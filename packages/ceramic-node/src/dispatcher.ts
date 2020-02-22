@@ -23,7 +23,7 @@ class Dispatcher extends EventEmitter {
   register (id: string): void {
     this._ids.push(id)
     // request head
-    await this._room.broadcast(JSON.stringify({ typ: MsgType.REQUEST, id }))
+    this._room.broadcast(JSON.stringify({ typ: MsgType.REQUEST, id }))
   }
 
   async newRecord (content: any): Promise<string> {
