@@ -1,0 +1,8 @@
+{
+  "name": "@ceramicnetwork/ceramic",
+  "private": true,
+  "devDependencies": {
+    "lerna": "^3.20.2",
+    "typescript": "^3.7.5"
+  }
+}
