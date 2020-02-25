@@ -12,6 +12,7 @@ class Dispatcher extends EventEmitter {
   private _ids: Record<string, boolean>
   private _peerId: string
   private _recordCache: Record<string, any>
+  private _room: PubSubRoom
 
   constructor (private _ipfs: Ipfs.Ipfs) {
     super()

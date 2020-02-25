@@ -64,11 +64,11 @@ describe('Document', () => {
       const doc = await Document.load(docId, dispatcher)
       // changes will not load since no network and no local head storage yet
       expect(doc.content).toEqual(initialState)
-      expect(doc.status()).toEqual({ signature: 'UNSIGNED', anchored: 0 })
+      expect(doc.status()).toEqual(expect.objectContaining({ signature: 'UNSIGNED', anchored: 0 }))
       // _handleHead is intended to be called by the dispatcher
       // should return a promise that resolves when head is added
       await doc._handleHead(log[1])
-      expect(doc.status()).toEqual({ signature: 'SIGNED', anchored: 0 })
+      expect(doc.status()).toEqual(expect.objectContaining({ signature: 'SIGNED', anchored: 0 }))
       expect(doc.content).toEqual(initialState)
       const updatePromise = new Promise(resolve => {
         doc.on('change', resolve)

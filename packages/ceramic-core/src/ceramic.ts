@@ -10,7 +10,7 @@ class Ceramic {
     this.docmap = {}
   }
 
-  static async create(ipfs: Ipfs.Ipfs): Ceramic {
+  static async create(ipfs: Ipfs.Ipfs): Promise<Ceramic> {
     const dispatcher = new Dispatcher(ipfs)
     const ceramic = new Ceramic(dispatcher)
     return ceramic

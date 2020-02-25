@@ -18,8 +18,9 @@ interface DocState {
 }
 
 interface DocStatus {
-  signature: SignatureStatus;
+  signature: string;
   anchored: number;
+  head: string;
 }
 
 export interface InitOpts {
@@ -27,7 +28,7 @@ export interface InitOpts {
   skipWait?: boolean;
 }
 
-const deepCopy = (obj): any => JSON.parse(JSON.stringify(obj))
+const deepCopy = (obj: any): any => JSON.parse(JSON.stringify(obj))
 
 class Document extends EventEmitter {
   private _applyQueue: PQueue
@@ -57,7 +58,7 @@ class Document extends EventEmitter {
     } else if (!opts.skipWait) {
       // add response timeout for network change
       await new Promise(resolve => {
-        let tid // eslint-disable-line prefer-const
+        let tid: any // eslint-disable-line prefer-const
         const clear = (): void => {
           clearTimeout(tid)
           this.off('change', clear)
@@ -69,14 +70,14 @@ class Document extends EventEmitter {
     }
   }
 
-  static async create (genesis: any, doctype: string, dispatcher: Dispatcher, opts?: InitOpts = {}): Promise<Document> {
+  static async create (genesis: any, doctype: string, dispatcher: Dispatcher, opts: InitOpts = {}): Promise<Document> {
     const cid = await dispatcher.newRecord({ genesis, doctype })
     const id = ['/ceramic', doctype, cid.toString()].join('/')
     if (typeof opts.onlyGenesis === 'undefined') opts.onlyGenesis = false
     return Document.load(id, dispatcher, opts)
   }
 
-  static async load (id: string, dispatcher: Dispatcher, opts?: InitOpts = {}): Promise<Document> {
+  static async load (id: string, dispatcher: Dispatcher, opts: InitOpts = {}): Promise<Document> {
     const doc = new Document(id, dispatcher)
     if (typeof opts.onlyGenesis === 'undefined') opts.onlyGenesis = true
     await doc._init(opts)
@@ -106,7 +107,7 @@ class Document extends EventEmitter {
     }
   }
 
-  async _fetchLog (cid: string, log?: Array<string> = []): Promise<Array<string>> {
+  async _fetchLog (cid: string, log: Array<string> = []): Promise<Array<string>> {
     if (this._state.log.includes(cid)) { // already processed
       return []
     }
@@ -139,8 +140,7 @@ class Document extends EventEmitter {
       const canonicalLog = this._state.log.slice() // copy log
       const localLog = canonicalLog.splice(conflictIdx)
       // Compute state up till conflictIdx
-      let state = {}
-      state = await this._applyLogToState(canonicalLog)
+      let state = await this._applyLogToState(canonicalLog)
       // Compute next transition in parallel
       const localState = await this._applyLogToState(localLog, deepCopy(state), true)
       const remoteState = await this._applyLogToState(log, deepCopy(state), true)
@@ -156,7 +156,7 @@ class Document extends EventEmitter {
     return modified
   }
 
-  async _applyLogToState (log: Array<string>, state: State, breakOnAnchor?: boolean): Promise<State> {
+  async _applyLogToState (log: Array<string>, state?: DocState, breakOnAnchor?: boolean): Promise<DocState> {
     const itr = log.entries()
     let entry = itr.next()
     while(!entry.done) {
@@ -217,7 +217,7 @@ class Document extends EventEmitter {
   async change (newContent: any): Promise<boolean> {
     const patch = jsonpatch.compare(this._state.content, newContent)
     const rec = { patch, next: this.head }
-    const cid = (await this.dispatcher.newRecord(rec, this.id)).toString()
+    const cid = (await this.dispatcher.newRecord(rec)).toString()
     this._state = await this._applyRecord(cid, this._state)
     await this.sign()
     await this.anchor()
@@ -229,7 +229,7 @@ class Document extends EventEmitter {
     // fake signature
     const signature = true
     const rec = { signature, next: this.head }
-    const cid = (await this.dispatcher.newRecord(rec, this.id)).toString()
+    const cid = (await this.dispatcher.newRecord(rec)).toString()
     this._state = await this._applyRecord(cid, this._state)
     return true
   }
@@ -244,7 +244,7 @@ class Document extends EventEmitter {
       path: 'ipld path for witness'
     }
     const rec = { anchor, next: this.head }
-    const cid = (await this.dispatcher.newRecord(rec, this.id)).toString()
+    const cid = (await this.dispatcher.newRecord(rec)).toString()
     this._state = await this._applyRecord(cid, this._state)
     return true
   }
@@ -252,7 +252,8 @@ class Document extends EventEmitter {
   status (): DocStatus {
     const signature = SignatureStatus[this._state.signature]
     const anchored = this._state.anchored
-    return { signature, anchored }
+    const head = this.head
+    return { signature, anchored, head }
   }
 
   toString (): string {

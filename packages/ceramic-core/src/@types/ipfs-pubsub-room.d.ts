@@ -2,7 +2,7 @@ declare module 'ipfs-pubsub-room' {
   import { EventEmitter } from 'events';
   import Ipfs from 'ipfs'
 
-  export class PubSubRoom extends EventEmitter {
+  export default class PubSubRoom extends EventEmitter {
     constructor(ipfs: Ipfs.Ipfs, topic: string)
 
     broadcast(message: string | any): void
@@ -15,6 +15,4 @@ declare module 'ipfs-pubsub-room' {
 
     hasPeer(cid: any): boolean
   }
-
-  export default function (ipfs: any, topic: string): PubSubRoom
 }
