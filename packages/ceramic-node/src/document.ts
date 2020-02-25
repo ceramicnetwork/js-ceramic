@@ -22,8 +22,9 @@ interface DocStatus {
   anchored: number;
 }
 
-interface InitOpts {
+export interface InitOpts {
   onlyGenesis?: boolean;
+  skipWait?: boolean;
 }
 
 const deepCopy = (obj): any => JSON.parse(JSON.stringify(obj))
@@ -42,19 +43,30 @@ class Document extends EventEmitter {
     this._type = split[2]
   }
 
-  async _init (onlyGenesis: boolean): Promise<void> {
+  async _init (opts?: InitOpts): Promise<void> {
     const record = await this.dispatcher.getRecord(this._genesisCid)
     if (this._type !== record.doctype) throw new Error(`Expected type ${this._type}, but got ${record.doctype}`)
     this._state = await this._applyRecord(this._genesisCid)
     this.dispatcher.on(`${this.id}_update`, this._handleHead.bind(this))
     this.dispatcher.on(`${this.id}_headreq`, this._publishHead.bind(this))
     this.dispatcher.register(this.id)
-    if (!onlyGenesis) {
+    if (!opts.onlyGenesis) {
       await this.sign()
       await this.anchor()
       this._publishHead()
+    } else if (!opts.skipWait) {
+      // add response timeout for network change
+      await new Promise(resolve => {
+        let tid // eslint-disable-line prefer-const
+        const clear = (): void => {
+          clearTimeout(tid)
+          this.off('change', clear)
+          resolve()
+        }
+        tid = setTimeout(clear, 3000)
+        this.on('change', clear)
+      })
     }
-    // add response timeout for network update
   }
 
   static async create (genesis: any, doctype: string, dispatcher: Dispatcher, opts?: InitOpts = {}): Promise<Document> {
@@ -67,7 +79,7 @@ class Document extends EventEmitter {
   static async load (id: string, dispatcher: Dispatcher, opts?: InitOpts = {}): Promise<Document> {
     const doc = new Document(id, dispatcher)
     if (typeof opts.onlyGenesis === 'undefined') opts.onlyGenesis = true
-    await doc._init(opts.onlyGenesis)
+    await doc._init(opts)
     return doc
   }
 
@@ -88,7 +100,7 @@ class Document extends EventEmitter {
       this._applyQueue.add(async () => {
         applyPromise = this._applyLog(log)
         const updated = await applyPromise
-        if (updated) this.emit('update')
+        if (updated) this.emit('change')
       })
       await applyPromise
     }
@@ -154,7 +166,7 @@ class Document extends EventEmitter {
       entry = itr.next()
     }
     if (state.signature === SignatureStatus.UNSIGNED) {
-      // if the last record is an update object don't add it to the state
+      // if the last record is not signed, don't add it to the state
       delete state.nextContent
       state.log.pop()
     }
@@ -163,9 +175,8 @@ class Document extends EventEmitter {
 
   async _applyRecord (cid: string, state?: DocState): Promise<DocState> {
     const record = await this.dispatcher.getRecord(cid)
-      //console.log('record', record, this._state)
     if (record.patch) {
-      if (state.nextContent) throw new Error('Can not have more than one update at a time')
+      if (state.nextContent) throw new Error('Can not have more than one change at a time')
       state.log.push(cid)
       return {
         ...state,
@@ -203,7 +214,7 @@ class Document extends EventEmitter {
     await this.dispatcher.publishHead(this.id, this.head)
   }
 
-  async update (newContent: any): Promise<boolean> {
+  async change (newContent: any): Promise<boolean> {
     const patch = jsonpatch.compare(this._state.content, newContent)
     const rec = { patch, next: this.head }
     const cid = (await this.dispatcher.newRecord(rec, this.id)).toString()
@@ -226,6 +237,7 @@ class Document extends EventEmitter {
   async anchor (): Promise<boolean> {
     // fake anchor
     const anchor = {
+      chain: 'ethmainnet',
       height: Date.now(),
       txHash: 'eth-cid',
       root: 'cid',
@@ -245,6 +257,10 @@ class Document extends EventEmitter {
 
   toString (): string {
     return JSON.stringify(this._state.content)
+  }
+
+  close (): void {
+    this.dispatcher.unregister(this.id)
   }
 }
 

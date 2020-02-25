@@ -1,7 +1,7 @@
 import Document from '../document'
 
 jest.mock('../dispatcher', () => {
-  return () => {
+  return (): any => {
     const recs: Array<string> = []
     const listeners: Record<string, Array<(cid: string) => void>> = {}
     return {
@@ -10,7 +10,7 @@ jest.mock('../dispatcher', () => {
         if (!listeners[id]) listeners[id] = []
         listeners[id].push(fn)
       }),
-      newRecord: jest.fn((rec, id) => {
+      newRecord: jest.fn((rec) => {
         // stringify as a way of doing deep copy
         recs.push(JSON.stringify(rec))
         return '' + (recs.length - 1)
@@ -18,7 +18,7 @@ jest.mock('../dispatcher', () => {
       publishHead: jest.fn((id, head) => {
         listeners[id+'_update'].map(fn => fn(head))
       }),
-      _requestHead: (id) => {
+      _requestHead: (id): void => {
         listeners[id+'_headreq'].map(fn => fn())
       },
       getRecord: jest.fn(cid => {
@@ -30,7 +30,6 @@ jest.mock('../dispatcher', () => {
 import Dispatcher from '../dispatcher'
 
 const DOCTYPE_1 = '3id'
-const DOCTYPE_2 = 'pact'
 
 describe('Document', () => {
 
@@ -72,10 +71,10 @@ describe('Document', () => {
       expect(doc.status()).toEqual({ signature: 'SIGNED', anchored: 0 })
       expect(doc.content).toEqual(initialState)
       const updatePromise = new Promise(resolve => {
-        doc.on('update', resolve)
+        doc.on('change', resolve)
       })
       doc._handleHead(log[2])
-      // update should be emitted when head has been added
+      // change should be emitted when head has been added
       await updatePromise
       expect(doc.status().signature).toEqual('SIGNED')
       expect(doc.status().anchored).not.toEqual(0)
@@ -84,7 +83,7 @@ describe('Document', () => {
 
     it('is updated correctly', async () => {
       const doc = await Document.create(initialState, DOCTYPE_1, dispatcher)
-      await doc.update(newState)
+      await doc.change(newState)
       expect(doc.content).toEqual(newState)
       expect(doc.status().signature).toEqual('SIGNED')
       expect(doc.status().anchored).not.toEqual(0)
@@ -95,17 +94,17 @@ describe('Document', () => {
       const doc1 = await Document.create(initialState, DOCTYPE_1, dispatcher)
       const docId = doc1.id
       const headPreUpdate = doc1.head
-      await doc1.update(newState)
+      await doc1.change(newState)
       expect(doc1.content).toEqual(newState)
       const headValidUpdate = doc1.head
-      // create invalid update that happened after main update
+      // create invalid change that happened after main change
       const doc2 = await Document.load(docId, dispatcher)
       await doc2._handleHead(headPreUpdate)
       // add short wait to get different anchor time
       // sometime the tests are damn fast
       await new Promise(resolve => setTimeout(resolve, 1))
       // TODO - better mock for anchors
-      await doc2.update(fakeState)
+      await doc2.change(fakeState)
       const headInvalidUpdate = doc2.head
       expect(doc2.content).toEqual(fakeState)
       // loading head from valid log to doc with invalid
@@ -129,12 +128,12 @@ describe('Document', () => {
       dispatcher = Dispatcher()
     })
 
-    it('should announce update to network', async () => {
+    it('should announce change to network', async () => {
       const doc1 = await Document.create(initialState, DOCTYPE_1, dispatcher)
       expect(dispatcher.publishHead).toHaveBeenCalledTimes(1)
       expect(dispatcher.publishHead).toHaveBeenCalledWith(doc1.id, doc1._state.log[2])
 
-      await doc1.update(newState)
+      await doc1.change(newState)
       expect(doc1.content).toEqual(newState)
 
       expect(dispatcher.publishHead).toHaveBeenCalledTimes(2)
@@ -146,9 +145,9 @@ describe('Document', () => {
       const doc2 = await Document.load(doc1.id, dispatcher)
 
       const updatePromise = new Promise(resolve => {
-        doc2.on('update', resolve)
+        doc2.on('change', resolve)
       })
-      await doc1.update(newState)
+      await doc1.change(newState)
       expect(doc1.content).toEqual(newState)
 
       await updatePromise

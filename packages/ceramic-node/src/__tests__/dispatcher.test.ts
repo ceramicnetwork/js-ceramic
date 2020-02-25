@@ -1,21 +1,12 @@
 import Dispatcher, { MsgType } from '../dispatcher'
 
-jest.mock('ipfs-pubsub-room', () => {
-  return () => {
-    return {
-      on: jest.fn(),
-      broadcast: jest.fn(),
-      leave: jest.fn()
-    }
-  }
-})
-import PubSubRoom from 'ipfs-pubsub-room'
+jest.mock('ipfs-pubsub-room')//, () => {
 const ipfs = {
   dag: {
     put: jest.fn(() => 'hash'),
     get: jest.fn(() => ({ value: 'data' }))
   },
-  id: () => ({ id: 'ipfsid' })
+  id: (): any => ({ id: 'ipfsid' })
 }
 
 
@@ -28,7 +19,7 @@ describe('Dispatcher', () => {
 
   it('is constructed correctly', async () => {
     const disp = new Dispatcher(ipfs)
-    expect(disp._ids).toEqual([])
+    expect(disp._ids).toEqual({})
     expect(disp._room.on).toHaveBeenCalledWith('message', expect.anything())
   })
 
@@ -61,7 +52,7 @@ describe('Dispatcher', () => {
     const id = '/ceramic/3id/234'
     const disp = new Dispatcher(ipfs)
     disp.register(id)
-    const updatePromise = new Promise(resolve => disp.on(id+'_update', resolve))
+  const updatePromise = new Promise(resolve => disp.on(id+'_update', resolve))
     const headreqPromise = new Promise(resolve => disp.on(id+'_headreq', resolve))
 
     disp.handleMessage({ data: JSON.stringify({ typ: MsgType.REQUEST, id }) })

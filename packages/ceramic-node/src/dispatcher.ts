@@ -9,21 +9,26 @@ export enum MsgType {
 }
 
 class Dispatcher extends EventEmitter {
-  private _ids: Array<string>
+  private _ids: Record<string, boolean>
   private _peerId: string
-  private _room: any // TODO - fix type
+  private _recordCache: Record<string, any>
 
   constructor (private _ipfs: Ipfs.Ipfs) {
     super()
-    this._ids = []
-    this._room = PubSubRoom(this._ipfs, '/ceramic')
+    this._ids = {}
+    this._recordCache = {}
+    this._room = new PubSubRoom(this._ipfs, '/ceramic')
     this._room.on('message', this.handleMessage.bind(this))
   }
 
   register (id: string): void {
-    this._ids.push(id)
+    this._ids[id] = true
     // request head
     this._room.broadcast(JSON.stringify({ typ: MsgType.REQUEST, id }))
+  }
+
+  unregister (id: string): void {
+    delete this._ids[id]
   }
 
   async newRecord (content: any): Promise<string> {
@@ -36,14 +41,15 @@ class Dispatcher extends EventEmitter {
   }
 
   async getRecord (cid: string): Promise<any> {
-    return (await this._ipfs.dag.get(cid)).value
+    if (!this._recordCache[cid]) this._recordCache[cid] = (await this._ipfs.dag.get(cid)).value
+    return this._recordCache[cid]
   }
 
   async handleMessage (message: any): Promise<void> {
     this._peerId = this._peerId || (await this._ipfs.id()).id
     if (message.from !== this._peerId) {
       const { typ, id, cid } = JSON.parse(message.data)
-      if (this._ids.includes(id)) {
+      if (this._ids[id]) {
         switch (typ) {
           case MsgType.UPDATE:
             if (typeof cid !== 'string') break
