@@ -1,4 +1,5 @@
 import fetch from 'node-fetch'
+import { EventEmitter } from 'events'
 
 const fetchJson = async (url: string, payload?: any): Promise<any> => {
   let opts
@@ -32,9 +33,11 @@ export interface InitOpts {
   skipWait?: boolean;
 }
 
-class Document {
+class Document extends EventEmitter {
 
-  constructor (public id: string, private _state: any) {}
+  constructor (public id: string, private _state: any) {
+    super()
+  }
 
   static async create (genesis: any, doctype: string, apiUrl: string, opts: InitOpts = {}): Promise<Document> {
     const { docId, state } = await fetchJson(apiUrl + '/create', { genesis, doctype, onlyGenesis: opts.onlyGenesis })
@@ -74,6 +77,14 @@ class Document {
   async anchor (): Promise<boolean> {
     return false
   }
+
+  async _syncState (apiUrl: string): Promise<void> {
+    const { state } = await fetchJson(apiUrl + '/state' + this.id)
+    if (JSON.stringify(this._state) !== JSON.stringify(state)) {
+      this._state = state
+      this.emit('change')
+    }
+  }
 }
 
 
@@ -83,10 +94,17 @@ const API_PATH = '/api/v0'
 class CeramicClient {
   private apiUrl: string
   private docmap: Record<string, Document>
+  private iid: any
 
   constructor (apiHost: string = CERAMIC_HOST) {
     this.apiUrl = apiHost + API_PATH
     this.docmap = {}
+    // this is an ugly way of getting updates, switch to something better
+    this.iid = setInterval(() => {
+      for (const docId in this.docmap) {
+        this.docmap[docId]._syncState(this.apiUrl)
+      }
+    }, 1000)
   }
 
   async createDocument (genesis: any, doctype: string, opts?: InitOpts): Promise<Document> {
@@ -104,6 +122,10 @@ class CeramicClient {
     const doc = new Document(id, {})
     await doc.change(content, this.apiUrl)
     return doc
+  }
+
+  async close () {
+    clearInterval(this.iid)
   }
 }
 

@@ -22,6 +22,7 @@ program
     const doc = await ceramic.createDocument(content, doctype, { onlyGenesis })
     console.log(doc.id)
     console.log(JSON.stringify(doc.content, null, 2))
+    ceramic.close()
   })
 
 program
@@ -31,6 +32,7 @@ program
     const ceramic = new CeramicClient()
     const doc = await ceramic.loadDocument(docId)
     console.log(JSON.stringify(doc.content, null, 2))
+    ceramic.close()
   })
 
 program
@@ -40,15 +42,20 @@ program
     const ceramic = new CeramicClient()
     const doc = await ceramic.loadDocument(docId)
     console.log(JSON.stringify(doc.state, null, 2))
+    ceramic.close()
   })
 
 program
   .command('watch <docId>')
   .description('Watch for updates in a document')
   .action(async (docId) => {
-    //const ceramic = new CeramicClient()
-    //const doc = await ceramic.loadDocument(docId)
-    //console.log(JSON.stringify(doc.content, null, 2))
+    const ceramic = new CeramicClient()
+    const doc = await ceramic.loadDocument(docId)
+    console.log(JSON.stringify(doc.content, null, 2))
+    doc.on('change', () => {
+      console.log('--- document changed ---')
+      console.log(JSON.stringify(doc.content, null, 2))
+    })
   })
 
 program
@@ -59,6 +66,7 @@ program
     const ceramic = new CeramicClient()
     const doc = await ceramic._updateDocument(docId, content)
     console.log(JSON.stringify(doc.id, null, 2))
+    ceramic.close()
   })
 
 program.parse(process.argv)
