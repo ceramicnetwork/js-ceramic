@@ -29,7 +29,6 @@
   },
   "dependencies": {
     "fast-json-patch": "^3.0.0-1",
-    "ipfs-pubsub-room": "^2.0.1",
     "p-queue": "^6.2.1"
   },
   "devDependencies": {

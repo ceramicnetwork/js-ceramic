@@ -1,13 +1,18 @@
 import Dispatcher, { MsgType } from '../dispatcher'
 
-jest.mock('ipfs-pubsub-room')//, () => {
 const ipfs = {
+  pubsub: {
+    subscribe: jest.fn(),
+    unsubscribe: jest.fn(),
+    publish: jest.fn()
+  },
   dag: {
     put: jest.fn(() => 'hash'),
     get: jest.fn(() => ({ value: 'data' }))
   },
   id: (): any => ({ id: 'ipfsid' })
 }
+const TOPIC = '/ceramic'
 
 
 describe('Dispatcher', () => {
@@ -15,19 +20,22 @@ describe('Dispatcher', () => {
   beforeEach(() => {
     ipfs.dag.put.mockClear()
     ipfs.dag.get.mockClear()
+    ipfs.pubsub.subscribe.mockClear()
+    ipfs.pubsub.unsubscribe.mockClear()
+    ipfs.pubsub.publish.mockClear()
   })
 
   it('is constructed correctly', async () => {
     const disp = new Dispatcher(ipfs)
     expect(disp._ids).toEqual({})
-    expect(disp._room.on).toHaveBeenCalledWith('message', expect.anything())
+    expect(ipfs.pubsub.subscribe).toHaveBeenCalledWith(TOPIC, expect.anything())
   })
 
   it('makes registration correctly', async () => {
     const id = '/ceramic/3id/234'
     const disp = new Dispatcher(ipfs)
     disp.register(id)
-    expect(disp._room.broadcast).toHaveBeenCalledWith(JSON.stringify({ typ: MsgType.REQUEST, id }))
+    expect(ipfs.pubsub.publish).toHaveBeenCalledWith(TOPIC, JSON.stringify({ typ: MsgType.REQUEST, id }))
   })
 
   it('creates new record correctly', async () => {
@@ -40,7 +48,7 @@ describe('Dispatcher', () => {
     const head = 'bafy9h3f08erf'
     const disp = new Dispatcher(ipfs)
     disp.publishHead(id, head)
-    expect(disp._room.broadcast).toHaveBeenCalledWith(JSON.stringify({ typ: MsgType.UPDATE, id, cid: head }))
+    expect(ipfs.pubsub.publish).toHaveBeenCalledWith(TOPIC, JSON.stringify({ typ: MsgType.UPDATE, id, cid: head }))
   })
 
   it('gets record correctly', async () => {
@@ -66,6 +74,7 @@ describe('Dispatcher', () => {
   it('closes correctly', async () => {
     const disp = new Dispatcher(ipfs)
     await disp.close()
-    expect(disp._room.leave).toHaveBeenCalledTimes(1)
+    expect(ipfs.pubsub.unsubscribe).toHaveBeenCalledTimes(1)
+    expect(ipfs.pubsub.unsubscribe).toHaveBeenCalledWith(TOPIC, expect.anything())
   })
 })

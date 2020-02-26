@@ -1,5 +1,4 @@
 import Ipfs from 'ipfs' // import only types ts 3.8
-import PubSubRoom from 'ipfs-pubsub-room'
 import { EventEmitter } from 'events'
 
 export enum MsgType {
@@ -8,24 +7,24 @@ export enum MsgType {
   RESPONSE
 }
 
+const TOPIC = '/ceramic'
+
 class Dispatcher extends EventEmitter {
   private _ids: Record<string, boolean>
   private _peerId: string
   private _recordCache: Record<string, any>
-  private _room: PubSubRoom
 
   constructor (private _ipfs: Ipfs.Ipfs) {
     super()
     this._ids = {}
     this._recordCache = {}
-    this._room = new PubSubRoom(this._ipfs, '/ceramic')
-    this._room.on('message', this.handleMessage.bind(this))
+    this._ipfs.pubsub.subscribe(TOPIC, this.handleMessage.bind(this)) // this returns promise, we should await
   }
 
-  register (id: string): void {
+  async register (id: string): Promise<void> {
     this._ids[id] = true
     // request head
-    this._room.broadcast(JSON.stringify({ typ: MsgType.REQUEST, id }))
+    await this._ipfs.pubsub.publish(TOPIC, JSON.stringify({ typ: MsgType.REQUEST, id }))
   }
 
   unregister (id: string): void {
@@ -38,7 +37,7 @@ class Dispatcher extends EventEmitter {
   }
 
   async publishHead (id: string, head: string): Promise<void> {
-    await this._room.broadcast(JSON.stringify({ typ: MsgType.UPDATE, id, cid: head }))
+    await this._ipfs.pubsub.publish(TOPIC, JSON.stringify({ typ: MsgType.UPDATE, id, cid: head }))
   }
 
   async getRecord (cid: string): Promise<any> {
@@ -67,7 +66,7 @@ class Dispatcher extends EventEmitter {
   }
 
   async close(): Promise<void> {
-    return this._room.leave()
+    return this._ipfs.pubsub.unsubscribe(TOPIC, this.handleMessage.bind(this))
   }
 }
 
