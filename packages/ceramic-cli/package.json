@@ -1,0 +1,50 @@
+{
+  "name": "@ceramicnetwork/ceramic-cli",
+  "version": "0.0.0",
+  "description": "Typescript implementation of the Ceramic CLI",
+  "keywords": [
+    "Ceramic",
+    "DID",
+    "identity",
+    "Data",
+    "routing"
+  ],
+  "author": "Joel Torstensson <oed3933@gmail.com>",
+  "homepage": "",
+  "license": "MIT",
+  "main": "lib/ceramic.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "files": [
+    "lib"
+  ],
+  "scripts": {
+    "test": "./node_modules/.bin/jest --coverage",
+    "build": "tsc -p tsconfig.json",
+    "prepublishOnly": "npm run build",
+    "prebuild": "npm run clean",
+    "lint": "./node_modules/.bin/eslint ./src --ext .js,.jsx,.ts,.tsx",
+    "clean": "rm -rf ./lib"
+  },
+  "dependencies": {
+    "commander": "^4.1.1",
+    "express": "^4.17.1",
+    "ipfs-http-client": "^42.0.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.8.4",
+    "@babel/preset-env": "^7.8.4",
+    "@babel/preset-typescript": "^7.8.3",
+    "@types/events": "^3.0.0",
+    "@types/express": "^4.17.2",
+    "@types/node": "^13.7.4",
+    "@typescript-eslint/eslint-plugin": "^2.19.0",
+    "@typescript-eslint/parser": "^2.19.0",
+    "babel-jest": "^25.1.0",
+    "eslint": "^6.8.0",
+    "ipfs": "^0.41.1",
+    "jest": "^25.1.0",
+    "tmp-promise": "^2.0.2"
+  }
+}
