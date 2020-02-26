@@ -10,13 +10,13 @@ ceramic daemon
 
 ceramic create <doctype> <genesis-content> [--onlyGenesis]
 
-ceramic show <path>
+ceramic show <docId>
 
-ceramic status <path>
+ceramic status <docId>
 
-ceramic watch <path>
+ceramic watch <docId>
 
-ceramic change <path> <new-content>
+ceramic change <docId> <new-content>
 
 
 ceramic user did
@@ -34,7 +34,7 @@ ceramic user decrypt <JWE | CWE><Paste>
 
 /api/v0/show/<document-id> - GET
 
-/api/v0/status/<document-id> - GET
+/api/v0/state/<document-id> - GET
 
 /api/v0/change/<document-id> - POST
 ```

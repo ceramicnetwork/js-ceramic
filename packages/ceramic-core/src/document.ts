@@ -17,12 +17,6 @@ interface DocState {
   log: Array<string>;
 }
 
-interface DocStatus {
-  signature: string;
-  anchored: number;
-  head: string;
-}
-
 export interface InitOpts {
   onlyGenesis?: boolean;
   skipWait?: boolean;
