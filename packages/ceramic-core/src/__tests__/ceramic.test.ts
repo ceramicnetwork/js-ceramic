@@ -1,4 +1,5 @@
 import Ceramic from '../ceramic'
+import { SignatureStatus } from '../document'
 import tmp from 'tmp-promise'
 import Ipfs from 'ipfs'
 
@@ -46,13 +47,14 @@ describe('Ceramic integration', () => {
     const doc1 = await ceramic1.createDocument({ test: 123 }, DOCTYPE)
     const doc2 = await ceramic2.loadDocument(doc1.id)
     expect(doc1.content).toEqual(doc2.content)
-    expect(doc1.status()).toEqual(doc2.status())
+    expect(doc1.state).toEqual(doc2.state)
     await ceramic1.close()
     await ceramic2.close()
   })
 
   it('won\'t propagate update across two disconnected nodes', async () => {
     await ipfs2.swarm.disconnect(multaddr1)
+    await ipfs2.swarm.disconnect(multaddr3)
     const ceramic1 = await Ceramic.create(ipfs1)
     const ceramic2 = await Ceramic.create(ipfs2)
     const doc1 = await ceramic1.createDocument({ test: 456 }, DOCTYPE)
@@ -60,7 +62,7 @@ describe('Ceramic integration', () => {
     // so we won't find the genesis object from it's CID
     const doc2 = await ceramic2.createDocument({ test: 456 }, DOCTYPE, { onlyGenesis: true })
     expect(doc1.content).toEqual(doc2.content)
-    expect(doc2.status()).toEqual(expect.objectContaining({ anchored: 0, signature: 'UNSIGNED' }))
+    expect(doc2.state).toEqual(expect.objectContaining({ anchored: 0, signature: SignatureStatus.UNSIGNED }))
     await ceramic1.close()
     await ceramic2.close()
   })
@@ -78,7 +80,7 @@ describe('Ceramic integration', () => {
     const doc1 = await ceramic1.createDocument({ test: 789 }, DOCTYPE)
     const doc3 = await ceramic3.createDocument({ test: 789 }, DOCTYPE, { onlyGenesis: true })
     expect(doc3.content).toEqual(doc1.content)
-    expect(doc3.status()).toEqual(doc1.status())
+    expect(doc3.state).toEqual(doc1.state)
     await ceramic1.close()
     await ceramic2.close()
     await ceramic3.close()
@@ -97,7 +99,7 @@ describe('Ceramic integration', () => {
     const doc1 = await ceramic1.createDocument({ test: 321 }, DOCTYPE)
     const doc3 = await ceramic3.createDocument({ test: 321 }, DOCTYPE, { onlyGenesis: true })
     expect(doc3.content).toEqual(doc1.content)
-    expect(doc3.status()).toEqual(doc1.status())
+    expect(doc3.state).toEqual(doc1.state)
     const updatePromise = new Promise(resolve => {
       doc3.on('change', resolve)
     })
@@ -105,7 +107,7 @@ describe('Ceramic integration', () => {
     await updatePromise
     expect(doc1.content).toEqual({ test: 'abcde' })
     expect(doc3.content).toEqual(doc1.content)
-    expect(doc3.status()).toEqual(doc1.status())
+    expect(doc3.state).toEqual(doc1.state)
     await ceramic1.close()
     await ceramic2.close()
     await ceramic3.close()

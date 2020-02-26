@@ -88,6 +88,10 @@ class Document extends EventEmitter {
     return this._state.nextContent || this._state.content
   }
 
+  get state (): DocState {
+    return this._state
+  }
+
   get head (): string {
     const log = this._state.log
     return log[log.length - 1]
@@ -247,13 +251,6 @@ class Document extends EventEmitter {
     const cid = (await this.dispatcher.newRecord(rec)).toString()
     this._state = await this._applyRecord(cid, this._state)
     return true
-  }
-
-  status (): DocStatus {
-    const signature = SignatureStatus[this._state.signature]
-    const anchored = this._state.anchored
-    const head = this.head
-    return { signature, anchored, head }
   }
 
   toString (): string {
