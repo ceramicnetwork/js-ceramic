@@ -1,6 +1,6 @@
 import ipfsClient from 'ipfs-http-client'
 import express, { Request, Response, NextFunction } from 'express'
-import Ceramic from '../../ceramic-core'
+import Ceramic from '@ceramicnetwork/ceramic-core'
 
 const IPFS_HOST = 'http://localhost:5001'
 const toApiPath = (ending: string):string => '/api/v0' + ending

@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/ceramic-cli",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Typescript implementation of the Ceramic CLI",
   "keywords": [
     "Ceramic",
@@ -24,13 +24,14 @@
   },
   "scripts": {
     "test": "./node_modules/.bin/jest --coverage",
-    "build": "tsc -p tsconfig.json",
+    "build": "../../node_modules/.bin/tsc -p tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
     "lint": "./node_modules/.bin/eslint ./src --ext .js,.jsx,.ts,.tsx",
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
+    "@ceramicnetwork/ceramic-core": "^0.0.0",
     "commander": "^4.1.1",
     "express": "^4.17.1",
     "ipfs-http-client": "^42.0.0",

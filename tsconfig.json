@@ -9,11 +9,18 @@
    "esModuleInterop": true,
    "emitDecoratorMetadata": true,
    "experimentalDecorators": true,
-   "sourceMap": true
+   "sourceMap": true,
+   "baseUrl": "./packages",
+   "paths": {
+     "@ceramicnetwork/*": ["./*/"]
+   }
  },
  "exclude": [
    "node_modules",
    "**/*.spec.ts",
    "**/*.test.ts"
+ ],
+ "references": [
+   { "path": "./packages/ceramic-core" }
  ]
 }

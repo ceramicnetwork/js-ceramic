@@ -5,6 +5,7 @@ import Document, { InitOpts } from './document'
 
 class Ceramic {
   private docmap: Record<string, Document>
+  private _didProvider: any
 
   constructor (public dispatcher: Dispatcher) {
     this.docmap = {}
@@ -25,6 +26,13 @@ class Ceramic {
   async loadDocument (id: string): Promise<Document> {
     if (!this.docmap[id]) this.docmap[id] = await Document.load(id, this.dispatcher)
     return this.docmap[id]
+  }
+
+  async setDIDProvider (provider: any): {
+    this._didProvider = provider
+    Object.keys(this.docmap).map(id => {
+      this.docmap[id].setDIDProvider
+    })
   }
 
   async close (): Promise<void> {
