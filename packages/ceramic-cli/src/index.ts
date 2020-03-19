@@ -5,6 +5,7 @@ import program from 'commander'
 program
   .command('daemon')
   .option('--ipfs-api <url>', 'The ipfs http api to use')
+  .option('--disable-pinning', 'Disable pinning thought the http api')
   .description('Start the daemon')
   .action(async () => { await CeramicDaemon.create() })
 
