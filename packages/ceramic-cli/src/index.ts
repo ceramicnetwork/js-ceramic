@@ -2,19 +2,16 @@ import CeramicDaemon from './ceramic-daemon'
 import CeramicClient from './ceramic-client'
 import program from 'commander'
 
-const VERSION = '0.0.0'
-
-program.version(VERSION, '-v, --version', 'output the version number')
-
 program
   .command('daemon')
-  .option('--ipfs-api <url>', 'The http ipfs api to use')
+  .option('--ipfs-api <url>', 'The ipfs http api to use')
   .description('Start the daemon')
   .action(async () => { await CeramicDaemon.create() })
 
 program
   .command('create <doctype> <new-content>')
   .option('--only-genesis', 'Only create the genesis object. No signature and anchore will be created')
+  .option('--owners <owners>', 'Specify the owners of the document. Defaults to current user')
   .description('Create a new document')
   .action(async (doctype, content, { onlyGenesis }) => {
     content = JSON.parse(content)
@@ -27,6 +24,7 @@ program
 
 program
   .command('show <docId>')
+  .option('-v, --version <number>', 'Specify the version of the document to show')
   .description('Show the content of a document')
   .action(async (docId) => {
     const ceramic = new CeramicClient()
@@ -60,6 +58,7 @@ program
 
 program
   .command('change <docId> <content>')
+  .option('--owners <owners>', 'Change owner of this document (only 3ID)')
   .description('Update the content of a document')
   .action(async (docId, content) => {
     content = JSON.parse(content)
