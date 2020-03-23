@@ -59,6 +59,8 @@ Returns the content of the given document.
 ##### Optional query parameters:
 * `?version=<number>` - the version of the document to show
 * `?v=<number>` - the version of the document to show
+* `?anchor=<CID>` - the CID of the anchor record to show the state at
+* `?a=<CID>` - the CID of the anchor record to show the state at
 
 ### `/api/v0/state/<document-id>` - `GET`
 Returns the full state of the given document.
@@ -66,6 +68,8 @@ Returns the full state of the given document.
 ##### Optional query parameters:
 * `?version=<number>` - the version of the document to show
 * `?v=<number>` - the version of the document to show
+* `?anchor=<CID>` - the CID of the anchor record to show the state at
+* `?a=<CID>` - the CID of the anchor record to show the state at
 
 ### `/api/v0/change/<document-id>` - `POST`
 Change the content of a given document.
