@@ -23,9 +23,11 @@ program
     ceramic.close()
   })
 
+
 program
   .command('show <docId>')
   .option('-v, --version <number>', 'Specify the version of the document to show')
+  .option('-a, --anchor <CID>', 'the CID of the anchor record to show the state at')
   .description('Show the content of a document')
   .action(async (docId) => {
     const ceramic = new CeramicClient()
@@ -36,6 +38,8 @@ program
 
 program
   .command('state <docId>')
+  .option('-v, --version <number>', 'Specify the version of the document to show')
+  .option('-a, --anchor <CID>', 'the CID of the anchor record to show the state at')
   .description('Show the state of a document')
   .action(async (docId) => {
     const ceramic = new CeramicClient()
