@@ -11,8 +11,9 @@ program
 
 program
   .command('create <doctype> <new-content>')
-  .option('--only-genesis', 'Only create the genesis object. No signature and anchore will be created')
+  .option('--only-genesis', 'Only create the genesis object. No anchor will be created')
   .option('--owners <owners>', 'Specify the owners of the document. Defaults to current user')
+  .option('--schema <docId>', 'Interactively create a new document using a given schema.')
   .description('Create a new document')
   .action(async (doctype, content, { onlyGenesis }) => {
     content = JSON.parse(content)
@@ -25,9 +26,7 @@ program
 
 
 program
-  .command('show <docId>')
-  .option('-v, --version <number>', 'Specify the version of the document to show')
-  .option('-a, --anchor <CID>', 'the CID of the anchor record to show the state at')
+  .command('show <docId> [<anchor>]')
   .description('Show the content of a document')
   .action(async (docId) => {
     const ceramic = new CeramicClient()
@@ -37,9 +36,7 @@ program
   })
 
 program
-  .command('state <docId>')
-  .option('-v, --version <number>', 'Specify the version of the document to show')
-  .option('-a, --anchor <CID>', 'the CID of the anchor record to show the state at')
+  .command('state <docId> [<anchor>]')
   .description('Show the state of a document')
   .action(async (docId) => {
     const ceramic = new CeramicClient()

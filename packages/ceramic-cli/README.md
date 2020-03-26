@@ -19,9 +19,6 @@ Unpin a given document.
 List pinned documents.
 
 
-#### `ceramic create-from-schema <schema-docId>`
-Interactively create a new document using a given schema. This command will prompt you to enter the information needed in order to create a new Ceramic Tile based on the given schema.
-
 
 #### `ceramic user did`
 Show the DID of the user.
