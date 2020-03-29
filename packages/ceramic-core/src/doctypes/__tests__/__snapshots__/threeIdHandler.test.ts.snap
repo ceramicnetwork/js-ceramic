@@ -1,0 +1,70 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ThreeIdHandler applies anchor record correctly 1`] = `
+Object {
+  "anchored": 123456,
+  "content": Object {
+    "other": "data",
+    "publicKeys": Object {
+      "test": "0xabc",
+    },
+  },
+  "doctype": "3id",
+  "log": Array [
+    "cid1",
+    "cid2",
+    "cid3",
+  ],
+  "owners": Array [
+    "0x123",
+  ],
+  "signature": 2,
+}
+`;
+
+exports[`ThreeIdHandler applies genesis record correctly 1`] = `
+Object {
+  "anchored": 0,
+  "content": Object {
+    "publicKeys": Object {
+      "test": "0xabc",
+    },
+  },
+  "doctype": "3id",
+  "log": Array [
+    "cid1",
+  ],
+  "nextContent": null,
+  "owners": Array [
+    "0x123",
+  ],
+  "signature": 0,
+}
+`;
+
+exports[`ThreeIdHandler applies signed record correctly 1`] = `
+Object {
+  "anchored": 0,
+  "content": Object {
+    "other": "data",
+    "publicKeys": Object {
+      "test": "0xabc",
+    },
+  },
+  "doctype": "3id",
+  "log": Array [
+    "cid1",
+    "cid2",
+  ],
+  "nextContent": Object {
+    "other": "data",
+    "publicKeys": Object {
+      "test": "0xabc",
+    },
+  },
+  "owners": Array [
+    "0x123",
+  ],
+  "signature": 2,
+}
+`;

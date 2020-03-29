@@ -3,6 +3,7 @@ module.exports = {
   parser: '@typescript-eslint/parser',
   plugins: [
     '@typescript-eslint',
+    'jest'
   ],
   rules: {
     "@typescript-eslint/no-explicit-any": "off"
@@ -12,4 +13,7 @@ module.exports = {
     'plugin:@typescript-eslint/eslint-recommended',
     'plugin:@typescript-eslint/recommended',
   ],
+  env: {
+    "jest/globals": true
+  }
 };

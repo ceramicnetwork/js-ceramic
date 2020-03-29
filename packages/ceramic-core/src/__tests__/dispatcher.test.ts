@@ -38,9 +38,14 @@ describe('Dispatcher', () => {
     expect(ipfs.pubsub.publish).toHaveBeenCalledWith(TOPIC, JSON.stringify({ typ: MsgType.REQUEST, id }))
   })
 
-  it('creates new record correctly', async () => {
+  it('store record correctly', async () => {
     const disp = new Dispatcher(ipfs)
-    expect(await disp.newRecord('data')).toEqual('hash')
+    expect(await disp.storeRecord('data')).toEqual('hash')
+  })
+
+  it('retrieves record correctly', async () => {
+    const disp = new Dispatcher(ipfs)
+    expect(await disp.retrieveRecord('hash')).toEqual('data')
   })
 
   it('publishes head correctly', async () => {
@@ -49,11 +54,6 @@ describe('Dispatcher', () => {
     const disp = new Dispatcher(ipfs)
     disp.publishHead(id, head)
     expect(ipfs.pubsub.publish).toHaveBeenCalledWith(TOPIC, JSON.stringify({ typ: MsgType.UPDATE, id, cid: head }))
-  })
-
-  it('gets record correctly', async () => {
-    const disp = new Dispatcher(ipfs)
-    expect(await disp.getRecord('hash')).toEqual('data')
   })
 
   it('handle message correctly', async () => {
@@ -75,6 +75,6 @@ describe('Dispatcher', () => {
     const disp = new Dispatcher(ipfs)
     await disp.close()
     expect(ipfs.pubsub.unsubscribe).toHaveBeenCalledTimes(1)
-    expect(ipfs.pubsub.unsubscribe).toHaveBeenCalledWith(TOPIC, expect.anything())
+    expect(ipfs.pubsub.unsubscribe).toHaveBeenCalledWith(TOPIC)
   })
 })

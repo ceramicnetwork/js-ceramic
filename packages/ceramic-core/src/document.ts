@@ -1,15 +1,17 @@
 import Dispatcher from './dispatcher' // import only type ts 3.8
-import jsonpatch from 'fast-json-patch'
+import DoctypeHandler from './doctypes/doctypeHandler'
 import { EventEmitter } from 'events'
 import PQueue from 'p-queue'
 
 export enum SignatureStatus {
-  UNSIGNED,
+  GENESIS,
   PARTIAL,
   SIGNED
 }
 
-interface DocState {
+export interface DocState {
+  doctype: string;
+  owners: Array<string>;
   content: any;
   nextContent?: any;
   signature: SignatureStatus;
@@ -18,6 +20,7 @@ interface DocState {
 }
 
 export interface InitOpts {
+  owners?: Array<string>;
   onlyGenesis?: boolean;
   skipWait?: boolean;
 }
@@ -27,26 +30,24 @@ const deepCopy = (obj: any): any => JSON.parse(JSON.stringify(obj))
 class Document extends EventEmitter {
   private _applyQueue: PQueue
   private _genesisCid: string
-  private _type: string
   private _state: DocState
+  private _doctype: DoctypeHandler
 
   constructor (public id: string, public dispatcher: Dispatcher) {
     super()
     this._applyQueue = new PQueue({concurrency: 1})
     const split = this.id.split('/')
-    this._genesisCid = split[3]
-    this._type = split[2]
+    this._genesisCid = split[2]
   }
 
-  async _init (opts?: InitOpts): Promise<void> {
-    const record = await this.dispatcher.getRecord(this._genesisCid)
-    if (this._type !== record.doctype) throw new Error(`Expected type ${this._type}, but got ${record.doctype}`)
-    this._state = await this._applyRecord(this._genesisCid)
+  async _init (doctypeHandlers: Record<string, DoctypeHandler>, opts: InitOpts): Promise<void> {
+    const record = await this.dispatcher.retrieveRecord(this._genesisCid)
+    this._doctype = doctypeHandlers[record.doctype]
+    this._state = await this._doctype.applyRecord(record, this._genesisCid)
     this.dispatcher.on(`${this.id}_update`, this._handleHead.bind(this))
     this.dispatcher.on(`${this.id}_headreq`, this._publishHead.bind(this))
     this.dispatcher.register(this.id)
     if (!opts.onlyGenesis) {
-      await this.sign()
       await this.anchor()
       this._publishHead()
     } else if (!opts.skipWait) {
@@ -64,17 +65,30 @@ class Document extends EventEmitter {
     }
   }
 
-  static async create (genesis: any, doctype: string, dispatcher: Dispatcher, opts: InitOpts = {}): Promise<Document> {
-    const cid = await dispatcher.newRecord({ genesis, doctype })
-    const id = ['/ceramic', doctype, cid.toString()].join('/')
+  static async create (
+    content: any,
+    doctypeHandler: DoctypeHandler,
+    dispatcher: Dispatcher,
+    opts: InitOpts = {}
+  ): Promise<Document> {
+    const genesisRecord = await doctypeHandler.makeGenesis(content, opts.owners)
+    const cid = await dispatcher.storeRecord(genesisRecord)
+    const id = ['/ceramic', cid.toString()].join('/')
     if (typeof opts.onlyGenesis === 'undefined') opts.onlyGenesis = false
-    return Document.load(id, dispatcher, opts)
+    const doctypeHandlers: Record<string, DoctypeHandler> = {}
+    doctypeHandlers[doctypeHandler.doctype] = doctypeHandler
+    return Document.load(id, doctypeHandlers, dispatcher, opts)
   }
 
-  static async load (id: string, dispatcher: Dispatcher, opts: InitOpts = {}): Promise<Document> {
+  static async load (
+    id: string,
+    doctypeHandlers: Record<string, DoctypeHandler>,
+    dispatcher: Dispatcher,
+    opts: InitOpts = {}
+  ): Promise<Document> {
     const doc = new Document(id, dispatcher)
     if (typeof opts.onlyGenesis === 'undefined') opts.onlyGenesis = true
-    await doc._init(opts)
+    await doc._init(doctypeHandlers, opts)
     return doc
   }
 
@@ -109,7 +123,7 @@ class Document extends EventEmitter {
     if (this._state.log.includes(cid)) { // already processed
       return []
     }
-    const record = await this.dispatcher.getRecord(cid)
+    const record = await this.dispatcher.retrieveRecord(cid)
     const nextCid = record.next?.toString()
     if (!nextCid) { // this is a fake log
       return []
@@ -126,7 +140,7 @@ class Document extends EventEmitter {
     let modified = false
     if (log[log.length - 1] === this.head) return // log already applied
     const cid = log[0]
-    const record = await this.dispatcher.getRecord(cid)
+    const record = await this.dispatcher.retrieveRecord(cid)
     if (record.next.toString() === this.head) {
       // the new log starts where the previous one ended
       this._state = await this._applyLogToState(log, deepCopy(this._state))
@@ -159,53 +173,13 @@ class Document extends EventEmitter {
     let entry = itr.next()
     while(!entry.done) {
       const cid = entry.value[1]
-      state = await this._applyRecord(cid, state)
+      const record = await this.dispatcher.retrieveRecord(cid)
+      // TODO - should catch potential thrown error here
+      state = await this._doctype.applyRecord(record, cid, state)
       if (breakOnAnchor && state.anchored) return state
       entry = itr.next()
     }
-    if (state.signature === SignatureStatus.UNSIGNED) {
-      // if the last record is not signed, don't add it to the state
-      delete state.nextContent
-      state.log.pop()
-    }
     return state
-  }
-
-  async _applyRecord (cid: string, state?: DocState): Promise<DocState> {
-    const record = await this.dispatcher.getRecord(cid)
-    if (record.patch) {
-      if (state.nextContent) throw new Error('Can not have more than one change at a time')
-      state.log.push(cid)
-      return {
-        ...state,
-        signature: SignatureStatus.UNSIGNED,
-        anchored: 0,
-        nextContent: jsonpatch.applyPatch(state.content, record.patch).newDocument
-      }
-    } else if (record.signature) {
-      state.log.push(cid)
-      return {
-        ...state,
-        signature: SignatureStatus.SIGNED
-      }
-    } else if (record.anchor) {
-      state.log.push(cid)
-      const content = state.nextContent
-      delete state.nextContent
-      return {
-        ...state,
-        content,
-        anchored: record.anchor.height
-      }
-    } else if (record.genesis) {
-      return {
-        content: record.genesis,
-        nextContent: record.genesis,
-        signature: SignatureStatus.UNSIGNED,
-        anchored: 0,
-        log: [cid]
-      }
-    }
   }
 
   async _publishHead (): Promise<void> {
@@ -213,37 +187,25 @@ class Document extends EventEmitter {
   }
 
   async change (newContent: any): Promise<boolean> {
-    const patch = jsonpatch.compare(this._state.content, newContent)
-    const rec = { patch, next: this.head }
-    const cid = (await this.dispatcher.newRecord(rec)).toString()
-    this._state = await this._applyRecord(cid, this._state)
-    await this.sign()
+    const record = await this._doctype.makeRecord(this._state, newContent)
+    const cid = (await this.dispatcher.storeRecord(record)).toString()
+    this._state = await this._doctype.applyRecord(record, cid, this._state)
     await this.anchor()
     this._publishHead()
     return true
   }
 
-  async sign (): Promise<boolean> {
-    // fake signature
-    const signature = true
-    const rec = { signature, next: this.head }
-    const cid = (await this.dispatcher.newRecord(rec)).toString()
-    this._state = await this._applyRecord(cid, this._state)
-    return true
-  }
-
   async anchor (): Promise<boolean> {
     // fake anchor
-    const anchor = {
+    const proof = {
       chain: 'ethmainnet',
-      height: Date.now(),
+      blockNumber: Date.now(),
       txHash: 'eth-cid',
-      root: 'cid',
-      path: 'ipld path for witness'
+      root: 'cid'
     }
-    const rec = { anchor, next: this.head }
-    const cid = (await this.dispatcher.newRecord(rec)).toString()
-    this._state = await this._applyRecord(cid, this._state)
+    const record = { proof, path: 'ipld path for witness', next: this.head }
+    const cid = (await this.dispatcher.storeRecord(record)).toString()
+    this._state = await this._doctype.applyRecord(record, cid, this._state)
     return true
   }
 

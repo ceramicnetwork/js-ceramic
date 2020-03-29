@@ -31,18 +31,18 @@ class Dispatcher extends EventEmitter {
     delete this._ids[id]
   }
 
-  async newRecord (content: any): Promise<string> {
-    const cid = (await this._ipfs.dag.put(content)).toString()
+  async storeRecord (data: any): Promise<string> {
+    const cid = (await this._ipfs.dag.put(data)).toString()
     return cid
+  }
+
+  async retrieveRecord (cid: string): Promise<any> {
+    if (!this._recordCache[cid]) this._recordCache[cid] = (await this._ipfs.dag.get(cid)).value
+    return this._recordCache[cid]
   }
 
   async publishHead (id: string, head: string): Promise<void> {
     await this._ipfs.pubsub.publish(TOPIC, JSON.stringify({ typ: MsgType.UPDATE, id, cid: head }))
-  }
-
-  async getRecord (cid: string): Promise<any> {
-    if (!this._recordCache[cid]) this._recordCache[cid] = (await this._ipfs.dag.get(cid)).value
-    return this._recordCache[cid]
   }
 
   async handleMessage (message: any): Promise<void> {
@@ -66,7 +66,7 @@ class Dispatcher extends EventEmitter {
   }
 
   async close(): Promise<void> {
-    return this._ipfs.pubsub.unsubscribe(TOPIC, this.handleMessage.bind(this))
+    return this._ipfs.pubsub.unsubscribe(TOPIC)
   }
 }
 
