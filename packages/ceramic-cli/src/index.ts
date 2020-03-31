@@ -35,8 +35,12 @@ program
   .description('Show the content of a document')
   .action(async (docId) => {
     const ceramic = new CeramicClient()
-    const doc = await ceramic.loadDocument(docId)
-    console.log(JSON.stringify(doc.content, null, 2))
+    try {
+      const doc = await ceramic.loadDocument(docId)
+      console.log(JSON.stringify(doc.content, null, 2))
+    } catch (e) {
+      console.error(e)
+    }
     ceramic.close()
   })
 
@@ -45,8 +49,12 @@ program
   .description('Show the state of a document')
   .action(async (docId) => {
     const ceramic = new CeramicClient()
-    const doc = await ceramic.loadDocument(docId)
-    console.log(JSON.stringify(doc.state, null, 2))
+    try {
+      const doc = await ceramic.loadDocument(docId)
+      console.log(JSON.stringify(doc.state, null, 2))
+    } catch (e) {
+      console.error(e)
+    }
     ceramic.close()
   })
 
@@ -55,12 +63,16 @@ program
   .description('Watch for updates in a document')
   .action(async (docId) => {
     const ceramic = new CeramicClient()
-    const doc = await ceramic.loadDocument(docId)
-    console.log(JSON.stringify(doc.content, null, 2))
-    doc.on('change', () => {
-      console.log('--- document changed ---')
+    try {
+      const doc = await ceramic.loadDocument(docId)
       console.log(JSON.stringify(doc.content, null, 2))
-    })
+      doc.on('change', () => {
+        console.log('--- document changed ---')
+        console.log(JSON.stringify(doc.content, null, 2))
+      })
+    } catch (e) {
+      console.error(e)
+    }
   })
 
 program
@@ -70,8 +82,12 @@ program
   .action(async (docId, content) => {
     content = JSON.parse(content)
     const ceramic = new CeramicClient()
-    const doc = await ceramic._updateDocument(docId, content)
-    console.log(JSON.stringify(doc.content, null, 2))
+    try {
+      const doc = await ceramic._updateDocument(docId, content)
+      console.log(JSON.stringify(doc.content, null, 2))
+    } catch (e) {
+      console.error(e)
+    }
     ceramic.close()
   })
 
