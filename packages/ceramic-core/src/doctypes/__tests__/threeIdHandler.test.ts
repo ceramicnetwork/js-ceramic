@@ -2,10 +2,10 @@ import ThreeIdHandler from '../threeIdHandler'
 
 jest.mock('../../user')
 import User from '../../user'
-jest.mock('did-jwt/src/VerifierAlgorithm.ts', () => () => {
+jest.mock('did-jwt', () => ({
   // TODO - We should test for when this function throws as well
-  return (): any => 'verified'
-})
+  verifyJWT: (): any => 'verified'
+}))
 
 const RECORDS = {
   genesis: { doctype: '3id', owners: [ '0x123' ], content: { publicKeys: { test: '0xabc' } } },

@@ -1,8 +1,9 @@
 import DoctypeHandler from './doctypeHandler'
 import { DocState, SignatureStatus } from '../document'
+import { wrapDocument } from '../3id-did-resolver'
 import jsonpatch from 'fast-json-patch'
-// @ts-ignore
-import VerifierAlrgorithm from 'did-jwt/src/VerifierAlgorithm.ts'
+import { verifyJWT } from 'did-jwt'
+import { DIDDocument } from 'did-resolver'
 
 const DOCTYPE = '3id'
 
@@ -56,14 +57,13 @@ class ThreeIdHandler extends DoctypeHandler {
       iss: record.iss
     })).toString('base64')
     if (payload.endsWith('=')) payload = payload.slice(0, -1)
-    const data = [header, payload].join('.')
-    const authenticators = state.owners.map(key => ({
-      publicKeyHex: key
-    }))
+    const jwt = [header, payload, signature].join('.')
     try {
-      await VerifierAlrgorithm('ES256K')(data, signature, authenticators)
+      // verify the jwt with a fake DID resolver that uses the current state of the 3ID
+      const didDoc = wrapDocument({ publicKeys: { signing: state.owners[0], encryption: '' } }, 'did:fake:123')
+      await verifyJWT(jwt, { resolver: { resolve: async (): Promise<DIDDocument> => didDoc } })
     } catch (e) {
-      throw new Error('Invalid signature for signed record')
+      throw new Error('Invalid signature for signed record:' + e)
     }
     return {
       ...state,

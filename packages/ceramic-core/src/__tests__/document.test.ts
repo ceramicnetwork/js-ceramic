@@ -31,10 +31,10 @@ jest.mock('../dispatcher', () => {
 import Dispatcher from '../dispatcher'
 jest.mock('../user')
 import User from '../user'
-jest.mock('did-jwt/src/VerifierAlgorithm.ts', () => () => {
-  // TODO - make sure this actually work
-  return (): any => 'verified'
-})
+jest.mock('did-jwt', () => ({
+  // TODO - We should test for when this function throws as well
+  verifyJWT: (): any => 'verified'
+}))
 
 
 describe('Document', () => {
