@@ -31,9 +31,10 @@
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/ceramic-core": "^0.0.0",
+    "@ceramicnetwork/ceramic-core": "^0.0.1",
     "commander": "^4.1.1",
     "express": "^4.17.1",
+    "identity-wallet": "file:../../../../3box/identity-wallet",
     "ipfs-http-client": "^42.0.0",
     "node-fetch": "^2.6.0"
   },

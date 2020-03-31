@@ -2,6 +2,7 @@ import CeramicDaemon from './ceramic-daemon'
 import CeramicClient from './ceramic-client'
 import program from 'commander'
 
+
 program
   .command('daemon')
   .option('--ipfs-api <url>', 'The ipfs http api to use')
@@ -18,9 +19,13 @@ program
   .action(async (doctype, content, { onlyGenesis }) => {
     content = JSON.parse(content)
     const ceramic = new CeramicClient()
-    const doc = await ceramic.createDocument(content, doctype, { onlyGenesis })
-    console.log(doc.id)
-    console.log(JSON.stringify(doc.content, null, 2))
+    try {
+      const doc = await ceramic.createDocument(content, doctype, { onlyGenesis })
+      console.log(doc.id)
+      console.log(JSON.stringify(doc.content, null, 2))
+    } catch (e) {
+      console.error(e)
+    }
     ceramic.close()
   })
 
@@ -66,7 +71,7 @@ program
     content = JSON.parse(content)
     const ceramic = new CeramicClient()
     const doc = await ceramic._updateDocument(docId, content)
-    console.log(JSON.stringify(doc.id, null, 2))
+    console.log(JSON.stringify(doc.content, null, 2))
     ceramic.close()
   })
 
