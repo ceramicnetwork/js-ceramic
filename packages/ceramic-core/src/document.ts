@@ -27,6 +27,20 @@ export interface InitOpts {
 
 const deepCopy = (obj: any): any => JSON.parse(JSON.stringify(obj))
 
+const waitForChange = async (doc: Document): Promise<void> => {
+  // add response timeout for network change
+  return new Promise(resolve => {
+    let tid: any // eslint-disable-line prefer-const
+    const clear = (): void => {
+      clearTimeout(tid)
+      doc.off('change', clear)
+      resolve()
+    }
+    tid = setTimeout(clear, 3000)
+    doc.on('change', clear)
+  })
+}
+
 class Document extends EventEmitter {
   private _applyQueue: PQueue
   private _genesisCid: string
@@ -51,17 +65,7 @@ class Document extends EventEmitter {
       await this.anchor()
       this._publishHead()
     } else if (!opts.skipWait) {
-      // add response timeout for network change
-      await new Promise(resolve => {
-        let tid: any // eslint-disable-line prefer-const
-        const clear = (): void => {
-          clearTimeout(tid)
-          this.off('change', clear)
-          resolve()
-        }
-        tid = setTimeout(clear, 3000)
-        this.on('change', clear)
-      })
+      await waitForChange(this)
     }
   }
 
