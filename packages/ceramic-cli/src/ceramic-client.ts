@@ -10,8 +10,9 @@ const fetchJson = async (url: string, payload?: any): Promise<any> => {
       headers: { 'Content-Type': 'application/json' }
     }
   }
-  const res = await fetch(url, opts)
-  return res.json()
+  const res = await (await fetch(url, opts)).json()
+  if (res.error) throw new Error(res.error)
+  return res
 }
 
 export enum SignatureStatus {
@@ -65,7 +66,7 @@ class Document extends EventEmitter {
   }
 
   async change (newContent: any, apiUrl: string): Promise<boolean> {
-    const { docId, state } = await fetchJson(apiUrl + '/change' + this.id, { content: newContent })
+    const { state } = await fetchJson(apiUrl + '/change' + this.id, { content: newContent })
     this._state = state
     return true
   }
@@ -124,7 +125,7 @@ class CeramicClient {
     return doc
   }
 
-  async close () {
+  async close (): Promise<void> {
     clearInterval(this.iid)
   }
 }
