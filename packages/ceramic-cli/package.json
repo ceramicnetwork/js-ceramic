@@ -20,7 +20,7 @@
     "lib"
   ],
   "bin": {
-    "ceramic": "./bin/cli.js"
+    "ceramic": "./bin/ceramic.js"
   },
   "scripts": {
     "test": "./node_modules/.bin/jest --coverage",
