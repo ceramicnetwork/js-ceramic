@@ -101,7 +101,7 @@ class TileHandler extends DoctypeHandler {
   async makeRecord (state: DocState, newContent: any): Promise<any> {
     if (!this.user) throw new Error('No user authenticated')
     const patch = jsonpatch.compare(state.content, newContent)
-    const record = { content: patch, next: head(state.log) }
+    const record = { content: patch, next: { '/': head(state.log) } }
     return this.signRecord(record)
   }
 

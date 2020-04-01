@@ -128,7 +128,7 @@ class Document extends EventEmitter {
       return []
     }
     const record = await this.dispatcher.retrieveRecord(cid)
-    const nextCid = record.next?.toString()
+    const nextCid = record.next ? record.next['/'].toString() : null
     if (!nextCid) { // this is a fake log
       return []
     }
@@ -145,14 +145,14 @@ class Document extends EventEmitter {
     if (log[log.length - 1] === this.head) return // log already applied
     const cid = log[0]
     const record = await this.dispatcher.retrieveRecord(cid)
-    if (record.next.toString() === this.head) {
+    if (record.next['/'].toString() === this.head) {
       // the new log starts where the previous one ended
       this._state = await this._applyLogToState(log, deepCopy(this._state))
       modified = true
     } else {
       // we have a conflict since next is in the log of the
       // local state, but isn't the head
-      const conflictIdx = this._state.log.indexOf(record.next.toString()) + 1
+      const conflictIdx = this._state.log.indexOf(record.next['/'].toString()) + 1
       const canonicalLog = this._state.log.slice() // copy log
       const localLog = canonicalLog.splice(conflictIdx)
       // Compute state up till conflictIdx
@@ -207,7 +207,7 @@ class Document extends EventEmitter {
       txHash: 'eth-cid',
       root: 'cid'
     }
-    const record = { proof, path: 'ipld path for witness', next: this.head }
+    const record = { proof, path: 'ipld path for witness', next: { '/': this.head } }
     const cid = (await this.dispatcher.storeRecord(record)).toString()
     this._state = await this._doctype.applyRecord(record, cid, this._state)
     return true
