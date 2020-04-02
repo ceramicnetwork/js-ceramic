@@ -1,6 +1,6 @@
 // TODO - the 3id-did-resolver should be it's own package
-import Ceramic from './ceramic'
-import { ParsedDID, DIDResolver, DIDDocument } from 'did-resolver'
+import type Ceramic from './ceramic'
+import type { ParsedDID, DIDResolver, DIDDocument } from 'did-resolver'
 
 interface ResolverRegistry {
   [index: string]: DIDResolver;
