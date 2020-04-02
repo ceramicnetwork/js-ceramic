@@ -1,5 +1,5 @@
-import Dispatcher from './dispatcher' // import only type ts 3.8
-import DoctypeHandler from './doctypes/doctypeHandler'
+import type Dispatcher from './dispatcher'
+import type DoctypeHandler from './doctypes/doctypeHandler'
 import { EventEmitter } from 'events'
 import PQueue from 'p-queue'
 

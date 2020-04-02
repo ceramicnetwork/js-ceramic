@@ -1,5 +1,5 @@
-import { DocState } from '../document'
-import User from '../user'
+import type { DocState } from '../document'
+import type User from '../user'
 
 abstract class DoctypeHandler {
   protected _user: User

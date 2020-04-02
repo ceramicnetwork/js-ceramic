@@ -1,23 +1,29 @@
-import Ipfs from 'ipfs' // import only types ts 3.8
+import type Ipfs from 'ipfs'
+import type DoctypeHandler from './doctypes/doctypeHandler'
 import Dispatcher from './dispatcher'
 import User from './user'
 import Document, { InitOpts } from './document'
-import DoctypeHandler from './doctypes/doctypeHandler'
 import ThreeIdHandler from './doctypes/threeIdHandler'
 import TileHandler from './doctypes/tileHandler'
 
 
 // This is temporary until we handle DIDs and in particular 3IDs better
 const gen3IDgenesis = (pubkeys: any): any => {
+  console.log('aaaa', pubkeys)
   return {
     owners: [pubkeys.managementKey],
     content: {
       publicKeys: {
         signing: pubkeys.signingKey,
-        encryption: pubkeys.encryptionKey
+        encryption: pubkeys.asymEncryptionKey
       }
     }
   }
+}
+
+interface CeramicConfig {
+  anchorServicePolicy?: string; // docId of an anchor service policy tile
+  didProvider?: any;
 }
 
 class Ceramic {
@@ -33,12 +39,22 @@ class Ceramic {
     }
   }
 
-  static async create(ipfs: Ipfs.Ipfs, didProvider?: any): Promise<Ceramic> {
+  async _init (config: CeramicConfig): Promise<void> {
+    const promises = []
+    if (config.didProvider) {
+      promises.push(this.setDIDProvider(config.didProvider))
+    }
+    if (config.anchorServicePolicy) {
+      // TODO load service policy tile for anchor service
+    }
+    await Promise.all(promises)
+    return null
+  }
+
+  static async create(ipfs: Ipfs.Ipfs, config: CeramicConfig = {}): Promise<Ceramic> {
     const dispatcher = new Dispatcher(ipfs)
     const ceramic = new Ceramic(dispatcher)
-    if (didProvider) {
-      await ceramic.setDIDProvider(didProvider)
-    }
+    await ceramic._init(config)
     return ceramic
   }
 

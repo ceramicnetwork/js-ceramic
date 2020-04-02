@@ -1,6 +1,6 @@
-import DoctypeHandler from './doctypeHandler'
-import Ceramic from '../ceramic'
+import type Ceramic from '../ceramic'
 import { DocState, SignatureStatus } from '../document'
+import DoctypeHandler from './doctypeHandler'
 import ThreeIdResolver from '../3id-did-resolver'
 import { Resolver } from 'did-resolver'
 import jsonpatch from 'fast-json-patch'

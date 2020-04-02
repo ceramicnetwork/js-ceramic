@@ -1,4 +1,4 @@
-import Ipfs from 'ipfs' // import only types ts 3.8
+import type Ipfs from 'ipfs' // import only types ts 3.8
 import { EventEmitter } from 'events'
 
 export enum MsgType {
