@@ -54,15 +54,15 @@ class AccountLinkHandler extends DoctypeHandler {
   }
 
   async applySigned (record: any, state: DocState): Promise<DocState> {
-    const proof = record.content
-    if (!await validateLink(proof)) {
+    const validProof = await validateLink(record.content)
+    if (!validProof || validProof.address.toLowerCase() !== state.owners[0].toLowerCase()) {
       throw new Error('Invalid proof for signed record')
     }
     return {
       ...state,
       signature: SignatureStatus.SIGNED,
       anchored: 0,
-      nextContent: proof
+      nextContent: validProof.did
     }
   }
 
