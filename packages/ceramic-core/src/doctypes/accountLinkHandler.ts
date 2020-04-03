@@ -1,6 +1,5 @@
 import DoctypeHandler from './doctypeHandler'
 import { DocState, SignatureStatus } from '../document'
-import jsonpatch from 'fast-json-patch'
 import { validateLink } from '3id-blockchain-utils'
 
 const DOCTYPE = 'account-link'
@@ -27,9 +26,8 @@ class AccountLinkHandler extends DoctypeHandler {
     return newState
   }
 
-  async makeRecord (state: DocState, newContent: any): Promise<any> {
-    const patch = jsonpatch.compare(state.content, newContent)
-    const record = { content: patch, next: { '/': head(state.log) } }
+  async makeRecord (state: DocState, proof: any): Promise<any> {
+    const record = { content: proof, next: { '/': head(state.log) } }
     return record
   }
 
@@ -55,15 +53,15 @@ class AccountLinkHandler extends DoctypeHandler {
   }
 
   async applySigned (record: any, state: DocState): Promise<DocState> {
-    const nextContent = jsonpatch.applyPatch(state.content, record.content).newDocument
-    if (!await validateLink(nextContent)) {
+    const proof = record.content
+    if (!await validateLink(proof)) {
       throw new Error('Invalid proof for signed record')
     }
     return {
       ...state,
       signature: SignatureStatus.SIGNED,
       anchored: 0,
-      nextContent
+      nextContent: proof
     }
   }
 
