@@ -13,14 +13,15 @@ program
 program
   .command('create <doctype> <new-content>')
   .option('--only-genesis', 'Only create the genesis object. No anchor will be created')
-  .option('--owners <owners>', 'Specify the owners of the document. Defaults to current user')
+  .option('--owners <owners>', 'Specify a comma-separated list of the owners of the document. Defaults to current user')
   .option('--schema <docId>', 'Interactively create a new document using a given schema.')
   .description('Create a new document')
-  .action(async (doctype, content, { onlyGenesis }) => {
+  .action(async (doctype, content, { onlyGenesis, owners }) => {
     content = JSON.parse(content)
+    if (typeof owners === 'string') owners = owners.split(',')
     const ceramic = new CeramicClient()
     try {
-      const doc = await ceramic.createDocument(content, doctype, { onlyGenesis })
+      const doc = await ceramic.createDocument(content, doctype, { onlyGenesis, owners })
       console.log(doc.id)
       console.log(JSON.stringify(doc.content, null, 2))
     } catch (e) {

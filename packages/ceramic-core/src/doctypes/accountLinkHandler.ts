@@ -32,7 +32,8 @@ class AccountLinkHandler extends DoctypeHandler {
   }
 
   async makeGenesis (content: any, owners: [string]): Promise<any> {
-    if (typeof content !== 'undefined') throw new Error('Account link genesis cannot have content')
+    if (content) throw new Error('Account link genesis cannot have content')
+    if (!owners) throw new Error('Owner must be specified')
     return {
       doctype: this.doctype,
       owners
