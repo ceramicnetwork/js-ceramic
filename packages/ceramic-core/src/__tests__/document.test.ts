@@ -1,4 +1,5 @@
 import Document, { SignatureStatus } from '../document'
+import AnchorService from '../anchor-service'
 import ThreeIdHandler from '../doctypes/threeIdHandler'
 
 jest.mock('../dispatcher', () => {
@@ -36,6 +37,8 @@ jest.mock('did-jwt', () => ({
   verifyJWT: (): any => 'verified'
 }))
 
+const anchorUpdate = (doc) => new Promise(resolve => doc.on('change', resolve))
+
 
 describe('Document', () => {
 
@@ -43,10 +46,11 @@ describe('Document', () => {
     const initialContent = { abc: 123, def: 456 }
     const newContent = { abc: 321, def: 456, gh: 987 }
     const owners = ['publickeymock']
-    let dispatcher, doctypeHandler, doctypeHandlers
+    let dispatcher, doctypeHandler, doctypeHandlers, anchorService
 
     beforeEach(() => {
       dispatcher = Dispatcher()
+      anchorService = new AnchorService(dispatcher)
       doctypeHandler = new ThreeIdHandler()
       doctypeHandler.user = new User()
       // fake jwt
@@ -55,44 +59,48 @@ describe('Document', () => {
     })
 
     it('is created correctly', async () => {
-      const doc = await Document.create(initialContent, doctypeHandler, dispatcher, { owners })
+      const doc = await Document.create(initialContent, doctypeHandler, anchorService, dispatcher, { owners })
       const docId = doc.id
       expect(doc.content).toEqual(initialContent)
       expect(dispatcher.register).toHaveBeenCalledWith(docId)
       expect(dispatcher.on).toHaveBeenCalled()
+      expect(doc.state.anchored).toEqual(0)
+      await anchorUpdate(doc)
+      expect(doc.state.anchored).toBeGreaterThan(0)
     })
 
     it('is loaded correctly', async () => {
-      const docId = (await Document.create(initialContent, doctypeHandler, dispatcher, { owners })).id
-      const doc = await Document.load(docId, doctypeHandlers, dispatcher, { skipWait: true })
+      const docId = (await Document.create(initialContent, doctypeHandler, anchorService, dispatcher, { owners })).id
+      const doc = await Document.load(docId, doctypeHandlers, anchorService, dispatcher, { skipWait: true })
       expect(doc.id).toEqual(docId)
       expect(doc.content).toEqual(initialContent)
+      expect(doc.state.anchored).toEqual(0)
+      await anchorUpdate(doc)
+      expect(doc.state.anchored).toBeGreaterThan(0)
     })
 
     it('handles new head correctly', async () => {
-      const tmpDoc = await Document.create(initialContent, doctypeHandler, dispatcher, { owners })
+      const tmpDoc = await Document.create(initialContent, doctypeHandler, anchorService, dispatcher, { owners })
+      await anchorUpdate(tmpDoc)
       const docId = tmpDoc.id
       const log = tmpDoc.state.log
-      const doc = await Document.load(docId, doctypeHandlers, dispatcher, { skipWait: true })
+      const doc = await Document.load(docId, doctypeHandlers, anchorService, dispatcher, { skipWait: true })
       // changes will not load since no network and no local head storage yet
       expect(doc.content).toEqual(initialContent)
       expect(doc.state).toEqual(expect.objectContaining({ signature: SignatureStatus.GENESIS, anchored: 0 }))
       // _handleHead is intended to be called by the dispatcher
       // should return a promise that resolves when head is added
-      const updatePromise = new Promise(resolve => {
-        doc.on('change', resolve)
-      })
-      doc._handleHead(log[1])
-      // change should be emitted when head has been added
-      await updatePromise
+      await doc._handleHead(log[1])
       expect(doc.state.signature).toEqual(SignatureStatus.GENESIS)
       expect(doc.state.anchored).not.toEqual(0)
       expect(doc.content).toEqual(initialContent)
     })
 
     it('is updated correctly', async () => {
-      const doc = await Document.create(initialContent, doctypeHandler, dispatcher, { owners })
+      const doc = await Document.create(initialContent, doctypeHandler, anchorService, dispatcher, { owners })
+      await anchorUpdate(doc)
       await doc.change(newContent)
+      await anchorUpdate(doc)
       expect(doc.content).toEqual(newContent)
       expect(doc.state.signature).toEqual(SignatureStatus.SIGNED)
       expect(doc.state.anchored).not.toEqual(0)
@@ -100,20 +108,23 @@ describe('Document', () => {
 
     it('handles conflict', async () => {
       const fakeState = { asdf: 2342 }
-      const doc1 = await Document.create(initialContent, doctypeHandler, dispatcher, { owners })
+      const doc1 = await Document.create(initialContent, doctypeHandler, anchorService, dispatcher, { owners })
       const docId = doc1.id
       const headPreUpdate = doc1.head
+      await anchorUpdate(doc1)
       await doc1.change(newContent)
+      await anchorUpdate(doc1)
       expect(doc1.content).toEqual(newContent)
       const headValidUpdate = doc1.head
       // create invalid change that happened after main change
-      const doc2 = await Document.load(docId, doctypeHandlers, dispatcher, { skipWait: true })
+      const doc2 = await Document.load(docId, doctypeHandlers, anchorService, dispatcher, { skipWait: true })
       await doc2._handleHead(headPreUpdate)
       // add short wait to get different anchor time
       // sometime the tests are damn fast
       await new Promise(resolve => setTimeout(resolve, 1))
       // TODO - better mock for anchors
       await doc2.change(fakeState)
+      await anchorUpdate(doc2)
       const headInvalidUpdate = doc2.head
       expect(doc2.content).toEqual(fakeState)
       // loading head from valid log to doc with invalid
@@ -132,10 +143,11 @@ describe('Document', () => {
     const initialContent = { abc: 123, def: 456 }
     const newContent = { abc: 321, def: 456, gh: 987 }
     const owners = ['publickeymock']
-    let dispatcher, doctypeHandler, doctypeHandlers
+    let dispatcher, doctypeHandler, doctypeHandlers, anchorService
 
     beforeEach(() => {
       dispatcher = Dispatcher()
+      anchorService = new AnchorService(dispatcher)
       doctypeHandler = new ThreeIdHandler()
       doctypeHandler.user = new User()
       // fake jwt
@@ -144,20 +156,22 @@ describe('Document', () => {
     })
 
     it('should announce change to network', async () => {
-      const doc1 = await Document.create(initialContent, doctypeHandler, dispatcher, { owners })
+      const doc1 = await Document.create(initialContent, doctypeHandler, anchorService, dispatcher, { owners })
       expect(dispatcher.publishHead).toHaveBeenCalledTimes(1)
       expect(dispatcher.publishHead).toHaveBeenCalledWith(doc1.id, doc1.head)
+      await anchorUpdate(doc1)
 
       await doc1.change(newContent)
       expect(doc1.content).toEqual(newContent)
 
-      expect(dispatcher.publishHead).toHaveBeenCalledTimes(2)
+      expect(dispatcher.publishHead).toHaveBeenCalledTimes(3)
       expect(dispatcher.publishHead).toHaveBeenCalledWith(doc1.id, doc1.head)
     })
 
     it('documents share updates', async () => {
-      const doc1 = await Document.create(initialContent, doctypeHandler, dispatcher, { owners })
-      const doc2 = await Document.load(doc1.id, doctypeHandlers, dispatcher, { skipWait: true })
+      const doc1 = await Document.create(initialContent, doctypeHandler, anchorService, dispatcher, { owners })
+      await anchorUpdate(doc1)
+      const doc2 = await Document.load(doc1.id, doctypeHandlers, anchorService, dispatcher, { skipWait: true })
 
       const updatePromise = new Promise(resolve => {
         doc2.on('change', resolve)
@@ -170,7 +184,7 @@ describe('Document', () => {
     })
 
     it('should publish head on network request', async () => {
-      const doc = await Document.create(initialContent, doctypeHandler, dispatcher, { owners })
+      const doc = await Document.create(initialContent, doctypeHandler, anchorService, dispatcher, { owners })
       expect(dispatcher.publishHead).toHaveBeenCalledTimes(1)
       expect(dispatcher.publishHead).toHaveBeenNthCalledWith(1, doc.id, doc.head)
 

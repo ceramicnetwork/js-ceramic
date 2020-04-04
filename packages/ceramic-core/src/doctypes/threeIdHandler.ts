@@ -18,20 +18,7 @@ class ThreeIdHandler extends DoctypeHandler {
     super(DOCTYPE)
   }
 
-  async applyRecord (record: any, cid: string, state?: DocState): Promise<DocState> {
-    let newState
-    if (record.doctype) {
-      newState = await this.applyGenesis(record)
-    } else if (record.proof) {
-      newState = await this.applyAnchor(record, state)
-    } else if (record.content || record.owners) {
-      newState = await this.applySigned(record, state)
-    }
-    newState.log.push(cid)
-    return newState
-  }
-
-  async applyGenesis (record: any): Promise<DocState> {
+  async applyGenesis (record: any, cid: string): Promise<DocState> {
     // TODO - verify genesis record
     return {
       doctype: DOCTYPE,
@@ -40,11 +27,11 @@ class ThreeIdHandler extends DoctypeHandler {
       nextContent: null,
       signature: SignatureStatus.GENESIS,
       anchored: 0,
-      log: []
+      log: [cid]
     }
   }
 
-  async applySigned (record: any, state: DocState): Promise<DocState> {
+  async applySigned (record: any, cid: string, state: DocState): Promise<DocState> {
     // reconstruct jwt
     const { header, signature } = record
     delete record.header
@@ -65,6 +52,7 @@ class ThreeIdHandler extends DoctypeHandler {
     } catch (e) {
       throw new Error('Invalid signature for signed record:' + e)
     }
+    state.log.push(cid)
     return {
       ...state,
       signature: SignatureStatus.SIGNED,
@@ -73,8 +61,8 @@ class ThreeIdHandler extends DoctypeHandler {
     }
   }
 
-  async applyAnchor (record: any, state: DocState): Promise<DocState> {
-    // TODO - verify anchor record
+  async applyAnchor (record: AnchorRecord, proof: AnchorProof, cid: string, state: DocState): Promise<DocState> {
+    state.log.push(cid)
     let content = state.content
     if (state.nextContent) {
       content = state.nextContent
@@ -83,7 +71,7 @@ class ThreeIdHandler extends DoctypeHandler {
     return {
       ...state,
       content,
-      anchored: record.proof.blockNumber
+      anchored: proof.blockNumber
     }
   }
 

@@ -111,7 +111,11 @@ describe('Ceramic integration', () => {
     expect(doc3.content).toEqual(doc1.content)
     expect(doc3.state).toEqual(doc1.state)
     const updatePromise = new Promise(resolve => {
-      doc3.on('change', resolve)
+      let c = 0 // wait for two updates
+      // the change update and the anchor update
+      doc3.on('change', () => {
+        if (++c > 1) resolve()
+      })
     })
     await doc1.change({ test: 'abcde' })
     await updatePromise

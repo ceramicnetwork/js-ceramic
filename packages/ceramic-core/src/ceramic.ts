@@ -1,6 +1,7 @@
 import type Ipfs from 'ipfs'
 import type DoctypeHandler from './doctypes/doctypeHandler'
 import Dispatcher from './dispatcher'
+import AnchorService from './anchor-service'
 import User from './user'
 import Document, { InitOpts } from './document'
 import ThreeIdHandler from './doctypes/threeIdHandler'
@@ -9,7 +10,6 @@ import TileHandler from './doctypes/tileHandler'
 
 // This is temporary until we handle DIDs and in particular 3IDs better
 const gen3IDgenesis = (pubkeys: any): any => {
-  console.log('aaaa', pubkeys)
   return {
     owners: [pubkeys.managementKey],
     content: {
@@ -47,6 +47,7 @@ class Ceramic {
     if (config.anchorServicePolicy) {
       // TODO load service policy tile for anchor service
     }
+    this._anchorService = new AnchorService(this.dispatcher)
     await Promise.all(promises)
     return null
   }
@@ -60,13 +61,15 @@ class Ceramic {
 
   async createDocument (content: any, doctype: string, opts: InitOpts = {}): Promise<Document> {
     const doctypeHandler = this.doctypeHandlers[doctype]
-    const doc = await Document.create(content, doctypeHandler, this.dispatcher, opts)
+    const doc = await Document.create(content, doctypeHandler, this._anchorService, this.dispatcher, opts)
     if (!this.docmap[doc.id]) this.docmap[doc.id] = doc
     return doc
   }
 
   async loadDocument (id: string, opts: InitOpts = {}): Promise<Document> {
-    if (!this.docmap[id]) this.docmap[id] = await Document.load(id, this.doctypeHandlers, this.dispatcher, opts)
+    if (!this.docmap[id]) {
+      this.docmap[id] = await Document.load(id, this.doctypeHandlers, this._anchorService, this.dispatcher, opts)
+    }
     return this.docmap[id]
   }
 

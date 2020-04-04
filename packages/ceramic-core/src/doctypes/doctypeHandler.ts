@@ -1,4 +1,4 @@
-import type { DocState } from '../document'
+import type { DocState, AnchorRecord, AnchorProof } from '../document'
 import type User from '../user'
 
 abstract class DoctypeHandler {
@@ -18,7 +18,11 @@ abstract class DoctypeHandler {
     return this._user
   }
 
-  abstract async applyRecord (record: any, cid: string, state?: DocState): Promise<DocState>;
+  abstract async applyGenesis (record: any, cid: string): Promise<DocState>;
+
+  abstract async applySigned (record: any, cid: string, state: DocState): Promise<DocState>;
+
+  abstract async applyAnchor (record: AnchorRecord, proof: AnchorProof, cid: string, state: DocState): Promise<DocState>;
 
   abstract async makeRecord (state: DocState, newContent: any): Promise<any>;
 

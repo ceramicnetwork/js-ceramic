@@ -1,4 +1,5 @@
 import type Dispatcher from './dispatcher'
+import type AnchorService from './anchor-service'
 import type DoctypeHandler from './doctypes/doctypeHandler'
 import { EventEmitter } from 'events'
 import PQueue from 'p-queue'
@@ -25,6 +26,20 @@ export interface InitOpts {
   skipWait?: boolean;
 }
 
+export interface AnchorRecord {
+  next: any; // should be CID type
+  proof: any; // should be CID type
+  path: string;
+}
+
+export interface AnchorProof {
+  chain: string;
+  blockNumber: number;
+  blockTimestamp: number;
+  txHash: string; // potentially a CID
+  root: any; // should be CID type
+}
+
 const deepCopy = (obj: any): any => JSON.parse(JSON.stringify(obj))
 
 const waitForChange = async (doc: Document): Promise<void> => {
@@ -45,7 +60,8 @@ class Document extends EventEmitter {
   private _applyQueue: PQueue
   private _genesisCid: string
   private _state: DocState
-  private _doctype: DoctypeHandler
+  private _doctypeHandler: DoctypeHandler
+  private _anchorService: AnchorService
 
   constructor (public id: string, public dispatcher: Dispatcher) {
     super()
@@ -54,10 +70,15 @@ class Document extends EventEmitter {
     this._genesisCid = split[2]
   }
 
-  async _init (doctypeHandlers: Record<string, DoctypeHandler>, opts: InitOpts): Promise<void> {
+  async _init (
+    doctypeHandlers: Record<string, DoctypeHandler>,
+    anchorService: AnchorService,
+    opts: InitOpts
+  ): Promise<void> {
     const record = await this.dispatcher.retrieveRecord(this._genesisCid)
-    this._doctype = doctypeHandlers[record.doctype]
-    this._state = await this._doctype.applyRecord(record, this._genesisCid)
+    this._doctypeHandler = doctypeHandlers[record.doctype]
+    this._anchorService = anchorService
+    this._state = await this._doctypeHandler.applyGenesis(record, this._genesisCid)
     this.dispatcher.on(`${this.id}_update`, this._handleHead.bind(this))
     this.dispatcher.on(`${this.id}_headreq`, this._publishHead.bind(this))
     this.dispatcher.register(this.id)
@@ -72,6 +93,7 @@ class Document extends EventEmitter {
   static async create (
     content: any,
     doctypeHandler: DoctypeHandler,
+    anchorService: AnchorService,
     dispatcher: Dispatcher,
     opts: InitOpts = {}
   ): Promise<Document> {
@@ -81,18 +103,19 @@ class Document extends EventEmitter {
     if (typeof opts.onlyGenesis === 'undefined') opts.onlyGenesis = false
     const doctypeHandlers: Record<string, DoctypeHandler> = {}
     doctypeHandlers[doctypeHandler.doctype] = doctypeHandler
-    return Document.load(id, doctypeHandlers, dispatcher, opts)
+    return Document.load(id, doctypeHandlers, anchorService, dispatcher, opts)
   }
 
   static async load (
     id: string,
     doctypeHandlers: Record<string, DoctypeHandler>,
+    anchorService: AnchorService,
     dispatcher: Dispatcher,
     opts: InitOpts = {}
   ): Promise<Document> {
     const doc = new Document(id, dispatcher)
     if (typeof opts.onlyGenesis === 'undefined') opts.onlyGenesis = true
-    await doc._init(doctypeHandlers, opts)
+    await doc._init(doctypeHandlers, anchorService, opts)
     return doc
   }
 
@@ -156,15 +179,15 @@ class Document extends EventEmitter {
       const canonicalLog = this._state.log.slice() // copy log
       const localLog = canonicalLog.splice(conflictIdx)
       // Compute state up till conflictIdx
-      let state = await this._applyLogToState(canonicalLog)
+      let state: DocState = await this._applyLogToState(canonicalLog)
       // Compute next transition in parallel
       const localState = await this._applyLogToState(localLog, deepCopy(state), true)
       const remoteState = await this._applyLogToState(log, deepCopy(state), true)
-      if (remoteState.anchored < localState.anchored) {
+      if (remoteState.anchored !== 0 && remoteState.anchored < localState.anchored) {
         // if the remote state is anchored before the local,
         // apply the remote log to our local state. Otherwise
         // keep present state
-        state = await this._applyLogToState(log, state)
+        state = await this._applyLogToState(log, deepCopy(state))
         this._state = state
         modified = true
       }
@@ -179,11 +202,27 @@ class Document extends EventEmitter {
       const cid = entry.value[1]
       const record = await this.dispatcher.retrieveRecord(cid)
       // TODO - should catch potential thrown error here
-      state = await this._doctype.applyRecord(record, cid, state)
+      if (!record.next) {
+        state = await this._doctypeHandler.applyGenesis(record, cid)
+      } else if (record.proof) {
+        const proof = await this._verifyAnchorRecord(record)
+        state = await this._doctypeHandler.applyAnchor(record, proof, cid, state)
+      } else {
+        state = await this._doctypeHandler.applySigned(record, cid, state)
+      }
       if (breakOnAnchor && state.anchored) return state
       entry = itr.next()
     }
     return state
+  }
+
+  async _verifyAnchorRecord (record: AnchorRecord): Promise<AnchorProof> {
+    //const nextRecordA = await this.dispatcher.retrieveRecord(record.next)
+    //const nextRecordB = await this.dispatcher.retrieveRecord(record.proof + '/root' + record.path)
+    // assert A == B
+    const proof: AnchorProof = await this.dispatcher.retrieveRecord(record.proof)
+    await this._anchorService.validateChainInclusion(proof)
+    return proof
   }
 
   async _publishHead (): Promise<void> {
@@ -191,26 +230,20 @@ class Document extends EventEmitter {
   }
 
   async change (newContent: any): Promise<boolean> {
-    const record = await this._doctype.makeRecord(this._state, newContent)
+    const record = await this._doctypeHandler.makeRecord(this._state, newContent)
     const cid = (await this.dispatcher.storeRecord(record)).toString()
-    this._state = await this._doctype.applyRecord(record, cid, this._state)
+    this._state = await this._doctypeHandler.applySigned(record, cid, this._state)
     await this.anchor()
     this._publishHead()
     return true
   }
 
-  async anchor (): Promise<boolean> {
-    // fake anchor
-    const proof = {
-      chain: 'ethmainnet',
-      blockNumber: Date.now(),
-      txHash: 'eth-cid',
-      root: 'cid'
-    }
-    const record = { proof, path: 'ipld path for witness', next: { '/': this.head } }
-    const cid = (await this.dispatcher.storeRecord(record)).toString()
-    this._state = await this._doctype.applyRecord(record, cid, this._state)
-    return true
+  async anchor (): Promise<void> {
+    this._anchorService.on(this.id, async (cid): Promise<void> => {
+      await this._handleHead(cid)
+      this._publishHead()
+    })
+    await this._anchorService.requestAnchor(this.id, this.head)
   }
 
   toString (): string {
