@@ -37,6 +37,8 @@ class Dispatcher extends EventEmitter {
   }
 
   async retrieveRecord (cid: string): Promise<any> {
+    // cache should be less needed once this issue is fixed:
+    // https://github.com/ipfs/js-ipfs-bitswap/pull/214
     if (!this._recordCache[cid]) this._recordCache[cid] = (await this._ipfs.dag.get(cid)).value
     return this._recordCache[cid]
   }

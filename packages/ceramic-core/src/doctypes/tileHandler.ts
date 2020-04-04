@@ -25,20 +25,7 @@ class TileHandler extends DoctypeHandler {
     })
   }
 
-  async applyRecord (record: any, cid: string, state?: DocState): Promise<DocState> {
-    let newState
-    if (record.doctype) {
-      newState = await this.applyGenesis(record)
-    } else if (record.proof) {
-      newState = await this.applyAnchor(record, state)
-    } else if (record.content || record.owners) {
-      newState = await this.applySigned(record, state)
-    }
-    newState.log.push(cid)
-    return newState
-  }
-
-  async applyGenesis (record: any): Promise<DocState> {
+  async applyGenesis (record: any, cid: string): Promise<DocState> {
     await this._verifyRecordSignature(record)
     // TODO - verify genesis record
     return {
@@ -48,12 +35,13 @@ class TileHandler extends DoctypeHandler {
       nextContent: null,
       signature: SignatureStatus.SIGNED,
       anchored: 0,
-      log: []
+      log: [cid]
     }
   }
 
-  async applySigned (record: any, state: DocState): Promise<DocState> {
+  async applySigned (record: any, cid: string, state: DocState): Promise<DocState> {
     await this._verifyRecordSignature(record)
+    state.log.push(cid)
     return {
       ...state,
       signature: SignatureStatus.SIGNED,
@@ -84,8 +72,8 @@ class TileHandler extends DoctypeHandler {
     }
   }
 
-  async applyAnchor (record: any, state: DocState): Promise<DocState> {
-    // TODO - verify anchor record
+  async applyAnchor (record: AnchorRecord, proof: AnchorProof, cid: string, state: DocState): Promise<DocState> {
+    state.log.push(cid)
     let content = state.content
     if (state.nextContent) {
       content = state.nextContent
@@ -94,7 +82,7 @@ class TileHandler extends DoctypeHandler {
     return {
       ...state,
       content,
-      anchored: record.proof.blockNumber
+      anchored: proof.blockNumber
     }
   }
 
