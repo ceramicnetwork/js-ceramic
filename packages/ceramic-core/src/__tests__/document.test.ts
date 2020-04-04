@@ -37,7 +37,7 @@ jest.mock('did-jwt', () => ({
   verifyJWT: (): any => 'verified'
 }))
 
-const anchorUpdate = (doc) => new Promise(resolve => doc.on('change', resolve))
+const anchorUpdate = (doc): Promise<void> => new Promise(resolve => doc.on('change', resolve))
 
 
 describe('Document', () => {

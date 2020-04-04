@@ -11,13 +11,24 @@ Monorepo containing the Typescript implementation of the Ceramic protocol.
 This implementation of the Ceramic protocol is only partial and is missing multiple critical components. As development moves forward this readme will be updated with the latest project status.
 
 **Missing components:**
-* Signature records - currently signatures are not implemented
 * Anchor records - currently anchor records are mocked
+
+## Install
+This project uses npm and lerna to manage packages and dependencies. To install dependencies for all packages in this repo:
+```
+$ npm run bootstrap
+```
+
+## Running tests
 
 ## Project Structure
 
 This repo is made up of several different packages.
 
-* `/packages/ceramic-core` - Implementation of the core protocol
-* `/packages/ceramic-cli` - An implementation of the cli and http daemon
+| Package | Current Version | Description |
+| -- | -- | -- |
+| @ceramicnetwork/ceramic-core | [![npm](https://img.shields.io/npm/v/@ceramicnetwork/ceramic-core)](https://www.npmjs.com/package/@ceramicnetwork/ceramic-core) | Ceramic protocol implementation |
+| @ceramicnetwork/ceramic-cli | [![npm](https://img.shields.io/npm/v/@ceramicnetwork/ceramic-cli)](https://www.npmjs.com/package/@ceramicnetwork/ceramic-cli) | Ceramic CLI and http daemon |
+
+
 
