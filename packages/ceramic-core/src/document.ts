@@ -127,6 +127,10 @@ class Document extends EventEmitter {
     return this._state
   }
 
+  get doctype (): string {
+    return this._doctypeHandler.doctype
+  }
+
   get head (): string {
     const log = this._state.log
     return log[log.length - 1]

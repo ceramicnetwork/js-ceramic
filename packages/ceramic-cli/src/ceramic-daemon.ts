@@ -29,7 +29,7 @@ class CeramicDaemon {
     server.keepAliveTimeout = 60 * 1000
   }
 
-  static async create (ipfsHost: string = IPFS_HOST): Promise<void> {
+  static async create (ipfsHost: string = IPFS_HOST): Promise<CeramicDaemon> {
     const ipfs = ipfsClient(ipfsHost)
     const ceramic = await Ceramic.create(ipfs)
     const idWallet = new IdentityWallet(async () => true, { seed })

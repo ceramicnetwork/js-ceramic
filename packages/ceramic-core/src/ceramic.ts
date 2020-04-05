@@ -27,13 +27,14 @@ interface CeramicConfig {
 }
 
 class Ceramic {
-  private docmap: Record<string, Document>
-  private doctypeHandlers: Record<string, DoctypeHandler>;
+  private _docmap: Record<string, Document>
+  private _doctypeHandlers: Record<string, DoctypeHandler>
+  private _anchorService: AnchorService
   public user: User
 
   constructor (public dispatcher: Dispatcher) {
-    this.docmap = {}
-    this.doctypeHandlers = {
+    this._docmap = {}
+    this._doctypeHandlers = {
       '3id': new ThreeIdHandler(),
       'tile': new TileHandler(this),
     }
@@ -60,24 +61,24 @@ class Ceramic {
   }
 
   async createDocument (content: any, doctype: string, opts: InitOpts = {}): Promise<Document> {
-    const doctypeHandler = this.doctypeHandlers[doctype]
+    const doctypeHandler = this._doctypeHandlers[doctype]
     const doc = await Document.create(content, doctypeHandler, this._anchorService, this.dispatcher, opts)
-    if (!this.docmap[doc.id]) this.docmap[doc.id] = doc
+    if (!this._docmap[doc.id]) this._docmap[doc.id] = doc
     return doc
   }
 
   async loadDocument (id: string, opts: InitOpts = {}): Promise<Document> {
-    if (!this.docmap[id]) {
-      this.docmap[id] = await Document.load(id, this.doctypeHandlers, this._anchorService, this.dispatcher, opts)
+    if (!this._docmap[id]) {
+      this._docmap[id] = await Document.load(id, this._doctypeHandlers, this._anchorService, this.dispatcher, opts)
     }
-    return this.docmap[id]
+    return this._docmap[id]
   }
 
   async setDIDProvider (provider: any): Promise<void> {
     this.user = new User(provider)
     await this.user.auth()
-    for (const doctype in this.doctypeHandlers) {
-      this.doctypeHandlers[doctype].user = this.user
+    for (const doctype in this._doctypeHandlers) {
+      this._doctypeHandlers[doctype].user = this.user
     }
     if (!this.user.DID) {
       // patch create did document for now

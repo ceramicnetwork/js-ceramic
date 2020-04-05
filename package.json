@@ -4,7 +4,7 @@
   "scripts": {
     "bootstrap": "npm install && lerna bootstrap --hoist",
     "test": "lerna run test",
-    "build": "learna run build",
+    "build": "lerna run build",
     "prepublishOnly": "npm run build",
     "lint": "lerna run lint",
     "clean": "rm -rf ./lib"

@@ -1,5 +1,5 @@
 import type Ceramic from '../ceramic'
-import { DocState, SignatureStatus } from '../document'
+import { DocState, SignatureStatus, AnchorRecord, AnchorProof } from '../document'
 import DoctypeHandler from './doctypeHandler'
 import ThreeIdResolver from '../3id-did-resolver'
 import { Resolver } from 'did-resolver'

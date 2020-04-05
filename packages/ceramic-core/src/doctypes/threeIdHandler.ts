@@ -1,5 +1,5 @@
 import type { DIDDocument } from 'did-resolver'
-import { DocState, SignatureStatus } from '../document'
+import { DocState, SignatureStatus, AnchorRecord, AnchorProof } from '../document'
 import DoctypeHandler from './doctypeHandler'
 import { wrapDocument } from '../3id-did-resolver'
 import jsonpatch from 'fast-json-patch'
