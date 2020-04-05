@@ -1,7 +1,7 @@
 import type Ceramic from '../ceramic'
 import { DocState, SignatureStatus, AnchorRecord, AnchorProof } from '../document'
 import DoctypeHandler from './doctypeHandler'
-import ThreeIdResolver from '../3id-did-resolver'
+import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import { Resolver } from 'did-resolver'
 import jsonpatch from 'fast-json-patch'
 import { verifyJWT } from 'did-jwt'

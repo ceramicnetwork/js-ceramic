@@ -28,6 +28,7 @@
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
+    "@ceramicnetwork/3id-did-resolver": "^0.0.1",
     "3id-resolver": "0.0.6",
     "did-jwt": "^4.0.0",
     "did-resolver": "^1.1.0",

@@ -2,7 +2,7 @@ import ThreeIdResolver from '../index'
 import { Resolver } from 'did-resolver'
 
 const ceramicMock = {
-  loadDocument: async (docId: string): Promise<any> => ({
+  loadDocument: async (): Promise<any> => ({
     content: {
       publicKeys: {
         signing: 'fake signing key',

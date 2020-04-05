@@ -1,5 +1,5 @@
 import CeramicDaemon from './ceramic-daemon'
-import CeramicClient from './ceramic-client'
+import CeramicClient from '@ceramicnetwork/ceramic-http-client'
 import program from 'commander'
 
 
