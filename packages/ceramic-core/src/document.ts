@@ -224,7 +224,7 @@ class Document extends EventEmitter {
     //const nextRecordA = await this.dispatcher.retrieveRecord(record.next)
     //const nextRecordB = await this.dispatcher.retrieveRecord(record.proof + '/root' + record.path)
     // assert A == B
-    const proof: AnchorProof = await this.dispatcher.retrieveRecord(record.proof)
+    const proof: AnchorProof = await this.dispatcher.retrieveRecord(record.proof['/'])
     await this._anchorService.validateChainInclusion(proof)
     return proof
   }
