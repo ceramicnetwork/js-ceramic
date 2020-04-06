@@ -29,7 +29,7 @@ const RECORDS = {
       next: { '/': 'cid1' }
     }
   },
-  r2: { proof: { blockNumber: 123456 } }
+  r2: { record: {}, proof: { blockNumber: 123456 } }
 }
 
 describe('AccountLinkHandler', () => {
@@ -55,13 +55,13 @@ describe('AccountLinkHandler', () => {
   })
 
   it('applies genesis record correctly', async () => {
-    const state = await handler.applyRecord(RECORDS.genesis, 'cid1')
+    const state = await handler.applyGenesis(RECORDS.genesis, 'cid1')
     
     expect(state).toMatchSnapshot()
   })
 
   it('makes signed record correctly', async () => {
-    const state = await handler.applyRecord(RECORDS.genesis, 'cid1')
+    const state = await handler.applyGenesis(RECORDS.genesis, 'cid1')
     
     const record = await handler.makeRecord(state, RECORDS.r1.desiredContent)
     
@@ -69,32 +69,32 @@ describe('AccountLinkHandler', () => {
   })
 
   it('applies signed record correctly', async () => {
-    let state = await handler.applyRecord(RECORDS.genesis, 'cid1')
+    let state = await handler.applyGenesis(RECORDS.genesis, 'cid1')
     
-    state = await handler.applyRecord(RECORDS.r1.record, 'cid2', state)
+    state = await handler.applySigned(RECORDS.r1.record, 'cid2', state)
     
     expect(state).toMatchSnapshot()
   })
 
   it('throws an error of the proof is invalid', async () => {
     validateLink.mockResolvedValue(undefined)
-    const state = await handler.applyRecord(RECORDS.genesis, 'cid1')
+    const state = await handler.applyGenesis(RECORDS.genesis, 'cid1')
     
-    await expect(handler.applyRecord(RECORDS.r1.record, 'cid2', state)).rejects.toThrow(/Invalid proof/)
+    await expect(handler.applySigned(RECORDS.r1.record, 'cid2', state)).rejects.toThrow(/Invalid proof/)
   })
 
   it('throws an error of the proof doesn\'t match the owner', async () => {
-    const badAddressRecord = cloneDeep(RECORDS.r1.record.content)
-    badAddressRecord.address = '0xffffffffffffffffffffffffffffffffffffffff'
-    const state = await handler.applyRecord(RECORDS.genesis, 'cid1')
+    const badAddressRecord = cloneDeep(RECORDS.r1.record)
+    badAddressRecord.content.address = '0xffffffffffffffffffffffffffffffffffffffff'
+    const state = await handler.applyGenesis(RECORDS.genesis, 'cid1')
 
-    expect(handler.applyRecord(badAddressRecord, 'cid2', state)).rejects.toThrow(/Address doesn't match/)
+    await expect(handler.applySigned(badAddressRecord, 'cid2', state)).rejects.toThrow(/Address doesn't match/)
   })
 
   it('applies anchor record correctly', async () => {
-    let state = await handler.applyRecord(RECORDS.genesis, 'cid1')
-    state = await handler.applyRecord(RECORDS.r1.record, 'cid2', state)
-    state = await handler.applyRecord(RECORDS.r2, 'cid3', state)
+    let state = await handler.applyGenesis(RECORDS.genesis, 'cid1')
+    state = await handler.applySigned(RECORDS.r1.record, 'cid2', state)
+    state = await handler.applyAnchor(RECORDS.r2.record, RECORDS.r2.proof, 'cid3', state)
     expect(state).toMatchSnapshot()
   })
 })

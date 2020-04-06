@@ -3,6 +3,7 @@ import type AnchorService from './anchor-service'
 import type DoctypeHandler from './doctypes/doctypeHandler'
 import { EventEmitter } from 'events'
 import PQueue from 'p-queue'
+import cloneDeep from 'lodash.clonedeep'
 
 export enum SignatureStatus {
   GENESIS,
@@ -39,8 +40,6 @@ export interface AnchorProof {
   txHash: string; // potentially a CID
   root: any; // should be CID type
 }
-
-const deepCopy = (obj: any): any => JSON.parse(JSON.stringify(obj))
 
 const waitForChange = async (doc: Document): Promise<void> => {
   // add response timeout for network change
@@ -174,7 +173,7 @@ class Document extends EventEmitter {
     const record = await this.dispatcher.retrieveRecord(cid)
     if (record.next['/'].toString() === this.head) {
       // the new log starts where the previous one ended
-      this._state = await this._applyLogToState(log, deepCopy(this._state))
+      this._state = await this._applyLogToState(log, cloneDeep(this._state))
       modified = true
     } else {
       // we have a conflict since next is in the log of the
@@ -185,13 +184,13 @@ class Document extends EventEmitter {
       // Compute state up till conflictIdx
       let state: DocState = await this._applyLogToState(canonicalLog)
       // Compute next transition in parallel
-      const localState = await this._applyLogToState(localLog, deepCopy(state), true)
-      const remoteState = await this._applyLogToState(log, deepCopy(state), true)
+      const localState = await this._applyLogToState(localLog, cloneDeep(state), true)
+      const remoteState = await this._applyLogToState(log, cloneDeep(state), true)
       if (remoteState.anchored !== 0 && remoteState.anchored < localState.anchored) {
         // if the remote state is anchored before the local,
         // apply the remote log to our local state. Otherwise
         // keep present state
-        state = await this._applyLogToState(log, deepCopy(state))
+        state = await this._applyLogToState(log, cloneDeep(state))
         this._state = state
         modified = true
       }
