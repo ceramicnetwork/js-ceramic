@@ -1,6 +1,7 @@
 import type Dispatcher from './dispatcher'
 import type AnchorService from './anchor-service'
 import type DoctypeHandler from './doctypes/doctypeHandler'
+import CID from 'cids'
 import { EventEmitter } from 'events'
 import PQueue from 'p-queue'
 import cloneDeep from 'lodash.clonedeep'
@@ -18,7 +19,7 @@ export interface DocState {
   nextContent?: any;
   signature: SignatureStatus;
   anchored: number;
-  log: Array<string>;
+  log: Array<CID>;
 }
 
 export interface InitOpts {
@@ -28,8 +29,8 @@ export interface InitOpts {
 }
 
 export interface AnchorRecord {
-  prev: any; // should be CID type
-  proof: any; // should be CID type
+  prev: CID; // should be CID type
+  proof: CID; // should be CID type
   path: string;
 }
 
@@ -38,7 +39,7 @@ export interface AnchorProof {
   blockNumber: number;
   blockTimestamp: number;
   txHash: string; // potentially a CID
-  root: any; // should be CID type
+  root: CID;
 }
 
 const waitForChange = async (doc: Document): Promise<void> => {
@@ -57,7 +58,7 @@ const waitForChange = async (doc: Document): Promise<void> => {
 
 class Document extends EventEmitter {
   private _applyQueue: PQueue
-  private _genesisCid: string
+  private _genesisCid: CID
   private _state: DocState
   private _doctypeHandler: DoctypeHandler
   private _anchorService: AnchorService
@@ -66,7 +67,7 @@ class Document extends EventEmitter {
     super()
     this._applyQueue = new PQueue({concurrency: 1})
     const split = this.id.split('/')
-    this._genesisCid = split[2]
+    this._genesisCid = new CID(split[2])
   }
 
   async _init (
@@ -130,12 +131,12 @@ class Document extends EventEmitter {
     return this._doctypeHandler.doctype
   }
 
-  get head (): string {
+  get head (): CID {
     const log = this._state.log
     return log[log.length - 1]
   }
 
-  async _handleHead (cid: string): Promise<void> {
+  async _handleHead (cid: CID): Promise<void> {
     const log = await this._fetchLog(cid)
     if (log.length) {
       // create a queue in case we get multiple conflicting records at once
@@ -149,36 +150,38 @@ class Document extends EventEmitter {
     }
   }
 
-  async _fetchLog (cid: string, log: Array<string> = []): Promise<Array<string>> {
-    if (this._state.log.includes(cid)) { // already processed
+  async _fetchLog (cid: CID, log: Array<CID> = []): Promise<Array<CID>> {
+    if (this._state.log.some(x => x.equals(cid))) { // already processed
       return []
     }
     const record = await this.dispatcher.retrieveRecord(cid)
-    const prevCid = record.prev ? record.prev['/'].toString() : null
+    //const prevCid: CID = record.prev ? record.prev['/'].toString() : null
+    const prevCid: CID = record.prev
     if (!prevCid) { // this is a fake log
       return []
     }
     log.unshift(cid)
-    if (this._state.log.includes(prevCid)) {
+    if (this._state.log.some(x => x.equals(prevCid))) {
       // we found the connection to the canonical log
       return log
     }
     return this._fetchLog(prevCid, log)
   }
 
-  async _applyLog (log: Array<string>): Promise<boolean> {
+  async _applyLog (log: Array<CID>): Promise<boolean> {
     let modified = false
-    if (log[log.length - 1] === this.head) return // log already applied
+    if (log[log.length - 1].equals(this.head)) return // log already applied
     const cid = log[0]
     const record = await this.dispatcher.retrieveRecord(cid)
-    if (record.prev['/'].toString() === this.head) {
+    //if (record.prev['/'].toString() === this.head) {
+    if (record.prev.equals(this.head)) {
       // the new log starts where the previous one ended
       this._state = await this._applyLogToState(log, cloneDeep(this._state))
       modified = true
     } else {
       // we have a conflict since prev is in the log of the
       // local state, but isn't the head
-      const conflictIdx = this._state.log.indexOf(record.prev['/'].toString()) + 1
+      const conflictIdx = this._state.log.findIndex(x => x.equals(record.prev)) + 1
       const canonicalLog = this._state.log.slice() // copy log
       const localLog = canonicalLog.splice(conflictIdx)
       // Compute state up till conflictIdx
@@ -198,7 +201,7 @@ class Document extends EventEmitter {
     return modified
   }
 
-  async _applyLogToState (log: Array<string>, state?: DocState, breakOnAnchor?: boolean): Promise<DocState> {
+  async _applyLogToState (log: Array<CID>, state?: DocState, breakOnAnchor?: boolean): Promise<DocState> {
     const itr = log.entries()
     let entry = itr.next()
     while(!entry.done) {
@@ -223,7 +226,7 @@ class Document extends EventEmitter {
     //const prevRecordA = await this.dispatcher.retrieveRecord(record.prev)
     //const prevRecordB = await this.dispatcher.retrieveRecord(record.proof + '/root' + record.path)
     // assert A == B
-    const proof: AnchorProof = await this.dispatcher.retrieveRecord(record.proof['/'])
+    const proof: AnchorProof = await this.dispatcher.retrieveRecord(record.proof)
     await this._anchorService.validateChainInclusion(proof)
     return proof
   }
@@ -234,7 +237,7 @@ class Document extends EventEmitter {
 
   async change (newContent: any): Promise<boolean> {
     const record = await this._doctypeHandler.makeRecord(this._state, newContent)
-    const cid = (await this.dispatcher.storeRecord(record)).toString()
+    const cid = await this.dispatcher.storeRecord(record)
     this._state = await this._doctypeHandler.applySigned(record, cid, this._state)
     await this.anchor()
     this._publishHead()

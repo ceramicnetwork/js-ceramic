@@ -1,10 +1,11 @@
+import type CID from 'cids'
 import DoctypeHandler from './doctypeHandler'
 import { DocState, SignatureStatus, AnchorProof } from '../document'
 import { validateLink } from '3id-blockchain-utils'
 
 const DOCTYPE = 'account-link'
 
-function head (log: Array<string>): string {
+function head (log: Array<CID>): CID {
   return log[log.length - 1]
 }
 
@@ -14,7 +15,7 @@ class AccountLinkHandler extends DoctypeHandler {
   }
 
   async makeRecord (state: DocState, proof: any): Promise<any> {
-    const record = { content: proof, next: { '/': head(state.log) } }
+    const record = { content: proof, prev: head(state.log) }
     return record
   }
 
@@ -31,7 +32,7 @@ class AccountLinkHandler extends DoctypeHandler {
     }
   }
 
-  async applyGenesis (record: any, cid: string): Promise<DocState> {
+  async applyGenesis (record: any, cid: CID): Promise<DocState> {
     // TODO - verify genesis record
     return {
       doctype: DOCTYPE,
@@ -44,7 +45,7 @@ class AccountLinkHandler extends DoctypeHandler {
     }
   }
 
-  async applySigned (record: any, cid: string, state: DocState): Promise<DocState> {
+  async applySigned (record: any, cid: CID, state: DocState): Promise<DocState> {
     const validProof = await validateLink(record.content)
     if (!validProof) throw new Error('Invalid proof for signed record')
     // TODO: handle CAIP-10 addresses in proof generation of 3id-blockchain-utils
@@ -63,7 +64,7 @@ class AccountLinkHandler extends DoctypeHandler {
     }
   }
 
-  async applyAnchor (record: any, proof: AnchorProof, cid: string, state: DocState): Promise<DocState> {
+  async applyAnchor (record: any, proof: AnchorProof, cid: CID, state: DocState): Promise<DocState> {
     state.log.push(cid)
     let content = state.content
     if (state.nextContent) {

@@ -3,8 +3,21 @@ import AnchorService from '../anchor-service'
 import ThreeIdHandler from '../doctypes/threeIdHandler'
 
 jest.mock('../dispatcher', () => {
-  return (): any => {
-    const recs: Array<string> = []
+  const CID = require('cids') // eslint-disable-line @typescript-eslint/no-var-requires
+  const { sha256 } = require('js-sha256') // eslint-disable-line @typescript-eslint/no-var-requires
+  const hash = (data: string): CID => new CID(1, 'sha2-256', Buffer.from('1220' + sha256(data), 'hex'))
+  const serializeCIDs = (rec: any): any => {
+    if (rec.prev) rec.prev = { '/': rec.prev.toString() }
+    if (rec.proof) rec.proof = { '/': rec.proof.toString() }
+    return rec
+  }
+  const deserializeCIDs = (rec: any): any => {
+    if (rec.prev) rec.prev = new CID(rec.prev['/'])
+    if (rec.proof) rec.proof = new CID(rec.proof['/'])
+    return rec
+  }
+  return (gossip: boolean): any => {
+    const recs: Record<string, string> = {}
     const listeners: Record<string, Array<(cid: string) => void>> = {}
     return {
       register: jest.fn(),
@@ -14,17 +27,19 @@ jest.mock('../dispatcher', () => {
       }),
       storeRecord: jest.fn((rec) => {
         // stringify as a way of doing deep copy
-        recs.push(JSON.stringify(rec))
-        return '' + (recs.length - 1)
+        const serialized = JSON.stringify(serializeCIDs(rec))
+        const cid = hash(serialized)
+        recs[cid.toString()] = serialized
+        return cid
       }),
       publishHead: jest.fn((id, head) => {
-        listeners[id+'_update'].map(fn => fn(head))
+        if (gossip) listeners[id+'_update'].map(fn => fn(head))
       }),
       _requestHead: (id): void => {
-        listeners[id+'_headreq'].map(fn => fn())
+        if (gossip) listeners[id+'_headreq'].map(fn => fn())
       },
       retrieveRecord: jest.fn(cid => {
-        return JSON.parse(recs[parseInt(cid)])
+        return deserializeCIDs(JSON.parse(recs[cid.toString()]))
       })
     }
   }
@@ -49,7 +64,7 @@ describe('Document', () => {
     let dispatcher, doctypeHandler, doctypeHandlers, anchorService
 
     beforeEach(() => {
-      dispatcher = Dispatcher()
+      dispatcher = Dispatcher(false)
       anchorService = new AnchorService(dispatcher)
       doctypeHandler = new ThreeIdHandler()
       doctypeHandler.user = new User()
@@ -75,8 +90,6 @@ describe('Document', () => {
       expect(doc.id).toEqual(docId)
       expect(doc.content).toEqual(initialContent)
       expect(doc.state.anchored).toEqual(0)
-      await anchorUpdate(doc)
-      expect(doc.state.anchored).toBeGreaterThan(0)
     })
 
     it('handles new head correctly', async () => {
@@ -110,8 +123,8 @@ describe('Document', () => {
       const fakeState = { asdf: 2342 }
       const doc1 = await Document.create(initialContent, doctypeHandler, anchorService, dispatcher, { owners })
       const docId = doc1.id
-      const headPreUpdate = doc1.head
       await anchorUpdate(doc1)
+      const headPreUpdate = doc1.head
       await doc1.change(newContent)
       await anchorUpdate(doc1)
       expect(doc1.content).toEqual(newContent)
@@ -120,7 +133,7 @@ describe('Document', () => {
       const doc2 = await Document.load(docId, doctypeHandlers, anchorService, dispatcher, { skipWait: true })
       await doc2._handleHead(headPreUpdate)
       // add short wait to get different anchor time
-      // sometime the tests are damn fast
+      // sometime the tests are very fast
       await new Promise(resolve => setTimeout(resolve, 1))
       // TODO - better mock for anchors
       await doc2.change(fakeState)
@@ -146,7 +159,7 @@ describe('Document', () => {
     let dispatcher, doctypeHandler, doctypeHandlers, anchorService
 
     beforeEach(() => {
-      dispatcher = Dispatcher()
+      dispatcher = Dispatcher(true)
       anchorService = new AnchorService(dispatcher)
       doctypeHandler = new ThreeIdHandler()
       doctypeHandler.user = new User()
