@@ -1,5 +1,5 @@
 import DoctypeHandler from './doctypeHandler'
-import { DocState, SignatureStatus, AnchorRecord, AnchorProof } from '../document'
+import { DocState, SignatureStatus, AnchorProof } from '../document'
 import { validateLink } from '3id-blockchain-utils'
 
 const DOCTYPE = 'account-link'
