@@ -1,5 +1,7 @@
 import Dispatcher, { MsgType } from '../dispatcher'
+import CID from 'cids'
 
+const FAKE_CID = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
 const ipfs = {
   pubsub: {
     subscribe: jest.fn(),
@@ -7,7 +9,7 @@ const ipfs = {
     publish: jest.fn()
   },
   dag: {
-    put: jest.fn(() => 'hash'),
+    put: jest.fn(() => FAKE_CID),
     get: jest.fn(() => ({ value: 'data' }))
   },
   id: (): any => ({ id: 'ipfsid' })
@@ -40,12 +42,12 @@ describe('Dispatcher', () => {
 
   it('store record correctly', async () => {
     const disp = new Dispatcher(ipfs)
-    expect(await disp.storeRecord('data')).toEqual('hash')
+    expect(await disp.storeRecord('data')).toEqual(FAKE_CID)
   })
 
   it('retrieves record correctly', async () => {
     const disp = new Dispatcher(ipfs)
-    expect(await disp.retrieveRecord('hash')).toEqual('data')
+    expect(await disp.retrieveRecord(FAKE_CID)).toEqual('data')
   })
 
   it('publishes head correctly', async () => {
@@ -67,8 +69,8 @@ describe('Dispatcher', () => {
     // only emits an event
     await headreqPromise
 
-    disp.handleMessage({ data: JSON.stringify({ typ: MsgType.UPDATE, id, cid: 'hash' }) })
-    expect(await updatePromise).toEqual('hash')
+    disp.handleMessage({ data: JSON.stringify({ typ: MsgType.UPDATE, id, cid: FAKE_CID.toString() }) })
+    expect(await updatePromise).toEqual(FAKE_CID)
   })
 
   it('closes correctly', async () => {

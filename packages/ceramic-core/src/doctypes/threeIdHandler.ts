@@ -1,4 +1,5 @@
 import type { DIDDocument } from 'did-resolver'
+import type CID from 'cids'
 import { DocState, SignatureStatus, AnchorRecord, AnchorProof } from '../document'
 import DoctypeHandler from './doctypeHandler'
 import { wrapDocument } from '@ceramicnetwork/3id-did-resolver'
@@ -8,7 +9,7 @@ import { verifyJWT } from 'did-jwt'
 const DOCTYPE = '3id'
 
 
-function head (log: Array<string>): string {
+function head (log: Array<CID>): CID {
   return log[log.length - 1]
 }
 
@@ -18,7 +19,7 @@ class ThreeIdHandler extends DoctypeHandler {
     super(DOCTYPE)
   }
 
-  async applyGenesis (record: any, cid: string): Promise<DocState> {
+  async applyGenesis (record: any, cid: CID): Promise<DocState> {
     // TODO - verify genesis record
     return {
       doctype: DOCTYPE,
@@ -31,7 +32,7 @@ class ThreeIdHandler extends DoctypeHandler {
     }
   }
 
-  async applySigned (record: any, cid: string, state: DocState): Promise<DocState> {
+  async applySigned (record: any, cid: CID, state: DocState): Promise<DocState> {
     // reconstruct jwt
     const { header, signature } = record
     delete record.header
@@ -40,7 +41,7 @@ class ThreeIdHandler extends DoctypeHandler {
       doctype: record.doctype,
       owners: record.owners,
       content: record.content,
-      prev: record.prev,
+      prev: { '/': record.prev.toString() },
       iss: record.iss
     })).toString('base64')
     if (payload.endsWith('=')) payload = payload.slice(0, -1)
@@ -61,7 +62,7 @@ class ThreeIdHandler extends DoctypeHandler {
     }
   }
 
-  async applyAnchor (record: AnchorRecord, proof: AnchorProof, cid: string, state: DocState): Promise<DocState> {
+  async applyAnchor (record: AnchorRecord, proof: AnchorProof, cid: CID, state: DocState): Promise<DocState> {
     state.log.push(cid)
     let content = state.content
     if (state.nextContent) {
@@ -78,11 +79,15 @@ class ThreeIdHandler extends DoctypeHandler {
   async makeRecord (state: DocState, newContent: any): Promise<any> {
     if (!this.user) throw new Error('No user authenticated')
     const patch = jsonpatch.compare(state.content, newContent)
-    const record: any = { content: patch, prev: { '/': head(state.log) } }
+    const record: any = { content: patch, prev: head(state.log) }
     // TODO - use the dag-jose library for properly encoded signed records
     record.iss = this.user.DID
+    // convert CID to string for signing
+    const tmpCID = record.prev
+    record.prev = { '/': tmpCID.toString() }
     const jwt = await this.user.sign(record, { useMgmt: true})
     const [header, payload, signature] = jwt.split('.') // eslint-disable-line @typescript-eslint/no-unused-vars
+    record.prev = tmpCID
     return { ...record, header, signature }
   }
 

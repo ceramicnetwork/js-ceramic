@@ -1,6 +1,7 @@
 import AccountLinkHandler from '../accountLinkHandler'
 
 import cloneDeep from 'lodash.clonedeep'
+import CID from 'cids'
 
 jest.mock('3id-blockchain-utils', () => ({
   validateLink: jest.fn()
@@ -8,6 +9,9 @@ jest.mock('3id-blockchain-utils', () => ({
 
 import { validateLink } from '3id-blockchain-utils'
 
+const FAKE_CID_1 = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
+const FAKE_CID_2 = new CID('bafybeig6xv5nwphfmvcnektpnojts44jqcuam7bmye2pb54adnrtccjlsu')
+const FAKE_CID_3 = new CID('bafybeig6xv5nwphfmvcnektpnojts55jqcuam7bmye2pb54adnrtccjlsu')
 const RECORDS = {
   genesis: { doctype: 'account-link', owners: [ '0x25954ef14cebbc9af3d71132489a9cfe87043f20@eip155:1' ] },
   r1: {
@@ -26,7 +30,7 @@ const RECORDS = {
         address: '0x25954ef14cebbc9af3d71132489a9cfe87043f20@eip155:1',
         timestamp: 1585919920
       },
-      next: { '/': 'cid1' }
+      prev: FAKE_CID_1
     }
   },
   r2: { record: {}, proof: { blockNumber: 123456 } }
@@ -46,7 +50,7 @@ describe('AccountLinkHandler', () => {
 
   it('makes genesis record correctly', async () => {
     const record = await handler.makeGenesis(undefined, RECORDS.genesis.owners)
-    
+
     expect(record).toEqual(RECORDS.genesis)
   })
 
@@ -86,46 +90,46 @@ describe('AccountLinkHandler', () => {
   })
 
   it('applies genesis record correctly', async () => {
-    const state = await handler.applyGenesis(RECORDS.genesis, 'cid1')
-    
+    const state = await handler.applyGenesis(RECORDS.genesis, FAKE_CID_1)
+
     expect(state).toMatchSnapshot()
   })
 
   it('makes signed record correctly', async () => {
-    const state = await handler.applyGenesis(RECORDS.genesis, 'cid1')
-    
+    const state = await handler.applyGenesis(RECORDS.genesis, FAKE_CID_1)
+
     const record = await handler.makeRecord(state, RECORDS.r1.desiredContent)
-    
+
     expect(record).toEqual(RECORDS.r1.record)
   })
 
   it('applies signed record correctly', async () => {
-    let state = await handler.applyGenesis(RECORDS.genesis, 'cid1')
-    
-    state = await handler.applySigned(RECORDS.r1.record, 'cid2', state)
-    
+    let state = await handler.applyGenesis(RECORDS.genesis, FAKE_CID_1)
+
+    state = await handler.applySigned(RECORDS.r1.record, FAKE_CID_2, state)
+
     expect(state).toMatchSnapshot()
   })
 
   it('throws an error of the proof is invalid', async () => {
     validateLink.mockResolvedValue(undefined)
-    const state = await handler.applyGenesis(RECORDS.genesis, 'cid1')
-    
-    await expect(handler.applySigned(RECORDS.r1.record, 'cid2', state)).rejects.toThrow(/Invalid proof/i)
+    const state = await handler.applyGenesis(RECORDS.genesis, FAKE_CID_1)
+
+    await expect(handler.applySigned(RECORDS.r1.record, FAKE_CID_2, state)).rejects.toThrow(/Invalid proof/i)
   })
 
   it('throws an error of the proof doesn\'t match the owner', async () => {
     const badAddressRecord = cloneDeep(RECORDS.r1.record)
     badAddressRecord.content.address = '0xffffffffffffffffffffffffffffffffffffffff'
-    const state = await handler.applyGenesis(RECORDS.genesis, 'cid1')
+    const state = await handler.applyGenesis(RECORDS.genesis, FAKE_CID_1)
 
-    await expect(handler.applySigned(badAddressRecord, 'cid2', state)).rejects.toThrow(/Address doesn't match/i)
+    await expect(handler.applySigned(badAddressRecord, FAKE_CID_2, state)).rejects.toThrow(/Address doesn't match/i)
   })
 
   it('applies anchor record correctly', async () => {
-    let state = await handler.applyGenesis(RECORDS.genesis, 'cid1')
-    state = await handler.applySigned(RECORDS.r1.record, 'cid2', state)
-    state = await handler.applyAnchor(RECORDS.r2.record, RECORDS.r2.proof, 'cid3', state)
+    let state = await handler.applyGenesis(RECORDS.genesis, FAKE_CID_1)
+    state = await handler.applySigned(RECORDS.r1.record, FAKE_CID_2, state)
+    state = await handler.applyAnchor(RECORDS.r2.record, RECORDS.r2.proof, FAKE_CID_3, state)
     expect(state).toMatchSnapshot()
   })
 })

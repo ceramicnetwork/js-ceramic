@@ -1,4 +1,5 @@
 import type Ceramic from '../ceramic'
+import type CID from 'cids'
 import { DocState, SignatureStatus, AnchorRecord, AnchorProof } from '../document'
 import DoctypeHandler from './doctypeHandler'
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
@@ -9,7 +10,7 @@ import { verifyJWT } from 'did-jwt'
 const DOCTYPE = 'tile'
 
 
-function head (log: Array<string>): string {
+function head (log: Array<CID>): CID {
   return log[log.length - 1]
 }
 
@@ -25,7 +26,7 @@ class TileHandler extends DoctypeHandler {
     })
   }
 
-  async applyGenesis (record: any, cid: string): Promise<DocState> {
+  async applyGenesis (record: any, cid: CID): Promise<DocState> {
     await this._verifyRecordSignature(record)
     // TODO - verify genesis record
     return {
@@ -39,7 +40,7 @@ class TileHandler extends DoctypeHandler {
     }
   }
 
-  async applySigned (record: any, cid: string, state: DocState): Promise<DocState> {
+  async applySigned (record: any, cid: CID, state: DocState): Promise<DocState> {
     await this._verifyRecordSignature(record)
     state.log.push(cid)
     return {
@@ -59,7 +60,7 @@ class TileHandler extends DoctypeHandler {
       doctype: record.doctype,
       owners: record.owners,
       content: record.content,
-      prev: record.prev,
+      prev: record.prev ? { '/': record.prev.toString() } : undefined,
       iss: record.iss
     })).toString('base64')
     if (payload.endsWith('=')) payload = payload.slice(0, -1)
@@ -67,12 +68,11 @@ class TileHandler extends DoctypeHandler {
     try {
       await verifyJWT(jwt, { resolver: this._didResolver })
     } catch (e) {
-      console.error('error', e)
       throw new Error('Invalid signature for signed record:' + e)
     }
   }
 
-  async applyAnchor (record: AnchorRecord, proof: AnchorProof, cid: string, state: DocState): Promise<DocState> {
+  async applyAnchor (record: AnchorRecord, proof: AnchorProof, cid: CID, state: DocState): Promise<DocState> {
     state.log.push(cid)
     let content = state.content
     if (state.nextContent) {
@@ -89,7 +89,7 @@ class TileHandler extends DoctypeHandler {
   async makeRecord (state: DocState, newContent: any): Promise<any> {
     if (!this.user) throw new Error('No user authenticated')
     const patch = jsonpatch.compare(state.content, newContent)
-    const record = { content: patch, prev: { '/': head(state.log) } }
+    const record = { content: patch, prev: head(state.log) }
     return this.signRecord(record)
   }
 
@@ -104,8 +104,12 @@ class TileHandler extends DoctypeHandler {
     // TODO - use the dag-jose library for properly encoded signed records
     // The way we use did-jwts right now are quite hacky
     record.iss = this.user.DID
+    // convert CID to string for signing
+    const tmpCID = record.prev
+    if (tmpCID) record.prev = { '/': tmpCID.toString() }
     const jwt = await this.user.sign(record)
     const [header, payload, signature] = jwt.split('.') // eslint-disable-line @typescript-eslint/no-unused-vars
+    if (tmpCID) record.prev = tmpCID
     return { ...record, header, signature }
   }
 }
