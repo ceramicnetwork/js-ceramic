@@ -55,8 +55,10 @@ class AccountLinkHandler extends DoctypeHandler {
 
   async applySigned (record: any, state: DocState): Promise<DocState> {
     const validProof = await validateLink(record.content)
-    if (!validProof || validProof.address.toLowerCase() !== state.owners[0].toLowerCase()) {
+    if (!validProof) {
       throw new Error('Invalid proof for signed record')
+    } else if (validProof.address.toLowerCase() !== state.owners[0].toLowerCase()) {
+      throw new Error("Address doesn't match document owner")
     }
     return {
       ...state,

@@ -33,6 +33,8 @@
     "did-jwt": "^4.0.0",
     "did-resolver": "^1.1.0",
     "fast-json-patch": "^3.0.0-1",
+    "identity-wallet": "^1.1.3",
+    "lodash.clonedeep": "^4.5.0",
     "p-queue": "^6.2.1"
   },
   "devDependencies": {
