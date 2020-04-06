@@ -93,40 +93,40 @@ const CERAMIC_HOST = 'http://localhost:7007'
 const API_PATH = '/api/v0'
 
 class CeramicClient {
-  private apiUrl: string
-  private docmap: Record<string, Document>
-  private iid: any
+  private _apiUrl: string
+  private _docmap: Record<string, Document>
+  private _iid: any
 
   constructor (apiHost: string = CERAMIC_HOST) {
-    this.apiUrl = apiHost + API_PATH
-    this.docmap = {}
+    this._apiUrl = apiHost + API_PATH
+    this._docmap = {}
     // this is an ugly way of getting updates, switch to something better
-    this.iid = setInterval(() => {
-      for (const docId in this.docmap) {
-        this.docmap[docId]._syncState(this.apiUrl)
+    this._iid = setInterval(() => {
+      for (const docId in this._docmap) {
+        this._docmap[docId]._syncState(this._apiUrl)
       }
     }, 1000)
   }
 
   async createDocument (genesis: any, doctype: string, opts?: InitOpts): Promise<Document> {
-    const doc = await Document.create(genesis, doctype, this.apiUrl, opts)
-    if (!this.docmap[doc.id]) this.docmap[doc.id] = doc
+    const doc = await Document.create(genesis, doctype, this._apiUrl, opts)
+    if (!this._docmap[doc.id]) this._docmap[doc.id] = doc
     return doc
   }
 
   async loadDocument (id: string): Promise<Document> {
-    if (!this.docmap[id]) this.docmap[id] = await Document.load(id, this.apiUrl)
-    return this.docmap[id]
+    if (!this._docmap[id]) this._docmap[id] = await Document.load(id, this._apiUrl)
+    return this._docmap[id]
   }
 
   async _updateDocument (id: string, content: any): Promise<Document> {
     const doc = new Document(id, {})
-    await doc.change(content, this.apiUrl)
+    await doc.change(content, this._apiUrl)
     return doc
   }
 
   async close (): Promise<void> {
-    clearInterval(this.iid)
+    clearInterval(this._iid)
   }
 }
 

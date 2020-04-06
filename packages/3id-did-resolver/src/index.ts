@@ -1,6 +1,13 @@
-// TODO - the 3id-did-resolver should be it's own package
-import type Ceramic from './ceramic'
 import type { ParsedDID, DIDResolver, DIDDocument } from 'did-resolver'
+
+// TDOD - we should probably have a general Ceramic interface type library
+interface Document {
+  content: any;
+}
+
+interface Ceramic {
+  loadDocument(docId: string): Promise<Document>;
+}
 
 interface ResolverRegistry {
   [index: string]: DIDResolver;

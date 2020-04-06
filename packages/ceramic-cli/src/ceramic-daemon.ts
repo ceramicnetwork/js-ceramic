@@ -4,7 +4,7 @@ import IdentityWallet from 'identity-wallet'
 import Ceramic from '@ceramicnetwork/ceramic-core'
 
 const IPFS_HOST = 'http://localhost:5001'
-const toApiPath = (ending: string):string => '/api/v0' + ending
+const toApiPath = (ending: string): string => '/api/v0' + ending
 // TODO - don't hardcode seed lol
 const seed = '0x5872d6e0ae7347b72c9216db218ebbb9d9d0ae7ab818ead3557e8e78bf944184'
 
@@ -29,7 +29,7 @@ class CeramicDaemon {
     server.keepAliveTimeout = 60 * 1000
   }
 
-  static async create (ipfsHost: string = IPFS_HOST) {
+  static async create (ipfsHost: string = IPFS_HOST): Promise<CeramicDaemon> {
     const ipfs = ipfsClient(ipfsHost)
     const ceramic = await Ceramic.create(ipfs)
     const idWallet = new IdentityWallet(async () => true, { seed })
@@ -37,9 +37,9 @@ class CeramicDaemon {
     return new CeramicDaemon(ceramic)
   }
 
-  async createDoc (req: Request, res: Response, next: NextFunction) {
+  async createDoc (req: Request, res: Response, next: NextFunction): Promise<void> {
     const { doctype, genesis, onlyGenesis } = req.body
-    if (!doctype || !genesis) {} // TODO - reject somehow
+    //if (!doctype || !genesis) {} // TODO - reject somehow
     try {
       const doc = await this.ceramic.createDocument(genesis, doctype, { onlyGenesis })
       res.json({ docId: doc.id, state: doc.state })
@@ -49,7 +49,7 @@ class CeramicDaemon {
     next()
   }
 
-  async show (req: Request, res: Response, next: NextFunction) {
+  async show (req: Request, res: Response, next: NextFunction): Promise<void> {
     const docId = ['/ceramic', req.params.cid].join('/')
     try {
       const doc = await this.ceramic.loadDocument(docId)
@@ -60,7 +60,7 @@ class CeramicDaemon {
     next()
   }
 
-  async state (req: Request, res: Response, next: NextFunction) {
+  async state (req: Request, res: Response, next: NextFunction): Promise<void> {
     const docId = ['/ceramic', req.params.cid].join('/')
     try {
       const doc = await this.ceramic.loadDocument(docId)
@@ -71,7 +71,7 @@ class CeramicDaemon {
     next()
   }
 
-  async change (req: Request, res: Response, next: NextFunction) {
+  async change (req: Request, res: Response, next: NextFunction): Promise<void> {
     const { content } = req.body
     if (!content) {
       res.json({ error: 'content required to change document' })

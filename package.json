@@ -1,6 +1,14 @@
 {
-  "name": "@ceramicnetwork/ceramic",
+  "name": "root",
   "private": true,
+  "scripts": {
+    "bootstrap": "npm install && lerna bootstrap --hoist",
+    "test": "lerna run test",
+    "build": "lerna run build",
+    "prepublishOnly": "npm run build",
+    "lint": "lerna run lint",
+    "clean": "rm -rf ./lib"
+  },
   "devDependencies": {
     "lerna": "^3.20.2",
     "typescript": "^3.8.3"

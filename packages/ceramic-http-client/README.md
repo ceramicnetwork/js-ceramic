@@ -1,17 +1,18 @@
-# Ceramic Core
+# Ceramic http client
 
-> This package contains the implementation of the core Ceramic protocol. It's exposed using a simple javascript api.
+> An http client for the Ceramic protocol
 
 ## Getting started
 
 ### Installation
 ```
-$ npm install @ceramicnetwork/ceramic-core
+$ npm install @ceramicnetwork/ceramic-http-client
 ```
 
 ### Usage
+
 ```
-import Ceramic from '@ceramicnetwork/ceramic-core'
+import Ceramic from '@ceramicnetwork/ceramic-http-client'
 
 // TODO: DEMONSTRATE API
 ```

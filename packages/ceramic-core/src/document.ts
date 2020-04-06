@@ -127,6 +127,10 @@ class Document extends EventEmitter {
     return this._state
   }
 
+  get doctype (): string {
+    return this._doctypeHandler.doctype
+  }
+
   get head (): string {
     const log = this._state.log
     return log[log.length - 1]
@@ -220,7 +224,7 @@ class Document extends EventEmitter {
     //const nextRecordA = await this.dispatcher.retrieveRecord(record.next)
     //const nextRecordB = await this.dispatcher.retrieveRecord(record.proof + '/root' + record.path)
     // assert A == B
-    const proof: AnchorProof = await this.dispatcher.retrieveRecord(record.proof)
+    const proof: AnchorProof = await this.dispatcher.retrieveRecord(record.proof['/'])
     await this._anchorService.validateChainInclusion(proof)
     return proof
   }

@@ -32,11 +32,11 @@
   },
   "dependencies": {
     "@ceramicnetwork/ceramic-core": "^0.0.1",
+    "@ceramicnetwork/ceramic-http-client": "^0.0.1",
     "commander": "^4.1.1",
     "express": "^4.17.1",
-    "identity-wallet": "file:../../../../3box/identity-wallet",
-    "ipfs-http-client": "^42.0.0",
-    "node-fetch": "^2.6.0"
+    "identity-wallet": "^1.2.0-ceramic.1",
+    "ipfs-http-client": "^42.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.8.4",

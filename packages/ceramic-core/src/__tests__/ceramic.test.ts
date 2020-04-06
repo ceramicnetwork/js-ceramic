@@ -19,6 +19,7 @@ const genIpfsConf = (path, id): any => {
 }
 
 describe('Ceramic integration', () => {
+  jest.setTimeout(7000)
   let ipfs1, ipfs2, ipfs3, multaddr1, multaddr2, multaddr3
   let tmpFolder, idWallet
 

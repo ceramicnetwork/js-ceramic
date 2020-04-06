@@ -2,10 +2,27 @@
 
 > A command line interface that allows you to interact with the Ceramic protocol.
 
-## Usage
+## Getting started
+
+### Installation
+To install the ceramic cli globally you can run:
+```
+$ npm install -g ceramic-cli
+```
+
+### Usage
+To get an overview of the available commands run:
 ```
 $ ceramic -h
 ```
+
+To start an instance of the Ceramic daemon, make sure you have ipfs running locally and execute:
+```
+$ ceramic daemon
+```
+
+## Development
+
 
 ### Not yet implemented commands
 
@@ -93,3 +110,9 @@ Remove the given document from the pin set.
 
 ### `/api/v0/pin/ls/` - `GET`
 Returns the list of document ids that are currently pinned.
+
+
+## Contributing
+We are happy to accept small and large contributions. Make sure to check out the [Ceramic specifications](https://github.com/ceramicnetwork/specs) for details of how the protocol works.
+
+## License
