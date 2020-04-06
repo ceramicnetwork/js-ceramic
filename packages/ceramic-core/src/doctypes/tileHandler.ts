@@ -59,7 +59,7 @@ class TileHandler extends DoctypeHandler {
       doctype: record.doctype,
       owners: record.owners,
       content: record.content,
-      next: record.next,
+      prev: record.prev,
       iss: record.iss
     })).toString('base64')
     if (payload.endsWith('=')) payload = payload.slice(0, -1)
@@ -89,7 +89,7 @@ class TileHandler extends DoctypeHandler {
   async makeRecord (state: DocState, newContent: any): Promise<any> {
     if (!this.user) throw new Error('No user authenticated')
     const patch = jsonpatch.compare(state.content, newContent)
-    const record = { content: patch, next: { '/': head(state.log) } }
+    const record = { content: patch, prev: { '/': head(state.log) } }
     return this.signRecord(record)
   }
 
