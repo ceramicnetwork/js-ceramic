@@ -40,7 +40,7 @@ class ThreeIdHandler extends DoctypeHandler {
       doctype: record.doctype,
       owners: record.owners,
       content: record.content,
-      next: record.next,
+      prev: record.prev,
       iss: record.iss
     })).toString('base64')
     if (payload.endsWith('=')) payload = payload.slice(0, -1)
@@ -78,7 +78,7 @@ class ThreeIdHandler extends DoctypeHandler {
   async makeRecord (state: DocState, newContent: any): Promise<any> {
     if (!this.user) throw new Error('No user authenticated')
     const patch = jsonpatch.compare(state.content, newContent)
-    const record: any = { content: patch, next: { '/': head(state.log) } }
+    const record: any = { content: patch, prev: { '/': head(state.log) } }
     // TODO - use the dag-jose library for properly encoded signed records
     record.iss = this.user.DID
     const jwt = await this.user.sign(record, { useMgmt: true})

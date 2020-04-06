@@ -11,7 +11,7 @@ const RECORDS = {
   genesis: { doctype: '3id', owners: [ '0x123' ], content: { publicKeys: { test: '0xabc' } } },
   r1: {
     desiredContent: { publicKeys: { test: '0xabc' }, other: 'data' },
-    record: { content: [ { op: 'add', path: '/other', value: 'data' } ], next: { '/': 'cid1' }, header: 'aaaa', signature: 'cccc' }
+    record: { content: [ { op: 'add', path: '/other', value: 'data' } ], prev: { '/': 'cid1' }, header: 'aaaa', signature: 'cccc' }
   },
   r2: { record: {}, proof: { blockNumber: 123456 } }
 }

@@ -28,7 +28,7 @@ export interface InitOpts {
 }
 
 export interface AnchorRecord {
-  next: any; // should be CID type
+  prev: any; // should be CID type
   proof: any; // should be CID type
   path: string;
 }
@@ -154,16 +154,16 @@ class Document extends EventEmitter {
       return []
     }
     const record = await this.dispatcher.retrieveRecord(cid)
-    const nextCid = record.next ? record.next['/'].toString() : null
-    if (!nextCid) { // this is a fake log
+    const prevCid = record.prev ? record.prev['/'].toString() : null
+    if (!prevCid) { // this is a fake log
       return []
     }
     log.unshift(cid)
-    if (this._state.log.includes(nextCid)) {
+    if (this._state.log.includes(prevCid)) {
       // we found the connection to the canonical log
       return log
     }
-    return this._fetchLog(nextCid, log)
+    return this._fetchLog(prevCid, log)
   }
 
   async _applyLog (log: Array<string>): Promise<boolean> {
@@ -171,14 +171,14 @@ class Document extends EventEmitter {
     if (log[log.length - 1] === this.head) return // log already applied
     const cid = log[0]
     const record = await this.dispatcher.retrieveRecord(cid)
-    if (record.next['/'].toString() === this.head) {
+    if (record.prev['/'].toString() === this.head) {
       // the new log starts where the previous one ended
       this._state = await this._applyLogToState(log, cloneDeep(this._state))
       modified = true
     } else {
-      // we have a conflict since next is in the log of the
+      // we have a conflict since prev is in the log of the
       // local state, but isn't the head
-      const conflictIdx = this._state.log.indexOf(record.next['/'].toString()) + 1
+      const conflictIdx = this._state.log.indexOf(record.prev['/'].toString()) + 1
       const canonicalLog = this._state.log.slice() // copy log
       const localLog = canonicalLog.splice(conflictIdx)
       // Compute state up till conflictIdx
@@ -205,7 +205,7 @@ class Document extends EventEmitter {
       const cid = entry.value[1]
       const record = await this.dispatcher.retrieveRecord(cid)
       // TODO - should catch potential thrown error here
-      if (!record.next) {
+      if (!record.prev) {
         state = await this._doctypeHandler.applyGenesis(record, cid)
       } else if (record.proof) {
         const proof = await this._verifyAnchorRecord(record)
@@ -220,8 +220,8 @@ class Document extends EventEmitter {
   }
 
   async _verifyAnchorRecord (record: AnchorRecord): Promise<AnchorProof> {
-    //const nextRecordA = await this.dispatcher.retrieveRecord(record.next)
-    //const nextRecordB = await this.dispatcher.retrieveRecord(record.proof + '/root' + record.path)
+    //const prevRecordA = await this.dispatcher.retrieveRecord(record.prev)
+    //const prevRecordB = await this.dispatcher.retrieveRecord(record.proof + '/root' + record.path)
     // assert A == B
     const proof: AnchorProof = await this.dispatcher.retrieveRecord(record.proof['/'])
     await this._anchorService.validateChainInclusion(proof)

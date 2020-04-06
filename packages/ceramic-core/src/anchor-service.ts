@@ -21,7 +21,7 @@ class AnchorService extends EventEmitter {
       root: 'cid'
     }
     const proof = { '/': await this._dispatcher.storeRecord(proofData) }
-    const record = { proof, path: 'ipld path for witness', next: { '/': head } }
+    const record = { proof, path: 'ipld path for witness', prev: { '/': head } }
     const cid = (await this._dispatcher.storeRecord(record)).toString()
     // TODO - poll for anchor inclusion on-chain
     this.emit(docId, cid)
