@@ -1,0 +1,52 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`AccountLinkHandler applies anchor record correctly 1`] = `
+Object {
+  "anchored": 123456,
+  "content": null,
+  "doctype": "account-link",
+  "log": Array [
+    "cid1",
+    "cid2",
+    "cid3",
+  ],
+  "nextContent": undefined,
+  "owners": Array [
+    "0x25954ef14cebbc9af3d71132489a9cfe87043f20@eip155:1",
+  ],
+  "signature": 2,
+}
+`;
+
+exports[`AccountLinkHandler applies genesis record correctly 1`] = `
+Object {
+  "anchored": 0,
+  "content": null,
+  "doctype": "account-link",
+  "log": Array [
+    "cid1",
+  ],
+  "nextContent": null,
+  "owners": Array [
+    "0x25954ef14cebbc9af3d71132489a9cfe87043f20@eip155:1",
+  ],
+  "signature": 0,
+}
+`;
+
+exports[`AccountLinkHandler applies signed record correctly 1`] = `
+Object {
+  "anchored": 0,
+  "content": null,
+  "doctype": "account-link",
+  "log": Array [
+    "cid1",
+    "cid2",
+  ],
+  "nextContent": undefined,
+  "owners": Array [
+    "0x25954ef14cebbc9af3d71132489a9cfe87043f20@eip155:1",
+  ],
+  "signature": 2,
+}
+`;

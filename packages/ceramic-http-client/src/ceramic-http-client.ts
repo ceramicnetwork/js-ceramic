@@ -32,6 +32,7 @@ interface DocState {
 export interface InitOpts {
   onlyGenesis?: boolean;
   skipWait?: boolean;
+  owners?: Array<string>;
 }
 
 class Document extends EventEmitter {
@@ -41,7 +42,7 @@ class Document extends EventEmitter {
   }
 
   static async create (genesis: any, doctype: string, apiUrl: string, opts: InitOpts = {}): Promise<Document> {
-    const { docId, state } = await fetchJson(apiUrl + '/create', { genesis, doctype, onlyGenesis: opts.onlyGenesis })
+    const { docId, state } = await fetchJson(apiUrl + '/create', { genesis, doctype, onlyGenesis: opts.onlyGenesis, owners: opts.owners })
     const doc = new Document(docId, state)
     return doc
   }

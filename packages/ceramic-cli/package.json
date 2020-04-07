@@ -50,6 +50,7 @@
     "@typescript-eslint/parser": "^2.19.0",
     "babel-jest": "^25.1.0",
     "eslint": "^6.8.0",
+    "eslint-plugin-jest": "^23.8.2",
     "ipfs": "^0.41.1",
     "jest": "^25.1.0",
     "tmp-promise": "^2.0.2"

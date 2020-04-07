@@ -38,10 +38,10 @@ class CeramicDaemon {
   }
 
   async createDoc (req: Request, res: Response, next: NextFunction): Promise<void> {
-    const { doctype, genesis, onlyGenesis } = req.body
+    const { doctype, genesis, onlyGenesis, owners } = req.body
     //if (!doctype || !genesis) {} // TODO - reject somehow
     try {
-      const doc = await this.ceramic.createDocument(genesis, doctype, { onlyGenesis })
+      const doc = await this.ceramic.createDocument(genesis, doctype, { onlyGenesis, owners })
       res.json({ docId: doc.id, state: doc.state })
     } catch (e) {
       res.json({ error: e.message })

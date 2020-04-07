@@ -6,6 +6,7 @@ import User from './user'
 import Document, { InitOpts } from './document'
 import ThreeIdHandler from './doctypes/threeIdHandler'
 import TileHandler from './doctypes/tileHandler'
+import AccountLinkHandler from './doctypes/accountLinkHandler'
 
 
 // This is temporary until we handle DIDs and in particular 3IDs better
@@ -37,6 +38,7 @@ class Ceramic {
     this._doctypeHandlers = {
       '3id': new ThreeIdHandler(),
       'tile': new TileHandler(this),
+      'account-link': new AccountLinkHandler(),
     }
   }
 
