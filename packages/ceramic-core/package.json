@@ -28,9 +28,9 @@
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/3id-did-resolver": "^0.0.1",
     "3id-blockchain-utils": "^0.3.3",
     "3id-resolver": "0.0.6",
+    "@ceramicnetwork/3id-did-resolver": "^0.0.1",
     "@types/lodash.clonedeep": "^4.5.6",
     "did-jwt": "^4.0.0",
     "did-resolver": "^1.1.0",

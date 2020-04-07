@@ -21,6 +21,10 @@ class AccountLinkHandler extends DoctypeHandler {
   async makeGenesis (content: any, owners: [string]): Promise<any> {
     if (content) throw new Error('Account link genesis cannot have content')
     if (!owners) throw new Error('Owner must be specified')
+    if (owners.length !== 1) throw new Error('Exactly one owner must be specified')
+    const [address, chainId] = owners[0].split('@')
+    if (!chainId) throw new Error('Chain ID must be specified according to CAIP-10')
+    if (chainId !== 'eip155:1') throw new Error('Only Ethereum mainnet supported')
     return {
       doctype: this.doctype,
       owners,
@@ -42,9 +46,12 @@ class AccountLinkHandler extends DoctypeHandler {
 
   async applySigned (record: any, cid: string, state: DocState): Promise<DocState> {
     const validProof = await validateLink(record.content)
-    if (!validProof) {
-      throw new Error('Invalid proof for signed record')
-    } else if (validProof.address.toLowerCase() !== state.owners[0].toLowerCase()) {
+    if (!validProof) throw new Error('Invalid proof for signed record')
+    // TODO: handle CAIP-10 addresses in proof generation of 3id-blockchain-utils
+    let [address, chainId] = validProof.address.split('@')  // eslint-disable-line prefer-const
+    if (!chainId) chainId = 'eip155:1'
+    const addressCaip10 = [address, chainId].join('@')
+    if (addressCaip10.toLowerCase() !== state.owners[0].toLowerCase()) {
       throw new Error("Address doesn't match document owner")
     }
     state.log.push(cid)
