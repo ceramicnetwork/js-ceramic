@@ -5,10 +5,8 @@
     "bootstrap": "npm install && lerna bootstrap --hoist",
     "test": "lerna run test",
     "build": "lerna run build",
-    "release:pre": "lerna version --no-push --conventional-commits --conventional-prerelease",
-    "release:graduate": "lerna version --no-push --conventional-commits --conventional-graduate",
-    "release": "lerna version --no-push --conventional-commits",
-    "publish:next": "lerna publish from-package --dist-tag next",
+    "publish:next": "lerna publish --no-push --conventional-prerelease --dist-tag next",
+    "publish:latest": "lerna publish --allow-branch master --conventional-graduate --create-release github --yes",
     "lint": "lerna run lint",
     "clean": "rm -rf ./lib"
   },
