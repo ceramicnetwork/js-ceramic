@@ -5,8 +5,11 @@
   "version": "independent",
   "command": {
     "version": {
-      "allowBranch": "release/*",
       "message": "chore(release):"
+    },
+    "publish": {
+      "message": "chore(release):",
+      "conventionalCommits": true
     }
   }
 }

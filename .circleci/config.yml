@@ -13,7 +13,19 @@ jobs:
             - run: npm run lint
             - run: npm run build
             - run: npm test
+  publish-release:
+    executor:
+      name: node/default
+    steps:
+      - checkout
+      - node/with-cache:
+          steps:
+            - run: npm run publish:latest
 workflows:
     build-and-test:
       jobs:
         - build-and-test
+        - publish-release:
+            filters:
+              branches:
+                only: master
