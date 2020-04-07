@@ -5,7 +5,10 @@
     "bootstrap": "npm install && lerna bootstrap --hoist",
     "test": "lerna run test",
     "build": "lerna run build",
-    "prepublishOnly": "npm run build",
+    "release:pre": "lerna version --no-push --conventional-commits --conventional-prerelease",
+    "release:graduate": "lerna version --no-push --conventional-commits --conventional-graduate",
+    "release": "lerna version --no-push --conventional-commits",
+    "publish:next": "lerna publish from-package --dist-tag next",
     "lint": "lerna run lint",
     "clean": "rm -rf ./lib"
   },
