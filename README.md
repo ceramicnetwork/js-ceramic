@@ -49,7 +49,7 @@ There are two types of releases that can be made, prereleases and regular releas
 ```
 $ npm run publish:next
 ```
-In any branch you can run the command above, this will create a prerelease with the version `vx.x.x-alpha.n`. It will also create a local commit for this release. This commit doesn't have to be 
+In any branch you can run the command above, this will create a prerelease with the version `vx.x.x-alpha.n`. It will also create a local commit for this release. This commit doesn't have to be committed.
 
 
 #### Release
