@@ -1,7 +1,14 @@
 import CeramicDaemon from './ceramic-daemon'
 import CeramicClient from '@ceramicnetwork/ceramic-http-client'
 import program from 'commander'
+import { serializeState } from './utils'
 
+
+const PREFIX_REGEX = /^ceramic:\/\/|^\/ceramic\//
+function validateDocId (docId: string): string {
+  const match = docId.match(PREFIX_REGEX)
+  return match ? match[0] : null
+}
 
 program
   .command('daemon')
@@ -35,6 +42,10 @@ program
   .command('show <docId> [<anchor>]')
   .description('Show the content of a document')
   .action(async (docId) => {
+    if (!validateDocId(docId)) {
+      console.error(`Invalid docId: ${docId}`)
+      return
+    }
     const ceramic = new CeramicClient()
     try {
       const doc = await ceramic.loadDocument(docId)
@@ -49,10 +60,14 @@ program
   .command('state <docId> [<anchor>]')
   .description('Show the state of a document')
   .action(async (docId) => {
+    if (!validateDocId(docId)) {
+      console.error(`Invalid docId: ${docId}`)
+      return
+    }
     const ceramic = new CeramicClient()
     try {
       const doc = await ceramic.loadDocument(docId)
-      console.log(JSON.stringify(doc.state, null, 2))
+      console.log(JSON.stringify(serializeState(doc.state), null, 2))
     } catch (e) {
       console.error(e)
     }
@@ -63,6 +78,10 @@ program
   .command('watch <docId>')
   .description('Watch for updates in a document')
   .action(async (docId) => {
+    if (!validateDocId(docId)) {
+      console.error(`Invalid docId: ${docId}`)
+      return
+    }
     const ceramic = new CeramicClient()
     try {
       const doc = await ceramic.loadDocument(docId)
@@ -81,6 +100,10 @@ program
   .option('--owners <owners>', 'Change owner of this document (only 3ID)')
   .description('Update the content of a document')
   .action(async (docId, content) => {
+    if (!validateDocId(docId)) {
+      console.error(`Invalid docId: ${docId}`)
+      return
+    }
     content = JSON.parse(content)
     const ceramic = new CeramicClient()
     try {

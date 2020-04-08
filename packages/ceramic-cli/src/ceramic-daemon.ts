@@ -2,6 +2,7 @@ import ipfsClient from 'ipfs-http-client'
 import express, { Request, Response, NextFunction } from 'express'
 import IdentityWallet from 'identity-wallet'
 import Ceramic from '@ceramicnetwork/ceramic-core'
+import { serializeState } from './utils'
 
 const IPFS_HOST = 'http://localhost:5001'
 const toApiPath = (ending: string): string => '/api/v0' + ending
@@ -42,7 +43,7 @@ class CeramicDaemon {
     //if (!doctype || !genesis) {} // TODO - reject somehow
     try {
       const doc = await this.ceramic.createDocument(genesis, doctype, { onlyGenesis, owners })
-      res.json({ docId: doc.id, state: doc.state })
+      res.json({ docId: doc.id, state: serializeState(doc.state) })
     } catch (e) {
       res.json({ error: e.message })
     }
@@ -53,7 +54,7 @@ class CeramicDaemon {
     const docId = ['/ceramic', req.params.cid].join('/')
     try {
       const doc = await this.ceramic.loadDocument(docId)
-    res.json({ docId: doc.id, content: doc.content })
+      res.json({ docId: doc.id, content: doc.content })
     } catch (e) {
       res.json({ error: e.message })
     }
@@ -64,7 +65,8 @@ class CeramicDaemon {
     const docId = ['/ceramic', req.params.cid].join('/')
     try {
       const doc = await this.ceramic.loadDocument(docId)
-      res.json({ docId: doc.id, state: doc.state })
+
+      res.json({ docId: doc.id, state: serializeState(doc.state) })
     } catch (e) {
       res.json({ error: e.message })
     }
