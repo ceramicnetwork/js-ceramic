@@ -1,4 +1,5 @@
 import fetch from 'node-fetch'
+import CID from 'cids'
 import { EventEmitter } from 'events'
 
 const fetchJson = async (url: string, payload?: any): Promise<any> => {
@@ -35,6 +36,11 @@ export interface InitOpts {
   owners?: Array<string>;
 }
 
+function deserializeState (state: any): DocState {
+  state.log = state.log.map((cidStr: string): CID => new CID(cidStr))
+  return state
+}
+
 class Document extends EventEmitter {
 
   constructor (public id: string, private _state: any) {
@@ -43,13 +49,13 @@ class Document extends EventEmitter {
 
   static async create (genesis: any, doctype: string, apiUrl: string, opts: InitOpts = {}): Promise<Document> {
     const { docId, state } = await fetchJson(apiUrl + '/create', { genesis, doctype, onlyGenesis: opts.onlyGenesis, owners: opts.owners })
-    const doc = new Document(docId, state)
+    const doc = new Document(docId, deserializeState(state))
     return doc
   }
 
   static async load (id: string, apiUrl: string): Promise<Document> {
     const { docId, state } = await fetchJson(apiUrl + '/state' + id)
-    const doc = new Document(docId, state)
+    const doc = new Document(docId, deserializeState(state))
     return doc
   }
 
