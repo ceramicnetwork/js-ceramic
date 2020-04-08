@@ -124,7 +124,7 @@ class Document extends EventEmitter {
   }
 
   get state (): DocState {
-    return this._state
+    return cloneDeep(this._state)
   }
 
   get doctype (): string {
@@ -155,7 +155,6 @@ class Document extends EventEmitter {
       return []
     }
     const record = await this.dispatcher.retrieveRecord(cid)
-    //const prevCid: CID = record.prev ? record.prev['/'].toString() : null
     const prevCid: CID = record.prev
     if (!prevCid) { // this is a fake log
       return []
@@ -173,7 +172,6 @@ class Document extends EventEmitter {
     if (log[log.length - 1].equals(this.head)) return // log already applied
     const cid = log[0]
     const record = await this.dispatcher.retrieveRecord(cid)
-    //if (record.prev['/'].toString() === this.head) {
     if (record.prev.equals(this.head)) {
       // the new log starts where the previous one ended
       this._state = await this._applyLogToState(log, cloneDeep(this._state))

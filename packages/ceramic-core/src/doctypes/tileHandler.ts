@@ -63,7 +63,7 @@ class TileHandler extends DoctypeHandler {
       prev: record.prev ? { '/': record.prev.toString() } : undefined,
       iss: record.iss
     })).toString('base64')
-    if (payload.endsWith('=')) payload = payload.slice(0, -1)
+    payload = payload.replace(/=/g, '')
     const jwt = [header, payload, signature].join('.')
     try {
       await verifyJWT(jwt, { resolver: this._didResolver })

@@ -44,7 +44,7 @@ class ThreeIdHandler extends DoctypeHandler {
       prev: { '/': record.prev.toString() },
       iss: record.iss
     })).toString('base64')
-    if (payload.endsWith('=')) payload = payload.slice(0, -1)
+    payload = payload.replace(/=/g, '')
     const jwt = [header, payload, signature].join('.')
     try {
       // verify the jwt with a fake DID resolver that uses the current state of the 3ID
