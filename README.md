@@ -42,6 +42,22 @@ $ npm run build
 $ npm test
 ```
 
+### Creating a release
+There are two types of releases that can be made, prereleases and regular releases.
+
+#### Prerelease
+```
+$ npm run publish:next
+```
+In any branch you can run the command above, this will create a prerelease with the version `vx.x.x-alpha.n`. It will also create a local commit for this release. This commit doesn't have to be 
+
+
+#### Release
+```
+$ npm run publish:latest
+```
+This command can only be run on the master branch, it will create a release commit and push it to master. It will also tag this commit and create a release on github. Make sure to set the [GH_TOKEN](https://github.com/lerna/lerna/tree/master/commands/version#--create-release-type) environment variable before you run this command.
+
 ## Contributing
 We are happy to accept small and large contributions. Make sure to check out the [Ceramic specifications](https://github.com/ceramicnetwork/specs) for details of how the protocol works.
 

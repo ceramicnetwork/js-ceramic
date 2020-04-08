@@ -13,21 +13,7 @@ jobs:
             - run: npm run lint
             - run: npm run build
             - run: npm test
-  publish-release:
-    executor:
-      name: node/default
-    steps:
-      - checkout
-      - node/with-cache:
-          steps:
-            - run: git config user.email "oed@3box.io"
-            - run: git config user.name "Joel Thorstensson"
-            - run: npm run publish:latest
 workflows:
     build-and-test:
       jobs:
         - build-and-test
-        - publish-release:
-            filters:
-              branches:
-                only: master
