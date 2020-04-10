@@ -1,6 +1,7 @@
 import type Ipfs from 'ipfs'
 import { EventEmitter } from 'events'
 import CID from 'cids'
+import cloneDeep from 'lodash.clonedeep'
 
 export enum MsgType {
   UPDATE,
@@ -40,7 +41,7 @@ class Dispatcher extends EventEmitter {
     // cache should be less needed once this issue is fixed:
     // https://github.com/ipfs/js-ipfs-bitswap/pull/214
     if (!this._recordCache[cid.toString()]) this._recordCache[cid.toString()] = (await this._ipfs.dag.get(cid)).value
-    return this._recordCache[cid.toString()]
+    return cloneDeep(this._recordCache[cid.toString()])
   }
 
   async publishHead (id: string, head: CID): Promise<void> {
