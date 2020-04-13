@@ -27,7 +27,9 @@
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
+    "@types/lodash.clonedeep": "^4.5.6",
     "cids": "^0.8.0",
+    "lodash.clonedeep": "^4.5.0",
     "node-fetch": "^2.6.0"
   },
   "devDependencies": {
