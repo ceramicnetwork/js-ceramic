@@ -44,7 +44,7 @@ export interface AnchorRecord {
 }
 
 export interface AnchorProof {
-  chain: string;
+  chainId: string;
   blockNumber: number;
   blockTimestamp: number;
   txHash: CID;

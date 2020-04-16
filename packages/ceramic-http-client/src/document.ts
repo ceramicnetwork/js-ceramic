@@ -30,7 +30,7 @@ export enum AnchorStatus {
 }
 
 export interface AnchorProof {
-  chain: string;
+  chainId: string;
   blockNumber: number;
   blockTimestamp: number;
   txHash: CID;

@@ -19,7 +19,7 @@ class MockAnchorService extends EventEmitter implements AnchorService {
     // TODO - make request to actual service
     // creates fake anchor record
     const proofData: AnchorProof = {
-      chain: 'eip155:1',
+      chainId: 'eip155:1',
       blockNumber: Date.now(),
       blockTimestamp: Date.now(),
       txHash: new CID('bagjqcgzaday6dzalvmy5ady2m5a5legq5zrbsnlxfc2bfxej532ds7htpova'),

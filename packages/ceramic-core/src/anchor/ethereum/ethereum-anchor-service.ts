@@ -1,4 +1,5 @@
 import CID from "cids";
+import fetch from "node-fetch";
 
 import {EventEmitter} from "events";
 import {AnchorProof} from "../../document";
@@ -118,7 +119,8 @@ export default class EthereumAnchorService extends EventEmitter implements Ancho
     constructor(_servicePolicy?: any) {
         super();
 
-        this._servicePolicy = _servicePolicy ? _servicePolicy : DEFAULT_DEV_GANACHE_SERVICE_POLICY_CONTENT;
+        // TODO set service policy instead of default
+        this._servicePolicy = DEFAULT_DEV_GANACHE_SERVICE_POLICY_CONTENT;
         this.cidToResMap = new Map<CidDoc, AnchorServiceResponse>();
     }
 
@@ -153,8 +155,14 @@ export default class EthereumAnchorService extends EventEmitter implements Ancho
                 "Content-Type": "application/json"
             }
         });
+
+        if (!response.ok) {
+            // bad request
+            // just log
+            return;
+        }
         const json = await response.json();
-        const res = Object.assign(new ResponseDto(), JSON.parse(json));
+        const res = Object.assign(new ResponseDto(), json);
 
         this.cidToResMap.set(cidDocPair, new AnchorServiceResponse(res.status, res.message, res.scheduledFor));
         this.emit(cidDocPair.docId,);
@@ -185,6 +193,10 @@ export default class EthereumAnchorService extends EventEmitter implements Ancho
             try {
                 const requestUrl = [this._servicePolicy.content.serviceEndpoint, cidDocPair.cid.toString()].join('/');
                 const response = await fetch(requestUrl);
+                if (response.ok) {
+                    // just log
+                    poller.poll(); // continue to poll
+                }
                 const json = await response.json();
 
                 const res: ResponseDto = Object.assign(new ResponseDto(), json);
@@ -233,12 +245,15 @@ export default class EthereumAnchorService extends EventEmitter implements Ancho
         const txHash = decoded.digest.toString("hex");
 
         // determine network based on a chain ID
-        const provider: BaseProvider = EthereumAnchorService._getEthProvider(proof.chain);
+        const provider: BaseProvider = EthereumAnchorService._getEthProvider(proof.chainId);
 
         const transaction = await provider.getTransaction('0x' + txHash);
         const block = await provider.getBlock(transaction.blockHash);
 
-        if (proof.root.toString() !== transaction.data) {
+        const txValueHexNumber = parseInt(transaction.data, 16);
+        const rootValueHexNumber = parseInt('0x' + proof.root.toBaseEncodedString('base16'), 16);
+
+        if (txValueHexNumber !== rootValueHexNumber) {
             throw new Error(`The root CID ${proof.root.toString()} is not in the transaction`);
         }
 
