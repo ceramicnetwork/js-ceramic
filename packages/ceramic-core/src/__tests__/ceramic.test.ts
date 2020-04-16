@@ -69,7 +69,7 @@ describe('Ceramic integration', () => {
     // so we won't find the genesis object from it's CID
     const doc2 = await ceramic2.createDocument({ test: 456 }, DOCTYPE_3ID, { onlyGenesis: true, owners: [owner] })
     expect(doc1.content).toEqual(doc2.content)
-    expect(doc2.state).toEqual(expect.objectContaining({ anchored: 0, content: { test: 456 } }))
+    expect(doc2.state).toEqual(expect.objectContaining({ anchorStatus: 0, content: { test: 456 } }))
     await ceramic1.close()
     await ceramic2.close()
   })

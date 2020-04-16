@@ -1,11 +1,11 @@
-import type Ceramic from '../ceramic'
-import type CID from 'cids'
-import { DocState, SignatureStatus, AnchorRecord, AnchorProof } from '../document'
+import Ceramic from '../ceramic'
+import CID from 'cids'
+import {AnchorProof, AnchorRecord, AnchorStatus, DocState, SignatureStatus} from '../document'
 import DoctypeHandler from './doctypeHandler'
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
-import { Resolver } from 'did-resolver'
+import {Resolver} from 'did-resolver'
 import jsonpatch from 'fast-json-patch'
-import { verifyJWT } from 'did-jwt'
+import {verifyJWT} from 'did-jwt'
 
 const DOCTYPE = 'tile'
 
@@ -35,7 +35,7 @@ class TileHandler extends DoctypeHandler {
       content: record.content,
       nextContent: null,
       signature: SignatureStatus.SIGNED,
-      anchored: 0,
+      anchorStatus: AnchorStatus.NOT_REQUESTED,
       log: [cid]
     }
   }
@@ -46,7 +46,7 @@ class TileHandler extends DoctypeHandler {
     return {
       ...state,
       signature: SignatureStatus.SIGNED,
-      anchored: 0,
+      anchorStatus: AnchorStatus.NOT_REQUESTED,
       nextContent: jsonpatch.applyPatch(state.content, record.content).newDocument
     }
   }
@@ -82,7 +82,8 @@ class TileHandler extends DoctypeHandler {
     return {
       ...state,
       content,
-      anchored: proof.blockNumber
+      anchorStatus: AnchorStatus.ANCHORED,
+      anchorProof: proof,
     }
   }
 

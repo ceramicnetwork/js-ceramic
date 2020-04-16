@@ -1,12 +1,13 @@
-import type Ipfs from 'ipfs'
-import type DoctypeHandler from './doctypes/doctypeHandler'
+import Ipfs from 'ipfs'
+import DoctypeHandler from './doctypes/doctypeHandler'
 import Dispatcher from './dispatcher'
-import AnchorService from './anchor-service'
+import AnchorService from './anchor/anchor-service'
 import User from './user'
-import Document, { InitOpts } from './document'
+import Document, {InitOpts} from './document'
 import ThreeIdHandler from './doctypes/threeIdHandler'
 import TileHandler from './doctypes/tileHandler'
 import AccountLinkHandler from './doctypes/accountLinkHandler'
+import {AnchorServiceFactory} from "./anchor/anchor-service-factory";
 
 
 // This is temporary until we handle DIDs and in particular 3IDs better
@@ -23,7 +24,7 @@ const gen3IDgenesis = (pubkeys: any): any => {
 }
 
 interface CeramicConfig {
-  anchorServicePolicy?: string; // docId of an anchor service policy tile
+  anchorServicePolicyId?: string; // docId of an anchor service policy tile
   didProvider?: any;
 }
 
@@ -43,15 +44,19 @@ class Ceramic {
   }
 
   async _init (config: CeramicConfig): Promise<void> {
-    const promises = []
+    const promises = [];
     if (config.didProvider) {
       promises.push(this.setDIDProvider(config.didProvider))
     }
-    if (config.anchorServicePolicy) {
-      // TODO load service policy tile for anchor service
+
+    let anchorServicePolicy;
+    if (config.anchorServicePolicyId) {
+      // TODO load service policy tile based on docId
     }
-    this._anchorService = new AnchorService(this.dispatcher)
-    await Promise.all(promises)
+
+    const anchorServiceFactory = new AnchorServiceFactory(this.dispatcher, anchorServicePolicy);
+    this._anchorService = anchorServiceFactory.get();
+    await Promise.all(promises);
     return null
   }
 

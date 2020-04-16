@@ -2,12 +2,14 @@ import { EventEmitter } from 'events'
 import CID from 'cids'
 
 // TODO - remove dispatcher, its not needed once we have anchoring service
-import type Dispatcher from './dispatcher'
-import type { AnchorRecord, AnchorProof } from './document'
+import type Dispatcher from '../../dispatcher'
+import type { AnchorProof } from '../../document'
+import AnchorService from "../anchor-service";
+import AnchorServiceResponse from "../anchor-service-response";
 
 const FAKE_CID = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
 
-class AnchorService extends EventEmitter {
+class MockAnchorService extends EventEmitter implements AnchorService {
 
   constructor (private _dispatcher: Dispatcher, private _servicePolicy?: any) {
     super()
@@ -20,23 +22,21 @@ class AnchorService extends EventEmitter {
       chain: 'eip155:1',
       blockNumber: Date.now(),
       blockTimestamp: Date.now(),
-      txHash: 'eth-cid',
+      txHash: new CID('bagjqcgzaday6dzalvmy5ady2m5a5legq5zrbsnlxfc2bfxej532ds7htpova'),
       root: FAKE_CID
-    }
+    };
     const proof = await this._dispatcher.storeRecord(proofData)
     const record = { proof, path: 'ipld path for witness', prev: head }
     const cid = await this._dispatcher.storeRecord(record)
-    // TODO - poll for anchor inclusion on-chain
-    this.emit(docId, cid)
+
+    this.emit(docId, new AnchorServiceResponse('COMPLETED', 'CID successfully anchored.', null, cid));
     this.removeAllListeners(docId)
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async validateChainInclusion (proof: AnchorProof): Promise<void> {
-    // TODO - throw if invalid
-    // validate that root CID is in tx,
-    // blockNumber and blockTimestamp match the block
-    // in which txHash was included
+    // always valid
   }
 }
 
-export default AnchorService
+export default MockAnchorService
