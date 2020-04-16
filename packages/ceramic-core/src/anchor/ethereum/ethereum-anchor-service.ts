@@ -193,7 +193,7 @@ export default class EthereumAnchorService extends EventEmitter implements Ancho
             try {
                 const requestUrl = [this._servicePolicy.content.serviceEndpoint, cidDocPair.cid.toString()].join('/');
                 const response = await fetch(requestUrl);
-                if (response.ok) {
+                if (!response.ok) {
                     // just log
                     poller.poll(); // continue to poll
                 }
