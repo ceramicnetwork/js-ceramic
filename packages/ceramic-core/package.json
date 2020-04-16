@@ -37,8 +37,8 @@
     "fast-json-patch": "^3.0.0-1",
     "lodash.clonedeep": "^4.5.0",
     "p-queue": "^6.2.1",
-    "ethers": "latest",
-    "typestub-multihashes": "latest"
+    "ethers": "^4.0.46",
+    "typestub-multihashes": "^0.0.1"
   },
   "devDependencies": {
     "@babel/core": "^7.9.0",
