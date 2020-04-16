@@ -65,9 +65,7 @@ class Ceramic {
   async createDocument (content: any, doctype: string, opts: InitOpts = {}): Promise<Document> {
     const doctypeHandler = this._doctypeHandlers[doctype]
     const doc = await Document.create(content, doctypeHandler, this._anchorService, this.dispatcher, opts)
-    if (this._docmap[doc.id]) {
-      doc.close()
-    } else {
+    if (!this._docmap[doc.id]) {
       this._docmap[doc.id] = doc
     }
     return this._docmap[doc.id]
