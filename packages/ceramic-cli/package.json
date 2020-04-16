@@ -35,7 +35,7 @@
     "@ceramicnetwork/ceramic-http-client": "^0.1.0",
     "commander": "^4.1.1",
     "express": "^4.17.1",
-    "identity-wallet": "^1.2.0-ceramic.1",
+    "identity-wallet": "1.2.0-ceramic.1",
     "ipfs-http-client": "^42.0.0"
   },
   "devDependencies": {

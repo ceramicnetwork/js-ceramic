@@ -2,7 +2,7 @@
   "name": "root",
   "private": true,
   "scripts": {
-    "bootstrap": "npm install && lerna bootstrap --hoist",
+    "bootstrap": "npm ci && lerna bootstrap --hoist --ci",
     "test": "lerna run test",
     "build": "lerna run build",
     "publish:next": "lerna publish --no-push --conventional-prerelease --dist-tag next",
