@@ -64,10 +64,14 @@ describe('Ceramic interop: core <> http-client', () => {
   })
 
   it('gets anchor record updates', async () => {
-    const doc = await core.createDocument({ test: 123 }, DOCTYPE_TILE)
-    await anchorUpdate(doc)
-    expect(doc.state.log.length).toEqual(2)
-    expect(doc.state.anchored).toBeGreaterThan(0)
+    const doc1 = await client.createDocument({ test: 123 }, DOCTYPE_TILE)
+    await anchorUpdate(doc1)
+    expect(doc1.state.log.length).toEqual(2)
+    expect(doc1.state.anchored).toBeGreaterThan(0)
+    const doc2 = await client.createDocument({ test: 1234 }, DOCTYPE_TILE)
+    await anchorUpdate(doc2)
+    expect(doc2.state.log.length).toEqual(2)
+    expect(doc2.state.anchored).toBeGreaterThan(0)
   })
 
   it('loads documents correctly', async () => {
