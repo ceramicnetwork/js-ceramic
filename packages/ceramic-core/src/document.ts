@@ -26,7 +26,7 @@ export interface DocState {
   nextContent?: any;
   signature: SignatureStatus;
   anchorStatus: AnchorStatus;
-  scheduledFor?: number; // only present when anchor status is pending
+  anchorScheduledFor?: number; // only present when anchor status is pending
   anchorProof?: AnchorProof; // the anchor proof of the latest anchor, only present when anchor status is anchored
   log: Array<CID>;
 }
@@ -257,7 +257,7 @@ class Document extends EventEmitter {
   async anchor (): Promise<void> {
     this._anchorService.on(this.id, async (asr: AnchorServiceResponse): Promise<void> => {
       if (asr.status === 'PENDING') {
-        this._state.scheduledFor = asr.scheduledFor;
+        this._state.anchorScheduledFor = asr.anchorScheduledFor;
         return;
       }
       if (asr.status === 'COMPLETED') {

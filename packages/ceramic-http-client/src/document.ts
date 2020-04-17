@@ -44,7 +44,7 @@ export interface DocState {
   nextContent?: any;
   signature: SignatureStatus;
   anchorStatus: AnchorStatus;
-  scheduledFor?: number;
+  anchorScheduledFor?: number;
   anchorProof?: AnchorProof;
   log: Array<CID>;
 }

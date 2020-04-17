@@ -129,7 +129,7 @@ export default class EthereumAnchorService extends EventEmitter implements Ancho
         }
         const json = await response.json();
 
-        this.cidToResMap.set(cidDocPair, {status:json.status, message: json.message, scheduledFor: json.scheduledFor});
+        this.cidToResMap.set(cidDocPair, {status:json.status, message: json.message, anchorScheduledFor: json.scheduledFor});
         this.emit(cidDocPair.docId,);
     }
 
