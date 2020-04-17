@@ -64,14 +64,11 @@ describe('Ceramic interop: core <> http-client', () => {
   })
 
   it('gets anchor record updates', async () => {
-    // Right now there is no pinning in ceramic-core which means that the anchor record
-    // will not be remembered when we create the same document from the client and we
-    // thus get a different anchor record.
-    const doc1 = await core.createDocument({ test: 123 }, DOCTYPE_TILE)
+    const doc1 = await client.createDocument({ test: 123 }, DOCTYPE_TILE)
     await anchorUpdate(doc1)
     expect(doc1.state.log.length).toEqual(2)
     expect(doc1.state.anchored).toBeGreaterThan(0)
-    const doc2 = await client.createDocument({ test: 123 }, DOCTYPE_TILE)
+    const doc2 = await client.createDocument({ test: 1234 }, DOCTYPE_TILE)
     await anchorUpdate(doc2)
     expect(doc2.state.log.length).toEqual(2)
     expect(doc2.state.anchored).toBeGreaterThan(0)

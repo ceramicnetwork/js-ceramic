@@ -14,7 +14,7 @@ COPY packages/ceramic-cli/package.json packages/ceramic-cli/package-lock.json ./
 COPY packages/ceramic-core/package.json packages/ceramic-cli/package-lock.json ./packages/ceramic-core/
 COPY packages/ceramic-http-client/package.json packages/ceramic-cli/package-lock.json ./packages/ceramic-http-client/
 
-RUN npx lerna bootstrap --hoist -- --production
+RUN npx lerna bootstrap --hoist
 
 COPY packages ./packages
 

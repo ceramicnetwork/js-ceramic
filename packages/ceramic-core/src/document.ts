@@ -255,6 +255,8 @@ class Document extends EventEmitter {
   }
 
   close (): void {
+    this.dispatcher.off(`${this.id}_update`, this._handleHead.bind(this))
+    this.dispatcher.off(`${this.id}_headreq`, this._publishHead.bind(this))
     this.dispatcher.unregister(this.id)
   }
 }
