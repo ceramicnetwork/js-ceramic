@@ -237,30 +237,30 @@ export default class EthereumAnchorService extends EventEmitter implements Ancho
 
     /**
      * Validate anchor proof on the chain
-     * @param proof - Anchor proof instance
+     * @param anchorProof - Anchor proof instance
      */
-    async validateChainInclusion(proof: AnchorProof): Promise<void> {
-        const decoded = decode(proof.txHash.multihash);
+    async validateChainInclusion(anchorProof: AnchorProof): Promise<void> {
+        const decoded = decode(anchorProof.txHash.multihash);
         const txHash = decoded.digest.toString("hex");
 
         // determine network based on a chain ID
-        const provider: BaseProvider = EthereumAnchorService._getEthProvider(proof.chainId);
+        const provider: BaseProvider = EthereumAnchorService._getEthProvider(anchorProof.chainId);
 
         const transaction = await provider.getTransaction('0x' + txHash);
         const block = await provider.getBlock(transaction.blockHash);
 
         const txValueHexNumber = parseInt(transaction.data, 16);
-        const rootValueHexNumber = parseInt('0x' + proof.root.toBaseEncodedString('base16'), 16);
+        const rootValueHexNumber = parseInt('0x' + anchorProof.root.toBaseEncodedString('base16'), 16);
 
         if (txValueHexNumber !== rootValueHexNumber) {
-            throw new Error(`The root CID ${proof.root.toString()} is not in the transaction`);
+            throw new Error(`The root CID ${anchorProof.root.toString()} is not in the transaction`);
         }
 
-        if (proof.blockNumber != transaction.blockNumber) {
+        if (anchorProof.blockNumber != transaction.blockNumber) {
             throw new Error(`Block numbers are not the same`);
         }
 
-        if (proof.blockTimestamp != block.timestamp) {
+        if (anchorProof.blockTimestamp != block.timestamp) {
             throw new Error(`Block timestamps are not the same`);
         }
     }

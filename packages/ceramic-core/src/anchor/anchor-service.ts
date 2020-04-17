@@ -14,8 +14,8 @@ export default interface AnchorService extends EventEmitter {
 
     /**
      * Validate anchor proof record
-     * @param proof - Anchor proof record
+     * @param anchorProof - Anchor proof record
      */
-    validateChainInclusion (proof: AnchorProof): Promise<void>;
+    validateChainInclusion (anchorProof: AnchorProof): Promise<void>;
 
 }
