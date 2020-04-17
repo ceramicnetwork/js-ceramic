@@ -164,7 +164,7 @@ export default class EthereumAnchorService extends EventEmitter implements Ancho
         const json = await response.json();
         const res = Object.assign(new ResponseDto(), json);
 
-        this.cidToResMap.set(cidDocPair, new AnchorServiceResponse(res.status, res.message, res.scheduledFor));
+        this.cidToResMap.set(cidDocPair, {status:res.status, message: res.message, scheduledFor: res.scheduledFor});
         this.emit(cidDocPair.docId,);
     }
 
@@ -183,7 +183,7 @@ export default class EthereumAnchorService extends EventEmitter implements Ancho
 
         const task: Function = async (): Promise<void> => {
             if (started > maxTime) {
-                const failedRes = new AnchorServiceResponse('FAILED', 'exceeded max timeout');
+                const failedRes = {status: 'FAILED', message: 'exceeded max timeout'};
                 this.cidToResMap.set(cidDocPair, failedRes);
 
                 this.emit(cidDocPair.docId, failedRes);
@@ -210,16 +210,15 @@ export default class EthereumAnchorService extends EventEmitter implements Ancho
                         break;
                     }
                     case "FAILED": {
-                        this.emit(cidDocPair.docId, new AnchorServiceResponse(res.status, res.message));
+                        this.emit(cidDocPair.docId, { status: res.status, message: res.message });
                         this.removeAllListeners(cidDocPair.docId);
                         return;
                     }
                     case "COMPLETED": {
                         const {anchorRecord} = res;
                         const anchorRecordCid = new CID(anchorRecord.cid.toString());
-                        const anchorServiceResponse = new AnchorServiceResponse(res.status, res.message, null, anchorRecordCid);
 
-                        this.emit(cidDocPair.docId, anchorServiceResponse);
+                        this.emit(cidDocPair.docId, { status: res.status, message: res.message, anchorRecord: anchorRecordCid });
                         this.removeAllListeners(cidDocPair.docId);
                         return;
                     }

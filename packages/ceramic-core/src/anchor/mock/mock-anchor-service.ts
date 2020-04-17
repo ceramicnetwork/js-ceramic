@@ -2,12 +2,9 @@ import { EventEmitter } from 'events'
 import CID from 'cids'
 
 // TODO - remove dispatcher, its not needed once we have anchoring service
+import AnchorService from "../anchor-service";
 import type Dispatcher from '../../dispatcher'
 import type { AnchorProof } from '../../document'
-import AnchorService from "../anchor-service";
-import AnchorServiceResponse from "../anchor-service-response";
-
-const FAKE_CID = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
 
 class MockAnchorService extends EventEmitter implements AnchorService {
 
@@ -16,20 +13,19 @@ class MockAnchorService extends EventEmitter implements AnchorService {
   }
 
   async requestAnchor(docId: string, head: CID): Promise<void> {
-    // TODO - make request to actual service
     // creates fake anchor record
     const proofData: AnchorProof = {
       chainId: 'eip155:1',
       blockNumber: Date.now(),
       blockTimestamp: Date.now(),
       txHash: new CID('bagjqcgzaday6dzalvmy5ady2m5a5legq5zrbsnlxfc2bfxej532ds7htpova'),
-      root: FAKE_CID
+      root: head,
     };
     const proof = await this._dispatcher.storeRecord(proofData)
-    const record = { proof, path: 'ipld path for witness', prev: head }
+    const record = { proof, path: '/', prev: head }
     const cid = await this._dispatcher.storeRecord(record)
 
-    this.emit(docId, new AnchorServiceResponse('COMPLETED', 'CID successfully anchored.', null, cid));
+    this.emit(docId, { status: 'COMPLETED', message: 'CID successfully anchored.', anchorRecord: cid});
     this.removeAllListeners(docId)
   }
 
