@@ -23,8 +23,9 @@ const gen3IDgenesis = (pubkeys: any): any => {
   }
 }
 
-interface CeramicConfig {
-  anchorServicePolicyId?: string; // docId of an anchor service policy tile
+export interface CeramicConfig {
+  ethereumRpcUrl?: string;
+  anchorServiceUrl?: string;
   didProvider?: any;
 }
 
@@ -49,12 +50,7 @@ class Ceramic {
       promises.push(this.setDIDProvider(config.didProvider))
     }
 
-    let anchorServicePolicy;
-    if (config.anchorServicePolicyId) {
-      // TODO load service policy tile based on docId
-    }
-
-    const anchorServiceFactory = new AnchorServiceFactory(this.dispatcher, anchorServicePolicy);
+    const anchorServiceFactory = new AnchorServiceFactory(this.dispatcher, config);
     this._anchorService = anchorServiceFactory.get();
     await Promise.all(promises);
     return null

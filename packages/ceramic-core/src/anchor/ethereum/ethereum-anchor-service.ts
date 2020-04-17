@@ -1,26 +1,17 @@
 import CID from "cids";
+import { ethers } from "ethers";
 import fetch from "node-fetch";
 
-import {EventEmitter} from "events";
-import {AnchorProof} from "../../document";
-import AnchorService from "../anchor-service";
+import { EventEmitter } from "events";
+import { AnchorProof } from "../../document";
 
-import {ethers} from "ethers";
 import { BaseProvider } from 'ethers/providers';
-import {decode} from "typestub-multihashes";
+import { decode } from "typestub-multihashes";
+import { CeramicConfig } from "../../ceramic";
+
+import AnchorService from "../anchor-service";
 import AnchorServiceResponse from "../anchor-service-response";
 
-/**
- * Describes response from the external Ceramic Anchor Service
- */
-class ResponseDto {
-    status: string;
-    message: string;
-    scheduledFor?: number;
-    anchorRecord?: {
-        cid: CID | string;
-    };
-}
 
 /**
  * Simple poller implementation
@@ -84,43 +75,18 @@ const ETH_CHAIN_ID_MAPPINGS: Map<string, EthNetwork> = new Map([
 
 
 /**
- * Default development config for Ganache
- */
-const DEFAULT_DEV_GANACHE_CONFIG = {
-    rpc: {
-        host: "http://localhost",
-        port: "8545",
-    },
-};
-
-/**
- * Default partial development service policy for Ganache
- */
-const DEFAULT_DEV_GANACHE_SERVICE_POLICY_CONTENT = {
-    doctype: "tile",
-    owners: [] as string[],
-    content: {
-        serviceEndpoint: "http://localhost:3000/api/v0/requests",
-        serviceFunctions: [] as any[]
-    }
-};
-
-/**
  * Ethereum anchor service that stores root CIDs on Ethereum blockchain
  */
 export default class EthereumAnchorService extends EventEmitter implements AnchorService {
 
-    private readonly _servicePolicy: any;
     private readonly cidToResMap: Map<CidDoc, AnchorServiceResponse>;
 
     /**
-     * @param _servicePolicy - service configuration (polling interval, etc.)
+     * @param _config - service configuration (polling interval, etc.)
      */
-    constructor(_servicePolicy?: any) {
+    constructor(private _config: CeramicConfig) {
         super();
 
-        // TODO set service policy instead of default
-        this._servicePolicy = DEFAULT_DEV_GANACHE_SERVICE_POLICY_CONTENT;
         this.cidToResMap = new Map<CidDoc, AnchorServiceResponse>();
     }
 
@@ -145,7 +111,7 @@ export default class EthereumAnchorService extends EventEmitter implements Ancho
      * @private
      */
     async _sendReq(cidDocPair: CidDoc): Promise<void> {
-        const response = await fetch(this._servicePolicy.content.serviceEndpoint, {
+        const response = await fetch(this._config.anchorServiceUrl, {
             method: "POST",
             body: JSON.stringify({
                 docId: cidDocPair.docId,
@@ -162,9 +128,8 @@ export default class EthereumAnchorService extends EventEmitter implements Ancho
             return;
         }
         const json = await response.json();
-        const res = Object.assign(new ResponseDto(), json);
 
-        this.cidToResMap.set(cidDocPair, {status:res.status, message: res.message, scheduledFor: res.scheduledFor});
+        this.cidToResMap.set(cidDocPair, {status:json.status, message: json.message, scheduledFor: json.scheduledFor});
         this.emit(cidDocPair.docId,);
     }
 
@@ -191,7 +156,7 @@ export default class EthereumAnchorService extends EventEmitter implements Ancho
                 return;
             }
             try {
-                const requestUrl = [this._servicePolicy.content.serviceEndpoint, cidDocPair.cid.toString()].join('/');
+                const requestUrl = [this._config.anchorServiceUrl, cidDocPair.cid.toString()].join('/');
                 const response = await fetch(requestUrl);
                 if (!response.ok) {
                     // just log
@@ -199,8 +164,7 @@ export default class EthereumAnchorService extends EventEmitter implements Ancho
                 }
                 const json = await response.json();
 
-                const res: ResponseDto = Object.assign(new ResponseDto(), json);
-                switch (res.status) {
+                switch (json.status) {
                     case "PENDING": {
                         // just log
                         break;
@@ -210,15 +174,15 @@ export default class EthereumAnchorService extends EventEmitter implements Ancho
                         break;
                     }
                     case "FAILED": {
-                        this.emit(cidDocPair.docId, { status: res.status, message: res.message });
+                        this.emit(cidDocPair.docId, { status: json.status, message: json.message });
                         this.removeAllListeners(cidDocPair.docId);
                         return;
                     }
                     case "COMPLETED": {
-                        const {anchorRecord} = res;
+                        const {anchorRecord} = json;
                         const anchorRecordCid = new CID(anchorRecord.cid.toString());
 
-                        this.emit(cidDocPair.docId, { status: res.status, message: res.message, anchorRecord: anchorRecordCid });
+                        this.emit(cidDocPair.docId, { status: json.status, message: json.message, anchorRecord: anchorRecordCid });
                         this.removeAllListeners(cidDocPair.docId);
                         return;
                     }
@@ -244,7 +208,7 @@ export default class EthereumAnchorService extends EventEmitter implements Ancho
         const txHash = decoded.digest.toString("hex");
 
         // determine network based on a chain ID
-        const provider: BaseProvider = EthereumAnchorService._getEthProvider(anchorProof.chainId);
+        const provider: BaseProvider = this._getEthProvider(anchorProof.chainId);
 
         const transaction = await provider.getTransaction('0x' + txHash);
         const block = await provider.getBlock(transaction.blockHash);
@@ -270,16 +234,15 @@ export default class EthereumAnchorService extends EventEmitter implements Ancho
      * @param chain - CAIP-2 Chain ID
      * @private
      */
-    private static _getEthProvider(chain: string): BaseProvider {
+    private _getEthProvider(chain: string): BaseProvider {
         if (!chain.startsWith('eip155')) {
             throw new Error('Invalid chain ID according to CAIP-2');
         }
 
         const ethNetwork: EthNetwork = ETH_CHAIN_ID_MAPPINGS.get(chain);
         if (ethNetwork == null) {
-            // return default dev ganache provider
-            const url = `${DEFAULT_DEV_GANACHE_CONFIG.rpc.host}:${DEFAULT_DEV_GANACHE_CONFIG.rpc.port}`;
-            return new ethers.providers.JsonRpcProvider(url);
+            // defaults to configuration Ethereum RPC URL
+            return new ethers.providers.JsonRpcProvider(this._config.ethereumRpcUrl);
         }
 
         return ethers.getDefaultProvider(ethNetwork._network);

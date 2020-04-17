@@ -1,4 +1,4 @@
-import Document, {AnchorStatus, SignatureStatus} from '../document'
+import Document, { AnchorStatus, SignatureStatus } from '../document'
 import MockAnchorService from "../anchor/mock/mock-anchor-service";
 import ThreeIdHandler from '../doctypes/threeIdHandler'
 
