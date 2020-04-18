@@ -1,13 +1,13 @@
-import Ipfs from 'ipfs'
-import DoctypeHandler from './doctypes/doctypeHandler'
+import type Ipfs from 'ipfs'
+import type DoctypeHandler from './doctypes/doctypeHandler'
 import Dispatcher from './dispatcher'
 import AnchorService from './anchor/anchor-service'
 import User from './user'
-import Document, {InitOpts} from './document'
+import Document, { InitOpts } from './document'
 import ThreeIdHandler from './doctypes/threeIdHandler'
 import TileHandler from './doctypes/tileHandler'
 import AccountLinkHandler from './doctypes/accountLinkHandler'
-import {AnchorServiceFactory} from "./anchor/anchor-service-factory";
+import { AnchorServiceFactory } from "./anchor/anchor-service-factory";
 
 
 // This is temporary until we handle DIDs and in particular 3IDs better
@@ -45,7 +45,7 @@ class Ceramic {
   }
 
   async _init (config: CeramicConfig): Promise<void> {
-    const promises = [];
+    const promises = []
     if (config.didProvider) {
       promises.push(this.setDIDProvider(config.didProvider))
     }

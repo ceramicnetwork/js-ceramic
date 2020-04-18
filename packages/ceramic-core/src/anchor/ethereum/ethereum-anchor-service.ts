@@ -54,23 +54,20 @@ const DEFAULT_MAX_POLL_TIME = 7200000; // 2 hours
 /**
  * Ethereum network configuration
  */
-class EthNetwork {
-    constructor(public _network: string, public _chain: string, public _networkId: number, public _type: string) {
-    }
+interface EthNetwork {
+    network: string;
+    chain: string;
+    chainId: number,
+    networkId: number;
+    type: string;
 }
 
 /**
- * Maps Ethereum chain IDs to network configuration
+ * Maps some of Ethereum chain IDs to network configuration
  */
 const ETH_CHAIN_ID_MAPPINGS: Map<string, EthNetwork> = new Map([
-    ["eip155:1", new EthNetwork("mainnet", "ETH", 1, "Production")],
-    ["eip155:3", new EthNetwork("ropsten", "ETH", 3, "Test")],
-    ["eip155:4", new EthNetwork("rinkeby", "ETH", 4, "Test")],
-    ["eip155:5", new EthNetwork("goerli", "ETH", 5, "Test")],
-    ["eip155:2018", new EthNetwork("dev", "ETH", 2018, "Development")],
-    ["eip155:61", new EthNetwork("classic", "ETH", 1, "Production")],
-    ["eip155:63", new EthNetwork("mordor", "ETH", 7, "Test")],
-    ["eip155:6", new EthNetwork("kotti", "ETH", 6, "Test")],
+    ["eip155:1", { network: "mainnet", chain: "ETH", chainId: 1, networkId: 1, type: "Production" }],
+    ["eip155:3", { network: "ropsten", chain: "ETH", chainId: 3, networkId: 3, type: "Test" }],
 ]);
 
 
