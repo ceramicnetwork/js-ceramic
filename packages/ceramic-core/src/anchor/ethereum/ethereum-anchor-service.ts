@@ -35,7 +35,7 @@ class Poller extends EventEmitter {
      * On poll listener
      * @param cb - Callback function
      */
-    async onPoll(cb: any): Promise<void> {
+    onPoll(cb: any): void {
         this.on("poll", cb);
     }
 }
