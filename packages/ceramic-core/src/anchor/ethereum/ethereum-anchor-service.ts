@@ -112,12 +112,9 @@ export default class EthereumAnchorService extends AnchorService {
      */
     async _sendReq(cidDocPair: CidDoc): Promise<void> {
         const response = await fetch(this._config.anchorServiceUrl, {
-            method: "POST",
-            body: JSON.stringify({
-                docId: cidDocPair.docId,
-                cid: cidDocPair.cid.toString()
-            }),
-            headers: {
+            method: "POST", body: JSON.stringify({
+                docId: cidDocPair.docId, cid: cidDocPair.cid.toString()
+            }), headers: {
                 "Content-Type": "application/json"
             }
         });
@@ -129,8 +126,9 @@ export default class EthereumAnchorService extends AnchorService {
         }
         const json = await response.json();
 
-        this.cidToResMap.set(cidDocPair, {status:json.status, message: json.message, anchorScheduledFor: json.scheduledFor});
-        this.emit(cidDocPair.docId,);
+        const res = { status: json.status, message: json.message, anchorScheduledFor: json.scheduledFor };
+        this.cidToResMap.set(cidDocPair, res);
+        this.emit(cidDocPair.docId, res);
     }
 
     /**
@@ -148,7 +146,7 @@ export default class EthereumAnchorService extends AnchorService {
 
         const task: Function = async (): Promise<void> => {
             if (started > maxTime) {
-                const failedRes = {status: 'FAILED', message: 'exceeded max timeout'};
+                const failedRes = { status: 'FAILED', message: 'exceeded max timeout' };
                 this.cidToResMap.set(cidDocPair, failedRes);
 
                 this.emit(cidDocPair.docId, failedRes);
@@ -179,10 +177,14 @@ export default class EthereumAnchorService extends AnchorService {
                         return;
                     }
                     case "COMPLETED": {
-                        const {anchorRecord} = json;
+                        const { anchorRecord } = json;
                         const anchorRecordCid = new CID(anchorRecord.cid.toString());
 
-                        this.emit(cidDocPair.docId, { status: json.status, message: json.message, anchorRecord: anchorRecordCid });
+                        this.emit(cidDocPair.docId, {
+                            status: json.status,
+                            message: json.message,
+                            anchorRecord: anchorRecordCid
+                        });
                         this.removeAllListeners(cidDocPair.docId);
                         return;
                     }
