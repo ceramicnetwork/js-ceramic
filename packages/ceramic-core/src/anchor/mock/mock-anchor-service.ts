@@ -1,4 +1,3 @@
-import { EventEmitter } from 'events'
 import CID from 'cids'
 
 // TODO - remove dispatcher, its not needed once we have anchoring service
@@ -6,7 +5,7 @@ import AnchorService from "../anchor-service";
 import type Dispatcher from '../../dispatcher'
 import type { AnchorProof } from '../../document'
 
-class MockAnchorService extends EventEmitter implements AnchorService {
+class MockAnchorService extends AnchorService {
 
   constructor (private _dispatcher: Dispatcher, private _servicePolicy?: any) {
     super()

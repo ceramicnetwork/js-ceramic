@@ -43,9 +43,9 @@ class Poller extends EventEmitter {
 /**
  * CID-docId pair
  */
-class CidDoc {
-    constructor(public cid: CID, public docId: string) {
-    }
+interface CidDoc {
+    readonly cid: CID;
+    readonly docId: string;
 }
 
 const DEFAULT_POLL_TIME = 5000; // 5 seconds
@@ -77,7 +77,7 @@ const ETH_CHAIN_ID_MAPPINGS: Map<string, EthNetwork> = new Map([
 /**
  * Ethereum anchor service that stores root CIDs on Ethereum blockchain
  */
-export default class EthereumAnchorService extends EventEmitter implements AnchorService {
+export default class EthereumAnchorService extends AnchorService {
 
     private readonly cidToResMap: Map<CidDoc, AnchorServiceResponse>;
 
@@ -96,7 +96,7 @@ export default class EthereumAnchorService extends EventEmitter implements Ancho
      * @param head - Head CID of the document
      */
     async requestAnchor(docId: string, head: CID): Promise<void> {
-        const cidDocPair: CidDoc = new CidDoc(head, docId);
+        const cidDocPair: CidDoc = { cid: head, docId };
 
         // send initial request
         await this._sendReq(cidDocPair);
