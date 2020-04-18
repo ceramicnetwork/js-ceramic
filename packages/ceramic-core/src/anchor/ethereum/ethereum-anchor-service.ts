@@ -57,7 +57,7 @@ const DEFAULT_MAX_POLL_TIME = 7200000; // 2 hours
 interface EthNetwork {
     network: string;
     chain: string;
-    chainId: number,
+    chainId: number;
     networkId: number;
     type: string;
 }
@@ -69,7 +69,6 @@ const ETH_CHAIN_ID_MAPPINGS: Map<string, EthNetwork> = new Map([
     ["eip155:1", { network: "mainnet", chain: "ETH", chainId: 1, networkId: 1, type: "Production" }],
     ["eip155:3", { network: "ropsten", chain: "ETH", chainId: 3, networkId: 3, type: "Test" }],
 ]);
-
 
 /**
  * Ethereum anchor service that stores root CIDs on Ethereum blockchain
@@ -244,7 +243,7 @@ export default class EthereumAnchorService extends AnchorService {
             return new ethers.providers.JsonRpcProvider(this._config.ethereumRpcUrl);
         }
 
-        return ethers.getDefaultProvider(ethNetwork._network);
+        return ethers.getDefaultProvider(ethNetwork.network);
     }
 
 }

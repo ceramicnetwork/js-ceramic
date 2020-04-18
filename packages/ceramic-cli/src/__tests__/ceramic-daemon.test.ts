@@ -4,7 +4,7 @@ import IdentityWallet from 'identity-wallet'
 import tmp from 'tmp-promise'
 import Ipfs from 'ipfs'
 import CeramicDaemon from '../ceramic-daemon'
-import {AnchorStatus} from "@ceramicnetwork/ceramic-core/lib/document";
+import AnchorStatus from "@ceramicnetwork/ceramic-core/lib/document";
 
 const seed = '0x5872d6e0ae7347b72c9216db218ebbb9d9d0ae7ab818ead3557e8e78bf944184'
 const genIpfsConf = (path, id): any => {
@@ -65,14 +65,11 @@ describe('Ceramic interop: core <> http-client', () => {
   })
 
   it('gets anchor record updates', async () => {
-    // Right now there is no pinning in ceramic-core which means that the anchor record
-    // will not be remembered when we create the same document from the client and we
-    // thus get a different anchor record.
-    const doc1 = await core.createDocument({ test: 123 }, DOCTYPE_TILE)
+    const doc1 = await client.createDocument({ test: 123 }, DOCTYPE_TILE)
     await anchorUpdate(doc1)
     expect(doc1.state.log.length).toEqual(2)
     expect(doc1.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
-    const doc2 = await client.createDocument({ test: 123 }, DOCTYPE_TILE)
+    const doc2 = await client.createDocument({ test: 1234 }, DOCTYPE_TILE)
     await anchorUpdate(doc2)
     expect(doc2.state.log.length).toEqual(2)
     expect(doc2.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)

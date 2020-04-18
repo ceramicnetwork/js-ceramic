@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/ceramic-cli",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Typescript implementation of the Ceramic CLI",
   "keywords": [
     "Ceramic",
@@ -31,20 +31,20 @@
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/ceramic-core": "^0.1.0",
-    "@ceramicnetwork/ceramic-http-client": "^0.1.0",
+    "@ceramicnetwork/ceramic-core": "^0.2.0",
+    "@ceramicnetwork/ceramic-http-client": "^0.2.0",
     "commander": "^4.1.1",
     "express": "^4.17.1",
     "identity-wallet": "1.2.0-ceramic.1",
     "ipfs-http-client": "^42.0.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.8.4",
+    "@babel/core": "^7.9.0",
     "@babel/preset-env": "^7.8.4",
-    "@babel/preset-typescript": "^7.8.3",
+    "@babel/preset-typescript": "^7.9.0",
     "@types/events": "^3.0.0",
     "@types/express": "^4.17.2",
-    "@types/node": "^13.7.4",
+    "@types/node": "^13.9.5",
     "@types/node-fetch": "^2.5.5",
     "@typescript-eslint/eslint-plugin": "^2.19.0",
     "@typescript-eslint/parser": "^2.19.0",
