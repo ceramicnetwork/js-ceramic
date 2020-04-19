@@ -5,7 +5,7 @@ Object {
   "anchorProof": Object {
     "blockNumber": 123456,
   },
-  "anchorStatus": 2,
+  "anchorStatus": 3,
   "content": Object {
     "much": "data",
     "very": "content",
