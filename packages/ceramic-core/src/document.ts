@@ -264,7 +264,6 @@ class Document extends EventEmitter {
         }
         case 'PROCESSING': {
           this._state.anchorStatus = AnchorStatus.PROCESSING;
-          this._state.anchorScheduledFor = asr.anchorScheduledFor;
           return;
         }
         case 'COMPLETED': {
