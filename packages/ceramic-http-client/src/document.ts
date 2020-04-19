@@ -26,6 +26,7 @@ export enum SignatureStatus {
 export enum AnchorStatus {
   NOT_REQUESTED,
   PENDING,
+  PROCESSING,
   ANCHORED
 }
 

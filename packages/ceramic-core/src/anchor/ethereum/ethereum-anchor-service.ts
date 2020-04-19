@@ -67,9 +67,7 @@ export default class EthereumAnchorService extends AnchorService {
 
         // send initial request
         await this._sendReq(cidDocPair);
-
-        // start polling
-        return this._poll(cidDocPair);
+        this._poll(cidDocPair); // start polling
     }
 
     /**
