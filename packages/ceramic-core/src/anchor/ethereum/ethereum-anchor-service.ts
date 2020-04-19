@@ -157,7 +157,6 @@ export default class EthereumAnchorService extends AnchorService {
             } catch (e) {
                 // just log
             }
-
         }
     }
 
