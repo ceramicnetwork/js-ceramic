@@ -118,8 +118,7 @@ export default class EthereumAnchorService extends AnchorService {
                 this.cidToResMap.set(cidDoc, failedRes);
 
                 this.emit(cidDoc.docId, failedRes);
-                poll = false;
-                return;
+                return; // exit loop
             }
 
             await new Promise(resolve => setTimeout(resolve, DEFAULT_POLL_TIME));
