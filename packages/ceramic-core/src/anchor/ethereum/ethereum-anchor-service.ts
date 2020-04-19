@@ -1,11 +1,10 @@
 import CID from "cids";
-import { ethers } from "ethers";
 import fetch from "node-fetch";
 
 import { AnchorProof } from "../../document";
 
-import { BaseProvider } from 'ethers/providers';
 import { decode } from "typestub-multihashes";
+import * as providers from "@ethersproject/providers"
 import { CeramicConfig } from "../../ceramic";
 
 import AnchorService from "../anchor-service";
@@ -166,7 +165,7 @@ export default class EthereumAnchorService extends AnchorService {
         const txHash = decoded.digest.toString("hex");
 
         // determine network based on a chain ID
-        const provider: BaseProvider = this._getEthProvider(anchorProof.chainId);
+        const provider: providers.BaseProvider = this._getEthProvider(anchorProof.chainId);
 
         const transaction = await provider.getTransaction('0x' + txHash);
         const block = await provider.getBlock(transaction.blockHash);
@@ -192,7 +191,7 @@ export default class EthereumAnchorService extends AnchorService {
      * @param chain - CAIP-2 Chain ID
      * @private
      */
-    private _getEthProvider(chain: string): BaseProvider {
+    private _getEthProvider(chain: string): providers.BaseProvider {
         if (!chain.startsWith('eip155')) {
             throw new Error('Invalid chain ID according to CAIP-2');
         }
@@ -200,10 +199,10 @@ export default class EthereumAnchorService extends AnchorService {
         const ethNetwork: EthNetwork = ETH_CHAIN_ID_MAPPINGS[chain];
         if (ethNetwork == null) {
             // defaults to configuration Ethereum RPC URL
-            return new ethers.providers.JsonRpcProvider(this._config.ethereumRpcUrl);
+            return new providers.JsonRpcProvider(this._config.ethereumRpcUrl);
         }
 
-        return ethers.getDefaultProvider(ethNetwork.network);
+        return providers.getDefaultProvider(ethNetwork.network);
     }
 
 }
