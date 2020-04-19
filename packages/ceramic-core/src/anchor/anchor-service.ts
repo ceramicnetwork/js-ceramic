@@ -1,7 +1,7 @@
 import CID from "cids";
 
 import { AnchorProof } from "../document";
-import {EventEmitter} from "events";
+import { EventEmitter } from "events";
 
 export default abstract class AnchorService extends EventEmitter {
 
@@ -16,6 +16,6 @@ export default abstract class AnchorService extends EventEmitter {
      * Validate anchor proof record
      * @param anchorProof - Anchor proof record
      */
-    abstract validateChainInclusion (anchorProof: AnchorProof): Promise<void>;
+    abstract validateChainInclusion(anchorProof: AnchorProof): Promise<void>;
 
 }
