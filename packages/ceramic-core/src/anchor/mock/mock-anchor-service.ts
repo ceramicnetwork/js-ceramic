@@ -25,7 +25,6 @@ class MockAnchorService extends AnchorService {
     const cid = await this._dispatcher.storeRecord(record)
 
     this.emit(docId, { status: 'COMPLETED', message: 'CID successfully anchored.', anchorRecord: cid});
-    this.removeAllListeners(docId)
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

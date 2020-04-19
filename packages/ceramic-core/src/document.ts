@@ -265,6 +265,9 @@ class Document extends EventEmitter {
         this._publishHead();
       }
       // TODO handle failed status
+
+      // clean up resources
+      this._anchorService.removeAllListeners(this.id);
     });
     await this._anchorService.requestAnchor(this.id, this.head)
     this._state.anchorStatus = AnchorStatus.PENDING;

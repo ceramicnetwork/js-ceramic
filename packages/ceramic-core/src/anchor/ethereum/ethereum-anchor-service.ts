@@ -2,7 +2,6 @@ import CID from "cids";
 import { ethers } from "ethers";
 import fetch from "node-fetch";
 
-import { EventEmitter } from "events";
 import { AnchorProof } from "../../document";
 
 import { BaseProvider } from 'ethers/providers';
@@ -11,34 +10,6 @@ import { CeramicConfig } from "../../ceramic";
 
 import AnchorService from "../anchor-service";
 import AnchorServiceResponse from "../anchor-service-response";
-
-
-/**
- * Simple poller implementation
- */
-class Poller extends EventEmitter {
-    /**
-     * @param {int} timeout how long should we wait after the poll started?
-     */
-    constructor(private timeout = 100) {
-        super();
-    }
-
-    /**
-     * Poll function which uses setTimeout instead of setInterval
-     */
-    poll(): void {
-        setTimeout(() => this.emit("poll"), this.timeout);
-    }
-
-    /**
-     * On poll listener
-     * @param cb - Callback function
-     */
-    onPoll(cb: any): void {
-        this.on("poll", cb);
-    }
-}
 
 /**
  * CID-docId pair
@@ -116,8 +87,7 @@ export default class EthereumAnchorService extends AnchorService {
         });
 
         if (!response.ok) {
-            // bad request
-            // just log
+            this.emit(cidDocPair.docId, { status: 'FAILED', message: `Failed to send request. Status ${response.statusText}` });
             return;
         }
         const json = await response.json();
@@ -129,33 +99,31 @@ export default class EthereumAnchorService extends AnchorService {
 
     /**
      * Start polling for CidDocPair mapping
-     * @param cidDocPair - CID to Doc mapping
+     * @param cidDoc - CID to Doc mapping
      * @param pollTime - Single poll timeout
      * @param maxPollingTime - Global timeout for max polling in milliseconds
      * @private
      */
-    async _poll(cidDocPair: CidDoc, pollTime?: number, maxPollingTime?: number): Promise<void> {
-        const poller = new Poller(pollTime | DEFAULT_POLL_TIME);
-
+    async _poll(cidDoc: CidDoc, pollTime?: number, maxPollingTime?: number): Promise<void> {
         const started = new Date().getTime();
         const maxTime = started + (maxPollingTime | DEFAULT_MAX_POLL_TIME);
 
-        const task: Function = async (): Promise<void> => {
+        let poll = true;
+        while (poll) {
             if (started > maxTime) {
                 const failedRes = { status: 'FAILED', message: 'exceeded max timeout' };
-                this.cidToResMap.set(cidDocPair, failedRes);
+                this.cidToResMap.set(cidDoc, failedRes);
 
-                this.emit(cidDocPair.docId, failedRes);
-                this.removeAllListeners(cidDocPair.docId);
+                this.emit(cidDoc.docId, failedRes);
+                poll = false;
                 return;
             }
+
+            await new Promise(resolve => setTimeout(resolve, DEFAULT_POLL_TIME));
+
             try {
-                const requestUrl = [this._config.anchorServiceUrl, cidDocPair.cid.toString()].join('/');
+                const requestUrl = [this._config.anchorServiceUrl, cidDoc.cid.toString()].join('/');
                 const response = await fetch(requestUrl);
-                if (!response.ok) {
-                    // just log
-                    poller.poll(); // continue to poll
-                }
                 const json = await response.json();
 
                 switch (json.status) {
@@ -168,33 +136,26 @@ export default class EthereumAnchorService extends AnchorService {
                         break;
                     }
                     case "FAILED": {
-                        this.emit(cidDocPair.docId, { status: json.status, message: json.message });
-                        this.removeAllListeners(cidDocPair.docId);
-                        return;
+                        this.emit(cidDoc.docId, { status: json.status, message: json.message });
+                        poll = false;
+                        break;
                     }
                     case "COMPLETED": {
                         const { anchorRecord } = json;
                         const anchorRecordCid = new CID(anchorRecord.cid.toString());
 
-                        this.emit(cidDocPair.docId, {
-                            status: json.status,
-                            message: json.message,
-                            anchorRecord: anchorRecordCid
+                        this.emit(cidDoc.docId, {
+                            status: json.status, message: json.message, anchorRecord: anchorRecordCid
                         });
-                        this.removeAllListeners(cidDocPair.docId);
-                        return;
+                        poll = false;
+                        break;
                     }
                 }
-
-                poller.poll(); // continue to poll
             } catch (e) {
-                // just log an error
-                poller.poll(); // continue to poll
+                // just log
             }
-        };
 
-        await poller.onPoll(task);
-        poller.poll(); // start polling
+        }
     }
 
     /**
