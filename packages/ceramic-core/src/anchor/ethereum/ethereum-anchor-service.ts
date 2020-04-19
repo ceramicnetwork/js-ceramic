@@ -177,11 +177,11 @@ export default class EthereumAnchorService extends AnchorService {
             throw new Error(`The root CID ${anchorProof.root.toString()} is not in the transaction`);
         }
 
-        if (anchorProof.blockNumber != transaction.blockNumber) {
+        if (anchorProof.blockNumber !== transaction.blockNumber) {
             throw new Error(`Block numbers are not the same`);
         }
 
-        if (anchorProof.blockTimestamp != block.timestamp) {
+        if (anchorProof.blockTimestamp !== block.timestamp) {
             throw new Error(`Block timestamps are not the same`);
         }
     }
