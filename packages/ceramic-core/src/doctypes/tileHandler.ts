@@ -1,11 +1,11 @@
 import Ceramic from '../ceramic'
 import CID from 'cids'
-import {AnchorProof, AnchorRecord, AnchorStatus, DocState, SignatureStatus} from '../document'
+import { AnchorProof, AnchorRecord, AnchorStatus, DocState, SignatureStatus } from '../document'
 import DoctypeHandler from './doctypeHandler'
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
-import {Resolver} from 'did-resolver'
+import { Resolver } from 'did-resolver'
 import jsonpatch from 'fast-json-patch'
-import {verifyJWT} from 'did-jwt'
+import { verifyJWT } from 'did-jwt'
 
 const DOCTYPE = 'tile'
 

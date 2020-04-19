@@ -1,7 +1,7 @@
 import CID from 'cids'
 import DoctypeHandler from './doctypeHandler'
-import {AnchorProof, AnchorStatus, DocState, SignatureStatus} from '../document'
-import {validateLink} from '3id-blockchain-utils'
+import { AnchorProof, AnchorStatus, DocState, SignatureStatus } from '../document'
+import { validateLink } from '3id-blockchain-utils'
 
 const DOCTYPE = 'account-link'
 
