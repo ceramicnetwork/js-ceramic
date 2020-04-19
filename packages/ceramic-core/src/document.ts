@@ -16,6 +16,7 @@ export enum SignatureStatus {
 export enum AnchorStatus {
   NOT_REQUESTED,
   PENDING,
+  PROCESSING,
   ANCHORED
 }
 
@@ -256,18 +257,29 @@ class Document extends EventEmitter {
 
   async anchor (): Promise<void> {
     this._anchorService.on(this.id, async (asr: AnchorServiceResponse): Promise<void> => {
-      if (asr.status === 'PENDING') {
-        this._state.anchorScheduledFor = asr.anchorScheduledFor;
-        return;
-      }
-      if (asr.status === 'COMPLETED') {
-        await this._handleHead(asr.anchorRecord);
-        this._publishHead();
-      }
-      // TODO handle failed status
+      switch (asr.status) {
+        case 'PENDING': {
+          this._state.anchorScheduledFor = asr.anchorScheduledFor;
+          return;
+        }
+        case 'PROCESSING': {
+          this._state.anchorStatus = AnchorStatus.PROCESSING;
+          this._state.anchorScheduledFor = asr.anchorScheduledFor;
+          return;
+        }
+        case 'COMPLETED': {
+          await this._handleHead(asr.anchorRecord);
+          this._publishHead();
 
-      // clean up resources
-      this._anchorService.removeAllListeners(this.id);
+          this._anchorService.removeAllListeners(this.id);
+          return;
+        }
+        case 'FAILED': {
+          // TODO handle failed status
+          this._anchorService.removeAllListeners(this.id);
+          return;
+        }
+      }
     });
     await this._anchorService.requestAnchor(this.id, this.head)
     this._state.anchorStatus = AnchorStatus.PENDING;

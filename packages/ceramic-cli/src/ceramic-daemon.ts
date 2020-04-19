@@ -3,6 +3,7 @@ import ipfsClient from 'ipfs-http-client'
 import express, { Request, Response, NextFunction } from 'express'
 import IdentityWallet from 'identity-wallet'
 import Ceramic from '@ceramicnetwork/ceramic-core'
+import type { CeramicConfig } from "@ceramicnetwork/ceramic-core";
 import { serializeState } from './utils'
 
 const IPFS_HOST = 'http://localhost:5001'
@@ -15,6 +16,9 @@ interface CreateOpts {
   ipfsHost?: string;
   ipfs?: Ipfs.Ipfs;
   port?: number;
+
+  ethereumRpcUrl?: string;
+  anchorServiceUrl?: string;
 }
 
 class CeramicDaemon {
@@ -41,7 +45,16 @@ class CeramicDaemon {
 
   static async create (opts: CreateOpts): Promise<CeramicDaemon> {
     const ipfs = opts.ipfs || ipfsClient(opts.ipfsHost || IPFS_HOST)
-    const ceramic = await Ceramic.create(ipfs)
+
+    let ceramicConfig: CeramicConfig; // load initially from file and override with opts
+    if (opts.ethereumRpcUrl && opts.anchorServiceUrl) {
+      ceramicConfig = {
+        ethereumRpcUrl: opts.ethereumRpcUrl,
+        anchorServiceUrl: opts.anchorServiceUrl,
+      }
+    }
+
+    const ceramic = await Ceramic.create(ipfs, ceramicConfig)
     const idWallet = new IdentityWallet(async () => true, { seed })
     await ceramic.setDIDProvider(idWallet.get3idProvider())
     return new CeramicDaemon(ceramic, opts)

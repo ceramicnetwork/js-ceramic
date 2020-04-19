@@ -69,7 +69,7 @@ export default class EthereumAnchorService extends AnchorService {
         await this._sendReq(cidDocPair);
 
         // start polling
-        await this._poll(cidDocPair);
+        return this._poll(cidDocPair);
     }
 
     /**
@@ -95,7 +95,7 @@ export default class EthereumAnchorService extends AnchorService {
         }
         const json = await response.json();
 
-        const res = { status: json.status, message: json.message, anchorScheduledFor: json.scheduledFor };
+        const res = { status: json.status, message: json.message, anchorScheduledFor: json.scheduledAt };
         this.cidToResMap.set(cidDocPair, res);
         this.emit(cidDocPair.docId, res);
     }
