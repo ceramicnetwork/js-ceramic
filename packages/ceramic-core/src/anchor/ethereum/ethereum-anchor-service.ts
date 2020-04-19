@@ -36,10 +36,10 @@ interface EthNetwork {
 /**
  * Maps some of Ethereum chain IDs to network configuration
  */
-const ETH_CHAIN_ID_MAPPINGS: Map<string, EthNetwork> = new Map([
-    ["eip155:1", { network: "mainnet", chain: "ETH", chainId: 1, networkId: 1, type: "Production" }],
-    ["eip155:3", { network: "ropsten", chain: "ETH", chainId: 3, networkId: 3, type: "Test" }],
-]);
+const ETH_CHAIN_ID_MAPPINGS: Record<string, EthNetwork> = {
+    "eip155:1": { network: "mainnet", chain: "ETH", chainId: 1, networkId: 1, type: "Production" },
+    "eip155:3": { network: "ropsten", chain: "ETH", chainId: 3, networkId: 3, type: "Test" },
+};
 
 /**
  * Ethereum anchor service that stores root CIDs on Ethereum blockchain
@@ -87,7 +87,10 @@ export default class EthereumAnchorService extends AnchorService {
         });
 
         if (!response.ok) {
-            this.emit(cidDocPair.docId, { status: 'FAILED', message: `Failed to send request. Status ${response.statusText}` });
+            this.emit(cidDocPair.docId, {
+                status: 'FAILED',
+                message: `Failed to send request. Status ${response.statusText}`
+            });
             return;
         }
         const json = await response.json();
@@ -198,7 +201,7 @@ export default class EthereumAnchorService extends AnchorService {
             throw new Error('Invalid chain ID according to CAIP-2');
         }
 
-        const ethNetwork: EthNetwork = ETH_CHAIN_ID_MAPPINGS.get(chain);
+        const ethNetwork: EthNetwork = ETH_CHAIN_ID_MAPPINGS[chain];
         if (ethNetwork == null) {
             // defaults to configuration Ethereum RPC URL
             return new ethers.providers.JsonRpcProvider(this._config.ethereumRpcUrl);
