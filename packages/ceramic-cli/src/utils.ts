@@ -6,7 +6,7 @@ export function serializeState (state: any): any {
     state.anchorStatus = AnchorStatus[state.anchorStatus];
   }
   if (state.anchorScheduledFor) {
-    state = new Date(state.anchorScheduledFor).toISOString(); // ISO format of the UTC time
+    state.anchorScheduledFor = new Date(state.anchorScheduledFor).toISOString(); // ISO format of the UTC time
   }
   if (state.anchorProof) {
     state.anchorProof.txHash = state.anchorProof.txHash.toString();

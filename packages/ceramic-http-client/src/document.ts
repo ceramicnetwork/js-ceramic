@@ -62,6 +62,12 @@ function deserializeState (state: any): DocState {
     state.anchorProof.txHash = new CID(state.anchorProof.txHash);
     state.anchorProof.root = new CID(state.anchorProof.root);
   }
+  if (state.anchorStatus) {
+    state.anchorStatus = AnchorStatus[state.anchorStatus];
+  }
+  if (state.anchorScheduledFor) {
+    state.anchorScheduledFor = Date.parse(state.anchorScheduledFor); // ISO format of the UTC time
+  }
   return state
 }
 
