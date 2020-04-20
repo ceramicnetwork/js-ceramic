@@ -23,12 +23,31 @@ export enum SignatureStatus {
   SIGNED
 }
 
-interface DocState {
+export enum AnchorStatus {
+  NOT_REQUESTED,
+  PENDING,
+  PROCESSING,
+  ANCHORED
+}
+
+export interface AnchorProof {
+  chainId: string;
+  blockNumber: number;
+  blockTimestamp: number;
+  txHash: CID;
+  root: CID;
+}
+
+export interface DocState {
+  doctype: string;
+  owners: Array<string>;
   content: any;
   nextContent?: any;
   signature: SignatureStatus;
-  anchored: number;
-  log: Array<string>;
+  anchorStatus: AnchorStatus;
+  anchorScheduledFor?: number;
+  anchorProof?: AnchorProof;
+  log: Array<CID>;
 }
 
 export interface InitOpts {
@@ -39,6 +58,16 @@ export interface InitOpts {
 
 function deserializeState (state: any): DocState {
   state.log = state.log.map((cidStr: string): CID => new CID(cidStr))
+  if (state.anchorProof) {
+    state.anchorProof.txHash = new CID(state.anchorProof.txHash);
+    state.anchorProof.root = new CID(state.anchorProof.root);
+  }
+  if (state.anchorStatus) {
+    state.anchorStatus = AnchorStatus[state.anchorStatus];
+  }
+  if (state.anchorScheduledFor) {
+    state.anchorScheduledFor = Date.parse(state.anchorScheduledFor); // ISO format of the UTC time
+  }
   return state
 }
 

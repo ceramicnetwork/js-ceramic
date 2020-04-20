@@ -1,15 +1,23 @@
 import type Dispatcher from './dispatcher'
-import type AnchorService from './anchor-service'
+import type AnchorService from './anchor/anchor-service'
 import type DoctypeHandler from './doctypes/doctypeHandler'
 import CID from 'cids'
 import { EventEmitter } from 'events'
 import PQueue from 'p-queue'
 import cloneDeep from 'lodash.clonedeep'
+import AnchorServiceResponse from "./anchor/anchor-service-response";
 
 export enum SignatureStatus {
   GENESIS,
   PARTIAL,
   SIGNED
+}
+
+export enum AnchorStatus {
+  NOT_REQUESTED,
+  PENDING,
+  PROCESSING,
+  ANCHORED
 }
 
 export interface DocState {
@@ -18,7 +26,9 @@ export interface DocState {
   content: any;
   nextContent?: any;
   signature: SignatureStatus;
-  anchored: number;
+  anchorStatus: AnchorStatus;
+  anchorScheduledFor?: number; // only present when anchor status is pending
+  anchorProof?: AnchorProof; // the anchor proof of the latest anchor, only present when anchor status is anchored
   log: Array<CID>;
 }
 
@@ -35,10 +45,10 @@ export interface AnchorRecord {
 }
 
 export interface AnchorProof {
-  chain: string;
+  chainId: string;
   blockNumber: number;
   blockTimestamp: number;
-  txHash: string; // potentially a CID
+  txHash: CID;
   root: CID;
 }
 
@@ -187,7 +197,9 @@ class Document extends EventEmitter {
       // Compute next transition in parallel
       const localState = await this._applyLogToState(localLog, cloneDeep(state), true)
       const remoteState = await this._applyLogToState(log, cloneDeep(state), true)
-      if (remoteState.anchored !== 0 && remoteState.anchored < localState.anchored) {
+
+      if (AnchorStatus.ANCHORED === remoteState.anchorStatus &&
+          remoteState.anchorProof.blockTimestamp < localState.anchorProof.blockTimestamp) {
         // if the remote state is anchored before the local,
         // apply the remote log to our local state. Otherwise
         // keep present state
@@ -209,12 +221,13 @@ class Document extends EventEmitter {
       if (!record.prev) {
         state = await this._doctypeHandler.applyGenesis(record, cid)
       } else if (record.proof) {
+        // it's an anchor record
         const proof = await this._verifyAnchorRecord(record)
         state = await this._doctypeHandler.applyAnchor(record, proof, cid, state)
       } else {
         state = await this._doctypeHandler.applySigned(record, cid, state)
       }
-      if (breakOnAnchor && state.anchored) return state
+      if (breakOnAnchor && AnchorStatus.ANCHORED === state.anchorStatus) return state
       entry = itr.next()
     }
     return state
@@ -243,11 +256,32 @@ class Document extends EventEmitter {
   }
 
   async anchor (): Promise<void> {
-    this._anchorService.on(this.id, async (cid): Promise<void> => {
-      await this._handleHead(cid)
-      this._publishHead()
-    })
+    this._anchorService.on(this.id, async (asr: AnchorServiceResponse): Promise<void> => {
+      switch (asr.status) {
+        case 'PENDING': {
+          this._state.anchorScheduledFor = asr.anchorScheduledFor;
+          return;
+        }
+        case 'PROCESSING': {
+          this._state.anchorStatus = AnchorStatus.PROCESSING;
+          return;
+        }
+        case 'COMPLETED': {
+          await this._handleHead(asr.anchorRecord);
+          this._publishHead();
+
+          this._anchorService.removeAllListeners(this.id);
+          return;
+        }
+        case 'FAILED': {
+          // TODO handle failed status
+          this._anchorService.removeAllListeners(this.id);
+          return;
+        }
+      }
+    });
     await this._anchorService.requestAnchor(this.id, this.head)
+    this._state.anchorStatus = AnchorStatus.PENDING;
   }
 
   toString (): string {

@@ -1,5 +1,5 @@
-import Document, { SignatureStatus } from '../document'
-import AnchorService from '../anchor-service'
+import Document, { AnchorStatus, SignatureStatus } from '../document'
+import MockAnchorService from "../anchor/mock/mock-anchor-service";
 import ThreeIdHandler from '../doctypes/threeIdHandler'
 
 jest.mock('../dispatcher', () => {
@@ -65,7 +65,7 @@ describe('Document', () => {
 
     beforeEach(() => {
       dispatcher = Dispatcher(false)
-      anchorService = new AnchorService(dispatcher)
+      anchorService = new MockAnchorService(dispatcher)
       doctypeHandler = new ThreeIdHandler()
       doctypeHandler.user = new User()
       // fake jwt
@@ -79,9 +79,9 @@ describe('Document', () => {
       expect(doc.content).toEqual(initialContent)
       expect(dispatcher.register).toHaveBeenCalledWith(docId)
       expect(dispatcher.on).toHaveBeenCalled()
-      expect(doc.state.anchored).toEqual(0)
+      expect(doc.state.anchorStatus).toEqual(AnchorStatus.PENDING)
       await anchorUpdate(doc)
-      expect(doc.state.anchored).toBeGreaterThan(0)
+      expect(doc.state.anchorStatus).not.toEqual(AnchorStatus.NOT_REQUESTED)
     })
 
     it('is loaded correctly', async () => {
@@ -89,7 +89,7 @@ describe('Document', () => {
       const doc = await Document.load(docId, doctypeHandlers, anchorService, dispatcher, { skipWait: true })
       expect(doc.id).toEqual(docId)
       expect(doc.content).toEqual(initialContent)
-      expect(doc.state.anchored).toEqual(0)
+      expect(doc.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
     })
 
     it('handles new head correctly', async () => {
@@ -100,12 +100,12 @@ describe('Document', () => {
       const doc = await Document.load(docId, doctypeHandlers, anchorService, dispatcher, { skipWait: true })
       // changes will not load since no network and no local head storage yet
       expect(doc.content).toEqual(initialContent)
-      expect(doc.state).toEqual(expect.objectContaining({ signature: SignatureStatus.GENESIS, anchored: 0 }))
+      expect(doc.state).toEqual(expect.objectContaining({ signature: SignatureStatus.GENESIS, anchorStatus: 0 }))
       // _handleHead is intended to be called by the dispatcher
       // should return a promise that resolves when head is added
       await doc._handleHead(log[1])
       expect(doc.state.signature).toEqual(SignatureStatus.GENESIS)
-      expect(doc.state.anchored).not.toEqual(0)
+      expect(doc.state.anchorStatus).not.toEqual(AnchorStatus.NOT_REQUESTED)
       expect(doc.content).toEqual(initialContent)
     })
 
@@ -116,7 +116,7 @@ describe('Document', () => {
       await anchorUpdate(doc)
       expect(doc.content).toEqual(newContent)
       expect(doc.state.signature).toEqual(SignatureStatus.SIGNED)
-      expect(doc.state.anchored).not.toEqual(0)
+      expect(doc.state.anchorStatus).not.toEqual(AnchorStatus.NOT_REQUESTED)
     })
 
     it('handles conflict', async () => {
@@ -160,7 +160,7 @@ describe('Document', () => {
 
     beforeEach(() => {
       dispatcher = Dispatcher(true)
-      anchorService = new AnchorService(dispatcher)
+      anchorService = new MockAnchorService(dispatcher)
       doctypeHandler = new ThreeIdHandler()
       doctypeHandler.user = new User()
       // fake jwt

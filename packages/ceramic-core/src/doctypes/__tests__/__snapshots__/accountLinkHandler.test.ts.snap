@@ -2,7 +2,10 @@
 
 exports[`AccountLinkHandler applies anchor record correctly 1`] = `
 Object {
-  "anchored": 123456,
+  "anchorProof": Object {
+    "blockNumber": 123456,
+  },
+  "anchorStatus": 3,
   "content": null,
   "doctype": "account-link",
   "log": Array [
@@ -146,7 +149,7 @@ Object {
 
 exports[`AccountLinkHandler applies genesis record correctly 1`] = `
 Object {
-  "anchored": 0,
+  "anchorStatus": 0,
   "content": null,
   "doctype": "account-link",
   "log": Array [
@@ -204,7 +207,7 @@ Object {
 
 exports[`AccountLinkHandler applies signed record correctly 1`] = `
 Object {
-  "anchored": 0,
+  "anchorStatus": 0,
   "content": null,
   "doctype": "account-link",
   "log": Array [

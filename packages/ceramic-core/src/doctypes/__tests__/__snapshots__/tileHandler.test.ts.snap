@@ -2,7 +2,10 @@
 
 exports[`ThreeIdHandler applies anchor record correctly 1`] = `
 Object {
-  "anchored": 123456,
+  "anchorProof": Object {
+    "blockNumber": 123456,
+  },
+  "anchorStatus": 3,
   "content": Object {
     "much": "data",
     "very": "content",
@@ -148,7 +151,7 @@ Object {
 
 exports[`ThreeIdHandler applies genesis record correctly 1`] = `
 Object {
-  "anchored": 0,
+  "anchorStatus": 0,
   "content": Object {
     "much": "data",
   },
@@ -208,7 +211,7 @@ Object {
 
 exports[`ThreeIdHandler applies signed record correctly 1`] = `
 Object {
-  "anchored": 0,
+  "anchorStatus": 0,
   "content": Object {
     "much": "data",
     "very": "content",

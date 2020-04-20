@@ -1,6 +1,6 @@
-import type CID from 'cids'
+import CID from 'cids'
 import DoctypeHandler from './doctypeHandler'
-import { DocState, SignatureStatus, AnchorProof } from '../document'
+import { AnchorProof, AnchorStatus, DocState, SignatureStatus } from '../document'
 import { validateLink } from '3id-blockchain-utils'
 
 const DOCTYPE = 'account-link'
@@ -40,7 +40,7 @@ class AccountLinkHandler extends DoctypeHandler {
       content: null,
       nextContent: null,
       signature: SignatureStatus.GENESIS,
-      anchored: 0,
+      anchorStatus: AnchorStatus.NOT_REQUESTED,
       log: [cid]
     }
   }
@@ -59,7 +59,7 @@ class AccountLinkHandler extends DoctypeHandler {
     return {
       ...state,
       signature: SignatureStatus.SIGNED,
-      anchored: 0,
+      anchorStatus: AnchorStatus.NOT_REQUESTED,
       nextContent: validProof.did
     }
   }
@@ -74,7 +74,8 @@ class AccountLinkHandler extends DoctypeHandler {
     return {
       ...state,
       content,
-      anchored: proof.blockNumber
+      anchorStatus: AnchorStatus.ANCHORED,
+      anchorProof: proof,
     }
   }
 }

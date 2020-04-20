@@ -13,9 +13,17 @@ function validateDocId (docId: string): string {
 program
   .command('daemon')
   .option('--ipfs-api <url>', 'The ipfs http api to use')
+  .option('--ethereum-rpc <url>', 'The Ethereum RPC URL used for communicating with Ethereum blockchain')
+  .option('--anchor-service-api <url>', 'The anchor service URL to use')
   .option('--disable-pinning', 'Disable pinning thought the http api')
   .description('Start the daemon')
-  .action(async ({ ipfsApi }) => { await CeramicDaemon.create({ ipfsHost: ipfsApi }) })
+  .action(async ({ ipfsApi, ethereumRpc, anchorServiceApi }) => {
+    await CeramicDaemon.create({
+        ipfsHost: ipfsApi,
+        ethereumRpcUrl: ethereumRpc,
+        anchorServiceUrl: anchorServiceApi,
+    })
+  })
 
 program
   .command('create <doctype> <new-content>')

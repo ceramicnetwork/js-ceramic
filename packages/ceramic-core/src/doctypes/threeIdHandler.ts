@@ -1,6 +1,6 @@
-import type { DIDDocument } from 'did-resolver'
-import type CID from 'cids'
-import { DocState, SignatureStatus, AnchorRecord, AnchorProof } from '../document'
+import { DIDDocument } from 'did-resolver'
+import CID from 'cids'
+import { AnchorProof, AnchorRecord, AnchorStatus, DocState, SignatureStatus } from '../document'
 import DoctypeHandler from './doctypeHandler'
 import { wrapDocument } from '@ceramicnetwork/3id-did-resolver'
 import jsonpatch from 'fast-json-patch'
@@ -27,7 +27,7 @@ class ThreeIdHandler extends DoctypeHandler {
       content: record.content,
       nextContent: null,
       signature: SignatureStatus.GENESIS,
-      anchored: 0,
+      anchorStatus: AnchorStatus.NOT_REQUESTED,
       log: [cid]
     }
   }
@@ -57,7 +57,7 @@ class ThreeIdHandler extends DoctypeHandler {
     return {
       ...state,
       signature: SignatureStatus.SIGNED,
-      anchored: 0,
+      anchorStatus: AnchorStatus.NOT_REQUESTED,
       nextContent: jsonpatch.applyPatch(state.content, record.content).newDocument
     }
   }
@@ -72,7 +72,8 @@ class ThreeIdHandler extends DoctypeHandler {
     return {
       ...state,
       content,
-      anchored: proof.blockNumber
+      anchorStatus: AnchorStatus.ANCHORED,
+      anchorProof: proof,
     }
   }
 
