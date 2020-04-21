@@ -235,10 +235,10 @@ class Document extends EventEmitter {
   }
 
   async _verifyAnchorRecord (record: AnchorRecord): Promise<AnchorProof> {
-    const prevRecord = cloneDeep(await this.dispatcher.retrieveRecord(record.prev))
+    const prevRecord = await this.dispatcher.retrieveRecord(record.prev)
 
     const path = record.path.length > 0 ? `/root/${record.path}` : '/root';
-    const prevRootPathRecord = cloneDeep(await this.dispatcher.retrieveRecordByPath(record.proof, path))
+    const prevRootPathRecord = await this.dispatcher.retrieveRecordByPath(record.proof, path)
 
     if (!equal(prevRecord, prevRootPathRecord)) {
       throw new Error(`The anchor record proof ${record.proof.toString()} with path ${record.path} points to invalid 'prev' record`)
