@@ -44,6 +44,15 @@ class Dispatcher extends EventEmitter {
     return cloneDeep(this._recordCache[cid.toString()])
   }
 
+  async retrieveRecordByPath (cid: CID, path: string): Promise<any> {
+    const ipfsObj = await this._ipfs.dag.get(cid, path)
+    if (ipfsObj == null) {
+      throw new Error(`Failed to find object for CID ${cid.toBaseEncodedString()} and path "${path}"`)
+    }
+    // should skip cache
+    return ipfsObj.value
+  }
+
   async publishHead (id: string, head: CID): Promise<void> {
     await this._ipfs.pubsub.publish(TOPIC, JSON.stringify({ typ: MsgType.UPDATE, id, cid: head.toString() }))
   }
