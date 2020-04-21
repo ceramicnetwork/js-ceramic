@@ -131,7 +131,7 @@ export default class EthereumAnchorService extends AnchorService {
                         break;
                     }
                     case "PROCESSING": {
-                        // just log
+                        this.emit(cidDoc.docId, { status: json.status, message: json.message });
                         break;
                     }
                     case "FAILED": {
