@@ -4,22 +4,11 @@ import ThreeIdHandler from '../doctypes/threeIdHandler'
 
 jest.mock('../dispatcher', () => {
   const CID = require('cids') // eslint-disable-line @typescript-eslint/no-var-requires
+  const cloneDeep = require('lodash.clonedeep') // eslint-disable-line @typescript-eslint/no-var-requires
   const { sha256 } = require('js-sha256') // eslint-disable-line @typescript-eslint/no-var-requires
   const hash = (data: string): CID => new CID(1, 'sha2-256', Buffer.from('1220' + sha256(data), 'hex'))
-  const serializeCIDs = (rec: any): any => {
-    if (rec.prev) rec.prev = { '/': rec.prev.toString() }
-    if (rec.proof) rec.proof = { '/': rec.proof.toString() }
-    if (rec.root) rec.root = { '/': rec.root.toString() }
-    return rec
-  }
-  const deserializeCIDs = (rec: any): any => {
-    if (rec.prev) rec.prev = new CID(rec.prev['/'])
-    if (rec.proof) rec.proof = new CID(rec.proof['/'])
-    if (rec.root) rec.root = new CID(rec.root['/'])
-    return rec
-  }
   return (gossip: boolean): any => {
-    const recs: Record<string, string> = {}
+    const recs: Record<string, any> = {}
     const listeners: Record<string, Array<(cid: string) => void>> = {}
     return {
       register: jest.fn(),
@@ -29,9 +18,9 @@ jest.mock('../dispatcher', () => {
       }),
       storeRecord: jest.fn((rec) => {
         // stringify as a way of doing deep copy
-        const serialized = JSON.stringify(serializeCIDs(rec))
-        const cid = hash(serialized)
-        recs[cid.toString()] = serialized
+        const clone = cloneDeep(rec)
+        const cid = hash(JSON.stringify(clone))
+        recs[cid.toString()] = clone
         return cid
       }),
       publishHead: jest.fn((id, head) => {
@@ -41,11 +30,11 @@ jest.mock('../dispatcher', () => {
         if (gossip) listeners[id+'_headreq'].map(fn => fn())
       },
       retrieveRecord: jest.fn(cid => {
-        return deserializeCIDs(JSON.parse(recs[cid.toString()]))
+        return recs[cid.toString()]
       }),
       retrieveRecordByPath: jest.fn((cid) => {
-        const rootCid = deserializeCIDs(JSON.parse(recs[cid.toString()])).root;
-        return deserializeCIDs(JSON.parse(recs[rootCid]))
+        const rootCid = recs[cid.toString()].root
+        return recs[rootCid.toString()]
       })
     }
   }

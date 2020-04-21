@@ -15,7 +15,7 @@ class AccountLinkHandler extends DoctypeHandler {
   }
 
   async makeRecord (state: DocState, proof: any): Promise<any> {
-    const record = { content: proof, prev: head(state.log) }
+    const record = { content: proof, prev: head(state.log), id: state.log[0] }
     return record
   }
 
@@ -23,7 +23,7 @@ class AccountLinkHandler extends DoctypeHandler {
     if (content) throw new Error('Account link genesis cannot have content')
     if (!owners) throw new Error('Owner must be specified')
     if (owners.length !== 1) throw new Error('Exactly one owner must be specified')
-    const [address, chainId] = owners[0].split('@')
+    const [address, chainId] = owners[0].split('@') // eslint-disable-line @typescript-eslint/no-unused-vars
     if (!chainId) throw new Error('Chain ID must be specified according to CAIP-10')
     if (chainId !== 'eip155:1') throw new Error('Only Ethereum mainnet supported')
     return {

@@ -5,7 +5,7 @@ import CID from 'cids'
 import { EventEmitter } from 'events'
 import PQueue from 'p-queue'
 import cloneDeep from 'lodash.clonedeep'
-import AnchorServiceResponse from "./anchor/anchor-service-response";
+import AnchorServiceResponse from "./anchor/anchor-service-response"
 
 export enum SignatureStatus {
   GENESIS,
@@ -236,7 +236,7 @@ class Document extends EventEmitter {
   async _verifyAnchorRecord (record: AnchorRecord): Promise<AnchorProof> {
     const proofRecord = await this.dispatcher.retrieveRecord(record.proof)
 
-    let prevRootPathRecord;
+    let prevRootPathRecord
     try {
       // optimize verification by using ipfs.dag.tree for fetching the nested CID
       if (record.path.length === 0) {
@@ -249,7 +249,7 @@ class Document extends EventEmitter {
         prevRootPathRecord = prevRootPathRecord[last]
       }
     } catch (e) {
-      throw new Error(`The anchor record couldn't be verified. Reason ${e.message}`);
+      throw new Error(`The anchor record couldn't be verified. Reason ${e.message}`)
     }
 
     if (record.prev.toString() !== prevRootPathRecord.toString()) {
@@ -278,29 +278,29 @@ class Document extends EventEmitter {
     this._anchorService.on(this.id, async (asr: AnchorServiceResponse): Promise<void> => {
       switch (asr.status) {
         case 'PENDING': {
-          this._state.anchorScheduledFor = asr.anchorScheduledFor;
-          return;
+          this._state.anchorScheduledFor = asr.anchorScheduledFor
+          return
         }
         case 'PROCESSING': {
-          this._state.anchorStatus = AnchorStatus.PROCESSING;
-          return;
+          this._state.anchorStatus = AnchorStatus.PROCESSING
+          return
         }
         case 'COMPLETED': {
-          await this._handleHead(asr.anchorRecord);
-          this._publishHead();
+          await this._handleHead(asr.anchorRecord)
+          this._publishHead()
 
-          this._anchorService.removeAllListeners(this.id);
-          return;
+          this._anchorService.removeAllListeners(this.id)
+          return
         }
         case 'FAILED': {
           // TODO handle failed status
-          this._anchorService.removeAllListeners(this.id);
-          return;
+          this._anchorService.removeAllListeners(this.id)
+          return
         }
       }
-    });
+    })
     await this._anchorService.requestAnchor(this.id, this.head)
-    this._state.anchorStatus = AnchorStatus.PENDING;
+    this._state.anchorStatus = AnchorStatus.PENDING
   }
 
   toString (): string {

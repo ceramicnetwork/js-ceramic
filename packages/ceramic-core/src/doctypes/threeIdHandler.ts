@@ -33,6 +33,7 @@ class ThreeIdHandler extends DoctypeHandler {
   }
 
   async applySigned (record: any, cid: CID, state: DocState): Promise<DocState> {
+    if (!record.id.equals(state.log[0])) throw new Error(`Invalid docId ${record.id}, expected ${state.log[0]}`)
     // reconstruct jwt
     const { header, signature } = record
     delete record.header
@@ -42,6 +43,7 @@ class ThreeIdHandler extends DoctypeHandler {
       owners: record.owners,
       content: record.content,
       prev: { '/': record.prev.toString() },
+      id: { '/': record.id.toString() },
       iss: record.iss
     })).toString('base64')
     payload = payload.replace(/=/g, '')
@@ -80,15 +82,18 @@ class ThreeIdHandler extends DoctypeHandler {
   async makeRecord (state: DocState, newContent: any): Promise<any> {
     if (!this.user) throw new Error('No user authenticated')
     const patch = jsonpatch.compare(state.content, newContent)
-    const record: any = { content: patch, prev: head(state.log) }
+    const record: any = { content: patch, prev: head(state.log), id: state.log[0] }
     // TODO - use the dag-jose library for properly encoded signed records
     record.iss = this.user.DID
     // convert CID to string for signing
-    const tmpCID = record.prev
-    record.prev = { '/': tmpCID.toString() }
+    const tmpPrev = record.prev
+    const tmpId = record.id
+    record.prev = { '/': tmpPrev.toString() }
+    record.id = { '/': tmpId.toString() }
     const jwt = await this.user.sign(record, { useMgmt: true})
     const [header, payload, signature] = jwt.split('.') // eslint-disable-line @typescript-eslint/no-unused-vars
-    record.prev = tmpCID
+    record.prev = tmpPrev
+    record.id = tmpId
     return { ...record, header, signature }
   }
 
