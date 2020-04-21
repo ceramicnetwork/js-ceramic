@@ -16,7 +16,7 @@ const RECORDS = {
   genesisGenerated: { doctype: 'tile', owners: [ 'did:3:bafyasdfasdf' ], content: { much: 'data' }, iss: 'did:3:bafyuser', header: 'aaaa', signature: 'cccc' },
   r1: {
     desiredContent: { much: 'data', very: 'content' },
-    record: { content: [ { op: 'add', path: '/very', value: 'content' } ], prev: FAKE_CID_1, iss: 'did:3:bafyuser', header: 'aaaa', signature: 'cccc' }
+    record: { content: [ { op: 'add', path: '/very', value: 'content' } ], id: FAKE_CID_1, prev: FAKE_CID_1, iss: 'did:3:bafyuser', header: 'aaaa', signature: 'cccc' }
   },
   r2: { record: {}, proof: { blockNumber: 123456 } }
 }

@@ -41,6 +41,7 @@ class TileHandler extends DoctypeHandler {
   }
 
   async applySigned (record: any, cid: CID, state: DocState): Promise<DocState> {
+    if (!record.id.equals(state.log[0])) throw new Error(`Invalid docId ${record.id}, expected ${state.log[0]}`)
     await this._verifyRecordSignature(record)
     state.log.push(cid)
     return {
@@ -61,6 +62,7 @@ class TileHandler extends DoctypeHandler {
       owners: record.owners,
       content: record.content,
       prev: record.prev ? { '/': record.prev.toString() } : undefined,
+      id: record.id ? { '/': record.id.toString() } : undefined,
       iss: record.iss
     })).toString('base64')
     payload = payload.replace(/=/g, '')
@@ -90,7 +92,7 @@ class TileHandler extends DoctypeHandler {
   async makeRecord (state: DocState, newContent: any): Promise<any> {
     if (!this.user) throw new Error('No user authenticated')
     const patch = jsonpatch.compare(state.content, newContent)
-    const record = { content: patch, prev: head(state.log) }
+    const record = { content: patch, prev: head(state.log), id: state.log[0] }
     return this.signRecord(record)
   }
 
@@ -107,10 +109,13 @@ class TileHandler extends DoctypeHandler {
     record.iss = this.user.DID
     // convert CID to string for signing
     const tmpCID = record.prev
+    const tmpId = record.id
     if (tmpCID) record.prev = { '/': tmpCID.toString() }
+    if (tmpId) record.id = { '/': tmpId.toString() }
     const jwt = await this.user.sign(record)
     const [header, payload, signature] = jwt.split('.') // eslint-disable-line @typescript-eslint/no-unused-vars
     if (tmpCID) record.prev = tmpCID
+    if (tmpId) record.id = tmpId
     return { ...record, header, signature }
   }
 }

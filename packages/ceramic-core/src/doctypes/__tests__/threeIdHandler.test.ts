@@ -8,12 +8,14 @@ jest.mock('did-jwt', () => ({
   verifyJWT: (): any => 'verified'
 }))
 
-const FAKE_CID = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
+const FAKE_CID_1 = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
+const FAKE_CID_2 = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsr')
+const FAKE_CID_3 = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlss')
 const RECORDS = {
   genesis: { doctype: '3id', owners: [ '0x123' ], content: { publicKeys: { test: '0xabc' } } },
   r1: {
     desiredContent: { publicKeys: { test: '0xabc' }, other: 'data' },
-    record: { content: [ { op: 'add', path: '/other', value: 'data' } ], prev: FAKE_CID, header: 'aaaa', signature: 'cccc' }
+    record: { content: [ { op: 'add', path: '/other', value: 'data' } ], id: FAKE_CID_1, prev: FAKE_CID_1, header: 'aaaa', signature: 'cccc' }
   },
   r2: { record: {}, proof: { blockNumber: 123456 } }
 }
@@ -49,12 +51,12 @@ describe('ThreeIdHandler', () => {
   })
 
   it('applies genesis record correctly', async () => {
-    const state = await handler.applyGenesis(RECORDS.genesis, FAKE_CID)
+    const state = await handler.applyGenesis(RECORDS.genesis, FAKE_CID_1)
     expect(state).toMatchSnapshot()
   })
 
   it('makes signed record correctly', async () => {
-    const state = await handler.applyGenesis(RECORDS.genesis, FAKE_CID)
+    const state = await handler.applyGenesis(RECORDS.genesis, FAKE_CID_1)
     await expect(handler.makeRecord(state, RECORDS.r1.desiredContent)).rejects.toThrow(/No user/)
     handler.user = user
     const record = await handler.makeRecord(state, RECORDS.r1.desiredContent)
@@ -62,15 +64,15 @@ describe('ThreeIdHandler', () => {
   })
 
   it('applies signed record correctly', async () => {
-    let state = await handler.applyGenesis(RECORDS.genesis, FAKE_CID)
-    state = await handler.applySigned(RECORDS.r1.record, 'cid2', state)
+    let state = await handler.applyGenesis(RECORDS.genesis, FAKE_CID_1)
+    state = await handler.applySigned(RECORDS.r1.record, FAKE_CID_2, state)
     expect(state).toMatchSnapshot()
   })
 
   it('applies anchor record correctly', async () => {
-    let state = await handler.applyGenesis(RECORDS.genesis, FAKE_CID)
-    state = await handler.applySigned(RECORDS.r1.record, 'cid2', state)
-    state = await handler.applyAnchor(RECORDS.r2.record, RECORDS.r2.proof, 'cid3', state)
+    let state = await handler.applyGenesis(RECORDS.genesis, FAKE_CID_1)
+    state = await handler.applySigned(RECORDS.r1.record, FAKE_CID_2, state)
+    state = await handler.applyAnchor(RECORDS.r2.record, RECORDS.r2.proof, FAKE_CID_3, state)
     expect(state).toMatchSnapshot()
   })
 })
