@@ -4,7 +4,7 @@ import type DoctypeHandler from './doctypes/doctypeHandler'
 import CID from 'cids'
 import { EventEmitter } from 'events'
 import PQueue from 'p-queue'
-import isEqual from 'lodash.isequal'
+import equal from 'fast-deep-equal'
 import cloneDeep from 'lodash.clonedeep'
 import AnchorServiceResponse from "./anchor/anchor-service-response";
 
@@ -235,12 +235,12 @@ class Document extends EventEmitter {
   }
 
   async _verifyAnchorRecord (record: AnchorRecord): Promise<AnchorProof> {
-    const prevRecord = await this.dispatcher.retrieveRecord(record.prev)
+    const prevRecord = cloneDeep(await this.dispatcher.retrieveRecord(record.prev))
 
     const path = record.path.length > 0 ? `/root/${record.path}` : '/root';
-    const prevRootPathRecord = await this.dispatcher.retrieveRecordByPath(record.proof, path)
+    const prevRootPathRecord = cloneDeep(await this.dispatcher.retrieveRecordByPath(record.proof, path))
 
-    if (!isEqual(prevRecord, prevRootPathRecord)) {
+    if (!equal(prevRecord, prevRootPathRecord)) {
       throw new Error(`The anchor record proof ${record.proof.toString()} with path ${record.path} points to invalid 'prev' record`)
     }
 

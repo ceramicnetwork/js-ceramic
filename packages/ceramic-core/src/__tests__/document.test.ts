@@ -9,11 +9,13 @@ jest.mock('../dispatcher', () => {
   const serializeCIDs = (rec: any): any => {
     if (rec.prev) rec.prev = { '/': rec.prev.toString() }
     if (rec.proof) rec.proof = { '/': rec.proof.toString() }
+    if (rec.root) rec.root = { '/': rec.root.toString() }
     return rec
   }
   const deserializeCIDs = (rec: any): any => {
     if (rec.prev) rec.prev = new CID(rec.prev['/'])
     if (rec.proof) rec.proof = new CID(rec.proof['/'])
+    if (rec.root) rec.root = new CID(rec.root['/'])
     return rec
   }
   return (gossip: boolean): any => {
@@ -40,6 +42,10 @@ jest.mock('../dispatcher', () => {
       },
       retrieveRecord: jest.fn(cid => {
         return deserializeCIDs(JSON.parse(recs[cid.toString()]))
+      }),
+      retrieveRecordByPath: jest.fn((cid) => {
+        const rootCid = deserializeCIDs(JSON.parse(recs[cid.toString()])).root;
+        return deserializeCIDs(JSON.parse(recs[rootCid]))
       })
     }
   }
