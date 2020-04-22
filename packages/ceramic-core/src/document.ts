@@ -4,7 +4,6 @@ import type DoctypeHandler from './doctypes/doctypeHandler'
 import CID from 'cids'
 import { EventEmitter } from 'events'
 import PQueue from 'p-queue'
-import equal from 'fast-deep-equal'
 import cloneDeep from 'lodash.clonedeep'
 import AnchorServiceResponse from "./anchor/anchor-service-response";
 
