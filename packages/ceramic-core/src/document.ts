@@ -235,12 +235,20 @@ class Document extends EventEmitter {
   }
 
   async _verifyAnchorRecord (record: AnchorRecord): Promise<AnchorProof> {
-    const prevRecord = await this.dispatcher.retrieveRecord(record.prev)
+    const proofRecord = await this.dispatcher.retrieveRecord(record.proof)
 
-    const path = record.path.length > 0 ? `/root/${record.path}` : '/root';
-    const prevRootPathRecord = await this.dispatcher.retrieveRecordByPath(record.proof, path)
+    let prevRootPathRecord;
+    if (record.path.length === 0) {
+      prevRootPathRecord = proofRecord.root
+    } else {
+      const subPath: string = '/root/' + record.path.substr(0, record.path.lastIndexOf('/'))
+      const last: string = record.path.substr(record.path.lastIndexOf('/')+1)
 
-    if (!equal(prevRecord, prevRootPathRecord)) {
+      prevRootPathRecord = await this.dispatcher.retrieveRecordByPath(record.proof, subPath)
+      prevRootPathRecord = prevRootPathRecord[last]
+    }
+
+    if (record.prev.toString() !== prevRootPathRecord.toString()) {
       throw new Error(`The anchor record proof ${record.proof.toString()} with path ${record.path} points to invalid 'prev' record`)
     }
 
