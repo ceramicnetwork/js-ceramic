@@ -40,6 +40,7 @@
     "p-queue": "^6.2.1",
     "typestub-multihashes": "^0.0.1",
     "ipfs": "0.42.1",
+    "ipfs-block": "0.8.1",
     "ipfs-block-service": "0.16.0"
   },
   "devDependencies": {
