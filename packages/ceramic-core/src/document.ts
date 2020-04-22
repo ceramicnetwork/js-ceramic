@@ -238,14 +238,19 @@ class Document extends EventEmitter {
     const proofRecord = await this.dispatcher.retrieveRecord(record.proof)
 
     let prevRootPathRecord;
-    if (record.path.length === 0) {
-      prevRootPathRecord = proofRecord.root
-    } else {
-      const subPath: string = '/root/' + record.path.substr(0, record.path.lastIndexOf('/'))
-      const last: string = record.path.substr(record.path.lastIndexOf('/')+1)
+    try {
+      // optimize verification by using ipfs.dag.tree for fetching the latest CID
+      if (record.path.length === 0) {
+        prevRootPathRecord = proofRecord.root
+      } else {
+        const subPath: string = '/root/' + record.path.substr(0, record.path.lastIndexOf('/'))
+        const last: string = record.path.substr(record.path.lastIndexOf('/')+1)
 
-      prevRootPathRecord = await this.dispatcher.retrieveRecordByPath(record.proof, subPath)
-      prevRootPathRecord = prevRootPathRecord[last]
+        prevRootPathRecord = await this.dispatcher.retrieveRecordByPath(record.proof, subPath)
+        prevRootPathRecord = prevRootPathRecord[last]
+      }
+    } catch (e) {
+      throw new Error(`The anchor record couldn't be verified. Reason ${e.message}`);
     }
 
     if (record.prev.toString() !== prevRootPathRecord.toString()) {
