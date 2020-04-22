@@ -238,7 +238,7 @@ class Document extends EventEmitter {
 
     let prevRootPathRecord;
     try {
-      // optimize verification by using ipfs.dag.tree for fetching the latest CID
+      // optimize verification by using ipfs.dag.tree for fetching the nested CID
       if (record.path.length === 0) {
         prevRootPathRecord = proofRecord.root
       } else {
