@@ -21,7 +21,7 @@ class MockAnchorService extends AnchorService {
       root: head,
     };
     const proof = await this._dispatcher.storeRecord(proofData)
-    const record = { proof, path: '/', prev: head }
+    const record = { proof, path: '', prev: head }
     const cid = await this._dispatcher.storeRecord(record)
 
     this.emit(docId, { status: 'COMPLETED', message: 'CID successfully anchored.', anchorRecord: cid});

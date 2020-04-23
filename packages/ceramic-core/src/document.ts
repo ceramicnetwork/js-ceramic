@@ -234,9 +234,28 @@ class Document extends EventEmitter {
   }
 
   async _verifyAnchorRecord (record: AnchorRecord): Promise<AnchorProof> {
-    //const prevRecordA = await this.dispatcher.retrieveRecord(record.prev)
-    //const prevRecordB = await this.dispatcher.retrieveRecord(record.proof + '/root' + record.path)
-    // assert A == B
+    const proofRecord = await this.dispatcher.retrieveRecord(record.proof)
+
+    let prevRootPathRecord;
+    try {
+      // optimize verification by using ipfs.dag.tree for fetching the nested CID
+      if (record.path.length === 0) {
+        prevRootPathRecord = proofRecord.root
+      } else {
+        const subPath: string = '/root/' + record.path.substr(0, record.path.lastIndexOf('/'))
+        const last: string = record.path.substr(record.path.lastIndexOf('/')+1)
+
+        prevRootPathRecord = await this.dispatcher.retrieveRecordByPath(record.proof, subPath)
+        prevRootPathRecord = prevRootPathRecord[last]
+      }
+    } catch (e) {
+      throw new Error(`The anchor record couldn't be verified. Reason ${e.message}`);
+    }
+
+    if (record.prev.toString() !== prevRootPathRecord.toString()) {
+      throw new Error(`The anchor record proof ${record.proof.toString()} with path ${record.path} points to invalid 'prev' record`)
+    }
+
     const proof: AnchorProof = await this.dispatcher.retrieveRecord(record.proof)
     await this._anchorService.validateChainInclusion(proof)
     return proof
