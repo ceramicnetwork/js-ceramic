@@ -1,5 +1,6 @@
 import CID from "cids";
 import fetch from "node-fetch";
+import https from "https"
 
 import { AnchorProof } from "../../document";
 
@@ -75,12 +76,17 @@ export default class EthereumAnchorService extends AnchorService {
      * @private
      */
     async _sendReq(cidDocPair: CidDoc): Promise<void> {
+        const httpsAgent = new https.Agent({
+            rejectUnauthorized: false,
+        });
+
         const response = await fetch(this._config.anchorServiceUrl, {
             method: "POST", body: JSON.stringify({
                 docId: cidDocPair.docId, cid: cidDocPair.cid.toString()
             }), headers: {
                 "Content-Type": "application/json"
-            }
+            },
+            agent: httpsAgent
         });
 
         if (!response.ok) {
@@ -121,8 +127,13 @@ export default class EthereumAnchorService extends AnchorService {
             await new Promise(resolve => setTimeout(resolve, DEFAULT_POLL_TIME));
 
             try {
+                const httpsAgent = new https.Agent({
+                    rejectUnauthorized: false,
+                });
                 const requestUrl = [this._config.anchorServiceUrl, cidDoc.cid.toString()].join('/');
-                const response = await fetch(requestUrl);
+                const response = await fetch(requestUrl, {
+                    agent: httpsAgent,
+                });
                 const json = await response.json();
 
                 switch (json.status) {
