@@ -1,4 +1,3 @@
-
 function encodeRpcCall (method: string, params: any): any {
   return {
     jsonrpc: '2.0',
@@ -6,6 +5,18 @@ function encodeRpcCall (method: string, params: any): any {
     method,
     params
   }
+}
+
+const cborSortCompareFn = (a: string, b: string): number => a.length - b.length || a.localeCompare(b)
+
+function sortPropertiesDeep(obj: any, compareFn: (a: any, b: any) => number = cborSortCompareFn): any {
+  if (typeof obj !== 'object' || Array.isArray(obj)) {
+    return obj
+  }
+  return Object.keys(obj).sort(compareFn).reduce<Record<string, any>>((acc, prop) => {
+    acc[prop] = sortPropertiesDeep(obj[prop], compareFn)
+    return acc
+  }, {})
 }
 
 
@@ -36,6 +47,7 @@ class User {
   async sign (payload: any, opts: any = {}): Promise<string> {
     // hack to get around timestamp before we have proper signing method in provider
     payload.iat = undefined
+    payload.content = sortPropertiesDeep(payload.content)
     const jwt = await this._callRpc('3id_signClaim', { payload, did: this._did, useMgmt: opts.useMgmt })
     return jwt
   }
