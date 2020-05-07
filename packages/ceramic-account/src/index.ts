@@ -14,7 +14,7 @@ class ThreeIDAccount {
 
   static async build (did: string, ceramic: CeramicApi, provider?: any): Promise<ThreeIDAccount> {
     const didDocument = await DIDDocument.get(did, ceramic)
-    
+
     // The incremental building of an account tile here is a good example of how creating a buffered
     // document type would reduce number of writes, speeding up creation, but more importantly, 
     // all future fetches due to less DAG depth
@@ -22,11 +22,13 @@ class ThreeIDAccount {
     let ceramicDoc
     if (didDocument.ceramicDoc.content.account) {
       ceramicDoc = await ceramic.loadDocument(didDocument.ceramicDoc.content.account)
+      console.log('FOUND account tile', ceramicDoc.id)
     } else {
       const genesisContent: Record<string, string> = {}
       ceramicDoc = await ceramic.createDocument(genesisContent, 'tile', { owners: [didDocument.did] })
       const prevContent = didDocument.ceramicDoc.content
-      await didDocument.ceramicDoc.change({...prevContent, sources: ceramicDoc.id})
+      await didDocument.ceramicDoc.change({...prevContent, account: ceramicDoc.id})
+      console.log('CREATED account tile', ceramicDoc.id)
     }
 
     // Load/create subtiles
@@ -37,7 +39,7 @@ class ThreeIDAccount {
       accountLinks = new AccountLinks(subtileDocument, ceramic, provider)
     } else {
       accountLinks = await AccountLinks.build(did, ceramic, provider)
-      ceramicDoc.change({ ...ceramicDoc.content, 'account-links': accountLinks.ceramicDoc.id })
+      await ceramicDoc.change({ ...ceramicDoc.content, 'account-links': accountLinks.ceramicDoc.id })
     }
 
     let keychain: Keychain
@@ -46,7 +48,7 @@ class ThreeIDAccount {
       keychain = new Keychain(subtileDocument, ceramic)
     } else {
       keychain = await Keychain.build(did, ceramic)
-      ceramicDoc.change({ ...ceramicDoc.content, keychain: accountLinks.ceramicDoc.id })
+      await ceramicDoc.change({ ...ceramicDoc.content, keychain: keychain.ceramicDoc.id })
     }
 
     let profile: Profile
@@ -55,7 +57,7 @@ class ThreeIDAccount {
       profile = new Profile(subtileDocument, ceramic)
     } else {
       profile = await Profile.build(did, ceramic)
-      ceramicDoc.change({ ...ceramicDoc.content, profile: accountLinks.ceramicDoc.id })
+      await ceramicDoc.change({ ...ceramicDoc.content, profile: profile.ceramicDoc.id })
     }
 
     let sources: Sources
@@ -64,7 +66,7 @@ class ThreeIDAccount {
       sources = new Sources(subtileDocument, ceramic)
     } else {
       sources = await Sources.build(did, ceramic)
-      ceramicDoc.change({ ...ceramicDoc.content, sources: accountLinks.ceramicDoc.id })
+      await ceramicDoc.change({ ...ceramicDoc.content, sources: sources.ceramicDoc.id })
     }
 
     let services: Services
@@ -73,7 +75,7 @@ class ThreeIDAccount {
       services = new Services(subtileDocument, ceramic)
     } else {
       services = await Services.build(did, ceramic)
-      ceramicDoc.change({ ...ceramicDoc.content, services: accountLinks.ceramicDoc.id })
+      await ceramicDoc.change({ ...ceramicDoc.content, services: services.ceramicDoc.id })
     }
 
     return new ThreeIDAccount(ceramicDoc, didDocument, accountLinks, keychain, profile, sources, services, ceramic, provider)
