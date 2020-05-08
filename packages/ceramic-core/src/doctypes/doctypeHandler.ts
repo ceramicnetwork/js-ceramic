@@ -25,7 +25,7 @@ abstract class DoctypeHandler {
 
   abstract async applyAnchor (record: AnchorRecord, proof: AnchorProof, cid: CID, state: DocState): Promise<DocState>;
 
-  abstract async makeRecord (state: DocState, newContent: any): Promise<any>;
+  abstract async makeRecord (state: DocState, newContent: any, newOwners?: Array<string>): Promise<any>;
 
   abstract async makeGenesis (content: any, owners?: Array<string>): Promise<any>;
 }

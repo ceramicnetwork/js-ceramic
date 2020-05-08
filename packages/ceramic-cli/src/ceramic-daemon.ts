@@ -8,6 +8,7 @@ import { serializeState } from './utils'
 
 const IPFS_HOST = 'http://localhost:5001'
 const DEFAULT_PORT = 7007
+const DEBUG = true
 const toApiPath = (ending: string): string => '/api/v0' + ending
 // TODO - don't hardcode seed lol
 const seed = '0x5872d6e0ae7347b72c9216db218ebbb9d9d0ae7ab818ead3557e8e78bf944184'
@@ -19,6 +20,16 @@ interface CreateOpts {
 
   ethereumRpcUrl?: string;
   anchorServiceUrl?: string;
+}
+
+function logErrors (err: Error, req: Request, res: Response, next: NextFunction) {
+  console.error(err)
+  next(err)
+}
+
+function sendErrorResponse(err: Error, req: Request, res: Response, next: NextFunction) {
+  res.json({ error: err.message })
+  next(err)
 }
 
 class CeramicDaemon {
@@ -35,6 +46,10 @@ class CeramicDaemon {
     app.get(toApiPath('/show/ceramic/:cid'), this.show.bind(this))
     app.get(toApiPath('/state/ceramic/:cid'), this.state.bind(this))
     app.post(toApiPath('/change/ceramic/:cid'), this.change.bind(this))
+    if (DEBUG) {
+      app.use(logErrors)
+    }
+    app.use(sendErrorResponse)
     const port = opts.port || DEFAULT_PORT
     this.server = app.listen(port, () => {
       console.log('Ceramic API running on port ' + port)
@@ -67,7 +82,7 @@ class CeramicDaemon {
       const doc = await this.ceramic.createDocument(genesis, doctype, { onlyGenesis, owners })
       res.json({ docId: doc.id, state: serializeState(doc.state) })
     } catch (e) {
-      res.json({ error: e.message })
+      return next(e)
     }
     next()
   }
@@ -78,7 +93,7 @@ class CeramicDaemon {
       const doc = await this.ceramic.loadDocument(docId)
       res.json({ docId: doc.id, content: doc.content })
     } catch (e) {
-      res.json({ error: e.message })
+      return next(e)
     }
     next()
   }
@@ -90,25 +105,25 @@ class CeramicDaemon {
 
       res.json({ docId: doc.id, state: serializeState(doc.state) })
     } catch (e) {
-      res.json({ error: e.message })
+      return next(e)
     }
     next()
   }
 
   async change (req: Request, res: Response, next: NextFunction): Promise<void> {
-    const { content } = req.body
-    if (!content) {
-      res.json({ error: 'content required to change document' })
+    const { content, owners } = req.body
+    if (!content && !owners) {
+      res.json({ error: 'content or owners required to change document' })
       next()
       return
     }
     const docId = ['/ceramic', req.params.cid].join('/')
     try {
       const doc = await this.ceramic.loadDocument(docId)
-      await doc.change(content)
+      await doc.change(content, owners)
       res.json({ docId: doc.id, state: serializeState(doc.state) })
     } catch (e) {
-      res.json({ error: e.message })
+      return next(e)
     }
     next()
   }

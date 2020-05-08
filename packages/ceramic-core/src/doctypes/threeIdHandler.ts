@@ -20,16 +20,36 @@ class ThreeIdHandler extends DoctypeHandler {
   }
 
   async applyGenesis (record: any, cid: CID): Promise<DocState> {
-    // TODO - verify genesis record
-    return {
-      doctype: DOCTYPE,
-      owners: record.owners,
-      content: record.content,
-      nextContent: null,
-      signature: SignatureStatus.GENESIS,
-      anchorStatus: AnchorStatus.NOT_REQUESTED,
-      log: [cid]
+    if(record.doctype === DOCTYPE) {
+      return {
+        doctype: DOCTYPE,
+        owners: record.owners,
+        content: record.content,
+        nextContent: null,
+        signature: SignatureStatus.GENESIS,
+        anchorStatus: AnchorStatus.NOT_REQUESTED,
+        log: [cid]
+      }
+    } else if (record['@context'] === "https://w3id.org/did/v1") {
+      const managementKey = record.publicKey.find((pk: { id: string }) => pk.id === 'did:3:GENESIS#managementKey').ethereumAddress
+      const signingKey = record.publicKey.find((pk: { id: string }) => pk.id === 'did:3:GENESIS#signingKey').publicKeyHex
+      const encryptionKey = record.publicKey.find((pk: { id: string }) => pk.id === 'did:3:GENESIS#encryptionKey').publicKeyBase64
+      return {
+        doctype: DOCTYPE,
+        owners: [managementKey],
+        content: {
+          publicKeys: {
+            signing: signingKey,
+            encryption: encryptionKey
+          }
+        },
+        nextContent: null,
+        signature: SignatureStatus.GENESIS,
+        anchorStatus: AnchorStatus.NOT_REQUESTED,
+        log: [cid]
+      }
     }
+    // TODO - verify genesis record
   }
 
   async applySigned (record: any, cid: CID, state: DocState): Promise<DocState> {
@@ -60,7 +80,8 @@ class ThreeIdHandler extends DoctypeHandler {
       ...state,
       signature: SignatureStatus.SIGNED,
       anchorStatus: AnchorStatus.NOT_REQUESTED,
-      nextContent: jsonpatch.applyPatch(state.content, record.content).newDocument
+      nextContent: jsonpatch.applyPatch(state.content, record.content).newDocument,
+      nextOwners: record.owners
     }
   }
 
@@ -71,18 +92,27 @@ class ThreeIdHandler extends DoctypeHandler {
       content = state.nextContent
       delete state.nextContent
     }
+    let owners = state.owners
+    if (state.nextOwners) {
+      owners = state.nextOwners
+      delete state.nextOwners
+    }
     return {
       ...state,
+      owners,
       content,
       anchorStatus: AnchorStatus.ANCHORED,
       anchorProof: proof,
     }
   }
 
-  async makeRecord (state: DocState, newContent: any): Promise<any> {
+  async makeRecord (state: DocState, newContent: any, newOwners?: Array<string>): Promise<any> {
     if (!this.user) throw new Error('No user authenticated')
+    if (typeof newContent === 'undefined') {
+      newContent = state.content
+    }
     const patch = jsonpatch.compare(state.content, newContent)
-    const record: any = { content: patch, prev: head(state.log), id: state.log[0] }
+    const record: any = { owners: newOwners, content: patch, prev: head(state.log), id: state.log[0] }
     // TODO - use the dag-jose library for properly encoded signed records
     record.iss = this.user.DID
     // convert CID to string for signing

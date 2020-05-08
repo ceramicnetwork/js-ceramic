@@ -41,6 +41,7 @@ export interface AnchorProof {
 export interface DocState {
   doctype: string;
   owners: Array<string>;
+  nextOwners?: Array<string>;
   content: any;
   nextContent?: any;
   signature: SignatureStatus;
@@ -102,8 +103,8 @@ class Document extends EventEmitter {
     return log[log.length - 1]
   }
 
-  async change (newContent: any): Promise<boolean> {
-    const { state } = await fetchJson(this._apiUrl + '/change' + this.id, { content: newContent })
+  async change (newContent: any, newOwners?: Array<string>): Promise<boolean> {
+    const { state } = await fetchJson(this._apiUrl + '/change' + this.id, { content: newContent, owners: newOwners })
     this._state = deserializeState(state)
     return true
   }

@@ -30,9 +30,9 @@ class CeramicClient {
     return this._docmap[id]
   }
 
-  async _updateDocument (id: string, content: any): Promise<Document> {
+  async _updateDocument (id: string, content: any, owners?: Array<string>): Promise<Document> {
     const doc = new Document(id, {}, this._apiUrl)
-    await doc.change(content)
+    await doc.change(content, owners)
     return doc
   }
 

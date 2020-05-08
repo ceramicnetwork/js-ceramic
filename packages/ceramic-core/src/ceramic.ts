@@ -41,6 +41,7 @@ class Ceramic {
       '3id': new ThreeIdHandler(),
       'tile': new TileHandler(this),
       'account-link': new AccountLinkHandler(),
+      undefined: new ThreeIdHandler()
     }
   }
 

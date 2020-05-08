@@ -23,6 +23,7 @@ export enum AnchorStatus {
 export interface DocState {
   doctype: string;
   owners: Array<string>;
+  nextOwners?: Array<string>;
   content: any;
   nextContent?: any;
   signature: SignatureStatus;
@@ -265,8 +266,8 @@ class Document extends EventEmitter {
     await this.dispatcher.publishHead(this.id, this.head)
   }
 
-  async change (newContent: any): Promise<boolean> {
-    const record = await this._doctypeHandler.makeRecord(this._state, newContent)
+  async change (newContent: any, newOwners?: Array<string>): Promise<boolean> {
+    const record = await this._doctypeHandler.makeRecord(this._state, newContent, newOwners)
     const cid = await this.dispatcher.storeRecord(record)
     this._state = await this._doctypeHandler.applySigned(record, cid, this._state)
     await this.anchor()
