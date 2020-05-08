@@ -7,7 +7,12 @@ class DIDDocument {
     return 'did:3:' + this.ceramicDoc.state.log[0]
   }
 
-  async linkAccount () { }
+  async linkAccountTile (accountTile: CeramicDocument) {
+    if (this.ceramicDoc.content.account) {
+      throw new Error(`Account tile already linked: ${this.ceramicDoc.content.account}`)
+    }
+    await this.ceramicDoc.change({...this.ceramicDoc.content, account: accountTile.id})
+  }
 
   static async get (did: string, ceramic: CeramicApi): Promise<DIDDocument> {
     const didPrefix = 'did:3:'

@@ -4,7 +4,7 @@ import DIDDocument from './did'
 import AccountLinks from './accountLinks'
 
 class ThreeIDAccount {
-  [key: string]: any
+  [key: string]: any // allow access to properties using index notation (ex: account['services'])
 
   constructor (public ceramicDoc: CeramicDocument, public didDocument: DIDDocument, public accountLinks: AccountLinks, public keychain: Keychain, public profile: Profile, public sources: Sources, public services: Services, private _ceramic: CeramicApi, public provider?: any) { }
 
@@ -26,8 +26,7 @@ class ThreeIDAccount {
     } else {
       const genesisContent: Record<string, string> = {}
       ceramicDoc = await ceramic.createDocument(genesisContent, 'tile', { owners: [didDocument.did] })
-      const prevContent = didDocument.ceramicDoc.content
-      await didDocument.ceramicDoc.change({...prevContent, account: ceramicDoc.id})
+      await didDocument.linkAccountTile(ceramicDoc)
       console.log('CREATED account tile', ceramicDoc.id)
     }
 
