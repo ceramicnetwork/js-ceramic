@@ -40,9 +40,17 @@ class Ceramic {
     this._doctypeHandlers = {
       '3id': new ThreeIdHandler(),
       'tile': new TileHandler(this),
-      'account-link': new AccountLinkHandler(),
-      undefined: new ThreeIdHandler()
+      'account-link': new AccountLinkHandler()
     }
+  }
+
+  getHandlerFromGenesis (genesisRecord: any): DoctypeHandler {
+    if (genesisRecord.doctype in this._doctypeHandlers) {
+      return this._doctypeHandlers[genesisRecord.doctype]
+    } else if (genesisRecord['@context'] === "https://w3id.org/did/v1") {
+      return this._doctypeHandlers['3id']
+    }
+    throw new Error("Couldn't determine doctype handler")
   }
 
   async _init (config: CeramicConfig): Promise<void> {
@@ -75,7 +83,7 @@ class Ceramic {
 
   async loadDocument (id: string, opts: InitOpts = {}): Promise<Document> {
     if (!this._docmap[id]) {
-      this._docmap[id] = await Document.load(id, this._doctypeHandlers, this._anchorService, this.dispatcher, opts)
+      this._docmap[id] = await Document.load(id, this.getHandlerFromGenesis.bind(this), this._anchorService, this.dispatcher, opts)
     }
     return this._docmap[id]
   }
