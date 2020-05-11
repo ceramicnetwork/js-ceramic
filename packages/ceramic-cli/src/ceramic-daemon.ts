@@ -47,7 +47,7 @@ class CeramicDaemon {
     const ipfs = opts.ipfs || ipfsClient(opts.ipfsHost || IPFS_HOST)
 
     let ceramicConfig: CeramicConfig; // load initially from file and override with opts
-    if (opts.ethereumRpcUrl && opts.anchorServiceUrl) {
+    if (opts.anchorServiceUrl) {
       ceramicConfig = {
         ethereumRpcUrl: opts.ethereumRpcUrl,
         anchorServiceUrl: opts.anchorServiceUrl,
