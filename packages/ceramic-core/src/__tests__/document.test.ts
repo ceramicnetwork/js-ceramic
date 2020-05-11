@@ -56,7 +56,7 @@ describe('Document', () => {
     const initialContent = { abc: 123, def: 456 }
     const newContent = { abc: 321, def: 456, gh: 987 }
     const owners = ['publickeymock']
-    let dispatcher, doctypeHandler, doctypeHandlers, anchorService
+    let dispatcher, doctypeHandler, getHandlerFromGenesis, anchorService
 
     beforeEach(() => {
       dispatcher = Dispatcher(false)
@@ -65,7 +65,7 @@ describe('Document', () => {
       doctypeHandler.user = new User()
       // fake jwt
       doctypeHandler.user.sign = jest.fn(async () => 'aaaa.bbbb.cccc')
-      doctypeHandlers = { '3id': doctypeHandler }
+      getHandlerFromGenesis = (): ThreeIdHandler => doctypeHandler
     })
 
     it('is created correctly', async () => {
@@ -81,7 +81,7 @@ describe('Document', () => {
 
     it('is loaded correctly', async () => {
       const docId = (await Document.create(initialContent, doctypeHandler, anchorService, dispatcher, { owners })).id
-      const doc = await Document.load(docId, doctypeHandlers, anchorService, dispatcher, { skipWait: true })
+      const doc = await Document.load(docId, getHandlerFromGenesis, anchorService, dispatcher, { skipWait: true })
       expect(doc.id).toEqual(docId)
       expect(doc.content).toEqual(initialContent)
       expect(doc.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
@@ -92,7 +92,7 @@ describe('Document', () => {
       await anchorUpdate(tmpDoc)
       const docId = tmpDoc.id
       const log = tmpDoc.state.log
-      const doc = await Document.load(docId, doctypeHandlers, anchorService, dispatcher, { skipWait: true })
+      const doc = await Document.load(docId, getHandlerFromGenesis, anchorService, dispatcher, { skipWait: true })
       // changes will not load since no network and no local head storage yet
       expect(doc.content).toEqual(initialContent)
       expect(doc.state).toEqual(expect.objectContaining({ signature: SignatureStatus.GENESIS, anchorStatus: 0 }))
@@ -125,7 +125,7 @@ describe('Document', () => {
       expect(doc1.content).toEqual(newContent)
       const headValidUpdate = doc1.head
       // create invalid change that happened after main change
-      const doc2 = await Document.load(docId, doctypeHandlers, anchorService, dispatcher, { skipWait: true })
+      const doc2 = await Document.load(docId, getHandlerFromGenesis, anchorService, dispatcher, { skipWait: true })
       await doc2._handleHead(headPreUpdate)
       // add short wait to get different anchor time
       // sometime the tests are very fast
@@ -151,7 +151,7 @@ describe('Document', () => {
     const initialContent = { abc: 123, def: 456 }
     const newContent = { abc: 321, def: 456, gh: 987 }
     const owners = ['publickeymock']
-    let dispatcher, doctypeHandler, doctypeHandlers, anchorService
+    let dispatcher, doctypeHandler, getHandlerFromGenesis, anchorService
 
     beforeEach(() => {
       dispatcher = Dispatcher(true)
@@ -160,7 +160,7 @@ describe('Document', () => {
       doctypeHandler.user = new User()
       // fake jwt
       doctypeHandler.user.sign = jest.fn(async () => 'aaaa.bbbb.cccc')
-      doctypeHandlers = { '3id': doctypeHandler }
+      getHandlerFromGenesis = (): ThreeIdHandler => doctypeHandler
     })
 
     it('should announce change to network', async () => {
@@ -179,7 +179,7 @@ describe('Document', () => {
     it('documents share updates', async () => {
       const doc1 = await Document.create(initialContent, doctypeHandler, anchorService, dispatcher, { owners })
       await anchorUpdate(doc1)
-      const doc2 = await Document.load(doc1.id, doctypeHandlers, anchorService, dispatcher, { skipWait: true })
+      const doc2 = await Document.load(doc1.id, getHandlerFromGenesis, anchorService, dispatcher, { skipWait: true })
 
       const updatePromise = new Promise(resolve => {
         doc2.on('change', resolve)

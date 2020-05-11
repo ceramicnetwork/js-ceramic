@@ -104,18 +104,19 @@ program
   })
 
 program
-  .command('change <docId> <content>')
+  .command('change <docId> [content]')
   .option('--owners <owners>', 'Change owner of this document (only 3ID)')
   .description('Update the content of a document')
-  .action(async (docId, content) => {
+  .action(async (docId, content, { owners }) => {
     if (!validateDocId(docId)) {
       console.error(`Invalid docId: ${docId}`)
       return
     }
-    content = JSON.parse(content)
+    if (typeof content !== 'undefined') content = JSON.parse(content)
+    if (typeof owners === 'string') owners = owners.split(',')
     const ceramic = new CeramicClient()
     try {
-      const doc = await ceramic._updateDocument(docId, content)
+      const doc = await ceramic._updateDocument(docId, content, owners)
       console.log(JSON.stringify(doc.content, null, 2))
     } catch (e) {
       console.error(e)

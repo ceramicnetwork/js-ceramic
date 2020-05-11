@@ -23,6 +23,7 @@ export enum AnchorStatus {
 export interface DocState {
   doctype: string;
   owners: Array<string>;
+  nextOwners?: Array<string>;
   content: any;
   nextContent?: any;
   signature: SignatureStatus;
@@ -81,12 +82,12 @@ class Document extends EventEmitter {
   }
 
   async _init (
-    doctypeHandlers: Record<string, DoctypeHandler>,
+    getHandlerFromGenesis: (genesisRecord: any) => DoctypeHandler,
     anchorService: AnchorService,
     opts: InitOpts
   ): Promise<void> {
     const record = await this.dispatcher.retrieveRecord(this._genesisCid)
-    this._doctypeHandler = doctypeHandlers[record.doctype]
+    this._doctypeHandler = getHandlerFromGenesis(record)
     this._anchorService = anchorService
     this._state = await this._doctypeHandler.applyGenesis(record, this._genesisCid)
     this.dispatcher.on(`${this.id}_update`, this._handleHead.bind(this))
@@ -111,21 +112,19 @@ class Document extends EventEmitter {
     const cid = await dispatcher.storeRecord(genesisRecord)
     const id = ['/ceramic', cid.toString()].join('/')
     if (typeof opts.onlyGenesis === 'undefined') opts.onlyGenesis = false
-    const doctypeHandlers: Record<string, DoctypeHandler> = {}
-    doctypeHandlers[doctypeHandler.doctype] = doctypeHandler
-    return Document.load(id, doctypeHandlers, anchorService, dispatcher, opts)
+    return Document.load(id, () => doctypeHandler, anchorService, dispatcher, opts)
   }
 
   static async load (
     id: string,
-    doctypeHandlers: Record<string, DoctypeHandler>,
+    getHandlerFromGenesis: (genesisRecord: any) => DoctypeHandler,
     anchorService: AnchorService,
     dispatcher: Dispatcher,
     opts: InitOpts = {}
   ): Promise<Document> {
     const doc = new Document(id, dispatcher)
     if (typeof opts.onlyGenesis === 'undefined') opts.onlyGenesis = true
-    await doc._init(doctypeHandlers, anchorService, opts)
+    await doc._init(getHandlerFromGenesis, anchorService, opts)
     return doc
   }
 
@@ -265,8 +264,8 @@ class Document extends EventEmitter {
     await this.dispatcher.publishHead(this.id, this.head)
   }
 
-  async change (newContent: any): Promise<boolean> {
-    const record = await this._doctypeHandler.makeRecord(this._state, newContent)
+  async change (newContent: any, newOwners?: Array<string>): Promise<boolean> {
+    const record = await this._doctypeHandler.makeRecord(this._state, newContent, newOwners)
     const cid = await this.dispatcher.storeRecord(record)
     this._state = await this._doctypeHandler.applySigned(record, cid, this._state)
     await this.anchor()
