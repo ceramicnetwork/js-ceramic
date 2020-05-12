@@ -2,7 +2,7 @@ import type Ipfs from 'ipfs'
 import { EventEmitter } from 'events'
 import CID from 'cids'
 import cloneDeep from 'lodash.clonedeep'
-import PinningService from "./pin/pinning-service"
+import StateStore from "./store/state-store"
 
 export enum MsgType {
   UPDATE,
@@ -17,12 +17,11 @@ class Dispatcher extends EventEmitter {
   private _peerId: string
   private _recordCache: Record<string, any>
 
-  constructor (private _ipfs: Ipfs.Ipfs, public pinningService: PinningService) {
+  constructor (private _ipfs: Ipfs.Ipfs) {
     super()
     this._ids = {}
     this._recordCache = {}
     this._ipfs.pubsub.subscribe(TOPIC, this.handleMessage.bind(this)) // this returns promise, we should await
-    this.pinningService.open() // this returns promise, we should await
   }
 
   async register (id: string): Promise<void> {
@@ -80,7 +79,6 @@ class Dispatcher extends EventEmitter {
   }
 
   async close(): Promise<void> {
-    await this.pinningService.close()
     return this._ipfs.pubsub.unsubscribe(TOPIC)
   }
 }

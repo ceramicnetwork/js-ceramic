@@ -1,7 +1,11 @@
 import Document, { AnchorStatus, SignatureStatus } from '../document'
 import MockAnchorService from "../anchor/mock/mock-anchor-service";
-import MockPinningService from "../pin/mock/mock-pinning-service"
 import ThreeIdHandler from '../doctypes/threeIdHandler'
+import LevelStateStore from "../store/level-state-store"
+
+jest.mock('../store/level-state-store')
+
+const mockStateStore = new LevelStateStore(null, null)
 
 jest.mock('../dispatcher', () => {
   const CID = require('cids') // eslint-disable-line @typescript-eslint/no-var-requires
@@ -12,7 +16,6 @@ jest.mock('../dispatcher', () => {
     const recs: Record<string, any> = {}
     const listeners: Record<string, Array<(cid: string) => void>> = {}
     return {
-      pinningService: new MockPinningService(),
       register: jest.fn(),
       on: jest.fn((id, fn) => {
         if (!listeners[id]) listeners[id] = []
@@ -71,7 +74,7 @@ describe('Document', () => {
     })
 
     it('is created correctly', async () => {
-      const doc = await Document.create(initialContent, doctypeHandler, anchorService, dispatcher, { owners })
+      const doc = await Document.create(initialContent, doctypeHandler, anchorService, dispatcher, mockStateStore, { owners })
       const docId = doc.id
       expect(doc.content).toEqual(initialContent)
       expect(dispatcher.register).toHaveBeenCalledWith(docId)
@@ -82,19 +85,19 @@ describe('Document', () => {
     })
 
     it('is loaded correctly', async () => {
-      const docId = (await Document.create(initialContent, doctypeHandler, anchorService, dispatcher, { owners })).id
-      const doc = await Document.load(docId, getHandlerFromGenesis, anchorService, dispatcher, { skipWait: true })
+      const docId = (await Document.create(initialContent, doctypeHandler, anchorService, dispatcher, mockStateStore, { owners })).id
+      const doc = await Document.load(docId, getHandlerFromGenesis, anchorService, dispatcher, new LevelStateStore(null, null), { skipWait: true })
       expect(doc.id).toEqual(docId)
       expect(doc.content).toEqual(initialContent)
       expect(doc.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
     })
 
     it('handles new head correctly', async () => {
-      const tmpDoc = await Document.create(initialContent, doctypeHandler, anchorService, dispatcher, { owners })
+      const tmpDoc = await Document.create(initialContent, doctypeHandler, anchorService, dispatcher, mockStateStore,{ owners })
       await anchorUpdate(tmpDoc)
       const docId = tmpDoc.id
       const log = tmpDoc.state.log
-      const doc = await Document.load(docId, getHandlerFromGenesis, anchorService, dispatcher, { skipWait: true })
+      const doc = await Document.load(docId, getHandlerFromGenesis, anchorService, dispatcher, mockStateStore, { skipWait: true })
       // changes will not load since no network and no local head storage yet
       expect(doc.content).toEqual(initialContent)
       expect(doc.state).toEqual(expect.objectContaining({ signature: SignatureStatus.GENESIS, anchorStatus: 0 }))
@@ -107,7 +110,7 @@ describe('Document', () => {
     })
 
     it('is updated correctly', async () => {
-      const doc = await Document.create(initialContent, doctypeHandler, anchorService, dispatcher, { owners })
+      const doc = await Document.create(initialContent, doctypeHandler, anchorService, dispatcher, mockStateStore,{ owners })
       await anchorUpdate(doc)
       await doc.change(newContent)
       await anchorUpdate(doc)
@@ -118,7 +121,7 @@ describe('Document', () => {
 
     it('handles conflict', async () => {
       const fakeState = { asdf: 2342 }
-      const doc1 = await Document.create(initialContent, doctypeHandler, anchorService, dispatcher, { owners })
+      const doc1 = await Document.create(initialContent, doctypeHandler, anchorService, dispatcher, mockStateStore, { owners })
       const docId = doc1.id
       await anchorUpdate(doc1)
       const headPreUpdate = doc1.head
@@ -127,7 +130,7 @@ describe('Document', () => {
       expect(doc1.content).toEqual(newContent)
       const headValidUpdate = doc1.head
       // create invalid change that happened after main change
-      const doc2 = await Document.load(docId, getHandlerFromGenesis, anchorService, dispatcher, { skipWait: true })
+      const doc2 = await Document.load(docId, getHandlerFromGenesis, anchorService, dispatcher, mockStateStore, { skipWait: true })
       await doc2._handleHead(headPreUpdate)
       // add short wait to get different anchor time
       // sometime the tests are very fast
@@ -166,7 +169,7 @@ describe('Document', () => {
     })
 
     it('should announce change to network', async () => {
-      const doc1 = await Document.create(initialContent, doctypeHandler, anchorService, dispatcher, { owners })
+      const doc1 = await Document.create(initialContent, doctypeHandler, anchorService, dispatcher, mockStateStore,{ owners })
       expect(dispatcher.publishHead).toHaveBeenCalledTimes(1)
       expect(dispatcher.publishHead).toHaveBeenCalledWith(doc1.id, doc1.head)
       await anchorUpdate(doc1)
@@ -179,9 +182,9 @@ describe('Document', () => {
     })
 
     it('documents share updates', async () => {
-      const doc1 = await Document.create(initialContent, doctypeHandler, anchorService, dispatcher, { owners })
+      const doc1 = await Document.create(initialContent, doctypeHandler, anchorService, dispatcher, mockStateStore,{ owners })
       await anchorUpdate(doc1)
-      const doc2 = await Document.load(doc1.id, getHandlerFromGenesis, anchorService, dispatcher, { skipWait: true })
+      const doc2 = await Document.load(doc1.id, getHandlerFromGenesis, anchorService, dispatcher, mockStateStore, { skipWait: true })
 
       const updatePromise = new Promise(resolve => {
         doc2.on('change', resolve)
@@ -194,7 +197,7 @@ describe('Document', () => {
     })
 
     it('should publish head on network request', async () => {
-      const doc = await Document.create(initialContent, doctypeHandler, anchorService, dispatcher, { owners })
+      const doc = await Document.create(initialContent, doctypeHandler, anchorService, dispatcher, mockStateStore,{ owners })
       expect(dispatcher.publishHead).toHaveBeenCalledTimes(1)
       expect(dispatcher.publishHead).toHaveBeenNthCalledWith(1, doc.id, doc.head)
 

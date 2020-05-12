@@ -6,6 +6,7 @@ import { EventEmitter } from 'events'
 import PQueue from 'p-queue'
 import cloneDeep from 'lodash.clonedeep'
 import AnchorServiceResponse from "./anchor/anchor-service-response"
+import StateStore from "./store/state-store"
 
 export enum SignatureStatus {
   GENESIS,
@@ -75,7 +76,7 @@ class Document extends EventEmitter {
   private _doctypeHandler: DoctypeHandler
   private _anchorService: AnchorService
 
-  constructor (public id: string, public dispatcher: Dispatcher) {
+  constructor (public id: string, public dispatcher: Dispatcher, public stateStore: StateStore) {
     super()
     this._applyQueue = new PQueue({concurrency: 1})
     const split = this.id.split('/')
@@ -110,13 +111,14 @@ class Document extends EventEmitter {
     doctypeHandler: DoctypeHandler,
     anchorService: AnchorService,
     dispatcher: Dispatcher,
+    stateStore: StateStore,
     opts: InitOpts = {}
   ): Promise<Document> {
     const genesisRecord = await doctypeHandler.makeGenesis(content, opts.owners)
     const cid = await dispatcher.storeRecord(genesisRecord)
     const id = ['/ceramic', cid.toString()].join('/')
     if (typeof opts.onlyGenesis === 'undefined') opts.onlyGenesis = false
-    return Document.load(id, () => doctypeHandler, anchorService, dispatcher, opts)
+    return Document.load(id, () => doctypeHandler, anchorService, dispatcher, stateStore, opts)
   }
 
   static async load (
@@ -124,15 +126,16 @@ class Document extends EventEmitter {
     getHandlerFromGenesis: (genesisRecord: any) => DoctypeHandler,
     anchorService: AnchorService,
     dispatcher: Dispatcher,
+    stateStore: StateStore,
     opts: InitOpts = {}
   ): Promise<Document> {
-    const doc = new Document(id, dispatcher)
+    const doc = new Document(id, dispatcher, stateStore)
     if (typeof opts.onlyGenesis === 'undefined') opts.onlyGenesis = true
 
-    const isPinned = await dispatcher.pinningService.isDocPinned(id)
+    const isPinned = await stateStore.isDocPinned(id)
     if (isPinned) {
       // get last stored state
-      doc._state = await dispatcher.pinningService.loadState(id)
+      doc._state = await stateStore.loadState(id)
     }
 
     await doc._init(getHandlerFromGenesis, anchorService, opts)
@@ -161,9 +164,9 @@ class Document extends EventEmitter {
    * @private
    */
   async _updateStateIfPinned(): Promise<void> {
-    const isPinned = await this.dispatcher.pinningService.isDocPinned(this.id)
+    const isPinned = await this.stateStore.isDocPinned(this.id)
     if (isPinned) {
-      await this.dispatcher.pinningService.pin(this, false)
+      await this.stateStore.pin(this, false)
     }
   }
 

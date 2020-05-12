@@ -8,7 +8,8 @@ import ThreeIdHandler from './doctypes/threeIdHandler'
 import TileHandler from './doctypes/tileHandler'
 import AccountLinkHandler from './doctypes/accountLinkHandler'
 import { AnchorServiceFactory } from "./anchor/anchor-service-factory";
-import PinningServiceFactory from "./pin/pinning-service-factory"
+import LevelStateStore from "./store/level-state-store"
+import StateStore from "./store/state-store"
 
 // This is temporary until we handle DIDs and in particular 3IDs better
 const gen3IDgenesis = (pubkeys: any): any => {
@@ -36,7 +37,7 @@ class Ceramic {
   private _anchorService: AnchorService
   public user: User
 
-  constructor (public dispatcher: Dispatcher) {
+  constructor (public dispatcher: Dispatcher, public stateStore: StateStore) {
     this._docmap = {}
     this._doctypeHandlers = {
       '3id': new ThreeIdHandler(),
@@ -67,19 +68,19 @@ class Ceramic {
   }
 
   static async create(ipfs: Ipfs.Ipfs, config: CeramicConfig = {}): Promise<Ceramic> {
-    const pinningServiceFactory = new PinningServiceFactory(ipfs, config)
-    const pinningService = pinningServiceFactory.get()
+    const dispatcher = new Dispatcher(ipfs)
 
-    const dispatcher = new Dispatcher(ipfs, pinningService)
+    const stateStore = new LevelStateStore(ipfs, config.pinningStorePath)
+    await stateStore.open()
 
-    const ceramic = new Ceramic(dispatcher)
+    const ceramic = new Ceramic(dispatcher, stateStore)
     await ceramic._init(config)
     return ceramic
   }
 
   async createDocument (content: any, doctype: string, opts: InitOpts = {}): Promise<Document> {
     const doctypeHandler = this._doctypeHandlers[doctype]
-    const doc = await Document.create(content, doctypeHandler, this._anchorService, this.dispatcher, opts)
+    const doc = await Document.create(content, doctypeHandler, this._anchorService, this.dispatcher, this.stateStore, opts)
     if (!this._docmap[doc.id]) {
       this._docmap[doc.id] = doc
     }
@@ -88,23 +89,22 @@ class Ceramic {
 
   async loadDocument (id: string, opts: InitOpts = {}): Promise<Document> {
     if (!this._docmap[id]) {
-      this._docmap[id] = await Document.load(id, this.getHandlerFromGenesis.bind(this), this._anchorService, this.dispatcher, opts)
+      this._docmap[id] = await Document.load(id, this.getHandlerFromGenesis.bind(this), this._anchorService, this.dispatcher, this.stateStore, opts)
     }
     return this._docmap[id]
   }
 
   async pinDocument (docId: string): Promise<void> {
     const document = await this.loadDocument(docId)
-    await this.dispatcher.pinningService.pin(document)
+    await this.stateStore.pin(document)
   }
 
   async unpinDocument (docId: string): Promise<void> {
-    const document = await this.loadDocument(docId)
-    await this.dispatcher.pinningService.rm(document)
+    await this.stateStore.rm(docId)
   }
 
   async listPinned (docId?: string): Promise<any> {
-    return this.dispatcher.pinningService.ls(docId)
+    return this.stateStore.ls(docId)
   }
 
   async setDIDProvider (provider: any): Promise<void> {
@@ -122,6 +122,7 @@ class Ceramic {
   }
 
   async close (): Promise<void> {
+    await this.stateStore.close()
     return this.dispatcher.close()
   }
 }

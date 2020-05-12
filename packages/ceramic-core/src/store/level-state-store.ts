@@ -4,14 +4,13 @@ import leveldown from "leveldown";
 import encoding from "encoding-down";
 
 import type Ipfs from 'ipfs'
-import Document, { DocState } from "../../document"
-import PinningService from "../pinning-service"
-import { AnchorStatus } from "../../../../ceramic-http-client/lib/document"
+import Document, { AnchorStatus, DocState } from "../document"
+import StateStore from "./state-store"
 
 /**
  * LevelDb backed Pinning Service
  */
-export default class LevelPinningService implements PinningService {
+export default class LevelStateStore implements StateStore {
     private readonly store: any
 
     constructor(private ipfs: Ipfs.Ipfs, private pinningStorePath: string) {
@@ -113,17 +112,20 @@ export default class LevelPinningService implements PinningService {
      */
     async isDocPinned(docId: string): Promise<boolean> {
         const state = await this.loadState(docId);
-        return state != null;
+        return Boolean(state)
     }
 
     /**
      * Unpin document
-     * @param document - Document instance
+     * @param docId - Document ID
      */
-    async rm(document: Document): Promise<void> {
-        const { state } = document;
-        const { log } = state;
+    async rm(docId: string): Promise<void> {
+        const state = await this.loadState(docId)
+        if (state == null) {
+            return
+        }
 
+        const { log } = state;
         const pinPromises = log.map(async (cid) => {
             try {
                 await this.ipfs.pin.rm(cid.toString())
@@ -133,7 +135,7 @@ export default class LevelPinningService implements PinningService {
             return
         });
         await Promise.all(pinPromises);
-        return await this.store.del(document.id)
+        return await this.store.del(docId)
     }
 
     /**

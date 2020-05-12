@@ -1,9 +1,9 @@
 import Document, { DocState } from "../document"
 
 /**
- * Pinning Service API
+ * State store API
  */
-export default interface PinningService {
+export default interface StateStore {
 
     /**
      * Open pinning service
@@ -31,15 +31,15 @@ export default interface PinningService {
 
     /**
      * Unpin document
-     * @param document - Document instance
+     * @param docId - Document ID
      */
-    rm(document: Document): Promise<void>;
+    rm(docId: string): Promise<void>;
 
     /**
      * List pinned document
      * @param docId - Document ID
      */
-    ls(docId: string): Promise<string[]>;
+    ls(docId?: string): Promise<string[]>;
 
     /**
      * Close pinning service
