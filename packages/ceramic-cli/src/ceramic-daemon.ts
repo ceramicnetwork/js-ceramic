@@ -142,7 +142,7 @@ class CeramicDaemon {
   async pinDocument (req: Request, res: Response, next: NextFunction): Promise<void> {
     const docId = ['/ceramic', req.params.cid].join('/')
     try {
-      await this.ceramic.pinDocument(docId)
+      await this.ceramic.pin.add(docId)
       res.json({ docId, isPinned: true })
     } catch (e) {
       return next(e)
@@ -153,7 +153,7 @@ class CeramicDaemon {
   async unpinDocument (req: Request, res: Response, next: NextFunction): Promise<void> {
     const docId = ['/ceramic', req.params.cid].join('/')
     try {
-      await this.ceramic.unpinDocument(docId)
+      await this.ceramic.pin.rm(docId)
       res.json({ docId, isPinned: false })
     } catch (e) {
       return next(e)
@@ -167,7 +167,7 @@ class CeramicDaemon {
       docId = ['/ceramic', req.params.cid].join('/')
     }
     try {
-      const list = await this.ceramic.listPinned(docId)
+      const list = await this.ceramic.pin.ls(docId)
       res.json({ pinnedDocIds: list })
     } catch (e) {
       return next(e)

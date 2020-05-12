@@ -31,11 +31,20 @@ export interface CeramicConfig {
   didProvider?: any;
 }
 
+export interface CeramicStateStoreAPI {
+  add(docId: string): Promise<void>;
+
+  rm(docId: string): Promise<void>;
+
+  ls(docId?: string): Promise<any>;
+}
+
 class Ceramic {
   private _docmap: Record<string, Document>
   private _doctypeHandlers: Record<string, DoctypeHandler>
   private _anchorService: AnchorService
   public user: User
+  public pin: CeramicStateStoreAPI
 
   constructor (public dispatcher: Dispatcher, public stateStore: StateStore) {
     this._docmap = {}
@@ -43,6 +52,19 @@ class Ceramic {
       '3id': new ThreeIdHandler(),
       'tile': new TileHandler(this),
       'account-link': new AccountLinkHandler()
+    }
+
+    this.pin = {
+      add: async (docId: string): Promise<void> => {
+        const document = await this.loadDocument(docId)
+        await this.stateStore.pin(document)
+      },
+      rm: async (docId: string): Promise<void> => {
+        await this.stateStore.rm(docId)
+      },
+      ls: async (docId?: string): Promise<any> => {
+        return this.stateStore.ls(docId)
+      }
     }
   }
 
@@ -92,19 +114,6 @@ class Ceramic {
       this._docmap[id] = await Document.load(id, this.getHandlerFromGenesis.bind(this), this._anchorService, this.dispatcher, this.stateStore, opts)
     }
     return this._docmap[id]
-  }
-
-  async pinDocument (docId: string): Promise<void> {
-    const document = await this.loadDocument(docId)
-    await this.stateStore.pin(document)
-  }
-
-  async unpinDocument (docId: string): Promise<void> {
-    await this.stateStore.rm(docId)
-  }
-
-  async listPinned (docId?: string): Promise<any> {
-    return this.stateStore.ls(docId)
   }
 
   async setDIDProvider (provider: any): Promise<void> {

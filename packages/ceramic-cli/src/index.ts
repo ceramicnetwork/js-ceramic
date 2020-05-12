@@ -120,7 +120,7 @@ program
     }
     const ceramic = new CeramicClient()
     try {
-      const result = await ceramic._pinDocument(docId)
+      const result = await ceramic.pin.add(docId)
       console.log(JSON.stringify(result, null, 2))
     } catch (e) {
       console.error(e)
@@ -138,7 +138,7 @@ program
         }
         const ceramic = new CeramicClient()
         try {
-            const result = await ceramic._unpinDocument(docId)
+            const result = await ceramic.pin.rm(docId)
             console.log(JSON.stringify(result, null, 2))
         } catch (e) {
             console.error(e)
@@ -156,7 +156,7 @@ program
         }
         const ceramic = new CeramicClient()
         try {
-            const list = await ceramic._listPinned(docId)
+            const list = await ceramic.pin.ls(docId)
             console.log(JSON.stringify(list, null, 2))
         } catch (e) {
             console.error(e)
