@@ -7,14 +7,14 @@ class DIDDocument {
     return 'did:3:' + this.ceramicDoc.state.log[0]
   }
 
-  async linkAccountTile (accountTile: CeramicDocument) {
+  async setAccountTile (accountTile: CeramicDocument): Promise<void> {
     if (this.ceramicDoc.content.account) {
       throw new Error(`Account tile already linked: ${this.ceramicDoc.content.account}`)
     }
     await this.ceramicDoc.change({...this.ceramicDoc.content, account: accountTile.id})
   }
 
-  static async get (did: string, ceramic: CeramicApi): Promise<DIDDocument> {
+  static async load (did: string, ceramic: CeramicApi): Promise<DIDDocument> {
     const didPrefix = 'did:3:'
     if (!did.startsWith(didPrefix)) {
       throw new Error('Only 3IDs allowed')
@@ -24,7 +24,7 @@ class DIDDocument {
     return new DIDDocument(ceramicDoc, ceramic)
   }
 
-  static async build (keys: {managementKey: string; signingKey: string; encryptionKey: string; }, ceramic: CeramicApi): Promise<DIDDocument> {
+  static async build (keys: {managementKey: string; signingKey: string; encryptionKey: string }, ceramic: CeramicApi): Promise<DIDDocument> {
     const ceramicDoc = await ceramic.createDocument({
       publicKeys: {
         signing: keys.signingKey,

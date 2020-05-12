@@ -1,5 +1,5 @@
 {
-  "name": "@ceramicnetwork/ceramic-account",
+  "name": "@ceramicnetwork/account-template",
   "version": "0.1.0",
   "description": "Ceramic module for accounts handling",
   "main": "lib/index.js",
@@ -31,5 +31,8 @@
     "account"
   ],
   "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "3id-blockchain-utils": "^0.3.3"
+  }
 }
