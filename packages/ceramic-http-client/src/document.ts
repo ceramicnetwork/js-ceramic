@@ -1,21 +1,7 @@
-import fetch from 'node-fetch'
 import CID from 'cids'
 import { EventEmitter } from 'events'
 import cloneDeep from 'lodash.clonedeep'
-
-const fetchJson = async (url: string, payload?: any): Promise<any> => {
-  let opts
-  if (payload) {
-    opts = {
-      method: 'post',
-      body: JSON.stringify(payload),
-      headers: { 'Content-Type': 'application/json' }
-    }
-  }
-  const res = await (await fetch(url, opts)).json()
-  if (res.error) throw new Error(res.error)
-  return res
-}
+import { fetchJson } from "./utils"
 
 export enum SignatureStatus {
   UNSIGNED,
@@ -27,7 +13,8 @@ export enum AnchorStatus {
   NOT_REQUESTED,
   PENDING,
   PROCESSING,
-  ANCHORED
+  ANCHORED,
+  FAILED
 }
 
 export interface AnchorProof {
@@ -63,11 +50,18 @@ function deserializeState (state: any): DocState {
     state.anchorProof.txHash = new CID(state.anchorProof.txHash);
     state.anchorProof.root = new CID(state.anchorProof.root);
   }
+
+  let showScheduledFor = true;
   if (state.anchorStatus) {
     state.anchorStatus = AnchorStatus[state.anchorStatus];
+    showScheduledFor = state.anchorStatus !== AnchorStatus.FAILED && state.anchorStatus !== AnchorStatus.ANCHORED
   }
   if (state.anchorScheduledFor) {
-    state.anchorScheduledFor = Date.parse(state.anchorScheduledFor); // ISO format of the UTC time
+    if (showScheduledFor) {
+      state.anchorScheduledFor = Date.parse(state.anchorScheduledFor); // ISO format of the UTC time
+    } else {
+      state.anchorScheduledFor = null;
+    }
   }
   return state
 }
@@ -107,6 +101,14 @@ class Document extends EventEmitter {
     const { state } = await fetchJson(this._apiUrl + '/change' + this.id, { content: newContent, owners: newOwners })
     this._state = deserializeState(state)
     return true
+  }
+
+  async pinDocument (): Promise<any> {
+    return await fetchJson(this._apiUrl + '/pin/add' + this.id)
+  }
+
+  async unpinDocument (): Promise<any> {
+    return await fetchJson(this._apiUrl + '/pin/rm' + this.id)
   }
 
   async sign (): Promise<boolean> {

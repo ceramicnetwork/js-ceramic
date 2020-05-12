@@ -65,7 +65,7 @@ describe('Ceramic integration', () => {
     const owner = ceramic1.user.publicKeys.managementKey
     const ceramic2 = await Ceramic.create(ipfs2)
     const doc1 = await ceramic1.createDocument({ test: 456 }, DOCTYPE_3ID, { owners: [owner] })
-    // we can't load document from id since nodes are not connected
+    // we can't get document from id since nodes are not connected
     // so we won't find the genesis object from it's CID
     const doc2 = await ceramic2.createDocument({ test: 456 }, DOCTYPE_3ID, { onlyGenesis: true, owners: [owner] })
     expect(doc1.content).toEqual(doc2.content)

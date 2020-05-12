@@ -20,6 +20,7 @@ interface CreateOpts {
 
   ethereumRpcUrl?: string;
   anchorServiceUrl?: string;
+  pinningStorePath?: string;
 }
 
 function logErrors (err: Error, req: Request, res: Response, next: NextFunction) {
@@ -46,6 +47,10 @@ class CeramicDaemon {
     app.get(toApiPath('/show/ceramic/:cid'), this.show.bind(this))
     app.get(toApiPath('/state/ceramic/:cid'), this.state.bind(this))
     app.post(toApiPath('/change/ceramic/:cid'), this.change.bind(this))
+    app.get(toApiPath('/pin/add/ceramic/:cid'), this.pinDocument.bind(this))
+    app.get(toApiPath('/pin/rm/ceramic/:cid'), this.unpinDocument.bind(this))
+    app.get(toApiPath('/pin/ls/ceramic/:cid'), this.listPinned.bind(this))
+    app.get(toApiPath('/pin/ls'), this.listPinned.bind(this))
     if (DEBUG) {
       app.use(logErrors)
     }
@@ -61,12 +66,18 @@ class CeramicDaemon {
   static async create (opts: CreateOpts): Promise<CeramicDaemon> {
     const ipfs = opts.ipfs || ipfsClient(opts.ipfsHost || IPFS_HOST)
 
-    let ceramicConfig: CeramicConfig; // load initially from file and override with opts
+    const ceramicConfig: CeramicConfig = {}; // get initially from file and override with opts
     if (opts.anchorServiceUrl) {
-      ceramicConfig = {
+      Object.assign(ceramicConfig, {
         ethereumRpcUrl: opts.ethereumRpcUrl,
         anchorServiceUrl: opts.anchorServiceUrl,
-      }
+      })
+    }
+
+    if (opts.pinningStorePath) {
+      Object.assign(ceramicConfig, {
+        pinningStorePath: opts.pinningStorePath,
+      })
     }
 
     const ceramic = await Ceramic.create(ipfs, ceramicConfig)
@@ -128,7 +139,43 @@ class CeramicDaemon {
     next()
   }
 
-  async close () {
+  async pinDocument (req: Request, res: Response, next: NextFunction): Promise<void> {
+    const docId = ['/ceramic', req.params.cid].join('/')
+    try {
+      await this.ceramic.pinDocument(docId)
+      res.json({ docId, isPinned: true })
+    } catch (e) {
+      return next(e)
+    }
+    next()
+  }
+
+  async unpinDocument (req: Request, res: Response, next: NextFunction): Promise<void> {
+    const docId = ['/ceramic', req.params.cid].join('/')
+    try {
+      await this.ceramic.unpinDocument(docId)
+      res.json({ docId, isPinned: false })
+    } catch (e) {
+      return next(e)
+    }
+    next()
+  }
+
+  async listPinned (req: Request, res: Response, next: NextFunction): Promise<void> {
+    let docId: string;
+    if (req.params.cid) {
+      docId = ['/ceramic', req.params.cid].join('/')
+    }
+    try {
+      const list = await this.ceramic.listPinned(docId)
+      res.json({ pinnedDocIds: list })
+    } catch (e) {
+      return next(e)
+    }
+    next()
+  }
+
+  async close (): Promise<void> {
     return this.server.close()
   }
 }

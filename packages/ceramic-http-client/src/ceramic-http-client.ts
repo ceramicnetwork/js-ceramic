@@ -1,3 +1,4 @@
+import { fetchJson } from "./utils"
 import Document, { InitOpts } from './document'
 
 const CERAMIC_HOST = 'http://localhost:7007'
@@ -34,6 +35,24 @@ class CeramicClient {
     const doc = new Document(id, {}, this._apiUrl)
     await doc.change(content, owners)
     return doc
+  }
+
+  async _pinDocument (id: string): Promise<Document> {
+    const doc = new Document(id, {}, this._apiUrl)
+    return await doc.pinDocument()
+  }
+
+  async _unpinDocument (id: string): Promise<any> {
+    const doc = new Document(id, {}, this._apiUrl)
+    return await doc.unpinDocument()
+  }
+
+  async _listPinned (docId?: string): Promise<any> {
+    let url = this._apiUrl + '/pin/ls'
+    if (docId !== undefined) {
+      url += docId
+    }
+    return await fetchJson(url)
   }
 
   async close (): Promise<void> {

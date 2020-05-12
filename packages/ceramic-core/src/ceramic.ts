@@ -8,7 +8,7 @@ import ThreeIdHandler from './doctypes/threeIdHandler'
 import TileHandler from './doctypes/tileHandler'
 import AccountLinkHandler from './doctypes/accountLinkHandler'
 import { AnchorServiceFactory } from "./anchor/anchor-service-factory";
-
+import PinningServiceFactory from "./pin/pinning-service-factory"
 
 // This is temporary until we handle DIDs and in particular 3IDs better
 const gen3IDgenesis = (pubkeys: any): any => {
@@ -26,6 +26,7 @@ const gen3IDgenesis = (pubkeys: any): any => {
 export interface CeramicConfig {
   ethereumRpcUrl?: string;
   anchorServiceUrl?: string;
+  pinningStorePath?: string;
   didProvider?: any;
 }
 
@@ -66,7 +67,11 @@ class Ceramic {
   }
 
   static async create(ipfs: Ipfs.Ipfs, config: CeramicConfig = {}): Promise<Ceramic> {
-    const dispatcher = new Dispatcher(ipfs)
+    const pinningServiceFactory = new PinningServiceFactory(ipfs, config)
+    const pinningService = pinningServiceFactory.get()
+
+    const dispatcher = new Dispatcher(ipfs, pinningService)
+
     const ceramic = new Ceramic(dispatcher)
     await ceramic._init(config)
     return ceramic
@@ -86,6 +91,20 @@ class Ceramic {
       this._docmap[id] = await Document.load(id, this.getHandlerFromGenesis.bind(this), this._anchorService, this.dispatcher, opts)
     }
     return this._docmap[id]
+  }
+
+  async pinDocument (docId: string): Promise<void> {
+    const document = await this.loadDocument(docId)
+    await this.dispatcher.pinningService.pin(document)
+  }
+
+  async unpinDocument (docId: string): Promise<void> {
+    const document = await this.loadDocument(docId)
+    await this.dispatcher.pinningService.rm(document)
+  }
+
+  async listPinned (docId?: string): Promise<any> {
+    return this.dispatcher.pinningService.ls(docId)
   }
 
   async setDIDProvider (provider: any): Promise<void> {

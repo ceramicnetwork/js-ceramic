@@ -6,6 +6,7 @@ import { EventEmitter } from 'events'
 import PQueue from 'p-queue'
 import cloneDeep from 'lodash.clonedeep'
 import AnchorServiceResponse from "./anchor/anchor-service-response"
+import PinningService from "./pin/pinning-service"
 
 export enum SignatureStatus {
   GENESIS,
@@ -17,7 +18,8 @@ export enum AnchorStatus {
   NOT_REQUESTED,
   PENDING,
   PROCESSING,
-  ANCHORED
+  ANCHORED,
+  FAILED
 }
 
 export interface DocState {
@@ -89,7 +91,10 @@ class Document extends EventEmitter {
     const record = await this.dispatcher.retrieveRecord(this._genesisCid)
     this._doctypeHandler = getHandlerFromGenesis(record)
     this._anchorService = anchorService
-    this._state = await this._doctypeHandler.applyGenesis(record, this._genesisCid)
+    if (!this._state) {
+      // apply genesis record if there's no state preserved
+      this._state = await this._doctypeHandler.applyGenesis(record, this._genesisCid)
+    }
     this.dispatcher.on(`${this.id}_update`, this._handleHead.bind(this))
     this.dispatcher.on(`${this.id}_headreq`, this._publishHead.bind(this))
     this.dispatcher.register(this.id)
@@ -124,6 +129,13 @@ class Document extends EventEmitter {
   ): Promise<Document> {
     const doc = new Document(id, dispatcher)
     if (typeof opts.onlyGenesis === 'undefined') opts.onlyGenesis = true
+
+    const isPinned = await dispatcher.pinningService.isDocPinned(id)
+    if (isPinned) {
+      // get last stored state
+      doc._state = await dispatcher.pinningService.loadState(id)
+    }
+
     await doc._init(getHandlerFromGenesis, anchorService, opts)
     return doc
   }
@@ -143,6 +155,17 @@ class Document extends EventEmitter {
   get head (): CID {
     const log = this._state.log
     return log[log.length - 1]
+  }
+
+  /**
+   * Updates document state if the document is pinned locally
+   * @private
+   */
+  async _updateStateIfPinned(): Promise<void> {
+    const isPinned = await this.dispatcher.pinningService.isDocPinned(this.id)
+    if (isPinned) {
+      await this.dispatcher.pinningService.pin(this, false)
+    }
   }
 
   async _handleHead (cid: CID): Promise<void> {
@@ -268,6 +291,8 @@ class Document extends EventEmitter {
     const record = await this._doctypeHandler.makeRecord(this._state, newContent, newOwners)
     const cid = await this.dispatcher.storeRecord(record)
     this._state = await this._doctypeHandler.applySigned(record, cid, this._state)
+    await this._updateStateIfPinned()
+
     await this.anchor()
     this._publishHead()
     return true
@@ -278,21 +303,25 @@ class Document extends EventEmitter {
       switch (asr.status) {
         case 'PENDING': {
           this._state.anchorScheduledFor = asr.anchorScheduledFor
+          await this._updateStateIfPinned()
           return
         }
         case 'PROCESSING': {
           this._state.anchorStatus = AnchorStatus.PROCESSING
+          await this._updateStateIfPinned()
           return
         }
         case 'COMPLETED': {
+          this._state.anchorStatus = AnchorStatus.ANCHORED
           await this._handleHead(asr.anchorRecord)
+          await this._updateStateIfPinned()
           this._publishHead()
 
           this._anchorService.removeAllListeners(this.id)
           return
         }
         case 'FAILED': {
-          // TODO handle failed status
+          this._state.anchorStatus = AnchorStatus.FAILED
           this._anchorService.removeAllListeners(this.id)
           return
         }

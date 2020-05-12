@@ -1,5 +1,6 @@
 import Document, { AnchorStatus, SignatureStatus } from '../document'
 import MockAnchorService from "../anchor/mock/mock-anchor-service";
+import MockPinningService from "../pin/mock/mock-pinning-service"
 import ThreeIdHandler from '../doctypes/threeIdHandler'
 
 jest.mock('../dispatcher', () => {
@@ -11,6 +12,7 @@ jest.mock('../dispatcher', () => {
     const recs: Record<string, any> = {}
     const listeners: Record<string, Array<(cid: string) => void>> = {}
     return {
+      pinningService: new MockPinningService(),
       register: jest.fn(),
       on: jest.fn((id, fn) => {
         if (!listeners[id]) listeners[id] = []
@@ -93,7 +95,7 @@ describe('Document', () => {
       const docId = tmpDoc.id
       const log = tmpDoc.state.log
       const doc = await Document.load(docId, getHandlerFromGenesis, anchorService, dispatcher, { skipWait: true })
-      // changes will not load since no network and no local head storage yet
+      // changes will not get since no network and no local head storage yet
       expect(doc.content).toEqual(initialContent)
       expect(doc.state).toEqual(expect.objectContaining({ signature: SignatureStatus.GENESIS, anchorStatus: 0 }))
       // _handleHead is intended to be called by the dispatcher

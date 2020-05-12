@@ -1,6 +1,6 @@
 import CID from 'cids'
 
-// TODO - remove dispatcher, its not needed once we have anchoring service
+// TODO - rm dispatcher, its not needed once we have anchoring service
 import AnchorService from "../anchor-service";
 import type Dispatcher from '../../dispatcher'
 import type { AnchorProof } from '../../document'
