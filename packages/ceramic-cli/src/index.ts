@@ -110,27 +110,30 @@ program
     }
   })
 
-program
-  .command('pin_add <docId>')
-  .description('Pin the document locally')
-  .action(async (docId) => {
-    if (!validateDocId(docId)) {
-      console.error(`Invalid docId: ${docId}`)
-      return
-    }
-    const ceramic = new CeramicClient()
-    try {
-      const result = await ceramic.pin.add(docId)
-      console.log(JSON.stringify(result, null, 2))
-    } catch (e) {
-      console.error(e)
-    }
-    ceramic.close()
-  })
+const pin = program.command('pin')
+pin.description('Ceramic local pinning API')
 
-program
-    .command('pin_rm <docId>')
-    .description('Unpin the document locally')
+pin
+    .command('add <docId>')
+    .description('Pin document')
+    .action(async (docId) => {
+        if (!validateDocId(docId)) {
+            console.error(`Invalid docId: ${docId}`)
+            return
+        }
+        const ceramic = new CeramicClient()
+        try {
+            const result = await ceramic.pin.add(docId)
+            console.log(JSON.stringify(result, null, 2))
+        } catch (e) {
+            console.error(e)
+        }
+        ceramic.close()
+    });
+
+pin
+    .command('rm <docId>')
+    .description('Unpin document')
     .action(async (docId) => {
         if (!validateDocId(docId)) {
             console.error(`Invalid docId: ${docId}`)
@@ -144,11 +147,11 @@ program
             console.error(e)
         }
         ceramic.close()
-    })
+    });
 
-program
-    .command('pin_list [<docId>]')
-    .description('List pinned documents locally')
+pin
+    .command('ls [<docId>]')
+    .description('List pinned documents')
     .action(async (docId) => {
         if (docId != null && !validateDocId(docId)) {
             console.error(`Invalid docId: ${docId}`)

@@ -23,7 +23,18 @@ class CeramicClient {
     this._apiUrl = apiHost + API_PATH
     this._docmap = {}
 
-    this.pin = {
+    this.pin = this._initPinApi()
+
+    // this is an ugly way of getting updates, switch to something better
+    this._iid = setInterval(() => {
+      for (const docId in this._docmap) {
+        this._docmap[docId]._syncState()
+      }
+    }, 1000)
+  }
+
+  _initPinApi(): CeramicStateStoreAPI {
+    return {
       add: async (docId: string): Promise<void> => {
         return await fetchJson(this._apiUrl + '/pin/add' + docId)
       },
@@ -38,13 +49,6 @@ class CeramicClient {
         return await fetchJson(url)
       }
     }
-
-    // this is an ugly way of getting updates, switch to something better
-    this._iid = setInterval(() => {
-      for (const docId in this._docmap) {
-        this._docmap[docId]._syncState()
-      }
-    }, 1000)
   }
 
   async createDocument (genesis: any, doctype: string, opts?: InitOpts): Promise<Document> {

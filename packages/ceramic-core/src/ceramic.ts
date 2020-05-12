@@ -54,7 +54,11 @@ class Ceramic {
       'account-link': new AccountLinkHandler()
     }
 
-    this.pin = {
+    this.pin = this._initPinApi();
+  }
+
+  _initPinApi(): CeramicStateStoreAPI {
+    return {
       add: async (docId: string): Promise<void> => {
         const document = await this.loadDocument(docId)
         await this.stateStore.pin(document)
