@@ -1,3 +1,4 @@
+import CID from "cids"
 import levelup from "levelup";
 import leveldown from "leveldown";
 import encoding from "encoding-down";
@@ -5,6 +6,7 @@ import encoding from "encoding-down";
 import type Ipfs from 'ipfs'
 import Document, { DocState } from "../../document"
 import PinningService from "../pinning-service"
+import { AnchorStatus } from "../../../../ceramic-http-client/lib/document"
 
 /**
  * LevelDb backed Pinning Service
@@ -33,7 +35,7 @@ export default class LevelPinningService implements PinningService {
      */
     async pin(document: Document, pinOnIpfs = true): Promise<void> {
         const { state } = document;
-        await this.store.put(document.id, state)
+        await this.store.put(document.id, this._serializeState(state))
 
         if (pinOnIpfs) {
             const { log } = state;
@@ -47,12 +49,56 @@ export default class LevelPinningService implements PinningService {
     }
 
     /**
+     * Serializes document state
+     * TODO move to common utility
+     * @param state - Document state
+     * @private
+     */
+    _serializeState (state: any): any {
+        state.log = state.log.map((cid: any) => cid.toString());
+        if (state.anchorStatus) {
+            state.anchorStatus = AnchorStatus[state.anchorStatus];
+        }
+        if (state.anchorScheduledFor) {
+            state.anchorScheduledFor = new Date(state.anchorScheduledFor).toISOString(); // ISO format of the UTC time
+        }
+        if (state.anchorProof) {
+            state.anchorProof.txHash = state.anchorProof.txHash.toString();
+            state.anchorProof.root = state.anchorProof.root.toString();
+        }
+        return state
+    }
+
+    /**
+     * Deserializes document state
+     * TODO move to common utility
+     * @param state - Serialized document state
+     * @private
+     */
+    _deserializeState (state: any): DocState {
+        state.log = state.log.map((cidStr: string): CID => new CID(cidStr))
+        if (state.anchorProof) {
+            state.anchorProof.txHash = new CID(state.anchorProof.txHash);
+            state.anchorProof.root = new CID(state.anchorProof.root);
+        }
+
+        if (state.anchorStatus) {
+            state.anchorStatus = AnchorStatus[state.anchorStatus];
+        }
+        if (state.anchorScheduledFor) {
+            state.anchorScheduledFor = Date.parse(state.anchorScheduledFor); // ISO format of the UTC time
+        }
+        return state
+    }
+
+    /**
      * Load document
      * @param docId - Document ID
      */
     async loadState(docId: string): Promise<DocState> {
         try {
-            return await this.store.get(docId)
+            const state = await this.store.get(docId)
+            return this._deserializeState(state)
         } catch (err) {
             if (err.notFound) {
                 return null; // return null for non-existent entry
