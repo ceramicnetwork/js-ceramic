@@ -1,30 +1,24 @@
 import CID from "cids"
-import levelup from "levelup";
-import leveldown from "leveldown";
-import encoding from "encoding-down";
+import Level from 'level-ts';
 
 import type Ipfs from 'ipfs'
 import Document, { AnchorStatus, DocState } from "../document"
 import StateStore from "./state-store"
 
 /**
- * LevelDb backed Pinning Service
+ * Level backed State Store
  */
 export default class LevelStateStore implements StateStore {
-    private readonly store: any
+    private store: any
 
-    constructor(private ipfs: Ipfs.Ipfs, private pinningStorePath: string) {
-        const encoded = encoding(leveldown(pinningStorePath), {
-            valueEncoding: "json"
-        });
-        this.store = levelup(encoded);
+    constructor(private ipfs: Ipfs.Ipfs, private storePath: string) {
     }
 
     /**
      * Open pinning service
      */
     async open(): Promise<void> {
-        await this.store.open();
+        this.store = new Level(this.storePath);
     }
 
     /**
@@ -135,7 +129,7 @@ export default class LevelStateStore implements StateStore {
             return
         });
         await Promise.all(pinPromises);
-        return await this.store.del(docId)
+        return this.store.del(docId)
     }
 
     /**
@@ -158,25 +152,20 @@ export default class LevelStateStore implements StateStore {
     async _listDocIds(): Promise<string[]> {
         const { store } = this;
         const keys: string[] = [];
-        return new Promise(function (resolve, reject) {
-            store.createKeyStream()
-                .on('data', (data: string) => {
-                    keys.push(data);
-                })
-                .on('error', function (err: Error) {
-                    reject(err)
-                })
-                .on('close', function () {
-                    resolve(keys);
-                })
+        const all = await store.stream({
+            keys: true
         })
+        for(const { key } of all) {
+            keys.push(key)
+        }
+        return keys
     }
 
     /**
      * Close pinning service
      */
     async close(): Promise<void> {
-        await this.store.close();
+        // do nothing
     }
 
 }
