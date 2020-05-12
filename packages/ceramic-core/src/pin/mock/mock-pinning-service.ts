@@ -6,12 +6,14 @@ export default class MockPinningService implements PinningService {
      * Open pinning service
      */
     async open(): Promise<void> {
+        return
     }
 
     /**
      * Pin document
      */
     async pin(): Promise<void> {
+        return
     }
 
     /**
@@ -32,6 +34,7 @@ export default class MockPinningService implements PinningService {
      * Unpin document
      */
     async rm(): Promise<void> {
+        return
     }
 
     /**
@@ -45,5 +48,6 @@ export default class MockPinningService implements PinningService {
      * Close pinning service
      */
     async close(): Promise<void> {
+        return
     }
 }

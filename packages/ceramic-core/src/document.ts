@@ -6,7 +6,6 @@ import { EventEmitter } from 'events'
 import PQueue from 'p-queue'
 import cloneDeep from 'lodash.clonedeep'
 import AnchorServiceResponse from "./anchor/anchor-service-response"
-import PinningService from "./pin/pinning-service"
 
 export enum SignatureStatus {
   GENESIS,

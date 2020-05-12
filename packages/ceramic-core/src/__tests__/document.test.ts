@@ -95,7 +95,7 @@ describe('Document', () => {
       const docId = tmpDoc.id
       const log = tmpDoc.state.log
       const doc = await Document.load(docId, getHandlerFromGenesis, anchorService, dispatcher, { skipWait: true })
-      // changes will not get since no network and no local head storage yet
+      // changes will not load since no network and no local head storage yet
       expect(doc.content).toEqual(initialContent)
       expect(doc.state).toEqual(expect.objectContaining({ signature: SignatureStatus.GENESIS, anchorStatus: 0 }))
       // _handleHead is intended to be called by the dispatcher
