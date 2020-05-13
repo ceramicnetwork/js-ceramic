@@ -13,6 +13,8 @@ const toApiPath = (ending: string): string => '/api/v0' + ending
 // TODO - don't hardcode seed lol
 const seed = '0x5872d6e0ae7347b72c9216db218ebbb9d9d0ae7ab818ead3557e8e78bf944184'
 
+const DEFAULT_ANCHOR_SERVICE_URL = "https://cas.3box.io:8081/api/v0/requests"
+
 interface CreateOpts {
   ipfsHost?: string;
   ipfs?: Ipfs.Ipfs;
@@ -66,6 +68,10 @@ class CeramicDaemon {
       ceramicConfig = {
         ethereumRpcUrl: opts.ethereumRpcUrl,
         anchorServiceUrl: opts.anchorServiceUrl,
+      }
+    } else {
+      ceramicConfig = {
+        anchorServiceUrl: DEFAULT_ANCHOR_SERVICE_URL,
       }
     }
 
