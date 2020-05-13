@@ -159,7 +159,7 @@ describe('AccountLinks', () => {
   })
 
   describe('unlinkAddress', () => {
-    it('should clear the account link document and the reference to it for the given address', async () => {
+    it('should remove the account link document for the given address', async () => {
       const did = 'did:3:abcdfg'
       const address = '0x12345@eip155:1'
       const mockAccountLinksTile = buildMockCeramicDoc()
@@ -179,7 +179,6 @@ describe('AccountLinks', () => {
       await accountLinks.unlinkAddress(address)
 
       expect(accountLinks.getLinkedAddresses()).not.toContain(address)
-      expect(mockAccountLinkDoc.change).toHaveBeenCalledWith('')
       expect(mockAccountLinksTile.change).toHaveBeenCalledWith([])
     })
 

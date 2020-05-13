@@ -46,7 +46,6 @@ class AccountLinks {
     if (!this._accountLinkDocuments[caip10Address]) {
       throw new Error(`Address ${caip10Address} not linked`)
     }
-    await this._accountLinkDocuments[caip10Address].change('')
     const newContent = this.ceramicDoc.content.filter((docId: string) => docId !== this._accountLinkDocuments[caip10Address].id)
     await this.ceramicDoc.change(newContent)
     
