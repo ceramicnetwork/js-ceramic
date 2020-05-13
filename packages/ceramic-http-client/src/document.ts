@@ -103,14 +103,6 @@ class Document extends EventEmitter {
     return true
   }
 
-  async pinDocument (): Promise<any> {
-    return await fetchJson(this._apiUrl + '/pin/add' + this.id)
-  }
-
-  async unpinDocument (): Promise<any> {
-    return await fetchJson(this._apiUrl + '/pin/rm' + this.id)
-  }
-
   async sign (): Promise<boolean> {
     return false
   }
