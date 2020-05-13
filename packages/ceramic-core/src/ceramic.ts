@@ -27,7 +27,7 @@ const gen3IDgenesis = (pubkeys: any): any => {
 export interface CeramicConfig {
   ethereumRpcUrl?: string;
   anchorServiceUrl?: string;
-  pinningStorePath?: string;
+  stateStorePath?: string;
   didProvider?: any;
 }
 
@@ -96,7 +96,7 @@ class Ceramic {
   static async create(ipfs: Ipfs.Ipfs, config: CeramicConfig = {}): Promise<Ceramic> {
     const dispatcher = new Dispatcher(ipfs)
 
-    const stateStore = new LevelStateStore(ipfs, config.pinningStorePath)
+    const stateStore = new LevelStateStore(ipfs, config.stateStorePath)
     await stateStore.open()
 
     const ceramic = new Ceramic(dispatcher, stateStore)

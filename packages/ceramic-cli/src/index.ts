@@ -20,15 +20,15 @@ program
   .option('--pinning-store-path <url>', 'The directory path used for pinning service. Defaults to' +
       ' WORKING_DIR/' + DEFAULT_PINNING_STORE_PATH)
   .description('Start the daemon')
-  .action(async ({ ipfsApi, ethereumRpc, anchorServiceApi, pinningStorePath }) => {
-      if (pinningStorePath == null) {
-          pinningStorePath = DEFAULT_PINNING_STORE_PATH
+  .action(async ({ ipfsApi, ethereumRpc, anchorServiceApi, stateStorePath }) => {
+      if (stateStorePath == null) {
+          stateStorePath = DEFAULT_PINNING_STORE_PATH
       }
       await CeramicDaemon.create({
         ipfsHost: ipfsApi,
         ethereumRpcUrl: ethereumRpc,
         anchorServiceUrl: anchorServiceApi,
-        pinningStorePath: pinningStorePath,
+        stateStorePath: stateStorePath,
     })
   })
 

@@ -20,7 +20,7 @@ interface CreateOpts {
 
   ethereumRpcUrl?: string;
   anchorServiceUrl?: string;
-  pinningStorePath?: string;
+  stateStorePath?: string;
 }
 
 function logErrors (err: Error, req: Request, res: Response, next: NextFunction) {
@@ -74,9 +74,9 @@ class CeramicDaemon {
       })
     }
 
-    if (opts.pinningStorePath) {
+    if (opts.stateStorePath) {
       Object.assign(ceramicConfig, {
-        pinningStorePath: opts.pinningStorePath,
+        stateStorePath: opts.stateStorePath,
       })
     }
 
