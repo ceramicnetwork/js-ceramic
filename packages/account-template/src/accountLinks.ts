@@ -12,7 +12,7 @@ class AccountLinks {
     this.ceramicDoc.on('change', this._loadAccountLinkDocs.bind(this))
   }
 
-  getAllAddresses (): Array<string> {
+  getLinkedAddresses (): Array<string> {
     return Object.keys(this._accountLinkDocuments)
   }
 
@@ -36,6 +36,9 @@ class AccountLinks {
     }
     
     await this.ceramicDoc.change([...this.ceramicDoc.content, accountLinkDoc.id])
+
+    // need this here because the accountLinks tile 'change' event isn't triggered immediately
+    this._accountLinkDocuments[caip10Address] = accountLinkDoc
   }
 
   async unlinkAddress (address: string): Promise<void> {
@@ -43,9 +46,12 @@ class AccountLinks {
     if (!this._accountLinkDocuments[caip10Address]) {
       throw new Error(`Address ${caip10Address} not linked`)
     }
-    await this._accountLinkDocuments[caip10Address].change("")
+    await this._accountLinkDocuments[caip10Address].change('')
     const newContent = this.ceramicDoc.content.filter((docId: string) => docId !== this._accountLinkDocuments[caip10Address].id)
     await this.ceramicDoc.change(newContent)
+    
+    // need this here because the accountLinks tile 'change' event isn't triggered immediately
+    delete this._accountLinkDocuments[caip10Address]
   }
 
   async _loadAccountLinkDocs(): Promise<void> {
@@ -81,7 +87,9 @@ class AccountLinks {
   static async build (owner: string, ceramic: CeramicApi, provider?: any): Promise<AccountLinks> {
     const genesisContent: string[] = []
     const ceramicDoc = await ceramic.createDocument(genesisContent, 'tile', { owners: [owner] })
-    return new AccountLinks(ceramicDoc, ceramic, provider)
+    const accountLinks = new AccountLinks(ceramicDoc, ceramic, provider)
+    await accountLinks._loadAccountLinkDocs()
+    return accountLinks
   }
 }
 
