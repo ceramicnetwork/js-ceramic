@@ -72,12 +72,10 @@ class ThreeIDAccount {
     let ceramicDoc
     if (didDocument.ceramicDoc.content.account) {
       ceramicDoc = await ceramic.loadDocument(didDocument.ceramicDoc.content.account)
-      console.log('FOUND account tile', ceramicDoc.id)
     } else {
       const genesisContent: Record<string, string> = {}
       ceramicDoc = await ceramic.createDocument(genesisContent, 'tile', { owners: [didDocument.did] })
       await didDocument.setAccountTile(ceramicDoc)
-      console.log('CREATED account tile', ceramicDoc.id)
     }
 
     // Load/create subtiles
