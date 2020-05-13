@@ -5,7 +5,7 @@ import LevelStateStore from "../store/level-state-store"
 
 jest.mock('../store/level-state-store')
 
-const mockStateStore = new LevelStateStore(null, null)
+const mockStateStore = new LevelStateStore(null, null,null)
 
 jest.mock('../dispatcher', () => {
   const CID = require('cids') // eslint-disable-line @typescript-eslint/no-var-requires
@@ -86,7 +86,7 @@ describe('Document', () => {
 
     it('is loaded correctly', async () => {
       const docId = (await Document.create(initialContent, doctypeHandler, anchorService, dispatcher, mockStateStore, { owners })).id
-      const doc = await Document.load(docId, getHandlerFromGenesis, anchorService, dispatcher, new LevelStateStore(null, null), { skipWait: true })
+      const doc = await Document.load(docId, getHandlerFromGenesis, anchorService, dispatcher, mockStateStore, { skipWait: true })
       expect(doc.id).toEqual(docId)
       expect(doc.content).toEqual(initialContent)
       expect(doc.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)

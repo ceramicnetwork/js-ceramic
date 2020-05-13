@@ -96,7 +96,7 @@ class Ceramic {
   static async create(ipfs: Ipfs.Ipfs, config: CeramicConfig = {}): Promise<Ceramic> {
     const dispatcher = new Dispatcher(ipfs)
 
-    const stateStore = new LevelStateStore(ipfs, config.stateStorePath)
+    const stateStore = new LevelStateStore(ipfs, dispatcher, config.stateStorePath)
     await stateStore.open()
 
     const ceramic = new Ceramic(dispatcher, stateStore)

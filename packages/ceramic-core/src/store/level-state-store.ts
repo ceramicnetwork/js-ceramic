@@ -1,9 +1,10 @@
 import CID from "cids"
 import Level from 'level-ts';
 
-import type Ipfs from 'ipfs'
+import Ipfs from 'ipfs'
 import Document, { AnchorStatus, DocState } from "../document"
 import StateStore from "./state-store"
+import Dispatcher from "../dispatcher"
 
 /**
  * Level backed State Store
@@ -11,7 +12,7 @@ import StateStore from "./state-store"
 export default class LevelStateStore implements StateStore {
     private store: any
 
-    constructor(private ipfs: Ipfs.Ipfs, private storePath: string) {
+    constructor(private ipfs: Ipfs.Ipfs, private dispatcher: Dispatcher, private storePath: string) {
     }
 
     /**
@@ -33,9 +34,35 @@ export default class LevelStateStore implements StateStore {
         if (pinOnIpfs) {
             const { log } = state;
             const pinPromises = log.map(async (cid) => {
-                return this.ipfs.pin.add(cid.toString(), {
+                await this.ipfs.pin.add(cid.toString(), {
                     recursive: false,
                 })
+
+                const record = await this.dispatcher.retrieveRecord(cid)
+                if (record.proof) {
+                    // fetch and pin
+                    await this.dispatcher.retrieveRecord(record.proof) // fetch proof object
+                    await this.ipfs.pin.add(record.proof.toString(), {
+                        recursive: false,
+                    })
+
+                    const path = "root/" + record.path
+                    const subPaths = path.split('/')
+
+                    let currentPath = ""
+                    for (const subPath of subPaths) {
+                        if (subPath.length === 0) {
+                            continue
+                        }
+                        currentPath += "/" + subPath
+
+                        // fetch and pin
+                        await this.ipfs.dag.get(record.proof, currentPath)
+                        await this.ipfs.pin.add(record.proof.toString() + currentPath, {
+                            recursive: false,
+                        })
+                    }
+                }
             })
             await Promise.all(pinPromises);
         }
@@ -123,10 +150,29 @@ export default class LevelStateStore implements StateStore {
         const pinPromises = log.map(async (cid) => {
             try {
                 await this.ipfs.pin.rm(cid.toString())
+
+                const record = await this.dispatcher.retrieveRecord(cid)
+                if (record.proof) {
+                    // unpin
+                    await this.ipfs.pin.rm(record.proof.toString())
+
+                    const path = "root/" + record.path
+                    const subPaths = path.split('/')
+
+                    let currentPath = ""
+                    for (const subPath of subPaths) {
+                        if (subPath.length === 0) {
+                            continue
+                        }
+                        currentPath += "/" + subPath
+
+                        // unpin
+                        await this.ipfs.pin.rm(record.proof.toString() + currentPath)
+                    }
+                }
             } catch (e) {
                 // do nothing
             }
-            return
         });
         await Promise.all(pinPromises);
         return this.store.del(docId)
