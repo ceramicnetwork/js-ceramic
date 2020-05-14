@@ -40,8 +40,6 @@ export default class LevelStateStore implements StateStore {
 
                 const record = await this.dispatcher.retrieveRecord(cid)
                 if (record.proof) {
-                    // fetch and pin
-                    await this.dispatcher.retrieveRecord(record.proof) // fetch proof object
                     await this.ipfs.pin.add(record.proof.toString(), {
                         recursive: false,
                     })
@@ -56,8 +54,6 @@ export default class LevelStateStore implements StateStore {
                         }
                         currentPath += "/" + subPath
 
-                        // fetch and pin
-                        await this.ipfs.dag.get(record.proof, currentPath)
                         await this.ipfs.pin.add(record.proof.toString() + currentPath, {
                             recursive: false,
                         })

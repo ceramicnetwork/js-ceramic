@@ -1,7 +1,7 @@
 import CID from 'cids'
 import { EventEmitter } from 'events'
 import cloneDeep from 'lodash.clonedeep'
-import { fetchJson } from "./utils"
+import { fetchJson } from './utils'
 
 export enum SignatureStatus {
   UNSIGNED,
