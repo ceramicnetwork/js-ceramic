@@ -32,6 +32,26 @@ class Profile {
   }
 }
 
+class Claims {
+  constructor (public ceramicDoc: CeramicDocument, private _ceramic: CeramicApi) { }
+
+  static async build(owner: string, ceramic: CeramicApi): Promise<Claims> {
+    const genesisContent: string[] = []
+    const ceramicDoc = await ceramic.createDocument(genesisContent, 'tile', { owners: [owner] })
+    return new Claims(ceramicDoc, ceramic)
+  }
+}
+
+class Connections {
+  constructor (public ceramicDoc: CeramicDocument, private _ceramic: CeramicApi) { }
+
+  static async build(owner: string, ceramic: CeramicApi): Promise<Connections> {
+    const genesisContent: string[] = []
+    const ceramicDoc = await ceramic.createDocument(genesisContent, 'tile', { owners: [owner] })
+    return new Connections(ceramicDoc, ceramic)
+  }
+}
+
 class Sources {
   constructor (public ceramicDoc: CeramicDocument, private _ceramic: CeramicApi) { }
 
@@ -61,6 +81,8 @@ class ThreeIDAccount {
                public accountLinks: AccountLinks,
                public keychain: Keychain,
                public profile: Profile,
+               public claims: Claims,
+               public connections: Connections,
                public sources: Sources,
                public services: Services,
                private _ceramic: CeramicApi,
@@ -114,6 +136,24 @@ class ThreeIDAccount {
       await ceramicDoc.change({ ...ceramicDoc.content, profile: profile.ceramicDoc.id })
     }
 
+    let claims: Claims
+    if (ceramicDoc.content.claims) {
+      const subtileDocument = await ceramic.loadDocument(ceramicDoc.content.claims)
+      claims = new Claims(subtileDocument, ceramic)
+    } else {
+      claims = await Claims.build(did, ceramic)
+      await ceramicDoc.change({ ...ceramicDoc.content, claims: claims.ceramicDoc.id })
+    }
+
+    let connections: Connections
+    if (ceramicDoc.content.connections) {
+      const subtileDocument = await ceramic.loadDocument(ceramicDoc.content.connections)
+      connections = new Connections(subtileDocument, ceramic)
+    } else {
+      connections = await Connections.build(did, ceramic)
+      await ceramicDoc.change({ ...ceramicDoc.content, connections: connections.ceramicDoc.id })
+    }
+
     let sources: Sources
     if (ceramicDoc.content.sources) {
       const subtileDocument = await ceramic.loadDocument(ceramicDoc.content.sources)
@@ -132,7 +172,8 @@ class ThreeIDAccount {
       await ceramicDoc.change({ ...ceramicDoc.content, services: services.ceramicDoc.id })
     }
 
-    return new ThreeIDAccount(ceramicDoc, didDocument, accountLinks, keychain, profile, sources, services, ceramic, provider)
+    return new ThreeIDAccount(ceramicDoc, didDocument, accountLinks, keychain, profile, claims,
+                              connections, sources, services, ceramic, provider)
   }
 }
 
