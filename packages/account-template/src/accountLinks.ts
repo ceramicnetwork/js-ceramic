@@ -22,7 +22,7 @@ class AccountLinks {
 
   async add (account: AccountID | string, opts: { proof?: Record<string, any>; provider?: any }): Promise<void> {
     if (typeof account === 'string') {
-      let [address, chainId] = account.split('@')
+      let [address, chainId] = account.split('@') // eslint-disable-line prefer-const
       if (!chainId) {
         chainId = 'eip155:1'
       }
@@ -54,7 +54,7 @@ class AccountLinks {
 
   async remove (account: AccountID | string): Promise<void> {
     if (typeof account === 'string') {
-      let [address, chainId] = account.split('@')
+      let [address, chainId] = account.split('@') // eslint-disable-line prefer-const
       if (!chainId) {
         chainId = 'eip155:1'
       }
@@ -87,7 +87,7 @@ class AccountLinks {
 
   static async build (owner: string, ceramic: CeramicApi): Promise<AccountLinks> {
     const genesisContent: string[] = []
-    const ceramicDoc = await ceramic.createDocument(genesisContent, 'tile', { owners: [owner] })
+    const ceramicDoc = await ceramic.createDocument(genesisContent, 'tile', { owners: [owner], isUnique: true })
     const accountLinks = new AccountLinks(ceramicDoc, ceramic)
     await accountLinks._loadAccountLinkDocs()
     return accountLinks

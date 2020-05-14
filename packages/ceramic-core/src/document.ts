@@ -37,6 +37,7 @@ export interface InitOpts {
   owners?: Array<string>;
   onlyGenesis?: boolean;
   skipWait?: boolean;
+  isUnique?: boolean;
 }
 
 export interface AnchorRecord {
@@ -108,7 +109,7 @@ class Document extends EventEmitter {
     dispatcher: Dispatcher,
     opts: InitOpts = {}
   ): Promise<Document> {
-    const genesisRecord = await doctypeHandler.makeGenesis(content, opts.owners)
+    const genesisRecord = await doctypeHandler.makeGenesis(content, opts.owners, { isUnique: opts.isUnique })
     const cid = await dispatcher.storeRecord(genesisRecord)
     const id = ['/ceramic', cid.toString()].join('/')
     if (typeof opts.onlyGenesis === 'undefined') opts.onlyGenesis = false

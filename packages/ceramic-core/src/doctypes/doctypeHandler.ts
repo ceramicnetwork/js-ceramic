@@ -27,7 +27,7 @@ abstract class DoctypeHandler {
 
   abstract async makeRecord (state: DocState, newContent: any, newOwners?: Array<string>): Promise<any>;
 
-  abstract async makeGenesis (content: any, owners?: Array<string>): Promise<any>;
+  abstract async makeGenesis (content: any, owners?: Array<string>, opts?: { isUnique?: boolean }): Promise<any>;
 }
 
 export default DoctypeHandler

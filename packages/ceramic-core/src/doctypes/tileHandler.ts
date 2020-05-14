@@ -6,6 +6,8 @@ import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import { Resolver } from 'did-resolver'
 import jsonpatch from 'fast-json-patch'
 import { verifyJWT } from 'did-jwt'
+import { encode as base64Encode } from '@ethersproject/base64'
+import { randomBytes } from '@ethersproject/random'
 
 const DOCTYPE = 'tile'
 
@@ -61,6 +63,7 @@ class TileHandler extends DoctypeHandler {
       doctype: record.doctype,
       owners: record.owners,
       content: record.content,
+      unique: record.unique || undefined,
       prev: record.prev ? { '/': record.prev.toString() } : undefined,
       id: record.id ? { '/': record.id.toString() } : undefined,
       iss: record.iss
@@ -96,10 +99,14 @@ class TileHandler extends DoctypeHandler {
     return this.signRecord(record)
   }
 
-  async makeGenesis (content: any, owners?: Array<string>): Promise<any> {
+  async makeGenesis (content: any, owners?: Array<string>, opts: { isUnique?: boolean } = {}): Promise<any> {
     if (!this.user) throw new Error('No user authenticated')
     if (!owners) owners = [this.user.DID]
-    const record = { doctype: this.doctype, owners, content }
+    let unique: string
+    if (opts.isUnique) {
+      unique = base64Encode(randomBytes(9))
+    }
+    const record = { doctype: this.doctype, owners, content, unique }
     return this.signRecord(record)
   }
 
