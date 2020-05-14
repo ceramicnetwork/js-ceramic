@@ -56,7 +56,15 @@ class Services {
 class ThreeIDAccount {
   [key: string]: any // allow access to properties using index notation (ex: account['services'])
 
-  constructor (public ceramicDoc: CeramicDocument, public didDocument: DIDDocument, public accountLinks: AccountLinks, public keychain: Keychain, public profile: Profile, public sources: Sources, public services: Services, private _ceramic: CeramicApi, public provider?: any) { }
+  constructor (public ceramicDoc: CeramicDocument,
+               public didDocument: DIDDocument,
+               public accountLinks: AccountLinks,
+               public keychain: Keychain,
+               public profile: Profile,
+               public sources: Sources,
+               public services: Services,
+               private _ceramic: CeramicApi,
+               public provider?: any) { }
 
   get DID (): string {
     return this.didDocument.did
@@ -82,9 +90,9 @@ class ThreeIDAccount {
 
     let accountLinks: AccountLinks
     if (ceramicDoc.content['account-links']) {
-      accountLinks = await AccountLinks.load(ceramicDoc.content['account-links'], ceramic, provider)
+      accountLinks = await AccountLinks.load(ceramicDoc.content['account-links'], ceramic)
     } else {
-      accountLinks = await AccountLinks.build(did, ceramic, provider)
+      accountLinks = await AccountLinks.build(did, ceramic)
       await ceramicDoc.change({ ...ceramicDoc.content, 'account-links': accountLinks.ceramicDoc.id })
     }
 

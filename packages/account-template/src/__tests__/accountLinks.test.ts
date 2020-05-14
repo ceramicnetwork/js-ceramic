@@ -41,7 +41,7 @@ describe('AccountLinks', () => {
     })
   })
 
-  describe('getLinkedAddresses', () => {
+  describe('list', () => {
     it('should return all addresses linked to this account', async () => {
       const mockAccountLinkDoc1 = buildMockCeramicDoc()
       mockAccountLinkDoc1.id = '/ceramic/qwerty'
@@ -55,16 +55,28 @@ describe('AccountLinks', () => {
       const mockCeramic = buildMockCeramic([mockAccountLinksTile, mockAccountLinkDoc1, mockAccountLinkDoc2])
       const accountLinks = await AccountLinks.load(mockAccountLinksTile.id, mockCeramic)
 
-      const linkedAddresses = accountLinks.getLinkedAddresses()
+      const linkedAddresses = accountLinks.list()
 
-      expect(linkedAddresses).toEqual(expect.arrayContaining([mockAccountLinkDoc1.state.owners[0], mockAccountLinkDoc2.state.owners[0]]))
+      const expected = [
+        {
+          account: mockAccountLinkDoc1.state.owners[0],
+          docId: mockAccountLinkDoc1.id
+        },
+        {
+          account: mockAccountLinkDoc2.state.owners[0],
+          docId: mockAccountLinkDoc2.id
+        }
+      ]
+      const actual = linkedAddresses.map(({account, docId}) => ({ account: account.toString(), docId }))
+      expect(actual).toEqual(expect.arrayContaining(expected))
     })
   })
 
-  describe('linkAddress', () => {
+  describe('add', () => {
     it('should create and link an account-link document to the given address', async () => {
       const did = 'did:3:abcdfg'
-      const address = '0x12345@eip155:1'
+      const address = '0x12345'
+      const account = address + '@eip155:1'
       const mockAccountLinksTile = buildMockCeramicDoc()
       mockAccountLinksTile.content = []
       mockAccountLinksTile.state.owners = [did]
@@ -73,15 +85,15 @@ describe('AccountLinks', () => {
       const mockCeramic = buildMockCeramic()
       mockCeramic.createDocument.mockResolvedValue(mockAccountLinkDoc)
       const mockProvider = jest.fn()
-      const accountLinks = new AccountLinks(mockAccountLinksTile, mockCeramic, mockProvider)
+      const accountLinks = new AccountLinks(mockAccountLinksTile, mockCeramic)
       const mockProof = jest.fn()
       createLink.mockResolvedValue(mockProof)
 
-      await accountLinks.linkAddress(address)
+      await accountLinks.add(account, { provider: mockProvider })
 
       expect(createLink).toHaveBeenCalledWith(did, address, mockProvider)
       expect(mockCeramic.createDocument).toHaveBeenCalledWith(null, 'account-link', {
-        owners: [address],
+        owners: [account],
         onlyGenesis: true
       })
       expect(mockAccountLinkDoc.change).toHaveBeenCalledWith(mockProof)
@@ -99,15 +111,13 @@ describe('AccountLinks', () => {
       const mockCeramic = buildMockCeramic()
       mockCeramic.createDocument.mockResolvedValue(mockAccountLinkDoc)
       const mockProvider = jest.fn()
-      const netVersion = 1
-      mockProvider.send = jest.fn((_, cb) => cb(null, { result: netVersion }))
-      const accountLinks = new AccountLinks(mockAccountLinksTile, mockCeramic, mockProvider)
+      const accountLinks = new AccountLinks(mockAccountLinksTile, mockCeramic)
       const mockProof = jest.fn()
       createLink.mockResolvedValue(mockProof)
 
-      await accountLinks.linkAddress(address)
+      await accountLinks.add(address, { provider: mockProvider })
 
-      const expectAddress = address + '@eip155:' + netVersion
+      const expectAddress = address + '@eip155:1'
       expect(mockCeramic.createDocument).toHaveBeenCalledWith(null, 'account-link', {
         owners: [expectAddress],
         onlyGenesis: true
@@ -124,10 +134,11 @@ describe('AccountLinks', () => {
       mockAccountLinkDoc.id = '/ceramic/qwerty'
       const mockCeramic = buildMockCeramic()
       mockCeramic.createDocument.mockResolvedValue(mockAccountLinkDoc)
+      const mockProvider = jest.fn()
       const accountLinks = new AccountLinks(mockAccountLinksTile, mockCeramic)
       const mockProof = jest.fn()
 
-      await accountLinks.linkAddress(address, mockProof)
+      await accountLinks.add(address, { provider: mockProvider, proof: mockProof })
 
       expect(createLink).not.toHaveBeenCalledWith()
       expect(mockCeramic.createDocument).toHaveBeenCalledWith(null, 'account-link', {
@@ -149,16 +160,16 @@ describe('AccountLinks', () => {
       const mockCeramic = buildMockCeramic()
       mockCeramic.createDocument.mockResolvedValue(mockAccountLinkDoc)
       const mockProvider = jest.fn()
-      const accountLinks = new AccountLinks(mockAccountLinksTile, mockCeramic, mockProvider)
+      const accountLinks = new AccountLinks(mockAccountLinksTile, mockCeramic)
       const mockProof = jest.fn()
       createLink.mockResolvedValue(mockProof)
-      await accountLinks.linkAddress(address)
+      await accountLinks.add(address, { provider: mockProvider })
 
-      await expect(accountLinks.linkAddress(address)).rejects.toThrow(/Address .* already linked/i)
+      await expect(accountLinks.add(address, { provider: mockProvider })).rejects.toThrow(/Address .* already linked/i)
     })
   })
 
-  describe('unlinkAddress', () => {
+  describe('remove', () => {
     it('should remove the account link document for the given address', async () => {
       const did = 'did:3:abcdfg'
       const address = '0x12345@eip155:1'
@@ -173,12 +184,12 @@ describe('AccountLinks', () => {
       const accountLinks = new AccountLinks(mockAccountLinksTile, mockCeramic, mockProvider)
       const mockProof = jest.fn()
       createLink.mockResolvedValue(mockProof)
-      await accountLinks.linkAddress(address)
-      expect(accountLinks.getLinkedAddresses()).toContain(address)
+      await accountLinks.add(address, { provider: mockProvider })
+      expect(accountLinks.list().find(link => link.account.toString() === address)).toBeTruthy()
 
-      await accountLinks.unlinkAddress(address)
+      await accountLinks.remove(address)
 
-      expect(accountLinks.getLinkedAddresses()).not.toContain(address)
+      expect(accountLinks.list().find(link => link.account.toString() === address)).not.toBeTruthy()
       expect(mockAccountLinksTile.change).toHaveBeenCalledWith([])
     })
 
@@ -194,17 +205,15 @@ describe('AccountLinks', () => {
       const mockCeramic = buildMockCeramic()
       mockCeramic.createDocument.mockResolvedValue(mockAccountLinkDoc)
       const mockProvider = jest.fn()
-      const netVersion = 1
-      mockProvider.send = jest.fn((_, cb) => cb(null, { result: netVersion }))
-      const accountLinks = new AccountLinks(mockAccountLinksTile, mockCeramic, mockProvider)
+      const accountLinks = new AccountLinks(mockAccountLinksTile, mockCeramic)
       const mockProof = jest.fn()
       createLink.mockResolvedValue(mockProof)
-      await accountLinks.linkAddress(caip10Address)
-      expect(accountLinks.getLinkedAddresses()).toContain(caip10Address)
+      await accountLinks.add(caip10Address, { provider: mockProvider })
+      expect(accountLinks.list().find(link => link.account.toString() === caip10Address)).toBeTruthy()
 
-      await accountLinks.unlinkAddress(address) 
+      await accountLinks.remove(address) 
 
-      expect(accountLinks.getLinkedAddresses()).not.toContain(caip10Address)
+      expect(accountLinks.list().find(link => link.account.toString() === caip10Address)).not.toBeTruthy()
     })
 
     it('should throw an error if the address is not linked', async () => {
@@ -214,10 +223,9 @@ describe('AccountLinks', () => {
       mockAccountLinksTile.content = []
       mockAccountLinksTile.state.owners = [did]
       const mockCeramic = buildMockCeramic()
-      const mockProvider = jest.fn()
-      const accountLinks = new AccountLinks(mockAccountLinksTile, mockCeramic, mockProvider)
+      const accountLinks = new AccountLinks(mockAccountLinksTile, mockCeramic)
 
-      await expect(accountLinks.unlinkAddress(address)).rejects.toThrow(/Address .* not linked/i)
+      await expect(accountLinks.remove(address)).rejects.toThrow(/Address .* not linked/i)
     })
   })
 })
