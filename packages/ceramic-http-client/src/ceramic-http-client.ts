@@ -6,7 +6,7 @@ export interface CeramicStateStoreAPI {
 
   rm(docId: string): Promise<void>;
 
-  ls(docId?: string): Promise<any>;
+  ls(docId?: string): Promise<AsyncIterable<string>>;
 }
 
 const CERAMIC_HOST = 'http://localhost:7007'
@@ -41,12 +41,26 @@ class CeramicClient {
       rm: async (docId: string): Promise<void> => {
         return await fetchJson(this._apiUrl + '/pin/rm' + docId)
       },
-      ls: async (docId?: string): Promise<any> => {
+      ls: async (docId?: string): Promise<AsyncIterable<string>> => {
         let url = this._apiUrl + '/pin/ls'
         if (docId !== undefined) {
           url += docId
         }
-        return await fetchJson(url)
+        const result = await fetchJson(url)
+        const { pinnedDocIds } = result
+        return {
+          [Symbol.asyncIterator]() {
+            let index = 0
+            return {
+              next() {
+                if (index === pinnedDocIds.length) {
+                  return Promise.resolve({ value: null, done: true });
+                }
+                return Promise.resolve({ value: pinnedDocIds[index++], done: false });
+              }
+            };
+          }
+        }
       }
     }
   }

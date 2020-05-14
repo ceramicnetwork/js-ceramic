@@ -159,8 +159,12 @@ pin
         }
         const ceramic = new CeramicClient()
         try {
-            const list = await ceramic.pin.ls(docId)
-            console.log(JSON.stringify(list, null, 2))
+            const pinnedDocIds = []
+            const iterator = await ceramic.pin.ls(docId)
+            for await (const id of iterator) {
+                pinnedDocIds.push(id)
+            }
+            console.log(JSON.stringify(pinnedDocIds, null, 2))
         } catch (e) {
             console.error(e)
         }

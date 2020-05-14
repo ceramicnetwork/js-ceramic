@@ -36,7 +36,7 @@ export interface CeramicStateStoreAPI {
 
   rm(docId: string): Promise<void>;
 
-  ls(docId?: string): Promise<any>;
+  ls(docId?: string): Promise<AsyncIterable<string>>;
 }
 
 class Ceramic {
@@ -66,7 +66,7 @@ class Ceramic {
       rm: async (docId: string): Promise<void> => {
         await this.stateStore.rm(docId)
       },
-      ls: async (docId?: string): Promise<any> => {
+      ls: async (docId?: string): Promise<AsyncIterable<string>> => {
         return this.stateStore.ls(docId)
       }
     }

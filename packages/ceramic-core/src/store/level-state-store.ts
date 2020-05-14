@@ -178,13 +178,28 @@ export default class LevelStateStore implements StateStore {
      * List pinned document
      * @param docId - Document ID
      */
-    async ls(docId?: string): Promise<string[]> {
+    async ls(docId?: string): Promise<AsyncIterable<string>> {
+        let docIds: string[]
         if (docId == null) {
-            return await this._listDocIds();
+            docIds = await this._listDocIds();
+        } else {
+            const isPinned = await this.isDocPinned(docId)
+            docIds = isPinned ? [docId] : []
         }
 
-        const isPinned = await this.isDocPinned(docId)
-        return isPinned? [ docId ] : []
+        return {
+            [Symbol.asyncIterator]() {
+                let index = 0
+                return {
+                    next() {
+                        if (index === docIds.length) {
+                            return Promise.resolve({ value: null, done: true });
+                        }
+                        return Promise.resolve({ value: docIds[index++], done: false });
+                    }
+                };
+            }
+        }
     }
 
     /**

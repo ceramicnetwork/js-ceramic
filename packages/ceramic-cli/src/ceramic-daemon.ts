@@ -167,8 +167,12 @@ class CeramicDaemon {
       docId = ['/ceramic', req.params.cid].join('/')
     }
     try {
-      const list = await this.ceramic.pin.ls(docId)
-      res.json({ pinnedDocIds: list })
+      const pinnedDocIds = []
+      const iterator = await this.ceramic.pin.ls(docId)
+      for await (const id of iterator) {
+        pinnedDocIds.push(id)
+      }
+      res.json({ pinnedDocIds: pinnedDocIds })
     } catch (e) {
       return next(e)
     }

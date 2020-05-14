@@ -39,7 +39,7 @@ export default interface StateStore {
      * List pinned document
      * @param docId - Document ID
      */
-    ls(docId?: string): Promise<string[]>;
+    ls(docId?: string): Promise<AsyncIterable<string>>;
 
     /**
      * Close pinning service
