@@ -55,6 +55,7 @@ export interface InitOpts {
   onlyGenesis?: boolean;
   skipWait?: boolean;
   owners?: Array<string>;
+  isUnique?: boolean;
 }
 
 function deserializeState (state: any): DocState {
@@ -79,7 +80,13 @@ class Document extends EventEmitter {
   }
 
   static async create (genesis: any, doctype: string, apiUrl: string, opts: InitOpts = {}): Promise<Document> {
-    const { docId, state } = await fetchJson(apiUrl + '/create', { genesis, doctype, onlyGenesis: opts.onlyGenesis, owners: opts.owners })
+    const { docId, state } = await fetchJson(apiUrl + '/create', {
+      genesis,
+      doctype,
+      onlyGenesis: opts.onlyGenesis,
+      owners: opts.owners,
+      isUnique: opts.isUnique
+    })
     const doc = new Document(docId, deserializeState(state), apiUrl)
     return doc
   }

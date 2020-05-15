@@ -62,6 +62,22 @@ describe('ThreeIdHandler', () => {
     expect(record2).toEqual(wrapWithFakeSignature(RECORDS.genesis))
   })
 
+  it('creates genesis records deterministically by default', async () => {
+    handler.user = user
+    const record1 = await handler.makeGenesis(RECORDS.genesis.content)
+    const record2 = await handler.makeGenesis(RECORDS.genesis.content)
+
+    expect(record1).toEqual(record2)
+  })
+
+  it('creates a unique genesis record if specified', async () => {
+    handler.user = user
+    const record1 = await handler.makeGenesis(RECORDS.genesis.content, undefined, { isUnique: true })
+    const record2 = await handler.makeGenesis(RECORDS.genesis.content, undefined, { isUnique: true })
+
+    expect(record1).not.toEqual(record2)
+  })
+
   it('applies genesis record correctly', async () => {
     const state = await handler.applyGenesis(RECORDS.genesis, FAKE_CID_1)
     expect(state).toMatchSnapshot()
