@@ -22,11 +22,7 @@ class AccountLinks {
 
   async add (account: AccountID | string, opts: { proof?: Record<string, any>; provider?: any }): Promise<void> {
     if (typeof account === 'string') {
-      let [address, chainId] = account.split('@') // eslint-disable-line prefer-const
-      if (!chainId) {
-        chainId = 'eip155:1'
-      }
-      account = new AccountID({ address, chainId })
+      account = new AccountID(account)
     }
     let proof = opts.proof
     if (!proof) {
@@ -54,11 +50,7 @@ class AccountLinks {
 
   async remove (account: AccountID | string): Promise<void> {
     if (typeof account === 'string') {
-      let [address, chainId] = account.split('@') // eslint-disable-line prefer-const
-      if (!chainId) {
-        chainId = 'eip155:1'
-      }
-      account = new AccountID({ address, chainId })
+      account = new AccountID(account)
     }
     if (!this._accountLinkDocuments[account.toString()]) {
       throw new Error(`Address ${account} not linked`)

@@ -104,7 +104,7 @@ class TileHandler extends DoctypeHandler {
     if (!owners) owners = [this.user.DID]
     let unique: string
     if (opts.isUnique) {
-      unique = base64Encode(randomBytes(9))
+      unique = base64Encode(randomBytes(12))
     }
     const record = { doctype: this.doctype, owners, content, unique }
     return this.signRecord(record)
