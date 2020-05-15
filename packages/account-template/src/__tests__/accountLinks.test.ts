@@ -100,30 +100,6 @@ describe('AccountLinks', () => {
       expect(mockAccountLinksTile.change).toHaveBeenCalledWith([mockAccountLinkDoc.id])
     })
 
-    it('should create and link an account-link document to the given address, converting to CAIP-10 format', async () => {
-      const did = 'did:3:abcdfg'
-      const address = '0x12345'
-      const mockAccountLinksTile = buildMockCeramicDoc()
-      mockAccountLinksTile.content = []
-      mockAccountLinksTile.state.owners = [did]
-      const mockAccountLinkDoc = buildMockCeramicDoc()
-      mockAccountLinkDoc.id = '/ceramic/qwerty'
-      const mockCeramic = buildMockCeramic()
-      mockCeramic.createDocument.mockResolvedValue(mockAccountLinkDoc)
-      const mockProvider = jest.fn()
-      const accountLinks = new AccountLinks(mockAccountLinksTile, mockCeramic)
-      const mockProof = jest.fn()
-      createLink.mockResolvedValue(mockProof)
-
-      await accountLinks.add(address, { provider: mockProvider })
-
-      const expectAddress = address + '@eip155:1'
-      expect(mockCeramic.createDocument).toHaveBeenCalledWith(null, 'account-link', {
-        owners: [expectAddress],
-        onlyGenesis: true
-      })
-    })
-
     it('should create and link an account-link document with the given proof if provided', async () => {
       const did = 'did:3:abcdfg'
       const address = '0x12345@eip155:1'
@@ -191,29 +167,6 @@ describe('AccountLinks', () => {
 
       expect(accountLinks.list().find(link => link.account.toString() === address)).not.toBeTruthy()
       expect(mockAccountLinksTile.change).toHaveBeenCalledWith([])
-    })
-
-    it('should clear the account link document and the reference to it for the given address, converting to CAIP-10 format', async () => {
-      const did = 'did:3:abcdfg'
-      const address = '0x12345'
-      const caip10Address = address + '@eip155:1'
-      const mockAccountLinksTile = buildMockCeramicDoc()
-      mockAccountLinksTile.content = []
-      mockAccountLinksTile.state.owners = [did]
-      const mockAccountLinkDoc = buildMockCeramicDoc()
-      mockAccountLinkDoc.id = '/ceramic/qwerty'
-      const mockCeramic = buildMockCeramic()
-      mockCeramic.createDocument.mockResolvedValue(mockAccountLinkDoc)
-      const mockProvider = jest.fn()
-      const accountLinks = new AccountLinks(mockAccountLinksTile, mockCeramic)
-      const mockProof = jest.fn()
-      createLink.mockResolvedValue(mockProof)
-      await accountLinks.add(caip10Address, { provider: mockProvider })
-      expect(accountLinks.list().find(link => link.account.toString() === caip10Address)).toBeTruthy()
-
-      await accountLinks.remove(address) 
-
-      expect(accountLinks.list().find(link => link.account.toString() === caip10Address)).not.toBeTruthy()
     })
 
     it('should throw an error if the address is not linked', async () => {
