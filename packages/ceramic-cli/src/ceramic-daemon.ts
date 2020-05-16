@@ -13,6 +13,8 @@ const toApiPath = (ending: string): string => '/api/v0' + ending
 // TODO - don't hardcode seed lol
 const seed = '0x5872d6e0ae7347b72c9216db218ebbb9d9d0ae7ab818ead3557e8e78bf944184'
 
+const DEFAULT_ANCHOR_SERVICE_URL = "https://cas.3box.io:8081/api/v0/requests"
+
 interface CreateOpts {
   ipfsHost?: string;
   ipfs?: Ipfs.Ipfs;
@@ -72,6 +74,10 @@ class CeramicDaemon {
         ethereumRpcUrl: opts.ethereumRpcUrl,
         anchorServiceUrl: opts.anchorServiceUrl,
       })
+    } else {
+      Object.assign(ceramicConfig, {
+        anchorServiceUrl: DEFAULT_ANCHOR_SERVICE_URL,
+      })
     }
 
     if (opts.stateStorePath) {
@@ -87,10 +93,10 @@ class CeramicDaemon {
   }
 
   async createDoc (req: Request, res: Response, next: NextFunction): Promise<void> {
-    const { doctype, genesis, onlyGenesis, owners } = req.body
+    const { doctype, genesis, onlyGenesis, owners, isUnique } = req.body
     //if (!doctype || !genesis) {} // TODO - reject somehow
     try {
-      const doc = await this.ceramic.createDocument(genesis, doctype, { onlyGenesis, owners })
+      const doc = await this.ceramic.createDocument(genesis, doctype, { onlyGenesis, owners, isUnique })
       res.json({ docId: doc.id, state: serializeState(doc.state) })
     } catch (e) {
       return next(e)

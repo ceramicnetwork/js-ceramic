@@ -37,13 +37,14 @@ program
   .option('--only-genesis', 'Only create the genesis object. No anchor will be created')
   .option('--owners <owners>', 'Specify a comma-separated list of the owners of the document. Defaults to current user')
   .option('--schema <docId>', 'Interactively create a new document using a given schema.')
+  .option('--unique', 'Ensure document is unique regardless of content')
   .description('Create a new document')
-  .action(async (doctype, content, { onlyGenesis, owners }) => {
+  .action(async (doctype, content, { onlyGenesis, owners, unique }) => {
     content = JSON.parse(content)
     if (typeof owners === 'string') owners = owners.split(',')
     const ceramic = new CeramicClient()
     try {
-      const doc = await ceramic.createDocument(content, doctype, { onlyGenesis, owners })
+      const doc = await ceramic.createDocument(content, doctype, { onlyGenesis, owners, isUnique: unique })
       console.log(doc.id)
       console.log(JSON.stringify(doc.content, null, 2))
     } catch (e) {

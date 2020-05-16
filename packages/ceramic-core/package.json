@@ -30,7 +30,9 @@
   "dependencies": {
     "3id-blockchain-utils": "^0.3.3",
     "@ceramicnetwork/3id-did-resolver": "^0.1.1",
+    "@ethersproject/base64": "^5.0.0-beta.134",
     "@ethersproject/providers": "^5.0.0-beta.144",
+    "@ethersproject/random": "^5.0.0-beta.136",
     "@types/lodash.clonedeep": "^4.5.6",
     "cids": "^0.8.0",
     "did-jwt": "^4.0.0",
