@@ -8,7 +8,8 @@ import ThreeIdHandler from './doctypes/threeIdHandler'
 import TileHandler from './doctypes/tileHandler'
 import AccountLinkHandler from './doctypes/accountLinkHandler'
 import { AnchorServiceFactory } from "./anchor/anchor-service-factory";
-
+import LevelStateStore from "./store/level-state-store"
+import StateStore from "./store/state-store"
 
 // This is temporary until we handle DIDs and in particular 3IDs better
 const gen3IDgenesis = (pubkeys: any): any => {
@@ -26,7 +27,16 @@ const gen3IDgenesis = (pubkeys: any): any => {
 export interface CeramicConfig {
   ethereumRpcUrl?: string;
   anchorServiceUrl?: string;
+  stateStorePath?: string;
   didProvider?: any;
+}
+
+export interface CeramicStateStoreAPI {
+  add(docId: string): Promise<void>;
+
+  rm(docId: string): Promise<void>;
+
+  ls(docId?: string): Promise<AsyncIterable<string>>;
 }
 
 class Ceramic {
@@ -34,13 +44,31 @@ class Ceramic {
   private _doctypeHandlers: Record<string, DoctypeHandler>
   private _anchorService: AnchorService
   public user: User
+  public pin: CeramicStateStoreAPI
 
-  constructor (public dispatcher: Dispatcher) {
+  constructor (public dispatcher: Dispatcher, public stateStore: StateStore) {
     this._docmap = {}
     this._doctypeHandlers = {
       '3id': new ThreeIdHandler(),
       'tile': new TileHandler(this),
       'account-link': new AccountLinkHandler()
+    }
+
+    this.pin = this._initPinApi();
+  }
+
+  _initPinApi(): CeramicStateStoreAPI {
+    return {
+      add: async (docId: string): Promise<void> => {
+        const document = await this.loadDocument(docId)
+        await this.stateStore.pin(document)
+      },
+      rm: async (docId: string): Promise<void> => {
+        await this.stateStore.rm(docId)
+      },
+      ls: async (docId?: string): Promise<AsyncIterable<string>> => {
+        return this.stateStore.ls(docId)
+      }
     }
   }
 
@@ -67,14 +95,18 @@ class Ceramic {
 
   static async create(ipfs: Ipfs.Ipfs, config: CeramicConfig = {}): Promise<Ceramic> {
     const dispatcher = new Dispatcher(ipfs)
-    const ceramic = new Ceramic(dispatcher)
+
+    const stateStore = new LevelStateStore(ipfs, dispatcher, config.stateStorePath)
+    await stateStore.open()
+
+    const ceramic = new Ceramic(dispatcher, stateStore)
     await ceramic._init(config)
     return ceramic
   }
 
   async createDocument (content: any, doctype: string, opts: InitOpts = {}): Promise<Document> {
     const doctypeHandler = this._doctypeHandlers[doctype]
-    const doc = await Document.create(content, doctypeHandler, this._anchorService, this.dispatcher, opts)
+    const doc = await Document.create(content, doctypeHandler, this._anchorService, this.dispatcher, this.stateStore, opts)
     if (!this._docmap[doc.id]) {
       this._docmap[doc.id] = doc
     }
@@ -83,7 +115,7 @@ class Ceramic {
 
   async loadDocument (id: string, opts: InitOpts = {}): Promise<Document> {
     if (!this._docmap[id]) {
-      this._docmap[id] = await Document.load(id, this.getHandlerFromGenesis.bind(this), this._anchorService, this.dispatcher, opts)
+      this._docmap[id] = await Document.load(id, this.getHandlerFromGenesis.bind(this), this._anchorService, this.dispatcher, this.stateStore, opts)
     }
     return this._docmap[id]
   }
@@ -103,6 +135,7 @@ class Ceramic {
   }
 
   async close (): Promise<void> {
+    await this.stateStore.close()
     return this.dispatcher.close()
   }
 }

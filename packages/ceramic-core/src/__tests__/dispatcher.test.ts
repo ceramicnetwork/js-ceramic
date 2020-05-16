@@ -16,7 +16,6 @@ const ipfs = {
 }
 const TOPIC = '/ceramic'
 
-
 describe('Dispatcher', () => {
 
   beforeEach(() => {

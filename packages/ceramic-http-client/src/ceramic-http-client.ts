@@ -1,4 +1,13 @@
+import { fetchJson } from "./utils"
 import Document, { InitOpts } from './document'
+
+export interface CeramicStateStoreAPI {
+  add(docId: string): Promise<void>;
+
+  rm(docId: string): Promise<void>;
+
+  ls(docId?: string): Promise<AsyncIterable<string>>;
+}
 
 const CERAMIC_HOST = 'http://localhost:7007'
 const API_PATH = '/api/v0'
@@ -8,15 +17,52 @@ class CeramicClient {
   private _docmap: Record<string, Document>
   private _iid: any
 
+  public pin: CeramicStateStoreAPI
+
   constructor (apiHost: string = CERAMIC_HOST) {
     this._apiUrl = apiHost + API_PATH
     this._docmap = {}
+
+    this.pin = this._initPinApi()
+
     // this is an ugly way of getting updates, switch to something better
     this._iid = setInterval(() => {
       for (const docId in this._docmap) {
         this._docmap[docId]._syncState()
       }
     }, 1000)
+  }
+
+  _initPinApi(): CeramicStateStoreAPI {
+    return {
+      add: async (docId: string): Promise<void> => {
+        return await fetchJson(this._apiUrl + '/pin/add' + docId)
+      },
+      rm: async (docId: string): Promise<void> => {
+        return await fetchJson(this._apiUrl + '/pin/rm' + docId)
+      },
+      ls: async (docId?: string): Promise<AsyncIterable<string>> => {
+        let url = this._apiUrl + '/pin/ls'
+        if (docId !== undefined) {
+          url += docId
+        }
+        const result = await fetchJson(url)
+        const { pinnedDocIds } = result
+        return {
+          [Symbol.asyncIterator]() {
+            let index = 0
+            return {
+              next() {
+                if (index === pinnedDocIds.length) {
+                  return Promise.resolve({ value: null, done: true });
+                }
+                return Promise.resolve({ value: pinnedDocIds[index++], done: false });
+              }
+            };
+          }
+        }
+      }
+    }
   }
 
   async createDocument (genesis: any, doctype: string, opts?: InitOpts): Promise<Document> {
