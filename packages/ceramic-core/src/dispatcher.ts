@@ -2,7 +2,6 @@ import type Ipfs from 'ipfs'
 import { EventEmitter } from 'events'
 import CID from 'cids'
 import cloneDeep from 'lodash.clonedeep'
-import StateStore from "./store/state-store"
 
 export enum MsgType {
   UPDATE,

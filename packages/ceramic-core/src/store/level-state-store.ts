@@ -1,5 +1,5 @@
 import CID from "cids"
-import Level from 'level-ts';
+import Level from "level-ts";
 
 import Ipfs from 'ipfs'
 import Document, { AnchorStatus, DocState } from "../document"
@@ -34,15 +34,17 @@ export default class LevelStateStore implements StateStore {
         if (pinOnIpfs) {
             const { log } = state;
             const pinPromises = log.map(async (cid) => {
-                await this.ipfs.pin.add(cid.toString(), {
+                const promisedPins = []
+
+                promisedPins.push(this.ipfs.pin.add(cid.toString(), {
                     recursive: false,
-                })
+                }))
 
                 const record = await this.dispatcher.retrieveRecord(cid)
                 if (record.proof) {
-                    await this.ipfs.pin.add(record.proof.toString(), {
+                    promisedPins.push(this.ipfs.pin.add(record.proof.toString(), {
                         recursive: false,
-                    })
+                    }))
 
                     const path = "root/" + record.path
                     const subPaths = path.split('/')
@@ -54,13 +56,14 @@ export default class LevelStateStore implements StateStore {
                         }
                         currentPath += "/" + subPath
 
-                        await this.ipfs.pin.add(record.proof.toString() + currentPath, {
+                        promisedPins.push(this.ipfs.pin.add(record.proof.toString() + currentPath, {
                             recursive: false,
-                        })
+                        }))
                     }
                 }
+                return promisedPins
             })
-            await Promise.all(pinPromises);
+            await Promise.all(this._flattenArray(pinPromises));
         }
     }
 
@@ -70,7 +73,7 @@ export default class LevelStateStore implements StateStore {
      * @param state - Document state
      * @private
      */
-    _serializeState (state: any): any {
+    _serializeState(state: any): any {
         state.log = state.log.map((cid: any) => cid.toString());
         if (state.anchorStatus) {
             state.anchorStatus = AnchorStatus[state.anchorStatus];
@@ -91,7 +94,7 @@ export default class LevelStateStore implements StateStore {
      * @param state - Serialized document state
      * @private
      */
-    _deserializeState (state: any): DocState {
+    _deserializeState(state: any): DocState {
         state.log = state.log.map((cidStr: string): CID => new CID(cidStr))
         if (state.anchorProof) {
             state.anchorProof.txHash = new CID(state.anchorProof.txHash);
@@ -145,12 +148,12 @@ export default class LevelStateStore implements StateStore {
         const { log } = state;
         const pinPromises = log.map(async (cid) => {
             try {
-                await this.ipfs.pin.rm(cid.toString())
+                const promisedPins = []
+                promisedPins.push(this.ipfs.pin.rm(cid.toString()))
 
                 const record = await this.dispatcher.retrieveRecord(cid)
                 if (record.proof) {
-                    // unpin
-                    await this.ipfs.pin.rm(record.proof.toString())
+                    promisedPins.push(this.ipfs.pin.rm(record.proof.toString()))
 
                     const path = "root/" + record.path
                     const subPaths = path.split('/')
@@ -161,16 +164,19 @@ export default class LevelStateStore implements StateStore {
                             continue
                         }
                         currentPath += "/" + subPath
-
-                        // unpin
-                        await this.ipfs.pin.rm(record.proof.toString() + currentPath)
+                        promisedPins.push(this.ipfs.pin.rm(record.proof.toString() + currentPath))
                     }
                 }
             } catch (e) {
                 // do nothing
             }
         });
-        await Promise.all(pinPromises);
+        try {
+            await Promise.all(this._flattenArray(pinPromises));
+        } catch (e) {
+            // do nothing
+        }
+
         return this.store.del(docId)
     }
 
@@ -212,10 +218,19 @@ export default class LevelStateStore implements StateStore {
         const all = await store.stream({
             keys: true
         })
-        for(const { key } of all) {
+        for (const { key } of all) {
             keys.push(key)
         }
         return keys
+    }
+
+    /**
+     * Flatten array of arrays
+     * @param arr - Array of arrays
+     * @private
+     */
+    _flattenArray(arr: any[]): any[] {
+        return arr.reduce((accumulator, value) => accumulator.concat(value), []);
     }
 
     /**
