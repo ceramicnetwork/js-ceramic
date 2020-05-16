@@ -1,7 +1,7 @@
 import CID from "cids"
 import Level from "level-ts";
 
-import Ipfs from 'ipfs'
+import Ipfs from "ipfs"
 import Document, { AnchorStatus, DocState } from "../document"
 import StateStore from "./state-store"
 import Dispatcher from "../dispatcher"

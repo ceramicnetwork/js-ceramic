@@ -1,36 +1,34 @@
-import CID from 'cids'
+import CID from "cids"
 import * as os from "os"
 import * as path from "path"
-import { promises as fsPromises } from 'fs';
+import { promises as fsPromises } from "fs";
 
 import LevelStateStore from "../level-state-store"
 
-const MOCK_CID = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
-
-let pinned: Record<string, boolean> = {}
+let pinnedDocIds: Record<string, boolean> = {}
 
 // mock IPFS
 const ipfs = {
     id: (): any => ({ id: 'ipfsid' }),
     dag: {
-      put: jest.fn(() => MOCK_CID),
+      put: jest.fn(() => new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')),
       get: jest.fn(() => ({ value: 'data' }))
     },
     pin: {
       add: jest.fn((cid: string) => {
-        pinned[cid] = true
+        pinnedDocIds[cid] = true
         return
       }),
       rm: jest.fn( (cid: string) => {
-        delete pinned[cid]
+        delete pinnedDocIds[cid]
         return
       }),
       ls: jest.fn( (cid?: string): AsyncIterable<string> => {
         let keys: string[];
         if (cid) {
-          keys = pinned[cid]? [cid] : []
+          keys = pinnedDocIds[cid]? [cid] : []
         } else {
-          keys = Object.keys(pinned)
+          keys = Object.keys(pinnedDocIds)
         }
         return {
           [Symbol.asyncIterator]() {
@@ -50,10 +48,10 @@ const ipfs = {
 }
 
 // mock Dispatcher
-jest.mock('../../dispatcher', () => {
-  const CID = require('cids') // eslint-disable-line @typescript-eslint/no-var-requires
-  const cloneDeep = require('lodash.clonedeep') // eslint-disable-line @typescript-eslint/no-var-requires
-  const { sha256 } = require('js-sha256') // eslint-disable-line @typescript-eslint/no-var-requires
+jest.mock("../../dispatcher", () => {
+  const CID = require("cids") // eslint-disable-line @typescript-eslint/no-var-requires
+  const cloneDeep = require("lodash.clonedeep") // eslint-disable-line @typescript-eslint/no-var-requires
+  const { sha256 } = require("js-sha256") // eslint-disable-line @typescript-eslint/no-var-requires
   const hash = (data: string): CID => new CID(1, 'sha2-256', Buffer.from('1220' + sha256(data), 'hex'))
   return (): any => {
     const recs: Record<string, any> = {}
@@ -80,13 +78,13 @@ import Dispatcher from "../../dispatcher"
 import MockAnchorService from "../../anchor/mock/mock-anchor-service"
 import ThreeIdHandler from "../../doctypes/threeIdHandler"
 
-jest.mock('../../user')
+jest.mock("../../user")
 
-import User from '../../user'
+import User from "../../user"
 import DoctypeHandler from "../../doctypes/doctypeHandler"
 import AnchorService from "../../anchor/anchor-service"
 
-jest.mock('did-jwt', () => ({
+jest.mock("did-jwt", () => ({
   verifyJWT: (): any => 'verified'
 }))
 
@@ -103,7 +101,7 @@ describe('Level data store', () => {
   let anchorService: AnchorService
 
   beforeEach(async () => {
-    pinned = {}
+    pinnedDocIds = {}
 
     ipfs.pin.ls.mockClear()
     ipfs.pin.rm.mockClear()
@@ -113,7 +111,7 @@ describe('Level data store', () => {
 
     const storeDirPath = await fsPromises.mkdtemp(path.join(os.tmpdir(), 'store-'))
 
-    dispatcher = Dispatcher(false)
+    dispatcher = Dispatcher()
     anchorService = new MockAnchorService(dispatcher)
     doctypeHandler = new ThreeIdHandler()
     doctypeHandler.user = new User()
@@ -185,40 +183,29 @@ describe('Level data store', () => {
     expect(ipfs.pin.rm).toHaveBeenCalledTimes(0)
   })
 
-  it('lists all documents', async () => {
+  it('lists pinned documents', async () => {
     const doc = await Document.create(initialContent, doctypeHandler, anchorService, dispatcher, store, { owners })
     await anchorUpdate(doc)
 
     await store.pin(doc, true)
     expect(ipfs.pin.add).toHaveBeenCalledTimes(4)
 
-    const pinned = []
-    const iterator = await store.ls(doc.id)
-    for await (const id of iterator) {
-      pinned.push(id)
-    }
-
-    expect(ipfs.pin.ls).toHaveBeenCalledTimes(0)
-    expect(pinned.length).toEqual(1)
-  })
-
-  it('lists pinned document', async () => {
-    const doc = await Document.create(initialContent, doctypeHandler, anchorService, dispatcher, store, { owners })
-    await anchorUpdate(doc)
-
-    await store.pin(doc, true)
-    expect(ipfs.pin.add).toHaveBeenCalledTimes(4)
-
-    const pinned = []
-    const iterator = await store.ls(doc.id)
+    let pinned = []
+    let iterator = await store.ls(doc.id)
     for await (const id of iterator) {
       pinned.push(id)
     }
     expect(pinned.length).toEqual(1)
     expect(ipfs.pin.ls).toHaveBeenCalledTimes(0)
+
+    pinned = []
+    iterator = await store.ls()
+    for await (const id of iterator) {
+      pinned.push(id)
+    }
   })
 
-  it('list unpinned document', async () => {
+  it('lists empty for unpinned document', async () => {
     const doc = await Document.create(initialContent, doctypeHandler, anchorService, dispatcher, store, { owners })
     await anchorUpdate(doc)
 
