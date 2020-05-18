@@ -48,7 +48,7 @@
     "@types/node-fetch": "^2.5.5",
     "@typescript-eslint/eslint-plugin": "^2.19.0",
     "@typescript-eslint/parser": "^2.19.0",
-    "babel-jest": "^25.1.0",
+    "babel-jest": "^26.0.1",
     "eslint": "^6.8.0",
     "eslint-plugin-jest": "^23.8.2",
     "ipfs": "^0.43.0",
