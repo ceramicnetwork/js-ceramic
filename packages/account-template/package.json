@@ -17,7 +17,7 @@
     "@babel/preset-typescript": "^7.9.0",
     "@ceramicnetwork/ceramic-core": "^0.2.0",
     "@ceramicnetwork/ceramic-http-client": "^0.2.0",
-    "@types/node": "^13.9.5",
+    "@types/node": "^14.0.1",
     "@typescript-eslint/eslint-plugin": "^2.19.0",
     "@typescript-eslint/parser": "^2.19.0",
     "babel-jest": "^25.1.0",
