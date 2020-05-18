@@ -53,6 +53,6 @@
     "eslint-plugin-jest": "^23.8.2",
     "ipfs": "^0.43.0",
     "jest": "^25.1.0",
-    "tmp-promise": "^2.0.2"
+    "tmp-promise": "^3.0.2"
   }
 }
