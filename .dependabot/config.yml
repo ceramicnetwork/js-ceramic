@@ -1,0 +1,10 @@
+version: 1
+update_configs:
+  - package_manager: "javascript"
+    target_branch: "develop"
+    directory: "/"
+    update_schedule: "weekly"
+    allowed_updates:
+      - match:
+          dependency_type: "production"
+          update_type: "all"
