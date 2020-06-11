@@ -3,6 +3,8 @@ import { EventEmitter } from 'events'
 import CID from 'cids'
 import cloneDeep from 'lodash.clonedeep'
 
+import Document from "./document"
+
 export enum MsgType {
   UPDATE,
   REQUEST,
@@ -12,25 +14,25 @@ export enum MsgType {
 const TOPIC = '/ceramic'
 
 class Dispatcher extends EventEmitter {
-  private _ids: Record<string, boolean>
   private _peerId: string
   private _recordCache: Record<string, any>
+  private _documents: Record<string, Document>
 
   constructor (private _ipfs: Ipfs.Ipfs) {
     super()
-    this._ids = {}
+    this._documents = {}
     this._recordCache = {}
     this._ipfs.pubsub.subscribe(TOPIC, this.handleMessage.bind(this)) // this returns promise, we should await
   }
 
-  async register (id: string): Promise<void> {
-    this._ids[id] = true
+  async register (document: Document): Promise<void> {
+    this._documents[document.id] = document
     // request head
-    await this._ipfs.pubsub.publish(TOPIC, JSON.stringify({ typ: MsgType.REQUEST, id }))
+    await this._ipfs.pubsub.publish(TOPIC, JSON.stringify({ typ: MsgType.REQUEST, id: document.id }))
   }
 
   unregister (id: string): void {
-    delete this._ids[id]
+    delete this._documents[id]
   }
 
   async storeRecord (data: any): Promise<CID> {
@@ -61,16 +63,16 @@ class Dispatcher extends EventEmitter {
     this._peerId = this._peerId || (await this._ipfs.id()).id
     if (message.from !== this._peerId) {
       const { typ, id, cid } = JSON.parse(message.data)
-      if (this._ids[id]) {
+      if (this._documents[id]) {
         switch (typ) {
           case MsgType.UPDATE:
             if (typeof cid !== 'string') break
             // add cache of cids here so that we don't emit event
             // multiple times if we get the message more than once.
-            this.emit(`${id}_update`, new CID(cid))
+            this._documents[id].emit('update', new CID(cid))
             break
           case MsgType.REQUEST:
-            this.emit(`${id}_headreq`)
+            this._documents[id].emit('headreq')
             break
         }
       }

@@ -14,12 +14,10 @@ jest.mock('../dispatcher', () => {
   const hash = (data: string): CID => new CID(1, 'sha2-256', Buffer.from('1220' + sha256(data), 'hex'))
   return (gossip: boolean): any => {
     const recs: Record<string, any> = {}
-    const listeners: Record<string, Array<(cid: string) => void>> = {}
+    const docs: Record<string, Document> = {}
     return {
-      register: jest.fn(),
-      on: jest.fn((id, fn) => {
-        if (!listeners[id]) listeners[id] = []
-        listeners[id].push(fn)
+      register: jest.fn((doc) => {
+        docs[doc.id] = doc
       }),
       storeRecord: jest.fn((rec) => {
         // stringify as a way of doing deep copy
@@ -29,10 +27,14 @@ jest.mock('../dispatcher', () => {
         return cid
       }),
       publishHead: jest.fn((id, head) => {
-        if (gossip) listeners[id+'_update'].map(fn => fn(head))
+        if (gossip) {
+          docs[id]._handleHead(head)
+        }
       }),
       _requestHead: (id): void => {
-        if (gossip) listeners[id+'_headreq'].map(fn => fn())
+        if (gossip) {
+          docs[id]._publishHead()
+        }
       },
       retrieveRecord: jest.fn(cid => {
         return recs[cid.toString()]
@@ -75,10 +77,8 @@ describe('Document', () => {
 
     it('is created correctly', async () => {
       const doc = await Document.create(initialContent, doctypeHandler, anchorService, dispatcher, mockStateStore, { owners })
-      const docId = doc.id
       expect(doc.content).toEqual(initialContent)
-      expect(dispatcher.register).toHaveBeenCalledWith(docId)
-      expect(dispatcher.on).toHaveBeenCalled()
+      expect(dispatcher.register).toHaveBeenCalledWith(doc)
       expect(doc.state.anchorStatus).toEqual(AnchorStatus.PENDING)
       await anchorUpdate(doc)
       expect(doc.state.anchorStatus).not.toEqual(AnchorStatus.NOT_REQUESTED)

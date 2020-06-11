@@ -96,9 +96,9 @@ class Document extends EventEmitter {
       // apply genesis record if there's no state preserved
       this._state = await this._doctypeHandler.applyGenesis(record, this._genesisCid)
     }
-    this.dispatcher.on(`${this.id}_update`, this._handleHead.bind(this))
-    this.dispatcher.on(`${this.id}_headreq`, this._publishHead.bind(this))
-    this.dispatcher.register(this.id)
+    this.on('update', this._handleHead.bind(this))
+    this.on('headreq', this._publishHead.bind(this))
+    this.dispatcher.register(this)
     if (!opts.onlyGenesis) {
       await this.anchor()
       this._publishHead()
