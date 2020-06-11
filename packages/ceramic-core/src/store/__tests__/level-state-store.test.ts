@@ -76,12 +76,12 @@ jest.mock("../../dispatcher", () => {
 import Document from "../../document"
 import Dispatcher from "../../dispatcher"
 import MockAnchorService from "../../anchor/mock/mock-anchor-service"
-import ThreeIdHandler from "../../doctypes/threeIdHandler"
+import ThreeIdHandler from "../../doctypes/three-id-handler"
 
 jest.mock("../../user")
 
 import User from "../../user"
-import DoctypeHandler from "../../doctypes/doctypeHandler"
+import DoctypeHandler from "../../doctypes/doctype-handler"
 import AnchorService from "../../anchor/anchor-service"
 
 jest.mock("did-jwt", () => ({

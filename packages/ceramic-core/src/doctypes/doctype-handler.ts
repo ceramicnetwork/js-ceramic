@@ -1,6 +1,6 @@
-import type { DocState, AnchorRecord, AnchorProof } from '../document'
 import type User from '../user'
 import type CID from 'cids'
+import { AnchorProof, AnchorRecord, DocState } from "../doctype"
 
 abstract class DoctypeHandler {
   protected _user: User

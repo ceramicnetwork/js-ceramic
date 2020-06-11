@@ -7,54 +7,7 @@ import PQueue from 'p-queue'
 import cloneDeep from 'lodash.clonedeep'
 import AnchorServiceResponse from "./anchor/anchor-service-response"
 import StateStore from "./store/state-store"
-
-export enum SignatureStatus {
-  GENESIS,
-  PARTIAL,
-  SIGNED
-}
-
-export enum AnchorStatus {
-  NOT_REQUESTED,
-  PENDING,
-  PROCESSING,
-  ANCHORED,
-  FAILED
-}
-
-export interface DocState {
-  doctype: string;
-  owners: Array<string>;
-  nextOwners?: Array<string>;
-  content: any;
-  nextContent?: any;
-  signature: SignatureStatus;
-  anchorStatus: AnchorStatus;
-  anchorScheduledFor?: number; // only present when anchor status is pending
-  anchorProof?: AnchorProof; // the anchor proof of the latest anchor, only present when anchor status is anchored
-  log: Array<CID>;
-}
-
-export interface InitOpts {
-  owners?: Array<string>;
-  onlyGenesis?: boolean;
-  skipWait?: boolean;
-  isUnique?: boolean;
-}
-
-export interface AnchorRecord {
-  prev: CID; // should be CID type
-  proof: CID; // should be CID type
-  path: string;
-}
-
-export interface AnchorProof {
-  chainId: string;
-  blockNumber: number;
-  blockTimestamp: number;
-  txHash: CID;
-  root: CID;
-}
+import { AnchorProof, AnchorRecord, AnchorStatus, DocState, InitOpts } from "./doctype"
 
 const waitForChange = async (doc: Document): Promise<void> => {
   // add response timeout for network change

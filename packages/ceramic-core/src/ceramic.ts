@@ -1,15 +1,16 @@
 import type Ipfs from 'ipfs'
-import type DoctypeHandler from './doctypes/doctypeHandler'
+import type DoctypeHandler from './doctypes/doctype-handler'
 import Dispatcher from './dispatcher'
 import AnchorService from './anchor/anchor-service'
 import User from './user'
-import Document, { InitOpts } from './document'
-import ThreeIdHandler from './doctypes/threeIdHandler'
-import TileHandler from './doctypes/tileHandler'
-import AccountLinkHandler from './doctypes/accountLinkHandler'
+import Document from './document'
+import ThreeIdHandler from './doctypes/three-id-handler'
+import TileHandler from './doctypes/tile-handler'
+import AccountLinkHandler from './doctypes/account-link-handler'
 import { AnchorServiceFactory } from "./anchor/anchor-service-factory";
 import LevelStateStore from "./store/level-state-store"
 import StateStore from "./store/state-store"
+import { InitOpts } from "./doctype"
 
 // This is temporary until we handle DIDs and in particular 3IDs better
 const gen3IDgenesis = (pubkeys: any): any => {

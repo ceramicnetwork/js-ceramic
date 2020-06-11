@@ -1,4 +1,4 @@
-import AccountLinkHandler from '../accountLinkHandler'
+import AccountLinkHandler from '../account-link-handler'
 
 import cloneDeep from 'lodash.clonedeep'
 import CID from 'cids'
@@ -8,6 +8,7 @@ jest.mock('3id-blockchain-utils', () => ({
 }))
 
 import { validateLink } from '3id-blockchain-utils'
+import DoctypeHandler from "../doctype-handler"
 
 const FAKE_CID_1 = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
 const FAKE_CID_2 = new CID('bafybeig6xv5nwphfmvcnektpnojts44jqcuam7bmye2pb54adnrtccjlsu')
@@ -38,7 +39,7 @@ const RECORDS = {
 }
 
 describe('AccountLinkHandler', () => {
-  let handler
+  let handler: DoctypeHandler
 
   beforeEach(() => {
     handler = new AccountLinkHandler()

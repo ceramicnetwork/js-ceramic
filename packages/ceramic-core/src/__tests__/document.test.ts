@@ -1,6 +1,6 @@
-import Document, { AnchorStatus, SignatureStatus } from '../document'
+import Document from '../document'
 import MockAnchorService from "../anchor/mock/mock-anchor-service";
-import ThreeIdHandler from '../doctypes/threeIdHandler'
+import ThreeIdHandler from '../doctypes/three-id-handler'
 import LevelStateStore from "../store/level-state-store"
 
 jest.mock('../store/level-state-store')
@@ -49,6 +49,7 @@ jest.mock('../dispatcher', () => {
 import Dispatcher from '../dispatcher'
 jest.mock('../user')
 import User from '../user'
+import { AnchorStatus, SignatureStatus } from "../doctype"
 jest.mock('did-jwt', () => ({
   // TODO - We should test for when this function throws as well
   verifyJWT: (): any => 'verified'

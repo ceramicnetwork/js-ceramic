@@ -1,7 +1,7 @@
 import CID from "cids";
 
-import { AnchorProof } from "../document";
 import { EventEmitter } from "events";
+import { AnchorProof } from "../doctype"
 
 export default abstract class AnchorService extends EventEmitter {
 

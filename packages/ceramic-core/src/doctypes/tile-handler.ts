@@ -1,13 +1,13 @@
 import Ceramic from '../ceramic'
 import CID from 'cids'
-import { AnchorProof, AnchorRecord, AnchorStatus, DocState, SignatureStatus } from '../document'
-import DoctypeHandler from './doctypeHandler'
+import DoctypeHandler from './doctype-handler'
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import { Resolver } from 'did-resolver'
 import jsonpatch from 'fast-json-patch'
 import { verifyJWT } from 'did-jwt'
 import { encode as base64Encode } from '@ethersproject/base64'
 import { randomBytes } from '@ethersproject/random'
+import { AnchorProof, AnchorRecord, AnchorStatus, DocState, SignatureStatus } from "../doctype"
 
 const DOCTYPE = 'tile'
 

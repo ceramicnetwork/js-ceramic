@@ -1,4 +1,5 @@
-import Document, { DocState } from "../document"
+import Document from "../document"
+import { DocState } from "../doctype"
 
 /**
  * State store API

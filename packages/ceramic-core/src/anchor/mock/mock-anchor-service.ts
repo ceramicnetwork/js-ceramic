@@ -3,7 +3,7 @@ import CID from 'cids'
 // TODO - remove dispatcher, its not needed once we have anchoring service
 import AnchorService from "../anchor-service";
 import type Dispatcher from '../../dispatcher'
-import type { AnchorProof } from '../../document'
+import { AnchorProof } from "../../doctype"
 
 class MockAnchorService extends AnchorService {
 

@@ -1,8 +1,9 @@
-import ThreeIdHandler from '../threeIdHandler'
+import ThreeIdHandler from '../three-id-handler'
 import CID from 'cids'
 
 jest.mock('../../user')
 import User from '../../user'
+import DoctypeHandler from "../doctype-handler"
 jest.mock('did-jwt', () => ({
   // TODO - We should test for when this function throws as well
   verifyJWT: (): any => 'verified'
@@ -21,7 +22,7 @@ const RECORDS = {
 }
 
 describe('ThreeIdHandler', () => {
-  let user, handler
+  let user: User, handler: DoctypeHandler
 
   beforeAll(() => {
     user = new User()

@@ -2,9 +2,10 @@ import CID from "cids"
 import Level from "level-ts";
 
 import Ipfs from "ipfs"
-import Document, { AnchorStatus, DocState } from "../document"
+import Document from "../document"
 import StateStore from "./state-store"
 import Dispatcher from "../dispatcher"
+import { AnchorStatus, DocState } from "../doctype"
 
 /**
  * Level backed State Store

@@ -1,10 +1,10 @@
 import { DIDDocument } from 'did-resolver'
 import CID from 'cids'
-import { AnchorProof, AnchorRecord, AnchorStatus, DocState, SignatureStatus } from '../document'
-import DoctypeHandler from './doctypeHandler'
+import DoctypeHandler from './doctype-handler'
 import { wrapDocument } from '@ceramicnetwork/3id-did-resolver'
 import jsonpatch from 'fast-json-patch'
 import { verifyJWT } from 'did-jwt'
+import { AnchorProof, AnchorRecord, AnchorStatus, DocState, SignatureStatus } from "../doctype"
 
 const DOCTYPE = '3id'
 

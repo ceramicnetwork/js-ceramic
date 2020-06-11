@@ -1,14 +1,13 @@
 import CID from "cids";
 import fetch from "node-fetch";
 
-import { AnchorProof } from "../../document";
-
 import { decode } from "typestub-multihashes";
 import * as providers from "@ethersproject/providers"
 import { CeramicConfig } from "../../ceramic";
 
 import AnchorService from "../anchor-service";
 import AnchorServiceResponse from "../anchor-service-response";
+import { AnchorProof } from "../../doctype"
 
 /**
  * CID-docId pair
