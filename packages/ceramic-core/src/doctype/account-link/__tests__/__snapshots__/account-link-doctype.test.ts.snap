@@ -1,18 +1,11 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`ThreeIdHandler applies anchor record correctly 1`] = `
+exports[`AccountLinkHandler applies anchor record correctly 1`] = `
 Object {
-  "anchorProof": Object {
-    "blockNumber": 123456,
-  },
+  "anchorProof": undefined,
   "anchorStatus": 3,
-  "content": Object {
-    "other": "data",
-    "publicKeys": Object {
-      "test": "0xabc",
-    },
-  },
-  "doctype": "3id",
+  "content": null,
+  "doctype": "account-link",
   "log": Array [
     Object {
       "codec": "dag-pb",
@@ -77,8 +70,8 @@ Object {
           107,
           147,
           57,
-          111,
-          105,
+          115,
+          137,
           128,
           168,
           6,
@@ -94,7 +87,7 @@ Object {
           49,
           9,
           43,
-          148,
+          149,
         ],
         "type": "Buffer",
       },
@@ -120,8 +113,8 @@ Object {
           107,
           147,
           57,
-          111,
-          105,
+          119,
+          169,
           128,
           168,
           6,
@@ -137,30 +130,26 @@ Object {
           49,
           9,
           43,
-          148,
+          149,
         ],
         "type": "Buffer",
       },
       "version": 1,
     },
   ],
-  "nextOwners": undefined,
+  "nextContent": undefined,
   "owners": Array [
-    "0x123",
+    "0x25954ef14cebbc9af3d71132489a9cfe87043f20@eip155:1",
   ],
   "signature": 2,
 }
 `;
 
-exports[`ThreeIdHandler applies genesis record correctly 1`] = `
+exports[`AccountLinkHandler applies genesis record correctly 1`] = `
 Object {
   "anchorStatus": 0,
-  "content": Object {
-    "publicKeys": Object {
-      "test": "0xabc",
-    },
-  },
-  "doctype": "3id",
+  "content": null,
+  "doctype": "account-link",
   "log": Array [
     Object {
       "codec": "dag-pb",
@@ -208,22 +197,17 @@ Object {
   ],
   "nextContent": null,
   "owners": Array [
-    "0x123",
+    "0x25954ef14cebbc9af3d71132489a9cfe87043f20@eip155:1",
   ],
   "signature": 0,
 }
 `;
 
-exports[`ThreeIdHandler applies signed record correctly 1`] = `
+exports[`AccountLinkHandler applies signed record correctly 1`] = `
 Object {
   "anchorStatus": 0,
-  "content": Object {
-    "other": "data",
-    "publicKeys": Object {
-      "test": "0xabc",
-    },
-  },
-  "doctype": "3id",
+  "content": null,
+  "doctype": "account-link",
   "log": Array [
     Object {
       "codec": "dag-pb",
@@ -288,8 +272,8 @@ Object {
           107,
           147,
           57,
-          111,
-          105,
+          115,
+          137,
           128,
           168,
           6,
@@ -305,22 +289,16 @@ Object {
           49,
           9,
           43,
-          148,
+          149,
         ],
         "type": "Buffer",
       },
       "version": 1,
     },
   ],
-  "nextContent": Object {
-    "other": "data",
-    "publicKeys": Object {
-      "test": "0xabc",
-    },
-  },
-  "nextOwners": undefined,
+  "nextContent": undefined,
   "owners": Array [
-    "0x123",
+    "0x25954ef14cebbc9af3d71132489a9cfe87043f20@eip155:1",
   ],
   "signature": 2,
 }

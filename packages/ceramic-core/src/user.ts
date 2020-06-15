@@ -1,11 +1,4 @@
-function encodeRpcCall (method: string, params: any): any {
-  return {
-    jsonrpc: '2.0',
-    id: 1,
-    method,
-    params
-  }
-}
+import { DIDProvider } from "./ceramic-api"
 
 const cborSortCompareFn = (a: string, b: string): number => a.length - b.length || a.localeCompare(b)
 
@@ -19,12 +12,11 @@ function sortPropertiesDeep(obj: any, compareFn: (a: any, b: any) => number = cb
   }, {})
 }
 
-
-class User {
-  private _pubkeys: any;
+export default class User {
   private _did: string;
+  private _pubkeys: any;
 
-  constructor (private didProvider: any) {}
+  constructor (private didProvider: DIDProvider) {}
 
   async auth (): Promise<void> {
     const response = await this._callRpc('3id_authenticate', { mgmtPub: true })
@@ -48,21 +40,21 @@ class User {
     // hack to get around timestamp before we have proper signing method in provider
     payload.iat = undefined
     payload.content = sortPropertiesDeep(payload.content)
-    const jwt = await this._callRpc('3id_signClaim', { payload, did: this._did, useMgmt: opts.useMgmt })
-    return jwt
+    return this._callRpc('3id_signClaim', { payload, did: this._did, useMgmt: opts.useMgmt })
   }
 
-  //async encrypt (payload: any): Promise<any> {
-  //}
-
-  //async decrypt (ciphertext: any): Promise<any> {
-  //}
-
   async _callRpc (method: string, params: any = {}): Promise<any> {
+    const encodeRpcCall = (method: string, params: any): any => {
+      return {
+        jsonrpc: '2.0',
+        id: 1,
+        method,
+        params
+      }
+    }
+
     const respose = await this.didProvider.send(encodeRpcCall(method, params))
     // TODO - check for errors
     return respose.result
   }
 }
-
-export default User

@@ -1,12 +1,16 @@
 import type { ParsedDID, DIDResolver, DIDDocument } from 'did-resolver'
 
-// TDOD - we should probably have a general Ceramic interface type library
-interface Document {
+// TODO - we should probably have a general Ceramic interface type library
+interface Doctype {
+  content: any;
+}
+
+interface InitOpts {
   content: any;
 }
 
 interface Ceramic {
-  loadDocument(docId: string): Promise<Document>;
+  load(docId: string): Promise<Doctype>;
 }
 
 interface ResolverRegistry {
@@ -41,8 +45,8 @@ export function wrapDocument (content: any, did: string): DIDDocument {
 export default {
   getResolver: (ceramic: Ceramic): ResolverRegistry => ({
     '3': async (did: string, parsed: ParsedDID): Promise<DIDDocument | null> => {
-      const doc = await ceramic.loadDocument(`/ceramic/${parsed.id}`)
-      return wrapDocument(doc.content, did)
+      const doctype = await ceramic.load(`/ceramic/${parsed.id}`)
+      return wrapDocument(doctype.content, did)
     }
   })
 }

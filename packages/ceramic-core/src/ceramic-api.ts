@@ -1,7 +1,11 @@
+import CID from 'cids'
+
+import type Ipfs from 'ipfs'
 import { Doctype, DoctypeHandler, InitOpts } from "./doctype"
+import { Context } from "./context"
 
 /**
- * Describes Ceramic pinning functionalities
+ * Describes Ceramic pinning functionality
  */
 export interface PinApi {
     /**
@@ -20,59 +24,73 @@ export interface PinApi {
      * List pinned documents
      * @param docId - Document ID for filtering
      */
-    ls(docId?: string): Promise<Array<string>>;
+    ls(docId?: string): Promise<AsyncIterable<string>>;
+}
+
+export interface JsonRpc2Response {
+    'id': string;
+    'json-rpc': string;
+    'result': object;
 }
 
 /**
  * Describes DID provider instance
  */
 export interface DIDProvider {
-    send(request: object): void;
+    send(jsonReq: object): JsonRpc2Response;
 }
 
 /**
  * Describes Ceramic node API
  */
 export interface CeramicApi {
-    ipfs: Ipfs.Ipfs;
     pin: PinApi;
+    ipfs: Ipfs.Ipfs;
 
     /**
      * Register Doctype handler
      * @param doctypeHandler - DoctypeHandler instance
      */
-    addDoctype(doctypeHandler: DoctypeHandler): void;
+    addDoctype<T extends Doctype>(doctypeHandler: DoctypeHandler<T>): void;
 
     /**
-     * Set DID provider
-     * @param provider - DID provider instance
-     */
-    setDIDProvider(provider: DIDProvider): void;
-
-    /**
-     * Creates new Doctype instance
-     * @param doctype - Doctype type name
-     * @param params - Creation parameters
+     * Create Doctype instance
+     * @param doctype - Doctype name
+     * @param params - Create parameters
      * @param opts - Initialization options
      */
-    create<T extends Doctype>(doctype: string, params: object, opts: InitOpts): Promise<T>;
+    create<T extends Doctype>(doctype: string, params: object, opts?: InitOpts): Promise<T>;
+
+    /**
+     * Create Doctype from genesis record
+     * @param genesis - Genesis record
+     * @param opts - Initialization options
+     */
+    createFromGenesis<T extends Doctype>(genesis: any, opts?: InitOpts): Promise<T>;
 
     /**
      * Loads Doctype instance
      * @param docId - Document ID
      * @param opts - Initialization options
      */
-    load<T extends Doctype>(docId: string, opts: InitOpts): Promise<T>;
+    load<T extends Doctype>(docId: string, opts?: InitOpts): Promise<T>;
 
     /**
      * Applies record on the existing document
      * @param docId - Document ID
      * @param record - Record to be applied
+     * @param opts - Initialization options
      */
-    applyRecord: (docId: string, record: object) => Promise<void>;
+    applyRecord<T extends Doctype>(docId: string, record: object, opts?: InitOpts): Promise<T>;
+
+    /**
+     * Set DID provider
+     * @param provider - DID provider instance
+     */
+    setDIDProvider (provider: DIDProvider): Promise<void>;
 
     /**
      * Closes Ceramic instance
      */
-    close: () => Promise<void>; // gracefully close the ceramic instance
+    close(): Promise<void>; // gracefully close the ceramic instance
 }

@@ -1,13 +1,58 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`AccountLinkHandler applies anchor record correctly 1`] = `
+exports[`ThreeIdHandler applies anchor record correctly 1`] = `
 Object {
   "anchorProof": Object {
-    "blockNumber": 123456,
+    "codec": "dag-pb",
+    "hash": Object {
+      "data": Array [
+        18,
+        32,
+        222,
+        189,
+        122,
+        219,
+        60,
+        229,
+        101,
+        68,
+        210,
+        42,
+        111,
+        107,
+        147,
+        57,
+        119,
+        169,
+        128,
+        168,
+        6,
+        124,
+        44,
+        193,
+        52,
+        240,
+        247,
+        128,
+        27,
+        99,
+        49,
+        9,
+        43,
+        149,
+      ],
+      "type": "Buffer",
+    },
+    "version": 1,
   },
   "anchorStatus": 3,
-  "content": null,
-  "doctype": "account-link",
+  "content": Object {
+    "other": "data",
+    "publicKeys": Object {
+      "test": "0xabc",
+    },
+  },
+  "doctype": "3id",
   "log": Array [
     Object {
       "codec": "dag-pb",
@@ -72,8 +117,8 @@ Object {
           107,
           147,
           57,
-          115,
-          137,
+          111,
+          105,
           128,
           168,
           6,
@@ -89,7 +134,7 @@ Object {
           49,
           9,
           43,
-          149,
+          148,
         ],
         "type": "Buffer",
       },
@@ -115,8 +160,8 @@ Object {
           107,
           147,
           57,
-          119,
-          169,
+          111,
+          105,
           128,
           168,
           6,
@@ -132,26 +177,30 @@ Object {
           49,
           9,
           43,
-          149,
+          148,
         ],
         "type": "Buffer",
       },
       "version": 1,
     },
   ],
-  "nextContent": undefined,
+  "nextOwners": undefined,
   "owners": Array [
-    "0x25954ef14cebbc9af3d71132489a9cfe87043f20@eip155:1",
+    "0x123",
   ],
   "signature": 2,
 }
 `;
 
-exports[`AccountLinkHandler applies genesis record correctly 1`] = `
+exports[`ThreeIdHandler applies genesis record correctly 1`] = `
 Object {
   "anchorStatus": 0,
-  "content": null,
-  "doctype": "account-link",
+  "content": Object {
+    "publicKeys": Object {
+      "test": "0xabc",
+    },
+  },
+  "doctype": "3id",
   "log": Array [
     Object {
       "codec": "dag-pb",
@@ -199,17 +248,22 @@ Object {
   ],
   "nextContent": null,
   "owners": Array [
-    "0x25954ef14cebbc9af3d71132489a9cfe87043f20@eip155:1",
+    "0x123",
   ],
   "signature": 0,
 }
 `;
 
-exports[`AccountLinkHandler applies signed record correctly 1`] = `
+exports[`ThreeIdHandler applies signed record correctly 1`] = `
 Object {
   "anchorStatus": 0,
-  "content": null,
-  "doctype": "account-link",
+  "content": Object {
+    "other": "data",
+    "publicKeys": Object {
+      "test": "0xabc",
+    },
+  },
+  "doctype": "3id",
   "log": Array [
     Object {
       "codec": "dag-pb",
@@ -274,8 +328,8 @@ Object {
           107,
           147,
           57,
-          115,
-          137,
+          111,
+          105,
           128,
           168,
           6,
@@ -291,16 +345,22 @@ Object {
           49,
           9,
           43,
-          149,
+          148,
         ],
         "type": "Buffer",
       },
       "version": 1,
     },
   ],
-  "nextContent": undefined,
+  "nextContent": Object {
+    "other": "data",
+    "publicKeys": Object {
+      "test": "0xabc",
+    },
+  },
+  "nextOwners": undefined,
   "owners": Array [
-    "0x25954ef14cebbc9af3d71132489a9cfe87043f20@eip155:1",
+    "0x123",
   ],
   "signature": 2,
 }

@@ -1,90 +1,71 @@
 import type Dispatcher from './dispatcher'
-import type AnchorService from './anchor/anchor-service'
-import type DoctypeHandler from './doctypes/doctypeHandler'
 import CID from 'cids'
 import { EventEmitter } from 'events'
 import PQueue from 'p-queue'
 import cloneDeep from 'lodash.clonedeep'
 import AnchorServiceResponse from "./anchor/anchor-service-response"
 import StateStore from "./store/state-store"
-import { AnchorProof, AnchorRecord, AnchorStatus, DocState, InitOpts } from "./doctype"
+import {
+  AnchorProof,
+  AnchorRecord,
+  AnchorStatus,
+  DocState,
+  Doctype,
+  DoctypeHandler, DoctypeUtils,
+  InitOpts
+} from "./doctype"
+import { Context } from "./context"
 
-const waitForChange = async (doc: Document): Promise<void> => {
-  // add response timeout for network change
-  return new Promise(resolve => {
-    let tid: any // eslint-disable-line prefer-const
-    const clear = (): void => {
-      clearTimeout(tid)
-      doc.off('change', clear)
-      resolve()
-    }
-    tid = setTimeout(clear, 3000)
-    doc.on('change', clear)
-  })
-}
-
-class Document extends EventEmitter {
+class Document extends EventEmitter implements Doctype {
   private _applyQueue: PQueue
   private _genesisCid: CID
-  private _state: DocState
-  private _doctypeHandler: DoctypeHandler
-  private _anchorService: AnchorService
 
-  constructor (public id: string, public dispatcher: Dispatcher, public stateStore: StateStore) {
+  public _state: DocState
+  public _context: Context
+  private _doctypeHandler: DoctypeHandler<Doctype>
+
+  public readonly id: string
+  public readonly dispatcher: Dispatcher
+  public readonly stateStore: StateStore
+
+  constructor (id: string, dispatcher: Dispatcher, stateStore: StateStore) {
     super()
+    this.id = id;
+
+    this.dispatcher = dispatcher;
+    this.stateStore = stateStore;
+
     this._applyQueue = new PQueue({concurrency: 1})
     const split = this.id.split('/')
     this._genesisCid = new CID(split[2])
   }
 
-  async _init (
-    getHandlerFromGenesis: (genesisRecord: any) => DoctypeHandler,
-    anchorService: AnchorService,
-    opts: InitOpts
-  ): Promise<void> {
-    const record = await this.dispatcher.retrieveRecord(this._genesisCid)
-    this._doctypeHandler = getHandlerFromGenesis(record)
-    this._anchorService = anchorService
-    if (!this._state) {
-      // apply genesis record if there's no state preserved
-      this._state = await this._doctypeHandler.applyGenesis(record, this._genesisCid)
-    }
-    this.on('update', this._handleHead.bind(this))
-    this.on('headreq', this._publishHead.bind(this))
-    this.dispatcher.register(this)
-    if (!opts.onlyGenesis) {
-      await this.anchor()
-      this._publishHead()
-    } else if (!opts.skipWait) {
-      await waitForChange(this)
-    }
+  static async create<T extends Doctype> (
+      params: object,
+      doctypeHandler: DoctypeHandler<Doctype>,
+      dispatcher: Dispatcher,
+      stateStore: StateStore,
+      context: Context,
+      opts: InitOpts = {}
+  ): Promise<string> {
+    const doctype = await doctypeHandler.create({ ... params }, context, opts)
+    return ['/ceramic', doctype.head.toString()].join('/')
   }
 
-  static async create (
-    content: any,
-    doctypeHandler: DoctypeHandler,
-    anchorService: AnchorService,
-    dispatcher: Dispatcher,
-    stateStore: StateStore,
-    opts: InitOpts = {}
-  ): Promise<Document> {
-    const genesisRecord = await doctypeHandler.makeGenesis(content, opts.owners, { isUnique: opts.isUnique })
-    const cid = await dispatcher.storeRecord(genesisRecord)
-    const id = ['/ceramic', cid.toString()].join('/')
-    if (typeof opts.onlyGenesis === 'undefined') opts.onlyGenesis = false
-    return Document.load(id, () => doctypeHandler, anchorService, dispatcher, stateStore, opts)
-  }
-
-  static async load (
-    id: string,
-    getHandlerFromGenesis: (genesisRecord: any) => DoctypeHandler,
-    anchorService: AnchorService,
-    dispatcher: Dispatcher,
-    stateStore: StateStore,
-    opts: InitOpts = {}
+  static async load<T extends Doctype> (
+      id: string,
+      findHandler: (genesisRecord: any) => DoctypeHandler<Doctype>,
+      dispatcher: Dispatcher,
+      stateStore: StateStore,
+      context: Context,
+      opts: InitOpts = {}
   ): Promise<Document> {
     const doc = new Document(id, dispatcher, stateStore)
-    if (typeof opts.onlyGenesis === 'undefined') opts.onlyGenesis = true
+    doc._context = context
+
+    if (typeof opts.onlyGenesis === 'undefined') {
+      opts.onlyGenesis = true
+    }
 
     const isPinned = await stateStore.isDocPinned(id)
     if (isPinned) {
@@ -92,25 +73,73 @@ class Document extends EventEmitter {
       doc._state = await stateStore.loadState(id)
     }
 
-    await doc._init(getHandlerFromGenesis, anchorService, opts)
+    const record = await dispatcher.retrieveRecord(doc._genesisCid)
+    doc._doctypeHandler = findHandler(record)
+    if (doc._state == null) {
+      // apply genesis record if there's no state preserved
+      doc._state = await doc._doctypeHandler.applyRecord(record, doc._genesisCid, context)
+    }
+
+    await doc._register(opts)
     return doc
   }
 
-  get content (): any {
-    return this._state.nextContent || this._state.content
+  static async createFromGenesis<T extends Doctype>(
+      genesis: any,
+      findHandler: (genesisRecord: any) => DoctypeHandler<Doctype>,
+      dispatcher: Dispatcher,
+      stateStore: StateStore,
+      context: Context,
+      opts: InitOpts = {}
+  ): Promise<Document> {
+    const genesisCid = await dispatcher._ipfs.dag.put(genesis)
+    const id = ['/ceramic', genesisCid.toString()].join('/')
+
+    const doc = new Document(id, dispatcher, stateStore)
+    doc._context = context
+    doc._doctypeHandler = findHandler(genesis)
+    doc._state = await doc._doctypeHandler.applyRecord(genesis, doc._genesisCid, context)
+
+    await doc._updateStateIfPinned()
+
+    if (typeof opts.onlyGenesis === 'undefined') {
+      opts.onlyGenesis = false
+    }
+    await doc._register(opts)
+    return doc
   }
 
-  get state (): DocState {
-    return cloneDeep(this._state)
+  async applyRecord (record: any, opts: InitOpts = {}): Promise<void> {
+    const cid = await this.dispatcher.storeRecord(record)
+    this._state = await this._doctypeHandler.applyRecord(record, cid, this._context, this.state)
+
+    await this._updateStateIfPinned()
+
+    if (!opts.onlyApply) {
+      await this.anchor()
+      this._publishHead()
+    } else if (!opts.skipWait) {
+      await Document.wait(this)
+    }
   }
 
-  get doctype (): string {
-    return this._doctypeHandler.doctype
-  }
+  async _register (opts: InitOpts): Promise<void> {
+    this.on('update', this._handleHead.bind(this))
+    this.on('headreq', this._publishHead.bind(this))
 
-  get head (): CID {
-    const log = this._state.log
-    return log[log.length - 1]
+    await this.dispatcher.register(this)
+
+    if (opts.skipWait == null) {
+      // skip wait by default
+      opts.skipWait = true
+    }
+
+    if (!opts.onlyGenesis) {
+      await this.anchor()
+      this._publishHead()
+    } else if (!opts.skipWait) {
+      await Document.wait(this)
+    }
   }
 
   /**
@@ -132,9 +161,13 @@ class Document extends EventEmitter {
       this._applyQueue.add(async () => {
         applyPromise = this._applyLog(log)
         const updated = await applyPromise
-        if (updated) this.emit('change')
+        if (updated) {
+          this.emit('change')
+        }
       })
-      await applyPromise
+      if (applyPromise) {
+        await applyPromise
+      }
     }
   }
 
@@ -197,13 +230,13 @@ class Document extends EventEmitter {
       const record = await this.dispatcher.retrieveRecord(cid)
       // TODO - should catch potential thrown error here
       if (!record.prev) {
-        state = await this._doctypeHandler.applyGenesis(record, cid)
+        state = await this._doctypeHandler.applyRecord(record, cid, this._context)
       } else if (record.proof) {
         // it's an anchor record
-        const proof = await this._verifyAnchorRecord(record)
-        state = await this._doctypeHandler.applyAnchor(record, proof, cid, state)
+        await this._verifyAnchorRecord(record)
+        state = await this._doctypeHandler.applyRecord(record, cid, this._context, state)
       } else {
-        state = await this._doctypeHandler.applySigned(record, cid, state)
+        state = await this._doctypeHandler.applyRecord(record, cid, this._context, state)
       }
       if (breakOnAnchor && AnchorStatus.ANCHORED === state.anchorStatus) return state
       entry = itr.next()
@@ -235,7 +268,7 @@ class Document extends EventEmitter {
     }
 
     const proof: AnchorProof = await this.dispatcher.retrieveRecord(record.proof)
-    await this._anchorService.validateChainInclusion(proof)
+    await this._context.anchorService.validateChainInclusion(proof)
     return proof
   }
 
@@ -243,19 +276,8 @@ class Document extends EventEmitter {
     await this.dispatcher.publishHead(this.id, this.head)
   }
 
-  async change (newContent: any, newOwners?: Array<string>): Promise<boolean> {
-    const record = await this._doctypeHandler.makeRecord(this._state, newContent, newOwners)
-    const cid = await this.dispatcher.storeRecord(record)
-    this._state = await this._doctypeHandler.applySigned(record, cid, this._state)
-    await this._updateStateIfPinned()
-
-    await this.anchor()
-    this._publishHead()
-    return true
-  }
-
   async anchor (): Promise<void> {
-    this._anchorService.on(this.id, async (asr: AnchorServiceResponse): Promise<void> => {
+    this._context.anchorService.on(this.id, async (asr: AnchorServiceResponse): Promise<void> => {
       switch (asr.status) {
         case 'PENDING': {
           this._state.anchorScheduledFor = asr.anchorScheduledFor
@@ -273,28 +295,67 @@ class Document extends EventEmitter {
           await this._updateStateIfPinned()
           this._publishHead()
 
-          this._anchorService.removeAllListeners(this.id)
+          this._context.anchorService.removeAllListeners(this.id)
           return
         }
         case 'FAILED': {
           this._state.anchorStatus = AnchorStatus.FAILED
-          this._anchorService.removeAllListeners(this.id)
+          this._context.anchorService.removeAllListeners(this.id)
           return
         }
       }
     })
-    await this._anchorService.requestAnchor(this.id, this.head)
+    await this._context.anchorService.requestAnchor(this.id, this.head)
     this._state.anchorStatus = AnchorStatus.PENDING
+  }
+
+  get content (): any {
+    return this._state.nextContent || this._state.content
+  }
+
+  get state (): DocState {
+    return this._state
+  }
+
+  get doctype (): string {
+    return this.state.doctype
+  }
+
+  get head (): CID {
+    const log = this._state.log
+    return log[log.length - 1]
+  }
+
+  get owners (): string[] {
+    return this._state.owners
+  }
+
+  toDoctype<T extends Doctype>(): T {
+    return DoctypeUtils.docStateToDoctype(this.id, this.state)
+  }
+
+  static async wait<T extends Doctype>(doc: Document): Promise<void> {
+    // add response timeout for network change
+    return new Promise(resolve => {
+      let tid: any // eslint-disable-line prefer-const
+      const clear = (): void => {
+        clearTimeout(tid)
+        doc.off('change', clear)
+        resolve()
+      }
+      tid = setTimeout(clear, 3000)
+      doc.on('change', clear)
+    })
+  }
+
+  close (): void {
+    this.off('update', this._handleHead.bind(this))
+    this.off('headreq', this._publishHead.bind(this))
+    this.dispatcher.unregister(this.id)
   }
 
   toString (): string {
     return JSON.stringify(this._state.content)
-  }
-
-  close (): void {
-    this.dispatcher.off(`${this.id}_update`, this._handleHead.bind(this))
-    this.dispatcher.off(`${this.id}_headreq`, this._publishHead.bind(this))
-    this.dispatcher.unregister(this.id)
   }
 }
 

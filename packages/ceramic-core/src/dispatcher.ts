@@ -18,7 +18,7 @@ class Dispatcher extends EventEmitter {
   private _recordCache: Record<string, any>
   private _documents: Record<string, Document>
 
-  constructor (private _ipfs: Ipfs.Ipfs) {
+  constructor (public _ipfs: Ipfs.Ipfs) {
     super()
     this._documents = {}
     this._recordCache = {}

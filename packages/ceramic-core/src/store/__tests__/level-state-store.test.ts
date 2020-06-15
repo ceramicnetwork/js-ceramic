@@ -76,13 +76,13 @@ jest.mock("../../dispatcher", () => {
 import Document from "../../document"
 import Dispatcher from "../../dispatcher"
 import MockAnchorService from "../../anchor/mock/mock-anchor-service"
-import ThreeIdHandler from "../../doctypes/three-id-handler"
 
 jest.mock("../../user")
 
 import User from "../../user"
-import DoctypeHandler from "../../doctypes/doctype-handler"
 import AnchorService from "../../anchor/anchor-service"
+import { DoctypeHandler } from "../../doctype"
+import ThreeIdDoctypeHandler from "../../doctype/three-id/three-id-doctype-handler"
 
 jest.mock("did-jwt", () => ({
   verifyJWT: (): any => 'verified'
@@ -97,7 +97,7 @@ describe('Level data store', () => {
 
   let store: LevelStateStore
   let dispatcher: Dispatcher
-  let doctypeHandler: DoctypeHandler
+  let doctypeHandler: ThreeIdDoctypeHandler
   let anchorService: AnchorService
 
   beforeEach(async () => {
@@ -113,7 +113,7 @@ describe('Level data store', () => {
 
     dispatcher = Dispatcher()
     anchorService = new MockAnchorService(dispatcher)
-    doctypeHandler = new ThreeIdHandler()
+    doctypeHandler = new ThreeIdDoctypeHandler()
     doctypeHandler.user = new User()
     doctypeHandler.user.sign = jest.fn(async () => 'aaaa.bbbb.cccc')
 
