@@ -43,9 +43,7 @@ export class TileDoctype implements Doctype {
 
         const { content, owners } = params
         const record = await TileDoctype.makeGenesis(context.user, content, owners, opts)
-
-        const tileDoctype = await context.api.createFromGenesis(record, opts)
-        return Promise.resolve(tileDoctype)
+        return context.api.createFromGenesis(record, opts)
     }
 
     /**

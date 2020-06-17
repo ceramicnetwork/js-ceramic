@@ -42,10 +42,7 @@ export class AccountLinkDoctype implements Doctype {
         const { content, owners } = params
 
         const record = await AccountLinkDoctype._makeGenesis(content, owners)
-        await context.ipfs.dag.put(record)
-
-        const accountLinkDoctype = await context.api.createFromGenesis(record, opts)
-        return Promise.resolve(accountLinkDoctype)
+        return context.api.createFromGenesis(record, opts)
     }
 
     /**

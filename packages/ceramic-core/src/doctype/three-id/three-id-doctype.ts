@@ -51,8 +51,7 @@ export class ThreeIdDoctype implements Doctype {
         }
 
         const record = await ThreeIdDoctype._makeGenesis(content, owners)
-        const threeIdDocType = await context.api.createFromGenesis<ThreeIdDoctype>(record, opts)
-        return Promise.resolve(threeIdDocType)
+        return context.api.createFromGenesis<ThreeIdDoctype>(record, opts)
     }
 
     /**
