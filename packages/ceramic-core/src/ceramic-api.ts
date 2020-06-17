@@ -24,6 +24,7 @@ export interface PinApi {
     ls(docId?: string): Promise<AsyncIterable<string>>;
 }
 
+// TODO handle errors as well
 export interface JsonRpc2Response {
     'id': string;
     'json-rpc': string;
