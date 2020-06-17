@@ -193,7 +193,8 @@ class Ceramic implements CeramicApi {
    */
   async _createDoc(doctype: string, params: object, opts: InitOpts = {}): Promise<Document> {
     const doctypeHandler = this._doctypeHandlers[doctype]
-    const docId = await Document.create(params, doctypeHandler, this.dispatcher, this.stateStore, this.context, opts)
+    const doctypeObj = await doctypeHandler.create({ ... params }, this.context, opts)
+    const docId = ['/ceramic', doctypeObj.head.toString()].join('/')
     return this._loadDoc(docId, opts)
   }
 

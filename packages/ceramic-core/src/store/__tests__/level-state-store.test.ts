@@ -7,12 +7,26 @@ import LevelStateStore from "../level-state-store"
 
 let pinnedDocIds: Record<string, boolean> = {}
 
+const cloneDeep = require('lodash.clonedeep') // eslint-disable-line @typescript-eslint/no-var-requires
+const { sha256 } = require('js-sha256') // eslint-disable-line @typescript-eslint/no-var-requires
+const hash = (data: string): CID => new CID(1, 'sha2-256', Buffer.from('1220' + sha256(data), 'hex'))
+
+const recs: Record<string, any> = {}
+
 // mock IPFS
 const ipfs = {
     id: (): any => ({ id: 'ipfsid' }),
     dag: {
-      put: jest.fn(() => new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')),
-      get: jest.fn(() => ({ value: 'data' }))
+      put(rec: any): any {
+        // stringify as a way of doing deep copy
+        const clone = cloneDeep(rec)
+        const cid = hash(JSON.stringify(clone))
+        recs[cid.toString()] = clone
+        return cid
+      },
+      get(cid: any): any {
+        return recs[cid.toString()]
+      }
     },
     pin: {
       add: jest.fn((cid: string) => {
@@ -56,6 +70,20 @@ jest.mock("../../dispatcher", () => {
   return (): any => {
     const recs: Record<string, any> = {}
     return {
+      _ipfs: {
+        dag: {
+          put(rec: any): any {
+            // stringify as a way of doing deep copy
+            const clone = cloneDeep(rec)
+            const cid = hash(JSON.stringify(clone))
+            recs[cid.toString()] = clone
+            return cid
+          },
+          get(cid: any): any {
+            return recs[cid.toString()]
+          }
+        }
+      },
       register: jest.fn(),
       on: jest.fn(),
       storeRecord: jest.fn((rec) => {
@@ -81,8 +109,10 @@ jest.mock("../../user")
 
 import User from "../../user"
 import AnchorService from "../../anchor/anchor-service"
-import { DoctypeHandler } from "../../doctype"
 import ThreeIdDoctypeHandler from "../../doctype/three-id/three-id-doctype-handler"
+import { Context } from "../../context"
+import { ThreeIdDoctype } from "../../doctype/three-id/three-id-doctype"
+import { DoctypeHandler } from "../../doctype"
 
 jest.mock("did-jwt", () => ({
   verifyJWT: (): any => 'verified'
@@ -99,6 +129,7 @@ describe('Level data store', () => {
   let dispatcher: Dispatcher
   let doctypeHandler: ThreeIdDoctypeHandler
   let anchorService: AnchorService
+  let context: Context
 
   beforeEach(async () => {
     pinnedDocIds = {}
@@ -106,23 +137,31 @@ describe('Level data store', () => {
     ipfs.pin.ls.mockClear()
     ipfs.pin.rm.mockClear()
     ipfs.pin.add.mockClear()
-    ipfs.dag.put.mockClear()
-    ipfs.dag.get.mockClear()
 
     const storeDirPath = await fsPromises.mkdtemp(path.join(os.tmpdir(), 'store-'))
 
     dispatcher = Dispatcher()
     anchorService = new MockAnchorService(dispatcher)
+
+    const user: User = new User(null)
+    user.sign = jest.fn(async () => 'aaaa.bbbb.cccc')
+
+    context = {
+      ipfs,
+      user,
+      anchorService,
+    }
+
     doctypeHandler = new ThreeIdDoctypeHandler()
-    doctypeHandler.user = new User()
-    doctypeHandler.user.sign = jest.fn(async () => 'aaaa.bbbb.cccc')
 
     store = new LevelStateStore(ipfs, dispatcher, storeDirPath)
     await store.open()
   })
 
   it('pins document correctly without IPFS pinning', async () => {
-    const doc = await Document.create(initialContent, doctypeHandler, anchorService, dispatcher, store, { owners })
+    const genesis = await ThreeIdDoctype._makeGenesis(initialContent, owners)
+    const findHandler = (): DoctypeHandler<ThreeIdDoctype> => doctypeHandler
+    const doc = await Document.createFromGenesis(genesis, findHandler, dispatcher, store, context)
     await anchorUpdate(doc)
 
     let docState = await store.loadState(doc.id)
@@ -136,8 +175,10 @@ describe('Level data store', () => {
   })
 
   it('pins not anchored document correctly with IPFS pinning', async () => {
-    const doc = await Document.create(initialContent, doctypeHandler, anchorService, dispatcher, store, {
-      owners, onlyGenesis: true, skipWait: true
+    const genesis = await ThreeIdDoctype._makeGenesis(initialContent, owners)
+    const findHandler = (): DoctypeHandler<ThreeIdDoctype> => doctypeHandler
+    const doc = await Document.createFromGenesis(genesis, findHandler, dispatcher, store, context, {
+      onlyGenesis: true, skipWait: true,
     })
 
     let docState = await store.loadState(doc.id)
@@ -151,7 +192,9 @@ describe('Level data store', () => {
   })
 
   it('pins document correctly with IPFS pinning', async () => {
-    const doc = await Document.create(initialContent, doctypeHandler, anchorService, dispatcher, store, { owners })
+    const genesis = await ThreeIdDoctype._makeGenesis(initialContent, owners)
+    const findHandler = (): DoctypeHandler<ThreeIdDoctype> => doctypeHandler
+    const doc = await Document.createFromGenesis(genesis, findHandler, dispatcher, store, context)
     await anchorUpdate(doc)
 
     let docState = await store.loadState(doc.id)
@@ -165,7 +208,9 @@ describe('Level data store', () => {
   })
 
   it('removes pinned document', async () => {
-    const doc = await Document.create(initialContent, doctypeHandler, anchorService, dispatcher, store, { owners })
+    const genesis = await ThreeIdDoctype._makeGenesis(initialContent, owners)
+    const findHandler = (): DoctypeHandler<ThreeIdDoctype> => doctypeHandler
+    const doc = await Document.createFromGenesis(genesis, findHandler, dispatcher, store, context)
     await anchorUpdate(doc)
 
     await store.pin(doc, true)
@@ -176,15 +221,19 @@ describe('Level data store', () => {
   })
 
   it('skips removing unpinned document', async () => {
-    const doc = await Document.create(initialContent, doctypeHandler, anchorService, dispatcher, store, { owners })
+    const genesis = await ThreeIdDoctype._makeGenesis(initialContent, owners)
+    const findHandler = (): DoctypeHandler<ThreeIdDoctype> => doctypeHandler
+    const doc = await Document.createFromGenesis(genesis, findHandler, dispatcher, store, context)
     await anchorUpdate(doc)
-    await store.rm(doc.id)
 
+    await store.rm(doc.id)
     expect(ipfs.pin.rm).toHaveBeenCalledTimes(0)
   })
 
   it('lists pinned documents', async () => {
-    const doc = await Document.create(initialContent, doctypeHandler, anchorService, dispatcher, store, { owners })
+    const genesis = await ThreeIdDoctype._makeGenesis(initialContent, owners)
+    const findHandler = (): DoctypeHandler<ThreeIdDoctype> => doctypeHandler
+    const doc = await Document.createFromGenesis(genesis, findHandler, dispatcher, store, context)
     await anchorUpdate(doc)
 
     await store.pin(doc, true)
@@ -206,7 +255,9 @@ describe('Level data store', () => {
   })
 
   it('lists empty for unpinned document', async () => {
-    const doc = await Document.create(initialContent, doctypeHandler, anchorService, dispatcher, store, { owners })
+    const genesis = await ThreeIdDoctype._makeGenesis(initialContent, owners)
+    const findHandler = (): DoctypeHandler<ThreeIdDoctype> => doctypeHandler
+    const doc = await Document.createFromGenesis(genesis, findHandler, dispatcher, store, context)
     await anchorUpdate(doc)
 
     const pinned = []
