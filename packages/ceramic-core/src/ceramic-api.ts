@@ -1,8 +1,5 @@
-import CID from 'cids'
-
 import type Ipfs from 'ipfs'
 import { Doctype, DoctypeHandler, InitOpts } from "./doctype"
-import { Context } from "./context"
 
 /**
  * Describes Ceramic pinning functionality

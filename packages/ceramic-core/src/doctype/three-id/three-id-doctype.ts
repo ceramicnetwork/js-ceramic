@@ -51,7 +51,7 @@ export class ThreeIdDoctype implements Doctype {
         }
 
         const record = await ThreeIdDoctype._makeGenesis(content, owners)
-        const threeIdDocType = await context.ceramic.createFromGenesis<ThreeIdDoctype>(record, opts)
+        const threeIdDocType = await context.api.createFromGenesis<ThreeIdDoctype>(record, opts)
         return Promise.resolve(threeIdDocType)
     }
 
@@ -79,7 +79,7 @@ export class ThreeIdDoctype implements Doctype {
         const { content, owners } = params
 
         const updateRecord = ThreeIdDoctype._makeRecord(doctype, context.user, content, owners)
-        return await context.ceramic.applyRecord(doctype.id, updateRecord)
+        return await context.api.applyRecord(doctype.id, updateRecord)
     }
 
     /**

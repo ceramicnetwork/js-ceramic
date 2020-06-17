@@ -44,7 +44,7 @@ export class AccountLinkDoctype implements Doctype {
         const record = await AccountLinkDoctype._makeGenesis(content, owners)
         await context.ipfs.dag.put(record)
 
-        const accountLinkDoctype = await context.ceramic.createFromGenesis(record, opts)
+        const accountLinkDoctype = await context.api.createFromGenesis(record, opts)
         return Promise.resolve(accountLinkDoctype)
     }
 
@@ -91,7 +91,7 @@ export class AccountLinkDoctype implements Doctype {
 
         const { content } = params
         const updateRecord = AccountLinkDoctype._makeRecord(doctype, content)
-        return await context.ceramic.applyRecord(doctype.id, updateRecord, opts)
+        return await context.api.applyRecord(doctype.id, updateRecord, opts)
     }
 
     /**

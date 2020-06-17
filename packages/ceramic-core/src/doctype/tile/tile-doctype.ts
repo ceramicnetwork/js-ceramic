@@ -44,7 +44,7 @@ export class TileDoctype implements Doctype {
         const { content, owners } = params
         const record = await TileDoctype.makeGenesis(context.user, content, owners, opts)
 
-        const tileDoctype = await context.ceramic.createFromGenesis(record, opts)
+        const tileDoctype = await context.api.createFromGenesis(record, opts)
         return Promise.resolve(tileDoctype)
     }
 
@@ -86,7 +86,7 @@ export class TileDoctype implements Doctype {
         }
 
         const updateRecord = TileDoctype._makeRecord(doctype, context.user, params.content)
-        return await context.ceramic.applyRecord(doctype.id, updateRecord, opts)
+        return await context.api.applyRecord(doctype.id, updateRecord, opts)
     }
 
     /**

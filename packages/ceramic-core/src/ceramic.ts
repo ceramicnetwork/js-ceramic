@@ -4,11 +4,11 @@ import User from './user'
 import Document from './document'
 import { AnchorServiceFactory } from "./anchor/anchor-service-factory";
 
-import LevelStateStore from "./store/level-state-store"
 import StateStore from "./store/state-store"
+import LevelStateStore from "./store/level-state-store"
 
 import { CeramicApi, DIDProvider, PinApi } from "./ceramic-api"
-import { Doctype, DoctypeHandler, DoctypeUtils, InitOpts } from "./doctype"
+import { Doctype, DoctypeHandler, InitOpts } from "./doctype"
 // doctype handlers
 import { Context } from "./context"
 import { Resolver } from 'did-resolver'
@@ -61,7 +61,7 @@ class Ceramic implements CeramicApi {
 
     this.pin = this._initPinApi();
     this.context = context
-    this.context.ceramic = this // set API reference
+    this.context.api = this // set API reference
   }
 
   /**

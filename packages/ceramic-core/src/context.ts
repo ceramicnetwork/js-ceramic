@@ -9,6 +9,7 @@ export interface Context {
     ipfs: Ipfs.Ipfs; // an ipfs instance
     resolver?: Resolver; // a DID resolver instance
     provider?: DIDProvider; // a DID provider (3ID provider initially)
-    ceramic?: CeramicApi;
     anchorService: AnchorService;
+
+    api?: CeramicApi; // the self reference to the Ceramic API
 }
