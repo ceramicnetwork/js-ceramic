@@ -172,14 +172,6 @@ export interface DoctypeHandler<T extends Doctype> {
     doctypeClass(): DoctypeConstructor;
 
     /**
-     * Creates new Doctype
-     * @param params - Doctype params
-     * @param context - Ceramic context
-     * @param opts - Initialization options
-     */
-    create(params: object, context: Context, opts?: InitOpts): Promise<T>;
-
-    /**
      * Applies record to the document (genesis|signed|anchored)
      * @param record - Record intance
      * @param cid - Record CID
