@@ -15,7 +15,7 @@ const DOCTYPE = 'tile'
 /**
  * Tile doctype handler implementation
  */
-export default class TileDoctypeHandler extends DoctypeHandler<TileDoctype> {
+export default class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
     /**
      * Gets doctype name
      */

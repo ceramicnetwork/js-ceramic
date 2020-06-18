@@ -13,7 +13,7 @@ import { AccountLinkDoctype, AccountLinkParams } from "./account-link-doctype"
 
 const DOCTYPE = 'account-link'
 
-export default class AccountLinkDoctypeHandler extends DoctypeHandler<AccountLinkDoctype> {
+export default class AccountLinkDoctypeHandler implements DoctypeHandler<AccountLinkDoctype> {
     /**
      * Gets doctype name
      */

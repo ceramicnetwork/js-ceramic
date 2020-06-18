@@ -169,7 +169,7 @@ export interface DoctypeConstructor {
 /**
  * Describes document type handler functionality
  */
-export abstract class DoctypeHandler<T extends Doctype> {
+export interface DoctypeHandler<T extends Doctype> {
     /**
      * The string name of the doctype
      */
@@ -178,7 +178,7 @@ export abstract class DoctypeHandler<T extends Doctype> {
     /**
      * The doctype class
      */
-    abstract doctypeClass(): DoctypeConstructor
+    doctypeClass(): DoctypeConstructor;
 
     /**
      * Creates new Doctype
@@ -186,7 +186,7 @@ export abstract class DoctypeHandler<T extends Doctype> {
      * @param context - Ceramic context
      * @param opts - Initialization options
      */
-    abstract create(params: object, context: Context, opts?: InitOpts): Promise<T>;
+    create(params: object, context: Context, opts?: InitOpts): Promise<T>;
 
     /**
      * Applies record to the document (genesis|signed|anchored)
@@ -195,6 +195,6 @@ export abstract class DoctypeHandler<T extends Doctype> {
      * @param context - Ceramic context
      * @param state - Document state
      */
-    abstract applyRecord(record: any, cid: CID, context: Context, state?: DocState): Promise<DocState>;
+    applyRecord(record: any, cid: CID, context: Context, state?: DocState): Promise<DocState>;
 
 }
