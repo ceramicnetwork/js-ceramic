@@ -186,7 +186,7 @@ describe('Document', () => {
       expect(doc1.content).toEqual(newContent)
       const headValidUpdate = doc1.head
       // create invalid change that happened after main change
-      let doc2 = await Document.load(docId, findHandler, dispatcher, mockStateStore, context, { skipWait: true })
+      const doc2 = await Document.load(docId, findHandler, dispatcher, mockStateStore, context, { skipWait: true })
       await doc2._handleHead(headPreUpdate)
       // add short wait to get different anchor time
       // sometime the tests are very fast
