@@ -1,5 +1,3 @@
-import CID from 'cids'
-
 import Document from '../document'
 import MockAnchorService from "../anchor/mock/mock-anchor-service";
 import ThreeIdDoctypeHandler from '../doctype/three-id/three-id-doctype-handler'

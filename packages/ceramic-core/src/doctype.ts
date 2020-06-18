@@ -144,7 +144,7 @@ export abstract class Doctype extends EventEmitter {
  * @constructor
  */
 export function DoctypeStatic<T>() {
-    return <U extends T>(constructor: U) => { constructor };
+    return <U extends T>(constructor: U): any => { constructor };
 }
 
 /**

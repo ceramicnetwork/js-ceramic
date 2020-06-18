@@ -45,10 +45,10 @@ const ipfs = {
           keys = Object.keys(pinnedDocIds)
         }
         return {
-          [Symbol.asyncIterator]() {
+          [Symbol.asyncIterator](): any {
             let index = 0
             return {
-              next() {
+              next(): any {
                 if (index === keys.length) {
                   return Promise.resolve({ value: null, done: true });
                 }

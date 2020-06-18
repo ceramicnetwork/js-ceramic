@@ -195,10 +195,10 @@ export default class LevelStateStore implements StateStore {
         }
 
         return {
-            [Symbol.asyncIterator]() {
+            [Symbol.asyncIterator](): any {
                 let index = 0
                 return {
-                    next() {
+                    next(): any {
                         if (index === docIds.length) {
                             return Promise.resolve({ value: null, done: true });
                         }
