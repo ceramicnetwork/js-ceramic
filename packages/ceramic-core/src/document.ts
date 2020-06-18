@@ -1,4 +1,4 @@
-import type Dispatcher from './dispatcher'
+import Dispatcher from './dispatcher'
 import CID from 'cids'
 import { EventEmitter } from 'events'
 import PQueue from 'p-queue'
@@ -6,7 +6,7 @@ import cloneDeep from 'lodash.clonedeep'
 import AnchorServiceResponse from "./anchor/anchor-service-response"
 import StateStore from "./store/state-store"
 import {
-  AnchorProof, AnchorRecord, AnchorStatus, DocState, Doctype, DoctypeConstructor, DoctypeHandler, DoctypeUtils, InitOpts
+  AnchorProof, AnchorRecord, AnchorStatus, DocState, Doctype, DoctypeConstructor, DoctypeHandler, InitOpts
 } from "./doctype"
 import { Context } from "./context"
 
@@ -46,7 +46,7 @@ class Document extends EventEmitter {
     const doctypeClass: DoctypeConstructor = doctypeHandler.doctypeClass()
     const genesis = await doctypeClass.makeGenesis(params, context, opts)
 
-    const genesisCid = await dispatcher._ipfs.dag.put(genesis)
+    const genesisCid = await dispatcher.storeRecord(genesis)
     const id = ['/ceramic', genesisCid.toString()].join('/')
 
     const doc = new Document(id, dispatcher, stateStore)
@@ -111,7 +111,7 @@ class Document extends EventEmitter {
       context: Context,
       opts: InitOpts = {}
   ): Promise<Document> {
-    const genesisCid = await dispatcher._ipfs.dag.put(genesis)
+    const genesisCid = await dispatcher.storeRecord(genesis)
     const id = ['/ceramic', genesisCid.toString()].join('/')
 
     const doc = new Document(id, dispatcher, stateStore)
@@ -249,8 +249,12 @@ class Document extends EventEmitter {
         state = await this._doctypeHandler.applyRecord(record, cid, this._context)
       } else if (record.proof) {
         // it's an anchor record
-        await this._verifyAnchorRecord(record)
+
+        const proofCid = record.proof
+        // TODO don't set the proof here (the issue is that the proof cannot be fetched from context.ipfs)
+        record.proof = await this._verifyAnchorRecord(record)
         state = await this._doctypeHandler.applyRecord(record, cid, this._context, state)
+        record.proof = proofCid
       } else {
         state = await this._doctypeHandler.applyRecord(record, cid, this._context, state)
       }
@@ -354,7 +358,7 @@ class Document extends EventEmitter {
         doc._doctype.off('change', clear)
         resolve()
       }
-      tid = setTimeout(clear, 3000)
+      tid = setTimeout(clear, 5000)
       doc._doctype.on('change', clear)
     })
   }
