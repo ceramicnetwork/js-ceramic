@@ -9,8 +9,8 @@ jest.mock('did-jwt', () => ({
 }))
 
 const FAKE_CID_1 = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
-const FAKE_CID_2 = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsr')
-const FAKE_CID_3 = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlss')
+const FAKE_CID_2 = new CID('bafybeig6xv5nwphfmvcnektpnojts44jqcuam7bmye2pb54adnrtccjlsu')
+const FAKE_CID_3 = new CID('bafybeig6xv5nwphfmvcnektpnojts55jqcuam7bmye2pb54adnrtccjlsu')
 const RECORDS = {
   genesis: { doctype: 'tile', owners: [ 'did:3:bafyasdfasdf' ], content: { much: 'data' } },
   genesisGenerated: { doctype: 'tile', owners: [ 'did:3:bafyasdfasdf' ], content: { much: 'data' }, iss: 'did:3:bafyuser', header: 'aaaa', signature: 'cccc' },
