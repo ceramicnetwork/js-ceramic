@@ -5,7 +5,6 @@ import User from '../../../user'
 import ThreeIdDoctypeHandler from "../three-id-doctype-handler"
 import { ThreeIdDoctype } from "../three-id-doctype"
 import { Context } from "../../../context"
-import { DoctypeUtils } from "../../../doctype"
 jest.mock('did-jwt', () => ({
   // TODO - We should test for when this function throws as well
   verifyJWT: (): any => 'verified'
@@ -90,9 +89,8 @@ describe('ThreeIdHandler', () => {
     await context.ipfs.dag.put(RECORDS.genesis, FAKE_CID_1)
 
     const state = await threeIdDoctypeHandler.applyRecord(RECORDS.genesis, FAKE_CID_1, context)
-    const docId = ['/ceramic', FAKE_CID_1.toString()].join('/')
+    const doctype = new ThreeIdDoctype(state)
 
-    const doctype = DoctypeUtils.docStateToDoctype<ThreeIdDoctype>(docId, state)
     await expect(ThreeIdDoctype._makeRecord(doctype, null, RECORDS.r1.desiredContent)).rejects.toThrow(/No user/)
     const record = await ThreeIdDoctype._makeRecord(doctype, user, RECORDS.r1.desiredContent)
     expect(record).toEqual(RECORDS.r1.record)

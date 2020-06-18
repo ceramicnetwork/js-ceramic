@@ -3,7 +3,6 @@ import CID from 'cids'
 
 jest.mock('../../../user')
 import User from '../../../user'
-import { DoctypeUtils } from "../../../doctype"
 import { Context } from "../../../context"
 import { TileDoctype } from "../tile-doctype"
 jest.mock('did-jwt', () => ({
@@ -123,8 +122,7 @@ describe('ThreeIdHandler', () => {
     await context.ipfs.dag.put(RECORDS.genesisGenerated, FAKE_CID_1)
 
     const state = await tileDoctypeHandler.applyRecord(RECORDS.genesisGenerated, FAKE_CID_1, context)
-    const docId = ['/ceramic', FAKE_CID_1.toString()].join('/')
-    const doctype = DoctypeUtils.docStateToDoctype(docId, state)
+    const doctype = new TileDoctype(state)
 
     await expect(TileDoctype._makeRecord(doctype, null, RECORDS.r1.desiredContent)).rejects.toThrow(/No user/)
 

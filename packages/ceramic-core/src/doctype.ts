@@ -60,28 +60,6 @@ export interface DocState {
 }
 
 /**
- * Doctype related utils
- */
-export class DoctypeUtils {
-    /**
-     * Create Doctype instance from the document wrapper
-     * @param docId - Document ID
-     * @param docState - Document state
-     */
-    static docStateToDoctype<T extends Doctype>(docId: string, docState: DocState): T {
-        const cloned = cloneDeep(docState)
-        return {
-            id: docId,
-            doctype: cloned.doctype,
-            content: cloned.content,
-            owners: cloned.owners,
-            state: cloned,
-            head: cloned.log[docState.log.length - 1],
-        } as T
-    }
-}
-
-/**
  * Doctype init options
  */
 export interface InitOpts {

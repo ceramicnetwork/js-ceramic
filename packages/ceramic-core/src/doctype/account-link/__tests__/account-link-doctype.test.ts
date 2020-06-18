@@ -8,7 +8,6 @@ jest.mock('3id-blockchain-utils', () => ({
 }))
 
 import { validateLink } from '3id-blockchain-utils'
-import { DoctypeUtils } from "../../../doctype"
 import { AccountLinkDoctype } from "../account-link-doctype"
 import { Context } from "../../../context"
 
@@ -125,8 +124,7 @@ describe('AccountLinkHandler', () => {
 
   it('makes signed record correctly', async () => {
     const state = await handler.applyRecord(RECORDS.genesis, FAKE_CID_1, context)
-    const docId = ['/ceramic', FAKE_CID_1.toString()].join('/')
-    const doctype = DoctypeUtils.docStateToDoctype(docId, state)
+    const doctype = new AccountLinkDoctype(state)
     const record = await AccountLinkDoctype._makeRecord(doctype, RECORDS.r1.desiredContent)
     expect(record).toEqual(RECORDS.r1.record)
   })
