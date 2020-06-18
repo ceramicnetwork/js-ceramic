@@ -170,7 +170,7 @@ class Ceramic implements CeramicApi {
   async applyRecord<T extends Doctype>(docId: string, record: object, opts?: InitOpts): Promise<T> {
     const doc = await this._loadDoc(docId, {})
     await doc.applyRecord(record, opts)
-    return doc.toDoctype<T>()
+    return doc.doctype as T
   }
 
   /**
@@ -181,7 +181,7 @@ class Ceramic implements CeramicApi {
    */
   async create<T extends Doctype>(doctype: string, params: object, opts?: InitOpts): Promise<T> {
     const doc = await this._createDoc(doctype, params, opts)
-    return doc.toDoctype<T>()
+    return doc.doctype as T
   }
 
   /**
@@ -193,9 +193,10 @@ class Ceramic implements CeramicApi {
    */
   async _createDoc(doctype: string, params: object, opts: InitOpts = {}): Promise<Document> {
     const doctypeHandler = this._doctypeHandlers[doctype]
-    const doctypeObj = await doctypeHandler.create({ ... params }, this.context, opts)
-    const docId = ['/ceramic', doctypeObj.head.toString()].join('/')
-    return this._loadDoc(docId, opts)
+
+    const doc = await Document.create(params, doctypeHandler, this.dispatcher, this.stateStore, this.context, opts);
+    this._docmap[doc.id] = doc
+    return this._docmap[doc.id]
   }
 
   /**
@@ -205,7 +206,7 @@ class Ceramic implements CeramicApi {
    */
   async createFromGenesis<T extends Doctype>(genesis: any, opts: InitOpts = {}): Promise<T> {
     const doc = await this._createDocFromGenesis(genesis, opts)
-    return doc.toDoctype<T>()
+    return doc.doctype as T
   }
 
   /**
@@ -229,7 +230,7 @@ class Ceramic implements CeramicApi {
    */
   async load<T extends Doctype>(docId: string, opts: InitOpts = {}): Promise<T> {
     const doc = await this._loadDoc(docId, opts)
-    return doc.toDoctype<T>()
+    return doc.doctype as T
   }
 
   /**

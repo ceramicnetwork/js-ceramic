@@ -18,7 +18,7 @@ const genIpfsConf = (path, id): any => {
 }
 
 describe('Ceramic integration', () => {
-  jest.setTimeout(7000)
+  jest.setTimeout(7000000)
   let ipfs1: Ipfs;
   let ipfs2: Ipfs;
   let ipfs3: Ipfs;
@@ -113,25 +113,27 @@ describe('Ceramic integration', () => {
     const ceramic2 = await Ceramic.create(ipfs2)
     const ceramic3 = await Ceramic.create(ipfs3)
     // ceramic node 2 shouldn't need to have the document open in order to forward the message
-    const doc1 = await ceramic1.create(DOCTYPE_3ID, { content: { test: 321 }, owners: [owner] })
-    const doc3 = await ceramic3.create(DOCTYPE_3ID, { content: { test: 321 }, owners: [owner] }, { onlyGenesis: true })
-    expect(doc3.content).toEqual(doc1.content)
-    expect(doc3.state).toEqual(doc1.state)
+    const doctype1 = await ceramic1.create<ThreeIdDoctype>(DOCTYPE_3ID, { content: { test: 321 }, owners: [owner] })
+    const doctype3 = await ceramic3.create<ThreeIdDoctype>(DOCTYPE_3ID, { content: { test: 321 }, owners: [owner] }, { onlyGenesis: true })
+
+    expect(doctype3.content).toEqual(doctype1.content)
+    expect(doctype3.state).toEqual(doctype1.state)
+
     const updatePromise = new Promise(resolve => {
       let c = 0 // wait for two updates
       // the change update and the anchor update
-      doc3.on('change', () => {
+      doctype3.on('change', () => {
         if (++c > 1) {
           resolve()
         }
       })
     })
-    const doctype1 = doc1.toDoctype<ThreeIdDoctype>()
+
     await doctype1.change({ content: { test: 'abcde' } }, ceramic1.context)
     await updatePromise
-    expect(doc1.content).toEqual({ test: 'abcde' })
-    expect(doc3.content).toEqual(doc1.content)
-    expect(doc3.state).toEqual(doc1.state)
+    expect(doctype1.content).toEqual({ test: 'abcde' })
+    expect(doctype3.content).toEqual(doctype1.content)
+    expect(doctype3.state).toEqual(doctype1.state)
     await ceramic1.close()
     await ceramic2.close()
     await ceramic3.close()

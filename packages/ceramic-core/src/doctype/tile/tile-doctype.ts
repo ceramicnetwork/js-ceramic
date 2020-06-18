@@ -78,7 +78,7 @@ export class TileDoctype extends Doctype {
             throw new Error('No user authenticated')
         }
 
-        const updateRecord = TileDoctype._makeRecord(doctype, context.user, params.content)
+        const updateRecord = await TileDoctype._makeRecord(doctype, context.user, params.content)
         return await context.api.applyRecord(doctype.id, updateRecord, opts)
     }
 

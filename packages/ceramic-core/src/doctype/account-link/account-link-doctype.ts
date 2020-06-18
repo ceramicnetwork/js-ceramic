@@ -74,7 +74,7 @@ export class AccountLinkDoctype extends Doctype {
         }
 
         const { content } = params
-        const updateRecord = AccountLinkDoctype._makeRecord(doctype, content)
+        const updateRecord = await AccountLinkDoctype._makeRecord(doctype, content)
         return await context.api.applyRecord(doctype.id, updateRecord, opts)
     }
 

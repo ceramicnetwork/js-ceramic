@@ -42,9 +42,29 @@ class Document extends EventEmitter {
       stateStore: StateStore,
       context: Context,
       opts: InitOpts = {}
-  ): Promise<string> {
-    const doctype = await doctypeHandler.create({ ... params }, context, opts)
-    return ['/ceramic', doctype.head.toString()].join('/')
+  ): Promise<Document> {
+    const doctypeClass: DoctypeConstructor = doctypeHandler.doctypeClass()
+    const genesis = await doctypeClass.makeGenesis(params, context, opts)
+
+    const genesisCid = await dispatcher._ipfs.dag.put(genesis)
+    const id = ['/ceramic', genesisCid.toString()].join('/')
+
+    const doc = new Document(id, dispatcher, stateStore)
+
+    doc._context = context
+    doc._doctypeHandler = doctypeHandler
+
+    doc._doctype = new doctypeClass(null)
+    doc._doctype.state = await doc._doctypeHandler.applyRecord(genesis, doc._genesisCid, context)
+
+    await doc._updateStateIfPinned()
+
+    if (typeof opts.onlyGenesis === 'undefined') {
+      opts.onlyGenesis = false
+    }
+
+    await doc._register(opts)
+    return doc
   }
 
   static async load<T extends Doctype> (
@@ -67,7 +87,6 @@ class Document extends EventEmitter {
 
     const doctypeClass: DoctypeConstructor = doc._doctypeHandler.doctypeClass()
     doc._doctype = new doctypeClass(null)
-
 
     if (doc._doctype.state == null) {
       // apply genesis record if there's no state preserved
@@ -133,11 +152,6 @@ class Document extends EventEmitter {
 
     await this.dispatcher.register(this)
 
-    if (opts.skipWait == null) {
-      // skip wait by default
-      opts.skipWait = true
-    }
-
     if (!opts.onlyGenesis) {
       await this.anchor()
       this._publishHead()
@@ -169,9 +183,7 @@ class Document extends EventEmitter {
           this._doctype.emit('change')
         }
       })
-      if (applyPromise) {
-        await applyPromise
-      }
+      await applyPromise
     }
   }
 
@@ -318,24 +330,19 @@ class Document extends EventEmitter {
   }
 
   get state (): DocState {
-    return cloneDeep(this._doctype.state)
+    return this._doctype.state
   }
 
-  get doctype (): string {
-    return this.state.doctype
+  get doctype (): Doctype {
+    return this._doctype
   }
 
   get head (): CID {
-    const log = this._doctype.state.log
-    return log[log.length - 1]
+    return this._doctype.head
   }
 
   get owners (): string[] {
     return this._doctype.state.owners
-  }
-
-  toDoctype<T extends Doctype>(): T {
-    return DoctypeUtils.docStateToDoctype(this.id, this.state)
   }
 
   static async wait<T extends Doctype>(doc: Document): Promise<void> {

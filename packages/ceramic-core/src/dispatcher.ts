@@ -28,7 +28,7 @@ class Dispatcher extends EventEmitter {
   async register (document: Document): Promise<void> {
     this._documents[document.id] = document
     // request head
-    await this._ipfs.pubsub.publish(TOPIC, JSON.stringify({ typ: MsgType.REQUEST, id: document.id }))
+    this._ipfs.pubsub.publish(TOPIC, JSON.stringify({ typ: MsgType.REQUEST, id: document.id }))
   }
 
   unregister (id: string): void {
