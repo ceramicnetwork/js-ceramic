@@ -162,7 +162,7 @@ describe('Level data store', () => {
     const genesis = await ThreeIdDoctype.makeGenesis({ content: initialContent, owners })
     const findHandler = (): DoctypeHandler<ThreeIdDoctype> => doctypeHandler
     const doc = await Document.createFromGenesis(genesis, findHandler, dispatcher, store, context)
-    await anchorUpdate(doc._doctype)
+    await anchorUpdate(doc.doctype)
 
     let docState = await store.loadState(doc.id)
     expect(docState).toBeNull()
@@ -195,7 +195,7 @@ describe('Level data store', () => {
     const genesis = await ThreeIdDoctype.makeGenesis({ content: initialContent, owners })
     const findHandler = (): DoctypeHandler<ThreeIdDoctype> => doctypeHandler
     const doc = await Document.createFromGenesis(genesis, findHandler, dispatcher, store, context)
-    await anchorUpdate(doc._doctype)
+    await anchorUpdate(doc.doctype)
 
     let docState = await store.loadState(doc.id)
     expect(docState).toBeNull()
@@ -211,7 +211,7 @@ describe('Level data store', () => {
     const genesis = await ThreeIdDoctype.makeGenesis({ content: initialContent, owners })
     const findHandler = (): DoctypeHandler<ThreeIdDoctype> => doctypeHandler
     const doc = await Document.createFromGenesis(genesis, findHandler, dispatcher, store, context)
-    await anchorUpdate(doc._doctype)
+    await anchorUpdate(doc.doctype)
 
     await store.pin(doc, true)
     expect(ipfs.pin.add).toHaveBeenCalledTimes(4)
@@ -224,7 +224,7 @@ describe('Level data store', () => {
     const genesis = await ThreeIdDoctype.makeGenesis({ content: initialContent, owners })
     const findHandler = (): DoctypeHandler<ThreeIdDoctype> => doctypeHandler
     const doc = await Document.createFromGenesis(genesis, findHandler, dispatcher, store, context)
-    await anchorUpdate(doc._doctype)
+    await anchorUpdate(doc.doctype)
 
     await store.rm(doc.id)
     expect(ipfs.pin.rm).toHaveBeenCalledTimes(0)
@@ -234,7 +234,7 @@ describe('Level data store', () => {
     const genesis = await ThreeIdDoctype.makeGenesis({ content: initialContent, owners })
     const findHandler = (): DoctypeHandler<ThreeIdDoctype> => doctypeHandler
     const doc = await Document.createFromGenesis(genesis, findHandler, dispatcher, store, context)
-    await anchorUpdate(doc._doctype)
+    await anchorUpdate(doc.doctype)
 
     await store.pin(doc, true)
     expect(ipfs.pin.add).toHaveBeenCalledTimes(4)
@@ -258,7 +258,7 @@ describe('Level data store', () => {
     const genesis = await ThreeIdDoctype.makeGenesis({ content: initialContent, owners })
     const findHandler = (): DoctypeHandler<ThreeIdDoctype> => doctypeHandler
     const doc = await Document.createFromGenesis(genesis, findHandler, dispatcher, store, context)
-    await anchorUpdate(doc._doctype)
+    await anchorUpdate(doc.doctype)
 
     const pinned = []
     const iterator = await store.ls(doc.id)
