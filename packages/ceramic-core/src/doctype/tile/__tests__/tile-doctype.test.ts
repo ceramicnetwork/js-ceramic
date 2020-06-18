@@ -85,25 +85,25 @@ describe('ThreeIdHandler', () => {
   })
 
   it('makes genesis record correctly', async () => {
-    const record1 = await TileDoctype.makeGenesis(user, RECORDS.genesis.content, [user.DID])
+    const record1 = await TileDoctype.makeGenesis({ content: RECORDS.genesis.content, owners: [user.DID] }, { user })
 
     const expected1 = wrapWithFakeSignature({ doctype: RECORDS.genesis.doctype, content: RECORDS.genesis.content, owners: [user.DID] })
     expect(record1).toEqual(expected1)
 
-    const record2 = await TileDoctype.makeGenesis(user, RECORDS.genesis.content, RECORDS.genesis.owners)
+    const record2 = await TileDoctype.makeGenesis({ content: RECORDS.genesis.content, owners: RECORDS.genesis.owners }, { user })
     expect(record2).toEqual(wrapWithFakeSignature(RECORDS.genesis))
   })
 
   it('creates genesis records deterministically by default', async () => {
-    const record1 = await TileDoctype.makeGenesis(user, RECORDS.genesis.content, [user.DID])
-    const record2 = await TileDoctype.makeGenesis(user, RECORDS.genesis.content, [user.DID])
+    const record1 = await TileDoctype.makeGenesis({ content: RECORDS.genesis.content, owners: [user.DID] }, { user })
+    const record2 = await TileDoctype.makeGenesis({ content: RECORDS.genesis.content, owners: [user.DID] }, { user })
 
     expect(record1).toEqual(record2)
   })
 
   it('creates a unique genesis record if specified', async () => {
-    const record1 = await TileDoctype.makeGenesis(user, RECORDS.genesis.content, [user.DID], { isUnique: true })
-    const record2 = await TileDoctype.makeGenesis(user, RECORDS.genesis.content, [user.DID], { isUnique: true })
+    const record1 = await TileDoctype.makeGenesis({ content: RECORDS.genesis.content, owners: [user.DID] }, { user }, { isUnique: true })
+    const record2 = await TileDoctype.makeGenesis({ content: RECORDS.genesis.content, owners: [user.DID] }, { user }, { isUnique: true })
 
     expect(record1).not.toEqual(record2)
   })

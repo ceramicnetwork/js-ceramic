@@ -77,7 +77,7 @@ import { AnchorStatus, DoctypeHandler, InitOpts, SignatureStatus } from "../doct
 import { ThreeIdDoctype, ThreeIdParams } from "../doctype/three-id/three-id-doctype"
 import Ceramic from "../ceramic"
 
-const anchorUpdate = (doc: Document): Promise<void> => new Promise(resolve => doc.on('change', resolve))
+const anchorUpdate = (doc: Document): Promise<void> => new Promise(resolve => doc._doctype.on('change', resolve))
 
 const create = async (params: ThreeIdParams, ceramic: Ceramic, context: Context, opts: InitOpts = {}): Promise<Document> => {
   const { content, owners } = params
@@ -85,7 +85,7 @@ const create = async (params: ThreeIdParams, ceramic: Ceramic, context: Context,
     throw new Error('The owner of the 3ID needs to be specified')
   }
 
-  const record = await ThreeIdDoctype._makeGenesis(content, owners)
+  const record = await ThreeIdDoctype.makeGenesis({ content, owners })
 
   return ceramic._createDocFromGenesis(record, opts)
 }
@@ -163,7 +163,7 @@ describe('Document', () => {
       const doc = await create({ content: initialContent, owners }, ceramic, context)
       await anchorUpdate(doc)
 
-      const updateRec = await ThreeIdDoctype._makeRecord(doc, user, newContent, doc.owners)
+      const updateRec = await ThreeIdDoctype._makeRecord(doc._doctype, user, newContent, doc.owners)
       await doc.applyRecord(updateRec)
 
       await anchorUpdate(doc)
@@ -179,7 +179,7 @@ describe('Document', () => {
       await anchorUpdate(doc1)
       const headPreUpdate = doc1.head
 
-      let updateRec = await ThreeIdDoctype._makeRecord(doc1, user, newContent, doc1.owners)
+      let updateRec = await ThreeIdDoctype._makeRecord(doc1._doctype, user, newContent, doc1.owners)
       await doc1.applyRecord(updateRec)
 
       await anchorUpdate(doc1)
@@ -193,7 +193,7 @@ describe('Document', () => {
       await new Promise(resolve => setTimeout(resolve, 1))
       // TODO - better mock for anchors
 
-      updateRec = await ThreeIdDoctype._makeRecord(doc2, user, fakeState, doc2.owners)
+      updateRec = await ThreeIdDoctype._makeRecord(doc2._doctype, user, fakeState, doc2.owners)
       await doc2.applyRecord(updateRec)
 
       await anchorUpdate(doc2)
@@ -249,7 +249,7 @@ describe('Document', () => {
       expect(dispatcher.publishHead).toHaveBeenCalledWith(doc1.id, doc1.head)
       await anchorUpdate(doc1)
 
-      const updateRec = await ThreeIdDoctype._makeRecord(doc1, user, newContent, doc1.owners)
+      const updateRec = await ThreeIdDoctype._makeRecord(doc1._doctype, user, newContent, doc1.owners)
       await doc1.applyRecord(updateRec)
 
       expect(doc1.content).toEqual(newContent)
@@ -264,10 +264,10 @@ describe('Document', () => {
       const doc2 = await Document.load(doc1.id, getHandlerFromGenesis, dispatcher, mockStateStore, context, { skipWait: true })
 
       const updatePromise = new Promise(resolve => {
-        doc2.on('change', resolve)
+        doc2._doctype.on('change', resolve)
       })
 
-      const updateRec = await ThreeIdDoctype._makeRecord(doc1, user, newContent, doc1.owners)
+      const updateRec = await ThreeIdDoctype._makeRecord(doc1._doctype, user, newContent, doc1.owners)
       await doc1.applyRecord(updateRec)
 
       expect(doc1.content).toEqual(newContent)

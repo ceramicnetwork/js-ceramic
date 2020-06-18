@@ -1,6 +1,7 @@
 import CID from 'cids'
 import { Context } from "./context"
 import cloneDeep from 'lodash.clonedeep'
+import { EventEmitter } from "events"
 
 /**
  * Describes signature status
@@ -94,23 +95,81 @@ export interface InitOpts {
 /**
  * Describes common doctype attributes
  */
-export interface Doctype {
-    id: string;
-    doctype: string;
-    content: object;
-    owners: Array<string>;
-    state: DocState;
-    head: CID;
+export abstract class Doctype extends EventEmitter {
+    constructor (private _state: DocState) {
+        super()
+    }
+
+    get id(): string {
+        return 'ceramic://' + this.head.toString()
+    }
+
+    get doctype(): string {
+        return this._state.doctype
+    }
+
+    get content(): Record<string, any> {
+        return cloneDeep(this.state.content)
+    }
+
+    get owners(): Array<string> {
+        return cloneDeep(this.state.owners)
+    }
+
+    get state(): DocState {
+        return cloneDeep(this._state)
+    }
+
+    set state(state: DocState) {
+        this._state = state
+    }
+
+    get head(): CID {
+        return this.state.log[this.state.log.length - 1]
+    }
+
+}
+
+/**
+ * Doctype decorator
+ * @constructor
+ */
+export function DoctypeStatic<T>() {
+    return <U extends T>(constructor: U) => { constructor };
+}
+
+/**
+ * Doctype static signatures
+ */
+export interface DoctypeConstructor {
+    /**
+     * Constructor signature
+     * @param state - Doctype state
+     */
+    new (state: DocState): Doctype;
+
+    /**
+     * Makes genesis record
+     * @param params - Create parameters
+     * @param context - Ceramic context
+     * @param opts - Initialization options
+     */
+    makeGenesis(params: Record<string, any>, context?: Context, opts?: InitOpts): Promise<Record<string, any>>;
 }
 
 /**
  * Describes document type handler functionality
  */
-export interface DoctypeHandler<T extends Doctype> {
+export abstract class DoctypeHandler<T extends Doctype> {
     /**
-     * the string name of the doctype
+     * The string name of the doctype
      */
     name: string;
+
+    /**
+     * The doctype class
+     */
+    abstract doctypeClass(): DoctypeConstructor
 
     /**
      * Creates new Doctype
@@ -118,7 +177,7 @@ export interface DoctypeHandler<T extends Doctype> {
      * @param context - Ceramic context
      * @param opts - Initialization options
      */
-    create(params: object, context: Context, opts?: InitOpts): Promise<T> ;
+    abstract create(params: object, context: Context, opts?: InitOpts): Promise<T>;
 
     /**
      * Applies record to the document (genesis|signed|anchored)
@@ -127,6 +186,6 @@ export interface DoctypeHandler<T extends Doctype> {
      * @param context - Ceramic context
      * @param state - Document state
      */
-    applyRecord(record: any, cid: CID, context: Context, state?: DocState): Promise<DocState>;
+    abstract applyRecord(record: any, cid: CID, context: Context, state?: DocState): Promise<DocState>;
 
 }

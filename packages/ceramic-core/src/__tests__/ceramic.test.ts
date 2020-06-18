@@ -113,8 +113,8 @@ describe('Ceramic integration', () => {
     const ceramic2 = await Ceramic.create(ipfs2)
     const ceramic3 = await Ceramic.create(ipfs3)
     // ceramic node 2 shouldn't need to have the document open in order to forward the message
-    const doc1 = await ceramic1._createDoc(DOCTYPE_3ID, { content: { test: 321 }, owners: [owner] })
-    const doc3 = await ceramic3._createDoc(DOCTYPE_3ID, { content: { test: 321 }, owners: [owner] }, { onlyGenesis: true })
+    const doc1 = await ceramic1.create(DOCTYPE_3ID, { content: { test: 321 }, owners: [owner] })
+    const doc3 = await ceramic3.create(DOCTYPE_3ID, { content: { test: 321 }, owners: [owner] }, { onlyGenesis: true })
     expect(doc3.content).toEqual(doc1.content)
     expect(doc3.state).toEqual(doc1.state)
     const updatePromise = new Promise(resolve => {

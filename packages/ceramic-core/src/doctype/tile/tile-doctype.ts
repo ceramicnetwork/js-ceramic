@@ -1,11 +1,9 @@
-import CID from 'cids'
-
 import jsonpatch from 'fast-json-patch'
 
 import { encode as base64Encode } from '@ethersproject/base64'
 import { randomBytes } from '@ethersproject/random'
 
-import { DocState, Doctype, InitOpts } from "../../doctype"
+import { Doctype, DoctypeConstructor, DoctypeStatic, InitOpts } from "../../doctype"
 import User from "../../user"
 import { Context } from "../../context"
 
@@ -22,13 +20,8 @@ export interface TileParams {
 /**
  * Tile doctype implementation
  */
-export class TileDoctype implements Doctype {
-    id: string;
-    content: object
-    doctype: string
-    head: CID
-    owners: Array<string>
-    state: DocState
+@DoctypeStatic<DoctypeConstructor>()
+export class TileDoctype extends Doctype {
 
     /**
      * Create Tile doctype
@@ -42,24 +35,26 @@ export class TileDoctype implements Doctype {
         }
 
         const { content, owners } = params
-        const record = await TileDoctype.makeGenesis(context.user, content, owners, opts)
+        const record = await TileDoctype.makeGenesis({ content, owners }, context, opts)
         return context.api.createFromGenesis(record, opts)
     }
 
     /**
-     * Make genesis record
-     * @param user - User instance
-     * @param content - Context
-     * @param owners - Owners
-     * @param opts - Initialization parameters
+     * Creates genesis record
+     * @param params - Create parameters
+     * @param context - Ceramic context
+     * @param opts - Initialization options
      */
-    static async makeGenesis(user: User, content: any, owners?: Array<string>, opts: { isUnique?: boolean } = {}): Promise<any> {
-        if (!user) {
+    static async makeGenesis(params: Record<string, any>, context?: Context, opts: InitOpts = {}): Promise<Record<string, any>> {
+        if (!context.user) {
             throw new Error('No user authenticated')
         }
 
+        let { owners } = params
+        const { content } = params
+
         if (!owners) {
-            owners = [user.DID]
+            owners = [context.user.DID]
         }
 
         let unique: string
@@ -68,7 +63,7 @@ export class TileDoctype implements Doctype {
         }
 
         const record = { doctype: DOCTYPE, owners, content, unique }
-        return TileDoctype._signRecord(record, user)
+        return TileDoctype._signRecord(record, context.user)
     }
 
     /**

@@ -74,8 +74,8 @@ describe('ThreeIdHandler', () => {
   })
 
   it('makes genesis record correctly', async () => {
-    await expect(ThreeIdDoctype._makeGenesis(RECORDS.genesis.content)).rejects.toThrow(/The owner/)
-    const record = await ThreeIdDoctype._makeGenesis(RECORDS.genesis.content, RECORDS.genesis.owners)
+    await expect(ThreeIdDoctype.makeGenesis({ content: RECORDS.genesis.content })).rejects.toThrow(/The owner/)
+    const record = await ThreeIdDoctype.makeGenesis({ content: RECORDS.genesis.content, owners: RECORDS.genesis.owners })
     expect(record).toEqual(RECORDS.genesis)
   })
 

@@ -1,7 +1,5 @@
-import CID from 'cids'
-import { DocState, Doctype, InitOpts } from "../../doctype"
 import { Context } from "../../context"
-import User from "../../user"
+import { Doctype, DoctypeConstructor, DoctypeStatic, InitOpts } from "../../doctype"
 
 const DOCTYPE = 'account-link'
 
@@ -16,21 +14,8 @@ export class AccountLinkParams {
 /**
  * AccountLink doctype implementation
  */
-export class AccountLinkDoctype implements Doctype {
-    id: string;
-    content: object
-    doctype: string
-    head: CID
-    owners: string[]
-    state: DocState
-
-    constructor(content: object, doctype: string, head: CID, owners: Array<string>, state: DocState) {
-        this.content = content
-        this.doctype = doctype
-        this.head = head
-        this.owners = owners
-        this.state = state
-    }
+@DoctypeStatic<DoctypeConstructor>()
+export class AccountLinkDoctype extends Doctype {
 
     /**
      * Creates AccountLink doctype
@@ -41,17 +26,19 @@ export class AccountLinkDoctype implements Doctype {
     static async create(params: AccountLinkParams, context: Context, opts?: InitOpts): Promise<AccountLinkDoctype> {
         const { content, owners } = params
 
-        const record = await AccountLinkDoctype._makeGenesis(content, owners)
+        const record = await AccountLinkDoctype.makeGenesis({ content, owners })
         return context.api.createFromGenesis(record, opts)
     }
 
     /**
-     * Makes genesis record
-     * @param content - Content
-     * @param owners - Owners
-     * @private
+     * Creates genesis record
+     * @param params - Create parameters
+     * @param context - Ceramic context
+     * @param opts - Initialization options
      */
-    static async _makeGenesis (content: any, owners: Array<string>): Promise<any> {
+    static async makeGenesis(params: Record<string, any>, context?: Context, opts: InitOpts = {}): Promise<Record<string, any>> {
+        const { content, owners } = params
+
         if (content) {
             throw new Error('Account link genesis cannot have content')
         }

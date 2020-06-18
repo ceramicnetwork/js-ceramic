@@ -84,38 +84,38 @@ describe('AccountLinkHandler', () => {
   })
 
   it('makes genesis record correctly', async () => {
-    const record = await AccountLinkDoctype._makeGenesis(undefined, RECORDS.genesis.owners)
+    const record = await AccountLinkDoctype.makeGenesis({ content: undefined, owners: RECORDS.genesis.owners })
     expect(record).toEqual(RECORDS.genesis)
   })
 
   it('throws an error if genesis record has content', async () => {
     const content = {}
     const owners = RECORDS.genesis.owners
-    await expect(AccountLinkDoctype._makeGenesis(content, owners)).rejects.toThrow(/Cannot have content/i)
+    await expect(AccountLinkDoctype.makeGenesis({ content, owners })).rejects.toThrow(/Cannot have content/i)
   })
 
   it('throws an error if genesis record has no owners specified', async () => {
     const content: any = undefined
     const owners: any = undefined
-    await expect(AccountLinkDoctype._makeGenesis(content, owners)).rejects.toThrow(/Owner must be specified/i)
+    await expect(AccountLinkDoctype.makeGenesis({ content, owners })).rejects.toThrow(/Owner must be specified/i)
   })
 
   it('throws an error if genesis record has more than one owner', async () => {
     const content: any = undefined
     const owners = [...RECORDS.genesis.owners, '0x25954ef14cebbc9af3d79876489a9cfe87043f20@eip155:1']
-    await expect(AccountLinkDoctype._makeGenesis(content, owners)).rejects.toThrow(/Exactly one owner/i)
+    await expect(AccountLinkDoctype.makeGenesis({ content, owners })).rejects.toThrow(/Exactly one owner/i)
   })
 
   it('throws an error if genesis record has owner not in CAIP-10 format', async () => {
     const content: any = undefined
     const owners = RECORDS.genesis.owners.map(address => address.split('@')[0])
-    await expect(AccountLinkDoctype._makeGenesis(content, owners)).rejects.toThrow(/According to CAIP-10/i)
+    await expect(AccountLinkDoctype.makeGenesis({ content, owners })).rejects.toThrow(/According to CAIP-10/i)
   })
 
   it('throws an error if genesis record has owner not on mainnet', async () => {
     const content: any = undefined
     const owners = RECORDS.genesis.owners.map(address => address.split('@')[0] = '@eip155:3')
-    await expect(AccountLinkDoctype._makeGenesis(content, owners)).rejects.toThrow(/Ethereum mainnet/i)
+    await expect(AccountLinkDoctype.makeGenesis({ content, owners })).rejects.toThrow(/Ethereum mainnet/i)
   })
 
   it('applies genesis record correctly', async () => {

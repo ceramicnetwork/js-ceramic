@@ -1,17 +1,31 @@
 import CID from 'cids'
-import { AnchorProof, AnchorStatus, DocState, DoctypeHandler, InitOpts, SignatureStatus } from "../../doctype"
+import {
+    AnchorProof,
+    AnchorStatus,
+    DocState, DoctypeConstructor,
+    DoctypeHandler,
+    InitOpts,
+    SignatureStatus
+} from "../../doctype"
 import { Context } from "../../context"
 import { validateLink } from "3id-blockchain-utils"
 import { AccountLinkDoctype, AccountLinkParams } from "./account-link-doctype"
 
 const DOCTYPE = 'account-link'
 
-export default class AccountLinkDoctypeHandler implements DoctypeHandler<AccountLinkDoctype> {
+export default class AccountLinkDoctypeHandler extends DoctypeHandler<AccountLinkDoctype> {
     /**
      * Gets doctype name
      */
     get name(): string {
         return DOCTYPE
+    }
+
+    /**
+     * Gets doctype class
+     */
+    doctypeClass(): DoctypeConstructor {
+        return AccountLinkDoctype
     }
 
     /**

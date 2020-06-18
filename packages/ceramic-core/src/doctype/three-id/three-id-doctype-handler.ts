@@ -6,7 +6,7 @@ import { wrapDocument } from '@ceramicnetwork/3id-did-resolver'
 import jsonpatch from 'fast-json-patch'
 import { verifyJWT } from 'did-jwt'
 import {
-    AnchorProof, AnchorRecord, AnchorStatus, DocState, DoctypeHandler, InitOpts, SignatureStatus
+    AnchorProof, AnchorRecord, AnchorStatus, DocState, DoctypeConstructor, DoctypeHandler, InitOpts, SignatureStatus
 } from "../../doctype"
 import { Context } from "../../context"
 import { ThreeIdDoctype, ThreeIdParams } from "./three-id-doctype"
@@ -16,12 +16,19 @@ const DOCTYPE = '3id'
 /**
  * ThreeId doctype handler implementation
  */
-export default class ThreeIdDoctypeHandler implements DoctypeHandler<ThreeIdDoctype> {
+export default class ThreeIdDoctypeHandler extends DoctypeHandler<ThreeIdDoctype> {
     /**
      * Gets doctype name
      */
     get name(): string {
         return DOCTYPE
+    }
+
+    /**
+     * Gets doctype class
+     */
+    doctypeClass(): DoctypeConstructor {
+        return ThreeIdDoctype
     }
 
     /**

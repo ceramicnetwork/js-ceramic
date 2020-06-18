@@ -112,13 +112,13 @@ import AnchorService from "../../anchor/anchor-service"
 import ThreeIdDoctypeHandler from "../../doctype/three-id/three-id-doctype-handler"
 import { Context } from "../../context"
 import { ThreeIdDoctype } from "../../doctype/three-id/three-id-doctype"
-import { DoctypeHandler } from "../../doctype"
+import { Doctype, DoctypeHandler } from "../../doctype"
 
 jest.mock("did-jwt", () => ({
   verifyJWT: (): any => 'verified'
 }))
 
-const anchorUpdate = (doc: Document): Promise<void> => new Promise(resolve => doc.on('change', resolve))
+const anchorUpdate = (doctype: Doctype): Promise<void> => new Promise(resolve => doctype.on('change', resolve))
 
 describe('Level data store', () => {
 
@@ -159,10 +159,10 @@ describe('Level data store', () => {
   })
 
   it('pins document correctly without IPFS pinning', async () => {
-    const genesis = await ThreeIdDoctype._makeGenesis(initialContent, owners)
+    const genesis = await ThreeIdDoctype.makeGenesis({ content: initialContent, owners })
     const findHandler = (): DoctypeHandler<ThreeIdDoctype> => doctypeHandler
     const doc = await Document.createFromGenesis(genesis, findHandler, dispatcher, store, context)
-    await anchorUpdate(doc)
+    await anchorUpdate(doc._doctype)
 
     let docState = await store.loadState(doc.id)
     expect(docState).toBeNull()
@@ -175,7 +175,7 @@ describe('Level data store', () => {
   })
 
   it('pins not anchored document correctly with IPFS pinning', async () => {
-    const genesis = await ThreeIdDoctype._makeGenesis(initialContent, owners)
+    const genesis = await ThreeIdDoctype.makeGenesis({ content: initialContent, owners })
     const findHandler = (): DoctypeHandler<ThreeIdDoctype> => doctypeHandler
     const doc = await Document.createFromGenesis(genesis, findHandler, dispatcher, store, context, {
       onlyGenesis: true, skipWait: true,
@@ -192,10 +192,10 @@ describe('Level data store', () => {
   })
 
   it('pins document correctly with IPFS pinning', async () => {
-    const genesis = await ThreeIdDoctype._makeGenesis(initialContent, owners)
+    const genesis = await ThreeIdDoctype.makeGenesis({ content: initialContent, owners })
     const findHandler = (): DoctypeHandler<ThreeIdDoctype> => doctypeHandler
     const doc = await Document.createFromGenesis(genesis, findHandler, dispatcher, store, context)
-    await anchorUpdate(doc)
+    await anchorUpdate(doc._doctype)
 
     let docState = await store.loadState(doc.id)
     expect(docState).toBeNull()
@@ -208,10 +208,10 @@ describe('Level data store', () => {
   })
 
   it('removes pinned document', async () => {
-    const genesis = await ThreeIdDoctype._makeGenesis(initialContent, owners)
+    const genesis = await ThreeIdDoctype.makeGenesis({ content: initialContent, owners })
     const findHandler = (): DoctypeHandler<ThreeIdDoctype> => doctypeHandler
     const doc = await Document.createFromGenesis(genesis, findHandler, dispatcher, store, context)
-    await anchorUpdate(doc)
+    await anchorUpdate(doc._doctype)
 
     await store.pin(doc, true)
     expect(ipfs.pin.add).toHaveBeenCalledTimes(4)
@@ -221,20 +221,20 @@ describe('Level data store', () => {
   })
 
   it('skips removing unpinned document', async () => {
-    const genesis = await ThreeIdDoctype._makeGenesis(initialContent, owners)
+    const genesis = await ThreeIdDoctype.makeGenesis({ content: initialContent, owners })
     const findHandler = (): DoctypeHandler<ThreeIdDoctype> => doctypeHandler
     const doc = await Document.createFromGenesis(genesis, findHandler, dispatcher, store, context)
-    await anchorUpdate(doc)
+    await anchorUpdate(doc._doctype)
 
     await store.rm(doc.id)
     expect(ipfs.pin.rm).toHaveBeenCalledTimes(0)
   })
 
   it('lists pinned documents', async () => {
-    const genesis = await ThreeIdDoctype._makeGenesis(initialContent, owners)
+    const genesis = await ThreeIdDoctype.makeGenesis({ content: initialContent, owners })
     const findHandler = (): DoctypeHandler<ThreeIdDoctype> => doctypeHandler
     const doc = await Document.createFromGenesis(genesis, findHandler, dispatcher, store, context)
-    await anchorUpdate(doc)
+    await anchorUpdate(doc._doctype)
 
     await store.pin(doc, true)
     expect(ipfs.pin.add).toHaveBeenCalledTimes(4)
@@ -255,10 +255,10 @@ describe('Level data store', () => {
   })
 
   it('lists empty for unpinned document', async () => {
-    const genesis = await ThreeIdDoctype._makeGenesis(initialContent, owners)
+    const genesis = await ThreeIdDoctype.makeGenesis({ content: initialContent, owners })
     const findHandler = (): DoctypeHandler<ThreeIdDoctype> => doctypeHandler
     const doc = await Document.createFromGenesis(genesis, findHandler, dispatcher, store, context)
-    await anchorUpdate(doc)
+    await anchorUpdate(doc._doctype)
 
     const pinned = []
     const iterator = await store.ls(doc.id)

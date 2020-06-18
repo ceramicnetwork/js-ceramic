@@ -4,7 +4,7 @@ import { verifyJWT } from 'did-jwt'
 
 import jsonpatch from 'fast-json-patch'
 import {
-    AnchorProof, AnchorRecord, AnchorStatus, DocState, DoctypeHandler, InitOpts, SignatureStatus
+    AnchorProof, AnchorRecord, AnchorStatus, DocState, DoctypeConstructor, DoctypeHandler, InitOpts, SignatureStatus
 } from "../../doctype"
 
 import { Context } from "../../context"
@@ -15,12 +15,19 @@ const DOCTYPE = 'tile'
 /**
  * Tile doctype handler implementation
  */
-export default class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
+export default class TileDoctypeHandler extends DoctypeHandler<TileDoctype> {
     /**
      * Gets doctype name
      */
     get name(): string {
         return DOCTYPE
+    }
+
+    /**
+     * Gets doctype class
+     */
+    doctypeClass(): DoctypeConstructor {
+        return TileDoctype
     }
 
     /**

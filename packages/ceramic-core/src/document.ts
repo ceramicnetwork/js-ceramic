@@ -6,23 +6,18 @@ import cloneDeep from 'lodash.clonedeep'
 import AnchorServiceResponse from "./anchor/anchor-service-response"
 import StateStore from "./store/state-store"
 import {
-  AnchorProof,
-  AnchorRecord,
-  AnchorStatus,
-  DocState,
-  Doctype,
-  DoctypeHandler, DoctypeUtils,
-  InitOpts
+  AnchorProof, AnchorRecord, AnchorStatus, DocState, Doctype, DoctypeConstructor, DoctypeHandler, DoctypeUtils, InitOpts
 } from "./doctype"
 import { Context } from "./context"
 
-class Document extends EventEmitter implements Doctype {
+class Document extends EventEmitter {
   private _applyQueue: PQueue
   private _genesisCid: CID
 
-  public _state: DocState
-  public _context: Context
+  private _doctype: Doctype
   private _doctypeHandler: DoctypeHandler<Doctype>
+
+  public _context: Context
 
   public readonly id: string
   public readonly dispatcher: Dispatcher
@@ -35,7 +30,7 @@ class Document extends EventEmitter implements Doctype {
     this.dispatcher = dispatcher;
     this.stateStore = stateStore;
 
-    this._applyQueue = new PQueue({concurrency: 1})
+    this._applyQueue = new PQueue({ concurrency: 1 })
     const split = this.id.split('/')
     this._genesisCid = new CID(split[2])
   }
@@ -67,17 +62,22 @@ class Document extends EventEmitter implements Doctype {
       opts.onlyGenesis = true
     }
 
+    const record = await dispatcher.retrieveRecord(doc._genesisCid)
+    doc._doctypeHandler = findHandler(record)
+
+    const doctypeClass: DoctypeConstructor = doc._doctypeHandler.doctypeClass()
+    doc._doctype = new doctypeClass(null)
+
+
+    if (doc._doctype.state == null) {
+      // apply genesis record if there's no state preserved
+      doc._doctype.state = await doc._doctypeHandler.applyRecord(record, doc._genesisCid, context)
+    }
+
     const isPinned = await stateStore.isDocPinned(id)
     if (isPinned) {
       // get last stored state
-      doc._state = await stateStore.loadState(id)
-    }
-
-    const record = await dispatcher.retrieveRecord(doc._genesisCid)
-    doc._doctypeHandler = findHandler(record)
-    if (doc._state == null) {
-      // apply genesis record if there's no state preserved
-      doc._state = await doc._doctypeHandler.applyRecord(record, doc._genesisCid, context)
+      doc._doctype.state = await stateStore.loadState(id)
     }
 
     await doc._register(opts)
@@ -96,9 +96,13 @@ class Document extends EventEmitter implements Doctype {
     const id = ['/ceramic', genesisCid.toString()].join('/')
 
     const doc = new Document(id, dispatcher, stateStore)
+
     doc._context = context
     doc._doctypeHandler = findHandler(genesis)
-    doc._state = await doc._doctypeHandler.applyRecord(genesis, doc._genesisCid, context)
+
+    const doctypeClass: DoctypeConstructor = doc._doctypeHandler.doctypeClass()
+    doc._doctype = new doctypeClass(null)
+    doc._doctype.state = await doc._doctypeHandler.applyRecord(genesis, doc._genesisCid, context)
 
     await doc._updateStateIfPinned()
 
@@ -111,7 +115,7 @@ class Document extends EventEmitter implements Doctype {
 
   async applyRecord (record: any, opts: InitOpts = {}): Promise<void> {
     const cid = await this.dispatcher.storeRecord(record)
-    this._state = await this._doctypeHandler.applyRecord(record, cid, this._context, this.state)
+    this._doctype.state = await this._doctypeHandler.applyRecord(record, cid, this._context, this.state)
 
     await this._updateStateIfPinned()
 
@@ -162,7 +166,7 @@ class Document extends EventEmitter implements Doctype {
         applyPromise = this._applyLog(log)
         const updated = await applyPromise
         if (updated) {
-          this.emit('change')
+          this._doctype.emit('change')
         }
       })
       if (applyPromise) {
@@ -172,7 +176,7 @@ class Document extends EventEmitter implements Doctype {
   }
 
   async _fetchLog (cid: CID, log: Array<CID> = []): Promise<Array<CID>> {
-    if (this._state.log.some(x => x.equals(cid))) { // already processed
+    if (this._doctype.state.log.some(x => x.equals(cid))) { // already processed
       return []
     }
     const record = await this.dispatcher.retrieveRecord(cid)
@@ -181,7 +185,7 @@ class Document extends EventEmitter implements Doctype {
       return []
     }
     log.unshift(cid)
-    if (this._state.log.some(x => x.equals(prevCid))) {
+    if (this._doctype.state.log.some(x => x.equals(prevCid))) {
       // we found the connection to the canonical log
       return log
     }
@@ -195,13 +199,13 @@ class Document extends EventEmitter implements Doctype {
     const record = await this.dispatcher.retrieveRecord(cid)
     if (record.prev.equals(this.head)) {
       // the new log starts where the previous one ended
-      this._state = await this._applyLogToState(log, cloneDeep(this._state))
+      this._doctype.state = await this._applyLogToState(log, cloneDeep(this._doctype.state))
       modified = true
     } else {
       // we have a conflict since prev is in the log of the
       // local state, but isn't the head
-      const conflictIdx = this._state.log.findIndex(x => x.equals(record.prev)) + 1
-      const canonicalLog = this._state.log.slice() // copy log
+      const conflictIdx = this._doctype.state.log.findIndex(x => x.equals(record.prev)) + 1
+      const canonicalLog = this._doctype.state.log.slice() // copy log
       const localLog = canonicalLog.splice(conflictIdx)
       // Compute state up till conflictIdx
       let state: DocState = await this._applyLogToState(canonicalLog)
@@ -215,7 +219,7 @@ class Document extends EventEmitter implements Doctype {
         // apply the remote log to our local state. Otherwise
         // keep present state
         state = await this._applyLogToState(log, cloneDeep(state))
-        this._state = state
+        this._doctype.state = state
         modified = true
       }
     }
@@ -280,17 +284,17 @@ class Document extends EventEmitter implements Doctype {
     this._context.anchorService.on(this.id, async (asr: AnchorServiceResponse): Promise<void> => {
       switch (asr.status) {
         case 'PENDING': {
-          this._state.anchorScheduledFor = asr.anchorScheduledFor
+          this._doctype.state.anchorScheduledFor = asr.anchorScheduledFor
           await this._updateStateIfPinned()
           return
         }
         case 'PROCESSING': {
-          this._state.anchorStatus = AnchorStatus.PROCESSING
+          this._doctype.state.anchorStatus = AnchorStatus.PROCESSING
           await this._updateStateIfPinned()
           return
         }
         case 'COMPLETED': {
-          this._state.anchorStatus = AnchorStatus.ANCHORED
+          this._doctype.state.anchorStatus = AnchorStatus.ANCHORED
           await this._handleHead(asr.anchorRecord)
           await this._updateStateIfPinned()
           this._publishHead()
@@ -299,22 +303,22 @@ class Document extends EventEmitter implements Doctype {
           return
         }
         case 'FAILED': {
-          this._state.anchorStatus = AnchorStatus.FAILED
+          this._doctype.state.anchorStatus = AnchorStatus.FAILED
           this._context.anchorService.removeAllListeners(this.id)
           return
         }
       }
     })
     await this._context.anchorService.requestAnchor(this.id, this.head)
-    this._state.anchorStatus = AnchorStatus.PENDING
+    this._doctype.state.anchorStatus = AnchorStatus.PENDING
   }
 
   get content (): any {
-    return this._state.nextContent || this._state.content
+    return this._doctype.state.nextContent || this._doctype.state.content
   }
 
   get state (): DocState {
-    return this._state
+    return cloneDeep(this._doctype.state)
   }
 
   get doctype (): string {
@@ -322,12 +326,12 @@ class Document extends EventEmitter implements Doctype {
   }
 
   get head (): CID {
-    const log = this._state.log
+    const log = this._doctype.state.log
     return log[log.length - 1]
   }
 
   get owners (): string[] {
-    return this._state.owners
+    return this._doctype.state.owners
   }
 
   toDoctype<T extends Doctype>(): T {
@@ -340,11 +344,11 @@ class Document extends EventEmitter implements Doctype {
       let tid: any // eslint-disable-line prefer-const
       const clear = (): void => {
         clearTimeout(tid)
-        doc.off('change', clear)
+        doc._doctype.off('change', clear)
         resolve()
       }
       tid = setTimeout(clear, 3000)
-      doc.on('change', clear)
+      doc._doctype.on('change', clear)
     })
   }
 
@@ -355,7 +359,7 @@ class Document extends EventEmitter implements Doctype {
   }
 
   toString (): string {
-    return JSON.stringify(this._state.content)
+    return JSON.stringify(this._doctype.state.content)
   }
 }
 

@@ -1,9 +1,7 @@
-import CID from 'cids'
-
 import jsonpatch from 'fast-json-patch'
 
 import {
-    DocState, Doctype, InitOpts,
+    Doctype, DoctypeConstructor, DoctypeStatic, InitOpts,
 } from "../../doctype"
 import { Context } from "../../context"
 import User from "../../user"
@@ -21,14 +19,8 @@ export class ThreeIdParams {
 /**
  * ThreeId doctype implementation
  */
-export class ThreeIdDoctype implements Doctype {
-    id: string;
-    content: object
-    doctype: string
-    head: CID
-    owners: string[]
-    state: DocState
-
+@DoctypeStatic<DoctypeConstructor>()
+export class ThreeIdDoctype extends Doctype {
     /**
      * Change existing ThreeId doctype
      * @param params - Change parameters
@@ -50,16 +42,19 @@ export class ThreeIdDoctype implements Doctype {
             throw new Error('The owner of the 3ID needs to be specified')
         }
 
-        const record = await ThreeIdDoctype._makeGenesis(content, owners)
+        const record = await ThreeIdDoctype.makeGenesis({ content, owners })
         return context.api.createFromGenesis<ThreeIdDoctype>(record, opts)
     }
 
     /**
-     * Makes genesis record
-     * @param content - Content
-     * @param owners - Owners
+     * Creates genesis record
+     * @param params - Create parameters
+     * @param context - Ceramic context
+     * @param opts - Initialization options
      */
-    static async _makeGenesis(content: any, owners?: Array<string>): Promise<any> {
+    static async makeGenesis(params: Record<string, any>, context?: Context, opts: InitOpts = {}): Promise<Record<string, any>> {
+        const { content, owners } = params
+
         if (!owners) {
             throw new Error('The owner of the 3ID needs to be specified')
         }
