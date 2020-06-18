@@ -34,7 +34,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "3id-blockchain-utils": "^0.4.0",
+    "3id-blockchain-utils": "^0.3.3",
     "caip": "~0.6.0"
   }
 }
