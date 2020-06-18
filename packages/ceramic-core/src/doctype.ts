@@ -60,6 +60,19 @@ export interface DocState {
 }
 
 /**
+ * Doctype related utils
+ */
+export class DoctypeUtils {
+    /**
+     * Create Doctype instance from the document wrapper
+     * @param genesisCid - Genesis record CID
+     */
+    static createDocId(genesisCid: any): string {
+        return ['/ceramic', genesisCid.toString()].join('/')
+    }
+}
+
+/**
  * Doctype init options
  */
 export interface InitOpts {
@@ -88,7 +101,7 @@ export abstract class Doctype extends EventEmitter {
     }
 
     get id(): string {
-        return ['/ceramic', this.state.log[0].toString()].join('/')
+        return DoctypeUtils.createDocId(this.state.log[0])
     }
 
     get doctype(): string {

@@ -6,7 +6,7 @@ import cloneDeep from 'lodash.clonedeep'
 import AnchorServiceResponse from "./anchor/anchor-service-response"
 import StateStore from "./store/state-store"
 import {
-  AnchorProof, AnchorRecord, AnchorStatus, DocState, Doctype, DoctypeConstructor, DoctypeHandler, InitOpts
+  AnchorProof, AnchorRecord, AnchorStatus, DocState, Doctype, DoctypeConstructor, DoctypeHandler, DoctypeUtils, InitOpts
 } from "./doctype"
 import { Context } from "./context"
 
@@ -47,7 +47,7 @@ class Document extends EventEmitter {
     const genesis = await doctypeClass.makeGenesis(params, context, opts)
 
     const genesisCid = await dispatcher.storeRecord(genesis)
-    const id = ['/ceramic', genesisCid.toString()].join('/')
+    const id = DoctypeUtils.createDocId(genesisCid)
 
     const doc = new Document(id, dispatcher, stateStore)
 
@@ -112,7 +112,7 @@ class Document extends EventEmitter {
       opts: InitOpts = {}
   ): Promise<Document> {
     const genesisCid = await dispatcher.storeRecord(genesis)
-    const id = ['/ceramic', genesisCid.toString()].join('/')
+    const id = DoctypeUtils.createDocId(genesisCid)
 
     const doc = new Document(id, dispatcher, stateStore)
 
@@ -349,7 +349,7 @@ class Document extends EventEmitter {
     return this._doctype.state.owners
   }
 
-  static async wait<T extends Doctype>(doc: Document): Promise<void> {
+  static async wait(doc: Document): Promise<void> {
     // add response timeout for network change
     return new Promise(resolve => {
       let tid: any // eslint-disable-line prefer-const
@@ -358,7 +358,7 @@ class Document extends EventEmitter {
         doc._doctype.off('change', clear)
         resolve()
       }
-      tid = setTimeout(clear, 5000)
+      tid = setTimeout(clear, 3000)
       doc._doctype.on('change', clear)
     })
   }
