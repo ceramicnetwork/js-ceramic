@@ -107,14 +107,14 @@ import Document from "../../document"
 import Dispatcher from "../../dispatcher"
 import MockAnchorService from "../../anchor/mock/mock-anchor-service"
 
-jest.mock("../../user")
+jest.mock("../../ceramic-user")
 
-import User from "../../user"
-import AnchorService from "../../anchor/anchor-service"
+import CeramicUser from "../../ceramic-user"
 import ThreeIdDoctypeHandler from "../../doctype/three-id/three-id-doctype-handler"
-import { Context } from "../../context"
 import { ThreeIdDoctype } from "../../doctype/three-id/three-id-doctype"
-import { Doctype, DoctypeHandler } from "../../doctype"
+import { Doctype, DoctypeHandler } from "../../../../ceramic-common/lib/doctype"
+import AnchorService from "../../../../ceramic-common/lib/anchor-service"
+import { Context } from "../../../../ceramic-common/lib/context"
 
 jest.mock("did-jwt", () => ({
   verifyJWT: (): any => 'verified'
@@ -145,7 +145,7 @@ describe('Level data store', () => {
     dispatcher = Dispatcher()
     anchorService = new MockAnchorService(dispatcher)
 
-    const user: User = new User(null)
+    const user: CeramicUser = new CeramicUser(null)
     user.sign = jest.fn(async () => 'aaaa.bbbb.cccc')
 
     context = {

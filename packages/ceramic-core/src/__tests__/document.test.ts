@@ -64,18 +64,18 @@ jest.mock('../dispatcher', () => {
 })
 
 import Dispatcher from '../dispatcher'
-jest.mock('../user')
-import User from '../user'
+jest.mock('../ceramic-user')
+import CeramicUser from '../ceramic-user'
 jest.mock('did-jwt', () => ({
   // TODO - We should test for when this function throws as well
   verifyJWT: (): any => 'verified'
 }))
 
-import { Context } from "../context"
-import AnchorService from "../anchor/anchor-service"
-import { AnchorStatus, DoctypeHandler, InitOpts, SignatureStatus } from "../doctype"
 import { ThreeIdDoctype, ThreeIdParams } from "../doctype/three-id/three-id-doctype"
 import Ceramic from "../ceramic"
+import { Context } from "../../../ceramic-common/lib/context"
+import { AnchorStatus, DoctypeHandler, InitOpts, SignatureStatus } from "../../../ceramic-common/lib/doctype"
+import AnchorService from "../../../ceramic-common/lib/anchor-service"
 
 const anchorUpdate = (doc: Document): Promise<void> => new Promise(resolve => doc._doctype.on('change', resolve))
 
@@ -107,7 +107,7 @@ describe('Document', () => {
     beforeEach(() => {
       dispatcher = Dispatcher(false)
       anchorService = new MockAnchorService(dispatcher)
-      user = new User()
+      user = new CeramicUser()
       doctypeHandler = new ThreeIdDoctypeHandler()
       // fake jwt
       user.sign = jest.fn(async () => 'aaaa.bbbb.cccc')
@@ -163,7 +163,7 @@ describe('Document', () => {
       const doc = await create({ content: initialContent, owners }, ceramic, context)
       await anchorUpdate(doc)
 
-      const updateRec = await ThreeIdDoctype._makeRecord(doc._doctype, user, newContent, doc.owners)
+      const updateRec = await ThreeIdDoctype._makeRecord(doc.doctype, user, newContent, doc.owners)
       await doc.applyRecord(updateRec)
 
       await anchorUpdate(doc)
@@ -179,7 +179,7 @@ describe('Document', () => {
       await anchorUpdate(doc1)
       const headPreUpdate = doc1.head
 
-      let updateRec = await ThreeIdDoctype._makeRecord(doc1._doctype, user, newContent, doc1.owners)
+      let updateRec = await ThreeIdDoctype._makeRecord(doc1.doctype, user, newContent, doc1.owners)
       await doc1.applyRecord(updateRec)
 
       await anchorUpdate(doc1)
@@ -193,7 +193,7 @@ describe('Document', () => {
       await new Promise(resolve => setTimeout(resolve, 1))
       // TODO - better mock for anchors
 
-      updateRec = await ThreeIdDoctype._makeRecord(doc2._doctype, user, fakeState, doc2.owners)
+      updateRec = await ThreeIdDoctype._makeRecord(doc2.doctype, user, fakeState, doc2.owners)
       await doc2.applyRecord(updateRec)
 
       await anchorUpdate(doc2)
@@ -217,17 +217,17 @@ describe('Document', () => {
     const owners = ['publickeymock']
 
     let dispatcher: any;
-    let doctypeHandler: DoctypeHandler;
+    let doctypeHandler: ThreeIdDoctypeHandler;
     let getHandlerFromGenesis: any;
     let anchorService: AnchorService;
     let context: Context;
     let ceramic: Ceramic;
-    let user: User;
+    let user: CeramicUser;
 
     beforeEach(() => {
       dispatcher = Dispatcher(true)
       anchorService = new MockAnchorService(dispatcher)
-      user = new User()
+      user = new CeramicUser()
       // fake jwt
       user.sign = jest.fn(async () => 'aaaa.bbbb.cccc')
       doctypeHandler = new ThreeIdDoctypeHandler()
@@ -249,7 +249,7 @@ describe('Document', () => {
       expect(dispatcher.publishHead).toHaveBeenCalledWith(doc1.id, doc1.head)
       await anchorUpdate(doc1)
 
-      const updateRec = await ThreeIdDoctype._makeRecord(doc1._doctype, user, newContent, doc1.owners)
+      const updateRec = await ThreeIdDoctype._makeRecord(doc1.doctype, user, newContent, doc1.owners)
       await doc1.applyRecord(updateRec)
 
       expect(doc1.content).toEqual(newContent)
@@ -264,10 +264,10 @@ describe('Document', () => {
       const doc2 = await Document.load(doc1.id, getHandlerFromGenesis, dispatcher, mockStateStore, context, { skipWait: true })
 
       const updatePromise = new Promise(resolve => {
-        doc2._doctype.on('change', resolve)
+        doc2.doctype.on('change', resolve)
       })
 
-      const updateRec = await ThreeIdDoctype._makeRecord(doc1._doctype, user, newContent, doc1.owners)
+      const updateRec = await ThreeIdDoctype._makeRecord(doc1.doctype, user, newContent, doc1.owners)
       await doc1.applyRecord(updateRec)
 
       expect(doc1.content).toEqual(newContent)

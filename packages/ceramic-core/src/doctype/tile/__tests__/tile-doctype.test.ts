@@ -1,10 +1,10 @@
 import TileDoctypeHandler from '../tile-doctype-handler'
 import CID from 'cids'
 
-jest.mock('../../../user')
-import User from '../../../user'
-import { Context } from "../../../context"
+jest.mock('../../../ceramic-user')
+import CeramicUser from '../../../ceramic-user'
 import { TileDoctype } from "../tile-doctype"
+import { Context } from "ceramic-common/lib/context"
 jest.mock('did-jwt', () => ({
   // TODO - We should test for when this function throws as well
   verifyJWT: (): any => 'verified'
@@ -42,12 +42,12 @@ const wrapWithFakeSignature = (obj: any): any => {
 }
 
 describe('ThreeIdHandler', () => {
-  let user: User;
+  let user: CeramicUser;
   let tileDoctypeHandler: TileDoctypeHandler;
   let context: Context;
 
   beforeAll(() => {
-    user = new User(null)
+    user = new CeramicUser(null)
     user.sign = jest.fn(async () => {
       // fake jwt
       return 'aaaa.bbbb.cccc'

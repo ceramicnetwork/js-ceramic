@@ -1,15 +1,10 @@
 import CID from 'cids'
-import {
-    AnchorProof,
-    AnchorStatus,
-    DocState, DoctypeConstructor,
-    DoctypeHandler,
-    InitOpts,
-    SignatureStatus
-} from "../../doctype"
-import { Context } from "../../context"
 import { validateLink } from "3id-blockchain-utils"
 import { AccountLinkDoctype, AccountLinkParams } from "./account-link-doctype"
+import {
+    AnchorProof, AnchorStatus, DocState, DoctypeConstructor, DoctypeHandler, InitOpts, SignatureStatus
+} from "ceramic-common/lib/doctype"
+import { Context } from "ceramic-common/lib/context"
 
 const DOCTYPE = 'account-link'
 

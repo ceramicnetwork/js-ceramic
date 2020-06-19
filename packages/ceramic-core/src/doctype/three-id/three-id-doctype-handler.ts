@@ -5,11 +5,11 @@ import { DIDDocument } from 'did-resolver'
 import { wrapDocument } from '@ceramicnetwork/3id-did-resolver'
 import jsonpatch from 'fast-json-patch'
 import { verifyJWT } from 'did-jwt'
+import { ThreeIdDoctype, ThreeIdParams } from "./three-id-doctype"
 import {
     AnchorProof, AnchorRecord, AnchorStatus, DocState, DoctypeConstructor, DoctypeHandler, InitOpts, SignatureStatus
-} from "../../doctype"
-import { Context } from "../../context"
-import { ThreeIdDoctype, ThreeIdParams } from "./three-id-doctype"
+} from "ceramic-common/lib/doctype"
+import { Context } from "ceramic-common/lib/context"
 
 const DOCTYPE = '3id'
 

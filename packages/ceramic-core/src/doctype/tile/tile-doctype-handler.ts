@@ -3,12 +3,12 @@ import CID from 'cids'
 import { verifyJWT } from 'did-jwt'
 
 import jsonpatch from 'fast-json-patch'
+
+import { TileDoctype, TileParams } from "./tile-doctype"
 import {
     AnchorProof, AnchorRecord, AnchorStatus, DocState, DoctypeConstructor, DoctypeHandler, InitOpts, SignatureStatus
-} from "../../doctype"
-
-import { Context } from "../../context"
-import { TileDoctype, TileParams } from "./tile-doctype"
+} from "ceramic-common/lib/doctype"
+import { Context } from "ceramic-common/lib/context"
 
 const DOCTYPE = 'tile'
 

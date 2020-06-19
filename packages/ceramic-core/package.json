@@ -30,6 +30,7 @@
   "dependencies": {
     "3id-blockchain-utils": "^0.3.3",
     "@ceramicnetwork/3id-did-resolver": "^0.1.1",
+    "ceramic-common": "file:../ceramic-common",
     "@ethersproject/base64": "^5.0.0-beta.134",
     "@ethersproject/providers": "^5.0.0-beta.144",
     "@ethersproject/random": "^5.0.0-beta.136",

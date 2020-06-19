@@ -1,23 +1,21 @@
 import Ipfs from 'ipfs'
 import Dispatcher from './dispatcher'
-import User from './user'
+import CeramicUser from './ceramic-user'
 import Document from './document'
 import { AnchorServiceFactory } from "./anchor/anchor-service-factory";
 
 import StateStore from "./store/state-store"
 import LevelStateStore from "./store/level-state-store"
 
-import { CeramicApi, DIDProvider, PinApi } from "./ceramic-api"
-import { Doctype, DoctypeHandler, InitOpts } from "./doctype"
-// doctype handlers
-import { Context } from "./context"
-import { Resolver } from 'did-resolver'
-
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 
 import ThreeIdDoctypeHandler from "./doctype/three-id/three-id-doctype-handler"
 import TileDoctypeHandler from "./doctype/tile/tile-doctype-handler"
 import AccountLinkDoctypeHandler from "./doctype/account-link/account-link-doctype-handler"
+import { CeramicApi, DIDProvider, PinApi } from "ceramic-common/lib/ceramic-api"
+import { Doctype, DoctypeHandler, InitOpts } from "ceramic-common/lib/doctype"
+import { Context } from "ceramic-common/lib/context"
+import { Resolver } from "did-resolver"
 
 // This is temporary until we handle DIDs and in particular 3IDs better
 const gen3IDgenesis = (pubkeys: any): any => {
@@ -140,7 +138,7 @@ class Ceramic implements CeramicApi {
    */
   async setDIDProvider (provider: DIDProvider): Promise<void> {
     this.context.provider = provider;
-    this.context.user = new User(provider)
+    this.context.user = new CeramicUser(provider)
 
     await this.context.user.auth() // authenticate
 

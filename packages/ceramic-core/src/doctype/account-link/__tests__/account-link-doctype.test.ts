@@ -9,7 +9,7 @@ jest.mock('3id-blockchain-utils', () => ({
 
 import { validateLink } from '3id-blockchain-utils'
 import { AccountLinkDoctype } from "../account-link-doctype"
-import { Context } from "../../../context"
+import { Context } from "ceramic-common/lib/context"
 
 const { sha256 } = require('js-sha256') // eslint-disable-line @typescript-eslint/no-var-requires
 const hash = (data: string): CID => new CID(1, 'sha2-256', Buffer.from('1220' + sha256(data), 'hex'))

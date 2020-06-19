@@ -23,6 +23,7 @@
  "references": [
    { "path": "./packages/ceramic-core" },
    { "path": "./packages/3id-did-resolver" },
-   { "path": "./packages/ceramic-http-client" }
+   { "path": "./packages/ceramic-http-client" },
+   { "path": "./packages/ceramic-common" }
  ]
 }

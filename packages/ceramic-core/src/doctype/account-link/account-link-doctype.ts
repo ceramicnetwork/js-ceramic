@@ -1,5 +1,5 @@
-import { Context } from "../../context"
-import { Doctype, DoctypeConstructor, DoctypeStatic, InitOpts } from "../../doctype"
+import { Doctype, DoctypeConstructor, DoctypeStatic, InitOpts } from "ceramic-common/lib/doctype"
+import { Context } from "ceramic-common/lib/context"
 
 const DOCTYPE = 'account-link'
 

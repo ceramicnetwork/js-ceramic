@@ -1,7 +1,7 @@
 import CID from 'cids'
-import { Context } from "./context"
 import cloneDeep from 'lodash.clonedeep'
 import { EventEmitter } from "events"
+import { Context } from "./context"
 
 /**
  * Describes signature status

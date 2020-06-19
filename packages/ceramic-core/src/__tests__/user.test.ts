@@ -1,7 +1,7 @@
-import User from '../user'
+import CeramicUser from '../ceramic-user'
 import IdentityWallet from 'identity-wallet'
 import VerifierAlrgorithm from 'did-jwt/src/VerifierAlgorithm.ts'
-import { DIDProvider } from "../ceramic-api"
+import { DIDProvider } from "../../../ceramic-common/lib/ceramic-api"
 
 describe('User', () => {
 
@@ -14,13 +14,13 @@ describe('User', () => {
   })
 
   it('authenticates correctly', async () => {
-    const user = new User(provider)
+    const user = new CeramicUser(provider)
     await user.auth()
     expect(user.publicKeys).toMatchSnapshot()
   })
 
   it('signs data correctly', async () => {
-    const user = new User(provider)
+    const user = new CeramicUser(provider)
     await user.auth()
     user.DID = 'did:3:bafy87y34087y3'
     const jwt = await user.sign({ asdf: 234 })
@@ -31,7 +31,7 @@ describe('User', () => {
   })
 
   it('signs data correctly with managementKey', async () => {
-    const user = new User(provider)
+    const user = new CeramicUser(provider)
     await user.auth()
     user.DID = 'did:3:bafy87y34087y3'
     const jwt = await user.sign({ asdf: 234 }, { useMgmt: true })

@@ -1,4 +1,5 @@
-import { DIDProvider } from "./ceramic-api"
+import { DIDProvider } from "ceramic-common/lib/ceramic-api"
+import User from "ceramic-common/lib/user"
 
 const cborSortCompareFn = (a: string, b: string): number => a.length - b.length || a.localeCompare(b)
 
@@ -12,7 +13,7 @@ function sortPropertiesDeep(obj: any, compareFn: (a: any, b: any) => number = cb
   }, {})
 }
 
-export default class User {
+export default class CeramicUser implements User {
   private _did: string;
   private _pubkeys: any;
 

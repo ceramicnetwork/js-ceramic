@@ -5,9 +5,9 @@ import { decode } from "typestub-multihashes";
 import * as providers from "@ethersproject/providers"
 import { CeramicConfig } from "../../ceramic";
 
-import AnchorService from "../anchor-service";
 import AnchorServiceResponse from "../anchor-service-response";
-import { AnchorProof } from "../../doctype"
+import AnchorService from "ceramic-common/lib/anchor-service"
+import { AnchorProof } from "ceramic-common/lib/doctype"
 
 /**
  * CID-docId pair
