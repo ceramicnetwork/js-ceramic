@@ -26,7 +26,12 @@ const RECORDS = {
     desiredContent: { much: 'data', very: 'content' },
     record: { content: [ { op: 'add', path: '/very', value: 'content' } ], owners: ["did:3:bafyasdfasdf"], id: FAKE_CID_1, prev: FAKE_CID_1, iss: 'did:3:bafyuser', header: 'aaaa', signature: 'cccc' }
   },
-  r2: { record: { proof: FAKE_CID_4}, proof: { blockNumber: 123456 } }
+  r2: { record: { proof: FAKE_CID_4 } },
+  proof: {
+    value: {
+      blockNumber: 123456
+    }
+  }
 }
 
 const wrapWithFakeSignature = (obj: any): any => {
@@ -147,7 +152,7 @@ describe('ThreeIdHandler', () => {
     await context.ipfs.dag.put(RECORDS.genesisGenerated, FAKE_CID_1)
     await context.ipfs.dag.put(RECORDS.r1.record, FAKE_CID_2)
     await context.ipfs.dag.put(RECORDS.r2.record, FAKE_CID_3)
-    await context.ipfs.dag.put(RECORDS.r2.record.proof, FAKE_CID_4)
+    await context.ipfs.dag.put(RECORDS.proof, FAKE_CID_4)
 
     let state = await tileDoctypeHandler.applyRecord(RECORDS.genesis, FAKE_CID_1, context)
     state = await tileDoctypeHandler.applyRecord(RECORDS.r1.record, FAKE_CID_2, context, state)

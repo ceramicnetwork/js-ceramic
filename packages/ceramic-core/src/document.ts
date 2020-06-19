@@ -128,6 +128,7 @@ class Document extends EventEmitter {
     if (typeof opts.onlyGenesis === 'undefined') {
       opts.onlyGenesis = false
     }
+
     await doc._register(opts)
     return doc
   }
@@ -250,11 +251,8 @@ class Document extends EventEmitter {
       } else if (record.proof) {
         // it's an anchor record
 
-        const proofCid = record.proof
-        // TODO don't set the proof here (the issue is that the proof cannot be fetched from context.ipfs)
-        record.proof = await this._verifyAnchorRecord(record)
+        await this._verifyAnchorRecord(record)
         state = await this._doctypeHandler.applyRecord(record, cid, this._context, state)
-        record.proof = proofCid
       } else {
         state = await this._doctypeHandler.applyRecord(record, cid, this._context, state)
       }

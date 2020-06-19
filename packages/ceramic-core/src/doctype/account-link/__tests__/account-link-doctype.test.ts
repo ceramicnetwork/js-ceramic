@@ -41,7 +41,12 @@ const RECORDS = {
       prev: FAKE_CID_1
     }
   },
-  r2: { record: { proof : FAKE_CID_4 }, proof: { blockNumber: 123456 } }
+  r2: { record: { proof: FAKE_CID_4 } },
+  proof: {
+    value: {
+      blockNumber: 123456
+    }
+  }
 }
 
 describe('AccountLinkHandler', () => {
@@ -149,6 +154,11 @@ describe('AccountLinkHandler', () => {
   })
 
   it('applies anchor record correctly', async () => {
+    await context.ipfs.dag.put(RECORDS.genesisGenerated, FAKE_CID_1)
+    await context.ipfs.dag.put(RECORDS.r1.record, FAKE_CID_2)
+    await context.ipfs.dag.put(RECORDS.r2.record, FAKE_CID_3)
+    await context.ipfs.dag.put(RECORDS.proof, FAKE_CID_4)
+
     let state = await handler.applyRecord(RECORDS.genesis, FAKE_CID_1, context)
     state = await handler.applyRecord(RECORDS.r1.record, FAKE_CID_2, context, state)
     state = await handler.applyRecord(RECORDS.r2.record, FAKE_CID_3, context, state)

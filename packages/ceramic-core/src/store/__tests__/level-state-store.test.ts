@@ -25,7 +25,9 @@ const ipfs = {
         return cid
       },
       get(cid: any): any {
-        return recs[cid.toString()]
+        return {
+          value: recs[cid.toString()]
+        }
       }
     },
     pin: {

@@ -51,7 +51,8 @@ export default class AccountLinkDoctypeHandler implements DoctypeHandler<Account
         }
 
         if (record.proof) {
-            return this._applyAnchor(record, record.proof, cid, state);
+            const proofRecord = (await context.ipfs.dag.get(record.proof)).value;
+            return this._applyAnchor(record, proofRecord, cid, state);
         }
 
         return this._applySigned(record, cid, state);
