@@ -27,7 +27,7 @@ export default class ThreeIdDoctypeHandler implements DoctypeHandler<ThreeIdDoct
     /**
      * Gets doctype class
      */
-    doctypeClass(): DoctypeConstructor {
+    get doctype(): DoctypeConstructor {
         return ThreeIdDoctype
     }
 

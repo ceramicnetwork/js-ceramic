@@ -26,7 +26,7 @@ export default class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
     /**
      * Gets doctype class
      */
-    doctypeClass(): DoctypeConstructor {
+    get doctype(): DoctypeConstructor {
         return TileDoctype
     }
 

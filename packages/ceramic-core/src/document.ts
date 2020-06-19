@@ -43,8 +43,7 @@ class Document extends EventEmitter {
       context: Context,
       opts: InitOpts = {}
   ): Promise<Document> {
-    const doctypeClass: DoctypeConstructor = doctypeHandler.doctypeClass()
-    const genesis = await doctypeClass.makeGenesis(params, context, opts)
+    const genesis = await doctypeHandler.doctype.makeGenesis(params, context, opts)
 
     const genesisCid = await dispatcher.storeRecord(genesis)
     const id = DoctypeUtils.createDocId(genesisCid)
@@ -54,7 +53,7 @@ class Document extends EventEmitter {
     doc._context = context
     doc._doctypeHandler = doctypeHandler
 
-    doc._doctype = new doctypeClass(null)
+    doc._doctype = new doctypeHandler.doctype(null)
     doc._doctype.state = await doc._doctypeHandler.applyRecord(genesis, doc._genesisCid, context)
 
     await doc._updateStateIfPinned()
@@ -85,8 +84,7 @@ class Document extends EventEmitter {
     const record = await dispatcher.retrieveRecord(doc._genesisCid)
     doc._doctypeHandler = findHandler(record)
 
-    const doctypeClass: DoctypeConstructor = doc._doctypeHandler.doctypeClass()
-    doc._doctype = new doctypeClass(null)
+    doc._doctype = new doc._doctypeHandler.doctype(null)
 
     if (doc._doctype.state == null) {
       // apply genesis record if there's no state preserved
@@ -119,8 +117,7 @@ class Document extends EventEmitter {
     doc._context = context
     doc._doctypeHandler = findHandler(genesis)
 
-    const doctypeClass: DoctypeConstructor = doc._doctypeHandler.doctypeClass()
-    doc._doctype = new doctypeClass(null)
+    doc._doctype = new doc._doctypeHandler.doctype(null)
     doc._doctype.state = await doc._doctypeHandler.applyRecord(genesis, doc._genesisCid, context)
 
     await doc._updateStateIfPinned()

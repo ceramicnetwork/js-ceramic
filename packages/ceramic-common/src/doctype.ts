@@ -160,7 +160,7 @@ export interface DoctypeHandler<T extends Doctype> {
     /**
      * The doctype class
      */
-    doctypeClass(): DoctypeConstructor;
+    doctype: DoctypeConstructor;
 
     /**
      * Applies record to the document (genesis|signed|anchored)
