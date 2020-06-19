@@ -55,8 +55,8 @@ describe('Ceramic integration', () => {
       didProvider: idWallet.get3idProvider(),
     })
     const ceramic2 = await Ceramic.create(ipfs2)
-    const doctype1 = await ceramic1.create(DOCTYPE_TILE, { content: { test: 123 } }, { onlyGenesis: true })
-    const doctype2 = await ceramic2.load(doctype1.id)
+    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { test: 123 } }, { onlyGenesis: true })
+    const doctype2 = await ceramic2.loadDocument(doctype1.id)
     expect(doctype1.content).toEqual(doctype2.content)
     expect(doctype1.state).toEqual(doctype2.state)
     await ceramic1.close()
@@ -70,10 +70,10 @@ describe('Ceramic integration', () => {
     await ceramic1.setDIDProvider(idWallet.get3idProvider())
     const owner = ceramic1.context.user.publicKeys.managementKey
     const ceramic2 = await Ceramic.create(ipfs2)
-    const doctype1 = await ceramic1.create(DOCTYPE_3ID, { content: { test: 456 }, owners: [owner] })
+    const doctype1 = await ceramic1.createDocument(DOCTYPE_3ID, { content: { test: 456 }, owners: [owner] })
     // we can't load document from id since nodes are not connected
     // so we won't find the genesis object from it's CID
-    const doctype2 = await ceramic2.create(DOCTYPE_3ID, { content: { test: 456 }, owners: [owner] },{ onlyGenesis: true })
+    const doctype2 = await ceramic2.createDocument(DOCTYPE_3ID, { content: { test: 456 }, owners: [owner] },{ onlyGenesis: true })
     expect(doctype1.content).toEqual(doctype2.content)
     expect(doctype2.state).toEqual(expect.objectContaining({ anchorStatus: 0, content: { test: 456 } }))
     await ceramic1.close()
@@ -92,8 +92,8 @@ describe('Ceramic integration', () => {
     const ceramic2 = await Ceramic.create(ipfs2)
     const ceramic3 = await Ceramic.create(ipfs3)
     // ceramic node 2 shouldn't need to have the document open in order to forward the message
-    const doctype1 = await ceramic1.create(DOCTYPE_3ID, { content: { test: 789 }, owners: [owner] }, { onlyGenesis: true })
-    const doctype3 = await ceramic3.create(DOCTYPE_3ID, { content: { test: 789 }, owners: [owner] }, { onlyGenesis: true })
+    const doctype1 = await ceramic1.createDocument(DOCTYPE_3ID, { content: { test: 789 }, owners: [owner] }, { onlyGenesis: true })
+    const doctype3 = await ceramic3.createDocument(DOCTYPE_3ID, { content: { test: 789 }, owners: [owner] }, { onlyGenesis: true })
     expect(doctype3.content).toEqual(doctype1.content)
     expect(doctype3.state).toEqual(doctype1.state)
     await ceramic1.close()
@@ -113,8 +113,8 @@ describe('Ceramic integration', () => {
     const ceramic2 = await Ceramic.create(ipfs2)
     const ceramic3 = await Ceramic.create(ipfs3)
     // ceramic node 2 shouldn't need to have the document open in order to forward the message
-    const doctype1 = await ceramic1.create<ThreeIdDoctype>(DOCTYPE_3ID, { content: { test: 321 }, owners: [owner] })
-    const doctype3 = await ceramic3.create<ThreeIdDoctype>(DOCTYPE_3ID, { content: { test: 321 }, owners: [owner] }, { onlyGenesis: true })
+    const doctype1 = await ceramic1.createDocument<ThreeIdDoctype>(DOCTYPE_3ID, { content: { test: 321 }, owners: [owner] })
+    const doctype3 = await ceramic3.createDocument<ThreeIdDoctype>(DOCTYPE_3ID, { content: { test: 321 }, owners: [owner] }, { onlyGenesis: true })
 
     expect(doctype3.content).toEqual(doctype1.content)
     expect(doctype3.state).toEqual(doctype1.state)

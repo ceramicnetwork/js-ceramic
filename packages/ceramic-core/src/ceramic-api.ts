@@ -57,21 +57,21 @@ export interface CeramicApi {
      * @param params - Create parameters
      * @param opts - Initialization options
      */
-    create<T extends Doctype>(doctype: string, params: object, opts?: InitOpts): Promise<T>;
+    createDocument<T extends Doctype>(doctype: string, params: object, opts?: InitOpts): Promise<T>;
 
     /**
      * Create Doctype from genesis record
      * @param genesis - Genesis record
      * @param opts - Initialization options
      */
-    createFromGenesis<T extends Doctype>(genesis: any, opts?: InitOpts): Promise<T>;
+    createDocumentFromGenesis<T extends Doctype>(genesis: any, opts?: InitOpts): Promise<T>;
 
     /**
      * Loads Doctype instance
      * @param docId - Document ID
      * @param opts - Initialization options
      */
-    load<T extends Doctype>(docId: string, opts?: InitOpts): Promise<T>;
+    loadDocument<T extends Doctype>(docId: string, opts?: InitOpts): Promise<T>;
 
     /**
      * Applies record on the existing document

@@ -43,7 +43,7 @@ export class ThreeIdDoctype extends Doctype {
         }
 
         const record = await ThreeIdDoctype.makeGenesis({ content, owners })
-        return context.api.createFromGenesis<ThreeIdDoctype>(record, opts)
+        return context.api.createDocumentFromGenesis<ThreeIdDoctype>(record, opts)
     }
 
     /**

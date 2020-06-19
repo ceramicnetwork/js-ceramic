@@ -179,7 +179,7 @@ class Ceramic implements CeramicApi {
    * @param params - Create parameters
    * @param opts - Initialization options
    */
-  async create<T extends Doctype>(doctype: string, params: object, opts?: InitOpts): Promise<T> {
+  async createDocument<T extends Doctype>(doctype: string, params: object, opts?: InitOpts): Promise<T> {
     const doc = await this._createDoc(doctype, params, opts)
     return doc.doctype as T
   }
@@ -204,7 +204,7 @@ class Ceramic implements CeramicApi {
    * @param genesis - Genesis CID
    * @param opts - Initialization options
    */
-  async createFromGenesis<T extends Doctype>(genesis: any, opts: InitOpts = {}): Promise<T> {
+  async createDocumentFromGenesis<T extends Doctype>(genesis: any, opts: InitOpts = {}): Promise<T> {
     const doc = await this._createDocFromGenesis(genesis, opts)
     return doc.doctype as T
   }
@@ -228,7 +228,7 @@ class Ceramic implements CeramicApi {
    * @param docId - Document ID
    * @param opts - Initialization options
    */
-  async load<T extends Doctype>(docId: string, opts: InitOpts = {}): Promise<T> {
+  async loadDocument<T extends Doctype>(docId: string, opts: InitOpts = {}): Promise<T> {
     const doc = await this._loadDoc(docId, opts)
     return doc.doctype as T
   }

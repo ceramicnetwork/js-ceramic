@@ -27,7 +27,7 @@ export class AccountLinkDoctype extends Doctype {
         const { content, owners } = params
 
         const record = await AccountLinkDoctype.makeGenesis({ content, owners })
-        return context.api.createFromGenesis(record, opts)
+        return context.api.createDocumentFromGenesis(record, opts)
     }
 
     /**

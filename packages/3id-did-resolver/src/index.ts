@@ -10,7 +10,7 @@ interface InitOpts {
 }
 
 interface Ceramic {
-  load(docId: string): Promise<Doctype>;
+  loadDocument(docId: string): Promise<Doctype>;
 }
 
 interface ResolverRegistry {
@@ -45,7 +45,7 @@ export function wrapDocument (content: any, did: string): DIDDocument {
 export default {
   getResolver: (ceramic: Ceramic): ResolverRegistry => ({
     '3': async (did: string, parsed: ParsedDID): Promise<DIDDocument | null> => {
-      const doctype = await ceramic.load(`/ceramic/${parsed.id}`)
+      const doctype = await ceramic.loadDocument(`/ceramic/${parsed.id}`)
       return wrapDocument(doctype.content, did)
     }
   })
