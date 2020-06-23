@@ -12,9 +12,9 @@ import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import ThreeIdDoctypeHandler from "./doctype/three-id/three-id-doctype-handler"
 import TileDoctypeHandler from "./doctype/tile/tile-doctype-handler"
 import AccountLinkDoctypeHandler from "./doctype/account-link/account-link-doctype-handler"
-import { CeramicApi, DIDProvider, PinApi } from "ceramic-common/lib/ceramic-api"
-import { Doctype, DoctypeHandler, InitOpts } from "ceramic-common/lib/doctype"
-import { Context } from "ceramic-common/lib/context"
+import { CeramicApi, DIDProvider, PinApi } from "@ceramicnetwork/ceramic-common/lib/ceramic-api"
+import { Doctype, DoctypeHandler, InitOpts } from "@ceramicnetwork/ceramic-common/lib/doctype"
+import { Context } from "@ceramicnetwork/ceramic-common/lib/context"
 import { Resolver } from "did-resolver"
 
 // This is temporary until we handle DIDs and in particular 3IDs better

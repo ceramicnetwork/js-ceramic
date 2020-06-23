@@ -30,7 +30,7 @@
   "dependencies": {
     "3id-blockchain-utils": "^0.3.3",
     "@ceramicnetwork/3id-did-resolver": "^0.1.1",
-    "ceramic-common": "file:../ceramic-common",
+    "@ceramicnetwork/ceramic-common": "^1.0.0",
     "@ethersproject/base64": "^5.0.0-beta.134",
     "@ethersproject/providers": "^5.0.0-beta.144",
     "@ethersproject/random": "^5.0.0-beta.136",
@@ -39,10 +39,10 @@
     "did-jwt": "^4.0.0",
     "did-resolver": "^1.1.0",
     "fast-json-patch": "^3.0.0-1",
+    "level-ts": "^1.12.2",
     "lodash.clonedeep": "^4.5.0",
     "p-queue": "^6.2.1",
-    "typestub-multihashes": "^0.0.1",
-    "level-ts": "^1.12.2"
+    "typestub-multihashes": "^0.0.1"
   },
   "devDependencies": {
     "@babel/core": "^7.9.0",

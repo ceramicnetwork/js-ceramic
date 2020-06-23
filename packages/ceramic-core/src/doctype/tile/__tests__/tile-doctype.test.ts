@@ -4,7 +4,7 @@ import CID from 'cids'
 jest.mock('../../../ceramic-user')
 import CeramicUser from '../../../ceramic-user'
 import { TileDoctype } from "../tile-doctype"
-import { Context } from "ceramic-common/lib/context"
+import { Context } from "@ceramicnetwork/ceramic-common/lib/context"
 jest.mock('did-jwt', () => ({
   // TODO - We should test for when this function throws as well
   verifyJWT: (): any => 'verified'

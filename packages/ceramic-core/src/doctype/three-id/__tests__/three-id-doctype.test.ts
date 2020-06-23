@@ -4,7 +4,7 @@ jest.mock('../../../ceramic-user')
 import CeramicUser from '../../../ceramic-user'
 import ThreeIdDoctypeHandler from "../three-id-doctype-handler"
 import { ThreeIdDoctype } from "../three-id-doctype"
-import { Context } from "ceramic-common/lib/context"
+import { Context } from "@ceramicnetwork/ceramic-common/lib/context"
 jest.mock('did-jwt', () => ({
   // TODO - We should test for when this function throws as well
   verifyJWT: (): any => 'verified'

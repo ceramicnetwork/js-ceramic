@@ -73,9 +73,9 @@ jest.mock('did-jwt', () => ({
 
 import { ThreeIdDoctype, ThreeIdParams } from "../doctype/three-id/three-id-doctype"
 import Ceramic from "../ceramic"
-import { Context } from "../../../ceramic-common/lib/context"
-import { AnchorStatus, DoctypeHandler, InitOpts, SignatureStatus } from "../../../ceramic-common/lib/doctype"
-import AnchorService from "../../../ceramic-common/lib/anchor-service"
+import { Context } from "@ceramicnetwork/ceramic-common/lib/context"
+import { AnchorStatus, InitOpts, SignatureStatus } from "@ceramicnetwork/ceramic-common/lib/doctype"
+import AnchorService from "@ceramicnetwork/ceramic-common/lib/anchor-service"
 
 const anchorUpdate = (doc: Document): Promise<void> => new Promise(resolve => doc._doctype.on('change', resolve))
 

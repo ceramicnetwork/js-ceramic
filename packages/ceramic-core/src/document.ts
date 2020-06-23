@@ -7,8 +7,8 @@ import AnchorServiceResponse from "./anchor/anchor-service-response"
 import StateStore from "./store/state-store"
 import {
   AnchorProof, AnchorRecord, AnchorStatus, DocState, Doctype, DoctypeConstructor, DoctypeHandler, DoctypeUtils, InitOpts
-} from "ceramic-common/lib/doctype"
-import { Context } from "ceramic-common/lib/context"
+} from "@ceramicnetwork/ceramic-common/lib/doctype"
+import { Context } from "@ceramicnetwork/ceramic-common/lib/context"
 
 class Document extends EventEmitter {
   private _applyQueue: PQueue
