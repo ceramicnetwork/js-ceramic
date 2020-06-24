@@ -1,4 +1,4 @@
-import AccountLinkDoctypeHandler from '../../account-link/account-link-doctype-handler'
+import AccountLinkDoctypeHandler from '../account-link-doctype-handler'
 
 import cloneDeep from 'lodash.clonedeep'
 import CID from 'cids'

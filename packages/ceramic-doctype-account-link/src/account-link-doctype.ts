@@ -8,7 +8,7 @@ const DOCTYPE = 'account-link'
  */
 export class AccountLinkParams {
     content: object;
-    owners: Array<string>;
+    owners?: Array<string>;
 }
 
 /**

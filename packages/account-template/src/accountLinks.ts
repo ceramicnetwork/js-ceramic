@@ -1,12 +1,12 @@
-import type { CeramicApi, CeramicDocument } from './types'
-
 import { createLink } from '3id-blockchain-utils'
 import { AccountID } from 'caip'
+import { CeramicApi } from "@ceramicnetwork/ceramic-common/lib/ceramic-api"
+import { AccountLinkDoctype } from "@ceramicnetwork/ceramic-doctype-account-link/lib/account-link-doctype"
 
 class AccountLinks {
-  private _accountLinkDocuments: Record<string, CeramicDocument>;
+  private _accountLinkDocuments: Record<string, AccountLinkDoctype>;
 
-  constructor (public ceramicDoc: CeramicDocument, private _ceramic: CeramicApi) {
+  constructor (public ceramicDoc: AccountLinkDoctype, private _ceramic: CeramicApi) {
     this._accountLinkDocuments = {}
     this.ceramicDoc.on('change', this._loadAccountLinkDocs.bind(this))
   }
@@ -34,15 +34,17 @@ class AccountLinks {
     if (this._accountLinkDocuments[account.toString()]) {
       throw new Error(`Address ${account} already linked`)
     }
-    const accountLinkDoc = await this._ceramic.createDocument(null, 'account-link', {
-      owners: [account.toString()],
+    const accountLinkDoc = await this._ceramic.createDocument<AccountLinkDoctype>('account-link', {
+      content: null,
+      owners: [account.toString()]
+    }, {
       onlyGenesis: true
     })
-    if (accountLinkDoc.content !== this.ceramicDoc.state.owners[0]) {
-      await accountLinkDoc.change(proof)
+    if (accountLinkDoc.content.toString() !== this.ceramicDoc.state.owners[0]) {
+      await AccountLinkDoctype.change(accountLinkDoc, { content: proof }, { api: this._ceramic })
     }
-    
-    await this.ceramicDoc.change([...this.ceramicDoc.content, accountLinkDoc.id])
+
+    await AccountLinkDoctype.change(this.ceramicDoc, { content: [...this.ceramicDoc.content, accountLinkDoc.id]}, { api: this._ceramic })
 
     // need this here because the accountLinks tile 'change' event isn't triggered immediately
     this._accountLinkDocuments[account.toString()] = accountLinkDoc
@@ -56,15 +58,15 @@ class AccountLinks {
       throw new Error(`Address ${account} not linked`)
     }
     const newContent = this.ceramicDoc.content.filter((docId: string) => docId !== this._accountLinkDocuments[account.toString()].id)
-    await this.ceramicDoc.change(newContent)
-    
+    await AccountLinkDoctype.change(this.ceramicDoc, { content: newContent }, { api: this._ceramic })
+
     // need this here because the accountLinks tile 'change' event isn't triggered immediately
     delete this._accountLinkDocuments[account.toString()]
   }
 
   async _loadAccountLinkDocs(): Promise<void> {
-    const docs: Array<CeramicDocument> = await Promise.all(this.ceramicDoc.content.map((docId: string) => this._ceramic.loadDocument(docId)))
-    this._accountLinkDocuments = docs.reduce<Record<string, CeramicDocument>>((acc, doc) => {
+    const docs: Array<AccountLinkDoctype> = await Promise.all(this.ceramicDoc.content.map((docId: string) => this._ceramic.loadDocument(docId)))
+    this._accountLinkDocuments = docs.reduce<Record<string, AccountLinkDoctype>>((acc, doc) => {
       acc[doc.state.owners[0]] = doc
       return acc
     }, {})

@@ -1,8 +1,19 @@
 import TileDoctypeHandler from '../tile-doctype-handler'
 import CID from 'cids'
 
-jest.mock('../../../ceramic-user')
-import CeramicUser from '../../../ceramic-user'
+import User from "@ceramicnetwork/ceramic-common/lib/user"
+
+class MockUser implements User {
+  DID: string;
+  publicKeys: any;
+  async auth(): Promise<void> {
+    return null
+  }
+  async sign(): Promise<string> {
+    return null
+  }
+}
+
 import { TileDoctype } from "../tile-doctype"
 import { Context } from "@ceramicnetwork/ceramic-common/lib/context"
 jest.mock('did-jwt', () => ({
@@ -42,12 +53,12 @@ const wrapWithFakeSignature = (obj: any): any => {
 }
 
 describe('ThreeIdHandler', () => {
-  let user: CeramicUser;
+  let user: MockUser;
   let tileDoctypeHandler: TileDoctypeHandler;
   let context: Context;
 
   beforeAll(() => {
-    user = new CeramicUser(null)
+    user = new MockUser()
     user.sign = jest.fn(async () => {
       // fake jwt
       return 'aaaa.bbbb.cccc'

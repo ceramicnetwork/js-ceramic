@@ -2,48 +2,7 @@ import CID from 'cids'
 import { EventEmitter } from 'events'
 import cloneDeep from 'lodash.clonedeep'
 import { fetchJson } from './utils'
-
-export enum SignatureStatus {
-  UNSIGNED,
-  PARTIAL,
-  SIGNED
-}
-
-export enum AnchorStatus {
-  NOT_REQUESTED,
-  PENDING,
-  PROCESSING,
-  ANCHORED,
-  FAILED
-}
-
-export interface AnchorProof {
-  chainId: string;
-  blockNumber: number;
-  blockTimestamp: number;
-  txHash: CID;
-  root: CID;
-}
-
-export interface DocState {
-  doctype: string;
-  owners: Array<string>;
-  nextOwners?: Array<string>;
-  content: any;
-  nextContent?: any;
-  signature: SignatureStatus;
-  anchorStatus: AnchorStatus;
-  anchorScheduledFor?: number;
-  anchorProof?: AnchorProof;
-  log: Array<CID>;
-}
-
-export interface InitOpts {
-  onlyGenesis?: boolean;
-  skipWait?: boolean;
-  owners?: Array<string>;
-  isUnique?: boolean;
-}
+import { AnchorStatus, DocState, Doctype, InitOpts } from "@ceramicnetwork/ceramic-common/lib/doctype"
 
 function deserializeState (state: any): DocState {
   state.log = state.log.map((cidStr: string): CID => new CID(cidStr))
@@ -69,26 +28,26 @@ function deserializeState (state: any): DocState {
 
 class Document extends EventEmitter {
 
+  public doctype: Doctype
+
   constructor (public id: string, private _state: any, private _apiUrl: string) {
     super()
   }
 
-  static async create (genesis: any, doctype: string, apiUrl: string, opts: InitOpts = {}): Promise<Document> {
+  static async create (apiUrl: string, doctype: string, params: object, opts?: InitOpts): Promise<Document> {
     const { docId, state } = await fetchJson(apiUrl + '/create', {
-      genesis,
+      params,
       doctype,
       onlyGenesis: opts.onlyGenesis,
       owners: opts.owners,
       isUnique: opts.isUnique
     })
-    const doc = new Document(docId, deserializeState(state), apiUrl)
-    return doc
+    return new Document(docId, deserializeState(state), apiUrl)
   }
 
   static async load (id: string, apiUrl: string): Promise<Document> {
     const { docId, state } = await fetchJson(apiUrl + '/state' + id)
-    const doc = new Document(docId, deserializeState(state), apiUrl)
-    return doc
+    return new Document(docId, deserializeState(state), apiUrl)
   }
 
   get content (): any {
@@ -105,7 +64,12 @@ class Document extends EventEmitter {
   }
 
   async change (newContent: any, newOwners?: Array<string>): Promise<boolean> {
-    const { state } = await fetchJson(this._apiUrl + '/change' + this.id, { content: newContent, owners: newOwners })
+    const { state } = await fetchJson(this._apiUrl + '/change' + this.id, {
+      params: {
+        content: newContent,
+        owners: newOwners
+      }
+    })
     this._state = deserializeState(state)
     return true
   }

@@ -44,7 +44,7 @@ program
     if (typeof owners === 'string') owners = owners.split(',')
     const ceramic = new CeramicClient()
     try {
-      const doc = await ceramic.createDocument(content, doctype, { onlyGenesis, owners, isUnique: unique })
+      const doc = await ceramic.createDocument(doctype, { content, owners }, { onlyGenesis, isUnique: unique })
       console.log(doc.id)
       console.log(JSON.stringify(doc.content, null, 2))
     } catch (e) {

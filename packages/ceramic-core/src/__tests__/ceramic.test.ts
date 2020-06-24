@@ -2,7 +2,7 @@ import Ceramic from '../ceramic'
 import IdentityWallet from 'identity-wallet'
 import tmp from 'tmp-promise'
 import Ipfs from 'ipfs'
-import { ThreeIdDoctype } from "../doctype/three-id/three-id-doctype"
+import { ThreeIdDoctype } from "@ceramicnetwork/ceramic-doctype-three-id/lib/three-id-doctype"
 
 jest.mock('../store/level-state-store')
 

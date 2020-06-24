@@ -1,23 +1,17 @@
 import { fetchJson } from "./utils"
-import Document, { InitOpts } from './document'
-
-export interface CeramicStateStoreAPI {
-  add(docId: string): Promise<void>;
-
-  rm(docId: string): Promise<void>;
-
-  ls(docId?: string): Promise<AsyncIterable<string>>;
-}
+import Document from './document'
+import { Doctype, DoctypeHandler, InitOpts } from "@ceramicnetwork/ceramic-common/lib/doctype"
+import { CeramicApi, DIDProvider, PinApi } from "@ceramicnetwork/ceramic-common/lib/ceramic-api"
 
 const CERAMIC_HOST = 'http://localhost:7007'
 const API_PATH = '/api/v0'
 
-class CeramicClient {
-  private _apiUrl: string
-  private _docmap: Record<string, Document>
-  private _iid: any
+class CeramicClient implements CeramicApi {
+  private readonly _apiUrl: string
+  private readonly _docmap: Record<string, Document>
+  private readonly _iid: any
 
-  public pin: CeramicStateStoreAPI
+  public pin: PinApi
 
   constructor (apiHost: string = CERAMIC_HOST) {
     this._apiUrl = apiHost + API_PATH
@@ -33,7 +27,7 @@ class CeramicClient {
     }, 1000)
   }
 
-  _initPinApi(): CeramicStateStoreAPI {
+  _initPinApi(): PinApi {
     return {
       add: async (docId: string): Promise<void> => {
         return await fetchJson(this._apiUrl + '/pin/add' + docId)
@@ -65,21 +59,47 @@ class CeramicClient {
     }
   }
 
-  async createDocument (genesis: any, doctype: string, opts?: InitOpts): Promise<Document> {
-    const doc = await Document.create(genesis, doctype, this._apiUrl, opts)
-    if (!this._docmap[doc.id]) this._docmap[doc.id] = doc
-    return doc
+  async createDocument<T extends Doctype>(doctype: string, params: object, opts?: InitOpts): Promise<T> {
+    const doc = await Document.create(this._apiUrl, doctype, params, opts)
+    if (!this._docmap[doc.id]) {
+      this._docmap[doc.id] = doc
+    }
+    return doc.doctype as T
   }
 
-  async loadDocument (id: string): Promise<Document> {
-    if (!this._docmap[id]) this._docmap[id] = await Document.load(id, this._apiUrl)
-    return this._docmap[id]
+  async loadDocument<T extends Doctype>(id: string, opts?: InitOpts): Promise<T> {
+    if (!this._docmap[id]) {
+      this._docmap[id] = await Document.load(id, this._apiUrl)
+    }
+    return this._docmap[id].doctype as T
   }
 
-  async _updateDocument (id: string, content: any, owners?: Array<string>): Promise<Document> {
-    const doc = new Document(id, {}, this._apiUrl)
-    await doc.change(content, owners)
-    return doc
+  get ipfs(): any {
+    throw new Error('method not implemented')
+  }
+
+  addDoctype<T extends Doctype>(doctypeHandler: DoctypeHandler<T>): void {
+    throw new Error('method not implemented')
+  }
+
+  applyRecord<T extends Doctype>(docId: string, record: object, opts?: InitOpts): Promise<T> {
+    throw new Error('method not implemented')
+  }
+
+  createDocumentFromGenesis<T extends Doctype>(genesis: any, opts?: InitOpts): Promise<T> {
+    throw new Error('method not implemented')
+  }
+
+  addDoctypeHandler<T extends Doctype>(doctypeHandler: DoctypeHandler<T>): void {
+    throw new Error('method not implemented')
+  }
+
+  findDoctypeHandler<T extends Doctype>(doctype: string): DoctypeHandler<T> {
+    throw new Error('method not implemented')
+  }
+
+  setDIDProvider(provider: DIDProvider): Promise<void> {
+    throw new Error('method not implemented')
   }
 
   async close (): Promise<void> {

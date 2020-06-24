@@ -1,17 +1,18 @@
-import type { CeramicApi, CeramicDocument } from './types'
+import { CeramicApi } from "@ceramicnetwork/ceramic-common/lib/ceramic-api"
+import { ThreeIdDoctype } from "@ceramicnetwork/ceramic-doctype-three-id/lib/three-id-doctype"
 
 class DIDDocument {
-  constructor (public ceramicDoc: CeramicDocument, private _ceramic: CeramicApi) { }
+  constructor (public ceramicDoc: ThreeIdDoctype, private _ceramic: CeramicApi) { }
 
   get did (): string {
     return 'did:3:' + this.ceramicDoc.state.log[0]
   }
 
-  async setAccountTile (accountTile: CeramicDocument): Promise<void> {
+  async setAccountTile (accountTile: ThreeIdDoctype): Promise<void> {
     if (this.ceramicDoc.content.account) {
       throw new Error(`Account tile already linked: ${this.ceramicDoc.content.account}`)
     }
-    await this.ceramicDoc.change({...this.ceramicDoc.content, account: accountTile.id})
+    await ThreeIdDoctype.change(this.ceramicDoc, {...this.ceramicDoc.content, account: accountTile.id})
   }
 
   static async load (did: string, ceramic: CeramicApi): Promise<DIDDocument> {
@@ -25,12 +26,13 @@ class DIDDocument {
   }
 
   static async build (keys: {managementKey: string; signingKey: string; encryptionKey: string }, ceramic: CeramicApi): Promise<DIDDocument> {
-    const ceramicDoc = await ceramic.createDocument({
+    const ceramicDoc = await ceramic.createDocument<ThreeIdDoctype>('3id', {
       publicKeys: {
         signing: keys.signingKey,
         encryption: keys.encryptionKey
-      }
-    }, '3id', { owners: [keys.managementKey] })
+      },
+      owners: [keys.managementKey]
+    })
     return new DIDDocument(ceramicDoc, ceramic)
   }
 }

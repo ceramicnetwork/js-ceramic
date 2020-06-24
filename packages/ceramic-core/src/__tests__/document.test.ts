@@ -1,6 +1,5 @@
 import Document from '../document'
 import MockAnchorService from "../anchor/mock/mock-anchor-service";
-import ThreeIdDoctypeHandler from '../doctype/three-id/three-id-doctype-handler'
 import LevelStateStore from "../store/level-state-store"
 
 jest.mock('../store/level-state-store')
@@ -71,13 +70,14 @@ jest.mock('did-jwt', () => ({
   verifyJWT: (): any => 'verified'
 }))
 
-import { ThreeIdDoctype, ThreeIdParams } from "../doctype/three-id/three-id-doctype"
 import Ceramic from "../ceramic"
 import { Context } from "@ceramicnetwork/ceramic-common/lib/context"
 import { AnchorStatus, InitOpts, SignatureStatus } from "@ceramicnetwork/ceramic-common/lib/doctype"
 import AnchorService from "@ceramicnetwork/ceramic-common/lib/anchor-service"
+import { ThreeIdDoctype, ThreeIdParams } from "@ceramicnetwork/ceramic-doctype-three-id/lib/three-id-doctype"
+import ThreeIdDoctypeHandler from "@ceramicnetwork/ceramic-doctype-three-id/lib/three-id-doctype-handler"
 
-const anchorUpdate = (doc: Document): Promise<void> => new Promise(resolve => doc._doctype.on('change', resolve))
+const anchorUpdate = (doc: Document): Promise<void> => new Promise(resolve => doc.doctype.on('change', resolve))
 
 const create = async (params: ThreeIdParams, ceramic: Ceramic, context: Context, opts: InitOpts = {}): Promise<Document> => {
   const { content, owners } = params

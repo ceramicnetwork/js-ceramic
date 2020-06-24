@@ -99,7 +99,7 @@ export abstract class Doctype extends EventEmitter {
         return this._state.doctype
     }
 
-    get content(): Record<string, any> {
+    get content(): object {
         return cloneDeep(this.state.content)
     }
 
@@ -146,6 +146,15 @@ export interface DoctypeConstructor {
      * @param opts - Initialization options
      */
     makeGenesis(params: Record<string, any>, context?: Context, opts?: InitOpts): Promise<Record<string, any>>;
+
+    /**
+     * Makes a change on an existing document
+     * @param doctype - Doctype instance
+     * @param params - Change parameteres
+     * @param context - Ceramic context
+     * @param opts - Initialization options
+     */
+    change(doctype: Doctype, params: Record<string, any>, context: Context, opts?: InitOpts): Promise<Doctype>;
 }
 
 /**

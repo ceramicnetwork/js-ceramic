@@ -1,9 +1,21 @@
 import CID from 'cids'
 
-jest.mock('../../../ceramic-user')
-import CeramicUser from '../../../ceramic-user'
+import User from "@ceramicnetwork/ceramic-common/lib/user"
+
+class MockUser implements User {
+  DID: string;
+  publicKeys: any;
+  async auth(): Promise<void> {
+    return null
+  }
+  async sign(): Promise<string> {
+    return null
+  }
+}
+
 import ThreeIdDoctypeHandler from "../three-id-doctype-handler"
 import { ThreeIdDoctype } from "../three-id-doctype"
+
 import { Context } from "@ceramicnetwork/ceramic-common/lib/context"
 jest.mock('did-jwt', () => ({
   // TODO - We should test for when this function throws as well
@@ -34,10 +46,10 @@ const RECORDS = {
 }
 
 describe('ThreeIdHandler', () => {
-  let user: CeramicUser, threeIdDoctypeHandler: ThreeIdDoctypeHandler, context: Context
+  let user: User, threeIdDoctypeHandler: ThreeIdDoctypeHandler, context: Context
 
   beforeAll(() => {
-    user = new CeramicUser(null)
+    user = new MockUser()
     user.sign = jest.fn(async () => {
       // fake jwt
       return 'aaaa.bbbb.cccc'

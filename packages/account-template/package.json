@@ -35,6 +35,10 @@
   "license": "MIT",
   "dependencies": {
     "3id-blockchain-utils": "^0.3.3",
+    "@ceramicnetwork/ceramic-common": "^1.0.0",
+    "@ceramicnetwork/ceramic-doctype-account-link": "^1.0.0",
+    "@ceramicnetwork/ceramic-doctype-three-id": "^1.0.0",
+    "@ceramicnetwork/ceramic-doctype-tile": "^1.0.0",
     "caip": "~0.6.0"
   }
 }

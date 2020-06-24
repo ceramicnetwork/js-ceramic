@@ -25,12 +25,12 @@ interface CreateOpts {
   stateStorePath?: string;
 }
 
-function logErrors (err: Error, req: Request, res: Response, next: NextFunction) {
+function logErrors (err: Error, req: Request, res: Response, next: NextFunction): void {
   console.error(err)
   next(err)
 }
 
-function sendErrorResponse(err: Error, req: Request, res: Response, next: NextFunction) {
+function sendErrorResponse(err: Error, req: Request, res: Response, next: NextFunction): void {
   res.json({ error: err.message })
   next(err)
 }
@@ -60,7 +60,7 @@ class CeramicDaemon {
     const port = opts.port || DEFAULT_PORT
     this.server = app.listen(port, () => {
       console.log('Ceramic API running on port ' + port)
-      console.log('User DID:', ceramic.user.DID)
+      console.log('User DID:', ceramic.context.user.DID)
     })
     this.server.keepAliveTimeout = 60 * 1000
   }
@@ -93,10 +93,10 @@ class CeramicDaemon {
   }
 
   async createDoc (req: Request, res: Response, next: NextFunction): Promise<void> {
-    const { doctype, genesis, onlyGenesis, owners, isUnique } = req.body
-    //if (!doctype || !genesis) {} // TODO - reject somehow
+    const { doctype, params, initOpts } = req.body
+    // TODO - check parameters
     try {
-      const doc = await this.ceramic.createDocument(genesis, doctype, { onlyGenesis, owners, isUnique })
+      const doc = await this.ceramic.createDocument(doctype, params, initOpts)
       res.json({ docId: doc.id, state: serializeState(doc.state) })
     } catch (e) {
       return next(e)
@@ -128,7 +128,8 @@ class CeramicDaemon {
   }
 
   async change (req: Request, res: Response, next: NextFunction): Promise<void> {
-    const { content, owners } = req.body
+    const { params } = req.body
+    const { content, owners } = params
     if (!content && !owners) {
       res.json({ error: 'content or owners required to change document' })
       next()
@@ -136,8 +137,10 @@ class CeramicDaemon {
     }
     const docId = ['/ceramic', req.params.cid].join('/')
     try {
-      const doc = await this.ceramic.loadDocument(docId)
-      await doc.change(content, owners)
+      let doc = await this.ceramic.loadDocument(docId)
+
+      const doctypeHandler = this.ceramic.findDoctypeHandler(doc.doctype)
+      doc = await doctypeHandler.doctype.change(doc, { content, owners }, this.ceramic.context)
       res.json({ docId: doc.id, state: serializeState(doc.state) })
     } catch (e) {
       return next(e)

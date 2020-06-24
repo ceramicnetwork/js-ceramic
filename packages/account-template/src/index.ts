@@ -1,14 +1,13 @@
-import type { CeramicApi, CeramicDocument } from './types'
-
 import DIDDocument from './did'
 import AccountLinks from './accountLinks'
-
+import { CeramicApi } from "@ceramicnetwork/ceramic-common/lib/ceramic-api"
+import { TileDoctype } from "@ceramicnetwork/ceramic-doctype-tile/lib/tile-doctype"
 
 
 // All of these could likely inherit from a AccountSubTile abstract parent class or a builder class
 
 class Keychain {
-  constructor (public ceramicDoc: CeramicDocument, private _ceramic: CeramicApi) { }
+  constructor (public ceramicDoc: TileDoctype, private _ceramic: CeramicApi) { }
 
   static async build(owner: string, ceramic: CeramicApi): Promise<Keychain> {
     const genesisContent: Record<string, string[]> = {
@@ -17,57 +16,57 @@ class Keychain {
       "auth-data": [],
       "legacy-data": []
     }
-    const ceramicDoc = await ceramic.createDocument(genesisContent, 'tile', { owners: [owner], isUnique: true })
+    const ceramicDoc = await ceramic.createDocument('tile', { content: genesisContent, owners: [owner] }, { isUnique: true })
     return new Keychain(ceramicDoc, ceramic)
   }
 }
 
 class Profile {
-  constructor (public ceramicDoc: CeramicDocument, private _ceramic: CeramicApi) { }
+  constructor (public ceramicDoc: TileDoctype, private _ceramic: CeramicApi) { }
 
   static async build(owner: string, ceramic: CeramicApi): Promise<Profile> {
     const genesisContent: Record<string, any> = {}
-    const ceramicDoc = await ceramic.createDocument(genesisContent, 'tile', { owners: [owner], isUnique: true })
+    const ceramicDoc = await ceramic.createDocument('tile', { content: genesisContent, owners: [owner] }, { isUnique: true })
     return new Profile(ceramicDoc, ceramic)
   }
 }
 
 class Claims {
-  constructor (public ceramicDoc: CeramicDocument, private _ceramic: CeramicApi) { }
+  constructor (public ceramicDoc: TileDoctype, private _ceramic: CeramicApi) { }
 
   static async build(owner: string, ceramic: CeramicApi): Promise<Claims> {
     const genesisContent: string[] = []
-    const ceramicDoc = await ceramic.createDocument(genesisContent, 'tile', { owners: [owner], isUnique: true })
+    const ceramicDoc = await ceramic.createDocument('tile', { content: genesisContent, owners: [owner] }, { isUnique: true })
     return new Claims(ceramicDoc, ceramic)
   }
 }
 
 class Connections {
-  constructor (public ceramicDoc: CeramicDocument, private _ceramic: CeramicApi) { }
+  constructor (public ceramicDoc: TileDoctype, private _ceramic: CeramicApi) { }
 
   static async build(owner: string, ceramic: CeramicApi): Promise<Connections> {
     const genesisContent: string[] = []
-    const ceramicDoc = await ceramic.createDocument(genesisContent, 'tile', { owners: [owner], isUnique: true })
+    const ceramicDoc = await ceramic.createDocument('tile', { content: genesisContent, owners: [owner] }, { isUnique: true })
     return new Connections(ceramicDoc, ceramic)
   }
 }
 
 class Sources {
-  constructor (public ceramicDoc: CeramicDocument, private _ceramic: CeramicApi) { }
+  constructor (public ceramicDoc: TileDoctype, private _ceramic: CeramicApi) { }
 
   static async build(owner: string, ceramic: CeramicApi): Promise<Sources> {
     const genesisContent: string[] = []
-    const ceramicDoc = await ceramic.createDocument(genesisContent, 'tile', { owners: [owner], isUnique: true })
+    const ceramicDoc = await ceramic.createDocument('tile', { content: genesisContent, owners: [owner] }, { isUnique: true })
     return new Sources(ceramicDoc, ceramic)
   }
 }
 
 class Services {
-  constructor (public ceramicDoc: CeramicDocument, private _ceramic: CeramicApi) { }
+  constructor (public ceramicDoc: TileDoctype, private _ceramic: CeramicApi) { }
 
   static async build(owner: string, ceramic: CeramicApi): Promise<Services> {
     const genesisContent: any[] = []
-    const ceramicDoc = await ceramic.createDocument(genesisContent, 'tile', { owners: [owner], isUnique: true })
+    const ceramicDoc = await ceramic.createDocument('tile', { content: genesisContent, owners: [owner] }, { isUnique: true })
     return new Services(ceramicDoc, ceramic)
   }
 }
@@ -76,7 +75,7 @@ class Services {
 class ThreeIDAccount {
   [key: string]: any // allow access to properties using index notation (ex: account['services'])
 
-  constructor (public ceramicDoc: CeramicDocument,
+  constructor (public ceramicDoc: TileDoctype,
                public didDocument: DIDDocument,
                public accountLinks: AccountLinks,
                public keychain: Keychain,
@@ -96,7 +95,7 @@ class ThreeIDAccount {
     const didDocument = await DIDDocument.load(did, ceramic)
 
     // The incremental building of an account tile here is a good example of how creating a buffered
-    // document type would reduce number of writes, speeding up creation, but more importantly, 
+    // document type would reduce number of writes, speeding up creation, but more importantly,
     // all future fetches due to less DAG depth
 
     let ceramicDoc
@@ -104,7 +103,7 @@ class ThreeIDAccount {
       ceramicDoc = await ceramic.loadDocument(didDocument.ceramicDoc.content.account)
     } else {
       const genesisContent: Record<string, string> = {}
-      ceramicDoc = await ceramic.createDocument(genesisContent, 'tile', { owners: [didDocument.did] })
+      ceramicDoc = await ceramic.createDocument('tile', { content: genesisContent, owners: [didDocument.did] })
       await didDocument.setAccountTile(ceramicDoc)
     }
 

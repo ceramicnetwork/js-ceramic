@@ -9,13 +9,14 @@ import LevelStateStore from "./store/level-state-store"
 
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 
-import ThreeIdDoctypeHandler from "./doctype/three-id/three-id-doctype-handler"
-import TileDoctypeHandler from "./doctype/tile/tile-doctype-handler"
-import AccountLinkDoctypeHandler from "./doctype/account-link/account-link-doctype-handler"
 import { CeramicApi, DIDProvider, PinApi } from "@ceramicnetwork/ceramic-common/lib/ceramic-api"
 import { Doctype, DoctypeHandler, InitOpts } from "@ceramicnetwork/ceramic-common/lib/doctype"
 import { Context } from "@ceramicnetwork/ceramic-common/lib/context"
 import { Resolver } from "did-resolver"
+
+import ThreeIdDoctypeHandler from "@ceramicnetwork/ceramic-doctype-three-id/lib/three-id-doctype-handler"
+import TileDoctypeHandler from "@ceramicnetwork/ceramic-doctype-tile/lib/tile-doctype-handler"
+import AccountLinkDoctypeHandler from "@ceramicnetwork/ceramic-doctype-account-link/lib/account-link-doctype-handler"
 
 // This is temporary until we handle DIDs and in particular 3IDs better
 const gen3IDgenesis = (pubkeys: any): any => {
@@ -154,8 +155,20 @@ class Ceramic implements CeramicApi {
    * Register new doctype handler
    * @param doctypeHandler - Document type handler
    */
-  addDoctype<T extends Doctype>(doctypeHandler: DoctypeHandler<T>): void {
+  addDoctypeHandler<T extends Doctype>(doctypeHandler: DoctypeHandler<T>): void {
     this._doctypeHandlers[doctypeHandler.name] = doctypeHandler
+  }
+
+  /**
+   * Finds doctype handler
+   * @param doctype - Doctype
+   */
+  findDoctypeHandler<T extends Doctype>(doctype: string): DoctypeHandler<T> {
+    const doctypeHandler = this._doctypeHandlers[doctype]
+    if (doctypeHandler == null) {
+      throw new Error(`Failed to find doctype handler for doctype ${doctype}`)
+    }
+    return doctypeHandler
   }
 
 

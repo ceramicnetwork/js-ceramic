@@ -49,7 +49,13 @@ export interface CeramicApi {
      * Register Doctype handler
      * @param doctypeHandler - DoctypeHandler instance
      */
-    addDoctype<T extends Doctype>(doctypeHandler: DoctypeHandler<T>): void;
+    addDoctypeHandler<T extends Doctype>(doctypeHandler: DoctypeHandler<T>): void;
+
+    /**
+     * Finds document handler for the doctype
+     * @param doctype - Doctype
+     */
+    findDoctypeHandler<T extends Doctype>(doctype: string): DoctypeHandler<T>;
 
     /**
      * Create Doctype instance
