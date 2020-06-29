@@ -20,8 +20,23 @@ export interface TileParams {
 /**
  * Tile doctype implementation
  */
-@DoctypeStatic<DoctypeConstructor>()
+@DoctypeStatic<DoctypeConstructor<TileDoctype>>()
 export class TileDoctype extends Doctype {
+
+    /**
+     * Change existing Tile doctype
+     * @param params - Change parameters
+     * @param context - Ceramic context
+     * @param opts - Initialization options
+     */
+    async change(params: TileParams, context: Context, opts?: InitOpts): Promise<Doctype> {
+        if (context.user == null) {
+            throw new Error('No user authenticated')
+        }
+
+        const updateRecord = await TileDoctype._makeRecord(this, context.user, params.content)
+        return await context.api.applyRecord(this.id, updateRecord, opts)
+    }
 
     /**
      * Create Tile doctype
@@ -73,7 +88,7 @@ export class TileDoctype extends Doctype {
      * @param context - Ceramic context
      * @param opts - Initialization options
      */
-    static async change(doctype: Doctype, params: TileParams, context: Context, opts?: InitOpts): Promise<Doctype> {
+    static async change(doctype: Doctype, params: TileParams, context: Context, opts?: InitOpts): Promise<TileDoctype> {
         if (context.user == null) {
             throw new Error('No user authenticated')
         }

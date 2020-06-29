@@ -110,15 +110,11 @@ import MockAnchorService from "../../anchor/mock/mock-anchor-service"
 jest.mock("../../ceramic-user")
 
 import CeramicUser from "../../ceramic-user"
-import { ThreeIdDoctype } from "../../doctype/three-id/three-id-doctype"
 import { Doctype, DoctypeHandler } from "../../../../@ceramicnetwork/ceramic-common/lib/doctype"
 import AnchorService from "../../../../@ceramicnetwork/ceramic-common/lib/anchor-service"
 import { Context } from "../../../../@ceramicnetwork/ceramic-common/lib/context"
 import ThreeIdDoctypeHandler from "@ceramicnetwork/ceramic-doctype-three-id/lib/three-id-doctype-handler"
-
-jest.mock("did-jwt", () => ({
-  verifyJWT: (): any => 'verified'
-}))
+import { ThreeIdDoctype } from "@ceramicnetwork/ceramic-doctype-three-id/lib/three-id-doctype"
 
 const anchorUpdate = (doctype: Doctype): Promise<void> => new Promise(resolve => doctype.on('change', resolve))
 
@@ -155,6 +151,7 @@ describe('Level data store', () => {
     }
 
     doctypeHandler = new ThreeIdDoctypeHandler()
+    doctypeHandler.verifyJWT = (): void => { return }
 
     store = new LevelStateStore(ipfs, dispatcher, storeDirPath)
     await store.open()

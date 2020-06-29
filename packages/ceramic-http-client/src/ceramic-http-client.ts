@@ -61,9 +61,9 @@ class CeramicClient implements CeramicApi {
 
   async createDocument<T extends Doctype>(doctype: string, params: object, opts?: InitOpts): Promise<T> {
     const doc = await Document.create(this._apiUrl, doctype, params, opts)
-    if (!this._docmap[doc.id]) {
+    // if (!this._docmap[doc.id]) {
       this._docmap[doc.id] = doc
-    }
+    // }
     return doc.doctype as T
   }
 

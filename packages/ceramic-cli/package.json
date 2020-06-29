@@ -33,6 +33,7 @@
   "dependencies": {
     "@ceramicnetwork/ceramic-common": "^1.0.0",
     "@ceramicnetwork/ceramic-core": "^0.2.0",
+    "@ceramicnetwork/ceramic-doctype-tile": "^1.0.0",
     "@ceramicnetwork/ceramic-http-client": "^0.2.0",
     "commander": "^5.0.0",
     "express": "^4.17.1",

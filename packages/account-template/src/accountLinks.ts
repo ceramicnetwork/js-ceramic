@@ -2,11 +2,12 @@ import { createLink } from '3id-blockchain-utils'
 import { AccountID } from 'caip'
 import { CeramicApi } from "@ceramicnetwork/ceramic-common/lib/ceramic-api"
 import { AccountLinkDoctype } from "@ceramicnetwork/ceramic-doctype-account-link/lib/account-link-doctype"
+import { TileDoctype } from "@ceramicnetwork/ceramic-doctype-tile/lib/tile-doctype"
 
 class AccountLinks {
   private _accountLinkDocuments: Record<string, AccountLinkDoctype>;
 
-  constructor (public ceramicDoc: AccountLinkDoctype, private _ceramic: CeramicApi) {
+  constructor (public ceramicDoc: TileDoctype, private _ceramic: CeramicApi) {
     this._accountLinkDocuments = {}
     this.ceramicDoc.on('change', this._loadAccountLinkDocs.bind(this))
   }
@@ -40,11 +41,11 @@ class AccountLinks {
     }, {
       onlyGenesis: true
     })
-    if (accountLinkDoc.content.toString() !== this.ceramicDoc.state.owners[0]) {
-      await AccountLinkDoctype.change(accountLinkDoc, { content: proof }, { api: this._ceramic })
+    if (accountLinkDoc.content !== this.ceramicDoc.state.owners[0]) {
+      await accountLinkDoc.change( { content: proof }, { api: this._ceramic })
     }
 
-    await AccountLinkDoctype.change(this.ceramicDoc, { content: [...this.ceramicDoc.content, accountLinkDoc.id]}, { api: this._ceramic })
+    await this.ceramicDoc.change({ content: [...this.ceramicDoc.content, accountLinkDoc.id]}, { api: this._ceramic })
 
     // need this here because the accountLinks tile 'change' event isn't triggered immediately
     this._accountLinkDocuments[account.toString()] = accountLinkDoc
@@ -58,7 +59,7 @@ class AccountLinks {
       throw new Error(`Address ${account} not linked`)
     }
     const newContent = this.ceramicDoc.content.filter((docId: string) => docId !== this._accountLinkDocuments[account.toString()].id)
-    await AccountLinkDoctype.change(this.ceramicDoc, { content: newContent }, { api: this._ceramic })
+    await this.ceramicDoc.change({ content: newContent }, { api: this._ceramic })
 
     // need this here because the accountLinks tile 'change' event isn't triggered immediately
     delete this._accountLinkDocuments[account.toString()]
@@ -73,7 +74,7 @@ class AccountLinks {
   }
 
   static async load (docId: string, ceramic: CeramicApi): Promise<AccountLinks> {
-    const ceramicDoc = await ceramic.loadDocument(docId)
+    const ceramicDoc = await ceramic.loadDocument<TileDoctype>(docId)
     const accountLinks = new AccountLinks(ceramicDoc, ceramic)
     await accountLinks._loadAccountLinkDocs()
     return accountLinks
@@ -81,7 +82,7 @@ class AccountLinks {
 
   static async build (owner: string, ceramic: CeramicApi): Promise<AccountLinks> {
     const genesisContent: string[] = []
-    const ceramicDoc = await ceramic.createDocument(genesisContent, 'tile', { owners: [owner], isUnique: true })
+    const ceramicDoc = await ceramic.createDocument<TileDoctype>('tile', { content: genesisContent, owners: [owner] }, { isUnique: true })
     const accountLinks = new AccountLinks(ceramicDoc, ceramic)
     await accountLinks._loadAccountLinkDocs()
     return accountLinks

@@ -65,10 +65,6 @@ jest.mock('../dispatcher', () => {
 import Dispatcher from '../dispatcher'
 jest.mock('../ceramic-user')
 import CeramicUser from '../ceramic-user'
-jest.mock('did-jwt', () => ({
-  // TODO - We should test for when this function throws as well
-  verifyJWT: (): any => 'verified'
-}))
 
 import Ceramic from "../ceramic"
 import { Context } from "@ceramicnetwork/ceramic-common/lib/context"
@@ -109,6 +105,7 @@ describe('Document', () => {
       anchorService = new MockAnchorService(dispatcher)
       user = new CeramicUser()
       doctypeHandler = new ThreeIdDoctypeHandler()
+      doctypeHandler.verifyJWT = (): void => { return }
       // fake jwt
       user.sign = jest.fn(async () => 'aaaa.bbbb.cccc')
       findHandler = (): ThreeIdDoctypeHandler => doctypeHandler
@@ -121,6 +118,7 @@ describe('Document', () => {
       }
 
       ceramic = new Ceramic(dispatcher, mockStateStore, context)
+      ceramic._doctypeHandlers['3id'] = doctypeHandler
     })
 
     it('is created correctly', async () => {
@@ -128,7 +126,7 @@ describe('Document', () => {
 
       expect(doc.content).toEqual(initialContent)
       expect(dispatcher.register).toHaveBeenCalledWith(doc)
-      expect(doc.state.anchorStatus).toEqual(AnchorStatus.PENDING)
+      expect(doc.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
       await anchorUpdate(doc)
       expect(doc.state.anchorStatus).not.toEqual(AnchorStatus.NOT_REQUESTED)
     })
@@ -231,6 +229,7 @@ describe('Document', () => {
       // fake jwt
       user.sign = jest.fn(async () => 'aaaa.bbbb.cccc')
       doctypeHandler = new ThreeIdDoctypeHandler()
+      doctypeHandler.verifyJWT = (): void => { return }
       getHandlerFromGenesis = (): ThreeIdDoctypeHandler => doctypeHandler
 
       context = {
@@ -241,6 +240,7 @@ describe('Document', () => {
       }
 
       ceramic = new Ceramic(dispatcher, mockStateStore, context)
+      ceramic._doctypeHandlers['3id'] = doctypeHandler
     })
 
     it('should announce change to network', async () => {

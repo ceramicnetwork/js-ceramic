@@ -3,7 +3,6 @@ import AccountLinks from './accountLinks'
 import { CeramicApi } from "@ceramicnetwork/ceramic-common/lib/ceramic-api"
 import { TileDoctype } from "@ceramicnetwork/ceramic-doctype-tile/lib/tile-doctype"
 
-
 // All of these could likely inherit from a AccountSubTile abstract parent class or a builder class
 
 class Keychain {
@@ -16,7 +15,7 @@ class Keychain {
       "auth-data": [],
       "legacy-data": []
     }
-    const ceramicDoc = await ceramic.createDocument('tile', { content: genesisContent, owners: [owner] }, { isUnique: true })
+    const ceramicDoc = await ceramic.createDocument<TileDoctype>('tile', { content: genesisContent, owners: [owner] }, { isUnique: true })
     return new Keychain(ceramicDoc, ceramic)
   }
 }
@@ -26,7 +25,7 @@ class Profile {
 
   static async build(owner: string, ceramic: CeramicApi): Promise<Profile> {
     const genesisContent: Record<string, any> = {}
-    const ceramicDoc = await ceramic.createDocument('tile', { content: genesisContent, owners: [owner] }, { isUnique: true })
+    const ceramicDoc = await ceramic.createDocument<TileDoctype>('tile', { content: genesisContent, owners: [owner] }, { isUnique: true })
     return new Profile(ceramicDoc, ceramic)
   }
 }
@@ -36,7 +35,7 @@ class Claims {
 
   static async build(owner: string, ceramic: CeramicApi): Promise<Claims> {
     const genesisContent: string[] = []
-    const ceramicDoc = await ceramic.createDocument('tile', { content: genesisContent, owners: [owner] }, { isUnique: true })
+    const ceramicDoc = await ceramic.createDocument<TileDoctype>('tile', { content: genesisContent, owners: [owner] }, { isUnique: true })
     return new Claims(ceramicDoc, ceramic)
   }
 }
@@ -46,7 +45,7 @@ class Connections {
 
   static async build(owner: string, ceramic: CeramicApi): Promise<Connections> {
     const genesisContent: string[] = []
-    const ceramicDoc = await ceramic.createDocument('tile', { content: genesisContent, owners: [owner] }, { isUnique: true })
+    const ceramicDoc = await ceramic.createDocument<TileDoctype>('tile', { content: genesisContent, owners: [owner] }, { isUnique: true })
     return new Connections(ceramicDoc, ceramic)
   }
 }
@@ -56,7 +55,7 @@ class Sources {
 
   static async build(owner: string, ceramic: CeramicApi): Promise<Sources> {
     const genesisContent: string[] = []
-    const ceramicDoc = await ceramic.createDocument('tile', { content: genesisContent, owners: [owner] }, { isUnique: true })
+    const ceramicDoc = await ceramic.createDocument<TileDoctype>('tile', { content: genesisContent, owners: [owner] }, { isUnique: true })
     return new Sources(ceramicDoc, ceramic)
   }
 }
@@ -66,7 +65,7 @@ class Services {
 
   static async build(owner: string, ceramic: CeramicApi): Promise<Services> {
     const genesisContent: any[] = []
-    const ceramicDoc = await ceramic.createDocument('tile', { content: genesisContent, owners: [owner] }, { isUnique: true })
+    const ceramicDoc = await ceramic.createDocument<TileDoctype>('tile', { content: genesisContent, owners: [owner] }, { isUnique: true })
     return new Services(ceramicDoc, ceramic)
   }
 }
@@ -98,12 +97,12 @@ class ThreeIDAccount {
     // document type would reduce number of writes, speeding up creation, but more importantly,
     // all future fetches due to less DAG depth
 
-    let ceramicDoc
+    let ceramicDoc: TileDoctype
     if (didDocument.ceramicDoc.content.account) {
-      ceramicDoc = await ceramic.loadDocument(didDocument.ceramicDoc.content.account)
+      ceramicDoc = await ceramic.loadDocument<TileDoctype>(didDocument.ceramicDoc.content.account)
     } else {
       const genesisContent: Record<string, string> = {}
-      ceramicDoc = await ceramic.createDocument('tile', { content: genesisContent, owners: [didDocument.did] })
+      ceramicDoc = await ceramic.createDocument<TileDoctype>('tile', { content: genesisContent, owners: [didDocument.did] })
       await didDocument.setAccountTile(ceramicDoc)
     }
 
@@ -114,61 +113,61 @@ class ThreeIDAccount {
       accountLinks = await AccountLinks.load(ceramicDoc.content['account-links'], ceramic)
     } else {
       accountLinks = await AccountLinks.build(did, ceramic)
-      await ceramicDoc.change({ ...ceramicDoc.content, 'account-links': accountLinks.ceramicDoc.id })
+      await TileDoctype.change(ceramicDoc, { content: { ...ceramicDoc.content, 'account-links': accountLinks.ceramicDoc.id } }, { api: ceramic } )
     }
 
     let keychain: Keychain
     if (ceramicDoc.content.keychain) {
-      const subtileDocument = await ceramic.loadDocument(ceramicDoc.content.keychain)
+      const subtileDocument = await ceramic.loadDocument<TileDoctype>(ceramicDoc.content.keychain)
       keychain = new Keychain(subtileDocument, ceramic)
     } else {
       keychain = await Keychain.build(did, ceramic)
-      await ceramicDoc.change({ ...ceramicDoc.content, keychain: keychain.ceramicDoc.id })
+      await TileDoctype.change(ceramicDoc, { content: { ...ceramicDoc.content, keychain: keychain.ceramicDoc.id } }, { api: ceramic })
     }
 
     let profile: Profile
     if (ceramicDoc.content.profile) {
-      const subtileDocument = await ceramic.loadDocument(ceramicDoc.content.profile)
+      const subtileDocument = await ceramic.loadDocument<TileDoctype>(ceramicDoc.content.profile)
       profile = new Profile(subtileDocument, ceramic)
     } else {
       profile = await Profile.build(did, ceramic)
-      await ceramicDoc.change({ ...ceramicDoc.content, profile: profile.ceramicDoc.id })
+      await TileDoctype.change(ceramicDoc, { content: { ...ceramicDoc.content, profile: profile.ceramicDoc.id } }, { api: ceramic })
     }
 
     let claims: Claims
     if (ceramicDoc.content.claims) {
-      const subtileDocument = await ceramic.loadDocument(ceramicDoc.content.claims)
+      const subtileDocument = await ceramic.loadDocument<TileDoctype>(ceramicDoc.content.claims)
       claims = new Claims(subtileDocument, ceramic)
     } else {
       claims = await Claims.build(did, ceramic)
-      await ceramicDoc.change({ ...ceramicDoc.content, claims: claims.ceramicDoc.id })
+      await TileDoctype.change(ceramicDoc, { content: { ...ceramicDoc.content, claims: claims.ceramicDoc.id }}, { api: ceramic })
     }
 
     let connections: Connections
     if (ceramicDoc.content.connections) {
-      const subtileDocument = await ceramic.loadDocument(ceramicDoc.content.connections)
+      const subtileDocument = await ceramic.loadDocument<TileDoctype>(ceramicDoc.content.connections)
       connections = new Connections(subtileDocument, ceramic)
     } else {
       connections = await Connections.build(did, ceramic)
-      await ceramicDoc.change({ ...ceramicDoc.content, connections: connections.ceramicDoc.id })
+      await TileDoctype.change(ceramicDoc, { content: { ...ceramicDoc.content, connections: connections.ceramicDoc.id } }, { api: ceramic })
     }
 
     let sources: Sources
     if (ceramicDoc.content.sources) {
-      const subtileDocument = await ceramic.loadDocument(ceramicDoc.content.sources)
+      const subtileDocument = await ceramic.loadDocument<TileDoctype>(ceramicDoc.content.sources)
       sources = new Sources(subtileDocument, ceramic)
     } else {
       sources = await Sources.build(did, ceramic)
-      await ceramicDoc.change({ ...ceramicDoc.content, sources: sources.ceramicDoc.id })
+      await TileDoctype.change(ceramicDoc, { content: { ...ceramicDoc.content, sources: sources.ceramicDoc.id } }, { api: ceramic })
     }
 
     let services: Services
     if (ceramicDoc.content.services) {
-      const subtileDocument = await ceramic.loadDocument(ceramicDoc.content.services)
+      const subtileDocument = await ceramic.loadDocument<TileDoctype>(ceramicDoc.content.services)
       services = new Services(subtileDocument, ceramic)
     } else {
       services = await Services.build(did, ceramic)
-      await ceramicDoc.change({ ...ceramicDoc.content, services: services.ceramicDoc.id })
+      await TileDoctype.change(ceramicDoc, { content: { ...ceramicDoc.content, services: services.ceramicDoc.id } }, { api: ceramic })
     }
 
     return new ThreeIDAccount(ceramicDoc, didDocument, accountLinks, keychain, profile, claims,

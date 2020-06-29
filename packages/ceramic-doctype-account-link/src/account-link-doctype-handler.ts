@@ -19,7 +19,7 @@ export default class AccountLinkDoctypeHandler implements DoctypeHandler<Account
     /**
      * Gets doctype class
      */
-    get doctype(): DoctypeConstructor {
+    get doctype(): DoctypeConstructor<AccountLinkDoctype> {
         return AccountLinkDoctype
     }
 

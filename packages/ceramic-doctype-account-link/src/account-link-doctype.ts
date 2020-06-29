@@ -14,8 +14,18 @@ export class AccountLinkParams {
 /**
  * AccountLink doctype implementation
  */
-@DoctypeStatic<DoctypeConstructor>()
+@DoctypeStatic<DoctypeConstructor<AccountLinkDoctype>>()
 export class AccountLinkDoctype extends Doctype {
+
+    /**
+     * Changes AccountLink instance
+     * @param params - Change parameters
+     * @param context - Ceramic context
+     * @param opts - Initialization options
+     */
+    async change(params: AccountLinkParams, context: Context, opts?: InitOpts): Promise<Doctype> {
+        return AccountLinkDoctype.change(this, params, context, opts)
+    }
 
     /**
      * Creates AccountLink doctype
@@ -68,11 +78,7 @@ export class AccountLinkDoctype extends Doctype {
      * @param context - Ceramic context
      * @param opts - Initialization options
      */
-    static async change(doctype: Doctype, params: AccountLinkParams, context: Context, opts?: InitOpts): Promise<Doctype> {
-        if (context.user == null) {
-            throw new Error('No user authenticated')
-        }
-
+    static async change(doctype: AccountLinkDoctype, params: AccountLinkParams, context: Context, opts?: InitOpts): Promise<AccountLinkDoctype> {
         const { content } = params
         const updateRecord = await AccountLinkDoctype._makeRecord(doctype, content)
         return await context.api.applyRecord(doctype.id, updateRecord, opts)

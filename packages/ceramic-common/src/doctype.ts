@@ -86,7 +86,7 @@ export interface InitOpts {
 /**
  * Describes common doctype attributes
  */
-export abstract class Doctype extends EventEmitter {
+export class Doctype extends EventEmitter {
     constructor(private _state: DocState) {
         super()
     }
@@ -99,7 +99,7 @@ export abstract class Doctype extends EventEmitter {
         return this._state.doctype
     }
 
-    get content(): object {
+    get content(): any {
         return cloneDeep(this.state.content)
     }
 
@@ -108,7 +108,7 @@ export abstract class Doctype extends EventEmitter {
     }
 
     get state(): DocState {
-        return this._state
+        return cloneDeep(this._state)
     }
 
     set state(state: DocState) {
@@ -132,12 +132,12 @@ export function DoctypeStatic<T>() {
 /**
  * Doctype static signatures
  */
-export interface DoctypeConstructor {
+export interface DoctypeConstructor<T extends Doctype> {
     /**
      * Constructor signature
      * @param state - Doctype state
      */
-    new (state: DocState): Doctype;
+    new (state: DocState): T;
 
     /**
      * Makes genesis record
@@ -154,7 +154,7 @@ export interface DoctypeConstructor {
      * @param context - Ceramic context
      * @param opts - Initialization options
      */
-    change(doctype: Doctype, params: Record<string, any>, context: Context, opts?: InitOpts): Promise<Doctype>;
+    change(doctype: Doctype, params: Record<string, any>, context: Context, opts?: InitOpts): Promise<T>;
 }
 
 /**
@@ -169,7 +169,7 @@ export interface DoctypeHandler<T extends Doctype> {
     /**
      * The doctype class
      */
-    doctype: DoctypeConstructor;
+    doctype: DoctypeConstructor<T>;
 
     /**
      * Applies record to the document (genesis|signed|anchored)

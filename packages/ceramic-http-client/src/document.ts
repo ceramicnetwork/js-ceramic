@@ -32,15 +32,17 @@ class Document extends EventEmitter {
 
   constructor (public id: string, private _state: any, private _apiUrl: string) {
     super()
+    this.doctype = new Doctype(_state)
   }
 
-  static async create (apiUrl: string, doctype: string, params: object, opts?: InitOpts): Promise<Document> {
+  static async create (apiUrl: string, doctype: string, params: object, opts: InitOpts = {}): Promise<Document> {
     const { docId, state } = await fetchJson(apiUrl + '/create', {
       params,
       doctype,
-      onlyGenesis: opts.onlyGenesis,
-      owners: opts.owners,
-      isUnique: opts.isUnique
+      initOpts: {
+        onlyGenesis: opts.onlyGenesis,
+        isUnique: opts.isUnique
+      }
     })
     return new Document(docId, deserializeState(state), apiUrl)
   }
@@ -82,12 +84,13 @@ class Document extends EventEmitter {
     return false
   }
 
-  async _syncState (): Promise<void> {
+  async _syncState(): Promise<void> {
     let { state } = await fetchJson(this._apiUrl + '/state' + this.id)
     state = deserializeState(state)
     if (JSON.stringify(this._state) !== JSON.stringify(state)) {
       this._state = state
-      this.emit('change')
+      this.doctype.state = state
+      this.doctype.emit('change')
     }
   }
 }

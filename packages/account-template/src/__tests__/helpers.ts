@@ -1,4 +1,6 @@
-function buildMockCeramicDoc() {
+import { Doctype } from "@ceramicnetwork/ceramic-common/lib/doctype"
+
+function buildMockCeramicDoc(): any {
   return {
     state: {
       log: []
@@ -9,8 +11,9 @@ function buildMockCeramicDoc() {
   }
 }
 
-function buildMockCeramic(mockDocuments) {
+function buildMockCeramic(mockDocuments?: Doctype[]): any {
   const mockCeramic = {
+    applyRecord: jest.fn().mockResolvedValue(buildMockCeramicDoc()),
     createDocument: jest.fn().mockResolvedValue(buildMockCeramicDoc()),
     loadDocument: jest.fn().mockResolvedValue(buildMockCeramicDoc()),
   }

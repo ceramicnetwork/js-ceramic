@@ -168,7 +168,7 @@ class Ceramic implements CeramicApi {
     if (doctypeHandler == null) {
       throw new Error(`Failed to find doctype handler for doctype ${doctype}`)
     }
-    return doctypeHandler
+    return doctypeHandler as DoctypeHandler<T>
   }
 
 

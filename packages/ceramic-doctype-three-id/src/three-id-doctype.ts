@@ -17,7 +17,7 @@ export class ThreeIdParams {
 /**
  * ThreeId doctype implementation
  */
-@DoctypeStatic<DoctypeConstructor>()
+@DoctypeStatic<DoctypeConstructor<ThreeIdDoctype>>()
 export class ThreeIdDoctype extends Doctype {
     /**
      * Change existing ThreeId doctype

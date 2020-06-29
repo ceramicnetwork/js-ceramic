@@ -1,6 +1,6 @@
 import CID from 'cids'
 
-import { verifyJWT } from 'did-jwt'
+import * as didJwt from 'did-jwt'
 
 import jsonpatch from 'fast-json-patch'
 
@@ -26,7 +26,7 @@ export default class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
     /**
      * Gets doctype class
      */
-    get doctype(): DoctypeConstructor {
+    get doctype(): DoctypeConstructor<TileDoctype> {
         return TileDoctype
     }
 
@@ -147,10 +147,19 @@ export default class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
         payload = payload.replace(/=/g, '')
         const jwt = [header, payload, signature].join('.')
         try {
-            await verifyJWT(jwt, { resolver: context.resolver })
+            await this.verifyJWT(jwt, { resolver: context.resolver })
         } catch (e) {
             throw new Error('Invalid signature for signed record:' + e)
         }
+    }
+
+    /**
+     * Verifies JWT token
+     * @param jwt - JWT token
+     * @param opts - verification options
+     */
+    async verifyJWT(jwt: string, opts: any): Promise<void> {
+        await didJwt.verifyJWT(jwt, opts)
     }
 
 }

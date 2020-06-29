@@ -37,7 +37,7 @@ describe('AccountLinks', () => {
 
       await AccountLinks.build(owner, mockCeramic)
 
-      expect(mockCeramic.createDocument).toHaveBeenCalledWith([], 'tile', { owners: [owner], isUnique: true })
+      expect(mockCeramic.createDocument).toHaveBeenCalledWith('tile', { content: [], owners: [owner] }, { isUnique: true })
     })
   })
 
@@ -92,12 +92,14 @@ describe('AccountLinks', () => {
       await accountLinks.add(account, { provider: mockProvider })
 
       expect(createLink).toHaveBeenCalledWith(did, address, mockProvider)
-      expect(mockCeramic.createDocument).toHaveBeenCalledWith(null, 'account-link', {
-        owners: [account],
+      expect(mockCeramic.createDocument).toHaveBeenCalledWith('account-link', {
+        content: null,
+        owners: [account]
+      }, {
         onlyGenesis: true
       })
-      expect(mockAccountLinkDoc.change).toHaveBeenCalledWith(mockProof)
-      expect(mockAccountLinksTile.change).toHaveBeenCalledWith([mockAccountLinkDoc.id])
+      expect(mockAccountLinkDoc.change).toHaveBeenCalledWith({ content: mockProof }, { api: mockCeramic })
+      expect(mockAccountLinksTile.change).toHaveBeenCalledWith({ content: [mockAccountLinkDoc.id] }, { api: mockCeramic })
     })
 
     it('should create and link an account-link document with the given proof if provided', async () => {
@@ -117,12 +119,12 @@ describe('AccountLinks', () => {
       await accountLinks.add(address, { provider: mockProvider, proof: mockProof })
 
       expect(createLink).not.toHaveBeenCalledWith()
-      expect(mockCeramic.createDocument).toHaveBeenCalledWith(null, 'account-link', {
+      expect(mockCeramic.createDocument).toHaveBeenCalledWith('account-link', {
+        content: null,
         owners: [address],
-        onlyGenesis: true
-      })
-      expect(mockAccountLinkDoc.change).toHaveBeenCalledWith(mockProof)
-      expect(mockAccountLinksTile.change).toHaveBeenCalledWith([mockAccountLinkDoc.id])
+      }, { onlyGenesis: true})
+      expect(mockAccountLinkDoc.change).toHaveBeenCalledWith({ content: mockProof }, { api: mockCeramic })
+      expect(mockAccountLinksTile.change).toHaveBeenCalledWith({ content: [mockAccountLinkDoc.id] }, { api: mockCeramic })
     })
 
     it('should throw an error if the address is already linked', async () => {
@@ -166,7 +168,7 @@ describe('AccountLinks', () => {
       await accountLinks.remove(address)
 
       expect(accountLinks.list().find(link => link.account.toString() === address)).not.toBeTruthy()
-      expect(mockAccountLinksTile.change).toHaveBeenCalledWith([])
+      expect(mockAccountLinksTile.change).toHaveBeenCalledWith({ content: [] }, { api: mockCeramic })
     })
 
     it('should throw an error if the address is not linked', async () => {

@@ -4,7 +4,7 @@ import { DIDDocument } from 'did-resolver'
 
 import { wrapDocument } from '@ceramicnetwork/3id-did-resolver'
 import jsonpatch from 'fast-json-patch'
-import { verifyJWT } from 'did-jwt'
+import * as didJwt from 'did-jwt'
 import { ThreeIdDoctype, ThreeIdParams } from "./three-id-doctype"
 import {
     AnchorProof, AnchorRecord, AnchorStatus, DocState, DoctypeConstructor, DoctypeHandler, InitOpts, SignatureStatus
@@ -27,7 +27,7 @@ export default class ThreeIdDoctypeHandler implements DoctypeHandler<ThreeIdDoct
     /**
      * Gets doctype class
      */
-    get doctype(): DoctypeConstructor {
+    get doctype(): DoctypeConstructor<ThreeIdDoctype> {
         return ThreeIdDoctype
     }
 
@@ -127,7 +127,7 @@ export default class ThreeIdDoctypeHandler implements DoctypeHandler<ThreeIdDoct
         try {
             // verify the jwt with a fake DID resolver that uses the current state of the 3ID
             const didDoc = wrapDocument({ publicKeys: { signing: state.owners[0], encryption: '' } }, 'did:fake:123')
-            await verifyJWT(jwt, { resolver: { resolve: async (): Promise<DIDDocument> => didDoc } })
+            await this.verifyJWT(jwt, { resolver: { resolve: async (): Promise<DIDDocument> => didDoc } })
         } catch (e) {
             throw new Error('Invalid signature for signed record:' + e)
         }
@@ -139,6 +139,15 @@ export default class ThreeIdDoctypeHandler implements DoctypeHandler<ThreeIdDoct
             nextContent: jsonpatch.applyPatch(state.content, record.content).newDocument,
             nextOwners: record.owners
         }
+    }
+
+    /**
+     * Verifies JWT token
+     * @param jwt - JWT token
+     * @param opts - verification options
+     */
+    async verifyJWT(jwt: string, opts: any): Promise<void> {
+        await didJwt.verifyJWT(jwt, opts)
     }
 
     /**
