@@ -177,7 +177,7 @@ describe('Level data store', () => {
     const genesis = await ThreeIdDoctype.makeGenesis({ content: initialContent, owners })
     const findHandler = (): DoctypeHandler<ThreeIdDoctype> => doctypeHandler
     const doc = await Document.createFromGenesis(genesis, findHandler, dispatcher, store, context, {
-      onlyGenesis: true, skipWait: true,
+      applyOnly: true, skipWait: true,
     })
 
     let docState = await store.loadState(doc.id)

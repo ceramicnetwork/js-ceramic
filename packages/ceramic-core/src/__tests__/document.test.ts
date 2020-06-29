@@ -132,7 +132,7 @@ describe('Document', () => {
     })
 
     it('is loaded correctly', async () => {
-      const doc1 = await create({ content: initialContent, owners }, ceramic, context, { onlyGenesis: true, skipWait: true })
+      const doc1 = await create({ content: initialContent, owners }, ceramic, context, { applyOnly: true, skipWait: true })
       const doc2 = await Document.load(doc1.id, findHandler, dispatcher, mockStateStore, context, { skipWait: true })
 
       expect(doc1.id).toEqual(doc2.id)

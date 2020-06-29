@@ -58,8 +58,8 @@ class Document extends EventEmitter {
 
     await doc._updateStateIfPinned()
 
-    if (typeof opts.onlyGenesis === 'undefined') {
-      opts.onlyGenesis = false
+    if (typeof opts.applyOnly === 'undefined') {
+      opts.applyOnly = false
     }
 
     await doc._register(opts)
@@ -77,8 +77,8 @@ class Document extends EventEmitter {
     const doc = new Document(id, dispatcher, stateStore)
     doc._context = context
 
-    if (typeof opts.onlyGenesis === 'undefined') {
-      opts.onlyGenesis = true
+    if (typeof opts.applyOnly === 'undefined') {
+      opts.applyOnly = true
     }
 
     const record = await dispatcher.retrieveRecord(doc._genesisCid)
@@ -122,8 +122,8 @@ class Document extends EventEmitter {
 
     await doc._updateStateIfPinned()
 
-    if (typeof opts.onlyGenesis === 'undefined') {
-      opts.onlyGenesis = false
+    if (typeof opts.applyOnly === 'undefined') {
+      opts.applyOnly = false
     }
 
     await doc._register(opts)
@@ -136,7 +136,7 @@ class Document extends EventEmitter {
 
     await this._updateStateIfPinned()
 
-    if (!opts.onlyApply) {
+    if (!opts.applyOnly) {
       await this.anchor()
       this._publishHead()
     } else if (!opts.skipWait) {
@@ -150,7 +150,7 @@ class Document extends EventEmitter {
 
     await this.dispatcher.register(this)
 
-    if (!opts.onlyGenesis) {
+    if (!opts.applyOnly) {
       await this.anchor()
       this._publishHead()
     } else if (!opts.skipWait) {

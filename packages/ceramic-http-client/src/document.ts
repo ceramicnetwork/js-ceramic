@@ -17,7 +17,7 @@ class Document extends EventEmitter {
       params,
       doctype,
       initOpts: {
-        onlyGenesis: opts.onlyGenesis,
+        applyOnly: opts.applyOnly,
         isUnique: opts.isUnique
       }
     })

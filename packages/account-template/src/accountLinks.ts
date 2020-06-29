@@ -39,7 +39,7 @@ class AccountLinks {
       content: null,
       owners: [account.toString()]
     }, {
-      onlyGenesis: true
+      applyOnly: true
     })
     if (accountLinkDoc.content !== this.ceramicDoc.state.owners[0]) {
       await accountLinkDoc.change( { content: proof }, { api: this._ceramic })

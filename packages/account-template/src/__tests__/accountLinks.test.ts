@@ -96,7 +96,7 @@ describe('AccountLinks', () => {
         content: null,
         owners: [account]
       }, {
-        onlyGenesis: true
+        applyOnly: true
       })
       expect(mockAccountLinkDoc.change).toHaveBeenCalledWith({ content: mockProof }, { api: mockCeramic })
       expect(mockAccountLinksTile.change).toHaveBeenCalledWith({ content: [mockAccountLinkDoc.id] }, { api: mockCeramic })
@@ -120,9 +120,10 @@ describe('AccountLinks', () => {
 
       expect(createLink).not.toHaveBeenCalledWith()
       expect(mockCeramic.createDocument).toHaveBeenCalledWith('account-link', {
-        content: null,
-        owners: [address],
-      }, { onlyGenesis: true})
+        content: null, owners: [address],
+      }, {
+        applyOnly: true
+      })
       expect(mockAccountLinkDoc.change).toHaveBeenCalledWith({ content: mockProof }, { api: mockCeramic })
       expect(mockAccountLinksTile.change).toHaveBeenCalledWith({ content: [mockAccountLinkDoc.id] }, { api: mockCeramic })
     })

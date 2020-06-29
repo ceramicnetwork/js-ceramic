@@ -122,8 +122,7 @@ export class DoctypeUtils {
  */
 export interface InitOpts {
     owners?: Array<string>;
-    onlyGenesis?: boolean;
-    onlyApply?: boolean;
+    applyOnly?: boolean;
     skipWait?: boolean;
     isUnique?: boolean;
 }

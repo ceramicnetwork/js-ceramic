@@ -66,8 +66,8 @@ describe('Ceramic interop: core <> http-client', () => {
   })
 
   it('properly creates document', async () => {
-    const doc1 = await core.createDocument(DOCTYPE_TILE, { content: { test: 123 } }, { onlyGenesis: true, skipWait: true })
-    const doc2 = await client.createDocument(DOCTYPE_TILE, { content: { test: 123 } }, { onlyGenesis: true, skipWait: true })
+    const doc1 = await core.createDocument(DOCTYPE_TILE, { content: { test: 123 } }, { applyOnly: true, skipWait: true })
+    const doc2 = await client.createDocument(DOCTYPE_TILE, { content: { test: 123 } }, { applyOnly: true, skipWait: true })
     expect(doc1.content).toEqual(doc2.content)
     expect(doc1.state).toEqual(doc2.state)
   })
