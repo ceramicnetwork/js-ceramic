@@ -136,12 +136,7 @@ class Document extends EventEmitter {
 
     await this._updateStateIfPinned()
 
-    if (!opts.applyOnly) {
-      await this.anchor()
-      this._publishHead()
-    } else if (!opts.skipWait) {
-      await Document.wait(this)
-    }
+    await this._applyOpts(opts)
   }
 
   async _register (opts: InitOpts): Promise<void> {
@@ -150,6 +145,15 @@ class Document extends EventEmitter {
 
     await this.dispatcher.register(this)
 
+    await this._applyOpts(opts)
+  }
+
+  /**
+   * Apply initialization options
+   * @param opts - Initialization options
+   * @private
+   */
+  async _applyOpts(opts: InitOpts): Promise<void> {
     if (!opts.applyOnly) {
       await this.anchor()
       this._publishHead()
