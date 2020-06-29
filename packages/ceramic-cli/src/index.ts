@@ -1,7 +1,7 @@
 import CeramicDaemon from './ceramic-daemon'
 import CeramicClient from '@ceramicnetwork/ceramic-http-client'
 import program from 'commander'
-import { serializeState } from './utils'
+import { DoctypeUtils } from "@ceramicnetwork/ceramic-common/lib/doctype"
 
 
 const PREFIX_REGEX = /^ceramic:\/\/|^\/ceramic\//
@@ -83,7 +83,7 @@ program
     const ceramic = new CeramicClient()
     try {
       const doc = await ceramic.loadDocument(docId)
-      console.log(JSON.stringify(serializeState(doc.state), null, 2))
+      console.log(JSON.stringify(DoctypeUtils.serializeState(doc.state), null, 2))
     } catch (e) {
       console.error(e)
     }

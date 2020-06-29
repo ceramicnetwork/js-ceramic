@@ -1,30 +1,7 @@
-import CID from 'cids'
 import { EventEmitter } from 'events'
 import cloneDeep from 'lodash.clonedeep'
 import { fetchJson } from './utils'
-import { AnchorStatus, DocState, Doctype, InitOpts } from "@ceramicnetwork/ceramic-common/lib/doctype"
-
-function deserializeState (state: any): DocState {
-  state.log = state.log.map((cidStr: string): CID => new CID(cidStr))
-  if (state.anchorProof) {
-    state.anchorProof.txHash = new CID(state.anchorProof.txHash);
-    state.anchorProof.root = new CID(state.anchorProof.root);
-  }
-
-  let showScheduledFor = true;
-  if (state.anchorStatus) {
-    state.anchorStatus = AnchorStatus[state.anchorStatus];
-    showScheduledFor = state.anchorStatus !== AnchorStatus.FAILED && state.anchorStatus !== AnchorStatus.ANCHORED
-  }
-  if (state.anchorScheduledFor) {
-    if (showScheduledFor) {
-      state.anchorScheduledFor = Date.parse(state.anchorScheduledFor); // ISO format of the UTC time
-    } else {
-      state.anchorScheduledFor = null;
-    }
-  }
-  return state
-}
+import { DocState, Doctype, DoctypeUtils, InitOpts } from "@ceramicnetwork/ceramic-common/lib/doctype"
 
 class Document extends EventEmitter {
 
@@ -44,12 +21,12 @@ class Document extends EventEmitter {
         isUnique: opts.isUnique
       }
     })
-    return new Document(docId, deserializeState(state), apiUrl)
+    return new Document(docId, DoctypeUtils.deserializeState(state), apiUrl)
   }
 
   static async load (id: string, apiUrl: string): Promise<Document> {
     const { docId, state } = await fetchJson(apiUrl + '/state' + id)
-    return new Document(docId, deserializeState(state), apiUrl)
+    return new Document(docId, DoctypeUtils.deserializeState(state), apiUrl)
   }
 
   get content (): any {
@@ -72,7 +49,7 @@ class Document extends EventEmitter {
         owners: newOwners
       }
     })
-    this._state = deserializeState(state)
+    this._state = DoctypeUtils.deserializeState(state)
     return true
   }
 
@@ -86,7 +63,7 @@ class Document extends EventEmitter {
 
   async _syncState(): Promise<void> {
     let { state } = await fetchJson(this._apiUrl + '/state' + this.id)
-    state = deserializeState(state)
+    state = DoctypeUtils.deserializeState(state)
     if (JSON.stringify(this._state) !== JSON.stringify(state)) {
       this._state = state
       this.doctype.state = state

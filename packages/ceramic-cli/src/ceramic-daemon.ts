@@ -4,7 +4,7 @@ import express, { Request, Response, NextFunction } from 'express'
 import IdentityWallet from 'identity-wallet'
 import Ceramic from '@ceramicnetwork/ceramic-core'
 import type { CeramicConfig } from "@ceramicnetwork/ceramic-core";
-import { serializeState } from './utils'
+import { DoctypeUtils } from "@ceramicnetwork/ceramic-common/lib/doctype"
 
 const IPFS_HOST = 'http://localhost:5001'
 const DEFAULT_PORT = 7007
@@ -97,7 +97,7 @@ class CeramicDaemon {
     // TODO - check parameters
     try {
       const doc = await this.ceramic.createDocument(doctype, params, initOpts)
-      res.json({ docId: doc.id, state: serializeState(doc.state) })
+      res.json({ docId: doc.id, state: DoctypeUtils.serializeState(doc.state) })
     } catch (e) {
       return next(e)
     }
@@ -120,7 +120,7 @@ class CeramicDaemon {
     try {
       const doc = await this.ceramic.loadDocument(docId)
 
-      res.json({ docId: doc.id, state: serializeState(doc.state) })
+      res.json({ docId: doc.id, state: DoctypeUtils.serializeState(doc.state) })
     } catch (e) {
       return next(e)
     }
@@ -141,7 +141,7 @@ class CeramicDaemon {
 
       const doctypeHandler = this.ceramic.findDoctypeHandler(doc.doctype)
       doc = await doctypeHandler.doctype.change(doc, { content, owners }, this.ceramic.context)
-      res.json({ docId: doc.id, state: serializeState(doc.state) })
+      res.json({ docId: doc.id, state: DoctypeUtils.serializeState(doc.state) })
     } catch (e) {
       return next(e)
     }

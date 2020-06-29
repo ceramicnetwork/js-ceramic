@@ -70,6 +70,51 @@ export class DoctypeUtils {
     static createDocId(genesisCid: any): string {
         return ['/ceramic', genesisCid.toString()].join('/')
     }
+
+    /**
+     * Serializes doctype state for over the network transfer
+     * @param state - Doctype state
+     */
+    static serializeState(state: any): any {
+        state.log = state.log.map((cid: any) => cid.toString());
+        if (state.anchorStatus) {
+            state.anchorStatus = AnchorStatus[state.anchorStatus];
+        }
+        if (state.anchorScheduledFor) {
+            state.anchorScheduledFor = new Date(state.anchorScheduledFor).toISOString(); // ISO format of the UTC time
+        }
+        if (state.anchorProof) {
+            state.anchorProof.txHash = state.anchorProof.txHash.toString();
+            state.anchorProof.root = state.anchorProof.root.toString();
+        }
+        return state
+    }
+
+    /**
+     * Deserializes doctype state from over the network transfer
+     * @param state - Doctype state
+     */
+    static deserializeState(state: any): DocState {
+        state.log = state.log.map((cidStr: string): CID => new CID(cidStr))
+        if (state.anchorProof) {
+            state.anchorProof.txHash = new CID(state.anchorProof.txHash);
+            state.anchorProof.root = new CID(state.anchorProof.root);
+        }
+
+        let showScheduledFor = true;
+        if (state.anchorStatus) {
+            state.anchorStatus = AnchorStatus[state.anchorStatus];
+            showScheduledFor = state.anchorStatus !== AnchorStatus.FAILED && state.anchorStatus !== AnchorStatus.ANCHORED
+        }
+        if (state.anchorScheduledFor) {
+            if (showScheduledFor) {
+                state.anchorScheduledFor = Date.parse(state.anchorScheduledFor); // ISO format of the UTC time
+            } else {
+                state.anchorScheduledFor = null;
+            }
+        }
+        return state
+    }
 }
 
 /**
