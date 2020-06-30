@@ -3,7 +3,7 @@ import { EventEmitter } from 'events'
 import CID from 'cids'
 import cloneDeep from 'lodash.clonedeep'
 
-import Document from "./document"
+import type Document from "./document"
 
 export enum MsgType {
   UPDATE,
