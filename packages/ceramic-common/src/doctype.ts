@@ -76,44 +76,48 @@ export class DoctypeUtils {
      * @param state - Doctype state
      */
     static serializeState(state: any): any {
-        state.log = state.log.map((cid: any) => cid.toString());
-        if (state.anchorStatus) {
-            state.anchorStatus = AnchorStatus[state.anchorStatus];
+        const cloned = cloneDeep(state)
+
+        cloned.log = cloned.log.map((cid: any) => cid.toString());
+        if (cloned.anchorStatus) {
+            cloned.anchorStatus = AnchorStatus[cloned.anchorStatus];
         }
-        if (state.anchorScheduledFor) {
-            state.anchorScheduledFor = new Date(state.anchorScheduledFor).toISOString(); // ISO format of the UTC time
+        if (cloned.anchorScheduledFor) {
+            cloned.anchorScheduledFor = new Date(cloned.anchorScheduledFor).toISOString(); // ISO format of the UTC time
         }
-        if (state.anchorProof) {
-            state.anchorProof.txHash = state.anchorProof.txHash.toString();
-            state.anchorProof.root = state.anchorProof.root.toString();
+        if (cloned.anchorProof) {
+            cloned.anchorProof.txHash = cloned.anchorProof.txHash.toString();
+            cloned.anchorProof.root = cloned.anchorProof.root.toString();
         }
-        return state
+        return cloned
     }
 
     /**
-     * Deserializes doctype state from over the network transfer
-     * @param state - Doctype state
+     * Deserializes doctype cloned from over the network transfer
+     * @param state - Doctype cloned
      */
     static deserializeState(state: any): DocState {
-        state.log = state.log.map((cidStr: string): CID => new CID(cidStr))
-        if (state.anchorProof) {
-            state.anchorProof.txHash = new CID(state.anchorProof.txHash);
-            state.anchorProof.root = new CID(state.anchorProof.root);
+        const cloned = cloneDeep(state)
+
+        cloned.log = cloned.log.map((cidStr: string): CID => new CID(cidStr))
+        if (cloned.anchorProof) {
+            cloned.anchorProof.txHash = new CID(cloned.anchorProof.txHash);
+            cloned.anchorProof.root = new CID(cloned.anchorProof.root);
         }
 
         let showScheduledFor = true;
-        if (state.anchorStatus) {
-            state.anchorStatus = AnchorStatus[state.anchorStatus];
-            showScheduledFor = state.anchorStatus !== AnchorStatus.FAILED && state.anchorStatus !== AnchorStatus.ANCHORED
+        if (cloned.anchorStatus) {
+            cloned.anchorStatus = AnchorStatus[cloned.anchorStatus];
+            showScheduledFor = cloned.anchorStatus !== AnchorStatus.FAILED && cloned.anchorStatus !== AnchorStatus.ANCHORED
         }
-        if (state.anchorScheduledFor) {
+        if (cloned.anchorScheduledFor) {
             if (showScheduledFor) {
-                state.anchorScheduledFor = Date.parse(state.anchorScheduledFor); // ISO format of the UTC time
+                cloned.anchorScheduledFor = Date.parse(cloned.anchorScheduledFor); // ISO format of the UTC time
             } else {
-                state.anchorScheduledFor = null;
+                cloned.anchorScheduledFor = null;
             }
         }
-        return state
+        return cloned
     }
 }
 
