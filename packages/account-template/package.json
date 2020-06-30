@@ -21,7 +21,7 @@
     "@typescript-eslint/eslint-plugin": "^2.19.0",
     "@typescript-eslint/parser": "^2.19.0",
     "babel-jest": "^25.1.0",
-    "did-resolver": "^1.1.0",
+    "did-resolver": "^2.0.1",
     "eslint": "^6.8.0",
     "eslint-plugin-jest": "^23.8.2",
     "jest": "^25.1.0",
@@ -34,11 +34,11 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "3id-blockchain-utils": "^0.3.3",
+    "3id-blockchain-utils": "^0.4.0",
+    "caip": "~0.9.2",
     "@ceramicnetwork/ceramic-common": "^1.0.0",
     "@ceramicnetwork/ceramic-doctype-account-link": "^1.0.0",
     "@ceramicnetwork/ceramic-doctype-three-id": "^1.0.0",
-    "@ceramicnetwork/ceramic-doctype-tile": "^1.0.0",
-    "caip": "~0.6.0"
+    "@ceramicnetwork/ceramic-doctype-tile": "^1.0.0"
   }
 }

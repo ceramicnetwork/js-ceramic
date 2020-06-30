@@ -20,10 +20,10 @@
   },
   "dependencies": {
     "@ceramicnetwork/3id-did-resolver": "0.1.1",
-    "3id-blockchain-utils": "^0.3.3",
+    "3id-blockchain-utils": "^0.4.0",
     "@ceramicnetwork/ceramic-common": "^1.0.0",
     "@types/lodash.clonedeep": "^4.5.6",
-    "did-resolver": "^1.1.0",
+    "did-resolver": "^2.0.1",
     "did-jwt": "^4.0.0"
   },
   "devDependencies": {

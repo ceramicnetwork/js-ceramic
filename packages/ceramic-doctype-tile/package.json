@@ -19,10 +19,10 @@
     "build": "../../node_modules/.bin/tsc -p tsconfig.json"
   },
   "dependencies": {
-    "3id-blockchain-utils": "^0.3.3",
+    "3id-blockchain-utils": "^0.4.0",
     "@ceramicnetwork/ceramic-common": "^1.0.0",
     "@types/lodash.clonedeep": "^4.5.6",
-    "did-resolver": "^1.1.0"
+    "did-resolver": "^2.0.1"
   },
   "devDependencies": {
     "@babel/core": "^7.9.0",
