@@ -43,7 +43,6 @@ export interface DIDProvider {
  */
 export interface CeramicApi {
     pin: PinApi;
-    ipfs: Ipfs.Ipfs;
 
     /**
      * Register Doctype handler
