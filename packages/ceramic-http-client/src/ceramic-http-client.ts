@@ -74,14 +74,6 @@ class CeramicClient implements CeramicApi {
     return this._docmap[id].doctype as T
   }
 
-  get ipfs(): any {
-    throw new Error('method not implemented')
-  }
-
-  addDoctype<T extends Doctype>(doctypeHandler: DoctypeHandler<T>): void {
-    throw new Error('method not implemented')
-  }
-
   applyRecord<T extends Doctype>(docId: string, record: object, opts?: InitOpts): Promise<T> {
     throw new Error('method not implemented')
   }
