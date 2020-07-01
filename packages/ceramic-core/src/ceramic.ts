@@ -206,7 +206,9 @@ class Ceramic implements CeramicApi {
     const doctypeHandler = this._doctypeHandlers[doctype]
 
     const doc = await Document.create(params, doctypeHandler, this.dispatcher, this.stateStore, this.context, opts);
-    this._docmap[doc.id] = doc
+    if (!this._docmap[doc.id]) {
+      this._docmap[doc.id] = doc
+    }
     return this._docmap[doc.id]
   }
 
