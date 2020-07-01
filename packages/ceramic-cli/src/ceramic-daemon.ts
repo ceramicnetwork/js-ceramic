@@ -137,10 +137,9 @@ class CeramicDaemon {
     }
     const docId = ['/ceramic', req.params.cid].join('/')
     try {
-      let doc = await this.ceramic.loadDocument(docId)
+      const doc = await this.ceramic.loadDocument(docId)
 
-      const doctypeHandler = this.ceramic.findDoctypeHandler(doc.doctype)
-      doc = await doctypeHandler.doctype.change(doc, { content, owners }, this.ceramic.context)
+      await doc.change({ content, owners }, this.ceramic.context)
       res.json({ docId: doc.id, state: DoctypeUtils.serializeState(doc.state) })
     } catch (e) {
       return next(e)

@@ -167,6 +167,16 @@ export class Doctype extends EventEmitter {
         return this.state.log[this.state.log.length - 1]
     }
 
+    /**
+     * Makes a change on an existing document
+     * @param params - Change parameteres
+     * @param context - Ceramic context
+     * @param opts - Initialization options
+     */
+    change(params: Record<string, any>, context: Context, opts?: InitOpts): Promise<void> {
+        throw new Error("Method not implemented.")
+    }
+
 }
 
 /**
@@ -194,15 +204,6 @@ export interface DoctypeConstructor<T extends Doctype> {
      * @param opts - Initialization options
      */
     makeGenesis(params: Record<string, any>, context?: Context, opts?: InitOpts): Promise<Record<string, any>>;
-
-    /**
-     * Makes a change on an existing document
-     * @param doctype - Doctype instance
-     * @param params - Change parameteres
-     * @param context - Ceramic context
-     * @param opts - Initialization options
-     */
-    change(doctype: Doctype, params: Record<string, any>, context: Context, opts?: InitOpts): Promise<T>;
 }
 
 /**
