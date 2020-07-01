@@ -5,7 +5,7 @@ import tmp from 'tmp-promise'
 import Ipfs from 'ipfs'
 import CeramicDaemon from '../ceramic-daemon'
 import { AnchorStatus } from "@ceramicnetwork/ceramic-common"
-import TileDoctypeHandler from "@ceramicnetwork/ceramic-doctype-tile/lib/tile-doctype-handler"
+import { TileDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-tile"
 
 jest.mock('@ceramicnetwork/ceramic-core/lib/store/level-state-store')
 

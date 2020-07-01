@@ -1,8 +1,8 @@
 import { createLink } from '3id-blockchain-utils'
 import { AccountID } from 'caip'
 import { CeramicApi } from "@ceramicnetwork/ceramic-common"
-import { AccountLinkDoctype } from "@ceramicnetwork/ceramic-doctype-account-link/lib/account-link-doctype"
-import { TileDoctype } from "@ceramicnetwork/ceramic-doctype-tile/lib/tile-doctype"
+import { AccountLinkDoctype } from "@ceramicnetwork/ceramic-doctype-account-link"
+import { TileDoctype } from "@ceramicnetwork/ceramic-doctype-tile"
 
 class AccountLinks {
   private _accountLinkDocuments: Record<string, AccountLinkDoctype>;

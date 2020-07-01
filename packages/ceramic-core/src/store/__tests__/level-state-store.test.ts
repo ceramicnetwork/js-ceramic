@@ -110,11 +110,11 @@ import MockAnchorService from "../../anchor/mock/mock-anchor-service"
 jest.mock("../../ceramic-user")
 
 import CeramicUser from "../../ceramic-user"
-import { Doctype, DoctypeHandler } from "../../../../@ceramicnetwork/ceramic-common"
-import AnchorService from "../../../../@ceramicnetwork/ceramic-common"
-import { Context } from "../../../../@ceramicnetwork/ceramic-common"
-import ThreeIdDoctypeHandler from "@ceramicnetwork/ceramic-doctype-three-id/lib/three-id-doctype-handler"
-import { ThreeIdDoctype } from "@ceramicnetwork/ceramic-doctype-three-id/lib/three-id-doctype"
+import { Doctype, DoctypeHandler } from "@ceramicnetwork/ceramic-common"
+import { AnchorService } from "@ceramicnetwork/ceramic-common"
+import { Context } from "@ceramicnetwork/ceramic-common"
+import { ThreeIdDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-three-id"
+import { ThreeIdDoctype } from "@ceramicnetwork/ceramic-doctype-three-id"
 
 const anchorUpdate = (doctype: Doctype): Promise<void> => new Promise(resolve => doctype.on('change', resolve))
 

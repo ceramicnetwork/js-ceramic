@@ -14,9 +14,9 @@ import { Doctype, DoctypeHandler, InitOpts } from "@ceramicnetwork/ceramic-commo
 import { Context } from "@ceramicnetwork/ceramic-common"
 import { Resolver } from "did-resolver"
 
-import ThreeIdDoctypeHandler from "@ceramicnetwork/ceramic-doctype-three-id/lib/three-id-doctype-handler"
-import TileDoctypeHandler from "@ceramicnetwork/ceramic-doctype-tile/lib/tile-doctype-handler"
-import AccountLinkDoctypeHandler from "@ceramicnetwork/ceramic-doctype-account-link/lib/account-link-doctype-handler"
+import { ThreeIdDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-three-id"
+import { TileDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-tile"
+import { AccountLinkDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-account-link"
 
 // This is temporary until we handle DIDs and in particular 3IDs better
 const gen3IDgenesis = (pubkeys: any): any => {

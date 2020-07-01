@@ -9,6 +9,7 @@
   "author": "Janko Simonovic <simonovic86@gmail.com>",
   "homepage": "",
   "license": "MIT",
+  "main": "lib/index.js",
   "directories": {
     "lib": "lib"
   },

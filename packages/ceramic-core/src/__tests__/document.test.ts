@@ -69,9 +69,9 @@ import CeramicUser from '../ceramic-user'
 import Ceramic from "../ceramic"
 import { Context } from "@ceramicnetwork/ceramic-common"
 import { AnchorStatus, InitOpts, SignatureStatus } from "@ceramicnetwork/ceramic-common"
-import AnchorService from "@ceramicnetwork/ceramic-common"
-import { ThreeIdDoctype, ThreeIdParams } from "@ceramicnetwork/ceramic-doctype-three-id/lib/three-id-doctype"
-import ThreeIdDoctypeHandler from "@ceramicnetwork/ceramic-doctype-three-id/lib/three-id-doctype-handler"
+import { AnchorService } from "@ceramicnetwork/ceramic-common"
+import { ThreeIdDoctype, ThreeIdParams } from "@ceramicnetwork/ceramic-doctype-three-id"
+import { ThreeIdDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-three-id"
 
 const anchorUpdate = (doc: Document): Promise<void> => new Promise(resolve => doc.doctype.on('change', resolve))
 
