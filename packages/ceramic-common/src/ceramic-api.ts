@@ -1,4 +1,3 @@
-import type Ipfs from 'ipfs'
 import { Doctype, DoctypeHandler, InitOpts } from "./doctype"
 
 /**

@@ -2,7 +2,7 @@ import MockAnchorService from "./mock/mock-anchor-service";
 import EthereumAnchorService from "./ethereum/ethereum-anchor-service";
 import Dispatcher from "../dispatcher";
 import type { CeramicConfig } from "../ceramic";
-import AnchorService from "@ceramicnetwork/ceramic-common/lib/anchor-service"
+import type { AnchorService } from "@ceramicnetwork/ceramic-common"
 
 /**
  * AnchorService factory class

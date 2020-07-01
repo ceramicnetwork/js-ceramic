@@ -9,9 +9,9 @@ import LevelStateStore from "./store/level-state-store"
 
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 
-import { CeramicApi, DIDProvider, PinApi } from "@ceramicnetwork/ceramic-common/lib/ceramic-api"
-import { Doctype, DoctypeHandler, InitOpts } from "@ceramicnetwork/ceramic-common/lib/doctype"
-import { Context } from "@ceramicnetwork/ceramic-common/lib/context"
+import { CeramicApi, DIDProvider, PinApi } from "@ceramicnetwork/ceramic-common"
+import { Doctype, DoctypeHandler, InitOpts } from "@ceramicnetwork/ceramic-common"
+import { Context } from "@ceramicnetwork/ceramic-common"
 import { Resolver } from "did-resolver"
 
 import ThreeIdDoctypeHandler from "@ceramicnetwork/ceramic-doctype-three-id/lib/three-id-doctype-handler"

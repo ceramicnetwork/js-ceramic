@@ -1,5 +1,5 @@
-import { DIDProvider } from "@ceramicnetwork/ceramic-common/lib/ceramic-api"
-import User from "@ceramicnetwork/ceramic-common/lib/user"
+import { DIDProvider } from "@ceramicnetwork/ceramic-common"
+import { User } from "@ceramicnetwork/ceramic-common"
 
 const cborSortCompareFn = (a: string, b: string): number => a.length - b.length || a.localeCompare(b)
 

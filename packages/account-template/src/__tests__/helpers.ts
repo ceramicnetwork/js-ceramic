@@ -1,4 +1,4 @@
-import { Doctype } from "@ceramicnetwork/ceramic-common/lib/doctype"
+import { Doctype } from "@ceramicnetwork/ceramic-common"
 
 function buildMockCeramicDoc(): any {
   return {

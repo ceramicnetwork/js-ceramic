@@ -5,7 +5,7 @@ import Ipfs from "ipfs"
 import Document from "../document"
 import StateStore from "./state-store"
 import Dispatcher from "../dispatcher"
-import { AnchorStatus, DocState } from "@ceramicnetwork/ceramic-common/lib/doctype"
+import { AnchorStatus, DocState } from "@ceramicnetwork/ceramic-common"
 
 /**
  * Level backed State Store

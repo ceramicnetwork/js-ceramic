@@ -1,7 +1,7 @@
 import CeramicUser from '../ceramic-user'
 import IdentityWallet from 'identity-wallet'
 import VerifierAlrgorithm from 'did-jwt/src/VerifierAlgorithm.ts'
-import { DIDProvider } from "@ceramicnetwork/ceramic-common/lib/ceramic-api"
+import { DIDProvider } from "@ceramicnetwork/ceramic-common"
 
 describe('User', () => {
 

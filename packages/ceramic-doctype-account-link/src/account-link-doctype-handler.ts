@@ -3,8 +3,8 @@ import { validateLink } from "3id-blockchain-utils"
 import { AccountLinkDoctype, AccountLinkParams } from "./account-link-doctype"
 import {
     AnchorProof, AnchorStatus, DocState, DoctypeConstructor, DoctypeHandler, InitOpts, SignatureStatus
-} from "@ceramicnetwork/ceramic-common/lib/doctype"
-import { Context } from "@ceramicnetwork/ceramic-common/lib/context"
+} from "@ceramicnetwork/ceramic-common"
+import { Context } from "@ceramicnetwork/ceramic-common"
 
 const DOCTYPE = 'account-link'
 

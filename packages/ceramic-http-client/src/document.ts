@@ -1,7 +1,7 @@
 import { EventEmitter } from 'events'
 import cloneDeep from 'lodash.clonedeep'
 import { fetchJson } from './utils'
-import { DocState, Doctype, DoctypeUtils, InitOpts } from "@ceramicnetwork/ceramic-common/lib/doctype"
+import { DocState, Doctype, DoctypeUtils, InitOpts } from "@ceramicnetwork/ceramic-common"
 
 class Document extends EventEmitter {
 

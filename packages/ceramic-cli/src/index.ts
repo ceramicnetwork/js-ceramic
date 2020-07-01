@@ -1,7 +1,7 @@
 import CeramicDaemon from './ceramic-daemon'
 import CeramicClient from '@ceramicnetwork/ceramic-http-client'
 import program from 'commander'
-import { DoctypeUtils } from "@ceramicnetwork/ceramic-common/lib/doctype"
+import { DoctypeUtils } from "@ceramicnetwork/ceramic-common"
 
 
 const PREFIX_REGEX = /^ceramic:\/\/|^\/ceramic\//

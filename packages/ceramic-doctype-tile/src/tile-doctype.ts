@@ -3,9 +3,9 @@ import jsonpatch from 'fast-json-patch'
 import { encode as base64Encode } from '@ethersproject/base64'
 import { randomBytes } from '@ethersproject/random'
 
-import { Doctype, DoctypeConstructor, DoctypeStatic, InitOpts } from "@ceramicnetwork/ceramic-common/lib/doctype"
-import { Context } from "@ceramicnetwork/ceramic-common/lib/context"
-import User from "@ceramicnetwork/ceramic-common/lib/user"
+import { Doctype, DoctypeConstructor, DoctypeStatic, InitOpts } from "@ceramicnetwork/ceramic-common"
+import { Context } from "@ceramicnetwork/ceramic-common"
+import { User } from "@ceramicnetwork/ceramic-common"
 
 const DOCTYPE = 'tile'
 

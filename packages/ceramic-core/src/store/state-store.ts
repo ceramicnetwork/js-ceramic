@@ -1,5 +1,5 @@
 import Document from "../document"
-import { DocState } from "@ceramicnetwork/ceramic-common/lib/doctype"
+import { DocState } from "@ceramicnetwork/ceramic-common"
 
 /**
  * State store API

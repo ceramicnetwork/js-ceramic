@@ -4,7 +4,7 @@ import IdentityWallet from 'identity-wallet'
 import tmp from 'tmp-promise'
 import Ipfs from 'ipfs'
 import CeramicDaemon from '../ceramic-daemon'
-import { AnchorStatus } from "@ceramicnetwork/ceramic-common/lib/doctype"
+import { AnchorStatus } from "@ceramicnetwork/ceramic-common"
 import TileDoctypeHandler from "@ceramicnetwork/ceramic-doctype-tile/lib/tile-doctype-handler"
 
 jest.mock('@ceramicnetwork/ceramic-core/lib/store/level-state-store')

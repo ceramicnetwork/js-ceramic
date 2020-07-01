@@ -2,8 +2,8 @@ import Ipfs from "ipfs"
 import { Resolver } from "did-resolver"
 import { CeramicApi, DIDProvider } from "./ceramic-api"
 
-import User from "./user"
-import AnchorService from "./anchor-service"
+import type { User } from "./user"
+import type { AnchorService } from "./anchor-service"
 
 export interface Context {
     user?: User;

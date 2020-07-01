@@ -1,4 +1,4 @@
-import { CeramicApi } from "@ceramicnetwork/ceramic-common/lib/ceramic-api"
+import { CeramicApi } from "@ceramicnetwork/ceramic-common"
 import { TileDoctype } from "@ceramicnetwork/ceramic-doctype-tile/lib/tile-doctype"
 import { ThreeIdDoctype } from "@ceramicnetwork/ceramic-doctype-three-id/lib/three-id-doctype"
 

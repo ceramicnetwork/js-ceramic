@@ -1,8 +1,8 @@
 import jsonpatch from 'fast-json-patch'
 
-import { Doctype, DoctypeConstructor, DoctypeStatic, InitOpts } from "@ceramicnetwork/ceramic-common/lib/doctype"
-import { Context } from "@ceramicnetwork/ceramic-common/lib/context"
-import User from "@ceramicnetwork/ceramic-common/lib/user"
+import { Doctype, DoctypeConstructor, DoctypeStatic, InitOpts } from "@ceramicnetwork/ceramic-common"
+import { Context } from "@ceramicnetwork/ceramic-common"
+import { User } from "@ceramicnetwork/ceramic-common"
 
 const DOCTYPE = '3id'
 

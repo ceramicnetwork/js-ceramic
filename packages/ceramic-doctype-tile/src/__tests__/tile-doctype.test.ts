@@ -1,7 +1,7 @@
 import TileDoctypeHandler from '../tile-doctype-handler'
 import CID from 'cids'
 
-import User from "@ceramicnetwork/ceramic-common/lib/user"
+import { User } from "@ceramicnetwork/ceramic-common"
 
 class MockUser implements User {
   DID: string;
@@ -15,7 +15,7 @@ class MockUser implements User {
 }
 
 import { TileDoctype } from "../tile-doctype"
-import { Context } from "@ceramicnetwork/ceramic-common/lib/context"
+import { Context } from "@ceramicnetwork/ceramic-common"
 jest.mock('did-jwt', () => ({
   // TODO - We should test for when this function throws as well
   verifyJWT: (): any => 'verified'

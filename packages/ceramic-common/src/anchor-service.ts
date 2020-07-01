@@ -3,7 +3,7 @@ import CID from "cids";
 import { EventEmitter } from "events";
 import { AnchorProof } from "./doctype"
 
-export default abstract class AnchorService extends EventEmitter {
+export abstract class AnchorService extends EventEmitter {
 
     /**
      * Request anchor record on blockchain

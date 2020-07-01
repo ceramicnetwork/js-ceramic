@@ -67,9 +67,9 @@ jest.mock('../ceramic-user')
 import CeramicUser from '../ceramic-user'
 
 import Ceramic from "../ceramic"
-import { Context } from "@ceramicnetwork/ceramic-common/lib/context"
-import { AnchorStatus, InitOpts, SignatureStatus } from "@ceramicnetwork/ceramic-common/lib/doctype"
-import AnchorService from "@ceramicnetwork/ceramic-common/lib/anchor-service"
+import { Context } from "@ceramicnetwork/ceramic-common"
+import { AnchorStatus, InitOpts, SignatureStatus } from "@ceramicnetwork/ceramic-common"
+import AnchorService from "@ceramicnetwork/ceramic-common"
 import { ThreeIdDoctype, ThreeIdParams } from "@ceramicnetwork/ceramic-doctype-three-id/lib/three-id-doctype"
 import ThreeIdDoctypeHandler from "@ceramicnetwork/ceramic-doctype-three-id/lib/three-id-doctype-handler"
 

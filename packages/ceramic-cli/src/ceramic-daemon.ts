@@ -4,7 +4,7 @@ import express, { Request, Response, NextFunction } from 'express'
 import IdentityWallet from 'identity-wallet'
 import Ceramic from '@ceramicnetwork/ceramic-core'
 import type { CeramicConfig } from "@ceramicnetwork/ceramic-core";
-import { DoctypeUtils } from "@ceramicnetwork/ceramic-common/lib/doctype"
+import { DoctypeUtils } from "@ceramicnetwork/ceramic-common"
 
 const IPFS_HOST = 'http://localhost:5001'
 const DEFAULT_PORT = 7007
