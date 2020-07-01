@@ -9,7 +9,6 @@ const API_PATH = '/api/v0'
 class CeramicClient implements CeramicApi {
   private readonly _apiUrl: string
   private readonly _docmap: Record<string, Document>
-  private readonly _iid: any
 
   public pin: PinApi
 
@@ -18,13 +17,6 @@ class CeramicClient implements CeramicApi {
     this._docmap = {}
 
     this.pin = this._initPinApi()
-
-    // this is an ugly way of getting updates, switch to something better
-    this._iid = setInterval(() => {
-      for (const docId in this._docmap) {
-        this._docmap[docId]._syncState()
-      }
-    }, 1000)
   }
 
   _initPinApi(): PinApi {
@@ -61,9 +53,9 @@ class CeramicClient implements CeramicApi {
 
   async createDocument<T extends Doctype>(doctype: string, params: object, opts?: InitOpts): Promise<T> {
     const doc = await Document.create(this._apiUrl, doctype, params, opts)
-    // if (!this._docmap[doc.id]) {
+    if (!this._docmap[doc.id]) {
       this._docmap[doc.id] = doc
-    // }
+    }
     return doc.doctype as T
   }
 
@@ -95,7 +87,9 @@ class CeramicClient implements CeramicApi {
   }
 
   async close (): Promise<void> {
-    clearInterval(this._iid)
+    for (const docId in this._docmap) {
+      this._docmap[docId].close();
+    }
   }
 }
 

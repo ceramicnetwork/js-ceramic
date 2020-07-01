@@ -209,7 +209,7 @@ class Ceramic implements CeramicApi {
     if (!this._docmap[doc.id]) {
       this._docmap[doc.id] = doc
     }
-    return this._docmap[doc.id]
+    return doc
   }
 
   /**

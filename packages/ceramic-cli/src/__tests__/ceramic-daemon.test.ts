@@ -28,7 +28,7 @@ const port = 7777
 const apiUrl = 'http://localhost:' + port
 
 describe('Ceramic interop: core <> http-client', () => {
-  jest.setTimeout(10000)
+  jest.setTimeout(7000)
   let ipfs
   let tmpFolder, idWallet
   let core, daemon, client

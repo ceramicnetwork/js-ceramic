@@ -6,10 +6,15 @@ import { DocState, Doctype, DoctypeUtils, InitOpts } from "@ceramicnetwork/ceram
 class Document extends EventEmitter {
 
   public doctype: Doctype
+  private readonly _syncHandle: NodeJS.Timeout
 
   constructor (public id: string, private _state: any, private _apiUrl: string) {
     super()
     this.doctype = new Doctype(_state)
+
+    this._syncHandle = setInterval(async () => {
+        this._syncState()
+    }, 1000)
   }
 
   static async create (apiUrl: string, doctype: string, params: object, opts: InitOpts = {}): Promise<Document> {
@@ -69,6 +74,10 @@ class Document extends EventEmitter {
       this.doctype.state = state
       this.doctype.emit('change')
     }
+  }
+
+  close() {
+    clearInterval(this._syncHandle)
   }
 }
 
