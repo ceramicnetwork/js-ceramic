@@ -2,15 +2,22 @@ import { EventEmitter } from 'events'
 import cloneDeep from 'lodash.clonedeep'
 import { fetchJson } from './utils'
 import { DocState, Doctype, DoctypeUtils, InitOpts } from "@ceramicnetwork/ceramic-common"
+import { Context } from "@ceramicnetwork/ceramic-common/lib"
+
+class CliDoctype extends Doctype {
+  async change(params: Record<string, any>, context: Context, opts?: InitOpts): Promise<void> {
+    // do nothing
+  }
+}
 
 class Document extends EventEmitter {
 
-  public doctype: Doctype
+  public doctype: CliDoctype
   private readonly _syncHandle: NodeJS.Timeout
 
   constructor (public id: string, private _state: any, private _apiUrl: string) {
     super()
-    this.doctype = new Doctype(_state)
+    this.doctype = new CliDoctype(_state)
 
     this._syncHandle = setInterval(async () => {
         this._syncState()

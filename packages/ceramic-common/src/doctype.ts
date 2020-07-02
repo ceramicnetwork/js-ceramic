@@ -134,7 +134,7 @@ export interface InitOpts {
 /**
  * Describes common doctype attributes
  */
-export class Doctype extends EventEmitter {
+export abstract class Doctype extends EventEmitter {
     constructor(private _state: DocState) {
         super()
     }
@@ -173,9 +173,7 @@ export class Doctype extends EventEmitter {
      * @param context - Ceramic context
      * @param opts - Initialization options
      */
-    change(params: Record<string, any>, context: Context, opts?: InitOpts): Promise<void> {
-        throw new Error("Method not implemented.")
-    }
+    abstract change(params: Record<string, any>, context: Context, opts?: InitOpts): Promise<void>;
 
 }
 
