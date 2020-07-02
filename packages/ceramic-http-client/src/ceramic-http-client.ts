@@ -2,6 +2,7 @@ import { fetchJson } from "./utils"
 import Document from './document'
 import { Doctype, DoctypeHandler, InitOpts } from "@ceramicnetwork/ceramic-common"
 import { CeramicApi, DIDProvider, PinApi } from "@ceramicnetwork/ceramic-common"
+import { DoctypeUtils } from "@ceramicnetwork/ceramic-common/lib"
 
 const CERAMIC_HOST = 'http://localhost:7007'
 const API_PATH = '/api/v0'
@@ -53,17 +54,19 @@ class CeramicClient implements CeramicApi {
 
   async createDocument<T extends Doctype>(doctype: string, params: object, opts?: InitOpts): Promise<T> {
     const doc = await Document.create(this._apiUrl, doctype, params, opts)
-    if (!this._docmap[doc.id]) {
-      this._docmap[doc.id] = doc
+    const normalizedId = DoctypeUtils.normalizeDocId(doc.id)
+    if (!this._docmap[normalizedId]) {
+      this._docmap[normalizedId] = doc
     }
     return doc as unknown as T
   }
 
   async loadDocument<T extends Doctype>(id: string, opts?: InitOpts): Promise<T> {
-    if (!this._docmap[id]) {
-      this._docmap[id] = await Document.load(id, this._apiUrl)
+    const normalizedId = DoctypeUtils.normalizeDocId(id)
+    if (!this._docmap[normalizedId]) {
+      this._docmap[normalizedId] = await Document.load(normalizedId, this._apiUrl)
     }
-    return this._docmap[id] as unknown as T
+    return this._docmap[normalizedId] as unknown as T
   }
 
   applyRecord<T extends Doctype>(docId: string, record: object, opts?: InitOpts): Promise<T> {

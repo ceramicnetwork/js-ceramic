@@ -31,8 +31,7 @@ class Document extends EventEmitter {
     this.stateStore = stateStore;
 
     this._applyQueue = new PQueue({ concurrency: 1 })
-    const split = this.id.split('/')
-    this._genesisCid = new CID(split[2])
+    this._genesisCid = new CID(DoctypeUtils.getGenesis(this.id))
   }
 
   static async create<T extends Doctype> (

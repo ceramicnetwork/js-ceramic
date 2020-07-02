@@ -28,13 +28,15 @@ class Document extends Doctype {
   }
 
   static async load (id: string, apiUrl: string): Promise<Document> {
-    const { state } = await fetchJson(apiUrl + '/state' + id)
+    const normalizedId = DoctypeUtils.normalizeDocId(id)
+    const { state } = await fetchJson(apiUrl + '/state' + normalizedId)
     return new Document(DoctypeUtils.deserializeState(state), apiUrl)
   }
 
   async change(params: Record<string, any>, context: Context, opts?: InitOpts): Promise<void> {
     const { content, owners } = params
-    const { state } = await fetchJson(this._apiUrl + '/change' + this.id, {
+    const normalizedId = DoctypeUtils.normalizeDocId(this.id)
+    const { state } = await fetchJson(this._apiUrl + '/change' + normalizedId, {
       params: {
         content,
         owners,
@@ -52,7 +54,8 @@ class Document extends Doctype {
   }
 
   async _syncState(): Promise<void> {
-    let { state } = await fetchJson(this._apiUrl + '/state' + this.id)
+    const normalizedId = DoctypeUtils.normalizeDocId(this.id)
+    let { state } = await fetchJson(this._apiUrl + '/state' + normalizedId)
     state = DoctypeUtils.deserializeState(state)
     if (JSON.stringify(this.state) !== JSON.stringify(state)) {
       this.state = state

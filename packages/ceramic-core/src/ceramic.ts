@@ -17,6 +17,7 @@ import { Resolver } from "did-resolver"
 import { ThreeIdDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-three-id"
 import { TileDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-tile"
 import { AccountLinkDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-account-link"
+import { DoctypeUtils } from "@ceramicnetwork/ceramic-common/lib"
 
 // This is temporary until we handle DIDs and in particular 3IDs better
 const gen3IDgenesis = (pubkeys: any): any => {
@@ -147,7 +148,7 @@ class Ceramic implements CeramicApi {
       // patch create did document for now
       const { owners, content } = gen3IDgenesis(this.context.user.publicKeys)
       const doc = await this._createDoc('3id', { content, owners })
-      this.context.user.DID = 'did:3:' + doc.id.split('/')[2]
+      this.context.user.DID = 'did:3:' + DoctypeUtils.getGenesis(doc.id)
     }
   }
 
@@ -206,8 +207,9 @@ class Ceramic implements CeramicApi {
     const doctypeHandler = this._doctypeHandlers[doctype]
 
     const doc = await Document.create(params, doctypeHandler, this.dispatcher, this.stateStore, this.context, opts);
-    if (!this._docmap[doc.id]) {
-      this._docmap[doc.id] = doc
+    const normalizedId = DoctypeUtils.normalizeDocId(doc.id)
+    if (!this._docmap[normalizedId]) {
+      this._docmap[normalizedId] = doc
     }
     return doc
   }
@@ -230,10 +232,11 @@ class Ceramic implements CeramicApi {
    */
   async _createDocFromGenesis(genesis: any, opts: InitOpts = {}): Promise<Document> {
     const doc = await Document.createFromGenesis(genesis, this.findHandler.bind(this), this.dispatcher, this.stateStore, this.context, opts);
-    if (!this._docmap[doc.id]) {
-      this._docmap[doc.id] = doc
+    const normalizedId = DoctypeUtils.normalizeDocId(doc.id)
+    if (!this._docmap[normalizedId]) {
+      this._docmap[normalizedId] = doc
     }
-    return this._docmap[doc.id]
+    return doc
   }
 
   /**
@@ -242,7 +245,9 @@ class Ceramic implements CeramicApi {
    * @param opts - Initialization options
    */
   async loadDocument<T extends Doctype>(docId: string, opts: InitOpts = {}): Promise<T> {
-    const doc = await this._loadDoc(docId, opts)
+    const normalizedId = DoctypeUtils.normalizeDocId(docId)
+
+    const doc = await this._loadDoc(normalizedId, opts)
     return doc.doctype as T
   }
 
@@ -252,10 +257,12 @@ class Ceramic implements CeramicApi {
    * @param opts - Initialization options
    */
   async _loadDoc(docId: string, opts: InitOpts = {}): Promise<Document> {
-    if (!this._docmap[docId]) {
-      this._docmap[docId] = await Document.load(docId, this.findHandler.bind(this), this.dispatcher, this.stateStore, this.context, opts)
+    const normalizedId = DoctypeUtils.normalizeDocId(docId)
+
+    if (!this._docmap[normalizedId]) {
+      this._docmap[normalizedId] = await Document.load(docId, this.findHandler.bind(this), this.dispatcher, this.stateStore, this.context, opts)
     }
-    return this._docmap[docId]
+    return this._docmap[normalizedId]
   }
 
   /**

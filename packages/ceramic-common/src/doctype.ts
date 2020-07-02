@@ -68,7 +68,29 @@ export class DoctypeUtils {
      * @param genesisCid - Genesis record CID
      */
     static createDocId(genesisCid: any): string {
-        return ['/ceramic', genesisCid.toString()].join('/')
+        return ['ceramic:/', genesisCid.toString()].join('/')
+    }
+
+    /**
+     * Normalize document ID
+     * @param docId - Document ID
+     */
+    static normalizeDocId(docId: string): string {
+        if (docId.startsWith('ceramic://')) {
+            return docId.replace('ceramic://', '/ceramic/')
+        }
+        return docId
+    }
+
+    /**
+     * Normalize document ID
+     * @param docId - Document ID
+     */
+    static getGenesis(docId: string): string {
+        if (docId.startsWith('ceramic://')) {
+            return docId.split('//')[1]
+        }
+        return docId.split('/')[2]
     }
 
     /**
