@@ -56,14 +56,14 @@ class CeramicClient implements CeramicApi {
     if (!this._docmap[doc.id]) {
       this._docmap[doc.id] = doc
     }
-    return doc.doctype as T
+    return doc as unknown as T
   }
 
   async loadDocument<T extends Doctype>(id: string, opts?: InitOpts): Promise<T> {
     if (!this._docmap[id]) {
       this._docmap[id] = await Document.load(id, this._apiUrl)
     }
-    return this._docmap[id].doctype as T
+    return this._docmap[id] as unknown as T
   }
 
   applyRecord<T extends Doctype>(docId: string, record: object, opts?: InitOpts): Promise<T> {

@@ -73,24 +73,24 @@ describe('Ceramic interop: core <> http-client', () => {
   })
 
   it('gets anchor record updates', async () => {
-    const doc1 = await client.createDocument(DOCTYPE_TILE, { test: 123 })
+    const doc1 = await client.createDocument(DOCTYPE_TILE, { content: { test: 123 } })
     await anchorUpdate(doc1)
     expect(doc1.state.log.length).toEqual(2)
     expect(doc1.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
-    const doc2 = await client.createDocument(DOCTYPE_TILE, { test: 1234 })
+    const doc2 = await client.createDocument(DOCTYPE_TILE, { content : { test: 1234 } })
     await anchorUpdate(doc2)
     expect(doc2.state.log.length).toEqual(2)
     expect(doc2.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
   })
 
   it('loads documents correctly', async () => {
-    const doc1 = await core.createDocument(DOCTYPE_TILE, { test: 123 })
+    const doc1 = await core.createDocument(DOCTYPE_TILE, { content: { test: 123 } })
     await anchorUpdate(doc1)
     const doc2 = await client.loadDocument(doc1.id)
     expect(doc1.content).toEqual(doc2.content)
     expect(doc1.state).toEqual(doc2.state)
 
-    const doc3 = await client.createDocument(DOCTYPE_TILE, { test: 456 })
+    const doc3 = await client.createDocument(DOCTYPE_TILE, { content: { test: 456 } })
     await anchorUpdate(doc3)
     const doc4 = await core.loadDocument(doc3.id)
     expect(doc3.content).toEqual(doc4.content)
@@ -98,19 +98,18 @@ describe('Ceramic interop: core <> http-client', () => {
   })
 
   it('makes and gets updates correctly', async () => {
-    const doc1 = await core.createDocument(DOCTYPE_TILE, { test: 123 })
+    const doc1 = await core.createDocument(DOCTYPE_TILE, { content: { test: 123 } })
     await anchorUpdate(doc1)
     const doc2 = await client.loadDocument(doc1.id)
     // change from core viewable in client
-    await doc1.change({test: 123, abc: 987}, core.context)
+    await doc1.change({ content: {test: 123, abc: 987} }, core.context)
     await anchorUpdate(doc1)
     await anchorUpdate(doc2)
     expect(doc1.content).toEqual(doc2.content)
     expect(doc1.state).toEqual(doc2.state)
     // change from client viewable in core
 
-    const doctypeHandler = core.findDoctypeHandler('tile')
-    await doctypeHandler.doctype.change(doc2, {test: 456, abc: 654}, core.context)
+    await doc2.change({ content: {test: 456, abc: 654} }, core.context)
 
     await anchorUpdate(doc2)
     expect(doc1.content).toEqual(doc2.content)

@@ -1,23 +1,14 @@
-import { EventEmitter } from 'events'
-import cloneDeep from 'lodash.clonedeep'
+import { Doctype, DoctypeUtils, InitOpts } from "@ceramicnetwork/ceramic-common"
+
 import { fetchJson } from './utils'
-import { DocState, Doctype, DoctypeUtils, InitOpts } from "@ceramicnetwork/ceramic-common"
-import { Context } from "@ceramicnetwork/ceramic-common/lib"
+import { Context, DocState } from "@ceramicnetwork/ceramic-common/lib"
 
-class CliDoctype extends Doctype {
-  async change(params: Record<string, any>, context: Context, opts?: InitOpts): Promise<void> {
-    // do nothing
-  }
-}
+class Document extends Doctype {
 
-class Document extends EventEmitter {
-
-  public doctype: CliDoctype
   private readonly _syncHandle: NodeJS.Timeout
 
-  constructor (public id: string, private _state: any, private _apiUrl: string) {
-    super()
-    this.doctype = new CliDoctype(_state)
+  constructor (state: DocState, private _apiUrl: string) {
+    super(state)
 
     this._syncHandle = setInterval(async () => {
         this._syncState()
@@ -25,7 +16,7 @@ class Document extends EventEmitter {
   }
 
   static async create (apiUrl: string, doctype: string, params: object, opts: InitOpts = {}): Promise<Document> {
-    const { docId, state } = await fetchJson(apiUrl + '/create', {
+    const { state } = await fetchJson(apiUrl + '/create', {
       params,
       doctype,
       initOpts: {
@@ -33,36 +24,23 @@ class Document extends EventEmitter {
         isUnique: opts.isUnique
       }
     })
-    return new Document(docId, DoctypeUtils.deserializeState(state), apiUrl)
+    return new Document(DoctypeUtils.deserializeState(state), apiUrl)
   }
 
   static async load (id: string, apiUrl: string): Promise<Document> {
-    const { docId, state } = await fetchJson(apiUrl + '/state' + id)
-    return new Document(docId, DoctypeUtils.deserializeState(state), apiUrl)
+    const { state } = await fetchJson(apiUrl + '/state' + id)
+    return new Document(DoctypeUtils.deserializeState(state), apiUrl)
   }
 
-  get content (): any {
-    return this._state.nextContent || this._state.content
-  }
-
-  get state (): DocState {
-    return cloneDeep(this._state)
-  }
-
-  get head (): string {
-    const log = this._state.log
-    return log[log.length - 1]
-  }
-
-  async change (newContent: any, newOwners?: Array<string>): Promise<boolean> {
+  async change(params: Record<string, any>, context: Context, opts?: InitOpts): Promise<void> {
+    const { content, owners } = params
     const { state } = await fetchJson(this._apiUrl + '/change' + this.id, {
       params: {
-        content: newContent,
-        owners: newOwners
+        content,
+        owners,
       }
     })
-    this._state = DoctypeUtils.deserializeState(state)
-    return true
+    this.state = DoctypeUtils.deserializeState(state)
   }
 
   async sign (): Promise<boolean> {
@@ -76,10 +54,10 @@ class Document extends EventEmitter {
   async _syncState(): Promise<void> {
     let { state } = await fetchJson(this._apiUrl + '/state' + this.id)
     state = DoctypeUtils.deserializeState(state)
-    if (JSON.stringify(this._state) !== JSON.stringify(state)) {
-      this._state = state
-      this.doctype.state = state
-      this.doctype.emit('change')
+    if (JSON.stringify(this.state) !== JSON.stringify(state)) {
+      this.state = state
+      this.state = state
+      this.emit('change')
     }
   }
 
