@@ -133,7 +133,7 @@ describe('Ceramic integration', () => {
       })
     })
 
-    await doctype1.change({ content: { test: 'abcde' } }, ceramic1.context)
+    await doctype1.change({ content: { test: 'abcde' } })
     await updatePromise
     expect(doctype1.content).toEqual({ test: 'abcde' })
     expect(doctype3.content).toEqual(doctype1.content)

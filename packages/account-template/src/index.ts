@@ -113,7 +113,7 @@ class ThreeIDAccount {
       accountLinks = await AccountLinks.load(ceramicDoc.content['account-links'], ceramic)
     } else {
       accountLinks = await AccountLinks.build(did, ceramic)
-      await ceramicDoc.change({ content: { ...ceramicDoc.content, 'account-links': accountLinks.ceramicDoc.id } }, { api: ceramic } )
+      await ceramicDoc.change({ content: { ...ceramicDoc.content, 'account-links': accountLinks.ceramicDoc.id } } )
     }
 
     let keychain: Keychain
@@ -122,7 +122,7 @@ class ThreeIDAccount {
       keychain = new Keychain(subtileDocument, ceramic)
     } else {
       keychain = await Keychain.build(did, ceramic)
-      await ceramicDoc.change({ content: { ...ceramicDoc.content, keychain: keychain.ceramicDoc.id } }, { api: ceramic })
+      await ceramicDoc.change({ content: { ...ceramicDoc.content, keychain: keychain.ceramicDoc.id } })
     }
 
     let profile: Profile
@@ -131,7 +131,7 @@ class ThreeIDAccount {
       profile = new Profile(subtileDocument, ceramic)
     } else {
       profile = await Profile.build(did, ceramic)
-      await ceramicDoc.change({ content: { ...ceramicDoc.content, profile: profile.ceramicDoc.id } }, { api: ceramic })
+      await ceramicDoc.change({ content: { ...ceramicDoc.content, profile: profile.ceramicDoc.id } })
     }
 
     let claims: Claims
@@ -140,7 +140,7 @@ class ThreeIDAccount {
       claims = new Claims(subtileDocument, ceramic)
     } else {
       claims = await Claims.build(did, ceramic)
-      await ceramicDoc.change({ content: { ...ceramicDoc.content, claims: claims.ceramicDoc.id }}, { api: ceramic })
+      await ceramicDoc.change({ content: { ...ceramicDoc.content, claims: claims.ceramicDoc.id }})
     }
 
     let connections: Connections
@@ -149,7 +149,7 @@ class ThreeIDAccount {
       connections = new Connections(subtileDocument, ceramic)
     } else {
       connections = await Connections.build(did, ceramic)
-      await ceramicDoc.change({ content: { ...ceramicDoc.content, connections: connections.ceramicDoc.id } }, { api: ceramic })
+      await ceramicDoc.change({ content: { ...ceramicDoc.content, connections: connections.ceramicDoc.id } })
     }
 
     let sources: Sources
@@ -158,7 +158,7 @@ class ThreeIDAccount {
       sources = new Sources(subtileDocument, ceramic)
     } else {
       sources = await Sources.build(did, ceramic)
-      await ceramicDoc.change({ content: { ...ceramicDoc.content, sources: sources.ceramicDoc.id } }, { api: ceramic })
+      await ceramicDoc.change({ content: { ...ceramicDoc.content, sources: sources.ceramicDoc.id } })
     }
 
     let services: Services
@@ -167,7 +167,7 @@ class ThreeIDAccount {
       services = new Services(subtileDocument, ceramic)
     } else {
       services = await Services.build(did, ceramic)
-      await ceramicDoc.change({ content: { ...ceramicDoc.content, services: services.ceramicDoc.id } }, { api: ceramic })
+      await ceramicDoc.change({ content: { ...ceramicDoc.content, services: services.ceramicDoc.id } })
     }
 
     return new ThreeIDAccount(ceramicDoc, didDocument, accountLinks, keychain, profile, claims,

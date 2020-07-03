@@ -20,13 +20,12 @@ export class AccountLinkDoctype extends Doctype {
     /**
      * Changes AccountLink instance
      * @param params - Change parameters
-     * @param context - Ceramic context
      * @param opts - Initialization options
      */
-    async change(params: AccountLinkParams, context: Context, opts?: InitOpts): Promise<void> {
+    async change(params: AccountLinkParams, opts?: InitOpts): Promise<void> {
         const { content } = params
         const updateRecord = await AccountLinkDoctype._makeRecord(this, content)
-        const updated = await context.api.applyRecord(this.id, updateRecord, opts)
+        const updated = await this.context.api.applyRecord(this.id, updateRecord, opts)
         this.state = updated.state
     }
 

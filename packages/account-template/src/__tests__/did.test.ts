@@ -55,7 +55,7 @@ describe('DIDDocument', () => {
 
       await didDocument.setAccountTile(mockAccountTile)
 
-      expect(mockCeramicDoc.change).toHaveBeenCalledWith({ content: { ...mockCeramicDoc.content, account: mockAccountTile.id } }, { api: mockCeramic })
+      expect(mockCeramicDoc.change).toHaveBeenCalledWith({ content: { ...mockCeramicDoc.content, account: mockAccountTile.id } })
     })
 
     it('should throw an error if an account document is already linked to this DID', async () => {

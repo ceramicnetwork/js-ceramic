@@ -22,13 +22,12 @@ export class ThreeIdDoctype extends Doctype {
     /**
      * Change existing ThreeId doctype
      * @param params - Change parameters
-     * @param context - Ceramic context
      */
-    async change(params: ThreeIdParams, context: Context): Promise<void> {
+    async change(params: ThreeIdParams): Promise<void> {
         const { content, owners } = params
 
-        const updateRecord = await ThreeIdDoctype._makeRecord(this, context.user, content, owners)
-        const updated = await context.api.applyRecord(this.id, updateRecord)
+        const updateRecord = await ThreeIdDoctype._makeRecord(this, this.context.user, content, owners)
+        const updated = await this.context.api.applyRecord(this.id, updateRecord)
         this.state = updated.state
     }
 

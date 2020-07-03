@@ -102,14 +102,14 @@ describe('Ceramic interop: core <> http-client', () => {
     await anchorUpdate(doc1)
     const doc2 = await client.loadDocument(doc1.id)
     // change from core viewable in client
-    await doc1.change({ content: {test: 123, abc: 987} }, core.context)
+    await doc1.change({ content: {test: 123, abc: 987} })
     await anchorUpdate(doc1)
     await anchorUpdate(doc2)
     expect(doc1.content).toEqual(doc2.content)
     expect(doc1.state).toEqual(doc2.state)
     // change from client viewable in core
 
-    await doc2.change({ content: {test: 456, abc: 654} }, core.context)
+    await doc2.change({ content: {test: 456, abc: 654} })
 
     await anchorUpdate(doc2)
     expect(doc1.content).toEqual(doc2.content)

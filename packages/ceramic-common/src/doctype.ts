@@ -157,7 +157,7 @@ export interface InitOpts {
  * Describes common doctype attributes
  */
 export abstract class Doctype extends EventEmitter {
-    constructor(private _state: DocState) {
+    constructor(private _state: DocState, private _context: Context) {
         super()
     }
 
@@ -185,6 +185,10 @@ export abstract class Doctype extends EventEmitter {
         this._state = state
     }
 
+    get context(): Context {
+        return this._context
+    }
+
     get head(): CID {
         return this.state.log[this.state.log.length - 1]
     }
@@ -192,10 +196,9 @@ export abstract class Doctype extends EventEmitter {
     /**
      * Makes a change on an existing document
      * @param params - Change parameteres
-     * @param context - Ceramic context
      * @param opts - Initialization options
      */
-    abstract change(params: Record<string, any>, context: Context, opts?: InitOpts): Promise<void>;
+    abstract change(params: Record<string, any>, opts?: InitOpts): Promise<void>;
 
 }
 
@@ -214,8 +217,9 @@ export interface DoctypeConstructor<T extends Doctype> {
     /**
      * Constructor signature
      * @param state - Doctype state
+     * @param context - Ceramic context
      */
-    new (state: DocState): T;
+    new (state: DocState, context: Context): T;
 
     /**
      * Makes genesis record

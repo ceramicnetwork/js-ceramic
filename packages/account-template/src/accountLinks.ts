@@ -42,10 +42,10 @@ class AccountLinks {
       applyOnly: true
     })
     if (accountLinkDoc.content !== this.ceramicDoc.state.owners[0]) {
-      await accountLinkDoc.change( { content: proof }, { api: this._ceramic })
+      await accountLinkDoc.change( { content: proof })
     }
 
-    await this.ceramicDoc.change({ content: [...this.ceramicDoc.content, accountLinkDoc.id]}, { api: this._ceramic })
+    await this.ceramicDoc.change({ content: [...this.ceramicDoc.content, accountLinkDoc.id]})
 
     // need this here because the accountLinks tile 'change' event isn't triggered immediately
     this._accountLinkDocuments[account.toString()] = accountLinkDoc
@@ -59,7 +59,7 @@ class AccountLinks {
       throw new Error(`Address ${account} not linked`)
     }
     const newContent = this.ceramicDoc.content.filter((docId: string) => docId !== this._accountLinkDocuments[account.toString()].id)
-    await this.ceramicDoc.change({ content: newContent }, { api: this._ceramic })
+    await this.ceramicDoc.change({ content: newContent })
 
     // need this here because the accountLinks tile 'change' event isn't triggered immediately
     delete this._accountLinkDocuments[account.toString()]

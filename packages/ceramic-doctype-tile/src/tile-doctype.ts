@@ -26,16 +26,15 @@ export class TileDoctype extends Doctype {
     /**
      * Change existing Tile doctype
      * @param params - Change parameters
-     * @param context - Ceramic context
      * @param opts - Initialization options
      */
-    async change(params: TileParams, context: Context, opts?: InitOpts): Promise<void> {
-        if (context.user == null) {
+    async change(params: TileParams, opts?: InitOpts): Promise<void> {
+        if (this.context.user == null) {
             throw new Error('No user authenticated')
         }
 
-        const updateRecord = await TileDoctype._makeRecord(this, context.user, params.content)
-        const updated = await context.api.applyRecord(this.id, updateRecord, opts)
+        const updateRecord = await TileDoctype._makeRecord(this, this.context.user, params.content)
+        const updated = await this.context.api.applyRecord(this.id, updateRecord, opts)
         this.state = updated.state
     }
 

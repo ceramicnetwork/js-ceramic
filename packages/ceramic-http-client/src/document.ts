@@ -1,14 +1,14 @@
 import { Doctype, DoctypeUtils, InitOpts } from "@ceramicnetwork/ceramic-common"
 
 import { fetchJson } from './utils'
-import { Context, DocState } from "@ceramicnetwork/ceramic-common/lib"
+import { DocState } from "@ceramicnetwork/ceramic-common/lib"
 
 class Document extends Doctype {
 
   private readonly _syncHandle: NodeJS.Timeout
 
   constructor (state: DocState, private _apiUrl: string) {
-    super(state)
+    super(state, null)
 
     this._syncHandle = setInterval(async () => {
         this._syncState()
@@ -33,7 +33,7 @@ class Document extends Doctype {
     return new Document(DoctypeUtils.deserializeState(state), apiUrl)
   }
 
-  async change(params: Record<string, any>, context: Context, opts?: InitOpts): Promise<void> {
+  async change(params: Record<string, any>): Promise<void> {
     const { content, owners } = params
     const normalizedId = DoctypeUtils.normalizeDocId(this.id)
     const { state } = await fetchJson(this._apiUrl + '/change' + normalizedId, {

@@ -98,8 +98,8 @@ describe('AccountLinks', () => {
       }, {
         applyOnly: true
       })
-      expect(mockAccountLinkDoc.change).toHaveBeenCalledWith({ content: mockProof }, { api: mockCeramic })
-      expect(mockAccountLinksTile.change).toHaveBeenCalledWith({ content: [mockAccountLinkDoc.id] }, { api: mockCeramic })
+      expect(mockAccountLinkDoc.change).toHaveBeenCalledWith({ content: mockProof })
+      expect(mockAccountLinksTile.change).toHaveBeenCalledWith({ content: [mockAccountLinkDoc.id] })
     })
 
     it('should create and link an account-link document with the given proof if provided', async () => {
@@ -124,8 +124,8 @@ describe('AccountLinks', () => {
       }, {
         applyOnly: true
       })
-      expect(mockAccountLinkDoc.change).toHaveBeenCalledWith({ content: mockProof }, { api: mockCeramic })
-      expect(mockAccountLinksTile.change).toHaveBeenCalledWith({ content: [mockAccountLinkDoc.id] }, { api: mockCeramic })
+      expect(mockAccountLinkDoc.change).toHaveBeenCalledWith({ content: mockProof })
+      expect(mockAccountLinksTile.change).toHaveBeenCalledWith({ content: [mockAccountLinkDoc.id] })
     })
 
     it('should throw an error if the address is already linked', async () => {
@@ -169,7 +169,7 @@ describe('AccountLinks', () => {
       await accountLinks.remove(address)
 
       expect(accountLinks.list().find(link => link.account.toString() === address)).not.toBeTruthy()
-      expect(mockAccountLinksTile.change).toHaveBeenCalledWith({ content: [] }, { api: mockCeramic })
+      expect(mockAccountLinksTile.change).toHaveBeenCalledWith({ content: [] })
     })
 
     it('should throw an error if the address is not linked', async () => {

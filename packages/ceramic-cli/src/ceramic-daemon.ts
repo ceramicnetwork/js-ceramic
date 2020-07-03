@@ -139,7 +139,7 @@ class CeramicDaemon {
     try {
       const doc = await this.ceramic.loadDocument(docId)
 
-      await doc.change({ content, owners }, this.ceramic.context)
+      await doc.change({ content, owners })
       res.json({ docId: doc.id, state: DoctypeUtils.serializeState(doc.state) })
     } catch (e) {
       return next(e)

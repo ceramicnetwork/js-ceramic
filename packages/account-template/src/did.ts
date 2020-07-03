@@ -13,7 +13,7 @@ class DIDDocument {
     if (this.ceramicDoc.content.account) {
       throw new Error(`Account tile already linked: ${this.ceramicDoc.content.account}`)
     }
-    await this.ceramicDoc.change({ content: {...this.ceramicDoc.content, account: accountTile.id } }, { api: this._ceramic })
+    await this.ceramicDoc.change({ content: {...this.ceramicDoc.content, account: accountTile.id } })
   }
 
   static async load (did: string, ceramic: CeramicApi): Promise<DIDDocument> {
