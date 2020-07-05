@@ -1,9 +1,9 @@
 import CID from 'cids'
 
 // TODO - remove dispatcher, its not needed once we have anchoring service
-import AnchorService from "../anchor-service";
 import type Dispatcher from '../../dispatcher'
-import type { AnchorProof } from '../../document'
+import { AnchorService } from "@ceramicnetwork/ceramic-common"
+import { AnchorProof } from "@ceramicnetwork/ceramic-common"
 
 class MockAnchorService extends AnchorService {
 

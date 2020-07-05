@@ -1,113 +1,48 @@
-import CID from 'cids'
-import { EventEmitter } from 'events'
-import cloneDeep from 'lodash.clonedeep'
+import { Doctype, DoctypeUtils, InitOpts } from "@ceramicnetwork/ceramic-common"
+
 import { fetchJson } from './utils'
+import { DocState } from "@ceramicnetwork/ceramic-common/lib"
 
-export enum SignatureStatus {
-  UNSIGNED,
-  PARTIAL,
-  SIGNED
-}
+class Document extends Doctype {
 
-export enum AnchorStatus {
-  NOT_REQUESTED,
-  PENDING,
-  PROCESSING,
-  ANCHORED,
-  FAILED
-}
+  private readonly _syncHandle: NodeJS.Timeout
 
-export interface AnchorProof {
-  chainId: string;
-  blockNumber: number;
-  blockTimestamp: number;
-  txHash: CID;
-  root: CID;
-}
+  constructor (state: DocState, private _apiUrl: string) {
+    super(state, null)
 
-export interface DocState {
-  doctype: string;
-  owners: Array<string>;
-  nextOwners?: Array<string>;
-  content: any;
-  nextContent?: any;
-  signature: SignatureStatus;
-  anchorStatus: AnchorStatus;
-  anchorScheduledFor?: number;
-  anchorProof?: AnchorProof;
-  log: Array<CID>;
-}
-
-export interface InitOpts {
-  onlyGenesis?: boolean;
-  skipWait?: boolean;
-  owners?: Array<string>;
-  isUnique?: boolean;
-}
-
-function deserializeState (state: any): DocState {
-  state.log = state.log.map((cidStr: string): CID => new CID(cidStr))
-  if (state.anchorProof) {
-    state.anchorProof.txHash = new CID(state.anchorProof.txHash);
-    state.anchorProof.root = new CID(state.anchorProof.root);
+    this._syncHandle = setInterval(async () => {
+        this._syncState()
+    }, 1000)
   }
 
-  let showScheduledFor = true;
-  if (state.anchorStatus) {
-    state.anchorStatus = AnchorStatus[state.anchorStatus];
-    showScheduledFor = state.anchorStatus !== AnchorStatus.FAILED && state.anchorStatus !== AnchorStatus.ANCHORED
-  }
-  if (state.anchorScheduledFor) {
-    if (showScheduledFor) {
-      state.anchorScheduledFor = Date.parse(state.anchorScheduledFor); // ISO format of the UTC time
-    } else {
-      state.anchorScheduledFor = null;
-    }
-  }
-  return state
-}
-
-class Document extends EventEmitter {
-
-  constructor (public id: string, private _state: any, private _apiUrl: string) {
-    super()
-  }
-
-  static async create (genesis: any, doctype: string, apiUrl: string, opts: InitOpts = {}): Promise<Document> {
-    const { docId, state } = await fetchJson(apiUrl + '/create', {
-      genesis,
+  static async create (apiUrl: string, doctype: string, params: object, opts: InitOpts = {}): Promise<Document> {
+    const { state } = await fetchJson(apiUrl + '/create', {
+      params,
       doctype,
-      onlyGenesis: opts.onlyGenesis,
-      owners: opts.owners,
-      isUnique: opts.isUnique
+      initOpts: {
+        applyOnly: opts.applyOnly,
+        isUnique: opts.isUnique
+      }
     })
-    const doc = new Document(docId, deserializeState(state), apiUrl)
-    return doc
+    return new Document(DoctypeUtils.deserializeState(state), apiUrl)
   }
 
   static async load (id: string, apiUrl: string): Promise<Document> {
-    const { docId, state } = await fetchJson(apiUrl + '/state' + id)
-    const doc = new Document(docId, deserializeState(state), apiUrl)
-    return doc
+    const normalizedId = DoctypeUtils.normalizeDocId(id)
+    const { state } = await fetchJson(apiUrl + '/state' + normalizedId)
+    return new Document(DoctypeUtils.deserializeState(state), apiUrl)
   }
 
-  get content (): any {
-    return this._state.nextContent || this._state.content
-  }
-
-  get state (): DocState {
-    return cloneDeep(this._state)
-  }
-
-  get head (): string {
-    const log = this._state.log
-    return log[log.length - 1]
-  }
-
-  async change (newContent: any, newOwners?: Array<string>): Promise<boolean> {
-    const { state } = await fetchJson(this._apiUrl + '/change' + this.id, { content: newContent, owners: newOwners })
-    this._state = deserializeState(state)
-    return true
+  async change(params: Record<string, any>): Promise<void> {
+    const { content, owners } = params
+    const normalizedId = DoctypeUtils.normalizeDocId(this.id)
+    const { state } = await fetchJson(this._apiUrl + '/change' + normalizedId, {
+      params: {
+        content,
+        owners,
+      }
+    })
+    this.state = DoctypeUtils.deserializeState(state)
   }
 
   async sign (): Promise<boolean> {
@@ -118,13 +53,19 @@ class Document extends EventEmitter {
     return false
   }
 
-  async _syncState (): Promise<void> {
-    let { state } = await fetchJson(this._apiUrl + '/state' + this.id)
-    state = deserializeState(state)
-    if (JSON.stringify(this._state) !== JSON.stringify(state)) {
-      this._state = state
+  async _syncState(): Promise<void> {
+    const normalizedId = DoctypeUtils.normalizeDocId(this.id)
+    let { state } = await fetchJson(this._apiUrl + '/state' + normalizedId)
+    state = DoctypeUtils.deserializeState(state)
+    if (JSON.stringify(this.state) !== JSON.stringify(state)) {
+      this.state = state
+      this.state = state
       this.emit('change')
     }
+  }
+
+  close() {
+    clearInterval(this._syncHandle)
   }
 }
 

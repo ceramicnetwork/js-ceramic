@@ -4,7 +4,8 @@ import IdentityWallet from 'identity-wallet'
 import tmp from 'tmp-promise'
 import Ipfs from 'ipfs'
 import CeramicDaemon from '../ceramic-daemon'
-import { AnchorStatus } from "@ceramicnetwork/ceramic-core/lib/document";
+import { AnchorStatus } from "@ceramicnetwork/ceramic-common"
+import { TileDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-tile"
 
 jest.mock('@ceramicnetwork/ceramic-core/lib/store/level-state-store')
 
@@ -33,7 +34,6 @@ describe('Ceramic interop: core <> http-client', () => {
   let core, daemon, client
 
   const DOCTYPE_TILE = 'tile'
-  const DOCTYPE_3ID = '3id'
 
   beforeAll(async () => {
     idWallet = new IdentityWallet(() => true, { seed })
@@ -49,6 +49,12 @@ describe('Ceramic interop: core <> http-client', () => {
   beforeEach(async () => {
     core = await Ceramic.create(ipfs)
     await core.setDIDProvider(idWallet.get3idProvider())
+
+    const doctypeHandler = new TileDoctypeHandler()
+    doctypeHandler.verifyJWT = (): void => { return }
+
+    core._doctypeHandlers['tile'] = doctypeHandler
+
     daemon = new CeramicDaemon(core, { port })
     client = new CeramicClient(apiUrl)
   })
@@ -60,31 +66,31 @@ describe('Ceramic interop: core <> http-client', () => {
   })
 
   it('properly creates document', async () => {
-    const doc1 = await core.createDocument({ test: 123 }, DOCTYPE_TILE, { onlyGenesis: true, skipWait: true })
-    const doc2 = await client.createDocument({ test: 123 }, DOCTYPE_TILE, { onlyGenesis: true, skipWait: true })
+    const doc1 = await core.createDocument(DOCTYPE_TILE, { content: { test: 123 } }, { applyOnly: true, skipWait: true })
+    const doc2 = await client.createDocument(DOCTYPE_TILE, { content: { test: 123 } }, { applyOnly: true, skipWait: true })
     expect(doc1.content).toEqual(doc2.content)
     expect(doc1.state).toEqual(doc2.state)
   })
 
   it('gets anchor record updates', async () => {
-    const doc1 = await client.createDocument({ test: 123 }, DOCTYPE_TILE)
+    const doc1 = await client.createDocument(DOCTYPE_TILE, { content: { test: 123 } })
     await anchorUpdate(doc1)
     expect(doc1.state.log.length).toEqual(2)
     expect(doc1.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
-    const doc2 = await client.createDocument({ test: 1234 }, DOCTYPE_TILE)
+    const doc2 = await client.createDocument(DOCTYPE_TILE, { content : { test: 1234 } })
     await anchorUpdate(doc2)
     expect(doc2.state.log.length).toEqual(2)
     expect(doc2.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
   })
 
   it('loads documents correctly', async () => {
-    const doc1 = await core.createDocument({ test: 123 }, DOCTYPE_TILE)
+    const doc1 = await core.createDocument(DOCTYPE_TILE, { content: { test: 123 } })
     await anchorUpdate(doc1)
     const doc2 = await client.loadDocument(doc1.id)
     expect(doc1.content).toEqual(doc2.content)
     expect(doc1.state).toEqual(doc2.state)
 
-    const doc3 = await client.createDocument({ test: 456 }, DOCTYPE_TILE)
+    const doc3 = await client.createDocument(DOCTYPE_TILE, { content: { test: 456 } })
     await anchorUpdate(doc3)
     const doc4 = await core.loadDocument(doc3.id)
     expect(doc3.content).toEqual(doc4.content)
@@ -92,17 +98,19 @@ describe('Ceramic interop: core <> http-client', () => {
   })
 
   it('makes and gets updates correctly', async () => {
-    const doc1 = await core.createDocument({ test: 123 }, DOCTYPE_TILE)
+    const doc1 = await core.createDocument(DOCTYPE_TILE, { content: { test: 123 } })
     await anchorUpdate(doc1)
     const doc2 = await client.loadDocument(doc1.id)
     // change from core viewable in client
-    await doc1.change({test: 123, abc: 987})
+    await doc1.change({ content: {test: 123, abc: 987} })
     await anchorUpdate(doc1)
     await anchorUpdate(doc2)
     expect(doc1.content).toEqual(doc2.content)
     expect(doc1.state).toEqual(doc2.state)
     // change from client viewable in core
-    await doc2.change({test: 456, abc: 654})
+
+    await doc2.change({ content: {test: 456, abc: 654} })
+
     await anchorUpdate(doc2)
     expect(doc1.content).toEqual(doc2.content)
     expect(doc1.state).toEqual(doc2.state)

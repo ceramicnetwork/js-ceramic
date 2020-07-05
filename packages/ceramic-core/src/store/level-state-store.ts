@@ -2,9 +2,10 @@ import CID from "cids"
 import Level from "level-ts";
 
 import Ipfs from "ipfs"
-import Document, { AnchorStatus, DocState } from "../document"
+import Document from "../document"
 import StateStore from "./state-store"
 import Dispatcher from "../dispatcher"
+import { AnchorStatus, DocState } from "@ceramicnetwork/ceramic-common"
 
 /**
  * Level backed State Store
@@ -194,10 +195,10 @@ export default class LevelStateStore implements StateStore {
         }
 
         return {
-            [Symbol.asyncIterator]() {
+            [Symbol.asyncIterator](): any {
                 let index = 0
                 return {
-                    next() {
+                    next(): any {
                         if (index === docIds.length) {
                             return Promise.resolve({ value: null, done: true });
                         }

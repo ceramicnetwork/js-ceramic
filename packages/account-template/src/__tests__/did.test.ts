@@ -10,7 +10,7 @@ describe('DIDDocument', () => {
       const mockCeramicDoc = buildMockCeramicDoc()
       const mockCeramic = buildMockCeramic()
       mockCeramic.loadDocument.mockResolvedValue(mockCeramicDoc)
-      
+
       const didDocument = await DIDDocument.load(did, mockCeramic)
 
       expect(mockCeramic.loadDocument).toHaveBeenCalledWith('/ceramic/' + cid)
@@ -34,12 +34,14 @@ describe('DIDDocument', () => {
       mockCeramic.createDocument.mockResolvedValue()
       await DIDDocument.build(keys, mockCeramic)
 
-      expect(mockCeramic.createDocument).toHaveBeenCalledWith({
-        publicKeys: {
-          signing: keys.signingKey,
-          encryption: keys.encryptionKey
-        }
-      }, '3id', { owners: [keys.managementKey] })
+      expect(mockCeramic.createDocument).toHaveBeenCalledWith('3id', {
+        content: {
+          publicKeys: {
+            signing: keys.signingKey, encryption: keys.encryptionKey
+          }
+        },
+        owners: [keys.managementKey],
+      })
     })
   })
 
@@ -53,7 +55,7 @@ describe('DIDDocument', () => {
 
       await didDocument.setAccountTile(mockAccountTile)
 
-      expect(mockCeramicDoc.change).toHaveBeenCalledWith({ ...mockCeramicDoc.content, account: mockAccountTile.id })
+      expect(mockCeramicDoc.change).toHaveBeenCalledWith({ content: { ...mockCeramicDoc.content, account: mockAccountTile.id } })
     })
 
     it('should throw an error if an account document is already linked to this DID', async () => {
