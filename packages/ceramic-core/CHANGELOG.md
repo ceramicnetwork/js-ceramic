@@ -3,6 +3,34 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.3.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-core@0.2.0...@ceramicnetwork/ceramic-core@0.3.0) (2020-07-08)
+
+
+### Bug Fixes
+
+* add node-fetch types to ceramic core ([0eb48b1](https://github.com/ceramicnetwork/js-ceramic/commit/0eb48b19c9387dc26dc9d04ac446142afedf1947))
+* **core:** add prev verification for anchor record ([#68](https://github.com/ceramicnetwork/js-ceramic/issues/68)) ([95430a4](https://github.com/ceramicnetwork/js-ceramic/commit/95430a4712f1017f21b95e4d26c32c24deaf3534))
+* **core:** emit processing state ([#64](https://github.com/ceramicnetwork/js-ceramic/issues/64)) ([d63fe3b](https://github.com/ceramicnetwork/js-ceramic/commit/d63fe3b9ab70386aa760bac9415caada909ae578))
+* **core:** fix failing tests ([5008d60](https://github.com/ceramicnetwork/js-ceramic/commit/5008d6033ec23473090d1790755f096ff1a6a5e9))
+
+
+### Features
+
+* **core:** add id property to signed records ([8f2f81a](https://github.com/ceramicnetwork/js-ceramic/commit/8f2f81ae16018730ac93a8a74f85300ad424b90d))
+* allow legacy did docs to be used as genesis records ([#88](https://github.com/ceramicnetwork/js-ceramic/issues/88)) ([3012b55](https://github.com/ceramicnetwork/js-ceramic/commit/3012b559d6255685272b0af59730a802c6ab3326))
+* **core:** add local pinning ([#95](https://github.com/ceramicnetwork/js-ceramic/issues/95)) ([d1576b5](https://github.com/ceramicnetwork/js-ceramic/commit/d1576b5a853b99fafc28aa8a42b32df6ab1a53ab))
+* **core:** implement anchor service module ([#23](https://github.com/ceramicnetwork/js-ceramic/issues/23)) ([2a7d9bf](https://github.com/ceramicnetwork/js-ceramic/commit/2a7d9bf37f8d92e48cdf6751e706d4f6af77fdbc))
+
+
+### Reverts
+
+* Revert "chore(deps): bump 3id-blockchain-utils from 0.3.3 to 0.4.0 (#122)" ([625c08b](https://github.com/ceramicnetwork/js-ceramic/commit/625c08b62a04ed76638956c879dce4b3425fc04a)), closes [#122](https://github.com/ceramicnetwork/js-ceramic/issues/122)
+* Revert "chore(deps): bump cids from 0.8.0 to 0.8.1 (#121)" ([0385bf5](https://github.com/ceramicnetwork/js-ceramic/commit/0385bf56000b81336ecf19dc2f8578d8ac44b04e)), closes [#121](https://github.com/ceramicnetwork/js-ceramic/issues/121)
+
+
+
+
+
 # [0.2.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-core@0.1.0...@ceramicnetwork/ceramic-core@0.2.0) (2020-04-17)
 
 
