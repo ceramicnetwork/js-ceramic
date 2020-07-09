@@ -27,7 +27,7 @@
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/ceramic-common": "^1.0.0",
+    "@ceramicnetwork/ceramic-common": "^0.2.0",
     "cids": "^0.8.0",
     "lodash.clonedeep": "^4.5.0",
     "node-fetch": "^2.6.0"
