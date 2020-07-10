@@ -17,7 +17,12 @@
     "lib"
   ],
   "scripts": {
-    "build": "../../node_modules/.bin/tsc -p tsconfig.json"
+    "test": "./node_modules/.bin/jest --coverage",
+    "build": "../../node_modules/.bin/tsc -p tsconfig.json",
+    "prepublishOnly": "npm run build",
+    "prebuild": "npm run clean",
+    "lint": "./node_modules/.bin/eslint ./src --ext .js,.jsx,.ts,.tsx",
+    "clean": "rm -rf ./lib"
   },
   "dependencies": {
     "3id-blockchain-utils": "^0.4.0",

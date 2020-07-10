@@ -106,7 +106,7 @@ describe('ThreeIdHandler', () => {
     await context.ipfs.dag.put(RECORDS.genesis, FAKE_CID_1)
 
     const state = await threeIdDoctypeHandler.applyRecord(RECORDS.genesis, FAKE_CID_1, context)
-    const doctype = new ThreeIdDoctype(state)
+    const doctype = new ThreeIdDoctype(state, context)
 
     await expect(ThreeIdDoctype._makeRecord(doctype, null, RECORDS.r1.desiredContent)).rejects.toThrow(/No user/)
     const record = await ThreeIdDoctype._makeRecord(doctype, user, RECORDS.r1.desiredContent)

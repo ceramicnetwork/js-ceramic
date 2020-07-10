@@ -8,7 +8,7 @@ import { Context } from "@ceramicnetwork/ceramic-common"
 
 const DOCTYPE = 'account-link'
 
-export class AccountLinkDoctypeHandler implements DoctypeHandler<AccountLinkDoctype> {
+export default class AccountLinkDoctypeHandler implements DoctypeHandler<AccountLinkDoctype> {
     /**
      * Gets doctype name
      */

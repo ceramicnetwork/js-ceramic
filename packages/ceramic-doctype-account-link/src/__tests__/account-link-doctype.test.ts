@@ -129,7 +129,7 @@ describe('AccountLinkHandler', () => {
 
   it('makes signed record correctly', async () => {
     const state = await handler.applyRecord(RECORDS.genesis, FAKE_CID_1, context)
-    const doctype = new AccountLinkDoctype(state)
+    const doctype = new AccountLinkDoctype(state, context)
     const record = await AccountLinkDoctype._makeRecord(doctype, RECORDS.r1.desiredContent)
     expect(record).toEqual(RECORDS.r1.record)
   })

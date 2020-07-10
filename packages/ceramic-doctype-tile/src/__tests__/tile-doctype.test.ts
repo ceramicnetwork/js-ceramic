@@ -138,7 +138,7 @@ describe('ThreeIdHandler', () => {
     await context.ipfs.dag.put(RECORDS.genesisGenerated, FAKE_CID_1)
 
     const state = await tileDoctypeHandler.applyRecord(RECORDS.genesisGenerated, FAKE_CID_1, context)
-    const doctype = new TileDoctype(state)
+    const doctype = new TileDoctype(state, context)
 
     await expect(TileDoctype._makeRecord(doctype, null, RECORDS.r1.desiredContent)).rejects.toThrow(/No user/)
 
