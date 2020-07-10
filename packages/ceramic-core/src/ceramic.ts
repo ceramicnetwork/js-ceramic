@@ -14,8 +14,8 @@ import { Doctype, DoctypeHandler, InitOpts } from "@ceramicnetwork/ceramic-commo
 import { Context } from "@ceramicnetwork/ceramic-common"
 import { Resolver } from "did-resolver"
 
-import { ThreeIdDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-three-id"
 import { TileDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-tile"
+import { ThreeIdDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-three-id"
 import { AccountLinkDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-account-link"
 import { DoctypeUtils } from "@ceramicnetwork/ceramic-common/lib"
 

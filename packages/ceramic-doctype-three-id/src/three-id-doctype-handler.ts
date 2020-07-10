@@ -16,7 +16,7 @@ const DOCTYPE = '3id'
 /**
  * ThreeId doctype handler implementation
  */
-export default class ThreeIdDoctypeHandler implements DoctypeHandler<ThreeIdDoctype> {
+export class ThreeIdDoctypeHandler implements DoctypeHandler<ThreeIdDoctype> {
     /**
      * Gets doctype name
      */

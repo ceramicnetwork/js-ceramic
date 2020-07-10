@@ -1,4 +1,4 @@
-import TileDoctypeHandler from '../tile-doctype-handler'
+import { TileDoctypeHandler } from '../tile-doctype-handler'
 import CID from 'cids'
 
 import { User } from "@ceramicnetwork/ceramic-common"

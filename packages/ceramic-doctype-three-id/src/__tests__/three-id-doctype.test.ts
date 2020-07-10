@@ -13,7 +13,7 @@ class MockUser implements User {
   }
 }
 
-import ThreeIdDoctypeHandler from "../three-id-doctype-handler"
+import { ThreeIdDoctypeHandler } from "../three-id-doctype-handler"
 import { ThreeIdDoctype } from "../three-id-doctype"
 
 import { Context } from "@ceramicnetwork/ceramic-common"
