@@ -31,7 +31,7 @@ describe('Ceramic integration', () => {
   const DOCTYPE_TILE = 'tile'
   const DOCTYPE_3ID = '3id'
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     idWallet = new IdentityWallet(() => true, { seed })
     tmpFolder = await tmp.dir({ unsafeCleanup: true })
     ipfs1 = await Ipfs.create(genIpfsConf(tmpFolder.path, 0))
@@ -42,7 +42,7 @@ describe('Ceramic integration', () => {
     multaddr3 = (await ipfs3.id()).addresses[0].toString()
   })
 
-  afterAll(async () => {
+  afterEach(async () => {
     await ipfs1.stop()
     await ipfs2.stop()
     await ipfs3.stop()
@@ -114,10 +114,6 @@ describe('Ceramic integration', () => {
     const ceramic3 = await Ceramic.create(ipfs3)
     // ceramic node 2 shouldn't need to have the document open in order to forward the message
     const doctype1 = await ceramic1.createDocument<ThreeIdDoctype>(DOCTYPE_3ID, { content: { test: 321 }, owners: [owner] })
-
-    // wait a bit to propagate
-    await new Promise(resolve => setTimeout(resolve, 1000))
-
     const doctype3 = await ceramic3.createDocument<ThreeIdDoctype>(DOCTYPE_3ID, { content: { test: 321 }, owners: [owner] }, { applyOnly: true })
 
     expect(doctype3.content).toEqual(doctype1.content)

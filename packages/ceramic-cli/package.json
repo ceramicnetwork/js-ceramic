@@ -31,9 +31,9 @@
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/ceramic-common": "^1.0.0",
+    "@ceramicnetwork/ceramic-common": "^0.2.0",
     "@ceramicnetwork/ceramic-core": "^0.2.0",
-    "@ceramicnetwork/ceramic-doctype-tile": "^1.0.0",
+    "@ceramicnetwork/ceramic-doctype-tile": "^0.2.0",
     "@ceramicnetwork/ceramic-http-client": "^0.2.0",
     "commander": "^5.0.0",
     "express": "^4.17.1",
@@ -53,7 +53,7 @@
     "babel-jest": "^25.1.0",
     "eslint": "^6.8.0",
     "eslint-plugin-jest": "^23.8.2",
-    "ipfs": "^0.46.0",
+    "ipfs": "^0.47.0",
     "jest": "^25.1.0",
     "tmp-promise": "^2.0.2"
   }
