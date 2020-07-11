@@ -18,7 +18,7 @@ const genIpfsConf = (path, id): any => {
 }
 
 describe('Ceramic integration', () => {
-  jest.setTimeout(30000)
+  jest.setTimeout(120000)
   let ipfs1: Ipfs;
   let ipfs2: Ipfs;
   let ipfs3: Ipfs;
