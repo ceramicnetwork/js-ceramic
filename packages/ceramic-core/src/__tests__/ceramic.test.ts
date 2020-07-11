@@ -46,7 +46,7 @@ describe('Ceramic integration', () => {
     await ipfs1.stop()
     await ipfs2.stop()
     await ipfs3.stop()
-    tmpFolder.cleanup()
+    await tmpFolder.cleanup()
   })
 
   it('can propagate update across two connected nodes', async () => {
