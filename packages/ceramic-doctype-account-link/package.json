@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/ceramic-doctype-account-link",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Ceramic AccountLink doctype",
   "keywords": [
     "ceramic",
@@ -26,7 +26,7 @@
   },
   "dependencies": {
     "3id-blockchain-utils": "^0.4.0",
-    "@ceramicnetwork/ceramic-common": "^0.2.2",
+    "@ceramicnetwork/ceramic-common": "^0.2.3",
     "@types/lodash.clonedeep": "^4.5.6",
     "did-resolver": "^2.0.1"
   },
@@ -55,5 +55,5 @@
       "/node_modules(?!/did-jwt)/"
     ]
   },
-  "gitHead": "a932dfcde6ce465fd806ae4c128023b3f9ebf7c0"
+  "gitHead": "8dd71e2083468ac295f68417ffcc5ec80913a69b"
 }
