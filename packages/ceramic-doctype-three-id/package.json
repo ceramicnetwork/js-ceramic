@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/ceramic-doctype-three-id",
-  "version": "0.2.0",
+  "version": "0.2.4",
   "description": "Ceramic ThreeId doctype",
   "keywords": [
     "ceramic",
@@ -26,8 +26,8 @@
   },
   "dependencies": {
     "3id-blockchain-utils": "^0.4.0",
-    "@ceramicnetwork/3id-did-resolver": "0.1.1",
-    "@ceramicnetwork/ceramic-common": "^0.2.0",
+    "@ceramicnetwork/3id-did-resolver": "^0.1.5",
+    "@ceramicnetwork/ceramic-common": "^0.2.4",
     "@types/lodash.clonedeep": "^4.5.6",
     "did-jwt": "^4.0.0",
     "did-resolver": "^2.0.1"
@@ -56,5 +56,6 @@
     "transformIgnorePatterns": [
       "/node_modules(?!/did-jwt)/"
     ]
-  }
+  },
+  "gitHead": "c58eb9659f5fdd976aca2db6465619c20ba30ff9"
 }

@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/ceramic-common",
-  "version": "0.2.0",
+  "version": "0.2.4",
   "description": "Ceramic common types and utilities",
   "keywords": [
     "ceramic",
@@ -52,5 +52,6 @@
     "transformIgnorePatterns": [
       "/node_modules(?!/did-jwt)/"
     ]
-  }
+  },
+  "gitHead": "c58eb9659f5fdd976aca2db6465619c20ba30ff9"
 }

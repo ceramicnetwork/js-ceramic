@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/ceramic-http-client",
-  "version": "0.2.0",
+  "version": "0.2.4",
   "description": "An http client for the ceramic network",
   "keywords": [
     "Ceramic",
@@ -27,7 +27,7 @@
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/ceramic-common": "^0.2.0",
+    "@ceramicnetwork/ceramic-common": "^0.2.4",
     "cids": "^0.8.0",
     "lodash.clonedeep": "^4.5.0",
     "node-fetch": "^2.6.0"
@@ -47,5 +47,6 @@
     "eslint": "^6.8.0",
     "eslint-plugin-jest": "^23.8.2",
     "jest": "^25.1.0"
-  }
+  },
+  "gitHead": "c58eb9659f5fdd976aca2db6465619c20ba30ff9"
 }
