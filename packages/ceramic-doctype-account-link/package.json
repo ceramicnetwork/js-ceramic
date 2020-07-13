@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/ceramic-doctype-account-link",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Ceramic AccountLink doctype",
   "keywords": [
     "ceramic",
@@ -26,7 +26,7 @@
   },
   "dependencies": {
     "3id-blockchain-utils": "^0.4.0",
-    "@ceramicnetwork/ceramic-common": "^0.2.1",
+    "@ceramicnetwork/ceramic-common": "^0.2.2",
     "@types/lodash.clonedeep": "^4.5.6",
     "did-resolver": "^2.0.1"
   },

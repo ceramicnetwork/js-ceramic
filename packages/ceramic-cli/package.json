@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/ceramic-cli",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Typescript implementation of the Ceramic CLI",
   "keywords": [
     "Ceramic",
@@ -31,10 +31,10 @@
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/ceramic-common": "^0.2.1",
-    "@ceramicnetwork/ceramic-core": "^0.2.1",
-    "@ceramicnetwork/ceramic-doctype-tile": "^0.2.1",
-    "@ceramicnetwork/ceramic-http-client": "^0.2.1",
+    "@ceramicnetwork/ceramic-common": "^0.2.2",
+    "@ceramicnetwork/ceramic-core": "^0.2.2",
+    "@ceramicnetwork/ceramic-doctype-tile": "^0.2.2",
+    "@ceramicnetwork/ceramic-http-client": "^0.2.2",
     "commander": "^5.0.0",
     "express": "^4.17.1",
     "identity-wallet": "1.2.0-ceramic.1",
