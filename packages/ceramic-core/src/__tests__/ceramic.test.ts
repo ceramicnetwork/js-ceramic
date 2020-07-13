@@ -18,7 +18,7 @@ const genIpfsConf = (path, id): any => {
 }
 
 describe('Ceramic integration', () => {
-  jest.setTimeout(20000)
+  jest.setTimeout(240000)
   let ipfs1: Ipfs;
   let ipfs2: Ipfs;
   let ipfs3: Ipfs;
@@ -46,7 +46,7 @@ describe('Ceramic integration', () => {
     await ipfs1.stop()
     await ipfs2.stop()
     await ipfs3.stop()
-    tmpFolder.cleanup()
+    await tmpFolder.cleanup()
   })
 
   it('can propagate update across two connected nodes', async () => {
@@ -114,6 +114,10 @@ describe('Ceramic integration', () => {
     const ceramic3 = await Ceramic.create(ipfs3)
     // ceramic node 2 shouldn't need to have the document open in order to forward the message
     const doctype1 = await ceramic1.createDocument<ThreeIdDoctype>(DOCTYPE_3ID, { content: { test: 321 }, owners: [owner] })
+
+    // wait a bit to propagate
+    await new Promise(resolve => setTimeout(resolve, 1000))
+
     const doctype3 = await ceramic3.createDocument<ThreeIdDoctype>(DOCTYPE_3ID, { content: { test: 321 }, owners: [owner] }, { applyOnly: true })
 
     expect(doctype3.content).toEqual(doctype1.content)

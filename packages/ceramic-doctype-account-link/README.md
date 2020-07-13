@@ -1,11 +1,13 @@
-# `ceramic-doctype-account-link`
+# Ceramic Account Link doctype
 
-> TODO: description
+> This package contains Account Link doctype implementation.
 
-## Usage
-
+### Installation
 ```
-const ceramicDoctypeAccountLink = require('ceramic-doctype-account-link');
-
-// TODO: DEMONSTRATE API
+$ npm install @ceramicnetwork/ceramic-doctype-account-link
 ```
+
+## Contributing
+We are happy to accept small and large contributions. Make sure to check out the [Ceramic specifications](https://github.com/ceramicnetwork/specs) for details of how the protocol works.
+
+## License

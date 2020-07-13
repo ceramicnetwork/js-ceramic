@@ -17,7 +17,12 @@
     "lib"
   ],
   "scripts": {
-    "build": "../../node_modules/.bin/tsc -p tsconfig.json"
+    "test": "./node_modules/.bin/jest --coverage",
+    "build": "../../node_modules/.bin/tsc -p tsconfig.json",
+    "prepublishOnly": "npm run build",
+    "prebuild": "npm run clean",
+    "lint": "./node_modules/.bin/eslint ./src --ext .js,.jsx,.ts,.tsx",
+    "clean": "rm -rf ./lib"
   },
   "dependencies": {
     "3id-blockchain-utils": "^0.4.0",
@@ -40,7 +45,7 @@
     "eslint": "^6.8.0",
     "eslint-plugin-jest": "^23.8.2",
     "identity-wallet": "1.2.0-ceramic.1",
-    "ipfs": "^0.47.0",
+    "ipfs": "^0.46.0",
     "jest": "^25.1.0",
     "js-sha256": "^0.9.0",
     "tmp-promise": "^2.0.2"

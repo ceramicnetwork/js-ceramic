@@ -1,11 +1,13 @@
-# `ceramic-doctype-tile`
+# Ceramic Tile doctype
 
-> TODO: description
+> This package contains Tile doctype implementation.
 
-## Usage
-
+### Installation
 ```
-const ceramicDoctypeTile = require('ceramic-doctype-tile');
-
-// TODO: DEMONSTRATE API
+$ npm install @ceramicnetwork/ceramic-doctype-tile
 ```
+
+## Contributing
+We are happy to accept small and large contributions. Make sure to check out the [Ceramic specifications](https://github.com/ceramicnetwork/specs) for details of how the protocol works.
+
+## License

@@ -1,11 +1,13 @@
-# `ceramic-doctype-three-id`
+# Ceramic 3ID doctype
 
-> TODO: description
+> This package contains 3ID doctype implementation.
 
-## Usage
-
+### Installation
 ```
-const ceramicDoctypeThreeId = require('ceramic-doctype-three-id');
-
-// TODO: DEMONSTRATE API
+$ npm install @ceramicnetwork/ceramic-doctype-three-id
 ```
+
+## Contributing
+We are happy to accept small and large contributions. Make sure to check out the [Ceramic specifications](https://github.com/ceramicnetwork/specs) for details of how the protocol works.
+
+## License
