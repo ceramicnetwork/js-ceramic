@@ -1,7 +1,7 @@
 import DIDDocument from './did'
 import AccountLinks from './accountLinks'
 import { CeramicApi } from "@ceramicnetwork/ceramic-common"
-import { TileDoctype } from "@ceramicnetwork/ceramic-doctype-tile/lib/tile-doctype"
+import { TileDoctype } from "@ceramicnetwork/ceramic-doctype-tile"
 
 // All of these could likely inherit from a AccountSubTile abstract parent class or a builder class
 

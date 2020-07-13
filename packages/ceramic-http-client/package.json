@@ -47,5 +47,6 @@
     "eslint": "^6.8.0",
     "eslint-plugin-jest": "^23.8.2",
     "jest": "^25.1.0"
-  }
+  },
+  "gitHead": "a932dfcde6ce465fd806ae4c128023b3f9ebf7c0"
 }

@@ -56,5 +56,6 @@
     "ipfs": "^0.46.0",
     "jest": "^25.1.0",
     "tmp-promise": "^2.0.2"
-  }
+  },
+  "gitHead": "a932dfcde6ce465fd806ae4c128023b3f9ebf7c0"
 }

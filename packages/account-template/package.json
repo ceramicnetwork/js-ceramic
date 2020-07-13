@@ -40,5 +40,6 @@
     "@ceramicnetwork/ceramic-doctype-three-id": "^0.2.1",
     "@ceramicnetwork/ceramic-doctype-tile": "^0.2.1",
     "caip": "~0.9.2"
-  }
+  },
+  "gitHead": "a932dfcde6ce465fd806ae4c128023b3f9ebf7c0"
 }
