@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/3id-did-resolver",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "DID Resolver for the 3ID method",
   "keywords": [
     "Ceramic",
@@ -46,5 +46,5 @@
       "/node_modules(?!/did-jwt)/"
     ]
   },
-  "gitHead": "8dd71e2083468ac295f68417ffcc5ec80913a69b"
+  "gitHead": "c58eb9659f5fdd976aca2db6465619c20ba30ff9"
 }
