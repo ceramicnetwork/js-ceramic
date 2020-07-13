@@ -62,4 +62,8 @@ This command can only be run on the master branch, it will create a release comm
 ## Contributing
 We are happy to accept small and large contributions. Make sure to check out the [Ceramic specifications](https://github.com/ceramicnetwork/specs) for details of how the protocol works.
 
+
+## Maintainers
+[@simonovic86](https://github.com/simonovic86)
+
 ## License

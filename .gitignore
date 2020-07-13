@@ -1,2 +1,4 @@
 node_modules/
 lerna-debug.log
+.idea
+.pinning.store

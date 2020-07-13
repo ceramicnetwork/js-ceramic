@@ -1,59 +1,90 @@
-import Document, { SignatureStatus } from '../document'
-import AnchorService from '../anchor-service'
-import ThreeIdHandler from '../doctypes/threeIdHandler'
+import Document from '../document'
+import MockAnchorService from "../anchor/mock/mock-anchor-service";
+import LevelStateStore from "../store/level-state-store"
+
+jest.mock('../store/level-state-store')
+
+const mockStateStore = new LevelStateStore(null, null,null)
 
 jest.mock('../dispatcher', () => {
   const CID = require('cids') // eslint-disable-line @typescript-eslint/no-var-requires
+  const cloneDeep = require('lodash.clonedeep') // eslint-disable-line @typescript-eslint/no-var-requires
   const { sha256 } = require('js-sha256') // eslint-disable-line @typescript-eslint/no-var-requires
   const hash = (data: string): CID => new CID(1, 'sha2-256', Buffer.from('1220' + sha256(data), 'hex'))
-  const serializeCIDs = (rec: any): any => {
-    if (rec.prev) rec.prev = { '/': rec.prev.toString() }
-    if (rec.proof) rec.proof = { '/': rec.proof.toString() }
-    return rec
-  }
-  const deserializeCIDs = (rec: any): any => {
-    if (rec.prev) rec.prev = new CID(rec.prev['/'])
-    if (rec.proof) rec.proof = new CID(rec.proof['/'])
-    return rec
-  }
   return (gossip: boolean): any => {
-    const recs: Record<string, string> = {}
-    const listeners: Record<string, Array<(cid: string) => void>> = {}
+    const recs: Record<string, any> = {}
+    const docs: Record<string, Document> = {}
     return {
-      register: jest.fn(),
-      on: jest.fn((id, fn) => {
-        if (!listeners[id]) listeners[id] = []
-        listeners[id].push(fn)
+      _ipfs: {
+        dag: {
+          put(rec: any): any {
+            // stringify as a way of doing deep copy
+            const clone = cloneDeep(rec)
+            const cid = hash(JSON.stringify(clone))
+            recs[cid.toString()] = clone
+            return cid
+          },
+          get(cid: any): any {
+            return {
+              value: recs[cid.toString()]
+            }
+          }
+        }
+      },
+      register: jest.fn((doc) => {
+        docs[doc.id] = doc
       }),
       storeRecord: jest.fn((rec) => {
         // stringify as a way of doing deep copy
-        const serialized = JSON.stringify(serializeCIDs(rec))
-        const cid = hash(serialized)
-        recs[cid.toString()] = serialized
+        const clone = cloneDeep(rec)
+        const cid = hash(JSON.stringify(clone))
+        recs[cid.toString()] = clone
         return cid
       }),
       publishHead: jest.fn((id, head) => {
-        if (gossip) listeners[id+'_update'].map(fn => fn(head))
+        if (gossip) {
+          docs[id]._handleHead(head)
+        }
       }),
-      _requestHead: (id): void => {
-        if (gossip) listeners[id+'_headreq'].map(fn => fn())
+      _requestHead: (id: string): void => {
+        if (gossip) {
+          docs[id]._publishHead()
+        }
       },
       retrieveRecord: jest.fn(cid => {
-        return deserializeCIDs(JSON.parse(recs[cid.toString()]))
+        return recs[cid.toString()]
+      }),
+      retrieveRecordByPath: jest.fn((cid) => {
+        const rootCid = recs[cid.toString()].root
+        return recs[rootCid.toString()]
       })
     }
   }
 })
+
 import Dispatcher from '../dispatcher'
-jest.mock('../user')
-import User from '../user'
-jest.mock('did-jwt', () => ({
-  // TODO - We should test for when this function throws as well
-  verifyJWT: (): any => 'verified'
-}))
+jest.mock('../ceramic-user')
+import CeramicUser from '../ceramic-user'
 
-const anchorUpdate = (doc): Promise<void> => new Promise(resolve => doc.on('change', resolve))
+import Ceramic from "../ceramic"
+import { Context } from "@ceramicnetwork/ceramic-common"
+import { AnchorStatus, InitOpts, SignatureStatus } from "@ceramicnetwork/ceramic-common"
+import { AnchorService } from "@ceramicnetwork/ceramic-common"
+import { ThreeIdDoctype, ThreeIdParams } from "@ceramicnetwork/ceramic-doctype-three-id"
+import { ThreeIdDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-three-id"
 
+const anchorUpdate = (doc: Document): Promise<void> => new Promise(resolve => doc.doctype.on('change', resolve))
+
+const create = async (params: ThreeIdParams, ceramic: Ceramic, context: Context, opts: InitOpts = {}): Promise<Document> => {
+  const { content, owners } = params
+  if (!owners) {
+    throw new Error('The owner of the 3ID needs to be specified')
+  }
+
+  const record = await ThreeIdDoctype.makeGenesis({ content, owners })
+
+  return ceramic._createDocFromGenesis(record, opts)
+}
 
 describe('Document', () => {
 
@@ -61,82 +92,108 @@ describe('Document', () => {
     const initialContent = { abc: 123, def: 456 }
     const newContent = { abc: 321, def: 456, gh: 987 }
     const owners = ['publickeymock']
-    let dispatcher, doctypeHandler, doctypeHandlers, anchorService
+    let user: any
+    let dispatcher: any;
+    let doctypeHandler: ThreeIdDoctypeHandler;
+    let findHandler: any;
+    let anchorService: AnchorService;
+    let ceramic: Ceramic;
+    let context: Context;
 
     beforeEach(() => {
       dispatcher = Dispatcher(false)
-      anchorService = new AnchorService(dispatcher)
-      doctypeHandler = new ThreeIdHandler()
-      doctypeHandler.user = new User()
+      anchorService = new MockAnchorService(dispatcher)
+      user = new CeramicUser()
+      doctypeHandler = new ThreeIdDoctypeHandler()
+      doctypeHandler.verifyJWT = (): void => { return }
       // fake jwt
-      doctypeHandler.user.sign = jest.fn(async () => 'aaaa.bbbb.cccc')
-      doctypeHandlers = { '3id': doctypeHandler }
+      user.sign = jest.fn(async () => 'aaaa.bbbb.cccc')
+      findHandler = (): ThreeIdDoctypeHandler => doctypeHandler
+
+      context = {
+        anchorService,
+        ipfs: dispatcher._ipfs,
+        resolver: null,
+        provider: null,
+      }
+
+      ceramic = new Ceramic(dispatcher, mockStateStore, context)
+      ceramic._doctypeHandlers['3id'] = doctypeHandler
     })
 
     it('is created correctly', async () => {
-      const doc = await Document.create(initialContent, doctypeHandler, anchorService, dispatcher, { owners })
-      const docId = doc.id
+      const doc = await create({ content: initialContent, owners }, ceramic, context)
+
       expect(doc.content).toEqual(initialContent)
-      expect(dispatcher.register).toHaveBeenCalledWith(docId)
-      expect(dispatcher.on).toHaveBeenCalled()
-      expect(doc.state.anchored).toEqual(0)
+      expect(dispatcher.register).toHaveBeenCalledWith(doc)
+      expect(doc.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
       await anchorUpdate(doc)
-      expect(doc.state.anchored).toBeGreaterThan(0)
+      expect(doc.state.anchorStatus).not.toEqual(AnchorStatus.NOT_REQUESTED)
     })
 
     it('is loaded correctly', async () => {
-      const docId = (await Document.create(initialContent, doctypeHandler, anchorService, dispatcher, { owners })).id
-      const doc = await Document.load(docId, doctypeHandlers, anchorService, dispatcher, { skipWait: true })
-      expect(doc.id).toEqual(docId)
-      expect(doc.content).toEqual(initialContent)
-      expect(doc.state.anchored).toEqual(0)
+      const doc1 = await create({ content: initialContent, owners }, ceramic, context, { applyOnly: true, skipWait: true })
+      const doc2 = await Document.load(doc1.id, findHandler, dispatcher, mockStateStore, context, { skipWait: true })
+
+      expect(doc1.id).toEqual(doc2.id)
+      expect(doc1.content).toEqual(initialContent)
+      expect(doc1.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
     })
 
     it('handles new head correctly', async () => {
-      const tmpDoc = await Document.create(initialContent, doctypeHandler, anchorService, dispatcher, { owners })
+      const tmpDoc = await create({ content: initialContent, owners }, ceramic, context)
       await anchorUpdate(tmpDoc)
       const docId = tmpDoc.id
       const log = tmpDoc.state.log
-      const doc = await Document.load(docId, doctypeHandlers, anchorService, dispatcher, { skipWait: true })
+      const doc = await Document.load(docId, findHandler, dispatcher, mockStateStore, context, { skipWait: true })
       // changes will not load since no network and no local head storage yet
       expect(doc.content).toEqual(initialContent)
-      expect(doc.state).toEqual(expect.objectContaining({ signature: SignatureStatus.GENESIS, anchored: 0 }))
+      expect(doc.state).toEqual(expect.objectContaining({ signature: SignatureStatus.GENESIS, anchorStatus: 0 }))
       // _handleHead is intended to be called by the dispatcher
       // should return a promise that resolves when head is added
       await doc._handleHead(log[1])
       expect(doc.state.signature).toEqual(SignatureStatus.GENESIS)
-      expect(doc.state.anchored).not.toEqual(0)
+      expect(doc.state.anchorStatus).not.toEqual(AnchorStatus.NOT_REQUESTED)
       expect(doc.content).toEqual(initialContent)
     })
 
     it('is updated correctly', async () => {
-      const doc = await Document.create(initialContent, doctypeHandler, anchorService, dispatcher, { owners })
+      const doc = await create({ content: initialContent, owners }, ceramic, context)
       await anchorUpdate(doc)
-      await doc.change(newContent)
+
+      const updateRec = await ThreeIdDoctype._makeRecord(doc.doctype, user, newContent, doc.owners)
+      await doc.applyRecord(updateRec)
+
       await anchorUpdate(doc)
       expect(doc.content).toEqual(newContent)
       expect(doc.state.signature).toEqual(SignatureStatus.SIGNED)
-      expect(doc.state.anchored).not.toEqual(0)
+      expect(doc.state.anchorStatus).not.toEqual(AnchorStatus.NOT_REQUESTED)
     })
 
     it('handles conflict', async () => {
       const fakeState = { asdf: 2342 }
-      const doc1 = await Document.create(initialContent, doctypeHandler, anchorService, dispatcher, { owners })
+      const doc1 = await create({ content: initialContent, owners }, ceramic, context)
       const docId = doc1.id
       await anchorUpdate(doc1)
       const headPreUpdate = doc1.head
-      await doc1.change(newContent)
+
+      let updateRec = await ThreeIdDoctype._makeRecord(doc1.doctype, user, newContent, doc1.owners)
+      await doc1.applyRecord(updateRec)
+
       await anchorUpdate(doc1)
       expect(doc1.content).toEqual(newContent)
       const headValidUpdate = doc1.head
       // create invalid change that happened after main change
-      const doc2 = await Document.load(docId, doctypeHandlers, anchorService, dispatcher, { skipWait: true })
+      const doc2 = await Document.load(docId, findHandler, dispatcher, mockStateStore, context, { skipWait: true })
       await doc2._handleHead(headPreUpdate)
       // add short wait to get different anchor time
       // sometime the tests are very fast
       await new Promise(resolve => setTimeout(resolve, 1))
       // TODO - better mock for anchors
-      await doc2.change(fakeState)
+
+      updateRec = await ThreeIdDoctype._makeRecord(doc2.doctype, user, fakeState, doc2.owners)
+      await doc2.applyRecord(updateRec)
+
       await anchorUpdate(doc2)
       const headInvalidUpdate = doc2.head
       expect(doc2.content).toEqual(fakeState)
@@ -156,25 +213,45 @@ describe('Document', () => {
     const initialContent = { abc: 123, def: 456 }
     const newContent = { abc: 321, def: 456, gh: 987 }
     const owners = ['publickeymock']
-    let dispatcher, doctypeHandler, doctypeHandlers, anchorService
+
+    let dispatcher: any;
+    let doctypeHandler: ThreeIdDoctypeHandler;
+    let getHandlerFromGenesis: any;
+    let anchorService: AnchorService;
+    let context: Context;
+    let ceramic: Ceramic;
+    let user: CeramicUser;
 
     beforeEach(() => {
       dispatcher = Dispatcher(true)
-      anchorService = new AnchorService(dispatcher)
-      doctypeHandler = new ThreeIdHandler()
-      doctypeHandler.user = new User()
+      anchorService = new MockAnchorService(dispatcher)
+      user = new CeramicUser()
       // fake jwt
-      doctypeHandler.user.sign = jest.fn(async () => 'aaaa.bbbb.cccc')
-      doctypeHandlers = { '3id': doctypeHandler }
+      user.sign = jest.fn(async () => 'aaaa.bbbb.cccc')
+      doctypeHandler = new ThreeIdDoctypeHandler()
+      doctypeHandler.verifyJWT = (): void => { return }
+      getHandlerFromGenesis = (): ThreeIdDoctypeHandler => doctypeHandler
+
+      context = {
+        anchorService,
+        ipfs: dispatcher._ipfs,
+        resolver: null,
+        provider: null,
+      }
+
+      ceramic = new Ceramic(dispatcher, mockStateStore, context)
+      ceramic._doctypeHandlers['3id'] = doctypeHandler
     })
 
     it('should announce change to network', async () => {
-      const doc1 = await Document.create(initialContent, doctypeHandler, anchorService, dispatcher, { owners })
+      const doc1 = await create({ content: initialContent, owners }, ceramic, context)
       expect(dispatcher.publishHead).toHaveBeenCalledTimes(1)
       expect(dispatcher.publishHead).toHaveBeenCalledWith(doc1.id, doc1.head)
       await anchorUpdate(doc1)
 
-      await doc1.change(newContent)
+      const updateRec = await ThreeIdDoctype._makeRecord(doc1.doctype, user, newContent, doc1.owners)
+      await doc1.applyRecord(updateRec)
+
       expect(doc1.content).toEqual(newContent)
 
       expect(dispatcher.publishHead).toHaveBeenCalledTimes(3)
@@ -182,14 +259,17 @@ describe('Document', () => {
     })
 
     it('documents share updates', async () => {
-      const doc1 = await Document.create(initialContent, doctypeHandler, anchorService, dispatcher, { owners })
+      const doc1 = await create({ content: initialContent, owners }, ceramic, context)
       await anchorUpdate(doc1)
-      const doc2 = await Document.load(doc1.id, doctypeHandlers, anchorService, dispatcher, { skipWait: true })
+      const doc2 = await Document.load(doc1.id, getHandlerFromGenesis, dispatcher, mockStateStore, context, { skipWait: true })
 
       const updatePromise = new Promise(resolve => {
-        doc2.on('change', resolve)
+        doc2.doctype.on('change', resolve)
       })
-      await doc1.change(newContent)
+
+      const updateRec = await ThreeIdDoctype._makeRecord(doc1.doctype, user, newContent, doc1.owners)
+      await doc1.applyRecord(updateRec)
+
       expect(doc1.content).toEqual(newContent)
 
       await updatePromise
@@ -197,7 +277,7 @@ describe('Document', () => {
     })
 
     it('should publish head on network request', async () => {
-      const doc = await Document.create(initialContent, doctypeHandler, anchorService, dispatcher, { owners })
+      const doc = await create({ content: initialContent, owners }, ceramic, context)
       expect(dispatcher.publishHead).toHaveBeenCalledTimes(1)
       expect(dispatcher.publishHead).toHaveBeenNthCalledWith(1, doc.id, doc.head)
 

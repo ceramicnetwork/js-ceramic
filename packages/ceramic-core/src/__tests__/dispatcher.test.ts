@@ -1,5 +1,6 @@
 import Dispatcher, { MsgType } from '../dispatcher'
 import CID from 'cids'
+import Document from "../document"
 
 const FAKE_CID = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
 const ipfs = {
@@ -16,7 +17,6 @@ const ipfs = {
 }
 const TOPIC = '/ceramic'
 
-
 describe('Dispatcher', () => {
 
   beforeEach(() => {
@@ -29,14 +29,15 @@ describe('Dispatcher', () => {
 
   it('is constructed correctly', async () => {
     const disp = new Dispatcher(ipfs)
-    expect(disp._ids).toEqual({})
+    expect(disp._documents).toEqual({})
     expect(ipfs.pubsub.subscribe).toHaveBeenCalledWith(TOPIC, expect.anything())
   })
 
   it('makes registration correctly', async () => {
-    const id = '/ceramic/3id/234'
+    const id = '/ceramic/bagjqcgzaday6dzalvmy5ady2m5a5legq5zrbsnlxfc2bfxej532ds7htpova'
     const disp = new Dispatcher(ipfs)
-    disp.register(id)
+    const doc = new Document(id, disp, null)
+    await disp.register(doc)
     expect(ipfs.pubsub.publish).toHaveBeenCalledWith(TOPIC, JSON.stringify({ typ: MsgType.REQUEST, id }))
   })
 
@@ -59,17 +60,19 @@ describe('Dispatcher', () => {
   })
 
   it('handle message correctly', async () => {
-    const id = '/ceramic/3id/234'
+    const id = '/ceramic/bagjqcgzaday6dzalvmy5ady2m5a5legq5zrbsnlxfc2bfxej532ds7htpova'
     const disp = new Dispatcher(ipfs)
-    disp.register(id)
-  const updatePromise = new Promise(resolve => disp.on(id+'_update', resolve))
-    const headreqPromise = new Promise(resolve => disp.on(id+'_headreq', resolve))
+    const doc = new Document(id, disp, null)
+    await disp.register(doc)
 
-    disp.handleMessage({ data: JSON.stringify({ typ: MsgType.REQUEST, id }) })
+    const updatePromise = new Promise(resolve => doc.on('update', resolve))
+    const headreqPromise = new Promise(resolve => doc.on('headreq', resolve))
+
+    await disp.handleMessage({ data: JSON.stringify({ typ: MsgType.REQUEST, id }) })
     // only emits an event
     await headreqPromise
 
-    disp.handleMessage({ data: JSON.stringify({ typ: MsgType.UPDATE, id, cid: FAKE_CID.toString() }) })
+    await disp.handleMessage({ data: JSON.stringify({ typ: MsgType.UPDATE, id, cid: FAKE_CID.toString() }) })
     expect(await updatePromise).toEqual(FAKE_CID)
   })
 

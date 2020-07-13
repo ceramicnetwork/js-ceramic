@@ -1,82 +1,48 @@
-import fetch from 'node-fetch'
-import CID from 'cids'
-import { EventEmitter } from 'events'
-import cloneDeep from 'lodash.clonedeep'
+import { Doctype, DoctypeUtils, InitOpts } from "@ceramicnetwork/ceramic-common"
 
-const fetchJson = async (url: string, payload?: any): Promise<any> => {
-  let opts
-  if (payload) {
-    opts = {
-      method: 'post',
-      body: JSON.stringify(payload),
-      headers: { 'Content-Type': 'application/json' }
-    }
-  }
-  const res = await (await fetch(url, opts)).json()
-  if (res.error) throw new Error(res.error)
-  return res
-}
+import { fetchJson } from './utils'
+import { DocState } from "@ceramicnetwork/ceramic-common/lib"
 
-export enum SignatureStatus {
-  UNSIGNED,
-  PARTIAL,
-  SIGNED
-}
+class Document extends Doctype {
 
-interface DocState {
-  content: any;
-  nextContent?: any;
-  signature: SignatureStatus;
-  anchored: number;
-  log: Array<string>;
-}
+  private readonly _syncHandle: NodeJS.Timeout
 
-export interface InitOpts {
-  onlyGenesis?: boolean;
-  skipWait?: boolean;
-  owners?: Array<string>;
-}
+  constructor (state: DocState, private _apiUrl: string) {
+    super(state, null)
 
-function deserializeState (state: any): DocState {
-  state.log = state.log.map((cidStr: string): CID => new CID(cidStr))
-  return state
-}
-
-class Document extends EventEmitter {
-
-  constructor (public id: string, private _state: any, private _apiUrl: string) {
-    super()
+    this._syncHandle = setInterval(async () => {
+        this._syncState()
+    }, 1000)
   }
 
-  static async create (genesis: any, doctype: string, apiUrl: string, opts: InitOpts = {}): Promise<Document> {
-    const { docId, state } = await fetchJson(apiUrl + '/create', { genesis, doctype, onlyGenesis: opts.onlyGenesis, owners: opts.owners })
-    const doc = new Document(docId, deserializeState(state), apiUrl)
-    return doc
+  static async create (apiUrl: string, doctype: string, params: object, opts: InitOpts = {}): Promise<Document> {
+    const { state } = await fetchJson(apiUrl + '/create', {
+      params,
+      doctype,
+      initOpts: {
+        applyOnly: opts.applyOnly,
+        isUnique: opts.isUnique
+      }
+    })
+    return new Document(DoctypeUtils.deserializeState(state), apiUrl)
   }
 
   static async load (id: string, apiUrl: string): Promise<Document> {
-    const { docId, state } = await fetchJson(apiUrl + '/state' + id)
-    const doc = new Document(docId, deserializeState(state), apiUrl)
-    return doc
+    const normalizedId = DoctypeUtils.normalizeDocId(id)
+    const { state } = await fetchJson(apiUrl + '/state' + normalizedId)
+    return new Document(DoctypeUtils.deserializeState(state), apiUrl)
   }
 
-  get content (): any {
-    return this._state.nextContent || this._state.content
-  }
-
-  get state (): DocState {
-    return cloneDeep(this._state)
-  }
-
-  get head (): string {
-    const log = this._state.log
-    return log[log.length - 1]
-  }
-
-  async change (newContent: any): Promise<boolean> {
-    const { state } = await fetchJson(this._apiUrl + '/change' + this.id, { content: newContent })
-    this._state = deserializeState(state)
-    return true
+  async change(params: Record<string, any>): Promise<void> {
+    const { content, owners } = params
+    const normalizedId = DoctypeUtils.normalizeDocId(this.id)
+    const { state } = await fetchJson(this._apiUrl + '/change' + normalizedId, {
+      params: {
+        content,
+        owners,
+      }
+    })
+    this.state = DoctypeUtils.deserializeState(state)
   }
 
   async sign (): Promise<boolean> {
@@ -87,13 +53,19 @@ class Document extends EventEmitter {
     return false
   }
 
-  async _syncState (): Promise<void> {
-    let { state } = await fetchJson(this._apiUrl + '/state' + this.id)
-    state = deserializeState(state)
-    if (JSON.stringify(this._state) !== JSON.stringify(state)) {
-      this._state = state
+  async _syncState(): Promise<void> {
+    const normalizedId = DoctypeUtils.normalizeDocId(this.id)
+    let { state } = await fetchJson(this._apiUrl + '/state' + normalizedId)
+    state = DoctypeUtils.deserializeState(state)
+    if (JSON.stringify(this.state) !== JSON.stringify(state)) {
+      this.state = state
+      this.state = state
       this.emit('change')
     }
+  }
+
+  close() {
+    clearInterval(this._syncHandle)
   }
 }
 

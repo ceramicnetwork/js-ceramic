@@ -31,12 +31,14 @@
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
+    "@ceramicnetwork/ceramic-common": "^0.2.0",
     "@ceramicnetwork/ceramic-core": "^0.2.0",
+    "@ceramicnetwork/ceramic-doctype-tile": "^0.2.0",
     "@ceramicnetwork/ceramic-http-client": "^0.2.0",
-    "commander": "^4.1.1",
+    "commander": "^5.0.0",
     "express": "^4.17.1",
     "identity-wallet": "1.2.0-ceramic.1",
-    "ipfs-http-client": "^42.0.0"
+    "ipfs-http-client": "^44.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.9.0",
@@ -51,7 +53,7 @@
     "babel-jest": "^25.1.0",
     "eslint": "^6.8.0",
     "eslint-plugin-jest": "^23.8.2",
-    "ipfs": "^0.42.1",
+    "ipfs": "^0.46.0",
     "jest": "^25.1.0",
     "tmp-promise": "^2.0.2"
   }
