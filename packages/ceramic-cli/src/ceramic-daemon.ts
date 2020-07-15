@@ -6,12 +6,19 @@ import Ceramic from '@ceramicnetwork/ceramic-core'
 import type { CeramicConfig } from "@ceramicnetwork/ceramic-core";
 import { DoctypeUtils } from "@ceramicnetwork/ceramic-common"
 
+import os from 'os'
+import path from 'path'
+import crypto from 'crypto'
+
+const fs = require('fs').promises
+
 const IPFS_HOST = 'http://localhost:5001'
 const DEFAULT_PORT = 7007
 const DEBUG = true
 const toApiPath = (ending: string): string => '/api/v0' + ending
-// TODO - don't hardcode seed lol
-const seed = '0x5872d6e0ae7347b72c9216db218ebbb9d9d0ae7ab818ead3557e8e78bf944184'
+
+const DEFAULT_CLI_CONFIG_PATH = path.join(os.homedir(), '.ceramic')
+const DEFAILT_CLI_CONFIG_FILE = 'config.json'
 
 const DEFAULT_ANCHOR_SERVICE_URL = "https://cas.3box.io:8081/api/v0/requests"
 
@@ -23,6 +30,10 @@ interface CreateOpts {
   ethereumRpcUrl?: string;
   anchorServiceUrl?: string;
   stateStorePath?: string;
+}
+
+interface CliConfig {
+  seed?: string;
 }
 
 function logErrors (err: Error, req: Request, res: Response, next: NextFunction): void {
@@ -68,6 +79,8 @@ class CeramicDaemon {
   static async create (opts: CreateOpts): Promise<CeramicDaemon> {
     const ipfs = opts.ipfs || ipfsClient(opts.ipfsHost || IPFS_HOST)
 
+    const cliConfig = await CeramicDaemon._loadCliConfig()
+
     const ceramicConfig: CeramicConfig = {}; // get initially from file and override with opts
     if (opts.anchorServiceUrl) {
       Object.assign(ceramicConfig, {
@@ -87,9 +100,39 @@ class CeramicDaemon {
     }
 
     const ceramic = await Ceramic.create(ipfs, ceramicConfig)
-    const idWallet = new IdentityWallet(async () => true, { seed })
+    const idWallet = new IdentityWallet(async () => true, { seed: cliConfig.seed })
     await ceramic.setDIDProvider(idWallet.get3idProvider())
     return new CeramicDaemon(ceramic, opts)
+  }
+
+  /**
+   * Load/create CLI config
+   */
+  static async _loadCliConfig(): Promise<CliConfig> {
+    let exists
+    const fullCliConfigPath = path.join(DEFAULT_CLI_CONFIG_PATH, DEFAILT_CLI_CONFIG_FILE)
+    try {
+      await fs.access(fullCliConfigPath)
+      exists = true
+    } catch (e) {
+      exists = false
+    }
+
+    if (exists) {
+      const configJson = await fs.readFile(fullCliConfigPath, { encoding: 'utf8' })
+      return JSON.parse(configJson)
+    }
+
+    await fs.mkdir(DEFAULT_CLI_CONFIG_PATH, { recursive: true })
+
+    console.log('Generating identity wallet seed...')
+    const config: CliConfig = {
+      seed: '0x' + Buffer.from(crypto.randomBytes(32)).toString('hex') // create new seed
+    }
+
+    await fs.writeFile(fullCliConfigPath, JSON.stringify(config, null, 2))
+    console.log('Identity wallet seed generated')
+    return config
   }
 
   async createDoc (req: Request, res: Response, next: NextFunction): Promise<void> {
