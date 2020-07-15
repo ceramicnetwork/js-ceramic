@@ -8,7 +8,7 @@ import { DoctypeUtils } from "@ceramicnetwork/ceramic-common"
 
 import os from 'os'
 import path from 'path'
-import nacl from 'tweetnacl'
+import crypto from 'crypto'
 
 const fs = require('fs').promises
 
@@ -127,7 +127,7 @@ class CeramicDaemon {
 
     console.log('Generating identity wallet seed...')
     const config: CliConfig = {
-      seed: '0x' + Buffer.from(nacl.randomBytes(32)).toString('hex') // create new seed
+      seed: '0x' + Buffer.from(crypto.randomBytes(32)).toString('hex') // create new seed
     }
 
     await fs.writeFile(fullCliConfigPath, JSON.stringify(config, null, 2))
