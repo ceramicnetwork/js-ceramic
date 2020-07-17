@@ -23,10 +23,12 @@ class CeramicClient implements CeramicApi {
   _initPinApi(): PinApi {
     return {
       add: async (docId: string): Promise<void> => {
-        return await fetchJson(this._apiUrl + '/pin/add' + docId)
+        const normalizedId = DoctypeUtils.normalizeDocId(docId)
+        return await fetchJson(this._apiUrl + '/pin/add' + normalizedId)
       },
       rm: async (docId: string): Promise<void> => {
-        return await fetchJson(this._apiUrl + '/pin/rm' + docId)
+        const normalizedId = DoctypeUtils.normalizeDocId(docId)
+        return await fetchJson(this._apiUrl + '/pin/rm' + normalizedId)
       },
       ls: async (docId?: string): Promise<AsyncIterable<string>> => {
         let url = this._apiUrl + '/pin/ls'
