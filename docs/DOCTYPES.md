@@ -219,13 +219,13 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
     async applyRecord(record: any, cid: CID, context: Context, state?: DocState): Promise<DocState> {  
         if (state == null) {  
             // apply genesis  
-			return this._applyGenesis(record, cid, context)  
+            return this._applyGenesis(record, cid, context)  
         }  
   
         if (record.proof) {  
             const proofRecord = (await context.ipfs.dag.get(record.proof)).value;  
-			return this._applyAnchor(record, proofRecord, cid, state);  
-		}  
+            return this._applyAnchor(record, proofRecord, cid, state);  
+        }  
   
         return this._applySigned(record, cid, state, context)  
     }  
