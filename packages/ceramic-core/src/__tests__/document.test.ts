@@ -126,7 +126,7 @@ describe('Document', () => {
 
       expect(doc.content).toEqual(initialContent)
       expect(dispatcher.register).toHaveBeenCalledWith(doc)
-      expect(doc.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
+      expect(doc.state.anchorStatus).toEqual(AnchorStatus.PENDING)
       await anchorUpdate(doc)
       expect(doc.state.anchorStatus).not.toEqual(AnchorStatus.NOT_REQUESTED)
     })

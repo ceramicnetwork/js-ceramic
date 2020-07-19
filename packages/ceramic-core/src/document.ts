@@ -25,7 +25,7 @@ class Document extends EventEmitter {
 
   constructor (id: string, dispatcher: Dispatcher, stateStore: StateStore) {
     super()
-    this.id = id;
+    this.id = DoctypeUtils.normalizeDocId(id);
 
     this.dispatcher = dispatcher;
     this.stateStore = stateStore;
@@ -298,17 +298,23 @@ class Document extends EventEmitter {
     this._context.anchorService.on(this.id, async (asr: AnchorServiceResponse): Promise<void> => {
       switch (asr.status) {
         case 'PENDING': {
-          this._doctype.state.anchorScheduledFor = asr.anchorScheduledFor
+          const state = this._doctype.state
+          state.anchorScheduledFor = asr.anchorScheduledFor
+          this._doctype.state = state
           await this._updateStateIfPinned()
           return
         }
         case 'PROCESSING': {
-          this._doctype.state.anchorStatus = AnchorStatus.PROCESSING
+          const state = this._doctype.state
+          state.anchorStatus = AnchorStatus.PROCESSING
+          this._doctype.state = state
           await this._updateStateIfPinned()
           return
         }
         case 'COMPLETED': {
-          this._doctype.state.anchorStatus = AnchorStatus.ANCHORED
+          const state = this._doctype.state
+          state.anchorStatus = AnchorStatus.ANCHORED
+          this._doctype.state = state
           await this._handleHead(asr.anchorRecord)
           await this._updateStateIfPinned()
           this._publishHead()
@@ -317,14 +323,18 @@ class Document extends EventEmitter {
           return
         }
         case 'FAILED': {
-          this._doctype.state.anchorStatus = AnchorStatus.FAILED
+          const state = this._doctype.state
+          state.anchorStatus = AnchorStatus.FAILED
+          this._doctype.state = state
           this._context.anchorService.removeAllListeners(this.id)
           return
         }
       }
     })
     await this._context.anchorService.requestAnchor(this.id, this.head)
-    this._doctype.state.anchorStatus = AnchorStatus.PENDING
+    const state = this._doctype.state
+    state.anchorStatus = AnchorStatus.PENDING
+    this._doctype.state = state
   }
 
   get content (): any {
