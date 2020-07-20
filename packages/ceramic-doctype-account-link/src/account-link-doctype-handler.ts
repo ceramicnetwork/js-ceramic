@@ -2,7 +2,7 @@ import CID from 'cids'
 import { validateLink } from "3id-blockchain-utils"
 import { AccountLinkDoctype, AccountLinkParams } from "./account-link-doctype"
 import {
-    AnchorProof, AnchorStatus, DocState, DoctypeConstructor, DoctypeHandler, InitOpts, SignatureStatus
+    AnchorProof, AnchorStatus, DocState, DoctypeConstructor, DoctypeHandler, DocOpts, SignatureStatus
 } from "@ceramicnetwork/ceramic-common"
 import { Context } from "@ceramicnetwork/ceramic-common"
 
@@ -29,7 +29,7 @@ export class AccountLinkDoctypeHandler implements DoctypeHandler<AccountLinkDoct
      * @param context - Ceramic context
      * @param opts - Initialization options
      */
-    async create(params: AccountLinkParams, context: Context, opts?: InitOpts): Promise<AccountLinkDoctype> {
+    async create(params: AccountLinkParams, context: Context, opts?: DocOpts): Promise<AccountLinkDoctype> {
         return AccountLinkDoctype.create(params, context, opts);
     }
 

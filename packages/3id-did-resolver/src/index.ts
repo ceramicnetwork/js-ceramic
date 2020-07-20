@@ -5,7 +5,7 @@ interface Doctype {
   content: any;
 }
 
-interface InitOpts {
+interface DocOpts {
   content: any;
 }
 

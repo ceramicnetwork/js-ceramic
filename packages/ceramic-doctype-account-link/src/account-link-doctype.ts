@@ -1,4 +1,4 @@
-import { Doctype, DoctypeConstructor, DoctypeStatic, InitOpts } from "@ceramicnetwork/ceramic-common"
+import { Doctype, DoctypeConstructor, DoctypeStatic, DocOpts } from "@ceramicnetwork/ceramic-common"
 import { Context } from "@ceramicnetwork/ceramic-common"
 
 const DOCTYPE = 'account-link'
@@ -22,7 +22,7 @@ export class AccountLinkDoctype extends Doctype {
      * @param params - Change parameters
      * @param opts - Initialization options
      */
-    async change(params: AccountLinkParams, opts?: InitOpts): Promise<void> {
+    async change(params: AccountLinkParams, opts?: DocOpts): Promise<void> {
         const { content } = params
         const updateRecord = await AccountLinkDoctype._makeRecord(this, content)
         const updated = await this.context.api.applyRecord(this.id, updateRecord, opts)
@@ -35,7 +35,7 @@ export class AccountLinkDoctype extends Doctype {
      * @param context - Ceramic context
      * @param opts - Initialization options
      */
-    static async create(params: AccountLinkParams, context: Context, opts?: InitOpts): Promise<AccountLinkDoctype> {
+    static async create(params: AccountLinkParams, context: Context, opts?: DocOpts): Promise<AccountLinkDoctype> {
         const { content, owners } = params
 
         const record = await AccountLinkDoctype.makeGenesis({ content, owners })
@@ -48,7 +48,7 @@ export class AccountLinkDoctype extends Doctype {
      * @param context - Ceramic context
      * @param opts - Initialization options
      */
-    static async makeGenesis(params: Record<string, any>, context?: Context, opts: InitOpts = {}): Promise<Record<string, any>> {
+    static async makeGenesis(params: Record<string, any>, context?: Context, opts: DocOpts = {}): Promise<Record<string, any>> {
         const { content, owners } = params
 
         if (content) {

@@ -1,3 +1,4 @@
+import CID from 'cids'
 import Document from '../document'
 import MockAnchorService from "../anchor/mock/mock-anchor-service";
 import LevelStateStore from "../store/level-state-store"
@@ -68,14 +69,14 @@ import CeramicUser from '../ceramic-user'
 
 import Ceramic from "../ceramic"
 import { Context } from "@ceramicnetwork/ceramic-common"
-import { AnchorStatus, InitOpts, SignatureStatus } from "@ceramicnetwork/ceramic-common"
+import { AnchorStatus, DocOpts, SignatureStatus } from "@ceramicnetwork/ceramic-common"
 import { AnchorService } from "@ceramicnetwork/ceramic-common"
 import { ThreeIdDoctype, ThreeIdParams } from "@ceramicnetwork/ceramic-doctype-three-id"
 import { ThreeIdDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-three-id"
 
 const anchorUpdate = (doc: Document): Promise<void> => new Promise(resolve => doc.doctype.on('change', resolve))
 
-const create = async (params: ThreeIdParams, ceramic: Ceramic, context: Context, opts: InitOpts = {}): Promise<Document> => {
+const create = async (params: ThreeIdParams, ceramic: Ceramic, context: Context, opts: DocOpts = {}): Promise<Document> => {
   const { content, owners } = params
   if (!owners) {
     throw new Error('The owner of the 3ID needs to be specified')
@@ -155,6 +156,67 @@ describe('Document', () => {
       expect(doc.state.signature).toEqual(SignatureStatus.GENESIS)
       expect(doc.state.anchorStatus).not.toEqual(AnchorStatus.NOT_REQUESTED)
       expect(doc.content).toEqual(initialContent)
+    })
+
+    it('it handles versions correctly (valid, invalid, non-existent)', async () => {
+      const doc = await create({ content: initialContent, owners }, ceramic, context)
+
+      let versions = await doc.listVersions()
+      expect(versions).toEqual([])
+
+      await anchorUpdate(doc)
+
+      versions = await doc.listVersions()
+      expect(versions.length).toEqual(1)
+
+      const updateRec = await ThreeIdDoctype._makeRecord(doc.doctype, user, newContent, doc.owners)
+
+      versions = await doc.listVersions()
+      expect(versions.length).toEqual(1)
+
+      await doc.applyRecord(updateRec)
+
+      versions = await doc.listVersions()
+      expect(versions.length).toEqual(1)
+
+      await anchorUpdate(doc)
+
+      versions = await doc.listVersions()
+      expect(versions.length).toEqual(2)
+
+      expect(doc.content).toEqual(newContent)
+      expect(doc.state.signature).toEqual(SignatureStatus.SIGNED)
+      expect(doc.state.anchorStatus).not.toEqual(AnchorStatus.NOT_REQUESTED)
+
+      // try to checkout non-existing version
+      try {
+        await Document.getVersion(doc, new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu'))
+        throw new Error('Should not be able to fetch non-existing version')
+      } catch (e) {
+        expect(e.message).toContain('No record found for version')
+      }
+
+      // try to checkout not anchored version
+      try {
+        await Document.getVersion(doc, doc.doctype.state.log[2])
+        throw new Error('Should not be able to fetch not anchored version')
+      } catch (e) {
+        expect(e.message).toContain('No anchor record for version')
+      }
+
+      const docV1 = await Document.getVersion(doc, doc.doctype.state.log[1])
+      expect(docV1.state.log.length).toEqual(2)
+      expect(docV1.owners).toEqual(owners)
+      expect(docV1.content).toEqual(initialContent)
+      expect(docV1.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+
+      // try to call doctype.change
+      try {
+        await docV1.doctype.change({ content: doc.content, owners: doc.owners })
+        throw new Error('Should not be able to fetch not anchored version')
+      } catch (e) {
+        expect(e.message).toEqual('The version of the document is readonly. Checkout the latest HEAD in order to update.')
+      }
     })
 
     it('is updated correctly', async () => {

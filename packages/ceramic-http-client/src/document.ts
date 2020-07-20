@@ -1,4 +1,4 @@
-import { Doctype, DoctypeUtils, InitOpts } from "@ceramicnetwork/ceramic-common"
+import { Doctype, DoctypeUtils, DocOpts } from "@ceramicnetwork/ceramic-common"
 
 import { fetchJson } from './utils'
 import { DocState } from "@ceramicnetwork/ceramic-common/lib"
@@ -15,11 +15,11 @@ class Document extends Doctype {
     }, 1000)
   }
 
-  static async create (apiUrl: string, doctype: string, params: object, opts: InitOpts = {}): Promise<Document> {
+  static async create (apiUrl: string, doctype: string, params: object, opts: DocOpts = {}): Promise<Document> {
     const { state } = await fetchJson(apiUrl + '/create', {
       params,
       doctype,
-      initOpts: {
+      docOpts: {
         applyOnly: opts.applyOnly,
         isUnique: opts.isUnique
       }

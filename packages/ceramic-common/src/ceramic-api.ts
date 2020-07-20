@@ -1,4 +1,5 @@
-import { Doctype, DoctypeHandler, InitOpts } from "./doctype"
+import CID from 'cids'
+import { Doctype, DoctypeHandler, DocOpts } from "./doctype"
 
 /**
  * Describes Ceramic pinning functionality
@@ -61,21 +62,21 @@ export interface CeramicApi {
      * @param params - Create parameters
      * @param opts - Initialization options
      */
-    createDocument<T extends Doctype>(doctype: string, params: object, opts?: InitOpts): Promise<T>;
+    createDocument<T extends Doctype>(doctype: string, params: object, opts?: DocOpts): Promise<T>;
 
     /**
      * Create Doctype from genesis record
      * @param genesis - Genesis record
      * @param opts - Initialization options
      */
-    createDocumentFromGenesis<T extends Doctype>(genesis: any, opts?: InitOpts): Promise<T>;
+    createDocumentFromGenesis<T extends Doctype>(genesis: any, opts?: DocOpts): Promise<T>;
 
     /**
      * Loads Doctype instance
      * @param docId - Document ID
      * @param opts - Initialization options
      */
-    loadDocument<T extends Doctype>(docId: string, opts?: InitOpts): Promise<T>;
+    loadDocument<T extends Doctype>(docId: string, opts?: DocOpts): Promise<T>;
 
     /**
      * Applies record on the existing document
@@ -83,7 +84,7 @@ export interface CeramicApi {
      * @param record - Record to be applied
      * @param opts - Initialization options
      */
-    applyRecord<T extends Doctype>(docId: string, record: object, opts?: InitOpts): Promise<T>;
+    applyRecord<T extends Doctype>(docId: string, record: object, opts?: DocOpts): Promise<T>;
 
     /**
      * Set DID provider

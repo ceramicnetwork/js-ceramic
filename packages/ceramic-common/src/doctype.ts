@@ -141,16 +141,29 @@ export class DoctypeUtils {
         }
         return cloned
     }
+
+    /**
+     * Make doctype readonly
+     * @param doctype - Doctype instance
+     */
+    static makeReadOnly<T extends Doctype>(doctype: T): T {
+        const cloned = cloneDeep(doctype)
+        cloned.change = (): Promise<void> => {
+            throw new Error('The version of the document is readonly. Checkout the latest HEAD in order to update.')
+        }
+        return cloned
+    }
 }
 
 /**
  * Doctype init options
  */
-export interface InitOpts {
+export interface DocOpts {
     owners?: Array<string>;
     applyOnly?: boolean;
     skipWait?: boolean;
     isUnique?: boolean;
+    version?: CID;
 }
 
 /**
@@ -177,6 +190,10 @@ export abstract class Doctype extends EventEmitter {
         return cloneDeep(this.state.owners)
     }
 
+    get head(): CID {
+        return this.state.log[this.state.log.length - 1]
+    }
+
     get state(): DocState {
         return cloneDeep(this._state)
     }
@@ -185,12 +202,12 @@ export abstract class Doctype extends EventEmitter {
         this._state = state
     }
 
-    get context(): Context {
-        return this._context
+    set context(context: Context) {
+        this._context = context
     }
 
-    get head(): CID {
-        return this.state.log[this.state.log.length - 1]
+    get context(): Context {
+        return this._context
     }
 
     /**
@@ -198,7 +215,7 @@ export abstract class Doctype extends EventEmitter {
      * @param params - Change parameteres
      * @param opts - Initialization options
      */
-    abstract change(params: Record<string, any>, opts?: InitOpts): Promise<void>;
+    abstract change(params: Record<string, any>, opts?: DocOpts): Promise<void>;
 
 }
 
@@ -227,7 +244,7 @@ export interface DoctypeConstructor<T extends Doctype> {
      * @param context - Ceramic context
      * @param opts - Initialization options
      */
-    makeGenesis(params: Record<string, any>, context?: Context, opts?: InitOpts): Promise<Record<string, any>>;
+    makeGenesis(params: Record<string, any>, context?: Context, opts?: DocOpts): Promise<Record<string, any>>;
 }
 
 /**

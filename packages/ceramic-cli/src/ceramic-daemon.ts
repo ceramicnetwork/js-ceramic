@@ -136,10 +136,10 @@ class CeramicDaemon {
   }
 
   async createDoc (req: Request, res: Response, next: NextFunction): Promise<void> {
-    const { doctype, params, initOpts } = req.body
+    const { doctype, params, docOpts } = req.body
     // TODO - check parameters
     try {
-      const doc = await this.ceramic.createDocument(doctype, params, initOpts)
+      const doc = await this.ceramic.createDocument(doctype, params, docOpts)
       res.json({ docId: doc.id, state: DoctypeUtils.serializeState(doc.state) })
     } catch (e) {
       return next(e)

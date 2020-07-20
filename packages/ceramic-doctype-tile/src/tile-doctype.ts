@@ -3,7 +3,7 @@ import jsonpatch from 'fast-json-patch'
 import { encode as base64Encode } from '@ethersproject/base64'
 import { randomBytes } from '@ethersproject/random'
 
-import { Doctype, DoctypeConstructor, DoctypeStatic, InitOpts } from "@ceramicnetwork/ceramic-common"
+import { Doctype, DoctypeConstructor, DoctypeStatic, DocOpts } from "@ceramicnetwork/ceramic-common"
 import { Context } from "@ceramicnetwork/ceramic-common"
 import { User } from "@ceramicnetwork/ceramic-common"
 
@@ -28,7 +28,7 @@ export class TileDoctype extends Doctype {
      * @param params - Change parameters
      * @param opts - Initialization options
      */
-    async change(params: TileParams, opts?: InitOpts): Promise<void> {
+    async change(params: TileParams, opts?: DocOpts): Promise<void> {
         if (this.context.user == null) {
             throw new Error('No user authenticated')
         }
@@ -44,7 +44,7 @@ export class TileDoctype extends Doctype {
      * @param context - Ceramic context
      * @param opts - Initialization options
      */
-    static async create(params: TileParams, context: Context, opts?: InitOpts): Promise<TileDoctype> {
+    static async create(params: TileParams, context: Context, opts?: DocOpts): Promise<TileDoctype> {
         if (context.user == null) {
             throw new Error('No user authenticated')
         }
@@ -60,7 +60,7 @@ export class TileDoctype extends Doctype {
      * @param context - Ceramic context
      * @param opts - Initialization options
      */
-    static async makeGenesis(params: Record<string, any>, context?: Context, opts: InitOpts = {}): Promise<Record<string, any>> {
+    static async makeGenesis(params: Record<string, any>, context?: Context, opts: DocOpts = {}): Promise<Record<string, any>> {
         if (!context.user) {
             throw new Error('No user authenticated')
         }
