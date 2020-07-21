@@ -32,7 +32,7 @@ describe('Ceramic integration', () => {
   const DOCTYPE_TILE = 'tile'
   const DOCTYPE_3ID = '3id'
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     idWallet = new IdentityWallet(() => true, { seed })
     tmpFolder = await tmp.dir({ unsafeCleanup: true })
     ipfs1 = await Ipfs.create(genIpfsConf(tmpFolder.path, 0))
@@ -43,7 +43,7 @@ describe('Ceramic integration', () => {
     multaddr3 = (await ipfs3.id()).addresses[0].toString()
   })
 
-  afterEach(async () => {
+  afterAll(async () => {
     await ipfs1.stop()
     await ipfs2.stop()
     await ipfs3.stop()
