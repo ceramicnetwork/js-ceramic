@@ -116,11 +116,8 @@ describe('Ceramic integration', () => {
     // ceramic node 2 shouldn't need to have the document open in order to forward the message
     const doctype1 = await ceramic1.createDocument<ThreeIdDoctype>(DOCTYPE_3ID, { content: { test: 321 }, owners: [owner] })
 
-    await new Promise(resolve => {
-      doctype1.on('change', () => {
-        resolve()
-      })
-    })
+    // wait a bit to propagate
+    await new Promise(resolve => setTimeout(resolve, 2000))
 
     const doctype3 = await ceramic3.createDocument<ThreeIdDoctype>(DOCTYPE_3ID, { content: { test: 321 }, owners: [owner] }, { applyOnly: true })
 
