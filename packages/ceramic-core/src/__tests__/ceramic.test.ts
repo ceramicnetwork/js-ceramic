@@ -3,7 +3,8 @@ import IdentityWallet from 'identity-wallet'
 import tmp from 'tmp-promise'
 import Ipfs from 'ipfs'
 import { ThreeIdDoctype } from "@ceramicnetwork/ceramic-doctype-three-id"
-import { AnchorStatus, DoctypeUtils } from "@ceramicnetwork/ceramic-common"
+import { DoctypeUtils } from "@ceramicnetwork/ceramic-common"
+import { AnchorStatus } from "@ceramicnetwork/ceramic-common/lib"
 
 jest.mock('../store/level-state-store')
 
@@ -116,6 +117,11 @@ describe('Ceramic integration', () => {
     // ceramic node 2 shouldn't need to have the document open in order to forward the message
     const doctype1 = await ceramic1.createDocument<ThreeIdDoctype>(DOCTYPE_3ID, { content: { test: 321 }, owners: [owner] })
     const doctype3 = await ceramic3.createDocument<ThreeIdDoctype>(DOCTYPE_3ID, { content: { test: 321 }, owners: [owner] }, { applyOnly: true })
+
+    while (doctype1.state.anchorStatus !== AnchorStatus.ANCHORED) {
+      // wait to propagate
+      await new Promise(resolve => setTimeout(resolve, 1000))
+    }
 
     expect(doctype3.content).toEqual(doctype1.content)
     expect(doctype3.state).toEqual(doctype1.state)
