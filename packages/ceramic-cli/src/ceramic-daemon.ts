@@ -200,7 +200,10 @@ class CeramicDaemon {
     try {
       const doc = await this.ceramic.loadDocument(docId)
 
-      await doc.change({ content, owners })
+      const doctypeHandler = this.ceramic.findDoctypeHandler(doc.doctype)
+      const doctype = new doctypeHandler.doctype(doc.state, this.ceramic.context)
+
+      await doctype.change({ content, owners })
       res.json({ docId: doc.id, state: DoctypeUtils.serializeState(doc.state) })
     } catch (e) {
       return next(e)

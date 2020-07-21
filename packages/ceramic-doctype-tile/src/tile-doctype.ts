@@ -28,7 +28,7 @@ export class TileDoctype extends Doctype {
      * @param params - Change parameters
      * @param opts - Initialization options
      */
-    async change(params: TileParams, opts?: DocOpts): Promise<void> {
+    async change(params: TileParams, opts: DocOpts = {}): Promise<void> {
         if (this.context.user == null) {
             throw new Error('No user authenticated')
         }
@@ -89,24 +89,12 @@ export class TileDoctype extends Doctype {
      * @private
      */
     static async _makeRecord(doctype: Doctype, user: User, newContent: any): Promise<Doctype> {
-        if (user == null) {
+        if (!user) {
             throw new Error('No user authenticated')
         }
-
         const patch = jsonpatch.compare(doctype.content, newContent)
-        const record: any = { owners: doctype.owners, content: patch, prev: doctype.head, id: doctype.state.log[0] }
-        record.iss = user.DID
-        // convert CID to string for signing
-        const tmpPrev = record.prev
-        const tmpId = record.id
-        record.prev = { '/': tmpPrev.toString() }
-        record.id = { '/': tmpId.toString() }
-        const jwt = await user.sign(record, { useMgmt: true})
-        const [header, payload, signature] = jwt.split('.') // eslint-disable-line @typescript-eslint/no-unused-vars
-        record.prev = tmpPrev
-        record.id = tmpId
-
-        return { ...record, header, signature }
+        const record = { content: patch, prev: doctype.head, id: doctype.state.log[0] }
+        return TileDoctype._signRecord(record, user)
     }
 
     /**

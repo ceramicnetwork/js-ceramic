@@ -1,4 +1,3 @@
-import CID from 'cids'
 import Ipfs from 'ipfs'
 import Dispatcher from './dispatcher'
 import CeramicUser from './ceramic-user'

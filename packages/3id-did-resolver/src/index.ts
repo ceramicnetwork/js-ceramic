@@ -1,13 +1,5 @@
+import { Doctype } from "@ceramicnetwork/ceramic-common"
 import type { ParsedDID, DIDResolver, DIDDocument } from 'did-resolver'
-
-// TODO - we should probably have a general Ceramic interface type library
-interface Doctype {
-  content: any;
-}
-
-interface DocOpts {
-  content: any;
-}
 
 interface Ceramic {
   loadDocument(docId: string): Promise<Doctype>;

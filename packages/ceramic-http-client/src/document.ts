@@ -41,7 +41,7 @@ class Document extends Doctype {
 
   async change(params: Record<string, any>): Promise<void> {
     const { content, owners } = params
-    const normalizedId = DoctypeUtils.normalizeDocId(this.id)
+    const normalizedId = DoctypeUtils.getBaseDocId(DoctypeUtils.normalizeDocId(this.id))
     const { state } = await fetchJson(this._apiUrl + '/change' + normalizedId, {
       params: {
         content,

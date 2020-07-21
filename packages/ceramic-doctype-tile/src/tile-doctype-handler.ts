@@ -149,7 +149,7 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
         try {
             await this.verifyJWT(jwt, { resolver: context.resolver })
         } catch (e) {
-            throw new Error('Invalid signature for signed record:' + e)
+            throw new Error('Invalid signature for signed record. ' + e)
         }
     }
 
