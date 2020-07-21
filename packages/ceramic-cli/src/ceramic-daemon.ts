@@ -149,10 +149,28 @@ class CeramicDaemon {
   }
 
   async show (req: Request, res: Response, next: NextFunction): Promise<void> {
-    const docId = ['/ceramic', req.params.cid].join('/')
+    let docId = ['/ceramic', req.params.cid].join('/')
+    if (req.query.version) {
+      docId = `${docId}?version=${req.query.version}`
+    }
     try {
       const doc = await this.ceramic.loadDocument(docId)
       res.json({ docId: doc.id, content: doc.content })
+    } catch (e) {
+      return next(e)
+    }
+    next()
+  }
+
+  async state (req: Request, res: Response, next: NextFunction): Promise<void> {
+    let docId = ['/ceramic', req.params.cid].join('/')
+    if (req.query.version) {
+      docId = `${docId}?version=${req.query.version}`
+    }
+    try {
+      const doc = await this.ceramic.loadDocument(docId)
+
+      res.json({ docId: doc.id, state: DoctypeUtils.serializeState(doc.state) })
     } catch (e) {
       return next(e)
     }
@@ -164,18 +182,6 @@ class CeramicDaemon {
     try {
       const versions = await this.ceramic.listVersions(docId)
       res.json({ docId, versions: versions })
-    } catch (e) {
-      return next(e)
-    }
-    next()
-  }
-
-  async state (req: Request, res: Response, next: NextFunction): Promise<void> {
-    const docId = ['/ceramic', req.params.cid].join('/')
-    try {
-      const doc = await this.ceramic.loadDocument(docId)
-
-      res.json({ docId: doc.id, state: DoctypeUtils.serializeState(doc.state) })
     } catch (e) {
       return next(e)
     }
