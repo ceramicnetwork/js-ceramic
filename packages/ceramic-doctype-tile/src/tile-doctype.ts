@@ -93,7 +93,7 @@ export class TileDoctype extends Doctype {
             throw new Error('No user authenticated')
         }
         const patch = jsonpatch.compare(doctype.content, newContent)
-        const record = { content: patch, prev: doctype.head, id: doctype.state.log[0] }
+        const record = { owners: doctype.owners, content: patch, prev: doctype.head, id: doctype.state.log[0] }
         return TileDoctype._signRecord(record, user)
     }
 
