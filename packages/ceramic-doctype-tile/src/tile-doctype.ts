@@ -3,7 +3,7 @@ import jsonpatch from 'fast-json-patch'
 import { encode as base64Encode } from '@ethersproject/base64'
 import { randomBytes } from '@ethersproject/random'
 
-import { Doctype, DoctypeConstructor, DoctypeStatic, InitOpts } from "@ceramicnetwork/ceramic-common"
+import { Doctype, DoctypeConstructor, DoctypeStatic, DocOpts } from "@ceramicnetwork/ceramic-common"
 import { Context } from "@ceramicnetwork/ceramic-common"
 import { User } from "@ceramicnetwork/ceramic-common"
 
@@ -28,7 +28,7 @@ export class TileDoctype extends Doctype {
      * @param params - Change parameters
      * @param opts - Initialization options
      */
-    async change(params: TileParams, opts?: InitOpts): Promise<void> {
+    async change(params: TileParams, opts: DocOpts = {}): Promise<void> {
         if (this.context.user == null) {
             throw new Error('No user authenticated')
         }
@@ -44,7 +44,7 @@ export class TileDoctype extends Doctype {
      * @param context - Ceramic context
      * @param opts - Initialization options
      */
-    static async create(params: TileParams, context: Context, opts?: InitOpts): Promise<TileDoctype> {
+    static async create(params: TileParams, context: Context, opts?: DocOpts): Promise<TileDoctype> {
         if (context.user == null) {
             throw new Error('No user authenticated')
         }
@@ -60,7 +60,7 @@ export class TileDoctype extends Doctype {
      * @param context - Ceramic context
      * @param opts - Initialization options
      */
-    static async makeGenesis(params: Record<string, any>, context?: Context, opts: InitOpts = {}): Promise<Record<string, any>> {
+    static async makeGenesis(params: Record<string, any>, context?: Context, opts: DocOpts = {}): Promise<Record<string, any>> {
         if (!context.user) {
             throw new Error('No user authenticated')
         }
@@ -89,24 +89,12 @@ export class TileDoctype extends Doctype {
      * @private
      */
     static async _makeRecord(doctype: Doctype, user: User, newContent: any): Promise<Doctype> {
-        if (user == null) {
+        if (!user) {
             throw new Error('No user authenticated')
         }
-
         const patch = jsonpatch.compare(doctype.content, newContent)
-        const record: any = { owners: doctype.owners, content: patch, prev: doctype.head, id: doctype.state.log[0] }
-        record.iss = user.DID
-        // convert CID to string for signing
-        const tmpPrev = record.prev
-        const tmpId = record.id
-        record.prev = { '/': tmpPrev.toString() }
-        record.id = { '/': tmpId.toString() }
-        const jwt = await user.sign(record, { useMgmt: true})
-        const [header, payload, signature] = jwt.split('.') // eslint-disable-line @typescript-eslint/no-unused-vars
-        record.prev = tmpPrev
-        record.id = tmpId
-
-        return { ...record, header, signature }
+        const record = { owners: doctype.owners, content: patch, prev: doctype.head, id: doctype.state.log[0] }
+        return TileDoctype._signRecord(record, user)
     }
 
     /**

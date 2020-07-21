@@ -57,6 +57,7 @@ class CeramicDaemon {
       next()
     })
     app.post(toApiPath('/create'), this.createDoc.bind(this))
+    app.get(toApiPath('/versions/ceramic/:cid'), this.versions.bind(this))
     app.get(toApiPath('/show/ceramic/:cid'), this.show.bind(this))
     app.get(toApiPath('/state/ceramic/:cid'), this.state.bind(this))
     app.post(toApiPath('/change/ceramic/:cid'), this.change.bind(this))
@@ -136,10 +137,10 @@ class CeramicDaemon {
   }
 
   async createDoc (req: Request, res: Response, next: NextFunction): Promise<void> {
-    const { doctype, params, initOpts } = req.body
+    const { doctype, params, docOpts } = req.body
     // TODO - check parameters
     try {
-      const doc = await this.ceramic.createDocument(doctype, params, initOpts)
+      const doc = await this.ceramic.createDocument(doctype, params, docOpts)
       res.json({ docId: doc.id, state: DoctypeUtils.serializeState(doc.state) })
     } catch (e) {
       return next(e)
@@ -148,7 +149,10 @@ class CeramicDaemon {
   }
 
   async show (req: Request, res: Response, next: NextFunction): Promise<void> {
-    const docId = ['/ceramic', req.params.cid].join('/')
+    let docId = ['/ceramic', req.params.cid].join('/')
+    if (req.query.version) {
+      docId = `${docId}?version=${req.query.version}`
+    }
     try {
       const doc = await this.ceramic.loadDocument(docId)
       res.json({ docId: doc.id, content: doc.content })
@@ -159,11 +163,25 @@ class CeramicDaemon {
   }
 
   async state (req: Request, res: Response, next: NextFunction): Promise<void> {
-    const docId = ['/ceramic', req.params.cid].join('/')
+    let docId = ['/ceramic', req.params.cid].join('/')
+    if (req.query.version) {
+      docId = `${docId}?version=${req.query.version}`
+    }
     try {
       const doc = await this.ceramic.loadDocument(docId)
 
       res.json({ docId: doc.id, state: DoctypeUtils.serializeState(doc.state) })
+    } catch (e) {
+      return next(e)
+    }
+    next()
+  }
+
+  async versions (req: Request, res: Response, next: NextFunction): Promise<void> {
+    const docId = ['/ceramic', req.params.cid].join('/')
+    try {
+      const versions = await this.ceramic.listVersions(docId)
+      res.json({ docId, versions: versions })
     } catch (e) {
       return next(e)
     }
@@ -182,7 +200,10 @@ class CeramicDaemon {
     try {
       const doc = await this.ceramic.loadDocument(docId)
 
-      await doc.change({ content, owners })
+      const doctypeHandler = this.ceramic.findDoctypeHandler(doc.doctype)
+      const doctype = new doctypeHandler.doctype(doc.state, this.ceramic.context)
+
+      await doctype.change({ content, owners })
       res.json({ docId: doc.id, state: DoctypeUtils.serializeState(doc.state) })
     } catch (e) {
       return next(e)

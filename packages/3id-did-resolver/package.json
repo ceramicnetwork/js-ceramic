@@ -26,6 +26,9 @@
     "lint": "./node_modules/.bin/eslint ./src --ext .js,.jsx,.ts,.tsx",
     "clean": "rm -rf ./lib"
   },
+  "dependencies": {
+    "@ceramicnetwork/ceramic-common": "^0.2.4"
+  },
   "devDependencies": {
     "@babel/core": "^7.9.0",
     "@babel/preset-env": "^7.8.4",

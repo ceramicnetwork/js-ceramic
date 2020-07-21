@@ -6,7 +6,7 @@ import jsonpatch from 'fast-json-patch'
 
 import { TileDoctype, TileParams } from "./tile-doctype"
 import {
-    AnchorProof, AnchorRecord, AnchorStatus, DocState, DoctypeConstructor, DoctypeHandler, InitOpts, SignatureStatus
+    AnchorProof, AnchorRecord, AnchorStatus, DocState, DoctypeConstructor, DoctypeHandler, DocOpts, SignatureStatus
 } from "@ceramicnetwork/ceramic-common"
 import { Context } from "@ceramicnetwork/ceramic-common"
 
@@ -36,7 +36,7 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
      * @param context - Ceramic context
      * @param opts - Initialization options
      */
-    async create(params: TileParams, context: Context, opts?: InitOpts): Promise<TileDoctype> {
+    async create(params: TileParams, context: Context, opts?: DocOpts): Promise<TileDoctype> {
         return TileDoctype.create(params, context, opts)
     }
 
@@ -149,7 +149,7 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
         try {
             await this.verifyJWT(jwt, { resolver: context.resolver })
         } catch (e) {
-            throw new Error('Invalid signature for signed record:' + e)
+            throw new Error('Invalid signature for signed record. ' + e)
         }
     }
 

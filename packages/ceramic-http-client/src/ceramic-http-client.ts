@@ -1,6 +1,6 @@
 import { fetchJson } from "./utils"
 import Document from './document'
-import { Doctype, DoctypeHandler, InitOpts } from "@ceramicnetwork/ceramic-common"
+import { Doctype, DoctypeHandler, DocOpts } from "@ceramicnetwork/ceramic-common"
 import { CeramicApi, DIDProvider, PinApi } from "@ceramicnetwork/ceramic-common"
 import { DoctypeUtils } from "@ceramicnetwork/ceramic-common/lib"
 
@@ -54,7 +54,7 @@ class CeramicClient implements CeramicApi {
     }
   }
 
-  async createDocument<T extends Doctype>(doctype: string, params: object, opts?: InitOpts): Promise<T> {
+  async createDocument<T extends Doctype>(doctype: string, params: object, opts?: DocOpts): Promise<T> {
     const doc = await Document.create(this._apiUrl, doctype, params, opts)
     const normalizedId = DoctypeUtils.normalizeDocId(doc.id)
     if (!this._docmap[normalizedId]) {
@@ -63,7 +63,7 @@ class CeramicClient implements CeramicApi {
     return doc as unknown as T
   }
 
-  async loadDocument<T extends Doctype>(id: string, opts?: InitOpts): Promise<T> {
+  async loadDocument<T extends Doctype>(id: string, opts?: DocOpts): Promise<T> {
     const normalizedId = DoctypeUtils.normalizeDocId(id)
     if (!this._docmap[normalizedId]) {
       this._docmap[normalizedId] = await Document.load(normalizedId, this._apiUrl)
@@ -71,11 +71,16 @@ class CeramicClient implements CeramicApi {
     return this._docmap[normalizedId] as unknown as T
   }
 
-  applyRecord<T extends Doctype>(docId: string, record: object, opts?: InitOpts): Promise<T> {
+  async listVersions(docId: string): Promise<string[]> {
+    const normalizedId = DoctypeUtils.normalizeDocId(docId)
+    return Document.listVersions(normalizedId, this._apiUrl)
+  }
+
+  applyRecord<T extends Doctype>(docId: string, record: object, opts?: DocOpts): Promise<T> {
     throw new Error('method not implemented')
   }
 
-  createDocumentFromGenesis<T extends Doctype>(genesis: any, opts?: InitOpts): Promise<T> {
+  createDocumentFromGenesis<T extends Doctype>(genesis: any, opts?: DocOpts): Promise<T> {
     throw new Error('method not implemented')
   }
 

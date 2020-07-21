@@ -1,4 +1,4 @@
-import { Doctype, DoctypeUtils, InitOpts } from "@ceramicnetwork/ceramic-common"
+import { Doctype, DoctypeUtils, DocOpts } from "@ceramicnetwork/ceramic-common"
 
 import { fetchJson } from './utils'
 import { DocState } from "@ceramicnetwork/ceramic-common/lib"
@@ -15,11 +15,11 @@ class Document extends Doctype {
     }, 1000)
   }
 
-  static async create (apiUrl: string, doctype: string, params: object, opts: InitOpts = {}): Promise<Document> {
+  static async create (apiUrl: string, doctype: string, params: object, opts: DocOpts = {}): Promise<Document> {
     const { state } = await fetchJson(apiUrl + '/create', {
       params,
       doctype,
-      initOpts: {
+      docOpts: {
         applyOnly: opts.applyOnly,
         isUnique: opts.isUnique
       }
@@ -33,9 +33,15 @@ class Document extends Doctype {
     return new Document(DoctypeUtils.deserializeState(state), apiUrl)
   }
 
+  static async listVersions (id: string, apiUrl: string): Promise<string[]> {
+    const normalizedId = DoctypeUtils.normalizeDocId(id)
+    const { versions } = await fetchJson(apiUrl + '/versions' + normalizedId)
+    return versions
+  }
+
   async change(params: Record<string, any>): Promise<void> {
     const { content, owners } = params
-    const normalizedId = DoctypeUtils.normalizeDocId(this.id)
+    const normalizedId = DoctypeUtils.getBaseDocId(DoctypeUtils.normalizeDocId(this.id))
     const { state } = await fetchJson(this._apiUrl + '/change' + normalizedId, {
       params: {
         content,

@@ -6,7 +6,7 @@ import cloneDeep from 'lodash.clonedeep'
 import AnchorServiceResponse from "./anchor/anchor-service-response"
 import StateStore from "./store/state-store"
 import {
-  AnchorProof, AnchorRecord, AnchorStatus, DocState, Doctype, DoctypeHandler, DoctypeUtils, InitOpts
+  AnchorProof, AnchorRecord, AnchorStatus, DocState, Doctype, DoctypeHandler, DoctypeUtils, DocOpts
 } from "@ceramicnetwork/ceramic-common"
 import { Context } from "@ceramicnetwork/ceramic-common"
 
@@ -20,12 +20,15 @@ class Document extends EventEmitter {
   public _context: Context
 
   public readonly id: string
+  public readonly version: CID
   public readonly dispatcher: Dispatcher
   public readonly stateStore: StateStore
 
   constructor (id: string, dispatcher: Dispatcher, stateStore: StateStore) {
     super()
-    this.id = DoctypeUtils.normalizeDocId(id);
+    const normalized = DoctypeUtils.normalizeDocId(id)
+    this.id = DoctypeUtils.getBaseDocId(normalized);
+    this.version = DoctypeUtils.getVersionId(normalized)
 
     this.dispatcher = dispatcher;
     this.stateStore = stateStore;
@@ -34,18 +37,27 @@ class Document extends EventEmitter {
     this._genesisCid = new CID(DoctypeUtils.getGenesis(this.id))
   }
 
+  /**
+   * Creates new Doctype with params
+   * @param params - Initial Doctype parameters
+   * @param doctypeHandler - DoctypeHandler instance
+   * @param dispatcher - Dispatcher instance
+   * @param stateStore - StateStore instance
+   * @param context - Ceramic context
+   * @param opts - Initialization options
+   */
   static async create<T extends Doctype> (
       params: object,
       doctypeHandler: DoctypeHandler<Doctype>,
       dispatcher: Dispatcher,
       stateStore: StateStore,
       context: Context,
-      opts: InitOpts = {}
+      opts: DocOpts = {}
   ): Promise<Document> {
     const genesis = await doctypeHandler.doctype.makeGenesis(params, context, opts)
 
     const genesisCid = await dispatcher.storeRecord(genesis)
-    const id = DoctypeUtils.createDocId(genesisCid)
+    const id = DoctypeUtils.createDocIdFromGenesis(genesisCid)
 
     const doc = new Document(id, dispatcher, stateStore)
 
@@ -65,13 +77,60 @@ class Document extends EventEmitter {
     return doc
   }
 
+  /**
+   * Creates new Doctype from genesis record
+   * @param genesis - Genesis record
+   * @param findHandler - find handler fn
+   * @param dispatcher - Dispatcher instance
+   * @param stateStore - StateStore instance
+   * @param context - Ceramic context
+   * @param opts - Initialization options
+   */
+  static async createFromGenesis<T extends Doctype>(
+      genesis: any,
+      findHandler: (genesisRecord: any) => DoctypeHandler<Doctype>,
+      dispatcher: Dispatcher,
+      stateStore: StateStore,
+      context: Context,
+      opts: DocOpts = {}
+  ): Promise<Document> {
+    const genesisCid = await dispatcher.storeRecord(genesis)
+    const id = DoctypeUtils.createDocIdFromGenesis(genesisCid)
+
+    const doc = new Document(id, dispatcher, stateStore)
+
+    doc._context = context
+    doc._doctypeHandler = findHandler(genesis)
+
+    doc._doctype = new doc._doctypeHandler.doctype(null, context)
+    doc._doctype.state = await doc._doctypeHandler.applyRecord(genesis, doc._genesisCid, context)
+
+    await doc._updateStateIfPinned()
+
+    if (typeof opts.applyOnly === 'undefined') {
+      opts.applyOnly = false
+    }
+
+    await doc._register(opts)
+    return doc
+  }
+
+  /**
+   * Loads the Doctype by id
+   * @param id - Document ID
+   * @param findHandler - find handler fn
+   * @param dispatcher - Dispatcher instance
+   * @param stateStore - StateStore instance
+   * @param context - Ceramic context
+   * @param opts - Initialization options
+   */
   static async load<T extends Doctype> (
       id: string,
       findHandler: (genesisRecord: any) => DoctypeHandler<Doctype>,
       dispatcher: Dispatcher,
       stateStore: StateStore,
       context: Context,
-      opts: InitOpts = {}
+      opts: DocOpts = {}
   ): Promise<Document> {
     const doc = new Document(id, dispatcher, stateStore)
     doc._context = context
@@ -100,36 +159,64 @@ class Document extends EventEmitter {
     return doc
   }
 
-  static async createFromGenesis<T extends Doctype>(
-      genesis: any,
-      findHandler: (genesisRecord: any) => DoctypeHandler<Doctype>,
-      dispatcher: Dispatcher,
-      stateStore: StateStore,
-      context: Context,
-      opts: InitOpts = {}
-  ): Promise<Document> {
-    const genesisCid = await dispatcher.storeRecord(genesis)
-    const id = DoctypeUtils.createDocId(genesisCid)
-
-    const doc = new Document(id, dispatcher, stateStore)
-
-    doc._context = context
-    doc._doctypeHandler = findHandler(genesis)
-
-    doc._doctype = new doc._doctypeHandler.doctype(null, context)
-    doc._doctype.state = await doc._doctypeHandler.applyRecord(genesis, doc._genesisCid, context)
-
-    await doc._updateStateIfPinned()
-
-    if (typeof opts.applyOnly === 'undefined') {
-      opts.applyOnly = false
+  /**
+   * Lists available versions
+   */
+  async listVersions(): Promise<CID[]> {
+    if (this._doctype.state == null) {
+      return []
     }
 
-    await doc._register(opts)
-    return doc
+    const checkPromises: Promise<CID[]>[] = this._doctype.state.log.map(async (cid): Promise<CID[]> => {
+      const record = await this.dispatcher.retrieveRecord(cid)
+      return record.proof != null ? [cid] : []
+    })
+    return (await Promise.all(checkPromises)).reduce((acc, recs) => acc.concat(...recs), [])
   }
 
-  async applyRecord (record: any, opts: InitOpts = {}): Promise<void> {
+  /**
+   * Loads a specific version of the Doctype
+   *
+   * @param version - Document version
+   */
+  async getVersion<T extends Doctype>(version: CID): Promise<T> {
+    const doc = await Document.getVersion<T>(this, version)
+    return doc.doctype as T
+  }
+
+  /**
+   * Loads a specific version of the Doctype
+   *
+   * @param doc - Document instance
+   * @param version - Document version
+   */
+  static async getVersion<T extends Doctype>(doc: Document, version: CID): Promise<Document> {
+    const { _context: context, dispatcher, stateStore, _doctypeHandler: doctypeHandler } = doc
+
+    const versionRecord = await dispatcher.retrieveRecord(version)
+    if (versionRecord == null) {
+      throw new Error(`No record found for version ${version.toString()}`)
+    }
+
+    // check if it's not an anchor record
+    if (versionRecord.proof == null) {
+      throw new Error(`No anchor record for version ${version.toString()}`)
+    }
+
+    const document = new Document(DoctypeUtils.createDocIdFromBase(doc.id, version), dispatcher, stateStore)
+    document._context = context
+    document._doctypeHandler = doctypeHandler
+    document._doctype = new doc._doctypeHandler.doctype(null, context)
+
+    const genesisRecord = await document.dispatcher.retrieveRecord(doc._genesisCid)
+    document._doctype.state = await doc._doctypeHandler.applyRecord(genesisRecord, doc._genesisCid, context)
+
+    await document._handleHead(version) // sync version
+    document._doctype = DoctypeUtils.makeReadOnly<T>(document.doctype as T)
+    return document
+  }
+
+  async applyRecord (record: any, opts: DocOpts = {}): Promise<void> {
     const cid = await this.dispatcher.storeRecord(record)
     this._doctype.state = await this._doctypeHandler.applyRecord(record, cid, this._context, this.state)
 
@@ -138,7 +225,7 @@ class Document extends EventEmitter {
     await this._applyOpts(opts)
   }
 
-  async _register (opts: InitOpts): Promise<void> {
+  async _register (opts: DocOpts): Promise<void> {
     this.on('update', this._handleHead.bind(this))
     this.on('headreq', this._publishHead.bind(this))
 
@@ -152,7 +239,7 @@ class Document extends EventEmitter {
    * @param opts - Initialization options
    * @private
    */
-  async _applyOpts(opts: InitOpts): Promise<void> {
+  async _applyOpts(opts: DocOpts): Promise<void> {
     if (!opts.applyOnly) {
       await this.anchor()
       this._publishHead()
@@ -250,7 +337,6 @@ class Document extends EventEmitter {
         state = await this._doctypeHandler.applyRecord(record, cid, this._context)
       } else if (record.proof) {
         // it's an anchor record
-
         await this._verifyAnchorRecord(record)
         state = await this._doctypeHandler.applyRecord(record, cid, this._context, state)
       } else {

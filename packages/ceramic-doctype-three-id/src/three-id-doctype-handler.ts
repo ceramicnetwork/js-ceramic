@@ -7,7 +7,7 @@ import jsonpatch from 'fast-json-patch'
 import * as didJwt from 'did-jwt'
 import { ThreeIdDoctype, ThreeIdParams } from "./three-id-doctype"
 import {
-    AnchorProof, AnchorRecord, AnchorStatus, DocState, DoctypeConstructor, DoctypeHandler, InitOpts, SignatureStatus
+    AnchorProof, AnchorRecord, AnchorStatus, DocState, DoctypeConstructor, DoctypeHandler, DocOpts, SignatureStatus
 } from "@ceramicnetwork/ceramic-common"
 import { Context } from "@ceramicnetwork/ceramic-common"
 
@@ -37,7 +37,7 @@ export class ThreeIdDoctypeHandler implements DoctypeHandler<ThreeIdDoctype> {
      * @param context - Ceramic context
      * @param opts - Initialization options
      */
-    async create(params: ThreeIdParams, context: Context, opts?: InitOpts): Promise<ThreeIdDoctype> {
+    async create(params: ThreeIdParams, context: Context, opts?: DocOpts): Promise<ThreeIdDoctype> {
         return ThreeIdDoctype.create(params, context, opts);
     }
 

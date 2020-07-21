@@ -52,7 +52,7 @@ const wrapWithFakeSignature = (obj: any): any => {
   return obj
 }
 
-describe('ThreeIdHandler', () => {
+describe('TileDoctypeHandler', () => {
   let user: MockUser;
   let tileDoctypeHandler: TileDoctypeHandler;
   let context: Context;

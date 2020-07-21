@@ -66,9 +66,20 @@ export class DoctypeUtils {
     /**
      * Create Doctype instance from the document wrapper
      * @param genesisCid - Genesis record CID
+     * @param version - Doctype version
      */
-    static createDocId(genesisCid: any): string {
-        return ['ceramic:/', genesisCid.toString()].join('/')
+    static createDocIdFromGenesis(genesisCid: any, version: any = null): string {
+        const baseDocId = ['ceramic:/', genesisCid.toString()].join('/')
+        return version? `${baseDocId}?version=${version.toString()}` : baseDocId
+    }
+
+    /**
+     * Create Doctype instance from the document wrapper
+     * @param docId - Doctype ID
+     * @param version - Doctype version
+     */
+    static createDocIdFromBase(docId: string, version: any = null): string {
+        return version? `${docId}?version=${version.toString()}` : docId
     }
 
     /**
@@ -87,10 +98,57 @@ export class DoctypeUtils {
      * @param docId - Document ID
      */
     static getGenesis(docId: string): string {
-        if (docId.startsWith('ceramic://')) {
-            return docId.split('//')[1]
+        const genesis = (docId.startsWith('ceramic://')) ? docId.split('//')[1] : docId.split('/')[2]
+        const indexOfVersion = genesis.indexOf('?')
+        if (indexOfVersion !== -1) {
+            return genesis.substring(0, indexOfVersion)
         }
-        return docId.split('/')[2]
+        return genesis
+    }
+
+    /**
+     * Normalize document ID
+     * @param docId - Document ID
+     */
+    static getBaseDocId(docId: string): string {
+        const indexOfVersion = docId.indexOf('?')
+        if (indexOfVersion !== -1) {
+            return docId.substring(0, indexOfVersion)
+        }
+        return docId
+    }
+
+    /**
+     * Normalize document ID
+     * @param docId - Document ID
+     */
+    static getVersionId(docId: string): CID {
+        const genesis = (docId.startsWith('ceramic://')) ? docId.split('//')[1] : docId.split('/')[2]
+        const indexOfVersion = genesis.indexOf('?')
+        if (indexOfVersion !== -1) {
+            const params = DoctypeUtils._getQueryParam(genesis.substring(indexOfVersion + 1))
+            return params['version']? new CID(params['version']) : null
+        }
+        return null
+    }
+
+    /**
+     * Get query params from document ID
+     * @param query - Document query
+     * @private
+     */
+    static _getQueryParam(query: string): Record<string, string> {
+        const result: Record<string, string> = {};
+        if (!query) {
+            return result
+        }
+
+        const pairs = query.toLowerCase().split('&')
+        pairs.forEach(function(pair) {
+            const mapping: string[] = pair.split('=');
+            result[mapping[0]] = mapping[1] || '';
+        });
+        return result
     }
 
     /**
@@ -141,12 +199,24 @@ export class DoctypeUtils {
         }
         return cloned
     }
+
+    /**
+     * Make doctype readonly
+     * @param doctype - Doctype instance
+     */
+    static makeReadOnly<T extends Doctype>(doctype: T): T {
+        const cloned = cloneDeep(doctype)
+        cloned.change = (): Promise<void> => {
+            throw new Error('The version of the document is readonly. Checkout the latest HEAD in order to update.')
+        }
+        return cloned
+    }
 }
 
 /**
  * Doctype init options
  */
-export interface InitOpts {
+export interface DocOpts {
     owners?: Array<string>;
     applyOnly?: boolean;
     skipWait?: boolean;
@@ -162,7 +232,7 @@ export abstract class Doctype extends EventEmitter {
     }
 
     get id(): string {
-        return DoctypeUtils.createDocId(this.state.log[0])
+        return DoctypeUtils.createDocIdFromGenesis(this.state.log[0])
     }
 
     get doctype(): string {
@@ -177,6 +247,10 @@ export abstract class Doctype extends EventEmitter {
         return cloneDeep(this.state.owners)
     }
 
+    get head(): CID {
+        return this.state.log[this.state.log.length - 1]
+    }
+
     get state(): DocState {
         return cloneDeep(this._state)
     }
@@ -185,12 +259,12 @@ export abstract class Doctype extends EventEmitter {
         this._state = state
     }
 
-    get context(): Context {
-        return this._context
+    set context(context: Context) {
+        this._context = context
     }
 
-    get head(): CID {
-        return this.state.log[this.state.log.length - 1]
+    get context(): Context {
+        return this._context
     }
 
     /**
@@ -198,7 +272,7 @@ export abstract class Doctype extends EventEmitter {
      * @param params - Change parameteres
      * @param opts - Initialization options
      */
-    abstract change(params: Record<string, any>, opts?: InitOpts): Promise<void>;
+    abstract change(params: Record<string, any>, opts?: DocOpts): Promise<void>;
 
 }
 
@@ -227,7 +301,7 @@ export interface DoctypeConstructor<T extends Doctype> {
      * @param context - Ceramic context
      * @param opts - Initialization options
      */
-    makeGenesis(params: Record<string, any>, context?: Context, opts?: InitOpts): Promise<Record<string, any>>;
+    makeGenesis(params: Record<string, any>, context?: Context, opts?: DocOpts): Promise<Record<string, any>>;
 }
 
 /**

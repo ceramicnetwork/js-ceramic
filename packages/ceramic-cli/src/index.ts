@@ -41,7 +41,9 @@ program
   .description('Create a new document')
   .action(async (doctype, content, { onlyGenesis, owners, unique }) => {
     content = JSON.parse(content)
-    if (typeof owners === 'string') owners = owners.split(',')
+    if (typeof owners === 'string') {
+        owners = owners.split(',')
+    }
     const ceramic = new CeramicClient()
     try {
       const doc = await ceramic.createDocument(doctype, { content, owners }, { applyOnly: onlyGenesis, isUnique: unique })
@@ -53,6 +55,34 @@ program
     ceramic.close()
   })
 
+program
+    .command('change <docId> <content>')
+    .option('--owners <owners>', 'Change owner of this document (only 3ID)')
+    .description('Update the content of a document')
+    .action(async (docId, content, { owners }) => {
+        if (!validateDocId(docId)) {
+            console.error(`Invalid docId: ${docId}`)
+            return
+        }
+        const version = DoctypeUtils.getVersionId(docId)
+        if (version) {
+            console.error(`No versions allowed. Invalid docId: ${docId}`)
+            return
+        }
+        content = JSON.parse(content)
+        if (typeof owners === 'string') {
+            owners = owners.split(',')
+        }
+        const ceramic = new CeramicClient()
+        try {
+            const doc = await ceramic.loadDocument(docId)
+            await doc.change({ content, owners })
+            console.log(JSON.stringify(doc.content, null, 2))
+        } catch (e) {
+            console.error(e)
+        }
+        ceramic.close()
+    })
 
 program
   .command('show <docId> [<anchor>]')
@@ -110,6 +140,24 @@ program
       console.error(e)
     }
   })
+
+program
+    .command('versions <docId>')
+    .description('List document versions')
+    .action(async (docId) => {
+        if (!validateDocId(docId)) {
+            console.error(`Invalid docId: ${docId}`)
+            return
+        }
+        const ceramic = new CeramicClient()
+        try {
+            const versions = await ceramic.listVersions(docId)
+            console.log(JSON.stringify(versions, null, 2))
+        } catch (e) {
+            console.error(e)
+        }
+        ceramic.close()
+    });
 
 const pin = program.command('pin')
 pin.description('Ceramic local pinning API')
