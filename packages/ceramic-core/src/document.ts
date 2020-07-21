@@ -20,12 +20,15 @@ class Document extends EventEmitter {
   public _context: Context
 
   public readonly id: string
+  public readonly version: CID
   public readonly dispatcher: Dispatcher
   public readonly stateStore: StateStore
 
   constructor (id: string, dispatcher: Dispatcher, stateStore: StateStore) {
     super()
-    this.id = DoctypeUtils.normalizeDocId(id);
+    const normalized = DoctypeUtils.normalizeDocId(id)
+    this.id = DoctypeUtils.getBaseDocId(normalized);
+    this.version = DoctypeUtils.getVersionId(normalized)
 
     this.dispatcher = dispatcher;
     this.stateStore = stateStore;
@@ -54,7 +57,7 @@ class Document extends EventEmitter {
     const genesis = await doctypeHandler.doctype.makeGenesis(params, context, opts)
 
     const genesisCid = await dispatcher.storeRecord(genesis)
-    const id = DoctypeUtils.createDocId(genesisCid)
+    const id = DoctypeUtils.createDocIdFromGenesis(genesisCid)
 
     const doc = new Document(id, dispatcher, stateStore)
 
@@ -92,7 +95,7 @@ class Document extends EventEmitter {
       opts: DocOpts = {}
   ): Promise<Document> {
     const genesisCid = await dispatcher.storeRecord(genesis)
-    const id = DoctypeUtils.createDocId(genesisCid)
+    const id = DoctypeUtils.createDocIdFromGenesis(genesisCid)
 
     const doc = new Document(id, dispatcher, stateStore)
 
@@ -200,7 +203,7 @@ class Document extends EventEmitter {
       throw new Error(`No anchor record for version ${version.toString()}`)
     }
 
-    const document = new Document(doc.id, dispatcher, stateStore)
+    const document = new Document(DoctypeUtils.createDocIdFromBase(doc.id, version), dispatcher, stateStore)
     document._context = context
     document._doctypeHandler = doctypeHandler
     document._doctype = new doc._doctypeHandler.doctype(null, context)

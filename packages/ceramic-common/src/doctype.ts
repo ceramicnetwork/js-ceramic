@@ -66,9 +66,20 @@ export class DoctypeUtils {
     /**
      * Create Doctype instance from the document wrapper
      * @param genesisCid - Genesis record CID
+     * @param version - Doctype version
      */
-    static createDocId(genesisCid: any): string {
-        return ['ceramic:/', genesisCid.toString()].join('/')
+    static createDocIdFromGenesis(genesisCid: any, version: any = null): string {
+        const baseDocId = ['ceramic:/', genesisCid.toString()].join('/')
+        return version? `${baseDocId}?version=${version.toString()}` : baseDocId
+    }
+
+    /**
+     * Create Doctype instance from the document wrapper
+     * @param docId - Doctype ID
+     * @param version - Doctype version
+     */
+    static createDocIdFromBase(docId: string, version: any = null): string {
+        return version? `${docId}?version=${version.toString()}` : docId
     }
 
     /**
@@ -87,10 +98,57 @@ export class DoctypeUtils {
      * @param docId - Document ID
      */
     static getGenesis(docId: string): string {
-        if (docId.startsWith('ceramic://')) {
-            return docId.split('//')[1]
+        const genesis = (docId.startsWith('ceramic://')) ? docId.split('//')[1] : docId.split('/')[2]
+        const indexOfVersion = genesis.indexOf('?')
+        if (indexOfVersion !== -1) {
+            return genesis.substring(0, indexOfVersion)
         }
-        return docId.split('/')[2]
+        return genesis
+    }
+
+    /**
+     * Normalize document ID
+     * @param docId - Document ID
+     */
+    static getBaseDocId(docId: string): string {
+        const indexOfVersion = docId.indexOf('?')
+        if (indexOfVersion !== -1) {
+            return docId.substring(0, indexOfVersion)
+        }
+        return docId
+    }
+
+    /**
+     * Normalize document ID
+     * @param docId - Document ID
+     */
+    static getVersionId(docId: string): CID {
+        const genesis = (docId.startsWith('ceramic://')) ? docId.split('//')[1] : docId.split('/')[2]
+        const indexOfVersion = genesis.indexOf('?')
+        if (indexOfVersion !== -1) {
+            const params = DoctypeUtils._getQueryParam(genesis.substring(indexOfVersion + 1))
+            return params['version']? new CID(params['version']) : null
+        }
+        return null
+    }
+
+    /**
+     * Get query params from document ID
+     * @param query - Document query
+     * @private
+     */
+    static _getQueryParam(query: string): Record<string, string> {
+        const result: Record<string, string> = {};
+        if (!query) {
+            return result
+        }
+
+        const pairs = query.toLowerCase().split('&')
+        pairs.forEach(function(pair) {
+            const mapping: string[] = pair.split('=');
+            result[mapping[0]] = mapping[1] || '';
+        });
+        return result
     }
 
     /**
@@ -163,7 +221,6 @@ export interface DocOpts {
     applyOnly?: boolean;
     skipWait?: boolean;
     isUnique?: boolean;
-    version?: CID;
 }
 
 /**
@@ -175,7 +232,7 @@ export abstract class Doctype extends EventEmitter {
     }
 
     get id(): string {
-        return DoctypeUtils.createDocId(this.state.log[0])
+        return DoctypeUtils.createDocIdFromGenesis(this.state.log[0])
     }
 
     get doctype(): string {

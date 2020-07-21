@@ -71,6 +71,11 @@ class CeramicClient implements CeramicApi {
     return this._docmap[normalizedId] as unknown as T
   }
 
+  async listVersions(docId: string): Promise<string[]> {
+    const normalizedId = DoctypeUtils.normalizeDocId(docId)
+    return Document.listVersions(normalizedId, this._apiUrl)
+  }
+
   applyRecord<T extends Doctype>(docId: string, record: object, opts?: DocOpts): Promise<T> {
     throw new Error('method not implemented')
   }

@@ -111,6 +111,24 @@ program
     }
   })
 
+program
+    .command('versions <docId>')
+    .description('List document versions')
+    .action(async (docId) => {
+        if (!validateDocId(docId)) {
+            console.error(`Invalid docId: ${docId}`)
+            return
+        }
+        const ceramic = new CeramicClient()
+        try {
+            const versions = await ceramic.listVersions(docId)
+            console.log(JSON.stringify(versions, null, 2))
+        } catch (e) {
+            console.error(e)
+        }
+        ceramic.close()
+    });
+
 const pin = program.command('pin')
 pin.description('Ceramic local pinning API')
 

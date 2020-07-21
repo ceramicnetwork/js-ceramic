@@ -1,3 +1,4 @@
+import CID from 'cids'
 import Ipfs from 'ipfs'
 import Dispatcher from './dispatcher'
 import CeramicUser from './ceramic-user'
@@ -246,8 +247,11 @@ class Ceramic implements CeramicApi {
   async loadDocument<T extends Doctype>(docId: string, opts: DocOpts = {}): Promise<T> {
     const normalizedId = DoctypeUtils.normalizeDocId(docId)
 
-    const doc = await this._loadDoc(normalizedId, opts)
-    return (opts.version? await doc.getVersion<T>(opts.version) : doc.doctype) as T
+    const baseDocId = DoctypeUtils.getBaseDocId(normalizedId)
+    const doc = await this._loadDoc(baseDocId, opts)
+
+    const version = DoctypeUtils.getVersionId(normalizedId)
+    return (version? await doc.getVersion<T>(version) : doc.doctype) as T
   }
 
   /**
@@ -262,6 +266,17 @@ class Ceramic implements CeramicApi {
       this._docmap[normalizedId] = await Document.load(docId, this.findHandler.bind(this), this.dispatcher, this.stateStore, this.context, opts)
     }
     return this._docmap[normalizedId]
+  }
+
+  /**
+   * Lists ceramic
+   * @param docId - Document ID
+   */
+  async listVersions(docId: string): Promise<string[]> {
+    const doc = await this._loadDoc(docId, {
+      applyOnly: true
+    })
+    return (await doc.listVersions()).map((e) => e.toString())
   }
 
   /**

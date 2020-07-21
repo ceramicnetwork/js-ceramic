@@ -57,6 +57,7 @@ class CeramicDaemon {
       next()
     })
     app.post(toApiPath('/create'), this.createDoc.bind(this))
+    app.get(toApiPath('/versions/ceramic/:cid'), this.versions.bind(this))
     app.get(toApiPath('/show/ceramic/:cid'), this.show.bind(this))
     app.get(toApiPath('/state/ceramic/:cid'), this.state.bind(this))
     app.post(toApiPath('/change/ceramic/:cid'), this.change.bind(this))
@@ -152,6 +153,17 @@ class CeramicDaemon {
     try {
       const doc = await this.ceramic.loadDocument(docId)
       res.json({ docId: doc.id, content: doc.content })
+    } catch (e) {
+      return next(e)
+    }
+    next()
+  }
+
+  async versions (req: Request, res: Response, next: NextFunction): Promise<void> {
+    const docId = ['/ceramic', req.params.cid].join('/')
+    try {
+      const versions = await this.ceramic.listVersions(docId)
+      res.json({ docId, versions: versions })
     } catch (e) {
       return next(e)
     }

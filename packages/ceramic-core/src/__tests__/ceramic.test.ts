@@ -3,6 +3,8 @@ import IdentityWallet from 'identity-wallet'
 import tmp from 'tmp-promise'
 import Ipfs from 'ipfs'
 import { ThreeIdDoctype } from "@ceramicnetwork/ceramic-doctype-three-id"
+import { AnchorStatus, DoctypeUtils } from "@ceramicnetwork/ceramic-common/lib"
+import Document from "../document"
 
 jest.mock('../store/level-state-store')
 
@@ -141,5 +143,65 @@ describe('Ceramic integration', () => {
     await ceramic1.close()
     await ceramic2.close()
     await ceramic3.close()
+  })
+
+  it('can load the previous document version', async () => {
+    const ceramic = await Ceramic.create(ipfs1)
+    await ceramic.setDIDProvider(idWallet.get3idProvider())
+    const owner = ceramic.context.user.publicKeys.managementKey
+
+    const docOg = await ceramic.createDocument<ThreeIdDoctype>(DOCTYPE_3ID, { content: { test: 321 }, owners: [owner] })
+
+    // wait for anchor (new version)
+    await new Promise(resolve => {
+      docOg.on('change', () => {
+        resolve()
+      })
+    })
+
+    expect(docOg.state.log.length).toEqual(2)
+    expect(docOg.content).toEqual({ test: 321 })
+    expect(docOg.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+
+    const stateOg = docOg.state
+
+    await docOg.change({ content: { test: 'abcde' } })
+
+    // wait for anchor (new version)
+    await new Promise(resolve => {
+      docOg.on('change', () => {
+        resolve()
+      })
+    })
+
+    expect(docOg.state.log.length).toEqual(4)
+    expect(docOg.content).toEqual({ test: 'abcde' })
+    expect(docOg.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+
+    let docV0Id = DoctypeUtils.createDocIdFromBase(docOg.id, docOg.state.log[1].toString())
+    const docV0 = await ceramic.loadDocument<ThreeIdDoctype>(docV0Id)
+
+    expect(docV0.state).toEqual(stateOg)
+    expect(docV0.content).toEqual({ test: 321 })
+    expect(docV0.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+
+    // try to call doctype.change
+    try {
+      await docV0.change({ content: { test: 'fghj' }, owners: docV0.owners })
+      throw new Error('Should not be able to fetch not anchored version')
+    } catch (e) {
+      expect(e.message).toEqual('The version of the document is readonly. Checkout the latest HEAD in order to update.')
+    }
+
+    // try to checkout not anchored version
+    try {
+      docV0Id = DoctypeUtils.createDocIdFromBase(docOg.id, docOg.state.log[2].toString())
+      await ceramic.loadDocument<ThreeIdDoctype>(docV0Id)
+      throw new Error('Should not be able to fetch not anchored version')
+    } catch (e) {
+      expect(e.message).toContain('No anchor record for version')
+    }
+
+    await ceramic.close()
   })
 })

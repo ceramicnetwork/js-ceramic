@@ -1,4 +1,3 @@
-import CID from 'cids'
 import { Doctype, DoctypeHandler, DocOpts } from "./doctype"
 
 /**
@@ -77,6 +76,12 @@ export interface CeramicApi {
      * @param opts - Initialization options
      */
     loadDocument<T extends Doctype>(docId: string, opts?: DocOpts): Promise<T>;
+
+    /**
+     * Lists current Doctype versions
+     * @param docId - Document ID
+     */
+    listVersions(docId: string): Promise<string[]>;
 
     /**
      * Applies record on the existing document
