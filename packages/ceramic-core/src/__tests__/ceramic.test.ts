@@ -117,6 +117,11 @@ describe('Ceramic integration', () => {
     const doctype1 = await ceramic1.createDocument<ThreeIdDoctype>(DOCTYPE_3ID, { content: { test: 321 }, owners: [owner] })
     const doctype3 = await ceramic3.createDocument<ThreeIdDoctype>(DOCTYPE_3ID, { content: { test: 321 }, owners: [owner] }, { applyOnly: true })
 
+    while (doctype3.state.anchorStatus !== doctype1.state.anchorStatus) {
+      // wait to propagate
+      await new Promise(resolve => setTimeout(resolve, 1000))
+    }
+
     expect(doctype3.content).toEqual(doctype1.content)
     expect(doctype3.state).toEqual(doctype1.state)
 
