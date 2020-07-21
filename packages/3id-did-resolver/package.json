@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/3id-did-resolver",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "DID Resolver for the 3ID method",
   "keywords": [
     "Ceramic",
@@ -27,7 +27,7 @@
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/ceramic-common": "^0.2.4"
+    "@ceramicnetwork/ceramic-common": "^0.2.6"
   },
   "devDependencies": {
     "@babel/core": "^7.9.0",
