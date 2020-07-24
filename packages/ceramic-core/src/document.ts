@@ -6,9 +6,8 @@ import cloneDeep from 'lodash.clonedeep'
 import AnchorServiceResponse from "./anchor/anchor-service-response"
 import StateStore from "./store/state-store"
 import {
-  AnchorProof, AnchorRecord, AnchorStatus, DocState, Doctype, DoctypeHandler, DoctypeUtils, DocOpts
+  AnchorProof, AnchorRecord, AnchorStatus, DocState, Doctype, DoctypeHandler, DocOpts, Context, DoctypeUtils
 } from "@ceramicnetwork/ceramic-common"
-import { Context } from "@ceramicnetwork/ceramic-common"
 
 class Document extends EventEmitter {
   private _applyQueue: PQueue
@@ -218,7 +217,12 @@ class Document extends EventEmitter {
 
   async applyRecord (record: any, opts: DocOpts = {}): Promise<void> {
     const cid = await this.dispatcher.storeRecord(record)
-    this._doctype.state = await this._doctypeHandler.applyRecord(record, cid, this._context, this.state)
+
+    const doctype = this._doctype.schema? this._doctype.clone() : this._doctype
+    doctype.state = await this._doctypeHandler.applyRecord(record, cid, this._context, this.state)
+
+    DoctypeUtils.validate(doctype)
+    this._doctype = doctype
 
     await this._updateStateIfPinned()
 

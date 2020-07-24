@@ -1,8 +1,7 @@
 import { fetchJson } from "./utils"
 import Document from './document'
 import { Doctype, DoctypeHandler, DocOpts } from "@ceramicnetwork/ceramic-common"
-import { CeramicApi, DIDProvider, PinApi } from "@ceramicnetwork/ceramic-common"
-import { DoctypeUtils } from "@ceramicnetwork/ceramic-common/lib"
+import { CeramicApi, DIDProvider, PinApi, DoctypeUtils } from "@ceramicnetwork/ceramic-common"
 
 const CERAMIC_HOST = 'http://localhost:7007'
 const API_PATH = '/api/v0'
