@@ -18,12 +18,13 @@
     "lib"
   ],
   "scripts": {
+    "test": "./node_modules/.bin/jest --coverage",
     "build": "../../node_modules/.bin/tsc -p tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
     "lint": "./node_modules/.bin/eslint ./src --ext .js,.jsx,.ts,.tsx",
     "clean": "rm -rf ./lib",
-    "generate": "cd scripts; ./generate_schemas.sh"
+    "generate": "cd scripts; ./schema_generator.sh"
   },
   "dependencies": {
     "ajv": "^6.12.3",

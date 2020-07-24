@@ -164,13 +164,11 @@ export class DoctypeUtils {
      * @param content - Doctype content
      * @param schema - Doctype schema
      */
-    static validate(content: any, schema: any): boolean {
+    static validate(content: any, schema: any): void {
         const isValid = this.validator.validate(schema, content)
         if (!isValid) {
             const errorMessages = this.validator.errorsText()
-            throw new Error(`Validation Error. ${errorMessages}`)
+            throw new Error(`Validation Error: ${errorMessages}`)
         }
-
-        return isValid
     }
 }

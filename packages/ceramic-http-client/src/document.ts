@@ -1,7 +1,6 @@
-import { Doctype, DoctypeUtils, DocOpts } from "@ceramicnetwork/ceramic-common"
+import { Doctype, DoctypeUtils, DocState, DocOpts } from "@ceramicnetwork/ceramic-common"
 
 import { fetchJson } from './utils'
-import { DocState } from "@ceramicnetwork/ceramic-common/lib"
 
 class Document extends Doctype {
 

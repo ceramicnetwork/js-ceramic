@@ -11,13 +11,12 @@ import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 
 import { CeramicApi, DIDProvider, PinApi } from "@ceramicnetwork/ceramic-common"
 import { Doctype, DoctypeHandler, DocOpts } from "@ceramicnetwork/ceramic-common"
-import { Context } from "@ceramicnetwork/ceramic-common"
+import { Context, DoctypeUtils } from "@ceramicnetwork/ceramic-common"
 import { Resolver } from "did-resolver"
 
 import { TileDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-tile"
 import { ThreeIdDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-three-id"
 import { AccountLinkDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-account-link"
-import { DoctypeUtils } from "@ceramicnetwork/ceramic-common/lib"
 
 // This is temporary until we handle DIDs and in particular 3IDs better
 const gen3IDgenesis = (pubkeys: any): any => {
