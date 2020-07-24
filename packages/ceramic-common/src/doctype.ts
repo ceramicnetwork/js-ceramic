@@ -92,7 +92,7 @@ export interface DocOpts {
  * Describes common doctype attributes
  */
 export abstract class Doctype extends EventEmitter {
-    constructor(private _state: DocState, private _context: Context, private _metadata: Record<string, any> = {}) {
+    constructor(private _state: DocState, private _context: Context, private _metadata?: Record<string, any>) {
         super()
     }
 
