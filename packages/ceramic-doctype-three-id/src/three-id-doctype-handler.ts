@@ -74,7 +74,9 @@ export class ThreeIdDoctypeHandler implements DoctypeHandler<ThreeIdDoctype> {
                 doctype: DOCTYPE,
                 owners: record.owners,
                 content: record.content,
-                nextContent: null,
+                next: {
+                    content: null,
+                },
                 signature: SignatureStatus.GENESIS,
                 anchorStatus: AnchorStatus.NOT_REQUESTED,
                 log: [cid]
@@ -91,7 +93,9 @@ export class ThreeIdDoctypeHandler implements DoctypeHandler<ThreeIdDoctype> {
                         signing: signingKey, encryption: encryptionKey
                     }
                 },
-                nextContent: null,
+                next: {
+                    content: null,
+                },
                 signature: SignatureStatus.GENESIS,
                 anchorStatus: AnchorStatus.NOT_REQUESTED,
                 log: [cid]
@@ -136,7 +140,9 @@ export class ThreeIdDoctypeHandler implements DoctypeHandler<ThreeIdDoctype> {
             ...state,
             signature: SignatureStatus.SIGNED,
             anchorStatus: AnchorStatus.NOT_REQUESTED,
-            nextContent: jsonpatch.applyPatch(state.content, record.content).newDocument,
+            next: {
+                content: jsonpatch.applyPatch(state.content, record.content).newDocument,
+            },
             nextOwners: record.owners
         }
     }
@@ -161,9 +167,9 @@ export class ThreeIdDoctypeHandler implements DoctypeHandler<ThreeIdDoctype> {
     async _applyAnchor(record: AnchorRecord, proof: AnchorProof, cid: CID, state: DocState): Promise<DocState> {
         state.log.push(cid)
         let content = state.content
-        if (state.nextContent) {
-            content = state.nextContent
-            delete state.nextContent
+        if (state.next && state.next.content) {
+            content = state.next.content
+            delete state.next.content
         }
         let owners = state.owners
         if (state.nextOwners) {

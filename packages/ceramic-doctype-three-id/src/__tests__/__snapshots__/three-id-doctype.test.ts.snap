@@ -144,6 +144,7 @@ Object {
       "version": 1,
     },
   ],
+  "next": Object {},
   "nextOwners": undefined,
   "owners": Array [
     "0x123",
@@ -206,7 +207,9 @@ Object {
       "version": 1,
     },
   ],
-  "nextContent": null,
+  "next": Object {
+    "content": null,
+  },
   "owners": Array [
     "0x123",
   ],
@@ -312,10 +315,12 @@ Object {
       "version": 1,
     },
   ],
-  "nextContent": Object {
-    "other": "data",
-    "publicKeys": Object {
-      "test": "0xabc",
+  "next": Object {
+    "content": Object {
+      "other": "data",
+      "publicKeys": Object {
+        "test": "0xabc",
+      },
     },
   },
   "nextOwners": undefined,

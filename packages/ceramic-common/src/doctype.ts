@@ -45,6 +45,23 @@ export interface AnchorProof {
 }
 
 /**
+ * Document metadata
+ */
+interface DocMetadata {
+    owners: Array<string>;
+    schema?: string;
+    tags?: Array<string>;
+}
+
+/**
+ * Document information about the next iteration
+ */
+interface DocNext {
+    content?: any;
+    metadata?: DocMetadata;
+}
+
+/**
  * Document state
  */
 export interface DocState {
@@ -52,7 +69,7 @@ export interface DocState {
     owners: Array<string>;
     nextOwners?: Array<string>;
     content: any;
-    nextContent?: any;
+    next?: DocNext;
     signature: SignatureStatus;
     anchorStatus: AnchorStatus;
     anchorScheduledFor?: number; // only present when anchor status is pending

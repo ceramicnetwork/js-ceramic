@@ -428,7 +428,8 @@ class Document extends EventEmitter {
   }
 
   get content (): any {
-    return this._doctype.state.nextContent || this._doctype.state.content
+    const { next, content } = this._doctype.state
+    return next? next.content || content : content
   }
 
   get state (): DocState {

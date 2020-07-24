@@ -65,7 +65,9 @@ export class AccountLinkDoctypeHandler implements DoctypeHandler<AccountLinkDoct
             doctype: DOCTYPE,
             owners: record.owners,
             content: null,
-            nextContent: null,
+            next: {
+                content: null
+            },
             signature: SignatureStatus.GENESIS,
             anchorStatus: AnchorStatus.NOT_REQUESTED,
             log: [cid]
@@ -100,7 +102,9 @@ export class AccountLinkDoctypeHandler implements DoctypeHandler<AccountLinkDoct
             ...state,
             signature: SignatureStatus.SIGNED,
             anchorStatus: AnchorStatus.NOT_REQUESTED,
-            nextContent: validProof.did
+            next: {
+                content: validProof.did
+            }
         }
     }
 
@@ -115,9 +119,9 @@ export class AccountLinkDoctypeHandler implements DoctypeHandler<AccountLinkDoct
     async _applyAnchor (record: any, proof: AnchorProof, cid: CID, state: DocState): Promise<DocState> {
         state.log.push(cid)
         let content = state.content
-        if (state.nextContent) {
-            content = state.nextContent
-            delete state.nextContent
+        if (state.next && state.next.content) {
+            content = state.next.content
+            delete state.next.content
         }
         return {
             ...state,

@@ -139,7 +139,9 @@ Object {
       "version": 1,
     },
   ],
-  "nextContent": undefined,
+  "next": Object {
+    "content": undefined,
+  },
   "owners": Array [
     "0x25954ef14cebbc9af3d71132489a9cfe87043f20@eip155:1",
   ],
@@ -197,7 +199,9 @@ Object {
       "version": 1,
     },
   ],
-  "nextContent": null,
+  "next": Object {
+    "content": null,
+  },
   "owners": Array [
     "0x25954ef14cebbc9af3d71132489a9cfe87043f20@eip155:1",
   ],
@@ -298,7 +302,9 @@ Object {
       "version": 1,
     },
   ],
-  "nextContent": undefined,
+  "next": Object {
+    "content": undefined,
+  },
   "owners": Array [
     "0x25954ef14cebbc9af3d71132489a9cfe87043f20@eip155:1",
   ],

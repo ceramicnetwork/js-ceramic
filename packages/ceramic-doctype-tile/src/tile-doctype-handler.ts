@@ -75,7 +75,9 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
             doctype: DOCTYPE,
             owners: record.owners,
             content: record.content,
-            nextContent: null,
+            next: {
+                content: null,
+            },
             signature: SignatureStatus.SIGNED,
             anchorStatus: AnchorStatus.NOT_REQUESTED,
             log: [cid]
@@ -100,7 +102,9 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
             ...state,
             signature: SignatureStatus.SIGNED,
             anchorStatus: AnchorStatus.NOT_REQUESTED,
-            nextContent: jsonpatch.applyPatch(state.content, record.content).newDocument
+            next: {
+                content: jsonpatch.applyPatch(state.content, record.content).newDocument,
+            }
         }
     }
 
@@ -115,9 +119,9 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
     async _applyAnchor(record: AnchorRecord, proof: AnchorProof, cid: CID, state: DocState): Promise<DocState> {
         state.log.push(cid)
         let content = state.content
-        if (state.nextContent) {
-            content = state.nextContent
-            delete state.nextContent
+        if (state.next && state.next.content) {
+            content = state.next.content
+            delete state.next.content
         }
         return {
             ...state, content, anchorStatus: AnchorStatus.ANCHORED, anchorProof: proof,
