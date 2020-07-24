@@ -179,8 +179,15 @@ class Ceramic implements CeramicApi {
    * @param opts - Initialization options
    */
   async applyRecord<T extends Doctype>(docId: string, record: object, opts?: DocOpts): Promise<T> {
-    const doc = await this._loadDoc(docId, {})
-    await doc.applyRecord(record, opts)
+    const doc = await this._loadDoc(docId, opts)
+
+    let schema: any
+    if (doc.state.metadata?.schema) {
+      const schemaDoc = await this._loadDoc(doc.state.metadata.schema)
+      schema = schemaDoc.content
+    }
+
+    await doc.applyRecord(record, opts, schema)
     return doc.doctype as T
   }
 

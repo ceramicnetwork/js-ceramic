@@ -167,12 +167,12 @@ export class ThreeIdDoctypeHandler implements DoctypeHandler<ThreeIdDoctype> {
     async _applyAnchor(record: AnchorRecord, proof: AnchorProof, cid: CID, state: DocState): Promise<DocState> {
         state.log.push(cid)
         let content = state.content
-        if (state.next && state.next.content) {
+        if (state.next?.content) {
             content = state.next.content
             delete state.next.content
         }
         let owners = state.owners
-        if (state.next && state.next.owners) {
+        if (state.next?.owners) {
             owners = state.next.owners
             delete state.next.owners
         }

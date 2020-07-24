@@ -161,15 +161,11 @@ export class DoctypeUtils {
 
     /**
      * Validates model against JSON-Schema
-     * @param doctype - Doctype instance
+     * @param content - Doctype content
+     * @param schema - Doctype schema
      */
-    static validate<T extends Doctype>(doctype: T): boolean {
-        if (!doctype.schema) {
-            return true
-        }
-
-        const isValid = this.validator.validate(doctype.schema, doctype.content)
-
+    static validate(content: any, schema: any): boolean {
+        const isValid = this.validator.validate(schema, content)
         if (!isValid) {
             const errorMessages = this.validator.errorsText()
             throw new Error(`Validation Error. ${errorMessages}`)

@@ -141,13 +141,6 @@ export abstract class Doctype extends EventEmitter {
     }
 
     /**
-     * Validates the content against the schema in case there is one
-     */
-    public validate(): void {
-        DoctypeUtils.validate(this)
-    }
-
-    /**
      * Clones the doctype
      */
     public clone(): Doctype {

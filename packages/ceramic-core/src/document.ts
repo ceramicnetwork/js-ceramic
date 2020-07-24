@@ -215,14 +215,15 @@ class Document extends EventEmitter {
     return document
   }
 
-  async applyRecord (record: any, opts: DocOpts = {}): Promise<void> {
+  async applyRecord (record: any, opts: DocOpts = {}, schema?: any): Promise<void> {
     const cid = await this.dispatcher.storeRecord(record)
 
-    const doctype = this._doctype.schema? this._doctype.clone() : this._doctype
-    doctype.state = await this._doctypeHandler.applyRecord(record, cid, this._context, this.state)
+    const state = await this._doctypeHandler.applyRecord(record, cid, this._context, this.state)
+    if (schema) {
+      DoctypeUtils.validate(state.content, schema)
+    }
 
-    DoctypeUtils.validate(doctype)
-    this._doctype = doctype
+    this._doctype.state = state
 
     await this._updateStateIfPinned()
 
