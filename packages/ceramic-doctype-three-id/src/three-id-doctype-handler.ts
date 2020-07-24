@@ -141,9 +141,9 @@ export class ThreeIdDoctypeHandler implements DoctypeHandler<ThreeIdDoctype> {
             signature: SignatureStatus.SIGNED,
             anchorStatus: AnchorStatus.NOT_REQUESTED,
             next: {
+                owners: record.owners,
                 content: jsonpatch.applyPatch(state.content, record.content).newDocument,
             },
-            nextOwners: record.owners
         }
     }
 
@@ -172,9 +172,9 @@ export class ThreeIdDoctypeHandler implements DoctypeHandler<ThreeIdDoctype> {
             delete state.next.content
         }
         let owners = state.owners
-        if (state.nextOwners) {
-            owners = state.nextOwners
-            delete state.nextOwners
+        if (state.next && state.next.owners) {
+            owners = state.next.owners
+            delete state.next.owners
         }
         return {
             ...state,

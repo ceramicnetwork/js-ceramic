@@ -144,8 +144,9 @@ Object {
       "version": 1,
     },
   ],
-  "next": Object {},
-  "nextOwners": undefined,
+  "next": Object {
+    "owners": undefined,
+  },
   "owners": Array [
     "0x123",
   ],
@@ -322,8 +323,8 @@ Object {
         "test": "0xabc",
       },
     },
+    "owners": undefined,
   },
-  "nextOwners": undefined,
   "owners": Array [
     "0x123",
   ],

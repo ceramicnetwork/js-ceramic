@@ -58,6 +58,7 @@ interface DocMetadata {
  */
 interface DocNext {
     content?: any;
+    owners?: Array<string>;
     metadata?: DocMetadata;
 }
 
@@ -67,9 +68,9 @@ interface DocNext {
 export interface DocState {
     doctype: string;
     owners: Array<string>;
-    nextOwners?: Array<string>;
     content: any;
     next?: DocNext;
+    metadata?: DocMetadata;
     signature: SignatureStatus;
     anchorStatus: AnchorStatus;
     anchorScheduledFor?: number; // only present when anchor status is pending
