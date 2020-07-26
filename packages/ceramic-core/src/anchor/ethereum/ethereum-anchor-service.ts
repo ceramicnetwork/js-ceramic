@@ -1,5 +1,5 @@
 import CID from "cids";
-import fetch from "node-fetch";
+import fetch from "cross-fetch";
 
 import { decode } from "typestub-multihashes";
 import * as providers from "@ethersproject/providers"
