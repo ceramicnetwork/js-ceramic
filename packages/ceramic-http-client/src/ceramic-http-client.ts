@@ -1,7 +1,7 @@
 import { fetchJson } from "./utils"
 import Document from './document'
 import { Doctype, DoctypeHandler, DocOpts } from "@ceramicnetwork/ceramic-common"
-import { CeramicApi, DIDProvider, PinApi, DoctypeUtils } from "@ceramicnetwork/ceramic-common"
+import { CeramicApi, PinApi, DoctypeUtils } from "@ceramicnetwork/ceramic-common"
 
 const CERAMIC_HOST = 'http://localhost:7007'
 const API_PATH = '/api/v0'
@@ -37,10 +37,10 @@ class CeramicClient implements CeramicApi {
         const result = await fetchJson(url)
         const { pinnedDocIds } = result
         return {
-          [Symbol.asyncIterator]() {
+          [Symbol.asyncIterator](): any {
             let index = 0
             return {
-              next() {
+              next(): any {
                 if (index === pinnedDocIds.length) {
                   return Promise.resolve({ value: null, done: true });
                 }
@@ -62,7 +62,7 @@ class CeramicClient implements CeramicApi {
     return doc as unknown as T
   }
 
-  async loadDocument<T extends Doctype>(id: string, opts?: DocOpts): Promise<T> {
+  async loadDocument<T extends Doctype>(id: string): Promise<T> {
     const normalizedId = DoctypeUtils.normalizeDocId(id)
     if (!this._docmap[normalizedId]) {
       this._docmap[normalizedId] = await Document.load(normalizedId, this._apiUrl)
@@ -75,23 +75,23 @@ class CeramicClient implements CeramicApi {
     return Document.listVersions(normalizedId, this._apiUrl)
   }
 
-  applyRecord<T extends Doctype>(docId: string, record: object, opts?: DocOpts): Promise<T> {
+  applyRecord<T extends Doctype>(): Promise<T> {
     throw new Error('method not implemented')
   }
 
-  createDocumentFromGenesis<T extends Doctype>(genesis: any, opts?: DocOpts): Promise<T> {
+  createDocumentFromGenesis<T extends Doctype>(): Promise<T> {
     throw new Error('method not implemented')
   }
 
-  addDoctypeHandler<T extends Doctype>(doctypeHandler: DoctypeHandler<T>): void {
+  addDoctypeHandler<T extends Doctype>(): void {
     throw new Error('method not implemented')
   }
 
-  findDoctypeHandler<T extends Doctype>(doctype: string): DoctypeHandler<T> {
+  findDoctypeHandler<T extends Doctype>(): DoctypeHandler<T> {
     throw new Error('method not implemented')
   }
 
-  setDIDProvider(provider: DIDProvider): Promise<void> {
+  setDIDProvider(): Promise<void> {
     throw new Error('method not implemented')
   }
 

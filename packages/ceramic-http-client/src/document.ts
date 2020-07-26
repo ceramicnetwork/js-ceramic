@@ -69,7 +69,7 @@ class Document extends Doctype {
     }
   }
 
-  close() {
+  close(): void {
     clearInterval(this._syncHandle)
   }
 }

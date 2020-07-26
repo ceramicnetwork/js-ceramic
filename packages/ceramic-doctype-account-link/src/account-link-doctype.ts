@@ -45,10 +45,8 @@ export class AccountLinkDoctype extends Doctype {
     /**
      * Creates genesis record
      * @param params - Create parameters
-     * @param context - Ceramic context
-     * @param opts - Initialization options
      */
-    static async makeGenesis(params: Record<string, any>, context?: Context, opts: DocOpts = {}): Promise<Record<string, any>> {
+    static async makeGenesis(params: Record<string, any>): Promise<Record<string, any>> {
         const { content, owners } = params
 
         if (content) {
