@@ -1,4 +1,4 @@
-import { Doctype, DoctypeConstructor, DoctypeStatic, DocOpts } from "@ceramicnetwork/ceramic-common"
+import { Doctype, DoctypeConstructor, DoctypeStatic, DocOpts, DocParams } from "@ceramicnetwork/ceramic-common"
 import { Context } from "@ceramicnetwork/ceramic-common"
 
 const DOCTYPE = 'account-link'
@@ -6,7 +6,7 @@ const DOCTYPE = 'account-link'
 /**
  * AccountLink parameters
  */
-export class AccountLinkParams {
+export interface AccountLinkParams extends DocParams {
     content: object;
     owners?: Array<string>;
 }

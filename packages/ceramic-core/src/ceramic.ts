@@ -180,7 +180,7 @@ class Ceramic implements CeramicApi {
   async applyRecord<T extends Doctype>(docId: string, record: object, opts?: DocOpts): Promise<T> {
     const doc = await this._loadDoc(docId, opts)
 
-    let schema: any
+    let schema
     if (doc.state.metadata?.schema) {
       const schemaDoc = await this._loadDoc(doc.state.metadata.schema)
       schema = schemaDoc.content

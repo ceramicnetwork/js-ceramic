@@ -1,6 +1,6 @@
 import jsonpatch from 'fast-json-patch'
 
-import { Doctype, DoctypeConstructor, DoctypeStatic, DocOpts } from "@ceramicnetwork/ceramic-common"
+import { Doctype, DoctypeConstructor, DoctypeStatic, DocOpts, DocParams } from "@ceramicnetwork/ceramic-common"
 import { Context } from "@ceramicnetwork/ceramic-common"
 import { User } from "@ceramicnetwork/ceramic-common"
 
@@ -9,7 +9,7 @@ const DOCTYPE = '3id'
 /**
  * ThreeId doctype parameters
  */
-export class ThreeIdParams {
+export interface ThreeIdParams extends DocParams {
     content: object;
     owners?: Array<string>;
 }

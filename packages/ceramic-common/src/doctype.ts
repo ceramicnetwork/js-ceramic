@@ -47,16 +47,23 @@ export interface AnchorProof {
 /**
  * Document metadata
  */
-interface DocMetadata {
+export interface DocMetadata {
     owners: Array<string>;
     schema?: string;
     tags?: Array<string>;
 }
 
 /**
+ * Document params
+ */
+export interface DocParams extends Record<string, any>{
+    metadata?: DocMetadata;
+}
+
+/**
  * Document information about the next iteration
  */
-interface DocNext {
+export interface DocNext {
     content?: any;
     owners?: Array<string>;
     metadata?: DocMetadata;
@@ -92,7 +99,7 @@ export interface DocOpts {
  * Describes common doctype attributes
  */
 export abstract class Doctype extends EventEmitter {
-    constructor(private _state: DocState, private _context: Context, private _metadata?: Record<string, any>) {
+    constructor(private _state: DocState, private _context: Context) {
         super()
     }
 
@@ -108,12 +115,8 @@ export abstract class Doctype extends EventEmitter {
         return cloneDeep(this.state.content)
     }
 
-    get metadata(): Record<string, any> {
-        return cloneDeep(this._metadata)
-    }
-
-    get schema(): any {
-        return this._metadata? this._metadata.schema : null
+    get metadata(): DocMetadata {
+        return cloneDeep(this._state.metadata)
     }
 
     get owners(): Array<string> {
@@ -149,10 +152,10 @@ export abstract class Doctype extends EventEmitter {
 
     /**
      * Makes a change on an existing document
-     * @param params - Change parameteres
+     * @param params - Change parameters
      * @param opts - Initialization options
      */
-    abstract change(params: Record<string, any>, opts?: DocOpts): Promise<void>;
+    abstract change(params: DocParams, opts?: DocOpts): Promise<void>
 
 }
 
@@ -181,7 +184,7 @@ export interface DoctypeConstructor<T extends Doctype> {
      * @param context - Ceramic context
      * @param opts - Initialization options
      */
-    makeGenesis(params: Record<string, any>, context?: Context, opts?: DocOpts): Promise<Record<string, any>>;
+    makeGenesis(params: DocParams, context?: Context, opts?: DocOpts): Promise<Record<string, any>>;
 }
 
 /**
@@ -200,7 +203,7 @@ export interface DoctypeHandler<T extends Doctype> {
 
     /**
      * Applies record to the document (genesis|signed|anchored)
-     * @param record - Record intance
+     * @param record - Record instance
      * @param cid - Record CID
      * @param context - Ceramic context
      * @param state - Document state

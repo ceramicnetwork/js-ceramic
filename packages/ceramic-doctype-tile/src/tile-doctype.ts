@@ -3,7 +3,7 @@ import jsonpatch from 'fast-json-patch'
 import { encode as base64Encode } from '@ethersproject/base64'
 import { randomBytes } from '@ethersproject/random'
 
-import { Doctype, DoctypeConstructor, DoctypeStatic, DocOpts } from "@ceramicnetwork/ceramic-common"
+import { Doctype, DoctypeConstructor, DoctypeStatic, DocOpts, DocParams } from "@ceramicnetwork/ceramic-common"
 import { Context } from "@ceramicnetwork/ceramic-common"
 import { User } from "@ceramicnetwork/ceramic-common"
 
@@ -12,7 +12,7 @@ const DOCTYPE = 'tile'
 /**
  * Tile doctype parameters
  */
-export interface TileParams {
+export interface TileParams extends DocParams {
     content: object;
     owners?: Array<string>;
 }
@@ -51,7 +51,7 @@ export class TileDoctype extends Doctype {
 
         const { content, owners } = params
         const record = await TileDoctype.makeGenesis({ content, owners }, context, opts)
-        return context.api.createDocumentFromGenesis(record, opts)
+        return context.api.createDocumentFromGenesis<TileDoctype>(record, opts)
     }
 
     /**

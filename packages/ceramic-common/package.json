@@ -27,6 +27,7 @@
     "generate": "cd scripts; ./schema_generator.sh"
   },
   "dependencies": {
+    "@types/json-schema": "^7.0.5",
     "ajv": "^6.12.3",
     "did-resolver": "^2.0.1"
   },
