@@ -331,7 +331,7 @@ class Document extends EventEmitter {
     const record = await this.dispatcher.retrieveRecord(cid)
     if (record.prev.equals(this.head)) {
       // the new log starts where the previous one ended
-      this._doctype.state = await this._applyLogToState(log, cloneDeep(this._doctype.state))
+      this._doctype.state = await this._applyLogToState(log, this._doctype.state)
       modified = true
     } else {
       // we have a conflict since prev is in the log of the
