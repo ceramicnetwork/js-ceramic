@@ -24,7 +24,8 @@
     "prebuild": "npm run clean",
     "lint": "./node_modules/.bin/eslint ./src --ext .js,.jsx,.ts,.tsx",
     "clean": "rm -rf ./lib",
-    "generate": "cd scripts; ./schema_generator.sh"
+    "schemasToTypes": "./scripts/schema_generator.sh -t types -i ./schemas -o ./src/generated",
+    "typesToSchemas": "./scripts/schema_generator.sh -t schemas -i ./src/generated -o ./src/generated"
   },
   "dependencies": {
     "@types/json-schema": "^7.0.5",
