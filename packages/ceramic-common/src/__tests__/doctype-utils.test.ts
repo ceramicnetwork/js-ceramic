@@ -1,36 +1,40 @@
+import * as path from "path"
+import fs from "fs";
 import { DoctypeUtils } from ".."
 
 describe('DoctypeUtils', () => {
+    const schemaDefDirPath = path.join(__dirname, '../../schemas')
+    const testDirsPath = path.join(__dirname, '__data__')
+    const testDirs = fs.readdirSync(testDirsPath)
 
-    const productSchema = {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "$id": "http://example.com/product.schema.json",
-        "title": "Product",
-        "description": "A product from Acme's catalog",
-        "type": "object",
-        "properties": {
-            "productId": {
-                "description": "The unique identifier for a product",
-                "type": "integer"
+    testDirs.forEach(testDir => {
+        const schemaFilePath = path.join(schemaDefDirPath, `${testDir}.json`)
+        const schema = JSON.parse(fs.readFileSync(schemaFilePath, "utf-8"))
+        const testFilePath = path.join(testDirsPath, testDir)
+
+        const tests = fs.readdirSync(testFilePath)
+        tests.forEach(test => {
+            switch (test) {
+                case 'valid.json':
+                    it(`should pass ${testDir} schema validation for ${test}`, () => {
+                        const content = JSON.parse(fs.readFileSync(path.join(testFilePath, test), "utf-8"))
+                        DoctypeUtils.validate(content, schema)
+                    })
+                    break
+                case 'invalid.json':
+                    it(`should fail ${testDir} schema validation for ${test}`, () => {
+                        const content = JSON.parse(fs.readFileSync(path.join(testFilePath, test), "utf-8"))
+                        try {
+                            DoctypeUtils.validate(content, schema)
+                            throw new Error('Should not be able to validate invalid data')
+                        } catch (e) {
+                            expect(e.message).toContain('Validation Error')
+                        }
+                    })
+                    break
+                default:
+                    throw new Error(`Invalid test ${test}`)
             }
-        },
-        "required": [ "productId" ]
-    }
-
-    it('validates against correct data', async () => {
-        DoctypeUtils.validate({
-            productId: 7
-        }, productSchema)
-    })
-
-    it('validates against incorrect data', async () => {
-        try {
-            DoctypeUtils.validate({
-                productId: "some text"
-            }, productSchema)
-            throw new Error('Should not be able to pass validation')
-        } catch (e) {
-            expect(e.message).toContain('Validation Error: data.productId should be integer')
-        }
+        })
     })
 })

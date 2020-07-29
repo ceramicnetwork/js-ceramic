@@ -1,0 +1,10 @@
+{
+  "collectionRef": "ceramic://asdfghj",
+  "references": [
+    {
+      "storeId": "storeId",
+      "host": "host",
+      "applications": 1
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+[
+  {
+    "protocol": "protocolA",
+    "host": "hostA"
+  },
+  {
+    "protocol": "protocolB",
+    "host": "hostB",
+    "id": "idB",
+    "claim": "claimB",
+    "attestations": [
+      "attB",
+      "attC"
+    ]
+  }
+]
