@@ -152,11 +152,10 @@ export class DoctypeUtils {
      * @param doctype - Doctype instance
      */
     static makeReadOnly<T extends Doctype>(doctype: T): T {
-        const cloned = cloneDeep(doctype)
-        cloned.change = (): Promise<void> => {
+        doctype.change = (): Promise<void> => {
             throw new Error('The version of the document is readonly. Checkout the latest HEAD in order to update.')
         }
-        return cloned
+        return doctype
     }
 
     /**

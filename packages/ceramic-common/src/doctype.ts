@@ -143,13 +143,6 @@ export abstract class Doctype extends EventEmitter {
     }
 
     /**
-     * Clones the doctype
-     */
-    public clone(): Doctype {
-        return new (this.constructor() as any)(this.state, this.context);
-    }
-
-    /**
      * Makes a change on an existing document
      * @param params - Change parameters
      * @param opts - Initialization options
