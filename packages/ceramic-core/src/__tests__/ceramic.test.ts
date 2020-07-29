@@ -114,11 +114,8 @@ describe('Ceramic integration', () => {
     const ceramic2 = await Ceramic.create(ipfs2)
     const ceramic3 = await Ceramic.create(ipfs3)
     // ceramic node 2 shouldn't need to have the document open in order to forward the message
-    const doctype1 = await ceramic1.createDocument<ThreeIdDoctype>(DOCTYPE_3ID, { content: { test: 321 }, metadata: { owners: [owner] } })
-    while (doctype1.state.anchorStatus !== AnchorStatus.ANCHORED) {
-      // wait to propagate
-      await new Promise(resolve => setTimeout(resolve, 1000))
-    }
+    let doctype1 = await ceramic1.createDocument<ThreeIdDoctype>(DOCTYPE_3ID, { content: { test: 321 }, metadata: { owners: [owner] } })
+    doctype1 = await ceramic1.loadDocument<ThreeIdDoctype>(doctype1.id)
 
     const doctype3 = await ceramic3.createDocument<ThreeIdDoctype>(DOCTYPE_3ID, { content: { test: 321 }, metadata: { owners: [owner] } }, { applyOnly: true })
     expect(doctype3.content).toEqual(doctype1.content)
