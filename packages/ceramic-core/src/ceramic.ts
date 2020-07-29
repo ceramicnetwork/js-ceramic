@@ -185,8 +185,7 @@ class Ceramic implements CeramicApi {
   async applyRecord<T extends Doctype>(docId: string, record: object, opts?: DocOpts): Promise<T> {
     const doc = await this._loadDoc(docId, opts)
 
-    const schema = await Document.loadSchema(this, doc.doctype)
-    await doc.applyRecord(record, opts, schema)
+    await doc.applyRecord(record, opts, this._validateDocs)
     return doc.doctype as T
   }
 
@@ -268,8 +267,7 @@ class Ceramic implements CeramicApi {
     const normalizedId = DoctypeUtils.normalizeDocId(docId)
 
     if (!this._docmap[normalizedId]) {
-      this._docmap[normalizedId] =
-          await Document.load(docId, this.findHandler.bind(this), this.dispatcher, this.stateStore, this.context, opts)
+      this._docmap[normalizedId] = await Document.load(docId, this.findHandler.bind(this), this.dispatcher, this, this.stateStore, this.context, opts)
     }
     return this._docmap[normalizedId]
   }
