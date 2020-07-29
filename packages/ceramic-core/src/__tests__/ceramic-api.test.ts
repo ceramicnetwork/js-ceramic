@@ -103,7 +103,7 @@ describe('Ceramic API', () => {
     await ceramic.close()
   })
 
-  it('can create document with valid schema', async () => {
+  it('cannot create document with invalid schema', async () => {
     const ceramic = await Ceramic.create(ipfs)
     await ceramic.setDIDProvider(idWallet.get3idProvider())
     const owner = ceramic.context.user.publicKeys.managementKey
@@ -128,7 +128,7 @@ describe('Ceramic API', () => {
     await ceramic.close()
   })
 
-  it('cannot create document with invalid schema', async () => {
+  it('can create document with valid schema', async () => {
     const ceramic = await Ceramic.create(ipfs)
     await ceramic.setDIDProvider(idWallet.get3idProvider())
     const owner = ceramic.context.user.publicKeys.managementKey
@@ -140,6 +140,27 @@ describe('Ceramic API', () => {
         schema: schemaDoc.id
       },
       content: { a: "test" },
+      owners: [owner]
+    }
+
+    await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, tileDocParams)
+
+    await new Promise(resolve => setTimeout(resolve, 1000)) // wait to propagate
+    await ceramic.close()
+  })
+
+  it('can create document with invalid schema if validation is not set', async () => {
+    const ceramic = await Ceramic.create(ipfs, { validateDocs: false })
+    await ceramic.setDIDProvider(idWallet.get3idProvider())
+    const owner = ceramic.context.user.publicKeys.managementKey
+
+    const schemaDoc = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, { content: stringMapSchema, metadata: { owners: [owner] }})
+
+    const tileDocParams: TileParams = {
+      metadata: {
+        schema: schemaDoc.id
+      },
+      content: { a: 1 },
       owners: [owner]
     }
 
