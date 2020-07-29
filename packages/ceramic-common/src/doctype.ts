@@ -88,7 +88,6 @@ export interface DocState {
  * Doctype init options
  */
 export interface DocOpts {
-    owners?: Array<string>;
     applyOnly?: boolean;
     skipWait?: boolean;
     isUnique?: boolean;
