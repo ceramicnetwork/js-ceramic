@@ -11,7 +11,7 @@ import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 
 import { CeramicApi, DIDProvider, PinApi } from "@ceramicnetwork/ceramic-common"
 import { Doctype, DoctypeHandler, DocOpts } from "@ceramicnetwork/ceramic-common"
-import { Context, DoctypeUtils } from "@ceramicnetwork/ceramic-common"
+import { Context, DoctypeUtils, DocParams } from "@ceramicnetwork/ceramic-common"
 import { Resolver } from "did-resolver"
 
 import { TileDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-tile"
@@ -31,6 +31,9 @@ const gen3IDgenesis = (pubkeys: any): any => {
   }
 }
 
+/**
+ * Initial Ceramic configuration
+ */
 export interface CeramicConfig {
   ethereumRpcUrl?: string;
   anchorServiceUrl?: string;
@@ -38,6 +41,8 @@ export interface CeramicConfig {
 
   didResolver?: Resolver;
   didProvider?: DIDProvider;
+
+  validateDocs?: boolean;
 }
 
 /**
@@ -50,7 +55,7 @@ class Ceramic implements CeramicApi {
   public readonly pin: PinApi
   public readonly context: Context
 
-  constructor (public dispatcher: Dispatcher, public stateStore: StateStore, context: Context) {
+  constructor (public dispatcher: Dispatcher, public stateStore: StateStore, context: Context, private _validateDocs: boolean = true) {
     this._docmap = {}
     this._doctypeHandlers = {
       '3id': new ThreeIdDoctypeHandler(),
@@ -108,7 +113,7 @@ class Ceramic implements CeramicApi {
       anchorService,
     }
 
-    const ceramic = new Ceramic(dispatcher, stateStore, context)
+    const ceramic = new Ceramic(dispatcher, stateStore, context, config.validateDocs)
     if (config.didProvider) {
       await ceramic.setDIDProvider(config.didProvider)
     }
@@ -180,12 +185,7 @@ class Ceramic implements CeramicApi {
   async applyRecord<T extends Doctype>(docId: string, record: object, opts?: DocOpts): Promise<T> {
     const doc = await this._loadDoc(docId, opts)
 
-    let schema
-    if (doc.state.metadata?.schema) {
-      const schemaDoc = await this._loadDoc(doc.state.metadata.schema)
-      schema = schemaDoc.content
-    }
-
+    const schema = await Document.loadSchema(this, doc.doctype)
     await doc.applyRecord(record, opts, schema)
     return doc.doctype as T
   }
@@ -208,10 +208,10 @@ class Ceramic implements CeramicApi {
    * @param opts - Initialization options
    * @private
    */
-  async _createDoc(doctype: string, params: object, opts: DocOpts = {}): Promise<Document> {
+  async _createDoc(doctype: string, params: DocParams, opts: DocOpts = {}): Promise<Document> {
     const doctypeHandler = this._doctypeHandlers[doctype]
 
-    const doc = await Document.create(params, doctypeHandler, this.dispatcher, this.stateStore, this.context, opts);
+    const doc = await Document.create(params, doctypeHandler, this.dispatcher, this, this.stateStore, this.context, opts, this._validateDocs);
     const normalizedId = DoctypeUtils.normalizeDocId(doc.id)
     if (!this._docmap[normalizedId]) {
       this._docmap[normalizedId] = doc
@@ -236,7 +236,7 @@ class Ceramic implements CeramicApi {
    * @private
    */
   async _createDocFromGenesis(genesis: any, opts: DocOpts = {}): Promise<Document> {
-    const doc = await Document.createFromGenesis(genesis, this.findHandler.bind(this), this.dispatcher, this.stateStore, this.context, opts);
+    const doc = await Document.createFromGenesis(genesis, this.findHandler.bind(this), this.dispatcher, this, this.stateStore, this.context, opts, this._validateDocs);
     const normalizedId = DoctypeUtils.normalizeDocId(doc.id)
     if (!this._docmap[normalizedId]) {
       this._docmap[normalizedId] = doc
@@ -268,7 +268,8 @@ class Ceramic implements CeramicApi {
     const normalizedId = DoctypeUtils.normalizeDocId(docId)
 
     if (!this._docmap[normalizedId]) {
-      this._docmap[normalizedId] = await Document.load(docId, this.findHandler.bind(this), this.dispatcher, this.stateStore, this.context, opts)
+      this._docmap[normalizedId] =
+          await Document.load(docId, this.findHandler.bind(this), this.dispatcher, this.stateStore, this.context, opts)
     }
     return this._docmap[normalizedId]
   }

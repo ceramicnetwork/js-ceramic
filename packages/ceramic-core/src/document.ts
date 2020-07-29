@@ -6,7 +6,17 @@ import cloneDeep from 'lodash.clonedeep'
 import AnchorServiceResponse from "./anchor/anchor-service-response"
 import StateStore from "./store/state-store"
 import {
-  AnchorProof, AnchorRecord, AnchorStatus, DocState, Doctype, DoctypeHandler, DocOpts, Context, DoctypeUtils
+  AnchorProof,
+  AnchorRecord,
+  AnchorStatus,
+  DocState,
+  Doctype,
+  DoctypeHandler,
+  DocOpts,
+  Context,
+  DoctypeUtils,
+  DocParams,
+  CeramicApi
 } from "@ceramicnetwork/ceramic-common"
 
 class Document extends EventEmitter {
@@ -29,8 +39,8 @@ class Document extends EventEmitter {
     this.id = DoctypeUtils.getBaseDocId(normalized);
     this.version = DoctypeUtils.getVersionId(normalized)
 
-    this.dispatcher = dispatcher;
-    this.stateStore = stateStore;
+    this.dispatcher = dispatcher
+    this.stateStore = stateStore
 
     this._applyQueue = new PQueue({ concurrency: 1 })
     this._genesisCid = new CID(DoctypeUtils.getGenesis(this.id))
@@ -41,17 +51,21 @@ class Document extends EventEmitter {
    * @param params - Initial Doctype parameters
    * @param doctypeHandler - DoctypeHandler instance
    * @param dispatcher - Dispatcher instance
+   * @param ceramicApi - Ceramic API
    * @param stateStore - StateStore instance
    * @param context - Ceramic context
    * @param opts - Initialization options
+   * @param validateSchema - Validate content against schema
    */
   static async create<T extends Doctype> (
-      params: object,
+      params: DocParams,
       doctypeHandler: DoctypeHandler<Doctype>,
       dispatcher: Dispatcher,
+      ceramicApi: CeramicApi,
       stateStore: StateStore,
       context: Context,
-      opts: DocOpts = {}
+      opts: DocOpts = {},
+      validateSchema = true
   ): Promise<Document> {
     const genesis = await doctypeHandler.doctype.makeGenesis(params, context, opts)
 
@@ -65,6 +79,13 @@ class Document extends EventEmitter {
 
     doc._doctype = new doctypeHandler.doctype(null, context)
     doc._doctype.state = await doc._doctypeHandler.applyRecord(genesis, doc._genesisCid, context)
+
+    if (validateSchema) {
+      const schema = await Document.loadSchema(ceramicApi, doc._doctype)
+      if (schema) {
+        DoctypeUtils.validate(doc._doctype.content, schema)
+      }
+    }
 
     await doc._updateStateIfPinned()
 
@@ -81,17 +102,21 @@ class Document extends EventEmitter {
    * @param genesis - Genesis record
    * @param findHandler - find handler fn
    * @param dispatcher - Dispatcher instance
+   * @param ceramicApi - Ceramic API
    * @param stateStore - StateStore instance
    * @param context - Ceramic context
    * @param opts - Initialization options
+   * @param validateSchema - Validate content against schema
    */
   static async createFromGenesis<T extends Doctype>(
       genesis: any,
       findHandler: (genesisRecord: any) => DoctypeHandler<Doctype>,
       dispatcher: Dispatcher,
+      ceramicApi: CeramicApi,
       stateStore: StateStore,
       context: Context,
-      opts: DocOpts = {}
+      opts: DocOpts = {},
+      validateSchema = true
   ): Promise<Document> {
     const genesisCid = await dispatcher.storeRecord(genesis)
     const id = DoctypeUtils.createDocIdFromGenesis(genesisCid)
@@ -103,6 +128,13 @@ class Document extends EventEmitter {
 
     doc._doctype = new doc._doctypeHandler.doctype(null, context)
     doc._doctype.state = await doc._doctypeHandler.applyRecord(genesis, doc._genesisCid, context)
+
+    if (validateSchema) {
+      const schema = await Document.loadSchema(ceramicApi, doc._doctype)
+      if (schema) {
+        DoctypeUtils.validate(doc._doctype.content, schema)
+      }
+    }
 
     await doc._updateStateIfPinned()
 
@@ -426,6 +458,28 @@ class Document extends EventEmitter {
     const state = this._doctype.state
     state.anchorStatus = AnchorStatus.PENDING
     this._doctype.state = state
+  }
+
+  /**
+   * Loads schema for the Doctype
+   * @param ceramicApi - Ceramic API
+   * @param doctype - Doctype instance
+   */
+  static async loadSchema<T extends Doctype>(ceramicApi: CeramicApi, doctype: Doctype): Promise<T> {
+    return doctype.state?.metadata?.schema ? Document.loadSchemaById(ceramicApi, doctype.state.metadata.schema) : null
+  }
+
+  /**
+   * Loads schema by ID
+   * @param ceramicApi - Ceramic API
+   * @param schemaDocId - Schema document ID
+   */
+  static async loadSchemaById<T extends Doctype>(ceramicApi: CeramicApi, schemaDocId: string): Promise<T> {
+    if (schemaDocId) {
+      const schemaDoc = await ceramicApi.loadDocument(schemaDocId)
+      return schemaDoc.content
+    }
+    return null
   }
 
   get content (): any {
