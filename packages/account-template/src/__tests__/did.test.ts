@@ -40,7 +40,7 @@ describe('DIDDocument', () => {
             signing: keys.signingKey, encryption: keys.encryptionKey
           }
         },
-        owners: [keys.managementKey],
+        metadata: { owners: [keys.managementKey] },
       })
     })
   })

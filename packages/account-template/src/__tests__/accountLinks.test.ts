@@ -13,7 +13,7 @@ describe('AccountLinks', () => {
       const docId = '/ceramic/abcdfg'
       const accountLinkDocIds = ['/ceramic/qwerty', '/ceramic/asdfg']
       const mockCeramicDoc = buildMockCeramicDoc()
-      mockCeramicDoc.state.owners = ['0x12345@eip155:1']
+      mockCeramicDoc.state.metadata =  { owners: ['0x12345@eip155:1'] }
       mockCeramicDoc.content = accountLinkDocIds
       const mockCeramic = buildMockCeramic()
       mockCeramic.loadDocument.mockResolvedValue(mockCeramicDoc)
@@ -37,7 +37,7 @@ describe('AccountLinks', () => {
 
       await AccountLinks.build(owner, mockCeramic)
 
-      expect(mockCeramic.createDocument).toHaveBeenCalledWith('tile', { content: [], owners: [owner] }, { isUnique: true })
+      expect(mockCeramic.createDocument).toHaveBeenCalledWith('tile', { content: [], metadata: { owners: [owner] } }, { isUnique: true })
     })
   })
 
@@ -45,10 +45,10 @@ describe('AccountLinks', () => {
     it('should return all addresses linked to this account', async () => {
       const mockAccountLinkDoc1 = buildMockCeramicDoc()
       mockAccountLinkDoc1.id = '/ceramic/qwerty'
-      mockAccountLinkDoc1.state.owners = ['0x12345@eip155:1']
+      mockAccountLinkDoc1.state.metadata = { owners: ['0x12345@eip155:1'] }
       const mockAccountLinkDoc2 = buildMockCeramicDoc()
       mockAccountLinkDoc2.id = '/ceramic/asdfg'
-      mockAccountLinkDoc2.state.owners = ['0xabcde@eip155:1']
+      mockAccountLinkDoc2.state.metadata = { owners: ['0xabcde@eip155:1'] }
       const mockAccountLinksTile = buildMockCeramicDoc()
       mockAccountLinksTile.id = '/ceramic/zxcvb'
       mockAccountLinksTile.content = [mockAccountLinkDoc1.id, mockAccountLinkDoc2.id]
@@ -59,11 +59,11 @@ describe('AccountLinks', () => {
 
       const expected = [
         {
-          account: mockAccountLinkDoc1.state.owners[0],
+          account: mockAccountLinkDoc1.state.metadata.owners[0],
           docId: mockAccountLinkDoc1.id
         },
         {
-          account: mockAccountLinkDoc2.state.owners[0],
+          account: mockAccountLinkDoc2.state.metadata.owners[0],
           docId: mockAccountLinkDoc2.id
         }
       ]
@@ -79,7 +79,7 @@ describe('AccountLinks', () => {
       const account = address + '@eip155:1'
       const mockAccountLinksTile = buildMockCeramicDoc()
       mockAccountLinksTile.content = []
-      mockAccountLinksTile.state.owners = [did]
+      mockAccountLinksTile.state.metadata = { owners: [did] }
       const mockAccountLinkDoc = buildMockCeramicDoc()
       mockAccountLinkDoc.id = '/ceramic/qwerty'
       const mockCeramic = buildMockCeramic()
@@ -94,7 +94,7 @@ describe('AccountLinks', () => {
       expect(createLink).toHaveBeenCalledWith(did, address, mockProvider)
       expect(mockCeramic.createDocument).toHaveBeenCalledWith('account-link', {
         content: null,
-        owners: [account]
+        metadata: { owners: [account] }
       }, {
         applyOnly: true
       })
@@ -107,7 +107,7 @@ describe('AccountLinks', () => {
       const address = '0x12345@eip155:1'
       const mockAccountLinksTile = buildMockCeramicDoc()
       mockAccountLinksTile.content = []
-      mockAccountLinksTile.state.owners = [did]
+      mockAccountLinksTile.state.metadata = { owners: [did] }
       const mockAccountLinkDoc = buildMockCeramicDoc()
       mockAccountLinkDoc.id = '/ceramic/qwerty'
       const mockCeramic = buildMockCeramic()
@@ -120,7 +120,7 @@ describe('AccountLinks', () => {
 
       expect(createLink).not.toHaveBeenCalledWith()
       expect(mockCeramic.createDocument).toHaveBeenCalledWith('account-link', {
-        content: null, owners: [address],
+        content: null, metadata: { owners: [address] },
       }, {
         applyOnly: true
       })
@@ -133,7 +133,7 @@ describe('AccountLinks', () => {
       const address = '0x12345@eip155:1'
       const mockAccountLinksTile = buildMockCeramicDoc()
       mockAccountLinksTile.content = []
-      mockAccountLinksTile.state.owners = [did]
+      mockAccountLinksTile.state.metadata = { owners: [did] }
       const mockAccountLinkDoc = buildMockCeramicDoc()
       mockAccountLinkDoc.id = '/ceramic/qwerty'
       const mockCeramic = buildMockCeramic()
@@ -154,7 +154,7 @@ describe('AccountLinks', () => {
       const address = '0x12345@eip155:1'
       const mockAccountLinksTile = buildMockCeramicDoc()
       mockAccountLinksTile.content = []
-      mockAccountLinksTile.state.owners = [did]
+      mockAccountLinksTile.state.metadata = { owners: [did] }
       const mockAccountLinkDoc = buildMockCeramicDoc()
       mockAccountLinkDoc.id = '/ceramic/qwerty'
       const mockCeramic = buildMockCeramic()
@@ -177,7 +177,7 @@ describe('AccountLinks', () => {
       const address = '0x12345@eip155:1'
       const mockAccountLinksTile = buildMockCeramicDoc()
       mockAccountLinksTile.content = []
-      mockAccountLinksTile.state.owners = [did]
+      mockAccountLinksTile.state.metadata = { owners: [did] }
       const mockCeramic = buildMockCeramic()
       const accountLinks = new AccountLinks(mockAccountLinksTile, mockCeramic)
 

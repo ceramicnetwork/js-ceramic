@@ -77,12 +77,12 @@ import { ThreeIdDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-three-id"
 const anchorUpdate = (doc: Document): Promise<void> => new Promise(resolve => doc.doctype.on('change', resolve))
 
 const create = async (params: ThreeIdParams, ceramic: Ceramic, context: Context, opts: DocOpts = {}): Promise<Document> => {
-  const { content, owners } = params
-  if (!owners) {
+  const { content, metadata } = params
+  if (!metadata?.owners) {
     throw new Error('The owner of the 3ID needs to be specified')
   }
 
-  const record = await ThreeIdDoctype.makeGenesis({ content, owners })
+  const record = await ThreeIdDoctype.makeGenesis({ content, metadata })
 
   return ceramic._createDocFromGenesis(record, opts)
 }
@@ -123,7 +123,7 @@ describe('Document', () => {
     })
 
     it('is created correctly', async () => {
-      const doc = await create({ content: initialContent, owners }, ceramic, context)
+      const doc = await create({ content: initialContent, metadata: { owners } }, ceramic, context)
 
       expect(doc.content).toEqual(initialContent)
       expect(dispatcher.register).toHaveBeenCalledWith(doc)
@@ -133,7 +133,7 @@ describe('Document', () => {
     })
 
     it('is loaded correctly', async () => {
-      const doc1 = await create({ content: initialContent, owners }, ceramic, context, { applyOnly: true, skipWait: true })
+      const doc1 = await create({ content: initialContent, metadata: { owners } }, ceramic, context, { applyOnly: true, skipWait: true })
       const doc2 = await Document.load(doc1.id, findHandler, dispatcher, mockStateStore, context, { skipWait: true })
 
       expect(doc1.id).toEqual(doc2.id)
@@ -142,7 +142,7 @@ describe('Document', () => {
     })
 
     it('handles new head correctly', async () => {
-      const tmpDoc = await create({ content: initialContent, owners }, ceramic, context)
+      const tmpDoc = await create({ content: initialContent, metadata: { owners } }, ceramic, context)
       await anchorUpdate(tmpDoc)
       const docId = tmpDoc.id
       const log = tmpDoc.state.log
@@ -159,7 +159,7 @@ describe('Document', () => {
     })
 
     it('it handles versions correctly (valid, invalid, non-existent)', async () => {
-      const doc = await create({ content: initialContent, owners }, ceramic, context)
+      const doc = await create({ content: initialContent, metadata: { owners } }, ceramic, context)
 
       let versions = await doc.listVersions()
       expect(versions).toEqual([])
@@ -220,7 +220,7 @@ describe('Document', () => {
     })
 
     it('is updated correctly', async () => {
-      const doc = await create({ content: initialContent, owners }, ceramic, context)
+      const doc = await create({ content: initialContent, metadata: { owners } }, ceramic, context)
       await anchorUpdate(doc)
 
       const updateRec = await ThreeIdDoctype._makeRecord(doc.doctype, user, newContent, doc.owners)
@@ -234,7 +234,7 @@ describe('Document', () => {
 
     it('handles conflict', async () => {
       const fakeState = { asdf: 2342 }
-      const doc1 = await create({ content: initialContent, owners }, ceramic, context)
+      const doc1 = await create({ content: initialContent, metadata: { owners } }, ceramic, context)
       const docId = doc1.id
       await anchorUpdate(doc1)
       const headPreUpdate = doc1.head
@@ -306,7 +306,7 @@ describe('Document', () => {
     })
 
     it('should announce change to network', async () => {
-      const doc1 = await create({ content: initialContent, owners }, ceramic, context)
+      const doc1 = await create({ content: initialContent, metadata: { owners } }, ceramic, context)
       expect(dispatcher.publishHead).toHaveBeenCalledTimes(1)
       expect(dispatcher.publishHead).toHaveBeenCalledWith(doc1.id, doc1.head)
       await anchorUpdate(doc1)
@@ -321,7 +321,7 @@ describe('Document', () => {
     })
 
     it('documents share updates', async () => {
-      const doc1 = await create({ content: initialContent, owners }, ceramic, context)
+      const doc1 = await create({ content: initialContent, metadata: { owners } }, ceramic, context)
       await anchorUpdate(doc1)
       const doc2 = await Document.load(doc1.id, getHandlerFromGenesis, dispatcher, mockStateStore, context, { skipWait: true })
 
@@ -339,7 +339,7 @@ describe('Document', () => {
     })
 
     it('should publish head on network request', async () => {
-      const doc = await create({ content: initialContent, owners }, ceramic, context)
+      const doc = await create({ content: initialContent, metadata: { owners } }, ceramic, context)
       expect(dispatcher.publishHead).toHaveBeenCalledTimes(1)
       expect(dispatcher.publishHead).toHaveBeenNthCalledWith(1, doc.id, doc.head)
 

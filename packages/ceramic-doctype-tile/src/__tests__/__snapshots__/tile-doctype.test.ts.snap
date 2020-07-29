@@ -142,10 +142,12 @@ Object {
       "version": 1,
     },
   ],
+  "metadata": Object {
+    "owners": Array [
+      "did:3:bafyasdfasdf",
+    ],
+  },
   "next": Object {},
-  "owners": Array [
-    "did:3:bafyasdfasdf",
-  ],
   "signature": 2,
 }
 `;
@@ -202,12 +204,14 @@ Object {
       "version": 1,
     },
   ],
+  "metadata": Object {
+    "owners": Array [
+      "did:3:bafyasdfasdf",
+    ],
+  },
   "next": Object {
     "content": null,
   },
-  "owners": Array [
-    "did:3:bafyasdfasdf",
-  ],
   "signature": 2,
 }
 `;
@@ -308,15 +312,17 @@ Object {
       "version": 1,
     },
   ],
+  "metadata": Object {
+    "owners": Array [
+      "did:3:bafyasdfasdf",
+    ],
+  },
   "next": Object {
     "content": Object {
       "much": "data",
       "very": "content",
     },
   },
-  "owners": Array [
-    "did:3:bafyasdfasdf",
-  ],
   "signature": 2,
 }
 `;

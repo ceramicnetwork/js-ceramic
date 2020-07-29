@@ -14,7 +14,6 @@ const DOCTYPE = 'tile'
  */
 export interface TileParams extends DocParams {
     content: object;
-    owners?: Array<string>;
 }
 
 /**
@@ -60,16 +59,9 @@ export class TileDoctype extends Doctype {
      * @param context - Ceramic context
      * @param opts - Initialization options
      */
-    static async makeGenesis(params: Record<string, any>, context?: Context, opts: DocOpts = {}): Promise<Record<string, any>> {
+    static async makeGenesis(params: DocParams, context?: Context, opts: DocOpts = {}): Promise<Record<string, any>> {
         if (!context.user) {
             throw new Error('No user authenticated')
-        }
-
-        let { owners } = params
-        const { content } = params
-
-        if (!owners) {
-            owners = [context.user.DID]
         }
 
         let unique: string
@@ -77,7 +69,14 @@ export class TileDoctype extends Doctype {
             unique = base64Encode(randomBytes(12))
         }
 
-        const record = { doctype: DOCTYPE, owners, content, unique }
+        const metadata = params.metadata? params.metadata : {}
+        const { owners } = metadata
+        if (!owners) {
+            metadata.owners = [context.user.DID]
+        }
+
+        const { content } = params
+        const record = { doctype: DOCTYPE, content, metadata, unique }
         return TileDoctype._signRecord(record, context.user)
     }
 
@@ -93,7 +92,7 @@ export class TileDoctype extends Doctype {
             throw new Error('No user authenticated')
         }
         const patch = jsonpatch.compare(doctype.content, newContent)
-        const record = { owners: doctype.owners, content: patch, prev: doctype.head, id: doctype.state.log[0] }
+        const record = { content: patch, metadata: doctype.metadata, prev: doctype.head, id: doctype.state.log[0] }
         return TileDoctype._signRecord(record, user)
     }
 

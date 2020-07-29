@@ -144,12 +144,14 @@ Object {
       "version": 1,
     },
   ],
+  "metadata": Object {
+    "owners": Array [
+      "0x123",
+    ],
+  },
   "next": Object {
     "owners": undefined,
   },
-  "owners": Array [
-    "0x123",
-  ],
   "signature": 2,
 }
 `;
@@ -208,12 +210,14 @@ Object {
       "version": 1,
     },
   ],
+  "metadata": Object {
+    "owners": Array [
+      "0x123",
+    ],
+  },
   "next": Object {
     "content": null,
   },
-  "owners": Array [
-    "0x123",
-  ],
   "signature": 0,
 }
 `;
@@ -316,6 +320,11 @@ Object {
       "version": 1,
     },
   ],
+  "metadata": Object {
+    "owners": Array [
+      "0x123",
+    ],
+  },
   "next": Object {
     "content": Object {
       "other": "data",
@@ -325,9 +334,6 @@ Object {
     },
     "owners": undefined,
   },
-  "owners": Array [
-    "0x123",
-  ],
   "signature": 2,
 }
 `;

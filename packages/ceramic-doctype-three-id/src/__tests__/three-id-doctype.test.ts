@@ -32,7 +32,7 @@ const FAKE_CID_3 = new CID('bafybeig6xv5nwphfmvcnektpnojts55jqcuam7bmye2pb54adnr
 const FAKE_CID_4 = new CID('bafybeig6xv5nwphfmvcnektpnojts66jqcuam7bmye2pb54adnrtccjlsu')
 
 const RECORDS = {
-  genesis: { doctype: '3id', owners: [ '0x123' ], content: { publicKeys: { test: '0xabc' } } },
+  genesis: { doctype: '3id', metadata: { owners: [ '0x123' ] }, content: { publicKeys: { test: '0xabc' } } },
   r1: {
     desiredContent: { publicKeys: { test: '0xabc' }, other: 'data' },
     record: { content: [ { op: 'add', path: '/other', value: 'data' } ], id: FAKE_CID_1, prev: FAKE_CID_1, header: 'aaaa', signature: 'cccc' }
@@ -91,7 +91,7 @@ describe('ThreeIdHandler', () => {
 
   it('makes genesis record correctly', async () => {
     await expect(ThreeIdDoctype.makeGenesis({ content: RECORDS.genesis.content })).rejects.toThrow(/The owner/)
-    const record = await ThreeIdDoctype.makeGenesis({ content: RECORDS.genesis.content, owners: RECORDS.genesis.owners })
+    const record = await ThreeIdDoctype.makeGenesis({ content: RECORDS.genesis.content, metadata: RECORDS.genesis.metadata })
     expect(record).toEqual(RECORDS.genesis)
   })
 

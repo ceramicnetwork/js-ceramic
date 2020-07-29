@@ -1,6 +1,12 @@
 import jsonpatch from 'fast-json-patch'
 
-import { Doctype, DoctypeConstructor, DoctypeStatic, DocOpts, DocParams } from "@ceramicnetwork/ceramic-common"
+import {
+    Doctype,
+    DoctypeConstructor,
+    DoctypeStatic,
+    DocOpts,
+    DocParams, DocMetadata
+} from "@ceramicnetwork/ceramic-common"
 import { Context } from "@ceramicnetwork/ceramic-common"
 import { User } from "@ceramicnetwork/ceramic-common"
 
@@ -11,7 +17,6 @@ const DOCTYPE = '3id'
  */
 export interface ThreeIdParams extends DocParams {
     content: object;
-    owners?: Array<string>;
 }
 
 /**
@@ -24,9 +29,9 @@ export class ThreeIdDoctype extends Doctype {
      * @param params - Change parameters
      */
     async change(params: ThreeIdParams): Promise<void> {
-        const { content, owners } = params
+        const { content, metadata } = params
 
-        const updateRecord = await ThreeIdDoctype._makeRecord(this, this.context.user, content, owners)
+        const updateRecord = await ThreeIdDoctype._makeRecord(this, this.context.user, content, metadata)
         const updated = await this.context.api.applyRecord(this.id, updateRecord)
         this.state = updated.state
     }
@@ -52,13 +57,13 @@ export class ThreeIdDoctype extends Doctype {
      * @param params - Create parameters
      */
     static async makeGenesis(params: Record<string, any>): Promise<Record<string, any>> {
-        const { content, owners } = params
+        const { content, metadata } = params
 
-        if (!owners) {
+        if (!metadata?.owners) {
             throw new Error('The owner of the 3ID needs to be specified')
         }
         return {
-            doctype: DOCTYPE, owners, content
+            doctype: DOCTYPE, metadata, content
         }
     }
 
@@ -67,10 +72,10 @@ export class ThreeIdDoctype extends Doctype {
      * @param doctype - Doctype instance
      * @param user - User instance
      * @param newContent - New context
-     * @param newOwners - New owners
+     * @param newMetadata - New metadata
      * @private
      */
-    static async _makeRecord(doctype: Doctype, user: User, newContent: any, newOwners?: string[]): Promise<any> {
+    static async _makeRecord(doctype: Doctype, user: User, newContent: any, newMetadata?: DocMetadata): Promise<any> {
         if (user == null) {
             throw new Error('No user authenticated')
         }
@@ -80,7 +85,7 @@ export class ThreeIdDoctype extends Doctype {
         }
 
         const patch = jsonpatch.compare(doctype.state.content, newContent)
-        const record: any = { owners: newOwners, content: patch, prev: doctype.head, id: doctype.state.log[0] }
+        const record: any = { metadata: newMetadata, content: patch, prev: doctype.head, id: doctype.state.log[0] }
         // TODO - use the dag-jose library for properly encoded signed records
         record.iss = user.DID
         // convert CID to string for signing

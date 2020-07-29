@@ -139,12 +139,14 @@ Object {
       "version": 1,
     },
   ],
+  "metadata": Object {
+    "owners": Array [
+      "0x25954ef14cebbc9af3d71132489a9cfe87043f20@eip155:1",
+    ],
+  },
   "next": Object {
     "content": undefined,
   },
-  "owners": Array [
-    "0x25954ef14cebbc9af3d71132489a9cfe87043f20@eip155:1",
-  ],
   "signature": 2,
 }
 `;
@@ -199,12 +201,14 @@ Object {
       "version": 1,
     },
   ],
+  "metadata": Object {
+    "owners": Array [
+      "0x25954ef14cebbc9af3d71132489a9cfe87043f20@eip155:1",
+    ],
+  },
   "next": Object {
     "content": null,
   },
-  "owners": Array [
-    "0x25954ef14cebbc9af3d71132489a9cfe87043f20@eip155:1",
-  ],
   "signature": 0,
 }
 `;
@@ -302,12 +306,14 @@ Object {
       "version": 1,
     },
   ],
+  "metadata": Object {
+    "owners": Array [
+      "0x25954ef14cebbc9af3d71132489a9cfe87043f20@eip155:1",
+    ],
+  },
   "next": Object {
     "content": undefined,
   },
-  "owners": Array [
-    "0x25954ef14cebbc9af3d71132489a9cfe87043f20@eip155:1",
-  ],
   "signature": 2,
 }
 `;

@@ -30,18 +30,18 @@ class AccountLinks {
       if (!opts.provider) {
         throw new Error('Provider must be set')
       }
-      proof = await createLink(this.ceramicDoc.state.owners[0], account.address, opts.provider)
+      proof = await createLink(this.ceramicDoc.state.metadata.owners[0], account.address, opts.provider)
     }
     if (this._accountLinkDocuments[account.toString()]) {
       throw new Error(`Address ${account} already linked`)
     }
     const accountLinkDoc = await this._ceramic.createDocument<AccountLinkDoctype>('account-link', {
       content: null,
-      owners: [account.toString()]
+      metadata: { owners: [account.toString()] }
     }, {
       applyOnly: true
     })
-    if (accountLinkDoc.content !== this.ceramicDoc.state.owners[0]) {
+    if (accountLinkDoc.content !== this.ceramicDoc.state.metadata.owners[0]) {
       await accountLinkDoc.change( { content: proof })
     }
 
@@ -68,7 +68,7 @@ class AccountLinks {
   async _loadAccountLinkDocs(): Promise<void> {
     const docs: Array<AccountLinkDoctype> = await Promise.all(this.ceramicDoc.content.map((docId: string) => this._ceramic.loadDocument(docId)))
     this._accountLinkDocuments = docs.reduce<Record<string, AccountLinkDoctype>>((acc, doc) => {
-      acc[doc.state.owners[0]] = doc
+      acc[doc.state.metadata.owners[0]] = doc
       return acc
     }, {})
   }
@@ -82,7 +82,7 @@ class AccountLinks {
 
   static async build (owner: string, ceramic: CeramicApi): Promise<AccountLinks> {
     const genesisContent: string[] = []
-    const ceramicDoc = await ceramic.createDocument<TileDoctype>('tile', { content: genesisContent, owners: [owner] }, { isUnique: true })
+    const ceramicDoc = await ceramic.createDocument<TileDoctype>('tile', { content: genesisContent, metadata: { owners: [owner] } }, { isUnique: true })
     const accountLinks = new AccountLinks(ceramicDoc, ceramic)
     await accountLinks._loadAccountLinkDocs()
     return accountLinks

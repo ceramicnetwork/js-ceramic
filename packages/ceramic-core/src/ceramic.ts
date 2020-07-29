@@ -21,7 +21,9 @@ import { AccountLinkDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-accou
 // This is temporary until we handle DIDs and in particular 3IDs better
 const gen3IDgenesis = (pubkeys: any): any => {
   return {
-    owners: [pubkeys.managementKey],
+    metadata: {
+      owners: [pubkeys.managementKey],
+    },
     content: {
       publicKeys: {
         signing: pubkeys.signingKey,
@@ -150,8 +152,8 @@ class Ceramic implements CeramicApi {
 
     if (!this.context.user.DID) {
       // patch create did document for now
-      const { owners, content } = gen3IDgenesis(this.context.user.publicKeys)
-      const doc = await this._createDoc('3id', { content, owners })
+      const { metadata, content } = gen3IDgenesis(this.context.user.publicKeys)
+      const doc = await this._createDoc('3id', { content, metadata })
       this.context.user.DID = 'did:3:' + DoctypeUtils.getGenesis(doc.id)
     }
   }

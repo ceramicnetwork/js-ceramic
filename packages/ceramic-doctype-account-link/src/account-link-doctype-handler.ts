@@ -63,11 +63,11 @@ export class AccountLinkDoctypeHandler implements DoctypeHandler<AccountLinkDoct
         // TODO - verify genesis record
         return {
             doctype: DOCTYPE,
-            owners: record.owners,
             content: null,
             next: {
                 content: null
             },
+            metadata: record.metadata,
             signature: SignatureStatus.GENESIS,
             anchorStatus: AnchorStatus.NOT_REQUESTED,
             log: [cid]
@@ -94,7 +94,7 @@ export class AccountLinkDoctypeHandler implements DoctypeHandler<AccountLinkDoct
         }
 
         const addressCaip10 = [address, chainId].join('@')
-        if (addressCaip10.toLowerCase() !== state.owners[0].toLowerCase()) {
+        if (addressCaip10.toLowerCase() !== state.metadata.owners[0].toLowerCase()) {
             throw new Error("Address doesn't match document owner")
         }
         state.log.push(cid)

@@ -48,7 +48,7 @@ export interface AnchorProof {
  * Document metadata
  */
 export interface DocMetadata {
-    owners: Array<string>;
+    owners?: Array<string>;
     schema?: string;
     tags?: Array<string>;
 }
@@ -74,7 +74,6 @@ export interface DocNext {
  */
 export interface DocState {
     doctype: string;
-    owners: Array<string>;
     content: any;
     next?: DocNext;
     metadata?: DocMetadata;
@@ -104,7 +103,7 @@ export abstract class Doctype extends EventEmitter {
     }
 
     get id(): string {
-        return DoctypeUtils.createDocIdFromGenesis(this.state.log[0])
+        return DoctypeUtils.createDocIdFromGenesis(this._state.log[0])
     }
 
     get doctype(): string {
@@ -112,19 +111,19 @@ export abstract class Doctype extends EventEmitter {
     }
 
     get content(): any {
-        return cloneDeep(this.state.content)
+        return cloneDeep(this._state.content)
     }
 
     get metadata(): DocMetadata {
-        return cloneDeep(this.state.metadata)
+        return this._state?.metadata? cloneDeep(this._state.metadata) : null
     }
 
     get owners(): Array<string> {
-        return cloneDeep(this.state.owners)
+        return this._state?.metadata?.owners? cloneDeep(this._state.metadata.owners) : null
     }
 
     get head(): CID {
-        return this.state.log[this.state.log.length - 1]
+        return this._state.log[this._state.log.length - 1]
     }
 
     get state(): DocState {
@@ -147,7 +146,7 @@ export abstract class Doctype extends EventEmitter {
      * Clones the doctype
      */
     public clone(): Doctype {
-        return new (this.constructor() as any)(this.state, this.context, this.metadata);
+        return new (this.constructor() as any)(this.state, this.context);
     }
 
     /**

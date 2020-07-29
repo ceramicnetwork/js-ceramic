@@ -495,7 +495,7 @@ class Document extends EventEmitter {
   }
 
   get owners (): string[] {
-    return this._doctype.state.owners
+    return this._doctype.state?.metadata?.owners
   }
 
   static async wait(doc: Document): Promise<void> {

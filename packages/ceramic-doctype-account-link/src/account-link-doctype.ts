@@ -8,7 +8,6 @@ const DOCTYPE = 'account-link'
  */
 export interface AccountLinkParams extends DocParams {
     content: object;
-    owners?: Array<string>;
 }
 
 /**
@@ -47,18 +46,18 @@ export class AccountLinkDoctype extends Doctype {
      * @param params - Create parameters
      */
     static async makeGenesis(params: Record<string, any>): Promise<Record<string, any>> {
-        const { content, owners } = params
+        const { content, metadata } = params
 
         if (content) {
             throw new Error('Account link genesis cannot have content')
         }
-        if (!owners) {
+        if (!metadata?.owners) {
             throw new Error('Owner must be specified')
         }
-        if (owners.length !== 1) {
+        if (metadata.owners.length !== 1) {
             throw new Error('Exactly one owner must be specified')
         }
-        const [address, chainId] = owners[0].split('@') // eslint-disable-line @typescript-eslint/no-unused-vars
+        const [address, chainId] = metadata.owners[0].split('@') // eslint-disable-line @typescript-eslint/no-unused-vars
         if (!chainId) {
             throw new Error('Chain ID must be specified according to CAIP-10')
         }
@@ -67,7 +66,7 @@ export class AccountLinkDoctype extends Doctype {
         }
         return {
             doctype: DOCTYPE,
-            owners,
+            metadata,
         }
     }
 

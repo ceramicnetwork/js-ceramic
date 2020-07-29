@@ -72,7 +72,7 @@ export class ThreeIdDoctypeHandler implements DoctypeHandler<ThreeIdDoctype> {
         if (record.doctype === DOCTYPE) {
             return {
                 doctype: DOCTYPE,
-                owners: record.owners,
+                metadata: record.metadata,
                 content: record.content,
                 next: {
                     content: null,
@@ -87,7 +87,9 @@ export class ThreeIdDoctypeHandler implements DoctypeHandler<ThreeIdDoctype> {
             const encryptionKey = record.publicKey.find((pk: { id: string }) => pk.id === 'did:3:GENESIS#encryptionKey').publicKeyBase64
             return {
                 doctype: DOCTYPE,
-                owners: [managementKey],
+                metadata: {
+                    owners: [managementKey],
+                },
                 content: {
                     publicKeys: {
                         signing: signingKey, encryption: encryptionKey
@@ -119,7 +121,7 @@ export class ThreeIdDoctypeHandler implements DoctypeHandler<ThreeIdDoctype> {
         delete record.signature
         let payload = Buffer.from(JSON.stringify({
             doctype: record.doctype,
-            owners: record.owners,
+            metadata: record.metadata,
             content: record.content,
             prev: { '/': record.prev.toString() },
             id: { '/': record.id.toString() },
@@ -130,7 +132,7 @@ export class ThreeIdDoctypeHandler implements DoctypeHandler<ThreeIdDoctype> {
         const jwt = [header, payload, signature].join('.')
         try {
             // verify the jwt with a fake DID resolver that uses the current state of the 3ID
-            const didDoc = wrapDocument({ publicKeys: { signing: state.owners[0], encryption: '' } }, 'did:fake:123')
+            const didDoc = wrapDocument({ publicKeys: { signing: state.metadata.owners[0], encryption: '' } }, 'did:fake:123')
             await this.verifyJWT(jwt, { resolver: { resolve: async (): Promise<DIDDocument> => didDoc } })
         } catch (e) {
             throw new Error('Invalid signature for signed record:' + e)
@@ -171,14 +173,16 @@ export class ThreeIdDoctypeHandler implements DoctypeHandler<ThreeIdDoctype> {
             content = state.next.content
             delete state.next.content
         }
-        let owners = state.owners
+        let owners = state.metadata?.owners
         if (state.next?.owners) {
             owners = state.next.owners
             delete state.next.owners
         }
         return {
             ...state,
-            owners,
+            metadata: {
+                owners
+            },
             content,
             anchorStatus: AnchorStatus.ANCHORED,
             anchorProof: proof,

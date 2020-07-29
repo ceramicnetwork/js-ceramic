@@ -73,8 +73,8 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
         // TODO - verify genesis record
         return {
             doctype: DOCTYPE,
-            owners: record.owners,
             content: record.content,
+            metadata: record.metadata || undefined,
             next: {
                 content: null,
             },
@@ -141,8 +141,8 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
         delete record.signature
         let payload = Buffer.from(JSON.stringify({
             doctype: record.doctype,
-            owners: record.owners,
             content: record.content,
+            metadata: record.metadata || undefined,
             unique: record.unique || undefined,
             prev: record.prev ? { '/': record.prev.toString() } : undefined,
             id: record.id ? { '/': record.id.toString() } : undefined,
