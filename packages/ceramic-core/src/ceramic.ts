@@ -210,7 +210,7 @@ class Ceramic implements CeramicApi {
   async _createDoc(doctype: string, params: DocParams, opts: DocOpts = {}): Promise<Document> {
     const doctypeHandler = this._doctypeHandlers[doctype]
 
-    const doc = await Document.create(params, doctypeHandler, this.dispatcher, this, this.stateStore, this.context, opts, this._validateDocs);
+    const doc = await Document.create(params, doctypeHandler, this.dispatcher, this.stateStore, this.context, opts, this._validateDocs);
     const normalizedId = DoctypeUtils.normalizeDocId(doc.id)
     if (!this._docmap[normalizedId]) {
       this._docmap[normalizedId] = doc
@@ -235,7 +235,7 @@ class Ceramic implements CeramicApi {
    * @private
    */
   async _createDocFromGenesis(genesis: any, opts: DocOpts = {}): Promise<Document> {
-    const doc = await Document.createFromGenesis(genesis, this.findHandler.bind(this), this.dispatcher, this, this.stateStore, this.context, opts, this._validateDocs);
+    const doc = await Document.createFromGenesis(genesis, this.findHandler.bind(this), this.dispatcher, this.stateStore, this.context, opts, this._validateDocs);
     const normalizedId = DoctypeUtils.normalizeDocId(doc.id)
     if (!this._docmap[normalizedId]) {
       this._docmap[normalizedId] = doc
@@ -267,7 +267,7 @@ class Ceramic implements CeramicApi {
     const normalizedId = DoctypeUtils.normalizeDocId(docId)
 
     if (!this._docmap[normalizedId]) {
-      this._docmap[normalizedId] = await Document.load(docId, this.findHandler.bind(this), this.dispatcher, this, this.stateStore, this.context, opts)
+      this._docmap[normalizedId] = await Document.load(docId, this.findHandler.bind(this), this.dispatcher, this.stateStore, this.context, opts)
     }
     return this._docmap[normalizedId]
   }

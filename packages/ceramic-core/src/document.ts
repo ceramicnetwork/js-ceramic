@@ -31,7 +31,7 @@ class Document extends EventEmitter {
   public readonly id: string
   public readonly version: CID
 
-  constructor (id: string, public dispatcher: Dispatcher, public stateStore: StateStore, public ceramicApi: CeramicApi) {
+  constructor (id: string, public dispatcher: Dispatcher, public stateStore: StateStore) {
     super()
     const normalized = DoctypeUtils.normalizeDocId(id)
     this.id = DoctypeUtils.getBaseDocId(normalized);
@@ -46,7 +46,6 @@ class Document extends EventEmitter {
    * @param params - Initial Doctype parameters
    * @param doctypeHandler - DoctypeHandler instance
    * @param dispatcher - Dispatcher instance
-   * @param ceramicApi - Ceramic API
    * @param stateStore - StateStore instance
    * @param context - Ceramic context
    * @param opts - Initialization options
@@ -56,7 +55,6 @@ class Document extends EventEmitter {
       params: DocParams,
       doctypeHandler: DoctypeHandler<Doctype>,
       dispatcher: Dispatcher,
-      ceramicApi: CeramicApi,
       stateStore: StateStore,
       context: Context,
       opts: DocOpts = {},
@@ -67,7 +65,7 @@ class Document extends EventEmitter {
     const genesisCid = await dispatcher.storeRecord(genesis)
     const id = DoctypeUtils.createDocIdFromGenesis(genesisCid)
 
-    const doc = new Document(id, dispatcher, stateStore, ceramicApi)
+    const doc = new Document(id, dispatcher, stateStore)
 
     doc._context = context
     doc._doctypeHandler = doctypeHandler
@@ -76,7 +74,7 @@ class Document extends EventEmitter {
     doc._doctype.state = await doc._doctypeHandler.applyRecord(genesis, doc._genesisCid, context)
 
     if (validate) {
-      const schema = await Document.loadSchema(ceramicApi, doc._doctype)
+      const schema = await Document.loadSchema(context.api, doc._doctype)
       if (schema) {
         DoctypeUtils.validate(doc._doctype.content, schema)
       }
@@ -97,7 +95,6 @@ class Document extends EventEmitter {
    * @param genesis - Genesis record
    * @param findHandler - find handler fn
    * @param dispatcher - Dispatcher instance
-   * @param ceramicApi - Ceramic API
    * @param stateStore - StateStore instance
    * @param context - Ceramic context
    * @param opts - Initialization options
@@ -107,7 +104,6 @@ class Document extends EventEmitter {
       genesis: any,
       findHandler: (genesisRecord: any) => DoctypeHandler<Doctype>,
       dispatcher: Dispatcher,
-      ceramicApi: CeramicApi,
       stateStore: StateStore,
       context: Context,
       opts: DocOpts = {},
@@ -116,7 +112,7 @@ class Document extends EventEmitter {
     const genesisCid = await dispatcher.storeRecord(genesis)
     const id = DoctypeUtils.createDocIdFromGenesis(genesisCid)
 
-    const doc = new Document(id, dispatcher, stateStore, ceramicApi)
+    const doc = new Document(id, dispatcher, stateStore)
 
     doc._context = context
     doc._doctypeHandler = findHandler(genesis)
@@ -125,7 +121,7 @@ class Document extends EventEmitter {
     doc._doctype.state = await doc._doctypeHandler.applyRecord(genesis, doc._genesisCid, context)
 
     if (validate) {
-      const schema = await Document.loadSchema(ceramicApi, doc._doctype)
+      const schema = await Document.loadSchema(doc._context.api, doc._doctype)
       if (schema) {
         DoctypeUtils.validate(doc._doctype.content, schema)
       }
@@ -146,7 +142,6 @@ class Document extends EventEmitter {
    * @param id - Document ID
    * @param findHandler - find handler fn
    * @param dispatcher - Dispatcher instance
-   * @param ceramicApi - Ceramic API
    * @param stateStore - StateStore instance
    * @param context - Ceramic context
    * @param opts - Initialization options
@@ -155,12 +150,11 @@ class Document extends EventEmitter {
       id: string,
       findHandler: (genesisRecord: any) => DoctypeHandler<Doctype>,
       dispatcher: Dispatcher,
-      ceramicApi: CeramicApi,
       stateStore: StateStore,
       context: Context,
       opts: DocOpts = {}
   ): Promise<Document> {
-    const doc = new Document(id, dispatcher, stateStore, ceramicApi)
+    const doc = new Document(id, dispatcher, stateStore)
     doc._context = context
 
     if (typeof opts.applyOnly === 'undefined') {
@@ -231,7 +225,7 @@ class Document extends EventEmitter {
       throw new Error(`No anchor record for version ${version.toString()}`)
     }
 
-    const document = new Document(DoctypeUtils.createDocIdFromBase(doc.id, version), dispatcher, stateStore, doc.ceramicApi)
+    const document = new Document(DoctypeUtils.createDocIdFromBase(doc.id, version), dispatcher, stateStore)
     document._context = context
     document._doctypeHandler = doctypeHandler
     document._doctype = new doc._doctypeHandler.doctype(null, context)
@@ -250,7 +244,7 @@ class Document extends EventEmitter {
     const state = await this._doctypeHandler.applyRecord(record, cid, this._context, this.state)
 
     if (validate) {
-      const schema = await Document.loadSchema(this.ceramicApi, this._doctype)
+      const schema = await Document.loadSchema(this._context.api, this._doctype)
       if (schema) {
         DoctypeUtils.validate(this._doctype.content, schema)
       }
