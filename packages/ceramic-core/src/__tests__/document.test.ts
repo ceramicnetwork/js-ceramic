@@ -134,7 +134,7 @@ describe('Document', () => {
 
     it('is loaded correctly', async () => {
       const doc1 = await create({ content: initialContent, owners }, ceramic, context, { applyOnly: true, skipWait: true })
-      const doc2 = await Document.load(doc1.id, findHandler, dispatcher, mockStateStore, context, { skipWait: true })
+      const doc2 = await Document.load(doc1.id, findHandler, dispatcher, null, mockStateStore, context, { skipWait: true })
 
       expect(doc1.id).toEqual(doc2.id)
       expect(doc1.content).toEqual(initialContent)
@@ -146,7 +146,7 @@ describe('Document', () => {
       await anchorUpdate(tmpDoc)
       const docId = tmpDoc.id
       const log = tmpDoc.state.log
-      const doc = await Document.load(docId, findHandler, dispatcher, mockStateStore, context, { skipWait: true })
+      const doc = await Document.load(docId, findHandler, dispatcher, null, mockStateStore, context, { skipWait: true })
       // changes will not load since no network and no local head storage yet
       expect(doc.content).toEqual(initialContent)
       expect(doc.state).toEqual(expect.objectContaining({ signature: SignatureStatus.GENESIS, anchorStatus: 0 }))
@@ -246,7 +246,7 @@ describe('Document', () => {
       expect(doc1.content).toEqual(newContent)
       const headValidUpdate = doc1.head
       // create invalid change that happened after main change
-      const doc2 = await Document.load(docId, findHandler, dispatcher, mockStateStore, context, { skipWait: true })
+      const doc2 = await Document.load(docId, findHandler, dispatcher, null, mockStateStore, context, { skipWait: true })
       await doc2._handleHead(headPreUpdate)
       // add short wait to get different anchor time
       // sometime the tests are very fast
@@ -323,7 +323,7 @@ describe('Document', () => {
     it('documents share updates', async () => {
       const doc1 = await create({ content: initialContent, owners }, ceramic, context)
       await anchorUpdate(doc1)
-      const doc2 = await Document.load(doc1.id, getHandlerFromGenesis, dispatcher, mockStateStore, context, { skipWait: true })
+      const doc2 = await Document.load(doc1.id, getHandlerFromGenesis, dispatcher, null, mockStateStore, context, { skipWait: true })
 
       const updatePromise = new Promise(resolve => {
         doc2.doctype.on('change', resolve)
