@@ -116,7 +116,7 @@ export abstract class Doctype extends EventEmitter {
     }
 
     get metadata(): DocMetadata {
-        return cloneDeep(this._state.metadata)
+        return cloneDeep(this.state.metadata)
     }
 
     get owners(): Array<string> {
