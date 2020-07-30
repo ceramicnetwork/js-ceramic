@@ -240,7 +240,6 @@ class Document extends EventEmitter {
 
   async applyRecord (record: any, opts: DocOpts = {}, validate = true): Promise<void> {
     const cid = await this.dispatcher.storeRecord(record)
-
     const state = await this._doctypeHandler.applyRecord(record, cid, this._context, this.state)
 
     if (validate) {
@@ -253,7 +252,6 @@ class Document extends EventEmitter {
     this._doctype.state = state
 
     await this._updateStateIfPinned()
-
     await this._applyOpts(opts)
   }
 
@@ -331,7 +329,7 @@ class Document extends EventEmitter {
     const record = await this.dispatcher.retrieveRecord(cid)
     if (record.prev.equals(this.head)) {
       // the new log starts where the previous one ended
-      this._doctype.state = await this._applyLogToState(log, this._doctype.state)
+      this._doctype.state = await this._applyLogToState(log, cloneDeep(this._doctype.state))
       modified = true
     } else {
       // we have a conflict since prev is in the log of the

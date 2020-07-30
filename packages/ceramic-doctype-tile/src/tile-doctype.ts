@@ -76,7 +76,7 @@ export class TileDoctype extends Doctype {
         }
 
         const { content } = params
-        const record = { doctype: DOCTYPE, content, metadata, unique }
+        const record = { doctype: DOCTYPE, data: content, metadata, unique }
         return TileDoctype._signRecord(record, context.user)
     }
 
@@ -92,7 +92,7 @@ export class TileDoctype extends Doctype {
             throw new Error('No user authenticated')
         }
         const patch = jsonpatch.compare(doctype.content, newContent)
-        const record = { content: patch, metadata: doctype.metadata, prev: doctype.head, id: doctype.state.log[0] }
+        const record = { data: patch, metadata: doctype.metadata, prev: doctype.head, id: doctype.state.log[0] }
         return TileDoctype._signRecord(record, user)
     }
 
