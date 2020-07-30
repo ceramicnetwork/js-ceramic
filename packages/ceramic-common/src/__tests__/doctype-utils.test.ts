@@ -3,7 +3,7 @@ import fs from "fs";
 import { DoctypeUtils } from ".."
 
 describe('DoctypeUtils', () => {
-    const schemaDefDirPath = path.join(__dirname, '../../schemas')
+    const schemaDefDirPath = path.join(__dirname, '__schemas__')
     const testDirsPath = path.join(__dirname, '__data__')
     const testDirs = fs.readdirSync(testDirsPath)
 

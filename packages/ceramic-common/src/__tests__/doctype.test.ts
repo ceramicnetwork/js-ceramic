@@ -22,6 +22,7 @@ describe('Doctype', () => {
         const docSchemaState = mock<DocState>()
         docSchemaState.content = schema
         docSchemaState.metadata = {
+            owners: [],
             schema: 'ceramic://1234567'
         }
 
@@ -36,6 +37,7 @@ describe('Doctype', () => {
     it('should pass schema validation', async () => {
         const state = mock<DocState>()
         state.metadata = {
+            owners: [],
             schema: 'ceramic://1234567'
         }
         state.content = {
@@ -49,6 +51,7 @@ describe('Doctype', () => {
     it('should fail schema validation', async () => {
         const state = mock<DocState>()
         state.metadata = {
+            owners: [],
             schema: 'ceramic://1234567'
         }
         state.content = {
