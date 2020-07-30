@@ -116,12 +116,12 @@ export class ThreeIdDoctypeHandler implements DoctypeHandler<ThreeIdDoctype> {
     async _applySigned(record: any, cid: CID, state: DocState): Promise<DocState> {
         if (!record.id.equals(state.log[0])) throw new Error(`Invalid docId ${record.id}, expected ${state.log[0]}`)
         // reconstruct jwt
-        const { header, signature } = record
-        delete record.header
+        const { signedHeader, signature } = record
+        delete record.signedHeader
         delete record.signature
         let payload = Buffer.from(JSON.stringify({
             doctype: record.doctype,
-            metadata: record.metadata,
+            header: record.header,
             content: record.content,
             prev: { '/': record.prev.toString() },
             id: { '/': record.id.toString() },
@@ -129,7 +129,7 @@ export class ThreeIdDoctypeHandler implements DoctypeHandler<ThreeIdDoctype> {
         })).toString('base64')
 
         payload = payload.replace(/=/g, '')
-        const jwt = [header, payload, signature].join('.')
+        const jwt = [signedHeader, payload, signature].join('.')
         try {
             // verify the jwt with a fake DID resolver that uses the current state of the 3ID
             const didDoc = wrapDocument({ publicKeys: { signing: state.metadata.owners[0], encryption: '' } }, 'did:fake:123')

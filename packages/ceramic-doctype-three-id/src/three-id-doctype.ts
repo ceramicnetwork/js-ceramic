@@ -31,7 +31,7 @@ export class ThreeIdDoctype extends Doctype {
     async change(params: ThreeIdParams): Promise<void> {
         const { content, metadata } = params
 
-        const updateRecord = await ThreeIdDoctype._makeRecord(this, this.context.user, content, metadata)
+        const updateRecord = await ThreeIdDoctype._makeRecord(this, this.context.user, content, metadata?.owners)
         const updated = await this.context.api.applyRecord(this.id, updateRecord)
         this.state = updated.state
     }
@@ -76,10 +76,10 @@ export class ThreeIdDoctype extends Doctype {
      * @param doctype - Doctype instance
      * @param user - User instance
      * @param newContent - New context
-     * @param newMetadata - New metadata
+     * @param newOwners - New owners
      * @private
      */
-    static async _makeRecord(doctype: Doctype, user: User, newContent: any, newMetadata?: DocMetadata): Promise<any> {
+    static async _makeRecord(doctype: Doctype, user: User, newContent: any, newOwners?: string[]): Promise<any> {
         if (user == null) {
             throw new Error('No user authenticated')
         }
@@ -89,7 +89,11 @@ export class ThreeIdDoctype extends Doctype {
         }
 
         const patch = jsonpatch.compare(doctype.state.content, newContent)
-        const record: any = { metadata: newMetadata, content: patch, prev: doctype.head, id: doctype.state.log[0] }
+        const header = doctype.metadata
+        if (newOwners) {
+            header.owners = newOwners
+        }
+        const record: any = { header, content: patch, prev: doctype.head, id: doctype.state.log[0] }
         // TODO - use the dag-jose library for properly encoded signed records
         record.iss = user.DID
         // convert CID to string for signing
@@ -98,11 +102,12 @@ export class ThreeIdDoctype extends Doctype {
         record.prev = { '/': tmpPrev.toString() }
         record.id = { '/': tmpId.toString() }
         const jwt = await user.sign(record, { useMgmt: true})
-        const [header, payload, signature] = jwt.split('.') // eslint-disable-line @typescript-eslint/no-unused-vars
+        const [signedHeader, payload, signature] = jwt.split('.') // eslint-disable-line
+        // @typescript-eslint/no-unused-vars
         record.prev = tmpPrev
         record.id = tmpId
 
-        return { ...record, header, signature }
+        return { ...record, signedHeader, signature }
     }
 
 }

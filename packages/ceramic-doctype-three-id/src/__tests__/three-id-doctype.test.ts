@@ -35,7 +35,7 @@ const RECORDS = {
   genesis: { doctype: '3id', header: { owners: [ '0x123' ] }, content: { publicKeys: { test: '0xabc' } } },
   r1: {
     desiredContent: { publicKeys: { test: '0xabc' }, other: 'data' },
-    record: { content: [ { op: 'add', path: '/other', value: 'data' } ], id: FAKE_CID_1, prev: FAKE_CID_1, header: 'aaaa', signature: 'cccc' }
+    record: { content: [ { op: 'add', path: '/other', value: 'data' } ], header: { owners: ['0x123'] }, id: FAKE_CID_1, prev: FAKE_CID_1, signedHeader: 'aaaa', signature: 'cccc' }
   },
   r2: { record: { proof: FAKE_CID_4 } },
   proof: {
