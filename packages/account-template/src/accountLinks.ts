@@ -82,7 +82,7 @@ class AccountLinks {
 
   static async build (owner: string, ceramic: CeramicApi): Promise<AccountLinks> {
     const genesisContent: string[] = []
-    const ceramicDoc = await ceramic.createDocument<TileDoctype>('tile', { content: genesisContent, metadata: { owners: [owner] } }, { isUnique: true })
+    const ceramicDoc = await ceramic.createDocument<TileDoctype>('tile', { content: genesisContent, metadata: { owners: [owner], isUnique: true } })
     const accountLinks = new AccountLinks(ceramicDoc, ceramic)
     await accountLinks._loadAccountLinkDocs()
     return accountLinks

@@ -117,8 +117,8 @@ describe('TileDoctypeHandler', () => {
   })
 
   it('creates a unique genesis record if specified', async () => {
-    const record1 = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { owners: [user.DID] } }, { user }, { isUnique: true })
-    const record2 = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { owners: [user.DID] } }, { user }, { isUnique: true })
+    const record1 = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { owners: [user.DID], isUnique: true } }, { user })
+    const record2 = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { owners: [user.DID], isUnique: true } }, { user } )
 
     expect(record1).not.toEqual(record2)
   })

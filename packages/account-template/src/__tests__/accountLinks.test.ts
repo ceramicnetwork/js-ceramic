@@ -37,7 +37,7 @@ describe('AccountLinks', () => {
 
       await AccountLinks.build(owner, mockCeramic)
 
-      expect(mockCeramic.createDocument).toHaveBeenCalledWith('tile', { content: [], metadata: { owners: [owner] } }, { isUnique: true })
+      expect(mockCeramic.createDocument).toHaveBeenCalledWith('tile', { content: [], metadata: { owners: [owner], isUnique: true } })
     })
   })
 

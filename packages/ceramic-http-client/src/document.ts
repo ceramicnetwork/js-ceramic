@@ -20,7 +20,6 @@ class Document extends Doctype {
       doctype,
       docOpts: {
         applyOnly: opts.applyOnly,
-        isUnique: opts.isUnique
       }
     })
     return new Document(DoctypeUtils.deserializeState(state), apiUrl)

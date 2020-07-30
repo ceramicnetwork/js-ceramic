@@ -46,7 +46,7 @@ program
     }
     const ceramic = new CeramicClient()
     try {
-      const doc = await ceramic.createDocument(doctype, { content, owners }, { applyOnly: onlyGenesis, isUnique: unique })
+      const doc = await ceramic.createDocument(doctype, { content, metadata: { owners, isUnique: unique } }, { applyOnly: onlyGenesis })
       console.log(doc.id)
       console.log(JSON.stringify(doc.content, null, 2))
     } catch (e) {

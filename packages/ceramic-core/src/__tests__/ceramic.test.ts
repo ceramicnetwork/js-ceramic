@@ -20,7 +20,7 @@ const genIpfsConf = (path, id): any => {
 }
 
 describe('Ceramic integration', () => {
-  jest.setTimeout(15000)
+  jest.setTimeout(20000)
   let ipfs1: Ipfs;
   let ipfs2: Ipfs;
   let ipfs3: Ipfs;
@@ -119,6 +119,7 @@ describe('Ceramic integration', () => {
 
     const genesisId = DoctypeUtils.getGenesis(doctype1.id)
     await ipfs2.dag.get(genesisId)
+    await ipfs3.dag.get(genesisId)
 
     const doctype3 = await ceramic3.createDocument<ThreeIdDoctype>(DOCTYPE_3ID, { content: { test: 321 }, metadata: { owners: [owner] } }, { applyOnly: true })
     expect(doctype3.content).toEqual(doctype1.content)

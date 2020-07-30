@@ -51,6 +51,7 @@ export interface DocMetadata {
     owners: Array<string>;
     schema?: string;
     tags?: Array<string>;
+    isUnique?: boolean;
 
     [index: string]: any; // allow arbitrary properties
 }
@@ -92,7 +93,6 @@ export interface DocState {
 export interface DocOpts {
     applyOnly?: boolean;
     skipWait?: boolean;
-    isUnique?: boolean;
 }
 
 /**
