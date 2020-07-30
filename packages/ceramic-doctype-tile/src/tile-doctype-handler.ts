@@ -74,7 +74,7 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
         return {
             doctype: DOCTYPE,
             content: record.data,
-            metadata: record.metadata || undefined,
+            metadata: record.header,
             next: {
                 content: null,
             },
@@ -136,20 +136,20 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
      */
     async _verifyRecordSignature(record: any, context: Context): Promise<void> {
         // reconstruct jwt
-        const { header, signature } = record
-        delete record.header
+        const { signedHeader, signature } = record
+        delete record.signedHeader
         delete record.signature
         let payload = Buffer.from(JSON.stringify({
             doctype: record.doctype,
             data: record.data,
-            metadata: record.metadata || undefined,
+            header: record.header,
             unique: record.unique || undefined,
             prev: record.prev ? { '/': record.prev.toString() } : undefined,
             id: record.id ? { '/': record.id.toString() } : undefined,
             iss: record.iss
         })).toString('base64')
         payload = payload.replace(/=/g, '')
-        const jwt = [header, payload, signature].join('.')
+        const jwt = [signedHeader, payload, signature].join('.')
         try {
             await this.verifyJWT(jwt, { resolver: context.resolver })
         } catch (e) {

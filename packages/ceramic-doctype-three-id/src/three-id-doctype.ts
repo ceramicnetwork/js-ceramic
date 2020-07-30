@@ -59,11 +59,15 @@ export class ThreeIdDoctype extends Doctype {
     static async makeGenesis(params: Record<string, any>): Promise<Record<string, any>> {
         const { content, metadata } = params
 
-        if (!metadata?.owners) {
+        if (!metadata) {
+            throw new Error('Metadata needs to be specified')
+        }
+
+        if (!metadata.owners) {
             throw new Error('The owner of the 3ID needs to be specified')
         }
         return {
-            doctype: DOCTYPE, metadata, content
+            doctype: DOCTYPE, header: metadata, content
         }
     }
 

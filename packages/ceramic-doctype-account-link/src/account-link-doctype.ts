@@ -51,7 +51,10 @@ export class AccountLinkDoctype extends Doctype {
         if (content) {
             throw new Error('Account link genesis cannot have content')
         }
-        if (!metadata?.owners) {
+        if (!metadata) {
+            throw new Error('Metadata must be specified')
+        }
+        if (!metadata.owners) {
             throw new Error('Owner must be specified')
         }
         if (metadata.owners.length !== 1) {
@@ -66,7 +69,7 @@ export class AccountLinkDoctype extends Doctype {
         }
         return {
             doctype: DOCTYPE,
-            metadata,
+            header: metadata,
         }
     }
 

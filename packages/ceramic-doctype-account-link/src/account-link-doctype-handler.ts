@@ -67,7 +67,7 @@ export class AccountLinkDoctypeHandler implements DoctypeHandler<AccountLinkDoct
             next: {
                 content: null
             },
-            metadata: record.metadata,
+            metadata: record.header,
             signature: SignatureStatus.GENESIS,
             anchorStatus: AnchorStatus.NOT_REQUESTED,
             log: [cid]

@@ -77,7 +77,7 @@ export class TileDoctype extends Doctype {
         }
 
         const { content } = params
-        const record = { doctype: DOCTYPE, data: content, metadata, unique }
+        const record = { doctype: DOCTYPE, data: content, header: metadata, unique }
         return TileDoctype._signRecord(record, context.user)
     }
 
@@ -93,7 +93,7 @@ export class TileDoctype extends Doctype {
             throw new Error('No user authenticated')
         }
         const patch = jsonpatch.compare(doctype.content, newContent)
-        const record = { data: patch, metadata: doctype.metadata, prev: doctype.head, id: doctype.state.log[0] }
+        const record = { data: patch, header: doctype.metadata, prev: doctype.head, id: doctype.state.log[0] }
         return TileDoctype._signRecord(record, user)
     }
 
@@ -120,14 +120,14 @@ export class TileDoctype extends Doctype {
             record.id = { '/': tmpId.toString() }
         }
         const jwt = await user.sign(record)
-        const [header, payload, signature] = jwt.split('.') // eslint-disable-line @typescript-eslint/no-unused-vars
+        const [signedHeader, payload, signature] = jwt.split('.') // eslint-disable-line @typescript-eslint/no-unused-vars
         if (tmpCID) {
             record.prev = tmpCID
         }
         if (tmpId) {
             record.id = tmpId
         }
-        return { ...record, header, signature }
+        return { ...record, signedHeader, signature }
     }
 
 }

@@ -72,7 +72,7 @@ export class ThreeIdDoctypeHandler implements DoctypeHandler<ThreeIdDoctype> {
         if (record.doctype === DOCTYPE) {
             return {
                 doctype: DOCTYPE,
-                metadata: record.metadata,
+                metadata: record.header,
                 content: record.content,
                 next: {
                     content: null,
