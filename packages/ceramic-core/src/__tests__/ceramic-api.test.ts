@@ -112,10 +112,10 @@ describe('Ceramic API', () => {
 
     const tileDocParams: TileParams = {
       metadata: {
-        schema: schemaDoc.id
+        schema: schemaDoc.id,
+        owners: [owner]
       },
       content: { a: 1 },
-      owners: [owner]
     }
 
     try {
