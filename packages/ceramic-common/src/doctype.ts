@@ -114,11 +114,11 @@ export abstract class Doctype extends EventEmitter {
     }
 
     get metadata(): DocMetadata {
-        return this._state?.metadata? cloneDeep(this._state.metadata) : null
+        return this._state?.metadata? cloneDeep(this._state.metadata) : {}
     }
 
     get owners(): Array<string> {
-        return this._state?.metadata?.owners? cloneDeep(this._state.metadata.owners) : null
+        return this._state?.metadata?.owners? cloneDeep(this._state.metadata.owners) : []
     }
 
     get head(): CID {

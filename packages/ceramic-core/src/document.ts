@@ -18,6 +18,7 @@ import {
   DocParams,
   CeramicApi
 } from "@ceramicnetwork/ceramic-common"
+import { DocMetadata } from "@ceramicnetwork/ceramic-common/lib"
 
 class Document extends EventEmitter {
   private _applyQueue: PQueue
@@ -493,7 +494,11 @@ class Document extends EventEmitter {
   }
 
   get owners (): string[] {
-    return this._doctype.state?.metadata?.owners
+    return this._doctype.owners
+  }
+
+  get metadata (): DocMetadata {
+    return this._doctype.metadata
   }
 
   static async wait(doc: Document): Promise<void> {
