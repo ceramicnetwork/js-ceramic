@@ -100,7 +100,7 @@ describe('TileDoctypeHandler', () => {
   })
 
   it('makes genesis record correctly', async () => {
-    const record1 = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, owners: [user.DID] }, { user })
+    const record1 = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { owners: [user.DID] } }, { user })
 
     const expected1 = wrapWithFakeSignature({ doctype: RECORDS.genesis.doctype, data: RECORDS.genesis.data, metadata: { owners: [user.DID] } })
     expect(record1).toEqual(expected1)

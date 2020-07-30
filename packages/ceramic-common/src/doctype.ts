@@ -48,9 +48,11 @@ export interface AnchorProof {
  * Document metadata
  */
 export interface DocMetadata {
-    owners?: Array<string>;
+    owners: Array<string>;
     schema?: string;
     tags?: Array<string>;
+
+    [index: string]: any; // allow arbitrary properties
 }
 
 /**
@@ -76,7 +78,7 @@ export interface DocState {
     doctype: string;
     content: any;
     next?: DocNext;
-    metadata?: DocMetadata;
+    metadata: DocMetadata;
     signature: SignatureStatus;
     anchorStatus: AnchorStatus;
     anchorScheduledFor?: number; // only present when anchor status is pending
@@ -114,11 +116,11 @@ export abstract class Doctype extends EventEmitter {
     }
 
     get metadata(): DocMetadata {
-        return this._state?.metadata? cloneDeep(this._state.metadata) : {}
+        return this._state? cloneDeep(this._state.metadata) : { owners: [] }
     }
 
     get owners(): Array<string> {
-        return this._state?.metadata?.owners? cloneDeep(this._state.metadata.owners) : []
+        return this._state? cloneDeep(this._state.metadata.owners) : []
     }
 
     get head(): CID {

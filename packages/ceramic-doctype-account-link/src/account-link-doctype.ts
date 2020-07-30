@@ -35,9 +35,9 @@ export class AccountLinkDoctype extends Doctype {
      * @param opts - Initialization options
      */
     static async create(params: AccountLinkParams, context: Context, opts?: DocOpts): Promise<AccountLinkDoctype> {
-        const { content, owners } = params
+        const { content, metadata } = params
 
-        const record = await AccountLinkDoctype.makeGenesis({ content, owners })
+        const record = await AccountLinkDoctype.makeGenesis({ content, metadata })
         return context.api.createDocumentFromGenesis(record, opts)
     }
 

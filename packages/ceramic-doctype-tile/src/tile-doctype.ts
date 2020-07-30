@@ -69,7 +69,7 @@ export class TileDoctype extends Doctype {
             unique = base64Encode(randomBytes(12))
         }
 
-        const metadata = params.metadata? params.metadata : {}
+        const metadata = params.metadata? params.metadata : { owners: [] }
         const { owners } = metadata
         if (!owners) {
             metadata.owners = [context.user.DID]
