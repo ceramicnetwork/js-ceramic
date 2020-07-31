@@ -1,4 +1,4 @@
-import { Doctype, DoctypeConstructor, DoctypeStatic, DocOpts } from "@ceramicnetwork/ceramic-common"
+import { Doctype, DoctypeConstructor, DoctypeStatic, DocOpts, DocParams } from "@ceramicnetwork/ceramic-common"
 import { Context } from "@ceramicnetwork/ceramic-common"
 
 const DOCTYPE = 'account-link'
@@ -6,9 +6,8 @@ const DOCTYPE = 'account-link'
 /**
  * AccountLink parameters
  */
-export class AccountLinkParams {
+export interface AccountLinkParams extends DocParams {
     content: object;
-    owners?: Array<string>;
 }
 
 /**
@@ -36,31 +35,32 @@ export class AccountLinkDoctype extends Doctype {
      * @param opts - Initialization options
      */
     static async create(params: AccountLinkParams, context: Context, opts?: DocOpts): Promise<AccountLinkDoctype> {
-        const { content, owners } = params
+        const { content, metadata } = params
 
-        const record = await AccountLinkDoctype.makeGenesis({ content, owners })
+        const record = await AccountLinkDoctype.makeGenesis({ content, metadata })
         return context.api.createDocumentFromGenesis(record, opts)
     }
 
     /**
      * Creates genesis record
      * @param params - Create parameters
-     * @param context - Ceramic context
-     * @param opts - Initialization options
      */
-    static async makeGenesis(params: Record<string, any>, context?: Context, opts: DocOpts = {}): Promise<Record<string, any>> {
-        const { content, owners } = params
+    static async makeGenesis(params: Record<string, any>): Promise<Record<string, any>> {
+        const { content, metadata } = params
 
         if (content) {
             throw new Error('Account link genesis cannot have content')
         }
-        if (!owners) {
+        if (!metadata) {
+            throw new Error('Metadata must be specified')
+        }
+        if (!metadata.owners) {
             throw new Error('Owner must be specified')
         }
-        if (owners.length !== 1) {
+        if (metadata.owners.length !== 1) {
             throw new Error('Exactly one owner must be specified')
         }
-        const [address, chainId] = owners[0].split('@') // eslint-disable-line @typescript-eslint/no-unused-vars
+        const [address, chainId] = metadata.owners[0].split('@') // eslint-disable-line @typescript-eslint/no-unused-vars
         if (!chainId) {
             throw new Error('Chain ID must be specified according to CAIP-10')
         }
@@ -69,7 +69,7 @@ export class AccountLinkDoctype extends Doctype {
         }
         return {
             doctype: DOCTYPE,
-            owners,
+            header: metadata,
         }
     }
 

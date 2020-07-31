@@ -3,7 +3,7 @@ import IdentityWallet from 'identity-wallet'
 import tmp from 'tmp-promise'
 import Ipfs from 'ipfs'
 import { ThreeIdDoctype } from "@ceramicnetwork/ceramic-doctype-three-id"
-import { DoctypeUtils, AnchorStatus } from "@ceramicnetwork/ceramic-common"
+import { AnchorStatus } from "@ceramicnetwork/ceramic-common"
 
 jest.mock('../store/level-state-store')
 
@@ -19,7 +19,7 @@ const genIpfsConf = (path, id): any => {
 }
 
 describe('Ceramic integration', () => {
-  jest.setTimeout(25000)
+  jest.setTimeout(20000)
   let ipfs1: Ipfs;
   let ipfs2: Ipfs;
   let ipfs3: Ipfs;
@@ -71,10 +71,10 @@ describe('Ceramic integration', () => {
     await ceramic1.setDIDProvider(idWallet.get3idProvider())
     const owner = ceramic1.context.user.publicKeys.managementKey
     const ceramic2 = await Ceramic.create(ipfs2)
-    const doctype1 = await ceramic1.createDocument(DOCTYPE_3ID, { content: { test: 456 }, owners: [owner] })
+    const doctype1 = await ceramic1.createDocument(DOCTYPE_3ID, { content: { test: 456 }, metadata: { owners: [owner] } })
     // we can't load document from id since nodes are not connected
     // so we won't find the genesis object from it's CID
-    const doctype2 = await ceramic2.createDocument(DOCTYPE_3ID, { content: { test: 456 }, owners: [owner] },{ applyOnly: true })
+    const doctype2 = await ceramic2.createDocument(DOCTYPE_3ID, { content: { test: 456 }, metadata: { owners: [owner] } },{ applyOnly: true })
     expect(doctype1.content).toEqual(doctype2.content)
     expect(doctype2.state).toEqual(expect.objectContaining({ anchorStatus: 0, content: { test: 456 } }))
     await ceramic1.close()
@@ -93,8 +93,8 @@ describe('Ceramic integration', () => {
     const ceramic2 = await Ceramic.create(ipfs2)
     const ceramic3 = await Ceramic.create(ipfs3)
     // ceramic node 2 shouldn't need to have the document open in order to forward the message
-    const doctype1 = await ceramic1.createDocument(DOCTYPE_3ID, { content: { test: 789 }, owners: [owner] }, { applyOnly: true })
-    const doctype3 = await ceramic3.createDocument(DOCTYPE_3ID, { content: { test: 789 }, owners: [owner] }, { applyOnly: true })
+    const doctype1 = await ceramic1.createDocument(DOCTYPE_3ID, { content: { test: 789 }, metadata: { owners: [owner] } }, { applyOnly: true })
+    const doctype3 = await ceramic3.createDocument(DOCTYPE_3ID, { content: { test: 789 }, metadata: { owners: [owner] } }, { applyOnly: true })
     expect(doctype3.content).toEqual(doctype1.content)
     expect(doctype3.state).toEqual(doctype1.state)
     await ceramic1.close()
@@ -114,13 +114,13 @@ describe('Ceramic integration', () => {
     const ceramic2 = await Ceramic.create(ipfs2)
     const ceramic3 = await Ceramic.create(ipfs3)
     // ceramic node 2 shouldn't need to have the document open in order to forward the message
-    const doctype1 = await ceramic1.createDocument<ThreeIdDoctype>(DOCTYPE_3ID, { content: { test: 321 }, owners: [owner] })
+    const doctype1 = await ceramic1.createDocument<ThreeIdDoctype>(DOCTYPE_3ID, { content: { test: 321 }, metadata: { owners: [owner] } })
     while (doctype1.state.anchorStatus !== AnchorStatus.ANCHORED) {
       // wait to propagate
       await new Promise(resolve => setTimeout(resolve, 1000))
     }
 
-    const doctype3 = await ceramic3.createDocument<ThreeIdDoctype>(DOCTYPE_3ID, { content: { test: 321 }, owners: [owner] }, { applyOnly: true })
+    const doctype3 = await ceramic3.createDocument<ThreeIdDoctype>(DOCTYPE_3ID, { content: { test: 321 }, metadata: { owners: [owner] } }, { applyOnly: true })
     expect(doctype3.content).toEqual(doctype1.content)
     expect(doctype3.state).toEqual(doctype1.state)
 
@@ -142,65 +142,5 @@ describe('Ceramic integration', () => {
     await ceramic1.close()
     await ceramic2.close()
     await ceramic3.close()
-  })
-
-  it('can load the previous document version', async () => {
-    const ceramic = await Ceramic.create(ipfs1)
-    await ceramic.setDIDProvider(idWallet.get3idProvider())
-    const owner = ceramic.context.user.publicKeys.managementKey
-
-    const docOg = await ceramic.createDocument<ThreeIdDoctype>(DOCTYPE_3ID, { content: { test: 321 }, owners: [owner] })
-
-    // wait for anchor (new version)
-    await new Promise(resolve => {
-      docOg.on('change', () => {
-        resolve()
-      })
-    })
-
-    expect(docOg.state.log.length).toEqual(2)
-    expect(docOg.content).toEqual({ test: 321 })
-    expect(docOg.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
-
-    const stateOg = docOg.state
-
-    await docOg.change({ content: { test: 'abcde' } })
-
-    // wait for anchor (new version)
-    await new Promise(resolve => {
-      docOg.on('change', () => {
-        resolve()
-      })
-    })
-
-    expect(docOg.state.log.length).toEqual(4)
-    expect(docOg.content).toEqual({ test: 'abcde' })
-    expect(docOg.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
-
-    let docV0Id = DoctypeUtils.createDocIdFromBase(docOg.id, docOg.state.log[1].toString())
-    const docV0 = await ceramic.loadDocument<ThreeIdDoctype>(docV0Id)
-
-    expect(docV0.state).toEqual(stateOg)
-    expect(docV0.content).toEqual({ test: 321 })
-    expect(docV0.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
-
-    // try to call doctype.change
-    try {
-      await docV0.change({ content: { test: 'fghj' }, owners: docV0.owners })
-      throw new Error('Should not be able to fetch not anchored version')
-    } catch (e) {
-      expect(e.message).toEqual('The version of the document is readonly. Checkout the latest HEAD in order to update.')
-    }
-
-    // try to checkout not anchored version
-    try {
-      docV0Id = DoctypeUtils.createDocIdFromBase(docOg.id, docOg.state.log[2].toString())
-      await ceramic.loadDocument<ThreeIdDoctype>(docV0Id)
-      throw new Error('Should not be able to fetch not anchored version')
-    } catch (e) {
-      expect(e.message).toContain('No anchor record for version')
-    }
-
-    await ceramic.close()
   })
 })

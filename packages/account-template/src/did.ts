@@ -32,7 +32,7 @@ class DIDDocument {
         publicKeys: {
           signing: keys.signingKey, encryption: keys.encryptionKey
         },
-      }, owners: [keys.managementKey]
+      }, metadata: { owners: [keys.managementKey] }
     })
     return new DIDDocument(ceramicDoc, ceramic)
   }

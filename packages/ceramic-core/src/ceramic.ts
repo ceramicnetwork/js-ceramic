@@ -11,18 +11,19 @@ import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 
 import { CeramicApi, DIDProvider, PinApi } from "@ceramicnetwork/ceramic-common"
 import { Doctype, DoctypeHandler, DocOpts } from "@ceramicnetwork/ceramic-common"
-import { Context } from "@ceramicnetwork/ceramic-common"
+import { Context, DoctypeUtils, DocParams } from "@ceramicnetwork/ceramic-common"
 import { Resolver } from "did-resolver"
 
 import { TileDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-tile"
 import { ThreeIdDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-three-id"
 import { AccountLinkDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-account-link"
-import { DoctypeUtils } from "@ceramicnetwork/ceramic-common/lib"
 
 // This is temporary until we handle DIDs and in particular 3IDs better
 const gen3IDgenesis = (pubkeys: any): any => {
   return {
-    owners: [pubkeys.managementKey],
+    metadata: {
+      owners: [pubkeys.managementKey],
+    },
     content: {
       publicKeys: {
         signing: pubkeys.signingKey,
@@ -32,6 +33,9 @@ const gen3IDgenesis = (pubkeys: any): any => {
   }
 }
 
+/**
+ * Initial Ceramic configuration
+ */
 export interface CeramicConfig {
   ethereumRpcUrl?: string;
   anchorServiceUrl?: string;
@@ -39,6 +43,8 @@ export interface CeramicConfig {
 
   didResolver?: Resolver;
   didProvider?: DIDProvider;
+
+  validateDocs?: boolean;
 }
 
 /**
@@ -51,7 +57,7 @@ class Ceramic implements CeramicApi {
   public readonly pin: PinApi
   public readonly context: Context
 
-  constructor (public dispatcher: Dispatcher, public stateStore: StateStore, context: Context) {
+  constructor (public dispatcher: Dispatcher, public stateStore: StateStore, context: Context, private _validateDocs: boolean = true) {
     this._docmap = {}
     this._doctypeHandlers = {
       '3id': new ThreeIdDoctypeHandler(),
@@ -109,7 +115,7 @@ class Ceramic implements CeramicApi {
       anchorService,
     }
 
-    const ceramic = new Ceramic(dispatcher, stateStore, context)
+    const ceramic = new Ceramic(dispatcher, stateStore, context, config.validateDocs)
     if (config.didProvider) {
       await ceramic.setDIDProvider(config.didProvider)
     }
@@ -146,8 +152,8 @@ class Ceramic implements CeramicApi {
 
     if (!this.context.user.DID) {
       // patch create did document for now
-      const { owners, content } = gen3IDgenesis(this.context.user.publicKeys)
-      const doc = await this._createDoc('3id', { content, owners })
+      const { metadata, content } = gen3IDgenesis(this.context.user.publicKeys)
+      const doc = await this._createDoc('3id', { content, metadata })
       this.context.user.DID = 'did:3:' + DoctypeUtils.getGenesis(doc.id)
     }
   }
@@ -179,8 +185,9 @@ class Ceramic implements CeramicApi {
    * @param opts - Initialization options
    */
   async applyRecord<T extends Doctype>(docId: string, record: object, opts?: DocOpts): Promise<T> {
-    const doc = await this._loadDoc(docId, {})
-    await doc.applyRecord(record, opts)
+    const doc = await this._loadDoc(docId, opts)
+
+    await doc.applyRecord(record, opts, this._validateDocs)
     return doc.doctype as T
   }
 
@@ -202,10 +209,10 @@ class Ceramic implements CeramicApi {
    * @param opts - Initialization options
    * @private
    */
-  async _createDoc(doctype: string, params: object, opts: DocOpts = {}): Promise<Document> {
+  async _createDoc(doctype: string, params: DocParams, opts: DocOpts = {}): Promise<Document> {
     const doctypeHandler = this._doctypeHandlers[doctype]
 
-    const doc = await Document.create(params, doctypeHandler, this.dispatcher, this.stateStore, this.context, opts);
+    const doc = await Document.create(params, doctypeHandler, this.dispatcher, this.stateStore, this.context, opts, this._validateDocs);
     const normalizedId = DoctypeUtils.normalizeDocId(doc.id)
     if (!this._docmap[normalizedId]) {
       this._docmap[normalizedId] = doc
@@ -230,7 +237,7 @@ class Ceramic implements CeramicApi {
    * @private
    */
   async _createDocFromGenesis(genesis: any, opts: DocOpts = {}): Promise<Document> {
-    const doc = await Document.createFromGenesis(genesis, this.findHandler.bind(this), this.dispatcher, this.stateStore, this.context, opts);
+    const doc = await Document.createFromGenesis(genesis, this.findHandler.bind(this), this.dispatcher, this.stateStore, this.context, opts, this._validateDocs);
     const normalizedId = DoctypeUtils.normalizeDocId(doc.id)
     if (!this._docmap[normalizedId]) {
       this._docmap[normalizedId] = doc

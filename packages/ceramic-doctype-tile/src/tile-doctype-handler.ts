@@ -73,9 +73,11 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
         // TODO - verify genesis record
         return {
             doctype: DOCTYPE,
-            owners: record.owners,
-            content: record.content,
-            nextContent: null,
+            content: record.data,
+            metadata: record.header,
+            next: {
+                content: null,
+            },
             signature: SignatureStatus.SIGNED,
             anchorStatus: AnchorStatus.NOT_REQUESTED,
             log: [cid]
@@ -100,7 +102,9 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
             ...state,
             signature: SignatureStatus.SIGNED,
             anchorStatus: AnchorStatus.NOT_REQUESTED,
-            nextContent: jsonpatch.applyPatch(state.content, record.content).newDocument
+            next: {
+                content: jsonpatch.applyPatch(state.content, record.data).newDocument,
+            }
         }
     }
 
@@ -115,9 +119,9 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
     async _applyAnchor(record: AnchorRecord, proof: AnchorProof, cid: CID, state: DocState): Promise<DocState> {
         state.log.push(cid)
         let content = state.content
-        if (state.nextContent) {
-            content = state.nextContent
-            delete state.nextContent
+        if (state.next?.content) {
+            content = state.next.content
+            delete state.next.content
         }
         return {
             ...state, content, anchorStatus: AnchorStatus.ANCHORED, anchorProof: proof,
@@ -132,20 +136,20 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
      */
     async _verifyRecordSignature(record: any, context: Context): Promise<void> {
         // reconstruct jwt
-        const { header, signature } = record
-        delete record.header
+        const { signedHeader, signature } = record
+        delete record.signedHeader
         delete record.signature
         let payload = Buffer.from(JSON.stringify({
             doctype: record.doctype,
-            owners: record.owners,
-            content: record.content,
+            data: record.data,
+            header: record.header,
             unique: record.unique || undefined,
             prev: record.prev ? { '/': record.prev.toString() } : undefined,
             id: record.id ? { '/': record.id.toString() } : undefined,
             iss: record.iss
         })).toString('base64')
         payload = payload.replace(/=/g, '')
-        const jwt = [header, payload, signature].join('.')
+        const jwt = [signedHeader, payload, signature].join('.')
         try {
             await this.verifyJWT(jwt, { resolver: context.resolver })
         } catch (e) {

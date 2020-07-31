@@ -144,10 +144,14 @@ Object {
       "version": 1,
     },
   ],
-  "nextOwners": undefined,
-  "owners": Array [
-    "0x123",
-  ],
+  "metadata": Object {
+    "owners": Array [
+      "0x123",
+    ],
+  },
+  "next": Object {
+    "owners": undefined,
+  },
   "signature": 2,
 }
 `;
@@ -206,10 +210,14 @@ Object {
       "version": 1,
     },
   ],
-  "nextContent": null,
-  "owners": Array [
-    "0x123",
-  ],
+  "metadata": Object {
+    "owners": Array [
+      "0x123",
+    ],
+  },
+  "next": Object {
+    "content": null,
+  },
   "signature": 0,
 }
 `;
@@ -312,16 +320,20 @@ Object {
       "version": 1,
     },
   ],
-  "nextContent": Object {
-    "other": "data",
-    "publicKeys": Object {
-      "test": "0xabc",
-    },
+  "metadata": Object {
+    "owners": Array [
+      "0x123",
+    ],
   },
-  "nextOwners": undefined,
-  "owners": Array [
-    "0x123",
-  ],
+  "next": Object {
+    "content": Object {
+      "other": "data",
+      "publicKeys": Object {
+        "test": "0xabc",
+      },
+    },
+    "owners": undefined,
+  },
   "signature": 2,
 }
 `;

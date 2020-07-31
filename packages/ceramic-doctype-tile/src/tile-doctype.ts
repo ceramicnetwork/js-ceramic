@@ -3,7 +3,7 @@ import jsonpatch from 'fast-json-patch'
 import { encode as base64Encode } from '@ethersproject/base64'
 import { randomBytes } from '@ethersproject/random'
 
-import { Doctype, DoctypeConstructor, DoctypeStatic, DocOpts } from "@ceramicnetwork/ceramic-common"
+import { Doctype, DoctypeConstructor, DoctypeStatic, DocOpts, DocParams } from "@ceramicnetwork/ceramic-common"
 import { Context } from "@ceramicnetwork/ceramic-common"
 import { User } from "@ceramicnetwork/ceramic-common"
 
@@ -12,9 +12,8 @@ const DOCTYPE = 'tile'
 /**
  * Tile doctype parameters
  */
-export interface TileParams {
+export interface TileParams extends DocParams {
     content: object;
-    owners?: Array<string>;
 }
 
 /**
@@ -51,7 +50,7 @@ export class TileDoctype extends Doctype {
 
         const { content, owners } = params
         const record = await TileDoctype.makeGenesis({ content, owners }, context, opts)
-        return context.api.createDocumentFromGenesis(record, opts)
+        return context.api.createDocumentFromGenesis<TileDoctype>(record, opts)
     }
 
     /**
@@ -60,24 +59,25 @@ export class TileDoctype extends Doctype {
      * @param context - Ceramic context
      * @param opts - Initialization options
      */
-    static async makeGenesis(params: Record<string, any>, context?: Context, opts: DocOpts = {}): Promise<Record<string, any>> {
+    static async makeGenesis(params: DocParams, context?: Context, opts: DocOpts = {}): Promise<Record<string, any>> {
         if (!context.user) {
             throw new Error('No user authenticated')
         }
 
-        let { owners } = params
-        const { content } = params
-
-        if (!owners) {
-            owners = [context.user.DID]
-        }
+        const metadata = params.metadata? params.metadata : { owners: [] }
 
         let unique: string
-        if (opts.isUnique) {
+        if (metadata.isUnique) {
             unique = base64Encode(randomBytes(12))
         }
 
-        const record = { doctype: DOCTYPE, owners, content, unique }
+        const { owners } = metadata
+        if (!owners) {
+            metadata.owners = [context.user.DID]
+        }
+
+        const { content } = params
+        const record = { doctype: DOCTYPE, data: content, header: metadata, unique }
         return TileDoctype._signRecord(record, context.user)
     }
 
@@ -93,7 +93,7 @@ export class TileDoctype extends Doctype {
             throw new Error('No user authenticated')
         }
         const patch = jsonpatch.compare(doctype.content, newContent)
-        const record = { owners: doctype.owners, content: patch, prev: doctype.head, id: doctype.state.log[0] }
+        const record = { data: patch, header: doctype.metadata, prev: doctype.head, id: doctype.state.log[0] }
         return TileDoctype._signRecord(record, user)
     }
 
@@ -120,14 +120,14 @@ export class TileDoctype extends Doctype {
             record.id = { '/': tmpId.toString() }
         }
         const jwt = await user.sign(record)
-        const [header, payload, signature] = jwt.split('.') // eslint-disable-line @typescript-eslint/no-unused-vars
+        const [signedHeader, payload, signature] = jwt.split('.') // eslint-disable-line @typescript-eslint/no-unused-vars
         if (tmpCID) {
             record.prev = tmpCID
         }
         if (tmpId) {
             record.id = tmpId
         }
-        return { ...record, header, signature }
+        return { ...record, signedHeader, signature }
     }
 
 }

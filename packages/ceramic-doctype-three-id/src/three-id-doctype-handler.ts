@@ -72,9 +72,11 @@ export class ThreeIdDoctypeHandler implements DoctypeHandler<ThreeIdDoctype> {
         if (record.doctype === DOCTYPE) {
             return {
                 doctype: DOCTYPE,
-                owners: record.owners,
+                metadata: record.header,
                 content: record.content,
-                nextContent: null,
+                next: {
+                    content: null,
+                },
                 signature: SignatureStatus.GENESIS,
                 anchorStatus: AnchorStatus.NOT_REQUESTED,
                 log: [cid]
@@ -85,13 +87,17 @@ export class ThreeIdDoctypeHandler implements DoctypeHandler<ThreeIdDoctype> {
             const encryptionKey = record.publicKey.find((pk: { id: string }) => pk.id === 'did:3:GENESIS#encryptionKey').publicKeyBase64
             return {
                 doctype: DOCTYPE,
-                owners: [managementKey],
+                metadata: {
+                    owners: [managementKey],
+                },
                 content: {
                     publicKeys: {
                         signing: signingKey, encryption: encryptionKey
                     }
                 },
-                nextContent: null,
+                next: {
+                    content: null,
+                },
                 signature: SignatureStatus.GENESIS,
                 anchorStatus: AnchorStatus.NOT_REQUESTED,
                 log: [cid]
@@ -110,12 +116,12 @@ export class ThreeIdDoctypeHandler implements DoctypeHandler<ThreeIdDoctype> {
     async _applySigned(record: any, cid: CID, state: DocState): Promise<DocState> {
         if (!record.id.equals(state.log[0])) throw new Error(`Invalid docId ${record.id}, expected ${state.log[0]}`)
         // reconstruct jwt
-        const { header, signature } = record
-        delete record.header
+        const { signedHeader, signature } = record
+        delete record.signedHeader
         delete record.signature
         let payload = Buffer.from(JSON.stringify({
             doctype: record.doctype,
-            owners: record.owners,
+            header: record.header,
             content: record.content,
             prev: { '/': record.prev.toString() },
             id: { '/': record.id.toString() },
@@ -123,10 +129,10 @@ export class ThreeIdDoctypeHandler implements DoctypeHandler<ThreeIdDoctype> {
         })).toString('base64')
 
         payload = payload.replace(/=/g, '')
-        const jwt = [header, payload, signature].join('.')
+        const jwt = [signedHeader, payload, signature].join('.')
         try {
             // verify the jwt with a fake DID resolver that uses the current state of the 3ID
-            const didDoc = wrapDocument({ publicKeys: { signing: state.owners[0], encryption: '' } }, 'did:fake:123')
+            const didDoc = wrapDocument({ publicKeys: { signing: state.metadata.owners[0], encryption: '' } }, 'did:fake:123')
             await this.verifyJWT(jwt, { resolver: { resolve: async (): Promise<DIDDocument> => didDoc } })
         } catch (e) {
             throw new Error('Invalid signature for signed record:' + e)
@@ -136,8 +142,10 @@ export class ThreeIdDoctypeHandler implements DoctypeHandler<ThreeIdDoctype> {
             ...state,
             signature: SignatureStatus.SIGNED,
             anchorStatus: AnchorStatus.NOT_REQUESTED,
-            nextContent: jsonpatch.applyPatch(state.content, record.content).newDocument,
-            nextOwners: record.owners
+            next: {
+                owners: record.owners,
+                content: jsonpatch.applyPatch(state.content, record.content).newDocument,
+            },
         }
     }
 
@@ -161,18 +169,20 @@ export class ThreeIdDoctypeHandler implements DoctypeHandler<ThreeIdDoctype> {
     async _applyAnchor(record: AnchorRecord, proof: AnchorProof, cid: CID, state: DocState): Promise<DocState> {
         state.log.push(cid)
         let content = state.content
-        if (state.nextContent) {
-            content = state.nextContent
-            delete state.nextContent
+        if (state.next?.content) {
+            content = state.next.content
+            delete state.next.content
         }
-        let owners = state.owners
-        if (state.nextOwners) {
-            owners = state.nextOwners
-            delete state.nextOwners
+        let owners = state.metadata?.owners
+        if (state.next?.owners) {
+            owners = state.next.owners
+            delete state.next.owners
         }
         return {
             ...state,
-            owners,
+            metadata: {
+                owners
+            },
             content,
             anchorStatus: AnchorStatus.ANCHORED,
             anchorProof: proof,

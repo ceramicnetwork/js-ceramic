@@ -15,7 +15,7 @@ class Keychain {
       "auth-data": [],
       "legacy-data": []
     }
-    const ceramicDoc = await ceramic.createDocument<TileDoctype>('tile', { content: genesisContent, owners: [owner] }, { isUnique: true })
+    const ceramicDoc = await ceramic.createDocument<TileDoctype>('tile', { content: genesisContent, metadata: { owners: [owner], isUnique: true } })
     return new Keychain(ceramicDoc, ceramic)
   }
 }
@@ -25,7 +25,7 @@ class Profile {
 
   static async build(owner: string, ceramic: CeramicApi): Promise<Profile> {
     const genesisContent: Record<string, any> = {}
-    const ceramicDoc = await ceramic.createDocument<TileDoctype>('tile', { content: genesisContent, owners: [owner] }, { isUnique: true })
+    const ceramicDoc = await ceramic.createDocument<TileDoctype>('tile', { content: genesisContent, metadata: { owners: [owner], isUnique: true } })
     return new Profile(ceramicDoc, ceramic)
   }
 }
@@ -35,7 +35,7 @@ class Claims {
 
   static async build(owner: string, ceramic: CeramicApi): Promise<Claims> {
     const genesisContent: string[] = []
-    const ceramicDoc = await ceramic.createDocument<TileDoctype>('tile', { content: genesisContent, owners: [owner] }, { isUnique: true })
+    const ceramicDoc = await ceramic.createDocument<TileDoctype>('tile', { content: genesisContent, metadata: { owners: [owner] }, isUnique: true })
     return new Claims(ceramicDoc, ceramic)
   }
 }
@@ -45,7 +45,7 @@ class Connections {
 
   static async build(owner: string, ceramic: CeramicApi): Promise<Connections> {
     const genesisContent: string[] = []
-    const ceramicDoc = await ceramic.createDocument<TileDoctype>('tile', { content: genesisContent, owners: [owner] }, { isUnique: true })
+    const ceramicDoc = await ceramic.createDocument<TileDoctype>('tile', { content: genesisContent, metadata: { owners: [owner], isUnique: true } })
     return new Connections(ceramicDoc, ceramic)
   }
 }
@@ -55,7 +55,7 @@ class Sources {
 
   static async build(owner: string, ceramic: CeramicApi): Promise<Sources> {
     const genesisContent: string[] = []
-    const ceramicDoc = await ceramic.createDocument<TileDoctype>('tile', { content: genesisContent, owners: [owner] }, { isUnique: true })
+    const ceramicDoc = await ceramic.createDocument<TileDoctype>('tile', { content: genesisContent, metadata: { owners: [owner], isUnique: true } })
     return new Sources(ceramicDoc, ceramic)
   }
 }
@@ -65,7 +65,7 @@ class Services {
 
   static async build(owner: string, ceramic: CeramicApi): Promise<Services> {
     const genesisContent: any[] = []
-    const ceramicDoc = await ceramic.createDocument<TileDoctype>('tile', { content: genesisContent, owners: [owner] }, { isUnique: true })
+    const ceramicDoc = await ceramic.createDocument<TileDoctype>('tile', { content: genesisContent, metadata: { owners: [owner] }, isUnique: true })
     return new Services(ceramicDoc, ceramic)
   }
 }

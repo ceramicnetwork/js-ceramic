@@ -1,7 +1,6 @@
-import { Doctype, DoctypeUtils, DocOpts } from "@ceramicnetwork/ceramic-common"
+import { Doctype, DoctypeUtils, DocState, DocOpts } from "@ceramicnetwork/ceramic-common"
 
 import { fetchJson } from './utils'
-import { DocState } from "@ceramicnetwork/ceramic-common/lib"
 
 class Document extends Doctype {
 
@@ -21,7 +20,6 @@ class Document extends Doctype {
       doctype,
       docOpts: {
         applyOnly: opts.applyOnly,
-        isUnique: opts.isUnique
       }
     })
     return new Document(DoctypeUtils.deserializeState(state), apiUrl)
@@ -70,7 +68,7 @@ class Document extends Doctype {
     }
   }
 
-  close() {
+  close(): void {
     clearInterval(this._syncHandle)
   }
 }
