@@ -37,10 +37,10 @@ class CeramicClient implements CeramicApi {
         const result = await fetchJson(url)
         const { pinnedDocIds } = result
         return {
-          [Symbol.asyncIterator](): any {
+          [Symbol.asyncIterator](): AsyncIterator<string, any, undefined> {
             let index = 0
             return {
-              next(): any {
+              next(): Promise<IteratorResult<string>> {
                 if (index === pinnedDocIds.length) {
                   return Promise.resolve({ value: null, done: true });
                 }
