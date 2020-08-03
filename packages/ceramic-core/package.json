@@ -40,7 +40,7 @@
     "cross-fetch": "^3.0.5",
     "did-resolver": "^2.0.1",
     "fast-json-patch": "^3.0.0-1",
-    "level-ts": "^1.12.2",
+    "level-ts": "^2.0.5",
     "lodash.clonedeep": "^4.5.0",
     "p-queue": "^6.2.1",
     "typestub-multihashes": "^0.0.4"
