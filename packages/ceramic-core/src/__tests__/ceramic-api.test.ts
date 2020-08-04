@@ -85,8 +85,17 @@ describe('Ceramic API', () => {
 
     // try to call doctype.change
     try {
-      await docV0.change({ content: { test: 'fghj' }, owners: docV0.owners })
-      throw new Error('Should not be able to fetch not anchored version')
+      await docV0.change({ content: { test: 'fghj' }, metadata: { owners: docV0.owners } })
+      throw new Error('Should not be able to update version')
+    } catch (e) {
+      expect(e.message).toEqual('The version of the document is readonly. Checkout the latest HEAD in order to update.')
+    }
+
+    // try to call Ceramic API directly
+    try {
+      const updateRecord = await TileDoctype._makeRecord(docV0, ceramic.context.user, { content: { test: 'fghj' } })
+      await ceramic.context.api.applyRecord(docV0Id, updateRecord)
+      throw new Error('Should not be able to update version')
     } catch (e) {
       expect(e.message).toEqual('The version of the document is readonly. Checkout the latest HEAD in order to update.')
     }
@@ -137,10 +146,10 @@ describe('Ceramic API', () => {
 
     const tileDocParams: TileParams = {
       metadata: {
-        schema: schemaDoc.id
+        schema: schemaDoc.id,
+        owners: [owner]
       },
-      content: { a: "test" },
-      owners: [owner]
+      content: { a: "test" }
     }
 
     await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, tileDocParams)
@@ -158,15 +167,82 @@ describe('Ceramic API', () => {
 
     const tileDocParams: TileParams = {
       metadata: {
-        schema: schemaDoc.id
+        schema: schemaDoc.id,
+        owners: [owner]
       },
       content: { a: 1 },
-      owners: [owner]
     }
 
     await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, tileDocParams)
 
     await new Promise(resolve => setTimeout(resolve, 1000)) // wait to propagate
+    await ceramic.close()
+  })
+
+  it('can update schema if content is valid', async () => {
+    const ceramic = await Ceramic.create(ipfs)
+    await ceramic.setDIDProvider(idWallet.get3idProvider())
+    const owner = ceramic.context.user.publicKeys.managementKey
+
+    const tileDocParams: TileParams = {
+      metadata: {
+        owners: [owner]
+      },
+      content: { a: 'x' },
+    }
+
+    const doctype = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, tileDocParams)
+    const schemaDoc = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, {
+      content: stringMapSchema,
+      metadata: {
+        owners: [owner]
+      }
+    })
+
+    await doctype.change({
+      metadata: {
+        owners: [owner], schema: schemaDoc.id
+      }
+    })
+
+    expect(doctype.content).toEqual({ a: 'x' })
+
+    await new Promise(resolve => setTimeout(resolve, 1000)) // wait to propagate
+    await ceramic.close()
+  })
+
+  it('cannot update schema if content is not valid', async () => {
+    const ceramic = await Ceramic.create(ipfs)
+    await ceramic.setDIDProvider(idWallet.get3idProvider())
+    const owner = ceramic.context.user.publicKeys.managementKey
+
+    const tileDocParams: TileParams = {
+      metadata: {
+        owners: [owner]
+      },
+      content: { a: 1 },
+    }
+
+    const docType = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, tileDocParams)
+    const schemaDoc = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, {
+      content: stringMapSchema,
+      metadata: {
+        owners: [owner]
+      }
+    })
+
+    try {
+      await docType.change({
+        metadata: {
+          owners: [owner],
+          schema: schemaDoc.id
+        }
+      })
+      throw new Error('Should not be able to update the document with invalid content')
+    } catch (e) {
+      expect(e.message).toEqual('Validation Error: data[\'a\'] should be string')
+    }
+
     await ceramic.close()
   })
 })

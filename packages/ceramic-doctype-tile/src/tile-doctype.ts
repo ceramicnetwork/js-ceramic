@@ -13,7 +13,7 @@ const DOCTYPE = 'tile'
  * Tile doctype parameters
  */
 export interface TileParams extends DocParams {
-    content: object;
+    content?: object;
 }
 
 /**
@@ -32,7 +32,7 @@ export class TileDoctype extends Doctype {
             throw new Error('No user authenticated')
         }
 
-        const updateRecord = await TileDoctype._makeRecord(this, this.context.user, params.content)
+        const updateRecord = await TileDoctype._makeRecord(this, this.context.user, params.content, params.metadata?.schema)
         const updated = await this.context.api.applyRecord(this.id, updateRecord, opts)
         this.state = updated.state
     }
@@ -48,8 +48,8 @@ export class TileDoctype extends Doctype {
             throw new Error('No user authenticated')
         }
 
-        const { content, owners } = params
-        const record = await TileDoctype.makeGenesis({ content, owners }, context, opts)
+        const { content, metadata } = params
+        const record = await TileDoctype.makeGenesis({ content, metadata }, context, opts)
         return context.api.createDocumentFromGenesis<TileDoctype>(record, opts)
     }
 
@@ -86,14 +86,25 @@ export class TileDoctype extends Doctype {
      * @param doctype - Tile doctype instance
      * @param user - User instance
      * @param newContent - New context
+     * @param schema - New schema ID
      * @private
      */
-    static async _makeRecord(doctype: Doctype, user: User, newContent: any): Promise<Doctype> {
+    static async _makeRecord(doctype: Doctype, user: User, newContent: any, schema?: string): Promise<Doctype> {
         if (!user) {
             throw new Error('No user authenticated')
         }
+
+        const header = doctype.metadata
+        if (schema) {
+            header.schema = schema
+        }
+
+        if (newContent == null) {
+            newContent = doctype.content
+        }
+
         const patch = jsonpatch.compare(doctype.content, newContent)
-        const record = { data: patch, header: doctype.metadata, prev: doctype.head, id: doctype.state.log[0] }
+        const record = { data: patch, header, prev: doctype.head, id: doctype.state.log[0] }
         return TileDoctype._signRecord(record, user)
     }
 

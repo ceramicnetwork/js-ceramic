@@ -1,6 +1,6 @@
 import { fetchJson } from "./utils"
 import Document from './document'
-import { Doctype, DoctypeHandler, DocOpts } from "@ceramicnetwork/ceramic-common"
+import { Doctype, DoctypeHandler, DocOpts, DocParams } from "@ceramicnetwork/ceramic-common"
 import { CeramicApi, PinApi, DoctypeUtils } from "@ceramicnetwork/ceramic-common"
 
 const CERAMIC_HOST = 'http://localhost:7007'
@@ -53,7 +53,7 @@ class CeramicClient implements CeramicApi {
     }
   }
 
-  async createDocument<T extends Doctype>(doctype: string, params: object, opts?: DocOpts): Promise<T> {
+  async createDocument<T extends Doctype>(doctype: string, params: DocParams, opts?: DocOpts): Promise<T> {
     const doc = await Document.create(this._apiUrl, doctype, params, opts)
     const normalizedId = DoctypeUtils.normalizeDocId(doc.id)
     if (!this._docmap[normalizedId]) {

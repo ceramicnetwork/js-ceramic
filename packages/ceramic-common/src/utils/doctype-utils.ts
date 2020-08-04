@@ -160,6 +160,14 @@ export class DoctypeUtils {
 
     /**
      * Validates model against JSON-Schema
+     * @param schema - Doctype schema
+     */
+    static isSchemaValid(schema: object): boolean {
+        return this.validator.validateSchema(schema)
+    }
+
+    /**
+     * Validates model against JSON-Schema
      * @param content - Doctype content
      * @param schema - Doctype schema
      */

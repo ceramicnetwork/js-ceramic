@@ -7,7 +7,7 @@ const DOCTYPE = 'account-link'
  * AccountLink parameters
  */
 export interface AccountLinkParams extends DocParams {
-    content: object;
+    content?: object;
 }
 
 /**
@@ -22,8 +22,8 @@ export class AccountLinkDoctype extends Doctype {
      * @param opts - Initialization options
      */
     async change(params: AccountLinkParams, opts?: DocOpts): Promise<void> {
-        const { content } = params
-        const updateRecord = await AccountLinkDoctype._makeRecord(this, content)
+        const { content, metadata } = params
+        const updateRecord = await AccountLinkDoctype._makeRecord(this, content, metadata?.schema)
         const updated = await this.context.api.applyRecord(this.id, updateRecord, opts)
         this.state = updated.state
     }
@@ -77,9 +77,17 @@ export class AccountLinkDoctype extends Doctype {
      * Creates change record
      * @param doctype - AccountLink doctype instance
      * @param newContent - Change content
+     * @param newSchema - Change schema
      * @private
      */
-    static async _makeRecord (doctype: AccountLinkDoctype, newContent: any): Promise<any> {
-        return { content: newContent, prev: doctype.head, id: doctype.state.log[0] }
+    static async _makeRecord (doctype: AccountLinkDoctype, newContent: any, newSchema: string = null): Promise<any> {
+        const { metadata } = doctype
+        if (newSchema) {
+            metadata.schema = newSchema
+        }
+        if (newContent == null) {
+            newContent = doctype.content
+        }
+        return { content: newContent, header: metadata, prev: doctype.head, id: doctype.state.log[0] }
     }
 }

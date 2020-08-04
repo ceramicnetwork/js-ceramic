@@ -52,6 +52,7 @@ describe('Ceramic integration', () => {
 
   it('can propagate update across two connected nodes', async () => {
     await ipfs2.swarm.connect(multaddr1)
+
     const ceramic1 = await Ceramic.create(ipfs1, {
       didProvider: idWallet.get3idProvider(),
     })
@@ -62,11 +63,11 @@ describe('Ceramic integration', () => {
     expect(doctype1.state).toEqual(doctype2.state)
     await ceramic1.close()
     await ceramic2.close()
+
+    await ipfs2.swarm.disconnect(multaddr1)
   })
 
   it('won\'t propagate update across two disconnected nodes', async () => {
-    await ipfs2.swarm.disconnect(multaddr1)
-    await ipfs2.swarm.disconnect(multaddr3)
     const ceramic1 = await Ceramic.create(ipfs1)
     await ceramic1.setDIDProvider(idWallet.get3idProvider())
     const owner = ceramic1.context.user.publicKeys.managementKey
@@ -86,7 +87,7 @@ describe('Ceramic integration', () => {
     // ipfs1 <!-> ipfs3
     await ipfs1.swarm.connect(multaddr2)
     await ipfs2.swarm.connect(multaddr3)
-    await ipfs1.swarm.disconnect(multaddr3)
+
     const ceramic1 = await Ceramic.create(ipfs1)
     await ceramic1.setDIDProvider(idWallet.get3idProvider())
     const owner = ceramic1.context.user.publicKeys.managementKey
@@ -100,6 +101,9 @@ describe('Ceramic integration', () => {
     await ceramic1.close()
     await ceramic2.close()
     await ceramic3.close()
+
+    await ipfs1.swarm.disconnect(multaddr2)
+    await ipfs2.swarm.disconnect(multaddr3)
   })
 
   it('can propagate multiple update across nodes with common connection', async () => {
@@ -107,7 +111,7 @@ describe('Ceramic integration', () => {
     // ipfs1 <!-> ipfs3
     await ipfs1.swarm.connect(multaddr2)
     await ipfs2.swarm.connect(multaddr3)
-    await ipfs1.swarm.disconnect(multaddr3)
+
     const ceramic1 = await Ceramic.create(ipfs1)
     await ceramic1.setDIDProvider(idWallet.get3idProvider())
     const owner = ceramic1.context.user.publicKeys.managementKey
@@ -117,7 +121,7 @@ describe('Ceramic integration', () => {
     const doctype1 = await ceramic1.createDocument<ThreeIdDoctype>(DOCTYPE_3ID, { content: { test: 321 }, metadata: { owners: [owner] } })
     while (doctype1.state.anchorStatus !== AnchorStatus.ANCHORED) {
       // wait to propagate
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      await new Promise(resolve => setTimeout(resolve, 500))
     }
 
     const doctype3 = await ceramic3.createDocument<ThreeIdDoctype>(DOCTYPE_3ID, { content: { test: 321 }, metadata: { owners: [owner] } }, { applyOnly: true })
@@ -142,5 +146,8 @@ describe('Ceramic integration', () => {
     await ceramic1.close()
     await ceramic2.close()
     await ceramic3.close()
+
+    await ipfs1.swarm.disconnect(multaddr2)
+    await ipfs2.swarm.disconnect(multaddr3)
   })
 })
