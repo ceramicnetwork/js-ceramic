@@ -54,7 +54,6 @@ class CeramicClient implements CeramicApi {
   }
 
   async createDocument<T extends Doctype>(doctype: string, params: DocParams, opts?: DocOpts): Promise<T> {
-    console.log('ovo saljem ' + JSON.stringify(params, null, 2))
     const doc = await Document.create(this._apiUrl, doctype, params, opts)
     const normalizedId = DoctypeUtils.normalizeDocId(doc.id)
     if (!this._docmap[normalizedId]) {
