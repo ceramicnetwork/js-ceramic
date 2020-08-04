@@ -37,6 +37,11 @@ const RECORDS = {
         address: '0x25954ef14cebbc9af3d71132489a9cfe87043f20@eip155:1',
         timestamp: 1585919920
       },
+      "header": {
+        "owners": [
+          "0x25954ef14cebbc9af3d71132489a9cfe87043f20@eip155:1"
+        ]
+      },
       id: FAKE_CID_1,
       prev: FAKE_CID_1
     }
