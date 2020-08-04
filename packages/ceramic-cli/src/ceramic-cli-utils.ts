@@ -151,6 +151,7 @@ export default class CeramicCliUtils {
             }
         } catch (e) {
             console.error(e)
+            return
         }
 
         return CeramicCliUtils.createDoc('tile', content, owners, onlyGenesis, isUnique)
@@ -176,6 +177,7 @@ export default class CeramicCliUtils {
             }
         } catch (e) {
             console.error(e)
+            return
         }
 
         return CeramicCliUtils.change(schemaDocId, content, owners, null)
