@@ -1,4 +1,4 @@
-import { Doctype, DoctypeHandler, DocOpts } from "./doctype"
+import { Doctype, DoctypeHandler, DocOpts, DocParams } from "./doctype"
 
 /**
  * Describes Ceramic pinning functionality
@@ -61,7 +61,7 @@ export interface CeramicApi {
      * @param params - Create parameters
      * @param opts - Initialization options
      */
-    createDocument<T extends Doctype>(doctype: string, params: object, opts?: DocOpts): Promise<T>;
+    createDocument<T extends Doctype>(doctype: string, params: DocParams, opts?: DocOpts): Promise<T>;
 
     /**
      * Create Doctype from genesis record

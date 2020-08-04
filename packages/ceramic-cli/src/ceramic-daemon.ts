@@ -30,6 +30,8 @@ interface CreateOpts {
   ethereumRpcUrl?: string;
   anchorServiceUrl?: string;
   stateStorePath?: string;
+
+  validateDocs?: boolean;
 }
 
 interface CliConfig {
@@ -84,20 +86,14 @@ class CeramicDaemon {
 
     const ceramicConfig: CeramicConfig = {}; // get initially from file and override with opts
     if (opts.anchorServiceUrl) {
-      Object.assign(ceramicConfig, {
-        ethereumRpcUrl: opts.ethereumRpcUrl,
-        anchorServiceUrl: opts.anchorServiceUrl,
-      })
+      ceramicConfig.ethereumRpcUrl = opts.ethereumRpcUrl
+      ceramicConfig.anchorServiceUrl = opts.anchorServiceUrl
     } else {
-      Object.assign(ceramicConfig, {
-        anchorServiceUrl: DEFAULT_ANCHOR_SERVICE_URL,
-      })
+      ceramicConfig.anchorServiceUrl = DEFAULT_ANCHOR_SERVICE_URL
     }
 
     if (opts.stateStorePath) {
-      Object.assign(ceramicConfig, {
-        stateStorePath: opts.stateStorePath,
-      })
+      ceramicConfig.stateStorePath = opts.stateStorePath
     }
 
     const ceramic = await Ceramic.create(ipfs, ceramicConfig)
@@ -189,10 +185,9 @@ class CeramicDaemon {
   }
 
   async change (req: Request, res: Response, next: NextFunction): Promise<void> {
-    const { params } = req.body
-    const { content, owners } = params
-    if (!content && !owners) {
-      res.json({ error: 'content or owners required to change document' })
+    const { content, metadata } = req.body
+    if (!content && !metadata?.owners && !metadata?.schema) {
+      res.json({ error: 'content, owners or schema required to change the document' })
       next()
       return
     }
@@ -203,7 +198,7 @@ class CeramicDaemon {
       const doctypeHandler = this.ceramic.findDoctypeHandler(doc.doctype)
       const doctype = new doctypeHandler.doctype(doc.state, this.ceramic.context)
 
-      await doctype.change({ content, owners })
+      await doctype.change({ content, metadata })
       res.json({ docId: doc.id, state: DoctypeUtils.serializeState(doc.state) })
     } catch (e) {
       return next(e)

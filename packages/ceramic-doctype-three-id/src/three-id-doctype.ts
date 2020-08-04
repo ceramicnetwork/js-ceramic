@@ -5,7 +5,7 @@ import {
     DoctypeConstructor,
     DoctypeStatic,
     DocOpts,
-    DocParams, DocMetadata
+    DocParams
 } from "@ceramicnetwork/ceramic-common"
 import { Context } from "@ceramicnetwork/ceramic-common"
 import { User } from "@ceramicnetwork/ceramic-common"
@@ -16,7 +16,7 @@ const DOCTYPE = '3id'
  * ThreeId doctype parameters
  */
 export interface ThreeIdParams extends DocParams {
-    content: object;
+    content?: object;
 }
 
 /**
@@ -31,7 +31,7 @@ export class ThreeIdDoctype extends Doctype {
     async change(params: ThreeIdParams): Promise<void> {
         const { content, metadata } = params
 
-        const updateRecord = await ThreeIdDoctype._makeRecord(this, this.context.user, content, metadata?.owners)
+        const updateRecord = await ThreeIdDoctype._makeRecord(this, this.context.user, content, metadata.owners, metadata.schema)
         const updated = await this.context.api.applyRecord(this.id, updateRecord)
         this.state = updated.state
     }
@@ -43,12 +43,12 @@ export class ThreeIdDoctype extends Doctype {
      * @param opts - Initialization options
      */
     static async create(params: ThreeIdParams, context: Context, opts?: DocOpts): Promise<ThreeIdDoctype> {
-        const { content, owners } = params
-        if (!owners) {
+        const { content, metadata } = params
+        if (!metadata?.owners) {
             throw new Error('The owner of the 3ID needs to be specified')
         }
 
-        const record = await ThreeIdDoctype.makeGenesis({ content, owners })
+        const record = await ThreeIdDoctype.makeGenesis({ content, metadata })
         return context.api.createDocumentFromGenesis<ThreeIdDoctype>(record, opts)
     }
 
@@ -77,9 +77,10 @@ export class ThreeIdDoctype extends Doctype {
      * @param user - User instance
      * @param newContent - New context
      * @param newOwners - New owners
+     * @param newSchema - New schema
      * @private
      */
-    static async _makeRecord(doctype: Doctype, user: User, newContent: any, newOwners?: string[]): Promise<any> {
+    static async _makeRecord(doctype: Doctype, user: User, newContent: any, newOwners: string[] = null, newSchema: string = null): Promise<any> {
         if (user == null) {
             throw new Error('No user authenticated')
         }
@@ -92,6 +93,9 @@ export class ThreeIdDoctype extends Doctype {
         const header = doctype.metadata
         if (newOwners) {
             header.owners = newOwners
+        }
+        if (newSchema) {
+            header.schema = newSchema
         }
         const record: any = { header, content: patch, prev: doctype.head, id: doctype.state.log[0] }
         // TODO - use the dag-jose library for properly encoded signed records

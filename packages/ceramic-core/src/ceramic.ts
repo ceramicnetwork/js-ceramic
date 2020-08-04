@@ -17,6 +17,7 @@ import { Resolver } from "did-resolver"
 import { TileDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-tile"
 import { ThreeIdDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-three-id"
 import { AccountLinkDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-account-link"
+import { TileDoctype } from "@ceramicnetwork/ceramic-doctype-tile/lib"
 
 // This is temporary until we handle DIDs and in particular 3IDs better
 const gen3IDgenesis = (pubkeys: any): any => {
@@ -185,6 +186,10 @@ class Ceramic implements CeramicApi {
    * @param opts - Initialization options
    */
   async applyRecord<T extends Doctype>(docId: string, record: object, opts?: DocOpts): Promise<T> {
+    if (DoctypeUtils.getVersionId(docId) != null) {
+      throw new Error('The version of the document is readonly. Checkout the latest HEAD in order to update.')
+    }
+
     const doc = await this._loadDoc(docId, opts)
 
     await doc.applyRecord(record, opts, this._validateDocs)
@@ -197,7 +202,7 @@ class Ceramic implements CeramicApi {
    * @param params - Create parameters
    * @param opts - Initialization options
    */
-  async createDocument<T extends Doctype>(doctype: string, params: object, opts?: DocOpts): Promise<T> {
+  async createDocument<T extends Doctype>(doctype: string, params: DocParams, opts?: DocOpts): Promise<T> {
     const doc = await this._createDoc(doctype, params, opts)
     return doc.doctype as T
   }

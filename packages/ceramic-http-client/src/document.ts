@@ -1,4 +1,4 @@
-import { Doctype, DoctypeUtils, DocState, DocOpts } from "@ceramicnetwork/ceramic-common"
+import { Doctype, DocParams, DoctypeUtils, DocState, DocOpts } from "@ceramicnetwork/ceramic-common"
 
 import { fetchJson } from './utils'
 
@@ -10,11 +10,11 @@ class Document extends Doctype {
     super(state, null)
 
     this._syncHandle = setInterval(async () => {
-        this._syncState()
+      this._syncState()
     }, 1000)
   }
 
-  static async create (apiUrl: string, doctype: string, params: object, opts: DocOpts = {}): Promise<Document> {
+  static async create (apiUrl: string, doctype: string, params: DocParams, opts: DocOpts = {}): Promise<Document> {
     const { state } = await fetchJson(apiUrl + '/create', {
       params,
       doctype,
@@ -37,15 +37,9 @@ class Document extends Doctype {
     return versions
   }
 
-  async change(params: Record<string, any>): Promise<void> {
-    const { content, owners } = params
+  async change(params: DocParams): Promise<void> {
     const normalizedId = DoctypeUtils.getBaseDocId(DoctypeUtils.normalizeDocId(this.id))
-    const { state } = await fetchJson(this._apiUrl + '/change' + normalizedId, {
-      params: {
-        content,
-        owners,
-      }
-    })
+    const { state } = await fetchJson(this._apiUrl + '/change' + normalizedId, params)
     this.state = DoctypeUtils.deserializeState(state)
   }
 
@@ -62,7 +56,6 @@ class Document extends Doctype {
     let { state } = await fetchJson(this._apiUrl + '/state' + normalizedId)
     state = DoctypeUtils.deserializeState(state)
     if (JSON.stringify(this.state) !== JSON.stringify(state)) {
-      this.state = state
       this.state = state
       this.emit('change')
     }
