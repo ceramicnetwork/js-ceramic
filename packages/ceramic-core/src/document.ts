@@ -16,9 +16,9 @@ import {
   Context,
   DoctypeUtils,
   DocParams,
-  CeramicApi
+  CeramicApi,
+  DocMetadata
 } from "@ceramicnetwork/ceramic-common"
-import { DocMetadata } from "@ceramicnetwork/ceramic-common/lib"
 
 class Document extends EventEmitter {
   private _applyQueue: PQueue

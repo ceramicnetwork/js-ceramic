@@ -1,5 +1,5 @@
 import CeramicClient from "@ceramicnetwork/ceramic-http-client"
-import { CeramicApi, DoctypeUtils } from "@ceramicnetwork/ceramic-common/lib"
+import { CeramicApi, DoctypeUtils } from "@ceramicnetwork/ceramic-common"
 
 const PREFIX_REGEX = /^ceramic:\/\/|^\/ceramic\//
 
