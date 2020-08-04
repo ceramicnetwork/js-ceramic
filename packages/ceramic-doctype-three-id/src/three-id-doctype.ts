@@ -31,7 +31,7 @@ export class ThreeIdDoctype extends Doctype {
     async change(params: ThreeIdParams): Promise<void> {
         const { content, metadata } = params
 
-        const updateRecord = await ThreeIdDoctype._makeRecord(this, this.context.user, content, metadata.owners, metadata.schema)
+        const updateRecord = await ThreeIdDoctype._makeRecord(this, this.context.user, content, metadata?.owners, metadata?.schema)
         const updated = await this.context.api.applyRecord(this.id, updateRecord)
         this.state = updated.state
     }
