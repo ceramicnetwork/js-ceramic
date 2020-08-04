@@ -243,8 +243,13 @@ class Document extends EventEmitter {
     const cid = await this.dispatcher.storeRecord(record)
     const state = await this._doctypeHandler.applyRecord(record, cid, this._context, this.state)
 
+    if (record.header) {
+      // override properties
+      Object.assign(state.metadata, record.header)
+    }
+
     if (validate) {
-      const schema = await Document.loadSchema(this._context.api, this._doctype)
+      const schema = await Document.loadSchemaById(this._context.api, state.metadata.schema)
       if (schema) {
         DoctypeUtils.validate(this._doctype.content, schema)
       }

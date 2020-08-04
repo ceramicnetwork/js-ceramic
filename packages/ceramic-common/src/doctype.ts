@@ -59,8 +59,10 @@ export interface DocMetadata {
 /**
  * Document params
  */
-export interface DocParams extends Record<string, any>{
+export interface DocParams {
     metadata?: DocMetadata;
+
+    [index: string]: any; // allow arbitrary properties
 }
 
 /**
