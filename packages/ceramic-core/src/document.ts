@@ -251,7 +251,7 @@ class Document extends EventEmitter {
     if (validate) {
       const schema = await Document.loadSchemaById(this._context.api, state.metadata.schema)
       if (schema) {
-        DoctypeUtils.validate(this._doctype.content, schema)
+        DoctypeUtils.validate(state.content, schema)
       }
     }
 
