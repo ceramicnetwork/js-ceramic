@@ -223,7 +223,7 @@ describe('Ceramic API', () => {
       content: { a: 1 },
     }
 
-    const docType = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, tileDocParams)
+    const doctype = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, tileDocParams)
     const schemaDoc = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, {
       content: stringMapSchema,
       metadata: {
@@ -232,7 +232,7 @@ describe('Ceramic API', () => {
     })
 
     try {
-      await docType.change({
+      await doctype.change({
         metadata: {
           owners: [owner],
           schema: schemaDoc.id
@@ -243,6 +243,38 @@ describe('Ceramic API', () => {
       expect(e.message).toEqual('Validation Error: data[\'a\'] should be string')
     }
 
+    await ceramic.close()
+  })
+
+  it('can update valid content and schema at the same time', async () => {
+    const ceramic = await Ceramic.create(ipfs)
+    await ceramic.setDIDProvider(idWallet.get3idProvider())
+    const owner = ceramic.context.user.publicKeys.managementKey
+
+    const tileDocParams: TileParams = {
+      metadata: {
+        owners: [owner]
+      },
+      content: { a: 1 },
+    }
+
+    const doctype = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, tileDocParams)
+    const schemaDoc = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, {
+      content: stringMapSchema,
+      metadata: {
+        owners: [owner]
+      }
+    })
+
+    await doctype.change({
+      content: { a: 'x' }, metadata: {
+        owners: [owner], schema: schemaDoc.id
+      }
+    })
+
+    expect(doctype.content).toEqual({ a: 'x' })
+
+    await new Promise(resolve => setTimeout(resolve, 1000)) // wait to propagate
     await ceramic.close()
   })
 })
