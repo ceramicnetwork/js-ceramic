@@ -150,7 +150,7 @@ export default class CeramicCliUtils {
                 return
             }
         } catch (e) {
-            console.error(e)
+            console.error(e.message)
             return
         }
 
@@ -176,7 +176,7 @@ export default class CeramicCliUtils {
                 return
             }
         } catch (e) {
-            console.error(e)
+            console.error(e.message)
             return
         }
 
