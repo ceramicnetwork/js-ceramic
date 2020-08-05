@@ -163,7 +163,8 @@ export class DoctypeUtils {
      * @param schema - Doctype schema
      */
     static isSchemaValid(schema: object): boolean {
-        return this.validator.validateSchema(schema)
+        this.validator.compile(schema) // throws an error on invalid schema
+        return this.validator.validateSchema(schema) // call validate schema just in case
     }
 
     /**
