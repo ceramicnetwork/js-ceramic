@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.2.8](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-core@0.2.7...@ceramicnetwork/ceramic-core@0.2.8) (2020-08-05)
+
+
+### Bug Fixes
+
+* **core:** fix content and schema update ([#197](https://github.com/ceramicnetwork/js-ceramic/issues/197)) ([b16b229](https://github.com/ceramicnetwork/js-ceramic/commit/b16b229d23d788c8cce39fbf883850f0716e83b0))
+
+
+
+
+
 ## [0.2.7](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-core@0.2.6...@ceramicnetwork/ceramic-core@0.2.7) (2020-07-21)
 
 **Note:** Version bump only for package @ceramicnetwork/ceramic-core
