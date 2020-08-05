@@ -41,8 +41,13 @@ const mockPow = {
     }
 }
 
-jest.spyOn<any, any>(pow, 'createPow').mockImplementation(() => mockPow)
-jest.spyOn<any, any>(pow.ffsOptions, 'withStorageConfig').mockImplementation((any) => any)
+beforeEach(() => {
+    jest.spyOn<any, any>(pow, 'createPow').mockImplementation(() => mockPow)
+    jest.spyOn<any, any>(pow.ffsOptions, 'withStorageConfig').mockImplementation((any) => any)
+    mockPow.ffs.remove.mockClear()
+    mockPow.ffs.watchJobs = watchJobs
+    mockPow.ffs.pushStorageConfig = pushStorageConfig
+})
 
 describe('constructor', () => {
     test('set Powergate endpoint from powergate:// URL', () => {
@@ -74,8 +79,6 @@ test('#open', async () => {
 
 describe('#pin', () => {
     test('pin record', async () => {
-        jest.spyOn<any, any>(pow, 'createPow').mockImplementation(() => mockPow)
-        jest.spyOn<any, any>(pow.ffsOptions, 'withStorageConfig').mockImplementation((any) => any)
         const pinning = new PowergatePinning(connectionString, context)
         await pinning.open()
         const cid = new CID('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D')
@@ -85,15 +88,13 @@ describe('#pin', () => {
     })
 
     test('tolerate double pinning as idempotent call', async () => {
-        jest.spyOn<any, any>(pow, 'createPow').mockImplementation(() => mockPow)
-        jest.spyOn<any, any>(pow.ffsOptions, 'withStorageConfig').mockImplementation((any) => any)
         const pinning = new PowergatePinning(connectionString, context)
         await pinning.open()
         const cid = new CID('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D')
         mockPow.ffs.pushStorageConfig = jest.fn(() => {
             throw new Error('cid already pinned, consider using override flag')
         })
-        await expect(pinning.pin(cid)).resolves.toReturn()
+        await expect(pinning.pin(cid)).resolves.toBeUndefined()
         expect(mockPow.ffs.defaultStorageConfig).toBeCalled()
         expect(mockPow.ffs.pushStorageConfig).toBeCalledWith(cid.toString(), expect.anything())
     })
@@ -114,11 +115,6 @@ describe('#pin', () => {
 })
 
 describe('#unpin', () => {
-    beforeEach(() => {
-        mockPow.ffs.remove.mockClear()
-        mockPow.ffs.watchJobs = watchJobs
-    })
-
     test('remove from pin set', async () => {
         const pinning = new PowergatePinning(connectionString, context)
         await pinning.open()
