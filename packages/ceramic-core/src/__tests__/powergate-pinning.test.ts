@@ -1,4 +1,4 @@
-import {JobStatus, PowergatePinning} from "../pinning/powergate-pinning";
+import {EmptyTokenError, JobStatus, PowergatePinning} from "../pinning/powergate-pinning";
 import * as pow from "@textile/powergate-client"
 import CID from "cids";
 
@@ -64,6 +64,11 @@ describe('constructor', () => {
         const pinning = new PowergatePinning(`powergate+https://example.com?token=${token}`, context)
         expect(pinning.endpoint).toEqual('https://example.com:5002')
         expect(pinning.token).toEqual(token)
+    })
+    test('require token', () => {
+        expect(() => {
+            new PowergatePinning(`powergate+https://example.com`, context)
+        }).toThrow(EmptyTokenError)
     })
 });
 

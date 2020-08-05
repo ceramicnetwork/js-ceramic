@@ -17,7 +17,7 @@ export class UnknownPinningService extends Error {
 export class PinningAggregation implements Pinning {
     readonly backends: Pinning[]
 
-    constructor(context: Context, connectionStrings: string[] = [], pinners: Array<PinningStatic> = [IpfsPinning, PowergatePinning]) {
+    constructor(context: Context, connectionStrings: string[], pinners: Array<PinningStatic> = [IpfsPinning, PowergatePinning]) {
         this.backends = connectionStrings.map(s => {
             const protocol = new URL(s).protocol.replace(':', '')
             const designator = protocol.match(/^(\w+)\+?/)[1]

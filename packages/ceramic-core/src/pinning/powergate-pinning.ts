@@ -3,7 +3,7 @@ import {Context} from "@ceramicnetwork/ceramic-common";
 import {createPow, ffsOptions, ffsTypes} from "@textile/powergate-client"
 import CID from 'cids'
 
-class EmptyTokenError extends Error {
+export class EmptyTokenError extends Error {
     constructor(address: string) {
         super(`No token provided for Powergate at ${address}`);
     }
