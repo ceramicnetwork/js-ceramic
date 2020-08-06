@@ -291,7 +291,7 @@ class Document extends EventEmitter {
   async _updateStateIfPinned(): Promise<void> {
     const isPinned = await this.pinStore.stateStore.exists(this.id)
     if (isPinned) {
-      await this.pinStore.stateStore.save(this.doctype)
+      await this.pinStore.add(this.doctype)
     }
   }
 
