@@ -18,7 +18,7 @@ import {
   CeramicApi,
   DocMetadata
 } from "@ceramicnetwork/ceramic-common"
-import {APinStore} from "./store/a-pin-store";
+import {PinStore} from "./store/pin-store";
 
 class Document extends EventEmitter {
   private _applyQueue: PQueue
@@ -32,7 +32,7 @@ class Document extends EventEmitter {
   public readonly id: string
   public readonly version: CID
 
-  constructor (id: string, public dispatcher: Dispatcher, public pinStore: APinStore) {
+  constructor (id: string, public dispatcher: Dispatcher, public pinStore: PinStore) {
     super()
     const normalized = DoctypeUtils.normalizeDocId(id)
     this.id = DoctypeUtils.getBaseDocId(normalized);
@@ -56,7 +56,7 @@ class Document extends EventEmitter {
       params: DocParams,
       doctypeHandler: DoctypeHandler<Doctype>,
       dispatcher: Dispatcher,
-      pinStore: APinStore,
+      pinStore: PinStore,
       context: Context,
       opts: DocOpts = {},
       validate = true
@@ -105,7 +105,7 @@ class Document extends EventEmitter {
       genesis: any,
       findHandler: (genesisRecord: any) => DoctypeHandler<Doctype>,
       dispatcher: Dispatcher,
-      pinStore: APinStore,
+      pinStore: PinStore,
       context: Context,
       opts: DocOpts = {},
       validate = true
@@ -151,7 +151,7 @@ class Document extends EventEmitter {
       id: string,
       findHandler: (genesisRecord: any) => DoctypeHandler<Doctype>,
       dispatcher: Dispatcher,
-      pinStore: APinStore,
+      pinStore: PinStore,
       context: Context,
       opts: DocOpts = {}
   ): Promise<Document> {

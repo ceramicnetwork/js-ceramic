@@ -1,11 +1,11 @@
-import {APinStore} from "../a-pin-store";
-import {AStateStore} from "../a-state-store";
+import {PinStore} from "../pin-store";
+import {StateStore} from "../state-store";
 import {Pinning} from "../../pinning/pinning";
 import CID from 'cids';
 import {AnchorStatus, SignatureStatus} from "@ceramicnetwork/ceramic-common";
 import {Doctype} from "@ceramicnetwork/ceramic-common/lib/index";
 
-let stateStore: AStateStore
+let stateStore: StateStore
 let pinning: Pinning
 
 beforeEach(() => {
@@ -48,14 +48,14 @@ class FakeType extends Doctype {
 }
 
 test('#open', async () => {
-    const pinStore = new APinStore(stateStore, pinning, jest.fn(), jest.fn())
+    const pinStore = new PinStore(stateStore, pinning, jest.fn(), jest.fn())
     await pinStore.open()
     expect(stateStore.open).toBeCalled()
     expect(pinning.open).toBeCalled()
 })
 
 test('#close', async () => {
-    const pinStore = new APinStore(stateStore, pinning, jest.fn(), jest.fn())
+    const pinStore = new PinStore(stateStore, pinning, jest.fn(), jest.fn())
     await pinStore.close()
     expect(stateStore.close).toBeCalled()
     expect(pinning.close).toBeCalled()
@@ -63,7 +63,7 @@ test('#close', async () => {
 
 describe('#add', () => {
     test('save and pin', async () => {
-        const pinStore = new APinStore(stateStore, pinning, jest.fn(), jest.fn())
+        const pinStore = new PinStore(stateStore, pinning, jest.fn(), jest.fn())
         const document = new FakeType(state, {})
         await pinStore.add(document)
         expect(stateStore.save).toBeCalledWith(document)
@@ -89,7 +89,7 @@ describe('#add', () => {
                 return proofRootCID
             }
         })
-        const pinStore = new APinStore(stateStore, pinning, retrieve, resolve)
+        const pinStore = new PinStore(stateStore, pinning, retrieve, resolve)
         const document = new FakeType(state, {})
         await pinStore.add(document)
         expect(stateStore.save).toBeCalledWith(document)
@@ -125,7 +125,7 @@ describe('#add', () => {
                 return rightCID
             }
         })
-        const pinStore = new APinStore(stateStore, pinning, retrieve, resolve)
+        const pinStore = new PinStore(stateStore, pinning, retrieve, resolve)
         const document = new FakeType(state, {})
         await pinStore.add(document)
         expect(stateStore.save).toBeCalledWith(document)
@@ -140,7 +140,7 @@ describe('#add', () => {
 })
 
 test('#rm', async () => {
-    const pinStore = new APinStore(stateStore, pinning, jest.fn(), jest.fn())
+    const pinStore = new PinStore(stateStore, pinning, jest.fn(), jest.fn())
     const document = new FakeType(state, {})
     stateStore.load = jest.fn(async () => state)
     await pinStore.rm(document.id)
@@ -149,7 +149,7 @@ test('#rm', async () => {
 })
 
 test('#ls', async () => {
-    const pinStore = new APinStore(stateStore, pinning, jest.fn(), jest.fn())
+    const pinStore = new PinStore(stateStore, pinning, jest.fn(), jest.fn())
     const document = new FakeType(state, {})
     const list = ['1', '2', '3']
     stateStore.list = jest.fn(async () => list)

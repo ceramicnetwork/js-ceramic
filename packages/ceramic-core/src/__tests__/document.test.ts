@@ -10,8 +10,8 @@ import { AnchorStatus, DocOpts, SignatureStatus } from "@ceramicnetwork/ceramic-
 import { AnchorService } from "@ceramicnetwork/ceramic-common"
 import { ThreeIdDoctype, ThreeIdParams } from "@ceramicnetwork/ceramic-doctype-three-id"
 import { ThreeIdDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-three-id"
-import {APinStore} from "../store/a-pin-store";
-import {ALevelStateStore} from "../store/a-level-state-store";
+import {PinStore} from "../store/pin-store";
+import {LevelStateStore} from "../store/level-state-store";
 import {Pinning} from "../pinning/pinning";
 
 jest.mock('../store/level-state-store')
@@ -86,20 +86,20 @@ const create = async (params: ThreeIdParams, ceramic: Ceramic, context: Context,
   return ceramic._createDocFromGenesis(record, opts)
 }
 
-let stateStore: ALevelStateStore
-let pinStore: APinStore
+let stateStore: LevelStateStore
+let pinStore: PinStore
 let pinning: Pinning
 
 beforeEach(async () => {
   const levelPath = await tmp.tmpName()
-  stateStore = new ALevelStateStore(levelPath)
+  stateStore = new LevelStateStore(levelPath)
   pinning = {
     open: jest.fn(),
     close: jest.fn(),
     pin: jest.fn(),
     unpin: jest.fn()
   }
-  pinStore = new APinStore(stateStore, pinning, jest.fn(), jest.fn())
+  pinStore = new PinStore(stateStore, pinning, jest.fn(), jest.fn())
   await pinStore.open()
 })
 

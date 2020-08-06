@@ -13,8 +13,8 @@ import { Resolver } from "did-resolver"
 import { TileDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-tile"
 import { ThreeIdDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-three-id"
 import { AccountLinkDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-account-link"
-import {APinStoreFactory} from "./store/a-pin-store-factory";
-import {APinStore} from "./store/a-pin-store";
+import {PinStoreFactory} from "./store/pin-store-factory";
+import {PinStore} from "./store/pin-store";
 
 // This is temporary until we handle DIDs and in particular 3IDs better
 const gen3IDgenesis = (pubkeys: any): any => {
@@ -56,7 +56,7 @@ class Ceramic implements CeramicApi {
   public readonly pin: PinApi
   public readonly context: Context
 
-  constructor (public dispatcher: Dispatcher, public pinStore: APinStore, context: Context, private _validateDocs: boolean = true) {
+  constructor (public dispatcher: Dispatcher, public pinStore: PinStore, context: Context, private _validateDocs: boolean = true) {
     this._docmap = {}
     this._doctypeHandlers = {
       '3id': new ThreeIdDoctypeHandler(),
@@ -125,7 +125,7 @@ class Ceramic implements CeramicApi {
       anchorService,
     }
 
-    const pinStoreFactory = new APinStoreFactory(context, config.stateStorePath, config.pinnings)
+    const pinStoreFactory = new PinStoreFactory(context, config.stateStorePath, config.pinnings)
     const pinStore = await pinStoreFactory.open()
 
     const ceramic = new Ceramic(dispatcher, pinStore, context, config.validateDocs)

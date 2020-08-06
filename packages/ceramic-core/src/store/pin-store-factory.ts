@@ -1,13 +1,13 @@
 import {Context} from "@ceramicnetwork/ceramic-common";
-import {ALevelStateStore} from "./a-level-state-store";
+import {LevelStateStore} from "./level-state-store";
 import {PinningAggregation} from "../pinning/pinning-aggregation";
 import {IpfsPinning} from "../pinning/ipfs-pinning";
 import {PowergatePinning} from "../pinning/powergate-pinning";
-import {APinStore} from "./a-pin-store";
+import {PinStore} from "./pin-store";
 import CID from 'cids'
 import path from "path";
 
-export class APinStoreFactory {
+export class PinStoreFactory {
     readonly stateStorePath: string
     readonly pinnings: string[]
 
@@ -16,8 +16,8 @@ export class APinStoreFactory {
         this.pinnings = pinnings && pinnings.length > 0 ? pinnings : ['ipfs://__context']
     }
 
-    async open(): Promise<APinStore> {
-        const stateStore = new ALevelStateStore(this.stateStorePath)
+    async open(): Promise<PinStore> {
+        const stateStore = new LevelStateStore(this.stateStorePath)
         const pinning = new PinningAggregation(this.context, this.pinnings, [IpfsPinning, PowergatePinning])
         const ipfs = this.context.ipfs
         const retrieve = async (cid: CID): Promise<any> => {
@@ -27,7 +27,7 @@ export class APinStoreFactory {
         const resolve = async (path: string): Promise<CID> => {
             return ipfs.dag.resolve(path)
         }
-        const pinStore = new APinStore(stateStore, pinning, retrieve, resolve)
+        const pinStore = new PinStore(stateStore, pinning, retrieve, resolve)
         await pinStore.open()
         return pinStore
     }

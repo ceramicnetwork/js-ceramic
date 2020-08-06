@@ -1,11 +1,11 @@
-import {AStateStore} from "./a-state-store";
+import {StateStore} from "./state-store";
 import {Pinning} from "../pinning/pinning";
 import {Doctype, DocState} from "@ceramicnetwork/ceramic-common"
 import CID from "cids";
 import _ from "lodash";
 
-export class APinStore {
-    constructor(readonly stateStore: AStateStore, readonly pinning: Pinning, readonly retrieve: (cid: CID) => Promise<any | null>, readonly resolve: (path: string) => Promise<CID>) {
+export class PinStore {
+    constructor(readonly stateStore: StateStore, readonly pinning: Pinning, readonly retrieve: (cid: CID) => Promise<any | null>, readonly resolve: (path: string) => Promise<CID>) {
     }
 
     async open(): Promise<void> {
