@@ -32,6 +32,7 @@ interface CreateOpts {
   stateStorePath?: string;
 
   validateDocs?: boolean;
+  pinning?: string[];
 }
 
 interface CliConfig {
@@ -94,6 +95,12 @@ class CeramicDaemon {
 
     if (opts.stateStorePath) {
       ceramicConfig.stateStorePath = opts.stateStorePath
+    }
+
+    if (opts.pinning) {
+      Object.assign(ceramicConfig, {
+        pinning: opts.pinning
+      })
     }
 
     const ceramic = await Ceramic.create(ipfs, ceramicConfig)
