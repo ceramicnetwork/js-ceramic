@@ -11,7 +11,7 @@ program
     .option('--ethereum-rpc <url>', 'The Ethereum RPC URL used for communicating with Ethereum blockchain')
     .option('--anchor-service-api <url>', 'The anchor service URL to use')
     .option('--validate-docs', 'Validate documents according to their schemas. It is enabled by default')
-    .option('--pinning <urls...>', 'Pinning endpoints')
+    .option('--pinning <url...>', 'Pinning endpoints')
     .option('--pinning-store-path <url>', `The directory path used for pinning service. Defaults to WORKING_DIR/${DEFAULT_PINNING_STORE_PATH}`)
     .description('Start the daemon')
     .action(async ({ ipfsApi, ethereumRpc, anchorServiceApi, stateStorePath, validateDocs, pinning }) => {
