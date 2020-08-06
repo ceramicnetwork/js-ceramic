@@ -1,33 +1,54 @@
 import CID from "cids"
-import * as os from "os"
-import * as path from "path"
-import { promises as fsPromises } from "fs";
-
-import LevelStateStore from "../level-state-store"
-
-let pinnedDocIds: Record<string, boolean> = {}
+import tmp from 'tmp-promise'
+import Document from "../../document"
+import Dispatcher from "../../dispatcher"
+import MockAnchorService from "../../anchor/mock/mock-anchor-service"
+import CeramicUser from "../../ceramic-user"
+import { Doctype, DoctypeHandler } from "@ceramicnetwork/ceramic-common"
+import { AnchorService } from "@ceramicnetwork/ceramic-common"
+import { Context } from "@ceramicnetwork/ceramic-common"
+import { ThreeIdDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-three-id"
+import { ThreeIdDoctype } from "@ceramicnetwork/ceramic-doctype-three-id"
+import {APinStore} from "../a-pin-store";
+import {APinStoreFactory} from "../a-pin-store-factory";
 
 const cloneDeep = require('lodash.clonedeep') // eslint-disable-line @typescript-eslint/no-var-requires
 const { sha256 } = require('js-sha256') // eslint-disable-line @typescript-eslint/no-var-requires
 const hash = (data: string): CID => new CID(1, 'sha2-256', Buffer.from('1220' + sha256(data), 'hex'))
 
-const recs: Record<string, any> = {}
+let pinnedDocIds: Record<string, boolean> = {}
+let mockRecs: Record<string, any> = {}
+
+function deepResolve(cid: CID, remaining: string[]): CID {
+  if (remaining.length > 0) {
+    const record = mockRecs[cid.toString()]
+    const next = record[remaining[0]] as CID
+    return deepResolve(next, remaining.slice(1))
+  } else {
+    return cid
+  }
+}
 
 // mock IPFS
-const ipfs = {
+const mockIpfs = {
     id: (): any => ({ id: 'ipfsid' }),
     dag: {
       put(rec: any): any {
         // stringify as a way of doing deep copy
         const clone = cloneDeep(rec)
         const cid = hash(JSON.stringify(clone))
-        recs[cid.toString()] = clone
+        mockRecs[cid.toString()] = clone
         return cid
       },
       get(cid: any): any {
         return {
-          value: recs[cid.toString()]
+          value: mockRecs[cid.toString()]
         }
+      },
+      resolve(query: string) {
+        const path = query.split('/')
+        const cid = new CID(path[0])
+        return deepResolve(cid, path.slice(1))
       }
     },
     pin: {
@@ -65,56 +86,24 @@ const ipfs = {
 
 // mock Dispatcher
 jest.mock("../../dispatcher", () => {
-  const CID = require("cids") // eslint-disable-line @typescript-eslint/no-var-requires
-  const cloneDeep = require("lodash.clonedeep") // eslint-disable-line @typescript-eslint/no-var-requires
-  const { sha256 } = require("js-sha256") // eslint-disable-line @typescript-eslint/no-var-requires
-  const hash = (data: string): CID => new CID(1, 'sha2-256', Buffer.from('1220' + sha256(data), 'hex'))
   return (): any => {
-    const recs: Record<string, any> = {}
     return {
-      _ipfs: {
-        dag: {
-          put(rec: any): any {
-            // stringify as a way of doing deep copy
-            const clone = cloneDeep(rec)
-            const cid = hash(JSON.stringify(clone))
-            recs[cid.toString()] = clone
-            return cid
-          },
-          get(cid: any): any {
-            return recs[cid.toString()]
-          }
-        }
-      },
+      _ipfs: mockIpfs,
       register: jest.fn(),
       on: jest.fn(),
       storeRecord: jest.fn((rec) => {
-        const clone = cloneDeep(rec)
-        const cid = hash(JSON.stringify(clone))
-        recs[cid.toString()] = clone
-        return cid
+        return mockIpfs.dag.put(rec)
       }),
       publishHead: jest.fn(),
       _requestHead: jest.fn(),
-      retrieveRecord: jest.fn(cid => {
-        return recs[cid.toString()]
+      retrieveRecord: jest.fn(async cid => {
+        const blob = await mockIpfs.dag.get(cid)
+        return blob?.value
       }),
     }
   }
 })
-
-import Document from "../../document"
-import Dispatcher from "../../dispatcher"
-import MockAnchorService from "../../anchor/mock/mock-anchor-service"
-
 jest.mock("../../ceramic-user")
-
-import CeramicUser from "../../ceramic-user"
-import { Doctype, DoctypeHandler } from "@ceramicnetwork/ceramic-common"
-import { AnchorService } from "@ceramicnetwork/ceramic-common"
-import { Context } from "@ceramicnetwork/ceramic-common"
-import { ThreeIdDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-three-id"
-import { ThreeIdDoctype } from "@ceramicnetwork/ceramic-doctype-three-id"
 
 const anchorUpdate = (doctype: Doctype): Promise<void> => new Promise(resolve => doctype.on('change', resolve))
 
@@ -123,7 +112,7 @@ describe('Level data store', () => {
   const initialContent = { abc: 123, def: 456 }
   const owners = ['publickeymock']
 
-  let store: LevelStateStore
+  let store: APinStore
   let dispatcher: Dispatcher
   let doctypeHandler: ThreeIdDoctypeHandler
   let anchorService: AnchorService
@@ -132,11 +121,11 @@ describe('Level data store', () => {
   beforeEach(async () => {
     pinnedDocIds = {}
 
-    ipfs.pin.ls.mockClear()
-    ipfs.pin.rm.mockClear()
-    ipfs.pin.add.mockClear()
+    mockIpfs.pin.ls.mockClear()
+    mockIpfs.pin.rm.mockClear()
+    mockIpfs.pin.add.mockClear()
 
-    const storeDirPath = await fsPromises.mkdtemp(path.join(os.tmpdir(), 'store-'))
+    mockRecs = {}
 
     dispatcher = Dispatcher()
     anchorService = new MockAnchorService(dispatcher)
@@ -145,16 +134,17 @@ describe('Level data store', () => {
     user.sign = jest.fn(async () => 'aaaa.bbbb.cccc')
 
     context = {
-      ipfs,
+      ipfs: mockIpfs,
       user,
       anchorService,
     }
 
     doctypeHandler = new ThreeIdDoctypeHandler()
-    doctypeHandler.verifyJWT = (): void => { return }
+    doctypeHandler.verifyJWT = async (): Promise<void> => { return }
 
-    store = new LevelStateStore(ipfs, dispatcher, storeDirPath)
-    await store.open()
+    const levelPath = await tmp.tmpName()
+    const storeFactory = new APinStoreFactory(context, levelPath, ['ipfs://__context'])
+    store = await storeFactory.open()
   })
 
   it('pins document correctly without IPFS pinning', async () => {
@@ -163,13 +153,13 @@ describe('Level data store', () => {
     const doc = await Document.createFromGenesis(genesis, findHandler, dispatcher, store, context)
     await anchorUpdate(doc.doctype)
 
-    let docState = await store.loadState(doc.id)
+    let docState = await store.stateStore.load(doc.id)
     expect(docState).toBeNull()
 
-    await store.pin(doc, false)
-    expect(ipfs.pin.add).toHaveBeenCalledTimes(0)
+    await store.stateStore.save(doc.doctype)
+    expect(mockIpfs.pin.add).toHaveBeenCalledTimes(0)
 
-    docState = await store.loadState(doc.id)
+    docState = await store.stateStore.load(doc.id)
     expect(docState).toBeDefined()
   })
 
@@ -180,13 +170,13 @@ describe('Level data store', () => {
       applyOnly: true, skipWait: true,
     })
 
-    let docState = await store.loadState(doc.id)
+    let docState = await store.stateStore.load(doc.id)
     expect(docState).toBeNull()
 
-    await store.pin(doc, true)
-    expect(ipfs.pin.add).toHaveBeenCalledTimes(1)
+    await store.add(doc.doctype)
+    expect(mockIpfs.pin.add).toHaveBeenCalledTimes(1)
 
-    docState = await store.loadState(doc.id)
+    docState = await store.stateStore.load(doc.id)
     expect(docState).toBeDefined()
   })
 
@@ -196,13 +186,13 @@ describe('Level data store', () => {
     const doc = await Document.createFromGenesis(genesis, findHandler, dispatcher, store, context)
     await anchorUpdate(doc.doctype)
 
-    let docState = await store.loadState(doc.id)
+    let docState = await store.stateStore.load(doc.id)
     expect(docState).toBeNull()
 
-    await store.pin(doc, true)
-    expect(ipfs.pin.add).toHaveBeenCalledTimes(4)
+    await store.add(doc.doctype)
+    expect(mockIpfs.pin.add).toHaveBeenCalledTimes(4)
 
-    docState = await store.loadState(doc.id)
+    docState = await store.stateStore.load(doc.id)
     expect(docState).toBeDefined()
   })
 
@@ -212,11 +202,11 @@ describe('Level data store', () => {
     const doc = await Document.createFromGenesis(genesis, findHandler, dispatcher, store, context)
     await anchorUpdate(doc.doctype)
 
-    await store.pin(doc, true)
-    expect(ipfs.pin.add).toHaveBeenCalledTimes(4)
+    await store.add(doc.doctype)
+    expect(mockIpfs.pin.add).toHaveBeenCalledTimes(4)
 
     await store.rm(doc.id)
-    expect(ipfs.pin.rm).toHaveBeenCalledTimes(4)
+    expect(mockIpfs.pin.rm).toHaveBeenCalledTimes(4)
   })
 
   it('skips removing unpinned document', async () => {
@@ -226,7 +216,7 @@ describe('Level data store', () => {
     await anchorUpdate(doc.doctype)
 
     await store.rm(doc.id)
-    expect(ipfs.pin.rm).toHaveBeenCalledTimes(0)
+    expect(mockIpfs.pin.rm).toHaveBeenCalledTimes(0)
   })
 
   it('lists pinned documents', async () => {
@@ -235,8 +225,8 @@ describe('Level data store', () => {
     const doc = await Document.createFromGenesis(genesis, findHandler, dispatcher, store, context)
     await anchorUpdate(doc.doctype)
 
-    await store.pin(doc, true)
-    expect(ipfs.pin.add).toHaveBeenCalledTimes(4)
+    await store.add(doc.doctype)
+    expect(mockIpfs.pin.add).toHaveBeenCalledTimes(4)
 
     let pinned = []
     let iterator = await store.ls(doc.id)
@@ -244,7 +234,7 @@ describe('Level data store', () => {
       pinned.push(id)
     }
     expect(pinned.length).toEqual(1)
-    expect(ipfs.pin.ls).toHaveBeenCalledTimes(0)
+    expect(mockIpfs.pin.ls).toHaveBeenCalledTimes(0)
 
     pinned = []
     iterator = await store.ls()
@@ -265,6 +255,6 @@ describe('Level data store', () => {
       pinned.push(id)
     }
     expect(pinned.length).toEqual(0)
-    expect(ipfs.pin.ls).toHaveBeenCalledTimes(0)
+    expect(mockIpfs.pin.ls).toHaveBeenCalledTimes(0)
   })
 })

@@ -4,7 +4,6 @@ import { EventEmitter } from 'events'
 import PQueue from 'p-queue'
 import cloneDeep from 'lodash.clonedeep'
 import AnchorServiceResponse from "./anchor/anchor-service-response"
-import StateStore from "./store/state-store"
 import {
   AnchorProof,
   AnchorRecord,
@@ -19,6 +18,7 @@ import {
   CeramicApi,
   DocMetadata
 } from "@ceramicnetwork/ceramic-common"
+import {APinStore} from "./store/a-pin-store";
 
 class Document extends EventEmitter {
   private _applyQueue: PQueue
@@ -32,7 +32,7 @@ class Document extends EventEmitter {
   public readonly id: string
   public readonly version: CID
 
-  constructor (id: string, public dispatcher: Dispatcher, public stateStore: StateStore) {
+  constructor (id: string, public dispatcher: Dispatcher, public pinStore: APinStore) {
     super()
     const normalized = DoctypeUtils.normalizeDocId(id)
     this.id = DoctypeUtils.getBaseDocId(normalized);
@@ -56,7 +56,7 @@ class Document extends EventEmitter {
       params: DocParams,
       doctypeHandler: DoctypeHandler<Doctype>,
       dispatcher: Dispatcher,
-      stateStore: StateStore,
+      pinStore: APinStore,
       context: Context,
       opts: DocOpts = {},
       validate = true
@@ -66,7 +66,7 @@ class Document extends EventEmitter {
     const genesisCid = await dispatcher.storeRecord(genesis)
     const id = DoctypeUtils.createDocIdFromGenesis(genesisCid)
 
-    const doc = new Document(id, dispatcher, stateStore)
+    const doc = new Document(id, dispatcher, pinStore)
 
     doc._context = context
     doc._doctypeHandler = doctypeHandler
@@ -96,7 +96,7 @@ class Document extends EventEmitter {
    * @param genesis - Genesis record
    * @param findHandler - find handler fn
    * @param dispatcher - Dispatcher instance
-   * @param stateStore - StateStore instance
+   * @param pinStore - PinStore instance
    * @param context - Ceramic context
    * @param opts - Initialization options
    * @param validate - Validate content against schema
@@ -105,7 +105,7 @@ class Document extends EventEmitter {
       genesis: any,
       findHandler: (genesisRecord: any) => DoctypeHandler<Doctype>,
       dispatcher: Dispatcher,
-      stateStore: StateStore,
+      pinStore: APinStore,
       context: Context,
       opts: DocOpts = {},
       validate = true
@@ -113,7 +113,7 @@ class Document extends EventEmitter {
     const genesisCid = await dispatcher.storeRecord(genesis)
     const id = DoctypeUtils.createDocIdFromGenesis(genesisCid)
 
-    const doc = new Document(id, dispatcher, stateStore)
+    const doc = new Document(id, dispatcher, pinStore)
 
     doc._context = context
     doc._doctypeHandler = findHandler(genesis)
@@ -151,11 +151,11 @@ class Document extends EventEmitter {
       id: string,
       findHandler: (genesisRecord: any) => DoctypeHandler<Doctype>,
       dispatcher: Dispatcher,
-      stateStore: StateStore,
+      pinStore: APinStore,
       context: Context,
       opts: DocOpts = {}
   ): Promise<Document> {
-    const doc = new Document(id, dispatcher, stateStore)
+    const doc = new Document(id, dispatcher, pinStore)
     doc._context = context
 
     if (typeof opts.applyOnly === 'undefined') {
@@ -172,10 +172,10 @@ class Document extends EventEmitter {
       doc._doctype.state = await doc._doctypeHandler.applyRecord(record, doc._genesisCid, context)
     }
 
-    const isPinned = await stateStore.isDocPinned(id)
-    if (isPinned) {
+    const isPresent = await pinStore.stateStore.exists(id)
+    if (isPresent) {
       // get last stored state
-      doc._doctype.state = await stateStore.loadState(id)
+      doc._doctype.state = await pinStore.stateStore.load(id)
     }
 
     await doc._register(opts)
@@ -214,7 +214,7 @@ class Document extends EventEmitter {
    * @param version - Document version
    */
   static async getVersion<T extends Doctype>(doc: Document, version: CID): Promise<Document> {
-    const { _context: context, dispatcher, stateStore, _doctypeHandler: doctypeHandler } = doc
+    const { _context: context, dispatcher, pinStore, _doctypeHandler: doctypeHandler } = doc
 
     const versionRecord = await dispatcher.retrieveRecord(version)
     if (versionRecord == null) {
@@ -226,7 +226,7 @@ class Document extends EventEmitter {
       throw new Error(`No anchor record for version ${version.toString()}`)
     }
 
-    const document = new Document(DoctypeUtils.createDocIdFromBase(doc.id, version), dispatcher, stateStore)
+    const document = new Document(DoctypeUtils.createDocIdFromBase(doc.id, version), dispatcher, pinStore)
     document._context = context
     document._doctypeHandler = doctypeHandler
     document._doctype = new doc._doctypeHandler.doctype(null, context)
@@ -289,9 +289,9 @@ class Document extends EventEmitter {
    * @private
    */
   async _updateStateIfPinned(): Promise<void> {
-    const isPinned = await this.stateStore.isDocPinned(this.id)
+    const isPinned = await this.pinStore.stateStore.exists(this.id)
     if (isPinned) {
-      await this.stateStore.pin(this, false)
+      await this.pinStore.stateStore.save(this.doctype)
     }
   }
 

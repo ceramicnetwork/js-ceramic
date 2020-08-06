@@ -13,7 +13,7 @@ export enum MsgType {
 
 const TOPIC = '/ceramic'
 
-class Dispatcher extends EventEmitter {
+export default class Dispatcher extends EventEmitter {
   private _peerId: string
   private _recordCache: Record<string, any>
   private _documents: Record<string, Document>
@@ -83,5 +83,3 @@ class Dispatcher extends EventEmitter {
     return this._ipfs.pubsub.unsubscribe(TOPIC)
   }
 }
-
-export default Dispatcher

@@ -3,10 +3,6 @@ import Dispatcher from './dispatcher'
 import CeramicUser from './ceramic-user'
 import Document from './document'
 import { AnchorServiceFactory } from "./anchor/anchor-service-factory";
-
-import StateStore from "./store/state-store"
-import LevelStateStore from "./store/level-state-store"
-
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 
 import { CeramicApi, DIDProvider, PinApi } from "@ceramicnetwork/ceramic-common"
@@ -17,6 +13,8 @@ import { Resolver } from "did-resolver"
 import { TileDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-tile"
 import { ThreeIdDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-three-id"
 import { AccountLinkDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-account-link"
+import {APinStoreFactory} from "./store/a-pin-store-factory";
+import {APinStore} from "./store/a-pin-store";
 
 // This is temporary until we handle DIDs and in particular 3IDs better
 const gen3IDgenesis = (pubkeys: any): any => {
@@ -45,6 +43,7 @@ export interface CeramicConfig {
   didProvider?: DIDProvider;
 
   validateDocs?: boolean;
+  pinnings?: string[];
 }
 
 /**
@@ -57,7 +56,7 @@ class Ceramic implements CeramicApi {
   public readonly pin: PinApi
   public readonly context: Context
 
-  constructor (public dispatcher: Dispatcher, public stateStore: StateStore, context: Context, private _validateDocs: boolean = true) {
+  constructor (public dispatcher: Dispatcher, public pinStore: APinStore, context: Context, private _validateDocs: boolean = true) {
     this._docmap = {}
     this._doctypeHandlers = {
       '3id': new ThreeIdDoctypeHandler(),
@@ -85,13 +84,27 @@ class Ceramic implements CeramicApi {
     return {
       add: async (docId: string): Promise<void> => {
         const document = await this._loadDoc(docId)
-        await this.stateStore.pin(document)
+        await this.pinStore.add(document.doctype)
       },
       rm: async (docId: string): Promise<void> => {
-        await this.stateStore.rm(docId)
+        await this.pinStore.rm(docId)
       },
       ls: async (docId?: string): Promise<AsyncIterable<string>> => {
-        return this.stateStore.ls(docId)
+        const normalized = docId ? DoctypeUtils.getBaseDocId(DoctypeUtils.normalizeDocId(docId)) : undefined
+        const docIds = await this.pinStore.ls(normalized)
+        return {
+          [Symbol.asyncIterator](): any {
+            let index = 0
+            return {
+              next(): any {
+                if (index === docIds.length) {
+                  return Promise.resolve({ value: null, done: true });
+                }
+                return Promise.resolve({ value: docIds[index++], done: false });
+              }
+            };
+          }
+        }
       }
     }
   }
@@ -104,9 +117,6 @@ class Ceramic implements CeramicApi {
   static async create(ipfs: Ipfs.Ipfs, config: CeramicConfig = {}): Promise<Ceramic> {
     const dispatcher = new Dispatcher(ipfs)
 
-    const stateStore = new LevelStateStore(ipfs, dispatcher, config.stateStorePath)
-    await stateStore.open()
-
     const anchorServiceFactory = new AnchorServiceFactory(dispatcher, config)
     const anchorService = anchorServiceFactory.get();
 
@@ -115,7 +125,10 @@ class Ceramic implements CeramicApi {
       anchorService,
     }
 
-    const ceramic = new Ceramic(dispatcher, stateStore, context, config.validateDocs)
+    const pinStoreFactory = new APinStoreFactory(context, config.stateStorePath, config.pinnings)
+    const pinStore = await pinStoreFactory.open()
+
+    const ceramic = new Ceramic(dispatcher, pinStore, context, config.validateDocs)
     if (config.didProvider) {
       await ceramic.setDIDProvider(config.didProvider)
     }
@@ -216,7 +229,7 @@ class Ceramic implements CeramicApi {
   async _createDoc(doctype: string, params: DocParams, opts: DocOpts = {}): Promise<Document> {
     const doctypeHandler = this._doctypeHandlers[doctype]
 
-    const doc = await Document.create(params, doctypeHandler, this.dispatcher, this.stateStore, this.context, opts, this._validateDocs);
+    const doc = await Document.create(params, doctypeHandler, this.dispatcher, this.pinStore, this.context, opts, this._validateDocs);
     const normalizedId = DoctypeUtils.normalizeDocId(doc.id)
     if (!this._docmap[normalizedId]) {
       this._docmap[normalizedId] = doc
@@ -241,7 +254,7 @@ class Ceramic implements CeramicApi {
    * @private
    */
   async _createDocFromGenesis(genesis: any, opts: DocOpts = {}): Promise<Document> {
-    const doc = await Document.createFromGenesis(genesis, this.findHandler.bind(this), this.dispatcher, this.stateStore, this.context, opts, this._validateDocs);
+    const doc = await Document.createFromGenesis(genesis, this.findHandler.bind(this), this.dispatcher, this.pinStore, this.context, opts, this._validateDocs);
     const normalizedId = DoctypeUtils.normalizeDocId(doc.id)
     if (!this._docmap[normalizedId]) {
       this._docmap[normalizedId] = doc
@@ -273,7 +286,7 @@ class Ceramic implements CeramicApi {
     const normalizedId = DoctypeUtils.normalizeDocId(docId)
 
     if (!this._docmap[normalizedId]) {
-      this._docmap[normalizedId] = await Document.load(docId, this.findHandler.bind(this), this.dispatcher, this.stateStore, this.context, opts)
+      this._docmap[normalizedId] = await Document.load(docId, this.findHandler.bind(this), this.dispatcher, this.pinStore, this.context, opts)
     }
     return this._docmap[normalizedId]
   }
@@ -293,7 +306,7 @@ class Ceramic implements CeramicApi {
    * Close Ceramic instance gracefully
    */
   async close (): Promise<void> {
-    await this.stateStore.close()
+    await this.pinStore.close()
     await this.dispatcher.close()
   }
 }

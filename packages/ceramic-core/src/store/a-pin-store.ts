@@ -26,9 +26,11 @@ export class APinStore {
 
     async rm(docId: string): Promise<void> {
         const state = await this.stateStore.load(docId)
-        const points = await this.pointsOfInterest(state)
-        Promise.all(points.map(point => this.pinning.unpin(point))).catch(_.noop)
-        await this.stateStore.remove(docId)
+        if (state) {
+            const points = await this.pointsOfInterest(state)
+            Promise.all(points.map(point => this.pinning.unpin(point))).catch(_.noop)
+            await this.stateStore.remove(docId)
+        }
     }
 
     async ls(docId?: string): Promise<string[]> {

@@ -4,7 +4,7 @@ export interface AStateStore {
     open(): Promise<void>;
     close(): Promise<void>;
     save(document: Doctype): Promise<void>;
-    load(docId: string): Promise<DocState>;
+    load(docId: string): Promise<DocState | null>;
     exists(docId: string): Promise<boolean>;
     list(docId?: string): Promise<string[]>;
     remove(docId: string): Promise<void>;

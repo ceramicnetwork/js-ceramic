@@ -115,7 +115,7 @@ export default class LevelStateStore implements StateStore {
      * Load document
      * @param docId - Document ID
      */
-    async loadState(docId: string): Promise<DocState> {
+    async loadState(docId: string): Promise<DocState | null> {
         try {
             const state = await this.store.get(docId)
             return this._deserializeState(state)
