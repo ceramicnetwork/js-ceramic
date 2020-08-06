@@ -7,12 +7,9 @@
 # js-ceramic
 Monorepo containing the Typescript implementation of the Ceramic protocol.
 
-## Project Status - `Proof of Concept`
+## Project Status - `Slip testnet`
 
-This implementation of the Ceramic protocol is only partial and is missing multiple critical components. As development moves forward this readme will be updated with the latest project status.
-
-**Missing components:**
-* Anchor records - currently anchor records are mocked
+This implementation is ready for testing, but there is still a few things left before the Clay testnet. See the [roadmap](https://github.com/ceramicnetwork/ceramic/issues/19).
 
 ## Project Structure
 
