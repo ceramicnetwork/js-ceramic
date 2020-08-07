@@ -1,4 +1,3 @@
-
 type Callback<T> = (error: Error, result?: T) => void;
 
 declare module 'ipfs' {
@@ -313,6 +312,8 @@ declare module 'ipfs' {
           tree(cid: string | CID, options: any): Promise<any>;
           tree(cid: string | CID, callback: Callback<any>): void;
           tree(cid: string | CID): Promise<any>;
+
+          resolve(path: string | CID): Promise<CID>;
       }
   }
 }

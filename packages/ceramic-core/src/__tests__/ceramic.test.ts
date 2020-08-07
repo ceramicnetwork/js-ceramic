@@ -55,8 +55,9 @@ describe('Ceramic integration', () => {
 
     const ceramic1 = await Ceramic.create(ipfs1, {
       didProvider: idWallet.get3idProvider(),
+      stateStorePath: await tmp.tmpName()
     })
-    const ceramic2 = await Ceramic.create(ipfs2)
+    const ceramic2 = await Ceramic.create(ipfs2, {stateStorePath: await tmp.tmpName()})
     const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { test: 123 } }, { applyOnly: true })
     const doctype2 = await ceramic2.loadDocument(doctype1.id)
     expect(doctype1.content).toEqual(doctype2.content)
@@ -68,10 +69,10 @@ describe('Ceramic integration', () => {
   })
 
   it('won\'t propagate update across two disconnected nodes', async () => {
-    const ceramic1 = await Ceramic.create(ipfs1)
+    const ceramic1 = await Ceramic.create(ipfs1, {stateStorePath: await tmp.tmpName()})
     await ceramic1.setDIDProvider(idWallet.get3idProvider())
     const owner = ceramic1.context.user.publicKeys.managementKey
-    const ceramic2 = await Ceramic.create(ipfs2)
+    const ceramic2 = await Ceramic.create(ipfs2, {stateStorePath: await tmp.tmpName()})
     const doctype1 = await ceramic1.createDocument(DOCTYPE_3ID, { content: { test: 456 }, metadata: { owners: [owner] } })
     // we can't load document from id since nodes are not connected
     // so we won't find the genesis object from it's CID
@@ -88,11 +89,11 @@ describe('Ceramic integration', () => {
     await ipfs1.swarm.connect(multaddr2)
     await ipfs2.swarm.connect(multaddr3)
 
-    const ceramic1 = await Ceramic.create(ipfs1)
+    const ceramic1 = await Ceramic.create(ipfs1, {stateStorePath: await tmp.tmpName()})
     await ceramic1.setDIDProvider(idWallet.get3idProvider())
     const owner = ceramic1.context.user.publicKeys.managementKey
-    const ceramic2 = await Ceramic.create(ipfs2)
-    const ceramic3 = await Ceramic.create(ipfs3)
+    const ceramic2 = await Ceramic.create(ipfs2, {stateStorePath: await tmp.tmpName()})
+    const ceramic3 = await Ceramic.create(ipfs3, {stateStorePath: await tmp.tmpName()})
     // ceramic node 2 shouldn't need to have the document open in order to forward the message
     const doctype1 = await ceramic1.createDocument(DOCTYPE_3ID, { content: { test: 789 }, metadata: { owners: [owner] } }, { applyOnly: true })
     const doctype3 = await ceramic3.createDocument(DOCTYPE_3ID, { content: { test: 789 }, metadata: { owners: [owner] } }, { applyOnly: true })
@@ -111,12 +112,11 @@ describe('Ceramic integration', () => {
     // ipfs1 <!-> ipfs3
     await ipfs1.swarm.connect(multaddr2)
     await ipfs2.swarm.connect(multaddr3)
-
-    const ceramic1 = await Ceramic.create(ipfs1)
+    const ceramic1 = await Ceramic.create(ipfs1, {stateStorePath: await tmp.tmpName()})
     await ceramic1.setDIDProvider(idWallet.get3idProvider())
     const owner = ceramic1.context.user.publicKeys.managementKey
-    const ceramic2 = await Ceramic.create(ipfs2)
-    const ceramic3 = await Ceramic.create(ipfs3)
+    const ceramic2 = await Ceramic.create(ipfs2, {stateStorePath: await tmp.tmpName()})
+    const ceramic3 = await Ceramic.create(ipfs3, {stateStorePath: await tmp.tmpName()})
     // ceramic node 2 shouldn't need to have the document open in order to forward the message
     const doctype1 = await ceramic1.createDocument<ThreeIdDoctype>(DOCTYPE_3ID, { content: { test: 321 }, metadata: { owners: [owner] } })
     while (doctype1.state.anchorStatus !== AnchorStatus.ANCHORED) {

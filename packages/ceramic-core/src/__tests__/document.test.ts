@@ -1,11 +1,21 @@
 import CID from 'cids'
 import Document from '../document'
 import MockAnchorService from "../anchor/mock/mock-anchor-service";
-import LevelStateStore from "../store/level-state-store"
+import tmp from 'tmp-promise'
+import Dispatcher from '../dispatcher'
+import CeramicUser from '../ceramic-user'
+import Ceramic from "../ceramic"
+import { Context } from "@ceramicnetwork/ceramic-common"
+import { AnchorStatus, DocOpts, SignatureStatus } from "@ceramicnetwork/ceramic-common"
+import { AnchorService } from "@ceramicnetwork/ceramic-common"
+import { ThreeIdDoctype, ThreeIdParams } from "@ceramicnetwork/ceramic-doctype-three-id"
+import { ThreeIdDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-three-id"
+import {PinStore} from "../store/pin-store";
+import {LevelStateStore} from "../store/level-state-store";
+import {Pinning} from "../pinning/pinning";
 
 jest.mock('../store/level-state-store')
-
-const mockStateStore = new LevelStateStore(null, null,null)
+jest.mock('../ceramic-user')
 
 jest.mock('../dispatcher', () => {
   const CID = require('cids') // eslint-disable-line @typescript-eslint/no-var-requires
@@ -63,17 +73,6 @@ jest.mock('../dispatcher', () => {
   }
 })
 
-import Dispatcher from '../dispatcher'
-jest.mock('../ceramic-user')
-import CeramicUser from '../ceramic-user'
-
-import Ceramic from "../ceramic"
-import { Context } from "@ceramicnetwork/ceramic-common"
-import { AnchorStatus, DocOpts, SignatureStatus } from "@ceramicnetwork/ceramic-common"
-import { AnchorService } from "@ceramicnetwork/ceramic-common"
-import { ThreeIdDoctype, ThreeIdParams } from "@ceramicnetwork/ceramic-doctype-three-id"
-import { ThreeIdDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-three-id"
-
 const anchorUpdate = (doc: Document): Promise<void> => new Promise(resolve => doc.doctype.on('change', resolve))
 
 const create = async (params: ThreeIdParams, ceramic: Ceramic, context: Context, opts: DocOpts = {}): Promise<Document> => {
@@ -86,6 +85,23 @@ const create = async (params: ThreeIdParams, ceramic: Ceramic, context: Context,
 
   return ceramic._createDocFromGenesis(record, opts)
 }
+
+let stateStore: LevelStateStore
+let pinStore: PinStore
+let pinning: Pinning
+
+beforeEach(async () => {
+  const levelPath = await tmp.tmpName()
+  stateStore = new LevelStateStore(levelPath)
+  pinning = {
+    open: jest.fn(),
+    close: jest.fn(),
+    pin: jest.fn(),
+    unpin: jest.fn()
+  }
+  pinStore = new PinStore(stateStore, pinning, jest.fn(), jest.fn())
+  await pinStore.open()
+})
 
 describe('Document', () => {
 
@@ -106,7 +122,7 @@ describe('Document', () => {
       anchorService = new MockAnchorService(dispatcher)
       user = new CeramicUser()
       doctypeHandler = new ThreeIdDoctypeHandler()
-      doctypeHandler.verifyJWT = (): void => { return }
+      doctypeHandler.verifyJWT = async (): Promise<void> => { return }
       // fake jwt
       user.sign = jest.fn(async () => 'aaaa.bbbb.cccc')
       findHandler = (): ThreeIdDoctypeHandler => doctypeHandler
@@ -118,7 +134,7 @@ describe('Document', () => {
         provider: null,
       }
 
-      ceramic = new Ceramic(dispatcher, mockStateStore, context)
+      ceramic = new Ceramic(dispatcher, pinStore, context)
       ceramic._doctypeHandlers['3id'] = doctypeHandler
     })
 
@@ -134,7 +150,7 @@ describe('Document', () => {
 
     it('is loaded correctly', async () => {
       const doc1 = await create({ content: initialContent, metadata: { owners } }, ceramic, context, { applyOnly: true, skipWait: true })
-      const doc2 = await Document.load(doc1.id, findHandler, dispatcher, mockStateStore, context, { skipWait: true })
+      const doc2 = await Document.load(doc1.id, findHandler, dispatcher, pinStore, context, { skipWait: true })
 
       expect(doc1.id).toEqual(doc2.id)
       expect(doc1.content).toEqual(initialContent)
@@ -146,7 +162,7 @@ describe('Document', () => {
       await anchorUpdate(tmpDoc)
       const docId = tmpDoc.id
       const log = tmpDoc.state.log
-      const doc = await Document.load(docId, findHandler, dispatcher, mockStateStore, context, { skipWait: true })
+      const doc = await Document.load(docId, findHandler, dispatcher, pinStore, context, { skipWait: true })
       // changes will not load since no network and no local head storage yet
       expect(doc.content).toEqual(initialContent)
       expect(doc.state).toEqual(expect.objectContaining({ signature: SignatureStatus.GENESIS, anchorStatus: 0 }))
@@ -246,7 +262,7 @@ describe('Document', () => {
       expect(doc1.content).toEqual(newContent)
       const headValidUpdate = doc1.head
       // create invalid change that happened after main change
-      const doc2 = await Document.load(docId, findHandler, dispatcher, mockStateStore, context, { skipWait: true })
+      const doc2 = await Document.load(docId, findHandler, dispatcher, pinStore, context, { skipWait: true })
       await doc2._handleHead(headPreUpdate)
       // add short wait to get different anchor time
       // sometime the tests are very fast
@@ -291,7 +307,7 @@ describe('Document', () => {
       // fake jwt
       user.sign = jest.fn(async () => 'aaaa.bbbb.cccc')
       doctypeHandler = new ThreeIdDoctypeHandler()
-      doctypeHandler.verifyJWT = (): void => { return }
+      doctypeHandler.verifyJWT = async (): Promise<void> => { return }
       getHandlerFromGenesis = (): ThreeIdDoctypeHandler => doctypeHandler
 
       context = {
@@ -301,7 +317,7 @@ describe('Document', () => {
         provider: null,
       }
 
-      ceramic = new Ceramic(dispatcher, mockStateStore, context)
+      ceramic = new Ceramic(dispatcher, pinStore, context)
       ceramic._doctypeHandlers['3id'] = doctypeHandler
     })
 
@@ -323,7 +339,7 @@ describe('Document', () => {
     it('documents share updates', async () => {
       const doc1 = await create({ content: initialContent, metadata: { owners } }, ceramic, context)
       await anchorUpdate(doc1)
-      const doc2 = await Document.load(doc1.id, getHandlerFromGenesis, dispatcher, mockStateStore, context, { skipWait: true })
+      const doc2 = await Document.load(doc1.id, getHandlerFromGenesis, dispatcher, pinStore, context, { skipWait: true })
 
       const updatePromise = new Promise(resolve => {
         doc2.doctype.on('change', resolve)

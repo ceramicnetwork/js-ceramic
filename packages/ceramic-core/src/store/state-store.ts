@@ -1,50 +1,11 @@
-import Document from "../document"
-import { DocState } from "@ceramicnetwork/ceramic-common"
+import { DocState, Doctype } from "@ceramicnetwork/ceramic-common"
 
-/**
- * State store API
- */
-export default interface StateStore {
-
-    /**
-     * Open pinning service
-     */
+export interface StateStore {
     open(): Promise<void>;
-
-    /**
-     * Pin document
-     * @param document - Document instance
-     * @param pinOnIpfs - Pin logs on IPFS
-     */
-    pin(document: Document, pinOnIpfs?: boolean): Promise<void>;
-
-    /**
-     * Load document
-     * @param docId - Document ID
-     */
-    loadState(docId: string): Promise<DocState>;
-
-    /**
-     * Is document pinned locally?
-     * @param docId - Document ID
-     */
-    isDocPinned(docId: string): Promise<boolean>;
-
-    /**
-     * Unpin document
-     * @param docId - Document ID
-     */
-    rm(docId: string): Promise<void>;
-
-    /**
-     * List pinned document
-     * @param docId - Document ID
-     */
-    ls(docId?: string): Promise<AsyncIterable<string>>;
-
-    /**
-     * Close pinning service
-     */
     close(): Promise<void>;
-
+    save(document: Doctype): Promise<void>;
+    load(docId: string): Promise<DocState | null>;
+    exists(docId: string): Promise<boolean>;
+    list(docId?: string): Promise<string[]>;
+    remove(docId: string): Promise<void>;
 }

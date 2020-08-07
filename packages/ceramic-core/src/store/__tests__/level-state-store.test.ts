@@ -1,270 +1,149 @@
-import CID from "cids"
-import * as os from "os"
-import * as path from "path"
-import { promises as fsPromises } from "fs";
+import tmp from 'tmp-promise'
+import {LevelStateStore} from "../level-state-store";
+import Level from "level-ts";
+import {AnchorStatus, Doctype, SignatureStatus} from "@ceramicnetwork/ceramic-common";
+import CID from 'cids';
+import {DoctypeUtils} from "@ceramicnetwork/ceramic-common/lib/index";
+import _ from 'lodash'
 
-import LevelStateStore from "../level-state-store"
+let mockStorage: Map<string, any>
+const mockPut = jest.fn((id: string, state: any) => mockStorage.set(id, state))
+let mockGet = jest.fn((id: string) => mockStorage.get(id))
+const mockDel = jest.fn((id: string) => Promise.resolve())
+const mockStreamResult = ['1', '2', '3']
+const mockStream = jest.fn(async () => mockStreamResult)
 
-let pinnedDocIds: Record<string, boolean> = {}
-
-const cloneDeep = require('lodash.clonedeep') // eslint-disable-line @typescript-eslint/no-var-requires
-const { sha256 } = require('js-sha256') // eslint-disable-line @typescript-eslint/no-var-requires
-const hash = (data: string): CID => new CID(1, 'sha2-256', Buffer.from('1220' + sha256(data), 'hex'))
-
-const recs: Record<string, any> = {}
-
-// mock IPFS
-const ipfs = {
-    id: (): any => ({ id: 'ipfsid' }),
-    dag: {
-      put(rec: any): any {
-        // stringify as a way of doing deep copy
-        const clone = cloneDeep(rec)
-        const cid = hash(JSON.stringify(clone))
-        recs[cid.toString()] = clone
-        return cid
-      },
-      get(cid: any): any {
+jest.mock('level-ts', () => {
+    return jest.fn().mockImplementation(() => {
         return {
-          value: recs[cid.toString()]
+            put: mockPut,
+            get: mockGet,
+            del: mockDel,
+            stream: mockStream
         }
-      }
-    },
-    pin: {
-      add: jest.fn((cid: string) => {
-        pinnedDocIds[cid] = true
-        return
-      }),
-      rm: jest.fn( (cid: string) => {
-        delete pinnedDocIds[cid]
-        return
-      }),
-      ls: jest.fn( (cid?: string): AsyncIterable<string> => {
-        let keys: string[];
-        if (cid) {
-          keys = pinnedDocIds[cid]? [cid] : []
-        } else {
-          keys = Object.keys(pinnedDocIds)
-        }
-        return {
-          [Symbol.asyncIterator](): any {
-            let index = 0
-            return {
-              next(): any {
-                if (index === keys.length) {
-                  return Promise.resolve({ value: null, done: true });
-                }
-                return Promise.resolve({ value: keys[index++], done: false });
-              }
-            };
-          }
-        }
-      })
-    },
-}
-
-// mock Dispatcher
-jest.mock("../../dispatcher", () => {
-  const CID = require("cids") // eslint-disable-line @typescript-eslint/no-var-requires
-  const cloneDeep = require("lodash.clonedeep") // eslint-disable-line @typescript-eslint/no-var-requires
-  const { sha256 } = require("js-sha256") // eslint-disable-line @typescript-eslint/no-var-requires
-  const hash = (data: string): CID => new CID(1, 'sha2-256', Buffer.from('1220' + sha256(data), 'hex'))
-  return (): any => {
-    const recs: Record<string, any> = {}
-    return {
-      _ipfs: {
-        dag: {
-          put(rec: any): any {
-            // stringify as a way of doing deep copy
-            const clone = cloneDeep(rec)
-            const cid = hash(JSON.stringify(clone))
-            recs[cid.toString()] = clone
-            return cid
-          },
-          get(cid: any): any {
-            return recs[cid.toString()]
-          }
-        }
-      },
-      register: jest.fn(),
-      on: jest.fn(),
-      storeRecord: jest.fn((rec) => {
-        const clone = cloneDeep(rec)
-        const cid = hash(JSON.stringify(clone))
-        recs[cid.toString()] = clone
-        return cid
-      }),
-      publishHead: jest.fn(),
-      _requestHead: jest.fn(),
-      retrieveRecord: jest.fn(cid => {
-        return recs[cid.toString()]
-      }),
-    }
-  }
+    })
 })
 
-import Document from "../../document"
-import Dispatcher from "../../dispatcher"
-import MockAnchorService from "../../anchor/mock/mock-anchor-service"
+interface Params {
+    num: number;
+}
 
-jest.mock("../../ceramic-user")
-
-import CeramicUser from "../../ceramic-user"
-import { Doctype, DoctypeHandler } from "@ceramicnetwork/ceramic-common"
-import { AnchorService } from "@ceramicnetwork/ceramic-common"
-import { Context } from "@ceramicnetwork/ceramic-common"
-import { ThreeIdDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-three-id"
-import { ThreeIdDoctype } from "@ceramicnetwork/ceramic-doctype-three-id"
-
-const anchorUpdate = (doctype: Doctype): Promise<void> => new Promise(resolve => doctype.on('change', resolve))
-
-describe('Level data store', () => {
-
-  const initialContent = { abc: 123, def: 456 }
-  const owners = ['publickeymock']
-
-  let store: LevelStateStore
-  let dispatcher: Dispatcher
-  let doctypeHandler: ThreeIdDoctypeHandler
-  let anchorService: AnchorService
-  let context: Context
-
-  beforeEach(async () => {
-    pinnedDocIds = {}
-
-    ipfs.pin.ls.mockClear()
-    ipfs.pin.rm.mockClear()
-    ipfs.pin.add.mockClear()
-
-    const storeDirPath = await fsPromises.mkdtemp(path.join(os.tmpdir(), 'store-'))
-
-    dispatcher = Dispatcher()
-    anchorService = new MockAnchorService(dispatcher)
-
-    const user: CeramicUser = new CeramicUser(null)
-    user.sign = jest.fn(async () => 'aaaa.bbbb.cccc')
-
-    context = {
-      ipfs,
-      user,
-      anchorService,
+class FakeType extends Doctype {
+    change(params: Params): Promise<void> {
+        throw new Error("Method not implemented.");
     }
+}
 
-    doctypeHandler = new ThreeIdDoctypeHandler()
-    doctypeHandler.verifyJWT = (): void => { return }
+let levelPath: string
+let stateSore: LevelStateStore
 
-    store = new LevelStateStore(ipfs, dispatcher, storeDirPath)
-    await store.open()
-  })
+beforeEach(async () => {
+    mockStorage = new Map()
+    levelPath = await tmp.tmpName()
+    stateSore = new LevelStateStore(levelPath)
+    mockGet = jest.fn((id: string) => mockStorage.get(id))
+})
 
-  it('pins document correctly without IPFS pinning', async () => {
-    const genesis = await ThreeIdDoctype.makeGenesis({ content: initialContent, metadata: { owners } })
-    const findHandler = (): DoctypeHandler<ThreeIdDoctype> => doctypeHandler
-    const doc = await Document.createFromGenesis(genesis, findHandler, dispatcher, store, context)
-    await anchorUpdate(doc.doctype)
+const state = {
+    doctype: 'fake',
+    content: {num: 0},
+    metadata: {
+        owners: ['']
+    },
+    signature: SignatureStatus.GENESIS,
+    anchorStatus: AnchorStatus.NOT_REQUESTED,
+    log: [new CID('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D')]
+}
 
-    let docState = await store.loadState(doc.id)
-    expect(docState).toBeNull()
+test('#open', async () => {
+    expect(Level).not.toBeCalled()
+    expect(stateSore.store).toBeUndefined()
+    await stateSore.open()
+    expect(Level).toBeCalledWith(levelPath)
+})
 
-    await store.pin(doc, false)
-    expect(ipfs.pin.add).toHaveBeenCalledTimes(0)
+test('#save and #load', async () => {
+    const document = new FakeType(state, {})
+    await stateSore.open()
+    await stateSore.save(document)
+    const docId = DoctypeUtils.getBaseDocId(DoctypeUtils.normalizeDocId(document.id))
+    const storedState = {
+        ...state,
+        log: state.log.map(_.toString)
+    }
+    expect(mockPut).toBeCalledWith(docId, storedState)
 
-    docState = await store.loadState(doc.id)
-    expect(docState).toBeDefined()
-  })
+    const retrieved = await stateSore.load(document.id)
+    expect(mockGet).toBeCalledWith(docId)
+    expect(retrieved).toEqual(state)
+})
 
-  it('pins not anchored document correctly with IPFS pinning', async () => {
-    const genesis = await ThreeIdDoctype.makeGenesis({ content: initialContent, metadata: { owners } })
-    const findHandler = (): DoctypeHandler<ThreeIdDoctype> => doctypeHandler
-    const doc = await Document.createFromGenesis(genesis, findHandler, dispatcher, store, context, {
-      applyOnly: true, skipWait: true,
+describe('#load', () => {
+    test('#load not found', async () => {
+        mockGet = jest.fn((id: string) => { throw {notFound: true}})
+        await stateSore.open()
+        const retrieved = await stateSore.load('ceramic://fooblah')
+        expect(retrieved).toBeNull()
     })
 
-    let docState = await store.loadState(doc.id)
-    expect(docState).toBeNull()
+    test('#load passes errors', async () => {
+        mockGet = jest.fn((id: string) => { throw new Error('something internal to LevelDB')})
+        await stateSore.open()
+        await expect(stateSore.load('ceramic://fooblah')).rejects.toThrow('something internal to LevelDB')
+    })
+})
 
-    await store.pin(doc, true)
-    expect(ipfs.pin.add).toHaveBeenCalledTimes(1)
+describe('#exists', () => {
+    test('absent', async () => {
+        await stateSore.open()
+        const load = jest.spyOn(stateSore, 'load')
+        await expect(stateSore.exists('ceramic://fooblah')).resolves.toBeFalsy()
+        expect(load).toBeCalledWith('ceramic://fooblah')
+    })
 
-    docState = await store.loadState(doc.id)
-    expect(docState).toBeDefined()
-  })
+    test('present', async () => {
+        await stateSore.open()
+        stateSore.load = jest.fn(async () => state)
+        await expect(stateSore.exists('ceramic://fooblah')).resolves.toBeTruthy()
+        expect(stateSore.load).toBeCalledWith('ceramic://fooblah')
+    })
+})
 
-  it('pins document correctly with IPFS pinning', async () => {
-    const genesis = await ThreeIdDoctype.makeGenesis({ content: initialContent, metadata: { owners } })
-    const findHandler = (): DoctypeHandler<ThreeIdDoctype> => doctypeHandler
-    const doc = await Document.createFromGenesis(genesis, findHandler, dispatcher, store, context)
-    await anchorUpdate(doc.doctype)
+describe('#remove', () => {
+    test('absent', async () => {
+        await stateSore.open()
+        const exists = jest.spyOn(stateSore, 'exists').mockImplementation(async () => false)
+        await stateSore.remove('ceramic://fooblah')
+        expect(exists).toBeCalledWith('ceramic://fooblah')
+        expect(mockDel).not.toBeCalled()
+    })
 
-    let docState = await store.loadState(doc.id)
-    expect(docState).toBeNull()
+    test('present', async () => {
+        await stateSore.open()
+        const exists = jest.spyOn(stateSore, 'exists').mockImplementation(async () => true)
+        await stateSore.remove('ceramic://fooblah')
+        expect(exists).toBeCalledWith('ceramic://fooblah')
+        expect(mockDel).toBeCalledWith('ceramic://fooblah')
+    })
+})
 
-    await store.pin(doc, true)
-    expect(ipfs.pin.add).toHaveBeenCalledTimes(4)
-
-    docState = await store.loadState(doc.id)
-    expect(docState).toBeDefined()
-  })
-
-  it('removes pinned document', async () => {
-    const genesis = await ThreeIdDoctype.makeGenesis({ content: initialContent, metadata: { owners } })
-    const findHandler = (): DoctypeHandler<ThreeIdDoctype> => doctypeHandler
-    const doc = await Document.createFromGenesis(genesis, findHandler, dispatcher, store, context)
-    await anchorUpdate(doc.doctype)
-
-    await store.pin(doc, true)
-    expect(ipfs.pin.add).toHaveBeenCalledTimes(4)
-
-    await store.rm(doc.id)
-    expect(ipfs.pin.rm).toHaveBeenCalledTimes(4)
-  })
-
-  it('skips removing unpinned document', async () => {
-    const genesis = await ThreeIdDoctype.makeGenesis({ content: initialContent, metadata: { owners } })
-    const findHandler = (): DoctypeHandler<ThreeIdDoctype> => doctypeHandler
-    const doc = await Document.createFromGenesis(genesis, findHandler, dispatcher, store, context)
-    await anchorUpdate(doc.doctype)
-
-    await store.rm(doc.id)
-    expect(ipfs.pin.rm).toHaveBeenCalledTimes(0)
-  })
-
-  it('lists pinned documents', async () => {
-    const genesis = await ThreeIdDoctype.makeGenesis({ content: initialContent, metadata: { owners } })
-    const findHandler = (): DoctypeHandler<ThreeIdDoctype> => doctypeHandler
-    const doc = await Document.createFromGenesis(genesis, findHandler, dispatcher, store, context)
-    await anchorUpdate(doc.doctype)
-
-    await store.pin(doc, true)
-    expect(ipfs.pin.add).toHaveBeenCalledTimes(4)
-
-    let pinned = []
-    let iterator = await store.ls(doc.id)
-    for await (const id of iterator) {
-      pinned.push(id)
-    }
-    expect(pinned.length).toEqual(1)
-    expect(ipfs.pin.ls).toHaveBeenCalledTimes(0)
-
-    pinned = []
-    iterator = await store.ls()
-    for await (const id of iterator) {
-      pinned.push(id)
-    }
-  })
-
-  it('lists empty for unpinned document', async () => {
-    const genesis = await ThreeIdDoctype.makeGenesis({ content: initialContent, metadata: { owners } })
-    const findHandler = (): DoctypeHandler<ThreeIdDoctype> => doctypeHandler
-    const doc = await Document.createFromGenesis(genesis, findHandler, dispatcher, store, context)
-    await anchorUpdate(doc.doctype)
-
-    const pinned = []
-    const iterator = await store.ls(doc.id)
-    for await (const id of iterator) {
-      pinned.push(id)
-    }
-    expect(pinned.length).toEqual(0)
-    expect(ipfs.pin.ls).toHaveBeenCalledTimes(0)
-  })
+describe('#list', () => {
+    test('saved entries', async () => {
+        await stateSore.open()
+        const list = await stateSore.list()
+        expect(list).toEqual(mockStreamResult)
+        expect(mockStream).toBeCalledWith({keys: true, values: false})
+    })
+    test('report if docId is saved', async () => {
+        await stateSore.open()
+        stateSore.exists = jest.fn(() => Promise.resolve(true))
+        const list = await stateSore.list('ceramic://doc-id')
+        expect(list).toEqual(['ceramic://doc-id'])
+    })
+    test('report if docId is absent', async () => {
+        await stateSore.open()
+        stateSore.exists = jest.fn(() => Promise.resolve(false))
+        const list = await stateSore.list('ceramic://doc-id')
+        expect(list).toEqual([])
+    })
 })
