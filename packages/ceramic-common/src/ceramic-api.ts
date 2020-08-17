@@ -1,3 +1,5 @@
+import { DID } from 'dids'
+import { RPCConnection } from 'rpc-utils'
 import { Doctype, DoctypeHandler, DocOpts, DocParams } from "./doctype"
 
 /**
@@ -23,25 +25,17 @@ export interface PinApi {
     ls(docId?: string): Promise<AsyncIterable<string>>;
 }
 
-// TODO handle errors as well
-export interface JsonRpc2Response {
-    'id': string;
-    'json-rpc': string;
-    'result': object;
-}
-
 /**
  * Describes DID provider instance
  */
-export interface DIDProvider {
-    send(jsonReq: object): JsonRpc2Response;
-}
+export type DIDProvider = RPCConnection
 
 /**
  * Describes Ceramic node API
  */
 export interface CeramicApi {
     pin: PinApi;
+    user?: DID;
 
     /**
      * Register Doctype handler

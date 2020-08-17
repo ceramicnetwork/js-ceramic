@@ -3,7 +3,7 @@ import Dispatcher from './dispatcher'
 import CeramicUser from './ceramic-user'
 import Document from './document'
 import { AnchorServiceFactory } from "./anchor/anchor-service-factory";
-import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
+import { getResolver } from '@ceramicnetwork/3id-did-resolver'
 
 import { CeramicApi, DIDProvider, PinApi } from "@ceramicnetwork/ceramic-common"
 import { Doctype, DoctypeHandler, DocOpts } from "@ceramicnetwork/ceramic-common"
@@ -133,7 +133,7 @@ class Ceramic implements CeramicApi {
       await ceramic.setDIDProvider(config.didProvider)
     }
 
-    const threeIdResolver = ThreeIdResolver.getResolver(ceramic)
+    const threeIdResolver = getResolver(ceramic)
     ceramic.context.resolver = new Resolver({
       ...config.didResolver, ...threeIdResolver
     })

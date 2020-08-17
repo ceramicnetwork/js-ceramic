@@ -39,7 +39,7 @@
     "@textile/powergate-client": "^0.2.0",
     "cids": "^0.8.0",
     "cross-fetch": "^3.0.5",
-    "did-resolver": "^2.0.1",
+    "did-resolver": "^2.1.0",
     "fast-json-patch": "^3.0.0-1",
     "ipfs-http-client": "^45.0.0",
     "level-ts": "^2.0.5",
