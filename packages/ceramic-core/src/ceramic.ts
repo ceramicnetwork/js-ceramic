@@ -43,7 +43,7 @@ export interface CeramicConfig {
   didProvider?: DIDProvider;
 
   validateDocs?: boolean;
-  pinnings?: string[];
+  pinning?: string[];
 }
 
 /**
@@ -125,7 +125,7 @@ class Ceramic implements CeramicApi {
       anchorService,
     }
 
-    const pinStoreFactory = new PinStoreFactory(context, config.stateStorePath, config.pinnings)
+    const pinStoreFactory = new PinStoreFactory(context, config.stateStorePath, config.pinning)
     const pinStore = await pinStoreFactory.open()
 
     const ceramic = new Ceramic(dispatcher, pinStore, context, config.validateDocs)
