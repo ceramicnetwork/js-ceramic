@@ -243,8 +243,8 @@ export default class CeramicCliUtils {
      * List pinned documents
      * @param docId - optional document ID filter
      */
-    static async pinLs(docId: string): Promise<void> {
-        if (!CeramicCliUtils._validateDocId(docId)) {
+    static async pinLs(docId?: string): Promise<void> {
+        if (docId && !CeramicCliUtils._validateDocId(docId)) {
             console.error(`Invalid docId: ${docId}`)
             return
         }
