@@ -28,7 +28,7 @@
   "dependencies": {
     "@types/json-schema": "^7.0.5",
     "ajv": "^6.12.3",
-    "did-resolver": "github:ceramicnetwork/did-resolver"
+    "did-resolver": "^2.1.1"
   },
   "devDependencies": {
     "@babel/core": "^7.9.0",
