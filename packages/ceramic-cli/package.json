@@ -30,6 +30,12 @@
     "lint": "./node_modules/.bin/eslint ./src --ext .js,.jsx,.ts,.tsx",
     "clean": "rm -rf ./lib"
   },
+  "jest": {
+    "testEnvironment": "node",
+    "transformIgnorePatterns": [
+      "/node_modules(?!/did-jwt)/"
+    ]
+  },
   "dependencies": {
     "@ceramicnetwork/ceramic-common": "^0.2.8",
     "@ceramicnetwork/ceramic-core": "^0.2.8",
