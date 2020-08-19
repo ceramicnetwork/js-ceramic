@@ -42,7 +42,8 @@
     "eslint": "^6.8.0",
     "eslint-plugin-jest": "^23.8.2",
     "jest": "^25.1.0",
-    "tmp-promise": "^2.0.2"
+    "tmp-promise": "^2.0.2",
+    "@types/bs58": "^4.0.1"
   },
   "jest": {
     "transformIgnorePatterns": [
