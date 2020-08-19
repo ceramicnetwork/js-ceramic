@@ -29,8 +29,7 @@
     "@types/json-schema": "^7.0.5",
     "ajv": "^6.12.3",
     "did-resolver": "^2.1.0",
-    "dids": "^0.1.0",
-    "rpc-utils": "^0.1.2"
+    "dids": "^0.2.0"
   },
   "devDependencies": {
     "@babel/core": "^7.9.0",

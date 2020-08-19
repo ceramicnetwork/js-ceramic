@@ -1,5 +1,4 @@
 import { DID } from 'dids'
-import { RPCConnection } from 'rpc-utils'
 import { Doctype, DoctypeHandler, DocOpts, DocParams } from "./doctype"
 
 /**
@@ -28,7 +27,7 @@ export interface PinApi {
 /**
  * Describes DID provider instance
  */
-export type DIDProvider = RPCConnection
+export { DIDProvider } from 'dids'
 
 /**
  * Describes Ceramic node API

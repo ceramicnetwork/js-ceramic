@@ -1,30 +1,17 @@
 import { Doctype } from '@ceramicnetwork/ceramic-common'
-import type { ParsedDID, DIDResolver, DIDDocument, Resolver } from 'did-resolver'
+import type { ParsedDID, DIDResolver, DIDDocument } from 'did-resolver'
 
 interface Ceramic {
-  loadDocument(docId: string): Promise<Doctype>;
+  loadDocument(docId: string): Promise<Doctype>
 }
 
-export interface ThreeIDDocument extends DIDDocument {
-  idx?: string;
-}
+export type ResolverRegistry = Record<string, DIDResolver>
 
-export type ThreeIDResolver = (
-  did: string,
-  parsed: ParsedDID,
-  resolver: Resolver
-) => Promise<null | ThreeIDDocument>
-
-export interface ResolverRegistry {
-  '3': ThreeIDResolver;
-  [index: string]: DIDResolver;
-}
-
-export function wrapDocument(content: any, did: string): ThreeIDDocument {
+export function wrapDocument(content: any, did: string): DIDDocument {
   // this should be generated in a much more dynamic way based on the content of the doc
   // keys should be encoded using multicodec, by looking at the codec bits
   // we can determine the key type.
-  return {
+  const doc: DIDDocument = {
     '@context': 'https://w3id.org/did/v1',
     id: did,
     publicKey: [
@@ -47,13 +34,24 @@ export function wrapDocument(content: any, did: string): ThreeIDDocument {
         publicKey: `${did}#signingKey`,
       },
     ],
-    idx: content.idx
   }
+
+  if (content.idx != null) {
+    doc.service = [
+      {
+        id: `${did}#idx`,
+        type: 'IdentityIndexRoot',
+        serviceEndpoint: content.idx,
+      },
+    ]
+  }
+
+  return doc
 }
 
 export function getResolver(ceramic: Ceramic): ResolverRegistry {
   return {
-    '3': async (did: string, parsed: ParsedDID): Promise<ThreeIDDocument | null> => {
+    '3': async (did: string, parsed: ParsedDID): Promise<DIDDocument> => {
       const doctype = await ceramic.loadDocument(`/ceramic/${parsed.id}`)
       return wrapDocument(doctype.content, did)
     },

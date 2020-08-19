@@ -1,5 +1,39 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`3ID DID Resolver resolver adds IDX root as service 1`] = `
+Object {
+  "@context": "https://w3id.org/did/v1",
+  "authentication": Array [
+    Object {
+      "publicKey": "did:3:bafyiuh3f97hqef97h#signingKey",
+      "type": "Secp256k1SignatureAuthentication2018",
+    },
+  ],
+  "id": "did:3:bafyiuh3f97hqef97h",
+  "publicKey": Array [
+    Object {
+      "controller": "did:3:bafyiuh3f97hqef97h",
+      "id": "did:3:bafyiuh3f97hqef97h#signingKey",
+      "publicKeyHex": "fake signing key",
+      "type": "Secp256k1VerificationKey2018",
+    },
+    Object {
+      "controller": "did:3:bafyiuh3f97hqef97h",
+      "id": "did:3:bafyiuh3f97hqef97h#encryptionKey",
+      "publicKeyBase64": "fake encryption key",
+      "type": "Curve25519EncryptionPublicKey",
+    },
+  ],
+  "service": Array [
+    Object {
+      "id": "did:3:bafyiuh3f97hqef97h#idx",
+      "serviceEndpoint": "ceramic://rootId",
+      "type": "IdentityIndexRoot",
+    },
+  ],
+}
+`;
+
 exports[`3ID DID Resolver resolver works correctly 1`] = `
 Object {
   "@context": "https://w3id.org/did/v1",
@@ -10,7 +44,6 @@ Object {
     },
   ],
   "id": "did:3:bafyiuh3f97hqef97h",
-  "idx": undefined,
   "publicKey": Array [
     Object {
       "controller": "did:3:bafyiuh3f97hqef97h",
