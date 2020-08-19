@@ -18,7 +18,7 @@ export function wrapDocument(content: any, did: string): DIDDocument {
     authentication: [],
     keyAgreement: []
   }
-  return Object.entries(content.publicKeys as string[]).reduce((diddoc, [keyName, keyValue]) => {
+  const doc = Object.entries(content.publicKeys as string[]).reduce((diddoc, [keyName, keyValue]) => {
     if (keyValue.startsWith('z')) { // we got a multicodec encoded key
       const keyBuf = bs58.decode(keyValue.slice(1))
       if (keyBuf[0] === 0xe7) { // it's secp256k1
@@ -73,6 +73,18 @@ export function wrapDocument(content: any, did: string): DIDDocument {
     }
     return diddoc
   }, startDoc)
+
+  if (content.idx != null) {
+    doc.service = [
+      {
+        id: `${did}#idx`,
+        type: 'IdentityIndexRoot',
+        serviceEndpoint: content.idx,
+      },
+    ]
+  }
+
+  return doc
 }
 
 // TODO - add backwards compatibility for 3IDv0

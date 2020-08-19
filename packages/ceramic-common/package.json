@@ -28,7 +28,8 @@
   "dependencies": {
     "@types/json-schema": "^7.0.5",
     "ajv": "^6.12.3",
-    "did-resolver": "^2.1.1"
+    "did-resolver": "^2.1.1",
+    "dids": "^0.2.1"
   },
   "devDependencies": {
     "@babel/core": "^7.9.0",
