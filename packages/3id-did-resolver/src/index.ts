@@ -16,7 +16,7 @@ export function wrapDocument(content: any, did: string): DIDDocument {
     id: did,
     publicKey: [],
     authentication: [],
-    keyAgreement: [] // TODO this should be resolved by the PR in the did-resolver lib
+    keyAgreement: [] // TODO should be resolved by https://github.com/decentralized-identity/did-resolver/pull/56
   }
   return Object.entries(content.publicKeys as string[]).reduce((diddoc, [keyName, keyValue]) => {
     if (keyValue.startsWith('z')) { // we got a multicodec encoded key
