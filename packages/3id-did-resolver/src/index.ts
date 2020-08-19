@@ -11,21 +11,21 @@ interface ResolverRegistry {
 }
 
 export function wrapDocument(content: any, did: string): DIDDocument {
-  const startDoc = {
+  const startDoc: DIDDocument = {
     '@context': 'https://w3id.org/did/v1',
     id: did,
     publicKey: [],
     authentication: [],
     keyAgreement: []
   }
-  return Object.entries(content.publicKeys).reduce((diddoc, [keyName, keyValue]) => {
+  return Object.entries(content.publicKeys as string[]).reduce((diddoc, [keyName, keyValue]) => {
     if (keyValue.startsWith('z')) { // we got a multicodec encoded key
       const keyBuf = bs58.decode(keyValue.slice(1))
       if (keyBuf[0] === 0xe7) { // it's secp256k1
         diddoc.publicKey.push({
           id: `${did}#${keyName}`,
           type: 'Secp256k1VerificationKey2018',
-          owner: did,
+          controller: did,
           // remove multicodec varint and encode to hex
           publicKeyHex: keyBuf.slice(2).toString('hex')
         })
@@ -38,7 +38,7 @@ export function wrapDocument(content: any, did: string): DIDDocument {
         diddoc.publicKey.push({
           id: `${did}#${keyName}`,
           type: 'Curve25519EncryptionPublicKey',
-          owner: did,
+          controller: did,
           publicKeyBase64: keyBuf.slice(2).toString('base64')
         })
         // new keyAgreement format for x25519 keys
@@ -54,7 +54,7 @@ export function wrapDocument(content: any, did: string): DIDDocument {
         diddoc.publicKey.push({
           id: `${did}#${keyName}`,
           type: 'Secp256k1VerificationKey2018',
-          owner: did,
+          controller: did,
           // remove multicodec varint and encode to hex
           publicKeyHex: keyValue
         })
@@ -66,7 +66,7 @@ export function wrapDocument(content: any, did: string): DIDDocument {
         diddoc.publicKey.push({
           id: `${did}#${keyName}`,
           type: 'Curve25519EncryptionPublicKey',
-          owner: did,
+          controller: did,
           publicKeyBase64: keyValue
         })
       }
