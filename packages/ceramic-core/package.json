@@ -68,6 +68,7 @@
     "tmp-promise": "^2.0.2"
   },
   "jest": {
+    "testEnvironment": "node",
     "transformIgnorePatterns": [
       "/node_modules(?!/did-jwt)/"
     ]
