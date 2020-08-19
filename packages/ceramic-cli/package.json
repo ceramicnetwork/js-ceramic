@@ -31,10 +31,7 @@
     "clean": "rm -rf ./lib"
   },
   "jest": {
-    "testEnvironment": "node",
-    "transformIgnorePatterns": [
-      "/node_modules(?!/did-jwt)/"
-    ]
+    "testEnvironment": "node"
   },
   "dependencies": {
     "@ceramicnetwork/ceramic-common": "^0.2.8",
