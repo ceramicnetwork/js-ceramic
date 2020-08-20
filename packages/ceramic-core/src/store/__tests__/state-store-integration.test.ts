@@ -143,7 +143,7 @@ describe('Level data store', () => {
     doctypeHandler.verifyJWT = async (): Promise<void> => { return }
 
     const levelPath = await tmp.tmpName()
-    const storeFactory = new PinStoreFactory(context, levelPath, ['ipfs://__context'])
+    const storeFactory = new PinStoreFactory(context, levelPath, ['ipfs+context'])
     store = await storeFactory.open()
   })
 

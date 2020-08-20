@@ -17,14 +17,6 @@ describe('constructor', () => {
         const pinning = new IpfsPinning('ipfs+context', {})
         expect(pinning.ipfsAddress).toEqual('__context')
     })
-    test('set IPFS address from ipfs protocol', () => {
-        const pinning = new IpfsPinning('ipfs://example.com', {})
-        expect(pinning.ipfsAddress).toEqual('http://example.com:5001')
-    })
-    test('set IPFS address from ipfs protocol with port', () => {
-        const pinning = new IpfsPinning('ipfs://example.com:3432', {})
-        expect(pinning.ipfsAddress).toEqual('http://example.com:3432')
-    })
     test('set IPFS address from ipfs+http protocol', () => {
         const pinning = new IpfsPinning('ipfs+http://example.com', {})
         expect(pinning.ipfsAddress).toEqual('http://example.com:5001')

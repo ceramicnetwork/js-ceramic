@@ -31,7 +31,6 @@ export class IpfsPinning implements Pinning {
             const ipfsHost = url.hostname
             const ipfsPort = parseInt(url.port, 10) || 5001
             const protocol = url.protocol
-                .replace('ipfs:', 'http')
                 .replace('ipfs+http:', 'http')
                 .replace('ipfs+https:', 'https')
                 .replace('ipfs+context:', FROM_CONTEXT)
