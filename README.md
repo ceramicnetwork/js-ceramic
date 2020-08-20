@@ -9,7 +9,7 @@ Monorepo containing the Typescript implementation of the Ceramic protocol.
 
 ## Project Status - `Slip testnet`
 
-This implementation is ready for testing, but there is still a few things left before the Clay testnet. See the [roadmap](https://github.com/ceramicnetwork/ceramic/issues/19).
+This implementation is ready for testing, but there are still a few things left before the Clay testnet. See the [roadmap](https://github.com/ceramicnetwork/ceramic/issues/19).
 
 ## Project Structure
 
