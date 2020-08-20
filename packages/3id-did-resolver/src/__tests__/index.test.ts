@@ -23,6 +23,18 @@ const ceramicMockOld = { // to be removed
   })
 }
 
+const ceramicMockWithIDX = {
+  loadDocument: async (): Promise<any> => ({
+    content: {
+      publicKeys: {
+        signing: 'zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV',
+        encryption: 'z6LSfQabSbJzX8WAm1qdQcHCHTzVv8a2u6F7kmzdodfvUCo9'
+      },
+      idx: 'ceramic://rootId'
+    }
+  })
+}
+
 describe('3ID DID Resolver', () => {
 
   it('getResolver works correctly', async () => {
@@ -39,6 +51,13 @@ describe('3ID DID Resolver', () => {
 
   it('resolves 3id document correctly', async () => {
     const threeIdResolver = ThreeIdResolver.getResolver(ceramicMock)
+    const resolver = new Resolver(threeIdResolver)
+    const fake3ID = 'did:3:bafyiuh3f97hqef97h'
+    expect(await resolver.resolve(fake3ID)).toMatchSnapshot()
+  })
+
+  it('adds IDX root as service', async () => {
+    const threeIdResolver = ThreeIdResolver.getResolver(ceramicMockWithIDX)
     const resolver = new Resolver(threeIdResolver)
     const fake3ID = 'did:3:bafyiuh3f97hqef97h'
     expect(await resolver.resolve(fake3ID)).toMatchSnapshot()
