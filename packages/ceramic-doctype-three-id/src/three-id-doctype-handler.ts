@@ -1,15 +1,15 @@
 import CID from 'cids'
+import base64url from 'base64url'
+import cloneDeep from 'lodash.clonedeep'
+import stringify from 'fast-json-stable-stringify'
 
-import { DIDDocument } from 'did-resolver'
-
-import { wrapDocument } from '@ceramicnetwork/3id-did-resolver'
 import jsonpatch from 'fast-json-patch'
 import * as didJwt from 'did-jwt'
 import { ThreeIdDoctype, ThreeIdParams } from "./three-id-doctype"
 import {
     AnchorProof, AnchorRecord, AnchorStatus, DocState, DoctypeConstructor, DoctypeHandler, DocOpts, SignatureStatus
 } from "@ceramicnetwork/ceramic-common"
-import { Context } from "@ceramicnetwork/ceramic-common"
+import { Context, EncodeUtils } from "@ceramicnetwork/ceramic-common"
 
 const DOCTYPE = '3id'
 
@@ -59,7 +59,7 @@ export class ThreeIdDoctypeHandler implements DoctypeHandler<ThreeIdDoctype> {
             return this._applyAnchor(record, proofRecord, cid, state);
         }
 
-        return this._applySigned(record, cid, state);
+        return this._applySigned(record, cid, state, context);
     }
 
     /**
@@ -111,51 +111,55 @@ export class ThreeIdDoctypeHandler implements DoctypeHandler<ThreeIdDoctype> {
      * @param record - Signed record
      * @param cid - Signed record CID
      * @param state - Document state
+     * @param context - Ceramic context
      * @private
      */
-    async _applySigned(record: any, cid: CID, state: DocState): Promise<DocState> {
-        if (!record.id.equals(state.log[0])) throw new Error(`Invalid docId ${record.id}, expected ${state.log[0]}`)
-        // reconstruct jwt
-        const { signedHeader, signature } = record
-        delete record.signedHeader
-        delete record.signature
-        let payload = Buffer.from(JSON.stringify({
-            doctype: record.doctype,
-            header: record.header,
-            content: record.content,
-            prev: { '/': record.prev.toString() },
-            id: { '/': record.id.toString() },
-            iss: record.iss
-        })).toString('base64')
-
-        payload = payload.replace(/=/g, '')
-        const jwt = [signedHeader, payload, signature].join('.')
-        try {
-            // verify the jwt with a fake DID resolver that uses the current state of the 3ID
-            const didDoc = wrapDocument({ publicKeys: { signing: state.metadata.owners[0], encryption: '' } }, 'did:fake:123')
-            await this.verifyJWT(jwt, { resolver: { resolve: async (): Promise<DIDDocument> => didDoc } })
-        } catch (e) {
-            throw new Error('Invalid signature for signed record:' + e)
+    async _applySigned(record: any, cid: CID, state: DocState, context: Context): Promise<DocState> {
+        if (!record.id.equals(state.log[0])) {
+            throw new Error(`Invalid docId ${record.id}, expected ${state.log[0]}`)
         }
+        const cloned = cloneDeep(record)
+
+        const { signedHeader, signature } = cloned
+        const payload = base64url.encode(JSON.stringify(JSON.parse(stringify(EncodeUtils.encodeDagJson({
+            doctype: cloned.doctype,
+            content: cloned.content,
+            header: cloned.header,
+            unique: cloned.unique || undefined,
+            prev: { '/': cloned.prev.toString() },
+            id: { '/': cloned.id.toString() },
+        })))))
+
+        const jws = [signedHeader, payload, signature].join('.')
+
+        const decodedHeader = JSON.parse(base64url.decode(signedHeader))
+        const { kid } = decodedHeader
+        const { publicKey } = await context.resolver.resolve(kid)
+        try {
+            await this.verifyJWS(jws, publicKey)
+        } catch (e) {
+            throw new Error('Invalid signature for signed record. ' + e)
+        }
+
         state.log.push(cid)
         return {
             ...state,
             signature: SignatureStatus.SIGNED,
             anchorStatus: AnchorStatus.NOT_REQUESTED,
             next: {
-                owners: record.owners,
+                owners: record.header.owners,
                 content: jsonpatch.applyPatch(state.content, record.content).newDocument,
             },
         }
     }
 
     /**
-     * Verifies JWT token
-     * @param jwt - JWT token
-     * @param opts - verification options
+     * Verifies JWS token
+     * @param jwt - JWS token
+     * @param pubkeys - public key(s)
      */
-    async verifyJWT(jwt: string, opts: any): Promise<void> {
-        await didJwt.verifyJWT(jwt, opts)
+    async verifyJWS(jwt: string, pubkeys: any): Promise<void> {
+        await didJwt.verifyJWS(jwt, pubkeys)
     }
 
     /**

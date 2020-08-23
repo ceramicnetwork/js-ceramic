@@ -104,8 +104,10 @@ class CeramicDaemon {
     }
 
     const ceramic = await Ceramic.create(ipfs, ceramicConfig)
-    const idWallet = new IdentityWallet(async () => true, { seed: cliConfig.seed })
-    await ceramic.setDIDProvider(idWallet.get3idProvider())
+    await IdentityWallet.create({
+      getPermission: async (): Promise<Array<string>> => [], seed: cliConfig.seed, ceramic, useThreeIdProv: true,
+    })
+
     return new CeramicDaemon(ceramic, opts)
   }
 

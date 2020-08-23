@@ -7,8 +7,9 @@ import {
     DocOpts,
     DocParams
 } from "@ceramicnetwork/ceramic-common"
+
+import { DID } from 'dids'
 import { Context } from "@ceramicnetwork/ceramic-common"
-import { User } from "@ceramicnetwork/ceramic-common"
 
 const DOCTYPE = '3id'
 
@@ -80,8 +81,8 @@ export class ThreeIdDoctype extends Doctype {
      * @param newSchema - New schema
      * @private
      */
-    static async _makeRecord(doctype: Doctype, user: User, newContent: any, newOwners: string[] = null, newSchema: string = null): Promise<any> {
-        if (user == null) {
+    static async _makeRecord(doctype: Doctype, user: DID, newContent: any, newOwners: string[] = null, newSchema: string = null): Promise<any> {
+        if (user == null || !user.authenticated) {
             throw new Error('No user authenticated')
         }
 
@@ -99,14 +100,14 @@ export class ThreeIdDoctype extends Doctype {
         }
         const record: any = { header, content: patch, prev: doctype.head, id: doctype.state.log[0] }
         // TODO - use the dag-jose library for properly encoded signed records
-        record.iss = user.DID
         // convert CID to string for signing
         const tmpPrev = record.prev
         const tmpId = record.id
         record.prev = { '/': tmpPrev.toString() }
         record.id = { '/': tmpId.toString() }
-        const jwt = await user.sign(record, { useMgmt: true})
-        const [signedHeader, payload, signature] = jwt.split('.') // eslint-disable-line
+
+        const jws = await user.createJWS(record, { protected: {} })
+        const [signedHeader, payload, signature] = jws.split('.') // eslint-disable-line
         // @typescript-eslint/no-unused-vars
         record.prev = tmpPrev
         record.id = tmpId

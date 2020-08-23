@@ -3,7 +3,6 @@ import Document from '../document'
 import MockAnchorService from "../anchor/mock/mock-anchor-service";
 import tmp from 'tmp-promise'
 import Dispatcher from '../dispatcher'
-import CeramicUser from '../ceramic-user'
 import Ceramic from "../ceramic"
 import { Context } from "@ceramicnetwork/ceramic-common"
 import { AnchorStatus, DocOpts, SignatureStatus } from "@ceramicnetwork/ceramic-common"
@@ -13,9 +12,12 @@ import { ThreeIdDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-three-id"
 import {PinStore} from "../store/pin-store";
 import {LevelStateStore} from "../store/level-state-store";
 import {Pinning} from "../pinning/pinning";
+import { DID } from "dids"
+
+import { Resolver } from "did-resolver"
+import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 
 jest.mock('../store/level-state-store')
-jest.mock('../ceramic-user')
 
 jest.mock('../dispatcher', () => {
   const CID = require('cids') // eslint-disable-line @typescript-eslint/no-var-requires
@@ -109,7 +111,7 @@ describe('Document', () => {
     const initialContent = { abc: 123, def: 456 }
     const newContent = { abc: 321, def: 456, gh: 987 }
     const owners = ['publickeymock']
-    let user: any
+    let user: DID
     let dispatcher: any;
     let doctypeHandler: ThreeIdDoctypeHandler;
     let findHandler: any;
@@ -120,17 +122,35 @@ describe('Document', () => {
     beforeEach(() => {
       dispatcher = Dispatcher(false)
       anchorService = new MockAnchorService(dispatcher)
-      user = new CeramicUser()
+      user = new DID()
+      user.createJWS = jest.fn(async () => {
+        // fake jws
+        return 'eyJraWQiOiJkaWQ6MzpiYWZ5YXNkZmFzZGY_dmVyc2lvbj0wI3NpZ25pbmciLCJhbGciOiJFUzI1NksifQ.bbbb.cccc'
+      })
+      user._did = 'did:3:bafyuser'
       doctypeHandler = new ThreeIdDoctypeHandler()
-      doctypeHandler.verifyJWT = async (): Promise<void> => { return }
-      // fake jwt
-      user.sign = jest.fn(async () => 'aaaa.bbbb.cccc')
+      doctypeHandler.verifyJWS = async (): Promise<void> => { return }
       findHandler = (): ThreeIdDoctypeHandler => doctypeHandler
+
+      const threeIdResolver = ThreeIdResolver.getResolver({
+        loadDocument: (): any => {
+          return Promise.resolve({
+            content: {
+              "publicKeys": {
+                "signing": "zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV",
+                "encryption": "z6LSfQabSbJzX8WAm1qdQcHCHTzVv8a2u6F7kmzdodfvUCo9"
+              }
+            }
+          })
+        }
+      })
 
       context = {
         anchorService,
         ipfs: dispatcher._ipfs,
-        resolver: null,
+        resolver: new Resolver({
+          ...threeIdResolver
+        }),
         provider: null,
       }
 
@@ -298,22 +318,40 @@ describe('Document', () => {
     let anchorService: AnchorService;
     let context: Context;
     let ceramic: Ceramic;
-    let user: CeramicUser;
+    let user: DID;
 
     beforeEach(() => {
       dispatcher = Dispatcher(true)
       anchorService = new MockAnchorService(dispatcher)
-      user = new CeramicUser()
-      // fake jwt
-      user.sign = jest.fn(async () => 'aaaa.bbbb.cccc')
+      user = new DID()
+      user.createJWS = jest.fn(async () => {
+        // fake jws
+        return 'eyJraWQiOiJkaWQ6MzpiYWZ5YXNkZmFzZGY_dmVyc2lvbj0wI3NpZ25pbmciLCJhbGciOiJFUzI1NksifQ.bbbb.cccc'
+      })
+      user._did = 'did:3:bafyuser'
       doctypeHandler = new ThreeIdDoctypeHandler()
-      doctypeHandler.verifyJWT = async (): Promise<void> => { return }
+      doctypeHandler.verifyJWS = async (): Promise<void> => { return }
       getHandlerFromGenesis = (): ThreeIdDoctypeHandler => doctypeHandler
+
+      const threeIdResolver = ThreeIdResolver.getResolver({
+        loadDocument: (): any => {
+          return Promise.resolve({
+            content: {
+              "publicKeys": {
+                "signing": "zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV",
+                "encryption": "z6LSfQabSbJzX8WAm1qdQcHCHTzVv8a2u6F7kmzdodfvUCo9"
+              }
+            }
+          })
+        }
+      })
 
       context = {
         anchorService,
         ipfs: dispatcher._ipfs,
-        resolver: null,
+        resolver: new Resolver({
+          ...threeIdResolver
+        }),
         provider: null,
       }
 

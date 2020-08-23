@@ -1,25 +1,16 @@
 import CID from 'cids'
 
-import { User } from "@ceramicnetwork/ceramic-common"
+import { Resolver } from "did-resolver"
+import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 
-class MockUser implements User {
-  DID: string;
-  publicKeys: any;
-  async auth(): Promise<void> {
-    return null
-  }
-  async sign(): Promise<string> {
-    return null
-  }
-}
-
+import { DID } from 'dids'
 import { ThreeIdDoctypeHandler } from "../three-id-doctype-handler"
 import { ThreeIdDoctype } from "../three-id-doctype"
 
 import { Context } from "@ceramicnetwork/ceramic-common"
 jest.mock('did-jwt', () => ({
   // TODO - We should test for when this function throws as well
-  verifyJWT: (): any => 'verified'
+  verifyJWS: (): any => 'verified'
 }))
 
 const cloneDeep = require('lodash.clonedeep') // eslint-disable-line @typescript-eslint/no-var-requires
@@ -35,7 +26,7 @@ const RECORDS = {
   genesis: { doctype: '3id', header: { owners: [ '0x123' ] }, content: { publicKeys: { test: '0xabc' } } },
   r1: {
     desiredContent: { publicKeys: { test: '0xabc' }, other: 'data' },
-    record: { content: [ { op: 'add', path: '/other', value: 'data' } ], header: { owners: ['0x123'] }, id: FAKE_CID_1, prev: FAKE_CID_1, signedHeader: 'aaaa', signature: 'cccc' }
+    record: { content: [ { op: 'add', path: '/other', value: 'data' } ], header: { owners: ['0x123'] }, id: FAKE_CID_1, prev: FAKE_CID_1, signedHeader: 'eyJraWQiOiJkaWQ6MzpiYWZ5YXNkZmFzZGY_dmVyc2lvbj0wI3NpZ25pbmciLCJhbGciOiJFUzI1NksifQ', signature: 'cccc' }
   },
   r2: { record: { proof: FAKE_CID_4 } },
   proof: {
@@ -46,14 +37,15 @@ const RECORDS = {
 }
 
 describe('ThreeIdHandler', () => {
-  let user: User, threeIdDoctypeHandler: ThreeIdDoctypeHandler, context: Context
+  let user: DID, threeIdDoctypeHandler: ThreeIdDoctypeHandler, context: Context
 
   beforeAll(() => {
-    user = new MockUser()
-    user.sign = jest.fn(async () => {
-      // fake jwt
-      return 'aaaa.bbbb.cccc'
+    user = new DID()
+    user.createJWS = jest.fn(async () => {
+      // fake jws
+      return 'eyJraWQiOiJkaWQ6MzpiYWZ5YXNkZmFzZGY_dmVyc2lvbj0wI3NpZ25pbmciLCJhbGciOiJFUzI1NksifQ.bbbb.cccc'
     })
+    user._did = 'did:3:bafyuser'
 
     const recs: Record<string, any> = {}
     const ipfs = {
@@ -75,8 +67,24 @@ describe('ThreeIdHandler', () => {
       }
     }
 
+    const threeIdResolver = ThreeIdResolver.getResolver({
+      loadDocument: (): any => {
+        return Promise.resolve({
+          content: {
+            "publicKeys": {
+              "signing": "zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV",
+              "encryption": "z6LSfQabSbJzX8WAm1qdQcHCHTzVv8a2u6F7kmzdodfvUCo9"
+            }
+          }
+        })
+      }
+    })
+
     context = {
       ipfs,
+      resolver: new Resolver({
+        ...threeIdResolver
+      }),
       anchorService: null,
     }
   })
