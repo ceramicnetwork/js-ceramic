@@ -95,7 +95,7 @@ class CeramicClient implements CeramicApi {
   }
 
   async applyRecord<T extends Doctype>(docId: string, record: object, opts?: DocOpts): Promise<T> {
-    return await Document.applyRecord(this._apiUrl, docId, record, opts) as unknown as T
+    return await Document.applyRecord(this._apiUrl, docId, record, this.context, opts) as unknown as T
   }
 
   async listVersions(docId: string): Promise<string[]> {
