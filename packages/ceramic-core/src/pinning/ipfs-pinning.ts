@@ -4,16 +4,16 @@ import {Ipfs} from "ipfs";
 import {Context} from "@ceramicnetwork/ceramic-common";
 import CID from "cids";
 
-const FROM_CONTEXT_HOST = '__context'
+const FROM_CONTEXT = '__context'
 
 /**
  * Pin document to a IPFS node.
  *
- * +connectionString+ indicates what node to connect to. It has a form of URL starting with `ipfs` protocol,
- * for example: `ipfs://3.3.3.3:5001`. It would translate into `http://3.3.3.3:5001` IPFS endpoint connection.
+ * +connectionString+ indicates what node to connect to. It has a form of URL starting with `ipfs+http(s)` protocol,
+ * for example: `ipfs+http://3.3.3.3:5001`. It would translate into `http://3.3.3.3:5001` IPFS endpoint connection.
  *
  * Ceramic node already manages a connection to IPFS. If it is preferred to reuse the connection, one should
- * pass a special `__context` hostname into the connection string: `ipfs:///__context:5001`.
+ * pass a special `ipfs+context` connection string.
  */
 export class IpfsPinning implements Pinning {
     static designator = 'ipfs'
@@ -24,17 +24,21 @@ export class IpfsPinning implements Pinning {
     #ipfs: Ipfs
 
     constructor(connectionString: string, context: Context) {
-        const url = new URL(connectionString)
-        const ipfsHost = url.hostname
-        const ipfsPort = parseInt(url.port, 10) || 5001
-        if (ipfsHost === FROM_CONTEXT_HOST) {
-            this.ipfsAddress = FROM_CONTEXT_HOST
+        if (connectionString == 'ipfs+context') {
+            this.ipfsAddress = FROM_CONTEXT
         } else {
+            const url = new URL(connectionString)
+            const ipfsHost = url.hostname
+            const ipfsPort = parseInt(url.port, 10) || 5001
             const protocol = url.protocol
-                .replace('ipfs:', 'http')
                 .replace('ipfs+http:', 'http')
                 .replace('ipfs+https:', 'https')
-            this.ipfsAddress = `${protocol}://${ipfsHost}:${ipfsPort}`
+                .replace('ipfs+context:', FROM_CONTEXT)
+            if (protocol === FROM_CONTEXT) {
+                this.ipfsAddress = FROM_CONTEXT
+            } else {
+                this.ipfsAddress = `${protocol}://${ipfsHost}:${ipfsPort}`
+            }
         }
         this.#context = context
     }
@@ -44,7 +48,7 @@ export class IpfsPinning implements Pinning {
     }
 
     async open(): Promise<void> {
-        if (this.ipfsAddress === FROM_CONTEXT_HOST) {
+        if (this.ipfsAddress === FROM_CONTEXT) {
             this.#ipfs = this.#context.ipfs
         } else {
             this.#ipfs = ipfsClient(this.ipfsAddress)
