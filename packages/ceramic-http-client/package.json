@@ -28,6 +28,9 @@
   },
   "dependencies": {
     "@ceramicnetwork/ceramic-common": "^0.2.8",
+    "@ceramicnetwork/ceramic-doctype-tile": "^0.2.8",
+    "@ceramicnetwork/ceramic-doctype-account-link": "^0.2.8",
+    "@ceramicnetwork/ceramic-doctype-three-id": "^0.2.8",
     "cids": "^0.8.0",
     "cross-fetch": "^3.0.5",
     "lodash.clonedeep": "^4.5.0"

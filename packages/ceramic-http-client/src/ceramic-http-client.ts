@@ -1,7 +1,11 @@
 import { fetchJson } from "./utils"
 import Document from './document'
-import { Doctype, DoctypeHandler, DocOpts, DocParams } from "@ceramicnetwork/ceramic-common"
-import { CeramicApi, PinApi, DoctypeUtils } from "@ceramicnetwork/ceramic-common"
+
+import { DID } from 'dids'
+import { Doctype, DoctypeHandler, DocOpts, DocParams, DIDProvider, Context, CeramicApi, PinApi, DoctypeUtils } from "@ceramicnetwork/ceramic-common"
+import { TileDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-tile"
+import { ThreeIdDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-three-id"
+import { AccountLinkDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-account-link"
 
 const CERAMIC_HOST = 'http://localhost:7007'
 const API_PATH = '/api/v0'
@@ -10,13 +14,23 @@ class CeramicClient implements CeramicApi {
   private readonly _apiUrl: string
   private readonly _docmap: Record<string, Document>
 
-  public pin: PinApi
+  public readonly pin: PinApi
+  public readonly context: Context
+
+  public readonly _doctypeHandlers: Record<string, DoctypeHandler<Doctype>>
 
   constructor (apiHost: string = CERAMIC_HOST) {
     this._apiUrl = apiHost + API_PATH
     this._docmap = {}
 
+    this.context = { api: this }
     this.pin = this._initPinApi()
+
+    this._doctypeHandlers = {
+      '3id': new ThreeIdDoctypeHandler(),
+      'tile': new TileDoctypeHandler(),
+      'account-link': new AccountLinkDoctypeHandler()
+    }
   }
 
   _initPinApi(): PinApi {
@@ -46,7 +60,7 @@ class CeramicClient implements CeramicApi {
                 }
                 return Promise.resolve({ value: pinnedDocIds[index++], done: false });
               }
-            };
+            }
           }
         }
       }
@@ -54,20 +68,34 @@ class CeramicClient implements CeramicApi {
   }
 
   async createDocument<T extends Doctype>(doctype: string, params: DocParams, opts?: DocOpts): Promise<T> {
-    const doc = await Document.create(this._apiUrl, doctype, params, opts)
+    const doctypeHandler = this.findDoctypeHandler(doctype)
+    const genesis = await doctypeHandler.doctype.makeGenesis(params, this.context, opts)
+
+    return await this.createDocumentFromGenesis(genesis, opts)
+  }
+
+  async createDocumentFromGenesis<T extends Doctype>(genesis: any, opts?: DocOpts): Promise<T> {
+    const doc = await Document.createFromGenesis(this._apiUrl, genesis, this.context, opts)
     const normalizedId = DoctypeUtils.normalizeDocId(doc.id)
     if (!this._docmap[normalizedId]) {
       this._docmap[normalizedId] = doc
     }
+    this._docmap[normalizedId].doctypeHandler = this.findDoctypeHandler(this._docmap[normalizedId].state.doctype)
     return doc as unknown as T
   }
 
   async loadDocument<T extends Doctype>(id: string): Promise<T> {
     const normalizedId = DoctypeUtils.normalizeDocId(id)
+
     if (!this._docmap[normalizedId]) {
-      this._docmap[normalizedId] = await Document.load(normalizedId, this._apiUrl)
+      this._docmap[normalizedId] = await Document.load(normalizedId, this._apiUrl, this.context)
     }
+    this._docmap[normalizedId].doctypeHandler = this.findDoctypeHandler(this._docmap[normalizedId].state.doctype)
     return this._docmap[normalizedId] as unknown as T
+  }
+
+  async applyRecord<T extends Doctype>(docId: string, record: object, opts?: DocOpts): Promise<T> {
+    return await Document.applyRecord(this._apiUrl, docId, record, opts) as unknown as T
   }
 
   async listVersions(docId: string): Promise<string[]> {
@@ -75,24 +103,25 @@ class CeramicClient implements CeramicApi {
     return Document.listVersions(normalizedId, this._apiUrl)
   }
 
-  applyRecord<T extends Doctype>(): Promise<T> {
-    throw new Error('method not implemented')
+  addDoctypeHandler<T extends Doctype>(doctypeHandler: DoctypeHandler<T>): void {
+    this._doctypeHandlers[doctypeHandler.name] = doctypeHandler
   }
 
-  createDocumentFromGenesis<T extends Doctype>(): Promise<T> {
-    throw new Error('method not implemented')
+  findDoctypeHandler<T extends Doctype>(doctype: string): DoctypeHandler<T> {
+    const doctypeHandler = this._doctypeHandlers[doctype]
+    if (doctypeHandler == null) {
+      throw new Error(`Failed to find doctype handler for doctype ${doctype}`)
+    }
+    return doctypeHandler as DoctypeHandler<T>
   }
 
-  addDoctypeHandler<T extends Doctype>(): void {
-    throw new Error('method not implemented')
-  }
+  async setDIDProvider(provider: DIDProvider): Promise<void> {
+    this.context.provider = provider;
+    this.context.user = new DID( { provider })
 
-  findDoctypeHandler<T extends Doctype>(): DoctypeHandler<T> {
-    throw new Error('method not implemented')
-  }
-
-  setDIDProvider(): Promise<void> {
-    throw new Error('method not implemented')
+    if (!this.context.user.authenticated) {
+      await this.context.user.authenticate()
+    }
   }
 
   async close (): Promise<void> {

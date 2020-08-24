@@ -50,9 +50,6 @@ describe('Ceramic interop: core <> http-client', () => {
 
   beforeEach(async () => {
     core = await Ceramic.create(ipfs)
-    await IdentityWallet.create({
-      getPermission: async (): Promise<Array<string>> => [], seed, ceramic: core, useThreeIdProv: true,
-    })
 
     const doctypeHandler = new TileDoctypeHandler()
     doctypeHandler.verifyJWS = (): Promise<void> => { return }
@@ -60,6 +57,14 @@ describe('Ceramic interop: core <> http-client', () => {
 
     daemon = new CeramicDaemon(core, { port })
     client = new CeramicClient(apiUrl)
+
+    await IdentityWallet.create({
+      getPermission: async (): Promise<Array<string>> => [], seed, ceramic: client, useThreeIdProv: true,
+    })
+
+    await IdentityWallet.create({
+      getPermission: async (): Promise<Array<string>> => [], seed, ceramic: core, useThreeIdProv: true,
+    })
   })
 
   afterEach(async () => {
