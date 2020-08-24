@@ -68,7 +68,7 @@ export class ThreeIdDoctype extends Doctype {
             throw new Error('The owner of the 3ID needs to be specified')
         }
         return {
-            doctype: DOCTYPE, header: metadata, content
+            doctype: DOCTYPE, header: metadata, data: content
         }
     }
 
@@ -98,7 +98,7 @@ export class ThreeIdDoctype extends Doctype {
         if (newSchema) {
             header.schema = newSchema
         }
-        const record: any = { header, content: patch, prev: doctype.head, id: doctype.state.log[0] }
+        const record: any = { header, data: patch, prev: doctype.head, id: doctype.state.log[0] }
         // TODO - use the dag-jose library for properly encoded signed records
         // convert CID to string for signing
         const tmpPrev = record.prev

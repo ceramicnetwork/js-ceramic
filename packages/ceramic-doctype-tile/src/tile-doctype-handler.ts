@@ -141,14 +141,14 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
         const cloned = cloneDeep(record)
 
         const { signedHeader, signature } = cloned
-        const payload = base64url.encode(JSON.stringify(JSON.parse(stringify(EncodeUtils.encodeDagJson({
+        const payload = base64url.encode(stringify(EncodeUtils.encodeDagJson({
             doctype: cloned.doctype,
             data: cloned.data,
             header: cloned.header,
             unique: cloned.unique || undefined,
             prev: cloned.prev ? { '/': cloned.prev.toString() } : undefined,
             id: cloned.id ? { '/': cloned.id.toString() } : undefined,
-        })))))
+        })))
 
         const jws = [signedHeader, payload, signature].join('.')
         const decodedHeader = JSON.parse(base64url.decode(signedHeader))

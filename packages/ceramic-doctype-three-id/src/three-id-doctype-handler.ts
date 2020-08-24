@@ -73,7 +73,7 @@ export class ThreeIdDoctypeHandler implements DoctypeHandler<ThreeIdDoctype> {
             return {
                 doctype: DOCTYPE,
                 metadata: record.header,
-                content: record.content,
+                content: record.data,
                 next: {
                     content: null,
                 },
@@ -121,14 +121,14 @@ export class ThreeIdDoctypeHandler implements DoctypeHandler<ThreeIdDoctype> {
         const cloned = cloneDeep(record)
 
         const { signedHeader, signature } = cloned
-        const payload = base64url.encode(JSON.stringify(JSON.parse(stringify(EncodeUtils.encodeDagJson({
+        const payload = base64url.encode(stringify(EncodeUtils.encodeDagJson({
             doctype: cloned.doctype,
-            content: cloned.content,
+            data: cloned.data,
             header: cloned.header,
             unique: cloned.unique || undefined,
             prev: { '/': cloned.prev.toString() },
             id: { '/': cloned.id.toString() },
-        })))))
+        })))
 
         const jws = [signedHeader, payload, signature].join('.')
 
@@ -148,7 +148,7 @@ export class ThreeIdDoctypeHandler implements DoctypeHandler<ThreeIdDoctype> {
             anchorStatus: AnchorStatus.NOT_REQUESTED,
             next: {
                 owners: record.header.owners,
-                content: jsonpatch.applyPatch(state.content, record.content).newDocument,
+                content: jsonpatch.applyPatch(state.content, record.data).newDocument,
             },
         }
     }
