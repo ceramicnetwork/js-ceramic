@@ -106,7 +106,7 @@ export class ThreeIdDoctype extends Doctype {
         record.prev = { '/': tmpPrev.toString() }
         record.id = { '/': tmpId.toString() }
 
-        const jws = await user.createJWS(record, { protected: {} })
+        const jws = await user.createJWS(record)
         const [signedHeader, payload, signature] = jws.split('.') // eslint-disable-line
         // @typescript-eslint/no-unused-vars
         record.prev = tmpPrev

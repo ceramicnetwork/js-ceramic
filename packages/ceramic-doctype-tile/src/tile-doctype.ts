@@ -129,7 +129,7 @@ export class TileDoctype extends Doctype {
             record.id = { '/': tmpId.toString() }
         }
 
-        const jws = await user.createJWS(JSON.parse(JSON.stringify(record)), { protected: {} })
+        const jws = await user.createJWS(JSON.parse(JSON.stringify(record)))
         const [signedHeader, payload, signature] = jws.split('.') // eslint-disable-line @typescript-eslint/no-unused-vars
         if (tmpCID) {
             record.prev = tmpCID
