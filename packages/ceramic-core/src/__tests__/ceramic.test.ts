@@ -26,7 +26,7 @@ const createCeramic = async (ipfs: Ipfs): Promise<Ceramic> => {
   await IdentityWallet.create({
     getPermission: async (): Promise<Array<string>> => [],
     seed,
-    ceramic: ceramic,
+    ceramic,
     useThreeIdProv: true,
   })
 

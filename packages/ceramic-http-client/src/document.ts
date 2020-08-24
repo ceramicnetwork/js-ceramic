@@ -8,12 +8,14 @@ class Document extends Doctype {
 
   public doctypeHandler: DoctypeHandler<Doctype>
 
-  constructor (state: DocState, public context: Context, private _apiUrl: string) {
+  constructor (state: DocState, public context: Context, private _apiUrl: string, syncState = true) {
     super(state, context)
 
-    this._syncHandle = setInterval(async () => {
-      this._syncState()
-    }, 1000)
+    if (syncState) {
+      this._syncHandle = setInterval(async () => {
+        await this._syncState()
+      }, 1000)
+    }
   }
 
   get id(): string {
@@ -49,7 +51,7 @@ class Document extends Doctype {
         applyOnly: opts.applyOnly,
       }
     })
-    return new Document(DoctypeUtils.deserializeState(state), context, apiUrl)
+    return new Document(DoctypeUtils.deserializeState(state), context, apiUrl, false)
   }
 
   static async load (id: string, apiUrl: string, context: Context): Promise<Document> {
