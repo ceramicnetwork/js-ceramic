@@ -3,6 +3,12 @@ import isCircular from 'is-circular'
 
 export class EncodeUtils {
 
+  /**
+   * Encode payload before signing
+   * @param obj - Payload
+   *
+   * TODO remove after introducing dag-jose
+   */
   static encodeDagJson(obj: Record<string, any>): Record<string, any> {
     if (isCircular(obj)) {
       throw new Error('Object contains circular references.')

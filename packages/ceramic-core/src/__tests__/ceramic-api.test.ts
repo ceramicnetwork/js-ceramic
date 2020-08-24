@@ -1,4 +1,4 @@
-import Ceramic from '../ceramic'
+import Ceramic, { CeramicConfig } from '../ceramic'
 import IdentityWallet from 'identity-wallet'
 import tmp from 'tmp-promise'
 import Ipfs from 'ipfs'
@@ -26,6 +26,19 @@ describe('Ceramic API', () => {
     }
   }
 
+  const createCeramic = async (c: CeramicConfig = {}) => {
+    const ceramic = await Ceramic.create(ipfs, c)
+
+    const config = {
+      getPermission: async (): Promise<Array<string>> => [],
+      seed,
+      ceramic: ceramic,
+      useThreeIdProv: true,
+    }
+    await IdentityWallet.create(config)
+    return ceramic
+  }
+
   beforeAll(async () => {
     tmpFolder = await tmp.dir({ unsafeCleanup: true })
 
@@ -44,15 +57,7 @@ describe('Ceramic API', () => {
   })
 
   it('can load the previous document version', async () => {
-    ceramic = await Ceramic.create(ipfs)
-
-    const config = {
-      getPermission: async (): Promise<Array<string>> => [],
-      seed,
-      ceramic: ceramic,
-      useThreeIdProv: true,
-    }
-    await IdentityWallet.create(config)
+    ceramic = await createCeramic()
 
     const owner = ceramic.context.user.DID
 
@@ -121,15 +126,7 @@ describe('Ceramic API', () => {
   })
 
   it('cannot create document with invalid schema', async () => {
-    ceramic = await Ceramic.create(ipfs)
-
-    const config = {
-      getPermission: async (): Promise<Array<string>> => [],
-      seed,
-      ceramic: ceramic,
-      useThreeIdProv: true,
-    }
-    await IdentityWallet.create(config)
+    ceramic = await createCeramic()
 
     const owner = ceramic.context.user.DID
 
@@ -154,15 +151,7 @@ describe('Ceramic API', () => {
   })
 
   it('can create document with valid schema', async () => {
-    ceramic = await Ceramic.create(ipfs)
-
-    const config = {
-      getPermission: async (): Promise<Array<string>> => [],
-      seed,
-      ceramic: ceramic,
-      useThreeIdProv: true,
-    }
-    await IdentityWallet.create(config)
+    ceramic = await createCeramic()
 
     const owner = ceramic.context.user.DID
 
@@ -183,15 +172,7 @@ describe('Ceramic API', () => {
   })
 
   it('can create document with invalid schema if validation is not set', async () => {
-    ceramic = await Ceramic.create(ipfs, { validateDocs: false })
-
-    const config = {
-      getPermission: async (): Promise<Array<string>> => [],
-      seed,
-      ceramic: ceramic,
-      useThreeIdProv: true,
-    }
-    await IdentityWallet.create(config)
+    ceramic = await createCeramic({ validateDocs: false })
 
     const owner = ceramic.context.user.DID
 
@@ -212,15 +193,7 @@ describe('Ceramic API', () => {
   })
 
   it('can update schema if content is valid', async () => {
-    ceramic = await Ceramic.create(ipfs)
-
-    const config = {
-      getPermission: async (): Promise<Array<string>> => [],
-      seed,
-      ceramic: ceramic,
-      useThreeIdProv: true,
-    }
-    await IdentityWallet.create(config)
+    ceramic = await createCeramic()
 
     const owner = ceramic.context.user.DID
 
@@ -252,15 +225,7 @@ describe('Ceramic API', () => {
   })
 
   it('cannot update schema if content is not valid', async () => {
-    ceramic = await Ceramic.create(ipfs)
-
-    const config = {
-      getPermission: async (): Promise<Array<string>> => [],
-      seed,
-      ceramic: ceramic,
-      useThreeIdProv: true,
-    }
-    await IdentityWallet.create(config)
+    ceramic = await createCeramic()
 
     const owner = ceramic.context.user.DID
 
@@ -295,15 +260,7 @@ describe('Ceramic API', () => {
   })
 
   it('can update valid content and schema at the same time', async () => {
-    ceramic = await Ceramic.create(ipfs)
-
-    const config = {
-      getPermission: async (): Promise<Array<string>> => [],
-      seed,
-      ceramic: ceramic,
-      useThreeIdProv: true,
-    }
-    await IdentityWallet.create(config)
+    ceramic = await createCeramic()
 
     const owner = ceramic.context.user.DID
 

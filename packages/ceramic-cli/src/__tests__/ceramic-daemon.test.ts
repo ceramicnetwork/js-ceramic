@@ -76,6 +76,7 @@ describe('Ceramic interop: core <> http-client', () => {
     const state1 = doc1.state
     const state2 = doc2.state
 
+    // TODO fix: logs are different because of the kid version (0 != anchored CID)
     delete state1.log
     delete state2.log
 
