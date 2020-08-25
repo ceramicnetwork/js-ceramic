@@ -3,9 +3,9 @@ import jsonpatch from 'fast-json-patch'
 import { encode as base64Encode } from '@ethersproject/base64'
 import { randomBytes } from '@ethersproject/random'
 
+import { DID } from 'dids'
 import { Doctype, DoctypeConstructor, DoctypeStatic, DocOpts, DocParams } from "@ceramicnetwork/ceramic-common"
 import { Context } from "@ceramicnetwork/ceramic-common"
-import { User } from "@ceramicnetwork/ceramic-common"
 
 const DOCTYPE = 'tile'
 
@@ -60,7 +60,7 @@ export class TileDoctype extends Doctype {
      * @param opts - Initialization options
      */
     static async makeGenesis(params: DocParams, context?: Context, opts: DocOpts = {}): Promise<Record<string, any>> {
-        if (!context.user) {
+        if (!context.user || !context.user.authenticated) {
             throw new Error('No user authenticated')
         }
 
@@ -72,8 +72,8 @@ export class TileDoctype extends Doctype {
         }
 
         const { owners } = metadata
-        if (!owners) {
-            metadata.owners = [context.user.DID]
+        if (!owners || owners.length === 0) {
+            metadata.owners = [context.user.id]
         }
 
         const { content } = params
@@ -89,8 +89,8 @@ export class TileDoctype extends Doctype {
      * @param schema - New schema ID
      * @private
      */
-    static async _makeRecord(doctype: Doctype, user: User, newContent: any, schema?: string): Promise<Doctype> {
-        if (!user) {
+    static async _makeRecord(doctype: Doctype, user: DID, newContent: any, schema?: string): Promise<Doctype> {
+        if (user == null || !user.authenticated) {
             throw new Error('No user authenticated')
         }
 
@@ -114,13 +114,11 @@ export class TileDoctype extends Doctype {
      * @param record - Record to be signed
      * @private
      */
-    static async _signRecord(record: any, user: User): Promise<any> {
-        if (user == null) {
+    static async _signRecord(record: any, user: DID): Promise<any> {
+        if (user == null || !user.authenticated) {
             throw new Error('No user authenticated')
         }
         // TODO - use the dag-jose library for properly encoded signed records
-        // The way we use did-jwts right now are quite hacky
-        record.iss = user.DID
         // convert CID to string for signing
         const tmpCID = record.prev
         const tmpId = record.id
@@ -130,8 +128,9 @@ export class TileDoctype extends Doctype {
         if (tmpId) {
             record.id = { '/': tmpId.toString() }
         }
-        const jwt = await user.sign(record)
-        const [signedHeader, payload, signature] = jwt.split('.') // eslint-disable-line @typescript-eslint/no-unused-vars
+
+        const jws = await user.createJWS(JSON.parse(JSON.stringify(record)))
+        const [signedHeader, payload, signature] = jws.split('.') // eslint-disable-line @typescript-eslint/no-unused-vars
         if (tmpCID) {
             record.prev = tmpCID
         }

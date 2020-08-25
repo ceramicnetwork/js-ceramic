@@ -1,6 +1,5 @@
 import Ipfs from 'ipfs'
 import Dispatcher from './dispatcher'
-import CeramicUser from './ceramic-user'
 import Document from './document'
 import { AnchorServiceFactory } from "./anchor/anchor-service-factory";
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
@@ -10,26 +9,12 @@ import { Doctype, DoctypeHandler, DocOpts } from "@ceramicnetwork/ceramic-common
 import { Context, DoctypeUtils, DocParams } from "@ceramicnetwork/ceramic-common"
 import { Resolver } from "did-resolver"
 
+import { DID } from 'dids'
 import { TileDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-tile"
 import { ThreeIdDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-three-id"
 import { AccountLinkDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-account-link"
-import {PinStoreFactory} from "./store/pin-store-factory";
-import {PinStore} from "./store/pin-store";
-
-// This is temporary until we handle DIDs and in particular 3IDs better
-const gen3IDgenesis = (pubkeys: any): any => {
-  return {
-    metadata: {
-      owners: [pubkeys.managementKey],
-    },
-    content: {
-      publicKeys: {
-        signing: pubkeys.signingKey,
-        encryption: pubkeys.asymEncryptionKey
-      }
-    }
-  }
-}
+import { PinStoreFactory } from "./store/pin-store-factory";
+import { PinStore } from "./store/pin-store";
 
 /**
  * Initial Ceramic configuration
@@ -159,15 +144,10 @@ class Ceramic implements CeramicApi {
    */
   async setDIDProvider (provider: DIDProvider): Promise<void> {
     this.context.provider = provider;
-    this.context.user = new CeramicUser(provider)
+    this.context.user = new DID( { provider })
 
-    await this.context.user.auth() // authenticate
-
-    if (!this.context.user.DID) {
-      // patch create did document for now
-      const { metadata, content } = gen3IDgenesis(this.context.user.publicKeys)
-      const doc = await this._createDoc('3id', { content, metadata })
-      this.context.user.DID = 'did:3:' + DoctypeUtils.getGenesis(doc.id)
+    if (!this.context.user.authenticated) {
+      await this.context.user.authenticate()
     }
   }
 

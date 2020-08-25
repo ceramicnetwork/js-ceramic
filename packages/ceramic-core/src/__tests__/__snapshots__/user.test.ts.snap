@@ -1,9 +1,0 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
-
-exports[`User authenticates correctly 1`] = `
-Object {
-  "asymEncryptionKey": "XIL/mHYbKvT6GkiNBb4VU9IpNdKmkbaVJRRTfHmtuQI=",
-  "managementKey": "02d41c913f542ae671e6df17a456c7dd6a280479d491120629daf92130602cd135",
-  "signingKey": "03e44c4e2a192daba57200aa6dd06dcfd38220a544fd1b3fe13862eb755dbc1b67",
-}
-`;

@@ -1,4 +1,4 @@
-import { Doctype, DocParams, DoctypeUtils, DocState, DocOpts } from "@ceramicnetwork/ceramic-common"
+import { Doctype, DocParams, DoctypeUtils, DocState, DocOpts, DoctypeHandler, Context } from "@ceramicnetwork/ceramic-common"
 
 import { fetchJson } from './utils'
 
@@ -6,15 +6,23 @@ class Document extends Doctype {
 
   private readonly _syncHandle: NodeJS.Timeout
 
-  constructor (state: DocState, private _apiUrl: string) {
-    super(state, null)
+  public doctypeHandler: DoctypeHandler<Doctype>
 
-    this._syncHandle = setInterval(async () => {
-      this._syncState()
-    }, 1000)
+  constructor (state: DocState, public context: Context, private _apiUrl: string, syncState = true) {
+    super(state, context)
+
+    if (syncState) {
+      this._syncHandle = setInterval(async () => {
+        await this._syncState()
+      }, 1000)
+    }
   }
 
-  static async create (apiUrl: string, doctype: string, params: DocParams, opts: DocOpts = {}): Promise<Document> {
+  get id(): string {
+    return DoctypeUtils.createDocIdFromGenesis(this.state.log[0])
+  }
+
+  static async create (apiUrl: string, doctype: string, params: DocParams, context: Context, opts: DocOpts = {}): Promise<Document> {
     const { state } = await fetchJson(apiUrl + '/create', {
       params,
       doctype,
@@ -22,13 +30,34 @@ class Document extends Doctype {
         applyOnly: opts.applyOnly,
       }
     })
-    return new Document(DoctypeUtils.deserializeState(state), apiUrl)
+    return new Document(DoctypeUtils.deserializeState(state), context, apiUrl)
   }
 
-  static async load (id: string, apiUrl: string): Promise<Document> {
+  static async createFromGenesis (apiUrl: string, genesis: any, context: Context, opts: DocOpts = {}): Promise<Document> {
+    const { state } = await fetchJson(apiUrl + '/create', {
+      genesis,
+      docOpts: {
+        applyOnly: opts.applyOnly,
+      }
+    })
+    return new Document(DoctypeUtils.deserializeState(state), context, apiUrl)
+  }
+
+  static async applyRecord(apiUrl: string, docId: string, record: any, context: Context, opts: DocOpts = {}): Promise<Document> {
+    const { state } = await fetchJson(apiUrl + '/apply', {
+      docId,
+      record: DoctypeUtils.serializeRecord(record),
+      docOpts: {
+        applyOnly: opts.applyOnly,
+      }
+    })
+    return new Document(DoctypeUtils.deserializeState(state), context, apiUrl, false)
+  }
+
+  static async load (id: string, apiUrl: string, context: Context): Promise<Document> {
     const normalizedId = DoctypeUtils.normalizeDocId(id)
     const { state } = await fetchJson(apiUrl + '/state' + normalizedId)
-    return new Document(DoctypeUtils.deserializeState(state), apiUrl)
+    return new Document(DoctypeUtils.deserializeState(state), context, apiUrl)
   }
 
   static async listVersions (id: string, apiUrl: string): Promise<string[]> {
@@ -38,17 +67,10 @@ class Document extends Doctype {
   }
 
   async change(params: DocParams): Promise<void> {
-    const normalizedId = DoctypeUtils.getBaseDocId(DoctypeUtils.normalizeDocId(this.id))
-    const { state } = await fetchJson(this._apiUrl + '/change' + normalizedId, params)
-    this.state = DoctypeUtils.deserializeState(state)
-  }
+    const doctype = new this.doctypeHandler.doctype(this.state, this.context)
 
-  async sign (): Promise<boolean> {
-    return false
-  }
-
-  async anchor (): Promise<boolean> {
-    return false
+    await doctype.change(params)
+    this.state = doctype.state
   }
 
   async _syncState(): Promise<void> {

@@ -1,7 +1,20 @@
 import CeramicClient from "@ceramicnetwork/ceramic-http-client"
 import { CeramicApi, DoctypeUtils } from "@ceramicnetwork/ceramic-common"
+import path from "path"
+import crypto from "crypto"
+import os from "os"
+import IdentityWallet from "identity-wallet"
+
+const fs = require('fs').promises
 
 const PREFIX_REGEX = /^ceramic:\/\/|^\/ceramic\//
+
+const DEFAULT_CLI_CONFIG_PATH = path.join(os.homedir(), '.ceramic')
+const DEFAILT_CLI_CONFIG_FILE = 'config.json'
+
+interface CliConfig {
+    seed?: string;
+}
 
 /**
  * Ceramic CLI utility functions
@@ -18,7 +31,7 @@ export default class CeramicCliUtils {
      * @param schemaDocId - Schema document ID
      */
     static async createDoc(doctype: string, content: string, owners: string, onlyGenesis: boolean, isUnique: boolean, schemaDocId: string = null): Promise<void> {
-        await CeramicCliUtils._runWithCeramic(async (ceramic: CeramicApi) => {
+        await CeramicCliUtils._runWithCeramic(async (ceramic: CeramicClient) => {
             const parsedOwners = CeramicCliUtils._parseOwners(owners)
             const parsedContent = CeramicCliUtils._parseContent(content)
 
@@ -57,12 +70,17 @@ export default class CeramicCliUtils {
             return
         }
 
-        await CeramicCliUtils._runWithCeramic(async (ceramic: CeramicApi) => {
+        await CeramicCliUtils._runWithCeramic(async (ceramic: CeramicClient) => {
             const parsedOwners = CeramicCliUtils._parseOwners(owners)
             const parsedContent = CeramicCliUtils._parseContent(content)
 
             const doc = await ceramic.loadDocument(docId)
-            await doc.change({ content: parsedContent, metadata: { owners: parsedOwners, schema: schemaDocId } })
+            await doc.change({
+                content: parsedContent, metadata: {
+                    owners: parsedOwners, schema: schemaDocId
+                }
+            })
+
             console.log(JSON.stringify(doc.content, null, 2))
         })
     }
@@ -264,8 +282,15 @@ export default class CeramicCliUtils {
      * @param fn - Function to be executed
      * @private
      */
-    static async _runWithCeramic(fn: (ceramic: CeramicApi) => Promise<void>): Promise<void> {
+    static async _runWithCeramic(fn: (ceramic: CeramicClient) => Promise<void>): Promise<void> {
+        const cliConfig = await CeramicCliUtils._loadCliConfig()
+
         const ceramic = new CeramicClient()
+
+        await IdentityWallet.create({
+            getPermission: async (): Promise<Array<string>> => [], seed: cliConfig.seed, ceramic, useThreeIdProv: true,
+        })
+
         try {
             await fn(ceramic)
         } catch (e) {
@@ -274,6 +299,34 @@ export default class CeramicCliUtils {
         } finally {
             ceramic.close()
         }
+    }
+
+    /**
+     * Load/create CLI config
+     */
+    static async _loadCliConfig(): Promise<CliConfig> {
+        let exists
+        const fullCliConfigPath = path.join(DEFAULT_CLI_CONFIG_PATH, DEFAILT_CLI_CONFIG_FILE)
+        try {
+            await fs.access(fullCliConfigPath)
+            exists = true
+        } catch (e) {
+            exists = false
+        }
+
+        if (exists) {
+            const configJson = await fs.readFile(fullCliConfigPath, { encoding: 'utf8' })
+            return JSON.parse(configJson)
+        }
+
+        await fs.mkdir(DEFAULT_CLI_CONFIG_PATH, { recursive: true })
+        const config: CliConfig = {
+            seed: '0x' + Buffer.from(crypto.randomBytes(32)).toString('hex') // create new seed
+        }
+
+        await fs.writeFile(fullCliConfigPath, JSON.stringify(config, null, 2))
+        console.log('Identity wallet seed generated')
+        return config
     }
 
     /**
