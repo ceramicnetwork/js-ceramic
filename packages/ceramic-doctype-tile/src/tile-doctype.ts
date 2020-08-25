@@ -73,7 +73,7 @@ export class TileDoctype extends Doctype {
 
         const { owners } = metadata
         if (!owners || owners.length === 0) {
-            metadata.owners = [context.user.DID]
+            metadata.owners = [context.user.id]
         }
 
         const { content } = params

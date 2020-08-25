@@ -11,7 +11,7 @@ import { TileDoctype, TileParams } from "./tile-doctype"
 import {
     AnchorProof, AnchorRecord, AnchorStatus, DocState, DoctypeConstructor, DoctypeHandler, DocOpts, SignatureStatus
 } from "@ceramicnetwork/ceramic-common"
-import { Context, EncodeUtils } from "@ceramicnetwork/ceramic-common"
+import { Context } from "@ceramicnetwork/ceramic-common"
 
 const DOCTYPE = 'tile'
 
@@ -141,14 +141,14 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
         const cloned = cloneDeep(record)
 
         const { signedHeader, signature } = cloned
-        const payload = base64url.encode(stringify(EncodeUtils.encodeDagJson({
+        const payload = base64url.encode(stringify({
             doctype: cloned.doctype,
             data: cloned.data,
             header: cloned.header,
             unique: cloned.unique || undefined,
             prev: cloned.prev ? { '/': cloned.prev.toString() } : undefined,
             id: cloned.id ? { '/': cloned.id.toString() } : undefined,
-        })))
+        }))
 
         const jws = [signedHeader, payload, signature].join('.')
         const decodedHeader = JSON.parse(base64url.decode(signedHeader))

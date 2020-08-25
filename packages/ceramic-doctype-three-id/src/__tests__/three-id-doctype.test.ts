@@ -45,7 +45,7 @@ describe('ThreeIdHandler', () => {
       // fake jws
       return 'eyJraWQiOiJkaWQ6MzpiYWZ5YXNkZmFzZGY_dmVyc2lvbj0wI3NpZ25pbmciLCJhbGciOiJFUzI1NksifQ.bbbb.cccc'
     })
-    user._did = 'did:3:bafyuser'
+    user._id = 'did:3:bafyuser'
 
     const recs: Record<string, any> = {}
     const ipfs = {

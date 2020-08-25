@@ -58,13 +58,11 @@ describe('Ceramic interop: core <> http-client', () => {
     daemon = new CeramicDaemon(core, { port })
     client = new CeramicClient(apiUrl)
 
-    await IdentityWallet.create({
-      getPermission: async (): Promise<Array<string>> => [], seed, ceramic: client, useThreeIdProv: true,
-    })
-
-    await IdentityWallet.create({
+    const identityWallet = await IdentityWallet.create({
       getPermission: async (): Promise<Array<string>> => [], seed, ceramic: core, useThreeIdProv: true,
     })
+
+    await client.setDIDProvider(identityWallet.get3idProvider())
   })
 
   afterEach(async () => {

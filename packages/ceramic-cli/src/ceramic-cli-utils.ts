@@ -42,12 +42,7 @@ export default class CeramicCliUtils {
                 }
             }
 
-            const doctypeHandler = ceramic.findDoctypeHandler(doctype)
-            const genesis = await doctypeHandler.doctype.makeGenesis(params, ceramic.context, {
-                applyOnly: onlyGenesis
-            })
-
-            const doc = await ceramic.createDocumentFromGenesis(genesis, {
+            const doc = await ceramic.createDocument(doctype, params, {
                 applyOnly: onlyGenesis
             })
 

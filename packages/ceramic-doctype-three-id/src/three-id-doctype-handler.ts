@@ -9,7 +9,7 @@ import { ThreeIdDoctype, ThreeIdParams } from "./three-id-doctype"
 import {
     AnchorProof, AnchorRecord, AnchorStatus, DocState, DoctypeConstructor, DoctypeHandler, DocOpts, SignatureStatus
 } from "@ceramicnetwork/ceramic-common"
-import { Context, EncodeUtils } from "@ceramicnetwork/ceramic-common"
+import { Context } from "@ceramicnetwork/ceramic-common"
 
 const DOCTYPE = '3id'
 
@@ -121,14 +121,14 @@ export class ThreeIdDoctypeHandler implements DoctypeHandler<ThreeIdDoctype> {
         const cloned = cloneDeep(record)
 
         const { signedHeader, signature } = cloned
-        const payload = base64url.encode(stringify(EncodeUtils.encodeDagJson({
+        const payload = base64url.encode(stringify({
             doctype: cloned.doctype,
             data: cloned.data,
             header: cloned.header,
             unique: cloned.unique || undefined,
             prev: { '/': cloned.prev.toString() },
             id: { '/': cloned.id.toString() },
-        })))
+        }))
 
         const jws = [signedHeader, payload, signature].join('.')
 
