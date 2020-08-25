@@ -10,7 +10,7 @@ import { ThreeIdDoctype } from "../three-id-doctype"
 import { Context } from "@ceramicnetwork/ceramic-common"
 jest.mock('did-jwt', () => ({
   // TODO - We should test for when this function throws as well
-  verifyJWS: (): any => 'verified'
+  verifyJWS: (): void => { return }
 }))
 
 const cloneDeep = require('lodash.clonedeep') // eslint-disable-line @typescript-eslint/no-var-requires
