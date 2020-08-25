@@ -84,8 +84,6 @@ export default class CeramicCliUtils {
                 content: parsedContent, metadata: {
                     owners: parsedOwners, schema: schemaDocId
                 }
-            }, {
-                applyOnly: false
             })
 
             console.log(JSON.stringify(doc.content, null, 2))
