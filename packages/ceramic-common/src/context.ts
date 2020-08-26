@@ -1,4 +1,4 @@
-import Ipfs from "ipfs"
+import type { Ipfs } from "ipfs"
 import { Resolver } from "did-resolver"
 import { CeramicApi, DIDProvider } from "./ceramic-api"
 
@@ -7,7 +7,7 @@ import type { AnchorService } from "./anchor-service"
 
 export interface Context {
     user?: User;
-    ipfs?: Ipfs.Ipfs; // an ipfs instance
+    ipfs?: Ipfs; // an ipfs instance
     resolver?: Resolver; // a DID resolver instance
     provider?: DIDProvider; // a DID provider (3ID provider initially)
     anchorService?: AnchorService;

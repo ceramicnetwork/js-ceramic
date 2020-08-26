@@ -1,10 +1,9 @@
-
-type Callback<T> = (error: Error, result?: T) => void;
-
 declare module 'ipfs' {
   import { EventEmitter } from "events";
   export function create(options: any): Ipfs;
   export function create(): Ipfs;
+
+    type Callback<T> = (error: Error, result?: T) => void;
 
   export class Ipfs extends EventEmitter {
       constructor(options: any);
