@@ -3,11 +3,18 @@ import program from 'commander'
 import CeramicDaemon from './ceramic-daemon'
 import CeramicCliUtils from "./ceramic-cli-utils"
 
+import dagJose from 'dag-jose'
+// @ts-ignore
+import legacy from 'multiformats/legacy'
+// @ts-ignore
+import multiformats from 'multiformats/basics'
+import Ipfs from "ipfs"
+
 const DEFAULT_PINNING_STORE_PATH = ".pinning.store"
 
 program
     .command('daemon')
-    .option('--ipfs-api <url>', 'The ipfs http api to use')
+    .option('--ipfs-api <url>', 'The IPFS HTTP API to use. IPFS will be created if the argument is not provided')
     .option('--ethereum-rpc <url>', 'The Ethereum RPC URL used for communicating with Ethereum blockchain')
     .option('--anchor-service-api <url>', 'The anchor service URL to use')
     .option('--validate-docs', 'Validate documents according to their schemas. It is enabled by default')
@@ -18,14 +25,39 @@ program
         if (stateStorePath == null) {
             stateStorePath = DEFAULT_PINNING_STORE_PATH
         }
-        await CeramicDaemon.create({
-            ipfsHost: ipfsApi,
+
+        const config = {
             ethereumRpcUrl: ethereumRpc,
             anchorServiceUrl: anchorServiceApi,
             stateStorePath: stateStorePath,
             validateDocs,
             pinning: pinning
-        })
+        }
+
+        if (ipfsApi) {
+            Object.assign(config, {
+                ipfsHost: ipfsApi
+            })
+        } else {
+            multiformats.multicodec.add(dagJose)
+            const format = legacy(multiformats, dagJose.name)
+
+            const ipfs = await Ipfs.create({
+                ipld: { formats: [format] },
+                libp2p: {
+                    config: {
+                        dht: {
+                            enabled: true
+                        }
+                    }
+                }
+            })
+            Object.assign(config, {
+                ipfs,
+            })
+        }
+
+        await CeramicDaemon.create(config)
     })
 
 program
