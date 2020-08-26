@@ -3,12 +3,12 @@ import program from 'commander'
 import CeramicDaemon from './ceramic-daemon'
 import CeramicCliUtils from "./ceramic-cli-utils"
 
+import Ipfs from "ipfs"
 import dagJose from 'dag-jose'
 // @ts-ignore
 import legacy from 'multiformats/legacy'
 // @ts-ignore
 import multiformats from 'multiformats/basics'
-import Ipfs from "ipfs"
 
 const DEFAULT_PINNING_STORE_PATH = ".pinning.store"
 
