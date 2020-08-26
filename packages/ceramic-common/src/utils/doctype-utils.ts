@@ -99,6 +99,38 @@ export class DoctypeUtils {
     }
 
     /**
+     * Serializes record
+     * @param record - Record instance
+     */
+    static serializeRecord(record: any): any {
+        const cloned = cloneDeep(record)
+        if (cloned.id) {
+            cloned.id = cloned.id.toString()
+        }
+
+        if (cloned.prev) {
+            cloned.prev = cloned.prev.toString()
+        }
+        return cloned
+    }
+
+    /**
+     * Deserializes record
+     * @param record - Record instance
+     */
+    static deserializeRecord(record: any): any {
+        const cloned = cloneDeep(record)
+        if (cloned.id) {
+            cloned.id = new CID(cloned.id)
+        }
+
+        if (cloned.prev) {
+            cloned.prev = new CID(cloned.prev)
+        }
+        return cloned
+    }
+
+    /**
      * Serializes doctype state for over the network transfer
      * @param state - Doctype state
      */

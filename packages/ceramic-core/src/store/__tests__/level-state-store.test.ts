@@ -1,9 +1,8 @@
 import tmp from 'tmp-promise'
-import {LevelStateStore} from "../level-state-store";
+import { LevelStateStore } from "../level-state-store";
 import Level from "level-ts";
-import {AnchorStatus, Doctype, SignatureStatus} from "@ceramicnetwork/ceramic-common";
+import { AnchorStatus, Doctype, SignatureStatus, DoctypeUtils } from "@ceramicnetwork/ceramic-common";
 import CID from 'cids';
-import {DoctypeUtils} from "@ceramicnetwork/ceramic-common/lib/index";
 
 let mockStorage: Map<string, any>
 const mockPut = jest.fn((id: string, state: any) => mockStorage.set(id, state))

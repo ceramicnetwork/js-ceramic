@@ -149,9 +149,7 @@ Object {
       "0x123",
     ],
   },
-  "next": Object {
-    "owners": undefined,
-  },
+  "next": Object {},
   "signature": 2,
 }
 `;
@@ -332,7 +330,9 @@ Object {
         "test": "0xabc",
       },
     },
-    "owners": undefined,
+    "owners": Array [
+      "0x123",
+    ],
   },
   "signature": 2,
 }

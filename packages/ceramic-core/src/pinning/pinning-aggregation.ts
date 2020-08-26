@@ -18,7 +18,7 @@ export class PinningAggregation implements Pinning {
 
     constructor(context: Context, connectionStrings: string[], pinners: Array<PinningStatic> = [IpfsPinning, PowergatePinning]) {
         this.backends = connectionStrings.map(s => {
-            const protocol = new URL(s).protocol.replace(':', '')
+            const protocol = s.match(`://`) ? new URL(s).protocol.replace(':', '') : s
             const designator = protocol.match(/^(\w+)\+?/)[1]
             const found = pinners.find(pinner => pinner.designator === designator)
             if (found) {

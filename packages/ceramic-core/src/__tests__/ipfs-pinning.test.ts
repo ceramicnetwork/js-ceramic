@@ -9,17 +9,13 @@ beforeEach(() => {
 });
 
 describe('constructor', () => {
-    test('set IPFS address to __context', () => {
-        const pinning = new IpfsPinning('ipfs://__context', {})
+    test('set IPFS address to __context if ipfs+context scheme', () => {
+        const pinning = new IpfsPinning('ipfs+context://', {})
         expect(pinning.ipfsAddress).toEqual('__context')
     })
-    test('set IPFS address from ipfs protocol', () => {
-        const pinning = new IpfsPinning('ipfs://example.com', {})
-        expect(pinning.ipfsAddress).toEqual('http://example.com:5001')
-    })
-    test('set IPFS address from ipfs protocol with port', () => {
-        const pinning = new IpfsPinning('ipfs://example.com:3432', {})
-        expect(pinning.ipfsAddress).toEqual('http://example.com:3432')
+    test('set IPFS address to __context if ipfs+context string', () => {
+        const pinning = new IpfsPinning('ipfs+context', {})
+        expect(pinning.ipfsAddress).toEqual('__context')
     })
     test('set IPFS address from ipfs+http protocol', () => {
         const pinning = new IpfsPinning('ipfs+http://example.com', {})
@@ -34,7 +30,7 @@ describe('constructor', () => {
 describe('#open', () => {
     test('use IPFS from context if __context', async () => {
         const context = {ipfs: jest.fn()}
-        const pinning = new IpfsPinning('ipfs://__context', context)
+        const pinning = new IpfsPinning('ipfs+context', context)
         await pinning.open()
         expect(pinning.ipfs).toBe(context.ipfs)
     })
@@ -55,7 +51,7 @@ describe('#pin', () => {
                 }
             }
         }
-        const pinning = new IpfsPinning('ipfs://__context', context)
+        const pinning = new IpfsPinning('ipfs+context', context)
         await pinning.open()
         const cid = new CID('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D')
         await pinning.pin(cid)
@@ -73,7 +69,7 @@ describe('#unpin', () => {
                 }
             }
         }
-        const pinning = new IpfsPinning('ipfs://__context', context)
+        const pinning = new IpfsPinning('ipfs+context', context)
         await pinning.open()
         const cid = new CID('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D')
         await pinning.unpin(cid)

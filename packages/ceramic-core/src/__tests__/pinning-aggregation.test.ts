@@ -35,7 +35,7 @@ class FakePinning implements Pinning {
 describe('constructor', () => {
     test('init pinning backends', async () => {
         const connectionStrings = [
-            'ipfs://localhost:5001',
+            'ipfs+context',
             'ipfs+https://example.com',
             `powergate://localhost:5002?token=${token}`,
             `powergate+https://example.com?token=${token}`
@@ -45,7 +45,7 @@ describe('constructor', () => {
 
         expect(aggregation.backends[0]).toBeInstanceOf(IpfsPinning)
         const zero = aggregation.backends[0] as IpfsPinning
-        expect(zero.ipfsAddress).toEqual('http://localhost:5001')
+        expect(zero.ipfsAddress).toEqual('__context')
 
         expect(aggregation.backends[1]).toBeInstanceOf(IpfsPinning)
         const one = aggregation.backends[1] as IpfsPinning

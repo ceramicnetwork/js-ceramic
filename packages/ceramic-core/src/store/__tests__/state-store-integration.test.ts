@@ -3,7 +3,6 @@ import tmp from 'tmp-promise'
 import Document from "../../document"
 import Dispatcher from "../../dispatcher"
 import MockAnchorService from "../../anchor/mock/mock-anchor-service"
-import CeramicUser from "../../ceramic-user"
 import { Doctype, DoctypeHandler } from "@ceramicnetwork/ceramic-common"
 import { AnchorService } from "@ceramicnetwork/ceramic-common"
 import { Context } from "@ceramicnetwork/ceramic-common"
@@ -11,6 +10,7 @@ import { ThreeIdDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-three-id"
 import { ThreeIdDoctype } from "@ceramicnetwork/ceramic-doctype-three-id"
 import {PinStore} from "../pin-store";
 import {PinStoreFactory} from "../pin-store-factory";
+import { DID } from 'dids'
 
 const cloneDeep = require('lodash.clonedeep') // eslint-disable-line @typescript-eslint/no-var-requires
 const { sha256 } = require('js-sha256') // eslint-disable-line @typescript-eslint/no-var-requires
@@ -103,7 +103,6 @@ jest.mock("../../dispatcher", () => {
     }
   }
 })
-jest.mock("../../ceramic-user")
 
 const anchorUpdate = (doctype: Doctype): Promise<void> => new Promise(resolve => doctype.on('change', resolve))
 
@@ -130,8 +129,12 @@ describe('Level data store', () => {
     dispatcher = Dispatcher()
     anchorService = new MockAnchorService(dispatcher)
 
-    const user: CeramicUser = new CeramicUser(null)
-    user.sign = jest.fn(async () => 'aaaa.bbbb.cccc')
+    const user: DID = new DID()
+    user.createJWS = jest.fn(async () => {
+      // fake jws
+      return 'eyJraWQiOiJkaWQ6MzpiYWZ5YXNkZmFzZGY_dmVyc2lvbj0wI3NpZ25pbmciLCJhbGciOiJFUzI1NksifQ.bbbb.cccc'
+    })
+    user._did = 'did:3:bafyuser'
 
     context = {
       ipfs: mockIpfs,
@@ -143,7 +146,7 @@ describe('Level data store', () => {
     doctypeHandler.verifyJWT = async (): Promise<void> => { return }
 
     const levelPath = await tmp.tmpName()
-    const storeFactory = new PinStoreFactory(context, levelPath, ['ipfs://__context'])
+    const storeFactory = new PinStoreFactory(context, levelPath, ['ipfs+context'])
     store = await storeFactory.open()
   })
 

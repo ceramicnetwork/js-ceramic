@@ -47,7 +47,7 @@ class Document extends EventEmitter {
    * @param params - Initial Doctype parameters
    * @param doctypeHandler - DoctypeHandler instance
    * @param dispatcher - Dispatcher instance
-   * @param stateStore - StateStore instance
+   * @param pinStore - PinStore instance
    * @param context - Ceramic context
    * @param opts - Initialization options
    * @param validate - Validate content against schema
@@ -143,7 +143,7 @@ class Document extends EventEmitter {
    * @param id - Document ID
    * @param findHandler - find handler fn
    * @param dispatcher - Dispatcher instance
-   * @param stateStore - StateStore instance
+   * @param pinStore - PinStore instance
    * @param context - Ceramic context
    * @param opts - Initialization options
    */

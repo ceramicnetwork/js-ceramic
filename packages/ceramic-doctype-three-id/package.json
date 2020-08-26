@@ -32,9 +32,11 @@
     "did-jwt": "^4.0.0",
     "did-resolver": "^2.1.1",
     "fast-json-patch": "^2.2.1",
-    "cids": "^0.8.0"
+    "cids": "^0.8.0",
+    "base64url": "^3.0.1"
   },
   "devDependencies": {
+    "@ceramicnetwork/3id-did-resolver": "^0.1.9",
     "@babel/core": "^7.9.0",
     "@babel/plugin-proposal-decorators": "^7.10.1",
     "@babel/preset-env": "^7.8.4",
@@ -47,7 +49,7 @@
     "babel-jest": "^25.1.0",
     "eslint": "^6.8.0",
     "eslint-plugin-jest": "^23.8.2",
-    "identity-wallet": "1.2.0-ceramic.1",
+    "identity-wallet": "2.0.0-alpha.1",
     "ipfs": "^0.49.0",
     "jest": "^25.1.0",
     "js-sha256": "^0.9.0",
