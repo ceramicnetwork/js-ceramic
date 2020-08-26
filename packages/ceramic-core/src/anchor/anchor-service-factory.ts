@@ -20,6 +20,7 @@ export class AnchorServiceFactory {
      * Get AnchorService instance by type
      */
     public get(): AnchorService {
+        console.log('anc', this._config.anchorServiceUrl)
         if (this._config.anchorServiceUrl) {
             // defaults to Ethereum based anchor service
             return this.ethereumAnchorService;

@@ -128,7 +128,7 @@ describe('AccountLinkHandler', () => {
   it('throws an error if genesis record has owner not on mainnet', async () => {
     const content: any = undefined
     const owners = RECORDS.genesis.header.owners.map(address => address.split('@')[0] = '@eip155:3')
-    await expect(AccountLinkDoctype.makeGenesis({ content, metadata: { owners } })).rejects.toThrow(/Ethereum mainnet/i)
+    await expect(AccountLinkDoctype.makeGenesis({ content, metadata: { owners } })).rejects.toThrow(/is not supported/i)
   })
 
   it('applies genesis record correctly', async () => {

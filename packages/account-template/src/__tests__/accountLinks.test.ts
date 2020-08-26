@@ -3,7 +3,7 @@ jest.mock('3id-blockchain-utils', () => ({
 }))
 
 import AccountLinks from '../accountLinks'
-
+import { AccountID } from 'caip'
 import { createLink } from '3id-blockchain-utils'
 import { buildMockCeramic, buildMockCeramicDoc } from './helpers'
 
@@ -77,6 +77,7 @@ describe('AccountLinks', () => {
       const did = 'did:3:abcdfg'
       const address = '0x12345'
       const account = address + '@eip155:1'
+      const accountId = new AccountID(account)
       const mockAccountLinksTile = buildMockCeramicDoc()
       mockAccountLinksTile.content = []
       mockAccountLinksTile.state.metadata = { owners: [did] }
@@ -91,7 +92,7 @@ describe('AccountLinks', () => {
 
       await accountLinks.add(account, { provider: mockProvider })
 
-      expect(createLink).toHaveBeenCalledWith(did, address, mockProvider)
+      expect(createLink).toHaveBeenCalledWith(did, accountId, mockProvider)
       expect(mockCeramic.createDocument).toHaveBeenCalledWith('account-link', {
         content: null,
         metadata: { owners: [account] }
