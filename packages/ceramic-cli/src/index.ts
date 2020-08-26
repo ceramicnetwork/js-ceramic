@@ -35,14 +35,12 @@ program
         }
 
         if (ipfsApi) {
-            Object.assign(config, {
-                ipfsHost: ipfsApi
-            })
+            config.ipfsHost = ipfsApi
         } else {
             multiformats.multicodec.add(dagJose)
             const format = legacy(multiformats, dagJose.name)
 
-            const ipfs = await Ipfs.create({
+            config.ipfs = await Ipfs.create({
                 ipld: { formats: [format] },
                 libp2p: {
                     config: {
@@ -51,9 +49,6 @@ program
                         }
                     }
                 }
-            })
-            Object.assign(config, {
-                ipfs,
             })
         }
 
