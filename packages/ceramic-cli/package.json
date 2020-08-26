@@ -44,7 +44,7 @@
     "ipfs-http-client": "^46.0.0",
     "dag-jose": "^0.1.1",
     "ipfs": "^0.49.0",
-    "multiformats": "^3.0.3"
+    "multiformats": "0.0.9"
   },
   "devDependencies": {
     "@babel/core": "^7.9.0",
