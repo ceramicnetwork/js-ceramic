@@ -4,7 +4,6 @@ import Level from "level-ts";
 import {AnchorStatus, Doctype, SignatureStatus} from "@ceramicnetwork/ceramic-common";
 import CID from 'cids';
 import {DoctypeUtils} from "@ceramicnetwork/ceramic-common/lib/index";
-import _ from 'lodash'
 
 let mockStorage: Map<string, any>
 const mockPut = jest.fn((id: string, state: any) => mockStorage.set(id, state))
@@ -69,7 +68,7 @@ test('#save and #load', async () => {
     const docId = DoctypeUtils.getBaseDocId(DoctypeUtils.normalizeDocId(document.id))
     const storedState = {
         ...state,
-        log: state.log.map(_.toString)
+        log: state.log.map(cid => cid.toString())
     }
     expect(mockPut).toBeCalledWith(docId, storedState)
 

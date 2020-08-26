@@ -1,7 +1,6 @@
 import {IpfsPinning} from "./ipfs-pinning";
 import {Pinning, PinningStatic} from "./pinning";
 import {Context} from "@ceramicnetwork/ceramic-common";
-import _ from 'lodash'
 import {PowergatePinning} from "./powergate-pinning";
 import CID from "cids";
 
@@ -61,6 +60,8 @@ export class PinningAggregation implements Pinning {
      * @param docId
      */
     async unpin(cid: CID): Promise<void> {
-        Promise.all(this.backends.map(async service => service.unpin(cid))).catch(_.noop)
+        Promise.all(this.backends.map(async service => service.unpin(cid))).catch(() => {
+            // Do Nothing
+        })
     }
 }
