@@ -30,7 +30,7 @@ class AccountLinks {
       if (!opts.provider) {
         throw new Error('Provider must be set')
       }
-      proof = await createLink(this.ceramicDoc.state.metadata.owners[0], account.address, opts.provider)
+      proof = await createLink(this.ceramicDoc.state.metadata.owners[0], account, opts.provider)
     }
     if (this._accountLinkDocuments[account.toString()]) {
       throw new Error(`Address ${account} already linked`)

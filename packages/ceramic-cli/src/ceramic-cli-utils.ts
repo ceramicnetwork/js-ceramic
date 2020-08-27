@@ -19,7 +19,7 @@ interface CliConfig {
 /**
  * Ceramic CLI utility functions
  */
-export default class CeramicCliUtils {
+export class CeramicCliUtils {
 
     /**
      * Create document
