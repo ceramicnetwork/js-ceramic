@@ -3,20 +3,11 @@ import IdentityWallet from 'identity-wallet'
 import tmp from 'tmp-promise'
 import Ipfs from 'ipfs'
 import { ThreeIdDoctype } from "@ceramicnetwork/ceramic-doctype-three-id"
-import { AnchorStatus } from "@ceramicnetwork/ceramic-common"
+import { AnchorStatus, IpfsUtils } from "@ceramicnetwork/ceramic-common"
 
 jest.mock('../store/level-state-store')
 
 const seed = '0x5872d6e0ae7347b72c9216db218ebbb9d9d0ae7ab818ead3557e8e78bf944184'
-const genIpfsConf = (path: string, id: number): any => {
-  return {
-    repo: `${path}/ipfs${id}/`,
-    config: {
-      Addresses: { Swarm: [ `/ip4/127.0.0.1/tcp/${4004 + id}` ] },
-      Bootstrap: []
-    },
-  }
-}
 
 const createCeramic = async (ipfs: Ipfs): Promise<Ceramic> => {
   const ceramic = await Ceramic.create(ipfs, {
@@ -48,12 +39,15 @@ describe('Ceramic integration', () => {
 
   beforeAll(async () => {
     tmpFolder = await tmp.dir({ unsafeCleanup: true })
-    ipfs1 = await Ipfs.create(genIpfsConf(tmpFolder.path, 0))
-    ipfs2 = await Ipfs.create(genIpfsConf(tmpFolder.path, 1))
-    ipfs3 = await Ipfs.create(genIpfsConf(tmpFolder.path, 2))
-    multaddr1 = (await ipfs1.id()).addresses[0].toString()
-    multaddr2 = (await ipfs2.id()).addresses[0].toString()
-    multaddr3 = (await ipfs3.id()).addresses[0].toString()
+    ipfs1 = await IpfsUtils.create(tmpFolder.path, 0)
+    ipfs2 = await IpfsUtils.create(tmpFolder.path, 1)
+    ipfs3 = await IpfsUtils.create(tmpFolder.path, 2)
+    const id1 = await ipfs1.id()
+    const id2 = await ipfs2.id()
+    const id3 = await ipfs3.id()
+    multaddr1 = id1.addresses[0].toString()
+    multaddr2 = id2.addresses[0].toString()
+    multaddr3 = id3.addresses[0].toString()
   })
 
   afterAll(async () => {

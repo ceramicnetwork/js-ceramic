@@ -4,49 +4,17 @@ import IdentityWallet from 'identity-wallet'
 import tmp from 'tmp-promise'
 import Ipfs from 'ipfs'
 import CeramicDaemon from '../ceramic-daemon'
-import { AnchorStatus } from "@ceramicnetwork/ceramic-common"
+import { AnchorStatus, IpfsUtils } from "@ceramicnetwork/ceramic-common"
 import { TileDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-tile"
 import { EventEmitter } from "events"
 
-import dagJose from 'dag-jose'
-// @ts-ignore
-import legacy from 'multiformats/legacy'
-// @ts-ignore
-import multiformats from 'multiformats/basics'
-
-jest.mock('@ceramicnetwork/ceramic-core/lib/store/level-state-store')
-
 const seed = '0x5872d6e0ae7347b72c9216db218ebbb9d9d0ae7ab818ead3557e8e78bf944184'
-const genIpfsConf = (path: string, id: number): any => {
-  multiformats.multicodec.add(dagJose)
-  const format = legacy(multiformats, dagJose.name)
-
-  return {
-    repo: `${path}/ipfs${id}/`,
-    ipld: { formats: [format] },
-    libp2p: {
-      config: {
-        dht: {
-          enabled: true
-        }
-      }
-    },
-    config: {
-      Addresses: { Swarm: [] },
-      Discovery: {
-        MDNS: { Enabled: false },
-        webRTCStar: { Enabled: false }
-      },
-      Bootstrap: []
-    }
-  }
-}
 const anchorUpdate = (doc: EventEmitter): Promise<void> => new Promise(resolve => doc.on('change', resolve))
 const port = 7777
 const apiUrl = 'http://localhost:' + port
 
 describe('Ceramic interop: core <> http-client', () => {
-  jest.setTimeout(7000)
+  jest.setTimeout(20000)
   let ipfs: Ipfs
   let tmpFolder: any
   let core: Ceramic
@@ -57,7 +25,7 @@ describe('Ceramic interop: core <> http-client', () => {
 
   beforeAll(async () => {
     tmpFolder = await tmp.dir({ unsafeCleanup: true })
-    ipfs = await Ipfs.create(genIpfsConf(tmpFolder.path, 0))
+    ipfs = await IpfsUtils.create(tmpFolder.path, 0)
   })
 
   afterAll(async () => {
