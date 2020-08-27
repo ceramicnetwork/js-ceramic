@@ -10,10 +10,6 @@ export interface AccountLinkParams extends DocParams {
     content?: object;
 }
 
-function isValidChainId(chainId: string) {
-    return chainId === 'eip155:1' || chainId === 'fil:t' || chainId === 'fil:m'
-}
-
 /**
  * AccountLink doctype implementation
  */
@@ -68,13 +64,9 @@ export class AccountLinkDoctype extends Doctype {
         if (!chainId) {
             throw new Error('Chain ID must be specified according to CAIP-10')
         }
-        if (isValidChainId(chainId)) {
-            return {
-                doctype: DOCTYPE,
-                header: metadata,
-            }
-        } else {
-            throw new Error(`ChainId ${chainId} is not supported`)
+        return {
+            doctype: DOCTYPE,
+            header: metadata,
         }
     }
 
