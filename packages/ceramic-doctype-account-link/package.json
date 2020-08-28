@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/ceramic-doctype-account-link",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Ceramic AccountLink doctype",
   "keywords": [
     "ceramic",
