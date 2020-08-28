@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/3id-did-resolver",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "DID Resolver for the 3ID method",
   "keywords": [
     "Ceramic",
