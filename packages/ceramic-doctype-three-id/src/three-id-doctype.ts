@@ -28,12 +28,13 @@ export class ThreeIdDoctype extends Doctype {
     /**
      * Change existing ThreeId doctype
      * @param params - Change parameters
+     * @param opts - Initialization options
      */
-    async change(params: ThreeIdParams): Promise<void> {
+    async change(params: ThreeIdParams, opts: DocOpts = {}): Promise<void> {
         const { content, metadata } = params
 
         const updateRecord = await ThreeIdDoctype._makeRecord(this, this.context.user, content, metadata?.owners, metadata?.schema)
-        const updated = await this.context.api.applyRecord(this.id, updateRecord)
+        const updated = await this.context.api.applyRecord(this.id, updateRecord, opts)
         this.state = updated.state
     }
 
@@ -99,19 +100,38 @@ export class ThreeIdDoctype extends Doctype {
             header.schema = newSchema
         }
         const record: any = { header, data: patch, prev: doctype.head, id: doctype.state.log[0] }
+        return ThreeIdDoctype._signRecord(record, user)
+    }
+
+    /**
+     * Sign ThreeId record
+     * @param user - User instance
+     * @param record - Record to be signed
+     * @private
+     */
+    static async _signRecord(record: any, user: DID): Promise<any> {
+        if (user == null || !user.authenticated) {
+            throw new Error('No user authenticated')
+        }
         // TODO - use the dag-jose library for properly encoded signed records
         // convert CID to string for signing
-        const tmpPrev = record.prev
+        const tmpCID = record.prev
         const tmpId = record.id
-        record.prev = { '/': tmpPrev.toString() }
-        record.id = { '/': tmpId.toString() }
+        if (tmpCID) {
+            record.prev = { '/': tmpCID.toString() }
+        }
+        if (tmpId) {
+            record.id = { '/': tmpId.toString() }
+        }
 
-        const jws = await user.createJWS(record)
-        const [signedHeader, payload, signature] = jws.split('.') // eslint-disable-line
-        // @typescript-eslint/no-unused-vars
-        record.prev = tmpPrev
-        record.id = tmpId
-
+        const jws = await user.createJWS(JSON.parse(JSON.stringify(record)))
+        const [signedHeader, payload, signature] = jws.split('.') // eslint-disable-line @typescript-eslint/no-unused-vars
+        if (tmpCID) {
+            record.prev = tmpCID
+        }
+        if (tmpId) {
+            record.id = tmpId
+        }
         return { ...record, signedHeader, signature }
     }
 

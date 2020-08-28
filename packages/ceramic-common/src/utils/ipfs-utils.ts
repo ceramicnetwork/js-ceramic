@@ -8,12 +8,15 @@ import multiformats from 'multiformats/basics'
 
 export class IpfsUtils {
 
-    static async create(path: string, id: number): Promise<any> {
+    /**
+     * Create an IPFS instance
+     * @param overrideConfig - IFPS config for override
+     */
+    static async createIPFS(overrideConfig: object = {}): Promise<any> {
         multiformats.multicodec.add(dagJose)
         const format = legacy(multiformats, dagJose.name)
 
-        return Ipfs.create({
-            repo: `${path}/ipfs${id}/`,
+        const config = {
             ipld: { formats: [format] },
             libp2p: {
                 config: {
@@ -21,16 +24,11 @@ export class IpfsUtils {
                         enabled: true
                     }
                 }
-            },
-            config: {
-                Addresses: { Swarm: [ `/ip4/127.0.0.1/tcp/${4004 + id}` ] },
-                Discovery: {
-                    MDNS: { Enabled: false },
-                    webRTCStar: { Enabled: false }
-                },
-                Bootstrap: []
             }
-        })
+        }
+
+        Object.assign(config, overrideConfig)
+        return Ipfs.create(config)
     }
 
 }

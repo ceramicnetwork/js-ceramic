@@ -2,6 +2,7 @@ import program from 'commander'
 
 import CeramicDaemon from './ceramic-daemon'
 import CeramicCliUtils from "./ceramic-cli-utils"
+import { IpfsUtils } from '@ceramicnetwork/ceramic-common'
 
 import Ipfs from "ipfs"
 import dagJose from 'dag-jose'
@@ -39,22 +40,8 @@ program
                 ipfsHost: ipfsApi,
             })
         } else {
-            multiformats.multicodec.add(dagJose)
-            const format = legacy(multiformats, dagJose.name)
-
-            const ipfs = await Ipfs.create({
-                ipld: { formats: [format] },
-                libp2p: {
-                    config: {
-                        dht: {
-                            enabled: true
-                        }
-                    }
-                }
-            })
-
             Object.assign(config, {
-                ipfs
+                ipfs: await IpfsUtils.createIPFS()
             })
         }
 

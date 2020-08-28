@@ -25,7 +25,17 @@ describe('Ceramic interop: core <> http-client', () => {
 
   beforeAll(async () => {
     tmpFolder = await tmp.dir({ unsafeCleanup: true })
-    ipfs = await IpfsUtils.create(tmpFolder.path, 0)
+    ipfs = await IpfsUtils.createIPFS({
+      repo: `${tmpFolder.path}/ipfs${7}/`,
+      config: {
+        Addresses: { Swarm: [ `/ip4/127.0.0.1/tcp/${4011}` ] },
+        Discovery: {
+          MDNS: { Enabled: false },
+          webRTCStar: { Enabled: false }
+        },
+        Bootstrap: []
+      }
+    })
   })
 
   afterAll(async () => {

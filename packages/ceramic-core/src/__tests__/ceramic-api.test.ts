@@ -42,7 +42,13 @@ describe('Ceramic API', () => {
   beforeAll(async () => {
     tmpFolder = await tmp.dir({ unsafeCleanup: true })
 
-    ipfs = await IpfsUtils.create(tmpFolder.path, 9)
+    ipfs1 = await IpfsUtils.createIPFS({
+      repo: `${tmpFolder.path}/ipfs${9}/`,
+      config: {
+        Addresses: { Swarm: [ `/ip4/127.0.0.1/tcp/${4013}` ] },
+        Bootstrap: []
+      }
+    })
   })
 
   afterAll(async () => {
