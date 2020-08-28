@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.5.2-alpha.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-doctype-account-link@0.4.0...@ceramicnetwork/ceramic-doctype-account-link@0.5.2-alpha.0) (2020-08-28)
+
+**Note:** Version bump only for package @ceramicnetwork/ceramic-doctype-account-link
+
+
+
+
+
 # [0.4.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-doctype-account-link@0.2.8...@ceramicnetwork/ceramic-doctype-account-link@0.4.0) (2020-08-28)
 
 
