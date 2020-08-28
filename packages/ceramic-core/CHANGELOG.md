@@ -3,6 +3,25 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.3.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-core@0.2.8...@ceramicnetwork/ceramic-core@0.3.0) (2020-08-28)
+
+
+### Bug Fixes
+
+* Pinning, not pinnings ([#209](https://github.com/ceramicnetwork/js-ceramic/issues/209)) ([49688b2](https://github.com/ceramicnetwork/js-ceramic/commit/49688b2b6b698c57683bf16a1a36ffe013187e6b))
+* Use `ipfs+connection` string to use IPFS connection from context. ([#227](https://github.com/ceramicnetwork/js-ceramic/issues/227)) ([3af56fc](https://github.com/ceramicnetwork/js-ceramic/commit/3af56fccc912413bb89906f5cc0af0c6ede05fbd))
+* use forked did-resolver ([033ab2a](https://github.com/ceramicnetwork/js-ceramic/commit/033ab2a65ef59159f375864610fa9d5ad9f1e7ea))
+
+
+### Features
+
+* **cli:** enable js-ipfs ([#231](https://github.com/ceramicnetwork/js-ceramic/issues/231)) ([84fba0c](https://github.com/ceramicnetwork/js-ceramic/commit/84fba0c7deb36a1b75646282be2e7fef3840a53a))
+* **core:** Powergate pinning ([#201](https://github.com/ceramicnetwork/js-ceramic/issues/201)) ([b8cd3ea](https://github.com/ceramicnetwork/js-ceramic/commit/b8cd3ea91d67ae151ce7bca004e63696c16c31c6))
+
+
+
+
+
 ## [0.2.8](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-core@0.2.7...@ceramicnetwork/ceramic-core@0.2.8) (2020-08-05)
 
 

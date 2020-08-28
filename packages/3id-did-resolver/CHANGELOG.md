@@ -3,6 +3,24 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.2.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/3id-did-resolver@0.1.9...@ceramicnetwork/3id-did-resolver@0.2.0) (2020-08-28)
+
+
+### Bug Fixes
+
+* **3id:** update the snapshots ([a2bd67e](https://github.com/ceramicnetwork/js-ceramic/commit/a2bd67e6490de5b570e646297741688e81218333))
+* use forked did-resolver ([033ab2a](https://github.com/ceramicnetwork/js-ceramic/commit/033ab2a65ef59159f375864610fa9d5ad9f1e7ea))
+
+
+### Features
+
+* **3id-did-resolver:** Support new multicodec key format ([#218](https://github.com/ceramicnetwork/js-ceramic/issues/218)) ([0b944f7](https://github.com/ceramicnetwork/js-ceramic/commit/0b944f7ce03e881c0f715f8e5143f05ee14b8fc3))
+* **cli:** enable js-ipfs ([#231](https://github.com/ceramicnetwork/js-ceramic/issues/231)) ([84fba0c](https://github.com/ceramicnetwork/js-ceramic/commit/84fba0c7deb36a1b75646282be2e7fef3840a53a))
+
+
+
+
+
 ## [0.1.9](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/3id-did-resolver@0.1.8...@ceramicnetwork/3id-did-resolver@0.1.9) (2020-08-05)
 
 **Note:** Version bump only for package @ceramicnetwork/3id-did-resolver

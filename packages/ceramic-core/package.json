@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/ceramic-core",
-  "version": "0.2.8",
+  "version": "0.3.0",
   "description": "Typescript implementation of the Ceramic protocol",
   "keywords": [
     "Ceramic",
@@ -28,15 +28,16 @@
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/3id-did-resolver": "^0.1.9",
-    "@ceramicnetwork/ceramic-common": "^0.2.8",
-    "@ceramicnetwork/ceramic-doctype-account-link": "^0.2.8",
-    "@ceramicnetwork/ceramic-doctype-three-id": "^0.2.8",
-    "@ceramicnetwork/ceramic-doctype-tile": "^0.2.8",
+    "@ceramicnetwork/3id-did-resolver": "^0.2.0",
+    "@ceramicnetwork/ceramic-common": "^0.3.0",
+    "@ceramicnetwork/ceramic-doctype-account-link": "^0.3.0",
+    "@ceramicnetwork/ceramic-doctype-three-id": "^0.3.0",
+    "@ceramicnetwork/ceramic-doctype-tile": "^0.3.0",
     "@ethersproject/base64": "^5.0.2",
     "@ethersproject/providers": "^5.0.0-beta.144",
     "@ethersproject/random": "^5.0.2",
     "@textile/powergate-client": "^0.2.0",
+    "async": "^3.2.0",
     "cids": "^0.8.0",
     "cross-fetch": "^3.0.5",
     "did-resolver": "^2.1.1",
@@ -44,7 +45,6 @@
     "ipfs-http-client": "^46.0.0",
     "level-ts": "^2.0.5",
     "lodash.clonedeep": "^4.5.0",
-    "async": "^3.2.0",
     "typestub-multihashes": "^0.0.4"
   },
   "devDependencies": {

@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/3id-did-resolver",
-  "version": "0.1.9",
+  "version": "0.2.0",
   "description": "DID Resolver for the 3ID method",
   "keywords": [
     "Ceramic",
@@ -27,13 +27,14 @@
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/ceramic-common": "^0.2.8",
+    "@ceramicnetwork/ceramic-common": "^0.3.0",
     "bs58": "^4.0.1"
   },
   "devDependencies": {
     "@babel/core": "^7.9.0",
     "@babel/preset-env": "^7.8.4",
     "@babel/preset-typescript": "^7.9.0",
+    "@types/bs58": "^4.0.1",
     "@types/events": "^3.0.0",
     "@types/node": "^13.13.15",
     "@typescript-eslint/eslint-plugin": "^2.19.0",
@@ -43,8 +44,7 @@
     "eslint": "^6.8.0",
     "eslint-plugin-jest": "^23.8.2",
     "jest": "^25.1.0",
-    "tmp-promise": "^2.0.2",
-    "@types/bs58": "^4.0.1"
+    "tmp-promise": "^2.0.2"
   },
   "jest": {
     "transformIgnorePatterns": [

@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/ceramic-cli",
-  "version": "0.2.8",
+  "version": "0.3.0",
   "description": "Typescript implementation of the Ceramic CLI",
   "keywords": [
     "Ceramic",
@@ -37,16 +37,16 @@
   },
   "dependencies": {
     "@babel/register": "^7.10.5",
-    "@ceramicnetwork/ceramic-common": "^0.2.8",
-    "@ceramicnetwork/ceramic-core": "^0.2.8",
-    "@ceramicnetwork/ceramic-doctype-tile": "^0.2.8",
-    "@ceramicnetwork/ceramic-http-client": "^0.2.8",
+    "@ceramicnetwork/ceramic-common": "^0.3.0",
+    "@ceramicnetwork/ceramic-core": "^0.3.0",
+    "@ceramicnetwork/ceramic-doctype-tile": "^0.3.0",
+    "@ceramicnetwork/ceramic-http-client": "^0.3.0",
+    "bs58": "^4.0.1",
     "commander": "^6.0.0",
     "express": "^4.17.1",
     "identity-wallet": "2.0.0-alpha.1",
     "ipfs": "^0.49.0",
-    "ipfs-http-client": "^46.0.0",
-    "bs58": "^4.0.1"
+    "ipfs-http-client": "^46.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.9.0",
@@ -58,12 +58,12 @@
     "@types/node": "^13.13.15",
     "@typescript-eslint/eslint-plugin": "^2.19.0",
     "@typescript-eslint/parser": "^2.19.0",
+    "@zondax/filecoin-signing-tools": "^0.6.3",
     "babel-jest": "^25.1.0",
     "eslint": "^6.8.0",
     "eslint-plugin-jest": "^23.8.2",
     "jest": "^25.1.0",
-    "tmp-promise": "^2.0.2",
-    "@zondax/filecoin-signing-tools": "^0.6.3"
+    "tmp-promise": "^2.0.2"
   },
   "peerDependencies": {
     "@zondax/filecoin-signing-tools": "^0.6.3"
