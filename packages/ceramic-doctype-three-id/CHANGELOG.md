@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.4.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-doctype-three-id@0.2.8...@ceramicnetwork/ceramic-doctype-three-id@0.4.0) (2020-08-28)
+
+
+### Bug Fixes
+
+* use forked did-resolver ([033ab2a](https://github.com/ceramicnetwork/js-ceramic/commit/033ab2a65ef59159f375864610fa9d5ad9f1e7ea))
+
+
+### Features
+
+* **cli:** enable js-ipfs ([#231](https://github.com/ceramicnetwork/js-ceramic/issues/231)) ([84fba0c](https://github.com/ceramicnetwork/js-ceramic/commit/84fba0c7deb36a1b75646282be2e7fef3840a53a))
+
+
+
+
+
 # [0.3.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-doctype-three-id@0.2.8...@ceramicnetwork/ceramic-doctype-three-id@0.3.0) (2020-08-28)
 
 
