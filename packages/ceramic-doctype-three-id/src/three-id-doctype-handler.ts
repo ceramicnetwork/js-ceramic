@@ -1,6 +1,5 @@
 import CID from 'cids'
 import base64url from 'base64url'
-import cloneDeep from 'lodash.clonedeep'
 import stringify from 'fast-json-stable-stringify'
 
 import jsonpatch from 'fast-json-patch'
@@ -118,29 +117,7 @@ export class ThreeIdDoctypeHandler implements DoctypeHandler<ThreeIdDoctype> {
         if (!record.id.equals(state.log[0])) {
             throw new Error(`Invalid docId ${record.id}, expected ${state.log[0]}`)
         }
-        const cloned = cloneDeep(record)
-
-        const { signedHeader, signature } = cloned
-        const payload = base64url.encode(stringify({
-            doctype: cloned.doctype,
-            data: cloned.data,
-            header: cloned.header,
-            unique: cloned.unique || undefined,
-            prev: { '/': cloned.prev.toString() },
-            id: { '/': cloned.id.toString() },
-        }))
-
-        const jws = [signedHeader, payload, signature].join('.')
-
-        const decodedHeader = JSON.parse(base64url.decode(signedHeader))
-        const { kid } = decodedHeader
-        const { publicKey } = await context.resolver.resolve(kid)
-        try {
-            await this.verifyJWS(jws, publicKey)
-        } catch (e) {
-            throw new Error('Invalid signature for signed record. ' + e)
-        }
-
+        await this._verifyRecordSignature(record, context)
         state.log.push(cid)
         return {
             ...state,
@@ -150,6 +127,34 @@ export class ThreeIdDoctypeHandler implements DoctypeHandler<ThreeIdDoctype> {
                 owners: record.header.owners,
                 content: jsonpatch.applyPatch(state.content, record.data).newDocument,
             },
+        }
+    }
+
+    /**
+     * Verifies record signature
+     * @param record - Record to be verified
+     * @param context - Ceramic context
+     * @private
+     */
+    async _verifyRecordSignature(record: any, context: Context): Promise<void> {
+        const { signedHeader, signature } = record
+        const payload = base64url.encode(stringify({
+            doctype: record.doctype,
+            data: record.data,
+            header: record.header,
+            unique: record.unique || undefined,
+            prev: record.prev ? { '/': record.prev.toString() } : undefined,
+            id: record.id ? { '/': record.id.toString() } : undefined,
+        }))
+
+        const jws = [signedHeader, payload, signature].join('.')
+        const decodedHeader = JSON.parse(base64url.decode(signedHeader))
+        const { kid } = decodedHeader
+        const { publicKey } = await context.resolver.resolve(kid)
+        try {
+            await this.verifyJWS(jws, publicKey)
+        } catch (e) {
+            throw new Error('Invalid signature for signed record. ' + e)
         }
     }
 

@@ -5,7 +5,6 @@ import Ceramic from '@ceramicnetwork/ceramic-core'
 import type { CeramicConfig } from "@ceramicnetwork/ceramic-core";
 import { DoctypeUtils } from "@ceramicnetwork/ceramic-common"
 
-const IPFS_HOST = 'http://localhost:5001'
 const DEFAULT_PORT = 7007
 const DEBUG = true
 const toApiPath = (ending: string): string => '/api/v0' + ending
@@ -66,7 +65,7 @@ class CeramicDaemon {
   }
 
   static async create (opts: CreateOpts): Promise<CeramicDaemon> {
-    const ipfs = opts.ipfs || ipfsClient(opts.ipfsHost || IPFS_HOST)
+    const ipfs = opts.ipfs || ipfsClient(opts.ipfsHost)
 
     const ceramicConfig: CeramicConfig = {}; // get initially from file and override with opts
     if (opts.anchorServiceUrl) {

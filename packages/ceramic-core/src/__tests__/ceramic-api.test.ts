@@ -1,9 +1,9 @@
 import Ceramic, { CeramicConfig } from '../ceramic'
 import IdentityWallet from 'identity-wallet'
-import tmp from 'tmp-promise'
 import Ipfs from 'ipfs'
+import tmp from 'tmp-promise'
 import { TileDoctype, TileParams } from "@ceramicnetwork/ceramic-doctype-tile"
-import { DoctypeUtils, AnchorStatus } from "@ceramicnetwork/ceramic-common"
+import { AnchorStatus, IpfsUtils, DoctypeUtils } from "@ceramicnetwork/ceramic-common"
 
 jest.mock('../store/level-state-store')
 
@@ -42,12 +42,12 @@ describe('Ceramic API', () => {
   beforeAll(async () => {
     tmpFolder = await tmp.dir({ unsafeCleanup: true })
 
-    ipfs = await Ipfs.create({
-      repo: `${tmpFolder.path}/ipfs9/`,
+    ipfs = await IpfsUtils.createIPFS({
+      repo: `${tmpFolder.path}/ipfs${9}/`,
       config: {
-        Addresses: { Swarm: [ `/ip4/127.0.0.1/tcp/4009` ] },
+        Addresses: { Swarm: [ `/ip4/127.0.0.1/tcp/${4013}` ] },
         Bootstrap: []
-      },
+      }
     })
   })
 

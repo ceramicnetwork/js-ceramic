@@ -2,21 +2,12 @@ import Ceramic from '../ceramic'
 import IdentityWallet from 'identity-wallet'
 import tmp from 'tmp-promise'
 import Ipfs from 'ipfs'
+import { AnchorStatus, IpfsUtils } from "@ceramicnetwork/ceramic-common"
 import { ThreeIdDoctype } from "@ceramicnetwork/ceramic-doctype-three-id"
-import { AnchorStatus } from "@ceramicnetwork/ceramic-common"
 
 jest.mock('../store/level-state-store')
 
 const seed = '0x5872d6e0ae7347b72c9216db218ebbb9d9d0ae7ab818ead3557e8e78bf944184'
-const genIpfsConf = (path: string, id: number): any => {
-  return {
-    repo: `${path}/ipfs${id}/`,
-    config: {
-      Addresses: { Swarm: [ `/ip4/127.0.0.1/tcp/${4004 + id}` ] },
-      Bootstrap: []
-    },
-  }
-}
 
 const createCeramic = async (ipfs: Ipfs): Promise<Ceramic> => {
   const ceramic = await Ceramic.create(ipfs, {
@@ -46,14 +37,34 @@ describe('Ceramic integration', () => {
   const DOCTYPE_TILE = 'tile'
   const DOCTYPE_3ID = '3id'
 
+  const safeDisconnect = async (ipfs: Ipfs, multiaddr: string) => {
+    try{
+      await ipfs.swarm.disconnect(multiaddr)
+    } catch (e) {
+      // do nothing
+    }
+  }
+
   beforeAll(async () => {
     tmpFolder = await tmp.dir({ unsafeCleanup: true })
-    ipfs1 = await Ipfs.create(genIpfsConf(tmpFolder.path, 0))
-    ipfs2 = await Ipfs.create(genIpfsConf(tmpFolder.path, 1))
-    ipfs3 = await Ipfs.create(genIpfsConf(tmpFolder.path, 2))
-    multaddr1 = (await ipfs1.id()).addresses[0].toString()
-    multaddr2 = (await ipfs2.id()).addresses[0].toString()
-    multaddr3 = (await ipfs3.id()).addresses[0].toString()
+    await tmpFolder.cleanup()
+
+    const buildConfig = (path, id) => {
+      return {
+        repo: `${path}/ipfs${id}/`, config: {
+          Addresses: { Swarm: [`/ip4/127.0.0.1/tcp/${4004 + id}`] }, Bootstrap: []
+        }
+      }
+    }
+
+    ([ipfs1, ipfs2, ipfs3] = await Promise.all([1, 2, 3].map(id => IpfsUtils.createIPFS(buildConfig(tmpFolder.path, id)))))
+
+    const id1 = await ipfs1.id()
+    const id2 = await ipfs2.id()
+    const id3 = await ipfs3.id()
+    multaddr1 = id1.addresses[0].toString()
+    multaddr2 = id2.addresses[0].toString()
+    multaddr3 = id3.addresses[0].toString()
   })
 
   afterAll(async () => {
@@ -61,6 +72,15 @@ describe('Ceramic integration', () => {
     await ipfs2.stop()
     await ipfs3.stop()
     await tmpFolder.cleanup()
+  })
+
+  beforeEach(async () => {
+    await safeDisconnect(ipfs1, multaddr2)
+    await safeDisconnect(ipfs1, multaddr3)
+    await safeDisconnect(ipfs2, multaddr1)
+    await safeDisconnect(ipfs2, multaddr3)
+    await safeDisconnect(ipfs3, multaddr1)
+    await safeDisconnect(ipfs3, multaddr2)
   })
 
   it('can propagate update across two connected nodes', async () => {
@@ -74,8 +94,6 @@ describe('Ceramic integration', () => {
     expect(doctype1.state).toEqual(doctype2.state)
     await ceramic1.close()
     await ceramic2.close()
-
-    await ipfs2.swarm.disconnect(multaddr1)
   })
 
   it('won\'t propagate update across two disconnected nodes', async () => {
@@ -113,9 +131,6 @@ describe('Ceramic integration', () => {
     await ceramic1.close()
     await ceramic2.close()
     await ceramic3.close()
-
-    await ipfs1.swarm.disconnect(multaddr2)
-    await ipfs2.swarm.disconnect(multaddr3)
   })
 
   it('can propagate multiple update across nodes with common connection', async () => {
@@ -123,9 +138,27 @@ describe('Ceramic integration', () => {
     // ipfs1 <!-> ipfs3
     await ipfs1.swarm.connect(multaddr2)
     await ipfs2.swarm.connect(multaddr3)
-    const ceramic1 = await createCeramic(ipfs1)
-    const ceramic2 = await createCeramic(ipfs2)
-    const ceramic3 = await createCeramic(ipfs3)
+
+    const ceramic1 = await Ceramic.create(ipfs1, {
+      stateStorePath: await tmp.tmpName()
+    })
+
+    const idw = await IdentityWallet.create({
+      getPermission: async (): Promise<Array<string>> => [],
+      seed,
+      ceramic: ceramic1,
+      useThreeIdProv: true,
+    })
+
+    const ceramic2 = await Ceramic.create(ipfs2, {
+      stateStorePath: await tmp.tmpName()
+    })
+    await ceramic2.setDIDProvider(idw.getDidProvider())
+
+    const ceramic3 = await Ceramic.create(ipfs3, {
+      stateStorePath: await tmp.tmpName()
+    })
+    await ceramic3.setDIDProvider(idw.getDidProvider())
 
     const owner = ceramic1.context.user.id
 
@@ -158,8 +191,5 @@ describe('Ceramic integration', () => {
     await ceramic1.close()
     await ceramic2.close()
     await ceramic3.close()
-
-    await ipfs1.swarm.disconnect(multaddr2)
-    await ipfs2.swarm.disconnect(multaddr3)
   })
 })

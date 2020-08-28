@@ -6,7 +6,8 @@ module.exports = {
     'jest'
   ],
   rules: {
-    "@typescript-eslint/no-explicit-any": "off"
+    "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/ban-ts-ignore": "off"
   },
   extends: [
     'eslint:recommended',

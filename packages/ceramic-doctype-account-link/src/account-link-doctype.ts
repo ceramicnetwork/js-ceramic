@@ -64,6 +64,9 @@ export class AccountLinkDoctype extends Doctype {
         if (!chainId) {
             throw new Error('Chain ID must be specified according to CAIP-10')
         }
+        if (chainId !== 'eip155:1') {
+            throw new Error('Only Ethereum mainnet supported')
+        }
         return {
             doctype: DOCTYPE,
             header: metadata,

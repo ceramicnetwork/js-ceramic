@@ -1,7 +1,7 @@
 import Dispatcher from './dispatcher'
 import CID from 'cids'
 import { EventEmitter } from 'events'
-import PQueue from 'p-queue'
+import async, { AsyncQueue } from 'async'
 import cloneDeep from 'lodash.clonedeep'
 import AnchorServiceResponse from "./anchor/anchor-service-response"
 import {
@@ -20,8 +20,12 @@ import {
 } from "@ceramicnetwork/ceramic-common"
 import {PinStore} from "./store/pin-store";
 
+interface QueueTask {
+  cid: CID;
+}
+
 class Document extends EventEmitter {
-  private _applyQueue: PQueue
+  private _applyQueue: AsyncQueue<unknown>
   private _genesisCid: CID
 
   private _doctype: Doctype
@@ -38,7 +42,21 @@ class Document extends EventEmitter {
     this.id = DoctypeUtils.getBaseDocId(normalized);
     this.version = DoctypeUtils.getVersionId(normalized)
 
-    this._applyQueue = new PQueue({ concurrency: 1 })
+    this._applyQueue = async.queue(async (task: QueueTask, callback) => {
+      try {
+        const log = await this._fetchLog(task.cid)
+        if (log.length) {
+          const updated = await this._applyLog(log)
+          if (updated) {
+            this._doctype.emit('change')
+          }
+        }
+      } catch (e) {
+        console.error(e)
+      } finally {
+        callback()
+      }
+    }, 1)
     this._genesisCid = new CID(DoctypeUtils.getGenesis(this.id))
   }
 
@@ -291,24 +309,17 @@ class Document extends EventEmitter {
   async _updateStateIfPinned(): Promise<void> {
     const isPinned = await this.pinStore.stateStore.exists(this.id)
     if (isPinned) {
-      await this.pinStore.add(this.doctype)
+      await this.pinStore.add(this._doctype)
     }
   }
 
+  /**
+   * Handles HEAD from the PubSub topic
+   * @param cid - HEAD CID
+   * @private
+   */
   async _handleHead (cid: CID): Promise<void> {
-    const log = await this._fetchLog(cid)
-    if (log.length) {
-      // create a queue in case we get multiple conflicting records at once
-      let applyPromise
-      this._applyQueue.add(async () => {
-        applyPromise = this._applyLog(log)
-        const updated = await applyPromise
-        if (updated) {
-          this._doctype.emit('change')
-        }
-      })
-      await applyPromise
-    }
+    await this._applyQueue.push({ cid })
   }
 
   async _fetchLog (cid: CID, log: Array<CID> = []): Promise<Array<CID>> {
@@ -378,7 +389,9 @@ class Document extends EventEmitter {
       } else {
         state = await this._doctypeHandler.applyRecord(record, cid, this._context, state)
       }
-      if (breakOnAnchor && AnchorStatus.ANCHORED === state.anchorStatus) return state
+      if (breakOnAnchor && AnchorStatus.ANCHORED === state.anchorStatus) {
+        return state
+      }
       entry = itr.next()
     }
     return state

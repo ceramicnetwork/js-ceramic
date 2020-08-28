@@ -1,13 +1,14 @@
 import program from 'commander'
 
 import CeramicDaemon from '../ceramic-daemon'
-import {CeramicCliUtils} from "../ceramic-cli-utils"
+import { CeramicCliUtils } from "../ceramic-cli-utils"
+import { IpfsUtils } from "@ceramicnetwork/ceramic-common"
 
 const DEFAULT_PINNING_STORE_PATH = ".pinning.store"
 
 program
     .command('daemon')
-    .option('--ipfs-api <url>', 'The ipfs http api to use')
+    .option('--ipfs-api <url>', 'The IPFS HTTP API to use. IPFS will be created if the argument is not provided')
     .option('--ethereum-rpc <url>', 'The Ethereum RPC URL used for communicating with Ethereum blockchain')
     .option('--anchor-service-api <url>', 'The anchor service URL to use')
     .option('--validate-docs', 'Validate documents according to their schemas. It is enabled by default')
@@ -18,14 +19,26 @@ program
         if (stateStorePath == null) {
             stateStorePath = DEFAULT_PINNING_STORE_PATH
         }
-        await CeramicDaemon.create({
-            ipfsHost: ipfsApi,
+
+        const config = {
             ethereumRpcUrl: ethereumRpc,
             anchorServiceUrl: anchorServiceApi,
             stateStorePath: stateStorePath,
             validateDocs,
             pinning: pinning
-        })
+        }
+
+        if (ipfsApi) {
+            Object.assign(config, {
+                ipfsHost: ipfsApi,
+            })
+        } else {
+            Object.assign(config, {
+                ipfs: await IpfsUtils.createIPFS()
+            })
+        }
+
+        await CeramicDaemon.create(config)
     })
 
 program
@@ -84,8 +97,7 @@ schemas.description('Ceramic schemas')
 schemas
     .command('create <new-content>')
     .option('--only-genesis', 'Only create the genesis object. No anchor will be created')
-    .option('--owners <owners>', 'Specify a comma-separated list of the owners of the schema document. Defaults to' +
-        ' current user')
+    .option('--owners <owners>', 'Specify a comma-separated list of the owners of the schema document. Defaults to' + ' current user')
     .option('--unique', 'Ensure schema document is unique regardless of content')
     .description('Create a new schema')
     .action(async (content, { onlyGenesis, owners, unique }) => {

@@ -104,7 +104,7 @@ export class TileDoctype extends Doctype {
         }
 
         const patch = jsonpatch.compare(doctype.content, newContent)
-        const record = { data: patch, header, prev: doctype.head, id: doctype.state.log[0] }
+        const record = { header, data: patch, prev: doctype.head, id: doctype.state.log[0] }
         return TileDoctype._signRecord(record, user)
     }
 

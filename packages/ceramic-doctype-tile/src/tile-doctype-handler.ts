@@ -2,7 +2,6 @@ import CID from 'cids'
 
 import * as didJwt from 'did-jwt'
 import base64url from 'base64url'
-import cloneDeep from 'lodash.clonedeep'
 import stringify from 'fast-json-stable-stringify'
 
 import jsonpatch from 'fast-json-patch'
@@ -138,16 +137,14 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
      * @private
      */
     async _verifyRecordSignature(record: any, context: Context): Promise<void> {
-        const cloned = cloneDeep(record)
-
-        const { signedHeader, signature } = cloned
+        const { signedHeader, signature } = record
         const payload = base64url.encode(stringify({
-            doctype: cloned.doctype,
-            data: cloned.data,
-            header: cloned.header,
-            unique: cloned.unique || undefined,
-            prev: cloned.prev ? { '/': cloned.prev.toString() } : undefined,
-            id: cloned.id ? { '/': cloned.id.toString() } : undefined,
+            doctype: record.doctype,
+            data: record.data,
+            header: record.header,
+            unique: record.unique || undefined,
+            prev: record.prev ? { '/': record.prev.toString() } : undefined,
+            id: record.id ? { '/': record.id.toString() } : undefined,
         }))
 
         const jws = [signedHeader, payload, signature].join('.')

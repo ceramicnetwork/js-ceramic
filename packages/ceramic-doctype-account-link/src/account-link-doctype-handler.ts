@@ -88,7 +88,7 @@ export class AccountLinkDoctypeHandler implements DoctypeHandler<AccountLinkDoct
         }
 
         // TODO: handle CAIP-10 addresses in proof generation of 3id-blockchain-utils
-        const account = validProof.accoun || validProof.address
+        const account = validProof.account || validProof.address
         let [address, chainId] = account.split('@')  // eslint-disable-line prefer-const
         if (!chainId) {
             chainId = 'eip155:1'
