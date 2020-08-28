@@ -28,7 +28,8 @@
     "3id-blockchain-utils": "^1.0.0",
     "@ceramicnetwork/ceramic-common": "^0.2.8",
     "@types/lodash.clonedeep": "^4.5.6",
-    "did-resolver": "^2.1.1"
+    "did-resolver": "^2.1.1",
+    "cids": "^0.8.0"
   },
   "devDependencies": {
     "@babel/core": "^7.9.0",

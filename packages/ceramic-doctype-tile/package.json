@@ -29,7 +29,12 @@
     "@ceramicnetwork/ceramic-common": "^0.2.8",
     "@types/lodash.clonedeep": "^4.5.6",
     "base64url": "^3.0.1",
-    "did-resolver": "^2.1.1"
+    "did-resolver": "^2.1.1",
+    "fast-json-patch": "^2.2.1",
+    "@ethersproject/base64": "^5.0.2",
+    "@ethersproject/random": "^5.0.2",
+    "did-jwt": "^4.0.0",
+    "cids": "^0.8.0"
   },
   "devDependencies": {
     "@ceramicnetwork/3id-did-resolver": "^0.1.9",

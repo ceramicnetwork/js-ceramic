@@ -12,7 +12,8 @@
   "author": "Joel Torstensson <oed3933@gmail.com>",
   "homepage": "",
   "license": "MIT",
-  "main": "lib/ceramic.js",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "directories": {
     "lib": "lib"
   },
@@ -44,7 +45,8 @@
     "express": "^4.17.1",
     "identity-wallet": "2.0.0-alpha.1",
     "ipfs": "^0.49.0",
-    "ipfs-http-client": "^46.0.0"
+    "ipfs-http-client": "^46.0.0",
+    "bs58": "^4.0.1"
   },
   "devDependencies": {
     "@babel/core": "^7.9.0",
@@ -60,7 +62,11 @@
     "eslint": "^6.8.0",
     "eslint-plugin-jest": "^23.8.2",
     "jest": "^25.1.0",
-    "tmp-promise": "^2.0.2"
+    "tmp-promise": "^2.0.2",
+    "@zondax/filecoin-signing-tools": "^0.6.3"
+  },
+  "peerDependencies": {
+    "@zondax/filecoin-signing-tools": "^0.6.3"
   },
   "gitHead": "c58eb9659f5fdd976aca2db6465619c20ba30ff9"
 }
