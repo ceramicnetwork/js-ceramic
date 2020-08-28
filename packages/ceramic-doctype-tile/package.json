@@ -41,7 +41,7 @@
     "@babel/plugin-proposal-decorators": "^7.10.1",
     "@babel/preset-env": "^7.8.4",
     "@babel/preset-typescript": "^7.9.0",
-    "@ceramicnetwork/3id-did-resolver": "^0.2.0",
+    "@ceramicnetwork/3id-did-resolver": "^0.3.2",
     "@ceramicnetwork/ceramic-doctype-three-id": "^0.4.0",
     "@types/encoding-down": "^5.0.0",
     "@types/events": "^3.0.0",
