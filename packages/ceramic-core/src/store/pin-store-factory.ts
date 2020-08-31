@@ -13,7 +13,7 @@ export class PinStoreFactory {
 
     constructor(readonly context: Context, stateStorePath: string | undefined, pinnings: string[] | undefined) {
         this.stateStorePath = stateStorePath || path.join(process.cwd(), '.pinning.store')
-        this.pinnings = pinnings && pinnings.length > 0 ? pinnings : ['ipfs://__context']
+        this.pinnings = pinnings && pinnings.length > 0 ? pinnings : ['ipfs+context']
     }
 
     async open(): Promise<PinStore> {
