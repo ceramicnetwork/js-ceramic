@@ -25,7 +25,7 @@ export class PinStoreFactory {
             return blob?.value
         }
         const resolve = async (path: string): Promise<CID> => {
-            return ipfs.dag.resolve(path)
+            return (await ipfs.dag.resolve(path)).cid
         }
         const pinStore = new PinStore(stateStore, pinning, retrieve, resolve)
         await pinStore.open()
