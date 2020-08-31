@@ -15,13 +15,11 @@ const TOPIC = '/ceramic'
 
 export default class Dispatcher extends EventEmitter {
   private _peerId: string
-  private _recordCache: Record<string, any>
   private _documents: Record<string, Document>
 
   constructor (public _ipfs: Ipfs.Ipfs) {
     super()
     this._documents = {}
-    this._recordCache = {}
     this._ipfs.pubsub.subscribe(TOPIC, this.handleMessage.bind(this)) // this returns promise, we should await
   }
 
@@ -40,10 +38,7 @@ export default class Dispatcher extends EventEmitter {
   }
 
   async retrieveRecord (cid: CID): Promise<any> {
-    // cache should be less needed once this issue is fixed:
-    // https://github.com/ipfs/js-ipfs-bitswap/pull/214
-    if (!this._recordCache[cid.toString()]) this._recordCache[cid.toString()] = (await this._ipfs.dag.get(cid)).value
-    return cloneDeep(this._recordCache[cid.toString()])
+    return cloneDeep((await this._ipfs.dag.get(cid)).value)
   }
 
   async retrieveRecordByPath (cid: CID, path: string): Promise<any> {
