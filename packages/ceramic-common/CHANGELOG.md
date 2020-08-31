@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.5.3](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-common@0.5.2...@ceramicnetwork/ceramic-common@0.5.3) (2020-08-31)
+
+
+### Bug Fixes
+
+* doctype getters now returns next state ([#248](https://github.com/ceramicnetwork/js-ceramic/issues/248)) ([d32ab16](https://github.com/ceramicnetwork/js-ceramic/commit/d32ab165a7771e543e8d1e08e64fe2994fb3db34))
+
+
+
+
+
 ## [0.5.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-common@0.5.2-alpha.0...@ceramicnetwork/ceramic-common@0.5.2) (2020-08-28)
 
 **Note:** Version bump only for package @ceramicnetwork/ceramic-common
