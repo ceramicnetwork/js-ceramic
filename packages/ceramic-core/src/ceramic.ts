@@ -61,6 +61,10 @@ class Ceramic implements CeramicApi {
     return this.context.ipfs
   }
 
+  get user(): DID | undefined {
+    return this.context.user
+  }
+
   /**
    * Initialize Ceramic pinning API
    * @private
