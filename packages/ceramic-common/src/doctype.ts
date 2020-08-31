@@ -8,20 +8,14 @@ import { DoctypeUtils } from "./utils/doctype-utils"
  * Describes signature status
  */
 export enum SignatureStatus {
-    GENESIS,
-    PARTIAL,
-    SIGNED
+    GENESIS, PARTIAL, SIGNED
 }
 
 /**
  * Describes all anchor statuses
  */
 export enum AnchorStatus {
-    NOT_REQUESTED,
-    PENDING,
-    PROCESSING,
-    ANCHORED,
-    FAILED
+    NOT_REQUESTED, PENDING, PROCESSING, ANCHORED, FAILED
 }
 
 /**
@@ -114,15 +108,17 @@ export abstract class Doctype extends EventEmitter {
     }
 
     get content(): any {
-        return cloneDeep(this._state.content)
+        const { next, content } = this._state
+        return cloneDeep(next?.content ?? content)
     }
 
     get metadata(): DocMetadata {
-        return cloneDeep(this._state.metadata)
+        const { next, metadata } = this._state
+        return cloneDeep(next?.metadata ?? metadata)
     }
 
     get owners(): Array<string> {
-        return cloneDeep(this._state.metadata.owners)
+        return this.metadata.owners
     }
 
     get head(): CID {
@@ -185,7 +181,7 @@ export interface DoctypeConstructor<T extends Doctype> {
      * @param state - Doctype state
      * @param context - Ceramic context
      */
-    new (state: DocState, context: Context): T;
+    new(state: DocState, context: Context): T;
 
     /**
      * Makes genesis record
