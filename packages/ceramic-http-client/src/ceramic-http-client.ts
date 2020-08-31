@@ -33,6 +33,10 @@ class CeramicClient implements CeramicApi {
     }
   }
 
+  get user(): DID | undefined {
+    return this.context.user
+  }
+
   _initPinApi(): PinApi {
     return {
       add: async (docId: string): Promise<void> => {
