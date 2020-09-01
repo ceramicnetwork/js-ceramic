@@ -2,9 +2,9 @@ import Ipfs from "ipfs"
 
 import dagJose from 'dag-jose'
 // @ts-ignore
-import legacy from 'multiformats/legacy'
+import basicsImport from 'multiformats/cjs/src/basics-import.js'
 // @ts-ignore
-import multiformats from 'multiformats/basics'
+import legacy from 'multiformats/cjs/src/legacy.js'
 
 export class IpfsUtils {
 
@@ -13,8 +13,8 @@ export class IpfsUtils {
      * @param overrideConfig - IFPS config for override
      */
     static async createIPFS(overrideConfig: object = {}): Promise<any> {
-        multiformats.multicodec.add(dagJose)
-        const format = legacy(multiformats, dagJose.name)
+        basicsImport.multicodec.add(dagJose)
+        const format = legacy(basicsImport, dagJose.name)
 
         const config = {
             ipld: { formats: [format] },

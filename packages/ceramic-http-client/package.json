@@ -27,8 +27,8 @@
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/ceramic-common": "^0.5.7",
-    "@ceramicnetwork/ceramic-doctype-account-link": "^0.5.7",
+    "@ceramicnetwork/ceramic-common": "^0.5.8",
+    "@ceramicnetwork/ceramic-doctype-account-link": "^0.5.8",
     "@ceramicnetwork/ceramic-doctype-three-id": "^0.5.8",
     "@ceramicnetwork/ceramic-doctype-tile": "^0.5.8",
     "cids": "^0.8.0",
