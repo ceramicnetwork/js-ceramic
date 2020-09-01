@@ -37,7 +37,7 @@
   },
   "dependencies": {
     "@babel/register": "^7.10.5",
-    "@ceramicnetwork/ceramic-common": "^0.5.7",
+    "@ceramicnetwork/ceramic-common": "^0.5.8",
     "@ceramicnetwork/ceramic-core": "^0.5.8",
     "@ceramicnetwork/ceramic-doctype-tile": "^0.5.8",
     "@ceramicnetwork/ceramic-http-client": "^0.5.8",

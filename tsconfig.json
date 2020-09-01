@@ -25,7 +25,6 @@
    { "path": "./packages/3id-did-resolver" },
    { "path": "./packages/ceramic-http-client" },
    { "path": "./packages/ceramic-common" },
-   { "path": "./packages/ceramic-doctype-account-link" },
    { "path": "./packages/ceramic-doctype-three-id" },
    { "path": "./packages/ceramic-doctype-tile" }
  ]

@@ -29,8 +29,7 @@
   },
   "dependencies": {
     "@ceramicnetwork/3id-did-resolver": "^0.3.13",
-    "@ceramicnetwork/ceramic-common": "^0.5.7",
-    "@ceramicnetwork/ceramic-doctype-account-link": "^0.5.7",
+    "@ceramicnetwork/ceramic-common": "^0.5.8",
     "@ceramicnetwork/ceramic-doctype-three-id": "^0.5.8",
     "@ceramicnetwork/ceramic-doctype-tile": "^0.5.8",
     "@ethersproject/base64": "^5.0.2",

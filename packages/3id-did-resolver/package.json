@@ -27,7 +27,7 @@
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/ceramic-common": "^0.5.7",
+    "@ceramicnetwork/ceramic-common": "^0.5.8",
     "bs58": "^4.0.1"
   },
   "devDependencies": {
