@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.5.6](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-core@0.5.3...@ceramicnetwork/ceramic-core@0.5.6) (2020-09-01)
+
+
+### Bug Fixes
+
+* **core:** fix document creation ([#253](https://github.com/ceramicnetwork/js-ceramic/issues/253)) ([67e0f23](https://github.com/ceramicnetwork/js-ceramic/commit/67e0f2314c471bde59912fa577ed4b89240ce211))
+* **core:** properly pin from context ([#251](https://github.com/ceramicnetwork/js-ceramic/issues/251)) ([5dded96](https://github.com/ceramicnetwork/js-ceramic/commit/5dded968ed59b16c536566f0902d710c9d64b33c))
+
+
+
+
+
 ## [0.5.5](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-core@0.5.3...@ceramicnetwork/ceramic-core@0.5.5) (2020-09-01)
 
 
