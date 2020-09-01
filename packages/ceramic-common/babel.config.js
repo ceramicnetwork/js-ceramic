@@ -10,12 +10,6 @@ module.exports = {
 			debug: false,
 		}],
 		'@babel/preset-typescript',
-	],
-	"plugins": [
-		["@babel/plugin-transform-modules-commonjs", {
-			"allowTopLevelThis": true
-		}],
-		["@babel/plugin-proposal-decorators", {"legacy": true}],
 	]
 }
 
