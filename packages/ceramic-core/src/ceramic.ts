@@ -61,8 +61,8 @@ class Ceramic implements CeramicApi {
     return this.context.ipfs
   }
 
-  get user(): DID | undefined {
-    return this.context.user
+  get did(): DID | undefined {
+    return this.context.did
   }
 
   /**
@@ -148,10 +148,10 @@ class Ceramic implements CeramicApi {
    */
   async setDIDProvider (provider: DIDProvider): Promise<void> {
     this.context.provider = provider;
-    this.context.user = new DID( { provider })
+    this.context.did = new DID( { provider })
 
-    if (!this.context.user.authenticated) {
-      await this.context.user.authenticate()
+    if (!this.context.did.authenticated) {
+      await this.context.did.authenticate()
     }
   }
 

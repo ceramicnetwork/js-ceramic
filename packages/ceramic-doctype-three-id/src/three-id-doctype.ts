@@ -33,7 +33,7 @@ export class ThreeIdDoctype extends Doctype {
     async change(params: ThreeIdParams, opts: DocOpts = {}): Promise<void> {
         const { content, metadata } = params
 
-        const updateRecord = await ThreeIdDoctype._makeRecord(this, this.context.user, content, metadata?.owners, metadata?.schema)
+        const updateRecord = await ThreeIdDoctype._makeRecord(this, this.context.did, content, metadata?.owners, metadata?.schema)
         const updated = await this.context.api.applyRecord(this.id, updateRecord, opts)
         this.state = updated.state
     }
@@ -76,15 +76,15 @@ export class ThreeIdDoctype extends Doctype {
     /**
      * Creates change record
      * @param doctype - Doctype instance
-     * @param user - User instance
+     * @param did - DID instance
      * @param newContent - New context
      * @param newOwners - New owners
      * @param newSchema - New schema
      * @private
      */
-    static async _makeRecord(doctype: Doctype, user: DID, newContent: any, newOwners: string[] = null, newSchema: string = null): Promise<any> {
-        if (user == null || !user.authenticated) {
-            throw new Error('No user authenticated')
+    static async _makeRecord(doctype: Doctype, did: DID, newContent: any, newOwners: string[] = null, newSchema: string = null): Promise<any> {
+        if (did == null || !did.authenticated) {
+            throw new Error('No DID authenticated')
         }
 
         if (typeof newContent == null) {
@@ -100,18 +100,18 @@ export class ThreeIdDoctype extends Doctype {
             header.schema = newSchema
         }
         const record: any = { header, data: patch, prev: doctype.head, id: doctype.state.log[0] }
-        return ThreeIdDoctype._signRecord(record, user)
+        return ThreeIdDoctype._signRecord(record, did)
     }
 
     /**
      * Sign ThreeId record
-     * @param user - User instance
+     * @param did - DID instance
      * @param record - Record to be signed
      * @private
      */
-    static async _signRecord(record: any, user: DID): Promise<any> {
-        if (user == null || !user.authenticated) {
-            throw new Error('No user authenticated')
+    static async _signRecord(record: any, did: DID): Promise<any> {
+        if (did == null || !did.authenticated) {
+            throw new Error('No DID authenticated')
         }
         // TODO - use the dag-jose library for properly encoded signed records
         // convert CID to string for signing
@@ -124,7 +124,7 @@ export class ThreeIdDoctype extends Doctype {
             record.id = { '/': tmpId.toString() }
         }
 
-        const jws = await user.createJWS(JSON.parse(JSON.stringify(record)))
+        const jws = await did.createJWS(JSON.parse(JSON.stringify(record)))
         const [signedHeader, payload, signature] = jws.split('.') // eslint-disable-line @typescript-eslint/no-unused-vars
         if (tmpCID) {
             record.prev = tmpCID

@@ -34,7 +34,7 @@ export type { DIDProvider } from 'dids'
  */
 export interface CeramicApi {
     pin: PinApi;
-    user?: DID;
+    did?: DID;
 
     /**
      * Register Doctype handler
