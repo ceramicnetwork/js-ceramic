@@ -28,7 +28,7 @@
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/3id-did-resolver": "^0.3.11",
+    "@ceramicnetwork/3id-did-resolver": "^0.3.12",
     "@ceramicnetwork/ceramic-common": "^0.5.7",
     "@ceramicnetwork/ceramic-doctype-account-link": "^0.5.7",
     "@ceramicnetwork/ceramic-doctype-three-id": "^0.5.7",
