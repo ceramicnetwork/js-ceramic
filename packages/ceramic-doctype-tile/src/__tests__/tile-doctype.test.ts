@@ -44,17 +44,17 @@ const wrapWithFakeSignature = (obj: any): any => {
 }
 
 describe('TileDoctypeHandler', () => {
-  let user: DID;
+  let did: DID;
   let tileDoctypeHandler: TileDoctypeHandler;
   let context: Context;
 
   beforeAll(() => {
-    user = new DID()
-    user.createJWS = jest.fn(async () => {
+    did = new DID()
+    did.createJWS = jest.fn(async () => {
       // fake jws
       return 'eyJraWQiOiJkaWQ6MzpiYWZ5YXNkZmFzZGY_dmVyc2lvbj0wI3NpZ25pbmciLCJhbGciOiJFUzI1NksifQ.bbbb.cccc'
     })
-    user._id = 'did:3:bafyuser'
+    did._id = 'did:3:bafyuser'
 
     const recs: Record<string, any> = {}
     const ipfs = {
@@ -90,7 +90,7 @@ describe('TileDoctypeHandler', () => {
     })
 
     context = {
-      user,
+      did,
       ipfs: ipfs,
       anchorService: null,
       resolver: new Resolver({
@@ -108,25 +108,25 @@ describe('TileDoctypeHandler', () => {
   })
 
   it('makes genesis record correctly', async () => {
-    const record1 = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { owners: [user.id] } }, { user })
+    const record1 = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { owners: [did.id] } }, { did })
 
-    const expected1 = wrapWithFakeSignature({ doctype: RECORDS.genesis.doctype, data: RECORDS.genesis.data, header: { owners: [user.id] } })
+    const expected1 = wrapWithFakeSignature({ doctype: RECORDS.genesis.doctype, data: RECORDS.genesis.data, header: { owners: [did.id] } })
     expect(record1).toEqual(expected1)
 
-    const record2 = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: RECORDS.genesis.header }, { user })
+    const record2 = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: RECORDS.genesis.header }, { did })
     expect(record2).toEqual(wrapWithFakeSignature(RECORDS.genesis))
   })
 
   it('creates genesis records deterministically by default', async () => {
-    const record1 = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { owners: [user.id] } }, { user })
-    const record2 = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { owners: [user.id] } }, { user })
+    const record1 = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { owners: [did.id] } }, { did })
+    const record2 = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { owners: [did.id] } }, { did })
 
     expect(record1).toEqual(record2)
   })
 
   it('creates a unique genesis record if specified', async () => {
-    const record1 = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { owners: [user.id], isUnique: true } }, { user })
-    const record2 = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { owners: [user.id], isUnique: true } }, { user } )
+    const record1 = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { owners: [did.id], isUnique: true } }, { did })
+    const record2 = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { owners: [did.id], isUnique: true } }, { did } )
 
     expect(record1).not.toEqual(record2)
   })
@@ -148,9 +148,9 @@ describe('TileDoctypeHandler', () => {
     const state = await tileDoctypeHandler.applyRecord(RECORDS.genesisGenerated, FAKE_CID_1, context)
     const doctype = new TileDoctype(state, context)
 
-    await expect(TileDoctype._makeRecord(doctype, null, RECORDS.r1.desiredContent)).rejects.toThrow(/No user/)
+    await expect(TileDoctype._makeRecord(doctype, null, RECORDS.r1.desiredContent)).rejects.toThrow(/No DID/)
 
-    const record = await TileDoctype._makeRecord(doctype, user, RECORDS.r1.desiredContent)
+    const record = await TileDoctype._makeRecord(doctype, did, RECORDS.r1.desiredContent)
     expect(record).toEqual(RECORDS.r1.record)
   })
 

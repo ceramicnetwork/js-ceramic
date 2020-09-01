@@ -13,7 +13,7 @@ export class PinStoreFactory {
 
     constructor(readonly context: Context, stateStorePath: string | undefined, pinnings: string[] | undefined) {
         this.stateStorePath = stateStorePath || path.join(process.cwd(), '.pinning.store')
-        this.pinnings = pinnings && pinnings.length > 0 ? pinnings : ['ipfs://__context']
+        this.pinnings = pinnings && pinnings.length > 0 ? pinnings : ['ipfs+context']
     }
 
     async open(): Promise<PinStore> {
@@ -25,7 +25,7 @@ export class PinStoreFactory {
             return blob?.value
         }
         const resolve = async (path: string): Promise<CID> => {
-            return ipfs.dag.resolve(path)
+            return (await ipfs.dag.resolve(path)).cid
         }
         const pinStore = new PinStore(stateStore, pinning, retrieve, resolve)
         await pinStore.open()

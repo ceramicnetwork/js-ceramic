@@ -61,6 +61,10 @@ class Ceramic implements CeramicApi {
     return this.context.ipfs
   }
 
+  get did(): DID | undefined {
+    return this.context.did
+  }
+
   /**
    * Initialize Ceramic pinning API
    * @private
@@ -144,10 +148,10 @@ class Ceramic implements CeramicApi {
    */
   async setDIDProvider (provider: DIDProvider): Promise<void> {
     this.context.provider = provider;
-    this.context.user = new DID( { provider })
+    this.context.did = new DID( { provider })
 
-    if (!this.context.user.authenticated) {
-      await this.context.user.authenticate()
+    if (!this.context.did.authenticated) {
+      await this.context.did.authenticate()
     }
   }
 
@@ -189,6 +193,16 @@ class Ceramic implements CeramicApi {
   }
 
   /**
+   * Get document from map by Gensis CID
+   * @param genesisCid
+   */
+  getDocFromMap(genesisCid: any): Document {
+    const id = DoctypeUtils.createDocIdFromGenesis(genesisCid)
+    const normalizedDocId = DoctypeUtils.normalizeDocId(id)
+    return this._docmap[normalizedDocId]
+  }
+
+  /**
    * Create doctype instance
    * @param doctype - Document type
    * @param params - Create parameters
@@ -209,11 +223,16 @@ class Ceramic implements CeramicApi {
   async _createDoc(doctype: string, params: DocParams, opts: DocOpts = {}): Promise<Document> {
     const doctypeHandler = this._doctypeHandlers[doctype]
 
-    const doc = await Document.create(params, doctypeHandler, this.dispatcher, this.pinStore, this.context, opts, this._validateDocs);
-    const normalizedId = DoctypeUtils.normalizeDocId(doc.id)
-    if (!this._docmap[normalizedId]) {
-      this._docmap[normalizedId] = doc
+    const genesis = await doctypeHandler.doctype.makeGenesis(params, this.context, opts)
+    const genesisCid = await this.dispatcher.storeRecord(genesis)
+    let doc = this.getDocFromMap(genesisCid)
+    if (doc) {
+      return doc
     }
+
+    doc = await Document.create(genesisCid, doctypeHandler, this.dispatcher, this.pinStore, this.context, opts, this._validateDocs);
+    const normalizedId = DoctypeUtils.normalizeDocId(doc.id)
+    this._docmap[normalizedId] = doc
     return doc
   }
 
@@ -234,11 +253,16 @@ class Ceramic implements CeramicApi {
    * @private
    */
   async _createDocFromGenesis(genesis: any, opts: DocOpts = {}): Promise<Document> {
-    const doc = await Document.createFromGenesis(genesis, this.findHandler.bind(this), this.dispatcher, this.pinStore, this.context, opts, this._validateDocs);
-    const normalizedId = DoctypeUtils.normalizeDocId(doc.id)
-    if (!this._docmap[normalizedId]) {
-      this._docmap[normalizedId] = doc
+    const genesisCid = await this.dispatcher.storeRecord(genesis)
+    let doc = this.getDocFromMap(genesisCid)
+    if (doc) {
+      return doc
     }
+
+    const doctypeHandler = this.findHandler(genesis)
+    doc = await Document.create(genesisCid, doctypeHandler, this.dispatcher, this.pinStore, this.context, opts, this._validateDocs);
+    const normalizedId = DoctypeUtils.normalizeDocId(doc.id)
+    this._docmap[normalizedId] = doc
     return doc
   }
 

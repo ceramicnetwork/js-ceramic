@@ -62,7 +62,7 @@ class Document extends EventEmitter {
 
   /**
    * Creates new Doctype with params
-   * @param params - Initial Doctype parameters
+   * @param genesisCid - Genesis CID
    * @param doctypeHandler - DoctypeHandler instance
    * @param dispatcher - Dispatcher instance
    * @param pinStore - PinStore instance
@@ -71,7 +71,7 @@ class Document extends EventEmitter {
    * @param validate - Validate content against schema
    */
   static async create<T extends Doctype> (
-      params: DocParams,
+      genesisCid: CID,
       doctypeHandler: DoctypeHandler<Doctype>,
       dispatcher: Dispatcher,
       pinStore: PinStore,
@@ -79,9 +79,7 @@ class Document extends EventEmitter {
       opts: DocOpts = {},
       validate = true
   ): Promise<Document> {
-    const genesis = await doctypeHandler.doctype.makeGenesis(params, context, opts)
-
-    const genesisCid = await dispatcher.storeRecord(genesis)
+    const genesis = await dispatcher.retrieveRecord(genesisCid)
     const id = DoctypeUtils.createDocIdFromGenesis(genesisCid)
 
     const doc = new Document(id, dispatcher, pinStore)
@@ -94,53 +92,6 @@ class Document extends EventEmitter {
 
     if (validate) {
       const schema = await Document.loadSchema(context.api, doc._doctype)
-      if (schema) {
-        DoctypeUtils.validate(doc._doctype.content, schema)
-      }
-    }
-
-    await doc._updateStateIfPinned()
-
-    if (typeof opts.applyOnly === 'undefined') {
-      opts.applyOnly = false
-    }
-
-    await doc._register(opts)
-    return doc
-  }
-
-  /**
-   * Creates new Doctype from genesis record
-   * @param genesis - Genesis record
-   * @param findHandler - find handler fn
-   * @param dispatcher - Dispatcher instance
-   * @param pinStore - PinStore instance
-   * @param context - Ceramic context
-   * @param opts - Initialization options
-   * @param validate - Validate content against schema
-   */
-  static async createFromGenesis<T extends Doctype>(
-      genesis: any,
-      findHandler: (genesisRecord: any) => DoctypeHandler<Doctype>,
-      dispatcher: Dispatcher,
-      pinStore: PinStore,
-      context: Context,
-      opts: DocOpts = {},
-      validate = true
-  ): Promise<Document> {
-    const genesisCid = await dispatcher.storeRecord(genesis)
-    const id = DoctypeUtils.createDocIdFromGenesis(genesisCid)
-
-    const doc = new Document(id, dispatcher, pinStore)
-
-    doc._context = context
-    doc._doctypeHandler = findHandler(genesis)
-
-    doc._doctype = new doc._doctypeHandler.doctype(null, context)
-    doc._doctype.state = await doc._doctypeHandler.applyRecord(genesis, doc._genesisCid, context)
-
-    if (validate) {
-      const schema = await Document.loadSchema(doc._context.api, doc._doctype)
       if (schema) {
         DoctypeUtils.validate(doc._doctype.content, schema)
       }

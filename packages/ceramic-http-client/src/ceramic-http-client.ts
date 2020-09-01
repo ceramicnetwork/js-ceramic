@@ -33,6 +33,10 @@ class CeramicClient implements CeramicApi {
     }
   }
 
+  get did(): DID | undefined {
+    return this.context.did
+  }
+
   _initPinApi(): PinApi {
     return {
       add: async (docId: string): Promise<void> => {
@@ -117,10 +121,10 @@ class CeramicClient implements CeramicApi {
 
   async setDIDProvider(provider: DIDProvider): Promise<void> {
     this.context.provider = provider;
-    this.context.user = new DID( { provider })
+    this.context.did = new DID( { provider })
 
-    if (!this.context.user.authenticated) {
-      await this.context.user.authenticate()
+    if (!this.context.did.authenticated) {
+      await this.context.did.authenticate()
     }
   }
 

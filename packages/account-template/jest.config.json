@@ -1,3 +1,0 @@
-{
-  "testMatch": [ "**/?(*.)+(spec|test).[jt]s?(x)" ]
-}

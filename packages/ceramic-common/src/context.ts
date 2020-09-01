@@ -6,7 +6,7 @@ import { DID } from 'dids'
 import type { AnchorService } from "./anchor-service"
 
 export interface Context {
-    user?: DID;
+    did?: DID;
     ipfs?: Ipfs; // an ipfs instance
     resolver?: Resolver; // a DID resolver instance
     provider?: DIDProvider; // a DID provider (3ID provider initially)

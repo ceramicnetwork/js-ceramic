@@ -5,8 +5,12 @@ import CID from "cids";
 import _ from "lodash";
 
 export class PinStore {
-    constructor(readonly stateStore: StateStore, readonly pinning: Pinning, readonly retrieve: (cid: CID) => Promise<any | null>, readonly resolve: (path: string) => Promise<CID>) {
-    }
+    constructor(
+      readonly stateStore: StateStore,
+      readonly pinning: Pinning,
+      readonly retrieve: (cid: CID) => Promise<any | null>,
+      readonly resolve: (path: string) => Promise<CID>
+    ) {}
 
     async open(): Promise<void> {
         await this.stateStore.open()
