@@ -38,7 +38,7 @@
     "@ethersproject/random": "^5.0.2",
     "@textile/powergate-client": "^0.2.0",
     "async": "^3.2.0",
-    "cids": "^0.8.0",
+    "cids": "^1.0.0",
     "cross-fetch": "^3.0.5",
     "did-resolver": "^2.1.1",
     "dids": "^0.5.0",
