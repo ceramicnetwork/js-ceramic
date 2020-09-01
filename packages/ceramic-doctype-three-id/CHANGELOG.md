@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.5.8](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-doctype-three-id@0.5.7...@ceramicnetwork/ceramic-doctype-three-id@0.5.8) (2020-09-01)
+
+**Note:** Version bump only for package @ceramicnetwork/ceramic-doctype-three-id
+
+
+
+
+
 ## [0.5.7](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-doctype-three-id@0.5.3...@ceramicnetwork/ceramic-doctype-three-id@0.5.7) (2020-09-01)
 
 **Note:** Version bump only for package @ceramicnetwork/ceramic-doctype-three-id
