@@ -7,6 +7,7 @@ import CeramicDaemon from '../ceramic-daemon'
 import { AnchorStatus, IpfsUtils } from "@ceramicnetwork/ceramic-common"
 import { TileDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-tile"
 import { EventEmitter } from "events"
+import { DoctypeUtils } from "@ceramicnetwork/ceramic-common/lib"
 
 const seed = '0x5872d6e0ae7347b72c9216db218ebbb9d9d0ae7ab818ead3557e8e78bf944184'
 const anchorUpdate = (doc: EventEmitter): Promise<void> => new Promise(resolve => doc.on('change', resolve))
@@ -97,13 +98,13 @@ describe('Ceramic interop: core <> http-client', () => {
     await anchorUpdate(doc1)
     const doc2 = await client.loadDocument(doc1.id)
     expect(doc1.content).toEqual(doc2.content)
-    expect(doc1.state).toEqual(doc2.state)
+    expect(DoctypeUtils.serializeState(doc1.state)).toEqual(DoctypeUtils.serializeState(doc2.state))
 
     const doc3 = await client.createDocument(DOCTYPE_TILE, { content: { test: 456 } })
     await anchorUpdate(doc3)
     const doc4 = await core.loadDocument(doc3.id)
     expect(doc3.content).toEqual(doc4.content)
-    expect(doc3.state).toEqual(doc4.state)
+    expect(DoctypeUtils.serializeState(doc3.state)).toEqual(DoctypeUtils.serializeState(doc4.state))
   })
 
   it('makes and gets updates correctly', async () => {
@@ -115,13 +116,13 @@ describe('Ceramic interop: core <> http-client', () => {
     await anchorUpdate(doc1)
     await anchorUpdate(doc2)
     expect(doc1.content).toEqual(doc2.content)
-    expect(doc1.state).toEqual(doc2.state)
+    expect(DoctypeUtils.serializeState(doc1.state)).toEqual(DoctypeUtils.serializeState(doc2.state))
     // change from client viewable in core
 
     await doc2.change({ content: {test: 456, abc: 654} })
 
     await anchorUpdate(doc2)
     expect(doc1.content).toEqual(doc2.content)
-    expect(doc1.state).toEqual(doc2.state)
+    expect(DoctypeUtils.serializeState(doc1.state)).toEqual(DoctypeUtils.serializeState(doc2.state))
   })
 })
