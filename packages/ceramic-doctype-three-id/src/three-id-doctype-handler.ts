@@ -117,7 +117,7 @@ export class ThreeIdDoctypeHandler implements DoctypeHandler<ThreeIdDoctype> {
         if (!record.id.equals(state.log[0])) {
             throw new Error(`Invalid docId ${record.id}, expected ${state.log[0]}`)
         }
-        await this._verifyRecordSignature(record, context)
+        await this._verifySignature(record, context)
         state.log.push(cid)
         return {
             ...state,
@@ -136,20 +136,14 @@ export class ThreeIdDoctypeHandler implements DoctypeHandler<ThreeIdDoctype> {
      * @param context - Ceramic context
      * @private
      */
-    async _verifyRecordSignature(record: any, context: Context): Promise<void> {
-        const { signedHeader, signature } = record
-        const payload = base64url.encode(stringify({
-            doctype: record.doctype,
-            data: record.data,
-            header: record.header,
-            unique: record.unique || undefined,
-            prev: record.prev ? { '/': record.prev.toString() } : undefined,
-            id: record.id ? { '/': record.id.toString() } : undefined,
-        }))
+    async _verifySignature(record: any, context: Context): Promise<void> {
+        const { payload, signatures } = record
+        const { signature,  protected: _protected } = signatures[0]
 
-        const jws = [signedHeader, payload, signature].join('.')
-        const decodedHeader = JSON.parse(base64url.decode(signedHeader))
+        const decodedHeader = JSON.parse(base64url.decode(_protected))
         const { kid } = decodedHeader
+
+        const jws = [_protected, payload, signature].join('.')
         const { publicKey } = await context.resolver.resolve(kid)
         try {
             await this.verifyJWS(jws, publicKey)
