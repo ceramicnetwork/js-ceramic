@@ -110,7 +110,7 @@ describe('TileDoctypeHandler', () => {
   it('makes genesis record correctly', async () => {
     const record1 = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { owners: [did.id] } }, { did })
 
-    const expected1 = wrapWithFakeSignature({ doctype: RECORDS.genesis.doctype, data: RECORDS.genesis.data, header: { owners: [did.id] } })
+    const expected1 = await did.createDagJWS(RECORDS.genesis)
     expect(record1).toEqual(expected1)
 
     const record2 = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: RECORDS.genesis.header }, { did })

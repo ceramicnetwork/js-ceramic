@@ -71,18 +71,19 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
      * @private
      */
     async _applyGenesis(record: any, cid: CID, context: Context): Promise<DocState> {
-        await this._verifyRecordSignature(record, context)
-        // TODO - verify genesis record
+        await this._verifySignature(record, context)
+
+        const payload = (await context.ipfs.dag.get(record.link)).value
         return {
             doctype: DOCTYPE,
-            content: record.data,
-            metadata: record.header,
+            content: payload.data,
+            metadata: payload.header,
             next: {
                 content: null,
             },
             signature: SignatureStatus.SIGNED,
             anchorStatus: AnchorStatus.NOT_REQUESTED,
-            log: [cid]
+            log: [record.link]
         }
     }
 
@@ -95,11 +96,13 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
      * @private
      */
     async _applySigned(record: any, cid: CID, state: DocState, context: Context): Promise<DocState> {
-        if (!record.id.equals(state.log[0])) {
+        await this._verifySignature(record, context)
+
+        const payload = (await context.ipfs.dag.get(record.link)).value
+        if (!payload.id.equals(state.log[0])) {
             throw new Error(`Invalid docId ${record.id}, expected ${state.log[0]}`)
         }
-        await this._verifyRecordSignature(record, context)
-        state.log.push(cid)
+        state.log.push(record.link)
         return {
             ...state,
             signature: SignatureStatus.SIGNED,
@@ -136,20 +139,24 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
      * @param context - Ceramic context
      * @private
      */
-    async _verifyRecordSignature(record: any, context: Context): Promise<void> {
-        const { signedHeader, signature } = record
-        const payload = base64url.encode(stringify({
-            doctype: record.doctype,
-            data: record.data,
-            header: record.header,
-            unique: record.unique || undefined,
-            prev: record.prev ? { '/': record.prev.toString() } : undefined,
-            id: record.id ? { '/': record.id.toString() } : undefined,
-        }))
+    async _verifySignature(record: any, context: Context): Promise<void> {
+        const { payload, signatures } = record
+        const { signature,  protected: _protected } = signatures[0]
 
-        const jws = [signedHeader, payload, signature].join('.')
-        const decodedHeader = JSON.parse(base64url.decode(signedHeader))
+
+        // const payload = base64url.encode(stringify({
+        //     doctype: record.doctype,
+        //     data: record.data,
+        //     header: record.header,
+        //     unique: record.unique || undefined,
+        //     prev: record.prev ? { '/': record.prev.toString() } : undefined,
+        //     id: record.id ? { '/': record.id.toString() } : undefined,
+        // }))
+
+        const decodedHeader = JSON.parse(base64url.decode(_protected))
         const { kid } = decodedHeader
+
+        const jws = [_protected, payload, signature].join('.')
         const { publicKey } = await context.resolver.resolve(kid)
         try {
             await this.verifyJWS(jws, publicKey)

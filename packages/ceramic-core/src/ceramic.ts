@@ -5,8 +5,15 @@ import { AnchorServiceFactory } from "./anchor/anchor-service-factory";
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 
 import { CeramicApi, DIDProvider, PinApi } from "@ceramicnetwork/ceramic-common"
-import { Doctype, DoctypeHandler, DocOpts } from "@ceramicnetwork/ceramic-common"
-import { Context, DoctypeUtils, DocParams } from "@ceramicnetwork/ceramic-common"
+import {
+  Doctype,
+  DoctypeHandler,
+  DocOpts,
+  Context,
+  DoctypeUtils,
+  DocParams,
+  IpfsUtils
+} from "@ceramicnetwork/ceramic-common"
 import { Resolver } from "did-resolver"
 
 import { DID } from 'dids'

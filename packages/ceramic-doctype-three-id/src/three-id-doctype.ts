@@ -77,7 +77,7 @@ export class ThreeIdDoctype extends Doctype {
      * Creates change record
      * @param doctype - Doctype instance
      * @param did - DID instance
-     * @param newContent - New context
+     * @param newContent - New content
      * @param newOwners - New owners
      * @param newSchema - New schema
      * @private
@@ -100,39 +100,24 @@ export class ThreeIdDoctype extends Doctype {
             header.schema = newSchema
         }
         const record: any = { header, data: patch, prev: doctype.head, id: doctype.state.log[0] }
-        return ThreeIdDoctype._signRecord(record, did)
+        return ThreeIdDoctype._signDagJWS(record, did)
     }
 
     /**
-     * Sign ThreeId record
+     * Sign 3ID record
      * @param did - DID instance
      * @param record - Record to be signed
      * @private
      */
-    static async _signRecord(record: any, did: DID): Promise<any> {
+    static async _signDagJWS(record: any, did: DID): Promise<any> {
         if (did == null || !did.authenticated) {
-            throw new Error('No DID authenticated')
-        }
-        // TODO - use the dag-jose library for properly encoded signed records
-        // convert CID to string for signing
-        const tmpCID = record.prev
-        const tmpId = record.id
-        if (tmpCID) {
-            record.prev = { '/': tmpCID.toString() }
-        }
-        if (tmpId) {
-            record.id = { '/': tmpId.toString() }
+            throw new Error('No user authenticated')
         }
 
-        const jws = await did.createJWS(JSON.parse(JSON.stringify(record)))
-        const [signedHeader, payload, signature] = jws.split('.') // eslint-disable-line @typescript-eslint/no-unused-vars
-        if (tmpCID) {
-            record.prev = tmpCID
+        const { jws, linkedBlock } = await did.createDagJWS(record)
+        return {
+            jws, linkedBlock
         }
-        if (tmpId) {
-            record.id = tmpId
-        }
-        return { ...record, signedHeader, signature }
     }
 
 }

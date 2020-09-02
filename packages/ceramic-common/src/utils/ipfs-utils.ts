@@ -31,4 +31,12 @@ export class IpfsUtils {
         return Ipfs.create(config)
     }
 
+    /**
+     * Checks if record is signed
+     * @param record - Record
+     */
+    static isRecordSigned(record: object): boolean {
+        return ('jws' in record && 'linkedBlock' in record)
+    }
+
 }
