@@ -143,16 +143,6 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
         const { payload, signatures } = record
         const { signature,  protected: _protected } = signatures[0]
 
-
-        // const payload = base64url.encode(stringify({
-        //     doctype: record.doctype,
-        //     data: record.data,
-        //     header: record.header,
-        //     unique: record.unique || undefined,
-        //     prev: record.prev ? { '/': record.prev.toString() } : undefined,
-        //     id: record.id ? { '/': record.id.toString() } : undefined,
-        // }))
-
         const decodedHeader = JSON.parse(base64url.decode(_protected))
         const { kid } = decodedHeader
 
