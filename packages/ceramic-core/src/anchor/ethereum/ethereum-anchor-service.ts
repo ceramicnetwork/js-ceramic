@@ -160,7 +160,7 @@ export default class EthereumAnchorService extends AnchorService {
      * @param anchorProof - Anchor proof instance
      */
     async validateChainInclusion(anchorProof: AnchorProof): Promise<void> {
-        const decoded = decode(Buffer.from(anchorProof.txHash.bytes));
+        const decoded = decode(Buffer.from(anchorProof.txHash.multihash));
         const txHash = decoded.digest.toString("hex");
 
         // determine network based on a chain ID
