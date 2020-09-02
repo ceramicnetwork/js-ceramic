@@ -12,7 +12,6 @@ import {
   Context,
   DoctypeUtils,
   DocParams,
-  IpfsUtils
 } from "@ceramicnetwork/ceramic-common"
 import { Resolver } from "did-resolver"
 
