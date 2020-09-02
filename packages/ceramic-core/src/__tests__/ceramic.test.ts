@@ -25,7 +25,7 @@ const createCeramic = async (ipfs: Ipfs): Promise<Ceramic> => {
 }
 
 describe('Ceramic integration', () => {
-  jest.setTimeout(20000)
+  jest.setTimeout(200000)
   let ipfs1: Ipfs;
   let ipfs2: Ipfs;
   let ipfs3: Ipfs;
@@ -164,16 +164,7 @@ describe('Ceramic integration', () => {
 
     // ceramic node 2 shouldn't need to have the document open in order to forward the message
     const doctype1 = await ceramic1.createDocument<ThreeIdDoctype>(DOCTYPE_3ID, { content: { test: 321 }, metadata: { owners: [owner] } })
-    while (doctype1.state.anchorStatus !== AnchorStatus.ANCHORED) {
-      // wait to propagate
-      await new Promise(resolve => setTimeout(resolve, 100))
-    }
-
     const doctype3 = await ceramic3.createDocument<ThreeIdDoctype>(DOCTYPE_3ID, { content: { test: 321 }, metadata: { owners: [owner] } }, { applyOnly: true })
-    while (doctype3.state.anchorStatus !== AnchorStatus.ANCHORED) {
-      // wait to propagate
-      await new Promise(resolve => setTimeout(resolve, 100))
-    }
     expect(doctype3.content).toEqual(doctype1.content)
     expect(doctype3.state).toEqual(doctype1.state)
 
