@@ -31,7 +31,7 @@
     "@ethersproject/random": "^5.0.2",
     "@types/lodash.clonedeep": "^4.5.6",
     "base64url": "^3.0.1",
-    "cids": "^1.0.0",
+    "cids": "^0.8.0",
     "did-jwt": "^4.0.0",
     "did-resolver": "^2.1.1",
     "fast-json-patch": "^2.2.1"
