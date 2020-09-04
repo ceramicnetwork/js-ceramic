@@ -2,7 +2,7 @@ import Ceramic from '../ceramic'
 import IdentityWallet from 'identity-wallet'
 import tmp from 'tmp-promise'
 import Ipfs from 'ipfs'
-import { AnchorStatus } from "@ceramicnetwork/ceramic-common"
+import { DoctypeUtils, DocState } from "@ceramicnetwork/ceramic-common"
 import { ThreeIdDoctype } from "@ceramicnetwork/ceramic-doctype-three-id"
 
 import dagJose from 'dag-jose'
@@ -36,6 +36,10 @@ const createIPFS =(overrideConfig: object = {}): Promise<any> => {
   return Ipfs.create(config)
 }
 
+const expectEqualStates = (state1: DocState, state2: DocState): void => {
+  expect(DoctypeUtils.serializeState(state1)).toEqual(DoctypeUtils.serializeState(state2))
+}
+
 const createCeramic = async (ipfs: Ipfs): Promise<Ceramic> => {
   const ceramic = await Ceramic.create(ipfs, {
     stateStorePath: await tmp.tmpName()
@@ -52,7 +56,7 @@ const createCeramic = async (ipfs: Ipfs): Promise<Ceramic> => {
 }
 
 describe('Ceramic integration', () => {
-  jest.setTimeout(20000)
+  jest.setTimeout(30000)
   let ipfs1: Ipfs;
   let ipfs2: Ipfs;
   let ipfs3: Ipfs;
@@ -76,7 +80,7 @@ describe('Ceramic integration', () => {
     tmpFolder = await tmp.dir({ unsafeCleanup: true })
     await tmpFolder.cleanup()
 
-    const buildConfig = (path, id) => {
+    const buildConfig = (path: string, id: number) => {
       return {
         repo: `${path}/ipfs${id}/`, config: {
           Addresses: { Swarm: [`/ip4/127.0.0.1/tcp/${4004 + id}`] }, Bootstrap: []
@@ -118,7 +122,7 @@ describe('Ceramic integration', () => {
     const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { test: 123 } }, { applyOnly: true })
     const doctype2 = await ceramic2.loadDocument(doctype1.id)
     expect(doctype1.content).toEqual(doctype2.content)
-    expect(doctype1.state).toEqual(doctype2.state)
+    expectEqualStates(doctype1.state, doctype2.state)
     await ceramic1.close()
     await ceramic2.close()
   })
@@ -154,7 +158,7 @@ describe('Ceramic integration', () => {
     const doctype1 = await ceramic1.createDocument(DOCTYPE_3ID, { content: { test: 789 }, metadata: { owners: [owner] } }, { applyOnly: true })
     const doctype3 = await ceramic3.createDocument(DOCTYPE_3ID, { content: { test: 789 }, metadata: { owners: [owner] } }, { applyOnly: true })
     expect(doctype3.content).toEqual(doctype1.content)
-    expect(doctype3.state).toEqual(doctype1.state)
+    expectEqualStates(doctype3.state, doctype1.state)
     await ceramic1.close()
     await ceramic2.close()
     await ceramic3.close()
@@ -191,14 +195,13 @@ describe('Ceramic integration', () => {
 
     // ceramic node 2 shouldn't need to have the document open in order to forward the message
     const doctype1 = await ceramic1.createDocument<ThreeIdDoctype>(DOCTYPE_3ID, { content: { test: 321 }, metadata: { owners: [owner] } })
-    while (doctype1.state.anchorStatus !== AnchorStatus.ANCHORED) {
-      // wait to propagate
-      await new Promise(resolve => setTimeout(resolve, 100))
-    }
+    await new Promise(resolve => setTimeout(resolve, 5000))
 
     const doctype3 = await ceramic3.createDocument<ThreeIdDoctype>(DOCTYPE_3ID, { content: { test: 321 }, metadata: { owners: [owner] } }, { applyOnly: true })
+    await new Promise(resolve => setTimeout(resolve, 5000))
+
     expect(doctype3.content).toEqual(doctype1.content)
-    expect(doctype3.state).toEqual(doctype1.state)
+    expectEqualStates(doctype3.state, doctype1.state)
 
     const updatePromise = new Promise(resolve => {
       let c = 0 // wait for two updates
@@ -214,7 +217,7 @@ describe('Ceramic integration', () => {
     await updatePromise
     expect(doctype1.content).toEqual({ test: 'abcde' })
     expect(doctype3.content).toEqual(doctype1.content)
-    expect(doctype3.state).toEqual(doctype1.state)
+    expectEqualStates(doctype3.state, doctype1.state)
     await ceramic1.close()
     await ceramic2.close()
     await ceramic3.close()
