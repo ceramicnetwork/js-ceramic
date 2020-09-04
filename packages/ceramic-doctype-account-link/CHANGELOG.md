@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.5.10-alpha.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-doctype-account-link@0.5.9...@ceramicnetwork/ceramic-doctype-account-link@0.5.10-alpha.0) (2020-09-04)
+
+
+### Reverts
+
+* Revert "chore(deps): bump cids from 0.8.3 to 1.0.0 (#204)" ([d29a032](https://github.com/ceramicnetwork/js-ceramic/commit/d29a032726a4beec5fa12fba528b2d520b4ca690)), closes [#204](https://github.com/ceramicnetwork/js-ceramic/issues/204)
+
+
+
+
+
 ## [0.5.9](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-doctype-account-link@0.5.9-alpha.0...@ceramicnetwork/ceramic-doctype-account-link@0.5.9) (2020-09-01)
 
 **Note:** Version bump only for package @ceramicnetwork/ceramic-doctype-account-link
