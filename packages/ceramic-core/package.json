@@ -46,7 +46,8 @@
     "ipfs-http-client": "^46.1.0",
     "level-ts": "^2.0.5",
     "lodash.clonedeep": "^4.5.0",
-    "typestub-multihashes": "^0.0.4"
+    "typestub-multihashes": "^0.0.4",
+    "multiformats": "^3.0.3"
   },
   "devDependencies": {
     "@babel/core": "^7.9.0",

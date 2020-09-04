@@ -2,7 +2,14 @@ import program from 'commander'
 
 import CeramicDaemon from '../ceramic-daemon'
 import { CeramicCliUtils } from "../ceramic-cli-utils"
-import { IpfsUtils } from "@ceramicnetwork/ceramic-common"
+
+import Ipfs from "ipfs"
+
+import dagJose from 'dag-jose'
+// @ts-ignore
+import multiformats from 'multiformats/basics'
+// @ts-ignore
+import legacy from 'multiformats/legacy'
 
 const DEFAULT_PINNING_STORE_PATH = ".pinning.store"
 
@@ -33,8 +40,11 @@ program
                 ipfsHost: ipfsApi,
             })
         } else {
+            multiformats.multicodec.add(dagJose)
+            const format = legacy(multiformats, dagJose.name)
+
             Object.assign(config, {
-                ipfs: await IpfsUtils.createIPFS()
+                ipfs: await Ipfs.create({ ipld: { formats: [format] } })
             })
         }
 
