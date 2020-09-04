@@ -2,12 +2,39 @@ import Ceramic from '../ceramic'
 import IdentityWallet from 'identity-wallet'
 import tmp from 'tmp-promise'
 import Ipfs from 'ipfs'
-import { AnchorStatus, IpfsUtils } from "@ceramicnetwork/ceramic-common"
+import { AnchorStatus } from "@ceramicnetwork/ceramic-common"
 import { ThreeIdDoctype } from "@ceramicnetwork/ceramic-doctype-three-id"
+
+import dagJose from 'dag-jose'
+import basicsImport from 'multiformats/cjs/src/basics-import.js'
+import legacy from 'multiformats/cjs/src/legacy.js'
 
 jest.mock('../store/level-state-store')
 
 const seed = '0x5872d6e0ae7347b72c9216db218ebbb9d9d0ae7ab818ead3557e8e78bf944184'
+
+/**
+ * Create an IPFS instance
+ * @param overrideConfig - IFPS config for override
+ */
+const createIPFS =(overrideConfig: object = {}): Promise<any> => {
+  basicsImport.multicodec.add(dagJose)
+  const format = legacy(basicsImport, dagJose.name)
+
+  const config = {
+    ipld: { formats: [format] },
+    libp2p: {
+      config: {
+        dht: {
+          enabled: true
+        }
+      }
+    }
+  }
+
+  Object.assign(config, overrideConfig)
+  return Ipfs.create(config)
+}
 
 const createCeramic = async (ipfs: Ipfs): Promise<Ceramic> => {
   const ceramic = await Ceramic.create(ipfs, {
@@ -57,7 +84,7 @@ describe('Ceramic integration', () => {
       }
     }
 
-    ([ipfs1, ipfs2, ipfs3] = await Promise.all([1, 2, 3].map(id => IpfsUtils.createIPFS(buildConfig(tmpFolder.path, id)))))
+    ([ipfs1, ipfs2, ipfs3] = await Promise.all([1, 2, 3].map(id => createIPFS(buildConfig(tmpFolder.path, id)))))
 
     const id1 = await ipfs1.id()
     const id2 = await ipfs2.id()
