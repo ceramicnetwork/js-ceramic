@@ -11,7 +11,7 @@
   ],
   "author": "Joel Torstensson <oed3933@gmail.com>",
   "homepage": "",
-  "license": "MIT",
+  "license": "(Apache-2.0 OR MIT)",
   "main": "lib/ceramic.js",
   "directories": {
     "lib": "lib"
