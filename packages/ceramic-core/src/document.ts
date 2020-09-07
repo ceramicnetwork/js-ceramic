@@ -14,7 +14,6 @@ import {
   DocOpts,
   Context,
   DoctypeUtils,
-  DocParams,
   CeramicApi,
   DocMetadata
 } from "@ceramicnetwork/ceramic-common"
@@ -132,7 +131,15 @@ class Document extends EventEmitter {
     }
 
     const record = await dispatcher.retrieveRecord(doc._genesisCid)
-    doc._doctypeHandler = findHandler(record)
+
+    let payload
+    if (record.payload && record.signatures) {
+      payload = await dispatcher.retrieveRecord(record.link)
+    } else {
+      payload = record
+    }
+
+    doc._doctypeHandler = findHandler(payload)
 
     doc._doctype = new doc._doctypeHandler.doctype(null, context)
 
@@ -210,11 +217,20 @@ class Document extends EventEmitter {
 
   async applyRecord (record: any, opts: DocOpts = {}, validate = true): Promise<void> {
     const cid = await this.dispatcher.storeRecord(record)
-    const state = await this._doctypeHandler.applyRecord(record, cid, this._context, this.state)
 
-    if (record.header) {
+    const retrievedRec = await this.dispatcher.retrieveRecord(cid)
+    const state = await this._doctypeHandler.applyRecord(retrievedRec, cid, this._context, this.state)
+
+    let payload
+    if (retrievedRec.payload && retrievedRec.signatures) {
+      payload = (await this._context.ipfs.dag.get(retrievedRec.link)).value
+    } else {
+      payload = retrievedRec
+    }
+
+    if (payload.header) {
       // override properties
-      Object.assign(state.metadata, record.header)
+      Object.assign(state.metadata, payload.header)
     }
 
     if (validate) {

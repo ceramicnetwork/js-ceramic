@@ -2,7 +2,6 @@ import CID from 'cids'
 
 import * as didJwt from 'did-jwt'
 import base64url from 'base64url'
-import stringify from 'fast-json-stable-stringify'
 
 import jsonpatch from 'fast-json-patch'
 
@@ -83,7 +82,7 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
             },
             signature: SignatureStatus.SIGNED,
             anchorStatus: AnchorStatus.NOT_REQUESTED,
-            log: [record.link]
+            log: [cid]
         }
     }
 
@@ -100,15 +99,15 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
 
         const payload = (await context.ipfs.dag.get(record.link)).value
         if (!payload.id.equals(state.log[0])) {
-            throw new Error(`Invalid docId ${record.id}, expected ${state.log[0]}`)
+            throw new Error(`Invalid docId ${payload.id}, expected ${state.log[0]}`)
         }
-        state.log.push(record.link)
+        state.log.push(cid)
         return {
             ...state,
             signature: SignatureStatus.SIGNED,
             anchorStatus: AnchorStatus.NOT_REQUESTED,
             next: {
-                content: jsonpatch.applyPatch(state.content, record.data).newDocument,
+                content: jsonpatch.applyPatch(state.content, payload.data).newDocument,
             }
         }
     }

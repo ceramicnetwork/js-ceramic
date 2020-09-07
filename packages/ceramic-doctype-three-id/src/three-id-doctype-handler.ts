@@ -114,18 +114,20 @@ export class ThreeIdDoctypeHandler implements DoctypeHandler<ThreeIdDoctype> {
      * @private
      */
     async _applySigned(record: any, cid: CID, state: DocState, context: Context): Promise<DocState> {
-        if (!record.id.equals(state.log[0])) {
-            throw new Error(`Invalid docId ${record.id}, expected ${state.log[0]}`)
-        }
         await this._verifySignature(record, context)
+
+        const payload = (await context.ipfs.dag.get(record.link)).value
+        if (!payload.id.equals(state.log[0])) {
+            throw new Error(`Invalid docId ${payload.id}, expected ${state.log[0]}`)
+        }
         state.log.push(cid)
         return {
             ...state,
             signature: SignatureStatus.SIGNED,
             anchorStatus: AnchorStatus.NOT_REQUESTED,
             next: {
-                owners: record.header.owners,
-                content: jsonpatch.applyPatch(state.content, record.data).newDocument,
+                owners: payload.header.owners,
+                content: jsonpatch.applyPatch(state.content, payload.data).newDocument,
             },
         }
     }

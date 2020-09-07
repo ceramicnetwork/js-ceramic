@@ -216,7 +216,7 @@ export class DoctypeUtils {
      * Checks if record is signed
      * @param record - Record
      */
-    static isRecordSigned(record: object): boolean {
-        return ('jws' in record && 'linkedBlock' in record)
+    static isRecordSigned(record: any): boolean {
+        return typeof record === 'object' && ('jws' in record && 'linkedBlock' in record)
     }
 }

@@ -23,9 +23,11 @@ jest.mock('../dispatcher', () => {
   const CID = require('cids') // eslint-disable-line @typescript-eslint/no-var-requires
   const cloneDeep = require('lodash.clonedeep') // eslint-disable-line @typescript-eslint/no-var-requires
   const { sha256 } = require('js-sha256') // eslint-disable-line @typescript-eslint/no-var-requires
+  const { DoctypeUtils } = require('@ceramicnetwork/ceramic-common') // eslint-disable-line @typescript-eslint/no-var-requires
+  const dagCBOR = require('ipld-dag-cbor')
   const hash = (data: string): CID => new CID(1, 'sha2-256', Buffer.from('1220' + sha256(data), 'hex'))
   return (gossip: boolean): any => {
-    const recs: Record<string, any> = {}
+    const recs: Record<any, any> = {}
     const docs: Record<string, Document> = {}
     return {
       _ipfs: {
@@ -47,7 +49,20 @@ jest.mock('../dispatcher', () => {
       register: jest.fn((doc) => {
         docs[doc.id] = doc
       }),
-      storeRecord: jest.fn((rec) => {
+      storeRecord: jest.fn(async (rec) => {
+        if (DoctypeUtils.isRecordSigned(rec)) {
+          const { jws, linkedBlock } = rec
+          const block = dagCBOR.util.deserialize(linkedBlock)
+
+          const cidLink = hash(JSON.stringify(block))
+          recs[cidLink.toString()] = block
+
+          const cidJws = hash(JSON.stringify(jws))
+          jws.link = cidLink
+          recs[cidJws.toString()] = jws
+          return cidJws
+        }
+
         // stringify as a way of doing deep copy
         const clone = cloneDeep(rec)
         const cid = hash(JSON.stringify(clone))
@@ -106,6 +121,7 @@ beforeEach(async () => {
 })
 
 describe('Document', () => {
+  jest.setTimeout(30000)
 
   describe('Log logic', () => {
     const initialContent = { abc: 123, def: 456 }
