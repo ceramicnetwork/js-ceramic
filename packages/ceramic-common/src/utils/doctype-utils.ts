@@ -211,4 +211,12 @@ export class DoctypeUtils {
             throw new Error(`Validation Error: ${errorMessages}`)
         }
     }
+
+    /**
+     * Checks if record is signed
+     * @param record - Record
+     */
+    static isRecordSigned(record: object): boolean {
+        return ('jws' in record && 'linkedBlock' in record)
+    }
 }

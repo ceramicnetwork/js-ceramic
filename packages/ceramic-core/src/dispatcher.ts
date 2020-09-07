@@ -4,7 +4,7 @@ import CID from 'cids'
 import cloneDeep from 'lodash.clonedeep'
 
 import type Document from "./document"
-import { IpfsUtils } from "@ceramicnetwork/ceramic-common/lib"
+import { DoctypeUtils } from "@ceramicnetwork/ceramic-common"
 
 export enum MsgType {
   UPDATE,
@@ -35,7 +35,7 @@ export default class Dispatcher extends EventEmitter {
   }
 
   async storeRecord (data: any): Promise<CID> {
-    if (IpfsUtils.isRecordSigned(data)) {
+    if (DoctypeUtils.isRecordSigned(data)) {
       const { jws, linkedBlock } = data
       // put the JWS into the ipfs dag
       const cid = await this._ipfs.dag.put(jws, { format: 'dag-jose', hashAlg: 'sha2-256' })
