@@ -1,6 +1,5 @@
 import CID from 'cids'
 import base64url from 'base64url'
-import stringify from 'fast-json-stable-stringify'
 
 import jsonpatch from 'fast-json-patch'
 import * as didJwt from 'did-jwt'
