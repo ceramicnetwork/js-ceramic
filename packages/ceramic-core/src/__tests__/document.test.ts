@@ -121,8 +121,6 @@ beforeEach(async () => {
 })
 
 describe('Document', () => {
-  jest.setTimeout(30000)
-
   describe('Log logic', () => {
     const initialContent = { abc: 123, def: 456 }
     const newContent = { abc: 321, def: 456, gh: 987 }
