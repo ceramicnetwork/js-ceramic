@@ -23,10 +23,10 @@ const FAKE_CID_3 = new CID('bafybeig6xv5nwphfmvcnektpnojts55jqcuam7bmye2pb54adnr
 const FAKE_CID_4 = new CID('bafybeig6xv5nwphfmvcnektpnojts66jqcuam7bmye2pb54adnrtccjlsu')
 
 const RECORDS = {
-  genesis: { doctype: '3id', header: { owners: [ '0x123' ] }, data: { publicKeys: { test: '0xabc' } } },
+  genesis: { doctype: '3id', header: { owners: [ 'did:3:bafyasdfasdf' ] }, data: { publicKeys: { test: '0xabc' } } },
   r1: {
     desiredContent: { publicKeys: { test: '0xabc' }, other: 'data' },
-    record: { data: [ { op: 'add', path: '/other', value: 'data' } ], header: { owners: ['0x123'] }, id: FAKE_CID_1, prev: FAKE_CID_1, signedHeader: 'eyJraWQiOiJkaWQ6MzpiYWZ5YXNkZmFzZGY_dmVyc2lvbj0wI3NpZ25pbmciLCJhbGciOiJFUzI1NksifQ', signature: 'cccc' }
+    record: { data: [ { op: 'add', path: '/other', value: 'data' } ], header: {}, id: FAKE_CID_1, prev: FAKE_CID_1, signedHeader: 'eyJraWQiOiJkaWQ6MzpiYWZ5YXNkZmFzZGY_dmVyc2lvbj0wI3NpZ25pbmciLCJhbGciOiJFUzI1NksifQ', signature: 'cccc' }
   },
   r2: { record: { proof: FAKE_CID_4 } },
   proof: {
@@ -128,6 +128,16 @@ describe('ThreeIdHandler', () => {
     let state = await threeIdDoctypeHandler.applyRecord(RECORDS.genesis, FAKE_CID_1, context)
     state = await threeIdDoctypeHandler.applyRecord(RECORDS.r1.record, FAKE_CID_2, context, state)
     expect(state).toMatchSnapshot()
+  })
+
+  it('throws error if record signed by wrong DID', async () => {
+    const genesis = cloneDeep(RECORDS.genesis)
+    genesis.header.owners = ['did:3:fake']
+    await context.ipfs.dag.put(genesis, FAKE_CID_1)
+    await context.ipfs.dag.put(RECORDS.r1.record, FAKE_CID_2)
+
+    const state = await threeIdDoctypeHandler.applyRecord(genesis, FAKE_CID_1, context)
+    await expect(threeIdDoctypeHandler.applyRecord(RECORDS.r1.record, FAKE_CID_2, context, state)).rejects.toThrow(/wrong DID/)
   })
 
   it('applies anchor record correctly', async () => {
