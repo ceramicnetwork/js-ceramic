@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/ceramic-core",
-  "version": "0.5.9",
+  "version": "0.5.10",
   "description": "Typescript implementation of the Ceramic protocol",
   "keywords": [
     "Ceramic",
@@ -11,7 +11,7 @@
   ],
   "author": "Joel Torstensson <oed3933@gmail.com>",
   "homepage": "",
-  "license": "MIT",
+  "license": "(Apache-2.0 OR MIT)",
   "main": "lib/ceramic.js",
   "directories": {
     "lib": "lib"
@@ -20,7 +20,7 @@
     "lib"
   ],
   "scripts": {
-    "test": "./node_modules/.bin/jest --coverage --runInBand",
+    "test": "./node_modules/.bin/jest --coverage",
     "build": "../../node_modules/.bin/tsc -p tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
@@ -28,24 +28,25 @@
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/3id-did-resolver": "^0.3.14",
-    "@ceramicnetwork/ceramic-common": "^0.5.9",
-    "@ceramicnetwork/ceramic-doctype-account-link": "^0.5.9",
-    "@ceramicnetwork/ceramic-doctype-three-id": "^0.5.9",
-    "@ceramicnetwork/ceramic-doctype-tile": "^0.5.9",
+    "@ceramicnetwork/3id-did-resolver": "^0.3.15",
+    "@ceramicnetwork/ceramic-common": "^0.5.10",
+    "@ceramicnetwork/ceramic-doctype-account-link": "^0.5.10",
+    "@ceramicnetwork/ceramic-doctype-three-id": "^0.5.10",
+    "@ceramicnetwork/ceramic-doctype-tile": "^0.5.10",
     "@ethersproject/base64": "^5.0.2",
     "@ethersproject/providers": "^5.0.0-beta.144",
     "@ethersproject/random": "^5.0.2",
     "@textile/powergate-client": "^0.2.0",
     "async": "^3.2.0",
-    "cids": "^0.8.0",
+    "cids": "^1.0.0",
     "cross-fetch": "^3.0.5",
     "did-resolver": "^2.1.1",
     "dids": "^0.5.0",
     "fast-json-patch": "^2.2.1",
-    "ipfs-http-client": "^46.0.0",
+    "ipfs-http-client": "^46.1.0",
     "level-ts": "^2.0.5",
     "lodash.clonedeep": "^4.5.0",
+    "multiformats": "^3.0.3",
     "typestub-multihashes": "^0.0.4"
   },
   "devDependencies": {
@@ -63,8 +64,8 @@
     "babel-jest": "^25.1.0",
     "eslint": "^6.8.0",
     "eslint-plugin-jest": "^23.8.2",
-    "identity-wallet": "2.0.0-alpha.1",
-    "ipfs": "^0.49.0",
+    "identity-wallet": "2.0.0-alpha.2",
+    "ipfs": "^0.50.0",
     "jest": "^25.1.0",
     "js-sha256": "^0.9.0",
     "tmp-promise": "^2.0.2"

@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/ceramic-cli",
-  "version": "0.5.9",
+  "version": "0.5.10",
   "description": "Typescript implementation of the Ceramic CLI",
   "keywords": [
     "Ceramic",
@@ -10,7 +10,7 @@
     "routing"
   ],
   "author": "Joel Torstensson <oed3933@gmail.com>",
-  "homepage": "",
+  "homepage": "(Apache-2.0 OR MIT)",
   "license": "MIT",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -37,16 +37,18 @@
   },
   "dependencies": {
     "@babel/register": "^7.10.5",
-    "@ceramicnetwork/ceramic-common": "^0.5.9",
-    "@ceramicnetwork/ceramic-core": "^0.5.9",
-    "@ceramicnetwork/ceramic-doctype-tile": "^0.5.9",
-    "@ceramicnetwork/ceramic-http-client": "^0.5.9",
+    "@ceramicnetwork/ceramic-common": "^0.5.10",
+    "@ceramicnetwork/ceramic-core": "^0.5.10",
+    "@ceramicnetwork/ceramic-doctype-tile": "^0.5.10",
+    "@ceramicnetwork/ceramic-http-client": "^0.5.10",
     "bs58": "^4.0.1",
     "commander": "^6.0.0",
     "express": "^4.17.1",
-    "identity-wallet": "2.0.0-alpha.1",
-    "ipfs": "^0.49.0",
-    "ipfs-http-client": "^46.0.0"
+    "identity-wallet": "2.0.0-alpha.2",
+    "ipfs": "^0.50.0",
+    "ipfs-http-client": "^46.1.0",
+    "dag-jose": "^0.1.1",
+    "multiformats": "^3.0.3"
   },
   "devDependencies": {
     "@babel/core": "^7.9.0",

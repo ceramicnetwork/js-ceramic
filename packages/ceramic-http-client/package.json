@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/ceramic-http-client",
-  "version": "0.5.9",
+  "version": "0.5.10",
   "description": "An http client for the ceramic network",
   "keywords": [
     "Ceramic",
@@ -10,7 +10,7 @@
   ],
   "author": "Joel Torstensson <oed3933@gmail.com>",
   "homepage": "",
-  "license": "MIT",
+  "license": "(Apache-2.0 OR MIT)",
   "main": "lib/ceramic-http-client.js",
   "directories": {
     "lib": "lib"
@@ -27,13 +27,14 @@
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/ceramic-common": "^0.5.9",
-    "@ceramicnetwork/ceramic-doctype-account-link": "^0.5.9",
-    "@ceramicnetwork/ceramic-doctype-three-id": "^0.5.9",
-    "@ceramicnetwork/ceramic-doctype-tile": "^0.5.9",
-    "cids": "^0.8.0",
+    "@ceramicnetwork/ceramic-common": "^0.5.10",
+    "@ceramicnetwork/ceramic-doctype-account-link": "^0.5.10",
+    "@ceramicnetwork/ceramic-doctype-three-id": "^0.5.10",
+    "@ceramicnetwork/ceramic-doctype-tile": "^0.5.10",
+    "cids": "^1.0.0",
     "cross-fetch": "^3.0.5",
-    "lodash.clonedeep": "^4.5.0"
+    "lodash.clonedeep": "^4.5.0",
+    "dids": "^0.5.0"
   },
   "devDependencies": {
     "@babel/core": "^7.9.0",

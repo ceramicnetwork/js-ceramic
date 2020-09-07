@@ -2,7 +2,6 @@ import {StateStore} from "./state-store";
 import {Pinning} from "../pinning/pinning";
 import {Doctype, DocState} from "@ceramicnetwork/ceramic-common"
 import CID from "cids";
-import _ from "lodash";
 
 export class PinStore {
     constructor(
@@ -32,7 +31,9 @@ export class PinStore {
         const state = await this.stateStore.load(docId)
         if (state) {
             const points = await this.pointsOfInterest(state)
-            Promise.all(points.map(point => this.pinning.unpin(point))).catch(_.noop)
+            Promise.all(points.map(point => this.pinning.unpin(point))).catch(() => {
+                // Do Nothing
+            })
             await this.stateStore.remove(docId)
         }
     }
