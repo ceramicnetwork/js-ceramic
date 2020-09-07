@@ -94,7 +94,7 @@ export class TileDoctype extends Doctype {
             throw new Error('No DID authenticated')
         }
 
-        const header = doctype.metadata
+        const header: Record<string, any> = {}
         if (schema) {
             header.schema = schema
         }

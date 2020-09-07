@@ -92,7 +92,7 @@ export class ThreeIdDoctype extends Doctype {
         }
 
         const patch = jsonpatch.compare(doctype.state.content, newContent)
-        const header = doctype.metadata
+        const header: Record<string, any> = {}
         if (newOwners) {
             header.owners = newOwners
         }

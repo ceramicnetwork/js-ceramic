@@ -27,7 +27,7 @@ const RECORDS = {
   genesisGenerated: { doctype: 'tile', header: { owners: [ 'did:3:bafyasdfasdf' ] }, data: { much: 'data' }, signedHeader: 'eyJraWQiOiJkaWQ6MzpiYWZ5YXNkZmFzZGY_dmVyc2lvbj0wI3NpZ25pbmciLCJhbGciOiJFUzI1NksifQ', signature: 'cccc' },
   r1: {
     desiredContent: { much: 'data', very: 'content' },
-    record: { data: [ { op: 'add', path: '/very', value: 'content' } ], header: { owners: ["did:3:bafyasdfasdf"] }, id: FAKE_CID_1, prev: FAKE_CID_1, signedHeader: 'eyJraWQiOiJkaWQ6MzpiYWZ5YXNkZmFzZGY_dmVyc2lvbj0wI3NpZ25pbmciLCJhbGciOiJFUzI1NksifQ', signature: 'cccc' }
+    record: { data: [ { op: 'add', path: '/very', value: 'content' } ], header: {}, id: FAKE_CID_1, prev: FAKE_CID_1, signedHeader: 'eyJraWQiOiJkaWQ6MzpiYWZ5YXNkZmFzZGY_dmVyc2lvbj0wI3NpZ25pbmciLCJhbGciOiJFUzI1NksifQ', signature: 'cccc' }
   },
   r2: { record: { proof: FAKE_CID_4 } },
   proof: {
@@ -163,6 +163,17 @@ describe('TileDoctypeHandler', () => {
     let state = await tileDoctypeHandler.applyRecord(RECORDS.genesisGenerated, FAKE_CID_1, context)
     state = await tileDoctypeHandler.applyRecord(RECORDS.r1.record, FAKE_CID_2, context, state)
     expect(state).toMatchSnapshot()
+  })
+
+  it('throws error if record signed by wrong DID', async () => {
+    const tileDoctypeHandler = new TileDoctypeHandler()
+
+    const genesis = cloneDeep(RECORDS.genesisGenerated)
+    genesis.header.owners = ['did:3:fake']
+    await context.ipfs.dag.put(genesis, FAKE_CID_1)
+    await context.ipfs.dag.put(RECORDS.r1.record, FAKE_CID_2)
+
+    await expect(tileDoctypeHandler.applyRecord(genesis, FAKE_CID_1, context)).rejects.toThrow(/wrong DID/)
   })
 
   it('applies anchor record correctly', async () => {
