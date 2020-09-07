@@ -46,7 +46,9 @@
     "express": "^4.17.1",
     "identity-wallet": "2.0.0-alpha.2",
     "ipfs": "^0.50.0",
-    "ipfs-http-client": "^46.1.0"
+    "ipfs-http-client": "^46.1.0",
+    "dag-jose": "^0.1.1",
+    "multiformats": "^3.0.3"
   },
   "devDependencies": {
     "@babel/core": "^7.9.0",
