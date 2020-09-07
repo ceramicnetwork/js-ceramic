@@ -89,7 +89,7 @@ export class TileDoctype extends Doctype {
      * @param schema - New schema ID
      * @private
      */
-    static async _makeRecord(doctype: Doctype, did: DID, newContent: any, schema?: string): Promise<Doctype> {
+    static async _makeRecord(doctype: Doctype, did: DID, newContent: any, schema?: string): Promise<any> {
         if (did == null || !did.authenticated) {
             throw new Error('No DID authenticated')
         }

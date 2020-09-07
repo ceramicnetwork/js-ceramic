@@ -1,9 +1,11 @@
-import { TileDoctypeHandler } from '../tile-doctype-handler'
 import CID from 'cids'
+
+import dagCBOR from "ipld-dag-cbor"
 
 import { DID } from 'dids'
 import { Resolver } from "did-resolver"
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
+import { TileDoctypeHandler } from '../tile-doctype-handler'
 
 import { TileDoctype } from "../tile-doctype"
 import { Context } from "@ceramicnetwork/ceramic-common"
@@ -24,10 +26,59 @@ const FAKE_CID_4 = new CID('bafybeig6xv5nwphfmvcnektpnojts66jqcuam7bmye2pb54adnr
 
 const RECORDS = {
   genesis: { doctype: 'tile', header: { owners: [ 'did:3:bafyasdfasdf' ] }, data: { much: 'data' } },
-  genesisGenerated: { doctype: 'tile', header: { owners: [ 'did:3:bafyasdfasdf' ] }, data: { much: 'data' }, signedHeader: 'eyJraWQiOiJkaWQ6MzpiYWZ5YXNkZmFzZGY_dmVyc2lvbj0wI3NpZ25pbmciLCJhbGciOiJFUzI1NksifQ', signature: 'cccc' },
+  genesisGenerated: {
+    "jws": {
+      "payload": "bbbb",
+      "signatures": [
+        {
+          "protected": "eyJraWQiOiJkaWQ6MzpiYWZ5YXNkZmFzZGY_dmVyc2lvbj0wI3NpZ25pbmciLCJhbGciOiJFUzI1NksifQ",
+          "signature": "cccc"
+        }
+      ],
+      "link": "bafyreieud3bpdflio42dgqssv2mzkdohwq4wesmgmj42cqpaq5n6pdwm3e"
+    },
+    "linkedBlock": {
+      "data": {
+        "much": "data"
+      },
+      "header": {
+        "owners": [
+          "did:3:bafyuser"
+        ]
+      },
+      "doctype": "tile"
+    }
+  },
   r1: {
     desiredContent: { much: 'data', very: 'content' },
-    record: { data: [ { op: 'add', path: '/very', value: 'content' } ], header: { owners: ["did:3:bafyasdfasdf"] }, id: FAKE_CID_1, prev: FAKE_CID_1, signedHeader: 'eyJraWQiOiJkaWQ6MzpiYWZ5YXNkZmFzZGY_dmVyc2lvbj0wI3NpZ25pbmciLCJhbGciOiJFUzI1NksifQ', signature: 'cccc' }
+    record: {
+      "jws": {
+        "payload": "bbbb",
+        "signatures": [
+          {
+            "protected": "eyJraWQiOiJkaWQ6MzpiYWZ5YXNkZmFzZGY_dmVyc2lvbj0wI3NpZ25pbmciLCJhbGciOiJFUzI1NksifQ",
+            "signature": "cccc"
+          }
+        ],
+        "link": "bafyreihin42fgqrp5agbo34tu72g4x77xx3e3orqzfzdv5ydvv2hik3xl4"
+      },
+      "linkedPayload": {
+        "id": "bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu",
+        "data": [
+          {
+            "op": "add",
+            "path": "/very",
+            "value": "content"
+          }
+        ],
+        "prev": "bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu",
+        "header": {
+          "owners": [
+            "did:3:bafyuser"
+          ]
+        }
+      }
+    }
   },
   r2: { record: { proof: FAKE_CID_4 } },
   proof: {
@@ -37,10 +88,25 @@ const RECORDS = {
   }
 }
 
-const wrapWithFakeSignature = (obj: any): any => {
-  obj.signedHeader = 'eyJraWQiOiJkaWQ6MzpiYWZ5YXNkZmFzZGY_dmVyc2lvbj0wI3NpZ25pbmciLCJhbGciOiJFUzI1NksifQ'
-  obj.signature = 'cccc'
-  return obj
+const serialize = (data: any): any => {
+  if (Array.isArray(data)) {
+    const serialized = []
+    for (const item of data) {
+      serialized.push(serialize(item))
+    }
+    return serialized
+  }
+  if (!CID.isCID(data) && typeof data === "object") {
+    const serialized: Record<string, any> = {}
+    for (const prop in data) {
+      serialized[prop] = serialize(data[prop])
+    }
+    return serialized
+  }
+  if (CID.isCID(data)) {
+    return data.toString()
+  }
+  return data
 }
 
 describe('TileDoctypeHandler', () => {
@@ -110,11 +176,23 @@ describe('TileDoctypeHandler', () => {
   it('makes genesis record correctly', async () => {
     const record1 = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { owners: [did.id] } }, { did })
 
-    const expected1 = await did.createDagJWS(RECORDS.genesis)
-    expect(record1).toEqual(expected1)
+    expect(record1).not.toBeNull()
 
-    const record2 = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: RECORDS.genesis.header }, { did })
-    expect(record2).toEqual(wrapWithFakeSignature(RECORDS.genesis))
+    const { jws, linkedBlock } = record1
+    expect(jws).not.toBeNull()
+    expect(linkedBlock).not.toBeNull()
+
+    const payload = dagCBOR.util.deserialize(linkedBlock)
+
+    const serialized = { jws: serialize(jws), linkedBlock: serialize(payload)}
+
+    const expected1 = await did.createDagJWS(RECORDS.genesis)
+    expect(expected1).not.toBeNull()
+
+    const { jws: eJws, linkedBlock: eLinkedBlock } = record1
+    const ePayload = dagCBOR.util.deserialize(eLinkedBlock)
+    const signed = { jws: serialize(eJws), linkedBlock: serialize(ePayload)}
+    expect(serialized).toEqual(signed)
   })
 
   it('creates genesis records deterministically by default', async () => {
@@ -134,47 +212,83 @@ describe('TileDoctypeHandler', () => {
   it('applies genesis record correctly', async () => {
     const tileHandler = new TileDoctypeHandler()
 
-    await context.ipfs.dag.put(RECORDS.genesisGenerated, FAKE_CID_1)
+    const record = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { owners: [did.id] } }, { did })
+    await context.ipfs.dag.put(record, FAKE_CID_1)
 
-    const docState = await tileHandler.applyRecord(RECORDS.genesisGenerated, FAKE_CID_1, context)
+    const payload = dagCBOR.util.deserialize(record.linkedBlock)
+    await context.ipfs.dag.put({ value: payload }, record.jws.link)
+
+    const docState = await tileHandler.applyRecord(record.jws, FAKE_CID_1, context)
     expect(docState).toMatchSnapshot()
   })
 
   it('makes signed record correctly', async () => {
     const tileDoctypeHandler = new TileDoctypeHandler()
 
-    await context.ipfs.dag.put(RECORDS.genesisGenerated, FAKE_CID_1)
+    await context.ipfs.dag.put(RECORDS.genesisGenerated.jws, FAKE_CID_1)
+    await context.ipfs.dag.put({ value: RECORDS.genesisGenerated.linkedBlock }, RECORDS.genesisGenerated.jws.link)
 
-    const state = await tileDoctypeHandler.applyRecord(RECORDS.genesisGenerated, FAKE_CID_1, context)
+    const state = await tileDoctypeHandler.applyRecord(RECORDS.genesisGenerated.jws, FAKE_CID_1, context)
     const doctype = new TileDoctype(state, context)
 
     await expect(TileDoctype._makeRecord(doctype, null, RECORDS.r1.desiredContent)).rejects.toThrow(/No DID/)
 
     const record = await TileDoctype._makeRecord(doctype, did, RECORDS.r1.desiredContent)
-    expect(record).toEqual(RECORDS.r1.record)
+    const { jws: rJws, linkedBlock: rLinkedBlock} = record
+    const rPayload = dagCBOR.util.deserialize(rLinkedBlock)
+    expect({ jws: serialize(rJws), linkedPayload: serialize(rPayload)}).toEqual(RECORDS.r1.record)
   })
 
   it('applies signed record correctly', async () => {
     const tileDoctypeHandler = new TileDoctypeHandler()
 
-    await context.ipfs.dag.put(RECORDS.genesisGenerated, FAKE_CID_1)
-    await context.ipfs.dag.put(RECORDS.r1.record, FAKE_CID_2)
+    const genesisRecord = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { owners: [did.id] } }, { did })
+    await context.ipfs.dag.put(genesisRecord, FAKE_CID_1)
 
-    let state = await tileDoctypeHandler.applyRecord(RECORDS.genesisGenerated, FAKE_CID_1, context)
-    state = await tileDoctypeHandler.applyRecord(RECORDS.r1.record, FAKE_CID_2, context, state)
+    const payload = dagCBOR.util.deserialize(genesisRecord.linkedBlock)
+    await context.ipfs.dag.put({ value: payload }, genesisRecord.jws.link)
+
+    // apply genesis
+    let state = await tileDoctypeHandler.applyRecord(genesisRecord.jws, FAKE_CID_1, context)
+
+    const doctype = new TileDoctype(state, context)
+    const signedRecord = await TileDoctype._makeRecord(doctype, did, RECORDS.r1.desiredContent)
+
+    await context.ipfs.dag.put(signedRecord, FAKE_CID_2)
+
+    const sPayload = dagCBOR.util.deserialize(signedRecord.linkedBlock)
+    await context.ipfs.dag.put({ value: sPayload }, signedRecord.jws.link)
+
+    // apply signed
+    state = await tileDoctypeHandler.applyRecord(signedRecord.jws, FAKE_CID_2, context, state)
     expect(state).toMatchSnapshot()
   })
 
   it('applies anchor record correctly', async () => {
     const tileDoctypeHandler = new TileDoctypeHandler()
 
-    await context.ipfs.dag.put(RECORDS.genesisGenerated, FAKE_CID_1)
-    await context.ipfs.dag.put(RECORDS.r1.record, FAKE_CID_2)
-    await context.ipfs.dag.put(RECORDS.r2.record, FAKE_CID_3)
-    await context.ipfs.dag.put(RECORDS.proof, FAKE_CID_4)
+    const genesisRecord = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { owners: [did.id] } }, { did })
+    await context.ipfs.dag.put(genesisRecord, FAKE_CID_1)
 
-    let state = await tileDoctypeHandler.applyRecord(RECORDS.genesisGenerated, FAKE_CID_1, context)
-    state = await tileDoctypeHandler.applyRecord(RECORDS.r1.record, FAKE_CID_2, context, state)
+    const payload = dagCBOR.util.deserialize(genesisRecord.linkedBlock)
+    await context.ipfs.dag.put({ value: payload }, genesisRecord.jws.link)
+
+    // apply genesis
+    let state = await tileDoctypeHandler.applyRecord(genesisRecord.jws, FAKE_CID_1, context)
+
+    const doctype = new TileDoctype(state, context)
+    const signedRecord = await TileDoctype._makeRecord(doctype, did, RECORDS.r1.desiredContent)
+
+    await context.ipfs.dag.put(signedRecord, FAKE_CID_2)
+
+    const sPayload = dagCBOR.util.deserialize(signedRecord.linkedBlock)
+    await context.ipfs.dag.put({ value: sPayload }, signedRecord.jws.link)
+
+    // apply signed
+    state = await tileDoctypeHandler.applyRecord(signedRecord.jws, FAKE_CID_2, context, state)
+
+    await context.ipfs.dag.put(RECORDS.proof, FAKE_CID_4)
+    // apply anchor
     state = await tileDoctypeHandler.applyRecord(RECORDS.r2.record, FAKE_CID_3, context, state)
     expect(state).toMatchSnapshot()
   })
