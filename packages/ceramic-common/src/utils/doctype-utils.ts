@@ -142,7 +142,7 @@ export class DoctypeUtils {
             cloned.anchorStatus = AnchorStatus[cloned.anchorStatus];
         }
         if (cloned.anchorScheduledFor) {
-            cloned.anchorScheduledFor = new Date(cloned.anchorScheduledFor).toISOString(); // ISO format of the UTC time
+            cloned.anchorScheduledFor = new Date(cloned.anchorScheduledFor).toLocaleString()
         }
         if (cloned.anchorProof) {
             cloned.anchorProof.txHash = cloned.anchorProof.txHash.toString();
