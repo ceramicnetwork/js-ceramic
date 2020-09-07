@@ -1,6 +1,9 @@
 import CID from 'cids'
 
 import { Resolver } from "did-resolver"
+
+import dagCBOR from "ipld-dag-cbor"
+
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 
 import { DID } from 'dids'
@@ -26,7 +29,34 @@ const RECORDS = {
   genesis: { doctype: '3id', header: { owners: [ '0x123' ] }, data: { publicKeys: { test: '0xabc' } } },
   r1: {
     desiredContent: { publicKeys: { test: '0xabc' }, other: 'data' },
-    record: { data: [ { op: 'add', path: '/other', value: 'data' } ], header: { owners: ['0x123'] }, id: FAKE_CID_1, prev: FAKE_CID_1, signedHeader: 'eyJraWQiOiJkaWQ6MzpiYWZ5YXNkZmFzZGY_dmVyc2lvbj0wI3NpZ25pbmciLCJhbGciOiJFUzI1NksifQ', signature: 'cccc' }
+    record: {
+      jws: {
+        "payload": "bbbb",
+        "signatures": [
+          {
+            "protected": "eyJraWQiOiJkaWQ6MzpiYWZ5YXNkZmFzZGY_dmVyc2lvbj0wI3NpZ25pbmciLCJhbGciOiJFUzI1NksifQ",
+            "signature": "cccc"
+          }
+        ],
+        "link": "bafyreialxtvq5lnnnsangw6gd4z5afhk6yjrhxrtodd4wan77xwpancq7y"
+      },
+      payload: {
+        "id": "bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu",
+        "data": [
+          {
+            "op": "add",
+            "path": "/other",
+            "value": "data"
+          }
+        ],
+        "prev": "bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu",
+        "header": {
+          "owners": [
+            "0x123"
+          ]
+        }
+      }
+    }
   },
   r2: { record: { proof: FAKE_CID_4 } },
   proof: {
@@ -34,6 +64,27 @@ const RECORDS = {
       blockNumber: 123456
     }
   }
+}
+
+const serialize = (data: any): any => {
+  if (Array.isArray(data)) {
+    const serialized = []
+    for (const item of data) {
+      serialized.push(serialize(item))
+    }
+    return serialized
+  }
+  if (!CID.isCID(data) && typeof data === "object") {
+    const serialized: Record<string, any> = {}
+    for (const prop in data) {
+      serialized[prop] = serialize(data[prop])
+    }
+    return serialized
+  }
+  if (CID.isCID(data)) {
+    return data.toString()
+  }
+  return data
 }
 
 describe('ThreeIdHandler', () => {
@@ -118,26 +169,44 @@ describe('ThreeIdHandler', () => {
 
     await expect(ThreeIdDoctype._makeRecord(doctype, null, RECORDS.r1.desiredContent)).rejects.toThrow(/No DID/)
     const record = await ThreeIdDoctype._makeRecord(doctype, user, RECORDS.r1.desiredContent)
-    expect(record).toEqual(RECORDS.r1.record)
+    expect(record).not.toBeNull()
+
+    const { jws, linkedBlock } = record
+    expect(jws).not.toBeNull()
+    expect(linkedBlock).not.toBeNull()
+
+    const payload = dagCBOR.util.deserialize(linkedBlock)
+    expect({ jws: serialize(jws), payload: serialize(payload)}).toEqual(RECORDS.r1.record)
   })
 
   it('applies signed record correctly', async () => {
     await context.ipfs.dag.put(RECORDS.genesis, FAKE_CID_1)
-    await context.ipfs.dag.put(RECORDS.r1.record, FAKE_CID_2)
 
     let state = await threeIdDoctypeHandler.applyRecord(RECORDS.genesis, FAKE_CID_1, context)
-    state = await threeIdDoctypeHandler.applyRecord(RECORDS.r1.record, FAKE_CID_2, context, state)
+    const doctype = new ThreeIdDoctype(state, context)
+    const record = await ThreeIdDoctype._makeRecord(doctype, user, RECORDS.r1.desiredContent)
+
+    const payload = dagCBOR.util.deserialize(record.linkedBlock)
+    await context.ipfs.dag.put({ value: payload }, record.jws.link)
+
+    state = await threeIdDoctypeHandler.applyRecord(RECORDS.genesis, FAKE_CID_1, context)
+    state = await threeIdDoctypeHandler.applyRecord(record.jws, FAKE_CID_2, context, state)
     expect(state).toMatchSnapshot()
   })
 
   it('applies anchor record correctly', async () => {
     await context.ipfs.dag.put(RECORDS.genesis, FAKE_CID_1)
-    await context.ipfs.dag.put(RECORDS.r1.record, FAKE_CID_2)
-    await context.ipfs.dag.put(RECORDS.r2.record, FAKE_CID_3)
     await context.ipfs.dag.put(RECORDS.proof, FAKE_CID_4)
 
     let state = await threeIdDoctypeHandler.applyRecord(RECORDS.genesis, FAKE_CID_1, context)
-    state = await threeIdDoctypeHandler.applyRecord(RECORDS.r1.record, FAKE_CID_2, context, state)
+    const doctype = new ThreeIdDoctype(state, context)
+    const record = await ThreeIdDoctype._makeRecord(doctype, user, RECORDS.r1.desiredContent)
+
+    const payload = dagCBOR.util.deserialize(record.linkedBlock)
+    await context.ipfs.dag.put({ value: payload }, record.jws.link)
+
+    state = await threeIdDoctypeHandler.applyRecord(RECORDS.genesis, FAKE_CID_1, context)
+    state = await threeIdDoctypeHandler.applyRecord(record.jws, FAKE_CID_2, context, state)
     state = await threeIdDoctypeHandler.applyRecord(RECORDS.r2.record, FAKE_CID_3, context, state)
     expect(state).toMatchSnapshot()
   })
