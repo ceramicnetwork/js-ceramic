@@ -10,7 +10,7 @@
     "routing"
   ],
   "author": "Joel Torstensson <oed3933@gmail.com>",
-  "homepage": "",
+  "homepage": "(Apache-2.0 OR MIT)",
   "license": "MIT",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
