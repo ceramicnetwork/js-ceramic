@@ -92,7 +92,7 @@ class CeramicDaemon {
   async createDocFromGenesis (req: Request, res: Response, next: NextFunction): Promise<void> {
     const { genesis, docOpts } = req.body
     try {
-      const doc = await this.ceramic.createDocumentFromGenesis(genesis, docOpts)
+      const doc = await this.ceramic.createDocumentFromGenesis(DoctypeUtils.deserializeRecord(genesis), docOpts)
       res.json({ docId: doc.id, state: DoctypeUtils.serializeState(doc.state) })
     } catch (e) {
       return next(e)

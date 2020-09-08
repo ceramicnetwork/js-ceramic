@@ -1,6 +1,8 @@
 import ajv from "ajv"
 import CID from 'cids'
 import cloneDeep from "lodash.clonedeep"
+import { encode as base64Encode, decode as base64Decode } from '@ethersproject/base64'
+
 import { AnchorStatus, DocState, Doctype } from "../doctype"
 
 /**
@@ -104,6 +106,13 @@ export class DoctypeUtils {
      */
     static serializeRecord(record: any): any {
         const cloned = cloneDeep(record)
+
+        if (DoctypeUtils.isRecordSigned(cloned)) {
+            cloned.jws.link = cloned.jws.link.toString()
+            cloned.linkedBlock = base64Encode(cloned.linkedBlock)
+            return cloned
+        }
+
         if (cloned.id) {
             cloned.id = cloned.id.toString()
         }
@@ -120,6 +129,13 @@ export class DoctypeUtils {
      */
     static deserializeRecord(record: any): any {
         const cloned = cloneDeep(record)
+
+        if (DoctypeUtils.isRecordSigned(cloned)) {
+            cloned.jws.link = new CID(cloned.jws.link)
+            cloned.linkedBlock = Buffer.from(base64Decode(cloned.linkedBlock).buffer)
+            return cloned
+        }
+
         if (cloned.id) {
             cloned.id = new CID(cloned.id)
         }

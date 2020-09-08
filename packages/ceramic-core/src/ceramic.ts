@@ -265,7 +265,14 @@ class Ceramic implements CeramicApi {
       return doc
     }
 
-    const doctypeHandler = this.findHandler(genesis)
+    let doctypeHandler
+    if (DoctypeUtils.isRecordSigned(genesis)) {
+      const payload = await this.dispatcher.retrieveRecord(genesis.jws.link)
+      doctypeHandler = this.findHandler(payload)
+    } else {
+      doctypeHandler = this.findHandler(genesis)
+    }
+
     doc = await Document.create(genesisCid, doctypeHandler, this.dispatcher, this.pinStore, this.context, opts, this._validateDocs);
     const normalizedId = DoctypeUtils.normalizeDocId(doc.id)
     this._docmap[normalizedId] = doc

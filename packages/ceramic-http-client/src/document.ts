@@ -35,7 +35,7 @@ class Document extends Doctype {
 
   static async createFromGenesis (apiUrl: string, genesis: any, context: Context, opts: DocOpts = {}): Promise<Document> {
     const { state } = await fetchJson(apiUrl + '/create', {
-      genesis,
+      genesis: DoctypeUtils.serializeRecord(genesis),
       docOpts: {
         applyOnly: opts.applyOnly,
       }
