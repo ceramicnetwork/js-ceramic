@@ -267,7 +267,8 @@ class Ceramic implements CeramicApi {
 
     let doctypeHandler
     if (DoctypeUtils.isRecordSigned(genesis)) {
-      const payload = await this.dispatcher.retrieveRecord(genesis.jws.link)
+      genesis = await this.dispatcher.retrieveRecord(genesisCid) // reload the genesis record
+      const payload = await this.dispatcher.retrieveRecord(genesis.link)
       doctypeHandler = this.findHandler(payload)
     } else {
       doctypeHandler = this.findHandler(genesis)

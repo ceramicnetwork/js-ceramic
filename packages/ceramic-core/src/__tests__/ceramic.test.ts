@@ -73,7 +73,7 @@ describe('Ceramic integration', () => {
   beforeEach(async () => {
     tmpFolder = await tmp.dir({ unsafeCleanup: true })
 
-    const buildConfig = (path: string, id: number) => {
+    const buildConfig = (path: string, id: number): object => {
       return {
         repo: `${path}/ipfs${id}/`, config: {
           Addresses: { Swarm: [`/ip4/127.0.0.1/tcp/${4004 + id}`] }, Bootstrap: []
