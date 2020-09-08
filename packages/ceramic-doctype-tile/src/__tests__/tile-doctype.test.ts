@@ -292,4 +292,5 @@ describe('TileDoctypeHandler', () => {
     state = await tileDoctypeHandler.applyRecord(RECORDS.r2.record, FAKE_CID_3, context, state)
     expect(state).toMatchSnapshot()
   })
+
 })

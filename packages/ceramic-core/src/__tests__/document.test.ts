@@ -57,9 +57,10 @@ jest.mock('../dispatcher', () => {
           const cidLink = hash(JSON.stringify(block))
           recs[cidLink.toString()] = block
 
-          const cidJws = hash(JSON.stringify(jws))
-          jws.link = cidLink
-          recs[cidJws.toString()] = jws
+          const clone = cloneDeep(jws)
+          clone.link = cidLink
+          const cidJws = hash(JSON.stringify(clone))
+          recs[cidJws.toString()] = clone
           return cidJws
         }
 
@@ -99,8 +100,7 @@ const create = async (params: ThreeIdParams, ceramic: Ceramic, context: Context,
   }
 
   const record = await ThreeIdDoctype.makeGenesis({ content, metadata })
-
-  return ceramic._createDocFromGenesis(record, opts)
+  return await ceramic._createDocFromGenesis(record, opts)
 }
 
 let stateStore: LevelStateStore
@@ -411,9 +411,13 @@ describe('Document', () => {
       expect(dispatcher.publishHead).toHaveBeenCalledTimes(1)
       expect(dispatcher.publishHead).toHaveBeenNthCalledWith(1, doc.id, doc.head)
 
-      dispatcher._requestHead(doc.id)
+      await dispatcher._requestHead(doc.id)
+
       expect(dispatcher.publishHead).toHaveBeenCalledTimes(2)
       expect(dispatcher.publishHead).toHaveBeenNthCalledWith(2, doc.id, doc.head)
+
+      // wait to complete
+      await new Promise(resolve => setTimeout(resolve, 1000))
     })
   })
 })

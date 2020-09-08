@@ -290,35 +290,75 @@ class Document extends EventEmitter {
   }
 
   async _fetchLog (cid: CID, log: Array<CID> = []): Promise<Array<CID>> {
-    if (this._doctype.state.log.some(x => x.equals(cid))) { // already processed
+    const cidIncluded = await this._cidIncluded(cid, this._doctype.state.log)
+    if (cidIncluded) { // already processed
       return []
     }
     const record = await this.dispatcher.retrieveRecord(cid)
-    const prevCid: CID = record.prev
+    let unwrapped = record
+    if (record.link) {
+      unwrapped = await this.dispatcher.retrieveRecord(record.link)
+    }
+    const prevCid: CID = unwrapped.prev
     if (!prevCid) { // this is a fake log
       return []
     }
     log.unshift(cid)
-    if (this._doctype.state.log.some(x => x.equals(prevCid))) {
+    if (await this._cidIncluded(prevCid, this._doctype.state.log)) {
       // we found the connection to the canonical log
       return log
     }
     return this._fetchLog(prevCid, log)
   }
 
+  async _cidIncluded(cid: CID, log: Array<CID>): Promise<boolean> {
+    for (const c of log) {
+      if (c.equals(cid)) {
+        return true
+      }
+      const record = await this.dispatcher.retrieveRecord(c)
+      if (record.link && record.link.equals(cid)) {
+        return true
+      }
+    }
+    return false
+  }
+
+  async _findIndex(cid: CID, log: Array<CID>): Promise<number> {
+    // const conflictIdx = this._doctype.state.log.findIndex(x => x.equals(record.prev)) + 1
+    for (let index = 0; index < log.length; index++) {
+      const c = log[index]
+      if (c.equals(cid)) {
+        return index
+      }
+      const record = await this.dispatcher.retrieveRecord(c)
+      if (record.link && record.link.equals(cid)) {
+        return index
+      }
+    }
+    return -1
+  }
+
   async _applyLog (log: Array<CID>): Promise<boolean> {
     let modified = false
-    if (log[log.length - 1].equals(this.head)) return // log already applied
+    if (log[log.length - 1].equals(this.head)) {
+      // log already applied
+      return
+    }
     const cid = log[0]
     const record = await this.dispatcher.retrieveRecord(cid)
-    if (record.prev.equals(this.head)) {
+    let unwrapped = record
+    if (record.link) {
+      unwrapped = await this.dispatcher.retrieveRecord(record.link)
+    }
+    if (unwrapped.prev.equals(this.head)) {
       // the new log starts where the previous one ended
       this._doctype.state = await this._applyLogToState(log, cloneDeep(this._doctype.state))
       modified = true
     } else {
       // we have a conflict since prev is in the log of the
       // local state, but isn't the head
-      const conflictIdx = this._doctype.state.log.findIndex(x => x.equals(record.prev)) + 1
+      const conflictIdx = await this._findIndex(unwrapped.prev, this._doctype.state.log) + 1
       const canonicalLog = this._doctype.state.log.slice() // copy log
       const localLog = canonicalLog.splice(conflictIdx)
       // Compute state up till conflictIdx
@@ -347,9 +387,15 @@ class Document extends EventEmitter {
       const cid = entry.value[1]
       const record = await this.dispatcher.retrieveRecord(cid)
       // TODO - should catch potential thrown error here
-      if (!record.prev) {
+
+      let unwrapped = record
+      if (record.link) {
+        unwrapped = await this.dispatcher.retrieveRecord(record.link)
+      }
+
+      if (!unwrapped.prev) {
         state = await this._doctypeHandler.applyRecord(record, cid, this._context)
-      } else if (record.proof) {
+      } else if (unwrapped.proof) {
         // it's an anchor record
         await this._verifyAnchorRecord(record)
         state = await this._doctypeHandler.applyRecord(record, cid, this._context, state)
