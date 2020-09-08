@@ -24,7 +24,7 @@ jest.mock('../dispatcher', () => {
   const cloneDeep = require('lodash.clonedeep') // eslint-disable-line @typescript-eslint/no-var-requires
   const { sha256 } = require('js-sha256') // eslint-disable-line @typescript-eslint/no-var-requires
   const { DoctypeUtils } = require('@ceramicnetwork/ceramic-common') // eslint-disable-line @typescript-eslint/no-var-requires
-  const dagCBOR = require('ipld-dag-cbor')
+  const dagCBOR = require('ipld-dag-cbor') // eslint-disable-line @typescript-eslint/no-var-requires
   const hash = (data: string): CID => new CID(1, 'sha2-256', Buffer.from('1220' + sha256(data), 'hex'))
   return (gossip: boolean): any => {
     const recs: Record<any, any> = {}
