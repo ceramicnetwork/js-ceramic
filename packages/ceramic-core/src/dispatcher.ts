@@ -43,6 +43,7 @@ export default class Dispatcher extends EventEmitter {
       const cid = await this._ipfs.dag.put(jws, { format: 'dag-jose', hashAlg: 'sha2-256' })
       // put the payload into the ipfs dag
       await this._ipfs.block.put(linkedBlock, { cid: jws.link })
+      Object.assign(data, await this.retrieveRecord(cid)) // reload record
       return cid
     }
     return await this._ipfs.dag.put(data)
