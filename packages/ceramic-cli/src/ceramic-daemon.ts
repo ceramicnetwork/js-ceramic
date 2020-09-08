@@ -90,14 +90,13 @@ class CeramicDaemon {
     app.get(toApiPath('/state/ceramic/:cid'), this.state.bind(this))
     app.get(toApiPath('/pin/ls/ceramic/:cid'), this.listPinned.bind(this))
     app.get(toApiPath('/pin/ls'), this.listPinned.bind(this))
+    app.post(toApiPath('/create'), this.createDocFromGenesis.bind(this))
 
     if (!gateway) {
-      app.post(toApiPath('/create'), this.createDocFromGenesis.bind(this))
       app.post(toApiPath('/apply'), this.applyRecord.bind(this))
       app.get(toApiPath('/pin/add/ceramic/:cid'), this.pinDocument.bind(this))
       app.get(toApiPath('/pin/rm/ceramic/:cid'), this.unpinDocument.bind(this))
     } else {
-      app.post(toApiPath('/create'), this.notSupported.bind(this))
       app.post(toApiPath('/apply'),  this.notSupported.bind(this))
       app.get(toApiPath('/pin/add/ceramic/:cid'),  this.notSupported.bind(this))
       app.get(toApiPath('/pin/rm/ceramic/:cid'),  this.notSupported.bind(this))
