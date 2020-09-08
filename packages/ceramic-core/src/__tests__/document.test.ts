@@ -124,7 +124,7 @@ describe('Document', () => {
   describe('Log logic', () => {
     const initialContent = { abc: 123, def: 456 }
     const newContent = { abc: 321, def: 456, gh: 987 }
-    const owners = ['publickeymock']
+    const owners = ['did:3:bafyasdfasdf']
     let user: DID
     let dispatcher: any;
     let doctypeHandler: ThreeIdDoctypeHandler;
@@ -141,7 +141,7 @@ describe('Document', () => {
         // fake jws
         return 'eyJraWQiOiJkaWQ6MzpiYWZ5YXNkZmFzZGY_dmVyc2lvbj0wI3NpZ25pbmciLCJhbGciOiJFUzI1NksifQ.bbbb.cccc'
       })
-      user._id = 'did:3:bafyuser'
+      user._id = 'did:3:bafyasdfasdf'
       doctypeHandler = new ThreeIdDoctypeHandler()
       doctypeHandler.verifyJWS = async (): Promise<void> => { return }
       findHandler = (): ThreeIdDoctypeHandler => doctypeHandler
@@ -324,7 +324,7 @@ describe('Document', () => {
   describe('Network update logic', () => {
     const initialContent = { abc: 123, def: 456 }
     const newContent = { abc: 321, def: 456, gh: 987 }
-    const owners = ['publickeymock']
+    const owners = ['did:3:bafyasdfasdf']
 
     let dispatcher: any;
     let doctypeHandler: ThreeIdDoctypeHandler;

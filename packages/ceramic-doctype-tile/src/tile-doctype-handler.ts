@@ -70,9 +70,9 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
      * @private
      */
     async _applyGenesis(record: any, cid: CID, context: Context): Promise<DocState> {
-        await this._verifySignature(record, context)
-
         const payload = (await context.ipfs.dag.get(record.link)).value
+
+        await this._verifySignature(record, context, payload.header.owners[0])
         return {
             doctype: DOCTYPE,
             content: payload.data,
@@ -95,7 +95,7 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
      * @private
      */
     async _applySigned(record: any, cid: CID, state: DocState, context: Context): Promise<DocState> {
-        await this._verifySignature(record, context)
+        await this._verifySignature(record, context, state.metadata.owners[0])
 
         const payload = (await context.ipfs.dag.get(record.link)).value
         if (!payload.id.equals(state.log[0])) {
@@ -138,12 +138,15 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
      * @param context - Ceramic context
      * @private
      */
-    async _verifySignature(record: any, context: Context): Promise<void> {
+    async _verifySignature(record: any, context: Context, did: string): Promise<void> {
         const { payload, signatures } = record
         const { signature,  protected: _protected } = signatures[0]
 
         const decodedHeader = JSON.parse(base64url.decode(_protected))
         const { kid } = decodedHeader
+        if (!kid.startsWith(did)) {
+            throw new Error(`Signature was made with wrong DID. Expected: ${did}, got: ${kid.split('?')[0]}`)
+        }
 
         const jws = [_protected, payload, signature].join('.')
         const { publicKey } = await context.resolver.resolve(kid)

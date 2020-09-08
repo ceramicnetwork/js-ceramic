@@ -16,7 +16,9 @@ const TOPIC = '/ceramic'
 
 export default class Dispatcher extends EventEmitter {
   private _peerId: string
-  private _documents: Record<string, Document>
+  private readonly _documents: Record<string, Document>
+
+  private _isRunning = true
 
   constructor (public _ipfs: Ipfs.Ipfs) {
     super()
@@ -55,15 +57,22 @@ export default class Dispatcher extends EventEmitter {
     if (ipfsObj == null) {
       throw new Error(`Failed to find object for CID ${cid.toBaseEncodedString()} and path "${path}"`)
     }
-    // should skip cache
-    return ipfsObj.value
+    return cloneDeep(ipfsObj.value)
   }
 
   async publishHead (id: string, head: CID): Promise<void> {
+    if (!this._isRunning) {
+      throw new Error('Dispatcher has been closed')
+    }
+
     await this._ipfs.pubsub.publish(TOPIC, JSON.stringify({ typ: MsgType.UPDATE, id, cid: head.toString() }))
   }
 
   async handleMessage (message: any): Promise<void> {
+    if (!this._isRunning) {
+      throw new Error('Dispatcher has been closed')
+    }
+
     this._peerId = this._peerId || (await this._ipfs.id()).id
     if (message.from !== this._peerId) {
       const { typ, id, cid } = JSON.parse(message.data)
@@ -84,6 +93,12 @@ export default class Dispatcher extends EventEmitter {
   }
 
   async close(): Promise<void> {
-    return this._ipfs.pubsub.unsubscribe(TOPIC)
+    this._isRunning = false
+    await this._ipfs.pubsub.unsubscribe(TOPIC)
+
+    // deregister documents
+    for (const doc of Object.values(this._documents)) {
+      doc.close()
+    }
   }
 }

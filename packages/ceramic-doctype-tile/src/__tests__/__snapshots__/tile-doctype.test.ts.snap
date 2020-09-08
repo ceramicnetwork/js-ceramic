@@ -135,7 +135,7 @@ Object {
   ],
   "metadata": Object {
     "owners": Array [
-      "did:3:bafyuser",
+      "did:3:bafyasdfasdf",
     ],
   },
   "next": Object {},
@@ -194,7 +194,7 @@ Object {
   ],
   "metadata": Object {
     "owners": Array [
-      "did:3:bafyuser",
+      "did:3:bafyasdfasdf",
     ],
   },
   "next": Object {
@@ -296,7 +296,7 @@ Object {
   ],
   "metadata": Object {
     "owners": Array [
-      "did:3:bafyuser",
+      "did:3:bafyasdfasdf",
     ],
   },
   "next": Object {

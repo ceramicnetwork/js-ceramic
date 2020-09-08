@@ -113,36 +113,43 @@ export class ThreeIdDoctypeHandler implements DoctypeHandler<ThreeIdDoctype> {
      * @private
      */
     async _applySigned(record: any, cid: CID, state: DocState, context: Context): Promise<DocState> {
-        await this._verifySignature(record, context)
+        await this._verifySignature(record, context, state.metadata.owners[0])
 
         const payload = (await context.ipfs.dag.get(record.link)).value
         if (!payload.id.equals(state.log[0])) {
             throw new Error(`Invalid docId ${payload.id}, expected ${state.log[0]}`)
         }
         state.log.push(cid)
-        return {
+        const newState: DocState = {
             ...state,
             signature: SignatureStatus.SIGNED,
             anchorStatus: AnchorStatus.NOT_REQUESTED,
             next: {
-                owners: payload.header.owners,
                 content: jsonpatch.applyPatch(state.content, payload.data).newDocument,
             },
         }
+        if (payload.header.owners) {
+            newState.next.owners = payload.header.owners
+        }
+        return newState
     }
 
     /**
      * Verifies record signature
      * @param record - Record to be verified
      * @param context - Ceramic context
+     * @param did - Decentralized identifier
      * @private
      */
-    async _verifySignature(record: any, context: Context): Promise<void> {
+    async _verifySignature(record: any, context: Context, did: string): Promise<void> {
         const { payload, signatures } = record
         const { signature,  protected: _protected } = signatures[0]
 
         const decodedHeader = JSON.parse(base64url.decode(_protected))
         const { kid } = decodedHeader
+        if (!kid.startsWith(did)) {
+            throw new Error(`Signature was made with wrong DID. Expected: ${did}, got: ${kid.split('?')[0]}`)
+        }
 
         const jws = [_protected, payload, signature].join('.')
         const { publicKey } = await context.resolver.resolve(kid)

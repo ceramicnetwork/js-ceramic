@@ -43,7 +43,7 @@ const RECORDS = {
       },
       "header": {
         "owners": [
-          "did:3:bafyuser"
+          "did:3:bafyasdfasdf"
         ]
       },
       "doctype": "tile"
@@ -60,7 +60,7 @@ const RECORDS = {
             "signature": "cccc"
           }
         ],
-        "link": "bafyreihin42fgqrp5agbo34tu72g4x77xx3e3orqzfzdv5ydvv2hik3xl4"
+        "link": "bafyreia6chsgnfihmdrl2d36llrfevc6xgmgzryi3ittdg3j5ohdifb7he"
       },
       "linkedPayload": {
         "id": "bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu",
@@ -73,9 +73,6 @@ const RECORDS = {
         ],
         "prev": "bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu",
         "header": {
-          "owners": [
-            "did:3:bafyuser"
-          ]
         }
       }
     }
@@ -120,7 +117,7 @@ describe('TileDoctypeHandler', () => {
       // fake jws
       return 'eyJraWQiOiJkaWQ6MzpiYWZ5YXNkZmFzZGY_dmVyc2lvbj0wI3NpZ25pbmciLCJhbGciOiJFUzI1NksifQ.bbbb.cccc'
     })
-    did._id = 'did:3:bafyuser'
+    did._id = 'did:3:bafyasdfasdf'
 
     const recs: Record<string, any> = {}
     const ipfs = {
@@ -262,6 +259,18 @@ describe('TileDoctypeHandler', () => {
     // apply signed
     state = await tileDoctypeHandler.applyRecord(signedRecord.jws, FAKE_CID_2, context, state)
     expect(state).toMatchSnapshot()
+  })
+
+  it('throws error if record signed by wrong DID', async () => {
+    const tileDoctypeHandler = new TileDoctypeHandler()
+
+    const genesisRecord = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { owners: ['did:3:fake'] } }, { did })
+    await context.ipfs.dag.put(genesisRecord, FAKE_CID_1)
+
+    const payload = dagCBOR.util.deserialize(genesisRecord.linkedBlock)
+    await context.ipfs.dag.put({ value: payload }, genesisRecord.jws.link)
+
+    await expect(tileDoctypeHandler.applyRecord(genesisRecord.jws, FAKE_CID_1, context)).rejects.toThrow(/wrong DID/)
   })
 
   it('applies anchor record correctly', async () => {
