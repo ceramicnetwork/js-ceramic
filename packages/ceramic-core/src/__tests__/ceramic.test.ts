@@ -99,9 +99,9 @@ describe('Ceramic integration', () => {
   })
 
   afterAll(async () => {
-    await ipfs1.stop()
-    await ipfs2.stop()
-    await ipfs3.stop()
+    await ipfs1.stop(() => console.log('IPFS1 stopped'))
+    await ipfs2.stop(() => console.log('IPFS2 stopped'))
+    await ipfs3.stop(() => console.log('IPFS3 stopped'))
     await tmpFolder.cleanup()
   })
 
