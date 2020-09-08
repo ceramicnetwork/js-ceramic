@@ -62,7 +62,8 @@ export default class Dispatcher extends EventEmitter {
 
   async publishHead (id: string, head: CID): Promise<void> {
     if (!this._isRunning) {
-      throw new Error('Dispatcher has been closed')
+      console.error('Dispatcher has been closed')
+      return
     }
 
     await this._ipfs.pubsub.publish(TOPIC, JSON.stringify({ typ: MsgType.UPDATE, id, cid: head.toString() }))
@@ -70,7 +71,8 @@ export default class Dispatcher extends EventEmitter {
 
   async handleMessage (message: any): Promise<void> {
     if (!this._isRunning) {
-      throw new Error('Dispatcher has been closed')
+      console.error('Dispatcher has been closed')
+      return
     }
 
     this._peerId = this._peerId || (await this._ipfs.id()).id
