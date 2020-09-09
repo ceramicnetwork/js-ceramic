@@ -5,8 +5,14 @@ import { AnchorServiceFactory } from "./anchor/anchor-service-factory";
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 
 import { CeramicApi, DIDProvider, PinApi } from "@ceramicnetwork/ceramic-common"
-import { Doctype, DoctypeHandler, DocOpts } from "@ceramicnetwork/ceramic-common"
-import { Context, DoctypeUtils, DocParams } from "@ceramicnetwork/ceramic-common"
+import {
+  Doctype,
+  DoctypeHandler,
+  DocOpts,
+  Context,
+  DoctypeUtils,
+  DocParams,
+} from "@ceramicnetwork/ceramic-common"
 import { Resolver } from "did-resolver"
 
 import { DID } from 'dids'
@@ -259,7 +265,15 @@ class Ceramic implements CeramicApi {
       return doc
     }
 
-    const doctypeHandler = this.findHandler(genesis)
+    let doctypeHandler
+    genesis = await this.dispatcher.retrieveRecord(genesisCid)
+    if (DoctypeUtils.isSignedRecord(genesis)) {
+      const payload = await this.dispatcher.retrieveRecord(genesis.link)
+      doctypeHandler = this.findHandler(payload)
+    } else {
+      doctypeHandler = this.findHandler(genesis)
+    }
+
     doc = await Document.create(genesisCid, doctypeHandler, this.dispatcher, this.pinStore, this.context, opts, this._validateDocs);
     const normalizedId = DoctypeUtils.normalizeDocId(doc.id)
     this._docmap[normalizedId] = doc

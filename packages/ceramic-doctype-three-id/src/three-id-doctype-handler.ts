@@ -1,6 +1,5 @@
 import CID from 'cids'
 import base64url from 'base64url'
-import stringify from 'fast-json-stable-stringify'
 
 import jsonpatch from 'fast-json-patch'
 import * as didJwt from 'did-jwt'
@@ -115,20 +114,24 @@ export class ThreeIdDoctypeHandler implements DoctypeHandler<ThreeIdDoctype> {
      * @private
      */
     async _applySigned(record: any, cid: CID, state: DocState, context: Context): Promise<DocState> {
-        if (!record.id.equals(state.log[0])) {
-            throw new Error(`Invalid docId ${record.id}, expected ${state.log[0]}`)
+        await this._verifySignature(record, context, state.metadata.owners[0])
+
+        const payload = (await context.ipfs.dag.get(record.link)).value
+        if (!payload.id.equals(state.log[0])) {
+            throw new Error(`Invalid docId ${payload.id}, expected ${state.log[0]}`)
         }
-        await this._verifyRecordSignature(record, context, state.metadata.owners[0])
         state.log.push(cid)
         const newState: DocState = {
             ...state,
             signature: SignatureStatus.SIGNED,
             anchorStatus: AnchorStatus.NOT_REQUESTED,
             next: {
-                content: jsonpatch.applyPatch(state.content, record.data).newDocument,
+                content: jsonpatch.applyPatch(state.content, payload.data).newDocument,
             },
         }
-        if (record.header.owners) newState.next.owners = record.header.owners
+        if (payload.header.owners) {
+            newState.next.owners = payload.header.owners
+        }
         return newState
     }
 
@@ -136,28 +139,24 @@ export class ThreeIdDoctypeHandler implements DoctypeHandler<ThreeIdDoctype> {
      * Verifies record signature
      * @param record - Record to be verified
      * @param context - Ceramic context
+     * @param did - Decentralized identifier
      * @private
      */
-    async _verifyRecordSignature(record: any, context: Context, did: string): Promise<void> {
-        const { signedHeader, signature } = record
-        const payload = base64url.encode(stringify({
-            doctype: record.doctype,
-            data: record.data,
-            header: record.header,
-            unique: record.unique || undefined,
-            prev: record.prev ? { '/': record.prev.toString() } : undefined,
-            id: record.id ? { '/': record.id.toString() } : undefined,
-        }))
+    async _verifySignature(record: any, context: Context, did: string): Promise<void> {
+        const { payload, signatures } = record
+        const { signature,  protected: _protected } = signatures[0]
 
-        const jws = [signedHeader, payload, signature].join('.')
-        const decodedHeader = JSON.parse(base64url.decode(signedHeader))
+        const decodedHeader = JSON.parse(base64url.decode(_protected))
         const { kid } = decodedHeader
-        if (!kid.startsWith(did)) throw new Error(`Signature was made with wrong DID. Expected: ${did}, got: ${kid.split('?')[0]}`)
+        if (!kid.startsWith(did)) {
+            throw new Error(`Signature was made with wrong DID. Expected: ${did}, got: ${kid.split('?')[0]}`)
+        }
         //const { publicKey } = await context.resolver.resolve(kid)
         // TODO - this is a temporary fix until we implement a full key-did-resolver
         // see: https://w3c-ccg.github.io/did-method-key/
         const keyb58 = did.split(':')[2]
         const { publicKey } = wrapDocument({ publicKeys: { [keyb58]: keyb58 } }, did)
+        const jws = [_protected, payload, signature].join('.')
         try {
             await this.verifyJWS(jws, publicKey)
         } catch (e) {

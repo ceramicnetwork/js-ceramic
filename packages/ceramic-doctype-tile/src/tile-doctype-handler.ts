@@ -2,7 +2,6 @@ import CID from 'cids'
 
 import * as didJwt from 'did-jwt'
 import base64url from 'base64url'
-import stringify from 'fast-json-stable-stringify'
 
 import jsonpatch from 'fast-json-patch'
 
@@ -71,12 +70,13 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
      * @private
      */
     async _applyGenesis(record: any, cid: CID, context: Context): Promise<DocState> {
-        await this._verifyRecordSignature(record, context, record.header.owners[0])
-        // TODO - verify genesis record
+        const payload = (await context.ipfs.dag.get(record.link)).value
+
+        await this._verifySignature(record, context, payload.header.owners[0])
         return {
             doctype: DOCTYPE,
-            content: record.data,
-            metadata: record.header,
+            content: payload.data,
+            metadata: payload.header,
             next: {
                 content: null,
             },
@@ -95,17 +95,19 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
      * @private
      */
     async _applySigned(record: any, cid: CID, state: DocState, context: Context): Promise<DocState> {
-        if (!record.id.equals(state.log[0])) {
-            throw new Error(`Invalid docId ${record.id}, expected ${state.log[0]}`)
+        await this._verifySignature(record, context, state.metadata.owners[0])
+
+        const payload = (await context.ipfs.dag.get(record.link)).value
+        if (!payload.id.equals(state.log[0])) {
+            throw new Error(`Invalid docId ${payload.id}, expected ${state.log[0]}`)
         }
-        await this._verifyRecordSignature(record, context, state.metadata.owners[0])
         state.log.push(cid)
         return {
             ...state,
             signature: SignatureStatus.SIGNED,
             anchorStatus: AnchorStatus.NOT_REQUESTED,
             next: {
-                content: jsonpatch.applyPatch(state.content, record.data).newDocument,
+                content: jsonpatch.applyPatch(state.content, payload.data).newDocument,
             }
         }
     }
@@ -136,21 +138,17 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
      * @param context - Ceramic context
      * @private
      */
-    async _verifyRecordSignature(record: any, context: Context, did: string): Promise<void> {
-        const { signedHeader, signature } = record
-        const payload = base64url.encode(stringify({
-            doctype: record.doctype,
-            data: record.data,
-            header: record.header,
-            unique: record.unique || undefined,
-            prev: record.prev ? { '/': record.prev.toString() } : undefined,
-            id: record.id ? { '/': record.id.toString() } : undefined,
-        }))
+    async _verifySignature(record: any, context: Context, did: string): Promise<void> {
+        const { payload, signatures } = record
+        const { signature,  protected: _protected } = signatures[0]
 
-        const jws = [signedHeader, payload, signature].join('.')
-        const decodedHeader = JSON.parse(base64url.decode(signedHeader))
+        const decodedHeader = JSON.parse(base64url.decode(_protected))
         const { kid } = decodedHeader
-        if (!kid.startsWith(did)) throw new Error(`Signature was made with wrong DID. Expected: ${did}, got: ${kid.split('?')[0]}`)
+        if (!kid.startsWith(did)) {
+            throw new Error(`Signature was made with wrong DID. Expected: ${did}, got: ${kid.split('?')[0]}`)
+        }
+
+        const jws = [_protected, payload, signature].join('.')
         const { publicKey } = await context.resolver.resolve(kid)
         try {
             await this.verifyJWS(jws, publicKey)
