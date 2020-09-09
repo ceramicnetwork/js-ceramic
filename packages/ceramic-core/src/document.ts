@@ -133,7 +133,7 @@ class Document extends EventEmitter {
     const record = await dispatcher.retrieveRecord(doc._genesisCid)
 
     let payload
-    if (record.payload && record.signatures) {
+    if (DoctypeUtils.isSignedRecord(record)) {
       payload = await dispatcher.retrieveRecord(record.link)
     } else {
       payload = record
@@ -218,14 +218,13 @@ class Document extends EventEmitter {
   async applyRecord (record: any, opts: DocOpts = {}, validate = true): Promise<void> {
     const cid = await this.dispatcher.storeRecord(record)
 
-    const retrievedRec = await this.dispatcher.retrieveRecord(cid)
-    const state = await this._doctypeHandler.applyRecord(retrievedRec, cid, this._context, this.state)
+    const state = await this._doctypeHandler.applyRecord(record, cid, this._context, this.state)
 
     let payload
-    if (retrievedRec.payload && retrievedRec.signatures) {
-      payload = (await this._context.ipfs.dag.get(retrievedRec.link)).value
+    if (DoctypeUtils.isSignedRecord(record)) {
+      payload = (await this._context.ipfs.dag.get(record.link)).value
     } else {
-      payload = retrievedRec
+      payload = record
     }
 
     if (payload.header) {
@@ -290,8 +289,7 @@ class Document extends EventEmitter {
   }
 
   async _fetchLog (cid: CID, log: Array<CID> = []): Promise<Array<CID>> {
-    const cidIncluded = (await this._findIndex(cid, this._doctype.state.log)) !== -1
-    if (cidIncluded) { // already processed
+    if (await this._isCidIncluded(cid, this._doctype.state.log)) { // already processed
       return []
     }
     const record = await this.dispatcher.retrieveRecord(cid)
@@ -304,7 +302,7 @@ class Document extends EventEmitter {
       return []
     }
     log.unshift(cid)
-    if ((await this._findIndex(prevCid, this._doctype.state.log)) !== -1) {
+    if (await this._isCidIncluded(prevCid, this._doctype.state.log)) {
       // we found the connection to the canonical log
       return log
     }
@@ -313,8 +311,8 @@ class Document extends EventEmitter {
 
   /**
    * Find index of the record in the array. If the record is signed, fetch the payload
-   * @param cid - cid - CID value
-   * @param log - log - Log array
+   * @param cid - CID value
+   * @param log - Log array
    * @private
    */
   async _findIndex(cid: CID, log: Array<CID>): Promise<number> {
@@ -330,6 +328,16 @@ class Document extends EventEmitter {
       }
     }
     return -1
+  }
+
+  /**
+   * Is CID included in the log. If the record is signed, fetch the payload
+   * @param cid - CID value
+   * @param log - Log array
+   * @private
+   */
+  async _isCidIncluded(cid: CID, log: Array<CID>): Promise<boolean> {
+    return (await this._findIndex(cid, log)) !== -1
   }
 
   async _applyLog (log: Array<CID>): Promise<boolean> {

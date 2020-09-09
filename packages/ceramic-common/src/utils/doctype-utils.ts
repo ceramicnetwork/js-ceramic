@@ -241,6 +241,6 @@ export class DoctypeUtils {
      * @param record - Record
      */
     static isSignedRecord(record: any): boolean {
-        return typeof record === 'object' && record.link
+        return typeof record === 'object' && record.link && record.payload && record.signatures
     }
 }
