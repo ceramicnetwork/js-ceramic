@@ -218,13 +218,14 @@ class Document extends EventEmitter {
   async applyRecord (record: any, opts: DocOpts = {}, validate = true): Promise<void> {
     const cid = await this.dispatcher.storeRecord(record)
 
-    const state = await this._doctypeHandler.applyRecord(record, cid, this._context, this.state)
+    const retrievedRec = await this.dispatcher.retrieveRecord(cid)
+    const state = await this._doctypeHandler.applyRecord(retrievedRec, cid, this._context, this.state)
 
     let payload
-    if (DoctypeUtils.isSignedRecord(record)) {
-      payload = (await this._context.ipfs.dag.get(record.link)).value
+    if (retrievedRec.payload && retrievedRec.signatures) {
+      payload = (await this._context.ipfs.dag.get(retrievedRec.link)).value
     } else {
-      payload = record
+      payload = retrievedRec
     }
 
     if (payload.header) {
