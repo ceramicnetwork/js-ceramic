@@ -132,7 +132,7 @@ export class DoctypeUtils {
 
         if (DoctypeUtils.isSignedRecordDTO(cloned)) {
             cloned.jws.link = new CID(cloned.jws.link)
-            cloned.linkedBlock = Buffer.from(base64Decode(cloned.linkedBlock).buffer)
+            cloned.linkedBlock = Buffer.from(cloned.linkedBlock, 'base64')
             return cloned
         }
 
