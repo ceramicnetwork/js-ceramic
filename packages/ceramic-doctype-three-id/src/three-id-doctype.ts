@@ -100,7 +100,7 @@ export class ThreeIdDoctype extends Doctype {
             header.schema = newSchema
         }
         const record: any = { header, data: patch, prev: doctype.head, id: doctype.state.log[0] }
-        return ThreeIdDoctype._signRecord(record, did)
+        return ThreeIdDoctype._signRecord(record, did, doctype.owners[0])
     }
 
     /**
@@ -109,7 +109,7 @@ export class ThreeIdDoctype extends Doctype {
      * @param record - Record to be signed
      * @private
      */
-    static async _signRecord(record: any, did: DID): Promise<any> {
+    static async _signRecord(record: any, did: DID, owner: string): Promise<any> {
         if (did == null || !did.authenticated) {
             throw new Error('No DID authenticated')
         }
@@ -124,7 +124,7 @@ export class ThreeIdDoctype extends Doctype {
             record.id = { '/': tmpId.toString() }
         }
 
-        const jws = await did.createJWS(JSON.parse(JSON.stringify(record)))
+        const jws = await did.createJWS(JSON.parse(JSON.stringify(record)), { did: owner })
         const [signedHeader, payload, signature] = jws.split('.') // eslint-disable-line @typescript-eslint/no-unused-vars
         if (tmpCID) {
             record.prev = tmpCID

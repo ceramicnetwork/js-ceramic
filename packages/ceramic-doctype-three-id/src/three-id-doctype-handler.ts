@@ -9,6 +9,7 @@ import {
     AnchorProof, AnchorRecord, AnchorStatus, DocState, DoctypeConstructor, DoctypeHandler, DocOpts, SignatureStatus
 } from "@ceramicnetwork/ceramic-common"
 import { Context } from "@ceramicnetwork/ceramic-common"
+import { wrapDocument } from "@ceramicnetwork/3id-did-resolver"
 
 const DOCTYPE = '3id'
 
@@ -152,7 +153,11 @@ export class ThreeIdDoctypeHandler implements DoctypeHandler<ThreeIdDoctype> {
         const decodedHeader = JSON.parse(base64url.decode(signedHeader))
         const { kid } = decodedHeader
         if (!kid.startsWith(did)) throw new Error(`Signature was made with wrong DID. Expected: ${did}, got: ${kid.split('?')[0]}`)
-        const { publicKey } = await context.resolver.resolve(kid)
+        //const { publicKey } = await context.resolver.resolve(kid)
+        // TODO - this is a temporary fix until we implement a full key-did-resolver
+        // see: https://w3c-ccg.github.io/did-method-key/
+        const keyb58 = did.split(':')[2]
+        const { publicKey } = wrapDocument({ publicKeys: { [keyb58]: keyb58 } }, did)
         try {
             await this.verifyJWS(jws, publicKey)
         } catch (e) {
