@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.5.11-alpha.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-common@0.5.10...@ceramicnetwork/ceramic-common@0.5.11-alpha.0) (2020-09-09)
+
+
+### Bug Fixes
+
+* **common:** Output time in local timezone ([#273](https://github.com/ceramicnetwork/js-ceramic/issues/273)) ([c6ca9e3](https://github.com/ceramicnetwork/js-ceramic/commit/c6ca9e38b9d4eb5481f4677d0b6064a0fc48a5bf))
+
+
+
+
+
 ## [0.5.10](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-common@0.5.9...@ceramicnetwork/ceramic-common@0.5.10) (2020-09-04)
 
 

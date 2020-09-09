@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.5.11-alpha.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-doctype-tile@0.5.10...@ceramicnetwork/ceramic-doctype-tile@0.5.11-alpha.0) (2020-09-09)
+
+
+### Bug Fixes
+
+* set DID when requesting a signature ([#283](https://github.com/ceramicnetwork/js-ceramic/issues/283)) ([416b639](https://github.com/ceramicnetwork/js-ceramic/commit/416b639eb534655ebe3bc648b2321f0432e4eb6e))
+* verify that signatures where made by correct DID ([#276](https://github.com/ceramicnetwork/js-ceramic/issues/276)) ([309a808](https://github.com/ceramicnetwork/js-ceramic/commit/309a8089191e4fbe80f705806f57d6068fdd6ba9))
+
+
+
+
+
 ## [0.5.10](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-doctype-tile@0.5.9...@ceramicnetwork/ceramic-doctype-tile@0.5.10) (2020-09-04)
 
 
