@@ -173,18 +173,18 @@ describe('TileDoctypeHandler', () => {
   it('makes genesis record correctly', async () => {
     const record1 = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { owners: [did.id] } }, { did })
 
-    expect(record1).not.toBeNull()
+    expect(record1).toBeDefined()
 
     const { jws, linkedBlock } = record1
-    expect(jws).not.toBeNull()
-    expect(linkedBlock).not.toBeNull()
+    expect(jws).toBeDefined()
+    expect(linkedBlock).toBeDefined()
 
     const payload = dagCBOR.util.deserialize(linkedBlock)
 
     const serialized = { jws: serialize(jws), linkedBlock: serialize(payload)}
 
     const expected1 = await did.createDagJWS(RECORDS.genesis)
-    expect(expected1).not.toBeNull()
+    expect(expected1).toBeDefined()
 
     const { jws: eJws, linkedBlock: eLinkedBlock } = record1
     const ePayload = dagCBOR.util.deserialize(eLinkedBlock)

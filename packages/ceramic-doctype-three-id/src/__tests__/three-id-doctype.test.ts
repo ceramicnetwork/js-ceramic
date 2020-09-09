@@ -165,11 +165,11 @@ describe('ThreeIdHandler', () => {
 
     await expect(ThreeIdDoctype._makeRecord(doctype, null, RECORDS.r1.desiredContent)).rejects.toThrow(/No DID/)
     const record = await ThreeIdDoctype._makeRecord(doctype, user, RECORDS.r1.desiredContent)
-    expect(record).not.toBeNull()
+    expect(record).toBeDefined()
 
     const { jws, linkedBlock } = record
-    expect(jws).not.toBeNull()
-    expect(linkedBlock).not.toBeNull()
+    expect(jws).toBeDefined()
+    expect(linkedBlock).toBeDefined()
 
     const payload = dagCBOR.util.deserialize(linkedBlock)
     expect({ jws: serialize(jws), payload: serialize(payload)}).toEqual(RECORDS.r1.record)
