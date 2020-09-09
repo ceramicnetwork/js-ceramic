@@ -416,7 +416,7 @@ describe('Document', () => {
       expect(dispatcher.publishHead).toHaveBeenCalledTimes(2)
       expect(dispatcher.publishHead).toHaveBeenNthCalledWith(2, doc.id, doc.head)
 
-      // wait to complete
+      // wait a bit to complete document handling
       await new Promise(resolve => setTimeout(resolve, 1000))
     })
   })
