@@ -114,10 +114,7 @@ export class ThreeIdDoctype extends Doctype {
             throw new Error('No user authenticated')
         }
 
-        const { jws, linkedBlock } = await did.createDagJWS(record)
-        return {
-            jws, linkedBlock
-        }
+        return did.createDagJWS(record)
     }
 
 }

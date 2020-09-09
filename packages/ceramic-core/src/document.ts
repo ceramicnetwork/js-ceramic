@@ -290,7 +290,7 @@ class Document extends EventEmitter {
   }
 
   async _fetchLog (cid: CID, log: Array<CID> = []): Promise<Array<CID>> {
-    const cidIncluded = await this._cidIncluded(cid, this._doctype.state.log)
+    const cidIncluded = (await this._findIndex(cid, this._doctype.state.log)) !== -1
     if (cidIncluded) { // already processed
       return []
     }
@@ -304,26 +304,19 @@ class Document extends EventEmitter {
       return []
     }
     log.unshift(cid)
-    if (await this._cidIncluded(prevCid, this._doctype.state.log)) {
+    if ((await this._findIndex(prevCid, this._doctype.state.log)) !== -1) {
       // we found the connection to the canonical log
       return log
     }
     return this._fetchLog(prevCid, log)
   }
 
-  async _cidIncluded(cid: CID, log: Array<CID>): Promise<boolean> {
-    for (const c of log) {
-      if (c.equals(cid)) {
-        return true
-      }
-      const record = await this.dispatcher.retrieveRecord(c)
-      if (record.link && record.link.equals(cid)) {
-        return true
-      }
-    }
-    return false
-  }
-
+  /**
+   * Find index of the record in the array. If the record is signed, unwrap the payload
+   * @param cid - cid - CID value
+   * @param log - log - Log array
+   * @private
+   */
   async _findIndex(cid: CID, log: Array<CID>): Promise<number> {
     // const conflictIdx = this._doctype.state.log.findIndex(x => x.equals(record.prev)) + 1
     for (let index = 0; index < log.length; index++) {
