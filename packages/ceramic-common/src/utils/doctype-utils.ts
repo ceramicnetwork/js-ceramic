@@ -1,7 +1,6 @@
 import ajv from "ajv"
 import CID from 'cids'
 import cloneDeep from "lodash.clonedeep"
-import { encode as base64Encode } from '@ethersproject/base64'
 
 import { AnchorStatus, DocState, Doctype } from "../doctype"
 
