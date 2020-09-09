@@ -100,7 +100,7 @@ export class ThreeIdDoctype extends Doctype {
             header.schema = newSchema
         }
         const record: any = { header, data: patch, prev: doctype.head, id: doctype.state.log[0] }
-        return ThreeIdDoctype._signDagJWS(record, did)
+        return ThreeIdDoctype._signDagJWS(record, did, doctype.owners[0])
     }
 
     /**
@@ -109,12 +109,11 @@ export class ThreeIdDoctype extends Doctype {
      * @param record - Record to be signed
      * @private
      */
-    static async _signDagJWS(record: any, did: DID): Promise<any> {
+    static async _signDagJWS(record: any, did: DID, owner: string): Promise<any> {
         if (did == null || !did.authenticated) {
             throw new Error('No user authenticated')
         }
-
-        return did.createDagJWS(record)
+        return did.createDagJWS(record, { did: owner })
     }
 
 }

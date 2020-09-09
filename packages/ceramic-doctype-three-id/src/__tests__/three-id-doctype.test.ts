@@ -26,7 +26,7 @@ const FAKE_CID_3 = new CID('bafybeig6xv5nwphfmvcnektpnojts55jqcuam7bmye2pb54adnr
 const FAKE_CID_4 = new CID('bafybeig6xv5nwphfmvcnektpnojts66jqcuam7bmye2pb54adnrtccjlsu')
 
 const RECORDS = {
-  genesis: { doctype: '3id', header: { owners: [ 'did:3:bafyasdfasdf' ] }, data: { publicKeys: { test: '0xabc' } } },
+  genesis: { doctype: '3id', header: { owners: [ 'did:key:zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV' ] }, data: { publicKeys: { test: '0xabc' } } },
   r1: {
     desiredContent: { publicKeys: { test: '0xabc' }, other: 'data' },
     record: {
@@ -34,7 +34,7 @@ const RECORDS = {
         "payload": "bbbb",
         "signatures": [
           {
-            "protected": "eyJraWQiOiJkaWQ6MzpiYWZ5YXNkZmFzZGY_dmVyc2lvbj0wI3NpZ25pbmciLCJhbGciOiJFUzI1NksifQ",
+            "protected": "eyJraWQiOiJkaWQ6a2V5OnpRM3Nod3NDZ0ZhbkJheDZVaWFMdTFvR3ZNN3ZodXFvVzg4VkJVaVVUQ2VIYlRlVFYiLCJhbGciOiJFUzI1NksifQ",
             "signature": "cccc"
           }
         ],
@@ -90,7 +90,7 @@ describe('ThreeIdHandler', () => {
     user = new DID()
     user.createJWS = jest.fn(async () => {
       // fake jws
-      return 'eyJraWQiOiJkaWQ6MzpiYWZ5YXNkZmFzZGY_dmVyc2lvbj0wI3NpZ25pbmciLCJhbGciOiJFUzI1NksifQ.bbbb.cccc'
+      return 'eyJraWQiOiJkaWQ6a2V5OnpRM3Nod3NDZ0ZhbkJheDZVaWFMdTFvR3ZNN3ZodXFvVzg4VkJVaVVUQ2VIYlRlVFYiLCJhbGciOiJFUzI1NksifQ.bbbb.cccc'
     })
     user._id = 'did:3:bafyasdfasdf'
 
