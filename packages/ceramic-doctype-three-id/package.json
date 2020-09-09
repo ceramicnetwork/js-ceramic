@@ -55,7 +55,8 @@
     "ipfs": "^0.50.0",
     "jest": "^25.1.0",
     "js-sha256": "^0.9.0",
-    "tmp-promise": "^2.0.2"
+    "tmp-promise": "^2.0.2",
+    "ipld-dag-cbor": "^0.17.0"
   },
   "jest": {
     "transformIgnorePatterns": [

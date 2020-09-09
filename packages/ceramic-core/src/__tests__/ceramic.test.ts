@@ -68,19 +68,12 @@ describe('Ceramic integration', () => {
   const DOCTYPE_TILE = 'tile'
   const DOCTYPE_3ID = '3id'
 
-  const safeDisconnect = async (ipfs: Ipfs, multiaddr: string) => {
-    try{
-      await ipfs.swarm.disconnect(multiaddr)
-    } catch (e) {
-      // do nothing
-    }
-  }
+  let ipfsIndexOffset = 0
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     tmpFolder = await tmp.dir({ unsafeCleanup: true })
-    await tmpFolder.cleanup()
 
-    const buildConfig = (path: string, id: number) => {
+    const buildConfig = (path: string, id: number): object => {
       return {
         repo: `${path}/ipfs${id}/`, config: {
           Addresses: { Swarm: [`/ip4/127.0.0.1/tcp/${4004 + id}`] }, Bootstrap: []
@@ -88,7 +81,7 @@ describe('Ceramic integration', () => {
       }
     }
 
-    ([ipfs1, ipfs2, ipfs3] = await Promise.all([1, 2, 3].map(id => createIPFS(buildConfig(tmpFolder.path, id)))))
+    ([ipfs1, ipfs2, ipfs3] = await Promise.all([1, 2, 3].map(id => createIPFS(buildConfig(tmpFolder.path, ipfsIndexOffset + id)))))
 
     const id1 = await ipfs1.id()
     const id2 = await ipfs2.id()
@@ -98,20 +91,13 @@ describe('Ceramic integration', () => {
     multaddr3 = id3.addresses[0].toString()
   })
 
-  afterAll(async () => {
-    await ipfs1.stop()
-    await ipfs2.stop()
-    await ipfs3.stop()
+  afterEach(async () => {
+    await ipfs1.stop(() => console.log('IPFS1 stopped'))
+    await ipfs2.stop(() => console.log('IPFS2 stopped'))
+    await ipfs3.stop(() => console.log('IPFS3 stopped'))
     await tmpFolder.cleanup()
-  })
 
-  beforeEach(async () => {
-    await safeDisconnect(ipfs1, multaddr2)
-    await safeDisconnect(ipfs1, multaddr3)
-    await safeDisconnect(ipfs2, multaddr1)
-    await safeDisconnect(ipfs2, multaddr3)
-    await safeDisconnect(ipfs3, multaddr1)
-    await safeDisconnect(ipfs3, multaddr2)
+    ipfsIndexOffset += 3
   })
 
   it('can propagate update across two connected nodes', async () => {
@@ -195,10 +181,7 @@ describe('Ceramic integration', () => {
 
     // ceramic node 2 shouldn't need to have the document open in order to forward the message
     const doctype1 = await ceramic1.createDocument<ThreeIdDoctype>(DOCTYPE_3ID, { content: { test: 321 }, metadata: { owners: [owner] } })
-    await new Promise(resolve => setTimeout(resolve, 5000))
-
     const doctype3 = await ceramic3.createDocument<ThreeIdDoctype>(DOCTYPE_3ID, { content: { test: 321 }, metadata: { owners: [owner] } }, { applyOnly: true })
-    await new Promise(resolve => setTimeout(resolve, 5000))
 
     expect(doctype3.content).toEqual(doctype1.content)
     expectEqualStates(doctype3.state, doctype1.state)

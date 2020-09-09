@@ -1,6 +1,7 @@
 import ajv from "ajv"
 import CID from 'cids'
 import cloneDeep from "lodash.clonedeep"
+
 import { AnchorStatus, DocState, Doctype } from "../doctype"
 
 /**
@@ -104,6 +105,13 @@ export class DoctypeUtils {
      */
     static serializeRecord(record: any): any {
         const cloned = cloneDeep(record)
+
+        if (DoctypeUtils.isSignedRecordDTO(cloned)) {
+            cloned.jws.link = cloned.jws.link.toString()
+            cloned.linkedBlock = Buffer.from(cloned.linkedBlock).toString('base64')
+            return cloned
+        }
+
         if (cloned.id) {
             cloned.id = cloned.id.toString()
         }
@@ -120,6 +128,13 @@ export class DoctypeUtils {
      */
     static deserializeRecord(record: any): any {
         const cloned = cloneDeep(record)
+
+        if (DoctypeUtils.isSignedRecordDTO(cloned)) {
+            cloned.jws.link = new CID(cloned.jws.link)
+            cloned.linkedBlock = Buffer.from(cloned.linkedBlock, 'base64')
+            return cloned
+        }
+
         if (cloned.id) {
             cloned.id = new CID(cloned.id)
         }
@@ -210,5 +225,21 @@ export class DoctypeUtils {
             const errorMessages = this.validator.errorsText()
             throw new Error(`Validation Error: ${errorMessages}`)
         }
+    }
+
+    /**
+     * Checks if record is signed DTO ({jws: {}, linkedBlock: {}})
+     * @param record - Record
+     */
+    static isSignedRecordDTO(record: any): boolean {
+        return typeof record === 'object' && 'jws' in record && 'linkedBlock' in record
+    }
+
+    /**
+     * Checks if record is signed
+     * @param record - Record
+     */
+    static isSignedRecord(record: any): boolean {
+        return typeof record === 'object' && 'link' in record && 'payload' in record && 'signatures' in record
     }
 }

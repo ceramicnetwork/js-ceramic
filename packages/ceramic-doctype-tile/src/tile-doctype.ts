@@ -78,7 +78,7 @@ export class TileDoctype extends Doctype {
 
         const { content } = params
         const record = { doctype: DOCTYPE, data: content, header: metadata, unique }
-        return TileDoctype._signRecord(record, context.did)
+        return TileDoctype._signDagJWS(record, context.did)
     }
 
     /**
@@ -89,7 +89,7 @@ export class TileDoctype extends Doctype {
      * @param schema - New schema ID
      * @private
      */
-    static async _makeRecord(doctype: Doctype, did: DID, newContent: any, schema?: string): Promise<Doctype> {
+    static async _makeRecord(doctype: Doctype, did: DID, newContent: any, schema?: string): Promise<any> {
         if (did == null || !did.authenticated) {
             throw new Error('No DID authenticated')
         }
@@ -105,7 +105,7 @@ export class TileDoctype extends Doctype {
 
         const patch = jsonpatch.compare(doctype.content, newContent)
         const record = { header, data: patch, prev: doctype.head, id: doctype.state.log[0] }
-        return TileDoctype._signRecord(record, did)
+        return TileDoctype._signDagJWS(record, did)
     }
 
     /**
@@ -114,30 +114,11 @@ export class TileDoctype extends Doctype {
      * @param record - Record to be signed
      * @private
      */
-    static async _signRecord(record: any, did: DID): Promise<any> {
+    static async _signDagJWS(record: any, did: DID): Promise<any> {
         if (did == null || !did.authenticated) {
-            throw new Error('No DID authenticated')
+            throw new Error('No user authenticated')
         }
-        // TODO - use the dag-jose library for properly encoded signed records
-        // convert CID to string for signing
-        const tmpCID = record.prev
-        const tmpId = record.id
-        if (tmpCID) {
-            record.prev = { '/': tmpCID.toString() }
-        }
-        if (tmpId) {
-            record.id = { '/': tmpId.toString() }
-        }
-
-        const jws = await did.createJWS(JSON.parse(JSON.stringify(record)))
-        const [signedHeader, payload, signature] = jws.split('.') // eslint-disable-line @typescript-eslint/no-unused-vars
-        if (tmpCID) {
-            record.prev = tmpCID
-        }
-        if (tmpId) {
-            record.id = tmpId
-        }
-        return { ...record, signedHeader, signature }
+        return did.createDagJWS(record)
     }
 
 }

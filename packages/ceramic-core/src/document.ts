@@ -14,7 +14,6 @@ import {
   DocOpts,
   Context,
   DoctypeUtils,
-  DocParams,
   CeramicApi,
   DocMetadata
 } from "@ceramicnetwork/ceramic-common"
@@ -132,7 +131,15 @@ class Document extends EventEmitter {
     }
 
     const record = await dispatcher.retrieveRecord(doc._genesisCid)
-    doc._doctypeHandler = findHandler(record)
+
+    let payload
+    if (DoctypeUtils.isSignedRecord(record)) {
+      payload = await dispatcher.retrieveRecord(record.link)
+    } else {
+      payload = record
+    }
+
+    doc._doctypeHandler = findHandler(payload)
 
     doc._doctype = new doc._doctypeHandler.doctype(null, context)
 
@@ -210,11 +217,20 @@ class Document extends EventEmitter {
 
   async applyRecord (record: any, opts: DocOpts = {}, validate = true): Promise<void> {
     const cid = await this.dispatcher.storeRecord(record)
-    const state = await this._doctypeHandler.applyRecord(record, cid, this._context, this.state)
 
-    if (record.header) {
+    const retrievedRec = await this.dispatcher.retrieveRecord(cid)
+    const state = await this._doctypeHandler.applyRecord(retrievedRec, cid, this._context, this.state)
+
+    let payload
+    if (retrievedRec.payload && retrievedRec.signatures) {
+      payload = (await this._context.ipfs.dag.get(retrievedRec.link)).value
+    } else {
+      payload = retrievedRec
+    }
+
+    if (payload.header) {
       // override properties
-      Object.assign(state.metadata, record.header)
+      Object.assign(state.metadata, payload.header)
     }
 
     if (validate) {
@@ -274,35 +290,77 @@ class Document extends EventEmitter {
   }
 
   async _fetchLog (cid: CID, log: Array<CID> = []): Promise<Array<CID>> {
-    if (this._doctype.state.log.some(x => x.equals(cid))) { // already processed
+    if (await this._isCidIncluded(cid, this._doctype.state.log)) { // already processed
       return []
     }
     const record = await this.dispatcher.retrieveRecord(cid)
-    const prevCid: CID = record.prev
+    let payload = record
+    if (DoctypeUtils.isSignedRecord(record)) {
+      payload = await this.dispatcher.retrieveRecord(record.link)
+    }
+    const prevCid: CID = payload.prev
     if (!prevCid) { // this is a fake log
       return []
     }
     log.unshift(cid)
-    if (this._doctype.state.log.some(x => x.equals(prevCid))) {
+    if (await this._isCidIncluded(prevCid, this._doctype.state.log)) {
       // we found the connection to the canonical log
       return log
     }
     return this._fetchLog(prevCid, log)
   }
 
+  /**
+   * Find index of the record in the array. If the record is signed, fetch the payload
+   * @param cid - CID value
+   * @param log - Log array
+   * @private
+   */
+  async _findIndex(cid: CID, log: Array<CID>): Promise<number> {
+    // const conflictIdx = this._doctype.state.log.findIndex(x => x.equals(record.prev)) + 1
+    for (let index = 0; index < log.length; index++) {
+      const c = log[index]
+      if (c.equals(cid)) {
+        return index
+      }
+      const record = await this.dispatcher.retrieveRecord(c)
+      if (DoctypeUtils.isSignedRecord(record) && record.link.equals(cid)) {
+        return index
+      }
+    }
+    return -1
+  }
+
+  /**
+   * Is CID included in the log. If the record is signed, fetch the payload
+   * @param cid - CID value
+   * @param log - Log array
+   * @private
+   */
+  async _isCidIncluded(cid: CID, log: Array<CID>): Promise<boolean> {
+    return (await this._findIndex(cid, log)) !== -1
+  }
+
   async _applyLog (log: Array<CID>): Promise<boolean> {
     let modified = false
-    if (log[log.length - 1].equals(this.head)) return // log already applied
+    if (log[log.length - 1].equals(this.head)) {
+      // log already applied
+      return
+    }
     const cid = log[0]
     const record = await this.dispatcher.retrieveRecord(cid)
-    if (record.prev.equals(this.head)) {
+    let payload = record
+    if (DoctypeUtils.isSignedRecord(record)) {
+      payload = await this.dispatcher.retrieveRecord(record.link)
+    }
+    if (payload.prev.equals(this.head)) {
       // the new log starts where the previous one ended
       this._doctype.state = await this._applyLogToState(log, cloneDeep(this._doctype.state))
       modified = true
     } else {
       // we have a conflict since prev is in the log of the
       // local state, but isn't the head
-      const conflictIdx = this._doctype.state.log.findIndex(x => x.equals(record.prev)) + 1
+      const conflictIdx = await this._findIndex(payload.prev, this._doctype.state.log) + 1
       const canonicalLog = this._doctype.state.log.slice() // copy log
       const localLog = canonicalLog.splice(conflictIdx)
       // Compute state up till conflictIdx
@@ -331,9 +389,15 @@ class Document extends EventEmitter {
       const cid = entry.value[1]
       const record = await this.dispatcher.retrieveRecord(cid)
       // TODO - should catch potential thrown error here
-      if (!record.prev) {
+
+      let payload = record
+      if (DoctypeUtils.isSignedRecord(record)) {
+        payload = await this.dispatcher.retrieveRecord(record.link)
+      }
+
+      if (!payload.prev) {
         state = await this._doctypeHandler.applyRecord(record, cid, this._context)
-      } else if (record.proof) {
+      } else if (payload.proof) {
         // it's an anchor record
         await this._verifyAnchorRecord(record)
         state = await this._doctypeHandler.applyRecord(record, cid, this._context, state)
