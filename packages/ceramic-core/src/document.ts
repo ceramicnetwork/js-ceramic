@@ -295,11 +295,11 @@ class Document extends EventEmitter {
       return []
     }
     const record = await this.dispatcher.retrieveRecord(cid)
-    let unwrapped = record
-    if (record.link) {
-      unwrapped = await this.dispatcher.retrieveRecord(record.link)
+    let payload = record
+    if (DoctypeUtils.isSignedRecord(record)) {
+      payload = await this.dispatcher.retrieveRecord(record.link)
     }
-    const prevCid: CID = unwrapped.prev
+    const prevCid: CID = payload.prev
     if (!prevCid) { // this is a fake log
       return []
     }
@@ -312,7 +312,7 @@ class Document extends EventEmitter {
   }
 
   /**
-   * Find index of the record in the array. If the record is signed, unwrap the payload
+   * Find index of the record in the array. If the record is signed, fetch the payload
    * @param cid - cid - CID value
    * @param log - log - Log array
    * @private
@@ -325,7 +325,7 @@ class Document extends EventEmitter {
         return index
       }
       const record = await this.dispatcher.retrieveRecord(c)
-      if (record.link && record.link.equals(cid)) {
+      if (DoctypeUtils.isSignedRecord(record) && record.link.equals(cid)) {
         return index
       }
     }
@@ -340,18 +340,18 @@ class Document extends EventEmitter {
     }
     const cid = log[0]
     const record = await this.dispatcher.retrieveRecord(cid)
-    let unwrapped = record
-    if (record.link) {
-      unwrapped = await this.dispatcher.retrieveRecord(record.link)
+    let payload = record
+    if (DoctypeUtils.isSignedRecord(record)) {
+      payload = await this.dispatcher.retrieveRecord(record.link)
     }
-    if (unwrapped.prev.equals(this.head)) {
+    if (payload.prev.equals(this.head)) {
       // the new log starts where the previous one ended
       this._doctype.state = await this._applyLogToState(log, cloneDeep(this._doctype.state))
       modified = true
     } else {
       // we have a conflict since prev is in the log of the
       // local state, but isn't the head
-      const conflictIdx = await this._findIndex(unwrapped.prev, this._doctype.state.log) + 1
+      const conflictIdx = await this._findIndex(payload.prev, this._doctype.state.log) + 1
       const canonicalLog = this._doctype.state.log.slice() // copy log
       const localLog = canonicalLog.splice(conflictIdx)
       // Compute state up till conflictIdx
@@ -381,14 +381,14 @@ class Document extends EventEmitter {
       const record = await this.dispatcher.retrieveRecord(cid)
       // TODO - should catch potential thrown error here
 
-      let unwrapped = record
-      if (record.link) {
-        unwrapped = await this.dispatcher.retrieveRecord(record.link)
+      let payload = record
+      if (DoctypeUtils.isSignedRecord(record)) {
+        payload = await this.dispatcher.retrieveRecord(record.link)
       }
 
-      if (!unwrapped.prev) {
+      if (!payload.prev) {
         state = await this._doctypeHandler.applyRecord(record, cid, this._context)
-      } else if (unwrapped.proof) {
+      } else if (payload.proof) {
         // it's an anchor record
         await this._verifyAnchorRecord(record)
         state = await this._doctypeHandler.applyRecord(record, cid, this._context, state)

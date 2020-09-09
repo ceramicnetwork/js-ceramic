@@ -37,7 +37,7 @@ export default class Dispatcher extends EventEmitter {
   }
 
   async storeRecord (data: any): Promise<CID> {
-    if (DoctypeUtils.isRecordSigned(data)) {
+    if (DoctypeUtils.isSignedRecordDTO(data)) {
       const { jws, linkedBlock } = data
       // put the JWS into the ipfs dag
       const cid = await this._ipfs.dag.put(jws, { format: 'dag-jose', hashAlg: 'sha2-256' })

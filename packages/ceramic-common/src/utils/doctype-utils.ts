@@ -107,7 +107,7 @@ export class DoctypeUtils {
     static serializeRecord(record: any): any {
         const cloned = cloneDeep(record)
 
-        if (DoctypeUtils.isRecordSigned(cloned)) {
+        if (DoctypeUtils.isSignedRecordDTO(cloned)) {
             cloned.jws.link = cloned.jws.link.toString()
             cloned.linkedBlock = base64Encode(cloned.linkedBlock)
             return cloned
@@ -130,7 +130,7 @@ export class DoctypeUtils {
     static deserializeRecord(record: any): any {
         const cloned = cloneDeep(record)
 
-        if (DoctypeUtils.isRecordSigned(cloned)) {
+        if (DoctypeUtils.isSignedRecordDTO(cloned)) {
             cloned.jws.link = new CID(cloned.jws.link)
             cloned.linkedBlock = Buffer.from(base64Decode(cloned.linkedBlock).buffer)
             return cloned
@@ -229,10 +229,18 @@ export class DoctypeUtils {
     }
 
     /**
+     * Checks if record is signed DTO ({jws: {}, linkedBlock: {}})
+     * @param record - Record
+     */
+    static isSignedRecordDTO(record: any): boolean {
+        return typeof record === 'object' && ('jws' in record && 'linkedBlock' in record)
+    }
+
+    /**
      * Checks if record is signed
      * @param record - Record
      */
-    static isRecordSigned(record: any): boolean {
-        return typeof record === 'object' && ('jws' in record && 'linkedBlock' in record)
+    static isSignedRecord(record: any): boolean {
+        return typeof record === 'object' && record.link
     }
 }
