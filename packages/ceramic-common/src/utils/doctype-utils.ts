@@ -233,7 +233,7 @@ export class DoctypeUtils {
      * @param record - Record
      */
     static isSignedRecordDTO(record: any): boolean {
-        return typeof record === 'object' && ('jws' in record && 'linkedBlock' in record)
+        return typeof record === 'object' && 'jws' in record && 'linkedBlock' in record
     }
 
     /**
@@ -241,6 +241,6 @@ export class DoctypeUtils {
      * @param record - Record
      */
     static isSignedRecord(record: any): boolean {
-        return typeof record === 'object' && record.link && record.payload && record.signatures
+        return typeof record === 'object' && 'link' in record && 'payload' in record && 'signatures' in record
     }
 }
