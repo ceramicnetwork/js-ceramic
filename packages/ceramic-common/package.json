@@ -31,10 +31,7 @@
     "cids": "^1.0.0",
     "dag-jose": "^0.1.1",
     "did-resolver": "^2.1.1",
-    "ipfs": "^0.50.0",
-    "ipfs-core-utils": "^0.4.0",
-    "lodash.clonedeep": "^4.5.0",
-    "multiformats": "^3.0.3"
+    "lodash.clonedeep": "^4.5.0"
   },
   "devDependencies": {
     "@babel/core": "^7.9.0",
