@@ -85,7 +85,7 @@ class CeramicClient implements CeramicApi {
       this._docmap[normalizedId] = doc
     }
     this._docmap[normalizedId].doctypeHandler = this.findDoctypeHandler(this._docmap[normalizedId].state.doctype)
-    return doc as unknown as T
+    return this._docmap[normalizedId] as unknown as T
   }
 
   async loadDocument<T extends Doctype>(id: string): Promise<T> {
