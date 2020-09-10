@@ -7,7 +7,7 @@
 ### Installation
 To install the ceramic cli globally you can run:
 ```
-$ npm install -g ceramic-cli
+$ npm install -g @ceramicnetwork/ceramic-cli
 ```
 
 ### Usage
