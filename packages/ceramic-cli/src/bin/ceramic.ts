@@ -1,17 +1,6 @@
 import program from 'commander'
 
-import CeramicDaemon from '../ceramic-daemon'
-import { CeramicCliUtils } from "../ceramic-cli-utils"
-
-import Ipfs from "ipfs"
-
-import dagJose from 'dag-jose'
-// @ts-ignore
-import multiformats from 'multiformats/basics'
-// @ts-ignore
-import legacy from 'multiformats/legacy'
-
-const DEFAULT_PINNING_STORE_PATH = ".pinning.store"
+import { CeramicCliUtils, DEFAULT_PINNING_STORE_PATH } from "../ceramic-cli-utils"
 
 program
     .command('daemon')
@@ -23,32 +12,7 @@ program
     .option('--pinning-store-path <url>', `The directory path used for pinning service. Defaults to WORKING_DIR/${DEFAULT_PINNING_STORE_PATH}`)
     .description('Start the daemon')
     .action(async ({ ipfsApi, ethereumRpc, anchorServiceApi, stateStorePath, validateDocs, pinning }) => {
-        if (stateStorePath == null) {
-            stateStorePath = DEFAULT_PINNING_STORE_PATH
-        }
-
-        const config = {
-            ethereumRpcUrl: ethereumRpc,
-            anchorServiceUrl: anchorServiceApi,
-            stateStorePath: stateStorePath,
-            validateDocs,
-            pinning: pinning
-        }
-
-        if (ipfsApi) {
-            Object.assign(config, {
-                ipfsHost: ipfsApi,
-            })
-        } else {
-            multiformats.multicodec.add(dagJose)
-            const format = legacy(multiformats, dagJose.name)
-
-            Object.assign(config, {
-                ipfs: await Ipfs.create({ ipld: { formats: [format] } })
-            })
-        }
-
-        await CeramicDaemon.create(config)
+        await CeramicCliUtils.createDaemon(ipfsApi, ethereumRpc, anchorServiceApi, stateStorePath, validateDocs, pinning)
     })
 
 program
@@ -152,5 +116,30 @@ pin
     .action(async (docId) => {
         await CeramicCliUtils.pinLs(docId)
     })
+
+const config = program.command('config')
+config.description('CLI Ceramic configuration. Configurable parameters: seed, ceramicHost ')
+
+config
+    .command('show')
+    .description('Show CLI Ceramic configuration')
+    .action(async () => {
+        await CeramicCliUtils.showConfig()
+    });
+
+config
+    .command('set <variable> <value>')
+    .description('Set variable value')
+    .action(async (variable, value) => {
+        await CeramicCliUtils.setConfig(variable, value)
+    })
+
+config
+    .command('unset <variable>')
+    .description('Unset configuration variable')
+    .action(async (variable) => {
+        await CeramicCliUtils.unsetConfig(variable)
+    })
+
 
 program.parse(process.argv)
