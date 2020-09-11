@@ -49,7 +49,6 @@ const createCeramic = async (ipfs: Ipfs): Promise<Ceramic> => {
     getPermission: async (): Promise<Array<string>> => [],
     seed,
     ceramic,
-    useThreeIdProv: true,
   })
 
   return ceramic
@@ -164,7 +163,6 @@ describe('Ceramic integration', () => {
       getPermission: async (): Promise<Array<string>> => [],
       seed,
       ceramic: ceramic1,
-      useThreeIdProv: true,
     })
 
     const ceramic2 = await Ceramic.create(ipfs2, {

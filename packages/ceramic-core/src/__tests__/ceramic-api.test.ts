@@ -60,7 +60,6 @@ describe('Ceramic API', () => {
       getPermission: async (): Promise<Array<string>> => [],
       seed,
       ceramic: ceramic,
-      useThreeIdProv: true,
     }
     await IdentityWallet.create(config)
     return ceramic
