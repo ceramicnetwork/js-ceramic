@@ -9,7 +9,9 @@ import { TileDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-tile"
 import { EventEmitter } from "events"
 
 import dagJose from 'dag-jose'
+// @ts-ignore
 import basicsImport from 'multiformats/cjs/src/basics-import.js'
+// @ts-ignore
 import legacy from 'multiformats/cjs/src/legacy.js'
 
 const seed = '0x5872d6e0ae7347b72c9216db218ebbb9d9d0ae7ab818ead3557e8e78bf944184'

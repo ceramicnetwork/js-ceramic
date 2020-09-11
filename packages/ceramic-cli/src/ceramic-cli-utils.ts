@@ -1,25 +1,81 @@
-import CeramicClient from "@ceramicnetwork/ceramic-http-client"
-import { CeramicApi, DoctypeUtils } from "@ceramicnetwork/ceramic-common"
-import path from "path"
-import crypto from "crypto"
 import os from "os"
-import IdentityWallet from "identity-wallet"
+import path from "path"
+import { randomBytes } from '@stablelib/random'
 
 const fs = require('fs').promises
 
+import IdentityWallet from "identity-wallet"
+import CeramicClient from "@ceramicnetwork/ceramic-http-client"
+import { CeramicApi, DoctypeUtils } from "@ceramicnetwork/ceramic-common"
+
+import CeramicDaemon from "./ceramic-daemon"
+
+import Ipfs from "ipfs"
+
+import dagJose from 'dag-jose'
+// @ts-ignore
+import multiformats from 'multiformats/basics'
+// @ts-ignore
+import legacy from 'multiformats/legacy'
+
 const PREFIX_REGEX = /^ceramic:\/\/|^\/ceramic\//
 
+const DEFAULT_CLI_CONFIG_FILE = 'config.json'
+export const DEFAULT_PINNING_STORE_PATH = ".pinning.store"
 const DEFAULT_CLI_CONFIG_PATH = path.join(os.homedir(), '.ceramic')
-const DEFAILT_CLI_CONFIG_FILE = 'config.json'
 
+/**
+ * CLI configuration
+ */
 interface CliConfig {
     seed?: string;
+    ceramicHost?: string;
+
+    [index: string]: any; // allow arbitrary properties
 }
 
 /**
  * Ceramic CLI utility functions
  */
 export class CeramicCliUtils {
+
+    /**
+     * Create CeramicDaemon instance
+     * @param ipfsApi - IPFS api
+     * @param ethereumRpc - Ethereum RPC URL
+     * @param anchorServiceApi - Anchor service API URL
+     * @param pinningStateStorePath - State store path
+     * @param validateDocs - Validate docs according to schemas or not
+     * @param pinning - Pinning endpoint
+     */
+    static async createDaemon(ipfsApi: string, ethereumRpc: string, anchorServiceApi: string, pinningStateStorePath: string, validateDocs: boolean, pinning: string[]): Promise<CeramicDaemon> {
+        if (pinningStateStorePath == null) {
+            pinningStateStorePath = DEFAULT_PINNING_STORE_PATH
+        }
+
+        const config = {
+            ethereumRpcUrl: ethereumRpc,
+            anchorServiceUrl: anchorServiceApi,
+            stateStorePath: pinningStateStorePath,
+            validateDocs,
+            pinning: pinning
+        }
+
+        if (ipfsApi) {
+            Object.assign(config, {
+                ipfsHost: ipfsApi,
+            })
+        } else {
+            multiformats.multicodec.add(dagJose)
+            const format = legacy(multiformats, dagJose.name)
+
+            Object.assign(config, {
+                ipfs: await Ipfs.create({ ipld: { formats: [format] } })
+            })
+        }
+
+        return CeramicDaemon.create(config)
+    }
 
     /**
      * Create document
@@ -36,8 +92,7 @@ export class CeramicCliUtils {
             const parsedContent = CeramicCliUtils._parseContent(content)
 
             const params = {
-                content: parsedContent,
-                metadata: {
+                content: parsedContent, metadata: {
                     owners: parsedOwners, isUnique, schema: schemaDocId
                 }
             }
@@ -285,7 +340,18 @@ export class CeramicCliUtils {
     static async _runWithCeramic(fn: (ceramic: CeramicClient) => Promise<void>): Promise<void> {
         const cliConfig = await CeramicCliUtils._loadCliConfig()
 
-        const ceramic = new CeramicClient()
+        if (!cliConfig.seed) {
+            cliConfig.seed = CeramicCliUtils._generateSeed()
+            await CeramicCliUtils._saveCliConfig(cliConfig)
+        }
+
+        let ceramic
+        const { ceramicHost } = cliConfig
+        if (ceramicHost !== undefined) {
+            ceramic = new CeramicClient(ceramicHost)
+        } else {
+            ceramic = new CeramicClient()
+        }
 
         await IdentityWallet.create({
             getPermission: async (): Promise<Array<string>> => [], seed: cliConfig.seed, ceramic, useThreeIdProv: true,
@@ -302,31 +368,85 @@ export class CeramicCliUtils {
     }
 
     /**
-     * Load/create CLI config
+     * Set Ceramic Daemon host
+     */
+    static async showConfig(): Promise<void> {
+        const cliConfig = await this._loadCliConfig()
+
+        console.log(JSON.stringify(cliConfig, null, 2))
+    }
+
+    /**
+     * Set Ceramic Daemon host
+     * @param variable - CLI config variable
+     * @param value - CLI config variable value
+     */
+    static async setConfig(variable: string, value: any): Promise<void> {
+        let cliConfig = await this._loadCliConfig()
+
+        if (cliConfig == null) {
+            cliConfig = {}
+        }
+
+        Object.assign(cliConfig, {
+            [variable]: value
+        })
+        await this._saveCliConfig(cliConfig)
+
+        console.log(`Ceramic CLI configuration ${variable} set to ${value}`)
+        console.log(JSON.stringify(cliConfig))
+    }
+
+    /**
+     * Set Ceramic Daemon host
+     * @param variable - Name of the configuration variable
+     */
+    static async unsetConfig(variable: string): Promise<void> {
+        const cliConfig = await this._loadCliConfig()
+
+        delete cliConfig[variable]
+        await this._saveCliConfig(cliConfig)
+
+        console.log(`Ceramic CLI configuration ${variable} unset`)
+        console.log(JSON.stringify(cliConfig, null, 2))
+    }
+
+    /**
+     * Load CLI configuration file
+     * @private
      */
     static async _loadCliConfig(): Promise<CliConfig> {
-        let exists
-        const fullCliConfigPath = path.join(DEFAULT_CLI_CONFIG_PATH, DEFAILT_CLI_CONFIG_FILE)
+        const fullCliConfigPath = path.join(DEFAULT_CLI_CONFIG_PATH, DEFAULT_CLI_CONFIG_FILE)
         try {
             await fs.access(fullCliConfigPath)
-            exists = true
+            return JSON.parse(await fs.readFile(fullCliConfigPath, { encoding: 'utf8' }))
         } catch (e) {
-            exists = false
+            // TODO handle invalid configuration
         }
+        return await this._saveCliConfig({})
+    }
 
-        if (exists) {
-            const configJson = await fs.readFile(fullCliConfigPath, { encoding: 'utf8' })
-            return JSON.parse(configJson)
-        }
+    /**
+     * Save CLI configuration file
+     * @param cliConfig - CLI configuration
+     * @private
+     */
+    static async _saveCliConfig(cliConfig: CliConfig): Promise<CliConfig> {
+        await fs.mkdir(DEFAULT_CLI_CONFIG_PATH, { recursive: true }) // create dirs if there are no
+        const fullCliConfigPath = path.join(DEFAULT_CLI_CONFIG_PATH, DEFAULT_CLI_CONFIG_FILE)
 
-        await fs.mkdir(DEFAULT_CLI_CONFIG_PATH, { recursive: true })
-        const config: CliConfig = {
-            seed: '0x' + Buffer.from(crypto.randomBytes(32)).toString('hex') // create new seed
-        }
+        await fs.writeFile(fullCliConfigPath, JSON.stringify(cliConfig, null, 2))
+        return cliConfig
+    }
 
-        await fs.writeFile(fullCliConfigPath, JSON.stringify(config, null, 2))
+    /**
+     * Generate new seed
+     * @private
+     */
+    static _generateSeed(): string {
+        const seed = '0x' + Buffer.from(randomBytes(32)).toString('hex')
         console.log('Identity wallet seed generated')
-        return config
+        return seed
     }
 
     /**
@@ -335,7 +455,7 @@ export class CeramicCliUtils {
      * @private
      */
     static _parseContent(content: string): any {
-        return content == null? null : JSON.parse(content)
+        return content == null ? null : JSON.parse(content)
     }
 
     /**
@@ -345,7 +465,7 @@ export class CeramicCliUtils {
      */
     static _parseOwners(owners: string): string[] {
         if (owners == null) {
-            return null
+            return [ ]
         }
         return owners.includes(',') ? owners.split(',') : [owners]
     }
