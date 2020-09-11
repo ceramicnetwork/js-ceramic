@@ -354,7 +354,7 @@ export class CeramicCliUtils {
         }
 
         await IdentityWallet.create({
-            getPermission: async (): Promise<Array<string>> => [], seed: cliConfig.seed, ceramic, useThreeIdProv: true,
+            getPermission: async (): Promise<Array<string>> => [], seed: cliConfig.seed, ceramic,
         })
 
         try {
