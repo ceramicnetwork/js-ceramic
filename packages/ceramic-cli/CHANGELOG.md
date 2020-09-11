@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.6.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-cli@0.5.11...@ceramicnetwork/ceramic-cli@0.6.0) (2020-09-11)
+
+
+### Features
+
+* bump IW deps ([#295](https://github.com/ceramicnetwork/js-ceramic/issues/295)) ([1276874](https://github.com/ceramicnetwork/js-ceramic/commit/1276874be36c578c41193180d02d597cbdd4302e))
+* **cli:** add config option to CLI, fix seed generation ([#293](https://github.com/ceramicnetwork/js-ceramic/issues/293)) ([4543d4e](https://github.com/ceramicnetwork/js-ceramic/commit/4543d4e298663eacc981c3d07e64bf0334f84076))
+
+
+
+
+
 # [0.6.0-alpha.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-cli@0.5.11...@ceramicnetwork/ceramic-cli@0.6.0-alpha.0) (2020-09-11)
 
 
