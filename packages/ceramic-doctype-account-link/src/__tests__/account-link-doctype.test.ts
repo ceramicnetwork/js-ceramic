@@ -125,12 +125,6 @@ describe('AccountLinkHandler', () => {
     await expect(AccountLinkDoctype.makeGenesis({ content, metadata: { owners } })).rejects.toThrow(/According to CAIP-10/i)
   })
 
-  it('throws an error if genesis record has owner not on mainnet', async () => {
-    const content: any = undefined
-    const owners = RECORDS.genesis.header.owners.map(address => address.split('@')[0] = '@eip155:3')
-    await expect(AccountLinkDoctype.makeGenesis({ content, metadata: { owners } })).rejects.toThrow(/Only Ethereum mainnet supported/i)
-  })
-
   it('applies genesis record correctly', async () => {
     const state = await handler.applyRecord(RECORDS.genesis, FAKE_CID_1, context)
     expect(state).toMatchSnapshot()
