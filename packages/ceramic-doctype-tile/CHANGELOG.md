@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.6.0-alpha.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-doctype-tile@0.5.11...@ceramicnetwork/ceramic-doctype-tile@0.6.0-alpha.0) (2020-09-11)
+
+
+### Features
+
+* bump IW deps ([#295](https://github.com/ceramicnetwork/js-ceramic/issues/295)) ([1276874](https://github.com/ceramicnetwork/js-ceramic/commit/1276874be36c578c41193180d02d597cbdd4302e))
+
+
+
+
+
 ## [0.5.11](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-doctype-tile@0.5.11-alpha.0...@ceramicnetwork/ceramic-doctype-tile@0.5.11) (2020-09-09)
 
 **Note:** Version bump only for package @ceramicnetwork/ceramic-doctype-tile

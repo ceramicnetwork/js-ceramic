@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.5.12-alpha.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-http-client@0.5.11...@ceramicnetwork/ceramic-http-client@0.5.12-alpha.0) (2020-09-11)
+
+
+### Bug Fixes
+
+* **http-client:** return correct doc instance from createDocument ([#287](https://github.com/ceramicnetwork/js-ceramic/issues/287)) ([64ca4f5](https://github.com/ceramicnetwork/js-ceramic/commit/64ca4f55100cd259f51002254aa6a4f528c60c63))
+
+
+
+
+
 ## [0.5.11](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-http-client@0.5.11-alpha.0...@ceramicnetwork/ceramic-http-client@0.5.11) (2020-09-09)
 
 **Note:** Version bump only for package @ceramicnetwork/ceramic-http-client
