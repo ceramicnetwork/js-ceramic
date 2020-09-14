@@ -43,7 +43,7 @@
     "did-resolver": "^2.1.1",
     "dids": "^0.5.0",
     "fast-json-patch": "^2.2.1",
-    "ipfs-http-client": "^46.1.0",
+    "ipfs-http-client": "^47.0.1",
     "level-ts": "^2.0.5",
     "lodash.clonedeep": "^4.5.0",
     "multiformats": "^3.0.3",
