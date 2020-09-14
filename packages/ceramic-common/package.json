@@ -29,7 +29,7 @@
     "@types/json-schema": "^7.0.5",
     "ajv": "^6.12.3",
     "cids": "^1.0.0",
-    "dag-jose": "^0.1.1",
+    "dag-jose": "^0.2.0",
     "did-resolver": "^2.1.1",
     "lodash.clonedeep": "^4.5.0"
   },
