@@ -19,7 +19,7 @@ const colors: Record<string, any> = {
  * Default logger options
  */
 const defaultOpts: Options = {
-    colors: true,
+    colors: false,
     level: 'info',
     format: 'text',
     stacktrace: {
@@ -46,7 +46,7 @@ interface Options {
 /**
  * Global Logger factory
  */
-export class LoggerFactory {
+class LoggerFactory {
 
     private options: Options & {}
 
@@ -67,7 +67,7 @@ export class LoggerFactory {
      * Gets logger by name
      * @param name
      */
-    static getLogger(name: string): Logger {
+    getLogger(name: string): Logger {
         return log.getLogger(name)
     }
 
@@ -76,15 +76,16 @@ export class LoggerFactory {
      * @private
      */
     _applyPrefix(): void {
+        const { options } = this
+        prefix.reg(log)
         prefix.apply(log, {
             format(level, name, timestamp) {
-                return LoggerFactory._toText(this.options, timestamp, level, name)
+                return LoggerFactory._toText(options, timestamp, level, name)
             },
             timestampFormatter(date) {
                 return date.toISOString()
             }
         })
-        prefix.reg(log)
     }
 
     /**
@@ -99,7 +100,7 @@ export class LoggerFactory {
             const rawMethod = originalFactory(methodName, logLevel, loggerName);
             return (...args: any[]): any => {
                 if (options.format !== 'json') {
-                    rawMethod(args)
+                    rawMethod(...args)
                 } else {
                     const timestamp = new Date().toISOString()
 
@@ -124,14 +125,17 @@ export class LoggerFactory {
                     }
 
                     const log = JSON.stringify({
-                        message: LoggerFactory._interpolate(args), level: {
-                            label: methodName, value: logLevel,
-                        }, logger: loggerName || '', timestamp, stacktrace,
+                        message: LoggerFactory._interpolate(args),
+                        level: {
+                            label: methodName,
+                            value: logLevel,
+                        },
+                        logger: loggerName || '',
+                        timestamp,
+                        stacktrace,
                     });
-
                     rawMethod(log)
                 }
-
             }
         };
         log.setLevel(log.getLevel());
@@ -164,6 +168,7 @@ export class LoggerFactory {
 
     /**
      * Interpolate parameters
+     * https://github.com/kutuluk/loglevel-plugin-remote/blob/master/src/remote.js
      * @private
      */
     static _interpolate(array: any[]): string {
@@ -233,4 +238,11 @@ export class LoggerFactory {
         }
         return '';
     }
+}
+
+const INSTANCE = new LoggerFactory()
+Object.freeze(INSTANCE)
+export {
+    INSTANCE as DefaultLoggerFactory,
+    LoggerFactory // should be exposed for customization
 }
