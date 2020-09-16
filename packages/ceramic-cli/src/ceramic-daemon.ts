@@ -3,10 +3,9 @@ import ipfsClient from 'ipfs-http-client'
 import express, { Request, Response, NextFunction } from 'express'
 import Ceramic from '@ceramicnetwork/ceramic-core'
 import type { CeramicConfig } from "@ceramicnetwork/ceramic-core";
-import { DoctypeUtils } from "@ceramicnetwork/ceramic-common"
+import { DoctypeUtils, DefaultLoggerFactory, Logger } from "@ceramicnetwork/ceramic-common"
 
 const DEFAULT_PORT = 7007
-const DEBUG = true
 const toApiPath = (ending: string): string => '/api/v0' + ending
 
 const DEFAULT_ANCHOR_SERVICE_URL = "https://cas.3box.io:8081/api/v0/requests"
@@ -23,22 +22,21 @@ interface CreateOpts {
   validateDocs?: boolean;
   pinning?: string[];
   gateway?: boolean;
-}
-
-function logErrors (err: Error, req: Request, res: Response, next: NextFunction): void {
-  console.error(err)
-  next(err)
-}
-
-function sendErrorResponse(err: Error, req: Request, res: Response, next: NextFunction): void {
-  res.json({ error: err.message })
-  next(err)
+  debug: boolean;
 }
 
 class CeramicDaemon {
   private server: any
+  private logger: Logger
+  private readonly debug: boolean
 
   constructor (public ceramic: Ceramic, opts: CreateOpts) {
+    this.debug = opts.debug
+    this.logger = DefaultLoggerFactory.getLogger(CeramicDaemon.name)
+    if (this.debug) {
+      this.logger.setLevel('debug')
+    }
+
     const app = express()
     app.use(express.json())
     app.use((req: Request, res: Response, next: NextFunction) => {
@@ -48,10 +46,68 @@ class CeramicDaemon {
 
     this.registerAPIPaths(app, opts.gateway)
 
-    if (DEBUG) {
-      app.use(logErrors)
+    if (this.debug) {
+      app.use((err: Error, req: Request, res: Response, next: NextFunction): void => {
+        this.logger.error(err)
+        next(err)
+      })
+      app.use((req: Request, res: Response, next: NextFunction) => {
+        const requestStart = Date.now();
+        const { rawHeaders, httpVersion, method, socket, url } = req;
+        const { remoteAddress, remoteFamily } = socket;
+
+        this.logger.debug(
+            JSON.stringify({
+              timestamp: Date.now(),
+              rawHeaders,
+              httpVersion,
+              method,
+              remoteAddress,
+              remoteFamily,
+              url
+            })
+        );
+
+        let errorMessage: string = null;
+        let body: string | any = [];
+        req.on("data", chunk => {
+          body.push(chunk)
+        })
+        req.on("end", () => {
+          body = Buffer.concat(body)
+          body = body.toString()
+        });
+        req.on("error", error => {
+          errorMessage = error.message
+        });
+
+        res.on("finish", () => {
+          const { rawHeaders, httpVersion, method, socket, url } = req
+          const { remoteAddress, remoteFamily } = socket
+
+          this.logger.debug(
+              JSON.stringify({
+                timestamp: Date.now(),
+                processingTime: Date.now() - requestStart,
+                rawHeaders,
+                body,
+                errorMessage,
+                httpVersion,
+                method,
+                remoteAddress,
+                remoteFamily,
+                url
+              })
+          )
+        })
+
+        next()
+      })
     }
-    app.use(sendErrorResponse)
+    app.use((err: Error, req: Request, res: Response, next: NextFunction): void => {
+      res.json({ error: err.message })
+      next(err)
+    })
     const port = opts.port || DEFAULT_PORT
     this.server = app.listen(port, () => {
       console.log('Ceramic API running on port ' + port)

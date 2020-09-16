@@ -4,7 +4,7 @@ import CID from 'cids'
 import cloneDeep from 'lodash.clonedeep'
 
 import type Document from "./document"
-import { DoctypeUtils } from "@ceramicnetwork/ceramic-common"
+import { DoctypeUtils, DefaultLoggerFactory, Logger } from "@ceramicnetwork/ceramic-common"
 
 export enum MsgType {
   UPDATE,
@@ -18,12 +18,22 @@ export default class Dispatcher extends EventEmitter {
   private _peerId: string
   private readonly _documents: Record<string, Document>
 
+  private logger: Logger
   private _isRunning = true
 
   constructor (public _ipfs: Ipfs.Ipfs) {
     super()
     this._documents = {}
-    this._ipfs.pubsub.subscribe(TOPIC, this.handleMessage.bind(this)) // this returns promise, we should await
+    this.logger = DefaultLoggerFactory.getLogger(Dispatcher.name)
+  }
+
+  /**
+   * Initialized Dispatcher
+   */
+  async init(): Promise<void> {
+    this._peerId = this._peerId || (await this._ipfs.id()).id
+    await this._ipfs.pubsub.subscribe(TOPIC, this.handleMessage.bind(this))
+    this.logger.info(`${this._peerId} successfully subscribed to pubsub topic ${TOPIC}`)
   }
 
   async register (document: Document): Promise<void> {
@@ -62,22 +72,25 @@ export default class Dispatcher extends EventEmitter {
 
   async publishHead (id: string, head: CID): Promise<void> {
     if (!this._isRunning) {
-      console.error('Dispatcher has been closed')
+      this.logger.error('Dispatcher has been closed')
       return
     }
 
-    await this._ipfs.pubsub.publish(TOPIC, JSON.stringify({ typ: MsgType.UPDATE, id, cid: head.toString() }))
+    const payload = JSON.stringify({ typ: MsgType.UPDATE, id, cid: head.toString() })
+    await this._ipfs.pubsub.publish(TOPIC, payload)
+    this.logger.info(`${this._peerId} successfully published to pubsub topic ${TOPIC}. Payload: ${payload}`)
   }
 
   async handleMessage (message: any): Promise<void> {
     if (!this._isRunning) {
-      console.error('Dispatcher has been closed')
+      this.logger.error('Dispatcher has been closed')
       return
     }
 
-    this._peerId = this._peerId || (await this._ipfs.id()).id
     if (message.from !== this._peerId) {
       const { typ, id, cid } = JSON.parse(message.data)
+      this.logger.info(`${this._peerId} received message from ${message.from}. Payload: ${JSON.stringify({typ, id, cid})}`)
+
       if (this._documents[id]) {
         switch (typ) {
           case MsgType.UPDATE:

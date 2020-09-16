@@ -49,8 +49,9 @@ export class CeramicCliUtils {
      * @param stateStorePath - State store path
      * @param gateway - read only endpoints available. It is disabled by default
      * @param port - port daemon is availabe. Default is 7007
+     * @param debug - Enable debug logging level
      */
-    static async createDaemon(ipfsApi: string, ethereumRpc: string, anchorServiceApi: string, validateDocs: boolean, pinning: string[], stateStorePath: string, gateway: boolean, port: number): Promise<CeramicDaemon> {
+    static async createDaemon(ipfsApi: string, ethereumRpc: string, anchorServiceApi: string, validateDocs: boolean, pinning: string[], stateStorePath: string, gateway: boolean, port: number, debug: boolean): Promise<CeramicDaemon> {
         if (stateStorePath == null) {
             stateStorePath = DEFAULT_PINNING_STORE_PATH
         }
@@ -62,7 +63,8 @@ export class CeramicCliUtils {
             validateDocs,
             pinning: pinning,
             gateway,
-            port
+            port,
+            debug
         }
 
         if (ipfsApi) {
