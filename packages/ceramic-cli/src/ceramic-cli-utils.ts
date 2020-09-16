@@ -44,21 +44,25 @@ export class CeramicCliUtils {
      * @param ipfsApi - IPFS api
      * @param ethereumRpc - Ethereum RPC URL
      * @param anchorServiceApi - Anchor service API URL
-     * @param pinningStateStorePath - State store path
      * @param validateDocs - Validate docs according to schemas or not
      * @param pinning - Pinning endpoint
+     * @param stateStorePath - State store path
+     * @param gateway - read only endpoints available. It is disabled by default
+     * @param port - port daemon is availabe. Default is 7007
      */
-    static async createDaemon(ipfsApi: string, ethereumRpc: string, anchorServiceApi: string, pinningStateStorePath: string, validateDocs: boolean, pinning: string[]): Promise<CeramicDaemon> {
-        if (pinningStateStorePath == null) {
-            pinningStateStorePath = DEFAULT_PINNING_STORE_PATH
+    static async createDaemon(ipfsApi: string, ethereumRpc: string, anchorServiceApi: string, validateDocs: boolean, pinning: string[], stateStorePath: string, gateway: boolean, port: number): Promise<CeramicDaemon> {
+        if (stateStorePath == null) {
+            stateStorePath = DEFAULT_PINNING_STORE_PATH
         }
 
         const config = {
             ethereumRpcUrl: ethereumRpc,
             anchorServiceUrl: anchorServiceApi,
-            stateStorePath: pinningStateStorePath,
+            stateStorePath: stateStorePath,
             validateDocs,
-            pinning: pinning
+            pinning: pinning,
+            gateway,
+            port
         }
 
         if (ipfsApi) {
