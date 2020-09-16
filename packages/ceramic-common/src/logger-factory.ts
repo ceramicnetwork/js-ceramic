@@ -102,7 +102,8 @@ class LoggerFactory {
                     return
                 }
                 const timestamp = new Date().toISOString()
-                const needStack = !!LoggerFactory._stacktrace() && options.stacktrace.levels.some(level => level === methodName)
+                const hasStacktrace = !!LoggerFactory._stacktrace()
+                const needStack = hasStacktrace && options.stacktrace.levels.some(level => level === methodName)
 
                 let stacktrace = needStack ? LoggerFactory._stacktrace() : '';
                 if (stacktrace) {
