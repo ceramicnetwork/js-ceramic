@@ -3,7 +3,7 @@ import ipfsClient from 'ipfs-http-client'
 import express, { Request, Response, NextFunction } from 'express'
 import Ceramic from '@ceramicnetwork/ceramic-core'
 import type { CeramicConfig } from "@ceramicnetwork/ceramic-core";
-import { DoctypeUtils } from "@ceramicnetwork/ceramic-common"
+import { DoctypeUtils, DefaultLoggerFactory, Logger } from "@ceramicnetwork/ceramic-common"
 
 const DEFAULT_PORT = 7007
 const DEBUG = true
@@ -36,14 +36,71 @@ function sendErrorResponse(err: Error, req: Request, res: Response, next: NextFu
 
 class CeramicDaemon {
   private server: any
+  private logger: Logger
 
   constructor (public ceramic: Ceramic, opts: CreateOpts) {
+    this.logger = DefaultLoggerFactory.getLogger(CeramicDaemon.name)
+
     const app = express()
     app.use(express.json())
     app.use((req: Request, res: Response, next: NextFunction) => {
       res.header('Access-Control-Allow-Origin', '*')
       next()
     })
+    app.use((req: Request, res: Response, next: NextFunction) => {
+      const requestStart = Date.now();
+      const { rawHeaders, httpVersion, method, socket, url } = req;
+      const { remoteAddress, remoteFamily } = socket;
+
+      this.logger.info(
+          JSON.stringify({
+            timestamp: Date.now(),
+            rawHeaders,
+            httpVersion,
+            method,
+            remoteAddress,
+            remoteFamily,
+            url
+          })
+      );
+
+      let errorMessage: string = null;
+      let body: string | any = [];
+      req.on("data", chunk => {
+        body.push(chunk)
+      })
+      req.on("end", () => {
+        body = Buffer.concat(body)
+        body = body.toString()
+      });
+      req.on("error", error => {
+        errorMessage = error.message
+      });
+
+      res.on("finish", () => {
+        const { rawHeaders, httpVersion, method, socket, url } = req
+        const { remoteAddress, remoteFamily } = socket
+
+        this.logger.info(
+            JSON.stringify({
+              timestamp: Date.now(),
+              processingTime: Date.now() - requestStart,
+              rawHeaders,
+              body,
+              errorMessage,
+              httpVersion,
+              method,
+              remoteAddress,
+              remoteFamily,
+              url
+            })
+        )
+      })
+
+      next()
+    })
+
+
     app.post(toApiPath('/create'), this.createDocFromGenesis.bind(this))
     app.get(toApiPath('/versions/ceramic/:cid'), this.versions.bind(this))
     app.get(toApiPath('/show/ceramic/:cid'), this.show.bind(this))
