@@ -101,12 +101,10 @@ class LoggerFactory {
                     rawMethod(...args)
                 } else {
                     const timestamp = new Date().toISOString()
-
-                    const hasStacktraceSupport = !!LoggerFactory._stacktrace();
-                    const needStack = hasStacktraceSupport && options.stacktrace.levels.some(level => level === methodName)
+                    const needStack = !!LoggerFactory._stacktrace()
+                        && options.stacktrace.levels.some(level => level === methodName)
 
                     let stacktrace = needStack ? LoggerFactory._stacktrace() : '';
-
                     if (stacktrace) {
                         const lines = stacktrace.split('\n');
                         lines.splice(0, options.stacktrace.excess + 3);
@@ -122,17 +120,15 @@ class LoggerFactory {
                         }
                     }
 
-                    const log = JSON.stringify({
+                    rawMethod(JSON.stringify({
                         message: LoggerFactory._interpolate(args),
                         level: {
-                            label: methodName,
-                            value: logLevel,
+                            label: methodName, value: logLevel,
                         },
                         logger: loggerName || '',
                         timestamp,
                         stacktrace,
-                    });
-                    rawMethod(log)
+                    }))
                 }
             }
         };
@@ -224,14 +220,12 @@ class LoggerFactory {
         if (!Object.getOwnPropertyDescriptor || !Object.getPrototypeOf) {
             return Object.prototype.toString.call(obj).slice(8, -1);
         }
-
         // https://github.com/nodejs/node/blob/master/lib/internal/util.js
         while (obj) {
             const descriptor = Object.getOwnPropertyDescriptor(obj, 'constructor');
             if (descriptor !== undefined && typeof descriptor.value === 'function' && descriptor.value.name !== '') {
                 return descriptor.value.name;
             }
-
             obj = Object.getPrototypeOf(obj);
         }
         return '';
@@ -259,10 +253,10 @@ class LoggerFactory {
     }
 }
 
-const INSTANCE = new LoggerFactory()
-Object.freeze(INSTANCE)
+const _instance = new LoggerFactory()
+Object.freeze(_instance) // freeze API
 export {
-    INSTANCE as DefaultLoggerFactory,
+    _instance as DefaultLoggerFactory,
     LoggerFactory, // should be exposed for customization
     Logger,
 }
