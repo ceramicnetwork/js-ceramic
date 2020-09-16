@@ -22,6 +22,7 @@ interface CreateOpts {
 
   validateDocs?: boolean;
   pinning?: string[];
+  gateway?: boolean;
 }
 
 function logErrors (err: Error, req: Request, res: Response, next: NextFunction): void {
@@ -47,6 +48,7 @@ class CeramicDaemon {
       res.header('Access-Control-Allow-Origin', '*')
       next()
     })
+
     app.use((req: Request, res: Response, next: NextFunction) => {
       const requestStart = Date.now();
       const { rawHeaders, httpVersion, method, socket, url } = req;
@@ -100,16 +102,8 @@ class CeramicDaemon {
       next()
     })
 
+    this.registerAPIPaths(app, opts.gateway)
 
-    app.post(toApiPath('/create'), this.createDocFromGenesis.bind(this))
-    app.get(toApiPath('/versions/ceramic/:cid'), this.versions.bind(this))
-    app.get(toApiPath('/show/ceramic/:cid'), this.show.bind(this))
-    app.get(toApiPath('/state/ceramic/:cid'), this.state.bind(this))
-    app.post(toApiPath('/apply'), this.applyRecord.bind(this))
-    app.get(toApiPath('/pin/add/ceramic/:cid'), this.pinDocument.bind(this))
-    app.get(toApiPath('/pin/rm/ceramic/:cid'), this.unpinDocument.bind(this))
-    app.get(toApiPath('/pin/ls/ceramic/:cid'), this.listPinned.bind(this))
-    app.get(toApiPath('/pin/ls'), this.listPinned.bind(this))
     if (DEBUG) {
       app.use(logErrors)
     }
@@ -146,6 +140,25 @@ class CeramicDaemon {
     return new CeramicDaemon(ceramic, opts)
   }
 
+  registerAPIPaths (app: any, gateway: boolean): void {
+    app.get(toApiPath('/versions/ceramic/:cid'), this.versions.bind(this))
+    app.get(toApiPath('/show/ceramic/:cid'), this.show.bind(this))
+    app.get(toApiPath('/state/ceramic/:cid'), this.state.bind(this))
+    app.get(toApiPath('/pin/ls/ceramic/:cid'), this.listPinned.bind(this))
+    app.get(toApiPath('/pin/ls'), this.listPinned.bind(this))
+    app.post(toApiPath('/create'), this.createDocFromGenesis.bind(this))
+
+    if (!gateway) {
+      app.post(toApiPath('/apply'), this.applyRecord.bind(this))
+      app.get(toApiPath('/pin/add/ceramic/:cid'), this.pinDocument.bind(this))
+      app.get(toApiPath('/pin/rm/ceramic/:cid'), this.unpinDocument.bind(this))
+    } else {
+      app.post(toApiPath('/apply'),  this.notSupported.bind(this))
+      app.get(toApiPath('/pin/add/ceramic/:cid'),  this.notSupported.bind(this))
+      app.get(toApiPath('/pin/rm/ceramic/:cid'),  this.notSupported.bind(this))
+    }
+  }
+
   async createDocFromGenesis (req: Request, res: Response, next: NextFunction): Promise<void> {
     const { genesis, docOpts } = req.body
     try {
@@ -154,6 +167,11 @@ class CeramicDaemon {
     } catch (e) {
       return next(e)
     }
+    next()
+  }
+
+  async notSupported (req: Request, res: Response, next: NextFunction): Promise<void> {
+    res.status(400).json({ status: 'error', message: 'Method not supported by read only Ceramic Gateway' })
     next()
   }
 
