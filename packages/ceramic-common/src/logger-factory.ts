@@ -2,8 +2,6 @@ import chalk from 'chalk'
 import log, { Logger, LogLevelDesc, MethodFactory } from 'loglevel'
 import prefix from 'loglevel-plugin-prefix'
 
-require("json-circular-stringify") // override default JSON.stringify
-
 /**
  * Logger colors
  */
@@ -111,8 +109,8 @@ class LoggerFactory {
 
                     if (stacktrace) {
                         const lines = stacktrace.split('\n');
-                        lines.splice(0, 3);
-                        const depth = 3;
+                        lines.splice(0, options.stacktrace.excess + 3);
+                        const { depth } = options.stacktrace;
                         if (depth && lines.length !== depth + 1) {
                             const shrink = lines.splice(0, depth);
                             stacktrace = shrink.join('\n');
@@ -189,10 +187,10 @@ class LoggerFactory {
                             a += +arg;
                             break;
                         case 'j':
-                            a = JSON.stringify(arg);
+                            a = LoggerFactory._safeStringify(arg);
                             break;
                         case 'o': {
-                            let obj = JSON.stringify(arg);
+                            let obj = LoggerFactory._safeStringify(arg);
                             if (obj[0] !== '{' && obj[0] !== '[') {
                                 obj = `<${obj}>`;
                             }
@@ -238,11 +236,33 @@ class LoggerFactory {
         }
         return '';
     }
+
+    /**
+     * Tries to JSON stringify
+     * @param obj - Input
+     * @param indent - Ident value
+     * @private
+     */
+    static _safeStringify(obj: any, indent = 0): string {
+        let cache: any[] = [];
+        const retVal = JSON.stringify(
+            obj, (key, value) =>
+                typeof value === "object" && value !== null
+                    ? cache.includes(value)
+                    ? undefined // Duplicate reference found, discard key
+                    : cache.push(value) && value // Store value in our collection
+                    : value,
+            indent
+        );
+        cache = null
+        return retVal
+    }
 }
 
 const INSTANCE = new LoggerFactory()
 Object.freeze(INSTANCE)
 export {
     INSTANCE as DefaultLoggerFactory,
-    LoggerFactory // should be exposed for customization
+    LoggerFactory, // should be exposed for customization
+    Logger,
 }

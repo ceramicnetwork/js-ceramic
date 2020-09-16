@@ -29,6 +29,7 @@ describe('Dispatcher', () => {
 
   it('is constructed correctly', async () => {
     const disp = new Dispatcher(ipfs)
+    await disp.init()
     expect(disp._documents).toEqual({})
     expect(ipfs.pubsub.subscribe).toHaveBeenCalledWith(TOPIC, expect.anything())
   })
@@ -36,6 +37,7 @@ describe('Dispatcher', () => {
   it('makes registration correctly', async () => {
     const id = '/ceramic/bagjqcgzaday6dzalvmy5ady2m5a5legq5zrbsnlxfc2bfxej532ds7htpova'
     const disp = new Dispatcher(ipfs)
+    await disp.init()
     const doc = new Document(id, disp, null)
     await disp.register(doc)
     expect(ipfs.pubsub.publish).toHaveBeenCalledWith(TOPIC, JSON.stringify({ typ: MsgType.REQUEST, id }))
@@ -43,11 +45,13 @@ describe('Dispatcher', () => {
 
   it('store record correctly', async () => {
     const disp = new Dispatcher(ipfs)
+    await disp.init()
     expect(await disp.storeRecord('data')).toEqual(FAKE_CID)
   })
 
   it('retrieves record correctly', async () => {
     const disp = new Dispatcher(ipfs)
+    await disp.init()
     expect(await disp.retrieveRecord(FAKE_CID)).toEqual('data')
   })
 
@@ -55,6 +59,7 @@ describe('Dispatcher', () => {
     const id = '/ceramic/3id/234'
     const head = 'bafy9h3f08erf'
     const disp = new Dispatcher(ipfs)
+    await disp.init()
     disp.publishHead(id, head)
     expect(ipfs.pubsub.publish).toHaveBeenCalledWith(TOPIC, JSON.stringify({ typ: MsgType.UPDATE, id, cid: head }))
   })
@@ -62,6 +67,7 @@ describe('Dispatcher', () => {
   it('handle message correctly', async () => {
     const id = '/ceramic/bagjqcgzaday6dzalvmy5ady2m5a5legq5zrbsnlxfc2bfxej532ds7htpova'
     const disp = new Dispatcher(ipfs)
+    await disp.init()
     const doc = new Document(id, disp, null)
     await disp.register(doc)
 
@@ -78,6 +84,7 @@ describe('Dispatcher', () => {
 
   it('closes correctly', async () => {
     const disp = new Dispatcher(ipfs)
+    await disp.init()
     await disp.close()
     expect(ipfs.pubsub.unsubscribe).toHaveBeenCalledTimes(1)
     expect(ipfs.pubsub.unsubscribe).toHaveBeenCalledWith(TOPIC)

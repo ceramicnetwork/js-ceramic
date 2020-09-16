@@ -19,8 +19,7 @@
   ],
   "scripts": {
     "test": "./node_modules/.bin/jest --coverage",
-    "build": "../../node_modules/.bin/tsc -p tsconfig.json; npm run copy-dts",
-    "copy-dts": "cp \"src/@types/loglevel.d.ts\" lib",
+    "build": "../../node_modules/.bin/tsc -p tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
     "lint": "./node_modules/.bin/eslint ./src --ext .js,.jsx,.ts,.tsx",
@@ -32,7 +31,6 @@
     "cids": "^1.0.0",
     "dag-jose": "^0.1.1",
     "did-resolver": "^2.1.1",
-    "json-circular-stringify": "^1.0.1",
     "lodash.clonedeep": "^4.5.0",
     "loglevel": "^1.7.0",
     "loglevel-plugin-prefix": "^0.8.4"

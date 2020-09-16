@@ -111,6 +111,7 @@ class Ceramic implements CeramicApi {
    */
   static async create(ipfs: Ipfs.Ipfs, config: CeramicConfig = {}): Promise<Ceramic> {
     const dispatcher = new Dispatcher(ipfs)
+    await dispatcher.init()
 
     const anchorServiceFactory = new AnchorServiceFactory(dispatcher, config)
     const anchorService = anchorServiceFactory.get();
