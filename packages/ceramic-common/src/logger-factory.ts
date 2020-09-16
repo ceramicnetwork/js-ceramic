@@ -99,37 +99,36 @@ class LoggerFactory {
             return (...args: any[]): any => {
                 if (options.format !== 'json') {
                     rawMethod(...args)
-                } else {
-                    const timestamp = new Date().toISOString()
-                    const needStack = !!LoggerFactory._stacktrace()
-                        && options.stacktrace.levels.some(level => level === methodName)
-
-                    let stacktrace = needStack ? LoggerFactory._stacktrace() : '';
-                    if (stacktrace) {
-                        const lines = stacktrace.split('\n');
-                        lines.splice(0, options.stacktrace.excess + 3);
-                        const { depth } = options.stacktrace;
-                        if (depth && lines.length !== depth + 1) {
-                            const shrink = lines.splice(0, depth);
-                            stacktrace = shrink.join('\n');
-                            if (lines.length) {
-                                stacktrace += `\n    and ${lines.length} more`;
-                            }
-                        } else {
-                            stacktrace = lines.join('\n');
-                        }
-                    }
-
-                    rawMethod(JSON.stringify({
-                        message: LoggerFactory._interpolate(args),
-                        level: {
-                            label: methodName, value: logLevel,
-                        },
-                        logger: loggerName || '',
-                        timestamp,
-                        stacktrace,
-                    }))
+                    return
                 }
+                const timestamp = new Date().toISOString()
+                const needStack = !!LoggerFactory._stacktrace() && options.stacktrace.levels.some(level => level === methodName)
+
+                let stacktrace = needStack ? LoggerFactory._stacktrace() : '';
+                if (stacktrace) {
+                    const lines = stacktrace.split('\n');
+                    lines.splice(0, options.stacktrace.excess + 3);
+                    const { depth } = options.stacktrace;
+                    if (depth && lines.length !== depth + 1) {
+                        const shrink = lines.splice(0, depth);
+                        stacktrace = shrink.join('\n');
+                        if (lines.length) {
+                            stacktrace += `\n    and ${lines.length} more`;
+                        }
+                    } else {
+                        stacktrace = lines.join('\n');
+                    }
+                }
+
+                rawMethod(JSON.stringify({
+                    message: LoggerFactory._interpolate(args),
+                    level: {
+                        label: methodName, value: logLevel,
+                    },
+                    logger: loggerName || '',
+                    timestamp,
+                    stacktrace,
+                }))
             }
         };
         log.setLevel(log.getLevel());
