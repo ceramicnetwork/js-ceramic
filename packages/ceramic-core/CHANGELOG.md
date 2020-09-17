@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.7.0-alpha.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-core@0.6.1...@ceramicnetwork/ceramic-core@0.7.0-alpha.0) (2020-09-17)
+
+
+### Features
+
+* **cli:** disable CLI logs ([#311](https://github.com/ceramicnetwork/js-ceramic/issues/311)) ([2a2494d](https://github.com/ceramicnetwork/js-ceramic/commit/2a2494d24bb58853b61d2f6444f62bbb7f81e1d7))
+
+
+
+
+
 ## [0.6.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-core@0.6.1-alpha.0...@ceramicnetwork/ceramic-core@0.6.1) (2020-09-16)
 
 **Note:** Version bump only for package @ceramicnetwork/ceramic-core
