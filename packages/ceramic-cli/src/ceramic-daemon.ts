@@ -118,7 +118,9 @@ class CeramicDaemon {
   static async create (opts: CreateOpts): Promise<CeramicDaemon> {
     const ipfs = opts.ipfs || ipfsClient(opts.ipfsHost)
 
-    const ceramicConfig: CeramicConfig = {}; // get initially from file and override with opts
+    const ceramicConfig: CeramicConfig = {
+      logLevel: 'silent',
+    }
     if (opts.anchorServiceUrl) {
       ceramicConfig.ethereumRpcUrl = opts.ethereumRpcUrl
       ceramicConfig.anchorServiceUrl = opts.anchorServiceUrl
