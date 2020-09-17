@@ -78,7 +78,7 @@ export class TileDoctype extends Doctype {
 
         const { content } = params
         const record = { doctype: DOCTYPE, data: content, header: metadata, unique }
-        return TileDoctype._signDagJWS(record, context.did, owners[0])
+        return TileDoctype._signDagJWS(record, context.did, metadata.owners[0])
     }
 
     /**
