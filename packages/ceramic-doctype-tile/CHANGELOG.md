@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.6.2-alpha.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-doctype-tile@0.6.2-alpha.0...@ceramicnetwork/ceramic-doctype-tile@0.6.2-alpha.1) (2020-09-17)
+
+
+### Bug Fixes
+
+* **tile:** fix owners undefined ([#312](https://github.com/ceramicnetwork/js-ceramic/issues/312)) ([77bf331](https://github.com/ceramicnetwork/js-ceramic/commit/77bf331f16382b6551d6c6b4a69e8d6bd0d514f3))
+
+
+
+
+
 ## [0.6.2-alpha.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-doctype-tile@0.6.1...@ceramicnetwork/ceramic-doctype-tile@0.6.2-alpha.0) (2020-09-17)
 
 **Note:** Version bump only for package @ceramicnetwork/ceramic-doctype-tile
