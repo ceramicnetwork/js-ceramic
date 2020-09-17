@@ -62,6 +62,14 @@ class LoggerFactory {
     }
 
     /**
+     * Set root log level
+     * @param level
+     */
+    setRootLogLevel(level: string): void {
+        log.setLevel(level as LogLevelDesc)
+    }
+
+    /**
      * Gets logger by name
      * @param name
      */
