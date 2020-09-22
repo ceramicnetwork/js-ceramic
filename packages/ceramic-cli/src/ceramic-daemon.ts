@@ -4,6 +4,8 @@ import express, { Request, Response, NextFunction } from 'express'
 import Ceramic from '@ceramicnetwork/ceramic-core'
 import type { CeramicConfig } from "@ceramicnetwork/ceramic-core";
 import { DoctypeUtils, DefaultLoggerFactory, Logger } from "@ceramicnetwork/ceramic-common"
+// @ts-ignore
+import cors from 'cors'
 
 const DEFAULT_PORT = 7007
 const toApiPath = (ending: string): string => '/api/v0' + ending
@@ -39,10 +41,7 @@ class CeramicDaemon {
 
     const app = express()
     app.use(express.json())
-    app.use((req: Request, res: Response, next: NextFunction) => {
-      res.header('Access-Control-Allow-Origin', '*')
-      next()
-    })
+    app.use(cors())
 
     this.registerAPIPaths(app, opts.gateway)
 
