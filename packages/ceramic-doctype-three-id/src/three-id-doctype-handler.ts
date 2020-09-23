@@ -151,11 +151,8 @@ export class ThreeIdDoctypeHandler implements DoctypeHandler<ThreeIdDoctype> {
         if (!kid.startsWith(did)) {
             throw new Error(`Signature was made with wrong DID. Expected: ${did}, got: ${kid.split('?')[0]}`)
         }
-        //const { publicKey } = await context.resolver.resolve(kid)
-        // TODO - this is a temporary fix until we implement a full key-did-resolver
-        // see: https://w3c-ccg.github.io/did-method-key/
-        const keyb58 = did.split(':')[2]
-        const { publicKey } = wrapDocument({ publicKeys: { [keyb58]: keyb58 } }, did)
+
+        const { publicKey } = await context.resolver.resolve(did)
         const jws = [_protected, payload, signature].join('.')
         try {
             await this.verifyJWS(jws, publicKey)

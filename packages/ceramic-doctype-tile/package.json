@@ -27,6 +27,7 @@
   "dependencies": {
     "3id-blockchain-utils": "^1.0.0",
     "@ceramicnetwork/ceramic-common": "^0.7.0",
+    "@ceramicnetwork/key-did-resolver": "^0.0.1",
     "@ethersproject/base64": "^5.0.2",
     "@ethersproject/random": "^5.0.2",
     "@types/lodash.clonedeep": "^4.5.6",
