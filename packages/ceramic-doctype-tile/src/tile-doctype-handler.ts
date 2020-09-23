@@ -148,8 +148,8 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
             throw new Error(`Signature was made with wrong DID. Expected: ${did}, got: ${kid.split('?')[0]}`)
         }
 
+        const { publicKey } = await context.resolver.resolve(did)
         const jws = [_protected, payload, signature].join('.')
-        const { publicKey } = await context.resolver.resolve(kid)
         try {
             await this.verifyJWS(jws, publicKey)
         } catch (e) {

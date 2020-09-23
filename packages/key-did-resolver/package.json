@@ -27,11 +27,9 @@
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
-    "@trust/keyto": "^1.0.1",
-    "bs58": "^4.0.1",
-    "canonicalize": "^1.0.3",
-    "secp256k1": "^4.0.2",
-    "base64url": "^3.0.1"
+    "multibase": "^3.0.1",
+    "uint8arrays": "^1.1.0",
+    "varint": "^5.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.9.0",
@@ -40,6 +38,8 @@
     "@types/bs58": "^4.0.1",
     "@types/events": "^3.0.0",
     "@types/node": "^13.13.15",
+    "@types/secp256k1": "^4.0.1",
+    "@types/varint": "^5.0.0",
     "@typescript-eslint/eslint-plugin": "^2.19.0",
     "@typescript-eslint/parser": "^2.19.0",
     "babel-jest": "^25.1.0",
@@ -47,8 +47,8 @@
     "eslint": "^6.8.0",
     "eslint-plugin-jest": "^23.8.2",
     "jest": "^25.1.0",
-    "@types/secp256k1": "^4.0.1",
-    "tmp-promise": "^2.0.2"
+    "tmp-promise": "^2.0.2",
+    "@types/multibase": "^0.6.0"
   },
   "jest": {
     "transformIgnorePatterns": [
