@@ -1,0 +1,43 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Secp256k1 driver successfully creates Secp256k1KeyPair instance from fingerprint 1`] = `
+Secp256k1KeyPair {
+  "controller": "did:key:zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV",
+  "id": "#zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV",
+  "privateKeyBase58": undefined,
+  "publicKeyBase58": "2Bv3fQSJiGJsbUUfUdiPsXXZGG5cXqaSeYnieuJcUFAbm",
+  "type": "EcdsaSecp256k1VerificationKey2019",
+}
+`;
+
+exports[`Secp256k1 driver successfully resolves the document from did 1`] = `
+Object {
+  "@context": Array [
+    "https://www.w3.org/ns/did/v1",
+    Object {
+      "@base": "did:key:zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV",
+    },
+  ],
+  "assertionMethod": Array [
+    "#zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV",
+  ],
+  "authentication": Array [
+    "#zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV",
+  ],
+  "capabilityDelegation": Array [
+    "#zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV",
+  ],
+  "capabilityInvocation": Array [
+    "#zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV",
+  ],
+  "id": "did:key:zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV",
+  "publicKey": Array [
+    Object {
+      "controller": "did:key:zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV",
+      "id": "#zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV",
+      "publicKeyBase58": "2Bv3fQSJiGJsbUUfUdiPsXXZGG5cXqaSeYnieuJcUFAbm",
+      "type": "EcdsaSecp256k1VerificationKey2019",
+    },
+  ],
+}
+`;

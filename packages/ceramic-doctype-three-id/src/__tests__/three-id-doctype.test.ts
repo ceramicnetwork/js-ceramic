@@ -4,6 +4,7 @@ import { Resolver } from "did-resolver"
 
 import dagCBOR from "ipld-dag-cbor"
 
+import KeyDidResolver from '@ceramicnetwork/key-did-resolver'
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 
 import { DID } from 'dids'
@@ -127,10 +128,11 @@ describe('ThreeIdHandler', () => {
       }
     })
 
+    const keyDidResolver = KeyDidResolver.getResolver()
     context = {
       ipfs,
       resolver: new Resolver({
-        ...threeIdResolver
+        ...threeIdResolver, ...keyDidResolver
       }),
       anchorService: null,
     }
