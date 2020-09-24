@@ -61,18 +61,10 @@ export class TileDoctype extends Doctype {
      */
     static async makeGenesis(params: DocParams, context?: Context, opts: DocOpts = {}): Promise<Record<string, any>> {
         const metadata = params.metadata? params.metadata : { owners: [] }
-        const is3id = metadata.tags?.includes('3id')
-        if (is3id) {
-            if (metadata.owners.length === 0) {
-                throw new Error('The owner of the 3ID needs to be specified')
-            }
-        }
 
-        if (!is3id) {
-            // check for DID and authentication
-            if (!context.did || !context.did.authenticated) {
-                throw new Error('No DID authenticated')
-            }
+        // check for DID and authentication
+        if (!context.did || !context.did.authenticated) {
+            throw new Error('No DID authenticated')
         }
 
         let unique: string
@@ -87,11 +79,7 @@ export class TileDoctype extends Doctype {
 
         const { content } = params
         const record = { doctype: DOCTYPE, data: content, header: metadata, unique }
-        if (!is3id) {
-            return TileDoctype._signDagJWS(record, context.did, metadata.owners[0])
-        }
-        // don't sign 3id
-        return record
+        return content ? TileDoctype._signDagJWS(record, context.did, metadata.owners[0]) : record
     }
 
     /**

@@ -12,6 +12,12 @@ const toApiPath = (ending: string): string => '/api/v0' + ending
 
 const DEFAULT_ANCHOR_SERVICE_URL = "https://cas.3box.io:8081/api/v0/requests"
 
+import dagJose from 'dag-jose'
+// @ts-ignore
+import multiformats from 'multiformats/basics'
+// @ts-ignore
+import legacy from 'multiformats/legacy'
+
 interface CreateOpts {
   ipfsHost?: string;
   ipfs?: Ipfs.Ipfs;
@@ -115,7 +121,14 @@ class CeramicDaemon {
   }
 
   static async create (opts: CreateOpts): Promise<CeramicDaemon> {
-    const ipfs = opts.ipfs || ipfsClient(opts.ipfsHost)
+    multiformats.multicodec.add(dagJose)
+    const format = legacy(multiformats, dagJose.name)
+    const ipfs = opts.ipfs || ipfsClient({
+      url: opts.ipfsHost,
+      ipld: {
+        formats: [format]
+      }
+    })
 
     const ceramicConfig: CeramicConfig = {
       logLevel: 'silent',

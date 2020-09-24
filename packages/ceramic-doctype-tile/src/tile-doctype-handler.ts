@@ -75,6 +75,8 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
         if (isSigned) {
             payload = (await context.ipfs.dag.get(record.link)).value
             await this._verifySignature(record, context, payload.header.owners[0])
+        } else if (payload.data !== null) {
+            throw Error('Genesis record with contents should always be signed')
         }
         return {
             doctype: DOCTYPE,
