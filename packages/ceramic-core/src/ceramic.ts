@@ -19,7 +19,6 @@ import { Resolver } from "did-resolver"
 
 import { DID } from 'dids'
 import { TileDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-tile"
-import { ThreeIdDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-three-id"
 import { AccountLinkDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-account-link"
 import { PinStoreFactory } from "./store/pin-store-factory";
 import { PinStore } from "./store/pin-store";
@@ -54,7 +53,6 @@ class Ceramic implements CeramicApi {
   constructor (public dispatcher: Dispatcher, public pinStore: PinStore, context: Context, private _validateDocs: boolean = true) {
     this._docmap = {}
     this._doctypeHandlers = {
-      '3id': new ThreeIdDoctypeHandler(),
       'tile': new TileDoctypeHandler(),
       'account-link': new AccountLinkDoctypeHandler()
     }
@@ -116,6 +114,8 @@ class Ceramic implements CeramicApi {
   static async create(ipfs: Ipfs.Ipfs, config: CeramicConfig = {}): Promise<Ceramic> {
     if (config.logLevel) {
       DefaultLoggerFactory.setRootLogLevel(config.logLevel)
+    } else {
+      DefaultLoggerFactory.setRootLogLevel('silent') // logs are silent by default
     }
 
     const dispatcher = new Dispatcher(ipfs)

@@ -4,7 +4,6 @@ import Document from './document'
 import { DID } from 'dids'
 import { Doctype, DoctypeHandler, DocOpts, DocParams, DIDProvider, Context, CeramicApi, PinApi, DoctypeUtils } from "@ceramicnetwork/ceramic-common"
 import { TileDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-tile"
-import { ThreeIdDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-three-id"
 import { AccountLinkDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-account-link"
 
 const CERAMIC_HOST = 'http://localhost:7007'
@@ -27,7 +26,6 @@ class CeramicClient implements CeramicApi {
     this.pin = this._initPinApi()
 
     this._doctypeHandlers = {
-      '3id': new ThreeIdDoctypeHandler(),
       'tile': new TileDoctypeHandler(),
       'account-link': new AccountLinkDoctypeHandler()
     }
