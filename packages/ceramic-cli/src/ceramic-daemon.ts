@@ -27,6 +27,11 @@ interface CreateOpts {
   debug: boolean;
 }
 
+interface HttpLog {
+  request: object;
+  response?: object;
+}
+
 class CeramicDaemon {
   private server: any
   private logger: Logger
@@ -55,17 +60,17 @@ class CeramicDaemon {
         const { rawHeaders, httpVersion, method, socket, url } = req;
         const { remoteAddress, remoteFamily } = socket;
 
-        this.logger.debug(
-            JSON.stringify({
-              timestamp: Date.now(),
-              rawHeaders,
-              httpVersion,
-              method,
-              remoteAddress,
-              remoteFamily,
-              url
-            })
-        );
+        const log: HttpLog = {
+          request:{
+            timestamp: Date.now(),
+            rawHeaders,
+            httpVersion,
+            method,
+            remoteAddress,
+            remoteFamily,
+            url
+          }
+        }
 
         let errorMessage: string = null;
         let body: string | any = [];
@@ -84,20 +89,20 @@ class CeramicDaemon {
           const { rawHeaders, httpVersion, method, socket, url } = req
           const { remoteAddress, remoteFamily } = socket
 
-          this.logger.debug(
-              JSON.stringify({
-                timestamp: Date.now(),
-                processingTime: Date.now() - requestStart,
-                rawHeaders,
-                body,
-                errorMessage,
-                httpVersion,
-                method,
-                remoteAddress,
-                remoteFamily,
-                url
-              })
-          )
+          const now = Date.now()
+          log.response = {
+            timestamp: now,
+            processingTime: now - requestStart,
+            rawHeaders,
+            body,
+            errorMessage,
+            httpVersion,
+            method,
+            remoteAddress,
+            remoteFamily,
+            url
+          }
+          this.logger.debug(JSON.stringify(log))
         })
 
         next()

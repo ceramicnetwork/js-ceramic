@@ -446,7 +446,7 @@ class Document extends EventEmitter {
   }
 
   async _publishHead (): Promise<void> {
-    await this.dispatcher.publishHead(this.id, this.head)
+    await this.dispatcher.publishHead(this.id, this.head, this.doctype.doctype)
   }
 
   async anchor (): Promise<void> {

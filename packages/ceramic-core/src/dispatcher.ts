@@ -14,6 +14,14 @@ export enum MsgType {
 
 const TOPIC = '/ceramic'
 
+interface LogMessage {
+  peer: string;
+  event: string;
+  topic: string;
+  from?: string;
+  message?: object;
+}
+
 export default class Dispatcher extends EventEmitter {
   private _peerId: string
   private readonly _documents: Record<string, Document>
@@ -33,13 +41,15 @@ export default class Dispatcher extends EventEmitter {
   async init(): Promise<void> {
     this._peerId = this._peerId || (await this._ipfs.id()).id
     await this._ipfs.pubsub.subscribe(TOPIC, this.handleMessage.bind(this))
-    this.logger.info(`${this._peerId} successfully subscribed to pubsub topic ${TOPIC}`)
+    this._log({ peer: this._peerId, event: 'subscribed', topic: TOPIC })
   }
 
   async register (document: Document): Promise<void> {
     this._documents[document.id] = document
     // request head
-    this._ipfs.pubsub.publish(TOPIC, JSON.stringify({ typ: MsgType.REQUEST, id: document.id }))
+    const payload = { typ: MsgType.REQUEST, id: document.id, doctype: document.doctype.doctype }
+    this._ipfs.pubsub.publish(TOPIC, JSON.stringify(payload))
+    this._log({ peer: this._peerId, event: 'published', topic: TOPIC, message: payload })
   }
 
   unregister (id: string): void {
@@ -70,15 +80,15 @@ export default class Dispatcher extends EventEmitter {
     return cloneDeep(ipfsObj.value)
   }
 
-  async publishHead (id: string, head: CID): Promise<void> {
+  async publishHead (id: string, head: CID, doctype?: string): Promise<void> {
     if (!this._isRunning) {
       this.logger.error('Dispatcher has been closed')
       return
     }
 
-    const payload = JSON.stringify({ typ: MsgType.UPDATE, id, cid: head.toString() })
-    await this._ipfs.pubsub.publish(TOPIC, payload)
-    this.logger.info(`${this._peerId} successfully published to pubsub topic ${TOPIC}. Payload: ${payload}`)
+    const payload = { typ: MsgType.UPDATE, id, cid: head.toString(), doctype: doctype }
+    await this._ipfs.pubsub.publish(TOPIC, JSON.stringify(payload))
+    this._log({ peer: this._peerId, event: 'published', topic: TOPIC, message: payload })
   }
 
   async handleMessage (message: any): Promise<void> {
@@ -88,9 +98,9 @@ export default class Dispatcher extends EventEmitter {
     }
 
     if (message.from !== this._peerId) {
-      const { typ, id, cid } = JSON.parse(message.data)
-      this.logger.info(`${this._peerId} received message from ${message.from}. Payload: ${JSON.stringify({typ, id, cid})}`)
+      this._log({ peer: this._peerId, event: 'received', topic: TOPIC, from: message.from, message: message.data })
 
+      const { typ, id, cid } = JSON.parse(message.data)
       if (this._documents[id]) {
         switch (typ) {
           case MsgType.UPDATE:
@@ -105,6 +115,10 @@ export default class Dispatcher extends EventEmitter {
         }
       }
     }
+  }
+
+  _log(msg: LogMessage): void {
+    this.logger.debug(JSON.stringify(msg))
   }
 
   async close(): Promise<void> {

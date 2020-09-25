@@ -1,6 +1,7 @@
 import Dispatcher, { MsgType } from '../dispatcher'
 import CID from 'cids'
 import Document from "../document"
+import { TileDoctype } from "@ceramicnetwork/ceramic-doctype-tile/lib"
 
 const FAKE_CID = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
 const ipfs = {
@@ -16,6 +17,12 @@ const ipfs = {
   id: (): any => ({ id: 'ipfsid' })
 }
 const TOPIC = '/ceramic'
+
+class TileDoctypeMock extends TileDoctype {
+  get doctype() {
+    return 'tile'
+  }
+}
 
 describe('Dispatcher', () => {
 
@@ -39,8 +46,9 @@ describe('Dispatcher', () => {
     const disp = new Dispatcher(ipfs)
     await disp.init()
     const doc = new Document(id, disp, null)
+    doc._doctype = new TileDoctypeMock()
     await disp.register(doc)
-    expect(ipfs.pubsub.publish).toHaveBeenCalledWith(TOPIC, JSON.stringify({ typ: MsgType.REQUEST, id }))
+    expect(ipfs.pubsub.publish).toHaveBeenCalledWith(TOPIC, JSON.stringify({ typ: MsgType.REQUEST, id, doctype: 'tile' }))
   })
 
   it('store record correctly', async () => {
@@ -69,6 +77,7 @@ describe('Dispatcher', () => {
     const disp = new Dispatcher(ipfs)
     await disp.init()
     const doc = new Document(id, disp, null)
+    doc._doctype = new TileDoctypeMock()
     await disp.register(doc)
 
     const updatePromise = new Promise(resolve => doc.on('update', resolve))
