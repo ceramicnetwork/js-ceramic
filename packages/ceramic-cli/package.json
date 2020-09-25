@@ -47,7 +47,7 @@
     "cors": "^2.8.5",
     "dag-jose": "^0.2.0",
     "express": "^4.17.1",
-    "identity-wallet": "^2.0.0-alpha.5",
+    "identity-wallet": "^2.0.0-alpha.7",
     "ipfs": "^0.50.0",
     "ipfs-http-client": "^47.0.1",
     "multiformats": "^3.0.3"

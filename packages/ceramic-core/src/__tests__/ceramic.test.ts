@@ -3,7 +3,7 @@ import IdentityWallet from 'identity-wallet'
 import tmp from 'tmp-promise'
 import Ipfs from 'ipfs'
 import { DoctypeUtils, DocState } from "@ceramicnetwork/ceramic-common"
-import { ThreeIdDoctype } from "@ceramicnetwork/ceramic-doctype-three-id"
+import { TileDoctype } from "@ceramicnetwork/ceramic-doctype-tile"
 
 import dagJose from 'dag-jose'
 import basicsImport from 'multiformats/cjs/src/basics-import.js'
@@ -65,7 +65,6 @@ describe('Ceramic integration', () => {
   let tmpFolder: any;
 
   const DOCTYPE_TILE = 'tile'
-  const DOCTYPE_3ID = '3id'
 
   let ipfsIndexOffset = 0
 
@@ -118,10 +117,10 @@ describe('Ceramic integration', () => {
 
     const owner = ceramic1.context.did.id
 
-    const doctype1 = await ceramic1.createDocument(DOCTYPE_3ID, { content: { test: 456 }, metadata: { owners: [owner] } })
+    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { test: 456 }, metadata: { owners: [owner], tags: ['3id'] } })
     // we can't load document from id since nodes are not connected
     // so we won't find the genesis object from it's CID
-    const doctype2 = await ceramic2.createDocument(DOCTYPE_3ID, { content: { test: 456 }, metadata: { owners: [owner] } },{ applyOnly: true })
+    const doctype2 = await ceramic2.createDocument(DOCTYPE_TILE, { content: { test: 456 }, metadata: { owners: [owner], tags: ['3id'] } },{ applyOnly: true })
     expect(doctype1.content).toEqual(doctype2.content)
     expect(doctype2.state).toEqual(expect.objectContaining({ content: { test: 456 } }))
     await ceramic1.close()
@@ -140,10 +139,9 @@ describe('Ceramic integration', () => {
 
     const owner = ceramic1.context.did.id
     // ceramic node 2 shouldn't need to have the document open in order to forward the message
-    const doctype1 = await ceramic1.createDocument(DOCTYPE_3ID, { content: { test: 789 }, metadata: { owners: [owner] } }, { applyOnly: true })
-    const doctype3 = await ceramic3.createDocument(DOCTYPE_3ID, { content: { test: 789 }, metadata: { owners: [owner] } }, { applyOnly: true })
+    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { test: 789 }, metadata: { owners: [owner], tags: ['3id'] } }, { applyOnly: true })
+    const doctype3 = await ceramic3.createDocument(DOCTYPE_TILE, { content: { test: 789 }, metadata: { owners: [owner], tags: ['3id'] } }, { applyOnly: true })
     expect(doctype3.content).toEqual(doctype1.content)
-    expectEqualStates(doctype3.state, doctype1.state)
     await ceramic1.close()
     await ceramic2.close()
     await ceramic3.close()
@@ -179,8 +177,8 @@ describe('Ceramic integration', () => {
     const owner = idw._threeIdx.managementDID
 
     // ceramic node 2 shouldn't need to have the document open in order to forward the message
-    const doctype1 = await ceramic1.createDocument<ThreeIdDoctype>(DOCTYPE_3ID, { content: { test: 321 }, metadata: { owners: [owner] } })
-    const doctype3 = await ceramic3.createDocument<ThreeIdDoctype>(DOCTYPE_3ID, { content: { test: 321 }, metadata: { owners: [owner] } }, { applyOnly: true })
+    const doctype1 = await ceramic1.createDocument<TileDoctype>(DOCTYPE_TILE, { content: { test: 321 }, metadata: { owners: [owner], tags: ['3id'] } })
+    const doctype3 = await ceramic3.createDocument<TileDoctype>(DOCTYPE_TILE, { content: { test: 321 }, metadata: { owners: [owner], tags: ['3id'] } }, { applyOnly: true })
 
     expect(doctype3.content).toEqual(doctype1.content)
     expectEqualStates(doctype3.state, doctype1.state)

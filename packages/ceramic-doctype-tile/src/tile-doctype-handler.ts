@@ -7,9 +7,17 @@ import jsonpatch from 'fast-json-patch'
 
 import { TileDoctype, TileParams } from "./tile-doctype"
 import {
-    AnchorProof, AnchorRecord, AnchorStatus, DocState, DoctypeConstructor, DoctypeHandler, DocOpts, SignatureStatus
+    AnchorProof,
+    AnchorRecord,
+    AnchorStatus,
+    Context,
+    DocOpts,
+    DocState,
+    DoctypeConstructor,
+    DoctypeHandler,
+    DoctypeUtils,
+    SignatureStatus
 } from "@ceramicnetwork/ceramic-common"
-import { Context } from "@ceramicnetwork/ceramic-common"
 
 const DOCTYPE = 'tile'
 
@@ -70,9 +78,14 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
      * @private
      */
     async _applyGenesis(record: any, cid: CID, context: Context): Promise<DocState> {
-        const payload = (await context.ipfs.dag.get(record.link)).value
-
-        await this._verifySignature(record, context, payload.header.owners[0])
+        let payload = record
+        const isSigned = DoctypeUtils.isSignedRecord(record)
+        if (isSigned) {
+            payload = (await context.ipfs.dag.get(record.link)).value
+            await this._verifySignature(record, context, payload.header.owners[0])
+        } else if (payload.data !== null) {
+            throw Error('Genesis record with contents should always be signed')
+        }
         return {
             doctype: DOCTYPE,
             content: payload.data,
@@ -80,7 +93,7 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
             next: {
                 content: null,
             },
-            signature: SignatureStatus.SIGNED,
+            signature: isSigned? SignatureStatus.SIGNED : SignatureStatus.GENESIS,
             anchorStatus: AnchorStatus.NOT_REQUESTED,
             log: [cid]
         }

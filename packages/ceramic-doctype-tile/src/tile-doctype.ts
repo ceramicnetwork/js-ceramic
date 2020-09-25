@@ -32,7 +32,7 @@ export class TileDoctype extends Doctype {
             throw new Error('No DID authenticated')
         }
 
-        const updateRecord = await TileDoctype._makeRecord(this, this.context.did, params.content, params.metadata?.schema)
+        const updateRecord = await TileDoctype._makeRecord(this, this.context.did, params.content, null, params.metadata?.schema)
         const updated = await this.context.api.applyRecord(this.id, updateRecord, opts)
         this.state = updated.state
     }
@@ -60,11 +60,12 @@ export class TileDoctype extends Doctype {
      * @param opts - Initialization options
      */
     static async makeGenesis(params: DocParams, context?: Context, opts: DocOpts = {}): Promise<Record<string, any>> {
+        const metadata = params.metadata? params.metadata : { owners: [] }
+
+        // check for DID and authentication
         if (!context.did || !context.did.authenticated) {
             throw new Error('No DID authenticated')
         }
-
-        const metadata = params.metadata? params.metadata : { owners: [] }
 
         let unique: string
         if (metadata.isUnique) {
@@ -78,7 +79,7 @@ export class TileDoctype extends Doctype {
 
         const { content } = params
         const record = { doctype: DOCTYPE, data: content, header: metadata, unique }
-        return TileDoctype._signDagJWS(record, context.did, metadata.owners[0])
+        return content ? TileDoctype._signDagJWS(record, context.did, metadata.owners[0]) : record
     }
 
     /**
@@ -86,10 +87,11 @@ export class TileDoctype extends Doctype {
      * @param doctype - Tile doctype instance
      * @param did - DID instance
      * @param newContent - New context
+     * @param newOwners - New owners
      * @param schema - New schema ID
      * @private
      */
-    static async _makeRecord(doctype: Doctype, did: DID, newContent: any, schema?: string): Promise<any> {
+    static async _makeRecord(doctype: Doctype, did: DID, newContent: any, newOwners?: string[], schema?: string): Promise<any> {
         if (did == null || !did.authenticated) {
             throw new Error('No DID authenticated')
         }
@@ -97,6 +99,10 @@ export class TileDoctype extends Doctype {
         const header: Record<string, any> = {}
         if (schema) {
             header.schema = schema
+        }
+
+        if (newOwners) {
+            header.owners = newOwners
         }
 
         if (newContent == null) {
@@ -112,6 +118,7 @@ export class TileDoctype extends Doctype {
      * Sign Tile record
      * @param did - DID instance
      * @param record - Record to be signed
+     * @param owner - Owner
      * @private
      */
     static async _signDagJWS(record: any, did: DID, owner: string): Promise<any> {

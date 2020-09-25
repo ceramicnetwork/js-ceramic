@@ -115,7 +115,9 @@ class CeramicDaemon {
   }
 
   static async create (opts: CreateOpts): Promise<CeramicDaemon> {
-    const ipfs = opts.ipfs || ipfsClient(opts.ipfsHost)
+    const ipfs = opts.ipfs || ipfsClient({
+      url: opts.ipfsHost,
+    })
 
     const ceramicConfig: CeramicConfig = {
       logLevel: 'silent',

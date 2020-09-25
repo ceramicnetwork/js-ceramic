@@ -12,7 +12,7 @@ Object {
       "test": "0xabc",
     },
   },
-  "doctype": "3id",
+  "doctype": "tile",
   "log": Array [
     Object {
       "codec": "dag-pb",
@@ -139,6 +139,9 @@ Object {
     "owners": Array [
       "did:key:zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV",
     ],
+    "tags": Array [
+      "3id",
+    ],
   },
   "next": Object {},
   "signature": 2,
@@ -153,7 +156,7 @@ Object {
       "test": "0xabc",
     },
   },
-  "doctype": "3id",
+  "doctype": "tile",
   "log": Array [
     Object {
       "codec": "dag-pb",
@@ -200,11 +203,14 @@ Object {
     "owners": Array [
       "did:key:zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV",
     ],
+    "tags": Array [
+      "3id",
+    ],
   },
   "next": Object {
     "content": null,
   },
-  "signature": 0,
+  "signature": 2,
 }
 `;
 
@@ -217,7 +223,7 @@ Object {
       "test": "0xabc",
     },
   },
-  "doctype": "3id",
+  "doctype": "tile",
   "log": Array [
     Object {
       "codec": "dag-pb",
@@ -303,6 +309,9 @@ Object {
   "metadata": Object {
     "owners": Array [
       "did:key:zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV",
+    ],
+    "tags": Array [
+      "3id",
     ],
   },
   "next": Object {
