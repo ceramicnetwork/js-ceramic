@@ -210,7 +210,7 @@ Object {
   "next": Object {
     "content": null,
   },
-  "signature": 0,
+  "signature": 2,
 }
 `;
 

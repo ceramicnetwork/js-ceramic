@@ -98,7 +98,7 @@ const create = async (params: TileParams, ceramic: Ceramic, context: Context, op
     throw new Error('The owner of the 3ID needs to be specified')
   }
 
-  const record = await TileDoctype.makeGenesis({ content, metadata })
+  const record = await TileDoctype.makeGenesis({ content, metadata }, context)
   return await ceramic._createDocFromGenesis(record, opts)
 }
 
@@ -159,6 +159,7 @@ describe('Document', () => {
       })
 
       context = {
+        did: user,
         anchorService,
         ipfs: dispatcher._ipfs,
         resolver: new Resolver({
@@ -198,11 +199,11 @@ describe('Document', () => {
       const doc = await Document.load(docId, findHandler, dispatcher, pinStore, context, { skipWait: true })
       // changes will not load since no network and no local head storage yet
       expect(doc.content).toEqual(initialContent)
-      expect(doc.state).toEqual(expect.objectContaining({ signature: SignatureStatus.GENESIS, anchorStatus: 0 }))
+      expect(doc.state).toEqual(expect.objectContaining({ signature: SignatureStatus.SIGNED, anchorStatus: 0 }))
       // _handleHead is intended to be called by the dispatcher
       // should return a promise that resolves when head is added
       await doc._handleHead(log[1])
-      expect(doc.state.signature).toEqual(SignatureStatus.GENESIS)
+      expect(doc.state.signature).toEqual(SignatureStatus.SIGNED)
       expect(doc.state.anchorStatus).not.toEqual(AnchorStatus.NOT_REQUESTED)
       expect(doc.content).toEqual(initialContent)
     })
@@ -360,6 +361,7 @@ describe('Document', () => {
       })
 
       context = {
+        did: user,
         anchorService,
         ipfs: dispatcher._ipfs,
         resolver: new Resolver({
