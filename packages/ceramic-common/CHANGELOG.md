@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.8.0-alpha.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-common@0.7.0...@ceramicnetwork/ceramic-common@0.8.0-alpha.0) (2020-09-25)
+
+
+### Features
+
+* remove 3id doctype ([#323](https://github.com/ceramicnetwork/js-ceramic/issues/323)) ([fdbd0ed](https://github.com/ceramicnetwork/js-ceramic/commit/fdbd0ed66a01f9521f631967b4438396ce197ace))
+
+
+
+
+
 # [0.7.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-common@0.7.0-alpha.0...@ceramicnetwork/ceramic-common@0.7.0) (2020-09-17)
 
 **Note:** Version bump only for package @ceramicnetwork/ceramic-common
