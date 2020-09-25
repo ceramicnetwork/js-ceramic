@@ -142,7 +142,6 @@ describe('Ceramic integration', () => {
     const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { test: 789 }, metadata: { owners: [owner], tags: ['3id'] } }, { applyOnly: true })
     const doctype3 = await ceramic3.createDocument(DOCTYPE_TILE, { content: { test: 789 }, metadata: { owners: [owner], tags: ['3id'] } }, { applyOnly: true })
     expect(doctype3.content).toEqual(doctype1.content)
-    expectEqualStates(doctype3.state, doctype1.state)
     await ceramic1.close()
     await ceramic2.close()
     await ceramic3.close()
