@@ -121,13 +121,8 @@ class CeramicDaemon {
   }
 
   static async create (opts: CreateOpts): Promise<CeramicDaemon> {
-    multiformats.multicodec.add(dagJose)
-    const format = legacy(multiformats, dagJose.name)
     const ipfs = opts.ipfs || ipfsClient({
       url: opts.ipfsHost,
-      ipld: {
-        formats: [format]
-      }
     })
 
     const ceramicConfig: CeramicConfig = {
