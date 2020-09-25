@@ -26,6 +26,7 @@
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
+    "chalk": "^4.1.0",
     "@types/json-schema": "^7.0.5",
     "ajv": "^6.12.3",
     "cids": "^1.0.0",
