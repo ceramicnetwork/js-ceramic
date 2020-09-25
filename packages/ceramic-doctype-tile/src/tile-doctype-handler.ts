@@ -7,9 +7,17 @@ import jsonpatch from 'fast-json-patch'
 
 import { TileDoctype, TileParams } from "./tile-doctype"
 import {
-    AnchorProof, AnchorRecord, AnchorStatus, Context, DocOpts, DocState, DoctypeConstructor, DoctypeHandler
+    AnchorProof,
+    AnchorRecord,
+    AnchorStatus,
+    Context,
+    DocOpts,
+    DocState,
+    DoctypeConstructor,
+    DoctypeHandler,
+    DoctypeUtils,
+    SignatureStatus
 } from "@ceramicnetwork/ceramic-common"
-import { DoctypeUtils, SignatureStatus } from "@ceramicnetwork/ceramic-common/lib"
 
 const DOCTYPE = 'tile'
 
