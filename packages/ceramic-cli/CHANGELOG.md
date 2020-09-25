@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.9.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-cli@0.8.0...@ceramicnetwork/ceramic-cli@0.9.0) (2020-09-25)
+
+
+### Features
+
+* cors middleware, preflight/content type ([dd47f1d](https://github.com/ceramicnetwork/js-ceramic/commit/dd47f1da5517a655d5334802a7ec610ac13591d3))
+* implement initial key-did-resolver module ([#321](https://github.com/ceramicnetwork/js-ceramic/issues/321)) ([472283f](https://github.com/ceramicnetwork/js-ceramic/commit/472283f8419dd51c4725b77083df43abeb9ee387))
+* remove 3id doctype ([#323](https://github.com/ceramicnetwork/js-ceramic/issues/323)) ([fdbd0ed](https://github.com/ceramicnetwork/js-ceramic/commit/fdbd0ed66a01f9521f631967b4438396ce197ace))
+
+
+
+
+
 # [0.9.0-alpha.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-cli@0.8.0...@ceramicnetwork/ceramic-cli@0.9.0-alpha.0) (2020-09-25)
 
 
