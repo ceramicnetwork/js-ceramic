@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.10.0-alpha.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-cli@0.9.2-alpha.0...@ceramicnetwork/ceramic-cli@0.10.0-alpha.0) (2020-09-28)
+
+
+### Features
+
+* **common:** refactor logger, include component name ([#326](https://github.com/ceramicnetwork/js-ceramic/issues/326)) ([02e8d66](https://github.com/ceramicnetwork/js-ceramic/commit/02e8d66e25d7fb8887496cf6b3430be90b79d4f3))
+
+
+
+
+
 ## [0.9.2-alpha.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-cli@0.9.1-alpha.1...@ceramicnetwork/ceramic-cli@0.9.2-alpha.0) (2020-09-28)
 
 **Note:** Version bump only for package @ceramicnetwork/ceramic-cli
