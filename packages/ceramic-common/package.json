@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/ceramic-common",
-  "version": "0.8.2-alpha.0",
+  "version": "0.8.2",
   "description": "Ceramic common types and utilities",
   "keywords": [
     "ceramic",

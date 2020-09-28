@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.7.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-doctype-tile@0.7.2-alpha.0...@ceramicnetwork/ceramic-doctype-tile@0.7.2) (2020-09-28)
+
+**Note:** Version bump only for package @ceramicnetwork/ceramic-doctype-tile
+
+
+
+
+
 ## [0.7.2-alpha.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-doctype-tile@0.7.1-alpha.1...@ceramicnetwork/ceramic-doctype-tile@0.7.2-alpha.0) (2020-09-28)
 
 **Note:** Version bump only for package @ceramicnetwork/ceramic-doctype-tile
