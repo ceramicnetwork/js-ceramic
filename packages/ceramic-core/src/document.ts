@@ -16,8 +16,8 @@ import {
   DoctypeUtils,
   CeramicApi,
   DocMetadata,
-  DefaultLoggerFactory,
-  Logger
+  RootLogger,
+  Logger,
 } from "@ceramicnetwork/ceramic-common"
 import {PinStore} from "./store/pin-store";
 
@@ -44,7 +44,7 @@ class Document extends EventEmitter {
     const normalized = DoctypeUtils.normalizeDocId(id)
     this.id = DoctypeUtils.getBaseDocId(normalized);
     this.version = DoctypeUtils.getVersionId(normalized)
-    this.logger = DefaultLoggerFactory.getLogger(Document.name)
+    this.logger = RootLogger.getLogger(Document.name)
 
     this._applyQueue = async.queue(async (task: QueueTask, callback) => {
       try {
@@ -81,7 +81,7 @@ class Document extends EventEmitter {
       pinStore: PinStore,
       context: Context,
       opts: DocOpts = {},
-      validate = true
+      validate = true,
   ): Promise<Document> {
     const genesis = await dispatcher.retrieveRecord(genesisCid)
     const id = DoctypeUtils.createDocIdFromGenesis(genesisCid)

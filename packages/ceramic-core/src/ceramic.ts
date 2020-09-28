@@ -13,7 +13,7 @@ import {
   Context,
   DoctypeUtils,
   DocParams,
-  DefaultLoggerFactory,
+  LoggerProvider,
 } from "@ceramicnetwork/ceramic-common"
 import { Resolver } from "did-resolver"
 
@@ -38,6 +38,7 @@ export interface CeramicConfig {
   pinning?: string[];
 
   logLevel?: string;
+  gateway?: boolean;
 }
 
 /**
@@ -112,11 +113,10 @@ class Ceramic implements CeramicApi {
    * @param config - Ceramic configuration
    */
   static async create(ipfs: Ipfs.Ipfs, config: CeramicConfig = {}): Promise<Ceramic> {
-    if (config.logLevel) {
-      DefaultLoggerFactory.setRootLogLevel(config.logLevel)
-    } else {
-      DefaultLoggerFactory.setRootLogLevel('silent') // logs are silent by default
-    }
+    LoggerProvider.init({
+      level: config.logLevel? config.logLevel : 'silent',
+      component: config.gateway? 'GATEWAY' : 'NODE'
+    })
 
     const dispatcher = new Dispatcher(ipfs)
     await dispatcher.init()
