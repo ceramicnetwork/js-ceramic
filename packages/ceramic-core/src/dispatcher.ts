@@ -4,7 +4,7 @@ import CID from 'cids'
 import cloneDeep from 'lodash.clonedeep'
 
 import type Document from "./document"
-import { DoctypeUtils, DefaultLoggerFactory, Logger } from "@ceramicnetwork/ceramic-common"
+import { DoctypeUtils, RootLogger, Logger } from "@ceramicnetwork/ceramic-common"
 
 export enum MsgType {
   UPDATE,
@@ -32,7 +32,7 @@ export default class Dispatcher extends EventEmitter {
   constructor (public _ipfs: Ipfs.Ipfs) {
     super()
     this._documents = {}
-    this.logger = DefaultLoggerFactory.getLogger(Dispatcher.name)
+    this.logger = RootLogger.getLogger(Dispatcher.name)
   }
 
   /**

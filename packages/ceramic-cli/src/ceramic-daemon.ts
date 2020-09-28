@@ -3,7 +3,7 @@ import ipfsClient from 'ipfs-http-client'
 import express, { Request, Response, NextFunction } from 'express'
 import Ceramic from '@ceramicnetwork/ceramic-core'
 import type { CeramicConfig } from "@ceramicnetwork/ceramic-core";
-import { DoctypeUtils, DefaultLoggerFactory, Logger } from "@ceramicnetwork/ceramic-common"
+import { DoctypeUtils, RootLogger, Logger } from "@ceramicnetwork/ceramic-common"
 // @ts-ignore
 import cors from 'cors'
 
@@ -39,10 +39,11 @@ class CeramicDaemon {
 
   constructor (public ceramic: Ceramic, opts: CreateOpts) {
     this.debug = opts.debug
-    this.logger = DefaultLoggerFactory.getLogger(CeramicDaemon.name)
     if (this.debug) {
-      this.logger.setLevel('debug')
+      RootLogger.setLevel('debug')
     }
+
+    this.logger = RootLogger.getLogger(CeramicDaemon.name)
 
     const app = express()
     app.use(express.json())
