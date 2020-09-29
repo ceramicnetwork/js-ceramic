@@ -29,7 +29,7 @@
   "dependencies": {
     "multibase": "^3.0.1",
     "uint8arrays": "^1.1.0",
-    "varint": "^5.0.0"
+    "varint": "^6.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.9.0",
