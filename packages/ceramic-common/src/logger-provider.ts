@@ -1,6 +1,8 @@
 import chalk from 'chalk'
-import log, { Logger, LogLevelDesc, MethodFactory } from 'loglevel'
+import fs from 'fs'
+import log, { Logger, LogLevelDesc, MethodFactory, RootLogger as RLogger } from 'loglevel'
 import prefix from 'loglevel-plugin-prefix'
+import util from 'util'
 
 /**
  * Logger colors
@@ -245,10 +247,23 @@ class LoggerProvider {
         cache = null
         return retVal
     }
+
+function logToFile(namespace: string, msg: string) {
+  const basePath = '/usr/local/var/log/ceramic/'
+  fs.mkdir(basePath, { recursive: true }, (err) => {
+    if (err && (err.code != 'EEXIST')) console.error(err)
+  })
+  const fileLog = fs.createWriteStream(
+    basePath + `${(namespace == '') ? '' : namespace + '-'}common.log`,
+    { flags: 'a' }
+  )
+  fileLog.write(util.format(msg) + '\n')
+  fileLog.end()
 }
 
 export {
-    LoggerProvider,
-    Logger,
-    log as RootLogger,
+  LoggerProvider,
+  Logger,
+  log as RootLogger,
+  logToFile,
 }
