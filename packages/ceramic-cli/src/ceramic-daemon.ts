@@ -1,5 +1,4 @@
 import type Ipfs from 'ipfs'
-import ipfsClient from 'ipfs-http-client'
 import express, { Request, Response, NextFunction } from 'express'
 import Ceramic from '@ceramicnetwork/ceramic-core'
 import type { CeramicConfig } from "@ceramicnetwork/ceramic-core";
@@ -12,7 +11,7 @@ const toApiPath = (ending: string): string => '/api/v0' + ending
 
 const DEFAULT_ANCHOR_SERVICE_URL = "https://cas.3box.io:8081/api/v0/requests"
 
-interface CreateOpts {
+export interface CreateOpts {
   ipfsHost?: string;
   ipfs?: Ipfs.Ipfs;
   port?: number;
@@ -121,9 +120,7 @@ class CeramicDaemon {
   }
 
   static async create (opts: CreateOpts): Promise<CeramicDaemon> {
-    const ipfs = opts.ipfs || ipfsClient({
-      url: opts.ipfsHost,
-    })
+    const { ipfs } = opts
 
     const ceramicConfig: CeramicConfig = {
       logLevel: 'silent',
