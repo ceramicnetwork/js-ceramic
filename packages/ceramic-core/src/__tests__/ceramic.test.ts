@@ -65,7 +65,6 @@ let tmpFolder2: any;
 let tmpFolder3: any;
 
 const beforeAllFn = async (): Promise<void> => {
-  console.log('PICKA')
   tmpFolder1 = await tmp.dir({ unsafeCleanup: true })
   tmpFolder2 = await tmp.dir({ unsafeCleanup: true })
   tmpFolder3 = await tmp.dir({ unsafeCleanup: true })
@@ -109,7 +108,6 @@ const beforeAllFn = async (): Promise<void> => {
 }
 
 const afterAllFn = async (): Promise<void> => {
-  console.log('KURAC')
   try {
     await ipfs1.stop(() => console.log('IPFS1 stopped'))
   } catch (e) {
