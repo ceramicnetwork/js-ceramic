@@ -62,14 +62,18 @@ describe('Ceramic integration', () => {
   let multaddr1: string;
   let multaddr2: string;
   let multaddr3: string;
-  let tmpFolder: any;
+  let tmpFolder1: any;
+  let tmpFolder2: any;
+  let tmpFolder3: any;
 
   const DOCTYPE_TILE = 'tile'
 
   let ipfsIndexOffset = 0
 
   beforeEach(async () => {
-    tmpFolder = await tmp.dir({ unsafeCleanup: true })
+    tmpFolder1 = await tmp.dir({ unsafeCleanup: true })
+    tmpFolder2 = await tmp.dir({ unsafeCleanup: true })
+    tmpFolder3 = await tmp.dir({ unsafeCleanup: true })
 
     const buildConfig = (path: string, id: number): object => {
       return {
@@ -79,9 +83,11 @@ describe('Ceramic integration', () => {
       }
     }
 
-    ipfs1 = await createIPFS(buildConfig(tmpFolder.path, ipfsIndexOffset))
-    ipfs2 = await createIPFS(buildConfig(tmpFolder.path, ipfsIndexOffset + 1))
-    ipfs3 = await createIPFS(buildConfig(tmpFolder.path, ipfsIndexOffset + 2))
+    ipfs1 = await createIPFS(buildConfig(tmpFolder1.path, ipfsIndexOffset))
+    ipfs2 = await createIPFS(buildConfig(tmpFolder2.path, ipfsIndexOffset + 1))
+    ipfs3 = await createIPFS(buildConfig(tmpFolder3.path, ipfsIndexOffset + 2))
+    ipfsIndexOffset += 10
+
     multaddr1 = (await ipfs1.id()).addresses[0].toString()
     multaddr2 = (await ipfs2.id()).addresses[0].toString()
     multaddr3 = (await ipfs3.id()).addresses[0].toString()
@@ -95,15 +101,12 @@ describe('Ceramic integration', () => {
   })
 
   afterEach(async () => {
-    // wait a bit to propagate
-    await new Promise(resolve => setTimeout(resolve, 5000))
-
-    await ipfs1.stop()
-    await ipfs2.stop()
-    await ipfs3.stop()
-    await tmpFolder.cleanup()
-
-    ipfsIndexOffset += 10
+    await ipfs1.stop(() => console.log('IPFS1 stopped'))
+    await ipfs2.stop(() => console.log('IPFS2 stopped'))
+    await ipfs3.stop(() => console.log('IPFS3 stopped'))
+    await tmpFolder1.cleanup()
+    await tmpFolder2.cleanup()
+    await tmpFolder3.cleanup()
   })
 
   it('can propagate update across two connected nodes', async () => {
