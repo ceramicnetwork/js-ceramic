@@ -103,7 +103,7 @@ describe('Ceramic integration', () => {
     ipfsIndexOffset += 10
   })
 
-  it('can propagate update across two connected nodes', async () => {
+  it('can propagate update across two connected nodes', async (done) => {
     await ipfs2.swarm.connect(multaddr1)
 
     const ceramic1 = await createCeramic(ipfs1)
@@ -114,9 +114,10 @@ describe('Ceramic integration', () => {
     expectEqualStates(doctype1.state, doctype2.state)
     await ceramic1.close()
     await ceramic2.close()
+    done()
   })
 
-  it('won\'t propagate update across two disconnected nodes', async () => {
+  it('won\'t propagate update across two disconnected nodes', async (done) => {
     const ceramic1 = await createCeramic(ipfs1)
     const ceramic2 = await createCeramic(ipfs2)
 
@@ -130,9 +131,10 @@ describe('Ceramic integration', () => {
     expect(doctype2.state).toEqual(expect.objectContaining({ content: { test: 456 } }))
     await ceramic1.close()
     await ceramic2.close()
+    done()
   })
 
-  it('can propagate update across nodes with common connection', async () => {
+  it('can propagate update across nodes with common connection', async (done) => {
     // ipfs1 <-> ipfs2 <-> ipfs3
     // ipfs1 <!-> ipfs3
     await ipfs1.swarm.connect(multaddr2)
@@ -150,9 +152,10 @@ describe('Ceramic integration', () => {
     await ceramic1.close()
     await ceramic2.close()
     await ceramic3.close()
+    done()
   })
 
-  it('can propagate multiple update across nodes with common connection', async () => {
+  it('can propagate multiple update across nodes with common connection', async (done) => {
     // ipfs1 <-> ipfs2 <-> ipfs3
     // ipfs1 <!-> ipfs3
     await ipfs1.swarm.connect(multaddr2)
@@ -206,5 +209,6 @@ describe('Ceramic integration', () => {
     await ceramic1.close()
     await ceramic2.close()
     await ceramic3.close()
+    done()
   })
 })
