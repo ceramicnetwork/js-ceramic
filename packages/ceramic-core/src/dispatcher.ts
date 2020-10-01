@@ -24,7 +24,7 @@ interface LogMessage {
 
 export default class Dispatcher extends EventEmitter {
   private _peerId: string
-  private readonly _documents: Record<string, Document>
+  private _documents: Record<string, Document>
 
   private logger: Logger
   private _isRunning = true
@@ -125,9 +125,7 @@ export default class Dispatcher extends EventEmitter {
     this._isRunning = false
     await this._ipfs.pubsub.unsubscribe(TOPIC)
 
-    // deregister documents
-    for (const doc of Object.values(this._documents)) {
-      await doc.close()
-    }
+    await Promise.all(Object.values(this._documents).map(async (doc) => await doc.close()))
+    this._documents = {}
   }
 }

@@ -551,7 +551,6 @@ class Document extends EventEmitter {
 
     this.dispatcher.unregister(this.id)
 
-    this._applyQueue.pause()
     await this._applyQueue.onEmpty()
   }
 
