@@ -545,11 +545,13 @@ class Document extends EventEmitter {
     })
   }
 
-  close (): void {
+  async close (): Promise<void> {
     this.dispatcher.unregister(this.id)
     this.off('update', this._handleHead.bind(this))
     this.off('headreq', this._publishHead.bind(this))
-    this._applyQueue.clear()
+    while (this._applyQueue.size > 0) {
+      await new Promise(resolve => setTimeout(resolve, 1000))
+    }
   }
 
   toString (): string {

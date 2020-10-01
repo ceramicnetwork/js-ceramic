@@ -127,7 +127,7 @@ export default class Dispatcher extends EventEmitter {
 
     // deregister documents
     for (const doc of Object.values(this._documents)) {
-      doc.close()
+      await doc.close()
     }
   }
 }
