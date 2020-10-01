@@ -273,17 +273,23 @@ class Document extends EventEmitter {
    * @param cid - HEAD CID
    * @private
    */
-  _handleHead(cid: CID): Promise<void> {
-    return this._applyQueue.add(async () => {
-      const log = await this._fetchLog(cid)
-      if (log.length) {
-        const updated = await this._applyLog(log)
-        if (updated) {
-          this._doctype.emit('change')
+  async _handleHead(cid: CID): Promise<void> {
+    let applyPromise
+    await this._applyQueue.add(async () => {
+      try {
+        const log = await this._fetchLog(cid)
+        if (log.length) {
+          applyPromise = this._applyLog(log)
+          const updated = await applyPromise
+          if (updated) {
+            this._doctype.emit('change')
+          }
         }
+      } catch (e) {
+        applyPromise = Promise.reject(e)
       }
-      console.log('working....')
     })
+    await applyPromise
   }
 
   async _fetchLog (cid: CID, log: Array<CID> = []): Promise<Array<CID>> {
