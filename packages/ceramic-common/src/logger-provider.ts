@@ -1,6 +1,6 @@
 import chalk from 'chalk'
 import fs from 'fs'
-import log, { Logger, LogLevelDesc, MethodFactory, RootLogger as RLogger } from 'loglevel'
+import log, { Logger, LogLevelDesc, MethodFactory } from 'loglevel'
 import prefix from 'loglevel-plugin-prefix'
 import util from 'util'
 
@@ -63,6 +63,7 @@ class LoggerProvider {
         }
 
         LoggerProvider._applyPrefix(options)
+        LoggerProvider._includeFilePlugin(options)
         LoggerProvider._includeJsonPlugin(options)
     }
 
@@ -80,6 +81,37 @@ class LoggerProvider {
                 return date.toISOString()
             }
         })
+    }
+
+    /**
+     * Plugin to append log messages to files named after components
+     * @param options Should include `component` name
+     */
+    static _includeFilePlugin (options: Options): void {
+        const originalFactory = log.methodFactory;
+
+        log.methodFactory = (methodName: string, logLevel: any, loggerName: string): MethodFactory => {
+            const rawMethod = originalFactory(methodName, logLevel, loggerName);
+
+            return (...args: any[]): any => {
+                const message = LoggerProvider._interpolate(args)
+                // TODO: Allow users to configure log location
+                const basePath = '/usr/local/var/log/ceramic/'
+                fs.mkdir(basePath, { recursive: true }, (err) => {
+                    if (err && (err.code != 'EEXIST')) console.warn('WARNING: Can not write logs to files', err)
+                    else {
+                        const stream = fs.createWriteStream(
+                            basePath + `${loggerName}-${options.component || 'out'}.plugin.log`,
+                            { flags: 'a' }
+                        )
+                        stream.write(util.format(message) + '\n')
+                        stream.end()
+                    }
+                })
+                rawMethod(...args)
+            }
+        };
+        log.setLevel(log.getLevel());
     }
 
     /**
@@ -248,22 +280,31 @@ class LoggerProvider {
         return retVal
     }
 
-function logToFile(namespace: string, msg: string) {
-  const basePath = '/usr/local/var/log/ceramic/'
-  fs.mkdir(basePath, { recursive: true }, (err) => {
-    if (err && (err.code != 'EEXIST')) console.error(err)
-  })
-  const fileLog = fs.createWriteStream(
-    basePath + `${(namespace == '') ? '' : namespace + '-'}common.log`,
-    { flags: 'a' }
-  )
-  fileLog.write(util.format(msg) + '\n')
-  fileLog.end()
+    
+}
+
+/**
+ * Appends `msg` to the file `filename`
+ * @param filename File name
+ * @param msg Log message
+ */
+function logToFile (filename: string, msg: string) {
+    // TODO: Allow users to configure log location
+    const basePath = '/usr/local/var/log/ceramic/'
+    fs.mkdir(basePath, { recursive: true }, (err) => {
+        if (err && (err.code != 'EEXIST')) console.error(err)
+    })
+    const stream = fs.createWriteStream(
+        basePath + `${filename}.log`,
+        { flags: 'a' }
+    )
+    stream.write(util.format(msg) + '\n')
+    stream.end()
 }
 
 export {
-  LoggerProvider,
-  Logger,
-  log as RootLogger,
-  logToFile,
+    LoggerProvider,
+    Logger,
+    log as RootLogger,
+    logToFile,
 }
