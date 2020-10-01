@@ -100,7 +100,7 @@ describe('Ceramic integration', () => {
     await ipfs3.stop(() => console.log('IPFS3 stopped'))
     await tmpFolder.cleanup()
 
-    ipfsIndexOffset += 3
+    ipfsIndexOffset += 10
   })
 
   it('can propagate update across two connected nodes', async () => {
