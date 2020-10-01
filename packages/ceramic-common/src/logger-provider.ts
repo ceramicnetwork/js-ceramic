@@ -279,8 +279,6 @@ class LoggerProvider {
         cache = null
         return retVal
     }
-
-    
 }
 
 // TODO: Remove logToFile in favor of plugin
