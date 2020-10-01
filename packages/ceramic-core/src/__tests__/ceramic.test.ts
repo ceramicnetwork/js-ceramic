@@ -68,8 +68,6 @@ describe('Ceramic integration', () => {
 
   const DOCTYPE_TILE = 'tile'
 
-  let ipfsIndexOffset = 10
-
   beforeEach(async () => {
     tmpFolder1 = await tmp.dir({ unsafeCleanup: true })
     tmpFolder2 = await tmp.dir({ unsafeCleanup: true })
@@ -84,24 +82,22 @@ describe('Ceramic integration', () => {
     }
 
     try {
-      ipfs1 = await createIPFS(buildConfig(tmpFolder1.path, ipfsIndexOffset))
+      ipfs1 = await createIPFS(buildConfig(tmpFolder1.path, 0))
     } catch (e) {
       // skip
     }
 
     try{
-      ipfs2 = await createIPFS(buildConfig(tmpFolder2.path, ipfsIndexOffset + 1))
+      ipfs2 = await createIPFS(buildConfig(tmpFolder2.path, 1))
     } catch (e) {
       // skip
     }
 
     try {
-      ipfs3 = await createIPFS(buildConfig(tmpFolder3.path, ipfsIndexOffset + 2))
+      ipfs3 = await createIPFS(buildConfig(tmpFolder3.path, 2))
     } catch (e) {
       // skip
     }
-
-    ipfsIndexOffset += 10
 
     multaddr1 = (await ipfs1.id()).addresses[0].toString()
     multaddr2 = (await ipfs2.id()).addresses[0].toString()
