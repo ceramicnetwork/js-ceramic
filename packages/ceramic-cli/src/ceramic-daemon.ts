@@ -86,21 +86,12 @@ class CeramicDaemon {
         });
 
         res.on("finish", () => {
-          const { rawHeaders, httpVersion, method, socket, url } = req
-          const { remoteAddress, remoteFamily } = socket
-
           const now = Date.now()
           log.response = {
             timestamp: now,
             processingTime: now - requestStart,
-            rawHeaders,
             body,
             errorMessage,
-            httpVersion,
-            method,
-            remoteAddress,
-            remoteFamily,
-            url
           }
           this.logger.debug(JSON.stringify(log))
         })
