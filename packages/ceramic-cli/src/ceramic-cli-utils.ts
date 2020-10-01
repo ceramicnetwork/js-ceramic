@@ -8,7 +8,7 @@ import IdentityWallet from "identity-wallet"
 import CeramicClient from "@ceramicnetwork/ceramic-http-client"
 import { CeramicApi, DoctypeUtils } from "@ceramicnetwork/ceramic-common"
 
-import CeramicDaemon from "./ceramic-daemon"
+import CeramicDaemon, { CreateOpts } from "./ceramic-daemon"
 
 import Ipfs from "ipfs"
 
@@ -17,6 +17,7 @@ import dagJose from 'dag-jose'
 import multiformats from 'multiformats/basics'
 // @ts-ignore
 import legacy from 'multiformats/legacy'
+import ipfsClient from "ipfs-http-client"
 
 const PREFIX_REGEX = /^ceramic:\/\/|^\/ceramic\//
 
@@ -56,7 +57,7 @@ export class CeramicCliUtils {
             stateStorePath = DEFAULT_PINNING_STORE_PATH
         }
 
-        const config = {
+        const config: CreateOpts = {
             ethereumRpcUrl: ethereumRpc,
             anchorServiceUrl: anchorServiceApi,
             stateStorePath: stateStorePath,
@@ -67,19 +68,17 @@ export class CeramicCliUtils {
             debug
         }
 
-        if (ipfsApi) {
-            Object.assign(config, {
-                ipfsHost: ipfsApi,
-            })
-        } else {
-            multiformats.multicodec.add(dagJose)
-            const format = legacy(multiformats, dagJose.name)
+        multiformats.multicodec.add(dagJose)
+        const format = legacy(multiformats, dagJose.name)
 
-            Object.assign(config, {
-                ipfs: await Ipfs.create({ ipld: { formats: [format] } })
-            })
+        let ipfs
+        if (ipfsApi) {
+            ipfs = ipfsClient({ url: ipfsApi, ipld: { formats: [format] } })
+        } else {
+            ipfs = await Ipfs.create({ ipld: { formats: [format] } })
         }
 
+        config.ipfs = ipfs
         return CeramicDaemon.create(config)
     }
 
