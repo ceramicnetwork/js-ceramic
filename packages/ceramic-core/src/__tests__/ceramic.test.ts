@@ -54,86 +54,91 @@ const createCeramic = async (ipfs: Ipfs): Promise<Ceramic> => {
   return ceramic
 }
 
-describe('Ceramic integration', () => {
-  jest.setTimeout(30000)
-  let ipfs1: Ipfs;
-  let ipfs2: Ipfs;
-  let ipfs3: Ipfs;
-  let multaddr1: string;
-  let multaddr2: string;
-  let multaddr3: string;
-  let tmpFolder1: any;
-  let tmpFolder2: any;
-  let tmpFolder3: any;
+let ipfs1: Ipfs;
+let ipfs2: Ipfs;
+let ipfs3: Ipfs;
+let multaddr1: string;
+let multaddr2: string;
+let multaddr3: string;
+let tmpFolder1: any;
+let tmpFolder2: any;
+let tmpFolder3: any;
 
-  const DOCTYPE_TILE = 'tile'
+const beforeAllFn = async (): Promise<void> => {
+  console.log('PICKA')
+  tmpFolder1 = await tmp.dir({ unsafeCleanup: true })
+  tmpFolder2 = await tmp.dir({ unsafeCleanup: true })
+  tmpFolder3 = await tmp.dir({ unsafeCleanup: true })
 
-  beforeEach(async () => {
-    tmpFolder1 = await tmp.dir({ unsafeCleanup: true })
-    tmpFolder2 = await tmp.dir({ unsafeCleanup: true })
-    tmpFolder3 = await tmp.dir({ unsafeCleanup: true })
-
-    const buildConfig = (path: string, id: number): object => {
-      return {
-        repo: `${path}/ipfs${id}/`, config: {
-          Addresses: { Swarm: [`/ip4/127.0.0.1/tcp/${4004 + id}`] }, Bootstrap: []
-        }
+  const buildConfig = (path: string, id: number): object => {
+    return {
+      repo: `${path}`, config: {
+        Addresses: { Swarm: [`/ip4/127.0.0.1/tcp/${4004 + id}`] }, Bootstrap: []
       }
     }
+  }
 
-    try {
-      ipfs1 = await createIPFS(buildConfig(tmpFolder1.path, 0))
-    } catch (e) {
-      // skip
-    }
+  try {
+    ipfs1 = await createIPFS(buildConfig(tmpFolder1.path, 0))
+  } catch (e) {
+    console.error(e)
+  }
 
-    try{
-      ipfs2 = await createIPFS(buildConfig(tmpFolder2.path, 1))
-    } catch (e) {
-      // skip
-    }
+  try{
+    ipfs2 = await createIPFS(buildConfig(tmpFolder2.path, 7))
+  } catch (e) {
+    console.error(e)
+  }
 
-    try {
-      ipfs3 = await createIPFS(buildConfig(tmpFolder3.path, 2))
-    } catch (e) {
-      // skip
-    }
+  try {
+    ipfs3 = await createIPFS(buildConfig(tmpFolder3.path, 21))
+  } catch (e) {
+    console.error(e)
+  }
 
-    multaddr1 = (await ipfs1.id()).addresses[0].toString()
-    multaddr2 = (await ipfs2.id()).addresses[0].toString()
-    multaddr3 = (await ipfs3.id()).addresses[0].toString()
+  multaddr1 = (await ipfs1.id()).addresses[0].toString()
+  multaddr2 = (await ipfs2.id()).addresses[0].toString()
+  multaddr3 = (await ipfs3.id()).addresses[0].toString()
 
-    const id1 = await ipfs1.id()
-    const id2 = await ipfs2.id()
-    const id3 = await ipfs3.id()
-    multaddr1 = id1.addresses[0].toString()
-    multaddr2 = id2.addresses[0].toString()
-    multaddr3 = id3.addresses[0].toString()
-  })
+  const id1 = await ipfs1.id()
+  const id2 = await ipfs2.id()
+  const id3 = await ipfs3.id()
+  multaddr1 = id1.addresses[0].toString()
+  multaddr2 = id2.addresses[0].toString()
+  multaddr3 = id3.addresses[0].toString()
+}
 
-  afterEach(async () => {
-    try {
-      await ipfs1.stop(() => console.log('IPFS1 stopped'))
-    } catch (e) {
-      // skip
-    }
-    try {
-      await ipfs2.stop(() => console.log('IPFS2 stopped'))
-    } catch (e) {
-      // skip
-    }
-    try {
-      await ipfs3.stop(() => console.log('IPFS3 stopped'))
-    } catch (e) {
-      // skip
-    }
+const afterAllFn = async (): Promise<void> => {
+  console.log('KURAC')
+  try {
+    await ipfs1.stop(() => console.log('IPFS1 stopped'))
+  } catch (e) {
+    console.error(e)
+  }
+  try {
+    await ipfs2.stop(() => console.log('IPFS2 stopped'))
+  } catch (e) {
+    console.error(e)
+  }
+  try {
+    await ipfs3.stop(() => console.log('IPFS3 stopped'))
+  } catch (e) {
+    console.error(e)
+  }
 
-    await new Promise(resolve => setTimeout(resolve, 5000))
+  await tmpFolder1.cleanup()
+  await tmpFolder2.cleanup()
+  await tmpFolder3.cleanup()
+}
 
-    await tmpFolder1.cleanup()
-    await tmpFolder2.cleanup()
-    await tmpFolder3.cleanup()
-  })
+const DOCTYPE_TILE = 'tile'
+
+describe('Ceramic integration', () => {
+  jest.setTimeout(300000)
+
+  beforeAll(beforeAllFn)
+
+  afterAll(afterAllFn)
 
   it('can propagate update across two connected nodes', async () => {
     await ipfs2.swarm.connect(multaddr1)
@@ -147,6 +152,14 @@ describe('Ceramic integration', () => {
     await ceramic1.close()
     await ceramic2.close()
   })
+})
+
+describe('Ceramic integration', () => {
+  jest.setTimeout(300000)
+
+  beforeAll(beforeAllFn)
+
+  afterAll(afterAllFn)
 
   it('won\'t propagate update across two disconnected nodes', async () => {
     const ceramic1 = await createCeramic(ipfs1)
@@ -154,15 +167,29 @@ describe('Ceramic integration', () => {
 
     const owner = ceramic1.context.did.id
 
-    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { test: 456 }, metadata: { owners: [owner], tags: ['3id'] } })
+    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, {
+      content: { test: 456 },
+      metadata: { owners: [owner], tags: ['3id'] }
+    })
     // we can't load document from id since nodes are not connected
     // so we won't find the genesis object from it's CID
-    const doctype2 = await ceramic2.createDocument(DOCTYPE_TILE, { content: { test: 456 }, metadata: { owners: [owner], tags: ['3id'] } },{ applyOnly: true })
+    const doctype2 = await ceramic2.createDocument(DOCTYPE_TILE, {
+      content: { test: 456 },
+      metadata: { owners: [owner], tags: ['3id'] }
+    }, { applyOnly: true })
     expect(doctype1.content).toEqual(doctype2.content)
     expect(doctype2.state).toEqual(expect.objectContaining({ content: { test: 456 } }))
     await ceramic1.close()
     await ceramic2.close()
   })
+})
+
+describe('Ceramic integration', () => {
+  jest.setTimeout(300000)
+
+  beforeAll(beforeAllFn)
+
+  afterAll(afterAllFn)
 
   it('can propagate update across nodes with common connection', async () => {
     // ipfs1 <-> ipfs2 <-> ipfs3
@@ -183,6 +210,14 @@ describe('Ceramic integration', () => {
     await ceramic2.close()
     await ceramic3.close()
   })
+})
+
+describe('Ceramic integration', () => {
+  jest.setTimeout(300000)
+
+  beforeAll(beforeAllFn)
+
+  afterAll(afterAllFn)
 
   it('can propagate multiple update across nodes with common connection', async () => {
     // ipfs1 <-> ipfs2 <-> ipfs3

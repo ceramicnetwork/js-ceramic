@@ -53,7 +53,7 @@ describe('Ceramic API', () => {
     }
   }
 
-  const createCeramic = async (c: CeramicConfig = {}) => {
+  const createCeramic = async (c: CeramicConfig = {}): Promise<Ceramic> => {
     const ceramic = await Ceramic.create(ipfs, c)
 
     const config = {
@@ -69,16 +69,16 @@ describe('Ceramic API', () => {
     tmpFolder = await tmp.dir({ unsafeCleanup: true })
 
     ipfs = await createIPFS({
-      repo: `${tmpFolder.path}/ipfs${9}/`,
+      repo: `${tmpFolder.path}`,
       config: {
-        Addresses: { Swarm: [ `/ip4/127.0.0.1/tcp/${4013}` ] },
+        Addresses: { Swarm: [ `/ip4/127.0.0.1/tcp/${4111}` ] },
         Bootstrap: []
       }
     })
   })
 
   afterAll(async () => {
-    await ipfs.stop()
+    await ipfs.stop(() => console.log('IPFS stopped'))
     await tmpFolder.cleanup()
   })
 
