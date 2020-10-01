@@ -273,7 +273,7 @@ class Document extends EventEmitter {
    * @param cid - HEAD CID
    * @private
    */
-  _handleHead(cid: CID): void {
+  _handleHead(cid: CID): Promise<void> {
     return this._applyQueue.add(async () => {
       const log = await this._fetchLog(cid)
       if (log.length) {
