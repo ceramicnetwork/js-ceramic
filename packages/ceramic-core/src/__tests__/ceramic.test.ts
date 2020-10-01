@@ -86,19 +86,19 @@ describe('Ceramic integration', () => {
     try {
       ipfs1 = await createIPFS(buildConfig(tmpFolder1.path, ipfsIndexOffset))
     } catch (e) {
-      console.error(e)
+      // skip
     }
 
     try{
       ipfs2 = await createIPFS(buildConfig(tmpFolder2.path, ipfsIndexOffset + 1))
     } catch (e) {
-      console.error(e)
+      // skip
     }
 
     try {
       ipfs3 = await createIPFS(buildConfig(tmpFolder3.path, ipfsIndexOffset + 2))
     } catch (e) {
-      console.error(e)
+      // skip
     }
 
     ipfsIndexOffset += 10
@@ -116,22 +116,23 @@ describe('Ceramic integration', () => {
   })
 
   afterEach(async () => {
-    await new Promise(resolve => setTimeout(resolve, 5000))
     try {
       await ipfs1.stop(() => console.log('IPFS1 stopped'))
     } catch (e) {
-      console.error(e)
+      // skip
     }
     try {
       await ipfs2.stop(() => console.log('IPFS2 stopped'))
     } catch (e) {
-      console.error(e)
+      // skip
     }
     try {
       await ipfs3.stop(() => console.log('IPFS3 stopped'))
     } catch (e) {
-      console.error(e)
+      // skip
     }
+
+    await new Promise(resolve => setTimeout(resolve, 5000))
 
     await tmpFolder1.cleanup()
     await tmpFolder2.cleanup()
