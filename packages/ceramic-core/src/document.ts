@@ -55,10 +55,10 @@ class Document extends EventEmitter {
             this._doctype.emit('change')
           }
         }
+        callback()
       } catch (e) {
         callback(e)
       }
-      callback()
     }, 1)
     this._genesisCid = new CID(DoctypeUtils.getGenesis(this.id))
   }
