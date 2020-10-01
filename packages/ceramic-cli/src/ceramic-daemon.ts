@@ -124,6 +124,7 @@ class CeramicDaemon {
 
     const ceramicConfig: CeramicConfig = {
       logLevel: 'silent',
+      gateway: opts.gateway || false
     }
     if (opts.anchorServiceUrl) {
       ceramicConfig.ethereumRpcUrl = opts.ethereumRpcUrl
