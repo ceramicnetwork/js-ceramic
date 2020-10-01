@@ -66,8 +66,6 @@ describe('Ceramic integration', () => {
 
   const DOCTYPE_TILE = 'tile'
 
-  let ipfsIndexOffset = 0
-
   beforeEach(async () => {
     tmpFolder = await tmp.dir({ unsafeCleanup: true })
 
@@ -79,7 +77,7 @@ describe('Ceramic integration', () => {
       }
     }
 
-    ([ipfs1, ipfs2, ipfs3] = await Promise.all([1, 2, 3].map(id => createIPFS(buildConfig(tmpFolder.path, ipfsIndexOffset + id)))))
+    ([ipfs1, ipfs2, ipfs3] = await Promise.all([1, 2, 3].map(id => createIPFS(buildConfig(tmpFolder.path, id)))))
 
     const id1 = await ipfs1.id()
     const id2 = await ipfs2.id()
@@ -94,8 +92,6 @@ describe('Ceramic integration', () => {
     await ipfs2.stop(() => console.log('IPFS2 stopped'))
     await ipfs3.stop(() => console.log('IPFS3 stopped'))
     await tmpFolder.cleanup()
-
-    ipfsIndexOffset += 3
   })
 
   it('can propagate update across two connected nodes', async () => {
