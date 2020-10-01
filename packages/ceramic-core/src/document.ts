@@ -43,6 +43,7 @@ class Document extends EventEmitter {
     this.logger = RootLogger.getLogger(Document.name)
 
     this._applyQueue = new PQueue({ concurrency: 1 })
+    this._applyQueue.start()
     this._genesisCid = new CID(DoctypeUtils.getGenesis(this.id))
   }
 
@@ -544,9 +545,10 @@ class Document extends EventEmitter {
   }
 
   close (): void {
+    this.dispatcher.unregister(this.id)
     this.off('update', this._handleHead.bind(this))
     this.off('headreq', this._publishHead.bind(this))
-    this.dispatcher.unregister(this.id)
+    this._applyQueue.clear()
   }
 
   toString (): string {

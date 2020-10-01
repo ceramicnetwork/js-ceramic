@@ -95,15 +95,18 @@ describe('Ceramic integration', () => {
   })
 
   afterEach(async () => {
-    await ipfs1.stop(() => console.log('IPFS1 stopped'))
-    await ipfs2.stop(() => console.log('IPFS2 stopped'))
-    await ipfs3.stop(() => console.log('IPFS3 stopped'))
+    // wait a bit to propagate
+    await new Promise(resolve => setTimeout(resolve, 5000))
+
+    await ipfs1.stop()
+    await ipfs2.stop()
+    await ipfs3.stop()
     await tmpFolder.cleanup()
 
     ipfsIndexOffset += 10
   })
 
-  it('can propagate update across two connected nodes', async (done) => {
+  it('can propagate update across two connected nodes', async () => {
     await ipfs2.swarm.connect(multaddr1)
 
     const ceramic1 = await createCeramic(ipfs1)
@@ -114,10 +117,9 @@ describe('Ceramic integration', () => {
     expectEqualStates(doctype1.state, doctype2.state)
     await ceramic1.close()
     await ceramic2.close()
-    done()
   })
 
-  it('won\'t propagate update across two disconnected nodes', async (done) => {
+  it('won\'t propagate update across two disconnected nodes', async () => {
     const ceramic1 = await createCeramic(ipfs1)
     const ceramic2 = await createCeramic(ipfs2)
 
@@ -131,10 +133,9 @@ describe('Ceramic integration', () => {
     expect(doctype2.state).toEqual(expect.objectContaining({ content: { test: 456 } }))
     await ceramic1.close()
     await ceramic2.close()
-    done()
   })
 
-  it('can propagate update across nodes with common connection', async (done) => {
+  it('can propagate update across nodes with common connection', async () => {
     // ipfs1 <-> ipfs2 <-> ipfs3
     // ipfs1 <!-> ipfs3
     await ipfs1.swarm.connect(multaddr2)
@@ -152,10 +153,9 @@ describe('Ceramic integration', () => {
     await ceramic1.close()
     await ceramic2.close()
     await ceramic3.close()
-    done()
   })
 
-  it('can propagate multiple update across nodes with common connection', async (done) => {
+  it('can propagate multiple update across nodes with common connection', async () => {
     // ipfs1 <-> ipfs2 <-> ipfs3
     // ipfs1 <!-> ipfs3
     await ipfs1.swarm.connect(multaddr2)
@@ -209,6 +209,5 @@ describe('Ceramic integration', () => {
     await ceramic1.close()
     await ceramic2.close()
     await ceramic3.close()
-    done()
   })
 })
