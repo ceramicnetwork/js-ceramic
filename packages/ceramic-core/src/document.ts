@@ -57,9 +57,8 @@ class Document extends EventEmitter {
         }
       } catch (e) {
         callback(e)
-      } finally {
-        callback()
       }
+      callback()
     }, 1)
     this._genesisCid = new CID(DoctypeUtils.getGenesis(this.id))
   }
@@ -292,6 +291,7 @@ class Document extends EventEmitter {
    */
   async _handleHead (cid: CID): Promise<void> {
     await this._applyQueue.push({ cid })
+    await this._applyQueue.drain()
   }
 
   async _fetchLog (cid: CID, log: Array<CID> = []): Promise<Array<CID>> {
