@@ -20,7 +20,7 @@
     "lib"
   ],
   "scripts": {
-    "test": "./node_modules/.bin/jest --coverage --runInBand",
+    "test": "./node_modules/.bin/jest --coverage --runInBand --detectOpenHandles",
     "build": "../../node_modules/.bin/tsc -p tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
