@@ -1,7 +1,7 @@
 import Dispatcher from './dispatcher'
 import CID from 'cids'
 import { EventEmitter } from 'events'
-import async, { AsyncQueue } from 'async'
+import PQueue from 'p-queue'
 import cloneDeep from 'lodash.clonedeep'
 import AnchorServiceResponse from "./anchor/anchor-service-response"
 import {
@@ -21,12 +21,8 @@ import {
 } from "@ceramicnetwork/ceramic-common"
 import {PinStore} from "./store/pin-store";
 
-interface QueueTask {
-  cid: CID;
-}
-
 class Document extends EventEmitter {
-  private _applyQueue: AsyncQueue<unknown>
+  private _applyQueue: PQueue
   private _genesisCid: CID
 
   private _doctype: Doctype
@@ -46,21 +42,7 @@ class Document extends EventEmitter {
     this.version = DoctypeUtils.getVersionId(normalized)
     this.logger = RootLogger.getLogger(Document.name)
 
-    this._applyQueue = async.queue(async (task: QueueTask, callback) => {
-      try {
-        const log = await this._fetchLog(task.cid)
-        if (log.length) {
-          const updated = await this._applyLog(log)
-          if (updated) {
-            this._doctype.emit('change')
-          }
-        }
-      } catch (e) {
-        callback(e)
-      } finally {
-        callback()
-      }
-    }, 1)
+    this._applyQueue = new PQueue({ concurrency: 1 })
     this._genesisCid = new CID(DoctypeUtils.getGenesis(this.id))
   }
 
@@ -290,8 +272,16 @@ class Document extends EventEmitter {
    * @param cid - HEAD CID
    * @private
    */
-  async _handleHead (cid: CID): Promise<void> {
-    await this._applyQueue.push({ cid })
+  async _handleHead(cid: CID): Promise<void> {
+    await this._applyQueue.add(async () => {
+      const log = await this._fetchLog(cid)
+      if (log.length) {
+        const updated = await this._applyLog(log)
+        if (updated) {
+          this._doctype.emit('change')
+        }
+      }
+    })
   }
 
   async _fetchLog (cid: CID, log: Array<CID> = []): Promise<Array<CID>> {
