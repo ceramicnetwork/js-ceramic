@@ -68,7 +68,7 @@ describe('Ceramic integration', () => {
 
   const DOCTYPE_TILE = 'tile'
 
-  let ipfsIndexOffset = 0
+  let ipfsIndexOffset = 10
 
   beforeEach(async () => {
     tmpFolder1 = await tmp.dir({ unsafeCleanup: true })
@@ -83,9 +83,24 @@ describe('Ceramic integration', () => {
       }
     }
 
-    ipfs1 = await createIPFS(buildConfig(tmpFolder1.path, ipfsIndexOffset))
-    ipfs2 = await createIPFS(buildConfig(tmpFolder2.path, ipfsIndexOffset + 1))
-    ipfs3 = await createIPFS(buildConfig(tmpFolder3.path, ipfsIndexOffset + 2))
+    try {
+      ipfs1 = await createIPFS(buildConfig(tmpFolder1.path, ipfsIndexOffset))
+    } catch (e) {
+      console.error(e)
+    }
+
+    try{
+      ipfs2 = await createIPFS(buildConfig(tmpFolder2.path, ipfsIndexOffset + 1))
+    } catch (e) {
+      console.error(e)
+    }
+
+    try {
+      ipfs3 = await createIPFS(buildConfig(tmpFolder3.path, ipfsIndexOffset + 2))
+    } catch (e) {
+      console.error(e)
+    }
+
     ipfsIndexOffset += 10
 
     multaddr1 = (await ipfs1.id()).addresses[0].toString()
@@ -101,9 +116,23 @@ describe('Ceramic integration', () => {
   })
 
   afterEach(async () => {
-    await ipfs1.stop(() => console.log('IPFS1 stopped'))
-    await ipfs2.stop(() => console.log('IPFS2 stopped'))
-    await ipfs3.stop(() => console.log('IPFS3 stopped'))
+    await new Promise(resolve => setTimeout(resolve, 5000))
+    try {
+      await ipfs1.stop(() => console.log('IPFS1 stopped'))
+    } catch (e) {
+      console.error(e)
+    }
+    try {
+      await ipfs2.stop(() => console.log('IPFS2 stopped'))
+    } catch (e) {
+      console.error(e)
+    }
+    try {
+      await ipfs3.stop(() => console.log('IPFS3 stopped'))
+    } catch (e) {
+      console.error(e)
+    }
+
     await tmpFolder1.cleanup()
     await tmpFolder2.cleanup()
     await tmpFolder3.cleanup()

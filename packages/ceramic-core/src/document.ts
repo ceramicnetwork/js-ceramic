@@ -550,6 +550,7 @@ class Document extends EventEmitter {
     this.off('update', this._handleHead.bind(this))
     this.off('headreq', this._publishHead.bind(this))
     while (this._applyQueue.size > 0) {
+      console.log('waiting')
       await new Promise(resolve => setTimeout(resolve, 1000))
     }
   }
