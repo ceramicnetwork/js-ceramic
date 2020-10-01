@@ -121,6 +121,7 @@ export default class Dispatcher extends EventEmitter {
 
   _log(msg: LogMessage): void {
     let msgString = JSON.stringify(msg)
+    // TODO: Remove logToFile when file plugin works
     logToFile('core', msgString)
     this.logger.debug(msgString)
   }

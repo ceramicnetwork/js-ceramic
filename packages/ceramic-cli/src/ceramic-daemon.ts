@@ -94,7 +94,8 @@ class CeramicDaemon {
             errorMessage,
           }
           const logString = JSON.stringify(log)
-          logToFile(`daemon${opts.gateway && '-gateway' || ''}`, logString)
+          // TODO: Remove logToFile when file plugin works
+          logToFile(`cli${opts.gateway && '-gateway' || ''}`, logString)
           this.logger.debug(logString)
         })
 

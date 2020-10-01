@@ -283,6 +283,7 @@ class LoggerProvider {
     
 }
 
+// TODO: Remove logToFile in favor of plugin
 /**
  * Appends `msg` to the file `filename`
  * @param filename File name
