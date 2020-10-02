@@ -154,7 +154,7 @@ class CeramicDaemon {
       }
     }
     const now = Date.now()
-    let logResponse = {
+    httpLog.response = {
       timestamp: now,
       processingTime: now - requestStart,
       body: extra && extra.body || null,
@@ -162,7 +162,6 @@ class CeramicDaemon {
       statusMessage: res.statusMessage,
       requestError: extra && extra.requestError || null
     }
-    httpLog.response = logResponse
     return httpLog
   }
 
