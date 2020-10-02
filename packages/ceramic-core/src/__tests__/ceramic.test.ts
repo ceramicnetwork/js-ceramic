@@ -37,7 +37,8 @@ const expectEqualStates = (state1: DocState, state2: DocState): void => {
 
 const createCeramic = async (ipfs: Ipfs, topic: string): Promise<Ceramic> => {
   const ceramic = await Ceramic.create(ipfs, {
-    stateStorePath: await tmp.tmpName()
+    stateStorePath: await tmp.tmpName(),
+    topic,
   })
 
   await IdentityWallet.create({
