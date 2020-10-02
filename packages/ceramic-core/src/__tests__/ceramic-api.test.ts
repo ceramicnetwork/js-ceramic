@@ -85,7 +85,7 @@ describe('Ceramic', () => {
   })
 
   describe('API', () => {
-    test('can load the previous document version', async () => {
+    it('can load the previous document version', async () => {
       ceramic = await createCeramic()
 
       const owner = ceramic.context.did.id
@@ -160,7 +160,7 @@ describe('Ceramic', () => {
 
 
   describe('API', () => {
-    test('cannot create document with invalid schema', async () => {
+    it('cannot create document with invalid schema', async () => {
       ceramic = await createCeramic()
 
       const owner = ceramic.context.did.id
@@ -188,7 +188,7 @@ describe('Ceramic', () => {
   })
 
   describe('API', () => {
-    test('can create document with valid schema', async () => {
+    it('can create document with valid schema', async () => {
       ceramic = await createCeramic()
 
       const owner = ceramic.context.did.id
@@ -212,7 +212,7 @@ describe('Ceramic', () => {
   })
 
   describe('API', () => {
-    test('can create document with invalid schema if validation is not set', async () => {
+    it('can create document with invalid schema if validation is not set', async () => {
       ceramic = await createCeramic({ validateDocs: false })
 
       const owner = ceramic.context.did.id
@@ -236,7 +236,7 @@ describe('Ceramic', () => {
   })
 
   describe('API', () => {
-    test('can update schema if content is valid', async () => {
+    it('can update schema if content is valid', async () => {
       ceramic = await createCeramic()
 
       const owner = ceramic.context.did.id
@@ -268,7 +268,7 @@ describe('Ceramic', () => {
   })
 
   describe('API', () => {
-    test('cannot update schema if content is not valid', async () => {
+    it('cannot update schema if content is not valid', async () => {
       ceramic = await createCeramic()
 
       const owner = ceramic.context.did.id
@@ -302,7 +302,7 @@ describe('Ceramic', () => {
   })
 
   describe('API', () => {
-    test('can update valid content and schema at the same time', async () => {
+    it('can update valid content and schema at the same time', async () => {
       ceramic = await createCeramic()
 
       const owner = ceramic.context.did.id
