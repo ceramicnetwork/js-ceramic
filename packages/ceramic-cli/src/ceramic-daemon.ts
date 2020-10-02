@@ -38,10 +38,6 @@ class CeramicDaemon {
 
   constructor (public ceramic: Ceramic, opts: CreateOpts) {
     this.debug = opts.debug
-    if (this.debug) {
-      RootLogger.setLevel('debug')
-    }
-
     this.logger = RootLogger.getLogger(CeramicDaemon.name)
 
     const app = express()
@@ -58,7 +54,6 @@ class CeramicDaemon {
         this.logger.error(logString)
         next(err)
       })
-
       app.use((req: Request, res: Response, next: NextFunction): void => {
         const requestStart = Date.now()
 
@@ -82,10 +77,10 @@ class CeramicDaemon {
           logToFile(`cli${opts.gateway && '-gateway' || ''}`, logString)
           this.logger.debug(logString)
         })
-
         next()
       })
     }
+
     app.use((err: Error, req: Request, res: Response, next: NextFunction): void => {
       res.json({ error: err.message })
       next(err)
@@ -102,7 +97,7 @@ class CeramicDaemon {
     const { ipfs } = opts
 
     const ceramicConfig: CeramicConfig = {
-      logLevel: 'silent',
+      logLevel: opts.debug ? 'debug' : 'silent',
       gateway: opts.gateway || false
     }
     if (opts.anchorServiceUrl) {
