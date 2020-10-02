@@ -84,6 +84,10 @@ describe('Ceramic', () => {
     await tmpFolder.cleanup()
   })
 
+  afterEach(async () => {
+    await new Promise(resolve => setTimeout(resolve, 10000))
+  })
+
   describe('API', () => {
     it('can load the previous document version', async () => {
       ceramic = await createCeramic()

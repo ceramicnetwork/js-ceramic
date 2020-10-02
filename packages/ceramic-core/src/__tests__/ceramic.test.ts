@@ -101,6 +101,10 @@ describe('Ceramic', () => {
     await tmpFolder.cleanup()
   })
 
+  afterEach(async () => {
+    await new Promise(resolve => setTimeout(resolve, 10000))
+  })
+
   describe('Integration 1', () => {
     it('can propagate update across two connected nodes', async () => {
       await ipfs2.swarm.connect(multaddr1)
