@@ -25,8 +25,6 @@ class Document extends EventEmitter {
   private _genesisCid: CID
   private _applyQueue: PQueue
 
-  private readonly processing: CID[] = []
-
   private _doctype: Doctype
   private _doctypeHandler: DoctypeHandler<Doctype>
 
@@ -36,6 +34,8 @@ class Document extends EventEmitter {
   public readonly version: CID
 
   private logger: Logger
+
+  private isProcessing: boolean
 
   constructor (id: string, public dispatcher: Dispatcher, public pinStore: PinStore) {
     super()
@@ -276,23 +276,17 @@ class Document extends EventEmitter {
    * @private
    */
   async _handleHead(cid: CID): Promise<void> {
-    this.processing.push(cid)
-    try {
-      await this._applyQueue.add(async () => {
-        const log = await this._fetchLog(cid)
-        if (log.length) {
-          const updated = await this._applyLog(log)
-          if (updated) {
-            this._doctype.emit('change')
-          }
+    this.isProcessing = true
+    await this._applyQueue.add(async () => {
+      const log = await this._fetchLog(cid)
+      if (log.length) {
+        const updated = await this._applyLog(log)
+        if (updated) {
+          this._doctype.emit('change')
         }
-        this.processing.shift()
-      })
-    } catch (e) {
-      this.processing.shift()
-      throw e
-    }
-
+      }
+      this.isProcessing = false
+    })
   }
 
   async _fetchLog (cid: CID, log: Array<CID> = []): Promise<Array<CID>> {
@@ -555,18 +549,14 @@ class Document extends EventEmitter {
   }
 
   async close (): Promise<void> {
-    while (this.processing.length > 0) {
-      await new Promise(resolve => setTimeout(resolve, 4000))
-    }
-
-    await this._applyQueue.pause()
-    await this._applyQueue.clear()
-    await this._applyQueue.onIdle()
-
     this.off('update', this._handleHead.bind(this))
     this.off('headreq', this._publishHead.bind(this))
 
     this.dispatcher.unregister(this.id)
+
+    while (this.isProcessing || this._applyQueue.size > 0) {
+      await new Promise(resolve => setTimeout(resolve, 1000))
+    }
   }
 
   toString (): string {
