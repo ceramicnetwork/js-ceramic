@@ -54,16 +54,16 @@ const createCeramic = async (ipfs: Ipfs): Promise<Ceramic> => {
   return ceramic
 }
 
-let ipfs1: Ipfs;
-let ipfs2: Ipfs;
-let ipfs3: Ipfs;
-let multaddr1: string;
-let multaddr2: string;
-let multaddr3: string;
-let tmpFolder: any;
-
 describe('Ceramic', () => {
   jest.setTimeout(300000)
+
+  let ipfs1: Ipfs;
+  let ipfs2: Ipfs;
+  let ipfs3: Ipfs;
+  let multaddr1: string;
+  let multaddr2: string;
+  let multaddr3: string;
+  let tmpFolder: any;
 
   const DOCTYPE_TILE = 'tile'
 
