@@ -67,7 +67,7 @@ describe('Ceramic integration', () => {
   let port2Start = 5000
   let port3Start = 6000
 
-  let topic = 'topic_'
+  let topic = '/ceramic_'
   let topicIndex = 1
 
   beforeEach(async () => {
