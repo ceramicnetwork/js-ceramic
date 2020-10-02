@@ -120,8 +120,7 @@ export default class Dispatcher extends EventEmitter {
   }
 
   _log(msg: LogMessage): void {
-    let msgString = JSON.stringify(msg)
-    this.logger.debug(msgString)
+    this.logger.debug(JSON.stringify(msg))
   }
 
   async close(): Promise<void> {
