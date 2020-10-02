@@ -101,12 +101,8 @@ describe('Ceramic', () => {
     await tmpFolder.cleanup()
   })
 
-  afterEach(async () => {
-    await new Promise(resolve => setTimeout(resolve, 20000))
-  })
-
   describe('Integration 1', () => {
-    it('can propagate update across two connected nodes', async () => {
+    test('can propagate update across two connected nodes', async () => {
       await ipfs2.swarm.connect(multaddr1)
 
       const ceramic1 = await createCeramic(ipfs1)
@@ -123,7 +119,7 @@ describe('Ceramic', () => {
   })
 
   describe('Integration 2', () => {
-    it('won\'t propagate update across two disconnected nodes', async () => {
+    test('won\'t propagate update across two disconnected nodes', async () => {
       const ceramic1 = await createCeramic(ipfs1)
       const ceramic2 = await createCeramic(ipfs2)
 
@@ -141,7 +137,7 @@ describe('Ceramic', () => {
   })
 
   describe('Integration 3', () => {
-    it('can propagate update across nodes with common connection', async () => {
+    test('can propagate update across nodes with common connection', async () => {
       // ipfs1 <-> ipfs2 <-> ipfs3
       // ipfs1 <!-> ipfs3
       await ipfs1.swarm.connect(multaddr2)
@@ -166,7 +162,7 @@ describe('Ceramic', () => {
   })
 
   describe('Integration 4', () => {
-    it('can propagate multiple update across nodes with common connection', async () => {
+    test('can propagate multiple update across nodes with common connection', async () => {
       // ipfs1 <-> ipfs2 <-> ipfs3
       // ipfs1 <!-> ipfs3
       await ipfs1.swarm.connect(multaddr2)

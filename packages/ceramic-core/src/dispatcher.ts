@@ -123,8 +123,9 @@ export default class Dispatcher extends EventEmitter {
 
   async close(): Promise<void> {
     this._isRunning = false
-    await this._ipfs.pubsub.unsubscribe(TOPIC)
 
     await Promise.all(Object.values(this._documents).map(async (doc) => await doc.close()))
+
+    await this._ipfs.pubsub.unsubscribe(TOPIC)
   }
 }

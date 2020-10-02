@@ -73,7 +73,7 @@ describe('Ceramic', () => {
     ipfs = await createIPFS({
       repo: `${tmpFolder.path}`,
       config: {
-        Addresses: { Swarm: [ `/ip4/127.0.0.1/tcp/${4111}` ] },
+        Addresses: { Swarm: [ `/ip4/127.0.0.1/tcp/${3001}` ] },
         Bootstrap: []
       }
     })
@@ -84,12 +84,8 @@ describe('Ceramic', () => {
     await tmpFolder.cleanup()
   })
 
-  afterEach(async () => {
-    await new Promise(resolve => setTimeout(resolve, 10000))
-  })
-
   describe('API', () => {
-    it('can load the previous document version', async () => {
+    test('can load the previous document version', async () => {
       ceramic = await createCeramic()
 
       const owner = ceramic.context.did.id
@@ -164,7 +160,7 @@ describe('Ceramic', () => {
 
 
   describe('API', () => {
-    it('cannot create document with invalid schema', async () => {
+    test('cannot create document with invalid schema', async () => {
       ceramic = await createCeramic()
 
       const owner = ceramic.context.did.id
@@ -192,7 +188,7 @@ describe('Ceramic', () => {
   })
 
   describe('API', () => {
-    it('can create document with valid schema', async () => {
+    test('can create document with valid schema', async () => {
       ceramic = await createCeramic()
 
       const owner = ceramic.context.did.id
@@ -216,7 +212,7 @@ describe('Ceramic', () => {
   })
 
   describe('API', () => {
-    it('can create document with invalid schema if validation is not set', async () => {
+    test('can create document with invalid schema if validation is not set', async () => {
       ceramic = await createCeramic({ validateDocs: false })
 
       const owner = ceramic.context.did.id
@@ -240,7 +236,7 @@ describe('Ceramic', () => {
   })
 
   describe('API', () => {
-    it('can update schema if content is valid', async () => {
+    test('can update schema if content is valid', async () => {
       ceramic = await createCeramic()
 
       const owner = ceramic.context.did.id
@@ -272,7 +268,7 @@ describe('Ceramic', () => {
   })
 
   describe('API', () => {
-    it('cannot update schema if content is not valid', async () => {
+    test('cannot update schema if content is not valid', async () => {
       ceramic = await createCeramic()
 
       const owner = ceramic.context.did.id
@@ -306,7 +302,7 @@ describe('Ceramic', () => {
   })
 
   describe('API', () => {
-    it('can update valid content and schema at the same time', async () => {
+    test('can update valid content and schema at the same time', async () => {
       ceramic = await createCeramic()
 
       const owner = ceramic.context.did.id

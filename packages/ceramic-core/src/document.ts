@@ -22,8 +22,10 @@ import {
 import {PinStore} from "./store/pin-store";
 
 class Document extends EventEmitter {
-  private _applyQueue: PQueue
   private _genesisCid: CID
+  private _applyQueue: PQueue
+
+  private readonly processing: CID[] = []
 
   private _doctype: Doctype
   private _doctypeHandler: DoctypeHandler<Doctype>
@@ -274,22 +276,23 @@ class Document extends EventEmitter {
    * @private
    */
   async _handleHead(cid: CID): Promise<void> {
-    let applyPromise
-    await this._applyQueue.add(async () => {
-      try {
+    this.processing.push(cid)
+    try {
+      await this._applyQueue.add(async () => {
         const log = await this._fetchLog(cid)
         if (log.length) {
-          applyPromise = this._applyLog(log)
-          const updated = await applyPromise
+          const updated = await this._applyLog(log)
           if (updated) {
             this._doctype.emit('change')
           }
         }
-      } catch (e) {
-        applyPromise = Promise.reject(e)
-      }
-    })
-    await applyPromise
+        this.processing.shift()
+      })
+    } catch (e) {
+      this.processing.shift()
+      throw e
+    }
+
   }
 
   async _fetchLog (cid: CID, log: Array<CID> = []): Promise<Array<CID>> {
@@ -555,6 +558,13 @@ class Document extends EventEmitter {
     this.off('update', this._handleHead.bind(this))
     this.off('headreq', this._publishHead.bind(this))
 
+    while (this.processing.length > 0) {
+      console.log(this.processing.length)
+      await new Promise(resolve => setTimeout(resolve, 1000))
+    }
+
+    await this._applyQueue.pause()
+    await this._applyQueue.clear()
     await this._applyQueue.onIdle()
     this.dispatcher.unregister(this.id)
   }
