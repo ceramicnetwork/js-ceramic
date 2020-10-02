@@ -555,9 +555,8 @@ class Document extends EventEmitter {
     this.off('update', this._handleHead.bind(this))
     this.off('headreq', this._publishHead.bind(this))
 
+    await this._applyQueue.onIdle()
     this.dispatcher.unregister(this.id)
-
-    await this._applyQueue.onEmpty()
   }
 
   toString (): string {

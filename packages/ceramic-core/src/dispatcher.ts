@@ -126,6 +126,5 @@ export default class Dispatcher extends EventEmitter {
     await this._ipfs.pubsub.unsubscribe(TOPIC)
 
     await Promise.all(Object.values(this._documents).map(async (doc) => await doc.close()))
-    this._documents = {}
   }
 }
