@@ -555,17 +555,17 @@ class Document extends EventEmitter {
   }
 
   async close (): Promise<void> {
-    this.off('update', this._handleHead.bind(this))
-    this.off('headreq', this._publishHead.bind(this))
-
     while (this.processing.length > 0) {
-      console.log(this.processing.length)
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      await new Promise(resolve => setTimeout(resolve, 4000))
     }
 
     await this._applyQueue.pause()
     await this._applyQueue.clear()
     await this._applyQueue.onIdle()
+
+    this.off('update', this._handleHead.bind(this))
+    this.off('headreq', this._publishHead.bind(this))
+
     this.dispatcher.unregister(this.id)
   }
 
