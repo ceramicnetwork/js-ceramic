@@ -102,7 +102,7 @@ describe('Ceramic', () => {
   })
 
   afterEach(async () => {
-    await new Promise(resolve => setTimeout(resolve, 10000))
+    await new Promise(resolve => setTimeout(resolve, 20000))
   })
 
   describe('Integration 1', () => {
