@@ -85,23 +85,23 @@ class LoggerProvider {
 
     /**
      * Plugin to append log messages to files named after components
-     * @param options Should include `component` name
+     * @notice If no component name is given 'default' will be included in the file name
+     * @param options Should include `component` name string
      */
     static _includeFilePlugin (options: Options): void {
         const originalFactory = log.methodFactory;
 
         log.methodFactory = (methodName: string, logLevel: any, loggerName: string): MethodFactory => {
             const rawMethod = originalFactory(methodName, logLevel, loggerName);
-
             return (...args: any[]): any => {
                 const message = LoggerProvider._interpolate(args)
-                // TODO: Allow users to configure log location
-                const basePath = '/usr/local/var/log/ceramic/'
+                const basePath = '/usr/local/var/log/ceramic/' // TODO: Allow users to configure log location
+                const namespace = options.component ? options.component.toLowerCase() : 'default'
                 fs.mkdir(basePath, { recursive: true }, (err) => {
                     if (err && (err.code != 'EEXIST')) console.warn('WARNING: Can not write logs to files', err)
                     else {
                         const stream = fs.createWriteStream(
-                            basePath + `${loggerName}-${options.component || 'out'}.plugin.log`,
+                            basePath + `${loggerName.toLowerCase()}-${namespace}.log`,
                             { flags: 'a' }
                         )
                         stream.write(util.format(message) + '\n')
@@ -281,29 +281,8 @@ class LoggerProvider {
     }
 }
 
-// TODO: Remove logToFile in favor of plugin
-/**
- * Appends `msg` to the file `filename`
- * @param filename File name
- * @param msg Log message
- */
-function logToFile (filename: string, msg: string) {
-    // TODO: Allow users to configure log location
-    const basePath = '/usr/local/var/log/ceramic/'
-    fs.mkdir(basePath, { recursive: true }, (err) => {
-        if (err && (err.code != 'EEXIST')) console.error(err)
-    })
-    const stream = fs.createWriteStream(
-        basePath + `${filename}.log`,
-        { flags: 'a' }
-    )
-    stream.write(util.format(msg) + '\n')
-    stream.end()
-}
-
 export {
     LoggerProvider,
     Logger,
     log as RootLogger,
-    logToFile,
 }

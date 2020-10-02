@@ -2,7 +2,7 @@ import type Ipfs from 'ipfs'
 import express, { Request, Response, NextFunction } from 'express'
 import Ceramic from '@ceramicnetwork/ceramic-core'
 import type { CeramicConfig } from "@ceramicnetwork/ceramic-core";
-import { DoctypeUtils, RootLogger, Logger, logToFile } from "@ceramicnetwork/ceramic-common"
+import { DoctypeUtils, RootLogger, Logger } from "@ceramicnetwork/ceramic-common"
 // @ts-ignore
 import cors from 'cors'
 
@@ -73,8 +73,6 @@ class CeramicDaemon {
         res.on("finish", () => {
           const httpLog = this.buildHttpLog(requestStart, req, res, {requestError, body})
           const logString = JSON.stringify(httpLog)
-          // TODO: Remove logToFile when file plugin works
-          logToFile(`cli${opts.gateway && '-gateway' || ''}`, logString)
           this.logger.debug(logString)
         })
         next()
