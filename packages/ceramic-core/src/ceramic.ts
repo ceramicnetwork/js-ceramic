@@ -39,6 +39,8 @@ export interface CeramicConfig {
 
   logLevel?: string;
   gateway?: boolean;
+
+  topic?: string;
 }
 
 /**
@@ -118,7 +120,7 @@ class Ceramic implements CeramicApi {
       component: config.gateway? 'GATEWAY' : 'NODE'
     })
 
-    const dispatcher = new Dispatcher(ipfs)
+    const dispatcher = new Dispatcher(ipfs, config.topic)
     await dispatcher.init()
 
     const anchorServiceFactory = new AnchorServiceFactory(dispatcher, config)

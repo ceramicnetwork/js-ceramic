@@ -35,7 +35,7 @@ const expectEqualStates = (state1: DocState, state2: DocState): void => {
   expect(DoctypeUtils.serializeState(state1)).toEqual(DoctypeUtils.serializeState(state2))
 }
 
-const createCeramic = async (ipfs: Ipfs): Promise<Ceramic> => {
+const createCeramic = async (ipfs: Ipfs, topic: string): Promise<Ceramic> => {
   const ceramic = await Ceramic.create(ipfs, {
     stateStorePath: await tmp.tmpName()
   })
@@ -66,7 +66,11 @@ describe('Ceramic integration', () => {
   let port2Start = 5000
   let port3Start = 6000
 
+  let topic = 'topic_'
+  let topicIndex = 1
+
   beforeEach(async () => {
+    topic = topic + topicIndex++
     tmpFolder = await tmp.dir({ unsafeCleanup: true })
 
     const buildConfig = (path: string, id: number): object => {
@@ -110,8 +114,8 @@ describe('Ceramic integration', () => {
   it('can propagate update across two connected nodes', async () => {
     await ipfs2.swarm.connect(multaddr1)
 
-    const ceramic1 = await createCeramic(ipfs1)
-    const ceramic2 = await createCeramic(ipfs2)
+    const ceramic1 = await createCeramic(ipfs1, topic)
+    const ceramic2 = await createCeramic(ipfs2, topic)
     const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { test: 123 } }, { applyOnly: true })
     const doctype2 = await ceramic2.loadDocument(doctype1.id)
     expect(doctype1.content).toEqual(doctype2.content)
@@ -121,8 +125,8 @@ describe('Ceramic integration', () => {
   })
 
   it('won\'t propagate update across two disconnected nodes', async () => {
-    const ceramic1 = await createCeramic(ipfs1)
-    const ceramic2 = await createCeramic(ipfs2)
+    const ceramic1 = await createCeramic(ipfs1, topic)
+    const ceramic2 = await createCeramic(ipfs2, topic)
 
     const owner = ceramic1.context.did.id
 
@@ -142,9 +146,9 @@ describe('Ceramic integration', () => {
     await ipfs1.swarm.connect(multaddr2)
     await ipfs2.swarm.connect(multaddr3)
 
-    const ceramic1 = await createCeramic(ipfs1)
-    const ceramic2 = await createCeramic(ipfs2)
-    const ceramic3 = await createCeramic(ipfs3)
+    const ceramic1 = await createCeramic(ipfs1, topic)
+    const ceramic2 = await createCeramic(ipfs2, topic)
+    const ceramic3 = await createCeramic(ipfs3, topic)
 
     const owner = ceramic1.context.did.id
     // ceramic node 2 shouldn't need to have the document open in order to forward the message

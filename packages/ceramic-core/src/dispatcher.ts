@@ -29,7 +29,7 @@ export default class Dispatcher extends EventEmitter {
   private logger: Logger
   private _isRunning = true
 
-  constructor (public _ipfs: Ipfs.Ipfs) {
+  constructor (public _ipfs: Ipfs.Ipfs, public topic: string = TOPIC) {
     super()
     this._documents = {}
     this.logger = RootLogger.getLogger(Dispatcher.name)
