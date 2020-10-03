@@ -29,13 +29,6 @@ const createIPFS =(overrideConfig: object = {}): Promise<any> => {
 
   const config = {
     ipld: { formats: [format] },
-    libp2p: {
-      config: {
-        dht: {
-          enabled: true
-        }
-      }
-    }
   }
 
   Object.assign(config, overrideConfig)
@@ -52,12 +45,14 @@ describe('Ceramic interop: core <> http-client', () => {
 
   const DOCTYPE_TILE = 'tile'
 
+  const topic = 'ceramic_daemon_test'
+
   beforeAll(async () => {
     tmpFolder = await tmp.dir({ unsafeCleanup: true })
     ipfs = await createIPFS({
-      repo: `${tmpFolder.path}/ipfs${7}/`,
+      repo: `${tmpFolder.path}/ipfs${5011}/`,
       config: {
-        Addresses: { Swarm: [ `/ip4/127.0.0.1/tcp/${4011}` ] },
+        Addresses: { Swarm: [ `/ip4/127.0.0.1/tcp/${5011}` ] },
         Discovery: {
           MDNS: { Enabled: false },
           webRTCStar: { Enabled: false }
@@ -73,7 +68,7 @@ describe('Ceramic interop: core <> http-client', () => {
   })
 
   beforeEach(async () => {
-    core = await Ceramic.create(ipfs)
+    core = await Ceramic.create(ipfs, { topic })
 
     const doctypeHandler = new TileDoctypeHandler()
     doctypeHandler.verifyJWS = (): Promise<void> => { return }
