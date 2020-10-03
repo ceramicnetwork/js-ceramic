@@ -77,10 +77,10 @@ describe('Ceramic integration', () => {
   beforeEach(async () => {
     tmpFolder = await tmp.dir({ unsafeCleanup: true })
 
-    const buildConfig = (path: string, id: number): object => {
+    const buildConfig = (path: string, port: number): object => {
       return {
-        repo: `${path}/ipfs${id}/`, config: {
-          Addresses: { Swarm: [`/ip4/127.0.0.1/tcp/${id}`] }, Bootstrap: []
+        repo: `${path}/ipfs${port}/`, config: {
+          Addresses: { Swarm: [`/ip4/127.0.0.1/tcp/${port}`] }, Bootstrap: []
         }
       }
     }
@@ -90,7 +90,7 @@ describe('Ceramic integration', () => {
     }
 
     ([port1, port2, port3] = await Promise.all([p1Start, p2Start, p3Start].map(start => findPort(start, pOffset))));
-    ([ipfs1, ipfs2, ipfs3] = await Promise.all([port1, port2, port3].map(id => createIPFS(buildConfig(tmpFolder.path, id)))));
+    ([ipfs1, ipfs2, ipfs3] = await Promise.all([port1, port2, port3].map(port => createIPFS(buildConfig(tmpFolder.path, port)))));
     ([p1Start, p2Start, p3Start] = [p1Start, p2Start, p3Start].map(start => start + pOffset))
 
     multaddr1 = (await ipfs1.id()).addresses[0].toString()
