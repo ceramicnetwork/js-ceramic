@@ -3,7 +3,8 @@ import CID from 'cids'
 import { EventEmitter } from 'events'
 import PQueue from 'p-queue'
 import cloneDeep from 'lodash.clonedeep'
-import AnchorServiceResponse from "./anchor/anchor-service-response"
+import AnchorServiceResponse from './anchor/anchor-service-response'
+import Utils from './utils'
 import {
   AnchorProof,
   AnchorRecord,
@@ -18,8 +19,8 @@ import {
   DocMetadata,
   RootLogger,
   Logger,
-} from "@ceramicnetwork/ceramic-common"
-import {PinStore} from "./store/pin-store";
+} from '@ceramicnetwork/ceramic-common'
+import {PinStore} from './store/pin-store';
 
 class Document extends EventEmitter {
   private _genesisCid: CID
@@ -45,7 +46,6 @@ class Document extends EventEmitter {
     this.logger = RootLogger.getLogger(Document.name)
 
     this._applyQueue = new PQueue({ concurrency: 1 })
-    this._applyQueue.start()
     this._genesisCid = new CID(DoctypeUtils.getGenesis(this.id))
   }
 
@@ -276,17 +276,22 @@ class Document extends EventEmitter {
    * @private
    */
   async _handleHead(cid: CID): Promise<void> {
-    this.isProcessing = true
-    await this._applyQueue.add(async () => {
-      const log = await this._fetchLog(cid)
-      if (log.length) {
-        const updated = await this._applyLog(log)
-        if (updated) {
-          this._doctype.emit('change')
+    try {
+      this.isProcessing = true
+      await this._applyQueue.add(async () => {
+        const log = await this._fetchLog(cid)
+        if (log.length) {
+          const updated = await this._applyLog(log)
+          if (updated) {
+            this._doctype.emit('change')
+          }
         }
-      }
+      })
+    } catch (e) {
+      this.logger.error(e)
+    } finally {
       this.isProcessing = false
-    })
+    }
   }
 
   async _fetchLog (cid: CID, log: Array<CID> = []): Promise<Array<CID>> {
@@ -369,14 +374,22 @@ class Document extends EventEmitter {
       const localState = await this._applyLogToState(localLog, cloneDeep(state), true)
       const remoteState = await this._applyLogToState(log, cloneDeep(state), true)
 
-      if (AnchorStatus.ANCHORED === remoteState.anchorStatus &&
-          remoteState.anchorProof.blockTimestamp < localState.anchorProof.blockTimestamp) {
-        // if the remote state is anchored before the local,
-        // apply the remote log to our local state. Otherwise
-        // keep present state
-        state = await this._applyLogToState(log, cloneDeep(state))
-        this._doctype.state = state
-        modified = true
+      const isLocalAnchored = localState.anchorStatus === AnchorStatus.ANCHORED
+      const isRemoteAnchored = remoteState.anchorStatus === AnchorStatus.ANCHORED
+
+      if (isLocalAnchored && isRemoteAnchored) {
+        // both states are anchored
+        const { anchorProof: localProof } = localState
+        const { anchorProof: remoteProof } = remoteState
+
+        if (remoteProof.blockTimestamp < localProof.blockTimestamp) {
+          // if the remote state is anchored before the local,
+          // apply the remote log to our local state. Otherwise
+          // keep present state
+          state = await this._applyLogToState(log, cloneDeep(state))
+          this._doctype.state = state
+          modified = true
+        }
       }
     }
     return modified
@@ -554,9 +567,10 @@ class Document extends EventEmitter {
 
     this.dispatcher.unregister(this.id)
 
-    while (this.isProcessing || this._applyQueue.size > 0) {
-      await new Promise(resolve => setTimeout(resolve, 1000))
-    }
+    await this._applyQueue.onEmpty()
+
+    this._context.anchorService.removeAllListeners(this.id)
+    await Utils.awaitCondition(() => this.isProcessing, () => false, 500)
   }
 
   toString (): string {

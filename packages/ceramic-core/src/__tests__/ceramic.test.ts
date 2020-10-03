@@ -51,7 +51,7 @@ const createCeramic = async (ipfs: Ipfs, topic: string): Promise<Ceramic> => {
 }
 
 describe('Ceramic integration', () => {
-  jest.setTimeout(30000)
+  jest.setTimeout(60000)
   let ipfs1: Ipfs;
   let ipfs2: Ipfs;
   let ipfs3: Ipfs;
@@ -67,11 +67,9 @@ describe('Ceramic integration', () => {
   let port2Start = 5000
   let port3Start = 6000
 
-  let topic = '/ceramic_'
-  let topicIndex = 1
+  const topic = '/ceramic_777'
 
   beforeEach(async () => {
-    topic = topic + topicIndex++
     tmpFolder = await tmp.dir({ unsafeCleanup: true })
 
     const buildConfig = (path: string, id: number): object => {
@@ -172,9 +170,7 @@ describe('Ceramic integration', () => {
     })
 
     const idw = await IdentityWallet.create({
-      getPermission: async (): Promise<Array<string>> => [],
-      seed,
-      ceramic: ceramic1,
+      getPermission: async (): Promise<Array<string>> => [], seed, ceramic: ceramic1,
     })
 
     const ceramic2 = await Ceramic.create(ipfs2, {
@@ -191,8 +187,14 @@ describe('Ceramic integration', () => {
     const owner = idw._threeIdx.managementDID
 
     // ceramic node 2 shouldn't need to have the document open in order to forward the message
-    const doctype1 = await ceramic1.createDocument<TileDoctype>(DOCTYPE_TILE, { content: { test: 321 }, metadata: { owners: [owner], tags: ['3id'] } })
-    const doctype3 = await ceramic3.createDocument<TileDoctype>(DOCTYPE_TILE, { content: { test: 321 }, metadata: { owners: [owner], tags: ['3id'] } }, { applyOnly: true })
+    const doctype1 = await ceramic1.createDocument<TileDoctype>(DOCTYPE_TILE, {
+      content: { test: 321 },
+      metadata: { owners: [owner], tags: ['3id'] }
+    })
+    const doctype3 = await ceramic3.createDocument<TileDoctype>(DOCTYPE_TILE, {
+      content: { test: 321 },
+      metadata: { owners: [owner], tags: ['3id'] }
+    }, { applyOnly: true })
 
     expect(doctype3.content).toEqual(doctype1.content)
     expectEqualStates(doctype3.state, doctype1.state)
@@ -207,7 +209,7 @@ describe('Ceramic integration', () => {
       })
     })
 
-    await doctype1.change({ content: { test: 'abcde' }, metadata: { owners: [owner]} })
+    await doctype1.change({ content: { test: 'abcde' }, metadata: { owners: [owner] } })
     await updatePromise
     expect(doctype1.content).toEqual({ test: 'abcde' })
     expect(doctype3.content).toEqual(doctype1.content)
