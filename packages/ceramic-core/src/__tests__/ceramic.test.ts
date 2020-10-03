@@ -62,12 +62,17 @@ describe('Ceramic integration', () => {
 
   const DOCTYPE_TILE = 'tile'
 
-  const portOffset = 100
-  let port1Start = 4000
-  let port2Start = 5000
-  let port3Start = 6000
+  let p1Start = 4000
+  let p2Start = 4100
+  let p3Start = 4200
 
-  const topic = '/ceramic_777'
+  const pOffset = 100
+
+  let port1: number;
+  let port2: number;
+  let port3: number;
+
+  const topic = '/ceramic_test'
 
   beforeEach(async () => {
     tmpFolder = await tmp.dir({ unsafeCleanup: true })
@@ -80,15 +85,13 @@ describe('Ceramic integration', () => {
       }
     }
 
-    const port1 = await getPort({port: getPort.makeRange(port1Start + 1, port1Start + portOffset)});
-    const port2 = await getPort({port: getPort.makeRange(port2Start + 1, port2Start + portOffset)});
-    const port3 = await getPort({port: getPort.makeRange(port3Start + 1, port3Start + portOffset)});
+    const findPort = async (start: number, offset: number): Promise<number> => {
+        return await getPort({port: getPort.makeRange(start + 1, start + offset)})
+    }
 
-    ([ipfs1, ipfs2, ipfs3] = await Promise.all([port1, port2, port3].map(id => createIPFS(buildConfig(tmpFolder.path, id)))))
-
-    port1Start += portOffset
-    port2Start += portOffset
-    port3Start += portOffset
+    ([port1, port2, port3] = await Promise.all([p1Start, p2Start, p3Start].map(start => findPort(start, pOffset))));
+    ([ipfs1, ipfs2, ipfs3] = await Promise.all([port1, port2, port3].map(id => createIPFS(buildConfig(tmpFolder.path, id)))));
+    ([p1Start, p2Start, p3Start] = [p1Start, p2Start, p3Start].map(start => start + pOffset))
 
     multaddr1 = (await ipfs1.id()).addresses[0].toString()
     multaddr2 = (await ipfs2.id()).addresses[0].toString()

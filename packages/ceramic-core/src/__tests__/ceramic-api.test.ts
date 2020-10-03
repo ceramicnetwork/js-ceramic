@@ -23,19 +23,11 @@ const createIPFS =(overrideConfig: object = {}): Promise<any> => {
 
   const config = {
     ipld: { formats: [format] },
-    libp2p: {
-      config: {
-        dht: {
-          enabled: true
-        }
-      }
-    }
   }
 
   Object.assign(config, overrideConfig)
   return Ipfs.create(config)
 }
-
 
 
 describe('Ceramic', () => {
@@ -45,6 +37,8 @@ describe('Ceramic', () => {
   let tmpFolder: any;
 
   const DOCTYPE_TILE = 'tile'
+
+  const topic = '/ceramic_api_test'
 
   const stringMapSchema = {
     "$schema": "http://json-schema.org/draft-07/schema#",
@@ -56,6 +50,7 @@ describe('Ceramic', () => {
   }
 
   const createCeramic = async (c: CeramicConfig = {}): Promise<Ceramic> => {
+    c.topic = topic
     const ceramic = await Ceramic.create(ipfs, c)
 
     const config = {
