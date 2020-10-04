@@ -1,9 +1,10 @@
 import Dispatcher from './dispatcher'
 import CID from 'cids'
 import { EventEmitter } from 'events'
-import async, { AsyncQueue } from 'async'
+import PQueue from 'p-queue'
 import cloneDeep from 'lodash.clonedeep'
-import AnchorServiceResponse from "./anchor/anchor-service-response"
+import AnchorServiceResponse from './anchor/anchor-service-response'
+import Utils from './utils'
 import {
   AnchorProof,
   AnchorRecord,
@@ -18,16 +19,12 @@ import {
   DocMetadata,
   RootLogger,
   Logger,
-} from "@ceramicnetwork/ceramic-common"
-import {PinStore} from "./store/pin-store";
-
-interface QueueTask {
-  cid: CID;
-}
+} from '@ceramicnetwork/ceramic-common'
+import {PinStore} from './store/pin-store';
 
 class Document extends EventEmitter {
-  private _applyQueue: AsyncQueue<unknown>
   private _genesisCid: CID
+  private _applyQueue: PQueue
 
   private _doctype: Doctype
   private _doctypeHandler: DoctypeHandler<Doctype>
@@ -39,6 +36,8 @@ class Document extends EventEmitter {
 
   private logger: Logger
 
+  private isProcessing: boolean
+
   constructor (id: string, public dispatcher: Dispatcher, public pinStore: PinStore) {
     super()
     const normalized = DoctypeUtils.normalizeDocId(id)
@@ -46,21 +45,7 @@ class Document extends EventEmitter {
     this.version = DoctypeUtils.getVersionId(normalized)
     this.logger = RootLogger.getLogger(Document.name)
 
-    this._applyQueue = async.queue(async (task: QueueTask, callback) => {
-      try {
-        const log = await this._fetchLog(task.cid)
-        if (log.length) {
-          const updated = await this._applyLog(log)
-          if (updated) {
-            this._doctype.emit('change')
-          }
-        }
-      } catch (e) {
-        callback(e)
-      } finally {
-        callback()
-      }
-    }, 1)
+    this._applyQueue = new PQueue({ concurrency: 1 })
     this._genesisCid = new CID(DoctypeUtils.getGenesis(this.id))
   }
 
@@ -290,8 +275,23 @@ class Document extends EventEmitter {
    * @param cid - HEAD CID
    * @private
    */
-  async _handleHead (cid: CID): Promise<void> {
-    await this._applyQueue.push({ cid })
+  async _handleHead(cid: CID): Promise<void> {
+    try {
+      this.isProcessing = true
+      await this._applyQueue.add(async () => {
+        const log = await this._fetchLog(cid)
+        if (log.length) {
+          const updated = await this._applyLog(log)
+          if (updated) {
+            this._doctype.emit('change')
+          }
+        }
+      })
+    } catch (e) {
+      this.logger.error(e)
+    } finally {
+      this.isProcessing = false
+    }
   }
 
   async _fetchLog (cid: CID, log: Array<CID> = []): Promise<Array<CID>> {
@@ -374,14 +374,22 @@ class Document extends EventEmitter {
       const localState = await this._applyLogToState(localLog, cloneDeep(state), true)
       const remoteState = await this._applyLogToState(log, cloneDeep(state), true)
 
-      if (AnchorStatus.ANCHORED === remoteState.anchorStatus &&
-          remoteState.anchorProof.blockTimestamp < localState.anchorProof.blockTimestamp) {
-        // if the remote state is anchored before the local,
-        // apply the remote log to our local state. Otherwise
-        // keep present state
-        state = await this._applyLogToState(log, cloneDeep(state))
-        this._doctype.state = state
-        modified = true
+      const isLocalAnchored = localState.anchorStatus === AnchorStatus.ANCHORED
+      const isRemoteAnchored = remoteState.anchorStatus === AnchorStatus.ANCHORED
+
+      if (isLocalAnchored && isRemoteAnchored) {
+        // both states are anchored
+        const { anchorProof: localProof } = localState
+        const { anchorProof: remoteProof } = remoteState
+
+        if (remoteProof.blockTimestamp < localProof.blockTimestamp) {
+          // if the remote state is anchored before the local,
+          // apply the remote log to our local state. Otherwise
+          // keep present state
+          state = await this._applyLogToState(log, cloneDeep(state))
+          this._doctype.state = state
+          modified = true
+        }
       }
     }
     return modified
@@ -553,10 +561,16 @@ class Document extends EventEmitter {
     })
   }
 
-  close (): void {
+  async close (): Promise<void> {
     this.off('update', this._handleHead.bind(this))
     this.off('headreq', this._publishHead.bind(this))
+
     this.dispatcher.unregister(this.id)
+
+    await this._applyQueue.onEmpty()
+
+    this._context.anchorService.removeAllListeners(this.id)
+    await Utils.awaitCondition(() => this.isProcessing, () => false, 500)
   }
 
   toString (): string {

@@ -53,7 +53,7 @@
     "babel-jest": "^25.1.0",
     "eslint": "^6.8.0",
     "eslint-plugin-jest": "^23.8.2",
-    "identity-wallet": "^2.0.0-alpha.7",
+    "identity-wallet": "^2.0.0-alpha.11",
     "ipfs": "github:simonovic86/ipfs",
     "ipld-dag-cbor": "^0.17.0",
     "jest": "^25.1.0",

@@ -23,26 +23,22 @@ const createIPFS =(overrideConfig: object = {}): Promise<any> => {
 
   const config = {
     ipld: { formats: [format] },
-    libp2p: {
-      config: {
-        dht: {
-          enabled: true
-        }
-      }
-    }
   }
 
   Object.assign(config, overrideConfig)
   return Ipfs.create(config)
 }
 
-describe('Ceramic API', () => {
+
+describe('Ceramic', () => {
   jest.setTimeout(15000)
   let ipfs: Ipfs;
   let ceramic: Ceramic
   let tmpFolder: any;
 
   const DOCTYPE_TILE = 'tile'
+
+  const topic = '/ceramic_api_test'
 
   const stringMapSchema = {
     "$schema": "http://json-schema.org/draft-07/schema#",
@@ -53,7 +49,8 @@ describe('Ceramic API', () => {
     }
   }
 
-  const createCeramic = async (c: CeramicConfig = {}) => {
+  const createCeramic = async (c: CeramicConfig = {}): Promise<Ceramic> => {
+    c.topic = topic
     const ceramic = await Ceramic.create(ipfs, c)
 
     const config = {
@@ -69,251 +66,265 @@ describe('Ceramic API', () => {
     tmpFolder = await tmp.dir({ unsafeCleanup: true })
 
     ipfs = await createIPFS({
-      repo: `${tmpFolder.path}/ipfs${9}/`,
+      repo: `${tmpFolder.path}`,
       config: {
-        Addresses: { Swarm: [ `/ip4/127.0.0.1/tcp/${4013}` ] },
+        Addresses: { Swarm: [ `/ip4/127.0.0.1/tcp/${3001}` ] },
         Bootstrap: []
       }
     })
   })
 
   afterAll(async () => {
-    await ipfs.stop()
+    await ipfs.stop(() => console.log('IPFS stopped'))
     await tmpFolder.cleanup()
   })
 
-  it('can load the previous document version', async () => {
-    ceramic = await createCeramic()
+  describe('API', () => {
+    it('can load the previous document version', async () => {
+      ceramic = await createCeramic()
 
-    const owner = ceramic.context.did.id
+      const owner = ceramic.context.did.id
 
-    const docOg = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, { content: { test: 321 }, metadata: { owners: [owner] } })
-
-    // wait for anchor (new version)
-    await new Promise(resolve => {
-      docOg.on('change', () => {
-        resolve()
+      const docOg = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, {
+        content: { test: 321 },
+        metadata: { owners: [owner] }
       })
-    })
 
-    expect(docOg.state.log.length).toEqual(2)
-    expect(docOg.content).toEqual({ test: 321 })
-    expect(docOg.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
-
-    const stateOg = docOg.state
-
-    await docOg.change({ content: { test: 'abcde' } })
-
-    // wait for anchor (new version)
-    await new Promise(resolve => {
-      docOg.on('change', () => {
-        resolve()
+      // wait for anchor (new version)
+      await new Promise(resolve => {
+        docOg.on('change', () => {
+          resolve()
+        })
       })
-    })
 
-    expect(docOg.state.log.length).toEqual(4)
-    expect(docOg.content).toEqual({ test: 'abcde' })
-    expect(docOg.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+      expect(docOg.state.log.length).toEqual(2)
+      expect(docOg.content).toEqual({ test: 321 })
+      expect(docOg.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
-    let docV0Id = DoctypeUtils.createDocIdFromBase(docOg.id, docOg.state.log[1].toString())
-    const docV0 = await ceramic.loadDocument<TileDoctype>(docV0Id)
+      const stateOg = docOg.state
 
-    expect(docV0.state).toEqual(stateOg)
-    expect(docV0.content).toEqual({ test: 321 })
-    expect(docV0.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+      await docOg.change({ content: { test: 'abcde' } })
 
-    // try to call doctype.change
-    try {
-      await docV0.change({ content: { test: 'fghj' }, metadata: { owners: docV0.owners } })
-      throw new Error('Should not be able to update version')
-    } catch (e) {
-      expect(e.message).toEqual('The version of the document is readonly. Checkout the latest HEAD in order to update.')
-    }
+      // wait for anchor (new version)
+      await new Promise(resolve => {
+        docOg.on('change', () => {
+          resolve()
+        })
+      })
 
-    // try to call Ceramic API directly
-    try {
-      const updateRecord = await TileDoctype._makeRecord(docV0, ceramic.context.did, { content: { test: 'fghj' } })
-      await ceramic.context.api.applyRecord(docV0Id, updateRecord)
-      throw new Error('Should not be able to update version')
-    } catch (e) {
-      expect(e.message).toEqual('The version of the document is readonly. Checkout the latest HEAD in order to update.')
-    }
+      expect(docOg.state.log.length).toEqual(4)
+      expect(docOg.content).toEqual({ test: 'abcde' })
+      expect(docOg.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
-    // try to checkout not anchored version
-    try {
-      docV0Id = DoctypeUtils.createDocIdFromBase(docOg.id, docOg.state.log[2].toString())
-      await ceramic.loadDocument<TileDoctype>(docV0Id)
-      throw new Error('Should not be able to fetch not anchored version')
-    } catch (e) {
-      expect(e.message).toContain('No anchor record for version')
-    }
+      let docV0Id = DoctypeUtils.createDocIdFromBase(docOg.id, docOg.state.log[1].toString())
+      const docV0 = await ceramic.loadDocument<TileDoctype>(docV0Id)
 
-    await ceramic.close()
-  })
+      expect(docV0.state).toEqual(stateOg)
+      expect(docV0.content).toEqual({ test: 321 })
+      expect(docV0.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
-  it('cannot create document with invalid schema', async () => {
-    ceramic = await createCeramic()
-
-    const owner = ceramic.context.did.id
-
-    const schemaDoc = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, { content: stringMapSchema, metadata: { owners: [owner] }})
-
-    const tileDocParams: TileParams = {
-      metadata: {
-        schema: schemaDoc.id,
-        owners: [owner]
-      },
-      content: { a: 1 },
-    }
-
-    try {
-      await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, tileDocParams)
-      throw new Error('Should not be able to create an invalid document')
-    } catch (e) {
-      expect(e.message).toEqual('Validation Error: data[\'a\'] should be string')
-    }
-
-    await ceramic.close()
-  })
-
-  it('can create document with valid schema', async () => {
-    ceramic = await createCeramic()
-
-    const owner = ceramic.context.did.id
-
-    const schemaDoc = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, { content: stringMapSchema, metadata: { owners: [owner] }})
-
-    const tileDocParams: TileParams = {
-      metadata: {
-        schema: schemaDoc.id,
-        owners: [owner]
-      },
-      content: { a: "test" }
-    }
-
-    await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, tileDocParams)
-
-    await new Promise(resolve => setTimeout(resolve, 1000)) // wait to propagate
-    await ceramic.close()
-  })
-
-  it('can create document with invalid schema if validation is not set', async () => {
-    ceramic = await createCeramic({ validateDocs: false })
-
-    const owner = ceramic.context.did.id
-
-    const schemaDoc = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, { content: stringMapSchema, metadata: { owners: [owner] }})
-
-    const tileDocParams: TileParams = {
-      metadata: {
-        schema: schemaDoc.id,
-        owners: [owner]
-      },
-      content: { a: 1 },
-    }
-
-    await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, tileDocParams)
-
-    await new Promise(resolve => setTimeout(resolve, 1000)) // wait to propagate
-    await ceramic.close()
-  })
-
-  it('can update schema if content is valid', async () => {
-    ceramic = await createCeramic()
-
-    const owner = ceramic.context.did.id
-
-    const tileDocParams: TileParams = {
-      metadata: {
-        owners: [owner]
-      },
-      content: { a: 'x' },
-    }
-
-    const doctype = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, tileDocParams)
-    const schemaDoc = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, {
-      content: stringMapSchema,
-      metadata: {
-        owners: [owner]
+      // try to call doctype.change
+      try {
+        await docV0.change({ content: { test: 'fghj' }, metadata: { owners: docV0.owners } })
+        throw new Error('Should not be able to update version')
+      } catch (e) {
+        expect(e.message).toEqual('The version of the document is readonly. Checkout the latest HEAD in order to update.')
       }
-    })
 
-    await doctype.change({
-      metadata: {
-        owners: [owner], schema: schemaDoc.id
+      // try to call Ceramic API directly
+      try {
+        const updateRecord = await TileDoctype._makeRecord(docV0, ceramic.context.did, { content: { test: 'fghj' } })
+        await ceramic.context.api.applyRecord(docV0Id, updateRecord)
+        throw new Error('Should not be able to update version')
+      } catch (e) {
+        expect(e.message).toEqual('The version of the document is readonly. Checkout the latest HEAD in order to update.')
       }
+
+      // try to checkout not anchored version
+      try {
+        docV0Id = DoctypeUtils.createDocIdFromBase(docOg.id, docOg.state.log[2].toString())
+        await ceramic.loadDocument<TileDoctype>(docV0Id)
+        throw new Error('Should not be able to fetch not anchored version')
+      } catch (e) {
+        expect(e.message).toContain('No anchor record for version')
+      }
+
+      await ceramic.close()
     })
-
-    expect(doctype.content).toEqual({ a: 'x' })
-
-    await new Promise(resolve => setTimeout(resolve, 1000)) // wait to propagate
-    await ceramic.close()
   })
 
-  it('cannot update schema if content is not valid', async () => {
-    ceramic = await createCeramic()
 
-    const owner = ceramic.context.did.id
+  describe('API', () => {
+    it('cannot create document with invalid schema', async () => {
+      ceramic = await createCeramic()
 
-    const tileDocParams: TileParams = {
-      metadata: {
-        owners: [owner]
-      },
-      content: { a: 1 },
-    }
+      const owner = ceramic.context.did.id
 
-    const doctype = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, tileDocParams)
-    const schemaDoc = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, {
-      content: stringMapSchema,
-      metadata: {
-        owners: [owner]
-      }
-    })
+      const schemaDoc = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, {
+        content: stringMapSchema,
+        metadata: { owners: [owner] }
+      })
 
-    try {
-      await doctype.change({
+      const tileDocParams: TileParams = {
         metadata: {
-          owners: [owner],
-          schema: schemaDoc.id
+          schema: schemaDoc.id, owners: [owner]
+        }, content: { a: 1 },
+      }
+
+      try {
+        await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, tileDocParams)
+        throw new Error('Should not be able to create an invalid document')
+      } catch (e) {
+        expect(e.message).toEqual('Validation Error: data[\'a\'] should be string')
+      }
+
+      await ceramic.close()
+    })
+  })
+
+  describe('API', () => {
+    it('can create document with valid schema', async () => {
+      ceramic = await createCeramic()
+
+      const owner = ceramic.context.did.id
+
+      const schemaDoc = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, {
+        content: stringMapSchema,
+        metadata: { owners: [owner] }
+      })
+
+      const tileDocParams: TileParams = {
+        metadata: {
+          schema: schemaDoc.id, owners: [owner]
+        }, content: { a: "test" }
+      }
+
+      await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, tileDocParams)
+
+      await new Promise(resolve => setTimeout(resolve, 1000)) // wait to propagate
+      await ceramic.close()
+    })
+  })
+
+  describe('API', () => {
+    it('can create document with invalid schema if validation is not set', async () => {
+      ceramic = await createCeramic({ validateDocs: false })
+
+      const owner = ceramic.context.did.id
+
+      const schemaDoc = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, {
+        content: stringMapSchema,
+        metadata: { owners: [owner] }
+      })
+
+      const tileDocParams: TileParams = {
+        metadata: {
+          schema: schemaDoc.id, owners: [owner]
+        }, content: { a: 1 },
+      }
+
+      await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, tileDocParams)
+
+      await new Promise(resolve => setTimeout(resolve, 1000)) // wait to propagate
+      await ceramic.close()
+    })
+  })
+
+  describe('API', () => {
+    it('can update schema if content is valid', async () => {
+      ceramic = await createCeramic()
+
+      const owner = ceramic.context.did.id
+
+      const tileDocParams: TileParams = {
+        metadata: {
+          owners: [owner]
+        }, content: { a: 'x' },
+      }
+
+      const doctype = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, tileDocParams)
+      const schemaDoc = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, {
+        content: stringMapSchema, metadata: {
+          owners: [owner]
         }
       })
-      throw new Error('Should not be able to update the document with invalid content')
-    } catch (e) {
-      expect(e.message).toEqual('Validation Error: data[\'a\'] should be string')
-    }
 
-    await ceramic.close()
+      await doctype.change({
+        metadata: {
+          owners: [owner], schema: schemaDoc.id
+        }
+      })
+
+      expect(doctype.content).toEqual({ a: 'x' })
+
+      await new Promise(resolve => setTimeout(resolve, 1000)) // wait to propagate
+      await ceramic.close()
+    })
   })
 
-  it('can update valid content and schema at the same time', async () => {
-    ceramic = await createCeramic()
+  describe('API', () => {
+    it('cannot update schema if content is not valid', async () => {
+      ceramic = await createCeramic()
 
-    const owner = ceramic.context.did.id
+      const owner = ceramic.context.did.id
 
-    const tileDocParams: TileParams = {
-      metadata: {
-        owners: [owner]
-      },
-      content: { a: 1 },
-    }
-
-    const doctype = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, tileDocParams)
-    const schemaDoc = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, {
-      content: stringMapSchema,
-      metadata: {
-        owners: [owner]
+      const tileDocParams: TileParams = {
+        metadata: {
+          owners: [owner]
+        }, content: { a: 1 },
       }
-    })
 
-    await doctype.change({
-      content: { a: 'x' }, metadata: {
-        owners: [owner], schema: schemaDoc.id
+      const doctype = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, tileDocParams)
+      const schemaDoc = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, {
+        content: stringMapSchema, metadata: {
+          owners: [owner]
+        }
+      })
+
+      try {
+        await doctype.change({
+          metadata: {
+            owners: [owner], schema: schemaDoc.id
+          }
+        })
+        throw new Error('Should not be able to update the document with invalid content')
+      } catch (e) {
+        expect(e.message).toEqual('Validation Error: data[\'a\'] should be string')
       }
+
+      await ceramic.close()
     })
+  })
 
-    expect(doctype.content).toEqual({ a: 'x' })
+  describe('API', () => {
+    it('can update valid content and schema at the same time', async () => {
+      ceramic = await createCeramic()
 
-    await new Promise(resolve => setTimeout(resolve, 1000)) // wait to propagate
-    await ceramic.close()
+      const owner = ceramic.context.did.id
+
+      const tileDocParams: TileParams = {
+        metadata: {
+          owners: [owner]
+        }, content: { a: 1 },
+      }
+
+      const doctype = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, tileDocParams)
+      const schemaDoc = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, {
+        content: stringMapSchema, metadata: {
+          owners: [owner]
+        }
+      })
+
+      await doctype.change({
+        content: { a: 'x' }, metadata: {
+          owners: [owner], schema: schemaDoc.id
+        }
+      })
+
+      expect(doctype.content).toEqual({ a: 'x' })
+
+      await new Promise(resolve => setTimeout(resolve, 1000)) // wait to propagate
+      await ceramic.close()
+    })
   })
 })

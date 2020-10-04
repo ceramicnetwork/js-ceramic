@@ -24,12 +24,12 @@ interface LogMessage {
 
 export default class Dispatcher extends EventEmitter {
   private _peerId: string
-  private readonly _documents: Record<string, Document>
+  private _documents: Record<string, Document>
 
   private logger: Logger
   private _isRunning = true
 
-  constructor (public _ipfs: Ipfs.Ipfs) {
+  constructor (public _ipfs: Ipfs.Ipfs, public topic: string = TOPIC) {
     super()
     this._documents = {}
     this.logger = RootLogger.getLogger(Dispatcher.name)
@@ -40,16 +40,16 @@ export default class Dispatcher extends EventEmitter {
    */
   async init(): Promise<void> {
     this._peerId = this._peerId || (await this._ipfs.id()).id
-    await this._ipfs.pubsub.subscribe(TOPIC, this.handleMessage.bind(this))
-    this._log({ peer: this._peerId, event: 'subscribed', topic: TOPIC })
+    await this._ipfs.pubsub.subscribe(this.topic, this.handleMessage.bind(this))
+    this._log({ peer: this._peerId, event: 'subscribed', topic: this.topic })
   }
 
   async register (document: Document): Promise<void> {
     this._documents[document.id] = document
     // request head
     const payload = { typ: MsgType.REQUEST, id: document.id, doctype: document.doctype.doctype }
-    this._ipfs.pubsub.publish(TOPIC, JSON.stringify(payload))
-    this._log({ peer: this._peerId, event: 'published', topic: TOPIC, message: payload })
+    this._ipfs.pubsub.publish(this.topic, JSON.stringify(payload))
+    this._log({ peer: this._peerId, event: 'published', topic: this.topic, message: payload })
   }
 
   unregister (id: string): void {
@@ -87,8 +87,8 @@ export default class Dispatcher extends EventEmitter {
     }
 
     const payload = { typ: MsgType.UPDATE, id, cid: head.toString(), doctype: doctype }
-    await this._ipfs.pubsub.publish(TOPIC, JSON.stringify(payload))
-    this._log({ peer: this._peerId, event: 'published', topic: TOPIC, message: payload })
+    await this._ipfs.pubsub.publish(this.topic, JSON.stringify(payload))
+    this._log({ peer: this._peerId, event: 'published', topic: this.topic, message: payload })
   }
 
   async handleMessage (message: any): Promise<void> {
@@ -98,7 +98,7 @@ export default class Dispatcher extends EventEmitter {
     }
 
     if (message.from !== this._peerId) {
-      this._log({ peer: this._peerId, event: 'received', topic: TOPIC, from: message.from, message: message.data })
+      this._log({ peer: this._peerId, event: 'received', topic: this.topic, from: message.from, message: message.data })
 
       const { typ, id, cid } = JSON.parse(message.data)
       if (this._documents[id]) {
@@ -123,11 +123,9 @@ export default class Dispatcher extends EventEmitter {
 
   async close(): Promise<void> {
     this._isRunning = false
-    await this._ipfs.pubsub.unsubscribe(TOPIC)
 
-    // deregister documents
-    for (const doc of Object.values(this._documents)) {
-      doc.close()
-    }
+    await Promise.all(Object.values(this._documents).map(async (doc) => await doc.close()))
+
+    await this._ipfs.pubsub.unsubscribe(this.topic)
   }
 }
