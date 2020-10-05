@@ -132,7 +132,8 @@ export default class Dispatcher extends EventEmitter {
   }
 
   _log(msg: LogMessage): void {
-    this.logger.debug(JSON.stringify(msg))
+    const timestampedMsg = {timestamp: Date.now(), ...msg}
+    this.logger.debug(JSON.stringify(timestampedMsg))
   }
 
   async close(): Promise<void> {
