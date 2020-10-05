@@ -30,7 +30,7 @@ const createIPFS =(overrideConfig: object = {}): Promise<any> => {
 }
 
 
-describe('Ceramic', () => {
+describe('Ceramic API', () => {
   jest.setTimeout(15000)
   let ipfs: Ipfs;
   let ceramic: Ceramic
@@ -151,10 +151,7 @@ describe('Ceramic', () => {
 
       await ceramic.close()
     })
-  })
 
-
-  describe('API', () => {
     it('cannot create document with invalid schema', async () => {
       ceramic = await createCeramic()
 
@@ -180,9 +177,7 @@ describe('Ceramic', () => {
 
       await ceramic.close()
     })
-  })
 
-  describe('API', () => {
     it('can create document with valid schema', async () => {
       ceramic = await createCeramic()
 
@@ -204,9 +199,7 @@ describe('Ceramic', () => {
       await new Promise(resolve => setTimeout(resolve, 1000)) // wait to propagate
       await ceramic.close()
     })
-  })
 
-  describe('API', () => {
     it('can create document with invalid schema if validation is not set', async () => {
       ceramic = await createCeramic({ validateDocs: false })
 
@@ -228,9 +221,7 @@ describe('Ceramic', () => {
       await new Promise(resolve => setTimeout(resolve, 1000)) // wait to propagate
       await ceramic.close()
     })
-  })
 
-  describe('API', () => {
     it('can update schema if content is valid', async () => {
       ceramic = await createCeramic()
 
@@ -260,9 +251,7 @@ describe('Ceramic', () => {
       await new Promise(resolve => setTimeout(resolve, 1000)) // wait to propagate
       await ceramic.close()
     })
-  })
 
-  describe('API', () => {
     it('cannot update schema if content is not valid', async () => {
       ceramic = await createCeramic()
 
@@ -294,9 +283,7 @@ describe('Ceramic', () => {
 
       await ceramic.close()
     })
-  })
 
-  describe('API', () => {
     it('can update valid content and schema at the same time', async () => {
       ceramic = await createCeramic()
 
@@ -326,5 +313,34 @@ describe('Ceramic', () => {
       await new Promise(resolve => setTimeout(resolve, 1000)) // wait to propagate
       await ceramic.close()
     })
+
+    it('can list log records', async () => {
+      ceramic = await createCeramic()
+
+      const owner = ceramic.context.did.id
+
+      const tileDocParams: TileParams = {
+        metadata: {
+          owners: [owner]
+        }, content: { a: 1 },
+      }
+
+      const doctype = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, tileDocParams)
+      const logRecords = await ceramic.loadDocumentRecords(doctype.id)
+      expect(logRecords).toBeDefined()
+
+      const expected = []
+      for (const cid of doctype.state.log) {
+        const record = (await ceramic.ipfs.dag.get(cid)).value
+        expected.push({
+          cid: cid.toString(),
+          value: await DoctypeUtils.convertRecordToDTO(record, ipfs)
+        })
+      }
+
+      expect(logRecords).toEqual(expected)
+      await ceramic.close()
+    })
   })
+
 })

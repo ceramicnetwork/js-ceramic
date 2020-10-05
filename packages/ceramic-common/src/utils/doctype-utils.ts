@@ -1,7 +1,9 @@
 import ajv from "ajv"
 import CID from 'cids'
 import cloneDeep from "lodash.clonedeep"
+import * as u8a from 'uint8arrays'
 
+import { Ipfs } from "ipfs"
 import { AnchorStatus, DocState, Doctype } from "../doctype"
 
 /**
@@ -108,8 +110,16 @@ export class DoctypeUtils {
 
         if (DoctypeUtils.isSignedRecordDTO(cloned)) {
             cloned.jws.link = cloned.jws.link.toString()
-            cloned.linkedBlock = Buffer.from(cloned.linkedBlock).toString('base64')
+            cloned.linkedBlock = u8a.toString(cloned.linkedBlock, 'base64')
             return cloned
+        }
+
+        if (DoctypeUtils.isSignedRecord(cloned)) {
+            cloned.link = cloned.link.toString()
+        }
+
+        if (DoctypeUtils.isAnchorRecord(cloned)) {
+            cloned.proof = cloned.proof.toString()
         }
 
         if (cloned.id) {
@@ -131,8 +141,16 @@ export class DoctypeUtils {
 
         if (DoctypeUtils.isSignedRecordDTO(cloned)) {
             cloned.jws.link = new CID(cloned.jws.link)
-            cloned.linkedBlock = Buffer.from(cloned.linkedBlock, 'base64')
+            cloned.linkedBlock = u8a.fromString(cloned.linkedBlock, 'base64')
             return cloned
+        }
+
+        if (DoctypeUtils.isSignedRecord(cloned)) {
+            cloned.link = new CID(cloned.link)
+        }
+
+        if (DoctypeUtils.isAnchorRecord(cloned)) {
+            cloned.proof = new CID(cloned.proof)
         }
 
         if (cloned.id) {
@@ -228,6 +246,21 @@ export class DoctypeUtils {
     }
 
     /**
+     * Converts record to DTO. The only difference is with signed record for now
+     * @param record - Record value
+     * @param ipfs - IPFS instance
+     */
+    static async convertRecordToDTO(record: any, ipfs: Ipfs): Promise<any> {
+        if (DoctypeUtils.isSignedRecord(record)) {
+            const linkedBlock = await ipfs.block.get(record.link)
+            return {
+                jws: record, linkedBlock,
+            }
+        }
+        return record
+    }
+
+    /**
      * Checks if record is signed DTO ({jws: {}, linkedBlock: {}})
      * @param record - Record
      */
@@ -241,5 +274,13 @@ export class DoctypeUtils {
      */
     static isSignedRecord(record: any): boolean {
         return typeof record === 'object' && 'link' in record && 'payload' in record && 'signatures' in record
+    }
+
+    /**
+     * Checks if record is anchor record
+     * @param record - Record
+     */
+    static isAnchorRecord(record: any): boolean {
+        return typeof record === 'object' && 'proof' in record && 'path' in record
     }
 }
