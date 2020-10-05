@@ -11,6 +11,9 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * **common:** refactor logger, include component name ([#326](https://github.com/ceramicnetwork/js-ceramic/issues/326)) ([02e8d66](https://github.com/ceramicnetwork/js-ceramic/commit/02e8d66e25d7fb8887496cf6b3430be90b79d4f3))
 
 
+## [0.9.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-cli@0.9.2-alpha.0...@ceramicnetwork/ceramic-cli@0.9.2) (2020-09-28)
+
+**Note:** Version bump only for package @ceramicnetwork/ceramic-cli
 
 
 

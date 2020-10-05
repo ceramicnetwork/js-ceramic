@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/ceramic-doctype-tile",
-  "version": "0.7.2-alpha.1",
+  "version": "0.7.2",
   "description": "Ceramic Tile doctype",
   "keywords": [
     "ceramic",
@@ -44,7 +44,7 @@
     "@babel/plugin-proposal-decorators": "^7.10.1",
     "@babel/preset-env": "^7.8.4",
     "@babel/preset-typescript": "^7.9.0",
-    "@ceramicnetwork/3id-did-resolver": "^0.4.2-alpha.1",
+    "@ceramicnetwork/3id-did-resolver": "^0.4.2",
     "@types/encoding-down": "^5.0.0",
     "@types/events": "^3.0.0",
     "@types/node": "^13.13.15",
