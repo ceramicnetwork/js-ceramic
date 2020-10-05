@@ -3,6 +3,23 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.9.0-alpha.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-core@0.8.2-alpha.0...@ceramicnetwork/ceramic-core@0.9.0-alpha.1) (2020-10-05)
+
+
+### Bug Fixes
+
+* pass string instead of CID instance ([#336](https://github.com/ceramicnetwork/js-ceramic/issues/336)) ([3bf7313](https://github.com/ceramicnetwork/js-ceramic/commit/3bf7313590a059f09bf0c3da47fd37d996b1868a))
+
+
+### Features
+
+* add dag-jose format to ipfs-http-client ([#341](https://github.com/ceramicnetwork/js-ceramic/issues/341)) ([18cbec8](https://github.com/ceramicnetwork/js-ceramic/commit/18cbec8fddc63c63cd02459f1dc6ff4e068f202f))
+* **common:** refactor logger, include component name ([#326](https://github.com/ceramicnetwork/js-ceramic/issues/326)) ([02e8d66](https://github.com/ceramicnetwork/js-ceramic/commit/02e8d66e25d7fb8887496cf6b3430be90b79d4f3))
+
+
+
+
+
 # [0.9.0-alpha.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-core@0.8.2-alpha.0...@ceramicnetwork/ceramic-core@0.9.0-alpha.0) (2020-09-28)
 
 
