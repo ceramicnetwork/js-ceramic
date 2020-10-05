@@ -211,6 +211,10 @@ class Document extends EventEmitter {
     const retrievedRec = await this.dispatcher.retrieveRecord(cid)
     const state = await this._doctypeHandler.applyRecord(retrievedRec, cid, this._context, this.state)
 
+    if (DoctypeUtils.isAnchorRecord(retrievedRec)) {
+      state.anchorStatus = AnchorStatus.ANCHORED
+    }
+
     let payload
     if (retrievedRec.payload && retrievedRec.signatures) {
       payload = (await this._context.ipfs.dag.get(retrievedRec.link)).value

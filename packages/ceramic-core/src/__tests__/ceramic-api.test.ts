@@ -331,9 +331,10 @@ describe('Ceramic API', () => {
 
       const expected = []
       for (const cid of doctype.state.log) {
+        const record = (await ceramic.ipfs.dag.get(cid)).value
         expected.push({
           cid: cid.toString(),
-          value: (await ceramic.ipfs.dag.get(cid)).value
+          value: await DoctypeUtils.convertRecordToDTO(record, ipfs)
         })
       }
 

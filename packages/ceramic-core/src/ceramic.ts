@@ -211,7 +211,7 @@ class Ceramic implements CeramicApi {
   }
 
   /**
-   * Get document from map by Gensis CID
+   * Get document from map by Genesis CID
    * @param genesisCid
    */
   getDocFromMap(genesisCid: any): Document {
@@ -316,8 +316,10 @@ class Ceramic implements CeramicApi {
     const { state } = doc
 
     return Promise.all(state.log.map(async (cid) => {
+      const record = (await this.ipfs.dag.get(cid)).value
       return {
-        cid: cid.toString(), value: (await this.ipfs.dag.get(cid)).value
+        cid: cid.toString(),
+        value: await DoctypeUtils.convertRecordToDTO(record, this.ipfs)
       }
     }))
   }

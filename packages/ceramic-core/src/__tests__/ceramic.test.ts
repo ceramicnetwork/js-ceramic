@@ -221,4 +221,38 @@ describe('Ceramic integration', () => {
     await ceramic2.close()
     await ceramic3.close()
   })
+
+  it('can apply existing records successfully', async () => {
+    const ceramic1 = await createCeramic(ipfs1, topic)
+    const ceramic2 = await createCeramic(ipfs2, topic)
+
+    const owner = ceramic1.context.did.id
+
+    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { test: 456 }, metadata: { owners: [owner], tags: ['3id'] } })
+
+    const updatePromise = new Promise(resolve => {
+      let c = 0
+      doctype1.on('change', () => {
+        if (++c > 1) {
+          resolve()
+        }
+      })
+    })
+
+    await doctype1.change({ content: { test: 'abcde' }, metadata: { owners: [owner] } })
+    await updatePromise
+
+    const logRecords = await ceramic1.loadDocumentRecords(doctype1.id)
+
+    let doctype2 = await ceramic2.createDocumentFromGenesis(logRecords[0].value)
+    for (let i = 1; i < logRecords.length; i++) {
+      doctype2 = await ceramic2.applyRecord(doctype2.id, logRecords[i].value, { applyOnly: true })
+    }
+
+    expect(doctype1.content).toEqual(doctype2.content)
+    expectEqualStates(doctype1.state, doctype2.state)
+
+    await ceramic1.close()
+    await ceramic2.close()
+  })
 })

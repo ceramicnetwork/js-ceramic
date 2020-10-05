@@ -3,6 +3,7 @@ import CID from 'cids'
 import cloneDeep from "lodash.clonedeep"
 import * as u8a from 'uint8arrays'
 
+import { Ipfs } from "ipfs"
 import { AnchorStatus, DocState, Doctype } from "../doctype"
 
 /**
@@ -242,6 +243,21 @@ export class DoctypeUtils {
             const errorMessages = this.validator.errorsText()
             throw new Error(`Validation Error: ${errorMessages}`)
         }
+    }
+
+    /**
+     * Converts record to DTO. The only difference is with signed record for now
+     * @param record - Record value
+     * @param ipfs - IPFS instance
+     */
+    static async convertRecordToDTO(record: any, ipfs: Ipfs): Promise<any> {
+        if (DoctypeUtils.isSignedRecord(record)) {
+            const linkedBlock = await ipfs.block.get(record.link)
+            return {
+                jws: record, linkedBlock,
+            }
+        }
+        return record
     }
 
     /**
