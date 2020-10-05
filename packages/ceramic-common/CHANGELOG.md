@@ -3,11 +3,28 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.9.0-alpha.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-common@0.8.2-alpha.0...@ceramicnetwork/ceramic-common@0.9.0-alpha.1) (2020-10-05)
+
+
+### Features
+
+* **common:** refactor logger, include component name ([#326](https://github.com/ceramicnetwork/js-ceramic/issues/326)) ([02e8d66](https://github.com/ceramicnetwork/js-ceramic/commit/02e8d66e25d7fb8887496cf6b3430be90b79d4f3))
+
+
+
+
+
+# [0.9.0-alpha.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-common@0.8.2-alpha.0...@ceramicnetwork/ceramic-common@0.9.0-alpha.0) (2020-09-28)
+
+
+### Features
+
+* **common:** refactor logger, include component name ([#326](https://github.com/ceramicnetwork/js-ceramic/issues/326)) ([02e8d66](https://github.com/ceramicnetwork/js-ceramic/commit/02e8d66e25d7fb8887496cf6b3430be90b79d4f3))
+
+
 ## [0.8.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-common@0.8.2-alpha.0...@ceramicnetwork/ceramic-common@0.8.2) (2020-09-28)
 
 **Note:** Version bump only for package @ceramicnetwork/ceramic-common
-
-
 
 
 

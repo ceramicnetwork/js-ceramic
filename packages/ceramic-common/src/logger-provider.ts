@@ -33,60 +33,46 @@ const defaultOpts: Options = {
 interface Options {
     level?: string;
     colors?: boolean;
-    format: string; // [text | json]
-    stacktrace: {
+    format?: string; // [text | json]
+    stacktrace?: {
         levels: ['trace', 'warn', 'error'];
         depth: 3;
         excess: 0;
     };
+    component?: string;
 }
 
 /**
  * Global Logger factory
  */
-class LoggerFactory {
+class LoggerProvider {
 
-    private options: Options & {}
+    /**
+     * Initialize root logger
+     * @param opts - Options
+     */
+    static init(opts = defaultOpts): void {
+        const options = Object.assign(defaultOpts, opts)
 
-    constructor(opts = {}) {
-        this.options = Object.assign(defaultOpts, opts)
-
-        if (this.options.level) {
-            log.setLevel(this.options.level as LogLevelDesc)
+        if (options.level) {
+            log.setLevel(options.level as LogLevelDesc)
         } else {
             log.enableAll() // enable all levels (TRACE)
         }
 
-        this._applyPrefix()
-        this._includeJsonPlugin()
-    }
-
-    /**
-     * Set root log level
-     * @param level
-     */
-    setRootLogLevel(level: string): void {
-        log.setLevel(level as LogLevelDesc)
-    }
-
-    /**
-     * Gets logger by name
-     * @param name
-     */
-    getLogger(name: string): Logger {
-        return log.getLogger(name)
+        LoggerProvider._applyPrefix(options)
+        LoggerProvider._includeJsonPlugin(options)
     }
 
     /**
      * Applies prefix
      * @private
      */
-    _applyPrefix(): void {
-        const { options } = this
+    static _applyPrefix(options: Options): void {
         prefix.reg(log)
         prefix.apply(log, {
             format(level, name, timestamp) {
-                return LoggerFactory._toText(options, timestamp, level, name)
+                return LoggerProvider._toText(options, timestamp, level, name)
             },
             timestampFormatter(date) {
                 return date.toISOString()
@@ -98,10 +84,9 @@ class LoggerFactory {
      * Simple JSON plugin
      * @private
      */
-    _includeJsonPlugin(): void {
+    static _includeJsonPlugin(options: Options): void {
         const originalFactory = log.methodFactory;
 
-        const { options } = this
         log.methodFactory = (methodName: string, logLevel: any, loggerName: string): MethodFactory => {
             const rawMethod = originalFactory(methodName, logLevel, loggerName);
             return (...args: any[]): any => {
@@ -110,10 +95,10 @@ class LoggerFactory {
                     return
                 }
                 const timestamp = new Date().toISOString()
-                const hasStacktrace = !!LoggerFactory._stacktrace()
+                const hasStacktrace = !!LoggerProvider._stacktrace()
                 const needStack = hasStacktrace && options.stacktrace.levels.some(level => level === methodName)
 
-                let stacktrace = needStack ? LoggerFactory._stacktrace() : '';
+                let stacktrace = needStack ? LoggerProvider._stacktrace() : '';
                 if (stacktrace) {
                     const lines = stacktrace.split('\n');
                     lines.splice(0, options.stacktrace.excess + 3);
@@ -130,13 +115,14 @@ class LoggerFactory {
                 }
 
                 rawMethod(JSON.stringify({
-                    message: LoggerFactory._interpolate(args),
+                    message: LoggerProvider._interpolate(args),
                     level: {
                         label: methodName, value: logLevel,
                     },
                     logger: loggerName || '',
                     timestamp,
                     stacktrace,
+                    component: options.component || undefined
                 }))
             }
         };
@@ -151,9 +137,9 @@ class LoggerFactory {
             return "" // no prefix
         }
         if (!options.colors) {
-            return `[${timestamp}] ${level} ${name}:`
+            return `[${timestamp}] ${level} ${options.component ? options.component : ""} ${name}:`
         }
-        return `${chalk.gray(`[${timestamp}]`)} ${colors[level.toUpperCase()](level)} ${chalk.green(`${name}:`)}`
+        return `${chalk.gray(`[${timestamp}]`)} ${colors[level.toUpperCase()](level)} ${options.component ? chalk.gray(options.component) : ""} ${chalk.green(`${name}:`)}`
     }
 
     /**
@@ -191,14 +177,14 @@ class LoggerFactory {
                             a += +arg;
                             break;
                         case 'j':
-                            a = LoggerFactory._safeStringify(arg);
+                            a = LoggerProvider._safeStringify(arg);
                             break;
                         case 'o': {
-                            let obj = LoggerFactory._safeStringify(arg);
+                            let obj = LoggerProvider._safeStringify(arg);
                             if (obj[0] !== '{' && obj[0] !== '[') {
                                 obj = `<${obj}>`;
                             }
-                            a = LoggerFactory._constructorName(arg) + obj;
+                            a = LoggerProvider._constructorName(arg) + obj;
                             break;
                         }
                     }
@@ -261,10 +247,8 @@ class LoggerFactory {
     }
 }
 
-const _instance = new LoggerFactory()
-Object.freeze(_instance) // freeze API
 export {
-    _instance as DefaultLoggerFactory,
-    LoggerFactory, // should be exposed for customization
+    LoggerProvider,
     Logger,
+    log as RootLogger,
 }

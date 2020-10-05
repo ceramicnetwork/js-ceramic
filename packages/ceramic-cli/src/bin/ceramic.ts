@@ -14,8 +14,8 @@ program
     .option('--port <int>', 'Port daemon is availabe. Default is 7007')
     .option('--debug', 'Enable debug logging level. Default is false')
     .description('Start the daemon')
-    .action(async ({ ipfsApi, ethereumRpc, anchorServiceApi, validateDocs, pinning, stateStorePath, gateway, port, debug }) => {
-        await CeramicCliUtils.createDaemon(ipfsApi, ethereumRpc, anchorServiceApi, validateDocs, pinning, stateStorePath, gateway, port, debug)
+    .action(async ({ ipfsApi, ethereumRpc, anchorServiceApi, validateDocs, pinning, pinningStorePath, gateway, port, debug }) => {
+        await CeramicCliUtils.createDaemon(ipfsApi, ethereumRpc, anchorServiceApi, validateDocs, pinning, pinningStorePath, gateway, port, debug)
     })
 
 program

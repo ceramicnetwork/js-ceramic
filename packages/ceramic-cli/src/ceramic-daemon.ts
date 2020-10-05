@@ -1,9 +1,8 @@
 import type Ipfs from 'ipfs'
-import ipfsClient from 'ipfs-http-client'
 import express, { Request, Response, NextFunction } from 'express'
 import Ceramic from '@ceramicnetwork/ceramic-core'
 import type { CeramicConfig } from "@ceramicnetwork/ceramic-core";
-import { DoctypeUtils, DefaultLoggerFactory, Logger } from "@ceramicnetwork/ceramic-common"
+import { DoctypeUtils, RootLogger, Logger } from "@ceramicnetwork/ceramic-common"
 // @ts-ignore
 import cors from 'cors'
 
@@ -12,7 +11,7 @@ const toApiPath = (ending: string): string => '/api/v0' + ending
 
 const DEFAULT_ANCHOR_SERVICE_URL = "https://cas.3box.io:8081/api/v0/requests"
 
-interface CreateOpts {
+export interface CreateOpts {
   ipfsHost?: string;
   ipfs?: Ipfs.Ipfs;
   port?: number;
@@ -39,10 +38,11 @@ class CeramicDaemon {
 
   constructor (public ceramic: Ceramic, opts: CreateOpts) {
     this.debug = opts.debug
-    this.logger = DefaultLoggerFactory.getLogger(CeramicDaemon.name)
     if (this.debug) {
-      this.logger.setLevel('debug')
+      RootLogger.setLevel('debug')
     }
+
+    this.logger = RootLogger.getLogger(CeramicDaemon.name)
 
     const app = express()
     app.use(express.json())
@@ -120,12 +120,11 @@ class CeramicDaemon {
   }
 
   static async create (opts: CreateOpts): Promise<CeramicDaemon> {
-    const ipfs = opts.ipfs || ipfsClient({
-      url: opts.ipfsHost,
-    })
+    const { ipfs } = opts
 
     const ceramicConfig: CeramicConfig = {
       logLevel: 'silent',
+      gateway: opts.gateway || false
     }
     if (opts.anchorServiceUrl) {
       ceramicConfig.ethereumRpcUrl = opts.ethereumRpcUrl

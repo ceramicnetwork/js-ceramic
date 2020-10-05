@@ -3,11 +3,26 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.8.0-alpha.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-doctype-account-link@0.7.2-alpha.0...@ceramicnetwork/ceramic-doctype-account-link@0.8.0-alpha.0) (2020-10-05)
+
+
+### Features
+
+* add dag-jose format to ipfs-http-client ([#341](https://github.com/ceramicnetwork/js-ceramic/issues/341)) ([18cbec8](https://github.com/ceramicnetwork/js-ceramic/commit/18cbec8fddc63c63cd02459f1dc6ff4e068f202f))
+
+
+
+
+
 ## [0.7.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-doctype-account-link@0.7.2-alpha.0...@ceramicnetwork/ceramic-doctype-account-link@0.7.2) (2020-09-28)
 
 **Note:** Version bump only for package @ceramicnetwork/ceramic-doctype-account-link
 
 
+
+## [0.7.2-alpha.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-doctype-account-link@0.7.2-alpha.0...@ceramicnetwork/ceramic-doctype-account-link@0.7.2-alpha.1) (2020-09-28)
+
+**Note:** Version bump only for package @ceramicnetwork/ceramic-doctype-account-link
 
 
 

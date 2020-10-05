@@ -13,6 +13,8 @@ jest.mock('../store/level-state-store')
 
 const seed = '0x5872d6e0ae7347b72c9216db218ebbb9d9d0ae7ab818ead3557e8e78bf944184'
 
+import getPort from 'get-port'
+
 /**
  * Create an IPFS instance
  * @param overrideConfig - IFPS config for override
@@ -23,13 +25,6 @@ const createIPFS =(overrideConfig: object = {}): Promise<any> => {
 
   const config = {
     ipld: { formats: [format] },
-    libp2p: {
-      config: {
-        dht: {
-          enabled: true
-        }
-      }
-    }
   }
 
   Object.assign(config, overrideConfig)
@@ -40,9 +35,10 @@ const expectEqualStates = (state1: DocState, state2: DocState): void => {
   expect(DoctypeUtils.serializeState(state1)).toEqual(DoctypeUtils.serializeState(state2))
 }
 
-const createCeramic = async (ipfs: Ipfs): Promise<Ceramic> => {
+const createCeramic = async (ipfs: Ipfs, topic: string): Promise<Ceramic> => {
   const ceramic = await Ceramic.create(ipfs, {
-    stateStorePath: await tmp.tmpName()
+    stateStorePath: await tmp.tmpName(),
+    topic,
   })
 
   await IdentityWallet.create({
@@ -55,7 +51,7 @@ const createCeramic = async (ipfs: Ipfs): Promise<Ceramic> => {
 }
 
 describe('Ceramic integration', () => {
-  jest.setTimeout(30000)
+  jest.setTimeout(60000)
   let ipfs1: Ipfs;
   let ipfs2: Ipfs;
   let ipfs3: Ipfs;
@@ -66,20 +62,40 @@ describe('Ceramic integration', () => {
 
   const DOCTYPE_TILE = 'tile'
 
-  let ipfsIndexOffset = 0
+  let p1Start = 4000
+  let p2Start = 4100
+  let p3Start = 4200
+
+  const pOffset = 100
+
+  let port1: number;
+  let port2: number;
+  let port3: number;
+
+  const topic = '/ceramic_test'
 
   beforeEach(async () => {
     tmpFolder = await tmp.dir({ unsafeCleanup: true })
 
-    const buildConfig = (path: string, id: number): object => {
+    const buildConfig = (path: string, port: number): object => {
       return {
-        repo: `${path}/ipfs${id}/`, config: {
-          Addresses: { Swarm: [`/ip4/127.0.0.1/tcp/${4004 + id}`] }, Bootstrap: []
+        repo: `${path}/ipfs${port}/`, config: {
+          Addresses: { Swarm: [`/ip4/127.0.0.1/tcp/${port}`] }, Bootstrap: []
         }
       }
     }
 
-    ([ipfs1, ipfs2, ipfs3] = await Promise.all([1, 2, 3].map(id => createIPFS(buildConfig(tmpFolder.path, ipfsIndexOffset + id)))))
+    const findPort = async (start: number, offset: number): Promise<number> => {
+        return await getPort({port: getPort.makeRange(start + 1, start + offset)})
+    }
+
+    ([port1, port2, port3] = await Promise.all([p1Start, p2Start, p3Start].map(start => findPort(start, pOffset))));
+    ([ipfs1, ipfs2, ipfs3] = await Promise.all([port1, port2, port3].map(port => createIPFS(buildConfig(tmpFolder.path, port)))));
+    ([p1Start, p2Start, p3Start] = [p1Start, p2Start, p3Start].map(start => start + pOffset))
+
+    multaddr1 = (await ipfs1.id()).addresses[0].toString()
+    multaddr2 = (await ipfs2.id()).addresses[0].toString()
+    multaddr3 = (await ipfs3.id()).addresses[0].toString()
 
     const id1 = await ipfs1.id()
     const id2 = await ipfs2.id()
@@ -93,16 +109,15 @@ describe('Ceramic integration', () => {
     await ipfs1.stop(() => console.log('IPFS1 stopped'))
     await ipfs2.stop(() => console.log('IPFS2 stopped'))
     await ipfs3.stop(() => console.log('IPFS3 stopped'))
-    await tmpFolder.cleanup()
 
-    ipfsIndexOffset += 3
+    await tmpFolder.cleanup()
   })
 
   it('can propagate update across two connected nodes', async () => {
     await ipfs2.swarm.connect(multaddr1)
 
-    const ceramic1 = await createCeramic(ipfs1)
-    const ceramic2 = await createCeramic(ipfs2)
+    const ceramic1 = await createCeramic(ipfs1, topic)
+    const ceramic2 = await createCeramic(ipfs2, topic)
     const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { test: 123 } }, { applyOnly: true })
     const doctype2 = await ceramic2.loadDocument(doctype1.id)
     expect(doctype1.content).toEqual(doctype2.content)
@@ -112,8 +127,8 @@ describe('Ceramic integration', () => {
   })
 
   it('won\'t propagate update across two disconnected nodes', async () => {
-    const ceramic1 = await createCeramic(ipfs1)
-    const ceramic2 = await createCeramic(ipfs2)
+    const ceramic1 = await createCeramic(ipfs1, topic)
+    const ceramic2 = await createCeramic(ipfs2, topic)
 
     const owner = ceramic1.context.did.id
 
@@ -133,9 +148,9 @@ describe('Ceramic integration', () => {
     await ipfs1.swarm.connect(multaddr2)
     await ipfs2.swarm.connect(multaddr3)
 
-    const ceramic1 = await createCeramic(ipfs1)
-    const ceramic2 = await createCeramic(ipfs2)
-    const ceramic3 = await createCeramic(ipfs3)
+    const ceramic1 = await createCeramic(ipfs1, topic)
+    const ceramic2 = await createCeramic(ipfs2, topic)
+    const ceramic3 = await createCeramic(ipfs3, topic)
 
     const owner = ceramic1.context.did.id
     // ceramic node 2 shouldn't need to have the document open in order to forward the message
@@ -158,9 +173,7 @@ describe('Ceramic integration', () => {
     })
 
     const idw = await IdentityWallet.create({
-      getPermission: async (): Promise<Array<string>> => [],
-      seed,
-      ceramic: ceramic1,
+      getPermission: async (): Promise<Array<string>> => [], seed, ceramic: ceramic1,
     })
 
     const ceramic2 = await Ceramic.create(ipfs2, {
@@ -177,8 +190,14 @@ describe('Ceramic integration', () => {
     const owner = idw._threeIdx.managementDID
 
     // ceramic node 2 shouldn't need to have the document open in order to forward the message
-    const doctype1 = await ceramic1.createDocument<TileDoctype>(DOCTYPE_TILE, { content: { test: 321 }, metadata: { owners: [owner], tags: ['3id'] } })
-    const doctype3 = await ceramic3.createDocument<TileDoctype>(DOCTYPE_TILE, { content: { test: 321 }, metadata: { owners: [owner], tags: ['3id'] } }, { applyOnly: true })
+    const doctype1 = await ceramic1.createDocument<TileDoctype>(DOCTYPE_TILE, {
+      content: { test: 321 },
+      metadata: { owners: [owner], tags: ['3id'] }
+    })
+    const doctype3 = await ceramic3.createDocument<TileDoctype>(DOCTYPE_TILE, {
+      content: { test: 321 },
+      metadata: { owners: [owner], tags: ['3id'] }
+    }, { applyOnly: true })
 
     expect(doctype3.content).toEqual(doctype1.content)
     expectEqualStates(doctype3.state, doctype1.state)
@@ -193,7 +212,7 @@ describe('Ceramic integration', () => {
       })
     })
 
-    await doctype1.change({ content: { test: 'abcde' }, metadata: { owners: [owner]} })
+    await doctype1.change({ content: { test: 'abcde' }, metadata: { owners: [owner] } })
     await updatePromise
     expect(doctype1.content).toEqual({ test: 'abcde' })
     expect(doctype3.content).toEqual(doctype1.content)
