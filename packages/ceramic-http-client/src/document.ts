@@ -1,4 +1,6 @@
-import { Doctype, DocParams, DoctypeUtils, DocState, DocOpts, DoctypeHandler, Context } from "@ceramicnetwork/ceramic-common"
+import {
+  Context, DocOpts, DocParams, DocState, Doctype, DoctypeHandler, DoctypeUtils
+} from "@ceramicnetwork/ceramic-common"
 
 import { fetchJson } from './utils'
 
@@ -64,6 +66,17 @@ class Document extends Doctype {
     const normalizedId = DoctypeUtils.normalizeDocId(id)
     const { versions } = await fetchJson(apiUrl + '/versions' + normalizedId)
     return versions
+  }
+
+  static async loadDocumentRecords (id: string, apiUrl: string): Promise<Array<Record<string, any>>> {
+    const normalizedId = DoctypeUtils.normalizeDocId(id)
+    const { records } = await fetchJson(apiUrl + '/records' + normalizedId)
+
+    return records.map((r: any) => {
+      return {
+        cid: r.cid, value: DoctypeUtils.deserializeRecord(r.value)
+      }
+    })
   }
 
   async change(params: DocParams): Promise<void> {

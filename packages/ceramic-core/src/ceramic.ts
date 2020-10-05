@@ -1,3 +1,4 @@
+import CID from 'cids'
 import Ipfs from 'ipfs'
 import Dispatcher from './dispatcher'
 import Document from './document'
@@ -305,6 +306,21 @@ class Ceramic implements CeramicApi {
 
     const version = DoctypeUtils.getVersionId(normalizedId)
     return (version? await doc.getVersion<T>(version) : doc.doctype) as T
+  }
+
+  /**
+   * Load all document records by document ID
+   * @param docId - Document ID
+   */
+  async loadDocumentRecords(docId: string): Promise<Array<Record<string, any>>> {
+    const doc = await this.loadDocument(docId)
+    const { state } = doc
+
+    return Promise.all(state.log.map(async (cid) => {
+      return {
+        cid: cid.toString(), value: (await this.ipfs.dag.get(cid)).value
+      }
+    }))
   }
 
   /**

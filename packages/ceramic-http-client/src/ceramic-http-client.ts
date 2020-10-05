@@ -96,6 +96,12 @@ class CeramicClient implements CeramicApi {
     return this._docmap[normalizedId] as unknown as T
   }
 
+  async loadDocumentRecords(docId: string): Promise<Array<Record<string, any>>> {
+    const normalizedId = DoctypeUtils.normalizeDocId(docId)
+
+    return Document.loadDocumentRecords(normalizedId, this._apiUrl)
+  }
+
   async applyRecord<T extends Doctype>(docId: string, record: object, opts?: DocOpts): Promise<T> {
     return await Document.applyRecord(this._apiUrl, docId, record, this.context, opts) as unknown as T
   }

@@ -71,6 +71,12 @@ export interface CeramicApi {
     loadDocument<T extends Doctype>(docId: string, opts?: DocOpts): Promise<T>;
 
     /**
+     * Load all document records by document ID
+     * @param docId - Document ID
+     */
+    loadDocumentRecords(docId: string): Promise<Array<Record<string, any>>>;
+
+    /**
      * Lists current Doctype versions
      * @param docId - Document ID
      */
