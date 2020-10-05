@@ -5,6 +5,7 @@ import cloneDeep from 'lodash.clonedeep'
 
 import type Document from "./document"
 import { DoctypeUtils, RootLogger, Logger } from "@ceramicnetwork/ceramic-common"
+import { TextDecoder } from 'util'
 
 export enum MsgType {
   UPDATE,
@@ -98,8 +99,18 @@ export default class Dispatcher extends EventEmitter {
     }
 
     if (message.from !== this._peerId) {
-      const parsedMessageData = JSON.parse(message.data)
+      // TODO: This is not a great way to handle the message because we don't
+      // don't know its type/contents. Ideally we can make this method generic
+      // against specific interfaces and follow follow IPFS specs for
+      // types (e.g. message data should be a buffer)
 
+      let parsedMessageData
+      if (typeof message.data === 'string') {
+        parsedMessageData = JSON.parse(message.data)
+      } else {
+        parsedMessageData = JSON.parse(new TextDecoder('utf-8').decode(message.data))
+      }
+      // TODO: handle signature and key buffers in message data
       const logMessage = { ...message, data: parsedMessageData }
       this._log({ peer: this._peerId, event: 'received', topic: this.topic, message: logMessage })
 
