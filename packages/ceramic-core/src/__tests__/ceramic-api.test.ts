@@ -332,7 +332,7 @@ describe('Ceramic API', () => {
       const expected = []
       for (const cid of doctype.state.log) {
         expected.push({
-          cid,
+          cid: cid.toString(),
           value: (await ceramic.ipfs.dag.get(cid)).value
         })
       }
