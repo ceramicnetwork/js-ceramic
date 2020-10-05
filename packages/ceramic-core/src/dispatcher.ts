@@ -98,11 +98,12 @@ export default class Dispatcher extends EventEmitter {
     }
 
     if (message.from !== this._peerId) {
-      const logMessage = message
-      logMessage.data = JSON.parse(new TextDecoder('utf-8').decode(message.data))
+      const parsedMessageData = JSON.parse(message.data)
+
+      const logMessage = { ...message, data: parsedMessageData }
       this._log({ peer: this._peerId, event: 'received', topic: this.topic, message: logMessage })
 
-      const { typ, id, cid } = message.data
+      const { typ, id, cid } = parsedMessageData
       if (this._documents[id]) {
         switch (typ) {
           case MsgType.UPDATE:
