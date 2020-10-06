@@ -50,7 +50,7 @@
     "identity-wallet": "^2.0.0-alpha.11",
     "ipfs": "github:simonovic86/ipfs",
     "ipfs-http-client": "github:simonovic86/ipfs-http-client",
-    "multiformats": "^3.0.3"
+    "multiformats": "^4.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.9.0",
