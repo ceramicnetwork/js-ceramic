@@ -24,6 +24,8 @@ export interface CreateOpts {
   pinning?: string[];
   gateway?: boolean;
   debug: boolean;
+  logToFiles?: boolean;
+  logPath?: string;
 }
 
 interface HttpLog {
@@ -38,10 +40,6 @@ class CeramicDaemon {
 
   constructor (public ceramic: Ceramic, opts: CreateOpts) {
     this.debug = opts.debug
-    if (this.debug) {
-      RootLogger.setLevel('debug')
-    }
-
     this.logger = RootLogger.getLogger(CeramicDaemon.name)
 
     const app = express()
@@ -52,27 +50,16 @@ class CeramicDaemon {
 
     if (this.debug) {
       app.use((err: Error, req: Request, res: Response, next: NextFunction): void => {
-        this.logger.error(err)
+        const requestStart = Date.now()
+        const httpLog = this.buildHttpLog(requestStart, req, res)
+        const logString = JSON.stringify(httpLog)
+        this.logger.error(logString)
         next(err)
       })
-      app.use((req: Request, res: Response, next: NextFunction) => {
-        const requestStart = Date.now();
-        const { rawHeaders, httpVersion, method, socket, url } = req;
-        const { remoteAddress, remoteFamily } = socket;
+      app.use((req: Request, res: Response, next: NextFunction): void => {
+        const requestStart = Date.now()
 
-        const log: HttpLog = {
-          request:{
-            timestamp: Date.now(),
-            rawHeaders,
-            httpVersion,
-            method,
-            remoteAddress,
-            remoteFamily,
-            url
-          }
-        }
-
-        let errorMessage: string = null;
+        let requestError: string = null;
         let body: string | any = [];
         req.on("data", chunk => {
           body.push(chunk)
@@ -82,36 +69,23 @@ class CeramicDaemon {
           body = body.toString()
         });
         req.on("error", error => {
-          errorMessage = error.message
+          requestError = error.message
         });
 
         res.on("finish", () => {
-          const { rawHeaders, httpVersion, method, socket, url } = req
-          const { remoteAddress, remoteFamily } = socket
-
-          const now = Date.now()
-          log.response = {
-            timestamp: now,
-            processingTime: now - requestStart,
-            rawHeaders,
-            body,
-            errorMessage,
-            httpVersion,
-            method,
-            remoteAddress,
-            remoteFamily,
-            url
-          }
-          this.logger.debug(JSON.stringify(log))
+          const httpLog = this.buildHttpLog(requestStart, req, res, {requestError, body})
+          const logString = JSON.stringify(httpLog)
+          this.logger.debug(logString)
         })
-
         next()
       })
     }
+
     app.use((err: Error, req: Request, res: Response, next: NextFunction): void => {
       res.json({ error: err.message })
       next(err)
     })
+
     const port = opts.port || DEFAULT_PORT
     this.server = app.listen(port, () => {
       console.log('Ceramic API running on port ' + port)
@@ -123,7 +97,9 @@ class CeramicDaemon {
     const { ipfs } = opts
 
     const ceramicConfig: CeramicConfig = {
-      logLevel: 'silent',
+      logLevel: opts.debug ? 'debug' : 'silent',
+      logToFiles: opts.logToFiles,
+      logPath: opts.logPath,
       gateway: opts.gateway || false
     }
     if (opts.anchorServiceUrl) {
@@ -165,6 +141,32 @@ class CeramicDaemon {
       app.get(toApiPath('/pin/add/ceramic/:cid'),  this.notSupported.bind(this))
       app.get(toApiPath('/pin/rm/ceramic/:cid'),  this.notSupported.bind(this))
     }
+  }
+
+  buildHttpLog (requestStart: number, req: Request, res: Response, extra?: any): HttpLog {
+    const { rawHeaders, httpVersion, method, socket, url } = req;
+    const { remoteAddress, remoteFamily } = socket;
+    const httpLog: HttpLog = {
+      request:{
+        timestamp: Date.now(),
+        rawHeaders,
+        httpVersion,
+        method,
+        remoteAddress,
+        remoteFamily,
+        url
+      }
+    }
+    const now = Date.now()
+    httpLog.response = {
+      timestamp: now,
+      processingTime: now - requestStart,
+      body: extra && extra.body || null,
+      statusCode: res.statusCode,
+      statusMessage: res.statusMessage,
+      requestError: extra && extra.requestError || null
+    }
+    return httpLog
   }
 
   async createDocFromGenesis (req: Request, res: Response, next: NextFunction): Promise<void> {

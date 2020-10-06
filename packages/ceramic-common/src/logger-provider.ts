@@ -1,6 +1,8 @@
 import chalk from 'chalk'
+import fs from 'fs'
 import log, { Logger, LogLevelDesc, MethodFactory } from 'loglevel'
 import prefix from 'loglevel-plugin-prefix'
+import util from 'util'
 
 /**
  * Logger colors
@@ -24,7 +26,9 @@ const defaultOpts: Options = {
         levels: ['trace', 'warn', 'error'],
         depth: 3,
         excess: 0,
-    }
+    },
+    outputToFiles: false,
+    outputPath: undefined
 }
 
 /**
@@ -40,6 +44,8 @@ interface Options {
         excess: 0;
     };
     component?: string;
+    outputToFiles?: boolean;
+    outputPath?: string;
 }
 
 /**
@@ -61,6 +67,9 @@ class LoggerProvider {
         }
 
         LoggerProvider._applyPrefix(options)
+        if (options.outputToFiles) {
+            LoggerProvider._includeFilePlugin(options)
+        }
         LoggerProvider._includeJsonPlugin(options)
     }
 
@@ -78,6 +87,43 @@ class LoggerProvider {
                 return date.toISOString()
             }
         })
+    }
+
+    /**
+     * Plugin to append log messages to files named after components
+     * @notice If no component name is given 'default' will be included in the file name
+     * @param options Should include `component` name string and `outputPath` string
+     */
+    static _includeFilePlugin (options: Options): void {
+        const originalFactory = log.methodFactory;
+        let basePath = options.outputPath
+        if ((basePath === undefined) || (basePath === '')) {
+            basePath = '/usr/local/var/log/ceramic/'
+        }
+        if (!basePath.endsWith('/')) {
+            basePath = basePath + '/'
+        }
+
+        log.methodFactory = (methodName: string, logLevel: any, loggerName: string): MethodFactory => {
+            const rawMethod = originalFactory(methodName, logLevel, loggerName);
+            return (...args: any[]): any => {
+                const message = LoggerProvider._interpolate(args)
+                const namespace = options.component ? options.component.toLowerCase() : 'default'
+                fs.mkdir(basePath, { recursive: true }, (err) => {
+                    if (err && (err.code != 'EEXIST')) console.warn('WARNING: Can not write logs to files', err)
+                    else {
+                        const stream = fs.createWriteStream(
+                            basePath + `${loggerName.toLowerCase()}-${namespace}.log`,
+                            { flags: 'a' }
+                        )
+                        stream.write(util.format(message) + '\n')
+                        stream.end()
+                    }
+                })
+                rawMethod(...args)
+            }
+        };
+        log.setLevel(log.getLevel());
     }
 
     /**
