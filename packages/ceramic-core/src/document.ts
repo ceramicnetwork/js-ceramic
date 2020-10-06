@@ -20,7 +20,7 @@ import {
   RootLogger,
   Logger,
 } from '@ceramicnetwork/ceramic-common'
-import {PinStore} from './store/pin-store';
+import { PinStore } from './store/pin-store';
 
 class Document extends EventEmitter {
   private _genesisCid: CID

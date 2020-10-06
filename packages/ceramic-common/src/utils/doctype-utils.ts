@@ -1,6 +1,7 @@
 import ajv from "ajv"
 import CID from 'cids'
 import cloneDeep from "lodash.clonedeep"
+import * as u8a from 'uint8arrays'
 
 import { Ipfs } from "ipfs"
 import { AnchorStatus, DocState, Doctype } from "../doctype"
@@ -109,13 +110,7 @@ export class DoctypeUtils {
 
         if (DoctypeUtils.isSignedRecordDTO(cloned)) {
             cloned.jws.link = cloned.jws.link.toString()
-            if (cloned.linkedBlock.data) {
-                // it's a block
-                cloned.linkedBlock = cloned.linkedBlock.data.toString('base64')
-            } else {
-                // it's a buffer
-                cloned.linkedBlock = cloned.linkedBlock.toString('base64')
-            }
+            cloned.linkedBlock = u8a.toString(cloned.linkedBlock, 'base64')
             return cloned
         }
 
@@ -146,7 +141,7 @@ export class DoctypeUtils {
 
         if (DoctypeUtils.isSignedRecordDTO(cloned)) {
             cloned.jws.link = new CID(cloned.jws.link)
-            cloned.linkedBlock = Buffer.from(cloned.linkedBlock, 'base64')
+            cloned.linkedBlock = u8a.fromString(cloned.linkedBlock, 'base64')
             return cloned
         }
 
@@ -260,7 +255,7 @@ export class DoctypeUtils {
             const linkedBlock = await ipfs.block.get(record.link)
             return {
                 jws: record,
-                linkedBlock: linkedBlock.data,
+                linkedBlock: new Uint8Array(linkedBlock.data.buffer),
             }
         }
         return record
