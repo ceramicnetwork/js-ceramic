@@ -3,6 +3,8 @@ import fs from 'fs'
 import log, { Logger, LogLevelDesc, MethodFactory } from 'loglevel'
 import prefix from 'loglevel-plugin-prefix'
 import util from 'util'
+import { DoctypeUtils } from "@ceramicnetwork/ceramic-common"
+import { Doctype } from './doctype'
 
 /**
  * Logger colors
@@ -28,7 +30,8 @@ const defaultOpts: Options = {
         excess: 0,
     },
     outputToFiles: false,
-    outputPath: undefined
+    outputPath: undefined,
+    getDocument: null
 }
 
 /**
@@ -46,6 +49,7 @@ interface Options {
     component?: string;
     outputToFiles?: boolean;
     outputPath?: string;
+    getDocument?: (docId: string) => Promise<Doctype>;
 }
 
 /**
@@ -112,18 +116,63 @@ class LoggerProvider {
                 fs.mkdir(basePath, { recursive: true }, (err) => {
                     if (err && (err.code != 'EEXIST')) console.warn('WARNING: Can not write logs to files', err)
                     else {
-                        const stream = fs.createWriteStream(
-                            basePath + `${loggerName.toLowerCase()}-${namespace}.log`,
-                            { flags: 'a' }
-                        )
-                        stream.write(util.format(message) + '\n')
-                        stream.end()
+                        const filePrefix = basePath + loggerName.toLowerCase()
+                        const filePath = `${filePrefix}-${namespace}.log`
+
+                        this._writeStream(filePath, message, 'a')
+                        const docId = this._writeDocId(filePrefix, message)
+                        this._write3id(filePrefix, docId, options.getDocument)
                     }
                 })
                 rawMethod(...args)
             }
         };
         log.setLevel(log.getLevel());
+    }
+
+    static _writeDocId(filePrefix: string, message: string) {
+        const lookup = '/ceramic/'
+        const docIdIndex = message.indexOf(lookup)
+
+        if (docIdIndex > -1) {
+            const docIdSubstring = message.substring(docIdIndex)
+            const match = docIdSubstring.match(/\/ceramic\/\w+/)
+
+            if (match !== null) {
+                const docId = match[0]
+                const filePath = filePrefix + '-docids.log'
+                this._writeStream(filePath, docId, 'w')
+                return docId
+            }
+        }
+    }
+
+    static async _write3id(filePrefix: string, docId: string, getDocument: (docId: string) => Promise<Doctype>) {
+        if (!getDocument || !docId) return
+
+        const doc = await getDocument(docId)
+        const docState = DoctypeUtils.serializeState(doc.state)
+
+        let is3id = false
+        try {
+            is3id = docState.metadata.tags.includes('3id')
+        } catch (error) {
+            return
+        }
+
+        if (is3id) {
+            const filePath = filePrefix + '-3ids.log'
+            this._writeStream(filePath, docId, 'w')
+        }
+    }
+    
+    static _writeStream(filePath: string, message: string, writeFlag: string) {
+        const stream = fs.createWriteStream(
+            filePath,
+            { flags: writeFlag }
+        )
+        stream.write(util.format(message) + '\n')
+        stream.end()
     }
 
     /**
