@@ -1,0 +1,31 @@
+{
+  "name": "ceramic-docid",
+  "version": "0.1.0",
+  "description": "Ceramic Document Ids",
+  "keywords": [
+    "ceramic",
+    "DocId"
+  ],
+  "main": "lib/index.js",
+  "files": [
+    "lib"
+  ],
+  "scripts": {
+    "test": "./node_modules/.bin/jest --coverage",
+    "build": "../../node_modules/.bin/tsc -p tsconfig.json; cp src/subnet-table.json lib; cp src/doctype-table.json lib;",
+    "prepublishOnly": "npm run build",
+    "prebuild": "npm run clean",
+    "lint": "./node_modules/.bin/eslint ./src --ext .js,.jsx,.ts,.tsx",
+    "clean": "rm -rf ./lib"
+  },
+  "author": "Zach Ferland <zachferland@gmail.com>",
+  "license": "(Apache-2.0 OR MIT)",
+  "directories": {
+    "lib": "lib"
+  },
+  "dependencies": {
+    "cids": "^1.0.1",
+    "multibase": "^3.0.1",
+    "varint": "^6.0.0"
+  }
+}
