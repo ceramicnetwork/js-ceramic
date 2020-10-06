@@ -51,8 +51,10 @@ export class CeramicCliUtils {
      * @param gateway - read only endpoints available. It is disabled by default
      * @param port - port daemon is availabe. Default is 7007
      * @param debug - Enable debug logging level
+     * @param logToFiles - Enable writing logs to files
+     * @param logPath - Store log files in this directory
      */
-    static async createDaemon(ipfsApi: string, ethereumRpc: string, anchorServiceApi: string, validateDocs: boolean, pinning: string[], stateStorePath: string, gateway: boolean, port: number, debug: boolean): Promise<CeramicDaemon> {
+    static async createDaemon(ipfsApi: string, ethereumRpc: string, anchorServiceApi: string, validateDocs: boolean, pinning: string[], stateStorePath: string, gateway: boolean, port: number, debug: boolean, logToFiles: boolean, logPath: string): Promise<CeramicDaemon> {
         if (stateStorePath == null) {
             stateStorePath = DEFAULT_PINNING_STORE_PATH
         }
@@ -65,7 +67,9 @@ export class CeramicCliUtils {
             pinning: pinning,
             gateway,
             port,
-            debug
+            debug,
+            logToFiles,
+            logPath
         }
 
         multiformats.multicodec.add(dagJose)

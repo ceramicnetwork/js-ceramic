@@ -24,6 +24,8 @@ export interface CreateOpts {
   pinning?: string[];
   gateway?: boolean;
   debug: boolean;
+  logToFiles?: boolean;
+  logPath?: string;
 }
 
 interface HttpLog {
@@ -96,6 +98,8 @@ class CeramicDaemon {
 
     const ceramicConfig: CeramicConfig = {
       logLevel: opts.debug ? 'debug' : 'silent',
+      logToFiles: opts.logToFiles,
+      logPath: opts.logPath,
       gateway: opts.gateway || false
     }
     if (opts.anchorServiceUrl) {

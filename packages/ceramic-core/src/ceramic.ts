@@ -38,6 +38,8 @@ export interface CeramicConfig {
   pinning?: string[];
 
   logLevel?: string;
+  logToFiles?: boolean;
+  logPath?: string;
   gateway?: boolean;
 
   topic?: string;
@@ -117,7 +119,9 @@ class Ceramic implements CeramicApi {
   static async create(ipfs: Ipfs.Ipfs, config: CeramicConfig = {}): Promise<Ceramic> {
     LoggerProvider.init({
       level: config.logLevel? config.logLevel : 'silent',
-      component: config.gateway? 'GATEWAY' : 'NODE'
+      component: config.gateway? 'GATEWAY' : 'NODE',
+      outputToFiles: config.logToFiles,
+      outputPath: config.logPath
     })
 
     const dispatcher = new Dispatcher(ipfs, config.topic)
