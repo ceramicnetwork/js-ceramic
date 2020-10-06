@@ -252,11 +252,8 @@ export class DoctypeUtils {
      */
     static async convertRecordToDTO(record: any, ipfs: Ipfs): Promise<any> {
         if (DoctypeUtils.isSignedRecord(record)) {
-            let linkedBlock = await ipfs.block.get(record.link)
-            if (linkedBlock.data instanceof Buffer) {
-                // transform Buffer into Uint8Array
-                linkedBlock = new Uint8Array(linkedBlock.data.buffer)
-            }
+            const block = await ipfs.block.get(record.link)
+            const linkedBlock = block.data instanceof Uint8Array ? block.data : new Uint8Array(block.data.buffer)
             return {
                 jws: record,
                 linkedBlock,
