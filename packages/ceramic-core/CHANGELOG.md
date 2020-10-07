@@ -3,6 +3,27 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.10.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-core@0.9.1-alpha.1...@ceramicnetwork/ceramic-core@0.10.0) (2020-10-07)
+
+
+### Bug Fixes
+
+* add todos to remove logToFile ([5f5433a](https://github.com/ceramicnetwork/js-ceramic/commit/5f5433a7636bba134457a9b264c7e88bf3ad4aed))
+* handle message data as string or buffer ([d9eeb7b](https://github.com/ceramicnetwork/js-ceramic/commit/d9eeb7bb9fe704fdfdc96a80b4e27708d3b3c5be))
+* parse message data in dispatcher log ([d5771a3](https://github.com/ceramicnetwork/js-ceramic/commit/d5771a33f10f3d6fb2d4dfbaf7292b805b5c9a20))
+* remove logToFile in favor of plugin and update file names ([5bbdd27](https://github.com/ceramicnetwork/js-ceramic/commit/5bbdd27922d8b873a42fb18a83e2bb0815b4052f))
+
+
+### Features
+
+* add log to file ([b342226](https://github.com/ceramicnetwork/js-ceramic/commit/b3422261c7ec34495140cbc39fdbdcde456b3110))
+* add timestamp to pubsub logs ([6ed6a94](https://github.com/ceramicnetwork/js-ceramic/commit/6ed6a94595ea06de18fc061a1da2053084536396))
+* make log to file optional and config path ([581bba8](https://github.com/ceramicnetwork/js-ceramic/commit/581bba8c91f963893fb5509b97b939cfee0bd68d))
+
+
+
+
+
 ## [0.9.1-alpha.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-core@0.9.1-alpha.0...@ceramicnetwork/ceramic-core@0.9.1-alpha.1) (2020-10-06)
 
 **Note:** Version bump only for package @ceramicnetwork/ceramic-core

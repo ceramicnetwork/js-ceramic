@@ -3,6 +3,28 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.11.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-cli@0.10.1-alpha.1...@ceramicnetwork/ceramic-cli@0.11.0) (2020-10-07)
+
+
+### Bug Fixes
+
+* add todos to remove logToFile ([5f5433a](https://github.com/ceramicnetwork/js-ceramic/commit/5f5433a7636bba134457a9b264c7e88bf3ad4aed))
+* initialize log level through ceramic config only ([0f5eb22](https://github.com/ceramicnetwork/js-ceramic/commit/0f5eb22963c0bc04ca08ab64929ef320b2b1b5b1))
+* lint ([68d77bb](https://github.com/ceramicnetwork/js-ceramic/commit/68d77bb2c464226283b07345775efeead9136687))
+* log errors and refactor http logging ([da1f777](https://github.com/ceramicnetwork/js-ceramic/commit/da1f777ecea1507eb58662132d0db48c9dba2de8))
+* remove logToFile in favor of plugin and update file names ([5bbdd27](https://github.com/ceramicnetwork/js-ceramic/commit/5bbdd27922d8b873a42fb18a83e2bb0815b4052f))
+* remove repeat request data from response log ([5df425f](https://github.com/ceramicnetwork/js-ceramic/commit/5df425f79ecf2deda03d29f73375e5d32dd2b053))
+
+
+### Features
+
+* make log to file optional and config path ([581bba8](https://github.com/ceramicnetwork/js-ceramic/commit/581bba8c91f963893fb5509b97b939cfee0bd68d))
+* write daemon logs to files ([0738730](https://github.com/ceramicnetwork/js-ceramic/commit/073873013f55a3afb0aa24e8fba57c7b39be1e0a))
+
+
+
+
+
 ## [0.10.1-alpha.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-cli@0.10.1-alpha.0...@ceramicnetwork/ceramic-cli@0.10.1-alpha.1) (2020-10-06)
 
 **Note:** Version bump only for package @ceramicnetwork/ceramic-cli

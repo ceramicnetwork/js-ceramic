@@ -3,6 +3,26 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.10.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-common@0.9.1-alpha.1...@ceramicnetwork/ceramic-common@0.10.0) (2020-10-07)
+
+
+### Bug Fixes
+
+* add todos to remove logToFile ([5f5433a](https://github.com/ceramicnetwork/js-ceramic/commit/5f5433a7636bba134457a9b264c7e88bf3ad4aed))
+* log errors and refactor http logging ([da1f777](https://github.com/ceramicnetwork/js-ceramic/commit/da1f777ecea1507eb58662132d0db48c9dba2de8))
+* remove logToFile in favor of plugin and update file names ([5bbdd27](https://github.com/ceramicnetwork/js-ceramic/commit/5bbdd27922d8b873a42fb18a83e2bb0815b4052f))
+
+
+### Features
+
+* add log to file ([b342226](https://github.com/ceramicnetwork/js-ceramic/commit/b3422261c7ec34495140cbc39fdbdcde456b3110))
+* add logger plugin to write to files ([54a1e13](https://github.com/ceramicnetwork/js-ceramic/commit/54a1e13a62b4d0bf348379a3f82670307fa45e91))
+* make log to file optional and config path ([581bba8](https://github.com/ceramicnetwork/js-ceramic/commit/581bba8c91f963893fb5509b97b939cfee0bd68d))
+
+
+
+
+
 ## [0.9.1-alpha.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-common@0.9.1-alpha.0...@ceramicnetwork/ceramic-common@0.9.1-alpha.1) (2020-10-06)
 
 
