@@ -8,6 +8,12 @@ const uint8ArrayToString = require('uint8arrays/to-string')
 const uint8ArrayEquals = require('uint8arrays/equals')
 const DOCID_CODEC = 206
 
+const getKey = (obj: { [key: string]: number; }, value: number): string | undefined => {
+  for (const [k, v] of Object.entries(obj)) { 
+    if (v === value) return k
+  }
+} 
+
 // Definition
 // '<multibase-prefix><multicodec-docid><subnet><doctype><genesis-cid-bytes>'
 
@@ -17,65 +23,63 @@ class DocId {
    *
    * @param {string|Uint8Array}  doctype
    * @param {CID|string}         [cid]
-   * @param {string}             [multihash = 'devnet']
-   * @param {string}             [multibaseName = 'base32']
+   * @param {string}             [subnet = 'devnet']
+   * @param {string}             [multibaseName = 'base36']
    *
    * @example
    * new DocId(<docType>, <CID>|<cidStr>)
    * new DocId(<docType>, <CID>|<cidStr>, <subnet>, <multibaseName>)
-   * new DocId(<docIdStr>)
-   * new DocId(<bytes>, <multibaseName>)  
    */
 
-  private _docType: string 
-  private _subnet: string
+  private _docType: number 
+  private _subnet: number
   private _cid: CID
-  private _cidBytes: Uint8Array
   private _multibaseName: string
 
-  constructor (doctype: string | Uint8Array, cid: CID | string, subnet?: string, multibaseName?: string) {
-    if (doctype instanceof Uint8Array) {
-      // Given uint8 array DocId
-      const bytes = doctype 
-      this._multibaseName = typeof cid === 'string' ? cid : 'base32'
-      this._initFromBytes(bytes)
-    } else if (Object.keys(doctypes).includes(doctype)) {
-      // From args
-      if (!doctype) throw new Error('constructor: doctype required')
-      if (!cid) throw new Error('constructor: cid required')
-      this._docType = doctype
-      this._subnet = subnet || 'devnet'
-      this._multibaseName = multibaseName || 'base32'
-      this._cid = (typeof cid === 'string') ? new CID(cid) : cid
-      this._cidBytes = this._cid.bytes
-    } else if (typeof doctype === 'string') {
-      // From DocIdString
-      const docIdStr = doctype
-      this._multibaseName = multibase.isEncoded(docIdStr)
-      const bytes = multibase.decode(docIdStr).slice(2)
-      this._initFromBytes(bytes)
-    } else {
-      throw new Error('constructor: Invalid Arguments or CID')
-    }
+  constructor (doctype: string | number = 'tile', cid: CID | string, subnet: string | number = 'devnet', multibaseName: string = 'base36') {
+    this._docType = (typeof cid === 'string') ? doctypes[doctype] : doctype
+     // if (!doctype) throw new Error('constructor: doctype required')
+    this._subnet = (typeof cid === 'string')? subnets[subnet] : subnet
+    this._multibaseName = multibaseName 
+    this._cid = (typeof cid === 'string') ? new CID(cid) : cid
+      // if (!cid) throw new Error('constructor: cid required')
   }
 
-  _initFromBytes(bytes: Uint8Array): void {
-    this._subnet = subnets[varint.decode(bytes)]
+  static fromBytes(bytes: Uint8Array, multibaseName: string): DocId {
+    const subnet = varint.decode(bytes)
     bytes = bytes.slice(varint.decode.bytes) 
-    this._docType = doctypes[varint.decode(bytes)]
+    const docType = varint.decode(bytes)
     bytes = bytes.slice(varint.decode.bytes) 
-    this._cid = new CID(bytes)
-    this._cidBytes = this._cid.bytes
+    const cid = new CID(bytes)
+    return new DocId(docType, cid, subnet, multibaseName)
+  }
+
+  static fromString(docId: string): DocId {
+    const multibaseName = multibase.isEncoded(docId)
+    const bytes = multibase.decode(docId).slice(2)
+    return DocId.fromBytes(bytes, multibaseName)
   }
 
   /**
-   * Get doc type string
+   * Get doc type code
+   *
+   * @returns {number}
+   * @readonly
+   */
+  get docType (): number {
+    return this._docType
+  }
+
+  /**
+   * Get doc type name
    *
    * @returns {string}
    * @readonly
    */
-  get docType (): string {
-    return this._docType
+  get docTypeName (): string {
+    const name = getKey(doctypes, this._docType)
+    if (!name) throw new Error('docTypeName: no registered name available')
+    return name 
   }
 
   /**
@@ -89,13 +93,25 @@ class DocId {
   }
 
   /**
-   * Get subnet name string
+   * Get subnet code
+   *
+   * @returns {number}
+   * @readonly
+   */
+  get subnet (): number {
+    return this._subnet
+  }
+
+  /**
+   * Get subnet name 
    *
    * @returns {string}
    * @readonly
    */
-  get subnet (): string {
-    return this._subnet
+  get subnetName (): string {
+    const name = getKey(doctypes, this._subnet)
+    if (!name) throw new Error('subnetName: no registered name available')
+    return name 
   }
 
   /**
@@ -136,12 +152,11 @@ class DocId {
    */
   get bytes (): Uint8Array {
     const codec = varint.encode(DOCID_CODEC)
-    const subnet = varint.encode(subnets[this.subnet])
-    const doctype = varint.encode(doctypes[this.docType])
-    const bytes = uint8ArrayConcat([
-      codec, subnet, doctype, this._cidBytes
-    ], codec.byteLength, subnet.byteLength, doctype.byteLength, this._cidBytes.byteLength)
-    return bytes
+    const subnet = varint.encode(this._subnet)
+    const doctype = varint.encode(this._docType)
+    return uint8ArrayConcat([
+      codec, subnet, doctype, this._cid.bytes
+    ])
   }
 
 
