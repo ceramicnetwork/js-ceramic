@@ -57,6 +57,7 @@ describe('Ceramic API', () => {
       getPermission: async (): Promise<Array<string>> => [],
       seed,
       ceramic: ceramic,
+      disableIDX: true,
     }
     await IdentityWallet.create(config)
     return ceramic
