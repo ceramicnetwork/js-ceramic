@@ -3,8 +3,6 @@ import fs from 'fs'
 import log, { Logger, LogLevelDesc, MethodFactory } from 'loglevel'
 import prefix from 'loglevel-plugin-prefix'
 import util from 'util'
-import { DoctypeUtils } from "@ceramicnetwork/ceramic-common"
-import { Doctype } from './doctype'
 
 /**
  * Logger colors
@@ -30,8 +28,7 @@ const defaultOpts: Options = {
         excess: 0,
     },
     outputToFiles: false,
-    outputPath: undefined,
-    getDocument: null
+    outputPath: undefined
 }
 
 /**
@@ -49,7 +46,6 @@ interface Options {
     component?: string;
     outputToFiles?: boolean;
     outputPath?: string;
-    getDocument?: (docId: string) => Promise<Doctype>;
 }
 
 /**

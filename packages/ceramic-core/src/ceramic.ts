@@ -120,6 +120,12 @@ class Ceramic implements CeramicApi {
    * @param config - Ceramic configuration
    */
   static async create(ipfs: Ipfs.Ipfs, config: CeramicConfig = {}): Promise<Ceramic> {
+    LoggerProvider.init({
+      level: config.logLevel? config.logLevel : 'silent',
+      component: config.gateway? 'GATEWAY' : 'NODE',
+      outputToFiles: config.logToFiles,
+      outputPath: config.logPath
+    })
 
     const dispatcher = new Dispatcher(ipfs, config.topic)
     await dispatcher.init()
@@ -144,14 +150,6 @@ class Ceramic implements CeramicApi {
     const threeIdResolver = ThreeIdResolver.getResolver(ceramic)
     ceramic.context.resolver = new Resolver({
       ...config.didResolver, ...threeIdResolver, ...keyDidResolver,
-    })
-
-    LoggerProvider.init({
-      level: config.logLevel? config.logLevel : 'silent',
-      component: config.gateway? 'GATEWAY' : 'NODE',
-      outputToFiles: config.logToFiles,
-      outputPath: config.logPath,
-      getDocument: config.logToFiles? ceramic.loadDocument.bind(ceramic) : null
     })
 
     return ceramic
