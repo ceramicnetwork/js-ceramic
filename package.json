@@ -5,7 +5,7 @@
     "bootstrap": "npm ci && lerna bootstrap --hoist --ci",
     "test": "lerna run test",
     "build": "lerna run build",
-    "docs": "typedoc --mode modules --disableOutputCheck --out ./docs/api --ignoreCompilerErrors --excludeExternals --excludePrivate --excludeNotExported --externalPattern '**/node_modules/**' --exclude '**/*.+(test).ts' --name 'Ceramic' --module commonjs .",
+    "docs": "typedoc --mode modules --disableOutputCheck --out ./docs/api --readme ./README.md --ignoreCompilerErrors --excludeExternals --excludePrivate --externalPattern '**/node_modules/**' --exclude '**/*.+(test).ts' --name 'Ceramic' --module commonjs .",
     "publish:next": "lerna publish --no-push --conventional-prerelease --dist-tag next",
     "publish:latest": "lerna publish --allow-branch master --conventional-graduate --create-release github",
     "lint": "lerna run lint",
