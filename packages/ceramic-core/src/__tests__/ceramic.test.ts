@@ -45,6 +45,7 @@ const createCeramic = async (ipfs: Ipfs, topic: string): Promise<Ceramic> => {
     getPermission: async (): Promise<Array<string>> => [],
     seed,
     ceramic,
+    disableIDX: true,
   })
 
   return ceramic
@@ -174,6 +175,7 @@ describe('Ceramic integration', () => {
 
     const idw = await IdentityWallet.create({
       getPermission: async (): Promise<Array<string>> => [], seed, ceramic: ceramic1,
+      disableIDX: true,
     })
 
     const ceramic2 = await Ceramic.create(ipfs2, {

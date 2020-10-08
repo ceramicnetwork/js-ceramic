@@ -97,7 +97,7 @@ export default class Dispatcher extends EventEmitter {
   }
 
   /**
-   * Retrieves one Ceramic record (genesis|signed|anchor).
+   * Retrieves one Ceramic record by CID or path.
    *
    * @param cid - Record CID
    */
