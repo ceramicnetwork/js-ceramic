@@ -3,6 +3,9 @@ import CID from "cids";
 import { EventEmitter } from "events";
 import { AnchorProof } from "./doctype"
 
+/**
+ * Describes anchoring service behavior
+ */
 export abstract class AnchorService extends EventEmitter {
 
     /**

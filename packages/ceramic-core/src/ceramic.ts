@@ -24,7 +24,7 @@ import { PinStoreFactory } from "./store/pin-store-factory";
 import { PinStore } from "./store/pin-store";
 
 /**
- * Initial Ceramic configuration
+ * Ceramic configuration
  */
 export interface CeramicConfig {
   ethereumRpcUrl?: string;
@@ -46,7 +46,7 @@ export interface CeramicConfig {
 }
 
 /**
- * Ceramic instance implementation
+ * Ceramic core implementation
  */
 class Ceramic implements CeramicApi {
   private readonly _docmap: Record<string, Document>
@@ -74,6 +74,9 @@ class Ceramic implements CeramicApi {
     return this.context.ipfs
   }
 
+  /**
+   * Get DID
+   */
   get did(): DID | undefined {
     return this.context.did
   }

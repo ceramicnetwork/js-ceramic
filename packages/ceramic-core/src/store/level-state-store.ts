@@ -2,13 +2,19 @@ import Level from "level-ts";
 import {DocState, Doctype, DoctypeUtils} from "@ceramicnetwork/ceramic-common"
 import {StateStore} from "./state-store";
 
+/**
+ * Ceramic store for saving documents locally
+ */
 export class LevelStateStore implements StateStore {
     #store: Level
 
     constructor(private storePath: string) {
     }
 
-    get store() {
+    /**
+     * Gets internal db
+     */
+    get store(): Level {
         return this.#store
     }
 
@@ -22,7 +28,6 @@ export class LevelStateStore implements StateStore {
     /**
      * Pin document
      * @param document - Document instance
-     * @param pinOnIpfs - Pin logs on IPFS
      */
     async save(document: Doctype): Promise<void> {
         const normalized = DoctypeUtils.getBaseDocId(DoctypeUtils.normalizeDocId(document.id))
