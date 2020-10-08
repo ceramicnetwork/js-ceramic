@@ -120,8 +120,7 @@ class LoggerProvider {
                         const filePath = `${filePrefix}-${namespace}.log`
 
                         this._writeStream(filePath, message, 'a')
-                        const docId = this._writeDocId(filePrefix, message)
-                        this._write3id(filePrefix, docId, options.getDocument)
+                        this._writeDocId(filePrefix, message)
                     }
                 })
                 rawMethod(...args)
@@ -130,7 +129,7 @@ class LoggerProvider {
         log.setLevel(log.getLevel());
     }
 
-    static _writeDocId(filePrefix: string, message: string) {
+    static _writeDocId(filePrefix: string, message: string): void {
         const lookup = '/ceramic/'
         const docIdIndex = message.indexOf(lookup)
 
@@ -142,31 +141,11 @@ class LoggerProvider {
                 const docId = match[0]
                 const filePath = filePrefix + '-docids.log'
                 this._writeStream(filePath, docId, 'w')
-                return docId
             }
         }
     }
 
-    static async _write3id(filePrefix: string, docId: string, getDocument: (docId: string) => Promise<Doctype>) {
-        if (!getDocument || !docId) return
-
-        const doc = await getDocument(docId)
-        const docState = DoctypeUtils.serializeState(doc.state)
-
-        let is3id = false
-        try {
-            is3id = docState.metadata.tags.includes('3id')
-        } catch (error) {
-            return
-        }
-
-        if (is3id) {
-            const filePath = filePrefix + '-3ids.log'
-            this._writeStream(filePath, docId, 'w')
-        }
-    }
-    
-    static _writeStream(filePath: string, message: string, writeFlag: string) {
+    static _writeStream(filePath: string, message: string, writeFlag: string): void {
         const stream = fs.createWriteStream(
             filePath,
             { flags: writeFlag }
