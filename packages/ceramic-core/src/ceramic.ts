@@ -14,6 +14,8 @@ import {
   DoctypeUtils,
   DocParams,
   LoggerProvider,
+  LoggerPlugin,
+  LoggerPluginOptions,
 } from "@ceramicnetwork/ceramic-common"
 import { Resolver } from "did-resolver"
 
@@ -39,7 +41,10 @@ export interface CeramicConfig {
 
   logLevel?: string;
   logToFiles?: boolean;
-  logPath?: string;
+  logToFilesPlugin?: {
+    plugin: LoggerPlugin;
+    options: LoggerPluginOptions;
+  };
   gateway?: boolean;
 
   topic?: string;
@@ -120,12 +125,18 @@ class Ceramic implements CeramicApi {
    * @param config - Ceramic configuration
    */
   static async create(ipfs: Ipfs.Ipfs, config: CeramicConfig = {}): Promise<Ceramic> {
-    LoggerProvider.init({
+    const loggerOptions = LoggerProvider.init({
       level: config.logLevel? config.logLevel : 'silent',
       component: config.gateway? 'GATEWAY' : 'NODE',
-      outputToFiles: config.logToFiles,
-      outputPath: config.logPath
     })
+
+    if (config.logToFiles) {
+        LoggerProvider.addPlugin(
+            config.logToFilesPlugin.plugin,
+            loggerOptions,
+            config.logToFilesPlugin.options
+        )
+    }
 
     const dispatcher = new Dispatcher(ipfs, config.topic)
     await dispatcher.init()

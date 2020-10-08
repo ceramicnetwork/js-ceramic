@@ -1,8 +1,6 @@
 import chalk from 'chalk'
-import fs from 'fs'
 import log, { Logger, LogLevelDesc, MethodFactory } from 'loglevel'
 import prefix from 'loglevel-plugin-prefix'
-import util from 'util'
 
 /**
  * Logger colors
@@ -27,8 +25,6 @@ const defaultOpts: Options = {
         depth: 3,
         excess: 0,
     },
-    outputToFiles: false,
-    outputPath: undefined
 }
 
 /**
@@ -44,9 +40,20 @@ interface Options {
         excess: 0;
     };
     component?: string;
-    outputToFiles?: boolean;
-    outputPath?: string;
 }
+
+/**
+ * Plugin options
+ */
+interface PluginOptions {
+    [index: string]: any;
+}
+
+/**
+ * Function type for plugins
+ * @dev Must call `setLevel` on `rootLogger` to be enabled
+ */
+type Plugin = (rootLogger: log.RootLogger, loggerOptions: Options, pluginOptions?: PluginOptions) => void;
 
 /**
  * Global Logger factory
@@ -56,8 +63,9 @@ class LoggerProvider {
     /**
      * Initialize root logger
      * @param opts - Options
+     * @returns Modified options
      */
-    static init(opts = defaultOpts): void {
+    static init(opts = defaultOpts): Options {
         const options = Object.assign(defaultOpts, opts)
 
         if (options.level) {
@@ -67,10 +75,18 @@ class LoggerProvider {
         }
 
         LoggerProvider._applyPrefix(options)
-        if (options.outputToFiles) {
-            LoggerProvider._includeFilePlugin(options)
-        }
         LoggerProvider._includeJsonPlugin(options)
+        return options
+    }
+
+    /**
+     * Adds `plugin` to the logger instance
+     * @param plugin Plugin function to add
+     * @param loggerOptions Options returned from LoggerProvider.init
+     * @param pluginOptions Options specific to `plugin`
+     */
+    static addPlugin(plugin: Plugin, loggerOptions: Options, pluginOptions?: PluginOptions): void {
+        plugin(log, loggerOptions, pluginOptions)
     }
 
     /**
@@ -87,67 +103,6 @@ class LoggerProvider {
                 return date.toISOString()
             }
         })
-    }
-
-    /**
-     * Plugin to append log messages to files named after components
-     * @notice If no component name is given 'default' will be included in the file name
-     * @param options Should include `component` name string and `outputPath` string
-     */
-    static _includeFilePlugin (options: Options): void {
-        const originalFactory = log.methodFactory;
-        let basePath = options.outputPath
-        if ((basePath === undefined) || (basePath === '')) {
-            basePath = '/usr/local/var/log/ceramic/'
-        }
-        if (!basePath.endsWith('/')) {
-            basePath = basePath + '/'
-        }
-
-        log.methodFactory = (methodName: string, logLevel: any, loggerName: string): MethodFactory => {
-            const rawMethod = originalFactory(methodName, logLevel, loggerName);
-            return (...args: any[]): any => {
-                const message = LoggerProvider._interpolate(args)
-                const namespace = options.component ? options.component.toLowerCase() : 'default'
-                fs.mkdir(basePath, { recursive: true }, (err) => {
-                    if (err && (err.code != 'EEXIST')) console.warn('WARNING: Can not write logs to files', err)
-                    else {
-                        const filePrefix = basePath + loggerName.toLowerCase()
-                        const filePath = `${filePrefix}-${namespace}.log`
-
-                        this._writeStream(filePath, message, 'a')
-                        this._writeDocId(filePrefix, message)
-                    }
-                })
-                rawMethod(...args)
-            }
-        };
-        log.setLevel(log.getLevel());
-    }
-
-    static _writeDocId(filePrefix: string, message: string): void {
-        const lookup = '/ceramic/'
-        const docIdIndex = message.indexOf(lookup)
-
-        if (docIdIndex > -1) {
-            const docIdSubstring = message.substring(docIdIndex)
-            const match = docIdSubstring.match(/\/ceramic\/\w+/)
-
-            if (match !== null) {
-                const docId = match[0]
-                const filePath = filePrefix + '-docids.log'
-                this._writeStream(filePath, docId, 'w')
-            }
-        }
-    }
-
-    static _writeStream(filePath: string, message: string, writeFlag: string): void {
-        const stream = fs.createWriteStream(
-            filePath,
-            { flags: writeFlag }
-        )
-        stream.write(util.format(message) + '\n')
-        stream.end()
     }
 
     /**
@@ -321,4 +276,8 @@ export {
     LoggerProvider,
     Logger,
     log as RootLogger,
+    MethodFactory as LoggerMethodFactory,
+    Options as LoggerOptions,
+    Plugin as LoggerPlugin,
+    PluginOptions as LoggerPluginOptions,
 }

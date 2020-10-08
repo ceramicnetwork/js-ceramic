@@ -3,6 +3,7 @@ import express, { Request, Response, NextFunction } from 'express'
 import Ceramic from '@ceramicnetwork/ceramic-core'
 import type { CeramicConfig } from "@ceramicnetwork/ceramic-core";
 import { DoctypeUtils, RootLogger, Logger } from "@ceramicnetwork/ceramic-common"
+import {loggerProviderPlugins} from "./ceramic-plugins"
 // @ts-ignore
 import cors from 'cors'
 
@@ -108,10 +109,9 @@ class CeramicDaemon {
 
     const ceramicConfig: CeramicConfig = {
       logLevel: opts.debug ? 'debug' : 'silent',
-      logToFiles: opts.logToFiles,
-      logPath: opts.logPath,
       gateway: opts.gateway || false
     }
+
     if (opts.anchorServiceUrl) {
       ceramicConfig.ethereumRpcUrl = opts.ethereumRpcUrl
       ceramicConfig.anchorServiceUrl = opts.anchorServiceUrl
@@ -127,6 +127,14 @@ class CeramicDaemon {
       Object.assign(ceramicConfig, {
         pinning: opts.pinning
       })
+    }
+
+    if (opts.logToFiles) {
+        ceramicConfig.logToFiles = opts.logToFiles
+        ceramicConfig.logToFilesPlugin = {
+            plugin: loggerProviderPlugins.logToFiles,
+            options: {logPath: opts.logPath}
+        }
     }
 
     const ceramic = await Ceramic.create(ipfs, ceramicConfig)
