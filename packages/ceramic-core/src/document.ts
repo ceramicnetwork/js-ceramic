@@ -439,9 +439,9 @@ class Document extends EventEmitter {
         prevRootPathRecord = proofRecord.root
       } else {
         const subPath: string = '/root/' + record.path.substr(0, record.path.lastIndexOf('/'))
-        const last: string = record.path.substr(record.path.lastIndexOf('/')+1)
+        const last: string = record.path.substr(record.path.lastIndexOf('/') + 1)
 
-        prevRootPathRecord = await this.dispatcher.retrieveRecordByPath(record.proof, subPath)
+        prevRootPathRecord = await this.dispatcher.retrieveRecord(record.proof.toString() + subPath)
         prevRootPathRecord = prevRootPathRecord[last]
       }
     } catch (e) {

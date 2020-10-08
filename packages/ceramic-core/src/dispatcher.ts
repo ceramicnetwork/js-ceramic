@@ -69,16 +69,8 @@ export default class Dispatcher extends EventEmitter {
     return await this._ipfs.dag.put(data)
   }
 
-  async retrieveRecord (cid: CID): Promise<any> {
+  async retrieveRecord (cid: CID | string): Promise<any> {
     return cloneDeep((await this._ipfs.dag.get(cid)).value)
-  }
-
-  async retrieveRecordByPath (cid: CID, path: string): Promise<any> {
-    const ipfsObj = await this._ipfs.dag.get(cid, path)
-    if (ipfsObj == null) {
-      throw new Error(`Failed to find object for CID ${cid.toBaseEncodedString()} and path "${path}"`)
-    }
-    return cloneDeep(ipfsObj.value)
   }
 
   async publishHead (id: string, head: CID, doctype?: string): Promise<void> {
