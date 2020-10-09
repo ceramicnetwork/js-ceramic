@@ -11,6 +11,9 @@ const toApiPath = (ending: string): string => '/api/v0' + ending
 
 const DEFAULT_ANCHOR_SERVICE_URL = "https://cas.3box.io:8081/api/v0/requests"
 
+/**
+ * Daemon create options
+ */
 export interface CreateOpts {
   ipfsHost?: string;
   ipfs?: Ipfs.Ipfs;
@@ -33,6 +36,9 @@ interface HttpLog {
   response?: object;
 }
 
+/**
+ * Ceramic daemon implementation
+ */
 class CeramicDaemon {
   private server: any
   private logger: Logger
@@ -51,7 +57,7 @@ class CeramicDaemon {
     if (this.debug) {
       app.use((err: Error, req: Request, res: Response, next: NextFunction): void => {
         const requestStart = Date.now()
-        const httpLog = this.buildHttpLog(requestStart, req, res)
+        const httpLog = this._buildHttpLog(requestStart, req, res)
         const logString = JSON.stringify(httpLog)
         this.logger.error(logString)
         next(err)
@@ -73,7 +79,7 @@ class CeramicDaemon {
         });
 
         res.on("finish", () => {
-          const httpLog = this.buildHttpLog(requestStart, req, res, {requestError, body})
+          const httpLog = this._buildHttpLog(requestStart, req, res, {requestError, body})
           const logString = JSON.stringify(httpLog)
           this.logger.debug(logString)
         })
@@ -93,6 +99,10 @@ class CeramicDaemon {
     this.server.keepAliveTimeout = 60 * 1000
   }
 
+  /**
+   * Create Ceramic daemon
+   * @param opts - Ceramic daemon options
+   */
   static async create (opts: CreateOpts): Promise<CeramicDaemon> {
     const { ipfs } = opts
 
@@ -137,13 +147,13 @@ class CeramicDaemon {
       app.get(toApiPath('/pin/add/ceramic/:cid'), this.pinDocument.bind(this))
       app.get(toApiPath('/pin/rm/ceramic/:cid'), this.unpinDocument.bind(this))
     } else {
-      app.post(toApiPath('/apply'),  this.notSupported.bind(this))
-      app.get(toApiPath('/pin/add/ceramic/:cid'),  this.notSupported.bind(this))
-      app.get(toApiPath('/pin/rm/ceramic/:cid'),  this.notSupported.bind(this))
+      app.post(toApiPath('/apply'),  this._notSupported.bind(this))
+      app.get(toApiPath('/pin/add/ceramic/:cid'),  this._notSupported.bind(this))
+      app.get(toApiPath('/pin/rm/ceramic/:cid'),  this._notSupported.bind(this))
     }
   }
 
-  buildHttpLog (requestStart: number, req: Request, res: Response, extra?: any): HttpLog {
+  _buildHttpLog (requestStart: number, req: Request, res: Response, extra?: any): HttpLog {
     const { rawHeaders, httpVersion, method, socket, url } = req;
     const { remoteAddress, remoteFamily } = socket;
     const httpLog: HttpLog = {
@@ -169,6 +179,9 @@ class CeramicDaemon {
     return httpLog
   }
 
+  /**
+   * Create document from genesis record
+   */
   async createDocFromGenesis (req: Request, res: Response, next: NextFunction): Promise<void> {
     const { genesis, docOpts } = req.body
     try {
@@ -180,11 +193,9 @@ class CeramicDaemon {
     next()
   }
 
-  async notSupported (req: Request, res: Response, next: NextFunction): Promise<void> {
-    res.status(400).json({ status: 'error', message: 'Method not supported by read only Ceramic Gateway' })
-    next()
-  }
-
+  /**
+   * Get document content
+   */
   async show (req: Request, res: Response, next: NextFunction): Promise<void> {
     let docId = ['/ceramic', req.params.cid].join('/')
     if (req.query.version) {
@@ -199,6 +210,9 @@ class CeramicDaemon {
     next()
   }
 
+  /**
+   * Get document state
+   */
   async state (req: Request, res: Response, next: NextFunction): Promise<void> {
     let docId = ['/ceramic', req.params.cid].join('/')
     if (req.query.version) {
@@ -214,6 +228,9 @@ class CeramicDaemon {
     next()
   }
 
+  /**
+   * Get document versions
+   */
   async versions (req: Request, res: Response, next: NextFunction): Promise<void> {
     const docId = ['/ceramic', req.params.cid].join('/')
     try {
@@ -225,6 +242,9 @@ class CeramicDaemon {
     next()
   }
 
+  /**
+   * Get all document records
+   */
   async records (req: Request, res: Response, next: NextFunction): Promise<void> {
     const docId = ['/ceramic', req.params.cid].join('/')
     try {
@@ -243,6 +263,9 @@ class CeramicDaemon {
     next()
   }
 
+  /**
+   * Apply one record to the existing document
+   */
   async applyRecord (req: Request, res: Response, next: NextFunction): Promise<void> {
     const { docId, record, opts } = req.body
     if (!docId && !record) {
@@ -260,6 +283,9 @@ class CeramicDaemon {
     next()
   }
 
+  /**
+   * Pin document
+   */
   async pinDocument (req: Request, res: Response, next: NextFunction): Promise<void> {
     const docId = ['/ceramic', req.params.cid].join('/')
     try {
@@ -271,6 +297,9 @@ class CeramicDaemon {
     next()
   }
 
+  /**
+   * Unpin document
+   */
   async unpinDocument (req: Request, res: Response, next: NextFunction): Promise<void> {
     const docId = ['/ceramic', req.params.cid].join('/')
     try {
@@ -282,6 +311,9 @@ class CeramicDaemon {
     next()
   }
 
+  /**
+   * List pinned documents
+   */
   async listPinned (req: Request, res: Response, next: NextFunction): Promise<void> {
     let docId: string;
     if (req.params.cid) {
@@ -300,6 +332,14 @@ class CeramicDaemon {
     next()
   }
 
+  async _notSupported (req: Request, res: Response, next: NextFunction): Promise<void> {
+    res.status(400).json({ status: 'error', message: 'Method not supported by read only Ceramic Gateway' })
+    next()
+  }
+
+  /**
+   * Close Ceramic daemon
+   */
   async close (): Promise<void> {
     return this.server.close()
   }

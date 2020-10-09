@@ -1,0 +1,333 @@
+<!doctype html>
+<html class="default no-js">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>Ceramic</title>
+	<meta name="description" content="Documentation for Ceramic">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body>
+<header>
+	<div class="tsd-page-toolbar">
+		<div class="container">
+			<div class="table-wrap">
+				<div class="table-cell" id="tsd-search" data-index="assets/js/search.json" data-base=".">
+					<div class="field">
+						<label for="tsd-search-field" class="tsd-widget search no-caption">Search</label>
+						<input id="tsd-search-field" type="text" />
+					</div>
+					<ul class="results">
+						<li class="state loading">Preparing search index...</li>
+						<li class="state failure">The search index is not available</li>
+					</ul>
+					<a href="index.html" class="title">Ceramic</a>
+				</div>
+				<div class="table-cell" id="tsd-widgets">
+					<div id="tsd-filter">
+						<a href="#" class="tsd-widget options no-caption" data-toggle="options">Options</a>
+						<div class="tsd-filter-group">
+							<div class="tsd-select" id="tsd-filter-visibility">
+								<span class="tsd-select-label">All</span>
+								<ul class="tsd-select-list">
+									<li data-value="public">Public</li>
+									<li data-value="protected">Public/Protected</li>
+									<li data-value="private" class="selected">All</li>
+								</ul>
+							</div>
+							<input type="checkbox" id="tsd-filter-inherited" checked />
+							<label class="tsd-widget" for="tsd-filter-inherited">Inherited</label>
+							<input type="checkbox" id="tsd-filter-only-exported" />
+							<label class="tsd-widget" for="tsd-filter-only-exported">Only exported</label>
+						</div>
+					</div>
+					<a href="#" class="tsd-widget menu no-caption" data-toggle="menu">Menu</a>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="tsd-page-title">
+		<div class="container">
+			<ul class="tsd-breadcrumb">
+				<li>
+					<a href="globals.html">Globals</a>
+				</li>
+			</ul>
+			<h1>Ceramic</h1>
+		</div>
+	</div>
+</header>
+<div class="container container-main">
+	<div class="row">
+		<div class="col-8 col-content">
+			<div class="tsd-panel tsd-typography">
+				<p><img src="https://uploads-ssl.webflow.com/5e4b58d7f08158ece0209bbd/5e6e45bfe64d7ddaabd58a1f_ceramicjsskinny.png" alt="js-ceramic">
+					<img src="https://circleci.com/gh/ceramicnetwork/js-ceramic.svg?style=shield" alt="ceramicnetwork">
+					<a href="https://lbesson.mit-license.org/"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="MIT license"></a>
+					<a href="https://discord.gg/6VRZpGP"><img src="https://img.shields.io/badge/Chat%20on-Discord-orange.svg?style=flat" alt=""></a>
+				<a href="https://twitter.com/ceramicnetwork"><img src="https://img.shields.io/twitter/follow/ceramicnetwork?label=Follow&style=social" alt="Twitter"></a></p>
+				<a href="#js-ceramic" id="js-ceramic" style="color: inherit; text-decoration: none;">
+					<h1>js-ceramic</h1>
+				</a>
+				<p>Monorepo containing the Typescript implementation of the Ceramic protocol.</p>
+				<a href="#project-status---clay-testnet" id="project-status---clay-testnet" style="color: inherit; text-decoration: none;">
+					<h2>Project Status - <code>Clay testnet</code></h2>
+				</a>
+				<p>This implementation is ready for testing, but there are still a few things left before the Fire livenet. See the <a href="https://github.com/ceramicnetwork/ceramic/issues/19">roadmap</a>.</p>
+				<a href="#project-structure" id="project-structure" style="color: inherit; text-decoration: none;">
+					<h2>Project Structure</h2>
+				</a>
+				<p>This repo is made up of several different packages.</p>
+				<table>
+					<thead>
+						<tr>
+							<th>Package</th>
+							<th>Current Version</th>
+							<th>Description</th>
+						</tr>
+					</thead>
+					<tbody><tr>
+							<td>@ceramicnetwork/ceramic-core</td>
+							<td><a href="https://www.npmjs.com/package/@ceramicnetwork/ceramic-core"><img src="https://img.shields.io/npm/v/@ceramicnetwork/ceramic-core" alt="npm"></a></td>
+							<td>Ceramic protocol implementation</td>
+						</tr>
+						<tr>
+							<td>@ceramicnetwork/ceramic-cli</td>
+							<td><a href="https://www.npmjs.com/package/@ceramicnetwork/ceramic-cli"><img src="https://img.shields.io/npm/v/@ceramicnetwork/ceramic-cli" alt="npm"></a></td>
+							<td>Ceramic CLI and http daemon</td>
+						</tr>
+						<tr>
+							<td>@ceramicnetwork/ceramic-http-client</td>
+							<td><a href="https://www.npmjs.com/package/@ceramicnetwork/ceramic-http-client"><img src="https://img.shields.io/npm/v/@ceramicnetwork/ceramic-http-client" alt="npm"></a></td>
+							<td>Ceramic http client that can interact with a remote Ceramic node</td>
+						</tr>
+						<tr>
+							<td>@ceramicnetwork/ceramic-common</td>
+							<td><a href="https://www.npmjs.com/package/@ceramicnetwork/ceramic-common"><img src="https://img.shields.io/npm/v/@ceramicnetwork/ceramic-common" alt="npm"></a></td>
+							<td>Ceramic types and utilities</td>
+						</tr>
+						<tr>
+							<td>@ceramicnetwork/ceramic-doctype-account-link</td>
+							<td><a href="https://www.npmjs.com/package/@ceramicnetwork/ceramic-doctype-account-link"><img src="https://img.shields.io/npm/v/@ceramicnetwork/ceramic-doctype-account-link" alt="npm"></a></td>
+							<td>Ceramic account link doctype</td>
+						</tr>
+						<tr>
+							<td>@ceramicnetwork/ceramic-doctype-tile</td>
+							<td><a href="https://www.npmjs.com/package/@ceramicnetwork/ceramic-doctype-tile"><img src="https://img.shields.io/npm/v/@ceramicnetwork/ceramic-doctype-tile" alt="npm"></a></td>
+							<td>Ceramic tile doctype</td>
+						</tr>
+						<tr>
+							<td>@ceramicnetwork/3id-did-resolver</td>
+							<td><a href="https://www.npmjs.com/package/@ceramicnetwork/3id-did-resolver"><img src="https://img.shields.io/npm/v/@ceramicnetwork/3id-did-resolver" alt="npm"></a></td>
+							<td>DID resolver for 3IDs</td>
+						</tr>
+						<tr>
+							<td>@ceramicnetwork/key-did-resolver</td>
+							<td><a href="https://www.npmjs.com/package/@ceramicnetwork/key-did-resolver"><img src="https://img.shields.io/npm/v/@ceramicnetwork/key-did-resolver" alt="npm"></a></td>
+							<td>did:key method resolver</td>
+						</tr>
+				</tbody></table>
+				<a href="#development" id="development" style="color: inherit; text-decoration: none;">
+					<h2>Development</h2>
+				</a>
+				<a href="#project-setup" id="project-setup" style="color: inherit; text-decoration: none;">
+					<h3>Project setup</h3>
+				</a>
+				<p>This project uses npm and lerna to manage packages and dependencies. To install dependencies for all packages in this repo:</p>
+				<pre><code>$ npm <span class="hljs-keyword">run</span><span class="bash"> bootstrap</span></code></pre>
+				<p>Then build all packages:</p>
+				<pre><code>$ npm <span class="hljs-keyword">run</span><span class="bash"> build</span></code></pre>
+				<a href="#run-tests" id="run-tests" style="color: inherit; text-decoration: none;">
+					<h3>Run tests</h3>
+				</a>
+				<pre><code><span class="hljs-meta">$</span><span class="bash"> npm <span class="hljs-built_in">test</span></span></code></pre>
+				<a href="#creating-a-release" id="creating-a-release" style="color: inherit; text-decoration: none;">
+					<h3>Creating a release</h3>
+				</a>
+				<p>There are two types of releases that can be made, prereleases and regular releases.</p>
+				<a href="#prerelease" id="prerelease" style="color: inherit; text-decoration: none;">
+					<h4>Prerelease</h4>
+				</a>
+				<pre><code>$ npm <span class="hljs-built_in">run</span> publish:<span class="hljs-keyword">next</span></code></pre>
+				<p>In any branch you can run the command above, this will create a prerelease with the version <code>vx.x.x-alpha.n</code>. It will also create a local commit for this release. This commit doesn&#39;t have to be committed.</p>
+				<a href="#release" id="release" style="color: inherit; text-decoration: none;">
+					<h4>Release</h4>
+				</a>
+				<pre><code>$ npm <span class="hljs-keyword">run</span><span class="bash"> publish:latest</span></code></pre>
+				<p>This command can only be run on the master branch, it will create a release commit and push it to master. It will also tag this commit and create a release on github. Make sure to set the <a href="https://github.com/lerna/lerna/tree/master/commands/version#--create-release-type">GH_TOKEN</a> environment variable before you run this command.</p>
+				<a href="#contributing" id="contributing" style="color: inherit; text-decoration: none;">
+					<h2>Contributing</h2>
+				</a>
+				<p>We are happy to accept small and large contributions. Make sure to check out the <a href="https://github.com/ceramicnetwork/specs">Ceramic specifications</a> for details of how the protocol works.</p>
+				<a href="#maintainers" id="maintainers" style="color: inherit; text-decoration: none;">
+					<h2>Maintainers</h2>
+				</a>
+				<p><a href="https://github.com/simonovic86">@simonovic86</a></p>
+				<a href="#license" id="license" style="color: inherit; text-decoration: none;">
+					<h2>License</h2>
+				</a>
+			</div>
+		</div>
+		<div class="col-4 col-menu menu-sticky-wrap menu-highlight">
+			<nav class="tsd-navigation primary">
+				<ul>
+					<li class="globals  ">
+						<a href="globals.html"><em>Globals</em></a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_3id_did_resolver_src_index_.html">&quot;3id-<wbr>did-<wbr>resolver/src/index&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_ceramic_cli_src_bin_ceramic_.html">&quot;ceramic-<wbr>cli/src/bin/ceramic&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_ceramic_cli_src_ceramic_cli_utils_.html">&quot;ceramic-<wbr>cli/src/ceramic-<wbr>cli-<wbr>utils&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_ceramic_cli_src_ceramic_daemon_.html">&quot;ceramic-<wbr>cli/src/ceramic-<wbr>daemon&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_ceramic_cli_src_index_.html">&quot;ceramic-<wbr>cli/src/index&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_ceramic_common_src_anchor_service_.html">&quot;ceramic-<wbr>common/src/anchor-<wbr>service&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_ceramic_common_src_ceramic_api_.html">&quot;ceramic-<wbr>common/src/ceramic-<wbr>api&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_ceramic_common_src_context_.html">&quot;ceramic-<wbr>common/src/context&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_ceramic_common_src_doctype_.html">&quot;ceramic-<wbr>common/src/doctype&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_ceramic_common_src_index_.html">&quot;ceramic-<wbr>common/src/index&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_ceramic_common_src_logger_provider_.html">&quot;ceramic-<wbr>common/src/logger-<wbr>provider&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_ceramic_common_src_utils_doctype_utils_.html">&quot;ceramic-<wbr>common/src/utils/doctype-<wbr>utils&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_ceramic_core_src_anchor_anchor_service_factory_.html">&quot;ceramic-<wbr>core/src/anchor/anchor-<wbr>service-<wbr>factory&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_ceramic_core_src_anchor_anchor_service_response_.html">&quot;ceramic-<wbr>core/src/anchor/anchor-<wbr>service-<wbr>response&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_ceramic_core_src_anchor_ethereum_ethereum_anchor_service_.html">&quot;ceramic-<wbr>core/src/anchor/ethereum/ethereum-<wbr>anchor-<wbr>service&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_ceramic_core_src_anchor_mock_mock_anchor_service_.html">&quot;ceramic-<wbr>core/src/anchor/mock/mock-<wbr>anchor-<wbr>service&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_ceramic_core_src_ceramic_.html">&quot;ceramic-<wbr>core/src/ceramic&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_ceramic_core_src_dispatcher_.html">&quot;ceramic-<wbr>core/src/dispatcher&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_ceramic_core_src_document_.html">&quot;ceramic-<wbr>core/src/document&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_ceramic_core_src_pinning_ipfs_pinning_.html">&quot;ceramic-<wbr>core/src/pinning/ipfs-<wbr>pinning&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_ceramic_core_src_pinning_pinning_.html">&quot;ceramic-<wbr>core/src/pinning/pinning&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_ceramic_core_src_pinning_pinning_aggregation_.html">&quot;ceramic-<wbr>core/src/pinning/pinning-<wbr>aggregation&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_ceramic_core_src_pinning_powergate_pinning_.html">&quot;ceramic-<wbr>core/src/pinning/powergate-<wbr>pinning&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_ceramic_core_src_store_level_state_store_.html">&quot;ceramic-<wbr>core/src/store/level-<wbr>state-<wbr>store&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_ceramic_core_src_store_pin_store_.html">&quot;ceramic-<wbr>core/src/store/pin-<wbr>store&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_ceramic_core_src_store_pin_store_factory_.html">&quot;ceramic-<wbr>core/src/store/pin-<wbr>store-<wbr>factory&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_ceramic_core_src_store_state_store_.html">&quot;ceramic-<wbr>core/src/store/state-<wbr>store&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_ceramic_core_src_utils_.html">&quot;ceramic-<wbr>core/src/utils&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_ceramic_doctype_account_link_src_account_link_doctype_.html">&quot;ceramic-<wbr>doctype-<wbr>account-<wbr>link/src/account-<wbr>link-<wbr>doctype&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_ceramic_doctype_account_link_src_account_link_doctype_handler_.html">&quot;ceramic-<wbr>doctype-<wbr>account-<wbr>link/src/account-<wbr>link-<wbr>doctype-<wbr>handler&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_ceramic_doctype_account_link_src_index_.html">&quot;ceramic-<wbr>doctype-<wbr>account-<wbr>link/src/index&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_ceramic_doctype_tile_src_index_.html">&quot;ceramic-<wbr>doctype-<wbr>tile/src/index&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_ceramic_doctype_tile_src_tile_doctype_.html">&quot;ceramic-<wbr>doctype-<wbr>tile/src/tile-<wbr>doctype&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_ceramic_doctype_tile_src_tile_doctype_handler_.html">&quot;ceramic-<wbr>doctype-<wbr>tile/src/tile-<wbr>doctype-<wbr>handler&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_ceramic_http_client_src_ceramic_http_client_.html">&quot;ceramic-<wbr>http-<wbr>client/src/ceramic-<wbr>http-<wbr>client&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_ceramic_http_client_src_document_.html">&quot;ceramic-<wbr>http-<wbr>client/src/document&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_ceramic_http_client_src_utils_.html">&quot;ceramic-<wbr>http-<wbr>client/src/utils&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_key_did_resolver_src_index_.html">&quot;key-<wbr>did-<wbr>resolver/src/index&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_key_did_resolver_src_secp256k1_.html">&quot;key-<wbr>did-<wbr>resolver/src/secp256k1&quot;</a>
+					</li>
+				</ul>
+			</nav>
+			<nav class="tsd-navigation secondary menu-sticky">
+				<ul class="before-current">
+				</ul>
+			</nav>
+		</div>
+	</div>
+</div>
+<footer class="with-border-bottom">
+	<div class="container">
+		<h2>Legend</h2>
+		<div class="tsd-legend-group">
+			<ul class="tsd-legend">
+				<li class="tsd-kind-object-literal"><span class="tsd-kind-icon">Object literal</span></li>
+				<li class="tsd-kind-variable"><span class="tsd-kind-icon">Variable</span></li>
+				<li class="tsd-kind-function"><span class="tsd-kind-icon">Function</span></li>
+				<li class="tsd-kind-function tsd-has-type-parameter"><span class="tsd-kind-icon">Function with type parameter</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-interface"><span class="tsd-kind-icon">Interface</span></li>
+				<li class="tsd-kind-interface tsd-has-type-parameter"><span class="tsd-kind-icon">Interface with type parameter</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-enum"><span class="tsd-kind-icon">Enumeration</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-class"><span class="tsd-kind-icon">Class</span></li>
+			</ul>
+		</div>
+	</div>
+</footer>
+<div class="container tsd-generator">
+	<p>Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p>
+</div>
+<div class="overlay"></div>
+<script src="assets/js/main.js"></script>
+</body>
+</html>

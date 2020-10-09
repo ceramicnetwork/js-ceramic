@@ -22,6 +22,9 @@ import {
 } from '@ceramicnetwork/ceramic-common'
 import { PinStore } from './store/pin-store';
 
+/**
+ * Document handles the update logic of the Doctype instance
+ */
 class Document extends EventEmitter {
   private _genesisCid: CID
   private _applyQueue: PQueue
@@ -205,6 +208,13 @@ class Document extends EventEmitter {
     return document
   }
 
+  /**
+   * Applies record to the existing Doctype
+   *
+   * @param record - Record data
+   * @param opts - Document initialization options (request anchor, wait, etc.)
+   * @param validate - Validate document against schema on apply
+   */
   async applyRecord (record: any, opts: DocOpts = {}, validate = true): Promise<void> {
     const cid = await this.dispatcher.storeRecord(record)
 
@@ -240,6 +250,12 @@ class Document extends EventEmitter {
     await this._applyOpts(opts)
   }
 
+  /**
+   * Register document to the Dispatcher
+   *
+   * @param opts - Document initialization options (request anchor, wait, etc.)
+   * @private
+   */
   async _register (opts: DocOpts): Promise<void> {
     this.on('update', this._handleHead.bind(this))
     this.on('headreq', this._publishHead.bind(this))
@@ -251,7 +267,8 @@ class Document extends EventEmitter {
 
   /**
    * Apply initialization options
-   * @param opts - Initialization options
+   *
+   * @param opts - Initialization options (request anchor, wait, etc.)
    * @private
    */
   async _applyOpts(opts: DocOpts): Promise<void> {
@@ -265,6 +282,7 @@ class Document extends EventEmitter {
 
   /**
    * Updates document state if the document is pinned locally
+   *
    * @private
    */
   async _updateStateIfPinned(): Promise<void> {
@@ -276,7 +294,8 @@ class Document extends EventEmitter {
 
   /**
    * Handles HEAD from the PubSub topic
-   * @param cid - HEAD CID
+   *
+   * @param cid - Document HEAD CID
    * @private
    */
   async _handleHead(cid: CID): Promise<void> {
@@ -298,6 +317,13 @@ class Document extends EventEmitter {
     }
   }
 
+  /**
+   * Fetch log to find a connection for the given CID
+   *
+   * @param cid - Record CID
+   * @param log - Found log so far
+   * @private
+   */
   async _fetchLog (cid: CID, log: Array<CID> = []): Promise<Array<CID>> {
     if (await this._isCidIncluded(cid, this._doctype.state.log)) { // already processed
       return []
@@ -321,6 +347,7 @@ class Document extends EventEmitter {
 
   /**
    * Find index of the record in the array. If the record is signed, fetch the payload
+   *
    * @param cid - CID value
    * @param log - Log array
    * @private
@@ -342,6 +369,7 @@ class Document extends EventEmitter {
 
   /**
    * Is CID included in the log. If the record is signed, fetch the payload
+   *
    * @param cid - CID value
    * @param log - Log array
    * @private
@@ -350,6 +378,12 @@ class Document extends EventEmitter {
     return (await this._findIndex(cid, log)) !== -1
   }
 
+  /**
+   * Applies the log to the document
+   *
+   * @param log - Log of record CIDs
+   * @private
+   */
   async _applyLog (log: Array<CID>): Promise<boolean> {
     let modified = false
     if (log[log.length - 1].equals(this.head)) {
@@ -399,6 +433,14 @@ class Document extends EventEmitter {
     return modified
   }
 
+  /**
+   * Applies the log to the document and updates the state
+   *
+   * @param log - Log of record CIDs
+   * @param state - Document state
+   * @param breakOnAnchor - Should break apply on anchor record?
+   * @private
+   */
   async _applyLogToState (log: Array<CID>, state?: DocState, breakOnAnchor?: boolean): Promise<DocState> {
     const itr = log.entries()
     let entry = itr.next()
@@ -429,8 +471,14 @@ class Document extends EventEmitter {
     return state
   }
 
+  /**
+   * Verifies anchor record structure
+   *
+   * @param record - Anchor record
+   * @private
+   */
   async _verifyAnchorRecord (record: AnchorRecord): Promise<AnchorProof> {
-    const proofRecord = await this.dispatcher.retrieveRecord(record.proof)
+    const proofRecord =  await this.dispatcher.retrieveRecord(record.proof)
 
     let prevRootPathRecord
     try {
@@ -457,10 +505,18 @@ class Document extends EventEmitter {
     return proof
   }
 
+  /**
+   * Publishes HEAD record to the pub/sub
+   *
+   * @private
+   */
   async _publishHead (): Promise<void> {
     await this.dispatcher.publishHead(this.id, this.head, this.doctype.doctype)
   }
 
+  /**
+   * Request anchor for the latest document state
+   */
   async anchor (): Promise<void> {
     this._context.anchorService.on(this.id, async (asr: AnchorServiceResponse): Promise<void> => {
       switch (asr.status) {
@@ -506,6 +562,7 @@ class Document extends EventEmitter {
 
   /**
    * Loads schema for the Doctype
+   *
    * @param ceramicApi - Ceramic API
    * @param doctype - Doctype instance
    */
@@ -515,6 +572,7 @@ class Document extends EventEmitter {
 
   /**
    * Loads schema by ID
+   *
    * @param ceramicApi - Ceramic API
    * @param schemaDocId - Schema document ID
    */
@@ -526,31 +584,54 @@ class Document extends EventEmitter {
     return null
   }
 
+  /**
+   * Gets document content
+   */
   get content (): any {
     const { next, content } = this._doctype.state
     return next?.content ?? content
   }
 
+  /**
+   * Gets document state
+   */
   get state (): DocState {
     return this._doctype.state
   }
 
+  /**
+   * Gets document doctype name
+   */
   get doctype (): Doctype {
     return this._doctype
   }
 
+  /**
+   * Gets document HEAD record CID
+   */
   get head (): CID {
     return this._doctype.head
   }
 
+  /**
+   * Gets document owners
+   */
   get owners (): string[] {
     return this._doctype.owners
   }
 
+  /**
+   * Gets document metadata
+   */
   get metadata (): DocMetadata {
     return this._doctype.metadata
   }
 
+  /**
+   * Waits for some time in order to propagate
+   *
+   * @param doc - Document instance
+   */
   static async wait(doc: Document): Promise<void> {
     // add response timeout for network change
     return new Promise(resolve => {
@@ -565,6 +646,9 @@ class Document extends EventEmitter {
     })
   }
 
+  /**
+   * Gracefully closes the document instance.
+   */
   async close (): Promise<void> {
     this.off('update', this._handleHead.bind(this))
     this.off('headreq', this._publishHead.bind(this))
@@ -577,6 +661,9 @@ class Document extends EventEmitter {
     await Utils.awaitCondition(() => this.isProcessing, () => false, 500)
   }
 
+  /**
+   * Serializes the document content
+   */
   toString (): string {
     return JSON.stringify(this._doctype.state.content)
   }

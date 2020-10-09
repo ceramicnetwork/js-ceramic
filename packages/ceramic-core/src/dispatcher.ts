@@ -7,14 +7,23 @@ import type Document from "./document"
 import { DoctypeUtils, RootLogger, Logger } from "@ceramicnetwork/ceramic-common"
 import { TextDecoder } from 'util'
 
+/**
+ * Ceramic Pub/Sub message type.
+ */
 export enum MsgType {
   UPDATE,
   REQUEST,
   RESPONSE
 }
 
+/**
+ * Default Ceramic Pub/Sub topic.
+ */
 const TOPIC = '/ceramic'
 
+/**
+ * Describes one log message from the Dispatcher.
+ */
 interface LogMessage {
   peer: string;
   event: string;
@@ -23,9 +32,12 @@ interface LogMessage {
   message?: object;
 }
 
+/**
+ * Ceramic core Dispatcher used for handling messages from pub/sub topic.
+ */
 export default class Dispatcher extends EventEmitter {
   private _peerId: string
-  private _documents: Record<string, Document>
+  private readonly _documents: Record<string, Document>
 
   private logger: Logger
   private _isRunning = true
@@ -37,7 +49,7 @@ export default class Dispatcher extends EventEmitter {
   }
 
   /**
-   * Initialized Dispatcher
+   * Initialize Dispatcher instance.
    */
   async init(): Promise<void> {
     this._peerId = this._peerId || (await this._ipfs.id()).id
@@ -45,6 +57,11 @@ export default class Dispatcher extends EventEmitter {
     this._log({ peer: this._peerId, event: 'subscribed', topic: this.topic })
   }
 
+  /**
+   * Register one document.
+   *
+   * @param document - Document instance
+   */
   async register (document: Document): Promise<void> {
     this._documents[document.id] = document
     // request head
@@ -53,10 +70,20 @@ export default class Dispatcher extends EventEmitter {
     this._log({ peer: this._peerId, event: 'published', topic: this.topic, message: payload })
   }
 
+  /**
+   * Unregister document by ID.
+   *
+   * @param id - Document ID
+   */
   unregister (id: string): void {
     delete this._documents[id]
   }
 
+  /**
+   * Store Ceramic record (genesis|signed|anchor).
+   *
+   * @param data - Ceramic record data
+   */
   async storeRecord (data: any): Promise<CID> {
     if (DoctypeUtils.isSignedRecordDTO(data)) {
       const { jws, linkedBlock } = data
@@ -69,10 +96,22 @@ export default class Dispatcher extends EventEmitter {
     return await this._ipfs.dag.put(data)
   }
 
+  /**
+   * Retrieves one Ceramic record by CID or path.
+   *
+   * @param cid - Record CID
+   */
   async retrieveRecord (cid: CID | string): Promise<any> {
     return cloneDeep((await this._ipfs.dag.get(cid)).value)
   }
 
+  /**
+   * Publishes HEAD record to pub/sub topic.
+   *
+   * @param id  - Document ID
+   * @param head - Record CID
+   * @param doctype - Doctype name
+   */
   async publishHead (id: string, head: CID, doctype?: string): Promise<void> {
     if (!this._isRunning) {
       this.logger.error('Dispatcher has been closed')
@@ -84,6 +123,11 @@ export default class Dispatcher extends EventEmitter {
     this._log({ peer: this._peerId, event: 'published', topic: this.topic, message: payload })
   }
 
+  /**
+   * Handles one message from the pub/sub topic.
+   *
+   * @param message - Message data
+   */
   async handleMessage (message: any): Promise<void> {
     if (!this._isRunning) {
       this.logger.error('Dispatcher has been closed')
@@ -123,11 +167,20 @@ export default class Dispatcher extends EventEmitter {
     }
   }
 
+  /**
+   * Logs one message
+   *
+   * @param msg - Message data
+   * @private
+   */
   _log(msg: LogMessage): void {
     const timestampedMsg = {timestamp: Date.now(), ...msg}
     this.logger.debug(JSON.stringify(timestampedMsg))
   }
 
+  /**
+   * Gracefully closes the Dispatcher.
+   */
   async close(): Promise<void> {
     this._isRunning = false
 

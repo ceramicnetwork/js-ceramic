@@ -10,7 +10,7 @@ class Document extends Doctype {
 
   public doctypeHandler: DoctypeHandler<Doctype>
 
-  constructor (state: DocState, public context: Context, private _apiUrl: string, syncState = true) {
+  constructor (state: DocState, context: Context, private _apiUrl: string, syncState = true) {
     super(state, context)
 
     if (syncState) {

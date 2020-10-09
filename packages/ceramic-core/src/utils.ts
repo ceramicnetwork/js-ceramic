@@ -1,3 +1,6 @@
+/**
+ * Various utility functions
+ */
 export default class Utils {
 
     /**

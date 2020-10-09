@@ -5,6 +5,9 @@ import { CeramicApi, DIDProvider } from "./ceramic-api"
 import { DID } from 'dids'
 import type { AnchorService } from "./anchor-service"
 
+/**
+ * Encapsulates Ceramic context
+ */
 export interface Context {
     did?: DID;
     ipfs?: Ipfs; // an ipfs instance
