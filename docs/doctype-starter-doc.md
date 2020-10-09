@@ -334,6 +334,12 @@ interface CeramicApi {
      */  
     loadDocument<T extends Doctype>(docId: string, opts?: InitOpts): Promise<T>;  
   
+    /**
+     * Load all document records by document ID
+     * @param docId - Document ID
+     */
+    loadDocumentRecords(docId: string): Promise<Array<Record<string, any>>>;
+
     /**  
       * Applies record on the existing document 
       * @param docId - Document ID  

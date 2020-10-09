@@ -62,111 +62,29 @@
 	<div class="row">
 		<div class="col-8 col-content">
 			<div class="tsd-panel tsd-typography">
-				<p><img src="https://uploads-ssl.webflow.com/5e4b58d7f08158ece0209bbd/5e6e45bfe64d7ddaabd58a1f_ceramicjsskinny.png" alt="js-ceramic">
-					<img src="https://circleci.com/gh/ceramicnetwork/js-ceramic.svg?style=shield" alt="ceramicnetwork">
-					<a href="https://lbesson.mit-license.org/"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="MIT license"></a>
-					<a href="https://discord.gg/6VRZpGP"><img src="https://img.shields.io/badge/Chat%20on-Discord-orange.svg?style=flat" alt=""></a>
-				<a href="https://twitter.com/ceramicnetwork"><img src="https://img.shields.io/twitter/follow/ceramicnetwork?label=Follow&style=social" alt="Twitter"></a></p>
-				<a href="#js-ceramic" id="js-ceramic" style="color: inherit; text-decoration: none;">
-					<h1>js-ceramic</h1>
+				<a href="#overview" id="overview" style="color: inherit; text-decoration: none;">
+					<h1>Overview</h1>
 				</a>
-				<p>Monorepo containing the Typescript implementation of the Ceramic protocol.</p>
-				<a href="#project-status---clay-testnet" id="project-status---clay-testnet" style="color: inherit; text-decoration: none;">
-					<h2>Project Status - <code>Clay testnet</code></h2>
+				<p>This document provides a basic overview to how js-ceramic is implemented. It goes though some of the high level apis of Ceramic and how it communicates with some external components. This is by no means comprehensive and will be expanded over time.</p>
+				<a href="#ceramic-api" id="ceramic-api" style="color: inherit; text-decoration: none;">
+					<h2>Ceramic Api</h2>
 				</a>
-				<p>This implementation is ready for testing, but there are still a few things left before the Fire livenet. See the <a href="https://github.com/ceramicnetwork/ceramic/issues/19">roadmap</a>.</p>
-				<a href="#project-structure" id="project-structure" style="color: inherit; text-decoration: none;">
-					<h2>Project Structure</h2>
+				<p>CeramicApi is an interface that both CeramicCore and CeramicHttpClient implements. It provides all the methods needed by a developer to build on top of Ceramic. An instance of CeramicApi allows only one user to be set at a time, using the <a href="https://github.com/ceramicnetwork/js-did">DID</a> interface. The main methods that this interface provides are <code>createDocument</code>, and <code>loadDocument</code> which both return <em>Doctype</em> instances.</p>
+				<p><img src="media/ceramic-api.png" alt="CeramicApi"></p>
+				<p><strong>CeramicCore</strong> is the implementation of the core protocol and can be run both in nodejs as well as in browser environments. It verifies every document that it loads locally and does all network communication over libp2p.</p>
+				<p><strong>CeramicHttpClient</strong> provides a way to interact with the Ceramic protocol without having to actually run the entire protocol locally. It delegates document validation to a remote <em>CeramicCore</em> node, however users can author updates to documents from the http client, just as in <em>CeramicCore</em>.</p>
+				<a href="#did-provider" id="did-provider" style="color: inherit; text-decoration: none;">
+					<h2>DID Provider</h2>
 				</a>
-				<p>This repo is made up of several different packages.</p>
-				<table>
-					<thead>
-						<tr>
-							<th>Package</th>
-							<th>Current Version</th>
-							<th>Description</th>
-						</tr>
-					</thead>
-					<tbody><tr>
-							<td>@ceramicnetwork/ceramic-core</td>
-							<td><a href="https://www.npmjs.com/package/@ceramicnetwork/ceramic-core"><img src="https://img.shields.io/npm/v/@ceramicnetwork/ceramic-core" alt="npm"></a></td>
-							<td>Ceramic protocol implementation</td>
-						</tr>
-						<tr>
-							<td>@ceramicnetwork/ceramic-cli</td>
-							<td><a href="https://www.npmjs.com/package/@ceramicnetwork/ceramic-cli"><img src="https://img.shields.io/npm/v/@ceramicnetwork/ceramic-cli" alt="npm"></a></td>
-							<td>Ceramic CLI and http daemon</td>
-						</tr>
-						<tr>
-							<td>@ceramicnetwork/ceramic-http-client</td>
-							<td><a href="https://www.npmjs.com/package/@ceramicnetwork/ceramic-http-client"><img src="https://img.shields.io/npm/v/@ceramicnetwork/ceramic-http-client" alt="npm"></a></td>
-							<td>Ceramic http client that can interact with a remote Ceramic node</td>
-						</tr>
-						<tr>
-							<td>@ceramicnetwork/ceramic-common</td>
-							<td><a href="https://www.npmjs.com/package/@ceramicnetwork/ceramic-common"><img src="https://img.shields.io/npm/v/@ceramicnetwork/ceramic-common" alt="npm"></a></td>
-							<td>Ceramic types and utilities</td>
-						</tr>
-						<tr>
-							<td>@ceramicnetwork/ceramic-doctype-account-link</td>
-							<td><a href="https://www.npmjs.com/package/@ceramicnetwork/ceramic-doctype-account-link"><img src="https://img.shields.io/npm/v/@ceramicnetwork/ceramic-doctype-account-link" alt="npm"></a></td>
-							<td>Ceramic account link doctype</td>
-						</tr>
-						<tr>
-							<td>@ceramicnetwork/ceramic-doctype-tile</td>
-							<td><a href="https://www.npmjs.com/package/@ceramicnetwork/ceramic-doctype-tile"><img src="https://img.shields.io/npm/v/@ceramicnetwork/ceramic-doctype-tile" alt="npm"></a></td>
-							<td>Ceramic tile doctype</td>
-						</tr>
-						<tr>
-							<td>@ceramicnetwork/3id-did-resolver</td>
-							<td><a href="https://www.npmjs.com/package/@ceramicnetwork/3id-did-resolver"><img src="https://img.shields.io/npm/v/@ceramicnetwork/3id-did-resolver" alt="npm"></a></td>
-							<td>DID resolver for 3IDs</td>
-						</tr>
-						<tr>
-							<td>@ceramicnetwork/key-did-resolver</td>
-							<td><a href="https://www.npmjs.com/package/@ceramicnetwork/key-did-resolver"><img src="https://img.shields.io/npm/v/@ceramicnetwork/key-did-resolver" alt="npm"></a></td>
-							<td>did:key method resolver</td>
-						</tr>
-				</tbody></table>
-				<a href="#development" id="development" style="color: inherit; text-decoration: none;">
-					<h2>Development</h2>
+				<p>The DID provider (<a href="https://eips.ethereum.org/EIPS/eip-2844">EIP2844</a>) is the interface used to communicate between the <em>CeramicApi</em> and wallets. This interface can be implemented by any DID method and provides an agnostic way to sign and decrypt data based on DIDs. Each CeramicApi instance can have one DID provider associated with it at any given time (see <a href="#http-client-and-daemon">section below</a> for how to have multiple users associated with one ceramic node). This abstraction allows for separation between the wallet and the application that uses ceramic since the DID provider is a json-rpc interface that can be used over a wide variety of transports.</p>
+				<p><img src="media/wallets.png" alt="did-provider"></p>
+				<p>For example, in the figure above there is a wallet instance that is being run within 3ID connect, which is an iframe. A web application can communicate with the 3ID Connect iframe using the <em>postMessage</em> api which is used to pass json-rpc messages between the wallet and the application. CeramicApi and IdentityWallet can of course also be used together within the same process.</p>
+				<a href="#http-client-and-daemon" id="http-client-and-daemon" style="color: inherit; text-decoration: none;">
+					<h2>Http Client and Daemon</h2>
 				</a>
-				<a href="#project-setup" id="project-setup" style="color: inherit; text-decoration: none;">
-					<h3>Project setup</h3>
-				</a>
-				<p>This project uses npm and lerna to manage packages and dependencies. To install dependencies for all packages in this repo:</p>
-				<pre><code>$ npm <span class="hljs-keyword">run</span><span class="bash"> bootstrap</span></code></pre>
-				<p>Then build all packages:</p>
-				<pre><code>$ npm <span class="hljs-keyword">run</span><span class="bash"> build</span></code></pre>
-				<a href="#run-tests" id="run-tests" style="color: inherit; text-decoration: none;">
-					<h3>Run tests</h3>
-				</a>
-				<pre><code><span class="hljs-meta">$</span><span class="bash"> npm <span class="hljs-built_in">test</span></span></code></pre>
-				<a href="#creating-a-release" id="creating-a-release" style="color: inherit; text-decoration: none;">
-					<h3>Creating a release</h3>
-				</a>
-				<p>There are two types of releases that can be made, prereleases and regular releases.</p>
-				<a href="#prerelease" id="prerelease" style="color: inherit; text-decoration: none;">
-					<h4>Prerelease</h4>
-				</a>
-				<pre><code>$ npm <span class="hljs-built_in">run</span> publish:<span class="hljs-keyword">next</span></code></pre>
-				<p>In any branch you can run the command above, this will create a prerelease with the version <code>vx.x.x-alpha.n</code>. It will also create a local commit for this release. This commit doesn&#39;t have to be committed.</p>
-				<a href="#release" id="release" style="color: inherit; text-decoration: none;">
-					<h4>Release</h4>
-				</a>
-				<pre><code>$ npm <span class="hljs-keyword">run</span><span class="bash"> publish:latest</span></code></pre>
-				<p>This command can only be run on the master branch, it will create a release commit and push it to master. It will also tag this commit and create a release on github. Make sure to set the <a href="https://github.com/lerna/lerna/tree/master/commands/version#--create-release-type">GH_TOKEN</a> environment variable before you run this command.</p>
-				<a href="#contributing" id="contributing" style="color: inherit; text-decoration: none;">
-					<h2>Contributing</h2>
-				</a>
-				<p>We are happy to accept small and large contributions. Make sure to check out the <a href="https://github.com/ceramicnetwork/specs">Ceramic specifications</a> for details of how the protocol works.</p>
-				<a href="#maintainers" id="maintainers" style="color: inherit; text-decoration: none;">
-					<h2>Maintainers</h2>
-				</a>
-				<p><a href="https://github.com/simonovic86">@simonovic86</a></p>
-				<a href="#license" id="license" style="color: inherit; text-decoration: none;">
-					<h2>License</h2>
-				</a>
+				<p>As mentioned above both CeramicCore and CeramicHttpClient implements the CeramicApi abstraction. In practice the CeramicHttpClient needs to talk to a CeramicCore node to actually read and write to the network. In order to facilitate this the CeramicDaemon implements an http api which the client can consume. The daemon is wrapped together with CeramicCore in the CeramicCli package, which provides a basic command line interface for interacting with Ceramic.</p>
+				<p><img src="media/http-clients.png" alt="http-clients"></p>
+				<p>As can be observed in the figure above multiple http clients can interact with the same daemon. This allows for multiple users on different machines to rely on the same http daemon while only authorizing their own DID to have write access. The daemon doesn&#39;t really have to care about which users are authenticated since it only reads from, and passes signed updates along to the CeramicCore instance.</p>
 			</div>
 		</div>
 		<div class="col-4 col-menu menu-sticky-wrap menu-highlight">

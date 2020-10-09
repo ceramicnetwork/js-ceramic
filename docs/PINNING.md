@@ -56,7 +56,7 @@ Based on the semantics, it makes sense to have:
 3. pinning backends aggregator - responsible for pinning records using multiple pinning backends simultaneously,
 4. pin store aggregator - responsible for storing state and pinning dependent records.
 
-![Pinning Design](./pinning-design.png)
+![Pinning Design](./images/pinning-design.png)
 
 Legend:
 - filled arrow - call,
