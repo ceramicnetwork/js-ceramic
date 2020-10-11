@@ -32,7 +32,7 @@ export class TileDoctype extends Doctype {
             throw new Error('No DID authenticated')
         }
 
-        const updateRecord = await TileDoctype._makeRecord(this, this.context.did, params.content, null, params.metadata?.schema)
+        const updateRecord = await TileDoctype._makeRecord(this, this.context.did, params.content, params.metadata?.owners, params.metadata?.schema)
         const updated = await this.context.api.applyRecord(this.id, updateRecord, opts)
         this.state = updated.state
     }

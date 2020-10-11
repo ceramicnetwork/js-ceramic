@@ -77,7 +77,10 @@ export class DoctypeUtils {
         const indexOfVersion = genesis.indexOf('?')
         if (indexOfVersion !== -1) {
             const params = DoctypeUtils._getQueryParam(genesis.substring(indexOfVersion + 1))
-            return params['version']? new CID(params['version']) : null
+            const version = params['version']
+            if (version) {
+                return version === '0' ? new CID(DoctypeUtils.getGenesis(docId)) : new CID(params['version'])
+            }
         }
         return null
     }
