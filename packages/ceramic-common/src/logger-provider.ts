@@ -1,23 +1,10 @@
-import chalk from 'chalk'
 import log, { Logger, LogLevelDesc, MethodFactory } from 'loglevel'
 import prefix from 'loglevel-plugin-prefix'
-
-/**
- * Logger colors
- */
-const colors: Record<string, any> = {
-    TRACE: chalk.magenta,
-    DEBUG: chalk.cyan,
-    INFO: chalk.blue,
-    WARN: chalk.yellow,
-    ERROR: chalk.red,
-}
 
 /**
  * Default logger options
  */
 const defaultOpts: Options = {
-    colors: false,
     level: 'info',
     format: 'text',
     stacktrace: {
@@ -32,7 +19,6 @@ const defaultOpts: Options = {
  */
 interface Options {
     level?: string;
-    colors?: boolean;
     format?: string; // [text | json]
     stacktrace?: {
         levels: ['trace', 'warn', 'error'];
@@ -162,10 +148,7 @@ class LoggerProvider {
         if (options.format === 'json') {
             return "" // no prefix
         }
-        if (!options.colors) {
-            return `[${timestamp}] ${level} ${options.component ? options.component : ""} ${name}:`
-        }
-        return `${chalk.gray(`[${timestamp}]`)} ${colors[level.toUpperCase()](level)} ${options.component ? chalk.gray(options.component) : ""} ${chalk.green(`${name}:`)}`
+        return `[${timestamp}] ${level} ${options.component ? options.component : ""} ${name}:`
     }
 
     /**
