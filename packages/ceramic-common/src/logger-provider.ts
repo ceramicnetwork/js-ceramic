@@ -1,5 +1,6 @@
 import log, { Logger, LogLevelDesc, MethodFactory } from 'loglevel'
 import prefix from 'loglevel-plugin-prefix'
+import cloneDeep from 'lodash.clonedeep'
 
 /**
  * Default logger options
@@ -45,6 +46,7 @@ type Plugin = (rootLogger: log.RootLogger, loggerOptions: Options, pluginOptions
  * Global Logger factory
  */
 class LoggerProvider {
+    private static options: Options;
 
     /**
      * Initialize root logger
@@ -52,18 +54,17 @@ class LoggerProvider {
      * @returns Modified options
      */
     static init(opts = defaultOpts): Options {
-        const options = Object.assign(defaultOpts, opts)
-        Object.freeze(options)
+        this.options = Object.assign(defaultOpts, opts)
 
-        if (options.level) {
-            log.setLevel(options.level as LogLevelDesc)
+        if (this.options.level) {
+            log.setLevel(this.options.level as LogLevelDesc)
         } else {
             log.enableAll() // enable all levels (TRACE)
         }
 
-        LoggerProvider._applyPrefix(options)
-        LoggerProvider._includeJsonPlugin(options)
-        return options
+        LoggerProvider._applyPrefix()
+        LoggerProvider._includeJsonPlugin()
+        return cloneDeep(this.options)
     }
 
     /**
@@ -80,11 +81,11 @@ class LoggerProvider {
      * Applies prefix
      * @private
      */
-    static _applyPrefix(options: Options): void {
+    static _applyPrefix(): void {
         prefix.reg(log)
         prefix.apply(log, {
             format(level, name, timestamp) {
-                return LoggerProvider._toText(options, timestamp, level, name)
+                return LoggerProvider._toText(timestamp, level, name)
             },
             timestampFormatter(date) {
                 return date.toISOString()
@@ -96,25 +97,25 @@ class LoggerProvider {
      * Simple JSON plugin
      * @private
      */
-    static _includeJsonPlugin(options: Options): void {
+    static _includeJsonPlugin(): void {
         const originalFactory = log.methodFactory;
 
         log.methodFactory = (methodName: string, logLevel: any, loggerName: string): MethodFactory => {
             const rawMethod = originalFactory(methodName, logLevel, loggerName);
             return (...args: any[]): any => {
-                if (options.format !== 'json') {
+                if (this.options.format !== 'json') {
                     rawMethod(...args)
                     return
                 }
                 const timestamp = new Date().toISOString()
                 const hasStacktrace = !!LoggerProvider._stacktrace()
-                const needStack = hasStacktrace && options.stacktrace.levels.some(level => level === methodName)
+                const needStack = hasStacktrace && this.options.stacktrace.levels.some(level => level === methodName)
 
                 let stacktrace = needStack ? LoggerProvider._stacktrace() : '';
                 if (stacktrace) {
                     const lines = stacktrace.split('\n');
-                    lines.splice(0, options.stacktrace.excess + 3);
-                    const { depth } = options.stacktrace;
+                    lines.splice(0, this.options.stacktrace.excess + 3);
+                    const { depth } = this.options.stacktrace;
                     if (depth && lines.length !== depth + 1) {
                         const shrink = lines.splice(0, depth);
                         stacktrace = shrink.join('\n');
@@ -134,7 +135,7 @@ class LoggerProvider {
                     logger: loggerName || '',
                     timestamp,
                     stacktrace,
-                    component: options.component || undefined
+                    component: this.options.component || undefined
                 }))
             }
         };
@@ -144,11 +145,11 @@ class LoggerProvider {
     /**
      * Formats to text
      */
-    static _toText(options: Options, timestamp: any, level: any, name: any): string {
-        if (options.format === 'json') {
+    static _toText(timestamp: any, level: any, name: any): string {
+        if (this.options.format === 'json') {
             return "" // no prefix
         }
-        return `[${timestamp}] ${level} ${options.component ? options.component : ""} ${name}:`
+        return `[${timestamp}] ${level} ${this.options.component ? this.options.component : ""} ${name}:`
     }
 
     /**
