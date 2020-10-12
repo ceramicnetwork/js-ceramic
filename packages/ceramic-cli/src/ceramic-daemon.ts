@@ -3,7 +3,7 @@ import express, { Request, Response, NextFunction } from 'express'
 import Ceramic from '@ceramicnetwork/ceramic-core'
 import type { CeramicConfig } from "@ceramicnetwork/ceramic-core";
 import { DoctypeUtils, RootLogger, Logger } from "@ceramicnetwork/ceramic-common"
-import {loggerProviderPlugins} from "./ceramic-plugins"
+import { LogToFiles } from "./ceramic-logger-plugins"
 // @ts-ignore
 import cors from 'cors'
 
@@ -132,7 +132,7 @@ class CeramicDaemon {
     if (opts.logToFiles) {
         ceramicConfig.logToFiles = opts.logToFiles
         ceramicConfig.logToFilesPlugin = {
-            plugin: loggerProviderPlugins.logToFiles,
+            plugin: LogToFiles.main,
             options: {logPath: opts.logPath}
         }
     }

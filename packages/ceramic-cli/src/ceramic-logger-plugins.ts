@@ -9,16 +9,18 @@ import {
     LoggerPluginOptions
 } from "@ceramicnetwork/ceramic-common"
 
-const loggerProviderPlugins = {
+/**
+ * Plugin for the root logger from the `loglevel` library to write logs to files
+ */
+export class LogToFiles {
     /**
-     * Plugin to append log messages to files named after components
-     * @dev Modifies `rootLogger`
+     * Modifies `rootLogger` to append log messages to files named after components
      * @notice If no component name is given 'default' will be included in the file name
      * @param rootLogger Root logger to use throughout the library
      * @param loggerOptions Should include `component` name string and `logPath` string
      * @param pluginOptions Should include `logPath` string to be used a directory to write files to
      */
-    logToFiles: function (rootLogger: Logger, loggerOptions: LoggerOptions, pluginOptions: LoggerPluginOptions): void {
+    public static main (rootLogger: Logger, loggerOptions: LoggerOptions, pluginOptions: LoggerPluginOptions): void {
         const originalFactory = rootLogger.methodFactory;
         let basePath = pluginOptions.logPath
         if ((basePath === undefined) || (basePath === '')) {
@@ -39,24 +41,31 @@ const loggerProviderPlugins = {
                         const filePrefix = basePath + loggerName.toLowerCase()
                         const filePath = `${filePrefix}-${namespace}.log`
 
-                        loggerProviderPlugins._writeStream(filePath, message, 'a')
-                        loggerProviderPlugins._writeDocId(filePrefix, message)
+                        LogToFiles._writeStream(filePath, message, 'a')
+                        LogToFiles._writeDocId(filePrefix, message)
                     }
                 })
                 rawMethod(...args)
             }
         };
         rootLogger.setLevel(rootLogger.getLevel());
-    },
-    _writeStream: function (filePath: string, message: string, writeFlag: string): void {
+    }
+    /**
+     * Opens a filesystem stream and writes `message` to it
+     * @param filePath Full path of file to write to
+     * @param message Message to write to `filePath`
+     * @param writeFlag Specifies writing method (e.g. "a" for append, "w" for overwrite)
+     */
+    private static _writeStream (filePath: string, message: string, writeFlag: string): void {
         const stream = fs.createWriteStream(
             filePath,
             { flags: writeFlag }
         )
         stream.write(util.format(message) + '\n')
         stream.end()
-    },
-    _writeDocId: function (filePrefix: string, message: string): void {
+    }
+
+    private static _writeDocId (filePrefix: string, message: string): void {
         const lookup = '/ceramic/'
         const docIdIndex = message.indexOf(lookup)
 
@@ -67,13 +76,8 @@ const loggerProviderPlugins = {
             if (match !== null) {
                 const docId = match[0]
                 const filePath = filePrefix + '-docids.log'
-                this._writeStream(filePath, docId, 'w')
+                LogToFiles._writeStream(filePath, docId, 'w')
             }
         }
     }
-}
-
-
-export {
-    loggerProviderPlugins
 }
