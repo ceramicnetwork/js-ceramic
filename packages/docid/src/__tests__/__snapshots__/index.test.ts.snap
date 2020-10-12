@@ -1,0 +1,71 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`DocID .bytes 1`] = `
+Uint8Array [
+  206,
+  1,
+  0,
+  0,
+  1,
+  133,
+  1,
+  18,
+  32,
+  84,
+  179,
+  109,
+  86,
+  78,
+  173,
+  242,
+  220,
+  63,
+  166,
+  43,
+  94,
+  52,
+  240,
+  80,
+  102,
+  174,
+  138,
+  255,
+  216,
+  30,
+  185,
+  101,
+  36,
+  150,
+  57,
+  240,
+  167,
+  85,
+  209,
+  179,
+  188,
+]
+`;
+
+exports[`DocID .subnetName if registered 1`] = `"subnetName: no registered name available"`;
+
+exports[`DocID .toString() 1`] = `"k3y52l7mkcvtg023bt9txegccxe1bah8os3naw5asin3baf3l3t54atn0cuy98yws"`;
+
+exports[`DocID .toString(base) 1`] = `"znBNPZRnLUqDUeDDwQQZjLCZ6ApAb369GWdP8NRgs7NpStZ5KrH2wRYhH"`;
+
+exports[`DocID .toUrl() 1`] = `"ceramic://k3y52l7mkcvtg023bt9txegccxe1bah8os3naw5asin3baf3l3t54atn0cuy98yws"`;
+
+exports[`DocID .typeName if registered 1`] = `"docTypeName: no registered name available"`;
+
+exports[`DocID create by parts (type:int, cid:cid) 1`] = `"k3y52l7mkcvtg023bt9txegccxe1bah8os3naw5asin3baf3l3t54atn0cuy98yws"`;
+
+exports[`DocID create by parts (type:int, cid:string, subnet:int, multibase) 1`] = `"bzyaqcaibquareicuwnwvmtvn6lod7jrlly2paudgv2fp7wa6xfssjfrz6ctvluntxq"`;
+
+exports[`DocID create by parts (type:string, cid:string, subnet:string) 1`] = `"k3y52l7mkcvtg023bt9txegccxe1bah8os3naw5asin3baf3l3t54atn0cuy98yws"`;
+
+exports[`DocID create from bytes  1`] = `"k3y52l7mkcvtg023bt9txegccxe1bah8os3naw5asin3baf3l3t54atn0cuy98yws"`;
+
+exports[`DocID create from bytes with multibase  1`] = `"bzyaqaaabquareicuwnwvmtvn6lod7jrlly2paudgv2fp7wa6xfssjfrz6ctvluntxq"`;
+
+exports[`DocID create from string 1`] = `"k3y52l7mkcvtg023bt9txegccxe1bah8os3naw5asin3baf3l3t54atn0cuy98yws"`;
+
+exports[`DocID create from url string 1`] = `"k3y52l7mkcvtg023bt9txegccxe1bah8os3naw5asin3baf3l3t54atn0cuy98yws"`;
