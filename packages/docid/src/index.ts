@@ -1,10 +1,12 @@
 import CID from 'cids'
-const multibase = require('multibase')
-const subnets = require('./subnet-table.json')
-const doctypes = require('./doctype-table.json')
-const varint = require('varint')
-const uint8ArrayConcat = require('uint8arrays/concat')
-const uint8ArrayToString = require('uint8arrays/to-string')
+// const multibase = require('multibase')
+import multibase from 'multibase'
+import subnets from './subnet-table'
+import doctypes from './doctype-table'
+import varint from 'varint'
+// const varint = require('varint')
+import uint8ArrayConcat from 'uint8arrays/concat'
+import uint8ArrayToString from 'uint8arrays/to-string'
 const DOCID_CODEC = 206
 
 const getKey = (obj: { [key: string]: number }, value: number): string | undefined => {
@@ -20,9 +22,9 @@ class DocID {
   /**
    * Create a new DocID.
    *
-   * @param {string|number}  doctype
-   * @param {CID|string}         [cid]
-   * @param {string | number}             [subnet = 'devnet']
+   * @param {string|number}      doctype
+   * @param {CID|string}         cid
+   * @param {string | number}    [subnet = 'devnet']
    * @param {string}             [multibaseName = 'base36']
    *
    * @example
@@ -60,6 +62,7 @@ class DocID {
   static fromString(docId: string): DocID {
     docId = docId.split('ceramic://').pop()
     const multibaseName = multibase.isEncoded(docId)
+    if (!multibaseName) throw new Error('fromString: requires base encoded string')
     const bytes = multibase.decode(docId)
     return DocID.fromBytes(bytes, multibaseName)
   }

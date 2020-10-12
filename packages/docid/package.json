@@ -12,7 +12,7 @@
   ],
   "scripts": {
     "test": "./node_modules/.bin/jest --coverage",
-    "build": "../../node_modules/.bin/tsc -p tsconfig.json; cp src/subnet-table.json lib; cp src/doctype-table.json lib;",
+    "build": "../../node_modules/.bin/tsc -p tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
     "lint": "./node_modules/.bin/eslint ./src --ext .js,.jsx,.ts,.tsx",
