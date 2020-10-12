@@ -67,6 +67,7 @@ class LoggerProvider {
      */
     static init(opts = defaultOpts): Options {
         const options = Object.assign(defaultOpts, opts)
+        Object.freeze(options)
 
         if (options.level) {
             log.setLevel(options.level as LogLevelDesc)
