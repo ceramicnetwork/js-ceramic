@@ -28,7 +28,6 @@
   "dependencies": {
     "@types/json-schema": "^7.0.5",
     "ajv": "^6.12.3",
-    "chalk": "^4.1.0",
     "cids": "^1.0.0",
     "dag-jose": "^0.3.0",
     "did-resolver": "^2.1.1",

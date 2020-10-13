@@ -1,25 +1,11 @@
-import chalk from 'chalk'
-import fs from 'fs'
 import log, { Logger, LogLevelDesc, MethodFactory } from 'loglevel'
 import prefix from 'loglevel-plugin-prefix'
-import util from 'util'
-
-/**
- * Logger colors
- */
-const colors: Record<string, any> = {
-    TRACE: chalk.magenta,
-    DEBUG: chalk.cyan,
-    INFO: chalk.blue,
-    WARN: chalk.yellow,
-    ERROR: chalk.red,
-}
+import cloneDeep from 'lodash.clonedeep'
 
 /**
  * Default logger options
  */
 const defaultOpts: Options = {
-    colors: false,
     level: 'info',
     format: 'text',
     stacktrace: {
@@ -27,8 +13,6 @@ const defaultOpts: Options = {
         depth: 3,
         excess: 0,
     },
-    outputToFiles: false,
-    outputPath: undefined
 }
 
 /**
@@ -36,7 +20,6 @@ const defaultOpts: Options = {
  */
 interface Options {
     level?: string;
-    colors?: boolean;
     format?: string; // [text | json]
     stacktrace?: {
         levels: ['trace', 'warn', 'error'];
@@ -44,44 +27,65 @@ interface Options {
         excess: 0;
     };
     component?: string;
-    outputToFiles?: boolean;
-    outputPath?: string;
 }
+
+/**
+ * Plugin options
+ */
+interface PluginOptions {
+    [index: string]: any;
+}
+
+/**
+ * Function type for plugins
+ * @dev Must call `setLevel` on `rootLogger` to be enabled
+ */
+type Plugin = (rootLogger: log.RootLogger, loggerOptions: Options, pluginOptions?: PluginOptions) => void;
 
 /**
  * Global Logger factory
  */
 class LoggerProvider {
+    private static options: Options;
 
     /**
      * Initialize root logger
      * @param opts - Options
+     * @returns Modified options
      */
-    static init(opts = defaultOpts): void {
-        const options = Object.assign(defaultOpts, opts)
+    static init(opts = defaultOpts): Options {
+        this.options = Object.assign(defaultOpts, opts)
 
-        if (options.level) {
-            log.setLevel(options.level as LogLevelDesc)
+        if (this.options.level) {
+            log.setLevel(this.options.level as LogLevelDesc)
         } else {
             log.enableAll() // enable all levels (TRACE)
         }
 
-        LoggerProvider._applyPrefix(options)
-        if (options.outputToFiles) {
-            LoggerProvider._includeFilePlugin(options)
-        }
-        LoggerProvider._includeJsonPlugin(options)
+        LoggerProvider._applyPrefix()
+        LoggerProvider._includeJsonPlugin()
+        return cloneDeep(this.options)
+    }
+
+    /**
+     * Adds `plugin` to the logger instance
+     * @param plugin Plugin function to add
+     * @param loggerOptions Options returned from LoggerProvider.init
+     * @param pluginOptions Options specific to `plugin`
+     */
+    static addPlugin(plugin: Plugin, loggerOptions: Options, pluginOptions?: PluginOptions): void {
+        plugin(log, loggerOptions, pluginOptions)
     }
 
     /**
      * Applies prefix
      * @private
      */
-    static _applyPrefix(options: Options): void {
+    static _applyPrefix(): void {
         prefix.reg(log)
         prefix.apply(log, {
             format(level, name, timestamp) {
-                return LoggerProvider._toText(options, timestamp, level, name)
+                return LoggerProvider._toText(timestamp, level, name)
             },
             timestampFormatter(date) {
                 return date.toISOString()
@@ -90,65 +94,28 @@ class LoggerProvider {
     }
 
     /**
-     * Plugin to append log messages to files named after components
-     * @notice If no component name is given 'default' will be included in the file name
-     * @param options Should include `component` name string and `outputPath` string
-     */
-    static _includeFilePlugin (options: Options): void {
-        const originalFactory = log.methodFactory;
-        let basePath = options.outputPath
-        if ((basePath === undefined) || (basePath === '')) {
-            basePath = '/usr/local/var/log/ceramic/'
-        }
-        if (!basePath.endsWith('/')) {
-            basePath = basePath + '/'
-        }
-
-        log.methodFactory = (methodName: string, logLevel: any, loggerName: string): MethodFactory => {
-            const rawMethod = originalFactory(methodName, logLevel, loggerName);
-            return (...args: any[]): any => {
-                const message = LoggerProvider._interpolate(args)
-                const namespace = options.component ? options.component.toLowerCase() : 'default'
-                fs.mkdir(basePath, { recursive: true }, (err) => {
-                    if (err && (err.code != 'EEXIST')) console.warn('WARNING: Can not write logs to files', err)
-                    else {
-                        const stream = fs.createWriteStream(
-                            basePath + `${loggerName.toLowerCase()}-${namespace}.log`,
-                            { flags: 'a' }
-                        )
-                        stream.write(util.format(message) + '\n')
-                        stream.end()
-                    }
-                })
-                rawMethod(...args)
-            }
-        };
-        log.setLevel(log.getLevel());
-    }
-
-    /**
      * Simple JSON plugin
      * @private
      */
-    static _includeJsonPlugin(options: Options): void {
+    static _includeJsonPlugin(): void {
         const originalFactory = log.methodFactory;
 
         log.methodFactory = (methodName: string, logLevel: any, loggerName: string): MethodFactory => {
             const rawMethod = originalFactory(methodName, logLevel, loggerName);
             return (...args: any[]): any => {
-                if (options.format !== 'json') {
+                if (this.options.format !== 'json') {
                     rawMethod(...args)
                     return
                 }
                 const timestamp = new Date().toISOString()
                 const hasStacktrace = !!LoggerProvider._stacktrace()
-                const needStack = hasStacktrace && options.stacktrace.levels.some(level => level === methodName)
+                const needStack = hasStacktrace && this.options.stacktrace.levels.some(level => level === methodName)
 
                 let stacktrace = needStack ? LoggerProvider._stacktrace() : '';
                 if (stacktrace) {
                     const lines = stacktrace.split('\n');
-                    lines.splice(0, options.stacktrace.excess + 3);
-                    const { depth } = options.stacktrace;
+                    lines.splice(0, this.options.stacktrace.excess + 3);
+                    const { depth } = this.options.stacktrace;
                     if (depth && lines.length !== depth + 1) {
                         const shrink = lines.splice(0, depth);
                         stacktrace = shrink.join('\n');
@@ -168,7 +135,7 @@ class LoggerProvider {
                     logger: loggerName || '',
                     timestamp,
                     stacktrace,
-                    component: options.component || undefined
+                    component: this.options.component || undefined
                 }))
             }
         };
@@ -178,14 +145,11 @@ class LoggerProvider {
     /**
      * Formats to text
      */
-    static _toText(options: Options, timestamp: any, level: any, name: any): string {
-        if (options.format === 'json') {
+    static _toText(timestamp: any, level: any, name: any): string {
+        if (this.options.format === 'json') {
             return "" // no prefix
         }
-        if (!options.colors) {
-            return `[${timestamp}] ${level} ${options.component ? options.component : ""} ${name}:`
-        }
-        return `${chalk.gray(`[${timestamp}]`)} ${colors[level.toUpperCase()](level)} ${options.component ? chalk.gray(options.component) : ""} ${chalk.green(`${name}:`)}`
+        return `[${timestamp}] ${level} ${this.options.component ? this.options.component : ""} ${name}:`
     }
 
     /**
@@ -297,4 +261,8 @@ export {
     LoggerProvider,
     Logger,
     log as RootLogger,
+    MethodFactory as LoggerMethodFactory,
+    Options as LoggerOptions,
+    Plugin as LoggerPlugin,
+    PluginOptions as LoggerPluginOptions,
 }
