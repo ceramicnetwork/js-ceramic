@@ -185,14 +185,18 @@ class Document extends EventEmitter {
   static async getVersion<T extends Doctype>(doc: Document, version: CID): Promise<Document> {
     const { _context: context, dispatcher, pinStore, _doctypeHandler: doctypeHandler } = doc
 
-    const versionRecord = await dispatcher.retrieveRecord(version)
-    if (versionRecord == null) {
-      throw new Error(`No record found for version ${version.toString()}`)
-    }
+    const isGenesis = version.equals(doc._genesisCid)
 
-    // check if it's not an anchor record
-    if (versionRecord.proof == null) {
-      throw new Error(`No anchor record for version ${version.toString()}`)
+    if (!isGenesis) {
+      const versionRecord = await dispatcher.retrieveRecord(version)
+      if (versionRecord == null) {
+        throw new Error(`No record found for version ${version.toString()}`)
+      }
+
+      // check if it's not an anchor record
+      if (versionRecord.proof == null) {
+        throw new Error(`No anchor record for version ${version.toString()}`)
+      }
     }
 
     const document = new Document(DoctypeUtils.createDocIdFromBase(doc.id, version), dispatcher, pinStore)
@@ -203,8 +207,10 @@ class Document extends EventEmitter {
     const genesisRecord = await document.dispatcher.retrieveRecord(doc._genesisCid)
     document._doctype.state = await doc._doctypeHandler.applyRecord(genesisRecord, doc._genesisCid, context)
 
-    await document._handleHead(version) // sync version
-    document._doctype = DoctypeUtils.makeReadOnly<T>(document.doctype as T)
+    if (!isGenesis) {
+      await document._handleHead(version) // sync version
+      document._doctype = DoctypeUtils.makeReadOnly<T>(document.doctype as T)
+    }
     return document
   }
 

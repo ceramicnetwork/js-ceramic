@@ -91,7 +91,8 @@ export function wrapDocument(content: any, did: string): DIDDocument {
 export default {
   getResolver: (ceramic: Ceramic): ResolverRegistry => ({
     '3': async (did: string, parsed: ParsedDID): Promise<DIDDocument | null> => {
-      const doctype = await ceramic.loadDocument(`/ceramic/${parsed.id}`)
+      const version = (parsed.query || '').replace('version-id', '?version')
+      const doctype = await ceramic.loadDocument(`/ceramic/${parsed.id}${version}`);
       return wrapDocument(doctype.content, did)
     }
   })

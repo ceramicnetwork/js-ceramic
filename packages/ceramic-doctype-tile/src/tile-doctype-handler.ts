@@ -115,7 +115,7 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
             throw new Error(`Invalid docId ${payload.id}, expected ${state.log[0]}`)
         }
         state.log.push(cid)
-        return {
+        const newState: DocState = {
             ...state,
             signature: SignatureStatus.SIGNED,
             anchorStatus: AnchorStatus.NOT_REQUESTED,
@@ -123,6 +123,10 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
                 content: jsonpatch.applyPatch(state.content, payload.data).newDocument,
             }
         }
+        if (payload.header?.owners) {
+          newState.next.metadata = { ...state.metadata, owners: payload.header.owners }
+        }
+        return newState
     }
 
     /**
@@ -136,12 +140,17 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
     async _applyAnchor(record: AnchorRecord, proof: AnchorProof, cid: CID, state: DocState): Promise<DocState> {
         state.log.push(cid)
         let content = state.content
+        let metadata = state.metadata
         if (state.next?.content) {
             content = state.next.content
-            delete state.next.content
+          delete state.next.content
+        }
+        if (state.next?.metadata) {
+            metadata = state.next.metadata
+          delete state.next.metadata
         }
         return {
-            ...state, content, anchorStatus: AnchorStatus.ANCHORED, anchorProof: proof,
+            ...state, content, metadata, anchorStatus: AnchorStatus.ANCHORED, anchorProof: proof,
         }
     }
 
@@ -161,7 +170,7 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
             throw new Error(`Signature was made with wrong DID. Expected: ${did}, got: ${kid.split('?')[0]}`)
         }
 
-        const { publicKey } = await context.resolver.resolve(did)
+        const { publicKey } = await context.resolver.resolve(kid)
         const jws = [_protected, payload, signature].join('.')
         try {
             await this.verifyJWS(jws, publicKey)
