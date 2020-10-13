@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.10.1-alpha.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-core@0.10.0...@ceramicnetwork/ceramic-core@0.10.1-alpha.0) (2020-10-13)
+
+
+### Bug Fixes
+
+* properly handle versions and key rotations ([#399](https://github.com/ceramicnetwork/js-ceramic/issues/399)) ([c70f04c](https://github.com/ceramicnetwork/js-ceramic/commit/c70f04c037929568e796cf4b7e523679c81818e1))
+* **core:** fix anchor record verification ([#381](https://github.com/ceramicnetwork/js-ceramic/issues/381)) ([c134c42](https://github.com/ceramicnetwork/js-ceramic/commit/c134c4239b79347b14a5ea7384a96c2bbe77fba4))
+* change identity-wallet version ([#384](https://github.com/ceramicnetwork/js-ceramic/issues/384)) ([9e0ba75](https://github.com/ceramicnetwork/js-ceramic/commit/9e0ba752b22c944b827edcecd68cb987905fd4d6))
+
+
+
+
+
 # [0.10.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-core@0.9.1-alpha.1...@ceramicnetwork/ceramic-core@0.10.0) (2020-10-07)
 
 
