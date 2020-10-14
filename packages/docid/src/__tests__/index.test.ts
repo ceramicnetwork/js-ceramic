@@ -3,13 +3,26 @@ import CID from 'cids'
 
 const cidStr = 'bagcqcerakszw2vsovxznyp5gfnpdj4cqm2xiv76yd24wkjewhhykovorwo6a'
 const docIdStr = 'k3y52l7mkcvtg023bt9txegccxe1bah8os3naw5asin3baf3l3t54atn0cuy98yws'
+const docIdStrVersion = 'k9tgzwbevycbwc8nc6ta08vm7wmdhcwpomm34zughq8gmliunxy25lior3npdspknkf4lb5ngvkz0io0fvv9fq953bu0lkwobcckhuo00lo5p503kdqyz4a118'
 const docIdUrl = 'ceramic://k3y52l7mkcvtg023bt9txegccxe1bah8os3naw5asin3baf3l3t54atn0cuy98yws'
+const docIdLegacy = '/ceramic/k3y52l7mkcvtg023bt9txegccxe1bah8os3naw5asin3baf3l3t54atn0cuy98yws'
+const docIdLegacyVersion = '/ceramic/k3y52l7mkcvtg023bt9txegccxe1bah8os3naw5asin3baf3l3t54atn0cuy98yws?version=bagcqcerakszw2vsovxznyp5gfnpdj4cqm2xiv76yd24wkjewhhykovorwo6a'
 const docIdBytes = new Uint8Array([
   206,   1,   0,   0,   1, 133,   1,  18,  32,
    84, 179, 109,  86,  78, 173, 242, 220,  63,
   166,  43,  94,  52, 240,  80, 102, 174, 138,
   255, 216,  30, 185, 101,  36, 150,  57, 240,
   167,  85, 209, 179, 188
+])
+
+const docIdBytesVersion = new Uint8Array([
+  206,   1,   0,   0,   1, 133,   1,  18,  32,  84, 179, 109,
+  86,  78, 173, 242, 220,  63, 166,  43,  94,  52, 240,  80,
+ 102, 174, 138, 255, 216,  30, 185, 101,  36, 150,  57, 240,
+ 167,  85, 209, 179, 188,   1, 133,   1,  18,  32,  84, 179,
+ 109,  86,  78, 173, 242, 220,  63, 166,  43,  94,  52, 240,
+  80, 102, 174, 138, 255, 216,  30, 185, 101,  36, 150,  57,
+ 240, 167,  85, 209, 179, 188
 ])
 
 describe('DocID', () => {
@@ -26,11 +39,11 @@ describe('DocID', () => {
     expect(docid.toString()).toMatchSnapshot()
   })
 
-  it('create by parts (type:int, cid:string, subnet:int, multibase)', async () => {
+  it('create by parts (type:int, cid:string, version:null, subnet:int, multibase)', async () => {
     const type = 1
     const subnet = 1
     const multibaseName = 'base32'
-    const docid = new DocID(type, cidStr, subnet, multibaseName)
+    const docid = new DocID(type, cidStr, null, subnet, multibaseName)
 
     expect(docid.subnet).toEqual(subnet)
     expect(docid.multibaseName).toEqual(multibaseName)
@@ -39,15 +52,27 @@ describe('DocID', () => {
     expect(docid.toString()).toMatchSnapshot()
   })
 
-  it('create by parts (type:string, cid:string, subnet:string)', async () => {
+  it('create by parts (type:string, cid:string, version:null, subnet:string)', async () => {
     const type = 'tile'
     const subnet = 'devnet'
-    const docid = new DocID(type, cidStr, subnet)
+    const docid = new DocID(type, cidStr, null, subnet)
 
     expect(docid.subnet).toEqual(0)
     expect(docid.multibaseName).toEqual('base36')
     expect(docid.type).toEqual(0)
     expect(docid._cid.toString()).toEqual(cidStr)
+    expect(docid.toString()).toMatchSnapshot()
+  })
+
+  it('create by parts (type:string, cid:string, version:string)', async () => {
+    const type = 'tile'
+    const docid = new DocID(type, cidStr, cidStr)
+
+    expect(docid.subnet).toEqual(0)
+    expect(docid.multibaseName).toEqual('base36')
+    expect(docid.type).toEqual(0)
+    expect(docid.cid.toString()).toEqual(cidStr)
+    expect(docid.version.toString()).toEqual(cidStr)
     expect(docid.toString()).toMatchSnapshot()
   })
 
@@ -61,9 +86,31 @@ describe('DocID', () => {
     expect(docid.toString()).toMatchSnapshot()
   })
 
+  it('create from bytes inlcuding version', async () => {
+    const docid = DocID.fromBytes(docIdBytesVersion)
+
+    expect(docid.subnet).toEqual(0)
+    expect(docid.multibaseName).toEqual('base36')
+    expect(docid.type).toEqual(0)
+    expect(docid.cid.toString()).toEqual(cidStr)
+    expect(docid.version.toString()).toEqual(cidStr)
+    expect(docid.toString()).toMatchSnapshot()
+  })
+
+  it('create from bytes with version', async () => {
+    const docid = DocID.fromBytes(docIdBytes, cidStr)
+
+    expect(docid.subnet).toEqual(0)
+    expect(docid.multibaseName).toEqual('base36')
+    expect(docid.type).toEqual(0)
+    expect(docid.cid.toString()).toEqual(cidStr)
+    expect(docid.version.toString()).toEqual(cidStr)
+    expect(docid.toString()).toMatchSnapshot()
+  })
+
   it('create from bytes with multibase ', async () => {
     const multibase = 'base32'
-    const docid = DocID.fromBytes(docIdBytes, multibase)
+    const docid = DocID.fromBytes(docIdBytes, null, multibase)
 
     expect(docid.subnet).toEqual(0)
     expect(docid.multibaseName).toEqual('base32')
@@ -82,6 +129,28 @@ describe('DocID', () => {
     expect(docid.toString()).toMatchSnapshot()
   })
 
+  it('create from string including version', async () => {
+    const docid = DocID.fromString(docIdStrVersion)
+
+    expect(docid.subnet).toEqual(0)
+    expect(docid.multibaseName).toEqual('base36')
+    expect(docid.type).toEqual(0)
+    expect(docid.cid.toString()).toEqual(cidStr)
+    expect(docid.version.toString()).toEqual(cidStr)
+    expect(docid.toString()).toMatchSnapshot()
+  })
+
+  it('create from string with version', async () => {
+    const docid = DocID.fromString(docIdStr, cidStr)
+
+    expect(docid.subnet).toEqual(0)
+    expect(docid.multibaseName).toEqual('base36')
+    expect(docid.type).toEqual(0)
+    expect(docid.cid.toString()).toEqual(cidStr)
+    expect(docid.version.toString()).toEqual(cidStr)
+    expect(docid.toString()).toMatchSnapshot()
+  })
+
   it('create from url string', async () => {
     const docid = DocID.fromString(docIdUrl)
     
@@ -92,14 +161,47 @@ describe('DocID', () => {
     expect(docid.toString()).toMatchSnapshot()
   })
 
+  it('create from legacy string "/ceramic/"', async () => {
+    const docid = DocID.fromString(docIdLegacy)
+    
+    expect(docid.subnet).toEqual(0)
+    expect(docid.multibaseName).toEqual('base36')
+    expect(docid.type).toEqual(0)
+    expect(docid._cid.toString()).toEqual(cidStr)
+    expect(docid.toString()).toMatchSnapshot()
+  })
+
+  it('create from legacy string "/ceramic/" with version param "?version="', async () => {
+    const docid = DocID.fromString(docIdLegacyVersion)
+    
+    expect(docid.subnet).toEqual(0)
+    expect(docid.multibaseName).toEqual('base36')
+    expect(docid.type).toEqual(0)
+    expect(docid.cid.toString()).toEqual(cidStr)
+    expect(docid.version.toString()).toEqual(cidStr)
+    expect(docid.toString()).toMatchSnapshot()
+  })
+
   it('roundtrip docID string', async () => {
     const docid = new DocID('tile', cidStr)
     const docid2 = DocID.fromString(docid.toString())
     expect(docid.toString()).toEqual(docid2.toString())
   })
 
+  it('roundtrip docID string with version', async () => {
+    const docid = new DocID('tile', cidStr, cidStr)
+    const docid2 = DocID.fromString(docid.toString())
+    expect(docid.toString()).toEqual(docid2.toString())
+  })
+
   it('roundtrip docID bytes', async () => {
     const docid = new DocID('tile', cidStr)
+    const docid2 = DocID.fromBytes(docid.bytes)
+    expect(docid.toString()).toEqual(docid2.toString())
+  })
+
+  it('roundtrip docID bytes with version', async () => {
+    const docid = new DocID('tile', cidStr, cidStr)
     const docid2 = DocID.fromBytes(docid.bytes)
     expect(docid.toString()).toEqual(docid2.toString())
   })
@@ -119,14 +221,14 @@ describe('DocID', () => {
   })
 
   it('.subnetName if registered', () => {
-    const docid = new DocID('tile', cidStr, 'devnet')
+    const docid = new DocID('tile', cidStr, null, 'devnet')
     expect(docid.subnetName).toEqual('devnet')
-    const docid2 = new DocID('tile', cidStr, 10)
+    const docid2 = new DocID('tile', cidStr, null, 10)
     expect(() => docid2.subnetName).toThrowErrorMatchingSnapshot()
   })
 
   it('.typeName if registered', async () => {
-    const docid = new DocID('tile', cidStr, 'devnet')
+    const docid = new DocID('tile', cidStr, null, 'devnet')
     expect(docid.typeName).toEqual('tile')
     const docid2 = new DocID(10, cidStr)
     expect(() => docid2.typeName).toThrowErrorMatchingSnapshot()

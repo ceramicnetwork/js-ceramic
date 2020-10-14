@@ -1,10 +1,8 @@
 import CID from 'cids'
-// const multibase = require('multibase')
 import multibase from 'multibase'
 import subnets from './subnet-table'
 import doctypes from './doctype-table'
 import varint from 'varint'
-// const varint = require('varint')
 import uint8ArrayConcat from 'uint8arrays/concat'
 import uint8ArrayToString from 'uint8arrays/to-string'
 const DOCID_CODEC = 206
@@ -17,6 +15,7 @@ const getKey = (obj: { [key: string]: number }, value: number): string | undefin
 
 // Definition
 // '<multibase-prefix><multicodec-docid><subnet><doctype><genesis-cid-bytes>'
+// '<multibase-prefix><multicodec-docid><subnet><doctype><genesis-cid-bytes><version-cid-bytes>'
 
 class DocID {
   /**
@@ -24,12 +23,13 @@ class DocID {
    *
    * @param {string|number}      doctype
    * @param {CID|string}         cid
+   * @param {CID|string}         version
    * @param {string | number}    [subnet = 'devnet']
    * @param {string}             [multibaseName = 'base36']
    *
    * @example
    * new DocID(<docType>, <CID>|<cidStr>)
-   * new DocID(<docType>, <CID>|<cidStr>, <subnet>, <multibaseName>)
+   * new DocID(<docType>, <CID>|<cidStr>, <VersionCID>|<VersionCidStr> <subnet>, <multibaseName>)
    */
 
   private _doctype: number 
@@ -37,17 +37,23 @@ class DocID {
   private _cid: CID
   private _multibaseName: string
   private _bytes: Uint8Array
+  private _version: CID | undefined
 
-  constructor (doctype: string | number, cid: CID | string, subnet: string | number = 0, multibaseName = 'base36') {
+  constructor (doctype: string | number, cid: CID | string, version: CID | string = null, subnet: string | number = 0, multibaseName = 'base36') {
     this._doctype = (typeof doctype === 'string') ? doctypes[doctype] : doctype
      if (!doctype && doctype !== 0) throw new Error('constructor: doctype required')
     this._subnet = (typeof subnet === 'string') ? subnets[subnet] : subnet
     this._multibaseName = multibaseName 
     this._cid = (typeof cid === 'string') ? new CID(cid) : cid
+    if (version) {
+      this._version = (typeof version === 'string') ? new CID(version) : version
+    } else {
+      this._version = undefined
+    }
     if (!cid) throw new Error('constructor: cid required')
   }
 
-  static fromBytes(bytes: Uint8Array, multibaseName?: string): DocID {
+  static fromBytes(bytes: Uint8Array, version?: CID | string, multibaseName?: string): DocID {
     const docCodec = varint.decode(bytes) 
     if (docCodec !== DOCID_CODEC) throw new Error('fromBytes: invalid docid, does not include docid codec')
     bytes = bytes.slice(varint.decode.bytes) 
@@ -55,16 +61,49 @@ class DocID {
     bytes = bytes.slice(varint.decode.bytes) 
     const docType = varint.decode(bytes)
     bytes = bytes.slice(varint.decode.bytes) 
-    const cid = new CID(bytes)
-    return new DocID(docType, cid, subnet, multibaseName)
+
+    let cid
+
+    try {
+      cid = new CID(bytes)
+    } catch(e) {
+      // Includes version
+      const cidLength = DocID._genesisCIDLength(bytes)
+      cid = new CID(bytes.slice(0, cidLength))
+      version = new CID(bytes.slice(cidLength))
+    }
+
+    return new DocID(docType, cid, version, subnet, multibaseName)
   }
 
-  static fromString(docId: string): DocID {
+  static _genesisCIDLength(bytes: Uint8Array): number {
+    let offset = 0
+
+    varint.decode(bytes) // cid version 
+    offset += varint.decode.bytes
+
+    varint.decode(bytes.slice(offset)) // cid codec
+    offset += varint.decode.bytes
+
+    varint.decode(bytes.slice(offset)) //mh codec
+    offset += varint.decode.bytes
+
+    const length = varint.decode(bytes.slice(offset)) //mh length
+    return offset + length + 1
+  }
+
+  static fromString(docId: string, version?: CID | string): DocID {
     docId = docId.split('ceramic://').pop()
+    // Likely temp, remove legacy once all ceramic update, but should make updating easier
+    docId = docId.split('/ceramic/').pop()
+    if (docId.includes('version')) {
+      version = docId.split('?')[1].split('=')[1]
+      docId = docId.split('?')[0]
+    }
     const multibaseName = multibase.isEncoded(docId)
     if (!multibaseName) throw new Error('fromString: requires base encoded string')
     const bytes = multibase.decode(docId)
-    return DocID.fromBytes(bytes, multibaseName)
+    return DocID.fromBytes(bytes, version, multibaseName)
   }
 
   /**
@@ -97,6 +136,16 @@ class DocID {
    */
   get cid (): CID {
     return this._cid
+  }
+
+    /**
+   * Get Version CID
+   *
+   * @returns {CID}
+   * @readonly
+   */
+  get version (): CID | undefined {
+    return this._version
   }
 
   /**
@@ -162,8 +211,9 @@ class DocID {
       const codec = varint.encode(DOCID_CODEC)
       const subnet = varint.encode(this._subnet)
       const doctype = varint.encode(this._doctype)
+      const versionBytes =  this._version ? this._version.bytes : new Uint8Array(0)
       this._bytes = uint8ArrayConcat([
-        codec, subnet, doctype, this._cid.bytes
+        codec, subnet, doctype, this._cid.bytes, versionBytes
       ])
     }
     return this._bytes

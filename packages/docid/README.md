@@ -7,6 +7,11 @@ Implements Ceramic DocIDs as defined in ceramic spec and [CIP](https://github.co
 ```html
 <docid> ::= <multibase-prefix><multicodec-docid><subnet><doctype><genesis-cid-bytes>
 ```
+or including DocID version
+
+```html
+<docid> ::= <multibase-prefix><multicodec-docid><subnet><doctype><genesis-cid-bytes><version-cid-bytes>
+```
 
 ## Getting started
 
@@ -22,7 +27,7 @@ You can create an instance from the parts. Document type string or integer and C
 ```js
 import DocID from '@ceramicnetwork/docid'
 
-const docid = new DocId('tile', 'bagcqcerakszw2vsov...', 'devnet', 'base36)
+const docid = new DocId('tile', 'bagcqcerakszw2vsov...', version, 'devnet', 'base36)
 
 docid.type           // 0
 docid.typeName       // 'tile'

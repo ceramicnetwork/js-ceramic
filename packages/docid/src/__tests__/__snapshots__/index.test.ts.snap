@@ -58,14 +58,28 @@ exports[`DocID .typeName if registered 1`] = `"docTypeName: no registered name a
 
 exports[`DocID create by parts (type:int, cid:cid) 1`] = `"k3y52l7mkcvtg023bt9txegccxe1bah8os3naw5asin3baf3l3t54atn0cuy98yws"`;
 
-exports[`DocID create by parts (type:int, cid:string, subnet:int, multibase) 1`] = `"bzyaqcaibquareicuwnwvmtvn6lod7jrlly2paudgv2fp7wa6xfssjfrz6ctvluntxq"`;
+exports[`DocID create by parts (type:int, cid:string, version:null, subnet:int, multibase) 1`] = `"bzyaqcaibquareicuwnwvmtvn6lod7jrlly2paudgv2fp7wa6xfssjfrz6ctvluntxq"`;
 
-exports[`DocID create by parts (type:string, cid:string, subnet:string) 1`] = `"k3y52l7mkcvtg023bt9txegccxe1bah8os3naw5asin3baf3l3t54atn0cuy98yws"`;
+exports[`DocID create by parts (type:string, cid:string, version:null, subnet:string) 1`] = `"k3y52l7mkcvtg023bt9txegccxe1bah8os3naw5asin3baf3l3t54atn0cuy98yws"`;
+
+exports[`DocID create by parts (type:string, cid:string, version:string) 1`] = `"k9tgzwbevycbwc8nc6ta08vm7wmdhcwpomm34zughq8gmliunxy25lior3npdspknkf4lb5ngvkz0io0fvv9fq953bu0lkwobcckhuo00lo5p503kdqyz4a118"`;
 
 exports[`DocID create from bytes  1`] = `"k3y52l7mkcvtg023bt9txegccxe1bah8os3naw5asin3baf3l3t54atn0cuy98yws"`;
 
+exports[`DocID create from bytes inlcuding version 1`] = `"k9tgzwbevycbwc8nc6ta08vm7wmdhcwpomm34zughq8gmliunxy25lior3npdspknkf4lb5ngvkz0io0fvv9fq953bu0lkwobcckhuo00lo5p503kdqyz4a118"`;
+
 exports[`DocID create from bytes with multibase  1`] = `"bzyaqaaabquareicuwnwvmtvn6lod7jrlly2paudgv2fp7wa6xfssjfrz6ctvluntxq"`;
 
+exports[`DocID create from bytes with version 1`] = `"k9tgzwbevycbwc8nc6ta08vm7wmdhcwpomm34zughq8gmliunxy25lior3npdspknkf4lb5ngvkz0io0fvv9fq953bu0lkwobcckhuo00lo5p503kdqyz4a118"`;
+
+exports[`DocID create from legacy string "/ceramic/" 1`] = `"k3y52l7mkcvtg023bt9txegccxe1bah8os3naw5asin3baf3l3t54atn0cuy98yws"`;
+
+exports[`DocID create from legacy string "/ceramic/" with version param "?version=" 1`] = `"k9tgzwbevycbwc8nc6ta08vm7wmdhcwpomm34zughq8gmliunxy25lior3npdspknkf4lb5ngvkz0io0fvv9fq953bu0lkwobcckhuo00lo5p503kdqyz4a118"`;
+
 exports[`DocID create from string 1`] = `"k3y52l7mkcvtg023bt9txegccxe1bah8os3naw5asin3baf3l3t54atn0cuy98yws"`;
+
+exports[`DocID create from string including version 1`] = `"k9tgzwbevycbwc8nc6ta08vm7wmdhcwpomm34zughq8gmliunxy25lior3npdspknkf4lb5ngvkz0io0fvv9fq953bu0lkwobcckhuo00lo5p503kdqyz4a118"`;
+
+exports[`DocID create from string with version 1`] = `"k9tgzwbevycbwc8nc6ta08vm7wmdhcwpomm34zughq8gmliunxy25lior3npdspknkf4lb5ngvkz0io0fvv9fq953bu0lkwobcckhuo00lo5p503kdqyz4a118"`;
 
 exports[`DocID create from url string 1`] = `"k3y52l7mkcvtg023bt9txegccxe1bah8os3naw5asin3baf3l3t54atn0cuy98yws"`;
