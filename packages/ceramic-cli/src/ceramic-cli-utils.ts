@@ -225,17 +225,7 @@ export class CeramicCliUtils {
      * @param isUnique - Should document be unique?
      */
     static async schemaCreateDoc(content: string, owners: string, onlyGenesis: boolean, isUnique: boolean): Promise<void> {
-        try {
-            const schemaObj = JSON.parse(content)
-            if (!DoctypeUtils.isSchemaValid(schemaObj)) {
-                console.error('Invalid schema')
-                return
-            }
-        } catch (e) {
-            console.error(e.message)
-            return
-        }
-
+        // TODO validate schema on the client side
         return CeramicCliUtils.createDoc('tile', content, owners, onlyGenesis, isUnique)
     }
 
@@ -251,42 +241,8 @@ export class CeramicCliUtils {
             return
         }
 
-        try {
-            const schemaObj = JSON.parse(content)
-            if (!DoctypeUtils.isSchemaValid(schemaObj)) {
-                console.error('Invalid schema')
-                return
-            }
-        } catch (e) {
-            console.error(e.message)
-            return
-        }
-
+        // TODO validate schema on the client side
         return CeramicCliUtils.change(schemaDocId, content, owners, null)
-    }
-
-    /**
-     * Validate content against schema document
-     * @param schemaDocId - Schema document ID
-     * @param content - Content
-     */
-    static async schemaValidateContent(schemaDocId: string, content: string): Promise<void> {
-        if (!CeramicCliUtils._validateDocId(schemaDocId)) {
-            console.error(`Invalid schema docId: ${schemaDocId}`)
-            return
-        }
-
-        await CeramicCliUtils._runWithCeramic(async (ceramic: CeramicApi) => {
-            const doc = await ceramic.loadDocument(schemaDocId)
-
-            const parsedContent = CeramicCliUtils._parseContent(content)
-            try {
-                DoctypeUtils.validate(parsedContent, doc.content)
-                console.log('Content is valid')
-            } catch (e) {
-                console.error(e.message)
-            }
-        })
     }
 
     /**

@@ -85,7 +85,7 @@ class Document extends EventEmitter {
     if (validate) {
       const schema = await Document.loadSchema(context.api, doc._doctype)
       if (schema) {
-        DoctypeUtils.validate(doc._doctype.content, schema)
+        Utils.validate(doc._doctype.content, schema)
       }
     }
 
@@ -149,6 +149,20 @@ class Document extends EventEmitter {
 
     await doc._register(opts)
     return doc
+  }
+
+  /**
+   * Validate Doctype against schema
+   */
+  async validate(): Promise<void> {
+    const schemaDocId = this.state?.metadata?.schema
+    if (schemaDocId) {
+      const schemaDoc = await this._context.api.loadDocument(schemaDocId)
+      if (!schemaDoc) {
+        throw new Error(`Schema not found for ${schemaDocId}`)
+      }
+      Utils.validate(this.content, schemaDoc.content)
+    }
   }
 
   /**
@@ -246,7 +260,7 @@ class Document extends EventEmitter {
     if (validate) {
       const schema = await Document.loadSchemaById(this._context.api, state.metadata.schema)
       if (schema) {
-        DoctypeUtils.validate(state.content, schema)
+        Utils.validate(state.content, schema)
       }
     }
 
