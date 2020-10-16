@@ -1,3 +1,5 @@
+jest.mock("@ceramicnetwork/ceramic-core/lib/anchor/ethereum/ethereum-anchor-service")
+
 import Ceramic from '@ceramicnetwork/ceramic-core'
 import CeramicClient from '@ceramicnetwork/ceramic-http-client'
 import IdentityWallet from 'identity-wallet'

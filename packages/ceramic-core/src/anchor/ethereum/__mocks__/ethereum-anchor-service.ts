@@ -8,8 +8,12 @@ class EthereumAnchorService extends AnchorService {
   private _ceramic: Ceramic
   private _dispatcher: Dispatcher
 
+  private _anchorDelay: number
+
   constructor (private _config: CeramicConfig) {
     super()
+
+    this._anchorDelay = _config['anchorDelay']? _config['anchorDelay'] : 0
   }
 
   /**
@@ -35,7 +39,10 @@ class EthereumAnchorService extends AnchorService {
     const record = { proof, path: '', prev: head }
     const cid = await this._dispatcher.storeRecord(record)
 
-    this.emit(docId, { status: 'COMPLETED', message: 'CID successfully anchored.', anchorRecord: cid});
+    const handle = setTimeout(() => {
+      this.emit(docId, { status: 'COMPLETED', message: 'CID successfully anchored.', anchorRecord: cid});
+      clearTimeout(handle)
+    }, this._anchorDelay)
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

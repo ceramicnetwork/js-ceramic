@@ -48,6 +48,8 @@ export interface CeramicConfig {
   gateway?: boolean;
 
   topic?: string;
+
+  [index: string]: any; // allow arbitrary properties
 }
 
 /**

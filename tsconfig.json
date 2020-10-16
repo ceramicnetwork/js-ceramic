@@ -18,8 +18,7 @@
  "exclude": [
    "node_modules",
    "**/*.spec.ts",
-   "**/*.test.ts",
-   "**/__mocks__/*"
+   "**/*.test.ts"
  ],
  "references": [
    { "path": "./packages/ceramic-core" },
