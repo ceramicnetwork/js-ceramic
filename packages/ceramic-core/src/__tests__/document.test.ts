@@ -1,6 +1,5 @@
 import CID from 'cids'
 import Document from '../document'
-import MockAnchorService from "../anchor/mock/mock-anchor-service";
 import tmp from 'tmp-promise'
 import Dispatcher from '../dispatcher'
 import Ceramic from "../ceramic"
@@ -17,6 +16,9 @@ import { Resolver } from "did-resolver"
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 
 jest.mock('../store/level-state-store')
+jest.mock('../anchor/ethereum/ethereum-anchor-service')
+
+import EthereumAnchorService from "../anchor/ethereum/ethereum-anchor-service"
 
 jest.mock('../dispatcher', () => {
   const CID = require('cids') // eslint-disable-line @typescript-eslint/no-var-requires
@@ -134,7 +136,10 @@ describe('Document', () => {
 
     beforeEach(() => {
       dispatcher = Dispatcher(false)
-      anchorService = new MockAnchorService(dispatcher)
+      anchorService = new EthereumAnchorService()
+      anchorService.ceramic = {
+        dispatcher,
+      }
       user = new DID()
       user.createJWS = jest.fn(async () => {
         // fake jws
@@ -336,7 +341,10 @@ describe('Document', () => {
 
     beforeEach(() => {
       dispatcher = Dispatcher(true)
-      anchorService = new MockAnchorService(dispatcher)
+      anchorService = new EthereumAnchorService()
+      anchorService.ceramic = {
+        dispatcher,
+      }
       user = new DID()
       user.createJWS = jest.fn(async () => {
         // fake jws

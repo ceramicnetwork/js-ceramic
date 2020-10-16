@@ -7,7 +7,7 @@ import { CeramicConfig } from "../../ceramic";
 
 import AnchorServiceResponse from "../anchor-service-response";
 import { AnchorService } from "@ceramicnetwork/ceramic-common"
-import { AnchorProof } from "@ceramicnetwork/ceramic-common"
+import { AnchorProof, CeramicApi } from "@ceramicnetwork/ceramic-common"
 
 /**
  * CID-docId pair
@@ -44,6 +44,7 @@ const ETH_CHAIN_ID_MAPPINGS: Record<string, EthNetwork> = {
  */
 export default class EthereumAnchorService extends AnchorService {
 
+    private _ceramic: CeramicApi
     private readonly cidToResMap: Map<CidDoc, AnchorServiceResponse>;
 
     /**
@@ -53,6 +54,15 @@ export default class EthereumAnchorService extends AnchorService {
         super();
 
         this.cidToResMap = new Map<CidDoc, AnchorServiceResponse>();
+    }
+
+    /**
+     * Set Ceramic API instance
+     *
+     * @param ceramic - Ceramic API used for various purposes
+     */
+    set ceramic(ceramic: CeramicApi) {
+        this._ceramic = ceramic
     }
 
     /**

@@ -1,14 +1,25 @@
 import CID from 'cids'
 
-// TODO - remove dispatcher, its not needed once we have anchoring service
-import type Dispatcher from '../../dispatcher'
-import { AnchorService } from "@ceramicnetwork/ceramic-common"
-import { AnchorProof } from "@ceramicnetwork/ceramic-common"
+import type Dispatcher from '../../../dispatcher'
+import { AnchorProof, AnchorService, CeramicApi } from "@ceramicnetwork/ceramic-common"
+import Ceramic, { CeramicConfig } from "../../../ceramic"
 
-class MockAnchorService extends AnchorService {
+class EthereumAnchorService extends AnchorService {
+  private _ceramic: Ceramic
+  private _dispatcher: Dispatcher
 
-  constructor (private _dispatcher: Dispatcher, private _servicePolicy?: any) {
+  constructor (private _config: CeramicConfig) {
     super()
+  }
+
+  /**
+   * Set Ceramic API instance
+   *
+   * @param ceramic - Ceramic API used for various purposes
+   */
+  set ceramic(ceramic: CeramicApi) {
+    this._ceramic = ceramic as Ceramic
+    this._dispatcher = this._ceramic.dispatcher
   }
 
   async requestAnchor(docId: string, head: CID): Promise<void> {
@@ -33,4 +44,4 @@ class MockAnchorService extends AnchorService {
   }
 }
 
-export default MockAnchorService
+export default EthereumAnchorService
