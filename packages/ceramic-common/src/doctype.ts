@@ -148,20 +148,6 @@ export abstract class Doctype extends EventEmitter {
      */
     abstract change(params: DocParams, opts?: DocOpts): Promise<void>
 
-    /**
-     * Validate Doctype against schema
-     */
-    async validate(): Promise<void> {
-        const schemaDocId = this.state?.metadata?.schema
-        if (schemaDocId) {
-            const schemaDoc = await this.context.api.loadDocument(schemaDocId)
-            if (!schemaDoc) {
-                throw new Error(`Schema not found for ${schemaDocId}`)
-            }
-            DoctypeUtils.validate(this.content, schemaDoc.content)
-        }
-    }
-
 }
 
 /**
