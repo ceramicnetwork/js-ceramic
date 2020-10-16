@@ -8,7 +8,7 @@ class EthereumAnchorService extends AnchorService {
   private _ceramic: Ceramic
   private _dispatcher: Dispatcher
 
-  private _anchorDelay: number = 0
+  private readonly _anchorDelay = 0
 
   constructor (private _config: CeramicConfig) {
     super()
