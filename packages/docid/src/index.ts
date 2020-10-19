@@ -1,6 +1,5 @@
 import CID from 'cids'
 import multibase from 'multibase'
-import subnets from './subnet-table'
 import doctypes from './doctype-table'
 import varint from 'varint'
 import uint8ArrayConcat from 'uint8arrays/concat'
@@ -14,8 +13,8 @@ const getKey = (obj: { [key: string]: number }, value: number): string | undefin
 } 
 
 // Definition
-// '<multibase-prefix><multicodec-docid><subnet><doctype><genesis-cid-bytes>'
-// '<multibase-prefix><multicodec-docid><subnet><doctype><genesis-cid-bytes><version-cid-bytes>'
+// '<multibase-prefix><multicodec-docid><doctype><genesis-cid-bytes>'
+// '<multibase-prefix><multicodec-docid><doctype><genesis-cid-bytes><version-cid-bytes>'
 
 class DocID {
   /**
@@ -24,31 +23,28 @@ class DocID {
    * @param {string|number}      doctype
    * @param {CID|string}         cid
    * @param {CID|string}         version
-   * @param {string | number}    [subnet = 'devnet']
    * @param {string}             [multibaseName = 'base36']
    *
    * @example
    * new DocID(<docType>, <CID>|<cidStr>)
-   * new DocID(<docType>, <CID>|<cidStr>, <VersionCID>|<VersionCidStr> <subnet>, <multibaseName>)
+   * new DocID(<docType>, <CID>|<cidStr>, <VersionCID>|<VersionCidStr>, <multibaseName>)
    */
 
   private _doctype: number 
-  private _subnet: number
   private _cid: CID
   private _multibaseName: string
   private _bytes: Uint8Array
   private _version: CID | undefined
 
-  constructor (doctype: string | number, cid: CID | string, version: CID | string = null, subnet: string | number = 0, multibaseName = 'base36') {
+  constructor (doctype: string | number, cid: CID | string, version: CID | string | number = null, multibaseName = 'base36') {
     this._doctype = (typeof doctype === 'string') ? doctypes[doctype] : doctype
      if (!doctype && doctype !== 0) throw new Error('constructor: doctype required')
-    this._subnet = (typeof subnet === 'string') ? subnets[subnet] : subnet
     this._multibaseName = multibaseName 
     this._cid = (typeof cid === 'string') ? new CID(cid) : cid
-    if (version) {
-      this._version = (typeof version === 'string') ? new CID(version) : version
+    if (version === '0' || typeof version === 'number') {
+      this._version = this._cid
     } else {
-      this._version = undefined
+      this._version = (typeof version === 'string') ? new CID(version) : version
     }
     if (!cid) throw new Error('constructor: cid required')
   }
@@ -57,8 +53,6 @@ class DocID {
     const docCodec = varint.decode(bytes) 
     if (docCodec !== DOCID_CODEC) throw new Error('fromBytes: invalid docid, does not include docid codec')
     bytes = bytes.slice(varint.decode.bytes) 
-    const subnet = varint.decode(bytes)
-    bytes = bytes.slice(varint.decode.bytes) 
     const docType = varint.decode(bytes)
     bytes = bytes.slice(varint.decode.bytes) 
 
@@ -66,14 +60,16 @@ class DocID {
 
     try {
       cid = new CID(bytes)
+      if (version === '0') version = cid
     } catch(e) {
       // Includes version
       const cidLength = DocID._genesisCIDLength(bytes)
       cid = new CID(bytes.slice(0, cidLength))
-      version = new CID(bytes.slice(cidLength))
+      const versionBytes = bytes.slice(cidLength)
+      version = versionBytes.length === 1 ? cid : new CID(versionBytes)
     }
 
-    return new DocID(docType, cid, version, subnet, multibaseName)
+    return new DocID(docType, cid, version, multibaseName)
   }
 
   static _genesisCIDLength(bytes: Uint8Array): number {
@@ -104,6 +100,18 @@ class DocID {
     if (!multibaseName) throw new Error('fromString: requires base encoded string')
     const bytes = multibase.decode(docId)
     return DocID.fromBytes(bytes, version, multibaseName)
+  }
+
+
+  /**
+   * Get base docID, always returns without version
+   *
+   * @returns {DocID}
+   * @readonly
+   */
+  get baseID (): DocID {
+    if (!this.version) return this
+    return new DocID(this.type, this.cid, null, this.multibaseName)
   }
 
   /**
@@ -138,7 +146,7 @@ class DocID {
     return this._cid
   }
 
-    /**
+  /**
    * Get Version CID
    *
    * @returns {CID}
@@ -146,28 +154,6 @@ class DocID {
    */
   get version (): CID | undefined {
     return this._version
-  }
-
-  /**
-   * Get subnet code
-   *
-   * @returns {number}
-   * @readonly
-   */
-  get subnet (): number {
-    return this._subnet
-  }
-
-  /**
-   * Get subnet name 
-   *
-   * @returns {string}
-   * @readonly
-   */
-  get subnetName (): string {
-    const name = getKey(subnets, this._subnet)
-    if (!name) throw new Error('subnetName: no registered name available')
-    return name 
   }
 
   /**
@@ -209,11 +195,17 @@ class DocID {
   get bytes (): Uint8Array {
     if (this._bytes == null) {
       const codec = varint.encode(DOCID_CODEC)
-      const subnet = varint.encode(this._subnet)
-      const doctype = varint.encode(this._doctype)
-      const versionBytes =  this._version ? this._version.bytes : new Uint8Array(0)
+      const doctype = varint.encode(this.type)
+
+      let versionBytes 
+      if (this.version) {
+        versionBytes = this.cid.equals(this.version) ? varint.encode(0) : this.version.bytes
+      } else {
+        versionBytes = new Uint8Array(0)
+      }
+
       this._bytes = uint8ArrayConcat([
-        codec, subnet, doctype, this._cid.bytes, versionBytes
+        codec, doctype, this.cid.bytes, versionBytes
       ])
     }
     return this._bytes
@@ -236,7 +228,7 @@ class DocID {
     }
 
     return this.type === otherDocID.type &&
-      this.subnet === otherDocID.subnet &&
+      (this.version ? this.version.equals(otherDocID.version) : !Boolean(otherDocID.version)) &&
       this.cid.equals(otherDocID.cid)
   }
 
@@ -279,10 +271,8 @@ class DocID {
     return `DocID(${this.toString()})`
   }
 
-  [Symbol.toPrimitive](hint: string): string | Uint8Array {
-    if (hint === 'string') return this.toString()
-    if (hint === 'default') return this.bytes
-    throw new TypeError('DocId can not be cast to number')
+  [Symbol.toPrimitive](): string | Uint8Array {
+    return this.toString()
   }
 
   /**
@@ -300,7 +290,7 @@ class DocID {
         DocID.fromBytes(other)
         return true
       } else {
-        return (other.type || other.type === 0) && (other.subnet || other.subnet === 0) && Boolean(other.cid)
+        return (other.type || other.type === 0) && Boolean(other.cid)
       }
     } catch(e) {
       return false

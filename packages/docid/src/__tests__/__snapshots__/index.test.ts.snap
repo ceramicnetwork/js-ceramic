@@ -5,7 +5,6 @@ Uint8Array [
   206,
   1,
   0,
-  0,
   1,
   133,
   1,
@@ -46,40 +45,52 @@ Uint8Array [
 ]
 `;
 
-exports[`DocID .subnetName if registered 1`] = `"subnetName: no registered name available"`;
+exports[`DocID .toString() 1`] = `"kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s"`;
 
-exports[`DocID .toString() 1`] = `"k3y52l7mkcvtg023bt9txegccxe1bah8os3naw5asin3baf3l3t54atn0cuy98yws"`;
+exports[`DocID .toString(base) 1`] = `"zBEgHSXJoGTRkwcyVfXPnWmXzCSBZkLQVT4kB2euwxhipjw6MStntReK"`;
 
-exports[`DocID .toString(base) 1`] = `"znBNPZRnLUqDUeDDwQQZjLCZ6ApAb369GWdP8NRgs7NpStZ5KrH2wRYhH"`;
-
-exports[`DocID .toUrl() 1`] = `"ceramic://k3y52l7mkcvtg023bt9txegccxe1bah8os3naw5asin3baf3l3t54atn0cuy98yws"`;
+exports[`DocID .toUrl() 1`] = `"ceramic://kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s"`;
 
 exports[`DocID .typeName if registered 1`] = `"docTypeName: no registered name available"`;
 
-exports[`DocID create by parts (type:int, cid:cid) 1`] = `"k3y52l7mkcvtg023bt9txegccxe1bah8os3naw5asin3baf3l3t54atn0cuy98yws"`;
+exports[`DocID create by parts (type:int, cid:cid) 1`] = `"kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s"`;
 
-exports[`DocID create by parts (type:int, cid:string, version:null, subnet:int, multibase) 1`] = `"bzyaqcaibquareicuwnwvmtvn6lod7jrlly2paudgv2fp7wa6xfssjfrz6ctvluntxq"`;
+exports[`DocID create by parts (type:int, cid:string, version:null, multibase) 1`] = `"bzyaqcamfaejcavftnvle5lps3q72mk26gtyfazvorl75qhvzmusjmopqu5k5dm54"`;
 
-exports[`DocID create by parts (type:string, cid:string, version:null, subnet:string) 1`] = `"k3y52l7mkcvtg023bt9txegccxe1bah8os3naw5asin3baf3l3t54atn0cuy98yws"`;
+exports[`DocID create by parts (type:string, cid:string, version:null) 1`] = `"kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s"`;
 
-exports[`DocID create by parts (type:string, cid:string, version:string) 1`] = `"k9tgzwbevycbwc8nc6ta08vm7wmdhcwpomm34zughq8gmliunxy25lior3npdspknkf4lb5ngvkz0io0fvv9fq953bu0lkwobcckhuo00lo5p503kdqyz4a118"`;
+exports[`DocID create by parts (type:string, cid:string, version:string) 1`] = `"k3y52l7qbv1frxwipl4hp7e6jlu4f6u8upm2xv0irmedfkm5cnutmezzi3u7mytj4"`;
 
-exports[`DocID create from bytes  1`] = `"k3y52l7mkcvtg023bt9txegccxe1bah8os3naw5asin3baf3l3t54atn0cuy98yws"`;
+exports[`DocID create from bytes  1`] = `"kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s"`;
 
-exports[`DocID create from bytes inlcuding version 1`] = `"k9tgzwbevycbwc8nc6ta08vm7wmdhcwpomm34zughq8gmliunxy25lior3npdspknkf4lb5ngvkz0io0fvv9fq953bu0lkwobcckhuo00lo5p503kdqyz4a118"`;
+exports[`DocID create from bytes inlcuding version 0 1`] = `"k3y52l7qbv1frxwipl4hp7e6jlu4f6u8upm2xv0irmedfkm5cnutmezzi3u7mytj4"`;
 
-exports[`DocID create from bytes with multibase  1`] = `"bzyaqaaabquareicuwnwvmtvn6lod7jrlly2paudgv2fp7wa6xfssjfrz6ctvluntxq"`;
+exports[`DocID create from bytes inlcuding version 1`] = `"k1dpgaqe3i64kjqcp801r3sn7ysi5i0k7nxvs7j351s7kewfzr3l7mdxnj7szwo4kr9mn2qki5nnj0cv836ythy1t1gya9s25cn1nexst3jxi5o3h6qprfyju"`;
 
-exports[`DocID create from bytes with version 1`] = `"k9tgzwbevycbwc8nc6ta08vm7wmdhcwpomm34zughq8gmliunxy25lior3npdspknkf4lb5ngvkz0io0fvv9fq953bu0lkwobcckhuo00lo5p503kdqyz4a118"`;
+exports[`DocID create from bytes with multibase  1`] = `"bzyaqaamfaejcavftnvle5lps3q72mk26gtyfazvorl75qhvzmusjmopqu5k5dm54"`;
 
-exports[`DocID create from legacy string "/ceramic/" 1`] = `"k3y52l7mkcvtg023bt9txegccxe1bah8os3naw5asin3baf3l3t54atn0cuy98yws"`;
+exports[`DocID create from bytes with version (0) matching cid 1`] = `"k3y52l7qbv1frxwipl4hp7e6jlu4f6u8upm2xv0irmedfkm5cnutmezzi3u7mytj4"`;
 
-exports[`DocID create from legacy string "/ceramic/" with version param "?version=" 1`] = `"k9tgzwbevycbwc8nc6ta08vm7wmdhcwpomm34zughq8gmliunxy25lior3npdspknkf4lb5ngvkz0io0fvv9fq953bu0lkwobcckhuo00lo5p503kdqyz4a118"`;
+exports[`DocID create from bytes with version 0 1`] = `"k3y52l7qbv1frxwipl4hp7e6jlu4f6u8upm2xv0irmedfkm5cnutmezzi3u7mytj4"`;
 
-exports[`DocID create from string 1`] = `"k3y52l7mkcvtg023bt9txegccxe1bah8os3naw5asin3baf3l3t54atn0cuy98yws"`;
+exports[`DocID create from bytes with version 1`] = `"k1dpgaqe3i64kjqcp801r3sn7ysi5i0k7nxvs7j351s7kewfzr3l7mdxnj7szwo4kr9mn2qki5nnj0cv836ythy1t1gya9s25cn1nexst3jxi5o3h6qprfyju"`;
 
-exports[`DocID create from string including version 1`] = `"k9tgzwbevycbwc8nc6ta08vm7wmdhcwpomm34zughq8gmliunxy25lior3npdspknkf4lb5ngvkz0io0fvv9fq953bu0lkwobcckhuo00lo5p503kdqyz4a118"`;
+exports[`DocID create from legacy string "/ceramic/" 1`] = `"kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s"`;
 
-exports[`DocID create from string with version 1`] = `"k9tgzwbevycbwc8nc6ta08vm7wmdhcwpomm34zughq8gmliunxy25lior3npdspknkf4lb5ngvkz0io0fvv9fq953bu0lkwobcckhuo00lo5p503kdqyz4a118"`;
+exports[`DocID create from legacy string "/ceramic/" with version param "?version=" 1`] = `"k1dpgaqe3i64kjqcp801r3sn7ysi5i0k7nxvs7j351s7kewfzr3l7mdxnj7szwo4kr9mn2qki5nnj0cv836ythy1t1gya9s25cn1nexst3jxi5o3h6qprfyju"`;
 
-exports[`DocID create from url string 1`] = `"k3y52l7mkcvtg023bt9txegccxe1bah8os3naw5asin3baf3l3t54atn0cuy98yws"`;
+exports[`DocID create from legacy string "/ceramic/" with version param "?version=0" 1`] = `"k3y52l7qbv1frxwipl4hp7e6jlu4f6u8upm2xv0irmedfkm5cnutmezzi3u7mytj4"`;
+
+exports[`DocID create from string 1`] = `"kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s"`;
+
+exports[`DocID create from string including version 0 1`] = `"k3y52l7qbv1frxwipl4hp7e6jlu4f6u8upm2xv0irmedfkm5cnutmezzi3u7mytj4"`;
+
+exports[`DocID create from string including version 1`] = `"k1dpgaqe3i64kjqcp801r3sn7ysi5i0k7nxvs7j351s7kewfzr3l7mdxnj7szwo4kr9mn2qki5nnj0cv836ythy1t1gya9s25cn1nexst3jxi5o3h6qprfyju"`;
+
+exports[`DocID create from string with version (0) matching cid 1`] = `"k3y52l7qbv1frxwipl4hp7e6jlu4f6u8upm2xv0irmedfkm5cnutmezzi3u7mytj4"`;
+
+exports[`DocID create from string with version 0 1`] = `"k3y52l7qbv1frxwipl4hp7e6jlu4f6u8upm2xv0irmedfkm5cnutmezzi3u7mytj4"`;
+
+exports[`DocID create from string with version 1`] = `"k1dpgaqe3i64kjqcp801r3sn7ysi5i0k7nxvs7j351s7kewfzr3l7mdxnj7szwo4kr9mn2qki5nnj0cv836ythy1t1gya9s25cn1nexst3jxi5o3h6qprfyju"`;
+
+exports[`DocID create from url string 1`] = `"kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s"`;
