@@ -1,9 +1,10 @@
 import type Ipfs from 'ipfs'
 import express, { Request, Response, NextFunction } from 'express'
 import Ceramic from '@ceramicnetwork/ceramic-core'
-import type { CeramicConfig } from "@ceramicnetwork/ceramic-core";
+import type { CeramicConfig } from "@ceramicnetwork/ceramic-core"
 import { DoctypeUtils, RootLogger, Logger } from "@ceramicnetwork/ceramic-common"
-import { LogToFiles } from "./ceramic-logger-plugins"
+import { LogToFiles } from "./ceramic-logger-plugins" 
+import DocID from "@ceramicnetwork/docid"
 // @ts-ignore
 import cors from 'cors'
 
@@ -205,13 +206,10 @@ class CeramicDaemon {
    * Get document content
    */
   async show (req: Request, res: Response, next: NextFunction): Promise<void> {
-    let docId = ['/ceramic', req.params.cid].join('/')
-    if (req.query.version) {
-      docId = `${docId}?version=${req.query.version}`
-    }
+    const docId = DocID.fromString(req.params.cid, req.query.version ? req.query.version.toString() : undefined)
     try {
       const doc = await this.ceramic.loadDocument(docId)
-      res.json({ docId: doc.id, content: doc.content })
+      res.json({ docId: doc.id.toString(), content: doc.content })
     } catch (e) {
       return next(e)
     }
@@ -222,14 +220,11 @@ class CeramicDaemon {
    * Get document state
    */
   async state (req: Request, res: Response, next: NextFunction): Promise<void> {
-    let docId = ['/ceramic', req.params.cid].join('/')
-    if (req.query.version) {
-      docId = `${docId}?version=${req.query.version}`
-    }
+    const docId = DocID.fromString(req.params.cid, req.query.version ? req.query.version.toString() : undefined)
     try {
       const doc = await this.ceramic.loadDocument(docId)
 
-      res.json({ docId: doc.id, state: DoctypeUtils.serializeState(doc.state) })
+      res.json({ docId: doc.id.toString(), state: DoctypeUtils.serializeState(doc.state) })
     } catch (e) {
       return next(e)
     }
@@ -240,10 +235,10 @@ class CeramicDaemon {
    * Get document versions
    */
   async versions (req: Request, res: Response, next: NextFunction): Promise<void> {
-    const docId = ['/ceramic', req.params.cid].join('/')
+    const docId = DocID.fromString(req.params.cid)
     try {
       const versions = await this.ceramic.listVersions(docId)
-      res.json({ docId, versions: versions })
+      res.json({ docId: docId.toString(), versions: versions })
     } catch (e) {
       return next(e)
     }
@@ -254,7 +249,7 @@ class CeramicDaemon {
    * Get all document records
    */
   async records (req: Request, res: Response, next: NextFunction): Promise<void> {
-    const docId = ['/ceramic', req.params.cid].join('/')
+    const docId = DocID.fromString(req.params.cid)
     try {
       const records = await this.ceramic.loadDocumentRecords(docId)
       const serializedRecords = records.map((r: any) => {
@@ -264,7 +259,7 @@ class CeramicDaemon {
         }
       })
 
-      res.json({ docId, records: serializedRecords })
+      res.json({ docId: docId.toString(), records: serializedRecords })
     } catch (e) {
       return next(e)
     }
@@ -284,7 +279,7 @@ class CeramicDaemon {
 
     try {
       const doctype = await this.ceramic.applyRecord(docId, DoctypeUtils.deserializeRecord(record), opts)
-      res.json({ docId: doctype.id, state: DoctypeUtils.serializeState(doctype.state) })
+      res.json({ docId: doctype.id.toString(), state: DoctypeUtils.serializeState(doctype.state) })
     } catch (e) {
       return next(e)
     }
@@ -295,10 +290,10 @@ class CeramicDaemon {
    * Pin document
    */
   async pinDocument (req: Request, res: Response, next: NextFunction): Promise<void> {
-    const docId = ['/ceramic', req.params.cid].join('/')
+    const docId = DocID.fromString(req.params.cid)
     try {
       await this.ceramic.pin.add(docId)
-      res.json({ docId, isPinned: true })
+      res.json({ docId: docId.toString(), isPinned: true })
     } catch (e) {
       return next(e)
     }
@@ -309,10 +304,10 @@ class CeramicDaemon {
    * Unpin document
    */
   async unpinDocument (req: Request, res: Response, next: NextFunction): Promise<void> {
-    const docId = ['/ceramic', req.params.cid].join('/')
+    const docId = DocID.fromString(req.params.cid)
     try {
       await this.ceramic.pin.rm(docId)
-      res.json({ docId, isPinned: false })
+      res.json({ docId: docId.toString(), isPinned: false })
     } catch (e) {
       return next(e)
     }
@@ -323,9 +318,9 @@ class CeramicDaemon {
    * List pinned documents
    */
   async listPinned (req: Request, res: Response, next: NextFunction): Promise<void> {
-    let docId: string;
+    let docId: DocID;
     if (req.params.cid) {
-      docId = ['/ceramic', req.params.cid].join('/')
+      docId = DocID.fromString(req.params.cid)
     }
     try {
       const pinnedDocIds = []

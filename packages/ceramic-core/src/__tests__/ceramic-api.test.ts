@@ -8,6 +8,7 @@ import { AnchorStatus, DoctypeUtils } from "@ceramicnetwork/ceramic-common"
 import dagJose from 'dag-jose'
 import basicsImport from 'multiformats/cjs/src/basics-import.js'
 import legacy from 'multiformats/cjs/src/legacy.js'
+import DocID from '@ceramicnetwork/docid'
 
 jest.mock('../store/level-state-store')
 
@@ -117,7 +118,8 @@ describe('Ceramic API', () => {
       expect(docOg.content).toEqual({ test: 'abcde' })
       expect(docOg.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
-      let docV0Id = DoctypeUtils.createDocIdFromBase(docOg.id, docOg.state.log[1].toString())
+      let docV0Id = DocID.fromBytes(docOg.id.bytes, docOg.state.log[1].toString())
+      console.log(docV0Id)
       const docV0 = await ceramic.loadDocument<TileDoctype>(docV0Id)
 
       expect(docV0.state).toEqual(stateOg)
@@ -132,7 +134,7 @@ describe('Ceramic API', () => {
         expect(e.message).toEqual('The version of the document is readonly. Checkout the latest HEAD in order to update.')
       }
 
-      // try to call Ceramic API directly
+      // // try to call Ceramic API directly
       try {
         const updateRecord = await TileDoctype._makeRecord(docV0, ceramic.context.did, { content: { test: 'fghj' } })
         await ceramic.context.api.applyRecord(docV0Id, updateRecord)
@@ -143,7 +145,7 @@ describe('Ceramic API', () => {
 
       // try to checkout not anchored version
       try {
-        docV0Id = DoctypeUtils.createDocIdFromBase(docOg.id, docOg.state.log[2].toString())
+        docV0Id = DocID.fromBytes(docOg.id.bytes, docOg.state.log[2].toString())
         await ceramic.loadDocument<TileDoctype>(docV0Id)
         throw new Error('Should not be able to fetch not anchored version')
       } catch (e) {
@@ -165,7 +167,7 @@ describe('Ceramic API', () => {
 
       const tileDocParams: TileParams = {
         metadata: {
-          schema: schemaDoc.id, owners: [owner]
+          schema: schemaDoc.id.toString(), owners: [owner]
         }, content: { a: 1 },
       }
 
@@ -173,6 +175,7 @@ describe('Ceramic API', () => {
         await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, tileDocParams)
         throw new Error('Should not be able to create an invalid document')
       } catch (e) {
+        console.log(e)
         expect(e.message).toEqual('Validation Error: data[\'a\'] should be string')
       }
 
@@ -191,7 +194,7 @@ describe('Ceramic API', () => {
 
       const tileDocParams: TileParams = {
         metadata: {
-          schema: schemaDoc.id, owners: [owner]
+          schema: schemaDoc.id.toString(), owners: [owner]
         }, content: { a: "test" }
       }
 
@@ -213,7 +216,7 @@ describe('Ceramic API', () => {
 
       const tileDocParams: TileParams = {
         metadata: {
-          schema: schemaDoc.id, owners: [owner]
+          schema: schemaDoc.id.toString(), owners: [owner]
         }, content: { a: 1 },
       }
 
@@ -243,7 +246,7 @@ describe('Ceramic API', () => {
 
       await doctype.change({
         metadata: {
-          owners: [owner], schema: schemaDoc.id
+          owners: [owner], schema: schemaDoc.id.toString()
         }
       })
 
@@ -274,7 +277,7 @@ describe('Ceramic API', () => {
       try {
         await doctype.change({
           metadata: {
-            owners: [owner], schema: schemaDoc.id
+            owners: [owner], schema: schemaDoc.id.toString()
           }
         })
         throw new Error('Should not be able to update the document with invalid content')
@@ -305,7 +308,7 @@ describe('Ceramic API', () => {
 
       await doctype.change({
         content: { a: 'x' }, metadata: {
-          owners: [owner], schema: schemaDoc.id
+          owners: [owner], schema: schemaDoc.id.toString()
         }
       })
 

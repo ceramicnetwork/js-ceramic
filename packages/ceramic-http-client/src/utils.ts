@@ -1,4 +1,5 @@
 import fetch from "cross-fetch"
+import DocID from "@ceramicnetwork/docid"
 
 export async function fetchJson(url: string, payload?: any): Promise<any> {
     let opts
@@ -13,3 +14,8 @@ export async function fetchJson(url: string, payload?: any): Promise<any> {
     if (res.error) throw new Error(res.error)
     return res
 }
+
+export function typeDocID(docId: DocID | string): DocID  {
+    return (typeof docId === 'string') ? DocID.fromString(docId) : docId
+}
+  

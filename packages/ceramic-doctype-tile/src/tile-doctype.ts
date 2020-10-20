@@ -33,7 +33,7 @@ export class TileDoctype extends Doctype {
         }
 
         const updateRecord = await TileDoctype._makeRecord(this, this.context.did, params.content, params.metadata?.owners, params.metadata?.schema)
-        const updated = await this.context.api.applyRecord(this.id, updateRecord, opts)
+        const updated = await this.context.api.applyRecord(this.id.toString(), updateRecord, opts)
         this.state = updated.state
     }
 

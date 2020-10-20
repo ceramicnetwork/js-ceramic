@@ -1,5 +1,6 @@
 import { DID, DIDProvider } from 'dids'
 import { Doctype, DoctypeHandler, DocOpts, DocParams } from "./doctype"
+import DocID from '@ceramicnetwork/docid'
 
 /**
  * Describes Ceramic pinning functionality
@@ -9,19 +10,19 @@ export interface PinApi {
      * Pin document
      * @param docId - Document ID
      */
-    add(docId: string): Promise<void>;
+    add(docId: DocID): Promise<void>;
 
     /**
      * Unpin document
      * @param docId - Document ID
      */
-    rm(docId: string): Promise<void>;
+    rm(docId: DocID): Promise<void>;
 
     /**
      * List pinned documents
      * @param docId - Document ID for filtering
      */
-    ls(docId?: string): Promise<AsyncIterable<string>>;
+    ls(docId?: DocID): Promise<AsyncIterable<string>>;
 }
 
 /**
@@ -68,19 +69,19 @@ export interface CeramicApi {
      * @param docId - Document ID
      * @param opts - Initialization options
      */
-    loadDocument<T extends Doctype>(docId: string, opts?: DocOpts): Promise<T>;
+    loadDocument<T extends Doctype>(docId: DocID | string, opts?: DocOpts): Promise<T>;
 
     /**
      * Load all document records by document ID
      * @param docId - Document ID
      */
-    loadDocumentRecords(docId: string): Promise<Array<Record<string, any>>>;
+    loadDocumentRecords(docId: DocID | string): Promise<Array<Record<string, any>>>;
 
     /**
      * Lists current Doctype versions
      * @param docId - Document ID
      */
-    listVersions(docId: string): Promise<string[]>;
+    listVersions(docId: DocID | string): Promise<string[]>;
 
     /**
      * Applies record on the existing document
@@ -88,7 +89,7 @@ export interface CeramicApi {
      * @param record - Record to be applied
      * @param opts - Initialization options
      */
-    applyRecord<T extends Doctype>(docId: string, record: object, opts?: DocOpts): Promise<T>;
+    applyRecord<T extends Doctype>(docId: DocID | string, record: object, opts?: DocOpts): Promise<T>;
 
     /**
      * Set DID provider

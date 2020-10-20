@@ -198,6 +198,7 @@ describe('Level data store', () => {
     const genesis = await TileDoctype.makeGenesis({ content: initialContent, metadata: { owners, tags: ['3id'] } }, context)
     const genesisCid = await dispatcher.storeRecord(genesis)
     const doc = await Document.create(genesisCid, doctypeHandler, dispatcher, store, context)
+
     await anchorUpdate(doc.doctype)
 
     let docState = await store.stateStore.load(doc.id)

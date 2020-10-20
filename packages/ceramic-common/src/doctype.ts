@@ -3,6 +3,7 @@ import cloneDeep from 'lodash.clonedeep'
 import { EventEmitter } from "events"
 import type { Context } from "./context"
 import { DoctypeUtils } from "./utils/doctype-utils"
+import DocID from '@ceramicnetwork/docid'
 
 /**
  * Describes signature status
@@ -99,8 +100,8 @@ export abstract class Doctype extends EventEmitter {
         super()
     }
 
-    get id(): string {
-        return DoctypeUtils.createDocIdFromGenesis(this._state.log[0])
+    get id(): DocID {
+        return new DocID(this._state.doctype, this._state.log[0])
     }
 
     get doctype(): string {

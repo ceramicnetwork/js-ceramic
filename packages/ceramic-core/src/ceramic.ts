@@ -4,7 +4,7 @@ import Document from './document'
 import { AnchorServiceFactory } from "./anchor/anchor-service-factory";
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import KeyDidResolver from '@ceramicnetwork/key-did-resolver'
-
+import DocID from '@ceramicnetwork/docid'
 import { CeramicApi, DIDProvider, PinApi } from "@ceramicnetwork/ceramic-common"
 import {
   Doctype,
@@ -50,6 +50,10 @@ export interface CeramicConfig {
   topic?: string;
 }
 
+const normalizeDocID = (docId: DocID | string): DocID => {
+  return (typeof docId === 'string') ? DocID.fromString(docId) : docId
+}
+
 /**
  * Ceramic core implementation
  */
@@ -92,16 +96,15 @@ class Ceramic implements CeramicApi {
    */
   _initPinApi(): PinApi {
     return {
-      add: async (docId: string): Promise<void> => {
+      add: async (docId: DocID): Promise<void> => {
         const document = await this._loadDoc(docId)
         await this.pinStore.add(document.doctype)
       },
-      rm: async (docId: string): Promise<void> => {
+      rm: async (docId: DocID): Promise<void> => {
         await this.pinStore.rm(docId)
       },
-      ls: async (docId?: string): Promise<AsyncIterable<string>> => {
-        const normalized = docId ? DoctypeUtils.getBaseDocId(DoctypeUtils.normalizeDocId(docId)) : undefined
-        const docIds = await this.pinStore.ls(normalized)
+      ls: async (docId?: DocID): Promise<AsyncIterable<string>> => {
+        const docIds = await this.pinStore.ls(docId.baseID)
         return {
           [Symbol.asyncIterator](): any {
             let index = 0
@@ -218,8 +221,9 @@ class Ceramic implements CeramicApi {
    * @param record - Record to be applied
    * @param opts - Initialization options
    */
-  async applyRecord<T extends Doctype>(docId: string, record: object, opts?: DocOpts): Promise<T> {
-    if (DoctypeUtils.getVersionId(docId) != null) {
+  async applyRecord<T extends Doctype>(docId: DocID | string, record: object, opts?: DocOpts): Promise<T> {
+    docId = normalizeDocID(docId)
+    if (docId.version != null) {
       throw new Error('The version of the document is readonly. Checkout the latest HEAD in order to update.')
     }
 
@@ -234,9 +238,7 @@ class Ceramic implements CeramicApi {
    * @param genesisCid
    */
   getDocFromMap(genesisCid: any): Document {
-    const id = DoctypeUtils.createDocIdFromGenesis(genesisCid)
-    const normalizedDocId = DoctypeUtils.normalizeDocId(id)
-    return this._docmap[normalizedDocId]
+    return this._docmap[genesisCid.toString()]
   }
 
   /**
@@ -268,8 +270,7 @@ class Ceramic implements CeramicApi {
     }
 
     doc = await Document.create(genesisCid, doctypeHandler, this.dispatcher, this.pinStore, this.context, opts, this._validateDocs);
-    const normalizedId = DoctypeUtils.normalizeDocId(doc.id)
-    this._docmap[normalizedId] = doc
+    this._docmap[doc.id.toString()] = doc
     return doc
   }
 
@@ -306,8 +307,7 @@ class Ceramic implements CeramicApi {
     }
 
     doc = await Document.create(genesisCid, doctypeHandler, this.dispatcher, this.pinStore, this.context, opts, this._validateDocs);
-    const normalizedId = DoctypeUtils.normalizeDocId(doc.id)
-    this._docmap[normalizedId] = doc
+    this._docmap[doc.id.toString()] = doc
     return doc
   }
 
@@ -316,21 +316,18 @@ class Ceramic implements CeramicApi {
    * @param docId - Document ID
    * @param opts - Initialization options
    */
-  async loadDocument<T extends Doctype>(docId: string, opts: DocOpts = {}): Promise<T> {
-    const normalizedId = DoctypeUtils.normalizeDocId(docId)
-
-    const baseDocId = DoctypeUtils.getBaseDocId(normalizedId)
-    const doc = await this._loadDoc(baseDocId, opts)
-
-    const version = DoctypeUtils.getVersionId(normalizedId)
-    return (version? await doc.getVersion<T>(version) : doc.doctype) as T
+  async loadDocument<T extends Doctype>(docId: DocID | string, opts: DocOpts = {}): Promise<T> {
+    docId = normalizeDocID(docId)
+    const doc = await this._loadDoc(docId.baseID, opts)
+    return (docId.version? await doc.getVersion<T>(docId.version) : doc.doctype) as T
   }
 
   /**
    * Load all document records by document ID
    * @param docId - Document ID
    */
-  async loadDocumentRecords(docId: string): Promise<Array<Record<string, any>>> {
+  async loadDocumentRecords(docId: DocID | string): Promise<Array<Record<string, any>>> {
+    docId = normalizeDocID(docId)
     const doc = await this.loadDocument(docId)
     const { state } = doc
 
@@ -348,20 +345,22 @@ class Ceramic implements CeramicApi {
    * @param docId - Document ID
    * @param opts - Initialization options
    */
-  async _loadDoc(docId: string, opts: DocOpts = {}): Promise<Document> {
-    const normalizedId = DoctypeUtils.normalizeDocId(docId)
+  async _loadDoc(docId: DocID | string, opts: DocOpts = {}): Promise<Document> {
+    docId = normalizeDocID(docId)
+    const docIdStr = docId.toString()
 
-    if (!this._docmap[normalizedId]) {
-      this._docmap[normalizedId] = await Document.load(docId, this.findHandler.bind(this), this.dispatcher, this.pinStore, this.context, opts)
+    if (!this._docmap[docIdStr]) {
+      this._docmap[docIdStr] = await Document.load(docId, this.findHandler.bind(this), this.dispatcher, this.pinStore, this.context, opts)
     }
-    return this._docmap[normalizedId]
+    return this._docmap[docIdStr]
   }
 
   /**
    * Lists ceramic
    * @param docId - Document ID
    */
-  async listVersions(docId: string): Promise<string[]> {
+  async listVersions(docId: DocID | string): Promise<string[]> {
+    docId = normalizeDocID(docId)
     const doc = await this._loadDoc(docId, {
       applyOnly: true
     })

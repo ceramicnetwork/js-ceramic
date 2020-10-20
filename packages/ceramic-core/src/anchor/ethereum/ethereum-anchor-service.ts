@@ -8,6 +8,7 @@ import { CeramicConfig } from "../../ceramic";
 import AnchorServiceResponse from "../anchor-service-response";
 import { AnchorService } from "@ceramicnetwork/ceramic-common"
 import { AnchorProof } from "@ceramicnetwork/ceramic-common"
+import DocID from "@ceramicnetwork/docid";
 
 /**
  * CID-docId pair
@@ -61,6 +62,7 @@ export default class EthereumAnchorService extends AnchorService {
      * @param head - Head CID of the document
      */
     async requestAnchor(docId: string, head: CID): Promise<void> {
+        console.log(DocID)
         const cidDocPair: CidDoc = { cid: head, docId };
 
         // send initial request

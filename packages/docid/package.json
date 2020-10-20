@@ -24,8 +24,12 @@
     "lib": "lib"
   },
   "dependencies": {
-    "cids": "^1.0.1",
+    "cids": "^1.0.0",
     "multibase": "^3.0.1",
     "varint": "^6.0.0"
-  }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "gitHead": "b1e70c449a2b4df7a7cb61b811059a7fef30c7cc"
 }
