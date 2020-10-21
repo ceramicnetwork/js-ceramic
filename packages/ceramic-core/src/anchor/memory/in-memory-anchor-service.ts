@@ -70,9 +70,9 @@ class InMemoryAnchorService extends AnchorService {
         let currentNonce
         if (DoctypeUtils.isSignedRecord(anchorRecord)) {
           const payload = await this._dispatcher.retrieveRecord(anchorRecord.link)
-          currentNonce = payload.header?.anchor?.nonce || 0
+          currentNonce = payload.header?.nonce || 0
         } else {
-          currentNonce = anchorRecord.header?.anchor?.nonce || 0
+          currentNonce = anchorRecord.header?.nonce || 0
         }
         if (selectedPair == null || currentNonce < nonce) {
           selectedPair = pair

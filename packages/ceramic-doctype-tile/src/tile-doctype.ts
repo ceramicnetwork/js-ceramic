@@ -111,10 +111,7 @@ export class TileDoctype extends Doctype {
             header.owners = newOwners
         }
 
-        const nonce = await TileDoctype._calculateNonce(doctype)
-        header.anchor = {
-            nonce,
-        }
+        header.nonce = TileDoctype._calculateNonce(doctype)
 
         if (newContent == null) {
             newContent = doctype.content
@@ -128,7 +125,7 @@ export class TileDoctype extends Doctype {
     /**
      * Calculates anchor nonce
      */
-    private static async _calculateNonce(doctype: Doctype): Promise<number> {
+    private static _calculateNonce(doctype: Doctype): Promise<number> {
         // If there hasn't been any update prior to this we should not set the nonce
         if (!doctype.state.next) {
             return

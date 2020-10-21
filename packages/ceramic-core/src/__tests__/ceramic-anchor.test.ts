@@ -259,7 +259,7 @@ describe('Ceramic anchoring', () => {
     await ceramic2.close()
   })
 
-  it('in the middle anchored', async () => {
+  it.skip('in the middle anchored', async () => {
     await ipfs2.swarm.connect(multaddr1)
 
     const ceramic1 = await createCeramic(ipfs1, true, topic)
