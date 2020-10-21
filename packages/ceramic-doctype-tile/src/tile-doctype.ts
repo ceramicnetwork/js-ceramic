@@ -134,21 +134,10 @@ export class TileDoctype extends Doctype {
             return 0 // return nonce 0 if IPFS is not available
         }
 
-        let nonce = 0
-        let cid = doctype.head
-
-        while (cid != null) {
-            let record = (await doctype.context.ipfs.dag.get(cid)).value
-            if (DoctypeUtils.isAnchorRecord(record)) {
-                return nonce
-            }
-            if (DoctypeUtils.isSignedRecord(record)) {
-                record = (await doctype.context.ipfs.dag.get(record.link)).value
-            }
-            cid = record.prev
-            nonce++
-        }
-        return nonce
+        // If there hasn't been any update prior to this we should not set the nonce
+        if (!doctype.state.next) return
+        // Get the current nonce and increment it by one
+        return (doctype.state.next.metadata?.nonce || 0)++
     }
 
     /**
@@ -166,4 +155,3 @@ export class TileDoctype extends Doctype {
     }
 
 }
-
