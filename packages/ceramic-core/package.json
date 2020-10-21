@@ -74,9 +74,6 @@
     "testEnvironment": "node",
     "transformIgnorePatterns": [
       "/node_modules(?!/did-jwt)/"
-    ],
-    "modulePathIgnorePatterns": [
-      "<rootDir>/lib"
     ]
   },
   "gitHead": "c58eb9659f5fdd976aca2db6465619c20ba30ff9"
