@@ -101,8 +101,10 @@ describe('Ceramic anchoring', () => {
   it('test all records anchored', async () => {
     await ipfs2.swarm.connect(multaddr1)
 
-    const ceramic1 = await createCeramic(ipfs1, true, topic)
-    const ceramic2 = await createCeramic(ipfs2, false, topic)
+    const [ceramic1, ceramic2] = await Promise.all([
+      createCeramic(ipfs1, true, topic),
+      createCeramic(ipfs2, false, topic)
+    ])
 
     const owner = ceramic1.context.did.id
 
@@ -115,7 +117,7 @@ describe('Ceramic anchoring', () => {
     await ceramic1.context.anchorService.anchor()
 
     const updatePromise = new Promise(resolve => {
-      doctype.on('change', () => {
+      doctype.once('change', () => {
         resolve()
       })
     })
@@ -136,8 +138,10 @@ describe('Ceramic anchoring', () => {
   it('test no records anchored', async () => {
     await ipfs2.swarm.connect(multaddr1)
 
-    const ceramic1 = await createCeramic(ipfs1, true, topic)
-    const ceramic2 = await createCeramic(ipfs2, false, topic)
+    const [ceramic1, ceramic2] = await Promise.all([
+      createCeramic(ipfs1, true, topic),
+      createCeramic(ipfs2, false, topic)
+    ])
 
     const owner = ceramic1.context.did.id
 
@@ -159,8 +163,10 @@ describe('Ceramic anchoring', () => {
   it('test first anchored and others not', async () => {
     await ipfs2.swarm.connect(multaddr1)
 
-    const ceramic1 = await createCeramic(ipfs1, true, topic)
-    const ceramic2 = await createCeramic(ipfs2, false, topic)
+    const [ceramic1, ceramic2] = await Promise.all([
+      createCeramic(ipfs1, true, topic),
+      createCeramic(ipfs2, false, topic)
+    ])
     const owner = ceramic1.context.did.id
 
     const doctype = await ceramic1.createDocument(DOCTYPE_TILE, { content: { a: 123, b: 4567 } }, { applyOnly: false })
@@ -172,7 +178,7 @@ describe('Ceramic anchoring', () => {
     await ceramic1.context.anchorService.anchor()
 
     const updatePromise = new Promise(resolve => {
-      doctype.on('change', () => {
+      doctype.once('change', () => {
         resolve()
       })
     })
@@ -193,8 +199,10 @@ describe('Ceramic anchoring', () => {
   it('test first anchored, the middle not, last one anchored', async () => {
     await ipfs2.swarm.connect(multaddr1)
 
-    const ceramic1 = await createCeramic(ipfs1, true, topic)
-    const ceramic2 = await createCeramic(ipfs2, false, topic)
+    const [ceramic1, ceramic2] = await Promise.all([
+      createCeramic(ipfs1, true, topic),
+      createCeramic(ipfs2, false, topic)
+    ])
     const owner = ceramic1.context.did.id
 
     const doctype = await ceramic1.createDocument(DOCTYPE_TILE, { content: { x: 1 } }, { applyOnly: false })
@@ -207,7 +215,7 @@ describe('Ceramic anchoring', () => {
     await ceramic1.context.anchorService.anchor()
 
     const updatePromise = new Promise(resolve => {
-      doctype.on('change', () => {
+      doctype.once('change', () => {
         resolve()
       })
     })
@@ -228,8 +236,10 @@ describe('Ceramic anchoring', () => {
   it('test last one anchored', async () => {
     await ipfs2.swarm.connect(multaddr1)
 
-    const ceramic1 = await createCeramic(ipfs1, true, topic)
-    const ceramic2 = await createCeramic(ipfs2, false, topic)
+    const [ceramic1, ceramic2] = await Promise.all([
+      createCeramic(ipfs1, true, topic),
+      createCeramic(ipfs2, false, topic)
+    ])
     const owner = ceramic1.context.did.id
 
     const doctype = await ceramic1.createDocument(DOCTYPE_TILE, { content: { x: 1 } }, { applyOnly: true })
@@ -241,7 +251,7 @@ describe('Ceramic anchoring', () => {
     await ceramic1.context.anchorService.anchor()
 
     const updatePromise = new Promise(resolve => {
-      doctype.on('change', () => {
+      doctype.once('change', () => {
         resolve()
       })
     })
@@ -262,8 +272,10 @@ describe('Ceramic anchoring', () => {
   it.skip('in the middle anchored', async () => {
     await ipfs2.swarm.connect(multaddr1)
 
-    const ceramic1 = await createCeramic(ipfs1, true, topic)
-    const ceramic2 = await createCeramic(ipfs2, false, topic)
+    const [ceramic1, ceramic2] = await Promise.all([
+      createCeramic(ipfs1, true, topic),
+      createCeramic(ipfs2, false, topic)
+    ])
     const owner = ceramic1.context.did.id
 
     const doctype = await ceramic1.createDocument(DOCTYPE_TILE, { content: { x: 1 } }, { applyOnly: true })
@@ -272,7 +284,7 @@ describe('Ceramic anchoring', () => {
     await doctype.change({ content: { x: doctype.content.x + 1 }, metadata: { owners: [owner] } }, { applyOnly: true })
 
     let updatePromise = new Promise(resolve => {
-      doctype.on('change', () => {
+      doctype.once('change', () => {
         resolve()
       })
     })
@@ -287,7 +299,7 @@ describe('Ceramic anchoring', () => {
     await doctype.change({ content: { x: doctype.content.x + 1 }, metadata: { owners: [owner] } }, { applyOnly: false })
 
     updatePromise = new Promise(resolve => {
-      doctype.on('change', () => {
+      doctype.once('change', () => {
         resolve()
       })
     })
@@ -313,8 +325,10 @@ describe('Ceramic anchoring', () => {
   it('test the same state anchored twice, first one wins', async () => {
     await ipfs2.swarm.connect(multaddr1)
 
-    const ceramic1 = await createCeramic(ipfs1, true, topic)
-    const ceramic2 = await createCeramic(ipfs2, false, topic)
+    const [ceramic1, ceramic2] = await Promise.all([
+      createCeramic(ipfs1, true, topic),
+      createCeramic(ipfs2, false, topic)
+    ])
     const owner = ceramic1.context.did.id
 
     const doctype = await ceramic1.createDocument(DOCTYPE_TILE, { content: { x: 1 } }, { applyOnly: true })
@@ -327,7 +341,7 @@ describe('Ceramic anchoring', () => {
     await ceramic1.context.anchorService.anchor()
 
     const updatePromise = new Promise(resolve => {
-      doctype.on('change', () => {
+      doctype.once('change', () => {
         resolve()
       })
     })
