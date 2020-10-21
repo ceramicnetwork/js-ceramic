@@ -10,7 +10,6 @@ import {
     DoctypeStatic,
     DocOpts,
     DocParams,
-    DoctypeUtils,
     Context
 } from "@ceramicnetwork/ceramic-common"
 
@@ -67,7 +66,7 @@ export class TileDoctype extends Doctype {
      * @param opts - Initialization options
      */
     static async makeGenesis(params: DocParams, context?: Context, opts: DocOpts = {}): Promise<Record<string, any>> {
-        const metadata = params.metadata? params.metadata : { owners: [], anchor: { nonce: 0 } }
+        const metadata = params.metadata? params.metadata : { owners: [] }
 
         // check for DID and authentication
         if (!context.did || !context.did.authenticated) {
@@ -130,14 +129,12 @@ export class TileDoctype extends Doctype {
      * Calculates anchor nonce
      */
     private static async _calculateNonce(doctype: Doctype): Promise<number> {
-        if (doctype.context.ipfs == null) {
-            return 0 // return nonce 0 if IPFS is not available
-        }
-
         // If there hasn't been any update prior to this we should not set the nonce
-        if (!doctype.state.next) return
+        if (!doctype.state.next) {
+            return
+        }
         // Get the current nonce and increment it by one
-        return (doctype.state.next.metadata?.nonce || 0)++
+        return (doctype.state.next.metadata?.nonce || 0) + 1
     }
 
     /**
