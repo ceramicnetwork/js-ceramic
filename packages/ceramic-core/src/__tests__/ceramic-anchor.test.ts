@@ -300,6 +300,8 @@ describe('Ceramic anchoring', () => {
     expect(doctype.content).toEqual({ x: 5 })
     expect(doctype.state.log.length).toEqual(7)
 
+    await new Promise(resolve => setTimeout(resolve, 1000)) // wait to propagate
+
     const doctype2 = await ceramic2.loadDocument(doctype.id)
     expect(doctype.content).toEqual(doctype2.content)
     expect(doctype.state.log.length).toEqual(doctype2.state.log.length)
