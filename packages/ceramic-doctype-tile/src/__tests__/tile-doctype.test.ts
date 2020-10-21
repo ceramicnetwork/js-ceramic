@@ -228,8 +228,6 @@ describe('TileDoctypeHandler', () => {
 
     await context.ipfs.dag.put(RECORDS.genesisGenerated.jws, FAKE_CID_1)
 
-    const x = await context.ipfs.dag.get(FAKE_CID_1)
-
     await context.ipfs.dag.put(RECORDS.genesisGenerated.linkedBlock, RECORDS.genesisGenerated.jws.link)
 
     const state = await tileDoctypeHandler.applyRecord(RECORDS.genesisGenerated.jws, FAKE_CID_1, context)
