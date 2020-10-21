@@ -271,27 +271,31 @@ describe('Ceramic anchoring', () => {
     await doctype.change({ content: { x: doctype.content.x + 1 }, metadata: { owners: [owner] } }, { applyOnly: false })
     await doctype.change({ content: { x: doctype.content.x + 1 }, metadata: { owners: [owner] } }, { applyOnly: true })
 
-    // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-    // @ts-ignore
-    await ceramic1.context.anchorService.anchor()
-    await new Promise(resolve => {
+    let updatePromise = new Promise(resolve => {
       doctype.on('change', () => {
         resolve()
       })
     })
+
+    // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+    // @ts-ignore
+    await ceramic1.context.anchorService.anchor()
+    await updatePromise
 
     await doctype.change({ content: { x: doctype.content.x + 1 }, metadata: { owners: [owner] } }, { applyOnly: true })
     await doctype.change({ content: { x: doctype.content.x + 1 }, metadata: { owners: [owner] } }, { applyOnly: true })
     await doctype.change({ content: { x: doctype.content.x + 1 }, metadata: { owners: [owner] } }, { applyOnly: false })
 
-    // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-    // @ts-ignore
-    await ceramic1.context.anchorService.anchor()
-    await new Promise(resolve => {
+    updatePromise = new Promise(resolve => {
       doctype.on('change', () => {
         resolve()
       })
     })
+
+    // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+    // @ts-ignore
+    await ceramic1.context.anchorService.anchor()
+    await updatePromise
 
     expect(doctype.content).toEqual({ x: 5 })
     expect(doctype.state.log.length).toEqual(7)
