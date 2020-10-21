@@ -4,9 +4,15 @@ import { encode as base64Encode } from '@ethersproject/base64'
 import { randomBytes } from '@ethersproject/random'
 
 import { DID } from 'dids'
-import { Doctype, DoctypeConstructor, DoctypeStatic, DocOpts, DocParams } from "@ceramicnetwork/ceramic-common"
-import { Context } from "@ceramicnetwork/ceramic-common"
-import { DoctypeUtils } from "@ceramicnetwork/ceramic-common/lib"
+import {
+    Doctype,
+    DoctypeConstructor,
+    DoctypeStatic,
+    DocOpts,
+    DocParams,
+    DoctypeUtils,
+    Context
+} from "@ceramicnetwork/ceramic-common"
 
 const DOCTYPE = 'tile'
 
