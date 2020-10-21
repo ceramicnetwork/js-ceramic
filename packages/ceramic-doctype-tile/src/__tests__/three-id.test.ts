@@ -68,7 +68,7 @@ const RECORDS = {
             "signature": "cccc"
           }
         ],
-        "link": "bafyreib2rxk3rybk3aobmv5cjuql3bm2twh4jo5uxgf5kpqcsgz7soitae"
+        "link": "bafyreidtes44hjeirpicdai2tm5og4pdgqb7yvphqm5glhtxkudnc4ali4"
       },
       payload: {
         "id": "bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu",
@@ -80,15 +80,17 @@ const RECORDS = {
           }
         ],
         "prev": "bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu",
-        "header": {}
+        "header": {
+          "anchor": {
+            "nonce": 1
+          }
+        }
       }
     }
   },
   r2: { record: { proof: FAKE_CID_4 } },
   proof: {
-    value: {
       blockNumber: 123456
-    }
   }
 }
 
@@ -131,13 +133,13 @@ describe('ThreeIdHandler', () => {
       dag: {
         put(rec: any, cid?: CID): any {
           if (cid) {
-            recs[cid.toString()] = rec
+            recs[cid.toString()] = { value: rec }
             return cid
           }
           // stringify as a way of doing deep copy
           const clone = cloneDeep(rec)
           const c = hash(JSON.stringify(clone))
-          recs[c.toString()] = clone
+          recs[c.toString()] = { value: clone }
           return c
         },
         get(cid: any): any {
@@ -194,7 +196,7 @@ describe('ThreeIdHandler', () => {
     await context.ipfs.dag.put(record, FAKE_CID_1)
 
     const payload = dagCBOR.util.deserialize(record.linkedBlock)
-    await context.ipfs.dag.put({ value: payload }, record.jws.link)
+    await context.ipfs.dag.put(payload, record.jws.link)
 
     const docState = await tileHandler.applyRecord(record.jws, FAKE_CID_1, context)
     expect(docState).toMatchSnapshot()
@@ -204,7 +206,7 @@ describe('ThreeIdHandler', () => {
     const tileDoctypeHandler = new TileDoctypeHandler()
 
     await context.ipfs.dag.put(RECORDS.genesisGenerated.jws, FAKE_CID_1)
-    await context.ipfs.dag.put({ value: RECORDS.genesisGenerated.linkedBlock }, RECORDS.genesisGenerated.jws.link)
+    await context.ipfs.dag.put(RECORDS.genesisGenerated.linkedBlock, RECORDS.genesisGenerated.jws.link)
 
     const state = await tileDoctypeHandler.applyRecord(RECORDS.genesisGenerated.jws, FAKE_CID_1, context)
     const doctype = new TileDoctype(state, context)
@@ -224,7 +226,7 @@ describe('ThreeIdHandler', () => {
     await context.ipfs.dag.put(genesisRecord, FAKE_CID_1)
 
     const payload = dagCBOR.util.deserialize(genesisRecord.linkedBlock)
-    await context.ipfs.dag.put({ value: payload }, genesisRecord.jws.link)
+    await context.ipfs.dag.put(payload, genesisRecord.jws.link)
 
     // apply genesis
     let state = await tileDoctypeHandler.applyRecord(genesisRecord.jws, FAKE_CID_1, context)
@@ -235,7 +237,7 @@ describe('ThreeIdHandler', () => {
     await context.ipfs.dag.put(signedRecord, FAKE_CID_2)
 
     const sPayload = dagCBOR.util.deserialize(signedRecord.linkedBlock)
-    await context.ipfs.dag.put({ value: sPayload }, signedRecord.jws.link)
+    await context.ipfs.dag.put(sPayload, signedRecord.jws.link)
 
     // apply signed
     state = await tileDoctypeHandler.applyRecord(signedRecord.jws, FAKE_CID_2, context, state)
@@ -249,7 +251,7 @@ describe('ThreeIdHandler', () => {
     await context.ipfs.dag.put(genesisRecord, FAKE_CID_1)
 
     const payload = dagCBOR.util.deserialize(genesisRecord.linkedBlock)
-    await context.ipfs.dag.put({ value: payload }, genesisRecord.jws.link)
+    await context.ipfs.dag.put(payload, genesisRecord.jws.link)
 
     await expect(tileDoctypeHandler.applyRecord(genesisRecord.jws, FAKE_CID_1, context)).rejects.toThrow(/wrong DID/)
   })
@@ -261,7 +263,7 @@ describe('ThreeIdHandler', () => {
     await context.ipfs.dag.put(genesisRecord, FAKE_CID_1)
 
     const payload = dagCBOR.util.deserialize(genesisRecord.linkedBlock)
-    await context.ipfs.dag.put({ value: payload }, genesisRecord.jws.link)
+    await context.ipfs.dag.put(payload, genesisRecord.jws.link)
 
     // apply genesis
     let state = await tileDoctypeHandler.applyRecord(genesisRecord.jws, FAKE_CID_1, context)
@@ -272,7 +274,7 @@ describe('ThreeIdHandler', () => {
     await context.ipfs.dag.put(signedRecord, FAKE_CID_2)
 
     const sPayload = dagCBOR.util.deserialize(signedRecord.linkedBlock)
-    await context.ipfs.dag.put({ value: sPayload }, signedRecord.jws.link)
+    await context.ipfs.dag.put(sPayload, signedRecord.jws.link)
 
     // apply signed
     state = await tileDoctypeHandler.applyRecord(signedRecord.jws, FAKE_CID_2, context, state)

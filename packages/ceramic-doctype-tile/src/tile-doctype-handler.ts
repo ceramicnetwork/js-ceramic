@@ -141,14 +141,17 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
         state.log.push(cid)
         let content = state.content
         let metadata = state.metadata
+
         if (state.next?.content) {
             content = state.next.content
-          delete state.next.content
+            delete state.next.content
         }
+
         if (state.next?.metadata) {
             metadata = state.next.metadata
-          delete state.next.metadata
+            delete state.next.metadata
         }
+
         return {
             ...state, content, metadata, anchorStatus: AnchorStatus.ANCHORED, anchorProof: proof,
         }

@@ -11,10 +11,7 @@ import { DID } from 'dids'
 
 import { Resolver } from "did-resolver"
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
-
-jest.mock('../../anchor/ethereum/ethereum-anchor-service')
-
-import EthereumAnchorService from "../../anchor/ethereum/ethereum-anchor-service"
+import InMemoryAnchorService from "../../anchor/memory/in-memory-anchor-service"
 
 // mock Dispatcher
 jest.mock('../../dispatcher', () => {
@@ -158,7 +155,7 @@ describe('Level data store', () => {
     dispatcher._ipfs.pin.rm.mockClear()
     dispatcher._ipfs.pin.add.mockClear()
 
-    anchorService = new EthereumAnchorService()
+    anchorService = new InMemoryAnchorService({})
     anchorService.ceramic = {
       dispatcher
     }

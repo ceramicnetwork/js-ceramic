@@ -10,7 +10,6 @@ import basicsImport from 'multiformats/cjs/src/basics-import.js'
 import legacy from 'multiformats/cjs/src/legacy.js'
 
 jest.mock('../store/level-state-store')
-jest.mock('../anchor/ethereum/ethereum-anchor-service')
 
 const seed = '0x5872d6e0ae7347b72c9216db218ebbb9d9d0ae7ab818ead3557e8e78bf944184'
 

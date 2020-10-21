@@ -6,6 +6,7 @@ import { randomBytes } from '@ethersproject/random'
 import { DID } from 'dids'
 import { Doctype, DoctypeConstructor, DoctypeStatic, DocOpts, DocParams } from "@ceramicnetwork/ceramic-common"
 import { Context } from "@ceramicnetwork/ceramic-common"
+import { DoctypeUtils } from "@ceramicnetwork/ceramic-common/lib"
 
 const DOCTYPE = 'tile'
 
@@ -60,7 +61,7 @@ export class TileDoctype extends Doctype {
      * @param opts - Initialization options
      */
     static async makeGenesis(params: DocParams, context?: Context, opts: DocOpts = {}): Promise<Record<string, any>> {
-        const metadata = params.metadata? params.metadata : { owners: [] }
+        const metadata = params.metadata? params.metadata : { owners: [], anchor: { nonce: 0 } }
 
         // check for DID and authentication
         if (!context.did || !context.did.authenticated) {
@@ -105,6 +106,11 @@ export class TileDoctype extends Doctype {
             header.owners = newOwners
         }
 
+        const nonce = await TileDoctype._calculateNonce(doctype)
+        header.anchor = {
+            nonce,
+        }
+
         if (newContent == null) {
             newContent = doctype.content
         }
@@ -112,6 +118,31 @@ export class TileDoctype extends Doctype {
         const patch = jsonpatch.compare(doctype.content, newContent)
         const record = { header, data: patch, prev: doctype.head, id: doctype.state.log[0] }
         return TileDoctype._signDagJWS(record, did, doctype.owners[0])
+    }
+
+    /**
+     * Calculates anchor nonce
+     */
+    private static async _calculateNonce(doctype: Doctype): Promise<number> {
+        if (doctype.context.ipfs == null) {
+            return 0 // return nonce 0 if IPFS is not available
+        }
+
+        let nonce = 0
+        let cid = doctype.head
+
+        while (cid != null) {
+            let record = (await doctype.context.ipfs.dag.get(cid)).value
+            if (DoctypeUtils.isAnchorRecord(record)) {
+                return nonce
+            }
+            if (DoctypeUtils.isSignedRecord(record)) {
+                record = (await doctype.context.ipfs.dag.get(record.link)).value
+            }
+            cid = record.prev
+            nonce++
+        }
+        return nonce
     }
 
     /**

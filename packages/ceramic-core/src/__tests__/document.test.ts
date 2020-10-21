@@ -16,9 +16,8 @@ import { Resolver } from "did-resolver"
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 
 jest.mock('../store/level-state-store')
-jest.mock('../anchor/ethereum/ethereum-anchor-service')
 
-import EthereumAnchorService from "../anchor/ethereum/ethereum-anchor-service"
+import InMemoryAnchorService from "../anchor/memory/in-memory-anchor-service"
 
 jest.mock('../dispatcher', () => {
   const CID = require('cids') // eslint-disable-line @typescript-eslint/no-var-requires
@@ -136,7 +135,7 @@ describe('Document', () => {
 
     beforeEach(() => {
       dispatcher = Dispatcher(false)
-      anchorService = new EthereumAnchorService()
+      anchorService = new InMemoryAnchorService({})
       anchorService.ceramic = {
         dispatcher,
       }
@@ -341,7 +340,7 @@ describe('Document', () => {
 
     beforeEach(() => {
       dispatcher = Dispatcher(true)
-      anchorService = new EthereumAnchorService()
+      anchorService = new InMemoryAnchorService({})
       anchorService.ceramic = {
         dispatcher,
       }

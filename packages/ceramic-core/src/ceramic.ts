@@ -23,7 +23,9 @@ import { TileDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-tile"
 import { AccountLinkDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-account-link"
 import { PinStoreFactory } from "./store/pin-store-factory";
 import { PinStore } from "./store/pin-store";
+
 import EthereumAnchorService from "./anchor/ethereum/ethereum-anchor-service"
+import InMemoryAnchorService from "./anchor/memory/in-memory-anchor-service"
 
 /**
  * Ceramic configuration
@@ -143,7 +145,7 @@ class Ceramic implements CeramicApi {
     const dispatcher = new Dispatcher(ipfs, config.topic)
     await dispatcher.init()
 
-    const anchorService = new EthereumAnchorService(config)
+    const anchorService = config.anchorServiceUrl ? new EthereumAnchorService(config) : new InMemoryAnchorService(config)
     const context: Context = {
       ipfs,
       anchorService,
