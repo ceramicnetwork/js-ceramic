@@ -89,8 +89,8 @@
 						<section class="tsd-index-section ">
 							<h3>Methods</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-static"><a href="_ceramic_common_src_logger_provider_.loggerprovider.html#_includefileplugin" class="tsd-kind-icon">_include<wbr>File<wbr>Plugin</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-static"><a href="_ceramic_common_src_logger_provider_.loggerprovider.html#_totext" class="tsd-kind-icon">_to<wbr>Text</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-static"><a href="_ceramic_common_src_logger_provider_.loggerprovider.html#addplugin" class="tsd-kind-icon">add<wbr>Plugin</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-static"><a href="_ceramic_common_src_logger_provider_.loggerprovider.html#init" class="tsd-kind-icon">init</a></li>
 							</ul>
 						</section>
@@ -100,52 +100,16 @@
 			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Methods</h2>
 				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-static">
-					<a name="_includefileplugin" class="tsd-anchor"></a>
-					<h3><span class="tsd-flag ts-flagStatic">Static</span> _include<wbr>File<wbr>Plugin</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-static">
-						<li class="tsd-signature tsd-kind-icon">_include<wbr>File<wbr>Plugin<span class="tsd-signature-symbol">(</span>options<span class="tsd-signature-symbol">: </span><a href="../interfaces/_ceramic_common_src_logger_provider_.options.html" class="tsd-signature-type">Options</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
-					</ul>
-					<ul class="tsd-descriptions">
-						<li class="tsd-description">
-							<aside class="tsd-sources">
-								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/32813d2/packages/ceramic-common/src/logger-provider.ts#L97">packages/ceramic-common/src/logger-provider.ts:97</a></li>
-								</ul>
-							</aside>
-							<div class="tsd-comment tsd-typography">
-								<div class="lead">
-									<p>Plugin to append log messages to files named after components</p>
-								</div>
-								<dl class="tsd-comment-tags">
-									<dt>notice</dt>
-									<dd><p>If no component name is given &#39;default&#39; will be included in the file name</p>
-									</dd>
-								</dl>
-							</div>
-							<h4 class="tsd-parameters-title">Parameters</h4>
-							<ul class="tsd-parameters">
-								<li>
-									<h5>options: <a href="../interfaces/_ceramic_common_src_logger_provider_.options.html" class="tsd-signature-type">Options</a></h5>
-									<div class="tsd-comment tsd-typography">
-										<p>Should include <code>component</code> name string and <code>outputPath</code> string</p>
-									</div>
-								</li>
-							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
-						</li>
-					</ul>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-static">
 					<a name="_totext" class="tsd-anchor"></a>
 					<h3><span class="tsd-flag ts-flagStatic">Static</span> _to<wbr>Text</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-static">
-						<li class="tsd-signature tsd-kind-icon">_to<wbr>Text<span class="tsd-signature-symbol">(</span>options<span class="tsd-signature-symbol">: </span><a href="../interfaces/_ceramic_common_src_logger_provider_.options.html" class="tsd-signature-type">Options</a>, timestamp<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span>, level<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span>, name<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></li>
+						<li class="tsd-signature tsd-kind-icon">_to<wbr>Text<span class="tsd-signature-symbol">(</span>timestamp<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span>, level<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span>, name<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/32813d2/packages/ceramic-common/src/logger-provider.ts#L181">packages/ceramic-common/src/logger-provider.ts:181</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/8ce4482/packages/ceramic-common/src/logger-provider.ts#L148">packages/ceramic-common/src/logger-provider.ts:148</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -155,9 +119,6 @@
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
-								<li>
-									<h5>options: <a href="../interfaces/_ceramic_common_src_logger_provider_.options.html" class="tsd-signature-type">Options</a></h5>
-								</li>
 								<li>
 									<h5>timestamp: <span class="tsd-signature-type">any</span></h5>
 								</li>
@@ -173,16 +134,59 @@
 					</ul>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-static">
-					<a name="init" class="tsd-anchor"></a>
-					<h3><span class="tsd-flag ts-flagStatic">Static</span> init</h3>
+					<a name="addplugin" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagStatic">Static</span> add<wbr>Plugin</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-static">
-						<li class="tsd-signature tsd-kind-icon">init<span class="tsd-signature-symbol">(</span>opts<span class="tsd-signature-symbol">?: </span><a href="../interfaces/_ceramic_common_src_logger_provider_.options.html" class="tsd-signature-type">Options</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+						<li class="tsd-signature tsd-kind-icon">add<wbr>Plugin<span class="tsd-signature-symbol">(</span>plugin<span class="tsd-signature-symbol">: </span><a href="../modules/_ceramic_common_src_logger_provider_.html#plugin" class="tsd-signature-type">Plugin</a>, loggerOptions<span class="tsd-signature-symbol">: </span><a href="../interfaces/_ceramic_common_src_logger_provider_.options.html" class="tsd-signature-type">Options</a>, pluginOptions<span class="tsd-signature-symbol">?: </span><a href="../interfaces/_ceramic_common_src_logger_provider_.pluginoptions.html" class="tsd-signature-type">PluginOptions</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/32813d2/packages/ceramic-common/src/logger-provider.ts#L60">packages/ceramic-common/src/logger-provider.ts:60</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/8ce4482/packages/ceramic-common/src/logger-provider.ts#L76">packages/ceramic-common/src/logger-provider.ts:76</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Adds <code>plugin</code> to the logger instance</p>
+								</div>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>plugin: <a href="../modules/_ceramic_common_src_logger_provider_.html#plugin" class="tsd-signature-type">Plugin</a></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>Plugin function to add</p>
+									</div>
+								</li>
+								<li>
+									<h5>loggerOptions: <a href="../interfaces/_ceramic_common_src_logger_provider_.options.html" class="tsd-signature-type">Options</a></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>Options returned from LoggerProvider.init</p>
+									</div>
+								</li>
+								<li>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> pluginOptions: <a href="../interfaces/_ceramic_common_src_logger_provider_.pluginoptions.html" class="tsd-signature-type">PluginOptions</a></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>Options specific to <code>plugin</code></p>
+									</div>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-static">
+					<a name="init" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagStatic">Static</span> init</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-static">
+						<li class="tsd-signature tsd-kind-icon">init<span class="tsd-signature-symbol">(</span>opts<span class="tsd-signature-symbol">?: </span><a href="../interfaces/_ceramic_common_src_logger_provider_.options.html" class="tsd-signature-type">Options</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="../interfaces/_ceramic_common_src_logger_provider_.options.html" class="tsd-signature-type">Options</a></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/8ce4482/packages/ceramic-common/src/logger-provider.ts#L56">packages/ceramic-common/src/logger-provider.ts:56</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -199,7 +203,8 @@
 									</div>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+							<h4 class="tsd-returns-title">Returns <a href="../interfaces/_ceramic_common_src_logger_provider_.options.html" class="tsd-signature-type">Options</a></h4>
+							<p>Modified options</p>
 						</li>
 					</ul>
 				</section>
@@ -218,16 +223,25 @@
 			</nav>
 			<nav class="tsd-navigation secondary menu-sticky">
 				<ul class="before-current">
+					<li class=" tsd-kind-reference tsd-parent-kind-module">
+						<a href="../modules/_ceramic_common_src_logger_provider_.html#loggeroptions" class="tsd-kind-icon">Logger<wbr>Options</a>
+					</li>
+					<li class=" tsd-kind-reference tsd-parent-kind-module">
+						<a href="../modules/_ceramic_common_src_logger_provider_.html#loggerplugin" class="tsd-kind-icon">Logger<wbr>Plugin</a>
+					</li>
+					<li class=" tsd-kind-reference tsd-parent-kind-module">
+						<a href="../modules/_ceramic_common_src_logger_provider_.html#loggerpluginoptions" class="tsd-kind-icon">Logger<wbr>Plugin<wbr>Options</a>
+					</li>
 				</ul>
 				<ul class="current">
 					<li class="current tsd-kind-class tsd-parent-kind-module">
 						<a href="_ceramic_common_src_logger_provider_.loggerprovider.html" class="tsd-kind-icon">Logger<wbr>Provider</a>
 						<ul>
 							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-static">
-								<a href="_ceramic_common_src_logger_provider_.loggerprovider.html#_includefileplugin" class="tsd-kind-icon">_include<wbr>File<wbr>Plugin</a>
+								<a href="_ceramic_common_src_logger_provider_.loggerprovider.html#_totext" class="tsd-kind-icon">_to<wbr>Text</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-static">
-								<a href="_ceramic_common_src_logger_provider_.loggerprovider.html#_totext" class="tsd-kind-icon">_to<wbr>Text</a>
+								<a href="_ceramic_common_src_logger_provider_.loggerprovider.html#addplugin" class="tsd-kind-icon">add<wbr>Plugin</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-static">
 								<a href="_ceramic_common_src_logger_provider_.loggerprovider.html#init" class="tsd-kind-icon">init</a>
@@ -239,8 +253,11 @@
 					<li class=" tsd-kind-interface tsd-parent-kind-module tsd-is-not-exported">
 						<a href="../interfaces/_ceramic_common_src_logger_provider_.options.html" class="tsd-kind-icon">Options</a>
 					</li>
-					<li class=" tsd-kind-object-literal tsd-parent-kind-module tsd-is-not-exported">
-						<a href="../modules/_ceramic_common_src_logger_provider_.html#colors" class="tsd-kind-icon">colors</a>
+					<li class=" tsd-kind-interface tsd-parent-kind-module tsd-is-not-exported">
+						<a href="../interfaces/_ceramic_common_src_logger_provider_.pluginoptions.html" class="tsd-kind-icon">Plugin<wbr>Options</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-parent-kind-module tsd-is-not-exported">
+						<a href="../modules/_ceramic_common_src_logger_provider_.html#plugin" class="tsd-kind-icon">Plugin</a>
 					</li>
 					<li class=" tsd-kind-object-literal tsd-parent-kind-module tsd-is-not-exported">
 						<a href="../modules/_ceramic_common_src_logger_provider_.html#defaultopts" class="tsd-kind-icon">default<wbr>Opts</a>
@@ -259,6 +276,7 @@
 				<li class="tsd-kind-variable"><span class="tsd-kind-icon">Variable</span></li>
 				<li class="tsd-kind-function"><span class="tsd-kind-icon">Function</span></li>
 				<li class="tsd-kind-function tsd-has-type-parameter"><span class="tsd-kind-icon">Function with type parameter</span></li>
+				<li class="tsd-kind-type-alias"><span class="tsd-kind-icon">Type alias</span></li>
 			</ul>
 			<ul class="tsd-legend">
 				<li class="tsd-kind-interface"><span class="tsd-kind-icon">Interface</span></li>
