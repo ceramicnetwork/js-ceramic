@@ -83,7 +83,7 @@ describe('Ceramic interop: core <> http-client', () => {
       disableIDX: true,
     })
 
-    await client.setDIDProvider(identityWallet.get3idProvider())
+    await client.setDIDProvider(identityWallet.getDidProvider())
   })
 
   afterEach(async () => {

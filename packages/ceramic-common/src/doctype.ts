@@ -2,7 +2,6 @@ import CID from 'cids'
 import cloneDeep from 'lodash.clonedeep'
 import { EventEmitter } from "events"
 import type { Context } from "./context"
-import { DoctypeUtils } from "./utils/doctype-utils"
 import DocID from '@ceramicnetwork/docid'
 
 /**
