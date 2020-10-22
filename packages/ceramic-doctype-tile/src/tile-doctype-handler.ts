@@ -118,13 +118,7 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
 
         const nextState = cloneDeep(state)
 
-        let squash = false
-        if (nextState.log.length > 1) {
-            const head = nextState.log[nextState.log.length-1]
-            const prevRec = (await context.ipfs.dag.get(head)).value
-            squash = !DoctypeUtils.isAnchorRecord(prevRec)
-        }
-
+        const squash = nextState.metadata?.nonce >= 0
         if (squash) {
             nextState.log[nextState.log.length-1] = cid
             nextState.metadata = state.next.metadata
