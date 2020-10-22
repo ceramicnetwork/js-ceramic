@@ -635,10 +635,10 @@ class Document extends EventEmitter {
   }
 
   /**
-   * Gets document owners
+   * Gets document controllers
    */
-  get owners (): string[] {
-    return this._doctype.owners
+  get controllers (): string[] {
+    return this._doctype.controllers
   }
 
   /**

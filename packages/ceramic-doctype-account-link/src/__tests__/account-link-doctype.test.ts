@@ -20,7 +20,7 @@ const FAKE_CID_3 = new CID('bafybeig6xv5nwphfmvcnektpnojts55jqcuam7bmye2pb54adnr
 const FAKE_CID_4 = new CID('bafybeig6xv5nwphfmvcnektpnojts66jqcuam7bmye2pb54adnrtccjlsu')
 
 const RECORDS = {
-  genesis: { doctype: 'account-link', header: { owners: [ '0x25954ef14cebbc9af3d71132489a9cfe87043f20@eip155:1' ] } },
+  genesis: { doctype: 'account-link', header: { controllers: [ '0x25954ef14cebbc9af3d71132489a9cfe87043f20@eip155:1' ] } },
   r1: {
     desiredContent: {
       version: 1,
@@ -38,7 +38,7 @@ const RECORDS = {
         timestamp: 1585919920
       },
       "header": {
-        "owners": [
+        "controllers": [
           "0x25954ef14cebbc9af3d71132489a9cfe87043f20@eip155:1"
         ]
       },
@@ -104,25 +104,25 @@ describe('AccountLinkHandler', () => {
 
   it('throws an error if genesis record has no metadata specified', async () => {
     const content: any = undefined
-    const owners: any = undefined
-    await expect(AccountLinkDoctype.makeGenesis({ content, owners })).rejects.toThrow(/Metadata must be specified/i)
+    const controllers: any = undefined
+    await expect(AccountLinkDoctype.makeGenesis({ content, controllers })).rejects.toThrow(/Metadata must be specified/i)
   })
 
-  it('throws an error if genesis record has no owners specified', async () => {
+  it('throws an error if genesis record has no controllers specified', async () => {
     const content: any = undefined
-    await expect(AccountLinkDoctype.makeGenesis({ content, metadata: {} })).rejects.toThrow(/Owner must be specified/i)
+    await expect(AccountLinkDoctype.makeGenesis({ content, metadata: {} })).rejects.toThrow(/Controller must be specified/i)
   })
 
-  it('throws an error if genesis record has more than one owner', async () => {
+  it('throws an error if genesis record has more than one controller', async () => {
     const content: any = undefined
-    const owners = [...RECORDS.genesis.header.owners, '0x25954ef14cebbc9af3d79876489a9cfe87043f20@eip155:1']
-    await expect(AccountLinkDoctype.makeGenesis({ content, metadata: { owners } })).rejects.toThrow(/Exactly one owner/i)
+    const controllers = [...RECORDS.genesis.header.controllers, '0x25954ef14cebbc9af3d79876489a9cfe87043f20@eip155:1']
+    await expect(AccountLinkDoctype.makeGenesis({ content, metadata: { controllers } })).rejects.toThrow(/Exactly one controller/i)
   })
 
-  it('throws an error if genesis record has owner not in CAIP-10 format', async () => {
+  it('throws an error if genesis record has controller not in CAIP-10 format', async () => {
     const content: any = undefined
-    const owners = RECORDS.genesis.header.owners.map(address => address.split('@')[0])
-    await expect(AccountLinkDoctype.makeGenesis({ content, metadata: { owners } })).rejects.toThrow(/According to CAIP-10/i)
+    const controllers = RECORDS.genesis.header.controllers.map(address => address.split('@')[0])
+    await expect(AccountLinkDoctype.makeGenesis({ content, metadata: { controllers } })).rejects.toThrow(/According to CAIP-10/i)
   })
 
   it('applies genesis record correctly', async () => {
@@ -149,7 +149,7 @@ describe('AccountLinkHandler', () => {
     await expect(handler.applyRecord(RECORDS.r1.record, FAKE_CID_2, context, state)).rejects.toThrow(/Invalid proof/i)
   })
 
-  it('throws an error of the proof doesn\'t match the owner', async () => {
+  it('throws an error of the proof doesn\'t match the controller', async () => {
     const badAddressRecord = cloneDeep(RECORDS.r1.record)
     badAddressRecord.content.address = '0xffffffffffffffffffffffffffffffffffffffff'
     const state = await handler.applyRecord(RECORDS.genesis, FAKE_CID_1, context)

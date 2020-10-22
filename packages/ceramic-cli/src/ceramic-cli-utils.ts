@@ -89,19 +89,19 @@ export class CeramicCliUtils {
      * Create document
      * @param doctype - Document type
      * @param content - Document content
-     * @param owners - Document owners
+     * @param controllers - Document controllers
      * @param onlyGenesis - Create only a genesis record (no publish or anchor)
      * @param isUnique - Should document be unique?
      * @param schemaDocId - Schema document ID
      */
-    static async createDoc(doctype: string, content: string, owners: string, onlyGenesis: boolean, isUnique: boolean, schemaDocId: string = null): Promise<void> {
+    static async createDoc(doctype: string, content: string, controllers: string, onlyGenesis: boolean, isUnique: boolean, schemaDocId: string = null): Promise<void> {
         await CeramicCliUtils._runWithCeramic(async (ceramic: CeramicClient) => {
-            const parsedOwners = CeramicCliUtils._parseOwners(owners)
+            const parsedControllers = CeramicCliUtils._parseControllers(controllers)
             const parsedContent = CeramicCliUtils._parseContent(content)
 
             const params = {
                 content: parsedContent, metadata: {
-                    owners: parsedOwners, isUnique, schema: schemaDocId
+                    controllers: parsedControllers, isUnique, schema: schemaDocId
                 }
             }
 
@@ -118,10 +118,10 @@ export class CeramicCliUtils {
      * Change document
      * @param docId - Document ID
      * @param content - Document content
-     * @param owners - Document owners
+     * @param controllers - Document controllers
      * @param schemaDocId - Optional schema document ID
      */
-    static async change(docId: string, content: string, owners: string, schemaDocId?: string): Promise<void> {
+    static async change(docId: string, content: string, controllers: string, schemaDocId?: string): Promise<void> {
         const id = DocID.fromString(docId)
 
         const version = id.version
@@ -131,13 +131,13 @@ export class CeramicCliUtils {
         }
 
         await CeramicCliUtils._runWithCeramic(async (ceramic: CeramicClient) => {
-            const parsedOwners = CeramicCliUtils._parseOwners(owners)
+            const parsedControllers = CeramicCliUtils._parseControllers(controllers)
             const parsedContent = CeramicCliUtils._parseContent(content)
 
             const doc = await ceramic.loadDocument(id)
             await doc.change({
                 content: parsedContent, metadata: {
-                    owners: parsedOwners, schema: schemaDocId
+                    controllers: parsedControllers, schema: schemaDocId
                 }
             })
 
@@ -204,25 +204,25 @@ export class CeramicCliUtils {
     /**
      * Create schema document
      * @param content - Schema content
-     * @param owners - Schema owners
+     * @param controllers - Schema controllers
      * @param onlyGenesis - Create only a genesis record (no publish or anchor)
      * @param isUnique - Should document be unique?
      */
-    static async schemaCreateDoc(content: string, owners: string, onlyGenesis: boolean, isUnique: boolean): Promise<void> {
+    static async schemaCreateDoc(content: string, controllers: string, onlyGenesis: boolean, isUnique: boolean): Promise<void> {
         // TODO validate schema on the client side
-        return CeramicCliUtils.createDoc('tile', content, owners, onlyGenesis, isUnique)
+        return CeramicCliUtils.createDoc('tile', content, controllers, onlyGenesis, isUnique)
     }
 
     /**
      * Change schema document
      * @param schemaDocId - Schema document ID
      * @param content - Schema document content
-     * @param owners - Schema document owners
+     * @param controllers - Schema document controllers
      */
-    static async schemaChangeDoc(schemaDocId: string, content: string, owners: string): Promise<void> {
+    static async schemaChangeDoc(schemaDocId: string, content: string, controllers: string): Promise<void> {
         DocID.fromString(schemaDocId)
         // TODO validate schema on the client side
-        return CeramicCliUtils.change(schemaDocId, content, owners, null)
+        return CeramicCliUtils.change(schemaDocId, content, controllers, null)
     }
 
     /**
@@ -396,14 +396,14 @@ export class CeramicCliUtils {
     }
 
     /**
-     * Parse input owners
-     * @param owners - Input owners
+     * Parse input controllers
+     * @param controllers - Input controllers
      * @private
      */
-    static _parseOwners(owners: string): string[] {
-        if (owners == null) {
+    static _parseControllers(controllers: string): string[] {
+        if (controllers == null) {
             return [ ]
         }
-        return owners.includes(',') ? owners.split(',') : [owners]
+        return controllers.includes(',') ? controllers.split(',') : [controllers]
     }
 }

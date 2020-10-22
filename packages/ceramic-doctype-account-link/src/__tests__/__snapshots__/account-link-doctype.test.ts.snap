@@ -131,7 +131,7 @@ Object {
     },
   ],
   "metadata": Object {
-    "owners": Array [
+    "controllers": Array [
       "0x25954ef14cebbc9af3d71132489a9cfe87043f20@eip155:1",
     ],
   },
@@ -190,7 +190,7 @@ Object {
     },
   ],
   "metadata": Object {
-    "owners": Array [
+    "controllers": Array [
       "0x25954ef14cebbc9af3d71132489a9cfe87043f20@eip155:1",
     ],
   },
@@ -289,7 +289,7 @@ Object {
     },
   ],
   "metadata": Object {
-    "owners": Array [
+    "controllers": Array [
       "0x25954ef14cebbc9af3d71132489a9cfe87043f20@eip155:1",
     ],
   },

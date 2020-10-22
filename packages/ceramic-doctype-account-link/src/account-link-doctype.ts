@@ -54,13 +54,13 @@ export class AccountLinkDoctype extends Doctype {
         if (!metadata) {
             throw new Error('Metadata must be specified')
         }
-        if (!metadata.owners) {
-            throw new Error('Owner must be specified')
+        if (!metadata.controllers) {
+            throw new Error('Controller must be specified')
         }
-        if (metadata.owners.length !== 1) {
-            throw new Error('Exactly one owner must be specified')
+        if (metadata.controllers.length !== 1) {
+            throw new Error('Exactly one controller must be specified')
         }
-        const [address, chainId] = metadata.owners[0].split('@') // eslint-disable-line @typescript-eslint/no-unused-vars
+        const [address, chainId] = metadata.controllers[0].split('@') // eslint-disable-line @typescript-eslint/no-unused-vars
         if (!chainId) {
             throw new Error('Chain ID must be specified according to CAIP-10')
         }

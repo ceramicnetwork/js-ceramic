@@ -49,7 +49,7 @@ const state = {
     doctype: 'tile',
     content: {num: 0},
     metadata: {
-        owners: ['']
+        controllers: ['']
     },
     signature: SignatureStatus.GENESIS,
     anchorStatus: AnchorStatus.NOT_REQUESTED,
