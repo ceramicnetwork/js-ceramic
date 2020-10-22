@@ -218,7 +218,6 @@ exports[`ThreeIdHandler applies signed record correctly 1`] = `
 Object {
   "anchorStatus": 0,
   "content": Object {
-    "other": "data",
     "publicKeys": Object {
       "test": "0xabc",
     },

@@ -4,6 +4,7 @@ import * as didJwt from 'did-jwt'
 import base64url from 'base64url'
 
 import jsonpatch from 'fast-json-patch'
+import cloneDeep from 'lodash.clonedeep'
 
 import { TileDoctype, TileParams } from "./tile-doctype"
 import {
@@ -114,19 +115,37 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
         if (!payload.id.equals(state.log[0])) {
             throw new Error(`Invalid docId ${payload.id}, expected ${state.log[0]}`)
         }
-        state.log.push(cid)
-        const newState: DocState = {
-            ...state,
-            signature: SignatureStatus.SIGNED,
-            anchorStatus: AnchorStatus.NOT_REQUESTED,
-            next: {
-                content: jsonpatch.applyPatch(state.content, payload.data).newDocument,
+
+        const nextState = cloneDeep(state)
+
+        let squash = false
+        if (nextState.log.length > 1) {
+            const head = nextState.log[nextState.log.length-1]
+            const prevRec = (await context.ipfs.dag.get(head)).value
+            squash = !DoctypeUtils.isAnchorRecord(prevRec)
+        }
+
+        if (squash) {
+            nextState.log[nextState.log.length-1] = cid
+            nextState.metadata = state.next.metadata
+            nextState.next = {
+                content: jsonpatch.applyPatch(state.next.content, payload.data).newDocument
+            }
+        } else {
+            nextState.log.push(cid)
+            nextState.metadata = state.metadata
+            nextState.next = {
+                content: jsonpatch.applyPatch(state.content, payload.data).newDocument
             }
         }
+
+        nextState.signature = SignatureStatus.SIGNED
+        nextState.anchorStatus = AnchorStatus.NOT_REQUESTED
+
         if (payload.header?.owners) {
-          newState.next.metadata = { ...state.metadata, owners: payload.header.owners }
+            nextState.next.metadata = { ...nextState.metadata, owners: payload.header.owners }
         }
-        return newState
+        return nextState
     }
 
     /**

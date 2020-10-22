@@ -209,7 +209,6 @@ Object {
   "anchorStatus": 0,
   "content": Object {
     "much": "data",
-    "very": "content",
   },
   "doctype": "tile",
   "log": Array [
