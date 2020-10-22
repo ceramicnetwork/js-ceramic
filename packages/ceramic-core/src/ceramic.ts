@@ -51,7 +51,10 @@ export interface CeramicConfig {
 }
 
 /**
- * Ceramic core implementation
+ * ### Ceramic core implementation.<br/>
+ *
+ * To install this library:<br/>
+ * `$ npm install --save @ceramicnetwork/ceramic-core`
  */
 class Ceramic implements CeramicApi {
   private readonly _docmap: Record<string, Document>
