@@ -1,8 +1,8 @@
 import * as path from "path"
 import fs from "fs";
-import { DoctypeUtils } from ".."
+import Utils from "../../utils"
 
-describe('DoctypeUtils', () => {
+describe('Utils schema validation', () => {
     const schemaDefDirPath = path.join(__dirname, '__schemas__')
     const testDirsPath = path.join(__dirname, '__data__')
     const testDirs = fs.readdirSync(testDirsPath)
@@ -18,14 +18,14 @@ describe('DoctypeUtils', () => {
                 case 'valid.json':
                     it(`should pass ${testDir} schema validation for ${test}`, () => {
                         const content = JSON.parse(fs.readFileSync(path.join(testFilePath, test), "utf-8"))
-                        DoctypeUtils.validate(content, schema)
+                        Utils.validate(content, schema)
                     })
                     break
                 case 'invalid.json':
                     it(`should fail ${testDir} schema validation for ${test}`, () => {
                         const content = JSON.parse(fs.readFileSync(path.join(testFilePath, test), "utf-8"))
                         try {
-                            DoctypeUtils.validate(content, schema)
+                            Utils.validate(content, schema)
                             throw new Error('Should not be able to validate invalid data')
                         } catch (e) {
                             expect(e.message).toContain('Validation Error')

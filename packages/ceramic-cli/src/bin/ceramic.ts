@@ -91,13 +91,6 @@ schemas
         await CeramicCliUtils.schemaChangeDoc(docId, content, owners)
     })
 
-schemas
-    .command('validate <schemaDocId> <new-content>')
-    .description('Validate content with schema')
-    .action(async (schemaDocId, content) => {
-        await CeramicCliUtils.schemaValidateContent(schemaDocId, content)
-    })
-
 const pin = program.command('pin')
 pin.description('Ceramic local pinning API')
 

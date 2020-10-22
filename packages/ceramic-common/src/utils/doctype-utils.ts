@@ -1,4 +1,3 @@
-import ajv from "ajv"
 import CID from 'cids'
 import cloneDeep from "lodash.clonedeep"
 import * as u8a from 'uint8arrays'
@@ -10,8 +9,6 @@ import { AnchorStatus, DocState, Doctype } from "../doctype"
  * Doctype related utils
  */
 export class DoctypeUtils {
-
-    static validator: any = new ajv({ allErrors: true })
 
     /**
      * Serializes record
@@ -133,28 +130,6 @@ export class DoctypeUtils {
             throw new Error('The version of the document is readonly. Checkout the latest HEAD in order to update.')
         }
         return doctype
-    }
-
-    /**
-     * Validates model against JSON-Schema
-     * @param schema - Doctype schema
-     */
-    static isSchemaValid(schema: object): boolean {
-        this.validator.compile(schema) // throws an error on invalid schema
-        return this.validator.validateSchema(schema) // call validate schema just in case
-    }
-
-    /**
-     * Validates model against JSON-Schema
-     * @param content - Doctype content
-     * @param schema - Doctype schema
-     */
-    static validate(content: any, schema: any): void {
-        const isValid = this.validator.validate(schema, content)
-        if (!isValid) {
-            const errorMessages = this.validator.errorsText()
-            throw new Error(`Validation Error: ${errorMessages}`)
-        }
     }
 
     /**

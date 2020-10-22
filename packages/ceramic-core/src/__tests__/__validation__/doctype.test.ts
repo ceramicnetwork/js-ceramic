@@ -1,5 +1,8 @@
 import { mock } from 'jest-mock-extended'
-import { CeramicApi, DocState, Doctype } from ".."
+
+import Utils from '../../utils'
+import { CeramicApi, Doctype, DocState } from "@ceramicnetwork/ceramic-common"
+
 
 class BasicDoctype extends Doctype {
     change(): Promise<void> {
@@ -45,7 +48,7 @@ describe('Doctype', () => {
         }
 
         const doc = new BasicDoctype(state, { api: ceramic })
-        await doc.validate()
+        await Utils.validateDoctype(doc)
     })
 
     it('should fail schema validation', async () => {
@@ -60,7 +63,7 @@ describe('Doctype', () => {
 
         const doc = new BasicDoctype(state, { api: ceramic })
         try {
-            await doc.validate()
+            await Utils.validateDoctype(doc)
             throw new Error('Should not be able to validate invalid data')
         } catch (e) {
             expect(e.message).toEqual('Validation Error: data[\'x\'] should be string')
