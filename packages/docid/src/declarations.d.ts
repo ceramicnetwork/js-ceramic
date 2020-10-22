@@ -7,7 +7,7 @@ declare module 'uint8arrays/to-string' {
 }
 
 type JSONTable = {
-  [key: string]: number | undefined
+  [key: string]: number | undefined;
 }
 
 declare module "varint" {

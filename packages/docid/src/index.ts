@@ -228,7 +228,7 @@ class DocID {
     }
 
     return this.type === otherDocID.type &&
-      (this.version ? this.version.equals(otherDocID.version) : !Boolean(otherDocID.version)) &&
+      (this.version ? this.version.equals(otherDocID.version) : !otherDocID.version) &&
       this.cid.equals(otherDocID.cid)
   }
 

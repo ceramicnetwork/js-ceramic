@@ -44,7 +44,7 @@
     "babel-jest": "^25.1.0",
     "eslint": "^6.8.0",
     "eslint-plugin-jest": "^23.8.2",
-    "identity-wallet": "^2.0.0-alpha.13",
+    "identity-wallet": "github:3box/identity-wallet-js#feat/docids",
     "ipfs": "github:simonovic86/ipfs",
     "jest": "^25.1.0",
     "js-sha256": "^0.9.0",
