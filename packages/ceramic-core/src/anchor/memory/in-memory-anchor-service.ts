@@ -74,7 +74,7 @@ class InMemoryAnchorService extends AnchorService {
         } else {
           currentNonce = anchorRecord.header?.nonce || 0
         }
-        if (selectedPair == null || currentNonce < nonce) {
+        if (selectedPair == null || currentNonce > nonce) {
           selectedPair = pair
           nonce = currentNonce
         }

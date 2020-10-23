@@ -91,9 +91,6 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
             doctype: DOCTYPE,
             content: payload.data,
             metadata: payload.header,
-            next: {
-                content: null,
-            },
             signature: isSigned? SignatureStatus.SIGNED : SignatureStatus.GENESIS,
             anchorStatus: AnchorStatus.NOT_REQUESTED,
             log: [cid]
@@ -118,26 +115,26 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
 
         const nextState = cloneDeep(state)
 
-        const squash = nextState.metadata?.nonce >= 0
+        nextState.signature = SignatureStatus.SIGNED
+        nextState.anchorStatus = AnchorStatus.NOT_REQUESTED
+
+        const nonce = payload.header.nonce
+        const squash = nonce > 0 && state.next
         if (squash) {
             nextState.log[nextState.log.length-1] = cid
-            nextState.metadata = state.next.metadata
             nextState.next = {
                 content: jsonpatch.applyPatch(state.next.content, payload.data).newDocument
             }
         } else {
             nextState.log.push(cid)
-            nextState.metadata = state.metadata
             nextState.next = {
                 content: jsonpatch.applyPatch(state.content, payload.data).newDocument
             }
         }
 
-        nextState.signature = SignatureStatus.SIGNED
-        nextState.anchorStatus = AnchorStatus.NOT_REQUESTED
-
+        nextState.next.metadata = { ...nextState.metadata, nonce: nonce }
         if (payload.header?.owners) {
-            nextState.next.metadata = { ...nextState.metadata, owners: payload.header.owners }
+            nextState.next.metadata.owners = payload.header.owners
         }
         return nextState
     }
@@ -164,6 +161,8 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
             metadata = state.next.metadata
             delete state.next.metadata
         }
+
+        delete state.next
 
         return {
             ...state, content, metadata, anchorStatus: AnchorStatus.ANCHORED, anchorProof: proof,

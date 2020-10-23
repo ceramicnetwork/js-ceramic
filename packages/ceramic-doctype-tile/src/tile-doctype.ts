@@ -118,17 +118,21 @@ export class TileDoctype extends Doctype {
         }
 
         const patch = jsonpatch.compare(doctype.content, newContent)
-        const record = { header, data: patch, prev: doctype.head, id: doctype.state.log[0] }
+
+        const willSquash = header.nonce > 0
+        const prev = doctype.state.log[doctype.state.log.length - 1 - (willSquash ? 1 : 0)]
+
+        const record = { header, data: patch, prev, id: doctype.state.log[0] }
         return TileDoctype._signDagJWS(record, did, doctype.owners[0])
     }
 
     /**
      * Calculates anchor nonce
      */
-    private static _calculateNonce(doctype: Doctype): Promise<number> {
+    private static _calculateNonce(doctype: Doctype): number {
         // If there hasn't been any update prior to this we should not set the nonce
         if (!doctype.state.next) {
-            return
+            return 0
         }
         // Get the current nonce and increment it by one
         return (doctype.state.next.metadata?.nonce || 0) + 1
