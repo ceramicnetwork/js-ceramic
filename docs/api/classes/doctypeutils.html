@@ -87,18 +87,12 @@
 							<h3>Methods</h3>
 							<ul class="tsd-index-list">
 								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-static"><a href="doctypeutils.html#convertrecordtodto" class="tsd-kind-icon">convert<wbr>Record<wbr>ToDTO</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-static"><a href="doctypeutils.html#createdocidfrombase" class="tsd-kind-icon">create<wbr>Doc<wbr>IdFrom<wbr>Base</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-static"><a href="doctypeutils.html#createdocidfromgenesis" class="tsd-kind-icon">create<wbr>Doc<wbr>IdFrom<wbr>Genesis</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-static"><a href="doctypeutils.html#deserializerecord" class="tsd-kind-icon">deserialize<wbr>Record</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-static"><a href="doctypeutils.html#deserializestate" class="tsd-kind-icon">deserialize<wbr>State</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-static"><a href="doctypeutils.html#getbasedocid" class="tsd-kind-icon">get<wbr>Base<wbr>Doc<wbr>Id</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-static"><a href="doctypeutils.html#getgenesis" class="tsd-kind-icon">get<wbr>Genesis</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-static"><a href="doctypeutils.html#getversionid" class="tsd-kind-icon">get<wbr>Version<wbr>Id</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-static"><a href="doctypeutils.html#isanchorrecord" class="tsd-kind-icon">is<wbr>Anchor<wbr>Record</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-static"><a href="doctypeutils.html#issignedrecord" class="tsd-kind-icon">is<wbr>Signed<wbr>Record</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-static"><a href="doctypeutils.html#issignedrecorddto" class="tsd-kind-icon">is<wbr>Signed<wbr>RecordDTO</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class tsd-has-type-parameter tsd-is-static"><a href="doctypeutils.html#makereadonly" class="tsd-kind-icon">make<wbr>Read<wbr>Only</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-static"><a href="doctypeutils.html#normalizedocid" class="tsd-kind-icon">normalize<wbr>Doc<wbr>Id</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-static"><a href="doctypeutils.html#serializerecord" class="tsd-kind-icon">serialize<wbr>Record</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-static"><a href="doctypeutils.html#serializestate" class="tsd-kind-icon">serialize<wbr>State</a></li>
 							</ul>
@@ -118,7 +112,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/a3f7d30/packages/ceramic-common/src/utils/doctype-utils.ts#L231">packages/ceramic-common/src/utils/doctype-utils.ts:231</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/af91dce/packages/ceramic-common/src/utils/doctype-utils.ts#L140">packages/ceramic-common/src/utils/doctype-utils.ts:140</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -146,80 +140,6 @@
 					</ul>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-static">
-					<a name="createdocidfrombase" class="tsd-anchor"></a>
-					<h3><span class="tsd-flag ts-flagStatic">Static</span> create<wbr>Doc<wbr>IdFrom<wbr>Base</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-static">
-						<li class="tsd-signature tsd-kind-icon">create<wbr>Doc<wbr>IdFrom<wbr>Base<span class="tsd-signature-symbol">(</span>docId<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, version<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></li>
-					</ul>
-					<ul class="tsd-descriptions">
-						<li class="tsd-description">
-							<aside class="tsd-sources">
-								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/a3f7d30/packages/ceramic-common/src/utils/doctype-utils.ts#L28">packages/ceramic-common/src/utils/doctype-utils.ts:28</a></li>
-								</ul>
-							</aside>
-							<div class="tsd-comment tsd-typography">
-								<div class="lead">
-									<p>Create Doctype instance from the document wrapper</p>
-								</div>
-							</div>
-							<h4 class="tsd-parameters-title">Parameters</h4>
-							<ul class="tsd-parameters">
-								<li>
-									<h5>docId: <span class="tsd-signature-type">string</span></h5>
-									<div class="tsd-comment tsd-typography">
-										<p>Doctype ID</p>
-									</div>
-								</li>
-								<li>
-									<h5><span class="tsd-flag ts-flagDefault value">Default value</span> version: <span class="tsd-signature-type">any</span><span class="tsd-signature-symbol"> = null</span></h5>
-									<div class="tsd-comment tsd-typography">
-										<p>Doctype version</p>
-									</div>
-								</li>
-							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4>
-						</li>
-					</ul>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-static">
-					<a name="createdocidfromgenesis" class="tsd-anchor"></a>
-					<h3><span class="tsd-flag ts-flagStatic">Static</span> create<wbr>Doc<wbr>IdFrom<wbr>Genesis</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-static">
-						<li class="tsd-signature tsd-kind-icon">create<wbr>Doc<wbr>IdFrom<wbr>Genesis<span class="tsd-signature-symbol">(</span>genesisCid<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span>, version<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></li>
-					</ul>
-					<ul class="tsd-descriptions">
-						<li class="tsd-description">
-							<aside class="tsd-sources">
-								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/a3f7d30/packages/ceramic-common/src/utils/doctype-utils.ts#L18">packages/ceramic-common/src/utils/doctype-utils.ts:18</a></li>
-								</ul>
-							</aside>
-							<div class="tsd-comment tsd-typography">
-								<div class="lead">
-									<p>Create Doctype instance from the document wrapper</p>
-								</div>
-							</div>
-							<h4 class="tsd-parameters-title">Parameters</h4>
-							<ul class="tsd-parameters">
-								<li>
-									<h5>genesisCid: <span class="tsd-signature-type">any</span></h5>
-									<div class="tsd-comment tsd-typography">
-										<p>Genesis record CID</p>
-									</div>
-								</li>
-								<li>
-									<h5><span class="tsd-flag ts-flagDefault value">Default value</span> version: <span class="tsd-signature-type">any</span><span class="tsd-signature-symbol"> = null</span></h5>
-									<div class="tsd-comment tsd-typography">
-										<p>Doctype version</p>
-									</div>
-								</li>
-							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4>
-						</li>
-					</ul>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-static">
 					<a name="deserializerecord" class="tsd-anchor"></a>
 					<h3><span class="tsd-flag ts-flagStatic">Static</span> deserialize<wbr>Record</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-static">
@@ -229,7 +149,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/a3f7d30/packages/ceramic-common/src/utils/doctype-utils.ts#L139">packages/ceramic-common/src/utils/doctype-utils.ts:139</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/af91dce/packages/ceramic-common/src/utils/doctype-utils.ts#L48">packages/ceramic-common/src/utils/doctype-utils.ts:48</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -260,7 +180,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/a3f7d30/packages/ceramic-common/src/utils/doctype-utils.ts#L191">packages/ceramic-common/src/utils/doctype-utils.ts:191</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/af91dce/packages/ceramic-common/src/utils/doctype-utils.ts#L100">packages/ceramic-common/src/utils/doctype-utils.ts:100</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -282,99 +202,6 @@
 					</ul>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-static">
-					<a name="getbasedocid" class="tsd-anchor"></a>
-					<h3><span class="tsd-flag ts-flagStatic">Static</span> get<wbr>Base<wbr>Doc<wbr>Id</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-static">
-						<li class="tsd-signature tsd-kind-icon">get<wbr>Base<wbr>Doc<wbr>Id<span class="tsd-signature-symbol">(</span>docId<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></li>
-					</ul>
-					<ul class="tsd-descriptions">
-						<li class="tsd-description">
-							<aside class="tsd-sources">
-								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/a3f7d30/packages/ceramic-common/src/utils/doctype-utils.ts#L60">packages/ceramic-common/src/utils/doctype-utils.ts:60</a></li>
-								</ul>
-							</aside>
-							<div class="tsd-comment tsd-typography">
-								<div class="lead">
-									<p>Normalize document ID</p>
-								</div>
-							</div>
-							<h4 class="tsd-parameters-title">Parameters</h4>
-							<ul class="tsd-parameters">
-								<li>
-									<h5>docId: <span class="tsd-signature-type">string</span></h5>
-									<div class="tsd-comment tsd-typography">
-										<p>Document ID</p>
-									</div>
-								</li>
-							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4>
-						</li>
-					</ul>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-static">
-					<a name="getgenesis" class="tsd-anchor"></a>
-					<h3><span class="tsd-flag ts-flagStatic">Static</span> get<wbr>Genesis</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-static">
-						<li class="tsd-signature tsd-kind-icon">get<wbr>Genesis<span class="tsd-signature-symbol">(</span>docId<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></li>
-					</ul>
-					<ul class="tsd-descriptions">
-						<li class="tsd-description">
-							<aside class="tsd-sources">
-								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/a3f7d30/packages/ceramic-common/src/utils/doctype-utils.ts#L47">packages/ceramic-common/src/utils/doctype-utils.ts:47</a></li>
-								</ul>
-							</aside>
-							<div class="tsd-comment tsd-typography">
-								<div class="lead">
-									<p>Normalize document ID</p>
-								</div>
-							</div>
-							<h4 class="tsd-parameters-title">Parameters</h4>
-							<ul class="tsd-parameters">
-								<li>
-									<h5>docId: <span class="tsd-signature-type">string</span></h5>
-									<div class="tsd-comment tsd-typography">
-										<p>Document ID</p>
-									</div>
-								</li>
-							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4>
-						</li>
-					</ul>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-static">
-					<a name="getversionid" class="tsd-anchor"></a>
-					<h3><span class="tsd-flag ts-flagStatic">Static</span> get<wbr>Version<wbr>Id</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-static">
-						<li class="tsd-signature tsd-kind-icon">get<wbr>Version<wbr>Id<span class="tsd-signature-symbol">(</span>docId<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">CID</span></li>
-					</ul>
-					<ul class="tsd-descriptions">
-						<li class="tsd-description">
-							<aside class="tsd-sources">
-								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/a3f7d30/packages/ceramic-common/src/utils/doctype-utils.ts#L72">packages/ceramic-common/src/utils/doctype-utils.ts:72</a></li>
-								</ul>
-							</aside>
-							<div class="tsd-comment tsd-typography">
-								<div class="lead">
-									<p>Normalize document ID</p>
-								</div>
-							</div>
-							<h4 class="tsd-parameters-title">Parameters</h4>
-							<ul class="tsd-parameters">
-								<li>
-									<h5>docId: <span class="tsd-signature-type">string</span></h5>
-									<div class="tsd-comment tsd-typography">
-										<p>Document ID</p>
-									</div>
-								</li>
-							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">CID</span></h4>
-						</li>
-					</ul>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-static">
 					<a name="isanchorrecord" class="tsd-anchor"></a>
 					<h3><span class="tsd-flag ts-flagStatic">Static</span> is<wbr>Anchor<wbr>Record</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-static">
@@ -384,7 +211,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/a3f7d30/packages/ceramic-common/src/utils/doctype-utils.ts#L263">packages/ceramic-common/src/utils/doctype-utils.ts:263</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/af91dce/packages/ceramic-common/src/utils/doctype-utils.ts#L172">packages/ceramic-common/src/utils/doctype-utils.ts:172</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -415,7 +242,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/a3f7d30/packages/ceramic-common/src/utils/doctype-utils.ts#L255">packages/ceramic-common/src/utils/doctype-utils.ts:255</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/af91dce/packages/ceramic-common/src/utils/doctype-utils.ts#L164">packages/ceramic-common/src/utils/doctype-utils.ts:164</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -446,7 +273,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/a3f7d30/packages/ceramic-common/src/utils/doctype-utils.ts#L247">packages/ceramic-common/src/utils/doctype-utils.ts:247</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/af91dce/packages/ceramic-common/src/utils/doctype-utils.ts#L156">packages/ceramic-common/src/utils/doctype-utils.ts:156</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -477,7 +304,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/a3f7d30/packages/ceramic-common/src/utils/doctype-utils.ts#L219">packages/ceramic-common/src/utils/doctype-utils.ts:219</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/af91dce/packages/ceramic-common/src/utils/doctype-utils.ts#L128">packages/ceramic-common/src/utils/doctype-utils.ts:128</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -505,37 +332,6 @@
 					</ul>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-static">
-					<a name="normalizedocid" class="tsd-anchor"></a>
-					<h3><span class="tsd-flag ts-flagStatic">Static</span> normalize<wbr>Doc<wbr>Id</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-static">
-						<li class="tsd-signature tsd-kind-icon">normalize<wbr>Doc<wbr>Id<span class="tsd-signature-symbol">(</span>docId<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></li>
-					</ul>
-					<ul class="tsd-descriptions">
-						<li class="tsd-description">
-							<aside class="tsd-sources">
-								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/a3f7d30/packages/ceramic-common/src/utils/doctype-utils.ts#L36">packages/ceramic-common/src/utils/doctype-utils.ts:36</a></li>
-								</ul>
-							</aside>
-							<div class="tsd-comment tsd-typography">
-								<div class="lead">
-									<p>Normalize document ID</p>
-								</div>
-							</div>
-							<h4 class="tsd-parameters-title">Parameters</h4>
-							<ul class="tsd-parameters">
-								<li>
-									<h5>docId: <span class="tsd-signature-type">string</span></h5>
-									<div class="tsd-comment tsd-typography">
-										<p>Document ID</p>
-									</div>
-								</li>
-							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4>
-						</li>
-					</ul>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-static">
 					<a name="serializerecord" class="tsd-anchor"></a>
 					<h3><span class="tsd-flag ts-flagStatic">Static</span> serialize<wbr>Record</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-static">
@@ -545,7 +341,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/a3f7d30/packages/ceramic-common/src/utils/doctype-utils.ts#L108">packages/ceramic-common/src/utils/doctype-utils.ts:108</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/af91dce/packages/ceramic-common/src/utils/doctype-utils.ts#L17">packages/ceramic-common/src/utils/doctype-utils.ts:17</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -576,7 +372,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/a3f7d30/packages/ceramic-common/src/utils/doctype-utils.ts#L170">packages/ceramic-common/src/utils/doctype-utils.ts:170</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/af91dce/packages/ceramic-common/src/utils/doctype-utils.ts#L79">packages/ceramic-common/src/utils/doctype-utils.ts:79</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -618,25 +414,10 @@
 								<a href="doctypeutils.html#convertrecordtodto" class="tsd-kind-icon">convert<wbr>Record<wbr>ToDTO</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-static">
-								<a href="doctypeutils.html#createdocidfrombase" class="tsd-kind-icon">create<wbr>Doc<wbr>IdFrom<wbr>Base</a>
-							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-static">
-								<a href="doctypeutils.html#createdocidfromgenesis" class="tsd-kind-icon">create<wbr>Doc<wbr>IdFrom<wbr>Genesis</a>
-							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-static">
 								<a href="doctypeutils.html#deserializerecord" class="tsd-kind-icon">deserialize<wbr>Record</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-static">
 								<a href="doctypeutils.html#deserializestate" class="tsd-kind-icon">deserialize<wbr>State</a>
-							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-static">
-								<a href="doctypeutils.html#getbasedocid" class="tsd-kind-icon">get<wbr>Base<wbr>Doc<wbr>Id</a>
-							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-static">
-								<a href="doctypeutils.html#getgenesis" class="tsd-kind-icon">get<wbr>Genesis</a>
-							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-static">
-								<a href="doctypeutils.html#getversionid" class="tsd-kind-icon">get<wbr>Version<wbr>Id</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-static">
 								<a href="doctypeutils.html#isanchorrecord" class="tsd-kind-icon">is<wbr>Anchor<wbr>Record</a>
@@ -649,9 +430,6 @@
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class tsd-has-type-parameter tsd-is-static">
 								<a href="doctypeutils.html#makereadonly" class="tsd-kind-icon">make<wbr>Read<wbr>Only</a>
-							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-static">
-								<a href="doctypeutils.html#normalizedocid" class="tsd-kind-icon">normalize<wbr>Doc<wbr>Id</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-static">
 								<a href="doctypeutils.html#serializerecord" class="tsd-kind-icon">serialize<wbr>Record</a>
