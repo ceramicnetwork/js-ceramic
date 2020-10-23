@@ -20,6 +20,7 @@ import {
   RootLogger,
   Logger,
 } from '@ceramicnetwork/ceramic-common'
+import DocID from '@ceramicnetwork/docid'
 import { PinStore } from './store/pin-store';
 
 /**
@@ -34,27 +35,27 @@ class Document extends EventEmitter {
 
   public _context: Context
 
-  public readonly id: string
+  public readonly id: DocID
   public readonly version: CID
 
   private logger: Logger
 
   private isProcessing: boolean
 
-  constructor (id: string, public dispatcher: Dispatcher, public pinStore: PinStore) {
+  constructor (id: DocID, public dispatcher: Dispatcher, public pinStore: PinStore) {
     super()
-    const normalized = DoctypeUtils.normalizeDocId(id)
-    this.id = DoctypeUtils.getBaseDocId(normalized);
-    this.version = DoctypeUtils.getVersionId(normalized)
+    this.id = id
+    this.version = id.version
+
     this.logger = RootLogger.getLogger(Document.name)
 
     this._applyQueue = new PQueue({ concurrency: 1 })
-    this._genesisCid = new CID(DoctypeUtils.getGenesis(this.id))
+    this._genesisCid = id.cid
   }
 
   /**
    * Creates new Doctype with params
-   * @param genesisCid - Genesis CID
+   * @param docId - Document ID
    * @param doctypeHandler - DoctypeHandler instance
    * @param dispatcher - Dispatcher instance
    * @param pinStore - PinStore instance
@@ -63,7 +64,7 @@ class Document extends EventEmitter {
    * @param validate - Validate content against schema
    */
   static async create<T extends Doctype> (
-      genesisCid: CID,
+      docId: DocID,
       doctypeHandler: DoctypeHandler<Doctype>,
       dispatcher: Dispatcher,
       pinStore: PinStore,
@@ -71,10 +72,8 @@ class Document extends EventEmitter {
       opts: DocOpts = {},
       validate = true,
   ): Promise<Document> {
-    const genesis = await dispatcher.retrieveRecord(genesisCid)
-    const id = DoctypeUtils.createDocIdFromGenesis(genesisCid)
-
-    const doc = new Document(id, dispatcher, pinStore)
+    const genesis = await dispatcher.retrieveRecord(docId.cid)
+    const doc = new Document(docId, dispatcher, pinStore)
 
     doc._context = context
     doc._doctypeHandler = doctypeHandler
@@ -85,7 +84,7 @@ class Document extends EventEmitter {
     if (validate) {
       const schema = await Document.loadSchema(context.api, doc._doctype)
       if (schema) {
-        DoctypeUtils.validate(doc._doctype.content, schema)
+        Utils.validate(doc._doctype.content, schema)
       }
     }
 
@@ -109,7 +108,7 @@ class Document extends EventEmitter {
    * @param opts - Initialization options
    */
   static async load<T extends Doctype> (
-      id: string,
+      id: DocID,
       findHandler: (genesisRecord: any) => DoctypeHandler<Doctype>,
       dispatcher: Dispatcher,
       pinStore: PinStore,
@@ -149,6 +148,20 @@ class Document extends EventEmitter {
 
     await doc._register(opts)
     return doc
+  }
+
+  /**
+   * Validate Doctype against schema
+   */
+  async validate(): Promise<void> {
+    const schemaDocId = this.state?.metadata?.schema
+    if (schemaDocId) {
+      const schemaDoc = await this._context.api.loadDocument(schemaDocId)
+      if (!schemaDoc) {
+        throw new Error(`Schema not found for ${schemaDocId}`)
+      }
+      Utils.validate(this.content, schemaDoc.content)
+    }
   }
 
   /**
@@ -199,7 +212,9 @@ class Document extends EventEmitter {
       }
     }
 
-    const document = new Document(DoctypeUtils.createDocIdFromBase(doc.id, version), dispatcher, pinStore)
+    const docid = DocID.fromBytes(doc.id.bytes, version)
+
+    const document = new Document(docid, dispatcher, pinStore)
     document._context = context
     document._doctypeHandler = doctypeHandler
     document._doctype = new doc._doctypeHandler.doctype(null, context)
@@ -246,7 +261,7 @@ class Document extends EventEmitter {
     if (validate) {
       const schema = await Document.loadSchemaById(this._context.api, state.metadata.schema)
       if (schema) {
-        DoctypeUtils.validate(state.next.content, schema)
+        Utils.validate(state.next.content, schema)
       }
     }
 
@@ -523,14 +538,14 @@ class Document extends EventEmitter {
    * @private
    */
   async _publishHead (): Promise<void> {
-    await this.dispatcher.publishHead(this.id, this.head, this.doctype.doctype)
+    await this.dispatcher.publishHead(this.id.toString(), this.head, this.doctype.doctype)
   }
 
   /**
    * Request anchor for the latest document state
    */
   async anchor (): Promise<void> {
-    this._context.anchorService.on(this.id, async (asr: AnchorServiceResponse): Promise<void> => {
+    this._context.anchorService.on(this.id.toString(), async (asr: AnchorServiceResponse): Promise<void> => {
       switch (asr.status) {
         case 'PENDING': {
           const state = this._doctype.state
@@ -554,19 +569,19 @@ class Document extends EventEmitter {
           await this._updateStateIfPinned()
           this._publishHead()
 
-          this._context.anchorService.removeAllListeners(this.id)
+          this._context.anchorService.removeAllListeners(this.id.toString())
           return
         }
         case 'FAILED': {
           const state = this._doctype.state
           state.anchorStatus = AnchorStatus.FAILED
           this._doctype.state = state
-          this._context.anchorService.removeAllListeners(this.id)
+          this._context.anchorService.removeAllListeners(this.id.toString())
           return
         }
       }
     })
-    await this._context.anchorService.requestAnchor(this.id, this.head)
+    await this._context.anchorService.requestAnchor(this.id.toString(), this.head)
     const state = this._doctype.state
     state.anchorStatus = AnchorStatus.PENDING
     this._doctype.state = state
@@ -665,11 +680,11 @@ class Document extends EventEmitter {
     this.off('update', this._handleHead.bind(this))
     this.off('headreq', this._publishHead.bind(this))
 
-    this.dispatcher.unregister(this.id)
+    this.dispatcher.unregister(this.id.toString())
 
     await this._applyQueue.onEmpty()
 
-    this._context.anchorService.removeAllListeners(this.id)
+    this._context.anchorService.removeAllListeners(this.id.toString())
     await Utils.awaitCondition(() => this.isProcessing, () => false, 500)
   }
 

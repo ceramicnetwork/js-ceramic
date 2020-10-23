@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/ceramic-core",
-  "version": "0.10.1",
+  "version": "0.10.2-alpha.0",
   "description": "Typescript implementation of the Ceramic protocol",
   "keywords": [
     "Ceramic",
@@ -28,15 +28,17 @@
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/3id-did-resolver": "^0.4.5",
-    "@ceramicnetwork/ceramic-common": "^0.10.1",
-    "@ceramicnetwork/ceramic-doctype-account-link": "^0.8.2",
-    "@ceramicnetwork/ceramic-doctype-tile": "^0.8.2",
+    "@ceramicnetwork/3id-did-resolver": "^0.4.6-alpha.0",
+    "@ceramicnetwork/ceramic-common": "^0.10.2-alpha.0",
+    "@ceramicnetwork/ceramic-doctype-account-link": "^0.8.3-alpha.0",
+    "@ceramicnetwork/ceramic-doctype-tile": "^0.8.3-alpha.0",
+    "@ceramicnetwork/docid": "^0.2.0-alpha.0",
     "@ceramicnetwork/key-did-resolver": "^0.1.2",
     "@ethersproject/base64": "^5.0.2",
     "@ethersproject/providers": "^5.0.0-beta.144",
     "@ethersproject/random": "^5.0.2",
     "@textile/powergate-client": "^0.2.0",
+    "ajv": "^6.12.3",
     "cids": "^1.0.0",
     "cross-fetch": "^3.0.5",
     "did-resolver": "^2.1.1",
@@ -64,9 +66,10 @@
     "eslint": "^6.8.0",
     "eslint-plugin-jest": "^23.8.2",
     "get-port": "^5.1.1",
-    "identity-wallet": "^2.0.0-alpha.13",
+    "identity-wallet": "github:3box/identity-wallet-js#feat/docids",
     "ipfs": "github:simonovic86/ipfs",
     "jest": "^25.1.0",
+    "jest-mock-extended": "^1.0.9",
     "js-sha256": "^0.9.0",
     "tmp-promise": "^2.0.2"
   },

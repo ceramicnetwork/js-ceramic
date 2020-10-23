@@ -2,7 +2,10 @@ import {
   Context, DocOpts, DocParams, DocState, Doctype, DoctypeHandler, DoctypeUtils
 } from "@ceramicnetwork/ceramic-common"
 
-import { fetchJson } from './utils'
+import { fetchJson, typeDocID } from './utils'
+import DocID from '@ceramicnetwork/docid'
+
+const docIdUrl = (docId: DocID ): string => `/ceramic/${docId.toString()}`
 
 class Document extends Doctype {
 
@@ -20,8 +23,8 @@ class Document extends Doctype {
     }
   }
 
-  get id(): string {
-    return DoctypeUtils.createDocIdFromGenesis(this.state.log[0])
+  get id(): DocID {
+    return new DocID(this.state.doctype, this.state.log[0])
   }
 
   static async create (apiUrl: string, doctype: string, params: DocParams, context: Context, opts: DocOpts = {}): Promise<Document> {
@@ -45,9 +48,10 @@ class Document extends Doctype {
     return new Document(DoctypeUtils.deserializeState(state), context, apiUrl)
   }
 
-  static async applyRecord(apiUrl: string, docId: string, record: any, context: Context, opts: DocOpts = {}): Promise<Document> {
+  static async applyRecord(apiUrl: string, docId: DocID | string, record: any, context: Context, opts: DocOpts = {}): Promise<Document> {
+    docId = typeDocID(docId)
     const { state } = await fetchJson(apiUrl + '/apply', {
-      docId,
+      docId: docId.toString(),
       record: DoctypeUtils.serializeRecord(record),
       docOpts: {
         applyOnly: opts.applyOnly,
@@ -56,21 +60,21 @@ class Document extends Doctype {
     return new Document(DoctypeUtils.deserializeState(state), context, apiUrl, false)
   }
 
-  static async load (id: string, apiUrl: string, context: Context): Promise<Document> {
-    const normalizedId = DoctypeUtils.normalizeDocId(id)
-    const { state } = await fetchJson(apiUrl + '/state' + normalizedId)
+  static async load (docId: DocID | string, apiUrl: string, context: Context): Promise<Document> {
+    docId = typeDocID(docId)
+    const { state } = await fetchJson(apiUrl + '/state' + docIdUrl(docId))
     return new Document(DoctypeUtils.deserializeState(state), context, apiUrl)
   }
 
-  static async listVersions (id: string, apiUrl: string): Promise<string[]> {
-    const normalizedId = DoctypeUtils.normalizeDocId(id)
-    const { versions } = await fetchJson(apiUrl + '/versions' + normalizedId)
+  static async listVersions (docId: DocID | string, apiUrl: string): Promise<string[]> {
+    docId = typeDocID(docId)
+    const { versions } = await fetchJson(apiUrl + '/versions' + docIdUrl(docId))
     return versions
   }
 
-  static async loadDocumentRecords (id: string, apiUrl: string): Promise<Array<Record<string, any>>> {
-    const normalizedId = DoctypeUtils.normalizeDocId(id)
-    const { records } = await fetchJson(apiUrl + '/records' + normalizedId)
+  static async loadDocumentRecords (docId: DocID | string, apiUrl: string): Promise<Array<Record<string, any>>> {
+    docId = typeDocID(docId)
+    const { records } = await fetchJson(apiUrl + '/records' + docIdUrl(docId))
 
     return records.map((r: any) => {
       return {
@@ -87,8 +91,7 @@ class Document extends Doctype {
   }
 
   async _syncState(): Promise<void> {
-    const normalizedId = DoctypeUtils.normalizeDocId(this.id)
-    let { state } = await fetchJson(this._apiUrl + '/state' + normalizedId)
+    let { state } = await fetchJson(this._apiUrl + '/state' + docIdUrl(this.id))
     state = DoctypeUtils.deserializeState(state)
     if (JSON.stringify(this.state) !== JSON.stringify(state)) {
       this.state = state

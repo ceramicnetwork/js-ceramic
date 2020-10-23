@@ -1,8 +1,9 @@
 import tmp from 'tmp-promise'
 import { LevelStateStore } from "../level-state-store";
 import Level from "level-ts";
-import { AnchorStatus, Doctype, SignatureStatus, DoctypeUtils } from "@ceramicnetwork/ceramic-common";
-import CID from 'cids';
+import { AnchorStatus, Doctype, SignatureStatus } from "@ceramicnetwork/ceramic-common";
+import CID from 'cids'
+import DocID from '@ceramicnetwork/docid'
 
 let mockStorage: Map<string, any>
 const mockPut = jest.fn((id: string, state: any) => mockStorage.set(id, state))
@@ -10,6 +11,8 @@ let mockGet = jest.fn((id: string) => mockStorage.get(id))
 const mockDel = jest.fn((id: string) => Promise.resolve())
 const mockStreamResult = ['1', '2', '3']
 const mockStream = jest.fn(async () => mockStreamResult)
+
+const docIdTest = 'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
 
 jest.mock('level-ts', () => {
     return jest.fn().mockImplementation(() => {
@@ -33,17 +36,17 @@ class FakeType extends Doctype {
 }
 
 let levelPath: string
-let stateSore: LevelStateStore
+let stateStore: LevelStateStore
 
 beforeEach(async () => {
     mockStorage = new Map()
     levelPath = await tmp.tmpName()
-    stateSore = new LevelStateStore(levelPath)
+    stateStore = new LevelStateStore(levelPath)
     mockGet = jest.fn((id: string) => mockStorage.get(id))
 })
 
 const state = {
-    doctype: 'fake',
+    doctype: 'tile',
     content: {num: 0},
     metadata: {
         owners: ['']
@@ -55,93 +58,101 @@ const state = {
 
 test('#open', async () => {
     expect(Level).not.toBeCalled()
-    expect(stateSore.store).toBeUndefined()
-    await stateSore.open()
+    expect(stateStore.store).toBeUndefined()
+    await stateStore.open()
     expect(Level).toBeCalledWith(levelPath)
 })
 
 test('#save and #load', async () => {
     const document = new FakeType(state, {})
-    await stateSore.open()
-    await stateSore.save(document)
-    const docId = DoctypeUtils.getBaseDocId(DoctypeUtils.normalizeDocId(document.id))
+    await stateStore.open()
+    await stateStore.save(document)
+    const docId = document.id.baseID
     const storedState = {
         ...state,
         log: state.log.map(cid => cid.toString())
     }
-    expect(mockPut).toBeCalledWith(docId, storedState)
+    expect(mockPut).toBeCalledWith(docId.toString(), storedState)
 
-    const retrieved = await stateSore.load(document.id)
-    expect(mockGet).toBeCalledWith(docId)
+    const retrieved = await stateStore.load(docId)
+    expect(mockGet).toBeCalledWith(docId.toString())
     expect(retrieved).toEqual(state)
 })
 
 describe('#load', () => {
     test('#load not found', async () => {
         mockGet = jest.fn((id: string) => { throw {notFound: true}})
-        await stateSore.open()
-        const retrieved = await stateSore.load('ceramic://fooblah')
+        await stateStore.open()
+        const docid = DocID.fromString(docIdTest)
+        const retrieved = await stateStore.load(docid)
         expect(retrieved).toBeNull()
     })
 
     test('#load passes errors', async () => {
         mockGet = jest.fn((id: string) => { throw new Error('something internal to LevelDB')})
-        await stateSore.open()
-        await expect(stateSore.load('ceramic://fooblah')).rejects.toThrow('something internal to LevelDB')
+        await stateStore.open()
+        const docid = DocID.fromString(docIdTest)
+        await expect(stateStore.load(docid)).rejects.toThrow('something internal to LevelDB')
     })
 })
 
 describe('#exists', () => {
     test('absent', async () => {
-        await stateSore.open()
-        const load = jest.spyOn(stateSore, 'load')
-        await expect(stateSore.exists('ceramic://fooblah')).resolves.toBeFalsy()
-        expect(load).toBeCalledWith('ceramic://fooblah')
+        await stateStore.open()
+        const load = jest.spyOn(stateStore, 'load')
+        const docid = DocID.fromString(docIdTest)
+        await expect(stateStore.exists(docid)).resolves.toBeFalsy()
+        expect(load).toBeCalledWith(docid)
     })
 
     test('present', async () => {
-        await stateSore.open()
-        stateSore.load = jest.fn(async () => state)
-        await expect(stateSore.exists('ceramic://fooblah')).resolves.toBeTruthy()
-        expect(stateSore.load).toBeCalledWith('ceramic://fooblah')
+        await stateStore.open()
+        stateStore.load = jest.fn(async () => state)
+        const docid = DocID.fromString(docIdTest)
+        await expect(stateStore.exists(docid)).resolves.toBeTruthy()
+        expect(stateStore.load).toBeCalledWith(docid)
     })
 })
 
 describe('#remove', () => {
     test('absent', async () => {
-        await stateSore.open()
-        const exists = jest.spyOn(stateSore, 'exists').mockImplementation(async () => false)
-        await stateSore.remove('ceramic://fooblah')
-        expect(exists).toBeCalledWith('ceramic://fooblah')
+        await stateStore.open()
+        const exists = jest.spyOn(stateStore, 'exists').mockImplementation(async () => false)
+        const docid = DocID.fromString(docIdTest)
+        await stateStore.remove(docid)
+        expect(exists).toBeCalledWith(docid)
         expect(mockDel).not.toBeCalled()
     })
 
     test('present', async () => {
-        await stateSore.open()
-        const exists = jest.spyOn(stateSore, 'exists').mockImplementation(async () => true)
-        await stateSore.remove('ceramic://fooblah')
-        expect(exists).toBeCalledWith('ceramic://fooblah')
-        expect(mockDel).toBeCalledWith('ceramic://fooblah')
+        await stateStore.open()
+        const exists = jest.spyOn(stateStore, 'exists').mockImplementation(async () => true)
+        const docid = DocID.fromString(docIdTest)
+        await stateStore.remove(docid)
+        expect(exists).toBeCalledWith(docid)
+        expect(mockDel).toBeCalledWith(docid.toString())
     })
 })
 
 describe('#list', () => {
     test('saved entries', async () => {
-        await stateSore.open()
-        const list = await stateSore.list()
+        await stateStore.open()
+        const list = await stateStore.list()
         expect(list).toEqual(mockStreamResult)
         expect(mockStream).toBeCalledWith({keys: true, values: false})
     })
     test('report if docId is saved', async () => {
-        await stateSore.open()
-        stateSore.exists = jest.fn(() => Promise.resolve(true))
-        const list = await stateSore.list('ceramic://doc-id')
-        expect(list).toEqual(['ceramic://doc-id'])
+        await stateStore.open()
+        stateStore.exists = jest.fn(() => Promise.resolve(true))
+        const docid = DocID.fromString(docIdTest)
+        const list = await stateStore.list(docid)
+        expect(list).toEqual([docid.toString()])
     })
     test('report if docId is absent', async () => {
-        await stateSore.open()
-        stateSore.exists = jest.fn(() => Promise.resolve(false))
-        const list = await stateSore.list('ceramic://doc-id')
+        await stateStore.open()
+        stateStore.exists = jest.fn(() => Promise.resolve(false))
+        const docid = DocID.fromString(docIdTest)
+        const list = await stateStore.list(docid)
         expect(list).toEqual([])
     })
 })

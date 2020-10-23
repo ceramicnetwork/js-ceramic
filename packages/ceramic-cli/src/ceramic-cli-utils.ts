@@ -7,6 +7,7 @@ const fs = require('fs').promises
 import IdentityWallet from "identity-wallet"
 import CeramicClient from "@ceramicnetwork/ceramic-http-client"
 import { CeramicApi, DoctypeUtils } from "@ceramicnetwork/ceramic-common"
+import DocID from '@ceramicnetwork/docid'
 
 import CeramicDaemon, { CreateOpts } from "./ceramic-daemon"
 
@@ -18,8 +19,6 @@ import multiformats from 'multiformats/basics'
 // @ts-ignore
 import legacy from 'multiformats/legacy'
 import ipfsClient from "ipfs-http-client"
-
-const PREFIX_REGEX = /^ceramic:\/\/|^\/ceramic\//
 
 const DEFAULT_CLI_CONFIG_FILE = 'config.json'
 export const DEFAULT_PINNING_STORE_PATH = ".pinning.store"
@@ -123,14 +122,11 @@ export class CeramicCliUtils {
      * @param schemaDocId - Optional schema document ID
      */
     static async change(docId: string, content: string, owners: string, schemaDocId?: string): Promise<void> {
-        if (!CeramicCliUtils._validateDocId(docId)) {
-            console.error(`Invalid docId: ${docId}`)
-            return
-        }
+        const id = DocID.fromString(docId)
 
-        const version = DoctypeUtils.getVersionId(docId)
+        const version = id.version
         if (version) {
-            console.error(`No versions allowed. Invalid docId: ${docId}`)
+            console.error(`No versions allowed. Invalid docId: ${id.toString()}`)
             return
         }
 
@@ -138,7 +134,7 @@ export class CeramicCliUtils {
             const parsedOwners = CeramicCliUtils._parseOwners(owners)
             const parsedContent = CeramicCliUtils._parseContent(content)
 
-            const doc = await ceramic.loadDocument(docId)
+            const doc = await ceramic.loadDocument(id)
             await doc.change({
                 content: parsedContent, metadata: {
                     owners: parsedOwners, schema: schemaDocId
@@ -154,13 +150,10 @@ export class CeramicCliUtils {
      * @param docId - Document ID
      */
     static async show(docId: string): Promise<void> {
-        if (!CeramicCliUtils._validateDocId(docId)) {
-            console.error(`Invalid docId: ${docId}`)
-            return
-        }
+        const id = DocID.fromString(docId)
 
         await CeramicCliUtils._runWithCeramic(async (ceramic: CeramicApi) => {
-            const doc = await ceramic.loadDocument(docId)
+            const doc = await ceramic.loadDocument(id)
             console.log(JSON.stringify(doc.content, null, 2))
         })
     }
@@ -170,13 +163,10 @@ export class CeramicCliUtils {
      * @param docId - Document ID
      */
     static async state(docId: string): Promise<void> {
-        if (!CeramicCliUtils._validateDocId(docId)) {
-            console.error(`Invalid docId: ${docId}`)
-            return
-        }
+        const id = DocID.fromString(docId)
 
         await CeramicCliUtils._runWithCeramic(async (ceramic: CeramicApi) => {
-            const doc = await ceramic.loadDocument(docId)
+            const doc = await ceramic.loadDocument(id)
             console.log(JSON.stringify(DoctypeUtils.serializeState(doc.state), null, 2))
         })
     }
@@ -186,13 +176,10 @@ export class CeramicCliUtils {
      * @param docId - Document ID
      */
     static async watch(docId: string): Promise<void> {
-        if (!CeramicCliUtils._validateDocId(docId)) {
-            console.error(`Invalid docId: ${docId}`)
-            return
-        }
+        const id = DocID.fromString(docId)
 
         await CeramicCliUtils._runWithCeramic(async (ceramic: CeramicApi) => {
-            const doc = await ceramic.loadDocument(docId)
+            const doc = await ceramic.loadDocument(id)
             console.log(JSON.stringify(doc.content, null, 2))
             doc.on('change', () => {
                 console.log('--- document changed ---')
@@ -206,13 +193,10 @@ export class CeramicCliUtils {
      * @param docId - Document ID
      */
     static async versions(docId: string): Promise<void> {
-        if (!CeramicCliUtils._validateDocId(docId)) {
-            console.error(`Invalid docId: ${docId}`)
-            return
-        }
+        const id = DocID.fromString(docId)
 
         await CeramicCliUtils._runWithCeramic(async (ceramic: CeramicApi) => {
-            const versions = await ceramic.listVersions(docId)
+            const versions = await ceramic.listVersions(id)
             console.log(JSON.stringify(versions, null, 2))
         })
     }
@@ -225,17 +209,7 @@ export class CeramicCliUtils {
      * @param isUnique - Should document be unique?
      */
     static async schemaCreateDoc(content: string, owners: string, onlyGenesis: boolean, isUnique: boolean): Promise<void> {
-        try {
-            const schemaObj = JSON.parse(content)
-            if (!DoctypeUtils.isSchemaValid(schemaObj)) {
-                console.error('Invalid schema')
-                return
-            }
-        } catch (e) {
-            console.error(e.message)
-            return
-        }
-
+        // TODO validate schema on the client side
         return CeramicCliUtils.createDoc('tile', content, owners, onlyGenesis, isUnique)
     }
 
@@ -246,47 +220,9 @@ export class CeramicCliUtils {
      * @param owners - Schema document owners
      */
     static async schemaChangeDoc(schemaDocId: string, content: string, owners: string): Promise<void> {
-        if (!CeramicCliUtils._validateDocId(schemaDocId)) {
-            console.error(`Invalid schema docId: ${schemaDocId}`)
-            return
-        }
-
-        try {
-            const schemaObj = JSON.parse(content)
-            if (!DoctypeUtils.isSchemaValid(schemaObj)) {
-                console.error('Invalid schema')
-                return
-            }
-        } catch (e) {
-            console.error(e.message)
-            return
-        }
-
+        DocID.fromString(schemaDocId)
+        // TODO validate schema on the client side
         return CeramicCliUtils.change(schemaDocId, content, owners, null)
-    }
-
-    /**
-     * Validate content against schema document
-     * @param schemaDocId - Schema document ID
-     * @param content - Content
-     */
-    static async schemaValidateContent(schemaDocId: string, content: string): Promise<void> {
-        if (!CeramicCliUtils._validateDocId(schemaDocId)) {
-            console.error(`Invalid schema docId: ${schemaDocId}`)
-            return
-        }
-
-        await CeramicCliUtils._runWithCeramic(async (ceramic: CeramicApi) => {
-            const doc = await ceramic.loadDocument(schemaDocId)
-
-            const parsedContent = CeramicCliUtils._parseContent(content)
-            try {
-                DoctypeUtils.validate(parsedContent, doc.content)
-                console.log('Content is valid')
-            } catch (e) {
-                console.error(e.message)
-            }
-        })
     }
 
     /**
@@ -294,13 +230,10 @@ export class CeramicCliUtils {
      * @param docId - Document ID
      */
     static async pinAdd(docId: string): Promise<void> {
-        if (!CeramicCliUtils._validateDocId(docId)) {
-            console.error(`Invalid docId: ${docId}`)
-            return
-        }
+        const id = DocID.fromString(docId)
 
         await CeramicCliUtils._runWithCeramic(async (ceramic: CeramicApi) => {
-            const result = await ceramic.pin.add(docId)
+            const result = await ceramic.pin.add(id)
             console.log(JSON.stringify(result, null, 2))
         })
     }
@@ -310,13 +243,10 @@ export class CeramicCliUtils {
      * @param docId - Document ID
      */
     static async pinRm(docId: string): Promise<void> {
-        if (!CeramicCliUtils._validateDocId(docId)) {
-            console.error(`Invalid docId: ${docId}`)
-            return
-        }
+        const id = DocID.fromString(docId)
 
         await CeramicCliUtils._runWithCeramic(async (ceramic: CeramicApi) => {
-            const result = await ceramic.pin.rm(docId)
+            const result = await ceramic.pin.rm(id)
             console.log(JSON.stringify(result, null, 2))
         })
     }
@@ -326,14 +256,11 @@ export class CeramicCliUtils {
      * @param docId - optional document ID filter
      */
     static async pinLs(docId?: string): Promise<void> {
-        if (docId && !CeramicCliUtils._validateDocId(docId)) {
-            console.error(`Invalid docId: ${docId}`)
-            return
-        }
-
+       const id = DocID.fromString(docId)
+       
         await CeramicCliUtils._runWithCeramic(async (ceramic: CeramicApi) => {
             const pinnedDocIds = []
-            const iterator = await ceramic.pin.ls(docId)
+            const iterator = await ceramic.pin.ls(id)
             for await (const id of iterator) {
                 pinnedDocIds.push(id)
             }
@@ -478,18 +405,5 @@ export class CeramicCliUtils {
             return [ ]
         }
         return owners.includes(',') ? owners.split(',') : [owners]
-    }
-
-    /**
-     * Validate document ID
-     * @param docId - Document ID
-     * @private
-     */
-    static _validateDocId(docId: string): string {
-        if (docId == null) {
-            return null
-        }
-        const match = docId.match(PREFIX_REGEX)
-        return match ? match[0] : null
     }
 }

@@ -384,7 +384,7 @@ describe('Document', () => {
     it('should announce change to network', async () => {
       const doc1 = await create({ content: initialContent, metadata: { owners, tags: ['3id'] } }, ceramic, context)
       expect(dispatcher.publishHead).toHaveBeenCalledTimes(1)
-      expect(dispatcher.publishHead).toHaveBeenCalledWith(doc1.id, doc1.head, 'tile')
+      expect(dispatcher.publishHead).toHaveBeenCalledWith(doc1.id.toString(), doc1.head, 'tile')
       await anchorUpdate(doc1)
 
       const updateRec = await TileDoctype._makeRecord(doc1.doctype, user, newContent, doc1.owners)
@@ -393,7 +393,7 @@ describe('Document', () => {
       expect(doc1.content).toEqual(newContent)
 
       expect(dispatcher.publishHead).toHaveBeenCalledTimes(3)
-      expect(dispatcher.publishHead).toHaveBeenCalledWith(doc1.id, doc1.head, 'tile')
+      expect(dispatcher.publishHead).toHaveBeenCalledWith(doc1.id.toString(), doc1.head, 'tile')
     })
 
     it('documents share updates', async () => {
@@ -417,12 +417,12 @@ describe('Document', () => {
     it('should publish head on network request', async () => {
       const doc = await create({ content: initialContent, metadata: { owners, tags: ['3id'] } }, ceramic, context)
       expect(dispatcher.publishHead).toHaveBeenCalledTimes(1)
-      expect(dispatcher.publishHead).toHaveBeenNthCalledWith(1, doc.id, doc.head, 'tile')
+      expect(dispatcher.publishHead).toHaveBeenNthCalledWith(1, doc.id.toString(), doc.head, 'tile')
 
       await dispatcher._requestHead(doc.id)
 
       expect(dispatcher.publishHead).toHaveBeenCalledTimes(2)
-      expect(dispatcher.publishHead).toHaveBeenNthCalledWith(2, doc.id, doc.head, 'tile')
+      expect(dispatcher.publishHead).toHaveBeenNthCalledWith(2, doc.id.toString(), doc.head, 'tile')
 
       // wait a bit to complete document handling
       await new Promise(resolve => setTimeout(resolve, 1000))

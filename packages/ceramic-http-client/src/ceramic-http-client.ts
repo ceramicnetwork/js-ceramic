@@ -1,10 +1,11 @@
-import { fetchJson } from "./utils"
+import { fetchJson, typeDocID } from "./utils"
 import Document from './document'
 
 import { DID } from 'dids'
 import { Doctype, DoctypeHandler, DocOpts, DocParams, DIDProvider, Context, CeramicApi, PinApi, DoctypeUtils } from "@ceramicnetwork/ceramic-common"
 import { TileDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-tile"
 import { AccountLinkDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-account-link"
+import DocID from '@ceramicnetwork/docid'
 
 const CERAMIC_HOST = 'http://localhost:7007'
 const API_PATH = '/api/v0'
@@ -37,18 +38,16 @@ class CeramicClient implements CeramicApi {
 
   _initPinApi(): PinApi {
     return {
-      add: async (docId: string): Promise<void> => {
-        const normalizedId = DoctypeUtils.normalizeDocId(docId)
-        return await fetchJson(this._apiUrl + '/pin/add' + normalizedId)
+      add: async (docId: DocID): Promise<void> => {
+        return await fetchJson(this._apiUrl + '/pin/add' + `/ceramic/${docId.toString()}`)
       },
-      rm: async (docId: string): Promise<void> => {
-        const normalizedId = DoctypeUtils.normalizeDocId(docId)
-        return await fetchJson(this._apiUrl + '/pin/rm' + normalizedId)
+      rm: async (docId: DocID): Promise<void> => {
+        return await fetchJson(this._apiUrl + '/pin/rm' + `/ceramic/${docId.toString()}`)
       },
-      ls: async (docId?: string): Promise<AsyncIterable<string>> => {
+      ls: async (docId?: DocID): Promise<AsyncIterable<string>> => {
         let url = this._apiUrl + '/pin/ls'
         if (docId !== undefined) {
-          url += docId
+          url += `/ceramic/${docId.toString()}`
         }
         const result = await fetchJson(url)
         const { pinnedDocIds } = result
@@ -78,37 +77,37 @@ class CeramicClient implements CeramicApi {
 
   async createDocumentFromGenesis<T extends Doctype>(genesis: any, opts?: DocOpts): Promise<T> {
     const doc = await Document.createFromGenesis(this._apiUrl, genesis, this.context, opts)
-    const normalizedId = DoctypeUtils.normalizeDocId(doc.id)
-    if (!this._docmap[normalizedId]) {
-      this._docmap[normalizedId] = doc
+    const docIdStr = doc.id.toString()
+    if (!this._docmap[docIdStr]) {
+      this._docmap[docIdStr] = doc
     }
-    this._docmap[normalizedId].doctypeHandler = this.findDoctypeHandler(this._docmap[normalizedId].state.doctype)
-    return this._docmap[normalizedId] as unknown as T
+    this._docmap[docIdStr].doctypeHandler = this.findDoctypeHandler(this._docmap[docIdStr].state.doctype)
+    return this._docmap[docIdStr] as unknown as T
   }
 
-  async loadDocument<T extends Doctype>(id: string): Promise<T> {
-    const normalizedId = DoctypeUtils.normalizeDocId(id)
-
-    if (!this._docmap[normalizedId]) {
-      this._docmap[normalizedId] = await Document.load(normalizedId, this._apiUrl, this.context)
+  async loadDocument<T extends Doctype>(docId: DocID | string): Promise<T> {
+    docId = typeDocID(docId)
+    const docIdStr = docId.toString()
+    if (!this._docmap[docIdStr]) {
+      this._docmap[docIdStr] = await Document.load(docId, this._apiUrl, this.context)
     }
-    this._docmap[normalizedId].doctypeHandler = this.findDoctypeHandler(this._docmap[normalizedId].state.doctype)
-    return this._docmap[normalizedId] as unknown as T
+    this._docmap[docIdStr].doctypeHandler = this.findDoctypeHandler(this._docmap[docIdStr].state.doctype)
+    return this._docmap[docIdStr] as unknown as T
   }
 
-  async loadDocumentRecords(docId: string): Promise<Array<Record<string, any>>> {
-    const normalizedId = DoctypeUtils.normalizeDocId(docId)
-
-    return Document.loadDocumentRecords(normalizedId, this._apiUrl)
+  async loadDocumentRecords(docId: DocID | string): Promise<Array<Record<string, any>>> {
+    docId = typeDocID(docId)
+    return Document.loadDocumentRecords(docId, this._apiUrl)
   }
 
-  async applyRecord<T extends Doctype>(docId: string, record: object, opts?: DocOpts): Promise<T> {
+  async applyRecord<T extends Doctype>(docId: DocID | string, record: object, opts?: DocOpts): Promise<T> {
+    docId = typeDocID(docId)
     return await Document.applyRecord(this._apiUrl, docId, record, this.context, opts) as unknown as T
   }
 
-  async listVersions(docId: string): Promise<string[]> {
-    const normalizedId = DoctypeUtils.normalizeDocId(docId)
-    return Document.listVersions(normalizedId, this._apiUrl)
+  async listVersions(docId: DocID | string): Promise<string[]> {
+    docId = typeDocID(docId)
+    return Document.listVersions(docId, this._apiUrl)
   }
 
   addDoctypeHandler<T extends Doctype>(doctypeHandler: DoctypeHandler<T>): void {

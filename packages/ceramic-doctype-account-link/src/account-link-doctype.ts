@@ -24,7 +24,7 @@ export class AccountLinkDoctype extends Doctype {
     async change(params: AccountLinkParams, opts?: DocOpts): Promise<void> {
         const { content, metadata } = params
         const updateRecord = await AccountLinkDoctype._makeRecord(this, content, metadata?.schema)
-        const updated = await this.context.api.applyRecord(this.id, updateRecord, opts)
+        const updated = await this.context.api.applyRecord(this.id.toString(), updateRecord, opts)
         this.state = updated.state
     }
 

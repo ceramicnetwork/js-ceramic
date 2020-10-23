@@ -1,4 +1,3 @@
-import ajv from "ajv"
 import CID from 'cids'
 import cloneDeep from "lodash.clonedeep"
 import * as u8a from 'uint8arrays'
@@ -10,99 +9,6 @@ import { AnchorStatus, DocState, Doctype } from "../doctype"
  * Doctype related utils
  */
 export class DoctypeUtils {
-
-    static validator: any = new ajv({ allErrors: true })
-
-    /**
-     * Create Doctype instance from the document wrapper
-     * @param genesisCid - Genesis record CID
-     * @param version - Doctype version
-     */
-    static createDocIdFromGenesis(genesisCid: any, version: any = null): string {
-        const baseDocId = ['ceramic:/', genesisCid.toString()].join('/')
-        return version? `${baseDocId}?version=${version.toString()}` : baseDocId
-    }
-
-    /**
-     * Create Doctype instance from the document wrapper
-     * @param docId - Doctype ID
-     * @param version - Doctype version
-     */
-    static createDocIdFromBase(docId: string, version: any = null): string {
-        return version? `${docId}?version=${version.toString()}` : docId
-    }
-
-    /**
-     * Normalize document ID
-     * @param docId - Document ID
-     */
-    static normalizeDocId(docId: string): string {
-        if (docId.startsWith('ceramic://')) {
-            return docId.replace('ceramic://', '/ceramic/')
-        }
-        return docId
-    }
-
-    /**
-     * Normalize document ID
-     * @param docId - Document ID
-     */
-    static getGenesis(docId: string): string {
-        const genesis = (docId.startsWith('ceramic://')) ? docId.split('//')[1] : docId.split('/')[2]
-        const indexOfVersion = genesis.indexOf('?')
-        if (indexOfVersion !== -1) {
-            return genesis.substring(0, indexOfVersion)
-        }
-        return genesis
-    }
-
-    /**
-     * Normalize document ID
-     * @param docId - Document ID
-     */
-    static getBaseDocId(docId: string): string {
-        const indexOfVersion = docId.indexOf('?')
-        if (indexOfVersion !== -1) {
-            return docId.substring(0, indexOfVersion)
-        }
-        return docId
-    }
-
-    /**
-     * Normalize document ID
-     * @param docId - Document ID
-     */
-    static getVersionId(docId: string): CID {
-        const genesis = (docId.startsWith('ceramic://')) ? docId.split('//')[1] : docId.split('/')[2]
-        const indexOfVersion = genesis.indexOf('?')
-        if (indexOfVersion !== -1) {
-            const params = DoctypeUtils._getQueryParam(genesis.substring(indexOfVersion + 1))
-            const version = params['version']
-            if (version) {
-                return version === '0' ? new CID(DoctypeUtils.getGenesis(docId)) : new CID(params['version'])
-            }
-        }
-        return null
-    }
-
-    /**
-     * Get query params from document ID
-     * @param query - Document query
-     * @private
-     */
-    static _getQueryParam(query: string): Record<string, string> {
-        const result: Record<string, string> = {};
-        if (!query) {
-            return result
-        }
-
-        const pairs = query.toLowerCase().split('&')
-        pairs.forEach(function(pair) {
-            const mapping: string[] = pair.split('=');
-            result[mapping[0]] = mapping[1] || '';
-        });
-        return result
-    }
 
     /**
      * Serializes record
@@ -224,28 +130,6 @@ export class DoctypeUtils {
             throw new Error('The version of the document is readonly. Checkout the latest HEAD in order to update.')
         }
         return doctype
-    }
-
-    /**
-     * Validates model against JSON-Schema
-     * @param schema - Doctype schema
-     */
-    static isSchemaValid(schema: object): boolean {
-        this.validator.compile(schema) // throws an error on invalid schema
-        return this.validator.validateSchema(schema) // call validate schema just in case
-    }
-
-    /**
-     * Validates model against JSON-Schema
-     * @param content - Doctype content
-     * @param schema - Doctype schema
-     */
-    static validate(content: any, schema: any): void {
-        const isValid = this.validator.validate(schema, content)
-        if (!isValid) {
-            const errorMessages = this.validator.errorsText()
-            throw new Error(`Validation Error: ${errorMessages}`)
-        }
     }
 
     /**

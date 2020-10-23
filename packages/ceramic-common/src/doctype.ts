@@ -2,7 +2,7 @@ import CID from 'cids'
 import cloneDeep from 'lodash.clonedeep'
 import { EventEmitter } from "events"
 import type { Context } from "./context"
-import { DoctypeUtils } from "./utils/doctype-utils"
+import DocID from '@ceramicnetwork/docid'
 
 /**
  * Describes signature status
@@ -99,8 +99,8 @@ export abstract class Doctype extends EventEmitter {
         super()
     }
 
-    get id(): string {
-        return DoctypeUtils.createDocIdFromGenesis(this._state.log[0])
+    get id(): DocID {
+        return new DocID(this._state.doctype, this._state.log[0])
     }
 
     get doctype(): string {
@@ -147,20 +147,6 @@ export abstract class Doctype extends EventEmitter {
      * @param opts - Initialization options
      */
     abstract change(params: DocParams, opts?: DocOpts): Promise<void>
-
-    /**
-     * Validate Doctype against schema
-     */
-    async validate(): Promise<void> {
-        const schemaDocId = this.state?.metadata?.schema
-        if (schemaDocId) {
-            const schemaDoc = await this.context.api.loadDocument(schemaDocId)
-            if (!schemaDoc) {
-                throw new Error(`Schema not found for ${schemaDocId}`)
-            }
-            DoctypeUtils.validate(this.content, schemaDoc.content)
-        }
-    }
 
 }
 
