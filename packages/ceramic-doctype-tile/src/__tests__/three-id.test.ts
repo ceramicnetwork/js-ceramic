@@ -68,7 +68,7 @@ const RECORDS = {
             "signature": "cccc"
           }
         ],
-        "link": "bafyreibaq7uk56ypw5ekedfvvqgwjlhw3wk4he5yjojg6o2bon7u4dcwqe"
+        "link": "bafyreihsdejlmphgha7z6u746pfxbgzykdkpxwkeeunylxvwuaibjybobq"
       },
       payload: {
         "id": "bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu",
@@ -81,7 +81,7 @@ const RECORDS = {
         ],
         "prev": "bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu",
         "header": {
-          "nonce": 1
+          "nonce": 0
         }
       }
     }

@@ -136,6 +136,7 @@ Object {
     },
   ],
   "metadata": Object {
+    "nonce": 0,
     "owners": Array [
       "did:key:zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV",
     ],
@@ -143,7 +144,6 @@ Object {
       "3id",
     ],
   },
-  "next": Object {},
   "signature": 2,
 }
 `;
@@ -206,9 +206,6 @@ Object {
     "tags": Array [
       "3id",
     ],
-  },
-  "next": Object {
-    "content": null,
   },
   "signature": 2,
 }
@@ -319,6 +316,15 @@ Object {
       "publicKeys": Object {
         "test": "0xabc",
       },
+    },
+    "metadata": Object {
+      "nonce": 0,
+      "owners": Array [
+        "did:key:zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV",
+      ],
+      "tags": Array [
+        "3id",
+      ],
     },
   },
   "signature": 2,

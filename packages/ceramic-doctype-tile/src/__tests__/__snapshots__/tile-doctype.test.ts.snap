@@ -134,11 +134,11 @@ Object {
     },
   ],
   "metadata": Object {
+    "nonce": 0,
     "owners": Array [
       "did:3:bafyasdfasdf",
     ],
   },
-  "next": Object {},
   "signature": 2,
 }
 `;
@@ -196,9 +196,6 @@ Object {
     "owners": Array [
       "did:3:bafyasdfasdf",
     ],
-  },
-  "next": Object {
-    "content": null,
   },
   "signature": 2,
 }
@@ -302,6 +299,12 @@ Object {
     "content": Object {
       "much": "data",
       "very": "content",
+    },
+    "metadata": Object {
+      "nonce": 0,
+      "owners": Array [
+        "did:3:bafyasdfasdf",
+      ],
     },
   },
   "signature": 2,
