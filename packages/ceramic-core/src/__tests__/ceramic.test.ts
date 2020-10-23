@@ -2,7 +2,8 @@ import Ceramic from '../ceramic'
 import IdentityWallet from 'identity-wallet'
 import tmp from 'tmp-promise'
 import Ipfs from 'ipfs'
-import { DoctypeUtils, DocState } from "@ceramicnetwork/ceramic-common"
+import getPort from 'get-port'
+import { DoctypeUtils, DocState, Doctype } from "@ceramicnetwork/ceramic-common"
 import { TileDoctype } from "@ceramicnetwork/ceramic-doctype-tile"
 
 import dagJose from 'dag-jose'
@@ -13,9 +14,6 @@ import * as u8a from 'uint8arrays'
 jest.mock('../store/level-state-store')
 
 const seed = u8a.fromString('6e34b2e1a9624113d81ece8a8a22e6e97f0e145c25c1d4d2d0e62753b4060c837097f768559e17ec89ee20cba153b23b9987912ec1e860fa1212ba4b84c776ce', 'base16')
-
-
-import getPort from 'get-port'
 
 /**
  * Create an IPFS instance
@@ -37,10 +35,11 @@ const expectEqualStates = (state1: DocState, state2: DocState): void => {
   expect(DoctypeUtils.serializeState(state1)).toEqual(DoctypeUtils.serializeState(state2))
 }
 
-const createCeramic = async (ipfs: Ipfs, topic: string): Promise<Ceramic> => {
+const createCeramic = async (ipfs: Ipfs, topic: string, anchorOnRequest = false): Promise<Ceramic> => {
   const ceramic = await Ceramic.create(ipfs, {
     stateStorePath: await tmp.tmpName(),
     topic,
+    anchorOnRequest,
   })
 
   await IdentityWallet.create({
@@ -51,6 +50,20 @@ const createCeramic = async (ipfs: Ipfs, topic: string): Promise<Ceramic> => {
   })
 
   return ceramic
+}
+
+const anchor = async (ceramic: Ceramic): Promise<void> => {
+  // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+  // @ts-ignore
+  await ceramic.context.anchorService.anchor()
+}
+
+const syncDoc = async (doctype: Doctype): Promise<void> => {
+  await new Promise(resolve => {
+    doctype.on('change', () => {
+      resolve()
+    })
+  })
 }
 
 describe('Ceramic integration', () => {
@@ -136,6 +149,9 @@ describe('Ceramic integration', () => {
     const owner = ceramic1.context.did.id
 
     const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { test: 456 }, metadata: { owners: [owner], tags: ['3id'] } })
+
+    await anchor(ceramic1)
+
     // we can't load document from id since nodes are not connected
     // so we won't find the genesis object from it's CID
     const doctype2 = await ceramic2.createDocument(DOCTYPE_TILE, { content: { test: 456 }, metadata: { owners: [owner], tags: ['3id'] } },{ applyOnly: true })
@@ -197,25 +213,24 @@ describe('Ceramic integration', () => {
       content: { test: 321 },
       metadata: { owners: [owner], tags: ['3id'] }
     })
+
+    await anchor(ceramic1)
+    await syncDoc(doctype1)
+
     const doctype3 = await ceramic3.createDocument<TileDoctype>(DOCTYPE_TILE, {
-      content: { test: 321 },
-      metadata: { owners: [owner], tags: ['3id'] }
-    }, { applyOnly: true })
+      content: { test: 321 }, metadata: { owners: [owner], tags: ['3id'] }
+    }, {
+      applyOnly: true
+    })
 
     expect(doctype3.content).toEqual(doctype1.content)
 
-    const updatePromise = new Promise(resolve => {
-      let c = 0 // wait for two updates
-      // the change update and the anchor update
-      doctype3.on('change', () => {
-        if (++c > 1) {
-          resolve()
-        }
-      })
-    })
-
     await doctype1.change({ content: { test: 'abcde' }, metadata: { owners: [owner] } })
-    await updatePromise
+
+    await syncDoc(doctype3)
+    await anchor(ceramic1)
+    await syncDoc(doctype3)
+
     expect(doctype1.content).toEqual({ test: 'abcde' })
     expect(doctype3.content).toEqual(doctype1.content)
     expectEqualStates(doctype3.state, doctype1.state)
@@ -226,23 +241,19 @@ describe('Ceramic integration', () => {
 
   it('can apply existing records successfully', async () => {
     const ceramic1 = await createCeramic(ipfs1, topic)
-    const ceramic2 = await createCeramic(ipfs2, topic)
+    const ceramic2 = await createCeramic(ipfs2, 'test')
 
     const owner = ceramic1.context.did.id
 
     const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { test: 456 }, metadata: { owners: [owner], tags: ['3id'] } })
 
-    const updatePromise = new Promise(resolve => {
-      let c = 0
-      doctype1.on('change', () => {
-        if (++c > 1) {
-          resolve()
-        }
-      })
-    })
+    await anchor(ceramic1)
+    await syncDoc(doctype1)
 
     await doctype1.change({ content: { test: 'abcde' }, metadata: { owners: [owner] } })
-    await updatePromise
+
+    await anchor(ceramic1)
+    await syncDoc(doctype1)
 
     const logRecords = await ceramic1.loadDocumentRecords(doctype1.id)
 
