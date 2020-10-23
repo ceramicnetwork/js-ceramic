@@ -55,7 +55,7 @@ class Document extends EventEmitter {
 
   /**
    * Creates new Doctype with params
-   * @param genesisCid - Genesis CID
+   * @param docId - Document ID
    * @param doctypeHandler - DoctypeHandler instance
    * @param dispatcher - Dispatcher instance
    * @param pinStore - PinStore instance
@@ -64,7 +64,7 @@ class Document extends EventEmitter {
    * @param validate - Validate content against schema
    */
   static async create<T extends Doctype> (
-      genesisCid: CID,
+      docId: DocID,
       doctypeHandler: DoctypeHandler<Doctype>,
       dispatcher: Dispatcher,
       pinStore: PinStore,
@@ -72,12 +72,8 @@ class Document extends EventEmitter {
       opts: DocOpts = {},
       validate = true,
   ): Promise<Document> {
-    const genesis = await dispatcher.retrieveRecord(genesisCid)
-  
-    const doctype = (await context.ipfs.dag.get(genesis.link)).value.doctype
-    const id = new DocID(doctype, genesisCid)
-
-    const doc = new Document(id, dispatcher, pinStore)
+    const genesis = await dispatcher.retrieveRecord(docId.cid)
+    const doc = new Document(docId, dispatcher, pinStore)
 
     doc._context = context
     doc._doctypeHandler = doctypeHandler

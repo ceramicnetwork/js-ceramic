@@ -237,8 +237,8 @@ class Ceramic implements CeramicApi {
    * Get document from map by Genesis CID
    * @param genesisCid
    */
-  getDocFromMap(genesisCid: any): Document {
-    return this._docmap[genesisCid.toString()]
+  getDocFromMap(docId: DocID): Document {
+    return this._docmap[docId.toString()]
   }
 
   /**
@@ -264,12 +264,14 @@ class Ceramic implements CeramicApi {
 
     const genesis = await doctypeHandler.doctype.makeGenesis(params, this.context, opts)
     const genesisCid = await this.dispatcher.storeRecord(genesis)
-    let doc = this.getDocFromMap(genesisCid)
+    const docId = new DocID(doctype, genesisCid)
+
+    let doc = this.getDocFromMap(docId)
     if (doc) {
       return doc
     }
 
-    doc = await Document.create(genesisCid, doctypeHandler, this.dispatcher, this.pinStore, this.context, opts, this._validateDocs);
+    doc = await Document.create(docId, doctypeHandler, this.dispatcher, this.pinStore, this.context, opts, this._validateDocs);
     this._docmap[doc.id.toString()] = doc
     return doc
   }
@@ -292,21 +294,26 @@ class Ceramic implements CeramicApi {
    */
   async _createDocFromGenesis(genesis: any, opts: DocOpts = {}): Promise<Document> {
     const genesisCid = await this.dispatcher.storeRecord(genesis)
-    let doc = this.getDocFromMap(genesisCid)
-    if (doc) {
-      return doc
-    }
 
-    let doctypeHandler
+    let doctypeHandler, doctype: string
     genesis = await this.dispatcher.retrieveRecord(genesisCid)
     if (DoctypeUtils.isSignedRecord(genesis)) {
       const payload = await this.dispatcher.retrieveRecord(genesis.link)
       doctypeHandler = this.findHandler(payload)
+      doctype = payload.doctype
     } else {
       doctypeHandler = this.findHandler(genesis)
+      doctype = genesis.doctype
     }
 
-    doc = await Document.create(genesisCid, doctypeHandler, this.dispatcher, this.pinStore, this.context, opts, this._validateDocs);
+    const docId = new DocID(doctype, genesisCid)
+
+    let doc = this.getDocFromMap(docId)
+    if (doc) {
+      return doc
+    }
+
+    doc = await Document.create(docId, doctypeHandler, this.dispatcher, this.pinStore, this.context, opts, this._validateDocs);
     this._docmap[doc.id.toString()] = doc
     return doc
   }
