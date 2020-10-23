@@ -99,11 +99,11 @@
 							<ul class="tsd-index-list">
 								<li class="tsd-kind-get-signature tsd-parent-kind-class tsd-is-inherited"><a href="accountlinkdoctype.html#content" class="tsd-kind-icon">content</a></li>
 								<li class="tsd-kind-accessor tsd-parent-kind-class tsd-is-inherited"><a href="accountlinkdoctype.html#context" class="tsd-kind-icon">context</a></li>
+								<li class="tsd-kind-get-signature tsd-parent-kind-class tsd-is-inherited"><a href="accountlinkdoctype.html#controllers" class="tsd-kind-icon">controllers</a></li>
 								<li class="tsd-kind-get-signature tsd-parent-kind-class tsd-is-inherited"><a href="accountlinkdoctype.html#doctype" class="tsd-kind-icon">doctype</a></li>
 								<li class="tsd-kind-get-signature tsd-parent-kind-class tsd-is-inherited"><a href="accountlinkdoctype.html#head" class="tsd-kind-icon">head</a></li>
 								<li class="tsd-kind-get-signature tsd-parent-kind-class tsd-is-inherited"><a href="accountlinkdoctype.html#id" class="tsd-kind-icon">id</a></li>
 								<li class="tsd-kind-get-signature tsd-parent-kind-class tsd-is-inherited"><a href="accountlinkdoctype.html#metadata" class="tsd-kind-icon">metadata</a></li>
-								<li class="tsd-kind-get-signature tsd-parent-kind-class tsd-is-inherited"><a href="accountlinkdoctype.html#owners" class="tsd-kind-icon">owners</a></li>
 								<li class="tsd-kind-accessor tsd-parent-kind-class tsd-is-inherited"><a href="accountlinkdoctype.html#state" class="tsd-kind-icon">state</a></li>
 							</ul>
 						</section>
@@ -218,6 +218,24 @@
 					</ul>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-get-signature tsd-parent-kind-class tsd-is-inherited">
+					<a name="controllers" class="tsd-anchor"></a>
+					<h3>controllers</h3>
+					<ul class="tsd-signatures tsd-kind-get-signature tsd-parent-kind-class tsd-is-inherited">
+						<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">get</span> controllers<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Array</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<p>Inherited from <a href="accountlinkdoctype.html">AccountLinkDoctype</a>.<a href="accountlinkdoctype.html#controllers">controllers</a></p>
+								<ul>
+									<li>Defined in packages/ceramic-common/lib/doctype.d.ts:69</li>
+								</ul>
+							</aside>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Array</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">&gt;</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-get-signature tsd-parent-kind-class tsd-is-inherited">
 					<a name="doctype" class="tsd-anchor"></a>
 					<h3>doctype</h3>
 					<ul class="tsd-signatures tsd-kind-get-signature tsd-parent-kind-class tsd-is-inherited">
@@ -286,24 +304,6 @@
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">DocMetadata</span></h4>
-						</li>
-					</ul>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-get-signature tsd-parent-kind-class tsd-is-inherited">
-					<a name="owners" class="tsd-anchor"></a>
-					<h3>owners</h3>
-					<ul class="tsd-signatures tsd-kind-get-signature tsd-parent-kind-class tsd-is-inherited">
-						<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">get</span> owners<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Array</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">&gt;</span></li>
-					</ul>
-					<ul class="tsd-descriptions">
-						<li class="tsd-description">
-							<aside class="tsd-sources">
-								<p>Inherited from <a href="accountlinkdoctype.html">AccountLinkDoctype</a>.<a href="accountlinkdoctype.html#owners">owners</a></p>
-								<ul>
-									<li>Defined in packages/ceramic-common/lib/doctype.d.ts:69</li>
-								</ul>
-							</aside>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Array</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -400,7 +400,7 @@
 							<aside class="tsd-sources">
 								<p>Overrides Doctype.change</p>
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/af91dce/packages/ceramic-doctype-account-link/src/account-link-doctype.ts#L24">packages/ceramic-doctype-account-link/src/account-link-doctype.ts:24</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/349990d/packages/ceramic-doctype-account-link/src/account-link-doctype.ts#L24">packages/ceramic-doctype-account-link/src/account-link-doctype.ts:24</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -890,7 +890,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/af91dce/packages/ceramic-doctype-account-link/src/account-link-doctype.ts#L37">packages/ceramic-doctype-account-link/src/account-link-doctype.ts:37</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/349990d/packages/ceramic-doctype-account-link/src/account-link-doctype.ts#L37">packages/ceramic-doctype-account-link/src/account-link-doctype.ts:37</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -933,7 +933,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/af91dce/packages/ceramic-doctype-account-link/src/account-link-doctype.ts#L48">packages/ceramic-doctype-account-link/src/account-link-doctype.ts:48</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/349990d/packages/ceramic-doctype-account-link/src/account-link-doctype.ts#L48">packages/ceramic-doctype-account-link/src/account-link-doctype.ts:48</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -981,6 +981,9 @@
 								<a href="accountlinkdoctype.html#context" class="tsd-kind-icon">context</a>
 							</li>
 							<li class=" tsd-kind-get-signature tsd-parent-kind-class tsd-is-inherited">
+								<a href="accountlinkdoctype.html#controllers" class="tsd-kind-icon">controllers</a>
+							</li>
+							<li class=" tsd-kind-get-signature tsd-parent-kind-class tsd-is-inherited">
 								<a href="accountlinkdoctype.html#doctype" class="tsd-kind-icon">doctype</a>
 							</li>
 							<li class=" tsd-kind-get-signature tsd-parent-kind-class tsd-is-inherited">
@@ -991,9 +994,6 @@
 							</li>
 							<li class=" tsd-kind-get-signature tsd-parent-kind-class tsd-is-inherited">
 								<a href="accountlinkdoctype.html#metadata" class="tsd-kind-icon">metadata</a>
-							</li>
-							<li class=" tsd-kind-get-signature tsd-parent-kind-class tsd-is-inherited">
-								<a href="accountlinkdoctype.html#owners" class="tsd-kind-icon">owners</a>
 							</li>
 							<li class=" tsd-kind-accessor tsd-parent-kind-class tsd-is-inherited">
 								<a href="accountlinkdoctype.html#state" class="tsd-kind-icon">state</a>
