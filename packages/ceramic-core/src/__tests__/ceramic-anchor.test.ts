@@ -152,9 +152,9 @@ describe('Ceramic anchoring', () => {
     expect(doctype.content).toEqual({ a: 3 })
     expect(doctype.state.log.length).toEqual(2)
 
-    // const doctype2 = await ceramic2.loadDocument(doctype.id)
-    // expect(doctype.content).toEqual(doctype2.content)
-    // expect(doctype.state.log.length).toEqual(doctype2.state.log.length)
+    const doctype2 = await ceramic2.loadDocument(doctype.id)
+    expect(doctype.content).toEqual(doctype2.content)
+    expect(doctype.state.log.length).toEqual(doctype2.state.log.length)
 
     await ceramic1.close()
     await ceramic2.close()
@@ -343,7 +343,7 @@ describe('Ceramic anchoring', () => {
     await cloned.change({ content: { x: 5 }, metadata: { owners: [owner] } }, { applyOnly: false })
 
     const updatePromise = new Promise(resolve => {
-      doctype.on('change', () => {
+      doctype.once('change', () => {
         resolve()
       })
     })
