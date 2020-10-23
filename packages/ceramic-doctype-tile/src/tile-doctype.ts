@@ -130,11 +130,11 @@ export class TileDoctype extends Doctype {
      * Calculates anchor nonce
      */
     private static _calculateNonce(doctype: Doctype): number {
-        // If there hasn't been any update prior to this we should not set the nonce
+        // if there hasn't been any update prior to this we should set the nonce to 0
         if (!doctype.state.next) {
             return 0
         }
-        // Get the current nonce and increment it by one
+        // get the current nonce and increment it by one
         return (doctype.state.next.metadata?.nonce || 0) + 1
     }
 
