@@ -1,6 +1,7 @@
 import Level from "level-ts";
 import {DocState, Doctype, DoctypeUtils} from "@ceramicnetwork/ceramic-common"
-import {StateStore} from "./state-store";
+import {StateStore} from "./state-store"
+import DocID from '@ceramicnetwork/docid'
 
 /**
  * Ceramic store for saving documents locally
@@ -30,18 +31,16 @@ export class LevelStateStore implements StateStore {
      * @param document - Document instance
      */
     async save(document: Doctype): Promise<void> {
-        const normalized = DoctypeUtils.getBaseDocId(DoctypeUtils.normalizeDocId(document.id))
-        await this.#store.put(normalized, DoctypeUtils.serializeState(document.state))
+        await this.#store.put(document.id.baseID.toString(), DoctypeUtils.serializeState(document.state))
     }
 
     /**
      * Load document
      * @param docId - Document ID
      */
-    async load(docId: string): Promise<DocState> {
+    async load(docId: DocID): Promise<DocState> {
         try {
-            const normalized = DoctypeUtils.getBaseDocId(DoctypeUtils.normalizeDocId(docId))
-            const state = await this.#store.get(normalized)
+            const state = await this.#store.get(docId.baseID.toString())
             if (state) {
                 return DoctypeUtils.deserializeState(state);
             } else {
@@ -59,8 +58,8 @@ export class LevelStateStore implements StateStore {
      * Is document pinned locally?
      * @param docId - Document ID
      */
-    async exists(docId: string): Promise<boolean> {
-        const state = await this.load(docId);
+    async exists(docId: DocID): Promise<boolean> {
+        const state = await this.load(docId.baseID);
         return Boolean(state)
     }
 
@@ -68,10 +67,10 @@ export class LevelStateStore implements StateStore {
      * Unpin document
      * @param docId - Document ID
      */
-    async remove(docId: string): Promise<void> {
-        const isPresent = await this.exists(docId)
+    async remove(docId: DocID): Promise<void> {
+        const isPresent = await this.exists(docId.baseID)
         if (isPresent) {
-            await this.#store.del(docId)
+            await this.#store.del(docId.baseID.toString())
         }
     }
 
@@ -79,13 +78,13 @@ export class LevelStateStore implements StateStore {
      * List pinned document
      * @param docId - Document ID
      */
-    async list(docId?: string): Promise<string[]> {
+    async list(docId?: DocID): Promise<string[]> {
         let docIds: string[]
         if (docId == null) {
             return this.#store.stream({keys: true, values: false})
         } else {
-            const exists = await this.exists(docId)
-            docIds = exists ? [docId] : []
+            const exists = await this.exists(docId.baseID)
+            docIds = exists ? [docId.toString()] : []
         }
         return docIds
     }

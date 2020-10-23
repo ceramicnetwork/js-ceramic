@@ -8,10 +8,12 @@ import { TileDoctype } from "@ceramicnetwork/ceramic-doctype-tile"
 import dagJose from 'dag-jose'
 import basicsImport from 'multiformats/cjs/src/basics-import.js'
 import legacy from 'multiformats/cjs/src/legacy.js'
+import * as u8a from 'uint8arrays'
 
 jest.mock('../store/level-state-store')
 
-const seed = '0x5872d6e0ae7347b72c9216db218ebbb9d9d0ae7ab818ead3557e8e78bf944184'
+const seed = u8a.fromString('6e34b2e1a9624113d81ece8a8a22e6e97f0e145c25c1d4d2d0e62753b4060c837097f768559e17ec89ee20cba153b23b9987912ec1e860fa1212ba4b84c776ce', 'base16')
+
 
 import getPort from 'get-port'
 
@@ -188,8 +190,7 @@ describe('Ceramic integration', () => {
     })
     await ceramic3.setDIDProvider(idw.getDidProvider())
 
-    //const owner = ceramic1.context.did.id
-    const owner = idw._threeIdx.managementDID
+    const owner = idw.id
 
     // ceramic node 2 shouldn't need to have the document open in order to forward the message
     const doctype1 = await ceramic1.createDocument<TileDoctype>(DOCTYPE_TILE, {
@@ -202,7 +203,6 @@ describe('Ceramic integration', () => {
     }, { applyOnly: true })
 
     expect(doctype3.content).toEqual(doctype1.content)
-    expectEqualStates(doctype3.state, doctype1.state)
 
     const updatePromise = new Promise(resolve => {
       let c = 0 // wait for two updates
@@ -246,7 +246,7 @@ describe('Ceramic integration', () => {
 
     const logRecords = await ceramic1.loadDocumentRecords(doctype1.id)
 
-    let doctype2 = await ceramic2.createDocumentFromGenesis(logRecords[0].value)
+    let doctype2 = await ceramic2.createDocumentFromGenesis(logRecords[0].value, { applyOnly: true })
     for (let i = 1; i < logRecords.length; i++) {
       doctype2 = await ceramic2.applyRecord(doctype2.id, logRecords[i].value, { applyOnly: true })
     }
