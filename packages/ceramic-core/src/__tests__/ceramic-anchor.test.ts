@@ -1,5 +1,6 @@
 import Ceramic from '../ceramic'
 import IdentityWallet from 'identity-wallet'
+import { Doctype } from "@ceramicnetwork/ceramic-common"
 import { TileDoctype } from "@ceramicnetwork/ceramic-doctype-tile"
 import tmp from 'tmp-promise'
 import Ipfs from 'ipfs'
@@ -46,6 +47,20 @@ const createCeramic = async (ipfs: Ipfs, anchorManual: boolean, topic: string): 
   })
 
   return ceramic
+}
+
+const anchor = async (ceramic: Ceramic): Promise<void> => {
+  // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+  // @ts-ignore
+  await ceramic.context.anchorService.anchor()
+}
+
+const syncDoc = async (doctype: Doctype): Promise<void> => {
+  await new Promise(resolve => {
+    doctype.on('change', () => {
+      resolve()
+    })
+  })
 }
 
 describe('Ceramic anchoring', () => {
@@ -109,28 +124,19 @@ describe('Ceramic anchoring', () => {
 
     const owner = ceramic1.context.did.id
 
-    const doctype = await ceramic1.createDocument(DOCTYPE_TILE, { content: { a: 1 } }, { applyOnly: false })
-    await doctype.change({ content: { a: 2 }, metadata: { owners: [owner] } }, { applyOnly: false })
-    await doctype.change({ content: { a: 3 }, metadata: { owners: [owner] } }, { applyOnly: false })
+    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { a: 1 } }, { applyOnly: false })
+    await doctype1.change({ content: { a: 2 }, metadata: { owners: [owner] } }, { applyOnly: false })
+    await doctype1.change({ content: { a: 3 }, metadata: { owners: [owner] } }, { applyOnly: false })
 
-    // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-    // @ts-ignore
-    await ceramic1.context.anchorService.anchor()
+    await anchor(ceramic1)
+    await syncDoc(doctype1)
 
-    const updatePromise = new Promise(resolve => {
-      doctype.once('change', () => {
-        resolve()
-      })
-    })
+    expect(doctype1.content).toEqual({ a: 3 })
+    expect(doctype1.state.log.length).toEqual(3)
 
-    await updatePromise
-
-    expect(doctype.content).toEqual({ a: 3 })
-    expect(doctype.state.log.length).toEqual(3)
-
-    const doctype2 = await ceramic2.loadDocument(doctype.id)
-    expect(doctype.content).toEqual(doctype2.content)
-    expect(doctype.state.log.length).toEqual(doctype2.state.log.length)
+    const doctype2 = await ceramic2.loadDocument(doctype1.id)
+    expect(doctype1.content).toEqual(doctype2.content)
+    expect(doctype1.state.log.length).toEqual(doctype2.state.log.length)
 
     await ceramic1.close()
     await ceramic2.close()
@@ -146,22 +152,22 @@ describe('Ceramic anchoring', () => {
 
     const owner = ceramic1.context.did.id
 
-    const doctype = await ceramic1.createDocument(DOCTYPE_TILE, { content: { a: 1 } }, { applyOnly: true })
-    await doctype.change({ content: { a: 2 }, metadata: { owners: [owner] } }, { applyOnly: true })
-    await doctype.change({ content: { a: 3 }, metadata: { owners: [owner] } }, { applyOnly: true })
+    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { a: 1 } }, { applyOnly: true })
+    await doctype1.change({ content: { a: 2 }, metadata: { owners: [owner] } }, { applyOnly: true })
+    await doctype1.change({ content: { a: 3 }, metadata: { owners: [owner] } }, { applyOnly: true })
 
-    expect(doctype.content).toEqual({ a: 3 })
-    expect(doctype.state.log.length).toEqual(2)
+    expect(doctype1.content).toEqual({ a: 3 })
+    expect(doctype1.state.log.length).toEqual(2)
 
-    const doctype2 = await ceramic2.loadDocument(doctype.id)
-    expect(doctype.content).toEqual(doctype2.content)
-    expect(doctype.state.log.length).toEqual(doctype2.state.log.length)
+    const doctype2 = await ceramic2.loadDocument(doctype1.id)
+    expect(doctype1.content).toEqual(doctype2.content)
+    expect(doctype1.state.log.length).toEqual(doctype2.state.log.length)
 
     await ceramic1.close()
     await ceramic2.close()
   })
 
-  it('test first anchored and others not', async () => {
+  it('test genesis anchored and others not', async () => {
     await ipfs2.swarm.connect(multaddr1)
 
     const [ceramic1, ceramic2] = await Promise.all([
@@ -170,36 +176,27 @@ describe('Ceramic anchoring', () => {
     ])
     const owner = ceramic1.context.did.id
 
-    const doctype = await ceramic1.createDocument(DOCTYPE_TILE, { content: { a: 123, b: 4567 } }, { applyOnly: false })
-    await doctype.change({ content: { a: 4567 }, metadata: { owners: [owner] } }, { applyOnly: true })
-    await doctype.change({ content: { b: 123 }, metadata: { owners: [owner] } }, { applyOnly: true })
+    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { a: 123, b: 4567 } }, { applyOnly: false })
+    await doctype1.change({ content: { a: 4567 }, metadata: { owners: [owner] } }, { applyOnly: true })
+    await doctype1.change({ content: { b: 123 }, metadata: { owners: [owner] } }, { applyOnly: true })
 
-    expect(doctype.state.log.length).toEqual(2)
+    expect(doctype1.state.log.length).toEqual(2)
 
-    // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-    // @ts-ignore
-    await ceramic1.context.anchorService.anchor()
+    await anchor(ceramic1)
+    await syncDoc(doctype1)
 
-    const updatePromise = new Promise(resolve => {
-      doctype.once('change', () => {
-        resolve()
-      })
-    })
+    expect(doctype1.content).toEqual({ a: 123, b: 4567 })
+    expect(doctype1.state.log.length).toEqual(2)
 
-    await updatePromise
-
-    expect(doctype.content).toEqual({ a: 123, b: 4567 })
-    expect(doctype.state.log.length).toEqual(2)
-
-    const doctype2 = await ceramic2.loadDocument(doctype.id)
-    expect(doctype.content).toEqual(doctype2.content)
-    expect(doctype.state.log.length).toEqual(doctype2.state.log.length)
+    const doctype2 = await ceramic2.loadDocument(doctype1.id)
+    expect(doctype1.content).toEqual(doctype2.content)
+    expect(doctype1.state.log.length).toEqual(doctype2.state.log.length)
 
     await ceramic1.close()
     await ceramic2.close()
   })
 
-  it('test first anchored, the middle not, last one anchored', async () => {
+  it('test genesis and the following anchored', async () => {
     await ipfs2.swarm.connect(multaddr1)
 
     const [ceramic1, ceramic2] = await Promise.all([
@@ -208,29 +205,48 @@ describe('Ceramic anchoring', () => {
     ])
     const owner = ceramic1.context.did.id
 
-    const doctype = await ceramic1.createDocument(DOCTYPE_TILE, { content: { x: 1 } }, { applyOnly: false })
+    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { a: 123 } })
+    await doctype1.change({ content: { a: 4567 }, metadata: { owners: [owner] } })
 
-    await doctype.change({ content: { x: doctype.content.x + 1 }, metadata: { owners: [owner] } }, { applyOnly: true })
-    await doctype.change({ content: { x: doctype.content.x + 1 }, metadata: { owners: [owner] } }, { applyOnly: false })
+    expect(doctype1.state.log.length).toEqual(2)
 
-    // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-    // @ts-ignore
-    await ceramic1.context.anchorService.anchor()
+    await anchor(ceramic1)
+    await syncDoc(doctype1)
 
-    const updatePromise = new Promise(resolve => {
-      doctype.once('change', () => {
-        resolve()
-      })
-    })
+    expect(doctype1.content).toEqual({ a: 123 })
+    expect(doctype1.state.log.length).toEqual(2)
 
-    await updatePromise
+    const doctype2 = await ceramic2.loadDocument(doctype1.id)
+    expect(doctype1.content).toEqual(doctype2.content)
+    expect(doctype1.state.log.length).toEqual(doctype2.state.log.length)
 
-    expect(doctype.content).toEqual({ x: 3 })
-    expect(doctype.state.log.length).toEqual(3)
+    await ceramic1.close()
+    await ceramic2.close()
+  })
 
-    const doctype2 = await ceramic2.loadDocument(doctype.id)
-    expect(doctype.content).toEqual(doctype2.content)
-    expect(doctype.state.log.length).toEqual(doctype2.state.log.length)
+  it('test genesis anchored, the middle not, last one anchored', async () => {
+    await ipfs2.swarm.connect(multaddr1)
+
+    const [ceramic1, ceramic2] = await Promise.all([
+      createCeramic(ipfs1, true, topic),
+      createCeramic(ipfs2, false, topic)
+    ])
+    const owner = ceramic1.context.did.id
+
+    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { x: 1 } }, { applyOnly: false })
+
+    await doctype1.change({ content: { x: doctype1.content.x + 1 }, metadata: { owners: [owner] } }, { applyOnly: true })
+    await doctype1.change({ content: { x: doctype1.content.x + 1 }, metadata: { owners: [owner] } }, { applyOnly: false })
+
+    await anchor(ceramic1)
+    await syncDoc(doctype1)
+
+    expect(doctype1.content).toEqual({ x: 3 })
+    expect(doctype1.state.log.length).toEqual(3)
+
+    const doctype2 = await ceramic2.loadDocument(doctype1.id)
+    expect(doctype1.content).toEqual(doctype2.content)
+    expect(doctype1.state.log.length).toEqual(doctype2.state.log.length)
 
     await ceramic1.close()
     await ceramic2.close()
@@ -245,28 +261,19 @@ describe('Ceramic anchoring', () => {
     ])
     const owner = ceramic1.context.did.id
 
-    const doctype = await ceramic1.createDocument(DOCTYPE_TILE, { content: { x: 1 } }, { applyOnly: true })
-    await doctype.change({ content: { x: doctype.content.x + 1 }, metadata: { owners: [owner] } }, { applyOnly: true })
-    await doctype.change({ content: { x: doctype.content.x + 1 }, metadata: { owners: [owner] } }, { applyOnly: false })
+    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { x: 1 } }, { applyOnly: true })
+    await doctype1.change({ content: { x: doctype1.content.x + 1 }, metadata: { owners: [owner] } }, { applyOnly: true })
+    await doctype1.change({ content: { x: doctype1.content.x + 1 }, metadata: { owners: [owner] } }, { applyOnly: false })
 
-    // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-    // @ts-ignore
-    await ceramic1.context.anchorService.anchor()
+    await anchor(ceramic1)
+    await syncDoc(doctype1)
 
-    const updatePromise = new Promise(resolve => {
-      doctype.once('change', () => {
-        resolve()
-      })
-    })
+    expect(doctype1.content).toEqual({ x: 3 })
+    expect(doctype1.state.log.length).toEqual(3)
 
-    await updatePromise
-
-    expect(doctype.content).toEqual({ x: 3 })
-    expect(doctype.state.log.length).toEqual(3)
-
-    const doctype2 = await ceramic2.loadDocument(doctype.id)
-    expect(doctype.content).toEqual(doctype2.content)
-    expect(doctype.state.log.length).toEqual(doctype2.state.log.length)
+    const doctype2 = await ceramic2.loadDocument(doctype1.id)
+    expect(doctype1.content).toEqual(doctype2.content)
+    expect(doctype1.state.log.length).toEqual(doctype2.state.log.length)
 
     await ceramic1.close()
     await ceramic2.close()
@@ -281,49 +288,33 @@ describe('Ceramic anchoring', () => {
     ])
     const owner = ceramic1.context.did.id
 
-    const doctype = await ceramic1.createDocument(DOCTYPE_TILE, { content: { x: 1 } }, { applyOnly: true })
-    await doctype.change({ content: { x: doctype.content.x + 1 }, metadata: { owners: [owner] } }, { applyOnly: true })
+    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { x: 1 } }, { applyOnly: true })
+    await doctype1.change({ content: { x: doctype1.content.x + 1 }, metadata: { owners: [owner] } }, { applyOnly: true })
 
-    expect(doctype.content).toEqual({ x: 2 })
-    expect(doctype.state.log.length).toEqual(2)
+    expect(doctype1.content).toEqual({ x: 2 })
+    expect(doctype1.state.log.length).toEqual(2)
 
-    await doctype.change({ content: { x: doctype.content.x + 1 }, metadata: { owners: [owner] } }, { applyOnly: false })
+    await doctype1.change({ content: { x: doctype1.content.x + 1 }, metadata: { owners: [owner] } }, { applyOnly: false })
 
-    let updatePromise = new Promise(resolve => {
-      doctype.once('change', () => {
-        resolve()
-      })
-    })
+    await anchor(ceramic1)
+    await syncDoc(doctype1)
 
-    // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-    // @ts-ignore
-    await ceramic1.context.anchorService.anchor()
-    await updatePromise
+    expect(doctype1.content).toEqual({ x: 3 })
+    expect(doctype1.state.log.length).toEqual(3)
 
-    expect(doctype.content).toEqual({ x: 3 })
-    expect(doctype.state.log.length).toEqual(3)
+    await doctype1.change({ content: { x: doctype1.content.x + 1 }, metadata: { owners: [owner] } }, { applyOnly: true })
+    await doctype1.change({ content: { x: doctype1.content.x + 1 }, metadata: { owners: [owner] } }, { applyOnly: true })
+    await doctype1.change({ content: { x: doctype1.content.x + 1 }, metadata: { owners: [owner] } }, { applyOnly: false })
 
-    await doctype.change({ content: { x: doctype.content.x + 1 }, metadata: { owners: [owner] } }, { applyOnly: true })
-    await doctype.change({ content: { x: doctype.content.x + 1 }, metadata: { owners: [owner] } }, { applyOnly: true })
-    await doctype.change({ content: { x: doctype.content.x + 1 }, metadata: { owners: [owner] } }, { applyOnly: false })
+    await anchor(ceramic1)
+    await syncDoc(doctype1)
 
-    updatePromise = new Promise(resolve => {
-      doctype.once('change', () => {
-        resolve()
-      })
-    })
+    expect(doctype1.content).toEqual({ x: 6 })
+    expect(doctype1.state.log.length).toEqual(5)
 
-    // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-    // @ts-ignore
-    await ceramic1.context.anchorService.anchor()
-    await updatePromise
-
-    expect(doctype.content).toEqual({ x: 6 })
-    expect(doctype.state.log.length).toEqual(5)
-
-    const doctype2 = await ceramic2.loadDocument(doctype.id)
-    expect(doctype.content).toEqual(doctype2.content)
-    expect(doctype.state.log.length).toEqual(doctype2.state.log.length)
+    const doctype2 = await ceramic2.loadDocument(doctype1.id)
+    expect(doctype1.content).toEqual(doctype2.content)
+    expect(doctype1.state.log.length).toEqual(doctype2.state.log.length)
 
     await ceramic1.close()
     await ceramic2.close()
@@ -338,28 +329,20 @@ describe('Ceramic anchoring', () => {
     ])
     const owner = ceramic1.context.did.id
 
-    const doctype = await ceramic1.createDocument(DOCTYPE_TILE, { content: { x: 1 } }, { applyOnly: true })
-    const cloned = new TileDoctype(doctype.state, doctype.context)
-    await doctype.change({ content: { x: 7 }, metadata: { owners: [owner] } }, { applyOnly: false })
+    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { x: 1 } }, { applyOnly: true })
+    const cloned = new TileDoctype(doctype1.state, doctype1.context)
+    await doctype1.change({ content: { x: 7 }, metadata: { owners: [owner] } }, { applyOnly: false })
     await cloned.change({ content: { x: 5 }, metadata: { owners: [owner] } }, { applyOnly: false })
 
-    const updatePromise = new Promise(resolve => {
-      doctype.once('change', () => {
-        resolve()
-      })
-    })
+    await anchor(ceramic1)
+    await syncDoc(doctype1)
 
-    // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-    // @ts-ignore
-    await ceramic1.context.anchorService.anchor()
-    await updatePromise
+    expect(doctype1.content).toEqual({ x: 7 })
+    expect(doctype1.state.log.length).toEqual(3)
 
-    expect(doctype.content).toEqual({ x: 7 })
-    expect(doctype.state.log.length).toEqual(3)
-
-    const doctype2 = await ceramic2.loadDocument(doctype.id)
-    expect(doctype.content).toEqual(doctype2.content)
-    expect(doctype.state.log.length).toEqual(doctype2.state.log.length)
+    const doctype2 = await ceramic2.loadDocument(doctype1.id)
+    expect(doctype1.content).toEqual(doctype2.content)
+    expect(doctype1.state.log.length).toEqual(doctype2.state.log.length)
 
     await ceramic1.close()
     await ceramic2.close()
