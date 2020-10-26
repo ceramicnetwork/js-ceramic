@@ -94,9 +94,9 @@ class InMemoryAnchorService extends AnchorService {
     this._dispatcher = this._ceramic.dispatcher
   }
 
-  async requestAnchor(docId: string, head: CID): Promise<void> {
+  async requestAnchor(docId: string, tip: CID): Promise<void> {
     const pair: CidDoc = {
-      docId, cid: head,
+      docId, cid: tip,
     }
 
     if (this._anchorOnRequest) {

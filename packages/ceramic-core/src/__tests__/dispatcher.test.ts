@@ -63,13 +63,13 @@ describe('Dispatcher', () => {
     expect(await disp.retrieveRecord(FAKE_CID)).toEqual('data')
   })
 
-  it('publishes head correctly', async () => {
+  it('publishes tip correctly', async () => {
     const id = '/ceramic/3id/234'
-    const head = 'bafy9h3f08erf'
+    const tip = 'bafy9h3f08erf'
     const disp = new Dispatcher(ipfs)
     await disp.init()
-    disp.publishHead(id, head)
-    expect(ipfs.pubsub.publish).toHaveBeenCalledWith(TOPIC, JSON.stringify({ typ: MsgType.UPDATE, id, cid: head }))
+    disp.publishTip(id, tip)
+    expect(ipfs.pubsub.publish).toHaveBeenCalledWith(TOPIC, JSON.stringify({ typ: MsgType.UPDATE, id, cid: tip }))
   })
 
   it('handle message correctly', async () => {
@@ -81,11 +81,11 @@ describe('Dispatcher', () => {
     await disp.register(doc)
 
     const updatePromise = new Promise(resolve => doc.on('update', resolve))
-    const headreqPromise = new Promise(resolve => doc.on('headreq', resolve))
+    const tipreqPromise = new Promise(resolve => doc.on('tipreq', resolve))
 
     await disp.handleMessage({ data: JSON.stringify({ typ: MsgType.REQUEST, id }) })
     // only emits an event
-    await headreqPromise
+    await tipreqPromise
 
     await disp.handleMessage({ data: JSON.stringify({ typ: MsgType.UPDATE, id, cid: FAKE_CID.toString() }) })
     expect(await updatePromise).toEqual(FAKE_CID)

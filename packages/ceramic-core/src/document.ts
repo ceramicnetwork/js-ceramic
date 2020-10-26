@@ -223,7 +223,7 @@ class Document extends EventEmitter {
     document._doctype.state = await doc._doctypeHandler.applyRecord(genesisRecord, doc._genesisCid, context)
 
     if (!isGenesis) {
-      await document._handleHead(version) // sync version
+      await document._handleTip(version) // sync version
       document._doctype = DoctypeUtils.makeReadOnly<T>(document.doctype as T)
     }
     return document
@@ -278,8 +278,8 @@ class Document extends EventEmitter {
    * @private
    */
   async _register (opts: DocOpts): Promise<void> {
-    this.on('update', this._handleHead.bind(this))
-    this.on('headreq', this._publishHead.bind(this))
+    this.on('update', this._handleTip.bind(this))
+    this.on('tipreq', this._publishTip.bind(this))
 
     await this.dispatcher.register(this)
 
@@ -295,7 +295,7 @@ class Document extends EventEmitter {
   async _applyOpts(opts: DocOpts): Promise<void> {
     if (!opts.applyOnly) {
       await this.anchor()
-      this._publishHead()
+      this._publishTip()
     } else if (!opts.skipWait) {
       await Document.wait(this)
     }
@@ -314,12 +314,12 @@ class Document extends EventEmitter {
   }
 
   /**
-   * Handles HEAD from the PubSub topic
+   * Handles TIP from the PubSub topic
    *
-   * @param cid - Document HEAD CID
+   * @param cid - Document TIP CID
    * @private
    */
-  async _handleHead(cid: CID): Promise<void> {
+  async _handleTip(cid: CID): Promise<void> {
     try {
       this.isProcessing = true
       await this._applyQueue.add(async () => {
@@ -407,7 +407,7 @@ class Document extends EventEmitter {
    */
   async _applyLog (log: Array<CID>): Promise<boolean> {
     let modified = false
-    if (log[log.length - 1].equals(this.head)) {
+    if (log[log.length - 1].equals(this.tip)) {
       // log already applied
       return
     }
@@ -417,13 +417,13 @@ class Document extends EventEmitter {
     if (DoctypeUtils.isSignedRecord(record)) {
       payload = await this.dispatcher.retrieveRecord(record.link)
     }
-    if (payload.prev.equals(this.head)) {
+    if (payload.prev.equals(this.tip)) {
       // the new log starts where the previous one ended
       this._doctype.state = await this._applyLogToState(log, cloneDeep(this._doctype.state))
       modified = true
     } else {
       // we have a conflict since prev is in the log of the
-      // local state, but isn't the head
+      // local state, but isn't the tip
       const conflictIdx = await this._findIndex(payload.prev, this._doctype.state.log) + 1
       const canonicalLog = this._doctype.state.log.slice() // copy log
       const localLog = canonicalLog.splice(conflictIdx)
@@ -533,12 +533,12 @@ class Document extends EventEmitter {
   }
 
   /**
-   * Publishes HEAD record to the pub/sub
+   * Publishes TIP record to the pub/sub
    *
    * @private
    */
-  async _publishHead (): Promise<void> {
-    await this.dispatcher.publishHead(this.id.toString(), this.head, this.doctype.doctype)
+  async _publishTip (): Promise<void> {
+    await this.dispatcher.publishTip(this.id.toString(), this.tip, this.doctype.doctype)
   }
 
   /**
@@ -565,9 +565,9 @@ class Document extends EventEmitter {
           const state = this._doctype.state
           state.anchorStatus = AnchorStatus.ANCHORED
           this._doctype.state = state
-          await this._handleHead(asr.anchorRecord)
+          await this._handleTip(asr.anchorRecord)
           await this._updateStateIfPinned()
-          this._publishHead()
+          this._publishTip()
 
           this._context.anchorService.removeAllListeners(this.id.toString())
           return
@@ -581,7 +581,7 @@ class Document extends EventEmitter {
         }
       }
     })
-    await this._context.anchorService.requestAnchor(this.id.toString(), this.head)
+    await this._context.anchorService.requestAnchor(this.id.toString(), this.tip)
     const state = this._doctype.state
     state.anchorStatus = AnchorStatus.PENDING
     this._doctype.state = state
@@ -634,10 +634,10 @@ class Document extends EventEmitter {
   }
 
   /**
-   * Gets document HEAD record CID
+   * Gets document TIP record CID
    */
-  get head (): CID {
-    return this._doctype.head
+  get tip (): CID {
+    return this._doctype.tip
   }
 
   /**
@@ -677,8 +677,8 @@ class Document extends EventEmitter {
    * Gracefully closes the document instance.
    */
   async close (): Promise<void> {
-    this.off('update', this._handleHead.bind(this))
-    this.off('headreq', this._publishHead.bind(this))
+    this.off('update', this._handleTip.bind(this))
+    this.off('tipreq', this._publishTip.bind(this))
 
     this.dispatcher.unregister(this.id.toString())
 

@@ -64,7 +64,7 @@ export default class Dispatcher extends EventEmitter {
    */
   async register (document: Document): Promise<void> {
     this._documents[document.id.toString()] = document
-    // request head
+    // request tip
     const payload = { typ: MsgType.REQUEST, id: document.id.toString(), doctype: document.doctype.doctype }
     this._ipfs.pubsub.publish(this.topic, JSON.stringify(payload))
     this._log({ peer: this._peerId, event: 'published', topic: this.topic, message: payload })
@@ -106,19 +106,19 @@ export default class Dispatcher extends EventEmitter {
   }
 
   /**
-   * Publishes HEAD record to pub/sub topic.
+   * Publishes TIP record to pub/sub topic.
    *
    * @param id  - Document ID
-   * @param head - Record CID
+   * @param tip - Record CID
    * @param doctype - Doctype name
    */
-  async publishHead (id: string, head: CID, doctype?: string): Promise<void> {
+  async publishTip (id: string, tip: CID, doctype?: string): Promise<void> {
     if (!this._isRunning) {
       this.logger.error('Dispatcher has been closed')
       return
     }
 
-    const payload = { typ: MsgType.UPDATE, id, cid: head.toString(), doctype: doctype }
+    const payload = { typ: MsgType.UPDATE, id, cid: tip.toString(), doctype: doctype }
     await this._ipfs.pubsub.publish(this.topic, JSON.stringify(payload))
     this._log({ peer: this._peerId, event: 'published', topic: this.topic, message: payload })
   }
@@ -160,7 +160,7 @@ export default class Dispatcher extends EventEmitter {
             this._documents[id].emit('update', new CID(cid))
             break
           case MsgType.REQUEST:
-            this._documents[id].emit('headreq')
+            this._documents[id].emit('tipreq')
             break
         }
       }

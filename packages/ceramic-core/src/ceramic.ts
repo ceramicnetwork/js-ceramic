@@ -231,7 +231,7 @@ class Ceramic implements CeramicApi {
   async applyRecord<T extends Doctype>(docId: DocID | string, record: object, opts?: DocOpts): Promise<T> {
     docId = normalizeDocID(docId)
     if (docId.version != null) {
-      throw new Error('The version of the document is readonly. Checkout the latest HEAD in order to update.')
+      throw new Error('The version of the document is readonly. Checkout the latest TIP in order to update.')
     }
 
     const doc = await this._loadDoc(docId, opts)

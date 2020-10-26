@@ -19,9 +19,9 @@ export abstract class AnchorService extends EventEmitter {
     /**
      * Request anchor record on blockchain
      * @param docId - Document ID
-     * @param head - CID head
+     * @param tip - CID tip
      */
-    abstract requestAnchor(docId: string, head: CID): Promise<void>;
+    abstract requestAnchor(docId: string, tip: CID): Promise<void>;
 
     /**
      * Validate anchor proof record
