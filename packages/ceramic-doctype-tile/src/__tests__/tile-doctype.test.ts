@@ -192,18 +192,18 @@ describe('TileDoctypeHandler', () => {
     expect(serialized).toEqual(signed)
   })
 
-  it('creates genesis records deterministically by default', async () => {
+  it('creates genesis records uniquely by default', async () => {
     const record1 = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id] } }, { did })
     const record2 = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id] } }, { did })
 
-    expect(record1).toEqual(record2)
+    expect(record1).not.toEqual(record2)
   })
 
-  it('creates a unique genesis record if specified', async () => {
-    const record1 = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id], isUnique: true } }, { did })
-    const record2 = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id], isUnique: true } }, { did } )
+  it('creates genesis records deterministically if isUnique:false is specified', async () => {
+    const record1 = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id], isUnique: false } }, { did })
+    const record2 = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id], isUnique: false } }, { did } )
 
-    expect(record1).not.toEqual(record2)
+    expect(record1).toEqual(record2)
   })
 
   it('applies genesis record correctly', async () => {

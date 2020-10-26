@@ -25,7 +25,7 @@ program
     .option('--content <content>', 'New document content')
     .option('--only-genesis', 'Only create the genesis object. No anchor will be created')
     .option('--controllers <controllers>', 'Specify a comma-separated list of the controllers of the document. Controllers are the users that are allowed to publish updates to this document. Defaults to current user')
-    .option('--unique', 'Ensure document is unique regardless of content')
+    .option('--unique <unique>', 'Controls whether document is ensured to be unique regardless of content. Defaults to true')
     .option('--schema <schema>', 'Schema document ID')
     .description('Create a new document')
     .action(async (doctype, { content, onlyGenesis, controllers, unique, schema }) => {
@@ -77,7 +77,7 @@ schemas
     .command('create <new-content>')
     .option('--only-genesis', 'Only create the genesis object. No anchor will be created')
     .option('--controllers <controllers>', 'Specify a comma-separated list of the controllers of the schema document. Defaults to' + ' current user')
-    .option('--unique', 'Ensure schema document is unique regardless of content')
+    .option('--unique', 'If set, ensures schema document is unique regardless of content')
     .description('Create a new schema')
     .action(async (content, { onlyGenesis, controllers, unique }) => {
         await CeramicCliUtils.schemaCreateDoc(content, controllers, onlyGenesis, unique)
