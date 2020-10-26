@@ -136,7 +136,6 @@ Object {
     },
   ],
   "metadata": Object {
-    "nonce": undefined,
     "owners": Array [
       "did:key:zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV",
     ],
@@ -316,15 +315,6 @@ Object {
       "publicKeys": Object {
         "test": "0xabc",
       },
-    },
-    "metadata": Object {
-      "nonce": undefined,
-      "owners": Array [
-        "did:key:zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV",
-      ],
-      "tags": Array [
-        "3id",
-      ],
     },
   },
   "signature": 2,
