@@ -134,7 +134,7 @@ Object {
     },
   ],
   "metadata": Object {
-    "nonce": 0,
+    "nonce": undefined,
     "owners": Array [
       "did:3:bafyasdfasdf",
     ],
@@ -301,7 +301,7 @@ Object {
       "very": "content",
     },
     "metadata": Object {
-      "nonce": 0,
+      "nonce": undefined,
       "owners": Array [
         "did:3:bafyasdfasdf",
       ],

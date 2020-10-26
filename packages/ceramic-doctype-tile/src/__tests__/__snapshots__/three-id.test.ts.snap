@@ -136,7 +136,7 @@ Object {
     },
   ],
   "metadata": Object {
-    "nonce": 0,
+    "nonce": undefined,
     "owners": Array [
       "did:key:zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV",
     ],
@@ -318,7 +318,7 @@ Object {
       },
     },
     "metadata": Object {
-      "nonce": 0,
+      "nonce": undefined,
       "owners": Array [
         "did:key:zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV",
       ],

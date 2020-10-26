@@ -119,7 +119,7 @@ export class TileDoctype extends Doctype {
 
         const patch = jsonpatch.compare(doctype.content, newContent)
 
-        const willSquash = header.nonce > 0
+        const willSquash = header.nonce && header.nonce > 0
         const prev = doctype.state.log[doctype.state.log.length - 1 - (willSquash ? 1 : 0)]
 
         const record = { header, data: patch, prev, id: doctype.state.log[0] }
@@ -132,7 +132,7 @@ export class TileDoctype extends Doctype {
     private static _calculateNonce(doctype: Doctype): number {
         // if there hasn't been any update prior to this we should set the nonce to 0
         if (!doctype.state.next) {
-            return 0
+            return undefined
         }
         // get the current nonce and increment it by one
         return (doctype.state.next.metadata?.nonce || 0) + 1
