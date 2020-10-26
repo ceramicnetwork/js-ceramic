@@ -138,7 +138,6 @@ Object {
       "did:3:bafyasdfasdf",
     ],
   },
-  "next": Object {},
   "signature": 2,
 }
 `;
@@ -197,9 +196,6 @@ Object {
       "did:3:bafyasdfasdf",
     ],
   },
-  "next": Object {
-    "content": null,
-  },
   "signature": 2,
 }
 `;
@@ -209,7 +205,6 @@ Object {
   "anchorStatus": 0,
   "content": Object {
     "much": "data",
-    "very": "content",
   },
   "doctype": "tile",
   "log": Array [

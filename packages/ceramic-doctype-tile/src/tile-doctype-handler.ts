@@ -4,6 +4,7 @@ import * as didJwt from 'did-jwt'
 import base64url from 'base64url'
 
 import jsonpatch from 'fast-json-patch'
+import cloneDeep from 'lodash.clonedeep'
 
 import { TileDoctype, TileParams } from "./tile-doctype"
 import {
@@ -90,9 +91,6 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
             doctype: DOCTYPE,
             content: payload.data,
             metadata: payload.header,
-            next: {
-                content: null,
-            },
             signature: isSigned? SignatureStatus.SIGNED : SignatureStatus.GENESIS,
             anchorStatus: AnchorStatus.NOT_REQUESTED,
             log: [cid]
@@ -114,19 +112,36 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
         if (!payload.id.equals(state.log[0])) {
             throw new Error(`Invalid docId ${payload.id}, expected ${state.log[0]}`)
         }
-        state.log.push(cid)
-        const newState: DocState = {
-            ...state,
-            signature: SignatureStatus.SIGNED,
-            anchorStatus: AnchorStatus.NOT_REQUESTED,
-            next: {
-                content: jsonpatch.applyPatch(state.content, payload.data).newDocument,
+
+        const nextState = cloneDeep(state)
+
+        nextState.signature = SignatureStatus.SIGNED
+        nextState.anchorStatus = AnchorStatus.NOT_REQUESTED
+
+        const nonce = payload.header.nonce
+        const squash = nonce > 0 && state.next
+        if (squash) {
+            nextState.log[nextState.log.length-1] = cid
+            nextState.next = {
+                content: jsonpatch.applyPatch(state.next.content, payload.data).newDocument
+            }
+        } else {
+            nextState.log.push(cid)
+            nextState.next = {
+                content: jsonpatch.applyPatch(state.content, payload.data).newDocument
             }
         }
+
+        let nextMetadata = nextState.metadata
         if (payload.header?.controllers) {
-          newState.next.metadata = { ...state.metadata, controllers: payload.header.controllers }
+            nextState.next.metadata = { ...nextMetadata, controllers: payload.header.controllers }
+            nextMetadata = nextState.next.metadata
         }
-        return newState
+
+        if (nonce) {
+            nextState.next.metadata = { ...nextMetadata, nonce: nonce }
+        }
+        return nextState
     }
 
     /**
@@ -141,14 +156,19 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
         state.log.push(cid)
         let content = state.content
         let metadata = state.metadata
+
         if (state.next?.content) {
             content = state.next.content
-          delete state.next.content
+            delete state.next.content
         }
+
         if (state.next?.metadata) {
             metadata = state.next.metadata
-          delete state.next.metadata
+            delete state.next.metadata
         }
+
+        delete state.next
+
         return {
             ...state, content, metadata, anchorStatus: AnchorStatus.ANCHORED, anchorProof: proof,
         }

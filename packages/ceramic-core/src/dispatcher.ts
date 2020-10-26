@@ -65,7 +65,7 @@ export default class Dispatcher extends EventEmitter {
   async register (document: Document): Promise<void> {
     this._documents[document.id.toString()] = document
     // request head
-    const payload = { typ: MsgType.REQUEST, id: document.id, doctype: document.doctype.doctype }
+    const payload = { typ: MsgType.REQUEST, id: document.id.toString(), doctype: document.doctype.doctype }
     this._ipfs.pubsub.publish(this.topic, JSON.stringify(payload))
     this._log({ peer: this._peerId, event: 'published', topic: this.topic, message: payload })
   }

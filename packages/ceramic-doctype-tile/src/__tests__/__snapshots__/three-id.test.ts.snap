@@ -143,7 +143,6 @@ Object {
       "3id",
     ],
   },
-  "next": Object {},
   "signature": 2,
 }
 `;
@@ -207,9 +206,6 @@ Object {
       "3id",
     ],
   },
-  "next": Object {
-    "content": null,
-  },
   "signature": 2,
 }
 `;
@@ -218,7 +214,6 @@ exports[`ThreeIdHandler applies signed record correctly 1`] = `
 Object {
   "anchorStatus": 0,
   "content": Object {
-    "other": "data",
     "publicKeys": Object {
       "test": "0xabc",
     },
