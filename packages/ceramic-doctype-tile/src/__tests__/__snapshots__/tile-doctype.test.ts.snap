@@ -134,7 +134,6 @@ Object {
     },
   ],
   "metadata": Object {
-    "nonce": undefined,
     "owners": Array [
       "did:3:bafyasdfasdf",
     ],
@@ -299,12 +298,6 @@ Object {
     "content": Object {
       "much": "data",
       "very": "content",
-    },
-    "metadata": Object {
-      "nonce": undefined,
-      "owners": Array [
-        "did:3:bafyasdfasdf",
-      ],
     },
   },
   "signature": 2,
