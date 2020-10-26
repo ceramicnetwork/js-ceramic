@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.9.0-alpha.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-doctype-tile@0.8.3-alpha.0...@ceramicnetwork/ceramic-doctype-tile@0.9.0-alpha.0) (2020-10-26)
+
+
+### Features
+
+* docids support ([1e48e9e](https://github.com/ceramicnetwork/js-ceramic/commit/1e48e9e88090463f27f831f4b47a3fab30ba8c5e))
+* idw update, docid idw ([09c7c0d](https://github.com/ceramicnetwork/js-ceramic/commit/09c7c0dc8e6e60ca3cf190f6e3c2b6c51a2e52ae))
+
+
+
+
+
 ## [0.8.3-alpha.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-doctype-tile@0.8.2...@ceramicnetwork/ceramic-doctype-tile@0.8.3-alpha.0) (2020-10-16)
 
 **Note:** Version bump only for package @ceramicnetwork/ceramic-doctype-tile

@@ -3,6 +3,25 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.11.0-alpha.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-core@0.10.2-alpha.0...@ceramicnetwork/ceramic-core@0.11.0-alpha.0) (2020-10-26)
+
+
+### Bug Fixes
+
+* fix tests and minor refactor ([71825e2](https://github.com/ceramicnetwork/js-ceramic/commit/71825e22282c5e9a8e53f431e82ff1fb9ce7eec5))
+* improve generated api docs ([#419](https://github.com/ceramicnetwork/js-ceramic/issues/419)) ([1364aec](https://github.com/ceramicnetwork/js-ceramic/commit/1364aecdbf9209106627fb11e29a13132d4943d4))
+
+
+### Features
+
+* **core:** create docid, docid map ([65f730c](https://github.com/ceramicnetwork/js-ceramic/commit/65f730cf7831638ed06ad39996bda9bf405fba98))
+* docids support ([1e48e9e](https://github.com/ceramicnetwork/js-ceramic/commit/1e48e9e88090463f27f831f4b47a3fab30ba8c5e))
+* idw update, docid idw ([09c7c0d](https://github.com/ceramicnetwork/js-ceramic/commit/09c7c0dc8e6e60ca3cf190f6e3c2b6c51a2e52ae))
+
+
+
+
+
 ## [0.10.2-alpha.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-core@0.10.1...@ceramicnetwork/ceramic-core@0.10.2-alpha.0) (2020-10-16)
 
 **Note:** Version bump only for package @ceramicnetwork/ceramic-core
