@@ -146,15 +146,15 @@ describe('Ceramic integration', () => {
     const ceramic1 = await createCeramic(ipfs1, topic)
     const ceramic2 = await createCeramic(ipfs2, topic)
 
-    const owner = ceramic1.context.did.id
+    const controller = ceramic1.context.did.id
 
-    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { test: 456 }, metadata: { owners: [owner], tags: ['3id'] } })
+    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { test: 456 }, metadata: { controllers: [controller], tags: ['3id'] } })
 
     await anchor(ceramic1)
 
     // we can't load document from id since nodes are not connected
     // so we won't find the genesis object from it's CID
-    const doctype2 = await ceramic2.createDocument(DOCTYPE_TILE, { content: { test: 456 }, metadata: { owners: [owner], tags: ['3id'] } },{ applyOnly: true })
+    const doctype2 = await ceramic2.createDocument(DOCTYPE_TILE, { content: { test: 456 }, metadata: { controllers: [controller], tags: ['3id'] } },{ applyOnly: true })
     expect(doctype1.content).toEqual(doctype2.content)
     expect(doctype2.state).toEqual(expect.objectContaining({ content: { test: 456 } }))
     await ceramic1.close()
@@ -171,10 +171,10 @@ describe('Ceramic integration', () => {
     const ceramic2 = await createCeramic(ipfs2, topic)
     const ceramic3 = await createCeramic(ipfs3, topic)
 
-    const owner = ceramic1.context.did.id
+    const controller = ceramic1.context.did.id
     // ceramic node 2 shouldn't need to have the document open in order to forward the message
-    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { test: 789 }, metadata: { owners: [owner], tags: ['3id'] } }, { applyOnly: true })
-    const doctype3 = await ceramic3.createDocument(DOCTYPE_TILE, { content: { test: 789 }, metadata: { owners: [owner], tags: ['3id'] } }, { applyOnly: true })
+    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { test: 789 }, metadata: { controllers: [controller], tags: ['3id'] } }, { applyOnly: true })
+    const doctype3 = await ceramic3.createDocument(DOCTYPE_TILE, { content: { test: 789 }, metadata: { controllers: [controller], tags: ['3id'] } }, { applyOnly: true })
     expect(doctype3.content).toEqual(doctype1.content)
     await ceramic1.close()
     await ceramic2.close()
@@ -206,26 +206,26 @@ describe('Ceramic integration', () => {
     })
     await ceramic3.setDIDProvider(idw.getDidProvider())
 
-    const owner = idw.id
+    const controller = idw.id
 
     // ceramic node 2 shouldn't need to have the document open in order to forward the message
     const doctype1 = await ceramic1.createDocument<TileDoctype>(DOCTYPE_TILE, {
       content: { test: 321 },
-      metadata: { owners: [owner], tags: ['3id'] }
+      metadata: { controllers: [controller], tags: ['3id'] }
     })
 
     await anchor(ceramic1)
     await syncDoc(doctype1)
 
     const doctype3 = await ceramic3.createDocument<TileDoctype>(DOCTYPE_TILE, {
-      content: { test: 321 }, metadata: { owners: [owner], tags: ['3id'] }
+      content: { test: 321 }, metadata: { controllers: [controller], tags: ['3id'] }
     }, {
       applyOnly: true
     })
 
     expect(doctype3.content).toEqual(doctype1.content)
 
-    await doctype1.change({ content: { test: 'abcde' }, metadata: { owners: [owner] } })
+    await doctype1.change({ content: { test: 'abcde' }, metadata: { controllers: [controller] } })
 
     await syncDoc(doctype3)
     await anchor(ceramic1)
@@ -243,14 +243,14 @@ describe('Ceramic integration', () => {
     const ceramic1 = await createCeramic(ipfs1, topic)
     const ceramic2 = await createCeramic(ipfs2, 'test')
 
-    const owner = ceramic1.context.did.id
+    const controller = ceramic1.context.did.id
 
-    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { test: 456 }, metadata: { owners: [owner], tags: ['3id'] } })
+    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { test: 456 }, metadata: { controllers: [controller], tags: ['3id'] } })
 
     await anchor(ceramic1)
     await syncDoc(doctype1)
 
-    await doctype1.change({ content: { test: 'abcde' }, metadata: { owners: [owner] } })
+    await doctype1.change({ content: { test: 'abcde' }, metadata: { controllers: [controller] } })
 
     await anchor(ceramic1)
     await syncDoc(doctype1)

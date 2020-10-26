@@ -42,7 +42,7 @@ export interface AnchorProof {
  * Document metadata
  */
 export interface DocMetadata {
-    owners: Array<string>;
+    controllers: Array<string>;
     schema?: string;
     tags?: Array<string>;
     isUnique?: boolean;
@@ -64,7 +64,7 @@ export interface DocParams {
  */
 export interface DocNext {
     content?: any;
-    owners?: Array<string>;
+    controllers?: Array<string>;
     metadata?: DocMetadata;
 }
 
@@ -117,8 +117,8 @@ export abstract class Doctype extends EventEmitter {
         return cloneDeep(next?.metadata ?? metadata)
     }
 
-    get owners(): Array<string> {
-        return this.metadata.owners
+    get controllers(): Array<string> {
+        return this.metadata.controllers
     }
 
     get head(): CID {

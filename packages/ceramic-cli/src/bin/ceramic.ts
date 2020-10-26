@@ -24,22 +24,22 @@ program
     .command('create <doctype>')
     .option('--content <content>', 'New document content')
     .option('--only-genesis', 'Only create the genesis object. No anchor will be created')
-    .option('--owners <owners>', 'Specify a comma-separated list of the owners of the document. Defaults to current user')
+    .option('--controllers <controllers>', 'Specify a comma-separated list of the controllers of the document. Controllers are the users that are allowed to publish updates to this document. Defaults to current user')
     .option('--unique', 'Ensure document is unique regardless of content')
     .option('--schema <schema>', 'Schema document ID')
     .description('Create a new document')
-    .action(async (doctype, { content, onlyGenesis, owners, unique, schema }) => {
-        await CeramicCliUtils.createDoc(doctype, content, owners, onlyGenesis, unique, schema)
+    .action(async (doctype, { content, onlyGenesis, controllers, unique, schema }) => {
+        await CeramicCliUtils.createDoc(doctype, content, controllers, onlyGenesis, unique, schema)
     })
 
 program
     .command('change <docId>')
     .option('--content <content>', 'Change document content')
-    .option('--owners <owners>', 'Change owner of this document (only 3ID)')
+    .option('--controllers <controllers>', 'Change controllers of this document (only 3ID)')
     .option('--schema <schema>', 'Change the schema document ID')
     .description('Update the content of a document')
-    .action(async (docId, { content, owners, schema }) => {
-        await CeramicCliUtils.change(docId, content, owners, schema)
+    .action(async (docId, { content, controllers, schema }) => {
+        await CeramicCliUtils.change(docId, content, controllers, schema)
     })
 
 program
@@ -76,19 +76,19 @@ schemas.description('Ceramic schemas')
 schemas
     .command('create <new-content>')
     .option('--only-genesis', 'Only create the genesis object. No anchor will be created')
-    .option('--owners <owners>', 'Specify a comma-separated list of the owners of the schema document. Defaults to' + ' current user')
+    .option('--controllers <controllers>', 'Specify a comma-separated list of the controllers of the schema document. Defaults to' + ' current user')
     .option('--unique', 'Ensure schema document is unique regardless of content')
     .description('Create a new schema')
-    .action(async (content, { onlyGenesis, owners, unique }) => {
-        await CeramicCliUtils.schemaCreateDoc(content, owners, onlyGenesis, unique)
+    .action(async (content, { onlyGenesis, controllers, unique }) => {
+        await CeramicCliUtils.schemaCreateDoc(content, controllers, onlyGenesis, unique)
     })
 
 schemas
     .command('change <docId> <new-content>')
-    .option('--owners <owners>', 'Change owner of this document (only 3ID)')
+    .option('--controllers <controllers>', 'Change controllers of this document (only 3ID)')
     .description('Update the content of a schema')
-    .action(async (docId, content, { owners }) => {
-        await CeramicCliUtils.schemaChangeDoc(docId, content, owners)
+    .action(async (docId, content, { controllers }) => {
+        await CeramicCliUtils.schemaChangeDoc(docId, content, controllers)
     })
 
 const pin = program.command('pin')

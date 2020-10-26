@@ -95,8 +95,8 @@ const anchorUpdate = (doc: Document): Promise<void> => new Promise(resolve => do
 
 const create = async (params: TileParams, ceramic: Ceramic, context: Context, opts: DocOpts = {}): Promise<Document> => {
   const { content, metadata } = params
-  if (!metadata?.owners) {
-    throw new Error('The owner of the 3ID needs to be specified')
+  if (!metadata?.controllers) {
+    throw new Error('The controller of the 3ID needs to be specified')
   }
 
   const record = await TileDoctype.makeGenesis({ content, metadata }, context)
@@ -124,7 +124,7 @@ describe('Document', () => {
   describe('Log logic', () => {
     const initialContent = { abc: 123, def: 456 }
     const newContent = { abc: 321, def: 456, gh: 987 }
-    const owners = ['did:3:bafyasdfasdf']
+    const controllers = ['did:3:bafyasdfasdf']
     let user: DID
     let dispatcher: any;
     let doctypeHandler: TileDoctypeHandler;
@@ -177,7 +177,7 @@ describe('Document', () => {
     })
 
     it('is created correctly', async () => {
-      const doc = await create({ content: initialContent, metadata: { owners, tags: ['3id'] } }, ceramic, context)
+      const doc = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context)
 
       expect(doc.content).toEqual(initialContent)
       expect(dispatcher.register).toHaveBeenCalledWith(doc)
@@ -187,7 +187,7 @@ describe('Document', () => {
     })
 
     it('is loaded correctly', async () => {
-      const doc1 = await create({ content: initialContent, metadata: { owners, tags: ['3id'] } }, ceramic, context, { applyOnly: true, skipWait: true })
+      const doc1 = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context, { applyOnly: true, skipWait: true })
       const doc2 = await Document.load(doc1.id, findHandler, dispatcher, pinStore, context, { skipWait: true })
 
       expect(doc1.id).toEqual(doc2.id)
@@ -196,7 +196,7 @@ describe('Document', () => {
     })
 
     it('handles new head correctly', async () => {
-      const tmpDoc = await create({ content: initialContent, metadata: { owners, tags: ['3id'] } }, ceramic, context)
+      const tmpDoc = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context)
       await anchorUpdate(tmpDoc)
       const docId = tmpDoc.id
       const log = tmpDoc.state.log
@@ -213,7 +213,7 @@ describe('Document', () => {
     })
 
     it('it handles versions correctly (valid, invalid, non-existent)', async () => {
-      const doc = await create({ content: initialContent, metadata: { owners, tags: ['3id'] } }, ceramic, context)
+      const doc = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context)
 
       let versions = await doc.listVersions()
       expect(versions).toEqual([])
@@ -223,7 +223,7 @@ describe('Document', () => {
       versions = await doc.listVersions()
       expect(versions.length).toEqual(1)
 
-      const updateRec = await TileDoctype._makeRecord(doc.doctype, user, newContent, doc.owners)
+      const updateRec = await TileDoctype._makeRecord(doc.doctype, user, newContent, doc.controllers)
 
       versions = await doc.listVersions()
       expect(versions.length).toEqual(1)
@@ -260,13 +260,13 @@ describe('Document', () => {
 
       const docV1 = await Document.getVersion(doc, doc.doctype.state.log[1])
       expect(docV1.state.log.length).toEqual(2)
-      expect(docV1.owners).toEqual(owners)
+      expect(docV1.controllers).toEqual(controllers)
       expect(docV1.content).toEqual(initialContent)
       expect(docV1.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
       // try to call doctype.change
       try {
-        await docV1.doctype.change({ content: doc.content, owners: doc.owners })
+        await docV1.doctype.change({ content: doc.content, controllers: doc.controllers })
         throw new Error('Should not be able to fetch not anchored version')
       } catch (e) {
         expect(e.message).toEqual('The version of the document is readonly. Checkout the latest HEAD in order to update.')
@@ -274,10 +274,10 @@ describe('Document', () => {
     })
 
     it('is updated correctly', async () => {
-      const doc = await create({ content: initialContent, metadata: { owners, tags: ['3id'] } }, ceramic, context)
+      const doc = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context)
       await anchorUpdate(doc)
 
-      const updateRec = await TileDoctype._makeRecord(doc.doctype, user, newContent, doc.owners)
+      const updateRec = await TileDoctype._makeRecord(doc.doctype, user, newContent, doc.controllers)
       await doc.applyRecord(updateRec)
 
       await anchorUpdate(doc)
@@ -288,12 +288,12 @@ describe('Document', () => {
 
     it('handles conflict', async () => {
       const fakeState = { asdf: 2342 }
-      const doc1 = await create({ content: initialContent, metadata: { owners, tags: ['3id'] } }, ceramic, context)
+      const doc1 = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context)
       const docId = doc1.id
       await anchorUpdate(doc1)
       const headPreUpdate = doc1.head
 
-      let updateRec = await TileDoctype._makeRecord(doc1.doctype, user, newContent, doc1.owners)
+      let updateRec = await TileDoctype._makeRecord(doc1.doctype, user, newContent, doc1.controllers)
       await doc1.applyRecord(updateRec)
 
       await anchorUpdate(doc1)
@@ -307,7 +307,7 @@ describe('Document', () => {
       await new Promise(resolve => setTimeout(resolve, 1))
       // TODO - better mock for anchors
 
-      updateRec = await TileDoctype._makeRecord(doc2.doctype, user, fakeState, doc2.owners)
+      updateRec = await TileDoctype._makeRecord(doc2.doctype, user, fakeState, doc2.controllers)
       await doc2.applyRecord(updateRec)
 
       await anchorUpdate(doc2)
@@ -328,7 +328,7 @@ describe('Document', () => {
   describe('Network update logic', () => {
     const initialContent = { abc: 123, def: 456 }
     const newContent = { abc: 321, def: 456, gh: 987 }
-    const owners = ['did:3:bafyasdfasdf']
+    const controllers = ['did:3:bafyasdfasdf']
 
     let dispatcher: any;
     let doctypeHandler: TileDoctypeHandler;
@@ -382,12 +382,12 @@ describe('Document', () => {
     })
 
     it('should announce change to network', async () => {
-      const doc1 = await create({ content: initialContent, metadata: { owners, tags: ['3id'] } }, ceramic, context)
+      const doc1 = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context)
       expect(dispatcher.publishHead).toHaveBeenCalledTimes(1)
       expect(dispatcher.publishHead).toHaveBeenCalledWith(doc1.id.toString(), doc1.head, 'tile')
       await anchorUpdate(doc1)
 
-      const updateRec = await TileDoctype._makeRecord(doc1.doctype, user, newContent, doc1.owners)
+      const updateRec = await TileDoctype._makeRecord(doc1.doctype, user, newContent, doc1.controllers)
       await doc1.applyRecord(updateRec)
 
       expect(doc1.content).toEqual(newContent)
@@ -397,7 +397,7 @@ describe('Document', () => {
     })
 
     it('documents share updates', async () => {
-      const doc1 = await create({ content: initialContent, metadata: { owners, tags: ['3id'] } }, ceramic, context)
+      const doc1 = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context)
       await anchorUpdate(doc1)
       const doc2 = await Document.load(doc1.id, getHandlerFromGenesis, dispatcher, pinStore, context, { skipWait: true })
 
@@ -405,7 +405,7 @@ describe('Document', () => {
         doc2.doctype.on('change', resolve)
       })
 
-      const updateRec = await TileDoctype._makeRecord(doc1.doctype, user, newContent, doc1.owners)
+      const updateRec = await TileDoctype._makeRecord(doc1.doctype, user, newContent, doc1.controllers)
       await doc1.applyRecord(updateRec)
 
       expect(doc1.content).toEqual(newContent)
@@ -415,7 +415,7 @@ describe('Document', () => {
     })
 
     it('should publish head on network request', async () => {
-      const doc = await create({ content: initialContent, metadata: { owners, tags: ['3id'] } }, ceramic, context)
+      const doc = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context)
       expect(dispatcher.publishHead).toHaveBeenCalledTimes(1)
       expect(dispatcher.publishHead).toHaveBeenNthCalledWith(1, doc.id.toString(), doc.head, 'tile')
 

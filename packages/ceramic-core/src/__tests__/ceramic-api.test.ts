@@ -86,11 +86,11 @@ describe('Ceramic API', () => {
     it('can load the previous document version', async () => {
       ceramic = await createCeramic()
 
-      const owner = ceramic.context.did.id
+      const controller = ceramic.context.did.id
 
       const docOg = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, {
         content: { test: 321 },
-        metadata: { owners: [owner] }
+        metadata: { controllers: [controller] }
       })
 
       // wait for anchor (new version)
@@ -129,7 +129,7 @@ describe('Ceramic API', () => {
 
       // try to call doctype.change
       try {
-        await docV0.change({ content: { test: 'fghj' }, metadata: { owners: docV0.owners } })
+        await docV0.change({ content: { test: 'fghj' }, metadata: { controllers: docV0.controllers } })
         throw new Error('Should not be able to update version')
       } catch (e) {
         expect(e.message).toEqual('The version of the document is readonly. Checkout the latest HEAD in order to update.')
@@ -159,16 +159,16 @@ describe('Ceramic API', () => {
     it('cannot create document with invalid schema', async () => {
       ceramic = await createCeramic()
 
-      const owner = ceramic.context.did.id
+      const controller = ceramic.context.did.id
 
       const schemaDoc = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, {
         content: stringMapSchema,
-        metadata: { owners: [owner] }
+        metadata: { controllers: [controller] }
       })
 
       const tileDocParams: TileParams = {
         metadata: {
-          schema: schemaDoc.id.toString(), owners: [owner]
+          schema: schemaDoc.id.toString(), controllers: [controller]
         }, content: { a: 1 },
       }
 
@@ -186,16 +186,16 @@ describe('Ceramic API', () => {
     it('can create document with valid schema', async () => {
       ceramic = await createCeramic()
 
-      const owner = ceramic.context.did.id
+      const controller = ceramic.context.did.id
 
       const schemaDoc = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, {
         content: stringMapSchema,
-        metadata: { owners: [owner] }
+        metadata: { controllers: [controller] }
       })
 
       const tileDocParams: TileParams = {
         metadata: {
-          schema: schemaDoc.id.toString(), owners: [owner]
+          schema: schemaDoc.id.toString(), controllers: [controller]
         }, content: { a: "test" }
       }
 
@@ -208,16 +208,16 @@ describe('Ceramic API', () => {
     it('can create document with invalid schema if validation is not set', async () => {
       ceramic = await createCeramic({ validateDocs: false })
 
-      const owner = ceramic.context.did.id
+      const controller = ceramic.context.did.id
 
       const schemaDoc = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, {
         content: stringMapSchema,
-        metadata: { owners: [owner] }
+        metadata: { controllers: [controller] }
       })
 
       const tileDocParams: TileParams = {
         metadata: {
-          schema: schemaDoc.id.toString(), owners: [owner]
+          schema: schemaDoc.id.toString(), controllers: [controller]
         }, content: { a: 1 },
       }
 
@@ -230,24 +230,24 @@ describe('Ceramic API', () => {
     it('can update schema if content is valid', async () => {
       ceramic = await createCeramic()
 
-      const owner = ceramic.context.did.id
+      const controller = ceramic.context.did.id
 
       const tileDocParams: TileParams = {
         metadata: {
-          owners: [owner]
+          controllers: [controller]
         }, content: { a: 'x' },
       }
 
       const doctype = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, tileDocParams)
       const schemaDoc = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, {
         content: stringMapSchema, metadata: {
-          owners: [owner]
+          controllers: [controller]
         }
       })
 
       await doctype.change({
         metadata: {
-          owners: [owner], schema: schemaDoc.id.toString()
+          controllers: [controller], schema: schemaDoc.id.toString()
         }
       })
 
@@ -260,25 +260,25 @@ describe('Ceramic API', () => {
     it('cannot update schema if content is not valid', async () => {
       ceramic = await createCeramic()
 
-      const owner = ceramic.context.did.id
+      const controller = ceramic.context.did.id
 
       const tileDocParams: TileParams = {
         metadata: {
-          owners: [owner]
+          controllers: [controller]
         }, content: { a: 1 },
       }
 
       const doctype = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, tileDocParams)
       const schemaDoc = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, {
         content: stringMapSchema, metadata: {
-          owners: [owner]
+          controllers: [controller]
         }
       })
 
       try {
         await doctype.change({
           metadata: {
-            owners: [owner], schema: schemaDoc.id.toString()
+            controllers: [controller], schema: schemaDoc.id.toString()
           }
         })
         throw new Error('Should not be able to update the document with invalid content')
@@ -292,24 +292,24 @@ describe('Ceramic API', () => {
     it('can update valid content and schema at the same time', async () => {
       ceramic = await createCeramic()
 
-      const owner = ceramic.context.did.id
+      const controller = ceramic.context.did.id
 
       const tileDocParams: TileParams = {
         metadata: {
-          owners: [owner]
+          controllers: [controller]
         }, content: { a: 1 },
       }
 
       const doctype = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, tileDocParams)
       const schemaDoc = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, {
         content: stringMapSchema, metadata: {
-          owners: [owner]
+          controllers: [controller]
         }
       })
 
       await doctype.change({
         content: { a: 'x' }, metadata: {
-          owners: [owner], schema: schemaDoc.id.toString()
+          controllers: [controller], schema: schemaDoc.id.toString()
         }
       })
 
@@ -322,11 +322,11 @@ describe('Ceramic API', () => {
     it('can list log records', async () => {
       ceramic = await createCeramic()
 
-      const owner = ceramic.context.did.id
+      const controller = ceramic.context.did.id
 
       const tileDocParams: TileParams = {
         metadata: {
-          owners: [owner]
+          controllers: [controller]
         }, content: { a: 1 },
       }
 

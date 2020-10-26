@@ -95,8 +95,8 @@ export class AccountLinkDoctypeHandler implements DoctypeHandler<AccountLinkDoct
         }
 
         const addressCaip10 = [address, chainId].join('@')
-        if (addressCaip10.toLowerCase() !== state.metadata.owners[0].toLowerCase()) {
-            throw new Error("Address doesn't match document owner")
+        if (addressCaip10.toLowerCase() !== state.metadata.controllers[0].toLowerCase()) {
+            throw new Error("Address doesn't match document controller")
         }
         state.log.push(cid)
         return {

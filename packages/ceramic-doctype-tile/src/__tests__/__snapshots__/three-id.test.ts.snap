@@ -136,7 +136,7 @@ Object {
     },
   ],
   "metadata": Object {
-    "owners": Array [
+    "controllers": Array [
       "did:key:zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV",
     ],
     "tags": Array [
@@ -199,7 +199,7 @@ Object {
     },
   ],
   "metadata": Object {
-    "owners": Array [
+    "controllers": Array [
       "did:key:zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV",
     ],
     "tags": Array [
@@ -302,7 +302,7 @@ Object {
     },
   ],
   "metadata": Object {
-    "owners": Array [
+    "controllers": Array [
       "did:key:zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV",
     ],
     "tags": Array [
