@@ -136,6 +136,7 @@ Object {
     },
   ],
   "metadata": Object {
+    "nonce": undefined,
     "owners": Array [
       "did:key:zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV",
     ],
@@ -143,7 +144,6 @@ Object {
       "3id",
     ],
   },
-  "next": Object {},
   "signature": 2,
 }
 `;
@@ -207,9 +207,6 @@ Object {
       "3id",
     ],
   },
-  "next": Object {
-    "content": null,
-  },
   "signature": 2,
 }
 `;
@@ -218,7 +215,6 @@ exports[`ThreeIdHandler applies signed record correctly 1`] = `
 Object {
   "anchorStatus": 0,
   "content": Object {
-    "other": "data",
     "publicKeys": Object {
       "test": "0xabc",
     },
@@ -320,6 +316,15 @@ Object {
       "publicKeys": Object {
         "test": "0xabc",
       },
+    },
+    "metadata": Object {
+      "nonce": undefined,
+      "owners": Array [
+        "did:key:zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV",
+      ],
+      "tags": Array [
+        "3id",
+      ],
     },
   },
   "signature": 2,

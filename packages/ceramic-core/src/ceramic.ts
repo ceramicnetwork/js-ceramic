@@ -1,7 +1,6 @@
 import Ipfs from 'ipfs'
 import Dispatcher from './dispatcher'
 import Document from './document'
-import { AnchorServiceFactory } from "./anchor/anchor-service-factory";
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import KeyDidResolver from '@ceramicnetwork/key-did-resolver'
 import DocID from '@ceramicnetwork/docid'
@@ -24,6 +23,9 @@ import { TileDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-tile"
 import { AccountLinkDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-account-link"
 import { PinStoreFactory } from "./store/pin-store-factory";
 import { PinStore } from "./store/pin-store";
+
+import EthereumAnchorService from "./anchor/ethereum/ethereum-anchor-service"
+import InMemoryAnchorService from "./anchor/memory/in-memory-anchor-service"
 
 /**
  * Ceramic configuration
@@ -48,6 +50,8 @@ export interface CeramicConfig {
   gateway?: boolean;
 
   topic?: string;
+
+  [index: string]: any; // allow arbitrary properties
 }
 
 const normalizeDocID = (docId: DocID | string): DocID => {
@@ -147,9 +151,7 @@ class Ceramic implements CeramicApi {
     const dispatcher = new Dispatcher(ipfs, config.topic)
     await dispatcher.init()
 
-    const anchorServiceFactory = new AnchorServiceFactory(dispatcher, config)
-    const anchorService = anchorServiceFactory.get();
-
+    const anchorService = config.anchorServiceUrl ? new EthereumAnchorService(config) : new InMemoryAnchorService(config)
     const context: Context = {
       ipfs,
       anchorService,
@@ -159,6 +161,8 @@ class Ceramic implements CeramicApi {
     const pinStore = await pinStoreFactory.open()
 
     const ceramic = new Ceramic(dispatcher, pinStore, context, config.validateDocs)
+    anchorService.ceramic = ceramic
+
     if (config.didProvider) {
       await ceramic.setDIDProvider(config.didProvider)
     }
