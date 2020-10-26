@@ -225,7 +225,7 @@ describe('Ceramic integration', () => {
 
     expect(doctype3.content).toEqual(doctype1.content)
 
-    await doctype1.change({ content: { test: 'abcde' }, metadata: { owners: [owner] } })
+    await doctype1.change({ content: { test: 'abcde' }, metadata: { controllers: [controller] } })
 
     await syncDoc(doctype3)
     await anchor(ceramic1)
@@ -250,7 +250,7 @@ describe('Ceramic integration', () => {
     await anchor(ceramic1)
     await syncDoc(doctype1)
 
-    await doctype1.change({ content: { test: 'abcde' }, metadata: { owners: [owner] } })
+    await doctype1.change({ content: { test: 'abcde' }, metadata: { controllers: [controller] } })
 
     await anchor(ceramic1)
     await syncDoc(doctype1)
