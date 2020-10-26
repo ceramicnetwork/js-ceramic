@@ -111,7 +111,10 @@ export class TileDoctype extends Doctype {
             header.owners = newOwners
         }
 
-        header.nonce = TileDoctype._calculateNonce(doctype)
+        const nonce = TileDoctype._calculateNonce(doctype)
+        if (nonce != null) {
+            header.nonce = nonce
+        }
 
         if (newContent == null) {
             newContent = doctype.content
@@ -132,7 +135,7 @@ export class TileDoctype extends Doctype {
     private static _calculateNonce(doctype: Doctype): number {
         // if there hasn't been any update prior to this we should set the nonce to 0
         if (!doctype.state.next) {
-            return undefined
+            return null
         }
         // get the current nonce and increment it by one
         return (doctype.state.next.metadata?.nonce || 0) + 1
