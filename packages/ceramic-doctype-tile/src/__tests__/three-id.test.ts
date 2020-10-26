@@ -53,7 +53,6 @@ const RECORDS = {
           "3id",
         ]
       },
-      unique: undefined,
       doctype: "tile"
     }
   },
