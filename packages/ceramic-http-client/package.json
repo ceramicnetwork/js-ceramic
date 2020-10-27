@@ -33,7 +33,7 @@
     "@ceramicnetwork/docid": "^0.2.0",
     "cids": "^1.0.0",
     "cross-fetch": "^3.0.5",
-    "dids": "^0.6.2",
+    "dids": "^0.7.0",
     "lodash.clonedeep": "^4.5.0"
   },
   "devDependencies": {
