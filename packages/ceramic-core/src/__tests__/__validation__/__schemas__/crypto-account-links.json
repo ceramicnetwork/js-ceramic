@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
-  "title": "CryptoAccountLinks",
+  "title": "CryptoAccountCaip10Links",
   "patternProperties": {
     "^[a-zA-Z0-9]{1,63}@[-a-zA-Z0-9]{3,16}:[-a-zA-Z0-9]{1,47}": {
       "type": "string",

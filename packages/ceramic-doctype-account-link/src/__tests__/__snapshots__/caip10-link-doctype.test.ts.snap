@@ -1,13 +1,13 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`AccountLinkHandler applies anchor record correctly 1`] = `
+exports[`Caip10LinkHandler applies anchor record correctly 1`] = `
 Object {
   "anchorProof": Object {
     "blockNumber": 123456,
   },
   "anchorStatus": 3,
   "content": null,
-  "doctype": "account-link",
+  "doctype": "caip10-link",
   "log": Array [
     Object {
       "codec": "dag-pb",
@@ -142,11 +142,11 @@ Object {
 }
 `;
 
-exports[`AccountLinkHandler applies genesis record correctly 1`] = `
+exports[`Caip10LinkHandler applies genesis record correctly 1`] = `
 Object {
   "anchorStatus": 0,
   "content": null,
-  "doctype": "account-link",
+  "doctype": "caip10-link",
   "log": Array [
     Object {
       "codec": "dag-pb",
@@ -201,11 +201,11 @@ Object {
 }
 `;
 
-exports[`AccountLinkHandler applies signed record correctly 1`] = `
+exports[`Caip10LinkHandler applies signed record correctly 1`] = `
 Object {
   "anchorStatus": 0,
   "content": null,
-  "doctype": "account-link",
+  "doctype": "caip10-link",
   "log": Array [
     Object {
       "codec": "dag-pb",

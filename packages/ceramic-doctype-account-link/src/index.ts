@@ -1,2 +1,2 @@
-export * from './account-link-doctype'
-export * from './account-link-doctype-handler'
+export * from './caip10-link-doctype'
+export * from './caip10-link-doctype-handler'
