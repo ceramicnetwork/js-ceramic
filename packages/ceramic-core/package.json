@@ -42,7 +42,7 @@
     "cids": "^1.0.0",
     "cross-fetch": "^3.0.5",
     "did-resolver": "^2.1.1",
-    "dids": "^0.6.2",
+    "dids": "^0.7.0",
     "fast-json-patch": "^2.2.1",
     "ipfs-http-client": "github:simonovic86/ipfs-http-client",
     "level-ts": "^2.0.5",
