@@ -111,7 +111,7 @@ class Ceramic implements CeramicApi {
         await this.pinStore.rm(docId)
       },
       ls: async (docId?: DocID): Promise<AsyncIterable<string>> => {
-        const docIds = await this.pinStore.ls(docId.baseID)
+        const docIds = await this.pinStore.ls(docId ? docId.baseID : null)
         return {
           [Symbol.asyncIterator](): any {
             let index = 0
