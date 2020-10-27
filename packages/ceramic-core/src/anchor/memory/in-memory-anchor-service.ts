@@ -2,6 +2,8 @@ import CID from 'cids'
 
 import { AnchorProof, AnchorService, CeramicApi, DoctypeUtils } from "@ceramicnetwork/ceramic-common"
 
+import base64url from "base64url"
+
 import type Dispatcher from '../../dispatcher'
 import Ceramic, { CeramicConfig } from "../../ceramic"
 
@@ -112,6 +114,8 @@ class InMemoryAnchorService extends AnchorService {
    * @private
    */
   async _process(cidDoc: CidDoc): Promise<void> {
+    await this.verifyCid(cidDoc.cid)
+
     // creates fake anchor record
     const proofData: AnchorProof = {
       chainId: 'eip155:1',
@@ -129,6 +133,28 @@ class InMemoryAnchorService extends AnchorService {
       this.emit(cidDoc.docId, { status: 'COMPLETED', message: 'CID successfully anchored.', anchorRecord: cid });
       clearTimeout(handle)
     }, this._anchorDelay)
+  }
+
+  async verifyCid(cid: CID): Promise<boolean> {
+    const record = (await this._ceramic.context.ipfs.dag.get(cid)).value;
+    if (!DoctypeUtils.isSignedRecord(record)) {
+      return true; // if not signed, always valid
+    }
+
+    const { payload, signatures } = record;
+    const { signature, protected: _protected } = signatures[0];
+
+    const decodedHeader = JSON.parse(base64url.decode(_protected));
+    const { kid } = decodedHeader;
+
+    const { publicKey } = await this._ceramic.context.resolver.resolve(kid);
+    const jws = [_protected, payload, signature].join(".");
+    try {
+      await didJwt.verifyJWS(jws, publicKey)
+    } catch (e) {
+      return false;
+    }
+    return true;
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

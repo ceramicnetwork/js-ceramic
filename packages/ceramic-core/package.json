@@ -38,6 +38,7 @@
     "@ethersproject/providers": "^5.0.0-beta.144",
     "@ethersproject/random": "^5.0.2",
     "@textile/powergate-client": "^0.2.0",
+    "base64url": "^3.0.1",
     "ajv": "^6.12.3",
     "cids": "^1.0.0",
     "cross-fetch": "^3.0.5",

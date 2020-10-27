@@ -178,6 +178,7 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
      * Verifies record signature
      * @param record - Record to be verified
      * @param context - Ceramic context
+     * @param did - DID value
      * @private
      */
     async _verifySignature(record: any, context: Context, did: string): Promise<void> {
