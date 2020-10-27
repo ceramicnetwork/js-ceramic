@@ -96,9 +96,14 @@ class InMemoryAnchorService extends AnchorService {
     this._dispatcher = this._ceramic.dispatcher
   }
 
-  async requestAnchor(docId: string, head: CID): Promise<void> {
+  /**
+   * Send request to the anchoring service
+   * @param docId - Document ID
+   * @param cid - Record CID
+   */
+  async requestAnchor(docId: string, cid: CID): Promise<void> {
     const pair: CidDoc = {
-      docId, cid: head,
+      docId, cid,
     }
 
     if (this._anchorOnRequest) {
@@ -135,6 +140,10 @@ class InMemoryAnchorService extends AnchorService {
     }, this._anchorDelay)
   }
 
+  /**
+   * Verify record
+   * @param cid - Record CID
+   */
   async verifyCid(cid: CID): Promise<boolean> {
     const record = (await this._ceramic.context.ipfs.dag.get(cid)).value;
     if (!DoctypeUtils.isSignedRecord(record)) {
