@@ -51,7 +51,8 @@
     "identity-wallet": "github:3box/identity-wallet-js#feat/docids",
     "ipfs": "github:simonovic86/ipfs",
     "ipfs-http-client": "github:simonovic86/ipfs-http-client",
-    "multiformats": "^3.0.3"
+    "multiformats": "^3.0.3",
+    "uint8arrays": "^1.1.0"
   },
   "devDependencies": {
     "@babel/core": "^7.9.0",
