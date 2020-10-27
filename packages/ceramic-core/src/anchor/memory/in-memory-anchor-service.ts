@@ -162,10 +162,6 @@ class InMemoryAnchorService extends AnchorService {
   }
 
   /**
-   * Verify record
-   * @param cid - Record CID
-   */
-  /**
    * Verifies record signature
    * @param record - Record data
    * @return DID
