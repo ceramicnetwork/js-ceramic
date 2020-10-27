@@ -53,60 +53,60 @@ class InMemoryAnchorService extends AnchorService {
    */
   async anchor(): Promise<void> {
     const filtered = await this._filter()
-    for (const pair of filtered) {
-      await this._process(pair)
+    for (const candidate of filtered) {
+      await this._process(candidate)
     }
 
     this._queue = [] // reset
   }
 
   /**
-   * Filter pairs by document, DIDs and nonces
+   * Filter candidates by document, DIDs and nonces
    * @private
    */
   async _filter(): Promise<Candidate[]> {
-    const result: Candidate[] = [];
-    const validCandidates: Record<string, Candidate[]> = {};
+    const result: Candidate[] = []
+    const validCandidates: Record<string, Candidate[]> = {}
 
-    let req = null;
+    let req = null
     for (let index = 0; index < this._queue.length; index++) {
       try {
-        req = this._queue[index];
-        const record = (await this._ceramic.ipfs.dag.get(req.cid)).value;
-        const did = await this.verifySignedRecord(record);
+        req = this._queue[index]
+        const record = (await this._ceramic.ipfs.dag.get(req.cid)).value
+        const did = await this.verifySignedRecord(record)
 
-        const pair = new Candidate(new CID(req.cid), req.docId, did);
-        if (!validCandidates[pair.key]) {
-          validCandidates[pair.key] = []
+        const candidate = new Candidate(new CID(req.cid), req.docId, did)
+        if (!validCandidates[candidate.key]) {
+          validCandidates[candidate.key] = []
         }
-        validCandidates[pair.key].push(pair)
+        validCandidates[candidate.key].push(candidate)
       } catch (e) {
         // do nothing
       }
     }
 
     for (const compositeKey of Object.keys(validCandidates)) {
-      const candidates: Candidate[] = validCandidates[compositeKey];
+      const candidates: Candidate[] = validCandidates[compositeKey]
 
-      let nonce = 0;
-      let selected: Candidate = null;
+      let nonce = 0
+      let selected: Candidate = null
 
-      for (const pair of candidates) {
-        const record = (await this._ceramic.ipfs.dag.get(pair.cid)).value;
+      for (const candidate of candidates) {
+        const record = (await this._ceramic.ipfs.dag.get(candidate.cid)).value
 
-        let currentNonce;
+        let currentNonce
         if (DoctypeUtils.isSignedRecord(record)) {
-          const payload = (await this._ceramic.ipfs.dag.get(record.link)).value;
-          currentNonce = payload.header?.nonce || 0;
+          const payload = (await this._ceramic.ipfs.dag.get(record.link)).value
+          currentNonce = payload.header?.nonce || 0
         } else {
-          currentNonce = record.header?.nonce || 0;
+          currentNonce = record.header?.nonce || 0
         }
         if (selected == null || currentNonce > nonce) {
-          selected = pair;
-          nonce = currentNonce;
+          selected = candidate
+          nonce = currentNonce
         }
       }
-      result.push(selected);
+      result.push(selected)
     }
     return result
   }
@@ -127,18 +127,17 @@ class InMemoryAnchorService extends AnchorService {
    * @param cid - Record CID
    */
   async requestAnchor(docId: string, cid: CID): Promise<void> {
-    const pair: Candidate = new Candidate(cid, docId)
+    const candidate: Candidate = new Candidate(cid, docId)
 
     if (this._anchorOnRequest) {
-      await this._process(pair)
+      await this._process(candidate)
     } else {
-      this._queue.push(pair)
+      this._queue.push(candidate)
     }
   }
 
   /**
-   * Process single pair
-   * @param leaf - Document-CID pair
+   * Process single candidate
    * @private
    */
   async _process(leaf: Candidate): Promise<void> {
@@ -156,7 +155,7 @@ class InMemoryAnchorService extends AnchorService {
 
     // add a delay
     const handle = setTimeout(() => {
-      this.emit(leaf.docId, { status: 'COMPLETED', message: 'CID successfully anchored.', anchorRecord: cid });
+      this.emit(leaf.docId, { status: 'COMPLETED', message: 'CID successfully anchored.', anchorRecord: cid })
       clearTimeout(handle)
     }, this._anchorDelay)
   }
@@ -168,16 +167,16 @@ class InMemoryAnchorService extends AnchorService {
    * @private
    */
   async verifySignedRecord(record: any): Promise<string> {
-    const { payload, signatures } = record;
-    const { signature, protected: _protected } = signatures[0];
+    const { payload, signatures } = record
+    const { signature, protected: _protected } = signatures[0]
 
-    const decodedHeader = JSON.parse(base64url.decode(_protected));
-    const { kid } = decodedHeader;
+    const decodedHeader = JSON.parse(base64url.decode(_protected))
+    const { kid } = decodedHeader
 
-    const didDoc = await this._ceramic.context.resolver.resolve(kid);
-    const jws = [_protected, payload, signature].join(".");
-    await didJwt.verifyJWS(jws, didDoc.publicKey);
-    return kid;
+    const didDoc = await this._ceramic.context.resolver.resolve(kid)
+    const jws = [_protected, payload, signature].join(".")
+    await didJwt.verifyJWS(jws, didDoc.publicKey)
+    return kid
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
