@@ -106,7 +106,7 @@ export default class Dispatcher extends EventEmitter {
   }
 
   /**
-   * Publishes TIP record to pub/sub topic.
+   * Publishes Tip record to pub/sub topic.
    *
    * @param id  - Document ID
    * @param tip - Record CID

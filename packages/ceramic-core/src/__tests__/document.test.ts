@@ -269,7 +269,7 @@ describe('Document', () => {
         await docV1.doctype.change({ content: doc.content, controllers: doc.controllers })
         throw new Error('Should not be able to fetch not anchored version')
       } catch (e) {
-        expect(e.message).toEqual('The version of the document is readonly. Checkout the latest TIP in order to update.')
+        expect(e.message).toEqual('Historical document versions cannot be modified. Load the document without specifying a version to make updates.')
       }
     })
 

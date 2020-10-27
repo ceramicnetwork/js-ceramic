@@ -314,9 +314,9 @@ class Document extends EventEmitter {
   }
 
   /**
-   * Handles TIP from the PubSub topic
+   * Handles Tip from the PubSub topic
    *
-   * @param cid - Document TIP CID
+   * @param cid - Document Tip CID
    * @private
    */
   async _handleTip(cid: CID): Promise<void> {
@@ -533,7 +533,7 @@ class Document extends EventEmitter {
   }
 
   /**
-   * Publishes TIP record to the pub/sub
+   * Publishes Tip record to the pub/sub
    *
    * @private
    */
@@ -634,7 +634,7 @@ class Document extends EventEmitter {
   }
 
   /**
-   * Gets document TIP record CID
+   * Gets document Tip record CID
    */
   get tip (): CID {
     return this._doctype.tip
