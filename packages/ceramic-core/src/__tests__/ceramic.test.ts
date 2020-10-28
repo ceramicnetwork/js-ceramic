@@ -17,7 +17,7 @@ const seed = u8a.fromString('6e34b2e1a9624113d81ece8a8a22e6e97f0e145c25c1d4d2d0e
 
 /**
  * Create an IPFS instance
- * @param overrideConfig - IFPS config for override
+ * @param overrideConfig - IPFS config for override
  */
 const createIPFS =(overrideConfig: object = {}): Promise<any> => {
   basicsImport.multicodec.add(dagJose)

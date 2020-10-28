@@ -3,6 +3,25 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.12.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-core@0.12.0-alpha.1...@ceramicnetwork/ceramic-core@0.12.0) (2020-10-28)
+
+**Note:** Version bump only for package @ceramicnetwork/ceramic-core
+
+
+
+
+
+# [0.12.0-alpha.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-core@0.12.0-alpha.0...@ceramicnetwork/ceramic-core@0.12.0-alpha.1) (2020-10-28)
+
+
+### Bug Fixes
+
+* **core:** fix pin ls ([#433](https://github.com/ceramicnetwork/js-ceramic/issues/433)) ([fda9380](https://github.com/ceramicnetwork/js-ceramic/commit/fda9380568c3244cad1bfd9e6a5c989943737211))
+
+
+
+
+
 # [0.12.0-alpha.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-core@0.11.0...@ceramicnetwork/ceramic-core@0.12.0-alpha.0) (2020-10-27)
 
 
