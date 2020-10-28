@@ -14,10 +14,9 @@ import {
  */
 export class LogToFiles {
     /**
-     * Modifies `rootLogger` to append log messages to files named after components
-     * @notice If no component name is given 'default' will be included in the file name
+     * Modifies `rootLogger` to append log messages to files
      * @param rootLogger Root logger to use throughout the library
-     * @param loggerOptions Should include `component` name string and `logPath` string
+     * @param loggerOptions Not used by this plugin so should be null
      * @param pluginOptions Should include `logPath` string to be used a directory to write files to
      */
     public static main (rootLogger: Logger, loggerOptions: LoggerOptions, pluginOptions: LoggerPluginOptions): void {
@@ -34,12 +33,11 @@ export class LogToFiles {
             const rawMethod = originalFactory(methodName, logLevel, loggerName);
             return (...args: any[]): any => {
                 const message = LoggerProvider._interpolate(args)
-                const namespace = loggerOptions.component ? loggerOptions.component.toLowerCase() : 'default'
                 fs.mkdir(basePath, { recursive: true }, (err) => {
                     if (err && (err.code != 'EEXIST')) console.warn('WARNING: Can not write logs to files', err)
                     else {
                         const filePrefix = basePath + loggerName.toLowerCase()
-                        const filePath = `${filePrefix}-${namespace}.log`
+                        const filePath = `${filePrefix}.log`
 
                         LogToFiles._writeStream(filePath, message, 'a')
                         LogToFiles._writeDocId(filePrefix, message)
@@ -64,7 +62,12 @@ export class LogToFiles {
         stream.write(util.format(message) + '\n')
         stream.end()
     }
-
+    /**
+     * Writes the docId in `message` to `filePath`, if `message` contains a docId.
+     * @notice The write operation overwrites any existing file.
+     * @param filePath Full path of file to write to
+     * @param message Message to write to `filePath`
+     */
     private static _writeDocId (filePrefix: string, message: string): void {
         const lookup = '/ceramic/'
         const docIdIndex = message.indexOf(lookup)
