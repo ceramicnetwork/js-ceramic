@@ -176,7 +176,7 @@ class InMemoryAnchorService extends AnchorService {
     const didDoc = await this._ceramic.context.resolver.resolve(kid)
     const jws = [_protected, payload, signature].join(".")
     await didJwt.verifyJWS(jws, didDoc.publicKey)
-    return kid
+    return kid.split('?')[0]
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

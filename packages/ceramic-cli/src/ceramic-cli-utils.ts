@@ -278,7 +278,8 @@ export class CeramicCliUtils {
         const cliConfig = await CeramicCliUtils._loadCliConfig()
 
         if (!cliConfig.seed) {
-            cliConfig.seed = CeramicCliUtils._generateSeed()
+            cliConfig.seed = u8a.toString(randomBytes(32))
+            console.log('Identity wallet seed generated')
             await CeramicCliUtils._saveCliConfig(cliConfig)
         }
 
@@ -376,16 +377,6 @@ export class CeramicCliUtils {
 
         await fs.writeFile(fullCliConfigPath, JSON.stringify(cliConfig, null, 2))
         return cliConfig
-    }
-
-    /**
-     * Generate new seed
-     * @private
-     */
-    static _generateSeed(): string {
-        const seed = u8a.toString(randomBytes(32))
-        console.log('Identity wallet seed generated')
-        return seed
     }
 
     /**
