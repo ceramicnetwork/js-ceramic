@@ -1,14 +1,14 @@
 import CID from 'cids'
 import { validateLink } from "3id-blockchain-utils"
-import { AccountLinkDoctype, AccountLinkParams } from "./account-link-doctype"
+import { Caip10LinkDoctype, Caip10LinkParams } from "./caip10-link-doctype"
 import {
     AnchorProof, AnchorStatus, DocState, DoctypeConstructor, DoctypeHandler, DocOpts, SignatureStatus
 } from "@ceramicnetwork/ceramic-common"
 import { Context } from "@ceramicnetwork/ceramic-common"
 
-const DOCTYPE = 'account-link'
+const DOCTYPE = 'caip10-link'
 
-export class AccountLinkDoctypeHandler implements DoctypeHandler<AccountLinkDoctype> {
+export class Caip10LinkDoctypeHandler implements DoctypeHandler<Caip10LinkDoctype> {
     /**
      * Gets doctype name
      */
@@ -19,18 +19,18 @@ export class AccountLinkDoctypeHandler implements DoctypeHandler<AccountLinkDoct
     /**
      * Gets doctype class
      */
-    get doctype(): DoctypeConstructor<AccountLinkDoctype> {
-        return AccountLinkDoctype
+    get doctype(): DoctypeConstructor<Caip10LinkDoctype> {
+        return Caip10LinkDoctype
     }
 
     /**
-     * Creates AccountLink instance
+     * Creates Caip10Link instance
      * @param params - Create parameters
      * @param context - Ceramic context
      * @param opts - Initialization options
      */
-    async create(params: AccountLinkParams, context: Context, opts?: DocOpts): Promise<AccountLinkDoctype> {
-        return AccountLinkDoctype.create(params, context, opts);
+    async create(params: Caip10LinkParams, context: Context, opts?: DocOpts): Promise<Caip10LinkDoctype> {
+        return Caip10LinkDoctype.create(params, context, opts);
     }
 
     /**

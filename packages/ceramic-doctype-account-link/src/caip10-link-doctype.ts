@@ -1,43 +1,43 @@
 import { Doctype, DoctypeConstructor, DoctypeStatic, DocOpts, DocParams } from "@ceramicnetwork/ceramic-common"
 import { Context } from "@ceramicnetwork/ceramic-common"
 
-const DOCTYPE = 'account-link'
+const DOCTYPE = 'caip10-link'
 
 /**
- * AccountLink parameters
+ * Caip10Link parameters
  */
-export interface AccountLinkParams extends DocParams {
+export interface Caip10LinkParams extends DocParams {
     content?: object;
 }
 
 /**
- * AccountLink doctype implementation
+ * Caip10Link doctype implementation
  */
-@DoctypeStatic<DoctypeConstructor<AccountLinkDoctype>>()
-export class AccountLinkDoctype extends Doctype {
+@DoctypeStatic<DoctypeConstructor<Caip10LinkDoctype>>()
+export class Caip10LinkDoctype extends Doctype {
 
     /**
-     * Changes AccountLink instance
+     * Changes Caip10Link instance
      * @param params - Change parameters
      * @param opts - Initialization options
      */
-    async change(params: AccountLinkParams, opts?: DocOpts): Promise<void> {
+    async change(params: Caip10LinkParams, opts?: DocOpts): Promise<void> {
         const { content, metadata } = params
-        const updateRecord = await AccountLinkDoctype._makeRecord(this, content, metadata?.schema)
+        const updateRecord = await Caip10LinkDoctype._makeRecord(this, content, metadata?.schema)
         const updated = await this.context.api.applyRecord(this.id.toString(), updateRecord, opts)
         this.state = updated.state
     }
 
     /**
-     * Creates AccountLink doctype
+     * Creates Caip10Link doctype
      * @param params - Create parameters
      * @param context - Ceramic context
      * @param opts - Initialization options
      */
-    static async create(params: AccountLinkParams, context: Context, opts?: DocOpts): Promise<AccountLinkDoctype> {
+    static async create(params: Caip10LinkParams, context: Context, opts?: DocOpts): Promise<Caip10LinkDoctype> {
         const { content, metadata } = params
 
-        const record = await AccountLinkDoctype.makeGenesis({ content, metadata })
+        const record = await Caip10LinkDoctype.makeGenesis({ content, metadata })
         return context.api.createDocumentFromGenesis(record, opts)
     }
 
@@ -72,12 +72,12 @@ export class AccountLinkDoctype extends Doctype {
 
     /**
      * Creates change record
-     * @param doctype - AccountLink doctype instance
+     * @param doctype - Caip10Link doctype instance
      * @param newContent - Change content
      * @param newSchema - Change schema
      * @private
      */
-    static async _makeRecord (doctype: AccountLinkDoctype, newContent: any, newSchema: string = null): Promise<any> {
+    static async _makeRecord (doctype: Caip10LinkDoctype, newContent: any, newSchema: string = null): Promise<any> {
         const { metadata } = doctype
         if (newSchema) {
             metadata.schema = newSchema
