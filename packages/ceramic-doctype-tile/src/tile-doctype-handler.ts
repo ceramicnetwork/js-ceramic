@@ -178,6 +178,7 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
      * Verifies record signature
      * @param record - Record to be verified
      * @param context - Ceramic context
+     * @param did - DID value
      * @private
      */
     async _verifySignature(record: any, context: Context, did: string): Promise<void> {
@@ -187,7 +188,7 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
         const decodedHeader = JSON.parse(base64url.decode(_protected))
         const { kid } = decodedHeader
         if (!kid.startsWith(did)) {
-            throw new Error(`Signature was made with wrong DID. Expected: ${did}, got: ${kid.split('?')[0]}`)
+            throw new Error(`Signature was made with wrong DID. Expected: ${did}, got: ${kid}`)
         }
 
         const { publicKey } = await context.resolver.resolve(kid)

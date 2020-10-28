@@ -38,6 +38,7 @@
     "@ethersproject/providers": "^5.0.0-beta.144",
     "@ethersproject/random": "^5.0.2",
     "@textile/powergate-client": "^0.2.0",
+    "base64url": "^3.0.1",
     "ajv": "^6.12.3",
     "cids": "^1.0.0",
     "cross-fetch": "^3.0.5",
@@ -49,7 +50,8 @@
     "lodash.clonedeep": "^4.5.0",
     "multiformats": "^3.0.3",
     "p-queue": "^6.6.1",
-    "typestub-multihashes": "^0.0.4"
+    "typestub-multihashes": "^0.0.4",
+    "did-jwt": "^4.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.9.0",
