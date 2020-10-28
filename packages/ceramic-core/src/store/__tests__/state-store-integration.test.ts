@@ -181,13 +181,20 @@ describe('Level data store', () => {
       }
     })
 
+    const resolver = new Resolver({ ...threeIdResolver })
     context = {
       ipfs: dispatcher._ipfs,
       did: user,
-      resolver: new Resolver({
-        ...threeIdResolver
-      }),
+      resolver,
       anchorService,
+    }
+
+    anchorService.ceramic = {
+      context: {
+        ipfs: dispatcher._ipfs,
+        resolver,
+      },
+      dispatcher,
     }
 
     doctypeHandler = new TileDoctypeHandler()

@@ -3,6 +3,38 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.10.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-doctype-tile@0.10.0-alpha.1...@ceramicnetwork/ceramic-doctype-tile@0.10.0) (2020-10-28)
+
+**Note:** Version bump only for package @ceramicnetwork/ceramic-doctype-tile
+
+
+
+
+
+# [0.10.0-alpha.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-doctype-tile@0.10.0-alpha.0...@ceramicnetwork/ceramic-doctype-tile@0.10.0-alpha.1) (2020-10-28)
+
+**Note:** Version bump only for package @ceramicnetwork/ceramic-doctype-tile
+
+
+
+
+
+# [0.10.0-alpha.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-doctype-tile@0.9.0...@ceramicnetwork/ceramic-doctype-tile@0.10.0-alpha.0) (2020-10-27)
+
+
+### Bug Fixes
+
+* **tile:** remove undefined nonce ([#425](https://github.com/ceramicnetwork/js-ceramic/issues/425)) ([12b3f5b](https://github.com/ceramicnetwork/js-ceramic/commit/12b3f5b58310806c234da1adc254d84380317883))
+
+
+### Features
+
+* **core:** Rename owners to controllers ([#423](https://github.com/ceramicnetwork/js-ceramic/issues/423)) ([c94ff15](https://github.com/ceramicnetwork/js-ceramic/commit/c94ff155a10c7dd3c486846f6cd8e91d320485cc))
+
+
+
+
+
 # [0.9.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-doctype-tile@0.9.0-alpha.0...@ceramicnetwork/ceramic-doctype-tile@0.9.0) (2020-10-26)
 
 **Note:** Version bump only for package @ceramicnetwork/ceramic-doctype-tile

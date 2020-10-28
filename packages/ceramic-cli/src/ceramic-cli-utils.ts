@@ -1,6 +1,7 @@
 import os from "os"
 import path from "path"
 import { randomBytes } from '@stablelib/random'
+import * as u8a from 'uint8arrays'
 
 const fs = require('fs').promises
 
@@ -257,7 +258,7 @@ export class CeramicCliUtils {
      */
     static async pinLs(docId?: string): Promise<void> {
        const id = DocID.fromString(docId)
-       
+
         await CeramicCliUtils._runWithCeramic(async (ceramic: CeramicApi) => {
             const pinnedDocIds = []
             const iterator = await ceramic.pin.ls(id)
@@ -277,7 +278,8 @@ export class CeramicCliUtils {
         const cliConfig = await CeramicCliUtils._loadCliConfig()
 
         if (!cliConfig.seed) {
-            cliConfig.seed = CeramicCliUtils._generateSeed()
+            cliConfig.seed = u8a.toString(randomBytes(32))
+            console.log('Identity wallet seed generated')
             await CeramicCliUtils._saveCliConfig(cliConfig)
         }
 
@@ -289,8 +291,9 @@ export class CeramicCliUtils {
             ceramic = new CeramicClient()
         }
 
+        const seed = u8a.fromString(cliConfig.seed)
         await IdentityWallet.create({
-            getPermission: async (): Promise<Array<string>> => [], seed: cliConfig.seed, ceramic,
+            getPermission: async (): Promise<Array<string>> => [], seed, ceramic,
             disableIDX: true,
         })
 
@@ -374,16 +377,6 @@ export class CeramicCliUtils {
 
         await fs.writeFile(fullCliConfigPath, JSON.stringify(cliConfig, null, 2))
         return cliConfig
-    }
-
-    /**
-     * Generate new seed
-     * @private
-     */
-    static _generateSeed(): string {
-        const seed = '0x' + Buffer.from(randomBytes(32)).toString('hex')
-        console.log('Identity wallet seed generated')
-        return seed
     }
 
     /**

@@ -7,9 +7,9 @@ import { Context } from "@ceramicnetwork/ceramic-common"
 import { AnchorStatus, DocOpts, SignatureStatus } from "@ceramicnetwork/ceramic-common"
 import { AnchorService } from "@ceramicnetwork/ceramic-common"
 import { TileDoctype, TileParams, TileDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-tile"
-import {PinStore} from "../store/pin-store";
-import {LevelStateStore} from "../store/level-state-store";
-import {Pinning} from "../pinning/pinning";
+import { PinStore } from "../store/pin-store";
+import { LevelStateStore } from "../store/level-state-store";
+import { Pinning } from "../pinning/pinning";
 import { DID } from "dids"
 
 import { Resolver } from "did-resolver"
@@ -136,9 +136,6 @@ describe('Document', () => {
     beforeEach(() => {
       dispatcher = Dispatcher(false)
       anchorService = new InMemoryAnchorService({})
-      anchorService.ceramic = {
-        dispatcher,
-      }
       user = new DID()
       user.createJWS = jest.fn(async () => {
         // fake jws
@@ -162,14 +159,21 @@ describe('Document', () => {
         }
       })
 
+      const resolver = new Resolver({ ...threeIdResolver })
       context = {
         did: user,
         anchorService,
         ipfs: dispatcher._ipfs,
-        resolver: new Resolver({
-          ...threeIdResolver
-        }),
+        resolver,
         provider: null,
+      }
+
+      anchorService.ceramic = {
+        context: {
+          ipfs: dispatcher._ipfs,
+          resolver,
+        },
+        dispatcher,
       }
 
       ceramic = new Ceramic(dispatcher, pinStore, context)
@@ -367,14 +371,21 @@ describe('Document', () => {
         }
       })
 
+      const resolver = new Resolver({ ...threeIdResolver })
       context = {
         did: user,
         anchorService,
         ipfs: dispatcher._ipfs,
-        resolver: new Resolver({
-          ...threeIdResolver
-        }),
+        resolver,
         provider: null,
+      }
+
+      anchorService.ceramic = {
+        context: {
+          ipfs: dispatcher._ipfs,
+          resolver,
+        },
+        dispatcher,
       }
 
       ceramic = new Ceramic(dispatcher, pinStore, context)
