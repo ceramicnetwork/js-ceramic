@@ -20,7 +20,7 @@ import { Resolver } from "did-resolver"
 
 import { DID } from 'dids'
 import { TileDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-tile"
-import { AccountLinkDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-account-link"
+import { Caip10LinkDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-account-link"
 import { PinStoreFactory } from "./store/pin-store-factory";
 import { PinStore } from "./store/pin-store";
 
@@ -75,7 +75,7 @@ class Ceramic implements CeramicApi {
     this._docmap = {}
     this._doctypeHandlers = {
       'tile': new TileDoctypeHandler(),
-      'account-link': new AccountLinkDoctypeHandler()
+      'caip10-link': new Caip10LinkDoctypeHandler()
     }
 
     this.pin = this._initPinApi();

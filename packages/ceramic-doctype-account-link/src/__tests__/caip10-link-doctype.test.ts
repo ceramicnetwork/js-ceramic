@@ -1,4 +1,4 @@
-import { AccountLinkDoctypeHandler } from '../account-link-doctype-handler'
+import { Caip10LinkDoctypeHandler } from '../caip10-link-doctype-handler'
 
 import cloneDeep from 'lodash.clonedeep'
 import CID from 'cids'
@@ -8,7 +8,7 @@ jest.mock('3id-blockchain-utils', () => ({
 }))
 
 import { validateLink } from '3id-blockchain-utils'
-import { AccountLinkDoctype } from "../account-link-doctype"
+import { Caip10LinkDoctype } from "../caip10-link-doctype"
 import { Context } from "@ceramicnetwork/ceramic-common"
 
 const { sha256 } = require('js-sha256') // eslint-disable-line @typescript-eslint/no-var-requires
@@ -20,7 +20,7 @@ const FAKE_CID_3 = new CID('bafybeig6xv5nwphfmvcnektpnojts55jqcuam7bmye2pb54adnr
 const FAKE_CID_4 = new CID('bafybeig6xv5nwphfmvcnektpnojts66jqcuam7bmye2pb54adnrtccjlsu')
 
 const RECORDS = {
-  genesis: { doctype: 'account-link', header: { controllers: [ '0x25954ef14cebbc9af3d71132489a9cfe87043f20@eip155:1' ] } },
+  genesis: { doctype: 'caip10-link', header: { controllers: [ '0x25954ef14cebbc9af3d71132489a9cfe87043f20@eip155:1' ] } },
   r1: {
     desiredContent: {
       version: 1,
@@ -54,12 +54,12 @@ const RECORDS = {
   }
 }
 
-describe('AccountLinkHandler', () => {
+describe('Caip10LinkHandler', () => {
   let context: Context
-  let handler: AccountLinkDoctypeHandler
+  let handler: Caip10LinkDoctypeHandler
 
   beforeEach(() => {
-    handler = new AccountLinkDoctypeHandler()
+    handler = new Caip10LinkDoctypeHandler()
     validateLink.mockImplementation(async (proof: object): Promise<object> => proof)
 
     const recs: Record<string, any> = {}
@@ -89,40 +89,40 @@ describe('AccountLinkHandler', () => {
   })
 
   it('is constructed correctly', async () => {
-    expect(handler.name).toEqual('account-link')
+    expect(handler.name).toEqual('caip10-link')
   })
 
   it('makes genesis record correctly', async () => {
-    const record = await AccountLinkDoctype.makeGenesis({ content: undefined, metadata: RECORDS.genesis.header })
+    const record = await Caip10LinkDoctype.makeGenesis({ content: undefined, metadata: RECORDS.genesis.header })
     expect(record).toEqual(RECORDS.genesis)
   })
 
   it('throws an error if genesis record has content', async () => {
     const content = {}
-    await expect(AccountLinkDoctype.makeGenesis({ content })).rejects.toThrow(/Cannot have content/i)
+    await expect(Caip10LinkDoctype.makeGenesis({ content })).rejects.toThrow(/Cannot have content/i)
   })
 
   it('throws an error if genesis record has no metadata specified', async () => {
     const content: any = undefined
     const controllers: any = undefined
-    await expect(AccountLinkDoctype.makeGenesis({ content, controllers })).rejects.toThrow(/Metadata must be specified/i)
+    await expect(Caip10LinkDoctype.makeGenesis({ content, controllers })).rejects.toThrow(/Metadata must be specified/i)
   })
 
   it('throws an error if genesis record has no controllers specified', async () => {
     const content: any = undefined
-    await expect(AccountLinkDoctype.makeGenesis({ content, metadata: {} })).rejects.toThrow(/Controller must be specified/i)
+    await expect(Caip10LinkDoctype.makeGenesis({ content, metadata: {} })).rejects.toThrow(/Controller must be specified/i)
   })
 
   it('throws an error if genesis record has more than one controller', async () => {
     const content: any = undefined
     const controllers = [...RECORDS.genesis.header.controllers, '0x25954ef14cebbc9af3d79876489a9cfe87043f20@eip155:1']
-    await expect(AccountLinkDoctype.makeGenesis({ content, metadata: { controllers } })).rejects.toThrow(/Exactly one controller/i)
+    await expect(Caip10LinkDoctype.makeGenesis({ content, metadata: { controllers } })).rejects.toThrow(/Exactly one controller/i)
   })
 
   it('throws an error if genesis record has controller not in CAIP-10 format', async () => {
     const content: any = undefined
     const controllers = RECORDS.genesis.header.controllers.map(address => address.split('@')[0])
-    await expect(AccountLinkDoctype.makeGenesis({ content, metadata: { controllers } })).rejects.toThrow(/According to CAIP-10/i)
+    await expect(Caip10LinkDoctype.makeGenesis({ content, metadata: { controllers } })).rejects.toThrow(/According to CAIP-10/i)
   })
 
   it('applies genesis record correctly', async () => {
@@ -132,8 +132,8 @@ describe('AccountLinkHandler', () => {
 
   it('makes signed record correctly', async () => {
     const state = await handler.applyRecord(RECORDS.genesis, FAKE_CID_1, context)
-    const doctype = new AccountLinkDoctype(state, context)
-    const record = await AccountLinkDoctype._makeRecord(doctype, RECORDS.r1.desiredContent)
+    const doctype = new Caip10LinkDoctype(state, context)
+    const record = await Caip10LinkDoctype._makeRecord(doctype, RECORDS.r1.desiredContent)
     expect(record).toEqual(RECORDS.r1.record)
   })
 
