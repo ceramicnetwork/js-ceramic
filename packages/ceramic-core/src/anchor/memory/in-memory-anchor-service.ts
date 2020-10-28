@@ -8,6 +8,8 @@ import base64url from "base64url"
 import type Dispatcher from '../../dispatcher'
 import Ceramic, { CeramicConfig } from "../../ceramic"
 
+const DID_MATCHER = '^(did:([a-zA-Z0-9_]+):([a-zA-Z0-9_.-]+(:[a-zA-Z0-9_.-]+)*)((;[a-zA-Z0-9_.:%-]+=[a-zA-Z0-9_.:%-]*)*)(/[^#?]*)?)([?][^#]*)?(#.*)?';
+
 class Candidate {
   public cid: CID;
   public docId: string;
@@ -176,7 +178,7 @@ class InMemoryAnchorService extends AnchorService {
     const didDoc = await this._ceramic.context.resolver.resolve(kid)
     const jws = [_protected, payload, signature].join(".")
     await didJwt.verifyJWS(jws, didDoc.publicKey)
-    return kid.split('?')[0]
+    return kid.match(RegExp(DID_MATCHER))[1]
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
