@@ -127,7 +127,7 @@ export class DoctypeUtils {
      */
     static makeReadOnly<T extends Doctype>(doctype: T): T {
         doctype.change = (): Promise<void> => {
-            throw new Error('The version of the document is readonly. Checkout the latest HEAD in order to update.')
+            throw new Error('Historical document versions cannot be modified. Load the document without specifying a version to make updates.')
         }
         return doctype
     }

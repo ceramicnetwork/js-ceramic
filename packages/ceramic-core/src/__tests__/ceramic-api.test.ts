@@ -132,7 +132,7 @@ describe('Ceramic API', () => {
         await docV0.change({ content: { test: 'fghj' }, metadata: { controllers: docV0.controllers } })
         throw new Error('Should not be able to update version')
       } catch (e) {
-        expect(e.message).toEqual('The version of the document is readonly. Checkout the latest HEAD in order to update.')
+        expect(e.message).toEqual('Historical document versions cannot be modified. Load the document without specifying a version to make updates.')
       }
 
       // // try to call Ceramic API directly
@@ -141,7 +141,7 @@ describe('Ceramic API', () => {
         await ceramic.context.api.applyRecord(docV0Id, updateRecord)
         throw new Error('Should not be able to update version')
       } catch (e) {
-        expect(e.message).toEqual('The version of the document is readonly. Checkout the latest HEAD in order to update.')
+        expect(e.message).toEqual('Historical document versions cannot be modified. Load the document without specifying a version to make updates.')
       }
 
       // try to checkout not anchored version

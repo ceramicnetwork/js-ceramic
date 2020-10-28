@@ -121,7 +121,7 @@ export abstract class Doctype extends EventEmitter {
         return this.metadata.controllers
     }
 
-    get head(): CID {
+    get tip(): CID {
         return this._state.log[this._state.log.length - 1]
     }
 

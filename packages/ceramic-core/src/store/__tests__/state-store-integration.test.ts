@@ -111,14 +111,14 @@ jest.mock('../../dispatcher', () => {
         recs[cid.toString()] = clone
         return cid
       }),
-      publishHead: jest.fn((id, head) => {
+      publishTip: jest.fn((id, tip) => {
         if (gossip) {
-          docs[id]._handleHead(head)
+          docs[id]._handleTip(tip)
         }
       }),
-      _requestHead: (id: string): void => {
+      _requestTip: (id: string): void => {
         if (gossip) {
-          docs[id]._publishHead()
+          docs[id]._publishTip()
         }
       },
       retrieveRecord: jest.fn(cid => {

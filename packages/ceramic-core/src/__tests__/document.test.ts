@@ -70,14 +70,14 @@ jest.mock('../dispatcher', () => {
         recs[cid.toString()] = clone
         return cid
       }),
-      publishHead: jest.fn((id, head) => {
+      publishTip: jest.fn((id, tip) => {
         if (gossip) {
-          docs[id]._handleHead(head)
+          docs[id]._handleTip(tip)
         }
       }),
-      _requestHead: (id: string): void => {
+      _requestTip: (id: string): void => {
         if (gossip) {
-          docs[id]._publishHead()
+          docs[id]._publishTip()
         }
       },
       retrieveRecord: jest.fn(cid => {
@@ -199,18 +199,18 @@ describe('Document', () => {
       expect(doc1.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
     })
 
-    it('handles new head correctly', async () => {
+    it('handles new tip correctly', async () => {
       const tmpDoc = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context)
       await anchorUpdate(tmpDoc)
       const docId = tmpDoc.id
       const log = tmpDoc.state.log
       const doc = await Document.load(docId, findHandler, dispatcher, pinStore, context, { skipWait: true })
-      // changes will not load since no network and no local head storage yet
+      // changes will not load since no network and no local tip storage yet
       expect(doc.content).toEqual(initialContent)
       expect(doc.state).toEqual(expect.objectContaining({ signature: SignatureStatus.SIGNED, anchorStatus: 0 }))
-      // _handleHead is intended to be called by the dispatcher
-      // should return a promise that resolves when head is added
-      await doc._handleHead(log[1])
+      // _handleTip is intended to be called by the dispatcher
+      // should return a promise that resolves when tip is added
+      await doc._handleTip(log[1])
       expect(doc.state.signature).toEqual(SignatureStatus.SIGNED)
       expect(doc.state.anchorStatus).not.toEqual(AnchorStatus.NOT_REQUESTED)
       expect(doc.content).toEqual(initialContent)
@@ -273,7 +273,7 @@ describe('Document', () => {
         await docV1.doctype.change({ content: doc.content, controllers: doc.controllers })
         throw new Error('Should not be able to fetch not anchored version')
       } catch (e) {
-        expect(e.message).toEqual('The version of the document is readonly. Checkout the latest HEAD in order to update.')
+        expect(e.message).toEqual('Historical document versions cannot be modified. Load the document without specifying a version to make updates.')
       }
     })
 
@@ -295,17 +295,17 @@ describe('Document', () => {
       const doc1 = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context)
       const docId = doc1.id
       await anchorUpdate(doc1)
-      const headPreUpdate = doc1.head
+      const tipPreUpdate = doc1.tip
 
       let updateRec = await TileDoctype._makeRecord(doc1.doctype, user, newContent, doc1.controllers)
       await doc1.applyRecord(updateRec)
 
       await anchorUpdate(doc1)
       expect(doc1.content).toEqual(newContent)
-      const headValidUpdate = doc1.head
+      const tipValidUpdate = doc1.tip
       // create invalid change that happened after main change
       const doc2 = await Document.load(docId, findHandler, dispatcher, pinStore, context, { skipWait: true })
-      await doc2._handleHead(headPreUpdate)
+      await doc2._handleTip(tipPreUpdate)
       // add short wait to get different anchor time
       // sometime the tests are very fast
       await new Promise(resolve => setTimeout(resolve, 1))
@@ -315,16 +315,16 @@ describe('Document', () => {
       await doc2.applyRecord(updateRec)
 
       await anchorUpdate(doc2)
-      const headInvalidUpdate = doc2.head
+      const tipInvalidUpdate = doc2.tip
       expect(doc2.content).toEqual(fakeState)
-      // loading head from valid log to doc with invalid
+      // loading tip from valid log to doc with invalid
       // log results in valid state
-      await doc2._handleHead(headValidUpdate)
+      await doc2._handleTip(tipValidUpdate)
       expect(doc2.content).toEqual(newContent)
 
-      // loading head from invalid log to doc with valid
+      // loading tip from invalid log to doc with valid
       // log results in valid state
-      await doc1._handleHead(headInvalidUpdate)
+      await doc1._handleTip(tipInvalidUpdate)
       expect(doc1.content).toEqual(newContent)
     })
   })
@@ -394,8 +394,8 @@ describe('Document', () => {
 
     it('should announce change to network', async () => {
       const doc1 = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context)
-      expect(dispatcher.publishHead).toHaveBeenCalledTimes(1)
-      expect(dispatcher.publishHead).toHaveBeenCalledWith(doc1.id.toString(), doc1.head, 'tile')
+      expect(dispatcher.publishTip).toHaveBeenCalledTimes(1)
+      expect(dispatcher.publishTip).toHaveBeenCalledWith(doc1.id.toString(), doc1.tip, 'tile')
       await anchorUpdate(doc1)
 
       const updateRec = await TileDoctype._makeRecord(doc1.doctype, user, newContent, doc1.controllers)
@@ -403,8 +403,8 @@ describe('Document', () => {
 
       expect(doc1.content).toEqual(newContent)
 
-      expect(dispatcher.publishHead).toHaveBeenCalledTimes(3)
-      expect(dispatcher.publishHead).toHaveBeenCalledWith(doc1.id.toString(), doc1.head, 'tile')
+      expect(dispatcher.publishTip).toHaveBeenCalledTimes(3)
+      expect(dispatcher.publishTip).toHaveBeenCalledWith(doc1.id.toString(), doc1.tip, 'tile')
     })
 
     it('documents share updates', async () => {
@@ -425,15 +425,15 @@ describe('Document', () => {
       expect(doc2.content).toEqual(newContent)
     })
 
-    it('should publish head on network request', async () => {
+    it('should publish tip on network request', async () => {
       const doc = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context)
-      expect(dispatcher.publishHead).toHaveBeenCalledTimes(1)
-      expect(dispatcher.publishHead).toHaveBeenNthCalledWith(1, doc.id.toString(), doc.head, 'tile')
+      expect(dispatcher.publishTip).toHaveBeenCalledTimes(1)
+      expect(dispatcher.publishTip).toHaveBeenNthCalledWith(1, doc.id.toString(), doc.tip, 'tile')
 
-      await dispatcher._requestHead(doc.id)
+      await dispatcher._requestTip(doc.id)
 
-      expect(dispatcher.publishHead).toHaveBeenCalledTimes(2)
-      expect(dispatcher.publishHead).toHaveBeenNthCalledWith(2, doc.id.toString(), doc.head, 'tile')
+      expect(dispatcher.publishTip).toHaveBeenCalledTimes(2)
+      expect(dispatcher.publishTip).toHaveBeenNthCalledWith(2, doc.id.toString(), doc.tip, 'tile')
 
       // wait a bit to complete document handling
       await new Promise(resolve => setTimeout(resolve, 1000))

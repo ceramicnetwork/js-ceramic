@@ -66,12 +66,12 @@ export default class EthereumAnchorService extends AnchorService {
     }
 
     /**
-     * Requests anchoring service for current head of the document
+     * Requests anchoring service for current tip of the document
      * @param docId - Document ID
-     * @param head - Head CID of the document
+     * @param tip - Tip CID of the document
      */
-    async requestAnchor(docId: string, head: CID): Promise<void> {
-        const cidDocPair: CidDoc = { cid: head, docId };
+    async requestAnchor(docId: string, tip: CID): Promise<void> {
+        const cidDocPair: CidDoc = { cid: tip, docId };
 
         // send initial request
         await this._sendReq(cidDocPair);
