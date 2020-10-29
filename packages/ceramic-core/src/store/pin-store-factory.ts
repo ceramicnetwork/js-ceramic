@@ -1,24 +1,32 @@
 import {Context} from "@ceramicnetwork/ceramic-common";
 import {LevelStateStore} from "./level-state-store";
-import {PinningAggregation} from "../pinning/pinning-aggregation";
-import {IpfsPinning} from "../pinning/ipfs-pinning";
-import {PowergatePinning} from "../pinning/powergate-pinning";
+import {PinningAggregation} from "@pinning-aggregation/aggregation";
 import {PinStore} from "./pin-store";
 import CID from 'cids'
 import path from "path";
+import {IPinningStatic} from "@pinning-aggregation/common";
+import {IpfsPinning} from '@pinning-aggregation/ipfs-pinning'
+
+export type Props = {
+    stateStorePath?: string;
+    pinnings?: string[];
+    pinningBackends?: IPinningStatic[];
+}
 
 export class PinStoreFactory {
     readonly stateStorePath: string
     readonly pinnings: string[]
+    readonly pinningBackends: IPinningStatic[];
 
-    constructor(readonly context: Context, stateStorePath: string | undefined, pinnings: string[] | undefined) {
-        this.stateStorePath = stateStorePath || path.join(process.cwd(), '.pinning.store')
-        this.pinnings = pinnings && pinnings.length > 0 ? pinnings : ['ipfs+context']
+    constructor(readonly context: Context, props: Props) {
+        this.stateStorePath = props.stateStorePath || path.join(process.cwd(), '.pinning.store')
+        this.pinnings = props.pinnings && props.pinnings.length > 0 ? props.pinnings : ['ipfs+context']
+        this.pinningBackends = props.pinningBackends && props.pinningBackends.length > 0 ? props.pinningBackends : [IpfsPinning]
     }
 
     async open(): Promise<PinStore> {
         const stateStore = new LevelStateStore(this.stateStorePath)
-        const pinning = new PinningAggregation(this.context, this.pinnings, [IpfsPinning, PowergatePinning])
+        const pinning = PinningAggregation.build(this.context, this.pinnings, this.pinningBackends)
         const ipfs = this.context.ipfs
         const retrieve = async (cid: CID): Promise<any> => {
             const blob = await ipfs.dag.get(cid)

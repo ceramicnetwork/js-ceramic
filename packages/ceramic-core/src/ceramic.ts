@@ -26,6 +26,7 @@ import { PinStore } from "./store/pin-store";
 
 import EthereumAnchorService from "./anchor/ethereum/ethereum-anchor-service"
 import InMemoryAnchorService from "./anchor/memory/in-memory-anchor-service"
+import {IPinningStatic} from "@pinning-aggregation/common";
 
 /**
  * Ceramic configuration
@@ -40,6 +41,7 @@ export interface CeramicConfig {
 
   validateDocs?: boolean;
   pinning?: string[];
+  pinningBackends?: IPinningStatic[];
 
   logLevel?: string;
   logToFiles?: boolean;
@@ -157,7 +159,7 @@ class Ceramic implements CeramicApi {
       anchorService,
     }
 
-    const pinStoreFactory = new PinStoreFactory(context, config.stateStorePath, config.pinning)
+    const pinStoreFactory = new PinStoreFactory(context, config)
     const pinStore = await pinStoreFactory.open()
 
     const ceramic = new Ceramic(dispatcher, pinStore, context, config.validateDocs)
