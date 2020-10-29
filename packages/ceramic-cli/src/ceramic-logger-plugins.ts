@@ -13,6 +13,8 @@ import {
  * Plugin for the root logger from the `loglevel` library to write logs to files
  */
 export class LogToFiles {
+    private MINUTES_TO_EXPIRATION = 60
+
     /**
      * Modifies `rootLogger` to append log messages to files
      * @param rootLogger Root logger to use throughout the library
@@ -48,6 +50,7 @@ export class LogToFiles {
         };
         rootLogger.setLevel(rootLogger.getLevel());
     }
+
     /**
      * Opens a filesystem stream and writes `message` to it
      * @param filePath Full path of file to write to
@@ -55,6 +58,7 @@ export class LogToFiles {
      * @param writeFlag Specifies writing method (e.g. "a" for append, "w" for overwrite)
      */
     private static _writeStream (filePath: string, message: string, writeFlag: string): void {
+        LogToFiles._isExpired(filePath) && LogToFiles._rotate(filePath)
         const stream = fs.createWriteStream(
             filePath,
             { flags: writeFlag }
@@ -62,10 +66,11 @@ export class LogToFiles {
         stream.write(util.format(message) + '\n')
         stream.end()
     }
+
     /**
      * Writes the docId in `message` to `filePath`, if `message` contains a docId.
      * @notice The write operation overwrites any existing file.
-     * @param filePath Full path of file to write to
+     * @param filePrefix Prefix of file name to write to
      * @param message Message to write to `filePath`
      */
     private static _writeDocId (filePrefix: string, message: string): void {
@@ -82,5 +87,24 @@ export class LogToFiles {
                 LogToFiles._writeStream(filePath, docId, 'w')
             }
         }
+    }
+
+    /**
+     * Returns true if it has been `MINUTES_TO_EXPIRATION` minutes since the file was created
+     * @param filePath Full path of file
+     */
+    private static _isExpired (filePath: string): boolean {
+        const { birthtime } = fs.statSync(filePath)
+        const minutesSinceBirth = ((Date.now() - birthtime.getTime()) / (1000 * 60)).toFixed(1)
+        return (minutesSinceBirth >= this.MINUTES_TO_EXPIRATION)
+    }
+
+    /**
+     * Renames the file given, appending `.old` to the file name
+     * @notice If a file with the new name already exists, it is overwritten
+     * @param filePath Full path of file
+     */
+    private static _rotate (filePath: string): void {
+        fs.renameSync(filePath, `${filePath}.old`)
     }
 }
