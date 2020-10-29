@@ -135,7 +135,7 @@ class Ceramic implements CeramicApi {
    * @param config - Ceramic configuration
    */
   static async create(ipfs: Ipfs.Ipfs, config: CeramicConfig = {}): Promise<Ceramic> {
-    const loggerOptions = LoggerProvider.init({
+    LoggerProvider.init({
       level: config.logLevel? config.logLevel : 'silent',
       component: config.gateway? 'GATEWAY' : 'NODE',
     })
@@ -143,7 +143,7 @@ class Ceramic implements CeramicApi {
     if (config.logToFiles) {
         LoggerProvider.addPlugin(
             config.logToFilesPlugin.plugin,
-            loggerOptions,
+            null,
             config.logToFilesPlugin.options
         )
     }
