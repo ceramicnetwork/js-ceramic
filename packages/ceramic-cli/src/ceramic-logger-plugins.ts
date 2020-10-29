@@ -13,7 +13,7 @@ import {
  * Plugin for the root logger from the `loglevel` library to write logs to files
  */
 export class LogToFiles {
-    private static MINUTES_TO_EXPIRATION: number = 60
+    private static MINUTES_TO_EXPIRATION = 60
 
     /**
      * Modifies `rootLogger` to append log messages to files
