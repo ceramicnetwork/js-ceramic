@@ -13,7 +13,7 @@ import {
  * Plugin for the root logger from the `loglevel` library to write logs to files
  */
 export class LogToFiles {
-    private MINUTES_TO_EXPIRATION = 60
+    private static MINUTES_TO_EXPIRATION: number = 60
 
     /**
      * Modifies `rootLogger` to append log messages to files
@@ -95,8 +95,8 @@ export class LogToFiles {
      */
     private static _isExpired (filePath: string): boolean {
         const { birthtime } = fs.statSync(filePath)
-        const minutesSinceBirth = ((Date.now() - birthtime.getTime()) / (1000 * 60)).toFixed(1)
-        return (minutesSinceBirth >= this.MINUTES_TO_EXPIRATION)
+        const minutesSinceBirth = (Date.now() - birthtime.getTime()) / (1000 * 60)
+        return (minutesSinceBirth >= LogToFiles.MINUTES_TO_EXPIRATION)
     }
 
     /**
