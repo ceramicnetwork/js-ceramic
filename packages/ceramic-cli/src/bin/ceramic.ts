@@ -25,11 +25,12 @@ program
     .option('--content <content>', 'New document content')
     .option('--only-genesis', 'Only create the genesis object. No anchor will be created')
     .option('--controllers <controllers>', 'Specify a comma-separated list of the controllers of the document. Controllers are the users that are allowed to publish updates to this document. Defaults to current user')
-    .option('--unique <unique>', 'Controls whether document is ensured to be unique regardless of content. Defaults to true')
+    .option('--unique', 'Ensure document is unique regardless of content. This is the default behavior.')
+    .option('--not-unique', 'Creating a document with identity content to an existing document will be a no-op.')
     .option('--schema <schema>', 'Schema document ID')
     .description('Create a new document')
-    .action(async (doctype, { content, onlyGenesis, controllers, unique, schema }) => {
-        await CeramicCliUtils.createDoc(doctype, content, controllers, onlyGenesis, unique, schema)
+    .action(async (doctype, { content, onlyGenesis, controllers, unique, notUnique, schema }) => {
+        await CeramicCliUtils.nonSchemaCreateDoc(doctype, content, controllers, onlyGenesis, unique, notUnique, schema)
     })
 
 program
@@ -77,10 +78,11 @@ schemas
     .command('create <new-content>')
     .option('--only-genesis', 'Only create the genesis object. No anchor will be created')
     .option('--controllers <controllers>', 'Specify a comma-separated list of the controllers of the schema document. Defaults to' + ' current user')
-    .option('--unique', 'If set, ensures schema document is unique regardless of content')
+    .option('--unique', 'Ensure schema document is unique regardless of content.')
+    .option('--not-unique', 'Creating a schema document with identical content to an existing schema document will be a no-op. This is the default behavior.')
     .description('Create a new schema')
-    .action(async (content, { onlyGenesis, controllers, unique }) => {
-        await CeramicCliUtils.schemaCreateDoc(content, controllers, onlyGenesis, unique)
+    .action(async (content, { onlyGenesis, controllers, unique, notUnique }) => {
+        await CeramicCliUtils.schemaCreateDoc(content, controllers, onlyGenesis, unique, notUnique)
     })
 
 schemas
