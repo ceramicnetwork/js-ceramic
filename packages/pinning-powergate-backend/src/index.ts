@@ -1,11 +1,10 @@
-import { createPow, Pow, ffsTypes } from "@textile/powergate-client";
 import CID from "cids";
 import type {
     CidList,
     PinningBackend,
     PinningInfo,
-    Context,
 } from "@ceramicnetwork/ceramic-common";
+import { createPow, Pow, ffsTypes } from "@textile/powergate-client";
 import * as sha256 from "@stablelib/sha256";
 import * as base64 from "@stablelib/base64";
 import * as _ from "lodash";
@@ -36,9 +35,7 @@ export class PowergatePinningBackend implements PinningBackend {
 
     #pow?: Pow;
 
-    constructor(
-        readonly connectionString: string,
-    ) {
+    constructor(readonly connectionString: string,) {
         const url = new URL(connectionString);
         const hostname = url.hostname;
         const port = parseInt(url.port, 10) || 6002;
@@ -78,9 +75,7 @@ export class PowergatePinningBackend implements PinningBackend {
                     override: true,
                 });
             } catch (e) {
-                if (
-                    e.message.includes("cid already pinned, consider using override flag")
-                ) {
+                if (e.message.includes("cid already pinned, consider using override flag")) {
                     // Do Nothing
                 } else {
                     throw e;
@@ -94,35 +89,22 @@ export class PowergatePinningBackend implements PinningBackend {
             const { config } = await this.#pow.ffs.getStorageConfig(cid.toString());
             if (config) {
                 const next = Object.assign({}, config, {
-                    ...config,
-                    repairable: false,
-                    hot: {
-                        ...config.hot,
-                        allowUnfreeze: false,
-                        enabled: false,
-                    },
-                    cold: {
-                        ...config.cold,
-                        enabled: false,
+                    ...config, repairable: false, hot: {
+                        ...config.hot, allowUnfreeze: false, enabled: false,
+                    }, cold: {
+                        ...config.cold, enabled: false,
                     },
                 });
-                const { jobId } = await this.#pow.ffs.pushStorageConfig(
-                    cid.toString(),
-                    {
-                        override: true,
-                        storageConfig: next,
-                    }
-                );
+                const { jobId } = await this.#pow.ffs.pushStorageConfig(cid.toString(), {
+                    override: true, storageConfig: next,
+                });
                 await this.waitForJobStatus(jobId, JobStatus.JOB_STATUS_SUCCESS);
                 await this.#pow.ffs.remove(cid.toString());
             }
         }
     }
 
-    protected async waitForJobStatus(
-        jobId: string,
-        status: ffsTypes.JobStatusMap[keyof ffsTypes.JobStatusMap]
-    ): Promise<void> {
+    protected async waitForJobStatus(jobId: string, status: ffsTypes.JobStatusMap[keyof ffsTypes.JobStatusMap]): Promise<void> {
         if (this.#pow) {
             const pow = this.#pow;
             return new Promise<void>((resolve, reject) => {
