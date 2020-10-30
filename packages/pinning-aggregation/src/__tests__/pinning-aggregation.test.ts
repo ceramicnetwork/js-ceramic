@@ -10,7 +10,7 @@ import {
 } from "@ceramicnetwork/ceramic-common";
 import CID from "cids";
 import { IpfsPinning } from "@ceramicnetwork/pinning-ipfs-backend";
-import { PowergatePinning } from "@ceramicnetwork/pinning-powergate-backend";
+import { PowergatePinningBackend } from "@ceramicnetwork/pinning-powergate-backend";
 
 const cid = new CID("QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D");
 
@@ -66,32 +66,32 @@ class FakePinning implements PinningBackend {
 describe("constructor", () => {
   test("init pinning backends", async () => {
     const connectionStrings = [
-      "ipfs://localhost:5001",
+      "ipfs+context",
       "ipfs+https://example.com",
       `powergate://localhost:5002?token=${token}`,
       `powergate+https://example.com?token=${token}`,
     ];
     const aggregation = PinningAggregation.build(context, connectionStrings, [
       IpfsPinning,
-      PowergatePinning,
+      PowergatePinningBackend,
     ]);
     expect(aggregation.backends.length).toEqual(4);
 
     expect(aggregation.backends[0]).toBeInstanceOf(IpfsPinning);
     const zero = aggregation.backends[0] as IpfsPinning;
-    expect(zero.ipfsAddress).toEqual("http://localhost:5001");
+    expect(zero.ipfsAddress).toEqual("ipfs+context");
 
     expect(aggregation.backends[1]).toBeInstanceOf(IpfsPinning);
     const one = aggregation.backends[1] as IpfsPinning;
     expect(one.ipfsAddress).toEqual("https://example.com:5001");
 
-    expect(aggregation.backends[2]).toBeInstanceOf(PowergatePinning);
-    const two = aggregation.backends[2] as PowergatePinning;
+    expect(aggregation.backends[2]).toBeInstanceOf(PowergatePinningBackend);
+    const two = aggregation.backends[2] as PowergatePinningBackend;
     expect(two.endpoint).toEqual("http://localhost:5002");
     expect(two.token).toEqual(token);
 
-    expect(aggregation.backends[3]).toBeInstanceOf(PowergatePinning);
-    const three = aggregation.backends[3] as PowergatePinning;
+    expect(aggregation.backends[3]).toBeInstanceOf(PowergatePinningBackend);
+    const three = aggregation.backends[3] as PowergatePinningBackend;
     expect(three.endpoint).toEqual("https://example.com:6002");
     expect(three.token).toEqual(token);
   });
