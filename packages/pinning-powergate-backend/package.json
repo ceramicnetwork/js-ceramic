@@ -1,0 +1,52 @@
+{
+  "name": "@ceramicnetwork/pinning-powergate-backend",
+  "version": "0.0.1",
+  "description": "Powergate Pinning backend",
+  "keywords": [
+    "ceramic",
+    "ipfs",
+    "filecoin",
+    "powergate"
+  ],
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "files": [
+    "lib"
+  ],
+  "scripts": {
+    "test": "../../node_modules/.bin/jest --coverage",
+    "build": "../../node_modules/.bin/tsc -p tsconfig.json",
+    "prepublishOnly": "npm run build",
+    "prebuild": "npm run clean",
+    "lint": "./node_modules/.bin/eslint ./src --ext .js,.jsx,.ts,.tsx",
+    "clean": "rm -rf ./lib"
+  },
+  "author": "Sergey Ukustov <sergey@ukstv.me>",
+  "license": "(Apache-2.0 OR MIT)",
+  "directories": {
+    "lib": "lib"
+  },
+  "dependencies": {
+    "@ceramicnetwork/ceramic-common": "^0.12.0",
+    "@stablelib/base64": "^1.0.0",
+    "@stablelib/sha256": "^1.0.0",
+    "@textile/powergate-client": "^2.0.1",
+    "lodash": "^4.17.20"
+  },
+  "devDependencies": {
+    "@types/lodash": "^4.14.162",
+    "cids": "^1.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "jest": {
+    "moduleFileExtensions": ["js", "json", "ts"],
+    "rootDir": "src",
+    "testRegex": ".(spec|test).ts$",
+    "transform": {
+      "^.+\\.ts$": "ts-jest"
+    },
+    "testEnvironment": "node"
+  }
+}
