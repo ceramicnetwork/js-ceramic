@@ -27,6 +27,9 @@
    { "path": "./packages/ceramic-http-client" },
    { "path": "./packages/ceramic-common" },
    { "path": "./packages/ceramic-doctype-account-link" },
-   { "path": "./packages/ceramic-doctype-tile" }
+   { "path": "./packages/ceramic-doctype-tile" },
+   { "path": "./packages/pinning-aggregation" },
+   { "path": "./packages/pinning-ipfs-backend" },
+   { "path": "./packages/pinning-powergate-backend" }
  ]
 }

@@ -1,11 +1,7 @@
 import _ from "lodash";
 import CID from "cids";
 import {
-    CidList,
-    PinningBackend,
-    PinningBackendStatic,
-    PinningInfo,
-    Context,
+    CidList, PinningBackend, PinningBackendStatic, PinningInfo, Context,
 } from "@ceramicnetwork/ceramic-common";
 import * as base64 from "@stablelib/base64";
 import * as sha256 from "@stablelib/sha256";
@@ -25,15 +21,9 @@ export class PinningAggregation implements PinningBackend {
     readonly id: string;
     readonly backends: PinningBackend[];
 
-    static build(
-        context: Context,
-        connectionStrings: string[],
-        pinners: Array<PinningBackendStatic> = []
-    ) {
+    static build(context: Context, connectionStrings: string[], pinners: Array<PinningBackendStatic> = []) {
         const backends = connectionStrings.map<PinningBackend>((s) => {
-            const protocol = s.match(`://`)
-                ? new URL(s).protocol.replace(":", "")
-                : s;
+            const protocol = s.match(`://`) ? new URL(s).protocol.replace(":", "") : s;
             const match = protocol.match(/^(\w+)\+?/);
             const designator = match ? match[1] : "";
 
@@ -86,9 +76,7 @@ export class PinningAggregation implements PinningBackend {
      * @param cid
      */
     async unpin(cid: CID): Promise<void> {
-        Promise.all(this.backends.map(async (service) => service.unpin(cid))).catch(
-            _.noop
-        );
+        Promise.all(this.backends.map(async (service) => service.unpin(cid))).catch(_.noop);
     }
 
     /**
