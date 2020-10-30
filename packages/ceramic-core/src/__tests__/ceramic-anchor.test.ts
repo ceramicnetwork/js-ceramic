@@ -50,8 +50,6 @@ const createCeramic = async (ipfs: Ipfs, anchorManual: boolean, topic: string): 
 }
 
 const anchor = async (ceramic: Ceramic): Promise<void> => {
-  // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-  // @ts-ignore
   await ceramic.context.anchorService.anchor()
 }
 
