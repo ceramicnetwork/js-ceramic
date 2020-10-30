@@ -1,22 +1,21 @@
-import {Context} from "@ceramicnetwork/ceramic-common";
+import {Context, PinningBackendStatic} from "@ceramicnetwork/ceramic-common";
 import {LevelStateStore} from "./level-state-store";
-import {PinningAggregation} from "@pinning-aggregation/aggregation";
+import {PinningAggregation} from "@ceramicnetwork/pinning-aggregation";
 import {PinStore} from "./pin-store";
 import CID from 'cids'
 import path from "path";
-import {IPinningStatic} from "@pinning-aggregation/common";
-import {IpfsPinning} from '@pinning-aggregation/ipfs-pinning'
+import {IpfsPinning} from '@ceramicnetwork/pinning-ipfs-backend'
 
 export type Props = {
     stateStorePath?: string;
     pinnings?: string[];
-    pinningBackends?: IPinningStatic[];
+    pinningBackends?: PinningBackendStatic[];
 }
 
 export class PinStoreFactory {
     readonly stateStorePath: string
     readonly pinnings: string[]
-    readonly pinningBackends: IPinningStatic[];
+    readonly pinningBackends: PinningBackendStatic[];
 
     constructor(readonly context: Context, props: Props) {
         this.stateStorePath = props.stateStorePath || path.join(process.cwd(), '.pinning.store')

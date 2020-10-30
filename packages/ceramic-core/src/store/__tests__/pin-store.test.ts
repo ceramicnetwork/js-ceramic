@@ -1,11 +1,10 @@
 import {PinStore} from "../pin-store";
 import {StateStore} from "../state-store";
-import { IPinning } from "@pinning-aggregation/common";
 import CID from 'cids';
-import { AnchorStatus, SignatureStatus, Doctype } from "@ceramicnetwork/ceramic-common";
+import { AnchorStatus, SignatureStatus, Doctype, PinningBackend } from "@ceramicnetwork/ceramic-common";
 
 let stateStore: StateStore
-let pinning: IPinning
+let pinning: PinningBackend
 
 beforeEach(() => {
     stateStore = {

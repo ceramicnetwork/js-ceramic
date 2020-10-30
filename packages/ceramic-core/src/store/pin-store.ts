@@ -1,6 +1,5 @@
 import { StateStore } from "./state-store";
-import { IPinning } from "@pinning-aggregation/common";
-import { Doctype, DocState } from "@ceramicnetwork/ceramic-common"
+import { Doctype, DocState, PinningBackend } from "@ceramicnetwork/ceramic-common"
 import CID from "cids"
 import DocID from '@ceramicnetwork/docid'
 
@@ -10,7 +9,7 @@ import DocID from '@ceramicnetwork/docid'
 export class PinStore {
     constructor(
       readonly stateStore: StateStore,
-      readonly pinning: IPinning,
+      readonly pinning: PinningBackend,
       readonly retrieve: (cid: CID) => Promise<any | null>,
       readonly resolve: (path: string) => Promise<CID>
     ) {}

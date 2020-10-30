@@ -26,7 +26,7 @@ import { PinStore } from "./store/pin-store";
 
 import EthereumAnchorService from "./anchor/ethereum/ethereum-anchor-service"
 import InMemoryAnchorService from "./anchor/memory/in-memory-anchor-service"
-import {IPinningStatic} from "@pinning-aggregation/common";
+import { PinningBackendStatic } from "@ceramicnetwork/ceramic-common";
 
 /**
  * Ceramic configuration
@@ -41,7 +41,7 @@ export interface CeramicConfig {
 
   validateDocs?: boolean;
   pinning?: string[];
-  pinningBackends?: IPinningStatic[];
+  pinningBackends?: PinningBackendStatic[];
 
   logLevel?: string;
   logToFiles?: boolean;

@@ -3,13 +3,12 @@ import Document from '../document'
 import tmp from 'tmp-promise'
 import Dispatcher from '../dispatcher'
 import Ceramic from "../ceramic"
-import { Context } from "@ceramicnetwork/ceramic-common"
+import { Context, PinningBackend } from "@ceramicnetwork/ceramic-common"
 import { AnchorStatus, DocOpts, SignatureStatus } from "@ceramicnetwork/ceramic-common"
 import { AnchorService } from "@ceramicnetwork/ceramic-common"
 import { TileDoctype, TileParams, TileDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-tile"
 import { PinStore } from "../store/pin-store";
 import { LevelStateStore } from "../store/level-state-store";
-import { IPinning } from "@pinning-aggregation/common";
 import { DID } from "dids"
 
 import { Resolver } from "did-resolver"
@@ -105,7 +104,7 @@ const create = async (params: TileParams, ceramic: Ceramic, context: Context, op
 
 let stateStore: LevelStateStore
 let pinStore: PinStore
-let pinning: IPinning
+let pinning: PinningBackend
 
 beforeEach(async () => {
   const levelPath = await tmp.tmpName()
