@@ -54,7 +54,7 @@
     "eslint": "^6.8.0",
     "eslint-plugin-jest": "^23.8.2",
     "identity-wallet": "github:3box/identity-wallet-js#feat/docids",
-    "ipfs": "github:simonovic86/ipfs",
+    "ipfs": "^0.51.0",
     "ipld-dag-cbor": "^0.17.0",
     "jest": "^25.1.0",
     "js-sha256": "^0.9.0",
