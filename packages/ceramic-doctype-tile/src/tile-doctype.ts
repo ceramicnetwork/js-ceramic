@@ -74,8 +74,10 @@ export class TileDoctype extends Doctype {
         }
 
         let unique: string
-        if (metadata.isUnique || metadata.isUnique == undefined) { // default isUnique to true
+        if (params.isUnique || params.isUnique == undefined) { // default isUnique to true
             unique = base64Encode(randomBytes(12))
+        } else {
+            unique = '0'
         }
 
         const { controllers } = metadata

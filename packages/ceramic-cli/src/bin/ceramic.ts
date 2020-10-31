@@ -78,8 +78,8 @@ schemas
     .command('create <new-content>')
     .option('--only-genesis', 'Only create the genesis object. No anchor will be created')
     .option('--controllers <controllers>', 'Specify a comma-separated list of the controllers of the schema document. Defaults to' + ' current user')
-    .option('--unique', 'Ensure schema document is unique regardless of content.')
-    .option('--not-unique', 'Creating a schema document with identical content to an existing schema document will be a no-op. This is the default behavior.')
+    .option('--unique', 'Ensure schema document is unique regardless of content. This is the default behavior.')
+    .option('--not-unique', 'Creating a schema document with identical content to an existing schema document will be a no-op.')
     .description('Create a new schema')
     .action(async (content, { onlyGenesis, controllers, unique, notUnique }) => {
         await CeramicCliUtils.schemaCreateDoc(content, controllers, onlyGenesis, unique, notUnique)

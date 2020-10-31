@@ -45,7 +45,6 @@ export interface DocMetadata {
     controllers: Array<string>;
     schema?: string;
     tags?: Array<string>;
-    isUnique?: boolean;
 
     [index: string]: any; // allow arbitrary properties
 }
@@ -55,6 +54,7 @@ export interface DocMetadata {
  */
 export interface DocParams {
     metadata?: DocMetadata;
+    isUnique?: boolean;
 
     [index: string]: any; // allow arbitrary properties
 }

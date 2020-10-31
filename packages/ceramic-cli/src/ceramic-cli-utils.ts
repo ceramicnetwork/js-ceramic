@@ -115,9 +115,11 @@ export class CeramicCliUtils {
             const parsedContent = CeramicCliUtils._parseContent(content)
 
             const params = {
-                content: parsedContent, metadata: {
-                    controllers: parsedControllers, isUnique, schema: schemaDocId
-                }
+                content: parsedContent,
+                metadata: {
+                    controllers: parsedControllers, schema: schemaDocId
+                },
+                isUnique,
             }
 
             const doc = await ceramic.createDocument(doctype, params, {

@@ -27,7 +27,7 @@ const FAKE_CID_3 = new CID('bafybeig6xv5nwphfmvcnektpnojts55jqcuam7bmye2pb54adnr
 const FAKE_CID_4 = new CID('bafybeig6xv5nwphfmvcnektpnojts66jqcuam7bmye2pb54adnrtccjlsu')
 
 const RECORDS = {
-  genesis: { doctype: 'tile', header: { tags: ['3id'], controllers: [ 'did:key:zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV' ], isUnique: false }, data: { publicKeys: { test: '0xabc' } } },
+  genesis: { doctype: 'tile', header: { tags: ['3id'], controllers: [ 'did:key:zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV' ] }, data: { publicKeys: { test: '0xabc' } } },
   genesisGenerated: {
     jws: {
       payload: "bbbb",
@@ -37,7 +37,7 @@ const RECORDS = {
           signature: "cccc"
         }
       ],
-      link: "bafyreigbqlbxajhmtqlsfhoob5svy3apl5tcsmfzdohcrxd272l4ej67hu"
+      link: "bafyreihfj4bmqbzwejbc7mzipe25wskovt3nsnj4jfrqrfpg4zkjy72gli"
     },
     linkedBlock: {
       data: {
@@ -49,12 +49,12 @@ const RECORDS = {
         controllers: [
           "did:key:zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV"
         ],
-        isUnique: false,
         "tags": [
           "3id",
         ]
       },
-      doctype: "tile"
+      unique: "0",
+      doctype: "tile",
     }
   },
   r1: {
@@ -177,7 +177,7 @@ describe('ThreeIdHandler', () => {
   })
 
   it('makes genesis record correctly', async () => {
-    const record = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: RECORDS.genesis.header }, context)
+    const record = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: RECORDS.genesis.header, isUnique:false }, context)
     const { jws, linkedBlock } = record
 
     const payload = dagCBOR.util.deserialize(linkedBlock)
