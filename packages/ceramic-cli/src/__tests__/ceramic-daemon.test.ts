@@ -11,11 +11,8 @@ import { EventEmitter } from "events"
 import * as u8a from 'uint8arrays'
 
 import dagJose from 'dag-jose'
-// @ts-ignore
 import basicsImport from 'multiformats/cjs/src/basics-import.js'
-// @ts-ignore
 import legacy from 'multiformats/cjs/src/legacy.js'
-
 
 const seed = u8a.fromString('6e34b2e1a9624113d81ece8a8a22e6e97f0e145c25c1d4d2d0e62753b4060c837097f768559e17ec89ee20cba153b23b9987912ec1e860fa1212ba4b84c776ce', 'base16')
 const anchorUpdate = (doc: EventEmitter): Promise<void> => new Promise(resolve => doc.on('change', resolve))
