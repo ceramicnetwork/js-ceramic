@@ -10,6 +10,7 @@ interface ResolverRegistry {
   [index: string]: DIDResolver;
 }
 
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function wrapDocument(content: any, did: string): DIDDocument {
   const startDoc: DIDDocument = {
     '@context': 'https://w3id.org/did/v1',

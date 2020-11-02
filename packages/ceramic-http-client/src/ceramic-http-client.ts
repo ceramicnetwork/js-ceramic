@@ -2,7 +2,7 @@ import { fetchJson, typeDocID } from "./utils"
 import Document from './document'
 
 import { DID } from 'dids'
-import { Doctype, DoctypeHandler, DocOpts, DocParams, DIDProvider, Context, CeramicApi, PinApi, DoctypeUtils } from "@ceramicnetwork/ceramic-common"
+import { Doctype, DoctypeHandler, DocOpts, DocParams, DIDProvider, Context, CeramicApi, PinApi } from "@ceramicnetwork/ceramic-common"
 import { TileDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-tile"
 import { Caip10LinkDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-account-link"
 import DocID from '@ceramicnetwork/docid'
@@ -100,7 +100,7 @@ class CeramicClient implements CeramicApi {
     return Document.loadDocumentRecords(docId, this._apiUrl)
   }
 
-  async applyRecord<T extends Doctype>(docId: DocID | string, record: object, opts?: DocOpts): Promise<T> {
+  async applyRecord<T extends Doctype>(docId: DocID | string, record: Record<string, unknown>, opts?: DocOpts): Promise<T> {
     docId = typeDocID(docId)
     return await Document.applyRecord(this._apiUrl, docId, record, this.context, opts) as unknown as T
   }

@@ -1,6 +1,6 @@
 import Level from "level-ts";
-import {DocState, Doctype, DoctypeUtils} from "@ceramicnetwork/ceramic-common"
-import {StateStore} from "./state-store"
+import { DocState, Doctype, DoctypeUtils } from "@ceramicnetwork/ceramic-common"
+import { StateStore } from "./state-store"
 import DocID from '@ceramicnetwork/docid'
 
 /**
@@ -81,7 +81,7 @@ export class LevelStateStore implements StateStore {
     async list(docId?: DocID): Promise<string[]> {
         let docIds: string[]
         if (docId == null) {
-            return this.#store.stream({keys: true, values: false})
+            return this.#store.stream({ keys: true, values: false })
         } else {
             const exists = await this.exists(docId.baseID)
             docIds = exists ? [docId.toString()] : []
