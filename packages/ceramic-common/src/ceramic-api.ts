@@ -89,7 +89,7 @@ export interface CeramicApi {
      * @param record - Record to be applied
      * @param opts - Initialization options
      */
-    applyRecord<T extends Doctype>(docId: DocID | string, record: any, opts?: DocOpts): Promise<T>;
+    applyRecord<T extends Doctype>(docId: DocID | string, record: Record<string, unknown>, opts?: DocOpts): Promise<T>;
 
     /**
      * Set DID provider

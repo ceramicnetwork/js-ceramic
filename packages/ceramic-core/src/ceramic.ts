@@ -230,7 +230,7 @@ class Ceramic implements CeramicApi {
    * @param record - Record to be applied
    * @param opts - Initialization options
    */
-  async applyRecord<T extends Doctype>(docId: DocID | string, record: object, opts?: DocOpts): Promise<T> {
+  async applyRecord<T extends Doctype>(docId: DocID | string, record: Record<string, unknown>, opts?: DocOpts): Promise<T> {
     docId = normalizeDocID(docId)
     if (docId.version != null) {
       throw new Error('Historical document versions cannot be modified. Load the document without specifying a version to make updates.')
