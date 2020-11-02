@@ -35,12 +35,8 @@ const state = {
     log: [new CID('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D')]
 }
 
-interface Params {
-    num: number;
-}
-
 class FakeType extends Doctype {
-    change(params: Params): Promise<void> {
+    change(): Promise<void> {
         throw new Error("Method not implemented.");
     }
 }

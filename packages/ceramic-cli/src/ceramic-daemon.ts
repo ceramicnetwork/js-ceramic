@@ -4,9 +4,9 @@ import type { CeramicConfig } from "@ceramicnetwork/ceramic-core"
 import { DoctypeUtils, RootLogger, Logger } from "@ceramicnetwork/ceramic-common"
 import { LogToFiles } from "./ceramic-logger-plugins"
 import DocID from "@ceramicnetwork/docid"
-// @ts-ignore
 import cors from 'cors'
 import { IPFSApi } from "./declarations"
+import * as core from "express-serve-static-core"
 
 const DEFAULT_PORT = 7007
 const toApiPath = (ending: string): string => '/api/v0' + ending
@@ -34,8 +34,8 @@ export interface CreateOpts {
 }
 
 interface HttpLog {
-  request: object;
-  response?: object;
+  request: Record<string, unknown>;
+  response?: Record<string, unknown>;
 }
 
 /**
@@ -50,7 +50,7 @@ class CeramicDaemon {
     this.debug = opts.debug
     this.logger = RootLogger.getLogger(CeramicDaemon.name)
 
-    const app = express()
+    const app: core.Express = express()
     app.use(express.json())
     app.use(cors())
 
@@ -142,7 +142,7 @@ class CeramicDaemon {
     return new CeramicDaemon(ceramic, opts)
   }
 
-  registerAPIPaths (app: any, gateway: boolean): void {
+  registerAPIPaths (app: core.Express, gateway: boolean): void {
     app.get(toApiPath('/records/ceramic/:docid'), this.records.bind(this))
     app.get(toApiPath('/versions/ceramic/:docid'), this.versions.bind(this))
     app.get(toApiPath('/show/ceramic/:docid'), this.show.bind(this))
@@ -162,6 +162,7 @@ class CeramicDaemon {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   _buildHttpLog (requestStart: number, req: Request, res: Response, extra?: any): HttpLog {
     const { rawHeaders, httpVersion, method, socket, url } = req;
     const { remoteAddress, remoteFamily } = socket;

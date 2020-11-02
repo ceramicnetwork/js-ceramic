@@ -8,7 +8,7 @@ import DocID from '@ceramicnetwork/docid'
 let mockStorage: Map<string, any>
 const mockPut = jest.fn((id: string, state: any) => mockStorage.set(id, state))
 let mockGet = jest.fn((id: string) => mockStorage.get(id))
-const mockDel = jest.fn((id: string) => Promise.resolve())
+const mockDel = jest.fn(() => Promise.resolve())
 const mockStreamResult = ['1', '2', '3']
 const mockStream = jest.fn(async () => mockStreamResult)
 
@@ -25,12 +25,8 @@ jest.mock('level-ts', () => {
     })
 })
 
-interface Params {
-    num: number;
-}
-
 class FakeType extends Doctype {
-    change(params: Params): Promise<void> {
+    change(): Promise<void> {
         throw new Error("Method not implemented.");
     }
 }
@@ -81,7 +77,7 @@ test('#save and #load', async () => {
 
 describe('#load', () => {
     test('#load not found', async () => {
-        mockGet = jest.fn((id: string) => { throw {notFound: true}})
+        mockGet = jest.fn(() => { throw {notFound: true}})
         await stateStore.open()
         const docid = DocID.fromString(docIdTest)
         const retrieved = await stateStore.load(docid)
@@ -89,7 +85,7 @@ describe('#load', () => {
     })
 
     test('#load passes errors', async () => {
-        mockGet = jest.fn((id: string) => { throw new Error('something internal to LevelDB')})
+        mockGet = jest.fn(() => { throw new Error('something internal to LevelDB')})
         await stateStore.open()
         const docid = DocID.fromString(docIdTest)
         await expect(stateStore.load(docid)).rejects.toThrow('something internal to LevelDB')

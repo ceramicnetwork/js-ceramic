@@ -259,7 +259,7 @@ export class CeramicCliUtils {
      * @param docId - optional document ID filter
      */
     static async pinLs(docId?: string): Promise<void> {
-       const id = DocID.fromString(docId)
+        const id = DocID.fromString(docId)
 
         await CeramicCliUtils._runWithCeramic(async (ceramic: CeramicApi) => {
             const pinnedDocIds = []
@@ -295,8 +295,7 @@ export class CeramicCliUtils {
 
         const seed = u8a.fromString(cliConfig.seed)
         await IdentityWallet.create({
-            getPermission: async (): Promise<Array<string>> => [], seed, ceramic,
-            disableIDX: true,
+            getPermission: async (): Promise<Array<string>> => [], seed, ceramic, disableIDX: true,
         })
 
         try {
@@ -323,6 +322,7 @@ export class CeramicCliUtils {
      * @param variable - CLI config variable
      * @param value - CLI config variable value
      */
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     static async setConfig(variable: string, value: any): Promise<void> {
         let cliConfig = await this._loadCliConfig()
 
@@ -397,7 +397,7 @@ export class CeramicCliUtils {
      */
     static _parseControllers(controllers: string): string[] {
         if (controllers == null) {
-            return [ ]
+            return []
         }
         return controllers.includes(',') ? controllers.split(',') : [controllers]
     }

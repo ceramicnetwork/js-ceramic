@@ -55,7 +55,7 @@ export class PowergatePinningBackend implements PinningBackend {
         this.id = `${PowergatePinningBackend.designator}@${digest}`;
     }
 
-    get pow() {
+    get pow(): Pow {
         return this.#pow;
     }
 

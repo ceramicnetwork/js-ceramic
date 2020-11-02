@@ -2,6 +2,7 @@ import CID from 'cids'
 
 import * as didJwt from 'did-jwt'
 import base64url from 'base64url'
+import { PublicKey } from 'did-resolver'
 
 import jsonpatch from 'fast-json-patch'
 import cloneDeep from 'lodash.clonedeep'
@@ -205,7 +206,7 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
      * @param jws - JWS token
      * @param pubkeys - public key(s)
      */
-    async verifyJWS(jws: string, pubkeys: any): Promise<void> {
+    async verifyJWS(jws: string, pubkeys: PublicKey[]): Promise<void> {
         await didJwt.verifyJWS(jws, pubkeys)
     }
 

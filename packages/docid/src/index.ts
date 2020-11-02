@@ -7,10 +7,10 @@ import uint8ArrayToString from 'uint8arrays/to-string'
 const DOCID_CODEC = 206
 
 const getKey = (obj: { [key: string]: number }, value: number): string | undefined => {
-  for (const [k, v] of Object.entries(obj)) { 
+  for (const [k, v] of Object.entries(obj)) {
     if (v === value) return k
   }
-} 
+}
 
 // Definition
 // '<multibase-prefix><multicodec-docid><doctype><genesis-cid-bytes>'
@@ -30,7 +30,7 @@ class DocID {
    * new DocID(<docType>, <CID>|<cidStr>, <VersionCID>|<VersionCidStr>, <multibaseName>)
    */
 
-  private _doctype: number 
+  private _doctype: number
   private _cid: CID
   private _multibaseName: string
   private _bytes: Uint8Array
@@ -39,7 +39,7 @@ class DocID {
   constructor (doctype: string | number, cid: CID | string, version: CID | string | number = null, multibaseName = 'base36') {
     this._doctype = (typeof doctype === 'string') ? doctypes[doctype] : doctype
      if (!doctype && doctype !== 0) throw new Error('constructor: doctype required')
-    this._multibaseName = multibaseName 
+    this._multibaseName = multibaseName
     this._cid = (typeof cid === 'string') ? new CID(cid) : cid
     if (version === '0' || typeof version === 'number') {
       this._version = this._cid
@@ -50,11 +50,11 @@ class DocID {
   }
 
   static fromBytes(bytes: Uint8Array, version?: CID | string, multibaseName?: string): DocID {
-    const docCodec = varint.decode(bytes) 
+    const docCodec = varint.decode(bytes)
     if (docCodec !== DOCID_CODEC) throw new Error('fromBytes: invalid docid, does not include docid codec')
-    bytes = bytes.slice(varint.decode.bytes) 
+    bytes = bytes.slice(varint.decode.bytes)
     const docType = varint.decode(bytes)
-    bytes = bytes.slice(varint.decode.bytes) 
+    bytes = bytes.slice(varint.decode.bytes)
 
     let cid
 
@@ -75,7 +75,7 @@ class DocID {
   static _genesisCIDLength(bytes: Uint8Array): number {
     let offset = 0
 
-    varint.decode(bytes) // cid version 
+    varint.decode(bytes) // cid version
     offset += varint.decode.bytes
 
     varint.decode(bytes.slice(offset)) // cid codec
@@ -133,7 +133,7 @@ class DocID {
   get typeName (): string {
     const name = getKey(doctypes, this._doctype)
     if (!name) throw new Error('docTypeName: no registered name available')
-    return name 
+    return name
   }
 
   /**
@@ -197,7 +197,7 @@ class DocID {
       const codec = varint.encode(DOCID_CODEC)
       const doctype = varint.encode(this.type)
 
-      let versionBytes 
+      let versionBytes
       if (this.version) {
         versionBytes = this.cid.equals(this.version) ? varint.encode(0) : this.version.bytes
       } else {
@@ -279,8 +279,9 @@ class DocID {
    * Determine if given DocID, DocID string or bytes is a valid DocID
    *
    * @param   {any}     other
-   * @returns {bool}
+   * @returns {Boolean}
    */
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   static isDocID (other: any): boolean {
     try {
       if (typeof other === 'string') {

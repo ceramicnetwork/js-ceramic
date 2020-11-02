@@ -182,7 +182,7 @@ class Ceramic implements CeramicApi {
    * Find handler by genesis record
    * @param genesisRecord - Document genesis record
    */
-  findHandler<T extends DoctypeHandler<Doctype>>(genesisRecord: any): T {
+  findHandler<T extends DoctypeHandler<Doctype>>(genesisRecord: Record<string, any>): T {
     if (genesisRecord.doctype in this._doctypeHandlers) {
       return this._doctypeHandlers[genesisRecord.doctype] as T
     } else if (genesisRecord['@context'] === "https://w3id.org/did/v1") {

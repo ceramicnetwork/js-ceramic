@@ -6,7 +6,7 @@ const DOCTYPE = 'caip10-link'
  * Caip10Link parameters
  */
 export interface Caip10LinkParams extends DocParams {
-    content?: object;
+    content?: any;
 }
 
 /**
