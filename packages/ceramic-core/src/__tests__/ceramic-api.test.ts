@@ -11,6 +11,7 @@ import basicsImport from 'multiformats/cjs/src/basics-import.js'
 import legacy from 'multiformats/cjs/src/legacy.js'
 import DocID from '@ceramicnetwork/docid'
 import * as u8a from 'uint8arrays'
+import cloneDeep from 'lodash.clonedeep'
 
 jest.mock('../store/level-state-store')
 
@@ -228,7 +229,7 @@ describe('Ceramic API', () => {
       await ceramic.close()
     })
 
-    it('can update schema if content is valid', async () => {
+    it('can assign schema if content is valid', async () => {
       ceramic = await createCeramic()
 
       const controller = ceramic.context.did.id
@@ -253,12 +254,13 @@ describe('Ceramic API', () => {
       })
 
       expect(doctype.content).toEqual({ a: 'x' })
+      expect(doctype.metadata.schema.toString()).toEqual(schemaDoc.id.toString())
 
       await new Promise(resolve => setTimeout(resolve, 1000)) // wait to propagate
       await ceramic.close()
     })
 
-    it('cannot update schema if content is not valid', async () => {
+    it('cannot assign schema if content is not valid', async () => {
       ceramic = await createCeramic()
 
       const controller = ceramic.context.did.id
@@ -290,7 +292,7 @@ describe('Ceramic API', () => {
       await ceramic.close()
     })
 
-    it('can update valid content and schema at the same time', async () => {
+    it('can update valid content and assign schema at the same time', async () => {
       ceramic = await createCeramic()
 
       const controller = ceramic.context.did.id
@@ -317,6 +319,188 @@ describe('Ceramic API', () => {
       expect(doctype.content).toEqual({ a: 'x' })
 
       await new Promise(resolve => setTimeout(resolve, 1000)) // wait to propagate
+      await ceramic.close()
+    })
+
+    it('can update schema and then assign to doc with now valid content', async () => {
+      ceramic = await createCeramic()
+
+      const controller = ceramic.context.did.id
+
+      // Create doc with content that has type 'number'.
+      const tileDocParams: TileParams = {
+        metadata: {
+          controllers: [controller]
+        },
+        content: { a: 1 },
+      }
+      const doc = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, tileDocParams)
+
+      // Create schema that enforces that the content value is a string, which would reject
+      // the document created above.
+      const schemaDoc = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, {
+        content: stringMapSchema,
+        metadata: { controllers: [controller] }
+      })
+
+      // Update the schema to expect a number, so now the original doc should conform to the new
+      // version of the schema
+      let updatedSchema = cloneDeep(stringMapSchema)
+      updatedSchema.additionalProperties.type = "number"
+      await schemaDoc.change({content: updatedSchema})
+
+      // Test that we can assign the updated schema to the document without error.
+      await doc.change({
+        metadata: {
+          controllers: [controller], schema: schemaDoc.id.toString()
+        }
+      })
+      expect(doc.content).toEqual({ a: 1 })
+
+      // Test that we can reload the document without issue
+      const doc2 = await ceramic.loadDocument(doc.id)
+      expect(doc2.content).toEqual(doc.content)
+      expect(doc2.metadata).toEqual(doc.metadata)
+
+      await ceramic.close()
+    })
+
+    it('update schema so existing doc no longer conforms', async () => {
+      ceramic = await createCeramic()
+
+      const controller = ceramic.context.did.id
+
+      // Create doc with content that has type 'string'.
+      const tileDocParams: TileParams = {
+        metadata: {
+          controllers: [controller]
+        },
+        content: { a: 'x' },
+      }
+      const doc = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, tileDocParams)
+
+      // Create schema that enforces that the content value is a string
+      const schemaDoc = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, {
+        content: stringMapSchema,
+        metadata: { controllers: [controller] }
+      })
+      // wait for anchor
+      await new Promise(resolve => {
+        schemaDoc.on('change', () => {
+          resolve()
+        })
+      })
+      expect(schemaDoc.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+      const schemaV0Id = DocID.fromBytes(schemaDoc.id.bytes, schemaDoc.tip.toString())
+
+      // Assign the schema to the conforming document.
+      await doc.change({
+        metadata: {
+          controllers: [controller], schema: schemaDoc.id.toString()
+        }
+      })
+      expect(doc.content).toEqual({ a: 'x' })
+
+      // Update schema so that existing doc no longer conforms
+      let updatedSchema = cloneDeep(stringMapSchema)
+      updatedSchema.additionalProperties.type = "number"
+      await schemaDoc.change({content: updatedSchema})
+
+      // Test that we can load the existing document without issue
+      const doc2 = await ceramic.loadDocument(doc.id)
+      expect(doc2.content).toEqual(doc.content)
+
+      // Test that updating the existing document fails if it doesn't conform to the most recent
+      // version of the schema, when specifying just the schema document ID without a version
+      try {
+        await doc.change({
+          content: {a: 'y'},
+          metadata: {controllers: [controller], schema: schemaDoc.id.toString() }
+        })
+        throw new Error('Should not be able to update the document with invalid content')
+      } catch (e) {
+        expect(e.message).toEqual('Validation Error: data[\'a\'] should be number')
+      }
+
+      // Test that we can update the existing document according to the original schema by manually
+      // specifying the old version of the schema
+      await doc.change({
+        content: { a: 'z' },
+        metadata: { controllers: [controller], schema: schemaV0Id.toString() }
+      })
+      expect(doc.content).toEqual({ a: 'z' })
+
+      await ceramic.close()
+    })
+
+    it('Pin schema to a specific version', async () => {
+      ceramic = await createCeramic()
+
+      const controller = ceramic.context.did.id
+
+      // Create doc with content that has type 'string'.
+      const tileDocParams: TileParams = {
+        metadata: {
+          controllers: [controller]
+        },
+        content: { a: 'x' },
+      }
+      const doc = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, tileDocParams)
+
+      // Create schema that enforces that the content value is a string
+      const schemaDoc = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, {
+        content: stringMapSchema,
+        metadata: { controllers: [controller] }
+      })
+      // wait for anchor
+      await new Promise(resolve => {
+        schemaDoc.on('change', () => {
+          resolve()
+        })
+      })
+      expect(schemaDoc.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+      const schemaV0Id = DocID.fromBytes(schemaDoc.id.bytes, schemaDoc.tip.toString())
+
+      // Assign the schema to the conforming document, specifying current version of the schema explicitly
+      await doc.change({
+        metadata: {
+          controllers: [controller], schema: schemaV0Id.toString(),
+        }
+      })
+      expect(doc.content).toEqual({ a: 'x' })
+      expect(doc.metadata.schema).toEqual(schemaV0Id.toString())
+
+      // Update schema so that existing doc no longer conforms
+      let updatedSchema = cloneDeep(stringMapSchema)
+      updatedSchema.additionalProperties.type = "number"
+      await schemaDoc.change({content: updatedSchema})
+
+      expect(doc.metadata.schema.toString()).toEqual(schemaV0Id.toString())
+
+      // Test that we can load the existing document without issue
+      const doc2 = await ceramic.loadDocument(doc.id)
+      expect(doc2.content).toEqual(doc.content)
+      expect(doc2.metadata).toEqual(doc.metadata)
+
+      // Test that we can update the existing document according to the original schema when taking
+      // the schema docID from the existing document.
+      await doc.change({
+        content: { a: 'y' },
+        metadata: { controllers: [controller], schema: doc.metadata.schema.toString() }
+      })
+
+      // Test that updating the existing document fails if it doesn't conform to the most recent
+      // version of the schema, when specifying just the schema document ID without a version
+      try {
+        await doc.change({
+          content: {a: 'z'},
+          metadata: {controllers: [controller], schema: schemaDoc.id.toString() }
+        })
+        throw new Error('Should not be able to update the document with invalid content')
+      } catch (e) {
+        expect(e.message).toEqual('Validation Error: data[\'a\'] should be number')
+      }
+
       await ceramic.close()
     })
 
