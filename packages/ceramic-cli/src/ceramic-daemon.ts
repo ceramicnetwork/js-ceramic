@@ -164,12 +164,12 @@ class CeramicDaemon {
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   _buildHttpLog (requestStart: number, req: Request, res: Response, extra?: any): HttpLog {
-    const { rawHeaders, httpVersion, method, socket, url } = req;
+    const { headers, httpVersion, method, socket, url } = req;
     const { remoteAddress, remoteFamily } = socket;
     const httpLog: HttpLog = {
       request:{
         timestamp: Date.now(),
-        rawHeaders,
+        headers,
         httpVersion,
         method,
         remoteAddress,
