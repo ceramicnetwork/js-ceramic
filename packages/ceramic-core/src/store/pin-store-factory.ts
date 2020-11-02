@@ -1,10 +1,10 @@
-import {Context, PinningBackendStatic} from "@ceramicnetwork/ceramic-common";
-import {LevelStateStore} from "./level-state-store";
-import {PinningAggregation} from "@ceramicnetwork/pinning-aggregation";
-import {PinStore} from "./pin-store";
+import { Context, PinningBackendStatic } from "@ceramicnetwork/ceramic-common";
+import { LevelStateStore } from "./level-state-store";
+import { PinningAggregation } from "@ceramicnetwork/pinning-aggregation";
+import { PinStore } from "./pin-store";
 import CID from 'cids'
 import path from "path";
-import {IpfsPinning} from '@ceramicnetwork/pinning-ipfs-backend'
+import { IpfsPinning } from '@ceramicnetwork/pinning-ipfs-backend'
 
 export type Props = {
     stateStorePath?: string;

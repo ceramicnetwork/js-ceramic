@@ -13,7 +13,7 @@ import DocID from '@ceramicnetwork/docid'
 
 import CeramicDaemon, { CreateOpts } from "./ceramic-daemon"
 
-import Ipfs from "ipfs"
+import IPFS from "ipfs"
 
 import dagJose from 'dag-jose'
 // @ts-ignore
@@ -21,6 +21,7 @@ import multiformats from 'multiformats/basics'
 // @ts-ignore
 import legacy from 'multiformats/legacy'
 import ipfsClient from "ipfs-http-client"
+import { IPFSApi } from "./declarations"
 
 const DEFAULT_CLI_CONFIG_FILE = 'config.json'
 export const DEFAULT_PINNING_STORE_PATH = ".pinning.store"
@@ -76,11 +77,11 @@ export class CeramicCliUtils {
         multiformats.multicodec.add(dagJose)
         const format = legacy(multiformats, dagJose.name)
 
-        let ipfs
+        let ipfs: IPFSApi
         if (ipfsApi) {
             ipfs = ipfsClient({ url: ipfsApi, ipld: { formats: [format] } })
         } else {
-            ipfs = await Ipfs.create({ ipld: { formats: [format] } })
+            ipfs = await IPFS.create({ ipld: { formats: [format] } })
         }
 
         config.ipfs = ipfs
