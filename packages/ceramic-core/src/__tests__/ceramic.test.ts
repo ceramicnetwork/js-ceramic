@@ -4,7 +4,7 @@ import IdentityWallet from 'identity-wallet'
 import tmp from 'tmp-promise'
 import getPort from 'get-port'
 import { DoctypeUtils, DocState, Doctype } from "@ceramicnetwork/ceramic-common"
-import { TileDoctype } from "@ceramicnetwork/ceramic-doctype-tile"
+import { TileDoctype } from "@ceramicnetwork/doctype-tile"
 
 import dagJose from 'dag-jose'
 import basicsImport from 'multiformats/cjs/src/basics-import.js'

@@ -28,7 +28,7 @@
   "dependencies": {
     "@ceramicnetwork/ceramic-common": "^0.12.0",
     "@ceramicnetwork/ceramic-doctype-account-link": "^0.10.0",
-    "@ceramicnetwork/ceramic-doctype-tile": "^0.10.0",
+    "@ceramicnetwork/doctype-tile": "^0.10.0",
     "@ceramicnetwork/docid": "^0.2.0",
     "cids": "^1.0.0",
     "cross-fetch": "^3.0.5",

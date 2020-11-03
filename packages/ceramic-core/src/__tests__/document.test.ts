@@ -6,7 +6,7 @@ import Ceramic from "../ceramic"
 import { Context, PinningBackend } from "@ceramicnetwork/ceramic-common"
 import { AnchorStatus, DocOpts, SignatureStatus } from "@ceramicnetwork/ceramic-common"
 import { AnchorService } from "@ceramicnetwork/ceramic-common"
-import { TileDoctype, TileParams, TileDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-tile"
+import { TileDoctype, TileParams, TileDoctypeHandler } from "@ceramicnetwork/doctype-tile"
 import { PinStore } from "../store/pin-store";
 import { LevelStateStore } from "../store/level-state-store";
 import { DID } from "dids"

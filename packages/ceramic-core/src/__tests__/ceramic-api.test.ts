@@ -3,7 +3,7 @@ import IdentityWallet from 'identity-wallet'
 import IPFS from 'ipfs'
 import { IPFSApi } from "../declarations"
 import tmp from 'tmp-promise'
-import { TileDoctype, TileParams } from "@ceramicnetwork/ceramic-doctype-tile"
+import { TileDoctype, TileParams } from "@ceramicnetwork/doctype-tile"
 import { AnchorStatus, DoctypeUtils } from "@ceramicnetwork/ceramic-common"
 
 import dagJose from 'dag-jose'

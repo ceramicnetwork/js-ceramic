@@ -4,7 +4,7 @@
 
 ### Installation
 ```
-$ npm install @ceramicnetwork/ceramic-doctype-tile
+$ npm install @ceramicnetwork/doctype-tile
 ```
 
 ## Contributing

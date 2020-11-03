@@ -1,5 +1,5 @@
 {
-  "name": "@ceramicnetwork/ceramic-doctype-tile",
+  "name": "@ceramicnetwork/doctype-tile",
   "version": "0.10.0",
   "description": "Ceramic Tile doctype",
   "keywords": [

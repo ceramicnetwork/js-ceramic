@@ -18,7 +18,7 @@ import {
 import { Resolver } from "did-resolver"
 
 import { DID } from 'dids'
-import { TileDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-tile"
+import { TileDoctypeHandler } from "@ceramicnetwork/doctype-tile"
 import { Caip10LinkDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-account-link"
 import { PinStoreFactory } from "./store/pin-store-factory";
 import { PinStore } from "./store/pin-store";
