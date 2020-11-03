@@ -28,18 +28,16 @@
     "@ceramicnetwork/ceramic-common": "^0.12.0",
     "@stablelib/base64": "^1.0.0",
     "@stablelib/sha256": "^1.0.0",
-    "ipfs-http-client": "github:simonovic86/ipfs-http-client"
+    "ipfs-http-client": "^48.0.0"
   },
   "devDependencies": {
-    "cids": "^1.0.0",
-    "ipfs-http-client": "^47.0.1"
+    "cids": "^1.0.2"
   },
   "publishConfig": {
     "access": "public"
   },
   "jest": {
     "moduleFileExtensions": ["js", "json", "ts"],
-    "rootDir": "src",
     "testRegex": ".(spec|test).ts$",
     "transform": {
       "^.+\\.ts$": "ts-jest"

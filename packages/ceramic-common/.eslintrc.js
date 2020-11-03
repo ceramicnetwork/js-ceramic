@@ -7,7 +7,7 @@ module.exports = {
   ],
   rules: {
     "@typescript-eslint/no-explicit-any": "off",
-    "@typescript-eslint/ban-ts-ignore": "off"
+    "@typescript-eslint/explicit-module-boundary-types": "off",
   },
   extends: [
     'eslint:recommended',

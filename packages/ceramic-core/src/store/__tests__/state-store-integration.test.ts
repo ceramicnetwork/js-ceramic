@@ -5,8 +5,8 @@ import { Doctype } from "@ceramicnetwork/ceramic-common"
 import { AnchorService } from "@ceramicnetwork/ceramic-common"
 import { Context } from "@ceramicnetwork/ceramic-common"
 import { TileDoctype, TileDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-tile"
-import {PinStore} from "../pin-store";
-import {PinStoreFactory} from "../pin-store-factory";
+import { PinStore } from "../pin-store";
+import { PinStoreFactory } from "../pin-store-factory";
 import { DID } from 'dids'
 import DocID from "@ceramicnetwork/docid"
 

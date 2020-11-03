@@ -60,7 +60,7 @@ describe('Caip10LinkHandler', () => {
 
   beforeEach(() => {
     handler = new Caip10LinkDoctypeHandler()
-    validateLink.mockImplementation(async (proof: object): Promise<object> => proof)
+    validateLink.mockImplementation(async (proof: any): Promise<any> => proof)
 
     const recs: Record<string, any> = {}
     const ipfs = {

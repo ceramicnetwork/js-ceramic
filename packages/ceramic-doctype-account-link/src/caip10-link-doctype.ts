@@ -1,5 +1,4 @@
-import { Doctype, DoctypeConstructor, DoctypeStatic, DocOpts, DocParams } from "@ceramicnetwork/ceramic-common"
-import { Context } from "@ceramicnetwork/ceramic-common"
+import { Doctype, DoctypeConstructor, DoctypeStatic, DocOpts, DocParams, Context } from "@ceramicnetwork/ceramic-common"
 
 const DOCTYPE = 'caip10-link'
 
@@ -7,7 +6,7 @@ const DOCTYPE = 'caip10-link'
  * Caip10Link parameters
  */
 export interface Caip10LinkParams extends DocParams {
-    content?: object;
+    content?: Record<string, unknown>;
 }
 
 /**

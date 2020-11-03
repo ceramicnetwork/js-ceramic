@@ -21,7 +21,7 @@ export class PinningAggregation implements PinningBackend {
     readonly id: string;
     readonly backends: PinningBackend[];
 
-    static build(context: Context, connectionStrings: string[], pinners: Array<PinningBackendStatic> = []) {
+    static build(context: Context, connectionStrings: string[], pinners: Array<PinningBackendStatic> = []): PinningAggregation {
         const backends = connectionStrings.map<PinningBackend>((s) => {
             const protocol = s.match(`://`) ? new URL(s).protocol.replace(":", "") : s;
             const match = protocol.match(/^(\w+)\+?/);

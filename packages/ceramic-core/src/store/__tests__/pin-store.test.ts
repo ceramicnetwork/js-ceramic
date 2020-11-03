@@ -1,5 +1,5 @@
-import {PinStore} from "../pin-store";
-import {StateStore} from "../state-store";
+import { PinStore } from "../pin-store";
+import { StateStore } from "../state-store";
 import CID from 'cids';
 import { AnchorStatus, SignatureStatus, Doctype, PinningBackend } from "@ceramicnetwork/ceramic-common";
 
@@ -35,12 +35,8 @@ const state = {
     log: [new CID('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D')]
 }
 
-interface Params {
-    num: number;
-}
-
 class FakeType extends Doctype {
-    change(params: Params): Promise<void> {
+    change(): Promise<void> {
         throw new Error("Method not implemented.");
     }
 }

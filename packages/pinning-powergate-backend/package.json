@@ -35,14 +35,13 @@
   },
   "devDependencies": {
     "@types/lodash": "^4.14.162",
-    "cids": "^1.0.0"
+    "cids": "^1.0.2"
   },
   "publishConfig": {
     "access": "public"
   },
   "jest": {
     "moduleFileExtensions": ["js", "json", "ts"],
-    "rootDir": "src",
     "testRegex": ".(spec|test).ts$",
     "transform": {
       "^.+\\.ts$": "ts-jest"

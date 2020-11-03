@@ -1,10 +1,12 @@
 {
  "compilerOptions": {
    "module": "commonjs",
-   "lib": ["dom", "es2017"],
-   "target": "es6",
+   "lib": ["es6", "dom", "esnext"],
+   "target": "ES2018",
    "declaration": true,
-   "noImplicitAny": true,
+   "declarationMap": true,
+   "skipLibCheck": true,
+   "resolveJsonModule": true,
    "removeComments": true,
    "esModuleInterop": true,
    "emitDecoratorMetadata": true,
@@ -17,6 +19,7 @@
  },
  "exclude": [
    "node_modules",
+   "coverage",
    "**/*.spec.ts",
    "**/*.test.ts"
  ],

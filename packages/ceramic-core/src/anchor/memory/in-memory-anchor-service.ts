@@ -168,7 +168,7 @@ class InMemoryAnchorService extends AnchorService {
    * @return DID
    * @private
    */
-  async verifySignedRecord(record: any): Promise<string> {
+  async verifySignedRecord(record: Record<string, unknown>): Promise<string> {
     const { payload, signatures } = record
     const { signature, protected: _protected } = signatures[0]
 

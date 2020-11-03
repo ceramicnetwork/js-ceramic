@@ -55,7 +55,7 @@ export class TileDoctype extends Doctype {
         }
 
         const { content, metadata } = params
-        const record = await TileDoctype.makeGenesis({ content, metadata }, context, opts)
+        const record = await TileDoctype.makeGenesis({ content, metadata }, context)
         return context.api.createDocumentFromGenesis<TileDoctype>(record, opts)
     }
 
@@ -63,9 +63,8 @@ export class TileDoctype extends Doctype {
      * Creates genesis record
      * @param params - Create parameters
      * @param context - Ceramic context
-     * @param opts - Initialization options
      */
-    static async makeGenesis(params: DocParams, context?: Context, opts: DocOpts = {}): Promise<Record<string, any>> {
+    static async makeGenesis(params: DocParams, context?: Context): Promise<Record<string, any>> {
         const metadata = params.metadata? params.metadata : { controllers: [] }
 
         // check for DID and authentication

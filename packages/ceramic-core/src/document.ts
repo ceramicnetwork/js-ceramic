@@ -78,7 +78,7 @@ class Document extends EventEmitter {
     doc._context = context
     doc._doctypeHandler = doctypeHandler
 
-    doc._doctype = new doctypeHandler.doctype(null, context)
+    doc._doctype = new doctypeHandler.doctype(null, context) as T
     doc._doctype.state = await doc._doctypeHandler.applyRecord(genesis, doc._genesisCid, context)
 
     if (validate) {
@@ -133,7 +133,7 @@ class Document extends EventEmitter {
 
     doc._doctypeHandler = findHandler(payload)
 
-    doc._doctype = new doc._doctypeHandler.doctype(null, context)
+    doc._doctype = new doc._doctypeHandler.doctype(null, context) as T
 
     if (doc._doctype.state == null) {
       // apply genesis record if there's no state preserved
