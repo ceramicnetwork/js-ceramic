@@ -1,11 +1,12 @@
 {
-  "name": "@ceramicnetwork/ceramic-doctype-account-link",
+  "name": "@ceramicnetwork/doctype-caip10-link",
 
   "version": "0.10.0",
   "description": "Ceramic Caip10 doctype",
   "keywords": [
     "ceramic",
-    "account-link"
+    "account-link",
+    "caip10"
   ],
   "author": "Janko Simonovic <simonovic86@gmail.com>",
   "homepage": "",

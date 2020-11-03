@@ -1,10 +1,10 @@
 # Ceramic Account Link doctype
 
-> This package contains Account Link doctype implementation.
+> This package contains the Caip-10 Link doctype implementation.
 
 ### Installation
 ```
-$ npm install @ceramicnetwork/ceramic-doctype-account-link
+$ npm install @ceramicnetwork/doctype-caip10-link
 ```
 
 ## Contributing

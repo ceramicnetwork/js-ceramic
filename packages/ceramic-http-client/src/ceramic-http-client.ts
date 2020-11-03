@@ -4,7 +4,7 @@ import Document from './document'
 import { DID } from 'dids'
 import { Doctype, DoctypeHandler, DocOpts, DocParams, DIDProvider, Context, CeramicApi, PinApi } from "@ceramicnetwork/ceramic-common"
 import { TileDoctypeHandler } from "@ceramicnetwork/doctype-tile"
-import { Caip10LinkDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-account-link"
+import { Caip10LinkDoctypeHandler } from "@ceramicnetwork/doctype-caip10-link"
 import DocID from '@ceramicnetwork/docid'
 
 const CERAMIC_HOST = 'http://localhost:7007'
