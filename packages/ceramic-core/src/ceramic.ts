@@ -64,7 +64,7 @@ const normalizeDocID = (docId: DocID | string): DocID => {
  * ### Ceramic core implementation.<br/>
  *
  * To install this library:<br/>
- * `$ npm install --save @ceramicnetwork/ceramic-core`
+ * `$ npm install --save @ceramicnetwork/core`
  */
 class Ceramic implements CeramicApi {
   private readonly _docmap: Record<string, Document>

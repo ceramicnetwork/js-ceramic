@@ -1,4 +1,4 @@
-import Ceramic from '@ceramicnetwork/ceramic-core'
+import Ceramic from '@ceramicnetwork/core'
 import CeramicClient from '@ceramicnetwork/ceramic-http-client'
 import IdentityWallet from 'identity-wallet'
 import tmp from 'tmp-promise'

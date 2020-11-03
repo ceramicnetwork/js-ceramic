@@ -1,6 +1,6 @@
 import express, { Request, Response, NextFunction } from 'express'
-import Ceramic from '@ceramicnetwork/ceramic-core'
-import type { CeramicConfig } from "@ceramicnetwork/ceramic-core"
+import Ceramic from '@ceramicnetwork/core'
+import type { CeramicConfig } from "@ceramicnetwork/core"
 import { DoctypeUtils, RootLogger, Logger } from "@ceramicnetwork/common"
 import { LogToFiles } from "./ceramic-logger-plugins"
 import DocID from "@ceramicnetwork/docid"

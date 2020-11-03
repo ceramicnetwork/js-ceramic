@@ -6,12 +6,12 @@
 
 ### Installation
 ```
-$ npm install @ceramicnetwork/ceramic-core
+$ npm install @ceramicnetwork/core
 ```
 
 ### Usage
 ```
-import Ceramic from '@ceramicnetwork/ceramic-core'
+import Ceramic from '@ceramicnetwork/core'
 
 import Ipfs from 'ipfs'
 import dagJose from 'dag-jose'
