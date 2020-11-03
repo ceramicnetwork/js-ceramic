@@ -345,7 +345,7 @@ describe('Ceramic API', () => {
 
       // Update the schema to expect a number, so now the original doc should conform to the new
       // version of the schema
-      let updatedSchema = cloneDeep(stringMapSchema)
+      const updatedSchema = cloneDeep(stringMapSchema)
       updatedSchema.additionalProperties.type = "number"
       await schemaDoc.change({content: updatedSchema})
 
@@ -402,7 +402,7 @@ describe('Ceramic API', () => {
       expect(doc.content).toEqual({ a: 'x' })
 
       // Update schema so that existing doc no longer conforms
-      let updatedSchema = cloneDeep(stringMapSchema)
+      const updatedSchema = cloneDeep(stringMapSchema)
       updatedSchema.additionalProperties.type = "number"
       await schemaDoc.change({content: updatedSchema})
 
@@ -471,7 +471,7 @@ describe('Ceramic API', () => {
       expect(doc.metadata.schema).toEqual(schemaV0Id.toString())
 
       // Update schema so that existing doc no longer conforms
-      let updatedSchema = cloneDeep(stringMapSchema)
+      const updatedSchema = cloneDeep(stringMapSchema)
       updatedSchema.additionalProperties.type = "number"
       await schemaDoc.change({content: updatedSchema})
 
