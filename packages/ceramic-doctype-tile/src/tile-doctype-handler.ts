@@ -133,14 +133,12 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
             }
         }
 
-        let nextMetadata = nextState.metadata
-        if (payload.header?.controllers) {
-            nextState.next.metadata = { ...nextMetadata, controllers: payload.header.controllers }
-            nextMetadata = nextState.next.metadata
+        if (payload.header) {
+            nextState.next.metadata = {...nextState.metadata, ...payload.header}
         }
 
         if (nonce) {
-            nextState.next.metadata = { ...nextMetadata, nonce: nonce }
+            nextState.next.metadata = { ...nextState.next.metadata, nonce: nonce }
         }
         return nextState
     }
