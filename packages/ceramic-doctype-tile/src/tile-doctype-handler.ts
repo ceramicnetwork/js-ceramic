@@ -19,7 +19,7 @@ import {
     DoctypeHandler,
     DoctypeUtils,
     SignatureStatus
-} from "@ceramicnetwork/ceramic-common"
+} from "@ceramicnetwork/common"
 
 const DOCTYPE = 'tile'
 

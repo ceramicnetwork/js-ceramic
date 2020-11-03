@@ -1,7 +1,7 @@
 import CID from 'cids'
 
 import * as didJwt from 'did-jwt'
-import { AnchorProof, AnchorService, CeramicApi, DoctypeUtils } from "@ceramicnetwork/ceramic-common"
+import { AnchorProof, AnchorService, CeramicApi, DoctypeUtils } from "@ceramicnetwork/common"
 
 import base64url from "base64url"
 

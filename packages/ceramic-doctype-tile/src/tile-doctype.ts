@@ -11,7 +11,7 @@ import {
     DocOpts,
     DocParams,
     Context
-} from "@ceramicnetwork/ceramic-common"
+} from "@ceramicnetwork/common"
 
 const DOCTYPE = 'tile'
 

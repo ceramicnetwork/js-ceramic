@@ -4,7 +4,7 @@
 
 ### Installation
 ```
-$ npm install @ceramicnetwork/ceramic-common
+$ npm install @ceramicnetwork/common
 ```
 
 ## Contributing

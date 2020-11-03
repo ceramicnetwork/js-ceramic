@@ -3,7 +3,7 @@ import CID from 'cids'
 import cloneDeep from 'lodash.clonedeep'
 
 import type Document from "./document"
-import { DoctypeUtils, RootLogger, Logger } from "@ceramicnetwork/ceramic-common"
+import { DoctypeUtils, RootLogger, Logger } from "@ceramicnetwork/common"
 import { TextDecoder } from 'util'
 import { IPFSApi } from "./declarations"
 

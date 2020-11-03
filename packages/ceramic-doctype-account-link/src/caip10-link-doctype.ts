@@ -1,4 +1,4 @@
-import { Doctype, DoctypeConstructor, DoctypeStatic, DocOpts, DocParams, Context } from "@ceramicnetwork/ceramic-common"
+import { Doctype, DoctypeConstructor, DoctypeStatic, DocOpts, DocParams, Context } from "@ceramicnetwork/common"
 
 const DOCTYPE = 'caip10-link'
 

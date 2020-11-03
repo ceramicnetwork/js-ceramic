@@ -9,7 +9,7 @@ import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 
 import { DID } from 'dids'
 
-import { Context } from "@ceramicnetwork/ceramic-common"
+import { Context } from "@ceramicnetwork/common"
 import { TileDoctypeHandler } from "../tile-doctype-handler"
 import { TileDoctype } from "../tile-doctype"
 jest.mock('did-jwt', () => ({

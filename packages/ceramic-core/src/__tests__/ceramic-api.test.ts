@@ -4,7 +4,7 @@ import IPFS from 'ipfs'
 import { IPFSApi } from "../declarations"
 import tmp from 'tmp-promise'
 import { TileDoctype, TileParams } from "@ceramicnetwork/doctype-tile"
-import { AnchorStatus, DoctypeUtils } from "@ceramicnetwork/ceramic-common"
+import { AnchorStatus, DoctypeUtils } from "@ceramicnetwork/common"
 
 import dagJose from 'dag-jose'
 import basicsImport from 'multiformats/cjs/src/basics-import.js'

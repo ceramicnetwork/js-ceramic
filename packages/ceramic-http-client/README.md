@@ -25,7 +25,7 @@ await doc = await client.createDocument('tile', { content: { test: 123 } }, { ap
 
 ### Ceramic API
 
-Complete Ceramic core API is available on [Ceramic API](https://github.com/ceramicnetwork/js-ceramic/blob/master/packages/ceramic-common/src/ceramic-api.ts).
+Complete Ceramic core API is available on [Ceramic API](https://github.com/ceramicnetwork/js-ceramic/blob/master/packages/common/src/ceramic-api.ts).
 
 ## Development
 Run tests:

@@ -1,4 +1,4 @@
-import { Context, PinningBackendStatic } from "@ceramicnetwork/ceramic-common";
+import { Context, PinningBackendStatic } from "@ceramicnetwork/common";
 import { LevelStateStore } from "./level-state-store";
 import { PinningAggregation } from "@ceramicnetwork/pinning-aggregation";
 import { PinStore } from "./pin-store";

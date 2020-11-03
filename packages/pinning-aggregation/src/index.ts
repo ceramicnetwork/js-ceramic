@@ -2,7 +2,7 @@ import _ from "lodash";
 import CID from "cids";
 import {
     CidList, PinningBackend, PinningBackendStatic, PinningInfo, Context,
-} from "@ceramicnetwork/ceramic-common";
+} from "@ceramicnetwork/common";
 import * as base64 from "@stablelib/base64";
 import * as sha256 from "@stablelib/sha256";
 

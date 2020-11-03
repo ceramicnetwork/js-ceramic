@@ -7,7 +7,7 @@ import {
     LoggerOptions,
     LoggerProvider,
     LoggerPluginOptions
-} from "@ceramicnetwork/ceramic-common"
+} from "@ceramicnetwork/common"
 
 const fsPromises = fs.promises
 

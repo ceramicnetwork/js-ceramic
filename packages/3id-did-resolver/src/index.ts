@@ -1,5 +1,5 @@
 import bs58 from 'bs58'
-import { Doctype } from "@ceramicnetwork/ceramic-common"
+import { Doctype } from "@ceramicnetwork/common"
 import type { ParsedDID, DIDResolver, DIDDocument } from 'did-resolver'
 
 interface Ceramic {

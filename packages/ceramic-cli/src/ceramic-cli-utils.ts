@@ -8,7 +8,7 @@ const fs = require('fs').promises
 
 import IdentityWallet from "identity-wallet"
 import CeramicClient from "@ceramicnetwork/ceramic-http-client"
-import { CeramicApi, DoctypeUtils } from "@ceramicnetwork/ceramic-common"
+import { CeramicApi, DoctypeUtils } from "@ceramicnetwork/common"
 import DocID from '@ceramicnetwork/docid'
 
 import CeramicDaemon, { CreateOpts } from "./ceramic-daemon"

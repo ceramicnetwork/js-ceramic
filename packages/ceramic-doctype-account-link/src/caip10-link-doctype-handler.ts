@@ -3,8 +3,8 @@ import { validateLink } from "3id-blockchain-utils"
 import { Caip10LinkDoctype, Caip10LinkParams } from "./caip10-link-doctype"
 import {
     AnchorProof, AnchorStatus, DocState, DoctypeConstructor, DoctypeHandler, DocOpts, SignatureStatus
-} from "@ceramicnetwork/ceramic-common"
-import { Context } from "@ceramicnetwork/ceramic-common"
+} from "@ceramicnetwork/common"
+import { Context } from "@ceramicnetwork/common"
 
 const DOCTYPE = 'caip10-link'
 

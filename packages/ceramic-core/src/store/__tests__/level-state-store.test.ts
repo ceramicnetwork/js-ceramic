@@ -1,7 +1,7 @@
 import tmp from 'tmp-promise'
 import { LevelStateStore } from "../level-state-store";
 import Level from "level-ts";
-import { AnchorStatus, Doctype, SignatureStatus } from "@ceramicnetwork/ceramic-common";
+import { AnchorStatus, Doctype, SignatureStatus } from "@ceramicnetwork/common";
 import CID from 'cids'
 import DocID from '@ceramicnetwork/docid'
 

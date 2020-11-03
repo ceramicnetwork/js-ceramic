@@ -27,7 +27,7 @@
     "lib": "lib"
   },
   "dependencies": {
-    "@ceramicnetwork/ceramic-common": "^0.12.0",
+    "@ceramicnetwork/common": "^0.12.0",
     "@ceramicnetwork/pinning-ipfs-backend": "^0.0.1",
     "@ceramicnetwork/pinning-powergate-backend": "^0.0.1"
   },

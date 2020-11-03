@@ -1,7 +1,7 @@
 import { mock } from 'jest-mock-extended'
 
 import Utils from '../../utils'
-import { CeramicApi, Doctype, DocState } from "@ceramicnetwork/ceramic-common"
+import { CeramicApi, Doctype, DocState } from "@ceramicnetwork/common"
 
 
 class BasicDoctype extends Doctype {

@@ -19,7 +19,7 @@ import {
   DocMetadata,
   RootLogger,
   Logger,
-} from '@ceramicnetwork/ceramic-common'
+} from '@ceramicnetwork/common'
 import DocID from '@ceramicnetwork/docid'
 import { PinStore } from './store/pin-store';
 

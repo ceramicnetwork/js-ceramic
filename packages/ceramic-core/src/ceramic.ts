@@ -3,7 +3,7 @@ import Document from './document'
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import KeyDidResolver from '@ceramicnetwork/key-did-resolver'
 import DocID from '@ceramicnetwork/docid'
-import { CeramicApi, DIDProvider, PinApi } from "@ceramicnetwork/ceramic-common"
+import { CeramicApi, DIDProvider, PinApi } from "@ceramicnetwork/common"
 import {
   Doctype,
   DoctypeHandler,
@@ -14,7 +14,7 @@ import {
   LoggerProvider,
   LoggerPlugin,
   LoggerPluginOptions,
-} from "@ceramicnetwork/ceramic-common"
+} from "@ceramicnetwork/common"
 import { Resolver } from "did-resolver"
 
 import { DID } from 'dids'
@@ -25,7 +25,7 @@ import { PinStore } from "./store/pin-store";
 
 import EthereumAnchorService from "./anchor/ethereum/ethereum-anchor-service"
 import InMemoryAnchorService from "./anchor/memory/in-memory-anchor-service"
-import { PinningBackendStatic } from "@ceramicnetwork/ceramic-common";
+import { PinningBackendStatic } from "@ceramicnetwork/common";
 import { IPFSApi } from "./declarations"
 
 /**

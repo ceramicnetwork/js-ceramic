@@ -1,4 +1,4 @@
-import { DocState, Doctype } from "@ceramicnetwork/ceramic-common"
+import { DocState, Doctype } from "@ceramicnetwork/common"
 import DocID from '@ceramicnetwork/docid'
 
 export interface StateStore {

@@ -3,9 +3,9 @@ import Document from '../document'
 import tmp from 'tmp-promise'
 import Dispatcher from '../dispatcher'
 import Ceramic from "../ceramic"
-import { Context, PinningBackend } from "@ceramicnetwork/ceramic-common"
-import { AnchorStatus, DocOpts, SignatureStatus } from "@ceramicnetwork/ceramic-common"
-import { AnchorService } from "@ceramicnetwork/ceramic-common"
+import { Context, PinningBackend } from "@ceramicnetwork/common"
+import { AnchorStatus, DocOpts, SignatureStatus } from "@ceramicnetwork/common"
+import { AnchorService } from "@ceramicnetwork/common"
 import { TileDoctype, TileParams, TileDoctypeHandler } from "@ceramicnetwork/doctype-tile"
 import { PinStore } from "../store/pin-store";
 import { LevelStateStore } from "../store/level-state-store";
@@ -22,7 +22,7 @@ jest.mock('../dispatcher', () => {
   const CID = require('cids') // eslint-disable-line @typescript-eslint/no-var-requires
   const cloneDeep = require('lodash.clonedeep') // eslint-disable-line @typescript-eslint/no-var-requires
   const { sha256 } = require('js-sha256') // eslint-disable-line @typescript-eslint/no-var-requires
-  const { DoctypeUtils } = require('@ceramicnetwork/ceramic-common') // eslint-disable-line @typescript-eslint/no-var-requires
+  const { DoctypeUtils } = require('@ceramicnetwork/common') // eslint-disable-line @typescript-eslint/no-var-requires
   const dagCBOR = require('ipld-dag-cbor') // eslint-disable-line @typescript-eslint/no-var-requires
   const hash = (data: string): CID => new CID(1, 'sha2-256', Buffer.from('1220' + sha256(data), 'hex'))
   return (gossip: boolean): any => {

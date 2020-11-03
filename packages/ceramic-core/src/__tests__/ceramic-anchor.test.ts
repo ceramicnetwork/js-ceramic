@@ -1,6 +1,6 @@
 import Ceramic from '../ceramic'
 import IdentityWallet from 'identity-wallet'
-import { Doctype } from "@ceramicnetwork/ceramic-common"
+import { Doctype } from "@ceramicnetwork/common"
 import { TileDoctype } from "@ceramicnetwork/doctype-tile"
 import tmp from 'tmp-promise'
 import IPFS from 'ipfs'

@@ -9,7 +9,7 @@ import KeyDidResolver from '@ceramicnetwork/key-did-resolver'
 import { TileDoctypeHandler } from '../tile-doctype-handler'
 
 import { TileDoctype } from "../tile-doctype"
-import { Context } from "@ceramicnetwork/ceramic-common"
+import { Context } from "@ceramicnetwork/common"
 
 jest.mock('did-jwt', () => ({
   // TODO - We should test for when this function throws as well

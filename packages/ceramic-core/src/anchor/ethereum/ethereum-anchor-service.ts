@@ -6,8 +6,8 @@ import * as providers from "@ethersproject/providers"
 import { CeramicConfig } from "../../ceramic";
 
 import AnchorServiceResponse from "../anchor-service-response";
-import { AnchorService } from "@ceramicnetwork/ceramic-common"
-import { AnchorProof, CeramicApi } from "@ceramicnetwork/ceramic-common"
+import { AnchorService } from "@ceramicnetwork/common"
+import { AnchorProof, CeramicApi } from "@ceramicnetwork/common"
 
 /**
  * CID-docId pair

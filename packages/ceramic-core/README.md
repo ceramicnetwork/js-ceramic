@@ -34,7 +34,7 @@ const doctype1 = await ceramic.createDocument('tile', { content: { test: 123 } }
 
 ### Ceramic API
 
-Complete Ceramic core API is available on [Ceramic API](https://github.com/ceramicnetwork/js-ceramic/blob/master/packages/ceramic-common/src/ceramic-api.ts).
+Complete Ceramic core API is available on [Ceramic API](https://github.com/ceramicnetwork/js-ceramic/blob/master/packages/common/src/ceramic-api.ts).
 
 ## Development
 Run tests:

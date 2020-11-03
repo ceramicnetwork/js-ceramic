@@ -1,5 +1,5 @@
 import { StateStore } from "./state-store";
-import { Doctype, DocState, PinningBackend } from "@ceramicnetwork/ceramic-common"
+import { Doctype, DocState, PinningBackend } from "@ceramicnetwork/common"
 import CID from "cids"
 import DocID from '@ceramicnetwork/docid'
 

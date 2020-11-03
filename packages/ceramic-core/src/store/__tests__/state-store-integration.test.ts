@@ -1,9 +1,9 @@
 import tmp from 'tmp-promise'
 import Document from "../../document"
 import Dispatcher from "../../dispatcher"
-import { Doctype } from "@ceramicnetwork/ceramic-common"
-import { AnchorService } from "@ceramicnetwork/ceramic-common"
-import { Context } from "@ceramicnetwork/ceramic-common"
+import { Doctype } from "@ceramicnetwork/common"
+import { AnchorService } from "@ceramicnetwork/common"
+import { Context } from "@ceramicnetwork/common"
 import { TileDoctype, TileDoctypeHandler } from "@ceramicnetwork/doctype-tile"
 import { PinStore } from "../pin-store";
 import { PinStoreFactory } from "../pin-store-factory";
@@ -19,7 +19,7 @@ jest.mock('../../dispatcher', () => {
   const CID = require('cids') // eslint-disable-line @typescript-eslint/no-var-requires
   const cloneDeep = require('lodash.clonedeep') // eslint-disable-line @typescript-eslint/no-var-requires
   const { sha256 } = require('js-sha256') // eslint-disable-line @typescript-eslint/no-var-requires
-  const { DoctypeUtils } = require('@ceramicnetwork/ceramic-common') // eslint-disable-line @typescript-eslint/no-var-requires
+  const { DoctypeUtils } = require('@ceramicnetwork/common') // eslint-disable-line @typescript-eslint/no-var-requires
   const dagCBOR = require('ipld-dag-cbor') // eslint-disable-line @typescript-eslint/no-var-requires
   const hash = (data: string): CID => new CID(1, 'sha2-256', Buffer.from('1220' + sha256(data), 'hex'))
 

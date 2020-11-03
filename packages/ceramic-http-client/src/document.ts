@@ -1,6 +1,6 @@
 import {
   Context, DocOpts, DocParams, DocState, Doctype, DoctypeHandler, DoctypeUtils
-} from "@ceramicnetwork/ceramic-common"
+} from "@ceramicnetwork/common"
 
 import { fetchJson, typeDocID } from './utils'
 import DocID from '@ceramicnetwork/docid'

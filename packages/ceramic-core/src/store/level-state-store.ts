@@ -1,5 +1,5 @@
 import Level from "level-ts";
-import { DocState, Doctype, DoctypeUtils } from "@ceramicnetwork/ceramic-common"
+import { DocState, Doctype, DoctypeUtils } from "@ceramicnetwork/common"
 import { StateStore } from "./state-store"
 import DocID from '@ceramicnetwork/docid'
 

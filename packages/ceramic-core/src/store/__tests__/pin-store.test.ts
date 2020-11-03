@@ -1,7 +1,7 @@
 import { PinStore } from "../pin-store";
 import { StateStore } from "../state-store";
 import CID from 'cids';
-import { AnchorStatus, SignatureStatus, Doctype, PinningBackend } from "@ceramicnetwork/ceramic-common";
+import { AnchorStatus, SignatureStatus, Doctype, PinningBackend } from "@ceramicnetwork/common";
 
 let stateStore: StateStore
 let pinning: PinningBackend

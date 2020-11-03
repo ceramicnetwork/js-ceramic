@@ -1,6 +1,6 @@
 import ajv from "ajv"
 
-import { Doctype } from "@ceramicnetwork/ceramic-common"
+import { Doctype } from "@ceramicnetwork/common"
 
 /**
  * Various utility functions
