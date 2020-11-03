@@ -6,13 +6,13 @@
 
 ### Installation
 ```
-$ npm install @ceramicnetwork/ceramic-http-client
+$ npm install @ceramicnetwork/http-client
 ```
 
 ### Usage
 
 ```
-import CeramicClient from '@ceramicnetwork/ceramic-http-client'
+import CeramicClient from '@ceramicnetwork/http-client'
 import IdentityWallet from 'identity-wallet'
 
 const API_URL = "http://localhost:7007"

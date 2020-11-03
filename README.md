@@ -19,7 +19,7 @@ This repo is made up of several different packages.
 | -- | -- | -- |
 | @ceramicnetwork/core | [![npm](https://img.shields.io/npm/v/@ceramicnetwork/core)](https://www.npmjs.com/package/@ceramicnetwork/core) | Ceramic protocol implementation |
 | @ceramicnetwork/ceramic-cli | [![npm](https://img.shields.io/npm/v/@ceramicnetwork/ceramic-cli)](https://www.npmjs.com/package/@ceramicnetwork/ceramic-cli) | Ceramic CLI and http daemon |
-| @ceramicnetwork/ceramic-http-client | [![npm](https://img.shields.io/npm/v/@ceramicnetwork/ceramic-http-client)](https://www.npmjs.com/package/@ceramicnetwork/ceramic-http-client) | Ceramic http client that can interact with a remote Ceramic node |
+| @ceramicnetwork/http-client | [![npm](https://img.shields.io/npm/v/@ceramicnetwork/http-client)](https://www.npmjs.com/package/@ceramicnetwork/http-client) | Ceramic http client that can interact with a remote Ceramic node |
 | @ceramicnetwork/common | [![npm](https://img.shields.io/npm/v/@ceramicnetwork/common)](https://www.npmjs.com/package/@ceramicnetwork/common) | Ceramic types and utilities |
 | @ceramicnetwork/doctype-caip10-link | [![npm](https://img.shields.io/npm/v/@ceramicnetwork/doctype-caip10-link)](https://www.npmjs.com/package/@ceramicnetwork/doctype-caip10-link) | Ceramic caip10 link doctype |
 | @ceramicnetwork/doctype-tile | [![npm](https://img.shields.io/npm/v/@ceramicnetwork/doctype-tile)](https://www.npmjs.com/package/@ceramicnetwork/doctype-tile) | Ceramic tile doctype |

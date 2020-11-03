@@ -1,5 +1,5 @@
 import Ceramic from '@ceramicnetwork/core'
-import CeramicClient from '@ceramicnetwork/ceramic-http-client'
+import CeramicClient from '@ceramicnetwork/http-client'
 import IdentityWallet from 'identity-wallet'
 import tmp from 'tmp-promise'
 import IPFS from 'ipfs'

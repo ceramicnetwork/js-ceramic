@@ -7,7 +7,7 @@ import * as u8a from 'uint8arrays'
 const fs = require('fs').promises
 
 import IdentityWallet from "identity-wallet"
-import CeramicClient from "@ceramicnetwork/ceramic-http-client"
+import CeramicClient from "@ceramicnetwork/http-client"
 import { CeramicApi, DoctypeUtils } from "@ceramicnetwork/common"
 import DocID from '@ceramicnetwork/docid'
 
