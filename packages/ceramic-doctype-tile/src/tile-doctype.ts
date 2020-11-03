@@ -73,16 +73,8 @@ export class TileDoctype extends Doctype {
             throw new Error('No DID authenticated')
         }
 
-        // TODO: stop checking metadata for 'isUnique' once all dependent libraries are using DocParams to specify it
-        let enforceUniqueness: boolean = params.isUnique || metadata.isUnique
-        if (!('isUnique' in params) && !('isUnique' in metadata)) {
-            // default isUnique to true
-            enforceUniqueness = true
-        }
-        delete metadata.isUnique
-
         let unique: string
-        if (enforceUniqueness) {
+        if (params.isUnique || params.isUnique == undefined) { // default isUnique to true
             unique = base64Encode(randomBytes(12))
         } else {
             unique = '0'
