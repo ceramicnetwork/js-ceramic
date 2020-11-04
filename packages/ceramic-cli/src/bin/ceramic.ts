@@ -25,13 +25,11 @@ program
     .option('--content <content>', 'New document content')
     .option('--only-genesis', 'Only create the genesis object. No anchor will be created')
     .option('--controllers <controllers>', 'Specify a comma-separated list of the controllers of the document. Controllers are the users that are allowed to publish updates to this document. Defaults to current user')
-    .option('--deterministic',
-        'Document content is created deterministically from the inputs.  This means ' +
-        'that creating a document with identical content to an existing document will be a no-op.')
+    .option('--not-unique', 'Creating a document with identity content to an existing document will be a no-op.')
     .option('--schema <schema>', 'Schema document ID')
     .description('Create a new document')
-    .action(async (doctype, { content, onlyGenesis, controllers, deterministic, schema }) => {
-        await CeramicCliUtils.nonSchemaCreateDoc(doctype, content, controllers, onlyGenesis, deterministic, schema)
+    .action(async (doctype, { content, onlyGenesis, controllers, notUnique, schema }) => {
+        await CeramicCliUtils.nonSchemaCreateDoc(doctype, content, controllers, onlyGenesis, notUnique, schema)
     })
 
 program
@@ -79,13 +77,10 @@ schemas
     .command('create <new-content>')
     .option('--only-genesis', 'Only create the genesis object. No anchor will be created')
     .option('--controllers <controllers>', 'Specify a comma-separated list of the controllers of the schema document. Defaults to' + ' current user')
-    .option('--deterministic',
-        'Document content is created deterministically from the inputs.  This means ' +
-        'that creating a schema document with identical content to an existing schema document ' +
-        'will be a no-op.')
+    .option('--not-unique', 'Creating a schema document with identical content to an existing schema document will be a no-op.')
     .description('Create a new schema')
-    .action(async (content, { onlyGenesis, controllers, deterministic }) => {
-        await CeramicCliUtils.schemaCreateDoc(content, controllers, onlyGenesis, deterministic)
+    .action(async (content, { onlyGenesis, controllers, notUnique }) => {
+        await CeramicCliUtils.schemaCreateDoc(content, controllers, onlyGenesis, notUnique)
     })
 
 schemas
