@@ -246,16 +246,14 @@ class Document extends EventEmitter {
   async applyRecord (record: any, opts: DocOpts = {}): Promise<void> {
     const cid = await this.dispatcher.storeRecord(record)
 
-    const blockPromise = new Promise((resolve, reject) => {
+    const syncPromise = new Promise((resolve, reject) => {
       this._handleTip(cid, { resolve, reject} )
     })
 
-    await blockPromise.then(async () => {
+    await syncPromise.then(async () => {
       await this._updateStateIfPinned()
       await this._applyOpts(opts)
-    }).catch((e) => {
-      throw e
-    })
+    }).catch(e => { throw e })
   }
 
   /**
