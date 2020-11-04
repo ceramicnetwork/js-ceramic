@@ -24,14 +24,6 @@ import DocID from '@ceramicnetwork/docid'
 import { PinStore } from './store/pin-store';
 
 /**
- * Provides a way to call _handleTip in a synchronous manner
- */
-interface SyncCallback {
-  resolve: Function;
-  reject: Function;
-}
-
-/**
  * Document handles the update logic of the Doctype instance
  */
 class Document extends EventEmitter {
@@ -246,14 +238,9 @@ class Document extends EventEmitter {
   async applyRecord (record: any, opts: DocOpts = {}): Promise<void> {
     const cid = await this.dispatcher.storeRecord(record)
 
-    const syncPromise = new Promise((resolve, reject) => {
-      this._handleTip(cid, { resolve, reject} )
-    })
-
-    await syncPromise.then(async () => {
-      await this._updateStateIfPinned()
-      await this._applyOpts(opts)
-    }).catch(e => { throw e })
+    await this._handleTip(cid)
+    await this._updateStateIfPinned()
+    await this._applyOpts(opts)
   }
 
   /**
@@ -263,7 +250,7 @@ class Document extends EventEmitter {
    * @private
    */
   async _register (opts: DocOpts): Promise<void> {
-    this.on('update', this._handleTip.bind(this))
+    this.on('update', this._update.bind(this))
     this.on('tipreq', this._publishTip.bind(this))
 
     await this.dispatcher.register(this)
@@ -299,13 +286,29 @@ class Document extends EventEmitter {
   }
 
   /**
+   * Handles update from the PubSub topic
+   *
+   * @param cid - Document Tip CID
+   * @private
+   */
+  async _update(cid: CID): Promise<void> {
+    try {
+      await this._handleTip(cid)
+    } catch (e) {
+      this._logger.error(e)
+    } finally {
+      this._isProcessing = false
+    }
+  }
+
+  /**
    * Handles Tip from the PubSub topic
    *
    * @param cid - Document Tip CID
    * @param cb - Provide a way of notifying a caller
    * @private
    */
-  async _handleTip(cid: CID, cb?: SyncCallback): Promise<void> {
+  async _handleTip(cid: CID): Promise<void> {
     try {
       this._isProcessing = true
       await this._applyQueue.add(async () => {
@@ -317,14 +320,6 @@ class Document extends EventEmitter {
           }
         }
       })
-      if (cb) {
-        cb.resolve()
-      }
-    } catch (e) {
-      this._logger.error(e)
-      if (cb) {
-        cb.reject(e)
-      }
     } finally {
       this._isProcessing = false
     }
@@ -698,7 +693,7 @@ class Document extends EventEmitter {
    * Gracefully closes the document instance.
    */
   async close (): Promise<void> {
-    this.off('update', this._handleTip.bind(this))
+    this.off('update', this._update.bind(this))
     this.off('tipreq', this._publishTip.bind(this))
 
     this.dispatcher.unregister(this.id.toString())
