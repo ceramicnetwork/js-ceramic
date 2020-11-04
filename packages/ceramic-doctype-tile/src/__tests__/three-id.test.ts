@@ -37,7 +37,7 @@ const RECORDS = {
           signature: "cccc"
         }
       ],
-      link: "bafyreiago3pnhq2r7yy4osv7h7yrja7vfkuyzvdiloqnhsk64qcior6tn4"
+      link: "bafyreihde57reuflbmjwtav55ffi3mggseh5iqygrqjl2mqykhstukxutq"
     },
     linkedBlock: {
       data: {
