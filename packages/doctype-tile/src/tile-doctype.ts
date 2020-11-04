@@ -83,7 +83,9 @@ export class TileDoctype extends Doctype {
         }
 
         const { content } = params
-        const record = { doctype: DOCTYPE, data: content, header: metadata, unique }
+        const record = {
+            ...{ doctype: DOCTYPE, data: content, header: metadata }, ...(unique ? { unique } : {})
+        }
         return content ? TileDoctype._signDagJWS(record, context.did, metadata.controllers[0]) : record
     }
 

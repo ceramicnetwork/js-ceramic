@@ -238,7 +238,7 @@ class Ceramic implements CeramicApi {
 
     const doc = await this._loadDoc(docId, opts)
 
-    await doc.applyRecord(record, opts, this._validateDocs)
+    await doc.applyRecord(record, opts)
     return doc.doctype as T
   }
 
