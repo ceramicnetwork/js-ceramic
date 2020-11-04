@@ -30,7 +30,7 @@
     "@ceramicnetwork/ceramic-doctype-account-link": "^0.10.0",
     "@ceramicnetwork/ceramic-doctype-tile": "^0.10.0",
     "@ceramicnetwork/docid": "^0.2.0",
-    "cids": "^1.0.0",
+    "cids": "^1.0.2",
     "cross-fetch": "^3.0.5",
     "dids": "^0.7.0",
     "lodash.clonedeep": "^4.5.0"

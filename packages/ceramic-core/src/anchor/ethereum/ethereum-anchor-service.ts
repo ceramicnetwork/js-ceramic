@@ -17,7 +17,7 @@ interface CidDoc {
     readonly docId: string;
 }
 
-const DEFAULT_POLL_TIME = 5000; // 5 seconds
+const DEFAULT_POLL_TIME = 60000; // 60 seconds
 const DEFAULT_MAX_POLL_TIME = 7200000; // 2 hours
 
 /**
