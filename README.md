@@ -18,12 +18,12 @@ This repo is made up of several different packages.
 
 | Package | Current Version | Description |
 | -- | -- | -- |
-| @ceramicnetwork/ceramic-core | [![npm](https://img.shields.io/npm/v/@ceramicnetwork/ceramic-core)](https://www.npmjs.com/package/@ceramicnetwork/ceramic-core) | Ceramic protocol implementation |
-| @ceramicnetwork/ceramic-cli | [![npm](https://img.shields.io/npm/v/@ceramicnetwork/ceramic-cli)](https://www.npmjs.com/package/@ceramicnetwork/ceramic-cli) | Ceramic CLI and http daemon |
-| @ceramicnetwork/ceramic-http-client | [![npm](https://img.shields.io/npm/v/@ceramicnetwork/ceramic-http-client)](https://www.npmjs.com/package/@ceramicnetwork/ceramic-http-client) | Ceramic http client that can interact with a remote Ceramic node |
-| @ceramicnetwork/ceramic-common | [![npm](https://img.shields.io/npm/v/@ceramicnetwork/ceramic-common)](https://www.npmjs.com/package/@ceramicnetwork/ceramic-common) | Ceramic types and utilities |
-| @ceramicnetwork/ceramic-doctype-account-link | [![npm](https://img.shields.io/npm/v/@ceramicnetwork/ceramic-doctype-account-link)](https://www.npmjs.com/package/@ceramicnetwork/ceramic-doctype-account-link) | Ceramic account link doctype |
-| @ceramicnetwork/ceramic-doctype-tile | [![npm](https://img.shields.io/npm/v/@ceramicnetwork/ceramic-doctype-tile)](https://www.npmjs.com/package/@ceramicnetwork/ceramic-doctype-tile) | Ceramic tile doctype |
+| @ceramicnetwork/core | [![npm](https://img.shields.io/npm/v/@ceramicnetwork/core)](https://www.npmjs.com/package/@ceramicnetwork/core) | Ceramic protocol implementation |
+| @ceramicnetwork/cli | [![npm](https://img.shields.io/npm/v/@ceramicnetwork/cli)](https://www.npmjs.com/package/@ceramicnetwork/cli) | Ceramic CLI and http daemon |
+| @ceramicnetwork/http-client | [![npm](https://img.shields.io/npm/v/@ceramicnetwork/http-client)](https://www.npmjs.com/package/@ceramicnetwork/http-client) | Ceramic http client that can interact with a remote Ceramic node |
+| @ceramicnetwork/common | [![npm](https://img.shields.io/npm/v/@ceramicnetwork/common)](https://www.npmjs.com/package/@ceramicnetwork/common) | Ceramic types and utilities |
+| @ceramicnetwork/doctype-caip10-link | [![npm](https://img.shields.io/npm/v/@ceramicnetwork/doctype-caip10-link)](https://www.npmjs.com/package/@ceramicnetwork/doctype-caip10-link) | Ceramic caip10 link doctype |
+| @ceramicnetwork/doctype-tile | [![npm](https://img.shields.io/npm/v/@ceramicnetwork/doctype-tile)](https://www.npmjs.com/package/@ceramicnetwork/doctype-tile) | Ceramic tile doctype |
 | @ceramicnetwork/3id-did-resolver | [![npm](https://img.shields.io/npm/v/@ceramicnetwork/3id-did-resolver)](https://www.npmjs.com/package/@ceramicnetwork/3id-did-resolver) | DID resolver for 3IDs |
 | @ceramicnetwork/key-did-resolver | [![npm](https://img.shields.io/npm/v/@ceramicnetwork/key-did-resolver)](https://www.npmjs.com/package/@ceramicnetwork/key-did-resolver) | did:key method resolver |
 

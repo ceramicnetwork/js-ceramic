@@ -1,14 +1,14 @@
 {
-  "name": "@ceramicnetwork/3id-did-resolver",
-  "version": "0.4.7",
-  "description": "DID Resolver for the 3ID method",
+  "name": "@ceramicnetwork/doctype-caip10-link",
+
+  "version": "0.10.0",
+  "description": "Ceramic Caip10 doctype",
   "keywords": [
-    "Ceramic",
-    "DID",
-    "identity",
-    "Data"
+    "ceramic",
+    "account-link",
+    "caip10"
   ],
-  "author": "Joel Torstensson <oed3933@gmail.com>",
+  "author": "Janko Simonovic <simonovic86@gmail.com>",
   "homepage": "",
   "license": "(Apache-2.0 OR MIT)",
   "main": "lib/index.js",
@@ -27,23 +27,29 @@
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
+    "3id-blockchain-utils": "^1.0.0",
     "@ceramicnetwork/common": "^0.12.0",
-    "bs58": "^4.0.1"
+    "@types/lodash.clonedeep": "^4.5.6",
+    "cids": "^1.0.2",
+    "did-resolver": "^2.1.1"
   },
   "devDependencies": {
     "@babel/core": "^7.9.0",
+    "@babel/plugin-proposal-decorators": "^7.10.1",
     "@babel/preset-env": "^7.8.4",
     "@babel/preset-typescript": "^7.9.0",
-    "@types/bs58": "^4.0.1",
+    "@types/encoding-down": "^5.0.0",
     "@types/events": "^3.0.0",
     "@types/node": "^13.13.15",
     "@typescript-eslint/eslint-plugin": "^4.6.0",
     "@typescript-eslint/parser": "^4.6.0",
     "babel-jest": "^25.1.0",
-    "did-resolver": "^2.1.1",
     "eslint": "^6.8.0",
     "eslint-plugin-jest": "^23.8.2",
+    "identity-wallet": "^2.0.0-alpha.18",
+    "ipfs": "^0.51.0",
     "jest": "^25.1.0",
+    "js-sha256": "^0.9.0",
     "tmp-promise": "^2.0.2"
   },
   "jest": {
