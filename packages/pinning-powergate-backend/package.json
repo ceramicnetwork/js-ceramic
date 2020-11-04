@@ -27,7 +27,7 @@
     "lib": "lib"
   },
   "dependencies": {
-    "@ceramicnetwork/ceramic-common": "^0.12.0",
+    "@ceramicnetwork/common": "^0.12.0",
     "@stablelib/base64": "^1.0.0",
     "@stablelib/sha256": "^1.0.0",
     "@textile/powergate-client": "^2.0.1",

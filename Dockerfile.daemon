@@ -9,10 +9,10 @@ RUN npm install
 
 COPY lerna.json tsconfig.json ./
 
-COPY packages/3id-did-resolver/package.json packages/ceramic-cli/package-lock.json ./packages/3id-did-resolver/
-COPY packages/ceramic-cli/package.json packages/ceramic-cli/package-lock.json ./packages/ceramic-cli/
-COPY packages/ceramic-core/package.json packages/ceramic-cli/package-lock.json ./packages/ceramic-core/
-COPY packages/ceramic-http-client/package.json packages/ceramic-cli/package-lock.json ./packages/ceramic-http-client/
+COPY packages/3id-did-resolver/package.json packages/cli/package-lock.json ./packages/3id-did-resolver/
+COPY packages/cli/package.json packages/cli/package-lock.json ./packages/cli/
+COPY packages/core/package.json packages/cli/package-lock.json ./packages/core/
+COPY packages/http-client/package.json packages/cli/package-lock.json ./packages/http-client/
 
 RUN npx lerna bootstrap --hoist
 
@@ -22,4 +22,4 @@ RUN npm run build
 
 EXPOSE 7007
 
-CMD cd packages/ceramic-cli && ./bin/ceramic.js daemon --ipfs-api $IPFS_API_URL
+CMD cd packages/cli && ./bin/ceramic.js daemon --ipfs-api $IPFS_API_URL

@@ -3,7 +3,7 @@ import type {
     CidList,
     PinningBackend,
     PinningInfo,
-} from "@ceramicnetwork/ceramic-common";
+} from "@ceramicnetwork/common";
 import { createPow, Pow, ffsTypes } from "@textile/powergate-client";
 import * as sha256 from "@stablelib/sha256";
 import * as base64 from "@stablelib/base64";

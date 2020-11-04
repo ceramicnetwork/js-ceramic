@@ -2,7 +2,7 @@ import ipfsClient from "ipfs-http-client"
 import CID from "cids";
 import { IpfsPinning, NoIpfsInstanceError } from "../index";
 import { asyncIterableFromArray } from "./async-iterable-from-array.util";
-import { Context } from "@ceramicnetwork/ceramic-common"
+import { Context } from "@ceramicnetwork/common"
 
 jest.mock("ipfs-http-client");
 

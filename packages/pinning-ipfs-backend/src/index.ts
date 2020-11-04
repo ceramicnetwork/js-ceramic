@@ -3,7 +3,7 @@ import type {
     PinningBackend,
     PinningInfo,
     Context,
-} from "@ceramicnetwork/ceramic-common";
+} from "@ceramicnetwork/common";
 import type CID from "cids";
 import * as sha256 from "@stablelib/sha256";
 import * as base64 from "@stablelib/base64";
