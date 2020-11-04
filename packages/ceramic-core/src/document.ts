@@ -24,6 +24,14 @@ import DocID from '@ceramicnetwork/docid'
 import { PinStore } from './store/pin-store';
 
 /**
+ * Provides a way to call _handleTip in a synchronous manner
+ */
+interface SyncCallback {
+  resolve: Function;
+  reject: Function;
+}
+
+/**
  * Document handles the update logic of the Doctype instance
  */
 class Document extends EventEmitter {
@@ -38,16 +46,15 @@ class Document extends EventEmitter {
   public readonly id: DocID
   public readonly version: CID
 
-  private logger: Logger
+  private _logger: Logger
+  private _isProcessing: boolean
 
-  private isProcessing: boolean
-
-  constructor (id: DocID, public dispatcher: Dispatcher, public pinStore: PinStore) {
+  constructor (id: DocID, public dispatcher: Dispatcher, public pinStore: PinStore, private _validate: boolean) {
     super()
     this.id = id
     this.version = id.version
 
-    this.logger = RootLogger.getLogger(Document.name)
+    this._logger = RootLogger.getLogger(Document.name)
 
     this._applyQueue = new PQueue({ concurrency: 1 })
     this._genesisCid = id.cid
@@ -73,7 +80,7 @@ class Document extends EventEmitter {
       validate = true,
   ): Promise<Document> {
     const genesis = await dispatcher.retrieveRecord(docId.cid)
-    const doc = new Document(docId, dispatcher, pinStore)
+    const doc = new Document(docId, dispatcher, pinStore, validate)
 
     doc._context = context
     doc._doctypeHandler = doctypeHandler
@@ -106,6 +113,7 @@ class Document extends EventEmitter {
    * @param pinStore - PinStore instance
    * @param context - Ceramic context
    * @param opts - Initialization options
+   * @param validate - Validate content against schema
    */
   static async load<T extends Doctype> (
       id: DocID,
@@ -113,9 +121,10 @@ class Document extends EventEmitter {
       dispatcher: Dispatcher,
       pinStore: PinStore,
       context: Context,
-      opts: DocOpts = {}
+      opts: DocOpts = {},
+      validate = true
   ): Promise<Document> {
-    const doc = new Document(id, dispatcher, pinStore)
+    const doc = new Document(id, dispatcher, pinStore, validate)
     doc._context = context
 
     if (typeof opts.applyOnly === 'undefined') {
@@ -132,18 +141,16 @@ class Document extends EventEmitter {
     }
 
     doc._doctypeHandler = findHandler(payload)
-
     doc._doctype = new doc._doctypeHandler.doctype(null, context) as T
+
+    const isStored = await pinStore.stateStore.exists(id)
+    if (isStored) {
+      doc._doctype.state = await pinStore.stateStore.load(id)
+    }
 
     if (doc._doctype.state == null) {
       // apply genesis record if there's no state preserved
       doc._doctype.state = await doc._doctypeHandler.applyRecord(record, doc._genesisCid, context)
-    }
-
-    const isPresent = await pinStore.stateStore.exists(id)
-    if (isPresent) {
-      // get last stored state
-      doc._doctype.state = await pinStore.stateStore.load(id)
     }
 
     await doc._register(opts)
@@ -185,7 +192,7 @@ class Document extends EventEmitter {
    * @param version - Document version
    */
   async getVersion<T extends Doctype>(version: CID): Promise<T> {
-    const doc = await Document.getVersion<T>(this, version)
+    const doc = await Document.getVersion<T>(this, version, this._validate)
     return doc.doctype as T
   }
 
@@ -194,8 +201,9 @@ class Document extends EventEmitter {
    *
    * @param doc - Document instance
    * @param version - Document version
+   * @param validate - Validate content against schema
    */
-  static async getVersion<T extends Doctype>(doc: Document, version: CID): Promise<Document> {
+  static async getVersion<T extends Doctype>(doc: Document, version: CID, validate = true): Promise<Document> {
     const { _context: context, dispatcher, pinStore, _doctypeHandler: doctypeHandler } = doc
 
     const isGenesis = version.equals(doc._genesisCid)
@@ -214,7 +222,7 @@ class Document extends EventEmitter {
 
     const docid = DocID.fromBytes(doc.id.bytes, version)
 
-    const document = new Document(docid, dispatcher, pinStore)
+    const document = new Document(docid, dispatcher, pinStore, validate)
     document._context = context
     document._doctypeHandler = doctypeHandler
     document._doctype = new doc._doctypeHandler.doctype(null, context)
@@ -234,41 +242,20 @@ class Document extends EventEmitter {
    *
    * @param record - Record data
    * @param opts - Document initialization options (request anchor, wait, etc.)
-   * @param validate - Validate document against schema on apply
    */
-  async applyRecord (record: any, opts: DocOpts = {}, validate = true): Promise<void> {
+  async applyRecord (record: any, opts: DocOpts = {}): Promise<void> {
     const cid = await this.dispatcher.storeRecord(record)
 
-    const retrievedRec = await this.dispatcher.retrieveRecord(cid)
-    const state = await this._doctypeHandler.applyRecord(retrievedRec, cid, this._context, this.state)
+    const blockPromise = new Promise((resolve, reject) => {
+      this._handleTip(cid, { resolve, reject} )
+    })
 
-    if (DoctypeUtils.isAnchorRecord(retrievedRec)) {
-      state.anchorStatus = AnchorStatus.ANCHORED
-    }
-
-    let payload
-    if (retrievedRec.payload && retrievedRec.signatures) {
-      payload = (await this._context.ipfs.dag.get(retrievedRec.link)).value
-    } else {
-      payload = retrievedRec
-    }
-
-    if (payload.header) {
-      // override properties
-      Object.assign(state.metadata, payload.header)
-    }
-
-    if (validate) {
-      const schema = await Document.loadSchemaById(this._context.api, state.metadata.schema)
-      if (schema) {
-        Utils.validate(state.next.content, schema)
-      }
-    }
-
-    this._doctype.state = state
-
-    await this._updateStateIfPinned()
-    await this._applyOpts(opts)
+    await blockPromise.then(async () => {
+      await this._updateStateIfPinned()
+      await this._applyOpts(opts)
+    }).catch((e) => {
+      throw e
+    })
   }
 
   /**
@@ -317,11 +304,12 @@ class Document extends EventEmitter {
    * Handles Tip from the PubSub topic
    *
    * @param cid - Document Tip CID
+   * @param cb - Provide a way of notifying a caller
    * @private
    */
-  async _handleTip(cid: CID): Promise<void> {
+  async _handleTip(cid: CID, cb?: SyncCallback): Promise<void> {
     try {
-      this.isProcessing = true
+      this._isProcessing = true
       await this._applyQueue.add(async () => {
         const log = await this._fetchLog(cid)
         if (log.length) {
@@ -331,10 +319,16 @@ class Document extends EventEmitter {
           }
         }
       })
+      if (cb) {
+        cb.resolve()
+      }
     } catch (e) {
-      this.logger.error(e)
+      this._logger.error(e)
+      if (cb) {
+        cb.reject(e)
+      }
     } finally {
-      this.isProcessing = false
+      this._isProcessing = false
     }
   }
 
@@ -481,15 +475,37 @@ class Document extends EventEmitter {
         payload = await this.dispatcher.retrieveRecord(record.link)
       }
 
-      if (!payload.prev) {
-        state = await this._doctypeHandler.applyRecord(record, cid, this._context)
-      } else if (payload.proof) {
+      if (payload.proof) {
         // it's an anchor record
         await this._verifyAnchorRecord(record)
         state = await this._doctypeHandler.applyRecord(record, cid, this._context, state)
+      } else if (!payload.prev) {
+        // it's a genesis record
+        if (this.validate) {
+          const schemaId = payload.header?.schema
+          if (schemaId) {
+            const schema = await Document.loadSchemaById(this._context.api, schemaId)
+            if (schema) {
+              Utils.validate(payload.content, schema)
+            }
+          }
+        }
+        state = await this._doctypeHandler.applyRecord(record, cid, this._context)
       } else {
-        state = await this._doctypeHandler.applyRecord(record, cid, this._context, state)
+        // it's a signed record
+        const tmpState = await this._doctypeHandler.applyRecord(record, cid, this._context, state)
+        if (this.validate) {
+          const schemaId = payload.header?.schema
+          if (schemaId) {
+            const schema = await Document.loadSchemaById(this._context.api, schemaId)
+            if (schema) {
+              Utils.validate(tmpState.next.content, schema)
+            }
+          }
+        }
+        state = tmpState // if validation is successful
       }
+
       if (breakOnAnchor && AnchorStatus.ANCHORED === state.anchorStatus) {
         return state
       }
@@ -685,7 +701,7 @@ class Document extends EventEmitter {
     await this._applyQueue.onEmpty()
 
     this._context.anchorService.removeAllListeners(this.id.toString())
-    await Utils.awaitCondition(() => this.isProcessing, () => false, 500)
+    await Utils.awaitCondition(() => this._isProcessing, () => false, 500)
   }
 
   /**
