@@ -342,12 +342,26 @@ describe('Ceramic API', () => {
         content: stringMapSchema,
         metadata: { controllers: [controller] }
       })
+      // wait for anchor
+      await new Promise(resolve => {
+        schemaDoc.on('change', () => {
+          resolve()
+        })
+      })
+      expect(schemaDoc.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
       // Update the schema to expect a number, so now the original doc should conform to the new
       // version of the schema
       const updatedSchema = cloneDeep(stringMapSchema)
       updatedSchema.additionalProperties.type = "number"
       await schemaDoc.change({content: updatedSchema})
+      // wait for anchor
+      await new Promise(resolve => {
+        schemaDoc.on('change', () => {
+          resolve()
+        })
+      })
+      expect(schemaDoc.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
       // Test that we can assign the updated schema to the document without error.
       await doc.change({
