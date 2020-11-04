@@ -94,21 +94,13 @@ export class CeramicCliUtils {
      * @param content - Document content
      * @param controllers - Document controllers
      * @param onlyGenesis - Create only a genesis record (no publish or anchor)
-     * @param unique - If true, forces document to be unique regardless of content
      * @param notUnique - If true, forces documents with identical content to be de-duped.
      * @param schemaDocId - Schema document ID
      */
-    static async _createDoc(doctype: string, content: string, controllers: string, onlyGenesis: boolean, unique: boolean, notUnique: boolean, schemaDocId: string = null): Promise<void> {
-        if (unique && notUnique) {
-            console.error("Only one of '--unique' and '--not-unique' may be specified at a time")
-            return
-        }
-
-        // Leave isUnique undefined if neither --unique nor --not-unique were specified on the CLI, to signal to lower layers to use the default
+    static async _createDoc(doctype: string, content: string, controllers: string, onlyGenesis: boolean, notUnique: boolean, schemaDocId: string = null): Promise<void> {
+        // Leave isUnique undefined if --not-unique was not specified on the CLI, to signal to lower layers to use the default
         let isUnique: boolean = undefined
-        if (unique && !notUnique) {
-            isUnique = true
-        } else if (!unique && notUnique) {
+        if (notUnique) {
             isUnique = false
         }
 
@@ -226,12 +218,11 @@ export class CeramicCliUtils {
      * @param content - Document content
      * @param controllers - Document controllers
      * @param onlyGenesis - Create only a genesis record (no publish or anchor)
-     * @param unique - If true, forces document to be unique regardless of content
      * @param notUnique - If true, forces documents with identical content to be de-duped.
      * @param schemaDocId - Schema document ID
      */
-    static async nonSchemaCreateDoc(doctype: string, content: string, controllers: string, onlyGenesis: boolean, unique: boolean, notUnique: boolean, schemaDocId: string = null): Promise<void> {
-        return CeramicCliUtils._createDoc(doctype, content, controllers, onlyGenesis, unique, notUnique, schemaDocId)
+    static async nonSchemaCreateDoc(doctype: string, content: string, controllers: string, onlyGenesis: boolean, notUnique: boolean, schemaDocId: string = null): Promise<void> {
+        return CeramicCliUtils._createDoc(doctype, content, controllers, onlyGenesis, notUnique, schemaDocId)
     }
 
     /**
@@ -239,12 +230,11 @@ export class CeramicCliUtils {
      * @param content - Schema content
      * @param controllers - Schema controllers
      * @param onlyGenesis - Create only a genesis record (no publish or anchor)
-     * @param unique - If true, forces documents with identical content to be de-duped.
      * @param notUnique - Opposite of 'unique'
      */
-    static async schemaCreateDoc(content: string, controllers: string, onlyGenesis: boolean, unique: boolean, notUnique: boolean): Promise<void> {
+    static async schemaCreateDoc(content: string, controllers: string, onlyGenesis: boolean, notUnique: boolean): Promise<void> {
         // TODO validate schema on the client side
-        return CeramicCliUtils._createDoc('tile', content, controllers, onlyGenesis, unique, notUnique)
+        return CeramicCliUtils._createDoc('tile', content, controllers, onlyGenesis, notUnique)
     }
 
     /**

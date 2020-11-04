@@ -36,7 +36,7 @@ const RECORDS = {
           "signature": "cccc"
         }
       ],
-      "link": "bafyreieud3bpdflio42dgqssv2mzkdohwq4wesmgmj42cqpaq5n6pdwm3e"
+      "link": "bafyreiau5pqllna6pewhp3w2hbvohxxeqsmffnwf6o2fwoln4ubbc6fldq"
     },
     "linkedBlock": {
       "data": {
@@ -47,6 +47,7 @@ const RECORDS = {
           "did:3:bafyasdfasdf"
         ]
       },
+      "unique": "0",
       "doctype": "tile"
     }
   },
@@ -171,7 +172,7 @@ describe('TileDoctypeHandler', () => {
   })
 
   it('makes genesis record correctly', async () => {
-    const record1 = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id] } }, { did })
+    const record1 = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id] }, isUnique: false }, { did })
     expect(record1).toBeDefined()
 
     const { jws, linkedBlock } = record1
