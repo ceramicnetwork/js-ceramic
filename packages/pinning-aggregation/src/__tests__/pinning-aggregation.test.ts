@@ -8,7 +8,7 @@ import {
   PinningBackend,
   PinningInfo,
   Context,
-} from "@ceramicnetwork/ceramic-common";
+} from "@ceramicnetwork/common";
 import { IpfsPinning } from "@ceramicnetwork/pinning-ipfs-backend";
 import { PowergatePinningBackend } from "@ceramicnetwork/pinning-powergate-backend";
 
