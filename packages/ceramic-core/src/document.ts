@@ -250,8 +250,8 @@ class Document extends EventEmitter {
    * @private
    */
   async _register (opts: DocOpts): Promise<void> {
-    this.on('update', this._update.bind(this))
-    this.on('tipreq', this._publishTip.bind(this))
+    this.on('update', this._update)
+    this.on('tipreq', this._publishTip)
 
     await this.dispatcher.register(this)
 
@@ -692,8 +692,8 @@ class Document extends EventEmitter {
    * Gracefully closes the document instance.
    */
   async close (): Promise<void> {
-    this.off('update', this._update.bind(this))
-    this.off('tipreq', this._publishTip.bind(this))
+    this.off('update', this._update)
+    this.off('tipreq', this._publishTip)
 
     this.dispatcher.unregister(this.id.toString())
 
