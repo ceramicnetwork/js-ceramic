@@ -1,7 +1,7 @@
 import Dispatcher, { MsgType } from '../dispatcher'
 import CID from 'cids'
 import Document from "../document"
-import { TileDoctype } from "@ceramicnetwork/doctype-tile/lib"
+import { TileDoctype } from "@ceramicnetwork/doctype-tile"
 
 const FAKE_CID = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
 const ipfs = {
