@@ -305,7 +305,6 @@ class Document extends EventEmitter {
    * Handles Tip from the PubSub topic
    *
    * @param cid - Document Tip CID
-   * @param cb - Provide a way of notifying a caller
    * @private
    */
   async _handleTip(cid: CID): Promise<void> {
