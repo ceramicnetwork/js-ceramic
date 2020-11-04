@@ -172,7 +172,6 @@ describe('TileDoctypeHandler', () => {
 
   it('makes genesis record correctly', async () => {
     const record1 = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id] } }, { did })
-
     expect(record1).toBeDefined()
 
     const { jws, linkedBlock } = record1
@@ -186,9 +185,10 @@ describe('TileDoctypeHandler', () => {
     const expected1 = await did.createDagJWS(RECORDS.genesis)
     expect(expected1).toBeDefined()
 
-    const { jws: eJws, linkedBlock: eLinkedBlock } = record1
+    const { jws: eJws, linkedBlock: eLinkedBlock } = expected1
     const ePayload = dagCBOR.util.deserialize(eLinkedBlock)
     const signed = { jws: serialize(eJws), linkedBlock: serialize(ePayload)}
+
     expect(serialized).toEqual(signed)
   })
 
