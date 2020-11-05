@@ -316,6 +316,14 @@ Object {
         "test": "0xabc",
       },
     },
+    "metadata": Object {
+      "controllers": Array [
+        "did:key:zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV",
+      ],
+      "tags": Array [
+        "3id",
+      ],
+    },
   },
   "signature": 2,
 }
