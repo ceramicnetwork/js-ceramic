@@ -30,15 +30,15 @@ const RECORDS = {
       timestamp: 1585919920
     },
     record: {
-      content: {
+      data: {
         version: 1,
         type: 'ethereum-eoa',
         signature: '0xbb800bc9e65a21e239bdc9e5f740e66edda75810a5952ff3d78fe6b41f7613c44470f81c6e4153eaded99096099afab59c7d0b8a1b61ba1bd7cd4cd0d117794c1b',
         address: '0x25954ef14cebbc9af3d71132489a9cfe87043f20@eip155:1',
         timestamp: 1585919920
       },
-      "header": {
-        "controllers": [
+      header: {
+        controllers: [
           "0x25954ef14cebbc9af3d71132489a9cfe87043f20@eip155:1"
         ]
       },
@@ -151,7 +151,7 @@ describe('Caip10LinkHandler', () => {
 
   it('throws an error of the proof doesn\'t match the controller', async () => {
     const badAddressRecord = cloneDeep(RECORDS.r1.record)
-    badAddressRecord.content.address = '0xffffffffffffffffffffffffffffffffffffffff'
+    badAddressRecord.data.address = '0xffffffffffffffffffffffffffffffffffffffff'
     const state = await handler.applyRecord(RECORDS.genesis, FAKE_CID_1, context)
     await expect(handler.applyRecord(badAddressRecord, FAKE_CID_2, context, state)).rejects.toThrow(/Address doesn't match/i)
   })
