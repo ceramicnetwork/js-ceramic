@@ -3,7 +3,7 @@ import express, { Request, Response, NextFunction } from 'express'
 import Ceramic from '@ceramicnetwork/ceramic-core'
 import type { CeramicConfig } from "@ceramicnetwork/ceramic-core"
 import { DoctypeUtils, RootLogger, Logger } from "@ceramicnetwork/ceramic-common"
-import { LogToFiles } from "./ceramic-logger-plugins" 
+import { LogToFiles } from "./ceramic-logger-plugins"
 import DocID from "@ceramicnetwork/docid"
 // @ts-ignore
 import cors from 'cors'
@@ -195,7 +195,7 @@ class CeramicDaemon {
     const { genesis, docOpts } = req.body
     try {
       const doc = await this.ceramic.createDocumentFromGenesis(DoctypeUtils.deserializeRecord(genesis), docOpts)
-      res.json({ docId: doc.id, state: DoctypeUtils.serializeState(doc.state) })
+      res.json({ docId: doc.id.toString(), state: DoctypeUtils.serializeState(doc.state) })
     } catch (e) {
       return next(e)
     }
