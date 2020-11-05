@@ -299,6 +299,11 @@ Object {
       "much": "data",
       "very": "content",
     },
+    "metadata": Object {
+      "controllers": Array [
+        "did:3:bafyasdfasdf",
+      ],
+    },
   },
   "signature": 2,
 }
