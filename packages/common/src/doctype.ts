@@ -55,7 +55,7 @@ export interface DocMetadata {
  * unique, regardless of content.  If using CREATE_DETERMINISTIC, then creating a document with
  * identical content to an existing document becomes a no-op.
  */
-export enum UniquenessOptions {
+export enum UniquenessMode {
     CREATE_UNIQUE,
     CREATE_DETERMINISTIC,
 }
@@ -65,7 +65,7 @@ export enum UniquenessOptions {
  */
 export interface DocParams {
     metadata?: DocMetadata;
-    uniquenessOptions?: UniquenessOptions;
+    uniquenessMode?: UniquenessMode;
 
     [index: string]: any; // allow arbitrary properties
 }

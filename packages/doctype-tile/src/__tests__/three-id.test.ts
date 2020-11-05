@@ -9,7 +9,7 @@ import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 
 import { DID } from 'dids'
 
-import {Context, UniquenessOptions} from "@ceramicnetwork/common"
+import {Context, UniquenessMode} from "@ceramicnetwork/common"
 import { TileDoctypeHandler } from "../tile-doctype-handler"
 import { TileDoctype } from "../tile-doctype"
 jest.mock('did-jwt', () => ({
@@ -177,7 +177,7 @@ describe('ThreeIdHandler', () => {
   })
 
   it('makes genesis record correctly', async () => {
-    const record = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: RECORDS.genesis.header, uniquenessOptions:UniquenessOptions.CREATE_DETERMINISTIC }, context)
+    const record = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: RECORDS.genesis.header, uniquenessMode:UniquenessMode.CREATE_DETERMINISTIC }, context)
     const { jws, linkedBlock } = record
 
     const payload = dagCBOR.util.deserialize(linkedBlock)

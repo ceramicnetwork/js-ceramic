@@ -8,7 +8,7 @@ const fs = require('fs').promises
 
 import IdentityWallet from "identity-wallet"
 import CeramicClient from "@ceramicnetwork/http-client"
-import {CeramicApi, DoctypeUtils, UniquenessOptions} from "@ceramicnetwork/common"
+import {CeramicApi, DoctypeUtils, UniquenessMode} from "@ceramicnetwork/common"
 import DocID from '@ceramicnetwork/docid'
 
 import CeramicDaemon, { CreateOpts } from "./ceramic-daemon"
@@ -98,10 +98,10 @@ export class CeramicCliUtils {
      * @param schemaDocId - Schema document ID
      */
     static async _createDoc(doctype: string, content: string, controllers: string, onlyGenesis: boolean, deterministic: boolean, schemaDocId: string = null): Promise<void> {
-        // Leave uniquenessOptions undefined if --deterministic was not specified on the CLI, to signal to lower layers to use the default
-        let uniquenessOptions: UniquenessOptions = undefined
+        // Leave uniquenessMode undefined if --deterministic was not specified on the CLI, to signal to lower layers to use the default
+        let uniquenessMode: UniquenessMode = undefined
         if (deterministic) {
-            uniquenessOptions = UniquenessOptions.CREATE_DETERMINISTIC
+            uniquenessMode = UniquenessMode.CREATE_DETERMINISTIC
         }
 
         await CeramicCliUtils._runWithCeramic(async (ceramic: CeramicClient) => {
@@ -113,7 +113,7 @@ export class CeramicCliUtils {
                 metadata: {
                     controllers: parsedControllers, schema: schemaDocId
                 },
-                uniquenessOptions,
+                uniquenessMode,
             }
 
             const doc = await ceramic.createDocument(doctype, params, {
