@@ -9,7 +9,7 @@ import KeyDidResolver from '@ceramicnetwork/key-did-resolver'
 import { TileDoctypeHandler } from '../tile-doctype-handler'
 
 import { TileDoctype } from "../tile-doctype"
-import { Context } from "@ceramicnetwork/common"
+import {Context, UniquenessOptions} from "@ceramicnetwork/common"
 
 jest.mock('did-jwt', () => ({
   // TODO - We should test for when this function throws as well
@@ -172,7 +172,7 @@ describe('TileDoctypeHandler', () => {
   })
 
   it('makes genesis record correctly', async () => {
-    const record1 = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id] }, isUnique: false }, { did })
+    const record1 = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id] }, uniquenessOptions: UniquenessOptions.CREATE_DETERMINISTIC }, { did })
     expect(record1).toBeDefined()
 
     const { jws, linkedBlock } = record1
@@ -200,9 +200,9 @@ describe('TileDoctypeHandler', () => {
     expect(record1).not.toEqual(record2)
   })
 
-  it('creates genesis records deterministically if isUnique:false is specified', async () => {
-    const record1 = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id] }, isUnique: false }, { did })
-    const record2 = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id] }, isUnique: false }, { did } )
+  it('creates genesis records deterministically if CREATE_DETERMINISTIC is specified', async () => {
+    const record1 = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id] }, uniquenessOptions: UniquenessOptions.CREATE_DETERMINISTIC }, { did })
+    const record2 = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id] }, uniquenessOptions: UniquenessOptions.CREATE_DETERMINISTIC}, { did } )
 
     expect(record1).toEqual(record2)
   })
