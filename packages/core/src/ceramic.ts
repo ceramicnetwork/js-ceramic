@@ -251,6 +251,14 @@ class Ceramic implements CeramicApi {
   }
 
   /**
+   * Removes the document from the _docmap cache
+   * @param docId: genesisCid
+   */
+  forgetDoc(docId: DocID): void {
+    delete this._docmap[docId.toString()]
+  }
+
+  /**
    * Create doctype instance
    * @param doctype - Document type
    * @param params - Create parameters

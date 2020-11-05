@@ -382,16 +382,6 @@ describe('Ceramic API', () => {
 
       const controller = ceramic.context.did.id
 
-      // Create doc with content that has type 'string'.
-      const tileDocParams: TileParams = {
-        metadata: {
-          controllers: [controller]
-        },
-        content: { a: 'x' },
-      }
-      const doc = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, tileDocParams)
-      await syncDoc(doc)
-
       // Create schema that enforces that the content value is a string
       const schemaDoc = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, {
         content: stringMapSchema,
@@ -402,45 +392,67 @@ describe('Ceramic API', () => {
       expect(schemaDoc.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
       const schemaV0Id = DocID.fromBytes(schemaDoc.id.bytes, schemaDoc.tip.toString())
 
-      // Assign the schema to the conforming document.
-      await doc.change({
-        metadata: {
-          controllers: [controller], schema: schemaDoc.id.toString()
-        }
-      })
-      await syncDoc(doc)
-      expect(doc.content).toEqual({ a: 'x' })
+      // Create doc with content that has type 'string' and no initial schema set.
+      const docWithoutSchemaInGenesis = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE,
+          { metadata: { controllers: [controller] },
+            content: { stuff: 'a' }})
+      await syncDoc(docWithoutSchemaInGenesis)
 
-      // Update schema so that existing doc no longer conforms
+      // Assign the schema to the conforming document.
+      await docWithoutSchemaInGenesis.change({
+        metadata: { controllers: [controller], schema: schemaDoc.id.toString() },
+        content: {stuff: 'b'},
+      })
+      await syncDoc(docWithoutSchemaInGenesis)
+      expect(docWithoutSchemaInGenesis.content).toEqual({ stuff: 'b' })
+
+      // Create another doc with content that has type 'string', but this one has the schema
+      // present in the genesis record.
+      const docWithSchemaInGenesis = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE,
+          { metadata: { controllers: [controller], schema: schemaDoc.id.toString() },
+            content: { stuff: 'z' }})
+      await syncDoc(docWithSchemaInGenesis)
+      expect(docWithSchemaInGenesis.content).toEqual({ stuff: 'z' })
+
+      // Update schema so that existing docs no longer conform
       const updatedSchema = cloneDeep(stringMapSchema)
       updatedSchema.additionalProperties.type = "number"
       await schemaDoc.change({content: updatedSchema})
       await syncDoc(schemaDoc)
 
-      // Test that we can load the existing document without issue
-      const doc2 = await ceramic.loadDocument(doc.id)
-      expect(doc2.content).toEqual(doc.content)
-
-      // Test that updating the existing document fails if it doesn't conform to the most recent
-      // version of the schema, when specifying just the schema document ID without a version
+      // Test that loading the document with the schema in the genesis record should fail, since
+      // the document load process should enforce the schema against the genesis record.
+      ceramic.forgetDoc(docWithSchemaInGenesis.id)
       try {
-        await doc.change({
-          content: {a: 'y'},
-          metadata: {controllers: [controller], schema: schemaDoc.id.toString() }
-        })
-        throw new Error('Should not be able to update the document with invalid content')
+        await ceramic.loadDocument(docWithSchemaInGenesis.id)
+        throw new Error('Should not be able to load document with invalid content')
       } catch (e) {
-        expect(e.message).toEqual('Validation Error: data[\'a\'] should be number')
+        expect(e.message).toEqual('Validation Error: data[\'stuff\'] should be number')
       }
 
-      // Test that we can update the existing document according to the original schema by manually
-      // specifying the old version of the schema
-      await doc.change({
-        content: { a: 'z' },
-        metadata: { controllers: [controller], schema: schemaV0Id.toString() }
-      })
-      await syncDoc(doc)
-      expect(doc.content).toEqual({ a: 'z' })
+      // Loading the document without the schema in the genesis record succeeds, since the document
+      // load returns after fetching the genesis record, and future changes are fetched and applied
+      // asynchronously. The additional updates after the genesis record, however, will never get
+      // applied since they'll be rejected for not conforming to the schema any more.
+      ceramic.forgetDoc(docWithoutSchemaInGenesis.id)
+      const reloadedDoc = await ceramic.loadDocument(docWithoutSchemaInGenesis.id)
+
+      // Wait 1 second and confirm that no updates are applied to the newly loaded doc.
+      try {
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => {
+            reject(new Error('Request timed out'));
+          }, 1000);
+        })
+        await Promise.race([syncDoc(reloadedDoc), timeoutPromise])
+        throw new Error("Should not be able to apply any updates to document that doesn't conform to schema")
+      } catch (e) {
+        expect(e.message).toEqual('Request timed out')
+      }
+
+      // reloadedDoc should have the original content from the genesis record for 'docWithoutSchemaInGenesis'
+      expect(reloadedDoc.content).toEqual({stuff: 'a'})
+      expect(reloadedDoc.metadata.schema).toBeUndefined()
 
       await ceramic.close()
     })
@@ -490,6 +502,7 @@ describe('Ceramic API', () => {
       expect(doc.metadata.schema.toString()).toEqual(schemaV0Id.toString())
 
       // Test that we can load the existing document without issue
+      ceramic.forgetDoc(doc.id)
       const doc2 = await ceramic.loadDocument(doc.id)
       expect(doc2.content).toEqual(doc.content)
       expect(doc2.metadata).toEqual(doc.metadata)
