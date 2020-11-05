@@ -50,13 +50,22 @@ export interface DocMetadata {
 }
 
 /**
+ * Controls uniqueness behavior when creating documents. If using CREATE_UNIQUE, documents will have
+ * some randomized data added to their genesis record which ensures that the document is globally
+ * unique, regardless of content.  If using CREATE_DETERMINISTIC, then creating a document with
+ * identical content to an existing document becomes a no-op.
+ */
+export enum UniquenessOptions {
+    CREATE_UNIQUE,
+    CREATE_DETERMINISTIC,
+}
+
+/**
  * Document params
  */
 export interface DocParams {
     metadata?: DocMetadata;
-    // isUnique is a tri-state. True means always force the document to be unique, false means
-    // always create the document deterministically, undefined means use the default behavior
-    isUnique?: boolean;
+    uniquenessOptions?: UniquenessOptions;
 
     [index: string]: any; // allow arbitrary properties
 }
