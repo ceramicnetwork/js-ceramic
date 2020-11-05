@@ -82,7 +82,7 @@ export class Caip10LinkDoctypeHandler implements DoctypeHandler<Caip10LinkDoctyp
      * @private
      */
     async _applySigned (record: any, cid: CID, state: DocState): Promise<DocState> {
-        const validProof = await validateLink(record.content)
+        const validProof = await validateLink(record.data)
         if (!validProof) {
             throw new Error('Invalid proof for signed record')
         }
