@@ -102,6 +102,15 @@ const create = async (params: TileParams, ceramic: Ceramic, context: Context, op
   return await ceramic._createDocFromGenesis(record, opts)
 }
 
+const stringMapSchema = {
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "StringMap",
+  "type": "object",
+  "additionalProperties": {
+    "type": "string"
+  }
+}
+
 let stateStore: LevelStateStore
 let pinStore: PinStore
 let pinning: PinningBackend
@@ -130,6 +139,7 @@ describe('Document', () => {
     let findHandler: any;
     let anchorService: AnchorService;
     let ceramic: Ceramic;
+    let ceramicWithoutSchemaValidation: Ceramic;
     let context: Context;
 
     beforeEach(() => {
@@ -177,6 +187,9 @@ describe('Document', () => {
 
       ceramic = new Ceramic(dispatcher, pinStore, context)
       ceramic._doctypeHandlers['tile'] = doctypeHandler
+
+      ceramicWithoutSchemaValidation = new Ceramic(dispatcher, pinStore, context, false)
+      ceramicWithoutSchemaValidation._doctypeHandlers['tile'] = doctypeHandler
     })
 
     it('is created correctly', async () => {
@@ -326,6 +339,66 @@ describe('Document', () => {
       await doc1._handleTip(tipInvalidUpdate)
       expect(doc1.content).toEqual(newContent)
     })
+
+    it('Enforces schema at document creation', async () => {
+      const schemaDoc = await create({ content: stringMapSchema, metadata: { controllers } }, ceramic, context)
+      await anchorUpdate(schemaDoc)
+
+      try {
+        const docParams = {
+          content: {stuff: 1},
+          metadata: {controllers, schema: schemaDoc.id.toString()}
+        }
+        await create(docParams, ceramic, context)
+        throw new Error('Should not be able to create a document with an invalid schema')
+      } catch (e) {
+        expect(e.message).toEqual('Validation Error: data[\'stuff\'] should be string')
+      }
+    })
+
+    it('Enforces schema at document update', async () => {
+      const schemaDoc = await create({ content: stringMapSchema, metadata: { controllers } }, ceramic, context)
+      await anchorUpdate(schemaDoc)
+
+      const docParams = {
+        content: {stuff: 1},
+        metadata: {controllers}
+      }
+      const doc = await create(docParams, ceramic, context)
+      await anchorUpdate(doc)
+
+      try {
+        const updateRec = await TileDoctype._makeRecord(doc.doctype, user, null, doc.controllers, schemaDoc.id.toString())
+        await doc.applyRecord(updateRec)
+        throw new Error('Should not be able to assign a schema to a document that does not conform')
+      } catch (e) {
+        expect(e.message).toEqual('Validation Error: data[\'stuff\'] should be string')
+      }
+    })
+
+    it('Enforces schema when loading genesis record', async () => {
+      const schemaDoc = await create({ content: stringMapSchema, metadata: { controllers } }, ceramic, context)
+      await anchorUpdate(schemaDoc)
+
+      const docParams = {
+        content: {stuff: 1},
+        metadata: {controllers, schema: schemaDoc.id.toString()}
+      }
+      // Create a document that isn't conforming to the schema
+      const doc = await create(docParams, ceramicWithoutSchemaValidation, context)
+      await anchorUpdate(doc)
+
+      expect(doc.content).toEqual({stuff:1})
+      expect(doc.metadata.schema).toEqual(schemaDoc.id.toString())
+
+      try {
+        await Document.load(doc.id, findHandler, dispatcher, pinStore, context, {skipWait:true})
+        throw new Error('Should not be able to assign a schema to a document that does not conform')
+      } catch (e) {
+        expect(e.message).toEqual('Validation Error: data[\'stuff\'] should be string')
+      }
+    })
+
   })
 
   describe('Network update logic', () => {
