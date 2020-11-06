@@ -69,6 +69,7 @@ describe('DocID', () => {
     expect(docid.multibaseName).toEqual('base36')
     expect(docid.type).toEqual(0)
     expect(docid._cid.toString()).toEqual(cidStr)
+    expect(docid.version).toBeFalsy()
     expect(docid.toString()).toMatchSnapshot()
   })
 
@@ -89,6 +90,7 @@ describe('DocID', () => {
     expect(docid.multibaseName).toEqual('base36')
     expect(docid.type).toEqual(0)
     expect(docid._cid.toString()).toEqual(cidStr)
+    expect(docid.version).toBeFalsy()
     expect(docid.toString()).toMatchSnapshot()
   })
 
@@ -149,6 +151,7 @@ describe('DocID', () => {
     expect(docid.multibaseName).toEqual('base32')
     expect(docid.type).toEqual(0)
     expect(docid._cid.toString()).toEqual(cidStr)
+    expect(docid.version).toBeFalsy()
     expect(docid.toString()).toMatchSnapshot()
   })
 
@@ -158,6 +161,7 @@ describe('DocID', () => {
     expect(docid.multibaseName).toEqual('base36')
     expect(docid.type).toEqual(0)
     expect(docid._cid.toString()).toEqual(cidStr)
+    expect(docid.version).toBeFalsy()
     expect(docid.toString()).toMatchSnapshot()
   })
 
@@ -211,12 +215,32 @@ describe('DocID', () => {
     expect(docid.toString()).toMatchSnapshot()
   })
 
+  it('create from string with version 0 as a number', async () => {
+    const docid = DocID.fromString(docIdStr, 0)
+
+    expect(docid.multibaseName).toEqual('base36')
+    expect(docid.type).toEqual(0)
+    expect(docid.cid.toString()).toEqual(cidStr)
+    expect(docid.version.toString()).toEqual(cidStr)
+    expect(docid.toString()).toMatchSnapshot()
+  })
+
+  it('Cannot specify version as a number other than 0', async () => {
+    try {
+      const docid = DocID.fromString(docIdStr, 1)
+      throw new Error("Should not be able to specify version as a non-zero number")
+    } catch (e) {
+      expect(e.message).toEqual("Cannot specify version as a number except to request version 0 (the genesis version)")
+    }
+  })
+
   it('create from url string', async () => {
     const docid = DocID.fromString(docIdUrl)
     
     expect(docid.multibaseName).toEqual('base36')
     expect(docid.type).toEqual(0)
     expect(docid._cid.toString()).toEqual(cidStr)
+    expect(docid.version).toBeFalsy()
     expect(docid.toString()).toMatchSnapshot()
   })
 
@@ -226,6 +250,7 @@ describe('DocID', () => {
     expect(docid.multibaseName).toEqual('base36')
     expect(docid.type).toEqual(0)
     expect(docid._cid.toString()).toEqual(cidStr)
+    expect(docid.version).toBeFalsy()
     expect(docid.toString()).toMatchSnapshot()
   })
 
@@ -351,6 +376,18 @@ describe('DocID', () => {
     const docid3 = new DocID('caip10-link', cidStr)
     expect(docid.equals(docid2.toString())).toEqual(true)
     expect(docid.equals(docid3.toString())).toEqual(false)
+  })
+
+  it('equals other DocID string with version 0', async () => {
+    // The first three docids should be equal and explicitly have the genesis CID as the version
+    const docid = new DocID('tile', cidStr, 0)
+    const docid2 = new DocID('tile', cidStr, '0')
+    const docid3 = new DocID('tile', cidStr, cidStr)
+    // docid4 won't equal the rest because it will omit the version entirely
+    const docid4 = new DocID('tile', cidStr)
+    expect(docid.equals(docid2.toString())).toEqual(true)
+    expect(docid.equals(docid3.toString())).toEqual(true)
+    expect(docid.equals(docid4.toString())).toEqual(false)
   })
 
   it('equals other DocID with version', async () => {

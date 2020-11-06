@@ -90,6 +90,9 @@ export class DoctypeUtils {
             cloned.anchorProof.txHash = cloned.anchorProof.txHash.toString();
             cloned.anchorProof.root = cloned.anchorProof.root.toString();
         }
+        if (cloned.lastAnchored) {
+            cloned.lastAnchored = cloned.lastAnchored.toString()
+        }
         return cloned
     }
 
@@ -117,6 +120,9 @@ export class DoctypeUtils {
             } else {
                 cloned.anchorScheduledFor = null;
             }
+        }
+        if (cloned.lastAnchored) {
+            cloned.lastAnchored = new CID(cloned.lastAnchored)
         }
         return cloned
     }

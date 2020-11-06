@@ -129,6 +129,7 @@ export class Caip10LinkDoctypeHandler implements DoctypeHandler<Caip10LinkDoctyp
             content,
             anchorStatus: AnchorStatus.ANCHORED,
             anchorProof: proof,
+            lastAnchored: cid,
         }
     }
 
