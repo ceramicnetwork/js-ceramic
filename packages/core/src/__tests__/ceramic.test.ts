@@ -211,7 +211,7 @@ describe('Ceramic integration', () => {
     const doctype1 = await ceramic1.createDocument<TileDoctype>(DOCTYPE_TILE, {
       content: { test: 321 },
       metadata: { controllers: [controller], tags: ['3id']},
-      isUnique: false,
+      deterministic: true,
     })
 
     await anchor(ceramic1)
@@ -220,7 +220,7 @@ describe('Ceramic integration', () => {
     const doctype3 = await ceramic3.createDocument<TileDoctype>(DOCTYPE_TILE, {
       content: { test: 321 },
       metadata: { controllers: [controller], tags: ['3id'] },
-      isUnique: false,
+      deterministic: true,
     }, {
       applyOnly: true
     })

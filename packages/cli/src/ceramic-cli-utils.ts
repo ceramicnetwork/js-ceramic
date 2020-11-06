@@ -98,12 +98,6 @@ export class CeramicCliUtils {
      * @param schemaDocId - Schema document ID
      */
     static async _createDoc(doctype: string, content: string, controllers: string, onlyGenesis: boolean, deterministic: boolean, schemaDocId: string = null): Promise<void> {
-        // Leave isUnique undefined if --not-unique was not specified on the CLI, to signal to lower layers to use the default
-        let isUnique: boolean = undefined
-        if (deterministic) {
-            isUnique = false
-        }
-
         await CeramicCliUtils._runWithCeramic(async (ceramic: CeramicClient) => {
             const parsedControllers = CeramicCliUtils._parseControllers(controllers)
             const parsedContent = CeramicCliUtils._parseContent(content)
@@ -113,7 +107,7 @@ export class CeramicCliUtils {
                 metadata: {
                     controllers: parsedControllers, schema: schemaDocId
                 },
-                isUnique,
+                deterministic,
             }
 
             const doc = await ceramic.createDocument(doctype, params, {

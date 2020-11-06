@@ -54,9 +54,9 @@ export interface DocMetadata {
  */
 export interface DocParams {
     metadata?: DocMetadata;
-    // isUnique is a tri-state. True means always force the document to be unique, false means
-    // always create the document deterministically, undefined means use the default behavior
-    isUnique?: boolean;
+    // deterministic is a tri-state. True means means always create the document deterministically,
+    // false means always force the document to be unique, undefined means use the default behavior
+    deterministic?: boolean;
 
     [index: string]: any; // allow arbitrary properties
 }
