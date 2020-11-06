@@ -11,7 +11,7 @@ import {
     DocOpts,
     DocParams,
     Context,
-    UniquenessMode,
+    UniquenessOptions
 } from "@ceramicnetwork/common"
 
 const DOCTYPE = 'tile'
@@ -74,7 +74,7 @@ export class TileDoctype extends Doctype {
         }
 
         let unique: string
-        if (params.uniquenessMode == UniquenessMode.CREATE_UNIQUE || params.uniquenessMode == undefined) { // default to CREATE_UNIQUE
+        if (params.uniquenessOptions == UniquenessOptions.CREATE_UNIQUE || params.uniquenessOptions == undefined) { // default to CREATE_UNIQUE
             unique = base64Encode(randomBytes(12))
         } else {
             unique = '0'

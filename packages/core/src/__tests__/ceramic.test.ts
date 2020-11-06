@@ -3,7 +3,7 @@ import Ceramic from '../ceramic'
 import IdentityWallet from 'identity-wallet'
 import tmp from 'tmp-promise'
 import getPort from 'get-port'
-import {DoctypeUtils, DocState, Doctype, UniquenessMode} from "@ceramicnetwork/common"
+import {DoctypeUtils, DocState, Doctype, UniquenessOptions} from "@ceramicnetwork/common"
 import { TileDoctype } from "@ceramicnetwork/doctype-tile"
 
 import dagJose from 'dag-jose'
@@ -211,7 +211,7 @@ describe('Ceramic integration', () => {
     const doctype1 = await ceramic1.createDocument<TileDoctype>(DOCTYPE_TILE, {
       content: { test: 321 },
       metadata: { controllers: [controller], tags: ['3id']},
-      uniquenessMode: UniquenessMode.CREATE_DETERMINISTIC,
+      uniquenessOptions: UniquenessOptions.CREATE_DETERMINISTIC,
     })
 
     await anchor(ceramic1)
@@ -220,7 +220,7 @@ describe('Ceramic integration', () => {
     const doctype3 = await ceramic3.createDocument<TileDoctype>(DOCTYPE_TILE, {
       content: { test: 321 },
       metadata: { controllers: [controller], tags: ['3id'] },
-      uniquenessMode: UniquenessMode.CREATE_DETERMINISTIC,
+      uniquenessOptions: UniquenessOptions.CREATE_DETERMINISTIC,
     }, {
       applyOnly: true
     })
