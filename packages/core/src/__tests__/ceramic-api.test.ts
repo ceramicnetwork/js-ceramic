@@ -38,12 +38,14 @@ const createIPFS =(overrideConfig: Record<string, unknown> = {}): Promise<IPFSAp
  * document is anchored
  * @param doc
  */
-const syncDoc = async (doc: any): Promise<void> => {
-  await new Promise(resolve => {
+const anchorDoc = async (ceramic: Ceramic, doc: any): Promise<void> => {
+  const p = new Promise(resolve => {
     doc.on('change', () => {
       resolve()
     })
   })
+  await ceramic.context.anchorService.anchor()
+  await p
 }
 
 describe('Ceramic API', () => {
@@ -67,6 +69,7 @@ describe('Ceramic API', () => {
 
   const createCeramic = async (c: CeramicConfig = {}): Promise<Ceramic> => {
     c.topic = topic
+    c.anchorOnRequest = false
     const ceramic = await Ceramic.create(ipfs, c)
 
     const config = {
@@ -108,7 +111,7 @@ describe('Ceramic API', () => {
       })
 
       // wait for anchor (new version)
-      await syncDoc(docOg)
+      await anchorDoc(ceramic, docOg)
 
       expect(docOg.state.log.length).toEqual(2)
       expect(docOg.content).toEqual({ test: 321 })
@@ -119,7 +122,7 @@ describe('Ceramic API', () => {
       await docOg.change({ content: { test: 'abcde' } })
 
       // wait for anchor (new version)
-      await syncDoc(docOg)
+      await anchorDoc(ceramic, docOg)
 
       expect(docOg.state.log.length).toEqual(4)
       expect(docOg.content).toEqual({ test: 'abcde' })
@@ -339,7 +342,7 @@ describe('Ceramic API', () => {
         content: { a: 1 },
       }
       const doc = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, tileDocParams)
-      await syncDoc(doc)
+      await anchorDoc(ceramic, doc)
 
       // Create schema that enforces that the content value is a string, which would reject
       // the document created above.
@@ -348,7 +351,7 @@ describe('Ceramic API', () => {
         metadata: { controllers: [controller] }
       })
       // wait for anchor
-      await syncDoc(schemaDoc)
+      await anchorDoc(ceramic, schemaDoc)
       expect(schemaDoc.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
       // Update the schema to expect a number, so now the original doc should conform to the new
@@ -357,7 +360,7 @@ describe('Ceramic API', () => {
       updatedSchema.additionalProperties.type = "number"
       await schemaDoc.change({content: updatedSchema})
       // wait for anchor
-      await syncDoc(schemaDoc)
+      await anchorDoc(ceramic, schemaDoc)
       expect(schemaDoc.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
       // Test that we can assign the updated schema to the document without error.
@@ -366,7 +369,7 @@ describe('Ceramic API', () => {
           controllers: [controller], schema: schemaDoc.id.toString()
         }
       })
-      await syncDoc(doc)
+      await anchorDoc(ceramic, doc)
       expect(doc.content).toEqual({ a: 1 })
 
       // Test that we can reload the document without issue
@@ -390,7 +393,7 @@ describe('Ceramic API', () => {
         content: { stuff: 'a' },
       }
       const doc = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, tileDocParams)
-      await syncDoc(doc)
+      await anchorDoc(ceramic, doc)
       expect(doc.content).toEqual({ stuff: 'a' })
 
       // Create schema that enforces that the content value is a string
@@ -400,7 +403,7 @@ describe('Ceramic API', () => {
       })
 
       // wait for anchor
-      await syncDoc(schemaDoc)
+      await anchorDoc(ceramic, schemaDoc)
       expect(schemaDoc.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
       const schemaV0Id = DocID.fromBytes(schemaDoc.id.bytes, schemaDoc.tip.toString())
 
@@ -409,7 +412,7 @@ describe('Ceramic API', () => {
         metadata: { controllers: [controller], schema: schemaV0Id.toString() },
         content: {stuff: 'b'}
       })
-      await syncDoc(doc)
+      await anchorDoc(ceramic, doc)
       expect(doc.content).toEqual({ stuff: 'b' })
       expect(doc.metadata.schema).toEqual(schemaV0Id.toString())
 
@@ -417,7 +420,7 @@ describe('Ceramic API', () => {
       const updatedSchema = cloneDeep(stringMapSchema)
       updatedSchema.additionalProperties.type = "number"
       await schemaDoc.change({content: updatedSchema})
-      await syncDoc(schemaDoc)
+      await anchorDoc(ceramic, schemaDoc)
 
       expect(doc.metadata.schema.toString()).toEqual(schemaV0Id.toString())
 
@@ -427,7 +430,7 @@ describe('Ceramic API', () => {
         content: { stuff: 'c' },
         metadata: { controllers: [controller], schema: doc.metadata.schema.toString() }
       })
-      await syncDoc(doc)
+      await anchorDoc(ceramic, doc)
       expect(doc.content).toEqual({ stuff: 'c' })
 
       // Test that updating the existing document fails if it doesn't conform to the most recent
