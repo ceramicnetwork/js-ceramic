@@ -1,6 +1,8 @@
-FROM node:10
+FROM node:12
 
 ENV IPFS_API_URL=http://host.docker.internal:5001
+
+RUN apt-get update && apt-get install -y netcat
 
 WORKDIR /js-ceramic
 
@@ -9,10 +11,15 @@ RUN npm install
 
 COPY lerna.json tsconfig.json ./
 
-COPY packages/3id-did-resolver/package.json packages/ceramic-cli/package-lock.json ./packages/3id-did-resolver/
 COPY packages/ceramic-cli/package.json packages/ceramic-cli/package-lock.json ./packages/ceramic-cli/
 COPY packages/ceramic-core/package.json packages/ceramic-cli/package-lock.json ./packages/ceramic-core/
+COPY packages/ceramic-common/package.json packages/ceramic-common/package-lock.json ./packages/ceramic-common/
 COPY packages/ceramic-http-client/package.json packages/ceramic-cli/package-lock.json ./packages/ceramic-http-client/
+COPY packages/ceramic-doctype-tile/package.json packages/ceramic-doctype-tile/package-lock.json ./packages/ceramic-doctype-tile/
+COPY packages/ceramic-doctype-account-link/package.json packages/ceramic-doctype-account-link/package-lock.json ./packages/ceramic-doctype-account-link/
+COPY packages/key-did-resolver/package.json packages/key-did-resolver/package-lock.json ./packages/key-did-resolver/
+COPY packages/3id-did-resolver/package.json packages/ceramic-cli/package-lock.json ./packages/3id-did-resolver/
+COPY packages/docid/package.json packages/docid/package-lock.json ./packages/docid/
 
 RUN npx lerna bootstrap --hoist
 
