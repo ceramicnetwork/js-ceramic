@@ -37,7 +37,7 @@ const RECORDS = {
           signature: "cccc"
         }
       ],
-      link: "bafyreihde57reuflbmjwtav55ffi3mggseh5iqygrqjl2mqykhstukxutq"
+      link: "bafyreihfj4bmqbzwejbc7mzipe25wskovt3nsnj4jfrqrfpg4zkjy72gli"
     },
     linkedBlock: {
       data: {
@@ -53,7 +53,8 @@ const RECORDS = {
           "3id",
         ]
       },
-      doctype: "tile"
+      unique: "0",
+      doctype: "tile",
     }
   },
   r1: {
@@ -176,7 +177,7 @@ describe('ThreeIdHandler', () => {
   })
 
   it('makes genesis record correctly', async () => {
-    const record = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: RECORDS.genesis.header }, context)
+    const record = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: RECORDS.genesis.header, deterministic:true }, context)
     const { jws, linkedBlock } = record
 
     const payload = dagCBOR.util.deserialize(linkedBlock)

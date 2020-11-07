@@ -26,7 +26,7 @@ const FAKE_CID_3 = new CID('bafybeig6xv5nwphfmvcnektpnojts55jqcuam7bmye2pb54adnr
 const FAKE_CID_4 = new CID('bafybeig6xv5nwphfmvcnektpnojts66jqcuam7bmye2pb54adnrtccjlsu')
 
 const RECORDS = {
-  genesis: { doctype: 'tile', header: { controllers: [ 'did:3:bafyasdfasdf' ] }, data: { much: 'data' } },
+  genesis: { doctype: 'tile', header: { controllers: [ 'did:3:bafyasdfasdf' ] }, data: { much: 'data' }, unique: '0' },
   genesisGenerated: {
     "jws": {
       "payload": "bbbb",
@@ -36,7 +36,7 @@ const RECORDS = {
           "signature": "cccc"
         }
       ],
-      "link": "bafyreieud3bpdflio42dgqssv2mzkdohwq4wesmgmj42cqpaq5n6pdwm3e"
+      "link": "bafyreiau5pqllna6pewhp3w2hbvohxxeqsmffnwf6o2fwoln4ubbc6fldq"
     },
     "linkedBlock": {
       "data": {
@@ -47,6 +47,7 @@ const RECORDS = {
           "did:3:bafyasdfasdf"
         ]
       },
+      "unique": "0",
       "doctype": "tile"
     }
   },
@@ -171,7 +172,7 @@ describe('TileDoctypeHandler', () => {
   })
 
   it('makes genesis record correctly', async () => {
-    const record1 = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id] } }, { did })
+    const record1 = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id] }, deterministic: true }, { did })
     expect(record1).toBeDefined()
 
     const { jws, linkedBlock } = record1
@@ -192,18 +193,18 @@ describe('TileDoctypeHandler', () => {
     expect(serialized).toEqual(signed)
   })
 
-  it('creates genesis records deterministically by default', async () => {
+  it('creates genesis records uniquely by default', async () => {
     const record1 = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id] } }, { did })
     const record2 = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id] } }, { did })
 
-    expect(record1).toEqual(record2)
+    expect(record1).not.toEqual(record2)
   })
 
-  it('creates a unique genesis record if specified', async () => {
-    const record1 = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id], isUnique: true } }, { did })
-    const record2 = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id], isUnique: true } }, { did } )
+  it('creates genesis records deterministically if deterministic:true is specified', async () => {
+    const record1 = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id] }, deterministic: true }, { did })
+    const record2 = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id] }, deterministic: true }, { did } )
 
-    expect(record1).not.toEqual(record2)
+    expect(record1).toEqual(record2)
   })
 
   it('applies genesis record correctly', async () => {

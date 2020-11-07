@@ -210,14 +210,17 @@ describe('Ceramic integration', () => {
     // ceramic node 2 shouldn't need to have the document open in order to forward the message
     const doctype1 = await ceramic1.createDocument<TileDoctype>(DOCTYPE_TILE, {
       content: { test: 321 },
-      metadata: { controllers: [controller], tags: ['3id'] }
+      metadata: { controllers: [controller], tags: ['3id']},
+      deterministic: true,
     })
 
     await anchor(ceramic1)
     await syncDoc(doctype1)
 
     const doctype3 = await ceramic3.createDocument<TileDoctype>(DOCTYPE_TILE, {
-      content: { test: 321 }, metadata: { controllers: [controller], tags: ['3id'] }
+      content: { test: 321 },
+      metadata: { controllers: [controller], tags: ['3id'] },
+      deterministic: true,
     }, {
       applyOnly: true
     })
