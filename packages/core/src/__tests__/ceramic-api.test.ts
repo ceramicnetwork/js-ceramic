@@ -33,7 +33,7 @@ const createIPFS =(overrideConfig: Record<string, unknown> = {}): Promise<IPFSAp
   return IPFS.create(config)
 }
 
-const registerChangeListener = async (doc: any): Promise<void> => {
+const registerChangeListener = function (doc: any): Promise<void> {
   return new Promise(resolve => {
     doc.on('change', () => {
       resolve()
@@ -49,7 +49,7 @@ const registerChangeListener = async (doc: any): Promise<void> => {
  * @param doc
  */
 const anchorDoc = async (ceramic: Ceramic, doc: any): Promise<void> => {
-  const changeHandle = await registerChangeListener(doc)
+  const changeHandle = registerChangeListener(doc)
   await ceramic.context.anchorService.anchor()
   await changeHandle
 }
