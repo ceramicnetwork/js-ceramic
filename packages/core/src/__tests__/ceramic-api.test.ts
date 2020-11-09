@@ -33,19 +33,25 @@ const createIPFS =(overrideConfig: Record<string, unknown> = {}): Promise<IPFSAp
   return IPFS.create(config)
 }
 
-/**
- * Waits for a document change event on the given document. Used in these tests to wait until a
- * document is anchored
- * @param doc
- */
-const anchorDoc = async (ceramic: Ceramic, doc: any): Promise<void> => {
-  const p = new Promise(resolve => {
+const registerChangeListener = async (doc: any): Promise<void> => {
+  return new Promise(resolve => {
     doc.on('change', () => {
       resolve()
     })
   })
+}
+
+/**
+ * Registers a listener for change notifications on a document, instructs the anchor service to
+ * perform an anchor, then waits for the change listener to resolve, indicating that the document
+ * got anchored.
+ * @param ceramic
+ * @param doc
+ */
+const anchorDoc = async (ceramic: Ceramic, doc: any): Promise<void> => {
+  const changeHandle = await registerChangeListener(doc)
   await ceramic.context.anchorService.anchor()
-  await p
+  await changeHandle
 }
 
 describe('Ceramic API', () => {

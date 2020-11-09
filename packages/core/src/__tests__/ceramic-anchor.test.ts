@@ -1,6 +1,6 @@
 import Ceramic from '../ceramic'
 import IdentityWallet from 'identity-wallet'
-import { Doctype } from "@ceramicnetwork/common"
+import {AnchorStatus, Doctype} from "@ceramicnetwork/common"
 import { TileDoctype } from "@ceramicnetwork/doctype-tile"
 import tmp from 'tmp-promise'
 import IPFS from 'ipfs'
@@ -50,16 +50,25 @@ const createCeramic = async (ipfs: IPFSApi, anchorManual: boolean, topic: string
   return ceramic
 }
 
-const anchor = async (ceramic: Ceramic): Promise<void> => {
-  await ceramic.context.anchorService.anchor()
-}
-
-const syncDoc = async (doctype: Doctype): Promise<void> => {
-  await new Promise(resolve => {
-    doctype.on('change', () => {
+const registerChangeListener = function (doc: Doctype): Promise<void> {
+  return new Promise(resolve => {
+    doc.on('change', () => {
       resolve()
     })
   })
+}
+
+/**
+ * Registers a listener for change notifications on a document, instructs the anchor service to
+ * perform an anchor, then waits for the change listener to resolve, indicating that the document
+ * got anchored.
+ * @param ceramic
+ * @param doc
+ */
+const anchorDoc = async (ceramic: Ceramic, doc: any): Promise<void> => {
+  const changeHandle = registerChangeListener(doc)
+  await ceramic.context.anchorService.anchor()
+  await changeHandle
 }
 
 describe('Ceramic anchoring', () => {
@@ -127,11 +136,11 @@ describe('Ceramic anchoring', () => {
     await doctype1.change({ content: { a: 2 }, metadata: { controllers: [controller] } }, { applyOnly: false })
     await doctype1.change({ content: { a: 3 }, metadata: { controllers: [controller] } }, { applyOnly: false })
 
-    await anchor(ceramic1)
-    await syncDoc(doctype1)
+    await anchorDoc(ceramic1, doctype1)
 
     expect(doctype1.content).toEqual({ a: 3 })
     expect(doctype1.state.log.length).toEqual(3)
+    expect(doctype1.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
     const doctype2 = await ceramic2.loadDocument(doctype1.id)
     expect(doctype1.content).toEqual(doctype2.content)
@@ -181,8 +190,7 @@ describe('Ceramic anchoring', () => {
 
     expect(doctype1.state.log.length).toEqual(2)
 
-    await anchor(ceramic1)
-    await syncDoc(doctype1)
+    await anchorDoc(ceramic1, doctype1)
 
     expect(doctype1.content).toEqual({ a: 123, b: 4567 })
     expect(doctype1.state.log.length).toEqual(2)
@@ -209,8 +217,7 @@ describe('Ceramic anchoring', () => {
 
     expect(doctype1.state.log.length).toEqual(2)
 
-    await anchor(ceramic1)
-    await syncDoc(doctype1)
+    await anchorDoc(ceramic1, doctype1)
 
     expect(doctype1.content).toEqual({ a: 123 })
     expect(doctype1.state.log.length).toEqual(2)
@@ -237,8 +244,7 @@ describe('Ceramic anchoring', () => {
     await doctype1.change({ content: { x: doctype1.content.x + 1 }, metadata: { controllers: [controller] } }, { applyOnly: true })
     await doctype1.change({ content: { x: doctype1.content.x + 1 }, metadata: { controllers: [controller] } }, { applyOnly: false })
 
-    await anchor(ceramic1)
-    await syncDoc(doctype1)
+    await anchorDoc(ceramic1, doctype1)
 
     expect(doctype1.content).toEqual({ x: 3 })
     expect(doctype1.state.log.length).toEqual(3)
@@ -264,8 +270,7 @@ describe('Ceramic anchoring', () => {
     await doctype1.change({ content: { x: doctype1.content.x + 1 }, metadata: { controllers: [controller] } }, { applyOnly: true })
     await doctype1.change({ content: { x: doctype1.content.x + 1 }, metadata: { controllers: [controller] } }, { applyOnly: false })
 
-    await anchor(ceramic1)
-    await syncDoc(doctype1)
+    await anchorDoc(ceramic1, doctype1)
 
     expect(doctype1.content).toEqual({ x: 3 })
     expect(doctype1.state.log.length).toEqual(3)
@@ -295,8 +300,7 @@ describe('Ceramic anchoring', () => {
 
     await doctype1.change({ content: { x: doctype1.content.x + 1 }, metadata: { controllers: [controller] } }, { applyOnly: false })
 
-    await anchor(ceramic1)
-    await syncDoc(doctype1)
+    await anchorDoc(ceramic1, doctype1)
 
     expect(doctype1.content).toEqual({ x: 3 })
     expect(doctype1.state.log.length).toEqual(3)
@@ -305,8 +309,7 @@ describe('Ceramic anchoring', () => {
     await doctype1.change({ content: { x: doctype1.content.x + 1 }, metadata: { controllers: [controller] } }, { applyOnly: true })
     await doctype1.change({ content: { x: doctype1.content.x + 1 }, metadata: { controllers: [controller] } }, { applyOnly: false })
 
-    await anchor(ceramic1)
-    await syncDoc(doctype1)
+    await anchorDoc(ceramic1, doctype1)
 
     expect(doctype1.content).toEqual({ x: 6 })
     expect(doctype1.state.log.length).toEqual(5)
@@ -333,8 +336,7 @@ describe('Ceramic anchoring', () => {
     await doctype1.change({ content: { x: 7 }, metadata: { controllers: [controller] } }, { applyOnly: false })
     await cloned.change({ content: { x: 5 }, metadata: { controllers: [controller] } }, { applyOnly: false })
 
-    await anchor(ceramic1)
-    await syncDoc(doctype1)
+    await anchorDoc(ceramic1, doctype1)
 
     expect(doctype1.content).toEqual({ x: 7 })
     expect(doctype1.state.log.length).toEqual(3)
