@@ -22,7 +22,7 @@ class DocID {
    *
    * @param {string|number}      doctype
    * @param {CID|string}         cid
-   * @param {CID|string}         version
+   * @param {CID|string}         version CID. Pass '0' as shorthand for the genesis version.
    * @param {string}             [multibaseName = 'base36']
    *
    * @example
@@ -41,12 +41,27 @@ class DocID {
      if (!doctype && doctype !== 0) throw new Error('constructor: doctype required')
     this._multibaseName = multibaseName
     this._cid = (typeof cid === 'string') ? new CID(cid) : cid
-    if (version === '0' || typeof version === 'number') {
+    if (typeof version === 'number' && version !== 0) {
+      throw new Error('Cannot specify version as a number except to request version 0 (the genesis version)')
+    }
+    if (version === '0' || version === 0) {
       this._version = this._cid
     } else {
       this._version = (typeof version === 'string') ? new CID(version) : version
     }
     if (!cid) throw new Error('constructor: cid required')
+  }
+
+  /**
+   * Copies the given DocID and returns a copy of it, optionally changing the version to the one provided
+   * @param other
+   * @param version
+   */
+  static fromOther(other: DocID, version?: CID | string): DocID {
+    if (!version) {
+      version = other.version
+    }
+    return new DocID(other._doctype, other._cid, version, other._multibaseName)
   }
 
   static fromBytes(bytes: Uint8Array, version?: CID | string, multibaseName?: string): DocID {
@@ -60,7 +75,6 @@ class DocID {
 
     try {
       cid = new CID(bytes)
-      if (version === '0') version = cid
     } catch(e) {
       // Includes version
       const cidLength = DocID._genesisCIDLength(bytes)
@@ -228,7 +242,7 @@ class DocID {
     }
 
     return this.type === otherDocID.type &&
-      (this.version ? this.version.equals(otherDocID.version) : !otherDocID.version) &&
+      (this.version ? (!!otherDocID.version && this.version.equals(otherDocID.version)) : !otherDocID.version) &&
       this.cid.equals(otherDocID.cid)
   }
 

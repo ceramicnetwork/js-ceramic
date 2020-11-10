@@ -183,7 +183,7 @@ describe('Ceramic API', () => {
 
       const tileDocParams: TileParams = {
         metadata: {
-          schema: schemaDoc.id.toString(), controllers: [controller]
+          schema: schemaDoc.currentVersionDocID.toString(), controllers: [controller]
         }, content: { a: 1 },
       }
 
@@ -210,13 +210,41 @@ describe('Ceramic API', () => {
 
       const tileDocParams: TileParams = {
         metadata: {
-          schema: schemaDoc.id.toString(), controllers: [controller]
+          schema: schemaDoc.currentVersionDocID.toString(), controllers: [controller]
         }, content: { a: "test" }
       }
 
       await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, tileDocParams)
 
       await new Promise(resolve => setTimeout(resolve, 1000)) // wait to propagate
+      await ceramic.close()
+    })
+
+    it('Must assign schema with specific version', async () => {
+      ceramic = await createCeramic()
+
+      const controller = ceramic.context.did.id
+
+      const schemaDoc = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, {
+        content: stringMapSchema,
+        metadata: { controllers: [controller] }
+      })
+
+      expect(schemaDoc.id.version).toBeFalsy()
+      const schemaDocIdWithoutVersion = schemaDoc.id.toString()
+      const tileDocParams: TileParams = {
+        metadata: {
+          schema: schemaDocIdWithoutVersion, controllers: [controller]
+        }, content: { a: "test" }
+      }
+
+      try {
+        await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, tileDocParams)
+        throw new Error("Should not be able to assign a schema without specifying the schema version")
+      } catch (e) {
+        expect(e.message).toEqual("Version missing when loading schema document")
+      }
+
       await ceramic.close()
     })
 
@@ -232,7 +260,7 @@ describe('Ceramic API', () => {
 
       const tileDocParams: TileParams = {
         metadata: {
-          schema: schemaDoc.id.toString(), controllers: [controller]
+          schema: schemaDoc.currentVersionDocID.toString(), controllers: [controller]
         }, content: { a: 1 },
       }
 
@@ -262,12 +290,12 @@ describe('Ceramic API', () => {
 
       await doctype.change({
         metadata: {
-          controllers: [controller], schema: schemaDoc.id.toString()
+          controllers: [controller], schema: schemaDoc.currentVersionDocID.toString()
         }
       })
 
       expect(doctype.content).toEqual({ a: 'x' })
-      expect(doctype.metadata.schema.toString()).toEqual(schemaDoc.id.toString())
+      expect(doctype.metadata.schema).toEqual(schemaDoc.currentVersionDocID.toString())
 
       await new Promise(resolve => setTimeout(resolve, 1000)) // wait to propagate
       await ceramic.close()
@@ -294,7 +322,7 @@ describe('Ceramic API', () => {
       try {
         await doctype.change({
           metadata: {
-            controllers: [controller], schema: schemaDoc.id.toString()
+            controllers: [controller], schema: schemaDoc.currentVersionDocID.toString()
           }
         })
         throw new Error('Should not be able to update the document with invalid content')
@@ -325,7 +353,7 @@ describe('Ceramic API', () => {
 
       await doctype.change({
         content: { a: 'x' }, metadata: {
-          controllers: [controller], schema: schemaDoc.id.toString()
+          controllers: [controller], schema: schemaDoc.currentVersionDocID.toString()
         }
       })
 
@@ -372,7 +400,7 @@ describe('Ceramic API', () => {
       // Test that we can assign the updated schema to the document without error.
       await doc.change({
         metadata: {
-          controllers: [controller], schema: schemaDoc.id.toString()
+          controllers: [controller], schema: schemaDoc.currentVersionDocID.toString()
         }
       })
       await anchorDoc(ceramic, doc)
@@ -382,75 +410,6 @@ describe('Ceramic API', () => {
       const doc2 = await ceramic.loadDocument(doc.id)
       expect(doc2.content).toEqual(doc.content)
       expect(doc2.metadata).toEqual(doc.metadata)
-
-      await ceramic.close()
-    })
-
-    it('Pin schema to a specific version', async () => {
-      ceramic = await createCeramic()
-
-      const controller = ceramic.context.did.id
-
-      // Create doc with content that has type 'string'.
-      const tileDocParams: TileParams = {
-        metadata: {
-          controllers: [controller]
-        },
-        content: { stuff: 'a' },
-      }
-      const doc = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, tileDocParams)
-      await anchorDoc(ceramic, doc)
-      expect(doc.content).toEqual({ stuff: 'a' })
-
-      // Create schema that enforces that the content value is a string
-      const schemaDoc = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, {
-        content: stringMapSchema,
-        metadata: { controllers: [controller] }
-      })
-
-      // wait for anchor
-      await anchorDoc(ceramic, schemaDoc)
-      expect(schemaDoc.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
-      const schemaV0Id = DocID.fromBytes(schemaDoc.id.bytes, schemaDoc.tip.toString())
-
-      // Assign the schema to the conforming document, specifying current version of the schema explicitly
-      await doc.change({
-        metadata: { controllers: [controller], schema: schemaV0Id.toString() },
-        content: {stuff: 'b'}
-      })
-      await anchorDoc(ceramic, doc)
-      expect(doc.content).toEqual({ stuff: 'b' })
-      expect(doc.metadata.schema).toEqual(schemaV0Id.toString())
-
-      // Update schema so that existing doc no longer conforms
-      const updatedSchema = cloneDeep(stringMapSchema)
-      updatedSchema.additionalProperties.type = "number"
-      await schemaDoc.change({content: updatedSchema})
-      await anchorDoc(ceramic, schemaDoc)
-
-      expect(doc.metadata.schema.toString()).toEqual(schemaV0Id.toString())
-
-      // Test that we can update the existing document according to the original schema when taking
-      // the schema docID from the existing document.
-      await doc.change({
-        content: { stuff: 'c' },
-        metadata: { controllers: [controller], schema: doc.metadata.schema.toString() }
-      })
-      await anchorDoc(ceramic, doc)
-      expect(doc.content).toEqual({ stuff: 'c' })
-
-      // Test that updating the existing document fails if it doesn't conform to the most recent
-      // version of the schema, when specifying just the schema document ID without a version
-      try {
-        await doc.change({
-          content: {stuff: 'd'},
-          metadata: {controllers: [controller], schema: schemaDoc.id.toString() }
-        })
-        throw new Error('Should not be able to update the document with invalid content')
-      } catch (e) {
-        expect(e.message).toEqual('Validation Error: data[\'stuff\'] should be number')
-      }
-      expect(doc.content).toEqual({ stuff: 'c' })
 
       await ceramic.close()
     })

@@ -82,6 +82,7 @@ export interface DocState {
     anchorStatus: AnchorStatus;
     anchorScheduledFor?: number; // only present when anchor status is pending
     anchorProof?: AnchorProof; // the anchor proof of the latest anchor, only present when anchor status is anchored
+    lastAnchored?: CID; // The CID of the most recent anchor record in the log
     log: Array<CID>;
 }
 
@@ -125,6 +126,11 @@ export abstract class Doctype extends EventEmitter {
 
     get tip(): CID {
         return this._state.log[this._state.log.length - 1]
+    }
+
+    get currentVersionDocID(): DocID {
+        const version = this._state.lastAnchored
+        return DocID.fromOther(this.id, version ? version : '0')
     }
 
     get state(): DocState {

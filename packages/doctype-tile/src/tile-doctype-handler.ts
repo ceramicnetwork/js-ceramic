@@ -169,7 +169,7 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
         delete state.next
 
         return {
-            ...state, content, metadata, anchorStatus: AnchorStatus.ANCHORED, anchorProof: proof,
+            ...state, content, metadata, anchorStatus: AnchorStatus.ANCHORED, anchorProof: proof, lastAnchored: cid,
         }
     }
 

@@ -335,7 +335,7 @@ class Ceramic implements CeramicApi {
   async loadDocument<T extends Doctype>(docId: DocID | string, opts: DocOpts = {}): Promise<T> {
     docId = normalizeDocID(docId)
     const doc = await this._loadDoc(docId.baseID, opts)
-    return (docId.version? await doc.getVersion<T>(docId.version) : doc.doctype) as T
+    return (docId.version? await doc.loadVersion<T>(docId.version) : doc.doctype) as T
   }
 
   /**

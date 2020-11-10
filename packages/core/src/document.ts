@@ -190,8 +190,8 @@ class Document extends EventEmitter {
    *
    * @param version - Document version
    */
-  async getVersion<T extends Doctype>(version: CID): Promise<T> {
-    const doc = await Document.getVersion<T>(this, version, this._validate)
+  async loadVersion<T extends Doctype>(version: CID): Promise<T> {
+    const doc = await Document.loadVersion<T>(this, version, this._validate)
     return doc.doctype as T
   }
 
@@ -202,7 +202,7 @@ class Document extends EventEmitter {
    * @param version - Document version
    * @param validate - Validate content against schema
    */
-  static async getVersion<T extends Doctype>(doc: Document, version: CID, validate = true): Promise<Document> {
+  static async loadVersion<T extends Doctype>(doc: Document, version: CID, validate = true): Promise<Document> {
     const { _context: context, dispatcher, pinStore, _doctypeHandler: doctypeHandler } = doc
 
     const isGenesis = version.equals(doc._genesisCid)
@@ -627,6 +627,10 @@ class Document extends EventEmitter {
    */
   static async loadSchemaById<T extends Doctype>(ceramicApi: CeramicApi, schemaDocId: string): Promise<T> {
     if (schemaDocId) {
+      const schemaDocIdParsed = DocID.fromString(schemaDocId)
+      if (!schemaDocIdParsed.version) {
+        throw new Error("Version missing when loading schema document")
+      }
       const schemaDoc = await ceramicApi.loadDocument(schemaDocId)
       return schemaDoc.content
     }
@@ -674,6 +678,10 @@ class Document extends EventEmitter {
    */
   get metadata (): DocMetadata {
     return this._doctype.metadata
+  }
+
+  get currentVersionDocID(): DocID {
+    return this._doctype.currentVersionDocID
   }
 
   /**
