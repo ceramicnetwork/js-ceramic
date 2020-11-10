@@ -99,7 +99,7 @@ const create = async (params: TileParams, ceramic: Ceramic, context: Context, op
   }
 
   const record = await TileDoctype.makeGenesis({ content, metadata }, context)
-  return await ceramic._createDocFromGenesis(record, opts)
+  return await ceramic._createDocFromGenesis("tile", record, opts)
 }
 
 const stringMapSchema = {
