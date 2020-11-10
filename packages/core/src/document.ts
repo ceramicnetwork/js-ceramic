@@ -145,6 +145,13 @@ class Document extends EventEmitter {
       doc._doctype.state = await doc._doctypeHandler.applyRecord(record, doc._genesisCid, context)
     }
 
+    if (validate) {
+      const schema = await Document.loadSchema(context.api, doc._doctype)
+      if (schema) {
+        Utils.validate(doc._doctype.content, schema)
+      }
+    }
+
     await doc._register(opts)
     return doc
   }
