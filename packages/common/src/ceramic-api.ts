@@ -59,10 +59,11 @@ export interface CeramicApi {
 
     /**
      * Create Doctype from genesis record
+     * @param doctype - Document type
      * @param genesis - Genesis record
      * @param opts - Initialization options
      */
-    createDocumentFromGenesis<T extends Doctype>(genesis: any, opts?: DocOpts): Promise<T>;
+    createDocumentFromGenesis<T extends Doctype>(doctype: string, genesis: any, opts?: DocOpts): Promise<T>;
 
     /**
      * Loads Doctype instance

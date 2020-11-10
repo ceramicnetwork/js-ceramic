@@ -259,7 +259,7 @@ describe('Ceramic integration', () => {
 
     const logRecords = await ceramic1.loadDocumentRecords(doctype1.id)
 
-    let doctype2 = await ceramic2.createDocumentFromGenesis(logRecords[0].value, { applyOnly: true })
+    let doctype2 = await ceramic2.createDocumentFromGenesis(DOCTYPE_TILE, logRecords[0].value, { applyOnly: true })
     for (let i = 1; i < logRecords.length; i++) {
       doctype2 = await ceramic2.applyRecord(doctype2.id, logRecords[i].value, { applyOnly: true })
     }

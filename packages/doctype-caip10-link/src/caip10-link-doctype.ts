@@ -37,7 +37,7 @@ export class Caip10LinkDoctype extends Doctype {
         const { content, metadata } = params
 
         const record = await Caip10LinkDoctype.makeGenesis({ content, metadata })
-        return context.api.createDocumentFromGenesis(record, opts)
+        return context.api.createDocumentFromGenesis(DOCTYPE, record, opts)
     }
 
     /**
@@ -63,10 +63,7 @@ export class Caip10LinkDoctype extends Doctype {
         if (!chainId) {
             throw new Error('Chain ID must be specified according to CAIP-10')
         }
-        return {
-            doctype: DOCTYPE,
-            header: metadata,
-        }
+        return { header: metadata }
     }
 
     /**

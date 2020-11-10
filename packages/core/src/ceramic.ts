@@ -179,12 +179,13 @@ class Ceramic implements CeramicApi {
   }
 
   /**
-   * Find handler by genesis record
+   * Find doctype handler
+   * @param doctype - Name of doctype
    * @param genesisRecord - Document genesis record
    */
-  findHandler<T extends DoctypeHandler<Doctype>>(genesisRecord: Record<string, any>): T {
-    if (genesisRecord.doctype in this._doctypeHandlers) {
-      return this._doctypeHandlers[genesisRecord.doctype] as T
+  findHandler<T extends DoctypeHandler<Doctype>>(doctype: string, genesisRecord: Record<string, any>): T {
+    if (doctype in this._doctypeHandlers) {
+      return this._doctypeHandlers[doctype] as T
     } else if (genesisRecord['@context'] === "https://w3id.org/did/v1") {
       return this._doctypeHandlers['3id'] as T
     }
@@ -287,32 +288,32 @@ class Ceramic implements CeramicApi {
 
   /**
    * Creates doctype from genesis record
+   * @param doctype - Document type
    * @param genesis - Genesis CID
    * @param opts - Initialization options
    */
-  async createDocumentFromGenesis<T extends Doctype>(genesis: any, opts: DocOpts = {}): Promise<T> {
-    const doc = await this._createDocFromGenesis(genesis, opts)
+  async createDocumentFromGenesis<T extends Doctype>(doctype: string, genesis: any, opts: DocOpts = {}): Promise<T> {
+    const doc = await this._createDocFromGenesis(doctype, genesis, opts)
     return doc.doctype as T
   }
 
   /**
    * Creates document from genesis record
+   * @param doctype - Document type
    * @param genesis - Genesis record
    * @param opts - Initialization options
    * @private
    */
-  async _createDocFromGenesis(genesis: any, opts: DocOpts = {}): Promise<Document> {
+  async _createDocFromGenesis(doctype: string, genesis: any, opts: DocOpts = {}): Promise<Document> {
     const genesisCid = await this.dispatcher.storeRecord(genesis)
 
-    let doctypeHandler, doctype: string
+    let doctypeHandler
     genesis = await this.dispatcher.retrieveRecord(genesisCid)
     if (DoctypeUtils.isSignedRecord(genesis)) {
       const payload = await this.dispatcher.retrieveRecord(genesis.link)
-      doctypeHandler = this.findHandler(payload)
-      doctype = payload.doctype
+      doctypeHandler = this.findHandler(doctype, payload)
     } else {
-      doctypeHandler = this.findHandler(genesis)
-      doctype = genesis.doctype
+      doctypeHandler = this.findHandler(doctype, genesis)
     }
 
     const docId = new DocID(doctype, genesisCid)

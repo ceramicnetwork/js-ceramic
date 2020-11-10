@@ -56,7 +56,7 @@ export class TileDoctype extends Doctype {
 
         const { content, metadata } = params
         const record = await TileDoctype.makeGenesis({ content, metadata }, context)
-        return context.api.createDocumentFromGenesis<TileDoctype>(record, opts)
+        return context.api.createDocumentFromGenesis<TileDoctype>(DOCTYPE, record, opts)
     }
 
     /**
@@ -86,9 +86,7 @@ export class TileDoctype extends Doctype {
         }
 
         const { content } = params
-        const record = {
-            ...{ doctype: DOCTYPE, data: content, header: metadata }, ...(unique ? { unique } : {})
-        }
+        const record = { data: content, header: metadata, unique }
         return content ? TileDoctype._signDagJWS(record, context.did, metadata.controllers[0]) : record
     }
 

@@ -72,11 +72,11 @@ class CeramicClient implements CeramicApi {
     const doctypeHandler = this.findDoctypeHandler(doctype)
     const genesis = await doctypeHandler.doctype.makeGenesis(params, this.context, opts)
 
-    return await this.createDocumentFromGenesis(genesis, opts)
+    return await this.createDocumentFromGenesis(doctype, genesis, opts)
   }
 
-  async createDocumentFromGenesis<T extends Doctype>(genesis: any, opts?: DocOpts): Promise<T> {
-    const doc = await Document.createFromGenesis(this._apiUrl, genesis, this.context, opts)
+  async createDocumentFromGenesis<T extends Doctype>(doctype: string, genesis: any, opts?: DocOpts): Promise<T> {
+    const doc = await Document.createFromGenesis(this._apiUrl, doctype, genesis, this.context, opts)
     const docIdStr = doc.id.toString()
     if (!this._docmap[docIdStr]) {
       this._docmap[docIdStr] = doc
