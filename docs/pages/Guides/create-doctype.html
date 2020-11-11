@@ -1,0 +1,528 @@
+<!doctype html>
+<html class="default no-js">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>Create a Doctype | Ceramic</title>
+	<meta name="description" content="Documentation for Ceramic">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="../../assets/css/main.css">
+	<link rel="stylesheet" href="../../assets/css/pages.css">
+</head>
+<body>
+<header>
+	<div class="tsd-page-toolbar">
+		<div class="container">
+			<div class="table-wrap">
+				<div class="table-cell" id="tsd-search" data-index="../../assets/js/search.json" data-base="../..">
+					<div class="field">
+						<label for="tsd-search-field" class="tsd-widget search no-caption">Search</label>
+						<input id="tsd-search-field" type="text" />
+					</div>
+					<ul class="results">
+						<li class="state loading">Preparing search index...</li>
+						<li class="state failure">The search index is not available</li>
+					</ul>
+					<a href="../../index.html" class="title">Ceramic</a>
+				</div>
+				<div class="table-cell" id="tsd-widgets">
+					<div id="tsd-filter">
+						<a href="#" class="tsd-widget options no-caption" data-toggle="options">Options</a>
+						<div class="tsd-filter-group">
+							<div class="tsd-select" id="tsd-filter-visibility">
+								<span class="tsd-select-label">All</span>
+								<ul class="tsd-select-list">
+									<li data-value="public">Public</li>
+									<li data-value="protected">Public/Protected</li>
+									<li data-value="private" class="selected">All</li>
+								</ul>
+							</div>
+							<input type="checkbox" id="tsd-filter-inherited" checked />
+							<label class="tsd-widget" for="tsd-filter-inherited">Inherited</label>
+							<input type="checkbox" id="tsd-filter-only-exported" />
+							<label class="tsd-widget" for="tsd-filter-only-exported">Only exported</label>
+						</div>
+					</div>
+					<a href="#" class="tsd-widget menu no-caption" data-toggle="menu">Menu</a>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="tsd-page-title">
+		<div class="container">
+			<ul class="tsd-breadcrumb">
+				<li>
+					<a href="../../globals.html">Globals</a>
+				</li>
+				<li>
+					<a href="create-doctype.html">Guides</a>
+				</li>
+				<li>
+					<a href="create-doctype.html">Create a Doctype</a>
+				</li>
+			</ul>
+			<h1>Create a Doctype</h1>
+		</div>
+	</div>
+</header>
+<div class="container container-main">
+	<div class="row">
+		<div class="col-8 col-content">
+			<div class="tsd-panel tsd-typography">
+				<a href="#ceramic-doctypes" id="ceramic-doctypes" style="color: inherit; text-decoration: none;">
+					<h1>Ceramic Doctypes</h1>
+				</a>
+				<p>In order to implement a new Ceramic Doctype there are a couple of interfaces which should be followed:</p>
+				<ul>
+					<li><strong>Doctype</strong><ul>
+							<li>This interface is used to implement an actual document.</li>
+						</ul>
+					</li>
+					<li><strong>DoctypeHandler</strong><ul>
+							<li>This interface is used to implement the state transition handler for the document which will be executed by the Ceramic node.</li>
+						</ul>
+					</li>
+				</ul>
+				<p>There are other constructs which need to be used in order to create a <code>Doctype</code>:</p>
+				<ul>
+					<li><strong>DoctypeStatic</strong><ul>
+							<li>Decorator for the Doctype implementation</li>
+						</ul>
+					</li>
+					<li><strong>DoctypeConstructor</strong><ul>
+							<li>Describes the Doctype constructor which needs to be implemented.</li>
+						</ul>
+					</li>
+				</ul>
+				<p>One interface worth noting is the <code>CeramicAPI</code> interface which lets the developer communicate with the Ceramic node in two ways:</p>
+				<ul>
+					<li><strong>directly</strong>: the node is the process running on the same machine</li>
+					<li><strong>indirectly</strong>: the node is running somewhere else and the communication is done over the HTTP protocol.</li>
+				</ul>
+				<a href="#doctype" id="doctype" style="color: inherit; text-decoration: none;">
+					<h1>Doctype</h1>
+				</a>
+				<p>The interface is listed in the code snipped below.</p>
+				<pre><code class="language-typescript"><span class="hljs-comment">/**
+ * Describes common doctype attributes 
+ */</span>
+ <span class="hljs-keyword">abstract</span> <span class="hljs-keyword">class</span> Doctype <span class="hljs-keyword">extends</span> EventEmitter {  
+    <span class="hljs-keyword">constructor</span>(<span class="hljs-params"><span class="hljs-keyword">private</span> _state: DocState, <span class="hljs-keyword">private</span> _context: Context</span>) {  
+        <span class="hljs-built_in">super</span>()  
+    }  
+
+    get id(): <span class="hljs-built_in">string</span> {  
+        <span class="hljs-keyword">return</span> DoctypeUtils.createDocId(<span class="hljs-built_in">this</span>.state.log[<span class="hljs-number">0</span>])  
+    }  
+
+    get doctype(): <span class="hljs-built_in">string</span> {  
+        <span class="hljs-keyword">return</span> <span class="hljs-built_in">this</span>._state.doctype  
+    }  
+
+    get content(): <span class="hljs-built_in">any</span> {  
+        <span class="hljs-keyword">return</span> cloneDeep(<span class="hljs-built_in">this</span>.state.content)  
+    }  
+
+    get owners(): <span class="hljs-built_in">Array</span>&lt;<span class="hljs-built_in">string</span>&gt; {  
+        <span class="hljs-keyword">return</span> cloneDeep(<span class="hljs-built_in">this</span>.state.owners)  
+    }  
+
+    get state(): DocState {  
+        <span class="hljs-keyword">return</span> cloneDeep(<span class="hljs-built_in">this</span>._state)  
+    }  
+
+    set state(state: DocState) {  
+        <span class="hljs-built_in">this</span>._state = state  
+    }  
+
+    get context(): Context {  
+        <span class="hljs-keyword">return</span> <span class="hljs-built_in">this</span>._context  
+    }  
+
+    get head(): CID {  
+        <span class="hljs-keyword">return</span> <span class="hljs-built_in">this</span>.state.log[<span class="hljs-built_in">this</span>.state.log.length - <span class="hljs-number">1</span>]  
+    }  
+
+   <span class="hljs-comment">/**  
+    * Makes a change on an existing document 
+    * @param params - Change parameteres  
+    * @param opts - Initialization options  
+    */</span>  
+    <span class="hljs-keyword">abstract</span> change(params: Record&lt;<span class="hljs-built_in">string</span>, <span class="hljs-built_in">any</span>&gt;, opts?: InitOpts): <span class="hljs-built_in">Promise</span>&lt;<span class="hljs-built_in">void</span>&gt;;  
+}</code></pre>
+				<p>The interface extends the <code>EventEmitter</code> interface which means that the developer can subscribe to events emitted from the Ceramic node like the <code>change</code> event (<em>more events will be defined in the future</em>).</p>
+				<p>The method <code>change</code> is more or less sugar coding for the developer since all the operations can be implemented using the <code>CeramicAPI</code> interface. For example the snipped below describes <code>TileDoctype</code> included in the Ceramic node out-of-the-box.</p>
+				<pre><code class="language-typescript"><span class="hljs-keyword">const</span> DOCTYPE = <span class="hljs-string">&#x27;tile&#x27;</span>
+
+<span class="hljs-comment">/**  
+ * Tile doctype parameters 
+ */</span>
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">interface</span> TileParams {  
+    content: <span class="hljs-built_in">object</span>;  
+    owners?: <span class="hljs-built_in">Array</span>&lt;<span class="hljs-built_in">string</span>&gt;;  
+}  
+
+<span class="hljs-comment">/**  
+ * Tile doctype implementation 
+ */</span>
+<span class="hljs-meta">@DoctypeStatic</span>&lt;DoctypeConstructor&lt;TileDoctype&gt;&gt;()  
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> TileDoctype <span class="hljs-keyword">extends</span> Doctype {  
+
+    <span class="hljs-comment">/**  
+     * Change existing Tile doctype 
+     * @param params - Change parameters  
+     * @param opts - Initialization options  
+    */</span>  
+    <span class="hljs-keyword">async</span> change(params: TileParams, opts?: InitOpts): <span class="hljs-built_in">Promise</span>&lt;<span class="hljs-built_in">void</span>&gt; {  
+        ...
+    }  
+
+    <span class="hljs-comment">/**  
+     * Create Tile doctype 
+     * @param params - Create parameters  
+     * @param context - Ceramic context  
+     * @param opts - Initialization options  
+     */</span>  
+    <span class="hljs-keyword">static</span> <span class="hljs-keyword">async</span> create(params: TileParams, context: Context, opts?: InitOpts): {
+        ...    
+    }  
+
+    <span class="hljs-comment">/**  
+      * Creates genesis record 
+      * @param params - Create parameters  
+      * @param context - Ceramic context  
+      * @param opts - Initialization options  
+      */</span>  
+    <span class="hljs-keyword">static</span> <span class="hljs-keyword">async</span> makeGenesis(params: Record&lt;<span class="hljs-built_in">string</span>, <span class="hljs-built_in">any</span>&gt;, context?: Context, opts: InitOpts = {}): <span class="hljs-built_in">Promise</span>&lt;Record&lt;<span class="hljs-built_in">string</span>, <span class="hljs-built_in">any</span>&gt;&gt; {  
+        ... 
+    }  
+
+    <span class="hljs-comment">/**  
+      * Make change record 
+      * @param doctype - Tile doctype instance  
+      * @param user - User instance  
+      * @param newContent - New context  
+      * @private  
+      */</span>  
+    <span class="hljs-keyword">static</span> <span class="hljs-keyword">async</span> _makeRecord(doctype: Doctype, user: User, newContent: <span class="hljs-built_in">any</span>): <span class="hljs-built_in">Promise</span>&lt;Doctype&gt; {  
+        ...
+    }  
+
+    <span class="hljs-comment">/**  
+      * Sign Tile record 
+      * @param user - User instance  
+      * @param record - Record to be signed  
+      * @private  
+      */</span>  
+    <span class="hljs-keyword">static</span> <span class="hljs-keyword">async</span> _signRecord(record: <span class="hljs-built_in">any</span>, user: User): <span class="hljs-built_in">Promise</span>&lt;<span class="hljs-built_in">any</span>&gt; {  
+        ...
+    }  
+}</code></pre>
+				<a href="#doctypehandler" id="doctypehandler" style="color: inherit; text-decoration: none;">
+					<h1>DoctypeHandler</h1>
+				</a>
+				<p>The interface is listed in the code snipped below.</p>
+				<pre><code class="language-typescript"><span class="hljs-comment">/**
+ * Describes document type handler functionality 
+ */</span>
+<span class="hljs-keyword">interface</span> DoctypeHandler&lt;T <span class="hljs-keyword">extends</span> Doctype&gt; {  
+  <span class="hljs-comment">/**  
+   * The string name of the doctype 
+   */</span>  
+   name: <span class="hljs-built_in">string</span>;  
+
+  <span class="hljs-comment">/**  
+   * The doctype class 
+   */</span>  
+   doctype: DoctypeConstructor&lt;T&gt;;  
+
+  <span class="hljs-comment">/**  
+    * Applies record to the document (genesis|signed|anchored) 
+    * @param record - Record intance  
+    * @param cid - Record CID  
+    * @param context - Ceramic context  
+    * @param state - Document state  
+    */</span>  
+  applyRecord(record: <span class="hljs-built_in">any</span>, cid: CID, context: Context, state?: DocState): <span class="hljs-built_in">Promise</span>&lt;DocState&gt;;  
+}
+</code></pre>
+				<p>This interface is used for determining the next <strong>state</strong> of the document. The method worth noting is <code>applyRecord</code> which is used for that <em>state transition</em>. The code snippet below describes <code>TileDoctypeHandler</code> which is included in the Ceramic node out-of-the-box as well.</p>
+				<pre><code class="language-typescript"><span class="hljs-keyword">const</span> DOCTYPE = <span class="hljs-string">&#x27;tile&#x27;</span>
+
+<span class="hljs-comment">/**  
+ * Tile doctype handler implementation 
+ */</span>
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> TileDoctypeHandler <span class="hljs-keyword">implements</span> DoctypeHandler&lt;TileDoctype&gt; {  
+   <span class="hljs-comment">/**  
+    * Gets doctype name 
+    */</span>  
+    get name(): <span class="hljs-built_in">string</span> {  
+        <span class="hljs-keyword">return</span> DOCTYPE  
+    }  
+
+   <span class="hljs-comment">/**  
+    * Gets doctype class 
+    */</span>  
+    get doctype(): DoctypeConstructor&lt;TileDoctype&gt; {  
+        <span class="hljs-keyword">return</span> TileDoctype  
+    }  
+
+    <span class="hljs-comment">/**  
+      * Create new Tile doctype instance 
+      * @param params - Create parameters  
+      * @param context - Ceramic context  
+      * @param opts - Initialization options  
+    */</span>  
+    <span class="hljs-keyword">async</span> create(params: TileParams, context: Context, opts?: InitOpts): <span class="hljs-built_in">Promise</span>&lt;TileDoctype&gt; {  
+        <span class="hljs-keyword">return</span> TileDoctype.create(params, context, opts)  
+    }  
+
+
+   <span class="hljs-comment">/**  
+     * Applies record (genesis|signed|anchor) 
+     * @param record - Record  
+     * @param cid - Record CID  
+     * @param context - Ceramic context  
+     * @param state - Document state  
+     */</span>  
+    <span class="hljs-keyword">async</span> applyRecord(record: <span class="hljs-built_in">any</span>, cid: CID, context: Context, state?: DocState): <span class="hljs-built_in">Promise</span>&lt;DocState&gt; {  
+        <span class="hljs-keyword">if</span> (state == <span class="hljs-literal">null</span>) {  
+            <span class="hljs-comment">// apply genesis  </span>
+            <span class="hljs-keyword">return</span> <span class="hljs-built_in">this</span>._applyGenesis(record, cid, context)  
+        }  
+
+        <span class="hljs-keyword">if</span> (record.proof) {  
+            <span class="hljs-keyword">const</span> proofRecord = (<span class="hljs-keyword">await</span> context.ipfs.dag.get(record.proof)).value;  
+            <span class="hljs-keyword">return</span> <span class="hljs-built_in">this</span>._applyAnchor(record, proofRecord, cid, state);  
+        }  
+
+        <span class="hljs-keyword">return</span> <span class="hljs-built_in">this</span>._applySigned(record, cid, state, context)  
+    }  
+
+   <span class="hljs-comment">/**  
+     * Applies genesis record 
+     * @param record - Genesis record  
+     * @param cid - Genesis record CID  
+     * @param context - Ceramic context  
+     * @private  
+     */</span>  
+    <span class="hljs-keyword">async</span> _applyGenesis(record: <span class="hljs-built_in">any</span>, cid: CID, context: Context): <span class="hljs-built_in">Promise</span>&lt;DocState&gt; {  
+        ...  
+    }  
+
+   <span class="hljs-comment">/**  
+     * Applies signed record 
+     * @param record - Signed record  
+     * @param cid - Signed record CID  
+     * @param state - Document state  
+     * @param context - Ceramic context  
+     * @private  
+     */</span>  
+    <span class="hljs-keyword">async</span> _applySigned(record: <span class="hljs-built_in">any</span>, cid: CID, state: DocState, context: Context): <span class="hljs-built_in">Promise</span>&lt;DocState&gt; {  
+        ...  
+    }  
+
+    <span class="hljs-comment">/**  
+     * Applies anchor record 
+     * @param record - Anchor record  
+     * @param proof - Anchor record proof  
+     * @param cid - Anchor record CID  
+     * @param state - Document state  
+     * @private  
+     */</span>  
+    <span class="hljs-keyword">async</span> _applyAnchor(record: AnchorRecord, proof: AnchorProof, cid: CID, state: DocState): <span class="hljs-built_in">Promise</span>&lt;DocState&gt; {  
+        ...  
+    }  
+
+    <span class="hljs-comment">/**  
+     * Verifies record signature 
+     * @param record - Record to be verified  
+     * @param context - Ceramic context  
+     * @private  
+     */</span>  
+    <span class="hljs-keyword">async</span> _verifyRecordSignature(record: <span class="hljs-built_in">any</span>, context: Context): <span class="hljs-built_in">Promise</span>&lt;<span class="hljs-built_in">void</span>&gt; {  
+        ...  
+    }  
+}
+</code></pre>
+				<p>The <code>DoctypeHandler</code> uses <code>CeramicAPI</code> which is included in the <code>Context</code> instance. <code>Context</code> interface is described in the snippet below.</p>
+				<pre><code class="language-typescript"><span class="hljs-keyword">interface</span> Context {
+    user?: User;  
+    ipfs?: Ipfs.Ipfs; <span class="hljs-comment">// an ipfs instance  </span>
+    resolver?: Resolver; <span class="hljs-comment">// a DID resolver instance  </span>
+    provider?: DIDProvider; <span class="hljs-comment">// a DID provider (3ID provider initially)  </span>
+    anchorService?: AnchorService;  
+    api?: CeramicApi; <span class="hljs-comment">// the self reference to the Ceramic API  </span>
+}</code></pre>
+				<a href="#appendix" id="appendix" style="color: inherit; text-decoration: none;">
+					<h1>Appendix</h1>
+				</a>
+				<p><code>CeramicAPI</code> is one of  the main interfaces of the Ceramic node.</p>
+				<pre><code class="language-typescript"><span class="hljs-keyword">interface</span> CeramicApi {
+    pin: PinApi;  
+
+    <span class="hljs-comment">/**  
+    * Register Doctype handler 
+    * @param doctypeHandler - DoctypeHandler instance  
+    */</span>  
+    addDoctypeHandler&lt;T <span class="hljs-keyword">extends</span> Doctype&gt;(doctypeHandler: DoctypeHandler&lt;T&gt;): <span class="hljs-built_in">void</span>;  
+
+   <span class="hljs-comment">/**  
+     * Finds document handler for the doctype
+     * @param doctype - Doctype  
+    */</span>  
+    findDoctypeHandler&lt;T <span class="hljs-keyword">extends</span> Doctype&gt;(doctype: <span class="hljs-built_in">string</span>): DoctypeHandler&lt;T&gt;;  
+
+    <span class="hljs-comment">/**  
+      * Create Doctype instance 
+      * @param doctype - Doctype name  
+      * @param params - Create parameters  
+      * @param opts - Initialization options  
+      */</span>
+    createDocument&lt;T <span class="hljs-keyword">extends</span> Doctype&gt;(doctype: <span class="hljs-built_in">string</span>, params: <span class="hljs-built_in">object</span>, opts?: InitOpts): <span class="hljs-built_in">Promise</span>&lt;T&gt;;  
+
+    <span class="hljs-comment">/**  
+      * Create Doctype from genesis record 
+      * @param genesis - Genesis record  
+      * @param opts - Initialization options  
+     */</span>
+    createDocumentFromGenesis&lt;T <span class="hljs-keyword">extends</span> Doctype&gt;(genesis: <span class="hljs-built_in">any</span>, opts?: InitOpts): <span class="hljs-built_in">Promise</span>&lt;T&gt;;  
+
+    <span class="hljs-comment">/**  
+      * Loads Doctype instance 
+      * @param docId - Document ID  
+      * @param opts - Initialization options  
+     */</span>  
+    loadDocument&lt;T <span class="hljs-keyword">extends</span> Doctype&gt;(docId: <span class="hljs-built_in">string</span>, opts?: InitOpts): <span class="hljs-built_in">Promise</span>&lt;T&gt;;  
+
+    <span class="hljs-comment">/**
+     * Load all document records by document ID
+     * @param docId - Document ID
+     */</span>
+    loadDocumentRecords(docId: <span class="hljs-built_in">string</span>): <span class="hljs-built_in">Promise</span>&lt;<span class="hljs-built_in">Array</span>&lt;Record&lt;<span class="hljs-built_in">string</span>, <span class="hljs-built_in">any</span>&gt;&gt;&gt;;
+
+    <span class="hljs-comment">/**  
+      * Applies record on the existing document 
+      * @param docId - Document ID  
+      * @param record - Record to be applied  
+      * @param opts - Initialization options  
+     */</span>  
+    applyRecord&lt;T <span class="hljs-keyword">extends</span> Doctype&gt;(docId: <span class="hljs-built_in">string</span>, record: <span class="hljs-built_in">object</span>, opts?: InitOpts): <span class="hljs-built_in">Promise</span>&lt;T&gt;;  
+
+    <span class="hljs-comment">/**  
+      * Set DID provider 
+      * @param provider - DID provider instance  
+     */</span>
+    setDIDProvider (provider: DIDProvider): <span class="hljs-built_in">Promise</span>&lt;<span class="hljs-built_in">void</span>&gt;;  
+
+    <span class="hljs-comment">/**  
+      * Closes Ceramic instance 
+     */</span>  
+    close(): <span class="hljs-built_in">Promise</span>&lt;<span class="hljs-built_in">void</span>&gt;; <span class="hljs-comment">// gracefully close the ceramic instance  </span>
+}</code></pre>
+			</div>
+		</div>
+		<div class="col-4 col-menu menu-sticky-wrap menu-highlight">
+			<nav class="tsd-navigation primary">
+				<ul>
+					<li class="label pp-nav pp-group">
+						<span>Ceramic <wbr>Network</span>
+					</li>
+					<li class=" pp-nav pp-page pp-parent">
+						<a href="../Ceramic Network/overview.html">Architecture</a>
+					</li>
+					<li class=" pp-nav pp-page">
+						<a href="../Ceramic Network/terminology.html">Terminology</a>
+					</li>
+					<li class=" pp-nav pp-page">
+						<a href="../Ceramic Network/ecosystem.html">Ecosystem</a>
+					</li>
+					<li class="label pp-nav pp-group">
+						<span>Getting <wbr>Started</span>
+					</li>
+					<li class="label pp-nav pp-group">
+						<span>Guides</span>
+					</li>
+					<li class="current pp-nav pp-page">
+						<a href="create-doctype.html">Create a <wbr>Doctype</a>
+					</li>
+					<li class="label pp-nav pp-group">
+						<span>Package APIs</span>
+					</li>
+					<li class="globals  ">
+						<a href="../../globals.html"><em>Globals</em></a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="../../modules/_ceramicnetwork_3id_did_resolver.html">@ceramicnetwork/3id-<wbr>did-<wbr>resolver</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="../../modules/_ceramicnetwork_cli.html">@ceramicnetwork/cli</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="../../modules/_ceramicnetwork_common.html">@ceramicnetwork/common</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="../../modules/_ceramicnetwork_core.html">@ceramicnetwork/core</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="../../modules/_ceramicnetwork_docid.html">@ceramicnetwork/docid</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="../../modules/_ceramicnetwork_doctype_caip10_link.html">@ceramicnetwork/doctype-<wbr>caip10-<wbr>link</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="../../modules/_ceramicnetwork_doctype_tile.html">@ceramicnetwork/doctype-<wbr>tile</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="../../modules/_ceramicnetwork_http_client.html">@ceramicnetwork/http-<wbr>client</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="../../modules/_ceramicnetwork_key_did_resolver.html">@ceramicnetwork/key-<wbr>did-<wbr>resolver</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="../../modules/_ceramicnetwork_pinning_aggregation.html">@ceramicnetwork/pinning-<wbr>aggregation</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="../../modules/_ceramicnetwork_pinning_ipfs_backend.html">@ceramicnetwork/pinning-<wbr>ipfs-<wbr>backend</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="../../modules/_ceramicnetwork_pinning_powergate_backend.html">@ceramicnetwork/pinning-<wbr>powergate-<wbr>backend</a>
+					</li>
+				</ul>
+			</nav>
+			<nav class="tsd-navigation secondary menu-sticky">
+				<ul class="before-current">
+				</ul>
+			</nav>
+		</div>
+	</div>
+</div>
+<footer>
+	<div class="container">
+		<h2>Legend</h2>
+		<div class="tsd-legend-group">
+			<ul class="tsd-legend">
+				<li class="tsd-kind-object-literal"><span class="tsd-kind-icon">Object literal</span></li>
+				<li class="tsd-kind-variable"><span class="tsd-kind-icon">Variable</span></li>
+				<li class="tsd-kind-function"><span class="tsd-kind-icon">Function</span></li>
+				<li class="tsd-kind-function tsd-has-type-parameter"><span class="tsd-kind-icon">Function with type parameter</span></li>
+				<li class="tsd-kind-type-alias"><span class="tsd-kind-icon">Type alias</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-interface"><span class="tsd-kind-icon">Interface</span></li>
+				<li class="tsd-kind-interface tsd-has-type-parameter"><span class="tsd-kind-icon">Interface with type parameter</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-enum"><span class="tsd-kind-icon">Enumeration</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-class"><span class="tsd-kind-icon">Class</span></li>
+			</ul>
+		</div>
+	</div>
+</footer>
+<div class="overlay"></div>
+<script src="../../assets/js/main.js"></script>
+<script>if (location.protocol == 'file:') document.write('<script src="../../assets/js/search.json"><' + '/script>');</script>
+</body>
+</html>
