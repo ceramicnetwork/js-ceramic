@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/core",
-  "version": "0.12.0",
+  "version": "0.12.1",
   "description": "Typescript implementation of the Ceramic protocol",
   "keywords": [
     "Ceramic",
@@ -28,10 +28,10 @@
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/3id-did-resolver": "^0.4.7",
-    "@ceramicnetwork/common": "^0.12.0",
-    "@ceramicnetwork/doctype-caip10-link": "^0.10.0",
-    "@ceramicnetwork/doctype-tile": "^0.10.0",
+    "@ceramicnetwork/3id-did-resolver": "^0.4.8",
+    "@ceramicnetwork/common": "^0.12.1",
+    "@ceramicnetwork/doctype-account-link": "^0.10.1",
+    "@ceramicnetwork/doctype-tile": "^0.10.1",
     "@ceramicnetwork/docid": "^0.2.0",
     "@ceramicnetwork/key-did-resolver": "^0.1.2",
     "@ethersproject/base64": "^5.0.2",
