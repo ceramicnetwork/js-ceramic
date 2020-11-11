@@ -25,6 +25,8 @@ const DEFAULT_CLI_CONFIG_FILE = 'config.json'
 export const DEFAULT_PINNING_STORE_PATH = ".pinning.store"
 const DEFAULT_CLI_CONFIG_PATH = path.join(os.homedir(), '.ceramic')
 
+const DHT_CLIENT_MODE = process.env.DHT_CLIENT_MODE === 'true'
+
 /**
  * CLI configuration
  */
@@ -79,7 +81,25 @@ export class CeramicCliUtils {
         if (ipfsApi) {
             ipfs = ipfsClient({ url: ipfsApi, ipld: { formats: [format] } })
         } else {
-            ipfs = await Ipfs.create({ ipld: { formats: [format] } })
+            ipfs = await Ipfs.create({
+                ipld: {
+                    formats: [format]
+                },
+                libp2p: {
+                    config: {
+                        dht: {
+                            enabled: true,
+                            clientMode: DHT_CLIENT_MODE,
+                            randomWalk: true,
+                        },
+                    },
+                },
+                config: {
+                    Routing: {
+                        Type: DHT_CLIENT_MODE? 'dhtclient' : 'dhtserver',
+                    },
+                }
+            })
         }
 
         config.ipfs = ipfs
