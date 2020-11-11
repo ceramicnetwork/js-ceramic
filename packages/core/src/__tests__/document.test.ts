@@ -136,7 +136,6 @@ describe('Document', () => {
     let user: DID
     let dispatcher: any;
     let doctypeHandler: TileDoctypeHandler;
-    let findHandler: any;
     let anchorService: AnchorService;
     let ceramic: Ceramic;
     let ceramicWithoutSchemaValidation: Ceramic;
@@ -153,7 +152,6 @@ describe('Document', () => {
       user._id = 'did:3:bafyasdfasdf'
       doctypeHandler = new TileDoctypeHandler()
       doctypeHandler.verifyJWS = async (): Promise<void> => { return }
-      findHandler = (): TileDoctypeHandler => doctypeHandler
 
       const threeIdResolver = ThreeIdResolver.getResolver({
         loadDocument: (): any => {
@@ -204,7 +202,7 @@ describe('Document', () => {
 
     it('is loaded correctly', async () => {
       const doc1 = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context, { applyOnly: true, skipWait: true })
-      const doc2 = await Document.load(doc1.id, findHandler, dispatcher, pinStore, context, { skipWait: true })
+      const doc2 = await Document.load(doc1.id, doctypeHandler, dispatcher, pinStore, context, { skipWait: true })
 
       expect(doc1.id).toEqual(doc2.id)
       expect(doc1.content).toEqual(initialContent)
@@ -216,7 +214,7 @@ describe('Document', () => {
       await anchorUpdate(tmpDoc)
       const docId = tmpDoc.id
       const log = tmpDoc.state.log
-      const doc = await Document.load(docId, findHandler, dispatcher, pinStore, context, { skipWait: true })
+      const doc = await Document.load(docId, doctypeHandler, dispatcher, pinStore, context, { skipWait: true })
       // changes will not load since no network and no local tip storage yet
       expect(doc.content).toEqual(initialContent)
       expect(doc.state).toEqual(expect.objectContaining({ signature: SignatureStatus.SIGNED, anchorStatus: 0 }))
@@ -325,7 +323,7 @@ describe('Document', () => {
       expect(doc1.content).toEqual(newContent)
       const tipValidUpdate = doc1.tip
       // create invalid change that happened after main change
-      const doc2 = await Document.load(docId, findHandler, dispatcher, pinStore, context, { skipWait: true })
+      const doc2 = await Document.load(docId, doctypeHandler, dispatcher, pinStore, context, { skipWait: true })
       await doc2._handleTip(tipPreUpdate)
       // add short wait to get different anchor time
       // sometime the tests are very fast
@@ -401,7 +399,7 @@ describe('Document', () => {
       expect(doc.metadata.schema).toEqual(schemaDoc.currentVersionDocID.toString())
 
       try {
-        await Document.load(doc.id, findHandler, dispatcher, pinStore, context, {skipWait:true})
+        await Document.load(doc.id, doctypeHandler, dispatcher, pinStore, context, {skipWait:true})
         throw new Error('Should not be able to assign a schema to a document that does not conform')
       } catch (e) {
         expect(e.message).toEqual('Validation Error: data[\'stuff\'] should be string')
@@ -417,7 +415,6 @@ describe('Document', () => {
 
     let dispatcher: any;
     let doctypeHandler: TileDoctypeHandler;
-    let getHandlerFromGenesis: any;
     let anchorService: AnchorService;
     let context: Context;
     let ceramic: Ceramic;
@@ -437,7 +434,6 @@ describe('Document', () => {
       user._id = 'did:3:bafyuser'
       doctypeHandler = new TileDoctypeHandler()
       doctypeHandler.verifyJWS = async (): Promise<void> => { return }
-      getHandlerFromGenesis = (): TileDoctypeHandler => doctypeHandler
 
       const threeIdResolver = ThreeIdResolver.getResolver({
         loadDocument: (): any => {
@@ -491,7 +487,7 @@ describe('Document', () => {
     it('documents share updates', async () => {
       const doc1 = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context)
       await anchorUpdate(doc1)
-      const doc2 = await Document.load(doc1.id, getHandlerFromGenesis, dispatcher, pinStore, context, { skipWait: true })
+      const doc2 = await Document.load(doc1.id, doctypeHandler, dispatcher, pinStore, context, { skipWait: true })
 
       const updatePromise = new Promise(resolve => {
         doc2.doctype.on('change', resolve)
