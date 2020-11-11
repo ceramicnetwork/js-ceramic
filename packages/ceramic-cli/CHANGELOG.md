@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.13.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-cli@0.13.1...@ceramicnetwork/ceramic-cli@0.13.2) (2020-11-11)
+
+
+### Bug Fixes
+
+* bump IDW dep, fix Dockerfile ([#474](https://github.com/ceramicnetwork/js-ceramic/issues/474)) ([79b39a4](https://github.com/ceramicnetwork/js-ceramic/commit/79b39a4e7212c22991805ae1b93f10b3d146d540))
+
+
+
+
+
 ## [0.13.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-cli@0.13.0...@ceramicnetwork/ceramic-cli@0.13.1) (2020-11-05)
 
 **Note:** Version bump only for package @ceramicnetwork/ceramic-cli
