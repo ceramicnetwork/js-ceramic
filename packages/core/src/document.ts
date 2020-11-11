@@ -109,7 +109,7 @@ class Document extends EventEmitter {
    */
   static async load<T extends Doctype> (
       id: DocID,
-      findHandler: (doctype: string, genesisRecord: any) => DoctypeHandler<Doctype>,
+      handler: DoctypeHandler<T>,
       dispatcher: Dispatcher,
       pinStore: PinStore,
       context: Context,
@@ -132,7 +132,7 @@ class Document extends EventEmitter {
       payload = record
     }
 
-    doc._doctypeHandler = findHandler(id.typeName, payload)
+    doc._doctypeHandler = handler
     doc._doctype = new doc._doctypeHandler.doctype(null, context) as T
 
     const isStored = await pinStore.stateStore.exists(id)

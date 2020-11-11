@@ -179,20 +179,6 @@ class Ceramic implements CeramicApi {
   }
 
   /**
-   * Find doctype handler
-   * @param doctype - Name of doctype
-   * @param genesisRecord - Document genesis record
-   */
-  findHandler<T extends DoctypeHandler<Doctype>>(doctype: string, genesisRecord: Record<string, any>): T {
-    if (doctype in this._doctypeHandlers) {
-      return this._doctypeHandlers[doctype] as T
-    } else if (genesisRecord['@context'] === "https://w3id.org/did/v1") {
-      return this._doctypeHandlers['3id'] as T
-    }
-    throw new Error("Couldn't determine doctype handler")
-  }
-
-  /**
    * Set DID provider
    * @param provider - DID provider instance
    */
@@ -306,14 +292,9 @@ class Ceramic implements CeramicApi {
    */
   async _createDocFromGenesis(doctype: string, genesis: any, opts: DocOpts = {}): Promise<Document> {
     const genesisCid = await this.dispatcher.storeRecord(genesis)
-
-    let doctypeHandler
-    genesis = await this.dispatcher.retrieveRecord(genesisCid)
-    if (DoctypeUtils.isSignedRecord(genesis)) {
-      const payload = await this.dispatcher.retrieveRecord(genesis.link)
-      doctypeHandler = this.findHandler(doctype, payload)
-    } else {
-      doctypeHandler = this.findHandler(doctype, genesis)
+    const doctypeHandler = this._doctypeHandlers[doctype]
+    if (!doctypeHandler) {
+      throw new Error(doctype + " is not a valid doctype")
     }
 
     const docId = new DocID(doctype, genesisCid)
@@ -366,8 +347,13 @@ class Ceramic implements CeramicApi {
     docId = normalizeDocID(docId)
     const docIdStr = docId.toString()
 
+    const doctypeHandler = this._doctypeHandlers[docId.typeName]
+    if (!doctypeHandler) {
+      throw new Error(docId.typeName + " is not a valid doctype")
+    }
+
     if (!this._docmap[docIdStr]) {
-      this._docmap[docIdStr] = await Document.load(docId, this.findHandler.bind(this), this.dispatcher, this.pinStore, this.context, opts)
+      this._docmap[docIdStr] = await Document.load(docId, doctypeHandler, this.dispatcher, this.pinStore, this.context, opts)
     }
     return this._docmap[docIdStr]
   }
