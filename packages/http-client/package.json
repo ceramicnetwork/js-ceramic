@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "@ceramicnetwork/common": "^0.12.1",
-    "@ceramicnetwork/doctype-account-link": "^0.10.1",
+    "@ceramicnetwork/doctype-caip10-link": "^0.10.1",
     "@ceramicnetwork/doctype-tile": "^0.10.1",
     "@ceramicnetwork/docid": "^0.2.0",
     "cids": "^1.0.2",
