@@ -1,0 +1,832 @@
+<!doctype html>
+<html class="default no-js">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>@ceramicnetwork/common | Ceramic</title>
+	<meta name="description" content="Documentation for Ceramic">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="../assets/css/main.css">
+	<link rel="stylesheet" href="../assets/css/pages.css">
+</head>
+<body>
+<header>
+	<div class="tsd-page-toolbar">
+		<div class="container">
+			<div class="table-wrap">
+				<div class="table-cell" id="tsd-search" data-index="../assets/js/search.json" data-base="..">
+					<div class="field">
+						<label for="tsd-search-field" class="tsd-widget search no-caption">Search</label>
+						<input id="tsd-search-field" type="text" />
+					</div>
+					<ul class="results">
+						<li class="state loading">Preparing search index...</li>
+						<li class="state failure">The search index is not available</li>
+					</ul>
+					<a href="../index.html" class="title">Ceramic</a>
+				</div>
+				<div class="table-cell" id="tsd-widgets">
+					<div id="tsd-filter">
+						<a href="#" class="tsd-widget options no-caption" data-toggle="options">Options</a>
+						<div class="tsd-filter-group">
+							<div class="tsd-select" id="tsd-filter-visibility">
+								<span class="tsd-select-label">All</span>
+								<ul class="tsd-select-list">
+									<li data-value="public">Public</li>
+									<li data-value="protected">Public/Protected</li>
+									<li data-value="private" class="selected">All</li>
+								</ul>
+							</div>
+							<input type="checkbox" id="tsd-filter-inherited" checked />
+							<label class="tsd-widget" for="tsd-filter-inherited">Inherited</label>
+							<input type="checkbox" id="tsd-filter-only-exported" />
+							<label class="tsd-widget" for="tsd-filter-only-exported">Only exported</label>
+						</div>
+					</div>
+					<a href="#" class="tsd-widget menu no-caption" data-toggle="menu">Menu</a>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="tsd-page-title">
+		<div class="container">
+			<ul class="tsd-breadcrumb">
+				<li>
+					<a href="../globals.html">Globals</a>
+				</li>
+				<li>
+					<a href="_ceramicnetwork_common.html">@ceramicnetwork/common</a>
+				</li>
+			</ul>
+			<h1>Module @ceramicnetwork/common</h1>
+		</div>
+	</div>
+</header>
+<div class="container container-main">
+	<div class="row">
+		<div class="col-8 col-content">
+			<section class="tsd-panel tsd-comment">
+				<div class="tsd-comment tsd-typography">
+					<a href="#ceramic-common" id="ceramic-common" style="color: inherit; text-decoration: none;">
+						<h1>Ceramic Common</h1>
+					</a>
+					<blockquote>
+						<p>This package contains common Ceramic types and utilities.</p>
+					</blockquote>
+					<a href="#installation" id="installation" style="color: inherit; text-decoration: none;">
+						<h3>Installation</h3>
+					</a>
+					<pre><code>$ <span class="hljs-built_in">npm</span> install @ceramicnetwork/common</code></pre>
+					<a href="#contributing" id="contributing" style="color: inherit; text-decoration: none;">
+						<h2>Contributing</h2>
+					</a>
+					<p>We are happy to accept small and large contributions. Make sure to check out the <a href="https://github.com/ceramicnetwork/specs">Ceramic specifications</a> for details of how the protocol works.</p>
+					<a href="#license" id="license" style="color: inherit; text-decoration: none;">
+						<h2>License</h2>
+					</a>
+				</div>
+			</section>
+			<section class="tsd-panel-group tsd-index-group">
+				<h2>Index</h2>
+				<section class="tsd-panel tsd-index-panel">
+					<div class="tsd-index-content">
+						<section class="tsd-index-section ">
+							<h3>References</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-reference tsd-parent-kind-module"><a href="_ceramicnetwork_common.html#anchorproof" class="tsd-kind-icon">Anchor<wbr>Proof</a></li>
+								<li class="tsd-kind-reference tsd-parent-kind-module"><a href="_ceramicnetwork_common.html#anchorrecord" class="tsd-kind-icon">Anchor<wbr>Record</a></li>
+								<li class="tsd-kind-reference tsd-parent-kind-module"><a href="_ceramicnetwork_common.html#anchorservice" class="tsd-kind-icon">Anchor<wbr>Service</a></li>
+								<li class="tsd-kind-reference tsd-parent-kind-module"><a href="_ceramicnetwork_common.html#anchorstatus" class="tsd-kind-icon">Anchor<wbr>Status</a></li>
+								<li class="tsd-kind-reference tsd-parent-kind-module"><a href="_ceramicnetwork_common.html#ceramicapi" class="tsd-kind-icon">Ceramic<wbr>Api</a></li>
+								<li class="tsd-kind-reference tsd-parent-kind-module"><a href="_ceramicnetwork_common.html#cidlist" class="tsd-kind-icon">Cid<wbr>List</a></li>
+								<li class="tsd-kind-reference tsd-parent-kind-module"><a href="_ceramicnetwork_common.html#cidstring" class="tsd-kind-icon">Cid<wbr>String</a></li>
+								<li class="tsd-kind-reference tsd-parent-kind-module"><a href="_ceramicnetwork_common.html#context" class="tsd-kind-icon">Context</a></li>
+								<li class="tsd-kind-reference tsd-parent-kind-module"><a href="_ceramicnetwork_common.html#designator" class="tsd-kind-icon">Designator</a></li>
+								<li class="tsd-kind-reference tsd-parent-kind-module"><a href="_ceramicnetwork_common.html#docmetadata" class="tsd-kind-icon">Doc<wbr>Metadata</a></li>
+								<li class="tsd-kind-reference tsd-parent-kind-module"><a href="_ceramicnetwork_common.html#docnext" class="tsd-kind-icon">Doc<wbr>Next</a></li>
+								<li class="tsd-kind-reference tsd-parent-kind-module"><a href="_ceramicnetwork_common.html#docopts" class="tsd-kind-icon">Doc<wbr>Opts</a></li>
+								<li class="tsd-kind-reference tsd-parent-kind-module"><a href="_ceramicnetwork_common.html#docparams" class="tsd-kind-icon">Doc<wbr>Params</a></li>
+								<li class="tsd-kind-reference tsd-parent-kind-module"><a href="_ceramicnetwork_common.html#docstate" class="tsd-kind-icon">Doc<wbr>State</a></li>
+								<li class="tsd-kind-reference tsd-parent-kind-module"><a href="_ceramicnetwork_common.html#doctype" class="tsd-kind-icon">Doctype</a></li>
+								<li class="tsd-kind-reference tsd-parent-kind-module"><a href="_ceramicnetwork_common.html#doctypeconstructor" class="tsd-kind-icon">Doctype<wbr>Constructor</a></li>
+								<li class="tsd-kind-reference tsd-parent-kind-module"><a href="_ceramicnetwork_common.html#doctypehandler" class="tsd-kind-icon">Doctype<wbr>Handler</a></li>
+								<li class="tsd-kind-reference tsd-parent-kind-module"><a href="_ceramicnetwork_common.html#doctypestatic" class="tsd-kind-icon">Doctype<wbr>Static</a></li>
+								<li class="tsd-kind-reference tsd-parent-kind-module"><a href="_ceramicnetwork_common.html#doctypeutils" class="tsd-kind-icon">Doctype<wbr>Utils</a></li>
+								<li class="tsd-kind-reference tsd-parent-kind-module"><a href="_ceramicnetwork_common.html#loggeroptions" class="tsd-kind-icon">Logger<wbr>Options</a></li>
+								<li class="tsd-kind-reference tsd-parent-kind-module"><a href="_ceramicnetwork_common.html#loggeroptions-1" class="tsd-kind-icon">Logger<wbr>Options</a></li>
+								<li class="tsd-kind-reference tsd-parent-kind-module"><a href="_ceramicnetwork_common.html#loggerplugin" class="tsd-kind-icon">Logger<wbr>Plugin</a></li>
+								<li class="tsd-kind-reference tsd-parent-kind-module"><a href="_ceramicnetwork_common.html#loggerplugin-1" class="tsd-kind-icon">Logger<wbr>Plugin</a></li>
+								<li class="tsd-kind-reference tsd-parent-kind-module"><a href="_ceramicnetwork_common.html#loggerpluginoptions" class="tsd-kind-icon">Logger<wbr>Plugin<wbr>Options</a></li>
+								<li class="tsd-kind-reference tsd-parent-kind-module"><a href="_ceramicnetwork_common.html#loggerpluginoptions-1" class="tsd-kind-icon">Logger<wbr>Plugin<wbr>Options</a></li>
+								<li class="tsd-kind-reference tsd-parent-kind-module"><a href="_ceramicnetwork_common.html#loggerprovider" class="tsd-kind-icon">Logger<wbr>Provider</a></li>
+								<li class="tsd-kind-reference tsd-parent-kind-module"><a href="_ceramicnetwork_common.html#pinapi" class="tsd-kind-icon">Pin<wbr>Api</a></li>
+								<li class="tsd-kind-reference tsd-parent-kind-module"><a href="_ceramicnetwork_common.html#pinningbackend" class="tsd-kind-icon">Pinning<wbr>Backend</a></li>
+								<li class="tsd-kind-reference tsd-parent-kind-module"><a href="_ceramicnetwork_common.html#pinningbackendstatic" class="tsd-kind-icon">Pinning<wbr>Backend<wbr>Static</a></li>
+								<li class="tsd-kind-reference tsd-parent-kind-module"><a href="_ceramicnetwork_common.html#pinninginfo" class="tsd-kind-icon">Pinning<wbr>Info</a></li>
+								<li class="tsd-kind-reference tsd-parent-kind-module"><a href="_ceramicnetwork_common.html#signaturestatus" class="tsd-kind-icon">Signature<wbr>Status</a></li>
+							</ul>
+						</section>
+						<section class="tsd-index-section ">
+							<h3>Enumerations</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-enum tsd-parent-kind-module"><a href="../enums/_ceramicnetwork_common.anchorstatus-1.html" class="tsd-kind-icon">Anchor<wbr>Status</a></li>
+								<li class="tsd-kind-enum tsd-parent-kind-module"><a href="../enums/_ceramicnetwork_common.signaturestatus-1.html" class="tsd-kind-icon">Signature<wbr>Status</a></li>
+							</ul>
+						</section>
+						<section class="tsd-index-section ">
+							<h3>Classes</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-class tsd-parent-kind-module"><a href="../classes/_ceramicnetwork_common.anchorservice-1.html" class="tsd-kind-icon">Anchor<wbr>Service</a></li>
+								<li class="tsd-kind-class tsd-parent-kind-module"><a href="../classes/_ceramicnetwork_common.doctype-1.html" class="tsd-kind-icon">Doctype</a></li>
+								<li class="tsd-kind-class tsd-parent-kind-module"><a href="../classes/_ceramicnetwork_common.doctypeutils-1.html" class="tsd-kind-icon">Doctype<wbr>Utils</a></li>
+								<li class="tsd-kind-class tsd-parent-kind-module"><a href="../classes/_ceramicnetwork_common.loggerprovider-1.html" class="tsd-kind-icon">Logger<wbr>Provider</a></li>
+							</ul>
+						</section>
+						<section class="tsd-index-section ">
+							<h3>Interfaces</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-interface tsd-parent-kind-module"><a href="../interfaces/_ceramicnetwork_common.anchorproof-1.html" class="tsd-kind-icon">Anchor<wbr>Proof</a></li>
+								<li class="tsd-kind-interface tsd-parent-kind-module"><a href="../interfaces/_ceramicnetwork_common.anchorrecord-1.html" class="tsd-kind-icon">Anchor<wbr>Record</a></li>
+								<li class="tsd-kind-interface tsd-parent-kind-module"><a href="../interfaces/_ceramicnetwork_common.ceramicapi-1.html" class="tsd-kind-icon">Ceramic<wbr>Api</a></li>
+								<li class="tsd-kind-interface tsd-parent-kind-module"><a href="../interfaces/_ceramicnetwork_common.context-1.html" class="tsd-kind-icon">Context</a></li>
+								<li class="tsd-kind-interface tsd-parent-kind-module"><a href="../interfaces/_ceramicnetwork_common.docmetadata-1.html" class="tsd-kind-icon">Doc<wbr>Metadata</a></li>
+								<li class="tsd-kind-interface tsd-parent-kind-module"><a href="../interfaces/_ceramicnetwork_common.docnext-1.html" class="tsd-kind-icon">Doc<wbr>Next</a></li>
+								<li class="tsd-kind-interface tsd-parent-kind-module"><a href="../interfaces/_ceramicnetwork_common.docopts-1.html" class="tsd-kind-icon">Doc<wbr>Opts</a></li>
+								<li class="tsd-kind-interface tsd-parent-kind-module"><a href="../interfaces/_ceramicnetwork_common.docparams-1.html" class="tsd-kind-icon">Doc<wbr>Params</a></li>
+								<li class="tsd-kind-interface tsd-parent-kind-module"><a href="../interfaces/_ceramicnetwork_common.docstate-1.html" class="tsd-kind-icon">Doc<wbr>State</a></li>
+								<li class="tsd-kind-interface tsd-parent-kind-module tsd-has-type-parameter"><a href="../interfaces/_ceramicnetwork_common.doctypeconstructor-1.html" class="tsd-kind-icon">Doctype<wbr>Constructor</a></li>
+								<li class="tsd-kind-interface tsd-parent-kind-module tsd-has-type-parameter"><a href="../interfaces/_ceramicnetwork_common.doctypehandler-1.html" class="tsd-kind-icon">Doctype<wbr>Handler</a></li>
+								<li class="tsd-kind-interface tsd-parent-kind-module tsd-is-not-exported"><a href="../interfaces/_ceramicnetwork_common.options.html" class="tsd-kind-icon">Options</a></li>
+								<li class="tsd-kind-interface tsd-parent-kind-module"><a href="../interfaces/_ceramicnetwork_common.pinapi-1.html" class="tsd-kind-icon">Pin<wbr>Api</a></li>
+								<li class="tsd-kind-interface tsd-parent-kind-module"><a href="../interfaces/_ceramicnetwork_common.pinningbackend-1.html" class="tsd-kind-icon">Pinning<wbr>Backend</a></li>
+								<li class="tsd-kind-interface tsd-parent-kind-module"><a href="../interfaces/_ceramicnetwork_common.pinningbackendstatic-1.html" class="tsd-kind-icon">Pinning<wbr>Backend<wbr>Static</a></li>
+								<li class="tsd-kind-interface tsd-parent-kind-module tsd-is-not-exported"><a href="../interfaces/_ceramicnetwork_common.pluginoptions.html" class="tsd-kind-icon">Plugin<wbr>Options</a></li>
+							</ul>
+						</section>
+						<section class="tsd-index-section ">
+							<h3>Type aliases</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-type-alias tsd-parent-kind-module"><a href="_ceramicnetwork_common.html#cidlist-1" class="tsd-kind-icon">Cid<wbr>List</a></li>
+								<li class="tsd-kind-type-alias tsd-parent-kind-module"><a href="_ceramicnetwork_common.html#cidstring-1" class="tsd-kind-icon">Cid<wbr>String</a></li>
+								<li class="tsd-kind-type-alias tsd-parent-kind-module"><a href="_ceramicnetwork_common.html#designator-1" class="tsd-kind-icon">Designator</a></li>
+								<li class="tsd-kind-type-alias tsd-parent-kind-module"><a href="_ceramicnetwork_common.html#pinninginfo-1" class="tsd-kind-icon">Pinning<wbr>Info</a></li>
+								<li class="tsd-kind-type-alias tsd-parent-kind-module tsd-is-not-exported"><a href="_ceramicnetwork_common.html#plugin" class="tsd-kind-icon">Plugin</a></li>
+							</ul>
+						</section>
+						<section class="tsd-index-section ">
+							<h3>Functions</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-function tsd-parent-kind-module tsd-has-type-parameter"><a href="_ceramicnetwork_common.html#doctypestatic-1" class="tsd-kind-icon">Doctype<wbr>Static</a></li>
+							</ul>
+						</section>
+						<section class="tsd-index-section tsd-is-not-exported">
+							<h3>Object literals</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-object-literal tsd-parent-kind-module tsd-is-not-exported"><a href="_ceramicnetwork_common.html#defaultopts" class="tsd-kind-icon">default<wbr>Opts</a></li>
+							</ul>
+						</section>
+					</div>
+				</section>
+			</section>
+			<section class="tsd-panel-group tsd-member-group ">
+				<h2>References</h2>
+				<section class="tsd-panel tsd-member tsd-kind-reference tsd-parent-kind-module">
+					<a name="anchorproof" class="tsd-anchor"></a>
+					<h3>Anchor<wbr>Proof</h3>
+					Re-exports <a href="../interfaces/_ceramicnetwork_common.anchorproof-1.html">AnchorProof</a>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-reference tsd-parent-kind-module">
+					<a name="anchorrecord" class="tsd-anchor"></a>
+					<h3>Anchor<wbr>Record</h3>
+					Re-exports <a href="../interfaces/_ceramicnetwork_common.anchorrecord-1.html">AnchorRecord</a>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-reference tsd-parent-kind-module">
+					<a name="anchorservice" class="tsd-anchor"></a>
+					<h3>Anchor<wbr>Service</h3>
+					Re-exports <a href="../classes/_ceramicnetwork_common.anchorservice-1.html">AnchorService</a>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-reference tsd-parent-kind-module">
+					<a name="anchorstatus" class="tsd-anchor"></a>
+					<h3>Anchor<wbr>Status</h3>
+					Re-exports <a href="../enums/_ceramicnetwork_common.anchorstatus-1.html">AnchorStatus</a>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-reference tsd-parent-kind-module">
+					<a name="ceramicapi" class="tsd-anchor"></a>
+					<h3>Ceramic<wbr>Api</h3>
+					Re-exports <a href="../interfaces/_ceramicnetwork_common.ceramicapi-1.html">CeramicApi</a>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-reference tsd-parent-kind-module">
+					<a name="cidlist" class="tsd-anchor"></a>
+					<h3>Cid<wbr>List</h3>
+					Re-exports <a href="_ceramicnetwork_common.html#cidlist-1">CidList</a>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-reference tsd-parent-kind-module">
+					<a name="cidstring" class="tsd-anchor"></a>
+					<h3>Cid<wbr>String</h3>
+					Re-exports <a href="_ceramicnetwork_common.html#cidstring-1">CidString</a>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-reference tsd-parent-kind-module">
+					<a name="context" class="tsd-anchor"></a>
+					<h3>Context</h3>
+					Re-exports <a href="../interfaces/_ceramicnetwork_common.context-1.html">Context</a>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-reference tsd-parent-kind-module">
+					<a name="designator" class="tsd-anchor"></a>
+					<h3>Designator</h3>
+					Re-exports <a href="_ceramicnetwork_common.html#designator-1">Designator</a>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-reference tsd-parent-kind-module">
+					<a name="docmetadata" class="tsd-anchor"></a>
+					<h3>Doc<wbr>Metadata</h3>
+					Re-exports <a href="../interfaces/_ceramicnetwork_common.docmetadata-1.html">DocMetadata</a>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-reference tsd-parent-kind-module">
+					<a name="docnext" class="tsd-anchor"></a>
+					<h3>Doc<wbr>Next</h3>
+					Re-exports <a href="../interfaces/_ceramicnetwork_common.docnext-1.html">DocNext</a>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-reference tsd-parent-kind-module">
+					<a name="docopts" class="tsd-anchor"></a>
+					<h3>Doc<wbr>Opts</h3>
+					Re-exports <a href="../interfaces/_ceramicnetwork_common.docopts-1.html">DocOpts</a>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-reference tsd-parent-kind-module">
+					<a name="docparams" class="tsd-anchor"></a>
+					<h3>Doc<wbr>Params</h3>
+					Re-exports <a href="../interfaces/_ceramicnetwork_common.docparams-1.html">DocParams</a>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-reference tsd-parent-kind-module">
+					<a name="docstate" class="tsd-anchor"></a>
+					<h3>Doc<wbr>State</h3>
+					Re-exports <a href="../interfaces/_ceramicnetwork_common.docstate-1.html">DocState</a>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-reference tsd-parent-kind-module">
+					<a name="doctype" class="tsd-anchor"></a>
+					<h3>Doctype</h3>
+					Re-exports <a href="../classes/_ceramicnetwork_common.doctype-1.html">Doctype</a>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-reference tsd-parent-kind-module">
+					<a name="doctypeconstructor" class="tsd-anchor"></a>
+					<h3>Doctype<wbr>Constructor</h3>
+					Re-exports <a href="../interfaces/_ceramicnetwork_common.doctypeconstructor-1.html">DoctypeConstructor</a>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-reference tsd-parent-kind-module">
+					<a name="doctypehandler" class="tsd-anchor"></a>
+					<h3>Doctype<wbr>Handler</h3>
+					Re-exports <a href="../interfaces/_ceramicnetwork_common.doctypehandler-1.html">DoctypeHandler</a>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-reference tsd-parent-kind-module">
+					<a name="doctypestatic" class="tsd-anchor"></a>
+					<h3>Doctype<wbr>Static</h3>
+					Re-exports <a href="_ceramicnetwork_common.html#doctypestatic-1">DoctypeStatic</a>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-reference tsd-parent-kind-module">
+					<a name="doctypeutils" class="tsd-anchor"></a>
+					<h3>Doctype<wbr>Utils</h3>
+					Re-exports <a href="../classes/_ceramicnetwork_common.doctypeutils-1.html">DoctypeUtils</a>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-reference tsd-parent-kind-module">
+					<a name="loggeroptions" class="tsd-anchor"></a>
+					<h3>Logger<wbr>Options</h3>
+					Renames and exports <a href="../interfaces/_ceramicnetwork_common.options.html">Options</a>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-reference tsd-parent-kind-module">
+					<a name="loggeroptions-1" class="tsd-anchor"></a>
+					<h3>Logger<wbr>Options</h3>
+					Renames and exports <a href="../interfaces/_ceramicnetwork_common.options.html">Options</a>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-reference tsd-parent-kind-module">
+					<a name="loggerplugin" class="tsd-anchor"></a>
+					<h3>Logger<wbr>Plugin</h3>
+					Renames and exports <a href="_ceramicnetwork_common.html#plugin">Plugin</a>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-reference tsd-parent-kind-module">
+					<a name="loggerplugin-1" class="tsd-anchor"></a>
+					<h3>Logger<wbr>Plugin</h3>
+					Renames and exports <a href="_ceramicnetwork_common.html#plugin">Plugin</a>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-reference tsd-parent-kind-module">
+					<a name="loggerpluginoptions" class="tsd-anchor"></a>
+					<h3>Logger<wbr>Plugin<wbr>Options</h3>
+					Renames and exports <a href="../interfaces/_ceramicnetwork_common.pluginoptions.html">PluginOptions</a>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-reference tsd-parent-kind-module">
+					<a name="loggerpluginoptions-1" class="tsd-anchor"></a>
+					<h3>Logger<wbr>Plugin<wbr>Options</h3>
+					Renames and exports <a href="../interfaces/_ceramicnetwork_common.pluginoptions.html">PluginOptions</a>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-reference tsd-parent-kind-module">
+					<a name="loggerprovider" class="tsd-anchor"></a>
+					<h3>Logger<wbr>Provider</h3>
+					Re-exports <a href="../classes/_ceramicnetwork_common.loggerprovider-1.html">LoggerProvider</a>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-reference tsd-parent-kind-module">
+					<a name="pinapi" class="tsd-anchor"></a>
+					<h3>Pin<wbr>Api</h3>
+					Re-exports <a href="../interfaces/_ceramicnetwork_common.pinapi-1.html">PinApi</a>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-reference tsd-parent-kind-module">
+					<a name="pinningbackend" class="tsd-anchor"></a>
+					<h3>Pinning<wbr>Backend</h3>
+					Re-exports <a href="../interfaces/_ceramicnetwork_common.pinningbackend-1.html">PinningBackend</a>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-reference tsd-parent-kind-module">
+					<a name="pinningbackendstatic" class="tsd-anchor"></a>
+					<h3>Pinning<wbr>Backend<wbr>Static</h3>
+					Re-exports <a href="../interfaces/_ceramicnetwork_common.pinningbackendstatic-1.html">PinningBackendStatic</a>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-reference tsd-parent-kind-module">
+					<a name="pinninginfo" class="tsd-anchor"></a>
+					<h3>Pinning<wbr>Info</h3>
+					Re-exports <a href="_ceramicnetwork_common.html#pinninginfo-1">PinningInfo</a>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-reference tsd-parent-kind-module">
+					<a name="signaturestatus" class="tsd-anchor"></a>
+					<h3>Signature<wbr>Status</h3>
+					Re-exports <a href="../enums/_ceramicnetwork_common.signaturestatus-1.html">SignatureStatus</a>
+				</section>
+			</section>
+			<section class="tsd-panel-group tsd-member-group ">
+				<h2>Type aliases</h2>
+				<section class="tsd-panel tsd-member tsd-kind-type-alias tsd-parent-kind-module">
+					<a name="cidlist-1" class="tsd-anchor"></a>
+					<h3>Cid<wbr>List</h3>
+					<div class="tsd-signature tsd-kind-icon">Cid<wbr>List<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Record</span><span class="tsd-signature-symbol">&lt;</span><a href="_ceramicnetwork_common.html#cidstring-1" class="tsd-signature-type">CidString</a><span class="tsd-signature-symbol">, </span><a href="_ceramicnetwork_common.html#designator-1" class="tsd-signature-type">Designator</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/common/src/pinning.ts#L28">packages/common/src/pinning.ts:28</a></li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-type-alias tsd-parent-kind-module">
+					<a name="cidstring-1" class="tsd-anchor"></a>
+					<h3>Cid<wbr>String</h3>
+					<div class="tsd-signature tsd-kind-icon">Cid<wbr>String<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/common/src/pinning.ts#L26">packages/common/src/pinning.ts:26</a></li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-type-alias tsd-parent-kind-module">
+					<a name="designator-1" class="tsd-anchor"></a>
+					<h3>Designator</h3>
+					<div class="tsd-signature tsd-kind-icon">Designator<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/common/src/pinning.ts#L27">packages/common/src/pinning.ts:27</a></li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-type-alias tsd-parent-kind-module">
+					<a name="pinninginfo-1" class="tsd-anchor"></a>
+					<h3>Pinning<wbr>Info</h3>
+					<div class="tsd-signature tsd-kind-icon">Pinning<wbr>Info<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Record</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/common/src/pinning.ts#L30">packages/common/src/pinning.ts:30</a></li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-type-alias tsd-parent-kind-module tsd-is-not-exported">
+					<a name="plugin" class="tsd-anchor"></a>
+					<h3>Plugin</h3>
+					<div class="tsd-signature tsd-kind-icon">Plugin<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">(</span>rootLogger<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">log.RootLogger</span>, loggerOptions<span class="tsd-signature-symbol">?: </span><a href="../interfaces/_ceramicnetwork_common.options.html" class="tsd-signature-type">Options</a>, pluginOptions<span class="tsd-signature-symbol">?: </span><a href="../interfaces/_ceramicnetwork_common.pluginoptions.html" class="tsd-signature-type">PluginOptions</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">void</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/common/src/logger-provider.ts#L43">packages/common/src/logger-provider.ts:43</a></li>
+						</ul>
+					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>Function type for plugins</p>
+						</div>
+						<dl class="tsd-comment-tags">
+							<dt>dev</dt>
+							<dd><p>Must call <code>setLevel</code> on <code>rootLogger</code> to be enabled</p>
+							</dd>
+						</dl>
+					</div>
+					<div class="tsd-type-declaration">
+						<h4>Type declaration</h4>
+						<ul class="tsd-parameters">
+							<li class="tsd-parameter-signature">
+								<ul class="tsd-signatures tsd-kind-type-literal tsd-parent-kind-type-alias tsd-is-not-exported">
+									<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">(</span>rootLogger<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">log.RootLogger</span>, loggerOptions<span class="tsd-signature-symbol">?: </span><a href="../interfaces/_ceramicnetwork_common.options.html" class="tsd-signature-type">Options</a>, pluginOptions<span class="tsd-signature-symbol">?: </span><a href="../interfaces/_ceramicnetwork_common.pluginoptions.html" class="tsd-signature-type">PluginOptions</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+								</ul>
+								<ul class="tsd-descriptions">
+									<li class="tsd-description">
+										<h4 class="tsd-parameters-title">Parameters</h4>
+										<ul class="tsd-parameters">
+											<li>
+												<h5>rootLogger: <span class="tsd-signature-type">log.RootLogger</span></h5>
+											</li>
+											<li>
+												<h5><span class="tsd-flag ts-flagOptional">Optional</span> loggerOptions: <a href="../interfaces/_ceramicnetwork_common.options.html" class="tsd-signature-type">Options</a></h5>
+											</li>
+											<li>
+												<h5><span class="tsd-flag ts-flagOptional">Optional</span> pluginOptions: <a href="../interfaces/_ceramicnetwork_common.pluginoptions.html" class="tsd-signature-type">PluginOptions</a></h5>
+											</li>
+										</ul>
+										<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+									</li>
+								</ul>
+							</li>
+						</ul>
+					</div>
+				</section>
+			</section>
+			<section class="tsd-panel-group tsd-member-group ">
+				<h2>Functions</h2>
+				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-module tsd-has-type-parameter">
+					<a name="doctypestatic-1" class="tsd-anchor"></a>
+					<h3>Doctype<wbr>Static</h3>
+					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-module tsd-has-type-parameter">
+						<li class="tsd-signature tsd-kind-icon">Doctype<wbr>Static&lt;T&gt;<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">(Anonymous function)</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/common/src/doctype.ts#L165">packages/common/src/doctype.ts:165</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Doctype decorator</p>
+								</div>
+							</div>
+							<h4 class="tsd-type-parameters-title">Type parameters</h4>
+							<ul class="tsd-type-parameters">
+								<li>
+									<h4>T</h4>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">(Anonymous function)</span></h4>
+						</li>
+					</ul>
+				</section>
+			</section>
+			<section class="tsd-panel-group tsd-member-group tsd-is-not-exported">
+				<h2>Object literals</h2>
+				<section class="tsd-panel tsd-member tsd-kind-object-literal tsd-parent-kind-module tsd-is-not-exported">
+					<a name="defaultopts" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagConst">Const</span> default<wbr>Opts</h3>
+					<div class="tsd-signature tsd-kind-icon">default<wbr>Opts<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">object</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/common/src/logger-provider.ts#L8">packages/common/src/logger-provider.ts:8</a></li>
+						</ul>
+					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>Default logger options</p>
+						</div>
+					</div>
+					<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal tsd-is-not-exported">
+						<a name="defaultopts.format" class="tsd-anchor"></a>
+						<h3>format</h3>
+						<div class="tsd-signature tsd-kind-icon">format<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> = &quot;text&quot;</span></div>
+						<aside class="tsd-sources">
+							<ul>
+								<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/common/src/logger-provider.ts#L10">packages/common/src/logger-provider.ts:10</a></li>
+							</ul>
+						</aside>
+					</section>
+					<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal tsd-is-not-exported">
+						<a name="defaultopts.level" class="tsd-anchor"></a>
+						<h3>level</h3>
+						<div class="tsd-signature tsd-kind-icon">level<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> = &quot;info&quot;</span></div>
+						<aside class="tsd-sources">
+							<ul>
+								<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/common/src/logger-provider.ts#L9">packages/common/src/logger-provider.ts:9</a></li>
+							</ul>
+						</aside>
+					</section>
+					<section class="tsd-panel tsd-member tsd-kind-object-literal tsd-parent-kind-object-literal tsd-is-not-exported">
+						<a name="defaultopts.stacktrace" class="tsd-anchor"></a>
+						<h3>stacktrace</h3>
+						<div class="tsd-signature tsd-kind-icon">stacktrace<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">object</span></div>
+						<aside class="tsd-sources">
+							<ul>
+								<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/common/src/logger-provider.ts#L11">packages/common/src/logger-provider.ts:11</a></li>
+							</ul>
+						</aside>
+						<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal tsd-is-not-exported">
+							<a name="defaultopts.stacktrace.depth" class="tsd-anchor"></a>
+							<h3>depth</h3>
+							<div class="tsd-signature tsd-kind-icon">depth<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">3</span><span class="tsd-signature-symbol"> = 3</span></div>
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/common/src/logger-provider.ts#L13">packages/common/src/logger-provider.ts:13</a></li>
+								</ul>
+							</aside>
+						</section>
+						<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal tsd-is-not-exported">
+							<a name="defaultopts.stacktrace.excess" class="tsd-anchor"></a>
+							<h3>excess</h3>
+							<div class="tsd-signature tsd-kind-icon">excess<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">0</span><span class="tsd-signature-symbol"> = 0</span></div>
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/common/src/logger-provider.ts#L14">packages/common/src/logger-provider.ts:14</a></li>
+								</ul>
+							</aside>
+						</section>
+						<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal tsd-is-not-exported">
+							<a name="defaultopts.stacktrace.levels" class="tsd-anchor"></a>
+							<h3>levels</h3>
+							<div class="tsd-signature tsd-kind-icon">levels<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">[</span><span class="tsd-signature-type">"trace"</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">"warn"</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">"error"</span><span class="tsd-signature-symbol">]</span><span class="tsd-signature-symbol"> = [&#x27;trace&#x27;, &#x27;warn&#x27;, &#x27;error&#x27;]</span></div>
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/common/src/logger-provider.ts#L12">packages/common/src/logger-provider.ts:12</a></li>
+								</ul>
+							</aside>
+						</section>
+					</section>
+				</section>
+			</section>
+		</div>
+		<div class="col-4 col-menu menu-sticky-wrap menu-highlight">
+			<nav class="tsd-navigation primary">
+				<ul>
+					<li class="label pp-nav pp-group">
+						<span>Ceramic <wbr>Network</span>
+					</li>
+					<li class=" pp-nav pp-page pp-parent">
+						<a href="../pages/Ceramic Network/overview.html">Architecture</a>
+					</li>
+					<li class=" pp-nav pp-page">
+						<a href="../pages/Ceramic Network/terminology.html">Terminology</a>
+					</li>
+					<li class=" pp-nav pp-page">
+						<a href="../pages/Ceramic Network/ecosystem.html">Ecosystem</a>
+					</li>
+					<li class="label pp-nav pp-group">
+						<span>Getting <wbr>Started</span>
+					</li>
+					<li class="label pp-nav pp-group">
+						<span>Guides</span>
+					</li>
+					<li class=" pp-nav pp-page">
+						<a href="../pages/Guides/create-doctype.html">Create a <wbr>Doctype</a>
+					</li>
+					<li class="label pp-nav pp-group">
+						<span>Package APIs</span>
+					</li>
+					<li class="globals  ">
+						<a href="../globals.html"><em>Globals</em></a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="_ceramicnetwork_3id_did_resolver.html">@ceramicnetwork/3id-<wbr>did-<wbr>resolver</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="_ceramicnetwork_cli.html">@ceramicnetwork/cli</a>
+					</li>
+					<li class="current tsd-kind-module">
+						<a href="_ceramicnetwork_common.html">@ceramicnetwork/common</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="_ceramicnetwork_core.html">@ceramicnetwork/core</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="_ceramicnetwork_docid.html">@ceramicnetwork/docid</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="_ceramicnetwork_doctype_caip10_link.html">@ceramicnetwork/doctype-<wbr>caip10-<wbr>link</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="_ceramicnetwork_doctype_tile.html">@ceramicnetwork/doctype-<wbr>tile</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="_ceramicnetwork_http_client.html">@ceramicnetwork/http-<wbr>client</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="_ceramicnetwork_key_did_resolver.html">@ceramicnetwork/key-<wbr>did-<wbr>resolver</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="_ceramicnetwork_pinning_aggregation.html">@ceramicnetwork/pinning-<wbr>aggregation</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="_ceramicnetwork_pinning_ipfs_backend.html">@ceramicnetwork/pinning-<wbr>ipfs-<wbr>backend</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="_ceramicnetwork_pinning_powergate_backend.html">@ceramicnetwork/pinning-<wbr>powergate-<wbr>backend</a>
+					</li>
+				</ul>
+			</nav>
+			<nav class="tsd-navigation secondary menu-sticky">
+				<ul class="before-current">
+					<li class=" tsd-kind-reference tsd-parent-kind-module">
+						<a href="_ceramicnetwork_common.html#anchorproof" class="tsd-kind-icon">Anchor<wbr>Proof</a>
+					</li>
+					<li class=" tsd-kind-reference tsd-parent-kind-module">
+						<a href="_ceramicnetwork_common.html#anchorrecord" class="tsd-kind-icon">Anchor<wbr>Record</a>
+					</li>
+					<li class=" tsd-kind-reference tsd-parent-kind-module">
+						<a href="_ceramicnetwork_common.html#anchorservice" class="tsd-kind-icon">Anchor<wbr>Service</a>
+					</li>
+					<li class=" tsd-kind-reference tsd-parent-kind-module">
+						<a href="_ceramicnetwork_common.html#anchorstatus" class="tsd-kind-icon">Anchor<wbr>Status</a>
+					</li>
+					<li class=" tsd-kind-reference tsd-parent-kind-module">
+						<a href="_ceramicnetwork_common.html#ceramicapi" class="tsd-kind-icon">Ceramic<wbr>Api</a>
+					</li>
+					<li class=" tsd-kind-reference tsd-parent-kind-module">
+						<a href="_ceramicnetwork_common.html#cidlist" class="tsd-kind-icon">Cid<wbr>List</a>
+					</li>
+					<li class=" tsd-kind-reference tsd-parent-kind-module">
+						<a href="_ceramicnetwork_common.html#cidstring" class="tsd-kind-icon">Cid<wbr>String</a>
+					</li>
+					<li class=" tsd-kind-reference tsd-parent-kind-module">
+						<a href="_ceramicnetwork_common.html#context" class="tsd-kind-icon">Context</a>
+					</li>
+					<li class=" tsd-kind-reference tsd-parent-kind-module">
+						<a href="_ceramicnetwork_common.html#designator" class="tsd-kind-icon">Designator</a>
+					</li>
+					<li class=" tsd-kind-reference tsd-parent-kind-module">
+						<a href="_ceramicnetwork_common.html#docmetadata" class="tsd-kind-icon">Doc<wbr>Metadata</a>
+					</li>
+					<li class=" tsd-kind-reference tsd-parent-kind-module">
+						<a href="_ceramicnetwork_common.html#docnext" class="tsd-kind-icon">Doc<wbr>Next</a>
+					</li>
+					<li class=" tsd-kind-reference tsd-parent-kind-module">
+						<a href="_ceramicnetwork_common.html#docopts" class="tsd-kind-icon">Doc<wbr>Opts</a>
+					</li>
+					<li class=" tsd-kind-reference tsd-parent-kind-module">
+						<a href="_ceramicnetwork_common.html#docparams" class="tsd-kind-icon">Doc<wbr>Params</a>
+					</li>
+					<li class=" tsd-kind-reference tsd-parent-kind-module">
+						<a href="_ceramicnetwork_common.html#docstate" class="tsd-kind-icon">Doc<wbr>State</a>
+					</li>
+					<li class=" tsd-kind-reference tsd-parent-kind-module">
+						<a href="_ceramicnetwork_common.html#doctype" class="tsd-kind-icon">Doctype</a>
+					</li>
+					<li class=" tsd-kind-reference tsd-parent-kind-module">
+						<a href="_ceramicnetwork_common.html#doctypeconstructor" class="tsd-kind-icon">Doctype<wbr>Constructor</a>
+					</li>
+					<li class=" tsd-kind-reference tsd-parent-kind-module">
+						<a href="_ceramicnetwork_common.html#doctypehandler" class="tsd-kind-icon">Doctype<wbr>Handler</a>
+					</li>
+					<li class=" tsd-kind-reference tsd-parent-kind-module">
+						<a href="_ceramicnetwork_common.html#doctypestatic" class="tsd-kind-icon">Doctype<wbr>Static</a>
+					</li>
+					<li class=" tsd-kind-reference tsd-parent-kind-module">
+						<a href="_ceramicnetwork_common.html#doctypeutils" class="tsd-kind-icon">Doctype<wbr>Utils</a>
+					</li>
+					<li class=" tsd-kind-reference tsd-parent-kind-module">
+						<a href="_ceramicnetwork_common.html#loggeroptions" class="tsd-kind-icon">Logger<wbr>Options</a>
+					</li>
+					<li class=" tsd-kind-reference tsd-parent-kind-module">
+						<a href="_ceramicnetwork_common.html#loggeroptions-1" class="tsd-kind-icon">Logger<wbr>Options</a>
+					</li>
+					<li class=" tsd-kind-reference tsd-parent-kind-module">
+						<a href="_ceramicnetwork_common.html#loggerplugin" class="tsd-kind-icon">Logger<wbr>Plugin</a>
+					</li>
+					<li class=" tsd-kind-reference tsd-parent-kind-module">
+						<a href="_ceramicnetwork_common.html#loggerplugin-1" class="tsd-kind-icon">Logger<wbr>Plugin</a>
+					</li>
+					<li class=" tsd-kind-reference tsd-parent-kind-module">
+						<a href="_ceramicnetwork_common.html#loggerpluginoptions" class="tsd-kind-icon">Logger<wbr>Plugin<wbr>Options</a>
+					</li>
+					<li class=" tsd-kind-reference tsd-parent-kind-module">
+						<a href="_ceramicnetwork_common.html#loggerpluginoptions-1" class="tsd-kind-icon">Logger<wbr>Plugin<wbr>Options</a>
+					</li>
+					<li class=" tsd-kind-reference tsd-parent-kind-module">
+						<a href="_ceramicnetwork_common.html#loggerprovider" class="tsd-kind-icon">Logger<wbr>Provider</a>
+					</li>
+					<li class=" tsd-kind-reference tsd-parent-kind-module">
+						<a href="_ceramicnetwork_common.html#pinapi" class="tsd-kind-icon">Pin<wbr>Api</a>
+					</li>
+					<li class=" tsd-kind-reference tsd-parent-kind-module">
+						<a href="_ceramicnetwork_common.html#pinningbackend" class="tsd-kind-icon">Pinning<wbr>Backend</a>
+					</li>
+					<li class=" tsd-kind-reference tsd-parent-kind-module">
+						<a href="_ceramicnetwork_common.html#pinningbackendstatic" class="tsd-kind-icon">Pinning<wbr>Backend<wbr>Static</a>
+					</li>
+					<li class=" tsd-kind-reference tsd-parent-kind-module">
+						<a href="_ceramicnetwork_common.html#pinninginfo" class="tsd-kind-icon">Pinning<wbr>Info</a>
+					</li>
+					<li class=" tsd-kind-reference tsd-parent-kind-module">
+						<a href="_ceramicnetwork_common.html#signaturestatus" class="tsd-kind-icon">Signature<wbr>Status</a>
+					</li>
+					<li class=" tsd-kind-enum tsd-parent-kind-module">
+						<a href="../enums/_ceramicnetwork_common.anchorstatus-1.html" class="tsd-kind-icon">Anchor<wbr>Status</a>
+					</li>
+					<li class=" tsd-kind-enum tsd-parent-kind-module">
+						<a href="../enums/_ceramicnetwork_common.signaturestatus-1.html" class="tsd-kind-icon">Signature<wbr>Status</a>
+					</li>
+					<li class=" tsd-kind-class tsd-parent-kind-module">
+						<a href="../classes/_ceramicnetwork_common.anchorservice-1.html" class="tsd-kind-icon">Anchor<wbr>Service</a>
+					</li>
+					<li class=" tsd-kind-class tsd-parent-kind-module">
+						<a href="../classes/_ceramicnetwork_common.doctype-1.html" class="tsd-kind-icon">Doctype</a>
+					</li>
+					<li class=" tsd-kind-class tsd-parent-kind-module">
+						<a href="../classes/_ceramicnetwork_common.doctypeutils-1.html" class="tsd-kind-icon">Doctype<wbr>Utils</a>
+					</li>
+					<li class=" tsd-kind-class tsd-parent-kind-module">
+						<a href="../classes/_ceramicnetwork_common.loggerprovider-1.html" class="tsd-kind-icon">Logger<wbr>Provider</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-module">
+						<a href="../interfaces/_ceramicnetwork_common.anchorproof-1.html" class="tsd-kind-icon">Anchor<wbr>Proof</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-module">
+						<a href="../interfaces/_ceramicnetwork_common.anchorrecord-1.html" class="tsd-kind-icon">Anchor<wbr>Record</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-module">
+						<a href="../interfaces/_ceramicnetwork_common.ceramicapi-1.html" class="tsd-kind-icon">Ceramic<wbr>Api</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-module">
+						<a href="../interfaces/_ceramicnetwork_common.context-1.html" class="tsd-kind-icon">Context</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-module">
+						<a href="../interfaces/_ceramicnetwork_common.docmetadata-1.html" class="tsd-kind-icon">Doc<wbr>Metadata</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-module">
+						<a href="../interfaces/_ceramicnetwork_common.docnext-1.html" class="tsd-kind-icon">Doc<wbr>Next</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-module">
+						<a href="../interfaces/_ceramicnetwork_common.docopts-1.html" class="tsd-kind-icon">Doc<wbr>Opts</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-module">
+						<a href="../interfaces/_ceramicnetwork_common.docparams-1.html" class="tsd-kind-icon">Doc<wbr>Params</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-module">
+						<a href="../interfaces/_ceramicnetwork_common.docstate-1.html" class="tsd-kind-icon">Doc<wbr>State</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-module tsd-has-type-parameter">
+						<a href="../interfaces/_ceramicnetwork_common.doctypeconstructor-1.html" class="tsd-kind-icon">Doctype<wbr>Constructor</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-module tsd-has-type-parameter">
+						<a href="../interfaces/_ceramicnetwork_common.doctypehandler-1.html" class="tsd-kind-icon">Doctype<wbr>Handler</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-module tsd-is-not-exported">
+						<a href="../interfaces/_ceramicnetwork_common.options.html" class="tsd-kind-icon">Options</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-module">
+						<a href="../interfaces/_ceramicnetwork_common.pinapi-1.html" class="tsd-kind-icon">Pin<wbr>Api</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-module">
+						<a href="../interfaces/_ceramicnetwork_common.pinningbackend-1.html" class="tsd-kind-icon">Pinning<wbr>Backend</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-module">
+						<a href="../interfaces/_ceramicnetwork_common.pinningbackendstatic-1.html" class="tsd-kind-icon">Pinning<wbr>Backend<wbr>Static</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-module tsd-is-not-exported">
+						<a href="../interfaces/_ceramicnetwork_common.pluginoptions.html" class="tsd-kind-icon">Plugin<wbr>Options</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-parent-kind-module">
+						<a href="_ceramicnetwork_common.html#cidlist-1" class="tsd-kind-icon">Cid<wbr>List</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-parent-kind-module">
+						<a href="_ceramicnetwork_common.html#cidstring-1" class="tsd-kind-icon">Cid<wbr>String</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-parent-kind-module">
+						<a href="_ceramicnetwork_common.html#designator-1" class="tsd-kind-icon">Designator</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-parent-kind-module">
+						<a href="_ceramicnetwork_common.html#pinninginfo-1" class="tsd-kind-icon">Pinning<wbr>Info</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-parent-kind-module tsd-is-not-exported">
+						<a href="_ceramicnetwork_common.html#plugin" class="tsd-kind-icon">Plugin</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module tsd-has-type-parameter">
+						<a href="_ceramicnetwork_common.html#doctypestatic-1" class="tsd-kind-icon">Doctype<wbr>Static</a>
+					</li>
+					<li class=" tsd-kind-object-literal tsd-parent-kind-module tsd-is-not-exported">
+						<a href="_ceramicnetwork_common.html#defaultopts" class="tsd-kind-icon">default<wbr>Opts</a>
+					</li>
+				</ul>
+			</nav>
+		</div>
+	</div>
+</div>
+<footer>
+	<div class="container">
+		<h2>Legend</h2>
+		<div class="tsd-legend-group">
+			<ul class="tsd-legend">
+				<li class="tsd-kind-object-literal"><span class="tsd-kind-icon">Object literal</span></li>
+				<li class="tsd-kind-variable"><span class="tsd-kind-icon">Variable</span></li>
+				<li class="tsd-kind-function"><span class="tsd-kind-icon">Function</span></li>
+				<li class="tsd-kind-function tsd-has-type-parameter"><span class="tsd-kind-icon">Function with type parameter</span></li>
+				<li class="tsd-kind-type-alias"><span class="tsd-kind-icon">Type alias</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-interface"><span class="tsd-kind-icon">Interface</span></li>
+				<li class="tsd-kind-interface tsd-has-type-parameter"><span class="tsd-kind-icon">Interface with type parameter</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-enum"><span class="tsd-kind-icon">Enumeration</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-class"><span class="tsd-kind-icon">Class</span></li>
+			</ul>
+		</div>
+	</div>
+</footer>
+<div class="overlay"></div>
+<script src="../assets/js/main.js"></script>
+<script>if (location.protocol == 'file:') document.write('<script src="../assets/js/search.json"><' + '/script>');</script>
+</body>
+</html>

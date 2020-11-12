@@ -1,8 +1,7 @@
 {
   "name": "@ceramicnetwork/doctype-caip10-link",
-
-  "version": "0.10.0",
-  "description": "Ceramic Caip10 doctype",
+  "version": "0.10.1",
+  "description": "Ceramic AccountLink doctype",
   "keywords": [
     "ceramic",
     "account-link",
@@ -28,7 +27,7 @@
   },
   "dependencies": {
     "3id-blockchain-utils": "^1.0.0",
-    "@ceramicnetwork/common": "^0.12.0",
+    "@ceramicnetwork/common": "^0.12.1",
     "@types/lodash.clonedeep": "^4.5.6",
     "cids": "^1.0.2",
     "did-resolver": "^2.1.1"

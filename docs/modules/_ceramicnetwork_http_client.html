@@ -1,0 +1,367 @@
+<!doctype html>
+<html class="default no-js">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>@ceramicnetwork/http-client | Ceramic</title>
+	<meta name="description" content="Documentation for Ceramic">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="../assets/css/main.css">
+	<link rel="stylesheet" href="../assets/css/pages.css">
+</head>
+<body>
+<header>
+	<div class="tsd-page-toolbar">
+		<div class="container">
+			<div class="table-wrap">
+				<div class="table-cell" id="tsd-search" data-index="../assets/js/search.json" data-base="..">
+					<div class="field">
+						<label for="tsd-search-field" class="tsd-widget search no-caption">Search</label>
+						<input id="tsd-search-field" type="text" />
+					</div>
+					<ul class="results">
+						<li class="state loading">Preparing search index...</li>
+						<li class="state failure">The search index is not available</li>
+					</ul>
+					<a href="../index.html" class="title">Ceramic</a>
+				</div>
+				<div class="table-cell" id="tsd-widgets">
+					<div id="tsd-filter">
+						<a href="#" class="tsd-widget options no-caption" data-toggle="options">Options</a>
+						<div class="tsd-filter-group">
+							<div class="tsd-select" id="tsd-filter-visibility">
+								<span class="tsd-select-label">All</span>
+								<ul class="tsd-select-list">
+									<li data-value="public">Public</li>
+									<li data-value="protected">Public/Protected</li>
+									<li data-value="private" class="selected">All</li>
+								</ul>
+							</div>
+							<input type="checkbox" id="tsd-filter-inherited" checked />
+							<label class="tsd-widget" for="tsd-filter-inherited">Inherited</label>
+							<input type="checkbox" id="tsd-filter-only-exported" />
+							<label class="tsd-widget" for="tsd-filter-only-exported">Only exported</label>
+						</div>
+					</div>
+					<a href="#" class="tsd-widget menu no-caption" data-toggle="menu">Menu</a>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="tsd-page-title">
+		<div class="container">
+			<ul class="tsd-breadcrumb">
+				<li>
+					<a href="../globals.html">Globals</a>
+				</li>
+				<li>
+					<a href="_ceramicnetwork_http_client.html">@ceramicnetwork/http-client</a>
+				</li>
+			</ul>
+			<h1>Module @ceramicnetwork/http-client</h1>
+		</div>
+	</div>
+</header>
+<div class="container container-main">
+	<div class="row">
+		<div class="col-8 col-content">
+			<section class="tsd-panel tsd-comment">
+				<div class="tsd-comment tsd-typography">
+					<a href="#ceramic-http-client" id="ceramic-http-client" style="color: inherit; text-decoration: none;">
+						<h1>Ceramic http client</h1>
+					</a>
+					<blockquote>
+						<p>An http client for the Ceramic protocol</p>
+					</blockquote>
+					<a href="#getting-started" id="getting-started" style="color: inherit; text-decoration: none;">
+						<h2>Getting started</h2>
+					</a>
+					<a href="#installation" id="installation" style="color: inherit; text-decoration: none;">
+						<h3>Installation</h3>
+					</a>
+					<pre><code>$ npm <span class="hljs-keyword">install</span> @ceramicnetwork/<span class="hljs-keyword">http</span>-<span class="hljs-keyword">client</span></code></pre>
+					<a href="#usage" id="usage" style="color: inherit; text-decoration: none;">
+						<h3>Usage</h3>
+					</a>
+					<pre><code><span class="hljs-keyword">import</span> CeramicClient <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;@ceramicnetwork/http-client&#x27;</span>
+<span class="hljs-keyword">import</span> IdentityWallet <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;identity-wallet&#x27;</span>
+
+<span class="hljs-keyword">const</span> API_URL = <span class="hljs-string">&quot;http://localhost:7007&quot;</span>
+
+<span class="hljs-keyword">const</span> client = <span class="hljs-keyword">new</span> CeramicClient(API_URL)
+
+<span class="hljs-comment">// create document example</span>
+<span class="hljs-keyword">await</span> doc = <span class="hljs-keyword">await</span> client.createDocument(<span class="hljs-string">&#x27;tile&#x27;</span>, { <span class="hljs-attr">content</span>: { <span class="hljs-attr">test</span>: <span class="hljs-number">123</span> } }, { <span class="hljs-attr">applyOnly</span>: <span class="hljs-literal">true</span>, <span class="hljs-attr">skipWait</span>: <span class="hljs-literal">true</span> })</code></pre>
+					<a href="#ceramic-api" id="ceramic-api" style="color: inherit; text-decoration: none;">
+						<h3>Ceramic API</h3>
+					</a>
+					<p>Complete Ceramic core API is available on <a href="https://github.com/ceramicnetwork/js-ceramic/blob/master/packages/common/src/ceramic-api.ts">Ceramic API</a>.</p>
+					<a href="#development" id="development" style="color: inherit; text-decoration: none;">
+						<h2>Development</h2>
+					</a>
+					<p>Run tests:</p>
+					<pre><code><span class="hljs-meta">$</span><span class="bash"> npm <span class="hljs-built_in">test</span></span></code></pre>
+					<p>Run linter:</p>
+					<pre><code>npm <span class="hljs-keyword">run</span><span class="bash"> lint</span></code></pre>
+					<a href="#contributing" id="contributing" style="color: inherit; text-decoration: none;">
+						<h2>Contributing</h2>
+					</a>
+					<p>We are happy to accept small and large contributions. Make sure to check out the <a href="https://github.com/ceramicnetwork/specs">Ceramic specifications</a> for details of how the protocol works.</p>
+					<a href="#license" id="license" style="color: inherit; text-decoration: none;">
+						<h2>License</h2>
+					</a>
+				</div>
+			</section>
+			<section class="tsd-panel-group tsd-index-group">
+				<h2>Index</h2>
+				<section class="tsd-panel tsd-index-panel">
+					<div class="tsd-index-content">
+						<section class="tsd-index-section ">
+							<h3>Classes</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-class tsd-parent-kind-module"><a href="../classes/_ceramicnetwork_http_client.ceramicclient.html" class="tsd-kind-icon">Ceramic<wbr>Client</a></li>
+								<li class="tsd-kind-class tsd-parent-kind-module tsd-is-not-exported"><a href="../classes/_ceramicnetwork_http_client.document.html" class="tsd-kind-icon">Document</a></li>
+							</ul>
+						</section>
+						<section class="tsd-index-section tsd-is-not-exported">
+							<h3>Variables</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-variable tsd-parent-kind-module tsd-is-not-exported"><a href="_ceramicnetwork_http_client.html#api_path" class="tsd-kind-icon">API_<wbr>PATH</a></li>
+								<li class="tsd-kind-variable tsd-parent-kind-module tsd-is-not-exported"><a href="_ceramicnetwork_http_client.html#ceramic_host" class="tsd-kind-icon">CERAMIC_<wbr>HOST</a></li>
+							</ul>
+						</section>
+						<section class="tsd-index-section ">
+							<h3>Functions</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-function tsd-parent-kind-module tsd-is-not-exported"><a href="_ceramicnetwork_http_client.html#docidurl" class="tsd-kind-icon">doc<wbr>IdUrl</a></li>
+								<li class="tsd-kind-function tsd-parent-kind-module"><a href="_ceramicnetwork_http_client.html#fetchjson" class="tsd-kind-icon">fetch<wbr>Json</a></li>
+								<li class="tsd-kind-function tsd-parent-kind-module"><a href="_ceramicnetwork_http_client.html#typedocid" class="tsd-kind-icon">type<wbr>DocID</a></li>
+							</ul>
+						</section>
+					</div>
+				</section>
+			</section>
+			<section class="tsd-panel-group tsd-member-group tsd-is-not-exported">
+				<h2>Variables</h2>
+				<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-module tsd-is-not-exported">
+					<a name="api_path" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagConst">Const</span> API_<wbr>PATH</h3>
+					<div class="tsd-signature tsd-kind-icon">API_<wbr>PATH<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">"/api/v0"</span><span class="tsd-signature-symbol"> = &quot;/api/v0&quot;</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/http-client/src/ceramic-http-client.ts#L11">packages/http-client/src/ceramic-http-client.ts:11</a></li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-module tsd-is-not-exported">
+					<a name="ceramic_host" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagConst">Const</span> CERAMIC_<wbr>HOST</h3>
+					<div class="tsd-signature tsd-kind-icon">CERAMIC_<wbr>HOST<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">"http://localhost:7007"</span><span class="tsd-signature-symbol"> = &quot;http://localhost:7007&quot;</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/http-client/src/ceramic-http-client.ts#L10">packages/http-client/src/ceramic-http-client.ts:10</a></li>
+						</ul>
+					</aside>
+				</section>
+			</section>
+			<section class="tsd-panel-group tsd-member-group ">
+				<h2>Functions</h2>
+				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
+					<a name="docidurl" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagConst">Const</span> doc<wbr>IdUrl</h3>
+					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
+						<li class="tsd-signature tsd-kind-icon">doc<wbr>IdUrl<span class="tsd-signature-symbol">(</span>docId<span class="tsd-signature-symbol">: </span><a href="../classes/_ceramicnetwork_docid.docid.html" class="tsd-signature-type">DocID</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/http-client/src/document.ts#L8">packages/http-client/src/document.ts:8</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>docId: <a href="../classes/_ceramicnetwork_docid.docid.html" class="tsd-signature-type">DocID</a></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-module">
+					<a name="fetchjson" class="tsd-anchor"></a>
+					<h3>fetch<wbr>Json</h3>
+					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-module">
+						<li class="tsd-signature tsd-kind-icon">fetch<wbr>Json<span class="tsd-signature-symbol">(</span>url<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, payload<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/http-client/src/utils.ts#L4">packages/http-client/src/utils.ts:4</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>url: <span class="tsd-signature-type">string</span></h5>
+								</li>
+								<li>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> payload: <span class="tsd-signature-type">any</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-module">
+					<a name="typedocid" class="tsd-anchor"></a>
+					<h3>type<wbr>DocID</h3>
+					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-module">
+						<li class="tsd-signature tsd-kind-icon">type<wbr>DocID<span class="tsd-signature-symbol">(</span>docId<span class="tsd-signature-symbol">: </span><a href="../classes/_ceramicnetwork_docid.docid.html" class="tsd-signature-type">DocID</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="../classes/_ceramicnetwork_docid.docid.html" class="tsd-signature-type">DocID</a></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/http-client/src/utils.ts#L18">packages/http-client/src/utils.ts:18</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>docId: <a href="../classes/_ceramicnetwork_docid.docid.html" class="tsd-signature-type">DocID</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <a href="../classes/_ceramicnetwork_docid.docid.html" class="tsd-signature-type">DocID</a></h4>
+						</li>
+					</ul>
+				</section>
+			</section>
+		</div>
+		<div class="col-4 col-menu menu-sticky-wrap menu-highlight">
+			<nav class="tsd-navigation primary">
+				<ul>
+					<li class="label pp-nav pp-group">
+						<span>Ceramic <wbr>Network</span>
+					</li>
+					<li class=" pp-nav pp-page pp-parent">
+						<a href="../pages/Ceramic Network/overview.html">Architecture</a>
+					</li>
+					<li class=" pp-nav pp-page">
+						<a href="../pages/Ceramic Network/terminology.html">Terminology</a>
+					</li>
+					<li class=" pp-nav pp-page">
+						<a href="../pages/Ceramic Network/ecosystem.html">Ecosystem</a>
+					</li>
+					<li class="label pp-nav pp-group">
+						<span>Getting <wbr>Started</span>
+					</li>
+					<li class="label pp-nav pp-group">
+						<span>Guides</span>
+					</li>
+					<li class=" pp-nav pp-page">
+						<a href="../pages/Guides/create-doctype.html">Create a <wbr>Doctype</a>
+					</li>
+					<li class="label pp-nav pp-group">
+						<span>Package APIs</span>
+					</li>
+					<li class="globals  ">
+						<a href="../globals.html"><em>Globals</em></a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="_ceramicnetwork_3id_did_resolver.html">@ceramicnetwork/3id-<wbr>did-<wbr>resolver</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="_ceramicnetwork_cli.html">@ceramicnetwork/cli</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="_ceramicnetwork_common.html">@ceramicnetwork/common</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="_ceramicnetwork_core.html">@ceramicnetwork/core</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="_ceramicnetwork_docid.html">@ceramicnetwork/docid</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="_ceramicnetwork_doctype_caip10_link.html">@ceramicnetwork/doctype-<wbr>caip10-<wbr>link</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="_ceramicnetwork_doctype_tile.html">@ceramicnetwork/doctype-<wbr>tile</a>
+					</li>
+					<li class="current tsd-kind-module">
+						<a href="_ceramicnetwork_http_client.html">@ceramicnetwork/http-<wbr>client</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="_ceramicnetwork_key_did_resolver.html">@ceramicnetwork/key-<wbr>did-<wbr>resolver</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="_ceramicnetwork_pinning_aggregation.html">@ceramicnetwork/pinning-<wbr>aggregation</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="_ceramicnetwork_pinning_ipfs_backend.html">@ceramicnetwork/pinning-<wbr>ipfs-<wbr>backend</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="_ceramicnetwork_pinning_powergate_backend.html">@ceramicnetwork/pinning-<wbr>powergate-<wbr>backend</a>
+					</li>
+				</ul>
+			</nav>
+			<nav class="tsd-navigation secondary menu-sticky">
+				<ul class="before-current">
+					<li class=" tsd-kind-class tsd-parent-kind-module">
+						<a href="../classes/_ceramicnetwork_http_client.ceramicclient.html" class="tsd-kind-icon">Ceramic<wbr>Client</a>
+					</li>
+					<li class=" tsd-kind-class tsd-parent-kind-module tsd-is-not-exported">
+						<a href="../classes/_ceramicnetwork_http_client.document.html" class="tsd-kind-icon">Document</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-parent-kind-module tsd-is-not-exported">
+						<a href="_ceramicnetwork_http_client.html#api_path" class="tsd-kind-icon">API_<wbr>PATH</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-parent-kind-module tsd-is-not-exported">
+						<a href="_ceramicnetwork_http_client.html#ceramic_host" class="tsd-kind-icon">CERAMIC_<wbr>HOST</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
+						<a href="_ceramicnetwork_http_client.html#docidurl" class="tsd-kind-icon">doc<wbr>IdUrl</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module">
+						<a href="_ceramicnetwork_http_client.html#fetchjson" class="tsd-kind-icon">fetch<wbr>Json</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module">
+						<a href="_ceramicnetwork_http_client.html#typedocid" class="tsd-kind-icon">type<wbr>DocID</a>
+					</li>
+				</ul>
+			</nav>
+		</div>
+	</div>
+</div>
+<footer>
+	<div class="container">
+		<h2>Legend</h2>
+		<div class="tsd-legend-group">
+			<ul class="tsd-legend">
+				<li class="tsd-kind-object-literal"><span class="tsd-kind-icon">Object literal</span></li>
+				<li class="tsd-kind-variable"><span class="tsd-kind-icon">Variable</span></li>
+				<li class="tsd-kind-function"><span class="tsd-kind-icon">Function</span></li>
+				<li class="tsd-kind-function tsd-has-type-parameter"><span class="tsd-kind-icon">Function with type parameter</span></li>
+				<li class="tsd-kind-type-alias"><span class="tsd-kind-icon">Type alias</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-interface"><span class="tsd-kind-icon">Interface</span></li>
+				<li class="tsd-kind-interface tsd-has-type-parameter"><span class="tsd-kind-icon">Interface with type parameter</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-enum"><span class="tsd-kind-icon">Enumeration</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-class"><span class="tsd-kind-icon">Class</span></li>
+			</ul>
+		</div>
+	</div>
+</footer>
+<div class="overlay"></div>
+<script src="../assets/js/main.js"></script>
+<script>if (location.protocol == 'file:') document.write('<script src="../assets/js/search.json"><' + '/script>');</script>
+</body>
+</html>
