@@ -48,7 +48,7 @@ export class CeramicCliUtils {
      * Create CeramicDaemon instance
      * @param ipfsApi - IPFS api
      * @param ethereumRpc - Ethereum RPC URL
-     * @param anchorServiceApi - Anchor service API URL
+     * @param anchorServiceURL - Anchor service URL
      * @param validateDocs - Validate docs according to schemas or not
      * @param pinning - Pinning endpoint
      * @param stateStorePath - State store path
@@ -58,14 +58,14 @@ export class CeramicCliUtils {
      * @param logToFiles - Enable writing logs to files
      * @param logPath - Store log files in this directory
      */
-    static async createDaemon(ipfsApi: string, ethereumRpc: string, anchorServiceApi: string, validateDocs: boolean, pinning: string[], stateStorePath: string, gateway: boolean, port: number, debug: boolean, logToFiles: boolean, logPath: string): Promise<CeramicDaemon> {
+    static async createDaemon(ipfsApi: string, ethereumRpc: string, anchorServiceUrl: string, validateDocs: boolean, pinning: string[], stateStorePath: string, gateway: boolean, port: number, debug: boolean, logToFiles: boolean, logPath: string): Promise<CeramicDaemon> {
         if (stateStorePath == null) {
             stateStorePath = DEFAULT_PINNING_STORE_PATH
         }
 
         const config: CreateOpts = {
             ethereumRpcUrl: ethereumRpc,
-            anchorServiceUrl: anchorServiceApi,
+            anchorServiceUrl,
             stateStorePath: stateStorePath,
             validateDocs,
             pinning: pinning,

@@ -6,7 +6,7 @@ program
     .command('daemon')
     .option('--ipfs-api <url>', 'The ipfs http api to use')
     .option('--ethereum-rpc <url>', 'The Ethereum RPC URL used for communicating with Ethereum blockchain')
-    .option('--anchor-service-api <url>', 'The anchor service URL to use')
+    .option('--anchor-service-url <url>', 'The anchor service URL to use')
     .option('--validate-docs', 'Validate documents according to their schemas. It is enabled by default')
     .option('--pinning <url...>', 'Pinning endpoints')
     .option('--pinning-store-path <url>', `The directory path used for pinning service. Defaults to WORKING_DIR/${DEFAULT_PINNING_STORE_PATH}`)
@@ -16,8 +16,8 @@ program
     .option('--log-to-files', 'If debug is true, write logs to files. Default is false')
     .option('--log-path <dir>', 'Store logs in this directory. Defaults to "/usr/local/var/log/ceramic"')
     .description('Start the daemon')
-    .action(async ({ ipfsApi, ethereumRpc, anchorServiceApi, validateDocs, pinning, pinningStorePath, gateway, port, debug, logToFiles, logPath }) => {
-        await CeramicCliUtils.createDaemon(ipfsApi, ethereumRpc, anchorServiceApi, validateDocs, pinning, pinningStorePath, gateway, port, debug, logToFiles, logPath)
+    .action(async ({ ipfsApi, ethereumRpc, anchorServiceUrl, validateDocs, pinning, pinningStorePath, gateway, port, debug, logToFiles, logPath }) => {
+        await CeramicCliUtils.createDaemon(ipfsApi, ethereumRpc, anchorServiceUrl, validateDocs, pinning, pinningStorePath, gateway, port, debug, logToFiles, logPath)
     })
 
 program
