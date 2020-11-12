@@ -37,6 +37,9 @@ export class TileDoctype extends Doctype {
         if (this.context.did == null) {
             throw new Error('No DID authenticated')
         }
+        if ('chainId' in params) {
+            throw new Error('Updating chainId is not currently supported')
+        }
 
         const updateRecord = await TileDoctype._makeRecord(this, this.context.did, params.content, params.metadata?.controllers, params.metadata?.schema)
         const updated = await this.context.api.applyRecord(this.id.toString(), updateRecord, opts)
@@ -64,13 +67,19 @@ export class TileDoctype extends Doctype {
      * @param params - Create parameters
      * @param context - Ceramic context
      */
-    static async makeGenesis(params: DocParams, context?: Context): Promise<Record<string, any>> {
+    static async makeGenesis(params: DocParams, context: Context): Promise<Record<string, any>> {
         const metadata = params.metadata? params.metadata : { controllers: [] }
 
         // check for DID and authentication
         if (!context.did || !context.did.authenticated) {
             throw new Error('No DID authenticated')
         }
+
+        if ('chainId' in metadata) {
+            throw new Error('Cannot manually specify chainId')
+        }
+        const chainId = await context.anchorService?.getChainId()
+        metadata.chainId = chainId
 
         let unique: string
         if (params.deterministic) {
@@ -84,6 +93,7 @@ export class TileDoctype extends Doctype {
         if (!controllers || controllers.length === 0) {
             metadata.controllers = [context.did.id]
         }
+
 
         const { content } = params
         const record = { data: content, header: metadata, unique }

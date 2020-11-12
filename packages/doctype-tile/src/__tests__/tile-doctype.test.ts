@@ -26,7 +26,7 @@ const FAKE_CID_3 = new CID('bafybeig6xv5nwphfmvcnektpnojts55jqcuam7bmye2pb54adnr
 const FAKE_CID_4 = new CID('bafybeig6xv5nwphfmvcnektpnojts66jqcuam7bmye2pb54adnrtccjlsu')
 
 const RECORDS = {
-  genesis: { header: { controllers: [ 'did:3:bafyasdfasdf' ] }, data: { much: 'data' }, unique: '0' },
+  genesis: { header: { controllers: [ 'did:3:bafyasdfasdf' ], chainId: undefined }, data: { much: 'data' }, unique: '0' },
   genesisGenerated: {
     "jws": {
       "payload": "bbbb",
@@ -197,6 +197,13 @@ describe('TileDoctypeHandler', () => {
     const record2 = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id] } }, { did })
 
     expect(record1).not.toEqual(record2)
+  })
+
+  it('Cannot manually specify chainId in genesis header', async () => {
+    await expect(TileDoctype.makeGenesis({
+        content: RECORDS.genesis.data,
+        metadata: {controllers: [did.id], chainId: "foobar"}
+      }, {did})).rejects.toThrow(/Cannot manually specify chainId/)
   })
 
   it('creates genesis records deterministically if deterministic:true is specified', async () => {

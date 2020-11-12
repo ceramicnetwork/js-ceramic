@@ -47,6 +47,7 @@ export default class EthereumAnchorService extends AnchorService {
     private _ceramic: CeramicApi
     private readonly cidToResMap: Map<CidDoc, AnchorServiceResponse>;
     private readonly requestsApiEndpoint: string
+    private readonly chainIdApiEndpoint: string
 
     /**
      * @param _config - service configuration (polling interval, etc.)
@@ -56,6 +57,7 @@ export default class EthereumAnchorService extends AnchorService {
 
         this.cidToResMap = new Map<CidDoc, AnchorServiceResponse>();
         this.requestsApiEndpoint = this._config.anchorServiceUrl + '/api/v0/requests'
+        this.chainIdApiEndpoint = this._config.anchorServiceUrl + '/api/v0/service-info/chainid'
     }
 
     /**
@@ -78,6 +80,15 @@ export default class EthereumAnchorService extends AnchorService {
         // send initial request
         await this._sendReq(cidDocPair);
         this._poll(cidDocPair); // start polling
+    }
+
+    /**
+     * @returns a string representing the CAIP-2 chain ID of the configured blockchain.
+     */
+    async getChainId(): Promise<string> {
+        const response = await fetch(this.chainIdApiEndpoint);
+        const json = await response.json();
+        return json.chainId
     }
 
     /**

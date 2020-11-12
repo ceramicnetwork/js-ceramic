@@ -45,6 +45,7 @@ export interface DocMetadata {
     controllers: Array<string>;
     schema?: string;
     tags?: Array<string>;
+    chainId?: string;
 
     [index: string]: any; // allow arbitrary properties
 }

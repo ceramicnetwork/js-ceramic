@@ -198,6 +198,7 @@ describe('Document', () => {
       expect(doc.state.anchorStatus).toEqual(AnchorStatus.PENDING)
       await anchorUpdate(doc)
       expect(doc.state.anchorStatus).not.toEqual(AnchorStatus.NOT_REQUESTED)
+      expect(doc.state.metadata.chainId).toEqual("inmemory:12345")
     })
 
     it('is loaded correctly', async () => {
