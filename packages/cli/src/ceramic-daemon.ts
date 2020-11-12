@@ -193,9 +193,9 @@ class CeramicDaemon {
    * Create document from genesis record
    */
   async createDocFromGenesis (req: Request, res: Response, next: NextFunction): Promise<void> {
-    const { genesis, docOpts } = req.body
+    const { doctype, genesis, docOpts } = req.body
     try {
-      const doc = await this.ceramic.createDocumentFromGenesis(DoctypeUtils.deserializeRecord(genesis), docOpts)
+      const doc = await this.ceramic.createDocumentFromGenesis(doctype, DoctypeUtils.deserializeRecord(genesis), docOpts)
       res.json({ docId: doc.id.toString(), state: DoctypeUtils.serializeState(doc.state) })
     } catch (e) {
       return next(e)

@@ -27,7 +27,7 @@ const FAKE_CID_3 = new CID('bafybeig6xv5nwphfmvcnektpnojts55jqcuam7bmye2pb54adnr
 const FAKE_CID_4 = new CID('bafybeig6xv5nwphfmvcnektpnojts66jqcuam7bmye2pb54adnrtccjlsu')
 
 const RECORDS = {
-  genesis: { doctype: 'tile', header: { tags: ['3id'], controllers: [ 'did:key:zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV' ] }, data: { publicKeys: { test: '0xabc' } } },
+  genesis: { header: { tags: ['3id'], controllers: [ 'did:key:zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV' ] }, data: { publicKeys: { test: '0xabc' } } },
   genesisGenerated: {
     jws: {
       payload: "bbbb",
@@ -37,7 +37,7 @@ const RECORDS = {
           signature: "cccc"
         }
       ],
-      link: "bafyreihfj4bmqbzwejbc7mzipe25wskovt3nsnj4jfrqrfpg4zkjy72gli"
+      link: "bafyreia4yhrqevqys35mvccnfmgcrpne6fxrdpqaonif7njq3gh7so633e"
     },
     linkedBlock: {
       data: {
@@ -54,7 +54,6 @@ const RECORDS = {
         ]
       },
       unique: "0",
-      doctype: "tile",
     }
   },
   r1: {
