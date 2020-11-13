@@ -179,19 +179,6 @@ class Ceramic implements CeramicApi {
   }
 
   /**
-   * Find handler by genesis record
-   * @param genesisRecord - Document genesis record
-   */
-  findHandler<T extends DoctypeHandler<Doctype>>(genesisRecord: Record<string, any>): T {
-    if (genesisRecord.doctype in this._doctypeHandlers) {
-      return this._doctypeHandlers[genesisRecord.doctype] as T
-    } else if (genesisRecord['@context'] === "https://w3id.org/did/v1") {
-      return this._doctypeHandlers['3id'] as T
-    }
-    throw new Error("Couldn't determine doctype handler")
-  }
-
-  /**
    * Set DID provider
    * @param provider - DID provider instance
    */
@@ -287,32 +274,27 @@ class Ceramic implements CeramicApi {
 
   /**
    * Creates doctype from genesis record
+   * @param doctype - Document type
    * @param genesis - Genesis CID
    * @param opts - Initialization options
    */
-  async createDocumentFromGenesis<T extends Doctype>(genesis: any, opts: DocOpts = {}): Promise<T> {
-    const doc = await this._createDocFromGenesis(genesis, opts)
+  async createDocumentFromGenesis<T extends Doctype>(doctype: string, genesis: any, opts: DocOpts = {}): Promise<T> {
+    const doc = await this._createDocFromGenesis(doctype, genesis, opts)
     return doc.doctype as T
   }
 
   /**
    * Creates document from genesis record
+   * @param doctype - Document type
    * @param genesis - Genesis record
    * @param opts - Initialization options
    * @private
    */
-  async _createDocFromGenesis(genesis: any, opts: DocOpts = {}): Promise<Document> {
+  async _createDocFromGenesis(doctype: string, genesis: any, opts: DocOpts = {}): Promise<Document> {
     const genesisCid = await this.dispatcher.storeRecord(genesis)
-
-    let doctypeHandler, doctype: string
-    genesis = await this.dispatcher.retrieveRecord(genesisCid)
-    if (DoctypeUtils.isSignedRecord(genesis)) {
-      const payload = await this.dispatcher.retrieveRecord(genesis.link)
-      doctypeHandler = this.findHandler(payload)
-      doctype = payload.doctype
-    } else {
-      doctypeHandler = this.findHandler(genesis)
-      doctype = genesis.doctype
+    const doctypeHandler = this._doctypeHandlers[doctype]
+    if (!doctypeHandler) {
+      throw new Error(doctype + " is not a valid doctype")
     }
 
     const docId = new DocID(doctype, genesisCid)
@@ -365,8 +347,13 @@ class Ceramic implements CeramicApi {
     docId = normalizeDocID(docId)
     const docIdStr = docId.toString()
 
+    const doctypeHandler = this._doctypeHandlers[docId.typeName]
+    if (!doctypeHandler) {
+      throw new Error(docId.typeName + " is not a valid doctype")
+    }
+
     if (!this._docmap[docIdStr]) {
-      this._docmap[docIdStr] = await Document.load(docId, this.findHandler.bind(this), this.dispatcher, this.pinStore, this.context, opts)
+      this._docmap[docIdStr] = await Document.load(docId, doctypeHandler, this.dispatcher, this.pinStore, this.context, opts)
     }
     return this._docmap[docIdStr]
   }
