@@ -1,6 +1,6 @@
 import IPFS from 'ipfs'
 import Ceramic from '../ceramic'
-import IdentityWallet from 'identity-wallet'
+import { Ed25519Provider } from 'key-did-provider-ed25519'
 import tmp from 'tmp-promise'
 import getPort from 'get-port'
 import { DoctypeUtils, DocState, Doctype } from "@ceramicnetwork/common"
@@ -14,7 +14,7 @@ import { IPFSApi } from "../declarations"
 
 jest.mock('../store/level-state-store')
 
-const seed = u8a.fromString('6e34b2e1a9624113d81ece8a8a22e6e97f0e145c25c1d4d2d0e62753b4060c837097f768559e17ec89ee20cba153b23b9987912ec1e860fa1212ba4b84c776ce', 'base16')
+const seed = u8a.fromString('6e34b2e1a9624113d81ece8a8a22e6e97f0e145c25c1d4d2d0e62753b4060c83', 'base16')
 
 /**
  * Create an IPFS instance
@@ -42,13 +42,8 @@ const createCeramic = async (ipfs: IPFSApi, topic: string, anchorOnRequest = fal
     topic,
     anchorOnRequest,
   })
-
-  await IdentityWallet.create({
-    getPermission: async (): Promise<Array<string>> => [],
-    seed,
-    ceramic,
-    disableIDX: true,
-  })
+  const provider = new Ed25519Provider(seed)
+  await ceramic.setDIDProvider(provider)
 
   return ceramic
 }
@@ -186,26 +181,23 @@ describe('Ceramic integration', () => {
     await ipfs1.swarm.connect(multaddr2)
     await ipfs2.swarm.connect(multaddr3)
 
+    const provider = new Ed25519Provider(seed)
     const ceramic1 = await Ceramic.create(ipfs1, {
       stateStorePath: await tmp.tmpName()
     })
-
-    const idw = await IdentityWallet.create({
-      getPermission: async (): Promise<Array<string>> => [], seed, ceramic: ceramic1,
-      disableIDX: true,
-    })
+    await ceramic1.setDIDProvider(provider)
 
     const ceramic2 = await Ceramic.create(ipfs2, {
       stateStorePath: await tmp.tmpName()
     })
-    await ceramic2.setDIDProvider(idw.getDidProvider())
+    await ceramic2.setDIDProvider(provider)
 
     const ceramic3 = await Ceramic.create(ipfs3, {
       stateStorePath: await tmp.tmpName()
     })
-    await ceramic3.setDIDProvider(idw.getDidProvider())
+    await ceramic3.setDIDProvider(provider)
 
-    const controller = idw.id
+    const controller = ceramic1.did.id
 
     // ceramic node 2 shouldn't need to have the document open in order to forward the message
     const doctype1 = await ceramic1.createDocument<TileDoctype>(DOCTYPE_TILE, {

@@ -1,5 +1,5 @@
 import Ceramic from '../ceramic'
-import IdentityWallet from 'identity-wallet'
+import { Ed25519Provider } from 'key-did-provider-ed25519'
 import {AnchorStatus, Doctype} from "@ceramicnetwork/common"
 import { TileDoctype } from "@ceramicnetwork/doctype-tile"
 import tmp from 'tmp-promise'
@@ -15,7 +15,7 @@ import legacy from 'multiformats/cjs/src/legacy.js'
 
 jest.mock('../store/level-state-store')
 
-const seed = u8a.fromString('6e34b2e1a9624113d81ece8a8a22e6e97f0e145c25c1d4d2d0e62753b4060c837097f768559e17ec89ee20cba153b23b9987912ec1e860fa1212ba4b84c776ce', 'base16')
+const seed = u8a.fromString('6e34b2e1a9624113d81ece8a8a22e6e97f0e145c25c1d4d2d0e62753b4060c83', 'base16')
 
 /**
  * Create an IPFS instance
@@ -39,13 +39,8 @@ const createCeramic = async (ipfs: IPFSApi, anchorManual: boolean, topic: string
     topic,
     anchorOnRequest: !anchorManual,
   })
-
-  await IdentityWallet.create({
-    getPermission: async (): Promise<Array<string>> => [],
-    seed,
-    ceramic,
-    disableIDX: true,
-  })
+  const provider = new Ed25519Provider(seed)
+  await ceramic.setDIDProvider(provider)
 
   return ceramic
 }
