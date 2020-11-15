@@ -70,6 +70,10 @@ export interface DocNext {
     metadata?: DocMetadata;
 }
 
+export interface LogEntry {
+  cid: CID
+  isVersion?: boolean
+}
 /**
  * Document state
  */
@@ -82,8 +86,7 @@ export interface DocState {
     anchorStatus: AnchorStatus;
     anchorScheduledFor?: number; // only present when anchor status is pending
     anchorProof?: AnchorProof; // the anchor proof of the latest anchor, only present when anchor status is anchored
-    lastAnchored?: CID; // The CID of the most recent anchor record in the log
-    log: Array<CID>;
+    log: Array<LogEntry>;
 }
 
 /**
@@ -103,7 +106,7 @@ export abstract class Doctype extends EventEmitter {
     }
 
     get id(): DocID {
-        return new DocID(this._state.doctype, this._state.log[0])
+        return new DocID(this._state.doctype, this._state.log[0].cid)
     }
 
     get doctype(): string {
@@ -125,13 +128,22 @@ export abstract class Doctype extends EventEmitter {
     }
 
     get tip(): CID {
-        return this._state.log[this._state.log.length - 1]
+        return this._state.log[this._state.log.length - 1].cid
     }
 
-    get currentVersionDocID(): DocID {
-        const version = this._state.lastAnchored
-        return DocID.fromOther(this.id, version ? version : '0')
+    get versionId(): DocID {
+        return this.allVersionIds.pop()
     }
+
+    /**
+     * Lists available versions
+     */
+    get allVersionIds(): Array<DocID> {
+      return this._state.log
+        .filter(({ isVersion }) => isVersion)
+        .map(({ cid }) => DocID.fromOther(this.id, cid))
+    }
+
 
     get state(): DocState {
         return cloneDeep(this._state)

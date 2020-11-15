@@ -94,7 +94,7 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
             metadata: payload.header,
             signature: isSigned? SignatureStatus.SIGNED : SignatureStatus.GENESIS,
             anchorStatus: AnchorStatus.NOT_REQUESTED,
-            log: [cid]
+            log: [{ cid, isVersion: true }]
         }
     }
 
@@ -110,8 +110,8 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
         await this._verifySignature(record, context, state.metadata.controllers[0])
 
         const payload = (await context.ipfs.dag.get(record.link)).value
-        if (!payload.id.equals(state.log[0])) {
-            throw new Error(`Invalid docId ${payload.id}, expected ${state.log[0]}`)
+        if (!payload.id.equals(state.log[0].cid)) {
+            throw new Error(`Invalid docId ${payload.id}, expected ${state.log[0].cid}`)
         }
 
         const nextState = cloneDeep(state)
@@ -122,12 +122,12 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
         const nonce = payload.header.nonce
         const squash = nonce > 0 && state.next
         if (squash) {
-            nextState.log[nextState.log.length-1] = cid
+            nextState.log[nextState.log.length-1] = { cid }
             nextState.next = {
                 content: jsonpatch.applyPatch(state.next.content, payload.data).newDocument
             }
         } else {
-            nextState.log.push(cid)
+            nextState.log.push({ cid })
             nextState.next = {
                 content: jsonpatch.applyPatch(state.content, payload.data).newDocument
             }
@@ -152,7 +152,7 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
      * @private
      */
     async _applyAnchor(record: AnchorRecord, proof: AnchorProof, cid: CID, state: DocState): Promise<DocState> {
-        state.log.push(cid)
+        state.log.push({ cid, isVersion: true })
         let content = state.content
         let metadata = state.metadata
 
@@ -169,7 +169,7 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
         delete state.next
 
         return {
-            ...state, content, metadata, anchorStatus: AnchorStatus.ANCHORED, anchorProof: proof, lastAnchored: cid,
+            ...state, content, metadata, anchorStatus: AnchorStatus.ANCHORED, anchorProof: proof,
         }
     }
 

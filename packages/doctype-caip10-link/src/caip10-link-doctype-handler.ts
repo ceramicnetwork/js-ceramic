@@ -70,7 +70,7 @@ export class Caip10LinkDoctypeHandler implements DoctypeHandler<Caip10LinkDoctyp
             metadata: record.header,
             signature: SignatureStatus.GENESIS,
             anchorStatus: AnchorStatus.NOT_REQUESTED,
-            log: [cid]
+            log: [{ cid, isVersion: true }]
         }
     }
 
@@ -98,7 +98,7 @@ export class Caip10LinkDoctypeHandler implements DoctypeHandler<Caip10LinkDoctyp
         if (addressCaip10.toLowerCase() !== state.metadata.controllers[0].toLowerCase()) {
             throw new Error("Address doesn't match document controller")
         }
-        state.log.push(cid)
+        state.log.push({ cid })
         return {
             ...state,
             signature: SignatureStatus.SIGNED,
@@ -118,7 +118,7 @@ export class Caip10LinkDoctypeHandler implements DoctypeHandler<Caip10LinkDoctyp
      * @private
      */
     async _applyAnchor (record: any, proof: AnchorProof, cid: CID, state: DocState): Promise<DocState> {
-        state.log.push(cid)
+        state.log.push({ cid, isVersion: true })
         let content = state.content
         if (state.next?.content) {
             content = state.next.content
@@ -129,7 +129,6 @@ export class Caip10LinkDoctypeHandler implements DoctypeHandler<Caip10LinkDoctyp
             content,
             anchorStatus: AnchorStatus.ANCHORED,
             anchorProof: proof,
-            lastAnchored: cid,
         }
     }
 

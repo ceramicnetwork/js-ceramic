@@ -32,7 +32,7 @@ const state = {
     },
     signature: SignatureStatus.GENESIS,
     anchorStatus: AnchorStatus.NOT_REQUESTED,
-    log: [new CID('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D')]
+    log: [{ cid: new CID('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D'),  isVersion: true }]
 }
 
 class FakeType extends Doctype {
@@ -61,18 +61,19 @@ describe('#add', () => {
         const document = new FakeType(state, {})
         await pinStore.add(document)
         expect(stateStore.save).toBeCalledWith(document)
-        expect(pinning.pin).toBeCalledWith(state.log[0])
+        expect(pinning.pin).toBeCalledWith(state.log[0].cid)
         expect(pinning.pin).toBeCalledTimes(1)
     })
 
     test('save and pin proof without path', async () => {
         const stateWithProof = Object.assign(state, {
-            log: [new CID('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D'), new CID('QmdmQXB2mzChmMeKY47C43LxUdg1NDJ5MWcKMKxDu7RgQm')]
+            log: [{ cid: new CID('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D'), isVersion: true},
+              { cid: new CID('QmdmQXB2mzChmMeKY47C43LxUdg1NDJ5MWcKMKxDu7RgQm'), isVersion: true }]
         })
         const proofCID = new CID('QmbQDovX7wRe9ek7u6QXe9zgCXkTzoUSsTFJEkrYV1HrVR')
         const proofRootCID = new CID('QmNPqfxJDLPJFMhkUexLv431HNTfQBqh45unLg8ByBfa7h')
         const retrieve = jest.fn(async (cid) => {
-            if (cid.equals(stateWithProof.log[1])) {
+            if (cid.equals(stateWithProof.log[1].cid)) {
                 return {
                     proof: proofCID
                 }
@@ -87,8 +88,8 @@ describe('#add', () => {
         const document = new FakeType(state, {})
         await pinStore.add(document)
         expect(stateStore.save).toBeCalledWith(document)
-        expect(pinning.pin).toBeCalledWith(stateWithProof.log[0])
-        expect(pinning.pin).toBeCalledWith(stateWithProof.log[1])
+        expect(pinning.pin).toBeCalledWith(stateWithProof.log[0].cid)
+        expect(pinning.pin).toBeCalledWith(stateWithProof.log[1].cid)
         expect(pinning.pin).toBeCalledWith(proofCID)
         expect(pinning.pin).toBeCalledWith(proofRootCID)
         expect(pinning.pin).toBeCalledTimes(4)
@@ -96,14 +97,15 @@ describe('#add', () => {
 
     test('save and pin proof with path', async () => {
         const stateWithProof = Object.assign(state, {
-            log: [new CID('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D'), new CID('QmdmQXB2mzChmMeKY47C43LxUdg1NDJ5MWcKMKxDu7RgQm')]
+          log: [{ cid: new CID('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D'), isVersion: true},
+            { cid: new CID('QmdmQXB2mzChmMeKY47C43LxUdg1NDJ5MWcKMKxDu7RgQm'), isVersion: true }]
         })
         const proofCID = new CID('QmbQDovX7wRe9ek7u6QXe9zgCXkTzoUSsTFJEkrYV1HrVR')
         const leftCID = new CID('QmdC5Hav9zdn2iS75reafXBq1PH4EnqUmoxwoxkS5QtuME')
         const rightCID = new CID('QmcyyLvDzCrduuvGVUQEh1DzFvM7UWGfc9sUg87PjjYCw7')
         const proofRootCID = new CID('QmNPqfxJDLPJFMhkUexLv431HNTfQBqh45unLg8ByBfa7h')
         const retrieve = jest.fn(async (cid) => {
-            if (cid.equals(stateWithProof.log[1])) {
+            if (cid.equals(stateWithProof.log[1].cid)) {
                 return {
                     proof: proofCID,
                     path: "L/R"
@@ -123,8 +125,8 @@ describe('#add', () => {
         const document = new FakeType(state, {})
         await pinStore.add(document)
         expect(stateStore.save).toBeCalledWith(document)
-        expect(pinning.pin).toBeCalledWith(stateWithProof.log[0])
-        expect(pinning.pin).toBeCalledWith(stateWithProof.log[1])
+        expect(pinning.pin).toBeCalledWith(stateWithProof.log[0].cid)
+        expect(pinning.pin).toBeCalledWith(stateWithProof.log[1].cid)
         expect(pinning.pin).toBeCalledWith(proofCID)
         expect(pinning.pin).toBeCalledWith(proofRootCID)
         expect(pinning.pin).toBeCalledWith(leftCID)
@@ -139,7 +141,7 @@ test('#rm', async () => {
     stateStore.load = jest.fn(async () => state)
     await pinStore.rm(document.id)
     expect(stateStore.remove).toBeCalledWith(document.id)
-    expect(pinning.unpin).toBeCalledWith(state.log[0])
+    expect(pinning.unpin).toBeCalledWith(state.log[0].cid)
 })
 
 test('#ls', async () => {

@@ -49,7 +49,7 @@ const state = {
     },
     signature: SignatureStatus.GENESIS,
     anchorStatus: AnchorStatus.NOT_REQUESTED,
-    log: [new CID('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D')]
+    log: [{ cid: new CID('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D'), isVersion: true }]
 }
 
 test('#open', async () => {
@@ -66,7 +66,7 @@ test('#save and #load', async () => {
     const docId = document.id.baseID
     const storedState = {
         ...state,
-        log: state.log.map(cid => cid.toString())
+        log: state.log.map(e => ({ ...e, cid: e.cid.toString() }))
     }
     expect(mockPut).toBeCalledWith(docId.toString(), storedState)
 
