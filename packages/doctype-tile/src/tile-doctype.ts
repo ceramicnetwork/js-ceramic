@@ -37,8 +37,9 @@ export class TileDoctype extends Doctype {
         if (this.context.did == null) {
             throw new Error('No DID authenticated')
         }
-        if ('chainId' in params) {
-            throw new Error('Updating chainId is not currently supported')
+
+        if ('chainId' in params && params.chainId != this.metadata.chainId) {
+            throw new Error("Updating chainId is not currently supported. Current chainId: " + this.metadata.chainId + ", requested chainId: " + params.chainId)
         }
 
         const updateRecord = await TileDoctype._makeRecord(this, this.context.did, params.content, params.metadata?.controllers, params.metadata?.schema)
@@ -75,10 +76,10 @@ export class TileDoctype extends Doctype {
             throw new Error('No DID authenticated')
         }
 
-        if ('chainId' in metadata) {
-            throw new Error('Cannot manually specify chainId')
+        const chainId = await context.api.getChainId()
+        if ('chainId' in metadata && metadata.chainId != chainId) {
+            throw new Error("Requested chainId '" + metadata.chainId + "' but this node is only configured to support chainId '" + chainId + "'")
         }
-        const chainId = await context.anchorService?.getChainId()
         metadata.chainId = chainId
 
         let unique: string

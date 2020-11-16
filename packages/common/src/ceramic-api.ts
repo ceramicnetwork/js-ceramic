@@ -99,6 +99,11 @@ export interface CeramicApi {
     setDIDProvider (provider: DIDProvider): Promise<void>;
 
     /**
+     * @returns the CAIP-2 chain ID of the blockchain that will be used to anchor records.
+     */
+    getChainId(): Promise<string>;
+
+    /**
      * Closes Ceramic instance
      */
     close(): Promise<void>; // gracefully close the ceramic instance

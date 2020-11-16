@@ -371,6 +371,18 @@ class Ceramic implements CeramicApi {
   }
 
   /**
+   * @returns the CAIP-2 chain ID of the blockchain that will be used to anchor records.
+   */
+  async getChainId(): Promise<string> {
+    if (!this.context.anchorService) {
+      throw new Error("No anchor service configured")
+    }
+    // TODO cache this!
+    return await this.context.anchorService.getChainId()
+  }
+
+
+  /**
    * Close Ceramic instance gracefully
    */
   async close (): Promise<void> {

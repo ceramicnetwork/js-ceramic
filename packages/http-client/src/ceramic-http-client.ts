@@ -131,6 +131,12 @@ class CeramicClient implements CeramicApi {
     }
   }
 
+  async getChainId(): Promise<string> {
+    const {chainId} = await fetchJson(this._apiUrl + '/chainId')
+    // todo cache this
+    return chainId
+  }
+
   async close (): Promise<void> {
     for (const docId in this._docmap) {
       this._docmap[docId].close();
