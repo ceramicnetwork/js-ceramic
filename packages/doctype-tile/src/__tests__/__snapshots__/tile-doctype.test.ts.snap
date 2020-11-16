@@ -174,7 +174,6 @@ Object {
     },
   ],
   "metadata": Object {
-    "chainId": undefined,
     "controllers": Array [
       "did:3:bafyasdfasdf",
     ],
@@ -233,7 +232,6 @@ Object {
     },
   ],
   "metadata": Object {
-    "chainId": undefined,
     "controllers": Array [
       "did:3:bafyasdfasdf",
     ],
@@ -332,7 +330,6 @@ Object {
     },
   ],
   "metadata": Object {
-    "chainId": undefined,
     "controllers": Array [
       "did:3:bafyasdfasdf",
     ],
@@ -343,7 +340,6 @@ Object {
       "very": "content",
     },
     "metadata": Object {
-      "chainId": undefined,
       "controllers": Array [
         "did:3:bafyasdfasdf",
       ],
