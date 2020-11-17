@@ -424,15 +424,11 @@ describe('Document', () => {
 
     it("Neither log is anchored", async () => {
       const state1 = {
-        doctype: TileDoctype.DOCTYPE,
-        content: {foo: 'bar'},
         anchorStatus: AnchorStatus.NOT_REQUESTED,
         log: [cids[1], cids[2], cids[3]]
       }
 
       const state2 = {
-        doctype: TileDoctype.DOCTYPE,
-        content: {foo: 'baz'},
         anchorStatus: AnchorStatus.PENDING,
         log: [cids[4], cids[0]]
       }
@@ -444,15 +440,11 @@ describe('Document', () => {
 
     it("One log anchored before the other", async () => {
       const state1 = {
-        doctype: TileDoctype.DOCTYPE,
-        content: {foo: 'bar'},
         anchorStatus: AnchorStatus.PENDING,
         log: [cids[1], cids[2], cids[3]]
       }
 
       const state2 = {
-        doctype: TileDoctype.DOCTYPE,
-        content: {foo: 'baz'},
         anchorStatus: AnchorStatus.ANCHORED,
         log: [cids[4], cids[0]]
       }
@@ -468,8 +460,6 @@ describe('Document', () => {
         blockTimestamp: 5,
       }
       const state1 = {
-        doctype: TileDoctype.DOCTYPE,
-        content: {foo: 'bar'},
         anchorStatus: AnchorStatus.ANCHORED,
         anchorProof: proof1,
         log: [cids[1], cids[2], cids[3]]
@@ -480,8 +470,6 @@ describe('Document', () => {
         blockTimestamp: 10,
       }
       const state2 = {
-        doctype: TileDoctype.DOCTYPE,
-        content: {foo: 'baz'},
         anchorStatus: AnchorStatus.ANCHORED,
         anchorProof: proof2,
         log: [cids[4], cids[0]]
@@ -498,8 +486,6 @@ describe('Document', () => {
         blockNumber: 10,
       }
       const state1 = {
-        doctype: TileDoctype.DOCTYPE,
-        content: {foo: 'bar'},
         anchorStatus: AnchorStatus.ANCHORED,
         anchorProof: proof1,
         log: [cids[1], cids[2], cids[3]]
@@ -510,8 +496,6 @@ describe('Document', () => {
         blockNumber: 5,
       }
       const state2 = {
-        doctype: TileDoctype.DOCTYPE,
-        content: {foo: 'baz'},
         anchorStatus: AnchorStatus.ANCHORED,
         anchorProof: proof2,
         log: [cids[4], cids[0]]
@@ -528,8 +512,6 @@ describe('Document', () => {
         blockNumber: 10,
       }
       const state1 = {
-        doctype: TileDoctype.DOCTYPE,
-        content: {foo: 'bar'},
         anchorStatus: AnchorStatus.ANCHORED,
         anchorProof: proof1,
         log: [cids[1], cids[2], cids[3]]
@@ -540,8 +522,6 @@ describe('Document', () => {
         blockNumber: 10,
       }
       const state2 = {
-        doctype: TileDoctype.DOCTYPE,
-        content: {foo: 'baz'},
         anchorStatus: AnchorStatus.ANCHORED,
         anchorProof: proof2,
         log: [cids[4], cids[0]]
