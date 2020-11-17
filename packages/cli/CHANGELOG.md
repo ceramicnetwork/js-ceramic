@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.13.3](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-cli@0.13.2...@ceramicnetwork/ceramic-cli@0.13.3) (2020-11-17)
+
+
+### Bug Fixes
+
+* disable random walk for DHT ([#504](https://github.com/ceramicnetwork/js-ceramic/issues/504)) ([fc931f7](https://github.com/ceramicnetwork/js-ceramic/commit/fc931f7c1d07a7b4f7ec261e9a03af39cfc8b0aa))
+
+
+
+
+
 ## [0.13.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-cli@0.13.1...@ceramicnetwork/ceramic-cli@0.13.2) (2020-11-11)
 
 

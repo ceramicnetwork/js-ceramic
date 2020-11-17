@@ -6,7 +6,7 @@ import * as u8a from 'uint8arrays'
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const fs = require('fs').promises
 
-import IdentityWallet from "identity-wallet"
+import { Ed25519Provider } from 'key-did-provider-ed25519'
 import CeramicClient from "@ceramicnetwork/http-client"
 import { CeramicApi, DoctypeUtils } from "@ceramicnetwork/common"
 import DocID from '@ceramicnetwork/docid'
@@ -92,7 +92,7 @@ export class CeramicCliUtils {
                         dht: {
                             enabled: true,
                             clientMode: !IPFS_DHT_SERVER_MODE,
-                            randomWalk: true,
+                            randomWalk: false,
                         },
                     },
                 },
@@ -329,9 +329,8 @@ export class CeramicCliUtils {
         }
 
         const seed = u8a.fromString(cliConfig.seed)
-        await IdentityWallet.create({
-            getPermission: async (): Promise<Array<string>> => [], seed, ceramic, disableIDX: true,
-        })
+        const provider = new Ed25519Provider(seed)
+        await ceramic.setDIDProvider(provider)
 
         try {
             await fn(ceramic)
