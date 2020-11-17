@@ -13,6 +13,7 @@ const API_PATH = '/api/v0'
 class CeramicClient implements CeramicApi {
   private readonly _apiUrl: string
   private readonly _docmap: Record<string, Document>
+  private _chainId: string
 
   public readonly pin: PinApi
   public readonly context: Context
@@ -132,8 +133,13 @@ class CeramicClient implements CeramicApi {
   }
 
   async getChainId(): Promise<string> {
+    if (this._chainId) {
+      return this._chainId
+    }
+
+    // Fetch the chainId from the daemon and cache the result
     const {chainId} = await fetchJson(this._apiUrl + '/chainId')
-    // todo cache this
+    this._chainId = chainId
     return chainId
   }
 

@@ -69,6 +69,7 @@ const normalizeDocID = (docId: DocID | string): DocID => {
 class Ceramic implements CeramicApi {
   private readonly _docmap: Record<string, Document>
   private readonly _doctypeHandlers: Record<string, DoctypeHandler<Doctype>>
+  private _chainId: string
 
   public readonly pin: PinApi
   public readonly context: Context
@@ -372,13 +373,20 @@ class Ceramic implements CeramicApi {
 
   /**
    * @returns the CAIP-2 chain ID of the blockchain that will be used to anchor records.
+   *
+   * Caches the result after the first time it is requested
    */
   async getChainId(): Promise<string> {
+    if (this._chainId) {
+      return this._chainId
+    }
+
+    // Fetch the chainId from the anchor service and cache the result
     if (!this.context.anchorService) {
       throw new Error("No anchor service configured")
     }
-    // TODO cache this!
-    return await this.context.anchorService.getChainId()
+    this._chainId = await this.context.anchorService.getChainId()
+    return this._chainId
   }
 
 
