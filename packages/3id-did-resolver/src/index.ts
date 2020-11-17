@@ -1,9 +1,12 @@
 import bs58 from 'bs58'
 import { Doctype } from "@ceramicnetwork/common"
 import type { ParsedDID, DIDResolver, DIDDocument } from 'did-resolver'
+import LegacyResolver from './legacyResolver'
+import DocID from '@ceramicnetwork/docid'
 
 interface Ceramic {
-  loadDocument(docId: string): Promise<Doctype>;
+  loadDocument(docId: DocID): Promise<Doctype>;
+  createDocument(type: string, content: any, opts: any): Promise<Doctype>;
 }
 
 interface ResolverRegistry {
@@ -88,13 +91,53 @@ export function wrapDocument(content: any, did: string): DIDDocument {
   return doc
 }
 
-// TODO - add backwards compatibility for 3IDv0
+const isLegacyDid = (didId: string): boolean => {
+ return !DocID.isDocID(didId)
+}
+
+const getVersion = (query = ''): string | null => {
+  const versionParam = query.split('&').find(e => e.includes('version-id'))
+  return versionParam ? versionParam.split('=')[1] : null
+}
+
 export default {
-  getResolver: (ceramic: Ceramic): ResolverRegistry => ({
-    '3': async (did: string, parsed: ParsedDID): Promise<DIDDocument | null> => {
-      const version = (parsed.query || '').replace('version-id', '?version')
-      const doctype = await ceramic.loadDocument(`/ceramic/${parsed.id}${version}`);
-      return wrapDocument(doctype.content, did)
+  getResolver: (ceramic: Ceramic): ResolverRegistry => {
+
+    // todo could add opt to pass ceramic ipfs here instead when true
+    const legacyResolver = LegacyResolver()
+ 
+    const legacyResolve = async (didId: string, version?: string): Promise<DIDDocument | null> => {
+      const legacyDoc = await legacyResolver(`did:3:${didId}`)
+      if (!legacyDoc) return null
+      if (version === '0') return legacyDoc
+
+      const keyEntry = legacyDoc.publicKey.findIndex(e => e.id.endsWith('managementKey'))
+      const managementKey = legacyDoc.publicKey[keyEntry].ethereumAddress 
+      if (!managementKey) return null
+   
+      const doctype = 'tile'
+      const content =  { metadata: { controllers: [`did:key:${managementKey}`], tags: ['3id'] } }
+      const doc = await ceramic.createDocument(doctype, content, { applyOnly: true })
+      const didDoc = await resolve(doc.id.toString(), version)
+      
+      return didDoc ? didDoc : legacyDoc
     }
-  })
+    
+    const resolve = async (didId: string, version?: string): Promise<DIDDocument | null> =>  {
+      const docId = DocID.fromString(didId, version)
+      try {
+        const doctype = await ceramic.loadDocument(docId)
+        return wrapDocument(doctype.content, `did:3:${didId}`)
+      } catch (e) {
+        return null
+      }
+    }
+    
+    return {
+      '3': async (did: string, parsed: ParsedDID): Promise<DIDDocument | null> => {
+        const version = getVersion(parsed.query)
+        return isLegacyDid(parsed.id) ? legacyResolve(parsed.id, version) : resolve(parsed.id, version)
+      }
+    }
+  }
 }
