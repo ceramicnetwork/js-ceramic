@@ -1,5 +1,7 @@
 import { Doctype, DoctypeConstructor, DoctypeStatic, DocOpts, DocParams, Context } from "@ceramicnetwork/common"
 
+const DOCTYPE = 'caip10-link'
+
 /**
  * Caip10Link parameters
  */
@@ -12,8 +14,6 @@ export interface Caip10LinkParams extends DocParams {
  */
 @DoctypeStatic<DoctypeConstructor<Caip10LinkDoctype>>()
 export class Caip10LinkDoctype extends Doctype {
-
-    public static DOCTYPE = 'caip10-link'
 
     /**
      * Changes Caip10Link instance
@@ -37,7 +37,7 @@ export class Caip10LinkDoctype extends Doctype {
         const { content, metadata } = params
 
         const record = await Caip10LinkDoctype.makeGenesis({ content, metadata })
-        return context.api.createDocumentFromGenesis(Caip10LinkDoctype.DOCTYPE, record, opts)
+        return context.api.createDocumentFromGenesis(DOCTYPE, record, opts)
     }
 
     /**

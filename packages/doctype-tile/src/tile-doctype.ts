@@ -13,6 +13,8 @@ import {
     Context
 } from "@ceramicnetwork/common"
 
+const DOCTYPE = 'tile'
+
 /**
  * Tile doctype parameters
  */
@@ -25,8 +27,6 @@ export interface TileParams extends DocParams {
  */
 @DoctypeStatic<DoctypeConstructor<TileDoctype>>()
 export class TileDoctype extends Doctype {
-
-    public static DOCTYPE = 'tile'
 
     /**
      * Change existing Tile doctype
@@ -56,7 +56,7 @@ export class TileDoctype extends Doctype {
 
         const { content, metadata } = params
         const record = await TileDoctype.makeGenesis({ content, metadata }, context)
-        return context.api.createDocumentFromGenesis<TileDoctype>(TileDoctype.DOCTYPE, record, opts)
+        return context.api.createDocumentFromGenesis<TileDoctype>(DOCTYPE, record, opts)
     }
 
     /**
