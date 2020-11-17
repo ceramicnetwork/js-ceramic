@@ -98,9 +98,7 @@ const create = async (params: TileParams, ceramic: Ceramic, context: Context, op
     throw new Error('The controller of the 3ID needs to be specified')
   }
 
-  const metadataWithChainId = await TileDoctype._addChainIdToMetadata(metadata, context)
-
-  const record = await TileDoctype.makeGenesis({ content, metadata: metadataWithChainId }, context)
+  const record = await TileDoctype.makeGenesis({ content, metadata }, context)
   return await ceramic._createDocFromGenesis("tile", record, opts)
 }
 

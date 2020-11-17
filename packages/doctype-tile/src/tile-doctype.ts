@@ -59,21 +59,8 @@ export class TileDoctype extends Doctype {
         }
 
         const { content, metadata } = params
-        const metadataWithChainId = await TileDoctype._addChainIdToMetadata(metadata, context)
-        const record = await TileDoctype.makeGenesis({ content, metadata: metadataWithChainId }, context)
+        const record = await TileDoctype.makeGenesis({ content, metadata }, context)
         return context.api.createDocumentFromGenesis<TileDoctype>(DOCTYPE, record, opts)
-    }
-
-    static async _addChainIdToMetadata(metadata: DocMetadata, context: Context): Promise<DocMetadata>{
-        metadata = metadata ?? {controllers: []}
-
-        const chainId = await context.api.getChainId()
-        if ('chainId' in metadata && metadata.chainId != chainId) {
-            throw new Error("Requested chainId '" + metadata.chainId + "' but this node is only configured to support chainId '" + chainId + "'")
-        }
-
-        metadata.chainId = chainId
-        return metadata
     }
 
     /**
@@ -88,6 +75,12 @@ export class TileDoctype extends Doctype {
         if (!context.did || !context.did.authenticated) {
             throw new Error('No DID authenticated')
         }
+
+        const chainId = await context.api.getChainId()
+        if ('chainId' in metadata && metadata.chainId != chainId) {
+            throw new Error("Requested chainId '" + metadata.chainId + "' but this node is only configured to support chainId '" + chainId + "'")
+        }
+        metadata.chainId = chainId
 
         let unique: string
         if (params.deterministic) {
