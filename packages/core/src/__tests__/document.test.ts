@@ -310,7 +310,6 @@ describe('Document', () => {
     })
 
     it('handles conflict', async () => {
-      const fakeState = { asdf: 2342 }
       const doc1 = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context)
       const docId = doc1.id
       await anchorUpdate(doc1)
@@ -330,12 +329,13 @@ describe('Document', () => {
       await new Promise(resolve => setTimeout(resolve, 1))
       // TODO - better mock for anchors
 
-      updateRec = await TileDoctype._makeRecord(doc2.doctype, user, fakeState, doc2.controllers)
+      const conflictingNewContent = { asdf: 2342 }
+      updateRec = await TileDoctype._makeRecord(doc2.doctype, user, conflictingNewContent, doc2.controllers)
       await doc2.applyRecord(updateRec)
 
       await anchorUpdate(doc2)
       const tipInvalidUpdate = doc2.tip
-      expect(doc2.content).toEqual(fakeState)
+      expect(doc2.content).toEqual(conflictingNewContent)
       // loading tip from valid log to doc with invalid
       // log results in valid state
       await doc2._handleTip(tipValidUpdate)

@@ -393,16 +393,48 @@ class Document extends EventEmitter {
   }
 
   /**
+   * Given two different DocStates representing two different conflicting histories of the same
+   * document, pick which version to accept, in accordance with our conflict resolution strategy
+   * @returns true if state2's log should be taken, or false if state1's log should be taken
+   */
+  static async _pickLogToAccept(state1: DocState, state2: DocState): Promise<boolean> {
+    const isState1Anchored = state1.anchorStatus === AnchorStatus.ANCHORED
+    const isState2Anchored = state2.anchorStatus === AnchorStatus.ANCHORED
+
+    if (!isState1Anchored && !isState2Anchored) {
+      // if none of them is anchored, apply the log
+      return true
+    }
+
+    if (!isState1Anchored && isState2Anchored) {
+      // if the remote state is anchored before the local,
+      // apply the remote log to our local state. Otherwise
+      // keep present state
+      return true
+    }
+
+    if (isState1Anchored && isState2Anchored) {
+      // compare anchor proofs if both states are anchored
+      const { anchorProof: localProof } = state1
+      const { anchorProof: remoteProof } = state2
+
+      if (remoteProof.blockTimestamp < localProof.blockTimestamp) {
+        return true
+      }
+    }
+  }
+
+  /**
    * Applies the log to the document
    *
    * @param log - Log of record CIDs
+   * @return true if the log resulted in an update to this document's state, false if not
    * @private
    */
   async _applyLog (log: Array<CID>): Promise<boolean> {
-    let modified = false
     if (log[log.length - 1].equals(this.tip)) {
       // log already applied
-      return
+      return false
     }
     const cid = log[0]
     const record = await this.dispatcher.retrieveRecord(cid)
@@ -413,51 +445,28 @@ class Document extends EventEmitter {
     if (payload.prev.equals(this.tip)) {
       // the new log starts where the previous one ended
       this._doctype.state = await this._applyLogToState(log, cloneDeep(this._doctype.state))
-      modified = true
-    } else {
-      // we have a conflict since prev is in the log of the
-      // local state, but isn't the tip
-      const conflictIdx = await this._findIndex(payload.prev, this._doctype.state.log) + 1
-      const canonicalLog = this._doctype.state.log.slice() // copy log
-      const localLog = canonicalLog.splice(conflictIdx)
-      // Compute state up till conflictIdx
-      let state: DocState = await this._applyLogToState(canonicalLog)
-      // Compute next transition in parallel
-      const localState = await this._applyLogToState(localLog, cloneDeep(state), true)
-      const remoteState = await this._applyLogToState(log, cloneDeep(state), true)
-
-      const isLocalAnchored = localState.anchorStatus === AnchorStatus.ANCHORED
-      const isRemoteAnchored = remoteState.anchorStatus === AnchorStatus.ANCHORED
-
-      if (!isLocalAnchored && !isRemoteAnchored) {
-        // if none of them is anchored, apply the log
-        state = await this._applyLogToState(log, cloneDeep(state))
-        this._doctype.state = state
-        modified = true
-      }
-
-      if (!isLocalAnchored && isRemoteAnchored) {
-        // if the remote state is anchored before the local,
-        // apply the remote log to our local state. Otherwise
-        // keep present state
-        state = await this._applyLogToState(log, cloneDeep(state))
-        this._doctype.state = state
-        modified = true
-      }
-
-      if (isLocalAnchored && isRemoteAnchored) {
-        // compare anchor proofs if both states are anchored
-        const { anchorProof: localProof } = localState
-        const { anchorProof: remoteProof } = remoteState
-
-        if (remoteProof.blockTimestamp < localProof.blockTimestamp) {
-          state = await this._applyLogToState(log, cloneDeep(state))
-          this._doctype.state = state
-          modified = true
-        }
-      }
+      return true
     }
-    return modified
+
+    // we have a conflict since prev is in the log of the local state, but isn't the tip
+    // BEGIN CONFLICT RESOLUTION
+    const conflictIdx = await this._findIndex(payload.prev, this._doctype.state.log) + 1
+    const canonicalLog = this._doctype.state.log.slice() // copy log
+    const localLog = canonicalLog.splice(conflictIdx)
+    // Compute state up till conflictIdx
+    let state: DocState = await this._applyLogToState(canonicalLog)
+    // Compute next transition in parallel
+    const localState = await this._applyLogToState(localLog, cloneDeep(state), true)
+    const remoteState = await this._applyLogToState(log, cloneDeep(state), true)
+
+    const applyRemoteLog = await Document._pickLogToAccept(localState, remoteState)
+    if (!applyRemoteLog) {
+      return false
+    }
+
+    state = await this._applyLogToState(log, cloneDeep(state))
+    this._doctype.state = state
+    return true
   }
 
   /**
