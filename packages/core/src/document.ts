@@ -395,33 +395,50 @@ class Document extends EventEmitter {
   /**
    * Given two different DocStates representing two different conflicting histories of the same
    * document, pick which version to accept, in accordance with our conflict resolution strategy
+   * @param state1 - first log's state
+   * @param state2 - second log's state
    * @returns true if state2's log should be taken, or false if state1's log should be taken
+   * @private
    */
   static async _pickLogToAccept(state1: DocState, state2: DocState): Promise<boolean> {
     const isState1Anchored = state1.anchorStatus === AnchorStatus.ANCHORED
     const isState2Anchored = state2.anchorStatus === AnchorStatus.ANCHORED
 
-    if (!isState1Anchored && !isState2Anchored) {
-      // if none of them is anchored, apply the log
-      return true
-    }
-
-    if (!isState1Anchored && isState2Anchored) {
-      // if the remote state is anchored before the local,
-      // apply the remote log to our local state. Otherwise
-      // keep present state
-      return true
+    if (isState1Anchored != isState2Anchored) {
+      // When one of the logs is anchored but not the other, take the one that is anchored
+      return isState2Anchored
     }
 
     if (isState1Anchored && isState2Anchored) {
       // compare anchor proofs if both states are anchored
-      const { anchorProof: localProof } = state1
-      const { anchorProof: remoteProof } = state2
+      const { anchorProof: proof1 } = state1
+      const { anchorProof: proof2 } = state2
 
-      if (remoteProof.blockTimestamp < localProof.blockTimestamp) {
-        return true
+      if (proof1.chainId == proof2.chainId) {
+        // The logs are anchored in the same blockchain, compare block heights to decide which to take
+        if (proof1.blockNumber < proof2.blockNumber) {
+          return false
+        } else if (proof2.blockNumber < proof1.blockNumber) {
+          return true
+        }
+        // If they have the same block number fall through to fallback mechanism
+      } else {
+        // The logs are anchored in different blockchains, compare block timestamps to decide which to take
+        if (proof1.blockTimestamp < proof2.blockTimestamp) {
+          return false
+        } else if (proof2.blockTimestamp < proof1.blockTimestamp) {
+          return true
+        }
+        // If they have the same block timestamp fall through to fallback mechanism
       }
     }
+
+    // If we got this far, that means that we don't have sufficient information to make a good
+    // decision about which log to choose.  The most common way this can happen is that neither log
+    // is anchored, although it can also happen if both are anchored but in the same blockNumber or
+    // blockTimestamp. At this point, the decision of which log to take is arbitrary, but we want it
+    // to still be deterministic. Therefore, we take the log whose first entry has the lowest CID.
+    return state1.log[0] > state2.log[0] // TODO Is it safe to compare raw CIDs? Do I need to call toString() on them?
   }
 
   /**

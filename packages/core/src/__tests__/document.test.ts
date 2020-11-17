@@ -3,13 +3,14 @@ import Document from '../document'
 import tmp from 'tmp-promise'
 import Dispatcher from '../dispatcher'
 import Ceramic from "../ceramic"
-import { Context, PinningBackend } from "@ceramicnetwork/common"
+import {AnchorProof, Context, DocState, PinningBackend} from "@ceramicnetwork/common"
 import { AnchorStatus, DocOpts, SignatureStatus } from "@ceramicnetwork/common"
 import { AnchorService } from "@ceramicnetwork/common"
 import { TileDoctype, TileParams, TileDoctypeHandler } from "@ceramicnetwork/doctype-tile"
 import { PinStore } from "../store/pin-store";
 import { LevelStateStore } from "../store/level-state-store";
 import { DID } from "dids"
+import { sha256 } from 'js-sha256'
 
 import { Resolver } from "did-resolver"
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
@@ -309,7 +310,7 @@ describe('Document', () => {
       expect(doc.state.anchorStatus).not.toEqual(AnchorStatus.NOT_REQUESTED)
     })
 
-    it('handles conflict', async () => {
+    it('handles basic conflict', async () => {
       const doc1 = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context)
       const docId = doc1.id
       await anchorUpdate(doc1)
@@ -405,7 +406,152 @@ describe('Document', () => {
         expect(e.message).toEqual('Validation Error: data[\'stuff\'] should be string')
       }
     })
+  })
 
+  describe('Conflict resolution logic', () => {
+    let cids: CID[];
+
+    beforeEach(() => {
+      // Provide a random group of CIDs to work with, in increasing lexicographic order
+      const makeCID = (data: string): CID => new CID(1, 'sha2-256', Buffer.from('1220' + sha256(data), 'hex'))
+      cids = [makeCID("aaaa"),
+              makeCID("bbbb"),
+              makeCID("cccc"),
+              makeCID("dddd"),
+              makeCID("eeeee")]
+      cids.sort()
+    })
+
+    it("Neither log is anchored", async () => {
+      const state1 = {
+        doctype: TileDoctype.DOCTYPE,
+        content: {foo: 'bar'},
+        anchorStatus: AnchorStatus.NOT_REQUESTED,
+        log: [cids[1], cids[2], cids[3]]
+      }
+
+      const state2 = {
+        doctype: TileDoctype.DOCTYPE,
+        content: {foo: 'baz'},
+        anchorStatus: AnchorStatus.PENDING,
+        log: [cids[4], cids[0]]
+      }
+
+      // When neither log is anchored we should pick the log whose first entry has the smaller CID
+      expect(await Document._pickLogToAccept(state1, state2)).toEqual(false)
+      expect(await Document._pickLogToAccept(state2, state1)).toEqual(true)
+    })
+
+    it("One log anchored before the other", async () => {
+      const state1 = {
+        doctype: TileDoctype.DOCTYPE,
+        content: {foo: 'bar'},
+        anchorStatus: AnchorStatus.PENDING,
+        log: [cids[1], cids[2], cids[3]]
+      }
+
+      const state2 = {
+        doctype: TileDoctype.DOCTYPE,
+        content: {foo: 'baz'},
+        anchorStatus: AnchorStatus.ANCHORED,
+        log: [cids[4], cids[0]]
+      }
+
+      // When only one of the logs has been anchored, we pick the anchored one
+      expect(await Document._pickLogToAccept(state1, state2)).toEqual(true)
+      expect(await Document._pickLogToAccept(state2, state1)).toEqual(false)
+    })
+
+    it("Both logs anchored in different blockchains", async () => {
+      const proof1 = {
+        chainId: 'chain1',
+        blockTimestamp: 5,
+      }
+      const state1 = {
+        doctype: TileDoctype.DOCTYPE,
+        content: {foo: 'bar'},
+        anchorStatus: AnchorStatus.ANCHORED,
+        anchorProof: proof1,
+        log: [cids[1], cids[2], cids[3]]
+      }
+
+      const proof2 = {
+        chainId: 'chain2',
+        blockTimestamp: 10,
+      }
+      const state2 = {
+        doctype: TileDoctype.DOCTYPE,
+        content: {foo: 'baz'},
+        anchorStatus: AnchorStatus.ANCHORED,
+        anchorProof: proof2,
+        log: [cids[4], cids[0]]
+      }
+
+      // When anchored in different blockchains, should take log with earlier block timestamp
+      expect(await Document._pickLogToAccept(state1, state2)).toEqual(false)
+      expect(await Document._pickLogToAccept(state2, state1)).toEqual(true)
+    })
+
+    it("Both logs anchored in same blockchains in different blocks", async () => {
+      const proof1 = {
+        chainId: 'myblockchain',
+        blockNumber: 10,
+      }
+      const state1 = {
+        doctype: TileDoctype.DOCTYPE,
+        content: {foo: 'bar'},
+        anchorStatus: AnchorStatus.ANCHORED,
+        anchorProof: proof1,
+        log: [cids[1], cids[2], cids[3]]
+      }
+
+      const proof2 = {
+        chainId: 'myblockchain',
+        blockNumber: 5,
+      }
+      const state2 = {
+        doctype: TileDoctype.DOCTYPE,
+        content: {foo: 'baz'},
+        anchorStatus: AnchorStatus.ANCHORED,
+        anchorProof: proof2,
+        log: [cids[4], cids[0]]
+      }
+
+      // When anchored in the same blockchain, should take log with earlier block number
+      expect(await Document._pickLogToAccept(state1, state2)).toEqual(true)
+      expect(await Document._pickLogToAccept(state2, state1)).toEqual(false)
+    })
+
+    it("Both logs anchored in same blockchains in the same block", async () => {
+      const proof1 = {
+        chainId: 'myblockchain',
+        blockNumber: 10,
+      }
+      const state1 = {
+        doctype: TileDoctype.DOCTYPE,
+        content: {foo: 'bar'},
+        anchorStatus: AnchorStatus.ANCHORED,
+        anchorProof: proof1,
+        log: [cids[1], cids[2], cids[3]]
+      }
+
+      const proof2 = {
+        chainId: 'myblockchain',
+        blockNumber: 10,
+      }
+      const state2 = {
+        doctype: TileDoctype.DOCTYPE,
+        content: {foo: 'baz'},
+        anchorStatus: AnchorStatus.ANCHORED,
+        anchorProof: proof2,
+        log: [cids[4], cids[0]]
+      }
+
+      // When anchored in the same blockchain and same block, should use the fallback mechanism
+      // of picking the log whose first entry has the smaller CID
+      expect(await Document._pickLogToAccept(state1, state2)).toEqual(false)
+      expect(await Document._pickLogToAccept(state2, state1)).toEqual(true)
+    })
   })
 
   describe('Network update logic', () => {
