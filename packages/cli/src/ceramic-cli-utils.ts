@@ -92,7 +92,7 @@ export class CeramicCliUtils {
                         dht: {
                             enabled: true,
                             clientMode: !IPFS_DHT_SERVER_MODE,
-                            randomWalk: true,
+                            randomWalk: false,
                         },
                     },
                 },
