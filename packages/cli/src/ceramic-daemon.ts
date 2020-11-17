@@ -350,8 +350,6 @@ class CeramicDaemon {
       return next(e)
     }
     next()
-
-
   }
 
   /**
