@@ -10,7 +10,7 @@ import {
     DoctypeStatic,
     DocOpts,
     DocParams,
-    Context, DocMetadata
+    Context,
 } from "@ceramicnetwork/common"
 
 const DOCTYPE = 'tile'
@@ -94,7 +94,6 @@ export class TileDoctype extends Doctype {
         if (!controllers || controllers.length === 0) {
             metadata.controllers = [context.did.id]
         }
-
 
         const { content } = params
         const record = { data: content, header: metadata, unique }
