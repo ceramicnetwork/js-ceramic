@@ -38,6 +38,7 @@ const RECORDS = {
         timestamp: 1585919920
       },
       header: {
+        chainId: "fakechain:123",
         controllers: [
           "0x25954ef14cebbc9af3d71132489a9cfe87043f20@eip155:1"
         ]
@@ -82,9 +83,11 @@ describe('Caip10LinkHandler', () => {
       }
     }
 
+    const api = {getChainId: jest.fn(async () => {return "fakechain:123"})}
     context = {
       ipfs: ipfs,
       anchorService: null,
+      api,
     }
   })
 
@@ -93,36 +96,36 @@ describe('Caip10LinkHandler', () => {
   })
 
   it('makes genesis record correctly', async () => {
-    const record = await Caip10LinkDoctype.makeGenesis({ content: undefined, metadata: RECORDS.genesis.header })
+    const record = await Caip10LinkDoctype.makeGenesis({ content: undefined, metadata: RECORDS.genesis.header }, context)
     expect(record).toEqual(RECORDS.genesis)
   })
 
   it('throws an error if genesis record has content', async () => {
     const content = {}
-    await expect(Caip10LinkDoctype.makeGenesis({ content })).rejects.toThrow(/Cannot have content/i)
+    await expect(Caip10LinkDoctype.makeGenesis({ content }, context)).rejects.toThrow(/Cannot have content/i)
   })
 
   it('throws an error if genesis record has no metadata specified', async () => {
     const content: any = undefined
     const controllers: any = undefined
-    await expect(Caip10LinkDoctype.makeGenesis({ content, controllers })).rejects.toThrow(/Metadata must be specified/i)
+    await expect(Caip10LinkDoctype.makeGenesis({ content, controllers }, context)).rejects.toThrow(/Metadata must be specified/i)
   })
 
   it('throws an error if genesis record has no controllers specified', async () => {
     const content: any = undefined
-    await expect(Caip10LinkDoctype.makeGenesis({ content, metadata: {} })).rejects.toThrow(/Controller must be specified/i)
+    await expect(Caip10LinkDoctype.makeGenesis({ content, metadata: {} }, context)).rejects.toThrow(/Controller must be specified/i)
   })
 
   it('throws an error if genesis record has more than one controller', async () => {
     const content: any = undefined
     const controllers = [...RECORDS.genesis.header.controllers, '0x25954ef14cebbc9af3d79876489a9cfe87043f20@eip155:1']
-    await expect(Caip10LinkDoctype.makeGenesis({ content, metadata: { controllers } })).rejects.toThrow(/Exactly one controller/i)
+    await expect(Caip10LinkDoctype.makeGenesis({ content, metadata: { controllers } }, context)).rejects.toThrow(/Exactly one controller/i)
   })
 
   it('throws an error if genesis record has controller not in CAIP-10 format', async () => {
     const content: any = undefined
     const controllers = RECORDS.genesis.header.controllers.map(address => address.split('@')[0])
-    await expect(Caip10LinkDoctype.makeGenesis({ content, metadata: { controllers } })).rejects.toThrow(/According to CAIP-10/i)
+    await expect(Caip10LinkDoctype.makeGenesis({ content, metadata: { controllers } }, context)).rejects.toThrow(/According to CAIP-10/i)
   })
 
   it('applies genesis record correctly', async () => {

@@ -22,6 +22,11 @@ export class Caip10LinkDoctype extends Doctype {
      */
     async change(params: Caip10LinkParams, opts?: DocOpts): Promise<void> {
         const { content, metadata } = params
+
+        if ('chainId' in params && params.chainId != this.metadata.chainId) {
+            throw new Error("Updating chainId is not currently supported. Current chainId: " + this.metadata.chainId + ", requested chainId: " + params.chainId)
+        }
+
         const updateRecord = await Caip10LinkDoctype._makeRecord(this, content, metadata?.schema)
         const updated = await this.context.api.applyRecord(this.id.toString(), updateRecord, opts)
         this.state = updated.state
@@ -36,7 +41,7 @@ export class Caip10LinkDoctype extends Doctype {
     static async create(params: Caip10LinkParams, context: Context, opts?: DocOpts): Promise<Caip10LinkDoctype> {
         const { content, metadata } = params
 
-        const record = await Caip10LinkDoctype.makeGenesis({ content, metadata })
+        const record = await Caip10LinkDoctype.makeGenesis({ content, metadata }, context)
         return context.api.createDocumentFromGenesis(DOCTYPE, record, opts)
     }
 
@@ -44,7 +49,7 @@ export class Caip10LinkDoctype extends Doctype {
      * Creates genesis record
      * @param params - Create parameters
      */
-    static async makeGenesis(params: Record<string, any>): Promise<Record<string, any>> {
+    static async makeGenesis(params: Record<string, any>, context: Context): Promise<Record<string, any>> {
         const { content, metadata } = params
 
         if (content) {
@@ -59,8 +64,15 @@ export class Caip10LinkDoctype extends Doctype {
         if (metadata.controllers.length !== 1) {
             throw new Error('Exactly one controller must be specified')
         }
-        const [address, chainId] = metadata.controllers[0].split('@') // eslint-disable-line @typescript-eslint/no-unused-vars
-        if (!chainId) {
+
+        const anchorChainId = await context.api.getChainId()
+        if ('chainId' in metadata && metadata.chainId != anchorChainId) {
+            throw new Error("Requested chainId '" + metadata.chainId + "' but this node is only configured to support chainId '" + anchorChainId + "'")
+        }
+        metadata.chainId = anchorChainId
+
+        const [address, linkedChainId] = metadata.controllers[0].split('@') // eslint-disable-line @typescript-eslint/no-unused-vars
+        if (!linkedChainId) {
             throw new Error('Chain ID must be specified according to CAIP-10')
         }
         return { header: metadata }
