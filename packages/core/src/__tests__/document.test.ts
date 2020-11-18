@@ -3,6 +3,7 @@ import Document from '../document'
 import tmp from 'tmp-promise'
 import Dispatcher from '../dispatcher'
 import Ceramic from "../ceramic"
+import DocID from '@ceramicnetwork/docid'
 import { Context, PinningBackend } from "@ceramicnetwork/common"
 import { AnchorStatus, DocOpts, SignatureStatus } from "@ceramicnetwork/common"
 import { AnchorService } from "@ceramicnetwork/common"
@@ -220,7 +221,7 @@ describe('Document', () => {
       expect(doc.state).toEqual(expect.objectContaining({ signature: SignatureStatus.SIGNED, anchorStatus: 0 }))
       // _handleTip is intended to be called by the dispatcher
       // should return a promise that resolves when tip is added
-      await doc._handleTip(log[1])
+      await doc._handleTip(log[1].cid)
       expect(doc.state.signature).toEqual(SignatureStatus.SIGNED)
       expect(doc.state.anchorStatus).not.toEqual(AnchorStatus.NOT_REQUESTED)
       expect(doc.content).toEqual(initialContent)
@@ -229,37 +230,37 @@ describe('Document', () => {
     it('it handles versions correctly (valid, invalid, non-existent)', async () => {
       const doc = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context)
 
-      let versions = await doc.listVersions()
-      expect(versions).toEqual([])
-      const version0 = doc.currentVersionDocID.version
-      expect(version0).toEqual(doc.id.cid)
+      let versions = doc.allVersionIds
+      const version0 = doc.versionId
+      expect(versions).toEqual([version0])
+      expect(version0).toEqual(DocID.fromOther(doc.id, doc.id.cid))
 
       await anchorUpdate(doc)
 
-      versions = await doc.listVersions()
-      expect(versions.length).toEqual(1)
-      const version1 = doc.currentVersionDocID.version
+      versions = doc.allVersionIds
+      expect(versions.length).toEqual(2)
+      const version1 = doc.versionId
       expect(version1).not.toEqual(version0)
-      expect(version1).toEqual(versions[0])
+      expect(version1).toEqual(versions[1])
 
       const updateRec = await TileDoctype._makeRecord(doc.doctype, user, newContent, doc.controllers)
 
-      versions = await doc.listVersions()
-      expect(versions.length).toEqual(1)
+      versions = doc.allVersionIds
+      expect(versions.length).toEqual(2)
 
       await doc.applyRecord(updateRec)
 
-      versions = await doc.listVersions()
-      expect(versions.length).toEqual(1)
-      expect(doc.currentVersionDocID.version).toEqual(version1)
+      versions = doc.allVersionIds
+      expect(versions.length).toEqual(2)
+      expect(doc.versionId).toEqual(version1)
 
       await anchorUpdate(doc)
 
-      versions = await doc.listVersions()
-      expect(versions.length).toEqual(2)
-      const version2 = doc.currentVersionDocID.version
+      versions = doc.allVersionIds
+      expect(versions.length).toEqual(3)
+      const version2 = doc.versionId
       expect(version2).not.toEqual(version1)
-      expect(version2).toEqual(versions[1])
+      expect(version2).toEqual(versions[2])
 
       expect(doc.content).toEqual(newContent)
       expect(doc.state.signature).toEqual(SignatureStatus.SIGNED)
@@ -275,13 +276,13 @@ describe('Document', () => {
 
       // try to checkout not anchored version
       try {
-        await Document.loadVersion(doc, doc.doctype.state.log[2])
+        await Document.loadVersion(doc, doc.doctype.state.log[2].cid)
         throw new Error('Should not be able to fetch not anchored version')
       } catch (e) {
         expect(e.message).toContain('No anchor record for version')
       }
 
-      const docV1 = await Document.loadVersion(doc, doc.doctype.state.log[1])
+      const docV1 = await Document.loadVersion(doc, doc.doctype.state.log[1].cid)
       expect(docV1.state.log.length).toEqual(2)
       expect(docV1.controllers).toEqual(controllers)
       expect(docV1.content).toEqual(initialContent)
@@ -354,7 +355,7 @@ describe('Document', () => {
       try {
         const docParams = {
           content: {stuff: 1},
-          metadata: {controllers, schema: schemaDoc.currentVersionDocID.toString()}
+          metadata: {controllers, schema: schemaDoc.versionId.toString()}
         }
         await create(docParams, ceramic, context)
         throw new Error('Should not be able to create a document with an invalid schema')
@@ -375,7 +376,7 @@ describe('Document', () => {
       await anchorUpdate(doc)
 
       try {
-        const updateRec = await TileDoctype._makeRecord(doc.doctype, user, null, doc.controllers, schemaDoc.currentVersionDocID.toString())
+        const updateRec = await TileDoctype._makeRecord(doc.doctype, user, null, doc.controllers, schemaDoc.versionId.toString())
         await doc.applyRecord(updateRec)
         throw new Error('Should not be able to assign a schema to a document that does not conform')
       } catch (e) {
@@ -389,14 +390,14 @@ describe('Document', () => {
 
       const docParams = {
         content: {stuff: 1},
-        metadata: {controllers, schema: schemaDoc.currentVersionDocID.toString()}
+        metadata: {controllers, schema: schemaDoc.versionId.toString()}
       }
       // Create a document that isn't conforming to the schema
       const doc = await create(docParams, ceramicWithoutSchemaValidation, context)
       await anchorUpdate(doc)
 
       expect(doc.content).toEqual({stuff:1})
-      expect(doc.metadata.schema).toEqual(schemaDoc.currentVersionDocID.toString())
+      expect(doc.metadata.schema).toEqual(schemaDoc.versionId.toString())
 
       try {
         await Document.load(doc.id, doctypeHandler, dispatcher, pinStore, context, {skipWait:true})

@@ -2,7 +2,7 @@ import CID from 'cids'
 import cloneDeep from "lodash.clonedeep"
 import * as u8a from 'uint8arrays'
 
-import { AnchorStatus, DocState, Doctype } from "../doctype"
+import { AnchorStatus, DocState, Doctype, LogEntry } from "../doctype"
 import { IPFSApi } from "../declarations"
 
 /**
@@ -79,7 +79,7 @@ export class DoctypeUtils {
     static serializeState(state: any): any {
         const cloned = cloneDeep(state)
 
-        cloned.log = cloned.log.map((cid: any) => cid.toString());
+        cloned.log = cloned.log.map((entry: LogEntry) => ({ ...entry, cid: entry.cid.toString() }))
         if (cloned.anchorStatus) {
             cloned.anchorStatus = AnchorStatus[cloned.anchorStatus];
         }
@@ -103,7 +103,7 @@ export class DoctypeUtils {
     static deserializeState(state: any): DocState {
         const cloned = cloneDeep(state)
 
-        cloned.log = cloned.log.map((cidStr: string): CID => new CID(cidStr))
+        cloned.log = cloned.log.map((entry: any): LogEntry => ({ ...entry, cid: new CID(entry.cid) }))
         if (cloned.anchorProof) {
             cloned.anchorProof.txHash = new CID(cloned.anchorProof.txHash);
             cloned.anchorProof.root = new CID(cloned.anchorProof.root);
