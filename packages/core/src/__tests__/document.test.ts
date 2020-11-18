@@ -422,20 +422,42 @@ describe('Document', () => {
       cids.sort()
     })
 
-    it("Neither log is anchored", async () => {
+    it("Neither log is anchored, no nonces", async () => {
       const state1 = {
         anchorStatus: AnchorStatus.NOT_REQUESTED,
-        log: [cids[1], cids[2], cids[3]]
+        log: [cids[1], cids[2], cids[3]],
+        metadata: {},
       }
 
       const state2 = {
         anchorStatus: AnchorStatus.PENDING,
-        log: [cids[4], cids[0]]
+        log: [cids[4], cids[0]],
+        metadata: {},
       }
 
-      // When neither log is anchored we should pick the log whose first entry has the smaller CID
+      // When neither log is anchored and there's no nonces we should pick the log whose first
+      // entry has the smaller CID.
       expect(await Document._pickLogToAccept(state1, state2)).toEqual(false)
       expect(await Document._pickLogToAccept(state2, state1)).toEqual(true)
+    })
+
+    it("Neither log is anchored, different nonces", async () => {
+      const state1 = {
+        anchorStatus: AnchorStatus.NOT_REQUESTED,
+        log: [cids[1], cids[2], cids[3]],
+        metadata: {nonce: 3},
+      }
+
+      const state2 = {
+        anchorStatus: AnchorStatus.PENDING,
+        log: [cids[4], cids[0]],
+        metadata: {},
+        next: {metadata: {nonce: 4}}
+      }
+
+      // When neither log is anchored the log with the higher nonce should win
+      expect(await Document._pickLogToAccept(state1, state2)).toEqual(true)
+      expect(await Document._pickLogToAccept(state2, state1)).toEqual(false)
     })
 
     it("One log anchored before the other", async () => {
@@ -506,7 +528,7 @@ describe('Document', () => {
       expect(await Document._pickLogToAccept(state2, state1)).toEqual(false)
     })
 
-    it("Both logs anchored in same blockchains in the same block", async () => {
+    it("Both logs anchored in same blockchains in the same block with the same nonce", async () => {
       const proof1 = {
         chainId: 'myblockchain',
         blockNumber: 10,
@@ -514,7 +536,8 @@ describe('Document', () => {
       const state1 = {
         anchorStatus: AnchorStatus.ANCHORED,
         anchorProof: proof1,
-        log: [cids[1], cids[2], cids[3]]
+        metadata: {nonce: 3},
+        log: [cids[1], cids[2], cids[3]],
       }
 
       const proof2 = {
@@ -524,11 +547,41 @@ describe('Document', () => {
       const state2 = {
         anchorStatus: AnchorStatus.ANCHORED,
         anchorProof: proof2,
-        log: [cids[4], cids[0]]
+        metadata: {nonce: 3},
+        log: [cids[4], cids[0]],
       }
 
-      // When anchored in the same blockchain and same block, should use the fallback mechanism
-      // of picking the log whose first entry has the smaller CID
+      // When anchored in the same blockchain, same block, and with the same nonce, we should use
+      // the fallback mechanism of picking the log whose first entry has the smaller CID
+      expect(await Document._pickLogToAccept(state1, state2)).toEqual(false)
+      expect(await Document._pickLogToAccept(state2, state1)).toEqual(true)
+    })
+
+    it("Both logs anchored in same blockchains in the same block, one has nonce", async () => {
+      const proof1 = {
+        chainId: 'myblockchain',
+        blockNumber: 10,
+      }
+      const state1 = {
+        anchorStatus: AnchorStatus.ANCHORED,
+        anchorProof: proof1,
+        metadata: {nonce: 1},
+        log: [cids[1], cids[2], cids[3]],
+      }
+
+      const proof2 = {
+        chainId: 'myblockchain',
+        blockNumber: 10,
+      }
+      const state2 = {
+        anchorStatus: AnchorStatus.ANCHORED,
+        anchorProof: proof2,
+        metadata: {},
+        log: [cids[4], cids[0]],
+      }
+
+      // When anchored in the same blockchain, same block, and one log has a nonce but not the other,
+      // the log with the nonce should win.
       expect(await Document._pickLogToAccept(state1, state2)).toEqual(false)
       expect(await Document._pickLogToAccept(state2, state1)).toEqual(true)
     })
