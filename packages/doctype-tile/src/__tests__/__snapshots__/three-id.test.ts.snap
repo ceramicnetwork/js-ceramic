@@ -55,7 +55,7 @@ Object {
         ],
         "version": 1,
       },
-      "isVersion": true,
+      "type": 0,
     },
     Object {
       "cid": Object {
@@ -98,6 +98,7 @@ Object {
         ],
         "version": 1,
       },
+      "type": 1,
     },
     Object {
       "cid": Object {
@@ -140,7 +141,7 @@ Object {
         ],
         "version": 1,
       },
-      "isVersion": true,
+      "type": 2,
     },
   ],
   "metadata": Object {
@@ -206,7 +207,7 @@ Object {
         ],
         "version": 1,
       },
-      "isVersion": true,
+      "type": 0,
     },
   ],
   "metadata": Object {
@@ -272,7 +273,7 @@ Object {
         ],
         "version": 1,
       },
-      "isVersion": true,
+      "type": 0,
     },
     Object {
       "cid": Object {
@@ -315,6 +316,7 @@ Object {
         ],
         "version": 1,
       },
+      "type": 1,
     },
   ],
   "metadata": Object {

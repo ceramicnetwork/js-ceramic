@@ -15,6 +15,7 @@ import {
     Context,
     DocOpts,
     DocState,
+    RecordType,
     DoctypeConstructor,
     DoctypeHandler,
     DoctypeUtils,
@@ -94,7 +95,7 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
             metadata: payload.header,
             signature: isSigned? SignatureStatus.SIGNED : SignatureStatus.GENESIS,
             anchorStatus: AnchorStatus.NOT_REQUESTED,
-            log: [{ cid, isVersion: true }]
+            log: [{ cid, type: RecordType.GENESIS }]
         }
     }
 
@@ -122,12 +123,12 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
         const nonce = payload.header.nonce
         const squash = nonce > 0 && state.next
         if (squash) {
-            nextState.log[nextState.log.length-1] = { cid }
+            nextState.log[nextState.log.length-1] = { cid, type: RecordType.SIGNED }
             nextState.next = {
                 content: jsonpatch.applyPatch(state.next.content, payload.data).newDocument
             }
         } else {
-            nextState.log.push({ cid })
+            nextState.log.push({ cid, type: RecordType.SIGNED })
             nextState.next = {
                 content: jsonpatch.applyPatch(state.content, payload.data).newDocument
             }
@@ -152,7 +153,7 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
      * @private
      */
     async _applyAnchor(record: AnchorRecord, proof: AnchorProof, cid: CID, state: DocState): Promise<DocState> {
-        state.log.push({ cid, isVersion: true })
+        state.log.push({ cid, type: RecordType.ANCHOR })
         let content = state.content
         let metadata = state.metadata
 

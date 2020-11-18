@@ -70,9 +70,13 @@ export interface DocNext {
     metadata?: DocMetadata;
 }
 
+export enum RecordType {
+  GENESIS, SIGNED, ANCHOR
+}
+
 export interface LogEntry {
   cid: CID
-  isVersion?: boolean
+  type: RecordType
 }
 /**
  * Document state
@@ -140,7 +144,7 @@ export abstract class Doctype extends EventEmitter {
      */
     get allVersionIds(): Array<DocID> {
       return this._state.log
-        .filter(({ isVersion }) => isVersion)
+        .filter(({ type }) => (type === RecordType.GENESIS) || (type === RecordType.ANCHOR))
         .map(({ cid }) => DocID.fromOther(this.id, cid))
     }
 

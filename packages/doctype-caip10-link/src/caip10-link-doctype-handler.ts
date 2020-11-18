@@ -2,7 +2,7 @@ import CID from 'cids'
 import { validateLink } from "3id-blockchain-utils"
 import { Caip10LinkDoctype, Caip10LinkParams } from "./caip10-link-doctype"
 import {
-    AnchorProof, AnchorStatus, DocState, DoctypeConstructor, DoctypeHandler, DocOpts, SignatureStatus
+    AnchorProof, AnchorStatus, DocState, DoctypeConstructor, DoctypeHandler, DocOpts, SignatureStatus, RecordType
 } from "@ceramicnetwork/common"
 import { Context } from "@ceramicnetwork/common"
 
@@ -70,7 +70,7 @@ export class Caip10LinkDoctypeHandler implements DoctypeHandler<Caip10LinkDoctyp
             metadata: record.header,
             signature: SignatureStatus.GENESIS,
             anchorStatus: AnchorStatus.NOT_REQUESTED,
-            log: [{ cid, isVersion: true }]
+            log: [{ cid, type: RecordType.GENESIS }]
         }
     }
 
@@ -98,7 +98,7 @@ export class Caip10LinkDoctypeHandler implements DoctypeHandler<Caip10LinkDoctyp
         if (addressCaip10.toLowerCase() !== state.metadata.controllers[0].toLowerCase()) {
             throw new Error("Address doesn't match document controller")
         }
-        state.log.push({ cid })
+        state.log.push({ cid, type: RecordType.SIGNED })
         return {
             ...state,
             signature: SignatureStatus.SIGNED,
@@ -118,7 +118,7 @@ export class Caip10LinkDoctypeHandler implements DoctypeHandler<Caip10LinkDoctyp
      * @private
      */
     async _applyAnchor (record: any, proof: AnchorProof, cid: CID, state: DocState): Promise<DocState> {
-        state.log.push({ cid, isVersion: true })
+        state.log.push({ cid, type: RecordType.ANCHOR })
         let content = state.content
         if (state.next?.content) {
             content = state.next.content
