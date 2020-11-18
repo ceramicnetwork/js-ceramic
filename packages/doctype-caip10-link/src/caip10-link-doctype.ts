@@ -93,6 +93,6 @@ export class Caip10LinkDoctype extends Doctype {
         if (newContent == null) {
             newContent = doctype.content
         }
-        return { data: newContent, header: metadata, prev: doctype.tip, id: doctype.state.log[0] }
+        return { data: newContent, header: metadata, prev: doctype.tip, id: doctype.state.log[0].cid }
     }
 }

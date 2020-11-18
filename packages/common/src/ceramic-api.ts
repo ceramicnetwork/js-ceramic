@@ -79,12 +79,6 @@ export interface CeramicApi {
     loadDocumentRecords(docId: DocID | string): Promise<Array<Record<string, any>>>;
 
     /**
-     * Lists current Doctype versions
-     * @param docId - Document ID
-     */
-    listVersions(docId: DocID | string): Promise<string[]>;
-
-    /**
      * Applies record on the existing document
      * @param docId - Document ID
      * @param record - Record to be applied

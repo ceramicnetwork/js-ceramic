@@ -129,7 +129,7 @@ describe('Ceramic API', () => {
       expect(docOg.content).toEqual({ test: 'abcde' })
       expect(docOg.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
-      let docV0Id = DocID.fromBytes(docOg.id.bytes, docOg.state.log[1].toString())
+      let docV0Id = DocID.fromBytes(docOg.id.bytes, docOg.state.log[1].cid.toString())
       console.log(docV0Id)
       const docV0 = await ceramic.loadDocument<TileDoctype>(docV0Id)
 
@@ -156,7 +156,7 @@ describe('Ceramic API', () => {
 
       // try to checkout not anchored version
       try {
-        docV0Id = DocID.fromBytes(docOg.id.bytes, docOg.state.log[2].toString())
+        docV0Id = DocID.fromBytes(docOg.id.bytes, docOg.state.log[2].cid.toString())
         await ceramic.loadDocument<TileDoctype>(docV0Id)
         throw new Error('Should not be able to fetch not anchored version')
       } catch (e) {
@@ -178,7 +178,7 @@ describe('Ceramic API', () => {
 
       const tileDocParams: TileParams = {
         metadata: {
-          schema: schemaDoc.currentVersionDocID.toString(), controllers: [controller]
+          schema: schemaDoc.versionId.toString(), controllers: [controller]
         }, content: { a: 1 },
       }
 
@@ -205,7 +205,7 @@ describe('Ceramic API', () => {
 
       const tileDocParams: TileParams = {
         metadata: {
-          schema: schemaDoc.currentVersionDocID.toString(), controllers: [controller]
+          schema: schemaDoc.versionId.toString(), controllers: [controller]
         }, content: { a: "test" }
       }
 
@@ -255,7 +255,7 @@ describe('Ceramic API', () => {
 
       const tileDocParams: TileParams = {
         metadata: {
-          schema: schemaDoc.currentVersionDocID.toString(), controllers: [controller]
+          schema: schemaDoc.versionId.toString(), controllers: [controller]
         }, content: { a: 1 },
       }
 
@@ -285,12 +285,12 @@ describe('Ceramic API', () => {
 
       await doctype.change({
         metadata: {
-          controllers: [controller], schema: schemaDoc.currentVersionDocID.toString()
+          controllers: [controller], schema: schemaDoc.versionId.toString()
         }
       })
 
       expect(doctype.content).toEqual({ a: 'x' })
-      expect(doctype.metadata.schema).toEqual(schemaDoc.currentVersionDocID.toString())
+      expect(doctype.metadata.schema).toEqual(schemaDoc.versionId.toString())
 
       await new Promise(resolve => setTimeout(resolve, 1000)) // wait to propagate
       await ceramic.close()
@@ -317,7 +317,7 @@ describe('Ceramic API', () => {
       try {
         await doctype.change({
           metadata: {
-            controllers: [controller], schema: schemaDoc.currentVersionDocID.toString()
+            controllers: [controller], schema: schemaDoc.versionId.toString()
           }
         })
         throw new Error('Should not be able to update the document with invalid content')
@@ -348,7 +348,7 @@ describe('Ceramic API', () => {
 
       await doctype.change({
         content: { a: 'x' }, metadata: {
-          controllers: [controller], schema: schemaDoc.currentVersionDocID.toString()
+          controllers: [controller], schema: schemaDoc.versionId.toString()
         }
       })
 
@@ -395,7 +395,7 @@ describe('Ceramic API', () => {
       // Test that we can assign the updated schema to the document without error.
       await doc.change({
         metadata: {
-          controllers: [controller], schema: schemaDoc.currentVersionDocID.toString()
+          controllers: [controller], schema: schemaDoc.versionId.toString()
         }
       })
       await anchorDoc(ceramic, doc)
@@ -425,7 +425,7 @@ describe('Ceramic API', () => {
       expect(logRecords).toBeDefined()
 
       const expected = []
-      for (const cid of doctype.state.log) {
+      for (const { cid } of doctype.state.log) {
         const record = (await ceramic.ipfs.dag.get(cid)).value
         expected.push({
           cid: cid.toString(),

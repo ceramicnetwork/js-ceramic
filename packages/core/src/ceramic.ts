@@ -330,7 +330,7 @@ class Ceramic implements CeramicApi {
     const doc = await this.loadDocument(docId)
     const { state } = doc
 
-    return Promise.all(state.log.map(async (cid) => {
+    return Promise.all(state.log.map(async ({ cid }) => {
       const record = (await this.ipfs.dag.get(cid)).value
       return {
         cid: cid.toString(),
@@ -357,18 +357,6 @@ class Ceramic implements CeramicApi {
       this._docmap[docIdStr] = await Document.load(docId, doctypeHandler, this.dispatcher, this.pinStore, this.context, opts)
     }
     return this._docmap[docIdStr]
-  }
-
-  /**
-   * Lists ceramic
-   * @param docId - Document ID
-   */
-  async listVersions(docId: DocID | string): Promise<string[]> {
-    docId = normalizeDocID(docId)
-    const doc = await this._loadDoc(docId, {
-      applyOnly: true
-    })
-    return (await doc.listVersions()).map((e) => e.toString())
   }
 
   /**

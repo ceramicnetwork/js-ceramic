@@ -10,6 +10,7 @@ import {
   AnchorRecord,
   AnchorStatus,
   DocState,
+  LogEntry,
   Doctype,
   DoctypeHandler,
   DocOpts,
@@ -168,21 +169,6 @@ class Document extends EventEmitter {
       }
       Utils.validate(this.content, schemaDoc.content)
     }
-  }
-
-  /**
-   * Lists available versions
-   */
-  async listVersions(): Promise<CID[]> {
-    if (this._doctype.state == null) {
-      return []
-    }
-
-    const checkPromises: Promise<CID[]>[] = this._doctype.state.log.map(async (cid): Promise<CID[]> => {
-      const record = await this.dispatcher.retrieveRecord(cid)
-      return record.proof != null ? [cid] : []
-    })
-    return (await Promise.all(checkPromises)).reduce((acc, recs) => acc.concat(...recs), [])
   }
 
   /**
@@ -366,10 +352,10 @@ class Document extends EventEmitter {
    * @param log - Log array
    * @private
    */
-  async _findIndex(cid: CID, log: Array<CID>): Promise<number> {
+  async _findIndex(cid: CID, log: Array<LogEntry>): Promise<number> {
     // const conflictIdx = this._doctype.state.log.findIndex(x => x.equals(record.prev)) + 1
     for (let index = 0; index < log.length; index++) {
-      const c = log[index]
+      const c = log[index].cid
       if (c.equals(cid)) {
         return index
       }
@@ -388,7 +374,7 @@ class Document extends EventEmitter {
    * @param log - Log array
    * @private
    */
-  async _isCidIncluded(cid: CID, log: Array<CID>): Promise<boolean> {
+  async _isCidIncluded(cid: CID, log: Array<LogEntry>): Promise<boolean> {
     return (await this._findIndex(cid, log)) !== -1
   }
 
@@ -418,7 +404,7 @@ class Document extends EventEmitter {
       // we have a conflict since prev is in the log of the
       // local state, but isn't the tip
       const conflictIdx = await this._findIndex(payload.prev, this._doctype.state.log) + 1
-      const canonicalLog = this._doctype.state.log.slice() // copy log
+      const canonicalLog = this._doctype.state.log.map(({ cid }) => cid) // copy log
       const localLog = canonicalLog.splice(conflictIdx)
       // Compute state up till conflictIdx
       let state: DocState = await this._applyLogToState(canonicalLog)
@@ -680,8 +666,12 @@ class Document extends EventEmitter {
     return this._doctype.metadata
   }
 
-  get currentVersionDocID(): DocID {
-    return this._doctype.currentVersionDocID
+  get versionId(): DocID {
+    return this._doctype.versionId
+  }
+
+  get allVersionIds(): Array<DocID> {
+    return this._doctype.allVersionIds
   }
 
   /**

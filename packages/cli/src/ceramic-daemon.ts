@@ -144,7 +144,6 @@ class CeramicDaemon {
 
   registerAPIPaths (app: core.Express, gateway: boolean): void {
     app.get(toApiPath('/records/ceramic/:docid'), this.records.bind(this))
-    app.get(toApiPath('/versions/ceramic/:docid'), this.versions.bind(this))
     app.get(toApiPath('/show/ceramic/:docid'), this.show.bind(this))
     app.get(toApiPath('/state/ceramic/:docid'), this.state.bind(this))
     app.get(toApiPath('/pin/ls/ceramic/:docid'), this.listPinned.bind(this))
@@ -227,20 +226,6 @@ class CeramicDaemon {
       const doc = await this.ceramic.loadDocument(docId)
 
       res.json({ docId: doc.id.toString(), state: DoctypeUtils.serializeState(doc.state) })
-    } catch (e) {
-      return next(e)
-    }
-    next()
-  }
-
-  /**
-   * Get document versions
-   */
-  async versions (req: Request, res: Response, next: NextFunction): Promise<void> {
-    const docId = DocID.fromString(req.params.docid)
-    try {
-      const versions = await this.ceramic.listVersions(docId)
-      res.json({ docId: docId.toString(), versions: versions })
     } catch (e) {
       return next(e)
     }

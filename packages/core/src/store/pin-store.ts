@@ -1,5 +1,5 @@
 import { StateStore } from "./state-store";
-import { Doctype, DocState, PinningBackend } from "@ceramicnetwork/common"
+import { Doctype, LogEntry, DocState, PinningBackend } from "@ceramicnetwork/common"
 import CID from "cids"
 import DocID from '@ceramicnetwork/docid'
 
@@ -46,10 +46,10 @@ export class PinStore {
     }
 
     protected async pointsOfInterest(state: DocState): Promise<Array<CID>> {
-        const log = state.log as Array<CID>
+        const log = state.log as Array<LogEntry>
 
         const points: CID[] = []
-        for (const cid of log) {
+        for (const { cid } of log) {
             points.push(cid)
 
             const record = await this.retrieve(cid)
