@@ -57,7 +57,7 @@ export default class EthereumAnchorService extends AnchorService {
 
         this.cidToResMap = new Map<CidDoc, AnchorServiceResponse>();
         this.requestsApiEndpoint = this._config.anchorServiceUrl + '/api/v0/requests'
-        this.chainIdApiEndpoint = this._config.anchorServiceUrl + '/api/v0/service-info/chainid'
+        this.chainIdApiEndpoint = this._config.anchorServiceUrl + '/api/v0/service-info/supported_chains'
     }
 
     /**
@@ -89,7 +89,7 @@ export default class EthereumAnchorService extends AnchorService {
     async getSupportedChains(): Promise<Array<string>> {
         const response = await fetch(this.chainIdApiEndpoint);
         const json = await response.json();
-        return [json.chainId]
+        return json.supportedChains
     }
 
     /**
