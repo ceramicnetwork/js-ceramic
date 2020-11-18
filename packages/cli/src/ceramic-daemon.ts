@@ -329,8 +329,8 @@ class CeramicDaemon {
 
   async getSupportedChains (req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const chains = await this.ceramic.getSupportedChains()
-      res.json({ chains })
+      const supportedChains = await this.ceramic.getSupportedChains()
+      res.json({ supportedChains })
     } catch (e) {
       return next(e)
     }
