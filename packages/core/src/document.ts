@@ -465,7 +465,7 @@ class Document extends EventEmitter {
     // we have a conflict since prev is in the log of the local state, but isn't the tip
     // BEGIN CONFLICT RESOLUTION
     const conflictIdx = await this._findIndex(payload.prev, this._doctype.state.log) + 1
-    const canonicalLog = this._doctype.state.log.slice() // copy log
+    const canonicalLog = this._doctype.state.log.map(({cid}) => cid) // copy log
     const localLog = canonicalLog.splice(conflictIdx)
     // Compute state up till conflictIdx
     let state: DocState = await this._applyLogToState(canonicalLog)
