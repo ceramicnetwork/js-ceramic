@@ -211,7 +211,7 @@ describe('Document', () => {
     it("Cannot specify chainId if it is different than the configured anchor service's chainid", async () => {
       const metadata = { controllers, tags: ['3id'], chainId: 'newchain' }
       const createPromise = create({ content: initialContent, metadata }, ceramic, context)
-      await expect(createPromise).rejects.toThrow("Requested chainId 'newchain' but this node is only configured to support chainId 'inmemory:12345'")
+      await expect(createPromise).rejects.toThrow("Requested chainId 'newchain' is not supported. Supported chains are: 'inmemory:12345'")
     })
 
     it('is loaded correctly', async () => {

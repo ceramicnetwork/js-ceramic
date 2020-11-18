@@ -78,7 +78,7 @@ export class TileDoctype extends Doctype {
 
         const supported_chains = await context.api.getSupportedChains()
         if ('chainId' in metadata && !supported_chains.includes(metadata.chainId)) {
-            throw new Error("Requested chainId '" + metadata.chainId + "' is not supported. Supported chains are: " + supported_chains.toString())
+            throw new Error("Requested chainId '" + metadata.chainId + "' is not supported. Supported chains are: '" + supported_chains.join("', '") + "'")
         }
         metadata.chainId = metadata.chainId ?? supported_chains[0]
 
