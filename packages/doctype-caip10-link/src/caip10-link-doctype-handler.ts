@@ -90,9 +90,6 @@ export class Caip10LinkDoctypeHandler implements DoctypeHandler<Caip10LinkDoctyp
         // TODO: handle CAIP-10 addresses in proof generation of 3id-blockchain-utils
         const account = validProof.account || validProof.address
         let [address, chainId] = account.split('@')  // eslint-disable-line prefer-const
-        if (!chainId) {
-            chainId = 'eip155:1'
-        }
 
         const addressCaip10 = [address, chainId].join('@')
         if (addressCaip10.toLowerCase() !== state.metadata.controllers[0].toLowerCase()) {
