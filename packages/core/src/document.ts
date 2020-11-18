@@ -10,6 +10,7 @@ import {
   AnchorRecord,
   AnchorStatus,
   DocState,
+  LogEntry,
   Doctype,
   DoctypeHandler,
   DocOpts,
@@ -168,21 +169,6 @@ class Document extends EventEmitter {
       }
       Utils.validate(this.content, schemaDoc.content)
     }
-  }
-
-  /**
-   * Lists available versions
-   */
-  async listVersions(): Promise<CID[]> {
-    if (this._doctype.state == null) {
-      return []
-    }
-
-    const checkPromises: Promise<CID[]>[] = this._doctype.state.log.map(async (cid): Promise<CID[]> => {
-      const record = await this.dispatcher.retrieveRecord(cid)
-      return record.proof != null ? [cid] : []
-    })
-    return (await Promise.all(checkPromises)).reduce((acc, recs) => acc.concat(...recs), [])
   }
 
   /**
@@ -366,10 +352,10 @@ class Document extends EventEmitter {
    * @param log - Log array
    * @private
    */
-  async _findIndex(cid: CID, log: Array<CID>): Promise<number> {
+  async _findIndex(cid: CID, log: Array<LogEntry>): Promise<number> {
     // const conflictIdx = this._doctype.state.log.findIndex(x => x.equals(record.prev)) + 1
     for (let index = 0; index < log.length; index++) {
-      const c = log[index]
+      const c = log[index].cid
       if (c.equals(cid)) {
         return index
       }
@@ -388,7 +374,7 @@ class Document extends EventEmitter {
    * @param log - Log array
    * @private
    */
-  async _isCidIncluded(cid: CID, log: Array<CID>): Promise<boolean> {
+  async _isCidIncluded(cid: CID, log: Array<LogEntry>): Promise<boolean> {
     return (await this._findIndex(cid, log)) !== -1
   }
 
@@ -449,7 +435,7 @@ class Document extends EventEmitter {
     // is anchored, although it can also happen if both are anchored but in the same blockNumber or
     // blockTimestamp. At this point, the decision of which log to take is arbitrary, but we want it
     // to still be deterministic. Therefore, we take the log whose first entry has the lowest CID.
-    return state1.log[0] > state2.log[0] // TODO Is it safe to compare raw CIDs? Do I need to call toString() on them?
+    return state1.log[0].cid > state2.log[0].cid // TODO Is it safe to compare raw CIDs? Do I need to call toString() on them?
   }
 
   /**
@@ -717,8 +703,12 @@ class Document extends EventEmitter {
     return this._doctype.metadata
   }
 
-  get currentVersionDocID(): DocID {
-    return this._doctype.currentVersionDocID
+  get versionId(): DocID {
+    return this._doctype.versionId
+  }
+
+  get allVersionIds(): Array<DocID> {
+    return this._doctype.allVersionIds
   }
 
   /**
