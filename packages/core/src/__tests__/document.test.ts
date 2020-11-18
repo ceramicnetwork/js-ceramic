@@ -426,13 +426,13 @@ describe('Document', () => {
     it("Neither log is anchored, no nonces", async () => {
       const state1 = {
         anchorStatus: AnchorStatus.NOT_REQUESTED,
-        log: [cids[1], cids[2], cids[3]],
+        log: [{cid: cids[1]}, {cid: cids[2]}, {cid: cids[3]}],
         metadata: {},
       }
 
       const state2 = {
         anchorStatus: AnchorStatus.PENDING,
-        log: [cids[4], cids[0]],
+        log: [{cid: cids[4]}, {cid: cids[0]}],
         metadata: {},
       }
 
@@ -445,13 +445,11 @@ describe('Document', () => {
     it("Neither log is anchored, different nonces", async () => {
       const state1 = {
         anchorStatus: AnchorStatus.NOT_REQUESTED,
-        log: [cids[1], cids[2], cids[3]],
         metadata: {nonce: 3},
       }
 
       const state2 = {
         anchorStatus: AnchorStatus.PENDING,
-        log: [cids[4], cids[0]],
         metadata: {},
         next: {metadata: {nonce: 4}}
       }
@@ -464,12 +462,10 @@ describe('Document', () => {
     it("One log anchored before the other", async () => {
       const state1 = {
         anchorStatus: AnchorStatus.PENDING,
-        log: [cids[1], cids[2], cids[3]]
       }
 
       const state2 = {
         anchorStatus: AnchorStatus.ANCHORED,
-        log: [cids[4], cids[0]]
       }
 
       // When only one of the logs has been anchored, we pick the anchored one
@@ -485,7 +481,6 @@ describe('Document', () => {
       const state1 = {
         anchorStatus: AnchorStatus.ANCHORED,
         anchorProof: proof1,
-        log: [cids[1], cids[2], cids[3]]
       }
 
       const proof2 = {
@@ -495,7 +490,6 @@ describe('Document', () => {
       const state2 = {
         anchorStatus: AnchorStatus.ANCHORED,
         anchorProof: proof2,
-        log: [cids[4], cids[0]]
       }
 
       // When anchored in different blockchains, should take log with earlier block timestamp
@@ -511,7 +505,6 @@ describe('Document', () => {
       const state1 = {
         anchorStatus: AnchorStatus.ANCHORED,
         anchorProof: proof1,
-        log: [cids[1], cids[2], cids[3]]
       }
 
       const proof2 = {
@@ -521,7 +514,6 @@ describe('Document', () => {
       const state2 = {
         anchorStatus: AnchorStatus.ANCHORED,
         anchorProof: proof2,
-        log: [cids[4], cids[0]]
       }
 
       // When anchored in the same blockchain, should take log with earlier block number
@@ -538,7 +530,7 @@ describe('Document', () => {
         anchorStatus: AnchorStatus.ANCHORED,
         anchorProof: proof1,
         metadata: {nonce: 3},
-        log: [cids[1], cids[2], cids[3]],
+        log: [{cid: cids[1]}, {cid: cids[2]}, {cid: cids[3]}],
       }
 
       const proof2 = {
@@ -549,7 +541,7 @@ describe('Document', () => {
         anchorStatus: AnchorStatus.ANCHORED,
         anchorProof: proof2,
         metadata: {nonce: 3},
-        log: [cids[4], cids[0]],
+        log: [{cid: cids[4]}, {cid: cids[0]}],
       }
 
       // When anchored in the same blockchain, same block, and with the same nonce, we should use
@@ -567,7 +559,6 @@ describe('Document', () => {
         anchorStatus: AnchorStatus.ANCHORED,
         anchorProof: proof1,
         metadata: {nonce: 1},
-        log: [cids[1], cids[2], cids[3]],
       }
 
       const proof2 = {
@@ -578,7 +569,6 @@ describe('Document', () => {
         anchorStatus: AnchorStatus.ANCHORED,
         anchorProof: proof2,
         metadata: {},
-        log: [cids[4], cids[0]],
       }
 
       // When anchored in the same blockchain, same block, and one log has a nonce but not the other,
