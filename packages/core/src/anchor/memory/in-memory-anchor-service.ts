@@ -52,10 +52,11 @@ class InMemoryAnchorService extends AnchorService {
   }
 
   /**
-   * @returns a string representing the CAIP-2 chain ID of the configured blockchain.
+   * @returns An array of the CAIP-2 chain IDs of the blockchains that are supported by this
+   * anchor service
    */
-  async getChainId(): Promise<string> {
-    return CHAIN_ID
+  async getSupportedChains(): Promise<Array<string>> {
+    return [CHAIN_ID]
   }
 
   /**

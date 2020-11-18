@@ -83,12 +83,13 @@ export default class EthereumAnchorService extends AnchorService {
     }
 
     /**
-     * @returns a string representing the CAIP-2 chain ID of the configured blockchain.
+     * @returns An array of the CAIP-2 chain IDs of the blockchains that are supported by this
+     * anchor service.
      */
-    async getChainId(): Promise<string> {
+    async getSupportedChains(): Promise<Array<string>> {
         const response = await fetch(this.chainIdApiEndpoint);
         const json = await response.json();
-        return json.chainId
+        return [json.chainId]
     }
 
     /**

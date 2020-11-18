@@ -83,7 +83,7 @@ describe('Caip10LinkHandler', () => {
       }
     }
 
-    const api = {getChainId: jest.fn(async () => {return "fakechain:123"})}
+    const api = {getSupportedChains: jest.fn(async () => {return ["fakechain:123"]})}
     context = {
       ipfs: ipfs,
       anchorService: null,

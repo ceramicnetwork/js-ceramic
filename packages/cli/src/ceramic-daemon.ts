@@ -148,7 +148,7 @@ class CeramicDaemon {
     app.get(toApiPath('/state/ceramic/:docid'), this.state.bind(this))
     app.get(toApiPath('/pin/ls/ceramic/:docid'), this.listPinned.bind(this))
     app.get(toApiPath('/pin/ls'), this.listPinned.bind(this))
-    app.get(toApiPath('/chainId'), this.getChainId.bind(this))
+    app.get(toApiPath('/supported_chains'), this.getSupportedChains.bind(this))
     app.post(toApiPath('/create'), this.createDocFromGenesis.bind(this))
 
     if (!gateway) {
@@ -327,10 +327,10 @@ class CeramicDaemon {
     next()
   }
 
-  async getChainId (req: Request, res: Response, next: NextFunction): Promise<void> {
+  async getSupportedChains (req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const chainId = await this.ceramic.getChainId()
-      res.json({ chainId })
+      const chains = await this.ceramic.getSupportedChains()
+      res.json({ chains })
     } catch (e) {
       return next(e)
     }

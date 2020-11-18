@@ -150,7 +150,7 @@ describe('TileDoctypeHandler', () => {
       }
     })
 
-    const api = {getChainId: jest.fn(async () => {return "fakechain:123"})}
+    const api = {getSupportedChains: jest.fn(async () => {return ["fakechain:123"]})}
     const keyDidResolver = KeyDidResolver.getResolver()
     context = {
       did,
