@@ -4,6 +4,7 @@ exports[`Caip10LinkHandler applies anchor record correctly 1`] = `
 Object {
   "anchorProof": Object {
     "blockNumber": 123456,
+    "chainId": "fakechain:123",
   },
   "anchorStatus": 3,
   "content": null,

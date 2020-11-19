@@ -79,7 +79,8 @@ const RECORDS = {
   },
   r2: { record: { proof: FAKE_CID_4 } },
   proof: {
-    blockNumber: 123456
+    blockNumber: 123456,
+    chainId: 'fakechain:123',
   }
 }
 
@@ -303,6 +304,28 @@ describe('TileDoctypeHandler', () => {
     // apply anchor
     state = await tileDoctypeHandler.applyRecord(RECORDS.r2.record, FAKE_CID_3, context, state)
     expect(state).toMatchSnapshot()
+  })
+
+  it('Does not apply anchor record on wrong chain', async () => {
+    const tileDoctypeHandler = new TileDoctypeHandler()
+
+    const genesisRecord = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id] } }, context)
+    await context.ipfs.dag.put(genesisRecord, FAKE_CID_1)
+
+    const payload = dagCBOR.util.deserialize(genesisRecord.linkedBlock)
+    await context.ipfs.dag.put(payload, genesisRecord.jws.link)
+
+    // apply genesis
+    let state = await tileDoctypeHandler.applyRecord(genesisRecord.jws, FAKE_CID_1, context)
+
+    const doctype = new TileDoctype(state, context)
+
+    // Create anchor proof with a different chainId than what's in the genesis record
+    await context.ipfs.dag.put({ blockNumber: 123456, chainId: 'thewrongchain'}, FAKE_CID_4)
+    // apply anchor
+    await expect(tileDoctypeHandler.applyRecord(RECORDS.r2.record, FAKE_CID_3, context, state))
+        .rejects.toThrow("Anchor record with cid '" + FAKE_CID_3 + "' on tile document with DocID '" +
+            FAKE_CID_1 + "' is on chain 'thewrongchain' but this document is configured to be anchored on chain 'fakechain:123'")
   })
 
 })
