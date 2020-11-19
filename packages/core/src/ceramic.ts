@@ -69,6 +69,7 @@ const normalizeDocID = (docId: DocID | string): DocID => {
 class Ceramic implements CeramicApi {
   private readonly _docmap: Record<string, Document>
   private readonly _doctypeHandlers: Record<string, DoctypeHandler<Doctype>>
+  private _supportedChains: Array<string>
 
   public readonly pin: PinApi
   public readonly context: Context
@@ -357,6 +358,26 @@ class Ceramic implements CeramicApi {
     }
     return this._docmap[docIdStr]
   }
+
+  /**
+   * @returns An array of the CAIP-2 chain IDs of the blockchains that are supported for anchoring
+   * documents.
+   *
+   * Caches the result after the first time it is requested
+   */
+  async getSupportedChains(): Promise<Array<string>> {
+    if (this._supportedChains) {
+      return this._supportedChains
+    }
+
+    // Fetch the chainId from the anchor service and cache the result
+    if (!this.context.anchorService) {
+      throw new Error("No anchor service configured")
+    }
+    this._supportedChains = await this.context.anchorService.getSupportedChains()
+    return this._supportedChains
+  }
+
 
   /**
    * Close Ceramic instance gracefully

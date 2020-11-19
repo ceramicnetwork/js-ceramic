@@ -9,6 +9,7 @@ import type Dispatcher from '../../dispatcher'
 import Ceramic, { CeramicConfig } from "../../ceramic"
 
 const DID_MATCHER = '^(did:([a-zA-Z0-9_]+):([a-zA-Z0-9_.-]+(:[a-zA-Z0-9_.-]+)*)((;[a-zA-Z0-9_.:%-]+=[a-zA-Z0-9_.:%-]*)*)(/[^#?]*)?)([?][^#]*)?(#.*)?';
+const CHAIN_ID = 'inmemory:12345'
 
 class Candidate {
   public cid: CID;
@@ -48,6 +49,14 @@ class InMemoryAnchorService extends AnchorService {
       this._anchorDelay = _config.anchorDelay ? _config.anchorDelay : 0
       this._anchorOnRequest = 'anchorOnRequest' in _config ? _config.anchorOnRequest : true
     }
+  }
+
+  /**
+   * @returns An array of the CAIP-2 chain IDs of the blockchains that are supported by this
+   * anchor service
+   */
+  async getSupportedChains(): Promise<Array<string>> {
+    return [CHAIN_ID]
   }
 
   /**
@@ -145,7 +154,7 @@ class InMemoryAnchorService extends AnchorService {
   async _process(leaf: Candidate): Promise<void> {
     // creates fake anchor record
     const proofData: AnchorProof = {
-      chainId: 'eip155:1',
+      chainId: CHAIN_ID,
       blockNumber: Date.now(),
       blockTimestamp: Date.now(),
       txHash: new CID(this.SAMPLE_ETH_TX_HASH),
