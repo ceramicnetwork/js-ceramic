@@ -420,7 +420,15 @@ describe('Document', () => {
               makeCID("cccc"),
               makeCID("dddd"),
               makeCID("eeeee")]
-      cids.sort()
+      cids.sort(function (cid1, cid2) {
+        if (cid1.bytes < cid2.bytes) {
+          return -1
+        } else if (cid1.bytes > cid2.bytes) {
+          return 1
+        } else {
+          return 0
+        }
+      })
     })
 
     it("Neither log is anchored, no nonces", async () => {
