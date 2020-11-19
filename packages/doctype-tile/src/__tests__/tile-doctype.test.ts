@@ -316,9 +316,7 @@ describe('TileDoctypeHandler', () => {
     await context.ipfs.dag.put(payload, genesisRecord.jws.link)
 
     // apply genesis
-    let state = await tileDoctypeHandler.applyRecord(genesisRecord.jws, FAKE_CID_1, context)
-
-    const doctype = new TileDoctype(state, context)
+    const state = await tileDoctypeHandler.applyRecord(genesisRecord.jws, FAKE_CID_1, context)
 
     // Create anchor proof with a different chainId than what's in the genesis record
     await context.ipfs.dag.put({ blockNumber: 123456, chainId: 'thewrongchain'}, FAKE_CID_4)
