@@ -161,8 +161,6 @@ describe('Caip10LinkHandler', () => {
   })
 
   it('applies anchor record correctly', async () => {
-    // create genesis
-    await context.ipfs.dag.put(RECORDS.genesisGenerated, FAKE_CID_1)
     // create signed record
     await context.ipfs.dag.put(RECORDS.r1.record, FAKE_CID_2)
     // create anchor record
@@ -180,8 +178,6 @@ describe('Caip10LinkHandler', () => {
   })
 
   it('Does not apply anchor record on wrong chain', async () => {
-    // create genesis
-    await context.ipfs.dag.put(RECORDS.genesisGenerated, FAKE_CID_1)
     // create signed record
     await context.ipfs.dag.put(RECORDS.r1.record, FAKE_CID_2)
     // create anchor record
