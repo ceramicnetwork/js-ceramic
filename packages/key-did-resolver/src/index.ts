@@ -19,7 +19,9 @@ export default {
             if (parsed.method !== 'key') {
                 throw new Error('did must be of method did:key.')
             }
-            const multicodecPubKey = multibase.decode(parsed.id)
+            const multicodecPubKey: any = multibase.decode(parsed.id)
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
             const keyType = varint.decode(multicodecPubKey)
             const pubKeyBytes = multicodecPubKey.slice(varint.decode.bytes)
             try {
