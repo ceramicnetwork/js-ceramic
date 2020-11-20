@@ -58,7 +58,7 @@ Object {
     Object {
       "controller": "did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki",
       "id": "did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki#encryption",
-      "publicKeyBase64": "N2/yXOxq8FCX4zzht8JQA3ftVRl+6C39CeU82eFB4Ug=",
+      "publicKeyBase64": "N2/yXOxq8FCX4zzht8JQA3ftVRl+6C39CeU82eFB4Ug",
       "type": "Curve25519EncryptionPublicKey",
     },
   ],
@@ -93,7 +93,7 @@ Object {
     Object {
       "controller": "did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki",
       "id": "did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki#encryption",
-      "publicKeyBase64": "N2/yXOxq8FCX4zzht8JQA3ftVRl+6C39CeU82eFB4Ug=",
+      "publicKeyBase64": "N2/yXOxq8FCX4zzht8JQA3ftVRl+6C39CeU82eFB4Ug",
       "type": "Curve25519EncryptionPublicKey",
     },
   ],
@@ -163,7 +163,7 @@ Object {
     Object {
       "controller": "did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki",
       "id": "did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki#encryption",
-      "publicKeyBase64": "N2/yXOxq8FCX4zzht8JQA3ftVRl+6C39CeU82eFB4Ug=",
+      "publicKeyBase64": "N2/yXOxq8FCX4zzht8JQA3ftVRl+6C39CeU82eFB4Ug",
       "type": "Curve25519EncryptionPublicKey",
     },
   ],

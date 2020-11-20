@@ -12,14 +12,6 @@ interface IPFS {
   dag: DAG;
 }
 
-interface ProtocolResolver {
-  (didId: string): Promise<DIDDocument>;
-}
-
-interface ErrorStatus extends Error {
-  statusCode?: number;
-}
-
 // Legacy 3ids available from 3box, other v1 will always be resolved through ipfs and other services 
 const THREEBOX_API_URL = 'https://ipfs.3box.io'
   
@@ -52,13 +44,6 @@ const  cidToDocument = async (ipfs: IPFS, documentCid:string): Promise<DIDDocume
     if (doc.authentication) {
       doc.authentication = JSON.parse(JSON.stringify(doc.authentication).replace(re, documentCid))
     }
-    if (doc.service) {
-      doc.service = JSON.parse(JSON.stringify(doc.service).replace(re, documentCid))
-    }
-  }
-  if (doc.previousDocument) {
-    // make CID human readable
-    doc.previousDocument = { '/': doc.previousDocument.toString() }
   }
   return doc
 }
