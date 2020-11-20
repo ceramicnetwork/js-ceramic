@@ -15,10 +15,8 @@ import CeramicDaemon, { CreateOpts } from "./ceramic-daemon"
 import IPFS from "ipfs"
 
 import dagJose from 'dag-jose'
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import multiformats from 'multiformats/basics'
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import legacy from 'multiformats/legacy'
 import ipfsClient from "ipfs-http-client"
