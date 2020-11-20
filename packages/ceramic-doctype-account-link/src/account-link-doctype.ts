@@ -7,7 +7,7 @@ const DOCTYPE = 'account-link'
  * AccountLink parameters
  */
 export interface AccountLinkParams extends DocParams {
-    content?: object;
+    content?: Record<string, unknown>;
 }
 
 /**

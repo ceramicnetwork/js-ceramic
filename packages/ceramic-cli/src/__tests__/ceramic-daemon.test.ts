@@ -10,9 +10,7 @@ import { EventEmitter } from "events"
 import * as u8a from 'uint8arrays'
 
 import dagJose from 'dag-jose'
-// @ts-ignore
 import basicsImport from 'multiformats/cjs/src/basics-import.js'
-// @ts-ignore
 import legacy from 'multiformats/cjs/src/legacy.js'
 import { IPFSApi } from "../declarations"
 
@@ -25,7 +23,7 @@ const apiUrl = 'http://localhost:' + port
  * Create an IPFS instance
  * @param overrideConfig - IFPS config for override
  */
-const createIPFS =(overrideConfig: object = {}): Promise<any> => {
+const createIPFS =(overrideConfig: Record<string, unknown> = {}): Promise<any> => {
   basicsImport.multicodec.add(dagJose)
   const format = legacy(basicsImport, dagJose.name)
 

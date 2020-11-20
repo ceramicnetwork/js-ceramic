@@ -60,7 +60,7 @@ describe('AccountLinkHandler', () => {
 
   beforeEach(() => {
     handler = new AccountLinkDoctypeHandler()
-    validateLink.mockImplementation(async (proof: object): Promise<object> => proof)
+    validateLink.mockImplementation(async (proof: Record<string, unknown>): Promise<Record<string, unknown>> => proof)
 
     const recs: Record<string, any> = {}
     const ipfs = {

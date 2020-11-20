@@ -4,7 +4,6 @@ import type { CeramicConfig } from "@ceramicnetwork/ceramic-core"
 import { DoctypeUtils, RootLogger, Logger } from "@ceramicnetwork/ceramic-common"
 import { LogToFiles } from "./ceramic-logger-plugins"
 import DocID from "@ceramicnetwork/docid"
-// @ts-ignore
 import cors from 'cors'
 import { IPFSApi } from "./declarations"
 
@@ -34,8 +33,8 @@ export interface CreateOpts {
 }
 
 interface HttpLog {
-  request: object;
-  response?: object;
+  request: Record<string, unknown>;
+  response?: Record<string, unknown>;
 }
 
 /**

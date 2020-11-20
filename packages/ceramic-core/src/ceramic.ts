@@ -228,7 +228,7 @@ class Ceramic implements CeramicApi {
    * @param record - Record to be applied
    * @param opts - Initialization options
    */
-  async applyRecord<T extends Doctype>(docId: DocID | string, record: object, opts?: DocOpts): Promise<T> {
+  async applyRecord<T extends Doctype>(docId: DocID | string, record: Record<string, unknown>, opts?: DocOpts): Promise<T> {
     docId = normalizeDocID(docId)
     if (docId.version != null) {
       throw new Error('The version of the document is readonly. Checkout the latest HEAD in order to update.')

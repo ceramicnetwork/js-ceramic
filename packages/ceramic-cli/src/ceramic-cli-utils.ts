@@ -3,6 +3,7 @@ import path from "path"
 import { randomBytes } from '@stablelib/random'
 import * as u8a from 'uint8arrays'
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const fs = require('fs').promises
 
 import IdentityWallet from "identity-wallet"
@@ -15,9 +16,7 @@ import CeramicDaemon, { CreateOpts } from "./ceramic-daemon"
 import IPFS from "ipfs"
 
 import dagJose from 'dag-jose'
-// @ts-ignore
 import multiformats from 'multiformats/basics'
-// @ts-ignore
 import legacy from 'multiformats/legacy'
 import ipfsClient from "ipfs-http-client"
 

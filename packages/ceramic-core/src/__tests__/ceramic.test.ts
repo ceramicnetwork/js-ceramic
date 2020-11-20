@@ -20,7 +20,7 @@ const seed = u8a.fromString('6e34b2e1a9624113d81ece8a8a22e6e97f0e145c25c1d4d2d0e
  * Create an IPFS instance
  * @param overrideConfig - IPFS config for override
  */
-const createIPFS =(overrideConfig: object = {}): Promise<any> => {
+const createIPFS =(overrideConfig: Record<string, unknown> = {}): Promise<any> => {
   basicsImport.multicodec.add(dagJose)
   const format = legacy(basicsImport, dagJose.name)
 
@@ -54,8 +54,6 @@ const createCeramic = async (ipfs: IPFSApi, topic: string, anchorOnRequest = fal
 }
 
 const anchor = async (ceramic: Ceramic): Promise<void> => {
-  // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-  // @ts-ignore
   await ceramic.context.anchorService.anchor()
 }
 
@@ -94,7 +92,7 @@ describe('Ceramic integration', () => {
   beforeEach(async () => {
     tmpFolder = await tmp.dir({ unsafeCleanup: true })
 
-    const buildConfig = (path: string, port: number): object => {
+    const buildConfig = (path: string, port: number): Record<string, unknown> => {
       return {
         repo: `${path}/ipfs${port}/`, config: {
           Addresses: { Swarm: [`/ip4/127.0.0.1/tcp/${port}`] }, Bootstrap: []
