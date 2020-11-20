@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/ceramic-doctype-tile",
-  "version": "0.10.2-alpha.0",
+  "version": "0.10.2",
   "description": "Ceramic Tile doctype",
   "keywords": [
     "ceramic",
@@ -26,8 +26,8 @@
   },
   "dependencies": {
     "3id-blockchain-utils": "^1.0.0",
-    "@ceramicnetwork/ceramic-common": "^0.12.2-alpha.0",
-    "@ceramicnetwork/key-did-resolver": "^0.1.3-alpha.0",
+    "@ceramicnetwork/ceramic-common": "^0.12.2",
+    "@ceramicnetwork/key-did-resolver": "^0.1.3",
     "@ethersproject/base64": "^5.0.2",
     "@ethersproject/random": "^5.0.2",
     "@types/lodash.clonedeep": "^4.5.6",
@@ -44,7 +44,7 @@
     "@babel/plugin-proposal-decorators": "^7.10.1",
     "@babel/preset-env": "^7.8.4",
     "@babel/preset-typescript": "^7.9.0",
-    "@ceramicnetwork/3id-did-resolver": "^0.4.9-alpha.0",
+    "@ceramicnetwork/3id-did-resolver": "^0.4.9",
     "@types/encoding-down": "^5.0.0",
     "@types/events": "^3.0.0",
     "@types/node": "^13.13.15",
