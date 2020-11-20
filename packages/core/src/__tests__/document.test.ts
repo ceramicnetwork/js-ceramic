@@ -144,6 +144,10 @@ describe('Document', () => {
 
     beforeEach(() => {
       dispatcher = Dispatcher(false)
+      // TODO: Many of the tests in this file are racy and depend on an anchor not having been
+      //  performed yet by the time the test checks.  To eliminate this race condition we should set
+      //  anchorOnRequest to false in the config for the InMemoryAnchorService, anchor manually
+      //  throughout the tests, and remove waitForSync:false from throughout the tests.
       anchorService = new InMemoryAnchorService({})
       user = new DID()
       user.createJWS = jest.fn(async () => {
@@ -192,7 +196,8 @@ describe('Document', () => {
     })
 
     it('is created correctly', async () => {
-      const doc = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context)
+      // TODO: Remove waitForSync:false and perform anchors manually to avoid race condition in test
+      const doc = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context, {waitForSync: false})
 
       expect(doc.content).toEqual(initialContent)
       expect(dispatcher.register).toHaveBeenCalledWith(doc)
@@ -224,7 +229,7 @@ describe('Document', () => {
     })
 
     it('handles new tip correctly', async () => {
-      const tmpDoc = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context)
+      const tmpDoc = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context, { waitForSync: false })
       await anchorUpdate(tmpDoc)
       const docId = tmpDoc.id
       const log = tmpDoc.state.log
@@ -241,7 +246,7 @@ describe('Document', () => {
     })
 
     it('it handles versions correctly (valid, invalid, non-existent)', async () => {
-      const doc = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context)
+      const doc = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context, {waitForSync: false})
 
       let versions = doc.allVersionIds
       const version0 = doc.versionId
@@ -261,7 +266,7 @@ describe('Document', () => {
       versions = doc.allVersionIds
       expect(versions.length).toEqual(2)
 
-      await doc.applyRecord(updateRec)
+      await doc.applyRecord(updateRec, {waitForSync: false})
 
       versions = doc.allVersionIds
       expect(versions.length).toEqual(2)
@@ -311,11 +316,11 @@ describe('Document', () => {
     })
 
     it('is updated correctly', async () => {
-      const doc = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context)
+      const doc = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context, { waitForSync: false })
       await anchorUpdate(doc)
 
       const updateRec = await TileDoctype._makeRecord(doc.doctype, user, newContent, doc.controllers)
-      await doc.applyRecord(updateRec)
+      await doc.applyRecord(updateRec, {waitForSync: false})
 
       await anchorUpdate(doc)
       expect(doc.content).toEqual(newContent)
@@ -325,13 +330,13 @@ describe('Document', () => {
 
     it('handles conflict', async () => {
       const fakeState = { asdf: 2342 }
-      const doc1 = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context)
+      const doc1 = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context, { waitForSync: false })
       const docId = doc1.id
       await anchorUpdate(doc1)
       const tipPreUpdate = doc1.tip
 
       let updateRec = await TileDoctype._makeRecord(doc1.doctype, user, newContent, doc1.controllers)
-      await doc1.applyRecord(updateRec)
+      await doc1.applyRecord(updateRec, { waitForSync: false })
 
       await anchorUpdate(doc1)
       expect(doc1.content).toEqual(newContent)
@@ -345,7 +350,7 @@ describe('Document', () => {
       // TODO - better mock for anchors
 
       updateRec = await TileDoctype._makeRecord(doc2.doctype, user, fakeState, doc2.controllers)
-      await doc2.applyRecord(updateRec)
+      await doc2.applyRecord(updateRec, { waitForSync: false })
 
       await anchorUpdate(doc2)
       const tipInvalidUpdate = doc2.tip
@@ -362,7 +367,7 @@ describe('Document', () => {
     })
 
     it('Enforces schema at document creation', async () => {
-      const schemaDoc = await create({ content: stringMapSchema, metadata: { controllers } }, ceramic, context)
+      const schemaDoc = await create({ content: stringMapSchema, metadata: { controllers } }, ceramic, context, { waitForSync: false })
       await anchorUpdate(schemaDoc)
 
       try {
@@ -378,14 +383,14 @@ describe('Document', () => {
     })
 
     it('Enforces schema at document update', async () => {
-      const schemaDoc = await create({ content: stringMapSchema, metadata: { controllers } }, ceramic, context)
+      const schemaDoc = await create({ content: stringMapSchema, metadata: { controllers } }, ceramic, context, { waitForSync: false })
       await anchorUpdate(schemaDoc)
 
       const docParams = {
         content: {stuff: 1},
         metadata: {controllers}
       }
-      const doc = await create(docParams, ceramic, context)
+      const doc = await create(docParams, ceramic, context, { waitForSync: false })
       await anchorUpdate(doc)
 
       try {
@@ -398,7 +403,7 @@ describe('Document', () => {
     })
 
     it('Enforces schema when loading genesis record', async () => {
-      const schemaDoc = await create({ content: stringMapSchema, metadata: { controllers } }, ceramic, context)
+      const schemaDoc = await create({ content: stringMapSchema, metadata: { controllers } }, ceramic, context, { waitForSync: false})
       await anchorUpdate(schemaDoc)
 
       const docParams = {
@@ -406,7 +411,7 @@ describe('Document', () => {
         metadata: {controllers, schema: schemaDoc.versionId.toString()}
       }
       // Create a document that isn't conforming to the schema
-      const doc = await create(docParams, ceramicWithoutSchemaValidation, context)
+      const doc = await create(docParams, ceramicWithoutSchemaValidation, context, { waitForSync: false })
       await anchorUpdate(doc)
 
       expect(doc.content).toEqual({stuff:1})
@@ -484,13 +489,13 @@ describe('Document', () => {
     })
 
     it('should announce change to network', async () => {
-      const doc1 = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context)
+      const doc1 = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context, { waitForSync: false })
       expect(dispatcher.publishTip).toHaveBeenCalledTimes(1)
       expect(dispatcher.publishTip).toHaveBeenCalledWith(doc1.id.toString(), doc1.tip, 'tile')
       await anchorUpdate(doc1)
 
       const updateRec = await TileDoctype._makeRecord(doc1.doctype, user, newContent, doc1.controllers)
-      await doc1.applyRecord(updateRec)
+      await doc1.applyRecord(updateRec, { waitForSync: false })
 
       expect(doc1.content).toEqual(newContent)
 
@@ -499,7 +504,7 @@ describe('Document', () => {
     })
 
     it('documents share updates', async () => {
-      const doc1 = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context)
+      const doc1 = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context, { waitForSync: false })
       await anchorUpdate(doc1)
       const doc2 = await Document.load(doc1.id, doctypeHandler, dispatcher, pinStore, context, { waitForSync: false })
 
@@ -517,7 +522,7 @@ describe('Document', () => {
     })
 
     it('should publish tip on network request', async () => {
-      const doc = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context)
+      const doc = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context, { waitForSync: false })
       expect(dispatcher.publishTip).toHaveBeenCalledTimes(1)
       expect(dispatcher.publishTip).toHaveBeenNthCalledWith(1, doc.id.toString(), doc.tip, 'tile')
 
