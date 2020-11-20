@@ -29,7 +29,7 @@ const config: CeramicConfig = {}
 const ceramic = await Ceramic.create(ipfs, config)
 
 // create document example
-const doctype1 = await ceramic.createDocument('tile', { content: { test: 123 } }) 
+const doctype1 = await ceramic.createDocument('tile', { content: { test: 123 } })
 ```
 
 ### Ceramic API
