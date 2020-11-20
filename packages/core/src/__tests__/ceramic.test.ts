@@ -128,7 +128,7 @@ describe('Ceramic integration', () => {
 
     const ceramic1 = await createCeramic(ipfs1, topic)
     const ceramic2 = await createCeramic(ipfs2, topic)
-    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { test: 123 } }, { applyOnly: true })
+    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { test: 123 } }, { anchor: false, publish: false })
     const doctype2 = await ceramic2.loadDocument(doctype1.id)
     expect(doctype1.content).toEqual(doctype2.content)
     expectEqualStates(doctype1.state, doctype2.state)
@@ -148,7 +148,7 @@ describe('Ceramic integration', () => {
 
     // we can't load document from id since nodes are not connected
     // so we won't find the genesis object from it's CID
-    const doctype2 = await ceramic2.createDocument(DOCTYPE_TILE, { content: { test: 456 }, metadata: { controllers: [controller], tags: ['3id'] } },{ applyOnly: true })
+    const doctype2 = await ceramic2.createDocument(DOCTYPE_TILE, { content: { test: 456 }, metadata: { controllers: [controller], tags: ['3id'] } },{ anchor: false, publish: false })
     expect(doctype1.content).toEqual(doctype2.content)
     expect(doctype2.state).toEqual(expect.objectContaining({ content: { test: 456 } }))
     await ceramic1.close()
@@ -167,8 +167,8 @@ describe('Ceramic integration', () => {
 
     const controller = ceramic1.context.did.id
     // ceramic node 2 shouldn't need to have the document open in order to forward the message
-    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { test: 789 }, metadata: { controllers: [controller], tags: ['3id'] } }, { applyOnly: true })
-    const doctype3 = await ceramic3.createDocument(DOCTYPE_TILE, { content: { test: 789 }, metadata: { controllers: [controller], tags: ['3id'] } }, { applyOnly: true })
+    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { test: 789 }, metadata: { controllers: [controller], tags: ['3id'] } }, { anchor: false, publish: false })
+    const doctype3 = await ceramic3.createDocument(DOCTYPE_TILE, { content: { test: 789 }, metadata: { controllers: [controller], tags: ['3id'] } }, { anchor: false, publish: false })
     expect(doctype3.content).toEqual(doctype1.content)
     await ceramic1.close()
     await ceramic2.close()
@@ -214,7 +214,7 @@ describe('Ceramic integration', () => {
       metadata: { controllers: [controller], tags: ['3id'] },
       deterministic: true,
     }, {
-      applyOnly: true
+      anchor: false, publish: false
     })
 
     expect(doctype3.content).toEqual(doctype1.content)
@@ -251,9 +251,9 @@ describe('Ceramic integration', () => {
 
     const logRecords = await ceramic1.loadDocumentRecords(doctype1.id)
 
-    let doctype2 = await ceramic2.createDocumentFromGenesis(DOCTYPE_TILE, logRecords[0].value, { applyOnly: true })
+    let doctype2 = await ceramic2.createDocumentFromGenesis(DOCTYPE_TILE, logRecords[0].value, { anchor: false, publish: false })
     for (let i = 1; i < logRecords.length; i++) {
-      doctype2 = await ceramic2.applyRecord(doctype2.id, logRecords[i].value, { applyOnly: true })
+      doctype2 = await ceramic2.applyRecord(doctype2.id, logRecords[i].value, { anchor: false, publish: false })
     }
 
     expect(doctype1.content).toEqual(doctype2.content)

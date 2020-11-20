@@ -27,25 +27,21 @@ class Document extends Doctype {
     return new DocID(this.state.doctype, this.state.log[0].cid)
   }
 
-  static async createFromGenesis (apiUrl: string, doctype: string, genesis: any, context: Context, opts: DocOpts = {}): Promise<Document> {
+  static async createFromGenesis (apiUrl: string, doctype: string, genesis: any, context: Context, docOpts: DocOpts = {}): Promise<Document> {
     const { state } = await fetchJson(apiUrl + '/create', {
       doctype,
       genesis: DoctypeUtils.serializeRecord(genesis),
-      docOpts: {
-        applyOnly: opts.applyOnly,
-      }
+      docOpts,
     })
     return new Document(DoctypeUtils.deserializeState(state), context, apiUrl)
   }
 
-  static async applyRecord(apiUrl: string, docId: DocID | string, record: any, context: Context, opts: DocOpts = {}): Promise<Document> {
+  static async applyRecord(apiUrl: string, docId: DocID | string, record: any, context: Context, docOpts: DocOpts = {}): Promise<Document> {
     docId = typeDocID(docId)
     const { state } = await fetchJson(apiUrl + '/apply', {
       docId: docId.toString(),
       record: DoctypeUtils.serializeRecord(record),
-      docOpts: {
-        applyOnly: opts.applyOnly,
-      }
+      docOpts,
     })
     return new Document(DoctypeUtils.deserializeState(state), context, apiUrl, false)
   }

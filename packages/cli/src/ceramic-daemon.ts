@@ -257,7 +257,7 @@ class CeramicDaemon {
    * Apply one record to the existing document
    */
   async applyRecord (req: Request, res: Response, next: NextFunction): Promise<void> {
-    const { docId, record, opts } = req.body
+    const { docId, record, opts } = req.body // todo docOpts? for create too
     if (!docId && !record) {
       res.json({ error: 'docId and record are required in order to apply record' })
       next()
