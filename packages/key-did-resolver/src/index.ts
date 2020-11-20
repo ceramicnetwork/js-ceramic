@@ -20,7 +20,6 @@ export default {
                 throw new Error('did must be of method did:key.')
             }
             const multicodecPubKey = multibase.decode(parsed.id)
-            // @ts-ignore
             const keyType = varint.decode(multicodecPubKey)
             const pubKeyBytes = multicodecPubKey.slice(varint.decode.bytes)
             try {
