@@ -37,7 +37,7 @@ describe('#open', () => {
     test('use IPFS client pointed to #ipfsAddress', async () => {
         const pinning = new IpfsPinning('ipfs+https://example.com', {})
         await pinning.open()
-        expect(ipfsClient).toBeCalledWith('https://example.com:5001')
+        expect(ipfsClient).toBeCalledWith({"url": "https://example.com:5001"})
     })
 })
 
