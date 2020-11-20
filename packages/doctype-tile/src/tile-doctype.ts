@@ -10,7 +10,7 @@ import {
     DoctypeStatic,
     DocOpts,
     DocParams,
-    Context
+    Context,
 } from "@ceramicnetwork/common"
 
 const DOCTYPE = 'tile'
@@ -36,6 +36,10 @@ export class TileDoctype extends Doctype {
     async change(params: TileParams, opts: DocOpts = {}): Promise<void> {
         if (this.context.did == null) {
             throw new Error('No DID authenticated')
+        }
+
+        if ('chainId' in params && params.chainId != this.metadata.chainId) {
+            throw new Error("Updating chainId is not currently supported. Current chainId: " + this.metadata.chainId + ", requested chainId: " + params.chainId)
         }
 
         const updateRecord = await TileDoctype._makeRecord(this, this.context.did, params.content, params.metadata?.controllers, params.metadata?.schema)
@@ -64,13 +68,19 @@ export class TileDoctype extends Doctype {
      * @param params - Create parameters
      * @param context - Ceramic context
      */
-    static async makeGenesis(params: DocParams, context?: Context): Promise<Record<string, any>> {
+    static async makeGenesis(params: DocParams, context: Context): Promise<Record<string, any>> {
         const metadata = params.metadata? params.metadata : { controllers: [] }
 
         // check for DID and authentication
         if (!context.did || !context.did.authenticated) {
             throw new Error('No DID authenticated')
         }
+
+        const supported_chains = await context.api.getSupportedChains()
+        if ('chainId' in metadata && !supported_chains.includes(metadata.chainId)) {
+            throw new Error("Requested chainId '" + metadata.chainId + "' is not supported. Supported chains are: '" + supported_chains.join("', '") + "'")
+        }
+        metadata.chainId = metadata.chainId ?? supported_chains[0]
 
         let unique: string
         if (params.deterministic) {
@@ -125,9 +135,9 @@ export class TileDoctype extends Doctype {
         const patch = jsonpatch.compare(doctype.content, newContent)
 
         const willSquash = header.nonce && header.nonce > 0
-        const prev = doctype.state.log[doctype.state.log.length - 1 - (willSquash ? 1 : 0)]
+        const prev = doctype.state.log[doctype.state.log.length - 1 - (willSquash ? 1 : 0)].cid
 
-        const record = { header, data: patch, prev, id: doctype.state.log[0] }
+        const record = { header, data: patch, prev, id: doctype.state.log[0].cid }
         return TileDoctype._signDagJWS(record, did, doctype.controllers[0])
     }
 

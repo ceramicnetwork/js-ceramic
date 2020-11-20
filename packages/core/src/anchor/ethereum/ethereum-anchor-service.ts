@@ -46,6 +46,8 @@ export default class EthereumAnchorService extends AnchorService {
 
     private _ceramic: CeramicApi
     private readonly cidToResMap: Map<CidDoc, AnchorServiceResponse>;
+    private readonly requestsApiEndpoint: string
+    private readonly chainIdApiEndpoint: string
 
     /**
      * @param _config - service configuration (polling interval, etc.)
@@ -54,6 +56,8 @@ export default class EthereumAnchorService extends AnchorService {
         super();
 
         this.cidToResMap = new Map<CidDoc, AnchorServiceResponse>();
+        this.requestsApiEndpoint = this._config.anchorServiceUrl + '/api/v0/requests'
+        this.chainIdApiEndpoint = this._config.anchorServiceUrl + '/api/v0/service-info/supported_chains'
     }
 
     /**
@@ -79,12 +83,22 @@ export default class EthereumAnchorService extends AnchorService {
     }
 
     /**
+     * @returns An array of the CAIP-2 chain IDs of the blockchains that are supported by this
+     * anchor service.
+     */
+    async getSupportedChains(): Promise<Array<string>> {
+        const response = await fetch(this.chainIdApiEndpoint);
+        const json = await response.json();
+        return json.supportedChains
+    }
+
+    /**
      * Send requests to an external Ceramic Anchor Service
      * @param cidDocPair - mapping
      * @private
      */
     async _sendReq(cidDocPair: CidDoc): Promise<void> {
-        const response = await fetch(this._config.anchorServiceUrl, {
+        const response = await fetch(this.requestsApiEndpoint, {
             method: "POST", body: JSON.stringify({
                 docId: cidDocPair.docId, cid: cidDocPair.cid.toString()
             }), headers: {
@@ -130,7 +144,7 @@ export default class EthereumAnchorService extends AnchorService {
             await new Promise(resolve => setTimeout(resolve, DEFAULT_POLL_TIME));
 
             try {
-                const requestUrl = [this._config.anchorServiceUrl, cidDoc.cid.toString()].join('/');
+                const requestUrl = [this.requestsApiEndpoint, cidDoc.cid.toString()].join('/');
                 const response = await fetch(requestUrl);
                 const json = await response.json();
 

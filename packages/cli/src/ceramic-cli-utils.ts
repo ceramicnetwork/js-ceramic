@@ -221,7 +221,8 @@ export class CeramicCliUtils {
         const id = DocID.fromString(docId)
 
         await CeramicCliUtils._runWithCeramic(async (ceramic: CeramicApi) => {
-            const versions = await ceramic.listVersions(id)
+            const doc = await ceramic.loadDocument(id)
+            const versions = doc.allVersionIds.map(v => v.toString())
             console.log(JSON.stringify(versions, null, 2))
         })
     }
@@ -315,7 +316,7 @@ export class CeramicCliUtils {
         const cliConfig = await CeramicCliUtils._loadCliConfig()
 
         if (!cliConfig.seed) {
-            cliConfig.seed = u8a.toString(randomBytes(32))
+            cliConfig.seed = u8a.toString(randomBytes(32), 'base16')
             console.log('Identity wallet seed generated')
             await CeramicCliUtils._saveCliConfig(cliConfig)
         }
@@ -328,7 +329,7 @@ export class CeramicCliUtils {
             ceramic = new CeramicClient()
         }
 
-        const seed = u8a.fromString(cliConfig.seed)
+        const seed = u8a.fromString(cliConfig.seed, 'base16')
         const provider = new Ed25519Provider(seed)
         await ceramic.setDIDProvider(provider)
 

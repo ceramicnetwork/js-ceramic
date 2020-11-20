@@ -11,7 +11,7 @@ import * as core from "express-serve-static-core"
 const DEFAULT_PORT = 7007
 const toApiPath = (ending: string): string => '/api/v0' + ending
 
-const DEFAULT_ANCHOR_SERVICE_URL = "https://cas.3box.io:8081/api/v0/requests"
+const DEFAULT_ANCHOR_SERVICE_URL = "https://cas.3box.io:8081"
 
 /**
  * Daemon create options
@@ -144,11 +144,11 @@ class CeramicDaemon {
 
   registerAPIPaths (app: core.Express, gateway: boolean): void {
     app.get(toApiPath('/records/ceramic/:docid'), this.records.bind(this))
-    app.get(toApiPath('/versions/ceramic/:docid'), this.versions.bind(this))
     app.get(toApiPath('/show/ceramic/:docid'), this.show.bind(this))
     app.get(toApiPath('/state/ceramic/:docid'), this.state.bind(this))
     app.get(toApiPath('/pin/ls/ceramic/:docid'), this.listPinned.bind(this))
     app.get(toApiPath('/pin/ls'), this.listPinned.bind(this))
+    app.get(toApiPath('/supported_chains'), this.getSupportedChains.bind(this))
     app.post(toApiPath('/create'), this.createDocFromGenesis.bind(this))
 
     if (!gateway) {
@@ -226,20 +226,6 @@ class CeramicDaemon {
       const doc = await this.ceramic.loadDocument(docId)
 
       res.json({ docId: doc.id.toString(), state: DoctypeUtils.serializeState(doc.state) })
-    } catch (e) {
-      return next(e)
-    }
-    next()
-  }
-
-  /**
-   * Get document versions
-   */
-  async versions (req: Request, res: Response, next: NextFunction): Promise<void> {
-    const docId = DocID.fromString(req.params.docid)
-    try {
-      const versions = await this.ceramic.listVersions(docId)
-      res.json({ docId: docId.toString(), versions: versions })
     } catch (e) {
       return next(e)
     }
@@ -338,6 +324,16 @@ class CeramicDaemon {
 
   async _notSupported (req: Request, res: Response, next: NextFunction): Promise<void> {
     res.status(400).json({ status: 'error', message: 'Method not supported by read only Ceramic Gateway' })
+    next()
+  }
+
+  async getSupportedChains (req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const supportedChains = await this.ceramic.getSupportedChains()
+      res.json({ supportedChains })
+    } catch (e) {
+      return next(e)
+    }
     next()
   }
 

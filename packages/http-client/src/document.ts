@@ -24,7 +24,7 @@ class Document extends Doctype {
   }
 
   get id(): DocID {
-    return new DocID(this.state.doctype, this.state.log[0])
+    return new DocID(this.state.doctype, this.state.log[0].cid)
   }
 
   static async createFromGenesis (apiUrl: string, doctype: string, genesis: any, context: Context, opts: DocOpts = {}): Promise<Document> {
@@ -54,12 +54,6 @@ class Document extends Doctype {
     docId = typeDocID(docId)
     const { state } = await fetchJson(apiUrl + '/state' + docIdUrl(docId))
     return new Document(DoctypeUtils.deserializeState(state), context, apiUrl)
-  }
-
-  static async listVersions (docId: DocID | string, apiUrl: string): Promise<string[]> {
-    docId = typeDocID(docId)
-    const { versions } = await fetchJson(apiUrl + '/versions' + docIdUrl(docId))
-    return versions
   }
 
   static async loadDocumentRecords (docId: DocID | string, apiUrl: string): Promise<Array<Record<string, any>>> {

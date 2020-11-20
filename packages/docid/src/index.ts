@@ -5,6 +5,7 @@ import varint from 'varint'
 import uint8ArrayConcat from 'uint8arrays/concat'
 import uint8ArrayToString from 'uint8arrays/to-string'
 const DOCID_CODEC = 206
+const DEFAULT_BASE = 'base36'
 
 const getKey = (obj: { [key: string]: number }, value: number): string | undefined => {
   for (const [k, v] of Object.entries(obj)) {
@@ -36,7 +37,7 @@ class DocID {
   private _bytes: Uint8Array
   private _version: CID | undefined
 
-  constructor (doctype: string | number, cid: CID | string, version: CID | string | number = null, multibaseName = 'base36') {
+  constructor (doctype: string | number, cid: CID | string, version: CID | string | number = null, multibaseName = DEFAULT_BASE) {
     this._doctype = (typeof doctype === 'string') ? doctypes[doctype] : doctype
      if (!doctype && doctype !== 0) throw new Error('constructor: doctype required')
     this._multibaseName = multibaseName
@@ -267,13 +268,12 @@ class DocID {
   }
 
   /**
-   * Encode the DocID into a url
+   * Encode the DocID into a base36 url
    *
-   * @param   {string}   [base=this.multibaseName]   Base encoding to use.
    * @returns {string}
    */
-  toUrl(base: string): string {
-    return `ceramic://${this.toBaseEncodedString(base)}`
+  toUrl(): string {
+    return `ceramic://${this.toBaseEncodedString(DEFAULT_BASE)}`
   }
 
   /**

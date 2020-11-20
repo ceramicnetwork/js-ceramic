@@ -29,4 +29,10 @@ export abstract class AnchorService extends EventEmitter {
      */
     abstract validateChainInclusion(anchorProof: AnchorProof): Promise<void>;
 
+    /**
+     * @returns An array of the CAIP-2 chain IDs of the blockchains that are supported by this
+     * anchor service.
+     */
+    abstract getSupportedChains(): Promise<Array<string>>;
+
 }

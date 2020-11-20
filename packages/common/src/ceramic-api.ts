@@ -79,12 +79,6 @@ export interface CeramicApi {
     loadDocumentRecords(docId: DocID | string): Promise<Array<Record<string, any>>>;
 
     /**
-     * Lists current Doctype versions
-     * @param docId - Document ID
-     */
-    listVersions(docId: DocID | string): Promise<string[]>;
-
-    /**
      * Applies record on the existing document
      * @param docId - Document ID
      * @param record - Record to be applied
@@ -97,6 +91,12 @@ export interface CeramicApi {
      * @param provider - DID provider instance
      */
     setDIDProvider (provider: DIDProvider): Promise<void>;
+
+    /**
+     * @returns An array of the CAIP-2 chain IDs of the blockchains that are supported for anchoring
+     * documents.
+     */
+    getSupportedChains(): Promise<Array<string>>;
 
     /**
      * Closes Ceramic instance
