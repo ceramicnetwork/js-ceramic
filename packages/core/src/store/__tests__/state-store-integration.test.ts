@@ -181,7 +181,7 @@ describe('Level data store', () => {
       }
     })
 
-    const api = {getSupportedChains: jest.fn(async () => {return ["fakechain:123"]})}
+    const api = {getSupportedChains: jest.fn(async () => {return await anchorService.getSupportedChains()})}
     const resolver = new Resolver({ ...threeIdResolver })
     context = {
       ipfs: dispatcher._ipfs,
