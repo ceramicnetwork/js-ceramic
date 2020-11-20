@@ -63,10 +63,10 @@ class Document extends Doctype {
     })
   }
 
-  async change(params: DocParams): Promise<void> {
+  async change(params: DocParams, opts: DocOpts): Promise<void> {
     const doctype = new this.doctypeHandler.doctype(this.state, this.context)
 
-    await doctype.change(params)
+    await doctype.change(params, opts)
     this.state = doctype.state
   }
 
