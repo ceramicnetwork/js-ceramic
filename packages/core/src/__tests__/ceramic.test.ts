@@ -204,7 +204,7 @@ describe('Ceramic integration', () => {
       content: { test: 321 },
       metadata: { controllers: [controller], tags: ['3id']},
       deterministic: true,
-    })
+    }, { waitForSync: false} )
 
     await anchor(ceramic1)
     await syncDoc(doctype1)
@@ -219,7 +219,7 @@ describe('Ceramic integration', () => {
 
     expect(doctype3.content).toEqual(doctype1.content)
 
-    await doctype1.change({ content: { test: 'abcde' }, metadata: { controllers: [controller] } })
+    await doctype1.change({ content: { test: 'abcde' }, metadata: { controllers: [controller] } }, { waitForSync: false })
 
     await syncDoc(doctype3)
     await anchor(ceramic1)
