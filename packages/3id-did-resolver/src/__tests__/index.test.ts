@@ -1,5 +1,8 @@
-jest.mock('./../legacyResolver', () =>  {
- return () => () => JSON.parse('{"id":"did:3:GENESIS","@context":"https://w3id.org/did/v1","publicKey":[{"id":"did:3:GENESIS#signingKey","type":"Secp256k1VerificationKey2018","publicKeyHex":"0452fbcde75f7ddd7cff18767e2b5536211f500ad474c15da8e74577a573e7a346f2192ef49a5aa0552c41f181a7950af3afdb93cafcbff18156943e3ba312e5b2"},{"id":"did:3:GENESIS#encryptionKey","type":"Curve25519EncryptionPublicKey","publicKeyBase64":"DFxR24MNHVxEDAdL2f6pPEwNDJ2p0Ldyjoo7y/ItLDc="},{"id":"did:3:GENESIS#managementKey","type":"Secp256k1VerificationKey2018","ethereumAddress":"0x3f0bb6247d647a30f310025662b29e6fa382b61d"}],"authentication":[{"type":"Secp256k1SignatureAuthentication2018","publicKey":"did:3:GENESIS#signingKey"}]}')
+jest.mock('cross-fetch', () =>  {
+  return () => ({
+    ok: true, 
+    json: async () => JSON.parse('{"value":{"id":"did:3:GENESIS","@context":"https://w3id.org/did/v1","publicKey":[{"id":"did:3:GENESIS#signingKey","type":"Secp256k1VerificationKey2018","publicKeyHex":"0452fbcde75f7ddd7cff18767e2b5536211f500ad474c15da8e74577a573e7a346f2192ef49a5aa0552c41f181a7950af3afdb93cafcbff18156943e3ba312e5b2"},{"id":"did:3:GENESIS#encryptionKey","type":"Curve25519EncryptionPublicKey","publicKeyBase64":"DFxR24MNHVxEDAdL2f6pPEwNDJ2p0Ldyjoo7y/ItLDc="},{"id":"did:3:GENESIS#managementKey","type":"Secp256k1VerificationKey2018","ethereumAddress":"0x3f0bb6247d647a30f310025662b29e6fa382b61d"}],"authentication":[{"type":"Secp256k1SignatureAuthentication2018","publicKey":"did:3:GENESIS#signingKey"}]}}')
+  })
 })
 
 import ThreeIdResolver from '../index'

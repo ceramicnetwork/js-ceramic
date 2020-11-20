@@ -3,6 +3,7 @@ import { Doctype } from "@ceramicnetwork/common"
 import type { ParsedDID, DIDResolver, DIDDocument } from 'did-resolver'
 import LegacyResolver from './legacyResolver'
 import DocID from '@ceramicnetwork/docid'
+import CID from 'cids'
 
 interface Ceramic {
   loadDocument(docId: DocID): Promise<Doctype>;
@@ -15,6 +16,7 @@ interface ResolverRegistry {
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function wrapDocument(content: any, did: string): DIDDocument {
+  if (!(content && content.publicKeys)) throw new Error('Not a valid 3ID')
   const startDoc: DIDDocument = {
     '@context': 'https://w3id.org/did/v1',
     id: did,
@@ -92,51 +94,51 @@ export function wrapDocument(content: any, did: string): DIDDocument {
 }
 
 const isLegacyDid = (didId: string): boolean => {
- return !DocID.isDocID(didId)
+  try {
+    new CID(didId) 
+    return true
+  } catch(e) {
+    return false
+  }
 }
 
 const getVersion = (query = ''): string | null => {
   const versionParam = query.split('&').find(e => e.includes('version-id'))
   return versionParam ? versionParam.split('=')[1] : null
 }
+ 
+const legacyResolve = async (ceramic: Ceramic, didId: string, version?: string): Promise<DIDDocument | null> => {
+  // todo could add opt to pass ceramic ipfs here instead when true
+  const legacyDoc = await LegacyResolver(didId)
+  if (!legacyDoc) return null
+  if (version === '0') return legacyDoc
+
+  const keyEntry = legacyDoc.publicKey.findIndex(e => e.id.endsWith('managementKey'))
+  const managementKey = legacyDoc.publicKey[keyEntry].ethereumAddress 
+  if (!managementKey) return null
+
+  try {
+    const content =  { metadata: { controllers: [`did:key:${managementKey}`], tags: ['3id'] } }
+    const doc = await ceramic.createDocument('tile', content, { applyOnly: true })
+    const didDoc = await resolve(ceramic, doc.id.toString(), version)
+    return didDoc
+  } catch(e) {
+    return legacyDoc
+  }
+}
+
+const resolve = async (ceramic: Ceramic, didId: string, version?: string): Promise<DIDDocument | null> =>  {
+  const docId = DocID.fromString(didId, version)
+  const doctype = await ceramic.loadDocument(docId)
+  return wrapDocument(doctype.content, `did:3:${didId}`)
+}
 
 export default {
   getResolver: (ceramic: Ceramic): ResolverRegistry => {
-
-    // todo could add opt to pass ceramic ipfs here instead when true
-    const legacyResolver = LegacyResolver()
- 
-    const legacyResolve = async (didId: string, version?: string): Promise<DIDDocument | null> => {
-      const legacyDoc = await legacyResolver(`did:3:${didId}`)
-      if (!legacyDoc) return null
-      if (version === '0') return legacyDoc
-
-      const keyEntry = legacyDoc.publicKey.findIndex(e => e.id.endsWith('managementKey'))
-      const managementKey = legacyDoc.publicKey[keyEntry].ethereumAddress 
-      if (!managementKey) return null
-   
-      const doctype = 'tile'
-      const content =  { metadata: { controllers: [`did:key:${managementKey}`], tags: ['3id'] } }
-      const doc = await ceramic.createDocument(doctype, content, { applyOnly: true })
-      const didDoc = await resolve(doc.id.toString(), version)
-      
-      return didDoc ? didDoc : legacyDoc
-    }
-    
-    const resolve = async (didId: string, version?: string): Promise<DIDDocument | null> =>  {
-      const docId = DocID.fromString(didId, version)
-      try {
-        const doctype = await ceramic.loadDocument(docId)
-        return wrapDocument(doctype.content, `did:3:${didId}`)
-      } catch (e) {
-        return null
-      }
-    }
-    
     return {
       '3': async (did: string, parsed: ParsedDID): Promise<DIDDocument | null> => {
         const version = getVersion(parsed.query)
-        return isLegacyDid(parsed.id) ? legacyResolve(parsed.id, version) : resolve(parsed.id, version)
+        return isLegacyDid(parsed.id) ? legacyResolve(ceramic, parsed.id, version) : resolve(ceramic, parsed.id, version)
       }
     }
   }
