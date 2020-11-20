@@ -12,6 +12,7 @@ export default class Utils {
     /**
      * Awaits on condition for certain amount of time
      */
+    // eslint-disable-next-line @typescript-eslint/ban-types
     static async awaitCondition(conditionFn: Function, stopFunction: Function, awaitInterval: number): Promise<void> {
         while (conditionFn()) {
             if (stopFunction()) {
@@ -25,7 +26,7 @@ export default class Utils {
      * Validates model against JSON-Schema
      * @param schema - Doctype schema
      */
-    static isSchemaValid(schema: object): boolean {
+    static isSchemaValid(schema: Record<string, unknown>): boolean {
         Utils.validator.compile(schema) // throws an error on invalid schema
         return Utils.validator.validateSchema(schema) // call validate schema just in case
     }

@@ -2,7 +2,7 @@ import Ceramic from '@ceramicnetwork/ceramic-core'
 import CeramicClient from '@ceramicnetwork/ceramic-http-client'
 import IdentityWallet from 'identity-wallet'
 import tmp from 'tmp-promise'
-import Ipfs from 'ipfs'
+import IPFS from 'ipfs'
 import CeramicDaemon from '../ceramic-daemon'
 import { AnchorStatus, DoctypeUtils } from "@ceramicnetwork/ceramic-common"
 import { TileDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-tile"
@@ -10,10 +10,9 @@ import { EventEmitter } from "events"
 import * as u8a from 'uint8arrays'
 
 import dagJose from 'dag-jose'
-// @ts-ignore
 import basicsImport from 'multiformats/cjs/src/basics-import.js'
-// @ts-ignore
 import legacy from 'multiformats/cjs/src/legacy.js'
+import { IPFSApi } from "../declarations"
 
 const seed = u8a.fromString('6e34b2e1a9624113d81ece8a8a22e6e97f0e145c25c1d4d2d0e62753b4060c837097f768559e17ec89ee20cba153b23b9987912ec1e860fa1212ba4b84c776ce', 'base16')
 const anchorUpdate = (doc: EventEmitter): Promise<void> => new Promise(resolve => doc.on('change', resolve))
@@ -24,7 +23,7 @@ const apiUrl = 'http://localhost:' + port
  * Create an IPFS instance
  * @param overrideConfig - IFPS config for override
  */
-const createIPFS =(overrideConfig: object = {}): Promise<any> => {
+const createIPFS =(overrideConfig: Record<string, unknown> = {}): Promise<any> => {
   basicsImport.multicodec.add(dagJose)
   const format = legacy(basicsImport, dagJose.name)
 
@@ -33,12 +32,12 @@ const createIPFS =(overrideConfig: object = {}): Promise<any> => {
   }
 
   Object.assign(config, overrideConfig)
-  return Ipfs.create(config)
+  return IPFS.create(config)
 }
 
 describe('Ceramic interop: core <> http-client', () => {
   jest.setTimeout(20000)
-  let ipfs: Ipfs
+  let ipfs: IPFSApi
   let tmpFolder: any
   let core: Ceramic
   let daemon: CeramicDaemon

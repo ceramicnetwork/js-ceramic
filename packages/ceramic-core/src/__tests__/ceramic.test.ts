@@ -1,7 +1,7 @@
 import Ceramic from '../ceramic'
 import IdentityWallet from 'identity-wallet'
 import tmp from 'tmp-promise'
-import Ipfs from 'ipfs'
+import IPFS from 'ipfs'
 import getPort from 'get-port'
 import { DoctypeUtils, DocState, Doctype } from "@ceramicnetwork/ceramic-common"
 import { TileDoctype } from "@ceramicnetwork/ceramic-doctype-tile"
@@ -10,6 +10,7 @@ import dagJose from 'dag-jose'
 import basicsImport from 'multiformats/cjs/src/basics-import.js'
 import legacy from 'multiformats/cjs/src/legacy.js'
 import * as u8a from 'uint8arrays'
+import { IPFSApi } from "../declarations"
 
 jest.mock('../store/level-state-store')
 
@@ -19,7 +20,7 @@ const seed = u8a.fromString('6e34b2e1a9624113d81ece8a8a22e6e97f0e145c25c1d4d2d0e
  * Create an IPFS instance
  * @param overrideConfig - IPFS config for override
  */
-const createIPFS =(overrideConfig: object = {}): Promise<any> => {
+const createIPFS =(overrideConfig: Record<string, unknown> = {}): Promise<any> => {
   basicsImport.multicodec.add(dagJose)
   const format = legacy(basicsImport, dagJose.name)
 
@@ -28,14 +29,14 @@ const createIPFS =(overrideConfig: object = {}): Promise<any> => {
   }
 
   Object.assign(config, overrideConfig)
-  return Ipfs.create(config)
+  return IPFS.create(config)
 }
 
 const expectEqualStates = (state1: DocState, state2: DocState): void => {
   expect(DoctypeUtils.serializeState(state1)).toEqual(DoctypeUtils.serializeState(state2))
 }
 
-const createCeramic = async (ipfs: Ipfs, topic: string, anchorOnRequest = false): Promise<Ceramic> => {
+const createCeramic = async (ipfs: IPFSApi, topic: string, anchorOnRequest = false): Promise<Ceramic> => {
   const ceramic = await Ceramic.create(ipfs, {
     stateStorePath: await tmp.tmpName(),
     topic,
@@ -53,8 +54,6 @@ const createCeramic = async (ipfs: Ipfs, topic: string, anchorOnRequest = false)
 }
 
 const anchor = async (ceramic: Ceramic): Promise<void> => {
-  // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-  // @ts-ignore
   await ceramic.context.anchorService.anchor()
 }
 
@@ -68,9 +67,9 @@ const syncDoc = async (doctype: Doctype): Promise<void> => {
 
 describe('Ceramic integration', () => {
   jest.setTimeout(60000)
-  let ipfs1: Ipfs;
-  let ipfs2: Ipfs;
-  let ipfs3: Ipfs;
+  let ipfs1: IPFSApi;
+  let ipfs2: IPFSApi;
+  let ipfs3: IPFSApi;
   let multaddr1: string;
   let multaddr2: string;
   let multaddr3: string;
@@ -93,7 +92,7 @@ describe('Ceramic integration', () => {
   beforeEach(async () => {
     tmpFolder = await tmp.dir({ unsafeCleanup: true })
 
-    const buildConfig = (path: string, port: number): object => {
+    const buildConfig = (path: string, port: number): Record<string, unknown> => {
       return {
         repo: `${path}/ipfs${port}/`, config: {
           Addresses: { Swarm: [`/ip4/127.0.0.1/tcp/${port}`] }, Bootstrap: []

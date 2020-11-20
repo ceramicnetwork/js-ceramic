@@ -3,7 +3,7 @@ import path from "path"
 import { randomBytes } from '@stablelib/random'
 import * as u8a from 'uint8arrays'
 
-const fs = require('fs').promises
+import { promises as fs } from 'fs'
 
 import IdentityWallet from "identity-wallet"
 import CeramicClient from "@ceramicnetwork/ceramic-http-client"
@@ -12,11 +12,13 @@ import DocID from '@ceramicnetwork/docid'
 
 import CeramicDaemon, { CreateOpts } from "./ceramic-daemon"
 
-import Ipfs from "ipfs"
+import IPFS from "ipfs"
 
 import dagJose from 'dag-jose'
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import multiformats from 'multiformats/basics'
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import legacy from 'multiformats/legacy'
 import ipfsClient from "ipfs-http-client"
@@ -81,7 +83,7 @@ export class CeramicCliUtils {
         if (ipfsApi) {
             ipfs = ipfsClient({ url: ipfsApi, ipld: { formats: [format] } })
         } else {
-            ipfs = await Ipfs.create({
+            ipfs = await IPFS.create({
                 ipld: {
                     formats: [format]
                 },

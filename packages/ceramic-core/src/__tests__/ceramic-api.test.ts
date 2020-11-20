@@ -1,6 +1,6 @@
 import Ceramic, { CeramicConfig } from '../ceramic'
 import IdentityWallet from 'identity-wallet'
-import Ipfs from 'ipfs'
+import IPFS from 'ipfs'
 import tmp from 'tmp-promise'
 import { TileDoctype, TileParams } from "@ceramicnetwork/ceramic-doctype-tile"
 import { AnchorStatus, DoctypeUtils } from "@ceramicnetwork/ceramic-common"
@@ -10,6 +10,7 @@ import basicsImport from 'multiformats/cjs/src/basics-import.js'
 import legacy from 'multiformats/cjs/src/legacy.js'
 import DocID from '@ceramicnetwork/docid'
 import * as u8a from 'uint8arrays'
+import { IPFSApi } from "../declarations"
 
 jest.mock('../store/level-state-store')
 
@@ -19,7 +20,7 @@ const seed = u8a.fromString('6e34b2e1a9624113d81ece8a8a22e6e97f0e145c25c1d4d2d0e
  * Create an IPFS instance
  * @param overrideConfig - IFPS config for override
  */
-const createIPFS =(overrideConfig: object = {}): Promise<any> => {
+const createIPFS =(overrideConfig: Record<string, unknown> = {}): Promise<any> => {
   basicsImport.multicodec.add(dagJose)
   const format = legacy(basicsImport, dagJose.name)
 
@@ -28,13 +29,13 @@ const createIPFS =(overrideConfig: object = {}): Promise<any> => {
   }
 
   Object.assign(config, overrideConfig)
-  return Ipfs.create(config)
+  return IPFS.create(config)
 }
 
 
 describe('Ceramic API', () => {
   jest.setTimeout(15000)
-  let ipfs: Ipfs;
+  let ipfs: IPFSApi;
   let ceramic: Ceramic
   let tmpFolder: any;
 
