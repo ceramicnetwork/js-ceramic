@@ -1,7 +1,5 @@
 FROM node:12
 
-ENV IPFS_API_URL=http://host.docker.internal:5001
-
 RUN apt-get update && apt-get install -y netcat
 
 WORKDIR /js-ceramic
@@ -18,7 +16,7 @@ COPY packages/http-client/package.json packages/cli/package-lock.json ./packages
 COPY packages/doctype-tile/package.json packages/doctype-tile/package-lock.json ./packages/doctype-tile/
 COPY packages/doctype-caip10-link/package.json packages/doctype-caip10-link/package-lock.json ./packages/doctype-caip10-link/
 COPY packages/key-did-resolver/package.json packages/key-did-resolver/package-lock.json ./packages/key-did-resolver/
-COPY packages/3id-did-resolver/package.json packages/ceramic-cli/package-lock.json ./packages/3id-did-resolver/
+COPY packages/3id-did-resolver/package.json packages/cli/package-lock.json ./packages/3id-did-resolver/
 COPY packages/docid/package.json packages/docid/package-lock.json ./packages/docid/
 
 RUN npx lerna bootstrap --hoist
@@ -29,4 +27,5 @@ RUN npm run build
 
 EXPOSE 7007
 
-CMD cd packages/cli && ./bin/ceramic.js daemon --ipfs-api $IPFS_API_URL
+ENTRYPOINT ["./packages/cli/bin/ceramic.js", "daemon"]
+
