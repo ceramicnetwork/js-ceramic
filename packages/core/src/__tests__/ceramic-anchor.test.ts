@@ -127,9 +127,9 @@ describe('Ceramic anchoring', () => {
 
     const controller = ceramic1.context.did.id
 
-    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { a: 1 } }, { applyOnly: false })
-    await doctype1.change({ content: { a: 2 }, metadata: { controllers: [controller] } }, { applyOnly: false })
-    await doctype1.change({ content: { a: 3 }, metadata: { controllers: [controller] } }, { applyOnly: false })
+    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { a: 1 } }, {})
+    await doctype1.change({ content: { a: 2 }, metadata: { controllers: [controller] } }, {})
+    await doctype1.change({ content: { a: 3 }, metadata: { controllers: [controller] } }, {})
 
     await anchorDoc(ceramic1, doctype1)
 
@@ -155,9 +155,9 @@ describe('Ceramic anchoring', () => {
 
     const controller = ceramic1.context.did.id
 
-    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { a: 1 } }, { applyOnly: true })
-    await doctype1.change({ content: { a: 2 }, metadata: { controllers: [controller] } }, { applyOnly: true })
-    await doctype1.change({ content: { a: 3 }, metadata: { controllers: [controller] } }, { applyOnly: true })
+    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { a: 1 } }, { anchor: false, publish: false })
+    await doctype1.change({ content: { a: 2 }, metadata: { controllers: [controller] } }, { anchor: false, publish: false })
+    await doctype1.change({ content: { a: 3 }, metadata: { controllers: [controller] } }, { anchor: false, publish: false })
 
     expect(doctype1.content).toEqual({ a: 3 })
     expect(doctype1.state.log.length).toEqual(2)
@@ -179,9 +179,9 @@ describe('Ceramic anchoring', () => {
     ])
     const controller = ceramic1.context.did.id
 
-    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { a: 123, b: 4567 } }, { applyOnly: false })
-    await doctype1.change({ content: { a: 4567 }, metadata: { controllers: [controller] } }, { applyOnly: true })
-    await doctype1.change({ content: { b: 123 }, metadata: { controllers: [controller] } }, { applyOnly: true })
+    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { a: 123, b: 4567 } }, {})
+    await doctype1.change({ content: { a: 4567 }, metadata: { controllers: [controller] } }, { anchor: false, publish: false })
+    await doctype1.change({ content: { b: 123 }, metadata: { controllers: [controller] } }, { anchor: false, publish: false })
 
     expect(doctype1.state.log.length).toEqual(2)
 
@@ -234,10 +234,10 @@ describe('Ceramic anchoring', () => {
     ])
     const controller = ceramic1.context.did.id
 
-    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { x: 1 } }, { applyOnly: false })
+    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { x: 1 } }, {})
 
-    await doctype1.change({ content: { x: doctype1.content.x + 1 }, metadata: { controllers: [controller] } }, { applyOnly: true })
-    await doctype1.change({ content: { x: doctype1.content.x + 1 }, metadata: { controllers: [controller] } }, { applyOnly: false })
+    await doctype1.change({ content: { x: doctype1.content.x + 1 }, metadata: { controllers: [controller] } }, { anchor: false, publish: false })
+    await doctype1.change({ content: { x: doctype1.content.x + 1 }, metadata: { controllers: [controller] } }, { anchor: true, publish: true })
 
     await anchorDoc(ceramic1, doctype1)
 
@@ -261,9 +261,9 @@ describe('Ceramic anchoring', () => {
     ])
     const controller = ceramic1.context.did.id
 
-    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { x: 1 } }, { applyOnly: true })
-    await doctype1.change({ content: { x: doctype1.content.x + 1 }, metadata: { controllers: [controller] } }, { applyOnly: true })
-    await doctype1.change({ content: { x: doctype1.content.x + 1 }, metadata: { controllers: [controller] } }, { applyOnly: false })
+    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { x: 1 } }, { anchor: false, publish: false })
+    await doctype1.change({ content: { x: doctype1.content.x + 1 }, metadata: { controllers: [controller] } }, { anchor: false, publish: false })
+    await doctype1.change({ content: { x: doctype1.content.x + 1 }, metadata: { controllers: [controller] } }, { anchor: true, publish: true })
 
     await anchorDoc(ceramic1, doctype1)
 
@@ -287,22 +287,22 @@ describe('Ceramic anchoring', () => {
     ])
     const controller = ceramic1.context.did.id
 
-    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { x: 1 } }, { applyOnly: true })
-    await doctype1.change({ content: { x: doctype1.content.x + 1 }, metadata: { controllers: [controller] } }, { applyOnly: true })
+    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { x: 1 } }, { anchor: false, publish: false })
+    await doctype1.change({ content: { x: doctype1.content.x + 1 }, metadata: { controllers: [controller] } }, { anchor: false, publish: false })
 
     expect(doctype1.content).toEqual({ x: 2 })
     expect(doctype1.state.log.length).toEqual(2)
 
-    await doctype1.change({ content: { x: doctype1.content.x + 1 }, metadata: { controllers: [controller] } }, { applyOnly: false })
+    await doctype1.change({ content: { x: doctype1.content.x + 1 }, metadata: { controllers: [controller] } }, { anchor: true, publish: true })
 
     await anchorDoc(ceramic1, doctype1)
 
     expect(doctype1.content).toEqual({ x: 3 })
     expect(doctype1.state.log.length).toEqual(3)
 
-    await doctype1.change({ content: { x: doctype1.content.x + 1 }, metadata: { controllers: [controller] } }, { applyOnly: true })
-    await doctype1.change({ content: { x: doctype1.content.x + 1 }, metadata: { controllers: [controller] } }, { applyOnly: true })
-    await doctype1.change({ content: { x: doctype1.content.x + 1 }, metadata: { controllers: [controller] } }, { applyOnly: false })
+    await doctype1.change({ content: { x: doctype1.content.x + 1 }, metadata: { controllers: [controller] } }, { anchor: false, publish: false })
+    await doctype1.change({ content: { x: doctype1.content.x + 1 }, metadata: { controllers: [controller] } }, { anchor: false, publish: false })
+    await doctype1.change({ content: { x: doctype1.content.x + 1 }, metadata: { controllers: [controller] } }, { anchor: true, publish: true })
 
     await anchorDoc(ceramic1, doctype1)
 
@@ -326,10 +326,10 @@ describe('Ceramic anchoring', () => {
     ])
     const controller = ceramic1.context.did.id
 
-    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { x: 1 } }, { applyOnly: true })
+    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { x: 1 } }, { anchor: false, publish: false })
     const cloned = new TileDoctype(doctype1.state, doctype1.context)
-    await doctype1.change({ content: { x: 7 }, metadata: { controllers: [controller] } }, { applyOnly: false })
-    await cloned.change({ content: { x: 5 }, metadata: { controllers: [controller] } }, { applyOnly: false })
+    await doctype1.change({ content: { x: 7 }, metadata: { controllers: [controller] } }, { anchor: true, publish: true })
+    await cloned.change({ content: { x: 5 }, metadata: { controllers: [controller] } }, { anchor: true, publish: true })
 
     await anchorDoc(ceramic1, doctype1)
 

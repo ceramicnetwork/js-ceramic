@@ -89,11 +89,6 @@ class Document extends EventEmitter {
     }
 
     await doc._updateStateIfPinned()
-
-    if (typeof opts.applyOnly === 'undefined') {
-      opts.applyOnly = false
-    }
-
     await doc._register(opts)
     return doc
   }
@@ -120,8 +115,13 @@ class Document extends EventEmitter {
     const doc = new Document(id, dispatcher, pinStore, validate)
     doc._context = context
 
-    if (typeof opts.applyOnly === 'undefined') {
-      opts.applyOnly = true
+    // Default "anchor" and "publish" options to false for load operations, as load operations don't
+    // create a new tip that needs handling.
+    if (!("anchor" in opts)) {
+      opts.anchor = false
+    }
+    if (!("publish" in opts)) {
+      opts.publish = false
     }
 
     const record = await dispatcher.retrieveRecord(doc._genesisCid)
@@ -258,10 +258,16 @@ class Document extends EventEmitter {
    * @private
    */
   async _applyOpts(opts: DocOpts): Promise<void> {
-    if (!opts.applyOnly) {
+    const anchor = opts.anchor ?? true
+    const publish = opts.publish ?? true
+    const waitForSync = opts.waitForSync ?? true
+    if (anchor) {
       await this.anchor()
-      this._publishTip()
-    } else if (!opts.skipWait) {
+    }
+    if (publish) {
+      await this._publishTip()
+    }
+    if (waitForSync) {
       await Document.wait(this)
     }
   }
@@ -575,7 +581,7 @@ class Document extends EventEmitter {
           this._doctype.state = state
           await this._handleTip(asr.anchorRecord)
           await this._updateStateIfPinned()
-          this._publishTip()
+          await this._publishTip()
 
           this._context.anchorService.removeAllListeners(this.id.toString())
           return

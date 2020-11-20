@@ -131,7 +131,8 @@ export class CeramicCliUtils {
             }
 
             const doc = await ceramic.createDocument(doctype, params, {
-                applyOnly: onlyGenesis
+                anchor: !onlyGenesis,
+                publish: !onlyGenesis,
             })
 
             console.log(doc.id)

@@ -233,7 +233,7 @@ describe('Level data store', () => {
     const genesisCid = await dispatcher.storeRecord(genesis)
     const docId = new DocID('tile', genesisCid)
     const doc = await Document.create(docId, doctypeHandler, dispatcher, store, context, {
-      applyOnly: true, skipWait: true,
+      anchor: false, publish: false, waitForSync: false,
     })
 
     let docState = await store.stateStore.load(doc.id)
