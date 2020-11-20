@@ -26,7 +26,7 @@ const FAKE_CID_3 = new CID('bafybeig6xv5nwphfmvcnektpnojts55jqcuam7bmye2pb54adnr
 const FAKE_CID_4 = new CID('bafybeig6xv5nwphfmvcnektpnojts66jqcuam7bmye2pb54adnrtccjlsu')
 
 const RECORDS = {
-  genesis: { header: { controllers: [ 'did:3:bafyasdfasdf' ] }, data: { much: 'data' }, unique: '0' },
+  genesis: { header: { controllers: [ 'did:3:bafyasdfasdf' ], chainId: 'fakechain:123' }, data: { much: 'data' }, unique: '0' },
   genesisGenerated: {
     "jws": {
       "payload": "bbbb",
@@ -79,7 +79,8 @@ const RECORDS = {
   },
   r2: { record: { proof: FAKE_CID_4 } },
   proof: {
-    blockNumber: 123456
+    blockNumber: 123456,
+    chainId: 'fakechain:123',
   }
 }
 
@@ -150,6 +151,7 @@ describe('TileDoctypeHandler', () => {
       }
     })
 
+    const api = {getSupportedChains: jest.fn(async () => {return ["fakechain:123"]})}
     const keyDidResolver = KeyDidResolver.getResolver()
     context = {
       did,
@@ -158,7 +160,8 @@ describe('TileDoctypeHandler', () => {
       resolver: new Resolver({
         ...threeIdResolver,
         ...keyDidResolver,
-      })
+      }),
+      api
     }
   })
 
@@ -171,7 +174,7 @@ describe('TileDoctypeHandler', () => {
   })
 
   it('makes genesis record correctly', async () => {
-    const record1 = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id] }, deterministic: true }, { did })
+    const record1 = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id] }, deterministic: true }, context)
     expect(record1).toBeDefined()
 
     const { jws, linkedBlock } = record1
@@ -193,15 +196,15 @@ describe('TileDoctypeHandler', () => {
   })
 
   it('creates genesis records uniquely by default', async () => {
-    const record1 = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id] } }, { did })
-    const record2 = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id] } }, { did })
+    const record1 = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id] } }, context)
+    const record2 = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id] } }, context)
 
     expect(record1).not.toEqual(record2)
   })
 
   it('creates genesis records deterministically if deterministic:true is specified', async () => {
-    const record1 = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id] }, deterministic: true }, { did })
-    const record2 = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id] }, deterministic: true }, { did } )
+    const record1 = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id] }, deterministic: true }, context)
+    const record2 = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id] }, deterministic: true }, context )
 
     expect(record1).toEqual(record2)
   })
@@ -209,7 +212,7 @@ describe('TileDoctypeHandler', () => {
   it('applies genesis record correctly', async () => {
     const tileHandler = new TileDoctypeHandler()
 
-    const record = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id] } }, { did })
+    const record = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id] } }, context)
     await context.ipfs.dag.put(record, FAKE_CID_1)
 
     const payload = dagCBOR.util.deserialize(record.linkedBlock)
@@ -240,7 +243,7 @@ describe('TileDoctypeHandler', () => {
   it('applies signed record correctly', async () => {
     const tileDoctypeHandler = new TileDoctypeHandler()
 
-    const genesisRecord = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id] } }, { did })
+    const genesisRecord = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id] } }, context)
     await context.ipfs.dag.put(genesisRecord, FAKE_CID_1)
 
     const payload = dagCBOR.util.deserialize(genesisRecord.linkedBlock)
@@ -265,7 +268,7 @@ describe('TileDoctypeHandler', () => {
   it('throws error if record signed by wrong DID', async () => {
     const tileDoctypeHandler = new TileDoctypeHandler()
 
-    const genesisRecord = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: ['did:3:fake'] } }, { did })
+    const genesisRecord = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: ['did:3:fake'] } }, context)
     await context.ipfs.dag.put(genesisRecord, FAKE_CID_1)
 
     const payload = dagCBOR.util.deserialize(genesisRecord.linkedBlock)
@@ -277,7 +280,7 @@ describe('TileDoctypeHandler', () => {
   it('applies anchor record correctly', async () => {
     const tileDoctypeHandler = new TileDoctypeHandler()
 
-    const genesisRecord = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id] } }, { did })
+    const genesisRecord = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id] } }, context)
     await context.ipfs.dag.put(genesisRecord, FAKE_CID_1)
 
     const payload = dagCBOR.util.deserialize(genesisRecord.linkedBlock)
@@ -301,6 +304,26 @@ describe('TileDoctypeHandler', () => {
     // apply anchor
     state = await tileDoctypeHandler.applyRecord(RECORDS.r2.record, FAKE_CID_3, context, state)
     expect(state).toMatchSnapshot()
+  })
+
+  it('Does not apply anchor record on wrong chain', async () => {
+    const tileDoctypeHandler = new TileDoctypeHandler()
+
+    const genesisRecord = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id] } }, context)
+    await context.ipfs.dag.put(genesisRecord, FAKE_CID_1)
+
+    const payload = dagCBOR.util.deserialize(genesisRecord.linkedBlock)
+    await context.ipfs.dag.put(payload, genesisRecord.jws.link)
+
+    // apply genesis
+    const state = await tileDoctypeHandler.applyRecord(genesisRecord.jws, FAKE_CID_1, context)
+
+    // Create anchor proof with a different chainId than what's in the genesis record
+    await context.ipfs.dag.put({ blockNumber: 123456, chainId: 'thewrongchain'}, FAKE_CID_4)
+    // apply anchor
+    await expect(tileDoctypeHandler.applyRecord(RECORDS.r2.record, FAKE_CID_3, context, state))
+        .rejects.toThrow("Anchor record with cid '" + FAKE_CID_3 + "' on tile document with DocID '" +
+            FAKE_CID_1 + "' is on chain 'thewrongchain' but this document is configured to be anchored on chain 'fakechain:123'")
   })
 
 })

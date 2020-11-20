@@ -181,12 +181,14 @@ describe('Level data store', () => {
       }
     })
 
+    const api = {getSupportedChains: jest.fn(async () => {return await anchorService.getSupportedChains()})}
     const resolver = new Resolver({ ...threeIdResolver })
     context = {
       ipfs: dispatcher._ipfs,
       did: user,
       resolver,
       anchorService,
+      api,
     }
 
     anchorService.ceramic = {

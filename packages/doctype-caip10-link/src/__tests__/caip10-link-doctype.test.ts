@@ -38,6 +38,7 @@ const RECORDS = {
         timestamp: 1585919920
       },
       header: {
+        chainId: "fakechain:123",
         controllers: [
           "0x25954ef14cebbc9af3d71132489a9cfe87043f20@eip155:1"
         ]
@@ -49,7 +50,8 @@ const RECORDS = {
   r2: { record: { proof: FAKE_CID_4 } },
   proof: {
     value: {
-      blockNumber: 123456
+      blockNumber: 123456,
+      chainId: 'fakechain:123',
     }
   }
 }
@@ -60,7 +62,7 @@ describe('Caip10LinkHandler', () => {
 
   beforeEach(() => {
     handler = new Caip10LinkDoctypeHandler()
-    validateLink.mockImplementation(async (proof: any): Promise<any> => proof)
+    validateLink.mockImplementation(async (proof: Record<string, unknown>): Promise<Record<string, unknown>> => proof)
 
     const recs: Record<string, any> = {}
     const ipfs = {
@@ -82,9 +84,11 @@ describe('Caip10LinkHandler', () => {
       }
     }
 
+    const api = {getSupportedChains: jest.fn(async () => {return ["fakechain:123"]})}
     context = {
       ipfs: ipfs,
       anchorService: null,
+      api,
     }
   })
 
@@ -93,36 +97,36 @@ describe('Caip10LinkHandler', () => {
   })
 
   it('makes genesis record correctly', async () => {
-    const record = await Caip10LinkDoctype.makeGenesis({ content: undefined, metadata: RECORDS.genesis.header })
+    const record = await Caip10LinkDoctype.makeGenesis({ content: undefined, metadata: RECORDS.genesis.header }, context)
     expect(record).toEqual(RECORDS.genesis)
   })
 
   it('throws an error if genesis record has content', async () => {
     const content = {}
-    await expect(Caip10LinkDoctype.makeGenesis({ content })).rejects.toThrow(/Cannot have content/i)
+    await expect(Caip10LinkDoctype.makeGenesis({ content }, context)).rejects.toThrow(/Cannot have content/i)
   })
 
   it('throws an error if genesis record has no metadata specified', async () => {
     const content: any = undefined
     const controllers: any = undefined
-    await expect(Caip10LinkDoctype.makeGenesis({ content, controllers })).rejects.toThrow(/Metadata must be specified/i)
+    await expect(Caip10LinkDoctype.makeGenesis({ content, controllers }, context)).rejects.toThrow(/Metadata must be specified/i)
   })
 
   it('throws an error if genesis record has no controllers specified', async () => {
     const content: any = undefined
-    await expect(Caip10LinkDoctype.makeGenesis({ content, metadata: {} })).rejects.toThrow(/Controller must be specified/i)
+    await expect(Caip10LinkDoctype.makeGenesis({ content, metadata: {} }, context)).rejects.toThrow(/Controller must be specified/i)
   })
 
   it('throws an error if genesis record has more than one controller', async () => {
     const content: any = undefined
     const controllers = [...RECORDS.genesis.header.controllers, '0x25954ef14cebbc9af3d79876489a9cfe87043f20@eip155:1']
-    await expect(Caip10LinkDoctype.makeGenesis({ content, metadata: { controllers } })).rejects.toThrow(/Exactly one controller/i)
+    await expect(Caip10LinkDoctype.makeGenesis({ content, metadata: { controllers } }, context)).rejects.toThrow(/Exactly one controller/i)
   })
 
   it('throws an error if genesis record has controller not in CAIP-10 format', async () => {
     const content: any = undefined
     const controllers = RECORDS.genesis.header.controllers.map(address => address.split('@')[0])
-    await expect(Caip10LinkDoctype.makeGenesis({ content, metadata: { controllers } })).rejects.toThrow(/According to CAIP-10/i)
+    await expect(Caip10LinkDoctype.makeGenesis({ content, metadata: { controllers } }, context)).rejects.toThrow(/According to CAIP-10/i)
   })
 
   it('applies genesis record correctly', async () => {
@@ -157,14 +161,37 @@ describe('Caip10LinkHandler', () => {
   })
 
   it('applies anchor record correctly', async () => {
-    await context.ipfs.dag.put(RECORDS.genesisGenerated, FAKE_CID_1)
+    // create signed record
     await context.ipfs.dag.put(RECORDS.r1.record, FAKE_CID_2)
+    // create anchor record
     await context.ipfs.dag.put(RECORDS.r2.record, FAKE_CID_3)
+    // create anchor proof
     await context.ipfs.dag.put(RECORDS.proof, FAKE_CID_4)
 
+    // Apply genesis
     let state = await handler.applyRecord(RECORDS.genesis, FAKE_CID_1, context)
+    // Apply signed record
     state = await handler.applyRecord(RECORDS.r1.record, FAKE_CID_2, context, state)
+    // Apply anchor record
     state = await handler.applyRecord(RECORDS.r2.record, FAKE_CID_3, context, state)
     expect(state).toMatchSnapshot()
+  })
+
+  it('Does not apply anchor record on wrong chain', async () => {
+    // create signed record
+    await context.ipfs.dag.put(RECORDS.r1.record, FAKE_CID_2)
+    // create anchor record
+    await context.ipfs.dag.put(RECORDS.r2.record, FAKE_CID_3)
+    // create anchor proof with a different chainId than what's in the genesis record
+    await context.ipfs.dag.put({value: { blockNumber: 123456, chainId: 'thewrongchain'}}, FAKE_CID_4)
+
+    // Apply genesis
+    let state = await handler.applyRecord(RECORDS.genesis, FAKE_CID_1, context)
+    // Apply signed record
+    state = await handler.applyRecord(RECORDS.r1.record, FAKE_CID_2, context, state)
+    // Apply anchor record
+    await expect(handler.applyRecord(RECORDS.r2.record, FAKE_CID_3, context, state))
+        .rejects.toThrow("Anchor record with cid '" + FAKE_CID_3 + "' on caip10-link document with DocID '" +
+            FAKE_CID_1 + "' is on chain 'thewrongchain' but this document is configured to be anchored on chain 'fakechain:123'")
   })
 })

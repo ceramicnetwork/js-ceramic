@@ -29,7 +29,7 @@ interface LogMessage {
   event: string;
   topic: string;
   from?: string;
-  message?: object;
+  message?: Record<string, unknown>;
 }
 
 /**

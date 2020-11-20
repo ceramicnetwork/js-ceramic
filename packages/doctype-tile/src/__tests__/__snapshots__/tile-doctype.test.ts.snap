@@ -4,6 +4,7 @@ exports[`TileDoctypeHandler applies anchor record correctly 1`] = `
 Object {
   "anchorProof": Object {
     "blockNumber": 123456,
+    "chainId": "fakechain:123",
   },
   "anchorStatus": 3,
   "content": Object {
@@ -143,6 +144,7 @@ Object {
     },
   ],
   "metadata": Object {
+    "chainId": "fakechain:123",
     "controllers": Array [
       "did:3:bafyasdfasdf",
     ],
@@ -204,6 +206,7 @@ Object {
     },
   ],
   "metadata": Object {
+    "chainId": "fakechain:123",
     "controllers": Array [
       "did:3:bafyasdfasdf",
     ],
@@ -308,6 +311,7 @@ Object {
     },
   ],
   "metadata": Object {
+    "chainId": "fakechain:123",
     "controllers": Array [
       "did:3:bafyasdfasdf",
     ],
@@ -318,6 +322,7 @@ Object {
       "very": "content",
     },
     "metadata": Object {
+      "chainId": "fakechain:123",
       "controllers": Array [
         "did:3:bafyasdfasdf",
       ],

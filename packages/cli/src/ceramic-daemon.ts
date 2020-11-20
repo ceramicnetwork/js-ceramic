@@ -148,6 +148,7 @@ class CeramicDaemon {
     app.get(toApiPath('/state/ceramic/:docid'), this.state.bind(this))
     app.get(toApiPath('/pin/ls/ceramic/:docid'), this.listPinned.bind(this))
     app.get(toApiPath('/pin/ls'), this.listPinned.bind(this))
+    app.get(toApiPath('/supported_chains'), this.getSupportedChains.bind(this))
     app.post(toApiPath('/create'), this.createDocFromGenesis.bind(this))
 
     if (!gateway) {
@@ -323,6 +324,16 @@ class CeramicDaemon {
 
   async _notSupported (req: Request, res: Response, next: NextFunction): Promise<void> {
     res.status(400).json({ status: 'error', message: 'Method not supported by read only Ceramic Gateway' })
+    next()
+  }
+
+  async getSupportedChains (req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const supportedChains = await this.ceramic.getSupportedChains()
+      res.json({ supportedChains })
+    } catch (e) {
+      return next(e)
+    }
     next()
   }
 

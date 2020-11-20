@@ -4,6 +4,7 @@ exports[`Caip10LinkHandler applies anchor record correctly 1`] = `
 Object {
   "anchorProof": Object {
     "blockNumber": 123456,
+    "chainId": "fakechain:123",
   },
   "anchorStatus": 3,
   "content": null,
@@ -140,6 +141,7 @@ Object {
     },
   ],
   "metadata": Object {
+    "chainId": "fakechain:123",
     "controllers": Array [
       "0x25954ef14cebbc9af3d71132489a9cfe87043f20@eip155:1",
     ],
@@ -202,6 +204,7 @@ Object {
     },
   ],
   "metadata": Object {
+    "chainId": "fakechain:123",
     "controllers": Array [
       "0x25954ef14cebbc9af3d71132489a9cfe87043f20@eip155:1",
     ],
@@ -307,6 +310,7 @@ Object {
     },
   ],
   "metadata": Object {
+    "chainId": "fakechain:123",
     "controllers": Array [
       "0x25954ef14cebbc9af3d71132489a9cfe87043f20@eip155:1",
     ],

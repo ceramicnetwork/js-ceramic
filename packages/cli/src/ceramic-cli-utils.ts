@@ -3,8 +3,7 @@ import path from "path"
 import { randomBytes } from '@stablelib/random'
 import * as u8a from 'uint8arrays'
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const fs = require('fs').promises
+import { promises as fs } from 'fs'
 
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import CeramicClient from "@ceramicnetwork/http-client"
