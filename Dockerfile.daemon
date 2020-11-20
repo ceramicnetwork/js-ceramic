@@ -1,7 +1,5 @@
 FROM node:12
 
-ENV IPFS_API_URL=http://host.docker.internal:5001
-
 RUN apt-get update && apt-get install -y netcat
 
 WORKDIR /js-ceramic
@@ -29,4 +27,5 @@ RUN npm run build
 
 EXPOSE 7007
 
-CMD cd packages/ceramic-cli && ./bin/ceramic.js daemon --ipfs-api $IPFS_API_URL
+ENTRYPOINT ["./packages/ceramic-cli/bin/ceramic.js", "daemon"]
+
