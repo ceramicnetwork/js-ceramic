@@ -145,9 +145,9 @@ describe('Document', () => {
     beforeEach(() => {
       dispatcher = Dispatcher(false)
       // TODO: Many of the tests in this file are racy and depend on an anchor not having been
-      //  performed yet by the time the test checks.  To eliminate this race condition we should set
-      //  anchorOnRequest to false in the config for the InMemoryAnchorService, anchor manually
-      //  throughout the tests, and remove waitForSync:false from throughout the tests.
+      // performed yet by the time the test checks.  To eliminate this race condition we should set
+      // anchorOnRequest to false in the config for the InMemoryAnchorService, anchor manually
+      // throughout the tests, and remove waitForSync:false from throughout the tests.
       anchorService = new InMemoryAnchorService({})
       user = new DID()
       user.createJWS = jest.fn(async () => {
