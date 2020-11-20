@@ -20,8 +20,6 @@ export default {
                 throw new Error('did must be of method did:key.')
             }
             const multicodecPubKey: any = multibase.decode(parsed.id)
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
             const keyType = varint.decode(multicodecPubKey)
             const pubKeyBytes = multicodecPubKey.slice(varint.decode.bytes)
             try {
