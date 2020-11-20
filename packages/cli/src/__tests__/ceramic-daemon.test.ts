@@ -64,6 +64,11 @@ describe('Ceramic interop: core <> http-client', () => {
     })
 
     beforeEach(async () => {
+        // TODO: Many of the tests in this file are racy and depend on an anchor not having been
+        // performed yet by the time the test checks.  To eliminate this race condition we should set
+        // anchorOnRequest to false in the config to Ceramic (which in turn gets passed down into
+        // the InMemoryAnchorService), anchor manually throughout the tests, and remove
+        // waitForSync:false from throughout the tests.
         core = await Ceramic.create(ipfs, { topic })
 
         const doctypeHandler = new TileDoctypeHandler()
@@ -110,24 +115,24 @@ describe('Ceramic interop: core <> http-client', () => {
     })
 
     it('gets anchor record updates', async () => {
-        const doc1 = await client.createDocument(DOCTYPE_TILE, { content: { test: 123 } })
+        const doc1 = await client.createDocument(DOCTYPE_TILE, { content: { test: 123 } }, { waitForSync: false })
         await anchorUpdate(doc1)
         expect(doc1.state.log.length).toEqual(2)
         expect(doc1.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
-        const doc2 = await client.createDocument(DOCTYPE_TILE, { content: { test: 1234 } })
+        const doc2 = await client.createDocument(DOCTYPE_TILE, { content: { test: 1234 } }, { waitForSync: false })
         await anchorUpdate(doc2)
         expect(doc2.state.log.length).toEqual(2)
         expect(doc2.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
     })
 
     it('loads documents correctly', async () => {
-        const doc1 = await core.createDocument(DOCTYPE_TILE, { content: { test: 123 } })
+        const doc1 = await core.createDocument(DOCTYPE_TILE, { content: { test: 123 } }, { waitForSync: false })
         await anchorUpdate(doc1)
         const doc2 = await client.loadDocument(doc1.id)
         expect(doc1.content).toEqual(doc2.content)
         expect(DoctypeUtils.serializeState(doc1.state)).toEqual(DoctypeUtils.serializeState(doc2.state))
 
-        const doc3 = await client.createDocument(DOCTYPE_TILE, { content: { test: 456 } })
+        const doc3 = await client.createDocument(DOCTYPE_TILE, { content: { test: 456 } }, { waitForSync: false })
         await anchorUpdate(doc3)
         const doc4 = await core.loadDocument(doc3.id)
         expect(doc3.content).toEqual(doc4.content)
@@ -135,7 +140,7 @@ describe('Ceramic interop: core <> http-client', () => {
     })
 
     it('loads document records correctly', async () => {
-        const doc1 = await core.createDocument(DOCTYPE_TILE, { content: { test: 123 } })
+        const doc1 = await core.createDocument(DOCTYPE_TILE, { content: { test: 123 } }, { waitForSync: false })
         await anchorUpdate(doc1)
         const doc2 = await client.loadDocument(doc1.id)
         expect(doc1.content).toEqual(doc2.content)
@@ -156,21 +161,23 @@ describe('Ceramic interop: core <> http-client', () => {
     })
 
     it('makes and gets updates correctly', async () => {
-        const doc1 = await core.createDocument(DOCTYPE_TILE, { content: { test: 123 } })
+        const doc1 = await core.createDocument(DOCTYPE_TILE, { content: { test: 123 } }, { waitForSync: false })
         await anchorUpdate(doc1)
         const doc2 = await client.loadDocument(doc1.id)
         // change from core viewable in client
-        await doc1.change({ content: { test: 123, abc: 987 } })
+        await doc1.change({ content: { test: 123, abc: 987 } }, { waitForSync: false })
         await anchorUpdate(doc1)
         await anchorUpdate(doc2)
         expect(doc1.content).toEqual(doc2.content)
         expect(DoctypeUtils.serializeState(doc1.state)).toEqual(DoctypeUtils.serializeState(doc2.state))
         // change from client viewable in core
 
-        await doc2.change({ content: { test: 456, abc: 654 } })
+        const finalContent = { test: 456, abc: 654 }
+        await doc2.change({ content: finalContent }, { waitForSync: false })
 
         await anchorUpdate(doc2)
         expect(doc1.content).toEqual(doc2.content)
+        expect(doc1.content).toEqual(finalContent)
         expect(DoctypeUtils.serializeState(doc1.state)).toEqual(DoctypeUtils.serializeState(doc2.state))
     })
 })
