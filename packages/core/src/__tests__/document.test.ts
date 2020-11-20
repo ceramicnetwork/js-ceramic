@@ -514,8 +514,8 @@ describe('Document', () => {
       }
 
       // When anchored in different blockchains, should take log with earlier block timestamp
-      expect(await Document._pickLogToAccept(state1, state2)).toEqual(false)
-      expect(await Document._pickLogToAccept(state2, state1)).toEqual(true)
+      await expect(Document._pickLogToAccept(state1, state2)).rejects.toThrow("Conflicting logs on the same document are anchored on different chains, this should be impossible. Chain1: chain1, chain2: chain2")
+      await expect(Document._pickLogToAccept(state2, state1)).rejects.toThrow("Conflicting logs on the same document are anchored on different chains, this should be impossible. Chain1: chain2, chain2: chain1")
     })
 
     it("Both logs anchored in same blockchains in different blocks", async () => {

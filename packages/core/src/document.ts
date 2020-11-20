@@ -400,23 +400,19 @@ class Document extends EventEmitter {
       const { anchorProof: proof1 } = state1
       const { anchorProof: proof2 } = state2
 
-      if (proof1.chainId == proof2.chainId) {
-        // The logs are anchored in the same blockchain, compare block heights to decide which to take
-        if (proof1.blockNumber < proof2.blockNumber) {
-          return false
-        } else if (proof2.blockNumber < proof1.blockNumber) {
-          return true
-        }
-        // If they have the same block number fall through to fallback mechanism
-      } else {
-        // The logs are anchored in different blockchains, compare block timestamps to decide which to take
-        if (proof1.blockTimestamp < proof2.blockTimestamp) {
-          return false
-        } else if (proof2.blockTimestamp < proof1.blockTimestamp) {
-          return true
-        }
-        // If they have the same block timestamp fall through to fallback mechanism
+      if (proof1.chainId != proof2.chainId) {
+        // TODO: this error should be process-fatal as it indicates a programming error
+        throw new Error("Conflicting logs on the same document are anchored on different chains, this should be impossible. Chain1: " +
+            proof1.chainId + ", chain2: " + proof2.chainId)
       }
+
+      // Compare block heights to decide which to take
+      if (proof1.blockNumber < proof2.blockNumber) {
+        return false
+      } else if (proof2.blockNumber < proof1.blockNumber) {
+        return true
+      }
+      // If they have the same block number fall through to fallback mechanism
     }
 
     // The anchor status is the same between both logs.  If either log has a 'nonce' that means
