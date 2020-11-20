@@ -12,7 +12,7 @@ import DocID from '@ceramicnetwork/docid'
 
 import CeramicDaemon, { CreateOpts } from "./ceramic-daemon"
 
-import Ipfs from "ipfs"
+import IPFS from "ipfs"
 
 import dagJose from 'dag-jose'
 // @ts-ignore
@@ -81,7 +81,7 @@ export class CeramicCliUtils {
         if (ipfsApi) {
             ipfs = ipfsClient({ url: ipfsApi, ipld: { formats: [format] } })
         } else {
-            ipfs = await Ipfs.create({
+            ipfs = await IPFS.create({
                 ipld: {
                     formats: [format]
                 },

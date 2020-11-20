@@ -1,8 +1,8 @@
 import {Pinning} from "./pinning";
 import ipfsClient from "ipfs-http-client";
-import {Ipfs} from "ipfs";
 import {Context} from "@ceramicnetwork/ceramic-common";
 import CID from "cids";
+import { IPFSApi } from "../declarations"
 
 const FROM_CONTEXT = '__context'
 
@@ -21,7 +21,7 @@ export class IpfsPinning implements Pinning {
     readonly ipfsAddress: string
 
     readonly #context: Context
-    #ipfs: Ipfs
+    #ipfs: IPFSApi
 
     constructor(connectionString: string, context: Context) {
         if (connectionString == 'ipfs+context') {
@@ -51,7 +51,9 @@ export class IpfsPinning implements Pinning {
         if (this.ipfsAddress === FROM_CONTEXT) {
             this.#ipfs = this.#context.ipfs
         } else {
-            this.#ipfs = ipfsClient(this.ipfsAddress)
+            this.#ipfs = ipfsClient({
+                url: this.ipfsAddress
+            })
         }
     }
 

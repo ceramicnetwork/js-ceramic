@@ -1,4 +1,3 @@
-import type Ipfs from 'ipfs'
 import express, { Request, Response, NextFunction } from 'express'
 import Ceramic from '@ceramicnetwork/ceramic-core'
 import type { CeramicConfig } from "@ceramicnetwork/ceramic-core"
@@ -7,6 +6,7 @@ import { LogToFiles } from "./ceramic-logger-plugins"
 import DocID from "@ceramicnetwork/docid"
 // @ts-ignore
 import cors from 'cors'
+import { IPFSApi } from "./declarations"
 
 const DEFAULT_PORT = 7007
 const toApiPath = (ending: string): string => '/api/v0' + ending
@@ -18,7 +18,7 @@ const DEFAULT_ANCHOR_SERVICE_URL = "https://cas.3box.io:8081/api/v0/requests"
  */
 export interface CreateOpts {
   ipfsHost?: string;
-  ipfs?: Ipfs.Ipfs;
+  ipfs?: IPFSApi;
   port?: number;
 
   ethereumRpcUrl?: string;

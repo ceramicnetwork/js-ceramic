@@ -13,7 +13,7 @@ $ npm install @ceramicnetwork/ceramic-core
 ```
 import Ceramic from '@ceramicnetwork/ceramic-core'
 
-import Ipfs from 'ipfs'
+import IPFS from 'ipfs'
 import dagJose from 'dag-jose'
 import basicsImport from 'multiformats/cjs/src/basics-import.js'
 import legacy from 'multiformats/cjs/src/legacy.js'
