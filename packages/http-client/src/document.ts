@@ -16,7 +16,7 @@ class Document extends Doctype {
 
   public doctypeHandler: DoctypeHandler<Doctype>
 
-  constructor (state: DocState, context: Context, private _apiUrl: string, config: CeramicClientConfig = { docSyncEnabled: false }) {
+  constructor (state: DocState, context: Context, private _apiUrl: string, config: CeramicClientConfig = { docSyncEnabled: false, docSyncInterval: 1000 }) {
     super(state, context)
 
     this._syncEnabled = config.docSyncEnabled
