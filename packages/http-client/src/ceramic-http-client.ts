@@ -62,15 +62,15 @@ export default class CeramicClient implements CeramicApi {
   _initPinApi(): PinApi {
     return {
       add: async (docId: DocID): Promise<void> => {
-        return await fetchJson(this._apiUrl + '/pin/add' + `/ceramic/${docId.toString()}`)
+        return await fetchJson(this._apiUrl + '/pins' + `/${docId.toString()}`, { method: 'post' })
       },
       rm: async (docId: DocID): Promise<void> => {
-        return await fetchJson(this._apiUrl + '/pin/rm' + `/ceramic/${docId.toString()}`)
+        return await fetchJson(this._apiUrl + '/pins' + `/${docId.toString()}`, { method: 'delete' })
       },
       ls: async (docId?: DocID): Promise<AsyncIterable<string>> => {
-        let url = this._apiUrl + '/pin/ls'
+        let url = this._apiUrl + '/pins'
         if (docId !== undefined) {
-          url += `/ceramic/${docId.toString()}`
+          url += `/${docId.toString()}`
         }
         const result = await fetchJson(url)
         const { pinnedDocIds } = result
@@ -155,7 +155,7 @@ export default class CeramicClient implements CeramicApi {
     }
 
     // Fetch the chainId from the daemon and cache the result
-    const {supportedChains} = await fetchJson(this._apiUrl + '/supported_chains')
+    const {supportedChains} = await fetchJson(this._apiUrl + '/node/chains')
     this._supportedChains = supportedChains
     return supportedChains
   }
