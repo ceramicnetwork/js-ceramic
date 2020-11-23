@@ -250,14 +250,14 @@ class Document extends EventEmitter {
   async _applyOpts(opts: DocOpts): Promise<void> {
     const anchor = opts.anchor ?? true
     const publish = opts.publish ?? true
-    const waitForSync = opts.waitForSync ?? true
+    const sync = opts.sync ?? true
     if (anchor) {
       await this.anchor()
     }
     if (publish) {
       await this._publishTip()
     }
-    if (waitForSync) {
+    if (sync) {
       await this._wait()
     }
   }

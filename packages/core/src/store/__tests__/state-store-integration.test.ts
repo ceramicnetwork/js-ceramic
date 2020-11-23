@@ -159,7 +159,7 @@ describe('Level data store', () => {
     // TODO: Many of the tests in this file are racy and depend on an anchor not having been
     // performed yet by the time the test checks.  To eliminate this race condition we should set
     // anchorOnRequest to false in the config for the InMemoryAnchorService, anchor manually
-    // throughout the tests, and remove waitForSync:false from throughout the tests.
+    // throughout the tests, and remove sync:false from throughout the tests.
     anchorService = new InMemoryAnchorService({})
     anchorService.ceramic = {
       dispatcher
@@ -218,7 +218,7 @@ describe('Level data store', () => {
     const genesis = await TileDoctype.makeGenesis({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, context)
     const genesisCid = await dispatcher.storeRecord(genesis)
     const docId = new DocID('tile', genesisCid)
-    const doc = await Document.create(docId, doctypeHandler, dispatcher, store, context, { waitForSync: false })
+    const doc = await Document.create(docId, doctypeHandler, dispatcher, store, context, { sync: false })
 
     await anchorUpdate(doc.doctype)
 
@@ -237,7 +237,7 @@ describe('Level data store', () => {
     const genesisCid = await dispatcher.storeRecord(genesis)
     const docId = new DocID('tile', genesisCid)
     const doc = await Document.create(docId, doctypeHandler, dispatcher, store, context, {
-      anchor: false, publish: false, waitForSync: false,
+      anchor: false, publish: false, sync: false,
     })
 
     let docState = await store.stateStore.load(doc.id)
@@ -254,7 +254,7 @@ describe('Level data store', () => {
     const genesis = await TileDoctype.makeGenesis({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, context)
     const genesisCid = await dispatcher.storeRecord(genesis)
     const docId = new DocID('tile', genesisCid)
-    const doc = await Document.create(docId, doctypeHandler, dispatcher, store, context, { waitForSync: false })
+    const doc = await Document.create(docId, doctypeHandler, dispatcher, store, context, { sync: false })
     await anchorUpdate(doc.doctype)
 
     let docState = await store.stateStore.load(doc.id)
@@ -271,7 +271,7 @@ describe('Level data store', () => {
     const genesis = await TileDoctype.makeGenesis({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, context)
     const genesisCid = await dispatcher.storeRecord(genesis)
     const docId = new DocID('tile', genesisCid)
-    const doc = await Document.create(docId, doctypeHandler, dispatcher, store, context, { waitForSync: false })
+    const doc = await Document.create(docId, doctypeHandler, dispatcher, store, context, { sync: false })
     await anchorUpdate(doc.doctype)
 
     await store.add(doc.doctype)
@@ -285,7 +285,7 @@ describe('Level data store', () => {
     const genesis = await TileDoctype.makeGenesis({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, context)
     const genesisCid = await dispatcher.storeRecord(genesis)
     const docId = new DocID('tile', genesisCid)
-    const doc = await Document.create(docId, doctypeHandler, dispatcher, store, context, { waitForSync: false })
+    const doc = await Document.create(docId, doctypeHandler, dispatcher, store, context, { sync: false })
     await anchorUpdate(doc.doctype)
 
     await store.rm(doc.id)
@@ -296,7 +296,7 @@ describe('Level data store', () => {
     const genesis = await TileDoctype.makeGenesis({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, context)
     const genesisCid = await dispatcher.storeRecord(genesis)
     const docId = new DocID('tile', genesisCid)
-    const doc = await Document.create(docId, doctypeHandler, dispatcher, store, context, { waitForSync: false })
+    const doc = await Document.create(docId, doctypeHandler, dispatcher, store, context, { sync: false })
     await anchorUpdate(doc.doctype)
 
     await store.add(doc.doctype)
@@ -321,7 +321,7 @@ describe('Level data store', () => {
     const genesis = await TileDoctype.makeGenesis({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, context)
     const genesisCid = await dispatcher.storeRecord(genesis)
     const docId = new DocID('tile', genesisCid)
-    const doc = await Document.create(docId, doctypeHandler, dispatcher, store, context, { waitForSync: false })
+    const doc = await Document.create(docId, doctypeHandler, dispatcher, store, context, { sync: false })
     await anchorUpdate(doc.doctype)
 
     const pinned = []

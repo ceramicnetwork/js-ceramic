@@ -147,7 +147,7 @@ describe('Document', () => {
       // TODO: Many of the tests in this file are racy and depend on an anchor not having been
       // performed yet by the time the test checks.  To eliminate this race condition we should set
       // anchorOnRequest to false in the config for the InMemoryAnchorService, anchor manually
-      // throughout the tests, and remove waitForSync:false from throughout the tests.
+      // throughout the tests, and remove sync:false from throughout the tests.
       anchorService = new InMemoryAnchorService({})
       user = new DID()
       user.createJWS = jest.fn(async () => {
@@ -196,8 +196,8 @@ describe('Document', () => {
     })
 
     it('is created correctly', async () => {
-      // TODO: Remove waitForSync:false and perform anchors manually to avoid race condition in test
-      const doc = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context, {waitForSync: false})
+      // TODO: Remove sync:false and perform anchors manually to avoid race condition in test
+      const doc = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context, {sync: false})
 
       expect(doc.content).toEqual(initialContent)
       expect(dispatcher.register).toHaveBeenCalledWith(doc)
@@ -220,8 +220,8 @@ describe('Document', () => {
     })
 
     it('is loaded correctly', async () => {
-      const doc1 = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context, { anchor: false, publish: false, waitForSync: false })
-      const doc2 = await Document.load(doc1.id, doctypeHandler, dispatcher, pinStore, context, { waitForSync: false })
+      const doc1 = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context, { anchor: false, publish: false, sync: false })
+      const doc2 = await Document.load(doc1.id, doctypeHandler, dispatcher, pinStore, context, { sync: false })
 
       expect(doc1.id).toEqual(doc2.id)
       expect(doc1.content).toEqual(initialContent)
@@ -229,11 +229,11 @@ describe('Document', () => {
     })
 
     it('handles new tip correctly', async () => {
-      const tmpDoc = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context, { waitForSync: false })
+      const tmpDoc = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context, { sync: false })
       await anchorUpdate(tmpDoc)
       const docId = tmpDoc.id
       const log = tmpDoc.state.log
-      const doc = await Document.load(docId, doctypeHandler, dispatcher, pinStore, context, { waitForSync: false })
+      const doc = await Document.load(docId, doctypeHandler, dispatcher, pinStore, context, { sync: false })
       // changes will not load since no network and no local tip storage yet
       expect(doc.content).toEqual(initialContent)
       expect(doc.state).toEqual(expect.objectContaining({ signature: SignatureStatus.SIGNED, anchorStatus: 0 }))
@@ -246,7 +246,7 @@ describe('Document', () => {
     })
 
     it('it handles versions correctly (valid, invalid, non-existent)', async () => {
-      const doc = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context, {waitForSync: false})
+      const doc = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context, {sync: false})
 
       let versions = doc.allVersionIds
       const version0 = doc.versionId
@@ -266,7 +266,7 @@ describe('Document', () => {
       versions = doc.allVersionIds
       expect(versions.length).toEqual(2)
 
-      await doc.applyRecord(updateRec, {waitForSync: false})
+      await doc.applyRecord(updateRec, {sync: false})
 
       versions = doc.allVersionIds
       expect(versions.length).toEqual(2)
@@ -316,11 +316,11 @@ describe('Document', () => {
     })
 
     it('is updated correctly', async () => {
-      const doc = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context, { waitForSync: false })
+      const doc = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context, { sync: false })
       await anchorUpdate(doc)
 
       const updateRec = await TileDoctype._makeRecord(doc.doctype, user, newContent, doc.controllers)
-      await doc.applyRecord(updateRec, {waitForSync: false})
+      await doc.applyRecord(updateRec, {sync: false})
 
       await anchorUpdate(doc)
       expect(doc.content).toEqual(newContent)
@@ -330,19 +330,19 @@ describe('Document', () => {
 
     it('handles conflict', async () => {
       const fakeState = { asdf: 2342 }
-      const doc1 = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context, { waitForSync: false })
+      const doc1 = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context, { sync: false })
       const docId = doc1.id
       await anchorUpdate(doc1)
       const tipPreUpdate = doc1.tip
 
       let updateRec = await TileDoctype._makeRecord(doc1.doctype, user, newContent, doc1.controllers)
-      await doc1.applyRecord(updateRec, { waitForSync: false })
+      await doc1.applyRecord(updateRec, { sync: false })
 
       await anchorUpdate(doc1)
       expect(doc1.content).toEqual(newContent)
       const tipValidUpdate = doc1.tip
       // create invalid change that happened after main change
-      const doc2 = await Document.load(docId, doctypeHandler, dispatcher, pinStore, context, { waitForSync: false })
+      const doc2 = await Document.load(docId, doctypeHandler, dispatcher, pinStore, context, { sync: false })
       await doc2._handleTip(tipPreUpdate)
       // add short wait to get different anchor time
       // sometime the tests are very fast
@@ -350,7 +350,7 @@ describe('Document', () => {
       // TODO - better mock for anchors
 
       updateRec = await TileDoctype._makeRecord(doc2.doctype, user, fakeState, doc2.controllers)
-      await doc2.applyRecord(updateRec, { waitForSync: false })
+      await doc2.applyRecord(updateRec, { sync: false })
 
       await anchorUpdate(doc2)
       const tipInvalidUpdate = doc2.tip
@@ -367,7 +367,7 @@ describe('Document', () => {
     })
 
     it('Enforces schema at document creation', async () => {
-      const schemaDoc = await create({ content: stringMapSchema, metadata: { controllers } }, ceramic, context, { waitForSync: false })
+      const schemaDoc = await create({ content: stringMapSchema, metadata: { controllers } }, ceramic, context, { sync: false })
       await anchorUpdate(schemaDoc)
 
       try {
@@ -383,14 +383,14 @@ describe('Document', () => {
     })
 
     it('Enforces schema at document update', async () => {
-      const schemaDoc = await create({ content: stringMapSchema, metadata: { controllers } }, ceramic, context, { waitForSync: false })
+      const schemaDoc = await create({ content: stringMapSchema, metadata: { controllers } }, ceramic, context, { sync: false })
       await anchorUpdate(schemaDoc)
 
       const docParams = {
         content: {stuff: 1},
         metadata: {controllers}
       }
-      const doc = await create(docParams, ceramic, context, { waitForSync: false })
+      const doc = await create(docParams, ceramic, context, { sync: false })
       await anchorUpdate(doc)
 
       try {
@@ -403,7 +403,7 @@ describe('Document', () => {
     })
 
     it('Enforces schema when loading genesis record', async () => {
-      const schemaDoc = await create({ content: stringMapSchema, metadata: { controllers } }, ceramic, context, { waitForSync: false})
+      const schemaDoc = await create({ content: stringMapSchema, metadata: { controllers } }, ceramic, context, { sync: false})
       await anchorUpdate(schemaDoc)
 
       const docParams = {
@@ -411,14 +411,14 @@ describe('Document', () => {
         metadata: {controllers, schema: schemaDoc.versionId.toString()}
       }
       // Create a document that isn't conforming to the schema
-      const doc = await create(docParams, ceramicWithoutSchemaValidation, context, { waitForSync: false })
+      const doc = await create(docParams, ceramicWithoutSchemaValidation, context, { sync: false })
       await anchorUpdate(doc)
 
       expect(doc.content).toEqual({stuff:1})
       expect(doc.metadata.schema).toEqual(schemaDoc.versionId.toString())
 
       try {
-        await Document.load(doc.id, doctypeHandler, dispatcher, pinStore, context, { waitForSync: false })
+        await Document.load(doc.id, doctypeHandler, dispatcher, pinStore, context, { sync: false })
         throw new Error('Should not be able to assign a schema to a document that does not conform')
       } catch (e) {
         expect(e.message).toEqual('Validation Error: data[\'stuff\'] should be string')
@@ -489,13 +489,13 @@ describe('Document', () => {
     })
 
     it('should announce change to network', async () => {
-      const doc1 = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context, { waitForSync: false })
+      const doc1 = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context, { sync: false })
       expect(dispatcher.publishTip).toHaveBeenCalledTimes(1)
       expect(dispatcher.publishTip).toHaveBeenCalledWith(doc1.id.toString(), doc1.tip, 'tile')
       await anchorUpdate(doc1)
 
       const updateRec = await TileDoctype._makeRecord(doc1.doctype, user, newContent, doc1.controllers)
-      await doc1.applyRecord(updateRec, { waitForSync: false })
+      await doc1.applyRecord(updateRec, { sync: false })
 
       expect(doc1.content).toEqual(newContent)
 
@@ -504,9 +504,9 @@ describe('Document', () => {
     })
 
     it('documents share updates', async () => {
-      const doc1 = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context, { waitForSync: false })
+      const doc1 = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context, { sync: false })
       await anchorUpdate(doc1)
-      const doc2 = await Document.load(doc1.id, doctypeHandler, dispatcher, pinStore, context, { waitForSync: false })
+      const doc2 = await Document.load(doc1.id, doctypeHandler, dispatcher, pinStore, context, { sync: false })
 
       const updatePromise = new Promise(resolve => {
         doc2.doctype.on('change', resolve)
@@ -522,7 +522,7 @@ describe('Document', () => {
     })
 
     it('should publish tip on network request', async () => {
-      const doc = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context, { waitForSync: false })
+      const doc = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context, { sync: false })
       expect(dispatcher.publishTip).toHaveBeenCalledTimes(1)
       expect(dispatcher.publishTip).toHaveBeenNthCalledWith(1, doc.id.toString(), doc.tip, 'tile')
 

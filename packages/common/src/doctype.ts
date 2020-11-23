@@ -106,7 +106,7 @@ export interface DocOpts {
     publish?: boolean;
 
     // Whether or not to wait a short period of time to hear about new tips for the document after performing the operation.
-    waitForSync?: boolean;
+    sync?: boolean;
 }
 
 /**
