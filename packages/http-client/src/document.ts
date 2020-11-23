@@ -45,7 +45,7 @@ class Document extends Doctype {
       try {
         await _syncState()
       } catch (e) {
-        console.error(e) // failed to sync state
+        // failed to sync state
       }
       await delay(this._syncInterval)
     }
