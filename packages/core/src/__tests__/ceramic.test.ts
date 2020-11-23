@@ -204,26 +204,31 @@ describe('Ceramic integration', () => {
       content: { test: 321 },
       metadata: { controllers: [controller], tags: ['3id']},
       deterministic: true,
-    }, { sync: false} )
+    })
 
     await anchor(ceramic1)
     await syncDoc(doctype1)
 
+    // Through a different ceramic instance create a new document with the same contents that will
+    // therefore resolve to the same genesis record and thus the same docId.  Make sure the new
+    // Document object can see the updates made to the first Document object since they respresent
+    // the same Document in the network.
     const doctype3 = await ceramic3.createDocument<TileDoctype>(DOCTYPE_TILE, {
       content: { test: 321 },
       metadata: { controllers: [controller], tags: ['3id'] },
       deterministic: true,
     }, {
-      anchor: false, publish: false
+      anchor: false, publish: false, sync: false
     })
+    await syncDoc(doctype3) // sync anchor record for genesis
 
     expect(doctype3.content).toEqual(doctype1.content)
 
-    await doctype1.change({ content: { test: 'abcde' }, metadata: { controllers: [controller] } }, { sync: false })
+    await doctype1.change({ content: { test: 'abcde' }, metadata: { controllers: [controller] } })
 
-    await syncDoc(doctype3)
     await anchor(ceramic1)
-    await syncDoc(doctype3)
+    await syncDoc(doctype3) // sync signed update record
+    await syncDoc(doctype3) // sync anchor record for signed update
 
     expect(doctype1.content).toEqual({ test: 'abcde' })
     expect(doctype3.content).toEqual(doctype1.content)
