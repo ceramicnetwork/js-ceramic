@@ -41,7 +41,7 @@ export default class CeramicClient implements CeramicApi {
   public readonly _doctypeHandlers: Record<string, DoctypeHandler<Doctype>>
 
   constructor (apiHost: string = CERAMIC_HOST, config?: CeramicClientConfig) {
-    this._config = Object.assign(config ? config : {}, DEFAULT_CLIENT_CONFIG)
+    this._config = Object.assign(DEFAULT_CLIENT_CONFIG, config ? config : {})
 
     this._apiUrl = combineURLs(apiHost, API_PATH)
     this._docmap = {}
