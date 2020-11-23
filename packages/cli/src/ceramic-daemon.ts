@@ -144,18 +144,18 @@ class CeramicDaemon {
 
   registerAPIPaths (app: core.Express, gateway: boolean): void {
     app.get(toApiPath('/records/:docid'), this.records.bind(this))
-    app.put(toApiPath('/document'), this.createDocFromGenesis.bind(this))
+    app.post(toApiPath('/document'), this.createDocFromGenesis.bind(this))
     app.get(toApiPath('/document/:docid'), this.state.bind(this))
     app.get(toApiPath('/pins/:docid'), this.listPinned.bind(this))
     app.get(toApiPath('/pins'), this.listPinned.bind(this))
     app.get(toApiPath('/node/chains'), this.getSupportedChains.bind(this))
 
     if (!gateway) {
-      app.post(toApiPath('/document'), this.applyRecord.bind(this))
+      app.post(toApiPath('/records'), this.applyRecord.bind(this))
       app.post(toApiPath('/pins/:docid'), this.pinDocument.bind(this))
       app.delete(toApiPath('/pins/:docid'), this.unpinDocument.bind(this))
     } else {
-      app.post(toApiPath('/document'),  this._notSupported.bind(this))
+      app.post(toApiPath('/records'),  this._notSupported.bind(this))
       app.post(toApiPath('/pins/:docid'),  this._notSupported.bind(this))
       app.delete(toApiPath('/pins/:docid'),  this._notSupported.bind(this))
     }

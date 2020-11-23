@@ -55,7 +55,7 @@ class Document extends Doctype {
 
   static async createFromGenesis (apiUrl: string, doctype: string, genesis: any, context: Context, opts: DocOpts = {}, config: CeramicClientConfig): Promise<Document> {
     const { state } = await fetchJson(apiUrl + '/document', {
-      method: 'put',
+      method: 'post',
       body: {
         doctype,
         genesis: DoctypeUtils.serializeRecord(genesis),
@@ -69,7 +69,7 @@ class Document extends Doctype {
 
   static async applyRecord(apiUrl: string, docId: DocID | string, record: any, context: Context, opts: DocOpts = {}): Promise<Document> {
     docId = typeDocID(docId)
-    const { state } = await fetchJson(apiUrl + '/document', {
+    const { state } = await fetchJson(apiUrl + '/records', {
       method: 'post',
       body: {
         docId: docId.toString(),
