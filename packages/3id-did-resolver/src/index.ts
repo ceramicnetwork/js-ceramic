@@ -34,57 +34,34 @@ export function wrapDocument(content: any, did: string): DIDDocument {
     keyAgreement: []
   }
   const doc = Object.entries(content.publicKeys as string[]).reduce((diddoc, [keyName, keyValue]) => {
-    if (keyValue.startsWith('z')) { // we got a multicodec encoded key
-      const keyBuf = u8a.fromString(keyValue.slice(1), 'base58btc')
-      if (keyBuf[0] === 0xe7) { // it's secp256k1
-        diddoc.publicKey.push({
-          id: `${did}#${keyName}`,
-          type: 'Secp256k1VerificationKey2018',
-          controller: did,
-          // remove multicodec varint and encode to hex
-          publicKeyHex: u8a.toString(keyBuf.slice(2), 'base16')
-        })
-        diddoc.authentication.push({
-          type: 'Secp256k1SignatureAuthentication2018',
-          publicKey: `${did}#${keyName}`,
-        })
-      } else if (keyBuf[0] === 0xec) { // it's x25519
-        // old key format, likely not needed in the future
-        diddoc.publicKey.push({
-          id: `${did}#${keyName}`,
-          type: 'Curve25519EncryptionPublicKey',
-          controller: did,
-          publicKeyBase64: u8a.toString(keyBuf.slice(2), 'base64')
-        })
-        // new keyAgreement format for x25519 keys
-        diddoc.keyAgreement.push({
-          id: `${did}#${keyName}`,
-          type: 'X25519KeyAgreementKey2019',
-          controller: did,
-          publicKeyBase58: u8a.toString(keyBuf.slice(2), 'base58btc')
-        })
-      }
-    } else { // we need to be backwards compatible (until js-did is used everywhere)
-      if(keyName === 'signing') {
-        diddoc.publicKey.push({
-          id: `${did}#${keyName}`,
-          type: 'Secp256k1VerificationKey2018',
-          controller: did,
-          // remove multicodec varint and encode to hex
-          publicKeyHex: keyValue
-        })
-        diddoc.authentication.push({
-          type: 'Secp256k1SignatureAuthentication2018',
-          publicKey: `${did}#${keyName}`,
-        })
-      } else if (keyName === 'encryption') {
-        diddoc.publicKey.push({
-          id: `${did}#${keyName}`,
-          type: 'Curve25519EncryptionPublicKey',
-          controller: did,
-          publicKeyBase64: keyValue
-        })
-      }
+    const keyBuf = u8a.fromString(keyValue.slice(1), 'base58btc')
+    if (keyBuf[0] === 0xe7) { // it's secp256k1
+      diddoc.publicKey.push({
+        id: `${did}#${keyName}`,
+        type: 'Secp256k1VerificationKey2018',
+        controller: did,
+        // remove multicodec varint and encode to hex
+        publicKeyBase58: u8a.toString(keyBuf.slice(2), 'base58btc')
+      })
+      diddoc.authentication.push({
+        type: 'Secp256k1SignatureAuthentication2018',
+        publicKey: `${did}#${keyName}`,
+      })
+    } else if (keyBuf[0] === 0xec) { // it's x25519
+      // old key format, likely not needed in the future
+      diddoc.publicKey.push({
+        id: `${did}#${keyName}`,
+        type: 'Curve25519EncryptionPublicKey',
+        controller: did,
+        publicKeyBase58: u8a.toString(keyBuf.slice(2), 'base58btc')
+      })
+      // new keyAgreement format for x25519 keys
+      diddoc.keyAgreement.push({
+        id: `${did}#${keyName}`,
+        type: 'X25519KeyAgreementKey2019',
+        controller: did,
+        publicKeyBase58: u8a.toString(keyBuf.slice(2), 'base58btc')
+      })
     }
     return diddoc
   }, startDoc)
@@ -134,6 +111,7 @@ const legacyResolve = async (ceramic: Ceramic, didId: string, version?: string):
     const didDoc = await resolve(ceramic, doc.id.toString(), version)
     return didDoc
   } catch(e) {
+    if (version) throw new Error('Not a valid 3ID')
     return legacyDoc
   }
 }

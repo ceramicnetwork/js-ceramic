@@ -23,17 +23,6 @@ const ceramicMock = {
   })
 }
 
-const ceramicMockOld = { // to be removed
-  loadDocument: async (): Promise<any> => ({
-    content: {
-      publicKeys: {
-        signing: 'fake signing key',
-        encryption: 'fake encryption key'
-      }
-    }
-  })
-}
-
 const ceramicMockWithIDX = {
   loadDocument: async (): Promise<any> => ({
     content: {
@@ -59,12 +48,6 @@ describe('3ID DID Resolver', () => {
   it('getResolver works correctly', async () => {
     const threeIdResolver = ThreeIdResolver.getResolver(ceramicMock)
     expect(Object.keys(threeIdResolver)).toEqual(['3'])
-  })
-
-  it('resolver works correctly (old format)', async () => {
-    const threeIdResolver = ThreeIdResolver.getResolver(ceramicMockOld)
-    const resolver = new Resolver(threeIdResolver)
-    expect(await resolver.resolve(fake3ID)).toMatchSnapshot()
   })
 
   it('resolves 3id document correctly', async () => {

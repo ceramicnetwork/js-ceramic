@@ -32,6 +32,7 @@ const ipfsMock: IPFS = {
   }
 }
 
+// just remove keys, return uint8 to consume in wrap doc in resolver
 const  cidToDocument = async (ipfs: IPFS, documentCid:string): Promise<DIDDocument> => {
   const doc = (await ipfs.dag.get(documentCid)).value
   // If genesis document replace placeholder identifier with cid
