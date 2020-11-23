@@ -2,24 +2,52 @@ import {
   Context, DocOpts, DocParams, DocState, Doctype, DoctypeHandler, DoctypeUtils
 } from "@ceramicnetwork/common"
 
-import { fetchJson, typeDocID } from './utils'
 import DocID from '@ceramicnetwork/docid'
+
+import { fetchJson, typeDocID, delay } from './utils'
+import { CeramicClientConfig } from "./ceramic-http-client"
 
 const docIdUrl = (docId: DocID ): string => `/ceramic/${docId.toString()}`
 
 class Document extends Doctype {
 
-  private readonly _syncHandle: NodeJS.Timeout
+  private _syncEnabled: boolean
+  private readonly _syncInterval: number
 
   public doctypeHandler: DoctypeHandler<Doctype>
 
-  constructor (state: DocState, context: Context, private _apiUrl: string, syncState = true) {
+  constructor (state: DocState, context: Context, private _apiUrl: string, config: CeramicClientConfig = { docSyncEnabled: false }) {
     super(state, context)
 
-    if (syncState) {
-      this._syncHandle = setInterval(async () => {
-        await this._syncState()
-      }, 1000)
+    this._syncEnabled = config.docSyncEnabled
+    this._syncInterval = config.docSyncInterval
+
+    if (this._syncEnabled) {
+      this._syncPeriodically() // start syncing
+    }
+  }
+
+  /**
+   * Sync document states periodically
+   * @private
+   */
+  async _syncPeriodically() {
+    const _syncState = async () => {
+      const { state } = await fetchJson(this._apiUrl + '/state' + docIdUrl(this.id))
+
+      if (JSON.stringify(DoctypeUtils.serializeState(this.state)) !== JSON.stringify(state)) {
+        this.state = DoctypeUtils.deserializeState(state)
+        this.emit('change')
+      }
+    }
+
+    while (this._syncEnabled) {
+      try {
+        await _syncState()
+      } catch (e) {
+        // failed to sync state
+      }
+      await delay(this._syncInterval)
     }
   }
 
@@ -27,7 +55,7 @@ class Document extends Doctype {
     return new DocID(this.state.doctype, this.state.log[0].cid)
   }
 
-  static async createFromGenesis (apiUrl: string, doctype: string, genesis: any, context: Context, opts: DocOpts = {}): Promise<Document> {
+  static async createFromGenesis (apiUrl: string, doctype: string, genesis: any, context: Context, opts: DocOpts = {}, config: CeramicClientConfig): Promise<Document> {
     const { state } = await fetchJson(apiUrl + '/create', {
       doctype,
       genesis: DoctypeUtils.serializeRecord(genesis),
@@ -35,7 +63,7 @@ class Document extends Doctype {
         applyOnly: opts.applyOnly,
       }
     })
-    return new Document(DoctypeUtils.deserializeState(state), context, apiUrl)
+    return new Document(DoctypeUtils.deserializeState(state), context, apiUrl, config)
   }
 
   static async applyRecord(apiUrl: string, docId: DocID | string, record: any, context: Context, opts: DocOpts = {}): Promise<Document> {
@@ -47,13 +75,13 @@ class Document extends Doctype {
         applyOnly: opts.applyOnly,
       }
     })
-    return new Document(DoctypeUtils.deserializeState(state), context, apiUrl, false)
+    return new Document(DoctypeUtils.deserializeState(state), context, apiUrl)
   }
 
-  static async load (docId: DocID | string, apiUrl: string, context: Context): Promise<Document> {
+  static async load (docId: DocID | string, apiUrl: string, context: Context, config: CeramicClientConfig): Promise<Document> {
     docId = typeDocID(docId)
     const { state } = await fetchJson(apiUrl + '/state' + docIdUrl(docId))
-    return new Document(DoctypeUtils.deserializeState(state), context, apiUrl)
+    return new Document(DoctypeUtils.deserializeState(state), context, apiUrl, config)
   }
 
   static async loadDocumentRecords (docId: DocID | string, apiUrl: string): Promise<Array<Record<string, any>>> {
@@ -74,17 +102,8 @@ class Document extends Doctype {
     this.state = doctype.state
   }
 
-  async _syncState(): Promise<void> {
-    let { state } = await fetchJson(this._apiUrl + '/state' + docIdUrl(this.id))
-    state = DoctypeUtils.deserializeState(state)
-    if (JSON.stringify(this.state) !== JSON.stringify(state)) {
-      this.state = state
-      this.emit('change')
-    }
-  }
-
   close(): void {
-    clearInterval(this._syncHandle)
+    this._syncEnabled = false
   }
 }
 

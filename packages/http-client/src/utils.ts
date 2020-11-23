@@ -18,4 +18,14 @@ export async function fetchJson(url: string, payload?: any): Promise<any> {
 export function typeDocID(docId: DocID | string): DocID  {
     return (typeof docId === 'string') ? DocID.fromString(docId) : docId
 }
-  
+
+export function combineURLs(baseURL, relativeURL) {
+    return relativeURL
+        ? baseURL.replace(/\/+$/, '') + '/' + relativeURL.replace(/^\/+/, '')
+        : baseURL;
+}
+
+export async function delay(mills: number): Promise<void> {
+    await new Promise(resolve => setTimeout(() => resolve(), mills))
+}
+
