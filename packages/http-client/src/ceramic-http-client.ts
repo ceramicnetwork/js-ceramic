@@ -22,8 +22,8 @@ export const DEFAULT_CLIENT_CONFIG: CeramicClientConfig = {
  * Ceramic client configuration
  */
 export interface CeramicClientConfig {
-  docSyncEnabled: boolean
-  docSyncInterval: number
+  docSyncEnabled?: boolean
+  docSyncInterval?: number
 }
 
 /**
@@ -96,7 +96,7 @@ export default class CeramicClient implements CeramicApi {
   }
 
   async createDocumentFromGenesis<T extends Doctype>(doctype: string, genesis: any, opts?: DocOpts): Promise<T> {
-    const doc = await Document.createFromGenesis(this._apiUrl, doctype, genesis, this.context, opts)
+    const doc = await Document.createFromGenesis(this._apiUrl, doctype, genesis, this.context, opts, this._config)
     const docIdStr = doc.id.toString()
     if (!this._docmap[docIdStr]) {
       this._docmap[docIdStr] = doc
@@ -109,7 +109,7 @@ export default class CeramicClient implements CeramicApi {
     docId = typeDocID(docId)
     const docIdStr = docId.toString()
     if (!this._docmap[docIdStr]) {
-      this._docmap[docIdStr] = await Document.load(docId, this._apiUrl, this.context)
+      this._docmap[docIdStr] = await Document.load(docId, this._apiUrl, this.context, this._config)
     }
     this._docmap[docIdStr].doctypeHandler = this.findDoctypeHandler(this._docmap[docIdStr].state.doctype)
     return this._docmap[docIdStr] as unknown as T
