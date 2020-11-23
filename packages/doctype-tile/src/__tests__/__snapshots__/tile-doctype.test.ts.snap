@@ -146,7 +146,7 @@ Object {
   "metadata": Object {
     "chainId": "fakechain:123",
     "controllers": Array [
-      "did:3:bafyasdfasdf",
+      "did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki",
     ],
   },
   "signature": 2,
@@ -208,7 +208,7 @@ Object {
   "metadata": Object {
     "chainId": "fakechain:123",
     "controllers": Array [
-      "did:3:bafyasdfasdf",
+      "did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki",
     ],
   },
   "signature": 2,
@@ -313,7 +313,7 @@ Object {
   "metadata": Object {
     "chainId": "fakechain:123",
     "controllers": Array [
-      "did:3:bafyasdfasdf",
+      "did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki",
     ],
   },
   "next": Object {
@@ -324,7 +324,7 @@ Object {
     "metadata": Object {
       "chainId": "fakechain:123",
       "controllers": Array [
-        "did:3:bafyasdfasdf",
+        "did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki",
       ],
     },
   },

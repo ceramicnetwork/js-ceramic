@@ -139,7 +139,7 @@ const anchorUpdate = (doctype: Doctype): Promise<void> => new Promise(resolve =>
 describe('Level data store', () => {
 
   const initialContent = { abc: 123, def: 456 }
-  const controllers = ['did:3:bafyasdfasdf']
+  const controllers = ['did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki']
 
   let store: PinStore
   let dispatcher: Dispatcher
@@ -164,9 +164,9 @@ describe('Level data store', () => {
     const user: DID = new DID()
     user.createJWS = jest.fn(async () => {
       // fake jws
-      return 'eyJraWQiOiJkaWQ6MzpiYWZ5YXNkZmFzZGY_dmVyc2lvbj0wI3NpZ25pbmciLCJhbGciOiJFUzI1NksifQ.bbbb.cccc'
+      return 'eyJraWQiOiJkaWQ6MzprMnQ2d3lmc3U0cGcwdDJuNGo4bXMzczMzeHNncWpodHRvMDRtdnE4dzVhMnY1eG80OGlkeXozOGw3eWRraT92ZXJzaW9uPTAjc2lnbmluZyIsImFsZyI6IkVTMjU2SyJ9.bbbb.cccc'
     })
-    user._id = 'did:3:bafyasdfasdf'
+    user._id = 'did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki'
 
     const threeIdResolver = ThreeIdResolver.getResolver({
       loadDocument: (): any => {

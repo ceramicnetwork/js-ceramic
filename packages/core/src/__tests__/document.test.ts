@@ -134,7 +134,7 @@ describe('Document', () => {
   describe('Log logic', () => {
     const initialContent = { abc: 123, def: 456 }
     const newContent = { abc: 321, def: 456, gh: 987 }
-    const controllers = ['did:3:bafyasdfasdf']
+    const controllers = ['did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki']
     let user: DID
     let dispatcher: any;
     let doctypeHandler: TileDoctypeHandler;
@@ -149,9 +149,9 @@ describe('Document', () => {
       user = new DID()
       user.createJWS = jest.fn(async () => {
         // fake jws
-        return 'eyJraWQiOiJkaWQ6MzpiYWZ5YXNkZmFzZGY_dmVyc2lvbj0wI3NpZ25pbmciLCJhbGciOiJFUzI1NksifQ.bbbb.cccc'
+        return 'eyJraWQiOiJkaWQ6MzprMnQ2d3lmc3U0cGcwdDJuNGo4bXMzczMzeHNncWpodHRvMDRtdnE4dzVhMnY1eG80OGlkeXozOGw3eWRraT92ZXJzaW9uPTAjc2lnbmluZyIsImFsZyI6IkVTMjU2SyJ9.bbbb.cccc'
       })
-      user._id = 'did:3:bafyasdfasdf'
+      user._id = 'did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki'
       doctypeHandler = new TileDoctypeHandler()
       doctypeHandler.verifyJWS = async (): Promise<void> => { return }
 
@@ -602,7 +602,7 @@ describe('Document', () => {
   describe('Network update logic', () => {
     const initialContent = { abc: 123, def: 456 }
     const newContent = { abc: 321, def: 456, gh: 987 }
-    const controllers = ['did:3:bafyasdfasdf']
+    const controllers = ['did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki']
 
     let dispatcher: any;
     let doctypeHandler: TileDoctypeHandler;
@@ -620,7 +620,7 @@ describe('Document', () => {
       user = new DID()
       user.createJWS = jest.fn(async () => {
         // fake jws
-        return 'eyJraWQiOiJkaWQ6MzpiYWZ5YXNkZmFzZGY_dmVyc2lvbj0wI3NpZ25pbmciLCJhbGciOiJFUzI1NksifQ.bbbb.cccc'
+        return 'eyJraWQiOiJkaWQ6MzprMnQ2d3lmc3U0cGcwdDJuNGo4bXMzczMzeHNncWpodHRvMDRtdnE4dzVhMnY1eG80OGlkeXozOGw3eWRraT92ZXJzaW9uPTAjc2lnbmluZyIsImFsZyI6IkVTMjU2SyJ9.bbbb.cccc'
       })
       user._id = 'did:3:bafyuser'
       doctypeHandler = new TileDoctypeHandler()

@@ -25,14 +25,17 @@ const FAKE_CID_2 = new CID('bafybeig6xv5nwphfmvcnektpnojts44jqcuam7bmye2pb54adnr
 const FAKE_CID_3 = new CID('bafybeig6xv5nwphfmvcnektpnojts55jqcuam7bmye2pb54adnrtccjlsu')
 const FAKE_CID_4 = new CID('bafybeig6xv5nwphfmvcnektpnojts66jqcuam7bmye2pb54adnrtccjlsu')
 
+// did:3:bafyasdfasdf
+
 const RECORDS = {
-  genesis: { header: { controllers: [ 'did:3:bafyasdfasdf' ], chainId: 'fakechain:123' }, data: { much: 'data' }, unique: '0' },
+  genesis: { header: { controllers: [ 'did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki' ], chainId: 'fakechain:123' }, data: { much: 'data' }, unique: '0' },
   genesisGenerated: {
     "jws": {
       "payload": "bbbb",
       "signatures": [
         {
-          "protected": "eyJraWQiOiJkaWQ6MzpiYWZ5YXNkZmFzZGY_dmVyc2lvbj0wI3NpZ25pbmciLCJhbGciOiJFUzI1NksifQ",
+          
+          "protected": "eyJraWQiOiJkaWQ6MzprMnQ2d3lmc3U0cGcwdDJuNGo4bXMzczMzeHNncWpodHRvMDRtdnE4dzVhMnY1eG80OGlkeXozOGw3eWRraT92ZXJzaW9uPTAjc2lnbmluZyIsImFsZyI6IkVTMjU2SyJ9",
           "signature": "cccc"
         }
       ],
@@ -44,7 +47,7 @@ const RECORDS = {
       },
       "header": {
         "controllers": [
-          "did:3:bafyasdfasdf"
+          "did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki"
         ]
       },
       "unique": "0",
@@ -57,7 +60,7 @@ const RECORDS = {
         "payload": "bbbb",
         "signatures": [
           {
-            "protected": "eyJraWQiOiJkaWQ6MzpiYWZ5YXNkZmFzZGY_dmVyc2lvbj0wI3NpZ25pbmciLCJhbGciOiJFUzI1NksifQ",
+            "protected": "eyJraWQiOiJkaWQ6MzprMnQ2d3lmc3U0cGcwdDJuNGo4bXMzczMzeHNncWpodHRvMDRtdnE4dzVhMnY1eG80OGlkeXozOGw3eWRraT92ZXJzaW9uPTAjc2lnbmluZyIsImFsZyI6IkVTMjU2SyJ9",
             "signature": "cccc"
           }
         ],
@@ -114,9 +117,9 @@ describe('TileDoctypeHandler', () => {
     did = new DID()
     did.createJWS = jest.fn(async () => {
       // fake jws
-      return 'eyJraWQiOiJkaWQ6MzpiYWZ5YXNkZmFzZGY_dmVyc2lvbj0wI3NpZ25pbmciLCJhbGciOiJFUzI1NksifQ.bbbb.cccc'
+      return 'eyJraWQiOiJkaWQ6MzprMnQ2d3lmc3U0cGcwdDJuNGo4bXMzczMzeHNncWpodHRvMDRtdnE4dzVhMnY1eG80OGlkeXozOGw3eWRraT92ZXJzaW9uPTAjc2lnbmluZyIsImFsZyI6IkVTMjU2SyJ9.bbbb.cccc'
     })
-    did._id = 'did:3:bafyasdfasdf'
+    did._id = 'did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki'
 
     const recs: Record<string, any> = {}
     const ipfs = {
