@@ -31,7 +31,7 @@ class Document extends Doctype {
    */
   async _syncPeriodically() {
     const _syncState = async () => {
-      const { state } = await fetchJson(this._apiUrl + '/document/' + this.id.toString())
+      const { state } = await fetchJson(this._apiUrl + '/documents/' + this.id.toString())
 
       if (JSON.stringify(DoctypeUtils.serializeState(this.state)) !== JSON.stringify(state)) {
         this.state = DoctypeUtils.deserializeState(state)
@@ -54,7 +54,7 @@ class Document extends Doctype {
   }
 
   static async createFromGenesis (apiUrl: string, doctype: string, genesis: any, context: Context, opts: DocOpts = {}, config: CeramicClientConfig): Promise<Document> {
-    const { state } = await fetchJson(apiUrl + '/document', {
+    const { state } = await fetchJson(apiUrl + '/documents', {
       method: 'post',
       body: {
         doctype,
@@ -84,7 +84,7 @@ class Document extends Doctype {
 
   static async load (docId: DocID | string, apiUrl: string, context: Context, config: CeramicClientConfig): Promise<Document> {
     docId = typeDocID(docId)
-    const { state } = await fetchJson(apiUrl + '/document/' + docId.toString())
+    const { state } = await fetchJson(apiUrl + '/documents/' + docId.toString())
     return new Document(DoctypeUtils.deserializeState(state), context, apiUrl, config)
   }
 

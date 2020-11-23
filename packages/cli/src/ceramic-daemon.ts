@@ -144,8 +144,8 @@ class CeramicDaemon {
 
   registerAPIPaths (app: core.Express, gateway: boolean): void {
     app.get(toApiPath('/records/:docid'), this.records.bind(this))
-    app.post(toApiPath('/document'), this.createDocFromGenesis.bind(this))
-    app.get(toApiPath('/document/:docid'), this.state.bind(this))
+    app.post(toApiPath('/documents'), this.createDocFromGenesis.bind(this))
+    app.get(toApiPath('/documents/:docid'), this.state.bind(this))
     app.get(toApiPath('/pins/:docid'), this.listPinned.bind(this))
     app.get(toApiPath('/pins'), this.listPinned.bind(this))
     app.get(toApiPath('/node/chains'), this.getSupportedChains.bind(this))
