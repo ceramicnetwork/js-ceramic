@@ -143,22 +143,21 @@ class CeramicDaemon {
   }
 
   registerAPIPaths (app: core.Express, gateway: boolean): void {
-    app.get(toApiPath('/records/ceramic/:docid'), this.records.bind(this))
-    app.get(toApiPath('/show/ceramic/:docid'), this.show.bind(this))
-    app.get(toApiPath('/state/ceramic/:docid'), this.state.bind(this))
-    app.get(toApiPath('/pin/ls/ceramic/:docid'), this.listPinned.bind(this))
-    app.get(toApiPath('/pin/ls'), this.listPinned.bind(this))
-    app.get(toApiPath('/supported_chains'), this.getSupportedChains.bind(this))
-    app.post(toApiPath('/create'), this.createDocFromGenesis.bind(this))
+    app.get(toApiPath('/records/:docid'), this.records.bind(this))
+    app.post(toApiPath('/documents'), this.createDocFromGenesis.bind(this))
+    app.get(toApiPath('/documents/:docid'), this.state.bind(this))
+    app.get(toApiPath('/pins/:docid'), this.listPinned.bind(this))
+    app.get(toApiPath('/pins'), this.listPinned.bind(this))
+    app.get(toApiPath('/node/chains'), this.getSupportedChains.bind(this))
 
     if (!gateway) {
-      app.post(toApiPath('/apply'), this.applyRecord.bind(this))
-      app.get(toApiPath('/pin/add/ceramic/:docid'), this.pinDocument.bind(this))
-      app.get(toApiPath('/pin/rm/ceramic/:docid'), this.unpinDocument.bind(this))
+      app.post(toApiPath('/records'), this.applyRecord.bind(this))
+      app.post(toApiPath('/pins/:docid'), this.pinDocument.bind(this))
+      app.delete(toApiPath('/pins/:docid'), this.unpinDocument.bind(this))
     } else {
-      app.post(toApiPath('/apply'),  this._notSupported.bind(this))
-      app.get(toApiPath('/pin/add/ceramic/:docid'),  this._notSupported.bind(this))
-      app.get(toApiPath('/pin/rm/ceramic/:docid'),  this._notSupported.bind(this))
+      app.post(toApiPath('/records'),  this._notSupported.bind(this))
+      app.post(toApiPath('/pins/:docid'),  this._notSupported.bind(this))
+      app.delete(toApiPath('/pins/:docid'),  this._notSupported.bind(this))
     }
   }
 
@@ -197,20 +196,6 @@ class CeramicDaemon {
     try {
       const doc = await this.ceramic.createDocumentFromGenesis(doctype, DoctypeUtils.deserializeRecord(genesis), docOpts)
       res.json({ docId: doc.id.toString(), state: DoctypeUtils.serializeState(doc.state) })
-    } catch (e) {
-      return next(e)
-    }
-    next()
-  }
-
-  /**
-   * Get document content
-   */
-  async show (req: Request, res: Response, next: NextFunction): Promise<void> {
-    const docId = DocID.fromString(req.params.docid, req.query.version ? req.query.version.toString() : undefined)
-    try {
-      const doc = await this.ceramic.loadDocument(docId)
-      res.json({ docId: doc.id.toString(), content: doc.content })
     } catch (e) {
       return next(e)
     }
