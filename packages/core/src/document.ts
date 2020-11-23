@@ -24,6 +24,11 @@ import {
 import DocID from '@ceramicnetwork/docid'
 import { PinStore } from './store/pin-store';
 
+// DocOpts defaults for document load operations
+const DEFAULT_LOAD_DOCOPTS = {anchor: false, publish: false, sync: true}
+// DocOpts defaults for document write operations
+const DEFAULT_WRITE_DOCOPTS = {anchor: true, publish: true, sync: false}
+
 /**
  * Document handles the update logic of the Doctype instance
  */
@@ -71,6 +76,9 @@ class Document extends EventEmitter {
       opts: DocOpts = {},
       validate = true,
   ): Promise<Document> {
+    // Fill 'opts' with default values for any missing fields
+    opts = {...DEFAULT_WRITE_DOCOPTS, ...opts}
+
     const doctype = new doctypeHandler.doctype(null, context) as T
     const doc = new Document(docId, dispatcher, pinStore, validate, context, doctypeHandler, doctype)
 
@@ -108,17 +116,11 @@ class Document extends EventEmitter {
       opts: DocOpts = {},
       validate = true
   ): Promise<Document> {
+    // Fill 'opts' with default values for any missing fields
+    opts = {...DEFAULT_LOAD_DOCOPTS, ...opts}
+
     const doctype = new handler.doctype(null, context) as T
     const doc = new Document(id, dispatcher, pinStore, validate, context, handler, doctype)
-
-    // Default "anchor" and "publish" options to false for load operations, as load operations don't
-    // create a new tip that needs handling.
-    if (!("anchor" in opts)) {
-      opts.anchor = false
-    }
-    if (!("publish" in opts)) {
-      opts.publish = false
-    }
 
     const record = await dispatcher.retrieveRecord(doc._genesisCid)
 
@@ -219,6 +221,9 @@ class Document extends EventEmitter {
    * @param opts - Document initialization options (request anchor, wait, etc.)
    */
   async applyRecord (record: any, opts: DocOpts = {}): Promise<void> {
+    // Fill 'opts' with default values for any missing fields
+    opts = {...DEFAULT_WRITE_DOCOPTS, ...opts}
+
     const cid = await this.dispatcher.storeRecord(record)
 
     await this._handleTip(cid)
