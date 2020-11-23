@@ -33,10 +33,10 @@ class Document extends Doctype {
    */
   async _syncPeriodically() {
     const _syncState = async () => {
-      let { state } = await fetchJson(this._apiUrl + '/state' + docIdUrl(this.id))
-      state = DoctypeUtils.deserializeState(state)
-      if (JSON.stringify(this.state) !== JSON.stringify(state)) {
-        this.state = state
+      const { state } = await fetchJson(this._apiUrl + '/state' + docIdUrl(this.id))
+
+      if (JSON.stringify(DoctypeUtils.serializeState(this.state)) !== JSON.stringify(state)) {
+        this.state = DoctypeUtils.deserializeState(state)
         this.emit('change')
       }
     }
