@@ -15,7 +15,7 @@ const CERAMIC_HOST = 'http://localhost:7007'
  */
 export const DEFAULT_CLIENT_CONFIG: CeramicClientConfig = {
   docSyncEnabled: false,
-  docSyncInterval: 1000,
+  docSyncInterval: 5000,
 }
 
 /**
