@@ -76,9 +76,8 @@ describe('Ceramic interop: core <> http-client', () => {
     beforeEach(async () => {
         // TODO: Many of the tests in this file are racy and depend on an anchor not having been
         // performed yet by the time the test checks.  To eliminate this race condition we should set
-        // anchorOnRequest to false in the config to Ceramic (which in turn gets passed down into
-        // the InMemoryAnchorService), anchor manually throughout the tests, and remove
-        // sync:false from throughout the tests.
+        // anchorOnRequest to false in the config for the InMemoryAnchorService and anchor manually
+        // throughout the tests.
         core = await Ceramic.create(ipfs, { topic })
 
         const doctypeHandler = new TileDoctypeHandler()
@@ -183,7 +182,7 @@ describe('Ceramic interop: core <> http-client', () => {
         // change from client viewable in core
 
         const finalContent = { test: 456, abc: 654 }
-        await doc2.change({ content: finalContent }, { sync: false })
+        await doc2.change({ content: finalContent })
 
         await waitChange(doc2)
         expect(doc1.content).toEqual(doc2.content)
