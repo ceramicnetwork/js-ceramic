@@ -7,8 +7,6 @@ import DocID from '@ceramicnetwork/docid'
 import { fetchJson, typeDocID, delay } from './utils'
 import { CeramicClientConfig } from "./ceramic-http-client"
 
-const docIdUrl = (docId: DocID ): string => `/ceramic/${docId.toString()}`
-
 class Document extends Doctype {
 
   private _syncEnabled: boolean
@@ -33,7 +31,7 @@ class Document extends Doctype {
    */
   async _syncPeriodically() {
     const _syncState = async () => {
-      const { state } = await fetchJson(this._apiUrl + '/state' + docIdUrl(this.id))
+      const { state } = await fetchJson(this._apiUrl + '/documents/' + this.id.toString())
 
       if (JSON.stringify(DoctypeUtils.serializeState(this.state)) !== JSON.stringify(state)) {
         this.state = DoctypeUtils.deserializeState(state)
@@ -56,33 +54,39 @@ class Document extends Doctype {
   }
 
   static async createFromGenesis (apiUrl: string, doctype: string, genesis: any, context: Context, docOpts: DocOpts = {}, config: CeramicClientConfig): Promise<Document> {
-    const { state } = await fetchJson(apiUrl + '/create', {
-      doctype,
-      genesis: DoctypeUtils.serializeRecord(genesis),
-      docOpts,
+    const { state } = await fetchJson(apiUrl + '/documents', {
+      method: 'post',
+      body: {
+        doctype,
+        genesis: DoctypeUtils.serializeRecord(genesis),
+        docOpts,
+      }
     })
     return new Document(DoctypeUtils.deserializeState(state), context, apiUrl, config)
   }
 
   static async applyRecord(apiUrl: string, docId: DocID | string, record: any, context: Context, docOpts: DocOpts = {}): Promise<Document> {
     docId = typeDocID(docId)
-    const { state } = await fetchJson(apiUrl + '/apply', {
-      docId: docId.toString(),
-      record: DoctypeUtils.serializeRecord(record),
-      docOpts,
+    const { state } = await fetchJson(apiUrl + '/records', {
+      method: 'post',
+      body: {
+        docId: docId.toString(),
+        record: DoctypeUtils.serializeRecord(record),
+        docOpts,
+      }
     })
     return new Document(DoctypeUtils.deserializeState(state), context, apiUrl)
   }
 
   static async load (docId: DocID | string, apiUrl: string, context: Context, config: CeramicClientConfig): Promise<Document> {
     docId = typeDocID(docId)
-    const { state } = await fetchJson(apiUrl + '/state' + docIdUrl(docId))
+    const { state } = await fetchJson(apiUrl + '/documents/' + docId.toString())
     return new Document(DoctypeUtils.deserializeState(state), context, apiUrl, config)
   }
 
   static async loadDocumentRecords (docId: DocID | string, apiUrl: string): Promise<Array<Record<string, any>>> {
     docId = typeDocID(docId)
-    const { records } = await fetchJson(apiUrl + '/records' + docIdUrl(docId))
+    const { records } = await fetchJson(apiUrl + '/records/' + docId.toString())
 
     return records.map((r: any) => {
       return {

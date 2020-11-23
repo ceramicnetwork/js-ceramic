@@ -11,6 +11,7 @@ import { TileDoctype, TileParams, TileDoctypeHandler } from "@ceramicnetwork/doc
 import { PinStore } from "../store/pin-store";
 import { LevelStateStore } from "../store/level-state-store";
 import { DID } from "dids"
+import { sha256 } from 'js-sha256'
 
 import { Resolver } from "did-resolver"
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
@@ -328,9 +329,8 @@ describe('Document', () => {
       expect(doc.state.anchorStatus).not.toEqual(AnchorStatus.NOT_REQUESTED)
     })
 
-    it('handles conflict', async () => {
-      const fakeState = { asdf: 2342 }
-      const doc1 = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context, { sync: false })
+    it('handles basic conflict', async () => {
+      const doc1 = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context)
       const docId = doc1.id
       await anchorUpdate(doc1)
       const tipPreUpdate = doc1.tip
@@ -348,13 +348,14 @@ describe('Document', () => {
       // sometime the tests are very fast
       await new Promise(resolve => setTimeout(resolve, 1))
       // TODO - better mock for anchors
-
-      updateRec = await TileDoctype._makeRecord(doc2.doctype, user, fakeState, doc2.controllers)
-      await doc2.applyRecord(updateRec, { sync: false })
+      
+      const conflictingNewContent = { asdf: 2342 }
+      updateRec = await TileDoctype._makeRecord(doc2.doctype, user, conflictingNewContent, doc2.controllers)
+      await doc2.applyRecord(updateRec)
 
       await anchorUpdate(doc2)
       const tipInvalidUpdate = doc2.tip
-      expect(doc2.content).toEqual(fakeState)
+      expect(doc2.content).toEqual(conflictingNewContent)
       // loading tip from valid log to doc with invalid
       // log results in valid state
       await doc2._handleTip(tipValidUpdate)
@@ -424,7 +425,183 @@ describe('Document', () => {
         expect(e.message).toEqual('Validation Error: data[\'stuff\'] should be string')
       }
     })
+  })
 
+  describe('Conflict resolution logic', () => {
+    let cids: CID[];
+
+    beforeEach(() => {
+      // Provide a random group of CIDs to work with, in increasing lexicographic order
+      const makeCID = (data: string): CID => new CID(1, 'sha2-256', Buffer.from('1220' + sha256(data), 'hex'))
+      cids = [makeCID("aaaa"),
+              makeCID("bbbb"),
+              makeCID("cccc"),
+              makeCID("dddd"),
+              makeCID("eeeee")]
+      cids.sort(function (cid1, cid2) {
+        if (cid1.bytes < cid2.bytes) {
+          return -1
+        } else if (cid1.bytes > cid2.bytes) {
+          return 1
+        } else {
+          return 0
+        }
+      })
+    })
+
+    it("Neither log is anchored, no nonces", async () => {
+      const state1 = {
+        anchorStatus: AnchorStatus.NOT_REQUESTED,
+        log: [{cid: cids[1]}, {cid: cids[2]}, {cid: cids[3]}],
+        metadata: {},
+      }
+
+      const state2 = {
+        anchorStatus: AnchorStatus.PENDING,
+        log: [{cid: cids[4]}, {cid: cids[0]}],
+        metadata: {},
+      }
+
+      // When neither log is anchored and there's no nonces we should pick the log whose first
+      // entry has the smaller CID.
+      expect(await Document._pickLogToAccept(state1, state2)).toEqual(false)
+      expect(await Document._pickLogToAccept(state2, state1)).toEqual(true)
+    })
+
+    it("Neither log is anchored, different nonces", async () => {
+      const state1 = {
+        anchorStatus: AnchorStatus.NOT_REQUESTED,
+        metadata: {nonce: 3},
+      }
+
+      const state2 = {
+        anchorStatus: AnchorStatus.PENDING,
+        metadata: {},
+        next: {metadata: {nonce: 4}}
+      }
+
+      // When neither log is anchored the log with the higher nonce should win
+      expect(await Document._pickLogToAccept(state1, state2)).toEqual(true)
+      expect(await Document._pickLogToAccept(state2, state1)).toEqual(false)
+    })
+
+    it("One log anchored before the other", async () => {
+      const state1 = {
+        anchorStatus: AnchorStatus.PENDING,
+      }
+
+      const state2 = {
+        anchorStatus: AnchorStatus.ANCHORED,
+      }
+
+      // When only one of the logs has been anchored, we pick the anchored one
+      expect(await Document._pickLogToAccept(state1, state2)).toEqual(true)
+      expect(await Document._pickLogToAccept(state2, state1)).toEqual(false)
+    })
+
+    it("Both logs anchored in different blockchains", async () => {
+      const proof1 = {
+        chainId: 'chain1',
+        blockTimestamp: 5,
+      }
+      const state1 = {
+        anchorStatus: AnchorStatus.ANCHORED,
+        anchorProof: proof1,
+      }
+
+      const proof2 = {
+        chainId: 'chain2',
+        blockTimestamp: 10,
+      }
+      const state2 = {
+        anchorStatus: AnchorStatus.ANCHORED,
+        anchorProof: proof2,
+      }
+
+      // When anchored in different blockchains, should take log with earlier block timestamp
+      await expect(Document._pickLogToAccept(state1, state2)).rejects.toThrow("Conflicting logs on the same document are anchored on different chains, this should be impossible. Chain1: chain1, chain2: chain2")
+      await expect(Document._pickLogToAccept(state2, state1)).rejects.toThrow("Conflicting logs on the same document are anchored on different chains, this should be impossible. Chain1: chain2, chain2: chain1")
+    })
+
+    it("Both logs anchored in same blockchains in different blocks", async () => {
+      const proof1 = {
+        chainId: 'myblockchain',
+        blockNumber: 10,
+      }
+      const state1 = {
+        anchorStatus: AnchorStatus.ANCHORED,
+        anchorProof: proof1,
+      }
+
+      const proof2 = {
+        chainId: 'myblockchain',
+        blockNumber: 5,
+      }
+      const state2 = {
+        anchorStatus: AnchorStatus.ANCHORED,
+        anchorProof: proof2,
+      }
+
+      // When anchored in the same blockchain, should take log with earlier block number
+      expect(await Document._pickLogToAccept(state1, state2)).toEqual(true)
+      expect(await Document._pickLogToAccept(state2, state1)).toEqual(false)
+    })
+
+    it("Both logs anchored in same blockchains in the same block with the same nonce", async () => {
+      const proof1 = {
+        chainId: 'myblockchain',
+        blockNumber: 10,
+      }
+      const state1 = {
+        anchorStatus: AnchorStatus.ANCHORED,
+        anchorProof: proof1,
+        metadata: {nonce: 3},
+        log: [{cid: cids[1]}, {cid: cids[2]}, {cid: cids[3]}],
+      }
+
+      const proof2 = {
+        chainId: 'myblockchain',
+        blockNumber: 10,
+      }
+      const state2 = {
+        anchorStatus: AnchorStatus.ANCHORED,
+        anchorProof: proof2,
+        metadata: {nonce: 3},
+        log: [{cid: cids[4]}, {cid: cids[0]}],
+      }
+
+      // When anchored in the same blockchain, same block, and with the same nonce, we should use
+      // the fallback mechanism of picking the log whose first entry has the smaller CID
+      expect(await Document._pickLogToAccept(state1, state2)).toEqual(false)
+      expect(await Document._pickLogToAccept(state2, state1)).toEqual(true)
+    })
+
+    it("Both logs anchored in same blockchains in the same block, one has nonce", async () => {
+      const proof1 = {
+        chainId: 'myblockchain',
+        blockNumber: 10,
+      }
+      const state1 = {
+        anchorStatus: AnchorStatus.ANCHORED,
+        anchorProof: proof1,
+        metadata: {nonce: 1},
+      }
+
+      const proof2 = {
+        chainId: 'myblockchain',
+        blockNumber: 10,
+      }
+      const state2 = {
+        anchorStatus: AnchorStatus.ANCHORED,
+        anchorProof: proof2,
+        metadata: {},
+      }
+
+      // When anchored in the same blockchain, same block, and one log has a nonce but not the other,
+      // the log with the nonce should win.
+      expect(await Document._pickLogToAccept(state1, state2)).toEqual(false)
+      expect(await Document._pickLogToAccept(state2, state1)).toEqual(true)
+    })
   })
 
   describe('Network update logic', () => {
