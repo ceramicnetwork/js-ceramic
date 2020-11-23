@@ -21,6 +21,7 @@ const waitChange = (doc: EventEmitter, count = 1): Promise<void> => {
         doc.on('change', () => {
             if (++c === count) {
                 resolve()
+                doc.removeAllListeners('change')
             }
         })
     })
