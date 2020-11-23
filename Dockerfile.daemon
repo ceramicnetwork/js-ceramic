@@ -9,15 +9,18 @@ RUN npm install
 
 COPY lerna.json tsconfig.json ./
 
-COPY packages/cli/package.json packages/cli/package-lock.json ./packages/cli/
-COPY packages/core/package.json packages/cli/package-lock.json ./packages/core/
-COPY packages/common/package.json packages/common/package-lock.json ./packages/common/
-COPY packages/http-client/package.json packages/cli/package-lock.json ./packages/http-client/
-COPY packages/doctype-tile/package.json packages/doctype-tile/package-lock.json ./packages/doctype-tile/
-COPY packages/doctype-caip10-link/package.json packages/doctype-caip10-link/package-lock.json ./packages/doctype-caip10-link/
-COPY packages/key-did-resolver/package.json packages/key-did-resolver/package-lock.json ./packages/key-did-resolver/
-COPY packages/3id-did-resolver/package.json packages/cli/package-lock.json ./packages/3id-did-resolver/
-COPY packages/docid/package.json packages/docid/package-lock.json ./packages/docid/
+COPY packages/3id-did-resolver/package*.json ./packages/3id-did-resolver/
+COPY packages/cli/package*.json ./packages/cli/
+COPY packages/common/package*.json ./packages/common/
+COPY packages/core/package*.json ./packages/core/
+COPY packages/docid/package*.json ./packages/docid/
+COPY packages/doctype-caip10-link/package*.json ./packages/doctype-caip10-link/
+COPY packages/doctype-tile/package*.json ./packages/doctype-tile/
+COPY packages/http-client/package*.json ./packages/http-client/
+COPY packages/key-did-resolver/package*.json ./packages/key-did-resolver/
+COPY packages/pinning-aggregation/package*.json ./packages/pinning-aggregation/
+COPY packages/pinning-ipfs-backend/package*.json ./packages/pinning-ipfs-backend/
+COPY packages/pinning-powergate-backend/package*.json ./packages/pinning-powergate-backend/
 
 RUN npx lerna bootstrap --hoist
 
