@@ -26,11 +26,6 @@ export function combineURLs(baseURL, relativeURL) {
 }
 
 export async function delay(mills: number): Promise<void> {
-    await new Promise((resolve => {
-        const h = setTimeout(() => {
-            clearTimeout(h)
-            resolve()
-        }, mills)
-    }))
+    await new Promise(resolve => setTimeout(() => resolve(), mills))
 }
 
