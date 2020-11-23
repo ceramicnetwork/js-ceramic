@@ -19,7 +19,7 @@ const DOCTYPE = 'tile'
  * Tile doctype parameters
  */
 export interface TileParams extends DocParams {
-    content?: object;
+    content?: Record<string, unknown>;
 }
 
 /**

@@ -46,8 +46,7 @@ export class Caip10LinkDoctypeHandler implements DoctypeHandler<Caip10LinkDoctyp
         }
 
         if (record.proof) {
-            const proofRecord = (await context.ipfs.dag.get(record.proof)).value;
-            return this._applyAnchor(record, proofRecord, cid, state);
+            return this._applyAnchor(context, record, cid, state);
         }
 
         return this._applySigned(record, cid, state);
@@ -82,6 +81,7 @@ export class Caip10LinkDoctypeHandler implements DoctypeHandler<Caip10LinkDoctyp
      * @private
      */
     async _applySigned (record: any, cid: CID, state: DocState): Promise<DocState> {
+        // TODO: Assert that the 'prev' of the record being applied is the end of the log in 'state'
         const validProof = await validateLink(record.data)
         if (!validProof) {
             throw new Error('Invalid proof for signed record')
@@ -108,13 +108,23 @@ export class Caip10LinkDoctypeHandler implements DoctypeHandler<Caip10LinkDoctyp
 
     /**
      * Applies anchor record
+     * @param context - Ceramic context
      * @param record - Anchor record
-     * @param proof - Anchor proof record
      * @param cid - Anchor record CID
      * @param state - Document state
      * @private
      */
-    async _applyAnchor (record: any, proof: AnchorProof, cid: CID, state: DocState): Promise<DocState> {
+    async _applyAnchor (context: Context, record: any, cid: CID, state: DocState): Promise<DocState> {
+        // TODO: Assert that the 'prev' of the record being applied is the end of the log in 'state'
+        const proof = (await context.ipfs.dag.get(record.proof)).value;
+        if (proof.chainId != state.metadata.chainId) {
+            throw new Error("Anchor record with cid '" + cid.toString() +
+                "' on caip10-link document with DocID '" + state.log[0].cid.toString() +
+                "' is on chain '" + proof.chainId +
+                "' but this document is configured to be anchored on chain '" +
+                state.metadata.chainId + "'")
+        }
+
         state.log.push({ cid, type: RecordType.ANCHOR })
         let content = state.content
         if (state.next?.content) {
