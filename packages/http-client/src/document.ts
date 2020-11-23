@@ -5,7 +5,7 @@ import {
 import DocID from '@ceramicnetwork/docid'
 
 import { fetchJson, typeDocID, delay } from './utils'
-import { CeramicClientConfig, DEFAULT_CLIENT_CONFIG } from "./ceramic-http-client"
+import { CeramicClientConfig } from "./ceramic-http-client"
 
 const docIdUrl = (docId: DocID ): string => `/ceramic/${docId.toString()}`
 
@@ -16,7 +16,7 @@ class Document extends Doctype {
 
   public doctypeHandler: DoctypeHandler<Doctype>
 
-  constructor (state: DocState, context: Context, private _apiUrl: string, config: CeramicClientConfig = DEFAULT_CLIENT_CONFIG) {
+  constructor (state: DocState, context: Context, private _apiUrl: string, config: CeramicClientConfig = { docSyncEnabled: false }) {
     super(state, context)
 
     this._syncEnabled = config.docSyncEnabled
@@ -55,7 +55,7 @@ class Document extends Doctype {
     return new DocID(this.state.doctype, this.state.log[0].cid)
   }
 
-  static async createFromGenesis (apiUrl: string, doctype: string, genesis: any, context: Context, opts: DocOpts = {}, config = DEFAULT_CLIENT_CONFIG): Promise<Document> {
+  static async createFromGenesis (apiUrl: string, doctype: string, genesis: any, context: Context, opts: DocOpts = {}, config: CeramicClientConfig): Promise<Document> {
     const { state } = await fetchJson(apiUrl + '/create', {
       doctype,
       genesis: DoctypeUtils.serializeRecord(genesis),
@@ -75,10 +75,10 @@ class Document extends Doctype {
         applyOnly: opts.applyOnly,
       }
     })
-    return new Document(DoctypeUtils.deserializeState(state), context, apiUrl, { docSyncEnabled: false })
+    return new Document(DoctypeUtils.deserializeState(state), context, apiUrl)
   }
 
-  static async load (docId: DocID | string, apiUrl: string, context: Context, config = DEFAULT_CLIENT_CONFIG): Promise<Document> {
+  static async load (docId: DocID | string, apiUrl: string, context: Context, config: CeramicClientConfig): Promise<Document> {
     docId = typeDocID(docId)
     const { state } = await fetchJson(apiUrl + '/state' + docIdUrl(docId))
     return new Document(DoctypeUtils.deserializeState(state), context, apiUrl, config)
