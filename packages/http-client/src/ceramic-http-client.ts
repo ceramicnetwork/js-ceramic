@@ -1,4 +1,4 @@
-import { fetchJson, typeDocID } from "./utils"
+import { fetchJson, typeDocID, combineURLs } from "./utils"
 import Document from './document'
 
 import { DID } from 'dids'
@@ -7,10 +7,29 @@ import { TileDoctypeHandler } from "@ceramicnetwork/doctype-tile"
 import { Caip10LinkDoctypeHandler } from "@ceramicnetwork/doctype-caip10-link"
 import DocID from '@ceramicnetwork/docid'
 
-const CERAMIC_HOST = 'http://localhost:7007'
 const API_PATH = '/api/v0'
+const CERAMIC_HOST = 'http://localhost:7007'
 
-class CeramicClient implements CeramicApi {
+/**
+ * Default Ceramic client configuration
+ */
+export const DEFAULT_CLIENT_CONFIG: CeramicClientConfig = {
+  docSyncEnabled: false,
+  docSyncInterval: 1000,
+}
+
+/**
+ * Ceramic client configuration
+ */
+export interface CeramicClientConfig {
+  docSyncEnabled: boolean
+  docSyncInterval: number
+}
+
+/**
+ * Ceramic client implementation
+ */
+export default class CeramicClient implements CeramicApi {
   private readonly _apiUrl: string
   private readonly _docmap: Record<string, Document>
   private _supportedChains: Array<string>
@@ -20,8 +39,8 @@ class CeramicClient implements CeramicApi {
 
   public readonly _doctypeHandlers: Record<string, DoctypeHandler<Doctype>>
 
-  constructor (apiHost: string = CERAMIC_HOST) {
-    this._apiUrl = apiHost + API_PATH
+  constructor (apiHost: string = CERAMIC_HOST, private _config: CeramicClientConfig = DEFAULT_CLIENT_CONFIG) {
+    this._apiUrl = combineURLs(apiHost, API_PATH)
     this._docmap = {}
 
     this.context = { api: this }
@@ -144,5 +163,3 @@ class CeramicClient implements CeramicApi {
     }
   }
 }
-
-export default CeramicClient
