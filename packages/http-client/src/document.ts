@@ -75,7 +75,7 @@ class Document extends Doctype {
         applyOnly: opts.applyOnly,
       }
     })
-    return new Document(DoctypeUtils.deserializeState(state), context, apiUrl)
+    return new Document(DoctypeUtils.deserializeState(state), context, apiUrl, { docSyncEnabled: false })
   }
 
   static async load (docId: DocID | string, apiUrl: string, context: Context, config = DEFAULT_CLIENT_CONFIG): Promise<Document> {
