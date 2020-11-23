@@ -27,6 +27,9 @@
     "lib": "lib"
   },
   "dependencies": {
+    "cids": "^1.0.2",
+    "@stablelib/base64": "^1.0.0",
+    "@stablelib/sha256": "^1.0.0",
     "@ceramicnetwork/common": "^0.12.0",
     "@ceramicnetwork/pinning-ipfs-backend": "^0.0.1",
     "@ceramicnetwork/pinning-powergate-backend": "^0.0.1"

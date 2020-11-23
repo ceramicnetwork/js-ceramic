@@ -15,7 +15,17 @@ import basicsImport from 'multiformats/cjs/src/basics-import.js'
 import legacy from 'multiformats/cjs/src/legacy.js'
 
 const seed = u8a.fromString('6e34b2e1a9624113d81ece8a8a22e6e97f0e145c25c1d4d2d0e62753b4060c83', 'base16')
-const anchorUpdate = (doc: EventEmitter): Promise<void> => new Promise(resolve => doc.on('change', resolve))
+const waitChange = (doc: EventEmitter, count = 1): Promise<void> => {
+    return new Promise(resolve => {
+        let c = 0
+        doc.on('change', () => {
+            if (++c === count) {
+                resolve()
+                doc.removeAllListeners('change')
+            }
+        })
+    })
+}
 const port = 7777
 const apiUrl = 'http://localhost:' + port
 
@@ -76,7 +86,7 @@ describe('Ceramic interop: core <> http-client', () => {
         core._doctypeHandlers['tile'] = doctypeHandler
 
         daemon = new CeramicDaemon(core, { port })
-        client = new CeramicClient(apiUrl)
+        client = new CeramicClient(apiUrl, { docSyncEnabled: true, docSyncInterval: 1000 })
 
         const provider = new Ed25519Provider(seed)
         await core.setDIDProvider(provider)
@@ -115,33 +125,33 @@ describe('Ceramic interop: core <> http-client', () => {
     })
 
     it('gets anchor record updates', async () => {
-        const doc1 = await client.createDocument(DOCTYPE_TILE, { content: { test: 123 } }, { waitForSync: false })
-        await anchorUpdate(doc1)
+        const doc1 = await client.createDocument(DOCTYPE_TILE, { content: { test: 123 } })
+        await waitChange(doc1, 2)
         expect(doc1.state.log.length).toEqual(2)
         expect(doc1.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
-        const doc2 = await client.createDocument(DOCTYPE_TILE, { content: { test: 1234 } }, { waitForSync: false })
-        await anchorUpdate(doc2)
+        const doc2 = await client.createDocument(DOCTYPE_TILE, { content: { test: 1234 } })
+        await waitChange(doc2, 2)
         expect(doc2.state.log.length).toEqual(2)
         expect(doc2.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
     })
 
     it('loads documents correctly', async () => {
-        const doc1 = await core.createDocument(DOCTYPE_TILE, { content: { test: 123 } }, { waitForSync: false })
-        await anchorUpdate(doc1)
+        const doc1 = await core.createDocument(DOCTYPE_TILE, { content: { test: 123 } })
+        await waitChange(doc1)
         const doc2 = await client.loadDocument(doc1.id)
         expect(doc1.content).toEqual(doc2.content)
         expect(DoctypeUtils.serializeState(doc1.state)).toEqual(DoctypeUtils.serializeState(doc2.state))
 
-        const doc3 = await client.createDocument(DOCTYPE_TILE, { content: { test: 456 } }, { waitForSync: false })
-        await anchorUpdate(doc3)
+        const doc3 = await client.createDocument(DOCTYPE_TILE, { content: { test: 456 } })
+        await waitChange(doc3)
         const doc4 = await core.loadDocument(doc3.id)
         expect(doc3.content).toEqual(doc4.content)
         expect(DoctypeUtils.serializeState(doc3.state)).toEqual(DoctypeUtils.serializeState(doc4.state))
     })
 
     it('loads document records correctly', async () => {
-        const doc1 = await core.createDocument(DOCTYPE_TILE, { content: { test: 123 } }, { waitForSync: false })
-        await anchorUpdate(doc1)
+        const doc1 = await core.createDocument(DOCTYPE_TILE, { content: { test: 123 } })
+        await waitChange(doc1)
         const doc2 = await client.loadDocument(doc1.id)
         expect(doc1.content).toEqual(doc2.content)
 
@@ -161,13 +171,13 @@ describe('Ceramic interop: core <> http-client', () => {
     })
 
     it('makes and gets updates correctly', async () => {
-        const doc1 = await core.createDocument(DOCTYPE_TILE, { content: { test: 123 } }, { waitForSync: false })
-        await anchorUpdate(doc1)
+        const doc1 = await core.createDocument(DOCTYPE_TILE, { content: { test: 123 } })
+        await waitChange(doc1)
         const doc2 = await client.loadDocument(doc1.id)
         // change from core viewable in client
-        await doc1.change({ content: { test: 123, abc: 987 } }, { waitForSync: false })
-        await anchorUpdate(doc1)
-        await anchorUpdate(doc2)
+        await doc1.change({ content: { test: 123, abc: 987 } })
+        await waitChange(doc1)
+        await waitChange(doc2)
         expect(doc1.content).toEqual(doc2.content)
         expect(DoctypeUtils.serializeState(doc1.state)).toEqual(DoctypeUtils.serializeState(doc2.state))
         // change from client viewable in core
@@ -175,7 +185,7 @@ describe('Ceramic interop: core <> http-client', () => {
         const finalContent = { test: 456, abc: 654 }
         await doc2.change({ content: finalContent }, { waitForSync: false })
 
-        await anchorUpdate(doc2)
+        await waitChange(doc2)
         expect(doc1.content).toEqual(doc2.content)
         expect(doc1.content).toEqual(finalContent)
         expect(DoctypeUtils.serializeState(doc1.state)).toEqual(DoctypeUtils.serializeState(doc2.state))
