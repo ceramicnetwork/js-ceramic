@@ -1,8 +1,5 @@
 import fetch from 'cross-fetch'
-import type { DIDDocument } from 'did-resolver'
-
-const DID_PLACEHOLDER = 'GENESIS'
-const PUBKEY_IDS = ['signingKey', 'managementKey', 'encryptionKey']
+import * as u8a from 'uint8arrays'
 
 interface DAG {
   get(cid: string): any;
@@ -32,37 +29,35 @@ const ipfsMock: IPFS = {
   }
 }
 
-// just remove keys, return uint8 to consume in wrap doc in resolver
-const  cidToDocument = async (ipfs: IPFS, documentCid:string): Promise<DIDDocument> => {
-  const doc = (await ipfs.dag.get(documentCid)).value
-  // If genesis document replace placeholder identifier with cid
-  if (doc.id.includes(DID_PLACEHOLDER)) {
-    const re = new RegExp(DID_PLACEHOLDER, 'gi')
-    doc.id = doc.id.replace(re, documentCid)
-    if (doc.publicKey) {
-      doc.publicKey = JSON.parse(JSON.stringify(doc.publicKey).replace(re, documentCid))
-    }
-    if (doc.authentication) {
-      doc.authentication = JSON.parse(JSON.stringify(doc.authentication).replace(re, documentCid))
-    }
-  }
-  return doc
+// TODO, from idw, key utils in future
+const encodeKey = (key: Uint8Array): string => {
+  const bytes = new Uint8Array(key.length + 2)
+  bytes[0] = 0xe7 // secp256k1 multicodec
+  bytes[1] = 0x01 // multicodec varint
+  bytes.set(key, 2)
+  return `z${u8a.toString(bytes, 'base58btc')}`
 }
 
-const validateDoc = (doc: DIDDocument): void =>  {
-  if (!doc || !doc.publicKey || !doc.authentication) {
+// Returns v0 3id public keys in ceramic 3id doc form
+const LegacyResolver = async (didId: string, ipfs = ipfsMock): Promise<any> => {
+  const doc = (await ipfs.dag.get(didId)).value
+  let signingKey, encryptionKey
+
+  try {
+    const keyEntrySigning = doc.publicKey.findIndex(e => e.id.endsWith('signingKey'))
+    const keyEntryEncryption = doc.publicKey.findIndex(e => e.id.endsWith('encryptionKey'))
+    signingKey = doc.publicKey[keyEntrySigning].publicKeyHex
+    encryptionKey = doc.publicKey[keyEntryEncryption].publicKeyBase64
+  } catch (e) {
     throw new Error('Not a valid 3ID')
   }
-  doc.publicKey.map(entry => {
-    const id = entry.id.split('#')[1]
-    if (!PUBKEY_IDS.includes(id)) throw new Error('Not a valid 3ID')
-  })
-}
 
-const LegacyResolver = async (didId: string, ipfs = ipfsMock): Promise<DIDDocument> => {
-  const doc = await cidToDocument(ipfs, didId)
-  validateDoc(doc)
-  return doc 
+  return {
+    publicKeys: {
+      signing: encodeKey(u8a.fromString(signingKey, 'base16')),
+      encryption: encodeKey(u8a.fromString(encryptionKey, 'base64pad'))
+    }
+  }
 }
 
 export default LegacyResolver

@@ -14,15 +14,6 @@ interface ResolverRegistry {
   [index: string]: DIDResolver;
 }
 
-// TODO, from idw, key utils in future
-const encodeKey = (key: Uint8Array, keyType: string): string => {
-  const bytes = new Uint8Array(key.length + 2)
-  bytes[0] = 0xe7 // secp256k1 multicodec
-  bytes[1] = 0x01 // multicodec varint
-  bytes.set(key, 2)
-  return `z${u8a.toString(bytes, 'base58btc')}`
-}
-
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function wrapDocument(content: any, did: string): DIDDocument {
   if (!(content && content.publicKeys)) throw new Error('Not a valid 3ID')
@@ -35,13 +26,14 @@ export function wrapDocument(content: any, did: string): DIDDocument {
   }
   const doc = Object.entries(content.publicKeys as string[]).reduce((diddoc, [keyName, keyValue]) => {
     const keyBuf = u8a.fromString(keyValue.slice(1), 'base58btc')
+    // remove multicodec varint
+    const publicKeyBase58 =  u8a.toString(keyBuf.slice(2), 'base58btc')
     if (keyBuf[0] === 0xe7) { // it's secp256k1
       diddoc.publicKey.push({
         id: `${did}#${keyName}`,
         type: 'Secp256k1VerificationKey2018',
         controller: did,
-        // remove multicodec varint and encode to hex
-        publicKeyBase58: u8a.toString(keyBuf.slice(2), 'base58btc')
+        publicKeyBase58
       })
       diddoc.authentication.push({
         type: 'Secp256k1SignatureAuthentication2018',
@@ -53,14 +45,14 @@ export function wrapDocument(content: any, did: string): DIDDocument {
         id: `${did}#${keyName}`,
         type: 'Curve25519EncryptionPublicKey',
         controller: did,
-        publicKeyBase58: u8a.toString(keyBuf.slice(2), 'base58btc')
+        publicKeyBase58
       })
       // new keyAgreement format for x25519 keys
       diddoc.keyAgreement.push({
         id: `${did}#${keyName}`,
         type: 'X25519KeyAgreementKey2019',
         controller: did,
-        publicKeyBase58: u8a.toString(keyBuf.slice(2), 'base58btc')
+        publicKeyBase58
       })
     }
     return diddoc
@@ -94,16 +86,13 @@ const getVersion = (query = ''): string | null => {
 }
  
 const legacyResolve = async (ceramic: Ceramic, didId: string, version?: string): Promise<DIDDocument | null> => {
-  // todo could add opt to pass ceramic ipfs here instead when true
-  const legacyDoc = await LegacyResolver(didId)
-  if (!legacyDoc) return null
+  const legacyPublicKeys = await LegacyResolver(didId) // can add opt to pass ceramic ipfs to resolve
+  if (!legacyPublicKeys) return null
+  
+  const legacyDoc = wrapDocument(legacyPublicKeys, `did:3:${didId}`)
   if (version === '0') return legacyDoc
 
-  const keyEntry = legacyDoc.publicKey.findIndex(e => e.id.endsWith('signingKey'))
-  const signingKey = legacyDoc.publicKey[keyEntry].publicKeyHex
-  if (!signingKey) return null
-
-  const managementKey = `did:key:${encodeKey(u8a.fromString(signingKey, 'base16'), 'secp256k1')}`
+  const managementKey = `did:key:${legacyPublicKeys.publicKeys.signing}`
 
   try {
     const content =  { metadata: { controllers: [managementKey], family: '3id' } }
