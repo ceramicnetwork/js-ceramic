@@ -184,37 +184,39 @@ export default class Dispatcher extends EventEmitter {
       return
     }
 
-    if (message.from !== this._peerId) {
-      // TODO: This is not a great way to handle the message because we don't
-      // don't know its type/contents. Ideally we can make this method generic
-      // against specific interfaces and follow follow IPFS specs for
-      // types (e.g. message data should be a buffer)
-
-      let parsedMessageData
-      if (typeof message.data === 'string') {
-        parsedMessageData = JSON.parse(message.data)
-      } else {
-        parsedMessageData = JSON.parse(new TextDecoder('utf-8').decode(message.data))
-      }
-      // TODO: handle signature and key buffers in message data
-      const logMessage = { ...message, data: parsedMessageData }
-      this._log({ peer: this._peerId, event: 'received', topic: this.topic, message: logMessage })
-
-      const { typ } = parsedMessageData
-      switch (typ) {
-        case MsgType.UPDATE:
-          await this._handleUpdateMessage(parsedMessageData)
-          break
-        case MsgType.QUERY:
-          await this._handleQueryMessage(parsedMessageData)
-          break
-        case MsgType.RESPONSE:
-          await this._handleResponseMessage(parsedMessageData)
-          break
-        default:
-          throw new Error("Unsupported message type: " + typ)
-      }
+    if (message.from === this._peerId) {
+      return
     }
+
+    // TODO: This is not a great way to handle the message because we don't
+    // don't know its type/contents. Ideally we can make this method generic
+    // against specific interfaces and follow IPFS specs for
+    // types (e.g. message data should be a buffer)
+    let parsedMessageData
+    if (typeof message.data === 'string') {
+      parsedMessageData = JSON.parse(message.data)
+    } else {
+      parsedMessageData = JSON.parse(new TextDecoder('utf-8').decode(message.data))
+    }
+    // TODO: handle signature and key buffers in message data
+    const logMessage = { ...message, data: parsedMessageData }
+    this._log({ peer: this._peerId, event: 'received', topic: this.topic, message: logMessage })
+
+    const { typ } = parsedMessageData
+    switch (typ) {
+      case MsgType.UPDATE:
+        await this._handleUpdateMessage(parsedMessageData)
+        break
+      case MsgType.QUERY:
+        await this._handleQueryMessage(parsedMessageData)
+        break
+      case MsgType.RESPONSE:
+        await this._handleResponseMessage(parsedMessageData)
+        break
+      default:
+        throw new Error("Unsupported message type: " + typ)
+    }
+
   }
 
   /**
@@ -247,14 +249,15 @@ export default class Dispatcher extends EventEmitter {
     // Runtime check that the message adheres to the expected format for QUERY messages
     QueryMessage.check(message)
 
-    const { doc } = message
-    if (!this._documents[doc]) {
+    const { doc: docId } = message
+    if (!this._documents[docId]) {
       return
     }
 
     // TODO: Should we validate that the 'id' field is the correct hash of the rest of the message?
 
-    this._documents[doc].emit('tipreq')
+    const doc = this._documents[docId]
+    await this.publishTip(doc.id, doc.tip)
     // TODO: Handle 'paths' for multiquery support
   }
 

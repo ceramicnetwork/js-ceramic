@@ -25,6 +25,10 @@ class TileDoctypeMock extends TileDoctype {
   get doctype() {
     return 'tile'
   }
+
+  get tip() {
+    return FAKE_CID
+  }
 }
 
 describe('Dispatcher', () => {
@@ -113,13 +117,11 @@ describe('Dispatcher', () => {
     await dispatcher.register(doc)
 
     const updatePromise = new Promise(resolve => doc.on('update', resolve))
-    const tipreqPromise = new Promise(resolve => doc.on('tipreq', resolve))
-
-    await dispatcher.handleMessage({ data: JSON.stringify({ typ: MsgType.QUERY, doc: FAKE_DOC_ID, id: "1" }) })
-    // only emits an event
-    await tipreqPromise
 
     await dispatcher.handleMessage({ data: JSON.stringify({ typ: MsgType.UPDATE, doc: FAKE_DOC_ID, tip: FAKE_CID.toString() }) })
     expect(await updatePromise).toEqual(FAKE_CID)
+
+    await dispatcher.handleMessage({ data: JSON.stringify({ typ: MsgType.QUERY, doc: FAKE_DOC_ID, id: "1" }) })
+    expect(ipfs.pubsub.publish).lastCalledWith(TOPIC, JSON.stringify({ typ: MsgType.UPDATE, doc: FAKE_DOC_ID, tip: FAKE_CID.toString() }))
   })
 })

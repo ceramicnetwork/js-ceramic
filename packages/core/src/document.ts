@@ -239,7 +239,6 @@ class Document extends EventEmitter {
    */
   async _register (opts: DocOpts): Promise<void> {
     this.on('update', this._update)
-    this.on('tipreq', this._publishTip)
 
     await this.dispatcher.register(this)
 
@@ -732,7 +731,6 @@ class Document extends EventEmitter {
    */
   async close (): Promise<void> {
     this.off('update', this._update)
-    this.off('tipreq', this._publishTip)
 
     this.dispatcher.unregister(this.id.toString())
 
