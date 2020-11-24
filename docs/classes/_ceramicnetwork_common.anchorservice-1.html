@@ -102,7 +102,6 @@
 							<h3>Properties</h3>
 							<ul class="tsd-index-list">
 								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-static"><a href="_ceramicnetwork_common.anchorservice-1.html#defaultmaxlisteners" class="tsd-kind-icon">default<wbr>Max<wbr>Listeners</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-static"><a href="_ceramicnetwork_common.anchorservice-1.html#errormonitor" class="tsd-kind-icon">error<wbr>Monitor</a></li>
 							</ul>
 						</section>
 						<section class="tsd-index-section ">
@@ -118,6 +117,7 @@
 								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><a href="_ceramicnetwork_common.anchorservice-1.html#emit" class="tsd-kind-icon">emit</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><a href="_ceramicnetwork_common.anchorservice-1.html#eventnames" class="tsd-kind-icon">event<wbr>Names</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><a href="_ceramicnetwork_common.anchorservice-1.html#getmaxlisteners" class="tsd-kind-icon">get<wbr>Max<wbr>Listeners</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_ceramicnetwork_common.anchorservice-1.html#getsupportedchains" class="tsd-kind-icon">get<wbr>Supported<wbr>Chains</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><a href="_ceramicnetwork_common.anchorservice-1.html#listenercount" class="tsd-kind-icon">listener<wbr>Count</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><a href="_ceramicnetwork_common.anchorservice-1.html#listeners" class="tsd-kind-icon">listeners</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><a href="_ceramicnetwork_common.anchorservice-1.html#off" class="tsd-kind-icon">off</a></li>
@@ -177,27 +177,6 @@
 						</ul>
 					</aside>
 				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-static">
-					<a name="errormonitor" class="tsd-anchor"></a>
-					<h3><span class="tsd-flag ts-flagStatic">Static</span> <span class="tsd-flag ts-flagReadonly">Readonly</span> error<wbr>Monitor</h3>
-					<div class="tsd-signature tsd-kind-icon">error<wbr>Monitor<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">unique </span><span class="tsd-signature-type">symbol</span></div>
-					<aside class="tsd-sources">
-						<p>Inherited from <a href="_ceramicnetwork_common.doctype-1.html">Doctype</a>.<a href="_ceramicnetwork_common.doctype-1.html#errormonitor">errorMonitor</a></p>
-						<ul>
-							<li>Defined in node_modules/@types/node/events.d.ts:55</li>
-						</ul>
-					</aside>
-					<div class="tsd-comment tsd-typography">
-						<div class="lead">
-							<p>This symbol shall be used to install a listener for only monitoring <code>&#39;error&#39;</code>
-								events. Listeners installed using this symbol are called before the regular
-							<code>&#39;error&#39;</code> listeners are called.</p>
-						</div>
-						<p>Installing a listener using this symbol does not change the behavior once an
-							<code>&#39;error&#39;</code> event is emitted, therefore the process will still crash if no
-						regular <code>&#39;error&#39;</code> listener is installed.</p>
-					</div>
-				</section>
 			</section>
 			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Accessors</h2>
@@ -211,7 +190,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/common/src/anchor-service.ts#L17">packages/common/src/anchor-service.ts:17</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/common/src/anchor-service.ts#L17">packages/common/src/anchor-service.ts:17</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -248,7 +227,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_ceramicnetwork_common.doctype-1.html">Doctype</a>.<a href="_ceramicnetwork_common.doctype-1.html#addlistener">addListener</a></p>
 								<ul>
-									<li>Defined in node_modules/@types/node/events.d.ts:62</li>
+									<li>Defined in node_modules/@types/node/globals.d.ts:569</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -293,7 +272,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_ceramicnetwork_common.doctype-1.html">Doctype</a>.<a href="_ceramicnetwork_common.doctype-1.html#emit">emit</a></p>
 								<ul>
-									<li>Defined in node_modules/@types/node/events.d.ts:72</li>
+									<li>Defined in node_modules/@types/node/globals.d.ts:579</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -320,7 +299,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_ceramicnetwork_common.doctype-1.html">Doctype</a>.<a href="_ceramicnetwork_common.doctype-1.html#eventnames">eventNames</a></p>
 								<ul>
-									<li>Defined in node_modules/@types/node/events.d.ts:77</li>
+									<li>Defined in node_modules/@types/node/globals.d.ts:584</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Array</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">symbol</span><span class="tsd-signature-symbol">&gt;</span></h4>
@@ -338,10 +317,31 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_ceramicnetwork_common.doctype-1.html">Doctype</a>.<a href="_ceramicnetwork_common.doctype-1.html#getmaxlisteners">getMaxListeners</a></p>
 								<ul>
-									<li>Defined in node_modules/@types/node/events.d.ts:69</li>
+									<li>Defined in node_modules/@types/node/globals.d.ts:576</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">number</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="getsupportedchains" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagAbstract">Abstract</span> get<wbr>Supported<wbr>Chains</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">get<wbr>Supported<wbr>Chains<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">Array</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/common/src/anchor-service.ts#L36">packages/common/src/anchor-service.ts:36</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+							</div>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">Array</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">&gt;</span></h4>
+							<p>An array of the CAIP-2 chain IDs of the blockchains that are supported by this
+							anchor service.</p>
 						</li>
 					</ul>
 				</section>
@@ -349,20 +349,20 @@
 					<a name="listenercount" class="tsd-anchor"></a>
 					<h3>listener<wbr>Count</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-inherited">
-						<li class="tsd-signature tsd-kind-icon">listener<wbr>Count<span class="tsd-signature-symbol">(</span>event<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">symbol</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></li>
+						<li class="tsd-signature tsd-kind-icon">listener<wbr>Count<span class="tsd-signature-symbol">(</span>type<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">symbol</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_ceramicnetwork_common.doctype-1.html">Doctype</a>.<a href="_ceramicnetwork_common.doctype-1.html#listenercount">listenerCount</a></p>
 								<ul>
-									<li>Defined in node_modules/@types/node/events.d.ts:73</li>
+									<li>Defined in node_modules/@types/node/globals.d.ts:580</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>event: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">symbol</span></h5>
+									<h5>type: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">symbol</span></h5>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">number</span></h4>
@@ -380,7 +380,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_ceramicnetwork_common.doctype-1.html">Doctype</a>.<a href="_ceramicnetwork_common.doctype-1.html#listeners">listeners</a></p>
 								<ul>
-									<li>Defined in node_modules/@types/node/events.d.ts:70</li>
+									<li>Defined in node_modules/@types/node/globals.d.ts:577</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -404,7 +404,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_ceramicnetwork_common.doctype-1.html">Doctype</a>.<a href="_ceramicnetwork_common.doctype-1.html#off">off</a></p>
 								<ul>
-									<li>Defined in node_modules/@types/node/events.d.ts:66</li>
+									<li>Defined in node_modules/@types/node/globals.d.ts:573</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -449,7 +449,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_ceramicnetwork_common.doctype-1.html">Doctype</a>.<a href="_ceramicnetwork_common.doctype-1.html#on">on</a></p>
 								<ul>
-									<li>Defined in node_modules/@types/node/events.d.ts:63</li>
+									<li>Defined in node_modules/@types/node/globals.d.ts:570</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -494,7 +494,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_ceramicnetwork_common.doctype-1.html">Doctype</a>.<a href="_ceramicnetwork_common.doctype-1.html#once">once</a></p>
 								<ul>
-									<li>Defined in node_modules/@types/node/events.d.ts:64</li>
+									<li>Defined in node_modules/@types/node/globals.d.ts:571</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -539,7 +539,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_ceramicnetwork_common.doctype-1.html">Doctype</a>.<a href="_ceramicnetwork_common.doctype-1.html#prependlistener">prependListener</a></p>
 								<ul>
-									<li>Defined in node_modules/@types/node/events.d.ts:75</li>
+									<li>Defined in node_modules/@types/node/globals.d.ts:582</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -584,7 +584,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_ceramicnetwork_common.doctype-1.html">Doctype</a>.<a href="_ceramicnetwork_common.doctype-1.html#prependoncelistener">prependOnceListener</a></p>
 								<ul>
-									<li>Defined in node_modules/@types/node/events.d.ts:76</li>
+									<li>Defined in node_modules/@types/node/globals.d.ts:583</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -629,7 +629,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_ceramicnetwork_common.doctype-1.html">Doctype</a>.<a href="_ceramicnetwork_common.doctype-1.html#rawlisteners">rawListeners</a></p>
 								<ul>
-									<li>Defined in node_modules/@types/node/events.d.ts:71</li>
+									<li>Defined in node_modules/@types/node/globals.d.ts:578</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -653,7 +653,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_ceramicnetwork_common.doctype-1.html">Doctype</a>.<a href="_ceramicnetwork_common.doctype-1.html#removealllisteners">removeAllListeners</a></p>
 								<ul>
-									<li>Defined in node_modules/@types/node/events.d.ts:67</li>
+									<li>Defined in node_modules/@types/node/globals.d.ts:574</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -677,7 +677,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_ceramicnetwork_common.doctype-1.html">Doctype</a>.<a href="_ceramicnetwork_common.doctype-1.html#removelistener">removeListener</a></p>
 								<ul>
-									<li>Defined in node_modules/@types/node/events.d.ts:65</li>
+									<li>Defined in node_modules/@types/node/globals.d.ts:572</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -721,7 +721,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/common/src/anchor-service.ts#L24">packages/common/src/anchor-service.ts:24</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/common/src/anchor-service.ts#L24">packages/common/src/anchor-service.ts:24</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -759,7 +759,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_ceramicnetwork_common.doctype-1.html">Doctype</a>.<a href="_ceramicnetwork_common.doctype-1.html#setmaxlisteners">setMaxListeners</a></p>
 								<ul>
-									<li>Defined in node_modules/@types/node/events.d.ts:68</li>
+									<li>Defined in node_modules/@types/node/globals.d.ts:575</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -782,7 +782,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/common/src/anchor-service.ts#L30">packages/common/src/anchor-service.ts:30</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/common/src/anchor-service.ts#L30">packages/common/src/anchor-service.ts:30</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -920,9 +920,6 @@
 							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-static">
 								<a href="_ceramicnetwork_common.anchorservice-1.html#defaultmaxlisteners" class="tsd-kind-icon">default<wbr>Max<wbr>Listeners</a>
 							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-static">
-								<a href="_ceramicnetwork_common.anchorservice-1.html#errormonitor" class="tsd-kind-icon">error<wbr>Monitor</a>
-							</li>
 							<li class=" tsd-kind-set-signature tsd-parent-kind-class">
 								<a href="_ceramicnetwork_common.anchorservice-1.html#ceramic" class="tsd-kind-icon">ceramic</a>
 							</li>
@@ -937,6 +934,9 @@
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-inherited">
 								<a href="_ceramicnetwork_common.anchorservice-1.html#getmaxlisteners" class="tsd-kind-icon">get<wbr>Max<wbr>Listeners</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="_ceramicnetwork_common.anchorservice-1.html#getsupportedchains" class="tsd-kind-icon">get<wbr>Supported<wbr>Chains</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-inherited">
 								<a href="_ceramicnetwork_common.anchorservice-1.html#listenercount" class="tsd-kind-icon">listener<wbr>Count</a>

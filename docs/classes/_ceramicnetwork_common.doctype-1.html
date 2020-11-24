@@ -102,21 +102,21 @@
 							<h3>Properties</h3>
 							<ul class="tsd-index-list">
 								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-static"><a href="_ceramicnetwork_common.doctype-1.html#defaultmaxlisteners" class="tsd-kind-icon">default<wbr>Max<wbr>Listeners</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-static"><a href="_ceramicnetwork_common.doctype-1.html#errormonitor" class="tsd-kind-icon">error<wbr>Monitor</a></li>
 							</ul>
 						</section>
 						<section class="tsd-index-section ">
 							<h3>Accessors</h3>
 							<ul class="tsd-index-list">
+								<li class="tsd-kind-get-signature tsd-parent-kind-class"><a href="_ceramicnetwork_common.doctype-1.html#allversionids" class="tsd-kind-icon">all<wbr>Version<wbr>Ids</a></li>
 								<li class="tsd-kind-get-signature tsd-parent-kind-class"><a href="_ceramicnetwork_common.doctype-1.html#content" class="tsd-kind-icon">content</a></li>
 								<li class="tsd-kind-accessor tsd-parent-kind-class"><a href="_ceramicnetwork_common.doctype-1.html#context" class="tsd-kind-icon">context</a></li>
 								<li class="tsd-kind-get-signature tsd-parent-kind-class"><a href="_ceramicnetwork_common.doctype-1.html#controllers" class="tsd-kind-icon">controllers</a></li>
-								<li class="tsd-kind-get-signature tsd-parent-kind-class"><a href="_ceramicnetwork_common.doctype-1.html#currentversiondocid" class="tsd-kind-icon">current<wbr>Version<wbr>DocID</a></li>
 								<li class="tsd-kind-get-signature tsd-parent-kind-class"><a href="_ceramicnetwork_common.doctype-1.html#doctype" class="tsd-kind-icon">doctype</a></li>
 								<li class="tsd-kind-get-signature tsd-parent-kind-class"><a href="_ceramicnetwork_common.doctype-1.html#id" class="tsd-kind-icon">id</a></li>
 								<li class="tsd-kind-get-signature tsd-parent-kind-class"><a href="_ceramicnetwork_common.doctype-1.html#metadata" class="tsd-kind-icon">metadata</a></li>
 								<li class="tsd-kind-accessor tsd-parent-kind-class"><a href="_ceramicnetwork_common.doctype-1.html#state" class="tsd-kind-icon">state</a></li>
 								<li class="tsd-kind-get-signature tsd-parent-kind-class"><a href="_ceramicnetwork_common.doctype-1.html#tip" class="tsd-kind-icon">tip</a></li>
+								<li class="tsd-kind-get-signature tsd-parent-kind-class"><a href="_ceramicnetwork_common.doctype-1.html#versionid" class="tsd-kind-icon">version<wbr>Id</a></li>
 							</ul>
 						</section>
 						<section class="tsd-index-section ">
@@ -157,7 +157,7 @@
 							<aside class="tsd-sources">
 								<p>Overrides <a href="_ceramicnetwork_common.anchorservice-1.html">AnchorService</a>.<a href="_ceramicnetwork_common.anchorservice-1.html#constructor">constructor</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/common/src/doctype.ts#L100">packages/common/src/doctype.ts:100</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/common/src/doctype.ts#L115">packages/common/src/doctype.ts:115</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -187,30 +187,31 @@
 						</ul>
 					</aside>
 				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-static">
-					<a name="errormonitor" class="tsd-anchor"></a>
-					<h3><span class="tsd-flag ts-flagStatic">Static</span> <span class="tsd-flag ts-flagReadonly">Readonly</span> error<wbr>Monitor</h3>
-					<div class="tsd-signature tsd-kind-icon">error<wbr>Monitor<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">unique </span><span class="tsd-signature-type">symbol</span></div>
-					<aside class="tsd-sources">
-						<p>Inherited from <a href="_ceramicnetwork_common.doctype-1.html">Doctype</a>.<a href="_ceramicnetwork_common.doctype-1.html#errormonitor">errorMonitor</a></p>
-						<ul>
-							<li>Defined in node_modules/@types/node/events.d.ts:55</li>
-						</ul>
-					</aside>
-					<div class="tsd-comment tsd-typography">
-						<div class="lead">
-							<p>This symbol shall be used to install a listener for only monitoring <code>&#39;error&#39;</code>
-								events. Listeners installed using this symbol are called before the regular
-							<code>&#39;error&#39;</code> listeners are called.</p>
-						</div>
-						<p>Installing a listener using this symbol does not change the behavior once an
-							<code>&#39;error&#39;</code> event is emitted, therefore the process will still crash if no
-						regular <code>&#39;error&#39;</code> listener is installed.</p>
-					</div>
-				</section>
 			</section>
 			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Accessors</h2>
+				<section class="tsd-panel tsd-member tsd-kind-get-signature tsd-parent-kind-class">
+					<a name="allversionids" class="tsd-anchor"></a>
+					<h3>all<wbr>Version<wbr>Ids</h3>
+					<ul class="tsd-signatures tsd-kind-get-signature tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">get</span> allVersionIds<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Array</span><span class="tsd-signature-symbol">&lt;</span><a href="_ceramicnetwork_docid.docid.html" class="tsd-signature-type">DocID</a><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/common/src/doctype.ts#L153">packages/common/src/doctype.ts:153</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Lists available versions</p>
+								</div>
+							</div>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Array</span><span class="tsd-signature-symbol">&lt;</span><a href="_ceramicnetwork_docid.docid.html" class="tsd-signature-type">DocID</a><span class="tsd-signature-symbol">&gt;</span></h4>
+						</li>
+					</ul>
+				</section>
 				<section class="tsd-panel tsd-member tsd-kind-get-signature tsd-parent-kind-class">
 					<a name="content" class="tsd-anchor"></a>
 					<h3>content</h3>
@@ -221,7 +222,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/common/src/doctype.ts#L113">packages/common/src/doctype.ts:113</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/common/src/doctype.ts#L128">packages/common/src/doctype.ts:128</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">any</span></h4>
@@ -239,7 +240,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/common/src/doctype.ts#L148">packages/common/src/doctype.ts:148</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/common/src/doctype.ts#L172">packages/common/src/doctype.ts:172</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <a href="../interfaces/_ceramicnetwork_common.context-1.html" class="tsd-signature-type">Context</a></h4>
@@ -247,7 +248,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/common/src/doctype.ts#L144">packages/common/src/doctype.ts:144</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/common/src/doctype.ts#L168">packages/common/src/doctype.ts:168</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -270,27 +271,10 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/common/src/doctype.ts#L123">packages/common/src/doctype.ts:123</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/common/src/doctype.ts#L138">packages/common/src/doctype.ts:138</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Array</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">&gt;</span></h4>
-						</li>
-					</ul>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-get-signature tsd-parent-kind-class">
-					<a name="currentversiondocid" class="tsd-anchor"></a>
-					<h3>current<wbr>Version<wbr>DocID</h3>
-					<ul class="tsd-signatures tsd-kind-get-signature tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">get</span> currentVersionDocID<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_ceramicnetwork_docid.docid.html" class="tsd-signature-type">DocID</a></li>
-					</ul>
-					<ul class="tsd-descriptions">
-						<li class="tsd-description">
-							<aside class="tsd-sources">
-								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/common/src/doctype.ts#L131">packages/common/src/doctype.ts:131</a></li>
-								</ul>
-							</aside>
-							<h4 class="tsd-returns-title">Returns <a href="_ceramicnetwork_docid.docid.html" class="tsd-signature-type">DocID</a></h4>
 						</li>
 					</ul>
 				</section>
@@ -304,7 +288,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/common/src/doctype.ts#L109">packages/common/src/doctype.ts:109</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/common/src/doctype.ts#L124">packages/common/src/doctype.ts:124</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4>
@@ -321,7 +305,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/common/src/doctype.ts#L105">packages/common/src/doctype.ts:105</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/common/src/doctype.ts#L120">packages/common/src/doctype.ts:120</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <a href="_ceramicnetwork_docid.docid.html" class="tsd-signature-type">DocID</a></h4>
@@ -338,7 +322,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/common/src/doctype.ts#L118">packages/common/src/doctype.ts:118</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/common/src/doctype.ts#L133">packages/common/src/doctype.ts:133</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <a href="../interfaces/_ceramicnetwork_common.docmetadata-1.html" class="tsd-signature-type">DocMetadata</a></h4>
@@ -356,7 +340,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/common/src/doctype.ts#L136">packages/common/src/doctype.ts:136</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/common/src/doctype.ts#L160">packages/common/src/doctype.ts:160</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <a href="../interfaces/_ceramicnetwork_common.docstate-1.html" class="tsd-signature-type">DocState</a></h4>
@@ -364,7 +348,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/common/src/doctype.ts#L140">packages/common/src/doctype.ts:140</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/common/src/doctype.ts#L164">packages/common/src/doctype.ts:164</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -387,10 +371,27 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/common/src/doctype.ts#L127">packages/common/src/doctype.ts:127</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/common/src/doctype.ts#L142">packages/common/src/doctype.ts:142</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">CID</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-get-signature tsd-parent-kind-class">
+					<a name="versionid" class="tsd-anchor"></a>
+					<h3>version<wbr>Id</h3>
+					<ul class="tsd-signatures tsd-kind-get-signature tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">get</span> versionId<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_ceramicnetwork_docid.docid.html" class="tsd-signature-type">DocID</a></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/common/src/doctype.ts#L146">packages/common/src/doctype.ts:146</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-returns-title">Returns <a href="_ceramicnetwork_docid.docid.html" class="tsd-signature-type">DocID</a></h4>
 						</li>
 					</ul>
 				</section>
@@ -408,7 +409,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_ceramicnetwork_common.doctype-1.html">Doctype</a>.<a href="_ceramicnetwork_common.doctype-1.html#addlistener">addListener</a></p>
 								<ul>
-									<li>Defined in node_modules/@types/node/events.d.ts:62</li>
+									<li>Defined in node_modules/@types/node/globals.d.ts:569</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -452,7 +453,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/common/src/doctype.ts#L157">packages/common/src/doctype.ts:157</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/common/src/doctype.ts#L181">packages/common/src/doctype.ts:181</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -490,7 +491,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_ceramicnetwork_common.doctype-1.html">Doctype</a>.<a href="_ceramicnetwork_common.doctype-1.html#emit">emit</a></p>
 								<ul>
-									<li>Defined in node_modules/@types/node/events.d.ts:72</li>
+									<li>Defined in node_modules/@types/node/globals.d.ts:579</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -517,7 +518,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_ceramicnetwork_common.doctype-1.html">Doctype</a>.<a href="_ceramicnetwork_common.doctype-1.html#eventnames">eventNames</a></p>
 								<ul>
-									<li>Defined in node_modules/@types/node/events.d.ts:77</li>
+									<li>Defined in node_modules/@types/node/globals.d.ts:584</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Array</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">symbol</span><span class="tsd-signature-symbol">&gt;</span></h4>
@@ -535,7 +536,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_ceramicnetwork_common.doctype-1.html">Doctype</a>.<a href="_ceramicnetwork_common.doctype-1.html#getmaxlisteners">getMaxListeners</a></p>
 								<ul>
-									<li>Defined in node_modules/@types/node/events.d.ts:69</li>
+									<li>Defined in node_modules/@types/node/globals.d.ts:576</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">number</span></h4>
@@ -546,20 +547,20 @@
 					<a name="listenercount" class="tsd-anchor"></a>
 					<h3>listener<wbr>Count</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-inherited">
-						<li class="tsd-signature tsd-kind-icon">listener<wbr>Count<span class="tsd-signature-symbol">(</span>event<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">symbol</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></li>
+						<li class="tsd-signature tsd-kind-icon">listener<wbr>Count<span class="tsd-signature-symbol">(</span>type<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">symbol</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_ceramicnetwork_common.doctype-1.html">Doctype</a>.<a href="_ceramicnetwork_common.doctype-1.html#listenercount">listenerCount</a></p>
 								<ul>
-									<li>Defined in node_modules/@types/node/events.d.ts:73</li>
+									<li>Defined in node_modules/@types/node/globals.d.ts:580</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>event: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">symbol</span></h5>
+									<h5>type: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">symbol</span></h5>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">number</span></h4>
@@ -577,7 +578,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_ceramicnetwork_common.doctype-1.html">Doctype</a>.<a href="_ceramicnetwork_common.doctype-1.html#listeners">listeners</a></p>
 								<ul>
-									<li>Defined in node_modules/@types/node/events.d.ts:70</li>
+									<li>Defined in node_modules/@types/node/globals.d.ts:577</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -601,7 +602,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_ceramicnetwork_common.doctype-1.html">Doctype</a>.<a href="_ceramicnetwork_common.doctype-1.html#off">off</a></p>
 								<ul>
-									<li>Defined in node_modules/@types/node/events.d.ts:66</li>
+									<li>Defined in node_modules/@types/node/globals.d.ts:573</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -646,7 +647,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_ceramicnetwork_common.doctype-1.html">Doctype</a>.<a href="_ceramicnetwork_common.doctype-1.html#on">on</a></p>
 								<ul>
-									<li>Defined in node_modules/@types/node/events.d.ts:63</li>
+									<li>Defined in node_modules/@types/node/globals.d.ts:570</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -691,7 +692,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_ceramicnetwork_common.doctype-1.html">Doctype</a>.<a href="_ceramicnetwork_common.doctype-1.html#once">once</a></p>
 								<ul>
-									<li>Defined in node_modules/@types/node/events.d.ts:64</li>
+									<li>Defined in node_modules/@types/node/globals.d.ts:571</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -736,7 +737,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_ceramicnetwork_common.doctype-1.html">Doctype</a>.<a href="_ceramicnetwork_common.doctype-1.html#prependlistener">prependListener</a></p>
 								<ul>
-									<li>Defined in node_modules/@types/node/events.d.ts:75</li>
+									<li>Defined in node_modules/@types/node/globals.d.ts:582</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -781,7 +782,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_ceramicnetwork_common.doctype-1.html">Doctype</a>.<a href="_ceramicnetwork_common.doctype-1.html#prependoncelistener">prependOnceListener</a></p>
 								<ul>
-									<li>Defined in node_modules/@types/node/events.d.ts:76</li>
+									<li>Defined in node_modules/@types/node/globals.d.ts:583</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -826,7 +827,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_ceramicnetwork_common.doctype-1.html">Doctype</a>.<a href="_ceramicnetwork_common.doctype-1.html#rawlisteners">rawListeners</a></p>
 								<ul>
-									<li>Defined in node_modules/@types/node/events.d.ts:71</li>
+									<li>Defined in node_modules/@types/node/globals.d.ts:578</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -850,7 +851,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_ceramicnetwork_common.doctype-1.html">Doctype</a>.<a href="_ceramicnetwork_common.doctype-1.html#removealllisteners">removeAllListeners</a></p>
 								<ul>
-									<li>Defined in node_modules/@types/node/events.d.ts:67</li>
+									<li>Defined in node_modules/@types/node/globals.d.ts:574</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -874,7 +875,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_ceramicnetwork_common.doctype-1.html">Doctype</a>.<a href="_ceramicnetwork_common.doctype-1.html#removelistener">removeListener</a></p>
 								<ul>
-									<li>Defined in node_modules/@types/node/events.d.ts:65</li>
+									<li>Defined in node_modules/@types/node/globals.d.ts:572</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -919,7 +920,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_ceramicnetwork_common.doctype-1.html">Doctype</a>.<a href="_ceramicnetwork_common.doctype-1.html#setmaxlisteners">setMaxListeners</a></p>
 								<ul>
-									<li>Defined in node_modules/@types/node/events.d.ts:68</li>
+									<li>Defined in node_modules/@types/node/globals.d.ts:575</li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -1049,8 +1050,8 @@
 							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-static">
 								<a href="_ceramicnetwork_common.doctype-1.html#defaultmaxlisteners" class="tsd-kind-icon">default<wbr>Max<wbr>Listeners</a>
 							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-static">
-								<a href="_ceramicnetwork_common.doctype-1.html#errormonitor" class="tsd-kind-icon">error<wbr>Monitor</a>
+							<li class=" tsd-kind-get-signature tsd-parent-kind-class">
+								<a href="_ceramicnetwork_common.doctype-1.html#allversionids" class="tsd-kind-icon">all<wbr>Version<wbr>Ids</a>
 							</li>
 							<li class=" tsd-kind-get-signature tsd-parent-kind-class">
 								<a href="_ceramicnetwork_common.doctype-1.html#content" class="tsd-kind-icon">content</a>
@@ -1060,9 +1061,6 @@
 							</li>
 							<li class=" tsd-kind-get-signature tsd-parent-kind-class">
 								<a href="_ceramicnetwork_common.doctype-1.html#controllers" class="tsd-kind-icon">controllers</a>
-							</li>
-							<li class=" tsd-kind-get-signature tsd-parent-kind-class">
-								<a href="_ceramicnetwork_common.doctype-1.html#currentversiondocid" class="tsd-kind-icon">current<wbr>Version<wbr>DocID</a>
 							</li>
 							<li class=" tsd-kind-get-signature tsd-parent-kind-class">
 								<a href="_ceramicnetwork_common.doctype-1.html#doctype" class="tsd-kind-icon">doctype</a>
@@ -1078,6 +1076,9 @@
 							</li>
 							<li class=" tsd-kind-get-signature tsd-parent-kind-class">
 								<a href="_ceramicnetwork_common.doctype-1.html#tip" class="tsd-kind-icon">tip</a>
+							</li>
+							<li class=" tsd-kind-get-signature tsd-parent-kind-class">
+								<a href="_ceramicnetwork_common.doctype-1.html#versionid" class="tsd-kind-icon">version<wbr>Id</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-inherited">
 								<a href="_ceramicnetwork_common.doctype-1.html#addlistener" class="tsd-kind-icon">add<wbr>Listener</a>

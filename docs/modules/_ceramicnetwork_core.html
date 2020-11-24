@@ -85,7 +85,7 @@
 					</a>
 					<pre><code><span class="hljs-keyword">import</span> Ceramic <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;@ceramicnetwork/core&#x27;</span>
 
-<span class="hljs-keyword">import</span> Ipfs <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;ipfs&#x27;</span>
+<span class="hljs-keyword">import</span> IPFS <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;ipfs&#x27;</span>
 <span class="hljs-keyword">import</span> dagJose <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;dag-jose&#x27;</span>
 <span class="hljs-keyword">import</span> basicsImport <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;multiformats/cjs/src/basics-import.js&#x27;</span>
 <span class="hljs-keyword">import</span> legacy <span class="hljs-keyword">from</span> <span class="hljs-string">&#x27;multiformats/cjs/src/legacy.js&#x27;</span>
@@ -101,7 +101,7 @@ basicsImport.multicodec.add(dagJose)
 <span class="hljs-keyword">const</span> ceramic = <span class="hljs-keyword">await</span> Ceramic.create(ipfs, config)
 
 <span class="hljs-comment">// create document example</span>
-<span class="hljs-keyword">const</span> doctype1 = <span class="hljs-keyword">await</span> ceramic.createDocument(<span class="hljs-string">&#x27;tile&#x27;</span>, { <span class="hljs-attr">content</span>: { <span class="hljs-attr">test</span>: <span class="hljs-number">123</span> } }, { <span class="hljs-attr">applyOnly</span>: <span class="hljs-literal">true</span> }) </code></pre>
+<span class="hljs-keyword">const</span> doctype1 = <span class="hljs-keyword">await</span> ceramic.createDocument(<span class="hljs-string">&#x27;tile&#x27;</span>, { <span class="hljs-attr">content</span>: { <span class="hljs-attr">test</span>: <span class="hljs-number">123</span> } })</code></pre>
 					<a href="#ceramic-api" id="ceramic-api" style="color: inherit; text-decoration: none;">
 						<h3>Ceramic API</h3>
 					</a>
@@ -167,6 +167,7 @@ basicsImport.multicodec.add(dagJose)
 						<section class="tsd-index-section tsd-is-not-exported">
 							<h3>Variables</h3>
 							<ul class="tsd-index-list">
+								<li class="tsd-kind-variable tsd-parent-kind-module tsd-is-not-exported"><a href="_ceramicnetwork_core.html#chain_id" class="tsd-kind-icon">CHAIN_<wbr>ID</a></li>
 								<li class="tsd-kind-variable tsd-parent-kind-module tsd-is-not-exported"><a href="_ceramicnetwork_core.html#default_max_poll_time" class="tsd-kind-icon">DEFAULT_<wbr>MAX_<wbr>POLL_<wbr>TIME</a></li>
 								<li class="tsd-kind-variable tsd-parent-kind-module tsd-is-not-exported"><a href="_ceramicnetwork_core.html#default_poll_time" class="tsd-kind-icon">DEFAULT_<wbr>POLL_<wbr>TIME</a></li>
 								<li class="tsd-kind-variable tsd-parent-kind-module tsd-is-not-exported"><a href="_ceramicnetwork_core.html#did_matcher" class="tsd-kind-icon">DID_<wbr>MATCHER</a></li>
@@ -182,6 +183,8 @@ basicsImport.multicodec.add(dagJose)
 						<section class="tsd-index-section tsd-is-not-exported">
 							<h3>Object literals</h3>
 							<ul class="tsd-index-list">
+								<li class="tsd-kind-object-literal tsd-parent-kind-module tsd-is-not-exported"><a href="_ceramicnetwork_core.html#default_load_docopts" class="tsd-kind-icon">DEFAULT_<wbr>LOAD_<wbr>DOCOPTS</a></li>
+								<li class="tsd-kind-object-literal tsd-parent-kind-module tsd-is-not-exported"><a href="_ceramicnetwork_core.html#default_write_docopts" class="tsd-kind-icon">DEFAULT_<wbr>WRITE_<wbr>DOCOPTS</a></li>
 								<li class="tsd-kind-object-literal tsd-parent-kind-module tsd-is-not-exported"><a href="_ceramicnetwork_core.html#eth_chain_id_mappings" class="tsd-kind-icon">ETH_<wbr>CHAIN_<wbr>ID_<wbr>MAPPINGS</a></li>
 							</ul>
 						</section>
@@ -193,17 +196,17 @@ basicsImport.multicodec.add(dagJose)
 				<section class="tsd-panel tsd-member tsd-kind-type-alias tsd-parent-kind-module">
 					<a name="props" class="tsd-anchor"></a>
 					<h3>Props</h3>
-					<div class="tsd-signature tsd-kind-icon">Props<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{ </span>pinningBackends<span class="tsd-signature-symbol">?: </span><a href="../interfaces/_ceramicnetwork_common.pinningbackendstatic-1.html" class="tsd-signature-type">PinningBackendStatic</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">; </span>pinnings<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">; </span>stateStorePath<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> }</span></div>
+					<div class="tsd-signature tsd-kind-icon">Props<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{ </span>pinningBackends<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">PinningBackendStatic</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">; </span>pinnings<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">; </span>stateStorePath<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> }</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/core/src/store/pin-store-factory.ts#L9">packages/core/src/store/pin-store-factory.ts:9</a></li>
+							<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/core/src/store/pin-store-factory.ts#L9">packages/core/src/store/pin-store-factory.ts:9</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-type-declaration">
 						<h4>Type declaration</h4>
 						<ul class="tsd-parameters">
 							<li class="tsd-parameter">
-								<h5><span class="tsd-flag ts-flagOptional">Optional</span> pinning<wbr>Backends<span class="tsd-signature-symbol">?: </span><a href="../interfaces/_ceramicnetwork_common.pinningbackendstatic-1.html" class="tsd-signature-type">PinningBackendStatic</a><span class="tsd-signature-symbol">[]</span></h5>
+								<h5><span class="tsd-flag ts-flagOptional">Optional</span> pinning<wbr>Backends<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">PinningBackendStatic</span><span class="tsd-signature-symbol">[]</span></h5>
 							</li>
 							<li class="tsd-parameter">
 								<h5><span class="tsd-flag ts-flagOptional">Optional</span> pinnings<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span></h5>
@@ -218,12 +221,22 @@ basicsImport.multicodec.add(dagJose)
 			<section class="tsd-panel-group tsd-member-group tsd-is-not-exported">
 				<h2>Variables</h2>
 				<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-module tsd-is-not-exported">
+					<a name="chain_id" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagConst">Const</span> CHAIN_<wbr>ID</h3>
+					<div class="tsd-signature tsd-kind-icon">CHAIN_<wbr>ID<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">"inmemory:12345"</span><span class="tsd-signature-symbol"> = &quot;inmemory:12345&quot;</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/core/src/anchor/memory/in-memory-anchor-service.ts#L12">packages/core/src/anchor/memory/in-memory-anchor-service.ts:12</a></li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-module tsd-is-not-exported">
 					<a name="default_max_poll_time" class="tsd-anchor"></a>
 					<h3><span class="tsd-flag ts-flagConst">Const</span> DEFAULT_<wbr>MAX_<wbr>POLL_<wbr>TIME</h3>
 					<div class="tsd-signature tsd-kind-icon">DEFAULT_<wbr>MAX_<wbr>POLL_<wbr>TIME<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">7200000</span><span class="tsd-signature-symbol"> = 7200000</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/core/src/anchor/ethereum/ethereum-anchor-service.ts#L21">packages/core/src/anchor/ethereum/ethereum-anchor-service.ts:21</a></li>
+							<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/core/src/anchor/ethereum/ethereum-anchor-service.ts#L21">packages/core/src/anchor/ethereum/ethereum-anchor-service.ts:21</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -233,7 +246,7 @@ basicsImport.multicodec.add(dagJose)
 					<div class="tsd-signature tsd-kind-icon">DEFAULT_<wbr>POLL_<wbr>TIME<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">60000</span><span class="tsd-signature-symbol"> = 60000</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/core/src/anchor/ethereum/ethereum-anchor-service.ts#L20">packages/core/src/anchor/ethereum/ethereum-anchor-service.ts:20</a></li>
+							<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/core/src/anchor/ethereum/ethereum-anchor-service.ts#L20">packages/core/src/anchor/ethereum/ethereum-anchor-service.ts:20</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -243,7 +256,7 @@ basicsImport.multicodec.add(dagJose)
 					<div class="tsd-signature tsd-kind-icon">DID_<wbr>MATCHER<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">"^(did:([a-zA-Z0-9_]+):([a-zA-Z0-9_.-]+(:[a-zA-Z0-9_.-]+)*)((;[a-zA-Z0-9_.:%-]+&#x3D;[a-zA-Z0-9_.:%-]*)*)(/[^#?]*)?)([?][^#]*)?(#.*)?"</span><span class="tsd-signature-symbol"> = &quot;^(did:([a-zA-Z0-9_]+):([a-zA-Z0-9_.-]+(:[a-zA-Z0-9_.-]+)*)((;[a-zA-Z0-9_.:%-]+&#x3D;[a-zA-Z0-9_.:%-]*)*)(/[^#?]*)?)([?][^#]*)?(#.*)?&quot;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/core/src/anchor/memory/in-memory-anchor-service.ts#L11">packages/core/src/anchor/memory/in-memory-anchor-service.ts:11</a></li>
+							<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/core/src/anchor/memory/in-memory-anchor-service.ts#L11">packages/core/src/anchor/memory/in-memory-anchor-service.ts:11</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -253,7 +266,7 @@ basicsImport.multicodec.add(dagJose)
 					<div class="tsd-signature tsd-kind-icon">TOPIC<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">"/ceramic"</span><span class="tsd-signature-symbol"> = &quot;/ceramic&quot;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/core/src/dispatcher.ts#L22">packages/core/src/dispatcher.ts:22</a></li>
+							<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/core/src/dispatcher.ts#L22">packages/core/src/dispatcher.ts:22</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -275,7 +288,7 @@ basicsImport.multicodec.add(dagJose)
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/core/src/ceramic.ts#L59">packages/core/src/ceramic.ts:59</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/core/src/ceramic.ts#L59">packages/core/src/ceramic.ts:59</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -292,12 +305,92 @@ basicsImport.multicodec.add(dagJose)
 			<section class="tsd-panel-group tsd-member-group tsd-is-not-exported">
 				<h2>Object literals</h2>
 				<section class="tsd-panel tsd-member tsd-kind-object-literal tsd-parent-kind-module tsd-is-not-exported">
+					<a name="default_load_docopts" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagConst">Const</span> DEFAULT_<wbr>LOAD_<wbr>DOCOPTS</h3>
+					<div class="tsd-signature tsd-kind-icon">DEFAULT_<wbr>LOAD_<wbr>DOCOPTS<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">object</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/core/src/document.ts#L28">packages/core/src/document.ts:28</a></li>
+						</ul>
+					</aside>
+					<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal tsd-is-not-exported">
+						<a name="default_load_docopts.anchor" class="tsd-anchor"></a>
+						<h3>anchor</h3>
+						<div class="tsd-signature tsd-kind-icon">anchor<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol"> = false</span></div>
+						<aside class="tsd-sources">
+							<ul>
+								<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/core/src/document.ts#L28">packages/core/src/document.ts:28</a></li>
+							</ul>
+						</aside>
+					</section>
+					<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal tsd-is-not-exported">
+						<a name="default_load_docopts.publish" class="tsd-anchor"></a>
+						<h3>publish</h3>
+						<div class="tsd-signature tsd-kind-icon">publish<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol"> = false</span></div>
+						<aside class="tsd-sources">
+							<ul>
+								<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/core/src/document.ts#L28">packages/core/src/document.ts:28</a></li>
+							</ul>
+						</aside>
+					</section>
+					<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal tsd-is-not-exported">
+						<a name="default_load_docopts.sync" class="tsd-anchor"></a>
+						<h3>sync</h3>
+						<div class="tsd-signature tsd-kind-icon">sync<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol"> = true</span></div>
+						<aside class="tsd-sources">
+							<ul>
+								<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/core/src/document.ts#L28">packages/core/src/document.ts:28</a></li>
+							</ul>
+						</aside>
+					</section>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-object-literal tsd-parent-kind-module tsd-is-not-exported">
+					<a name="default_write_docopts" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagConst">Const</span> DEFAULT_<wbr>WRITE_<wbr>DOCOPTS</h3>
+					<div class="tsd-signature tsd-kind-icon">DEFAULT_<wbr>WRITE_<wbr>DOCOPTS<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">object</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/core/src/document.ts#L30">packages/core/src/document.ts:30</a></li>
+						</ul>
+					</aside>
+					<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal tsd-is-not-exported">
+						<a name="default_write_docopts.anchor-1" class="tsd-anchor"></a>
+						<h3>anchor</h3>
+						<div class="tsd-signature tsd-kind-icon">anchor<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol"> = true</span></div>
+						<aside class="tsd-sources">
+							<ul>
+								<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/core/src/document.ts#L30">packages/core/src/document.ts:30</a></li>
+							</ul>
+						</aside>
+					</section>
+					<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal tsd-is-not-exported">
+						<a name="default_write_docopts.publish-1" class="tsd-anchor"></a>
+						<h3>publish</h3>
+						<div class="tsd-signature tsd-kind-icon">publish<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol"> = true</span></div>
+						<aside class="tsd-sources">
+							<ul>
+								<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/core/src/document.ts#L30">packages/core/src/document.ts:30</a></li>
+							</ul>
+						</aside>
+					</section>
+					<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal tsd-is-not-exported">
+						<a name="default_write_docopts.sync-1" class="tsd-anchor"></a>
+						<h3>sync</h3>
+						<div class="tsd-signature tsd-kind-icon">sync<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol"> = false</span></div>
+						<aside class="tsd-sources">
+							<ul>
+								<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/core/src/document.ts#L30">packages/core/src/document.ts:30</a></li>
+							</ul>
+						</aside>
+					</section>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-object-literal tsd-parent-kind-module tsd-is-not-exported">
 					<a name="eth_chain_id_mappings" class="tsd-anchor"></a>
 					<h3><span class="tsd-flag ts-flagConst">Const</span> ETH_<wbr>CHAIN_<wbr>ID_<wbr>MAPPINGS</h3>
 					<div class="tsd-signature tsd-kind-icon">ETH_<wbr>CHAIN_<wbr>ID_<wbr>MAPPINGS<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">object</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/core/src/anchor/ethereum/ethereum-anchor-service.ts#L37">packages/core/src/anchor/ethereum/ethereum-anchor-service.ts:37</a></li>
+							<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/core/src/anchor/ethereum/ethereum-anchor-service.ts#L37">packages/core/src/anchor/ethereum/ethereum-anchor-service.ts:37</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -311,7 +404,7 @@ basicsImport.multicodec.add(dagJose)
 						<div class="tsd-signature tsd-kind-icon">eip155:1<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">object</span></div>
 						<aside class="tsd-sources">
 							<ul>
-								<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/core/src/anchor/ethereum/ethereum-anchor-service.ts#L38">packages/core/src/anchor/ethereum/ethereum-anchor-service.ts:38</a></li>
+								<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/core/src/anchor/ethereum/ethereum-anchor-service.ts#L38">packages/core/src/anchor/ethereum/ethereum-anchor-service.ts:38</a></li>
 							</ul>
 						</aside>
 						<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal tsd-is-not-exported">
@@ -320,7 +413,7 @@ basicsImport.multicodec.add(dagJose)
 							<div class="tsd-signature tsd-kind-icon">chain<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> = &quot;ETH&quot;</span></div>
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/core/src/anchor/ethereum/ethereum-anchor-service.ts#L38">packages/core/src/anchor/ethereum/ethereum-anchor-service.ts:38</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/core/src/anchor/ethereum/ethereum-anchor-service.ts#L38">packages/core/src/anchor/ethereum/ethereum-anchor-service.ts:38</a></li>
 								</ul>
 							</aside>
 						</section>
@@ -330,7 +423,7 @@ basicsImport.multicodec.add(dagJose)
 							<div class="tsd-signature tsd-kind-icon">chain<wbr>Id<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> = 1</span></div>
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/core/src/anchor/ethereum/ethereum-anchor-service.ts#L38">packages/core/src/anchor/ethereum/ethereum-anchor-service.ts:38</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/core/src/anchor/ethereum/ethereum-anchor-service.ts#L38">packages/core/src/anchor/ethereum/ethereum-anchor-service.ts:38</a></li>
 								</ul>
 							</aside>
 						</section>
@@ -340,7 +433,7 @@ basicsImport.multicodec.add(dagJose)
 							<div class="tsd-signature tsd-kind-icon">network<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> = &quot;mainnet&quot;</span></div>
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/core/src/anchor/ethereum/ethereum-anchor-service.ts#L38">packages/core/src/anchor/ethereum/ethereum-anchor-service.ts:38</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/core/src/anchor/ethereum/ethereum-anchor-service.ts#L38">packages/core/src/anchor/ethereum/ethereum-anchor-service.ts:38</a></li>
 								</ul>
 							</aside>
 						</section>
@@ -350,7 +443,7 @@ basicsImport.multicodec.add(dagJose)
 							<div class="tsd-signature tsd-kind-icon">network<wbr>Id<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> = 1</span></div>
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/core/src/anchor/ethereum/ethereum-anchor-service.ts#L38">packages/core/src/anchor/ethereum/ethereum-anchor-service.ts:38</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/core/src/anchor/ethereum/ethereum-anchor-service.ts#L38">packages/core/src/anchor/ethereum/ethereum-anchor-service.ts:38</a></li>
 								</ul>
 							</aside>
 						</section>
@@ -360,7 +453,7 @@ basicsImport.multicodec.add(dagJose)
 							<div class="tsd-signature tsd-kind-icon">type<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> = &quot;Production&quot;</span></div>
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/core/src/anchor/ethereum/ethereum-anchor-service.ts#L38">packages/core/src/anchor/ethereum/ethereum-anchor-service.ts:38</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/core/src/anchor/ethereum/ethereum-anchor-service.ts#L38">packages/core/src/anchor/ethereum/ethereum-anchor-service.ts:38</a></li>
 								</ul>
 							</aside>
 						</section>
@@ -371,7 +464,7 @@ basicsImport.multicodec.add(dagJose)
 						<div class="tsd-signature tsd-kind-icon">eip155:3<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">object</span></div>
 						<aside class="tsd-sources">
 							<ul>
-								<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/core/src/anchor/ethereum/ethereum-anchor-service.ts#L39">packages/core/src/anchor/ethereum/ethereum-anchor-service.ts:39</a></li>
+								<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/core/src/anchor/ethereum/ethereum-anchor-service.ts#L39">packages/core/src/anchor/ethereum/ethereum-anchor-service.ts:39</a></li>
 							</ul>
 						</aside>
 						<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal tsd-is-not-exported">
@@ -380,7 +473,7 @@ basicsImport.multicodec.add(dagJose)
 							<div class="tsd-signature tsd-kind-icon">chain<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> = &quot;ETH&quot;</span></div>
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/core/src/anchor/ethereum/ethereum-anchor-service.ts#L39">packages/core/src/anchor/ethereum/ethereum-anchor-service.ts:39</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/core/src/anchor/ethereum/ethereum-anchor-service.ts#L39">packages/core/src/anchor/ethereum/ethereum-anchor-service.ts:39</a></li>
 								</ul>
 							</aside>
 						</section>
@@ -390,7 +483,7 @@ basicsImport.multicodec.add(dagJose)
 							<div class="tsd-signature tsd-kind-icon">chain<wbr>Id<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> = 3</span></div>
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/core/src/anchor/ethereum/ethereum-anchor-service.ts#L39">packages/core/src/anchor/ethereum/ethereum-anchor-service.ts:39</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/core/src/anchor/ethereum/ethereum-anchor-service.ts#L39">packages/core/src/anchor/ethereum/ethereum-anchor-service.ts:39</a></li>
 								</ul>
 							</aside>
 						</section>
@@ -400,7 +493,7 @@ basicsImport.multicodec.add(dagJose)
 							<div class="tsd-signature tsd-kind-icon">network<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> = &quot;ropsten&quot;</span></div>
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/core/src/anchor/ethereum/ethereum-anchor-service.ts#L39">packages/core/src/anchor/ethereum/ethereum-anchor-service.ts:39</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/core/src/anchor/ethereum/ethereum-anchor-service.ts#L39">packages/core/src/anchor/ethereum/ethereum-anchor-service.ts:39</a></li>
 								</ul>
 							</aside>
 						</section>
@@ -410,7 +503,7 @@ basicsImport.multicodec.add(dagJose)
 							<div class="tsd-signature tsd-kind-icon">network<wbr>Id<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> = 3</span></div>
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/core/src/anchor/ethereum/ethereum-anchor-service.ts#L39">packages/core/src/anchor/ethereum/ethereum-anchor-service.ts:39</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/core/src/anchor/ethereum/ethereum-anchor-service.ts#L39">packages/core/src/anchor/ethereum/ethereum-anchor-service.ts:39</a></li>
 								</ul>
 							</aside>
 						</section>
@@ -420,7 +513,7 @@ basicsImport.multicodec.add(dagJose)
 							<div class="tsd-signature tsd-kind-icon">type<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> = &quot;Test&quot;</span></div>
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/core/src/anchor/ethereum/ethereum-anchor-service.ts#L39">packages/core/src/anchor/ethereum/ethereum-anchor-service.ts:39</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/core/src/anchor/ethereum/ethereum-anchor-service.ts#L39">packages/core/src/anchor/ethereum/ethereum-anchor-service.ts:39</a></li>
 								</ul>
 							</aside>
 						</section>
@@ -553,6 +646,9 @@ basicsImport.multicodec.add(dagJose)
 						<a href="_ceramicnetwork_core.html#props" class="tsd-kind-icon">Props</a>
 					</li>
 					<li class=" tsd-kind-variable tsd-parent-kind-module tsd-is-not-exported">
+						<a href="_ceramicnetwork_core.html#chain_id" class="tsd-kind-icon">CHAIN_<wbr>ID</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-parent-kind-module tsd-is-not-exported">
 						<a href="_ceramicnetwork_core.html#default_max_poll_time" class="tsd-kind-icon">DEFAULT_<wbr>MAX_<wbr>POLL_<wbr>TIME</a>
 					</li>
 					<li class=" tsd-kind-variable tsd-parent-kind-module tsd-is-not-exported">
@@ -566,6 +662,12 @@ basicsImport.multicodec.add(dagJose)
 					</li>
 					<li class=" tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
 						<a href="_ceramicnetwork_core.html#normalizedocid" class="tsd-kind-icon">normalize<wbr>DocID</a>
+					</li>
+					<li class=" tsd-kind-object-literal tsd-parent-kind-module tsd-is-not-exported">
+						<a href="_ceramicnetwork_core.html#default_load_docopts" class="tsd-kind-icon">DEFAULT_<wbr>LOAD_<wbr>DOCOPTS</a>
+					</li>
+					<li class=" tsd-kind-object-literal tsd-parent-kind-module tsd-is-not-exported">
+						<a href="_ceramicnetwork_core.html#default_write_docopts" class="tsd-kind-icon">DEFAULT_<wbr>WRITE_<wbr>DOCOPTS</a>
 					</li>
 					<li class=" tsd-kind-object-literal tsd-parent-kind-module tsd-is-not-exported">
 						<a href="_ceramicnetwork_core.html#eth_chain_id_mappings" class="tsd-kind-icon">ETH_<wbr>CHAIN_<wbr>ID_<wbr>MAPPINGS</a>

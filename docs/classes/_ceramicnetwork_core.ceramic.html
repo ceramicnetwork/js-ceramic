@@ -90,7 +90,7 @@
 			<section class="tsd-panel">
 				<h3>Implements</h3>
 				<ul class="tsd-hierarchy">
-					<li><span class="tsd-signature-type">any</span></li>
+					<li><span class="tsd-signature-type">CeramicApi</span></li>
 				</ul>
 			</section>
 			<section class="tsd-panel-group tsd-index-group">
@@ -129,9 +129,8 @@
 								<li class="tsd-kind-method tsd-parent-kind-class tsd-has-type-parameter tsd-is-not-exported"><a href="_ceramicnetwork_core.ceramic.html#createdocument" class="tsd-kind-icon">create<wbr>Document</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class tsd-has-type-parameter tsd-is-not-exported"><a href="_ceramicnetwork_core.ceramic.html#createdocumentfromgenesis" class="tsd-kind-icon">create<wbr>Document<wbr>From<wbr>Genesis</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class tsd-has-type-parameter tsd-is-not-exported"><a href="_ceramicnetwork_core.ceramic.html#finddoctypehandler" class="tsd-kind-icon">find<wbr>Doctype<wbr>Handler</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class tsd-has-type-parameter tsd-is-not-exported"><a href="_ceramicnetwork_core.ceramic.html#findhandler" class="tsd-kind-icon">find<wbr>Handler</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-not-exported"><a href="_ceramicnetwork_core.ceramic.html#getdocfrommap" class="tsd-kind-icon">get<wbr>Doc<wbr>From<wbr>Map</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-not-exported"><a href="_ceramicnetwork_core.ceramic.html#listversions" class="tsd-kind-icon">list<wbr>Versions</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-not-exported"><a href="_ceramicnetwork_core.ceramic.html#getsupportedchains" class="tsd-kind-icon">get<wbr>Supported<wbr>Chains</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class tsd-has-type-parameter tsd-is-not-exported"><a href="_ceramicnetwork_core.ceramic.html#loaddocument" class="tsd-kind-icon">load<wbr>Document</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-not-exported"><a href="_ceramicnetwork_core.ceramic.html#loaddocumentrecords" class="tsd-kind-icon">load<wbr>Document<wbr>Records</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-not-exported"><a href="_ceramicnetwork_core.ceramic.html#setdidprovider" class="tsd-kind-icon">setDIDProvider</a></li>
@@ -147,13 +146,13 @@
 					<a name="constructor" class="tsd-anchor"></a>
 					<h3>constructor</h3>
 					<ul class="tsd-signatures tsd-kind-constructor tsd-parent-kind-class tsd-is-not-exported">
-						<li class="tsd-signature tsd-kind-icon">new <wbr>Ceramic<span class="tsd-signature-symbol">(</span>dispatcher<span class="tsd-signature-symbol">: </span><a href="_ceramicnetwork_core.dispatcher.html" class="tsd-signature-type">Dispatcher</a>, pinStore<span class="tsd-signature-symbol">: </span><a href="_ceramicnetwork_core.pinstore.html" class="tsd-signature-type">PinStore</a>, context<span class="tsd-signature-symbol">: </span><a href="../interfaces/_ceramicnetwork_common.context-1.html" class="tsd-signature-type">Context</a>, _validateDocs<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_ceramicnetwork_core.ceramic.html" class="tsd-signature-type">Ceramic</a></li>
+						<li class="tsd-signature tsd-kind-icon">new <wbr>Ceramic<span class="tsd-signature-symbol">(</span>dispatcher<span class="tsd-signature-symbol">: </span><a href="_ceramicnetwork_core.dispatcher.html" class="tsd-signature-type">Dispatcher</a>, pinStore<span class="tsd-signature-symbol">: </span><a href="_ceramicnetwork_core.pinstore.html" class="tsd-signature-type">PinStore</a>, context<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Context</span>, _validateDocs<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_ceramicnetwork_core.ceramic.html" class="tsd-signature-type">Ceramic</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/core/src/ceramic.ts#L74">packages/core/src/ceramic.ts:74</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/core/src/ceramic.ts#L75">packages/core/src/ceramic.ts:75</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -165,7 +164,7 @@
 									<h5>pinStore: <a href="_ceramicnetwork_core.pinstore.html" class="tsd-signature-type">PinStore</a></h5>
 								</li>
 								<li>
-									<h5>context: <a href="../interfaces/_ceramicnetwork_common.context-1.html" class="tsd-signature-type">Context</a></h5>
+									<h5>context: <span class="tsd-signature-type">Context</span></h5>
 								</li>
 								<li>
 									<h5><span class="tsd-flag ts-flagDefault value">Default value</span> _validateDocs: <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol"> = true</span></h5>
@@ -181,10 +180,10 @@
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-not-exported">
 					<a name="context" class="tsd-anchor"></a>
 					<h3><span class="tsd-flag ts-flagReadonly">Readonly</span> context</h3>
-					<div class="tsd-signature tsd-kind-icon">context<span class="tsd-signature-symbol">:</span> <a href="../interfaces/_ceramicnetwork_common.context-1.html" class="tsd-signature-type">Context</a></div>
+					<div class="tsd-signature tsd-kind-icon">context<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Context</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/core/src/ceramic.ts#L74">packages/core/src/ceramic.ts:74</a></li>
+							<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/core/src/ceramic.ts#L75">packages/core/src/ceramic.ts:75</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -194,17 +193,17 @@
 					<div class="tsd-signature tsd-kind-icon">dispatcher<span class="tsd-signature-symbol">:</span> <a href="_ceramicnetwork_core.dispatcher.html" class="tsd-signature-type">Dispatcher</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/core/src/ceramic.ts#L76">packages/core/src/ceramic.ts:76</a></li>
+							<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/core/src/ceramic.ts#L77">packages/core/src/ceramic.ts:77</a></li>
 						</ul>
 					</aside>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-not-exported">
 					<a name="pin" class="tsd-anchor"></a>
 					<h3><span class="tsd-flag ts-flagReadonly">Readonly</span> pin</h3>
-					<div class="tsd-signature tsd-kind-icon">pin<span class="tsd-signature-symbol">:</span> <a href="../interfaces/_ceramicnetwork_common.pinapi-1.html" class="tsd-signature-type">PinApi</a></div>
+					<div class="tsd-signature tsd-kind-icon">pin<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">PinApi</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/core/src/ceramic.ts#L73">packages/core/src/ceramic.ts:73</a></li>
+							<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/core/src/ceramic.ts#L74">packages/core/src/ceramic.ts:74</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -214,7 +213,7 @@
 					<div class="tsd-signature tsd-kind-icon">pin<wbr>Store<span class="tsd-signature-symbol">:</span> <a href="_ceramicnetwork_core.pinstore.html" class="tsd-signature-type">PinStore</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/core/src/ceramic.ts#L76">packages/core/src/ceramic.ts:76</a></li>
+							<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/core/src/ceramic.ts#L77">packages/core/src/ceramic.ts:77</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -231,7 +230,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/core/src/ceramic.ts#L98">packages/core/src/ceramic.ts:98</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/core/src/ceramic.ts#L99">packages/core/src/ceramic.ts:99</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -253,7 +252,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/core/src/ceramic.ts#L91">packages/core/src/ceramic.ts:91</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/core/src/ceramic.ts#L92">packages/core/src/ceramic.ts:92</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -272,13 +271,13 @@
 					<a name="_loaddoc" class="tsd-anchor"></a>
 					<h3>_load<wbr>Doc</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-not-exported">
-						<li class="tsd-signature tsd-kind-icon">_load<wbr>Doc<span class="tsd-signature-symbol">(</span>docId<span class="tsd-signature-symbol">: </span><a href="_ceramicnetwork_docid.docid.html" class="tsd-signature-type">DocID</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span>, opts<span class="tsd-signature-symbol">?: </span><a href="../interfaces/_ceramicnetwork_common.docopts-1.html" class="tsd-signature-type">DocOpts</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="_ceramicnetwork_core.document.html" class="tsd-signature-type">Document</a><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">_load<wbr>Doc<span class="tsd-signature-symbol">(</span>docId<span class="tsd-signature-symbol">: </span><a href="_ceramicnetwork_docid.docid.html" class="tsd-signature-type">DocID</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span>, opts<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">DocOpts</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="_ceramicnetwork_core.document.html" class="tsd-signature-type">Document</a><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/core/src/ceramic.ts#L364">packages/core/src/ceramic.ts:364</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/core/src/ceramic.ts#L347">packages/core/src/ceramic.ts:347</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -295,7 +294,7 @@
 									</div>
 								</li>
 								<li>
-									<h5><span class="tsd-flag ts-flagDefault value">Default value</span> opts: <a href="../interfaces/_ceramicnetwork_common.docopts-1.html" class="tsd-signature-type">DocOpts</a><span class="tsd-signature-symbol"> = {}</span></h5>
+									<h5><span class="tsd-flag ts-flagDefault value">Default value</span> opts: <span class="tsd-signature-type">DocOpts</span><span class="tsd-signature-symbol"> = {}</span></h5>
 									<div class="tsd-comment tsd-typography">
 										<p>Initialization options</p>
 									</div>
@@ -309,13 +308,13 @@
 					<a name="adddoctypehandler" class="tsd-anchor"></a>
 					<h3>add<wbr>Doctype<wbr>Handler</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-has-type-parameter tsd-is-not-exported">
-						<li class="tsd-signature tsd-kind-icon">add<wbr>Doctype<wbr>Handler&lt;T&gt;<span class="tsd-signature-symbol">(</span>doctypeHandler<span class="tsd-signature-symbol">: </span><a href="../interfaces/_ceramicnetwork_common.doctypehandler-1.html" class="tsd-signature-type">DoctypeHandler</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+						<li class="tsd-signature tsd-kind-icon">add<wbr>Doctype<wbr>Handler&lt;T&gt;<span class="tsd-signature-symbol">(</span>doctypeHandler<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">DoctypeHandler</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/core/src/ceramic.ts#L211">packages/core/src/ceramic.ts:211</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/core/src/ceramic.ts#L199">packages/core/src/ceramic.ts:199</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -326,13 +325,13 @@
 							<h4 class="tsd-type-parameters-title">Type parameters</h4>
 							<ul class="tsd-type-parameters">
 								<li>
-									<h4>T<span class="tsd-signature-symbol">: </span><a href="_ceramicnetwork_common.doctype-1.html" class="tsd-signature-type">Doctype</a></h4>
+									<h4>T<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Doctype</span></h4>
 								</li>
 							</ul>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>doctypeHandler: <a href="../interfaces/_ceramicnetwork_common.doctypehandler-1.html" class="tsd-signature-type">DoctypeHandler</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">&gt;</span></h5>
+									<h5>doctypeHandler: <span class="tsd-signature-type">DoctypeHandler</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">&gt;</span></h5>
 									<div class="tsd-comment tsd-typography">
 										<p>Document type handler</p>
 									</div>
@@ -346,13 +345,13 @@
 					<a name="applyrecord" class="tsd-anchor"></a>
 					<h3>apply<wbr>Record</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-has-type-parameter tsd-is-not-exported">
-						<li class="tsd-signature tsd-kind-icon">apply<wbr>Record&lt;T&gt;<span class="tsd-signature-symbol">(</span>docId<span class="tsd-signature-symbol">: </span><a href="_ceramicnetwork_docid.docid.html" class="tsd-signature-type">DocID</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span>, record<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Record</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">unknown</span><span class="tsd-signature-symbol">&gt;</span>, opts<span class="tsd-signature-symbol">?: </span><a href="../interfaces/_ceramicnetwork_common.docopts-1.html" class="tsd-signature-type">DocOpts</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">apply<wbr>Record&lt;T&gt;<span class="tsd-signature-symbol">(</span>docId<span class="tsd-signature-symbol">: </span><a href="_ceramicnetwork_docid.docid.html" class="tsd-signature-type">DocID</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span>, record<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Record</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">unknown</span><span class="tsd-signature-symbol">&gt;</span>, opts<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">DocOpts</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/core/src/ceramic.ts#L233">packages/core/src/ceramic.ts:233</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/core/src/ceramic.ts#L221">packages/core/src/ceramic.ts:221</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -363,7 +362,7 @@
 							<h4 class="tsd-type-parameters-title">Type parameters</h4>
 							<ul class="tsd-type-parameters">
 								<li>
-									<h4>T<span class="tsd-signature-symbol">: </span><a href="_ceramicnetwork_common.doctype-1.html" class="tsd-signature-type">Doctype</a></h4>
+									<h4>T<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Doctype</span></h4>
 								</li>
 							</ul>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -381,7 +380,7 @@
 									</div>
 								</li>
 								<li>
-									<h5><span class="tsd-flag ts-flagOptional">Optional</span> opts: <a href="../interfaces/_ceramicnetwork_common.docopts-1.html" class="tsd-signature-type">DocOpts</a></h5>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> opts: <span class="tsd-signature-type">DocOpts</span></h5>
 									<div class="tsd-comment tsd-typography">
 										<p>Initialization options</p>
 									</div>
@@ -401,7 +400,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/core/src/ceramic.ts#L389">packages/core/src/ceramic.ts:389</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/core/src/ceramic.ts#L385">packages/core/src/ceramic.ts:385</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -417,13 +416,13 @@
 					<a name="createdocument" class="tsd-anchor"></a>
 					<h3>create<wbr>Document</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-has-type-parameter tsd-is-not-exported">
-						<li class="tsd-signature tsd-kind-icon">create<wbr>Document&lt;T&gt;<span class="tsd-signature-symbol">(</span>doctype<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, params<span class="tsd-signature-symbol">: </span><a href="../interfaces/_ceramicnetwork_common.docparams-1.html" class="tsd-signature-type">DocParams</a>, opts<span class="tsd-signature-symbol">?: </span><a href="../interfaces/_ceramicnetwork_common.docopts-1.html" class="tsd-signature-type">DocOpts</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">create<wbr>Document&lt;T&gt;<span class="tsd-signature-symbol">(</span>doctype<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, params<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">DocParams</span>, opts<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">DocOpts</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/core/src/ceramic.ts#L259">packages/core/src/ceramic.ts:259</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/core/src/ceramic.ts#L247">packages/core/src/ceramic.ts:247</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -434,7 +433,7 @@
 							<h4 class="tsd-type-parameters-title">Type parameters</h4>
 							<ul class="tsd-type-parameters">
 								<li>
-									<h4>T<span class="tsd-signature-symbol">: </span><a href="_ceramicnetwork_common.doctype-1.html" class="tsd-signature-type">Doctype</a></h4>
+									<h4>T<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Doctype</span></h4>
 								</li>
 							</ul>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -446,13 +445,13 @@
 									</div>
 								</li>
 								<li>
-									<h5>params: <a href="../interfaces/_ceramicnetwork_common.docparams-1.html" class="tsd-signature-type">DocParams</a></h5>
+									<h5>params: <span class="tsd-signature-type">DocParams</span></h5>
 									<div class="tsd-comment tsd-typography">
 										<p>Create parameters</p>
 									</div>
 								</li>
 								<li>
-									<h5><span class="tsd-flag ts-flagOptional">Optional</span> opts: <a href="../interfaces/_ceramicnetwork_common.docopts-1.html" class="tsd-signature-type">DocOpts</a></h5>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> opts: <span class="tsd-signature-type">DocOpts</span></h5>
 									<div class="tsd-comment tsd-typography">
 										<p>Initialization options</p>
 									</div>
@@ -466,13 +465,13 @@
 					<a name="createdocumentfromgenesis" class="tsd-anchor"></a>
 					<h3>create<wbr>Document<wbr>From<wbr>Genesis</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-has-type-parameter tsd-is-not-exported">
-						<li class="tsd-signature tsd-kind-icon">create<wbr>Document<wbr>From<wbr>Genesis&lt;T&gt;<span class="tsd-signature-symbol">(</span>genesis<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span>, opts<span class="tsd-signature-symbol">?: </span><a href="../interfaces/_ceramicnetwork_common.docopts-1.html" class="tsd-signature-type">DocOpts</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">create<wbr>Document<wbr>From<wbr>Genesis&lt;T&gt;<span class="tsd-signature-symbol">(</span>doctype<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, genesis<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span>, opts<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">DocOpts</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/core/src/ceramic.ts#L293">packages/core/src/ceramic.ts:293</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/core/src/ceramic.ts#L282">packages/core/src/ceramic.ts:282</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -483,11 +482,17 @@
 							<h4 class="tsd-type-parameters-title">Type parameters</h4>
 							<ul class="tsd-type-parameters">
 								<li>
-									<h4>T<span class="tsd-signature-symbol">: </span><a href="_ceramicnetwork_common.doctype-1.html" class="tsd-signature-type">Doctype</a></h4>
+									<h4>T<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Doctype</span></h4>
 								</li>
 							</ul>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
+								<li>
+									<h5>doctype: <span class="tsd-signature-type">string</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>Document type</p>
+									</div>
+								</li>
 								<li>
 									<h5>genesis: <span class="tsd-signature-type">any</span></h5>
 									<div class="tsd-comment tsd-typography">
@@ -495,7 +500,7 @@
 									</div>
 								</li>
 								<li>
-									<h5><span class="tsd-flag ts-flagDefault value">Default value</span> opts: <a href="../interfaces/_ceramicnetwork_common.docopts-1.html" class="tsd-signature-type">DocOpts</a><span class="tsd-signature-symbol"> = {}</span></h5>
+									<h5><span class="tsd-flag ts-flagDefault value">Default value</span> opts: <span class="tsd-signature-type">DocOpts</span><span class="tsd-signature-symbol"> = {}</span></h5>
 									<div class="tsd-comment tsd-typography">
 										<p>Initialization options</p>
 									</div>
@@ -509,13 +514,13 @@
 					<a name="finddoctypehandler" class="tsd-anchor"></a>
 					<h3>find<wbr>Doctype<wbr>Handler</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-has-type-parameter tsd-is-not-exported">
-						<li class="tsd-signature tsd-kind-icon">find<wbr>Doctype<wbr>Handler&lt;T&gt;<span class="tsd-signature-symbol">(</span>doctype<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="../interfaces/_ceramicnetwork_common.doctypehandler-1.html" class="tsd-signature-type">DoctypeHandler</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">find<wbr>Doctype<wbr>Handler&lt;T&gt;<span class="tsd-signature-symbol">(</span>doctype<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">DoctypeHandler</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/core/src/ceramic.ts#L219">packages/core/src/ceramic.ts:219</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/core/src/ceramic.ts#L207">packages/core/src/ceramic.ts:207</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -526,7 +531,7 @@
 							<h4 class="tsd-type-parameters-title">Type parameters</h4>
 							<ul class="tsd-type-parameters">
 								<li>
-									<h4>T<span class="tsd-signature-symbol">: </span><a href="_ceramicnetwork_common.doctype-1.html" class="tsd-signature-type">Doctype</a></h4>
+									<h4>T<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Doctype</span></h4>
 								</li>
 							</ul>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -538,44 +543,7 @@
 									</div>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <a href="../interfaces/_ceramicnetwork_common.doctypehandler-1.html" class="tsd-signature-type">DoctypeHandler</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">&gt;</span></h4>
-						</li>
-					</ul>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-has-type-parameter tsd-is-not-exported">
-					<a name="findhandler" class="tsd-anchor"></a>
-					<h3>find<wbr>Handler</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-has-type-parameter tsd-is-not-exported">
-						<li class="tsd-signature tsd-kind-icon">find<wbr>Handler&lt;T&gt;<span class="tsd-signature-symbol">(</span>genesisRecord<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Record</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">T</span></li>
-					</ul>
-					<ul class="tsd-descriptions">
-						<li class="tsd-description">
-							<aside class="tsd-sources">
-								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/core/src/ceramic.ts#L185">packages/core/src/ceramic.ts:185</a></li>
-								</ul>
-							</aside>
-							<div class="tsd-comment tsd-typography">
-								<div class="lead">
-									<p>Find handler by genesis record</p>
-								</div>
-							</div>
-							<h4 class="tsd-type-parameters-title">Type parameters</h4>
-							<ul class="tsd-type-parameters">
-								<li>
-									<h4>T<span class="tsd-signature-symbol">: </span><a href="../interfaces/_ceramicnetwork_common.doctypehandler-1.html" class="tsd-signature-type">DoctypeHandler</a><span class="tsd-signature-symbol">&lt;</span><a href="_ceramicnetwork_common.doctype-1.html" class="tsd-signature-type">Doctype</a><span class="tsd-signature-symbol">&gt;</span></h4>
-								</li>
-							</ul>
-							<h4 class="tsd-parameters-title">Parameters</h4>
-							<ul class="tsd-parameters">
-								<li>
-									<h5>genesisRecord: <span class="tsd-signature-type">Record</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></h5>
-									<div class="tsd-comment tsd-typography">
-										<p>Document genesis record</p>
-									</div>
-								</li>
-							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">T</span></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">DoctypeHandler</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -589,7 +557,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/core/src/ceramic.ts#L249">packages/core/src/ceramic.ts:249</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/core/src/ceramic.ts#L237">packages/core/src/ceramic.ts:237</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -608,33 +576,24 @@
 					</ul>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-not-exported">
-					<a name="listversions" class="tsd-anchor"></a>
-					<h3>list<wbr>Versions</h3>
+					<a name="getsupportedchains" class="tsd-anchor"></a>
+					<h3>get<wbr>Supported<wbr>Chains</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-not-exported">
-						<li class="tsd-signature tsd-kind-icon">list<wbr>Versions<span class="tsd-signature-symbol">(</span>docId<span class="tsd-signature-symbol">: </span><a href="_ceramicnetwork_docid.docid.html" class="tsd-signature-type">DocID</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">get<wbr>Supported<wbr>Chains<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">Array</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/core/src/ceramic.ts#L378">packages/core/src/ceramic.ts:378</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/core/src/ceramic.ts#L368">packages/core/src/ceramic.ts:368</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
-								<div class="lead">
-									<p>Lists ceramic</p>
-								</div>
 							</div>
-							<h4 class="tsd-parameters-title">Parameters</h4>
-							<ul class="tsd-parameters">
-								<li>
-									<h5>docId: <a href="_ceramicnetwork_docid.docid.html" class="tsd-signature-type">DocID</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span></h5>
-									<div class="tsd-comment tsd-typography">
-										<p>Document ID</p>
-									</div>
-								</li>
-							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">Array</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">&gt;</span></h4>
+							<p>An array of the CAIP-2 chain IDs of the blockchains that are supported for anchoring
+							documents.</p>
+							<p>Caches the result after the first time it is requested</p>
 						</li>
 					</ul>
 				</section>
@@ -642,13 +601,13 @@
 					<a name="loaddocument" class="tsd-anchor"></a>
 					<h3>load<wbr>Document</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-has-type-parameter tsd-is-not-exported">
-						<li class="tsd-signature tsd-kind-icon">load<wbr>Document&lt;T&gt;<span class="tsd-signature-symbol">(</span>docId<span class="tsd-signature-symbol">: </span><a href="_ceramicnetwork_docid.docid.html" class="tsd-signature-type">DocID</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span>, opts<span class="tsd-signature-symbol">?: </span><a href="../interfaces/_ceramicnetwork_common.docopts-1.html" class="tsd-signature-type">DocOpts</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">load<wbr>Document&lt;T&gt;<span class="tsd-signature-symbol">(</span>docId<span class="tsd-signature-symbol">: </span><a href="_ceramicnetwork_docid.docid.html" class="tsd-signature-type">DocID</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span>, opts<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">DocOpts</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/core/src/ceramic.ts#L335">packages/core/src/ceramic.ts:335</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/core/src/ceramic.ts#L318">packages/core/src/ceramic.ts:318</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -659,7 +618,7 @@
 							<h4 class="tsd-type-parameters-title">Type parameters</h4>
 							<ul class="tsd-type-parameters">
 								<li>
-									<h4>T<span class="tsd-signature-symbol">: </span><a href="_ceramicnetwork_common.doctype-1.html" class="tsd-signature-type">Doctype</a></h4>
+									<h4>T<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Doctype</span></h4>
 								</li>
 							</ul>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -671,7 +630,7 @@
 									</div>
 								</li>
 								<li>
-									<h5><span class="tsd-flag ts-flagDefault value">Default value</span> opts: <a href="../interfaces/_ceramicnetwork_common.docopts-1.html" class="tsd-signature-type">DocOpts</a><span class="tsd-signature-symbol"> = {}</span></h5>
+									<h5><span class="tsd-flag ts-flagDefault value">Default value</span> opts: <span class="tsd-signature-type">DocOpts</span><span class="tsd-signature-symbol"> = {}</span></h5>
 									<div class="tsd-comment tsd-typography">
 										<p>Initialization options</p>
 									</div>
@@ -691,7 +650,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/core/src/ceramic.ts#L345">packages/core/src/ceramic.ts:345</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/core/src/ceramic.ts#L328">packages/core/src/ceramic.ts:328</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -722,7 +681,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/core/src/ceramic.ts#L198">packages/core/src/ceramic.ts:198</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/core/src/ceramic.ts#L186">packages/core/src/ceramic.ts:186</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -753,7 +712,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/core/src/ceramic.ts#L139">packages/core/src/ceramic.ts:139</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/core/src/ceramic.ts#L140">packages/core/src/ceramic.ts:140</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -905,14 +864,11 @@
 							<li class=" tsd-kind-method tsd-parent-kind-class tsd-has-type-parameter tsd-is-not-exported">
 								<a href="_ceramicnetwork_core.ceramic.html#finddoctypehandler" class="tsd-kind-icon">find<wbr>Doctype<wbr>Handler</a>
 							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-class tsd-has-type-parameter tsd-is-not-exported">
-								<a href="_ceramicnetwork_core.ceramic.html#findhandler" class="tsd-kind-icon">find<wbr>Handler</a>
-							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-not-exported">
 								<a href="_ceramicnetwork_core.ceramic.html#getdocfrommap" class="tsd-kind-icon">get<wbr>Doc<wbr>From<wbr>Map</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-not-exported">
-								<a href="_ceramicnetwork_core.ceramic.html#listversions" class="tsd-kind-icon">list<wbr>Versions</a>
+								<a href="_ceramicnetwork_core.ceramic.html#getsupportedchains" class="tsd-kind-icon">get<wbr>Supported<wbr>Chains</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class tsd-has-type-parameter tsd-is-not-exported">
 								<a href="_ceramicnetwork_core.ceramic.html#loaddocument" class="tsd-kind-icon">load<wbr>Document</a>
@@ -976,6 +932,9 @@
 						<a href="../modules/_ceramicnetwork_core.html#props" class="tsd-kind-icon">Props</a>
 					</li>
 					<li class=" tsd-kind-variable tsd-parent-kind-module tsd-is-not-exported">
+						<a href="../modules/_ceramicnetwork_core.html#chain_id" class="tsd-kind-icon">CHAIN_<wbr>ID</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-parent-kind-module tsd-is-not-exported">
 						<a href="../modules/_ceramicnetwork_core.html#default_max_poll_time" class="tsd-kind-icon">DEFAULT_<wbr>MAX_<wbr>POLL_<wbr>TIME</a>
 					</li>
 					<li class=" tsd-kind-variable tsd-parent-kind-module tsd-is-not-exported">
@@ -989,6 +948,12 @@
 					</li>
 					<li class=" tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
 						<a href="../modules/_ceramicnetwork_core.html#normalizedocid" class="tsd-kind-icon">normalize<wbr>DocID</a>
+					</li>
+					<li class=" tsd-kind-object-literal tsd-parent-kind-module tsd-is-not-exported">
+						<a href="../modules/_ceramicnetwork_core.html#default_load_docopts" class="tsd-kind-icon">DEFAULT_<wbr>LOAD_<wbr>DOCOPTS</a>
+					</li>
+					<li class=" tsd-kind-object-literal tsd-parent-kind-module tsd-is-not-exported">
+						<a href="../modules/_ceramicnetwork_core.html#default_write_docopts" class="tsd-kind-icon">DEFAULT_<wbr>WRITE_<wbr>DOCOPTS</a>
 					</li>
 					<li class=" tsd-kind-object-literal tsd-parent-kind-module tsd-is-not-exported">
 						<a href="../modules/_ceramicnetwork_core.html#eth_chain_id_mappings" class="tsd-kind-icon">ETH_<wbr>CHAIN_<wbr>ID_<wbr>MAPPINGS</a>

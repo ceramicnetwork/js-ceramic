@@ -83,6 +83,7 @@
 						<section class="tsd-index-section ">
 							<h3>Methods</h3>
 							<ul class="tsd-index-list">
+								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="_ceramicnetwork_3id_did_resolver.ceramic.html#createdocument" class="tsd-kind-icon">create<wbr>Document</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="_ceramicnetwork_3id_did_resolver.ceramic.html#loaddocument" class="tsd-kind-icon">load<wbr>Document</a></li>
 							</ul>
 						</section>
@@ -92,25 +93,54 @@
 			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Methods</h2>
 				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-interface">
-					<a name="loaddocument" class="tsd-anchor"></a>
-					<h3>load<wbr>Document</h3>
+					<a name="createdocument" class="tsd-anchor"></a>
+					<h3>create<wbr>Document</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface">
-						<li class="tsd-signature tsd-kind-icon">load<wbr>Document<span class="tsd-signature-symbol">(</span>docId<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../classes/_ceramicnetwork_common.doctype-1.html" class="tsd-signature-type">Doctype</a><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">create<wbr>Document<span class="tsd-signature-symbol">(</span>type<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, content<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span>, opts<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">Doctype</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/3id-did-resolver/src/index.ts#L6">packages/3id-did-resolver/src/index.ts:6</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/3id-did-resolver/src/index.ts#L10">packages/3id-did-resolver/src/index.ts:10</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>docId: <span class="tsd-signature-type">string</span></h5>
+									<h5>type: <span class="tsd-signature-type">string</span></h5>
+								</li>
+								<li>
+									<h5>content: <span class="tsd-signature-type">any</span></h5>
+								</li>
+								<li>
+									<h5>opts: <span class="tsd-signature-type">any</span></h5>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../classes/_ceramicnetwork_common.doctype-1.html" class="tsd-signature-type">Doctype</a><span class="tsd-signature-symbol">&gt;</span></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">Doctype</span><span class="tsd-signature-symbol">&gt;</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-interface">
+					<a name="loaddocument" class="tsd-anchor"></a>
+					<h3>load<wbr>Document</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface">
+						<li class="tsd-signature tsd-kind-icon">load<wbr>Document<span class="tsd-signature-symbol">(</span>docId<span class="tsd-signature-symbol">: </span><a href="../classes/_ceramicnetwork_docid.docid.html" class="tsd-signature-type">DocID</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">Doctype</span><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/3id-did-resolver/src/index.ts#L9">packages/3id-did-resolver/src/index.ts:9</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>docId: <a href="../classes/_ceramicnetwork_docid.docid.html" class="tsd-signature-type">DocID</a></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">Doctype</span><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -192,6 +222,9 @@
 						<a href="_ceramicnetwork_3id_did_resolver.ceramic.html" class="tsd-kind-icon">Ceramic</a>
 						<ul>
 							<li class=" tsd-kind-method tsd-parent-kind-interface">
+								<a href="_ceramicnetwork_3id_did_resolver.ceramic.html#createdocument" class="tsd-kind-icon">create<wbr>Document</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-interface">
 								<a href="_ceramicnetwork_3id_did_resolver.ceramic.html#loaddocument" class="tsd-kind-icon">load<wbr>Document</a>
 							</li>
 						</ul>
@@ -199,10 +232,46 @@
 				</ul>
 				<ul class="after-current">
 					<li class=" tsd-kind-interface tsd-parent-kind-module tsd-is-not-exported">
+						<a href="_ceramicnetwork_3id_did_resolver.dag.html" class="tsd-kind-icon">DAG</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-module tsd-is-not-exported">
+						<a href="_ceramicnetwork_3id_did_resolver.ipfs.html" class="tsd-kind-icon">IPFS</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-module tsd-is-not-exported">
 						<a href="_ceramicnetwork_3id_did_resolver.resolverregistry.html" class="tsd-kind-icon">Resolver<wbr>Registry</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-parent-kind-module tsd-is-not-exported">
+						<a href="../modules/_ceramicnetwork_3id_did_resolver.html#threebox_api_url" class="tsd-kind-icon">THREEBOX_<wbr>API_<wbr>URL</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module">
+						<a href="../modules/_ceramicnetwork_3id_did_resolver.html#legacyresolver" class="tsd-kind-icon">Legacy<wbr>Resolver</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
+						<a href="../modules/_ceramicnetwork_3id_did_resolver.html#diddocreq" class="tsd-kind-icon">did<wbr>Doc<wbr>Req</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
+						<a href="../modules/_ceramicnetwork_3id_did_resolver.html#encodekey" class="tsd-kind-icon">encode<wbr>Key</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
+						<a href="../modules/_ceramicnetwork_3id_did_resolver.html#fetchjson" class="tsd-kind-icon">fetch<wbr>Json</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
+						<a href="../modules/_ceramicnetwork_3id_did_resolver.html#getversion" class="tsd-kind-icon">get<wbr>Version</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
+						<a href="../modules/_ceramicnetwork_3id_did_resolver.html#islegacydid" class="tsd-kind-icon">is<wbr>Legacy<wbr>Did</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
+						<a href="../modules/_ceramicnetwork_3id_did_resolver.html#legacyresolve" class="tsd-kind-icon">legacy<wbr>Resolve</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
+						<a href="../modules/_ceramicnetwork_3id_did_resolver.html#resolve" class="tsd-kind-icon">resolve</a>
 					</li>
 					<li class=" tsd-kind-function tsd-parent-kind-module">
 						<a href="../modules/_ceramicnetwork_3id_did_resolver.html#wrapdocument" class="tsd-kind-icon">wrap<wbr>Document</a>
+					</li>
+					<li class=" tsd-kind-object-literal tsd-parent-kind-module tsd-is-not-exported">
+						<a href="../modules/_ceramicnetwork_3id_did_resolver.html#ipfsmock" class="tsd-kind-icon">ipfs<wbr>Mock</a>
 					</li>
 				</ul>
 			</nav>

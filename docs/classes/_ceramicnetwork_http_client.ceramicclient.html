@@ -68,6 +68,13 @@
 <div class="container container-main">
 	<div class="row">
 		<div class="col-8 col-content">
+			<section class="tsd-panel tsd-comment">
+				<div class="tsd-comment tsd-typography">
+					<div class="lead">
+						<p>Ceramic client implementation</p>
+					</div>
+				</div>
+			</section>
 			<section class="tsd-panel tsd-hierarchy">
 				<h3>Hierarchy</h3>
 				<ul class="tsd-hierarchy">
@@ -79,7 +86,7 @@
 			<section class="tsd-panel">
 				<h3>Implements</h3>
 				<ul class="tsd-hierarchy">
-					<li><span class="tsd-signature-type">any</span></li>
+					<li><span class="tsd-signature-type">CeramicApi</span></li>
 				</ul>
 			</section>
 			<section class="tsd-panel-group tsd-index-group">
@@ -116,7 +123,7 @@
 								<li class="tsd-kind-method tsd-parent-kind-class tsd-has-type-parameter"><a href="_ceramicnetwork_http_client.ceramicclient.html#createdocument" class="tsd-kind-icon">create<wbr>Document</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class tsd-has-type-parameter"><a href="_ceramicnetwork_http_client.ceramicclient.html#createdocumentfromgenesis" class="tsd-kind-icon">create<wbr>Document<wbr>From<wbr>Genesis</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class tsd-has-type-parameter"><a href="_ceramicnetwork_http_client.ceramicclient.html#finddoctypehandler" class="tsd-kind-icon">find<wbr>Doctype<wbr>Handler</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_ceramicnetwork_http_client.ceramicclient.html#listversions" class="tsd-kind-icon">list<wbr>Versions</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_ceramicnetwork_http_client.ceramicclient.html#getsupportedchains" class="tsd-kind-icon">get<wbr>Supported<wbr>Chains</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class tsd-has-type-parameter"><a href="_ceramicnetwork_http_client.ceramicclient.html#loaddocument" class="tsd-kind-icon">load<wbr>Document</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_ceramicnetwork_http_client.ceramicclient.html#loaddocumentrecords" class="tsd-kind-icon">load<wbr>Document<wbr>Records</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_ceramicnetwork_http_client.ceramicclient.html#setdidprovider" class="tsd-kind-icon">setDIDProvider</a></li>
@@ -131,19 +138,22 @@
 					<a name="constructor" class="tsd-anchor"></a>
 					<h3>constructor</h3>
 					<ul class="tsd-signatures tsd-kind-constructor tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">new <wbr>Ceramic<wbr>Client<span class="tsd-signature-symbol">(</span>apiHost<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_ceramicnetwork_http_client.ceramicclient.html" class="tsd-signature-type">CeramicClient</a></li>
+						<li class="tsd-signature tsd-kind-icon">new <wbr>Ceramic<wbr>Client<span class="tsd-signature-symbol">(</span>apiHost<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">string</span>, config<span class="tsd-signature-symbol">?: </span><a href="../interfaces/_ceramicnetwork_http_client.ceramicclientconfig.html" class="tsd-signature-type">CeramicClientConfig</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_ceramicnetwork_http_client.ceramicclient.html" class="tsd-signature-type">CeramicClient</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/http-client/src/ceramic-http-client.ts#L20">packages/http-client/src/ceramic-http-client.ts:20</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/http-client/src/ceramic-http-client.ts#L41">packages/http-client/src/ceramic-http-client.ts:41</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
 									<h5><span class="tsd-flag ts-flagDefault value">Default value</span> apiHost: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> = CERAMIC_HOST</span></h5>
+								</li>
+								<li>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> config: <a href="../interfaces/_ceramicnetwork_http_client.ceramicclientconfig.html" class="tsd-signature-type">CeramicClientConfig</a></h5>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <a href="_ceramicnetwork_http_client.ceramicclient.html" class="tsd-signature-type">CeramicClient</a></h4>
@@ -156,30 +166,30 @@
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
 					<a name="_doctypehandlers" class="tsd-anchor"></a>
 					<h3><span class="tsd-flag ts-flagReadonly">Readonly</span> _doctype<wbr>Handlers</h3>
-					<div class="tsd-signature tsd-kind-icon">_doctype<wbr>Handlers<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Record</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">, </span><a href="../interfaces/_ceramicnetwork_common.doctypehandler-1.html" class="tsd-signature-type">DoctypeHandler</a><span class="tsd-signature-symbol">&lt;</span><a href="_ceramicnetwork_common.doctype-1.html" class="tsd-signature-type">Doctype</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">&gt;</span></div>
+					<div class="tsd-signature tsd-kind-icon">_doctype<wbr>Handlers<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Record</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">DoctypeHandler</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">Doctype</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">&gt;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/http-client/src/ceramic-http-client.ts#L20">packages/http-client/src/ceramic-http-client.ts:20</a></li>
+							<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/http-client/src/ceramic-http-client.ts#L41">packages/http-client/src/ceramic-http-client.ts:41</a></li>
 						</ul>
 					</aside>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
 					<a name="context" class="tsd-anchor"></a>
 					<h3><span class="tsd-flag ts-flagReadonly">Readonly</span> context</h3>
-					<div class="tsd-signature tsd-kind-icon">context<span class="tsd-signature-symbol">:</span> <a href="../interfaces/_ceramicnetwork_common.context-1.html" class="tsd-signature-type">Context</a></div>
+					<div class="tsd-signature tsd-kind-icon">context<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Context</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/http-client/src/ceramic-http-client.ts#L18">packages/http-client/src/ceramic-http-client.ts:18</a></li>
+							<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/http-client/src/ceramic-http-client.ts#L38">packages/http-client/src/ceramic-http-client.ts:38</a></li>
 						</ul>
 					</aside>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
 					<a name="pin" class="tsd-anchor"></a>
 					<h3><span class="tsd-flag ts-flagReadonly">Readonly</span> pin</h3>
-					<div class="tsd-signature tsd-kind-icon">pin<span class="tsd-signature-symbol">:</span> <a href="../interfaces/_ceramicnetwork_common.pinapi-1.html" class="tsd-signature-type">PinApi</a></div>
+					<div class="tsd-signature tsd-kind-icon">pin<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">PinApi</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/http-client/src/ceramic-http-client.ts#L17">packages/http-client/src/ceramic-http-client.ts:17</a></li>
+							<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/http-client/src/ceramic-http-client.ts#L37">packages/http-client/src/ceramic-http-client.ts:37</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -196,7 +206,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/http-client/src/ceramic-http-client.ts#L35">packages/http-client/src/ceramic-http-client.ts:35</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/http-client/src/ceramic-http-client.ts#L58">packages/http-client/src/ceramic-http-client.ts:58</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">DID</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span></h4>
@@ -210,16 +220,16 @@
 					<a name="_initpinapi" class="tsd-anchor"></a>
 					<h3>_init<wbr>Pin<wbr>Api</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">_init<wbr>Pin<wbr>Api<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="../interfaces/_ceramicnetwork_common.pinapi-1.html" class="tsd-signature-type">PinApi</a></li>
+						<li class="tsd-signature tsd-kind-icon">_init<wbr>Pin<wbr>Api<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">PinApi</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/http-client/src/ceramic-http-client.ts#L39">packages/http-client/src/ceramic-http-client.ts:39</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/http-client/src/ceramic-http-client.ts#L62">packages/http-client/src/ceramic-http-client.ts:62</a></li>
 								</ul>
 							</aside>
-							<h4 class="tsd-returns-title">Returns <a href="../interfaces/_ceramicnetwork_common.pinapi-1.html" class="tsd-signature-type">PinApi</a></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">PinApi</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -227,25 +237,25 @@
 					<a name="adddoctypehandler" class="tsd-anchor"></a>
 					<h3>add<wbr>Doctype<wbr>Handler</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-has-type-parameter">
-						<li class="tsd-signature tsd-kind-icon">add<wbr>Doctype<wbr>Handler&lt;T&gt;<span class="tsd-signature-symbol">(</span>doctypeHandler<span class="tsd-signature-symbol">: </span><a href="../interfaces/_ceramicnetwork_common.doctypehandler-1.html" class="tsd-signature-type">DoctypeHandler</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+						<li class="tsd-signature tsd-kind-icon">add<wbr>Doctype<wbr>Handler&lt;T&gt;<span class="tsd-signature-symbol">(</span>doctypeHandler<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">DoctypeHandler</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/http-client/src/ceramic-http-client.ts#L113">packages/http-client/src/ceramic-http-client.ts:113</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/http-client/src/ceramic-http-client.ts#L131">packages/http-client/src/ceramic-http-client.ts:131</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-type-parameters-title">Type parameters</h4>
 							<ul class="tsd-type-parameters">
 								<li>
-									<h4>T<span class="tsd-signature-symbol">: </span><a href="_ceramicnetwork_common.doctype-1.html" class="tsd-signature-type">Doctype</a></h4>
+									<h4>T<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Doctype</span></h4>
 								</li>
 							</ul>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>doctypeHandler: <a href="../interfaces/_ceramicnetwork_common.doctypehandler-1.html" class="tsd-signature-type">DoctypeHandler</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">&gt;</span></h5>
+									<h5>doctypeHandler: <span class="tsd-signature-type">DoctypeHandler</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">&gt;</span></h5>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
@@ -256,19 +266,19 @@
 					<a name="applyrecord" class="tsd-anchor"></a>
 					<h3>apply<wbr>Record</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-has-type-parameter">
-						<li class="tsd-signature tsd-kind-icon">apply<wbr>Record&lt;T&gt;<span class="tsd-signature-symbol">(</span>docId<span class="tsd-signature-symbol">: </span><a href="_ceramicnetwork_docid.docid.html" class="tsd-signature-type">DocID</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span>, record<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Record</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">unknown</span><span class="tsd-signature-symbol">&gt;</span>, opts<span class="tsd-signature-symbol">?: </span><a href="../interfaces/_ceramicnetwork_common.docopts-1.html" class="tsd-signature-type">DocOpts</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">apply<wbr>Record&lt;T&gt;<span class="tsd-signature-symbol">(</span>docId<span class="tsd-signature-symbol">: </span><a href="_ceramicnetwork_docid.docid.html" class="tsd-signature-type">DocID</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span>, record<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Record</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">unknown</span><span class="tsd-signature-symbol">&gt;</span>, opts<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">DocOpts</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/http-client/src/ceramic-http-client.ts#L103">packages/http-client/src/ceramic-http-client.ts:103</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/http-client/src/ceramic-http-client.ts#L126">packages/http-client/src/ceramic-http-client.ts:126</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-type-parameters-title">Type parameters</h4>
 							<ul class="tsd-type-parameters">
 								<li>
-									<h4>T<span class="tsd-signature-symbol">: </span><a href="_ceramicnetwork_common.doctype-1.html" class="tsd-signature-type">Doctype</a></h4>
+									<h4>T<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Doctype</span></h4>
 								</li>
 							</ul>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -280,7 +290,7 @@
 									<h5>record: <span class="tsd-signature-type">Record</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">unknown</span><span class="tsd-signature-symbol">&gt;</span></h5>
 								</li>
 								<li>
-									<h5><span class="tsd-flag ts-flagOptional">Optional</span> opts: <a href="../interfaces/_ceramicnetwork_common.docopts-1.html" class="tsd-signature-type">DocOpts</a></h5>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> opts: <span class="tsd-signature-type">DocOpts</span></h5>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">&gt;</span></h4>
@@ -297,7 +307,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/http-client/src/ceramic-http-client.ts#L134">packages/http-client/src/ceramic-http-client.ts:134</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/http-client/src/ceramic-http-client.ts#L163">packages/http-client/src/ceramic-http-client.ts:163</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></h4>
@@ -308,19 +318,19 @@
 					<a name="createdocument" class="tsd-anchor"></a>
 					<h3>create<wbr>Document</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-has-type-parameter">
-						<li class="tsd-signature tsd-kind-icon">create<wbr>Document&lt;T&gt;<span class="tsd-signature-symbol">(</span>doctype<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, params<span class="tsd-signature-symbol">: </span><a href="../interfaces/_ceramicnetwork_common.docparams-1.html" class="tsd-signature-type">DocParams</a>, opts<span class="tsd-signature-symbol">?: </span><a href="../interfaces/_ceramicnetwork_common.docopts-1.html" class="tsd-signature-type">DocOpts</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">create<wbr>Document&lt;T&gt;<span class="tsd-signature-symbol">(</span>doctype<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, params<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">DocParams</span>, opts<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">DocOpts</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/http-client/src/ceramic-http-client.ts#L71">packages/http-client/src/ceramic-http-client.ts:71</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/http-client/src/ceramic-http-client.ts#L94">packages/http-client/src/ceramic-http-client.ts:94</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-type-parameters-title">Type parameters</h4>
 							<ul class="tsd-type-parameters">
 								<li>
-									<h4>T<span class="tsd-signature-symbol">: </span><a href="_ceramicnetwork_common.doctype-1.html" class="tsd-signature-type">Doctype</a></h4>
+									<h4>T<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Doctype</span></h4>
 								</li>
 							</ul>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -329,10 +339,10 @@
 									<h5>doctype: <span class="tsd-signature-type">string</span></h5>
 								</li>
 								<li>
-									<h5>params: <a href="../interfaces/_ceramicnetwork_common.docparams-1.html" class="tsd-signature-type">DocParams</a></h5>
+									<h5>params: <span class="tsd-signature-type">DocParams</span></h5>
 								</li>
 								<li>
-									<h5><span class="tsd-flag ts-flagOptional">Optional</span> opts: <a href="../interfaces/_ceramicnetwork_common.docopts-1.html" class="tsd-signature-type">DocOpts</a></h5>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> opts: <span class="tsd-signature-type">DocOpts</span></h5>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">&gt;</span></h4>
@@ -343,28 +353,31 @@
 					<a name="createdocumentfromgenesis" class="tsd-anchor"></a>
 					<h3>create<wbr>Document<wbr>From<wbr>Genesis</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-has-type-parameter">
-						<li class="tsd-signature tsd-kind-icon">create<wbr>Document<wbr>From<wbr>Genesis&lt;T&gt;<span class="tsd-signature-symbol">(</span>genesis<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span>, opts<span class="tsd-signature-symbol">?: </span><a href="../interfaces/_ceramicnetwork_common.docopts-1.html" class="tsd-signature-type">DocOpts</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">create<wbr>Document<wbr>From<wbr>Genesis&lt;T&gt;<span class="tsd-signature-symbol">(</span>doctype<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, genesis<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span>, opts<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">DocOpts</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/http-client/src/ceramic-http-client.ts#L78">packages/http-client/src/ceramic-http-client.ts:78</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/http-client/src/ceramic-http-client.ts#L101">packages/http-client/src/ceramic-http-client.ts:101</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-type-parameters-title">Type parameters</h4>
 							<ul class="tsd-type-parameters">
 								<li>
-									<h4>T<span class="tsd-signature-symbol">: </span><a href="_ceramicnetwork_common.doctype-1.html" class="tsd-signature-type">Doctype</a></h4>
+									<h4>T<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Doctype</span></h4>
 								</li>
 							</ul>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
+									<h5>doctype: <span class="tsd-signature-type">string</span></h5>
+								</li>
+								<li>
 									<h5>genesis: <span class="tsd-signature-type">any</span></h5>
 								</li>
 								<li>
-									<h5><span class="tsd-flag ts-flagOptional">Optional</span> opts: <a href="../interfaces/_ceramicnetwork_common.docopts-1.html" class="tsd-signature-type">DocOpts</a></h5>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> opts: <span class="tsd-signature-type">DocOpts</span></h5>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">&gt;</span></h4>
@@ -375,19 +388,19 @@
 					<a name="finddoctypehandler" class="tsd-anchor"></a>
 					<h3>find<wbr>Doctype<wbr>Handler</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-has-type-parameter">
-						<li class="tsd-signature tsd-kind-icon">find<wbr>Doctype<wbr>Handler&lt;T&gt;<span class="tsd-signature-symbol">(</span>doctype<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="../interfaces/_ceramicnetwork_common.doctypehandler-1.html" class="tsd-signature-type">DoctypeHandler</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">find<wbr>Doctype<wbr>Handler&lt;T&gt;<span class="tsd-signature-symbol">(</span>doctype<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">DoctypeHandler</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/http-client/src/ceramic-http-client.ts#L117">packages/http-client/src/ceramic-http-client.ts:117</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/http-client/src/ceramic-http-client.ts#L135">packages/http-client/src/ceramic-http-client.ts:135</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-type-parameters-title">Type parameters</h4>
 							<ul class="tsd-type-parameters">
 								<li>
-									<h4>T<span class="tsd-signature-symbol">: </span><a href="_ceramicnetwork_common.doctype-1.html" class="tsd-signature-type">Doctype</a></h4>
+									<h4>T<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Doctype</span></h4>
 								</li>
 							</ul>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -396,30 +409,24 @@
 									<h5>doctype: <span class="tsd-signature-type">string</span></h5>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <a href="../interfaces/_ceramicnetwork_common.doctypehandler-1.html" class="tsd-signature-type">DoctypeHandler</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">&gt;</span></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">DoctypeHandler</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
-					<a name="listversions" class="tsd-anchor"></a>
-					<h3>list<wbr>Versions</h3>
+					<a name="getsupportedchains" class="tsd-anchor"></a>
+					<h3>get<wbr>Supported<wbr>Chains</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">list<wbr>Versions<span class="tsd-signature-symbol">(</span>docId<span class="tsd-signature-symbol">: </span><a href="_ceramicnetwork_docid.docid.html" class="tsd-signature-type">DocID</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">get<wbr>Supported<wbr>Chains<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">Array</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/http-client/src/ceramic-http-client.ts#L108">packages/http-client/src/ceramic-http-client.ts:108</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/http-client/src/ceramic-http-client.ts#L152">packages/http-client/src/ceramic-http-client.ts:152</a></li>
 								</ul>
 							</aside>
-							<h4 class="tsd-parameters-title">Parameters</h4>
-							<ul class="tsd-parameters">
-								<li>
-									<h5>docId: <a href="_ceramicnetwork_docid.docid.html" class="tsd-signature-type">DocID</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span></h5>
-								</li>
-							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">Array</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -433,13 +440,13 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/http-client/src/ceramic-http-client.ts#L88">packages/http-client/src/ceramic-http-client.ts:88</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/http-client/src/ceramic-http-client.ts#L111">packages/http-client/src/ceramic-http-client.ts:111</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-type-parameters-title">Type parameters</h4>
 							<ul class="tsd-type-parameters">
 								<li>
-									<h4>T<span class="tsd-signature-symbol">: </span><a href="_ceramicnetwork_common.doctype-1.html" class="tsd-signature-type">Doctype</a></h4>
+									<h4>T<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Doctype</span></h4>
 								</li>
 							</ul>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -462,7 +469,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/http-client/src/ceramic-http-client.ts#L98">packages/http-client/src/ceramic-http-client.ts:98</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/http-client/src/ceramic-http-client.ts#L121">packages/http-client/src/ceramic-http-client.ts:121</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -485,7 +492,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/http-client/src/ceramic-http-client.ts#L125">packages/http-client/src/ceramic-http-client.ts:125</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/http-client/src/ceramic-http-client.ts#L143">packages/http-client/src/ceramic-http-client.ts:143</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -612,7 +619,7 @@
 								<a href="_ceramicnetwork_http_client.ceramicclient.html#finddoctypehandler" class="tsd-kind-icon">find<wbr>Doctype<wbr>Handler</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
-								<a href="_ceramicnetwork_http_client.ceramicclient.html#listversions" class="tsd-kind-icon">list<wbr>Versions</a>
+								<a href="_ceramicnetwork_http_client.ceramicclient.html#getsupportedchains" class="tsd-kind-icon">get<wbr>Supported<wbr>Chains</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class tsd-has-type-parameter">
 								<a href="_ceramicnetwork_http_client.ceramicclient.html#loaddocument" class="tsd-kind-icon">load<wbr>Document</a>
@@ -630,20 +637,32 @@
 					<li class=" tsd-kind-class tsd-parent-kind-module tsd-is-not-exported">
 						<a href="_ceramicnetwork_http_client.document.html" class="tsd-kind-icon">Document</a>
 					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-module">
+						<a href="../interfaces/_ceramicnetwork_http_client.ceramicclientconfig.html" class="tsd-kind-icon">Ceramic<wbr>Client<wbr>Config</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-module tsd-is-not-exported">
+						<a href="../interfaces/_ceramicnetwork_http_client.fetchopts.html" class="tsd-kind-icon">Fetch<wbr>Opts</a>
+					</li>
 					<li class=" tsd-kind-variable tsd-parent-kind-module tsd-is-not-exported">
 						<a href="../modules/_ceramicnetwork_http_client.html#api_path" class="tsd-kind-icon">API_<wbr>PATH</a>
 					</li>
 					<li class=" tsd-kind-variable tsd-parent-kind-module tsd-is-not-exported">
 						<a href="../modules/_ceramicnetwork_http_client.html#ceramic_host" class="tsd-kind-icon">CERAMIC_<wbr>HOST</a>
 					</li>
-					<li class=" tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
-						<a href="../modules/_ceramicnetwork_http_client.html#docidurl" class="tsd-kind-icon">doc<wbr>IdUrl</a>
+					<li class=" tsd-kind-function tsd-parent-kind-module">
+						<a href="../modules/_ceramicnetwork_http_client.html#combineurls" class="tsd-kind-icon">combineURLs</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module">
+						<a href="../modules/_ceramicnetwork_http_client.html#delay" class="tsd-kind-icon">delay</a>
 					</li>
 					<li class=" tsd-kind-function tsd-parent-kind-module">
 						<a href="../modules/_ceramicnetwork_http_client.html#fetchjson" class="tsd-kind-icon">fetch<wbr>Json</a>
 					</li>
 					<li class=" tsd-kind-function tsd-parent-kind-module">
 						<a href="../modules/_ceramicnetwork_http_client.html#typedocid" class="tsd-kind-icon">type<wbr>DocID</a>
+					</li>
+					<li class=" tsd-kind-object-literal tsd-parent-kind-module">
+						<a href="../modules/_ceramicnetwork_http_client.html#default_client_config" class="tsd-kind-icon">DEFAULT_<wbr>CLIENT_<wbr>CONFIG</a>
 					</li>
 				</ul>
 			</nav>

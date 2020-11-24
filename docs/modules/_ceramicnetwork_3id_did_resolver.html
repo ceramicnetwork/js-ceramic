@@ -122,20 +122,257 @@
 							<h3>Interfaces</h3>
 							<ul class="tsd-index-list">
 								<li class="tsd-kind-interface tsd-parent-kind-module"><a href="../interfaces/_ceramicnetwork_3id_did_resolver.ceramic.html" class="tsd-kind-icon">Ceramic</a></li>
+								<li class="tsd-kind-interface tsd-parent-kind-module tsd-is-not-exported"><a href="../interfaces/_ceramicnetwork_3id_did_resolver.dag.html" class="tsd-kind-icon">DAG</a></li>
+								<li class="tsd-kind-interface tsd-parent-kind-module tsd-is-not-exported"><a href="../interfaces/_ceramicnetwork_3id_did_resolver.ipfs.html" class="tsd-kind-icon">IPFS</a></li>
 								<li class="tsd-kind-interface tsd-parent-kind-module tsd-is-not-exported"><a href="../interfaces/_ceramicnetwork_3id_did_resolver.resolverregistry.html" class="tsd-kind-icon">Resolver<wbr>Registry</a></li>
+							</ul>
+						</section>
+						<section class="tsd-index-section tsd-is-not-exported">
+							<h3>Variables</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-variable tsd-parent-kind-module tsd-is-not-exported"><a href="_ceramicnetwork_3id_did_resolver.html#threebox_api_url" class="tsd-kind-icon">THREEBOX_<wbr>API_<wbr>URL</a></li>
 							</ul>
 						</section>
 						<section class="tsd-index-section ">
 							<h3>Functions</h3>
 							<ul class="tsd-index-list">
+								<li class="tsd-kind-function tsd-parent-kind-module"><a href="_ceramicnetwork_3id_did_resolver.html#legacyresolver" class="tsd-kind-icon">Legacy<wbr>Resolver</a></li>
+								<li class="tsd-kind-function tsd-parent-kind-module tsd-is-not-exported"><a href="_ceramicnetwork_3id_did_resolver.html#diddocreq" class="tsd-kind-icon">did<wbr>Doc<wbr>Req</a></li>
+								<li class="tsd-kind-function tsd-parent-kind-module tsd-is-not-exported"><a href="_ceramicnetwork_3id_did_resolver.html#encodekey" class="tsd-kind-icon">encode<wbr>Key</a></li>
+								<li class="tsd-kind-function tsd-parent-kind-module tsd-is-not-exported"><a href="_ceramicnetwork_3id_did_resolver.html#fetchjson" class="tsd-kind-icon">fetch<wbr>Json</a></li>
+								<li class="tsd-kind-function tsd-parent-kind-module tsd-is-not-exported"><a href="_ceramicnetwork_3id_did_resolver.html#getversion" class="tsd-kind-icon">get<wbr>Version</a></li>
+								<li class="tsd-kind-function tsd-parent-kind-module tsd-is-not-exported"><a href="_ceramicnetwork_3id_did_resolver.html#islegacydid" class="tsd-kind-icon">is<wbr>Legacy<wbr>Did</a></li>
+								<li class="tsd-kind-function tsd-parent-kind-module tsd-is-not-exported"><a href="_ceramicnetwork_3id_did_resolver.html#legacyresolve" class="tsd-kind-icon">legacy<wbr>Resolve</a></li>
+								<li class="tsd-kind-function tsd-parent-kind-module tsd-is-not-exported"><a href="_ceramicnetwork_3id_did_resolver.html#resolve" class="tsd-kind-icon">resolve</a></li>
 								<li class="tsd-kind-function tsd-parent-kind-module"><a href="_ceramicnetwork_3id_did_resolver.html#wrapdocument" class="tsd-kind-icon">wrap<wbr>Document</a></li>
+							</ul>
+						</section>
+						<section class="tsd-index-section tsd-is-not-exported">
+							<h3>Object literals</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-object-literal tsd-parent-kind-module tsd-is-not-exported"><a href="_ceramicnetwork_3id_did_resolver.html#ipfsmock" class="tsd-kind-icon">ipfs<wbr>Mock</a></li>
 							</ul>
 						</section>
 					</div>
 				</section>
 			</section>
+			<section class="tsd-panel-group tsd-member-group tsd-is-not-exported">
+				<h2>Variables</h2>
+				<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-module tsd-is-not-exported">
+					<a name="threebox_api_url" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagConst">Const</span> THREEBOX_<wbr>API_<wbr>URL</h3>
+					<div class="tsd-signature tsd-kind-icon">THREEBOX_<wbr>API_<wbr>URL<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">"https://ipfs.3box.io"</span><span class="tsd-signature-symbol"> = &quot;https://ipfs.3box.io&quot;</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/3id-did-resolver/src/legacyResolver.ts#L13">packages/3id-did-resolver/src/legacyResolver.ts:13</a></li>
+						</ul>
+					</aside>
+				</section>
+			</section>
 			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Functions</h2>
+				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-module">
+					<a name="legacyresolver" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagConst">Const</span> Legacy<wbr>Resolver</h3>
+					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-module">
+						<li class="tsd-signature tsd-kind-icon">Legacy<wbr>Resolver<span class="tsd-signature-symbol">(</span>didId<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, ipfs<span class="tsd-signature-symbol">?: </span><a href="../interfaces/_ceramicnetwork_3id_did_resolver.ipfs.html" class="tsd-signature-type">IPFS</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/3id-did-resolver/src/legacyResolver.ts#L46">packages/3id-did-resolver/src/legacyResolver.ts:46</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>didId: <span class="tsd-signature-type">string</span></h5>
+								</li>
+								<li>
+									<h5><span class="tsd-flag ts-flagDefault value">Default value</span> ipfs: <a href="../interfaces/_ceramicnetwork_3id_did_resolver.ipfs.html" class="tsd-signature-type">IPFS</a><span class="tsd-signature-symbol"> = ipfsMock</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
+					<a name="diddocreq" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagConst">Const</span> did<wbr>Doc<wbr>Req</h3>
+					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
+						<li class="tsd-signature tsd-kind-icon">did<wbr>Doc<wbr>Req<span class="tsd-signature-symbol">(</span>cid<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/3id-did-resolver/src/legacyResolver.ts#L23">packages/3id-did-resolver/src/legacyResolver.ts:23</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>cid: <span class="tsd-signature-type">string</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
+					<a name="encodekey" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagConst">Const</span> encode<wbr>Key</h3>
+					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
+						<li class="tsd-signature tsd-kind-icon">encode<wbr>Key<span class="tsd-signature-symbol">(</span>key<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Uint8Array</span>, encryption<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/3id-did-resolver/src/legacyResolver.ts#L33">packages/3id-did-resolver/src/legacyResolver.ts:33</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>key: <span class="tsd-signature-type">Uint8Array</span></h5>
+								</li>
+								<li>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> encryption: <span class="tsd-signature-type">boolean</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
+					<a name="fetchjson" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagConst">Const</span> fetch<wbr>Json</h3>
+					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
+						<li class="tsd-signature tsd-kind-icon">fetch<wbr>Json<span class="tsd-signature-symbol">(</span>url<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/3id-did-resolver/src/legacyResolver.ts#L15">packages/3id-did-resolver/src/legacyResolver.ts:15</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>url: <span class="tsd-signature-type">string</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
+					<a name="getversion" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagConst">Const</span> get<wbr>Version</h3>
+					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
+						<li class="tsd-signature tsd-kind-icon">get<wbr>Version<span class="tsd-signature-symbol">(</span>query<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/3id-did-resolver/src/index.ts#L83">packages/3id-did-resolver/src/index.ts:83</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5><span class="tsd-flag ts-flagDefault value">Default value</span> query: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> = &quot;&quot;</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
+					<a name="islegacydid" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagConst">Const</span> is<wbr>Legacy<wbr>Did</h3>
+					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
+						<li class="tsd-signature tsd-kind-icon">is<wbr>Legacy<wbr>Did<span class="tsd-signature-symbol">(</span>didId<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/3id-did-resolver/src/index.ts#L74">packages/3id-did-resolver/src/index.ts:74</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>didId: <span class="tsd-signature-type">string</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
+					<a name="legacyresolve" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagConst">Const</span> legacy<wbr>Resolve</h3>
+					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
+						<li class="tsd-signature tsd-kind-icon">legacy<wbr>Resolve<span class="tsd-signature-symbol">(</span>ceramic<span class="tsd-signature-symbol">: </span><a href="../interfaces/_ceramicnetwork_3id_did_resolver.ceramic.html" class="tsd-signature-type">Ceramic</a>, didId<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, version<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">DIDDocument</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/3id-did-resolver/src/index.ts#L88">packages/3id-did-resolver/src/index.ts:88</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>ceramic: <a href="../interfaces/_ceramicnetwork_3id_did_resolver.ceramic.html" class="tsd-signature-type">Ceramic</a></h5>
+								</li>
+								<li>
+									<h5>didId: <span class="tsd-signature-type">string</span></h5>
+								</li>
+								<li>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> version: <span class="tsd-signature-type">string</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">DIDDocument</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span><span class="tsd-signature-symbol">&gt;</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
+					<a name="resolve" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagConst">Const</span> resolve</h3>
+					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
+						<li class="tsd-signature tsd-kind-icon">resolve<span class="tsd-signature-symbol">(</span>ceramic<span class="tsd-signature-symbol">: </span><a href="../interfaces/_ceramicnetwork_3id_did_resolver.ceramic.html" class="tsd-signature-type">Ceramic</a>, didId<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, version<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">DIDDocument</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/3id-did-resolver/src/index.ts#L108">packages/3id-did-resolver/src/index.ts:108</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>ceramic: <a href="../interfaces/_ceramicnetwork_3id_did_resolver.ceramic.html" class="tsd-signature-type">Ceramic</a></h5>
+								</li>
+								<li>
+									<h5>didId: <span class="tsd-signature-type">string</span></h5>
+								</li>
+								<li>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> version: <span class="tsd-signature-type">string</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">DIDDocument</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span><span class="tsd-signature-symbol">&gt;</span></h4>
+						</li>
+					</ul>
+				</section>
 				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-module">
 					<a name="wrapdocument" class="tsd-anchor"></a>
 					<h3>wrap<wbr>Document</h3>
@@ -146,7 +383,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/be66617/packages/3id-did-resolver/src/index.ts#L14">packages/3id-did-resolver/src/index.ts:14</a></li>
+									<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/3id-did-resolver/src/index.ts#L18">packages/3id-did-resolver/src/index.ts:18</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -161,6 +398,52 @@
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">DIDDocument</span></h4>
 						</li>
 					</ul>
+				</section>
+			</section>
+			<section class="tsd-panel-group tsd-member-group tsd-is-not-exported">
+				<h2>Object literals</h2>
+				<section class="tsd-panel tsd-member tsd-kind-object-literal tsd-parent-kind-module tsd-is-not-exported">
+					<a name="ipfsmock" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagConst">Const</span> ipfs<wbr>Mock</h3>
+					<div class="tsd-signature tsd-kind-icon">ipfs<wbr>Mock<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">object</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/3id-did-resolver/src/legacyResolver.ts#L26">packages/3id-did-resolver/src/legacyResolver.ts:26</a></li>
+						</ul>
+					</aside>
+					<section class="tsd-panel tsd-member tsd-kind-object-literal tsd-parent-kind-object-literal tsd-is-not-exported">
+						<a name="ipfsmock.dag-1" class="tsd-anchor"></a>
+						<h3>dag</h3>
+						<div class="tsd-signature tsd-kind-icon">dag<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">object</span></div>
+						<aside class="tsd-sources">
+							<ul>
+								<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/3id-did-resolver/src/legacyResolver.ts#L27">packages/3id-did-resolver/src/legacyResolver.ts:27</a></li>
+							</ul>
+						</aside>
+						<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-object-literal tsd-is-not-exported">
+							<a name="ipfsmock.dag-1.get" class="tsd-anchor"></a>
+							<h3>get</h3>
+							<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-object-literal tsd-is-not-exported">
+								<li class="tsd-signature tsd-kind-icon">get<span class="tsd-signature-symbol">(</span>cid<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></li>
+							</ul>
+							<ul class="tsd-descriptions">
+								<li class="tsd-description">
+									<aside class="tsd-sources">
+										<ul>
+											<li>Defined in <a href="https://github.com/ceramicnetwork/js-ceramic/blob/b94896e/packages/3id-did-resolver/src/legacyResolver.ts#L28">packages/3id-did-resolver/src/legacyResolver.ts:28</a></li>
+										</ul>
+									</aside>
+									<h4 class="tsd-parameters-title">Parameters</h4>
+									<ul class="tsd-parameters">
+										<li>
+											<h5>cid: <span class="tsd-signature-type">string</span></h5>
+										</li>
+									</ul>
+									<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></h4>
+								</li>
+							</ul>
+						</section>
+					</section>
 				</section>
 			</section>
 		</div>
@@ -238,10 +521,46 @@
 						<a href="../interfaces/_ceramicnetwork_3id_did_resolver.ceramic.html" class="tsd-kind-icon">Ceramic</a>
 					</li>
 					<li class=" tsd-kind-interface tsd-parent-kind-module tsd-is-not-exported">
+						<a href="../interfaces/_ceramicnetwork_3id_did_resolver.dag.html" class="tsd-kind-icon">DAG</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-module tsd-is-not-exported">
+						<a href="../interfaces/_ceramicnetwork_3id_did_resolver.ipfs.html" class="tsd-kind-icon">IPFS</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-module tsd-is-not-exported">
 						<a href="../interfaces/_ceramicnetwork_3id_did_resolver.resolverregistry.html" class="tsd-kind-icon">Resolver<wbr>Registry</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-parent-kind-module tsd-is-not-exported">
+						<a href="_ceramicnetwork_3id_did_resolver.html#threebox_api_url" class="tsd-kind-icon">THREEBOX_<wbr>API_<wbr>URL</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module">
+						<a href="_ceramicnetwork_3id_did_resolver.html#legacyresolver" class="tsd-kind-icon">Legacy<wbr>Resolver</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
+						<a href="_ceramicnetwork_3id_did_resolver.html#diddocreq" class="tsd-kind-icon">did<wbr>Doc<wbr>Req</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
+						<a href="_ceramicnetwork_3id_did_resolver.html#encodekey" class="tsd-kind-icon">encode<wbr>Key</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
+						<a href="_ceramicnetwork_3id_did_resolver.html#fetchjson" class="tsd-kind-icon">fetch<wbr>Json</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
+						<a href="_ceramicnetwork_3id_did_resolver.html#getversion" class="tsd-kind-icon">get<wbr>Version</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
+						<a href="_ceramicnetwork_3id_did_resolver.html#islegacydid" class="tsd-kind-icon">is<wbr>Legacy<wbr>Did</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
+						<a href="_ceramicnetwork_3id_did_resolver.html#legacyresolve" class="tsd-kind-icon">legacy<wbr>Resolve</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module tsd-is-not-exported">
+						<a href="_ceramicnetwork_3id_did_resolver.html#resolve" class="tsd-kind-icon">resolve</a>
 					</li>
 					<li class=" tsd-kind-function tsd-parent-kind-module">
 						<a href="_ceramicnetwork_3id_did_resolver.html#wrapdocument" class="tsd-kind-icon">wrap<wbr>Document</a>
+					</li>
+					<li class=" tsd-kind-object-literal tsd-parent-kind-module tsd-is-not-exported">
+						<a href="_ceramicnetwork_3id_did_resolver.html#ipfsmock" class="tsd-kind-icon">ipfs<wbr>Mock</a>
 					</li>
 				</ul>
 			</nav>
