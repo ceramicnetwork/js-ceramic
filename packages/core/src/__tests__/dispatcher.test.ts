@@ -54,11 +54,15 @@ describe('Dispatcher', () => {
   })
 
   it('makes registration correctly', async () => {
-    const id = '/ceramic/bagjqcgzaday6dzalvmy5ady2m5a5legq5zrbsnlxfc2bfxej532ds7htpova'
-    const doc = new Document(id, dispatcher, null)
+    const doc = new Document(DocID.fromString(FAKE_DOC_ID), dispatcher, null)
     doc._doctype = new TileDoctypeMock()
     await dispatcher.register(doc)
-    expect(ipfs.pubsub.publish).toHaveBeenCalledWith(TOPIC, JSON.stringify({ typ: MsgType.QUERY, id, doctype: 'tile' }))
+
+    const publishArgs = ipfs.pubsub.publish.mock.calls[0]
+    expect(publishArgs[0]).toEqual(TOPIC)
+    const queryMessageSent = JSON.parse(publishArgs[1])
+    delete queryMessageSent.id
+    expect(queryMessageSent).toEqual({typ: MsgType.QUERY, doc: FAKE_DOC_ID})
   })
 
   it('store record correctly', async () => {
@@ -82,8 +86,6 @@ describe('Dispatcher', () => {
   })
 
   it('UPDATE message format validation', async () => {
-    const id = '/ceramic/bagjqcgzaday6dzalvmy5ady2m5a5legq5zrbsnlxfc2bfxej532ds7htpova'
-
     // Missing a field
     await expect(dispatcher.handleMessage({ data: JSON.stringify({ typ: MsgType.UPDATE, doc: FAKE_DOC_ID, }) })).rejects.toThrow("Expected string, but was undefined in tip")
 
@@ -94,15 +96,26 @@ describe('Dispatcher', () => {
     await dispatcher.handleMessage({ data: JSON.stringify({ typ: MsgType.UPDATE, doc: FAKE_DOC_ID, tip: FAKE_CID.toString(), randomField: 'foobar'}) })
   })
 
+  it('QUERY message format validation', async () => {
+    // Missing a field
+    await expect(dispatcher.handleMessage({ data: JSON.stringify({ typ: MsgType.QUERY, doc: FAKE_DOC_ID }) })).rejects.toThrow("Expected string, but was undefined in id")
+
+    // Field with wrong type
+    await expect(dispatcher.handleMessage({ data: JSON.stringify({ typ: MsgType.QUERY, doc: FAKE_DOC_ID, id: 5 }) })).rejects.toThrow("Expected string, but was number in id")
+
+    // Allows additional unexpected fields
+    await dispatcher.handleMessage({ data: JSON.stringify({ typ: MsgType.QUERY, doc: FAKE_DOC_ID, id: "1", randomField: 'foobar'}) })
+  })
+
   it('handle message correctly', async () => {
-    const doc = new Document(FAKE_DOC_ID, dispatcher, null)
+    const doc = new Document(DocID.fromString(FAKE_DOC_ID), dispatcher, null)
     doc._doctype = new TileDoctypeMock()
     await dispatcher.register(doc)
 
     const updatePromise = new Promise(resolve => doc.on('update', resolve))
     const tipreqPromise = new Promise(resolve => doc.on('tipreq', resolve))
 
-    await dispatcher.handleMessage({ data: JSON.stringify({ typ: MsgType.QUERY, id: FAKE_DOC_ID }) })
+    await dispatcher.handleMessage({ data: JSON.stringify({ typ: MsgType.QUERY, doc: FAKE_DOC_ID, id: "1" }) })
     // only emits an event
     await tipreqPromise
 
