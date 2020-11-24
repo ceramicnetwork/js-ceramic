@@ -112,13 +112,13 @@ export default class Dispatcher extends EventEmitter {
    * @param tip - Record CID
    * @param doctype - Doctype name
    */
-  async publishTip (id: string, tip: CID, doctype?: string): Promise<void> {
+  async publishTip (docId: string, tip: CID, doctype?: string): Promise<void> {
     if (!this._isRunning) {
       this.logger.error('Dispatcher has been closed')
       return
     }
 
-    const payload = { typ: MsgType.UPDATE, id, cid: tip.toString(), doctype: doctype }
+    const payload = { typ: MsgType.UPDATE, doc: docId, tip: tip.toString() }
     await this._ipfs.pubsub.publish(this.topic, JSON.stringify(payload))
     this._log({ peer: this._peerId, event: 'published', topic: this.topic, message: payload })
   }
@@ -173,16 +173,16 @@ export default class Dispatcher extends EventEmitter {
    * @private
    */
   async _handleUpdateMessage(message: any): Promise<void> {
-    const { id, cid } = message
-    if (!this._documents[id]) {
+    const { doc, tip } = message
+    if (!this._documents[doc]) {
       return
     }
 
-    if (typeof cid !== 'string') return
+    if (typeof tip !== 'string') return
 
     // TODO: add cache of cids here so that we don't emit event
     // multiple times if we get the message more than once.
-    this._documents[id].emit('update', new CID(cid))
+    this._documents[doc].emit('update', new CID(tip))
   }
 
   /**
