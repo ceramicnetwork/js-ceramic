@@ -5,6 +5,7 @@ import { TileDoctype } from "@ceramicnetwork/doctype-tile"
 import DocID from "@ceramicnetwork/docid";
 
 const FAKE_CID = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
+const FAKE_CID2 = new CID('bafybeig6xv5nwphfmvcnektpnojts44jqcuam7bmye2pb54adnrtccjlsu')
 const FAKE_DOC_ID = "kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s"
 
 const ipfs = {
@@ -116,12 +117,24 @@ describe('Dispatcher', () => {
     doc._doctype = new TileDoctypeMock()
     await dispatcher.register(doc)
 
-    const updatePromise = new Promise(resolve => doc.on('update', resolve))
+    // Store the query ID sent when the doc is registered so we can use it as the response ID later
+    const publishArgs = ipfs.pubsub.publish.mock.calls[0]
+    expect(publishArgs[0]).toEqual(TOPIC)
+    const queryMessageSent = JSON.parse(publishArgs[1])
+    const queryID = queryMessageSent.id
 
+    // Handle UPDATE message
+    const updatePromise = new Promise(resolve => doc.on('update', resolve))
     await dispatcher.handleMessage({ data: JSON.stringify({ typ: MsgType.UPDATE, doc: FAKE_DOC_ID, tip: FAKE_CID.toString() }) })
     expect(await updatePromise).toEqual(FAKE_CID)
 
+    // Handle QUERY message
     await dispatcher.handleMessage({ data: JSON.stringify({ typ: MsgType.QUERY, doc: FAKE_DOC_ID, id: "1" }) })
-    expect(ipfs.pubsub.publish).lastCalledWith(TOPIC, JSON.stringify({ typ: MsgType.UPDATE, doc: FAKE_DOC_ID, tip: FAKE_CID.toString() }))
+    expect(ipfs.pubsub.publish).lastCalledWith(TOPIC, JSON.stringify({ typ: MsgType.RESPONSE, id: "1", tips: {[FAKE_DOC_ID]: FAKE_CID.toString()} }))
+
+    // Handle RESPONSE message
+    const updatePromise2 = new Promise(resolve => doc.on('update', resolve))
+    await dispatcher.handleMessage({ data: JSON.stringify({ typ: MsgType.RESPONSE, id: queryID, tips: { [FAKE_DOC_ID]: FAKE_CID2.toString() } }) })
+    expect(await updatePromise2).toEqual(FAKE_CID2)
   })
 })

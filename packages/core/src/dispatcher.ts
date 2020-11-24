@@ -80,6 +80,9 @@ const QueryMessage = runtypes.Record({
 export default class Dispatcher extends EventEmitter {
   private _peerId: string
   private readonly _documents: Record<string, Document>
+  // Set of IDs for QUERY messages we have sent to the pub/sub topic but not yet heard a
+  // corresponding RESPONSE message for. Maps the query ID to the primary DocID we were querying for.
+  private readonly _outstandingQueryIds: Record<string, DocID>
 
   private logger: Logger
   private _isRunning = true
@@ -87,6 +90,7 @@ export default class Dispatcher extends EventEmitter {
   constructor (public _ipfs: IPFSApi, public topic: string = TOPIC) {
     super()
     this._documents = {}
+    this._outstandingQueryIds = {}
     this.logger = RootLogger.getLogger(Dispatcher.name)
   }
 
@@ -106,8 +110,13 @@ export default class Dispatcher extends EventEmitter {
    */
   async register (document: Document): Promise<void> {
     this._documents[document.id.toString()] = document
-    // request tip
+
+    // Build a QUERY message to send to the pub/sub topic to request the latest tip for this document
     const payload = await this._buildQueryMessage(document)
+
+    // Store the query id so we'll process the corresponding RESPONSE message when it comes in
+    this._outstandingQueryIds[payload.id] = document.id.baseID
+
     this._ipfs.pubsub.publish(this.topic, JSON.stringify(payload))
     this._log({ peer: this._peerId, event: 'published', topic: this.topic, message: payload })
   }
@@ -249,16 +258,20 @@ export default class Dispatcher extends EventEmitter {
     // Runtime check that the message adheres to the expected format for QUERY messages
     QueryMessage.check(message)
 
-    const { doc: docId } = message
+    const { doc: docId, id } = message
     if (!this._documents[docId]) {
       return
     }
 
     // TODO: Should we validate that the 'id' field is the correct hash of the rest of the message?
 
-    const doc = this._documents[docId]
-    await this.publishTip(doc.id, doc.tip)
+    // Build RESPONSE message and send it out on the pub/sub topic
     // TODO: Handle 'paths' for multiquery support
+    const tipMap = {}
+    tipMap[docId] = this._documents[docId].tip.toString()
+    const payload = { typ: MsgType.RESPONSE, id, tips: tipMap}
+    await this._ipfs.pubsub.publish(this.topic, JSON.stringify(payload))
+    this._log({ peer: this._peerId, event: 'published', topic: this.topic, message: payload })
   }
 
   /**
@@ -267,7 +280,22 @@ export default class Dispatcher extends EventEmitter {
    * @private
    */
   async _handleResponseMessage(message: any): Promise<void> {
-    // TODO: Use Response message
+    // TODO Add validation the message adheres to the proper format.
+    const { id: queryId, tips } = message
+
+    if (!this._outstandingQueryIds[queryId]) {
+      // We're not expecting this RESPONSE message
+      return
+    }
+
+    const expectedDocID = this._outstandingQueryIds[queryId]
+    const newTip = tips[expectedDocID.toString()]
+    if (!newTip) {
+      throw new Error("Response to query with ID '" + queryId + "' is missing expected new tip for docID '" +
+          expectedDocID + "'")
+    }
+    this._documents[expectedDocID.toString()].emit('update', new CID(newTip))
+    // TODO Iterate over all documents in 'tips' object and process the new tip for each
   }
 
   /**
