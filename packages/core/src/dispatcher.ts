@@ -7,6 +7,7 @@ import { DoctypeUtils, RootLogger, Logger } from "@ceramicnetwork/common"
 import { TextDecoder } from 'util'
 import { IPFSApi } from "./declarations"
 import DocID from "@ceramicnetwork/docid";
+import * as runtypes from "runtypes";
 
 /**
  * Ceramic Pub/Sub message type.
@@ -32,6 +33,18 @@ interface LogMessage {
   from?: string;
   message?: Record<string, unknown>;
 }
+
+/**
+ * Format for UPDATE messages on the pub/sub topic. Uses the 'runtypes' library to provide type
+ * checking at run time when parsing messages off the pub/sub topic.
+ */
+const UpdateMessage = runtypes.Record({
+  typ: runtypes.Number.withConstraint(n => n === MsgType.UPDATE), // The message type, always 0
+  doc: runtypes.String,  // The DocID that is being updated
+  tip: runtypes.String,  // The CID of the new Tip of the document
+  // The url of the anchor service that was used to request an anchor. Optional.
+  anchorService: runtypes.String.Or(runtypes.Undefined),
+});
 
 /**
  * Ceramic core Dispatcher used for handling messages from pub/sub topic.
@@ -173,6 +186,9 @@ export default class Dispatcher extends EventEmitter {
    * @private
    */
   async _handleUpdateMessage(message: any): Promise<void> {
+    // Runtime check that the message adheres to the expected format for UPDATE messages
+    UpdateMessage.check(message)
+
     const { doc, tip } = message
     if (!this._documents[doc]) {
       return

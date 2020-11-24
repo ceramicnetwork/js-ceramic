@@ -78,28 +78,32 @@ describe('Dispatcher', () => {
 
   it('errors on invalid message type', async () => {
     const id = '/ceramic/bagjqcgzaday6dzalvmy5ady2m5a5legq5zrbsnlxfc2bfxej532ds7htpova'
-
-    const doc = new Document(id, dispatcher, null)
-    doc._doctype = new TileDoctypeMock()
-    await dispatcher.register(doc)
-
     await expect(dispatcher.handleMessage({ data: JSON.stringify({ typ: -1, id }) })).rejects.toThrow("Unsupported message type: -1")
   })
 
+  it('UPDATE message type validation', async () => {
+    const id = '/ceramic/bagjqcgzaday6dzalvmy5ady2m5a5legq5zrbsnlxfc2bfxej532ds7htpova'
+
+    // Missing a field
+    await expect(dispatcher.handleMessage({ data: JSON.stringify({ typ: MsgType.UPDATE, doc: FAKE_DOC_ID, }) })).rejects.toThrow("Expected string, but was undefined in tip")
+
+    // Field with wrong type
+    await expect(dispatcher.handleMessage({ data: JSON.stringify({ typ: MsgType.UPDATE, doc: FAKE_DOC_ID, tip: 5, }) })).rejects.toThrow("Expected string, but was number in tip")
+  })
+
   it('handle message correctly', async () => {
-    const docId = '/ceramic/bagjqcgzaday6dzalvmy5ady2m5a5legq5zrbsnlxfc2bfxej532ds7htpova'
-    const doc = new Document(docId, dispatcher, null)
+    const doc = new Document(FAKE_DOC_ID, dispatcher, null)
     doc._doctype = new TileDoctypeMock()
     await dispatcher.register(doc)
 
     const updatePromise = new Promise(resolve => doc.on('update', resolve))
     const tipreqPromise = new Promise(resolve => doc.on('tipreq', resolve))
 
-    await dispatcher.handleMessage({ data: JSON.stringify({ typ: MsgType.QUERY, id: docId }) })
+    await dispatcher.handleMessage({ data: JSON.stringify({ typ: MsgType.QUERY, id: FAKE_DOC_ID }) })
     // only emits an event
     await tipreqPromise
 
-    await dispatcher.handleMessage({ data: JSON.stringify({ typ: MsgType.UPDATE, doc: docId, tip: FAKE_CID.toString() }) })
+    await dispatcher.handleMessage({ data: JSON.stringify({ typ: MsgType.UPDATE, doc: FAKE_DOC_ID, tip: FAKE_CID.toString() }) })
     expect(await updatePromise).toEqual(FAKE_CID)
   })
 })
