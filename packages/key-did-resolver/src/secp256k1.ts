@@ -3,7 +3,7 @@ import * as u8a from 'uint8arrays'
 /**
  * Constructs the document based on the method key
  */
-const keyToDidDoc = (pubKeyBytes: Uint8Array, fingerprint: string): any => {
+export function keyToDidDoc (pubKeyBytes: Uint8Array, fingerprint: string): any {
     const did = `did:key:${fingerprint}`
     const keyId = `${did}#${fingerprint}`
     return {
@@ -20,8 +20,4 @@ const keyToDidDoc = (pubKeyBytes: Uint8Array, fingerprint: string): any => {
         capabilityDelegation: [keyId],
         capabilityInvocation: [keyId],
     }
-}
-
-export {
-    keyToDidDoc
 }

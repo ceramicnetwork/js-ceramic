@@ -5,12 +5,13 @@ import varint from 'varint'
 import uint8ArrayConcat from 'uint8arrays/concat'
 import uint8ArrayToString from 'uint8arrays/to-string'
 const DOCID_CODEC = 206
+const DEFAULT_BASE = 'base36'
 
 const getKey = (obj: { [key: string]: number }, value: number): string | undefined => {
-  for (const [k, v] of Object.entries(obj)) { 
+  for (const [k, v] of Object.entries(obj)) {
     if (v === value) return k
   }
-} 
+}
 
 // Definition
 // '<multibase-prefix><multicodec-docid><doctype><genesis-cid-bytes>'
@@ -22,7 +23,7 @@ class DocID {
    *
    * @param {string|number}      doctype
    * @param {CID|string}         cid
-   * @param {CID|string}         version
+   * @param {CID|string}         version CID. Pass '0' as shorthand for the genesis version.
    * @param {string}             [multibaseName = 'base36']
    *
    * @example
@@ -30,18 +31,21 @@ class DocID {
    * new DocID(<docType>, <CID>|<cidStr>, <VersionCID>|<VersionCidStr>, <multibaseName>)
    */
 
-  private _doctype: number 
+  private _doctype: number
   private _cid: CID
   private _multibaseName: string
   private _bytes: Uint8Array
   private _version: CID | undefined
 
-  constructor (doctype: string | number, cid: CID | string, version: CID | string | number = null, multibaseName = 'base36') {
+  constructor (doctype: string | number, cid: CID | string, version: CID | string | number = null, multibaseName = DEFAULT_BASE) {
     this._doctype = (typeof doctype === 'string') ? doctypes[doctype] : doctype
      if (!doctype && doctype !== 0) throw new Error('constructor: doctype required')
-    this._multibaseName = multibaseName 
+    this._multibaseName = multibaseName
     this._cid = (typeof cid === 'string') ? new CID(cid) : cid
-    if (version === '0' || typeof version === 'number') {
+    if (typeof version === 'number' && version !== 0) {
+      throw new Error('Cannot specify version as a number except to request version 0 (the genesis version)')
+    }
+    if (version === '0' || version === 0) {
       this._version = this._cid
     } else {
       this._version = (typeof version === 'string') ? new CID(version) : version
@@ -49,18 +53,29 @@ class DocID {
     if (!cid) throw new Error('constructor: cid required')
   }
 
+  /**
+   * Copies the given DocID and returns a copy of it, optionally changing the version to the one provided
+   * @param other
+   * @param version
+   */
+  static fromOther(other: DocID, version?: CID | string): DocID {
+    if (!version) {
+      version = other.version
+    }
+    return new DocID(other._doctype, other._cid, version, other._multibaseName)
+  }
+
   static fromBytes(bytes: Uint8Array, version?: CID | string, multibaseName?: string): DocID {
-    const docCodec = varint.decode(bytes) 
+    const docCodec = varint.decode(bytes)
     if (docCodec !== DOCID_CODEC) throw new Error('fromBytes: invalid docid, does not include docid codec')
-    bytes = bytes.slice(varint.decode.bytes) 
+    bytes = bytes.slice(varint.decode.bytes)
     const docType = varint.decode(bytes)
-    bytes = bytes.slice(varint.decode.bytes) 
+    bytes = bytes.slice(varint.decode.bytes)
 
     let cid
 
     try {
       cid = new CID(bytes)
-      if (version === '0') version = cid
     } catch(e) {
       // Includes version
       const cidLength = DocID._genesisCIDLength(bytes)
@@ -75,7 +90,7 @@ class DocID {
   static _genesisCIDLength(bytes: Uint8Array): number {
     let offset = 0
 
-    varint.decode(bytes) // cid version 
+    varint.decode(bytes) // cid version
     offset += varint.decode.bytes
 
     varint.decode(bytes.slice(offset)) // cid codec
@@ -133,7 +148,7 @@ class DocID {
   get typeName (): string {
     const name = getKey(doctypes, this._doctype)
     if (!name) throw new Error('docTypeName: no registered name available')
-    return name 
+    return name
   }
 
   /**
@@ -197,7 +212,7 @@ class DocID {
       const codec = varint.encode(DOCID_CODEC)
       const doctype = varint.encode(this.type)
 
-      let versionBytes 
+      let versionBytes
       if (this.version) {
         versionBytes = this.cid.equals(this.version) ? varint.encode(0) : this.version.bytes
       } else {
@@ -228,7 +243,7 @@ class DocID {
     }
 
     return this.type === otherDocID.type &&
-      (this.version ? this.version.equals(otherDocID.version) : !otherDocID.version) &&
+      (this.version ? (!!otherDocID.version && this.version.equals(otherDocID.version)) : !otherDocID.version) &&
       this.cid.equals(otherDocID.cid)
   }
 
@@ -253,13 +268,12 @@ class DocID {
   }
 
   /**
-   * Encode the DocID into a url
+   * Encode the DocID into a base36 url
    *
-   * @param   {string}   [base=this.multibaseName]   Base encoding to use.
    * @returns {string}
    */
-  toUrl(base: string): string {
-    return `ceramic://${this.toBaseEncodedString(base)}`
+  toUrl(): string {
+    return `ceramic://${this.toBaseEncodedString(DEFAULT_BASE)}`
   }
 
   /**
@@ -279,8 +293,9 @@ class DocID {
    * Determine if given DocID, DocID string or bytes is a valid DocID
    *
    * @param   {any}     other
-   * @returns {bool}
+   * @returns {Boolean}
    */
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   static isDocID (other: any): boolean {
     try {
       if (typeof other === 'string') {

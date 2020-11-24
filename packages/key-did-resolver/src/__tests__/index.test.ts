@@ -9,7 +9,7 @@ describe('Index mapper', () => {
         const resolve = resolverRegistry.key
         expect(resolve).not.toBeUndefined()
 
-        const parsedDid = {
+        let parsedDid = {
             id: "zQ3shbgnTGcgBpXPdBjDur3ATMDWhS7aPs6FRFkWR19Lb9Zwz",
             did: 'did:key:zQ3shbgnTGcgBpXPdBjDur3ATMDWhS7aPs6FRFkWR19Lb9Zwz',
             method: "key",
@@ -17,7 +17,18 @@ describe('Index mapper', () => {
             path: '/some/path'
         }
 
-        const doc = await resolve('did:key:zQ3shbgnTGcgBpXPdBjDur3ATMDWhS7aPs6FRFkWR19Lb9Zwz', parsedDid)
+        let doc = await resolve('did:key:zQ3shbgnTGcgBpXPdBjDur3ATMDWhS7aPs6FRFkWR19Lb9Zwz', parsedDid)
+        expect(doc).toMatchSnapshot()
+
+        parsedDid = {
+            id: "z6MktvqCyLxTsXUH1tUZncNdVeEZ7hNh7npPRbUU27GTrYb8",
+            did: 'did:key:z6MktvqCyLxTsXUH1tUZncNdVeEZ7hNh7npPRbUU27GTrYb8',
+            method: "key",
+            didUrl: 'did:key:z6MktvqCyLxTsXUH1tUZncNdVeEZ7hNh7npPRbUU27GTrYb8/some/path',
+            path: '/some/path'
+        }
+
+        doc = await resolve('did:key:z6MktvqCyLxTsXUH1tUZncNdVeEZ7hNh7npPRbUU27GTrYb8', parsedDid)
         expect(doc).toMatchSnapshot()
     })
 

@@ -1,0 +1,45 @@
+{
+  "mode": "modules",
+  "out": "./docs",
+  "exclude": ["**/node_modules/**", "**/*.test.ts"],
+  "name": "Ceramic",
+  "excludePrivate": true,
+  "excludeExternals": true,
+  "disableOutputCheck": true,
+  "ignoreCompilerErrors": true,
+  "listInvalidSymbolLinks": true,
+  "hideGenerator": true,
+  "media": "./docs-src/media",
+  "theme": "./node_modules/typedoc-plugin-pages/dist/theme/v2",
+  "plugin": "typedoc-plugin-pages,typedoc-plugin-lerna-packages",
+  "readme": "./README.md",
+  "pages": {
+    "reflectionNavigationTitle": "Package APIs",
+    "groups": [{
+      "title": "Ceramic Network",
+      "pages": [{
+        "title": "Architecture",
+        "source": "./docs-src/network/architecture/overview.md",
+        "children": [{
+          "title": "Pinning",
+          "source": "./docs-src/network/architecture/pinning.md"
+        }]
+      }, {
+        "title": "Terminology",
+        "source": "./docs-src/network/terminology.md"
+      }, {
+        "title": "Ecosystem",
+        "source": "./docs-src/network/ecosystem.md"
+      }]
+    }, {
+      "title": "Getting Started",
+      "pages": []
+    }, {
+      "title": "Guides",
+      "pages": [{
+        "title": "Create a Doctype",
+        "source": "./docs-src/guides/create-doctype.md"
+      }]
+    }]
+  }
+}

@@ -19,16 +19,20 @@
  },
  "exclude": [
    "node_modules",
+   "coverage",
    "**/*.spec.ts",
    "**/*.test.ts"
  ],
  "references": [
-   { "path": "./packages/ceramic-core" },
+   { "path": "./packages/core" },
    { "path": "./packages/3id-did-resolver" },
    { "path": "./packages/key-did-resolver" },
-   { "path": "./packages/ceramic-http-client" },
-   { "path": "./packages/ceramic-common" },
-   { "path": "./packages/ceramic-doctype-account-link" },
-   { "path": "./packages/ceramic-doctype-tile" }
+   { "path": "./packages/http-client" },
+   { "path": "./packages/common" },
+   { "path": "./packages/doctype-caip10-link" },
+   { "path": "./packages/doctype-tile" },
+   { "path": "./packages/pinning-aggregation" },
+   { "path": "./packages/pinning-ipfs-backend" },
+   { "path": "./packages/pinning-powergate-backend" }
  ]
 }

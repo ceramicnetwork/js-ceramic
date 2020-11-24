@@ -1,0 +1,203 @@
+<!doctype html>
+<html class="default no-js">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>Architecture | Ceramic</title>
+	<meta name="description" content="Documentation for Ceramic">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="../../assets/css/main.css">
+	<link rel="stylesheet" href="../../assets/css/pages.css">
+</head>
+<body>
+<header>
+	<div class="tsd-page-toolbar">
+		<div class="container">
+			<div class="table-wrap">
+				<div class="table-cell" id="tsd-search" data-index="../../assets/js/search.json" data-base="../..">
+					<div class="field">
+						<label for="tsd-search-field" class="tsd-widget search no-caption">Search</label>
+						<input id="tsd-search-field" type="text" />
+					</div>
+					<ul class="results">
+						<li class="state loading">Preparing search index...</li>
+						<li class="state failure">The search index is not available</li>
+					</ul>
+					<a href="../../index.html" class="title">Ceramic</a>
+				</div>
+				<div class="table-cell" id="tsd-widgets">
+					<div id="tsd-filter">
+						<a href="#" class="tsd-widget options no-caption" data-toggle="options">Options</a>
+						<div class="tsd-filter-group">
+							<div class="tsd-select" id="tsd-filter-visibility">
+								<span class="tsd-select-label">All</span>
+								<ul class="tsd-select-list">
+									<li data-value="public">Public</li>
+									<li data-value="protected">Public/Protected</li>
+									<li data-value="private" class="selected">All</li>
+								</ul>
+							</div>
+							<input type="checkbox" id="tsd-filter-inherited" checked />
+							<label class="tsd-widget" for="tsd-filter-inherited">Inherited</label>
+							<input type="checkbox" id="tsd-filter-only-exported" />
+							<label class="tsd-widget" for="tsd-filter-only-exported">Only exported</label>
+						</div>
+					</div>
+					<a href="#" class="tsd-widget menu no-caption" data-toggle="menu">Menu</a>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="tsd-page-title">
+		<div class="container">
+			<ul class="tsd-breadcrumb">
+				<li>
+					<a href="../../globals.html">Globals</a>
+				</li>
+				<li>
+					<a href="overview.html">Ceramic Network</a>
+				</li>
+				<li>
+					<a href="overview.html">Architecture</a>
+				</li>
+			</ul>
+			<h1>Architecture</h1>
+		</div>
+	</div>
+</header>
+<div class="container container-main">
+	<div class="row">
+		<div class="col-8 col-content">
+			<div class="tsd-panel tsd-typography">
+				<a href="#overview" id="overview" style="color: inherit; text-decoration: none;">
+					<h1>Overview</h1>
+				</a>
+				<p>This document provides a basic overview to how js-ceramic is implemented. It goes though some of the high level apis of Ceramic and how it communicates with some external components. This is by no means comprehensive and will be expanded over time.</p>
+				<a href="#ceramic-api" id="ceramic-api" style="color: inherit; text-decoration: none;">
+					<h2>Ceramic Api</h2>
+				</a>
+				<p>CeramicApi is an interface that both CeramicCore and CeramicHttpClient implements. It provides all the methods needed by a developer to build on top of Ceramic. An instance of CeramicApi allows only one user to be set at a time, using the <a href="https://github.com/ceramicnetwork/js-did">DID</a> interface. The main methods that this interface provides are <code>createDocument</code>, and <code>loadDocument</code> which both return <em>Doctype</em> instances.</p>
+				<p><img src="../../media/ceramic-api.png" alt="CeramicApi"></p>
+				<p><strong>CeramicCore</strong> is the implementation of the core protocol and can be run both in nodejs as well as in browser environments. It verifies every document that it loads locally and does all network communication over libp2p.</p>
+				<p><strong>CeramicHttpClient</strong> provides a way to interact with the Ceramic protocol without having to actually run the entire protocol locally. It delegates document validation to a remote <em>CeramicCore</em> node, however users can author updates to documents from the http client, just as in <em>CeramicCore</em>.</p>
+				<a href="#did-provider" id="did-provider" style="color: inherit; text-decoration: none;">
+					<h2>DID Provider</h2>
+				</a>
+				<p>The DID provider (<a href="https://eips.ethereum.org/EIPS/eip-2844">EIP2844</a>) is the interface used to communicate between the <em>CeramicApi</em> and wallets. This interface can be implemented by any DID method and provides an agnostic way to sign and decrypt data based on DIDs. Each CeramicApi instance can have one DID provider associated with it at any given time (see <a href="#http-client-and-daemon">section below</a> for how to have multiple users associated with one ceramic node). This abstraction allows for separation between the wallet and the application that uses ceramic since the DID provider is a json-rpc interface that can be used over a wide variety of transports.</p>
+				<p><img src="../../media/wallets.png" alt="did-provider"></p>
+				<p>For example, in the figure above there is a wallet instance that is being run within 3ID connect, which is an iframe. A web application can communicate with the 3ID Connect iframe using the <em>postMessage</em> api which is used to pass json-rpc messages between the wallet and the application. CeramicApi and IdentityWallet can of course also be used together within the same process.</p>
+				<a href="#http-client-and-daemon" id="http-client-and-daemon" style="color: inherit; text-decoration: none;">
+					<h2>Http Client and Daemon</h2>
+				</a>
+				<p>As mentioned above both CeramicCore and CeramicHttpClient implements the CeramicApi abstraction. In practice the CeramicHttpClient needs to talk to a CeramicCore node to actually read and write to the network. In order to facilitate this the CeramicDaemon implements an http api which the client can consume. The daemon is wrapped together with CeramicCore in the CeramicCli package, which provides a basic command line interface for interacting with Ceramic.</p>
+				<p><img src="../../media/http-clients.png" alt="http-clients"></p>
+				<p>As can be observed in the figure above multiple http clients can interact with the same daemon. This allows for multiple users on different machines to rely on the same http daemon while only authorizing their own DID to have write access. The daemon doesn&#39;t really have to care about which users are authenticated since it only reads from, and passes signed updates along to the CeramicCore instance.</p>
+			</div>
+		</div>
+		<div class="col-4 col-menu menu-sticky-wrap menu-highlight">
+			<nav class="tsd-navigation primary">
+				<ul>
+					<li class="label pp-nav pp-group">
+						<span>Ceramic <wbr>Network</span>
+					</li>
+					<li class="current pp-nav pp-page pp-parent">
+						<a href="overview.html">Architecture</a>
+					</li>
+					<li class=" pp-nav pp-page pp-child">
+						<a href="overview/pinning.html">Pinning</a>
+					</li>
+					<li class=" pp-nav pp-page">
+						<a href="terminology.html">Terminology</a>
+					</li>
+					<li class=" pp-nav pp-page">
+						<a href="ecosystem.html">Ecosystem</a>
+					</li>
+					<li class="label pp-nav pp-group">
+						<span>Getting <wbr>Started</span>
+					</li>
+					<li class="label pp-nav pp-group">
+						<span>Guides</span>
+					</li>
+					<li class=" pp-nav pp-page">
+						<a href="../Guides/create-doctype.html">Create a <wbr>Doctype</a>
+					</li>
+					<li class="label pp-nav pp-group">
+						<span>Package APIs</span>
+					</li>
+					<li class="globals  ">
+						<a href="../../globals.html"><em>Globals</em></a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="../../modules/_ceramicnetwork_3id_did_resolver.html">@ceramicnetwork/3id-<wbr>did-<wbr>resolver</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="../../modules/_ceramicnetwork_cli.html">@ceramicnetwork/cli</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="../../modules/_ceramicnetwork_common.html">@ceramicnetwork/common</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="../../modules/_ceramicnetwork_core.html">@ceramicnetwork/core</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="../../modules/_ceramicnetwork_docid.html">@ceramicnetwork/docid</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="../../modules/_ceramicnetwork_doctype_caip10_link.html">@ceramicnetwork/doctype-<wbr>caip10-<wbr>link</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="../../modules/_ceramicnetwork_doctype_tile.html">@ceramicnetwork/doctype-<wbr>tile</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="../../modules/_ceramicnetwork_http_client.html">@ceramicnetwork/http-<wbr>client</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="../../modules/_ceramicnetwork_key_did_resolver.html">@ceramicnetwork/key-<wbr>did-<wbr>resolver</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="../../modules/_ceramicnetwork_pinning_aggregation.html">@ceramicnetwork/pinning-<wbr>aggregation</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="../../modules/_ceramicnetwork_pinning_ipfs_backend.html">@ceramicnetwork/pinning-<wbr>ipfs-<wbr>backend</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="../../modules/_ceramicnetwork_pinning_powergate_backend.html">@ceramicnetwork/pinning-<wbr>powergate-<wbr>backend</a>
+					</li>
+				</ul>
+			</nav>
+			<nav class="tsd-navigation secondary menu-sticky">
+				<ul class="before-current">
+				</ul>
+			</nav>
+		</div>
+	</div>
+</div>
+<footer>
+	<div class="container">
+		<h2>Legend</h2>
+		<div class="tsd-legend-group">
+			<ul class="tsd-legend">
+				<li class="tsd-kind-object-literal"><span class="tsd-kind-icon">Object literal</span></li>
+				<li class="tsd-kind-variable"><span class="tsd-kind-icon">Variable</span></li>
+				<li class="tsd-kind-function"><span class="tsd-kind-icon">Function</span></li>
+				<li class="tsd-kind-function tsd-has-type-parameter"><span class="tsd-kind-icon">Function with type parameter</span></li>
+				<li class="tsd-kind-type-alias"><span class="tsd-kind-icon">Type alias</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-interface"><span class="tsd-kind-icon">Interface</span></li>
+				<li class="tsd-kind-interface tsd-has-type-parameter"><span class="tsd-kind-icon">Interface with type parameter</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-enum"><span class="tsd-kind-icon">Enumeration</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-class"><span class="tsd-kind-icon">Class</span></li>
+			</ul>
+		</div>
+	</div>
+</footer>
+<div class="overlay"></div>
+<script src="../../assets/js/main.js"></script>
+<script>if (location.protocol == 'file:') document.write('<script src="../../assets/js/search.json"><' + '/script>');</script>
+</body>
+</html>

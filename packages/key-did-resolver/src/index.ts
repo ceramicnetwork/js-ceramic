@@ -7,10 +7,12 @@ interface ResolverRegistry {
 }
 
 import * as secp256k1 from './secp256k1'
+import * as ed25519 from './ed25519'
 
 // supported drivers
 const prefixToDriverMap: any = {
     0xE7: secp256k1,
+    0xED: ed25519,
 }
 
 export default {
