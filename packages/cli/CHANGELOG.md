@@ -3,6 +3,28 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# 0.14.0 (2020-11-24)
+
+
+### Bug Fixes
+
+* disable randomWalk ([ed6fb39](https://github.com/ceramicnetwork/js-ceramic/commit/ed6fb39da06ecc5cb5a001ba388b1352f68bf457))
+* **cli:** fix conflicts ([99e297a](https://github.com/ceramicnetwork/js-ceramic/commit/99e297a3c8b7ddfb5e52881c19e8f20c833385b9))
+
+
+### Features
+
+* **core:** Add chainId to genesis header ([#509](https://github.com/ceramicnetwork/js-ceramic/issues/509)) ([f916e63](https://github.com/ceramicnetwork/js-ceramic/commit/f916e633fcd61ad8fae8e1ac634f347b77302f06))
+* **core:** Break up and rename DocOpts args ([#527](https://github.com/ceramicnetwork/js-ceramic/issues/527)) ([13ed725](https://github.com/ceramicnetwork/js-ceramic/commit/13ed7254db0fe467165098b2f3e2825cb5baa6fb))
+* **core:** Interpret anchorServiceURL as base URL of the CAS, without the full path to the API endpoint ([#491](https://github.com/ceramicnetwork/js-ceramic/issues/491)) ([75cffa7](https://github.com/ceramicnetwork/js-ceramic/commit/75cffa78911dad8aa9c63c43c9843d761839071d))
+* **core:** Make isUnique default to true ([#427](https://github.com/ceramicnetwork/js-ceramic/issues/427)) ([cbd9041](https://github.com/ceramicnetwork/js-ceramic/commit/cbd90410865c3a7be00b0b153f682150dfd1ac91))
+* **core:** Remove doctype from genesis record ([#486](https://github.com/ceramicnetwork/js-ceramic/issues/486)) ([fbd68df](https://github.com/ceramicnetwork/js-ceramic/commit/fbd68df4664981a46596feffa68f85da742fbad2))
+* **core:** Rename several packages to remove redundant "ceramic-" prefix ([#460](https://github.com/ceramicnetwork/js-ceramic/issues/460)) ([8a86fb6](https://github.com/ceramicnetwork/js-ceramic/commit/8a86fb68b5f895f64e79a2585a5f854dd6c42088))
+
+
+
+
+
 ## [0.13.4](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-cli@0.13.4-alpha.0...@ceramicnetwork/ceramic-cli@0.13.4) (2020-11-20)
 
 **Note:** Version bump only for package @ceramicnetwork/ceramic-cli

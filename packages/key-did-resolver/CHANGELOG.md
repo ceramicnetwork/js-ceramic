@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.2.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/key-did-resolver@0.1.3...@ceramicnetwork/key-did-resolver@0.2.0) (2020-11-24)
+
+
+### Features
+
+* **key-did-resolver:** add support for ed25519 ([#479](https://github.com/ceramicnetwork/js-ceramic/issues/479)) ([23392f5](https://github.com/ceramicnetwork/js-ceramic/commit/23392f5d4a3d3f8ac665f1ed626b8ac1f62cba41))
+
+
+
+
+
 ## [0.1.3](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/key-did-resolver@0.1.3-alpha.0...@ceramicnetwork/key-did-resolver@0.1.3) (2020-11-20)
 
 **Note:** Version bump only for package @ceramicnetwork/key-did-resolver

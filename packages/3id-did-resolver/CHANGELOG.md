@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.5.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/3id-did-resolver@0.4.9...@ceramicnetwork/3id-did-resolver@0.5.0) (2020-11-24)
+
+
+### Features
+
+* **3id-did-resolver:** resolve v0 and v1 3ids ([#511](https://github.com/ceramicnetwork/js-ceramic/issues/511)) ([eedeb98](https://github.com/ceramicnetwork/js-ceramic/commit/eedeb989855540445c8d693c01a5c26e5796e5b4))
+* **core:** Rename several packages to remove redundant "ceramic-" prefix ([#460](https://github.com/ceramicnetwork/js-ceramic/issues/460)) ([8a86fb6](https://github.com/ceramicnetwork/js-ceramic/commit/8a86fb68b5f895f64e79a2585a5f854dd6c42088))
+
+
+
+
+
 ## [0.4.9](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/3id-did-resolver@0.4.9-alpha.0...@ceramicnetwork/3id-did-resolver@0.4.9) (2020-11-20)
 
 **Note:** Version bump only for package @ceramicnetwork/3id-did-resolver

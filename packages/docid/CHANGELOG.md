@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.3.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/docid@0.2.0...@ceramicnetwork/docid@0.3.0) (2020-11-24)
+
+
+### Features
+
+* **docid:** base36 toUrl ([0ebb84c](https://github.com/ceramicnetwork/js-ceramic/commit/0ebb84c1247183d1aee9748375b1cdb1d6c030c0))
+* **tile:** Enforce that schemas must always be assigned with a version ([#477](https://github.com/ceramicnetwork/js-ceramic/issues/477)) ([28d8212](https://github.com/ceramicnetwork/js-ceramic/commit/28d8212a7b8cab399a2e8af6ba525e908c4548ab))
+
+
+
+
+
 # [0.2.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/docid@0.2.0-alpha.1...@ceramicnetwork/docid@0.2.0) (2020-10-26)
 
 **Note:** Version bump only for package @ceramicnetwork/docid

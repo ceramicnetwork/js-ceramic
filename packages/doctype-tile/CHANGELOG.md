@@ -3,6 +3,24 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# 0.11.0 (2020-11-24)
+
+
+### Features
+
+* **3id-did-resolver:** resolve v0 and v1 3ids ([#511](https://github.com/ceramicnetwork/js-ceramic/issues/511)) ([eedeb98](https://github.com/ceramicnetwork/js-ceramic/commit/eedeb989855540445c8d693c01a5c26e5796e5b4))
+* **core:** Add chainId to genesis header ([#509](https://github.com/ceramicnetwork/js-ceramic/issues/509)) ([f916e63](https://github.com/ceramicnetwork/js-ceramic/commit/f916e633fcd61ad8fae8e1ac634f347b77302f06))
+* **core:** Enforce that anchors happen on the chainId specified in the document metadata ([#521](https://github.com/ceramicnetwork/js-ceramic/issues/521)) ([3edb62d](https://github.com/ceramicnetwork/js-ceramic/commit/3edb62d6936605d786df681b3b92b48a961222bb))
+* **core:** Make isUnique default to true ([#427](https://github.com/ceramicnetwork/js-ceramic/issues/427)) ([cbd9041](https://github.com/ceramicnetwork/js-ceramic/commit/cbd90410865c3a7be00b0b153f682150dfd1ac91))
+* **core:** Remove doctype from genesis record ([#486](https://github.com/ceramicnetwork/js-ceramic/issues/486)) ([fbd68df](https://github.com/ceramicnetwork/js-ceramic/commit/fbd68df4664981a46596feffa68f85da742fbad2))
+* **core:** Rename several packages to remove redundant "ceramic-" prefix ([#460](https://github.com/ceramicnetwork/js-ceramic/issues/460)) ([8a86fb6](https://github.com/ceramicnetwork/js-ceramic/commit/8a86fb68b5f895f64e79a2585a5f854dd6c42088))
+* **tile:** Enforce that schemas must always be assigned with a version ([#477](https://github.com/ceramicnetwork/js-ceramic/issues/477)) ([28d8212](https://github.com/ceramicnetwork/js-ceramic/commit/28d8212a7b8cab399a2e8af6ba525e908c4548ab))
+* **tile:** Fix metadata handling and test schema enforcement behavior ([#459](https://github.com/ceramicnetwork/js-ceramic/issues/459)) ([3689228](https://github.com/ceramicnetwork/js-ceramic/commit/3689228aefd8799d3bad572a93bd75760c6cc7cd))
+
+
+
+
+
 ## [0.10.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ceramic-doctype-tile@0.10.2-alpha.0...@ceramicnetwork/ceramic-doctype-tile@0.10.2) (2020-11-20)
 
 **Note:** Version bump only for package @ceramicnetwork/ceramic-doctype-tile
