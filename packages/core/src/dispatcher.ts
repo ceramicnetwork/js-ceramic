@@ -200,11 +200,11 @@ export default class Dispatcher extends EventEmitter {
       return
     }
 
-    if (typeof tip !== 'string') return
-
     // TODO: add cache of cids here so that we don't emit event
     // multiple times if we get the message more than once.
     this._documents[doc].emit('update', new CID(tip))
+
+    // TODO: Handle 'anchorService' if present in message
   }
 
   /**
