@@ -2,8 +2,11 @@ import Dispatcher, { MsgType } from '../dispatcher'
 import CID from 'cids'
 import Document from "../document"
 import { TileDoctype } from "@ceramicnetwork/doctype-tile"
+import DocID from "@ceramicnetwork/docid";
 
 const FAKE_CID = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
+const FAKE_DOC_ID = "kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s"
+
 const ipfs = {
   pubsub: {
     subscribe: jest.fn(),
@@ -67,10 +70,10 @@ describe('Dispatcher', () => {
   })
 
   it('publishes tip correctly', async () => {
-    const docId = '/ceramic/3id/234'
+    const docId = DocID.fromString(FAKE_DOC_ID)
     const tip = 'bafy9h3f08erf'
     dispatcher.publishTip(docId, tip)
-    expect(ipfs.pubsub.publish).toHaveBeenCalledWith(TOPIC, JSON.stringify({ typ: MsgType.UPDATE, doc: docId, tip }))
+    expect(ipfs.pubsub.publish).toHaveBeenCalledWith(TOPIC, JSON.stringify({ typ: MsgType.UPDATE, doc: FAKE_DOC_ID, tip }))
   })
 
   it('errors on invalid message type', async () => {

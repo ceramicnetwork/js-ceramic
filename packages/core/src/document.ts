@@ -580,7 +580,7 @@ class Document extends EventEmitter {
    * @private
    */
   async _publishTip (): Promise<void> {
-    await this.dispatcher.publishTip(this.id.toString(), this.tip, this.doctype.doctype)
+    await this.dispatcher.publishTip(this.id, this.tip)
   }
 
   /**

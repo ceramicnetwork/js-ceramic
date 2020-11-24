@@ -6,6 +6,7 @@ import type Document from "./document"
 import { DoctypeUtils, RootLogger, Logger } from "@ceramicnetwork/common"
 import { TextDecoder } from 'util'
 import { IPFSApi } from "./declarations"
+import DocID from "@ceramicnetwork/docid";
 
 /**
  * Ceramic Pub/Sub message type.
@@ -108,17 +109,16 @@ export default class Dispatcher extends EventEmitter {
   /**
    * Publishes Tip record to pub/sub topic.
    *
-   * @param id  - Document ID
+   * @param docId  - Document ID
    * @param tip - Record CID
-   * @param doctype - Doctype name
    */
-  async publishTip (docId: string, tip: CID, doctype?: string): Promise<void> {
+  async publishTip (docId: DocID, tip: CID): Promise<void> {
     if (!this._isRunning) {
       this.logger.error('Dispatcher has been closed')
       return
     }
 
-    const payload = { typ: MsgType.UPDATE, doc: docId, tip: tip.toString() }
+    const payload = { typ: MsgType.UPDATE, doc: docId.baseID.toString(), tip: tip.toString() }
     await this._ipfs.pubsub.publish(this.topic, JSON.stringify(payload))
     this._log({ peer: this._peerId, event: 'published', topic: this.topic, message: payload })
   }
