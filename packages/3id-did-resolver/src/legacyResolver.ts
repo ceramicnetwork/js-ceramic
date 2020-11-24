@@ -11,7 +11,7 @@ interface IPFS {
 
 // Legacy 3ids available from 3box, other v1 will always be resolved through ipfs and other services 
 const THREEBOX_API_URL = 'https://ipfs.3box.io'
-  
+
 const fetchJson = async (url: string): Promise<any> =>  {
   const r = await fetch(url)
   if (r.ok) {
@@ -30,9 +30,13 @@ const ipfsMock: IPFS = {
 }
 
 // TODO, from idw, key utils in future
-const encodeKey = (key: Uint8Array): string => {
+const encodeKey = (key: Uint8Array, encryption?: boolean): string => {
   const bytes = new Uint8Array(key.length + 2)
-  bytes[0] = 0xe7 // secp256k1 multicodec
+  if (encryption) {
+    bytes[0] = 0xec // x25519 multicodec
+  } else {
+    bytes[0] = 0xe7 // secp256k1 multicodec
+  }
   bytes[1] = 0x01 // multicodec varint
   bytes.set(key, 2)
   return `z${u8a.toString(bytes, 'base58btc')}`
@@ -52,10 +56,12 @@ const LegacyResolver = async (didId: string, ipfs = ipfsMock): Promise<any> => {
     throw new Error('Not a valid 3ID')
   }
 
+  const signing = encodeKey(u8a.fromString(signingKey, 'base16'))
+  const encryption = encodeKey(u8a.fromString(encryptionKey, 'base64pad'), true)
   return {
     publicKeys: {
-      signing: encodeKey(u8a.fromString(signingKey, 'base16')),
-      encryption: encodeKey(u8a.fromString(encryptionKey, 'base64pad'))
+      [signing.slice(-15)]: signing,
+      [encryption.slice(-15)]: encryption,
     }
   }
 }

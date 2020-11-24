@@ -73,7 +73,7 @@ export function wrapDocument(content: any, did: string): DIDDocument {
 
 const isLegacyDid = (didId: string): boolean => {
   try {
-    new CID(didId) 
+    new CID(didId)
     return true
   } catch(e) {
     return false
@@ -84,11 +84,11 @@ const getVersion = (query = ''): string | null => {
   const versionParam = query.split('&').find(e => e.includes('version-id'))
   return versionParam ? versionParam.split('=')[1] : null
 }
- 
+
 const legacyResolve = async (ceramic: Ceramic, didId: string, version?: string): Promise<DIDDocument | null> => {
   const legacyPublicKeys = await LegacyResolver(didId) // can add opt to pass ceramic ipfs to resolve
   if (!legacyPublicKeys) return null
-  
+
   const legacyDoc = wrapDocument(legacyPublicKeys, `did:3:${didId}`)
   if (version === '0') return legacyDoc
 

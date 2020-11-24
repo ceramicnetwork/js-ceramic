@@ -10,29 +10,39 @@ import { Resolver } from 'did-resolver'
 import DocID from '@ceramicnetwork/docid'
 
 const ceramicMock = {
-  loadDocument: async (): Promise<any> => ({
-    content: {
-      publicKeys: {
-        signing: 'zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV',
-        encryption: 'z6LSfQabSbJzX8WAm1qdQcHCHTzVv8a2u6F7kmzdodfvUCo9'
+  loadDocument: async (): Promise<any> => {
+    const signing = 'zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV'
+    const encryption = 'z6LSfQabSbJzX8WAm1qdQcHCHTzVv8a2u6F7kmzdodfvUCo9'
+    // mimic how IDW sets the 3ID DID document
+    return {
+      content: {
+        publicKeys: {
+          [signing.slice(-15)]: signing,
+          [encryption.slice(-15)]: encryption,
+        },
       }
     }
-  }),
+  },
   createDocument: async (): Promise<any> => ({
     id: DocID.fromString('k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki')
   })
 }
 
 const ceramicMockWithIDX = {
-  loadDocument: async (): Promise<any> => ({
-    content: {
-      publicKeys: {
-        signing: 'zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV',
-        encryption: 'z6LSfQabSbJzX8WAm1qdQcHCHTzVv8a2u6F7kmzdodfvUCo9'
-      },
-      idx: 'ceramic://rootId'
+  loadDocument: async (): Promise<any> => {
+    const signing = 'zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV'
+    const encryption = 'z6LSfQabSbJzX8WAm1qdQcHCHTzVv8a2u6F7kmzdodfvUCo9'
+    // mimic how IDW sets the 3ID DID document
+    return {
+      content: {
+        publicKeys: {
+          [signing.slice(-15)]: signing,
+          [encryption.slice(-15)]: encryption,
+        },
+        idx: 'ceramic://rootId'
+      }
     }
-  })
+  }
 }
 
 const ceramicMockNull = { // to be removed
