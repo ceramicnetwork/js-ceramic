@@ -1,6 +1,7 @@
 import { EventEmitter } from 'events'
 import CID from 'cids'
 import cloneDeep from 'lodash.clonedeep'
+import dagCBOR from "ipld-dag-cbor"
 
 import type Document from "./document"
 import { DoctypeUtils, RootLogger, Logger } from "@ceramicnetwork/common"
@@ -53,6 +54,27 @@ const UpdateMessage = runtypes.Record({
 });
 
 /**
+ * Format for QUERY messages on the pub/sub topic. Uses the 'runtypes' library to provide type
+ * checking at run time when parsing messages off the pub/sub topic.
+ */
+const QueryMessage = runtypes.Record({
+  // The message type, always 0
+  typ: runtypes.Number.withConstraint(n => n === MsgType.QUERY),
+
+  // The DocID that is being queried
+  doc: runtypes.String,
+
+  // The unique identifier of the query. A multihash of the query object without the id property
+  // canonicalized using dag-cbor.
+  id: runtypes.String,
+
+  // The paths in the contents of the documents to explore. Paths are expected to resolve to
+  // DocIDs. Nodes responding to a QUERY message may include the tips for documents referenced from
+  // these paths.  This field is optional.
+  paths: runtypes.Array(runtypes.String).Or(runtypes.Undefined)
+});
+
+/**
  * Ceramic core Dispatcher used for handling messages from pub/sub topic.
  */
 export default class Dispatcher extends EventEmitter {
@@ -85,9 +107,18 @@ export default class Dispatcher extends EventEmitter {
   async register (document: Document): Promise<void> {
     this._documents[document.id.toString()] = document
     // request tip
-    const payload = { typ: MsgType.QUERY, id: document.id.toString(), doctype: document.doctype.doctype }
+    const payload = await this._buildQueryMessage(document)
     this._ipfs.pubsub.publish(this.topic, JSON.stringify(payload))
     this._log({ peer: this._peerId, event: 'published', topic: this.topic, message: payload })
+  }
+
+  async _buildQueryMessage(document: Document): Promise<Record<string, any>> {
+    const message = { typ: MsgType.QUERY, doc: document.id.baseID.toString() }
+
+    // Add 'id' to message.  'id' is the multihash of the rest of the query object canonicalized
+    // using dag-cbor
+    const id: Uint8Array = dagCBOR.util.serialize(message)
+    return {...message, id: id.toString()}
   }
 
   /**
@@ -213,12 +244,18 @@ export default class Dispatcher extends EventEmitter {
    * @private
    */
   async _handleQueryMessage(message: any): Promise<void> {
-    const { id } = message
-    if (!this._documents[id]) {
+    // Runtime check that the message adheres to the expected format for QUERY messages
+    QueryMessage.check(message)
+
+    const { doc } = message
+    if (!this._documents[doc]) {
       return
     }
 
-    this._documents[id].emit('tipreq')
+    // TODO: Should we validate that the 'id' field is the correct hash of the rest of the message?
+
+    this._documents[doc].emit('tipreq')
+    // TODO: Handle 'paths' for multiquery support
   }
 
   /**
