@@ -12,7 +12,7 @@ import { IPFSApi } from "./declarations"
  */
 export enum MsgType {
   UPDATE,
-  REQUEST,
+  QUERY,
   RESPONSE
 }
 
@@ -65,7 +65,7 @@ export default class Dispatcher extends EventEmitter {
   async register (document: Document): Promise<void> {
     this._documents[document.id.toString()] = document
     // request tip
-    const payload = { typ: MsgType.REQUEST, id: document.id.toString(), doctype: document.doctype.doctype }
+    const payload = { typ: MsgType.QUERY, id: document.id.toString(), doctype: document.doctype.doctype }
     this._ipfs.pubsub.publish(this.topic, JSON.stringify(payload))
     this._log({ peer: this._peerId, event: 'published', topic: this.topic, message: payload })
   }
@@ -150,21 +150,62 @@ export default class Dispatcher extends EventEmitter {
       const logMessage = { ...message, data: parsedMessageData }
       this._log({ peer: this._peerId, event: 'received', topic: this.topic, message: logMessage })
 
-      const { typ, id, cid } = parsedMessageData
-      if (this._documents[id]) {
-        switch (typ) {
-          case MsgType.UPDATE:
-            if (typeof cid !== 'string') break
-            // add cache of cids here so that we don't emit event
-            // multiple times if we get the message more than once.
-            this._documents[id].emit('update', new CID(cid))
-            break
-          case MsgType.REQUEST:
-            this._documents[id].emit('tipreq')
-            break
-        }
+      const { typ } = parsedMessageData
+      switch (typ) {
+        case MsgType.UPDATE:
+          await this._handleUpdateMessage(parsedMessageData)
+          break
+        case MsgType.QUERY:
+          await this._handleQueryMessage(parsedMessageData)
+          break
+        case MsgType.RESPONSE:
+          await this._handleResponseMessage(parsedMessageData)
+          break
+        default:
+          throw new Error("Unsupported message type: " + typ)
       }
     }
+  }
+
+  /**
+   * Handles an incoming Update message from the pub/sub topic.
+   * @param message
+   * @private
+   */
+  async _handleUpdateMessage(message: any): Promise<void> {
+    const { id, cid } = message
+    if (!this._documents[id]) {
+      return
+    }
+
+    if (typeof cid !== 'string') return
+
+    // TODO: add cache of cids here so that we don't emit event
+    // multiple times if we get the message more than once.
+    this._documents[id].emit('update', new CID(cid))
+  }
+
+  /**
+   * Handles an incoming Query message from the pub/sub topic.
+   * @param message
+   * @private
+   */
+  async _handleQueryMessage(message: any): Promise<void> {
+    const { id } = message
+    if (!this._documents[id]) {
+      return
+    }
+
+    this._documents[id].emit('tipreq')
+  }
+
+  /**
+   * Handles an incoming Response message from the pub/sub topic.
+   * @param message
+   * @private
+   */
+  async _handleResponseMessage(message: any): Promise<void> {
+    // TODO: Use Response message
   }
 
   /**

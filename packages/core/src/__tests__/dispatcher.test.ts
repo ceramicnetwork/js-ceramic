@@ -48,7 +48,7 @@ describe('Dispatcher', () => {
     const doc = new Document(id, disp, null)
     doc._doctype = new TileDoctypeMock()
     await disp.register(doc)
-    expect(ipfs.pubsub.publish).toHaveBeenCalledWith(TOPIC, JSON.stringify({ typ: MsgType.REQUEST, id, doctype: 'tile' }))
+    expect(ipfs.pubsub.publish).toHaveBeenCalledWith(TOPIC, JSON.stringify({ typ: MsgType.QUERY, id, doctype: 'tile' }))
   })
 
   it('store record correctly', async () => {
@@ -83,7 +83,7 @@ describe('Dispatcher', () => {
     const updatePromise = new Promise(resolve => doc.on('update', resolve))
     const tipreqPromise = new Promise(resolve => doc.on('tipreq', resolve))
 
-    await disp.handleMessage({ data: JSON.stringify({ typ: MsgType.REQUEST, id }) })
+    await disp.handleMessage({ data: JSON.stringify({ typ: MsgType.QUERY, id }) })
     // only emits an event
     await tipreqPromise
 
