@@ -39,9 +39,15 @@ interface LogMessage {
  * checking at run time when parsing messages off the pub/sub topic.
  */
 const UpdateMessage = runtypes.Record({
-  typ: runtypes.Number.withConstraint(n => n === MsgType.UPDATE), // The message type, always 0
-  doc: runtypes.String,  // The DocID that is being updated
-  tip: runtypes.String,  // The CID of the new Tip of the document
+  // The message type, always 0
+  typ: runtypes.Number.withConstraint(n => n === MsgType.UPDATE),
+
+  // The DocID that is being updated
+  doc: runtypes.String,
+
+  // The CID of the new Tip of the document
+  tip: runtypes.String,
+
   // The url of the anchor service that was used to request an anchor. Optional.
   anchorService: runtypes.String.Or(runtypes.Undefined),
 });

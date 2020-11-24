@@ -81,7 +81,7 @@ describe('Dispatcher', () => {
     await expect(dispatcher.handleMessage({ data: JSON.stringify({ typ: -1, id }) })).rejects.toThrow("Unsupported message type: -1")
   })
 
-  it('UPDATE message type validation', async () => {
+  it('UPDATE message format validation', async () => {
     const id = '/ceramic/bagjqcgzaday6dzalvmy5ady2m5a5legq5zrbsnlxfc2bfxej532ds7htpova'
 
     // Missing a field
@@ -89,6 +89,9 @@ describe('Dispatcher', () => {
 
     // Field with wrong type
     await expect(dispatcher.handleMessage({ data: JSON.stringify({ typ: MsgType.UPDATE, doc: FAKE_DOC_ID, tip: 5, }) })).rejects.toThrow("Expected string, but was number in tip")
+
+    // Allows additional unexpected fields
+    await dispatcher.handleMessage({ data: JSON.stringify({ typ: MsgType.UPDATE, doc: FAKE_DOC_ID, tip: FAKE_CID.toString(), randomField: 'foobar'}) })
   })
 
   it('handle message correctly', async () => {
