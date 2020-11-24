@@ -95,11 +95,18 @@ export interface DocState {
 }
 
 /**
- * Doctype init options
+ * Options that are passed to each operation on a document (create, change, load) that control
+ * behaviors that are performed as part of the operation.
  */
 export interface DocOpts {
-    applyOnly?: boolean;
-    skipWait?: boolean;
+    // Whether or not to request an anchor after performing the operation.
+    anchor?: boolean;
+
+    // Whether or not to publish the current tip record to the pubsub channel after performing the operation.
+    publish?: boolean;
+
+    // Whether or not to wait a short period of time to hear about new tips for the document after performing the operation.
+    sync?: boolean;
 }
 
 /**

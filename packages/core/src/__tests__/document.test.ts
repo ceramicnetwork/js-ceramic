@@ -145,6 +145,10 @@ describe('Document', () => {
 
     beforeEach(() => {
       dispatcher = Dispatcher(false)
+      // TODO: Many of the tests in this file are racy and depend on an anchor not having been
+      // performed yet by the time the test checks.  To eliminate this race condition we should set
+      // anchorOnRequest to false in the config for the InMemoryAnchorService and anchor manually
+      // throughout the tests.
       anchorService = new InMemoryAnchorService({})
       user = new DID()
       user.createJWS = jest.fn(async () => {
@@ -216,8 +220,8 @@ describe('Document', () => {
     })
 
     it('is loaded correctly', async () => {
-      const doc1 = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context, { applyOnly: true, skipWait: true })
-      const doc2 = await Document.load(doc1.id, doctypeHandler, dispatcher, pinStore, context, { skipWait: true })
+      const doc1 = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context, { anchor: false, publish: false, sync: false })
+      const doc2 = await Document.load(doc1.id, doctypeHandler, dispatcher, pinStore, context, { sync: false })
 
       expect(doc1.id).toEqual(doc2.id)
       expect(doc1.content).toEqual(initialContent)
@@ -229,7 +233,7 @@ describe('Document', () => {
       await anchorUpdate(tmpDoc)
       const docId = tmpDoc.id
       const log = tmpDoc.state.log
-      const doc = await Document.load(docId, doctypeHandler, dispatcher, pinStore, context, { skipWait: true })
+      const doc = await Document.load(docId, doctypeHandler, dispatcher, pinStore, context, { sync: false })
       // changes will not load since no network and no local tip storage yet
       expect(doc.content).toEqual(initialContent)
       expect(doc.state).toEqual(expect.objectContaining({ signature: SignatureStatus.SIGNED, anchorStatus: 0 }))
@@ -337,13 +341,13 @@ describe('Document', () => {
       expect(doc1.content).toEqual(newContent)
       const tipValidUpdate = doc1.tip
       // create invalid change that happened after main change
-      const doc2 = await Document.load(docId, doctypeHandler, dispatcher, pinStore, context, { skipWait: true })
+      const doc2 = await Document.load(docId, doctypeHandler, dispatcher, pinStore, context, { sync: false })
       await doc2._handleTip(tipPreUpdate)
       // add short wait to get different anchor time
       // sometime the tests are very fast
       await new Promise(resolve => setTimeout(resolve, 1))
       // TODO - better mock for anchors
-
+      
       const conflictingNewContent = { asdf: 2342 }
       updateRec = await TileDoctype._makeRecord(doc2.doctype, user, conflictingNewContent, doc2.controllers)
       await doc2.applyRecord(updateRec)
@@ -414,7 +418,7 @@ describe('Document', () => {
       expect(doc.metadata.schema).toEqual(schemaDoc.versionId.toString())
 
       try {
-        await Document.load(doc.id, doctypeHandler, dispatcher, pinStore, context, {skipWait:true})
+        await Document.load(doc.id, doctypeHandler, dispatcher, pinStore, context, { sync: false })
         throw new Error('Should not be able to assign a schema to a document that does not conform')
       } catch (e) {
         expect(e.message).toEqual('Validation Error: data[\'stuff\'] should be string')
@@ -678,7 +682,7 @@ describe('Document', () => {
     it('documents share updates', async () => {
       const doc1 = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context)
       await anchorUpdate(doc1)
-      const doc2 = await Document.load(doc1.id, doctypeHandler, dispatcher, pinStore, context, { skipWait: true })
+      const doc2 = await Document.load(doc1.id, doctypeHandler, dispatcher, pinStore, context, { sync: false })
 
       const updatePromise = new Promise(resolve => {
         doc2.doctype.on('change', resolve)

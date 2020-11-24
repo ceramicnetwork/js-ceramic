@@ -20,7 +20,7 @@ const API_URL = "http://localhost:7007"
 const client = new CeramicClient(API_URL)
 
 // create document example
-await doc = await client.createDocument('tile', { content: { test: 123 } }, { applyOnly: true, skipWait: true })
+await doc = await client.createDocument('tile', { content: { test: 123 } })
 ```
 
 ### Ceramic API

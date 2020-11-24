@@ -53,30 +53,26 @@ class Document extends Doctype {
     return new DocID(this.state.doctype, this.state.log[0].cid)
   }
 
-  static async createFromGenesis (apiUrl: string, doctype: string, genesis: any, context: Context, opts: DocOpts = {}, config: CeramicClientConfig): Promise<Document> {
+  static async createFromGenesis (apiUrl: string, doctype: string, genesis: any, context: Context, docOpts: DocOpts = {}, config: CeramicClientConfig): Promise<Document> {
     const { state } = await fetchJson(apiUrl + '/documents', {
       method: 'post',
       body: {
         doctype,
         genesis: DoctypeUtils.serializeRecord(genesis),
-        docOpts: {
-          applyOnly: opts.applyOnly,
-        }
+        docOpts,
       }
     })
     return new Document(DoctypeUtils.deserializeState(state), context, apiUrl, config)
   }
 
-  static async applyRecord(apiUrl: string, docId: DocID | string, record: any, context: Context, opts: DocOpts = {}): Promise<Document> {
+  static async applyRecord(apiUrl: string, docId: DocID | string, record: any, context: Context, docOpts: DocOpts = {}): Promise<Document> {
     docId = typeDocID(docId)
     const { state } = await fetchJson(apiUrl + '/records', {
       method: 'post',
       body: {
         docId: docId.toString(),
         record: DoctypeUtils.serializeRecord(record),
-        docOpts: {
-          applyOnly: opts.applyOnly,
-        }
+        docOpts,
       }
     })
     return new Document(DoctypeUtils.deserializeState(state), context, apiUrl)
@@ -99,10 +95,10 @@ class Document extends Doctype {
     })
   }
 
-  async change(params: DocParams): Promise<void> {
+  async change(params: DocParams, opts: DocOpts): Promise<void> {
     const doctype = new this.doctypeHandler.doctype(this.state, this.context)
 
-    await doctype.change(params)
+    await doctype.change(params, opts)
     this.state = doctype.state
   }
 

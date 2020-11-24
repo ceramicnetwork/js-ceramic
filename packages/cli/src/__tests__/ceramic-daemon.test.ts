@@ -74,6 +74,10 @@ describe('Ceramic interop: core <> http-client', () => {
     })
 
     beforeEach(async () => {
+        // TODO: Many of the tests in this file are racy and depend on an anchor not having been
+        // performed yet by the time the test checks.  To eliminate this race condition we should set
+        // anchorOnRequest to false in the config for the InMemoryAnchorService and anchor manually
+        // throughout the tests.
         core = await Ceramic.create(ipfs, { topic })
 
         const doctypeHandler = new TileDoctypeHandler()
@@ -96,12 +100,14 @@ describe('Ceramic interop: core <> http-client', () => {
 
     it('properly creates document', async () => {
         const doc1 = await core.createDocument(DOCTYPE_TILE, { content: { test: 123 } }, {
-            applyOnly: true,
-            skipWait: true
+            anchor: false,
+            publish: false,
+            sync: false,
         })
         const doc2 = await client.createDocument(DOCTYPE_TILE, { content: { test: 123 } }, {
-            applyOnly: true,
-            skipWait: true
+            anchor: false,
+            publish: false,
+            sync: false,
         })
         expect(doc1.content).toEqual(doc2.content)
 
@@ -175,10 +181,12 @@ describe('Ceramic interop: core <> http-client', () => {
         expect(DoctypeUtils.serializeState(doc1.state)).toEqual(DoctypeUtils.serializeState(doc2.state))
         // change from client viewable in core
 
-        await doc2.change({ content: { test: 456, abc: 654 } })
+        const finalContent = { test: 456, abc: 654 }
+        await doc2.change({ content: finalContent })
 
         await waitChange(doc2)
         expect(doc1.content).toEqual(doc2.content)
+        expect(doc1.content).toEqual(finalContent)
         expect(DoctypeUtils.serializeState(doc1.state)).toEqual(DoctypeUtils.serializeState(doc2.state))
     })
 })

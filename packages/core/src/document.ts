@@ -24,6 +24,11 @@ import {
 import DocID from '@ceramicnetwork/docid'
 import { PinStore } from './store/pin-store';
 
+// DocOpts defaults for document load operations
+const DEFAULT_LOAD_DOCOPTS = {anchor: false, publish: false, sync: true}
+// DocOpts defaults for document write operations
+const DEFAULT_WRITE_DOCOPTS = {anchor: true, publish: true, sync: false}
+
 /**
  * Document handles the update logic of the Doctype instance
  */
@@ -31,20 +36,19 @@ class Document extends EventEmitter {
   private _genesisCid: CID
   private _applyQueue: PQueue
 
-  private _doctype: Doctype
-  private _doctypeHandler: DoctypeHandler<Doctype>
-
-  public _context: Context
-
-  public readonly id: DocID
   public readonly version: CID
 
   private _logger: Logger
   private _isProcessing: boolean
 
-  constructor (id: DocID, public dispatcher: Dispatcher, public pinStore: PinStore, private _validate: boolean) {
+  constructor (public readonly id: DocID,
+               public dispatcher: Dispatcher,
+               public pinStore: PinStore,
+               private _validate: boolean,
+               private _context: Context,
+               private _doctypeHandler: DoctypeHandler<Doctype>,
+               private _doctype: Doctype) {
     super()
-    this.id = id
     this.version = id.version
 
     this._logger = RootLogger.getLogger(Document.name)
@@ -72,28 +76,23 @@ class Document extends EventEmitter {
       opts: DocOpts = {},
       validate = true,
   ): Promise<Document> {
+    // Fill 'opts' with default values for any missing fields
+    opts = {...DEFAULT_WRITE_DOCOPTS, ...opts}
+
+    const doctype = new doctypeHandler.doctype(null, context) as T
+    const doc = new Document(docId, dispatcher, pinStore, validate, context, doctypeHandler, doctype)
+
     const genesis = await dispatcher.retrieveRecord(docId.cid)
-    const doc = new Document(docId, dispatcher, pinStore, validate)
-
-    doc._context = context
-    doc._doctypeHandler = doctypeHandler
-
-    doc._doctype = new doctypeHandler.doctype(null, context) as T
     doc._doctype.state = await doc._doctypeHandler.applyRecord(genesis, doc._genesisCid, context)
 
     if (validate) {
-      const schema = await Document.loadSchema(context.api, doc._doctype)
+      const schema = await Document.loadSchema(context, doc._doctype)
       if (schema) {
         Utils.validate(doc._doctype.content, schema)
       }
     }
 
     await doc._updateStateIfPinned()
-
-    if (typeof opts.applyOnly === 'undefined') {
-      opts.applyOnly = false
-    }
-
     await doc._register(opts)
     return doc
   }
@@ -117,12 +116,11 @@ class Document extends EventEmitter {
       opts: DocOpts = {},
       validate = true
   ): Promise<Document> {
-    const doc = new Document(id, dispatcher, pinStore, validate)
-    doc._context = context
+    // Fill 'opts' with default values for any missing fields
+    opts = {...DEFAULT_LOAD_DOCOPTS, ...opts}
 
-    if (typeof opts.applyOnly === 'undefined') {
-      opts.applyOnly = true
-    }
+    const doctype = new handler.doctype(null, context) as T
+    const doc = new Document(id, dispatcher, pinStore, validate, context, handler, doctype)
 
     const record = await dispatcher.retrieveRecord(doc._genesisCid)
 
@@ -132,9 +130,6 @@ class Document extends EventEmitter {
     } else {
       payload = record
     }
-
-    doc._doctypeHandler = handler
-    doc._doctype = new doc._doctypeHandler.doctype(null, context) as T
 
     const isStored = await pinStore.stateStore.exists(id)
     if (isStored) {
@@ -147,7 +142,7 @@ class Document extends EventEmitter {
     }
 
     if (validate) {
-      const schema = await Document.loadSchema(context.api, doc._doctype)
+      const schema = await Document.loadSchema(context, doc._doctype)
       if (schema) {
         Utils.validate(doc._doctype.content, schema)
       }
@@ -206,11 +201,8 @@ class Document extends EventEmitter {
     }
 
     const docid = DocID.fromBytes(doc.id.bytes, version)
-
-    const document = new Document(docid, dispatcher, pinStore, validate)
-    document._context = context
-    document._doctypeHandler = doctypeHandler
-    document._doctype = new doc._doctypeHandler.doctype(null, context)
+    const doctype = new doctypeHandler.doctype(null, context)
+    const document = new Document(docid, dispatcher, pinStore, validate, context, doctypeHandler, doctype)
 
     const genesisRecord = await document.dispatcher.retrieveRecord(doc._genesisCid)
     document._doctype.state = await doc._doctypeHandler.applyRecord(genesisRecord, doc._genesisCid, context)
@@ -229,6 +221,9 @@ class Document extends EventEmitter {
    * @param opts - Document initialization options (request anchor, wait, etc.)
    */
   async applyRecord (record: any, opts: DocOpts = {}): Promise<void> {
+    // Fill 'opts' with default values for any missing fields
+    opts = {...DEFAULT_WRITE_DOCOPTS, ...opts}
+
     const cid = await this.dispatcher.storeRecord(record)
 
     await this._handleTip(cid)
@@ -258,11 +253,17 @@ class Document extends EventEmitter {
    * @private
    */
   async _applyOpts(opts: DocOpts): Promise<void> {
-    if (!opts.applyOnly) {
+    const anchor = opts.anchor ?? true
+    const publish = opts.publish ?? true
+    const sync = opts.sync ?? true
+    if (anchor) {
       await this.anchor()
-      this._publishTip()
-    } else if (!opts.skipWait) {
-      await Document.wait(this)
+    }
+    if (publish) {
+      await this._publishTip()
+    }
+    if (sync) {
+      await this._wait()
     }
   }
 
@@ -509,7 +510,7 @@ class Document extends EventEmitter {
         if (this.validate) {
           const schemaId = payload.header?.schema
           if (schemaId) {
-            const schema = await Document.loadSchemaById(this._context.api, schemaId)
+            const schema = await Document.loadSchemaById(this._context, schemaId)
             if (schema) {
               Utils.validate(payload.content, schema)
             }
@@ -522,7 +523,7 @@ class Document extends EventEmitter {
         if (this.validate) {
           const schemaId = payload.header?.schema
           if (schemaId) {
-            const schema = await Document.loadSchemaById(this._context.api, schemaId)
+            const schema = await Document.loadSchemaById(this._context, schemaId)
             if (schema) {
               Utils.validate(tmpState.next.content, schema)
             }
@@ -608,7 +609,7 @@ class Document extends EventEmitter {
           this._doctype.state = state
           await this._handleTip(asr.anchorRecord)
           await this._updateStateIfPinned()
-          this._publishTip()
+          await this._publishTip()
 
           this._context.anchorService.removeAllListeners(this.id.toString())
           return
@@ -631,26 +632,26 @@ class Document extends EventEmitter {
   /**
    * Loads schema for the Doctype
    *
-   * @param ceramicApi - Ceramic API
+   * @param context - Ceramic context
    * @param doctype - Doctype instance
    */
-  static async loadSchema<T extends Doctype>(ceramicApi: CeramicApi, doctype: Doctype): Promise<T> {
-    return doctype.state?.metadata?.schema ? Document.loadSchemaById(ceramicApi, doctype.state.metadata.schema) : null
+  static async loadSchema<T extends Doctype>(context: Context, doctype: Doctype): Promise<T> {
+    return doctype.state?.metadata?.schema ? Document.loadSchemaById(context, doctype.state.metadata.schema) : null
   }
 
   /**
    * Loads schema by ID
    *
-   * @param ceramicApi - Ceramic API
+   * @param context - Ceramic context
    * @param schemaDocId - Schema document ID
    */
-  static async loadSchemaById<T extends Doctype>(ceramicApi: CeramicApi, schemaDocId: string): Promise<T> {
+  static async loadSchemaById<T extends Doctype>(context: Context, schemaDocId: string): Promise<T> {
     if (schemaDocId) {
       const schemaDocIdParsed = DocID.fromString(schemaDocId)
       if (!schemaDocIdParsed.version) {
         throw new Error("Version missing when loading schema document")
       }
-      const schemaDoc = await ceramicApi.loadDocument(schemaDocId)
+      const schemaDoc = await context.api.loadDocument(schemaDocId)
       return schemaDoc.content
     }
     return null
@@ -710,19 +711,19 @@ class Document extends EventEmitter {
   /**
    * Waits for some time in order to propagate
    *
-   * @param doc - Document instance
+   * @private
    */
-  static async wait(doc: Document): Promise<void> {
+  async _wait(): Promise<void> {
     // add response timeout for network change
     return new Promise(resolve => {
       let tid: any // eslint-disable-line prefer-const
       const clear = (): void => {
         clearTimeout(tid)
-        doc._doctype.off('change', clear)
+        this._doctype.off('change', clear)
         resolve()
       }
       tid = setTimeout(clear, 3000)
-      doc._doctype.on('change', clear)
+      this._doctype.on('change', clear)
     })
   }
 

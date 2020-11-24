@@ -156,6 +156,10 @@ describe('Level data store', () => {
     dispatcher._ipfs.pin.rm.mockClear()
     dispatcher._ipfs.pin.add.mockClear()
 
+    // TODO: Many of the tests in this file are racy and depend on an anchor not having been
+    // performed yet by the time the test checks.  To eliminate this race condition we should set
+    // anchorOnRequest to false in the config for the InMemoryAnchorService and anchor manually
+    // throughout the tests.
     anchorService = new InMemoryAnchorService({})
     anchorService.ceramic = {
       dispatcher
@@ -233,7 +237,7 @@ describe('Level data store', () => {
     const genesisCid = await dispatcher.storeRecord(genesis)
     const docId = new DocID('tile', genesisCid)
     const doc = await Document.create(docId, doctypeHandler, dispatcher, store, context, {
-      applyOnly: true, skipWait: true,
+      anchor: false, publish: false, sync: false,
     })
 
     let docState = await store.stateStore.load(doc.id)
