@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/ceramic-common",
-  "version": "0.12.2",
+  "version": "0.12.3-alpha.0",
   "description": "Ceramic common types and utilities",
   "keywords": [
     "ceramic",
@@ -53,14 +53,14 @@
     "eslint": "^6.8.0",
     "eslint-plugin-jest": "^23.8.2",
     "identity-wallet": "^2.0.0-alpha.18",
+    "ipfs-core": "^0.3.0",
     "jest": "^25.1.0",
     "js-sha256": "^0.9.0",
     "json-schema-to-typescript": "^9.1.1",
     "tmp-promise": "^2.0.2",
     "ts-node": "^9.0.0",
     "tsc-watch": "^4.2.9",
-    "typescript-json-schema": "^0.42.0",
-    "ipfs-core": "^0.3.0"
+    "typescript-json-schema": "^0.42.0"
   },
   "jest": {
     "transformIgnorePatterns": [
