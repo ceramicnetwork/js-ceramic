@@ -1,7 +1,7 @@
 import Ceramic from '../ceramic'
 import IdentityWallet from 'identity-wallet'
 import tmp from 'tmp-promise'
-import IPFS from 'ipfs'
+import IPFS from 'ipfs-core'
 import getPort from 'get-port'
 import { DoctypeUtils, DocState, Doctype, IpfsApi } from "@ceramicnetwork/ceramic-common"
 import { TileDoctype } from "@ceramicnetwork/ceramic-doctype-tile"

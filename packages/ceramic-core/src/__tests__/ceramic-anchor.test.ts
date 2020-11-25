@@ -3,7 +3,7 @@ import IdentityWallet from 'identity-wallet'
 import { Doctype, IpfsApi } from "@ceramicnetwork/ceramic-common"
 import { TileDoctype } from "@ceramicnetwork/ceramic-doctype-tile"
 import tmp from 'tmp-promise'
-import IPFS from 'ipfs'
+import IPFS from 'ipfs-core'
 import * as u8a from 'uint8arrays'
 
 import getPort from 'get-port'

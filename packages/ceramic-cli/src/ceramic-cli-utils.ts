@@ -12,7 +12,7 @@ import DocID from '@ceramicnetwork/docid'
 
 import CeramicDaemon, { CreateOpts } from "./ceramic-daemon"
 
-import IPFS from "ipfs"
+import IPFS from "ipfs-core"
 
 import dagJose from 'dag-jose'
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment

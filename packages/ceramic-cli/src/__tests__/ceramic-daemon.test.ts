@@ -2,7 +2,7 @@ import Ceramic from '@ceramicnetwork/ceramic-core'
 import CeramicClient from '@ceramicnetwork/ceramic-http-client'
 import IdentityWallet from 'identity-wallet'
 import tmp from 'tmp-promise'
-import IPFS from 'ipfs'
+import IPFS from 'ipfs-core'
 import CeramicDaemon from '../ceramic-daemon'
 import { AnchorStatus, DoctypeUtils, IpfsApi } from "@ceramicnetwork/ceramic-common"
 import { TileDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-tile"
