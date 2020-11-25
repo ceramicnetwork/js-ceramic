@@ -4,7 +4,7 @@ import IdentityWallet from 'identity-wallet'
 import tmp from 'tmp-promise'
 import IPFS from 'ipfs'
 import CeramicDaemon from '../ceramic-daemon'
-import { AnchorStatus, DoctypeUtils } from "@ceramicnetwork/ceramic-common"
+import { AnchorStatus, DoctypeUtils, IpfsApi } from "@ceramicnetwork/ceramic-common"
 import { TileDoctypeHandler } from "@ceramicnetwork/ceramic-doctype-tile"
 import { EventEmitter } from "events"
 import * as u8a from 'uint8arrays'
@@ -12,7 +12,6 @@ import * as u8a from 'uint8arrays'
 import dagJose from 'dag-jose'
 import basicsImport from 'multiformats/cjs/src/basics-import.js'
 import legacy from 'multiformats/cjs/src/legacy.js'
-import { IPFSApi } from "../declarations"
 
 const seed = u8a.fromString('6e34b2e1a9624113d81ece8a8a22e6e97f0e145c25c1d4d2d0e62753b4060c837097f768559e17ec89ee20cba153b23b9987912ec1e860fa1212ba4b84c776ce', 'base16')
 const anchorUpdate = (doc: EventEmitter): Promise<void> => new Promise(resolve => doc.on('change', resolve))
@@ -37,7 +36,7 @@ const createIPFS =(overrideConfig: Record<string, unknown> = {}): Promise<any> =
 
 describe('Ceramic interop: core <> http-client', () => {
   jest.setTimeout(20000)
-  let ipfs: IPFSApi
+  let ipfs: IpfsApi
   let tmpFolder: any
   let core: Ceramic
   let daemon: CeramicDaemon

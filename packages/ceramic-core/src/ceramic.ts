@@ -14,6 +14,7 @@ import {
   LoggerProvider,
   LoggerPlugin,
   LoggerPluginOptions,
+  IpfsApi,
 } from "@ceramicnetwork/ceramic-common"
 import { Resolver } from "did-resolver"
 
@@ -25,7 +26,6 @@ import { PinStore } from "./store/pin-store";
 
 import EthereumAnchorService from "./anchor/ethereum/ethereum-anchor-service"
 import InMemoryAnchorService from "./anchor/memory/in-memory-anchor-service"
-import { IPFSApi } from "./declarations"
 
 /**
  * Ceramic configuration
@@ -86,7 +86,7 @@ class Ceramic implements CeramicApi {
   /**
    * Get IPFS instance
    */
-  get ipfs(): IPFSApi {
+  get ipfs(): IpfsApi {
     return this.context.ipfs
   }
 
@@ -134,7 +134,7 @@ class Ceramic implements CeramicApi {
    * @param ipfs - IPFS instance
    * @param config - Ceramic configuration
    */
-  static async create(ipfs: IPFSApi, config: CeramicConfig = {}): Promise<Ceramic> {
+  static async create(ipfs: IpfsApi, config: CeramicConfig = {}): Promise<Ceramic> {
     const loggerOptions = LoggerProvider.init({
       level: config.logLevel? config.logLevel : 'silent',
       component: config.gateway? 'GATEWAY' : 'NODE',

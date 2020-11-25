@@ -3,14 +3,13 @@ import IdentityWallet from 'identity-wallet'
 import IPFS from 'ipfs'
 import tmp from 'tmp-promise'
 import { TileDoctype, TileParams } from "@ceramicnetwork/ceramic-doctype-tile"
-import { AnchorStatus, DoctypeUtils } from "@ceramicnetwork/ceramic-common"
+import { AnchorStatus, DoctypeUtils, IpfsApi } from "@ceramicnetwork/ceramic-common"
 
 import dagJose from 'dag-jose'
 import basicsImport from 'multiformats/cjs/src/basics-import.js'
 import legacy from 'multiformats/cjs/src/legacy.js'
 import DocID from '@ceramicnetwork/docid'
 import * as u8a from 'uint8arrays'
-import { IPFSApi } from "../declarations"
 
 jest.mock('../store/level-state-store')
 
@@ -35,7 +34,7 @@ const createIPFS =(overrideConfig: Record<string, unknown> = {}): Promise<any> =
 
 describe('Ceramic API', () => {
   jest.setTimeout(15000)
-  let ipfs: IPFSApi;
+  let ipfs: IpfsApi;
   let ceramic: Ceramic
   let tmpFolder: any;
 

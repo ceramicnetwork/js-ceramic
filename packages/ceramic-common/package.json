@@ -59,7 +59,8 @@
     "tmp-promise": "^2.0.2",
     "ts-node": "^9.0.0",
     "tsc-watch": "^4.2.9",
-    "typescript-json-schema": "^0.42.0"
+    "typescript-json-schema": "^0.42.0",
+    "ipfs-core": "^0.3.0"
   },
   "jest": {
     "transformIgnorePatterns": [

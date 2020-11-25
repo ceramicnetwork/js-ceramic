@@ -3,7 +3,7 @@ import cloneDeep from "lodash.clonedeep"
 import * as u8a from 'uint8arrays'
 
 import { AnchorStatus, DocState, Doctype } from "../doctype"
-import { IPFSApi } from "../declarations"
+import { IpfsApi } from "../index"
 
 /**
  * Doctype related utils
@@ -137,7 +137,7 @@ export class DoctypeUtils {
      * @param record - Record value
      * @param ipfs - IPFS instance
      */
-    static async convertRecordToDTO(record: any, ipfs: IPFSApi): Promise<any> {
+    static async convertRecordToDTO(record: any, ipfs: IpfsApi): Promise<any> {
         if (DoctypeUtils.isSignedRecord(record)) {
             const block = await ipfs.block.get(record.link)
             const linkedBlock = block.data instanceof Uint8Array ? block.data : new Uint8Array(block.data.buffer)

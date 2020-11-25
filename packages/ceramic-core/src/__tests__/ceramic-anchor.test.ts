@@ -1,6 +1,6 @@
 import Ceramic from '../ceramic'
 import IdentityWallet from 'identity-wallet'
-import { Doctype } from "@ceramicnetwork/ceramic-common"
+import { Doctype, IpfsApi } from "@ceramicnetwork/ceramic-common"
 import { TileDoctype } from "@ceramicnetwork/ceramic-doctype-tile"
 import tmp from 'tmp-promise'
 import IPFS from 'ipfs'
@@ -11,7 +11,6 @@ import getPort from 'get-port'
 import dagJose from 'dag-jose'
 import basicsImport from 'multiformats/cjs/src/basics-import.js'
 import legacy from 'multiformats/cjs/src/legacy.js'
-import { IPFSApi } from "../declarations"
 
 jest.mock('../store/level-state-store')
 
@@ -33,7 +32,7 @@ const createIPFS =(overrideConfig: Record<string, unknown> = {}): Promise<any> =
   return IPFS.create(config)
 }
 
-const createCeramic = async (ipfs: IPFSApi, anchorManual: boolean, topic: string): Promise<Ceramic> => {
+const createCeramic = async (ipfs: IpfsApi, anchorManual: boolean, topic: string): Promise<Ceramic> => {
   const ceramic = await Ceramic.create(ipfs, {
     stateStorePath: await tmp.tmpName(),
     topic,
@@ -64,8 +63,8 @@ const syncDoc = async (doctype: Doctype): Promise<void> => {
 
 describe('Ceramic anchoring', () => {
   jest.setTimeout(60000)
-  let ipfs1: IPFSApi;
-  let ipfs2: IPFSApi;
+  let ipfs1: IpfsApi;
+  let ipfs2: IpfsApi;
   let multaddr1: string;
   let tmpFolder: any;
 

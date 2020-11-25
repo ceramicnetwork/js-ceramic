@@ -3,9 +3,8 @@ import CID from 'cids'
 import cloneDeep from 'lodash.clonedeep'
 
 import type Document from "./document"
-import { DoctypeUtils, RootLogger, Logger } from "@ceramicnetwork/ceramic-common"
+import { DoctypeUtils, RootLogger, Logger, IpfsApi } from "@ceramicnetwork/ceramic-common"
 import { TextDecoder } from 'util'
-import { IPFSApi } from "./declarations"
 
 /**
  * Ceramic Pub/Sub message type.
@@ -42,7 +41,7 @@ export default class Dispatcher extends EventEmitter {
   private logger: Logger
   private _isRunning = true
 
-  constructor (public _ipfs: IPFSApi, public topic: string = TOPIC) {
+  constructor (public _ipfs: IpfsApi, public topic: string = TOPIC) {
     super()
     this._documents = {}
     this.logger = RootLogger.getLogger(Dispatcher.name)
