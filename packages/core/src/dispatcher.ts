@@ -8,7 +8,6 @@ import { DoctypeUtils, RootLogger, Logger } from "@ceramicnetwork/common"
 import { TextDecoder } from 'util'
 import { IPFSApi } from "./declarations"
 import DocID from "@ceramicnetwork/docid";
-import * as runtypes from "runtypes";
 
 /**
  * Ceramic Pub/Sub message type.
@@ -34,45 +33,6 @@ interface LogMessage {
   from?: string;
   message?: Record<string, unknown>;
 }
-
-/**
- * Format for UPDATE messages on the pub/sub topic. Uses the 'runtypes' library to provide type
- * checking at run time when parsing messages off the pub/sub topic.
- */
-const UpdateMessage = runtypes.Record({
-  // The message type, always 0
-  typ: runtypes.Number.withConstraint(n => n === MsgType.UPDATE),
-
-  // The DocID that is being updated
-  doc: runtypes.String,
-
-  // The CID of the new Tip of the document
-  tip: runtypes.String,
-
-  // The url of the anchor service that was used to request an anchor. Optional.
-  anchorService: runtypes.String.Or(runtypes.Undefined),
-});
-
-/**
- * Format for QUERY messages on the pub/sub topic. Uses the 'runtypes' library to provide type
- * checking at run time when parsing messages off the pub/sub topic.
- */
-const QueryMessage = runtypes.Record({
-  // The message type, always 0
-  typ: runtypes.Number.withConstraint(n => n === MsgType.QUERY),
-
-  // The DocID that is being queried
-  doc: runtypes.String,
-
-  // The unique identifier of the query. A multihash of the query object without the id property
-  // canonicalized using dag-cbor.
-  id: runtypes.String,
-
-  // The paths in the contents of the documents to explore. Paths are expected to resolve to
-  // DocIDs. Nodes responding to a QUERY message may include the tips for documents referenced from
-  // these paths.  This field is optional.
-  paths: runtypes.Array(runtypes.String).Or(runtypes.Undefined)
-});
 
 /**
  * Ceramic core Dispatcher used for handling messages from pub/sub topic.
@@ -234,8 +194,7 @@ export default class Dispatcher extends EventEmitter {
    * @private
    */
   async _handleUpdateMessage(message: any): Promise<void> {
-    // Runtime check that the message adheres to the expected format for UPDATE messages
-    UpdateMessage.check(message)
+    // TODO Add validation the message adheres to the proper format.
 
     const { doc, tip } = message
     if (!this._documents[doc]) {
@@ -255,8 +214,7 @@ export default class Dispatcher extends EventEmitter {
    * @private
    */
   async _handleQueryMessage(message: any): Promise<void> {
-    // Runtime check that the message adheres to the expected format for QUERY messages
-    QueryMessage.check(message)
+    // TODO Add validation the message adheres to the proper format.
 
     const { doc: docId, id } = message
     if (!this._documents[docId]) {
