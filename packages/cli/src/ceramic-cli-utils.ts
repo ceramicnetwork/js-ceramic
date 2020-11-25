@@ -7,7 +7,7 @@ import { promises as fs } from 'fs'
 
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import CeramicClient from "@ceramicnetwork/http-client"
-import { CeramicApi, DoctypeUtils } from "@ceramicnetwork/common"
+import { CeramicApi, DoctypeUtils, IpfsApi } from "@ceramicnetwork/common"
 import DocID from '@ceramicnetwork/docid'
 
 import CeramicDaemon, { CreateOpts } from "./ceramic-daemon"
@@ -20,7 +20,6 @@ import multiformats from 'multiformats/basics'
 // @ts-ignore
 import legacy from 'multiformats/legacy'
 import ipfsClient from "ipfs-http-client"
-import { IPFSApi } from "./declarations"
 
 const DEFAULT_CLI_CONFIG_FILE = 'config.json'
 export const DEFAULT_PINNING_STORE_PATH = ".pinning.store"
@@ -78,7 +77,7 @@ export class CeramicCliUtils {
         multiformats.multicodec.add(dagJose)
         const format = legacy(multiformats, dagJose.name)
 
-        let ipfs: IPFSApi
+        let ipfs: IpfsApi
         if (ipfsApi) {
             ipfs = ipfsClient({ url: ipfsApi, ipld: { formats: [format] } })
         } else {

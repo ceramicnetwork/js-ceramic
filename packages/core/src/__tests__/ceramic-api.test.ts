@@ -1,10 +1,9 @@
 import Ceramic, { CeramicConfig } from '../ceramic'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import IPFS from 'ipfs'
-import { IPFSApi } from "../declarations"
 import tmp from 'tmp-promise'
 import { TileDoctype, TileParams } from "@ceramicnetwork/doctype-tile"
-import { AnchorStatus, DoctypeUtils } from "@ceramicnetwork/common"
+import { AnchorStatus, DoctypeUtils, IpfsApi } from "@ceramicnetwork/common"
 
 import dagJose from 'dag-jose'
 import basicsImport from 'multiformats/cjs/src/basics-import.js'
@@ -21,7 +20,7 @@ const seed = u8a.fromString('6e34b2e1a9624113d81ece8a8a22e6e97f0e145c25c1d4d2d0e
  * Create an IPFS instance
  * @param overrideConfig - IFPS config for override
  */
-const createIPFS =(overrideConfig: Record<string, unknown> = {}): Promise<IPFSApi> => {
+const createIPFS =(overrideConfig: Record<string, unknown> = {}): Promise<IpfsApi> => {
   basicsImport.multicodec.add(dagJose)
   const format = legacy(basicsImport, dagJose.name)
 
@@ -56,7 +55,7 @@ const anchorDoc = async (ceramic: Ceramic, doc: any): Promise<void> => {
 
 describe('Ceramic API', () => {
   jest.setTimeout(15000)
-  let ipfs: IPFSApi;
+  let ipfs: IpfsApi;
   let ceramic: Ceramic
   let tmpFolder: any;
 
