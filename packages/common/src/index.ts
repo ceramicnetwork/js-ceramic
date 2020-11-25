@@ -5,3 +5,7 @@ export * from './doctype'
 export * from './utils/doctype-utils'
 export * from './logger-provider'
 export * from './pinning'
+
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+export type { IPFSAPI as IpfsApi } from 'ipfs-core/dist/src/components'

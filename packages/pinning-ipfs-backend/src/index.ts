@@ -1,14 +1,10 @@
 import type {
-    CidList,
-    PinningBackend,
-    PinningInfo,
-    Context,
+    CidList, PinningBackend, PinningInfo, Context, IpfsApi,
 } from "@ceramicnetwork/common";
 import type CID from "cids";
 import * as sha256 from "@stablelib/sha256";
 import * as base64 from "@stablelib/base64";
 import ipfsClient from "ipfs-http-client"
-import { IPFSApi } from "./declarations"
 
 const FROM_CONTEXT_HOST = "ipfs+context";
 
@@ -36,7 +32,7 @@ export class IpfsPinning implements PinningBackend {
     readonly id: string;
 
     readonly #context: Context;
-    #ipfs: IPFSApi | undefined;
+    #ipfs: IpfsApi | undefined;
 
     constructor(readonly connectionString: string, context: Context) {
         if (connectionString == 'ipfs+context') {
@@ -62,7 +58,7 @@ export class IpfsPinning implements PinningBackend {
         this.id = `${IpfsPinning.designator}@${digest}`;
     }
 
-    get ipfs(): IPFSApi {
+    get ipfs(): IpfsApi {
         return this.#ipfs;
     }
 
