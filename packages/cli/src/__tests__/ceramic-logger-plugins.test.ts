@@ -52,7 +52,7 @@ describe('Ceramic Logger Plugins', () => {
             })
         })
 
-        describe('_writeStream', () => {
+        describe('_writeFile', () => {
             it('should rotate expired files before overwriting', async () => {
                 dateNowSpy = jest.spyOn(Date, 'now').mockImplementation(() => today.getTime())
                 const prevFilePath = mockFiles[0].name
@@ -62,7 +62,7 @@ describe('Ceramic Logger Plugins', () => {
                 expect(isExpired).toBe(true)
 
                 const nextFileMessage = 'nextmessage'
-                await LogToFiles['_writeStream'](prevFilePath, nextFileMessage, 'w')
+                await LogToFiles['_writeFile'](prevFilePath, nextFileMessage, 'w')
                 const nextFilePath = prevFilePath + '.old'
 
                 expect(mockFs[prevFilePath].message).toBe(nextFileMessage + '\n')
@@ -77,7 +77,7 @@ describe('Ceramic Logger Plugins', () => {
                 expect(isExpired).toBe(true)
 
                 const nextFileMessage = 'nextmessage'
-                await LogToFiles['_writeStream'](prevFilePath, nextFileMessage, 'a')
+                await LogToFiles['_writeFile'](prevFilePath, nextFileMessage, 'a')
                 const nextFilePath = prevFilePath + '.old'
 
                 expect(mockFs[prevFilePath].message).toBe(nextFileMessage + '\n')
@@ -92,7 +92,7 @@ describe('Ceramic Logger Plugins', () => {
                 expect(isExpired).toBe(false)
 
                 const message = 'message'
-                await LogToFiles['_writeStream'](filePath, message, 'a')
+                await LogToFiles['_writeFile'](filePath, message, 'a')
                 const nextFilePath = filePath + '.old'
 
                 expect(mockFs[filePath].message).toBe(prevMessage + message + '\n')
@@ -106,7 +106,7 @@ describe('Ceramic Logger Plugins', () => {
                 expect(isExpired).toBe(false)
 
                 const message = 'message'
-                await LogToFiles['_writeStream'](filePath, message, 'w')
+                await LogToFiles['_writeFile'](filePath, message, 'w')
                 const nextFilePath = filePath + '.old'
 
                 expect(mockFs[filePath].message).toBe(message + '\n')

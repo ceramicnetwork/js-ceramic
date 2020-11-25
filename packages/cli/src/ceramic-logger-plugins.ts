@@ -43,7 +43,7 @@ export class LogToFiles {
                         const filePrefix = basePath + loggerName.toLowerCase()
                         const filePath = `${filePrefix}.log`
 
-                        await LogToFiles._writeStream(filePath, message, 'a')
+                        await LogToFiles._writeFile(filePath, message, 'a')
                         await LogToFiles._writeDocId(filePrefix, message)
                     }
                 })
@@ -54,20 +54,19 @@ export class LogToFiles {
     }
 
     /**
-     * Opens a filesystem stream and writes `message` to it
+     * Writes `message` to a file
      * @param filePath Full path of file to write to
      * @param message Message to write to `filePath`
      * @param writeFlag Specifies writing method (e.g. "a" for append, "w" for overwrite)
      */
-    private static async _writeStream (filePath: string, message: string, writeFlag: string): Promise<void> {
+    private static async _writeFile (filePath: string, message: string, writeFlag: string): Promise<void> {
         const fileExpired = await LogToFiles._isExpired(filePath)
         fileExpired && await LogToFiles._rotate(filePath)
-        const stream = fs.createWriteStream(
+        await fsPromises.writeFile(
             filePath,
-            { flags: writeFlag }
+            util.format(message) + '\n',
+            { flag: writeFlag }
         )
-        stream.write(util.format(message) + '\n')
-        stream.end()
     }
 
     /**
@@ -87,7 +86,7 @@ export class LogToFiles {
             if (match !== null) {
                 const docId = match[0]
                 const filePath = filePrefix + '-docids.log'
-                LogToFiles._writeStream(filePath, docId, 'w')
+                LogToFiles._writeFile(filePath, docId, 'w')
             }
         }
     }
