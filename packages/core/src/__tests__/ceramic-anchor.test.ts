@@ -3,7 +3,7 @@ import { Ed25519Provider } from 'key-did-provider-ed25519'
 import { AnchorStatus, Doctype, IpfsApi } from "@ceramicnetwork/common"
 import { TileDoctype } from "@ceramicnetwork/doctype-tile"
 import tmp from 'tmp-promise'
-import IPFS from 'ipfs'
+import IPFS from 'ipfs-core'
 import * as u8a from 'uint8arrays'
 
 import getPort from 'get-port'

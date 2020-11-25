@@ -1,6 +1,6 @@
 import Ceramic, { CeramicConfig } from '../ceramic'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
-import IPFS from 'ipfs'
+import IPFS from 'ipfs-core'
 import tmp from 'tmp-promise'
 import { TileDoctype, TileParams } from "@ceramicnetwork/doctype-tile"
 import { AnchorStatus, DoctypeUtils, IpfsApi } from "@ceramicnetwork/common"

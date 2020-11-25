@@ -2,7 +2,7 @@ import Ceramic from '@ceramicnetwork/core'
 import CeramicClient from '@ceramicnetwork/http-client'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import tmp from 'tmp-promise'
-import IPFS from 'ipfs'
+import IPFS from 'ipfs-core'
 import CeramicDaemon from '../ceramic-daemon'
 import { AnchorStatus, DoctypeUtils, IpfsApi } from "@ceramicnetwork/common"
 import { TileDoctypeHandler } from "@ceramicnetwork/doctype-tile"

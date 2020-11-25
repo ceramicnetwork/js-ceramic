@@ -1,4 +1,4 @@
-import IPFS from 'ipfs'
+import IPFS from 'ipfs-core'
 import Ceramic from '../ceramic'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import tmp from 'tmp-promise'
