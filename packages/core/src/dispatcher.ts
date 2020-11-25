@@ -2,6 +2,8 @@ import { EventEmitter } from 'events'
 import CID from 'cids'
 import cloneDeep from 'lodash.clonedeep'
 import dagCBOR from "ipld-dag-cbor"
+import * as multihashes from 'typestub-multihashes'
+import * as sha256 from "@stablelib/sha256"
 
 import type Document from "./document"
 import { DoctypeUtils, RootLogger, Logger } from "@ceramicnetwork/common"
@@ -84,10 +86,26 @@ export default class Dispatcher extends EventEmitter {
   async _buildQueryMessage(document: Document): Promise<Record<string, any>> {
     const message = { typ: MsgType.QUERY, doc: document.id.baseID.toString() }
 
-    // Add 'id' to message.  'id' is the multihash of the rest of the query object canonicalized
-    // using dag-cbor
-    const id: Uint8Array = dagCBOR.util.serialize(message)
+    // Add 'id' to message that is a hash of the message contents.
+    const id = await this._hashMessage(message)
+
     return {...message, id: id.toString()}
+  }
+
+  /**
+   * Computes a sha-256 multihash of the input message canonicalized using dag-cbor
+   * @param message
+   */
+  async _hashMessage(message: any) : Promise<Uint8Array> {
+    // DAG-CBOR encoding
+    let id: Uint8Array = dagCBOR.util.serialize(message)
+
+    // SHA-256 hash
+    id = sha256.hash(id)
+
+    // Multihash encoding
+    const buf = Buffer.from(id)
+    return multihashes.encode(buf, 'sha256')
   }
 
   /**
