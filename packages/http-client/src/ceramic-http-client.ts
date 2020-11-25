@@ -6,6 +6,9 @@ import { Doctype, DoctypeHandler, DocOpts, DocParams, DIDProvider, Context, Cera
 import { TileDoctypeHandler } from "@ceramicnetwork/doctype-tile"
 import { Caip10LinkDoctypeHandler } from "@ceramicnetwork/doctype-caip10-link"
 import DocID from '@ceramicnetwork/docid'
+import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
+import KeyDidResolver from '@ceramicnetwork/key-did-resolver'
+import { Resolver } from "did-resolver"
 
 const API_PATH = '/api/v0'
 const CERAMIC_HOST = 'http://localhost:7007'
@@ -22,6 +25,7 @@ export const DEFAULT_CLIENT_CONFIG: CeramicClientConfig = {
  * Ceramic client configuration
  */
 export interface CeramicClientConfig {
+  didResolver?: Resolver
   docSyncEnabled?: boolean
   docSyncInterval?: number
 }
@@ -48,6 +52,12 @@ export default class CeramicClient implements CeramicApi {
 
     this.context = { api: this }
     this.pin = this._initPinApi()
+
+    const keyDidResolver = KeyDidResolver.getResolver()
+    const threeIdResolver = ThreeIdResolver.getResolver(this)
+    this.context.resolver = new Resolver({
+      ...config.didResolver, ...threeIdResolver, ...keyDidResolver,
+    })
 
     this._doctypeHandlers = {
       'tile': new TileDoctypeHandler(),
@@ -142,7 +152,7 @@ export default class CeramicClient implements CeramicApi {
 
   async setDIDProvider(provider: DIDProvider): Promise<void> {
     this.context.provider = provider;
-    this.context.did = new DID( { provider })
+    this.context.did = new DID( { provider, resolver: this.context.resolver })
 
     if (!this.context.did.authenticated) {
       await this.context.did.authenticate()

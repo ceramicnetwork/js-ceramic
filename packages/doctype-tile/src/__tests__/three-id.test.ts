@@ -121,7 +121,7 @@ describe('ThreeIdHandler', () => {
     did = new DID()
     did.createJWS = jest.fn(async () => {
       // fake jws
-      return 'eyJraWQiOiJkaWQ6a2V5OnpRM3Nod3NDZ0ZhbkJheDZVaWFMdTFvR3ZNN3ZodXFvVzg4VkJVaVVUQ2VIYlRlVFYiLCJhbGciOiJFUzI1NksifQ.bbbb.cccc'
+      return { payload: 'bbbb', signatures: [{ protected: 'eyJraWQiOiJkaWQ6a2V5OnpRM3Nod3NDZ0ZhbkJheDZVaWFMdTFvR3ZNN3ZodXFvVzg4VkJVaVVUQ2VIYlRlVFYiLCJhbGciOiJFUzI1NksifQ', signature: 'cccc'}]}
     })
     did._id = 'did:key:zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV'
 

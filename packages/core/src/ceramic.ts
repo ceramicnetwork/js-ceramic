@@ -166,15 +166,15 @@ class Ceramic implements CeramicApi {
     const ceramic = new Ceramic(dispatcher, pinStore, context, config.validateDocs)
     anchorService.ceramic = ceramic
 
-    if (config.didProvider) {
-      await ceramic.setDIDProvider(config.didProvider)
-    }
-
     const keyDidResolver = KeyDidResolver.getResolver()
     const threeIdResolver = ThreeIdResolver.getResolver(ceramic)
     ceramic.context.resolver = new Resolver({
       ...config.didResolver, ...threeIdResolver, ...keyDidResolver,
     })
+
+    if (config.didProvider) {
+      await ceramic.setDIDProvider(config.didProvider)
+    }
 
     return ceramic
   }
@@ -185,7 +185,7 @@ class Ceramic implements CeramicApi {
    */
   async setDIDProvider (provider: DIDProvider): Promise<void> {
     this.context.provider = provider;
-    this.context.did = new DID( { provider })
+    this.context.did = new DID( { provider, resolver: this.context.resolver })
 
     if (!this.context.did.authenticated) {
       await this.context.did.authenticate()
