@@ -3,7 +3,7 @@ import Document from './document'
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import KeyDidResolver from '@ceramicnetwork/key-did-resolver'
 import DocID from '@ceramicnetwork/docid'
-import { CeramicApi, DIDProvider, PinApi } from "@ceramicnetwork/common"
+import { CeramicApi, DIDProvider, IpfsApi, PinApi } from "@ceramicnetwork/common"
 import {
   Doctype,
   DoctypeHandler,
@@ -26,7 +26,6 @@ import { PinStore } from "./store/pin-store";
 import EthereumAnchorService from "./anchor/ethereum/ethereum-anchor-service"
 import InMemoryAnchorService from "./anchor/memory/in-memory-anchor-service"
 import { PinningBackendStatic } from "@ceramicnetwork/common";
-import { IPFSApi } from "./declarations"
 
 /**
  * Ceramic configuration
@@ -89,7 +88,7 @@ class Ceramic implements CeramicApi {
   /**
    * Get IPFS instance
    */
-  get ipfs(): IPFSApi {
+  get ipfs(): IpfsApi {
     return this.context.ipfs
   }
 
@@ -137,7 +136,7 @@ class Ceramic implements CeramicApi {
    * @param ipfs - IPFS instance
    * @param config - Ceramic configuration
    */
-  static async create(ipfs: IPFSApi, config: CeramicConfig = {}): Promise<Ceramic> {
+  static async create(ipfs: IpfsApi, config: CeramicConfig = {}): Promise<Ceramic> {
     LoggerProvider.init({
       level: config.logLevel? config.logLevel : 'silent',
       component: config.gateway? 'GATEWAY' : 'NODE',

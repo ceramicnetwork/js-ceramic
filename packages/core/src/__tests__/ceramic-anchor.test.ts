@@ -1,10 +1,9 @@
 import Ceramic from '../ceramic'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
-import {AnchorStatus, Doctype} from "@ceramicnetwork/common"
+import { AnchorStatus, Doctype, IpfsApi } from "@ceramicnetwork/common"
 import { TileDoctype } from "@ceramicnetwork/doctype-tile"
 import tmp from 'tmp-promise'
-import IPFS from 'ipfs'
-import { IPFSApi } from "../declarations"
+import IPFS from 'ipfs-core'
 import * as u8a from 'uint8arrays'
 
 import getPort from 'get-port'
@@ -21,7 +20,7 @@ const seed = u8a.fromString('6e34b2e1a9624113d81ece8a8a22e6e97f0e145c25c1d4d2d0e
  * Create an IPFS instance
  * @param overrideConfig - IFPS config for override
  */
-const createIPFS =(overrideConfig: Record<string, unknown> = {}): Promise<IPFSApi> => {
+const createIPFS =(overrideConfig: Record<string, unknown> = {}): Promise<IpfsApi> => {
   basicsImport.multicodec.add(dagJose)
   const format = legacy(basicsImport, dagJose.name)
 
@@ -33,7 +32,7 @@ const createIPFS =(overrideConfig: Record<string, unknown> = {}): Promise<IPFSAp
   return IPFS.create(config)
 }
 
-const createCeramic = async (ipfs: IPFSApi, anchorManual: boolean, topic: string): Promise<Ceramic> => {
+const createCeramic = async (ipfs: IpfsApi, anchorManual: boolean, topic: string): Promise<Ceramic> => {
   const ceramic = await Ceramic.create(ipfs, {
     stateStorePath: await tmp.tmpName(),
     topic,
@@ -68,8 +67,8 @@ const anchorDoc = async (ceramic: Ceramic, doc: any): Promise<void> => {
 
 describe('Ceramic anchoring', () => {
   jest.setTimeout(60000)
-  let ipfs1: IPFSApi;
-  let ipfs2: IPFSApi;
+  let ipfs1: IpfsApi;
+  let ipfs2: IpfsApi;
   let multaddr1: string;
   let tmpFolder: any;
 

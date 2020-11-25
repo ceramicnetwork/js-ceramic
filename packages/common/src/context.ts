@@ -3,14 +3,14 @@ import { CeramicApi, DIDProvider } from "./ceramic-api"
 
 import { DID } from 'dids'
 import type { AnchorService } from "./anchor-service"
-import { IPFSApi } from "./declarations"
+import { IpfsApi } from "./index"
 
 /**
  * Encapsulates Ceramic context
  */
 export interface Context {
     did?: DID;
-    ipfs?: IPFSApi; // an ipfs instance
+    ipfs?: IpfsApi; // an ipfs instance
     resolver?: Resolver; // a DID resolver instance
     provider?: DIDProvider; // a DID provider (3ID provider initially)
     anchorService?: AnchorService;

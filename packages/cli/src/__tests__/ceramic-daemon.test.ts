@@ -2,10 +2,9 @@ import Ceramic from '@ceramicnetwork/core'
 import CeramicClient from '@ceramicnetwork/http-client'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import tmp from 'tmp-promise'
-import IPFS from 'ipfs'
-import { IPFSApi } from "../declarations"
+import IPFS from 'ipfs-core'
 import CeramicDaemon from '../ceramic-daemon'
-import { AnchorStatus, DoctypeUtils } from "@ceramicnetwork/common"
+import { AnchorStatus, DoctypeUtils, IpfsApi } from "@ceramicnetwork/common"
 import { TileDoctypeHandler } from "@ceramicnetwork/doctype-tile"
 import { EventEmitter } from "events"
 import * as u8a from 'uint8arrays'
@@ -33,7 +32,7 @@ const apiUrl = 'http://localhost:' + port
  * Create an IPFS instance
  * @param overrideConfig - IFPS config for override
  */
-const createIPFS = (overrideConfig: Record<string, unknown> = {}): Promise<IPFSApi> => {
+const createIPFS = (overrideConfig: Record<string, unknown> = {}): Promise<IpfsApi> => {
     basicsImport.multicodec.add(dagJose)
     const format = legacy(basicsImport, dagJose.name)
 
@@ -47,7 +46,7 @@ const createIPFS = (overrideConfig: Record<string, unknown> = {}): Promise<IPFSA
 
 describe('Ceramic interop: core <> http-client', () => {
     jest.setTimeout(20000)
-    let ipfs: IPFSApi
+    let ipfs: IpfsApi
     let tmpFolder: any
     let core: Ceramic
     let daemon: CeramicDaemon
