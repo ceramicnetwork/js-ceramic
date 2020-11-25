@@ -3,8 +3,12 @@ import IdentityWallet from 'identity-wallet'
 import tmp from 'tmp-promise'
 import IPFS from 'ipfs-core'
 import getPort from 'get-port'
-import { DoctypeUtils, DocState, Doctype, IpfsApi } from "@ceramicnetwork/ceramic-common"
+import { DoctypeUtils, DocState, Doctype } from "@ceramicnetwork/ceramic-common"
 import { TileDoctype } from "@ceramicnetwork/ceramic-doctype-tile"
+
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import { IPFSAPI as IpfsApi } from 'ipfs-core/dist/src/components'
 
 import dagJose from 'dag-jose'
 import basicsImport from 'multiformats/cjs/src/basics-import.js'

@@ -14,7 +14,6 @@ import {
   LoggerProvider,
   LoggerPlugin,
   LoggerPluginOptions,
-  IpfsApi,
 } from "@ceramicnetwork/ceramic-common"
 import { Resolver } from "did-resolver"
 
@@ -26,6 +25,10 @@ import { PinStore } from "./store/pin-store";
 
 import EthereumAnchorService from "./anchor/ethereum/ethereum-anchor-service"
 import InMemoryAnchorService from "./anchor/memory/in-memory-anchor-service"
+
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import { IPFSAPI as IpfsApi } from 'ipfs-core/dist/src/components'
 
 /**
  * Ceramic configuration

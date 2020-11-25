@@ -1,7 +1,11 @@
-import {Pinning} from "./pinning";
+import { Pinning } from "./pinning";
 import ipfsClient from "ipfs-http-client";
-import {Context, IpfsApi} from "@ceramicnetwork/ceramic-common";
+import { Context } from "@ceramicnetwork/ceramic-common";
 import CID from "cids";
+
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import { IPFSAPI as IpfsApi } from 'ipfs-core/dist/src/components'
 
 const FROM_CONTEXT = '__context'
 

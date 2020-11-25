@@ -1,10 +1,14 @@
 import Ceramic from '../ceramic'
 import IdentityWallet from 'identity-wallet'
-import { Doctype, IpfsApi } from "@ceramicnetwork/ceramic-common"
+import { Doctype } from "@ceramicnetwork/ceramic-common"
 import { TileDoctype } from "@ceramicnetwork/ceramic-doctype-tile"
 import tmp from 'tmp-promise'
 import IPFS from 'ipfs-core'
 import * as u8a from 'uint8arrays'
+
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import { IPFSAPI as IpfsApi } from 'ipfs-core/dist/src/components'
 
 import getPort from 'get-port'
 
