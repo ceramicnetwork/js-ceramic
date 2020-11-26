@@ -175,7 +175,9 @@ describe('Document', () => {
       const resolver = new Resolver({ ...threeIdResolver })
       context = {
         did: user,
-        anchorService,
+        anchorServices: {
+          'inmemory:12345': [anchorService],
+        },
         ipfs: dispatcher._ipfs,
         resolver,
         provider: null,
@@ -347,7 +349,7 @@ describe('Document', () => {
       // sometime the tests are very fast
       await new Promise(resolve => setTimeout(resolve, 1))
       // TODO - better mock for anchors
-      
+
       const conflictingNewContent = { asdf: 2342 }
       updateRec = await TileDoctype._makeRecord(doc2.doctype, user, conflictingNewContent, doc2.controllers)
       await doc2.applyRecord(updateRec)
@@ -618,9 +620,7 @@ describe('Document', () => {
     beforeEach(() => {
       dispatcher = Dispatcher(true)
       anchorService = new InMemoryAnchorService({})
-      anchorService.ceramic = {
-        dispatcher,
-      }
+
       user = new DID()
       user.createJWS = jest.fn(async () => {
         // fake jws
@@ -646,7 +646,9 @@ describe('Document', () => {
       const resolver = new Resolver({ ...threeIdResolver })
       context = {
         did: user,
-        anchorService,
+        anchorServices: {
+          'inmemory:12345': [anchorService],
+        },
         ipfs: dispatcher._ipfs,
         resolver,
         provider: null,

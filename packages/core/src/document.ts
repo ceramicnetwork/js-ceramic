@@ -16,10 +16,9 @@ import {
   DocOpts,
   Context,
   DoctypeUtils,
-  CeramicApi,
   DocMetadata,
   RootLogger,
-  Logger,
+  Logger, AnchorService,
 } from '@ceramicnetwork/common'
 import DocID from '@ceramicnetwork/docid'
 import { PinStore } from './store/pin-store';
@@ -569,7 +568,12 @@ class Document extends EventEmitter {
     }
 
     const proof: AnchorProof = await this.dispatcher.retrieveRecord(record.proof)
-    await this._context.anchorService.validateChainInclusion(proof)
+
+    const anchorService = Utils.getAnchorService(this._context)
+    if (anchorService == null) {
+      throw new Error('There is no anchor service registered for the chain ' + proof.chainId)
+    }
+    await anchorService.validateChainInclusion(proof)
     return proof
   }
 
@@ -586,7 +590,10 @@ class Document extends EventEmitter {
    * Request anchor for the latest document state
    */
   async anchor (): Promise<void> {
-    this._context.anchorService.on(this.id.toString(), async (asr: AnchorServiceResponse): Promise<void> => {
+    const { chainId } = this.metadata
+    const anchorService = Utils.getAnchorService(this._context, chainId)
+
+    anchorService.on(this.id.toString(), async (asr: AnchorServiceResponse): Promise<void> => {
       switch (asr.status) {
         case 'PENDING': {
           const state = this._doctype.state
@@ -610,19 +617,21 @@ class Document extends EventEmitter {
           await this._updateStateIfPinned()
           await this._publishTip()
 
-          this._context.anchorService.removeAllListeners(this.id.toString())
+          anchorService.removeAllListeners(this.id.toString())
           return
         }
         case 'FAILED': {
           const state = this._doctype.state
           state.anchorStatus = AnchorStatus.FAILED
           this._doctype.state = state
-          this._context.anchorService.removeAllListeners(this.id.toString())
+
+          anchorService.removeAllListeners(this.id.toString())
           return
         }
       }
     })
-    await this._context.anchorService.requestAnchor(this.id.toString(), this.tip)
+
+    await anchorService.requestAnchor(this.id.toString(), this.tip)
     const state = this._doctype.state
     state.anchorStatus = AnchorStatus.PENDING
     this._doctype.state = state
@@ -735,8 +744,7 @@ class Document extends EventEmitter {
     this.dispatcher.unregister(this.id.toString())
 
     await this._applyQueue.onEmpty()
-
-    this._context.anchorService.removeAllListeners(this.id.toString())
+    Object.values(this._context.anchorServices).flat().forEach(as => as.removeAllListeners(this.id.toString()))
     await Utils.awaitCondition(() => this._isProcessing, () => false, 500)
   }
 

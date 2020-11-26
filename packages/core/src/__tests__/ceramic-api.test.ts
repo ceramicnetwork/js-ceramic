@@ -11,6 +11,7 @@ import legacy from 'multiformats/cjs/src/legacy.js'
 import DocID from '@ceramicnetwork/docid'
 import * as u8a from 'uint8arrays'
 import cloneDeep from 'lodash.clonedeep'
+import Utils from "../utils"
 
 jest.mock('../store/level-state-store')
 
@@ -49,7 +50,7 @@ const registerChangeListener = function (doc: any): Promise<void> {
  */
 const anchorDoc = async (ceramic: Ceramic, doc: any): Promise<void> => {
   const changeHandle = registerChangeListener(doc)
-  await ceramic.context.anchorService.anchor()
+  await Utils.getAnchorService(ceramic.context).anchor()
   await changeHandle
 }
 

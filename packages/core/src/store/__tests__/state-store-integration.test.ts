@@ -161,9 +161,6 @@ describe('Level data store', () => {
     // anchorOnRequest to false in the config for the InMemoryAnchorService and anchor manually
     // throughout the tests.
     anchorService = new InMemoryAnchorService({})
-    anchorService.ceramic = {
-      dispatcher
-    }
 
     const user: DID = new DID()
     user.createJWS = jest.fn(async () => {
@@ -191,7 +188,9 @@ describe('Level data store', () => {
       ipfs: dispatcher._ipfs,
       did: user,
       resolver,
-      anchorService,
+      anchorServices: {
+        'inmemory:12345': anchorService,
+      },
       api,
     }
 

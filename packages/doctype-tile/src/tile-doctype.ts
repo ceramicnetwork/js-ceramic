@@ -76,11 +76,11 @@ export class TileDoctype extends Doctype {
             throw new Error('No DID authenticated')
         }
 
-        const supported_chains = await context.api.getSupportedChains()
-        if ('chainId' in metadata && !supported_chains.includes(metadata.chainId)) {
-            throw new Error("Requested chainId '" + metadata.chainId + "' is not supported. Supported chains are: '" + supported_chains.join("', '") + "'")
+        const supportedChains = await context.api.getSupportedChains()
+        if ('chainId' in metadata && !supportedChains.includes(metadata.chainId)) {
+            throw new Error("Requested chainId '" + metadata.chainId + "' is not supported. Supported chains are: '" + supportedChains.join("', '") + "'")
         }
-        metadata.chainId = metadata.chainId ?? supported_chains[0]
+        metadata.chainId = metadata.chainId ?? supportedChains[0]
 
         let unique: string
         if (params.deterministic) {

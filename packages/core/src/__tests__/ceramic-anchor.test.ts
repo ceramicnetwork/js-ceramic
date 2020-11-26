@@ -11,6 +11,7 @@ import getPort from 'get-port'
 import dagJose from 'dag-jose'
 import basicsImport from 'multiformats/cjs/src/basics-import.js'
 import legacy from 'multiformats/cjs/src/legacy.js'
+import Utils from "../utils"
 
 jest.mock('../store/level-state-store')
 
@@ -61,7 +62,7 @@ const registerChangeListener = function (doc: Doctype): Promise<void> {
  */
 const anchorDoc = async (ceramic: Ceramic, doc: any): Promise<void> => {
   const changeHandle = registerChangeListener(doc)
-  await ceramic.context.anchorService.anchor()
+  await Utils.getAnchorService(ceramic.context).anchor()
   await changeHandle
 }
 

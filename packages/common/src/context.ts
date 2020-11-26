@@ -13,7 +13,7 @@ export interface Context {
     ipfs?: IpfsApi; // an ipfs instance
     resolver?: Resolver; // a DID resolver instance
     provider?: DIDProvider; // a DID provider (3ID provider initially)
-    anchorService?: AnchorService;
+    anchorServices?: Record<string, Array<AnchorService>>; // mapping from chainId(s) to the AnchorService instance(s)
 
     api?: CeramicApi; // the self reference to the Ceramic API
 }

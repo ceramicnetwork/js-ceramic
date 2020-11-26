@@ -10,6 +10,7 @@ import dagJose from 'dag-jose'
 import basicsImport from 'multiformats/cjs/src/basics-import.js'
 import legacy from 'multiformats/cjs/src/legacy.js'
 import * as u8a from 'uint8arrays'
+import Utils from "../utils"
 
 jest.mock('../store/level-state-store')
 
@@ -48,7 +49,7 @@ const createCeramic = async (ipfs: IpfsApi, topic: string, anchorOnRequest = fal
 }
 
 const anchor = async (ceramic: Ceramic): Promise<void> => {
-  await ceramic.context.anchorService.anchor()
+  await Utils.getAnchorService(ceramic.context).anchor()
 }
 
 const syncDoc = async (doctype: Doctype): Promise<void> => {

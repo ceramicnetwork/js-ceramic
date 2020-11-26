@@ -3,7 +3,13 @@ import Document from './document'
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import KeyDidResolver from '@ceramicnetwork/key-did-resolver'
 import DocID from '@ceramicnetwork/docid'
-import { CeramicApi, DIDProvider, IpfsApi, PinApi } from "@ceramicnetwork/common"
+import {
+  AnchorService,
+  CeramicApi,
+  DIDProvider,
+  IpfsApi,
+  PinApi,
+} from "@ceramicnetwork/common"
 import {
   Doctype,
   DoctypeHandler,
@@ -26,6 +32,8 @@ import { PinStore } from "./store/pin-store";
 import EthereumAnchorService from "./anchor/ethereum/ethereum-anchor-service"
 import InMemoryAnchorService from "./anchor/memory/in-memory-anchor-service"
 import { PinningBackendStatic } from "@ceramicnetwork/common";
+
+export const DEFAULT_ANCHOR_SERVICE_CHAIN_ID = 'eip155:3' // the default anchor service anchors on Ropsten
 
 /**
  * Ceramic configuration
@@ -68,7 +76,6 @@ const normalizeDocID = (docId: DocID | string): DocID => {
 class Ceramic implements CeramicApi {
   private readonly _docmap: Record<string, Document>
   private readonly _doctypeHandlers: Record<string, DoctypeHandler<Doctype>>
-  private _supportedChains: Array<string>
 
   public readonly pin: PinApi
   public readonly context: Context
@@ -153,17 +160,28 @@ class Ceramic implements CeramicApi {
     const dispatcher = new Dispatcher(ipfs, config.topic)
     await dispatcher.init()
 
-    const anchorService = config.anchorServiceUrl ? new EthereumAnchorService(config) : new InMemoryAnchorService(config)
+    const anchorServices = {
+      'inmemory:12345': [new InMemoryAnchorService(config)], // always included by default
+    }
+
+    if (config.anchorServiceUrl) {
+      const ethereumService = new EthereumAnchorService(config)
+      const supportedChains = await ethereumService.getSupportedChains()
+      for (const chainId of supportedChains) {
+        anchorServices[chainId] = anchorServices[chainId] ? [...anchorServices[chainId], ethereumService] : [ethereumService]
+      }
+    }
+
     const context: Context = {
       ipfs,
-      anchorService,
+      anchorServices,
     }
 
     const pinStoreFactory = new PinStoreFactory(context, config)
     const pinStore = await pinStoreFactory.open()
 
     const ceramic = new Ceramic(dispatcher, pinStore, context, config.validateDocs)
-    anchorService.ceramic = ceramic
+    Object.values(anchorServices).flat().forEach(as => as.ceramic = ceramic)
 
     const keyDidResolver = KeyDidResolver.getResolver()
     const threeIdResolver = ThreeIdResolver.getResolver(ceramic)
@@ -231,9 +249,10 @@ class Ceramic implements CeramicApi {
 
   /**
    * Get document from map by Genesis CID
-   * @param genesisCid
+   * @param docId - Document ID
+   * @private
    */
-  getDocFromMap(docId: DocID): Document {
+  _getDocFromMap(docId: DocID): Document {
     return this._docmap[docId.toString()]
   }
 
@@ -262,7 +281,7 @@ class Ceramic implements CeramicApi {
     const genesisCid = await this.dispatcher.storeRecord(genesis)
     const docId = new DocID(doctype, genesisCid)
 
-    let doc = this.getDocFromMap(docId)
+    let doc = this._getDocFromMap(docId)
     if (doc) {
       return doc
     }
@@ -299,7 +318,7 @@ class Ceramic implements CeramicApi {
 
     const docId = new DocID(doctype, genesisCid)
 
-    let doc = this.getDocFromMap(docId)
+    let doc = this._getDocFromMap(docId)
     if (doc) {
       return doc
     }
@@ -361,22 +380,18 @@ class Ceramic implements CeramicApi {
   /**
    * @returns An array of the CAIP-2 chain IDs of the blockchains that are supported for anchoring
    * documents.
-   *
-   * Caches the result after the first time it is requested
    */
   async getSupportedChains(): Promise<Array<string>> {
-    if (this._supportedChains) {
-      return this._supportedChains
-    }
+    const chainIds = Object.keys(this.context.anchorServices)
 
-    // Fetch the chainId from the anchor service and cache the result
-    if (!this.context.anchorService) {
-      throw new Error("No anchor service configured")
+    const index = chainIds.indexOf(DEFAULT_ANCHOR_SERVICE_CHAIN_ID);
+    if (index > -1) {
+      // set default chainId to be the first one
+      chainIds.splice(index, 1);
+      chainIds.unshift(DEFAULT_ANCHOR_SERVICE_CHAIN_ID)
     }
-    this._supportedChains = await this.context.anchorService.getSupportedChains()
-    return this._supportedChains
+    return chainIds
   }
-
 
   /**
    * Close Ceramic instance gracefully
