@@ -56,7 +56,7 @@ export default class CeramicClient implements CeramicApi {
     const keyDidResolver = KeyDidResolver.getResolver()
     const threeIdResolver = ThreeIdResolver.getResolver(this)
     this.context.resolver = new Resolver({
-      ...config.didResolver, ...threeIdResolver, ...keyDidResolver,
+      ...this._config.didResolver, ...threeIdResolver, ...keyDidResolver,
     })
 
     this._doctypeHandlers = {
