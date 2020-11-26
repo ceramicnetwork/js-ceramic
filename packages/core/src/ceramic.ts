@@ -75,6 +75,7 @@ const normalizeDocID = (docId: DocID | string): DocID => {
 class Ceramic implements CeramicApi {
   private readonly _docmap: Record<string, Document>
   private readonly _doctypeHandlers: Record<string, DoctypeHandler<Doctype>>
+  private _supportedChains: Array<string>
 
   public readonly pin: PinApi
   public readonly context: Context
@@ -89,6 +90,15 @@ class Ceramic implements CeramicApi {
     this.pin = this._initPinApi();
     this.context = context
     this.context.api = this // set API reference
+
+    this._supportedChains = Object.keys(context.anchorServices)
+
+    const index = this._supportedChains.indexOf(DEFAULT_ANCHOR_SERVICE_CHAIN_ID)
+    if (index > -1) {
+      // set default chainId to be the first one
+      this._supportedChains.splice(index, 1);
+      this._supportedChains.unshift(DEFAULT_ANCHOR_SERVICE_CHAIN_ID)
+    }
   }
 
   /**
@@ -381,15 +391,7 @@ class Ceramic implements CeramicApi {
    * documents.
    */
   async getSupportedChains(): Promise<Array<string>> {
-    const chainIds = Object.keys(this.context.anchorServices)
-
-    const index = chainIds.indexOf(DEFAULT_ANCHOR_SERVICE_CHAIN_ID);
-    if (index > -1) {
-      // set default chainId to be the first one
-      chainIds.splice(index, 1);
-      chainIds.unshift(DEFAULT_ANCHOR_SERVICE_CHAIN_ID)
-    }
-    return chainIds
+    return this._supportedChains
   }
 
   /**

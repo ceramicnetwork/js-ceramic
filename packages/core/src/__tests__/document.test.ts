@@ -18,7 +18,7 @@ import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 
 jest.mock('../store/level-state-store')
 
-import InMemoryAnchorService, { IN_MEMORY_ANCHOR_SERVICE_CHAIN_ID } from "../anchor/memory/in-memory-anchor-service"
+import InMemoryAnchorService from "../anchor/memory/in-memory-anchor-service"
 
 jest.mock('../dispatcher', () => {
   const CID = require('cids') // eslint-disable-line @typescript-eslint/no-var-requires
