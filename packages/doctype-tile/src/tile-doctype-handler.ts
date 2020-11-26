@@ -9,7 +9,6 @@ import cloneDeep from 'lodash.clonedeep'
 
 import { TileDoctype, TileParams } from "./tile-doctype"
 import {
-    AnchorProof,
     AnchorRecord,
     AnchorStatus,
     Context,

@@ -4,7 +4,6 @@ import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import KeyDidResolver from '@ceramicnetwork/key-did-resolver'
 import DocID from '@ceramicnetwork/docid'
 import {
-  AnchorService,
   CeramicApi,
   DIDProvider,
   IpfsApi,
@@ -30,7 +29,7 @@ import { PinStoreFactory } from "./store/pin-store-factory";
 import { PinStore } from "./store/pin-store";
 
 import EthereumAnchorService from "./anchor/ethereum/ethereum-anchor-service"
-import InMemoryAnchorService from "./anchor/memory/in-memory-anchor-service"
+import InMemoryAnchorService, { IN_MEMORY_ANCHOR_SERVICE_CHAIN_ID } from "./anchor/memory/in-memory-anchor-service"
 import { PinningBackendStatic } from "@ceramicnetwork/common";
 
 export const DEFAULT_ANCHOR_SERVICE_CHAIN_ID = 'eip155:3' // the default anchor service anchors on Ropsten
@@ -161,7 +160,7 @@ class Ceramic implements CeramicApi {
     await dispatcher.init()
 
     const anchorServices = {
-      'inmemory:12345': [new InMemoryAnchorService(config)], // always included by default
+      [IN_MEMORY_ANCHOR_SERVICE_CHAIN_ID]: [new InMemoryAnchorService(config)], // always included by default
     }
 
     if (config.anchorServiceUrl) {

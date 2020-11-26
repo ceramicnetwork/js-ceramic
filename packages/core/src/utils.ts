@@ -3,6 +3,7 @@ import ajv from "ajv"
 import { AnchorService, Context, Doctype } from "@ceramicnetwork/common"
 
 import { DEFAULT_ANCHOR_SERVICE_CHAIN_ID } from "./ceramic"
+import { IN_MEMORY_ANCHOR_SERVICE_CHAIN_ID } from "./anchor/memory/in-memory-anchor-service"
 
 /**
  * Various utility functions
@@ -64,9 +65,12 @@ export default class Utils {
      * Gets the default anchoring service.
      *
      * The default service anchors on Ropsten. If it's not specified, return the in-memory one.
+     *
+     * Note: only the first anchor service is returned from the list. If there are multiple services for the same
+     * chainId we should re-think about priorities.
      */
     static getAnchorService(context: Context, chainId?: string): AnchorService {
         const anchorServices = context.anchorServices[chainId ? chainId : DEFAULT_ANCHOR_SERVICE_CHAIN_ID]
-        return anchorServices != null ? anchorServices[0] : context.anchorServices['inmemory:12345'][0]
+        return anchorServices != null ? anchorServices[0] : context.anchorServices[IN_MEMORY_ANCHOR_SERVICE_CHAIN_ID][0]
     }
 }

@@ -9,7 +9,7 @@ import type Dispatcher from '../../dispatcher'
 import Ceramic, { CeramicConfig } from "../../ceramic"
 
 const DID_MATCHER = '^(did:([a-zA-Z0-9_]+):([a-zA-Z0-9_.-]+(:[a-zA-Z0-9_.-]+)*)((;[a-zA-Z0-9_.:%-]+=[a-zA-Z0-9_.:%-]*)*)(/[^#?]*)?)([?][^#]*)?(#.*)?';
-const CHAIN_ID = 'inmemory:12345'
+export const IN_MEMORY_ANCHOR_SERVICE_CHAIN_ID = 'inmemory:12345'
 
 class Candidate {
   public cid: CID;
@@ -56,7 +56,7 @@ class InMemoryAnchorService extends AnchorService {
    * anchor service
    */
   async getSupportedChains(): Promise<Array<string>> {
-    return [CHAIN_ID]
+    return [IN_MEMORY_ANCHOR_SERVICE_CHAIN_ID]
   }
 
   /**
@@ -154,7 +154,7 @@ class InMemoryAnchorService extends AnchorService {
   async _process(leaf: Candidate): Promise<void> {
     // creates fake anchor record
     const proofData: AnchorProof = {
-      chainId: CHAIN_ID,
+      chainId: IN_MEMORY_ANCHOR_SERVICE_CHAIN_ID,
       blockNumber: Date.now(),
       blockTimestamp: Date.now(),
       txHash: new CID(this.SAMPLE_ETH_TX_HASH),
