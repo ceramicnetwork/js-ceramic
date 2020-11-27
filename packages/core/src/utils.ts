@@ -2,8 +2,8 @@ import ajv from "ajv"
 
 import { AnchorService, Context, Doctype } from "@ceramicnetwork/common"
 
-import { DEFAULT_ANCHOR_SERVICE_CHAIN_ID } from "./ceramic"
-import { IN_MEMORY_ANCHOR_SERVICE_CHAIN_ID } from "./anchor/memory/in-memory-anchor-service"
+import { IN_MEMORY_CHAIN_ID } from "./anchor/memory/in-memory-anchor-service"
+import { ROPSTEN_CHAIN_ID } from "./anchor/ethereum/ethereum-anchor-service"
 
 /**
  * Various utility functions
@@ -70,7 +70,7 @@ export default class Utils {
      * chainId we should re-think about priorities.
      */
     static getAnchorService(context: Context, chainId?: string): AnchorService {
-        const anchorServices = context.anchorServices[chainId ? chainId : DEFAULT_ANCHOR_SERVICE_CHAIN_ID]
-        return anchorServices != null ? anchorServices[0] : context.anchorServices[IN_MEMORY_ANCHOR_SERVICE_CHAIN_ID][0]
+        const anchorServices = context.anchorServices[chainId ? chainId : ROPSTEN_CHAIN_ID]
+        return anchorServices != null ? anchorServices[0] : context.anchorServices[IN_MEMORY_CHAIN_ID][0]
     }
 }

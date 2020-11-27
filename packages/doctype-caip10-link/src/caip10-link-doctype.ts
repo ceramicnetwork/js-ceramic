@@ -65,11 +65,14 @@ export class Caip10LinkDoctype extends Doctype {
             throw new Error('Exactly one controller must be specified')
         }
 
-        const supported_anchor_chains = await context.api.getSupportedChains()
-        if ('chainId' in metadata && !supported_anchor_chains.includes(metadata.chainId)) {
-            throw new Error("Requested chainId '" + metadata.chainId + "' is not supported. Supported chains are: " + supported_anchor_chains.toString())
+        if (!('chainId' in metadata)) {
+            metadata.chainId = context.preferredChainId // set to preferred one
         }
-        metadata.chainId = metadata.chainId ?? supported_anchor_chains[0]
+
+        const supportedChains = await context.api.getSupportedChains()
+        if (!supportedChains.includes(metadata.chainId)) {
+            throw new Error("Requested chainId '" + metadata.chainId + "' is not supported. Supported chains are: " + supportedChains.toString())
+        }
 
         const [address, linkedChainId] = metadata.controllers[0].split('@') // eslint-disable-line @typescript-eslint/no-unused-vars
         if (!linkedChainId) {

@@ -14,6 +14,7 @@ export interface Context {
     resolver?: Resolver; // a DID resolver instance
     provider?: DIDProvider; // a DID provider (3ID provider initially)
     anchorServices?: Record<string, Array<AnchorService>>; // mapping from chainId(s) to the AnchorService instance(s)
+    preferredChainId?: string; // preferred chain ID for the anchoring service
 
     api?: CeramicApi; // the self reference to the Ceramic API
 }

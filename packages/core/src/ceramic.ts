@@ -25,14 +25,13 @@ import { Resolver } from "did-resolver"
 import { DID } from 'dids'
 import { TileDoctypeHandler } from "@ceramicnetwork/doctype-tile"
 import { Caip10LinkDoctypeHandler } from "@ceramicnetwork/doctype-caip10-link"
-import { PinStoreFactory } from "./store/pin-store-factory";
-import { PinStore } from "./store/pin-store";
-
-import EthereumAnchorService from "./anchor/ethereum/ethereum-anchor-service"
-import InMemoryAnchorService, { IN_MEMORY_ANCHOR_SERVICE_CHAIN_ID } from "./anchor/memory/in-memory-anchor-service"
 import { PinningBackendStatic } from "@ceramicnetwork/common";
 
-export const DEFAULT_ANCHOR_SERVICE_CHAIN_ID = 'eip155:3' // the default anchor service anchors on Ropsten
+import { PinStore } from "./store/pin-store";
+import { PinStoreFactory } from "./store/pin-store-factory";
+
+import EthereumAnchorService, { ROPSTEN_CHAIN_ID } from "./anchor/ethereum/ethereum-anchor-service"
+import InMemoryAnchorService, { IN_MEMORY_CHAIN_ID } from "./anchor/memory/in-memory-anchor-service"
 
 /**
  * Ceramic configuration
@@ -75,7 +74,7 @@ const normalizeDocID = (docId: DocID | string): DocID => {
 class Ceramic implements CeramicApi {
   private readonly _docmap: Record<string, Document>
   private readonly _doctypeHandlers: Record<string, DoctypeHandler<Doctype>>
-  private _supportedChains: Array<string>
+  private readonly _supportedChains: Array<string>
 
   public readonly pin: PinApi
   public readonly context: Context
@@ -92,13 +91,6 @@ class Ceramic implements CeramicApi {
     this.context.api = this // set API reference
 
     this._supportedChains = Object.keys(context.anchorServices)
-
-    const index = this._supportedChains.indexOf(DEFAULT_ANCHOR_SERVICE_CHAIN_ID)
-    if (index > -1) {
-      // set default chainId to be the first one
-      this._supportedChains.splice(index, 1);
-      this._supportedChains.unshift(DEFAULT_ANCHOR_SERVICE_CHAIN_ID)
-    }
   }
 
   /**
@@ -170,8 +162,9 @@ class Ceramic implements CeramicApi {
     await dispatcher.init()
 
     const anchorServices = {
-      [IN_MEMORY_ANCHOR_SERVICE_CHAIN_ID]: [new InMemoryAnchorService(config)], // always included by default
+      [IN_MEMORY_CHAIN_ID]: [new InMemoryAnchorService(config)], // always included by default
     }
+    let preferredChainId = IN_MEMORY_CHAIN_ID
 
     if (config.anchorServiceUrl) {
       const ethereumService = new EthereumAnchorService(config)
@@ -179,11 +172,13 @@ class Ceramic implements CeramicApi {
       for (const chainId of supportedChains) {
         anchorServices[chainId] = anchorServices[chainId] ? [...anchorServices[chainId], ethereumService] : [ethereumService]
       }
+      preferredChainId = ROPSTEN_CHAIN_ID
     }
 
     const context: Context = {
       ipfs,
       anchorServices,
+      preferredChainId,
     }
 
     const pinStoreFactory = new PinStoreFactory(context, config)
