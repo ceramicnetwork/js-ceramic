@@ -2,9 +2,7 @@
 
 name: CI
 
-# Controls when the action will run. 
 on:
-  # Triggers the workflow on push or pull request events but only for the develop branch
   push:
     branches: [ chore/docs-deploy ]
 
@@ -13,7 +11,7 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  generate-docs:
+  deploy-docs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -25,6 +23,8 @@ jobs:
         run: npm ci
       - name: Bootstrap
         run: npm run bootstrap
+      - name: Build
+        run: npm run build
       - name: Generate docs
         run: npm run docs
 
