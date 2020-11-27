@@ -76,7 +76,7 @@ export class TileDoctype extends Doctype {
             throw new Error('No DID authenticated')
         }
 
-        if (!('chainId' in metadata)) {
+        if (!('chainId' in metadata) || metadata.chainId == null) {
             metadata.chainId = context.preferredChainId // set to preferred one
         }
 

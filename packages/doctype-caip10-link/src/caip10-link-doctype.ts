@@ -65,7 +65,7 @@ export class Caip10LinkDoctype extends Doctype {
             throw new Error('Exactly one controller must be specified')
         }
 
-        if (!('chainId' in metadata)) {
+        if (!('chainId' in metadata) || metadata.chainId == null) {
             metadata.chainId = context.preferredChainId // set to preferred one
         }
 
