@@ -9,10 +9,7 @@ import type Dispatcher from '../../dispatcher'
 import Ceramic, { CeramicConfig } from "../../ceramic"
 
 const DID_MATCHER = '^(did:([a-zA-Z0-9_]+):([a-zA-Z0-9_.-]+(:[a-zA-Z0-9_.-]+)*)((;[a-zA-Z0-9_.:%-]+=[a-zA-Z0-9_.:%-]*)*)(/[^#?]*)?)([?][^#]*)?(#.*)?';
-
-// In-memory CAS is used in testing only and will not be included if there are other anchoring services. That's why
-// its chain ID is equal to Ropsten chain ID.
-export const IN_MEMORY_ANCHOR_SERVICE_CHAIN_ID = 'eip155:3'
+export const IN_MEMORY_ANCHOR_SERVICE_CHAIN_ID = 'eip155:3' // Ropsten chain ID. In-memory CAS is used in testing only.
 
 class Candidate {
   public cid: CID;
