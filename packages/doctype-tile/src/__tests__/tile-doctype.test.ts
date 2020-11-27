@@ -28,7 +28,7 @@ const FAKE_CID_4 = new CID('bafybeig6xv5nwphfmvcnektpnojts66jqcuam7bmye2pb54adnr
 // did:3:bafyasdfasdf
 
 const RECORDS = {
-  genesis: { header: { controllers: [ 'did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki' ], chainId: 'fakechain:123' }, data: { much: 'data' }, unique: '0' },
+  genesis: { header: { controllers: [ 'did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki' ], chainId: 'eip155:3' }, data: { much: 'data' }, unique: '0' },
   genesisGenerated: {
     "jws": {
       "payload": "bbbb",
@@ -82,7 +82,7 @@ const RECORDS = {
   r2: { record: { proof: FAKE_CID_4 } },
   proof: {
     blockNumber: 123456,
-    chainId: 'fakechain:123',
+    chainId: 'eip155:3',
   }
 }
 
@@ -153,7 +153,7 @@ describe('TileDoctypeHandler', () => {
       }
     })
 
-    const api = {getSupportedChains: jest.fn(async () => {return ["fakechain:123"]})}
+    const api = {getSupportedChains: jest.fn(async () => {return ["eip155:3"]})}
     const keyDidResolver = KeyDidResolver.getResolver()
     context = {
       did,
@@ -325,7 +325,7 @@ describe('TileDoctypeHandler', () => {
     // apply anchor
     await expect(tileDoctypeHandler.applyRecord(RECORDS.r2.record, FAKE_CID_3, context, state))
         .rejects.toThrow("Anchor record with cid '" + FAKE_CID_3 + "' on tile document with DocID '" +
-            FAKE_CID_1 + "' is on chain 'thewrongchain' but this document is configured to be anchored on chain 'fakechain:123'")
+            FAKE_CID_1 + "' is on chain 'thewrongchain' but this document is configured to be anchored on chain 'eip155:3'")
   })
 
 })
