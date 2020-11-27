@@ -23,6 +23,7 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
       - name: Install Deps
         run: npm ci
+        run: npm run bootstrap
       - name: Generate docs
         run: npm run docs
 
