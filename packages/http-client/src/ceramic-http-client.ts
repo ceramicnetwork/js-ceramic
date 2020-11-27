@@ -19,6 +19,7 @@ const CERAMIC_HOST = 'http://localhost:7007'
 export const DEFAULT_CLIENT_CONFIG: CeramicClientConfig = {
   docSyncEnabled: false,
   docSyncInterval: 5000,
+  preferredChainId: 'eip155:3'
 }
 
 /**
@@ -28,6 +29,7 @@ export interface CeramicClientConfig {
   didResolver?: Resolver
   docSyncEnabled?: boolean
   docSyncInterval?: number
+  preferredChainId?: string
 }
 
 /**
@@ -50,7 +52,7 @@ export default class CeramicClient implements CeramicApi {
     this._apiUrl = combineURLs(apiHost, API_PATH)
     this._docmap = {}
 
-    this.context = { api: this }
+    this.context = { api: this, preferredChainId: this._config.preferredChainId }
     this.pin = this._initPinApi()
 
     const keyDidResolver = KeyDidResolver.getResolver()
