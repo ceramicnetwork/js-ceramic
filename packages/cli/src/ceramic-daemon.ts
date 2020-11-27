@@ -27,7 +27,7 @@ export interface CreateOpts {
   validateDocs?: boolean;
   pinning?: string[];
   gateway?: boolean;
-  debug: boolean;
+  debug?: boolean;
   logToFiles?: boolean;
   logPath?: string;
 }
@@ -147,7 +147,7 @@ class CeramicDaemon {
     app.get(toApiPath('/documents/:docid'), this.state.bind(this))
     app.get(toApiPath('/pins/:docid'), this.listPinned.bind(this))
     app.get(toApiPath('/pins'), this.listPinned.bind(this))
-    app.get(toApiPath('/node/chains'), this.getSupportedChains.bind(this))
+    app.get(toApiPath('/node/chains'), this.getChainInfo.bind(this))
 
     if (!gateway) {
       app.post(toApiPath('/records'), this.applyRecord.bind(this))
@@ -311,10 +311,10 @@ class CeramicDaemon {
     next()
   }
 
-  async getSupportedChains (req: Request, res: Response, next: NextFunction): Promise<void> {
+  async getChainInfo (req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const supportedChains = await this.ceramic.getSupportedChains()
-      res.json({ supportedChains })
+      const { preferredChain, supportedChains } = await this.ceramic.getChainsInfo()
+      res.json({ supportedChains, preferredChain })
     } catch (e) {
       return next(e)
     }

@@ -2,7 +2,17 @@ import { fetchJson, typeDocID, combineURLs } from "./utils"
 import Document from './document'
 
 import { DID } from 'dids'
-import { Doctype, DoctypeHandler, DocOpts, DocParams, DIDProvider, Context, CeramicApi, PinApi } from "@ceramicnetwork/common"
+import {
+  Doctype,
+  DoctypeHandler,
+  DocOpts,
+  DocParams,
+  DIDProvider,
+  Context,
+  CeramicApi,
+  PinApi,
+  ChainInfo
+} from "@ceramicnetwork/common"
 import { TileDoctypeHandler } from "@ceramicnetwork/doctype-tile"
 import { Caip10LinkDoctypeHandler } from "@ceramicnetwork/doctype-caip10-link"
 import DocID from '@ceramicnetwork/docid'
@@ -19,7 +29,6 @@ const CERAMIC_HOST = 'http://localhost:7007'
 export const DEFAULT_CLIENT_CONFIG: CeramicClientConfig = {
   docSyncEnabled: false,
   docSyncInterval: 5000,
-  preferredChainId: 'eip155:3'
 }
 
 /**
@@ -29,7 +38,6 @@ export interface CeramicClientConfig {
   didResolver?: Resolver
   docSyncEnabled?: boolean
   docSyncInterval?: number
-  preferredChainId?: string
 }
 
 /**
@@ -38,7 +46,6 @@ export interface CeramicClientConfig {
 export default class CeramicClient implements CeramicApi {
   private readonly _apiUrl: string
   private readonly _docmap: Record<string, Document>
-  private _supportedChains: Array<string>
 
   public readonly pin: PinApi
   public readonly context: Context
@@ -52,7 +59,9 @@ export default class CeramicClient implements CeramicApi {
     this._apiUrl = combineURLs(apiHost, API_PATH)
     this._docmap = {}
 
-    this.context = { api: this, preferredChainId: this._config.preferredChainId }
+    this.context = {
+      api: this,
+    }
     this.pin = this._initPinApi()
 
     const keyDidResolver = KeyDidResolver.getResolver()
@@ -101,6 +110,13 @@ export default class CeramicClient implements CeramicApi {
         }
       }
     }
+  }
+
+  /**
+   * Initialize the Ceramic API
+   */
+  async init(): Promise<void> {
+    this.context.chainInfo = await this.getChainsInfo()
   }
 
   async createDocument<T extends Doctype>(doctype: string, params: DocParams, opts?: DocOpts): Promise<T> {
@@ -161,15 +177,22 @@ export default class CeramicClient implements CeramicApi {
     }
   }
 
-  async getSupportedChains(): Promise<Array<string>> {
-    if (this._supportedChains) {
-      return this._supportedChains
+  /**
+   * @returns an object which contains an array of the CAIP-2 chain IDs of the blockchains that are supported for
+   * anchoring documents and a preferred one.
+   */
+  async getChainsInfo(): Promise<ChainInfo> {
+    if (this.context.chainInfo) {
+      return this.context.chainInfo
     }
 
-    // Fetch the chainId from the daemon and cache the result
-    const {supportedChains} = await fetchJson(this._apiUrl + '/node/chains')
-    this._supportedChains = supportedChains
-    return supportedChains
+    // Fetch the chain info from the daemon and cache the result
+    const { preferredChain, supportedChains } = await fetchJson(this._apiUrl + '/node/chains')
+    this.context.chainInfo = {
+      preferredChain,
+      supportedChains,
+    }
+    return this.context.chainInfo
   }
 
   async close (): Promise<void> {

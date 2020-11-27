@@ -1,6 +1,7 @@
 import { DID, DIDProvider } from 'dids'
 import { Doctype, DoctypeHandler, DocOpts, DocParams } from "./doctype"
 import DocID from '@ceramicnetwork/docid'
+import { ChainInfo } from "./context"
 
 /**
  * Describes Ceramic pinning functionality
@@ -36,6 +37,12 @@ export type { DIDProvider } from 'dids'
 export interface CeramicApi {
     pin: PinApi;
     did?: DID;
+
+
+    /**
+     * Initialize the Ceramic API
+     */
+    init(): Promise<void>;
 
     /**
      * Register Doctype handler
@@ -93,10 +100,10 @@ export interface CeramicApi {
     setDIDProvider (provider: DIDProvider): Promise<void>;
 
     /**
-     * @returns An array of the CAIP-2 chain IDs of the blockchains that are supported for anchoring
-     * documents.
+     * @returns an object which contains an array of the CAIP-2 chain IDs of the blockchains that are supported for
+     * anchoring documents and a preferred one.
      */
-    getSupportedChains(): Promise<Array<string>>;
+    getChainsInfo(): Promise<ChainInfo>;
 
     /**
      * Closes Ceramic instance

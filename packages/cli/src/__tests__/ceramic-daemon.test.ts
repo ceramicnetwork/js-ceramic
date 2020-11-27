@@ -85,8 +85,10 @@ describe('Ceramic interop: core <> http-client', () => {
 
         daemon = new CeramicDaemon(core, { port })
         client = new CeramicClient(apiUrl, {
-            docSyncEnabled: true, docSyncInterval: 1000, preferredChainId: 'inmemory:12345'
+            docSyncEnabled: true, docSyncInterval: 1000,
         })
+
+        await client.init()
 
         const provider = new Ed25519Provider(seed)
         await core.setDIDProvider(provider)

@@ -181,7 +181,10 @@ describe('Document', () => {
         ipfs: dispatcher._ipfs,
         resolver,
         provider: null,
-        preferredChainId: 'inmemory:12345'
+        chainInfo: {
+          preferredChain: 'inmemory:12345',
+          supportedChains: ['inmemory:12345']
+        }
       }
 
       anchorService.ceramic = {
@@ -650,7 +653,10 @@ describe('Document', () => {
         ipfs: dispatcher._ipfs,
         resolver,
         provider: null,
-        preferredChainId: 'inmemory:12345'
+        chainInfo: {
+          preferredChain: 'inmemory:12345',
+          supportedChains: ['inmemory:12345']
+        }
       }
 
       anchorService.ceramic = {

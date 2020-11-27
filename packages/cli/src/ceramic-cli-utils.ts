@@ -327,6 +327,7 @@ export class CeramicCliUtils {
         } else {
             ceramic = new CeramicClient()
         }
+        await ceramic.init()
 
         const seed = u8a.fromString(cliConfig.seed, 'base16')
         const provider = new Ed25519Provider(seed)

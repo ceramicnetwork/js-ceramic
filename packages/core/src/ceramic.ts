@@ -4,12 +4,6 @@ import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import KeyDidResolver from '@ceramicnetwork/key-did-resolver'
 import DocID from '@ceramicnetwork/docid'
 import {
-  CeramicApi,
-  DIDProvider,
-  IpfsApi,
-  PinApi,
-} from "@ceramicnetwork/common"
-import {
   Doctype,
   DoctypeHandler,
   DocOpts,
@@ -19,6 +13,11 @@ import {
   LoggerProvider,
   LoggerPlugin,
   LoggerPluginOptions,
+  CeramicApi,
+  ChainInfo,
+  DIDProvider,
+  IpfsApi,
+  PinApi,
 } from "@ceramicnetwork/common"
 import { Resolver } from "did-resolver"
 
@@ -74,7 +73,6 @@ const normalizeDocID = (docId: DocID | string): DocID => {
 class Ceramic implements CeramicApi {
   private readonly _docmap: Record<string, Document>
   private readonly _doctypeHandlers: Record<string, DoctypeHandler<Doctype>>
-  private readonly _supportedChains: Array<string>
 
   public readonly pin: PinApi
   public readonly context: Context
@@ -89,8 +87,6 @@ class Ceramic implements CeramicApi {
     this.pin = this._initPinApi();
     this.context = context
     this.context.api = this // set API reference
-
-    this._supportedChains = Object.keys(context.anchorServices)
   }
 
   /**
@@ -164,7 +160,7 @@ class Ceramic implements CeramicApi {
     const anchorServices = {
       [IN_MEMORY_CHAIN_ID]: [new InMemoryAnchorService(config)], // always included by default
     }
-    let preferredChainId = IN_MEMORY_CHAIN_ID
+    let preferredChain = IN_MEMORY_CHAIN_ID
 
     if (config.anchorServiceUrl) {
       const ethereumService = new EthereumAnchorService(config)
@@ -172,13 +168,16 @@ class Ceramic implements CeramicApi {
       for (const chainId of supportedChains) {
         anchorServices[chainId] = anchorServices[chainId] ? [...anchorServices[chainId], ethereumService] : [ethereumService]
       }
-      preferredChainId = ROPSTEN_CHAIN_ID
+      preferredChain = ROPSTEN_CHAIN_ID
     }
 
     const context: Context = {
       ipfs,
       anchorServices,
-      preferredChainId,
+      chainInfo: {
+        preferredChain,
+        supportedChains: Object.keys(anchorServices)
+      }
     }
 
     const pinStoreFactory = new PinStoreFactory(context, config)
@@ -197,7 +196,15 @@ class Ceramic implements CeramicApi {
       await ceramic.setDIDProvider(config.didProvider)
     }
 
+    await ceramic.init()
     return ceramic
+  }
+
+  /**
+   * Initialize the Ceramic API
+   */
+  async init(): Promise<void> {
+    // do nothing for now
   }
 
   /**
@@ -382,11 +389,11 @@ class Ceramic implements CeramicApi {
   }
 
   /**
-   * @returns An array of the CAIP-2 chain IDs of the blockchains that are supported for anchoring
-   * documents.
+   * @returns an object which contains an array of the CAIP-2 chain IDs of the blockchains that are supported for
+   * anchoring documents and a preferred one.
    */
-  async getSupportedChains(): Promise<Array<string>> {
-    return this._supportedChains
+  async getChainsInfo(): Promise<ChainInfo> {
+    return this.context.chainInfo
   }
 
   /**

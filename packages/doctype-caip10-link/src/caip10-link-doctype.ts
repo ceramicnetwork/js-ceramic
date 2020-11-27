@@ -66,10 +66,10 @@ export class Caip10LinkDoctype extends Doctype {
         }
 
         if (!('chainId' in metadata) || metadata.chainId == null) {
-            metadata.chainId = context.preferredChainId // set to preferred one
+            metadata.chainId = context.chainInfo.preferredChain // set to the preferred one
         }
 
-        const supportedChains = await context.api.getSupportedChains()
+        const { supportedChains } = context.chainInfo
         if (!supportedChains.includes(metadata.chainId)) {
             throw new Error("Requested chainId '" + metadata.chainId + "' is not supported. Supported chains are: " + supportedChains.toString())
         }
