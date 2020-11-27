@@ -4,7 +4,7 @@ exports[`ThreeIdHandler applies anchor record correctly 1`] = `
 Object {
   "anchorProof": Object {
     "blockNumber": 123456,
-    "chainId": "eip155:3",
+    "chainId": "inmemory:12345",
   },
   "anchorStatus": 3,
   "content": Object {
@@ -146,7 +146,7 @@ Object {
     },
   ],
   "metadata": Object {
-    "chainId": "eip155:3",
+    "chainId": "inmemory:12345",
     "controllers": Array [
       "did:key:zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV",
     ],
@@ -213,7 +213,7 @@ Object {
     },
   ],
   "metadata": Object {
-    "chainId": "eip155:3",
+    "chainId": "inmemory:12345",
     "controllers": Array [
       "did:key:zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV",
     ],
@@ -323,7 +323,7 @@ Object {
     },
   ],
   "metadata": Object {
-    "chainId": "eip155:3",
+    "chainId": "inmemory:12345",
     "controllers": Array [
       "did:key:zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV",
     ],
@@ -339,7 +339,7 @@ Object {
       },
     },
     "metadata": Object {
-      "chainId": "eip155:3",
+      "chainId": "inmemory:12345",
       "controllers": Array [
         "did:key:zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV",
       ],

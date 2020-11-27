@@ -4,7 +4,7 @@ exports[`TileDoctypeHandler applies anchor record correctly 1`] = `
 Object {
   "anchorProof": Object {
     "blockNumber": 123456,
-    "chainId": "eip155:3",
+    "chainId": "inmemory:12345",
   },
   "anchorStatus": 3,
   "content": Object {
@@ -144,7 +144,7 @@ Object {
     },
   ],
   "metadata": Object {
-    "chainId": "eip155:3",
+    "chainId": "inmemory:12345",
     "controllers": Array [
       "did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki",
     ],
@@ -206,7 +206,7 @@ Object {
     },
   ],
   "metadata": Object {
-    "chainId": "eip155:3",
+    "chainId": "inmemory:12345",
     "controllers": Array [
       "did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki",
     ],
@@ -311,7 +311,7 @@ Object {
     },
   ],
   "metadata": Object {
-    "chainId": "eip155:3",
+    "chainId": "inmemory:12345",
     "controllers": Array [
       "did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki",
     ],
@@ -322,7 +322,7 @@ Object {
       "very": "content",
     },
     "metadata": Object {
-      "chainId": "eip155:3",
+      "chainId": "inmemory:12345",
       "controllers": Array [
         "did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki",
       ],

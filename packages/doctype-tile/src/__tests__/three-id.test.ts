@@ -37,7 +37,7 @@ const RECORDS = {
           signature: "cccc"
         }
       ],
-      link: "bafyreibei37l4cvsryeat5vt7gu7dylc2naawvnqnu552upabpi4hmeecq"
+      link: "bafyreiewxbtt6zl2y2nglahlbzkwcuriixy3kjwchkup3nohqepdjowyxy"
     },
     linkedBlock: {
       data: {
@@ -46,7 +46,7 @@ const RECORDS = {
           },
       },
       header: {
-        chainId: "eip155:3",
+        chainId: "inmemory:12345",
         controllers: [
           "did:key:zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV"
         ],
@@ -87,7 +87,7 @@ const RECORDS = {
   r2: { record: { proof: FAKE_CID_4 } },
   proof: {
     blockNumber: 123456,
-    chainId: 'eip155:3',
+    chainId: 'inmemory:12345',
   }
 }
 
@@ -158,7 +158,7 @@ describe('ThreeIdHandler', () => {
       }
     })
 
-    const api = {getSupportedChains: jest.fn(async () => {return ["eip155:3"]})}
+    const api = {getSupportedChains: jest.fn(async () => {return ["inmemory:12345"]})}
     const keyDidResolver = KeyDidResolver.getResolver()
     context = {
       did,
@@ -168,6 +168,7 @@ describe('ThreeIdHandler', () => {
       }),
       anchorService: null,
       api,
+      preferredChainId: 'inmemory:12345',
     }
   })
 

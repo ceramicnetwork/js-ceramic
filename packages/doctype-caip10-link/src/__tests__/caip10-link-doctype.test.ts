@@ -20,13 +20,13 @@ const FAKE_CID_3 = new CID('bafybeig6xv5nwphfmvcnektpnojts55jqcuam7bmye2pb54adnr
 const FAKE_CID_4 = new CID('bafybeig6xv5nwphfmvcnektpnojts66jqcuam7bmye2pb54adnrtccjlsu')
 
 const RECORDS = {
-  genesis: { header: { controllers: [ '0x25954ef14cebbc9af3d71132489a9cfe87043f20@eip155:1' ] } },
+  genesis: { header: { controllers: [ '0x25954ef14cebbc9af3d71132489a9cfe87043f20@inmemory:12345' ] } },
   r1: {
     desiredContent: {
       version: 1,
       type: 'ethereum-eoa',
       signature: '0xbb800bc9e65a21e239bdc9e5f740e66edda75810a5952ff3d78fe6b41f7613c44470f81c6e4153eaded99096099afab59c7d0b8a1b61ba1bd7cd4cd0d117794c1b',
-      address: '0x25954ef14cebbc9af3d71132489a9cfe87043f20@eip155:1',
+      address: '0x25954ef14cebbc9af3d71132489a9cfe87043f20@inmemory:12345',
       timestamp: 1585919920
     },
     record: {
@@ -34,13 +34,13 @@ const RECORDS = {
         version: 1,
         type: 'ethereum-eoa',
         signature: '0xbb800bc9e65a21e239bdc9e5f740e66edda75810a5952ff3d78fe6b41f7613c44470f81c6e4153eaded99096099afab59c7d0b8a1b61ba1bd7cd4cd0d117794c1b',
-        address: '0x25954ef14cebbc9af3d71132489a9cfe87043f20@eip155:1',
+        address: '0x25954ef14cebbc9af3d71132489a9cfe87043f20@inmemory:12345',
         timestamp: 1585919920
       },
       header: {
-        chainId: "fakechain:123",
+        chainId: "inmemory:12345",
         controllers: [
-          "0x25954ef14cebbc9af3d71132489a9cfe87043f20@eip155:1"
+          "0x25954ef14cebbc9af3d71132489a9cfe87043f20@inmemory:12345"
         ]
       },
       id: FAKE_CID_1,
@@ -51,7 +51,7 @@ const RECORDS = {
   proof: {
     value: {
       blockNumber: 123456,
-      chainId: 'fakechain:123',
+      chainId: 'inmemory:12345',
     }
   }
 }
@@ -84,11 +84,12 @@ describe('Caip10LinkHandler', () => {
       }
     }
 
-    const api = {getSupportedChains: jest.fn(async () => {return ["fakechain:123"]})}
+    const api = {getSupportedChains: jest.fn(async () => {return ["inmemory:12345"]})}
     context = {
       ipfs: ipfs,
       anchorService: null,
       api,
+      preferredChainId: 'inmemory:12345'
     }
   })
 
@@ -119,7 +120,7 @@ describe('Caip10LinkHandler', () => {
 
   it('throws an error if genesis record has more than one controller', async () => {
     const content: any = undefined
-    const controllers = [...RECORDS.genesis.header.controllers, '0x25954ef14cebbc9af3d79876489a9cfe87043f20@eip155:1']
+    const controllers = [...RECORDS.genesis.header.controllers, '0x25954ef14cebbc9af3d79876489a9cfe87043f20@inmemory:12345']
     await expect(Caip10LinkDoctype.makeGenesis({ content, metadata: { controllers } }, context)).rejects.toThrow(/Exactly one controller/i)
   })
 
@@ -192,6 +193,7 @@ describe('Caip10LinkHandler', () => {
     // Apply anchor record
     await expect(handler.applyRecord(RECORDS.r2.record, FAKE_CID_3, context, state))
         .rejects.toThrow("Anchor record with cid '" + FAKE_CID_3 + "' on caip10-link document with DocID '" +
-            FAKE_CID_1 + "' is on chain 'thewrongchain' but this document is configured to be anchored on chain 'fakechain:123'")
+            FAKE_CID_1 + "' is on chain 'thewrongchain' but this document is configured to be anchored on chain" +
+            " 'inmemory:12345'")
   })
 })
