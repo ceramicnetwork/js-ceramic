@@ -9,7 +9,7 @@ import type Dispatcher from '../../dispatcher'
 import Ceramic, { CeramicConfig } from "../../ceramic"
 
 const DID_MATCHER = '^(did:([a-zA-Z0-9_]+):([a-zA-Z0-9_.-]+(:[a-zA-Z0-9_.-]+)*)((;[a-zA-Z0-9_.:%-]+=[a-zA-Z0-9_.:%-]*)*)(/[^#?]*)?)([?][^#]*)?(#.*)?';
-export const IN_MEMORY_ANCHOR_SERVICE_CHAIN_ID = 'eip155:3' // Ropsten chain ID. In-memory CAS is used in testing only.
+export const IN_MEMORY_ANCHOR_SERVICE_CHAIN_ID = 'inmemory:12345'
 
 class Candidate {
   public cid: CID;
@@ -29,7 +29,7 @@ class Candidate {
 
 }
 /**
- * In-memory anchor service - used locally, NOT meant to be used in production code (testing only).
+ * In-memory anchor service - used locally, not meant to be used in production code
  */
 class InMemoryAnchorService extends AnchorService {
   private _ceramic: Ceramic
