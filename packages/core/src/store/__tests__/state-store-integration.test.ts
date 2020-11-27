@@ -189,7 +189,7 @@ describe('Level data store', () => {
       did: user,
       resolver,
       anchorServices: {
-        'inmemory:12345': [anchorService],
+        'eip155:3': [anchorService],
       },
       api,
     }

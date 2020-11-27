@@ -176,7 +176,7 @@ describe('Document', () => {
       context = {
         did: user,
         anchorServices: {
-          'inmemory:12345': [anchorService],
+          'eip155:3': [anchorService],
         },
         ipfs: dispatcher._ipfs,
         resolver,
@@ -206,19 +206,19 @@ describe('Document', () => {
       expect(doc.state.anchorStatus).toEqual(AnchorStatus.PENDING)
       await anchorUpdate(doc)
       expect(doc.state.anchorStatus).not.toEqual(AnchorStatus.NOT_REQUESTED)
-      expect(doc.state.metadata.chainId).toEqual("inmemory:12345")
+      expect(doc.state.metadata.chainId).toEqual("eip155:3")
     })
 
     it("Can specify chainId if it matches the configured anchor service's chainid", async () => {
-      const metadata = { controllers, tags: ['3id'], chainId: 'inmemory:12345' }
+      const metadata = { controllers, tags: ['3id'], chainId: 'eip155:3' }
       const doc = await create({ content: initialContent, metadata }, ceramic, context)
-      expect(doc.state.metadata.chainId).toEqual("inmemory:12345")
+      expect(doc.state.metadata.chainId).toEqual("eip155:3")
     })
 
     it("Cannot specify chainId if it is different than the configured anchor service's chainid", async () => {
       const metadata = { controllers, tags: ['3id'], chainId: 'newchain' }
       const createPromise = create({ content: initialContent, metadata }, ceramic, context)
-      await expect(createPromise).rejects.toThrow("Requested chainId 'newchain' is not supported. Supported chains are: 'inmemory:12345'")
+      await expect(createPromise).rejects.toThrow("Requested chainId 'newchain' is not supported. Supported chains are: 'eip155:3'")
     })
 
     it('is loaded correctly', async () => {
@@ -647,7 +647,7 @@ describe('Document', () => {
       context = {
         did: user,
         anchorServices: {
-          'inmemory:12345': [anchorService],
+          'eip155:3': [anchorService],
         },
         ipfs: dispatcher._ipfs,
         resolver,

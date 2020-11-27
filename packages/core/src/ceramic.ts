@@ -4,10 +4,7 @@ import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import KeyDidResolver from '@ceramicnetwork/key-did-resolver'
 import DocID from '@ceramicnetwork/docid'
 import {
-  CeramicApi,
-  DIDProvider,
-  IpfsApi,
-  PinApi,
+  AnchorService, CeramicApi, DIDProvider, IpfsApi, PinApi,
 } from "@ceramicnetwork/common"
 import {
   Doctype,
@@ -169,9 +166,7 @@ class Ceramic implements CeramicApi {
     const dispatcher = new Dispatcher(ipfs, config.topic)
     await dispatcher.init()
 
-    const anchorServices = {
-      [IN_MEMORY_ANCHOR_SERVICE_CHAIN_ID]: [new InMemoryAnchorService(config)], // always included by default
-    }
+    const anchorServices: Record<string, Array<AnchorService>> = {}
 
     if (config.anchorServiceUrl) {
       const ethereumService = new EthereumAnchorService(config)
@@ -179,6 +174,8 @@ class Ceramic implements CeramicApi {
       for (const chainId of supportedChains) {
         anchorServices[chainId] = anchorServices[chainId] ? [...anchorServices[chainId], ethereumService] : [ethereumService]
       }
+    } else {
+      anchorServices[IN_MEMORY_ANCHOR_SERVICE_CHAIN_ID] = [new InMemoryAnchorService(config)]
     }
 
     const context: Context = {
