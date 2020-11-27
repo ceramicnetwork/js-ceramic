@@ -192,6 +192,7 @@ describe('Level data store', () => {
         'inmemory:12345': [anchorService],
       },
       api,
+      preferredChainId: 'inmemory:12345',
     }
 
     anchorService.ceramic = {
