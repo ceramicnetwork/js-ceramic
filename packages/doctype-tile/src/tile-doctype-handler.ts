@@ -155,13 +155,6 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
     async _applyAnchor(context: Context, record: AnchorRecord, cid: CID, state: DocState): Promise<DocState> {
         // TODO: Assert that the 'prev' of the record being applied is the end of the log in 'state'
         const proof = (await context.ipfs.dag.get(record.proof)).value;
-        if (proof.chainId != state.metadata.chainId) {
-            throw new Error("Anchor record with cid '" + cid.toString() +
-                            "' on tile document with DocID '" + state.log[0].cid.toString() +
-                            "' is on chain '" + proof.chainId +
-                            "' but this document is configured to be anchored on chain '" +
-                            state.metadata.chainId + "'")
-        }
 
         state.log.push({ cid, type: RecordType.ANCHOR })
         let content = state.content

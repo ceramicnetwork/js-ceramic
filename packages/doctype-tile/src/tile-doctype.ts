@@ -38,10 +38,6 @@ export class TileDoctype extends Doctype {
             throw new Error('No DID authenticated')
         }
 
-        if ('chainId' in params && params.chainId != this.metadata.chainId) {
-            throw new Error("Updating chainId is not currently supported. Current chainId: " + this.metadata.chainId + ", requested chainId: " + params.chainId)
-        }
-
         const updateRecord = await TileDoctype._makeRecord(this, this.context.did, params.content, params.metadata?.controllers, params.metadata?.schema)
         const updated = await this.context.api.applyRecord(this.id.toString(), updateRecord, opts)
         this.state = updated.state
@@ -75,12 +71,6 @@ export class TileDoctype extends Doctype {
         if (!context.did || !context.did.authenticated) {
             throw new Error('No DID authenticated')
         }
-
-        const supported_chains = await context.api.getSupportedChains()
-        if ('chainId' in metadata && !supported_chains.includes(metadata.chainId)) {
-            throw new Error("Requested chainId '" + metadata.chainId + "' is not supported. Supported chains are: '" + supported_chains.join("', '") + "'")
-        }
-        metadata.chainId = metadata.chainId ?? supported_chains[0]
 
         let unique: string
         if (params.deterministic) {

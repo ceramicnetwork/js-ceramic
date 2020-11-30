@@ -118,8 +118,6 @@ describe('Ceramic interop: core <> http-client', () => {
         delete state2.log
 
         expect(state1).toEqual(state2)
-        // Ensure that chainId gets populated correctly
-        expect(state1.metadata.chainId).toEqual("inmemory:12345")
     })
 
     it('gets anchor record updates', async () => {
