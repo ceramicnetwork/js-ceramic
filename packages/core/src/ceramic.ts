@@ -168,7 +168,7 @@ class Ceramic implements CeramicApi {
         break
       }
       default: {
-        throw new Error("Unrecognized Ceramic network name: " + networkName)
+        throw new Error("Unrecognized Ceramic network name: " + networkName + ". Supported networks are: 'mainnet', 'testnet-clay', 'local', 'inmemory'.")
       }
     }
 

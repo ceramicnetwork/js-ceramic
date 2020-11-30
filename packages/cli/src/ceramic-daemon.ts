@@ -30,6 +30,7 @@ export interface CreateOpts {
   debug: boolean;
   logToFiles?: boolean;
   logPath?: string;
+  ceramicNetwork?: string;
 }
 
 interface HttpLog {
@@ -109,7 +110,8 @@ class CeramicDaemon {
 
     const ceramicConfig: CeramicConfig = {
       logLevel: opts.debug ? 'debug' : 'silent',
-      gateway: opts.gateway || false
+      gateway: opts.gateway || false,
+      networkName: opts.ceramicNetwork,
     }
 
     if (opts.anchorServiceUrl) {
