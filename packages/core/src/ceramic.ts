@@ -81,6 +81,7 @@ class Ceramic implements CeramicApi {
   public readonly pin: PinApi
   public readonly context: Context
 
+  // TODO: Make the constructor private and force the use of Ceramic.create() everywhere
   constructor (public dispatcher: Dispatcher,
                public pinStore: PinStore,
                context: Context,

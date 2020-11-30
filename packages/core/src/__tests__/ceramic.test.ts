@@ -35,10 +35,9 @@ const expectEqualStates = (state1: DocState, state2: DocState): void => {
   expect(DoctypeUtils.serializeState(state1)).toEqual(DoctypeUtils.serializeState(state2))
 }
 
-const createCeramic = async (ipfs: IpfsApi, topic: string, anchorOnRequest = false): Promise<Ceramic> => {
+const createCeramic = async (ipfs: IpfsApi, anchorOnRequest = false): Promise<Ceramic> => {
   const ceramic = await Ceramic.create(ipfs, {
     stateStorePath: await tmp.tmpName(),
-    topic,
     anchorOnRequest,
   })
   const provider = new Ed25519Provider(seed)
@@ -80,8 +79,6 @@ describe('Ceramic integration', () => {
   let port1: number;
   let port2: number;
   let port3: number;
-
-  const topic = '/ceramic_test'
 
   beforeEach(async () => {
     tmpFolder = await tmp.dir({ unsafeCleanup: true })
@@ -125,8 +122,8 @@ describe('Ceramic integration', () => {
   it('can propagate update across two connected nodes', async () => {
     await ipfs2.swarm.connect(multaddr1)
 
-    const ceramic1 = await createCeramic(ipfs1, topic)
-    const ceramic2 = await createCeramic(ipfs2, topic)
+    const ceramic1 = await createCeramic(ipfs1)
+    const ceramic2 = await createCeramic(ipfs2)
     const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { test: 123 } }, { anchor: false, publish: false })
     const doctype2 = await ceramic2.loadDocument(doctype1.id)
     expect(doctype1.content).toEqual(doctype2.content)
@@ -136,8 +133,8 @@ describe('Ceramic integration', () => {
   })
 
   it('won\'t propagate update across two disconnected nodes', async () => {
-    const ceramic1 = await createCeramic(ipfs1, topic)
-    const ceramic2 = await createCeramic(ipfs2, topic)
+    const ceramic1 = await createCeramic(ipfs1)
+    const ceramic2 = await createCeramic(ipfs2)
 
     const controller = ceramic1.context.did.id
 
@@ -160,9 +157,9 @@ describe('Ceramic integration', () => {
     await ipfs1.swarm.connect(multaddr2)
     await ipfs2.swarm.connect(multaddr3)
 
-    const ceramic1 = await createCeramic(ipfs1, topic)
-    const ceramic2 = await createCeramic(ipfs2, topic)
-    const ceramic3 = await createCeramic(ipfs3, topic)
+    const ceramic1 = await createCeramic(ipfs1)
+    const ceramic2 = await createCeramic(ipfs2)
+    const ceramic3 = await createCeramic(ipfs3)
 
     const controller = ceramic1.context.did.id
     // ceramic node 2 shouldn't need to have the document open in order to forward the message
@@ -238,8 +235,8 @@ describe('Ceramic integration', () => {
   })
 
   it('can apply existing records successfully', async () => {
-    const ceramic1 = await createCeramic(ipfs1, topic)
-    const ceramic2 = await createCeramic(ipfs2, 'test')
+    const ceramic1 = await createCeramic(ipfs1)
+    const ceramic2 = await createCeramic(ipfs2)
 
     const controller = ceramic1.context.did.id
 
