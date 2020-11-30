@@ -8,4 +8,5 @@ export * from './pinning'
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-export type { IPFSAPI as IpfsApi } from 'ipfs-core/dist/src/components'
+import type { IPFSAPI as IpfsApi } from 'ipfs-core/dist/src/components'
+export type IpfsApi = typeof IpfsApi
