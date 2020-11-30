@@ -308,4 +308,23 @@ describe('TileDoctypeHandler', () => {
     expect(state).toMatchSnapshot()
   })
 
+  it('Does not apply anchor record on unsupported chain', async () => {
+    const tileDoctypeHandler = new TileDoctypeHandler()
+
+    const genesisRecord = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id] } }, context)
+    await context.ipfs.dag.put(genesisRecord, FAKE_CID_1)
+
+    const payload = dagCBOR.util.deserialize(genesisRecord.linkedBlock)
+    await context.ipfs.dag.put(payload, genesisRecord.jws.link)
+
+    // apply genesis
+    const state = await tileDoctypeHandler.applyRecord(genesisRecord.jws, FAKE_CID_1, context)
+
+    // Create anchor proof with a different chainId than what's in the genesis record
+    await context.ipfs.dag.put({ blockNumber: 123456, chainId: 'thewrongchain'}, FAKE_CID_4)
+    // apply anchor
+    await expect(tileDoctypeHandler.applyRecord(RECORDS.r2.record, FAKE_CID_3, context, state))
+        .rejects.toThrow("Anchor proof chainId 'thewrongchain' is not supported. Supported chains are: 'fakechain:123'")
+  })
+
 })

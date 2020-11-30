@@ -175,4 +175,21 @@ describe('Caip10LinkHandler', () => {
     state = await handler.applyRecord(RECORDS.r2.record, FAKE_CID_3, context, state)
     expect(state).toMatchSnapshot()
   })
+
+  it('Does not apply anchor record on unsupported chain', async () => {
+    // create signed record
+    await context.ipfs.dag.put(RECORDS.r1.record, FAKE_CID_2)
+    // create anchor record
+    await context.ipfs.dag.put(RECORDS.r2.record, FAKE_CID_3)
+    // create anchor proof with a different chainId than what's in the genesis record
+    await context.ipfs.dag.put({value: { blockNumber: 123456, chainId: 'thewrongchain'}}, FAKE_CID_4)
+
+    // Apply genesis
+    let state = await handler.applyRecord(RECORDS.genesis, FAKE_CID_1, context)
+    // Apply signed record
+    state = await handler.applyRecord(RECORDS.r1.record, FAKE_CID_2, context, state)
+    // Apply anchor record
+    await expect(handler.applyRecord(RECORDS.r2.record, FAKE_CID_3, context, state))
+        .rejects.toThrow("Anchor proof chainId 'thewrongchain' is not supported. Supported chains are: 'fakechain:123'")
+  })
 })

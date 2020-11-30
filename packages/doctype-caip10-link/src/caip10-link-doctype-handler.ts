@@ -118,6 +118,13 @@ export class Caip10LinkDoctypeHandler implements DoctypeHandler<Caip10LinkDoctyp
         // TODO: Assert that the 'prev' of the record being applied is the end of the log in 'state'
         const proof = (await context.ipfs.dag.get(record.proof)).value;
 
+        const supportedChains = await context.api.getSupportedChains()
+        if (!supportedChains.includes(proof.chainId)) {
+            throw new Error("Anchor proof chainId '" + proof.chainId
+                + "' is not supported. Supported chains are: '"
+                + supportedChains.join("', '") + "'")
+        }
+
         state.log.push({ cid, type: RecordType.ANCHOR })
         let content = state.content
         if (state.next?.content) {
