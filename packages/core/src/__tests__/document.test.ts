@@ -189,10 +189,16 @@ describe('Document', () => {
         dispatcher,
       }
 
-      ceramic = new Ceramic(dispatcher, pinStore, context)
+      const networkOptions = {
+        name: 'inmemory',
+        pubsubTopic: '/ceramic/inmemory',
+        supportedChains: ['inmemory:12345']
+      }
+
+      ceramic = new Ceramic(dispatcher, pinStore, context, networkOptions)
       ceramic._doctypeHandlers['tile'] = doctypeHandler
 
-      ceramicWithoutSchemaValidation = new Ceramic(dispatcher, pinStore, context, "inmemory", false)
+      ceramicWithoutSchemaValidation = new Ceramic(dispatcher, pinStore, context, networkOptions, false)
       ceramicWithoutSchemaValidation._doctypeHandlers['tile'] = doctypeHandler
     })
 
@@ -647,7 +653,13 @@ describe('Document', () => {
         dispatcher,
       }
 
-      ceramic = new Ceramic(dispatcher, pinStore, context)
+      const networkOptions = {
+        name: 'inmemory',
+        pubsubTopic: '/ceramic/inmemory',
+        supportedChains: ['inmemory:12345']
+      }
+
+      ceramic = new Ceramic(dispatcher, pinStore, context, networkOptions)
       ceramic._doctypeHandlers['tile'] = doctypeHandler
     })
 
