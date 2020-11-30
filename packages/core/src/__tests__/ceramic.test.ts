@@ -35,6 +35,10 @@ const expectEqualStates = (state1: DocState, state2: DocState): void => {
   expect(DoctypeUtils.serializeState(state1)).toEqual(DoctypeUtils.serializeState(state2))
 }
 
+async function delay(mills: number): Promise<void> {
+  await new Promise(resolve => setTimeout(() => resolve(), mills))
+}
+
 const createCeramic = async (ipfs: IpfsApi, anchorOnRequest = false): Promise<Ceramic> => {
   const ceramic = await Ceramic.create(ipfs, {
     stateStorePath: await tmp.tmpName(),
@@ -117,6 +121,32 @@ describe('Ceramic integration', () => {
     await ipfs3.stop(() => console.log('IPFS3 stopped'))
 
     await tmpFolder.cleanup()
+  })
+
+  it('can create Ceramic instance on default network', async () => {
+    const ceramic = await Ceramic.create(ipfs1, {stateStorePath: await tmp.tmpName()})
+    await delay(1000)
+    const supportedChains = await ceramic.getSupportedChains()
+    expect(supportedChains).toEqual(['inmemory:12345'])
+    await ceramic.close()
+  })
+
+
+  it('can create Ceramic instance explicitly on inmemory network', async () => {
+    const ceramic = await Ceramic.create(ipfs1, { networkName: 'inmemory', stateStorePath: await tmp.tmpName() })
+    await delay(1000)
+    const supportedChains = await ceramic.getSupportedChains()
+    expect(supportedChains).toEqual(['inmemory:12345'])
+    await ceramic.close()
+  })
+
+  it('cannot create Ceramic instance on network not supported by our anchor service', async () => {
+    await expect(Ceramic.create(ipfs1, { networkName: 'local', stateStorePath: await tmp.tmpName() })).rejects.toThrow(
+        "No usable chainId for anchoring was found.  The ceramic network 'local' supports the chains: ['eip155:1337'], but the configured anchor service only supports the chains: ['inmemory:12345']")
+  })
+
+  it('cannot create Ceramic instance on invalid network', async () => {
+    await expect(Ceramic.create(ipfs1, { networkName: 'fakenetwork', stateStorePath: await tmp.tmpName() })).rejects.toThrow("Unrecognized Ceramic network name: 'fakenetwork'. Supported networks are: 'mainnet', 'testnet-clay', 'local', 'inmemory'")
   })
 
   it('can propagate update across two connected nodes', async () => {
