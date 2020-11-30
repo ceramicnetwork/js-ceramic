@@ -37,7 +37,7 @@ const RECORDS = {
           signature: "cccc"
         }
       ],
-      link: "bafyreigjmhnpzforbh5jzkkhd45a7cpfmx5he7wlbdvw6dzhuh3roievde"
+      link: "bafyreia4yhrqevqys35mvccnfmgcrpne6fxrdpqaonif7njq3gh7so633e"
     },
     linkedBlock: {
       data: {
@@ -46,7 +46,6 @@ const RECORDS = {
           },
       },
       header: {
-        chainId: "fakechain:123",
         controllers: [
           "did:key:zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV"
         ],

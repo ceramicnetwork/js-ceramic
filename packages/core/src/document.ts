@@ -401,8 +401,8 @@ class Document extends EventEmitter {
       const { anchorProof: proof2 } = state2
 
       if (proof1.chainId != proof2.chainId) {
-        // TODO: this error should be process-fatal as it indicates a programming error
-        throw new Error("Conflicting logs on the same document are anchored on different chains, this should be impossible. Chain1: " +
+        // TODO: Add logic to handle conflicting updates anchored on different chains
+        throw new Error("Conflicting logs on the same document are anchored on different chains. Chain1: " +
             proof1.chainId + ", chain2: " + proof2.chainId)
       }
 

@@ -204,19 +204,6 @@ describe('Document', () => {
       expect(doc.state.anchorStatus).toEqual(AnchorStatus.PENDING)
       await anchorUpdate(doc)
       expect(doc.state.anchorStatus).not.toEqual(AnchorStatus.NOT_REQUESTED)
-      expect(doc.state.metadata.chainId).toEqual("inmemory:12345")
-    })
-
-    it("Can specify chainId if it matches the configured anchor service's chainid", async () => {
-      const metadata = { controllers, tags: ['3id'], chainId: 'inmemory:12345' }
-      const doc = await create({ content: initialContent, metadata }, ceramic, context)
-      expect(doc.state.metadata.chainId).toEqual("inmemory:12345")
-    })
-
-    it("Cannot specify chainId if it is different than the configured anchor service's chainid", async () => {
-      const metadata = { controllers, tags: ['3id'], chainId: 'newchain' }
-      const createPromise = create({ content: initialContent, metadata }, ceramic, context)
-      await expect(createPromise).rejects.toThrow("Requested chainId 'newchain' is not supported. Supported chains are: 'inmemory:12345'")
     })
 
     it('is loaded correctly', async () => {
@@ -517,9 +504,9 @@ describe('Document', () => {
         anchorProof: proof2,
       }
 
-      // When anchored in different blockchains, should take log with earlier block timestamp
-      await expect(Document._pickLogToAccept(state1, state2)).rejects.toThrow("Conflicting logs on the same document are anchored on different chains, this should be impossible. Chain1: chain1, chain2: chain2")
-      await expect(Document._pickLogToAccept(state2, state1)).rejects.toThrow("Conflicting logs on the same document are anchored on different chains, this should be impossible. Chain1: chain2, chain2: chain1")
+      // We do not currently support multiple blockchains
+      await expect(Document._pickLogToAccept(state1, state2)).rejects.toThrow("Conflicting logs on the same document are anchored on different chains. Chain1: chain1, chain2: chain2")
+      await expect(Document._pickLogToAccept(state2, state1)).rejects.toThrow("Conflicting logs on the same document are anchored on different chains. Chain1: chain2, chain2: chain1")
     })
 
     it("Both logs anchored in same blockchains in different blocks", async () => {

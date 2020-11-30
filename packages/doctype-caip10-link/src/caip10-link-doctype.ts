@@ -23,10 +23,6 @@ export class Caip10LinkDoctype extends Doctype {
     async change(params: Caip10LinkParams, opts?: DocOpts): Promise<void> {
         const { content, metadata } = params
 
-        if ('chainId' in params && params.chainId != this.metadata.chainId) {
-            throw new Error("Updating chainId is not currently supported. Current chainId: " + this.metadata.chainId + ", requested chainId: " + params.chainId)
-        }
-
         const updateRecord = await Caip10LinkDoctype._makeRecord(this, content, metadata?.schema)
         const updated = await this.context.api.applyRecord(this.id.toString(), updateRecord, opts)
         this.state = updated.state
@@ -64,12 +60,6 @@ export class Caip10LinkDoctype extends Doctype {
         if (metadata.controllers.length !== 1) {
             throw new Error('Exactly one controller must be specified')
         }
-
-        const supported_anchor_chains = await context.api.getSupportedChains()
-        if ('chainId' in metadata && !supported_anchor_chains.includes(metadata.chainId)) {
-            throw new Error("Requested chainId '" + metadata.chainId + "' is not supported. Supported chains are: " + supported_anchor_chains.toString())
-        }
-        metadata.chainId = metadata.chainId ?? supported_anchor_chains[0]
 
         const [address, linkedChainId] = metadata.controllers[0].split('@') // eslint-disable-line @typescript-eslint/no-unused-vars
         if (!linkedChainId) {
