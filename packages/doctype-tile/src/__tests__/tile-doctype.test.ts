@@ -326,5 +326,4 @@ describe('TileDoctypeHandler', () => {
     await expect(tileDoctypeHandler.applyRecord(RECORDS.r2.record, FAKE_CID_3, context, state))
         .rejects.toThrow("Anchor proof chainId 'thewrongchain' is not supported. Supported chains are: 'fakechain:123'")
   })
-
 })
