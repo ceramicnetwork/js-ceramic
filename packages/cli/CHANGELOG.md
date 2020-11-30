@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.14.3](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@0.14.2...@ceramicnetwork/cli@0.14.3) (2020-11-30)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
 ## [0.14.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@0.14.1...@ceramicnetwork/cli@0.14.2) (2020-11-30)
 
 **Note:** Version bump only for package @ceramicnetwork/cli
