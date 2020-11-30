@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.14.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@0.13.0...@ceramicnetwork/core@0.14.0) (2020-11-26)
+
+
+### Features
+
+* **core:** Update pubsub messages to those defined in CIP-71 ([#542](https://github.com/ceramicnetwork/js-ceramic/issues/542)) ([ee30eb4](https://github.com/ceramicnetwork/js-ceramic/commit/ee30eb468ecd3937b1e2b80b1d5b0b492ffb9acc))
+
+
+
+
+
 # 0.13.0 (2020-11-24)
 
 
