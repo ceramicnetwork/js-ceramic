@@ -85,7 +85,7 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
         if (isSigned) {
             payload = (await context.ipfs.dag.get(record.link)).value
             await this._verifySignature(record, context, payload.header.controllers[0])
-        } else if (payload.data !== null) {
+        } else if (payload.data) {
             throw Error('Genesis record with contents should always be signed')
         }
         return {
@@ -130,7 +130,7 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
         } else {
             nextState.log.push({ cid, type: RecordType.SIGNED })
             nextState.next = {
-                content: jsonpatch.applyPatch(state.content, payload.data).newDocument
+                content: state.content ? jsonpatch.applyPatch(state.content, payload.data).newDocument : payload.data
             }
         }
 
