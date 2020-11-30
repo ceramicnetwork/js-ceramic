@@ -3,7 +3,7 @@ import Document from './document'
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import KeyDidResolver from '@ceramicnetwork/key-did-resolver'
 import DocID from '@ceramicnetwork/docid'
-import { CeramicApi, DIDProvider, IpfsApi, PinApi } from "@ceramicnetwork/common"
+import { AnchorService, CeramicApi, DIDProvider, IpfsApi, PinApi } from "@ceramicnetwork/common"
 import {
   Doctype,
   DoctypeHandler,
@@ -17,6 +17,7 @@ import {
 } from "@ceramicnetwork/common"
 import { Resolver } from "did-resolver"
 
+import {randomUint32} from "@stablelib/random"
 import { DID } from 'dids'
 import { TileDoctypeHandler } from "@ceramicnetwork/doctype-tile"
 import { Caip10LinkDoctypeHandler } from "@ceramicnetwork/doctype-caip10-link"
@@ -50,9 +51,18 @@ export interface CeramicConfig {
   };
   gateway?: boolean;
 
-  topic?: string;
+  networkName?: string;
 
   [index: string]: any; // allow arbitrary properties
+}
+
+/**
+ * Protocol options that are derived from the Ceramic network name (e.g. "mainnet", "testnet-clay", etc) specified
+ */
+interface CeramicNetworkOptions {
+  name: string, // Must be one of the supported network names
+  supportedChains: string[], // A list of CAIP-2 chainIds that are acceptable anchor proof locations
+  pubsubTopic: string, // The topic that will be used for broadcasting protocol messages
 }
 
 const normalizeDocID = (docId: DocID | string): DocID => {
@@ -68,12 +78,15 @@ const normalizeDocID = (docId: DocID | string): DocID => {
 class Ceramic implements CeramicApi {
   private readonly _docmap: Record<string, Document>
   private readonly _doctypeHandlers: Record<string, DoctypeHandler<Doctype>>
-  private _supportedChains: Array<string>
 
   public readonly pin: PinApi
   public readonly context: Context
 
-  constructor (public dispatcher: Dispatcher, public pinStore: PinStore, context: Context, private _validateDocs: boolean = true) {
+  constructor (public dispatcher: Dispatcher,
+               public pinStore: PinStore,
+               context: Context,
+               private _networkOptions: CeramicNetworkOptions,
+               private _validateDocs: boolean = true) {
     this._docmap = {}
     this._doctypeHandlers = {
       'tile': new TileDoctypeHandler(),
@@ -131,6 +144,51 @@ class Ceramic implements CeramicApi {
     }
   }
 
+  private static async _generateNetworkOptions(networkName: string, anchorService: AnchorService): Promise<CeramicNetworkOptions> {
+    let pubsubTopic
+    let networkChains
+    switch (networkName) {
+      case "mainnet": {
+        pubsubTopic = "/ceramic/mainnet"
+        networkChains = ["eip155:1"] // Ethereum mainnet
+        break
+      }
+      case "testnet-clay": {
+        pubsubTopic = "/ceramic/testnet-clay"
+        networkChains = ["eip155:3", "eip155:4"] // Ethereum Ropsten, Rinkeby
+        break
+      }
+      case "local": {
+        const randomNum = randomUint32()
+        pubsubTopic = "/ceramic/local-" + randomNum
+        networkChains = ["eip155:1337"] // Ganache
+        break
+      }
+      case "inmemory": {
+        const randomNum = randomUint32()
+        pubsubTopic = "/ceramic/inmemory-" + randomNum
+        networkChains = ["inmemory:12345"] // Our fake in-memory anchor service chainId
+        break
+      }
+      default: {
+        throw new Error("Unrecognized Ceramic network name: " + networkName)
+      }
+    }
+
+    // Now that we know the set of supported chains for the specified network, get the actually
+    // configured chainId from the anchorService and make sure it's valid.
+    const anchorServiceChains = await anchorService.getSupportedChains()
+    const usableChains = networkChains.filter(c => anchorServiceChains.includes(c))
+    if (usableChains.length === 0) {
+      throw new Error("No usable chainId for anchoring was found.  The ceramic network '" + networkName
+          + "' supports the chains: ['" + networkChains.join("', '")
+          + "'], but the configured anchor service only supports the chains: ['"
+          + anchorServiceChains.join("', '") + "']")
+    }
+
+    return {name: networkName, pubsubTopic, supportedChains: usableChains}
+  }
+
   /**
    * Create Ceramic instance
    * @param ipfs - IPFS instance
@@ -150,19 +208,21 @@ class Ceramic implements CeramicApi {
         )
     }
 
-    const dispatcher = new Dispatcher(ipfs, config.topic)
-    await dispatcher.init()
-
     const anchorService = config.anchorServiceUrl ? new EthereumAnchorService(config) : new InMemoryAnchorService(config)
     const context: Context = {
       ipfs,
       anchorService,
     }
 
+    const networkOptions = await Ceramic._generateNetworkOptions(config.networkName || "local", anchorService)
+
+    const dispatcher = new Dispatcher(ipfs, networkOptions.pubsubTopic)
+    await dispatcher.init()
+
     const pinStoreFactory = new PinStoreFactory(context, config)
     const pinStore = await pinStoreFactory.open()
 
-    const ceramic = new Ceramic(dispatcher, pinStore, context, config.validateDocs)
+    const ceramic = new Ceramic(dispatcher, pinStore, context, networkOptions, config.validateDocs)
     anchorService.ceramic = ceramic
 
     const keyDidResolver = KeyDidResolver.getResolver()
@@ -361,20 +421,9 @@ class Ceramic implements CeramicApi {
   /**
    * @returns An array of the CAIP-2 chain IDs of the blockchains that are supported for anchoring
    * documents.
-   *
-   * Caches the result after the first time it is requested
    */
   async getSupportedChains(): Promise<Array<string>> {
-    if (this._supportedChains) {
-      return this._supportedChains
-    }
-
-    // Fetch the chainId from the anchor service and cache the result
-    if (!this.context.anchorService) {
-      throw new Error("No anchor service configured")
-    }
-    this._supportedChains = await this.context.anchorService.getSupportedChains()
-    return this._supportedChains
+    return this._networkOptions.supportedChains
   }
 
 

@@ -20,11 +20,6 @@ export enum MsgType {
 }
 
 /**
- * Default Ceramic Pub/Sub topic.
- */
-const TOPIC = '/ceramic'
-
-/**
  * Describes one log message from the Dispatcher.
  */
 interface LogMessage {
@@ -48,7 +43,7 @@ export default class Dispatcher extends EventEmitter {
   private logger: Logger
   private _isRunning = true
 
-  constructor (public _ipfs: IpfsApi, public topic: string = TOPIC) {
+  constructor (public _ipfs: IpfsApi, public topic: string) {
     super()
     this._documents = {}
     this._outstandingQueryIds = {}
