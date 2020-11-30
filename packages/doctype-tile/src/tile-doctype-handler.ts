@@ -90,7 +90,7 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
         }
         return {
             doctype: DOCTYPE,
-            content: payload.data,
+            content: payload.data || {},
             metadata: payload.header,
             signature: isSigned? SignatureStatus.SIGNED : SignatureStatus.GENESIS,
             anchorStatus: AnchorStatus.NOT_REQUESTED,
@@ -130,7 +130,7 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
         } else {
             nextState.log.push({ cid, type: RecordType.SIGNED })
             nextState.next = {
-                content: state.content ? jsonpatch.applyPatch(state.content, payload.data).newDocument : payload.data
+                content: jsonpatch.applyPatch(state.content, payload.data).newDocument
             }
         }
 
