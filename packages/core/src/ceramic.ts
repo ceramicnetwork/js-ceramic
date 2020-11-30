@@ -17,7 +17,6 @@ import {
 } from "@ceramicnetwork/common"
 import { Resolver } from "did-resolver"
 
-import {randomUint32} from "@stablelib/random"
 import { DID } from 'dids'
 import { TileDoctypeHandler } from "@ceramicnetwork/doctype-tile"
 import { Caip10LinkDoctypeHandler } from "@ceramicnetwork/doctype-caip10-link"
@@ -159,14 +158,12 @@ class Ceramic implements CeramicApi {
         break
       }
       case "local": {
-        const randomNum = randomUint32()
-        pubsubTopic = "/ceramic/local-" + randomNum
+        pubsubTopic = "/ceramic/local"
         networkChains = ["eip155:1337"] // Ganache
         break
       }
       case "inmemory": {
-        const randomNum = randomUint32()
-        pubsubTopic = "/ceramic/inmemory-" + randomNum
+        pubsubTopic = "/ceramic/inmemory"
         networkChains = ["inmemory:12345"] // Our fake in-memory anchor service chainId
         break
       }
@@ -214,7 +211,7 @@ class Ceramic implements CeramicApi {
       anchorService,
     }
 
-    const networkOptions = await Ceramic._generateNetworkOptions(config.networkName || "local", anchorService)
+    const networkOptions = await Ceramic._generateNetworkOptions(config.networkName || "inmemory", anchorService)
 
     const dispatcher = new Dispatcher(ipfs, networkOptions.pubsubTopic)
     await dispatcher.init()
@@ -425,7 +422,6 @@ class Ceramic implements CeramicApi {
   async getSupportedChains(): Promise<Array<string>> {
     return this._networkOptions.supportedChains
   }
-
 
   /**
    * Close Ceramic instance gracefully
