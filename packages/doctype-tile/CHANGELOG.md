@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.11.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/doctype-tile@0.11.1...@ceramicnetwork/doctype-tile@0.11.2) (2020-11-30)
+
+
+### Bug Fixes
+
+* **doctype-tile:** properly handle unsigned genesis records ([#564](https://github.com/ceramicnetwork/js-ceramic/issues/564)) ([c7df75c](https://github.com/ceramicnetwork/js-ceramic/commit/c7df75ce6c5ff84f01fe781e25578ed4cc271761))
+
+
+
+
+
 ## [0.11.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/doctype-tile@0.11.0...@ceramicnetwork/doctype-tile@0.11.1) (2020-11-26)
 
 **Note:** Version bump only for package @ceramicnetwork/doctype-tile

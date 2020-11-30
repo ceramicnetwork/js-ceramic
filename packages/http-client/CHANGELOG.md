@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.8.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/http-client@0.8.1...@ceramicnetwork/http-client@0.8.2) (2020-11-30)
+
+
+### Bug Fixes
+
+* **client:** fix resolver construction ([#549](https://github.com/ceramicnetwork/js-ceramic/issues/549)) ([f23ff93](https://github.com/ceramicnetwork/js-ceramic/commit/f23ff938e92e2f835f613e8e3162fe7795194ebf))
+
+
+
+
+
 ## [0.8.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/http-client@0.8.0...@ceramicnetwork/http-client@0.8.1) (2020-11-26)
 
 **Note:** Version bump only for package @ceramicnetwork/http-client

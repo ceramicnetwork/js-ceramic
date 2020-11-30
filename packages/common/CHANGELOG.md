@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.13.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@0.13.1...@ceramicnetwork/common@0.13.2) (2020-11-30)
+
+
+### Bug Fixes
+
+* **common:** fix IpfsApi import ([#565](https://github.com/ceramicnetwork/js-ceramic/issues/565)) ([802c284](https://github.com/ceramicnetwork/js-ceramic/commit/802c284657c3d03df4268c1cf1f6d445e6b7218d))
+
+
+
+
+
 ## [0.13.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@0.13.0...@ceramicnetwork/common@0.13.1) (2020-11-26)
 
 **Note:** Version bump only for package @ceramicnetwork/common
