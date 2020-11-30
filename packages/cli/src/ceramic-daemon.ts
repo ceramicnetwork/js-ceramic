@@ -10,8 +10,6 @@ import * as core from "express-serve-static-core"
 const DEFAULT_PORT = 7007
 const toApiPath = (ending: string): string => '/api/v0' + ending
 
-const DEFAULT_ANCHOR_SERVICE_URL = "https://cas.3box.io:8081"
-
 /**
  * Daemon create options
  */
@@ -117,8 +115,6 @@ class CeramicDaemon {
     if (opts.anchorServiceUrl) {
       ceramicConfig.ethereumRpcUrl = opts.ethereumRpcUrl
       ceramicConfig.anchorServiceUrl = opts.anchorServiceUrl
-    } else {
-      ceramicConfig.anchorServiceUrl = DEFAULT_ANCHOR_SERVICE_URL
     }
 
     if (opts.stateStorePath) {
