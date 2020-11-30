@@ -28,7 +28,7 @@ This repo is made up of several different packages.
 | @ceramicnetwork/key-did-resolver | [![npm](https://img.shields.io/npm/v/@ceramicnetwork/key-did-resolver)](https://www.npmjs.com/package/@ceramicnetwork/key-did-resolver) | did:key method resolver |
 
 ## APIs
-[APIs documentation](https://ceramicnetwork.github.io/js-ceramic/)
+[APIs documentation](https://docs.ceramicnetwork.network)
 
 
 ## Development
