@@ -32,10 +32,9 @@ const createIPFS =(overrideConfig: Record<string, unknown> = {}): Promise<IpfsAp
   return IPFS.create(config)
 }
 
-const createCeramic = async (ipfs: IpfsApi, anchorManual: boolean, topic: string): Promise<Ceramic> => {
+const createCeramic = async (ipfs: IpfsApi, anchorManual: boolean): Promise<Ceramic> => {
   const ceramic = await Ceramic.create(ipfs, {
     stateStorePath: await tmp.tmpName(),
-    topic,
     anchorOnRequest: !anchorManual,
   })
   const provider = new Ed25519Provider(seed)
@@ -82,8 +81,6 @@ describe('Ceramic anchoring', () => {
   let port1: number;
   let port2: number;
 
-  const topic = '/ceramic_anchor'
-
   beforeEach(async () => {
     tmpFolder = await tmp.dir({ unsafeCleanup: true })
 
@@ -120,8 +117,8 @@ describe('Ceramic anchoring', () => {
     await ipfs2.swarm.connect(multaddr1)
 
     const [ceramic1, ceramic2] = await Promise.all([
-      createCeramic(ipfs1, true, topic),
-      createCeramic(ipfs2, false, topic)
+      createCeramic(ipfs1, true),
+      createCeramic(ipfs2, false)
     ])
 
     const controller = ceramic1.context.did.id
@@ -148,8 +145,8 @@ describe('Ceramic anchoring', () => {
     await ipfs2.swarm.connect(multaddr1)
 
     const [ceramic1, ceramic2] = await Promise.all([
-      createCeramic(ipfs1, true, topic),
-      createCeramic(ipfs2, false, topic)
+      createCeramic(ipfs1, true),
+      createCeramic(ipfs2, false)
     ])
 
     const controller = ceramic1.context.did.id
@@ -173,8 +170,8 @@ describe('Ceramic anchoring', () => {
     await ipfs2.swarm.connect(multaddr1)
 
     const [ceramic1, ceramic2] = await Promise.all([
-      createCeramic(ipfs1, true, topic),
-      createCeramic(ipfs2, false, topic)
+      createCeramic(ipfs1, true),
+      createCeramic(ipfs2, false)
     ])
     const controller = ceramic1.context.did.id
 
@@ -201,8 +198,8 @@ describe('Ceramic anchoring', () => {
     await ipfs2.swarm.connect(multaddr1)
 
     const [ceramic1, ceramic2] = await Promise.all([
-      createCeramic(ipfs1, true, topic),
-      createCeramic(ipfs2, false, topic)
+      createCeramic(ipfs1, true),
+      createCeramic(ipfs2, false)
     ])
     const controller = ceramic1.context.did.id
 
@@ -228,8 +225,8 @@ describe('Ceramic anchoring', () => {
     await ipfs2.swarm.connect(multaddr1)
 
     const [ceramic1, ceramic2] = await Promise.all([
-      createCeramic(ipfs1, true, topic),
-      createCeramic(ipfs2, false, topic)
+      createCeramic(ipfs1, true),
+      createCeramic(ipfs2, false)
     ])
     const controller = ceramic1.context.did.id
 
@@ -255,8 +252,8 @@ describe('Ceramic anchoring', () => {
     await ipfs2.swarm.connect(multaddr1)
 
     const [ceramic1, ceramic2] = await Promise.all([
-      createCeramic(ipfs1, true, topic),
-      createCeramic(ipfs2, false, topic)
+      createCeramic(ipfs1, true),
+      createCeramic(ipfs2, false)
     ])
     const controller = ceramic1.context.did.id
 
@@ -281,8 +278,8 @@ describe('Ceramic anchoring', () => {
     await ipfs2.swarm.connect(multaddr1)
 
     const [ceramic1, ceramic2] = await Promise.all([
-      createCeramic(ipfs1, true, topic),
-      createCeramic(ipfs2, false, topic)
+      createCeramic(ipfs1, true),
+      createCeramic(ipfs2, false)
     ])
     const controller = ceramic1.context.did.id
 
@@ -320,8 +317,8 @@ describe('Ceramic anchoring', () => {
     await ipfs2.swarm.connect(multaddr1)
 
     const [ceramic1, ceramic2] = await Promise.all([
-      createCeramic(ipfs1, true, topic),
-      createCeramic(ipfs2, false, topic)
+      createCeramic(ipfs1, true),
+      createCeramic(ipfs2, false)
     ])
     const controller = ceramic1.context.did.id
 

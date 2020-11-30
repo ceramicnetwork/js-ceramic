@@ -192,7 +192,7 @@ describe('Document', () => {
       ceramic = new Ceramic(dispatcher, pinStore, context)
       ceramic._doctypeHandlers['tile'] = doctypeHandler
 
-      ceramicWithoutSchemaValidation = new Ceramic(dispatcher, pinStore, context, false)
+      ceramicWithoutSchemaValidation = new Ceramic(dispatcher, pinStore, context, "inmemory", false)
       ceramicWithoutSchemaValidation._doctypeHandlers['tile'] = doctypeHandler
     })
 
