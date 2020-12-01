@@ -15,10 +15,10 @@ program
     .option('--debug', 'Enable debug logging level. Default is false')
     .option('--log-to-files', 'If debug is true, write logs to files. Default is false')
     .option('--log-path <dir>', 'Store logs in this directory. Defaults to "/usr/local/var/log/ceramic"')
-    .option('--ceramic-network <name>', 'Name of the ceramic network to connect to. Defaults to "inmemory"')
+    .option('--network <name>', 'Name of the ceramic network to connect to. One of: "testnet-clay", "local", or "inmemory". Defaults to "testnet-clay"')
     .description('Start the daemon')
-    .action(async ({ ipfsApi, ethereumRpc, anchorServiceApi, validateDocs, pinning, pinningStorePath, gateway, port, debug, logToFiles, logPath, ceramicNetwork }) => {
-        await CeramicCliUtils.createDaemon(ipfsApi, ethereumRpc, anchorServiceApi, validateDocs, pinning, pinningStorePath, gateway, port, debug, logToFiles, logPath, ceramicNetwork)
+    .action(async ({ ipfsApi, ethereumRpc, anchorServiceApi, validateDocs, pinning, pinningStorePath, gateway, port, debug, logToFiles, logPath, network }) => {
+        await CeramicCliUtils.createDaemon(ipfsApi, ethereumRpc, anchorServiceApi, validateDocs, pinning, pinningStorePath, gateway, port, debug, logToFiles, logPath, network)
     })
 
 program

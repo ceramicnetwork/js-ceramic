@@ -55,7 +55,7 @@ export class CeramicCliUtils {
      * @param debug - Enable debug logging level
      * @param logToFiles - Enable writing logs to files
      * @param logPath - Store log files in this directory
-     * @param ceramicNetwork - The Ceramic network to connect to
+     * @param network - The Ceramic network to connect to
      */
     static async createDaemon(ipfsApi: string,
                               ethereumRpc: string,
@@ -68,7 +68,7 @@ export class CeramicCliUtils {
                               debug: boolean,
                               logToFiles: boolean,
                               logPath: string,
-                              ceramicNetwork: string): Promise<CeramicDaemon> {
+                              network: string): Promise<CeramicDaemon> {
         if (stateStorePath == null) {
             stateStorePath = DEFAULT_PINNING_STORE_PATH
         }
@@ -84,7 +84,7 @@ export class CeramicCliUtils {
             debug,
             logToFiles,
             logPath,
-            ceramicNetwork,
+            network,
         }
 
         multiformats.multicodec.add(dagJose)

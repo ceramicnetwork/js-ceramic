@@ -8,6 +8,7 @@ import cors from 'cors'
 import * as core from "express-serve-static-core"
 
 const DEFAULT_PORT = 7007
+const DEFAULT_NETWORK = 'testnet-clay'
 const toApiPath = (ending: string): string => '/api/v0' + ending
 
 /**
@@ -28,7 +29,7 @@ export interface CreateOpts {
   debug: boolean;
   logToFiles?: boolean;
   logPath?: string;
-  ceramicNetwork?: string;
+  network?: string;
 }
 
 interface HttpLog {
@@ -109,7 +110,7 @@ class CeramicDaemon {
     const ceramicConfig: CeramicConfig = {
       logLevel: opts.debug ? 'debug' : 'silent',
       gateway: opts.gateway || false,
-      networkName: opts.ceramicNetwork,
+      networkName: opts.network || DEFAULT_NETWORK,
     }
 
     if (opts.anchorServiceUrl) {
