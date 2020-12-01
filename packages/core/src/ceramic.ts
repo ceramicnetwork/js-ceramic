@@ -27,6 +27,8 @@ import EthereumAnchorService from "./anchor/ethereum/ethereum-anchor-service"
 import InMemoryAnchorService from "./anchor/memory/in-memory-anchor-service"
 import { PinningBackendStatic } from "@ceramicnetwork/common";
 
+import { randomUint32 } from '@stablelib/random'
+
 /**
  * Ceramic configuration
  */
@@ -51,6 +53,7 @@ export interface CeramicConfig {
   gateway?: boolean;
 
   networkName?: string;
+  pubsubTopic?: string;
 
   [index: string]: any; // allow arbitrary properties
 }
@@ -63,6 +66,8 @@ interface CeramicNetworkOptions {
   supportedChains: string[], // A list of CAIP-2 chainIds that are acceptable anchor proof locations
   pubsubTopic: string, // The topic that will be used for broadcasting protocol messages
 }
+
+const DEFAULT_NETWORK = 'inmemory'
 
 const normalizeDocID = (docId: DocID | string): DocID => {
   return (typeof docId === 'string') ? DocID.fromString(docId) : docId
@@ -144,7 +149,13 @@ class Ceramic implements CeramicApi {
     }
   }
 
-  private static async _generateNetworkOptions(networkName: string, anchorService: AnchorService, anchorServiceURL: string): Promise<CeramicNetworkOptions> {
+  private static async _generateNetworkOptions(config: CeramicConfig, anchorService: AnchorService): Promise<CeramicNetworkOptions> {
+    const networkName = config.networkName || DEFAULT_NETWORK
+
+    if (config.pubsubTopic && networkName !== "inmemory") {
+      throw new Error("Specifying pub/sub topic is only supported for the 'inmemory' network")
+    }
+
     let pubsubTopic
     let networkChains
     switch (networkName) {
@@ -159,12 +170,21 @@ class Ceramic implements CeramicApi {
         break
       }
       case "local": {
-        pubsubTopic = "/ceramic/local"
+        // 'local' network always uses a random pubsub topic so that nodes stay isolated from each other
+        const rand = randomUint32()
+        pubsubTopic = "/ceramic/local-" + rand
         networkChains = ["eip155:1337"] // Ganache
         break
       }
       case "inmemory": {
-        pubsubTopic = "/ceramic/inmemory"
+        // For inmemory only we allow overriding the pub/sub topic.  This is to enable tests
+        // within the same process to be able to talk to each other by using a fixed topic.
+        if (config.pubsubTopic) {
+          pubsubTopic = config.pubsubTopic
+        } else {
+          const rand = randomUint32()
+          pubsubTopic = "/ceramic/inmemory-" + rand
+        }
         networkChains = ["inmemory:12345"] // Our fake in-memory anchor service chainId
         break
       }
@@ -180,7 +200,7 @@ class Ceramic implements CeramicApi {
     if (usableChains.length === 0) {
       throw new Error("No usable chainId for anchoring was found.  The ceramic network '" + networkName
           + "' supports the chains: ['" + networkChains.join("', '")
-          + "'], but the configured anchor service '" + anchorServiceURL
+          + "'], but the configured anchor service '" + (config.anchorServiceURL ?? "inmemory")
           + "' only supports the chains: ['" + anchorServiceChains.join("', '") + "']")
     }
 
@@ -212,7 +232,7 @@ class Ceramic implements CeramicApi {
       anchorService,
     }
 
-    const networkOptions = await Ceramic._generateNetworkOptions(config.networkName || "inmemory", anchorService, config.anchorServiceUrl || "inmemory")
+    const networkOptions = await Ceramic._generateNetworkOptions(config, anchorService)
 
     const dispatcher = new Dispatcher(ipfs, networkOptions.pubsubTopic)
     await dispatcher.init()

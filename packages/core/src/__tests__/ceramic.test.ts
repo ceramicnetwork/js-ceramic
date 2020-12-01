@@ -43,6 +43,7 @@ const createCeramic = async (ipfs: IpfsApi, anchorOnRequest = false): Promise<Ce
   const ceramic = await Ceramic.create(ipfs, {
     stateStorePath: await tmp.tmpName(),
     anchorOnRequest,
+    pubsubTopic: "/ceramic/inmemory/test" // necessary so Ceramic instances can talk to each other
   })
   const provider = new Ed25519Provider(seed)
   await ceramic.setDIDProvider(provider)
@@ -212,21 +213,9 @@ describe('Ceramic integration', () => {
     await ipfs1.swarm.connect(multaddr2)
     await ipfs2.swarm.connect(multaddr3)
 
-    const provider = new Ed25519Provider(seed)
-    const ceramic1 = await Ceramic.create(ipfs1, {
-      stateStorePath: await tmp.tmpName()
-    })
-    await ceramic1.setDIDProvider(provider)
-
-    const ceramic2 = await Ceramic.create(ipfs2, {
-      stateStorePath: await tmp.tmpName()
-    })
-    await ceramic2.setDIDProvider(provider)
-
-    const ceramic3 = await Ceramic.create(ipfs3, {
-      stateStorePath: await tmp.tmpName()
-    })
-    await ceramic3.setDIDProvider(provider)
+    const ceramic1 = await createCeramic(ipfs1)
+    const ceramic2 = await createCeramic(ipfs2)
+    const ceramic3 = await createCeramic(ipfs3)
 
     const controller = ceramic1.did.id
 
@@ -242,7 +231,7 @@ describe('Ceramic integration', () => {
 
     // Through a different ceramic instance create a new document with the same contents that will
     // therefore resolve to the same genesis record and thus the same docId.  Make sure the new
-    // Document object can see the updates made to the first Document object since they respresent
+    // Document object can see the updates made to the first Document object since they represent
     // the same Document in the network.
     const doctype3 = await ceramic3.createDocument<TileDoctype>(DOCTYPE_TILE, {
       content: { test: 321 },
