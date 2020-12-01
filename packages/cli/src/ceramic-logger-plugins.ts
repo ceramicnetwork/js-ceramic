@@ -11,20 +11,33 @@ import {
 
 const fsPromises = fs.promises
 
+interface LogToFilesState {
+    blockedFiles: BlockedFiles
+}
+
+interface BlockedFiles {
+    [filePath: string]: boolean
+}
+
 /**
  * Plugin for the root logger from the `loglevel` library to write logs to files
  */
 export class LogToFiles {
-    private blockedFiles: { [filePath: string]: boolean }
     private static MINUTES_TO_EXPIRATION = 60
 
     /**
      * Modifies `rootLogger` to append log messages to files
      * @param rootLogger Root logger to use throughout the library
+     * @param pluginState Shared state used by this plugin
      * @param { null } loggerOptions Not used by this plugin so should be null
      * @param pluginOptions Should include `logPath` string to be used a directory to write files to
      */
-    public main (rootLogger: Logger, loggerOptions: LoggerOptions, pluginOptions: LoggerPluginOptions): void {
+    public static main (
+        rootLogger: Logger,
+        pluginState: LogToFilesState,
+        loggerOptions: LoggerOptions,
+        pluginOptions: LoggerPluginOptions
+    ): void {
         const originalFactory = rootLogger.methodFactory;
         let basePath = pluginOptions.logPath
         if ((basePath === undefined) || (basePath === '')) {
@@ -44,8 +57,8 @@ export class LogToFiles {
                         const filePrefix = basePath + loggerName.toLowerCase()
                         const filePath = `${filePrefix}.log`
 
-                        await this._writeFile(filePath, message, 'a')
-                        await this._writeDocId(filePrefix, message)
+                        await LogToFiles._writeFile(pluginState.blockedFiles, filePath, message, 'a')
+                        await LogToFiles._writeDocId(pluginState.blockedFiles, filePrefix, message)
                     }
                 })
                 rawMethod(...args)
@@ -62,13 +75,18 @@ export class LogToFiles {
    * @param message Message to write to `filePath`
    * @param writeFlag Specifies writing method (e.g. "a" for append, "w" for overwrite)
    */
-    private async _writeFile (filePath: string, message: string, writeFlag: string): Promise<void> {
-        if (this.blockedFiles[filePath]) {
+    private static async _writeFile (
+        blockedFiles: BlockedFiles,
+        filePath: string,
+        message: string,
+        writeFlag: string
+    ): Promise<void> {
+        if (blockedFiles[filePath]) {
             console.warn(`Stream busy for ${filePath}. Some logs may be dropped.`)
             return
         }
 
-        this.blockedFiles[filePath] = true
+        blockedFiles[filePath] = true
 
         const fileExpired = await LogToFiles._isExpired(filePath)
         fileExpired && await LogToFiles._rotate(filePath)
@@ -79,14 +97,14 @@ export class LogToFiles {
             return
         })
         stream.on('drain', () => {
-            this.blockedFiles[filePath] = false
+            blockedFiles[filePath] = false
             return
         })
         stream.on('finish', () => {
-            this.blockedFiles[filePath] = false
+            blockedFiles[filePath] = false
             return
         })
-        this.blockedFiles[filePath] = !stream.write(util.format(message) + '\n', () => {
+        blockedFiles[filePath] = !stream.write(util.format(message) + '\n', () => {
             stream.end()
             return
         })
@@ -98,7 +116,7 @@ export class LogToFiles {
      * @param filePrefix Prefix of file name to write to
      * @param message Message to write to `filePath`
      */
-    private async _writeDocId (filePrefix: string, message: string): Promise<void> {
+    private static async _writeDocId (blockedFiles: BlockedFiles, filePrefix: string, message: string): Promise<void> {
         const lookup = '/ceramic/'
         const docIdIndex = message.indexOf(lookup)
 
@@ -109,7 +127,7 @@ export class LogToFiles {
             if (match !== null) {
                 const docId = match[0]
                 const filePath = filePrefix + '-docids.log'
-                this._writeFile(filePath, docId, 'w')
+                LogToFiles._writeFile(blockedFiles, filePath, docId, 'w')
             }
         }
     }
