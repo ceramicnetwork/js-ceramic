@@ -137,9 +137,10 @@ class CeramicDaemon {
     }
 
     if (opts.logToFiles) {
+        const fileLogger = new LogToFiles()
         ceramicConfig.logToFiles = opts.logToFiles
         ceramicConfig.logToFilesPlugin = {
-            plugin: LogToFiles.main,
+            plugin: fileLogger.main,
             options: {logPath: opts.logPath}
         }
     }

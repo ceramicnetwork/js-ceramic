@@ -15,15 +15,16 @@ const fsPromises = fs.promises
  * Plugin for the root logger from the `loglevel` library to write logs to files
  */
 export class LogToFiles {
+    private blockedFiles: { [filePath: string]: boolean }
     private static MINUTES_TO_EXPIRATION = 60
 
     /**
      * Modifies `rootLogger` to append log messages to files
      * @param rootLogger Root logger to use throughout the library
-     * @param loggerOptions Not used by this plugin so should be null
+     * @param { null } loggerOptions Not used by this plugin so should be null
      * @param pluginOptions Should include `logPath` string to be used a directory to write files to
      */
-    public static main (rootLogger: Logger, loggerOptions: LoggerOptions, pluginOptions: LoggerPluginOptions): void {
+    public main (rootLogger: Logger, loggerOptions: LoggerOptions, pluginOptions: LoggerPluginOptions): void {
         const originalFactory = rootLogger.methodFactory;
         let basePath = pluginOptions.logPath
         if ((basePath === undefined) || (basePath === '')) {
@@ -43,8 +44,8 @@ export class LogToFiles {
                         const filePrefix = basePath + loggerName.toLowerCase()
                         const filePath = `${filePrefix}.log`
 
-                        await LogToFiles._writeFile(filePath, message, 'a')
-                        await LogToFiles._writeDocId(filePrefix, message)
+                        await this._writeFile(filePath, message, 'a')
+                        await this._writeDocId(filePrefix, message)
                     }
                 })
                 rawMethod(...args)
@@ -54,19 +55,41 @@ export class LogToFiles {
     }
 
     /**
-     * Writes `message` to a file
-     * @param filePath Full path of file to write to
-     * @param message Message to write to `filePath`
-     * @param writeFlag Specifies writing method (e.g. "a" for append, "w" for overwrite)
-     */
-    private static async _writeFile (filePath: string, message: string, writeFlag: string): Promise<void> {
+   * Writes `message` to a file
+   * @notice If the file is currently being written to by an open stream or if
+   * its buffer is full, the call to this method will return without writing
+   * @param filePath Full path of file to write to
+   * @param message Message to write to `filePath`
+   * @param writeFlag Specifies writing method (e.g. "a" for append, "w" for overwrite)
+   */
+    private async _writeFile (filePath: string, message: string, writeFlag: string): Promise<void> {
+        if (this.blockedFiles[filePath]) {
+            console.warn(`Stream busy for ${filePath}. Some logs may be dropped.`)
+            return
+        }
+
+        this.blockedFiles[filePath] = true
+
         const fileExpired = await LogToFiles._isExpired(filePath)
         fileExpired && await LogToFiles._rotate(filePath)
-        await fsPromises.writeFile(
-            filePath,
-            util.format(message) + '\n',
-            { flag: writeFlag }
-        )
+
+        const stream = fs.createWriteStream(filePath, { flags: writeFlag })
+        stream.on('error', (err) => {
+            console.warn(err)
+            return
+        })
+        stream.on('drain', () => {
+            this.blockedFiles[filePath] = false
+            return
+        })
+        stream.on('finish', () => {
+            this.blockedFiles[filePath] = false
+            return
+        })
+        this.blockedFiles[filePath] = !stream.write(util.format(message) + '\n', () => {
+            stream.end()
+            return
+        })
     }
 
     /**
@@ -75,7 +98,7 @@ export class LogToFiles {
      * @param filePrefix Prefix of file name to write to
      * @param message Message to write to `filePath`
      */
-    private static async _writeDocId (filePrefix: string, message: string): Promise<void> {
+    private async _writeDocId (filePrefix: string, message: string): Promise<void> {
         const lookup = '/ceramic/'
         const docIdIndex = message.indexOf(lookup)
 
@@ -86,7 +109,7 @@ export class LogToFiles {
             if (match !== null) {
                 const docId = match[0]
                 const filePath = filePrefix + '-docids.log'
-                LogToFiles._writeFile(filePath, docId, 'w')
+                this._writeFile(filePath, docId, 'w')
             }
         }
     }
@@ -116,7 +139,7 @@ export class LogToFiles {
      */
     private static async _rotate (filePath: string): Promise<void> {
         try {
-          await fsPromises.rename(filePath, `${filePath}.old`)
+            await fsPromises.rename(filePath, `${filePath}.old`)
         } catch (err) {
             console.warn('WARNING: Log file rotation failed for', filePath, err)
         }
