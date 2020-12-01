@@ -54,8 +54,6 @@ describe('Ceramic interop: core <> http-client', () => {
 
     const DOCTYPE_TILE = 'tile'
 
-    const topic = 'ceramic_daemon_test'
-
     beforeAll(async () => {
         tmpFolder = await tmp.dir({ unsafeCleanup: true })
         ipfs = await createIPFS({
@@ -77,7 +75,7 @@ describe('Ceramic interop: core <> http-client', () => {
         // performed yet by the time the test checks.  To eliminate this race condition we should set
         // anchorOnRequest to false in the config for the InMemoryAnchorService and anchor manually
         // throughout the tests.
-        core = await Ceramic.create(ipfs, { topic })
+        core = await Ceramic.create(ipfs)
 
         const doctypeHandler = new TileDoctypeHandler()
         doctypeHandler.verifyJWS = (): Promise<void> => { return }

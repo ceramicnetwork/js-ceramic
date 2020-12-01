@@ -43,7 +43,7 @@ describe('Dispatcher', () => {
     ipfs.pubsub.unsubscribe.mockClear()
     ipfs.pubsub.publish.mockClear()
 
-    dispatcher = new Dispatcher(ipfs)
+    dispatcher = new Dispatcher(ipfs, TOPIC)
     await dispatcher.init()
   })
 

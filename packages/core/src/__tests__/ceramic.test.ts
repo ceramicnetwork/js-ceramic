@@ -35,10 +35,13 @@ const expectEqualStates = (state1: DocState, state2: DocState): void => {
   expect(DoctypeUtils.serializeState(state1)).toEqual(DoctypeUtils.serializeState(state2))
 }
 
-const createCeramic = async (ipfs: IpfsApi, topic: string, anchorOnRequest = false): Promise<Ceramic> => {
+async function delay(mills: number): Promise<void> {
+  await new Promise(resolve => setTimeout(() => resolve(), mills))
+}
+
+const createCeramic = async (ipfs: IpfsApi, anchorOnRequest = false): Promise<Ceramic> => {
   const ceramic = await Ceramic.create(ipfs, {
     stateStorePath: await tmp.tmpName(),
-    topic,
     anchorOnRequest,
   })
   const provider = new Ed25519Provider(seed)
@@ -81,8 +84,6 @@ describe('Ceramic integration', () => {
   let port2: number;
   let port3: number;
 
-  const topic = '/ceramic_test'
-
   beforeEach(async () => {
     tmpFolder = await tmp.dir({ unsafeCleanup: true })
 
@@ -122,11 +123,42 @@ describe('Ceramic integration', () => {
     await tmpFolder.cleanup()
   })
 
+  it('can create Ceramic instance on default network', async () => {
+    const stateStorePath = await tmp.tmpName()
+    const ceramic = await Ceramic.create(ipfs1, {stateStorePath})
+    await delay(1000)
+    const supportedChains = await ceramic.getSupportedChains()
+    expect(supportedChains).toEqual(['inmemory:12345'])
+    await ceramic.close()
+  })
+
+  it('can create Ceramic instance explicitly on inmemory network', async () => {
+    const stateStorePath = await tmp.tmpName()
+    const ceramic = await Ceramic.create(ipfs1, { networkName: 'inmemory', stateStorePath })
+    await delay(1000)
+    const supportedChains = await ceramic.getSupportedChains()
+    expect(supportedChains).toEqual(['inmemory:12345'])
+    await ceramic.close()
+  })
+
+  it('cannot create Ceramic instance on network not supported by our anchor service', async () => {
+    const stateStorePath = await tmp.tmpName()
+    await expect(Ceramic.create(ipfs1, { networkName: 'local', stateStorePath })).rejects.toThrow(
+        "No usable chainId for anchoring was found.  The ceramic network 'local' supports the chains: ['eip155:1337'], but the configured anchor service only supports the chains: ['inmemory:12345']")
+    await delay(1000)
+  })
+
+  it('cannot create Ceramic instance on invalid network', async () => {
+    const stateStorePath = await tmp.tmpName()
+    await expect(Ceramic.create(ipfs1, { networkName: 'fakenetwork', stateStorePath })).rejects.toThrow("Unrecognized Ceramic network name: 'fakenetwork'. Supported networks are: 'mainnet', 'testnet-clay', 'local', 'inmemory'")
+    await delay(1000)
+  })
+
   it('can propagate update across two connected nodes', async () => {
     await ipfs2.swarm.connect(multaddr1)
 
-    const ceramic1 = await createCeramic(ipfs1, topic)
-    const ceramic2 = await createCeramic(ipfs2, topic)
+    const ceramic1 = await createCeramic(ipfs1)
+    const ceramic2 = await createCeramic(ipfs2)
     const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { test: 123 } }, { anchor: false, publish: false })
     const doctype2 = await ceramic2.loadDocument(doctype1.id)
     expect(doctype1.content).toEqual(doctype2.content)
@@ -136,8 +168,8 @@ describe('Ceramic integration', () => {
   })
 
   it('won\'t propagate update across two disconnected nodes', async () => {
-    const ceramic1 = await createCeramic(ipfs1, topic)
-    const ceramic2 = await createCeramic(ipfs2, topic)
+    const ceramic1 = await createCeramic(ipfs1)
+    const ceramic2 = await createCeramic(ipfs2)
 
     const controller = ceramic1.context.did.id
 
@@ -160,9 +192,9 @@ describe('Ceramic integration', () => {
     await ipfs1.swarm.connect(multaddr2)
     await ipfs2.swarm.connect(multaddr3)
 
-    const ceramic1 = await createCeramic(ipfs1, topic)
-    const ceramic2 = await createCeramic(ipfs2, topic)
-    const ceramic3 = await createCeramic(ipfs3, topic)
+    const ceramic1 = await createCeramic(ipfs1)
+    const ceramic2 = await createCeramic(ipfs2)
+    const ceramic3 = await createCeramic(ipfs3)
 
     const controller = ceramic1.context.did.id
     // ceramic node 2 shouldn't need to have the document open in order to forward the message
@@ -238,8 +270,8 @@ describe('Ceramic integration', () => {
   })
 
   it('can apply existing records successfully', async () => {
-    const ceramic1 = await createCeramic(ipfs1, topic)
-    const ceramic2 = await createCeramic(ipfs2, 'test')
+    const ceramic1 = await createCeramic(ipfs1)
+    const ceramic2 = await createCeramic(ipfs2)
 
     const controller = ceramic1.context.did.id
 

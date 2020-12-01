@@ -61,8 +61,6 @@ describe('Ceramic API', () => {
 
   const DOCTYPE_TILE = 'tile'
 
-  const topic = '/ceramic_api_test'
-
   const stringMapSchema = {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "StringMap",
@@ -73,7 +71,6 @@ describe('Ceramic API', () => {
   }
 
   const createCeramic = async (c: CeramicConfig = {}): Promise<Ceramic> => {
-    c.topic = topic
     c.anchorOnRequest = false
     const ceramic = await Ceramic.create(ipfs, c)
 
