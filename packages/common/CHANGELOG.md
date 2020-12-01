@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.14.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@0.13.2...@ceramicnetwork/common@0.14.0) (2020-12-01)
+
+
+### Features
+
+* **core:** Remove chainId from document metadata and stop enforcing of chainId when applying records ([#574](https://github.com/ceramicnetwork/js-ceramic/issues/574)) ([955d3f6](https://github.com/ceramicnetwork/js-ceramic/commit/955d3f6bd7348676d096cab8f32d932993690a6e))
+
+
+
+
+
 ## [0.13.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@0.13.1...@ceramicnetwork/common@0.13.2) (2020-11-30)
 
 
