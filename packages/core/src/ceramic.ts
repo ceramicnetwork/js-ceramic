@@ -212,7 +212,7 @@ class Ceramic implements CeramicApi {
       anchorService,
     }
 
-    const networkOptions = await Ceramic._generateNetworkOptions(config.networkName || "inmemory", anchorService, config.anchorServiceUrl)
+    const networkOptions = await Ceramic._generateNetworkOptions(config.networkName || "inmemory", anchorService, config.anchorServiceUrl || "inmemory")
 
     const dispatcher = new Dispatcher(ipfs, networkOptions.pubsubTopic)
     await dispatcher.init()
