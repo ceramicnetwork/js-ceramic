@@ -144,7 +144,7 @@ class Ceramic implements CeramicApi {
     }
   }
 
-  private static async _generateNetworkOptions(networkName: string, anchorService: AnchorService): Promise<CeramicNetworkOptions> {
+  private static async _generateNetworkOptions(networkName: string, anchorService: AnchorService, anchorServiceURL: string): Promise<CeramicNetworkOptions> {
     let pubsubTopic
     let networkChains
     switch (networkName) {
@@ -180,8 +180,8 @@ class Ceramic implements CeramicApi {
     if (usableChains.length === 0) {
       throw new Error("No usable chainId for anchoring was found.  The ceramic network '" + networkName
           + "' supports the chains: ['" + networkChains.join("', '")
-          + "'], but the configured anchor service only supports the chains: ['"
-          + anchorServiceChains.join("', '") + "']")
+          + "'], but the configured anchor service '" + anchorServiceURL
+          + "' only supports the chains: ['" + anchorServiceChains.join("', '") + "']")
     }
 
     return {name: networkName, pubsubTopic, supportedChains: usableChains}
@@ -212,7 +212,7 @@ class Ceramic implements CeramicApi {
       anchorService,
     }
 
-    const networkOptions = await Ceramic._generateNetworkOptions(config.networkName || "inmemory", anchorService)
+    const networkOptions = await Ceramic._generateNetworkOptions(config.networkName || "inmemory", anchorService, config.anchorServiceUrl || "inmemory")
 
     const dispatcher = new Dispatcher(ipfs, networkOptions.pubsubTopic)
     await dispatcher.init()
