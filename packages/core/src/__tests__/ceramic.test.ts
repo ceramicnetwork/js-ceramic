@@ -96,12 +96,17 @@ describe('Ceramic integration', () => {
     }
 
     const findPort = async (start: number, offset: number): Promise<number> => {
-        return await getPort({port: getPort.makeRange(start + 1, start + offset)})
+        return await getPort({port: getPort.makeRange(start, start + offset)})
     }
 
     ([port1, port2, port3] = await Promise.all([p1Start, p2Start, p3Start].map(start => findPort(start, pOffset))));
     ([ipfs1, ipfs2, ipfs3] = await Promise.all([port1, port2, port3].map(port => createIPFS(buildConfig(tmpFolder.path, port)))));
-    ([p1Start, p2Start, p3Start] = [p1Start, p2Start, p3Start].map(start => start + pOffset))
+    ([p1Start, p2Start, p3Start] = [p1Start, p2Start, p3Start].map(start => start + 1))
+
+    // Wait for all IPFS nodes to be fully started up.
+    await ipfs1.config.getAll();
+    await ipfs2.config.getAll();
+    await ipfs3.config.getAll();
 
     multaddr1 = (await ipfs1.id()).addresses[0].toString()
     multaddr2 = (await ipfs2.id()).addresses[0].toString()
@@ -116,9 +121,12 @@ describe('Ceramic integration', () => {
   })
 
   afterEach(async () => {
-    await ipfs1.stop(() => console.log('IPFS1 stopped'))
-    await ipfs2.stop(() => console.log('IPFS2 stopped'))
-    await ipfs3.stop(() => console.log('IPFS3 stopped'))
+    await ipfs1.stop()
+    console.log('IPFS1 stopped')
+    await ipfs2.stop()
+    console.log('IPFS2 stopped')
+    await ipfs3.stop()
+    console.log('IPFS3 stopped')
 
     await tmpFolder.cleanup()
   })
@@ -126,7 +134,6 @@ describe('Ceramic integration', () => {
   it('can create Ceramic instance on default network', async () => {
     const stateStorePath = await tmp.tmpName()
     const ceramic = await Ceramic.create(ipfs1, {stateStorePath})
-    await delay(1000)
     const supportedChains = await ceramic.getSupportedChains()
     expect(supportedChains).toEqual(['inmemory:12345'])
     await ceramic.close()
@@ -135,7 +142,6 @@ describe('Ceramic integration', () => {
   it('can create Ceramic instance explicitly on inmemory network', async () => {
     const stateStorePath = await tmp.tmpName()
     const ceramic = await Ceramic.create(ipfs1, { networkName: 'inmemory', stateStorePath })
-    await delay(1000)
     const supportedChains = await ceramic.getSupportedChains()
     expect(supportedChains).toEqual(['inmemory:12345'])
     await ceramic.close()
@@ -145,13 +151,11 @@ describe('Ceramic integration', () => {
     const stateStorePath = await tmp.tmpName()
     await expect(Ceramic.create(ipfs1, { networkName: 'local', stateStorePath })).rejects.toThrow(
         "No usable chainId for anchoring was found.  The ceramic network 'local' supports the chains: ['eip155:1337'], but the configured anchor service 'inmemory' only supports the chains: ['inmemory:12345']")
-    await delay(1000)
   })
 
   it('cannot create Ceramic instance on invalid network', async () => {
     const stateStorePath = await tmp.tmpName()
     await expect(Ceramic.create(ipfs1, { networkName: 'fakenetwork', stateStorePath })).rejects.toThrow("Unrecognized Ceramic network name: 'fakenetwork'. Supported networks are: 'mainnet', 'testnet-clay', 'local', 'inmemory'")
-    await delay(1000)
   })
 
   it('can propagate update across two connected nodes', async () => {
