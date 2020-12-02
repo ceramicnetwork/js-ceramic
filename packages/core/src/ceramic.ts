@@ -178,7 +178,7 @@ class Ceramic implements CeramicApi {
       }
       case "inmemory": {
         // For inmemory only we allow overriding the pub/sub topic.  This is to enable tests
-        // within the same process to be able to talk to each other by using a fixed topic.
+        // within the same process to be able to talk to each other by using a fixed topic, while making the pub/sub topic random by default
         if (config.pubsubTopic) {
           pubsubTopic = config.pubsubTopic
         } else {
