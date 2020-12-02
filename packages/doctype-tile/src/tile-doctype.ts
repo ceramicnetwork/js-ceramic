@@ -122,7 +122,7 @@ export class TileDoctype extends Doctype {
             newContent = doctype.content
         }
 
-        const patch = jsonpatch.compare(doctype.content, newContent)
+        const patch = jsonpatch.compare(doctype.state.content, newContent)
 
         const willSquash = header.nonce && header.nonce > 0
         const prev = doctype.state.log[doctype.state.log.length - 1 - (willSquash ? 1 : 0)].cid
