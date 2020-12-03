@@ -211,6 +211,13 @@ describe('TileDoctypeHandler', () => {
     expect(record1).toEqual(record2)
   })
 
+  it('creates genesis records without DID if content is undefined', async () => {
+    expect(TileDoctype.makeGenesis({ content: 'asdf', metadata: { controllers: [did.id] } }, {})).rejects.toThrow('No DID authenticated')
+    const record1 = await TileDoctype.makeGenesis({ metadata: { controllers: [did.id] } }, {})
+
+    expect(record1).toBeDefined()
+  })
+
   it('applies genesis record correctly', async () => {
     const tileHandler = new TileDoctypeHandler()
 

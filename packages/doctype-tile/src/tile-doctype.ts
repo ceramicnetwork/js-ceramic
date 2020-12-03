@@ -50,10 +50,6 @@ export class TileDoctype extends Doctype {
      * @param opts - Initialization options
      */
     static async create(params: TileParams, context: Context, opts?: DocOpts): Promise<TileDoctype> {
-        if (context.did == null) {
-            throw new Error('No DID authenticated')
-        }
-
         const { content, metadata } = params
         const record = await TileDoctype.makeGenesis({ content, metadata }, context)
         return context.api.createDocumentFromGenesis<TileDoctype>(DOCTYPE, record, opts)
@@ -65,29 +61,19 @@ export class TileDoctype extends Doctype {
      * @param context - Ceramic context
      */
     static async makeGenesis(params: DocParams, context: Context): Promise<Record<string, any>> {
-        const metadata = params.metadata? params.metadata : { controllers: [] }
+        // If 'deterministic' is undefined, default to creating document uniquely
+        const unique = params.deterministic ? '0' : base64Encode(randomBytes(12))
 
-        // check for DID and authentication
-        if (!context.did || !context.did.authenticated) {
-            throw new Error('No DID authenticated')
+        const metadata = params.metadata ? params.metadata : { controllers: [] }
+        if (metadata.controllers.length === 0) {
+            if (params.content && context.did) {
+                metadata.controllers = [context.did.id]
+            } else {
+                throw new Error('No controllers specified')
+            }
         }
-
-        let unique: string
-        if (params.deterministic) {
-            unique = '0'
-        } else {
-            // If 'deterministic' is undefined, default to creating document uniquely
-            unique = base64Encode(randomBytes(12))
-        }
-
-        const { controllers } = metadata
-        if (!controllers || controllers.length === 0) {
-            metadata.controllers = [context.did.id]
-        }
-
-        const { content } = params
-        const record = { data: content, header: metadata, unique }
-        return content ? TileDoctype._signDagJWS(record, context.did, metadata.controllers[0]) : record
+        const record = { data: params.content, header: metadata, unique }
+        return params.content ? TileDoctype._signDagJWS(record, context.did, metadata.controllers[0]) : record
     }
 
     /**
@@ -100,10 +86,6 @@ export class TileDoctype extends Doctype {
      * @private
      */
     static async _makeRecord(doctype: Doctype, did: DID, newContent: any, newControllers?: string[], schema?: string): Promise<any> {
-        if (did == null || !did.authenticated) {
-            throw new Error('No DID authenticated')
-        }
-
         const header: Record<string, any> = {}
         if (schema) {
             header.schema = schema
@@ -151,8 +133,9 @@ export class TileDoctype extends Doctype {
      * @private
      */
     static async _signDagJWS(record: any, did: DID, controller: string): Promise<any> {
+        // check for DID and authentication
         if (did == null || !did.authenticated) {
-            throw new Error('No user authenticated')
+            throw new Error('No DID authenticated')
         }
         return did.createDagJWS(record, { did: controller })
     }
