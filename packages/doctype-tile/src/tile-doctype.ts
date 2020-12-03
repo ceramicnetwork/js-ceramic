@@ -65,9 +65,9 @@ export class TileDoctype extends Doctype {
         const unique = params.deterministic ? '0' : base64Encode(randomBytes(12))
 
         const metadata = params.metadata ? params.metadata : { controllers: [] }
-        if (!metadata.controllers || metadata.controllers.length === 0) {
-            if (params.content) {
-                metadata.controllers = [context.did?.id]
+        if (metadata.controllers.length === 0) {
+            if (params.content && content.did) {
+                metadata.controllers = [context.did.id]
             } else {
                 throw new Error('No controllers specified')
             }
