@@ -9,7 +9,7 @@ import KeyDidResolver from '@ceramicnetwork/key-did-resolver'
 import { TileDoctypeHandler } from '../tile-doctype-handler'
 
 import { TileDoctype } from "../tile-doctype"
-import { Context } from "@ceramicnetwork/common"
+import { Context, DoctypeUtils  } from "@ceramicnetwork/common"
 
 jest.mock('did-jwt', () => ({
   // TODO - We should test for when this function throws as well
@@ -272,6 +272,41 @@ describe('TileDoctypeHandler', () => {
     // apply signed
     state = await tileDoctypeHandler.applyRecord(signedRecord.jws, FAKE_CID_2, context, state)
     expect(state).toMatchSnapshot()
+  })
+
+  it.only('squashes record correctly', async () => {
+    const deepCopy = o => DoctypeUtils.deserializeState(DoctypeUtils.serializeState(o))
+    const tileDoctypeHandler = new TileDoctypeHandler()
+
+    const genesisRecord = await TileDoctype.makeGenesis({ content: { test: 'data' }, metadata: { controllers: [did.id] } }, context)
+    await context.ipfs.dag.put(genesisRecord, FAKE_CID_1)
+    const payload = dagCBOR.util.deserialize(genesisRecord.linkedBlock)
+    await context.ipfs.dag.put(payload, genesisRecord.jws.link)
+    // apply genesis
+    const genesisState = await tileDoctypeHandler.applyRecord(genesisRecord.jws, FAKE_CID_1, context)
+
+    // make a first update
+    let doctype = new TileDoctype(genesisState, context)
+    const signedRecord1 = await TileDoctype._makeRecord(doctype, did, { other: { obj: 'content' } })
+
+    await context.ipfs.dag.put(signedRecord1, FAKE_CID_2)
+    const sPayload1 = dagCBOR.util.deserialize(signedRecord1.linkedBlock)
+    await context.ipfs.dag.put(sPayload1, signedRecord1.jws.link)
+    // apply signed
+    const state1 = await tileDoctypeHandler.applyRecord(signedRecord1.jws, FAKE_CID_2, context, deepCopy(genesisState))
+
+    // make a second update that squashes the first
+    doctype = new TileDoctype(state1, context)
+    const signedRecord2 = await TileDoctype._makeRecord(doctype, did, { other: { obj2: 'fefe' } })
+
+    await context.ipfs.dag.put(signedRecord2, FAKE_CID_3)
+    const sPayload2 = dagCBOR.util.deserialize(signedRecord2.linkedBlock)
+    await context.ipfs.dag.put(sPayload2, signedRecord2.jws.link)
+
+    // apply signed
+    const state2 = await tileDoctypeHandler.applyRecord(signedRecord2.jws, FAKE_CID_3, context, deepCopy(genesisState))
+
+    expect(state2).toMatchSnapshot()
   })
 
   it('throws error if record signed by wrong DID', async () => {
