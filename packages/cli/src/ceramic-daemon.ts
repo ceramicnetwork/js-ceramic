@@ -1,7 +1,7 @@
 import express, { Request, Response, NextFunction } from 'express'
 import Ceramic from '@ceramicnetwork/core'
-import type { CeramicConfig } from "@ceramicnetwork/core"
-import { DoctypeUtils, RootLogger, Logger, IpfsApi } from "@ceramicnetwork/common"
+import type { CeramicConfig} from "@ceramicnetwork/core"
+import { DoctypeUtils, RootLogger, Logger, IpfsApi, Doctype  } from "@ceramicnetwork/common"
 import { LogToFiles } from "./ceramic-logger-plugins"
 import DocID from "@ceramicnetwork/docid"
 import cors from 'cors'
@@ -37,6 +37,15 @@ export interface CreateOpts {
 interface HttpLog {
   request: Record<string, unknown>;
   response?: Record<string, unknown>;
+}
+
+interface MultiQuery {
+  docid: string
+  paths?: Array<string>
+}
+
+interface StatesQuery {
+  queries: Array<MultiQuery>
 }
 
 /**
@@ -147,6 +156,7 @@ class CeramicDaemon {
   registerAPIPaths (app: core.Express, gateway: boolean): void {
     app.get(toApiPath('/records/:docid'), this.records.bind(this))
     app.post(toApiPath('/documents'), this.createDocFromGenesis.bind(this))
+    app.post(toApiPath('/states'), this.multiQuery.bind(this))
     app.get(toApiPath('/documents/:docid'), this.state.bind(this))
     app.get(toApiPath('/pins/:docid'), this.listPinned.bind(this))
     app.get(toApiPath('/pins'), this.listPinned.bind(this))
@@ -254,6 +264,43 @@ class CeramicDaemon {
     try {
       const doctype = await this.ceramic.applyRecord(docId, DoctypeUtils.deserializeRecord(record), docOpts)
       res.json({ docId: doctype.id.toString(), state: DoctypeUtils.serializeState(doctype.state) })
+    } catch (e) {
+      return next(e)
+    }
+    next()
+  }
+
+  /**
+   * Load multiple documents and paths using a multiquery
+   */
+  async multiQuery (req: Request, res: Response, next: NextFunction): Promise<void> {
+    const { queries } = <StatesQuery> req.body
+    try {
+
+      const promiseList = queries.map(query => {
+        try {
+          const docId = DocID.fromString(query.docid)
+          return this.ceramic.loadLinkedDocuments(docId, query.paths)
+        } catch (e) {
+          return Promise.resolve({})
+        }
+      })
+
+      const results = await Promise.all(promiseList)
+
+      const serializeDocMap = (map: Record<string, Doctype>) => {
+        return Object.entries(map).reduce((acc, e) => {
+          const [k, v] = e
+          acc[k] = DoctypeUtils.serializeState(v.state)
+          return acc
+        }, {})
+      }
+
+      const response = results.reduce((acc, result) => {
+        return { ...acc, ...serializeDocMap(result)}
+      }, {})
+
+      res.json(response)
     } catch (e) {
       return next(e)
     }
