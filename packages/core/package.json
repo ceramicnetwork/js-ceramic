@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/core",
-  "version": "0.15.0",
+  "version": "0.16.0",
   "description": "Typescript implementation of the Ceramic protocol",
   "keywords": [
     "Ceramic",
@@ -32,7 +32,7 @@
     "@ceramicnetwork/common": "^0.14.0",
     "@ceramicnetwork/docid": "^0.3.0",
     "@ceramicnetwork/doctype-caip10-link": "^0.12.0",
-    "@ceramicnetwork/doctype-tile": "^0.12.0",
+    "@ceramicnetwork/doctype-tile": "^0.12.1",
     "@ceramicnetwork/key-did-resolver": "^0.2.0",
     "@ceramicnetwork/pinning-aggregation": "^0.1.3",
     "@ceramicnetwork/pinning-ipfs-backend": "^0.1.3",

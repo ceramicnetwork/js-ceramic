@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.16.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@0.15.0...@ceramicnetwork/core@0.16.0) (2020-12-03)
+
+
+### Features
+
+* **core:** Add default anchor service for 'testnet-clay' ([#580](https://github.com/ceramicnetwork/js-ceramic/issues/580)) ([650bf04](https://github.com/ceramicnetwork/js-ceramic/commit/650bf0413d9506c223b2148db46cf6ce7b4c25eb))
+* **core:** Use randomized pub/sub topic for 'local' and 'inmemory' networks ([#583](https://github.com/ceramicnetwork/js-ceramic/issues/583)) ([ed31106](https://github.com/ceramicnetwork/js-ceramic/commit/ed31106ec40f3a4487d66342784b92704a50d825))
+
+
+
+
+
 # [0.15.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@0.14.2...@ceramicnetwork/core@0.15.0) (2020-12-01)
 
 

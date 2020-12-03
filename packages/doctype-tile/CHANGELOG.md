@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.12.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/doctype-tile@0.12.0...@ceramicnetwork/doctype-tile@0.12.1) (2020-12-03)
+
+
+### Bug Fixes
+
+* **doctype-tile:** bug in squashing logic was mitigated ([#587](https://github.com/ceramicnetwork/js-ceramic/issues/587)) ([f8c1e77](https://github.com/ceramicnetwork/js-ceramic/commit/f8c1e77928bca8064a60864c15ab95f881e5acf4))
+* **doctype-tile:** don't require auth when creating empty genesis records ([#588](https://github.com/ceramicnetwork/js-ceramic/issues/588)) ([b9745fa](https://github.com/ceramicnetwork/js-ceramic/commit/b9745fac3c9abd0b4e577f4e956966d2446c68a0))
+
+
+
+
+
 # [0.12.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/doctype-tile@0.11.3...@ceramicnetwork/doctype-tile@0.12.0) (2020-12-01)
 
 
