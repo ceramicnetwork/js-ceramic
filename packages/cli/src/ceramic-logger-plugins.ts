@@ -29,6 +29,7 @@ interface WriteResult {
  */
 export class LogToFiles {
     private static MINUTES_TO_EXPIRATION = 60
+    private static MAX_FILE_BYTES = 10000000 // 10 MB
 
     /**
      * Modifies `rootLogger` to append log messages to files
@@ -156,8 +157,7 @@ export class LogToFiles {
 
         blockedFiles[filePath] = true
 
-        const fileExpired = await LogToFiles._isExpired(filePath)
-        fileExpired && await LogToFiles._rotate(filePath)
+        await LogToFiles._shouldRotate(filePath) && await LogToFiles._rotate(filePath)
 
         const stream = fs.createWriteStream(filePath, { flags: writeFlag })
         stream.on('error', (err) => {
@@ -180,22 +180,58 @@ export class LogToFiles {
     }
 
     /**
-     * Returns true if it has been `MINUTES_TO_EXPIRATION` minutes since the file was created
-     * @notice Returns false if file is not found.
-     * Returns true if unable to get file creation datetime for some other reason.
+     * Returns true if the file should be rotated, false otherwise
      * @param filePath Full path of file
-     * @returns If the file is expired
+     * @returns If the file should be rotated
      */
-    private static async _isExpired (filePath: string): Promise<boolean> {
+    private static async _shouldRotate (filePath: string): Promise<boolean> {
+        let fileStats
+
         try {
-            const { birthtime } = await fsPromises.stat(filePath)
-            const minutesSinceBirth = (Date.now() - birthtime.getTime()) / (1000 * 60)
-            return minutesSinceBirth >= LogToFiles.MINUTES_TO_EXPIRATION
+            fileStats = await fsPromises.stat(filePath)
         } catch (err) {
-            if (err.code == 'ENOENT') return false
-            else console.error(err)
+            if (err.code == 'ENOENT') { // File not found
+                return false
+            }
+            console.error(err)
             return true
         }
+
+        if (!fileStats) {
+            return true
+        } else if (LogToFiles._isExpired(fileStats)) {
+            return true
+        } else if (LogToFiles._isMaxSize(fileStats)) {
+            return true
+        }
+
+        return false
+    }
+
+    /**
+     * Returns true if it has been `MINUTES_TO_EXPIRATION` minutes since the file was created
+     * @notice Returns false if unable to get file creation datetime
+     * @param fileStats `fs.Stats` of file
+     * @returns If the file is expired
+     */
+    private static async _isExpired (fileStats: fs.Stats): Promise<boolean> {
+        const { birthtime } = fileStats
+        if (birthtime.getTime() == 0) {
+            console.warn('WARNING: Unable to retrieve file birthtime')
+            return false // Inconclusive
+        }
+        const minutesSinceBirth = (Date.now() - birthtime.getTime()) / (1000 * 60)
+        return minutesSinceBirth >= LogToFiles.MINUTES_TO_EXPIRATION
+    }
+
+    /**
+     * Returns true if file size is >= `MAX_FILE_BYTES`
+     * @param fileStats `fs.Stats` of file
+     * @returns If the file is at max size
+     */
+    private static async _isMaxSize (fileStats: fs.Stats): Promise<boolean> {
+        const { size } = fileStats
+        return size >= LogToFiles.MAX_FILE_BYTES
     }
 
     /**
