@@ -274,7 +274,7 @@ describe('TileDoctypeHandler', () => {
     expect(state).toMatchSnapshot()
   })
 
-  it.only('squashes record correctly', async () => {
+  it('squashes record correctly', async () => {
     const deepCopy = o => DoctypeUtils.deserializeState(DoctypeUtils.serializeState(o))
     const tileDoctypeHandler = new TileDoctypeHandler()
 
