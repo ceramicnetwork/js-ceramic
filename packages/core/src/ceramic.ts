@@ -22,10 +22,12 @@ import { TileDoctypeHandler } from "@ceramicnetwork/doctype-tile"
 import { Caip10LinkDoctypeHandler } from "@ceramicnetwork/doctype-caip10-link"
 import { PinStoreFactory } from "./store/pin-store-factory";
 import { PinStore } from "./store/pin-store";
+import { PathTrie, TrieNode } from './utils'
 
 import EthereumAnchorService from "./anchor/ethereum/ethereum-anchor-service"
 import InMemoryAnchorService from "./anchor/memory/in-memory-anchor-service"
-import { PinningBackendStatic } from "@ceramicnetwork/common";
+import { PinningBackendStatic } from "@ceramicnetwork/common"
+
 
 import { randomUint32 } from '@stablelib/random'
 
@@ -71,6 +73,14 @@ const DEFAULT_NETWORK = 'inmemory'
 
 const normalizeDocID = (docId: DocID | string): DocID => {
   return (typeof docId === 'string') ? DocID.fromString(docId) : docId
+}
+
+const tryDocId = (id: string): DocID | null => {
+  try {
+    return DocID.fromString(id)
+  } catch(e) { 
+    return null
+  }
 }
 
 /**
@@ -388,7 +398,7 @@ class Ceramic implements CeramicApi {
   }
 
   /**
-   * Load document type instance
+   * Load document type instance 
    * @param docId - Document ID
    * @param opts - Initialization options
    */
@@ -396,6 +406,38 @@ class Ceramic implements CeramicApi {
     docId = normalizeDocID(docId)
     const doc = await this._loadDoc(docId.baseID, opts)
     return (docId.version? await doc.loadVersion<T>(docId.version) : doc.doctype) as T
+  }
+
+
+// TODO DocOpts?
+  /**
+   * Load all document type instance for given paths
+   * @param docId - Document ID (root)
+   * @param paths - relative paths to documents to load
+   */
+  async loadLinkedDocuments(id: DocID, paths: string[]): Promise<Record<string, Doctype>> {
+    const pathTrie = new PathTrie()
+    paths.forEach(path => pathTrie.add(path))
+
+    const index = {}
+
+    const walkNext = async (node: TrieNode, docId: DocID) => {
+      //TODO  eroror handling/timeout, this shouldnt block other docs returning 
+      const doc = await this.loadDocument(docId)
+      index[docId.toString()] = doc
+      
+      const promiseList = Object.keys(node.children).map(key => {
+        const keyDocId = doc.content[key] ? tryDocId(doc.content[key]) : null
+        if (keyDocId) return walkNext(node.children[key], keyDocId)
+        return Promise.resolve()
+      })
+
+      await Promise.all(promiseList)
+    }
+
+    await walkNext(pathTrie.root, id)
+
+    return index
   }
 
   /**
