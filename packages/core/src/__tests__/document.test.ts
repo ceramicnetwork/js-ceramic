@@ -279,7 +279,7 @@ describe('Document', () => {
 
       // try to checkout non-existing version
       try {
-        await Document.loadVersion(doc, new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu'))
+        await doc.loadVersion(new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu'))
         throw new Error('Should not be able to fetch non-existing version')
       } catch (e) {
         expect(e.message).toContain('No record found for version')
@@ -287,13 +287,13 @@ describe('Document', () => {
 
       // try to checkout not anchored version
       try {
-        await Document.loadVersion(doc, doc.doctype.state.log[2].cid)
+        await doc.loadVersion(doc.doctype.state.log[2].cid)
         throw new Error('Should not be able to fetch not anchored version')
       } catch (e) {
         expect(e.message).toContain('No anchor record for version')
       }
 
-      const docV1 = await Document.loadVersion(doc, doc.doctype.state.log[1].cid)
+      const docV1 = await doc.loadVersion(doc.doctype.state.log[1].cid)
       expect(docV1.state.log.length).toEqual(2)
       expect(docV1.controllers).toEqual(controllers)
       expect(docV1.content).toEqual(initialContent)

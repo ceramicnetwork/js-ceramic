@@ -151,7 +151,7 @@ class Document extends EventEmitter {
    * @param version - Document version
    */
   async loadVersion<T extends Doctype>(version: CID): Promise<T> {
-    const doc = await Document.loadVersion<T>(this, version, this._validate)
+    const doc = await Document.loadVersion<T>(this.id, version, this._doctypeHandler as DoctypeHandler<T>, this.dispatcher, this.pinStore, this._context, this._validate)
     return doc.doctype as T
   }
 
@@ -164,10 +164,17 @@ class Document extends EventEmitter {
    */
   //TODO take a docid not a document
   // TODO maybe change name (add underscore) and make private
-  static async loadVersion<T extends Doctype>(doc: Document, version: CID, validate = true): Promise<Document> {
-    const { _context: context, dispatcher, pinStore, _doctypeHandler: doctypeHandler } = doc
+  static async loadVersion<T extends Doctype>(
+      id: DocID,
+      version: CID,
+      handler: DoctypeHandler<T>,
+      dispatcher: Dispatcher,
+      pinStore: PinStore,
+      context: Context,
+      validate = true): Promise<Document> {
 
-    const isGenesis = version.equals(doc._genesisCid)
+    const genesisCid = id.cid
+    const isGenesis = version.equals(genesisCid)
 
     if (!isGenesis) {
       const versionRecord = await dispatcher.retrieveRecord(version)
@@ -181,12 +188,12 @@ class Document extends EventEmitter {
       }
     }
 
-    const docid = DocID.fromBytes(doc.id.bytes, version)
-    const doctype = new doctypeHandler.doctype(null, context)
-    const document = new Document(docid, dispatcher, pinStore, validate, context, doctypeHandler, doctype)
+    const docid = DocID.fromBytes(id.bytes, version)
+    const doctype = new handler.doctype(null, context)
+    const document = new Document(docid, dispatcher, pinStore, validate, context, handler, doctype)
 
-    const genesisRecord = await document.dispatcher.retrieveRecord(doc._genesisCid)
-    document._doctype.state = await doc._doctypeHandler.applyRecord(genesisRecord, doc._genesisCid, context)
+    const genesisRecord = await document.dispatcher.retrieveRecord(genesisCid)
+    document._doctype.state = await handler.applyRecord(genesisRecord, genesisCid, context)
 
     if (!isGenesis) {
       await document._handleTip(version) // sync version
