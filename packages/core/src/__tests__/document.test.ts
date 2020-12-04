@@ -412,7 +412,7 @@ describe('Document', () => {
 
       try {
         await Document.load(doc.id, doctypeHandler, dispatcher, pinStore, context, { sync: false })
-        throw new Error('Should not be able to assign a schema to a document that does not conform')
+        throw new Error("Should not be able to load a document (using Document.load) that doesn't conform to its schema")
       } catch (e) {
         expect(e.message).toEqual('Validation Error: data[\'stuff\'] should be string')
       }
@@ -420,7 +420,7 @@ describe('Document', () => {
       try {
         const version = doc.state.log[doc.state.log.length - 1].cid
         await Document.loadVersion(doc.id, version, doctypeHandler, dispatcher, pinStore, context)
-        throw new Error('Should not be able to assign a schema to a document that does not conform')
+        throw new Error("Should not be able to load a document (using Document.loadVersion) that doesn't conform to its schema")
       } catch (e) {
         expect(e.message).toEqual('Validation Error: data[\'stuff\'] should be string')
       }
