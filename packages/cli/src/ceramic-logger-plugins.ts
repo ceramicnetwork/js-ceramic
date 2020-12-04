@@ -15,7 +15,7 @@ interface LogToFilesState {
     blockedFiles: BlockedFiles
 }
 
-interface BlockedFiles {
+export interface BlockedFiles {
     [filePath: string]: boolean
 }
 
