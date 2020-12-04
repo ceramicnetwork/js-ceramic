@@ -151,7 +151,7 @@ class Document extends EventEmitter {
    * @param version - Document version
    */
   async loadVersion<T extends Doctype>(version: CID): Promise<T> {
-    const doc = await Document._loadVersion<T>(this.id, version, this._doctypeHandler as DoctypeHandler<T>, this.dispatcher, this.pinStore, this._context, this._validate)
+    const doc = await Document.loadVersion<T>(this.id, version, this._doctypeHandler as DoctypeHandler<T>, this.dispatcher, this.pinStore, this._context, this._validate)
     return doc.doctype as T
   }
 
@@ -164,9 +164,8 @@ class Document extends EventEmitter {
    * @param pinStore
    * @param context
    * @param validate
-   * @private
    */
-  static async _loadVersion<T extends Doctype>(
+  static async loadVersion<T extends Doctype>(
       id: DocID,
       version: CID,
       handler: DoctypeHandler<T>,
