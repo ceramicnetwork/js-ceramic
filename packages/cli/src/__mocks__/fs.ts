@@ -6,6 +6,7 @@ interface MockFile {
     name: string;
     birthtime: Date;
     message: string;
+    size: number;
 }
 
 interface MockFs {
@@ -27,7 +28,8 @@ class MockStream {
         const prevFile = mockFs[this.filePath] || {
             name: this.filePath,
             birthtime: new Date(),
-            message: ''
+            message: '',
+            size: 0
         }
 
         if (this.writeFlag === 'w') {
@@ -67,7 +69,8 @@ function writeFile(filePath: string, data: any, options: { flag: string }): Prom
     const prevFile = mockFs[filePath] || {
         name: filePath,
         birthtime: new Date(),
-        message: ''
+        message: '',
+        size: 0
     }
 
     if (options.flag === 'w') {
