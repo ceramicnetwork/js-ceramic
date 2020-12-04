@@ -175,7 +175,7 @@ class Document extends EventEmitter {
       context: Context,
       validate = true): Promise<Document> {
 
-    const docid = DocID.fromBytes(id.bytes, version)
+    const docid = DocID.fromOther(id, version)
     const doc = await Document._loadGenesisDocument(docid, handler, dispatcher, pinStore, context, validate)
 
     if (version.equals(id.cid)) {
