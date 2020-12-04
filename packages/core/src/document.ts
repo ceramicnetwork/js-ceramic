@@ -119,33 +119,12 @@ class Document extends EventEmitter {
     // Fill 'opts' with default values for any missing fields
     opts = {...DEFAULT_LOAD_DOCOPTS, ...opts}
 
-    const doctype = new handler.doctype(null, context) as T
-    const doc = new Document(id, dispatcher, pinStore, validate, context, handler, doctype)
+    const doc = await Document._loadGenesisDocument(id, handler, dispatcher, pinStore, context, validate)
 
-    const record = await dispatcher.retrieveRecord(doc._genesisCid)
-
-    let payload
-    if (DoctypeUtils.isSignedRecord(record)) {
-      payload = await dispatcher.retrieveRecord(record.link)
-    } else {
-      payload = record
-    }
-
+    // Update document state to cached state if any
     const isStored = await pinStore.stateStore.exists(id)
     if (isStored) {
       doc._doctype.state = await pinStore.stateStore.load(id)
-    }
-
-    if (doc._doctype.state == null) {
-      // apply genesis record if there's no state preserved
-      doc._doctype.state = await doc._doctypeHandler.applyRecord(record, doc._genesisCid, context)
-    }
-
-    if (validate) {
-      const schema = await Document.loadSchema(context, doc._doctype)
-      if (schema) {
-        Utils.validate(doc._doctype.content, schema)
-      }
     }
 
     await doc._register(opts)
@@ -183,6 +162,8 @@ class Document extends EventEmitter {
    * @param version - Document version
    * @param validate - Validate content against schema
    */
+  //TODO take a docid not a document
+  // TODO maybe change name (add underscore) and make private
   static async loadVersion<T extends Doctype>(doc: Document, version: CID, validate = true): Promise<Document> {
     const { _context: context, dispatcher, pinStore, _doctypeHandler: doctypeHandler } = doc
 
@@ -212,6 +193,29 @@ class Document extends EventEmitter {
       document._doctype = DoctypeUtils.makeReadOnly<T>(document.doctype as T)
     }
     return document
+  }
+
+  static async _loadGenesisDocument<T extends Doctype>(
+      id: DocID,
+      handler: DoctypeHandler<T>,
+      dispatcher: Dispatcher,
+      pinStore: PinStore,
+      context: Context,
+      validate: boolean) {
+    const doctype = new handler.doctype(null, context) as T
+    const doc = new Document(id, dispatcher, pinStore, validate, context, handler, doctype)
+
+    const record = await dispatcher.retrieveRecord(doc._genesisCid)
+    doc._doctype.state = await doc._doctypeHandler.applyRecord(record, doc._genesisCid, context)
+
+    if (validate) {
+      const schema = await Document.loadSchema(context, doc._doctype)
+      if (schema) {
+        Utils.validate(doc._doctype.content, schema)
+      }
+    }
+
+    return doc
   }
 
   /**
