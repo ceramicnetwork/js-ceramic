@@ -157,7 +157,7 @@ class Document extends EventEmitter {
 
   /**
    * Loads a specific version of the Doctype
-   *
+   * todo this comment
    * @param doc - Document instance
    * @param version - Document version
    * @param validate - Validate content against schema
@@ -171,33 +171,30 @@ class Document extends EventEmitter {
       context: Context,
       validate = true): Promise<Document> {
 
-    const genesisCid = id.cid
-    const isGenesis = version.equals(genesisCid)
-
-    if (!isGenesis) {
-      const versionRecord = await dispatcher.retrieveRecord(version)
-      if (versionRecord == null) {
-        throw new Error(`No record found for version ${version.toString()}`)
-      }
-
-      // check if it's not an anchor record
-      if (versionRecord.proof == null) {
-        throw new Error(`No anchor record for version ${version.toString()}`)
-      }
-    }
-
     const docid = DocID.fromBytes(id.bytes, version)
-    const doctype = new handler.doctype(null, context)
-    const document = new Document(docid, dispatcher, pinStore, validate, context, handler, doctype)
+    const doc = await Document._loadGenesisDocument(docid, handler, dispatcher, pinStore, context, validate)
 
-    const genesisRecord = await document.dispatcher.retrieveRecord(genesisCid)
-    document._doctype.state = await handler.applyRecord(genesisRecord, genesisCid, context)
-
-    if (!isGenesis) {
-      await document._handleTip(version) // sync version
-      document._doctype = DoctypeUtils.makeReadOnly<T>(document.doctype as T)
+    if (version.equals(id.cid)) {
+      // The version is the same as the genesis record CID, so nothing more to do after loading
+      // the genesis version of the document.
+      return doc
     }
-    return document
+
+    // Load the requested version record
+    const versionRecord = await dispatcher.retrieveRecord(version)
+    if (versionRecord == null) {
+      throw new Error(`No record found for version ${version.toString()}`)
+    }
+
+    // check if it's not an anchor record
+    if (versionRecord.proof == null) {
+      throw new Error(`No anchor record for version ${version.toString()}`)
+    }
+
+    await doc._handleTip(version) // sync version
+    doc._doctype = DoctypeUtils.makeReadOnly<T>(doc.doctype as T)
+
+    return doc
   }
 
   static async _loadGenesisDocument<T extends Doctype>(
