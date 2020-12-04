@@ -1,4 +1,4 @@
-import { LogToFiles } from '../ceramic-logger-plugins'
+import { BlockedFiles, LogToFiles } from '../ceramic-logger-plugins'
 
 jest.mock('fs')
 import fs from 'fs'
@@ -10,59 +10,89 @@ describe('Ceramic Logger Plugins', () => {
 
     const yesterday = new Date('2020-10-30')
     const today = new Date('2020-10-31')
+    const inconclusive = new Date(0)
+
+    const YESTERDAY = 0
+    const TODAY = 1
+    const LARGE = 2
+    const INCONCLUSIVE = 3
+    const BLOCKING = 4
 
     describe('LogToFiles', () => {
         let mockFiles: Array<any>
         let mockFs: any
+        let blockedFiles: BlockedFiles
+        let basePath: string
 
         beforeEach(async () => {
+            basePath = '/usr/local/var/log/'
             mockFiles = [
                 {
-                    name: '/usr/var/log/ceramic/yesterday.log',
+                    name: `${basePath}yesterday.log`,
                     message: 'yesterday\n',
-                    birthtime: yesterday
+                    birthtime: yesterday,
+                    size: 10000000, // 10MB
+                    __blocking: false
                 },
                 {
-                    name: '/usr/var/log/ceramic/today.log',
+                    name: `${basePath}today.log`,
                     message: 'today\n',
-                    birthtime: today
+                    birthtime: today,
+                    size: 9000000, // 9 MB
+                    __blocking: false
+                },
+                {
+                    name: `${basePath}large.log`,
+                    message: 'large\n',
+                    birthtime: today,
+                    size: 133000000, // 133MB
+                    __blocking: false
+                },
+                {
+                    name: `${basePath}inconclusive.log`,
+                    message: 'inconclusive\n',
+                    birthtime: inconclusive,
+                    size: 0,
+                    __blocking: false
+                },
+                {
+                    name: `${basePath}blocking.log`,
+                    message: 'blocking\n',
+                    birthtime: today,
+                    size: 1000000, // 1MB
+                    __blocking: true
                 }
             ]
             // @ts-ignore
             fs.__initMockFs(mockFiles)
             // @ts-ignore
             mockFs = fs.__getMockFs()
+            blockedFiles = {}
         })
         afterEach(() => {
-            dateNowSpy.mockRestore()
+            if (dateNowSpy) dateNowSpy.mockRestore()
         })
 
-        describe('_isExpired', () => {
-            it('returns true if amount of time since file was created > expiration time', async () => {
+        describe('_write', () => {
+            it('should append message to file that does not need rotating', async () => {
                 dateNowSpy = jest.spyOn(Date, 'now').mockImplementation(() => today.getTime())
-                const isExpired = await LogToFiles['_isExpired'](mockFiles[0].name)
-                expect(dateNowSpy).toHaveBeenCalled()
-                expect(isExpired).toBe(true)
-            })
-            it('returns false if amount of time since file was created <= expiration time', async () => {
-                dateNowSpy = jest.spyOn(Date, 'now').mockImplementation(() => today.getTime())
-                const isExpired = await LogToFiles['_isExpired'](mockFiles[1].name)
-                expect(dateNowSpy).toHaveBeenCalled()
-                expect(isExpired).toBe(false)
-            })
-        })
+                const filePath = mockFiles[1].name
+                const prevMessage = mockFiles[1].message
 
-        describe('_writeFile', () => {
-            it('should rotate expired files before overwriting', async () => {
-                dateNowSpy = jest.spyOn(Date, 'now').mockImplementation(() => today.getTime())
-                const prevFilePath = mockFiles[0].name
-                const prevFileMessage = mockFiles[0].message
+                const message = 'message'
+                await LogToFiles['_write'](blockedFiles, basePath, 'today', message)
+                const nextFilePath = filePath + '.old'
 
-                const isExpired = await LogToFiles['_isExpired'](prevFilePath)
-                expect(isExpired).toBe(true)
+                expect(mockFs[filePath].message).toBe(prevMessage + message + '\n')
+                expect(mockFs[nextFilePath]).toBeUndefined()
+            })
+            it('should rotate files of at least max size before appending', async () => {
+                dateNowSpy = jest.spyOn(Date, 'now').mockImplementation(() => today.getTime())
+                const prevFilePath = mockFiles[LARGE].name
+                const prevFileMessage = mockFiles[LARGE].message
 
                 const nextFileMessage = 'nextmessage'
-                await LogToFiles['_writeFile'](prevFilePath, nextFileMessage, 'w')
+                await LogToFiles['_write'](blockedFiles, basePath, 'large', nextFileMessage)
                 const nextFilePath = prevFilePath + '.old'
 
                 expect(mockFs[prevFilePath].message).toBe(nextFileMessage + '\n')
@@ -70,47 +100,93 @@ describe('Ceramic Logger Plugins', () => {
             })
             it('should rotate expired files before appending', async () => {
                 dateNowSpy = jest.spyOn(Date, 'now').mockImplementation(() => today.getTime())
-                const prevFilePath = mockFiles[0].name
-                const prevFileMessage = mockFiles[0].message
-
-                const isExpired = await LogToFiles['_isExpired'](prevFilePath)
-                expect(isExpired).toBe(true)
+                const prevFilePath = mockFiles[YESTERDAY].name
+                const prevFileMessage = mockFiles[YESTERDAY].message
 
                 const nextFileMessage = 'nextmessage'
-                await LogToFiles['_writeFile'](prevFilePath, nextFileMessage, 'a')
+                await LogToFiles['_write'](blockedFiles, basePath, 'yesterday', nextFileMessage)
                 const nextFilePath = prevFilePath + '.old'
 
                 expect(mockFs[prevFilePath].message).toBe(nextFileMessage + '\n')
                 expect(mockFs[nextFilePath].message).toBe(prevFileMessage)
             })
-            it('should append the message to an unexpired file without rotating', async () => {
+            it('should not rotate file with inconclusive birthtime', async () => {
                 dateNowSpy = jest.spyOn(Date, 'now').mockImplementation(() => today.getTime())
-                const filePath = mockFiles[1].name
-                const prevMessage = mockFiles[1].message
+                const prevFilePath = mockFiles[INCONCLUSIVE].name
+                const prevFileMessage = mockFiles[INCONCLUSIVE].message
 
-                const isExpired = await LogToFiles['_isExpired'](filePath)
-                expect(isExpired).toBe(false)
+                const nextFileMessage = 'message'
+                await LogToFiles['_write'](blockedFiles, basePath, 'inconclusive', nextFileMessage)
+                const nextFilePath = prevFilePath + '.old'
 
-                const message = 'message'
-                await LogToFiles['_writeFile'](filePath, message, 'a')
-                const nextFilePath = filePath + '.old'
-
-                expect(mockFs[filePath].message).toBe(prevMessage + message + '\n')
+                expect(mockFs[prevFilePath].message).toBe(prevFileMessage + nextFileMessage + '\n')
                 expect(mockFs[nextFilePath]).toBeUndefined()
             })
-            it('should overwrite an unexpired file without rotating', async () => {
+            it('should not append the message if the file is already being written to', async () => {
                 dateNowSpy = jest.spyOn(Date, 'now').mockImplementation(() => today.getTime())
-                const filePath = mockFiles[1].name
+                const filePath = mockFiles[TODAY].name
+                const prevMessage = mockFiles[TODAY].message
+                const message1 = 'message1'
+                const message2 = 'message2'
+                LogToFiles['_writeBlockedWarning'] = jest.fn()
+                jest.useFakeTimers();
+                LogToFiles['_write'](blockedFiles, basePath, 'today', message1)
+                LogToFiles['_write'](blockedFiles, basePath, 'today', message2)
+                setTimeout(() => {
+                    expect(LogToFiles['_writeBlockedWarning']).toHaveBeenCalledTimes(1)
+                    expect(mockFs[filePath].message).toBe(prevMessage + message1 + '\n')
+                }, 1500);
+            })
+            it('should not append the message if a stream for the file needs draining', async () => {
+                dateNowSpy = jest.spyOn(Date, 'now').mockImplementation(() => today.getTime())
+                const filePath = mockFiles[BLOCKING].name
+                const prevMessage = mockFiles[BLOCKING].message
+                const message1 = 'message1'
+                const message2 = 'message2'
+                LogToFiles['_writeBlockedWarning'] = jest.fn()
+                await LogToFiles['_write'](blockedFiles, basePath, 'blocking', message1)
+                await LogToFiles['_write'](blockedFiles, basePath, 'blocking', message2)
+                expect(LogToFiles['_writeBlockedWarning']).toHaveBeenCalledTimes(2)
+                expect(mockFs[filePath].message).toBe(prevMessage + message1 + '\n')
+            })
+        }) 
 
-                const isExpired = await LogToFiles['_isExpired'](filePath)
-                expect(isExpired).toBe(false)
-
-                const message = 'message'
-                await LogToFiles['_writeFile'](filePath, message, 'w')
-                const nextFilePath = filePath + '.old'
-
+        describe('_writeDocid', () => {
+            it('should write the docId if one is present', async () => {
+                const filePath = basePath + 'today-docids.log'
+                const message = '/ceramic/kz123'
+                await LogToFiles['_writeDocId'](blockedFiles, basePath, 'today', message)
                 expect(mockFs[filePath].message).toBe(message + '\n')
-                expect(mockFs[nextFilePath]).toBeUndefined()
+            })
+            it('should not write if no docId is present', async () => {
+                const filePath = basePath + 'today-docids.log'
+                const message = '/nope/kz123'
+                await LogToFiles['_writeDocId'](blockedFiles, basePath, 'today', message)
+                expect(mockFs[filePath]).toBe(undefined)
+            })
+            it('should not write if the file is already being written to', async () => {
+                const filePath = basePath + 'today-docids.log'
+                const message1 = '/ceramic/1'
+                const message2 = '/ceramic/2'
+                LogToFiles['_writeBlockedWarning'] = jest.fn()
+                jest.useFakeTimers();
+                LogToFiles['_writeDocId'](blockedFiles, basePath, 'today', message1)
+                LogToFiles['_writeDocId'](blockedFiles, basePath, 'today', message2)
+                setTimeout(() => {
+                    expect(LogToFiles['_writeBlockedWarning']).toHaveBeenCalledTimes(1)
+                    expect(mockFs[filePath].message).toBe(message1 + '\n')
+                }, 1500);
+            })
+            it('should overwrite the existing file when writing', async () => {
+                const filePath = basePath + 'today-docids.log'
+                const message1 = '/ceramic/1'
+                const message2 = '/ceramic/2'
+                LogToFiles['_writeBlockedWarning'] = jest.fn()
+                // jest.useFakeTimers();
+                await LogToFiles['_writeDocId'](blockedFiles, basePath, 'today', message1)
+                expect(mockFs[filePath].message).toBe(message1 + '\n')
+                await LogToFiles['_writeDocId'](blockedFiles, basePath, 'today', message2)
+                expect(mockFs[filePath].message).toBe(message2 + '\n')
             })
         })
     })

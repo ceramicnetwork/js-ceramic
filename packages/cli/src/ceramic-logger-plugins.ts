@@ -74,6 +74,7 @@ export class LogToFiles {
 
     /**
      * Appends `message` to file `${basePath}${filePrefix}.log`
+     * @notice Rotates file if it is expired or of at least max size
      * @param basePath Base directory for file
      * @param filePrefix Prefix of file name to write to
      * @param message Message to write to file
@@ -85,6 +86,7 @@ export class LogToFiles {
         message: string
     ): Promise<void> {
         const filePath = `${basePath}${filePrefix}.log`
+        await LogToFiles._shouldRotate(filePath) && await LogToFiles._rotate(filePath)
         const result = await LogToFiles._writeStream(blockedFiles, filePath, message, 'a')
         if (result.blocked) await LogToFiles._writeBlockedWarning(blockedFiles, basePath, filePath)
     }
@@ -157,8 +159,6 @@ export class LogToFiles {
 
         blockedFiles[filePath] = true
 
-        await LogToFiles._shouldRotate(filePath) && await LogToFiles._rotate(filePath)
-
         const stream = fs.createWriteStream(filePath, { flags: writeFlag })
         stream.on('error', (err) => {
             console.warn(err)
@@ -185,7 +185,7 @@ export class LogToFiles {
      * @returns If the file should be rotated
      */
     private static async _shouldRotate (filePath: string): Promise<boolean> {
-        let fileStats
+        let fileStats = null
 
         try {
             fileStats = await fsPromises.stat(filePath)
@@ -199,9 +199,9 @@ export class LogToFiles {
 
         if (!fileStats) {
             return true
-        } else if (LogToFiles._isExpired(fileStats)) {
+        } else if (await LogToFiles._isExpired(fileStats)) {
             return true
-        } else if (LogToFiles._isMaxSize(fileStats)) {
+        } else if (await LogToFiles._isMaxSize(fileStats)) {
             return true
         }
 

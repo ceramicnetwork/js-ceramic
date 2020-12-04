@@ -7,6 +7,7 @@ interface MockFile {
     birthtime: Date;
     message: string;
     size: number;
+    __blocking: boolean;
 }
 
 interface MockFs {
@@ -24,12 +25,15 @@ class MockStream {
         this.writeFlag = writeFlag
     }
 
-    write(message: string): void {
+    on(event: string, cb: Function): void {}
+
+    write(message: string): boolean {
         const prevFile = mockFs[this.filePath] || {
             name: this.filePath,
             birthtime: new Date(),
             message: '',
-            size: 0
+            size: 0,
+            __blocking: false
         }
 
         if (this.writeFlag === 'w') {
@@ -43,6 +47,11 @@ class MockStream {
                 message: prevFile.message.concat(message)
             }
         }
+        setTimeout(() => {
+            // delay
+        }, 1000);
+        if (mockFs[this.filePath].__blocking) return false // Can not write again
+        return true
     }
 
     end(): void {
@@ -65,27 +74,6 @@ function createWriteStream(filePath: string, options: { flags: string }): MockSt
     return new MockStream(filePath, options.flags)
 }
 
-function writeFile(filePath: string, data: any, options: { flag: string }): Promise<void> {
-    const prevFile = mockFs[filePath] || {
-        name: filePath,
-        birthtime: new Date(),
-        message: '',
-        size: 0
-    }
-
-    if (options.flag === 'w') {
-        mockFs[filePath] = {
-            ...prevFile,
-            message: data
-        }
-    } else if (options.flag === 'a') {
-        mockFs[filePath] = {
-            ...prevFile,
-            message: prevFile.message.concat(data)
-        }
-    }
-}
-
 async function rename(filePath: string, nextFilePath: string): Promise<void> {
     const file = mockFs[filePath]
     delete mockFs[filePath]
@@ -93,7 +81,7 @@ async function rename(filePath: string, nextFilePath: string): Promise<void> {
 }
 
 async function stat(filePath: string): Promise<MockFile> {
-    return mockFs[filePath]
+    return Promise.resolve(mockFs[filePath])
 }
 
 fs.__initMockFs = __initMockFs
@@ -101,6 +89,5 @@ fs.__getMockFs = __getMockFs
 fs.createWriteStream = createWriteStream
 fs.promises.rename = rename
 fs.promises.stat = stat
-fs.promises.writeFile = writeFile
 
 module.exports = fs
