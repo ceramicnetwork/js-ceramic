@@ -166,7 +166,7 @@ class Document extends EventEmitter {
    * @param validate
    * @private
    */
-  private static async _loadVersion<T extends Doctype>(
+  static async _loadVersion<T extends Doctype>(
       id: DocID,
       version: CID,
       handler: DoctypeHandler<T>,

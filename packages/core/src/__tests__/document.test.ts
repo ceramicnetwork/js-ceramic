@@ -416,6 +416,14 @@ describe('Document', () => {
       } catch (e) {
         expect(e.message).toEqual('Validation Error: data[\'stuff\'] should be string')
       }
+
+      try {
+        const version = doc.state.log[doc.state.log.length - 1].cid
+        await Document._loadVersion(doc.id, version, doctypeHandler, dispatcher, pinStore, context)
+        throw new Error('Should not be able to assign a schema to a document that does not conform')
+      } catch (e) {
+        expect(e.message).toEqual('Validation Error: data[\'stuff\'] should be string')
+      }
     })
   })
 
