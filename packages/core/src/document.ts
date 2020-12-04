@@ -119,7 +119,7 @@ class Document extends EventEmitter {
     // Fill 'opts' with default values for any missing fields
     opts = {...DEFAULT_LOAD_DOCOPTS, ...opts}
 
-    const doc = await Document._loadGenesisDocument(id, handler, dispatcher, pinStore, context, validate)
+    const doc = await Document._loadGenesis(id, handler, dispatcher, pinStore, context, validate)
 
     // Update document state to cached state if any
     const isStored = await pinStore.stateStore.exists(id)
@@ -176,7 +176,7 @@ class Document extends EventEmitter {
       validate = true): Promise<Document> {
 
     const docid = DocID.fromOther(id, version)
-    const doc = await Document._loadGenesisDocument(docid, handler, dispatcher, pinStore, context, validate)
+    const doc = await Document._loadGenesis(docid, handler, dispatcher, pinStore, context, validate)
 
     if (version.equals(id.cid)) {
       // The version is the same as the genesis record CID, so nothing more to do after loading
@@ -212,7 +212,7 @@ class Document extends EventEmitter {
    * @param validate
    * @private
    */
-  private static async _loadGenesisDocument<T extends Doctype>(
+  private static async _loadGenesis<T extends Doctype>(
       id: DocID,
       handler: DoctypeHandler<T>,
       dispatcher: Dispatcher,
