@@ -156,11 +156,15 @@ class Document extends EventEmitter {
   }
 
   /**
-   * Loads a specific version of the Doctype
-   * todo this comment
-   * @param doc - Document instance
-   * @param version - Document version
-   * @param validate - Validate content against schema
+   * Loads a specific version of the document
+   * @param id - base document id
+   * @param version - version of the document being requested
+   * @param handler
+   * @param dispatcher
+   * @param pinStore
+   * @param context
+   * @param validate
+   * @private
    */
   private static async _loadVersion<T extends Doctype>(
       id: DocID,
@@ -197,7 +201,18 @@ class Document extends EventEmitter {
     return doc
   }
 
-  static async _loadGenesisDocument<T extends Doctype>(
+  /**
+   * Loads the genesis record and builds a Document object off it, but does not register for updates
+   * or apply any additional records past the genesis record.
+   * @param id - Document id
+   * @param handler
+   * @param dispatcher
+   * @param pinStore
+   * @param context
+   * @param validate
+   * @private
+   */
+  private static async _loadGenesisDocument<T extends Doctype>(
       id: DocID,
       handler: DoctypeHandler<T>,
       dispatcher: Dispatcher,
