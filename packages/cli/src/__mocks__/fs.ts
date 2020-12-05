@@ -24,8 +24,7 @@ class MockStream {
         this.filePath = filePath
         this.writeFlag = writeFlag
     }
-
-    on(event: string, cb: Function): void {}
+    on(event: string, cb: any): void { /* eslint-disable-line */ }
 
     write(message: string): boolean {
         const prevFile = mockFs[this.filePath] || {
@@ -54,9 +53,7 @@ class MockStream {
         return true
     }
 
-    end(): void {
-        // pass
-    }
+    end(): void { /* eslint-disable-line */ }
 }
 
 function __initMockFs(files: Array<MockFile>): void {
