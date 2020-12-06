@@ -551,7 +551,7 @@ describe('Ceramic API', () => {
         }, 
         {
           docId: docB.id,
-          paths: ['/e/f' , '/d']
+          paths: ['/e/f', '/d']
         }
       ]
       const docs = await ceramic.multiQuery(queries)
@@ -586,7 +586,6 @@ describe('Ceramic API', () => {
           docId: docE.id,
           paths: ['/1', '2/3/4', '5/6']
         },
-        , 
         {
           docId: docB.id,
           paths: ['/1', '2/3/4', '5/6']

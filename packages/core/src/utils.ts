@@ -68,21 +68,21 @@ export class TrieNode {
       this.key = key
       this.children = {}
     }
-  }
+}
   
-  export class PathTrie {
+export class PathTrie {
     public root: TrieNode
-  
+
     constructor() {
-      this.root = new TrieNode()
+        this.root = new TrieNode()
     }
-  
+
     add(path: string) {
-      const nextNodeAdd = (node: TrieNode, key: string): TrieNode => {
+        const nextNodeAdd = (node: TrieNode, key: string): TrieNode => {
         if (!node.children[key]) node.children[key] = new TrieNode(key)
-        return node.children[key]
-      }
-      if (path.startsWith('/')) path = path.substring(1)
-      path.split('/').reduce(nextNodeAdd, this.root)
+            return node.children[key]
+        }
+        if (path.startsWith('/')) path = path.substring(1)
+        path.split('/').reduce(nextNodeAdd, this.root)
     }
-  }
+}

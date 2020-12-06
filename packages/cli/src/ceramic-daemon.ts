@@ -1,7 +1,7 @@
 import express, { Request, Response, NextFunction } from 'express'
 import Ceramic from '@ceramicnetwork/core'
 import type { CeramicConfig} from "@ceramicnetwork/core"
-import { DoctypeUtils, RootLogger, Logger, IpfsApi, Doctype  } from "@ceramicnetwork/common"
+import { DoctypeUtils, RootLogger, Logger, IpfsApi, Doctype, MultiQuery  } from "@ceramicnetwork/common"
 import { LogToFiles } from "./ceramic-logger-plugins"
 import DocID from "@ceramicnetwork/docid"
 import cors from 'cors'
@@ -39,12 +39,7 @@ interface HttpLog {
   response?: Record<string, unknown>;
 }
 
-interface MultiQuery {
-  docid: string
-  paths?: Array<string>
-}
-
-interface StatesQuery {
+interface MultiQueries {
   queries: Array<MultiQuery>
 }
 
@@ -156,7 +151,7 @@ class CeramicDaemon {
   registerAPIPaths (app: core.Express, gateway: boolean): void {
     app.get(toApiPath('/records/:docid'), this.records.bind(this))
     app.post(toApiPath('/documents'), this.createDocFromGenesis.bind(this))
-    app.post(toApiPath('/states'), this.multiQuery.bind(this))
+    app.post(toApiPath('/multiqueries'), this.multiQuery.bind(this))
     app.get(toApiPath('/documents/:docid'), this.state.bind(this))
     app.get(toApiPath('/pins/:docid'), this.listPinned.bind(this))
     app.get(toApiPath('/pins'), this.listPinned.bind(this))
@@ -271,35 +266,17 @@ class CeramicDaemon {
   }
 
   /**
-   * Load multiple documents and paths using a multiquery
+   * Load multiple documents and paths using an array of multiqueries
    */
   async multiQuery (req: Request, res: Response, next: NextFunction): Promise<void> {
-    const { queries } = <StatesQuery> req.body
+    const { queries } = <MultiQueries> req.body
     try {
-
-      const promiseList = queries.map(query => {
-        try {
-          const docId = DocID.fromString(query.docid)
-          return this.ceramic.loadLinkedDocuments(docId, query.paths)
-        } catch (e) {
-          return Promise.resolve({})
-        }
-      })
-
-      const results = await Promise.all(promiseList)
-
-      const serializeDocMap = (map: Record<string, Doctype>) => {
-        return Object.entries(map).reduce((acc, e) => {
-          const [k, v] = e
-          acc[k] = DoctypeUtils.serializeState(v.state)
-          return acc
-        }, {})
-      }
-
-      const response = results.reduce((acc, result) => {
-        return { ...acc, ...serializeDocMap(result)}
+      const results = await this.ceramic.multiQuery(queries)
+      const response = Object.entries(results).reduce((acc, e) => {
+        const [k, v] = e
+        acc[k] = DoctypeUtils.serializeState(v.state)
+        return acc
       }, {})
-
       res.json(response)
     } catch (e) {
       return next(e)
