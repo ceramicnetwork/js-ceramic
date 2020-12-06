@@ -3,7 +3,8 @@ import Document from './document'
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import KeyDidResolver from '@ceramicnetwork/key-did-resolver'
 import DocID from '@ceramicnetwork/docid'
-import { AnchorService, CeramicApi, CeramicRecord, DIDProvider, IpfsApi, PinApi } from "@ceramicnetwork/common"
+import { AnchorService, CeramicApi, CeramicRecord, DIDProvider, IpfsApi, PinApi, MultiQuery } from "@ceramicnetwork/common"
+
 import {
   Doctype,
   DoctypeHandler,
@@ -414,8 +415,10 @@ class Ceramic implements CeramicApi {
    * Load all document type instance for given paths
    * @param docId - Document ID (root)
    * @param paths - relative paths to documents to load
+   * @private
    */
-  async loadLinkedDocuments(id: DocID, paths: string[]): Promise<Record<string, Doctype>> {
+  async _loadLinkedDocuments(id: DocID | string, paths: string[]): Promise<Record<string, Doctype>> {
+    id = normalizeDocID(id)
     const pathTrie = new PathTrie()
     paths.forEach(path => pathTrie.add(path))
 
@@ -438,6 +441,22 @@ class Ceramic implements CeramicApi {
     await walkNext(pathTrie.root, id)
 
     return index
+  }
+
+  /**
+   * Load all document types instances for given multiqueries
+   * @param queries - Array of MultiQueries 
+   */
+  async multiQuery(queries: Array<MultiQuery>):  Promise<Record<string, Doctype>> {
+    const queryPromises = queries.map(query => {
+      try {
+        return this._loadLinkedDocuments(query.docId, query.paths)
+      } catch (e) {
+        return Promise.resolve({})
+      }
+    })
+    const results = await Promise.all(queryPromises)
+    return results.reduce((acc, res) => ({ ...acc, ...res}), {})
   }
 
   /**
