@@ -16,7 +16,6 @@ import {
   DocOpts,
   Context,
   DoctypeUtils,
-  CeramicApi,
   DocMetadata,
   RootLogger,
   Logger,
@@ -100,7 +99,7 @@ class Document extends EventEmitter {
   /**
    * Loads the Doctype by id
    * @param id - Document ID
-   * @param findHandler - find handler fn
+   * @param handler - find handler
    * @param dispatcher - Dispatcher instance
    * @param pinStore - PinStore instance
    * @param context - Ceramic context
@@ -118,7 +117,7 @@ class Document extends EventEmitter {
   ): Promise<Document> {
     // Fill 'opts' with default values for any missing fields
     opts = {...DEFAULT_LOAD_DOCOPTS, ...opts}
-
+    
     const doc = await Document._loadGenesis(id, handler, dispatcher, pinStore, context, validate)
 
     // Update document state to cached state if any

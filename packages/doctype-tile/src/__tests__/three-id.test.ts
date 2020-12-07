@@ -9,7 +9,7 @@ import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 
 import { DID } from 'dids'
 
-import { Context } from "@ceramicnetwork/common"
+import { AnchorRecord, Context, SignedRecordDTO } from "@ceramicnetwork/common"
 import { TileDoctypeHandler } from "../tile-doctype-handler"
 import { TileDoctype } from "../tile-doctype"
 jest.mock('did-jwt', () => ({
@@ -37,7 +37,7 @@ const RECORDS = {
           signature: "cccc"
         }
       ],
-      link: "bafyreia4yhrqevqys35mvccnfmgcrpne6fxrdpqaonif7njq3gh7so633e"
+      link: new CID("bafyreia4yhrqevqys35mvccnfmgcrpne6fxrdpqaonif7njq3gh7so633e")
     },
     linkedBlock: {
       data: {
@@ -154,10 +154,11 @@ describe('ThreeIdHandler', () => {
             }
           }
         })
-      }
+      },
+      createDocument: (): any => { return null },
     })
 
-    const api = {getSupportedChains: jest.fn(async () => {return ["fakechain:123"]})}
+    const api = { getSupportedChains: jest.fn(async () => {return ["fakechain:123"]}) }
     const keyDidResolver = KeyDidResolver.getResolver()
     context = {
       did,
@@ -179,18 +180,18 @@ describe('ThreeIdHandler', () => {
   })
 
   it('makes genesis record correctly', async () => {
-    const record = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: RECORDS.genesis.header, deterministic:true }, context)
+    const record = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: RECORDS.genesis.header, deterministic:true }, context) as SignedRecordDTO
     const { jws, linkedBlock } = record
 
     const payload = dagCBOR.util.deserialize(linkedBlock)
     const generated = { jws: serialize(jws), linkedBlock: serialize(payload)}
-    expect(generated).toEqual(RECORDS.genesisGenerated)
+    expect(generated).toEqual(serialize(RECORDS.genesisGenerated))
   })
 
   it('applies genesis record correctly', async () => {
     const tileHandler = new TileDoctypeHandler()
 
-    const record = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id], tags: ['3id'] } }, context)
+    const record = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id], tags: ['3id'] } }, context) as SignedRecordDTO
     await context.ipfs.dag.put(record, FAKE_CID_1)
 
     const payload = dagCBOR.util.deserialize(record.linkedBlock)
@@ -211,7 +212,7 @@ describe('ThreeIdHandler', () => {
 
     await expect(TileDoctype._makeRecord(doctype, null, RECORDS.r1.desiredContent)).rejects.toThrow(/No DID/)
 
-    const record = await TileDoctype._makeRecord(doctype, did, RECORDS.r1.desiredContent)
+    const record = await TileDoctype._makeRecord(doctype, did, RECORDS.r1.desiredContent) as SignedRecordDTO
     const { jws: rJws, linkedBlock: rLinkedBlock} = record
     const rPayload = dagCBOR.util.deserialize(rLinkedBlock)
     expect({ jws: serialize(rJws), payload: serialize(rPayload)}).toEqual(RECORDS.r1.record)
@@ -220,7 +221,7 @@ describe('ThreeIdHandler', () => {
   it('applies signed record correctly', async () => {
     const tileDoctypeHandler = new TileDoctypeHandler()
 
-    const genesisRecord = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id], tags: ['3id'] } }, context)
+    const genesisRecord = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id], tags: ['3id'] } }, context) as SignedRecordDTO
     await context.ipfs.dag.put(genesisRecord, FAKE_CID_1)
 
     const payload = dagCBOR.util.deserialize(genesisRecord.linkedBlock)
@@ -230,7 +231,7 @@ describe('ThreeIdHandler', () => {
     let state = await tileDoctypeHandler.applyRecord(genesisRecord.jws, FAKE_CID_1, context)
 
     const doctype = new TileDoctype(state, context)
-    const signedRecord = await TileDoctype._makeRecord(doctype, did, RECORDS.r1.desiredContent)
+    const signedRecord = await TileDoctype._makeRecord(doctype, did, RECORDS.r1.desiredContent) as SignedRecordDTO
 
     await context.ipfs.dag.put(signedRecord, FAKE_CID_2)
 
@@ -245,7 +246,7 @@ describe('ThreeIdHandler', () => {
   it('throws error if record signed by wrong DID', async () => {
     const tileDoctypeHandler = new TileDoctypeHandler()
 
-    const genesisRecord = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: ['did:3:fake'], tags: ['3id'] } }, context)
+    const genesisRecord = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: ['did:3:fake'], tags: ['3id'] } }, context) as SignedRecordDTO
     await context.ipfs.dag.put(genesisRecord, FAKE_CID_1)
 
     const payload = dagCBOR.util.deserialize(genesisRecord.linkedBlock)
@@ -257,7 +258,7 @@ describe('ThreeIdHandler', () => {
   it('applies anchor record correctly', async () => {
     const tileDoctypeHandler = new TileDoctypeHandler()
 
-    const genesisRecord = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id], tags: ['3id'] } }, context)
+    const genesisRecord = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id], tags: ['3id'] } }, context) as SignedRecordDTO
     await context.ipfs.dag.put(genesisRecord, FAKE_CID_1)
 
     const payload = dagCBOR.util.deserialize(genesisRecord.linkedBlock)
@@ -267,7 +268,7 @@ describe('ThreeIdHandler', () => {
     let state = await tileDoctypeHandler.applyRecord(genesisRecord.jws, FAKE_CID_1, context)
 
     const doctype = new TileDoctype(state, context)
-    const signedRecord = await TileDoctype._makeRecord(doctype, did, RECORDS.r1.desiredContent)
+    const signedRecord = await TileDoctype._makeRecord(doctype, did, RECORDS.r1.desiredContent) as SignedRecordDTO
 
     await context.ipfs.dag.put(signedRecord, FAKE_CID_2)
 
@@ -279,7 +280,7 @@ describe('ThreeIdHandler', () => {
 
     await context.ipfs.dag.put(RECORDS.proof, FAKE_CID_4)
     // apply anchor
-    state = await tileDoctypeHandler.applyRecord(RECORDS.r2.record, FAKE_CID_3, context, state)
+    state = await tileDoctypeHandler.applyRecord(RECORDS.r2.record as AnchorRecord, FAKE_CID_3, context, state)
     expect(state).toMatchSnapshot()
   })
 })

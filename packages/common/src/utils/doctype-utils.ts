@@ -2,8 +2,16 @@ import CID from 'cids'
 import cloneDeep from "lodash.clonedeep"
 import * as u8a from 'uint8arrays'
 
-import { IpfsApi } from "../index"
+import {
+    AnchorRecord,
+    CeramicRecord,
+    DocMetadata,
+    IpfsApi,
+    RecordHeader,
+    SignedRecord, SignedRecordDTO
+} from "../index"
 import { AnchorStatus, DocState, Doctype, LogEntry } from "../doctype"
+import { DagJWS } from "dids"
 
 /**
  * Doctype related utils
@@ -143,12 +151,12 @@ export class DoctypeUtils {
      * @param record - Record value
      * @param ipfs - IPFS instance
      */
-    static async convertRecordToDTO(record: any, ipfs: IpfsApi): Promise<any> {
+    static async convertRecordToDTO(record: CeramicRecord, ipfs: IpfsApi): Promise<CeramicRecord> {
         if (DoctypeUtils.isSignedRecord(record)) {
-            const block = await ipfs.block.get(record.link)
+            const block = await ipfs.block.get((record as DagJWS).link)
             const linkedBlock = block.data instanceof Uint8Array ? block.data : new Uint8Array(block.data.buffer)
             return {
-                jws: record,
+                jws: record as DagJWS,
                 linkedBlock,
             }
         }
@@ -156,26 +164,38 @@ export class DoctypeUtils {
     }
 
     /**
+     * Converts Doctype metadata to record header
+     * @param docMetadata - DocMetadata instance
+     */
+    static metadataToRecordHeader(docMetadata: DocMetadata): RecordHeader {
+        return {
+            ...docMetadata.controllers && { controllers: docMetadata.controllers },
+            ...docMetadata.schema && { schema: docMetadata.schema },
+            ...docMetadata.tags && { tags: docMetadata.tags },
+        }
+    }
+
+    /**
      * Checks if record is signed DTO ({jws: {}, linkedBlock: {}})
      * @param record - Record
      */
-    static isSignedRecordDTO(record: any): boolean {
-        return typeof record === 'object' && 'jws' in record && 'linkedBlock' in record
+    static isSignedRecordDTO(record: CeramicRecord): boolean {
+        return (record as SignedRecordDTO).jws !== undefined
     }
 
     /**
      * Checks if record is signed
      * @param record - Record
      */
-    static isSignedRecord(record: any): boolean {
-        return typeof record === 'object' && 'link' in record && 'payload' in record && 'signatures' in record
+    static isSignedRecord(record: CeramicRecord): boolean {
+        return (record as SignedRecord).link !== undefined
     }
 
     /**
      * Checks if record is anchor record
      * @param record - Record
      */
-    static isAnchorRecord(record: any): boolean {
-        return typeof record === 'object' && 'proof' in record && 'path' in record
+    static isAnchorRecord(record: CeramicRecord): boolean {
+        return (record as AnchorRecord).proof !== undefined
     }
 }
