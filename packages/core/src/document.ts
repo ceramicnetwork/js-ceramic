@@ -120,6 +120,25 @@ class Document extends EventEmitter {
 
     const doc = await Document._loadGenesis(id, handler, dispatcher, pinStore, context, validate)
 
+    if (!id.version) {
+      // No version requested, so we should load the most current version we can find.
+      return await Document._loadCurrent(doc, pinStore, opts)
+    } else {
+      return await Document._loadVersion(doc, id.version, dispatcher)
+    }
+  }
+
+  /**
+   * Takes a document containing only the genesis record and kicks off the process to load and apply
+   * the most recent Tip to it.
+   * @param doc - Document containing only the genesis record
+   * @param pinStore
+   * @param opts
+   */
+  static async _loadCurrent(doc: Document, pinStore: PinStore, opts: DocOpts): Promise<Document> {
+    // TODO: Assert that doc contains only the genesis record
+    const id = doc.id
+
     // Update document state to cached state if any
     const isStored = await pinStore.stateStore.exists(id)
     if (isStored) {
@@ -131,28 +150,21 @@ class Document extends EventEmitter {
   }
 
   /**
-   * Loads a specific version of the document
-   * @param id - base document id
-   * @param version - version of the document being requested
-   * @param handler
+   * Takes a document containing only the genesis record and syncs the document to the state as
+   * of the specific version requested.  Intentionally does not register the document so that it
+   * does not get notifications about newer versions, since we want a specific version here.
+   * @param doc - Document containing only the genesis record
+   * @param version - CID of the Tip record that we want to load the document at
    * @param dispatcher
-   * @param pinStore
-   * @param context
-   * @param validate
    */
-  static async loadVersion<T extends Doctype>(
-      id: DocID,
+  static async _loadVersion<T extends Doctype> (
+      doc: Document,
       version: CID,
-      handler: DoctypeHandler<T>,
-      dispatcher: Dispatcher,
-      pinStore: PinStore,
-      context: Context,
-      validate = true): Promise<Document> {
+      dispatcher: Dispatcher): Promise<Document> {
+    // TODO: assert that doc.id.version == version
+    // TODO: Assert that doc contains only the genesis record
 
-    const docid = DocID.fromOther(id, version)
-    const doc = await Document._loadGenesis(docid, handler, dispatcher, pinStore, context, validate)
-
-    if (version.equals(id.cid)) {
+    if (version.equals(doc.id.cid)) {
       // The version is the same as the genesis record CID, so nothing more to do after loading
       // the genesis version of the document.
       return doc
@@ -170,6 +182,7 @@ class Document extends EventEmitter {
     }
 
     await doc._handleTip(version) // sync version
+
     doc._doctype = DoctypeUtils.makeReadOnly<T>(doc.doctype as T)
 
     return doc
@@ -215,7 +228,9 @@ class Document extends EventEmitter {
    * @param version - Document version
    */
   async loadVersion<T extends Doctype>(version: CID): Promise<T> {
-    const doc = await Document.loadVersion<T>(this.id, version, this._doctypeHandler as DoctypeHandler<T>, this.dispatcher, this.pinStore, this._context, this._validate)
+    const versionId = DocID.fromOther(this.id, version)
+    const opts: DocOpts = {anchor: false, publish: false, sync: false}
+    const doc = await Document.load<T>(versionId, this._doctypeHandler as DoctypeHandler<T>, this.dispatcher, this.pinStore, this._context, opts, this._validate)
     return doc.doctype as T
   }
 

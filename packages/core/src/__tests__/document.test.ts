@@ -419,7 +419,8 @@ describe('Document', () => {
 
       try {
         const version = doc.state.log[doc.state.log.length - 1].cid
-        await Document.loadVersion(doc.id, version, doctypeHandler, dispatcher, pinStore, context)
+        const versionId = DocID.fromOther(doc.id, version)
+        await Document.load(versionId, doctypeHandler, dispatcher, pinStore, context, { sync: false })
         throw new Error("Should not be able to load a document (using Document.loadVersion) that doesn't conform to its schema")
       } catch (e) {
         expect(e.message).toEqual('Validation Error: data[\'stuff\'] should be string')
