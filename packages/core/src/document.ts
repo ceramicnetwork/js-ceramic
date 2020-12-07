@@ -174,6 +174,13 @@ class Document extends EventEmitter {
     // TODO: assert that doc.id.version == version
     // TODO: Assert that doc contains only the genesis record
 
+    if (tip.equals(doc.id.cid)) {
+      // The version is the same as the genesis record CID, so nothing more to do after loading
+      // the genesis version of the document.
+      doc._doctype = DoctypeUtils.makeReadOnly<T>(doc.doctype as T)
+      return doc
+    }
+
     // Load the requested version record
     const versionRecord = await dispatcher.retrieveRecord(tip)
     if (versionRecord == null) {
@@ -188,7 +195,6 @@ class Document extends EventEmitter {
     await doc._handleTip(tip) // sync version
 
     doc._doctype = DoctypeUtils.makeReadOnly<T>(doc.doctype as T)
-
     return doc
   }
 

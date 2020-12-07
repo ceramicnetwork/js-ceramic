@@ -156,7 +156,7 @@ describe('Ceramic API', () => {
         await ceramic.loadDocument<TileDoctype>(docV0Id)
         throw new Error('Should not be able to fetch not anchored version')
       } catch (e) {
-        expect(e.message).toContain('No anchor record for version')
+        expect(e.message).toContain('does not refer to a valid version, which must correspond to an anchor record')
       }
 
       await ceramic.close()
