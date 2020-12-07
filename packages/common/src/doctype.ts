@@ -74,6 +74,8 @@ export interface DocMetadata {
     controllers: Array<string>
     schema?: string
     tags?: Array<string>
+
+    [index: string]: any // allow arbitrary properties (nonce, etc.)
 }
 
 /**
@@ -84,6 +86,8 @@ export interface DocParams {
     // deterministic is a tri-state. True means means always create the document deterministically,
     // false means always force the document to be unique, undefined means use the default behavior
     deterministic?: boolean
+
+    [index: string]: any // allow arbitrary properties
 }
 
 /**
