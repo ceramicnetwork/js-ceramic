@@ -13,7 +13,9 @@
   },
   "devDependencies": {
     "docusaurus-plugin-typedoc": "^0.4.0",
+    "jest": "^26.6.3",
     "lerna": "^3.22.1",
+    "ts-jest": "^26.4.4",
     "ts-node": "^9.0.0",
     "typedoc": "^0.19.2",
     "typedoc-plugin-lerna-packages": "^0.3.1",
