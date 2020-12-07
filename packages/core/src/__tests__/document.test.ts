@@ -453,7 +453,7 @@ describe('Document', () => {
 
       try {
         await Document.load(doc.id, doctypeHandler, dispatcher, pinStore, context, { sync: false })
-        throw new Error("Should not be able to load a document (using Document.load) that doesn't conform to its schema")
+        throw new Error("Should not be able to load a document that doesn't conform to its schema")
       } catch (e) {
         expect(e.message).toEqual('Validation Error: data[\'stuff\'] should be string')
       }
