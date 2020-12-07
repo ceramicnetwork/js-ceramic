@@ -8,9 +8,15 @@ import {
     Doctype,
     DoctypeConstructor,
     DoctypeStatic,
+    CeramicRecord,
+    RecordHeader,
     DocOpts,
     DocParams,
     Context,
+    GenesisHeader,
+    GenesisRecord,
+    UnsignedRecord,
+    DoctypeUtils,
 } from "@ceramicnetwork/common"
 
 const DOCTYPE = 'tile'
@@ -60,11 +66,11 @@ export class TileDoctype extends Doctype {
      * @param params - Create parameters
      * @param context - Ceramic context
      */
-    static async makeGenesis(params: DocParams, context: Context): Promise<Record<string, any>> {
+    static async makeGenesis<T extends CeramicRecord>(params: DocParams, context: Context): Promise<T> {
         // If 'deterministic' is undefined, default to creating document uniquely
         const unique = params.deterministic ? '0' : base64Encode(randomBytes(12))
 
-        const metadata = params.metadata ? params.metadata : { controllers: [] }
+        const metadata: GenesisHeader = params.metadata ? DoctypeUtils.metadataToRecordHeader(params.metadata) : { controllers: [] }
         if (metadata.controllers.length === 0) {
             if (params.content && context.did) {
                 metadata.controllers = [context.did.id]
@@ -72,8 +78,9 @@ export class TileDoctype extends Doctype {
                 throw new Error('No controllers specified')
             }
         }
-        const record = { data: params.content, header: metadata, unique }
-        return params.content ? TileDoctype._signDagJWS(record, context.did, metadata.controllers[0]) : record
+
+        const record: GenesisRecord = { data: params.content, header: metadata, unique }
+        return (params.content ? await TileDoctype._signDagJWS(record, context.did, metadata.controllers[0]): record) as T
     }
 
     /**
@@ -85,14 +92,10 @@ export class TileDoctype extends Doctype {
      * @param schema - New schema ID
      * @private
      */
-    static async _makeRecord(doctype: Doctype, did: DID, newContent: any, newControllers?: string[], schema?: string): Promise<any> {
-        const header: Record<string, any> = {}
-        if (schema) {
-            header.schema = schema
-        }
-
-        if (newControllers) {
-            header.controllers = newControllers
+    static async _makeRecord(doctype: Doctype, did: DID, newContent: any, newControllers?: string[], schema?: string): Promise<CeramicRecord> {
+        const header: RecordHeader = {
+            ...schema != null && { schema: schema },
+            ...newControllers != null && { controllers: newControllers },
         }
 
         const nonce = TileDoctype._calculateNonce(doctype)
@@ -109,7 +112,7 @@ export class TileDoctype extends Doctype {
         const willSquash = header.nonce && header.nonce > 0
         const prev = doctype.state.log[doctype.state.log.length - 1 - (willSquash ? 1 : 0)].cid
 
-        const record = { header, data: patch, prev, id: doctype.state.log[0].cid }
+        const record: UnsignedRecord = { header, data: patch, prev, id: doctype.state.log[0].cid }
         return TileDoctype._signDagJWS(record, did, doctype.controllers[0])
     }
 
@@ -132,7 +135,7 @@ export class TileDoctype extends Doctype {
      * @param controller - Controller
      * @private
      */
-    static async _signDagJWS(record: any, did: DID, controller: string): Promise<any> {
+    static async _signDagJWS(record: CeramicRecord, did: DID, controller: string): Promise<CeramicRecord> {
         // check for DID and authentication
         if (did == null || !did.authenticated) {
             throw new Error('No DID authenticated')

@@ -9,8 +9,6 @@ import cloneDeep from 'lodash.clonedeep'
 
 import { TileDoctype, TileParams } from "./tile-doctype"
 import {
-    AnchorProof,
-    AnchorRecord,
     AnchorStatus,
     Context,
     DocOpts,
@@ -19,7 +17,9 @@ import {
     DoctypeConstructor,
     DoctypeHandler,
     DoctypeUtils,
-    SignatureStatus
+    SignatureStatus,
+    CeramicRecord,
+    AnchorRecord,
 } from "@ceramicnetwork/common"
 
 const DOCTYPE = 'tile'
@@ -59,14 +59,14 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
      * @param context - Ceramic context
      * @param state - Document state
      */
-    async applyRecord(record: any, cid: CID, context: Context, state?: DocState): Promise<DocState> {
+    async applyRecord(record: CeramicRecord, cid: CID, context: Context, state?: DocState): Promise<DocState> {
         if (state == null) {
             // apply genesis
             return this._applyGenesis(record, cid, context)
         }
 
-        if (record.proof) {
-            return this._applyAnchor(context, record, cid, state);
+        if ((record as AnchorRecord).proof) {
+            return this._applyAnchor(context, record as AnchorRecord, cid, state);
         }
 
         return this._applySigned(record, cid, state, context)

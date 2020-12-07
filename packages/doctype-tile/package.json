@@ -34,7 +34,7 @@
     "cids": "^1.0.2",
     "did-jwt": "^4.6.3",
     "did-resolver": "^2.1.1",
-    "dids": "^1.0.0",
+    "dids": "^1.1.0",
     "fast-json-patch": "^2.2.1",
     "fast-json-stable-stringify": "^2.1.0"
   },

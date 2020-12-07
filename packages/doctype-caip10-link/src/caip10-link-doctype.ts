@@ -1,4 +1,13 @@
-import { Doctype, DoctypeConstructor, DoctypeStatic, DocOpts, DocParams, Context } from "@ceramicnetwork/common"
+import {
+    Doctype,
+    DoctypeConstructor,
+    DoctypeStatic,
+    DocOpts,
+    DocParams,
+    Context,
+    CeramicRecord,
+    DoctypeUtils
+} from "@ceramicnetwork/common"
 
 const DOCTYPE = 'caip10-link'
 
@@ -45,7 +54,7 @@ export class Caip10LinkDoctype extends Doctype {
      * Creates genesis record
      * @param params - Create parameters
      */
-    static async makeGenesis(params: Record<string, any>, context: Context): Promise<Record<string, any>> {
+    static async makeGenesis(params: Record<string, any>, context: Context): Promise<CeramicRecord> {
         const { content, metadata } = params
 
         if (content) {
@@ -65,7 +74,7 @@ export class Caip10LinkDoctype extends Doctype {
         if (!linkedChainId) {
             throw new Error('Chain ID must be specified according to CAIP-10')
         }
-        return { header: metadata }
+        return { header: DoctypeUtils.metadataToRecordHeader(metadata) }
     }
 
     /**
@@ -75,7 +84,7 @@ export class Caip10LinkDoctype extends Doctype {
      * @param newSchema - Change schema
      * @private
      */
-    static async _makeRecord (doctype: Caip10LinkDoctype, newContent: any, newSchema: string = null): Promise<any> {
+    static async _makeRecord (doctype: Caip10LinkDoctype, newContent: any, newSchema: string = null): Promise<CeramicRecord> {
         const { metadata } = doctype
         if (newSchema) {
             metadata.schema = newSchema

@@ -2,7 +2,15 @@ import CID from 'cids'
 import { validateLink } from "3id-blockchain-utils"
 import { Caip10LinkDoctype, Caip10LinkParams } from "./caip10-link-doctype"
 import {
-    AnchorProof, AnchorStatus, DocState, DoctypeConstructor, DoctypeHandler, DocOpts, SignatureStatus, RecordType
+    AnchorStatus,
+    DocState,
+    DoctypeConstructor,
+    DoctypeHandler,
+    DocOpts,
+    SignatureStatus,
+    RecordType,
+    CeramicRecord,
+    AnchorRecord,
 } from "@ceramicnetwork/common"
 import { Context } from "@ceramicnetwork/common"
 
@@ -40,12 +48,12 @@ export class Caip10LinkDoctypeHandler implements DoctypeHandler<Caip10LinkDoctyp
      * @param context - Ceramic context
      * @param state - Document state
      */
-    async applyRecord(record: any, cid: CID, context: Context, state?: DocState): Promise<DocState> {
+    async applyRecord(record: CeramicRecord, cid: CID, context: Context, state?: DocState): Promise<DocState> {
         if (state == null) {
             return this._applyGenesis(record, cid)
         }
 
-        if (record.proof) {
+        if ((record as AnchorRecord).proof) {
             return this._applyAnchor(context, record, cid, state);
         }
 
