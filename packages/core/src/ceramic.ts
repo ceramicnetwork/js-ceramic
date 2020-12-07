@@ -393,21 +393,16 @@ class Ceramic implements CeramicApi {
    * @param docId - Document ID
    * @param opts - Initialization options
    */
-  async loadDocument<T extends Doctype>(docId: DocID | string, opts: DocOpts = {}): Promise<T> {
+  async loadDocument<T extends Doctype>(docId: DocID | string, opts: DocOpts = {}, tip?: CID): Promise<T> {
     docId = normalizeDocID(docId)
     const doc = await this._loadDoc(docId.baseID, opts)
-    return (docId.version? await doc.loadVersion<T>(docId.version) : doc.doctype) as T
-  }
-
-  /**
-   * Load document type instance
-   * @param docId - Document ID
-   * @param opts - Initialization options
-   */
-  async loadDocumentAtTip<T extends Doctype>(docId: DocID | string, opts: DocOpts, tip: CID): Promise<T> {
-    docId = normalizeDocID(docId)
-    const doc = await this._loadDoc(docId.baseID, opts)
-    return await doc.loadTip<T>(tip)
+    if (docId.version) {
+      return await doc.loadVersion<T>(docId.version)
+    }
+    if (tip) {
+      return await doc.loadTip<T>(tip)
+    }
+    return doc.doctype as T
   }
 
   /**

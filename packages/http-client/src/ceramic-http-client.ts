@@ -129,20 +129,13 @@ export default class CeramicClient implements CeramicApi {
     return this._docmap[docIdStr] as unknown as T
   }
 
-  async loadDocument<T extends Doctype>(docId: DocID | string, opts: DocOpts): Promise<T> {
+  async loadDocument<T extends Doctype>(docId: DocID | string, opts?: DocOpts, tip?: CID): Promise<T> {
     docId = typeDocID(docId)
     const docIdStr = docId.toString()
     if (!this._docmap[docIdStr]) {
-      this._docmap[docIdStr] = await Document.load(docId, this._apiUrl, this.context, this._config, opts)
-    }
-    this._docmap[docIdStr].doctypeHandler = this.findDoctypeHandler(this._docmap[docIdStr].state.doctype)
-    return this._docmap[docIdStr] as unknown as T
-  }
-
-  async loadDocumentAtTip<T extends Doctype>(docId: DocID | string, opts: DocOpts, tip: CID): Promise<T> {
-    docId = typeDocID(docId).baseID
-    const docIdStr = docId.toString()
-    if (!this._docmap[docIdStr]) {
+      // TODO if 'tip' is set then this entry in the cache will be at a specific tip and have polling disabled,
+      // but then if we try to load the same docId later and want the most current version, we'll need to
+      // update this cache to the version of the Document that has polling enabled.
       this._docmap[docIdStr] = await Document.load(docId, this._apiUrl, this.context, this._config, opts, tip)
     }
     this._docmap[docIdStr].doctypeHandler = this.findDoctypeHandler(this._docmap[docIdStr].state.doctype)

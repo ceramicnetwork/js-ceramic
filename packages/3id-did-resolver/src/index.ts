@@ -1,12 +1,12 @@
 import type { ParsedDID, DIDResolver, DIDDocument } from 'did-resolver'
-import { Doctype } from "@ceramicnetwork/common"
+import {DocOpts, Doctype} from "@ceramicnetwork/common"
 import LegacyResolver from './legacyResolver'
 import * as u8a from 'uint8arrays'
 import DocID from '@ceramicnetwork/docid'
 import CID from 'cids'
 
 interface Ceramic {
-  loadDocument(docId: DocID): Promise<Doctype>;
+  loadDocument(docId: DocID, opts?: DocOpts, tip?: CID): Promise<Doctype>;
   createDocument(type: string, content: any, opts: any): Promise<Doctype>;
 }
 

@@ -77,14 +77,7 @@ export interface CeramicApi {
      * @param docId - Document ID
      * @param opts - Initialization options
      */
-    loadDocument<T extends Doctype>(docId: DocID | string, opts?: DocOpts): Promise<T>;
-
-    /**
-     * Loads document at a specific tip
-     * @param docId - Document ID
-     * @param tip - CID of the record to load the document at
-     */
-    loadDocumentAtTip<T extends Doctype>(docId: DocID | string, tip?: CID): Promise<T>;
+    loadDocument<T extends Doctype>(docId: DocID | string, opts?: DocOpts, tip?: CID): Promise<T>;
 
     /**
      * Load all document records by document ID
