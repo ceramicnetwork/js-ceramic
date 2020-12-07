@@ -131,7 +131,7 @@ class Document extends EventEmitter {
       // Requested document at a specific version
       return await Document._syncDocumentToTip(doc, id.version, dispatcher, true)
     } else {
-      throw new Error("Cannot specify a version and a tip to Document.load")
+      throw new Error("Cannot specify both a version and a tip to Document.load")
     }
   }
 
@@ -152,6 +152,7 @@ class Document extends EventEmitter {
       doc._doctype.state = await pinStore.stateStore.load(id)
     }
 
+    // Request current tip from pub/sub system and register for future updates
     await doc._register(opts)
     return doc
   }
@@ -171,7 +172,6 @@ class Document extends EventEmitter {
       tip: CID,
       dispatcher: Dispatcher,
       mustBeVersion): Promise<Document> {
-    // TODO: assert that doc.id.version == version
     // TODO: Assert that doc contains only the genesis record
 
     if (tip.equals(doc.id.cid)) {
@@ -192,7 +192,7 @@ class Document extends EventEmitter {
       throw new Error(`Log record CID ${tip.toString()} does not refer to a valid version, which must correspond to an anchor record`)
     }
 
-    await doc._handleTip(tip) // sync version
+    await doc._handleTip(tip) // sync document to the requested tip
 
     doc._doctype = DoctypeUtils.makeReadOnly<T>(doc.doctype as T)
     return doc
