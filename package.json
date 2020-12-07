@@ -15,6 +15,7 @@
     "docusaurus-plugin-typedoc": "^0.4.0",
     "lerna": "^3.22.1",
     "ts-node": "^9.0.0",
+    "ts-jest": "^26.4.4",
     "typedoc": "^0.19.2",
     "typedoc-plugin-lerna-packages": "^0.3.1",
     "typedoc-plugin-pages": "^1.0.1",
