@@ -13,7 +13,7 @@ const connectionString = `powergate://example.com?token=${token}`;
 
 const setToken = jest.fn();
 const defaultStorageConfig = jest.fn(() => ({ something: "something" }));
-const pushStorageConfig = jest.fn(() => ({ jobId: "jobId" }));
+const pushStorageConfig = jest.fn((a: string, b: any) => ({ jobId: "jobId" }));
 const getStorageConfig = jest.fn(() => ({
   config: { hot: { something: "something" }, cold: { something: "something" } },
 }));
@@ -91,24 +91,18 @@ describe("#pin", () => {
     await pinning.open();
     const cid = new CID("QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D");
     await pinning.pin(cid);
-    expect(mockPow.ffs.pushStorageConfig).toBeCalledWith(
-      cid.toString(),
-      expect.anything()
-    );
+    expect(mockPow.ffs.pushStorageConfig).toBeCalledWith(cid.toString(), expect.anything());
   });
 
   test("tolerate double pinning as idempotent call", async () => {
     const pinning = new PowergatePinningBackend(connectionString);
     await pinning.open();
     const cid = new CID("QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D");
-    mockPow.ffs.pushStorageConfig = jest.fn(() => {
+    mockPow.ffs.pushStorageConfig = jest.fn((a: string, b: any) => {
       throw new Error("cid already pinned, consider using override flag");
     });
     await expect(pinning.pin(cid)).resolves.toBeUndefined();
-    expect(mockPow.ffs.pushStorageConfig).toBeCalledWith(
-      cid.toString(),
-      expect.anything()
-    );
+    expect(mockPow.ffs.pushStorageConfig).toBeCalledWith(cid.toString(), expect.anything());
   });
 
   test("throw if not double pinning", async () => {
@@ -116,14 +110,11 @@ describe("#pin", () => {
     const pinning = new PowergatePinningBackend(connectionString);
     await pinning.open();
     const cid = new CID("QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D");
-    mockPow.ffs.pushStorageConfig = jest.fn(() => {
+    mockPow.ffs.pushStorageConfig = jest.fn((a: string, b: any) => {
       throw new Error("something wrong");
     });
     await expect(pinning.pin(cid)).rejects.toThrow("something wrong");
-    expect(mockPow.ffs.pushStorageConfig).toBeCalledWith(
-      cid.toString(),
-      expect.anything()
-    );
+    expect(mockPow.ffs.pushStorageConfig).toBeCalledWith(cid.toString(), expect.anything());
   });
 });
 

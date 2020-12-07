@@ -18,56 +18,85 @@ export enum AnchorStatus {
     NOT_REQUESTED, PENDING, PROCESSING, ANCHORED, FAILED
 }
 
-/**
- * Describes anchor record
- */
-export interface AnchorRecord {
-    prev: CID; // should be CID type
-    proof: CID; // should be CID type
-    path: string;
+export interface RecordHeader {
+    controllers: Array<string>
+    schema?: string
+    tags?: Array<string>
+
+    unique?: string
+
+    [index: string]: any // allow support for future changes
 }
 
-/**
- * Describes anchor proof
- */
-export interface AnchorProof {
-    chainId: string;
-    blockNumber: number;
-    blockTimestamp: number;
-    txHash: CID;
-    root: CID;
+export type GenesisHeader = RecordHeader
+
+export type GenesisRecord = {
+    header: GenesisHeader
+    data?: any
+    unique?: string
 }
+
+export interface UnsignedRecord {
+    id: CID
+    header?: RecordHeader
+    data: any
+    prev: CID
+}
+
+export interface AnchorProof {
+    chainId: string,
+    blockNumber: number,
+    blockTimestamp: number,
+    txHash: CID,
+    root: CID,
+}
+
+export interface AnchorRecord {
+    id: CID,
+    prev: CID,
+    refs?: Array<CID>
+    proof: CID,
+    path: string,
+}
+
+import type { DagJWSResult, DagJWS } from 'dids'
+
+export type SignedRecordDTO = DagJWSResult
+
+export type SignedRecord = DagJWS
+
+export type CeramicRecord = GenesisRecord | UnsignedRecord | AnchorRecord | SignedRecordDTO | SignedRecord
 
 /**
  * Document metadata
  */
 export interface DocMetadata {
-    controllers: Array<string>;
-    schema?: string;
-    tags?: Array<string>;
+    controllers: Array<string>
+    schema?: string
+    tags?: Array<string>
 
-    [index: string]: any; // allow arbitrary properties
+    [index: string]: any // allow arbitrary properties (nonce, etc.)
 }
 
 /**
  * Document params
  */
 export interface DocParams {
-    metadata?: DocMetadata;
+    metadata?: DocMetadata
     // deterministic is a tri-state. True means means always create the document deterministically,
     // false means always force the document to be unique, undefined means use the default behavior
-    deterministic?: boolean;
+    deterministic?: boolean
 
-    [index: string]: any; // allow arbitrary properties
+    [index: string]: any // allow arbitrary properties
 }
 
 /**
  * Document information about the next iteration
  */
 export interface DocNext {
-    content?: any;
-    controllers?: Array<string>;
-    metadata?: DocMetadata;
+    content?: any
+    controllers?: Array<string>
+    metadata?: DocMetadata
 }
 
 export enum RecordType {
@@ -82,15 +111,15 @@ export interface LogEntry {
  * Document state
  */
 export interface DocState {
-    doctype: string;
-    content: any;
-    next?: DocNext;
-    metadata: DocMetadata;
-    signature: SignatureStatus;
-    anchorStatus: AnchorStatus;
-    anchorScheduledFor?: number; // only present when anchor status is pending
-    anchorProof?: AnchorProof; // the anchor proof of the latest anchor, only present when anchor status is anchored
-    log: Array<LogEntry>;
+    doctype: string
+    content: any
+    next?: DocNext
+    metadata: DocMetadata
+    signature: SignatureStatus
+    anchorStatus: AnchorStatus
+    anchorScheduledFor?: number // only present when anchor status is pending
+    anchorProof?: AnchorProof // the anchor proof of the latest anchor, only present when anchor status is anchored
+    log: Array<LogEntry>
 }
 
 /**
@@ -99,13 +128,13 @@ export interface DocState {
  */
 export interface DocOpts {
     // Whether or not to request an anchor after performing the operation.
-    anchor?: boolean;
+    anchor?: boolean
 
     // Whether or not to publish the current tip record to the pubsub channel after performing the operation.
-    publish?: boolean;
+    publish?: boolean
 
     // Whether or not to wait a short period of time to hear about new tips for the document after performing the operation.
-    sync?: boolean;
+    sync?: boolean
 }
 
 /**
@@ -186,7 +215,7 @@ export abstract class Doctype extends EventEmitter {
  * @constructor
  */
 export function DoctypeStatic<T>() {
-    return <U extends T>(constructor: U): any => { constructor };
+    return <U extends T>(constructor: U): any => { constructor }
 }
 
 /**
@@ -198,7 +227,7 @@ export interface DoctypeConstructor<T extends Doctype> {
      * @param state - Doctype state
      * @param context - Ceramic context
      */
-    new(state: DocState, context: Context): T;
+    new(state: DocState, context: Context): T
 
     /**
      * Makes genesis record
@@ -206,7 +235,7 @@ export interface DoctypeConstructor<T extends Doctype> {
      * @param context - Ceramic context
      * @param opts - Initialization options
      */
-    makeGenesis(params: DocParams, context?: Context, opts?: DocOpts): Promise<Record<string, any>>;
+    makeGenesis(params: DocParams, context?: Context, opts?: DocOpts): Promise<CeramicRecord>
 }
 
 /**
@@ -216,12 +245,12 @@ export interface DoctypeHandler<T extends Doctype> {
     /**
      * The string name of the doctype
      */
-    name: string;
+    name: string
 
     /**
      * The doctype class
      */
-    doctype: DoctypeConstructor<T>;
+    doctype: DoctypeConstructor<T>
 
     /**
      * Applies record to the document (genesis|signed|anchored)
@@ -230,6 +259,6 @@ export interface DoctypeHandler<T extends Doctype> {
      * @param context - Ceramic context
      * @param state - Document state
      */
-    applyRecord(record: any, cid: CID, context: Context, state?: DocState): Promise<DocState>;
+    applyRecord(record: CeramicRecord, cid: CID, context: Context, state?: DocState): Promise<DocState>
 
 }
