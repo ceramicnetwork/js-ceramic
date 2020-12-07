@@ -11,7 +11,7 @@ import {
     SignedRecord, SignedRecordDTO
 } from "../index"
 import { AnchorStatus, DocState, Doctype, LogEntry } from "../doctype"
-import { DagJWS, DagJWSResult } from "dids/lib"
+import { DagJWS } from "dids"
 
 /**
  * Doctype related utils
