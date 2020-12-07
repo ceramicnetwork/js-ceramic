@@ -2,6 +2,7 @@ import { fetchJson, typeDocID, combineURLs } from "./utils"
 import Document from './document'
 
 import { DID } from 'dids'
+import CID from 'cids'
 import {
   Doctype,
   DoctypeHandler,
@@ -128,11 +129,21 @@ export default class CeramicClient implements CeramicApi {
     return this._docmap[docIdStr] as unknown as T
   }
 
-  async loadDocument<T extends Doctype>(docId: DocID | string): Promise<T> {
+  async loadDocument<T extends Doctype>(docId: DocID | string, opts: DocOpts): Promise<T> {
     docId = typeDocID(docId)
     const docIdStr = docId.toString()
     if (!this._docmap[docIdStr]) {
-      this._docmap[docIdStr] = await Document.load(docId, this._apiUrl, this.context, this._config)
+      this._docmap[docIdStr] = await Document.load(docId, this._apiUrl, this.context, this._config, opts)
+    }
+    this._docmap[docIdStr].doctypeHandler = this.findDoctypeHandler(this._docmap[docIdStr].state.doctype)
+    return this._docmap[docIdStr] as unknown as T
+  }
+
+  async loadDocumentAtTip<T extends Doctype>(docId: DocID | string, opts: DocOpts, tip: CID): Promise<T> {
+    docId = typeDocID(docId).baseID
+    const docIdStr = docId.toString()
+    if (!this._docmap[docIdStr]) {
+      this._docmap[docIdStr] = await Document.load(docId, this._apiUrl, this.context, this._config, opts, tip)
     }
     this._docmap[docIdStr].doctypeHandler = this.findDoctypeHandler(this._docmap[docIdStr].state.doctype)
     return this._docmap[docIdStr] as unknown as T

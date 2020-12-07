@@ -205,24 +205,6 @@ describe('Ceramic interop: core <> http-client', () => {
         expect(doc.state.log.length).toEqual(6)
         expect(doc.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
-        // Cannot load any of the signed records as versions
-        const assertCannotLoadNonVersion = async function(invalidDocId: DocID) {
-            // try with core
-            try {
-                await core.loadDocument(invalidDocId)
-            } catch (e) {
-                expect(e.message).toContain('does not refer to a valid version, which must correspond to an anchor record')
-            }
-            // try with client
-            try {
-                await client.loadDocument(invalidDocId)
-            } catch (e) {
-                expect(e.message).toContain('does not refer to a valid version, which must correspond to an anchor record')
-            }
-        }
-        await assertCannotLoadNonVersion(DocID.fromOther(doc.id, doc.state.log[2].cid))
-        await assertCannotLoadNonVersion(DocID.fromOther(doc.id, doc.state.log[4].cid))
-
         // Load genesis version
         const v0Id = DocID.fromOther(doc.id, doc.id.cid)
         const docV0Core = await core.loadDocument(v0Id)
@@ -254,5 +236,27 @@ describe('Ceramic interop: core <> http-client', () => {
         expect(docV3Core.content).toEqual(content3)
         expect(docV3Core.state.log.length).toEqual(6)
         expect(DoctypeUtils.serializeState(docV3Core.state)).toEqual(DoctypeUtils.serializeState(docV3Client.state))
+
+        // Cannot load any of the signed records as versions
+        const assertCannotLoadNonVersion = async function(invalidDocId: DocID) {
+            // try with core
+            try {
+                await core.loadDocument(invalidDocId)
+            } catch (e) {
+                expect(e.message).toContain('does not refer to a valid version, which must correspond to an anchor record')
+            }
+            // try with client
+            try {
+                await client.loadDocument(invalidDocId)
+            } catch (e) {
+                expect(e.message).toContain('does not refer to a valid version, which must correspond to an anchor record')
+            }
+        }
+        await assertCannotLoadNonVersion(DocID.fromOther(doc.id, doc.state.log[2].cid))
+        await assertCannotLoadNonVersion(DocID.fromOther(doc.id, doc.state.log[4].cid))
+
+        // The signed records can, however, be loaded as tips
+        //const docTip2Core = await core.loadDocument(doc.id, {}, doc.state.log[2].cid)
+        //const docTip2Client = await client.loadDocument(v3Id)
     })
 })

@@ -3,6 +3,7 @@ import Document from './document'
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import KeyDidResolver from '@ceramicnetwork/key-did-resolver'
 import DocID from '@ceramicnetwork/docid'
+import CID from 'cids'
 import { AnchorService, CeramicApi, CeramicRecord, DIDProvider, IpfsApi, PinApi } from "@ceramicnetwork/common"
 import {
   Doctype,
@@ -396,6 +397,17 @@ class Ceramic implements CeramicApi {
     docId = normalizeDocID(docId)
     const doc = await this._loadDoc(docId.baseID, opts)
     return (docId.version? await doc.loadVersion<T>(docId.version) : doc.doctype) as T
+  }
+
+  /**
+   * Load document type instance
+   * @param docId - Document ID
+   * @param opts - Initialization options
+   */
+  async loadDocumentAtTip<T extends Doctype>(docId: DocID | string, opts: DocOpts, tip: CID): Promise<T> {
+    docId = normalizeDocID(docId)
+    const doc = await this._loadDoc(docId.baseID, opts)
+    return await doc.loadTip<T>(tip)
   }
 
   /**

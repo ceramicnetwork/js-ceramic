@@ -245,6 +245,17 @@ class Document extends EventEmitter {
   }
 
   /**
+   * Loads a specific tip of the Doctype
+   *
+   * @param tip - Document tip
+   */
+  async loadTip<T extends Doctype>(tip: CID): Promise<T> {
+    const opts: DocOpts = {anchor: false, publish: false, sync: false}
+    const doc = await Document.load<T>(this.id.baseID, this._doctypeHandler as DoctypeHandler<T>, this.dispatcher, this.pinStore, this._context, opts, this._validate, tip)
+    return doc.doctype as T
+  }
+
+  /**
    * Applies record to the existing Doctype
    *
    * @param record - Record data

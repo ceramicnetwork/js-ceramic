@@ -3,6 +3,7 @@ import {
 } from "@ceramicnetwork/common"
 
 import DocID from '@ceramicnetwork/docid'
+import CID from 'cids'
 
 import { fetchJson, typeDocID, delay } from './utils'
 import { CeramicClientConfig } from "./ceramic-http-client"
@@ -78,9 +79,11 @@ class Document extends Doctype {
     return new Document(DoctypeUtils.deserializeState(state), context, apiUrl)
   }
 
-  static async load (docId: DocID | string, apiUrl: string, context: Context, config: CeramicClientConfig): Promise<Document> {
+  static async load (docId: DocID | string, apiUrl: string, context: Context, config: CeramicClientConfig, opts: DocOpts, tip?: CID): Promise<Document> {
+    // todo send opts and tip
     docId = typeDocID(docId)
     const { state } = await fetchJson(apiUrl + '/documents/' + docId.toString())
+    // todo if loading at tip, disable document syncing
     return new Document(DoctypeUtils.deserializeState(state), context, apiUrl, config)
   }
 
