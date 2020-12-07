@@ -542,7 +542,6 @@ describe('Ceramic API', () => {
       expect(docs[docF.id.toString()]).toBeTruthy()
     })
 
-
     it('can load docs for array of overlapping multiqueries', async () => {
       const queries = [
         {
@@ -558,23 +557,20 @@ describe('Ceramic API', () => {
       expect(Object.keys(docs).length).toEqual(6)
     })
 
-    // it('can load docs for array of multiqueries even if docid or path throws error', async () => {
-    //   console.log('error')
-    //   const queries = [
-    //     {
-    //       docId: docA.id,
-    //       paths: ['/b/d', '/notExistDocId']
-    //     }, 
-    //     {
-    //       docId: notExistDocId,
-    //       paths: ['/e/f' , '/d']
-    //     }
-    //   ]
-    //   const docs = await ceramic.multiQuery(queries)
-    //   expect(Object.keys(docs).length).toEqual(3)
-    //   console.log('error not')
-    // })
-
+    it('can load docs for array of multiqueries even if docid or path throws error', async () => {
+      const queries = [
+        {
+          docId: docA.id,
+          paths: ['/b/d', '/notExistDocId']
+        }, 
+        {
+          docId: notExistDocId,
+          paths: ['/e/f' , '/d']
+        }
+      ]
+      const docs = await ceramic.multiQuery(queries, 1000)
+      expect(Object.keys(docs).length).toEqual(3)
+    })
 
     it('can load docs for array of multiqueries including paths that dont exist', async () => {
       const queries = [

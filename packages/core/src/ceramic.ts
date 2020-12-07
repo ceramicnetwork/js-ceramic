@@ -23,7 +23,7 @@ import { TileDoctypeHandler } from "@ceramicnetwork/doctype-tile"
 import { Caip10LinkDoctypeHandler } from "@ceramicnetwork/doctype-caip10-link"
 import { PinStoreFactory } from "./store/pin-store-factory";
 import { PinStore } from "./store/pin-store";
-import { PathTrie, TrieNode } from './utils'
+import { PathTrie, TrieNode, promiseTimeout } from './utils'
 
 import EthereumAnchorService from "./anchor/ethereum/ethereum-anchor-service"
 import InMemoryAnchorService from "./anchor/memory/in-memory-anchor-service"
@@ -409,15 +409,13 @@ class Ceramic implements CeramicApi {
     return (docId.version? await doc.loadVersion<T>(docId.version) : doc.doctype) as T
   }
 
-
-// TODO DocOpts?
   /**
    * Load all document type instance for given paths
    * @param docId - Document ID (root)
    * @param paths - relative paths to documents to load
    * @private
    */
-  async _loadLinkedDocuments(id: DocID | string, paths: string[]): Promise<Record<string, Doctype>> {
+  async _loadLinkedDocuments(id: DocID | string, paths: string[], timeout = 7000): Promise<Record<string, Doctype>> {
     id = normalizeDocID(id)
     const pathTrie = new PathTrie()
     paths.forEach(path => pathTrie.add(path))
@@ -425,8 +423,12 @@ class Ceramic implements CeramicApi {
     const index = {}
 
     const walkNext = async (node: TrieNode, docId: DocID) => {
-      //TODO  eroror handling/timeout, this shouldnt block other docs returning 
-      const doc = await this.loadDocument(docId)
+      let doc
+      try {
+        doc = await promiseTimeout(timeout, this.loadDocument(docId))
+      } catch (e) {
+        return Promise.resolve()
+      }
       index[docId.toString()] = doc
       
       const promiseList = Object.keys(node.children).map(key => {
@@ -447,10 +449,10 @@ class Ceramic implements CeramicApi {
    * Load all document types instances for given multiqueries
    * @param queries - Array of MultiQueries 
    */
-  async multiQuery(queries: Array<MultiQuery>):  Promise<Record<string, Doctype>> {
+  async multiQuery(queries: Array<MultiQuery>, timeout?: number):  Promise<Record<string, Doctype>> {
     const queryPromises = queries.map(query => {
       try {
-        return this._loadLinkedDocuments(query.docId, query.paths)
+        return this._loadLinkedDocuments(query.docId, query.paths, timeout)
       } catch (e) {
         return Promise.resolve({})
       }

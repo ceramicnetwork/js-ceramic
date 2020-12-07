@@ -86,3 +86,10 @@ export class PathTrie {
         path.split('/').reduce(nextNodeAdd, this.root)
     }
 }
+
+export const promiseTimeout = (ms: number, promise:Promise<any>): Promise<any> => {
+    const timeout = new Promise((resolve, reject) => {
+        setTimeout(() => reject(), ms)
+    })
+    return Promise.race([timeout, promise])
+}
