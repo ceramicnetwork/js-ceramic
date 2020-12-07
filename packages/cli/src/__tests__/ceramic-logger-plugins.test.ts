@@ -28,7 +28,9 @@ describe('Ceramic Logger Plugins', () => {
                     birthtime: today
                 }
             ]
+            // @ts-ignore
             fs.__initMockFs(mockFiles)
+            // @ts-ignore
             mockFs = fs.__getMockFs()
         })
         afterEach(() => {

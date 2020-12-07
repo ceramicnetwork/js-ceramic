@@ -33,7 +33,10 @@
   },
   "jest": {
     "testEnvironment": "node",
-    "transformIgnorePatterns": []
+    "transformIgnorePatterns": [],
+    "modulePathIgnorePatterns": [
+      "lib"
+    ]
   },
   "dependencies": {
     "@babel/register": "^7.10.5",

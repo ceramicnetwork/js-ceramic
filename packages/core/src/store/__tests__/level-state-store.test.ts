@@ -1,7 +1,7 @@
 import tmp from 'tmp-promise'
 import { LevelStateStore } from "../level-state-store";
 import Level from "level-ts";
-import { AnchorStatus, Doctype, SignatureStatus } from "@ceramicnetwork/common";
+import { AnchorStatus, Doctype, RecordType, SignatureStatus } from "@ceramicnetwork/common";
 import CID from 'cids'
 import DocID from '@ceramicnetwork/docid'
 
@@ -49,7 +49,7 @@ const state = {
     },
     signature: SignatureStatus.GENESIS,
     anchorStatus: AnchorStatus.NOT_REQUESTED,
-    log: [{ cid: new CID('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D') }]
+    log: [{ type: RecordType.GENESIS, cid: new CID('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D') }]
 }
 
 test('#open', async () => {

@@ -3,7 +3,7 @@ import Document from './document'
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import KeyDidResolver from '@ceramicnetwork/key-did-resolver'
 import DocID from '@ceramicnetwork/docid'
-import { AnchorService, CeramicApi, DIDProvider, IpfsApi, PinApi } from "@ceramicnetwork/common"
+import { AnchorService, CeramicApi, CeramicRecord, DIDProvider, IpfsApi, PinApi } from "@ceramicnetwork/common"
 import {
   Doctype,
   DoctypeHandler,
@@ -295,7 +295,7 @@ class Ceramic implements CeramicApi {
    * @param record - Record to be applied
    * @param opts - Initialization options
    */
-  async applyRecord<T extends Doctype>(docId: DocID | string, record: Record<string, unknown>, opts?: DocOpts): Promise<T> {
+  async applyRecord<T extends Doctype>(docId: DocID | string, record: CeramicRecord, opts?: DocOpts): Promise<T> {
     docId = normalizeDocID(docId)
     if (docId.version != null) {
       throw new Error('Historical document versions cannot be modified. Load the document without specifying a version to make updates.')
@@ -309,7 +309,7 @@ class Ceramic implements CeramicApi {
 
   /**
    * Get document from map by Genesis CID
-   * @param genesisCid
+   * @param docId - Document ID
    */
   getDocFromMap(docId: DocID): Document {
     return this._docmap[docId.toString()]
