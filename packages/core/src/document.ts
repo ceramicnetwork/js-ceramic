@@ -117,7 +117,7 @@ class Document extends EventEmitter {
   ): Promise<Document> {
     // Fill 'opts' with default values for any missing fields
     opts = {...DEFAULT_LOAD_DOCOPTS, ...opts}
-    
+
     const doc = await Document._loadGenesis(id, handler, dispatcher, pinStore, context, validate)
 
     // Update document state to cached state if any
@@ -128,30 +128,6 @@ class Document extends EventEmitter {
 
     await doc._register(opts)
     return doc
-  }
-
-  /**
-   * Validate Doctype against schema
-   */
-  async validate(): Promise<void> {
-    const schemaDocId = this.state?.metadata?.schema
-    if (schemaDocId) {
-      const schemaDoc = await this._context.api.loadDocument(schemaDocId)
-      if (!schemaDoc) {
-        throw new Error(`Schema not found for ${schemaDocId}`)
-      }
-      Utils.validate(this.content, schemaDoc.content)
-    }
-  }
-
-  /**
-   * Loads a specific version of the Doctype
-   *
-   * @param version - Document version
-   */
-  async loadVersion<T extends Doctype>(version: CID): Promise<T> {
-    const doc = await Document.loadVersion<T>(this.id, version, this._doctypeHandler as DoctypeHandler<T>, this.dispatcher, this.pinStore, this._context, this._validate)
-    return doc.doctype as T
   }
 
   /**
@@ -231,6 +207,16 @@ class Document extends EventEmitter {
     }
 
     return doc
+  }
+
+  /**
+   * Loads a specific version of the Doctype
+   *
+   * @param version - Document version
+   */
+  async loadVersion<T extends Doctype>(version: CID): Promise<T> {
+    const doc = await Document.loadVersion<T>(this.id, version, this._doctypeHandler as DoctypeHandler<T>, this.dispatcher, this.pinStore, this._context, this._validate)
+    return doc.doctype as T
   }
 
   /**
@@ -525,7 +511,7 @@ class Document extends EventEmitter {
         state = await this._doctypeHandler.applyRecord(record, cid, this._context, state)
       } else if (!payload.prev) {
         // it's a genesis record
-        if (this.validate) {
+        if (this._validate) {
           const schemaId = payload.header?.schema
           if (schemaId) {
             const schema = await Document.loadSchemaById(this._context, schemaId)
@@ -538,7 +524,7 @@ class Document extends EventEmitter {
       } else {
         // it's a signed record
         const tmpState = await this._doctypeHandler.applyRecord(record, cid, this._context, state)
-        if (this.validate) {
+        if (this._validate) {
           const schemaId = payload.header?.schema
           if (schemaId) {
             const schema = await Document.loadSchemaById(this._context, schemaId)
