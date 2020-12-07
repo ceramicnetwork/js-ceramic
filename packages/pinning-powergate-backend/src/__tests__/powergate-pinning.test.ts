@@ -91,6 +91,7 @@ describe("#pin", () => {
     await pinning.open();
     const cid = new CID("QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D");
     await pinning.pin(cid);
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     expect(mockPow.ffs.pushStorageConfig).toBeCalledWith( // @ts-ignore
       cid.toString(),
       expect.anything()
@@ -105,6 +106,7 @@ describe("#pin", () => {
       throw new Error("cid already pinned, consider using override flag");
     });
     await expect(pinning.pin(cid)).resolves.toBeUndefined();
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     expect(mockPow.ffs.pushStorageConfig).toBeCalledWith( // @ts-ignore
       cid.toString(),
       expect.anything()
@@ -120,6 +122,7 @@ describe("#pin", () => {
       throw new Error("something wrong");
     });
     await expect(pinning.pin(cid)).rejects.toThrow("something wrong");
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     expect(mockPow.ffs.pushStorageConfig).toBeCalledWith( // @ts-ignore
       cid.toString(),
       expect.anything()
