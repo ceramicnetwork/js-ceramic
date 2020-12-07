@@ -58,16 +58,6 @@ export function wrapDocument(content: any, did: string): DIDDocument {
     return diddoc
   }, startDoc)
 
-  if (content.idx != null) {
-    doc.service = [
-      {
-        id: `${did}#idx`,
-        type: 'IdentityIndexRoot',
-        serviceEndpoint: content.idx,
-      },
-    ]
-  }
-
   return doc
 }
 
@@ -93,8 +83,8 @@ const legacyResolve = async (ceramic: Ceramic, didId: string, version?: string):
   if (version === '0') return legacyDoc
 
   try {
-    const content =  { deterministic: true, metadata: { controllers: [legacyPublicKeys.keyDid], family: '3id' } }
-    const doc = await ceramic.createDocument('tile', content, { applyOnly: true })
+    const docParams =  { deterministic: true, metadata: { controllers: [legacyPublicKeys.keyDid], family: '3id' } }
+    const doc = await ceramic.createDocument('tile', docParams, { applyOnly: true })
     const didDoc = await resolve(ceramic, doc.id.toString(), version, didId)
     return didDoc
   } catch(e) {
