@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "bootstrap": "npm ci && lerna bootstrap --hoist --ci",
-    "test": "lerna run test",
+    "test": "lerna exec npm t",
     "build": "lerna run build",
     "docs": "./node_modules/.bin/typedoc",
     "publish:next": "lerna publish --no-push --conventional-prerelease --dist-tag next",
