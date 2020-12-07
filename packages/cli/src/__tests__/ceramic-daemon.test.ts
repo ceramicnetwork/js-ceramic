@@ -12,6 +12,7 @@ import * as u8a from 'uint8arrays'
 import dagJose from 'dag-jose'
 import basicsImport from 'multiformats/cjs/src/basics-import.js'
 import legacy from 'multiformats/cjs/src/legacy.js'
+import DocID from "@ceramicnetwork/docid";
 
 const seed = u8a.fromString('6e34b2e1a9624113d81ece8a8a22e6e97f0e145c25c1d4d2d0e62753b4060c83', 'base16')
 const waitChange = (doc: EventEmitter, count = 1): Promise<void> => {
@@ -184,5 +185,74 @@ describe('Ceramic interop: core <> http-client', () => {
         expect(doc1.content).toEqual(doc2.content)
         expect(doc1.content).toEqual(finalContent)
         expect(DoctypeUtils.serializeState(doc1.state)).toEqual(DoctypeUtils.serializeState(doc2.state))
+    })
+
+    it('loads versions correctly', async () => {
+        // Create multiple versions of the same document
+        const content1 = { test: 123 }
+        const content2 = { test: 456 }
+        const content3 = { test: 789 }
+        const doc = await core.createDocument(DOCTYPE_TILE, { content: content1 })
+        await waitChange(doc)
+        expect(doc.state.log.length).toEqual(2)
+        expect(doc.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+        await doc.change({ content: content2 })
+        await waitChange(doc)
+        expect(doc.state.log.length).toEqual(4)
+        expect(doc.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+        await doc.change({ content: content3 })
+        await waitChange(doc)
+        expect(doc.state.log.length).toEqual(6)
+        expect(doc.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+
+        // Cannot load any of the signed records as versions
+        const assertCannotLoadNonVersion = async function(invalidDocId: DocID) {
+            // try with core
+            try {
+                await core.loadDocument(invalidDocId)
+            } catch (e) {
+                expect(e.message).toContain('does not refer to a valid version, which must correspond to an anchor record')
+            }
+            // try with client
+            try {
+                await client.loadDocument(invalidDocId)
+            } catch (e) {
+                expect(e.message).toContain('does not refer to a valid version, which must correspond to an anchor record')
+            }
+        }
+        await assertCannotLoadNonVersion(DocID.fromOther(doc.id, doc.state.log[2].cid))
+        await assertCannotLoadNonVersion(DocID.fromOther(doc.id, doc.state.log[4].cid))
+
+        // Load genesis version
+        const v0Id = DocID.fromOther(doc.id, doc.id.cid)
+        const docV0Core = await core.loadDocument(v0Id)
+        const docV0Client = await client.loadDocument(v0Id)
+        expect(docV0Core.content).toEqual(content1)
+        expect(docV0Core.state.log.length).toEqual(1)
+        expect(DoctypeUtils.serializeState(docV0Core.state)).toEqual(DoctypeUtils.serializeState(docV0Client.state))
+
+        // Load v1 (anchor on top of genesis version)
+        const v1Id = DocID.fromOther(doc.id, doc.state.log[1].cid)
+        const docV1Core = await core.loadDocument(v1Id)
+        const docV1Client = await client.loadDocument(v1Id)
+        expect(docV1Core.content).toEqual(content1)
+        expect(docV1Core.state.log.length).toEqual(2)
+        expect(DoctypeUtils.serializeState(docV1Core.state)).toEqual(DoctypeUtils.serializeState(docV1Client.state))
+
+        // Load v2
+        const v2Id = DocID.fromOther(doc.id, doc.state.log[3].cid)
+        const docV2Core = await core.loadDocument(v2Id)
+        const docV2Client = await client.loadDocument(v2Id)
+        expect(docV2Core.content).toEqual(content2)
+        expect(docV2Core.state.log.length).toEqual(4)
+        expect(DoctypeUtils.serializeState(docV2Core.state)).toEqual(DoctypeUtils.serializeState(docV2Client.state))
+
+        // Load v3
+        const v3Id = DocID.fromOther(doc.id, doc.state.log[5].cid)
+        const docV3Core = await core.loadDocument(v3Id)
+        const docV3Client = await client.loadDocument(v3Id)
+        expect(docV3Core.content).toEqual(content3)
+        expect(docV3Core.state.log.length).toEqual(6)
+        expect(DoctypeUtils.serializeState(docV3Core.state)).toEqual(DoctypeUtils.serializeState(docV3Client.state))
     })
 })

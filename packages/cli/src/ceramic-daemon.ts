@@ -208,9 +208,8 @@ class CeramicDaemon {
    * Get document state
    */
   async state (req: Request, res: Response, next: NextFunction): Promise<void> {
-    const docId = DocID.fromString(req.params.docid, req.query.version ? req.query.version.toString() : undefined)
     try {
-      const doc = await this.ceramic.loadDocument(docId)
+      const doc = await this.ceramic.loadDocument(req.params.docid)
 
       res.json({ docId: doc.id.toString(), state: DoctypeUtils.serializeState(doc.state) })
     } catch (e) {
