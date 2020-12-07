@@ -16,7 +16,6 @@ import {
   DocOpts,
   Context,
   DoctypeUtils,
-  CeramicApi,
   DocMetadata,
   RootLogger,
   Logger,
@@ -100,7 +99,7 @@ class Document extends EventEmitter {
   /**
    * Loads the Doctype by id
    * @param id - Document ID
-   * @param findHandler - find handler fn
+   * @param handler - find handler
    * @param dispatcher - Dispatcher instance
    * @param pinStore - PinStore instance
    * @param context - Ceramic context
@@ -123,13 +122,6 @@ class Document extends EventEmitter {
     const doc = new Document(id, dispatcher, pinStore, validate, context, handler, doctype)
 
     const record = await dispatcher.retrieveRecord(doc._genesisCid)
-
-    let payload
-    if (DoctypeUtils.isSignedRecord(record)) {
-      payload = await dispatcher.retrieveRecord(record.link)
-    } else {
-      payload = record
-    }
 
     const isStored = await pinStore.stateStore.exists(id)
     if (isStored) {

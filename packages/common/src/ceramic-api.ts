@@ -1,5 +1,11 @@
 import { DID, DIDProvider } from 'dids'
-import { Doctype, DoctypeHandler, DocOpts, DocParams } from "./doctype"
+import {
+    Doctype,
+    DoctypeHandler,
+    DocOpts,
+    DocParams,
+    CeramicRecord
+} from "./doctype"
 import DocID from '@ceramicnetwork/docid'
 
 /**
@@ -84,7 +90,7 @@ export interface CeramicApi {
      * @param record - Record to be applied
      * @param opts - Initialization options
      */
-    applyRecord<T extends Doctype>(docId: DocID | string, record: Record<string, unknown>, opts?: DocOpts): Promise<T>;
+    applyRecord<T extends Doctype>(docId: DocID | string, record: CeramicRecord, opts?: DocOpts): Promise<T>;
 
     /**
      * Set DID provider

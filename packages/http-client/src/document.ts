@@ -1,5 +1,5 @@
 import {
-  Context, DocOpts, DocParams, DocState, Doctype, DoctypeHandler, DoctypeUtils
+  CeramicRecord, Context, DocOpts, DocParams, DocState, Doctype, DoctypeHandler, DoctypeUtils
 } from "@ceramicnetwork/common"
 
 import DocID from '@ceramicnetwork/docid'
@@ -65,7 +65,7 @@ class Document extends Doctype {
     return new Document(DoctypeUtils.deserializeState(state), context, apiUrl, config)
   }
 
-  static async applyRecord(apiUrl: string, docId: DocID | string, record: any, context: Context, docOpts: DocOpts = {}): Promise<Document> {
+  static async applyRecord(apiUrl: string, docId: DocID | string, record: CeramicRecord, context: Context, docOpts: DocOpts = {}): Promise<Document> {
     docId = typeDocID(docId)
     const { state } = await fetchJson(apiUrl + '/records', {
       method: 'post',
@@ -84,7 +84,7 @@ class Document extends Doctype {
     return new Document(DoctypeUtils.deserializeState(state), context, apiUrl, config)
   }
 
-  static async loadDocumentRecords (docId: DocID | string, apiUrl: string): Promise<Array<Record<string, any>>> {
+  static async loadDocumentRecords (docId: DocID | string, apiUrl: string): Promise<Array<Record<string, CeramicRecord>>> {
     docId = typeDocID(docId)
     const { records } = await fetchJson(apiUrl + '/records/' + docId.toString())
 
