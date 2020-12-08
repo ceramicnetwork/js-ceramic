@@ -120,7 +120,7 @@ export default class Dispatcher extends EventEmitter {
    * @param data - Ceramic record data
    */
   async storeRecord (data: any): Promise<CID> {
-    if (DoctypeUtils.isSignedRecordDTO(data)) {
+    if (DoctypeUtils.isSignedRecordContainer(data)) {
       const { jws, linkedBlock } = data
       // put the JWS into the ipfs dag
       const cid = await this._ipfs.dag.put(jws, { format: 'dag-jose', hashAlg: 'sha2-256' })
