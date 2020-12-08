@@ -64,7 +64,7 @@ describe('Ceramic', () => {
     let ceramic: Ceramic
     let tmpFolder: any;
 
-    beforeAll(async () => {
+    beforeEach(async () => {
         tmpFolder = await tmp.dir({ unsafeCleanup: true })
 
         ipfs = await createIPFS({
@@ -74,59 +74,55 @@ describe('Ceramic', () => {
         })
     })
 
-    afterAll(async () => {
+    afterEach(async () => {
         await ipfs.stop(() => console.log('IPFS stopped'))
         await tmpFolder.cleanup()
         await new Promise(resolve => setTimeout(() => resolve(), 1000))
     })
 
-    describe('network', () => {
-        it('can create Ceramic instance on default network', async () => {
-            const stateStorePath = await tmp.tmpName()
-            const ceramic = await Ceramic.create(ipfs, { stateStorePath })
-            const supportedChains = await ceramic.getSupportedChains()
-            expect(supportedChains).toEqual(['inmemory:12345'])
-            await ceramic.close()
-        })
-
-        it('can create Ceramic instance explicitly on inmemory network', async () => {
-            const stateStorePath = await tmp.tmpName()
-            const ceramic = await Ceramic.create(ipfs, { networkName: 'inmemory', stateStorePath })
-            const supportedChains = await ceramic.getSupportedChains()
-            expect(supportedChains).toEqual(['inmemory:12345'])
-            await ceramic.close()
-        })
-
-        it('cannot create Ceramic instance on network not supported by our anchor service', async () => {
-            const stateStorePath = await tmp.tmpName()
-            await expect(Ceramic.create(ipfs, {
-                networkName: 'local', stateStorePath
-            })).rejects.toThrow("No usable chainId for anchoring was found.  The ceramic network 'local' supports the chains: ['eip155:1337'], but the configured anchor service 'inmemory' only supports the chains: ['inmemory:12345']")
-        })
-
-        it('cannot create Ceramic instance on invalid network', async () => {
-            const stateStorePath = await tmp.tmpName()
-            await expect(Ceramic.create(ipfs, {
-                networkName: 'fakenetwork', stateStorePath
-            })).rejects.toThrow("Unrecognized Ceramic network name: 'fakenetwork'. Supported networks are: 'mainnet', 'testnet-clay', 'local', 'inmemory'")
-        })
+    it('can create Ceramic instance on default network', async () => {
+        const stateStorePath = await tmp.tmpName()
+        const ceramic = await Ceramic.create(ipfs, { stateStorePath })
+        const supportedChains = await ceramic.getSupportedChains()
+        expect(supportedChains).toEqual(['inmemory:12345'])
+        await ceramic.close()
     })
 
-    describe('records', () => {
-        it('can store record if the size is lesser than the maximum size ~500KB', async () => {
-            ceramic = await createCeramic(ipfs)
+    it('can create Ceramic instance explicitly on inmemory network', async () => {
+        const stateStorePath = await tmp.tmpName()
+        const ceramic = await Ceramic.create(ipfs, { networkName: 'inmemory', stateStorePath })
+        const supportedChains = await ceramic.getSupportedChains()
+        expect(supportedChains).toEqual(['inmemory:12345'])
+        await ceramic.close()
+    })
 
-            const doctype = await ceramic.createDocument('tile', { content: { test: generateStringOfSize(10000) } })
-            expect(doctype).not.toBeNull();
+    it('cannot create Ceramic instance on network not supported by our anchor service', async () => {
+        const stateStorePath = await tmp.tmpName()
+        await expect(Ceramic.create(ipfs, {
+            networkName: 'local', stateStorePath
+        })).rejects.toThrow("No usable chainId for anchoring was found.  The ceramic network 'local' supports the chains: ['eip155:1337'], but the configured anchor service 'inmemory' only supports the chains: ['inmemory:12345']")
+    })
 
-            await ceramic.close()
-        })
+    it('cannot create Ceramic instance on invalid network', async () => {
+        const stateStorePath = await tmp.tmpName()
+        await expect(Ceramic.create(ipfs, {
+            networkName: 'fakenetwork', stateStorePath
+        })).rejects.toThrow("Unrecognized Ceramic network name: 'fakenetwork'. Supported networks are: 'mainnet', 'testnet-clay', 'local', 'inmemory'")
+    })
 
-        it('cannot store record if the size is greated than the maximum size ~500KB', async () => {
-            ceramic = await createCeramic(ipfs)
+    it('can store record if the size is lesser than the maximum size ~500KB', async () => {
+        ceramic = await createCeramic(ipfs)
 
-            await expect(ceramic.createDocument('tile', { content: { test: generateStringOfSize(20000001) } })).rejects.toThrow(/exceeds the maximum block size of/)
-            await ceramic.close()
-        })
+        const doctype = await ceramic.createDocument('tile', { content: { test: generateStringOfSize(10000) } })
+        expect(doctype).not.toBeNull();
+
+        await ceramic.close()
+    })
+
+    it('cannot store record if the size is greated than the maximum size ~500KB', async () => {
+        ceramic = await createCeramic(ipfs)
+
+        await expect(ceramic.createDocument('tile', { content: { test: generateStringOfSize(1000000) } })).rejects.toThrow(/exceeds the maximum block size of/)
+        await ceramic.close()
     })
 })
