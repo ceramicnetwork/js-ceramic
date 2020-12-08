@@ -187,8 +187,8 @@ describe('Ceramic interop: core <> http-client', () => {
         expect(DoctypeUtils.serializeState(doc1.state)).toEqual(DoctypeUtils.serializeState(doc2.state))
     })
 
-    it('loads versions correctly', async () => {
-        // Create multiple versions of the same document
+    it('loads commits correctly', async () => {
+        // Create multiple commits of the same document
         const content1 = {test: 123}
         const content2 = {test: 456}
         const content3 = {test: 789}
@@ -205,7 +205,7 @@ describe('Ceramic interop: core <> http-client', () => {
         expect(doc.state.log.length).toEqual(6)
         expect(doc.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
-        // Load genesis version
+        // Load genesis commit
         const v0Id = DocID.fromOther(doc.id, doc.id.cid)
         const docV0Core = await core.loadDocument(v0Id)
         const docV0Client = await client.loadDocument(v0Id)
@@ -213,7 +213,7 @@ describe('Ceramic interop: core <> http-client', () => {
         expect(docV0Core.state.log.length).toEqual(1)
         expect(DoctypeUtils.serializeState(docV0Core.state)).toEqual(DoctypeUtils.serializeState(docV0Client.state))
 
-        // Load v1 (anchor on top of genesis version)
+        // Load v1 (anchor on top of genesis commit)
         const v1Id = DocID.fromOther(doc.id, doc.state.log[1].cid)
         const docV1Core = await core.loadDocument(v1Id)
         const docV1Client = await client.loadDocument(v1Id)

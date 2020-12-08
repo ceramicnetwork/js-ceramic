@@ -70,31 +70,36 @@ const isLegacyDid = (didId: string): boolean => {
   }
 }
 
+/**
+ * Gets the identifier of the version of the did document that was requested. This will correspond
+ * to a specific 'commit' of the ceramic document
+ * @param query
+ */
 const getVersion = (query = ''): string | null => {
   const versionParam = query.split('&').find(e => e.includes('version-id'))
   return versionParam ? versionParam.split('=')[1] : null
 }
 
-const legacyResolve = async (ceramic: Ceramic, didId: string, version?: string): Promise<DIDDocument | null> => {
+const legacyResolve = async (ceramic: Ceramic, didId: string, commit?: string): Promise<DIDDocument | null> => {
   const legacyPublicKeys = await LegacyResolver(didId) // can add opt to pass ceramic ipfs to resolve
   if (!legacyPublicKeys) return null
 
   const legacyDoc = wrapDocument(legacyPublicKeys, `did:3:${didId}`)
-  if (version === '0') return legacyDoc
+  if (commit === '0') return legacyDoc
 
   try {
     const docParams =  { deterministic: true, metadata: { controllers: [legacyPublicKeys.keyDid], family: '3id' } }
     const doc = await ceramic.createDocument('tile', docParams, { applyOnly: true })
-    const didDoc = await resolve(ceramic, doc.id.toString(), version, didId)
+    const didDoc = await resolve(ceramic, doc.id.toString(), commit, didId)
     return didDoc
   } catch(e) {
-    if (version) throw new Error('Not a valid 3ID')
+    if (commit) throw new Error('Not a valid 3ID')
     return legacyDoc
   }
 }
 
-const resolve = async (ceramic: Ceramic, didId: string, version?: string, v03ID?: string): Promise<DIDDocument | null> =>  {
-  const docId = DocID.fromString(didId, version)
+const resolve = async (ceramic: Ceramic, didId: string, commit?: string, v03ID?: string): Promise<DIDDocument | null> =>  {
+  const docId = DocID.fromString(didId, commit)
   const doctype = await ceramic.loadDocument(docId)
   return wrapDocument(doctype.content, `did:3:${v03ID || didId}`)
 }

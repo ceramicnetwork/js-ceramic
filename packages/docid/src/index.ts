@@ -15,7 +15,7 @@ const getKey = (obj: { [key: string]: number }, value: number): string | undefin
 
 // Definition
 // '<multibase-prefix><multicodec-docid><doctype><genesis-cid-bytes>'
-// '<multibase-prefix><multicodec-docid><doctype><genesis-cid-bytes><version-cid-bytes>'
+// '<multibase-prefix><multicodec-docid><doctype><genesis-cid-bytes><commit-cid-bytes>'
 
 class DocID {
   /**
@@ -23,49 +23,49 @@ class DocID {
    *
    * @param {string|number}      doctype
    * @param {CID|string}         cid
-   * @param {CID|string}         version CID. Pass '0' as shorthand for the genesis version.
+   * @param {CID|string}         commit CID. Pass '0' as shorthand for the genesis commit.
    * @param {string}             [multibaseName = 'base36']
    *
    * @example
    * new DocID(<docType>, <CID>|<cidStr>)
-   * new DocID(<docType>, <CID>|<cidStr>, <VersionCID>|<VersionCidStr>, <multibaseName>)
+   * new DocID(<docType>, <CID>|<cidStr>, <CommitCID>|<CommitCidStr>, <multibaseName>)
    */
 
   private _doctype: number
   private _cid: CID
   private _multibaseName: string
   private _bytes: Uint8Array
-  private _version: CID | undefined
+  private _commit: CID | undefined
 
-  constructor (doctype: string | number, cid: CID | string, version: CID | string | number = null, multibaseName = DEFAULT_BASE) {
+  constructor (doctype: string | number, cid: CID | string, commit: CID | string | number = null, multibaseName = DEFAULT_BASE) {
     this._doctype = (typeof doctype === 'string') ? doctypes[doctype] : doctype
      if (!doctype && doctype !== 0) throw new Error('constructor: doctype required')
     this._multibaseName = multibaseName
     this._cid = (typeof cid === 'string') ? new CID(cid) : cid
-    if (typeof version === 'number' && version !== 0) {
-      throw new Error('Cannot specify version as a number except to request version 0 (the genesis version)')
+    if (typeof commit === 'number' && commit !== 0) {
+      throw new Error('Cannot specify commit as a number except to request commit 0 (the genesis commit)')
     }
-    if (version === '0' || version === 0) {
-      this._version = this._cid
+    if (commit === '0' || commit === 0) {
+      this._commit = this._cid
     } else {
-      this._version = (typeof version === 'string') ? new CID(version) : version
+      this._commit = (typeof commit === 'string') ? new CID(commit) : commit
     }
     if (!cid) throw new Error('constructor: cid required')
   }
 
   /**
-   * Copies the given DocID and returns a copy of it, optionally changing the version to the one provided
+   * Copies the given DocID and returns a copy of it, optionally changing the commit to the one provided
    * @param other
-   * @param version
+   * @param commit
    */
-  static fromOther(other: DocID, version?: CID | string): DocID {
-    if (!version) {
-      version = other.version
+  static fromOther(other: DocID, commit?: CID | string): DocID {
+    if (!commit) {
+      commit = other.commit
     }
-    return new DocID(other._doctype, other._cid, version, other._multibaseName)
+    return new DocID(other._doctype, other._cid, commit, other._multibaseName)
   }
 
-  static fromBytes(bytes: Uint8Array, version?: CID | string, multibaseName?: string): DocID {
+  static fromBytes(bytes: Uint8Array, commit?: CID | string, multibaseName?: string): DocID {
     const docCodec = varint.decode(bytes)
     if (docCodec !== DOCID_CODEC) throw new Error('fromBytes: invalid docid, does not include docid codec')
     bytes = bytes.slice(varint.decode.bytes)
@@ -77,14 +77,14 @@ class DocID {
     try {
       cid = new CID(bytes)
     } catch(e) {
-      // Includes version
+      // Includes commit
       const cidLength = DocID._genesisCIDLength(bytes)
       cid = new CID(bytes.slice(0, cidLength))
-      const versionBytes = bytes.slice(cidLength)
-      version = versionBytes.length === 1 ? cid : new CID(versionBytes)
+      const commitBytes = bytes.slice(cidLength)
+      commit = commitBytes.length === 1 ? cid : new CID(commitBytes)
     }
 
-    return new DocID(docType, cid, version, multibaseName)
+    return new DocID(docType, cid, commit, multibaseName)
   }
 
   static _genesisCIDLength(bytes: Uint8Array): number {
@@ -103,29 +103,29 @@ class DocID {
     return offset + length + 1
   }
 
-  static fromString(docId: string, version?: CID | string): DocID {
+  static fromString(docId: string, commit?: CID | string): DocID {
     docId = docId.split('ceramic://').pop()
     // Likely temp, remove legacy once all ceramic update, but should make updating easier
     docId = docId.split('/ceramic/').pop()
-    if (docId.includes('version')) {
-      version = docId.split('?')[1].split('=')[1]
+    if (docId.includes('commit')) {
+      commit = docId.split('?')[1].split('=')[1]
       docId = docId.split('?')[0]
     }
     const multibaseName = multibase.isEncoded(docId)
     if (!multibaseName) throw new Error('fromString: requires base encoded string')
     const bytes = multibase.decode(docId)
-    return DocID.fromBytes(bytes, version, multibaseName)
+    return DocID.fromBytes(bytes, commit, multibaseName)
   }
 
 
   /**
-   * Get base docID, always returns without version
+   * Get base docID, always returns without commit
    *
    * @returns {DocID}
    * @readonly
    */
   get baseID (): DocID {
-    if (!this.version) return this
+    if (!this.commit) return this
     return new DocID(this.type, this.cid, null, this.multibaseName)
   }
 
@@ -162,13 +162,13 @@ class DocID {
   }
 
   /**
-   * Get Version CID
+   * Get Commit CID
    *
    * @returns {CID}
    * @readonly
    */
-  get version (): CID | undefined {
-    return this._version
+  get commit (): CID | undefined {
+    return this._commit
   }
 
   /**
@@ -212,15 +212,15 @@ class DocID {
       const codec = varint.encode(DOCID_CODEC)
       const doctype = varint.encode(this.type)
 
-      let versionBytes
-      if (this.version) {
-        versionBytes = this.cid.equals(this.version) ? varint.encode(0) : this.version.bytes
+      let commitBytes
+      if (this.commit) {
+        commitBytes = this.cid.equals(this.commit) ? varint.encode(0) : this.commit.bytes
       } else {
-        versionBytes = new Uint8Array(0)
+        commitBytes = new Uint8Array(0)
       }
 
       this._bytes = uint8ArrayConcat([
-        codec, doctype, this.cid.bytes, versionBytes
+        codec, doctype, this.cid.bytes, commitBytes
       ])
     }
     return this._bytes
@@ -243,7 +243,7 @@ class DocID {
     }
 
     return this.type === otherDocID.type &&
-      (this.version ? (!!otherDocID.version && this.version.equals(otherDocID.version)) : !otherDocID.version) &&
+      (this.commit ? (!!otherDocID.commit && this.commit.equals(otherDocID.commit)) : !otherDocID.commit) &&
       this.cid.equals(otherDocID.cid)
   }
 

@@ -11,7 +11,7 @@
   "definitions": {
     "CeramicDocId": {
       "type": "string",
-      "pattern": "^ceramic://.+(\\?version=.+)?"
+      "pattern": "^ceramic://.+"
     }
   }
 }
