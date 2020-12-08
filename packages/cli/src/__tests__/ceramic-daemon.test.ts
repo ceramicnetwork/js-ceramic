@@ -186,7 +186,7 @@ describe('Ceramic interop: core <> http-client', () => {
         expect(doc1.content).toEqual(finalContent)
         expect(DoctypeUtils.serializeState(doc1.state)).toEqual(DoctypeUtils.serializeState(doc2.state))
     })
-    
+
     it('loads versions correctly', async () => {
         // Create multiple versions of the same document
         const content1 = {test: 123}

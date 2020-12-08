@@ -290,7 +290,7 @@ describe('Document', () => {
       // try to checkout non-existing version
       try {
         await doc.loadVersion(new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu'))
-        throw new Error('Should not be able to fetch non-existing version')
+        fail('Should not be able to fetch non-existing version')
       } catch (e) {
         expect(e.message).toContain('No record found for CID')
       }
@@ -307,7 +307,7 @@ describe('Document', () => {
       // try to call doctype.change on doc that's tied to a specific version
       try {
         await docV1.doctype.change({ content: doc.content, controllers: doc.controllers })
-        throw new Error('Should not be able to change document that was loaded at a specific version')
+        fail('Should not be able to change document that was loaded at a specific version')
       } catch (e) {
         expect(e.message).toEqual('Historical document versions cannot be modified. Load the document without specifying a version to make updates.')
       }
@@ -320,7 +320,7 @@ describe('Document', () => {
       try {
         const invalidVersionId = DocID.fromOther(doc.id, doc.doctype.state.log[2].cid)
         await Document.load(invalidVersionId, doctypeHandler, dispatcher, pinStore, context)
-        throw new Error('Should not be able to fetch not anchored version')
+        fail('Should not be able to fetch not anchored version')
       } catch (e) {
         expect(e.message).toContain('does not refer to a valid version, which must correspond to an anchor record')
       }
@@ -329,7 +329,7 @@ describe('Document', () => {
       try {
         const invalidVersionId = DocID.fromOther(doc.id, doc.doctype.state.log[4].cid)
         await Document.load(invalidVersionId, doctypeHandler, dispatcher, pinStore, context)
-        throw new Error('Should not be able to fetch not anchored version')
+        fail('Should not be able to fetch not anchored version')
       } catch (e) {
         expect(e.message).toContain('does not refer to a valid version, which must correspond to an anchor record')
       }
@@ -410,7 +410,7 @@ describe('Document', () => {
           metadata: {controllers, schema: schemaDoc.versionId.toString()}
         }
         await create(docParams, ceramic, context)
-        throw new Error('Should not be able to create a document with an invalid schema')
+        fail('Should not be able to create a document with an invalid schema')
       } catch (e) {
         expect(e.message).toEqual('Validation Error: data[\'stuff\'] should be string')
       }
@@ -430,7 +430,7 @@ describe('Document', () => {
       try {
         const updateRec = await TileDoctype._makeRecord(doc.doctype, user, null, doc.controllers, schemaDoc.versionId.toString())
         await doc.applyRecord(updateRec)
-        throw new Error('Should not be able to assign a schema to a document that does not conform')
+        fail('Should not be able to assign a schema to a document that does not conform')
       } catch (e) {
         expect(e.message).toEqual('Validation Error: data[\'stuff\'] should be string')
       }
@@ -453,7 +453,7 @@ describe('Document', () => {
 
       try {
         await Document.load(doc.id, doctypeHandler, dispatcher, pinStore, context, { sync: false })
-        throw new Error("Should not be able to load a document that doesn't conform to its schema")
+        fail("Should not be able to load a document that doesn't conform to its schema")
       } catch (e) {
         expect(e.message).toEqual('Validation Error: data[\'stuff\'] should be string')
       }
