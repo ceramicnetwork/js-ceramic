@@ -242,36 +242,50 @@ describe('Document', () => {
       const doc = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context)
 
       let versions = doc.allVersionIds
+      let anchorVersions = doc.anchorVersionIds
       const version0 = doc.versionId
       expect(versions).toEqual([version0])
       expect(version0).toEqual(DocID.fromOther(doc.id, doc.id.cid))
+      expect(anchorVersions.length).toEqual(0)
 
       await anchorUpdate(doc)
 
       versions = doc.allVersionIds
+      anchorVersions = doc.anchorVersionIds
       expect(versions.length).toEqual(2)
+      expect(anchorVersions.length).toEqual(1)
       const version1 = doc.versionId
       expect(version1).not.toEqual(version0)
       expect(version1).toEqual(versions[1])
+      expect(version1).toEqual(anchorVersions[0])
 
       const updateRec = await TileDoctype._makeRecord(doc.doctype, user, newContent, doc.controllers)
 
       versions = doc.allVersionIds
+      anchorVersions = doc.anchorVersionIds
       expect(versions.length).toEqual(2)
+      expect(anchorVersions.length).toEqual(1)
 
       await doc.applyRecord(updateRec)
 
       versions = doc.allVersionIds
-      expect(versions.length).toEqual(2)
-      expect(doc.versionId).toEqual(version1)
+      anchorVersions = doc.anchorVersionIds
+      expect(versions.length).toEqual(3)
+      expect(anchorVersions.length).toEqual(1)
+      const version2 = doc.versionId
+      expect(version2).not.toEqual(version1)
+      expect(version2).toEqual(versions[2])
 
       await anchorUpdate(doc)
 
       versions = doc.allVersionIds
-      expect(versions.length).toEqual(3)
-      const version2 = doc.versionId
-      expect(version2).not.toEqual(version1)
-      expect(version2).toEqual(versions[2])
+      anchorVersions = doc.anchorVersionIds
+      expect(versions.length).toEqual(4)
+      expect(anchorVersions.length).toEqual(2)
+      const version3 = doc.versionId
+      expect(version3).not.toEqual(version2)
+      expect(version3).toEqual(versions[3])
+      expect(version3).toEqual(anchorVersions[1])
 
       expect(doc.content).toEqual(newContent)
       expect(doc.state.signature).toEqual(SignatureStatus.SIGNED)
@@ -283,8 +297,13 @@ describe('Document', () => {
       await doc.applyRecord(updateRec2)
 
       versions = doc.allVersionIds
-      expect(versions.length).toEqual(3)
-      expect(doc.versionId).toEqual(version2)
+      anchorVersions = doc.anchorVersionIds
+      expect(versions.length).toEqual(5)
+      expect(anchorVersions.length).toEqual(2)
+      const version4 = doc.versionId
+      expect(version4).not.toEqual(version3)
+      expect(version4).toEqual(versions[4])
+      expect(version4).not.toEqual(anchorVersions[1])
       expect(doc.state.log.length).toEqual(5)
 
       // try to load a non-existing version
@@ -297,55 +316,43 @@ describe('Document', () => {
       }
 
       // Correctly check out a specific version
-      const version = doc.doctype.state.log[1].cid
-      const versionId = DocID.fromOther(doc.id, version)
-      const docV1 = await Document.load(versionId, doctypeHandler, dispatcher, pinStore, context)
+      const docV0 = await Document.load(version0, doctypeHandler, dispatcher, pinStore, context)
+      expect(docV0.state.log.length).toEqual(1)
+      expect(docV0.controllers).toEqual(controllers)
+      expect(docV0.content).toEqual(initialContent)
+      expect(docV0.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
+
+      const docV1 = await Document.load(version1, doctypeHandler, dispatcher, pinStore, context)
       expect(docV1.state.log.length).toEqual(2)
       expect(docV1.controllers).toEqual(controllers)
       expect(docV1.content).toEqual(initialContent)
       expect(docV1.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
+      const docV2 = await Document.load(version2, doctypeHandler, dispatcher, pinStore, context)
+      expect(docV2.state.log.length).toEqual(3)
+      expect(docV2.controllers).toEqual(controllers)
+      expect(docV2.content).toEqual(newContent)
+      expect(docV2.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
+
+      const docV3 = await Document.load(version3, doctypeHandler, dispatcher, pinStore, context)
+      expect(docV3.state.log.length).toEqual(4)
+      expect(docV3.controllers).toEqual(controllers)
+      expect(docV3.content).toEqual(newContent)
+      expect(docV3.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+
+      const docV4 = await Document.load(version4, doctypeHandler, dispatcher, pinStore, context)
+      expect(docV4.state.log.length).toEqual(5)
+      expect(docV4.controllers).toEqual(controllers)
+      expect(docV4.content).toEqual(finalContent)
+      expect(docV4.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
+
       // try to call doctype.change on doc that's tied to a specific version
       try {
-        await docV1.doctype.change({ content: doc.content, controllers: doc.controllers })
+        await docV4.doctype.change({ content: doc.content, controllers: doc.controllers })
         fail('Should not be able to change document that was loaded at a specific version')
       } catch (e) {
         expect(e.message).toEqual('Historical document versions cannot be modified. Load the document without specifying a version to make updates.')
       }
-
-      // Cannot load historical signed record when loading a version
-      try {
-        const invalidVersionId = DocID.fromOther(doc.id, doc.doctype.state.log[2].cid)
-        await Document.load(invalidVersionId, doctypeHandler, dispatcher, pinStore, context)
-        fail('Should not be able to fetch not anchored version')
-      } catch (e) {
-        expect(e.message).toContain('does not refer to a valid version, which must correspond to an anchor record')
-      }
-
-      // Cannot load signed record that hasn't been anchored when loading a version
-      try {
-        const invalidVersionId = DocID.fromOther(doc.id, doc.doctype.state.log[4].cid)
-        await Document.load(invalidVersionId, doctypeHandler, dispatcher, pinStore, context)
-        fail('Should not be able to fetch not anchored version')
-      } catch (e) {
-        expect(e.message).toContain('does not refer to a valid version, which must correspond to an anchor record')
-      }
-
-      /* TODO re-write and enable these tests once we can load signed records as versions
-      // Can load a historical signed record so long as it's loaded a tip, not as a version
-      const docAtTip2 = await Document.load(doc.id, doctypeHandler, dispatcher, pinStore, context, {}, true, doc.doctype.state.log[2].cid)
-      expect(docAtTip2.content).toEqual(newContent)
-      expect(docAtTip2.state.log.length).toEqual(3)
-      expect(docAtTip2.state.signature).toEqual(SignatureStatus.SIGNED)
-      expect(docAtTip2.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
-
-      // Can load signed record that hasn't been anchored so long as it's loaded a tip, not as a version
-      const docAtTip4 = await Document.load(doc.id, doctypeHandler, dispatcher, pinStore, context, {}, true, doc.doctype.state.log[4].cid)
-      expect(docAtTip4.content).toEqual(finalContent)
-      expect(docAtTip4.state.log.length).toEqual(5)
-      expect(docAtTip4.state.signature).toEqual(SignatureStatus.SIGNED)
-      expect(docAtTip4.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
-       */
     })
 
     it('is updated correctly', async () => {

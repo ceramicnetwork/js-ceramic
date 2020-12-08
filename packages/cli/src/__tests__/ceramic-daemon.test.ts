@@ -205,24 +205,6 @@ describe('Ceramic interop: core <> http-client', () => {
         expect(doc.state.log.length).toEqual(6)
         expect(doc.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
-        // Cannot load any of the signed records as versions
-        const assertCannotLoadNonVersion = async function (invalidDocId: DocID) {
-            // try with core
-            try {
-                await core.loadDocument(invalidDocId)
-            } catch (e) {
-                expect(e.message).toContain('does not refer to a valid version, which must correspond to an anchor record')
-            }
-            // try with client
-            try {
-                await client.loadDocument(invalidDocId)
-            } catch (e) {
-                expect(e.message).toContain('does not refer to a valid version, which must correspond to an anchor record')
-            }
-        }
-        await assertCannotLoadNonVersion(DocID.fromOther(doc.id, doc.state.log[2].cid))
-        await assertCannotLoadNonVersion(DocID.fromOther(doc.id, doc.state.log[4].cid))
-
         // Load genesis version
         const v0Id = DocID.fromOther(doc.id, doc.id.cid)
         const docV0Core = await core.loadDocument(v0Id)
@@ -240,20 +222,36 @@ describe('Ceramic interop: core <> http-client', () => {
         expect(DoctypeUtils.serializeState(docV1Core.state)).toEqual(DoctypeUtils.serializeState(docV1Client.state))
 
         // Load v2
-        const v2Id = DocID.fromOther(doc.id, doc.state.log[3].cid)
+        const v2Id = DocID.fromOther(doc.id, doc.state.log[2].cid)
         const docV2Core = await core.loadDocument(v2Id)
         const docV2Client = await client.loadDocument(v2Id)
         expect(docV2Core.content).toEqual(content2)
-        expect(docV2Core.state.log.length).toEqual(4)
+        expect(docV2Core.state.log.length).toEqual(3)
         expect(DoctypeUtils.serializeState(docV2Core.state)).toEqual(DoctypeUtils.serializeState(docV2Client.state))
 
-        // Load v3
-        const v3Id = DocID.fromOther(doc.id, doc.state.log[5].cid)
+        // Load v3 (anchor on top of v2)
+        const v3Id = DocID.fromOther(doc.id, doc.state.log[3].cid)
         const docV3Core = await core.loadDocument(v3Id)
         const docV3Client = await client.loadDocument(v3Id)
-        expect(docV3Core.content).toEqual(content3)
-        expect(docV3Core.state.log.length).toEqual(6)
+        expect(docV3Core.content).toEqual(content2)
+        expect(docV3Core.state.log.length).toEqual(4)
         expect(DoctypeUtils.serializeState(docV3Core.state)).toEqual(DoctypeUtils.serializeState(docV3Client.state))
+
+        // Load v4
+        const v4Id = DocID.fromOther(doc.id, doc.state.log[4].cid)
+        const docV4Core = await core.loadDocument(v4Id)
+        const docV4Client = await client.loadDocument(v4Id)
+        expect(docV4Core.content).toEqual(content3)
+        expect(docV4Core.state.log.length).toEqual(5)
+        expect(DoctypeUtils.serializeState(docV4Core.state)).toEqual(DoctypeUtils.serializeState(docV4Client.state))
+
+        // Load v5
+        const v5Id = DocID.fromOther(doc.id, doc.state.log[5].cid)
+        const docV5Core = await core.loadDocument(v5Id)
+        const docV5Client = await client.loadDocument(v5Id)
+        expect(docV5Core.content).toEqual(content3)
+        expect(docV5Core.state.log.length).toEqual(6)
+        expect(DoctypeUtils.serializeState(docV5Core.state)).toEqual(DoctypeUtils.serializeState(docV5Client.state))
     })
 
     describe('multiqueries', () => {
