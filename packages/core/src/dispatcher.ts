@@ -147,7 +147,7 @@ export default class Dispatcher extends EventEmitter {
   }
 
   /**
-   * Restricts record size to DEFAULT_MAX_IPFS_OBJECT_SIZE (2MB)
+   * Restricts record size to DEFAULT_MAX_IPFS_OBJECT_SIZE
    * @param cid -
    * @private
    */
