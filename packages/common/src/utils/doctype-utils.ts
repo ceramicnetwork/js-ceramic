@@ -25,7 +25,7 @@ export class DoctypeUtils {
     static serializeRecord(record: any): any {
         const cloned = cloneDeep(record)
 
-        if (DoctypeUtils.isSignedRecordDTO(cloned)) {
+        if (DoctypeUtils.isSignedRecordContainer(cloned)) {
             cloned.jws.link = cloned.jws.link.toString()
             cloned.linkedBlock = u8a.toString(cloned.linkedBlock, 'base64')
             return cloned
@@ -56,7 +56,7 @@ export class DoctypeUtils {
     static deserializeRecord(record: any): any {
         const cloned = cloneDeep(record)
 
-        if (DoctypeUtils.isSignedRecordDTO(cloned)) {
+        if (DoctypeUtils.isSignedRecordContainer(cloned)) {
             cloned.jws.link = new CID(cloned.jws.link)
             cloned.linkedBlock = u8a.fromString(cloned.linkedBlock, 'base64')
             return cloned
@@ -147,11 +147,11 @@ export class DoctypeUtils {
     }
 
     /**
-     * Converts record to DTO. The only difference is with signed record for now
+     * Converts record to SignedRecordContainer. The only difference is with signed record for now
      * @param record - Record value
      * @param ipfs - IPFS instance
      */
-    static async convertRecordToDTO(record: CeramicRecord, ipfs: IpfsApi): Promise<CeramicRecord> {
+    static async convertRecordToSignedRecordContainer(record: CeramicRecord, ipfs: IpfsApi): Promise<CeramicRecord> {
         if (DoctypeUtils.isSignedRecord(record)) {
             const block = await ipfs.block.get((record as DagJWS).link)
             const linkedBlock = block.data instanceof Uint8Array ? block.data : new Uint8Array(block.data.buffer)
@@ -179,7 +179,7 @@ export class DoctypeUtils {
      * Checks if record is signed DTO ({jws: {}, linkedBlock: {}})
      * @param record - Record
      */
-    static isSignedRecordDTO(record: CeramicRecord): boolean {
+    static isSignedRecordContainer(record: CeramicRecord): boolean {
         return (record as SignedRecordContainer).jws !== undefined
     }
 
