@@ -21,7 +21,8 @@
    "node_modules",
    "coverage",
    "**/*.spec.ts",
-   "**/*.test.ts"
+   "**/*.test.ts",
+   "**/__mocks__/*"
  ],
  "references": [
    { "path": "./packages/core" },
