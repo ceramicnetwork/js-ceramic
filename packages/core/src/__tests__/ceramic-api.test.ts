@@ -425,7 +425,7 @@ describe('Ceramic API', () => {
         const record = (await ceramic.ipfs.dag.get(cid)).value
         expected.push({
           cid: cid.toString(),
-          value: await DoctypeUtils.convertRecordToDTO(record, ipfs)
+          value: await DoctypeUtils.convertRecordToSignedRecordContainer(record, ipfs)
         })
       }
 
@@ -459,7 +459,7 @@ describe('Ceramic API', () => {
         metadata: { controllers: [controller] }
       })
       docB = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, {
-        content: { e: docE.id.toUrl(), 
+        content: { e: docE.id.toUrl(),
                    d: docD.id.toUrl(),
                    notDoc: '123' },
         metadata: { controllers: [controller] }
@@ -527,7 +527,7 @@ describe('Ceramic API', () => {
         {
           docId: docA.id,
           paths: ['/b']
-        }, 
+        },
         {
           docId: docE.id,
           paths: ['/f']
@@ -547,7 +547,7 @@ describe('Ceramic API', () => {
         {
           docId: docA.id,
           paths: ['/b', '/c']
-        }, 
+        },
         {
           docId: docB.id,
           paths: ['/e/f', '/d']
@@ -562,7 +562,7 @@ describe('Ceramic API', () => {
         {
           docId: docA.id,
           paths: ['/b/d', '/notExistDocId']
-        }, 
+        },
         {
           docId: notExistDocId,
           paths: ['/e/f' , '/d']
@@ -577,7 +577,7 @@ describe('Ceramic API', () => {
         {
           docId: docA.id,
           paths: ['/1', '2/3/4', '5/6']
-        }, 
+        },
         {
           docId: docE.id,
           paths: ['/1', '2/3/4', '5/6']

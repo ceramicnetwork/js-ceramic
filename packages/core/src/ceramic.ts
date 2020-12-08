@@ -79,7 +79,7 @@ const normalizeDocID = (docId: DocID | string): DocID => {
 const tryDocId = (id: string): DocID | null => {
   try {
     return DocID.fromString(id)
-  } catch(e) { 
+  } catch(e) {
     return null
   }
 }
@@ -399,7 +399,7 @@ class Ceramic implements CeramicApi {
   }
 
   /**
-   * Load document type instance 
+   * Load document type instance
    * @param docId - Document ID
    * @param opts - Initialization options
    */
@@ -430,7 +430,7 @@ class Ceramic implements CeramicApi {
         return Promise.resolve()
       }
       index[docId.toString()] = doc
-      
+
       const promiseList = Object.keys(node.children).map(key => {
         const keyDocId = doc.content[key] ? tryDocId(doc.content[key]) : null
         if (keyDocId) return walkNext(node.children[key], keyDocId)
@@ -447,7 +447,7 @@ class Ceramic implements CeramicApi {
 
   /**
    * Load all document types instances for given multiqueries
-   * @param queries - Array of MultiQueries 
+   * @param queries - Array of MultiQueries
    */
   async multiQuery(queries: Array<MultiQuery>, timeout?: number):  Promise<Record<string, Doctype>> {
     const queryPromises = queries.map(query => {
@@ -474,7 +474,7 @@ class Ceramic implements CeramicApi {
       const record = (await this.ipfs.dag.get(cid)).value
       return {
         cid: cid.toString(),
-        value: await DoctypeUtils.convertRecordToDTO(record, this.ipfs)
+        value: await DoctypeUtils.convertRecordToSignedRecordContainer(record, this.ipfs)
       }
     }))
   }
