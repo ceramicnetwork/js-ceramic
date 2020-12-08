@@ -11,7 +11,7 @@ import { TextDecoder } from 'util'
 import DocID from "@ceramicnetwork/docid";
 
 const DEFAULT_GET_TIMEOUT = 30000 // 30 seconds
-const DEFAULT_MAX_IPFS_OBJECT_SIZE = 2000000 // 2 MB
+const DEFAULT_MAX_IPFS_OBJECT_SIZE = 500000 // 500 KB
 
 /**
  * Ceramic Pub/Sub message type.
@@ -141,8 +141,9 @@ export default class Dispatcher extends EventEmitter {
    * @param cid - Record CID
    */
   async retrieveRecord (cid: CID | string): Promise<any> {
+    const record = await this._ipfs.dag.get(cid, { timeout: DEFAULT_GET_TIMEOUT })
     await this._restrictRecordSize(cid)
-    return cloneDeep((await this._ipfs.dag.get(cid)).value)
+    return cloneDeep(record.value)
   }
 
   /**
