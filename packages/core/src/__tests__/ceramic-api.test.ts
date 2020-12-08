@@ -125,7 +125,7 @@ describe('Ceramic API', () => {
       expect(docOg.content).toEqual({ test: 'abcde' })
       expect(docOg.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
-      let docV0Id = DocID.fromBytes(docOg.id.bytes, docOg.state.log[1].cid.toString())
+      let docV0Id = DocID.fromOther(docOg.id, docOg.state.log[1].cid.toString())
       console.log(docV0Id)
       const docV0 = await ceramic.loadDocument<TileDoctype>(docV0Id)
 
