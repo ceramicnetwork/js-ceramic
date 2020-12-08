@@ -18,6 +18,9 @@ const ipfs = {
     put: jest.fn(() => FAKE_CID),
     get: jest.fn(() => ({ value: 'data' }))
   },
+  block: {
+    stat: jest.fn(() => ({ size: 10 }))
+  },
   id: (): any => ({ id: 'ipfsid' })
 }
 const TOPIC = '/ceramic'
