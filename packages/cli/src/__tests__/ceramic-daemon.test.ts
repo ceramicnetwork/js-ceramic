@@ -186,27 +186,27 @@ describe('Ceramic interop: core <> http-client', () => {
         expect(doc1.content).toEqual(finalContent)
         expect(DoctypeUtils.serializeState(doc1.state)).toEqual(DoctypeUtils.serializeState(doc2.state))
     })
-
+    
     it('loads versions correctly', async () => {
         // Create multiple versions of the same document
-        const content1 = { test: 123 }
-        const content2 = { test: 456 }
-        const content3 = { test: 789 }
-        const doc = await core.createDocument(DOCTYPE_TILE, { content: content1 })
+        const content1 = {test: 123}
+        const content2 = {test: 456}
+        const content3 = {test: 789}
+        const doc = await core.createDocument(DOCTYPE_TILE, {content: content1})
         await waitChange(doc)
         expect(doc.state.log.length).toEqual(2)
         expect(doc.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
-        await doc.change({ content: content2 })
+        await doc.change({content: content2})
         await waitChange(doc)
         expect(doc.state.log.length).toEqual(4)
         expect(doc.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
-        await doc.change({ content: content3 })
+        await doc.change({content: content3})
         await waitChange(doc)
         expect(doc.state.log.length).toEqual(6)
         expect(doc.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
         // Cannot load any of the signed records as versions
-        const assertCannotLoadNonVersion = async function(invalidDocId: DocID) {
+        const assertCannotLoadNonVersion = async function (invalidDocId: DocID) {
             // try with core
             try {
                 await core.loadDocument(invalidDocId)
@@ -254,5 +254,55 @@ describe('Ceramic interop: core <> http-client', () => {
         expect(docV3Core.content).toEqual(content3)
         expect(docV3Core.state.log.length).toEqual(6)
         expect(DoctypeUtils.serializeState(docV3Core.state)).toEqual(DoctypeUtils.serializeState(docV3Client.state))
+    })
+
+    describe('multiqueries', () => {
+        let docA, docB, docC, docD
+        beforeAll(async () => {
+          const controller = core.context.did.id
+          docD = await core.createDocument(DOCTYPE_TILE, {
+            content: { test: '321d'  },
+            metadata: { controllers: [controller] }
+          })
+          docC = await core.createDocument(DOCTYPE_TILE, {
+            content: { test: '321c' },
+            metadata: { controllers: [controller] }
+          })
+          docB = await core.createDocument(DOCTYPE_TILE, {
+            content: { d: docD.id.toUrl(),
+                       notDoc: '123' },
+            metadata: { controllers: [controller] }
+          })
+          docA = await core.createDocument(DOCTYPE_TILE, {
+            content: { b: docB.id.toUrl(),
+                       c: docC.id.toUrl(),
+                       notDoc: '123' },
+            metadata: { controllers: [controller] }
+          })
+        })
+
+        it('responds to multiqueries request', async () => {
+            //mixed docId types
+            const queries = [
+                {
+                  docId: docA.id,
+                  paths: ['/c']
+                }, 
+                {
+                  docId: docB.id.toString(),
+                  paths: ['/d']
+                }
+            ]
+            const resCore  = await core.multiQuery(queries)
+            const resClient = await client.multiQuery(queries)
+
+            expect(Object.keys(resCore).length).toEqual(4)
+            expect(Object.keys(resClient).length).toEqual(4)
+
+            expect(resCore[docA.id.toString()].content).toEqual(resClient[docA.id.toString()].content)
+            expect(resCore[docB.id.toString()].content).toEqual(resClient[docB.id.toString()].content)
+            expect(resCore[docC.id.toString()].content).toEqual(resClient[docC.id.toString()].content)
+            expect(resCore[docD.id.toString()].content).toEqual(resClient[docD.id.toString()].content)
+        })
     })
 })

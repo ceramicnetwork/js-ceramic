@@ -51,7 +51,7 @@ jest.mock('../dispatcher', () => {
         docs[doc.id] = doc
       }),
       storeRecord: jest.fn(async (rec) => {
-        if (DoctypeUtils.isSignedRecordDTO(rec)) {
+        if (DoctypeUtils.isSignedRecordContainer(rec)) {
           const { jws, linkedBlock } = rec
           const block = dagCBOR.util.deserialize(linkedBlock)
 
@@ -381,7 +381,7 @@ describe('Document', () => {
       // sometime the tests are very fast
       await new Promise(resolve => setTimeout(resolve, 1))
       // TODO - better mock for anchors
-      
+
       const conflictingNewContent = { asdf: 2342 }
       updateRec = await TileDoctype._makeRecord(doc2.doctype, user, conflictingNewContent, doc2.controllers)
       await doc2.applyRecord(updateRec)

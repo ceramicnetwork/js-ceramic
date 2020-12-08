@@ -1,7 +1,7 @@
 import express, { Request, Response, NextFunction } from 'express'
 import Ceramic from '@ceramicnetwork/core'
-import type { CeramicConfig } from "@ceramicnetwork/core"
-import { DoctypeUtils, RootLogger, Logger, IpfsApi } from "@ceramicnetwork/common"
+import type { CeramicConfig} from "@ceramicnetwork/core"
+import { DoctypeUtils, RootLogger, Logger, IpfsApi, Doctype, MultiQuery  } from "@ceramicnetwork/common"
 import { LogToFiles } from "./ceramic-logger-plugins"
 import DocID from "@ceramicnetwork/docid"
 import cors from 'cors'
@@ -37,6 +37,10 @@ export interface CreateOpts {
 interface HttpLog {
   request: Record<string, unknown>;
   response?: Record<string, unknown>;
+}
+
+interface MultiQueries {
+  queries: Array<MultiQuery>
 }
 
 /**
@@ -147,6 +151,7 @@ class CeramicDaemon {
   registerAPIPaths (app: core.Express, gateway: boolean): void {
     app.get(toApiPath('/records/:docid'), this.records.bind(this))
     app.post(toApiPath('/documents'), this.createDocFromGenesis.bind(this))
+    app.post(toApiPath('/multiqueries'), this.multiQuery.bind(this))
     app.get(toApiPath('/documents/:docid'), this.state.bind(this))
     app.get(toApiPath('/pins/:docid'), this.listPinned.bind(this))
     app.get(toApiPath('/pins'), this.listPinned.bind(this))
@@ -253,6 +258,25 @@ class CeramicDaemon {
     try {
       const doctype = await this.ceramic.applyRecord(docId, DoctypeUtils.deserializeRecord(record), docOpts)
       res.json({ docId: doctype.id.toString(), state: DoctypeUtils.serializeState(doctype.state) })
+    } catch (e) {
+      return next(e)
+    }
+    next()
+  }
+
+  /**
+   * Load multiple documents and paths using an array of multiqueries
+   */
+  async multiQuery (req: Request, res: Response, next: NextFunction): Promise<void> {
+    const { queries } = <MultiQueries> req.body
+    try {
+      const results = await this.ceramic.multiQuery(queries)
+      const response = Object.entries(results).reduce((acc, e) => {
+        const [k, v] = e
+        acc[k] = DoctypeUtils.serializeState(v.state)
+        return acc
+      }, {})
+      res.json(response)
     } catch (e) {
       return next(e)
     }

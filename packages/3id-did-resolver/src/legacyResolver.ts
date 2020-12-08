@@ -59,6 +59,7 @@ const LegacyResolver = async (didId: string, ipfs = ipfsMock): Promise<any> => {
   const signing = encodeKey(u8a.fromString(signingKey, 'base16'))
   const encryption = encodeKey(u8a.fromString(encryptionKey, 'base64pad'), true)
   return {
+    keyDid: `did:key:${signing}`,
     publicKeys: {
       [signing.slice(-15)]: signing,
       [encryption.slice(-15)]: encryption,

@@ -61,11 +61,11 @@ export interface AnchorRecord {
 
 import type { DagJWSResult, DagJWS } from 'dids'
 
-export type SignedRecordDTO = DagJWSResult
-
 export type SignedRecord = DagJWS
 
-export type CeramicRecord = GenesisRecord | UnsignedRecord | AnchorRecord | SignedRecordDTO | SignedRecord
+export type SignedRecordContainer = DagJWSResult
+
+export type CeramicRecord = GenesisRecord | UnsignedRecord | AnchorRecord | SignedRecord | SignedRecordContainer
 
 /**
  * Document metadata

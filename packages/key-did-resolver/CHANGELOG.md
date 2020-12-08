@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.2.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/key-did-resolver@0.2.0...@ceramicnetwork/key-did-resolver@0.2.1) (2020-12-08)
+
+**Note:** Version bump only for package @ceramicnetwork/key-did-resolver
+
+
+
+
+
 # [0.2.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/key-did-resolver@0.1.3...@ceramicnetwork/key-did-resolver@0.2.0) (2020-11-24)
 
 

@@ -58,16 +58,6 @@ export function wrapDocument(content: any, did: string): DIDDocument {
     return diddoc
   }, startDoc)
 
-  if (content.idx != null) {
-    doc.service = [
-      {
-        id: `${did}#idx`,
-        type: 'IdentityIndexRoot',
-        serviceEndpoint: content.idx,
-      },
-    ]
-  }
-
   return doc
 }
 
@@ -92,12 +82,10 @@ const legacyResolve = async (ceramic: Ceramic, didId: string, version?: string):
   const legacyDoc = wrapDocument(legacyPublicKeys, `did:3:${didId}`)
   if (version === '0') return legacyDoc
 
-  const managementKey = `did:key:${legacyPublicKeys.publicKeys.signing}`
-
   try {
-    const content =  { metadata: { controllers: [managementKey], family: '3id' } }
-    const doc = await ceramic.createDocument('tile', content, { applyOnly: true })
-    const didDoc = await resolve(ceramic, doc.id.toString(), version)
+    const docParams =  { deterministic: true, metadata: { controllers: [legacyPublicKeys.keyDid], family: '3id' } }
+    const doc = await ceramic.createDocument('tile', docParams, { applyOnly: true })
+    const didDoc = await resolve(ceramic, doc.id.toString(), version, didId)
     return didDoc
   } catch(e) {
     if (version) throw new Error('Not a valid 3ID')
@@ -105,10 +93,10 @@ const legacyResolve = async (ceramic: Ceramic, didId: string, version?: string):
   }
 }
 
-const resolve = async (ceramic: Ceramic, didId: string, version?: string): Promise<DIDDocument | null> =>  {
+const resolve = async (ceramic: Ceramic, didId: string, version?: string, v03ID?: string): Promise<DIDDocument | null> =>  {
   const docId = DocID.fromString(didId, version)
   const doctype = await ceramic.loadDocument(docId)
-  return wrapDocument(doctype.content, `did:3:${didId}`)
+  return wrapDocument(doctype.content, `did:3:${v03ID || didId}`)
 }
 
 export default {

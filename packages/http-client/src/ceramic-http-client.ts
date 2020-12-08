@@ -12,6 +12,8 @@ import {
   CeramicApi,
   PinApi,
   CeramicRecord,
+  DoctypeUtils, 
+  MultiQuery
 } from "@ceramicnetwork/common"
 import { TileDoctypeHandler } from "@ceramicnetwork/doctype-tile"
 import { Caip10LinkDoctypeHandler } from "@ceramicnetwork/doctype-caip10-link"
@@ -136,6 +138,31 @@ export default class CeramicClient implements CeramicApi {
     }
     this._docmap[docIdStr].doctypeHandler = this.findDoctypeHandler(this._docmap[docIdStr].state.doctype)
     return this._docmap[docIdStr] as unknown as T
+  }
+
+  async multiQuery(queries: Array<MultiQuery>): Promise<Record<string, Doctype>> {
+    const queriesJSON = queries.map(q => {
+      return {
+        docId: typeof q.docId === 'string' ? q.docId : q.docId.toString(),
+        paths: q.paths
+      }
+    })
+
+    const results = await fetchJson(this._apiUrl + '/multiqueries', {
+      method: 'post',
+      body: {
+       queries: queriesJSON
+      }
+    })
+
+    const response = Object.entries(results).reduce((acc, e) => {
+      const [k, v] = e
+      const state = DoctypeUtils.deserializeState(v)
+      acc[k] = new Document(state, this.context, this._apiUrl, this._config)
+      return acc
+    }, {})
+
+    return response
   }
 
   async loadDocumentRecords(docId: DocID | string): Promise<Array<Record<string, any>>> {

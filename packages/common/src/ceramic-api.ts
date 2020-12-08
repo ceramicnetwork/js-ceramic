@@ -109,3 +109,8 @@ export interface CeramicApi {
      */
     close(): Promise<void>; // gracefully close the ceramic instance
 }
+
+export interface MultiQuery {
+    docId: DocID | string
+    paths?: Array<string>
+}
