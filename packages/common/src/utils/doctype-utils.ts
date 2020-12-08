@@ -8,7 +8,7 @@ import {
     DocMetadata,
     IpfsApi,
     RecordHeader,
-    SignedRecord, SignedRecordDTO
+    SignedRecord, SignedRecordContainer
 } from "../index"
 import { AnchorStatus, DocState, Doctype, LogEntry } from "../doctype"
 import { DagJWS } from "dids"
@@ -180,7 +180,7 @@ export class DoctypeUtils {
      * @param record - Record
      */
     static isSignedRecordDTO(record: CeramicRecord): boolean {
-        return (record as SignedRecordDTO).jws !== undefined
+        return (record as SignedRecordContainer).jws !== undefined
     }
 
     /**
