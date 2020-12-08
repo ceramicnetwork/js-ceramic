@@ -434,4 +434,165 @@ describe('Ceramic API', () => {
     })
   })
 
+  describe('API MultiQueries', () => {
+
+    let docA, docB, docC, docD, docE, docF
+    const notExistDocId = DocID.fromString('kjzl6cwe1jw1495fyn7770ujykvl1f8sskbzsevlux062ajragz9hp3akdqbmdg')
+
+    beforeAll(async () => {
+      const controller = ceramic.context.did.id
+
+      docF = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, {
+        content: { test: '321f' },
+        metadata: { controllers: [controller] }
+      })
+      docE = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, {
+        content: { f: docF.id.toUrl() },
+        metadata: { controllers: [controller] }
+      })
+      docD = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, {
+        content: { test: '321d'  },
+        metadata: { controllers: [controller] }
+      })
+      docC = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, {
+        content: { test: '321c' },
+        metadata: { controllers: [controller] }
+      })
+      docB = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, {
+        content: { e: docE.id.toUrl(), 
+                   d: docD.id.toUrl(),
+                   notDoc: '123' },
+        metadata: { controllers: [controller] }
+      })
+      docA = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, {
+        content: { b: docB.id.toUrl(),
+                   c: docC.id.toUrl(),
+                   notExistDocId: notExistDocId.toUrl(),
+                   notDoc: '123' },
+        metadata: { controllers: [controller] }
+      })
+    })
+
+    it('can load linked doc path, returns expected form', async () => {
+      const docs = await ceramic._loadLinkedDocuments(docA.id, ['/b/e'])
+      // inlcudes all linked docs in path, including root, key by docid string
+      expect(docs[docA.id.toString()]).toBeTruthy()
+      expect(docs[docB.id.toString()]).toBeTruthy()
+      expect(docs[docE.id.toString()]).toBeTruthy()
+      // maps to content
+      expect(docs[docA.id.toString()].content).toEqual(docA.content)
+      expect(docs[docB.id.toString()].content).toEqual(docB.content)
+      expect(docs[docE.id.toString()].content).toEqual(docE.content)
+    })
+
+    it('can load multiple paths', async () => {
+      const docs = await ceramic._loadLinkedDocuments(docA.id, ['/b/e/f', '/c', '/b/d'])
+      expect(Object.keys(docs).length).toEqual(6)
+      expect(docs[docA.id.toString()]).toBeTruthy()
+      expect(docs[docB.id.toString()]).toBeTruthy()
+      expect(docs[docC.id.toString()]).toBeTruthy()
+      expect(docs[docD.id.toString()]).toBeTruthy()
+      expect(docs[docE.id.toString()]).toBeTruthy()
+      expect(docs[docF.id.toString()]).toBeTruthy()
+    })
+
+    it('can load multiple paths, including redundant subpaths and paths', async () => {
+      const docs = await ceramic._loadLinkedDocuments(docA.id, ['/b/e/f', '/c', '/b/d', '/b', 'b/e'])
+      expect(Object.keys(docs).length).toEqual(6)
+      expect(docs[docA.id.toString()]).toBeTruthy()
+      expect(docs[docB.id.toString()]).toBeTruthy()
+      expect(docs[docC.id.toString()]).toBeTruthy()
+      expect(docs[docD.id.toString()]).toBeTruthy()
+      expect(docs[docE.id.toString()]).toBeTruthy()
+      expect(docs[docF.id.toString()]).toBeTruthy()
+    })
+
+    it('can load multiple paths and ignore paths that dont exist', async () => {
+      const docs = await ceramic._loadLinkedDocuments(docA.id, ['/b', '/c/g/h', 'c/g/j', '/c/k'])
+      expect(Object.keys(docs).length).toEqual(3)
+      expect(docs[docA.id.toString()]).toBeTruthy()
+      expect(docs[docB.id.toString()]).toBeTruthy()
+      expect(docs[docC.id.toString()]).toBeTruthy()
+    })
+
+    it('can load multiple paths and ignore invalid paths (ie not docs)', async () => {
+      const docs = await ceramic._loadLinkedDocuments(docA.id, ['/b', '/b/notDoc', '/notDoc'])
+      expect(Object.keys(docs).length).toEqual(2)
+      expect(docs[docA.id.toString()]).toBeTruthy()
+      expect(docs[docB.id.toString()]).toBeTruthy()
+    })
+
+    it('can load docs for array of multiqueries', async () => {
+      const queries = [
+        {
+          docId: docA.id,
+          paths: ['/b']
+        }, 
+        {
+          docId: docE.id,
+          paths: ['/f']
+        }
+      ]
+      const docs = await ceramic.multiQuery(queries)
+
+      expect(Object.keys(docs).length).toEqual(4)
+      expect(docs[docA.id.toString()]).toBeTruthy()
+      expect(docs[docB.id.toString()]).toBeTruthy()
+      expect(docs[docE.id.toString()]).toBeTruthy()
+      expect(docs[docF.id.toString()]).toBeTruthy()
+    })
+
+    it('can load docs for array of overlapping multiqueries', async () => {
+      const queries = [
+        {
+          docId: docA.id,
+          paths: ['/b', '/c']
+        }, 
+        {
+          docId: docB.id,
+          paths: ['/e/f', '/d']
+        }
+      ]
+      const docs = await ceramic.multiQuery(queries)
+      expect(Object.keys(docs).length).toEqual(6)
+    })
+
+    it('can load docs for array of multiqueries even if docid or path throws error', async () => {
+      const queries = [
+        {
+          docId: docA.id,
+          paths: ['/b/d', '/notExistDocId']
+        }, 
+        {
+          docId: notExistDocId,
+          paths: ['/e/f' , '/d']
+        }
+      ]
+      const docs = await ceramic.multiQuery(queries, 1000)
+      expect(Object.keys(docs).length).toEqual(3)
+    })
+
+    it('can load docs for array of multiqueries including paths that dont exist', async () => {
+      const queries = [
+        {
+          docId: docA.id,
+          paths: ['/1', '2/3/4', '5/6']
+        }, 
+        {
+          docId: docE.id,
+          paths: ['/1', '2/3/4', '5/6']
+        },
+        {
+          docId: docB.id,
+          paths: ['/1', '2/3/4', '5/6']
+        }
+      ]
+        const docs = await ceramic.multiQuery(queries)
+
+        expect(Object.keys(docs).length).toEqual(3)
+        expect(docs[docA.id.toString()]).toBeTruthy()
+        expect(docs[docB.id.toString()]).toBeTruthy()
+        expect(docs[docE.id.toString()]).toBeTruthy()
+    })
+  })
 })

@@ -58,5 +58,38 @@ export default class Utils {
         }
     }
 
+}
 
+export class TrieNode {
+    public key: string
+    public children:  Record<string, TrieNode>
+  
+    constructor(key = '') {
+      this.key = key
+      this.children = {}
+    }
+}
+  
+export class PathTrie {
+    public root: TrieNode
+
+    constructor() {
+        this.root = new TrieNode()
+    }
+
+    add(path: string) {
+        const nextNodeAdd = (node: TrieNode, key: string): TrieNode => {
+        if (!node.children[key]) node.children[key] = new TrieNode(key)
+            return node.children[key]
+        }
+        if (path.startsWith('/')) path = path.substring(1)
+        path.split('/').reduce(nextNodeAdd, this.root)
+    }
+}
+
+export const promiseTimeout = (ms: number, promise:Promise<any>): Promise<any> => {
+    const timeout = new Promise((resolve, reject) => {
+        setTimeout(() => reject(), ms)
+    })
+    return Promise.race([timeout, promise])
 }

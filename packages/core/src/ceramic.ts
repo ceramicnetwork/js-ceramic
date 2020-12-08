@@ -3,7 +3,8 @@ import Document from './document'
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import KeyDidResolver from '@ceramicnetwork/key-did-resolver'
 import DocID from '@ceramicnetwork/docid'
-import { AnchorService, CeramicApi, CeramicRecord, DIDProvider, IpfsApi, PinApi } from "@ceramicnetwork/common"
+import { AnchorService, CeramicApi, CeramicRecord, DIDProvider, IpfsApi, PinApi, MultiQuery } from "@ceramicnetwork/common"
+
 import {
   Doctype,
   DoctypeHandler,
@@ -22,10 +23,12 @@ import { TileDoctypeHandler } from "@ceramicnetwork/doctype-tile"
 import { Caip10LinkDoctypeHandler } from "@ceramicnetwork/doctype-caip10-link"
 import { PinStoreFactory } from "./store/pin-store-factory";
 import { PinStore } from "./store/pin-store";
+import { PathTrie, TrieNode, promiseTimeout } from './utils'
 
 import EthereumAnchorService from "./anchor/ethereum/ethereum-anchor-service"
 import InMemoryAnchorService from "./anchor/memory/in-memory-anchor-service"
-import { PinningBackendStatic } from "@ceramicnetwork/common";
+import { PinningBackendStatic } from "@ceramicnetwork/common"
+
 
 import { randomUint32 } from '@stablelib/random'
 
@@ -71,6 +74,14 @@ const DEFAULT_NETWORK = 'inmemory'
 
 const normalizeDocID = (docId: DocID | string): DocID => {
   return (typeof docId === 'string') ? DocID.fromString(docId) : docId
+}
+
+const tryDocId = (id: string): DocID | null => {
+  try {
+    return DocID.fromString(id)
+  } catch(e) { 
+    return null
+  }
 }
 
 /**
@@ -388,7 +399,7 @@ class Ceramic implements CeramicApi {
   }
 
   /**
-   * Load document type instance
+   * Load document type instance 
    * @param docId - Document ID
    * @param opts - Initialization options
    */
@@ -396,6 +407,58 @@ class Ceramic implements CeramicApi {
     docId = normalizeDocID(docId)
     const doc = await this._loadDoc(docId.baseID, opts)
     return (docId.version? await doc.loadVersion<T>(docId.version) : doc.doctype) as T
+  }
+
+  /**
+   * Load all document type instance for given paths
+   * @param docId - Document ID (root)
+   * @param paths - relative paths to documents to load
+   * @private
+   */
+  async _loadLinkedDocuments(id: DocID | string, paths: string[], timeout = 7000): Promise<Record<string, Doctype>> {
+    id = normalizeDocID(id)
+    const pathTrie = new PathTrie()
+    paths.forEach(path => pathTrie.add(path))
+
+    const index = {}
+
+    const walkNext = async (node: TrieNode, docId: DocID) => {
+      let doc
+      try {
+        doc = await promiseTimeout(timeout, this.loadDocument(docId))
+      } catch (e) {
+        return Promise.resolve()
+      }
+      index[docId.toString()] = doc
+      
+      const promiseList = Object.keys(node.children).map(key => {
+        const keyDocId = doc.content[key] ? tryDocId(doc.content[key]) : null
+        if (keyDocId) return walkNext(node.children[key], keyDocId)
+        return Promise.resolve()
+      })
+
+      await Promise.all(promiseList)
+    }
+
+    await walkNext(pathTrie.root, id)
+
+    return index
+  }
+
+  /**
+   * Load all document types instances for given multiqueries
+   * @param queries - Array of MultiQueries 
+   */
+  async multiQuery(queries: Array<MultiQuery>, timeout?: number):  Promise<Record<string, Doctype>> {
+    const queryPromises = queries.map(query => {
+      try {
+        return this._loadLinkedDocuments(query.docId, query.paths, timeout)
+      } catch (e) {
+        return Promise.resolve({})
+      }
+    })
+    const results = await Promise.all(queryPromises)
+    return results.reduce((acc, res) => ({ ...acc, ...res}), {})
   }
 
   /**
