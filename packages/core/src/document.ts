@@ -233,18 +233,6 @@ class Document extends EventEmitter {
   }
 
   /**
-   * Loads a specific version of the Doctype
-   *
-   * @param version - Document version
-   */
-  async loadVersion<T extends Doctype>(version: CID): Promise<T> {
-    const versionId = DocID.fromOther(this.id, version)
-    const opts: DocOpts = {anchor: false, publish: false, sync: false}
-    const doc = await Document.load<T>(versionId, this._doctypeHandler as DoctypeHandler<T>, this.dispatcher, this.pinStore, this._context, opts, this._validate)
-    return doc.doctype as T
-  }
-
-  /**
    * Applies record to the existing Doctype
    *
    * @param record - Record data

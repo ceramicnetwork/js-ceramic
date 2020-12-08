@@ -287,9 +287,10 @@ describe('Document', () => {
       expect(doc.versionId).toEqual(version2)
       expect(doc.state.log.length).toEqual(5)
 
-      // try to checkout non-existing version
+      // try to load a non-existing version
       try {
-        await doc.loadVersion(new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu'))
+        const nonExistentVersionID = DocID.fromOther(doc.id, new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu'))
+        await Document.load(nonExistentVersionID, doctypeHandler, dispatcher, pinStore, context)
         fail('Should not be able to fetch non-existing version')
       } catch (e) {
         expect(e.message).toContain('No record found for CID')
@@ -311,10 +312,6 @@ describe('Document', () => {
       } catch (e) {
         expect(e.message).toEqual('Historical document versions cannot be modified. Load the document without specifying a version to make updates.')
       }
-
-      // doc.loadVersion is a convenience alias for Document.load with a specific version
-      const docV1Again = await doc.loadVersion(doc.doctype.state.log[1].cid)
-      expect(docV1Again.state).toEqual(docV1.state)
 
       // Cannot load historical signed record when loading a version
       try {
