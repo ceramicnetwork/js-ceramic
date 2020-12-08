@@ -105,7 +105,6 @@ class Document extends EventEmitter {
    * @param context - Ceramic context
    * @param opts - Initialization options
    * @param validate - Validate content against schema
-   * @param tip - If specified we load the document at the specific Tip record requested
    */
   static async load<T extends Doctype> (
       id: DocID,
@@ -114,24 +113,18 @@ class Document extends EventEmitter {
       pinStore: PinStore,
       context: Context,
       opts: DocOpts = {},
-      validate = true,
-      tip?: CID): Promise<Document> {
+      validate = true): Promise<Document> {
     // Fill 'opts' with default values for any missing fields
     opts = {...DEFAULT_LOAD_DOCOPTS, ...opts}
 
     const doc = await Document._loadGenesis(id, handler, dispatcher, pinStore, context, validate)
 
-    if (!id.version && !tip) {
-      // No version or tip requested, so we should load the most current version we can find.
+    if (!id.version) {
+      // No version requested, so we should load the most current version we can find.
       return await Document._syncDocumentToCurrent(doc, pinStore, opts)
-    } else if (!id.version && tip) {
-      // Requested document at a specific tip
-      return await Document._syncDocumentToTip(doc, tip, dispatcher, false)
-    } else if (id.version && !tip) {
-      // Requested document at a specific version
-      return await Document._syncDocumentToTip(doc, id.version, dispatcher, true)
     } else {
-      throw new Error("Cannot specify both a version and a tip to Document.load")
+      // Requested document at a specific version
+      return await Document._syncDocumentToVersion(doc, id.version, dispatcher)
     }
   }
 
@@ -164,14 +157,11 @@ class Document extends EventEmitter {
    * @param doc - Document containing only the genesis record
    * @param tip - CID of the Tip record that we want to load the document at
    * @param dispatcher
-   * @param mustBeVersion - only anchor records count as valid document versions.  If 'mustBeVersion'
-   *   is false and 'tip' refers to a signed record, throws an error
    */
-  static async _syncDocumentToTip<T extends Doctype> (
+  static async _syncDocumentToVersion<T extends Doctype> (
       doc: Document,
       tip: CID,
-      dispatcher: Dispatcher,
-      mustBeVersion): Promise<Document> {
+      dispatcher: Dispatcher): Promise<Document> {
     // TODO: Assert that doc contains only the genesis record
 
     if (tip.equals(doc.id.cid)) {
@@ -188,7 +178,7 @@ class Document extends EventEmitter {
     }
 
     // check if it's not an anchor record
-    if (mustBeVersion && versionRecord.proof == null) {
+    if (versionRecord.proof == null) {
       throw new Error(`Log record CID ${tip.toString()} does not refer to a valid version, which must correspond to an anchor record`)
     }
 

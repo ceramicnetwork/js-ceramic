@@ -331,6 +331,7 @@ describe('Document', () => {
         expect(e.message).toContain('does not refer to a valid version, which must correspond to an anchor record')
       }
 
+      /* TODO re-write and enable these tests once we can load signed records as versions
       // Can load a historical signed record so long as it's loaded a tip, not as a version
       const docAtTip2 = await Document.load(doc.id, doctypeHandler, dispatcher, pinStore, context, {}, true, doc.doctype.state.log[2].cid)
       expect(docAtTip2.content).toEqual(newContent)
@@ -344,6 +345,7 @@ describe('Document', () => {
       expect(docAtTip4.state.log.length).toEqual(5)
       expect(docAtTip4.state.signature).toEqual(SignatureStatus.SIGNED)
       expect(docAtTip4.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
+       */
     })
 
     it('is updated correctly', async () => {
