@@ -118,6 +118,8 @@ describe('Ceramic API', () => {
 
       await docOg.change({ content: { test: 'abcde' } })
 
+      const stateV2 = docOg.state
+
       // wait for anchor (new version)
       await anchorDoc(ceramic, docOg)
 
@@ -125,17 +127,15 @@ describe('Ceramic API', () => {
       expect(docOg.content).toEqual({ test: 'abcde' })
       expect(docOg.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
-      let docV0Id = DocID.fromOther(docOg.id, docOg.state.log[1].cid.toString())
-      console.log(docV0Id)
-      const docV0 = await ceramic.loadDocument<TileDoctype>(docV0Id)
-
-      expect(docV0.state).toEqual(stateOg)
-      expect(docV0.content).toEqual({ test: 321 })
-      expect(docV0.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+      const docV1Id = DocID.fromOther(docOg.id, docOg.state.log[1].cid.toString())
+      const docV1 = await ceramic.loadDocument<TileDoctype>(docV1Id)
+      expect(docV1.state).toEqual(stateOg)
+      expect(docV1.content).toEqual({ test: 321 })
+      expect(docV1.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
       // try to call doctype.change
       try {
-        await docV0.change({ content: { test: 'fghj' }, metadata: { controllers: docV0.controllers } })
+        await docV1.change({ content: { test: 'fghj' }, metadata: { controllers: docV1.controllers } })
         throw new Error('Should not be able to update version')
       } catch (e) {
         expect(e.message).toEqual('Historical document versions cannot be modified. Load the document without specifying a version to make updates.')
@@ -143,21 +143,18 @@ describe('Ceramic API', () => {
 
       // // try to call Ceramic API directly
       try {
-        const updateRecord = await TileDoctype._makeRecord(docV0, ceramic.context.did, { content: { test: 'fghj' } })
-        await ceramic.context.api.applyRecord(docV0Id, updateRecord)
+        const updateRecord = await TileDoctype._makeRecord(docV1, ceramic.context.did, { content: { test: 'fghj' } })
+        await ceramic.context.api.applyRecord(docV1Id, updateRecord)
         throw new Error('Should not be able to update version')
       } catch (e) {
         expect(e.message).toEqual('Historical document versions cannot be modified. Load the document without specifying a version to make updates.')
       }
 
-      // try to checkout not anchored version
-      try {
-        docV0Id = DocID.fromBytes(docOg.id.bytes, docOg.state.log[2].cid.toString())
-        await ceramic.loadDocument<TileDoctype>(docV0Id)
-        throw new Error('Should not be able to fetch not anchored version')
-      } catch (e) {
-        expect(e.message).toContain('does not refer to a valid version, which must correspond to an anchor record')
-      }
+      // checkout not anchored version
+      const docV2Id = DocID.fromOther(docOg.id, docOg.state.log[2].cid.toString())
+      const docV2 = await ceramic.loadDocument<TileDoctype>(docV2Id)
+      expect(docV2.content).toEqual({ test: "abcde" })
+      expect(docV2.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
 
       await ceramic.close()
     })
