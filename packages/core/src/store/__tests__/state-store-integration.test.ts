@@ -91,7 +91,7 @@ jest.mock('../../dispatcher', () => {
         docs[doc.id] = doc
       }),
       storeRecord: jest.fn(async (rec) => {
-        if (DoctypeUtils.isSignedRecordDTO(rec)) {
+        if (DoctypeUtils.isSignedRecordContainer(rec)) {
           const { jws, linkedBlock } = rec
           const block = dagCBOR.util.deserialize(linkedBlock)
 
