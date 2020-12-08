@@ -10,6 +10,9 @@ import { DoctypeUtils, RootLogger, Logger, IpfsApi } from "@ceramicnetwork/commo
 import { TextDecoder } from 'util'
 import DocID from "@ceramicnetwork/docid";
 
+const DEFAULT_GET_TIMEOUT = 30000 // 30 seconds
+const DEFAULT_MAX_IPFS_OBJECT_SIZE = 2000000 // 2 MB
+
 /**
  * Ceramic Pub/Sub message type.
  */
@@ -123,9 +126,13 @@ export default class Dispatcher extends EventEmitter {
       const cid = await this._ipfs.dag.put(jws, { format: 'dag-jose', hashAlg: 'sha2-256' })
       // put the payload into the ipfs dag
       await this._ipfs.block.put(linkedBlock, { cid: jws.link.toString() })
+      await this._restrictRecordSize(jws.link.toString())
+      await this._restrictRecordSize(cid)
       return cid
     }
-    return await this._ipfs.dag.put(data)
+    const cid = await this._ipfs.dag.put(data)
+    await this._restrictRecordSize(cid)
+    return cid
   }
 
   /**
@@ -134,7 +141,20 @@ export default class Dispatcher extends EventEmitter {
    * @param cid - Record CID
    */
   async retrieveRecord (cid: CID | string): Promise<any> {
+    await this._restrictRecordSize(cid)
     return cloneDeep((await this._ipfs.dag.get(cid)).value)
+  }
+
+  /**
+   * Restricts record size to DEFAULT_MAX_IPFS_OBJECT_SIZE (2MB)
+   * @param cid -
+   * @private
+   */
+  async _restrictRecordSize(cid: CID | string): Promise<void> {
+    const stat = await this._ipfs.block.stat(cid, { timeout: DEFAULT_GET_TIMEOUT })
+    if (stat.size > DEFAULT_MAX_IPFS_OBJECT_SIZE) {
+      throw new Error(`${cid.toString()} record size ${stat.size} exceeds the maximum block size of ${DEFAULT_MAX_IPFS_OBJECT_SIZE}`)
+    }
   }
 
   /**
