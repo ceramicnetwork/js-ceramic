@@ -15,7 +15,7 @@ const seed = u8a.fromString('6e34b2e1a9624113d81ece8a8a22e6e97f0e145c25c1d4d2d0e
 
 /**
  * Create an IPFS instance
- * @param overrideConfig - IFPS config for override
+ * @param overrideConfig - IPFS config for override
  */
 const createIPFS = (overrideConfig: Record<string, unknown> = {}): Promise<IpfsApi> => {
     basicsImport.multicodec.add(dagJose)
@@ -113,7 +113,7 @@ describe('Ceramic', () => {
     })
 
     describe('records', () => {
-        it('can store record if the size is lesser than the maximum size ~2MB', async () => {
+        it('can store record if the size is lesser than the maximum size ~500KB', async () => {
             ceramic = await createCeramic(ipfs)
 
             const doctype = await ceramic.createDocument('tile', { content: { test: generateStringOfSize(10000) } })
@@ -122,7 +122,7 @@ describe('Ceramic', () => {
             await ceramic.close()
         })
 
-        it('cannot store record if the size is greated than the maximum size ~2MB', async () => {
+        it('cannot store record if the size is greated than the maximum size ~500KB', async () => {
             ceramic = await createCeramic(ipfs)
 
             await expect(ceramic.createDocument('tile', { content: { test: generateStringOfSize(20000001) } })).rejects.toThrow(/exceeds the maximum block size of/)
