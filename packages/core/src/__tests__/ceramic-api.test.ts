@@ -53,6 +53,21 @@ const anchorDoc = async (ceramic: Ceramic, doc: any): Promise<void> => {
   await changeHandle
 }
 
+/**
+ * Generates string of particular size in bytes
+ * @param size - Size in bytes
+ */
+const generateStringOfSize = (size): string => {
+  const chars = 'abcdefghijklmnopqrstuvwxyz'.split('');
+  const len = chars.length;
+  const random_data = [];
+
+  while (size--) {
+    random_data.push(chars[Math.random() * len | 0]);
+  }
+  return random_data.join('');
+}
+
 describe('Ceramic API', () => {
   jest.setTimeout(15000)
   let ipfs: IpfsApi;
@@ -208,7 +223,7 @@ describe('Ceramic API', () => {
       await ceramic.close()
     })
 
-    it('Must assign schema with specific version', async () => {
+    it('must assign schema with specific version', async () => {
       ceramic = await createCeramic()
 
       const controller = ceramic.context.did.id
@@ -427,6 +442,22 @@ describe('Ceramic API', () => {
       }
 
       expect(logRecords).toEqual(expected)
+      await ceramic.close()
+    })
+
+    it('can store record if the size is lesser than the maximum size ~256KB', async () => {
+      ceramic = await createCeramic(ipfs)
+
+      const doctype = await ceramic.createDocument('tile', { content: { test: generateStringOfSize(10000) } })
+      expect(doctype).not.toBeNull();
+
+      await ceramic.close()
+    })
+
+    it('cannot store record if the size is greated than the maximum size ~256KB', async () => {
+      ceramic = await createCeramic(ipfs)
+
+      await expect(ceramic.createDocument('tile', { content: { test: generateStringOfSize(1000000) } })).rejects.toThrow(/exceeds the maximum block size of/)
       await ceramic.close()
     })
   })

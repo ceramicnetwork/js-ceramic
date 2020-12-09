@@ -70,7 +70,7 @@ export class TileDoctype extends Doctype {
         // If 'deterministic' is undefined, default to creating document uniquely
         const unique = params.deterministic ? '0' : base64Encode(randomBytes(12))
 
-        const metadata: GenesisHeader = params.metadata ? DoctypeUtils.metadataToRecordHeader(params.metadata) : { controllers: [] }
+        const metadata: GenesisHeader = params.metadata || { controllers: [] }
         if (metadata.controllers.length === 0) {
             if (params.content && context.did) {
                 metadata.controllers = [context.did.id]

@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.12.3](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/doctype-tile@0.12.2...@ceramicnetwork/doctype-tile@0.12.3) (2020-12-09)
+
+
+### Bug Fixes
+
+* **doctype-tile:** unbreak tile makeGenesis metadata ([#608](https://github.com/ceramicnetwork/js-ceramic/issues/608)) ([760e214](https://github.com/ceramicnetwork/js-ceramic/commit/760e214639730bfa45a3e6c9cbaf58c7061d3a1c))
+
+
+
+
+
 ## [0.12.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/doctype-tile@0.12.1...@ceramicnetwork/doctype-tile@0.12.2) (2020-12-08)
 
 **Note:** Version bump only for package @ceramicnetwork/doctype-tile

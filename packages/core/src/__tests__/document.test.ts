@@ -353,6 +353,40 @@ describe('Document', () => {
       } catch (e) {
         expect(e.message).toEqual('Historical document versions cannot be modified. Load the document without specifying a version to make updates.')
       }
+
+      // Cannot load historical signed record when loading a version
+      try {
+        const invalidVersionId = DocID.fromOther(doc.id, doc.doctype.state.log[2].cid)
+        await Document.load(invalidVersionId, doctypeHandler, dispatcher, pinStore, context)
+        fail('Should not be able to fetch not anchored version')
+      } catch (e) {
+        expect(e.message).toContain('does not refer to a valid version, which must correspond to an anchor record')
+      }
+
+      // Cannot load signed record that hasn't been anchored when loading a version
+      try {
+        const invalidVersionId = DocID.fromOther(doc.id, doc.doctype.state.log[4].cid)
+        await Document.load(invalidVersionId, doctypeHandler, dispatcher, pinStore, context)
+        fail('Should not be able to fetch not anchored version')
+      } catch (e) {
+        expect(e.message).toContain('does not refer to a valid version, which must correspond to an anchor record')
+      }
+
+      /* TODO re-write and enable these tests once we can load signed records as versions
+      // Can load a historical signed record so long as it's loaded a tip, not as a version
+      const docAtTip2 = await Document.load(doc.id, doctypeHandler, dispatcher, pinStore, context, {}, true, doc.doctype.state.log[2].cid)
+      expect(docAtTip2.content).toEqual(newContent)
+      expect(docAtTip2.state.log.length).toEqual(3)
+      expect(docAtTip2.state.signature).toEqual(SignatureStatus.SIGNED)
+      expect(docAtTip2.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
+
+      // Can load signed record that hasn't been anchored so long as it's loaded a tip, not as a version
+      const docAtTip4 = await Document.load(doc.id, doctypeHandler, dispatcher, pinStore, context, {}, true, doc.doctype.state.log[4].cid)
+      expect(docAtTip4.content).toEqual(finalContent)
+      expect(docAtTip4.state.log.length).toEqual(5)
+      expect(docAtTip4.state.signature).toEqual(SignatureStatus.SIGNED)
+      expect(docAtTip4.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
+       */
     })
 
     it('is updated correctly', async () => {
