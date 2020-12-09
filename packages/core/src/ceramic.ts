@@ -319,11 +319,24 @@ class Ceramic implements CeramicApi {
   }
 
   /**
-   * Get document from map by Genesis CID
+   * Get document from cache by DocID
    * @param docId - Document ID
+   * @private
    */
-  getDocFromMap(docId: DocID): Document {
+  private _getDocFromCache(docId: DocID): Document {
     return this._docmap[docId.toString()]
+  }
+
+  /**
+   * Puts document into cache if not already there
+   * @param doc - document to cache
+   * @private
+   */
+  private _cacheDocIfNeeded(doc: Document) {
+    const docIdStr = doc.id.toString()
+    if (!this._docmap[docIdStr]) {
+      this._docmap[docIdStr] = doc
+    }
   }
 
   /**
@@ -351,7 +364,7 @@ class Ceramic implements CeramicApi {
     const genesisCid = await this.dispatcher.storeRecord(genesis)
     const docId = new DocID(doctype, genesisCid)
 
-    let doc = this.getDocFromMap(docId)
+    let doc = this._getDocFromCache(docId)
     if (doc) {
       return doc
     }
@@ -388,13 +401,13 @@ class Ceramic implements CeramicApi {
 
     const docId = new DocID(doctype, genesisCid)
 
-    let doc = this.getDocFromMap(docId)
+    let doc = this._getDocFromCache(docId)
     if (doc) {
       return doc
     }
 
     doc = await Document.create(docId, doctypeHandler, this.dispatcher, this.pinStore, this.context, opts, this._validateDocs);
-    this._docmap[doc.id.toString()] = doc
+    this._cacheDocIfNeeded(doc)
     return doc
   }
 
@@ -486,21 +499,35 @@ class Ceramic implements CeramicApi {
    */
   async _loadDoc(docId: DocID | string, opts: DocOpts = {}): Promise<Document> {
     docId = normalizeDocID(docId)
-    const docIdStr = docId.toString()
 
-    if (this._docmap[docIdStr]) {
-      return this._docmap[docIdStr]
+    // If we already have cached exactly what we want, just return it from the cache
+    let doc = this._getDocFromCache(docId)
+    if (doc) {
+      return doc
     }
 
-    const doctypeHandler = this._doctypeHandlers[docId.typeName]
-    if (!doctypeHandler) {
-      throw new Error(docId.typeName + " is not a valid doctype")
+    // If we're requesting a specific commit, we should also check the cache for the current version
+    // of the document
+    doc = this._getDocFromCache(docId.baseID)
+
+    if (!doc) {
+      // Load the current version of the document
+      const doctypeHandler = this._doctypeHandlers[docId.typeName]
+      if (!doctypeHandler) {
+        throw new Error(docId.typeName + " is not a valid doctype")
+      }
+      doc = await Document.load(docId.baseID, doctypeHandler, this.dispatcher, this.pinStore, this.context, opts)
+      this._cacheDocIfNeeded(doc)
     }
-    const doc = await Document.load(docId, doctypeHandler, this.dispatcher, this.pinStore, this.context, opts)
+
     if (!docId.commit) {
-      // Only cache document if we're loading the baseId (i.e. the current commit)
-      this._docmap[docIdStr] = doc
+      // Return current version of the document
+      return doc
     }
+
+    // We requested a specific commit
+    doc = await Document.loadAtCommit(docId, doc)
+    this._cacheDocIfNeeded(doc)
     return doc
   }
 
