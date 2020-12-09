@@ -113,25 +113,104 @@ class Document extends EventEmitter {
       pinStore: PinStore,
       context: Context,
       opts: DocOpts = {},
-      validate = true
-  ): Promise<Document> {
+      validate = true): Promise<Document> {
     // Fill 'opts' with default values for any missing fields
     opts = {...DEFAULT_LOAD_DOCOPTS, ...opts}
 
-    const doctype = new handler.doctype(null, context) as T
-    const doc = new Document(id, dispatcher, pinStore, validate, context, handler, doctype)
+    const doc = await Document._loadGenesis(id, handler, dispatcher, pinStore, context, validate)
 
-    const record = await dispatcher.retrieveRecord(doc._genesisCid)
+    if (!id.version) {
+      // No version requested, so we should load the most current version we can find.
+      return await Document._syncDocumentToCurrent(doc, pinStore, opts)
+    } else {
+      // Requested document at a specific version
+      return await Document._syncDocumentToVersion(doc, id.version, dispatcher)
+    }
+  }
 
+  /**
+   * Takes a document containing only the genesis record and kicks off the process to load and apply
+   * the most recent Tip to it.
+   * @param doc - Document containing only the genesis record
+   * @param pinStore
+   * @param opts
+   */
+  static async _syncDocumentToCurrent(doc: Document, pinStore: PinStore, opts: DocOpts): Promise<Document> {
+    // TODO: Assert that doc contains only the genesis record
+    const id = doc.id
+
+    // Update document state to cached state if any
     const isStored = await pinStore.stateStore.exists(id)
     if (isStored) {
       doc._doctype.state = await pinStore.stateStore.load(id)
     }
 
-    if (doc._doctype.state == null) {
-      // apply genesis record if there's no state preserved
-      doc._doctype.state = await doc._doctypeHandler.applyRecord(record, doc._genesisCid, context)
+    // Request current tip from pub/sub system and register for future updates
+    await doc._register(opts)
+    return doc
+  }
+
+  /**
+   * Takes a document containing only the genesis record and syncs the document to the state as
+   * of the specific version requested.  Intentionally does not register the document so that it
+   * does not get notifications about newer versions, since we want a specific version here.
+   * @param doc - Document containing only the genesis record
+   * @param tip - CID of the Tip record that we want to load the document at
+   * @param dispatcher
+   */
+  static async _syncDocumentToVersion<T extends Doctype> (
+      doc: Document,
+      tip: CID,
+      dispatcher: Dispatcher): Promise<Document> {
+    // TODO: Assert that doc contains only the genesis record
+
+    if (tip.equals(doc.id.cid)) {
+      // The version is the same as the genesis record CID, so nothing more to do after loading
+      // the genesis version of the document.
+      doc._doctype = DoctypeUtils.makeReadOnly<T>(doc.doctype as T)
+      return doc
     }
+
+    // Load the requested version record
+    const versionRecord = await dispatcher.retrieveRecord(tip)
+    if (versionRecord == null) {
+      throw new Error(`No record found for CID ${tip.toString()}`)
+    }
+
+    // check if it's not an anchor record
+    if (versionRecord.proof == null) {
+      throw new Error(`Log record CID ${tip.toString()} does not refer to a valid version, which must correspond to an anchor record`)
+    }
+
+    await doc._handleTip(tip) // sync document to the requested tip
+
+    doc._doctype = DoctypeUtils.makeReadOnly<T>(doc.doctype as T)
+    return doc
+  }
+
+  /**
+   * Loads the genesis record and builds a Document object off it, but does not register for updates
+   * or apply any additional records past the genesis record.
+   * @param id - Document id
+   * @param handler
+   * @param dispatcher
+   * @param pinStore
+   * @param context
+   * @param validate
+   * @private
+   */
+  private static async _loadGenesis<T extends Doctype>(
+      id: DocID,
+      handler: DoctypeHandler<T>,
+      dispatcher: Dispatcher,
+      pinStore: PinStore,
+      context: Context,
+      validate: boolean) {
+    const doctype = new handler.doctype(null, context) as T
+    const doc = new Document(id, dispatcher, pinStore, validate, context, handler, doctype)
+
+    const record = await dispatcher.retrieveRecord(doc._genesisCid)
+    doc._doctype.state = await doc._doctypeHandler.applyRecord(record, doc._genesisCid, context)
 
     if (validate) {
       const schema = await Document.loadSchema(context, doc._doctype)
@@ -140,70 +219,7 @@ class Document extends EventEmitter {
       }
     }
 
-    await doc._register(opts)
     return doc
-  }
-
-  /**
-   * Validate Doctype against schema
-   */
-  async validate(): Promise<void> {
-    const schemaDocId = this.state?.metadata?.schema
-    if (schemaDocId) {
-      const schemaDoc = await this._context.api.loadDocument(schemaDocId)
-      if (!schemaDoc) {
-        throw new Error(`Schema not found for ${schemaDocId}`)
-      }
-      Utils.validate(this.content, schemaDoc.content)
-    }
-  }
-
-  /**
-   * Loads a specific version of the Doctype
-   *
-   * @param version - Document version
-   */
-  async loadVersion<T extends Doctype>(version: CID): Promise<T> {
-    const doc = await Document.loadVersion<T>(this, version, this._validate)
-    return doc.doctype as T
-  }
-
-  /**
-   * Loads a specific version of the Doctype
-   *
-   * @param doc - Document instance
-   * @param version - Document version
-   * @param validate - Validate content against schema
-   */
-  static async loadVersion<T extends Doctype>(doc: Document, version: CID, validate = true): Promise<Document> {
-    const { _context: context, dispatcher, pinStore, _doctypeHandler: doctypeHandler } = doc
-
-    const isGenesis = version.equals(doc._genesisCid)
-
-    if (!isGenesis) {
-      const versionRecord = await dispatcher.retrieveRecord(version)
-      if (versionRecord == null) {
-        throw new Error(`No record found for version ${version.toString()}`)
-      }
-
-      // check if it's not an anchor record
-      if (versionRecord.proof == null) {
-        throw new Error(`No anchor record for version ${version.toString()}`)
-      }
-    }
-
-    const docid = DocID.fromBytes(doc.id.bytes, version)
-    const doctype = new doctypeHandler.doctype(null, context)
-    const document = new Document(docid, dispatcher, pinStore, validate, context, doctypeHandler, doctype)
-
-    const genesisRecord = await document.dispatcher.retrieveRecord(doc._genesisCid)
-    document._doctype.state = await doc._doctypeHandler.applyRecord(genesisRecord, doc._genesisCid, context)
-
-    if (!isGenesis) {
-      await document._handleTip(version) // sync version
-      document._doctype = DoctypeUtils.makeReadOnly<T>(document.doctype as T)
-    }
-    return document
   }
 
   /**
@@ -498,7 +514,7 @@ class Document extends EventEmitter {
         state = await this._doctypeHandler.applyRecord(record, cid, this._context, state)
       } else if (!payload.prev) {
         // it's a genesis record
-        if (this.validate) {
+        if (this._validate) {
           const schemaId = payload.header?.schema
           if (schemaId) {
             const schema = await Document.loadSchemaById(this._context, schemaId)
@@ -511,7 +527,7 @@ class Document extends EventEmitter {
       } else {
         // it's a signed record
         const tmpState = await this._doctypeHandler.applyRecord(record, cid, this._context, state)
-        if (this.validate) {
+        if (this._validate) {
           const schemaId = payload.header?.schema
           if (schemaId) {
             const schema = await Document.loadSchemaById(this._context, schemaId)

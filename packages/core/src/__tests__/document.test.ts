@@ -277,35 +277,75 @@ describe('Document', () => {
       expect(doc.state.signature).toEqual(SignatureStatus.SIGNED)
       expect(doc.state.anchorStatus).not.toEqual(AnchorStatus.NOT_REQUESTED)
 
-      // try to checkout non-existing version
+      // Apply a final record that never gets anchored and thus never becomes a proper version
+      const finalContent = {foo: 'bar'}
+      const updateRec2 = await TileDoctype._makeRecord(doc.doctype, user, finalContent, doc.controllers)
+      await doc.applyRecord(updateRec2)
+
+      versions = doc.allVersionIds
+      expect(versions.length).toEqual(3)
+      expect(doc.versionId).toEqual(version2)
+      expect(doc.state.log.length).toEqual(5)
+
+      // try to load a non-existing version
       try {
-        await Document.loadVersion(doc, new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu'))
-        throw new Error('Should not be able to fetch non-existing version')
+        const nonExistentVersionID = DocID.fromOther(doc.id, new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu'))
+        await Document.load(nonExistentVersionID, doctypeHandler, dispatcher, pinStore, context)
+        fail('Should not be able to fetch non-existing version')
       } catch (e) {
-        expect(e.message).toContain('No record found for version')
+        expect(e.message).toContain('No record found for CID')
       }
 
-      // try to checkout not anchored version
-      try {
-        await Document.loadVersion(doc, doc.doctype.state.log[2].cid)
-        throw new Error('Should not be able to fetch not anchored version')
-      } catch (e) {
-        expect(e.message).toContain('No anchor record for version')
-      }
-
-      const docV1 = await Document.loadVersion(doc, doc.doctype.state.log[1].cid)
+      // Correctly check out a specific version
+      const version = doc.doctype.state.log[1].cid
+      const versionId = DocID.fromOther(doc.id, version)
+      const docV1 = await Document.load(versionId, doctypeHandler, dispatcher, pinStore, context)
       expect(docV1.state.log.length).toEqual(2)
       expect(docV1.controllers).toEqual(controllers)
       expect(docV1.content).toEqual(initialContent)
       expect(docV1.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
-      // try to call doctype.change
+      // try to call doctype.change on doc that's tied to a specific version
       try {
         await docV1.doctype.change({ content: doc.content, controllers: doc.controllers })
-        throw new Error('Should not be able to fetch not anchored version')
+        fail('Should not be able to change document that was loaded at a specific version')
       } catch (e) {
         expect(e.message).toEqual('Historical document versions cannot be modified. Load the document without specifying a version to make updates.')
       }
+
+      // Cannot load historical signed record when loading a version
+      try {
+        const invalidVersionId = DocID.fromOther(doc.id, doc.doctype.state.log[2].cid)
+        await Document.load(invalidVersionId, doctypeHandler, dispatcher, pinStore, context)
+        fail('Should not be able to fetch not anchored version')
+      } catch (e) {
+        expect(e.message).toContain('does not refer to a valid version, which must correspond to an anchor record')
+      }
+
+      // Cannot load signed record that hasn't been anchored when loading a version
+      try {
+        const invalidVersionId = DocID.fromOther(doc.id, doc.doctype.state.log[4].cid)
+        await Document.load(invalidVersionId, doctypeHandler, dispatcher, pinStore, context)
+        fail('Should not be able to fetch not anchored version')
+      } catch (e) {
+        expect(e.message).toContain('does not refer to a valid version, which must correspond to an anchor record')
+      }
+
+      /* TODO re-write and enable these tests once we can load signed records as versions
+      // Can load a historical signed record so long as it's loaded a tip, not as a version
+      const docAtTip2 = await Document.load(doc.id, doctypeHandler, dispatcher, pinStore, context, {}, true, doc.doctype.state.log[2].cid)
+      expect(docAtTip2.content).toEqual(newContent)
+      expect(docAtTip2.state.log.length).toEqual(3)
+      expect(docAtTip2.state.signature).toEqual(SignatureStatus.SIGNED)
+      expect(docAtTip2.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
+
+      // Can load signed record that hasn't been anchored so long as it's loaded a tip, not as a version
+      const docAtTip4 = await Document.load(doc.id, doctypeHandler, dispatcher, pinStore, context, {}, true, doc.doctype.state.log[4].cid)
+      expect(docAtTip4.content).toEqual(finalContent)
+      expect(docAtTip4.state.log.length).toEqual(5)
+      expect(docAtTip4.state.signature).toEqual(SignatureStatus.SIGNED)
+      expect(docAtTip4.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
+       */
     })
 
     it('is updated correctly', async () => {
@@ -369,7 +409,7 @@ describe('Document', () => {
           metadata: {controllers, schema: schemaDoc.versionId.toString()}
         }
         await create(docParams, ceramic, context)
-        throw new Error('Should not be able to create a document with an invalid schema')
+        fail('Should not be able to create a document with an invalid schema')
       } catch (e) {
         expect(e.message).toEqual('Validation Error: data[\'stuff\'] should be string')
       }
@@ -389,7 +429,7 @@ describe('Document', () => {
       try {
         const updateRec = await TileDoctype._makeRecord(doc.doctype, user, null, doc.controllers, schemaDoc.versionId.toString())
         await doc.applyRecord(updateRec)
-        throw new Error('Should not be able to assign a schema to a document that does not conform')
+        fail('Should not be able to assign a schema to a document that does not conform')
       } catch (e) {
         expect(e.message).toEqual('Validation Error: data[\'stuff\'] should be string')
       }
@@ -412,7 +452,7 @@ describe('Document', () => {
 
       try {
         await Document.load(doc.id, doctypeHandler, dispatcher, pinStore, context, { sync: false })
-        throw new Error('Should not be able to assign a schema to a document that does not conform')
+        fail("Should not be able to load a document that doesn't conform to its schema")
       } catch (e) {
         expect(e.message).toEqual('Validation Error: data[\'stuff\'] should be string')
       }

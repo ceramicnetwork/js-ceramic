@@ -405,8 +405,8 @@ class Ceramic implements CeramicApi {
    */
   async loadDocument<T extends Doctype>(docId: DocID | string, opts: DocOpts = {}): Promise<T> {
     docId = normalizeDocID(docId)
-    const doc = await this._loadDoc(docId.baseID, opts)
-    return (docId.version? await doc.loadVersion<T>(docId.version) : doc.doctype) as T
+    const doc = await this._loadDoc(docId, opts)
+    return doc.doctype as T
   }
 
   /**
@@ -488,15 +488,20 @@ class Ceramic implements CeramicApi {
     docId = normalizeDocID(docId)
     const docIdStr = docId.toString()
 
+    if (this._docmap[docIdStr]) {
+      return this._docmap[docIdStr]
+    }
+
     const doctypeHandler = this._doctypeHandlers[docId.typeName]
     if (!doctypeHandler) {
       throw new Error(docId.typeName + " is not a valid doctype")
     }
-
-    if (!this._docmap[docIdStr]) {
-      this._docmap[docIdStr] = await Document.load(docId, doctypeHandler, this.dispatcher, this.pinStore, this.context, opts)
+    const doc = await Document.load(docId, doctypeHandler, this.dispatcher, this.pinStore, this.context, opts)
+    if (!docId.version) {
+      // Only cache document if we're loading the baseId (i.e. the current version)
+      this._docmap[docIdStr] = doc
     }
-    return this._docmap[docIdStr]
+    return doc
   }
 
   /**
