@@ -171,21 +171,21 @@ export abstract class Doctype extends EventEmitter {
         return this._state.log[this._state.log.length - 1].cid
     }
 
-    get versionId(): DocID {
-        return this.allVersionIds.pop()
+    get commitId(): DocID {
+        return DocID.fromOther(this.id, this.tip)
     }
 
     /**
-     * Lists available versions
+     * Lists available commits
      */
-    get allVersionIds(): Array<DocID> {
+    get allCommitIds(): Array<DocID> {
       return this._state.log.map(({ cid }) => DocID.fromOther(this.id, cid))
     }
 
     /**
-     * Lists available versions that correspond to anchor records
+     * Lists available commits that correspond to anchor records
      */
-    get anchorVersionIds(): Array<DocID> {
+    get anchorCommitIds(): Array<DocID> {
         return this._state.log
             .filter(({ type }) => type === RecordType.ANCHOR)
             .map(({ cid }) => DocID.fromOther(this.id, cid))

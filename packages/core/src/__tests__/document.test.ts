@@ -238,120 +238,120 @@ describe('Document', () => {
       expect(doc.content).toEqual(initialContent)
     })
 
-    it('it handles versions correctly (valid, invalid, non-existent)', async () => {
+    it('it handles commits correctly (valid, invalid, non-existent)', async () => {
       const doc = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context)
 
-      let versions = doc.allVersionIds
-      let anchorVersions = doc.anchorVersionIds
-      const version0 = doc.versionId
-      expect(versions).toEqual([version0])
-      expect(version0).toEqual(DocID.fromOther(doc.id, doc.id.cid))
-      expect(anchorVersions.length).toEqual(0)
+      let commits = doc.allCommitIds
+      let anchorCommits = doc.anchorCommitIds
+      const commit0 = doc.commitId
+      expect(commits).toEqual([commit0])
+      expect(commit0).toEqual(DocID.fromOther(doc.id, doc.id.cid))
+      expect(anchorCommits.length).toEqual(0)
 
       await anchorUpdate(doc)
 
-      versions = doc.allVersionIds
-      anchorVersions = doc.anchorVersionIds
-      expect(versions.length).toEqual(2)
-      expect(anchorVersions.length).toEqual(1)
-      const version1 = doc.versionId
-      expect(version1).not.toEqual(version0)
-      expect(version1).toEqual(versions[1])
-      expect(version1).toEqual(anchorVersions[0])
+      commits = doc.allCommitIds
+      anchorCommits = doc.anchorCommitIds
+      expect(commits.length).toEqual(2)
+      expect(anchorCommits.length).toEqual(1)
+      const commit1 = doc.commitId
+      expect(commit1).not.toEqual(commit0)
+      expect(commit1).toEqual(commits[1])
+      expect(commit1).toEqual(anchorCommits[0])
 
       const updateRec = await TileDoctype._makeRecord(doc.doctype, user, newContent, doc.controllers)
 
-      versions = doc.allVersionIds
-      anchorVersions = doc.anchorVersionIds
-      expect(versions.length).toEqual(2)
-      expect(anchorVersions.length).toEqual(1)
+      commits = doc.allCommitIds
+      anchorCommits = doc.anchorCommitIds
+      expect(commits.length).toEqual(2)
+      expect(anchorCommits.length).toEqual(1)
 
       await doc.applyRecord(updateRec)
 
-      versions = doc.allVersionIds
-      anchorVersions = doc.anchorVersionIds
-      expect(versions.length).toEqual(3)
-      expect(anchorVersions.length).toEqual(1)
-      const version2 = doc.versionId
-      expect(version2).not.toEqual(version1)
-      expect(version2).toEqual(versions[2])
+      commits = doc.allCommitIds
+      anchorCommits = doc.anchorCommitIds
+      expect(commits.length).toEqual(3)
+      expect(anchorCommits.length).toEqual(1)
+      const commit2 = doc.commitId
+      expect(commit2).not.toEqual(commit1)
+      expect(commit2).toEqual(commits[2])
 
       await anchorUpdate(doc)
 
-      versions = doc.allVersionIds
-      anchorVersions = doc.anchorVersionIds
-      expect(versions.length).toEqual(4)
-      expect(anchorVersions.length).toEqual(2)
-      const version3 = doc.versionId
-      expect(version3).not.toEqual(version2)
-      expect(version3).toEqual(versions[3])
-      expect(version3).toEqual(anchorVersions[1])
+      commits = doc.allCommitIds
+      anchorCommits = doc.anchorCommitIds
+      expect(commits.length).toEqual(4)
+      expect(anchorCommits.length).toEqual(2)
+      const commit3 = doc.commitId
+      expect(commit3).not.toEqual(commit2)
+      expect(commit3).toEqual(commits[3])
+      expect(commit3).toEqual(anchorCommits[1])
 
       expect(doc.content).toEqual(newContent)
       expect(doc.state.signature).toEqual(SignatureStatus.SIGNED)
       expect(doc.state.anchorStatus).not.toEqual(AnchorStatus.NOT_REQUESTED)
 
-      // Apply a final record that never gets anchored and thus never becomes a proper version
+      // Apply a final record that never gets anchored and thus never becomes a proper commit
       const finalContent = {foo: 'bar'}
       const updateRec2 = await TileDoctype._makeRecord(doc.doctype, user, finalContent, doc.controllers)
       await doc.applyRecord(updateRec2)
 
-      versions = doc.allVersionIds
-      anchorVersions = doc.anchorVersionIds
-      expect(versions.length).toEqual(5)
-      expect(anchorVersions.length).toEqual(2)
-      const version4 = doc.versionId
-      expect(version4).not.toEqual(version3)
-      expect(version4).toEqual(versions[4])
-      expect(version4).not.toEqual(anchorVersions[1])
+      commits = doc.allCommitIds
+      anchorCommits = doc.anchorCommitIds
+      expect(commits.length).toEqual(5)
+      expect(anchorCommits.length).toEqual(2)
+      const commit4 = doc.commitId
+      expect(commit4).not.toEqual(commit3)
+      expect(commit4).toEqual(commits[4])
+      expect(commit4).not.toEqual(anchorCommits[1])
       expect(doc.state.log.length).toEqual(5)
 
-      // try to load a non-existing version
+      // try to load a non-existing commit
       try {
-        const nonExistentVersionID = DocID.fromOther(doc.id, new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu'))
-        await Document.load(nonExistentVersionID, doctypeHandler, dispatcher, pinStore, context)
-        fail('Should not be able to fetch non-existing version')
+        const nonExistentCommitID = DocID.fromOther(doc.id, new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu'))
+        await Document.load(nonExistentCommitID, doctypeHandler, dispatcher, pinStore, context)
+        fail('Should not be able to fetch non-existing commit')
       } catch (e) {
         expect(e.message).toContain('No record found for CID')
       }
 
-      // Correctly check out a specific version
-      const docV0 = await Document.load(version0, doctypeHandler, dispatcher, pinStore, context)
+      // Correctly check out a specific commit
+      const docV0 = await Document.load(commit0, doctypeHandler, dispatcher, pinStore, context)
       expect(docV0.state.log.length).toEqual(1)
       expect(docV0.controllers).toEqual(controllers)
       expect(docV0.content).toEqual(initialContent)
       expect(docV0.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
 
-      const docV1 = await Document.load(version1, doctypeHandler, dispatcher, pinStore, context)
+      const docV1 = await Document.load(commit1, doctypeHandler, dispatcher, pinStore, context)
       expect(docV1.state.log.length).toEqual(2)
       expect(docV1.controllers).toEqual(controllers)
       expect(docV1.content).toEqual(initialContent)
       expect(docV1.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
-      const docV2 = await Document.load(version2, doctypeHandler, dispatcher, pinStore, context)
+      const docV2 = await Document.load(commit2, doctypeHandler, dispatcher, pinStore, context)
       expect(docV2.state.log.length).toEqual(3)
       expect(docV2.controllers).toEqual(controllers)
       expect(docV2.content).toEqual(newContent)
       expect(docV2.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
 
-      const docV3 = await Document.load(version3, doctypeHandler, dispatcher, pinStore, context)
+      const docV3 = await Document.load(commit3, doctypeHandler, dispatcher, pinStore, context)
       expect(docV3.state.log.length).toEqual(4)
       expect(docV3.controllers).toEqual(controllers)
       expect(docV3.content).toEqual(newContent)
       expect(docV3.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
-      const docV4 = await Document.load(version4, doctypeHandler, dispatcher, pinStore, context)
+      const docV4 = await Document.load(commit4, doctypeHandler, dispatcher, pinStore, context)
       expect(docV4.state.log.length).toEqual(5)
       expect(docV4.controllers).toEqual(controllers)
       expect(docV4.content).toEqual(finalContent)
       expect(docV4.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
 
-      // try to call doctype.change on doc that's tied to a specific version
+      // try to call doctype.change on doc that's tied to a specific commit
       try {
         await docV4.doctype.change({ content: doc.content, controllers: doc.controllers })
-        fail('Should not be able to change document that was loaded at a specific version')
+        fail('Should not be able to change document that was loaded at a specific commit')
       } catch (e) {
-        expect(e.message).toEqual('Historical document versions cannot be modified. Load the document without specifying a version to make updates.')
+        expect(e.message).toEqual('Historical document commits cannot be modified. Load the document without specifying a commit to make updates.')
       }
     })
 
@@ -413,7 +413,7 @@ describe('Document', () => {
       try {
         const docParams = {
           content: {stuff: 1},
-          metadata: {controllers, schema: schemaDoc.versionId.toString()}
+          metadata: {controllers, schema: schemaDoc.commitId.toString()}
         }
         await create(docParams, ceramic, context)
         fail('Should not be able to create a document with an invalid schema')
@@ -434,7 +434,7 @@ describe('Document', () => {
       await anchorUpdate(doc)
 
       try {
-        const updateRec = await TileDoctype._makeRecord(doc.doctype, user, null, doc.controllers, schemaDoc.versionId.toString())
+        const updateRec = await TileDoctype._makeRecord(doc.doctype, user, null, doc.controllers, schemaDoc.commitId.toString())
         await doc.applyRecord(updateRec)
         fail('Should not be able to assign a schema to a document that does not conform')
       } catch (e) {
@@ -448,14 +448,14 @@ describe('Document', () => {
 
       const docParams = {
         content: {stuff: 1},
-        metadata: {controllers, schema: schemaDoc.versionId.toString()}
+        metadata: {controllers, schema: schemaDoc.commitId.toString()}
       }
       // Create a document that isn't conforming to the schema
       const doc = await create(docParams, ceramicWithoutSchemaValidation, context)
       await anchorUpdate(doc)
 
       expect(doc.content).toEqual({stuff:1})
-      expect(doc.metadata.schema).toEqual(schemaDoc.versionId.toString())
+      expect(doc.metadata.schema).toEqual(schemaDoc.commitId.toString())
 
       try {
         await Document.load(doc.id, doctypeHandler, dispatcher, pinStore, context, { sync: false })

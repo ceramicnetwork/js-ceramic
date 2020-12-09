@@ -112,7 +112,7 @@ describe('Ceramic API', () => {
   })
 
   describe('API', () => {
-    it('can load the previous document version', async () => {
+    it('can load the previous document commit', async () => {
       ceramic = await createCeramic()
 
       const controller = ceramic.context.did.id
@@ -122,7 +122,7 @@ describe('Ceramic API', () => {
         metadata: { controllers: [controller] }
       })
 
-      // wait for anchor (new version)
+      // wait for anchor (new commit)
       await anchorDoc(ceramic, docOg)
 
       expect(docOg.state.log.length).toEqual(2)
@@ -135,7 +135,7 @@ describe('Ceramic API', () => {
 
       const stateV2 = docOg.state
 
-      // wait for anchor (new version)
+      // wait for anchor (new commit)
       await anchorDoc(ceramic, docOg)
 
       expect(docOg.state.log.length).toEqual(4)
@@ -151,21 +151,21 @@ describe('Ceramic API', () => {
       // try to call doctype.change
       try {
         await docV1.change({ content: { test: 'fghj' }, metadata: { controllers: docV1.controllers } })
-        throw new Error('Should not be able to update version')
+        throw new Error('Should not be able to update commit')
       } catch (e) {
-        expect(e.message).toEqual('Historical document versions cannot be modified. Load the document without specifying a version to make updates.')
+        expect(e.message).toEqual('Historical document commits cannot be modified. Load the document without specifying a commit to make updates.')
       }
 
       // // try to call Ceramic API directly
       try {
         const updateRecord = await TileDoctype._makeRecord(docV1, ceramic.context.did, { content: { test: 'fghj' } })
         await ceramic.context.api.applyRecord(docV1Id, updateRecord)
-        throw new Error('Should not be able to update version')
+        throw new Error('Should not be able to update commit')
       } catch (e) {
-        expect(e.message).toEqual('Historical document versions cannot be modified. Load the document without specifying a version to make updates.')
+        expect(e.message).toEqual('Historical document commits cannot be modified. Load the document without specifying a commit to make updates.')
       }
 
-      // checkout not anchored version
+      // checkout not anchored commit
       const docV2Id = DocID.fromOther(docOg.id, docOg.state.log[2].cid.toString())
       const docV2 = await ceramic.loadDocument<TileDoctype>(docV2Id)
       expect(docV2.content).toEqual({ test: "abcde" })
@@ -186,7 +186,7 @@ describe('Ceramic API', () => {
 
       const tileDocParams: TileParams = {
         metadata: {
-          schema: schemaDoc.versionId.toString(), controllers: [controller]
+          schema: schemaDoc.commitId.toString(), controllers: [controller]
         }, content: { a: 1 },
       }
 
@@ -213,7 +213,7 @@ describe('Ceramic API', () => {
 
       const tileDocParams: TileParams = {
         metadata: {
-          schema: schemaDoc.versionId.toString(), controllers: [controller]
+          schema: schemaDoc.commitId.toString(), controllers: [controller]
         }, content: { a: "test" }
       }
 
@@ -223,7 +223,7 @@ describe('Ceramic API', () => {
       await ceramic.close()
     })
 
-    it('must assign schema with specific version', async () => {
+    it('Must assign schema with specific commit', async () => {
       ceramic = await createCeramic()
 
       const controller = ceramic.context.did.id
@@ -233,19 +233,19 @@ describe('Ceramic API', () => {
         metadata: { controllers: [controller] }
       })
 
-      expect(schemaDoc.id.version).toBeFalsy()
-      const schemaDocIdWithoutVersion = schemaDoc.id.toString()
+      expect(schemaDoc.id.commit).toBeFalsy()
+      const schemaDocIdWithoutCommit = schemaDoc.id.toString()
       const tileDocParams: TileParams = {
         metadata: {
-          schema: schemaDocIdWithoutVersion, controllers: [controller]
+          schema: schemaDocIdWithoutCommit, controllers: [controller]
         }, content: { a: "test" }
       }
 
       try {
         await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, tileDocParams)
-        throw new Error("Should not be able to assign a schema without specifying the schema version")
+        throw new Error("Should not be able to assign a schema without specifying the schema commit")
       } catch (e) {
-        expect(e.message).toEqual("Version missing when loading schema document")
+        expect(e.message).toEqual("Commit missing when loading schema document")
       }
 
       await ceramic.close()
@@ -263,7 +263,7 @@ describe('Ceramic API', () => {
 
       const tileDocParams: TileParams = {
         metadata: {
-          schema: schemaDoc.versionId.toString(), controllers: [controller]
+          schema: schemaDoc.commitId.toString(), controllers: [controller]
         }, content: { a: 1 },
       }
 
@@ -293,12 +293,12 @@ describe('Ceramic API', () => {
 
       await doctype.change({
         metadata: {
-          controllers: [controller], schema: schemaDoc.versionId.toString()
+          controllers: [controller], schema: schemaDoc.commitId.toString()
         }
       })
 
       expect(doctype.content).toEqual({ a: 'x' })
-      expect(doctype.metadata.schema).toEqual(schemaDoc.versionId.toString())
+      expect(doctype.metadata.schema).toEqual(schemaDoc.commitId.toString())
 
       await new Promise(resolve => setTimeout(resolve, 1000)) // wait to propagate
       await ceramic.close()
@@ -325,7 +325,7 @@ describe('Ceramic API', () => {
       try {
         await doctype.change({
           metadata: {
-            controllers: [controller], schema: schemaDoc.versionId.toString()
+            controllers: [controller], schema: schemaDoc.commitId.toString()
           }
         })
         throw new Error('Should not be able to update the document with invalid content')
@@ -356,7 +356,7 @@ describe('Ceramic API', () => {
 
       await doctype.change({
         content: { a: 'x' }, metadata: {
-          controllers: [controller], schema: schemaDoc.versionId.toString()
+          controllers: [controller], schema: schemaDoc.commitId.toString()
         }
       })
 
@@ -392,7 +392,7 @@ describe('Ceramic API', () => {
       expect(schemaDoc.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
       // Update the schema to expect a number, so now the original doc should conform to the new
-      // version of the schema
+      // commit of the schema
       const updatedSchema = cloneDeep(stringMapSchema)
       updatedSchema.additionalProperties.type = "number"
       await schemaDoc.change({content: updatedSchema})
@@ -403,7 +403,7 @@ describe('Ceramic API', () => {
       // Test that we can assign the updated schema to the document without error.
       await doc.change({
         metadata: {
-          controllers: [controller], schema: schemaDoc.versionId.toString()
+          controllers: [controller], schema: schemaDoc.commitId.toString()
         }
       })
       await anchorDoc(ceramic, doc)

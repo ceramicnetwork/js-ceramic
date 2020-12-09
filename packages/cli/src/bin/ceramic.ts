@@ -67,10 +67,10 @@ program
     })
 
 program
-    .command('versions <docId>')
-    .description('List document versions')
+    .command('commits <docId>')
+    .description('List document commits')
     .action(async (docId) => {
-        await CeramicCliUtils.versions(docId)
+        await CeramicCliUtils.commits(docId)
     })
 
 const schemas = program.command('schema')

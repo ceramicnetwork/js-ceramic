@@ -308,8 +308,8 @@ class Ceramic implements CeramicApi {
    */
   async applyRecord<T extends Doctype>(docId: DocID | string, record: CeramicRecord, opts?: DocOpts): Promise<T> {
     docId = normalizeDocID(docId)
-    if (docId.version != null) {
-      throw new Error('Historical document versions cannot be modified. Load the document without specifying a version to make updates.')
+    if (docId.commit != null) {
+      throw new Error('Historical document commits cannot be modified. Load the document without specifying a commit to make updates.')
     }
 
     const doc = await this._loadDoc(docId, opts)
@@ -497,8 +497,8 @@ class Ceramic implements CeramicApi {
       throw new Error(docId.typeName + " is not a valid doctype")
     }
     const doc = await Document.load(docId, doctypeHandler, this.dispatcher, this.pinStore, this.context, opts)
-    if (!docId.version) {
-      // Only cache document if we're loading the baseId (i.e. the current version)
+    if (!docId.commit) {
+      // Only cache document if we're loading the baseId (i.e. the current commit)
       this._docmap[docIdStr] = doc
     }
     return doc

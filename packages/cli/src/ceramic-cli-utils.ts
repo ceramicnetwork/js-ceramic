@@ -161,9 +161,9 @@ export class CeramicCliUtils {
     static async change(docId: string, content: string, controllers: string, schemaDocId?: string): Promise<void> {
         const id = DocID.fromString(docId)
 
-        const version = id.version
-        if (version) {
-            console.error(`No versions allowed. Invalid docId: ${id.toString()}`)
+        const commit = id.commit
+        if (commit) {
+            console.error(`No commits allowed. Invalid docId: ${id.toString()}`)
             return
         }
 
@@ -226,16 +226,16 @@ export class CeramicCliUtils {
     }
 
     /**
-     * Get document versions
+     * Get document commits
      * @param docId - Document ID
      */
-    static async versions(docId: string): Promise<void> {
+    static async commits(docId: string): Promise<void> {
         const id = DocID.fromString(docId)
 
         await CeramicCliUtils._runWithCeramic(async (ceramic: CeramicApi) => {
             const doc = await ceramic.loadDocument(id)
-            const versions = doc.allVersionIds.map(v => v.toString())
-            console.log(JSON.stringify(versions, null, 2))
+            const commits = doc.allCommitIds.map(v => v.toString())
+            console.log(JSON.stringify(commits, null, 2))
         })
     }
 

@@ -7,10 +7,10 @@ Implements Ceramic DocIDs as defined in ceramic spec and [CIP](https://github.co
 ```html
 <docid> ::= <multibase-prefix><multicodec-docid><doctype><genesis-cid-bytes>
 ```
-or including DocID version
+or including DocID commit
 
 ```html
-<docid> ::= <multibase-prefix><multicodec-docid><doctype><genesis-cid-bytes><version-cid-bytes>
+<docid> ::= <multibase-prefix><multicodec-docid><doctype><genesis-cid-bytes><commit-cid-bytes>
 ```
 
 ## Getting started
@@ -22,12 +22,12 @@ $ npm install @ceramicnetwork/docid
 
 ### Usage
 
-You can create an instance from the parts. Document type string or integer and CID instance or string are required. Version CID and multibaseName are optional and default to null and 'base36' respectively. 
+You can create an instance from the parts. Document type string or integer and CID instance or string are required. Commit CID and multibaseName are optional and default to null and 'base36' respectively. 
 
 ```js
 import DocID from '@ceramicnetwork/docid'
 
-const docid = new DocId('tile', 'bagcqcerakszw2vsov...', version, 'devnet', 'base36)
+const docid = new DocId('tile', 'bagcqcerakszw2vsov...', commit, 'devnet', 'base36)
 
 docid.type           // 0
 docid.typeName       // 'tile'

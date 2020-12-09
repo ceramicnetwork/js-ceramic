@@ -141,7 +141,7 @@ export class DoctypeUtils {
      */
     static makeReadOnly<T extends Doctype>(doctype: T): T {
         doctype.change = (): Promise<void> => {
-            throw new Error('Historical document versions cannot be modified. Load the document without specifying a version to make updates.')
+            throw new Error('Historical document commits cannot be modified. Load the document without specifying a commit to make updates.')
         }
         return doctype
     }

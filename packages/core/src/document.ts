@@ -35,7 +35,7 @@ class Document extends EventEmitter {
   private _genesisCid: CID
   private _applyQueue: PQueue
 
-  public readonly version: CID
+  public readonly commit: CID
 
   private _logger: Logger
   private _isProcessing: boolean
@@ -48,7 +48,7 @@ class Document extends EventEmitter {
                private _doctypeHandler: DoctypeHandler<Doctype>,
                private _doctype: Doctype) {
     super()
-    this.version = id.version
+    this.commit = id.commit
 
     this._logger = RootLogger.getLogger(Document.name)
 
@@ -119,12 +119,12 @@ class Document extends EventEmitter {
 
     const doc = await Document._loadGenesis(id, handler, dispatcher, pinStore, context, validate)
 
-    if (!id.version) {
-      // No version requested, so we should load the most current version we can find.
+    if (!id.commit) {
+      // No commit requested, so we should load the most current commit we can find.
       return await Document._syncDocumentToCurrent(doc, pinStore, opts)
     } else {
-      // Requested document at a specific version
-      return await Document._syncDocumentToVersion(doc, id.version, dispatcher)
+      // Requested document at a specific commit
+      return await Document._syncDocumentToCommit(doc, id.commit, dispatcher)
     }
   }
 
@@ -152,28 +152,28 @@ class Document extends EventEmitter {
 
   /**
    * Takes a document containing only the genesis record and syncs the document to the state as
-   * of the specific version requested.  Intentionally does not register the document so that it
-   * does not get notifications about newer versions, since we want a specific version here.
+   * of the specific commit requested.  Intentionally does not register the document so that it
+   * does not get notifications about newer commits, since we want a specific commit here.
    * @param doc - Document containing only the genesis record
    * @param tip - CID of the Tip record that we want to load the document at
    * @param dispatcher
    */
-  static async _syncDocumentToVersion<T extends Doctype> (
+  static async _syncDocumentToCommit<T extends Doctype> (
       doc: Document,
       tip: CID,
       dispatcher: Dispatcher): Promise<Document> {
     // TODO: Assert that doc contains only the genesis record
 
     if (tip.equals(doc.id.cid)) {
-      // The version is the same as the genesis record CID, so nothing more to do after loading
-      // the genesis version of the document.
+      // The commit is the same as the genesis record CID, so nothing more to do after loading
+      // the genesis commit of the document.
       doc._doctype = DoctypeUtils.makeReadOnly<T>(doc.doctype as T)
       return doc
     }
 
-    // Load the requested version record
-    const versionRecord = await dispatcher.retrieveRecord(tip)
-    if (versionRecord == null) {
+    // Load the requested commit record
+    const commitRecord = await dispatcher.retrieveRecord(tip)
+    if (commitRecord == null) {
       throw new Error(`No record found for CID ${tip.toString()}`)
     }
 
@@ -383,7 +383,7 @@ class Document extends EventEmitter {
 
   /**
    * Given two different DocStates representing two different conflicting histories of the same
-   * document, pick which version to accept, in accordance with our conflict resolution strategy
+   * document, pick which commit to accept, in accordance with our conflict resolution strategy
    * @param state1 - first log's state
    * @param state2 - second log's state
    * @returns true if state2's log should be taken, or false if state1's log should be taken
@@ -650,8 +650,8 @@ class Document extends EventEmitter {
   static async loadSchemaById<T extends Doctype>(context: Context, schemaDocId: string): Promise<T> {
     if (schemaDocId) {
       const schemaDocIdParsed = DocID.fromString(schemaDocId)
-      if (!schemaDocIdParsed.version) {
-        throw new Error("Version missing when loading schema document")
+      if (!schemaDocIdParsed.commit) {
+        throw new Error("Commit missing when loading schema document")
       }
       const schemaDoc = await context.api.loadDocument(schemaDocId)
       return schemaDoc.content
@@ -702,16 +702,16 @@ class Document extends EventEmitter {
     return this._doctype.metadata
   }
 
-  get versionId(): DocID {
-    return this._doctype.versionId
+  get commitId(): DocID {
+    return this._doctype.commitId
   }
 
-  get allVersionIds(): Array<DocID> {
-    return this._doctype.allVersionIds
+  get allCommitIds(): Array<DocID> {
+    return this._doctype.allCommitIds
   }
 
-  get anchorVersionIds(): Array<DocID> {
-    return this._doctype.anchorVersionIds
+  get anchorCommitIds(): Array<DocID> {
+    return this._doctype.anchorCommitIds
   }
 
   /**
