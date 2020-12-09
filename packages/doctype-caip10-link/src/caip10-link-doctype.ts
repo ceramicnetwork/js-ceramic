@@ -5,8 +5,7 @@ import {
     DocOpts,
     DocParams,
     Context,
-    CeramicRecord,
-    DoctypeUtils
+    CeramicRecord
 } from "@ceramicnetwork/common"
 
 const DOCTYPE = 'caip10-link'
@@ -74,7 +73,8 @@ export class Caip10LinkDoctype extends Doctype {
         if (!linkedChainId) {
             throw new Error('Chain ID must be specified according to CAIP-10')
         }
-        return { header: DoctypeUtils.metadataToRecordHeader(metadata) }
+        // Add family here to enable easier indexing
+        return { header: { controllers: metadata.controllers, family: `caip10-${linkedChainId}` } }
     }
 
     /**
@@ -85,13 +85,12 @@ export class Caip10LinkDoctype extends Doctype {
      * @private
      */
     static async _makeRecord (doctype: Caip10LinkDoctype, newContent: any, newSchema: string = null): Promise<CeramicRecord> {
-        const { metadata } = doctype
         if (newSchema) {
-            metadata.schema = newSchema
+            throw new Error('Schema not allowed on caip10-link doctype')
         }
         if (newContent == null) {
-            newContent = doctype.content
+            throw new Error('Proof must be given in doctype')
         }
-        return { data: newContent, header: metadata, prev: doctype.tip, id: doctype.state.log[0].cid }
+        return { data: newContent, prev: doctype.tip, id: doctype.state.log[0].cid }
     }
 }
