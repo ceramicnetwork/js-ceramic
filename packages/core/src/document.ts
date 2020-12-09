@@ -177,11 +177,6 @@ class Document extends EventEmitter {
       throw new Error(`No record found for CID ${tip.toString()}`)
     }
 
-    // check if it's not an anchor record
-    if (versionRecord.proof == null) {
-      throw new Error(`Log record CID ${tip.toString()} does not refer to a valid version, which must correspond to an anchor record`)
-    }
-
     await doc._handleTip(tip) // sync document to the requested tip
 
     doc._doctype = DoctypeUtils.makeReadOnly<T>(doc.doctype as T)
@@ -713,6 +708,10 @@ class Document extends EventEmitter {
 
   get allVersionIds(): Array<DocID> {
     return this._doctype.allVersionIds
+  }
+
+  get anchorVersionIds(): Array<DocID> {
+    return this._doctype.anchorVersionIds
   }
 
   /**
