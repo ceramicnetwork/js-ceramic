@@ -198,9 +198,9 @@ export class LogToFiles {
 
         if (!fileStats) {
             return true
-        } else if (await LogToFiles._isExpired(fileStats)) {
+        } else if (LogToFiles._isExpired(fileStats)) {
             return true
-        } else if (await LogToFiles._isMaxSize(fileStats)) {
+        } else if (LogToFiles._isMaxSize(fileStats)) {
             return true
         }
 
@@ -213,7 +213,7 @@ export class LogToFiles {
      * @param fileStats `fs.Stats` of file
      * @returns If the file is expired
      */
-    private static async _isExpired (fileStats: fs.Stats): Promise<boolean> {
+    private static _isExpired (fileStats: fs.Stats): boolean {
         const { birthtime } = fileStats
         if (birthtime.getTime() == 0) {
             console.warn('WARNING: Unable to retrieve file birthtime')
@@ -228,7 +228,7 @@ export class LogToFiles {
      * @param fileStats `fs.Stats` of file
      * @returns If the file is at max size
      */
-    private static async _isMaxSize (fileStats: fs.Stats): Promise<boolean> {
+    private static _isMaxSize (fileStats: fs.Stats): boolean {
         const { size } = fileStats
         return size >= LogToFiles.MAX_FILE_BYTES
     }
