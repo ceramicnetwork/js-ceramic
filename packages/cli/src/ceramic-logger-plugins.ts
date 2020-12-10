@@ -161,8 +161,7 @@ export class LogToFiles {
 
         const stream = fs.createWriteStream(filePath, { flags: writeFlag })
         stream.on('error', (err) => {
-            console.warn(err)
-            return
+            throw err
         })
         stream.on('drain', () => {
             blockedFiles[filePath] = false
