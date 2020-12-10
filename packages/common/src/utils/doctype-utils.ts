@@ -164,18 +164,6 @@ export class DoctypeUtils {
     }
 
     /**
-     * Converts Doctype metadata to record header
-     * @param docMetadata - DocMetadata instance
-     */
-    static metadataToRecordHeader(docMetadata: DocMetadata): RecordHeader {
-        return {
-            ...docMetadata.controllers && { controllers: docMetadata.controllers },
-            ...docMetadata.schema && { schema: docMetadata.schema },
-            ...docMetadata.tags && { tags: docMetadata.tags },
-        }
-    }
-
-    /**
      * Checks if record is signed DTO ({jws: {}, linkedBlock: {}})
      * @param record - Record
      */

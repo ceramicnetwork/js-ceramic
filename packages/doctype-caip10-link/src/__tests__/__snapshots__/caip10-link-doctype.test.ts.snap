@@ -144,6 +144,7 @@ Object {
     "controllers": Array [
       "0x25954ef14cebbc9af3d71132489a9cfe87043f20@eip155:1",
     ],
+    "family": "caip10-eip155:1",
   },
   "next": Object {
     "content": undefined,
@@ -206,6 +207,7 @@ Object {
     "controllers": Array [
       "0x25954ef14cebbc9af3d71132489a9cfe87043f20@eip155:1",
     ],
+    "family": "caip10-eip155:1",
   },
   "next": Object {
     "content": null,
@@ -311,6 +313,7 @@ Object {
     "controllers": Array [
       "0x25954ef14cebbc9af3d71132489a9cfe87043f20@eip155:1",
     ],
+    "family": "caip10-eip155:1",
   },
   "next": Object {
     "content": undefined,
