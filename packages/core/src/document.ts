@@ -157,7 +157,6 @@ class Document extends EventEmitter {
    * specific commit.
    * @param id - DocID of the document including the requested commit
    * @param doc - Most current version of the document that we know about
-   * @private
    */
   static async loadAtCommit<T extends Doctype> (
       id: DocID,
