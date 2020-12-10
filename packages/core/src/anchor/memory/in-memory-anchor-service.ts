@@ -8,19 +8,19 @@ import base64url from "base64url"
 import type Dispatcher from '../../dispatcher'
 import Ceramic, { CeramicConfig } from "../../ceramic"
 
-const DID_MATCHER = '^(did:([a-zA-Z0-9_]+):([a-zA-Z0-9_.-]+(:[a-zA-Z0-9_.-]+)*)((;[a-zA-Z0-9_.:%-]+=[a-zA-Z0-9_.:%-]*)*)(/[^#?]*)?)([?][^#]*)?(#.*)?';
+const DID_MATCHER = '^(did:([a-zA-Z0-9_]+):([a-zA-Z0-9_.-]+(:[a-zA-Z0-9_.-]+)*)(([a-zA-Z0-9_.:%-]+=[a-zA-Z0-9_.:%-]*)*)(/[^#?]*)?)([?][^#]*)?(#.*)?'
 const CHAIN_ID = 'inmemory:12345'
 
 class Candidate {
-  public cid: CID;
-  public docId: string;
+  public cid: CID
+  public docId: string
 
-  public did?: string;
+  public did?: string
 
   constructor(cid: CID, docId?: string, did?: string) {
-    this.cid = cid;
-    this.docId = docId;
-    this.did = did;
+    this.cid = cid
+    this.docId = docId
+    this.did = did
   }
 
   get key(): string {
