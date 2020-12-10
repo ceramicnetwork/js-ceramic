@@ -493,14 +493,14 @@ class Document extends EventEmitter {
   }
 
   /**
-   * Applies the log to the document and updates the state
+   * Applies the log to the document and updates the state.
+   * TODO: make this static so it's immediately obvious that this doesn't mutate the document
    *
    * @param log - Log of record CIDs
    * @param state - Document state
    * @param breakOnAnchor - Should break apply on anchor record?
    * @private
    */
-  // TODO make this static
   async _applyLogToState (log: Array<CID>, state?: DocState, breakOnAnchor?: boolean): Promise<DocState> {
     const itr = log.entries()
     let entry = itr.next()
