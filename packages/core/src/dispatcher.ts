@@ -68,6 +68,7 @@ export default class Dispatcher extends EventEmitter {
    * @param document - Document instance
    */
   async register (document: Document): Promise<void> {
+    // TODO assert that document.id is a base ID
     this._documents[document.id.toString()] = document
 
     // Build a QUERY message to send to the pub/sub topic to request the latest tip for this document
