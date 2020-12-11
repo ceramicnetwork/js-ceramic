@@ -120,13 +120,7 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
         nextState.signature = SignatureStatus.SIGNED
         nextState.anchorStatus = AnchorStatus.NOT_REQUESTED
 
-        const nonce = payload.header.nonce
-        const squash = nonce > 0 && state.next
-        if (squash) {
-            nextState.log[nextState.log.length-1] = { cid, type: RecordType.SIGNED }
-        } else {
-            nextState.log.push({ cid, type: RecordType.SIGNED })
-        }
+        nextState.log.push({ cid, type: RecordType.SIGNED })
         nextState.next = {
             content: jsonpatch.applyPatch(state.content, payload.data).newDocument
         }
@@ -135,9 +129,6 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
             nextState.next.metadata = {...nextState.metadata, ...payload.header}
         }
 
-        if (nonce) {
-            nextState.next.metadata = { ...nextState.next.metadata, nonce: nonce }
-        }
         return nextState
     }
 

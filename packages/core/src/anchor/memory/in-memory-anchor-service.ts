@@ -13,14 +13,18 @@ const CHAIN_ID = 'inmemory:12345'
 
 class Candidate {
   public cid: CID
+  public did?: string
   public docId: string
 
-  public did?: string
+  public readonly partialLog: CID[]
+  public readonly timestamp: number // the timestamp is used just as a heuristic
 
   constructor(cid: CID, docId?: string, did?: string) {
     this.cid = cid
     this.docId = docId
     this.did = did
+    this.partialLog = []
+    this.timestamp = Date.now()
   }
 
   get key(): string {
@@ -28,6 +32,7 @@ class Candidate {
   }
 
 }
+
 /**
  * In-memory anchor service - used locally, not meant to be used in production code
  */
@@ -72,7 +77,7 @@ class InMemoryAnchorService extends AnchorService {
   }
 
   /**
-   * Filter candidates by document, DIDs and nonces
+   * Filter candidates by document and DIDs
    * @private
    */
   async _filter(): Promise<Candidate[]> {
@@ -97,29 +102,75 @@ class InMemoryAnchorService extends AnchorService {
     }
 
     for (const compositeKey of Object.keys(validCandidates)) {
-      const candidates: Candidate[] = validCandidates[compositeKey]
+      let candidates: Candidate[] = validCandidates[compositeKey]
+      candidates = await Promise.all(candidates.map(async c => {
+        c.partialLog.push(...await this._loadCommitHistory(c.cid))
+        return c
+      }))
+      candidates.sort((c1, c2) => c2.timestamp - c1.timestamp)
 
-      let nonce = 0
-      let selected: Candidate = null
+      let selected: Candidate
+      // naive implementation for finding last the latest commit
+      for (const c1 of candidates) {
+        selected = c1
+        let isIncluded = false
 
-      for (const candidate of candidates) {
-        const record = (await this._ceramic.ipfs.dag.get(candidate.cid)).value
+        for (const c2 of candidates) {
+          if (c1 === c2) {
+            continue
+          }
 
-        let currentNonce
-        if (DoctypeUtils.isSignedRecord(record)) {
-          const payload = (await this._ceramic.ipfs.dag.get(record.link)).value
-          currentNonce = payload.header?.nonce || 0
-        } else {
-          currentNonce = record.header?.nonce || 0
+          if (c2.partialLog.includes(c1.cid)) {
+            isIncluded = true
+            break
+          }
         }
-        if (selected == null || currentNonce > nonce) {
-          selected = candidate
-          nonce = currentNonce
+
+        if (!isIncluded) {
+          result.push(selected)
+          break
         }
       }
-      result.push(selected)
     }
     return result
+  }
+
+  /**
+   * Load last "depth" commits
+   *
+   * Note: this method will be replaced once CAS becomes aware of documents, not just individual commits
+   *
+   * @param commitId - Start CID
+   * @param depth - Number of history commits
+   * @private
+   */
+  async _loadCommitHistory(commitId: CID, depth = 10): Promise<CID[]> {
+    const history: CID[] = []
+
+    let currentCommitId = commitId
+    for (let i = 0; i < depth; i++) {
+      const currentCommit = (await this._ceramic.ipfs.dag.get(currentCommitId)).value
+      if (DoctypeUtils.isAnchorRecord(currentCommit)) {
+        return history
+      }
+
+      let prevCommitId: CID
+      if (DoctypeUtils.isSignedRecord(currentCommit)) {
+        const payload = (await this._ceramic.ipfs.dag.get(currentCommit.link)).value
+        prevCommitId = payload.prev
+      } else {
+        prevCommitId = currentCommit.prev
+      }
+
+      if (prevCommitId == null) {
+        return history
+      }
+
+      history.push(prevCommitId)
+      currentCommitId = prevCommitId
+    }
+
+    return history
   }
 
   /**

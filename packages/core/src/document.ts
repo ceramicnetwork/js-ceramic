@@ -418,17 +418,6 @@ class Document extends EventEmitter {
       // If they have the same block number fall through to fallback mechanism
     }
 
-    // The anchor status is the same between both logs.  If either log has a 'nonce' that means
-    // multiple updates have been squashed into a single anchor window, so prefer the log with the
-    // higher nonce (which indicates it has had more writes).
-    const nonce1 = (state1.next?.metadata.nonce ?? state1.metadata.nonce) || 0
-    const nonce2 = (state2.next?.metadata.nonce ?? state2.metadata.nonce) || 0
-    if (nonce1 < nonce2) {
-      return true
-    } else if (nonce2 < nonce1) {
-      return false
-    }
-
     // If we got this far, that means that we don't have sufficient information to make a good
     // decision about which log to choose.  The most common way this can happen is that neither log
     // is anchored, although it can also happen if both are anchored but in the same blockNumber or
