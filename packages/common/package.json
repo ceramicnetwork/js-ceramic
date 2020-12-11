@@ -28,7 +28,7 @@
   },
   "dependencies": {
     "@ceramicnetwork/docid": "^0.3.0",
-    "cids": "^1.0.2",
+    "cids": "1.0.2",
     "dag-jose": "^0.3.0",
     "did-resolver": "^2.1.1",
     "lodash.clonedeep": "^4.5.0",

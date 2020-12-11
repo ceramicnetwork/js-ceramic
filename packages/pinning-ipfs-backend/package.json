@@ -31,7 +31,7 @@
     "ipfs-http-client": "^48.1.1"
   },
   "devDependencies": {
-    "cids": "^1.0.2",
+    "cids": "1.0.2",
     "ts-jest": "^26.4.4"
   },
   "publishConfig": {
