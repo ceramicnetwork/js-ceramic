@@ -202,7 +202,7 @@ class CeramicDaemon {
     const freeMem = freememPercentage()
     if (freeCpu < 0.05 || freeMem < 0.20) {
       this.logger.error(`Ceramic failed a healthcheck. Info: (freeCpu=${freeCpu}, freeMem=${freeMem})`)
-      res.status(400).send('Insufficient resources')
+      res.status(503).send('Insufficient resources')
     } else {
       res.status(200).send('Alive!')
     }
