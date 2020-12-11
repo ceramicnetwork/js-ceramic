@@ -149,6 +149,7 @@ class CeramicDaemon {
   }
 
   registerAPIPaths (app: core.Express, gateway: boolean): void {
+    app.get(toApiPath('/healthcheck'), this.healthcheck.bind(this))
     app.get(toApiPath('/records/:docid'), this.records.bind(this))
     app.post(toApiPath('/documents'), this.createDocFromGenesis.bind(this))
     app.post(toApiPath('/multiqueries'), this.multiQuery.bind(this))
@@ -193,6 +194,10 @@ class CeramicDaemon {
       requestError: extra && extra.requestError || null
     }
     return httpLog
+  }
+
+  async healthcheck (req: Request, res: Response, next: NextFunction): Promise<void> {
+    res.status(200).send('Alive!')
   }
 
   /**
