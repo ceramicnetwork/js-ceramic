@@ -6,6 +6,7 @@ import { LogToFiles } from "./ceramic-logger-plugins"
 import DocID from "@ceramicnetwork/docid"
 import cors from 'cors'
 import * as core from "express-serve-static-core"
+import { cpuFree, freememPercentage } from "os-utils"
 
 const DEFAULT_PORT = 7007
 const DEFAULT_NETWORK = 'testnet-clay'
@@ -197,7 +198,14 @@ class CeramicDaemon {
   }
 
   async healthcheck (req: Request, res: Response, next: NextFunction): Promise<void> {
-    res.status(200).send('Alive!')
+    const freeCpu = await new Promise((resolve) => cpuFree(resolve))
+    const freeMem = freememPercentage()
+    if (freeCpu < 0.05 || freeMem < 0.20) {
+      this.logger.error(`Ceramic failed a healthcheck. Info: (freeCpu=${freeCpu}, freeMem=${freeMem})`)
+      res.status(400).send('Insufficient resources')
+    } else {
+      res.status(200).send('Alive!')
+    }
   }
 
   /**
