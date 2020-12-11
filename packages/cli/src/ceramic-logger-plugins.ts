@@ -110,7 +110,8 @@ export class LogToFiles {
 
         if (docIdIndex > -1) {
             const docIdSubstring = message.substring(docIdIndex)
-            const match = docIdSubstring.match(/\/ceramic\/\w+/)
+            // TODO: Exclude topics without docIds
+            const match = docIdSubstring.match(/\/ceramic\/[^"]+/)
 
             if (match !== null) {
                 const docId = match[0]
