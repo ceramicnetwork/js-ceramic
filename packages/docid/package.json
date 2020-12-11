@@ -24,7 +24,7 @@
     "lib": "lib"
   },
   "dependencies": {
-    "cids": "^1.0.2",
+    "cids": "1.0.2",
     "multibase": "^3.0.1",
     "varint": "^6.0.0"
   },
