@@ -46,9 +46,6 @@ class MockStream {
                 message: prevFile.message.concat(message)
             }
         }
-        setTimeout(() => {
-            // delay
-        }, 1000);
         if (mockFs[this.filePath].__blocking) return false // Can not write again
         return true
     }
