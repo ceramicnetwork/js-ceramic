@@ -1,4 +1,5 @@
 import fs from 'fs'
+import path from 'path'
 import util from 'util'
 
 import {
@@ -48,7 +49,7 @@ export class LogToFiles {
 
         let basePath = pluginOptions.logPath
         if ((basePath === undefined) || (basePath === '')) {
-            basePath = '/usr/local/var/log/ceramic/'
+            basePath = path.join(path.resolve(__dirname, '../'), 'logs/')
         }
         if (!basePath.endsWith('/')) {
             basePath = basePath + '/'
