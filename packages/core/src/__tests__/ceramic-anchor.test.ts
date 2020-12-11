@@ -73,7 +73,6 @@ describe('Ceramic anchoring', () => {
   let ipfs3: IpfsApi;
   let multaddr1: string;
   let multaddr2: string;
-  let multaddr3: string;
   let tmpFolder: any;
 
   const DOCTYPE_TILE = 'tile'
@@ -109,7 +108,6 @@ describe('Ceramic anchoring', () => {
 
     multaddr1 = (await ipfs1.id()).addresses[0].toString()
     multaddr2 = (await ipfs2.id()).addresses[0].toString()
-    multaddr3 = (await ipfs3.id()).addresses[0].toString()
   })
 
   afterEach(async () => {
