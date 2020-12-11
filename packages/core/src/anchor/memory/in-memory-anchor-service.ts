@@ -109,8 +109,9 @@ class InMemoryAnchorService extends AnchorService {
       }))
       candidates.sort((c1, c2) => c2.timestamp - c1.timestamp)
 
+      // naive implementation for finding the "valid" commit for the document.
+      // the decision making is going to change once the anchoring service becomes aware of Doctypes
       let selected: Candidate
-      // naive implementation for finding last the latest commit
       for (const c1 of candidates) {
         selected = c1
         let isIncluded = false
