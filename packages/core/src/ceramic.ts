@@ -180,6 +180,11 @@ class Ceramic implements CeramicApi {
         networkChains = ["eip155:3", "eip155:4"] // Ethereum Ropsten, Rinkeby
         break
       }
+      case "dev-unstable": {
+        pubsubTopic = "/ceramic/dev-unstable"
+        networkChains = ["eip155:3", "eip155:4"] // Ethereum Ropsten, Rinkeby
+        break
+      }
       case "local": {
         // 'local' network always uses a random pubsub topic so that nodes stay isolated from each other
         const rand = randomUint32()
@@ -200,7 +205,7 @@ class Ceramic implements CeramicApi {
         break
       }
       default: {
-        throw new Error("Unrecognized Ceramic network name: '" + networkName + "'. Supported networks are: 'mainnet', 'testnet-clay', 'local', 'inmemory'")
+        throw new Error("Unrecognized Ceramic network name: '" + networkName + "'. Supported networks are: 'mainnet', 'testnet-clay', 'dev-unstable', 'local', 'inmemory'")
       }
     }
 
