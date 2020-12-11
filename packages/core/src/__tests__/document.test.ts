@@ -246,8 +246,7 @@ describe('Document', () => {
       const commit0 = doc.commitId
       expect(commits).toEqual([commit0])
 
-      const x = DocID.fromOther(doc.id, doc.id.cid)
-      expect(commit0).toEqual(x)
+      expect(commit0).toEqual(DocID.fromOther(doc.id, doc.id.cid))
       expect(anchorCommits.length).toEqual(0)
 
       await anchorUpdate(doc)
