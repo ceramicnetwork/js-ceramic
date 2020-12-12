@@ -151,7 +151,7 @@ describe('Ceramic integration', () => {
 
   it('cannot create Ceramic instance on invalid network', async () => {
     const stateStorePath = await tmp.tmpName()
-    await expect(Ceramic.create(ipfs1, { networkName: 'fakenetwork', stateStorePath })).rejects.toThrow("Unrecognized Ceramic network name: 'fakenetwork'. Supported networks are: 'mainnet', 'testnet-clay', 'local', 'inmemory'")
+    await expect(Ceramic.create(ipfs1, { networkName: 'fakenetwork', stateStorePath })).rejects.toThrow("Unrecognized Ceramic network name: 'fakenetwork'. Supported networks are: 'mainnet', 'testnet-clay', 'dev-unstable', 'local', 'inmemory'")
     await delay(1000)
   })
 
