@@ -51,6 +51,7 @@ export interface CeramicConfig {
   logToFiles?: boolean;
   logToFilesPlugin?: {
     plugin: LoggerPlugin;
+    state: any;
     options: LoggerPluginOptions;
   };
   gateway?: boolean;
@@ -232,6 +233,7 @@ class Ceramic implements CeramicApi {
     if (config.logToFiles) {
         LoggerProvider.addPlugin(
             config.logToFilesPlugin.plugin,
+            config.logToFilesPlugin.state,
             null,
             config.logToFilesPlugin.options
         )

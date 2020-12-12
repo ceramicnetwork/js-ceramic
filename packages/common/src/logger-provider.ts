@@ -40,7 +40,12 @@ interface PluginOptions {
  * Function type for plugins
  * @dev Must call `setLevel` on `rootLogger` to be enabled
  */
-type Plugin = (rootLogger: log.RootLogger, loggerOptions?: Options, pluginOptions?: PluginOptions) => void;
+type Plugin = (
+    rootLogger: log.RootLogger,
+    pluginState?: any,
+    loggerOptions?: Options,
+    pluginOptions?: PluginOptions
+) => void;
 
 /**
  * Global Logger factory
@@ -70,11 +75,17 @@ class LoggerProvider {
     /**
      * Adds `plugin` to the logger instance
      * @param plugin Plugin function to add
+     * @param pluginState Shared state specific to `plugin`
      * @param loggerOptions Options returned from LoggerProvider.init
      * @param pluginOptions Options specific to `plugin`
      */
-    static addPlugin(plugin: Plugin, loggerOptions?: Options, pluginOptions?: PluginOptions): void {
-        plugin(log, loggerOptions, pluginOptions)
+    static addPlugin(
+        plugin: Plugin,
+        pluginState?: any,
+        loggerOptions?: Options,
+        pluginOptions?: PluginOptions
+    ): void {
+        plugin(log, pluginState, loggerOptions, pluginOptions)
     }
 
     /**
