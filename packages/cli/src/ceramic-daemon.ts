@@ -33,6 +33,9 @@ export interface CreateOpts {
   logToFiles?: boolean;
   logPath?: string;
   network?: string;
+
+  maxHealthyCpu: number;
+  maxHealthyMemory: number;
 }
 
 interface HttpLog {
@@ -50,11 +53,15 @@ interface MultiQueries {
 class CeramicDaemon {
   private server: any
   private logger: Logger
+  private maxHealthyCpu: number
+  private maxHealthyMemory: number
   private readonly debug: boolean
 
   constructor (public ceramic: Ceramic, opts: CreateOpts) {
     this.debug = opts.debug
     this.logger = RootLogger.getLogger(CeramicDaemon.name)
+    this.maxHealthyCpu = opts.maxHealthyCpu
+    this.maxHealthyMemory = opts.maxHealthyMemory
 
     const app: core.Express = express()
     app.use(express.json())
@@ -198,14 +205,21 @@ class CeramicDaemon {
   }
 
   async healthcheck (req: Request, res: Response, next: NextFunction): Promise<void> {
-    const freeCpu = await new Promise((resolve) => cpuFree(resolve))
-    const freeMem = freememPercentage()
-    if (freeCpu < 0.05 || freeMem < 0.20) {
-      this.logger.error(`Ceramic failed a healthcheck. Info: (freeCpu=${freeCpu}, freeMem=${freeMem})`)
+    const freeCpu: any = await new Promise((resolve) => cpuFree(resolve))
+    const cpuUsage: number = 1 - freeCpu
+
+    const freeMemory = freememPercentage()
+    const memUsage: number = 1 - freeMemory
+
+    const stats = `maxHealthyCpu=${this.maxHealthyCpu} cpuUsage=${cpuUsage} freeCpu=${freeCpu} maxHealthyMemory=${this.maxHealthyMemory} memoryUsage=${memUsage} freeMemory=${freeMemory}`
+
+    if (cpuUsage > this.maxHealthyCpu || memUsage > this.maxHealthyMemory) {
+      this.logger.error('Ceramic failed a healthcheck')
       res.status(503).send('Insufficient resources')
     } else {
       res.status(200).send('Alive!')
     }
+    this.logger.debug(stats)
   }
 
   /**
