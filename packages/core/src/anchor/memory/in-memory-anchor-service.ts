@@ -16,14 +16,14 @@ class Candidate {
   public did?: string
   public docId: string
 
-  public readonly partialLog: CID[]
+  public readonly log: CID[]
   public readonly timestamp: number // the timestamp is used just as a heuristic
 
-  constructor(cid: CID, docId?: string, did?: string) {
+  constructor(cid: CID, docId?: string, did?: string, log?: CID[]) {
     this.cid = cid
     this.docId = docId
     this.did = did
-    this.partialLog = []
+    this.log = log
     this.timestamp = Date.now()
   }
 
@@ -91,7 +91,9 @@ class InMemoryAnchorService extends AnchorService {
         const record = (await this._ceramic.ipfs.dag.get(req.cid)).value
         const did = await this.verifySignedRecord(record)
 
-        const candidate = new Candidate(new CID(req.cid), req.docId, did)
+        const log = await this._loadCommitHistory(req.cid)
+        const candidate = new Candidate(new CID(req.cid), req.docId, did, log)
+
         if (!validCandidates[candidate.key]) {
           validCandidates[candidate.key] = []
         }
@@ -102,11 +104,7 @@ class InMemoryAnchorService extends AnchorService {
     }
 
     for (const compositeKey of Object.keys(validCandidates)) {
-      let candidates: Candidate[] = validCandidates[compositeKey]
-      candidates = await Promise.all(candidates.map(async c => {
-        c.partialLog.push(...await this._loadCommitHistory(c.cid))
-        return c
-      }))
+      const candidates: Candidate[] = validCandidates[compositeKey]
       candidates.sort((c1, c2) => c2.timestamp - c1.timestamp)
 
       // naive implementation for finding the "valid" commit for the document.
@@ -121,7 +119,7 @@ class InMemoryAnchorService extends AnchorService {
             continue
           }
 
-          if (c2.partialLog.includes(c1.cid)) {
+          if (c2.log.includes(c1.cid)) {
             isIncluded = true
             break
           }
@@ -137,7 +135,7 @@ class InMemoryAnchorService extends AnchorService {
   }
 
   /**
-   * Load last "depth" commits
+   * Load candidate log.
    *
    * Note: this method will be replaced once CAS becomes aware of documents, not just individual commits
    *
@@ -145,11 +143,11 @@ class InMemoryAnchorService extends AnchorService {
    * @param depth - Number of history commits
    * @private
    */
-  async _loadCommitHistory(commitId: CID, depth = 10): Promise<CID[]> {
+  async _loadCommitHistory(commitId: CID): Promise<CID[]> {
     const history: CID[] = []
 
     let currentCommitId = commitId
-    for (let i = 0; i < depth; i++) {
+    for (; ;) {
       const currentCommit = (await this._ceramic.ipfs.dag.get(currentCommitId)).value
       if (DoctypeUtils.isAnchorRecord(currentCommit)) {
         return history
@@ -170,8 +168,6 @@ class InMemoryAnchorService extends AnchorService {
       history.push(prevCommitId)
       currentCommitId = prevCommitId
     }
-
-    return history
   }
 
   /**

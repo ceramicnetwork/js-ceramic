@@ -1,5 +1,6 @@
 import Ceramic from '../ceramic'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
+import { TileDoctype } from "@ceramicnetwork/doctype-tile"
 import { AnchorStatus, Doctype, IpfsApi } from "@ceramicnetwork/common"
 import tmp from 'tmp-promise'
 import IPFS from 'ipfs-core'
@@ -318,7 +319,7 @@ describe('Ceramic anchoring', () => {
     await ceramic2.close()
   })
 
-  it('test the same state anchored twice, last one wins', async () => {
+  it('test the same state anchored twice, last one wins (in-memory anchor service behavior)', async () => {
     await ipfs3.swarm.connect(multaddr1)
     await ipfs3.swarm.connect(multaddr2)
 
