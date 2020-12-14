@@ -418,8 +418,7 @@ class Document extends EventEmitter {
       // If they have the same block number fall through to fallback mechanism
     }
 
-    // The anchor status is the same between both logs.
-    // Compare log lengths and choose the one with longer length.
+    // The anchor states are the same for both logs. Compare log lengths and choose the one with longer length.
     if (state1.log.length > state2.log.length) {
       return true
     } else if (state1.log.length < state2.log.length) {
