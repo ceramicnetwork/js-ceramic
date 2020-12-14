@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/docid",
-  "version": "0.3.0",
+  "version": "0.4.0-alpha.0",
   "description": "Ceramic Document Ids",
   "keywords": [
     "ceramic",

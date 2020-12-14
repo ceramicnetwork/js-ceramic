@@ -3,6 +3,23 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.4.0-alpha.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/docid@0.3.0...@ceramicnetwork/docid@0.4.0-alpha.0) (2020-12-14)
+
+
+### Bug Fixes
+
+* **docid:** Add missing uint8array dep ([#647](https://github.com/ceramicnetwork/js-ceramic/issues/647)) ([2291f07](https://github.com/ceramicnetwork/js-ceramic/commit/2291f07c476972a5d36f1b1cab9a4305a556b2d1))
+* CID version fix ([#638](https://github.com/ceramicnetwork/js-ceramic/issues/638)) ([a4f4390](https://github.com/ceramicnetwork/js-ceramic/commit/a4f4390ea561e991cae93dd26b9b122d10caef32))
+
+
+### Features
+
+* **core:** Rename document "versions" to document "commits" ([#618](https://github.com/ceramicnetwork/js-ceramic/issues/618)) ([03bc30a](https://github.com/ceramicnetwork/js-ceramic/commit/03bc30a017662f3001ba855d1b73e1c245d0bfef))
+
+
+
+
+
 # [0.3.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/docid@0.2.0...@ceramicnetwork/docid@0.3.0) (2020-11-24)
 
 
