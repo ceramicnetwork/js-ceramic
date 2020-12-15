@@ -319,7 +319,7 @@ describe('Ceramic anchoring', () => {
     await ceramic2.close()
   })
 
-  it('test the same state anchored twice, first one wins', async () => {
+  it('test the same doc anchored twice (same Ceramic instance), first one wins', async () => {
     await ipfs2.swarm.connect(multaddr1)
 
     const [ceramic1, ceramic2] = await Promise.all([
@@ -346,7 +346,7 @@ describe('Ceramic anchoring', () => {
     await ceramic2.close()
   })
 
-  it('test the same state anchored twice, last one wins (in-memory anchor service behavior)', async () => {
+  it('test the same doc anchored twice (different Ceramic instances), first one wins)', async () => {
     await ipfs3.swarm.connect(multaddr1)
     await ipfs3.swarm.connect(multaddr2)
 
@@ -375,14 +375,14 @@ describe('Ceramic anchoring', () => {
     await handle1
     await handle2
 
-    expect(doctype1.content).toEqual({ x: 5 })
+    expect(doctype1.content).toEqual({ x: 7 })
     expect(doctype1.state.log.length).toEqual(3)
 
-    expect(doctype2.content).toEqual({ x: 5 })
+    expect(doctype2.content).toEqual({ x: 7 })
     expect(doctype2.state.log.length).toEqual(3)
 
     const doctype3 = await ceramic3.loadDocument(doctype1.id)
-    expect(doctype3.content).toEqual({ x: 5 })
+    expect(doctype3.content).toEqual({ x: 7 })
     expect(doctype3.state.log.length).toEqual(3)
 
     await ceramic1.close()

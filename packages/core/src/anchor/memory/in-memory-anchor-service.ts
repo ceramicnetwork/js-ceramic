@@ -17,14 +17,12 @@ class Candidate {
   public docId: string
 
   public readonly log: CID[]
-  public readonly timestamp: number // the timestamp is used just as a heuristic
 
   constructor(cid: CID, docId?: string, did?: string, log?: CID[]) {
     this.cid = cid
     this.docId = docId
     this.did = did
     this.log = log
-    this.timestamp = Date.now()
   }
 
   get key(): string {
@@ -105,7 +103,6 @@ class InMemoryAnchorService extends AnchorService {
 
     for (const compositeKey of Object.keys(validCandidates)) {
       const candidates: Candidate[] = validCandidates[compositeKey]
-      candidates.sort((c1, c2) => c2.timestamp - c1.timestamp)
 
       // naive implementation for finding the "valid" commit for the document.
       // the decision making is going to change once the anchoring service becomes aware of Doctypes
@@ -119,7 +116,7 @@ class InMemoryAnchorService extends AnchorService {
             continue
           }
 
-          if (c2.log.includes(c1.cid)) {
+          if (c2.log.some(c => c.toString() === c1.cid.toString())) {
             isIncluded = true
             break
           }
