@@ -140,7 +140,6 @@ class InMemoryAnchorService extends AnchorService {
    * Note: this method will be replaced once CAS becomes aware of documents, not just individual commits
    *
    * @param commitId - Start CID
-   * @param depth - Number of history commits
    * @private
    */
   async _loadCommitHistory(commitId: CID): Promise<CID[]> {
