@@ -10,6 +10,7 @@ import getPort from 'get-port'
 import dagJose from 'dag-jose'
 import basicsImport from 'multiformats/cjs/src/basics-import.js'
 import legacy from 'multiformats/cjs/src/legacy.js'
+import { TileDoctype } from "@ceramicnetwork/doctype-tile"
 
 jest.mock('../store/level-state-store')
 
@@ -309,6 +310,33 @@ describe('Ceramic anchoring', () => {
 
     expect(doctype1.content).toEqual({ x: 6 })
     expect(doctype1.state.log.length).toEqual(8)
+
+    const doctype2 = await ceramic2.loadDocument(doctype1.id)
+    expect(doctype1.content).toEqual(doctype2.content)
+    expect(doctype1.state.log.length).toEqual(doctype2.state.log.length)
+
+    await ceramic1.close()
+    await ceramic2.close()
+  })
+
+  it('test the same state anchored twice, first one wins', async () => {
+    await ipfs2.swarm.connect(multaddr1)
+
+    const [ceramic1, ceramic2] = await Promise.all([
+      createCeramic(ipfs1, true),
+      createCeramic(ipfs2, false)
+    ])
+    const controller = ceramic1.context.did.id
+
+    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { x: 1 } }, { anchor: false, publish: false })
+    const cloned = new TileDoctype(doctype1.state, doctype1.context)
+    await doctype1.change({ content: { x: 7 }, metadata: { controllers: [controller] } }, { anchor: true, publish: true })
+    await cloned.change({ content: { x: 5 }, metadata: { controllers: [controller] } }, { anchor: true, publish: true })
+
+    await anchorDoc(ceramic1, doctype1)
+
+    expect(doctype1.content).toEqual({ x: 7 })
+    expect(doctype1.state.log.length).toEqual(3)
 
     const doctype2 = await ceramic2.loadDocument(doctype1.id)
     expect(doctype1.content).toEqual(doctype2.content)
