@@ -516,10 +516,10 @@ describe('Document', () => {
         metadata: {},
       }
 
-      // When neither log is anchored and log lengths are the same we should pick the log whose first entry has the
+      // When neither log is anchored and log lengths are the same we should pick the log whose last entry has the
       // smaller CID.
-      expect(await Document._pickLogToAccept(state1, state2)).toEqual(state1)
-      expect(await Document._pickLogToAccept(state2, state1)).toEqual(state1)
+      expect(await Document._pickLogToAccept(state1, state2)).toEqual(state2)
+      expect(await Document._pickLogToAccept(state2, state1)).toEqual(state2)
     })
 
     it("Neither log is anchored, different log lengths", async () => {
@@ -649,9 +649,9 @@ describe('Document', () => {
       }
 
       // When anchored in the same blockchain, same block, and with same log lengths, we should use
-      // the fallback mechanism of picking the log whose first entry has the smaller CID
-      expect(await Document._pickLogToAccept(state1, state2)).toEqual(state1)
-      expect(await Document._pickLogToAccept(state2, state1)).toEqual(state1)
+      // the fallback mechanism of picking the log whose last entry has the smaller CID
+      expect(await Document._pickLogToAccept(state1, state2)).toEqual(state2)
+      expect(await Document._pickLogToAccept(state2, state1)).toEqual(state2)
     })
   })
 

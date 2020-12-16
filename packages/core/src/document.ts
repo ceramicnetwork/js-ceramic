@@ -438,8 +438,8 @@ class Document extends EventEmitter {
     // decision about which log to choose.  The most common way this can happen is that neither log
     // is anchored, although it can also happen if both are anchored but in the same blockNumber or
     // blockTimestamp. At this point, the decision of which log to take is arbitrary, but we want it
-    // to still be deterministic. Therefore, we take the log whose first entry has the lowest CID.
-    return state1.log[0].cid.bytes < state2.log[0].cid.bytes ? state1 : state2
+    // to still be deterministic. Therefore, we take the log whose last entry has the lowest CID.
+    return state1.log[state1.log.length - 1].cid.bytes < state2.log[state2.log.length - 1].cid.bytes ? state1 : state2
   }
 
   /**
