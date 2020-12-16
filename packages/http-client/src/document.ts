@@ -1,5 +1,5 @@
 import {
-  CeramicRecord, Context, DocOpts, DocParams, DocState, Doctype, DoctypeHandler, DoctypeUtils
+  CeramicRecord, Context, DocOpts, DocParams, DocState, Doctype, DoctypeConstructor, DoctypeUtils
 } from "@ceramicnetwork/common"
 
 import DocID from '@ceramicnetwork/docid'
@@ -12,7 +12,7 @@ class Document extends Doctype {
   private _syncEnabled: boolean
   private readonly _syncInterval: number
 
-  public doctypeHandler: DoctypeHandler<Doctype>
+  public doctypeConstructor: DoctypeConstructor<Doctype>
 
   constructor (state: DocState, context: Context, private _apiUrl: string, config: CeramicClientConfig = { docSyncEnabled: false }) {
     super(state, context)
@@ -96,7 +96,7 @@ class Document extends Doctype {
   }
 
   async change(params: DocParams, opts: DocOpts): Promise<void> {
-    const doctype = new this.doctypeHandler.doctype(this.state, this.context)
+    const doctype = new this.doctypeConstructor(this.state, this.context)
 
     await doctype.change(params, opts)
     this.state = doctype.state

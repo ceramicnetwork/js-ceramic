@@ -4,6 +4,7 @@ import Document from './document'
 import { DID } from 'dids'
 import {
   Doctype,
+  DoctypeConstructor,
   DoctypeHandler,
   DocOpts,
   DocParams,
@@ -15,8 +16,8 @@ import {
   DoctypeUtils, 
   MultiQuery
 } from "@ceramicnetwork/common"
-import { TileDoctypeHandler } from "@ceramicnetwork/doctype-tile"
-import { Caip10LinkDoctypeHandler } from "@ceramicnetwork/doctype-caip10-link"
+import { TileDoctype } from "@ceramicnetwork/doctype-tile"
+import { Caip10LinkDoctype } from "@ceramicnetwork/doctype-caip10-link"
 import DocID from '@ceramicnetwork/docid'
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import KeyDidResolver from '@ceramicnetwork/key-did-resolver'
@@ -54,7 +55,7 @@ export default class CeramicClient implements CeramicApi {
   public readonly context: Context
 
   private readonly _config: CeramicClientConfig
-  public readonly _doctypeHandlers: Record<string, DoctypeHandler<Doctype>>
+  public readonly _doctypes: Record<string, DoctypeConstructor<Doctype>>
 
   constructor (apiHost: string = CERAMIC_HOST, config?: CeramicClientConfig) {
     this._config = Object.assign(DEFAULT_CLIENT_CONFIG, config ? config : {})
@@ -71,9 +72,9 @@ export default class CeramicClient implements CeramicApi {
       ...this._config.didResolver, ...threeIdResolver, ...keyDidResolver,
     })
 
-    this._doctypeHandlers = {
-      'tile': new TileDoctypeHandler(),
-      'caip10-link': new Caip10LinkDoctypeHandler()
+    this._doctypes = {
+      'tile': TileDoctype,
+      'caip10-link': Caip10LinkDoctype
     }
   }
 
@@ -113,20 +114,20 @@ export default class CeramicClient implements CeramicApi {
     }
   }
 
-  async createDocument<T extends Doctype>(doctype: string, params: DocParams, opts?: DocOpts): Promise<T> {
-    const doctypeHandler = this.findDoctypeHandler(doctype)
-    const genesis = await doctypeHandler.doctype.makeGenesis(params, this.context, opts)
+  async createDocument<T extends Doctype>(doctypeName: string, params: DocParams, opts?: DocOpts): Promise<T> {
+    const doctype = this._doctypes[doctypeName]
+    const genesis = await doctype.makeGenesis(params, this.context, opts)
 
-    return await this.createDocumentFromGenesis(doctype, genesis, opts)
+    return await this.createDocumentFromGenesis(doctypeName, genesis, opts)
   }
 
-  async createDocumentFromGenesis<T extends Doctype>(doctype: string, genesis: any, opts?: DocOpts): Promise<T> {
-    const doc = await Document.createFromGenesis(this._apiUrl, doctype, genesis, this.context, opts, this._config)
+  async createDocumentFromGenesis<T extends Doctype>(doctypeName: string, genesis: any, opts?: DocOpts): Promise<T> {
+    const doc = await Document.createFromGenesis(this._apiUrl, doctypeName, genesis, this.context, opts, this._config)
     const docIdStr = doc.id.toString()
     if (!this._docmap[docIdStr]) {
       this._docmap[docIdStr] = doc
     }
-    this._docmap[docIdStr].doctypeHandler = this.findDoctypeHandler(this._docmap[docIdStr].state.doctype)
+    this._docmap[docIdStr].doctypeConstructor = this._doctypes[this._docmap[docIdStr].state.doctype]
     return this._docmap[docIdStr] as unknown as T
   }
 
@@ -136,7 +137,7 @@ export default class CeramicClient implements CeramicApi {
     if (!this._docmap[docIdStr]) {
       this._docmap[docIdStr] = await Document.load(docId, this._apiUrl, this.context, this._config)
     }
-    this._docmap[docIdStr].doctypeHandler = this.findDoctypeHandler(this._docmap[docIdStr].state.doctype)
+    this._docmap[docIdStr].doctypeConstructor = this._doctypes[this._docmap[docIdStr].state.doctype]
     return this._docmap[docIdStr] as unknown as T
   }
 
@@ -176,15 +177,7 @@ export default class CeramicClient implements CeramicApi {
   }
 
   addDoctypeHandler<T extends Doctype>(doctypeHandler: DoctypeHandler<T>): void {
-    this._doctypeHandlers[doctypeHandler.name] = doctypeHandler
-  }
-
-  findDoctypeHandler<T extends Doctype>(doctype: string): DoctypeHandler<T> {
-    const doctypeHandler = this._doctypeHandlers[doctype]
-    if (doctypeHandler == null) {
-      throw new Error(`Failed to find doctype handler for doctype ${doctype}`)
-    }
-    return doctypeHandler as DoctypeHandler<T>
+    this._doctypes[doctypeHandler.name] = doctypeHandler.doctype
   }
 
   async setDIDProvider(provider: DIDProvider): Promise<void> {

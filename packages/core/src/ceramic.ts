@@ -296,18 +296,6 @@ class Ceramic implements CeramicApi {
   }
 
   /**
-   * Finds doctype handler
-   * @param doctype - Doctype
-   */
-  findDoctypeHandler<T extends Doctype>(doctype: string): DoctypeHandler<T> {
-    const doctypeHandler = this._doctypeHandlers[doctype]
-    if (doctypeHandler == null) {
-      throw new Error(`Failed to find doctype handler for doctype ${doctype}`)
-    }
-    return doctypeHandler as DoctypeHandler<T>
-  }
-
-  /**
    * Applies record on a given document
    * @param docId - Document ID
    * @param record - Record to be applied
