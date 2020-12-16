@@ -95,6 +95,18 @@ export class Caip10LinkDoctypeHandler implements DoctypeHandler<Caip10LinkDoctyp
             throw new Error('Invalid proof for signed record')
         }
 
+        if (state.signature !== SignatureStatus.GENESIS && (
+          (
+            state.anchorStatus === AnchorStatus.ANCHORED &&
+            validProof.timestamp < state.anchorProof.blockTimestamp
+          ) || (
+            state.anchorStatus !== AnchorStatus.ANCHORED &&
+            validProof.timestamp < state.next.metadata.lastUpdate
+          )
+        )) {
+          throw new Error('Invalid record, proof timestamp too old')
+        }
+
         // TODO: handle CAIP-10 addresses in proof generation of 3id-blockchain-utils
         const account = validProof.account || validProof.address
         let [address, chainId] = account.split('@')  // eslint-disable-line prefer-const
@@ -109,7 +121,11 @@ export class Caip10LinkDoctypeHandler implements DoctypeHandler<Caip10LinkDoctyp
             signature: SignatureStatus.SIGNED,
             anchorStatus: AnchorStatus.NOT_REQUESTED,
             next: {
-                content: validProof.did
+                content: validProof.did,
+                metadata: {
+                  ...state.metadata,
+                  lastUpdate: validProof.timestamp // in case there are two updates after each other
+                }
             }
         }
     }
@@ -138,6 +154,7 @@ export class Caip10LinkDoctypeHandler implements DoctypeHandler<Caip10LinkDoctyp
         if (state.next?.content) {
             content = state.next.content
             delete state.next.content
+            delete state.next.metadata
         }
         return {
             ...state,
