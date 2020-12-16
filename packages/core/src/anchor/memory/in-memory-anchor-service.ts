@@ -137,6 +137,9 @@ class InMemoryAnchorService extends AnchorService {
     let currentCommitId = commitId
     for (; ;) {
       const currentCommit = (await this._ceramic.ipfs.dag.get(currentCommitId)).value
+      if (DoctypeUtils.isAnchorRecord(currentCommit)) {
+        return history
+      }
 
       let prevCommitId: CID
       if (DoctypeUtils.isSignedRecord(currentCommit)) {
