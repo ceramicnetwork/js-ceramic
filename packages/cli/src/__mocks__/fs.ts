@@ -6,6 +6,8 @@ interface MockFile {
     name: string;
     birthtime: Date;
     message: string;
+    size: number;
+    __blocking: boolean;
 }
 
 interface MockFs {
@@ -22,12 +24,15 @@ class MockStream {
         this.filePath = filePath
         this.writeFlag = writeFlag
     }
+    on(event: string, cb: any): void { /* eslint-disable-line */ }
 
-    write(message: string): void {
+    write(message: string): boolean {
         const prevFile = mockFs[this.filePath] || {
             name: this.filePath,
             birthtime: new Date(),
-            message: ''
+            message: '',
+            size: 0,
+            __blocking: false
         }
 
         if (this.writeFlag === 'w') {
@@ -41,11 +46,11 @@ class MockStream {
                 message: prevFile.message.concat(message)
             }
         }
+        if (mockFs[this.filePath].__blocking) return false // Can not write again
+        return true
     }
 
-    end(): void {
-        // pass
-    }
+    end(): void { /* eslint-disable-line */ }
 }
 
 function __initMockFs(files: Array<MockFile>): void {
@@ -70,7 +75,7 @@ async function rename(filePath: string, nextFilePath: string): Promise<void> {
 }
 
 async function stat(filePath: string): Promise<MockFile> {
-    return mockFs[filePath]
+    return Promise.resolve(mockFs[filePath])
 }
 
 fs.__initMockFs = __initMockFs

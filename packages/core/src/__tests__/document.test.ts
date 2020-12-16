@@ -245,6 +245,7 @@ describe('Document', () => {
       let anchorCommits = doc.anchorCommitIds
       const commit0 = doc.commitId
       expect(commits).toEqual([commit0])
+
       expect(commit0).toEqual(DocID.fromOther(doc.id, doc.id.cid))
       expect(anchorCommits.length).toEqual(0)
 
@@ -309,38 +310,43 @@ describe('Document', () => {
       // try to load a non-existing commit
       try {
         const nonExistentCommitID = DocID.fromOther(doc.id, new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu'))
-        await Document.load(nonExistentCommitID, doctypeHandler, dispatcher, pinStore, context)
+        await Document.loadAtCommit(nonExistentCommitID, doc)
         fail('Should not be able to fetch non-existing commit')
       } catch (e) {
         expect(e.message).toContain('No record found for CID')
       }
 
       // Correctly check out a specific commit
-      const docV0 = await Document.load(commit0, doctypeHandler, dispatcher, pinStore, context)
+      const docV0 = await Document.loadAtCommit(commit0, doc)
+      expect(docV0.id).toEqual(commit0)
       expect(docV0.state.log.length).toEqual(1)
       expect(docV0.controllers).toEqual(controllers)
       expect(docV0.content).toEqual(initialContent)
       expect(docV0.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
 
-      const docV1 = await Document.load(commit1, doctypeHandler, dispatcher, pinStore, context)
+      const docV1 = await Document.loadAtCommit(commit1, doc)
+      expect(docV1.id).toEqual(commit1)
       expect(docV1.state.log.length).toEqual(2)
       expect(docV1.controllers).toEqual(controllers)
       expect(docV1.content).toEqual(initialContent)
       expect(docV1.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
-      const docV2 = await Document.load(commit2, doctypeHandler, dispatcher, pinStore, context)
+      const docV2 = await Document.loadAtCommit(commit2, doc)
+      expect(docV2.id).toEqual(commit2)
       expect(docV2.state.log.length).toEqual(3)
       expect(docV2.controllers).toEqual(controllers)
       expect(docV2.content).toEqual(newContent)
       expect(docV2.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
 
-      const docV3 = await Document.load(commit3, doctypeHandler, dispatcher, pinStore, context)
+      const docV3 = await Document.loadAtCommit(commit3, doc)
+      expect(docV3.id).toEqual(commit3)
       expect(docV3.state.log.length).toEqual(4)
       expect(docV3.controllers).toEqual(controllers)
       expect(docV3.content).toEqual(newContent)
       expect(docV3.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
-      const docV4 = await Document.load(commit4, doctypeHandler, dispatcher, pinStore, context)
+      const docV4 = await Document.loadAtCommit(commit4, doc)
+      expect(docV4.id).toEqual(commit4)
       expect(docV4.state.log.length).toEqual(5)
       expect(docV4.controllers).toEqual(controllers)
       expect(docV4.content).toEqual(finalContent)
@@ -404,6 +410,15 @@ describe('Document', () => {
       // log results in valid state
       await doc1._handleTip(tipInvalidUpdate)
       expect(doc1.content).toEqual(newContent)
+
+      // Loading valid commit works
+      const docAtValidCommit = await Document.loadAtCommit(DocID.fromOther(docId, tipValidUpdate), doc1)
+      expect(docAtValidCommit.content).toEqual(newContent)
+
+      // Loading invalid commit fails
+      await expect(Document.loadAtCommit(DocID.fromOther(docId, tipInvalidUpdate), doc1)).rejects.toThrow(
+          `Requested commit CID ${tipInvalidUpdate.toString()} not found in the log for document ${docId.toString()}`
+      )
     })
 
     it('Enforces schema at document creation', async () => {
