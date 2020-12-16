@@ -12,7 +12,7 @@ const DEFAULT_PORT = 7007
 const DEFAULT_NETWORK = 'testnet-clay'
 const toApiPath = (ending: string): string => '/api/v0' + ending
 
-const DEFAULT_ANCHOR_SERVICE_URL = "https://cas.3box.io:8081"
+const DEFAULT_ANCHOR_SERVICE_URL = "https://cas-clay.3box.io:8081"
 
 /**
  * Daemon create options
