@@ -384,14 +384,14 @@ class Document extends EventEmitter {
   /**
    * Given two different DocStates representing two different conflicting histories of the same
    * document, pick which commit to accept, in accordance with our conflict resolution strategy
-   * @param localState - current document log's state
-   * @param remoteState - remote document state
-   * @returns true if remoteState's log should be taken, or false if we're going to keep the localState
+   * @param state1 - first log's state
+   * @param state2 - second log's state
+   * @returns true if state2's log should be taken, or false if state1's log should be taken
    * @private
    */
-  static async _pickLocalState(localState: DocState, remoteState: DocState): Promise<boolean> {
-    const isState1Anchored = localState.anchorStatus === AnchorStatus.ANCHORED
-    const isState2Anchored = remoteState.anchorStatus === AnchorStatus.ANCHORED
+  static async _pickLogToAccept(state1: DocState, state2: DocState): Promise<boolean> {
+    const isState1Anchored = state1.anchorStatus === AnchorStatus.ANCHORED
+    const isState2Anchored = state2.anchorStatus === AnchorStatus.ANCHORED
 
     if (isState1Anchored != isState2Anchored) {
       // When one of the logs is anchored but not the other, take the one that is anchored
@@ -400,8 +400,8 @@ class Document extends EventEmitter {
 
     if (isState1Anchored && isState2Anchored) {
       // compare anchor proofs if both states are anchored
-      const { anchorProof: proof1 } = localState
-      const { anchorProof: proof2 } = remoteState
+      const { anchorProof: proof1 } = state1
+      const { anchorProof: proof2 } = state2
 
       if (proof1.chainId != proof2.chainId) {
         // TODO: Add logic to handle conflicting updates anchored on different chains
@@ -419,9 +419,9 @@ class Document extends EventEmitter {
     }
 
     // The anchor states are the same for both logs. Compare log lengths and choose the one with longer length.
-    if (localState.log.length > remoteState.log.length) {
+    if (state1.log.length > state2.log.length) {
       return false
-    } else if (localState.log.length < remoteState.log.length) {
+    } else if (state1.log.length < state2.log.length) {
       return true
     }
 
@@ -430,7 +430,7 @@ class Document extends EventEmitter {
     // is anchored, although it can also happen if both are anchored but in the same blockNumber or
     // blockTimestamp. At this point, the decision of which log to take is arbitrary, but we want it
     // to still be deterministic. Therefore, we take the log whose first entry has the lowest CID.
-    return localState.log[0].cid.bytes > remoteState.log[0].cid.bytes
+    return state1.log[0].cid.bytes > state2.log[0].cid.bytes
   }
 
   /**
@@ -468,7 +468,7 @@ class Document extends EventEmitter {
     const localState = await this._applyLogToState(localLog, cloneDeep(state), true)
     const remoteState = await this._applyLogToState(log, cloneDeep(state), true)
 
-    const applyRemoteLog = await Document._pickLocalState(localState, remoteState)
+    const applyRemoteLog = await Document._pickLogToAccept(localState, remoteState)
     if (!applyRemoteLog) {
       return false
     }
