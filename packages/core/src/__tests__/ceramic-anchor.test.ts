@@ -319,33 +319,6 @@ describe('Ceramic anchoring', () => {
     await ceramic2.close()
   })
 
-  it('test the same doc anchored twice (same Ceramic instance), first one wins', async () => {
-    await ipfs2.swarm.connect(multaddr1)
-
-    const [ceramic1, ceramic2] = await Promise.all([
-      createCeramic(ipfs1, true),
-      createCeramic(ipfs2, false)
-    ])
-    const controller = ceramic1.context.did.id
-
-    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { x: 1 } }, { anchor: false, publish: false })
-    const cloned = new TileDoctype(doctype1.state, doctype1.context)
-    await doctype1.change({ content: { x: 7 }, metadata: { controllers: [controller] } }, { anchor: true, publish: true })
-    await cloned.change({ content: { x: 5 }, metadata: { controllers: [controller] } }, { anchor: true, publish: true })
-
-    await anchorDoc(ceramic1, doctype1)
-
-    expect(doctype1.content).toEqual({ x: 7 })
-    expect(doctype1.state.log.length).toEqual(3)
-
-    const doctype2 = await ceramic2.loadDocument(doctype1.id)
-    expect(doctype1.content).toEqual(doctype2.content)
-    expect(doctype1.state.log.length).toEqual(doctype2.state.log.length)
-
-    await ceramic1.close()
-    await ceramic2.close()
-  })
-
   it('test the same doc anchored twice (different Ceramic instances), first one wins)', async () => {
     await ipfs3.swarm.connect(multaddr1)
     await ipfs3.swarm.connect(multaddr2)
@@ -362,8 +335,16 @@ describe('Ceramic anchoring', () => {
 
     const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { x: 1 } }, { anchor: false, publish: true })
     const doctype2 = await ceramic2.loadDocument(doctype1.id)
-    await doctype1.change({ content: { x: 7 }, metadata: { controllers: [controller] } }, { anchor: true, publish: false })
-    await doctype2.change({ content: { x: 5 }, metadata: { controllers: [controller] } }, { anchor: true, publish: false })
+
+    // Create two conflicting updates, each on a different ceramic instance
+    const newContent1 = { x: 7 }
+    const newContent2 = { x: 5 }
+    await doctype1.change({ content: newContent1, metadata: { controllers: [controller] } }, { anchor: true, publish: false })
+    await doctype2.change({ content: newContent2, metadata: { controllers: [controller] } }, { anchor: true, publish: false })
+
+    // Which update wins depends on which update got assigned the lower CID
+    const update1ShouldWin = doctype1.state.log[doctype1.state.log.length - 1].cid.bytes < doctype2.state.log[doctype2.state.log.length - 1].cid.bytes
+    const winningContent = update1ShouldWin ? newContent1 : newContent2
 
     const handle1 = registerChangeListener(doctype1)
     const handle2 = registerChangeListener(doctype2)
@@ -375,14 +356,17 @@ describe('Ceramic anchoring', () => {
     await handle1
     await handle2
 
-    expect(doctype1.content).toEqual({ x: 7 })
+    // Only one of the updates should have won
     expect(doctype1.state.log.length).toEqual(3)
-
-    expect(doctype2.content).toEqual({ x: 7 })
     expect(doctype2.state.log.length).toEqual(3)
+    expect(doctype1.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+    expect(doctype2.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+    expect(doctype1.content).toEqual(winningContent)
+    expect(doctype2.content).toEqual(winningContent)
+
 
     const doctype3 = await ceramic3.loadDocument(doctype1.id)
-    expect(doctype3.content).toEqual({ x: 7 })
+    expect(doctype3.content).toEqual(winningContent)
     expect(doctype3.state.log.length).toEqual(3)
 
     await ceramic1.close()
