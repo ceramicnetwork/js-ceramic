@@ -75,7 +75,7 @@ export interface DocMetadata {
     schema?: string
     tags?: Array<string>
 
-    [index: string]: any // allow arbitrary properties (nonce, etc.)
+    [index: string]: any // allow arbitrary properties
 }
 
 /**
