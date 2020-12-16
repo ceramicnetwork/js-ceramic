@@ -518,8 +518,8 @@ describe('Document', () => {
 
       // When neither log is anchored and log lengths are the same we should pick the log whose first entry has the
       // smaller CID.
-      expect(await Document._pickLocalState(state1, state2)).toEqual(false)
-      expect(await Document._pickLocalState(state2, state1)).toEqual(true)
+      expect(await Document._pickLogToAccept(state1, state2)).toEqual(false)
+      expect(await Document._pickLogToAccept(state2, state1)).toEqual(true)
     })
 
     it("Neither log is anchored, different log lengths", async () => {
@@ -536,8 +536,8 @@ describe('Document', () => {
       }
 
       // When neither log is anchored and log lengths are different we should pick the log with greater length
-      expect(await Document._pickLocalState(state1, state2)).toEqual(false)
-      expect(await Document._pickLocalState(state2, state1)).toEqual(true)
+      expect(await Document._pickLogToAccept(state1, state2)).toEqual(false)
+      expect(await Document._pickLogToAccept(state2, state1)).toEqual(true)
     })
 
     it("One log anchored before the other", async () => {
@@ -550,8 +550,8 @@ describe('Document', () => {
       }
 
       // When only one of the logs has been anchored, we pick the anchored one
-      expect(await Document._pickLocalState(state1, state2)).toEqual(true)
-      expect(await Document._pickLocalState(state2, state1)).toEqual(false)
+      expect(await Document._pickLogToAccept(state1, state2)).toEqual(true)
+      expect(await Document._pickLogToAccept(state2, state1)).toEqual(false)
     })
 
     it("Both logs anchored in different blockchains", async () => {
@@ -574,8 +574,8 @@ describe('Document', () => {
       }
 
       // We do not currently support multiple blockchains
-      await expect(Document._pickLocalState(state1, state2)).rejects.toThrow("Conflicting logs on the same document are anchored on different chains. Chain1: chain1, chain2: chain2")
-      await expect(Document._pickLocalState(state2, state1)).rejects.toThrow("Conflicting logs on the same document are anchored on different chains. Chain1: chain2, chain2: chain1")
+      await expect(Document._pickLogToAccept(state1, state2)).rejects.toThrow("Conflicting logs on the same document are anchored on different chains. Chain1: chain1, chain2: chain2")
+      await expect(Document._pickLogToAccept(state2, state1)).rejects.toThrow("Conflicting logs on the same document are anchored on different chains. Chain1: chain2, chain2: chain1")
     })
 
     it("Both logs anchored in same blockchains in different blocks", async () => {
@@ -598,8 +598,8 @@ describe('Document', () => {
       }
 
       // When anchored in the same blockchain, should take log with earlier block number
-      expect(await Document._pickLocalState(state1, state2)).toEqual(true)
-      expect(await Document._pickLocalState(state2, state1)).toEqual(false)
+      expect(await Document._pickLogToAccept(state1, state2)).toEqual(true)
+      expect(await Document._pickLogToAccept(state2, state1)).toEqual(false)
     })
 
     it("Both logs anchored in same blockchains in the same block with different log lengths", async () => {
@@ -624,8 +624,8 @@ describe('Document', () => {
 
       // When anchored in the same blockchain, same block, and with same log lengths, we should choose the one with
       // longer log length
-      expect(await Document._pickLocalState(state1, state2)).toEqual(false)
-      expect(await Document._pickLocalState(state2, state1)).toEqual(true)
+      expect(await Document._pickLogToAccept(state1, state2)).toEqual(false)
+      expect(await Document._pickLogToAccept(state2, state1)).toEqual(true)
     })
 
     it("Both logs anchored in same blockchains in the same block with same log lengths", async () => {
@@ -650,8 +650,8 @@ describe('Document', () => {
 
       // When anchored in the same blockchain, same block, and with same log lengths, we should use
       // the fallback mechanism of picking the log whose first entry has the smaller CID
-      expect(await Document._pickLocalState(state1, state2)).toEqual(false)
-      expect(await Document._pickLocalState(state2, state1)).toEqual(true)
+      expect(await Document._pickLogToAccept(state1, state2)).toEqual(false)
+      expect(await Document._pickLogToAccept(state2, state1)).toEqual(true)
     })
   })
 
