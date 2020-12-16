@@ -427,6 +427,13 @@ class Document extends EventEmitter {
       // If they have the same block number fall through to fallback mechanism
     }
 
+    // The anchor states are the same for both logs. Compare log lengths and choose the one with longer length.
+    if (state1.log.length > state2.log.length) {
+      return false
+    } else if (state1.log.length < state2.log.length) {
+      return true
+    }
+
     // If we got this far, that means that we don't have sufficient information to make a good
     // decision about which log to choose.  The most common way this can happen is that neither log
     // is anchored, although it can also happen if both are anchored but in the same blockNumber or

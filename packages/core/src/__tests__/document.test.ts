@@ -503,7 +503,26 @@ describe('Document', () => {
       })
     })
 
-    it("Neither log is anchored", async () => {
+    it("Neither log is anchored, same log lengths", async () => {
+      const state1 = {
+        anchorStatus: AnchorStatus.NOT_REQUESTED,
+        log: [{cid: cids[1]}, {cid: cids[2]}],
+        metadata: {},
+      }
+
+      const state2 = {
+        anchorStatus: AnchorStatus.PENDING,
+        log: [{cid: cids[4]}, {cid: cids[0]}],
+        metadata: {},
+      }
+
+      // When neither log is anchored and log lengths are the same we should pick the log whose first entry has the
+      // smaller CID.
+      expect(await Document._pickLogToAccept(state1, state2)).toEqual(false)
+      expect(await Document._pickLogToAccept(state2, state1)).toEqual(true)
+    })
+
+    it("Neither log is anchored, different log lengths", async () => {
       const state1 = {
         anchorStatus: AnchorStatus.NOT_REQUESTED,
         log: [{cid: cids[1]}, {cid: cids[2]}, {cid: cids[3]}],
@@ -516,7 +535,7 @@ describe('Document', () => {
         metadata: {},
       }
 
-      // When neither log is anchored we should pick the log whose first entry has the smaller CID.
+      // When neither log is anchored and log lengths are different we should pick the log with greater length
       expect(await Document._pickLogToAccept(state1, state2)).toEqual(false)
       expect(await Document._pickLogToAccept(state2, state1)).toEqual(true)
     })
@@ -583,30 +602,53 @@ describe('Document', () => {
       expect(await Document._pickLogToAccept(state2, state1)).toEqual(false)
     })
 
-    it("Both logs anchored in same blockchains in the same block with the same nonce", async () => {
+    it("Both logs anchored in same blockchains in the same block with different log lengths", async () => {
       const proof1 = {
-        chainId: 'myblockchain',
-        blockNumber: 10,
+        chainId: 'myblockchain', blockNumber: 10,
       }
       const state1 = {
         anchorStatus: AnchorStatus.ANCHORED,
-        anchorProof: proof1,
-        metadata: {nonce: 3},
-        log: [{cid: cids[1]}, {cid: cids[2]}, {cid: cids[3]}],
+        anchorProof: proof1, metadata: {},
+        log: [{ cid: cids[1] }, { cid: cids[2] }, { cid: cids[3] }],
       }
 
       const proof2 = {
-        chainId: 'myblockchain',
-        blockNumber: 10,
+        chainId: 'myblockchain', blockNumber: 10,
       }
       const state2 = {
         anchorStatus: AnchorStatus.ANCHORED,
         anchorProof: proof2,
-        metadata: {nonce: 3},
-        log: [{cid: cids[4]}, {cid: cids[0]}],
+        metadata: {},
+        log: [{ cid: cids[4] }, { cid: cids[0] }],
       }
 
-      // When anchored in the same blockchain, same block, and with the same nonce, we should use
+      // When anchored in the same blockchain, same block, and with same log lengths, we should choose the one with
+      // longer log length
+      expect(await Document._pickLogToAccept(state1, state2)).toEqual(false)
+      expect(await Document._pickLogToAccept(state2, state1)).toEqual(true)
+    })
+
+    it("Both logs anchored in same blockchains in the same block with same log lengths", async () => {
+      const proof1 = {
+        chainId: 'myblockchain', blockNumber: 10,
+      }
+      const state1 = {
+        anchorStatus: AnchorStatus.ANCHORED,
+        anchorProof: proof1, metadata: {},
+        log: [{ cid: cids[1] }, { cid: cids[2] }],
+      }
+
+      const proof2 = {
+        chainId: 'myblockchain', blockNumber: 10,
+      }
+      const state2 = {
+        anchorStatus: AnchorStatus.ANCHORED,
+        anchorProof: proof2,
+        metadata: {},
+        log: [{ cid: cids[4] }, { cid: cids[0] }],
+      }
+
+      // When anchored in the same blockchain, same block, and with same log lengths, we should use
       // the fallback mechanism of picking the log whose first entry has the smaller CID
       expect(await Document._pickLogToAccept(state1, state2)).toEqual(false)
       expect(await Document._pickLogToAccept(state2, state1)).toEqual(true)
