@@ -395,16 +395,16 @@ class Document extends EventEmitter {
    * document, pick which commit to accept, in accordance with our conflict resolution strategy
    * @param state1 - first log's state
    * @param state2 - second log's state
-   * @returns true if state2's log should be taken, or false if state1's log should be taken
+   * @returns the DocState containing the log that is selected
    * @private
    */
-  static async _pickLogToAccept(state1: DocState, state2: DocState): Promise<boolean> {
+  static async _pickLogToAccept(state1: DocState, state2: DocState): Promise<DocState> {
     const isState1Anchored = state1.anchorStatus === AnchorStatus.ANCHORED
     const isState2Anchored = state2.anchorStatus === AnchorStatus.ANCHORED
 
     if (isState1Anchored != isState2Anchored) {
       // When one of the logs is anchored but not the other, take the one that is anchored
-      return isState2Anchored
+      return isState1Anchored ? state1 : state2
     }
 
     if (isState1Anchored && isState2Anchored) {
@@ -420,26 +420,26 @@ class Document extends EventEmitter {
 
       // Compare block heights to decide which to take
       if (proof1.blockNumber < proof2.blockNumber) {
-        return false
+        return state1
       } else if (proof2.blockNumber < proof1.blockNumber) {
-        return true
+        return state2
       }
       // If they have the same block number fall through to fallback mechanism
     }
 
     // The anchor states are the same for both logs. Compare log lengths and choose the one with longer length.
     if (state1.log.length > state2.log.length) {
-      return false
+      return state1
     } else if (state1.log.length < state2.log.length) {
-      return true
+      return state2
     }
 
     // If we got this far, that means that we don't have sufficient information to make a good
     // decision about which log to choose.  The most common way this can happen is that neither log
     // is anchored, although it can also happen if both are anchored but in the same blockNumber or
     // blockTimestamp. At this point, the decision of which log to take is arbitrary, but we want it
-    // to still be deterministic. Therefore, we take the log whose first entry has the lowest CID.
-    return state1.log[0].cid.bytes > state2.log[0].cid.bytes
+    // to still be deterministic. Therefore, we take the log whose last entry has the lowest CID.
+    return state1.log[state1.log.length - 1].cid.bytes < state2.log[state2.log.length - 1].cid.bytes ? state1 : state2
   }
 
   /**
@@ -477,8 +477,8 @@ class Document extends EventEmitter {
     const localState = await this._applyLogToState(localLog, cloneDeep(state), true)
     const remoteState = await this._applyLogToState(log, cloneDeep(state), true)
 
-    const applyRemoteLog = await Document._pickLogToAccept(localState, remoteState)
-    if (!applyRemoteLog) {
+    const selectedState = await Document._pickLogToAccept(localState, remoteState)
+    if (selectedState === localState) {
       return false
     }
 

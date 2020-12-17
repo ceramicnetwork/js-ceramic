@@ -104,37 +104,29 @@ class InMemoryAnchorService extends AnchorService {
     for (const compositeKey of Object.keys(validCandidates)) {
       const candidates: Candidate[] = validCandidates[compositeKey]
 
-      // naive implementation for finding the "valid" commit for the document.
-      // the decision making is going to change once the anchoring service becomes aware of Doctypes
+      // When there are multiple valid candidate tips to anchor for the same docId, pick the one
+      // with the largest log
+      let maxLogLength = -1
       let selected: Candidate
-      for (const c1 of candidates) {
-        selected = c1
-        let isIncluded = false
-
-        for (const c2 of candidates) {
-          if (c1 === c2) {
-            continue
-          }
-
-          if (c2.log.some(c => c.toString() === c1.cid.toString())) {
-            isIncluded = true
-            break
-          }
-        }
-
-        if (!isIncluded) {
-          result.push(selected)
-          break
+      for (const c of candidates) {
+        if (c.log.length > maxLogLength) {
+          selected = c
+          maxLogLength = c.log.length
+        } else if (c.log.length == maxLogLength && c.cid.bytes < selected.cid.bytes) {
+          // If there are two conflicting candidates with the same log length, we must choose
+          // which to anchor deterministically. We use the same arbitrary but deterministic strategy
+          // that js-ceramic conflict resolution does: choosing the record whose CID is smaller
+          selected = c
         }
       }
+
+      result.push(selected)
     }
     return result
   }
 
   /**
    * Load candidate log.
-   *
-   * Note: this method will be replaced once CAS becomes aware of documents, not just individual commits
    *
    * @param commitId - Start CID
    * @private
