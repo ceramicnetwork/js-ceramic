@@ -3,11 +3,8 @@ import { Caip10LinkDoctypeHandler } from '../caip10-link-doctype-handler'
 import cloneDeep from 'lodash.clonedeep'
 import CID from 'cids'
 
-jest.mock('3id-blockchain-utils', () => ({
-  validateLink: jest.fn()
-}))
-
-import { validateLink } from '3id-blockchain-utils'
+import * as u8a from 'uint8arrays'
+import { validateLink, createLink } from '3id-blockchain-utils'
 import { Caip10LinkDoctype } from "../caip10-link-doctype"
 import { Context } from "@ceramicnetwork/common"
 
@@ -18,24 +15,30 @@ const FAKE_CID_1 = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnr
 const FAKE_CID_2 = new CID('bafybeig6xv5nwphfmvcnektpnojts44jqcuam7bmye2pb54adnrtccjlsu')
 const FAKE_CID_3 = new CID('bafybeig6xv5nwphfmvcnektpnojts55jqcuam7bmye2pb54adnrtccjlsu')
 const FAKE_CID_4 = new CID('bafybeig6xv5nwphfmvcnektpnojts66jqcuam7bmye2pb54adnrtccjlsu')
+const FAKE_CID_5 = new CID('bafybeig6xv5nwphfmvcnektpnojts44jqcuam7bmye2pb54adnrtccjlse')
+const FAKE_CID_6 = new CID('bafybeig6xv5nwphfmvcnektpnojts55jqcuam7bmye2pb54adnrtccjleu')
+const FAKE_CID_7 = new CID('bafybeig6xv5nwphfmvcnektpnojts66jqcuam7bmye2pb54adnrtccjlwu')
+const FAKE_CID_8 = new CID('bafybeig6xv5nwphfmvcnektpnojts66jqcuam6bmye2pb54adnrtccjlwu')
 
 const RECORDS = {
-  genesis: { header: { controllers: [ '0x25954ef14cebbc9af3d71132489a9cfe87043f20@eip155:1' ], family: "caip10-eip155:1" } },
+  genesis: { header: { controllers: [ '0x0544DcF4fcE959C6C4F3b7530190cB5E1BD67Cb8@eip155:1' ], family: "caip10-eip155:1" } },
   r1: {
     desiredContent: {
-      version: 1,
+      version: 2,
       type: 'ethereum-eoa',
-      signature: '0xbb800bc9e65a21e239bdc9e5f740e66edda75810a5952ff3d78fe6b41f7613c44470f81c6e4153eaded99096099afab59c7d0b8a1b61ba1bd7cd4cd0d117794c1b',
-      address: '0x25954ef14cebbc9af3d71132489a9cfe87043f20@eip155:1',
-      timestamp: 1585919920
+      message: 'Create a new account link to your identity.\n' + '\n' + 'did:3:testdid1 \n' + 'Timestamp: 1608116721',
+      signature: '0xc6a5f50945bc7b06320b66cfe144e2b571391c88827eed0490f7f8e5e8af769c4246e27e83078c907ccfaf9bd0de82bd5e57fe7884d9cb8a9303f5d92ea4df0d1c',
+      account: '0x0544dcf4fce959c6c4f3b7530190cb5e1bd67cb8@eip155:1',
+      timestamp: 1608116721
     },
     record: {
       data: {
-        version: 1,
+        version: 2,
         type: 'ethereum-eoa',
-        signature: '0xbb800bc9e65a21e239bdc9e5f740e66edda75810a5952ff3d78fe6b41f7613c44470f81c6e4153eaded99096099afab59c7d0b8a1b61ba1bd7cd4cd0d117794c1b',
-        address: '0x25954ef14cebbc9af3d71132489a9cfe87043f20@eip155:1',
-        timestamp: 1585919920
+        message: 'Create a new account link to your identity.\n' + '\n' + 'did:3:testdid1 \n' + 'Timestamp: 1608116721',
+        signature: '0xc6a5f50945bc7b06320b66cfe144e2b571391c88827eed0490f7f8e5e8af769c4246e27e83078c907ccfaf9bd0de82bd5e57fe7884d9cb8a9303f5d92ea4df0d1c',
+        account: '0x0544dcf4fce959c6c4f3b7530190cb5e1bd67cb8@eip155:1',
+        timestamp: 1608116721
       },
       id: FAKE_CID_1,
       prev: FAKE_CID_1
@@ -56,8 +59,6 @@ describe('Caip10LinkHandler', () => {
 
   beforeEach(() => {
     handler = new Caip10LinkDoctypeHandler()
-    validateLink.mockImplementation(async (proof: Record<string, unknown>): Promise<Record<string, unknown>> => proof)
-
     const recs: Record<string, any> = {}
     const ipfs = {
       dag: {
@@ -142,16 +143,17 @@ describe('Caip10LinkHandler', () => {
   })
 
   it('throws an error of the proof is invalid', async () => {
-    validateLink.mockResolvedValue(undefined)
+    const badRecord = cloneDeep(RECORDS.r1.record)
+    badRecord.data.signature = '0xc6a5f50945bc7b06320b66cfe144e2b571391c88827eed0490f7f8e5e8af769c4246e27e8302348762387462387648726346877884d9cb8a9303f5d92ea4df0d1c'
     const state = await handler.applyRecord(RECORDS.genesis, FAKE_CID_1, context)
-    await expect(handler.applyRecord(RECORDS.r1.record, FAKE_CID_2, context, state)).rejects.toThrow(/Invalid proof/i)
+    await expect(handler.applyRecord(badRecord, FAKE_CID_2, context, state)).rejects.toThrow(/Invalid proof/i)
   })
 
   it('throws an error of the proof doesn\'t match the controller', async () => {
-    const badAddressRecord = cloneDeep(RECORDS.r1.record)
-    badAddressRecord.data.address = '0xffffffffffffffffffffffffffffffffffffffff'
-    const state = await handler.applyRecord(RECORDS.genesis, FAKE_CID_1, context)
-    await expect(handler.applyRecord(badAddressRecord, FAKE_CID_2, context, state)).rejects.toThrow(/Address doesn't match/i)
+    const badAddressGenesis = cloneDeep(RECORDS.genesis)
+    badAddressGenesis.header.controllers = ['0xffffffffffffffffffffffffffffffffffffffff@eip155:1']
+    const state = await handler.applyRecord(badAddressGenesis, FAKE_CID_1, context)
+    await expect(handler.applyRecord(RECORDS.r1.record, FAKE_CID_2, context, state)).rejects.toThrow(/Address doesn't match/i)
   })
 
   it('applies anchor record correctly', async () => {
@@ -186,5 +188,78 @@ describe('Caip10LinkHandler', () => {
     // Apply anchor record
     await expect(handler.applyRecord(RECORDS.r2.record, FAKE_CID_3, context, state))
         .rejects.toThrow("Anchor proof chainId 'thewrongchain' is not supported. Supported chains are: 'fakechain:123'")
+  })
+
+  it('Should not allow replay attack', async () => {
+    const records = {
+      genesis: { header: { controllers: [ '0x0544DcF4fcE959C6C4F3b7530190cB5E1BD67Cb8@eip155:1' ], family: "caip10-eip155:1" } },
+      r1: {
+        data: {
+          version: 2,
+          type: 'ethereum-eoa',
+          message: 'Create a new account link to your identity.\n' + '\n' + 'did:3:testdid1 \n' + 'Timestamp: 1608116721',
+          signature: '0xc6a5f50945bc7b06320b66cfe144e2b571391c88827eed0490f7f8e5e8af769c4246e27e83078c907ccfaf9bd0de82bd5e57fe7884d9cb8a9303f5d92ea4df0d1c',
+          account: '0x0544dcf4fce959c6c4f3b7530190cb5e1bd67cb8@eip155:1',
+          timestamp: 1608116721
+        },
+        id: FAKE_CID_1,
+        prev: FAKE_CID_1
+      },
+      r2: { proof: FAKE_CID_4 },
+      r2proof: {
+        value: {
+          blockNumber: 123456,
+          blockTimestamp: 1608116723,
+          chainId: 'fakechain:123',
+        }
+      },
+      r3: {
+        data: {
+          version: 2,
+          type: 'ethereum-eoa',
+          message: 'Create a new account link to your identity.\n' + '\n' + 'did:3:testdid2 \n' + 'Timestamp: 1608116725',
+          signature: '0xe1bcc3f3b67ae303cb95db9d2d266f95984fd76bf3a4452dbb64ad4d3941998f4cb37f85197c74f9fb5cdf33e9042949a5452a204db2d48d85929406f64aac811b',
+          account: '0x0544dcf4fce959c6c4f3b7530190cb5e1bd67cb8@eip155:1',
+          timestamp: 1608116725
+        },
+        id: FAKE_CID_1,
+        prev: FAKE_CID_3
+      },
+      r4: { proof: FAKE_CID_7 },
+      r4proof: {
+        value: {
+          blockNumber: 123456,
+          blockTimestamp: 1608116727,
+          chainId: 'fakechain:123',
+        }
+      }
+    }
+    await context.ipfs.dag.put(records.r2proof, FAKE_CID_4)
+    await context.ipfs.dag.put(records.r4proof, FAKE_CID_7)
+
+    let state = await handler.applyRecord(records.genesis, FAKE_CID_1, context)
+    state = await handler.applyRecord(records.r1, FAKE_CID_2, context, state)
+    state = await handler.applyRecord(records.r2, FAKE_CID_3, context, state)
+    expect(state.content).toEqual('did:3:testdid1')
+    state = await handler.applyRecord(records.r3, FAKE_CID_5, context, state)
+
+    // create a fake update based on the r1 data to try a replay attack
+    const r4 = {
+      data: records.r1.data,
+      id: FAKE_CID_1,
+      prev: FAKE_CID_5
+    }
+    await expect(handler.applyRecord(r4, FAKE_CID_8, context, state)).rejects.toThrow('Invalid record, proof timestamp too old')
+
+    state = await handler.applyRecord(records.r4, FAKE_CID_6, context, state)
+    expect(state.content).toEqual('did:3:testdid2')
+
+    // create a fake update based on the r1 data to try a replay attack
+    const r5 = {
+      data: records.r1.data,
+      id: FAKE_CID_1,
+      prev: FAKE_CID_6
+    }
+    await expect(handler.applyRecord(r5, FAKE_CID_8, context, state)).rejects.toThrow('Invalid record, proof timestamp too old')
   })
 })

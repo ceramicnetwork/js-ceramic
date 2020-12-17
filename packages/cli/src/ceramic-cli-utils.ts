@@ -56,19 +56,25 @@ export class CeramicCliUtils {
      * @param logToFiles - Enable writing logs to files
      * @param logPath - Store log files in this directory
      * @param network - The Ceramic network to connect to
+     * @param maxHealthyCpu - Max fraction of total CPU usage considered healthy. Default is 0.7
+     * @param maxHealthyMemory - Max fraction of total memory usage considered healthy. Default is 0.7
      */
-    static async createDaemon(ipfsApi: string,
-                              ethereumRpc: string,
-                              anchorServiceApi: string,
-                              validateDocs: boolean,
-                              pinning: string[],
-                              stateStorePath: string,
-                              gateway: boolean,
-                              port: number,
-                              debug: boolean,
-                              logToFiles: boolean,
-                              logPath: string,
-                              network: string): Promise<CeramicDaemon> {
+    static async createDaemon(
+        ipfsApi: string,
+        ethereumRpc: string,
+        anchorServiceApi: string,
+        validateDocs: boolean,
+        pinning: string[],
+        stateStorePath: string,
+        gateway: boolean,
+        port: number,
+        debug: boolean,
+        logToFiles: boolean,
+        logPath: string,
+        network: string,
+        maxHealthyCpu = 0.7,
+        maxHealthyMemory = 0.7
+    ): Promise<CeramicDaemon> {
         if (stateStorePath == null) {
             stateStorePath = DEFAULT_PINNING_STORE_PATH
         }
@@ -76,15 +82,17 @@ export class CeramicCliUtils {
         const config: CreateOpts = {
             ethereumRpcUrl: ethereumRpc,
             anchorServiceUrl: anchorServiceApi,
-            stateStorePath: stateStorePath,
+            stateStorePath,
             validateDocs,
-            pinning: pinning,
+            pinning,
             gateway,
             port,
             debug,
             logToFiles,
             logPath,
             network,
+            maxHealthyCpu,
+            maxHealthyMemory
         }
 
         multiformats.multicodec.add(dagJose)

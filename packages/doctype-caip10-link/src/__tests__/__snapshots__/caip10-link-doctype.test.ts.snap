@@ -7,7 +7,7 @@ Object {
     "chainId": "fakechain:123",
   },
   "anchorStatus": 3,
-  "content": null,
+  "content": "did:3:testdid1",
   "doctype": "caip10-link",
   "log": Array [
     Object {
@@ -142,13 +142,11 @@ Object {
   ],
   "metadata": Object {
     "controllers": Array [
-      "0x25954ef14cebbc9af3d71132489a9cfe87043f20@eip155:1",
+      "0x0544DcF4fcE959C6C4F3b7530190cB5E1BD67Cb8@eip155:1",
     ],
     "family": "caip10-eip155:1",
   },
-  "next": Object {
-    "content": undefined,
-  },
+  "next": Object {},
   "signature": 2,
 }
 `;
@@ -205,7 +203,7 @@ Object {
   ],
   "metadata": Object {
     "controllers": Array [
-      "0x25954ef14cebbc9af3d71132489a9cfe87043f20@eip155:1",
+      "0x0544DcF4fcE959C6C4F3b7530190cB5E1BD67Cb8@eip155:1",
     ],
     "family": "caip10-eip155:1",
   },
@@ -311,12 +309,19 @@ Object {
   ],
   "metadata": Object {
     "controllers": Array [
-      "0x25954ef14cebbc9af3d71132489a9cfe87043f20@eip155:1",
+      "0x0544DcF4fcE959C6C4F3b7530190cB5E1BD67Cb8@eip155:1",
     ],
     "family": "caip10-eip155:1",
   },
   "next": Object {
-    "content": undefined,
+    "content": "did:3:testdid1",
+    "metadata": Object {
+      "controllers": Array [
+        "0x0544DcF4fcE959C6C4F3b7530190cB5E1BD67Cb8@eip155:1",
+      ],
+      "family": "caip10-eip155:1",
+      "lastUpdate": 1608116721,
+    },
   },
   "signature": 2,
 }

@@ -11,14 +11,46 @@ program
     .option('--pinning <url...>', 'Pinning endpoints')
     .option('--pinning-store-path <url>', `The directory path used for pinning service. Defaults to WORKING_DIR/${DEFAULT_PINNING_STORE_PATH}`)
     .option('--gateway', 'Makes read only endpoints available. It is disabled by default')
-    .option('--port <int>', 'Port daemon is availabe. Default is 7007')
+    .option('--port <int>', 'Port daemon is available. Default is 7007')
     .option('--debug', 'Enable debug logging level. Default is false')
     .option('--log-to-files', 'If debug is true, write logs to files. Default is false')
     .option('--log-path <dir>', 'Store logs in this directory. Defaults to "/usr/local/var/log/ceramic"')
     .option('--network <name>', 'Name of the ceramic network to connect to. One of: "mainnet", "testnet-clay", "local", or "inmemory". Defaults to "testnet-clay"')
+    .option('--max-healthy-cpu <decimal>', 'Fraction of total CPU usage considered healthy. Defaults to 0.7')
+    .option('--max-healthy-memory <decimal>', 'Fraction of total memory usage considered healthy. Defaults to 0.7')
     .description('Start the daemon')
-    .action(async ({ ipfsApi, ethereumRpc, anchorServiceApi, validateDocs, pinning, pinningStorePath, gateway, port, debug, logToFiles, logPath, network }) => {
-        await CeramicCliUtils.createDaemon(ipfsApi, ethereumRpc, anchorServiceApi, validateDocs, pinning, pinningStorePath, gateway, port, debug, logToFiles, logPath, network)
+    .action(async ({
+        ipfsApi,
+        ethereumRpc,
+        anchorServiceApi,
+        validateDocs,
+        pinning,
+        pinningStorePath,
+        gateway,
+        port,
+        debug,
+        logToFiles,
+        logPath,
+        network,
+        maxHealthyCpu,
+        maxHealthyMemory
+    }) => {
+        await CeramicCliUtils.createDaemon(
+            ipfsApi,
+            ethereumRpc,
+            anchorServiceApi,
+            validateDocs,
+            pinning,
+            pinningStorePath,
+            gateway,
+            port,
+            debug,
+            logToFiles,
+            logPath,
+            network,
+            maxHealthyCpu,
+            maxHealthyMemory
+        )
     })
 
 program
