@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.17.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@0.17.0-alpha.0...@ceramicnetwork/cli@0.17.0) (2020-12-17)
+
+
+### Bug Fixes
+
+* **cli:** rename healthcheck endpoint ([#673](https://github.com/ceramicnetwork/js-ceramic/issues/673)) ([bdfe1d5](https://github.com/ceramicnetwork/js-ceramic/commit/bdfe1d566184d213fb1ccdffd59389ae7752aedf))
+
+
+
+
+
 # [0.17.0-alpha.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@0.16.2...@ceramicnetwork/cli@0.17.0-alpha.0) (2020-12-14)
 
 

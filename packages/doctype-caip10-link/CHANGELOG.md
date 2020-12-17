@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.12.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/doctype-caip10-link@0.12.2-alpha.0...@ceramicnetwork/doctype-caip10-link@0.12.2) (2020-12-17)
+
+
+### Bug Fixes
+
+* **doctype-caip10-link:** replay attack vector was mitigated ([#666](https://github.com/ceramicnetwork/js-ceramic/issues/666)) ([ab6cb50](https://github.com/ceramicnetwork/js-ceramic/commit/ab6cb5039f34b7de6cf2fa2e36d1637e12ee8274))
+
+
+
+
+
 ## [0.12.2-alpha.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/doctype-caip10-link@0.12.1...@ceramicnetwork/doctype-caip10-link@0.12.2-alpha.0) (2020-12-14)
 
 
