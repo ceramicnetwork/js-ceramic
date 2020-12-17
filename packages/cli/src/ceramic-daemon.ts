@@ -148,6 +148,7 @@ class CeramicDaemon {
         ceramicConfig.logToFiles = opts.logToFiles
         ceramicConfig.logToFilesPlugin = {
             plugin: LogToFiles.main,
+            state: {blockedFiles: {}},
             options: {logPath: opts.logPath}
         }
     }

@@ -3,6 +3,24 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.15.0-alpha.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@0.14.1...@ceramicnetwork/common@0.15.0-alpha.0) (2020-12-14)
+
+
+### Bug Fixes
+
+* CID version fix ([#638](https://github.com/ceramicnetwork/js-ceramic/issues/638)) ([a4f4390](https://github.com/ceramicnetwork/js-ceramic/commit/a4f4390ea561e991cae93dd26b9b122d10caef32))
+* **doctype-caip10-link:** solidify data structure ([#619](https://github.com/ceramicnetwork/js-ceramic/issues/619)) ([d1e3b98](https://github.com/ceramicnetwork/js-ceramic/commit/d1e3b98bda51ad3a7d2b7d31b253be3a181d91ae))
+
+
+### Features
+
+* **core:** Allow loading signed records as document versions ([#617](https://github.com/ceramicnetwork/js-ceramic/issues/617)) ([ecf6943](https://github.com/ceramicnetwork/js-ceramic/commit/ecf6943c0e475b973bd1081b85f9cb1c9622cfe7))
+* **core:** Rename document "versions" to document "commits" ([#618](https://github.com/ceramicnetwork/js-ceramic/issues/618)) ([03bc30a](https://github.com/ceramicnetwork/js-ceramic/commit/03bc30a017662f3001ba855d1b73e1c245d0bfef))
+
+
+
+
+
 ## [0.14.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@0.14.0...@ceramicnetwork/common@0.14.1) (2020-12-08)
 
 **Note:** Version bump only for package @ceramicnetwork/common

@@ -438,7 +438,6 @@ Object {
       "controllers": Array [
         "did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki",
       ],
-      "nonce": 1,
     },
   },
   "signature": 2,

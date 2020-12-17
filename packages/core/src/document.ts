@@ -117,15 +117,12 @@ class Document extends EventEmitter {
     // Fill 'opts' with default values for any missing fields
     opts = {...DEFAULT_LOAD_DOCOPTS, ...opts}
 
-    const doc = await Document._loadGenesis(id, handler, dispatcher, pinStore, context, validate)
-
-    if (!id.commit) {
-      // No commit requested, so we should load the most current commit we can find.
-      return await Document._syncDocumentToCurrent(doc, pinStore, opts)
-    } else {
-      // Requested document at a specific commit
-      return await Document._syncDocumentToCommit(doc, id.commit, dispatcher)
+    if (id.commit) {
+      throw new Error("Cannot use Document.load() to load a specific document commit.  Use Document.loadAtCommit() instead")
     }
+
+    const doc = await Document._loadGenesis(id.baseID, handler, dispatcher, pinStore, context, validate)
+    return await Document._syncDocumentToCurrent(doc, pinStore, opts)
   }
 
   /**
@@ -134,6 +131,7 @@ class Document extends EventEmitter {
    * @param doc - Document containing only the genesis record
    * @param pinStore
    * @param opts
+   * @private
    */
   static async _syncDocumentToCurrent(doc: Document, pinStore: PinStore, opts: DocOpts): Promise<Document> {
     // TODO: Assert that doc contains only the genesis record
@@ -151,36 +149,37 @@ class Document extends EventEmitter {
   }
 
   /**
-   * Takes a document containing only the genesis record and syncs the document to the state as
-   * of the specific commit requested.  Intentionally does not register the document so that it
-   * does not get notifications about newer commits, since we want a specific commit here.
-   * @param doc - Document containing only the genesis record
-   * @param tip - CID of the Tip record that we want to load the document at
-   * @param dispatcher
+   * Takes the most recent known-about version of a document and a specific commit and returns a new
+   * Document instance representing the same document but set to the state of the document at the
+   * requested commit.  If the requested commit is for a branch of history that conflicts with the
+   * known current version of the document, throws an error. Intentionally does not register the new
+   * document so that it does not get notifications about newer commits, since we want it tied to a
+   * specific commit.
+   * @param id - DocID of the document including the requested commit
+   * @param doc - Most current version of the document that we know about
    */
-  static async _syncDocumentToCommit<T extends Doctype> (
-      doc: Document,
-      tip: CID,
-      dispatcher: Dispatcher): Promise<Document> {
-    // TODO: Assert that doc contains only the genesis record
+  static async loadAtCommit<T extends Doctype> (
+      id: DocID,
+      doc: Document): Promise<Document> {
 
-    if (tip.equals(doc.id.cid)) {
-      // The commit is the same as the genesis record CID, so nothing more to do after loading
-      // the genesis commit of the document.
-      doc._doctype = DoctypeUtils.makeReadOnly<T>(doc.doctype as T)
-      return doc
+    // If 'commit' is ahead of 'doc', sync doc up to 'commit'
+    await doc._handleTip(id.commit)
+
+    // If 'commit' is not included in doc's log at this point, that means that conflict resolution
+    // rejected it.
+    const commitIndex = await doc._findIndex(id.commit, doc._doctype.state.log)
+    if (commitIndex < 0) {
+      throw new Error(`Requested commit CID ${id.commit.toString()} not found in the log for document ${id.baseID.toString()}`)
     }
 
-    // Load the requested commit record
-    const commitRecord = await dispatcher.retrieveRecord(tip)
-    if (commitRecord == null) {
-      throw new Error(`No record found for CID ${tip.toString()}`)
-    }
-
-    await doc._handleTip(tip) // sync document to the requested tip
-
-    doc._doctype = DoctypeUtils.makeReadOnly<T>(doc.doctype as T)
-    return doc
+    // If the requested commit is included in the log, but isn't the most recent commit, we need
+    // to reset the state to the state at the requested commit.
+    const resetLog = doc._doctype.state.log.slice(0, commitIndex + 1)
+    const resetState = await doc._applyLogToState(resetLog.map((logEntry) => logEntry.cid))
+    let doctype = new doc._doctypeHandler.doctype(null, doc._context) as T
+    doctype.state = resetState
+    doctype = DoctypeUtils.makeReadOnly<T>(doctype as T)
+    return new Document(id, doc.dispatcher, doc.pinStore, doc._validate, doc._context, doc._doctypeHandler, doctype)
   }
 
   /**
@@ -205,6 +204,9 @@ class Document extends EventEmitter {
     const doc = new Document(id, dispatcher, pinStore, validate, context, handler, doctype)
 
     const record = await dispatcher.retrieveRecord(doc._genesisCid)
+    if (record == null) {
+      throw new Error(`No record found for CID ${id.commit.toString()}`)
+    }
     doc._doctype.state = await doc._doctypeHandler.applyRecord(record, doc._genesisCid, context)
 
     if (validate) {
@@ -332,9 +334,16 @@ class Document extends EventEmitter {
       return []
     }
     const record = await this.dispatcher.retrieveRecord(cid)
+    if (record == null) {
+      throw new Error(`No record found for CID ${cid.toString()}`)
+    }
+
     let payload = record
     if (DoctypeUtils.isSignedRecord(record)) {
       payload = await this.dispatcher.retrieveRecord(record.link)
+      if (payload == null) {
+        throw new Error(`No record found for CID ${record.link.toString()}`)
+      }
     }
     const prevCid: CID = payload.prev
     if (!prevCid) { // this is a fake log
@@ -418,15 +427,11 @@ class Document extends EventEmitter {
       // If they have the same block number fall through to fallback mechanism
     }
 
-    // The anchor status is the same between both logs.  If either log has a 'nonce' that means
-    // multiple updates have been squashed into a single anchor window, so prefer the log with the
-    // higher nonce (which indicates it has had more writes).
-    const nonce1 = (state1.next?.metadata.nonce ?? state1.metadata.nonce) || 0
-    const nonce2 = (state2.next?.metadata.nonce ?? state2.metadata.nonce) || 0
-    if (nonce1 < nonce2) {
-      return true
-    } else if (nonce2 < nonce1) {
+    // The anchor states are the same for both logs. Compare log lengths and choose the one with longer length.
+    if (state1.log.length > state2.log.length) {
       return false
+    } else if (state1.log.length < state2.log.length) {
+      return true
     }
 
     // If we got this far, that means that we don't have sufficient information to make a good
@@ -483,7 +488,8 @@ class Document extends EventEmitter {
   }
 
   /**
-   * Applies the log to the document and updates the state
+   * Applies the log to the document and updates the state.
+   * TODO: make this static so it's immediately obvious that this doesn't mutate the document
    *
    * @param log - Log of record CIDs
    * @param state - Document state

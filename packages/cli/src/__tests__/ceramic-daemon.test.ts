@@ -46,7 +46,7 @@ const createIPFS = (overrideConfig: Record<string, unknown> = {}): Promise<IpfsA
 }
 
 describe('Ceramic interop: core <> http-client', () => {
-    jest.setTimeout(20000)
+    jest.setTimeout(30000)
     let ipfs: IpfsApi
     let tmpFolder: any
     let core: Ceramic

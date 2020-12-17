@@ -3,6 +3,26 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.17.0-alpha.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@0.16.2...@ceramicnetwork/core@0.17.0-alpha.0) (2020-12-14)
+
+
+### Bug Fixes
+
+* **core:** Fail loading document at a commit if it is rejected by conflict resolution with known state of the document ([#634](https://github.com/ceramicnetwork/js-ceramic/issues/634)) ([5da5ac5](https://github.com/ceramicnetwork/js-ceramic/commit/5da5ac5251d9348699038f42857ff6bc4632fa41))
+* CID version fix ([#638](https://github.com/ceramicnetwork/js-ceramic/issues/638)) ([a4f4390](https://github.com/ceramicnetwork/js-ceramic/commit/a4f4390ea561e991cae93dd26b9b122d10caef32))
+
+
+### Features
+
+* **core:** Add 'dev-unstable' ceramic network ([#644](https://github.com/ceramicnetwork/js-ceramic/issues/644)) ([2357034](https://github.com/ceramicnetwork/js-ceramic/commit/23570343316ab8d8ae123ca7692a0f2baaea75d8))
+* **core:** Allow loading signed records as document versions ([#617](https://github.com/ceramicnetwork/js-ceramic/issues/617)) ([ecf6943](https://github.com/ceramicnetwork/js-ceramic/commit/ecf6943c0e475b973bd1081b85f9cb1c9622cfe7))
+* **core:** Rename document "versions" to document "commits" ([#618](https://github.com/ceramicnetwork/js-ceramic/issues/618)) ([03bc30a](https://github.com/ceramicnetwork/js-ceramic/commit/03bc30a017662f3001ba855d1b73e1c245d0bfef))
+* **core:** Unify implementations of Document.load and Document.loadVersion ([#594](https://github.com/ceramicnetwork/js-ceramic/issues/594)) ([ec5dd81](https://github.com/ceramicnetwork/js-ceramic/commit/ec5dd8142adf6f45fecc7adea14d0be6fd4fc589))
+
+
+
+
+
 ## [0.16.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@0.16.1...@ceramicnetwork/core@0.16.2) (2020-12-09)
 
 **Note:** Version bump only for package @ceramicnetwork/core

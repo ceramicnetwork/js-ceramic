@@ -16,7 +16,6 @@ import {
     GenesisHeader,
     GenesisRecord,
     UnsignedRecord,
-    DoctypeUtils,
 } from "@ceramicnetwork/common"
 
 const DOCTYPE = 'tile'
@@ -98,34 +97,13 @@ export class TileDoctype extends Doctype {
             ...newControllers != null && { controllers: newControllers },
         }
 
-        const nonce = TileDoctype._calculateNonce(doctype)
-        if (nonce != null) {
-            header.nonce = nonce
-        }
-
         if (newContent == null) {
             newContent = doctype.content
         }
 
         const patch = jsonpatch.compare(doctype.state.content, newContent)
-
-        const willSquash = header.nonce && header.nonce > 0
-        const prev = doctype.state.log[doctype.state.log.length - 1 - (willSquash ? 1 : 0)].cid
-
-        const record: UnsignedRecord = { header, data: patch, prev, id: doctype.state.log[0].cid }
+        const record: UnsignedRecord = { header, data: patch, prev: doctype.tip, id: doctype.state.log[0].cid }
         return TileDoctype._signDagJWS(record, did, doctype.controllers[0])
-    }
-
-    /**
-     * Calculates anchor nonce
-     */
-    private static _calculateNonce(doctype: Doctype): number {
-        // if there hasn't been any update prior to this we should set the nonce to 0
-        if (!doctype.state.next) {
-            return null
-        }
-        // get the current nonce and increment it by one
-        return (doctype.state.next.metadata?.nonce || 0) + 1
     }
 
     /**

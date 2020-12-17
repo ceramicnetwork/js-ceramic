@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.12.2-alpha.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/doctype-caip10-link@0.12.1...@ceramicnetwork/doctype-caip10-link@0.12.2-alpha.0) (2020-12-14)
+
+
+### Bug Fixes
+
+* CID version fix ([#638](https://github.com/ceramicnetwork/js-ceramic/issues/638)) ([a4f4390](https://github.com/ceramicnetwork/js-ceramic/commit/a4f4390ea561e991cae93dd26b9b122d10caef32))
+* **doctype-caip10-link:** solidify data structure ([#619](https://github.com/ceramicnetwork/js-ceramic/issues/619)) ([d1e3b98](https://github.com/ceramicnetwork/js-ceramic/commit/d1e3b98bda51ad3a7d2b7d31b253be3a181d91ae))
+
+
+
+
+
 ## [0.12.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/doctype-caip10-link@0.12.0...@ceramicnetwork/doctype-caip10-link@0.12.1) (2020-12-08)
 
 **Note:** Version bump only for package @ceramicnetwork/doctype-caip10-link
