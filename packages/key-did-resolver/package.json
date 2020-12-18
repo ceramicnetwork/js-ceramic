@@ -1,5 +1,5 @@
 {
-  "name": "@ceramicnetwork/key-did-resolver",
+  "name": "key-did-resolver",
   "version": "0.2.2",
   "description": "Ceramic did:key method resolver",
   "keywords": [
