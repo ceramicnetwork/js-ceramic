@@ -9,6 +9,9 @@ import {
     LoggerProvider,
     LoggerPluginOptions
 } from "@ceramicnetwork/common"
+import DocID from '@ceramicnetwork/docid'
+import * as logfmt from 'logfmt'
+const flatten = require('flat')
 
 const fsPromises = fs.promises
 
@@ -58,13 +61,20 @@ export class LogToFiles {
         rootLogger.methodFactory = (methodName: string, logLevel: any, loggerName: string): LoggerMethodFactory => {
             const rawMethod = originalFactory(methodName, logLevel, loggerName);
             return (...args: any[]): any => {
-                const message = LoggerProvider._interpolate(args)
+                let message = LoggerProvider._interpolate(args)
+                let jsonMessage
+                try {
+                    jsonMessage = JSON.parse(message)
+                    message = logfmt.stringify(flatten(jsonMessage))
+                } catch {
+                    jsonMessage = {message: null}
+                }
                 fs.mkdir(basePath, { recursive: true }, async (err) => {
                     if (err && (err.code != 'EEXIST')) console.warn('WARNING: Can not write logs to files', err)
                     else {
                         const filePrefix = loggerName.toLowerCase()
                         await LogToFiles._write(pluginState.blockedFiles, basePath, filePrefix, message)
-                        await LogToFiles._writeDocId(pluginState.blockedFiles, basePath, filePrefix, message)
+                        await LogToFiles._writeDocId(pluginState.blockedFiles, basePath, filePrefix, jsonMessage.message)
                     }
                 })
                 rawMethod(...args)
@@ -97,29 +107,21 @@ export class LogToFiles {
      * @notice The write operation overwrites the existing file at `${basePath}${filePrefix}.log`
      * @param basePath Base directory for file
      * @param filePrefix Prefix of file name to write to
-     * @param message Message to write to file
+     * @param jsonMessage Message containing the docId
      */
     private static async _writeDocId (
         blockedFiles: BlockedFiles,
         basePath: string,
         filePrefix: string,
-        message: string
+        jsonMessage: any
     ): Promise<void> {
-        const lookup = '/ceramic/'
-        const docIdIndex = message.indexOf(lookup)
-
-        if (docIdIndex > -1) {
-            const docIdSubstring = message.substring(docIdIndex)
-            // TODO: Exclude topics without docIds
-            const match = docIdSubstring.match(/\/ceramic\/[^"]+/)
-
-            if (match !== null) {
-                const docId = match[0]
-                const filePath = `${basePath}${filePrefix}-docids.log`
-                const result = await LogToFiles._writeStream(blockedFiles, filePath, docId, 'w')
-                if (result.blocked) await LogToFiles._writeBlockedWarning(blockedFiles, basePath, filePath)
-            }
+        if (!jsonMessage) {
+            return
         }
+        const docId = jsonMessage.doc
+        const filePath = `${basePath}${filePrefix}-docids.log`
+        const result = await LogToFiles._writeStream(blockedFiles, filePath, docId, 'w')
+        if (result.blocked) await LogToFiles._writeBlockedWarning(blockedFiles, basePath, filePath)
     }
 
     /**
