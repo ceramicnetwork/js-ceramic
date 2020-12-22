@@ -243,7 +243,7 @@ class CeramicDaemon {
    */
   async createReadOnlyDocFromGenesis (req: Request, res: Response, next: NextFunction): Promise<void> {
     const { doctype, genesis, docOpts } = req.body
-    const readOnlyDocOpts = {...docOpts, anchor: false, publish: false}
+    const readOnlyDocOpts = { ...docOpts, anchor: false, publish: false }
     try {
       const doc = await this.ceramic.createDocumentFromGenesis(doctype, DoctypeUtils.deserializeRecord(genesis), readOnlyDocOpts)
       res.json({ docId: doc.id.toString(), state: DoctypeUtils.serializeState(doc.state) })
