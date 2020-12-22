@@ -159,7 +159,6 @@ class CeramicDaemon {
 
   registerAPIPaths (app: core.Express, gateway: boolean): void {
     app.get(toApiPath('/records/:docid'), this.records.bind(this))
-    app.post(toApiPath('/documents'), this.createDocFromGenesis.bind(this))
     app.post(toApiPath('/multiqueries'), this.multiQuery.bind(this))
     app.get(toApiPath('/documents/:docid'), this.state.bind(this))
     app.get(toApiPath('/pins/:docid'), this.listPinned.bind(this))
@@ -168,10 +167,12 @@ class CeramicDaemon {
     app.get(toApiPath('/node/healthcheck'), this.healthcheck.bind(this))
 
     if (!gateway) {
+      app.post(toApiPath('/documents'), this.createDocFromGenesis.bind(this))
       app.post(toApiPath('/records'), this.applyRecord.bind(this))
       app.post(toApiPath('/pins/:docid'), this.pinDocument.bind(this))
       app.delete(toApiPath('/pins/:docid'), this.unpinDocument.bind(this))
     } else {
+      app.post(toApiPath('/documents'), this.createReadOnlyDocFromGenesis.bind(this))
       app.post(toApiPath('/records'),  this._notSupported.bind(this))
       app.post(toApiPath('/pins/:docid'),  this._notSupported.bind(this))
       app.delete(toApiPath('/pins/:docid'),  this._notSupported.bind(this))
@@ -230,6 +231,21 @@ class CeramicDaemon {
     const { doctype, genesis, docOpts } = req.body
     try {
       const doc = await this.ceramic.createDocumentFromGenesis(doctype, DoctypeUtils.deserializeRecord(genesis), docOpts)
+      res.json({ docId: doc.id.toString(), state: DoctypeUtils.serializeState(doc.state) })
+    } catch (e) {
+      return next(e)
+    }
+    next()
+  }
+
+  /**
+   * Create read-only document from genesis record
+   */
+  async createReadOnlyDocFromGenesis (req: Request, res: Response, next: NextFunction): Promise<void> {
+    const { doctype, genesis, docOpts } = req.body
+    const readOnlyDocOpts = {...docOpts, anchor: false, publish: false}
+    try {
+      const doc = await this.ceramic.createDocumentFromGenesis(doctype, DoctypeUtils.deserializeRecord(genesis), readOnlyDocOpts)
       res.json({ docId: doc.id.toString(), state: DoctypeUtils.serializeState(doc.state) })
     } catch (e) {
       return next(e)
