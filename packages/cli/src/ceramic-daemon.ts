@@ -226,6 +226,7 @@ class CeramicDaemon {
 
   /**
    * Create document from genesis record
+   * @dev Useful when the docId is unknown, but you have the genesis contents
    */
   async createDocFromGenesis (req: Request, res: Response, next: NextFunction): Promise<void> {
     const { doctype, genesis, docOpts } = req.body
@@ -240,6 +241,10 @@ class CeramicDaemon {
 
   /**
    * Create read-only document from genesis record
+   * @dev Useful when the docId is unknown, but you have the genesis contents
+   * @TODO Should return null if document does not already exist instead of
+   * current behavior, publishing to IPFS. With that change it will make sense
+   * to rename this, e.g. `loadDocFromGenesis`
    */
   async createReadOnlyDocFromGenesis (req: Request, res: Response, next: NextFunction): Promise<void> {
     const { doctype, genesis, docOpts } = req.body
