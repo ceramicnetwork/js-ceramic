@@ -122,11 +122,11 @@ describe('Ceramic interop: core <> http-client', () => {
 
     it('gets anchor record updates', async () => {
         const doc1 = await client.createDocument(DOCTYPE_TILE, { content: { test: 123 } })
-        await waitChange(doc1, 2)
+        await waitChange(doc1, 1)
         expect(doc1.state.log.length).toEqual(2)
         expect(doc1.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
         const doc2 = await client.createDocument(DOCTYPE_TILE, { content: { test: 1234 } })
-        await waitChange(doc2, 2)
+        await waitChange(doc2, 1)
         expect(doc2.state.log.length).toEqual(2)
         expect(doc2.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
     })
