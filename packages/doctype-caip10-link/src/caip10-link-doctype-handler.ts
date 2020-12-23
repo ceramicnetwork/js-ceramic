@@ -116,6 +116,7 @@ export class Caip10LinkDoctypeHandler implements DoctypeHandler<Caip10LinkDoctyp
             throw new Error("Address doesn't match document controller")
         }
         state.log.push({ cid, type: RecordType.SIGNED })
+        const metadata = state.next?.metadata ?? state.metadata
         return {
             ...state,
             signature: SignatureStatus.SIGNED,
@@ -123,7 +124,7 @@ export class Caip10LinkDoctypeHandler implements DoctypeHandler<Caip10LinkDoctyp
             next: {
                 content: validProof.did,
                 metadata: {
-                  ...state.metadata,
+                  ...metadata,
                   lastUpdate: validProof.timestamp // in case there are two updates after each other
                 }
             }

@@ -101,7 +101,7 @@ export class TileDoctype extends Doctype {
             newContent = doctype.content
         }
 
-        const patch = jsonpatch.compare(doctype.state.content, newContent)
+        const patch = jsonpatch.compare(doctype.content, newContent)
         const record: UnsignedRecord = { header, data: patch, prev: doctype.tip, id: doctype.state.log[0].cid }
         return TileDoctype._signDagJWS(record, did, doctype.controllers[0])
     }

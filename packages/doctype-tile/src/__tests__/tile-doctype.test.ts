@@ -305,7 +305,7 @@ describe('TileDoctypeHandler', () => {
     await context.ipfs.dag.put(sPayload2, signedRecord2.jws.link)
 
     // apply signed
-    const state2 = await tileDoctypeHandler.applyRecord(signedRecord2.jws, FAKE_CID_3, context, deepCopy(genesisState))
+    const state2 = await tileDoctypeHandler.applyRecord(signedRecord2.jws, FAKE_CID_3, context, deepCopy(state1))
 
     expect(state2).toMatchSnapshot()
   })

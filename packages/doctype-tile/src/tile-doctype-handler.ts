@@ -121,14 +121,13 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
         nextState.anchorStatus = AnchorStatus.NOT_REQUESTED
 
         nextState.log.push({ cid, type: RecordType.SIGNED })
+
+        const content = state.next?.content ?? state.content
+        const metadata = state.next?.metadata ?? state.metadata
         nextState.next = {
-            content: jsonpatch.applyPatch(state.content, payload.data).newDocument
+            content: jsonpatch.applyPatch(content, payload.data).newDocument,
+            metadata: {...metadata, ...payload.header}
         }
-
-        if (payload.header) {
-            nextState.next.metadata = {...nextState.metadata, ...payload.header}
-        }
-
         return nextState
     }
 
