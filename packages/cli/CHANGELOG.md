@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.18.0](/compare/@ceramicnetwork/cli@0.17.0...@ceramicnetwork/cli@0.18.0) (2020-12-23)
+
+
+### Features
+
+* **core:** Update default CAS URL to point to clay infra (#669) 85b6bcb, closes #669
+
+
+
+
+
 # [0.17.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@0.17.0-alpha.0...@ceramicnetwork/cli@0.17.0) (2020-12-17)
 
 

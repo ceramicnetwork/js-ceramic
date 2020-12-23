@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# 0.3.0 (2020-12-23)
+
+
+### Features
+
+* **key-did-resolver:** add support for ed25519 (#479) 23392f5, closes #479
+* implement initial key-did-resolver module (#321) 472283f, closes #321
+
+
+
+
+
 ## [0.2.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/key-did-resolver@0.2.2-alpha.0...@ceramicnetwork/key-did-resolver@0.2.2) (2020-12-17)
 
 **Note:** Version bump only for package @ceramicnetwork/key-did-resolver
