@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.12.5](/compare/@ceramicnetwork/doctype-tile@0.12.4...@ceramicnetwork/doctype-tile@0.12.5) (2020-12-23)
+
+
+### Bug Fixes
+
+* **core:** Don't lose pending metadata updates when performing a second update (#710) 7941e0a, closes #710
+
+
+### Reverts
+
+* Revert "chore(release):" 26ed474
+
+
+
+
+
 ## [0.12.4](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/doctype-tile@0.12.4-alpha.0...@ceramicnetwork/doctype-tile@0.12.4) (2020-12-17)
 
 **Note:** Version bump only for package @ceramicnetwork/doctype-tile

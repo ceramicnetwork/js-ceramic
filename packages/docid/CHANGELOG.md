@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.4.1](/compare/@ceramicnetwork/docid@0.4.0...@ceramicnetwork/docid@0.4.1) (2020-12-23)
+
+
+### Reverts
+
+* Revert "chore(release):" 26ed474
+
+
+
+
+
 # [0.4.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/docid@0.4.0-alpha.0...@ceramicnetwork/docid@0.4.0) (2020-12-17)
 
 **Note:** Version bump only for package @ceramicnetwork/docid

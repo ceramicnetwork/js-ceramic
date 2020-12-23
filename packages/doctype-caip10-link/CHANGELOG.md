@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.12.3](/compare/@ceramicnetwork/doctype-caip10-link@0.12.2...@ceramicnetwork/doctype-caip10-link@0.12.3) (2020-12-23)
+
+
+### Reverts
+
+* Revert "chore(release):" 26ed474
+
+
+
+
+
 ## [0.12.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/doctype-caip10-link@0.12.2-alpha.0...@ceramicnetwork/doctype-caip10-link@0.12.2) (2020-12-17)
 
 
