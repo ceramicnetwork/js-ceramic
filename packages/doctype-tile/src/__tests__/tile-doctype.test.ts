@@ -275,7 +275,7 @@ describe('TileDoctypeHandler', () => {
     expect(state).toMatchSnapshot()
   })
 
-  it('squashes record correctly', async () => {
+  it('multiple consecutive updates', async () => {
     const deepCopy = o => DoctypeUtils.deserializeState(DoctypeUtils.serializeState(o))
     const tileDoctypeHandler = new TileDoctypeHandler()
 
@@ -288,7 +288,7 @@ describe('TileDoctypeHandler', () => {
 
     // make a first update
     let doctype = new TileDoctype(genesisState, context)
-    const signedRecord1 = await TileDoctype._makeRecord(doctype, did, { other: { obj: 'content' } }) as SignedRecordContainer
+    const signedRecord1 = await TileDoctype._makeRecord(doctype, did, { other: { obj: 'content' } }, null, "a new schema") as SignedRecordContainer
 
     await context.ipfs.dag.put(signedRecord1, FAKE_CID_2)
     const sPayload1 = dagCBOR.util.deserialize(signedRecord1.linkedBlock)
@@ -296,7 +296,7 @@ describe('TileDoctypeHandler', () => {
     // apply signed
     const state1 = await tileDoctypeHandler.applyRecord(signedRecord1.jws, FAKE_CID_2, context, deepCopy(genesisState))
 
-    // make a second update that squashes the first
+    // make a second update on top of the first
     doctype = new TileDoctype(state1, context)
     const signedRecord2 = await TileDoctype._makeRecord(doctype, did, { other: { obj2: 'fefe' } }) as SignedRecordContainer
 

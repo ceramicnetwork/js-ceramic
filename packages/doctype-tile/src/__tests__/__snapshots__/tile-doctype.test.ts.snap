@@ -328,7 +328,7 @@ Object {
 }
 `;
 
-exports[`TileDoctypeHandler squashes record correctly 1`] = `
+exports[`TileDoctypeHandler multiple consecutive updates 1`] = `
 Object {
   "anchorStatus": 0,
   "content": Object {
@@ -481,6 +481,7 @@ Object {
       "controllers": Array [
         "did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki",
       ],
+      "schema": "a new schema",
     },
   },
   "signature": 2,
