@@ -4,7 +4,7 @@
 
 ### Installation
 ```
-$ npm install @ceramicnetwork/key-did-resolver
+$ npm install key-did-resolver
 ```
 
 ## Contributing
