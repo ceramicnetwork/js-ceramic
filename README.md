@@ -25,7 +25,7 @@ This repo is made up of several different packages.
 | @ceramicnetwork/doctype-caip10-link | [![npm](https://img.shields.io/npm/v/@ceramicnetwork/doctype-caip10-link)](https://www.npmjs.com/package/@ceramicnetwork/doctype-caip10-link) | Ceramic caip10 link doctype |
 | @ceramicnetwork/doctype-tile | [![npm](https://img.shields.io/npm/v/@ceramicnetwork/doctype-tile)](https://www.npmjs.com/package/@ceramicnetwork/doctype-tile) | Ceramic tile doctype |
 | @ceramicnetwork/3id-did-resolver | [![npm](https://img.shields.io/npm/v/@ceramicnetwork/3id-did-resolver)](https://www.npmjs.com/package/@ceramicnetwork/3id-did-resolver) | DID resolver for 3IDs |
-| @ceramicnetwork/key-did-resolver | [![npm](https://img.shields.io/npm/v/@ceramicnetwork/key-did-resolver)](https://www.npmjs.com/package/@ceramicnetwork/key-did-resolver) | did:key method resolver |
+| key-did-resolver | [![npm](https://img.shields.io/npm/v/key-did-resolver)](https://www.npmjs.com/package/key-did-resolver) | did:key method resolver |
 
 ## APIs
 [APIs documentation](https://docs.ceramic.network)

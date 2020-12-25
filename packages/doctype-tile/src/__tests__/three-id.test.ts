@@ -4,7 +4,7 @@ import { Resolver } from "did-resolver"
 
 import dagCBOR from "ipld-dag-cbor"
 
-import KeyDidResolver from '@ceramicnetwork/key-did-resolver'
+import KeyDidResolver from 'key-did-resolver'
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 
 import { DID } from 'dids'
