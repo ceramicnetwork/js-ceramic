@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.12.4-alpha.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/doctype-caip10-link@0.12.3...@ceramicnetwork/doctype-caip10-link@0.12.4-alpha.1) (2020-12-25)
+
+**Note:** Version bump only for package @ceramicnetwork/doctype-caip10-link
+
+
+
+
+
 ## [0.12.4-alpha.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/doctype-caip10-link@0.12.3...@ceramicnetwork/doctype-caip10-link@0.12.4-alpha.0) (2020-12-25)
 
 **Note:** Version bump only for package @ceramicnetwork/doctype-caip10-link
