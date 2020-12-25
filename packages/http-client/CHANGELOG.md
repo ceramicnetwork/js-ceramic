@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.8.10-alpha.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/http-client@0.8.9...@ceramicnetwork/http-client@0.8.10-alpha.0) (2020-12-25)
+
+
+### Bug Fixes
+
+* use new key-did-resolver pkg name everywhere ([86d6d0c](https://github.com/ceramicnetwork/js-ceramic/commit/86d6d0c6ced489dfcdcea48f92c533a18a10fbf0))
+* **http-client:** reload cached documents ([96ceb9a](https://github.com/ceramicnetwork/js-ceramic/commit/96ceb9a52fae4b1b15dbf5e336099629d491b7da))
+
+
+
+
+
 ## [0.8.9](/compare/@ceramicnetwork/http-client@0.8.8...@ceramicnetwork/http-client@0.8.9) (2020-12-23)
 
 

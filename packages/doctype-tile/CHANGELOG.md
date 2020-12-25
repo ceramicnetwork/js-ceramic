@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.12.6-alpha.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/doctype-tile@0.12.5...@ceramicnetwork/doctype-tile@0.12.6-alpha.0) (2020-12-25)
+
+
+### Bug Fixes
+
+* use new key-did-resolver pkg name everywhere ([86d6d0c](https://github.com/ceramicnetwork/js-ceramic/commit/86d6d0c6ced489dfcdcea48f92c533a18a10fbf0))
+
+
+
+
+
 ## [0.12.5](/compare/@ceramicnetwork/doctype-tile@0.12.4...@ceramicnetwork/doctype-tile@0.12.5) (2020-12-23)
 
 
