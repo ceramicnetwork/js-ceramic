@@ -19,7 +19,7 @@ import { TileDoctypeHandler } from "@ceramicnetwork/doctype-tile"
 import { Caip10LinkDoctypeHandler } from "@ceramicnetwork/doctype-caip10-link"
 import DocID from '@ceramicnetwork/docid'
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
-import KeyDidResolver from '@ceramicnetwork/key-did-resolver'
+import KeyDidResolver from 'key-did-resolver'
 import { Resolver } from "did-resolver"
 
 const API_PATH = '/api/v0'
@@ -125,6 +125,8 @@ export default class CeramicClient implements CeramicApi {
     const docIdStr = doc.id.toString()
     if (!this._docmap[docIdStr]) {
       this._docmap[docIdStr] = doc
+    } else {
+      this._docmap[docIdStr].state = doc.state
     }
     this._docmap[docIdStr].doctypeHandler = this.findDoctypeHandler(this._docmap[docIdStr].state.doctype)
     return this._docmap[docIdStr] as unknown as T
@@ -135,6 +137,8 @@ export default class CeramicClient implements CeramicApi {
     const docIdStr = docId.toString()
     if (!this._docmap[docIdStr]) {
       this._docmap[docIdStr] = await Document.load(docId, this._apiUrl, this.context, this._config)
+    } else {
+      this._docmap[docIdStr]._syncState()
     }
     this._docmap[docIdStr].doctypeHandler = this.findDoctypeHandler(this._docmap[docIdStr].state.doctype)
     return this._docmap[docIdStr] as unknown as T
