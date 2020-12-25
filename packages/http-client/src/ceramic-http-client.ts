@@ -125,7 +125,10 @@ export default class CeramicClient implements CeramicApi {
     const docIdStr = doc.id.toString()
     if (!this._docmap[docIdStr]) {
       this._docmap[docIdStr] = doc
-    } else {
+    } else if (
+      JSON.stringify(DoctypeUtils.serializeState(doc.state)) !==
+      JSON.stringify(DoctypeUtils.serializeState(this._docmap[docIdStr].state))
+    ) {
       this._docmap[docIdStr].state = doc.state
       this._docmap[docIdStr].emit('change')
     }
