@@ -127,6 +127,7 @@ export default class CeramicClient implements CeramicApi {
       this._docmap[docIdStr] = doc
     } else {
       this._docmap[docIdStr].state = doc.state
+      this._docmap[docIdStr].emit('change')
     }
     this._docmap[docIdStr].doctypeHandler = this.findDoctypeHandler(this._docmap[docIdStr].state.doctype)
     return this._docmap[docIdStr] as unknown as T
@@ -138,7 +139,7 @@ export default class CeramicClient implements CeramicApi {
     if (!this._docmap[docIdStr]) {
       this._docmap[docIdStr] = await Document.load(docId, this._apiUrl, this.context, this._config)
     } else {
-      this._docmap[docIdStr]._syncState()
+      await this._docmap[docIdStr]._syncState()
     }
     this._docmap[docIdStr].doctypeHandler = this.findDoctypeHandler(this._docmap[docIdStr].state.doctype)
     return this._docmap[docIdStr] as unknown as T
