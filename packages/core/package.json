@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/core",
-  "version": "0.17.1",
+  "version": "0.17.2-alpha.0",
   "description": "Typescript implementation of the Ceramic protocol",
   "keywords": [
     "Ceramic",
@@ -28,14 +28,13 @@
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/3id-did-resolver": "^0.6.1",
-    "@ceramicnetwork/common": "^0.15.1",
-    "@ceramicnetwork/docid": "^0.4.1",
-    "@ceramicnetwork/doctype-caip10-link": "^0.12.3",
-    "@ceramicnetwork/doctype-tile": "^0.12.5",
-    "key-did-resolver": "^0.2.3",
-    "@ceramicnetwork/pinning-aggregation": "^0.1.6",
-    "@ceramicnetwork/pinning-ipfs-backend": "^0.1.6",
+    "@ceramicnetwork/3id-did-resolver": "^0.6.2-alpha.0",
+    "@ceramicnetwork/common": "^0.15.2-alpha.0",
+    "@ceramicnetwork/docid": "^0.4.2-alpha.0",
+    "@ceramicnetwork/doctype-caip10-link": "^0.12.4-alpha.0",
+    "@ceramicnetwork/doctype-tile": "^0.12.6-alpha.0",
+    "@ceramicnetwork/pinning-aggregation": "^0.1.7-alpha.0",
+    "@ceramicnetwork/pinning-ipfs-backend": "^0.1.7-alpha.0",
     "@ethersproject/base64": "^5.0.2",
     "@ethersproject/providers": "^5.0.0-beta.144",
     "@ethersproject/random": "^5.0.2",
@@ -48,6 +47,7 @@
     "dids": "^1.1.0",
     "fast-json-patch": "^2.2.1",
     "ipfs-http-client": "48.1.1",
+    "key-did-resolver": "^0.2.4-alpha.0",
     "level-ts": "^2.0.5",
     "lodash.clonedeep": "^4.5.0",
     "multiformats": "3.0.3",
