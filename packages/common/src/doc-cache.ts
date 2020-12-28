@@ -1,15 +1,15 @@
 import { LRUMap } from 'lru_map'
 import DocID from "@ceramicnetwork/docid"
 
-import Document from "./document"
+import { DocStateHolder } from "./doctype"
 
 /**
  * Encapsulates document caching (base, commits)
  */
-class DocumentCache {
+export class DocCache {
     private readonly _cacheCommits: boolean
-    private readonly _baseCache: LRUMap<string, Document>
-    private readonly _commitCache: LRUMap<string, Document>
+    private readonly _baseCache: LRUMap<string, DocStateHolder>
+    private readonly _commitCache: LRUMap<string, DocStateHolder>
 
     constructor(limit, cacheCommits = true) {
         this._cacheCommits = cacheCommits
@@ -18,10 +18,10 @@ class DocumentCache {
     }
 
     /**
-     * Set document to cache
-     * @param doc - Document instance
+     * Sets to cache
+     * @param doc - DocStateHolder instance
      */
-    set(doc: Document): void {
+    set(doc: DocStateHolder): void {
         this._baseCache.set(doc.id.baseID.toString(), doc)
         if (this._cacheCommits && doc.id.commit) {
             this._commitCache.set(doc.id.toString(), doc)
@@ -29,16 +29,22 @@ class DocumentCache {
     }
 
     /**
-     * Get document from cache
-     * @param docId - Document ID
+     * Gets from cache
+     * @param docId - DocId instance
      */
-    get(docId: DocID): Document {
+    get(docId: DocID): DocStateHolder {
         const doc = this._baseCache.get(docId.toString())
         if (doc) {
             return doc
         }
         return this._cacheCommits? this._commitCache.get(docId.toString()): null
     }
-}
 
-export default DocumentCache
+    /**
+     * Doc exists?
+     * @param docId - DocId instance
+     */
+    has(docId: DocID): boolean {
+        return this.get(docId) != null
+    }
+}

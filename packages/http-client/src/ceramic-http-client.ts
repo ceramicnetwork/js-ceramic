@@ -1,19 +1,20 @@
-import { fetchJson, typeDocID, combineURLs } from "./utils"
+import { combineURLs, fetchJson, typeDocID } from "./utils"
 import Document from './document'
 
 import { DID } from 'dids'
 import {
-  Doctype,
-  DoctypeHandler,
+  CeramicApi,
+  CeramicRecord,
+  Context,
+  DIDProvider,
+  DocCache,
   DocOpts,
   DocParams,
-  DIDProvider,
-  Context,
-  CeramicApi,
+  Doctype,
+  DoctypeHandler,
+  DoctypeUtils,
+  MultiQuery,
   PinApi,
-  CeramicRecord,
-  DoctypeUtils, 
-  MultiQuery
 } from "@ceramicnetwork/common"
 import { TileDoctypeHandler } from "@ceramicnetwork/doctype-tile"
 import { Caip10LinkDoctypeHandler } from "@ceramicnetwork/doctype-caip10-link"
@@ -31,6 +32,7 @@ const CERAMIC_HOST = 'http://localhost:7007'
 export const DEFAULT_CLIENT_CONFIG: CeramicClientConfig = {
   docSyncEnabled: false,
   docSyncInterval: 5000,
+  docBaseCacheLimit: 100,
 }
 
 /**
@@ -40,6 +42,7 @@ export interface CeramicClientConfig {
   didResolver?: Resolver
   docSyncEnabled?: boolean
   docSyncInterval?: number
+  docBaseCacheLimit?: number;
 }
 
 /**
@@ -54,7 +57,7 @@ export default class CeramicClient implements CeramicApi {
    * always have access to the most recent known-about version, without needing
    * to explicitly re-load the document.
    */
-  private readonly _docmap: Record<string, Document>
+  private readonly _docCache: DocCache
   private _supportedChains: Array<string>
 
   public readonly pin: PinApi
@@ -67,7 +70,7 @@ export default class CeramicClient implements CeramicApi {
     this._config = Object.assign(DEFAULT_CLIENT_CONFIG, config ? config : {})
 
     this._apiUrl = combineURLs(apiHost, API_PATH)
-    this._docmap = {}
+    this._docCache = new DocCache(config.docBaseCacheLimit, true)
 
     this.context = { api: this }
     this.pin = this._initPinApi()
@@ -129,27 +132,32 @@ export default class CeramicClient implements CeramicApi {
 
   async createDocumentFromGenesis<T extends Doctype>(doctype: string, genesis: any, opts?: DocOpts): Promise<T> {
     const doc = await Document.createFromGenesis(this._apiUrl, doctype, genesis, this.context, opts, this._config)
-    const docIdStr = doc.id.toString()
-    if (!this._docmap[docIdStr]) {
-      this._docmap[docIdStr] = doc
-    } else if (DoctypeUtils.statesEqual(doc.state, this._docmap[docIdStr].state)) {
-      this._docmap[docIdStr].state = doc.state
-      this._docmap[docIdStr].emit('change')
+
+    let docFromCache = this._docCache.get(doc.id)
+    if (docFromCache == null) {
+      this._docCache.set(doc)
+      docFromCache = doc
+    } else if (!DoctypeUtils.statesEqual(doc.state, docFromCache.state)) {
+      docFromCache.state = doc.state
+      docFromCache.emit('change')
     }
-    this._docmap[docIdStr].doctypeHandler = this.findDoctypeHandler(this._docmap[docIdStr].state.doctype)
-    return this._docmap[docIdStr] as unknown as T
+
+    docFromCache.doctypeHandler = this.findDoctypeHandler(docFromCache.state.doctype)
+    return docFromCache as unknown as T
   }
 
   async loadDocument<T extends Doctype>(docId: DocID | string): Promise<T> {
     docId = typeDocID(docId)
-    const docIdStr = docId.toString()
-    if (!this._docmap[docIdStr]) {
-      this._docmap[docIdStr] = await Document.load(docId, this._apiUrl, this.context, this._config)
+
+    let docFromCache: Document = this._docCache.get(docId)
+    if (docFromCache == null) {
+      docFromCache = await Document.load(docId, this._apiUrl, this.context, this._config)
+      this._docCache.set(docFromCache)
     } else {
-      await this._docmap[docIdStr]._syncState()
+      await docFromCache._syncState()
     }
-    this._docmap[docIdStr].doctypeHandler = this.findDoctypeHandler(this._docmap[docIdStr].state.doctype)
-    return this._docmap[docIdStr] as unknown as T
+    docFromCache.doctypeHandler = this.findDoctypeHandler(docFromCache.state.doctype)
+    return docFromCache as unknown as T
   }
 
   async multiQuery(queries: Array<MultiQuery>): Promise<Record<string, Doctype>> {
@@ -167,14 +175,12 @@ export default class CeramicClient implements CeramicApi {
       }
     })
 
-    const response = Object.entries(results).reduce((acc, e) => {
+    return Object.entries(results).reduce((acc, e) => {
       const [k, v] = e
       const state = DoctypeUtils.deserializeState(v)
       acc[k] = new Document(state, this.context, this._apiUrl, this._config)
       return acc
     }, {})
-
-    return response
   }
 
   async loadDocumentRecords(docId: DocID | string): Promise<Array<Record<string, any>>> {

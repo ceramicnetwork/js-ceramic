@@ -20,7 +20,8 @@ import {
   IpfsApi,
   PinApi,
   MultiQuery,
-  PinningBackendStatic
+  PinningBackendStatic,
+  DocCache,
 } from "@ceramicnetwork/common"
 import { Resolver } from "did-resolver"
 
@@ -31,7 +32,6 @@ import { PinStoreFactory } from "./store/pin-store-factory";
 import { PinStore } from "./store/pin-store";
 import { PathTrie, TrieNode, promiseTimeout } from './utils'
 
-import DocumentCache from "./document-cache"
 import EthereumAnchorService from "./anchor/ethereum/ethereum-anchor-service"
 import InMemoryAnchorService from "./anchor/memory/in-memory-anchor-service"
 
@@ -107,7 +107,7 @@ class Ceramic implements CeramicApi {
   public readonly pin: PinApi
   public readonly context: Context
 
-  private readonly _docCache: DocumentCache
+  private readonly _docCache: DocCache
 
   // TODO: Make the constructor private and force the use of Ceramic.create() everywhere
   constructor (public dispatcher: Dispatcher,
@@ -117,7 +117,7 @@ class Ceramic implements CeramicApi {
                private _validateDocs: boolean = true,
                docCacheLimit = DEFAULT_BASE_DOC_CACHE_LIMIT,
                cacheDocumentCommits = true) {
-    this._docCache = new DocumentCache(docCacheLimit, cacheDocumentCommits)
+    this._docCache = new DocCache(docCacheLimit, cacheDocumentCommits)
     this._doctypeHandlers = {
       'tile': new TileDoctypeHandler(),
       'caip10-link': new Caip10LinkDoctypeHandler()
@@ -344,7 +344,7 @@ class Ceramic implements CeramicApi {
    * @private
    */
   private _getDocFromCache(docId: DocID): Document {
-    return this._docCache.get(docId)
+    return this._docCache.get(docId) as Document
   }
 
   /**
