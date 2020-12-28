@@ -12,7 +12,7 @@ import {
   CeramicApi,
   PinApi,
   CeramicRecord,
-  DoctypeUtils, 
+  DoctypeUtils,
   MultiQuery
 } from "@ceramicnetwork/common"
 import { TileDoctypeHandler } from "@ceramicnetwork/doctype-tile"
@@ -132,7 +132,7 @@ export default class CeramicClient implements CeramicApi {
     const docIdStr = doc.id.toString()
     if (!this._docmap[docIdStr]) {
       this._docmap[docIdStr] = doc
-    } else if (DoctypeUtils.statesEqual(doc.state, this._docmap[docIdStr].state)) {
+    } else if (!DoctypeUtils.statesEqual(doc.state, this._docmap[docIdStr].state)) {
       this._docmap[docIdStr].state = doc.state
       this._docmap[docIdStr].emit('change')
     }
