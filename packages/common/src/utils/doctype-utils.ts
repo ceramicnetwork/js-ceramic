@@ -136,7 +136,7 @@ export class DoctypeUtils {
     }
 
     static statesEqual(state1: DocState, state2: DocState): boolean {
-        return JSON.stringify(DoctypeUtils.serializeState(state1)) !==
+        return JSON.stringify(DoctypeUtils.serializeState(state1)) ===
         JSON.stringify(DoctypeUtils.serializeState(state2))
     }
 
