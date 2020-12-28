@@ -37,7 +37,7 @@ import InMemoryAnchorService from "./anchor/memory/in-memory-anchor-service"
 
 import { randomUint32 } from '@stablelib/random'
 
-const DEFAULT_BASE_DOC_CACHE_LIMIT = 100; // number of base docs stored in the cache
+const DEFAULT_BASE_DOC_CACHE_LIMIT = 500; // number of base docs stored in the cache
 
 /**
  * Ceramic configuration

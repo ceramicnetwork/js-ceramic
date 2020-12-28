@@ -24,7 +24,9 @@ export class DocCache {
      * @param doc - DocStateHolder instance
      */
     set(doc: DocStateHolder): void {
-        this._baseCache.set(doc.id.baseID.toString(), doc)
+        if (doc.id.commit == null) {
+            this._baseCache.set(doc.id.baseID.toString(), doc)
+        }
         if (this._cacheCommits && doc.id.commit) {
             this._commitCache.set(doc.id.toString(), doc)
         }

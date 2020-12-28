@@ -32,7 +32,7 @@ const CERAMIC_HOST = 'http://localhost:7007'
 export const DEFAULT_CLIENT_CONFIG: CeramicClientConfig = {
   docSyncEnabled: false,
   docSyncInterval: 5000,
-  docBaseCacheLimit: 100,
+  docBaseCacheLimit: 500,
 }
 
 /**
