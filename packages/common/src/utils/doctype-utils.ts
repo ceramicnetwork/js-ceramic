@@ -5,9 +5,7 @@ import * as u8a from 'uint8arrays'
 import {
     AnchorRecord,
     CeramicRecord,
-    DocMetadata,
     IpfsApi,
-    RecordHeader,
     SignedRecord, SignedRecordContainer
 } from "../index"
 import { AnchorStatus, DocState, Doctype, LogEntry } from "../doctype"
