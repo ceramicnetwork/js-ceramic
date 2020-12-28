@@ -19,7 +19,7 @@ import { TileDoctypeHandler } from "@ceramicnetwork/doctype-tile"
 import { Caip10LinkDoctypeHandler } from "@ceramicnetwork/doctype-caip10-link"
 import DocID from '@ceramicnetwork/docid'
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
-import KeyDidResolver from '@ceramicnetwork/key-did-resolver'
+import KeyDidResolver from 'key-did-resolver'
 import { Resolver } from "did-resolver"
 
 const API_PATH = '/api/v0'
@@ -47,6 +47,13 @@ export interface CeramicClientConfig {
  */
 export default class CeramicClient implements CeramicApi {
   private readonly _apiUrl: string
+  /**
+   * _docmap stores handles to Documents that been handed out. This allows us
+   * to update the state within the Document object when we learn about changes
+   * to the document. This means that client code with Document references
+   * always have access to the most recent known-about version, without needing
+   * to explicitly re-load the document.
+   */
   private readonly _docmap: Record<string, Document>
   private _supportedChains: Array<string>
 
@@ -125,6 +132,9 @@ export default class CeramicClient implements CeramicApi {
     const docIdStr = doc.id.toString()
     if (!this._docmap[docIdStr]) {
       this._docmap[docIdStr] = doc
+    } else if (DoctypeUtils.statesEqual(doc.state, this._docmap[docIdStr].state)) {
+      this._docmap[docIdStr].state = doc.state
+      this._docmap[docIdStr].emit('change')
     }
     this._docmap[docIdStr].doctypeHandler = this.findDoctypeHandler(this._docmap[docIdStr].state.doctype)
     return this._docmap[docIdStr] as unknown as T
@@ -135,6 +145,8 @@ export default class CeramicClient implements CeramicApi {
     const docIdStr = docId.toString()
     if (!this._docmap[docIdStr]) {
       this._docmap[docIdStr] = await Document.load(docId, this._apiUrl, this.context, this._config)
+    } else {
+      await this._docmap[docIdStr]._syncState()
     }
     this._docmap[docIdStr].doctypeHandler = this.findDoctypeHandler(this._docmap[docIdStr].state.doctype)
     return this._docmap[docIdStr] as unknown as T
