@@ -50,7 +50,7 @@ $ npm test
 ```
 
 ### Creating a release
-There are two types of releases that can be made, prereleases and regular releases.
+There are two types of releases that can be made, prereleases and regular releases. Before creating any releases, make sure you have an npm account (you can sign up at https://www.npmjs.com/), have signed into that account on the command line with `npm adduser`, and that the account has been added to the @ceramicnetwork org on npm.
 
 #### Prerelease
 ```
