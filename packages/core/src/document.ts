@@ -612,9 +612,6 @@ class Document extends EventEmitter {
           return
         }
         case 'COMPLETED': {
-          const state = this._doctype.state
-          state.anchorStatus = AnchorStatus.ANCHORED
-          this._doctype.state = state
           await this._handleTip(asr.anchorRecord)
           await this._updateStateIfPinned()
           await this._publishTip()
