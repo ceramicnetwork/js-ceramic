@@ -54,7 +54,6 @@ export interface AnchorProof {
 export interface AnchorRecord {
     id: CID,
     prev: CID,
-    refs?: Array<CID>
     proof: CID,
     path: string,
 }
