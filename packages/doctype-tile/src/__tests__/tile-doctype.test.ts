@@ -5,7 +5,7 @@ import dagCBOR from "ipld-dag-cbor"
 import { DID } from 'dids'
 import { Resolver } from "did-resolver"
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
-import KeyDidResolver from '@ceramicnetwork/key-did-resolver'
+import KeyDidResolver from 'key-did-resolver'
 import { TileDoctypeHandler } from '../tile-doctype-handler'
 
 import { TileDoctype } from "../tile-doctype"

@@ -1,7 +1,7 @@
 import Dispatcher from './dispatcher'
 import Document from './document'
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
-import KeyDidResolver from '@ceramicnetwork/key-did-resolver'
+import KeyDidResolver from 'key-did-resolver'
 import DocID from '@ceramicnetwork/docid'
 import {
   Doctype,

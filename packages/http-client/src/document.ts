@@ -26,22 +26,26 @@ class Document extends Doctype {
   }
 
   /**
+   * Sync document state
+   * @private
+   */
+  async _syncState() {
+    const { state } = await fetchJson(this._apiUrl + '/documents/' + this.id.toString())
+
+    if (JSON.stringify(DoctypeUtils.serializeState(this.state)) !== JSON.stringify(state)) {
+      this.state = DoctypeUtils.deserializeState(state)
+      this.emit('change')
+    }
+  }
+
+  /**
    * Sync document states periodically
    * @private
    */
   async _syncPeriodically() {
-    const _syncState = async () => {
-      const { state } = await fetchJson(this._apiUrl + '/documents/' + this.id.toString())
-
-      if (JSON.stringify(DoctypeUtils.serializeState(this.state)) !== JSON.stringify(state)) {
-        this.state = DoctypeUtils.deserializeState(state)
-        this.emit('change')
-      }
-    }
-
     while (this._syncEnabled) {
       try {
-        await _syncState()
+        await this._syncState()
       } catch (e) {
         // failed to sync state
       }
