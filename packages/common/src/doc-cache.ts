@@ -47,4 +47,21 @@ export class DocCache {
     has(docId: DocID): boolean {
         return this.get(docId) != null
     }
+
+    /**
+     * Applies function to all entries
+     * @param applyFn - Function to apply
+     */
+    applyToAll(applyFn: (d: DocStateHolder) => void): void {
+        this._baseCache.forEach((d) => applyFn(d))
+        this._commitCache.forEach((d) => applyFn(d))
+    }
+
+    /**
+     * Clears cache
+     */
+    clear(): void {
+        this._baseCache.clear();
+        this._commitCache.clear();
+    }
 }

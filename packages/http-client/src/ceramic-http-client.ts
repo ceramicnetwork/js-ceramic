@@ -133,7 +133,7 @@ export default class CeramicClient implements CeramicApi {
   async createDocumentFromGenesis<T extends Doctype>(doctype: string, genesis: any, opts?: DocOpts): Promise<T> {
     const doc = await Document.createFromGenesis(this._apiUrl, doctype, genesis, this.context, opts, this._config)
 
-    let docFromCache = this._docCache.get(doc.id)
+    let docFromCache = this._docCache.get(doc.id) as Document
     if (docFromCache == null) {
       this._docCache.set(doc)
       docFromCache = doc
@@ -149,7 +149,7 @@ export default class CeramicClient implements CeramicApi {
   async loadDocument<T extends Doctype>(docId: DocID | string): Promise<T> {
     docId = typeDocID(docId)
 
-    let docFromCache: Document = this._docCache.get(docId)
+    let docFromCache = this._docCache.get(docId) as Document
     if (docFromCache == null) {
       docFromCache = await Document.load(docId, this._apiUrl, this.context, this._config)
       this._docCache.set(docFromCache)
@@ -226,8 +226,7 @@ export default class CeramicClient implements CeramicApi {
   }
 
   async close (): Promise<void> {
-    for (const docId in this._docmap) {
-      this._docmap[docId].close();
-    }
+    this._docCache.applyToAll((d: Document) => d.close())
+    this._docCache.clear()
   }
 }
