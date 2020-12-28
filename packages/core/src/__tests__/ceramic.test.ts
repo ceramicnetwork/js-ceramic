@@ -10,8 +10,7 @@ import dagJose from 'dag-jose'
 import basicsImport from 'multiformats/cjs/src/basics-import.js'
 import legacy from 'multiformats/cjs/src/legacy.js'
 import * as u8a from 'uint8arrays'
-import DocID from "@ceramicnetwork/docid/lib"
-import DocumentCache from "../document-cache"
+import DocID from "@ceramicnetwork/docid"
 
 jest.mock('../store/level-state-store')
 
