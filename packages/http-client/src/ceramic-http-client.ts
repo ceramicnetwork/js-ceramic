@@ -47,6 +47,13 @@ export interface CeramicClientConfig {
  */
 export default class CeramicClient implements CeramicApi {
   private readonly _apiUrl: string
+  /**
+   * _docmap stores handles to Documents that been handed out. This allows us
+   * to update the state within the Document object when we learn about changes
+   * to the document. This means that client code with Document references
+   * always have access to the most recent known-about version, without needing
+   * to explicitly re-load the document.
+   */
   private readonly _docmap: Record<string, Document>
   private _supportedChains: Array<string>
 
@@ -125,10 +132,7 @@ export default class CeramicClient implements CeramicApi {
     const docIdStr = doc.id.toString()
     if (!this._docmap[docIdStr]) {
       this._docmap[docIdStr] = doc
-    } else if (
-      JSON.stringify(DoctypeUtils.serializeState(doc.state)) !==
-      JSON.stringify(DoctypeUtils.serializeState(this._docmap[docIdStr].state))
-    ) {
+    } else if (DoctypeUtils.statesEqual(doc.state, this._docmap[docIdStr].state)) {
       this._docmap[docIdStr].state = doc.state
       this._docmap[docIdStr].emit('change')
     }
