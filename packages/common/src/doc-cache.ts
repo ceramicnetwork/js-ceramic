@@ -14,7 +14,9 @@ export class DocCache {
     constructor(limit, cacheCommits = true) {
         this._cacheCommits = cacheCommits
         this._baseCache = new LRUMap(limit)
-        this._commitCache = new LRUMap(limit)
+
+        // use the same 'limit' if cacheCommits is enabled
+        this._commitCache = this._cacheCommits? new LRUMap(limit) : new LRUMap(0)
     }
 
     /**
