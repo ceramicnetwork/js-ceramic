@@ -320,8 +320,8 @@ describe('Ceramic integration', () => {
 
     expect(setDocToCacheSpy1).toBeCalledTimes(1)
     expect(getDocFromCacheSpy1).toBeCalledTimes(1)
-    expect(docCache1._baseCache.has(doctype1.id.baseID.toString())).toBeTruthy()
-    expect(docCache1._commitCache.has(doctype1.id.toString())).toBeFalsy()
+    expect(docCache1._baseDocCache.has(doctype1.id.baseID.toString())).toBeTruthy()
+    expect(docCache1._commitDocCache.has(doctype1.id.toString())).toBeFalsy()
 
     const prevCommitDocId1 = DocID.fromOther(doctype1.id, doctype1.state.log[1].cid.toString())
     const doctype2 = await ceramic2.loadDocument(prevCommitDocId1)
@@ -329,8 +329,8 @@ describe('Ceramic integration', () => {
 
     expect(getDocFromCacheSpy2).toBeCalledTimes(2)
     expect(setDocToCacheSpy2).toBeCalledTimes(2)
-    expect(docCache2._baseCache.has(prevCommitDocId1.baseID.toString())).toBeTruthy()
-    expect(docCache2._commitCache.has(prevCommitDocId1.toString())).toBeTruthy()
+    expect(docCache2._baseDocCache.has(prevCommitDocId1.baseID.toString())).toBeTruthy()
+    expect(docCache2._commitDocCache.has(prevCommitDocId1.toString())).toBeTruthy()
 
     await doctype1.change({ content: { test: 'abcde' }, metadata: { controllers: [controller] } })
 
@@ -346,17 +346,17 @@ describe('Ceramic integration', () => {
 
     expect(getDocFromCacheSpy2).toBeCalledTimes(2)
     expect(setDocToCacheSpy2).toBeCalledTimes(1)
-    expect(docCache2._baseCache.has(prevCommitDocId2.baseID.toString())).toBeTruthy()
-    expect(docCache2._commitCache.has(prevCommitDocId1.toString())).toBeFalsy()
-    expect(docCache2._commitCache.has(prevCommitDocId2.toString())).toBeTruthy()
+    expect(docCache2._baseDocCache.has(prevCommitDocId2.baseID.toString())).toBeTruthy()
+    expect(docCache2._commitDocCache.has(prevCommitDocId1.toString())).toBeFalsy()
+    expect(docCache2._commitDocCache.has(prevCommitDocId2.toString())).toBeTruthy()
 
     const prevDoc3 = await ceramic3.loadDocument(prevCommitDocId2)
     expect(prevDoc3).toBeDefined()
 
     expect(getDocFromCacheSpy3).toBeCalledTimes(2)
     expect(setDocToCacheSpy3).toBeCalledTimes(2)
-    expect(docCache3._baseCache.has(prevCommitDocId2.baseID.toString())).toBeTruthy()
-    expect(docCache3._commitCache.has(prevCommitDocId2.toString())).toBeFalsy()
+    expect(docCache3._baseDocCache.has(prevCommitDocId2.baseID.toString())).toBeTruthy()
+    expect(docCache3._commitDocCache.has(prevCommitDocId2.toString())).toBeFalsy()
 
     await ceramic1.close()
     await ceramic2.close()
