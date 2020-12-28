@@ -8,15 +8,15 @@ import { DocStateHolder } from "./doctype"
  */
 export class DocCache {
     private readonly _cacheCommits: boolean
-    private readonly _baseCache: LRUMap<string, DocStateHolder>
-    private readonly _commitCache: LRUMap<string, DocStateHolder>
+    private readonly _baseDocCache: LRUMap<string, DocStateHolder>
+    private readonly _commitDocCache: LRUMap<string, DocStateHolder>
 
     constructor(limit, cacheCommits = true) {
         this._cacheCommits = cacheCommits
-        this._baseCache = new LRUMap(limit)
+        this._baseDocCache = new LRUMap(limit)
 
         // use the same 'limit' if cacheCommits is enabled
-        this._commitCache = this._cacheCommits? new LRUMap(limit) : new LRUMap(0)
+        this._commitDocCache = this._cacheCommits? new LRUMap(limit) : new LRUMap(0)
     }
 
     /**
@@ -25,10 +25,9 @@ export class DocCache {
      */
     set(doc: DocStateHolder): void {
         if (doc.id.commit == null) {
-            this._baseCache.set(doc.id.baseID.toString(), doc)
-        }
-        if (this._cacheCommits && doc.id.commit) {
-            this._commitCache.set(doc.id.toString(), doc)
+            this._baseDocCache.set(doc.id.baseID.toString(), doc)
+        } else if (this._cacheCommits) {
+            this._commitDocCache.set(doc.id.toString(), doc)
         }
     }
 
@@ -37,11 +36,11 @@ export class DocCache {
      * @param docId - DocId instance
      */
     get(docId: DocID): DocStateHolder {
-        const doc = this._baseCache.get(docId.toString())
+        const doc = this._baseDocCache.get(docId.toString())
         if (doc) {
             return doc
         }
-        return this._cacheCommits? this._commitCache.get(docId.toString()): null
+        return this._cacheCommits? this._commitDocCache.get(docId.toString()): null
     }
 
     /**
@@ -57,15 +56,15 @@ export class DocCache {
      * @param applyFn - Function to apply
      */
     applyToAll(applyFn: (d: DocStateHolder) => void): void {
-        this._baseCache.forEach((d) => applyFn(d))
-        this._commitCache.forEach((d) => applyFn(d))
+        this._baseDocCache.forEach((d) => applyFn(d))
+        this._commitDocCache.forEach((d) => applyFn(d))
     }
 
     /**
      * Clears cache
      */
     clear(): void {
-        this._baseCache.clear();
-        this._commitCache.clear();
+        this._baseDocCache.clear();
+        this._commitDocCache.clear();
     }
 }
