@@ -10,6 +10,8 @@ import dagJose from 'dag-jose'
 import basicsImport from 'multiformats/cjs/src/basics-import.js'
 import legacy from 'multiformats/cjs/src/legacy.js'
 import * as u8a from 'uint8arrays'
+import DocID from "@ceramicnetwork/docid/lib"
+import DocumentCache from "../document-cache"
 
 jest.mock('../store/level-state-store')
 
@@ -39,10 +41,12 @@ async function delay(mills: number): Promise<void> {
   await new Promise(resolve => setTimeout(() => resolve(), mills))
 }
 
-const createCeramic = async (ipfs: IpfsApi, anchorOnRequest = false): Promise<Ceramic> => {
+const createCeramic = async (ipfs: IpfsApi, anchorOnRequest = false, documentCacheLimit = 100, cacheDocumentCommits = true): Promise<Ceramic> => {
   const ceramic = await Ceramic.create(ipfs, {
     stateStorePath: await tmp.tmpName(),
     anchorOnRequest,
+    docBaseCacheLimit: documentCacheLimit,
+    cacheDocCommits: cacheDocumentCommits,
     pubsubTopic: "/ceramic/inmemory/test" // necessary so Ceramic instances can talk to each other
   })
   const provider = new Ed25519Provider(seed)
@@ -52,6 +56,8 @@ const createCeramic = async (ipfs: IpfsApi, anchorOnRequest = false): Promise<Ce
 }
 
 const anchor = async (ceramic: Ceramic): Promise<void> => {
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
   await ceramic.context.anchorService.anchor()
 }
 
@@ -286,5 +292,75 @@ describe('Ceramic integration', () => {
 
     await ceramic1.close()
     await ceramic2.close()
+  })
+
+  it('can utilize documents cache', async () => {
+    const ceramic1 = await createCeramic(ipfs1, false, 2)
+    const ceramic2 = await createCeramic(ipfs2, false, 1)
+    const ceramic3 = await createCeramic(ipfs3, false, 1, false)
+
+    const controller = ceramic1.context.did.id
+
+    const docCache1 = ceramic1._docCache
+    const setDocToCacheSpy1 = jest.spyOn(docCache1, 'set');
+    const getDocFromCacheSpy1 = jest.spyOn(docCache1, 'get');
+
+    const docCache2 = ceramic2._docCache
+    const setDocToCacheSpy2 = jest.spyOn(docCache2, 'set');
+    const getDocFromCacheSpy2 = jest.spyOn(docCache2, 'get');
+
+    const docCache3 = ceramic3._docCache
+    const setDocToCacheSpy3 = jest.spyOn(docCache3, 'set');
+    const getDocFromCacheSpy3 = jest.spyOn(docCache3, 'get');
+
+    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { test: 456 }, metadata: { controllers: [controller], tags: ['3id'] } })
+    expect(doctype1).toBeDefined()
+
+    await anchor(ceramic1)
+    await syncDoc(doctype1)
+
+    expect(setDocToCacheSpy1).toBeCalledTimes(1)
+    expect(getDocFromCacheSpy1).toBeCalledTimes(1)
+    expect(docCache1._baseCache.has(doctype1.id.baseID.toString())).toBeTruthy()
+    expect(docCache1._commitCache.has(doctype1.id.toString())).toBeFalsy()
+
+    const prevCommitDocId1 = DocID.fromOther(doctype1.id, doctype1.state.log[1].cid.toString())
+    const doctype2 = await ceramic2.loadDocument(prevCommitDocId1)
+    expect(doctype2).toBeDefined()
+
+    expect(getDocFromCacheSpy2).toBeCalledTimes(2)
+    expect(setDocToCacheSpy2).toBeCalledTimes(2)
+    expect(docCache2._baseCache.has(prevCommitDocId1.baseID.toString())).toBeTruthy()
+    expect(docCache2._commitCache.has(prevCommitDocId1.toString())).toBeTruthy()
+
+    await doctype1.change({ content: { test: 'abcde' }, metadata: { controllers: [controller] } })
+
+    await anchor(ceramic1)
+    await syncDoc(doctype1)
+
+    setDocToCacheSpy2.mockClear()
+    getDocFromCacheSpy2.mockClear()
+
+    const prevCommitDocId2 = DocID.fromOther(doctype1.id, doctype1.state.log[3].cid.toString())
+    const prevDoc2 = await ceramic2.loadDocument(prevCommitDocId2)
+    expect(prevDoc2).toBeDefined()
+
+    expect(getDocFromCacheSpy2).toBeCalledTimes(2)
+    expect(setDocToCacheSpy2).toBeCalledTimes(1)
+    expect(docCache2._baseCache.has(prevCommitDocId2.baseID.toString())).toBeTruthy()
+    expect(docCache2._commitCache.has(prevCommitDocId1.toString())).toBeFalsy()
+    expect(docCache2._commitCache.has(prevCommitDocId2.toString())).toBeTruthy()
+
+    const prevDoc3 = await ceramic3.loadDocument(prevCommitDocId2)
+    expect(prevDoc3).toBeDefined()
+
+    expect(getDocFromCacheSpy3).toBeCalledTimes(2)
+    expect(setDocToCacheSpy3).toBeCalledTimes(2)
+    expect(docCache3._baseCache.has(prevCommitDocId2.baseID.toString())).toBeTruthy()
+    expect(docCache3._commitCache.has(prevCommitDocId2.toString())).toBeFalsy()
+
+    await ceramic1.close()
+    await ceramic2.close()
+    await ceramic3.close()
   })
 })

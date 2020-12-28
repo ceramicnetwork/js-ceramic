@@ -133,8 +133,6 @@ describe('Ceramic API', () => {
 
       await docOg.change({ content: { test: 'abcde' } })
 
-      const stateV2 = docOg.state
-
       // wait for anchor (new commit)
       await anchorDoc(ceramic, docOg)
 
@@ -223,7 +221,7 @@ describe('Ceramic API', () => {
       await ceramic.close()
     })
 
-    it('Must assign schema with specific commit', async () => {
+    it('must assign schema with specific commit', async () => {
       ceramic = await createCeramic()
 
       const controller = ceramic.context.did.id

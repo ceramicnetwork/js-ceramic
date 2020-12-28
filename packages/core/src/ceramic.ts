@@ -3,8 +3,6 @@ import Document from './document'
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import KeyDidResolver from '@ceramicnetwork/key-did-resolver'
 import DocID from '@ceramicnetwork/docid'
-import { AnchorService, CeramicApi, CeramicRecord, DIDProvider, IpfsApi, PinApi, MultiQuery } from "@ceramicnetwork/common"
-
 import {
   Doctype,
   DoctypeHandler,
@@ -15,6 +13,14 @@ import {
   LoggerProvider,
   LoggerPlugin,
   LoggerPluginOptions,
+  AnchorService,
+  CeramicApi,
+  CeramicRecord,
+  DIDProvider,
+  IpfsApi,
+  PinApi,
+  MultiQuery,
+  PinningBackendStatic
 } from "@ceramicnetwork/common"
 import { Resolver } from "did-resolver"
 
@@ -25,12 +31,13 @@ import { PinStoreFactory } from "./store/pin-store-factory";
 import { PinStore } from "./store/pin-store";
 import { PathTrie, TrieNode, promiseTimeout } from './utils'
 
+import DocumentCache from "./document-cache"
 import EthereumAnchorService from "./anchor/ethereum/ethereum-anchor-service"
 import InMemoryAnchorService from "./anchor/memory/in-memory-anchor-service"
-import { PinningBackendStatic } from "@ceramicnetwork/common"
-
 
 import { randomUint32 } from '@stablelib/random'
+
+const DEFAULT_BASE_DOC_CACHE_LIMIT = 100; // number of base docs stored in the cache
 
 /**
  * Ceramic configuration
@@ -58,6 +65,9 @@ export interface CeramicConfig {
 
   networkName?: string;
   pubsubTopic?: string;
+
+  docBaseCacheLimit?: number;
+  cacheDocCommits?: boolean; // adds 'docBaseCacheLimit' additional cache entries if commits can be cached as well
 
   [index: string]: any; // allow arbitrary properties
 }
@@ -92,19 +102,22 @@ const tryDocId = (id: string): DocID | null => {
  * `$ npm install --save @ceramicnetwork/core`
  */
 class Ceramic implements CeramicApi {
-  private readonly _docmap: Record<string, Document>
   private readonly _doctypeHandlers: Record<string, DoctypeHandler<Doctype>>
 
   public readonly pin: PinApi
   public readonly context: Context
+
+  private readonly _docCache: DocumentCache
 
   // TODO: Make the constructor private and force the use of Ceramic.create() everywhere
   constructor (public dispatcher: Dispatcher,
                public pinStore: PinStore,
                context: Context,
                private _networkOptions: CeramicNetworkOptions,
-               private _validateDocs: boolean = true) {
-    this._docmap = {}
+               private _validateDocs: boolean = true,
+               docCacheLimit = DEFAULT_BASE_DOC_CACHE_LIMIT,
+               cacheDocumentCommits = true) {
+    this._docCache = new DocumentCache(docCacheLimit, cacheDocumentCommits)
     this._doctypeHandlers = {
       'tile': new TileDoctypeHandler(),
       'caip10-link': new Caip10LinkDoctypeHandler()
@@ -258,7 +271,7 @@ class Ceramic implements CeramicApi {
     const pinStoreFactory = new PinStoreFactory(context, config)
     const pinStore = await pinStoreFactory.open()
 
-    const ceramic = new Ceramic(dispatcher, pinStore, context, networkOptions, config.validateDocs)
+    const ceramic = new Ceramic(dispatcher, pinStore, context, networkOptions, config.validateDocs, config.docBaseCacheLimit, config.cacheDocCommits)
     anchorService.ceramic = ceramic
 
     const keyDidResolver = KeyDidResolver.getResolver()
@@ -331,19 +344,7 @@ class Ceramic implements CeramicApi {
    * @private
    */
   private _getDocFromCache(docId: DocID): Document {
-    return this._docmap[docId.toString()]
-  }
-
-  /**
-   * Puts document into cache if not already there
-   * @param doc - document to cache
-   * @private
-   */
-  private _cacheDocIfNeeded(doc: Document) {
-    const docIdStr = doc.id.toString()
-    if (!this._docmap[docIdStr]) {
-      this._docmap[docIdStr] = doc
-    }
+    return this._docCache.get(docId)
   }
 
   /**
@@ -377,7 +378,7 @@ class Ceramic implements CeramicApi {
     }
 
     doc = await Document.create(docId, doctypeHandler, this.dispatcher, this.pinStore, this.context, opts, this._validateDocs);
-    this._docmap[doc.id.toString()] = doc
+    this._docCache.set(doc)
     return doc
   }
 
@@ -414,7 +415,7 @@ class Ceramic implements CeramicApi {
     }
 
     doc = await Document.create(docId, doctypeHandler, this.dispatcher, this.pinStore, this.context, opts, this._validateDocs);
-    this._cacheDocIfNeeded(doc)
+    this._docCache.set(doc)
     return doc
   }
 
@@ -431,8 +432,9 @@ class Ceramic implements CeramicApi {
 
   /**
    * Load all document type instance for given paths
-   * @param docId - Document ID (root)
+   * @param id - Document ID (root)
    * @param paths - relative paths to documents to load
+   * @param timeout - Timeout in milliseconds
    * @private
    */
   async _loadLinkedDocuments(id: DocID | string, paths: string[], timeout = 7000): Promise<Record<string, Doctype>> {
@@ -468,6 +470,7 @@ class Ceramic implements CeramicApi {
   /**
    * Load all document types instances for given multiqueries
    * @param queries - Array of MultiQueries
+   * @param timeout - Timeout in milliseconds
    */
   async multiQuery(queries: Array<MultiQuery>, timeout?: number):  Promise<Record<string, Doctype>> {
     const queryPromises = queries.map(query => {
@@ -524,7 +527,7 @@ class Ceramic implements CeramicApi {
         throw new Error(docId.typeName + " is not a valid doctype")
       }
       doc = await Document.load(docId.baseID, doctypeHandler, this.dispatcher, this.pinStore, this.context, opts)
-      this._cacheDocIfNeeded(doc)
+      this._docCache.set(doc)
     }
 
     if (!docId.commit) {
@@ -534,7 +537,7 @@ class Ceramic implements CeramicApi {
 
     // We requested a specific commit
     doc = await Document.loadAtCommit(docId, doc)
-    this._cacheDocIfNeeded(doc)
+    this._docCache.set(doc)
     return doc
   }
 
