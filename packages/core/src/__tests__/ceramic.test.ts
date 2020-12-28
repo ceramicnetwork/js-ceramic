@@ -40,11 +40,11 @@ async function delay(mills: number): Promise<void> {
   await new Promise(resolve => setTimeout(() => resolve(), mills))
 }
 
-const createCeramic = async (ipfs: IpfsApi, anchorOnRequest = false, documentCacheLimit = 100, cacheDocumentCommits = true): Promise<Ceramic> => {
+const createCeramic = async (ipfs: IpfsApi, anchorOnRequest = false, docCacheLimit = 100, cacheDocumentCommits = true): Promise<Ceramic> => {
   const ceramic = await Ceramic.create(ipfs, {
     stateStorePath: await tmp.tmpName(),
     anchorOnRequest,
-    docBaseCacheLimit: documentCacheLimit,
+    docCacheLimit,
     cacheDocCommits: cacheDocumentCommits,
     pubsubTopic: "/ceramic/inmemory/test" // necessary so Ceramic instances can talk to each other
   })

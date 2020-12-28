@@ -66,8 +66,8 @@ export interface CeramicConfig {
   networkName?: string;
   pubsubTopic?: string;
 
-  docBaseCacheLimit?: number;
-  cacheDocCommits?: boolean; // adds 'docBaseCacheLimit' additional cache entries if commits can be cached as well
+  docCacheLimit?: number;
+  cacheDocCommits?: boolean; // adds 'docCacheLimit' additional cache entries if commits can be cached as well
 
   [index: string]: any; // allow arbitrary properties
 }
@@ -271,7 +271,7 @@ class Ceramic implements CeramicApi {
     const pinStoreFactory = new PinStoreFactory(context, config)
     const pinStore = await pinStoreFactory.open()
 
-    const ceramic = new Ceramic(dispatcher, pinStore, context, networkOptions, config.validateDocs, config.docBaseCacheLimit, config.cacheDocCommits)
+    const ceramic = new Ceramic(dispatcher, pinStore, context, networkOptions, config.validateDocs, config.docCacheLimit, config.cacheDocCommits)
     anchorService.ceramic = ceramic
 
     const keyDidResolver = KeyDidResolver.getResolver()

@@ -32,7 +32,7 @@ const CERAMIC_HOST = 'http://localhost:7007'
 export const DEFAULT_CLIENT_CONFIG: CeramicClientConfig = {
   docSyncEnabled: false,
   docSyncInterval: 5000,
-  docBaseCacheLimit: 500,
+  docCacheLimit: 500,
 }
 
 /**
@@ -42,7 +42,7 @@ export interface CeramicClientConfig {
   didResolver?: Resolver
   docSyncEnabled?: boolean
   docSyncInterval?: number
-  docBaseCacheLimit?: number;
+  docCacheLimit?: number;
 }
 
 /**
@@ -70,7 +70,7 @@ export default class CeramicClient implements CeramicApi {
     this._config = Object.assign(DEFAULT_CLIENT_CONFIG, config ? config : {})
 
     this._apiUrl = combineURLs(apiHost, API_PATH)
-    this._docCache = new DocCache(config.docBaseCacheLimit, true)
+    this._docCache = new DocCache(config.docCacheLimit, true)
 
     this.context = { api: this }
     this.pin = this._initPinApi()
