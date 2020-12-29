@@ -70,13 +70,6 @@ class CeramicDaemon {
     this.registerAPIPaths(app, opts.gateway)
 
     if (this.debug) {
-      app.use((err: Error, req: Request, res: Response, next: NextFunction): void => {
-        const requestStart = Date.now()
-        const httpLog = this._buildHttpLog(requestStart, req, res)
-        const logString = JSON.stringify(httpLog)
-        this.logger.error(logString)
-        next(err)
-      })
       app.use((req: Request, res: Response, next: NextFunction): void => {
         const requestStart = Date.now()
 
@@ -103,7 +96,10 @@ class CeramicDaemon {
     }
 
     app.use((err: Error, req: Request, res: Response, next: NextFunction): void => {
-      res.json({ error: err.message })
+      const requestStart = Date.now()
+      const httpLog = this._buildHttpLog(requestStart, req, res)
+      const logString = JSON.stringify(httpLog)
+      this.logger.error(logString)
       next(err)
     })
 
