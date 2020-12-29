@@ -219,7 +219,6 @@ export class LogToFiles {
     private static _isExpired (fileStats: fs.Stats): boolean {
         const { birthtime } = fileStats
         if (birthtime.getTime() == 0) {
-            console.warn('WARNING: Unable to retrieve file birthtime')
             return false // Inconclusive
         }
         const minutesSinceBirth = (Date.now() - birthtime.getTime()) / (1000 * 60)
