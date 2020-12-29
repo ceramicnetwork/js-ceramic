@@ -9,7 +9,6 @@ import {
     LoggerProvider,
     LoggerPluginOptions
 } from "@ceramicnetwork/common"
-import DocID from '@ceramicnetwork/docid'
 import * as logfmt from 'logfmt'
 const flatten = require('flat')
 
