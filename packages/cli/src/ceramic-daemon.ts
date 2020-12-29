@@ -130,7 +130,7 @@ class CeramicDaemon {
     if (opts.anchorServiceUrl) {
       ceramicConfig.ethereumRpcUrl = opts.ethereumRpcUrl
       ceramicConfig.anchorServiceUrl = opts.anchorServiceUrl
-    } else if (ceramicConfig.networkName === "testnet-clay") {
+    } else if (ceramicConfig.networkName === "testnet-clay" || ceramicConfig.networkName === "dev-unstable") {
       ceramicConfig.anchorServiceUrl = DEFAULT_ANCHOR_SERVICE_URL
     }
 
