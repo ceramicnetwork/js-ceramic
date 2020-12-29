@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.17.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@0.17.1...@ceramicnetwork/core@0.17.2) (2020-12-29)
+
+
+### Bug Fixes
+
+* **core:** Don't update document state before applying anchor record ([#714](https://github.com/ceramicnetwork/js-ceramic/issues/714)) ([294ed7c](https://github.com/ceramicnetwork/js-ceramic/commit/294ed7c1d065d2514d59f8f6116d17204ef64572))
+* **http-client:** reload cached documents ([#719](https://github.com/ceramicnetwork/js-ceramic/issues/719)) ([6bc7dbf](https://github.com/ceramicnetwork/js-ceramic/commit/6bc7dbff31eaccfdbcb960effd850f069eb0d538))
+
+
+
+
+
 ## [0.17.1](/compare/@ceramicnetwork/core@0.17.0...@ceramicnetwork/core@0.17.1) (2020-12-23)
 
 

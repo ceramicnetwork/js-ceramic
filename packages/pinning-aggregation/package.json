@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/pinning-aggregation",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "Aggregated pinning",
   "keywords": [
     "ceramic",
@@ -27,9 +27,9 @@
     "lib": "lib"
   },
   "dependencies": {
-    "@ceramicnetwork/common": "^0.15.1",
-    "@ceramicnetwork/pinning-ipfs-backend": "^0.1.6",
-    "@ceramicnetwork/pinning-powergate-backend": "^0.1.6",
+    "@ceramicnetwork/common": "^0.15.2",
+    "@ceramicnetwork/pinning-ipfs-backend": "^0.1.7",
+    "@ceramicnetwork/pinning-powergate-backend": "^0.1.7",
     "@stablelib/base64": "^1.0.0",
     "@stablelib/sha256": "^1.0.0",
     "cids": "1.0.2"

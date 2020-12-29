@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.18.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@0.18.0...@ceramicnetwork/cli@0.18.1) (2020-12-29)
+
+
+### Bug Fixes
+
+* surface express errors properly ([#706](https://github.com/ceramicnetwork/js-ceramic/issues/706)) ([b4d46d1](https://github.com/ceramicnetwork/js-ceramic/commit/b4d46d17053f7cdbc0618c391419fb83013e48f4))
+* **cli:** Set default anchor service URL when on dev-unstable network ([#724](https://github.com/ceramicnetwork/js-ceramic/issues/724)) ([c5091cb](https://github.com/ceramicnetwork/js-ceramic/commit/c5091cb88084b1b118afa4b50eb82627b7d0d3fb))
+* **core:** Don't update document state before applying anchor record ([#714](https://github.com/ceramicnetwork/js-ceramic/issues/714)) ([294ed7c](https://github.com/ceramicnetwork/js-ceramic/commit/294ed7c1d065d2514d59f8f6116d17204ef64572))
+
+
+
+
+
 # [0.18.0](/compare/@ceramicnetwork/cli@0.17.0...@ceramicnetwork/cli@0.18.0) (2020-12-23)
 
 

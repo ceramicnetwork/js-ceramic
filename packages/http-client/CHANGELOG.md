@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.8.10](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/http-client@0.8.9...@ceramicnetwork/http-client@0.8.10) (2020-12-29)
+
+
+### Bug Fixes
+
+* **http-client:** reload cached documents ([#719](https://github.com/ceramicnetwork/js-ceramic/issues/719)) ([6bc7dbf](https://github.com/ceramicnetwork/js-ceramic/commit/6bc7dbff31eaccfdbcb960effd850f069eb0d538))
+
+
+
+
+
 ## [0.8.9](/compare/@ceramicnetwork/http-client@0.8.8...@ceramicnetwork/http-client@0.8.9) (2020-12-23)
 
 
