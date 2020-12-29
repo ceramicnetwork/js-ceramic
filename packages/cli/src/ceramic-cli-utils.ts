@@ -58,6 +58,7 @@ export class CeramicCliUtils {
      * @param network - The Ceramic network to connect to
      * @param maxHealthyCpu - Max fraction of total CPU usage considered healthy. Default is 0.7
      * @param maxHealthyMemory - Max fraction of total memory usage considered healthy. Default is 0.7
+     * @param corsAllowedOrigins - Origins for Access-Control-Allow-Origin header. Default is all
      */
     static async createDaemon(
         ipfsApi: string,
@@ -73,7 +74,8 @@ export class CeramicCliUtils {
         logPath: string,
         network: string,
         maxHealthyCpu = 0.7,
-        maxHealthyMemory = 0.7
+        maxHealthyMemory = 0.7,
+        corsAllowedOrigins: any[] = ["*"]
     ): Promise<CeramicDaemon> {
         if (stateStorePath == null) {
             stateStorePath = DEFAULT_PINNING_STORE_PATH
@@ -92,7 +94,8 @@ export class CeramicCliUtils {
             logPath,
             network,
             maxHealthyCpu,
-            maxHealthyMemory
+            maxHealthyMemory,
+            corsAllowedOrigins
         }
 
         multiformats.multicodec.add(dagJose)
