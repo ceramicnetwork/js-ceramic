@@ -113,15 +113,17 @@ export class LogToFiles {
         blockedFiles: BlockedFiles,
         basePath: string,
         filePrefix: string,
-        jsonMessage: any
+        jsonMessage: {doc: any, [key: string]: any}
     ): Promise<void> {
         if (!jsonMessage) {
             return
         }
         const docId = jsonMessage.doc
-        const filePath = `${basePath}${filePrefix}-docids.log`
-        const result = await LogToFiles._writeStream(blockedFiles, filePath, docId, 'w')
-        if (result.blocked) await LogToFiles._writeBlockedWarning(blockedFiles, basePath, filePath)
+        if (docId) {
+            const filePath = `${basePath}${filePrefix}-docids.log`
+            const result = await LogToFiles._writeStream(blockedFiles, filePath, docId, 'w')
+            if (result.blocked) await LogToFiles._writeBlockedWarning(blockedFiles, basePath, filePath)
+        }
     }
 
     /**
