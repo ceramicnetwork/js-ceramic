@@ -151,15 +151,15 @@ export default class CeramicClient implements CeramicApi {
   async loadDocument<T extends Doctype>(docId: DocID | string): Promise<T> {
     docId = typeDocID(docId)
 
-    let docFromCache = this._docCache.get(docId) as Document
-    if (docFromCache == null) {
-      docFromCache = await Document.load(docId, this._apiUrl, this.context, this._config)
-      this._docCache.put(docFromCache)
+    let doc = this._docCache.get(docId) as Document
+    if (doc == null) {
+      doc = await Document.load(docId, this._apiUrl, this.context, this._config)
+      this._docCache.put(doc)
     } else {
-      await docFromCache._syncState()
+      await doc._syncState()
     }
-    docFromCache.doctypeHandler = this.findDoctypeHandler(docFromCache.state.doctype)
-    return docFromCache as unknown as T
+    doc.doctypeHandler = this.findDoctypeHandler(doc.state.doctype)
+    return doc as unknown as T
   }
 
   async multiQuery(queries: Array<MultiQuery>): Promise<Record<string, Doctype>> {
