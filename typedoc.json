@@ -2,7 +2,7 @@
   "mode": "modules",
   "out": "./docs",
   "exclude": ["**/node_modules/**", "**/*.test.ts", "**/__mocks__/*.ts"],
-  "name": "Ceramic",
+  "name": "Ceramic Typescript Implementation",
   "excludePrivate": true,
   "excludeExternals": true,
   "disableOutputCheck": true,
@@ -16,24 +16,18 @@
   "pages": {
     "reflectionNavigationTitle": "Package APIs",
     "groups": [{
-      "title": "Ceramic Network",
+      "title": "Ceramic Typescript Implementation",
       "pages": [{
         "title": "Architecture",
-        "source": "./docs-src/network/architecture/overview.md",
+        "source": "./docs-src/architecture/overview.md",
         "children": [{
           "title": "Pinning",
-          "source": "./docs-src/network/architecture/pinning.md"
+          "source": "./docs-src/architecture/pinning.md"
         }]
       }, {
-        "title": "Terminology",
-        "source": "./docs-src/network/terminology.md"
-      }, {
-        "title": "Ecosystem",
-        "source": "./docs-src/network/ecosystem.md"
+        "title": "HTTP API",
+        "source": "./docs-src/http-api.md"
       }]
-    }, {
-      "title": "Getting Started",
-      "pages": []
     }, {
       "title": "Guides",
       "pages": [{
