@@ -555,29 +555,29 @@ class Document extends EventEmitter {
    * @private
    */
   async _verifyAnchorRecord (record: AnchorRecord): Promise<AnchorProof> {
-    const proofRecord =  await this.dispatcher.retrieveRecord(record.proof)
+    const proofCID = record.proof
+    const proof =  await this.dispatcher.retrieveFromIPFS(proofCID)
 
-    let prevRootPathRecord
+    let prevCIDViaMerkleTree
     try {
       // optimize verification by using ipfs.dag.tree for fetching the nested CID
       if (record.path.length === 0) {
-        prevRootPathRecord = proofRecord.root
+        prevCIDViaMerkleTree = proof.root
       } else {
-        const subPath: string = '/root/' + record.path.substr(0, record.path.lastIndexOf('/'))
+        const merkleTreeParentRecordPath = '/root/' + record.path.substr(0, record.path.lastIndexOf('/'))
         const last: string = record.path.substr(record.path.lastIndexOf('/') + 1)
 
-        prevRootPathRecord = await this.dispatcher.retrieveRecord(record.proof.toString() + subPath)
-        prevRootPathRecord = prevRootPathRecord[last]
+        const merkleTreeParentRecord = await this.dispatcher.retrieveFromIPFS(proofCID, merkleTreeParentRecordPath)
+        prevCIDViaMerkleTree = merkleTreeParentRecord[last]
       }
     } catch (e) {
       throw new Error(`The anchor record couldn't be verified. Reason ${e.message}`)
     }
 
-    if (record.prev.toString() !== prevRootPathRecord.toString()) {
+    if (record.prev.toString() !== prevCIDViaMerkleTree.toString()) {
       throw new Error(`The anchor record proof ${record.proof.toString()} with path ${record.path} points to invalid 'prev' record`)
     }
 
-    const proof: AnchorProof = await this.dispatcher.retrieveRecord(record.proof)
     await this._context.anchorService.validateChainInclusion(proof)
     return proof
   }

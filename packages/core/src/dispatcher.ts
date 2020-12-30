@@ -137,13 +137,25 @@ export default class Dispatcher extends EventEmitter {
   }
 
   /**
-   * Retrieves one Ceramic record by CID or path.
+   * Retrieves one Ceramic record by CID, and enforces that the record doesn't exceed the maximum
+   * record size.  To load an IPLD path or a CID from IPFS that isn't a Ceramic record,
+   * use `retrieveFromIPFS`.
    *
    * @param cid - Record CID
    */
   async retrieveRecord (cid: CID | string): Promise<any> {
     const record = await this._ipfs.dag.get(cid, { timeout: IPFS_GET_TIMEOUT })
     await this._restrictRecordSize(cid)
+    return cloneDeep(record.value)
+  }
+
+  /**
+   * Retrieves an object from the IPFS dag
+   * @param cid
+   * @param path - optional IPLD path to load, starting from the object represented by `cid`
+   */
+  async retrieveFromIPFS (cid: CID | string, path?: string): Promise<any> {
+    const record = await this._ipfs.dag.get(cid, { timeout: IPFS_GET_TIMEOUT, path })
     return cloneDeep(record.value)
   }
 
