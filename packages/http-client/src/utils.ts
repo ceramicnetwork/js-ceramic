@@ -14,7 +14,9 @@ export async function fetchJson(url: string, opts: FetchOpts = {}): Promise<any>
         })
     }
     const res = await (await fetch(url, opts)).json()
-    if (res.error) throw new Error(res.error)
+    if (res.error) {
+        throw new Error(res.error)
+    }
     return res
 }
 
