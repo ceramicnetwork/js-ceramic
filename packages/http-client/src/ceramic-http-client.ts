@@ -51,7 +51,7 @@ export interface CeramicClientConfig {
 export default class CeramicClient implements CeramicApi {
   private readonly _apiUrl: string
   /**
-   * _docmap stores handles to Documents that been handed out. This allows us
+   * _docCache stores handles to Documents that been handed out. This allows us
    * to update the state within the Document object when we learn about changes
    * to the document. This means that client code with Document references
    * always have access to the most recent known-about version, without needing
@@ -95,7 +95,7 @@ export default class CeramicClient implements CeramicApi {
     return {
       add: async (docId: DocID): Promise<void> => {
         const doc = await fetchJson(this._apiUrl + '/pins' + `/${docId.toString()}`, { method: 'post' })
-        this._docCache.set(doc, true)
+        this._docCache.put(doc, true)
       },
       rm: async (docId: DocID): Promise<void> => {
         await fetchJson(this._apiUrl + '/pins' + `/${docId.toString()}`, { method: 'delete' })
@@ -137,7 +137,7 @@ export default class CeramicClient implements CeramicApi {
 
     let docFromCache = this._docCache.get(doc.id) as Document
     if (docFromCache == null) {
-      this._docCache.set(doc)
+      this._docCache.put(doc)
       docFromCache = doc
     } else if (!DoctypeUtils.statesEqual(doc.state, docFromCache.state)) {
       docFromCache.state = doc.state
@@ -154,7 +154,7 @@ export default class CeramicClient implements CeramicApi {
     let docFromCache = this._docCache.get(docId) as Document
     if (docFromCache == null) {
       docFromCache = await Document.load(docId, this._apiUrl, this.context, this._config)
-      this._docCache.set(docFromCache)
+      this._docCache.put(docFromCache)
     } else {
       await docFromCache._syncState()
     }

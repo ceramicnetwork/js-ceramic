@@ -301,15 +301,15 @@ describe('Ceramic integration', () => {
     const controller = ceramic1.context.did.id
 
     const docCache1 = ceramic1._docCache
-    const setDocToCacheSpy1 = jest.spyOn(docCache1, 'set');
+    const putDocToCacheSpy1 = jest.spyOn(docCache1, 'put');
     const getDocFromCacheSpy1 = jest.spyOn(docCache1, 'get');
 
     const docCache2 = ceramic2._docCache
-    const setDocToCacheSpy2 = jest.spyOn(docCache2, 'set');
+    const putDocToCacheSpy2 = jest.spyOn(docCache2, 'put');
     const getDocFromCacheSpy2 = jest.spyOn(docCache2, 'get');
 
     const docCache3 = ceramic3._docCache
-    const setDocToCacheSpy3 = jest.spyOn(docCache3, 'set');
+    const putDocToCacheSpy3 = jest.spyOn(docCache3, 'put');
     const getDocFromCacheSpy3 = jest.spyOn(docCache3, 'get');
 
     const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { test: 456 }, metadata: { controllers: [controller], tags: ['3id'] } })
@@ -318,27 +318,27 @@ describe('Ceramic integration', () => {
     await anchor(ceramic1)
     await syncDoc(doctype1)
 
-    expect(setDocToCacheSpy1).toBeCalledTimes(1)
+    expect(putDocToCacheSpy1).toBeCalledTimes(1)
     expect(getDocFromCacheSpy1).toBeCalledTimes(1)
     expect(docCache1._baseDocCache.has(doctype1.id.baseID.toString())).toBeTruthy()
     expect(docCache1._commitDocCache.has(doctype1.id.toString())).toBeFalsy()
 
-    setDocToCacheSpy1.mockClear()
+    putDocToCacheSpy1.mockClear()
     getDocFromCacheSpy1.mockClear()
 
     await ceramic1.pin.add(doctype1.id)
 
-    expect(setDocToCacheSpy1).toBeCalledTimes(1)
+    expect(putDocToCacheSpy1).toBeCalledTimes(1)
     expect(getDocFromCacheSpy1).toBeCalledTimes(1)
     expect(docCache1._pinnedDocCache[doctype1.id.baseID.toString()]).toBeDefined()
     expect(docCache1._baseDocCache.has(doctype1.id.baseID.toString())).toBeFalsy()
     expect(docCache1._commitDocCache.has(doctype1.id.toString())).toBeFalsy()
 
-    setDocToCacheSpy1.mockClear()
+    putDocToCacheSpy1.mockClear()
     getDocFromCacheSpy1.mockClear()
 
     await ceramic1.pin.rm(doctype1.id)
-    expect(setDocToCacheSpy1).toBeCalledTimes(1)
+    expect(putDocToCacheSpy1).toBeCalledTimes(1)
     expect(getDocFromCacheSpy1).toBeCalledTimes(0)
     expect(docCache1._pinnedDocCache[doctype1.id.baseID.toString()]).toBeUndefined()
     expect(docCache1._baseDocCache.has(doctype1.id.baseID.toString())).toBeTruthy()
@@ -349,7 +349,7 @@ describe('Ceramic integration', () => {
     expect(doctype2).toBeDefined()
 
     expect(getDocFromCacheSpy2).toBeCalledTimes(2)
-    expect(setDocToCacheSpy2).toBeCalledTimes(2)
+    expect(putDocToCacheSpy2).toBeCalledTimes(2)
     expect(docCache2._baseDocCache.has(prevCommitDocId1.baseID.toString())).toBeTruthy()
     expect(docCache2._commitDocCache.has(prevCommitDocId1.toString())).toBeTruthy()
 
@@ -358,7 +358,7 @@ describe('Ceramic integration', () => {
     await anchor(ceramic1)
     await syncDoc(doctype1)
 
-    setDocToCacheSpy2.mockClear()
+    putDocToCacheSpy2.mockClear()
     getDocFromCacheSpy2.mockClear()
 
     const prevCommitDocId2 = DocID.fromOther(doctype1.id, doctype1.state.log[3].cid.toString())
@@ -366,7 +366,7 @@ describe('Ceramic integration', () => {
     expect(prevDoc2).toBeDefined()
 
     expect(getDocFromCacheSpy2).toBeCalledTimes(2)
-    expect(setDocToCacheSpy2).toBeCalledTimes(1)
+    expect(putDocToCacheSpy2).toBeCalledTimes(1)
     expect(docCache2._baseDocCache.has(prevCommitDocId2.baseID.toString())).toBeTruthy()
     expect(docCache2._commitDocCache.has(prevCommitDocId1.toString())).toBeFalsy()
     expect(docCache2._commitDocCache.has(prevCommitDocId2.toString())).toBeTruthy()
@@ -375,7 +375,7 @@ describe('Ceramic integration', () => {
     expect(prevDoc3).toBeDefined()
 
     expect(getDocFromCacheSpy3).toBeCalledTimes(2)
-    expect(setDocToCacheSpy3).toBeCalledTimes(2)
+    expect(putDocToCacheSpy3).toBeCalledTimes(2)
     expect(docCache3._baseDocCache.has(prevCommitDocId2.baseID.toString())).toBeTruthy()
     expect(docCache3._commitDocCache.has(prevCommitDocId2.toString())).toBeFalsy()
 

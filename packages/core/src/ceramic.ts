@@ -151,7 +151,7 @@ class Ceramic implements CeramicApi {
       add: async (docId: DocID): Promise<void> => {
         const document = await this._loadDoc(docId)
         await this.pinStore.add(document.doctype)
-        this._docCache.set(document, true)
+        this._docCache.put(document, true)
       },
       rm: async (docId: DocID): Promise<void> => {
         await this.pinStore.rm(docId)
@@ -380,7 +380,7 @@ class Ceramic implements CeramicApi {
     }
 
     doc = await Document.create(docId, doctypeHandler, this.dispatcher, this.pinStore, this.context, opts, this._validateDocs);
-    this._docCache.set(doc)
+    this._docCache.put(doc)
     return doc
   }
 
@@ -417,7 +417,7 @@ class Ceramic implements CeramicApi {
     }
 
     doc = await Document.create(docId, doctypeHandler, this.dispatcher, this.pinStore, this.context, opts, this._validateDocs);
-    this._docCache.set(doc)
+    this._docCache.put(doc)
     return doc
   }
 
@@ -529,7 +529,7 @@ class Ceramic implements CeramicApi {
         throw new Error(docId.typeName + " is not a valid doctype")
       }
       doc = await Document.load(docId.baseID, doctypeHandler, this.dispatcher, this.pinStore, this.context, opts)
-      this._docCache.set(doc)
+      this._docCache.put(doc)
     }
 
     if (!docId.commit) {
@@ -539,7 +539,7 @@ class Ceramic implements CeramicApi {
 
     // We requested a specific commit
     doc = await Document.loadAtCommit(docId, doc)
-    this._docCache.set(doc)
+    this._docCache.put(doc)
     return doc
   }
 

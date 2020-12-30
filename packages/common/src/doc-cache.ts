@@ -23,11 +23,11 @@ export class DocCache {
     }
 
     /**
-     * Sets to cache
+     * Puts to cache
      * @param doc - DocStateHolder instance
      * @param isPinned - Is document pinned?
      */
-    set(doc: DocStateHolder, isPinned = false): void {
+    put(doc: DocStateHolder, isPinned = false): void {
         if (isPinned) {
             this._pinnedDocCache[doc.id.toString()] = doc;
             this._baseDocCache.delete(doc.id.baseID.toString())
@@ -72,7 +72,7 @@ export class DocCache {
         if (pinnedOnly) {
             const doc = this._pinnedDocCache[docId.baseID.toString()]
             delete this._pinnedDocCache[docId.baseID.toString()]
-            this.set(doc, false)
+            this.put(doc, false)
             return
         }
         this._baseDocCache.delete(docId.baseID.toString())
