@@ -152,41 +152,41 @@ describe('Ceramic Logger Plugins', () => {
         }) 
 
         describe('_writeDocid', () => {
-            it('should write the docId if one is present', async () => {
+            it('should write the docId if the doc key is present', async () => {
                 const filePath = basePath + 'today-docids.log'
-                const message = '/ceramic/kz123'
+                const message = {doc: 'kz123'}
                 await LogToFiles['_writeDocId'](blockedFiles, basePath, 'today', message)
-                expect(mockFs[filePath].message).toBe(message + '\n')
+                expect(mockFs[filePath].message).toBe(message.doc + '\n')
             })
-            it('should not write if no docId is present', async () => {
+            it('should not write the docId if the doc key is not present', async () => {
                 const filePath = basePath + 'today-docids.log'
-                const message = '/nope/kz123'
+                const message = {nope: 'kz123'}
                 await LogToFiles['_writeDocId'](blockedFiles, basePath, 'today', message)
                 expect(mockFs[filePath]).toBe(undefined)
             })
             it('should not write if the file is already being written to', async () => {
                 const filePath = basePath + 'today-docids.log'
-                const message1 = '/ceramic/1'
-                const message2 = '/ceramic/2'
+                const message1 = {doc: '1'}
+                const message2 = {doc: '2'}
                 LogToFiles['_writeBlockedWarning'] = jest.fn()
                 jest.useFakeTimers();
                 LogToFiles['_writeDocId'](blockedFiles, basePath, 'today', message1)
                 LogToFiles['_writeDocId'](blockedFiles, basePath, 'today', message2)
                 setTimeout(() => {
                     expect(LogToFiles['_writeBlockedWarning']).toHaveBeenCalledTimes(1)
-                    expect(mockFs[filePath].message).toBe(message1 + '\n')
+                    expect(mockFs[filePath].message).toBe(message1.doc + '\n')
                 }, 1500);
             })
             it('should overwrite the existing file when writing', async () => {
                 const filePath = basePath + 'today-docids.log'
-                const message1 = '/ceramic/1'
-                const message2 = '/ceramic/2'
+                const message1 = {doc: 1, something: '1', foo: /$/}
+                const message2 = {doc: 2, something: '2', foo: /$/}
                 LogToFiles['_writeBlockedWarning'] = jest.fn()
                 // jest.useFakeTimers();
                 await LogToFiles['_writeDocId'](blockedFiles, basePath, 'today', message1)
-                expect(mockFs[filePath].message).toBe(message1 + '\n')
+                expect(mockFs[filePath].message).toBe(message1.doc + '\n')
                 await LogToFiles['_writeDocId'](blockedFiles, basePath, 'today', message2)
-                expect(mockFs[filePath].message).toBe(message2 + '\n')
+                expect(mockFs[filePath].message).toBe(message2.doc + '\n')
             })
         })
     })
