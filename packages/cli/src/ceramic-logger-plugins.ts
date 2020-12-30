@@ -2,6 +2,9 @@ import fs from 'fs'
 import path from 'path'
 import util from 'util'
 
+import * as logfmt from 'logfmt'
+import flatten from 'flat'
+
 import {
     Logger,
     LoggerMethodFactory,
@@ -9,8 +12,6 @@ import {
     LoggerProvider,
     LoggerPluginOptions
 } from "@ceramicnetwork/common"
-import * as logfmt from 'logfmt'
-const flatten = require('flat')
 
 const fsPromises = fs.promises
 
