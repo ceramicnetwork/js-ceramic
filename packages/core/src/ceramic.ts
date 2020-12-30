@@ -151,9 +151,11 @@ class Ceramic implements CeramicApi {
       add: async (docId: DocID): Promise<void> => {
         const document = await this._loadDoc(docId)
         await this.pinStore.add(document.doctype)
+        this._docCache.set(document, true)
       },
       rm: async (docId: DocID): Promise<void> => {
         await this.pinStore.rm(docId)
+        this._docCache.del(docId, true)
       },
       ls: async (docId?: DocID): Promise<AsyncIterable<string>> => {
         const docIds = await this.pinStore.ls(docId ? docId.baseID : null)

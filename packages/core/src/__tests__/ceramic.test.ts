@@ -323,6 +323,27 @@ describe('Ceramic integration', () => {
     expect(docCache1._baseDocCache.has(doctype1.id.baseID.toString())).toBeTruthy()
     expect(docCache1._commitDocCache.has(doctype1.id.toString())).toBeFalsy()
 
+    setDocToCacheSpy1.mockClear()
+    getDocFromCacheSpy1.mockClear()
+
+    await ceramic1.pin.add(doctype1.id)
+
+    expect(setDocToCacheSpy1).toBeCalledTimes(1)
+    expect(getDocFromCacheSpy1).toBeCalledTimes(1)
+    expect(docCache1._pinnedDocCache[doctype1.id.baseID.toString()]).toBeDefined()
+    expect(docCache1._baseDocCache.has(doctype1.id.baseID.toString())).toBeFalsy()
+    expect(docCache1._commitDocCache.has(doctype1.id.toString())).toBeFalsy()
+
+    setDocToCacheSpy1.mockClear()
+    getDocFromCacheSpy1.mockClear()
+
+    await ceramic1.pin.rm(doctype1.id)
+    expect(setDocToCacheSpy1).toBeCalledTimes(1)
+    expect(getDocFromCacheSpy1).toBeCalledTimes(0)
+    expect(docCache1._pinnedDocCache[doctype1.id.baseID.toString()]).toBeUndefined()
+    expect(docCache1._baseDocCache.has(doctype1.id.baseID.toString())).toBeTruthy()
+    expect(docCache1._commitDocCache.has(doctype1.id.toString())).toBeFalsy()
+
     const prevCommitDocId1 = DocID.fromOther(doctype1.id, doctype1.state.log[1].cid.toString())
     const doctype2 = await ceramic2.loadDocument(prevCommitDocId1)
     expect(doctype2).toBeDefined()
