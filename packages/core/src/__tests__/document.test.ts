@@ -85,7 +85,8 @@ jest.mock('../dispatcher', () => {
         return recs[cid.toString()]
       }),
       retrieveFromIPFS: jest.fn((cid, path) => {
-        return recs[cid.toString() + (path ?? '')]
+        // TODO: this doesn't actually handle path traversal properly
+        return recs[cid.toString()]
       }),
     }
   }
