@@ -432,7 +432,7 @@ curl http://localhost:7007/api/v0/pins/k2t6wyfsu4pg2qvoorchoj23e8hf3eiis4w7bucll
 }
 ```
 
-## Check if a document is in the pin set
+## Check if a specific document is in the pin set
 This method is used to check if a particular document is in the pin set.
 
 ### Request
