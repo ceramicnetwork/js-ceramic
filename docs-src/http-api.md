@@ -291,7 +291,7 @@ curl http://localhost:7007/api/v0/records/kjzl6cwe1jw14ahmwunhk9yjwawac12tb52j1u
 ## Apply a record to a document
 *`⚠️ This method is not available if gateway mode is enabled.`*
 
-In order to modify a document we apply a record to its docment log. This record usually contains a signature over the *json-patch* of the document contents. The record also needs to contain pointers to the previous record and other metadata. You can read more about this in the [Ceramic Specification](https://github.com/ceramicnetwork/ceramic/blob/master/SPECIFICATION.md#document-records). Different document types may have different formats for their records. If you want to see an example implementation for how to construct a record you can have a look at the implementation of the [[TileDoctype]].
+In order to modify a document we apply a record to its docment log. This record usually contains a signature over a *json-patch* diff describing a modification to the document contents. The record also needs to contain pointers to the previous record and other metadata. You can read more about this in the [Ceramic Specification](https://github.com/ceramicnetwork/ceramic/blob/master/SPECIFICATION.md#document-records). Different document types may have different formats for their records. If you want to see an example implementation for how to construct a record you can have a look at the implementation of the [[TileDoctype]].
 
 ### Request
 `POST /api/v0/records`
