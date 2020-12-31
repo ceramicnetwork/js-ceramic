@@ -50,7 +50,7 @@ $ curl http://localhost:7007/api/v0/documents/kjzl6cwe1jw147r7878h32yazawcll6bxe
 ```
 
 ## Create a document from genesis record
-Create a new document, or load a document from it's genesis content (these are equivalent actions). The genesis content may be signed (a DagJWS for the `tile` doctype), or unsigned in some cases.
+Create a new document, or load a document from its genesis content. The genesis content may be signed (a DagJWS for the `tile` doctype), or unsigned in some cases.
 
 ### Request
 `POST /api/v0/documents`
