@@ -4,6 +4,7 @@ import Document from "../document"
 import { TileDoctype } from "@ceramicnetwork/doctype-tile"
 import DocID from "@ceramicnetwork/docid";
 
+const TOPIC = '/ceramic'
 const FAKE_CID = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
 const FAKE_CID2 = new CID('bafybeig6xv5nwphfmvcnektpnojts44jqcuam7bmye2pb54adnrtccjlsu')
 const FAKE_DOC_ID = "kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s"
@@ -12,6 +13,10 @@ const ipfs = {
   pubsub: {
     subscribe: jest.fn(),
     unsubscribe: jest.fn(),
+    ls: jest.fn(() => new Promise((resolve, reject) => {
+        resolve([TOPIC])
+        reject()
+    })),
     publish: jest.fn()
   },
   dag: {
@@ -23,7 +28,6 @@ const ipfs = {
   },
   id: (): any => ({ id: 'ipfsid' })
 }
-const TOPIC = '/ceramic'
 
 class TileDoctypeMock extends TileDoctype {
   get doctype() {

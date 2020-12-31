@@ -45,6 +45,8 @@ export default class Dispatcher extends EventEmitter {
 
   private logger: Logger
   private _isRunning = true
+  private _isSubscribed = false
+  private _resubscribeInterval: any
 
   constructor (public _ipfs: IpfsApi, public topic: string) {
     super()
@@ -58,8 +60,45 @@ export default class Dispatcher extends EventEmitter {
    */
   async init(): Promise<void> {
     this._peerId = this._peerId || (await this._ipfs.id()).id
-    await this._ipfs.pubsub.subscribe(this.topic, this.handleMessage.bind(this))
-    this._log({ peer: this._peerId, event: 'subscribed', topic: this.topic })
+    this._subscribe()
+    this._resubscribeOnDisconnect()
+  }
+
+  async _subscribe(): Promise<void> {
+    let alreadySubscribed = this._isSubscribed
+
+    try {
+      !alreadySubscribed && await this._ipfs.pubsub.subscribe(this.topic, this.handleMessage.bind(this))
+      this._isSubscribed = true
+    } catch (error) {
+      console.error(error.message)
+      console.error(`Pubsub subscribe failed for topic ${this.topic}`)
+    }
+
+    if (alreadySubscribed) {
+      console.log(`Pubsub subscribe skipped. Already subscribed to topic ${this.topic}`)
+    } else {
+      this._log({peer: this._peerId, event: 'subscribed', topic: this.topic})
+    }
+  }
+
+  _resubscribeOnDisconnect(): void {
+    const intervalDelay = 1000 * 60 // one minute
+    const requestTimeout = 1000 * 5 // five seconds
+
+    this._resubscribeInterval = setInterval(() => {
+      this._ipfs.pubsub.ls({timeout: requestTimeout})
+      .then((subscriptions: Array<string>) => {
+        if (!(this.topic in subscriptions)) {
+          throw new Error(`Pubsub not subscribed to topic ${this.topic}`)
+        }
+      })
+      .catch((error) => {
+        this._isSubscribed = false
+        console.error(error.message)
+        this._subscribe()
+      })
+    }, intervalDelay)
   }
 
   /**
@@ -318,6 +357,8 @@ export default class Dispatcher extends EventEmitter {
    */
   async close(): Promise<void> {
     this._isRunning = false
+
+    clearInterval(this._resubscribeInterval)
 
     await Promise.all(Object.values(this._documents).map(async (doc) => await doc.close()))
 
