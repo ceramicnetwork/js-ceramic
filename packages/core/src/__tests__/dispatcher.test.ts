@@ -60,7 +60,7 @@ describe('Dispatcher', () => {
 
   it('is constructed correctly', async () => {
     expect(dispatcher._documents).toEqual({})
-    expect(ipfs.pubsub.subscribe).toHaveBeenCalledWith(TOPIC, expect.anything())
+    expect(ipfs.pubsub.subscribe).toHaveBeenCalledWith(TOPIC, expect.anything(), expect.anything())
   })
 
   it('closes correctly', async () => {
