@@ -50,6 +50,10 @@ describe('Dispatcher', () => {
     await dispatcher.init()
   })
 
+  afterEach(async () => {
+    await dispatcher.close()
+  })
+
   it('is constructed correctly', async () => {
     expect(dispatcher._documents).toEqual({})
     expect(ipfs.pubsub.subscribe).toHaveBeenCalledWith(TOPIC, expect.anything())
@@ -62,8 +66,16 @@ describe('Dispatcher', () => {
   })
 
   it('makes registration correctly', async () => {
-    const doc = new Document(DocID.fromString(FAKE_DOC_ID), dispatcher, null)
-    doc._doctype = new TileDoctypeMock()
+    const doc = new Document(
+      DocID.fromString(FAKE_DOC_ID),
+      dispatcher,
+      null,
+      false,
+      {},
+      null,
+      null
+    )
+    doc['_doctype'] = new TileDoctypeMock(null, {})
     await dispatcher.register(doc)
 
     const publishArgs = ipfs.pubsub.publish.mock.calls[0]
@@ -94,8 +106,16 @@ describe('Dispatcher', () => {
   })
 
   it('handle message correctly', async () => {
-    const doc = new Document(DocID.fromString(FAKE_DOC_ID), dispatcher, null)
-    doc._doctype = new TileDoctypeMock()
+    const doc = new Document(
+      DocID.fromString(FAKE_DOC_ID),
+      dispatcher,
+      null,
+      false,
+      {},
+      null,
+      null
+    )
+    doc['_doctype'] = new TileDoctypeMock(null, {})
     await dispatcher.register(doc)
 
     // Store the query ID sent when the doc is registered so we can use it as the response ID later
