@@ -65,7 +65,7 @@ export default class Dispatcher extends EventEmitter {
   }
 
   async _subscribe(): Promise<void> {
-    let alreadySubscribed = this._isSubscribed
+    const alreadySubscribed = this._isSubscribed
 
     try {
       !alreadySubscribed && await this._ipfs.pubsub.subscribe(this.topic, this.handleMessage.bind(this))
