@@ -6,7 +6,7 @@ The Ceramic HTTP API allows you to create and update documents on a remote Ceram
 The documents endpoint is used to create new documents, load documents from their [[DocID]] or from their genesis content. 
 
 ## Get the state of a document
-Load the state of a document given it's [[DocID]].
+Load the state of a document given its [[DocID]].
 
 ### Request
 `GET /api/v0/documents/:docid`
@@ -527,4 +527,3 @@ curl http://localhost:7007/api/v0/node/healthcheck
 
 Alive!
 ```
-
