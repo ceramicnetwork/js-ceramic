@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.17.3](/compare/@ceramicnetwork/core@0.17.2...@ceramicnetwork/core@0.17.3) (2020-12-31)
+
+
+### Bug Fixes
+
+* **core:** Cannot call ipfs.block.stat on an IPLD path (#728) c756134, closes #728
+
+
+
+
+
 ## [0.17.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@0.17.1...@ceramicnetwork/core@0.17.2) (2020-12-29)
 
 
