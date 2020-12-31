@@ -57,7 +57,7 @@ Create a new document, or load a document from its genesis content. The genesis 
 
 The request body should contain the following fields:
 
-- `doctype` - the name of the doctype to use, string
+- `doctype` - the name of the doctype to use (e.g. 'tile'), string
 - `genesis` - the genesis content of the document (will differ per doctype)
 - `docOpts` - options for the document creation [[DocOpts]]
 
