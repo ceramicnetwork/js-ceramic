@@ -60,45 +60,75 @@ export default class Dispatcher extends EventEmitter {
    */
   async init(): Promise<void> {
     this._peerId = this._peerId || (await this._ipfs.id()).id
-    this._subscribe()
+    await this._subscribe()
     this._resubscribeOnDisconnect()
   }
 
+  /**
+   * Subscribes IPFS pubsub to `this.topic` and logs an `subscribe` event.
+   */
   async _subscribe(): Promise<void> {
-    const alreadySubscribed = this._isSubscribed
-
-    try {
-      !alreadySubscribed && await this._ipfs.pubsub.subscribe(this.topic, this.handleMessage.bind(this))
-      this._isSubscribed = true
-    } catch (error) {
-      console.error(error.message)
-      console.error(`Pubsub subscribe failed for topic ${this.topic}`)
-    }
-
-    if (alreadySubscribed) {
+    if (this._isSubscribed) {
       console.log(`Pubsub subscribe skipped. Already subscribed to topic ${this.topic}`)
     } else {
-      this._log({peer: this._peerId, event: 'subscribed', topic: this.topic})
+      const requestTimeout = 1000 * 5 // five seconds
+      try {
+        await this._ipfs.pubsub.subscribe(
+          this.topic,
+          this.handleMessage.bind(this),
+          { timeout: requestTimeout }
+        )
+
+        const { isSubscribed, error } = await this._confirmIsSubscribed()
+        if (isSubscribed) {
+          this._log({peer: this._peerId, event: 'subscribed', topic: this.topic })
+        } else if (error) {
+          throw error
+        } else {
+          throw new Error(`Pubsub subscribe failed for topic ${this.topic}`)
+        }
+      } catch (error) {
+        console.error(error)
+      }
     }
   }
 
+  /**
+   * Periodically checks that IPFS pubsub is subscribed to `this.topic` and
+   * attempts to subscribe if not.
+   */
   _resubscribeOnDisconnect(): void {
     const intervalDelay = 1000 * 60 // one minute
-    const requestTimeout = 1000 * 5 // five seconds
 
-    this._resubscribeInterval = setInterval(() => {
-      this._ipfs.pubsub.ls({timeout: requestTimeout})
-      .then((subscriptions: Array<string>) => {
-        if (!(this.topic in subscriptions)) {
-          throw new Error(`Pubsub not subscribed to topic ${this.topic}`)
+    this._resubscribeInterval = setInterval(async () => {
+      const { isSubscribed } = await this._confirmIsSubscribed()
+      !isSubscribed && await this._subscribe()
+    }, intervalDelay)
+  }
+
+  /**
+   * Sets `this._iSubscribed` if the `this.topic` is listed as an IPFS pubsub
+   * subscription.
+   * @returns A tuple of `this._isSubscribed` and an error if one was caught.
+   */
+  async _confirmIsSubscribed(): Promise<{isSubscribed: boolean, error: Error | null}> {
+    let isSubscribed = true
+    let error = null
+
+    const requestTimeout = 1000 * 5 // five seconds
+    await this._ipfs.pubsub.ls({ timeout: requestTimeout })
+      .then((subscriptions: any) => {
+        if (!subscriptions.includes(this.topic)) {
+          isSubscribed = false
         }
       })
-      .catch((error) => {
-        this._isSubscribed = false
-        console.error(error.message)
-        this._subscribe()
+      .catch((_error: Error) => {
+        isSubscribed = false
+        error = _error
       })
-    }, intervalDelay)
+    this._isSubscribed = isSubscribed
+
+    return { isSubscribed: this._isSubscribed, error }
   }
 
   /**
