@@ -228,7 +228,7 @@ curl http://localhost:7007/api/v0/multiqueries -X POST -d '{
 
 # Records
 
-The records endpoint provides lower level access to the data structure of a Ceramic document. It is also the enpoint that has to be used in order to update a document, by adding a new record.
+The records endpoint provides lower level access to the data structure of a Ceramic document. It is also the enpoint that is used in order to update a document, by adding a new record.
 
 ## Get all records of a document
 
