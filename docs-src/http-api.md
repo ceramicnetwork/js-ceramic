@@ -3,7 +3,7 @@ The Ceramic HTTP API allows you to create and update documents on a remote Ceram
 *`ℹ️ Not all of these methods are exposed if the node runs in gateway mode.`*
 
 # Documents
-The documents endpoint is used to create new documents, load documents from their [[DocID]] or from their genesis content. 
+The `documents` endpoint is used to create new documents, load documents from their [[DocID]] or from their genesis content. 
 
 ## Get the state of a document
 Load the state of a document given its [[DocID]].
@@ -59,7 +59,7 @@ The request body should contain the following fields:
 
 - `doctype` - the name of the doctype to use (e.g. 'tile'), string
 - `genesis` - the genesis content of the document (will differ per doctype)
-- `docOpts` - options for the document creation [[DocOpts]]
+- `docOpts` - options for the document creation, [[DocOpts]] (optional)
 
 ### Response
 
@@ -100,7 +100,7 @@ $ curl http://localhost:7007/api/v0/documents -X POST -d '{ "doctype": "tile", "
 ```
 
 # Multiqueries
-The Multiqueries endpoint enables querying multiple documents at once, as well as querying documents which are linked.
+The `multiqueries` endpoint enables querying multiple documents at once, as well as querying documents which are linked.
 
 ## Query multiple documents
 This endpoint allows you to query multiple DocIDs. Along with each DocID an array of paths can be passed. If any of the paths within the document structure contains a ceramic DocID url (`ceramic://<DocID>`), this linked document will also be returned as part of the response.
@@ -170,7 +170,7 @@ curl http://localhost:7007/api/v0/multiqueries -X POST -d '{
       ]
     },
     "signature": 2,
-    "anchorStatus": "FAILED",
+    "anchorStatus": "PENDING",
     "log": [
       {
         "cid": "bagcqcera5nx45nccxvjjyxsq3so5po77kpqzbfsydy6yflnkt6p5tnjvhbkq",
@@ -191,7 +191,7 @@ curl http://localhost:7007/api/v0/multiqueries -X POST -d '{
       ]
     },
     "signature": 2,
-    "anchorStatus": "FAILED",
+    "anchorStatus": "PENDING",
     "log": [
       {
         "cid": "bagcqcerawq5h7otlkdwuai7vhogqhs2aeaauwbu2aqclrh4iyu5h54qqogma",
@@ -212,7 +212,7 @@ curl http://localhost:7007/api/v0/multiqueries -X POST -d '{
       ]
     },
     "signature": 2,
-    "anchorStatus": "FAILED",
+    "anchorStatus": "PENDING",
     "log": [
       {
         "cid": "bagcqceranecdjzw4xheudgkr2amjkntpktci2xv44d7v4hbft3ndpptid6ka",
@@ -228,7 +228,7 @@ curl http://localhost:7007/api/v0/multiqueries -X POST -d '{
 
 # Records
 
-The records endpoint provides lower level access to the data structure of a Ceramic document. It is also the enpoint that is used in order to update a document, by adding a new record.
+The `records` endpoint provides lower level access to the data structure of a Ceramic document. It is also the enpoint that is used in order to update a document, by adding a new record.
 
 ## Get all records of a document
 
@@ -295,10 +295,6 @@ In order to modify a document we apply a record to its docment log. This record 
 
 ### Request
 `POST /api/v0/records`
-
-Here, `:docid` should be replaced by the string representation of the DocID of the document that is being requested.
-
-
 
 The request body should contain the following fields:
 
@@ -378,7 +374,7 @@ curl http://localhost:7007/api/v0/records -X POST -d '{
 
 # Pins
 
-The pins api endpoint can be used to manipulate the pin set. The pin set is all of the documents that a node maintains the state of. Any document opened by the node that is not pinned will eventually be garbage collected from the node.
+The `pins` api endpoint can be used to manipulate the pin set. The pin set is all of the documents that a node maintains the state of. Any document opened by the node that is not pinned will eventually be garbage collected from the node.
 
 ## Add a document to the pin set
 This method adds the document with the given [[DocID]] to the pin set. 
@@ -419,7 +415,7 @@ Here, `:docid` should be replaced by the string representation of the DocID of t
 ### Response
 
 * `docId` - the [[DocID]] of the document which was unpinned, string
-* `isPinned` - whether the document was pinned, boolean - `false`
+* `isPinned` - whether the document was unpinned, boolean - `false`
 
 ### Example
 
@@ -432,7 +428,35 @@ curl http://localhost:7007/api/v0/pins/k2t6wyfsu4pg2qvoorchoj23e8hf3eiis4w7bucll
 }
 ```
 
-## Check if a specific document is in the pin set
+## List all documents in the pin set
+
+Calling this method allows you to list all of the documents that are in the pin set on this node.
+
+### Request
+
+`GET /api/v0/pins`
+
+### Response
+
+* `pinnedDocIds` - an array of [[DocID]] strings that are in the pin set
+
+### Example
+
+```bash
+curl http://localhost:7007/api/v0/pins
+
+{
+  "pinnedDocIds": [
+    "k2t6wyfsu4pfwqaju0w9nmi53zo6f5bcier7vc951x4b9rydv6t8q4pvzd5w3l",
+    "k2t6wyfsu4pfxon8reod8xcyka9bujeg7acpz8hgh0jsyc7p2b334izdyzsdp7",
+    "k2t6wyfsu4pfxqseec01fnqywmn8l93p4g2chzyx3sod3hpyovurye9hskcegs",
+    "k2t6wyfsu4pfya9y0ega1vnokf0g5qaus69basy52oxg50y3l35vm9rqbb88t3"
+  ]
+}
+```
+
+# Check if a specific document is in the pin set
+
 This method is used to check if a particular document is in the pin set.
 
 ### Request
@@ -452,32 +476,6 @@ curl http://localhost:7007/api/v0/pins/k2t6wyfsu4pg2qvoorchoj23e8hf3eiis4w7bucll
 
 {
   "pinnedDocIds": ["k2t6wyfsu4pg2qvoorchoj23e8hf3eiis4w7bucllxkmlk91sjgluuag5syphl"]
-}
-```
-
-## List all documents in the pin set
-
-Calling this method allows you to list all of the documents that are in the pin set on this node.
-
-### Request
-`GET /api/v0/pins`
-
-### Response
-
-* `pinnedDocIds` - an array of [[DocID]] strings that are in the pin set
-
-### Example
-
-```bash
-curl http://localhost:7007/api/v0/pins
-
-{
-  "pinnedDocIds": [
-    "k2t6wyfsu4pfwqaju0w9nmi53zo6f5bcier7vc951x4b9rydv6t8q4pvzd5w3l",
-    "k2t6wyfsu4pfxon8reod8xcyka9bujeg7acpz8hgh0jsyc7p2b334izdyzsdp7",
-    "k2t6wyfsu4pfxqseec01fnqywmn8l93p4g2chzyx3sod3hpyovurye9hskcegs",
-    "k2t6wyfsu4pfya9y0ega1vnokf0g5qaus69basy52oxg50y3l35vm9rqbb88t3"
-  ]
 }
 ```
 
