@@ -443,7 +443,7 @@ Here, `:docid` should be replaced by the string representation of the DocID of t
 
 ### Response
 
-* `pinnedDocIds` - an array of [[DocID]] strings that are in the pin set
+* `pinnedDocIds` - an array containing the specified [[DocID]] string if that document is pinned, or an empty array if that document is not pinned
 
 ### Example
 
