@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/core",
-  "version": "0.17.3",
+  "version": "0.17.4",
   "description": "Typescript implementation of the Ceramic protocol",
   "keywords": [
     "Ceramic",
@@ -82,5 +82,5 @@
       "/node_modules(?!/did-jwt)/"
     ]
   },
-  "gitHead": "c58eb9659f5fdd976aca2db6465619c20ba30ff9"
+  "gitHead": "a969ea166f8669fdba3a3ae63dd1215c3224c20c"
 }
