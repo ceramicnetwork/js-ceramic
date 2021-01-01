@@ -68,6 +68,8 @@ const generateStringOfSize = (size): string => {
   return random_data.join('');
 }
 
+const TOPIC = '/ceramic'
+
 describe('Ceramic API', () => {
   jest.setTimeout(15000)
   let ipfs: IpfsApi;
@@ -87,6 +89,7 @@ describe('Ceramic API', () => {
 
   const createCeramic = async (c: CeramicConfig = {}): Promise<Ceramic> => {
     c.anchorOnRequest = false
+    c.pubsubTopic = TOPIC
     const ceramic = await Ceramic.create(ipfs, c)
 
     const provider = new Ed25519Provider(seed)
@@ -104,11 +107,22 @@ describe('Ceramic API', () => {
         Bootstrap: []
       }
     })
+    ipfs.pubsub.subscribe = jest.fn()
+    ipfs.pubsub.ls = jest.fn(
+        () => new Promise((resolve, reject) => {
+            resolve([TOPIC])
+            reject()
+        })
+    )
   })
 
   afterAll(async () => {
     await ipfs.stop(() => console.log('IPFS stopped'))
     await tmpFolder.cleanup()
+  })
+
+  afterEach(async () => {
+    await ceramic.close()
   })
 
   describe('API', () => {
