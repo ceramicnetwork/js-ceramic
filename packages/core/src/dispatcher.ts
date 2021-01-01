@@ -116,16 +116,15 @@ export default class Dispatcher extends EventEmitter {
     let error = null
 
     const requestTimeout = 1000 * 5 // five seconds
-    await this._ipfs.pubsub.ls({ timeout: requestTimeout })
-      .then((subscriptions: any) => {
-        if (!subscriptions.includes(this.topic)) {
-          isSubscribed = false
-        }
-      })
-      .catch((_error: Error) => {
+    try {
+      const subscriptions = await this._ipfs.pubsub.ls({ timeout: requestTimeout })
+      if (!subscriptions.includes(this.topic)) {
         isSubscribed = false
-        error = _error
-      })
+      }
+    } catch (_error) {
+      isSubscribed = false
+      error = _error
+    }
     this._isSubscribed = isSubscribed
 
     return { isSubscribed: this._isSubscribed, error }
