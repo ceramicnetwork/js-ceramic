@@ -12,6 +12,7 @@ import DocID from "@ceramicnetwork/docid";
 
 const IPFS_GET_TIMEOUT = 30000 // 30 seconds
 const IPFS_MAX_RECORD_SIZE = 256000 // 256 KB
+const IPFS_RESUBSCRIBE_INTERVAL_DELAY = 1000 * 60 // 1 minute
 
 /**
  * Ceramic Pub/Sub message type.
@@ -71,12 +72,11 @@ export default class Dispatcher extends EventEmitter {
     if (this._isSubscribed) {
       console.log(`Pubsub subscribe skipped. Already subscribed to topic ${this.topic}`)
     } else {
-      const requestTimeout = 1000 * 5 // five seconds
       try {
         await this._ipfs.pubsub.subscribe(
           this.topic,
           this.handleMessage.bind(this),
-          { timeout: requestTimeout }
+          { timeout: IPFS_GET_TIMEOUT }
         )
 
         const { isSubscribed, error } = await this._confirmIsSubscribed()
@@ -98,12 +98,10 @@ export default class Dispatcher extends EventEmitter {
    * attempts to subscribe if not.
    */
   _resubscribeOnDisconnect(): void {
-    const intervalDelay = 1000 * 60 // one minute
-
     this._resubscribeInterval = setInterval(async () => {
       const { isSubscribed } = await this._confirmIsSubscribed()
       !isSubscribed && await this._subscribe()
-    }, intervalDelay)
+    }, IPFS_RESUBSCRIBE_INTERVAL_DELAY)
   }
 
   /**
@@ -115,9 +113,8 @@ export default class Dispatcher extends EventEmitter {
     let isSubscribed = true
     let error = null
 
-    const requestTimeout = 1000 * 5 // five seconds
     try {
-      const subscriptions = await this._ipfs.pubsub.ls({ timeout: requestTimeout })
+      const subscriptions = await this._ipfs.pubsub.ls({ timeout: IPFS_GET_TIMEOUT })
       if (!subscriptions.includes(this.topic)) {
         isSubscribed = false
       }
