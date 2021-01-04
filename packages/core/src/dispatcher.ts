@@ -13,6 +13,7 @@ import DocID from "@ceramicnetwork/docid";
 const IPFS_GET_TIMEOUT = 30000 // 30 seconds
 const IPFS_MAX_RECORD_SIZE = 256000 // 256 KB
 const IPFS_RESUBSCRIBE_INTERVAL_DELAY = 1000 * 60 // 1 minute
+const TESTING = process.env.NODE_ENV == 'test'
 
 /**
  * Ceramic Pub/Sub message type.
@@ -62,7 +63,7 @@ export default class Dispatcher extends EventEmitter {
   async init(): Promise<void> {
     this._peerId = this._peerId || (await this._ipfs.id()).id
     await this._subscribe()
-    process.env.NODE_ENV != 'test' && this._resubscribeOnDisconnect()
+    !TESTING && this._resubscribeOnDisconnect()
   }
 
   /**
@@ -76,7 +77,7 @@ export default class Dispatcher extends EventEmitter {
         await this._ipfs.pubsub.subscribe(
           this.topic,
           this.handleMessage.bind(this),
-          {timeout: process.env.NODE_ENV != 'test' && IPFS_GET_TIMEOUT}
+          {timeout: !TESTING && IPFS_GET_TIMEOUT}
         )
 
         const { isSubscribed, error } = await this._confirmIsSubscribed()
