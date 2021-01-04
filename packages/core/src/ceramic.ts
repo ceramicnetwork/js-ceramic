@@ -39,8 +39,6 @@ import { randomUint32 } from '@stablelib/random'
 
 const DEFAULT_BASE_DOC_CACHE_LIMIT = 500; // number of base docs stored in the cache
 
-const EVICT_EVENT_NAME = 'evicted'
-
 /**
  * Ceramic configuration
  */
@@ -127,7 +125,7 @@ class Ceramic implements CeramicApi {
     // on evict the Document is being unregistered from the Dispatcher and removed from cache
     // also, the event 'evicted' is fired so the client can catch the eviction and possibly load the doc again
     this._docCache = new DocCache(docCacheLimit, async (d: Document) => {
-      d.doctype.emit(EVICT_EVENT_NAME);
+      d.doctype.emit('evicted');
       await d.close()
     }, cacheDocumentCommits)
 

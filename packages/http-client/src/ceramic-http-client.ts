@@ -78,7 +78,10 @@ export default class CeramicClient implements CeramicApi {
     })
 
     this._apiUrl = combineURLs(apiHost, API_PATH)
-    this._docCache = new DocCache(config.docCacheLimit, async (d: Document) => d.close(), true)
+    this._docCache = new DocCache(config.docCacheLimit, async (d: Document) => {
+      d.emit('evicted');
+      d.close()
+    }, true)
 
     this.context = { api: this }
     this.pin = this._initPinApi()
