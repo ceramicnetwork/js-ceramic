@@ -13,7 +13,8 @@ import {
   Doctype,
   DoctypeHandler,
   DoctypeUtils,
-  MultiQuery, OnEvictFunction,
+  MultiQuery,
+  OnEvictFunction,
   PinApi,
 } from "@ceramicnetwork/common"
 import { TileDoctypeHandler } from "@ceramicnetwork/doctype-tile"
@@ -66,8 +67,15 @@ export default class CeramicClient implements CeramicApi {
   private readonly _config: CeramicClientConfig
   public readonly _doctypeHandlers: Record<string, DoctypeHandler<Doctype>>
 
-  constructor (apiHost: string = CERAMIC_HOST, config?: CeramicClientConfig) {
-    this._config = Object.assign(DEFAULT_CLIENT_CONFIG, config ? config : {})
+  constructor (apiHost: string = CERAMIC_HOST, config: CeramicClientConfig = {}) {
+    this._config = config
+
+    // fill missing configuration from default
+    Object.keys(DEFAULT_CLIENT_CONFIG).forEach((key) => {
+      if (config[key] == null) {
+        config[key] = DEFAULT_CLIENT_CONFIG[key]
+      }
+    })
 
     this._apiUrl = combineURLs(apiHost, API_PATH)
     this._docCache = new DocCache(config.docCacheLimit, async (d: Document) => d.close(), true)
@@ -85,6 +93,10 @@ export default class CeramicClient implements CeramicApi {
       'tile': new TileDoctypeHandler(),
       'caip10-link': new Caip10LinkDoctypeHandler()
     }
+  }
+
+  _mergeConfigs() {
+
   }
 
   get did(): DID | undefined {
