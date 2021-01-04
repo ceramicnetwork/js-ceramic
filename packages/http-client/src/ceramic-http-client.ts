@@ -95,10 +95,6 @@ export default class CeramicClient implements CeramicApi {
     }
   }
 
-  _mergeConfigs() {
-
-  }
-
   get did(): DID | undefined {
     return this.context.did
   }
