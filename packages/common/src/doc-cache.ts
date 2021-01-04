@@ -3,6 +3,8 @@ import DocID from "@ceramicnetwork/docid"
 
 import { DocStateHolder } from "./doctype"
 
+export type OnEvictFunction = (doc: DocStateHolder) => Promise<void>
+
 /**
  * Encapsulates document caching (base, commits)
  */
@@ -13,13 +15,31 @@ export class DocCache {
     private readonly _commitDocCache: LRUMap<string, DocStateHolder>
     private readonly _pinnedDocCache: Record<string, DocStateHolder>
 
-    constructor(limit, cacheCommits = true) {
+    constructor(limit, onEvictFn: OnEvictFunction, cacheCommits = true) {
         this._cacheCommits = cacheCommits
-        this._baseDocCache = new LRUMap(limit)
+        this._baseDocCache = this._initDocLRUCache(limit, onEvictFn)
         this._pinnedDocCache = {}
 
         // use the same 'limit' if cacheCommits is enabled
-        this._commitDocCache = this._cacheCommits? new LRUMap(limit) : new LRUMap(0)
+        this._commitDocCache = this._cacheCommits? this._initDocLRUCache(limit, onEvictFn) : new LRUMap(0)
+    }
+
+    /**
+     * Initialize single LRU cache
+     * @private
+     */
+    _initDocLRUCache(limit: number, onEvictFn: OnEvictFunction) {
+        const cache = new LRUMap<string, DocStateHolder>(limit)
+        if (onEvictFn) {
+            cache.shift = function() {
+                const entryArr = LRUMap.prototype.shift.call(cache)
+                if (entryArr) {
+                    onEvictFn(entryArr[1]) // TODO handle async call
+                }
+                return entryArr
+            }
+        }
+        return cache
     }
 
     /**

@@ -39,6 +39,8 @@ import { randomUint32 } from '@stablelib/random'
 
 const DEFAULT_BASE_DOC_CACHE_LIMIT = 500; // number of base docs stored in the cache
 
+const EVICT_EVENT_NAME = 'evicted'
+
 /**
  * Ceramic configuration
  */
@@ -117,11 +119,17 @@ class Ceramic implements CeramicApi {
                private _validateDocs: boolean = true,
                docCacheLimit = DEFAULT_BASE_DOC_CACHE_LIMIT,
                cacheDocumentCommits = true) {
-    this._docCache = new DocCache(docCacheLimit, cacheDocumentCommits)
     this._doctypeHandlers = {
       'tile': new TileDoctypeHandler(),
       'caip10-link': new Caip10LinkDoctypeHandler()
     }
+
+    // on evict the Document is being unregistered from the Dispatcher and removed from cache
+    // also, the event 'evicted' is fired so the client can catch the eviction and possibly load the doc again
+    this._docCache = new DocCache(docCacheLimit, async (d: Document) => {
+      d.doctype.emit(EVICT_EVENT_NAME);
+      await d.close()
+    }, cacheDocumentCommits)
 
     this.pin = this._initPinApi();
     this.context = context

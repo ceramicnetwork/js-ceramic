@@ -326,10 +326,50 @@ describe('Ceramic integration', () => {
     putDocToCacheSpy1.mockClear()
     getDocFromCacheSpy1.mockClear()
 
-    await ceramic1.pin.add(doctype1.id)
+    const doctype2 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { test: 3456789 }, metadata: { controllers: [controller], tags: ['3id'] } })
+    expect(doctype2).toBeDefined()
+
+    await anchor(ceramic1)
+    await syncDoc(doctype2)
 
     expect(putDocToCacheSpy1).toBeCalledTimes(1)
     expect(getDocFromCacheSpy1).toBeCalledTimes(1)
+    expect(docCache1._baseDocCache.has(doctype1.id.baseID.toString())).toBeTruthy()
+    expect(docCache1._baseDocCache.has(doctype2.id.baseID.toString())).toBeTruthy()
+    expect(docCache1._commitDocCache.has(doctype1.id.toString())).toBeFalsy()
+    expect(docCache1._commitDocCache.has(doctype2.id.toString())).toBeFalsy()
+
+    putDocToCacheSpy1.mockClear()
+    getDocFromCacheSpy1.mockClear()
+
+    let doctype1Evicted = false
+    doctype1.on('evicted', () => {
+      doctype1Evicted = true
+    })
+
+    const doctype3 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { test: 123456789 }, metadata: { controllers: [controller], tags: ['3id'] } })
+    expect(doctype3).toBeDefined()
+    expect(doctype1Evicted).toBeTruthy()
+
+    await anchor(ceramic1)
+    await syncDoc(doctype3)
+
+    expect(putDocToCacheSpy1).toBeCalledTimes(1)
+    expect(getDocFromCacheSpy1).toBeCalledTimes(1)
+    expect(docCache1._baseDocCache.has(doctype1.id.baseID.toString())).toBeFalsy()
+    expect(docCache1._baseDocCache.has(doctype2.id.baseID.toString())).toBeTruthy()
+    expect(docCache1._baseDocCache.has(doctype3.id.baseID.toString())).toBeTruthy()
+    expect(docCache1._commitDocCache.has(doctype1.id.toString())).toBeFalsy()
+    expect(docCache1._commitDocCache.has(doctype2.id.toString())).toBeFalsy()
+    expect(docCache1._commitDocCache.has(doctype3.id.toString())).toBeFalsy()
+
+    putDocToCacheSpy1.mockClear()
+    getDocFromCacheSpy1.mockClear()
+
+    await ceramic1.pin.add(doctype1.id)
+
+    expect(putDocToCacheSpy1).toBeCalledTimes(2)
+    expect(getDocFromCacheSpy1).toBeCalledTimes(2)
     expect(docCache1._pinnedDocCache[doctype1.id.baseID.toString()]).toBeDefined()
     expect(docCache1._baseDocCache.has(doctype1.id.baseID.toString())).toBeFalsy()
     expect(docCache1._commitDocCache.has(doctype1.id.toString())).toBeFalsy()
@@ -345,28 +385,28 @@ describe('Ceramic integration', () => {
     expect(docCache1._commitDocCache.has(doctype1.id.toString())).toBeFalsy()
 
     const prevCommitDocId1 = DocID.fromOther(doctype1.id, doctype1.state.log[1].cid.toString())
-    const doctype2 = await ceramic2.loadDocument(prevCommitDocId1)
-    expect(doctype2).toBeDefined()
+    const loadedDoctype1 = await ceramic2.loadDocument(prevCommitDocId1)
+    expect(loadedDoctype1).toBeDefined()
 
     expect(getDocFromCacheSpy2).toBeCalledTimes(2)
     expect(putDocToCacheSpy2).toBeCalledTimes(2)
     expect(docCache2._baseDocCache.has(prevCommitDocId1.baseID.toString())).toBeTruthy()
     expect(docCache2._commitDocCache.has(prevCommitDocId1.toString())).toBeTruthy()
 
-    await doctype1.change({ content: { test: 'abcde' }, metadata: { controllers: [controller] } })
+    await doctype3.change({ content: { test: 'abcde' }, metadata: { controllers: [controller] } })
 
     await anchor(ceramic1)
-    await syncDoc(doctype1)
+    await syncDoc(doctype3)
 
     putDocToCacheSpy2.mockClear()
     getDocFromCacheSpy2.mockClear()
 
-    const prevCommitDocId2 = DocID.fromOther(doctype1.id, doctype1.state.log[3].cid.toString())
-    const prevDoc2 = await ceramic2.loadDocument(prevCommitDocId2)
-    expect(prevDoc2).toBeDefined()
+    const prevCommitDocId2 = DocID.fromOther(doctype3.id, doctype3.state.log[3].cid.toString())
+    const loadedDoc3 = await ceramic2.loadDocument(prevCommitDocId2)
+    expect(loadedDoc3).toBeDefined()
 
     expect(getDocFromCacheSpy2).toBeCalledTimes(2)
-    expect(putDocToCacheSpy2).toBeCalledTimes(1)
+    expect(putDocToCacheSpy2).toBeCalledTimes(2)
     expect(docCache2._baseDocCache.has(prevCommitDocId2.baseID.toString())).toBeTruthy()
     expect(docCache2._commitDocCache.has(prevCommitDocId1.toString())).toBeFalsy()
     expect(docCache2._commitDocCache.has(prevCommitDocId2.toString())).toBeTruthy()

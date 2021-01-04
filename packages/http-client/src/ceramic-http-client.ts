@@ -13,7 +13,7 @@ import {
   Doctype,
   DoctypeHandler,
   DoctypeUtils,
-  MultiQuery,
+  MultiQuery, OnEvictFunction,
   PinApi,
 } from "@ceramicnetwork/common"
 import { TileDoctypeHandler } from "@ceramicnetwork/doctype-tile"
@@ -70,7 +70,7 @@ export default class CeramicClient implements CeramicApi {
     this._config = Object.assign(DEFAULT_CLIENT_CONFIG, config ? config : {})
 
     this._apiUrl = combineURLs(apiHost, API_PATH)
-    this._docCache = new DocCache(config.docCacheLimit, true)
+    this._docCache = new DocCache(config.docCacheLimit, async (d: Document) => d.close(), true)
 
     this.context = { api: this }
     this.pin = this._initPinApi()
