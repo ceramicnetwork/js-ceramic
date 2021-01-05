@@ -47,7 +47,6 @@ export default class Dispatcher extends EventEmitter {
 
   private logger: Logger
   private _isRunning = true
-  private _isSubscribed = false
   private _resubscribeInterval: any
 
   constructor (public _ipfs: IpfsApi, public topic: string) {
@@ -63,69 +62,35 @@ export default class Dispatcher extends EventEmitter {
   async init(): Promise<void> {
     this._peerId = this._peerId || (await this._ipfs.id()).id
     await this._subscribe()
-    !TESTING && this._resubscribeOnDisconnect()
+    !TESTING && this._resubscribe()
   }
 
   /**
-   * Subscribes IPFS pubsub to `this.topic` and logs an `subscribe` event.
+   * Subscribes IPFS pubsub to `this.topic` and logs a `subscribe` event.
+   *
+   * Logs error if subscribe fails.
    */
   async _subscribe(): Promise<void> {
-    if (this._isSubscribed) {
-      console.log(`Pubsub subscribe skipped. Already subscribed to topic ${this.topic}`)
-    } else {
-      try {
-        await this._ipfs.pubsub.subscribe(
-          this.topic,
-          this.handleMessage.bind(this),
-          {timeout: TESTING ? null : IPFS_GET_TIMEOUT}
-        )
-
-        const { isSubscribed, error } = await this._confirmIsSubscribed()
-        if (isSubscribed) {
-          this._log({peer: this._peerId, event: 'subscribed', topic: this.topic })
-        } else if (error) {
-          throw error
-        } else {
-          throw new Error(`Pubsub subscribe failed for topic ${this.topic}`)
-        }
-      } catch (error) {
-        console.error(error)
-      }
-    }
-  }
-
-  /**
-   * Periodically checks that IPFS pubsub is subscribed to `this.topic` and
-   * attempts to subscribe if not.
-   */
-  _resubscribeOnDisconnect(): void {
-    this._resubscribeInterval = setInterval(async () => {
-      const { isSubscribed } = await this._confirmIsSubscribed()
-      !isSubscribed && await this._subscribe()
-    }, IPFS_RESUBSCRIBE_INTERVAL_DELAY)
-  }
-
-  /**
-   * Sets `this._iSubscribed` if the `this.topic` is listed as an IPFS pubsub
-   * subscription.
-   * @returns A tuple of `this._isSubscribed` and an error if one was caught.
-   */
-  async _confirmIsSubscribed(): Promise<{isSubscribed: boolean, error: Error | null}> {
-    let isSubscribed = true
-    let error = null
-
     try {
-      const subscriptions = await this._ipfs.pubsub.ls({ timeout: IPFS_GET_TIMEOUT })
-      if (!subscriptions.includes(this.topic)) {
-        isSubscribed = false
-      }
-    } catch (_error) {
-      isSubscribed = false
-      error = _error
+      await this._ipfs.pubsub.subscribe(
+        this.topic,
+        this.handleMessage.bind(this),
+        {timeout: !TESTING && IPFS_GET_TIMEOUT}
+      )
+      this._log({peer: this._peerId, event: 'subscribed', topic: this.topic })
+    } catch (error) {
+      // TODO: use logger
+      console.error(error)
     }
-    this._isSubscribed = isSubscribed
+  }
 
-    return { isSubscribed: this._isSubscribed, error }
+  /**
+   * Periodically subscribes to IPFS pubsub topic.
+   */
+  _resubscribe(): void {
+    this._resubscribeInterval = setInterval(async () => {
+      await this._subscribe()
+    }, IPFS_RESUBSCRIBE_INTERVAL_DELAY)
   }
 
   /**

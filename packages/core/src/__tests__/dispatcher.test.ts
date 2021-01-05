@@ -13,9 +13,6 @@ const ipfs = {
   pubsub: {
     subscribe: jest.fn(),
     unsubscribe: jest.fn(),
-    ls: jest.fn(() => new Promise((resolve) => {
-        resolve([TOPIC])
-    })),
     publish: jest.fn()
   },
   dag: {

@@ -69,7 +69,6 @@ describe('Ceramic interop: core <> http-client', () => {
             ipfs.pubsub = {}
         }
         ipfs.pubsub.subscribe = jest.fn()
-        ipfs.pubsub.ls = jest.fn(() => Promise.resolve([topic]))
     })
 
     afterAll(async () => {
