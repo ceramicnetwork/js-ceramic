@@ -47,7 +47,6 @@ export default class Dispatcher extends EventEmitter {
 
   private logger: Logger
   private _isRunning = true
-  private _messageHandler = this.handleMessage.bind(this)
   private _resubscribeInterval: any
 
   constructor (public _ipfs: IpfsApi, public topic: string) {
@@ -77,7 +76,7 @@ export default class Dispatcher extends EventEmitter {
     try {
       await this._ipfs.pubsub.subscribe(
         this.topic,
-        this._messageHandler,
+        this.handleMessage,
         {timeout: TESTING ? null : IPFS_GET_TIMEOUT}
       )
       this._log({peer: this._peerId, event: 'subscribed', topic: this.topic })
@@ -227,7 +226,7 @@ export default class Dispatcher extends EventEmitter {
    *
    * @param message - Message data
    */
-  async handleMessage (message: any): Promise<void> {
+  handleMessage = async (message: any): Promise<void> => {
     if (!this._isRunning) {
       this.logger.error('Dispatcher has been closed')
       return
