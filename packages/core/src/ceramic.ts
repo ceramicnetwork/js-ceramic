@@ -37,7 +37,7 @@ import InMemoryAnchorService from "./anchor/memory/in-memory-anchor-service"
 
 import { randomUint32 } from '@stablelib/random'
 
-const DEFAULT_BASE_DOC_CACHE_LIMIT = 500; // number of base docs stored in the cache
+const DEFAULT_DOC_CACHE_LIMIT = 500; // number of docs stored in the cache
 
 /**
  * Ceramic configuration
@@ -115,7 +115,7 @@ class Ceramic implements CeramicApi {
                context: Context,
                private _networkOptions: CeramicNetworkOptions,
                private _validateDocs: boolean = true,
-               docCacheLimit = DEFAULT_BASE_DOC_CACHE_LIMIT,
+               docCacheLimit = DEFAULT_DOC_CACHE_LIMIT,
                cacheDocumentCommits = true) {
     this._doctypeHandlers = {
       'tile': new TileDoctypeHandler(),
