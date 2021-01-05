@@ -23,8 +23,6 @@ export interface RecordHeader {
     schema?: string
     tags?: Array<string>
 
-    unique?: string
-
     [index: string]: any // allow support for future changes
 }
 
