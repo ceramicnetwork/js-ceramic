@@ -4,6 +4,7 @@ import Document from "../document"
 import { TileDoctype } from "@ceramicnetwork/doctype-tile"
 import DocID from "@ceramicnetwork/docid";
 
+const TOPIC = '/ceramic'
 const FAKE_CID = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
 const FAKE_CID2 = new CID('bafybeig6xv5nwphfmvcnektpnojts44jqcuam7bmye2pb54adnrtccjlsu')
 const FAKE_DOC_ID = "kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s"
@@ -23,7 +24,6 @@ const ipfs = {
   },
   id: (): any => ({ id: 'ipfsid' })
 }
-const TOPIC = '/ceramic'
 
 class TileDoctypeMock extends TileDoctype {
   get doctype() {
@@ -50,9 +50,13 @@ describe('Dispatcher', () => {
     await dispatcher.init()
   })
 
+  afterEach(async () => {
+    await dispatcher.close()
+  })
+
   it('is constructed correctly', async () => {
     expect(dispatcher._documents).toEqual({})
-    expect(ipfs.pubsub.subscribe).toHaveBeenCalledWith(TOPIC, expect.anything())
+    expect(ipfs.pubsub.subscribe).toHaveBeenCalledWith(TOPIC, expect.anything(), expect.anything())
   })
 
   it('closes correctly', async () => {
@@ -62,8 +66,16 @@ describe('Dispatcher', () => {
   })
 
   it('makes registration correctly', async () => {
-    const doc = new Document(DocID.fromString(FAKE_DOC_ID), dispatcher, null)
-    doc._doctype = new TileDoctypeMock()
+    const doc = new Document(
+      DocID.fromString(FAKE_DOC_ID),
+      dispatcher,
+      null,
+      false,
+      {},
+      null,
+      null
+    )
+    doc['_doctype'] = new TileDoctypeMock(null, {})
     await dispatcher.register(doc)
 
     const publishArgs = ipfs.pubsub.publish.mock.calls[0]
@@ -94,8 +106,16 @@ describe('Dispatcher', () => {
   })
 
   it('handle message correctly', async () => {
-    const doc = new Document(DocID.fromString(FAKE_DOC_ID), dispatcher, null)
-    doc._doctype = new TileDoctypeMock()
+    const doc = new Document(
+      DocID.fromString(FAKE_DOC_ID),
+      dispatcher,
+      null,
+      false,
+      {},
+      null,
+      null
+    )
+    doc['_doctype'] = new TileDoctypeMock(null, {})
     await dispatcher.register(doc)
 
     // Store the query ID sent when the doc is registered so we can use it as the response ID later

@@ -12,6 +12,8 @@ import DocID from "@ceramicnetwork/docid";
 
 const IPFS_GET_TIMEOUT = 30000 // 30 seconds
 const IPFS_MAX_RECORD_SIZE = 256000 // 256 KB
+const IPFS_RESUBSCRIBE_INTERVAL_DELAY = 1000 * 60 // 1 minute
+const TESTING = process.env.NODE_ENV == 'test'
 
 /**
  * Ceramic Pub/Sub message type.
@@ -45,6 +47,7 @@ export default class Dispatcher extends EventEmitter {
 
   private logger: Logger
   private _isRunning = true
+  private _resubscribeInterval: any
 
   constructor (public _ipfs: IpfsApi, public topic: string) {
     super()
@@ -58,8 +61,42 @@ export default class Dispatcher extends EventEmitter {
    */
   async init(): Promise<void> {
     this._peerId = this._peerId || (await this._ipfs.id()).id
-    await this._ipfs.pubsub.subscribe(this.topic, this.handleMessage.bind(this))
-    this._log({ peer: this._peerId, event: 'subscribed', topic: this.topic })
+    await this._subscribe()
+    if (!TESTING) {
+      this._resubscribe()
+    }
+  }
+
+  /**
+   * Subscribes IPFS pubsub to `this.topic` and logs a `subscribe` event.
+   *
+   * Logs error if subscribe fails.
+   */
+  async _subscribe(): Promise<void> {
+    try {
+      await this._ipfs.pubsub.subscribe(
+        this.topic,
+        this.handleMessage,
+        {timeout: TESTING ? null : IPFS_GET_TIMEOUT}
+      )
+      this._log({peer: this._peerId, event: 'subscribed', topic: this.topic })
+    } catch (error) {
+      // TODO: use logger
+      if (error.message.includes('Already subscribed')) {
+        this.logger.debug(error.message)
+      } else {
+        console.error(error)
+      }
+    }
+  }
+
+  /**
+   * Periodically subscribes to IPFS pubsub topic.
+   */
+  _resubscribe(): void {
+    this._resubscribeInterval = setInterval(async () => {
+      await this._subscribe()
+    }, IPFS_RESUBSCRIBE_INTERVAL_DELAY)
   }
 
   /**
@@ -193,7 +230,7 @@ export default class Dispatcher extends EventEmitter {
    *
    * @param message - Message data
    */
-  async handleMessage (message: any): Promise<void> {
+  handleMessage = async (message: any): Promise<void> => {
     if (!this._isRunning) {
       this.logger.error('Dispatcher has been closed')
       return
@@ -318,6 +355,8 @@ export default class Dispatcher extends EventEmitter {
    */
   async close(): Promise<void> {
     this._isRunning = false
+
+    clearInterval(this._resubscribeInterval)
 
     await Promise.all(Object.values(this._documents).map(async (doc) => await doc.close()))
 

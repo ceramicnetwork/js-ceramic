@@ -746,7 +746,7 @@ class Document extends EventEmitter {
 
     await this._applyQueue.onEmpty()
 
-    this._context.anchorService.removeAllListeners(this.id.toString())
+    this._context.anchorService && this._context.anchorService.removeAllListeners(this.id.toString())
     await Utils.awaitCondition(() => this._isProcessing, () => false, 500)
   }
 

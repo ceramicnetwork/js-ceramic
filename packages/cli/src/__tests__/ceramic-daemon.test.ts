@@ -28,6 +28,7 @@ const waitChange = (doc: EventEmitter, count = 1): Promise<void> => {
 }
 const port = 7777
 const apiUrl = 'http://localhost:' + port
+const topic = '/ceramic'
 
 /**
  * Create an IPFS instance
@@ -64,6 +65,10 @@ describe('Ceramic interop: core <> http-client', () => {
                 }, Bootstrap: []
             }
         })
+        if (!ipfs.pubsub) {
+            ipfs.pubsub = {}
+        }
+        ipfs.pubsub.subscribe = jest.fn()
     })
 
     afterAll(async () => {
@@ -76,7 +81,7 @@ describe('Ceramic interop: core <> http-client', () => {
         // performed yet by the time the test checks.  To eliminate this race condition we should set
         // anchorOnRequest to false in the config for the InMemoryAnchorService and anchor manually
         // throughout the tests.
-        core = await Ceramic.create(ipfs)
+        core = await Ceramic.create(ipfs, {pubsubTopic: topic})
 
         const doctypeHandler = new TileDoctypeHandler()
         doctypeHandler.verifyJWS = (): Promise<void> => { return }
