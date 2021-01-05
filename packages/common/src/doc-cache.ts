@@ -3,58 +3,30 @@ import DocID from "@ceramicnetwork/docid"
 
 import { DocStateHolder } from "./doctype"
 
-export type OnEvictFunction = (doc: DocStateHolder) => Promise<void>
-
 /**
  * Encapsulates document caching (base, commits)
  */
 export class DocCache {
     private readonly _cacheCommits: boolean
 
+    private _pinnedDocCache: Record<string, DocStateHolder>
     private readonly _baseDocCache: LRUMap<string, DocStateHolder>
     private readonly _commitDocCache: LRUMap<string, DocStateHolder>
-    private readonly _pinnedDocCache: Record<string, DocStateHolder>
 
-    constructor(limit, onEvictFn: OnEvictFunction, cacheCommits = true) {
+    constructor(limit, cacheCommits = true) {
         this._cacheCommits = cacheCommits
-        this._baseDocCache = this._initDocLRUCache(limit, onEvictFn)
+        this._baseDocCache = new LRUMap<string, DocStateHolder>(limit)
         this._pinnedDocCache = {}
 
         // use the same 'limit' if cacheCommits is enabled
-        this._commitDocCache = this._cacheCommits? this._initDocLRUCache(limit, onEvictFn) : new LRUMap(0)
-    }
-
-    /**
-     * Initialize single LRU cache
-     * @private
-     */
-    _initDocLRUCache(limit: number, onEvictFn: OnEvictFunction) {
-        const cache = new LRUMap<string, DocStateHolder>(limit)
-        if (onEvictFn) {
-            cache.shift = function() {
-                const entryArr = LRUMap.prototype.shift.call(cache)
-                if (entryArr) {
-                    onEvictFn(entryArr[1]) // TODO handle async call
-                }
-                return entryArr
-            }
-        }
-        return cache
+        this._commitDocCache = this._cacheCommits? new LRUMap<string, DocStateHolder>(limit) : null
     }
 
     /**
      * Puts to cache
      * @param doc - DocStateHolder instance
-     * @param isPinned - Is document pinned?
      */
-    put(doc: DocStateHolder, isPinned = false): void {
-        if (isPinned) {
-            this._pinnedDocCache[doc.id.toString()] = doc;
-            this._baseDocCache.delete(doc.id.baseID.toString())
-            this._commitDocCache.delete(doc.id.baseID.toString())
-            return;
-        }
-
+    put(doc: DocStateHolder): void {
         if (doc.id.commit == null) {
             this._baseDocCache.set(doc.id.baseID.toString(), doc)
             return;
@@ -84,17 +56,30 @@ export class DocCache {
     }
 
     /**
+     * Puts to pinned
+     */
+    pin(doc: DocStateHolder) {
+        this._pinnedDocCache[doc.id.toString()] = doc;
+        this._baseDocCache.delete(doc.id.baseID.toString())
+        this._commitDocCache.delete(doc.id.baseID.toString())
+        return;
+    }
+
+    /**
+     * Deletes from pinned and puts it to a regular cache
+     */
+    unpin(docId: DocID) {
+        const doc = this._pinnedDocCache[docId.baseID.toString()]
+        delete this._pinnedDocCache[docId.baseID.toString()]
+        this.put(doc)
+        return
+    }
+
+    /**
      * Delete from cache
      * @param docId - DocId instance
-     * @param pinnedOnly - Delete from pinned only cache
      */
-    del(docId: DocID, pinnedOnly = false): void {
-        if (pinnedOnly) {
-            const doc = this._pinnedDocCache[docId.baseID.toString()]
-            delete this._pinnedDocCache[docId.baseID.toString()]
-            this.put(doc, false)
-            return
-        }
+    del(docId: DocID): void {
         this._baseDocCache.delete(docId.baseID.toString())
         this._commitDocCache.delete(docId.baseID.toString())
 
@@ -123,6 +108,7 @@ export class DocCache {
      * Clears cache
      */
     clear(): void {
+        this._pinnedDocCache = {}
         this._baseDocCache.clear();
         this._commitDocCache.clear();
     }

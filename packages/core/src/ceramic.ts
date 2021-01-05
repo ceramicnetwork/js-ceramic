@@ -122,12 +122,7 @@ class Ceramic implements CeramicApi {
       'caip10-link': new Caip10LinkDoctypeHandler()
     }
 
-    // on evict the Document is being unregistered from the Dispatcher and removed from cache
-    // also, the event 'evicted' is fired so the client can catch the eviction and possibly load the doc again
-    this._docCache = new DocCache(docCacheLimit, async (d: Document) => {
-      d.doctype.emit('evicted');
-      await d.close()
-    }, cacheDocumentCommits)
+    this._docCache = new DocCache(docCacheLimit, cacheDocumentCommits)
 
     this.pin = this._initPinApi();
     this.context = context
@@ -157,11 +152,11 @@ class Ceramic implements CeramicApi {
       add: async (docId: DocID): Promise<void> => {
         const document = await this._loadDoc(docId)
         await this.pinStore.add(document.doctype)
-        this._docCache.put(document, true)
+        this._docCache.pin(document)
       },
       rm: async (docId: DocID): Promise<void> => {
         await this.pinStore.rm(docId)
-        this._docCache.del(docId, true)
+        this._docCache.unpin(docId)
       },
       ls: async (docId?: DocID): Promise<AsyncIterable<string>> => {
         const docIds = await this.pinStore.ls(docId ? docId.baseID : null)

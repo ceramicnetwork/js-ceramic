@@ -14,7 +14,6 @@ import {
   DoctypeHandler,
   DoctypeUtils,
   MultiQuery,
-  OnEvictFunction,
   PinApi,
 } from "@ceramicnetwork/common"
 import { TileDoctypeHandler } from "@ceramicnetwork/doctype-tile"
@@ -68,20 +67,10 @@ export default class CeramicClient implements CeramicApi {
   public readonly _doctypeHandlers: Record<string, DoctypeHandler<Doctype>>
 
   constructor (apiHost: string = CERAMIC_HOST, config: CeramicClientConfig = {}) {
-    this._config = config
-
-    // fill missing configuration from default
-    Object.keys(DEFAULT_CLIENT_CONFIG).forEach((key) => {
-      if (config[key] == null) {
-        config[key] = DEFAULT_CLIENT_CONFIG[key]
-      }
-    })
+    this._config = { ...DEFAULT_CLIENT_CONFIG, ...config }
 
     this._apiUrl = combineURLs(apiHost, API_PATH)
-    this._docCache = new DocCache(config.docCacheLimit, async (d: Document) => {
-      d.emit('evicted');
-      d.close()
-    }, true)
+    this._docCache = new DocCache(config.docCacheLimit, true)
 
     this.context = { api: this }
     this.pin = this._initPinApi()
@@ -106,11 +95,11 @@ export default class CeramicClient implements CeramicApi {
     return {
       add: async (docId: DocID): Promise<void> => {
         const doc = await fetchJson(this._apiUrl + '/pins' + `/${docId.toString()}`, { method: 'post' })
-        this._docCache.put(doc, true)
+        this._docCache.pin(doc)
       },
       rm: async (docId: DocID): Promise<void> => {
         await fetchJson(this._apiUrl + '/pins' + `/${docId.toString()}`, { method: 'delete' })
-        this._docCache.del(docId, true)
+        this._docCache.unpin(docId)
       },
       ls: async (docId?: DocID): Promise<AsyncIterable<string>> => {
         let url = this._apiUrl + '/pins'
