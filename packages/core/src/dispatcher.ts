@@ -62,7 +62,9 @@ export default class Dispatcher extends EventEmitter {
   async init(): Promise<void> {
     this._peerId = this._peerId || (await this._ipfs.id()).id
     await this._subscribe()
-    !TESTING && this._resubscribe()
+    if (!TESTING) {
+      this._resubscribe()
+    }
   }
 
   /**
@@ -75,7 +77,7 @@ export default class Dispatcher extends EventEmitter {
       await this._ipfs.pubsub.subscribe(
         this.topic,
         this.handleMessage.bind(this),
-        {timeout: !TESTING && IPFS_GET_TIMEOUT}
+        {timeout: TESTING ? null : IPFS_GET_TIMEOUT}
       )
       this._log({peer: this._peerId, event: 'subscribed', topic: this.topic })
     } catch (error) {
