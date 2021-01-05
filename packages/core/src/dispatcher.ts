@@ -77,7 +77,7 @@ export default class Dispatcher extends EventEmitter {
         await this._ipfs.pubsub.subscribe(
           this.topic,
           this.handleMessage.bind(this),
-          {timeout: !TESTING && IPFS_GET_TIMEOUT}
+          {timeout: TESTING ? null : IPFS_GET_TIMEOUT}
         )
 
         const { isSubscribed, error } = await this._confirmIsSubscribed()
