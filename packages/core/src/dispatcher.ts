@@ -82,6 +82,9 @@ export default class Dispatcher extends EventEmitter {
       this._log({peer: this._peerId, event: 'subscribed', topic: this.topic })
     } catch (error) {
       // TODO: use logger
+      if (error.message.includes('Already subscribed')) {
+        console.log(error.message)
+      }
       console.error(error)
     }
   }
