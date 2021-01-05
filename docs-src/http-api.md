@@ -388,8 +388,9 @@ Here, `:docid` should be replaced by the string representation of the DocID of t
 
 ### Response
 
+If the operation was sucessful the response will be a 200 OK.
+
 * `docId` - the [[DocID]] of the document which was pinned, string
-* `isPinned` - whether the document was pinned, boolean - `true`
 
 ### Example
 
@@ -397,8 +398,7 @@ Here, `:docid` should be replaced by the string representation of the DocID of t
 curl http://localhost:7007/api/v0/pins/k2t6wyfsu4pg2qvoorchoj23e8hf3eiis4w7bucllxkmlk91sjgluuag5syphl -X POST
 
 {
-  "docId": "k2t6wyfsu4pg2qvoorchoj23e8hf3eiis4w7bucllxkmlk91sjgluuag5syphl",
-  "isPinned": true
+  "docId": "k2t6wyfsu4pg2qvoorchoj23e8hf3eiis4w7bucllxkmlk91sjgluuag5syphl"
 }
 ```
 
@@ -414,8 +414,9 @@ Here, `:docid` should be replaced by the string representation of the DocID of t
 
 ### Response
 
+If the operation was sucessful the response will be a 200 OK.
+
 * `docId` - the [[DocID]] of the document which was unpinned, string
-* `isPinned` - whether the document was unpinned, boolean - `false`
 
 ### Example
 
@@ -423,8 +424,7 @@ Here, `:docid` should be replaced by the string representation of the DocID of t
 curl http://localhost:7007/api/v0/pins/k2t6wyfsu4pg2qvoorchoj23e8hf3eiis4w7bucllxkmlk91sjgluuag5syphl -X DELETE
 
 {
-  "docId": "k2t6wyfsu4pg2qvoorchoj23e8hf3eiis4w7bucllxkmlk91sjgluuag5syphl",
-  "isPinned": false
+  "docId": "k2t6wyfsu4pg2qvoorchoj23e8hf3eiis4w7bucllxkmlk91sjgluuag5syphl"
 }
 ```
 
