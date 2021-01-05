@@ -1,4 +1,4 @@
-The Ceramic HTTP API allows you to create and update documents on a remote Ceramic node. These endpoints allows you to manually make requests to a Ceramic node. This is also a good place to start if you want to build a Ceramic client in a new language. 
+The Ceramic HTTP API allows you to create, update, and query documents on a remote Ceramic node. These endpoints allows you to manually make requests to a Ceramic node. This is also a good place to start if you want to build a Ceramic client in a new language. 
 
 *`ℹ️ Not all of these methods are exposed if the node runs in gateway mode.`*
 
@@ -299,8 +299,8 @@ In order to modify a document we apply a record to its docment log. This record 
 The request body should contain the following fields:
 
 - `docId` - the name of the doctype to use, string
-- `record` - the genesis content of the document (will differ per doctype)
-- `docOpts` - options for the document creation [[DocOpts]]
+- `record` - the content of the record to apply (will differ per doctype)
+- `docOpts` - options for the document update [[DocOpts]] (optional)
 
 ### Response
 
