@@ -83,9 +83,10 @@ export default class Dispatcher extends EventEmitter {
     } catch (error) {
       // TODO: use logger
       if (error.message.includes('Already subscribed')) {
-        console.log(error.message)
+        this.logger.debug(error.message)
+      } else {
+        console.error(error)
       }
-      console.error(error)
     }
   }
 
