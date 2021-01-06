@@ -92,9 +92,7 @@ class Document extends EventEmitter implements DocStateHolder {
       }
     }
 
-    await doc._updateStateIfPinned()
-    await doc._register(opts)
-    return doc
+    return Document._syncDocumentToCurrent(doc, pinStore, opts)
   }
 
   /**
