@@ -73,3 +73,5 @@ We are happy to accept small and large contributions. Make sure to check out the
 [@simonovic86](https://github.com/simonovic86)
 
 ## License
+
+MIT or APACHE
