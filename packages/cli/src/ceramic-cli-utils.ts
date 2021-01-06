@@ -75,10 +75,15 @@ export class CeramicCliUtils {
         network: string,
         maxHealthyCpu = 0.7,
         maxHealthyMemory = 0.7,
-        corsAllowedOrigins: any[] = ["*"]
+        corsAllowedOrigins: string
     ): Promise<CeramicDaemon> {
         if (stateStorePath == null) {
             stateStorePath = DEFAULT_PINNING_STORE_PATH
+        }
+
+        let _corsAllowedOrigins: string | RegExp[] = '*'
+        if (corsAllowedOrigins != null && corsAllowedOrigins != '*') {
+            _corsAllowedOrigins = corsAllowedOrigins.split(' ').map((origin) => new RegExp(origin))
         }
 
         const config: CreateOpts = {
@@ -95,7 +100,7 @@ export class CeramicCliUtils {
             network,
             maxHealthyCpu,
             maxHealthyMemory,
-            corsAllowedOrigins
+            corsAllowedOrigins: _corsAllowedOrigins
         }
 
         multiformats.multicodec.add(dagJose)

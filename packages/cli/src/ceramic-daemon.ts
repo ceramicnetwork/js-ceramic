@@ -21,7 +21,7 @@ export interface CreateOpts {
   ipfsHost?: string;
   ipfs?: IpfsApi;
   port?: number;
-  corsAllowedOrigins: any[];
+  corsAllowedOrigins: string | RegExp[];
 
   ethereumRpcUrl?: string;
   anchorServiceUrl?: string;
@@ -67,7 +67,6 @@ class CeramicDaemon {
     const app: core.Express = express()
     app.use(express.json())
     app.use(cors({ origin: opts.corsAllowedOrigins }))
-    // app.use(cors({ origin: [ "http://localhost", /\.3boxlabs\.com$/, /\.ceramic\.network$/, /\.self\.id$/, /\.3idconnect\.org$/  ] }))
 
     this.registerAPIPaths(app, opts.gateway)
 
