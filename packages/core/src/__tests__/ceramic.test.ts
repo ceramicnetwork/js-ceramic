@@ -10,6 +10,7 @@ import dagJose from 'dag-jose'
 import basicsImport from 'multiformats/cjs/src/basics-import.js'
 import legacy from 'multiformats/cjs/src/legacy.js'
 import * as u8a from 'uint8arrays'
+import DocID from "@ceramicnetwork/docid"
 
 jest.mock('../store/level-state-store')
 
@@ -39,10 +40,12 @@ async function delay(mills: number): Promise<void> {
   await new Promise(resolve => setTimeout(() => resolve(), mills))
 }
 
-const createCeramic = async (ipfs: IpfsApi, anchorOnRequest = false): Promise<Ceramic> => {
+const createCeramic = async (ipfs: IpfsApi, anchorOnRequest = false, docCacheLimit = 100, cacheDocumentCommits = true): Promise<Ceramic> => {
   const ceramic = await Ceramic.create(ipfs, {
     stateStorePath: await tmp.tmpName(),
     anchorOnRequest,
+    docCacheLimit,
+    cacheDocCommits: cacheDocumentCommits,
     pubsubTopic: "/ceramic/inmemory/test" // necessary so Ceramic instances can talk to each other
   })
   const provider = new Ed25519Provider(seed)
@@ -52,6 +55,8 @@ const createCeramic = async (ipfs: IpfsApi, anchorOnRequest = false): Promise<Ce
 }
 
 const anchor = async (ceramic: Ceramic): Promise<void> => {
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
   await ceramic.context.anchorService.anchor()
 }
 
@@ -287,4 +292,188 @@ describe('Ceramic integration', () => {
     await ceramic1.close()
     await ceramic2.close()
   })
+
+
+  it('can evict from doc cache', async () => {
+    const ceramic1 = await createCeramic(ipfs1, false, 1)
+    const controller = ceramic1.context.did.id
+
+    const docCache1 = ceramic1._docCache
+    const putDocToCacheSpy1 = jest.spyOn(docCache1, 'put');
+    const getDocFromCacheSpy1 = jest.spyOn(docCache1, 'get');
+
+    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { test: 456 }, metadata: { controllers: [controller], tags: ['3id'] } })
+    expect(doctype1).toBeDefined()
+
+    await anchor(ceramic1)
+    await syncDoc(doctype1)
+
+    expect(putDocToCacheSpy1).toBeCalledTimes(1)
+    expect(getDocFromCacheSpy1).toBeCalledTimes(1)
+    expect(docCache1._baseDocCache.has(doctype1.id.baseID.toString())).toBeTruthy()
+    expect(docCache1._commitDocCache.has(doctype1.id.toString())).toBeFalsy()
+
+    putDocToCacheSpy1.mockClear()
+    getDocFromCacheSpy1.mockClear()
+
+    const doctype2 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { test: 3456789 }, metadata: { controllers: [controller], tags: ['3id'] } })
+    expect(doctype2).toBeDefined()
+
+    await anchor(ceramic1)
+    await syncDoc(doctype2)
+
+    expect(putDocToCacheSpy1).toBeCalledTimes(1)
+    expect(getDocFromCacheSpy1).toBeCalledTimes(1)
+    expect(docCache1._baseDocCache.has(doctype1.id.baseID.toString())).toBeFalsy()
+    expect(docCache1._baseDocCache.has(doctype2.id.baseID.toString())).toBeTruthy()
+    expect(docCache1._commitDocCache.has(doctype1.id.toString())).toBeFalsy()
+    expect(docCache1._commitDocCache.has(doctype2.id.toString())).toBeFalsy()
+
+    await ceramic1.close()
+  })
+
+  it('can pin/unpin doc to/from cache', async () => {
+    const ceramic1 = await createCeramic(ipfs1, false, 1)
+    const controller = ceramic1.context.did.id
+
+    const docCache1 = ceramic1._docCache
+    const putDocToCacheSpy1 = jest.spyOn(docCache1, 'put');
+    const getDocFromCacheSpy1 = jest.spyOn(docCache1, 'get');
+    const pinDocToCacheSpy1 = jest.spyOn(docCache1, 'pin');
+    const unpinDocToCacheSpy1 = jest.spyOn(docCache1, 'unpin');
+
+    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { test: 456 }, metadata: { controllers: [controller], tags: ['3id'] } })
+    expect(doctype1).toBeDefined()
+
+    await anchor(ceramic1)
+    await syncDoc(doctype1)
+
+    expect(putDocToCacheSpy1).toBeCalledTimes(1)
+    expect(getDocFromCacheSpy1).toBeCalledTimes(1)
+    expect(docCache1._baseDocCache.has(doctype1.id.baseID.toString())).toBeTruthy()
+    expect(docCache1._commitDocCache.has(doctype1.id.toString())).toBeFalsy()
+
+    putDocToCacheSpy1.mockClear()
+    getDocFromCacheSpy1.mockClear()
+
+    await ceramic1.pin.add(doctype1.id)
+
+    expect(putDocToCacheSpy1).toBeCalledTimes(0)
+    expect(getDocFromCacheSpy1).toBeCalledTimes(1)
+    expect(pinDocToCacheSpy1).toBeCalledTimes(1)
+    expect(unpinDocToCacheSpy1).toBeCalledTimes(0)
+    expect(docCache1._pinnedDocCache[doctype1.id.baseID.toString()]).toBeDefined()
+    expect(docCache1._baseDocCache.has(doctype1.id.baseID.toString())).toBeFalsy()
+    expect(docCache1._commitDocCache.has(doctype1.id.toString())).toBeFalsy()
+
+    putDocToCacheSpy1.mockClear()
+    getDocFromCacheSpy1.mockClear()
+    pinDocToCacheSpy1.mockClear()
+    unpinDocToCacheSpy1.mockClear()
+
+    await ceramic1.pin.rm(doctype1.id)
+
+    expect(putDocToCacheSpy1).toBeCalledTimes(1)
+    expect(getDocFromCacheSpy1).toBeCalledTimes(0)
+    expect(pinDocToCacheSpy1).toBeCalledTimes(0)
+    expect(unpinDocToCacheSpy1).toBeCalledTimes(1)
+    expect(docCache1._pinnedDocCache[doctype1.id.baseID.toString()]).toBeUndefined()
+    expect(docCache1._baseDocCache.has(doctype1.id.baseID.toString())).toBeTruthy()
+    expect(docCache1._commitDocCache.has(doctype1.id.toString())).toBeFalsy()
+
+    await ceramic1.close()
+  })
+
+  it('can utilize doc commit cache', async () => {
+    const ceramic1 = await createCeramic(ipfs1, false, 2)
+    const ceramic2 = await createCeramic(ipfs2, false, 1)
+    const controller = ceramic1.context.did.id
+
+    const docCache1 = ceramic1._docCache
+    const putDocToCacheSpy1 = jest.spyOn(docCache1, 'put');
+    const getDocFromCacheSpy1 = jest.spyOn(docCache1, 'get');
+
+    const docCache2 = ceramic2._docCache
+    const putDocToCacheSpy2 = jest.spyOn(docCache2, 'put');
+    const getDocFromCacheSpy2 = jest.spyOn(docCache2, 'get');
+
+    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { test: 456 }, metadata: { controllers: [controller], tags: ['3id'] } })
+    expect(doctype1).toBeDefined()
+
+    await anchor(ceramic1)
+    await syncDoc(doctype1)
+
+    expect(putDocToCacheSpy1).toBeCalledTimes(1)
+    expect(getDocFromCacheSpy1).toBeCalledTimes(1)
+    expect(docCache1._baseDocCache.has(doctype1.id.baseID.toString())).toBeTruthy()
+    expect(docCache1._commitDocCache.has(doctype1.id.toString())).toBeFalsy()
+
+    putDocToCacheSpy1.mockClear()
+    getDocFromCacheSpy1.mockClear()
+
+    await doctype1.change({ content: { test: 'abcde' }, metadata: { controllers: [controller] } })
+
+    await anchor(ceramic1)
+    await syncDoc(doctype1)
+
+    const prevCommitDocId1 = DocID.fromOther(doctype1.id, doctype1.state.log[3].cid.toString())
+
+    const loadedDoctype1 = await ceramic2.loadDocument(prevCommitDocId1)
+    expect(loadedDoctype1).toBeDefined()
+
+    expect(getDocFromCacheSpy2).toBeCalledTimes(2)
+    expect(putDocToCacheSpy2).toBeCalledTimes(2)
+    expect(docCache2._baseDocCache.has(prevCommitDocId1.baseID.toString())).toBeTruthy()
+    expect(docCache2._commitDocCache.has(prevCommitDocId1.toString())).toBeTruthy()
+
+    await ceramic1.close()
+    await ceramic2.close()
+  })
+
+  it('cannot utilize disabled doc commit cache', async () => {
+    const ceramic1 = await createCeramic(ipfs1, false, 2)
+    const ceramic2 = await createCeramic(ipfs2, false, 1, false)
+    const controller = ceramic1.context.did.id
+
+    const docCache1 = ceramic1._docCache
+    const putDocToCacheSpy1 = jest.spyOn(docCache1, 'put');
+    const getDocFromCacheSpy1 = jest.spyOn(docCache1, 'get');
+
+    const docCache2 = ceramic2._docCache
+    const putDocToCacheSpy2 = jest.spyOn(docCache2, 'put');
+    const getDocFromCacheSpy2 = jest.spyOn(docCache2, 'get');
+
+    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { test: 456 }, metadata: { controllers: [controller], tags: ['3id'] } })
+    expect(doctype1).toBeDefined()
+
+    await anchor(ceramic1)
+    await syncDoc(doctype1)
+
+    expect(putDocToCacheSpy1).toBeCalledTimes(1)
+    expect(getDocFromCacheSpy1).toBeCalledTimes(1)
+    expect(docCache1._baseDocCache.has(doctype1.id.baseID.toString())).toBeTruthy()
+    expect(docCache1._commitDocCache.has(doctype1.id.toString())).toBeFalsy()
+
+    putDocToCacheSpy1.mockClear()
+    getDocFromCacheSpy1.mockClear()
+
+    await doctype1.change({ content: { test: 'abcde' }, metadata: { controllers: [controller] } })
+
+    await anchor(ceramic1)
+    await syncDoc(doctype1)
+
+    const prevCommitDocId1 = DocID.fromOther(doctype1.id, doctype1.state.log[3].cid.toString())
+
+    const loadedDoctype1 = await ceramic2.loadDocument(prevCommitDocId1)
+    expect(loadedDoctype1).toBeDefined()
+
+    expect(getDocFromCacheSpy2).toBeCalledTimes(2)
+    expect(putDocToCacheSpy2).toBeCalledTimes(2)
+    expect(docCache2._baseDocCache.has(prevCommitDocId1.baseID.toString())).toBeTruthy()
+    expect(docCache2._commitDocCache).toBeNull()
+
+    await ceramic1.close()
+    await ceramic2.close()
+  })
+
 })

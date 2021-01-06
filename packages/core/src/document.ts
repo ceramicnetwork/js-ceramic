@@ -19,6 +19,7 @@ import {
   DocMetadata,
   RootLogger,
   Logger,
+  DocStateHolder,
 } from '@ceramicnetwork/common'
 import DocID from '@ceramicnetwork/docid'
 import { PinStore } from './store/pin-store';
@@ -31,7 +32,7 @@ const DEFAULT_WRITE_DOCOPTS = {anchor: true, publish: true, sync: false}
 /**
  * Document handles the update logic of the Doctype instance
  */
-class Document extends EventEmitter {
+class Document extends EventEmitter implements DocStateHolder {
   private _genesisCid: CID
   private _applyQueue: PQueue
 

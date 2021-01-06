@@ -135,9 +135,20 @@ export interface DocOpts {
 }
 
 /**
+ * Describes object which stores DocState.
+ *
+ * Note: the interface should be removed once we refactor documents.
+ *
+ */
+export interface DocStateHolder {
+    id: DocID;
+    state: DocState;
+}
+
+/**
  * Describes common doctype attributes
  */
-export abstract class Doctype extends EventEmitter {
+export abstract class Doctype extends EventEmitter implements DocStateHolder {
     constructor(private _state: DocState, private _context: Context) {
         super()
     }
