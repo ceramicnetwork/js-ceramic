@@ -143,7 +143,7 @@ export interface DocOpts {
  * Note: the interface should be removed once we refactor documents.
  *
  */
-export interface DocStateHolder extends EventEmitter {
+export interface DocStateHolder {
     id: DocID;
     state: DocState;
 }

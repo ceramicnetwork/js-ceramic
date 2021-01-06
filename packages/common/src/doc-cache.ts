@@ -59,10 +59,11 @@ export class DocCache {
      * Puts to pinned
      */
     pin(doc: DocStateHolder) {
+        if (doc.id.commit != null) {
+            throw new Error(`Cannot pin a specific commit. Doc ID ${doc.id.toString()}`)
+        }
         this._pinnedDocCache[doc.id.toString()] = doc;
-        this._baseDocCache.delete(doc.id.baseID.toString())
-        this._commitDocCache.delete(doc.id.baseID.toString())
-        return;
+        this._baseDocCache.delete(doc.id.toString())
     }
 
     /**
@@ -81,8 +82,7 @@ export class DocCache {
      */
     del(docId: DocID): void {
         this._baseDocCache.delete(docId.baseID.toString())
-        this._commitDocCache.delete(docId.baseID.toString())
-
+        this._commitDocCache.delete(docId.toString())
     }
 
     /**

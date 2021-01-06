@@ -33,6 +33,7 @@ export const DEFAULT_CLIENT_CONFIG: CeramicClientConfig = {
   docSyncEnabled: false,
   docSyncInterval: 5000,
   docCacheLimit: 500,
+  cacheDocCommits: false,
 }
 
 /**
@@ -43,6 +44,7 @@ export interface CeramicClientConfig {
   docSyncEnabled?: boolean
   docSyncInterval?: number
   docCacheLimit?: number;
+  cacheDocCommits?: boolean;
 }
 
 /**
@@ -70,7 +72,7 @@ export default class CeramicClient implements CeramicApi {
     this._config = { ...DEFAULT_CLIENT_CONFIG, ...config }
 
     this._apiUrl = combineURLs(apiHost, API_PATH)
-    this._docCache = new DocCache(config.docCacheLimit, true)
+    this._docCache = new DocCache(config.docCacheLimit, this._config.cacheDocCommits)
 
     this.context = { api: this }
     this.pin = this._initPinApi()
