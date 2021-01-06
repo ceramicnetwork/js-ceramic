@@ -99,7 +99,9 @@ export class DocCache {
      */
     applyToAll(applyFn: (d: DocStateHolder) => void): void {
         this._baseDocCache.forEach((d) => applyFn(d))
-        this._commitDocCache.forEach((d) => applyFn(d))
+        if (this._commitDocCache != null) {
+            this._commitDocCache.forEach((d) => applyFn(d))
+        }
 
         Object.entries(this._pinnedDocCache).forEach(([, d]) => applyFn(d))
     }
