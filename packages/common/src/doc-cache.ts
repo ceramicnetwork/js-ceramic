@@ -82,7 +82,10 @@ export class DocCache {
      */
     del(docId: DocID): void {
         this._baseDocCache.delete(docId.baseID.toString())
-        this._commitDocCache.delete(docId.toString())
+
+        if (this._cacheCommits) {
+            this._commitDocCache.delete(docId.toString())
+        }
     }
 
     /**
@@ -99,10 +102,10 @@ export class DocCache {
      */
     applyToAll(applyFn: (d: DocStateHolder) => void): void {
         this._baseDocCache.forEach((d) => applyFn(d))
-        if (this._commitDocCache != null) {
+
+        if (this._cacheCommits) {
             this._commitDocCache.forEach((d) => applyFn(d))
         }
-
         Object.entries(this._pinnedDocCache).forEach(([, d]) => applyFn(d))
     }
 
@@ -112,6 +115,9 @@ export class DocCache {
     clear(): void {
         this._pinnedDocCache = {}
         this._baseDocCache.clear();
-        this._commitDocCache.clear();
+
+        if (this._cacheCommits) {
+            this._commitDocCache.clear();
+        }
     }
 }
