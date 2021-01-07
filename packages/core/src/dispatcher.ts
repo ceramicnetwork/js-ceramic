@@ -77,7 +77,7 @@ export default class Dispatcher extends EventEmitter {
       await this._ipfs.pubsub.subscribe(
         this.topic,
         this.handleMessage,
-        {timeout: TESTING ? null : IPFS_GET_TIMEOUT}
+        // {timeout: IPFS_GET_TIMEOUT} // ipfs-core bug causes timeout option to throw https://github.com/ipfs/js-ipfs/issues/3472
       )
       this._log({peer: this._peerId, event: 'subscribed', topic: this.topic })
     } catch (error) {
