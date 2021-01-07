@@ -81,7 +81,8 @@ describe('Ceramic interop: core <> http-client', () => {
         // performed yet by the time the test checks.  To eliminate this race condition we should set
         // anchorOnRequest to false in the config for the InMemoryAnchorService and anchor manually
         // throughout the tests.
-        core = await Ceramic.create(ipfs, {pubsubTopic: topic})
+        const stateStorePath = await tmp.tmpName()
+        core = await Ceramic.create(ipfs, {pubsubTopic: topic, stateStorePath})
 
         const doctypeHandler = new TileDoctypeHandler()
         doctypeHandler.verifyJWS = (): Promise<void> => { return }
@@ -306,6 +307,74 @@ describe('Ceramic interop: core <> http-client', () => {
             expect(resCore[docB.id.toString()].content).toEqual(resClient[docB.id.toString()].content)
             expect(resCore[docC.id.toString()].content).toEqual(resClient[docC.id.toString()].content)
             expect(resCore[docD.id.toString()].content).toEqual(resClient[docD.id.toString()].content)
+        })
+    })
+
+    describe('pin api', () => {
+
+        let docA, docB
+
+        beforeAll(async () => {
+            docB = await core.createDocument(DOCTYPE_TILE, { content: { foo: 'bar' } })
+            docA = await core.createDocument(DOCTYPE_TILE, { content: { foo: 'baz' } })
+        })
+
+        const pinLs = async (docId?: DocID): Promise<Array<any>> => {
+            const pinnedDocsIterator = await client.pin.ls(docId);
+            const docs = [];
+            for await (const doc of pinnedDocsIterator) {
+                docs.push(doc)
+            }
+            return docs
+        }
+
+        it('pin API CRUD test', async () => {
+            // Make sure no docs are pinned to start
+            let pinnedDocs = await pinLs()
+            expect(pinnedDocs).toHaveLength(0)
+
+            // Pin docA
+            await client.pin.add(docA.id)
+
+            // Make sure docA shows up in list of all pinned docs
+            pinnedDocs = await pinLs()
+            expect(pinnedDocs).toEqual([docA.id.toString()])
+
+            // Make sure docA shows as pinned when checking for its specific docId
+            pinnedDocs = await pinLs(docA.id)
+            expect(pinnedDocs).toEqual([docA.id.toString()])
+
+            // Make sure docB doesn't show up as pinned when checking for its docId
+            pinnedDocs = await pinLs(docB.id)
+            expect(pinnedDocs).toHaveLength(0)
+
+            // Now pin docB as well, and make sure 'ls' works as expected in all cases
+            await client.pin.add(docB.id)
+
+            pinnedDocs = await pinLs()
+            expect(pinnedDocs).toHaveLength(2)
+            expect(pinnedDocs).toContain(docA.id.toString())
+            expect(pinnedDocs).toContain(docB.id.toString())
+
+            pinnedDocs = await pinLs(docA.id)
+            expect(pinnedDocs).toEqual([docA.id.toString()])
+
+            pinnedDocs = await pinLs(docB.id)
+            expect(pinnedDocs).toEqual([docB.id.toString()])
+
+            // Now unpin docA
+            await client.pin.rm(docA.id)
+
+            pinnedDocs = await pinLs()
+            expect(pinnedDocs).toEqual([docB.id.toString()])
+
+            // Make sure docB still shows as pinned when checking for its specific docId
+            pinnedDocs = await pinLs(docB.id)
+            expect(pinnedDocs).toEqual([docB.id.toString()])
+
+            // Make sure docA no longer shows up as pinned when checking for its docId
+            pinnedDocs = await pinLs(docA.id)
+            expect(pinnedDocs).toHaveLength(0)
         })
     })
 })
