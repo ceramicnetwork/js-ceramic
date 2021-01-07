@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/doctype-tile",
-  "version": "0.12.7",
+  "version": "0.12.8",
   "description": "Ceramic Tile doctype",
   "keywords": [
     "ceramic",
@@ -25,7 +25,7 @@
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/common": "^0.15.3",
+    "@ceramicnetwork/common": "^0.15.4",
     "@ethersproject/base64": "^5.0.2",
     "@ethersproject/random": "^5.0.2",
     "@types/lodash.clonedeep": "^4.5.6",
@@ -42,7 +42,7 @@
     "@babel/plugin-proposal-decorators": "^7.10.1",
     "@babel/preset-env": "^7.8.4",
     "@babel/preset-typescript": "^7.9.0",
-    "@ceramicnetwork/3id-did-resolver": "^0.6.3",
+    "@ceramicnetwork/3id-did-resolver": "^0.6.4",
     "@types/encoding-down": "^5.0.0",
     "@types/events": "^3.0.0",
     "@types/node": "^13.13.15",
@@ -64,5 +64,5 @@
       "/node_modules(?!/did-jwt)/"
     ]
   },
-  "gitHead": "c58eb9659f5fdd976aca2db6465619c20ba30ff9"
+  "gitHead": "4a43386b9803e9bc00f71ceef30b2a822f1a9c8a"
 }
