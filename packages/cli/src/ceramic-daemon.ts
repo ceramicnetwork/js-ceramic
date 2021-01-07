@@ -95,12 +95,15 @@ class CeramicDaemon {
       })
     }
 
+    // next is required in function signature
     app.use((err: Error, req: Request, res: Response, next: NextFunction): void => {
-      const requestStart = Date.now()
-      const httpLog = this._buildHttpLog(requestStart, req, res)
-      const logString = JSON.stringify(httpLog)
-      this.logger.error(logString)
-      next(err)
+      this.logger.error(err)
+      if (res.statusCode < 300) { // 2xx indicates error has not yet been handled
+        res.status(500)
+      }
+      res.send(err.message)
+      // TODO: Get real request start
+      this.logger.error(JSON.stringify(this._buildHttpLog(Date.now(), req, res)))
     })
 
     const port = opts.port || DEFAULT_PORT
@@ -212,12 +215,12 @@ class CeramicDaemon {
     const stats = `maxHealthyCpu=${this.maxHealthyCpu} cpuUsage=${cpuUsage} freeCpu=${freeCpu} maxHealthyMemory=${this.maxHealthyMemory} memoryUsage=${memUsage} freeMemory=${freeMemory}`
 
     if (cpuUsage > this.maxHealthyCpu || memUsage > this.maxHealthyMemory) {
-      this.logger.error('Ceramic failed a healthcheck')
-      res.status(503).send('Insufficient resources')
+      this.logger.debug(stats)
+      res.status(503)
+      return next(new Error('Ceramic failed a healthcheck. Insufficient resources.'))
     } else {
       res.status(200).send('Alive!')
     }
-    this.logger.debug(stats)
   }
 
   /**
