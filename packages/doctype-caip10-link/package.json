@@ -29,7 +29,7 @@
     "3id-blockchain-utils": "^1.1.0",
     "@ceramicnetwork/common": "^0.15.4",
     "@types/lodash.clonedeep": "^4.5.6",
-    "cids": "1.0.2"
+    "cids": "1.1.4"
   },
   "devDependencies": {
     "@babel/core": "^7.9.0",

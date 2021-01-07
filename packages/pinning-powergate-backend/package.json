@@ -35,7 +35,7 @@
   },
   "devDependencies": {
     "@types/lodash": "^4.14.162",
-    "cids": "1.0.2"
+    "cids": "1.1.4"
   },
   "publishConfig": {
     "access": "public"
