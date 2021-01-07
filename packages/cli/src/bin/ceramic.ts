@@ -18,6 +18,7 @@ program
     .option('--network <name>', 'Name of the ceramic network to connect to. One of: "mainnet", "testnet-clay", "local", or "inmemory". Defaults to "testnet-clay"')
     .option('--max-healthy-cpu <decimal>', 'Fraction of total CPU usage considered healthy. Defaults to 0.7')
     .option('--max-healthy-memory <decimal>', 'Fraction of total memory usage considered healthy. Defaults to 0.7')
+    .option('--cors-allowed-origins <list>', 'Space-separated list of strings and/or regex expressions to set for Access-Control-Allow-Origin . Defaults to all: "*"')
     .description('Start the daemon')
     .action(async ({
         ipfsApi,
@@ -33,7 +34,8 @@ program
         logPath,
         network,
         maxHealthyCpu,
-        maxHealthyMemory
+        maxHealthyMemory,
+        corsAllowedOrigins
     }) => {
         await CeramicCliUtils.createDaemon(
             ipfsApi,
@@ -49,7 +51,8 @@ program
             logPath,
             network,
             maxHealthyCpu,
-            maxHealthyMemory
+            maxHealthyMemory,
+            corsAllowedOrigins
         )
     })
 

@@ -21,6 +21,7 @@ export interface CreateOpts {
   ipfsHost?: string;
   ipfs?: IpfsApi;
   port?: number;
+  corsAllowedOrigins: string | RegExp[];
 
   ethereumRpcUrl?: string;
   anchorServiceUrl?: string;
@@ -65,7 +66,7 @@ class CeramicDaemon {
 
     const app: core.Express = express()
     app.use(express.json())
-    app.use(cors())
+    app.use(cors({ origin: opts.corsAllowedOrigins }))
 
     this.registerAPIPaths(app, opts.gateway)
 
