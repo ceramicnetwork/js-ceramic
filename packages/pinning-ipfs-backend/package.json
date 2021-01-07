@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/pinning-ipfs-backend",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "IPFS Pinning backend",
   "keywords": [
     "ceramic",
@@ -25,7 +25,7 @@
     "lib": "lib"
   },
   "dependencies": {
-    "@ceramicnetwork/common": "^0.15.2",
+    "@ceramicnetwork/common": "^0.15.3",
     "@stablelib/base64": "^1.0.0",
     "@stablelib/sha256": "^1.0.0",
     "ipfs-http-client": "48.1.1"

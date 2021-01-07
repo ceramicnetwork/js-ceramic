@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.15.3](/compare/@ceramicnetwork/common@0.15.2...@ceramicnetwork/common@0.15.3) (2021-01-07)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
 ## [0.15.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@0.15.1...@ceramicnetwork/common@0.15.2) (2020-12-29)
 
 

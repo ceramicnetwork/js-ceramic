@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.18.5](/compare/@ceramicnetwork/cli@0.18.4...@ceramicnetwork/cli@0.18.5) (2021-01-07)
+
+
+### Bug Fixes
+
+* log api errors with status and message (#750) 6c6445c, closes #750
+
+
+
+
+
 ## [0.18.4](/compare/@ceramicnetwork/cli@0.18.3...@ceramicnetwork/cli@0.18.4) (2020-12-31)
 
 **Note:** Version bump only for package @ceramicnetwork/cli
