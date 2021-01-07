@@ -323,7 +323,7 @@ export class CeramicCliUtils {
      * @param docId - optional document ID filter
      */
     static async pinLs(docId?: string): Promise<void> {
-        const id = DocID.fromString(docId)
+        const id = docId ? DocID.fromString(docId) : null
 
         await CeramicCliUtils._runWithCeramic(async (ceramic: CeramicApi) => {
             const pinnedDocIds = []

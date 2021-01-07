@@ -96,7 +96,8 @@ export default class CeramicClient implements CeramicApi {
   _initPinApi(): PinApi {
     return {
       add: async (docId: DocID): Promise<void> => {
-        const doc = await fetchJson(this._apiUrl + '/pins' + `/${docId.toString()}`, { method: 'post' })
+        await fetchJson(this._apiUrl + '/pins' + `/${docId.toString()}`, { method: 'post' })
+        const doc = await this.loadDocument(docId)
         this._docCache.pin(doc)
       },
       rm: async (docId: DocID): Promise<void> => {
@@ -105,7 +106,7 @@ export default class CeramicClient implements CeramicApi {
       },
       ls: async (docId?: DocID): Promise<AsyncIterable<string>> => {
         let url = this._apiUrl + '/pins'
-        if (docId !== undefined) {
+        if (docId) {
           url += `/${docId.toString()}`
         }
         const result = await fetchJson(url)

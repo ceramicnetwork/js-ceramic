@@ -72,7 +72,9 @@ export class DocCache {
     unpin(docId: DocID) {
         const doc = this._pinnedDocCache[docId.baseID.toString()]
         delete this._pinnedDocCache[docId.baseID.toString()]
-        this.put(doc)
+        if (doc) {
+            this.put(doc)
+        }
         return
     }
 
