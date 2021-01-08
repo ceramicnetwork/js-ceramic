@@ -20,7 +20,7 @@
     "lib"
   ],
   "scripts": {
-    "test": "./node_modules/.bin/jest --coverage --runInBand",
+    "test": "../../node_modules/.bin/jest --coverage --runInBand",
     "build": "../../node_modules/.bin/tsc -p tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
@@ -38,6 +38,9 @@
     "@ethersproject/base64": "^5.0.2",
     "@ethersproject/providers": "^5.0.0-beta.144",
     "@ethersproject/random": "^5.0.2",
+    "@stablelib/random": "^1.0.0",
+    "@stablelib/sha256": "^1.0.0",
+    "ipld-dag-cbor": "^0.17.0",
     "ajv": "^6.12.3",
     "base64url": "^3.0.1",
     "cids": "1.0.2",
@@ -55,6 +58,7 @@
     "typestub-multihashes": "^0.0.4"
   },
   "devDependencies": {
+    "uint8arrays": "^1.1.0",
     "@babel/core": "^7.9.0",
     "@babel/plugin-proposal-decorators": "^7.10.1",
     "@babel/plugin-transform-modules-commonjs": "^7.10.4",
@@ -65,16 +69,14 @@
     "@types/node": "^13.13.15",
     "@typescript-eslint/eslint-plugin": "^4.6.0",
     "@typescript-eslint/parser": "^4.6.0",
-    "babel-jest": "^25.1.0",
     "eslint": "^6.8.0",
     "eslint-plugin-jest": "^23.8.2",
     "get-port": "^5.1.1",
     "ipfs-core": "0.3.0",
-    "jest": "^26.6.3",
-    "jest-mock-extended": "^1.0.9",
     "js-sha256": "^0.9.0",
     "key-did-provider-ed25519": "^1.0.0",
-    "tmp-promise": "^2.0.2"
+    "tmp-promise": "^2.0.2",
+    "dag-jose": "^0.3.0"
   },
   "jest": {
     "testEnvironment": "node",

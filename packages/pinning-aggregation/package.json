@@ -32,7 +32,8 @@
     "@ceramicnetwork/pinning-powergate-backend": "^0.1.9",
     "@stablelib/base64": "^1.0.0",
     "@stablelib/sha256": "^1.0.0",
-    "cids": "1.0.2"
+    "cids": "1.0.2",
+    "lodash": "^4.17.20"
   },
   "publishConfig": {
     "access": "public"

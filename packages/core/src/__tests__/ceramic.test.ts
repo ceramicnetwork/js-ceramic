@@ -37,7 +37,7 @@ const expectEqualStates = (state1: DocState, state2: DocState): void => {
 }
 
 async function delay(mills: number): Promise<void> {
-  await new Promise(resolve => setTimeout(() => resolve(), mills))
+  await new Promise<void>(resolve => setTimeout(() => resolve(), mills))
 }
 
 const createCeramic = async (ipfs: IpfsApi, anchorOnRequest = false, docCacheLimit = 100, cacheDocumentCommits = true): Promise<Ceramic> => {
@@ -61,7 +61,7 @@ const anchor = async (ceramic: Ceramic): Promise<void> => {
 }
 
 const syncDoc = async (doctype: Doctype): Promise<void> => {
-  await new Promise(resolve => {
+  await new Promise<void>(resolve => {
     doctype.on('change', () => {
       resolve()
     })
