@@ -4,3 +4,8 @@ lerna-debug.log
 .pinning.store
 .vscode
 docs/
+
+packages/*/lib/
+packages/*/node_modules/
+packages/*/coverage/
+packages/*/logs/
