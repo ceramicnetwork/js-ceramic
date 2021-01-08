@@ -7,7 +7,8 @@ import DocID from '@ceramicnetwork/docid'
 import { Context, PinningBackend } from "@ceramicnetwork/common"
 import { AnchorStatus, DocOpts, SignatureStatus } from "@ceramicnetwork/common"
 import { AnchorService } from "@ceramicnetwork/common"
-import { TileDoctype, TileParams, TileDoctypeHandler } from "@ceramicnetwork/doctype-tile"
+import { TileDoctype, TileParams } from "@ceramicnetwork/doctype-tile"
+import { TileDoctypeHandler } from '@ceramicnetwork/doctype-tile-handler'
 import { PinStore } from "../store/pin-store";
 import { LevelStateStore } from "../store/level-state-store";
 import { DID } from "dids"
@@ -84,7 +85,7 @@ jest.mock('../dispatcher', () => {
       retrieveRecord: jest.fn(cid => {
         return recs[cid.toString()]
       }),
-      retrieveFromIPFS: jest.fn((cid, path) => {
+      retrieveFromIPFS: jest.fn((cid) => {
         // TODO: this doesn't actually handle path traversal properly
         return recs[cid.toString()]
       }),

@@ -1,13 +1,13 @@
-import CID from 'cids'
+import type CID from 'cids'
 
 import * as didJwt from 'did-jwt'
-import base64url from 'base64url'
-import { PublicKey } from 'did-resolver'
+import * as uint8arrays from 'uint8arrays'
+import type { PublicKey } from 'did-resolver'
 
 import jsonpatch from 'fast-json-patch'
 import cloneDeep from 'lodash.clonedeep'
 
-import { TileDoctype, TileParams } from "./tile-doctype"
+import { TileDoctype, TileParams, DOCTYPE } from "@ceramicnetwork/doctype-tile"
 import {
     AnchorStatus,
     Context,
@@ -21,8 +21,6 @@ import {
     CeramicRecord,
     AnchorRecord,
 } from "@ceramicnetwork/common"
-
-const DOCTYPE = 'tile'
 
 /**
  * Tile doctype handler implementation
@@ -182,7 +180,8 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
         const { payload, signatures } = record
         const { signature,  protected: _protected } = signatures[0]
 
-        const decodedHeader = JSON.parse(base64url.decode(_protected))
+        const jsonString = uint8arrays.toString(uint8arrays.fromString(_protected, 'base64url'))
+        const decodedHeader = JSON.parse(jsonString)
         const { kid } = decodedHeader
         if (!kid.startsWith(did)) {
             throw new Error(`Signature was made with wrong DID. Expected: ${did}, got: ${kid}`)

@@ -18,7 +18,7 @@ import {
     UnsignedRecord,
 } from "@ceramicnetwork/common"
 
-const DOCTYPE = 'tile'
+export const DOCTYPE = 'tile'
 
 /**
  * Tile doctype parameters

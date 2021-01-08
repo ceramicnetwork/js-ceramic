@@ -32,6 +32,7 @@
    { "path": "./packages/common" },
    { "path": "./packages/doctype-caip10-link" },
    { "path": "./packages/doctype-tile" },
+   { "path": "./packages/doctype-tile-handler" },
    { "path": "./packages/pinning-aggregation" },
    { "path": "./packages/pinning-ipfs-backend" },
    { "path": "./packages/pinning-powergate-backend" }
