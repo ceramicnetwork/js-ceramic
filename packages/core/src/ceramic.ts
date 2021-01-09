@@ -27,7 +27,7 @@ import { Resolver } from "did-resolver"
 
 import { DID } from 'dids'
 import { TileDoctypeHandler } from "@ceramicnetwork/doctype-tile-handler"
-import { Caip10LinkDoctypeHandler } from "@ceramicnetwork/doctype-caip10-link"
+import { Caip10LinkDoctypeHandler } from "@ceramicnetwork/doctype-caip10-link-handler"
 import { PinStoreFactory } from "./store/pin-store-factory";
 import { PinStore } from "./store/pin-store";
 import { PathTrie, TrieNode, promiseTimeout } from './utils'

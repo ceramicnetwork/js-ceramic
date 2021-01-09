@@ -8,7 +8,7 @@ import {
     CeramicRecord
 } from "@ceramicnetwork/common"
 
-const DOCTYPE = 'caip10-link'
+export const DOCTYPE = 'caip10-link'
 
 /**
  * Caip10Link parameters

@@ -1,6 +1,6 @@
-import CID from 'cids'
+import type CID from 'cids'
 import { validateLink } from "3id-blockchain-utils"
-import { Caip10LinkDoctype, Caip10LinkParams } from "./caip10-link-doctype"
+import { Caip10LinkDoctype, Caip10LinkParams, DOCTYPE } from "@ceramicnetwork/doctype-caip10-link"
 import {
     AnchorStatus,
     DocState,
@@ -11,10 +11,8 @@ import {
     RecordType,
     CeramicRecord,
     AnchorRecord,
+    Context
 } from "@ceramicnetwork/common"
-import { Context } from "@ceramicnetwork/common"
-
-const DOCTYPE = 'caip10-link'
 
 export class Caip10LinkDoctypeHandler implements DoctypeHandler<Caip10LinkDoctype> {
     /**
