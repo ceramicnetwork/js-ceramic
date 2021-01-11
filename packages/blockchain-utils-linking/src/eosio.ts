@@ -50,7 +50,7 @@ export class EosioAuthProvider implements AuthProvider {
   }
 
   withAddress(address: string): AuthProvider {
-    return new EosioAuthProvider(this.provider, this.address);
+    return new EosioAuthProvider(this.provider, address);
   }
 }
 

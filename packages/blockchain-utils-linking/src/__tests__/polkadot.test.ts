@@ -5,7 +5,7 @@ import { TypeRegistry } from "@polkadot/types/create";
 import { createTestKeyring } from "@polkadot/keyring/testing";
 import { assert, hexToU8a, u8aToHex } from "@polkadot/util";
 import { PolkadotAuthProvider } from "../polkadot";
-import { waitReady } from "@polkadot/wasm-crypto";
+import { cryptoWaitReady } from "@polkadot/util-crypto";
 
 const did = "did:3:bafysdfwefwe";
 const seed = hexToU8a(
@@ -46,8 +46,7 @@ let keyPairSr25519: KeyringPair,
   keyPairSecp256k: KeyringPair;
 
 beforeAll(async () => {
-  await waitReady();
-  console.log('wait', await waitReady())
+  await cryptoWaitReady();
   keyPairSr25519 = keyringSr25519.addFromSeed(seed);
   keyPairEd25519 = keyringEd25519.addFromSeed(seed);
   keyPairSecp256k = keyringSecp256k.addFromSeed(seed);

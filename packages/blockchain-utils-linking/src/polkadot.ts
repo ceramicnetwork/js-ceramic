@@ -17,7 +17,7 @@ export class PolkadotAuthProvider implements AuthProvider {
   ) {}
 
   async authenticate(message: string): Promise<string> {
-    throw new Error("Not Implemented");
+    throw new Error(`Not Implemented: PolkadotAuthProvider#authenticate, ${message}`);
   }
 
   async createLink(did: string): Promise<LinkProof> {

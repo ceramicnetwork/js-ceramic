@@ -1,10 +1,12 @@
 import { AccountID } from "caip";
 import ganache from "ganache-core";
+import ethereum from "../ethereum";
 import * as sigUtils from "eth-sig-util";
 import { ContractFactory, Contract } from "@ethersproject/contracts";
 import * as providers from "@ethersproject/providers";
-import { encodeRpcMessage } from "../util";
-import * as ethereum from "../ethereum";
+import * as linking from "@ceramicnetwork/blockchain-utils-linking";
+import { proofs } from "./fixtures";
+import {LinkProof} from "@ceramicnetwork/blockchain-utils-linking";
 
 const CONTRACT_WALLET_ABI = [
   {
@@ -51,15 +53,13 @@ const send = (provider: any, data: any): Promise<any> =>
     })
   );
 
-const testDid = "did:3:bafysdfwefwe";
+let provider: any, addresses: string[], contractAddress: string;
 
-let provider: any;
-let addresses: string[];
-let contractAddress: string;
+const testDid = "did:3:bafysdfwefwe";
 
 beforeAll(async () => {
   provider = ganache.provider(GANACHE_CONF);
-  addresses = await send(provider, encodeRpcMessage("eth_accounts"));
+  addresses = await send(provider, linking.encodeRpcMessage("eth_accounts"));
   // ganache-core doesn't support personal_sign -.-
   provider.manager.personal_sign = (
     data: any,
@@ -83,7 +83,7 @@ beforeAll(async () => {
     gasPrice: 100000000000,
     nonce: 0,
   });
-  await send(provider, encodeRpcMessage("eth_sendTransaction", [unsignedTx]));
+  await send(provider, linking.encodeRpcMessage("eth_sendTransaction", [unsignedTx]));
   contractAddress = Contract.getContractAddress(unsignedTx);
   // mock ethers providers
   (providers as any).getNetwork = (): any => {
@@ -93,95 +93,69 @@ beforeAll(async () => {
       },
     };
   };
-  global.Date.now = jest.fn().mockImplementation(() => 666);
 });
 
-afterAll(() => {
-  jest.clearAllMocks();
+test("invalid ethereumEOA proof should return null", async () => {
+  // wrong address
+  const account = new AccountID({ address: addresses[1], chainId: "eip155:1" });
+  const invalidProof = { account } as unknown as LinkProof;
+  expect(await ethereum.validateLink(invalidProof)).toBeFalsy();
+  // invalid signature
+  const invalidSignatureProof = Object.assign(
+    {},
+    {
+      signature:
+        "0xfa69ccf4a94db6132542abcabcabcab234b73f439700fbb748209890a5780f3365a5335f82d424d7f9a63ee41b637c116e64ef2f32c761bb065e4409f978c4babc",
+    }
+  ) as unknown as LinkProof;
+  expect(await ethereum.validateLink(invalidSignatureProof)).toBeFalsy();
 });
 
-describe("isEthAddress", () => {
-  test("detect eth address correctly", async () => {
-    const notEthAddr = "0xabc123";
-    expect(await ethereum.isEthAddress(notEthAddr)).toBeFalsy();
-    expect(await ethereum.isEthAddress(addresses[0])).toBeTruthy();
-  });
+test("validateLink: valid ethereumEOA proof should return proof", async () => {
+  const authProvider = new linking.ethereum.EthereumAuthProvider(
+    provider,
+    addresses[0]
+  );
+  const proof = await authProvider.createLink(testDid);
+  await expect(ethereum.validateLink(proof)).resolves.toEqual(proof);
 });
 
-describe("isERC1271", () => {
-  test("detect erc1271 address", async () => {
-    const acc1 = new AccountID({ address: addresses[0], chainId: "eip155:1" });
-    expect(await ethereum.isERC1271(acc1, provider)).toEqual(false);
-    const acc2 = new AccountID({
-      address: contractAddress,
-      chainId: "eip155:1",
-    });
-    expect(await ethereum.isERC1271(acc2, provider)).toEqual(true);
-  });
+test("validate v0 and v1 proofs", async () => {
+  expect(await ethereum.validateLink(proofs.v0.valid as unknown as LinkProof)).toMatchSnapshot();
+  await expect(ethereum.validateLink(proofs.v0.invalid as unknown as LinkProof)).resolves.toEqual(null);
+  expect(await ethereum.validateLink(proofs.v1.valid as unknown as LinkProof)).toMatchSnapshot();
+  expect(await ethereum.validateLink(proofs.v1.invalid as unknown as LinkProof)).toEqual(null);
 });
 
-describe("createLink", () => {
-  test("create ethereumEOA proof correctly", async () => {
-    const acc = new AccountID({ address: addresses[0], chainId: "eip155:1" });
-    // skip timestamp because it's a pain to test
-    const eoaProof = await ethereum.createLink(testDid, acc, provider, {
-      skipTimestamp: true,
-    });
-    expect(eoaProof).toMatchSnapshot();
+test("invalid erc1271 proof should return null", async () => {
+  // the contract wallet we deployed should just return false by default
+  // when trying to validate signature
+  const account = new AccountID({
+    address: contractAddress,
+    chainId: "eip155:" + GANACHE_CHAIN_ID,
   });
-
-  test("create erc1271 proof correctly", async () => {
-    // In reality personal_sign is implemented differently by each contract wallet.
-    // However the correct signature should still be returned. Here we simply test
-    // that the proof is constructed correctly.
-    const acc = new AccountID({
-      address: contractAddress,
-      chainId: "eip155:" + GANACHE_CHAIN_ID,
-    });
-    expect(
-      await ethereum.createLink(testDid, acc, provider, { skipTimestamp: true })
-    ).toMatchSnapshot();
-  });
-
-  test("throw if erc1271 is on wrong chain", async () => {
-    // In reality personal_sign is implemented differently by each contract wallet.
-    // However the correct signature should still be returned. Here we simply test
-    // that the proof is constructed correctly.
-    const acc = new AccountID({
-      address: contractAddress,
-      chainId: "eip155:123",
-    });
-    await expect(
-      ethereum.createLink(testDid, acc, provider, { skipTimestamp: true })
-    ).rejects.toMatchSnapshot();
-  });
+  const erc1271Proof = { account, type: "erc1271" } as unknown as LinkProof
+  expect(await ethereum.validateLink(erc1271Proof)).toBeFalsy();
 });
 
-describe("authenticate", () => {
-  test("correctly sign auth message", async () => {
-    const account = new AccountID({
-      address: addresses[1],
-      chainId: "eip155:1",
-    });
-    await expect(
-      ethereum.authenticate("msg", account, provider)
-    ).resolves.toMatchSnapshot();
+test("validateLink: valid erc1271 proof should return proof", async () => {
+  // tell the contract wallet contract to return valid signature instead
+  const contract = new Contract(
+    contractAddress,
+    CONTRACT_WALLET_ABI,
+    new providers.Web3Provider(provider)
+  );
+  let tx = await contract.populateTransaction.setIsValid(true);
+  tx = Object.assign(tx, {
+    from: addresses[0],
+    gas: 4712388,
+    gasPrice: 100000000000,
   });
-});
-
-describe("EthereumAuthProvider", () => {
-  test("authenticate", async () => {
-    const address = addresses[0];
-    const auth = new ethereum.EthereumAuthProvider(provider, address);
-    await expect(
-      auth.withAddress(address).authenticate("msg")
-    ).resolves.toMatchSnapshot();
-  });
-  test("createLink", async () => {
-    const address = addresses[0];
-    const auth = new ethereum.EthereumAuthProvider(provider, address);
-    await expect(
-      auth.withAddress(address).createLink(testDid)
-    ).resolves.toMatchSnapshot();
-  });
+  await send(provider, linking.encodeRpcMessage("eth_sendTransaction", [tx]));
+  const authProvider = new linking.ethereum.EthereumAuthProvider(
+    provider,
+    contractAddress
+  );
+  const proof = await authProvider.createLink('msg')
+  expect(await ethereum.validateLink(proof)).toEqual(proof);
 });
