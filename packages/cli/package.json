@@ -44,7 +44,6 @@
     "@ceramicnetwork/core": "^0.17.7",
     "@ceramicnetwork/docid": "^0.4.2",
     "@ceramicnetwork/doctype-tile": "^0.12.8",
-    "@ceramicnetwork/doctype-tile-handler": "^0.12.8",
     "@ceramicnetwork/http-client": "^0.8.12",
     "@stablelib/random": "^1.0.0",
     "@zondax/filecoin-signing-tools": "^0.13.0",
@@ -79,7 +78,8 @@
     "eslint": "^6.8.0",
     "eslint-plugin-jest": "^23.8.2",
     "jest": "^26.6.3",
-    "tmp-promise": "^2.0.2"
+    "tmp-promise": "^2.0.2",
+    "@ceramicnetwork/doctype-tile-handler": "^0.12.8"
   },
   "peerDependencies": {
     "@zondax/filecoin-signing-tools": "^0.13.0"
