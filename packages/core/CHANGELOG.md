@@ -3,6 +3,25 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.17.7](/compare/@ceramicnetwork/core@0.17.6...@ceramicnetwork/core@0.17.7) (2021-01-07)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+## [0.17.6](/compare/@ceramicnetwork/core@0.17.5...@ceramicnetwork/core@0.17.6) (2021-01-07)
+
+
+### Bug Fixes
+
+* **core:** respect pinned status on createDocument call (#741) 1361390, closes #741
+
+
+
+
+
 ## [0.17.5](/compare/@ceramicnetwork/core@0.17.4...@ceramicnetwork/core@0.17.5) (2020-12-31)
 
 **Note:** Version bump only for package @ceramicnetwork/core

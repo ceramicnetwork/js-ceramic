@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.8.12](/compare/@ceramicnetwork/http-client@0.8.11...@ceramicnetwork/http-client@0.8.12) (2021-01-07)
+
+**Note:** Version bump only for package @ceramicnetwork/http-client
+
+
+
+
+
+## [0.8.11](/compare/@ceramicnetwork/http-client@0.8.10...@ceramicnetwork/http-client@0.8.11) (2021-01-07)
+
+**Note:** Version bump only for package @ceramicnetwork/http-client
+
+
+
+
+
 ## [0.8.10](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/http-client@0.8.9...@ceramicnetwork/http-client@0.8.10) (2020-12-29)
 
 

@@ -226,6 +226,10 @@ class Ceramic implements CeramicApi {
       }
     }
 
+    if (networkName == "mainnet") {
+      throw new Error("Ceramic mainnet is not yet supported")
+    }
+
     // Now that we know the set of supported chains for the specified network, get the actually
     // configured chainId from the anchorService and make sure it's valid.
     const anchorServiceChains = await anchorService.getSupportedChains()
