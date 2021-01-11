@@ -31,6 +31,7 @@
    { "path": "./packages/http-client" },
    { "path": "./packages/common" },
    { "path": "./packages/doctype-caip10-link" },
+   { "path": "./packages/doctype-caip10-link-handler" },
    { "path": "./packages/doctype-tile" },
    { "path": "./packages/doctype-tile-handler" },
    { "path": "./packages/pinning-aggregation" },
