@@ -13,6 +13,7 @@
    "experimentalDecorators": true,
    "sourceMap": true,
    "baseUrl": "./packages",
+   "incremental": true,
    "paths": {
      "@ceramicnetwork/*": ["./*/"]
    }
