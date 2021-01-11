@@ -1,0 +1,43 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`accountId 1`] = `
+AccountID {
+  "address": "testuser1111",
+  "chainId": ChainID {
+    "namespace": "eosio",
+    "reference": "1eaa0824707c8c16bd25145493bf062a",
+  },
+}
+`;
+
+exports[`authenticate Jungle 1`] = `"0xda6a3b61f0849251071ebceb94c874a3517772cc2a865c8c5e078c2e6646a0c2"`;
+
+exports[`authenticate Telos Testnet 1`] = `"0x521674ea7031af056c7fcf69e2c3ff6f4bea888158941a7b6dc789d0fe44cf53"`;
+
+exports[`createLink generate proof on jungle testnet 1`] = `
+Object {
+  "account": "idx3idctest1@eosio:2a02a0053e5a8cf73a56ba0fda11e4d9",
+  "message": "Create a new account link to your identity.
+
+did:3:bafysdfwefwe 
+Timestamp: 666",
+  "signature": "SIG_K1_KUxrjuxkgUuXheBQaSAeR5Ahud2LnYTf5aTtZm4qLxXQPyYVU8XAxoLPkukxHLMCPouUbFwfvYkiiuHiz6RU1ia9gT9m92",
+  "timestamp": 666,
+  "type": "eosio",
+  "version": 1,
+}
+`;
+
+exports[`createLink generate proof on telos testnet 1`] = `
+Object {
+  "account": "testuser1111@eosio:1eaa0824707c8c16bd25145493bf062a",
+  "message": "Create a new account link to your identity.
+
+did:3:bafysdfwefwe 
+Timestamp: 666",
+  "signature": "SIG_K1_Jy6okKYm2SCnv8e1qb7mUTfygmAUFG3bW9NhMMsRTUXgn92x4n67csgnjh28Q2ex2Eadf9fTCCBiFV3EA3NmLTyRZoj8sm",
+  "timestamp": 666,
+  "type": "eosio",
+  "version": 1,
+}
+`;
