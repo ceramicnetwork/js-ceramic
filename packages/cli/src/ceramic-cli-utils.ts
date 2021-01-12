@@ -22,7 +22,6 @@ import legacy from 'multiformats/legacy'
 import ipfsClient from "ipfs-http-client"
 
 const DEFAULT_CLI_CONFIG_FILE = 'config.json'
-export const DEFAULT_PINNING_STORE_PATH = ".pinning.store"
 const DEFAULT_CLI_CONFIG_PATH = path.join(os.homedir(), '.ceramic')
 
 const IPFS_DHT_SERVER_MODE = process.env.IPFS_DHT_SERVER_MODE === 'true'

@@ -1,6 +1,6 @@
 import program from 'commander'
 
-import { CeramicCliUtils, DEFAULT_PINNING_STORE_PATH } from "../ceramic-cli-utils"
+import { CeramicCliUtils } from "../ceramic-cli-utils"
 
 program
     .command('daemon')
@@ -9,7 +9,7 @@ program
     .option('--anchor-service-api <url>', 'The anchor service URL to use')
     .option('--validate-docs', 'Validate documents according to their schemas. It is enabled by default')
     .option('--pinning <url...>', 'Pinning endpoints')
-    .option('--pinning-store-path <url>', `The directory path used for pinning service. Defaults to WORKING_DIR/${DEFAULT_PINNING_STORE_PATH}`)
+    .option('--pinning-store-path <url>', `The directory path used for pinning service. Defaults to WORKING_DIR`)
     .option('--gateway', 'Makes read only endpoints available. It is disabled by default')
     .option('--port <int>', 'Port daemon is available. Default is 7007')
     .option('--debug', 'Enable debug logging level. Default is false')
