@@ -11,6 +11,7 @@
   "homepage": "https://ceramic.network",
   "license": "(Apache-2.0 OR MIT)",
   "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "directories": {
     "lib": "lib"
   },
@@ -26,9 +27,9 @@
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
+    "@ceramicnetwork/blockchain-utils-validation": "^0.0.1",
     "@ceramicnetwork/common": "^0.15.4",
-    "@ceramicnetwork/doctype-caip10-link": "^0.12.6",
-    "3id-blockchain-utils": "^1.1.0"
+    "@ceramicnetwork/doctype-caip10-link": "^0.12.6"
   },
   "devDependencies": {
     "@stablelib/sha256": "^1.0.0",

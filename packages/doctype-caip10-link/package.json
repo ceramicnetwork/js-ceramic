@@ -11,6 +11,7 @@
   "homepage": "",
   "license": "(Apache-2.0 OR MIT)",
   "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "directories": {
     "lib": "lib"
   },
@@ -26,7 +27,6 @@
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
-    "3id-blockchain-utils": "^1.1.0",
     "@ceramicnetwork/common": "^0.15.4",
     "@types/lodash.clonedeep": "^4.5.6",
     "cids": "1.0.2"

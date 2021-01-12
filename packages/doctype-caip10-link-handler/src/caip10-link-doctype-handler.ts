@@ -1,5 +1,5 @@
 import type CID from 'cids'
-import { validateLink } from "3id-blockchain-utils"
+import { validateLink } from "@ceramicnetwork/blockchain-utils-validation"
 import { Caip10LinkDoctype, Caip10LinkParams, DOCTYPE_NAME } from "@ceramicnetwork/doctype-caip10-link"
 import {
     AnchorStatus,
