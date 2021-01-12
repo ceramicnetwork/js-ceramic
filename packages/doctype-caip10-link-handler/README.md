@@ -4,7 +4,7 @@
 
 ### Installation
 ```shell
-npm install @ceramicnetwork/doctype-caip10-link
+npm install @ceramicnetwork/doctype-caip10-link-handler
 ```
 
 ## Contributing

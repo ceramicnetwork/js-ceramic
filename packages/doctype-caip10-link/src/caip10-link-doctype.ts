@@ -8,7 +8,7 @@ import {
     CeramicRecord
 } from "@ceramicnetwork/common"
 
-export const DOCTYPE = 'caip10-link'
+export const DOCTYPE_NAME = 'caip10-link'
 
 /**
  * Caip10Link parameters
@@ -46,7 +46,7 @@ export class Caip10LinkDoctype extends Doctype {
         const { content, metadata } = params
 
         const record = await Caip10LinkDoctype.makeGenesis({ content, metadata }, context)
-        return context.api.createDocumentFromGenesis(DOCTYPE, record, opts)
+        return context.api.createDocumentFromGenesis(DOCTYPE_NAME, record, opts)
     }
 
     /**

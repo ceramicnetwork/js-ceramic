@@ -7,7 +7,7 @@ import type { PublicKey } from 'did-resolver'
 import jsonpatch from 'fast-json-patch'
 import cloneDeep from 'lodash.clonedeep'
 
-import { TileDoctype, TileParams, DOCTYPE } from "@ceramicnetwork/doctype-tile"
+import { TileDoctype, TileParams, DOCTYPE_NAME } from "@ceramicnetwork/doctype-tile"
 import {
     AnchorStatus,
     Context,
@@ -30,7 +30,7 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
      * Gets doctype name
      */
     get name(): string {
-        return DOCTYPE
+        return DOCTYPE_NAME
     }
 
     /**
@@ -87,7 +87,7 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
             throw Error('Genesis record with contents should always be signed')
         }
         return {
-            doctype: DOCTYPE,
+            doctype: DOCTYPE_NAME,
             content: payload.data || {},
             metadata: payload.header,
             signature: isSigned? SignatureStatus.SIGNED : SignatureStatus.GENESIS,

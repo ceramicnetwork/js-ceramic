@@ -60,7 +60,6 @@
     "typestub-multihashes": "^0.0.4"
   },
   "devDependencies": {
-    "uint8arrays": "^1.1.0",
     "@babel/core": "^7.9.0",
     "@babel/plugin-proposal-decorators": "^7.10.1",
     "@babel/plugin-transform-modules-commonjs": "^7.10.4",
@@ -71,6 +70,7 @@
     "@types/node": "^13.13.15",
     "@typescript-eslint/eslint-plugin": "^4.6.0",
     "@typescript-eslint/parser": "^4.6.0",
+    "dag-jose": "^0.3.0",
     "eslint": "^6.8.0",
     "eslint-plugin-jest": "^23.8.2",
     "get-port": "^5.1.1",
@@ -78,7 +78,7 @@
     "js-sha256": "^0.9.0",
     "key-did-provider-ed25519": "^1.0.0",
     "tmp-promise": "^2.0.2",
-    "dag-jose": "^0.3.0"
+    "uint8arrays": "^1.1.0"
   },
   "jest": {
     "testEnvironment": "node",
