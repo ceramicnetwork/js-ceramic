@@ -1,13 +1,15 @@
-# Ceramic Tile doctype
+# Utils for validation of linked blockchain accounts
 
-> This package contains Tile doctype implementation.
+> This package contains utility functions to validate links of blockchain accounts linked a DID.
 
 ### Installation
-```
-$ npm install @ceramicnetwork/doctype-tile
+```shell
+npm install @ceramicnetwork/doctype-blockchain-utils-validation
 ```
 
 ## Contributing
 We are happy to accept small and large contributions. Make sure to check out the [Ceramic specifications](https://github.com/ceramicnetwork/specs) for details of how the protocol works.
 
 ## License
+
+Apache-2.0 or MIT
