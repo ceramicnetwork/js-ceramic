@@ -79,6 +79,13 @@ export interface CeramicApi {
     loadDocumentCommits(docId: DocID | string): Promise<Array<Record<string, any>>>;
 
     /**
+     * Load all document commits by document ID
+     * @param docId - Document ID
+     * @deprecated See `loadDocumentCommits`
+     */
+    loadDocumentRecords(docId: DocID | string): Promise<Array<Record<string, any>>>;
+
+    /**
      * Applies commit on the existing document
      * @param docId - Document ID
      * @param commit - Commit to be applied
