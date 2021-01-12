@@ -162,7 +162,7 @@ describe('Ceramic interop: core <> http-client', () => {
         const records2 = await client.loadDocumentRecords(doc2.id)
         expect(records2).toBeDefined()
 
-        const serializeRecords = (records: any): any => records.map((r: any) => {
+        const serializeCommits = (commits: any): any => commits.map((r: any) => {
             return {
                 cid: r.cid, value: DoctypeUtils.serializeCommit(r.value)
             }
