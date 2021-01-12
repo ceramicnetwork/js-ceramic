@@ -92,8 +92,8 @@ jest.mock('../../dispatcher', () => {
       register: jest.fn((doc) => {
         docs[doc.id] = doc
       }),
-      storeRecord: jest.fn(async (rec) => {
-        if (DoctypeUtils.isSignedRecordContainer(rec)) {
+      storeCommit: jest.fn(async (rec) => {
+        if (DoctypeUtils.isSignedCommitContainer(rec)) {
           const { jws, linkedBlock } = rec
           const block = dagCBOR.util.deserialize(linkedBlock)
 
@@ -123,7 +123,7 @@ jest.mock('../../dispatcher', () => {
           docs[id]._publishTip()
         }
       },
-      retrieveRecord: jest.fn(cid => {
+      retrieveCommit: jest.fn(cid => {
         return recs[cid.toString()]
       }),
       retrieveFromIPFS: jest.fn((cid, path) => {
@@ -218,7 +218,7 @@ describe('Level data store', () => {
 
   it('pins document correctly without IPFS pinning', async () => {
     const genesis = await TileDoctype.makeGenesis({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, context)
-    const genesisCid = await dispatcher.storeRecord(genesis)
+    const genesisCid = await dispatcher.storeCommit(genesis)
     const docId = new DocID('tile', genesisCid)
     const doc = await Document.create(docId, doctypeHandler, dispatcher, store, context)
 
@@ -236,7 +236,7 @@ describe('Level data store', () => {
 
   it('pins not anchored document correctly with IPFS pinning', async () => {
     const genesis = await TileDoctype.makeGenesis({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, context)
-    const genesisCid = await dispatcher.storeRecord(genesis)
+    const genesisCid = await dispatcher.storeCommit(genesis)
     const docId = new DocID('tile', genesisCid)
     const doc = await Document.create(docId, doctypeHandler, dispatcher, store, context, {
       anchor: false, publish: false, sync: false,
@@ -254,7 +254,7 @@ describe('Level data store', () => {
 
   it('pins document correctly with IPFS pinning', async () => {
     const genesis = await TileDoctype.makeGenesis({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, context)
-    const genesisCid = await dispatcher.storeRecord(genesis)
+    const genesisCid = await dispatcher.storeCommit(genesis)
     const docId = new DocID('tile', genesisCid)
     const doc = await Document.create(docId, doctypeHandler, dispatcher, store, context)
     await anchorUpdate(doc.doctype)
@@ -271,7 +271,7 @@ describe('Level data store', () => {
 
   it('removes pinned document', async () => {
     const genesis = await TileDoctype.makeGenesis({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, context)
-    const genesisCid = await dispatcher.storeRecord(genesis)
+    const genesisCid = await dispatcher.storeCommit(genesis)
     const docId = new DocID('tile', genesisCid)
     const doc = await Document.create(docId, doctypeHandler, dispatcher, store, context)
     await anchorUpdate(doc.doctype)
@@ -285,7 +285,7 @@ describe('Level data store', () => {
 
   it('skips removing unpinned document', async () => {
     const genesis = await TileDoctype.makeGenesis({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, context)
-    const genesisCid = await dispatcher.storeRecord(genesis)
+    const genesisCid = await dispatcher.storeCommit(genesis)
     const docId = new DocID('tile', genesisCid)
     const doc = await Document.create(docId, doctypeHandler, dispatcher, store, context)
     await anchorUpdate(doc.doctype)
@@ -296,7 +296,7 @@ describe('Level data store', () => {
 
   it('lists pinned documents', async () => {
     const genesis = await TileDoctype.makeGenesis({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, context)
-    const genesisCid = await dispatcher.storeRecord(genesis)
+    const genesisCid = await dispatcher.storeCommit(genesis)
     const docId = new DocID('tile', genesisCid)
     const doc = await Document.create(docId, doctypeHandler, dispatcher, store, context)
     await anchorUpdate(doc.doctype)
@@ -321,7 +321,7 @@ describe('Level data store', () => {
 
   it('lists empty for unpinned document', async () => {
     const genesis = await TileDoctype.makeGenesis({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, context)
-    const genesisCid = await dispatcher.storeRecord(genesis)
+    const genesisCid = await dispatcher.storeCommit(genesis)
     const docId = new DocID('tile', genesisCid)
     const doc = await Document.create(docId, doctypeHandler, dispatcher, store, context)
     await anchorUpdate(doc.doctype)

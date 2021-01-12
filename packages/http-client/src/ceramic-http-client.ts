@@ -4,7 +4,7 @@ import Document from './document'
 import { DID } from 'dids'
 import {
   CeramicApi,
-  CeramicRecord,
+  CeramicCommit,
   Context,
   DIDProvider,
   DocCache,
@@ -185,14 +185,28 @@ export default class CeramicClient implements CeramicApi {
     }, {})
   }
 
-  async loadDocumentRecords(docId: DocID | string): Promise<Array<Record<string, any>>> {
-    docId = typeDocID(docId)
-    return Document.loadDocumentRecords(docId, this._apiUrl)
+  loadDocumentCommits(docId: string | DocID): Promise<Record<string, any>[]> {
+    const effectiveDocId = typeDocID(docId)
+    return Document.loadDocumentCommits(effectiveDocId, this._apiUrl)
   }
 
-  async applyRecord<T extends Doctype>(docId: DocID | string, record: CeramicRecord, opts?: DocOpts): Promise<T> {
-    docId = typeDocID(docId)
-    return await Document.applyRecord(this._apiUrl, docId, record, this.context, opts) as unknown as T
+  /**
+   * @deprecated See `loadDocumentCommits`.
+   */
+  async loadDocumentRecords(docId: DocID | string): Promise<Array<Record<string, any>>> {
+    return this.loadDocumentCommits(docId)
+  }
+
+  applyCommit<T extends Doctype>(docId: string | DocID, commit: CeramicCommit, opts?: DocOpts): Promise<T> {
+    const effectiveDocId = typeDocID(docId)
+    return Document.applyCommit(this._apiUrl, effectiveDocId, commit, this.context, opts) as unknown as Promise<T>
+  }
+
+  /**
+   * @deprecated See `applyCommit`.
+   */
+  async applyRecord<T extends Doctype>(docId: DocID | string, record: CeramicCommit, opts?: DocOpts): Promise<T> {
+    return this.applyCommit(docId, record, opts)
   }
 
   addDoctypeHandler<T extends Doctype>(doctypeHandler: DoctypeHandler<T>): void {

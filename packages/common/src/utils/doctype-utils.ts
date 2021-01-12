@@ -3,10 +3,10 @@ import cloneDeep from "lodash.clonedeep"
 import * as u8a from 'uint8arrays'
 
 import {
-    AnchorRecord,
-    CeramicRecord,
+    AnchorCommit,
+    CeramicCommit,
     IpfsApi,
-    SignedRecord, SignedRecordContainer
+    SignedCommit, SignedCommitContainer
 } from "../index"
 import { AnchorStatus, DocState, Doctype, LogEntry } from "../doctype"
 import { DagJWS } from "dids"
@@ -17,23 +17,23 @@ import { DagJWS } from "dids"
 export class DoctypeUtils {
 
     /**
-     * Serializes record
-     * @param record - Record instance
+     * Serializes commit
+     * @param commit - Commit instance
      */
-    static serializeRecord(record: any): any {
-        const cloned = cloneDeep(record)
+    static serializeCommit(commit: any): any {
+        const cloned = cloneDeep(commit)
 
-        if (DoctypeUtils.isSignedRecordContainer(cloned)) {
+        if (DoctypeUtils.isSignedCommitContainer(cloned)) {
             cloned.jws.link = cloned.jws.link.toString()
             cloned.linkedBlock = u8a.toString(cloned.linkedBlock, 'base64')
             return cloned
         }
 
-        if (DoctypeUtils.isSignedRecord(cloned)) {
+        if (DoctypeUtils.isSignedCommit(cloned)) {
             cloned.link = cloned.link.toString()
         }
 
-        if (DoctypeUtils.isAnchorRecord(cloned)) {
+        if (DoctypeUtils.isAnchorCommit(cloned)) {
             cloned.proof = cloned.proof.toString()
         }
 
@@ -48,23 +48,23 @@ export class DoctypeUtils {
     }
 
     /**
-     * Deserializes record
-     * @param record - Record instance
+     * Deserializes commit
+     * @param commit - Commit instance
      */
-    static deserializeRecord(record: any): any {
-        const cloned = cloneDeep(record)
+    static deserializeCommit(commit: any): any {
+        const cloned = cloneDeep(commit)
 
-        if (DoctypeUtils.isSignedRecordContainer(cloned)) {
+        if (DoctypeUtils.isSignedCommitContainer(cloned)) {
             cloned.jws.link = new CID(cloned.jws.link)
             cloned.linkedBlock = u8a.fromString(cloned.linkedBlock, 'base64')
             return cloned
         }
 
-        if (DoctypeUtils.isSignedRecord(cloned)) {
+        if (DoctypeUtils.isSignedCommit(cloned)) {
             cloned.link = new CID(cloned.link)
         }
 
-        if (DoctypeUtils.isAnchorRecord(cloned)) {
+        if (DoctypeUtils.isAnchorCommit(cloned)) {
             cloned.proof = new CID(cloned.proof)
         }
 
@@ -150,43 +150,43 @@ export class DoctypeUtils {
     }
 
     /**
-     * Converts record to SignedRecordContainer. The only difference is with signed record for now
-     * @param record - Record value
+     * Converts commit to SignedCommitContainer. The only difference is with signed commit for now
+     * @param commit - Commit value
      * @param ipfs - IPFS instance
      */
-    static async convertRecordToSignedRecordContainer(record: CeramicRecord, ipfs: IpfsApi): Promise<CeramicRecord> {
-        if (DoctypeUtils.isSignedRecord(record)) {
-            const block = await ipfs.block.get((record as DagJWS).link)
+    static async convertCommitToSignedCommitContainer(commit: CeramicCommit, ipfs: IpfsApi): Promise<CeramicCommit> {
+        if (DoctypeUtils.isSignedCommit(commit)) {
+            const block = await ipfs.block.get((commit as DagJWS).link)
             const linkedBlock = block.data instanceof Uint8Array ? block.data : new Uint8Array(block.data.buffer)
             return {
-                jws: record as DagJWS,
+                jws: commit as DagJWS,
                 linkedBlock,
             }
         }
-        return record
+        return commit
     }
 
     /**
-     * Checks if record is signed DTO ({jws: {}, linkedBlock: {}})
-     * @param record - Record
+     * Checks if commit is signed DTO ({jws: {}, linkedBlock: {}})
+     * @param commit - Commit
      */
-    static isSignedRecordContainer(record: CeramicRecord): boolean {
-        return (record as SignedRecordContainer).jws !== undefined
+    static isSignedCommitContainer(commit: CeramicCommit): boolean {
+        return (commit as SignedCommitContainer).jws !== undefined
     }
 
     /**
-     * Checks if record is signed
-     * @param record - Record
+     * Checks if commit is signed
+     * @param commit - Commit
      */
-    static isSignedRecord(record: CeramicRecord): boolean {
-        return (record as SignedRecord).link !== undefined
+    static isSignedCommit(commit: CeramicCommit): boolean {
+        return (commit as SignedCommit).link !== undefined
     }
 
     /**
-     * Checks if record is anchor record
-     * @param record - Record
+     * Checks if commit is anchor commit
+     * @param commit - Commit
      */
-    static isAnchorRecord(record: CeramicRecord): boolean {
-        return (record as AnchorRecord).proof !== undefined
+    static isAnchorCommit(commit: CeramicCommit): boolean {
+        return (commit as AnchorCommit).proof !== undefined
     }
 }

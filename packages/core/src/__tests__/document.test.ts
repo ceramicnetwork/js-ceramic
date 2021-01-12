@@ -51,8 +51,8 @@ jest.mock('../dispatcher', () => {
       register: jest.fn((doc) => {
         docs[doc.id] = doc
       }),
-      storeRecord: jest.fn(async (rec) => {
-        if (DoctypeUtils.isSignedRecordContainer(rec)) {
+      storeCommit: jest.fn(async (rec) => {
+        if (DoctypeUtils.isSignedCommitContainer(rec)) {
           const { jws, linkedBlock } = rec
           const block = dagCBOR.util.deserialize(linkedBlock)
 
@@ -82,7 +82,7 @@ jest.mock('../dispatcher', () => {
           docs[id]._publishTip()
         }
       },
-      retrieveRecord: jest.fn(cid => {
+      retrieveCommit: jest.fn(cid => {
         return recs[cid.toString()]
       }),
       retrieveFromIPFS: jest.fn((cid, path) => {
@@ -261,14 +261,14 @@ describe('Document', () => {
       expect(commit1).toEqual(commits[1])
       expect(commit1).toEqual(anchorCommits[0])
 
-      const updateRec = await TileDoctype._makeRecord(doc.doctype, user, newContent, doc.controllers)
+      const updateRec = await TileDoctype._makeCommit(doc.doctype, user, newContent, doc.controllers)
 
       commits = doc.allCommitIds
       anchorCommits = doc.anchorCommitIds
       expect(commits.length).toEqual(2)
       expect(anchorCommits.length).toEqual(1)
 
-      await doc.applyRecord(updateRec)
+      await doc.applyCommit(updateRec)
 
       commits = doc.allCommitIds
       anchorCommits = doc.anchorCommitIds
@@ -295,8 +295,8 @@ describe('Document', () => {
 
       // Apply a final record that never gets anchored and thus never becomes a proper commit
       const finalContent = {foo: 'bar'}
-      const updateRec2 = await TileDoctype._makeRecord(doc.doctype, user, finalContent, doc.controllers)
-      await doc.applyRecord(updateRec2)
+      const updateRec2 = await TileDoctype._makeCommit(doc.doctype, user, finalContent, doc.controllers)
+      await doc.applyCommit(updateRec2)
 
       commits = doc.allCommitIds
       anchorCommits = doc.anchorCommitIds
@@ -309,12 +309,12 @@ describe('Document', () => {
       expect(doc.state.log.length).toEqual(5)
 
       // try to load a non-existing commit
+      const nonExistentCommitID = DocID.fromOther(doc.id, new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu'))
       try {
-        const nonExistentCommitID = DocID.fromOther(doc.id, new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu'))
         await Document.loadAtCommit(nonExistentCommitID, doc)
         fail('Should not be able to fetch non-existing commit')
       } catch (e) {
-        expect(e.message).toContain('No record found for CID')
+        expect(e.message).toContain(`No commit found for CID ${nonExistentCommitID.commit?.toString()}`)
       }
 
       // Correctly check out a specific commit
@@ -366,8 +366,8 @@ describe('Document', () => {
       const doc = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context)
       await anchorUpdate(doc)
 
-      const updateRec = await TileDoctype._makeRecord(doc.doctype, user, newContent, doc.controllers)
-      await doc.applyRecord(updateRec)
+      const updateRec = await TileDoctype._makeCommit(doc.doctype, user, newContent, doc.controllers)
+      await doc.applyCommit(updateRec)
 
       await anchorUpdate(doc)
       expect(doc.content).toEqual(newContent)
@@ -381,8 +381,8 @@ describe('Document', () => {
       await anchorUpdate(doc1)
       const tipPreUpdate = doc1.tip
 
-      let updateRec = await TileDoctype._makeRecord(doc1.doctype, user, newContent, doc1.controllers)
-      await doc1.applyRecord(updateRec)
+      let updateRec = await TileDoctype._makeCommit(doc1.doctype, user, newContent, doc1.controllers)
+      await doc1.applyCommit(updateRec)
 
       await anchorUpdate(doc1)
       expect(doc1.content).toEqual(newContent)
@@ -396,8 +396,8 @@ describe('Document', () => {
       // TODO - better mock for anchors
 
       const conflictingNewContent = { asdf: 2342 }
-      updateRec = await TileDoctype._makeRecord(doc2.doctype, user, conflictingNewContent, doc2.controllers)
-      await doc2.applyRecord(updateRec)
+      updateRec = await TileDoctype._makeCommit(doc2.doctype, user, conflictingNewContent, doc2.controllers)
+      await doc2.applyCommit(updateRec)
 
       await anchorUpdate(doc2)
       const tipInvalidUpdate = doc2.tip
@@ -450,8 +450,8 @@ describe('Document', () => {
       await anchorUpdate(doc)
 
       try {
-        const updateRec = await TileDoctype._makeRecord(doc.doctype, user, null, doc.controllers, schemaDoc.commitId.toString())
-        await doc.applyRecord(updateRec)
+        const updateRec = await TileDoctype._makeCommit(doc.doctype, user, null, doc.controllers, schemaDoc.commitId.toString())
+        await doc.applyCommit(updateRec)
         fail('Should not be able to assign a schema to a document that does not conform')
       } catch (e) {
         expect(e.message).toEqual('Validation Error: data[\'stuff\'] should be string')
@@ -729,8 +729,8 @@ describe('Document', () => {
       expect(dispatcher.publishTip).toHaveBeenCalledWith(doc1.id, doc1.tip)
       await anchorUpdate(doc1)
 
-      const updateRec = await TileDoctype._makeRecord(doc1.doctype, user, newContent, doc1.controllers)
-      await doc1.applyRecord(updateRec)
+      const updateRec = await TileDoctype._makeCommit(doc1.doctype, user, newContent, doc1.controllers)
+      await doc1.applyCommit(updateRec)
 
       expect(doc1.content).toEqual(newContent)
 
@@ -747,8 +747,8 @@ describe('Document', () => {
         doc2.doctype.on('change', resolve)
       })
 
-      const updateRec = await TileDoctype._makeRecord(doc1.doctype, user, newContent, doc1.controllers)
-      await doc1.applyRecord(updateRec)
+      const updateRec = await TileDoctype._makeCommit(doc1.doctype, user, newContent, doc1.controllers)
+      await doc1.applyCommit(updateRec)
 
       expect(doc1.content).toEqual(newContent)
 

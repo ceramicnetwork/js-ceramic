@@ -165,7 +165,7 @@ describe('Ceramic interop: core <> http-client', () => {
 
         const serializeRecords = (records: any): any => records.map((r: any) => {
             return {
-                cid: r.cid, value: DoctypeUtils.serializeRecord(r.value)
+                cid: r.cid, value: DoctypeUtils.serializeCommit(r.value)
             }
         })
 

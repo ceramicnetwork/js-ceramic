@@ -7,7 +7,7 @@ import AnchorServiceResponse from './anchor/anchor-service-response'
 import Utils from './utils'
 import {
   AnchorProof,
-  AnchorRecord,
+  AnchorCommit,
   AnchorStatus,
   DocState,
   LogEntry,
@@ -82,8 +82,8 @@ class Document extends EventEmitter implements DocStateHolder {
     const doctype = new doctypeHandler.doctype(null, context) as T
     const doc = new Document(docId, dispatcher, pinStore, validate, context, doctypeHandler, doctype)
 
-    const genesis = await dispatcher.retrieveRecord(docId.cid)
-    doc._doctype.state = await doc._doctypeHandler.applyRecord(genesis, doc._genesisCid, context)
+    const genesis = await dispatcher.retrieveCommit(docId.cid)
+    doc._doctype.state = await doc._doctypeHandler.applyCommit(genesis, doc._genesisCid, context)
 
     if (validate) {
       const schema = await Document.loadSchema(context, doc._doctype)
@@ -125,15 +125,15 @@ class Document extends EventEmitter implements DocStateHolder {
   }
 
   /**
-   * Takes a document containing only the genesis record and kicks off the process to load and apply
+   * Takes a document containing only the genesis commit and kicks off the process to load and apply
    * the most recent Tip to it.
-   * @param doc - Document containing only the genesis record
+   * @param doc - Document containing only the genesis commit
    * @param pinStore
    * @param opts
    * @private
    */
   static async _syncDocumentToCurrent(doc: Document, pinStore: PinStore, opts: DocOpts): Promise<Document> {
-    // TODO: Assert that doc contains only the genesis record
+    // TODO: Assert that doc contains only the genesis commit
     const id = doc.id
 
     // Update document state to cached state if any
@@ -182,8 +182,8 @@ class Document extends EventEmitter implements DocStateHolder {
   }
 
   /**
-   * Loads the genesis record and builds a Document object off it, but does not register for updates
-   * or apply any additional records past the genesis record.
+   * Loads the genesis commit and builds a Document object off it, but does not register for updates
+   * or apply any additional commits past the genesis commit.
    * @param id - Document id
    * @param handler
    * @param dispatcher
@@ -202,11 +202,11 @@ class Document extends EventEmitter implements DocStateHolder {
     const doctype = new handler.doctype(null, context) as T
     const doc = new Document(id, dispatcher, pinStore, validate, context, handler, doctype)
 
-    const record = await dispatcher.retrieveRecord(doc._genesisCid)
-    if (record == null) {
-      throw new Error(`No record found for CID ${id.commit.toString()}`)
+    const commit = await dispatcher.retrieveCommit(doc._genesisCid)
+    if (commit == null) {
+      throw new Error(`No commit found for CID ${id.commit.toString()}`)
     }
-    doc._doctype.state = await doc._doctypeHandler.applyRecord(record, doc._genesisCid, context)
+    doc._doctype.state = await doc._doctypeHandler.applyCommit(commit, doc._genesisCid, context)
 
     if (validate) {
       const schema = await Document.loadSchema(context, doc._doctype)
@@ -219,16 +219,16 @@ class Document extends EventEmitter implements DocStateHolder {
   }
 
   /**
-   * Applies record to the existing Doctype
+   * Applies commit to the existing Doctype
    *
-   * @param record - Record data
+   * @param commit - Commit data
    * @param opts - Document initialization options (request anchor, wait, etc.)
    */
-  async applyRecord (record: any, opts: DocOpts = {}): Promise<void> {
+  async applyCommit (commit: any, opts: DocOpts = {}): Promise<void> {
     // Fill 'opts' with default values for any missing fields
     opts = {...DEFAULT_WRITE_DOCOPTS, ...opts}
 
-    const cid = await this.dispatcher.storeRecord(record)
+    const cid = await this.dispatcher.storeCommit(commit)
 
     await this._handleTip(cid)
     await this._updateStateIfPinned()
@@ -324,7 +324,7 @@ class Document extends EventEmitter implements DocStateHolder {
   /**
    * Fetch log to find a connection for the given CID
    *
-   * @param cid - Record CID
+   * @param cid - Commit CID
    * @param log - Found log so far
    * @private
    */
@@ -332,16 +332,16 @@ class Document extends EventEmitter implements DocStateHolder {
     if (await this._isCidIncluded(cid, this._doctype.state.log)) { // already processed
       return []
     }
-    const record = await this.dispatcher.retrieveRecord(cid)
-    if (record == null) {
-      throw new Error(`No record found for CID ${cid.toString()}`)
+    const commit = await this.dispatcher.retrieveCommit(cid)
+    if (commit == null) {
+      throw new Error(`No commit found for CID ${cid.toString()}`)
     }
 
-    let payload = record
-    if (DoctypeUtils.isSignedRecord(record)) {
-      payload = await this.dispatcher.retrieveRecord(record.link)
+    let payload = commit
+    if (DoctypeUtils.isSignedCommit(commit)) {
+      payload = await this.dispatcher.retrieveCommit(commit.link)
       if (payload == null) {
-        throw new Error(`No record found for CID ${record.link.toString()}`)
+        throw new Error(`No commit found for CID ${commit.link.toString()}`)
       }
     }
     const prevCid: CID = payload.prev
@@ -357,21 +357,21 @@ class Document extends EventEmitter implements DocStateHolder {
   }
 
   /**
-   * Find index of the record in the array. If the record is signed, fetch the payload
+   * Find index of the commit in the array. If the commit is signed, fetch the payload
    *
    * @param cid - CID value
    * @param log - Log array
    * @private
    */
   async _findIndex(cid: CID, log: Array<LogEntry>): Promise<number> {
-    // const conflictIdx = this._doctype.state.log.findIndex(x => x.equals(record.prev)) + 1
+    // const conflictIdx = this._doctype.state.log.findIndex(x => x.equals(commit.prev)) + 1
     for (let index = 0; index < log.length; index++) {
       const c = log[index].cid
       if (c.equals(cid)) {
         return index
       }
-      const record = await this.dispatcher.retrieveRecord(c)
-      if (DoctypeUtils.isSignedRecord(record) && record.link.equals(cid)) {
+      const commit = await this.dispatcher.retrieveCommit(c)
+      if (DoctypeUtils.isSignedCommit(commit) && commit.link.equals(cid)) {
         return index
       }
     }
@@ -379,7 +379,7 @@ class Document extends EventEmitter implements DocStateHolder {
   }
 
   /**
-   * Is CID included in the log. If the record is signed, fetch the payload
+   * Is CID included in the log. If the commit is signed, fetch the payload
    *
    * @param cid - CID value
    * @param log - Log array
@@ -444,7 +444,7 @@ class Document extends EventEmitter implements DocStateHolder {
   /**
    * Applies the log to the document
    *
-   * @param log - Log of record CIDs
+   * @param log - Log of commit CIDs
    * @return true if the log resulted in an update to this document's state, false if not
    * @private
    */
@@ -454,10 +454,10 @@ class Document extends EventEmitter implements DocStateHolder {
       return false
     }
     const cid = log[0]
-    const record = await this.dispatcher.retrieveRecord(cid)
-    let payload = record
-    if (DoctypeUtils.isSignedRecord(record)) {
-      payload = await this.dispatcher.retrieveRecord(record.link)
+    const commit = await this.dispatcher.retrieveCommit(cid)
+    let payload = commit
+    if (DoctypeUtils.isSignedCommit(commit)) {
+      payload = await this.dispatcher.retrieveCommit(commit.link)
     }
     if (payload.prev.equals(this.tip)) {
       // the new log starts where the previous one ended
@@ -490,9 +490,9 @@ class Document extends EventEmitter implements DocStateHolder {
    * Applies the log to the document and updates the state.
    * TODO: make this static so it's immediately obvious that this doesn't mutate the document
    *
-   * @param log - Log of record CIDs
+   * @param log - Log of commit CIDs
    * @param state - Document state
-   * @param breakOnAnchor - Should break apply on anchor record?
+   * @param breakOnAnchor - Should break apply on anchor commits?
    * @private
    */
   async _applyLogToState (log: Array<CID>, state?: DocState, breakOnAnchor?: boolean): Promise<DocState> {
@@ -500,20 +500,20 @@ class Document extends EventEmitter implements DocStateHolder {
     let entry = itr.next()
     while(!entry.done) {
       const cid = entry.value[1]
-      const record = await this.dispatcher.retrieveRecord(cid)
+      const commit = await this.dispatcher.retrieveCommit(cid)
       // TODO - should catch potential thrown error here
 
-      let payload = record
-      if (DoctypeUtils.isSignedRecord(record)) {
-        payload = await this.dispatcher.retrieveRecord(record.link)
+      let payload = commit
+      if (DoctypeUtils.isSignedCommit(commit)) {
+        payload = await this.dispatcher.retrieveCommit(commit.link)
       }
 
       if (payload.proof) {
-        // it's an anchor record
-        await this._verifyAnchorRecord(record)
-        state = await this._doctypeHandler.applyRecord(record, cid, this._context, state)
+        // it's an anchor commit
+        await this._verifyAnchorCommit(commit)
+        state = await this._doctypeHandler.applyCommit(commit, cid, this._context, state)
       } else if (!payload.prev) {
-        // it's a genesis record
+        // it's a genesis commit
         if (this._validate) {
           const schemaId = payload.header?.schema
           if (schemaId) {
@@ -523,10 +523,10 @@ class Document extends EventEmitter implements DocStateHolder {
             }
           }
         }
-        state = await this._doctypeHandler.applyRecord(record, cid, this._context)
+        state = await this._doctypeHandler.applyCommit(commit, cid, this._context)
       } else {
-        // it's a signed record
-        const tmpState = await this._doctypeHandler.applyRecord(record, cid, this._context, state)
+        // it's a signed commit
+        const tmpState = await this._doctypeHandler.applyCommit(commit, cid, this._context, state)
         if (this._validate) {
           const schemaId = payload.header?.schema
           if (schemaId) {
@@ -548,33 +548,33 @@ class Document extends EventEmitter implements DocStateHolder {
   }
 
   /**
-   * Verifies anchor record structure
+   * Verifies anchor commit structure
    *
-   * @param record - Anchor record
+   * @param commit - Anchor commit
    * @private
    */
-  async _verifyAnchorRecord (record: AnchorRecord): Promise<AnchorProof> {
-    const proofCID = record.proof
+  async _verifyAnchorCommit (commit: AnchorCommit): Promise<AnchorProof> {
+    const proofCID = commit.proof
     const proof =  await this.dispatcher.retrieveFromIPFS(proofCID)
 
     let prevCIDViaMerkleTree
     try {
       // optimize verification by using ipfs.dag.tree for fetching the nested CID
-      if (record.path.length === 0) {
+      if (commit.path.length === 0) {
         prevCIDViaMerkleTree = proof.root
       } else {
-        const merkleTreeParentRecordPath = '/root/' + record.path.substr(0, record.path.lastIndexOf('/'))
-        const last: string = record.path.substr(record.path.lastIndexOf('/') + 1)
+        const merkleTreeParentRecordPath = '/root/' + commit.path.substr(0, commit.path.lastIndexOf('/'))
+        const last: string = commit.path.substr(commit.path.lastIndexOf('/') + 1)
 
         const merkleTreeParentRecord = await this.dispatcher.retrieveFromIPFS(proofCID, merkleTreeParentRecordPath)
         prevCIDViaMerkleTree = merkleTreeParentRecord[last]
       }
     } catch (e) {
-      throw new Error(`The anchor record couldn't be verified. Reason ${e.message}`)
+      throw new Error(`The anchor commit couldn't be verified. Reason ${e.message}`)
     }
 
-    if (record.prev.toString() !== prevCIDViaMerkleTree.toString()) {
-      throw new Error(`The anchor record proof ${record.proof.toString()} with path ${record.path} points to invalid 'prev' record`)
+    if (commit.prev.toString() !== prevCIDViaMerkleTree.toString()) {
+      throw new Error(`The anchor commit proof ${commit.proof.toString()} with path ${commit.path} points to invalid 'prev' commit`)
     }
 
     await this._context.anchorService.validateChainInclusion(proof)
@@ -582,7 +582,7 @@ class Document extends EventEmitter implements DocStateHolder {
   }
 
   /**
-   * Publishes Tip record to the pub/sub
+   * Publishes Tip commit to the pub/sub
    *
    * @private
    */
@@ -684,7 +684,7 @@ class Document extends EventEmitter implements DocStateHolder {
   }
 
   /**
-   * Gets document Tip record CID
+   * Gets document Tip commit CID
    */
   get tip (): CID {
     return this._doctype.tip

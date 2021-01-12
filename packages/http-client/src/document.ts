@@ -1,5 +1,5 @@
 import {
-  CeramicRecord, Context, DocOpts, DocParams, DocState, Doctype, DoctypeConstructor, DoctypeUtils
+  CeramicCommit, Context, DocOpts, DocParams, DocState, Doctype, DoctypeConstructor, DoctypeUtils
 } from "@ceramicnetwork/common"
 
 import DocID from '@ceramicnetwork/docid'
@@ -62,20 +62,20 @@ class Document extends Doctype {
       method: 'post',
       body: {
         doctype,
-        genesis: DoctypeUtils.serializeRecord(genesis),
+        genesis: DoctypeUtils.serializeCommit(genesis),
         docOpts,
       }
     })
     return new Document(DoctypeUtils.deserializeState(state), context, apiUrl, config)
   }
 
-  static async applyRecord(apiUrl: string, docId: DocID | string, record: CeramicRecord, context: Context, docOpts: DocOpts = {}): Promise<Document> {
+  static async applyCommit(apiUrl: string, docId: DocID | string, commit: CeramicCommit, context: Context, docOpts: DocOpts = {}): Promise<Document> {
     docId = typeDocID(docId)
-    const { state } = await fetchJson(apiUrl + '/records', {
+    const { state } = await fetchJson(apiUrl + '/commits', {
       method: 'post',
       body: {
         docId: docId.toString(),
-        record: DoctypeUtils.serializeRecord(record),
+        commit: DoctypeUtils.serializeCommit(commit),
         docOpts,
       }
     })
@@ -88,13 +88,13 @@ class Document extends Doctype {
     return new Document(DoctypeUtils.deserializeState(state), context, apiUrl, config)
   }
 
-  static async loadDocumentRecords (docId: DocID | string, apiUrl: string): Promise<Array<Record<string, CeramicRecord>>> {
+  static async loadDocumentCommits (docId: DocID | string, apiUrl: string): Promise<Array<Record<string, CeramicCommit>>> {
     docId = typeDocID(docId)
-    const { records } = await fetchJson(apiUrl + '/records/' + docId.toString())
+    const { commits } = await fetchJson(apiUrl + '/commits/' + docId.toString())
 
-    return records.map((r: any) => {
+    return commits.map((r: any) => {
       return {
-        cid: r.cid, value: DoctypeUtils.deserializeRecord(r.value)
+        cid: r.cid, value: DoctypeUtils.deserializeCommit(r.value)
       }
     })
   }

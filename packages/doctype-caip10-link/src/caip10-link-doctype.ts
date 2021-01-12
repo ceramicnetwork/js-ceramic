@@ -5,7 +5,7 @@ import {
     DocOpts,
     DocParams,
     Context,
-    CeramicRecord
+    CeramicCommit
 } from "@ceramicnetwork/common"
 
 export const DOCTYPE_NAME = 'caip10-link'
@@ -31,8 +31,8 @@ export class Caip10LinkDoctype extends Doctype {
     async change(params: Caip10LinkParams, opts?: DocOpts): Promise<void> {
         const { content, metadata } = params
 
-        const updateRecord = await Caip10LinkDoctype._makeRecord(this, content, metadata?.schema)
-        const updated = await this.context.api.applyRecord(this.id.toString(), updateRecord, opts)
+        const updateCommit = await Caip10LinkDoctype._makeCommit(this, content, metadata?.schema)
+        const updated = await this.context.api.applyCommit(this.id.toString(), updateCommit, opts)
         this.state = updated.state
     }
 
@@ -45,15 +45,16 @@ export class Caip10LinkDoctype extends Doctype {
     static async create(params: Caip10LinkParams, context: Context, opts?: DocOpts): Promise<Caip10LinkDoctype> {
         const { content, metadata } = params
 
-        const record = await Caip10LinkDoctype.makeGenesis({ content, metadata }, context)
-        return context.api.createDocumentFromGenesis(DOCTYPE_NAME, record, opts)
+        const commit = await Caip10LinkDoctype.makeGenesis({ content, metadata }, context)
+        return context.api.createDocumentFromGenesis(DOCTYPE_NAME, commit, opts)
     }
 
     /**
-     * Creates genesis record
+     * Creates genesis commit
      * @param params - Create parameters
+     * @param context
      */
-    static async makeGenesis(params: Record<string, any>, context: Context): Promise<CeramicRecord> {
+    static async makeGenesis(params: Record<string, any>, context: Context): Promise<CeramicCommit> {
         const { content, metadata } = params
 
         if (content) {
@@ -78,13 +79,13 @@ export class Caip10LinkDoctype extends Doctype {
     }
 
     /**
-     * Creates change record
+     * Creates change commit
      * @param doctype - Caip10Link doctype instance
      * @param newContent - Change content
      * @param newSchema - Change schema
      * @private
      */
-    static async _makeRecord (doctype: Caip10LinkDoctype, newContent: any, newSchema: string = null): Promise<CeramicRecord> {
+    static async _makeCommit (doctype: Caip10LinkDoctype, newContent: any, newSchema: string = null): Promise<CeramicCommit> {
         if (newSchema) {
             throw new Error('Schema not allowed on caip10-link doctype')
         }

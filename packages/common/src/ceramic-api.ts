@@ -4,7 +4,7 @@ import {
     DoctypeHandler,
     DocOpts,
     DocParams,
-    CeramicRecord
+    CeramicCommit
 } from "./doctype"
 import DocID from '@ceramicnetwork/docid'
 
@@ -58,9 +58,9 @@ export interface CeramicApi {
     createDocument<T extends Doctype>(doctype: string, params: DocParams, opts?: DocOpts): Promise<T>;
 
     /**
-     * Create Doctype from genesis record
+     * Create Doctype from genesis commit
      * @param doctype - Document type
-     * @param genesis - Genesis record
+     * @param genesis - Genesis commit
      * @param opts - Initialization options
      */
     createDocumentFromGenesis<T extends Doctype>(doctype: string, genesis: any, opts?: DocOpts): Promise<T>;
@@ -73,18 +73,27 @@ export interface CeramicApi {
     loadDocument<T extends Doctype>(docId: DocID | string, opts?: DocOpts): Promise<T>;
 
     /**
-     * Load all document records by document ID
+     * Load all document commits by document ID
      * @param docId - Document ID
      */
-    loadDocumentRecords(docId: DocID | string): Promise<Array<Record<string, any>>>;
+    loadDocumentCommits(docId: DocID | string): Promise<Array<Record<string, any>>>;
 
     /**
-     * Applies record on the existing document
+     * Applies commit on the existing document
      * @param docId - Document ID
-     * @param record - Record to be applied
+     * @param commit - Commit to be applied
+     * @param opts - Initialization options
+     * @deprecated Use `applyCommit`
+     */
+    applyRecord<T extends Doctype>(docId: DocID | string, commit: CeramicCommit, opts?: DocOpts): Promise<T>;
+
+    /**
+     * Applies commit on the existing document
+     * @param docId - Document ID
+     * @param commit - Commit to be applied
      * @param opts - Initialization options
      */
-    applyRecord<T extends Doctype>(docId: DocID | string, record: CeramicRecord, opts?: DocOpts): Promise<T>;
+    applyCommit<T extends Doctype>(docId: DocID | string, commit: CeramicCommit, opts?: DocOpts): Promise<T>;
 
     /**
      * Set DID provider
