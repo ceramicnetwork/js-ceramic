@@ -301,7 +301,7 @@ class CeramicDaemon {
    */
   async applyCommit (req: Request, res: Response, next: NextFunction): Promise<void> {
     const { docId, commit, docOpts } = req.body
-    if (!docId && !commit) {
+    if (!(docId && commit)) {
       res.json({ error: 'docId and commit are required in order to apply commit' })
       next()
       return
