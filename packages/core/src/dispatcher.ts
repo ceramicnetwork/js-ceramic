@@ -153,12 +153,12 @@ export default class Dispatcher extends EventEmitter {
   }
 
   /**
-   * Store Ceramic record (genesis|signed|anchor).
+   * Store Ceramic commit (genesis|signed|anchor).
    *
-   * @param data - Ceramic record data
+   * @param data - Ceramic commit data
    */
-  async storeRecord (data: any): Promise<CID> {
-    if (DoctypeUtils.isSignedRecordContainer(data)) {
+  async storeCommit (data: any): Promise<CID> {
+    if (DoctypeUtils.isSignedCommitContainer(data)) {
       const { jws, linkedBlock } = data
       // put the JWS into the ipfs dag
       const cid = await this._ipfs.dag.put(jws, { format: 'dag-jose', hashAlg: 'sha2-256' })
@@ -174,13 +174,13 @@ export default class Dispatcher extends EventEmitter {
   }
 
   /**
-   * Retrieves one Ceramic record by CID, and enforces that the record doesn't exceed the maximum
-   * record size.  To load an IPLD path or a CID from IPFS that isn't a Ceramic record,
+   * Retrieves one Ceramic commit by CID, and enforces that the commit doesn't exceed the maximum
+   * commit size. To load an IPLD path or a CID from IPFS that isn't a Ceramic commit,
    * use `retrieveFromIPFS`.
    *
-   * @param cid - Record CID
+   * @param cid - Commit CID
    */
-  async retrieveRecord (cid: CID | string): Promise<any> {
+  async retrieveCommit (cid: CID | string): Promise<any> {
     const record = await this._ipfs.dag.get(cid, { timeout: IPFS_GET_TIMEOUT })
     await this._restrictRecordSize(cid)
     return cloneDeep(record.value)
@@ -209,10 +209,10 @@ export default class Dispatcher extends EventEmitter {
   }
 
   /**
-   * Publishes Tip record to pub/sub topic.
+   * Publishes Tip commit to pub/sub topic.
    *
    * @param docId  - Document ID
-   * @param tip - Record CID
+   * @param tip - Commit CID
    */
   async publishTip (docId: DocID, tip: CID): Promise<void> {
     if (!this._isRunning) {

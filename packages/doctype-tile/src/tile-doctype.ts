@@ -8,14 +8,14 @@ import {
     Doctype,
     DoctypeConstructor,
     DoctypeStatic,
-    CeramicRecord,
-    RecordHeader,
+    CeramicCommit,
+    CommitHeader,
     DocOpts,
     DocParams,
     Context,
     GenesisHeader,
-    GenesisRecord,
-    UnsignedRecord,
+    GenesisCommit,
+    UnsignedCommit,
 } from "@ceramicnetwork/common"
 
 const DOCTYPE = 'tile'
@@ -43,8 +43,8 @@ export class TileDoctype extends Doctype {
             throw new Error('No DID authenticated')
         }
 
-        const updateRecord = await TileDoctype._makeRecord(this, this.context.did, params.content, params.metadata?.controllers, params.metadata?.schema)
-        const updated = await this.context.api.applyRecord(this.id.toString(), updateRecord, opts)
+        const updateCommit = await TileDoctype._makeCommit(this, this.context.did, params.content, params.metadata?.controllers, params.metadata?.schema)
+        const updated = await this.context.api.applyCommit(this.id.toString(), updateCommit, opts)
         this.state = updated.state
     }
 
@@ -56,16 +56,16 @@ export class TileDoctype extends Doctype {
      */
     static async create(params: TileParams, context: Context, opts?: DocOpts): Promise<TileDoctype> {
         const { content, metadata } = params
-        const record = await TileDoctype.makeGenesis({ content, metadata }, context)
-        return context.api.createDocumentFromGenesis<TileDoctype>(DOCTYPE, record, opts)
+        const commit = await TileDoctype.makeGenesis({ content, metadata }, context)
+        return context.api.createDocumentFromGenesis<TileDoctype>(DOCTYPE, commit, opts)
     }
 
     /**
-     * Creates genesis record
+     * Creates genesis commit
      * @param params - Create parameters
      * @param context - Ceramic context
      */
-    static async makeGenesis<T extends CeramicRecord>(params: DocParams, context: Context): Promise<T> {
+    static async makeGenesis<T extends CeramicCommit>(params: DocParams, context: Context): Promise<T> {
         // If 'deterministic' is undefined, default to creating document uniquely
         const unique = params.deterministic ? '0' : base64Encode(randomBytes(12))
 
@@ -78,12 +78,12 @@ export class TileDoctype extends Doctype {
             }
         }
 
-        const record: GenesisRecord = { data: params.content, header: metadata, unique }
-        return (params.content ? await TileDoctype._signDagJWS(record, context.did, metadata.controllers[0]): record) as T
+        const commit: GenesisCommit = { data: params.content, header: metadata, unique }
+        return (params.content ? await TileDoctype._signDagJWS(commit, context.did, metadata.controllers[0]): commit) as T
     }
 
     /**
-     * Make change record
+     * Make change commit
      * @param doctype - Tile doctype instance
      * @param did - DID instance
      * @param newContent - New context
@@ -91,8 +91,8 @@ export class TileDoctype extends Doctype {
      * @param schema - New schema ID
      * @private
      */
-    static async _makeRecord(doctype: Doctype, did: DID, newContent: any, newControllers?: string[], schema?: string): Promise<CeramicRecord> {
-        const header: RecordHeader = {
+    static async _makeCommit(doctype: Doctype, did: DID, newContent: any, newControllers?: string[], schema?: string): Promise<CeramicCommit> {
+        const header: CommitHeader = {
             ...schema != null && { schema: schema },
             ...newControllers != null && { controllers: newControllers },
         }
@@ -102,23 +102,23 @@ export class TileDoctype extends Doctype {
         }
 
         const patch = jsonpatch.compare(doctype.content, newContent)
-        const record: UnsignedRecord = { header, data: patch, prev: doctype.tip, id: doctype.state.log[0].cid }
-        return TileDoctype._signDagJWS(record, did, doctype.controllers[0])
+        const commit: UnsignedCommit = { header, data: patch, prev: doctype.tip, id: doctype.state.log[0].cid }
+        return TileDoctype._signDagJWS(commit, did, doctype.controllers[0])
     }
 
     /**
-     * Sign Tile record
+     * Sign Tile commit
      * @param did - DID instance
-     * @param record - Record to be signed
+     * @param commit - Commit to be signed
      * @param controller - Controller
      * @private
      */
-    static async _signDagJWS(record: CeramicRecord, did: DID, controller: string): Promise<CeramicRecord> {
+    static async _signDagJWS(commit: CeramicCommit, did: DID, controller: string): Promise<CeramicCommit> {
         // check for DID and authentication
         if (did == null || !did.authenticated) {
             throw new Error('No DID authenticated')
         }
-        return did.createDagJWS(record, { did: controller })
+        return did.createDagJWS(commit, { did: controller })
     }
 
 }

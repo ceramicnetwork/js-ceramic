@@ -15,7 +15,7 @@ import {
   LoggerPluginOptions,
   AnchorService,
   CeramicApi,
-  CeramicRecord,
+  CeramicCommit,
   DIDProvider,
   IpfsApi,
   PinApi,
@@ -332,16 +332,25 @@ class Ceramic implements CeramicApi {
    * @param docId - Document ID
    * @param record - Record to be applied
    * @param opts - Initialization options
+   * @deprecated See `applyCommit`
    */
-  async applyRecord<T extends Doctype>(docId: DocID | string, record: CeramicRecord, opts?: DocOpts): Promise<T> {
+  async applyRecord<T extends Doctype>(docId: DocID | string, record: CeramicCommit, opts?: DocOpts): Promise<T> {
+    return this.applyCommit(docId, record, opts)
+  }
+
+  /**
+   * Applies commit on a given document
+   * @param docId - Document ID
+   * @param commit - Commit to be applied
+   * @param opts - Initialization options
+   */
+  async applyCommit<T extends Doctype>(docId: string | DocID, commit: CeramicCommit, opts?: DocOpts): Promise<T> {
     docId = normalizeDocID(docId)
     if (docId.commit != null) {
       throw new Error('Historical document commits cannot be modified. Load the document without specifying a commit to make updates.')
     }
-
     const doc = await this._loadDoc(docId, opts)
-
-    await doc.applyRecord(record, opts)
+    await doc.applyCommit(commit, opts)
     return doc.doctype as T
   }
 
@@ -376,7 +385,7 @@ class Ceramic implements CeramicApi {
     const doctypeHandler = this._doctypeHandlers[doctype]
 
     const genesis = await doctypeHandler.doctype.makeGenesis(params, this.context, opts)
-    const genesisCid = await this.dispatcher.storeRecord(genesis)
+    const genesisCid = await this.dispatcher.storeCommit(genesis)
     const docId = new DocID(doctype, genesisCid)
 
     let doc = this._getDocFromCache(docId)
@@ -408,7 +417,7 @@ class Ceramic implements CeramicApi {
    * @private
    */
   async _createDocFromGenesis(doctype: string, genesis: any, opts: DocOpts = {}): Promise<Document> {
-    const genesisCid = await this.dispatcher.storeRecord(genesis)
+    const genesisCid = await this.dispatcher.storeCommit(genesis)
     const doctypeHandler = this._doctypeHandlers[doctype]
     if (!doctypeHandler) {
       throw new Error(doctype + " is not a valid doctype")
@@ -494,17 +503,26 @@ class Ceramic implements CeramicApi {
   /**
    * Load all document records by document ID
    * @param docId - Document ID
+   * @deprecated See `loadDocumentCommits`
    */
   async loadDocumentRecords(docId: DocID | string): Promise<Array<Record<string, any>>> {
-    docId = normalizeDocID(docId)
-    const doc = await this.loadDocument(docId)
+    return this.loadDocumentCommits(docId)
+  }
+
+  /**
+   * Load all document commits by document ID
+   * @param docId - Document ID
+   */
+  async loadDocumentCommits(docId: string | DocID): Promise<Record<string, any>[]> {
+    const effectiveDocId = normalizeDocID(docId)
+    const doc = await this.loadDocument(effectiveDocId)
     const { state } = doc
 
     return Promise.all(state.log.map(async ({ cid }) => {
       const record = (await this.ipfs.dag.get(cid)).value
       return {
         cid: cid.toString(),
-        value: await DoctypeUtils.convertRecordToSignedRecordContainer(record, this.ipfs)
+        value: await DoctypeUtils.convertCommitToSignedCommitContainer(record, this.ipfs)
       }
     }))
   }

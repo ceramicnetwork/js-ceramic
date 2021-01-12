@@ -140,7 +140,7 @@ export class CeramicCliUtils {
      * @param doctype - Document type
      * @param content - Document content
      * @param controllers - Document controllers
-     * @param onlyGenesis - Create only a genesis record (no publish or anchor)
+     * @param onlyGenesis - Create only a genesis commit (no publish or anchor)
      * @param deterministic - If true, documents will not be guaranteed to be unique. Documents with identical content will get de-duped.
      * @param schemaDocId - Schema document ID
      */
@@ -260,7 +260,7 @@ export class CeramicCliUtils {
      * @param doctype - Document type
      * @param content - Document content
      * @param controllers - Document controllers
-     * @param onlyGenesis - Create only a genesis record (no publish or anchor)
+     * @param onlyGenesis - Create only a genesis commit (no publish or anchor)
      * @param deterministic - If true, documents will not be guaranteed to be unique. Documents with identical content will get de-duped.
      * @param schemaDocId - Schema document ID
      */
@@ -272,7 +272,7 @@ export class CeramicCliUtils {
      * Create schema document
      * @param content - Schema content
      * @param controllers - Schema controllers
-     * @param onlyGenesis - Create only a genesis record (no publish or anchor)
+     * @param onlyGenesis - Create only a genesis commit (no publish or anchor)
      * @param deterministic - If true, documents will not be guaranteed to be unique. Documents with identical content will get de-duped.
      */
     static async schemaCreateDoc(content: string, controllers: string, onlyGenesis: boolean, deterministic: boolean): Promise<void> {

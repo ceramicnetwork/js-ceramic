@@ -17,15 +17,15 @@ export abstract class AnchorService extends EventEmitter {
     abstract set ceramic(ceramic: CeramicApi);
 
     /**
-     * Request anchor record on blockchain
+     * Request anchor commit on blockchain
      * @param docId - Document ID
      * @param tip - CID tip
      */
     abstract requestAnchor(docId: string, tip: CID): Promise<void>;
 
     /**
-     * Validate anchor proof record
-     * @param anchorProof - Anchor proof record
+     * Validate anchor proof commit
+     * @param anchorProof - Proof of blockchain inclusion
      */
     abstract validateChainInclusion(anchorProof: AnchorProof): Promise<void>;
 

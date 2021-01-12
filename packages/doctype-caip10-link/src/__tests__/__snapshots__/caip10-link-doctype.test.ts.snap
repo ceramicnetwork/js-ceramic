@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Caip10LinkHandler applies anchor record correctly 1`] = `
+exports[`Caip10LinkHandler applies anchor commit correctly 1`] = `
 Object {
   "anchorProof": Object {
     "blockNumber": 123456,

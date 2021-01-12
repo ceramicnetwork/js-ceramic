@@ -13,7 +13,7 @@ export async function fetchJson(url: string, opts: FetchOpts = {}): Promise<any>
             headers: { 'Content-Type': 'application/json' }
         })
     }
-    const res = await (await fetch(url, opts)).json()
+    const res = await fetch(url, opts).then(response => response.json())
     if (res.error) {
         throw new Error(res.error)
     }

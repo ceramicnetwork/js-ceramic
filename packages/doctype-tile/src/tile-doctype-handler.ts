@@ -13,13 +13,13 @@ import {
     Context,
     DocOpts,
     DocState,
-    RecordType,
+    CommitType,
     DoctypeConstructor,
     DoctypeHandler,
     DoctypeUtils,
     SignatureStatus,
-    CeramicRecord,
-    AnchorRecord,
+    CeramicCommit,
+    AnchorCommit,
 } from "@ceramicnetwork/common"
 
 const DOCTYPE = 'tile'
@@ -53,40 +53,40 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
     }
 
     /**
-     * Applies record (genesis|signed|anchor)
-     * @param record - Record
-     * @param cid - Record CID
+     * Applies commit (genesis|signed|anchor)
+     * @param commit - Commit
+     * @param cid - Commit CID
      * @param context - Ceramic context
      * @param state - Document state
      */
-    async applyRecord(record: CeramicRecord, cid: CID, context: Context, state?: DocState): Promise<DocState> {
+    async applyCommit(commit: CeramicCommit, cid: CID, context: Context, state?: DocState): Promise<DocState> {
         if (state == null) {
             // apply genesis
-            return this._applyGenesis(record, cid, context)
+            return this._applyGenesis(commit, cid, context)
         }
 
-        if ((record as AnchorRecord).proof) {
-            return this._applyAnchor(context, record as AnchorRecord, cid, state);
+        if ((commit as AnchorCommit).proof) {
+            return this._applyAnchor(context, commit as AnchorCommit, cid, state);
         }
 
-        return this._applySigned(record, cid, state, context)
+        return this._applySigned(commit, cid, state, context)
     }
 
     /**
-     * Applies genesis record
-     * @param record - Genesis record
-     * @param cid - Genesis record CID
+     * Applies genesis commit
+     * @param commit - Genesis commit
+     * @param cid - Genesis commit CID
      * @param context - Ceramic context
      * @private
      */
-    async _applyGenesis(record: any, cid: CID, context: Context): Promise<DocState> {
-        let payload = record
-        const isSigned = DoctypeUtils.isSignedRecord(record)
+    async _applyGenesis(commit: any, cid: CID, context: Context): Promise<DocState> {
+        let payload = commit
+        const isSigned = DoctypeUtils.isSignedCommit(commit)
         if (isSigned) {
-            payload = (await context.ipfs.dag.get(record.link)).value
-            await this._verifySignature(record, context, payload.header.controllers[0])
+            payload = (await context.ipfs.dag.get(commit.link)).value
+            await this._verifySignature(commit, context, payload.header.controllers[0])
         } else if (payload.data) {
-            throw Error('Genesis record with contents should always be signed')
+            throw Error('Genesis commit with contents should always be signed')
         }
         return {
             doctype: DOCTYPE,
@@ -94,23 +94,23 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
             metadata: payload.header,
             signature: isSigned? SignatureStatus.SIGNED : SignatureStatus.GENESIS,
             anchorStatus: AnchorStatus.NOT_REQUESTED,
-            log: [{ cid, type: RecordType.GENESIS }]
+            log: [{ cid, type: CommitType.GENESIS }]
         }
     }
 
     /**
-     * Applies signed record
-     * @param record - Signed record
-     * @param cid - Signed record CID
+     * Applies signed commit
+     * @param commit - Signed commit
+     * @param cid - Signed commit CID
      * @param state - Document state
      * @param context - Ceramic context
      * @private
      */
-    async _applySigned(record: any, cid: CID, state: DocState, context: Context): Promise<DocState> {
-        // TODO: Assert that the 'prev' of the record being applied is the end of the log in 'state'
-        await this._verifySignature(record, context, state.metadata.controllers[0])
+    async _applySigned(commit: any, cid: CID, state: DocState, context: Context): Promise<DocState> {
+        // TODO: Assert that the 'prev' of the commit being applied is the end of the log in 'state'
+        await this._verifySignature(commit, context, state.metadata.controllers[0])
 
-        const payload = (await context.ipfs.dag.get(record.link)).value
+        const payload = (await context.ipfs.dag.get(commit.link)).value
         if (!payload.id.equals(state.log[0].cid)) {
             throw new Error(`Invalid docId ${payload.id}, expected ${state.log[0].cid}`)
         }
@@ -120,7 +120,7 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
         nextState.signature = SignatureStatus.SIGNED
         nextState.anchorStatus = AnchorStatus.NOT_REQUESTED
 
-        nextState.log.push({ cid, type: RecordType.SIGNED })
+        nextState.log.push({ cid, type: CommitType.SIGNED })
 
         const content = state.next?.content ?? state.content
         const metadata = state.next?.metadata ?? state.metadata
@@ -132,16 +132,16 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
     }
 
     /**
-     * Applies anchor record
+     * Applies anchor commit
      * @param context - Ceramic context
-     * @param record - Anchor record
-     * @param cid - Anchor record CID
+     * @param commit - Anchor commit
+     * @param cid - Anchor commit CID
      * @param state - Document state
      * @private
      */
-    async _applyAnchor(context: Context, record: AnchorRecord, cid: CID, state: DocState): Promise<DocState> {
-        // TODO: Assert that the 'prev' of the record being applied is the end of the log in 'state'
-        const proof = (await context.ipfs.dag.get(record.proof)).value;
+    async _applyAnchor(context: Context, commit: AnchorCommit, cid: CID, state: DocState): Promise<DocState> {
+        // TODO: Assert that the 'prev' of the commit being applied is the end of the log in 'state'
+        const proof = (await context.ipfs.dag.get(commit.proof)).value;
 
         const supportedChains = await context.api.getSupportedChains()
         if (!supportedChains.includes(proof.chainId)) {
@@ -150,7 +150,7 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
                 + supportedChains.join("', '") + "'")
         }
 
-        state.log.push({ cid, type: RecordType.ANCHOR })
+        state.log.push({ cid, type: CommitType.ANCHOR })
         let content = state.content
         let metadata = state.metadata
 
@@ -172,14 +172,14 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
     }
 
     /**
-     * Verifies record signature
-     * @param record - Record to be verified
+     * Verifies commit signature
+     * @param commit - Commit to be verified
      * @param context - Ceramic context
      * @param did - DID value
      * @private
      */
-    async _verifySignature(record: any, context: Context, did: string): Promise<void> {
-        const { payload, signatures } = record
+    async _verifySignature(commit: any, context: Context, did: string): Promise<void> {
+        const { payload, signatures } = commit
         const { signature,  protected: _protected } = signatures[0]
 
         const decodedHeader = JSON.parse(base64url.decode(_protected))
@@ -193,7 +193,7 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
         try {
             await this.verifyJWS(jws, publicKey)
         } catch (e) {
-            throw new Error('Invalid signature for signed record. ' + e)
+            throw new Error('Invalid signature for signed commit. ' + e)
         }
     }
 

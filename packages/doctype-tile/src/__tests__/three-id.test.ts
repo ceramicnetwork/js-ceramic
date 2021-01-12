@@ -9,7 +9,7 @@ import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 
 import { DID } from 'dids'
 
-import { AnchorRecord, Context, SignedRecordContainer } from "@ceramicnetwork/common"
+import {AnchorCommit, CeramicApi, Context, SignedCommitContainer} from "@ceramicnetwork/common"
 import { TileDoctypeHandler } from "../tile-doctype-handler"
 import { TileDoctype } from "../tile-doctype"
 jest.mock('did-jwt', () => ({
@@ -26,7 +26,7 @@ const FAKE_CID_2 = new CID('bafybeig6xv5nwphfmvcnektpnojts44jqcuam7bmye2pb54adnr
 const FAKE_CID_3 = new CID('bafybeig6xv5nwphfmvcnektpnojts55jqcuam7bmye2pb54adnrtccjlsu')
 const FAKE_CID_4 = new CID('bafybeig6xv5nwphfmvcnektpnojts66jqcuam7bmye2pb54adnrtccjlsu')
 
-const RECORDS = {
+const COMMITS = {
   genesis: { header: { tags: ['3id'], controllers: [ 'did:key:zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV' ] }, data: { publicKeys: { test: '0xabc' } } },
   genesisGenerated: {
     jws: {
@@ -58,7 +58,7 @@ const RECORDS = {
   },
   r1: {
     desiredContent: { publicKeys: { test: '0xabc' }, other: 'data' },
-    record: {
+    commit: {
       jws: {
         "payload": "bbbb",
         "signatures": [
@@ -83,7 +83,7 @@ const RECORDS = {
       }
     }
   },
-  r2: { record: { proof: FAKE_CID_4 } },
+  r2: { commit: { proof: FAKE_CID_4 } },
   proof: {
     blockNumber: 123456,
     chainId: 'fakechain:123',
@@ -167,7 +167,7 @@ describe('ThreeIdHandler', () => {
         ...threeIdResolver, ...keyDidResolver
       }),
       anchorService: null,
-      api,
+      api: api as unknown as CeramicApi,
     }
   })
 
@@ -179,108 +179,108 @@ describe('ThreeIdHandler', () => {
     expect(tileDoctypeHandler.name).toEqual('tile')
   })
 
-  it('makes genesis record correctly', async () => {
-    const record = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: RECORDS.genesis.header, deterministic:true }, context) as SignedRecordContainer
-    const { jws, linkedBlock } = record
+  it('makes genesis commit correctly', async () => {
+    const commit = await TileDoctype.makeGenesis({ content: COMMITS.genesis.data, metadata: COMMITS.genesis.header, deterministic:true }, context) as SignedCommitContainer
+    const { jws, linkedBlock } = commit
 
     const payload = dagCBOR.util.deserialize(linkedBlock)
     const generated = { jws: serialize(jws), linkedBlock: serialize(payload)}
-    expect(generated).toEqual(serialize(RECORDS.genesisGenerated))
+    expect(generated).toEqual(serialize(COMMITS.genesisGenerated))
   })
 
-  it('applies genesis record correctly', async () => {
+  it('applies genesis commit correctly', async () => {
     const tileHandler = new TileDoctypeHandler()
 
-    const record = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id], tags: ['3id'] } }, context) as SignedRecordContainer
-    await context.ipfs.dag.put(record, FAKE_CID_1)
+    const commit = await TileDoctype.makeGenesis({ content: COMMITS.genesis.data, metadata: { controllers: [did.id], tags: ['3id'] } }, context) as SignedCommitContainer
+    await context.ipfs.dag.put(commit, FAKE_CID_1)
 
-    const payload = dagCBOR.util.deserialize(record.linkedBlock)
-    await context.ipfs.dag.put(payload, record.jws.link)
+    const payload = dagCBOR.util.deserialize(commit.linkedBlock)
+    await context.ipfs.dag.put(payload, commit.jws.link)
 
-    const docState = await tileHandler.applyRecord(record.jws, FAKE_CID_1, context)
+    const docState = await tileHandler.applyCommit(commit.jws, FAKE_CID_1, context)
     expect(docState).toMatchSnapshot()
   })
 
-  it('makes signed record correctly', async () => {
+  it('makes signed commit correctly', async () => {
     const tileDoctypeHandler = new TileDoctypeHandler()
 
-    await context.ipfs.dag.put(RECORDS.genesisGenerated.jws, FAKE_CID_1)
-    await context.ipfs.dag.put(RECORDS.genesisGenerated.linkedBlock, RECORDS.genesisGenerated.jws.link)
+    await context.ipfs.dag.put(COMMITS.genesisGenerated.jws, FAKE_CID_1)
+    await context.ipfs.dag.put(COMMITS.genesisGenerated.linkedBlock, COMMITS.genesisGenerated.jws.link)
 
-    const state = await tileDoctypeHandler.applyRecord(RECORDS.genesisGenerated.jws, FAKE_CID_1, context)
+    const state = await tileDoctypeHandler.applyCommit(COMMITS.genesisGenerated.jws, FAKE_CID_1, context)
     const doctype = new TileDoctype(state, context)
 
-    await expect(TileDoctype._makeRecord(doctype, null, RECORDS.r1.desiredContent)).rejects.toThrow(/No DID/)
+    await expect(TileDoctype._makeCommit(doctype, null, COMMITS.r1.desiredContent)).rejects.toThrow(/No DID/)
 
-    const record = await TileDoctype._makeRecord(doctype, did, RECORDS.r1.desiredContent) as SignedRecordContainer
-    const { jws: rJws, linkedBlock: rLinkedBlock} = record
+    const commit = await TileDoctype._makeCommit(doctype, did, COMMITS.r1.desiredContent) as SignedCommitContainer
+    const { jws: rJws, linkedBlock: rLinkedBlock} = commit
     const rPayload = dagCBOR.util.deserialize(rLinkedBlock)
-    expect({ jws: serialize(rJws), payload: serialize(rPayload)}).toEqual(RECORDS.r1.record)
+    expect({ jws: serialize(rJws), payload: serialize(rPayload)}).toEqual(COMMITS.r1.commit)
   })
 
-  it('applies signed record correctly', async () => {
+  it('applies signed commit correctly', async () => {
     const tileDoctypeHandler = new TileDoctypeHandler()
 
-    const genesisRecord = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id], tags: ['3id'] } }, context) as SignedRecordContainer
-    await context.ipfs.dag.put(genesisRecord, FAKE_CID_1)
+    const genesisCommit = await TileDoctype.makeGenesis({ content: COMMITS.genesis.data, metadata: { controllers: [did.id], tags: ['3id'] } }, context) as SignedCommitContainer
+    await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
 
-    const payload = dagCBOR.util.deserialize(genesisRecord.linkedBlock)
-    await context.ipfs.dag.put(payload, genesisRecord.jws.link)
+    const payload = dagCBOR.util.deserialize(genesisCommit.linkedBlock)
+    await context.ipfs.dag.put(payload, genesisCommit.jws.link)
 
     // apply genesis
-    let state = await tileDoctypeHandler.applyRecord(genesisRecord.jws, FAKE_CID_1, context)
+    let state = await tileDoctypeHandler.applyCommit(genesisCommit.jws, FAKE_CID_1, context)
 
     const doctype = new TileDoctype(state, context)
-    const signedRecord = await TileDoctype._makeRecord(doctype, did, RECORDS.r1.desiredContent) as SignedRecordContainer
+    const signedCommit = await TileDoctype._makeCommit(doctype, did, COMMITS.r1.desiredContent) as SignedCommitContainer
 
-    await context.ipfs.dag.put(signedRecord, FAKE_CID_2)
+    await context.ipfs.dag.put(signedCommit, FAKE_CID_2)
 
-    const sPayload = dagCBOR.util.deserialize(signedRecord.linkedBlock)
-    await context.ipfs.dag.put(sPayload, signedRecord.jws.link)
+    const sPayload = dagCBOR.util.deserialize(signedCommit.linkedBlock)
+    await context.ipfs.dag.put(sPayload, signedCommit.jws.link)
 
     // apply signed
-    state = await tileDoctypeHandler.applyRecord(signedRecord.jws, FAKE_CID_2, context, state)
+    state = await tileDoctypeHandler.applyCommit(signedCommit.jws, FAKE_CID_2, context, state)
     expect(state).toMatchSnapshot()
   })
 
-  it('throws error if record signed by wrong DID', async () => {
+  it('throws error if commit signed by wrong DID', async () => {
     const tileDoctypeHandler = new TileDoctypeHandler()
 
-    const genesisRecord = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: ['did:3:fake'], tags: ['3id'] } }, context) as SignedRecordContainer
-    await context.ipfs.dag.put(genesisRecord, FAKE_CID_1)
+    const genesisCommit = await TileDoctype.makeGenesis({ content: COMMITS.genesis.data, metadata: { controllers: ['did:3:fake'], tags: ['3id'] } }, context) as SignedCommitContainer
+    await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
 
-    const payload = dagCBOR.util.deserialize(genesisRecord.linkedBlock)
-    await context.ipfs.dag.put(payload, genesisRecord.jws.link)
+    const payload = dagCBOR.util.deserialize(genesisCommit.linkedBlock)
+    await context.ipfs.dag.put(payload, genesisCommit.jws.link)
 
-    await expect(tileDoctypeHandler.applyRecord(genesisRecord.jws, FAKE_CID_1, context)).rejects.toThrow(/wrong DID/)
+    await expect(tileDoctypeHandler.applyCommit(genesisCommit.jws, FAKE_CID_1, context)).rejects.toThrow(/wrong DID/)
   })
 
-  it('applies anchor record correctly', async () => {
+  it('applies anchor commit correctly', async () => {
     const tileDoctypeHandler = new TileDoctypeHandler()
 
-    const genesisRecord = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id], tags: ['3id'] } }, context) as SignedRecordContainer
-    await context.ipfs.dag.put(genesisRecord, FAKE_CID_1)
+    const genesisCommit = await TileDoctype.makeGenesis({ content: COMMITS.genesis.data, metadata: { controllers: [did.id], tags: ['3id'] } }, context) as SignedCommitContainer
+    await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
 
-    const payload = dagCBOR.util.deserialize(genesisRecord.linkedBlock)
-    await context.ipfs.dag.put(payload, genesisRecord.jws.link)
+    const payload = dagCBOR.util.deserialize(genesisCommit.linkedBlock)
+    await context.ipfs.dag.put(payload, genesisCommit.jws.link)
 
     // apply genesis
-    let state = await tileDoctypeHandler.applyRecord(genesisRecord.jws, FAKE_CID_1, context)
+    let state = await tileDoctypeHandler.applyCommit(genesisCommit.jws, FAKE_CID_1, context)
 
     const doctype = new TileDoctype(state, context)
-    const signedRecord = await TileDoctype._makeRecord(doctype, did, RECORDS.r1.desiredContent) as SignedRecordContainer
+    const signedCommit = await TileDoctype._makeCommit(doctype, did, COMMITS.r1.desiredContent) as SignedCommitContainer
 
-    await context.ipfs.dag.put(signedRecord, FAKE_CID_2)
+    await context.ipfs.dag.put(signedCommit, FAKE_CID_2)
 
-    const sPayload = dagCBOR.util.deserialize(signedRecord.linkedBlock)
-    await context.ipfs.dag.put(sPayload, signedRecord.jws.link)
+    const sPayload = dagCBOR.util.deserialize(signedCommit.linkedBlock)
+    await context.ipfs.dag.put(sPayload, signedCommit.jws.link)
 
     // apply signed
-    state = await tileDoctypeHandler.applyRecord(signedRecord.jws, FAKE_CID_2, context, state)
+    state = await tileDoctypeHandler.applyCommit(signedCommit.jws, FAKE_CID_2, context, state)
 
-    await context.ipfs.dag.put(RECORDS.proof, FAKE_CID_4)
+    await context.ipfs.dag.put(COMMITS.proof, FAKE_CID_4)
     // apply anchor
-    state = await tileDoctypeHandler.applyRecord(RECORDS.r2.record as AnchorRecord, FAKE_CID_3, context, state)
+    state = await tileDoctypeHandler.applyCommit(COMMITS.r2.commit as AnchorCommit, FAKE_CID_3, context, state)
     expect(state).toMatchSnapshot()
   })
 })
