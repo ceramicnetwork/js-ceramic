@@ -5,9 +5,9 @@ update_configs:
     directory: "/"
     update_schedule: "weekly"
     default_reviewers:
-      - "simonovic86"
+      - "stbrody"
     default_assignees:
-      - "simonovic86"
+      - "stbrody"
     allowed_updates:
       - match:
           dependency_type: "production"
