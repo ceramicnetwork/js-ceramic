@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.18.7-alpha.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@0.18.6...@ceramicnetwork/cli@0.18.7-alpha.0) (2021-01-12)
+
+
+### Bug Fixes
+
+* **cli,http-client:** Fix pin API in CLI and http client ([#752](https://github.com/ceramicnetwork/js-ceramic/issues/752)) ([20fcd75](https://github.com/ceramicnetwork/js-ceramic/commit/20fcd7598e589c088bcc778bafd1304efa64edb7))
+
+
+
+
+
 ## [0.18.6](/compare/@ceramicnetwork/cli@0.18.5...@ceramicnetwork/cli@0.18.6) (2021-01-07)
 
 **Note:** Version bump only for package @ceramicnetwork/cli

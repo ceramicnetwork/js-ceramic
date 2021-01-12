@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.9.0-alpha.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/http-client@0.8.12...@ceramicnetwork/http-client@0.9.0-alpha.0) (2021-01-12)
+
+
+### Bug Fixes
+
+* **cli,http-client:** Fix pin API in CLI and http client ([#752](https://github.com/ceramicnetwork/js-ceramic/issues/752)) ([20fcd75](https://github.com/ceramicnetwork/js-ceramic/commit/20fcd7598e589c088bcc778bafd1304efa64edb7))
+
+
+### Features
+
+* **http-client:** Remove ability to pin documents in local cache in http client ([#762](https://github.com/ceramicnetwork/js-ceramic/issues/762)) ([dcf7add](https://github.com/ceramicnetwork/js-ceramic/commit/dcf7add42affc340ff58951828186c960c144f0c))
+
+
+
+
+
 ## [0.8.12](/compare/@ceramicnetwork/http-client@0.8.11...@ceramicnetwork/http-client@0.8.12) (2021-01-07)
 
 **Note:** Version bump only for package @ceramicnetwork/http-client

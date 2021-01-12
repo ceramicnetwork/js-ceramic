@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.18.0-alpha.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@0.17.7...@ceramicnetwork/core@0.18.0-alpha.0) (2021-01-12)
+
+
+### Features
+
+* **core:** Disallow ceramic mainnet for now ([#753](https://github.com/ceramicnetwork/js-ceramic/issues/753)) ([c352590](https://github.com/ceramicnetwork/js-ceramic/commit/c352590afcc4ac4c0745fbf9dbd9a8fea0cfed99))
+
+
+
+
+
 ## [0.17.7](/compare/@ceramicnetwork/core@0.17.6...@ceramicnetwork/core@0.17.7) (2021-01-07)
 
 **Note:** Version bump only for package @ceramicnetwork/core
