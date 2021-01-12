@@ -27,8 +27,8 @@ This repo is made up of several different packages.
 | @ceramicnetwork/3id-did-resolver | [![npm](https://img.shields.io/npm/v/@ceramicnetwork/3id-did-resolver)](https://www.npmjs.com/package/@ceramicnetwork/3id-did-resolver) | DID resolver for 3IDs |
 | key-did-resolver | [![npm](https://img.shields.io/npm/v/key-did-resolver)](https://www.npmjs.com/package/key-did-resolver) | did:key method resolver |
 
-## APIs
-[APIs documentation](https://docs.ceramic.network)
+## Documentation
+[Ceramic Developer Portal](https://developers.ceramic.network)
 
 
 ## Development
