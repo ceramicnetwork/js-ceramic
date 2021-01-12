@@ -77,10 +77,6 @@ export class CeramicCliUtils {
         maxHealthyMemory = 0.7,
         corsAllowedOrigins: string
     ): Promise<CeramicDaemon> {
-        if (stateStorePath == null) {
-            stateStorePath = DEFAULT_PINNING_STORE_PATH
-        }
-
         let _corsAllowedOrigins: string | RegExp[] = '*'
         if (corsAllowedOrigins != null && corsAllowedOrigins != '*') {
             _corsAllowedOrigins = corsAllowedOrigins.split(' ').map((origin) => new RegExp(origin))

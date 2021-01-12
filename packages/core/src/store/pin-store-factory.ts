@@ -7,6 +7,7 @@ import path from "path";
 import { IpfsPinning } from '@ceramicnetwork/pinning-ipfs-backend'
 
 export type Props = {
+    networkName?: string;
     stateStorePath?: string;
     pinnings?: string[];
     pinningBackends?: PinningBackendStatic[];
@@ -18,7 +19,9 @@ export class PinStoreFactory {
     readonly pinningBackends: PinningBackendStatic[];
 
     constructor(readonly context: Context, props: Props) {
-        this.stateStorePath = props.stateStorePath || path.join(process.cwd(), '.pinning.store')
+        const directoryName = ".pinning.store." + props.networkName
+        const directoryRoot = props.stateStorePath || process.cwd()
+        this.stateStorePath = path.join(directoryRoot, directoryName)
         this.pinnings = props.pinnings && props.pinnings.length > 0 ? props.pinnings : ['ipfs+context']
         this.pinningBackends = props.pinningBackends && props.pinningBackends.length > 0 ? props.pinningBackends : [IpfsPinning]
     }

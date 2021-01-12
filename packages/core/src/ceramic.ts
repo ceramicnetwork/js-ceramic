@@ -178,15 +178,15 @@ class Ceramic implements CeramicApi {
   }
 
   private static async _generateNetworkOptions(config: CeramicConfig, anchorService: AnchorService): Promise<CeramicNetworkOptions> {
-    const networkName = config.networkName || DEFAULT_NETWORK
+    config.networkName = config.networkName || DEFAULT_NETWORK
 
-    if (config.pubsubTopic && networkName !== "inmemory") {
+    if (config.pubsubTopic && config.networkName !== "inmemory") {
       throw new Error("Specifying pub/sub topic is only supported for the 'inmemory' network")
     }
 
     let pubsubTopic
     let networkChains
-    switch (networkName) {
+    switch (config.networkName) {
       case "mainnet": {
         pubsubTopic = "/ceramic/mainnet"
         networkChains = ["eip155:1"] // Ethereum mainnet
@@ -222,11 +222,11 @@ class Ceramic implements CeramicApi {
         break
       }
       default: {
-        throw new Error("Unrecognized Ceramic network name: '" + networkName + "'. Supported networks are: 'mainnet', 'testnet-clay', 'dev-unstable', 'local', 'inmemory'")
+        throw new Error("Unrecognized Ceramic network name: '" + config.networkName + "'. Supported networks are: 'mainnet', 'testnet-clay', 'dev-unstable', 'local', 'inmemory'")
       }
     }
 
-    if (networkName == "mainnet") {
+    if (config.networkName == "mainnet") {
       throw new Error("Ceramic mainnet is not yet supported")
     }
 
@@ -235,13 +235,13 @@ class Ceramic implements CeramicApi {
     const anchorServiceChains = await anchorService.getSupportedChains()
     const usableChains = networkChains.filter(c => anchorServiceChains.includes(c))
     if (usableChains.length === 0) {
-      throw new Error("No usable chainId for anchoring was found.  The ceramic network '" + networkName
+      throw new Error("No usable chainId for anchoring was found.  The ceramic network '" + config.networkName
           + "' supports the chains: ['" + networkChains.join("', '")
           + "'], but the configured anchor service '" + (config.anchorServiceURL ?? "inmemory")
           + "' only supports the chains: ['" + anchorServiceChains.join("', '") + "']")
     }
 
-    return {name: networkName, pubsubTopic, supportedChains: usableChains}
+    return {name: config.networkName, pubsubTopic, supportedChains: usableChains}
   }
 
   /**
