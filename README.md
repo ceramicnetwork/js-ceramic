@@ -70,7 +70,7 @@ We are happy to accept small and large contributions. Make sure to check out the
 
 
 ## Maintainers
-[@simonovic86](https://github.com/simonovic86)
+[@stbrody](https://github.com/stbrody)
 
 ## License
 
