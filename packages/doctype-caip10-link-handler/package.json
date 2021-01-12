@@ -27,15 +27,15 @@
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
+    "@ceramicnetwork/common": "^0.15.4",
     "@ceramicnetwork/blockchain-utils-validation": "^0.0.1",
-    "@ceramicnetwork/doctype-caip10-link": "^0.12.6",
-    "@ceramicnetwork/common": "^0.15.4"
+    "@ceramicnetwork/doctype-caip10-link": "^0.12.6"
   },
   "devDependencies": {
-    "cids": "1.0.2",
     "@stablelib/sha256": "^1.0.0",
-    "lodash.clonedeep": "^4.5.0",
     "@types/lodash.clonedeep": "^4.5.6",
+    "cids": "1.0.2",
+    "lodash.clonedeep": "^4.5.0",
     "uint8arrays": "^2.0.5"
   },
   "jest": {
