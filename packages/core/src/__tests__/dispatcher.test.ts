@@ -37,7 +37,7 @@ class TileDoctypeMock extends TileDoctype {
 
 describe('Dispatcher', () => {
 
-  let dispatcher
+  let dispatcher: Dispatcher
 
   beforeEach(async () => {
     ipfs.dag.put.mockClear()
@@ -55,7 +55,7 @@ describe('Dispatcher', () => {
   })
 
   it('is constructed correctly', async () => {
-    expect(dispatcher._documents).toEqual({})
+    expect((dispatcher as any)._documents).toEqual({})
     expect(ipfs.pubsub.subscribe).toHaveBeenCalledWith(TOPIC, expect.anything())
   })
 
@@ -86,18 +86,18 @@ describe('Dispatcher', () => {
   })
 
   it('store record correctly', async () => {
-    expect(await dispatcher.storeRecord('data')).toEqual(FAKE_CID)
+    expect(await dispatcher.storeCommit('data')).toEqual(FAKE_CID)
   })
 
   it('retrieves record correctly', async () => {
-    expect(await dispatcher.retrieveRecord(FAKE_CID)).toEqual('data')
+    expect(await dispatcher.retrieveCommit(FAKE_CID)).toEqual('data')
   })
 
   it('publishes tip correctly', async () => {
     const docId = DocID.fromString(FAKE_DOC_ID)
-    const tip = 'bafy9h3f08erf'
+    const tip = new CID('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D')
     dispatcher.publishTip(docId, tip)
-    expect(ipfs.pubsub.publish).toHaveBeenCalledWith(TOPIC, JSON.stringify({ typ: MsgType.UPDATE, doc: FAKE_DOC_ID, tip }))
+    expect(ipfs.pubsub.publish).toHaveBeenCalledWith(TOPIC, JSON.stringify({ typ: MsgType.UPDATE, doc: FAKE_DOC_ID, tip: tip.toString() }))
   })
 
   it('errors on invalid message type', async () => {

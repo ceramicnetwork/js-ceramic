@@ -3,7 +3,7 @@ import { Caip10LinkDoctypeHandler } from '../caip10-link-doctype-handler'
 import cloneDeep from 'lodash.clonedeep'
 import CID from 'cids'
 import { Caip10LinkDoctype } from "@ceramicnetwork/doctype-caip10-link"
-import {CeramicApi, Context} from "@ceramicnetwork/common"
+import {CeramicApi, CeramicCommit, Context} from "@ceramicnetwork/common"
 import sha256 from '@stablelib/sha256'
 import * as uint8arrays from 'uint8arrays'
 
@@ -30,7 +30,7 @@ const RECORDS = {
             account: '0x0544dcf4fce959c6c4f3b7530190cb5e1bd67cb8@eip155:1',
             timestamp: 1608116721
         },
-        record: {
+        commit: {
             data: {
                 version: 2,
                 type: 'ethereum-eoa',
@@ -43,7 +43,7 @@ const RECORDS = {
             prev: FAKE_CID_1
         }
     },
-    r2: { record: { proof: FAKE_CID_4 } },
+    r2: { commit: { proof: FAKE_CID_4 } },
     proof: {
         value: {
             blockNumber: 123456,
@@ -124,68 +124,68 @@ describe('Caip10LinkHandler', () => {
     })
 
     it('applies genesis record correctly', async () => {
-        const state = await handler.applyRecord(RECORDS.genesis, FAKE_CID_1, context)
+        const state = await handler.applyCommit(RECORDS.genesis, FAKE_CID_1, context)
         expect(state).toMatchSnapshot()
     })
 
     it('makes signed record correctly', async () => {
-        const state = await handler.applyRecord(RECORDS.genesis, FAKE_CID_1, context)
+        const state = await handler.applyCommit(RECORDS.genesis, FAKE_CID_1, context)
         const doctype = new Caip10LinkDoctype(state, context)
-        const record = await Caip10LinkDoctype._makeRecord(doctype, RECORDS.r1.desiredContent)
-        expect(record).toEqual(RECORDS.r1.record)
+        const record = await Caip10LinkDoctype._makeCommit(doctype, RECORDS.r1.desiredContent)
+        expect(record).toEqual(RECORDS.r1.commit)
     })
 
     it('applies signed record correctly', async () => {
-        let state = await handler.applyRecord(RECORDS.genesis, FAKE_CID_1, context)
-        state = await handler.applyRecord(RECORDS.r1.record, FAKE_CID_2, context, state)
+        let state = await handler.applyCommit(RECORDS.genesis, FAKE_CID_1, context)
+        state = await handler.applyCommit(RECORDS.r1.commit, FAKE_CID_2, context, state)
         expect(state).toMatchSnapshot()
     })
 
     it('throws an error of the proof is invalid', async () => {
-        const badRecord = cloneDeep(RECORDS.r1.record)
+        const badRecord = cloneDeep(RECORDS.r1.commit)
         badRecord.data.signature = '0xc6a5f50945bc7b06320b66cfe144e2b571391c88827eed0490f7f8e5e8af769c4246e27e8302348762387462387648726346877884d9cb8a9303f5d92ea4df0d1c'
-        const state = await handler.applyRecord(RECORDS.genesis, FAKE_CID_1, context)
-        await expect(handler.applyRecord(badRecord, FAKE_CID_2, context, state)).rejects.toThrow(/Invalid proof/i)
+        const state = await handler.applyCommit(RECORDS.genesis, FAKE_CID_1, context)
+        await expect(handler.applyCommit(badRecord, FAKE_CID_2, context, state)).rejects.toThrow(/Invalid proof/i)
     })
 
     it('throws an error of the proof doesn\'t match the controller', async () => {
         const badAddressGenesis = cloneDeep(RECORDS.genesis)
         badAddressGenesis.header.controllers = ['0xffffffffffffffffffffffffffffffffffffffff@eip155:1']
-        const state = await handler.applyRecord(badAddressGenesis, FAKE_CID_1, context)
-        await expect(handler.applyRecord(RECORDS.r1.record, FAKE_CID_2, context, state)).rejects.toThrow(/Address doesn't match/i)
+        const state = await handler.applyCommit(badAddressGenesis, FAKE_CID_1, context)
+        await expect(handler.applyCommit(RECORDS.r1.commit, FAKE_CID_2, context, state)).rejects.toThrow(/Address doesn't match/i)
     })
 
     it('applies anchor record correctly', async () => {
         // create signed record
-        await context.ipfs.dag.put(RECORDS.r1.record, FAKE_CID_2)
+        await context.ipfs.dag.put(RECORDS.r1.commit, FAKE_CID_2)
         // create anchor record
-        await context.ipfs.dag.put(RECORDS.r2.record, FAKE_CID_3)
+        await context.ipfs.dag.put(RECORDS.r2.commit, FAKE_CID_3)
         // create anchor proof
         await context.ipfs.dag.put(RECORDS.proof, FAKE_CID_4)
 
         // Apply genesis
-        let state = await handler.applyRecord(RECORDS.genesis, FAKE_CID_1, context)
+        let state = await handler.applyCommit(RECORDS.genesis, FAKE_CID_1, context)
         // Apply signed record
-        state = await handler.applyRecord(RECORDS.r1.record, FAKE_CID_2, context, state)
+        state = await handler.applyCommit(RECORDS.r1.commit, FAKE_CID_2, context, state)
         // Apply anchor record
-        state = await handler.applyRecord(RECORDS.r2.record, FAKE_CID_3, context, state)
+        state = await handler.applyCommit(RECORDS.r2.commit as unknown as CeramicCommit, FAKE_CID_3, context, state)
         expect(state).toMatchSnapshot()
     })
 
     it('Does not apply anchor record on unsupported chain', async () => {
         // create signed record
-        await context.ipfs.dag.put(RECORDS.r1.record, FAKE_CID_2)
+        await context.ipfs.dag.put(RECORDS.r1.commit, FAKE_CID_2)
         // create anchor record
-        await context.ipfs.dag.put(RECORDS.r2.record, FAKE_CID_3)
+        await context.ipfs.dag.put(RECORDS.r2.commit, FAKE_CID_3)
         // create anchor proof with a different chainId than what's in the genesis record
         await context.ipfs.dag.put({value: { blockNumber: 123456, chainId: 'thewrongchain'}}, FAKE_CID_4)
 
         // Apply genesis
-        let state = await handler.applyRecord(RECORDS.genesis, FAKE_CID_1, context)
+        let state = await handler.applyCommit(RECORDS.genesis, FAKE_CID_1, context)
         // Apply signed record
-        state = await handler.applyRecord(RECORDS.r1.record, FAKE_CID_2, context, state)
+        state = await handler.applyCommit(RECORDS.r1.commit, FAKE_CID_2, context, state)
         // Apply anchor record
-        await expect(handler.applyRecord(RECORDS.r2.record, FAKE_CID_3, context, state))
+        await expect(handler.applyCommit(RECORDS.r2.commit as unknown as CeramicCommit, FAKE_CID_3, context, state))
             .rejects.toThrow("Anchor proof chainId 'thewrongchain' is not supported. Supported chains are: 'fakechain:123'")
     })
 
@@ -236,11 +236,11 @@ describe('Caip10LinkHandler', () => {
         await context.ipfs.dag.put(records.r2proof, FAKE_CID_4)
         await context.ipfs.dag.put(records.r4proof, FAKE_CID_7)
 
-        let state = await handler.applyRecord(records.genesis, FAKE_CID_1, context)
-        state = await handler.applyRecord(records.r1, FAKE_CID_2, context, state)
-        state = await handler.applyRecord(records.r2, FAKE_CID_3, context, state)
+        let state = await handler.applyCommit(records.genesis, FAKE_CID_1, context)
+        state = await handler.applyCommit(records.r1, FAKE_CID_2, context, state)
+        state = await handler.applyCommit(records.r2 as unknown as CeramicCommit, FAKE_CID_3, context, state)
         expect(state.content).toEqual('did:3:testdid1')
-        state = await handler.applyRecord(records.r3, FAKE_CID_5, context, state)
+        state = await handler.applyCommit(records.r3, FAKE_CID_5, context, state)
 
         // create a fake update based on the r1 data to try a replay attack
         const r4 = {
@@ -248,9 +248,9 @@ describe('Caip10LinkHandler', () => {
             id: FAKE_CID_1,
             prev: FAKE_CID_5
         }
-        await expect(handler.applyRecord(r4, FAKE_CID_8, context, state)).rejects.toThrow('Invalid record, proof timestamp too old')
+        await expect(handler.applyCommit(r4, FAKE_CID_8, context, state)).rejects.toThrow('Invalid commit, proof timestamp too old')
 
-        state = await handler.applyRecord(records.r4, FAKE_CID_6, context, state)
+        state = await handler.applyCommit(records.r4 as unknown as CeramicCommit, FAKE_CID_6, context, state)
         expect(state.content).toEqual('did:3:testdid2')
 
         // create a fake update based on the r1 data to try a replay attack
@@ -259,6 +259,6 @@ describe('Caip10LinkHandler', () => {
             id: FAKE_CID_1,
             prev: FAKE_CID_6
         }
-        await expect(handler.applyRecord(r5, FAKE_CID_8, context, state)).rejects.toThrow('Invalid record, proof timestamp too old')
+        await expect(handler.applyCommit(r5, FAKE_CID_8, context, state)).rejects.toThrow('Invalid commit, proof timestamp too old')
     })
 })

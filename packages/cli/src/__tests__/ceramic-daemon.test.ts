@@ -163,13 +163,13 @@ describe('Ceramic interop: core <> http-client', () => {
         const records2 = await client.loadDocumentRecords(doc2.id)
         expect(records2).toBeDefined()
 
-        const serializeRecords = (records: any): any => records.map((r: any) => {
+        const serializeCommits = (commits: any): any => commits.map((r: any) => {
             return {
-                cid: r.cid, value: DoctypeUtils.serializeRecord(r.value)
+                cid: r.cid, value: DoctypeUtils.serializeCommit(r.value)
             }
         })
 
-        expect(serializeRecords(records1)).toEqual(serializeRecords(records2))
+        expect(serializeCommits(records1)).toEqual(serializeCommits(records2))
     })
 
     it('makes and gets updates correctly', async () => {

@@ -3,6 +3,7 @@ import cloneDeep from 'lodash.clonedeep'
 import { EventEmitter } from "events"
 import type { Context } from "./context"
 import DocID from '@ceramicnetwork/docid'
+import type { DagJWSResult, DagJWS } from 'dids'
 
 /**
  * Describes signature status
@@ -18,7 +19,7 @@ export enum AnchorStatus {
     NOT_REQUESTED, PENDING, PROCESSING, ANCHORED, FAILED
 }
 
-export interface RecordHeader {
+export interface CommitHeader {
     controllers: Array<string>
     schema?: string
     tags?: Array<string>
@@ -26,17 +27,17 @@ export interface RecordHeader {
     [index: string]: any // allow support for future changes
 }
 
-export type GenesisHeader = RecordHeader
+export type GenesisHeader = CommitHeader
 
-export type GenesisRecord = {
+export type GenesisCommit = {
     header: GenesisHeader
     data?: any
     unique?: string
 }
 
-export interface UnsignedRecord {
+export interface UnsignedCommit {
     id: CID
-    header?: RecordHeader
+    header?: CommitHeader
     data: any
     prev: CID
 }
@@ -49,20 +50,18 @@ export interface AnchorProof {
     root: CID,
 }
 
-export interface AnchorRecord {
+export interface AnchorCommit {
     id: CID,
     prev: CID,
     proof: CID,
     path: string,
 }
 
-import type { DagJWSResult, DagJWS } from 'dids'
+export type SignedCommit = DagJWS
 
-export type SignedRecord = DagJWS
+export type SignedCommitContainer = DagJWSResult
 
-export type SignedRecordContainer = DagJWSResult
-
-export type CeramicRecord = GenesisRecord | UnsignedRecord | AnchorRecord | SignedRecord | SignedRecordContainer
+export type CeramicCommit = GenesisCommit | UnsignedCommit | AnchorCommit | SignedCommit | SignedCommitContainer
 
 /**
  * Document metadata
@@ -96,13 +95,13 @@ export interface DocNext {
     metadata?: DocMetadata
 }
 
-export enum RecordType {
+export enum CommitType {
   GENESIS, SIGNED, ANCHOR
 }
 
 export interface LogEntry {
   cid: CID
-  type: RecordType
+  type: CommitType
 }
 /**
  * Document state
@@ -127,7 +126,7 @@ export interface DocOpts {
     // Whether or not to request an anchor after performing the operation.
     anchor?: boolean
 
-    // Whether or not to publish the current tip record to the pubsub channel after performing the operation.
+    // Whether or not to publish the current tip commit to the pubsub channel after performing the operation.
     publish?: boolean
 
     // Whether or not to wait a short period of time to hear about new tips for the document after performing the operation.
@@ -191,11 +190,11 @@ export abstract class Doctype extends EventEmitter implements DocStateHolder {
     }
 
     /**
-     * Lists available commits that correspond to anchor records
+     * Lists available commits that correspond to anchor commits
      */
     get anchorCommitIds(): Array<DocID> {
         return this._state.log
-            .filter(({ type }) => type === RecordType.ANCHOR)
+            .filter(({ type }) => type === CommitType.ANCHOR)
             .map(({ cid }) => DocID.fromOther(this.id, cid))
     }
 
@@ -244,12 +243,12 @@ export interface DoctypeConstructor<T extends Doctype> {
     new(state: DocState, context: Context): T
 
     /**
-     * Makes genesis record
+     * Makes genesis commit
      * @param params - Create parameters
      * @param context - Ceramic context
      * @param opts - Initialization options
      */
-    makeGenesis(params: DocParams, context?: Context, opts?: DocOpts): Promise<CeramicRecord>
+    makeGenesis(params: DocParams, context?: Context, opts?: DocOpts): Promise<CeramicCommit>
 }
 
 /**
@@ -267,12 +266,11 @@ export interface DoctypeHandler<T extends Doctype> {
     doctype: DoctypeConstructor<T>
 
     /**
-     * Applies record to the document (genesis|signed|anchored)
-     * @param record - Record instance
+     * Applies commit to the document (genesis|signed|anchored)
+     * @param commit - Commit instance
      * @param cid - Record CID
      * @param context - Ceramic context
      * @param state - Document state
      */
-    applyRecord(record: CeramicRecord, cid: CID, context: Context, state?: DocState): Promise<DocState>
-
+    applyCommit(commit: CeramicCommit, cid: CID, context: Context, state?: DocState): Promise<DocState>
 }

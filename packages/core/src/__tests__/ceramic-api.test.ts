@@ -156,7 +156,7 @@ describe('Ceramic API', () => {
 
       // // try to call Ceramic API directly
       try {
-        const updateRecord = await TileDoctype._makeRecord(docV1, ceramic.context.did, { content: { test: 'fghj' } })
+        const updateRecord = await TileDoctype._makeCommit(docV1, ceramic.context.did, { content: { test: 'fghj' } })
         await ceramic.context.api.applyRecord(docV1Id, updateRecord)
         throw new Error('Should not be able to update commit')
       } catch (e) {
@@ -435,7 +435,7 @@ describe('Ceramic API', () => {
         const record = (await ceramic.ipfs.dag.get(cid)).value
         expected.push({
           cid: cid.toString(),
-          value: await DoctypeUtils.convertRecordToSignedRecordContainer(record, ipfs)
+          value: await DoctypeUtils.convertCommitToSignedCommitContainer(record, ipfs)
         })
       }
 

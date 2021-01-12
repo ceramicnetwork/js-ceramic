@@ -1,7 +1,7 @@
 import express, { Request, Response, NextFunction } from 'express'
 import Ceramic from '@ceramicnetwork/core'
 import type { CeramicConfig} from "@ceramicnetwork/core"
-import { DoctypeUtils, RootLogger, Logger, IpfsApi, Doctype, MultiQuery  } from "@ceramicnetwork/common"
+import { DoctypeUtils, RootLogger, Logger, IpfsApi, MultiQuery  } from "@ceramicnetwork/common"
 import { LogToFiles } from "./ceramic-logger-plugins"
 import DocID from "@ceramicnetwork/docid"
 import cors from 'cors'
@@ -158,7 +158,8 @@ class CeramicDaemon {
   }
 
   registerAPIPaths (app: core.Express, gateway: boolean): void {
-    app.get(toApiPath('/records/:docid'), this.records.bind(this))
+    app.get(toApiPath('/commits/:docid'), this.commits.bind(this))
+    app.get(toApiPath('/records/:docid'), this.commits.bind(this))
     app.post(toApiPath('/multiqueries'), this.multiQuery.bind(this))
     app.get(toApiPath('/documents/:docid'), this.state.bind(this))
     app.get(toApiPath('/pins/:docid'), this.listPinned.bind(this))
@@ -168,11 +169,13 @@ class CeramicDaemon {
 
     if (!gateway) {
       app.post(toApiPath('/documents'), this.createDocFromGenesis.bind(this))
-      app.post(toApiPath('/records'), this.applyRecord.bind(this))
+      app.post(toApiPath('/commits'), this.applyCommit.bind(this))
+      app.post(toApiPath('/records'), this.applyCommit.bind(this))
       app.post(toApiPath('/pins/:docid'), this.pinDocument.bind(this))
       app.delete(toApiPath('/pins/:docid'), this.unpinDocument.bind(this))
     } else {
       app.post(toApiPath('/documents'), this.createReadOnlyDocFromGenesis.bind(this))
+      app.post(toApiPath('/commits'),  this._notSupported.bind(this))
       app.post(toApiPath('/records'),  this._notSupported.bind(this))
       app.post(toApiPath('/pins/:docid'),  this._notSupported.bind(this))
       app.delete(toApiPath('/pins/:docid'),  this._notSupported.bind(this))
@@ -225,13 +228,13 @@ class CeramicDaemon {
   }
 
   /**
-   * Create document from genesis record
+   * Create document from genesis commit
    * @dev Useful when the docId is unknown, but you have the genesis contents
    */
   async createDocFromGenesis (req: Request, res: Response, next: NextFunction): Promise<void> {
     const { doctype, genesis, docOpts } = req.body
     try {
-      const doc = await this.ceramic.createDocumentFromGenesis(doctype, DoctypeUtils.deserializeRecord(genesis), docOpts)
+      const doc = await this.ceramic.createDocumentFromGenesis(doctype, DoctypeUtils.deserializeCommit(genesis), docOpts)
       res.json({ docId: doc.id.toString(), state: DoctypeUtils.serializeState(doc.state) })
     } catch (e) {
       return next(e)
@@ -240,7 +243,7 @@ class CeramicDaemon {
   }
 
   /**
-   * Create read-only document from genesis record
+   * Create read-only document from genesis commit
    * @dev Useful when the docId is unknown, but you have the genesis contents
    * @TODO Should return null if document does not already exist instead of
    * current behavior, publishing to IPFS. With that change it will make sense
@@ -250,7 +253,7 @@ class CeramicDaemon {
     const { doctype, genesis, docOpts } = req.body
     const readOnlyDocOpts = { ...docOpts, anchor: false, publish: false }
     try {
-      const doc = await this.ceramic.createDocumentFromGenesis(doctype, DoctypeUtils.deserializeRecord(genesis), readOnlyDocOpts)
+      const doc = await this.ceramic.createDocumentFromGenesis(doctype, DoctypeUtils.deserializeCommit(genesis), readOnlyDocOpts)
       res.json({ docId: doc.id.toString(), state: DoctypeUtils.serializeState(doc.state) })
     } catch (e) {
       return next(e)
@@ -273,20 +276,20 @@ class CeramicDaemon {
   }
 
   /**
-   * Get all document records
+   * Get all document commits
    */
-  async records (req: Request, res: Response, next: NextFunction): Promise<void> {
+  async commits (req: Request, res: Response, next: NextFunction): Promise<void> {
     const docId = DocID.fromString(req.params.docid)
     try {
-      const records = await this.ceramic.loadDocumentRecords(docId)
-      const serializedRecords = records.map((r: any) => {
+      const commits = await this.ceramic.loadDocumentCommits(docId)
+      const serializedCommits = commits.map((r: any) => {
         return {
           cid: r.cid,
-          value: DoctypeUtils.serializeRecord(r.value)
+          value: DoctypeUtils.serializeCommit(r.value)
         }
       })
 
-      res.json({ docId: docId.toString(), records: serializedRecords })
+      res.json({ docId: docId.toString(), commits: serializedCommits })
     } catch (e) {
       return next(e)
     }
@@ -294,18 +297,18 @@ class CeramicDaemon {
   }
 
   /**
-   * Apply one record to the existing document
+   * Apply one commit to the existing document
    */
-  async applyRecord (req: Request, res: Response, next: NextFunction): Promise<void> {
-    const { docId, record, docOpts } = req.body
-    if (!docId && !record) {
-      res.json({ error: 'docId and record are required in order to apply record' })
+  async applyCommit (req: Request, res: Response, next: NextFunction): Promise<void> {
+    const { docId, commit, docOpts } = req.body
+    if (!(docId && commit)) {
+      res.json({ error: 'docId and commit are required in order to apply commit' })
       next()
       return
     }
 
     try {
-      const doctype = await this.ceramic.applyRecord(docId, DoctypeUtils.deserializeRecord(record), docOpts)
+      const doctype = await this.ceramic.applyCommit(docId, DoctypeUtils.deserializeCommit(commit), docOpts)
       res.json({ docId: doctype.id.toString(), state: DoctypeUtils.serializeState(doctype.state) })
     } catch (e) {
       return next(e)

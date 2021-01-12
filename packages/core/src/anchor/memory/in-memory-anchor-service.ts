@@ -87,7 +87,7 @@ class InMemoryAnchorService extends AnchorService {
       try {
         req = this._queue[index]
         const record = (await this._ceramic.ipfs.dag.get(req.cid)).value
-        const did = await this.verifySignedRecord(record)
+        const did = await this.verifySignedCommit(record)
 
         const log = await this._loadCommitHistory(req.cid)
         const candidate = new Candidate(new CID(req.cid), req.docId, did, log)
@@ -112,7 +112,7 @@ class InMemoryAnchorService extends AnchorService {
         if (c.log.length > maxLogLength) {
           selected = c
           maxLogLength = c.log.length
-        } else if (c.log.length == maxLogLength && c.cid.bytes < selected.cid.bytes) {
+        } else if (selected && c.log.length == maxLogLength && c.cid.bytes < selected.cid.bytes) {
           // If there are two conflicting candidates with the same log length, we must choose
           // which to anchor deterministically. We use the same arbitrary but deterministic strategy
           // that js-ceramic conflict resolution does: choosing the record whose CID is smaller
@@ -137,12 +137,12 @@ class InMemoryAnchorService extends AnchorService {
     let currentCommitId = commitId
     for (; ;) {
       const currentCommit = (await this._ceramic.ipfs.dag.get(currentCommitId)).value
-      if (DoctypeUtils.isAnchorRecord(currentCommit)) {
+      if (DoctypeUtils.isAnchorCommit(currentCommit)) {
         return history
       }
 
       let prevCommitId: CID
-      if (DoctypeUtils.isSignedRecord(currentCommit)) {
+      if (DoctypeUtils.isSignedCommit(currentCommit)) {
         const payload = (await this._ceramic.ipfs.dag.get(currentCommit.link)).value
         prevCommitId = payload.prev
       } else {
@@ -164,14 +164,14 @@ class InMemoryAnchorService extends AnchorService {
    * @param ceramic - Ceramic API used for various purposes
    */
   set ceramic(ceramic: CeramicApi) {
-    this._ceramic = ceramic as Ceramic
+    this._ceramic = ceramic as unknown as Ceramic
     this._dispatcher = this._ceramic.dispatcher
   }
 
   /**
    * Send request to the anchoring service
    * @param docId - Document ID
-   * @param cid - Record CID
+   * @param cid - Commit CID
    */
   async requestAnchor(docId: string, cid: CID): Promise<void> {
     const candidate: Candidate = new Candidate(cid, docId)
@@ -188,7 +188,7 @@ class InMemoryAnchorService extends AnchorService {
    * @private
    */
   async _process(leaf: Candidate): Promise<void> {
-    // creates fake anchor record
+    // creates fake anchor commit
     const proofData: AnchorProof = {
       chainId: CHAIN_ID,
       blockNumber: Date.now(),
@@ -196,9 +196,9 @@ class InMemoryAnchorService extends AnchorService {
       txHash: new CID(this.SAMPLE_ETH_TX_HASH),
       root: leaf.cid,
     }
-    const proof = await this._dispatcher.storeRecord(proofData)
-    const record = { proof, path: '', prev: leaf.cid }
-    const cid = await this._dispatcher.storeRecord(record)
+    const proof = await this._dispatcher.storeCommit(proofData)
+    const commit = { proof, path: '', prev: leaf.cid }
+    const cid = await this._dispatcher.storeCommit(commit)
 
     // add a delay
     const handle = setTimeout(() => {
@@ -208,13 +208,13 @@ class InMemoryAnchorService extends AnchorService {
   }
 
   /**
-   * Verifies record signature
-   * @param record - Record data
+   * Verifies commit signature
+   * @param commit - Commit data
    * @return DID
    * @private
    */
-  async verifySignedRecord(record: Record<string, unknown>): Promise<string> {
-    const { payload, signatures } = record
+  async verifySignedCommit(commit: Record<string, unknown>): Promise<string> {
+    const { payload, signatures } = commit
     const { signature, protected: _protected } = signatures[0]
 
     const decodedHeader = JSON.parse(base64url.decode(_protected))

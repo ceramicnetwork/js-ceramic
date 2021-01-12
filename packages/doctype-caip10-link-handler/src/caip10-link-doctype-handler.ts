@@ -8,9 +8,9 @@ import {
     DoctypeHandler,
     DocOpts,
     SignatureStatus,
-    RecordType,
-    CeramicRecord,
-    AnchorRecord,
+    CommitType,
+    CeramicCommit,
+    AnchorCommit,
     Context
 } from "@ceramicnetwork/common"
 
@@ -40,57 +40,57 @@ export class Caip10LinkDoctypeHandler implements DoctypeHandler<Caip10LinkDoctyp
     }
 
     /**
-     * Applies record (genesis|signed|anchor)
-     * @param record - Record to be applied
-     * @param cid - Record CID
+     * Applies commit (genesis|signed|anchor)
+     * @param commit - Commit to be applied
+     * @param cid - Commit CID
      * @param context - Ceramic context
      * @param state - Document state
      */
-    async applyRecord(record: CeramicRecord, cid: CID, context: Context, state?: DocState): Promise<DocState> {
+    async applyCommit(commit: CeramicCommit, cid: CID, context: Context, state?: DocState): Promise<DocState> {
         if (state == null) {
-            return this._applyGenesis(record, cid)
+            return this._applyGenesis(commit, cid)
         }
 
-        if ((record as AnchorRecord).proof) {
-            return this._applyAnchor(context, record, cid, state);
+        if ((commit as AnchorCommit).proof) {
+            return this._applyAnchor(context, commit, cid, state);
         }
 
-        return this._applySigned(record, cid, state);
+        return this._applySigned(commit, cid, state);
     }
 
     /**
-     * Applies genesis record
-     * @param record - Genesis record
-     * @param cid - Genesis record CID
+     * Applies genesis commit
+     * @param commit - Genesis commit
+     * @param cid - Genesis commit CID
      * @private
      */
-    async _applyGenesis (record: any, cid: CID): Promise<DocState> {
-        // TODO - verify genesis record
+    async _applyGenesis (commit: any, cid: CID): Promise<DocState> {
+        // TODO - verify genesis commit
         return {
             doctype: DOCTYPE_NAME,
             content: null,
             next: {
                 content: null
             },
-            metadata: record.header,
+            metadata: commit.header,
             signature: SignatureStatus.GENESIS,
             anchorStatus: AnchorStatus.NOT_REQUESTED,
-            log: [{ cid, type: RecordType.GENESIS }]
+            log: [{ cid, type: CommitType.GENESIS }]
         }
     }
 
     /**
-     * Applies signed record
-     * @param record - Signed record
-     * @param cid - Signed record CID
+     * Applies signed commit
+     * @param commit - Signed commit
+     * @param cid - Signed commit CID
      * @param state - Document state
      * @private
      */
-    async _applySigned (record: any, cid: CID, state: DocState): Promise<DocState> {
-        // TODO: Assert that the 'prev' of the record being applied is the end of the log in 'state'
-        const validProof = await validateLink(record.data)
+    async _applySigned (commit: any, cid: CID, state: DocState): Promise<DocState> {
+        // TODO: Assert that the 'prev' of the commit being applied is the end of the log in 'state'
+        const validProof = await validateLink(commit.data)
         if (!validProof) {
-            throw new Error('Invalid proof for signed record')
+            throw new Error('Invalid proof for signed commit')
         }
 
         if (state.signature !== SignatureStatus.GENESIS && (
@@ -102,7 +102,7 @@ export class Caip10LinkDoctypeHandler implements DoctypeHandler<Caip10LinkDoctyp
             validProof.timestamp < state.next.metadata.lastUpdate
           )
         )) {
-          throw new Error('Invalid record, proof timestamp too old')
+          throw new Error('Invalid commit, proof timestamp too old')
         }
 
         // TODO: handle CAIP-10 addresses in proof generation of 3id-blockchain-utils
@@ -113,7 +113,7 @@ export class Caip10LinkDoctypeHandler implements DoctypeHandler<Caip10LinkDoctyp
         if (addressCaip10.toLowerCase() !== state.metadata.controllers[0].toLowerCase()) {
             throw new Error("Address doesn't match document controller")
         }
-        state.log.push({ cid, type: RecordType.SIGNED })
+        state.log.push({ cid, type: CommitType.SIGNED })
         return {
             ...state,
             signature: SignatureStatus.SIGNED,
@@ -129,16 +129,16 @@ export class Caip10LinkDoctypeHandler implements DoctypeHandler<Caip10LinkDoctyp
     }
 
     /**
-     * Applies anchor record
+     * Applies anchor commit
      * @param context - Ceramic context
-     * @param record - Anchor record
-     * @param cid - Anchor record CID
+     * @param commit - Anchor commit
+     * @param cid - Anchor commit CID
      * @param state - Document state
      * @private
      */
-    async _applyAnchor (context: Context, record: any, cid: CID, state: DocState): Promise<DocState> {
-        // TODO: Assert that the 'prev' of the record being applied is the end of the log in 'state'
-        const proof = (await context.ipfs.dag.get(record.proof)).value;
+    async _applyAnchor (context: Context, commit: any, cid: CID, state: DocState): Promise<DocState> {
+        // TODO: Assert that the 'prev' of the commit being applied is the end of the log in 'state'
+        const proof = (await context.ipfs.dag.get(commit.proof)).value;
 
         const supportedChains = await context.api.getSupportedChains()
         if (!supportedChains.includes(proof.chainId)) {
@@ -147,7 +147,7 @@ export class Caip10LinkDoctypeHandler implements DoctypeHandler<Caip10LinkDoctyp
                 + supportedChains.join("', '") + "'")
         }
 
-        state.log.push({ cid, type: RecordType.ANCHOR })
+        state.log.push({ cid, type: CommitType.ANCHOR })
         let content = state.content
         if (state.next?.content) {
             content = state.next.content
