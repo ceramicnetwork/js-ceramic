@@ -168,7 +168,7 @@ describe('Ceramic interop: core <> http-client', () => {
             }
         })
 
-        expect(serializeRecords(records1)).toEqual(serializeRecords(records2))
+        expect(serializeCommits(records1)).toEqual(serializeCommits(records2))
     })
 
     it('makes and gets updates correctly', async () => {
