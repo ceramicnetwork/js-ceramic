@@ -26,8 +26,8 @@ import {
 import { Resolver } from "did-resolver"
 
 import { DID } from 'dids'
-import { TileDoctypeHandler } from "@ceramicnetwork/doctype-tile"
-import { Caip10LinkDoctypeHandler } from "@ceramicnetwork/doctype-caip10-link"
+import { TileDoctypeHandler } from "@ceramicnetwork/doctype-tile-handler"
+import { Caip10LinkDoctypeHandler } from "@ceramicnetwork/doctype-caip10-link-handler"
 import { PinStoreFactory } from "./store/pin-store-factory";
 import { PinStore } from "./store/pin-store";
 import { PathTrie, TrieNode, promiseTimeout } from './utils'
@@ -313,18 +313,6 @@ class Ceramic implements CeramicApi {
    */
   addDoctypeHandler<T extends Doctype>(doctypeHandler: DoctypeHandler<T>): void {
     this._doctypeHandlers[doctypeHandler.name] = doctypeHandler
-  }
-
-  /**
-   * Finds doctype handler
-   * @param doctype - Doctype
-   */
-  findDoctypeHandler<T extends Doctype>(doctype: string): DoctypeHandler<T> {
-    const doctypeHandler = this._doctypeHandlers[doctype]
-    if (doctypeHandler == null) {
-      throw new Error(`Failed to find doctype handler for doctype ${doctype}`)
-    }
-    return doctypeHandler as DoctypeHandler<T>
   }
 
   /**

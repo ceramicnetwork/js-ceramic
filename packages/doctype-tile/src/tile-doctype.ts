@@ -18,7 +18,7 @@ import {
     UnsignedRecord,
 } from "@ceramicnetwork/common"
 
-const DOCTYPE = 'tile'
+export const DOCTYPE_NAME = 'tile'
 
 /**
  * Tile doctype parameters
@@ -57,7 +57,7 @@ export class TileDoctype extends Doctype {
     static async create(params: TileParams, context: Context, opts?: DocOpts): Promise<TileDoctype> {
         const { content, metadata } = params
         const record = await TileDoctype.makeGenesis({ content, metadata }, context)
-        return context.api.createDocumentFromGenesis<TileDoctype>(DOCTYPE, record, opts)
+        return context.api.createDocumentFromGenesis<TileDoctype>(DOCTYPE_NAME, record, opts)
     }
 
     /**

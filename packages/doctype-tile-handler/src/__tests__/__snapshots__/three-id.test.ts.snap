@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`ThreeIdHandler applies anchor record correctly 1`] = `
+exports[`applies anchor record correctly 1`] = `
 Object {
   "anchorProof": Object {
     "blockNumber": 123456,
@@ -157,7 +157,7 @@ Object {
 }
 `;
 
-exports[`ThreeIdHandler applies genesis record correctly 1`] = `
+exports[`applies genesis record correctly 1`] = `
 Object {
   "anchorStatus": 0,
   "content": Object {
@@ -223,7 +223,7 @@ Object {
 }
 `;
 
-exports[`ThreeIdHandler applies signed record correctly 1`] = `
+exports[`applies signed record correctly 1`] = `
 Object {
   "anchorStatus": 0,
   "content": Object {

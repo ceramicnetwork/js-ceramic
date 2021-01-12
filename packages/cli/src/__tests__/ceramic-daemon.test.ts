@@ -5,7 +5,7 @@ import tmp from 'tmp-promise'
 import IPFS from 'ipfs-core'
 import CeramicDaemon from '../ceramic-daemon'
 import { AnchorStatus, DoctypeUtils, IpfsApi } from "@ceramicnetwork/common"
-import { TileDoctypeHandler } from "@ceramicnetwork/doctype-tile"
+import { TileDoctypeHandler } from "@ceramicnetwork/doctype-tile-handler"
 import { EventEmitter } from "events"
 import * as u8a from 'uint8arrays'
 

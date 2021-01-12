@@ -1,6 +1,6 @@
-import CID from 'cids'
+import type CID from 'cids'
 import { validateLink } from "3id-blockchain-utils"
-import { Caip10LinkDoctype, Caip10LinkParams } from "./caip10-link-doctype"
+import { Caip10LinkDoctype, Caip10LinkParams, DOCTYPE_NAME } from "@ceramicnetwork/doctype-caip10-link"
 import {
     AnchorStatus,
     DocState,
@@ -11,17 +11,15 @@ import {
     RecordType,
     CeramicRecord,
     AnchorRecord,
+    Context
 } from "@ceramicnetwork/common"
-import { Context } from "@ceramicnetwork/common"
-
-const DOCTYPE = 'caip10-link'
 
 export class Caip10LinkDoctypeHandler implements DoctypeHandler<Caip10LinkDoctype> {
     /**
      * Gets doctype name
      */
     get name(): string {
-        return DOCTYPE
+        return DOCTYPE_NAME
     }
 
     /**
@@ -69,7 +67,7 @@ export class Caip10LinkDoctypeHandler implements DoctypeHandler<Caip10LinkDoctyp
     async _applyGenesis (record: any, cid: CID): Promise<DocState> {
         // TODO - verify genesis record
         return {
-            doctype: DOCTYPE,
+            doctype: DOCTYPE_NAME,
             content: null,
             next: {
                 content: null

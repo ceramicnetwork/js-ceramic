@@ -4,11 +4,13 @@ import Dispatcher from "../../dispatcher"
 import { Doctype } from "@ceramicnetwork/common"
 import { AnchorService } from "@ceramicnetwork/common"
 import { Context } from "@ceramicnetwork/common"
-import { TileDoctype, TileDoctypeHandler } from "@ceramicnetwork/doctype-tile"
+import { TileDoctype } from "@ceramicnetwork/doctype-tile"
+import {TileDoctypeHandler} from '@ceramicnetwork/doctype-tile-handler'
 import { PinStore } from "../pin-store";
 import { PinStoreFactory } from "../pin-store-factory";
 import { DID } from 'dids'
 import DocID from "@ceramicnetwork/docid"
+import CID from 'cids'
 
 import { Resolver } from "did-resolver"
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'

@@ -1,0 +1,46 @@
+{
+  "name": "@ceramicnetwork/doctype-caip10-link-handler",
+  "version": "0.12.6",
+  "description": "Ceramic AccountLink doctype handler",
+  "keywords": [
+    "ceramic",
+    "account-link",
+    "caip10"
+  ],
+  "author": "Janko Simonovic <simonovic86@gmail.com>",
+  "homepage": "https://ceramic.network",
+  "license": "(Apache-2.0 OR MIT)",
+  "main": "lib/index.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "files": [
+    "lib"
+  ],
+  "scripts": {
+    "test": "../../node_modules/.bin/jest --coverage",
+    "build": "../../node_modules/.bin/tsc -p tsconfig.json",
+    "prepublishOnly": "npm run build",
+    "prebuild": "npm run clean",
+    "lint": "../../node_modules/.bin/eslint ./src --ext .js,.jsx,.ts,.tsx",
+    "clean": "rm -rf ./lib"
+  },
+  "dependencies": {
+    "@ceramicnetwork/common": "^0.15.4",
+    "@ceramicnetwork/doctype-caip10-link": "^0.12.6",
+    "3id-blockchain-utils": "^1.1.0"
+  },
+  "devDependencies": {
+    "@stablelib/sha256": "^1.0.0",
+    "@types/lodash.clonedeep": "^4.5.6",
+    "cids": "1.0.2",
+    "lodash.clonedeep": "^4.5.0",
+    "uint8arrays": "^2.0.5"
+  },
+  "jest": {
+    "transformIgnorePatterns": [
+      "/node_modules(?!/did-jwt)/"
+    ]
+  },
+  "gitHead": "4a43386b9803e9bc00f71ceef30b2a822f1a9c8a"
+}
