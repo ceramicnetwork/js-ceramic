@@ -8,7 +8,6 @@ import {
 } from "./util";
 import * as uint8arrays from "uint8arrays";
 import * as sha256 from '@stablelib/sha256'
-import { verifyMessage } from "@ethersproject/wallet";
 
 const ADDRESS_TYPES = {
   ethereumEOA: "ethereum-eoa",
@@ -176,13 +175,6 @@ export async function authenticate(
     account.address,
   ]);
   const signature = await safeSend(payload, provider);
-  if (account) {
-    const recoveredAddr = verifyMessage(message, signature).toLowerCase();
-    if (account.address !== recoveredAddr)
-      throw new Error(
-          "Provider returned signature from different account than requested"
-      );
-  }
   const signatureBytes = uint8arrays.fromString(signature.slice(2))
   const digest = sha256.hash(signatureBytes)
   return `0x${uint8arrays.toString(digest, 'base16')}`;
