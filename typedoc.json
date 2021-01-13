@@ -1,7 +1,11 @@
 {
   "mode": "modules",
   "out": "./docs/reference/typescript",
-  "exclude": ["**/node_modules/**", "**/*.test.ts", "**/__mocks__/*.ts"],
+  "exclude": [
+    "**/node_modules/**",
+    "**/*.test.ts",
+    "**/__mocks__/*.ts"
+  ],
   "name": "Ceramic Typescript Implementation",
   "excludePrivate": true,
   "excludeExternals": true,
@@ -15,25 +19,39 @@
   "readme": "./README.md",
   "pages": {
     "reflectionNavigationTitle": "Package APIs",
-    "groups": [{
-      "title": "Ceramic Typescript Implementation",
-      "pages": [{
-        "title": "Architecture",
-        "source": "./docs-src/architecture/overview.md",
-        "children": [{
-          "title": "Pinning",
-          "source": "./docs-src/architecture/pinning.md"
-        }]
-      }, {
-        "title": "HTTP API",
-        "source": "./docs-src/http-api.md"
-      }]
-    }, {
-      "title": "Guides",
-      "pages": [{
-        "title": "Create a Doctype",
-        "source": "./docs-src/guides/create-doctype.md"
-      }]
-    }]
+    "groups": [
+      {
+        "title": "Ceramic Typescript Implementation",
+        "pages": [
+          {
+            "title": "Architecture",
+            "source": "./docs-src/architecture/overview.md",
+            "children": [
+              {
+                "title": "Pinning",
+                "source": "./docs-src/architecture/pinning.md"
+              }
+            ]
+          },
+          {
+            "title": "HTTP API",
+            "source": "./docs-src/http-api.md"
+          }
+        ]
+      },
+      {
+        "title": "Guides",
+        "pages": [
+          {
+            "title": "Create a Doctype",
+            "source": "./docs-src/guides/create-doctype.md"
+          },
+          {
+            "title": "Add new blockchain",
+            "source": "./docs-src/guides/add-new-blockchain.md"
+          }
+        ]
+      }
+    ]
   }
 }
