@@ -1,5 +1,6 @@
 import fetch from 'cross-fetch'
 import * as u8a from 'uint8arrays'
+import { LRUMap } from 'lru_map'
 
 interface DAG {
   get(cid: string): any;
@@ -11,11 +12,17 @@ interface IPFS {
 
 // Legacy 3ids available from 3box, other v1 will always be resolved through ipfs and other services 
 const THREEBOX_API_URL = 'https://ipfs.3box.io'
+const LIMIT = 100
+const fetchCache = new LRUMap<string, any>(LIMIT)
 
 const fetchJson = async (url: string): Promise<any> =>  {
+  const cached = fetchCache.get(url)
+  if (cached) return cached
   const r = await fetch(url)
   if (r.ok) {
-    return r.json()
+    const json = await r.json()
+    fetchCache.set(url, json)
+    return json
   } else {
     throw new Error('Not a valid 3ID')  }
 }
