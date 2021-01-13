@@ -4,7 +4,7 @@
 
 ### Installation
 ```shell
-npm install @ceramicnetwork/doctype-blockchain-utils-validation
+npm install @ceramicnetwork/blockchain-utils-validation
 ```
 
 ## Contributing
