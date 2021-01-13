@@ -4,7 +4,7 @@
 
 ### Installation
 ```shell
-npm install @ceramicnetwork/doctype-blockchain-utils-linking
+npm install @ceramicnetwork/blockchain-utils-linking
 ```
 
 ## Contributing
