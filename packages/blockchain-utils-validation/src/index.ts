@@ -12,8 +12,7 @@ const handlers = {
   [eosio.namespace]: eosio,
 };
 
-const findDID = (did: string): string | undefined =>
-  did.match(/(did:(3|muport):[a-zA-Z0-9])\w+/)?.[0];
+const findDID = (did: string): string | undefined => did.match(/(did:[a-zA-Z0-9]+:[a-zA-Z0-9]+)/)?.[0]
 
 export async function validateLink(
   proof: LinkProof
