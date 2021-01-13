@@ -56,6 +56,7 @@ export class CeramicCliUtils {
      * @param logToFiles - Enable writing logs to files
      * @param logPath - Store log files in this directory
      * @param network - The Ceramic network to connect to
+     * @param pubsubTopic - Pub/sub topic to use for protocol messages.
      * @param maxHealthyCpu - Max fraction of total CPU usage considered healthy. Default is 0.7
      * @param maxHealthyMemory - Max fraction of total memory usage considered healthy. Default is 0.7
      * @param corsAllowedOrigins - Origins for Access-Control-Allow-Origin header. Default is all
@@ -73,6 +74,7 @@ export class CeramicCliUtils {
         logToFiles: boolean,
         logPath: string,
         network: string,
+        pubsubTopic: string,
         maxHealthyCpu = 0.7,
         maxHealthyMemory = 0.7,
         corsAllowedOrigins: string
@@ -98,6 +100,7 @@ export class CeramicCliUtils {
             logToFiles,
             logPath,
             network,
+            pubsubTopic,
             maxHealthyCpu,
             maxHealthyMemory,
             corsAllowedOrigins: _corsAllowedOrigins

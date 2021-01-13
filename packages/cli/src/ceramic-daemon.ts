@@ -34,6 +34,7 @@ export interface CreateOpts {
   logToFiles?: boolean;
   logPath?: string;
   network?: string;
+  pubsubTopic?: string;
 
   maxHealthyCpu: number;
   maxHealthyMemory: number;
@@ -132,6 +133,10 @@ class CeramicDaemon {
       ceramicConfig.anchorServiceUrl = opts.anchorServiceUrl
     } else if (ceramicConfig.networkName === "testnet-clay" || ceramicConfig.networkName === "dev-unstable") {
       ceramicConfig.anchorServiceUrl = DEFAULT_ANCHOR_SERVICE_URL
+    }
+
+    if (opts.pubsubTopic) {
+      ceramicConfig.pubsubTopic = opts.pubsubTopic
     }
 
     if (opts.stateStorePath) {

@@ -16,6 +16,7 @@ program
     .option('--log-to-files', 'If debug is true, write logs to files. Default is false')
     .option('--log-path <dir>', 'Store logs in this directory. Defaults to "/usr/local/var/log/ceramic"')
     .option('--network <name>', 'Name of the ceramic network to connect to. One of: "mainnet", "testnet-clay", "local", or "inmemory". Defaults to "testnet-clay"')
+    .option('--pubsubTopic <string>', 'Pub/sub topic to use for protocol messages')
     .option('--max-healthy-cpu <decimal>', 'Fraction of total CPU usage considered healthy. Defaults to 0.7')
     .option('--max-healthy-memory <decimal>', 'Fraction of total memory usage considered healthy. Defaults to 0.7')
     .option('--cors-allowed-origins <list>', 'Space-separated list of strings and/or regex expressions to set for Access-Control-Allow-Origin . Defaults to all: "*"')
@@ -33,6 +34,7 @@ program
         logToFiles,
         logPath,
         network,
+        pubsubTopic,
         maxHealthyCpu,
         maxHealthyMemory,
         corsAllowedOrigins
@@ -50,6 +52,7 @@ program
             logToFiles,
             logPath,
             network,
+            pubsubTopic,
             maxHealthyCpu,
             maxHealthyMemory,
             corsAllowedOrigins
