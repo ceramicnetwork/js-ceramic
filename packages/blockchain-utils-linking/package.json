@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/blockchain-utils-linking",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Blockchain utils for linking blockchain accounts to DID",
   "keywords": [
     "ceramic",
@@ -48,5 +48,5 @@
       "/node_modules(?!/did-jwt)/"
     ]
   },
-  "gitHead": "092cb026676295e8b809787c8d349a1a158526cc"
+  "gitHead": "34eeee25597b0a60def72906c26d3afd6230aaf1"
 }
