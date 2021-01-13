@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/doctype-tile-handler",
-  "version": "0.12.9",
+  "version": "0.12.10",
   "description": "Ceramic Tile doctype handler",
   "keywords": [
     "ceramic",
@@ -25,14 +25,14 @@
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/common": "^0.15.5",
-    "@ceramicnetwork/doctype-tile": "^0.12.9",
+    "@ceramicnetwork/common": "^0.15.6",
+    "@ceramicnetwork/doctype-tile": "^0.12.10",
     "fast-json-patch": "^2.2.1",
     "lodash.clonedeep": "^4.5.0",
     "uint8arrays": "^2.0.5"
   },
   "devDependencies": {
-    "@ceramicnetwork/3id-did-resolver": "^0.6.5",
+    "@ceramicnetwork/3id-did-resolver": "^0.6.6",
     "@stablelib/sha256": "^1.0.0",
     "@types/lodash.clonedeep": "^4.5.6",
     "cids": "1.0.2",
@@ -47,5 +47,6 @@
     "transformIgnorePatterns": [
       "/node_modules(?!/did-jwt)/"
     ]
-  }
+  },
+  "gitHead": "092cb026676295e8b809787c8d349a1a158526cc"
 }

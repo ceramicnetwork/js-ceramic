@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/docid",
-  "version": "0.4.3",
+  "version": "0.4.4",
   "description": "Ceramic Document Ids",
   "keywords": [
     "ceramic",
@@ -34,5 +34,5 @@
   "publishConfig": {
     "access": "public"
   },
-  "gitHead": "b1e70c449a2b4df7a7cb61b811059a7fef30c7cc"
+  "gitHead": "092cb026676295e8b809787c8d349a1a158526cc"
 }

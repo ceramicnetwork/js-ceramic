@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/http-client",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "description": "An http client for the ceramic network",
   "keywords": [
     "Ceramic",
@@ -26,11 +26,11 @@
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/3id-did-resolver": "^0.6.5",
-    "@ceramicnetwork/common": "^0.15.5",
-    "@ceramicnetwork/docid": "^0.4.3",
-    "@ceramicnetwork/doctype-caip10-link": "^0.12.7",
-    "@ceramicnetwork/doctype-tile": "^0.12.9",
+    "@ceramicnetwork/3id-did-resolver": "^0.6.6",
+    "@ceramicnetwork/common": "^0.15.6",
+    "@ceramicnetwork/docid": "^0.4.4",
+    "@ceramicnetwork/doctype-caip10-link": "^0.12.8",
+    "@ceramicnetwork/doctype-tile": "^0.12.10",
     "cids": "1.0.2",
     "cross-fetch": "^3.0.6",
     "did-resolver": "^2.1.1",
@@ -53,5 +53,5 @@
     "eslint-plugin-jest": "^23.8.2",
     "jest": "^26.6.3"
   },
-  "gitHead": "4a43386b9803e9bc00f71ceef30b2a822f1a9c8a"
+  "gitHead": "092cb026676295e8b809787c8d349a1a158526cc"
 }

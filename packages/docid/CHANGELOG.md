@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.4.4](/compare/@ceramicnetwork/docid@0.4.3...@ceramicnetwork/docid@0.4.4) (2021-01-13)
+
+**Note:** Version bump only for package @ceramicnetwork/docid
+
+
+
+
+
 ## [0.4.3](/compare/@ceramicnetwork/docid@0.4.2...@ceramicnetwork/docid@0.4.3) (2021-01-13)
 
 **Note:** Version bump only for package @ceramicnetwork/docid

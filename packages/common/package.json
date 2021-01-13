@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/common",
-  "version": "0.15.5",
+  "version": "0.15.6",
   "description": "Ceramic common types and utilities",
   "keywords": [
     "ceramic",
@@ -27,7 +27,7 @@
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/docid": "^0.4.3",
+    "@ceramicnetwork/docid": "^0.4.4",
     "cids": "1.0.2",
     "dag-jose": "^0.3.0",
     "did-resolver": "^2.1.1",
@@ -68,5 +68,5 @@
       "/node_modules(?!/did-jwt)/"
     ]
   },
-  "gitHead": "4a43386b9803e9bc00f71ceef30b2a822f1a9c8a"
+  "gitHead": "092cb026676295e8b809787c8d349a1a158526cc"
 }
