@@ -180,8 +180,8 @@ class Ceramic implements CeramicApi {
   private static async _generateNetworkOptions(config: CeramicConfig, anchorService: AnchorService): Promise<CeramicNetworkOptions> {
     const networkName = config.networkName || DEFAULT_NETWORK
 
-    if (config.pubsubTopic && networkName !== "inmemory") {
-      throw new Error("Specifying pub/sub topic is only supported for the 'inmemory' network")
+    if (config.pubsubTopic && (networkName !== "inmemory" && networkName !== "local")) {
+      throw new Error("Specifying pub/sub topic is only supported for the 'inmemory' and 'local' networks")
     }
 
     let pubsubTopic
@@ -203,15 +203,22 @@ class Ceramic implements CeramicApi {
         break
       }
       case "local": {
-        // 'local' network always uses a random pubsub topic so that nodes stay isolated from each other
-        const rand = randomUint32()
-        pubsubTopic = "/ceramic/local-" + rand
+        // Default to a random pub/sub topic so that local deployments are isolated from each other
+        // by default.  Allow specifying a specific pub/sub topic so that test deployments *can*
+        // be made to talk to each other if needed.
+        if (config.pubsubTopic) {
+          pubsubTopic = config.pubsubTopic
+        } else {
+          const rand = randomUint32()
+          pubsubTopic = "/ceramic/local-" + rand
+        }
         networkChains = ["eip155:1337"] // Ganache
         break
       }
       case "inmemory": {
-        // For inmemory only we allow overriding the pub/sub topic.  This is to enable tests
-        // within the same process to be able to talk to each other by using a fixed topic, while making the pub/sub topic random by default
+        // Default to a random pub/sub topic so that inmemory deployments are isolated from each other
+        // by default.  Allow specifying a specific pub/sub topic so that test deployments *can*
+        // be made to talk to each other if needed.
         if (config.pubsubTopic) {
           pubsubTopic = config.pubsubTopic
         } else {
