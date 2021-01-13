@@ -180,7 +180,7 @@ class Ceramic implements CeramicApi {
   private static async _generateNetworkOptions(config: CeramicConfig, anchorService: AnchorService): Promise<CeramicNetworkOptions> {
     const networkName = config.networkName || DEFAULT_NETWORK
 
-    if (config.pubsubTopic && (config.networkName !== "inmemory" && config.networkName !== "local")) {
+    if (config.pubsubTopic && (networkName !== "inmemory" && networkName !== "local")) {
       throw new Error("Specifying pub/sub topic is only supported for the 'inmemory' and 'local' networks")
     }
 
