@@ -29,6 +29,7 @@
    { "path": "./packages/3id-did-resolver" },
    { "path": "./packages/key-did-resolver" },
    { "path": "./packages/http-client" },
+   { "path": "./packages/docid" },
    { "path": "./packages/common" },
    { "path": "./packages/doctype-caip10-link" },
    { "path": "./packages/doctype-caip10-link-handler" },
@@ -36,6 +37,8 @@
    { "path": "./packages/doctype-tile-handler" },
    { "path": "./packages/pinning-aggregation" },
    { "path": "./packages/pinning-ipfs-backend" },
-   { "path": "./packages/pinning-powergate-backend" }
+   { "path": "./packages/pinning-powergate-backend" },
+   { "path": "./packages/blockchain-utils-linking" },
+   { "path": "./packages/blockchain-utils-validation" }
  ]
 }

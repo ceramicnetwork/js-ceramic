@@ -1,0 +1,99 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`accountId handle bls mainnet 1`] = `
+AccountID {
+  "address": "f3vbrwhphivdxyvs3pxpp54w73664bgxmb7ed4du4ohhu3dc6f5y264cs72yluw7mjbwnlrtzq543ys57plzka",
+  "chainId": ChainID {
+    "namespace": "fil",
+    "reference": "f",
+  },
+}
+`;
+
+exports[`accountId handle mainnet 1`] = `
+AccountID {
+  "address": "f1ymbkm43ysdiruibji6c6m2iy5bxwbuv5d6cdqmy",
+  "chainId": ChainID {
+    "namespace": "fil",
+    "reference": "f",
+  },
+}
+`;
+
+exports[`accountId handle testnet 1`] = `
+AccountID {
+  "address": "t17lxg2i2otnl7mmpw2ocd6o4e3b4un3272vny6ka",
+  "chainId": ChainID {
+    "namespace": "fil",
+    "reference": "t",
+  },
+}
+`;
+
+exports[`authenticate mainnet 1`] = `"F5gy3IHoKUNJOUEQQMHg1iTZGa4Ef3TeT+deaBKkkYFK3Aur5y3XuOL4NNygsn9lYPnPsvXUvtBiyy4+yZ6geQE="`;
+
+exports[`authenticate mainnet BLS 1`] = `"r1QYs+G633VEW/i5EUZVMm/SqdH5fvsylvql0chOeMJAEB6jsD9NKfgeap6mVepVE+IA2iqFdqi+F0lTkRicrxvOLs7siyPXAQZPivx34oxSEdN55LNbXL6EAIE+3p4W"`;
+
+exports[`authenticate testnet 1`] = `"APHUqaCLuyqunqfYJl8YAq3/p6oO9iiEAGkGQILzZAEMR/L28/F+iN2ismhMJCm9yr8VjIqgneiaFIkr65fimgA="`;
+
+exports[`createLink generate proof on mainnet 1`] = `
+Object {
+  "account": "f1ymbkm43ysdiruibji6c6m2iy5bxwbuv5d6cdqmy@fil:f",
+  "message": "Create a new account link to your identity.
+
+did:3:bafysdfwefwe 
+Timestamp: 0",
+  "signature": "V39yp3WzEVGJ0mZ5mKywD7N4jTvVhiYDAT5iGM1MjjFDeKA38hWlrMcWZx7Bz6YaYpV2GZqZjpdC64grGxMliAA=",
+  "timestamp": 0,
+  "type": "eoa-tx",
+  "version": 2,
+}
+`;
+
+exports[`createLink generate proof on mainnet for BLS key 1`] = `
+Object {
+  "account": "f3vbrwhphivdxyvs3pxpp54w73664bgxmb7ed4du4ohhu3dc6f5y264cs72yluw7mjbwnlrtzq543ys57plzka@fil:f",
+  "message": "Create a new account link to your identity.
+
+did:3:bafysdfwefwe 
+Timestamp: 0",
+  "signature": "iyq0tKJ98dHb3zMA1ijHySlEOxq9P+2dQpL6jJna8gTKRifjj0FVAsUJc5uUePC/DOw2TJA7YabYV+dQBld4BH3QYuV4Y9NNWBJCfGo8d8raKYNGxPzhSZ+5sVeawf0p",
+  "timestamp": 0,
+  "type": "eoa-tx",
+  "version": 2,
+}
+`;
+
+exports[`createLink generate proof on testnet 1`] = `
+Object {
+  "account": "t17lxg2i2otnl7mmpw2ocd6o4e3b4un3272vny6ka@fil:t",
+  "message": "Create a new account link to your identity.
+
+did:3:bafysdfwefwe 
+Timestamp: 0",
+  "signature": "UhcbW66J4k9r4GtLpyuyEMpdMydKOo+LtC5+IaM1PTYqRtACwDj86EyZDgmI7gbLPpGNyA70hwcgxIkg+nF9zgA=",
+  "timestamp": 0,
+  "type": "eoa-tx",
+  "version": 2,
+}
+`;
+
+exports[`withAddress 1`] = `
+AccountID {
+  "address": "t17lxg2i2otnl7mmpw2ocd6o4e3b4un3272vny6ka",
+  "chainId": ChainID {
+    "namespace": "fil",
+    "reference": "t",
+  },
+}
+`;
+
+exports[`withAddress 2`] = `
+AccountID {
+  "address": "f123",
+  "chainId": ChainID {
+    "namespace": "fil",
+    "reference": "f",
+  },
+}
+`;
