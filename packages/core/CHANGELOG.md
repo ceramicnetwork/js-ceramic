@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.18.0](/compare/@ceramicnetwork/core@0.17.7...@ceramicnetwork/core@0.18.0) (2021-01-13)
+
+
+### Features
+
+* **cli:** Allow specifying pub/sub topic for 'local' ceramic network (#781) f3650b4, closes #781
+* **core:** Disallow ceramic mainnet for now (#753) c352590, closes #753
+
+
+
+
+
 ## [0.17.7](/compare/@ceramicnetwork/core@0.17.6...@ceramicnetwork/core@0.17.7) (2021-01-07)
 
 **Note:** Version bump only for package @ceramicnetwork/core

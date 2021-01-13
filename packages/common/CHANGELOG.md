@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.15.5](/compare/@ceramicnetwork/common@0.15.4...@ceramicnetwork/common@0.15.5) (2021-01-13)
+
+
+### Bug Fixes
+
+* **cli,http-client:** Fix pin API in CLI and http client (#752) 20fcd75, closes #752
+
+
+
+
+
 ## [0.15.4](/compare/@ceramicnetwork/common@0.15.3...@ceramicnetwork/common@0.15.4) (2021-01-07)
 
 **Note:** Version bump only for package @ceramicnetwork/common

@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.9.0](/compare/@ceramicnetwork/http-client@0.8.12...@ceramicnetwork/http-client@0.9.0) (2021-01-13)
+
+
+### Bug Fixes
+
+* **cli,http-client:** Fix pin API in CLI and http client (#752) 20fcd75, closes #752
+
+
+### Features
+
+* **http-client:** Remove ability to pin documents in local cache in http client (#762) dcf7add, closes #762
+
+
+
+
+
 ## [0.8.12](/compare/@ceramicnetwork/http-client@0.8.11...@ceramicnetwork/http-client@0.8.12) (2021-01-07)
 
 **Note:** Version bump only for package @ceramicnetwork/http-client

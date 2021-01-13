@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/doctype-caip10-link",
-  "version": "0.12.6",
+  "version": "0.12.7",
   "description": "Ceramic AccountLink doctype",
   "keywords": [
     "ceramic",
@@ -27,7 +27,7 @@
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/common": "^0.15.4",
+    "@ceramicnetwork/common": "^0.15.5",
     "@types/lodash.clonedeep": "^4.5.6",
     "cids": "1.0.2"
   },
