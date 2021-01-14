@@ -8,13 +8,13 @@ Ceramic interacts with blockchain accounts in two ways:
 - authentication
 - linking
 
-*Authentication.* 3ID Connect (using `3id-did-provider`) creates `3id` (Ceramic flavour of DID) private keys
+**Authentication.** 3ID Connect (using `3id-did-provider`) creates `3id` (Ceramic flavour of DID) private keys
 based on an externally-provided entropy. It could be provided by a blockchain account by merely
 signing a well-known message. From a user's standpoint,
 it is authentication _into_ Ceramic through her blockchain account, be it on Ethereum, Filecoin,
 EOS, Cosmos or something else. Same signature (=same entropy) generates same Ceramic DID.
 
-*Linking.* In addition to generating a DID a user could also _link_ additional blockchain accounts to a Ceramic DID.
+**Linking.** In addition to generating a DID a user could also _link_ additional blockchain accounts to a Ceramic DID.
 It establishes a relation `blockchain account → DID` that allows one to discover DID along with social profile
 based on just a blockchain account. Additionally, a link serves as a proof-of-ownership by DID over the blockchain account.
 This has proven to be useful fir dApp personalization: one sees familiar names instead of `0xgibberish`.
