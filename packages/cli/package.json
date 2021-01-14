@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/cli",
-  "version": "0.19.2",
+  "version": "0.19.3-alpha.0",
   "description": "Typescript implementation of the Ceramic CLI",
   "keywords": [
     "Ceramic",
@@ -41,7 +41,7 @@
   "dependencies": {
     "@babel/register": "^7.10.5",
     "@ceramicnetwork/common": "^0.15.7",
-    "@ceramicnetwork/core": "^0.18.2",
+    "@ceramicnetwork/core": "^0.18.3-alpha.0",
     "@ceramicnetwork/docid": "^0.4.5",
     "@ceramicnetwork/doctype-tile": "^0.12.11",
     "@ceramicnetwork/http-client": "^0.9.2",
