@@ -78,6 +78,10 @@ export class TileDoctype extends Doctype {
             }
         }
 
+        if (metadata.controllers.length !== 1) {
+            throw new Error('Exactly one controller must be specified')
+        }
+
         const commit: GenesisCommit = { data: params.content, header: metadata, unique }
         return (params.content ? await TileDoctype._signDagJWS(commit, context.did, metadata.controllers[0]): commit) as T
     }
@@ -99,6 +103,10 @@ export class TileDoctype extends Doctype {
 
         if (newContent == null) {
             newContent = doctype.content
+        }
+
+        if (header.controllers && header.controllers.length !== 1) {
+            throw new Error('Exactly one controller must be specified')
         }
 
         const patch = jsonpatch.compare(doctype.content, newContent)
