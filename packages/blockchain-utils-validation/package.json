@@ -25,6 +25,7 @@
   },
   "dependencies": {
     "@ceramicnetwork/blockchain-utils-linking": "^0.0.4",
+    "@ethersproject/contracts": "^5.0.9",
     "@ethersproject/providers": "^5.0.18",
     "@ethersproject/wallet": "^5.0.10",
     "@polkadot/util-crypto": "^5.2.3",
@@ -34,7 +35,6 @@
     "uint8arrays": "^2.0.5"
   },
   "devDependencies": {
-    "@ethersproject/contracts": "^5.0.9",
     "@glif/filecoin-address": "^1.1.0-beta.15",
     "@glif/local-managed-provider": "^1.1.0-beta.15",
     "@polkadot/api": "^3.0.1",
