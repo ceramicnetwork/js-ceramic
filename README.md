@@ -28,11 +28,11 @@ Learn the basics by setting up and interacting with the Ceramic CLI. [Quick star
 
 ## Installation and usage
 
-Full documentation on installation and usage can be found on the [Ceramic documentation site →](https://developers.ceramic.network/build/installation/).
+Full documentation on installation and usage can be found on the [Ceramic documentation site →](https://developers.ceramic.network/build/installation/)
 
 ## Troubleshooting
 
-- For questions, support, and discussions: [Join the Ceramic Discord](https://chat.idx.xyz)
+- For questions, support, and discussions: [Join the Ceramic Discord](https://chat.ceramic.network)
 - For bugs and feature requests: [Create an issue on Github](https://github.com/ceramicnetwork/js-ceramic/issues)
 
 ## Contributing
