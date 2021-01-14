@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.19.3](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@0.19.2...@ceramicnetwork/cli@0.19.3) (2021-01-14)
+
+
+### Bug Fixes
+
+* send http error response as json ([#790](https://github.com/ceramicnetwork/js-ceramic/issues/790)) ([02e1dfc](https://github.com/ceramicnetwork/js-ceramic/commit/02e1dfcbe00a8508a6a2c5035b23156abbe723b8)), closes [#789](https://github.com/ceramicnetwork/js-ceramic/issues/789)
+
+
+
+
+
 ## [0.19.2](/compare/@ceramicnetwork/cli@0.19.1...@ceramicnetwork/cli@0.19.2) (2021-01-13)
 
 **Note:** Version bump only for package @ceramicnetwork/cli

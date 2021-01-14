@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/doctype-caip10-link-handler",
-  "version": "0.12.9",
+  "version": "0.12.10",
   "description": "Ceramic AccountLink doctype handler",
   "keywords": [
     "ceramic",
@@ -27,7 +27,7 @@
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/blockchain-utils-validation": "^0.0.4",
+    "@ceramicnetwork/blockchain-utils-validation": "^0.0.5",
     "@ceramicnetwork/common": "^0.15.7",
     "@ceramicnetwork/doctype-caip10-link": "^0.12.9"
   },
