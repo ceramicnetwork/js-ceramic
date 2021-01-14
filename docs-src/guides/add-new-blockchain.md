@@ -8,7 +8,7 @@ Ceramic interacts with blockchain accounts in two ways:
 - authentication,
 - linking.
 
-*Authentication.* IdentityWallet (and 3id-connect) create `3id` (Ceramic flavour of DID) private keys
+*Authentication.* 3ID Connect (using `3id-did-provider`) create `3id` (Ceramic flavour of DID) private keys
 based on an externally-provided entropy. It could be provided by a blockchain account by merely
 signing a well-known message. From a user's standpoint,
 it is authentication _into_ Ceramic through her blockchain account, be it on Ethereum, Filecoin,
