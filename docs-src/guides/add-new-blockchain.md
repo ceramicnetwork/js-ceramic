@@ -17,14 +17,14 @@ EOS, Cosmos or something else. Same signature (=same entropy) generates same Cer
 **Linking.** In addition to generating a DID a user could also _link_ additional blockchain accounts to a Ceramic DID.
 It establishes a relation `blockchain account → DID` that allows one to discover DID along with social profile
 based on just a blockchain account. Additionally, a link serves as a proof-of-ownership by DID over the blockchain account.
-This has proven to be useful fir dApp personalization: one sees familiar names instead of `0xgibberish`.
+This has proven to be useful for dApp personalization: one sees familiar names instead of `0xgibberish`.
 
 Below one additional process is mentioned: validation. It checks if _proof-of-ownership_ in the link is formally correct,
 i.e., a well-known payload is really signed by the account that is declared in the link.
 
 ## Adding a new blockchain
 
-To add a new blockchain one have to do both linking and validation sections. 
+To add a new blockchain to Ceramic one has to implement both linking and validation. 
 
 ### Linking
 
@@ -32,30 +32,30 @@ We use [CAIP-10](https://github.com/ChainAgnostic/CAIPs/blob/master/CAIPs/caip-1
 If the blockchain you want to add isn't already part of the CAIP standards you should make sure to add it there.
 
 To add a new blockchain, one has to implement a new class implementing [AuthProvider](https://github.com/ceramicnetwork/js-ceramic/blob/develop/packages/blockchain-utils-linking/src/auth-provider.ts), put it
-into [`@ceramicnetwork/blockchain-utils-linking`](https://github.com/ceramicnetwork/js-ceramic/tree/develop/packages/blockchain-utils-linking) package and export it.
+into the [`@ceramicnetwork/blockchain-utils-linking`](https://github.com/ceramicnetwork/js-ceramic/tree/develop/packages/blockchain-utils-linking) package and export it.
 See existing auth providers for inspiration.
 
-Auth provider is expected to be mainly called in a web browser as part of [3id-connect](https://github.com/3box/3id-connect) flow.
-Auth provider sits between 3id-connect (or 3ID DID Provider) and your blockchain account provider. In case of Ethereum,
-it might be MetaMask. Auth provider is responsible mainly for:
-- authentication (`#authenticate`): provide entropy,
-- creating link (`#createLink`): create a LinkProof object which associates the specified AccountID with the DID.
+The auth provider is expected to be mainly called in a web browser as part of [3id-connect](https://github.com/3box/3id-connect) flow.
+The auth provider sits between 3id-connect (or 3ID DID Provider) and your blockchain account provider. In case of Ethereum,
+it might be MetaMask. The auth provider is responsible mainly for:
+- authentication (`#authenticate`): provide entropy
+- creating link (`#createLink`): create a LinkProof object which associates the specified AccountID with the DID
 
-Auth provider is expected to know which blockchain account it currently serves. It reports it via `#accountId`.
-To reuse same internal settings, e.g. connection to blockchain provider, but with a different account,
-auth provider should have `#withAddress` method.
+The auth provider is expected to know which blockchain account it currently serves. It reports it via `#accountId`.
+To reuse the same internal settings, e.g. a connection to a blockchain provider, but with a different account,
+the auth provider should have a `#withAddress` method.
 
 To sum it all up, to add a new blockchain for linking:
-- add new class implementing `AuthProvider` interface to `@ceramicnetwork/blockchain-utils-linking` package,
-- its `authenticate` method should ask blockchain provider for an authentication signature and return 32 bytes
-  in form of `0x`-prefixed hex string,
-- its `createLink` method should ask blockchain provider for linking signature and return `LinkProof` data structure,
-- its `accountId` method should return currently used account in CAIP-10 format,
-- its `withAccount` method should return a new instance of auth provider that serves a new account.
+- add a new class implementing the `AuthProvider` interface to the `@ceramicnetwork/blockchain-utils-linking` package.
+- its `authenticate` method should ask the blockchain provider for an authentication signature and return 32 bytes
+  in form of `0x`-prefixed hex string.
+- its `createLink` method should ask the blockchain provider for a linking signature and return a `LinkProof` data structure.
+- its `accountId` method should return currently used account in the CAIP-10 format.
+- its `withAccount` method should return a new instance of the auth provider that serves a new account.
 
 ### Validation
 
-It is a counterpart of [#linking] that checks if signature contained in `LinkProof` corresponds to declared account.
+Validation is the counterpart of [#linking] that checks if the signature contained in a `LinkProof` corresponds to the declared account.
 
 To add a new blockchain:
 - add a new file named after your blockchain to `@ceramicnetwork/blockchain-utils-validation` package
