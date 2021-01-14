@@ -47,7 +47,7 @@
             "source": "./docs-src/guides/create-doctype.md"
           },
           {
-            "title": "Add new blockchain",
+            "title": "Add support for new blockchain",
             "source": "./docs-src/guides/add-new-blockchain.md"
           }
         ]
