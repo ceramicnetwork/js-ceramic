@@ -336,9 +336,7 @@ describe('TileDoctypeHandler', () => {
         const payload = dagCBOR.util.deserialize(genesisRecord.linkedBlock)
         await context.ipfs.dag.put(payload, genesisRecord.jws.link)
 
-        // apply genesis
-        let state = await tileDoctypeHandler.applyCommit(genesisRecord.jws, FAKE_CID_1, context)
-
+        const state = await tileDoctypeHandler.applyCommit(genesisRecord.jws, FAKE_CID_1, context)
         const doctype = new TileDoctype(state, context)
         const makeCommit = TileDoctype._makeCommit(doctype, did, RECORDS.r1.desiredContent, [did.id, did.id])
         await expect(makeCommit).rejects.toThrow(/Exactly one controller must be specified/)
