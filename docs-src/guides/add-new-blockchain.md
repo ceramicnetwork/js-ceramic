@@ -1,6 +1,6 @@
-# Add new blockchain
+# Add support for new blockchain
 
-This document contains a guide on how to support new blockchains on Ceramic.
+This document contains a guide on how to add support for a new blockchain to the `caip10-link` doctype, as well as use for authentication.
 
 ## Overview: Ceramic and blockchain accounts
 
