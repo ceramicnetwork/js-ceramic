@@ -47,7 +47,8 @@ auth provider should have `#withAddress` method.
 
 To sum it all up, to add a new blockchain for linking:
 - add new class implementing `AuthProvider` interface to `@ceramicnetwork/blockchain-utils-linking` package,
-- its `authenticate` method should ask blockchain provider for an authentication signature and return `0x`-prefixed string,
+- its `authenticate` method should ask blockchain provider for an authentication signature and return 32 bytes
+  in form of `0x`-prefixed hex string,
 - its `createLink` method should ask blockchain provider for linking signature and return `LinkProof` data structure,
 - its `accountId` method should return currently used account in CAIP-10 format,
 - its `withAccount` method should return a new instance of auth provider that serves a new account.
