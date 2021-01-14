@@ -36,7 +36,7 @@ into [`@ceramicnetwork/blockchain-utils-linking`](https://github.com/ceramicnetw
 See existing auth providers for inspiration.
 
 Auth provider is expected to be mainly called in a web browser as part of [3id-connect](https://github.com/3box/3id-connect) flow.
-Auth provider sits between 3id-connect (or IdentityWallet) and your blockchain account provider. In case of Ethereum,
+Auth provider sits between 3id-connect (or 3ID DID Provider) and your blockchain account provider. In case of Ethereum,
 it might be MetaMask. Auth provider is responsible mainly for:
 - authentication (`#authenticate`): provide entropy,
 - creating link (`#createLink`): create a LinkProof object which associates the specified AccountID with the DID.
