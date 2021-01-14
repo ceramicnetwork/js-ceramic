@@ -103,7 +103,7 @@ class CeramicDaemon {
       if (res.statusCode < 300) { // 2xx indicates error has not yet been handled
         res.status(500)
       }
-      res.send(err.message)
+      res.send({error: err.message})
       // TODO: Get real request start
       this.logger.error(JSON.stringify(this._buildHttpLog(Date.now(), req, res)))
     })
