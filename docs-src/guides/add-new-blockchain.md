@@ -1,20 +1,20 @@
 # Add support for new blockchain
 
-This document contains a guide on how to add support for a new blockchain to the [`caip10-link`](https://github.com/ceramicnetwork/CIP/blob/master/CIPs/CIP-7/CIP-7.md) doctype, as well as use for authentication.
+This document contains a guide on how to add support for a new blockchain to the [`caip10-link`](https://github.com/ceramicnetwork/CIP/blob/master/CIPs/CIP-7/CIP-7.md) doctype, as well as to use for authentication.
 
 ## Overview: Ceramic and blockchain accounts
 
 Ceramic interacts with blockchain accounts in two ways:
-- authentication,
-- linking.
+- authentication
+- linking
 
-*Authentication.* 3ID Connect (using `3id-did-provider`) create `3id` (Ceramic flavour of DID) private keys
+*Authentication.* 3ID Connect (using `3id-did-provider`) creates `3id` (Ceramic flavour of DID) private keys
 based on an externally-provided entropy. It could be provided by a blockchain account by merely
 signing a well-known message. From a user's standpoint,
 it is authentication _into_ Ceramic through her blockchain account, be it on Ethereum, Filecoin,
 EOS, Cosmos or something else. Same signature (=same entropy) generates same Ceramic DID.
 
-*Linking.* In addition to generating DID a user could also _link_ additional blockchain accounts to Ceramic DID.
+*Linking.* In addition to generating a DID a user could also _link_ additional blockchain accounts to a Ceramic DID.
 It establishes a relation `blockchain account → DID` that allows one to discover DID along with social profile
 based on just a blockchain account. Additionally, a link serves as a proof-of-ownership by DID over the blockchain account.
 This has proven to be useful fir dApp personalization: one sees familiar names instead of `0xgibberish`.
@@ -58,10 +58,20 @@ To sum it all up, to add a new blockchain for linking:
 It is a counterpart of [#linking] that checks if signature contained in `LinkProof` corresponds to declared account.
 
 To add a new blockchain:
-- add a new file named after your blockchain to `@ceramicnetwork/blockchain-utils-validation` package,
-- this file should expose `BlockchainHandler` structure, having:
-    - CAIP-10 namespace for your blockchain,
-    - `validateLink` function: it checks if linking signature was created by an account declared in `LinkProof` argument,
-- add the newly created `BlockchainHandler` to `handlers` list in [index.ts](https://github.com/ceramicnetwork/js-ceramic/blob/develop/packages/blockchain-utils-validation/src/index.ts).
+- add a new file named after your blockchain to `@ceramicnetwork/blockchain-utils-validation` package
+- this file should expose an implementation of the `BlockchainHandler` interface, having:
+    - [CAIP-2](https://github.com/ChainAgnostic/CAIPs/blob/master/CAIPs/caip-2.md) `namespace` for your blockchain
+    - a `validateLink` function that checks if the linking signature was created by the account declared in the `LinkProof` argument
+- add the newly created `BlockchainHandler` to the `handlers` list in [index.ts](https://github.com/ceramicnetwork/js-ceramic/blob/develop/packages/blockchain-utils-validation/src/index.ts)
 
-Make sure that `validateLink` could validate links created by `AuthProvider#createLink`.
+Make sure that `validateLink` can validate links created by `AuthProvider#createLink`.
+
+## Supported blockchains
+
+Below you can see a table which lists supported blockchains and their provider objects.
+
+| Blockchain | CAIP-2 namespace | Supported providers             |
+|------------|------------------|---------------------------------|
+| Ethereum   | [eip155](https://github.com/ChainAgnostic/CAIPs/blob/master/CAIPs/caip-3.md)    | metamask-like ethereum provider |
+| Filecoin   | [fil](https://github.com/ChainAgnostic/CAIPs/blob/master/CAIPs/caip-23.md)              | [Filecoin Wallet Provider](https://github.com/openworklabs/filecoin-wallet-provider) |
+| EOS        | [eosio](https://github.com/ChainAgnostic/CAIPs/blob/master/CAIPs/caip-7.md)              | [@smontero/eosio-local-provider](https://github.com/sebastianmontero/eosio-local-provider#readme) |
