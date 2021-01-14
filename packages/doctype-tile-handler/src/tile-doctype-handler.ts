@@ -86,6 +86,11 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
         } else if (payload.data) {
             throw Error('Genesis commit with contents should always be signed')
         }
+
+        if (!(payload.header.controllers && payload.header.controllers.length === 1)) {
+            throw new Error('Exactly one controller must be specified')
+        }
+
         return {
             doctype: DOCTYPE_NAME,
             content: payload.data || {},
@@ -111,6 +116,10 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
         const payload = (await context.ipfs.dag.get(commit.link)).value
         if (!payload.id.equals(state.log[0].cid)) {
             throw new Error(`Invalid docId ${payload.id}, expected ${state.log[0].cid}`)
+        }
+
+        if (payload.header.controllers && payload.header.controllers.length !== 1) {
+            throw new Error('Exactly one controller must be specified')
         }
 
         const nextState = cloneDeep(state)

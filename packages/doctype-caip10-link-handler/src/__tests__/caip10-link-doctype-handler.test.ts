@@ -108,13 +108,13 @@ describe('Caip10LinkHandler', () => {
 
     it('throws an error if genesis record has no controllers specified', async () => {
         const content: any = undefined
-        await expect(Caip10LinkDoctype.makeGenesis({ content, metadata: {} }, context)).rejects.toThrow(/Controller must be specified/i)
+        await expect(Caip10LinkDoctype.makeGenesis({ content, metadata: {} }, context)).rejects.toThrow(/Exactly one controller must be specified/i)
     })
 
     it('throws an error if genesis record has more than one controller', async () => {
         const content: any = undefined
         const controllers = [...RECORDS.genesis.header.controllers, '0x25954ef14cebbc9af3d79876489a9cfe87043f20@eip155:1']
-        await expect(Caip10LinkDoctype.makeGenesis({ content, metadata: { controllers } }, context)).rejects.toThrow(/Exactly one controller/i)
+        await expect(Caip10LinkDoctype.makeGenesis({ content, metadata: { controllers } }, context)).rejects.toThrow(/Exactly one controller must be specified/i)
     })
 
     it('throws an error if genesis record has controller not in CAIP-10 format', async () => {
