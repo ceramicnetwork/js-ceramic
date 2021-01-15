@@ -8,7 +8,7 @@
 
 **js-ceramic** is a monorepo containing the TypeScript implementation of the Ceramic protocol. If you are unfamiliar with Ceramic, see the [website](https://ceramic.network) or [overview](https://github.com/ceramicnetwork/ceramic) for more information.
 
-> **Project status**: **`Clay` testnet is now live. 🚀**
+> **Project status**: **`Clay` testnet is now live. 🚀** <br/>
 > Clay is a decentralized public network ready for experimental application development and testing. It anchors documents on the Ethereum Ropsten and Rinkeby testnets. It is the last major milestone before `Fire` mainnet, which is under development and will launch in late Q1 2021. Documents published on Clay will *not* be portable to Fire.
 
 ## Clients
