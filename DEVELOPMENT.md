@@ -49,13 +49,13 @@ This repository contains many different JavaScript packages. The main reason for
 
 
 ## Creating a release
-This repo uses lerna to make releases of all packages which have been changed. There are two types of releases that can be made, release clients and regular releases. Before creating any releases, make sure you have an npm account (you can sign up at https://www.npmjs.com/), have signed into that account on the command line with `npm adduser`, and that the account has been added to the @ceramicnetwork org on npm.
+This repo uses lerna to make releases of all packages which have been changed. There are two types of releases that can be made, release candidates and regular releases. Before creating any releases, make sure you have an npm account (you can sign up at https://www.npmjs.com/), have signed into that account on the command line with `npm adduser`, and that the account has been added to the @ceramicnetwork org on npm.
 
-### Release client
+### Release candidate
 ```
-$ npm run publish:release-client
+$ npm run publish:release-candidate
 ```
-In any branch you can run the command above, this will create a release client with the version `x.x.x-rc.n`. It will also create a local commit for this release. This commit doesn't have to be pushed, and can be discarded.
+In any branch you can run the command above, this will create a release candidate with the version `x.x.x-rc.n`. It will also create a local commit for this release. This commit doesn't have to be pushed, and can be discarded.
 
 ### Regular release
 ```
