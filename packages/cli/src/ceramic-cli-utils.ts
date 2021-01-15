@@ -7,25 +7,16 @@ import { promises as fs } from 'fs'
 
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import CeramicClient from "@ceramicnetwork/http-client"
-import { CeramicApi, DoctypeUtils, IpfsApi } from "@ceramicnetwork/common"
+import { CeramicApi, DoctypeUtils } from "@ceramicnetwork/common"
 import DocID from '@ceramicnetwork/docid'
 
 import CeramicDaemon, { CreateOpts } from "./ceramic-daemon"
 
-import IPFS from "ipfs-core"
-
-import dagJose from 'dag-jose'
-// @ts-ignore
-import multiformats from 'multiformats/basics'
-// @ts-ignore
-import legacy from 'multiformats/legacy'
-import ipfsClient from "ipfs-http-client"
+import {buildIpfsConnection} from "./build-ipfs-connection.util";
 
 const DEFAULT_CLI_CONFIG_FILE = 'config.json'
 export const DEFAULT_PINNING_STORE_PATH = ".pinning.store"
 const DEFAULT_CLI_CONFIG_PATH = path.join(os.homedir(), '.ceramic')
-
-const IPFS_DHT_SERVER_MODE = process.env.IPFS_DHT_SERVER_MODE === 'true'
 
 /**
  * CLI configuration
@@ -73,7 +64,7 @@ export class CeramicCliUtils {
         debug: boolean,
         logToFiles: boolean,
         logPath: string,
-        network: string,
+        network: string | undefined,
         pubsubTopic: string,
         maxHealthyCpu = 0.7,
         maxHealthyMemory = 0.7,
@@ -103,38 +94,9 @@ export class CeramicCliUtils {
             pubsubTopic,
             maxHealthyCpu,
             maxHealthyMemory,
-            corsAllowedOrigins: _corsAllowedOrigins
+            corsAllowedOrigins: _corsAllowedOrigins,
+            ipfs: await buildIpfsConnection(network, ipfsApi)
         }
-
-        multiformats.multicodec.add(dagJose)
-        const format = legacy(multiformats, dagJose.name)
-
-        let ipfs: IpfsApi
-        if (ipfsApi) {
-            ipfs = ipfsClient({ url: ipfsApi, ipld: { formats: [format] } })
-        } else {
-            ipfs = await IPFS.create({
-                ipld: {
-                    formats: [format]
-                },
-                libp2p: {
-                    config: {
-                        dht: {
-                            enabled: true,
-                            clientMode: !IPFS_DHT_SERVER_MODE,
-                            randomWalk: false,
-                        },
-                    },
-                },
-                config: {
-                    Routing: {
-                        Type: IPFS_DHT_SERVER_MODE ? 'dhtserver' : 'dhtclient',
-                    },
-                }
-            })
-        }
-
-        config.ipfs = ipfs
         return CeramicDaemon.create(config)
     }
 
