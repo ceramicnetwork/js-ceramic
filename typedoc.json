@@ -32,10 +32,6 @@
                 "source": "./docs-src/architecture/pinning.md"
               }
             ]
-          },
-          {
-            "title": "HTTP API",
-            "source": "./docs-src/http-api.md"
           }
         ]
       },
