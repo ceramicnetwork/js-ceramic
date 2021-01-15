@@ -6,7 +6,7 @@
     "test": "lerna exec npm t",
     "build": "lerna run build",
     "docs": "./node_modules/.bin/typedoc",
-    "publish:next": "lerna publish --no-push --conventional-prerelease --dist-tag next",
+    "publish:release-client": "lerna publish --no-push --conventional-prerelease --dist-tag next --preid rc",
     "publish:latest": "lerna publish --allow-branch master --conventional-graduate --create-release github",
     "lint": "lerna run lint",
     "clean": "rm -rf ./lib"
