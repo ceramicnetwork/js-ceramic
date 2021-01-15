@@ -461,9 +461,9 @@ export class CeramicCliUtils {
      * @param controllers - Input controllers
      * @private
      */
-    static _parseControllers(controllers: string): string[] {
+    static _parseControllers(controllers: string): string[] | undefined {
         if (controllers == null) {
-            return []
+            return undefined
         }
         return controllers.includes(',') ? controllers.split(',') : [controllers]
     }
