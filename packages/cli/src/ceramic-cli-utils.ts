@@ -17,6 +17,7 @@ import {buildIpfsConnection} from "./build-ipfs-connection.util";
 const DEFAULT_CLI_CONFIG_FILE = 'config.json'
 export const DEFAULT_PINNING_STORE_PATH = ".pinning.store"
 const DEFAULT_CLI_CONFIG_PATH = path.join(os.homedir(), '.ceramic')
+const DEFAULT_NETWORK = 'testnet-clay'
 
 /**
  * CLI configuration
@@ -64,7 +65,7 @@ export class CeramicCliUtils {
         debug: boolean,
         logToFiles: boolean,
         logPath: string,
-        network: string | undefined,
+        network = DEFAULT_NETWORK,
         pubsubTopic: string,
         maxHealthyCpu = 0.7,
         maxHealthyMemory = 0.7,

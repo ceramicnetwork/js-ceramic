@@ -9,7 +9,6 @@ import * as core from "express-serve-static-core"
 import { cpuFree, freememPercentage } from "os-utils"
 
 const DEFAULT_PORT = 7007
-const DEFAULT_NETWORK = 'testnet-clay'
 const toApiPath = (ending: string): string => '/api/v0' + ending
 
 const DEFAULT_ANCHOR_SERVICE_URL = "https://cas-clay.3boxlabs.com"
@@ -125,7 +124,7 @@ class CeramicDaemon {
     const ceramicConfig: CeramicConfig = {
       logLevel: opts.debug ? 'debug' : 'silent',
       gateway: opts.gateway || false,
-      networkName: opts.network || DEFAULT_NETWORK,
+      networkName: opts.network
     }
 
     if (opts.anchorServiceUrl) {
