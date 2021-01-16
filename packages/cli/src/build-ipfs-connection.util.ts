@@ -15,7 +15,7 @@ const IPFS_DHT_SERVER_MODE = process.env.IPFS_DHT_SERVER_MODE === 'true'
 
 const BOOTSTRAP = {
     "testnet-clay": [
-        '/dns4/ipfs-clay-cas.3boxlabs.com/tcp/4012/wss/p2p/QmQotCKxiMWt935TyCBFTN23jaivxwrZ3uD58wNxeg5npi',
+        '/dns4/ipfs-clay-cas.3boxlabs.com/tcp/4012/wss/p2p/QmbeBTzSccH8xYottaYeyVX8QsKyox1ExfRx7T1iBqRyCd',
         '/dns4/ipfs-clay.ceramic.network/tcp/4012/wss/p2p/QmQqq1oVkwpJdKNdiWvrftgWE2nov4AFGPBauZ2AakxmoR',
         '/dns4/ipfs-clay.3boxlabs.com/tcp/4012/wss/p2p/QmQotCKxiMWt935TyCBFTN23jaivxwrZ3uD58wNxeg5npi'
     ],
