@@ -130,8 +130,8 @@ describe('Ceramic integration', () => {
   })
 
   it('can create Ceramic instance on default network', async () => {
-    const stateStorePath = await tmp.tmpName()
-    const ceramic = await Ceramic.create(ipfs1, {pinsetDirectory: stateStorePath})
+    const pinsetDirectory = await tmp.tmpName()
+    const ceramic = await Ceramic.create(ipfs1, {pinsetDirectory})
     await delay(1000)
     const supportedChains = await ceramic.getSupportedChains()
     expect(supportedChains).toEqual(['inmemory:12345'])
@@ -139,8 +139,8 @@ describe('Ceramic integration', () => {
   })
 
   it('can create Ceramic instance explicitly on inmemory network', async () => {
-    const stateStorePath = await tmp.tmpName()
-    const ceramic = await Ceramic.create(ipfs1, { networkName: 'inmemory', pinsetDirectory: stateStorePath })
+    const pinsetDirectory = await tmp.tmpName()
+    const ceramic = await Ceramic.create(ipfs1, { networkName: 'inmemory', pinsetDirectory })
     await delay(1000)
     const supportedChains = await ceramic.getSupportedChains()
     expect(supportedChains).toEqual(['inmemory:12345'])
@@ -148,15 +148,15 @@ describe('Ceramic integration', () => {
   })
 
   it('cannot create Ceramic instance on network not supported by our anchor service', async () => {
-    const stateStorePath = await tmp.tmpName()
-    await expect(Ceramic.create(ipfs1, { networkName: 'local', pinsetDirectory: stateStorePath })).rejects.toThrow(
+    const pinsetDirectory = await tmp.tmpName()
+    await expect(Ceramic.create(ipfs1, { networkName: 'local', pinsetDirectory })).rejects.toThrow(
         "No usable chainId for anchoring was found.  The ceramic network 'local' supports the chains: ['eip155:1337'], but the configured anchor service 'inmemory' only supports the chains: ['inmemory:12345']")
     await delay(1000)
   })
 
   it('cannot create Ceramic instance on invalid network', async () => {
-    const stateStorePath = await tmp.tmpName()
-    await expect(Ceramic.create(ipfs1, { networkName: 'fakenetwork', pinsetDirectory: stateStorePath })).rejects.toThrow("Unrecognized Ceramic network name: 'fakenetwork'. Supported networks are: 'mainnet', 'testnet-clay', 'dev-unstable', 'local', 'inmemory'")
+    const pinsetDirectory = await tmp.tmpName()
+    await expect(Ceramic.create(ipfs1, { networkName: 'fakenetwork', pinsetDirectory })).rejects.toThrow("Unrecognized Ceramic network name: 'fakenetwork'. Supported networks are: 'mainnet', 'testnet-clay', 'dev-unstable', 'local', 'inmemory'")
     await delay(1000)
   })
 

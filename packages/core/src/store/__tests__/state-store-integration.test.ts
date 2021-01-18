@@ -210,8 +210,8 @@ describe('Level data store', () => {
 
     const levelPath = (await tmp.dir({unsafeCleanup: true})).path
     const storeFactory = new PinStoreFactory(context, {
-      stateStorePath: levelPath,
-      pinnings: ['ipfs+context'],
+      pinsetDirectory: levelPath,
+      pinningEndpoints: ['ipfs+context'],
       networkName: 'inmemory',
     })
     store = await storeFactory.open()
@@ -346,8 +346,8 @@ describe('Level data store', () => {
 
     const levelPath = (await tmp.dir({unsafeCleanup: true})).path
     const storeFactoryLocal = new PinStoreFactory(context, {
-      stateStorePath: levelPath,
-      pinnings: ['ipfs+context'],
+      pinsetDirectory: levelPath,
+      pinningEndpoints: ['ipfs+context'],
       networkName: "local",
     })
     const localStore = await storeFactoryLocal.open()
@@ -360,8 +360,8 @@ describe('Level data store', () => {
 
     // Now create a net pin store for a different ceramic network
     const storeFactoryInMemory = new PinStoreFactory(context, {
-      stateStorePath: levelPath,
-      pinnings: ['ipfs+context'],
+      pinsetDirectory: levelPath,
+      pinningEndpoints: ['ipfs+context'],
       networkName: "inmemory",
     })
     const inMemoryStore = await storeFactoryInMemory.open()

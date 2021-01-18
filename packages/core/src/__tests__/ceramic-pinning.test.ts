@@ -39,9 +39,9 @@ async function delay(mills: number): Promise<void> {
   await new Promise(resolve => setTimeout(() => resolve(), mills))
 }
 
-const createCeramic = async (ipfs: IpfsApi, stateStorePath, anchorOnRequest = false): Promise<Ceramic> => {
+const createCeramic = async (ipfs: IpfsApi, pinsetDirectory, anchorOnRequest = false): Promise<Ceramic> => {
   const ceramic = await Ceramic.create(ipfs, {
-    pinsetDirectory: stateStorePath,
+    pinsetDirectory,
     anchorOnRequest,
     pubsubTopic: "/ceramic/inmemory/test" // necessary so Ceramic instances can talk to each other
   })
