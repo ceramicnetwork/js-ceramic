@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.19.0](/compare/@ceramicnetwork/core@0.18.3...@ceramicnetwork/core@0.19.0) (2021-01-18)
+
+
+### Bug Fixes
+
+* **core:** Schema validation not enforced during update (#817) 7431fce, closes #817
+
+
+### Features
+
+* **core:** Do IPFS peer discovery by querying a github file containing a list of registered ceramic peers (#814) a2fa80f, closes #814
+
+
+
+
+
 ## [0.18.3](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@0.18.2...@ceramicnetwork/core@0.18.3) (2021-01-14)
 
 **Note:** Version bump only for package @ceramicnetwork/core

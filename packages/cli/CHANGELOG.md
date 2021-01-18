@@ -3,6 +3,24 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.20.0](/compare/@ceramicnetwork/cli@0.19.3...@ceramicnetwork/cli@0.20.0) (2021-01-18)
+
+
+### Bug Fixes
+
+* **cli:** controllers should not default to empty array on update (#803) d9bb420, closes #803
+* **cli:** Disable DHT (#806) 6d6e432, closes #806
+* **cli:** Properly connect to bootstrap nodes. (#805) c0b8da0, closes #805
+
+
+### Features
+
+* **cli:** Use bootstrap nodes (#801) 0d24dfd, closes #801
+
+
+
+
+
 ## [0.19.3](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@0.19.2...@ceramicnetwork/cli@0.19.3) (2021-01-14)
 
 
