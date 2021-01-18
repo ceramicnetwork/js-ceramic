@@ -5,6 +5,7 @@ import { PinStore } from "./pin-store";
 import CID from 'cids'
 import path from "path";
 import os from "os";
+import { promises as fs } from 'fs'
 import { IpfsPinning } from '@ceramicnetwork/pinning-ipfs-backend'
 
 const DEFAULT_PINSET_DIRECTORY = path.join(os.homedir(), ".ceramic", "pinset")
@@ -30,6 +31,7 @@ export class PinStoreFactory {
     }
 
     async open(): Promise<PinStore> {
+        await fs.mkdir(this.stateStorePath, { recursive: true }) // create dir if it doesn't exist
         const stateStore = new LevelStateStore(this.stateStorePath)
         const pinning = PinningAggregation.build(this.context, this.pinningEndpoints, this.pinningBackends)
         const ipfs = this.context.ipfs
