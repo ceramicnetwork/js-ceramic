@@ -47,7 +47,7 @@ const TESTING = process.env.NODE_ENV == 'test'
 export interface CeramicConfig {
   ethereumRpcUrl?: string;
   anchorServiceUrl?: string;
-  stateStorePath?: string;
+  pinsetDirectory?: string;
 
   didResolver?: Resolver;
   didProvider?: DIDProvider;
@@ -190,7 +190,7 @@ class Ceramic implements CeramicApi {
 
     let pubsubTopic
     let networkChains
-    switch (config.networkName) {
+    switch (networkName) {
       case "mainnet": {
         pubsubTopic = "/ceramic/mainnet"
         networkChains = ["eip155:1"] // Ethereum mainnet
@@ -233,11 +233,11 @@ class Ceramic implements CeramicApi {
         break
       }
       default: {
-        throw new Error("Unrecognized Ceramic network name: '" + config.networkName + "'. Supported networks are: 'mainnet', 'testnet-clay', 'dev-unstable', 'local', 'inmemory'")
+        throw new Error("Unrecognized Ceramic network name: '" + networkName + "'. Supported networks are: 'mainnet', 'testnet-clay', 'dev-unstable', 'local', 'inmemory'")
       }
     }
 
-    if (config.networkName == "mainnet") {
+    if (networkName == "mainnet") {
       throw new Error("Ceramic mainnet is not yet supported")
     }
 
@@ -246,13 +246,13 @@ class Ceramic implements CeramicApi {
     const anchorServiceChains = await anchorService.getSupportedChains()
     const usableChains = networkChains.filter(c => anchorServiceChains.includes(c))
     if (usableChains.length === 0) {
-      throw new Error("No usable chainId for anchoring was found.  The ceramic network '" + config.networkName
+      throw new Error("No usable chainId for anchoring was found.  The ceramic network '" + networkName
           + "' supports the chains: ['" + networkChains.join("', '")
           + "'], but the configured anchor service '" + (config.anchorServiceURL ?? "inmemory")
           + "' only supports the chains: ['" + anchorServiceChains.join("', '") + "']")
     }
 
-    return {name: config.networkName, pubsubTopic, supportedChains: usableChains}
+    return {name: networkName, pubsubTopic, supportedChains: usableChains}
   }
 
   /**

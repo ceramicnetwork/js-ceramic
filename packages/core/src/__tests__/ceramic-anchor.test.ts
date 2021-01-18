@@ -33,7 +33,7 @@ const createIPFS =(overrideConfig: Record<string, unknown> = {}): Promise<IpfsAp
 
 const createCeramic = async (ipfs: IpfsApi, anchorManual: boolean): Promise<Ceramic> => {
   const ceramic = await Ceramic.create(ipfs, {
-    stateStorePath: await tmp.tmpName(),
+    pinsetDirectory: await tmp.tmpName(),
     anchorOnRequest: !anchorManual,
     pubsubTopic: "/ceramic/inmemory/test" // necessary so Ceramic instances can talk to each other
   })
