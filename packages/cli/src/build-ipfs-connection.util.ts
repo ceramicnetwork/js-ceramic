@@ -38,7 +38,7 @@ export async function buildIpfsConnection(network: string, ipfsEndpoint?: string
             libp2p: {
                 config: {
                     dht: {
-                        enabled: true,
+                        enabled: false,
                         clientMode: !IPFS_DHT_SERVER_MODE,
                         randomWalk: false,
                     },
