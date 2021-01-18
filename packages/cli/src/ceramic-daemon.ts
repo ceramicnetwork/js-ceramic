@@ -24,7 +24,7 @@ export interface CreateOpts {
 
   ethereumRpcUrl?: string;
   anchorServiceUrl?: string;
-  stateStorePath?: string;
+  pinsetDirectory?: string;
 
   validateDocs?: boolean;
   pinning?: string[];
@@ -138,8 +138,8 @@ class CeramicDaemon {
       ceramicConfig.pubsubTopic = opts.pubsubTopic
     }
 
-    if (opts.stateStorePath) {
-      ceramicConfig.stateStorePath = opts.stateStorePath
+    if (opts.pinsetDirectory) {
+      ceramicConfig.pinsetDirectory = opts.pinsetDirectory
     }
 
     if (opts.pinning) {

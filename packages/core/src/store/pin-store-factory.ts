@@ -4,11 +4,14 @@ import { PinningAggregation } from "@ceramicnetwork/pinning-aggregation";
 import { PinStore } from "./pin-store";
 import CID from 'cids'
 import path from "path";
+import os from "os";
 import { IpfsPinning } from '@ceramicnetwork/pinning-ipfs-backend'
+
+const DEFAULT_PINSET_DIRECTORY = path.join(os.homedir(), ".ceramic", "pinset")
 
 export type Props = {
     networkName?: string;
-    stateStorePath?: string;
+    pinsetDirectory?: string;
     pinnings?: string[];
     pinningBackends?: PinningBackendStatic[];
 }
@@ -19,9 +22,9 @@ export class PinStoreFactory {
     readonly pinningBackends: PinningBackendStatic[];
 
     constructor(readonly context: Context, props: Props) {
-        const directoryName = ".pinning.store." + props.networkName
-        const directoryRoot = props.stateStorePath || process.cwd()
-        this.stateStorePath = path.join(directoryRoot, directoryName)
+        const directoryRoot = props.pinsetDirectory || DEFAULT_PINSET_DIRECTORY
+        // Always store the pinning state in a network-specific directory
+        this.stateStorePath = path.join(directoryRoot, props.networkName)
         this.pinnings = props.pinnings && props.pinnings.length > 0 ? props.pinnings : ['ipfs+context']
         this.pinningBackends = props.pinningBackends && props.pinningBackends.length > 0 ? props.pinningBackends : [IpfsPinning]
     }

@@ -182,7 +182,7 @@ class Ceramic implements CeramicApi {
   }
 
   private static async _generateNetworkOptions(config: CeramicConfig, anchorService: AnchorService): Promise<CeramicNetworkOptions> {
-    config.networkName = config.networkName || DEFAULT_NETWORK
+    const networkName = config.networkName || DEFAULT_NETWORK
 
     if (config.pubsubTopic && (networkName !== "inmemory" && networkName !== "local")) {
       throw new Error("Specifying pub/sub topic is only supported for the 'inmemory' and 'local' networks")
@@ -286,7 +286,13 @@ class Ceramic implements CeramicApi {
     const dispatcher = new Dispatcher(ipfs, networkOptions.pubsubTopic)
     await dispatcher.init()
 
-    const pinStoreFactory = new PinStoreFactory(context, config)
+    const pinStoreProperties = {
+      networkName: networkOptions.name,
+      pinsetDirectory: config.pinsetDirectory,
+      pinnings: config.pinning,
+      pinningBackends: config.pinningBackends
+    }
+    const pinStoreFactory = new PinStoreFactory(context, pinStoreProperties)
     const pinStore = await pinStoreFactory.open()
 
     const ceramic = new Ceramic(dispatcher, pinStore, context, networkOptions, config.validateDocs, config.docCacheLimit, config.cacheDocCommits)
