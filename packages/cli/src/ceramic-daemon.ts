@@ -27,7 +27,7 @@ export interface CreateOpts {
   pinsetDirectory?: string;
 
   validateDocs?: boolean;
-  pinning?: string[];
+  pinningEndpoints?: string[];
   gateway?: boolean;
   debug: boolean;
   logToFiles?: boolean;
@@ -142,10 +142,8 @@ class CeramicDaemon {
       ceramicConfig.pinsetDirectory = opts.pinsetDirectory
     }
 
-    if (opts.pinning) {
-      Object.assign(ceramicConfig, {
-        pinning: opts.pinning
-      })
+    if (opts.pinningEndpoints) {
+      ceramicConfig.pinningEndpoints = opts.pinningEndpoints
     }
 
     if (opts.logToFiles) {

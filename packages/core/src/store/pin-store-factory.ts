@@ -12,26 +12,26 @@ const DEFAULT_PINSET_DIRECTORY = path.join(os.homedir(), ".ceramic", "pinset")
 export type Props = {
     networkName?: string;
     pinsetDirectory?: string;
-    pinnings?: string[];
+    pinningEndpoints?: string[];
     pinningBackends?: PinningBackendStatic[];
 }
 
 export class PinStoreFactory {
     readonly stateStorePath: string
-    readonly pinnings: string[]
+    readonly pinningEndpoints: string[]
     readonly pinningBackends: PinningBackendStatic[];
 
     constructor(readonly context: Context, props: Props) {
         const directoryRoot = props.pinsetDirectory || DEFAULT_PINSET_DIRECTORY
         // Always store the pinning state in a network-specific directory
         this.stateStorePath = path.join(directoryRoot, props.networkName)
-        this.pinnings = props.pinnings && props.pinnings.length > 0 ? props.pinnings : ['ipfs+context']
+        this.pinningEndpoints = props.pinningEndpoints && props.pinningEndpoints.length > 0 ? props.pinningEndpoints : ['ipfs+context']
         this.pinningBackends = props.pinningBackends && props.pinningBackends.length > 0 ? props.pinningBackends : [IpfsPinning]
     }
 
     async open(): Promise<PinStore> {
         const stateStore = new LevelStateStore(this.stateStorePath)
-        const pinning = PinningAggregation.build(this.context, this.pinnings, this.pinningBackends)
+        const pinning = PinningAggregation.build(this.context, this.pinningEndpoints, this.pinningBackends)
         const ipfs = this.context.ipfs
         const retrieve = async (cid: CID): Promise<any> => {
             const blob = await ipfs.dag.get(cid)
