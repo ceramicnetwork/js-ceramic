@@ -438,7 +438,7 @@ describe('Document', () => {
       }
     })
 
-    it('Enforces schema at document update', async () => {
+    it('Enforces schema in update that assigns schema', async () => {
       const schemaDoc = await create({ content: stringMapSchema, metadata: { controllers } }, ceramic, context)
       await anchorUpdate(schemaDoc)
 
@@ -451,6 +451,28 @@ describe('Document', () => {
 
       try {
         const updateRec = await TileDoctype._makeCommit(doc.doctype, user, null, doc.controllers, schemaDoc.commitId.toString())
+        await doc.applyCommit(updateRec)
+        fail('Should not be able to assign a schema to a document that does not conform')
+      } catch (e) {
+        expect(e.message).toEqual('Validation Error: data[\'stuff\'] should be string')
+      }
+    })
+
+    it('Enforces previously assigned schema during future update', async () => {
+      const schemaDoc = await create({ content: stringMapSchema, metadata: { controllers } }, ceramic, context)
+      await anchorUpdate(schemaDoc)
+
+      const conformingContent = {stuff: 'foo'}
+      const nonConformingContent = {stuff: 1}
+      const docParams = {
+        content: conformingContent,
+        metadata: {controllers, schema: schemaDoc.commitId.toString()}
+      }
+      const doc = await create(docParams, ceramic, context)
+      await anchorUpdate(doc)
+
+      try {
+        const updateRec = await TileDoctype._makeCommit(doc.doctype, user, nonConformingContent, doc.controllers)
         await doc.applyCommit(updateRec)
         fail('Should not be able to assign a schema to a document that does not conform')
       } catch (e) {

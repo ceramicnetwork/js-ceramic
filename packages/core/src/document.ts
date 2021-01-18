@@ -528,7 +528,7 @@ class Document extends EventEmitter implements DocStateHolder {
         // it's a signed commit
         const tmpState = await this._doctypeHandler.applyCommit(commit, cid, this._context, state)
         if (this._validate) {
-          const schemaId = payload.header?.schema
+          const schemaId = tmpState.next.metadata.schema
           if (schemaId) {
             const schema = await Document.loadSchemaById(this._context, schemaId)
             if (schema) {

@@ -476,4 +476,36 @@ describe('Ceramic integration', () => {
     await ceramic2.close()
   })
 
+  it('validates schema on doc change', async () => {
+    const ceramic = await createCeramic(ipfs1)
+
+    const NoteSchema = {
+      $schema: 'http://json-schema.org/draft-07/schema#',
+      title: 'Note',
+      type: 'object',
+      properties: {
+        date: {
+          type: 'string',
+          format: 'date-time',
+          maxLength: 30,
+        },
+        text: {
+          type: 'string',
+          maxLength: 4000,
+        },
+      },
+      required: ['date', 'text'],
+    }
+    const noteSchema = await ceramic.createDocument('tile', {
+      content: NoteSchema,
+      metadata: { controllers: [ceramic.did.id] },
+    })
+
+    const doc = await ceramic.createDocument('tile', {
+      content: { date: '2021-01-06T14:28:00.000Z', text: 'hello first' },
+      metadata: { controllers: [ceramic.did.id], schema: noteSchema.commitId.toUrl() },
+    })
+    await expect(doc.change({ content: { date: 'invalid-date' } })).rejects.toThrow()
+  })
+
 })
