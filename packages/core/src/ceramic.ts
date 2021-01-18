@@ -29,6 +29,7 @@ import { DID } from 'dids'
 import { TileDoctypeHandler } from "@ceramicnetwork/doctype-tile-handler"
 import { Caip10LinkDoctypeHandler } from "@ceramicnetwork/doctype-caip10-link-handler"
 import { PinStoreFactory } from "./store/pin-store-factory";
+import {cancelPeriodicConnectToPeersTask, periodicallyConnectToPeers} from "./peer-discovery";
 import { PinStore } from "./store/pin-store";
 import { PathTrie, TrieNode, promiseTimeout } from './utils'
 
@@ -38,6 +39,7 @@ import InMemoryAnchorService from "./anchor/memory/in-memory-anchor-service"
 import { randomUint32 } from '@stablelib/random'
 
 const DEFAULT_DOC_CACHE_LIMIT = 500; // number of docs stored in the cache
+const TESTING = process.env.NODE_ENV == 'test'
 
 /**
  * Ceramic configuration
@@ -68,6 +70,8 @@ export interface CeramicConfig {
 
   docCacheLimit?: number;
   cacheDocCommits?: boolean; // adds 'docCacheLimit' additional cache entries if commits can be cached as well
+
+  useCentralizedPeerDiscovery?: boolean;
 
   [index: string]: any; // allow arbitrary properties
 }
@@ -296,6 +300,11 @@ class Ceramic implements CeramicApi {
 
     if (config.didProvider) {
       await ceramic.setDIDProvider(config.didProvider)
+    }
+
+    const doPeerDiscovery = config.useCentralizedPeerDiscovery ?? !TESTING
+    if (doPeerDiscovery) {
+      await periodicallyConnectToPeers(networkOptions.name, ipfs)
     }
 
     return ceramic
@@ -575,6 +584,7 @@ class Ceramic implements CeramicApi {
   async close (): Promise<void> {
     await this.pinStore.close()
     await this.dispatcher.close()
+    await cancelPeriodicConnectToPeersTask()
   }
 }
 
