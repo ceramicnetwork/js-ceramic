@@ -26,7 +26,7 @@ async function fetchJson(url: string): Promise<any> {
 async function connectToPeers(network: string, ipfs: IpfsApi): Promise<void> {
     const url = PEER_FILE_URLS[network]
     if (!url) {
-        console.warn(`Skipping peer discovery. Peer discovery is not supported for ceramic network ${network}. This node may fail to load documents from other nodes on the network`)
+        console.warn(`Peer discovery is not supported for ceramic network ${network}. This node may fail to load documents from other nodes on the network`)
         return
     }
     console.log(`Connecting to peers found in '${url}'`)
@@ -41,9 +41,8 @@ async function connectToPeers(network: string, ipfs: IpfsApi): Promise<void> {
         }
     }))
 
-    const res = await ipfs.swarm.peers()
-    const peersStr = "[" + res.map((obj) => {return obj.addr}).join(', ') + "]"
-    console.log("Connected to peers: " + peersStr)
+    const connectedPeers = await ipfs.swarm.peers()
+    console.log("Connected to peers: " + connectedPeers.map((obj) => {return obj.addr}).join(', '))
 }
 
 /**
