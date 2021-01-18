@@ -512,12 +512,20 @@ class Document extends EventEmitter implements DocStateHolder {
         // it's an anchor commit
         await this._verifyAnchorCommit(commit)
         state = await this._doctypeHandler.applyCommit(commit, cid, this._context, state)
+      } else if (!payload.prev) {
+        // it's a genesis commit
+        if (this._validate) {
+          const schemaId = payload.header?.schema
+          if (schemaId) {
+            const schema = await Document.loadSchemaById(this._context, schemaId)
+            if (schema) {
+              Utils.validate(payload.content, schema)
+            }
+          }
+        }
+        state = await this._doctypeHandler.applyCommit(commit, cid, this._context)
       } else {
         // it's a signed commit
-        if (!payload.prev) {
-          // TODO use an assertion for this
-          throw new Error("_applyLogToState somehow called with genesis record, this should be impossible")
-        }
         const tmpState = await this._doctypeHandler.applyCommit(commit, cid, this._context, state)
         if (this._validate) {
           const schemaId = tmpState.next.metadata.schema
