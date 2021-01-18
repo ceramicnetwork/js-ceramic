@@ -198,6 +198,11 @@ describe('TileDoctypeHandler', () => {
         expect(serialized).toEqual(signed)
     })
 
+    it('throws if more than one controller', async () => {
+        const record1Promised = TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id, "did:key:zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV"] }, deterministic: true }, context)
+        await expect(record1Promised).rejects.toThrow(/Exactly one controller must be specified/)
+    })
+
     it('creates genesis records uniquely by default', async () => {
         const record1 = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id] } }, context)
         const record2 = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id] } }, context)
@@ -320,6 +325,21 @@ describe('TileDoctypeHandler', () => {
         await context.ipfs.dag.put(payload, genesisRecord.jws.link)
 
         await expect(tileDoctypeHandler.applyCommit(genesisRecord.jws, FAKE_CID_1, context)).rejects.toThrow(/wrong DID/)
+    })
+
+    it('throws error if changes to more than one controller', async () => {
+        const tileDoctypeHandler = new TileDoctypeHandler()
+
+        const genesisRecord = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id] } }, context) as SignedCommitContainer
+        await context.ipfs.dag.put(genesisRecord, FAKE_CID_1)
+
+        const payload = dagCBOR.util.deserialize(genesisRecord.linkedBlock)
+        await context.ipfs.dag.put(payload, genesisRecord.jws.link)
+
+        const state = await tileDoctypeHandler.applyCommit(genesisRecord.jws, FAKE_CID_1, context)
+        const doctype = new TileDoctype(state, context)
+        const makeCommit = TileDoctype._makeCommit(doctype, did, RECORDS.r1.desiredContent, [did.id, did.id])
+        await expect(makeCommit).rejects.toThrow(/Exactly one controller must be specified/)
     })
 
     it('applies anchor record correctly', async () => {

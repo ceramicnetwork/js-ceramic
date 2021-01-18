@@ -9,7 +9,6 @@ import * as core from "express-serve-static-core"
 import { cpuFree, freememPercentage } from "os-utils"
 
 const DEFAULT_PORT = 7007
-const DEFAULT_NETWORK = 'testnet-clay'
 const toApiPath = (ending: string): string => '/api/v0' + ending
 
 const DEFAULT_ANCHOR_SERVICE_URL = "https://cas-clay.3boxlabs.com"
@@ -34,6 +33,7 @@ export interface CreateOpts {
   logToFiles?: boolean;
   logPath?: string;
   network?: string;
+  pubsubTopic?: string;
 
   maxHealthyCpu: number;
   maxHealthyMemory: number;
@@ -102,7 +102,7 @@ class CeramicDaemon {
       if (res.statusCode < 300) { // 2xx indicates error has not yet been handled
         res.status(500)
       }
-      res.send(err.message)
+      res.send({error: err.message})
       // TODO: Get real request start
       this.logger.error(JSON.stringify(this._buildHttpLog(Date.now(), req, res)))
     })
@@ -124,7 +124,7 @@ class CeramicDaemon {
     const ceramicConfig: CeramicConfig = {
       logLevel: opts.debug ? 'debug' : 'silent',
       gateway: opts.gateway || false,
-      networkName: opts.network || DEFAULT_NETWORK,
+      networkName: opts.network
     }
 
     if (opts.anchorServiceUrl) {
@@ -132,6 +132,10 @@ class CeramicDaemon {
       ceramicConfig.anchorServiceUrl = opts.anchorServiceUrl
     } else if (ceramicConfig.networkName === "testnet-clay" || ceramicConfig.networkName === "dev-unstable") {
       ceramicConfig.anchorServiceUrl = DEFAULT_ANCHOR_SERVICE_URL
+    }
+
+    if (opts.pubsubTopic) {
+      ceramicConfig.pubsubTopic = opts.pubsubTopic
     }
 
     if (opts.stateStorePath) {

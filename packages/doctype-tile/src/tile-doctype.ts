@@ -70,12 +70,16 @@ export class TileDoctype extends Doctype {
         const unique = params.deterministic ? '0' : base64Encode(randomBytes(12))
 
         const metadata: GenesisHeader = params.metadata || { controllers: [] }
-        if (metadata.controllers.length === 0) {
+        if (!metadata.controllers || metadata.controllers.length === 0) {
             if (params.content && context.did) {
                 metadata.controllers = [context.did.id]
             } else {
                 throw new Error('No controllers specified')
             }
+        }
+
+        if (metadata.controllers.length !== 1) {
+            throw new Error('Exactly one controller must be specified')
         }
 
         const commit: GenesisCommit = { data: params.content, header: metadata, unique }
@@ -99,6 +103,10 @@ export class TileDoctype extends Doctype {
 
         if (newContent == null) {
             newContent = doctype.content
+        }
+
+        if (header.controllers && header.controllers.length !== 1) {
+            throw new Error('Exactly one controller must be specified')
         }
 
         const patch = jsonpatch.compare(doctype.content, newContent)

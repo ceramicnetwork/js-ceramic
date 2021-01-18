@@ -1,5 +1,5 @@
 import type CID from 'cids'
-import { validateLink } from "3id-blockchain-utils"
+import { validateLink } from "@ceramicnetwork/blockchain-utils-validation"
 import { Caip10LinkDoctype, Caip10LinkParams, DOCTYPE_NAME } from "@ceramicnetwork/doctype-caip10-link"
 import {
     AnchorStatus,
@@ -66,7 +66,7 @@ export class Caip10LinkDoctypeHandler implements DoctypeHandler<Caip10LinkDoctyp
      */
     async _applyGenesis (commit: any, cid: CID): Promise<DocState> {
         // TODO - verify genesis commit
-        return {
+        const state = {
             doctype: DOCTYPE_NAME,
             content: null,
             next: {
@@ -77,6 +77,12 @@ export class Caip10LinkDoctypeHandler implements DoctypeHandler<Caip10LinkDoctyp
             anchorStatus: AnchorStatus.NOT_REQUESTED,
             log: [{ cid, type: CommitType.GENESIS }]
         }
+
+        if (!(state.metadata.controllers && state.metadata.controllers.length === 1)) {
+            throw new Error('Exactly one controller must be specified')
+        }
+
+        return state
     }
 
     /**

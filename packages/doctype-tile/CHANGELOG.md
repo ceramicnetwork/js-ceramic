@@ -3,6 +3,30 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.12.11](/compare/@ceramicnetwork/doctype-tile@0.12.10...@ceramicnetwork/doctype-tile@0.12.11) (2021-01-13)
+
+**Note:** Version bump only for package @ceramicnetwork/doctype-tile
+
+
+
+
+
+## [0.12.10](/compare/@ceramicnetwork/doctype-tile@0.12.9...@ceramicnetwork/doctype-tile@0.12.10) (2021-01-13)
+
+**Note:** Version bump only for package @ceramicnetwork/doctype-tile
+
+
+
+
+
+## [0.12.9](/compare/@ceramicnetwork/doctype-tile@0.12.8...@ceramicnetwork/doctype-tile@0.12.9) (2021-01-13)
+
+**Note:** Version bump only for package @ceramicnetwork/doctype-tile
+
+
+
+
+
 ## [0.12.8](/compare/@ceramicnetwork/doctype-tile@0.12.7...@ceramicnetwork/doctype-tile@0.12.8) (2021-01-07)
 
 **Note:** Version bump only for package @ceramicnetwork/doctype-tile

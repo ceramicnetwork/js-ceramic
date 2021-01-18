@@ -1,12 +1,13 @@
 {
   "name": "@ceramicnetwork/docid",
-  "version": "0.4.2",
+  "version": "0.4.5",
   "description": "Ceramic Document Ids",
   "keywords": [
     "ceramic",
     "DocId"
   ],
   "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "files": [
     "lib"
   ],
@@ -33,5 +34,5 @@
   "publishConfig": {
     "access": "public"
   },
-  "gitHead": "b1e70c449a2b4df7a7cb61b811059a7fef30c7cc"
+  "gitHead": "34eeee25597b0a60def72906c26d3afd6230aaf1"
 }

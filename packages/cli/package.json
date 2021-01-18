@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/cli",
-  "version": "0.18.6",
+  "version": "0.19.3",
   "description": "Typescript implementation of the Ceramic CLI",
   "keywords": [
     "Ceramic",
@@ -40,11 +40,11 @@
   },
   "dependencies": {
     "@babel/register": "^7.10.5",
-    "@ceramicnetwork/common": "^0.15.4",
-    "@ceramicnetwork/core": "^0.17.7",
-    "@ceramicnetwork/docid": "^0.4.2",
-    "@ceramicnetwork/doctype-tile": "^0.12.8",
-    "@ceramicnetwork/http-client": "^0.8.12",
+    "@ceramicnetwork/common": "^0.15.7",
+    "@ceramicnetwork/core": "^0.18.3",
+    "@ceramicnetwork/docid": "^0.4.5",
+    "@ceramicnetwork/doctype-tile": "^0.12.11",
+    "@ceramicnetwork/http-client": "^0.9.2",
     "@stablelib/random": "^1.0.0",
     "@zondax/filecoin-signing-tools": "^0.13.0",
     "bs58": "^4.0.1",
@@ -67,7 +67,7 @@
     "@babel/plugin-transform-modules-commonjs": "^7.10.4",
     "@babel/preset-env": "^7.8.4",
     "@babel/preset-typescript": "^7.9.0",
-    "@ceramicnetwork/doctype-tile-handler": "^0.12.8",
+    "@ceramicnetwork/doctype-tile-handler": "^0.12.11",
     "@types/events": "^3.0.0",
     "@types/express": "^4.17.2",
     "@types/logfmt": "^1.2.1",
@@ -84,5 +84,5 @@
   "peerDependencies": {
     "@zondax/filecoin-signing-tools": "^0.13.0"
   },
-  "gitHead": "4a43386b9803e9bc00f71ceef30b2a822f1a9c8a"
+  "gitHead": "34eeee25597b0a60def72906c26d3afd6230aaf1"
 }

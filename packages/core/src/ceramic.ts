@@ -29,6 +29,7 @@ import { DID } from 'dids'
 import { TileDoctypeHandler } from "@ceramicnetwork/doctype-tile-handler"
 import { Caip10LinkDoctypeHandler } from "@ceramicnetwork/doctype-caip10-link-handler"
 import { PinStoreFactory } from "./store/pin-store-factory";
+import {cancelPeriodicConnectToPeersTask, periodicallyConnectToPeers} from "./peer-discovery";
 import { PinStore } from "./store/pin-store";
 import { PathTrie, TrieNode, promiseTimeout } from './utils'
 
@@ -38,6 +39,7 @@ import InMemoryAnchorService from "./anchor/memory/in-memory-anchor-service"
 import { randomUint32 } from '@stablelib/random'
 
 const DEFAULT_DOC_CACHE_LIMIT = 500; // number of docs stored in the cache
+const TESTING = process.env.NODE_ENV == 'test'
 
 /**
  * Ceramic configuration
@@ -68,6 +70,8 @@ export interface CeramicConfig {
 
   docCacheLimit?: number;
   cacheDocCommits?: boolean; // adds 'docCacheLimit' additional cache entries if commits can be cached as well
+
+  useCentralizedPeerDiscovery?: boolean;
 
   [index: string]: any; // allow arbitrary properties
 }
@@ -180,8 +184,8 @@ class Ceramic implements CeramicApi {
   private static async _generateNetworkOptions(config: CeramicConfig, anchorService: AnchorService): Promise<CeramicNetworkOptions> {
     config.networkName = config.networkName || DEFAULT_NETWORK
 
-    if (config.pubsubTopic && config.networkName !== "inmemory") {
-      throw new Error("Specifying pub/sub topic is only supported for the 'inmemory' network")
+    if (config.pubsubTopic && (networkName !== "inmemory" && networkName !== "local")) {
+      throw new Error("Specifying pub/sub topic is only supported for the 'inmemory' and 'local' networks")
     }
 
     let pubsubTopic
@@ -203,15 +207,22 @@ class Ceramic implements CeramicApi {
         break
       }
       case "local": {
-        // 'local' network always uses a random pubsub topic so that nodes stay isolated from each other
-        const rand = randomUint32()
-        pubsubTopic = "/ceramic/local-" + rand
+        // Default to a random pub/sub topic so that local deployments are isolated from each other
+        // by default.  Allow specifying a specific pub/sub topic so that test deployments *can*
+        // be made to talk to each other if needed.
+        if (config.pubsubTopic) {
+          pubsubTopic = config.pubsubTopic
+        } else {
+          const rand = randomUint32()
+          pubsubTopic = "/ceramic/local-" + rand
+        }
         networkChains = ["eip155:1337"] // Ganache
         break
       }
       case "inmemory": {
-        // For inmemory only we allow overriding the pub/sub topic.  This is to enable tests
-        // within the same process to be able to talk to each other by using a fixed topic, while making the pub/sub topic random by default
+        // Default to a random pub/sub topic so that inmemory deployments are isolated from each other
+        // by default.  Allow specifying a specific pub/sub topic so that test deployments *can*
+        // be made to talk to each other if needed.
         if (config.pubsubTopic) {
           pubsubTopic = config.pubsubTopic
         } else {
@@ -289,6 +300,11 @@ class Ceramic implements CeramicApi {
 
     if (config.didProvider) {
       await ceramic.setDIDProvider(config.didProvider)
+    }
+
+    const doPeerDiscovery = config.useCentralizedPeerDiscovery ?? !TESTING
+    if (doPeerDiscovery) {
+      await periodicallyConnectToPeers(networkOptions.name, ipfs)
     }
 
     return ceramic
@@ -568,6 +584,7 @@ class Ceramic implements CeramicApi {
   async close (): Promise<void> {
     await this.pinStore.close()
     await this.dispatcher.close()
+    await cancelPeriodicConnectToPeersTask()
   }
 }
 

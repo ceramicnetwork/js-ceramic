@@ -63,10 +63,7 @@ export class Caip10LinkDoctype extends Doctype {
         if (!metadata) {
             throw new Error('Metadata must be specified')
         }
-        if (!metadata.controllers) {
-            throw new Error('Controller must be specified')
-        }
-        if (metadata.controllers.length !== 1) {
+        if (!(metadata.controllers && metadata.controllers.length === 1)) {
             throw new Error('Exactly one controller must be specified')
         }
 

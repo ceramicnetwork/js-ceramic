@@ -7,24 +7,16 @@ import { promises as fs } from 'fs'
 
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import CeramicClient from "@ceramicnetwork/http-client"
-import { CeramicApi, DoctypeUtils, IpfsApi } from "@ceramicnetwork/common"
+import { CeramicApi, DoctypeUtils } from "@ceramicnetwork/common"
 import DocID from '@ceramicnetwork/docid'
 
 import CeramicDaemon, { CreateOpts } from "./ceramic-daemon"
 
-import IPFS from "ipfs-core"
-
-import dagJose from 'dag-jose'
-// @ts-ignore
-import multiformats from 'multiformats/basics'
-// @ts-ignore
-import legacy from 'multiformats/legacy'
-import ipfsClient from "ipfs-http-client"
+import {buildIpfsConnection} from "./build-ipfs-connection.util";
 
 const DEFAULT_CLI_CONFIG_FILE = 'config.json'
 const DEFAULT_CLI_CONFIG_PATH = path.join(os.homedir(), '.ceramic')
-
-const IPFS_DHT_SERVER_MODE = process.env.IPFS_DHT_SERVER_MODE === 'true'
+const DEFAULT_NETWORK = 'testnet-clay'
 
 /**
  * CLI configuration
@@ -55,6 +47,7 @@ export class CeramicCliUtils {
      * @param logToFiles - Enable writing logs to files
      * @param logPath - Store log files in this directory
      * @param network - The Ceramic network to connect to
+     * @param pubsubTopic - Pub/sub topic to use for protocol messages.
      * @param maxHealthyCpu - Max fraction of total CPU usage considered healthy. Default is 0.7
      * @param maxHealthyMemory - Max fraction of total memory usage considered healthy. Default is 0.7
      * @param corsAllowedOrigins - Origins for Access-Control-Allow-Origin header. Default is all
@@ -71,7 +64,8 @@ export class CeramicCliUtils {
         debug: boolean,
         logToFiles: boolean,
         logPath: string,
-        network: string,
+        network = DEFAULT_NETWORK,
+        pubsubTopic: string,
         maxHealthyCpu = 0.7,
         maxHealthyMemory = 0.7,
         corsAllowedOrigins: string
@@ -93,40 +87,12 @@ export class CeramicCliUtils {
             logToFiles,
             logPath,
             network,
+            pubsubTopic,
             maxHealthyCpu,
             maxHealthyMemory,
-            corsAllowedOrigins: _corsAllowedOrigins
+            corsAllowedOrigins: _corsAllowedOrigins,
+            ipfs: await buildIpfsConnection(network, ipfsApi)
         }
-
-        multiformats.multicodec.add(dagJose)
-        const format = legacy(multiformats, dagJose.name)
-
-        let ipfs: IpfsApi
-        if (ipfsApi) {
-            ipfs = ipfsClient({ url: ipfsApi, ipld: { formats: [format] } })
-        } else {
-            ipfs = await IPFS.create({
-                ipld: {
-                    formats: [format]
-                },
-                libp2p: {
-                    config: {
-                        dht: {
-                            enabled: true,
-                            clientMode: !IPFS_DHT_SERVER_MODE,
-                            randomWalk: false,
-                        },
-                    },
-                },
-                config: {
-                    Routing: {
-                        Type: IPFS_DHT_SERVER_MODE ? 'dhtserver' : 'dhtclient',
-                    },
-                }
-            })
-        }
-
-        config.ipfs = ipfs
         return CeramicDaemon.create(config)
     }
 
@@ -453,9 +419,9 @@ export class CeramicCliUtils {
      * @param controllers - Input controllers
      * @private
      */
-    static _parseControllers(controllers: string): string[] {
+    static _parseControllers(controllers: string): string[] | undefined {
         if (controllers == null) {
-            return []
+            return undefined
         }
         return controllers.includes(',') ? controllers.split(',') : [controllers]
     }
