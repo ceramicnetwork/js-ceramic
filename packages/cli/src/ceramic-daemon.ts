@@ -23,6 +23,9 @@ export interface CreateOpts {
   corsAllowedOrigins: string | RegExp[];
 
   ethereumRpcUrl?: string;
+  infuraProjectId?: string;
+  infuraProjectSecret?: string;
+
   anchorServiceUrl?: string;
   stateStorePath?: string;
 
@@ -155,6 +158,14 @@ class CeramicDaemon {
             state: {blockedFiles: {}},
             options: {logPath: opts.logPath}
         }
+    }
+
+    if (opts.infuraProjectId) {
+      ceramicConfig.infuraProjectId = opts.infuraProjectId
+    }
+
+    if (opts.infuraProjectSecret) {
+      ceramicConfig.infuraProjectSecret = opts.infuraProjectSecret
     }
 
     const ceramic = await Ceramic.create(ipfs, ceramicConfig)

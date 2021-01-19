@@ -241,7 +241,9 @@ export default class EthereumAnchorService extends AnchorService {
             return new providers.JsonRpcProvider(this._config.ethereumRpcUrl)
         }
 
-        return providers.getDefaultProvider(ethNetwork.network)
+        const providerConfig = { infura: { projectId: this._config.infuraProjectId,
+                                           projectSecret: this._config.infuraProjectSecret} }
+        return providers.getDefaultProvider(ethNetwork.network, providerConfig)
     }
 
 }

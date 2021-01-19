@@ -73,6 +73,9 @@ export interface CeramicConfig {
 
   useCentralizedPeerDiscovery?: boolean;
 
+  infuraProjectId?: string;
+  infuraProjectSecret?: string;
+
   [index: string]: any; // allow arbitrary properties
 }
 
