@@ -52,6 +52,9 @@ export async function buildIpfsConnection(network: string, ipfsEndpoint?: string
                     Type: IPFS_DHT_SERVER_MODE ? 'dhtserver' : 'dhtclient',
                 },
                 Bootstrap: bootstrapList
+            },
+            preload: {
+                enabled: false
             }
         })
         await Promise.all(bootstrapList.map(async node => {
