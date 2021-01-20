@@ -4,28 +4,36 @@ import { PinningAggregation } from "@ceramicnetwork/pinning-aggregation";
 import { PinStore } from "./pin-store";
 import CID from 'cids'
 import path from "path";
+import os from "os";
+import { promises as fs } from 'fs'
 import { IpfsPinning } from '@ceramicnetwork/pinning-ipfs-backend'
 
+const DEFAULT_PINSET_DIRECTORY = path.join(os.homedir(), ".ceramic", "pinset")
+
 export type Props = {
-    stateStorePath?: string;
-    pinnings?: string[];
+    networkName?: string;
+    pinsetDirectory?: string;
+    pinningEndpoints?: string[];
     pinningBackends?: PinningBackendStatic[];
 }
 
 export class PinStoreFactory {
     readonly stateStorePath: string
-    readonly pinnings: string[]
+    readonly pinningEndpoints: string[]
     readonly pinningBackends: PinningBackendStatic[];
 
     constructor(readonly context: Context, props: Props) {
-        this.stateStorePath = props.stateStorePath || path.join(process.cwd(), '.pinning.store')
-        this.pinnings = props.pinnings && props.pinnings.length > 0 ? props.pinnings : ['ipfs+context']
+        const directoryRoot = props.pinsetDirectory || DEFAULT_PINSET_DIRECTORY
+        // Always store the pinning state in a network-specific directory
+        this.stateStorePath = path.join(directoryRoot, props.networkName)
+        this.pinningEndpoints = props.pinningEndpoints && props.pinningEndpoints.length > 0 ? props.pinningEndpoints : ['ipfs+context']
         this.pinningBackends = props.pinningBackends && props.pinningBackends.length > 0 ? props.pinningBackends : [IpfsPinning]
     }
 
     async open(): Promise<PinStore> {
+        await fs.mkdir(this.stateStorePath, { recursive: true }) // create dir if it doesn't exist
         const stateStore = new LevelStateStore(this.stateStorePath)
-        const pinning = PinningAggregation.build(this.context, this.pinnings, this.pinningBackends)
+        const pinning = PinningAggregation.build(this.context, this.pinningEndpoints, this.pinningBackends)
         const ipfs = this.context.ipfs
         const retrieve = async (cid: CID): Promise<any> => {
             const blob = await ipfs.dag.get(cid)

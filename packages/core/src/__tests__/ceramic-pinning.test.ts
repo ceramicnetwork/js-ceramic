@@ -39,9 +39,9 @@ async function delay(mills: number): Promise<void> {
   await new Promise(resolve => setTimeout(() => resolve(), mills))
 }
 
-const createCeramic = async (ipfs: IpfsApi, stateStorePath, anchorOnRequest = false): Promise<Ceramic> => {
+const createCeramic = async (ipfs: IpfsApi, pinsetDirectory, anchorOnRequest = false): Promise<Ceramic> => {
   const ceramic = await Ceramic.create(ipfs, {
-    stateStorePath,
+    pinsetDirectory,
     anchorOnRequest,
     pubsubTopic: "/ceramic/inmemory/test" // necessary so Ceramic instances can talk to each other
   })
@@ -110,23 +110,21 @@ describe('Ceramic document pinning', () => {
   })
 
   it('Document not pinned will not retain data on restart', async () => {
-    const stateStorePath = await tmp.tmpName()
-    let ceramic = await createCeramic(ipfs1, stateStorePath)
+    let ceramic = await createCeramic(ipfs1, tmpFolder.path)
     const doc1 = await createDoc(ceramic, ceramic.did.id, 'test')
     const content = { some: 'data' }
     await doc1.change({ content })
     expect(doc1.content).toEqual(content)
     await ceramic.close()
 
-    ceramic = await createCeramic(ipfs1, stateStorePath)
+    ceramic = await createCeramic(ipfs1, tmpFolder.path)
     const doc2 = await createDoc(ceramic, ceramic.did.id, 'test')
     expect(doc2.content).not.toEqual(content)
     await ceramic.close()
   })
 
   it('Document pinned will retain data on restart', async () => {
-    const stateStorePath = await tmp.tmpName()
-    let ceramic = await createCeramic(ipfs1, stateStorePath)
+    let ceramic = await createCeramic(ipfs1, tmpFolder.path)
     const doc1 = await createDoc(ceramic, ceramic.did.id, 'test')
     await ceramic.pin.add(doc1.id)
     const content = { some: 'data' }
@@ -134,15 +132,14 @@ describe('Ceramic document pinning', () => {
     expect(doc1.content).toEqual(content)
     await ceramic.close()
 
-    ceramic = await createCeramic(ipfs1, stateStorePath)
+    ceramic = await createCeramic(ipfs1, tmpFolder.path)
     const doc2 = await ceramic.loadDocument(doc1.id)
     expect(doc2.content).toEqual(content)
     await ceramic.close()
   })
 
   it('Document pinned will retain data on restart, load though create', async () => {
-    const stateStorePath = await tmp.tmpName()
-    let ceramic = await createCeramic(ipfs1, stateStorePath)
+    let ceramic = await createCeramic(ipfs1, tmpFolder.path)
     const doc1 = await createDoc(ceramic, ceramic.did.id, 'test')
     await ceramic.pin.add(doc1.id)
     const content = { some: 'data' }
@@ -150,7 +147,7 @@ describe('Ceramic document pinning', () => {
     expect(doc1.content).toEqual(content)
     await ceramic.close()
 
-    ceramic = await createCeramic(ipfs1, stateStorePath)
+    ceramic = await createCeramic(ipfs1, tmpFolder.path)
     const doc2 = await createDoc(ceramic, ceramic.did.id, 'test')
     expect(doc2.content).toEqual(content)
     await ceramic.close()

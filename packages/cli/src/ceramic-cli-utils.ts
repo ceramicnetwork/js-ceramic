@@ -15,7 +15,6 @@ import CeramicDaemon, { CreateOpts } from "./ceramic-daemon"
 import {buildIpfsConnection} from "./build-ipfs-connection.util";
 
 const DEFAULT_CLI_CONFIG_FILE = 'config.json'
-export const DEFAULT_PINNING_STORE_PATH = ".pinning.store"
 const DEFAULT_CLI_CONFIG_PATH = path.join(os.homedir(), '.ceramic')
 const DEFAULT_NETWORK = 'testnet-clay'
 
@@ -40,8 +39,8 @@ export class CeramicCliUtils {
      * @param ethereumRpc - Ethereum RPC URL
      * @param anchorServiceApi - Anchor service API URL
      * @param validateDocs - Validate docs according to schemas or not
-     * @param pinning - Pinning endpoint
-     * @param stateStorePath - State store path
+     * @param pinningEndpoints - Pinning endpoints
+     * @param pinsetDirectory - Path to the directory that will be used for storing pinned document state
      * @param gateway - read only endpoints available. It is disabled by default
      * @param port - port daemon is availabe. Default is 7007
      * @param debug - Enable debug logging level
@@ -58,8 +57,8 @@ export class CeramicCliUtils {
         ethereumRpc: string,
         anchorServiceApi: string,
         validateDocs: boolean,
-        pinning: string[],
-        stateStorePath: string,
+        pinningEndpoints: string[],
+        pinsetDirectory: string,
         gateway: boolean,
         port: number,
         debug: boolean,
@@ -71,10 +70,6 @@ export class CeramicCliUtils {
         maxHealthyMemory = 0.7,
         corsAllowedOrigins: string
     ): Promise<CeramicDaemon> {
-        if (stateStorePath == null) {
-            stateStorePath = DEFAULT_PINNING_STORE_PATH
-        }
-
         let _corsAllowedOrigins: string | RegExp[] = '*'
         if (corsAllowedOrigins != null && corsAllowedOrigins != '*') {
             _corsAllowedOrigins = corsAllowedOrigins.split(' ').map((origin) => new RegExp(origin))
@@ -83,9 +78,9 @@ export class CeramicCliUtils {
         const config: CreateOpts = {
             ethereumRpcUrl: ethereumRpc,
             anchorServiceUrl: anchorServiceApi,
-            stateStorePath,
+            pinsetDirectory,
             validateDocs,
-            pinning,
+            pinningEndpoints,
             gateway,
             port,
             debug,

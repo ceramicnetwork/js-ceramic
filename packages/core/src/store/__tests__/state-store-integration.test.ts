@@ -208,10 +208,11 @@ describe('Level data store', () => {
     doctypeHandler = new TileDoctypeHandler()
     doctypeHandler.verifyJWS = async (): Promise<void> => { return }
 
-    const levelPath = await tmp.tmpName()
+    const levelPath = (await tmp.dir({unsafeCleanup: true})).path
     const storeFactory = new PinStoreFactory(context, {
-      stateStorePath: levelPath,
-      pinnings: ['ipfs+context']
+      pinsetDirectory: levelPath,
+      pinningEndpoints: ['ipfs+context'],
+      networkName: 'inmemory',
     })
     store = await storeFactory.open()
   })
@@ -333,5 +334,40 @@ describe('Level data store', () => {
     }
     expect(pinned.length).toEqual(0)
     expect(dispatcher._ipfs.pin.ls).toHaveBeenCalledTimes(0)
+  })
+
+  it('pins in different networks', async () => {
+    // Create a document to test with
+    const genesis = await TileDoctype.makeGenesis({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, context)
+    const genesisCid = await dispatcher.storeCommit(genesis)
+    const docId = new DocID('tile', genesisCid)
+    const doc = await Document.create(docId, doctypeHandler, dispatcher, store, context)
+    await anchorUpdate(doc.doctype)
+
+    const levelPath = (await tmp.dir({unsafeCleanup: true})).path
+    const storeFactoryLocal = new PinStoreFactory(context, {
+      pinsetDirectory: levelPath,
+      pinningEndpoints: ['ipfs+context'],
+      networkName: "local",
+    })
+    const localStore = await storeFactoryLocal.open()
+
+    await localStore.stateStore.save(doc.doctype)
+    let docState = await localStore.stateStore.load(doc.id)
+    expect(docState).toBeDefined()
+
+    await localStore.close()
+
+    // Now create a net pin store for a different ceramic network
+    const storeFactoryInMemory = new PinStoreFactory(context, {
+      pinsetDirectory: levelPath,
+      pinningEndpoints: ['ipfs+context'],
+      networkName: "inmemory",
+    })
+    const inMemoryStore = await storeFactoryInMemory.open()
+
+    // The new pin store shouldn't be able to see docs that were pinned on the other network
+    docState = await inMemoryStore.stateStore.load(doc.id)
+    expect(docState).toBeNull()
   })
 })
