@@ -43,6 +43,8 @@ const ETH_CHAIN_ID_MAPPINGS: Record<string, EthNetwork> = {
     "eip155:3": { network: "ropsten", chain: "ETH", chainId: 3, networkId: 3, type: "Test" },
 }
 
+const BASE_CHAIN_ID = "eip155"
+
 /**
  * Ethereum anchor service that stores root CIDs on Ethereum blockchain
  */
@@ -73,6 +75,21 @@ export default class EthereumAnchorService extends AnchorService {
      */
     set ceramic(ceramic: CeramicApi) {
         this._ceramic = ceramic
+    }
+
+    async init(): Promise<void> {
+        // Get the chainIds supported by our anchor service
+        const anchor_service_chains = await this.getSupportedChains()
+
+        // Confirm that we have an eth provider that works for each of the chains that the anchor service supports
+        for (const chain of anchor_service_chains) {
+            const provider = this._getEthProvider(chain)
+            const provider_chain_idnum = (await provider.getNetwork()).chainId
+            const provider_chain = BASE_CHAIN_ID + ':' + provider_chain_idnum
+            if (chain != provider_chain) {
+                throw new Error(`Configured eth provider is for chainId ${provider_chain}, but our anchor service uses chain ${chain}`)
+            }
+        }
     }
 
     /**
@@ -235,10 +252,13 @@ export default class EthereumAnchorService extends AnchorService {
             throw new Error('Invalid chain ID according to CAIP-2')
         }
 
+        if (this._config.ethereumRpcUrl) {
+            return new providers.JsonRpcProvider(this._config.ethereumRpcUrl)
+        }
+
         const ethNetwork: EthNetwork = ETH_CHAIN_ID_MAPPINGS[chain]
         if (ethNetwork == null) {
-            // defaults to configuration Ethereum RPC URL
-            return new providers.JsonRpcProvider(this._config.ethereumRpcUrl)
+            throw new Error(`No ethereum provider available for chainId ${chain}`)
         }
 
         return providers.getDefaultProvider(ethNetwork.network)

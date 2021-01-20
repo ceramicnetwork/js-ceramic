@@ -54,6 +54,10 @@ class InMemoryAnchorService extends AnchorService {
     }
   }
 
+  async init(): Promise<void> {
+    return
+  }
+
   /**
    * @returns An array of the CAIP-2 chain IDs of the blockchains that are supported by this
    * anchor service
