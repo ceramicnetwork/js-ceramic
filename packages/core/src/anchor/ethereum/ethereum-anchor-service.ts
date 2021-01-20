@@ -54,6 +54,7 @@ export default class EthereumAnchorService extends AnchorService {
     private readonly cidToResMap: Map<CidDoc, AnchorServiceResponse>
     private readonly requestsApiEndpoint: string
     private readonly chainIdApiEndpoint: string
+    private _supportedChains: string[]
 
     /**
      * @param _config - service configuration (polling interval, etc.)
@@ -79,10 +80,12 @@ export default class EthereumAnchorService extends AnchorService {
 
     async init(): Promise<void> {
         // Get the chainIds supported by our anchor service
-        const anchor_service_chains = await this.getSupportedChains()
+        const response = await fetch(this.chainIdApiEndpoint)
+        const json = await response.json()
+        this._supportedChains = json.supportedChains
 
         // Confirm that we have an eth provider that works for each of the chains that the anchor service supports
-        for (const chain of anchor_service_chains) {
+        for (const chain of this._supportedChains) {
             const provider = this._getEthProvider(chain)
             const provider_chain_idnum = (await provider.getNetwork()).chainId
             const provider_chain = BASE_CHAIN_ID + ':' + provider_chain_idnum
@@ -110,9 +113,7 @@ export default class EthereumAnchorService extends AnchorService {
      * anchor service.
      */
     async getSupportedChains(): Promise<Array<string>> {
-        const response = await fetch(this.chainIdApiEndpoint)
-        const json = await response.json()
-        return json.supportedChains
+        return this._supportedChains
     }
 
     /**
@@ -250,6 +251,10 @@ export default class EthereumAnchorService extends AnchorService {
     private _getEthProvider(chain: string): providers.BaseProvider {
         if (!chain.startsWith('eip155')) {
             throw new Error('Invalid chain ID according to CAIP-2')
+        }
+
+        if (!this._supportedChains.includes(chain)) {
+            throw new Error(`Unsupported chainId ${chain}`)
         }
 
         if (this._config.ethereumRpcUrl) {
