@@ -40,7 +40,8 @@
     "@smontero/eosio-local-provider": "^0.0.3",
     "@zondax/filecoin-signing-tools": "^0.13.0",
     "eth-sig-util": "^3.0.0",
-    "ganache-core": "^2.13.1"
+    "ganache-core": "^2.13.1",
+    "@tendermint/sig": "^0.6.0"
   },
   "jest": {
     "testEnvironment": "jest-environment-uint8array",
