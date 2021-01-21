@@ -9,6 +9,7 @@
     "publish:release-candidate": "lerna publish --no-push --conventional-prerelease --dist-tag next --preid rc",
     "publish:latest": "lerna publish --allow-branch master --conventional-graduate --create-release github",
     "lint": "lerna run lint",
+    "clear-deps": "lerna exec 'rm -rf package-lock.json node_modules' ; rm -rf package-lock.json node_modules",
     "clean": "rm -rf ./lib"
   },
   "devDependencies": {
