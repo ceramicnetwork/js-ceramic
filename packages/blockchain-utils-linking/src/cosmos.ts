@@ -5,8 +5,6 @@ import { Tx, SignMeta } from '@tendermint/sig';
 import { hash } from '@stablelib/sha256';
 import * as uint8arrays from 'uint8arrays';
 
-const CHAIN_ID = "cosmos:cosmoshub-3";
-
 const stringEncode = (str: string): string => uint8arrays.toString(uint8arrays.fromString(str), 'base64pad');
 
 // return data in the cosmos unsigned transaction format
@@ -44,7 +42,8 @@ export class CosmosAuthProvider implements AuthProvider {
 
   constructor(
     private readonly provider: any, 
-    private readonly address: string) {}
+    private readonly address: string,
+    private readonly chainRef: string) {}
 
   async authenticate(message: string): Promise<string> {
     const accountID = await this.accountId();
@@ -73,11 +72,11 @@ export class CosmosAuthProvider implements AuthProvider {
   async accountId(): Promise<AccountID> {
     return new AccountID({
       address: this.address,
-      chainId: CHAIN_ID,
+      chainId: `cosmos:${this.chainRef}`,
     });
   }
 
   withAddress(address: string): AuthProvider {
-    return new CosmosAuthProvider(this.provider, address);
+    return new CosmosAuthProvider(this.provider, address, this.chainRef);
   }
 }

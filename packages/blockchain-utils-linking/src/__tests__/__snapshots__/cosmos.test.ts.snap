@@ -11,7 +11,6 @@ did:3:bafysdfwefwe
 Timestamp: 666",
   "signature": "eyJzaWduYXR1cmUiOiJUUFJqd0JIdCtMRDloQkFXZndMSVhPMnRnWWUwdnZlZjVqdTVlRGcrcEpSbkdIMkEyRzc3ZE1Ec0U3ekR0Z2RXZCsyTFFOQjM4NzROL2xzcXh2Mnk0UT09IiwicHViX2tleSI6eyJ0eXBlIjoidGVuZGVybWludC9QdWJLZXlTZWNwMjU2azEiLCJ2YWx1ZSI6IkE0MVhFTUx0TnhvbmhlU2FwNTg5Nzdkc0ZhSTh5VWt3NHdWSytiR3dPNElyIn19",
   "timestamp": 666,
-  "type": "cosmos",
   "version": 1,
 }
 `;
