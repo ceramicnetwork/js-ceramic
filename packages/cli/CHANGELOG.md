@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.20.2](/compare/@ceramicnetwork/cli@0.20.1...@ceramicnetwork/cli@0.20.2) (2021-01-21)
+
+
+### Bug Fixes
+
+* **cli:** Fix caeramic daemon test to use proper arg name for pinsetDirectory (#836) c33dd2a, closes #836
+
+
+
+
+
 ## [0.20.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@0.20.0...@ceramicnetwork/cli@0.20.1) (2021-01-21)
 
 

@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/pinning-powergate-backend",
-  "version": "0.1.12",
+  "version": "0.1.13",
   "description": "Powergate Pinning backend",
   "keywords": [
     "ceramic",
@@ -27,7 +27,7 @@
     "lib": "lib"
   },
   "dependencies": {
-    "@ceramicnetwork/common": "^0.15.7",
+    "@ceramicnetwork/common": "^0.15.8",
     "@stablelib/base64": "^1.0.0",
     "@stablelib/sha256": "^1.0.0",
     "@textile/powergate-client": "^2.0.1",

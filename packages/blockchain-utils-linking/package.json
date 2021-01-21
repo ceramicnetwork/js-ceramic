@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/blockchain-utils-linking",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Blockchain utils for linking blockchain accounts to DID",
   "keywords": [
     "ceramic",
@@ -38,10 +38,10 @@
     "@polkadot/util": "^5.0.1",
     "@polkadot/util-crypto": "^5.2.3",
     "@smontero/eosio-local-provider": "^0.0.3",
+    "@tendermint/sig": "^0.6.0",
     "@zondax/filecoin-signing-tools": "^0.13.0",
     "eth-sig-util": "^3.0.0",
-    "ganache-core": "^2.13.1",
-    "@tendermint/sig": "^0.6.0"
+    "ganache-core": "^2.13.1"
   },
   "jest": {
     "testEnvironment": "jest-environment-uint8array",

@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.19.2](/compare/@ceramicnetwork/core@0.19.1...@ceramicnetwork/core@0.19.2) (2021-01-21)
+
+
+### Bug Fixes
+
+* **core:** Honor ethereumRpcUrl config option (#830) a440b59, closes #830
+
+
+
+
+
 ## [0.19.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@0.19.0...@ceramicnetwork/core@0.19.1) (2021-01-21)
 
 

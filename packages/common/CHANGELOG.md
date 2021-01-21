@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.15.8](/compare/@ceramicnetwork/common@0.15.7...@ceramicnetwork/common@0.15.8) (2021-01-21)
+
+
+### Bug Fixes
+
+* **core:** Honor ethereumRpcUrl config option (#830) a440b59, closes #830
+
+
+
+
+
 ## [0.15.7](/compare/@ceramicnetwork/common@0.15.6...@ceramicnetwork/common@0.15.7) (2021-01-13)
 
 **Note:** Version bump only for package @ceramicnetwork/common
