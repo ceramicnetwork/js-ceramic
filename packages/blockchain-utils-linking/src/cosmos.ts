@@ -8,7 +8,7 @@ import * as uint8arrays from 'uint8arrays';
 const stringEncode = (str: string): string => uint8arrays.toString(uint8arrays.fromString(str), 'base64pad');
 
 // return data in the cosmos unsigned transaction format
-function asTransaction(address: string, message: string): Tx {
+export function asTransaction(address: string, message: string): Tx {
   return {
     fee: {
       amount: [{ amount: '0', denom: '' }],
@@ -29,7 +29,7 @@ function asTransaction(address: string, message: string): Tx {
 }
 
 // generate metadata for signing the transaction
-function getMetaData(): SignMeta {
+export function getMetaData(): SignMeta {
   return {
     account_number: '1',
     chain_id: 'cosmos',
