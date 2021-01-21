@@ -84,7 +84,7 @@ export default class EthereumAnchorService extends AnchorService {
         const json = await response.json()
         this._supportedChains = json.supportedChains
         if (this._supportedChains.length > 1) {
-            throw new Error("Anchor service returned multiple supported chains, which isn't supported yet")
+            throw new Error("Anchor service returned multiple supported chains, which isn't supported by js-ceramic yet")
         }
 
         // Confirm that we have an eth provider that works for each of the chains that the anchor service supports
