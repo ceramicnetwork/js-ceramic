@@ -83,6 +83,9 @@ export default class EthereumAnchorService extends AnchorService {
         const response = await fetch(this.chainIdApiEndpoint)
         const json = await response.json()
         this._supportedChains = json.supportedChains
+        if (this._supportedChains.length > 1) {
+            throw new Error("Anchor service returned multiple supported chains, which isn't supported yet")
+        }
 
         // Confirm that we have an eth provider that works for each of the chains that the anchor service supports
         for (const chain of this._supportedChains) {
