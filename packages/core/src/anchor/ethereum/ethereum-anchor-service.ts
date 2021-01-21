@@ -133,6 +133,7 @@ export default class EthereumAnchorService extends AnchorService {
 
         if (!response.ok) {
             this.emit(cidDocPair.docId, {
+                cid: cidDocPair.cid,
                 status: 'FAILED',
                 message: `Failed to send request. Status ${response.statusText}`
             })
@@ -140,7 +141,7 @@ export default class EthereumAnchorService extends AnchorService {
         }
         const json = await response.json()
 
-        const res = { status: json.status, message: json.message, anchorScheduledFor: json.scheduledAt }
+        const res = { cid: cidDocPair.cid, status: json.status, message: json.message, anchorScheduledFor: json.scheduledAt }
         this.cidToResMap.set(cidDocPair, res)
         this.emit(cidDocPair.docId, res)
     }
@@ -159,7 +160,7 @@ export default class EthereumAnchorService extends AnchorService {
         let poll = true
         while (poll) {
             if (started > maxTime) {
-                const failedRes = { status: 'FAILED', message: 'exceeded max timeout' }
+                const failedRes = { cid: cidDoc.cid, status: 'FAILED', message: 'exceeded max timeout' }
                 this.cidToResMap.set(cidDoc, failedRes)
 
                 this.emit(cidDoc.docId, failedRes)
@@ -176,7 +177,7 @@ export default class EthereumAnchorService extends AnchorService {
                     // the anchor request does not exist, fail and stop polling
                     // TODO
                     this.emit(cidDoc.docId, {
-                        status: AnchorStatus[AnchorStatus.FAILED], message: 'Request not found.'
+                        cid: cidDoc.cid, status: AnchorStatus[AnchorStatus.FAILED], message: 'Request not found.'
                     })
                     poll = false
                     break
@@ -189,11 +190,11 @@ export default class EthereumAnchorService extends AnchorService {
                         break
                     }
                     case "PROCESSING": {
-                        this.emit(cidDoc.docId, { status: json.status, message: json.message })
+                        this.emit(cidDoc.docId, { cid: cidDoc.cid, status: json.status, message: json.message })
                         break
                     }
                     case "FAILED": {
-                        this.emit(cidDoc.docId, { status: json.status, message: json.message })
+                        this.emit(cidDoc.docId, { cid: cidDoc.cid, status: json.status, message: json.message })
                         poll = false
                         break
                     }
@@ -202,7 +203,7 @@ export default class EthereumAnchorService extends AnchorService {
                         const anchorRecordCid = new CID(anchorRecord.cid.toString())
 
                         this.emit(cidDoc.docId, {
-                            status: json.status, message: json.message, anchorRecord: anchorRecordCid
+                            cid: cidDoc.cid, status: json.status, message: json.message, anchorRecord: anchorRecordCid
                         })
                         poll = false
                         break

@@ -93,7 +93,10 @@ jest.mock('../dispatcher', () => {
   }
 })
 
-const anchorUpdate = (doc: Document): Promise<void> => new Promise(resolve => doc.doctype.on('change', resolve))
+const anchorUpdate = async (anchorService: InMemoryAnchorService, doc: Document): Promise<void> => {
+  await anchorService.anchor()
+  return new Promise(resolve => doc.doctype.on('change', resolve))
+}
 
 const create = async (params: TileParams, ceramic: Ceramic, context: Context, opts: DocOpts = {}): Promise<Document> => {
   const { content, metadata } = params
@@ -139,7 +142,7 @@ describe('Document', () => {
     let user: DID
     let dispatcher: any;
     let doctypeHandler: TileDoctypeHandler;
-    let anchorService: AnchorService;
+    let anchorService: InMemoryAnchorService;
     let ceramic: Ceramic;
     let ceramicWithoutSchemaValidation: Ceramic;
     let context: Context;
@@ -150,7 +153,7 @@ describe('Document', () => {
       // performed yet by the time the test checks.  To eliminate this race condition we should set
       // anchorOnRequest to false in the config for the InMemoryAnchorService and anchor manually
       // throughout the tests.
-      anchorService = new InMemoryAnchorService({})
+      anchorService = new InMemoryAnchorService({anchorOnRequest:false, verifySignatures: false})
       user = new DID()
       user.createJWS = jest.fn(async () => {
         // fake jws
@@ -188,6 +191,7 @@ describe('Document', () => {
           resolver,
         },
         dispatcher,
+        ipfs: dispatcher._ipfs
       }
 
       const networkOptions = {
@@ -209,7 +213,7 @@ describe('Document', () => {
       expect(doc.content).toEqual(initialContent)
       expect(dispatcher.register).toHaveBeenCalledWith(doc)
       expect(doc.state.anchorStatus).toEqual(AnchorStatus.PENDING)
-      await anchorUpdate(doc)
+      await anchorUpdate(anchorService, doc)
       expect(doc.state.anchorStatus).not.toEqual(AnchorStatus.NOT_REQUESTED)
     })
 
@@ -224,7 +228,7 @@ describe('Document', () => {
 
     it('handles new tip correctly', async () => {
       const tmpDoc = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context)
-      await anchorUpdate(tmpDoc)
+      await anchorUpdate(anchorService, tmpDoc)
       const docId = tmpDoc.id
       const log = tmpDoc.state.log
       const doc = await Document.load(docId, doctypeHandler, dispatcher, pinStore, context, { sync: false })
@@ -250,7 +254,7 @@ describe('Document', () => {
       expect(commit0).toEqual(DocID.fromOther(doc.id, doc.id.cid))
       expect(anchorCommits.length).toEqual(0)
 
-      await anchorUpdate(doc)
+      await anchorUpdate(anchorService, doc)
 
       commits = doc.allCommitIds
       anchorCommits = doc.anchorCommitIds
@@ -278,7 +282,7 @@ describe('Document', () => {
       expect(commit2).not.toEqual(commit1)
       expect(commit2).toEqual(commits[2])
 
-      await anchorUpdate(doc)
+      await anchorUpdate(anchorService, doc)
 
       commits = doc.allCommitIds
       anchorCommits = doc.anchorCommitIds
@@ -364,12 +368,12 @@ describe('Document', () => {
 
     it('is updated correctly', async () => {
       const doc = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context)
-      await anchorUpdate(doc)
+      await anchorUpdate(anchorService, doc)
 
       const updateRec = await TileDoctype._makeCommit(doc.doctype, user, newContent, doc.controllers)
       await doc.applyCommit(updateRec)
 
-      await anchorUpdate(doc)
+      await anchorUpdate(anchorService, doc)
       expect(doc.content).toEqual(newContent)
       expect(doc.state.signature).toEqual(SignatureStatus.SIGNED)
       expect(doc.state.anchorStatus).not.toEqual(AnchorStatus.NOT_REQUESTED)
@@ -378,13 +382,13 @@ describe('Document', () => {
     it('handles basic conflict', async () => {
       const doc1 = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context)
       const docId = doc1.id
-      await anchorUpdate(doc1)
+      await anchorUpdate(anchorService, doc1)
       const tipPreUpdate = doc1.tip
 
       let updateRec = await TileDoctype._makeCommit(doc1.doctype, user, newContent, doc1.controllers)
       await doc1.applyCommit(updateRec)
 
-      await anchorUpdate(doc1)
+      await anchorUpdate(anchorService, doc1)
       expect(doc1.content).toEqual(newContent)
       const tipValidUpdate = doc1.tip
       // create invalid change that happened after main change
@@ -399,7 +403,7 @@ describe('Document', () => {
       updateRec = await TileDoctype._makeCommit(doc2.doctype, user, conflictingNewContent, doc2.controllers)
       await doc2.applyCommit(updateRec)
 
-      await anchorUpdate(doc2)
+      await anchorUpdate(anchorService, doc2)
       const tipInvalidUpdate = doc2.tip
       expect(doc2.content).toEqual(conflictingNewContent)
       // loading tip from valid log to doc with invalid
@@ -422,9 +426,22 @@ describe('Document', () => {
       )
     })
 
+    it('handles consecutive anchors', async () => {
+      const doc = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context)
+
+      const updateRec = await TileDoctype._makeCommit(doc.doctype, user, newContent, doc.controllers)
+      await doc.applyCommit(updateRec)
+
+      await anchorUpdate(anchorService, doc)
+      expect(doc.content).toEqual(newContent)
+      expect(doc.state.log).toHaveLength(3)
+      expect(doc.state.signature).toEqual(SignatureStatus.SIGNED)
+      expect(doc.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+    })
+
     it('Enforces schema at document creation', async () => {
       const schemaDoc = await create({ content: stringMapSchema, metadata: { controllers } }, ceramic, context)
-      await anchorUpdate(schemaDoc)
+      await anchorUpdate(anchorService, schemaDoc)
 
       try {
         const docParams = {
@@ -440,14 +457,14 @@ describe('Document', () => {
 
     it('Enforces schema in update that assigns schema', async () => {
       const schemaDoc = await create({ content: stringMapSchema, metadata: { controllers } }, ceramic, context)
-      await anchorUpdate(schemaDoc)
+      await anchorUpdate(anchorService, schemaDoc)
 
       const docParams = {
         content: {stuff: 1},
         metadata: {controllers}
       }
       const doc = await create(docParams, ceramic, context)
-      await anchorUpdate(doc)
+      await anchorUpdate(anchorService, doc)
 
       try {
         const updateRec = await TileDoctype._makeCommit(doc.doctype, user, null, doc.controllers, schemaDoc.commitId.toString())
@@ -460,7 +477,7 @@ describe('Document', () => {
 
     it('Enforces previously assigned schema during future update', async () => {
       const schemaDoc = await create({ content: stringMapSchema, metadata: { controllers } }, ceramic, context)
-      await anchorUpdate(schemaDoc)
+      await anchorUpdate(anchorService, schemaDoc)
 
       const conformingContent = {stuff: 'foo'}
       const nonConformingContent = {stuff: 1}
@@ -469,7 +486,7 @@ describe('Document', () => {
         metadata: {controllers, schema: schemaDoc.commitId.toString()}
       }
       const doc = await create(docParams, ceramic, context)
-      await anchorUpdate(doc)
+      await anchorUpdate(anchorService, doc)
 
       try {
         const updateRec = await TileDoctype._makeCommit(doc.doctype, user, nonConformingContent, doc.controllers)
@@ -482,7 +499,7 @@ describe('Document', () => {
 
     it('Enforces schema when loading genesis record', async () => {
       const schemaDoc = await create({ content: stringMapSchema, metadata: { controllers } }, ceramic, context)
-      await anchorUpdate(schemaDoc)
+      await anchorUpdate(anchorService, schemaDoc)
 
       const docParams = {
         content: {stuff: 1},
@@ -490,7 +507,7 @@ describe('Document', () => {
       }
       // Create a document that isn't conforming to the schema
       const doc = await create(docParams, ceramicWithoutSchemaValidation, context)
-      await anchorUpdate(doc)
+      await anchorUpdate(anchorService, doc)
 
       expect(doc.content).toEqual({stuff:1})
       expect(doc.metadata.schema).toEqual(schemaDoc.commitId.toString())
@@ -749,7 +766,7 @@ describe('Document', () => {
       const doc1 = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context)
       expect(dispatcher.publishTip).toHaveBeenCalledTimes(1)
       expect(dispatcher.publishTip).toHaveBeenCalledWith(doc1.id, doc1.tip)
-      await anchorUpdate(doc1)
+      await anchorUpdate(anchorService, doc1)
 
       const updateRec = await TileDoctype._makeCommit(doc1.doctype, user, newContent, doc1.controllers)
       await doc1.applyCommit(updateRec)
@@ -762,7 +779,7 @@ describe('Document', () => {
 
     it('documents share updates', async () => {
       const doc1 = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context)
-      await anchorUpdate(doc1)
+      await anchorUpdate(anchorService, doc1)
       const doc2 = await Document.load(doc1.id, doctypeHandler, dispatcher, pinStore, context, { sync: false })
 
       const updatePromise = new Promise(resolve => {
