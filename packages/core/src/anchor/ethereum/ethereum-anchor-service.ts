@@ -43,6 +43,8 @@ const ETH_CHAIN_ID_MAPPINGS: Record<string, EthNetwork> = {
     "eip155:3": { network: "ropsten", chain: "ETH", chainId: 3, networkId: 3, type: "Test" },
 }
 
+const BASE_CHAIN_ID = "eip155"
+
 /**
  * Ethereum anchor service that stores root CIDs on Ethereum blockchain
  */
@@ -52,6 +54,7 @@ export default class EthereumAnchorService extends AnchorService {
     private readonly cidToResMap: Map<CidDoc, AnchorServiceResponse>
     private readonly requestsApiEndpoint: string
     private readonly chainIdApiEndpoint: string
+    private _chainId: string
 
     /**
      * @param _config - service configuration (polling interval, etc.)
@@ -75,6 +78,24 @@ export default class EthereumAnchorService extends AnchorService {
         this._ceramic = ceramic
     }
 
+    async init(): Promise<void> {
+        // Get the chainIds supported by our anchor service
+        const response = await fetch(this.chainIdApiEndpoint)
+        const json = await response.json()
+        if (json.supportedChains.length > 1) {
+            throw new Error("Anchor service returned multiple supported chains, which isn't supported by js-ceramic yet")
+        }
+        this._chainId = json.supportedChains[0]
+
+        // Confirm that we have an eth provider that works for the same chain that the anchor service supports
+        const provider = this._getEthProvider(this._chainId)
+        const provider_chain_idnum = (await provider.getNetwork()).chainId
+        const provider_chain = BASE_CHAIN_ID + ':' + provider_chain_idnum
+        if (this._chainId != provider_chain) {
+            throw new Error(`Configured eth provider is for chainId ${provider_chain}, but our anchor service uses chain ${this._chainId}`)
+        }
+    }
+
     /**
      * Requests anchoring service for current tip of the document
      * @param docId - Document ID
@@ -93,9 +114,7 @@ export default class EthereumAnchorService extends AnchorService {
      * anchor service.
      */
     async getSupportedChains(): Promise<Array<string>> {
-        const response = await fetch(this.chainIdApiEndpoint)
-        const json = await response.json()
-        return json.supportedChains
+        return [this._chainId]
     }
 
     /**
@@ -232,13 +251,20 @@ export default class EthereumAnchorService extends AnchorService {
      */
     private _getEthProvider(chain: string): providers.BaseProvider {
         if (!chain.startsWith('eip155')) {
-            throw new Error('Invalid chain ID according to CAIP-2')
+            throw new Error(`Unsupported chainId '${chain}' - must be eip155 namespace`)
+        }
+
+        if (this._chainId != chain) {
+            throw new Error(`Unsupported chainId '${chain}'. Configured anchor service only supports '${this._chainId}'`)
+        }
+
+        if (this._config.ethereumRpcUrl) {
+            return new providers.JsonRpcProvider(this._config.ethereumRpcUrl)
         }
 
         const ethNetwork: EthNetwork = ETH_CHAIN_ID_MAPPINGS[chain]
         if (ethNetwork == null) {
-            // defaults to configuration Ethereum RPC URL
-            return new providers.JsonRpcProvider(this._config.ethereumRpcUrl)
+            throw new Error(`No ethereum provider available for chainId ${chain}`)
         }
 
         return providers.getDefaultProvider(ethNetwork.network)

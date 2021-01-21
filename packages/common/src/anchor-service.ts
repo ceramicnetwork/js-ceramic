@@ -10,6 +10,11 @@ import { CeramicApi } from "./ceramic-api"
 export abstract class AnchorService extends EventEmitter {
 
     /**
+     * Performs whatever initialization work is required by the specific anchor service implementation
+     */
+    abstract init(): Promise<void>;
+
+    /**
      * Set Ceramic API instance
      *
      * @param ceramic - Ceramic API used for various purposes

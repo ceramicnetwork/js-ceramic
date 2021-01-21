@@ -276,6 +276,7 @@ class Ceramic implements CeramicApi {
     }
 
     const anchorService = config.anchorServiceUrl ? new EthereumAnchorService(config) : new InMemoryAnchorService(config)
+    await anchorService.init()
     const context: Context = {
       ipfs,
       anchorService,
