@@ -62,7 +62,6 @@ export class CosmosAuthProvider implements AuthProvider {
     const signature = stringEncode(JSON.stringify(res.signatures[0]));
     const proof: LinkProof = {
       version: 1,
-      type: 'cosmos',
       message,
       signature,
       account: accountID.toString(),
