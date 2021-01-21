@@ -3,6 +3,7 @@ import ethereum from "./blockchains/ethereum";
 import filecoin from "./blockchains/filecoin";
 import polkadot from "./blockchains/polkadot";
 import eosio from "./blockchains/eosio";
+import cosmos from "./blockchains/cosmos";
 import { AccountID } from "caip";
 
 const handlers = {
@@ -10,6 +11,7 @@ const handlers = {
   [filecoin.namespace]: filecoin,
   [polkadot.namespace]: polkadot,
   [eosio.namespace]: eosio,
+  [cosmos.namespace]: cosmos,
 };
 
 const findDID = (did: string): string | undefined => did.match(/(did:[a-zA-Z0-9]+:[a-zA-Z0-9]+)/)?.[0]

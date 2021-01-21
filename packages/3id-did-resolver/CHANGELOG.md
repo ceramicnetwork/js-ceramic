@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.6.8](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/3id-did-resolver@0.6.7...@ceramicnetwork/3id-did-resolver@0.6.8) (2021-01-21)
+
+
+### Bug Fixes
+
+* add cache to 3idv0 resolver ([#779](https://github.com/ceramicnetwork/js-ceramic/issues/779)) ([fc0ca8c](https://github.com/ceramicnetwork/js-ceramic/commit/fc0ca8cc7cc277285bd88e95994a77f8a645a821))
+
+
+
+
+
 ## [0.6.7](/compare/@ceramicnetwork/3id-did-resolver@0.6.6...@ceramicnetwork/3id-did-resolver@0.6.7) (2021-01-13)
 
 **Note:** Version bump only for package @ceramicnetwork/3id-did-resolver

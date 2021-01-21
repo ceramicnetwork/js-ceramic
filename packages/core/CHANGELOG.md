@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.19.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@0.19.0...@ceramicnetwork/core@0.19.1) (2021-01-21)
+
+
+### Bug Fixes
+
+* **core:** Encode network name into pin store directory name ([#775](https://github.com/ceramicnetwork/js-ceramic/issues/775)) ([2572f28](https://github.com/ceramicnetwork/js-ceramic/commit/2572f286baeb8ba41f7349b93d1399f432b420c8))
+
+
+
+
+
 # [0.19.0](/compare/@ceramicnetwork/core@0.18.3...@ceramicnetwork/core@0.19.0) (2021-01-18)
 
 

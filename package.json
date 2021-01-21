@@ -9,6 +9,7 @@
     "publish:release-candidate": "lerna publish --no-push --conventional-prerelease --dist-tag next --preid rc",
     "publish:latest": "lerna publish --allow-branch master --conventional-graduate --create-release github",
     "lint": "lerna run lint",
+    "clear-deps": "lerna exec 'rm -rf package-lock.json node_modules' ; rm -rf package-lock.json node_modules",
     "clean": "rm -rf ./lib"
   },
   "devDependencies": {
@@ -26,6 +27,7 @@
     "@typescript-eslint/eslint-plugin": "^4.6.0",
     "@typescript-eslint/parser": "^4.6.0",
     "eslint": "^6.8.0",
-    "eslint-plugin-jest": "^23.8.2"
+    "eslint-plugin-jest": "^23.8.2",
+    "jest-environment-uint8array": "^1.0.0"
   }
 }
