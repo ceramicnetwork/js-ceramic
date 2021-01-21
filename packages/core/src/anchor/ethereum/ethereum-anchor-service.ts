@@ -251,11 +251,11 @@ export default class EthereumAnchorService extends AnchorService {
      */
     private _getEthProvider(chain: string): providers.BaseProvider {
         if (!chain.startsWith('eip155')) {
-            throw new Error('Unsupported chainId - must be eip155 namespace')
+            throw new Error(`Unsupported chainId '${chain}' - must be eip155 namespace`)
         }
 
         if (this._chainId != chain) {
-            throw new Error(`Unsupported chainId ${chain}`)
+            throw new Error(`Unsupported chainId '${chain}'. Configured anchor service only supports '${this._chainId}'`)
         }
 
         if (this._config.ethereumRpcUrl) {
