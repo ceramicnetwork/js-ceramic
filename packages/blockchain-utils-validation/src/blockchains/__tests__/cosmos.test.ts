@@ -5,6 +5,7 @@ import * as linking from "@ceramicnetwork/blockchain-utils-linking";
 const did = 'did:3:bafysdfwefwe';
 const mnemonic = 'test salon husband push melody usage fine ensure blade deal miss twin';
 const local_provider = createWalletFromMnemonic(mnemonic);
+const chainRef = 'cosmoshub-3';
 
 class CosmosMockSigner {
   readonly provider: Wallet;
@@ -27,7 +28,8 @@ describe('Blockchain: Cosmos', () => {
       const provider = new CosmosMockSigner(local_provider);
       const authProvider = new linking.cosmos.CosmosAuthProvider(
         provider,
-        local_provider.address
+        local_provider.address,
+        chainRef
       );
       const proof = await authProvider.createLink(did);
       await expect(validateLink(proof)).resolves.toEqual(proof);

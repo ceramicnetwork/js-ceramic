@@ -40,8 +40,8 @@ function getMetaData(): SignMeta {
 }
 
 export async function validateLink(
-  proof: linking.LinkProof
-): Promise<linking.LinkProof | null> {
+  proof: LinkProof
+): Promise<LinkProof | null> {
     const account = new AccountID(proof.account);
     const encodedMsg = stringEncode(proof.message);
     const payload = asTransaction(account.address, encodedMsg);
