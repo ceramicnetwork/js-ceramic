@@ -1,7 +1,7 @@
 import { AccountID } from "caip";
 import { Tx, SignMeta, verifyTx } from '@tendermint/sig';
 import { BlockchainHandler } from "../blockchain-handler";
-import * as linking from "@ceramicnetwork/blockchain-utils-linking";
+import type { LinkProof } from "@ceramicnetwork/blockchain-utils-linking";
 import * as uint8arrays from "uint8arrays";
 
 const namespace = "cosmos";
