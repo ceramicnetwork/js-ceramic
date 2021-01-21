@@ -19,7 +19,8 @@ import {
   DocMetadata,
   RootLogger,
   Logger,
-  DocStateHolder, CommitType,
+  DocStateHolder,
+  CommitType,
 } from '@ceramicnetwork/common'
 import DocID from '@ceramicnetwork/docid'
 import { PinStore } from './store/pin-store';
@@ -587,7 +588,7 @@ class Document extends EventEmitter implements DocStateHolder {
   async _isCidAnchored(cid: CID): Promise<boolean> {
     let foundCid = false
     for (const entry of this.state.log) {
-      if (entry.cid == cid) {
+      if (entry.cid.equals(cid)) {
         foundCid = true
       }
 
@@ -607,7 +608,7 @@ class Document extends EventEmitter implements DocStateHolder {
     const tip: CID = this.tip
 
     this._context.anchorService.on(this.id.toString(), async function listener (asr: AnchorServiceResponse) {
-      if (asr.cid.toString() != tip.toString()) { // todo don't use toString
+      if (!asr.cid.equals(tip)) {
         // This message is about a different tip for the same document
         return
       }
