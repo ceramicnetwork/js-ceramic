@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.20.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@0.20.0...@ceramicnetwork/cli@0.20.1) (2021-01-21)
+
+
+### Bug Fixes
+
+* **cli:** update bootstrap peer list ([#834](https://github.com/ceramicnetwork/js-ceramic/issues/834)) ([ca2e108](https://github.com/ceramicnetwork/js-ceramic/commit/ca2e108d5fdc886707a76291860e5d479c37a30d))
+* **core:** Encode network name into pin store directory name ([#775](https://github.com/ceramicnetwork/js-ceramic/issues/775)) ([2572f28](https://github.com/ceramicnetwork/js-ceramic/commit/2572f286baeb8ba41f7349b93d1399f432b420c8))
+
+
+
+
+
 # [0.20.0](/compare/@ceramicnetwork/cli@0.19.3...@ceramicnetwork/cli@0.20.0) (2021-01-18)
 
 
