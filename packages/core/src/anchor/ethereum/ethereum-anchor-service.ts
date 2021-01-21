@@ -54,7 +54,7 @@ export default class EthereumAnchorService extends AnchorService {
     private readonly cidToResMap: Map<CidDoc, AnchorServiceResponse>
     private readonly requestsApiEndpoint: string
     private readonly chainIdApiEndpoint: string
-    private _supportedChains: string[]
+    private _chainId: string
 
     /**
      * @param _config - service configuration (polling interval, etc.)
@@ -82,19 +82,17 @@ export default class EthereumAnchorService extends AnchorService {
         // Get the chainIds supported by our anchor service
         const response = await fetch(this.chainIdApiEndpoint)
         const json = await response.json()
-        this._supportedChains = json.supportedChains
-        if (this._supportedChains.length > 1) {
+        if (json.supportedChains.length > 1) {
             throw new Error("Anchor service returned multiple supported chains, which isn't supported by js-ceramic yet")
         }
+        this._chainId = json.supportedChains[0]
 
-        // Confirm that we have an eth provider that works for each of the chains that the anchor service supports
-        for (const chain of this._supportedChains) {
-            const provider = this._getEthProvider(chain)
-            const provider_chain_idnum = (await provider.getNetwork()).chainId
-            const provider_chain = BASE_CHAIN_ID + ':' + provider_chain_idnum
-            if (chain != provider_chain) {
-                throw new Error(`Configured eth provider is for chainId ${provider_chain}, but our anchor service uses chain ${chain}`)
-            }
+        // Confirm that we have an eth provider that works for the same chain that the anchor service supports
+        const provider = this._getEthProvider(this._chainId)
+        const provider_chain_idnum = (await provider.getNetwork()).chainId
+        const provider_chain = BASE_CHAIN_ID + ':' + provider_chain_idnum
+        if (this._chainId != provider_chain) {
+            throw new Error(`Configured eth provider is for chainId ${provider_chain}, but our anchor service uses chain ${this._chainId}`)
         }
     }
 
@@ -116,7 +114,7 @@ export default class EthereumAnchorService extends AnchorService {
      * anchor service.
      */
     async getSupportedChains(): Promise<Array<string>> {
-        return this._supportedChains
+        return [this._chainId]
     }
 
     /**
@@ -256,7 +254,7 @@ export default class EthereumAnchorService extends AnchorService {
             throw new Error('Unsupported chainId - must be eip155 namespace')
         }
 
-        if (!this._supportedChains.includes(chain)) {
+        if (this._chainId != chain) {
             throw new Error(`Unsupported chainId ${chain}`)
         }
 
