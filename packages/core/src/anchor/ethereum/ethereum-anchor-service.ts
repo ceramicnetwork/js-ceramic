@@ -253,7 +253,7 @@ export default class EthereumAnchorService extends AnchorService {
      */
     private _getEthProvider(chain: string): providers.BaseProvider {
         if (!chain.startsWith('eip155')) {
-            throw new Error('Invalid chain ID according to CAIP-2')
+            throw new Error('Unsupported chainId - must be eip155 namespace')
         }
 
         if (!this._supportedChains.includes(chain)) {
