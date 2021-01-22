@@ -18,10 +18,9 @@ class Candidate {
 
   public readonly log: CID[]
 
-  constructor(cid: CID, docId?: string, did?: string, log?: CID[]) {
+  constructor(cid: CID, docId?: string, log?: CID[]) {
     this.cid = cid
     this.docId = docId
-    this.did = did
     this.log = log
   }
 
@@ -31,6 +30,12 @@ class Candidate {
 
 }
 
+interface InMemoryAnchorConfig {
+  anchorDelay?: number;
+  anchorOnRequest?: boolean;
+  verifySignatures?: boolean;
+}
+
 /**
  * In-memory anchor service - used locally, not meant to be used in production code
  */
@@ -38,20 +43,20 @@ class InMemoryAnchorService extends AnchorService {
   private _ceramic: Ceramic
   private _dispatcher: Dispatcher
 
-  private readonly _anchorDelay = 0
-  private readonly _anchorOnRequest = true
+  private readonly _anchorDelay: number
+  private readonly _anchorOnRequest: boolean
+  private readonly _verifySignatures: boolean
 
   private _queue: Candidate[] = []
 
   private SAMPLE_ETH_TX_HASH = 'bagjqcgzaday6dzalvmy5ady2m5a5legq5zrbsnlxfc2bfxej532ds7htpova'
 
-  constructor (private _config: CeramicConfig) {
+  constructor (private _config: InMemoryAnchorConfig) {
     super()
 
-    if (this._config) {
-      this._anchorDelay = _config.anchorDelay ? _config.anchorDelay : 0
-      this._anchorOnRequest = 'anchorOnRequest' in _config ? _config.anchorOnRequest : true
-    }
+    this._anchorDelay = _config?.anchorDelay ?? 0
+    this._anchorOnRequest = _config?.anchorOnRequest ?? true
+    this._verifySignatures = _config?.verifySignatures ?? true
   }
 
   async init(): Promise<void> {
@@ -70,63 +75,95 @@ class InMemoryAnchorService extends AnchorService {
    * Anchor requests
    */
   async anchor(): Promise<void> {
-    const filtered = await this._filter()
-    for (const candidate of filtered) {
+    const candidates = await this._findCandidates()
+    for (const candidate of candidates) {
       await this._process(candidate)
     }
 
     this._queue = [] // reset
   }
 
-  /**
+
+    /**
    * Filter candidates by document and DIDs
    * @private
    */
-  async _filter(): Promise<Candidate[]> {
-    const result: Candidate[] = []
-    const validCandidates: Record<string, Candidate[]> = {}
+  async _findCandidates(): Promise<Candidate[]> {
+    const groupedCandidates = await this._groupCandidatesByDocId(this._queue)
+    return await this._selectValidCandidates(groupedCandidates)
+  }
 
-    let req = null
+  async _groupCandidatesByDocId(candidates: Candidate[]): Promise<Record<string, Candidate[]>> {
+    const result: Record<string, Candidate[]> = {};
+
+    let req: Candidate = null
     for (let index = 0; index < this._queue.length; index++) {
       try {
         req = this._queue[index]
         const record = (await this._ceramic.ipfs.dag.get(req.cid)).value
-        const did = await this.verifySignedCommit(record)
+        if (this._verifySignatures) {
+          await this.verifySignedCommit(record)
+        }
 
         const log = await this._loadCommitHistory(req.cid)
-        const candidate = new Candidate(new CID(req.cid), req.docId, did, log)
+        const candidate = new Candidate(new CID(req.cid), req.docId, log)
 
-        if (!validCandidates[candidate.key]) {
-          validCandidates[candidate.key] = []
+        if (!result[candidate.key]) {
+          result[candidate.key] = []
         }
-        validCandidates[candidate.key].push(candidate)
+        result[candidate.key].push(candidate)
       } catch (e) {
-        // do nothing
+        console.error(e.message)
+        await this._failCandidate(req, e.message)
       }
     }
 
-    for (const compositeKey of Object.keys(validCandidates)) {
-      const candidates: Candidate[] = validCandidates[compositeKey]
+    return result
+  }
+
+  async _selectValidCandidates(groupedCandidates: Record<string, Candidate[]>): Promise<Candidate[]> {
+    const result: Candidate[] = []
+    for (const compositeKey of Object.keys(groupedCandidates)) {
+      const candidates: Candidate[] = groupedCandidates[compositeKey]
 
       // When there are multiple valid candidate tips to anchor for the same docId, pick the one
       // with the largest log
-      let maxLogLength = -1
-      let selected: Candidate
+      let selected: Candidate = null
       for (const c of candidates) {
-        if (c.log.length > maxLogLength) {
+        if (selected == null) {
           selected = c
-          maxLogLength = c.log.length
-        } else if (selected && c.log.length == maxLogLength && c.cid.bytes < selected.cid.bytes) {
+          continue
+        }
+
+        if (c.log.length < selected.log.length) {
+          await this._failCandidate(c)
+        } else if (c.log.length > selected.log.length) {
+          await this._failCandidate(selected)
+          selected = c
+        } else {
           // If there are two conflicting candidates with the same log length, we must choose
           // which to anchor deterministically. We use the same arbitrary but deterministic strategy
           // that js-ceramic conflict resolution does: choosing the record whose CID is smaller
-          selected = c
+          if (c.cid.bytes < selected.cid.bytes) {
+            await this._failCandidate(selected)
+            selected = c
+          } else {
+            await this._failCandidate(c)
+          }
         }
       }
 
       result.push(selected)
     }
+
     return result
+  }
+
+  async _failCandidate(candidate: Candidate, message?: string): Promise<void> {
+    if (!message) {
+      message = `Rejecting request to anchor CID ${candidate.cid.toString()} for document ${candidate.docId.toString()} because there is a better CID to anchor for the same document`
+    }
+    this.emit(candidate.docId, { cid: candidate.cid, status: 'FAILED', message: message })
   }
 
   /**
@@ -206,7 +243,7 @@ class InMemoryAnchorService extends AnchorService {
 
     // add a delay
     const handle = setTimeout(() => {
-      this.emit(leaf.docId, { status: 'COMPLETED', message: 'CID successfully anchored.', anchorRecord: cid })
+      this.emit(leaf.docId, { cid: leaf.cid, status: 'COMPLETED', message: 'CID successfully anchored.', anchorRecord: cid })
       clearTimeout(handle)
     }, this._anchorDelay)
   }
