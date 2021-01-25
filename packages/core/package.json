@@ -53,6 +53,7 @@
     "lodash.clonedeep": "^4.5.0",
     "multihashes": "^3.1.1",
     "p-queue": "^6.6.1",
+    "rxjs": "^6.6.3",
     "tslib": "^2.1.0"
   },
   "devDependencies": {

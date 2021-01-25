@@ -1,6 +1,7 @@
 import CID from "cids";
 import * as uint8arrays from "uint8arrays";
-
+import { Observable, Subject } from "rxjs";
+import { filter } from "rxjs/operators";
 import * as didJwt from "did-jwt";
 import {
   AnchorProof,
@@ -13,6 +14,7 @@ import {
 import type Dispatcher from "../../dispatcher";
 import Ceramic from "../../ceramic";
 import DocID from "@ceramicnetwork/docid";
+import { AnchorServiceResponse } from "../anchor-service-response";
 
 const DID_MATCHER =
   "^(did:([a-zA-Z0-9_]+):([a-zA-Z0-9_.-]+(:[a-zA-Z0-9_.-]+)*)((;[a-zA-Z0-9_.:%-]+=[a-zA-Z0-9_.:%-]*)*)(/[^#?]*)?)([?][^#]*)?(#.*)?";
@@ -49,6 +51,7 @@ class InMemoryAnchorService extends AnchorService {
   readonly #anchorDelay: number;
   readonly #anchorOnRequest: boolean;
   readonly #verifySignatures: boolean;
+  readonly #feed: Subject<AnchorServiceResponse> = new Subject();
 
   #queue: Candidate[] = [];
 
@@ -58,6 +61,10 @@ class InMemoryAnchorService extends AnchorService {
     this.#anchorDelay = _config?.anchorDelay ?? 0;
     this.#anchorOnRequest = _config?.anchorOnRequest ?? true;
     this.#verifySignatures = _config?.verifySignatures ?? true;
+  }
+
+  anchorStatus$(docId: DocID): Observable<AnchorServiceResponse> {
+    return this.#feed.pipe(filter((r) => r.docId.baseID.equals(docId.baseID)));
   }
 
   async init(): Promise<void> {
@@ -167,6 +174,12 @@ class InMemoryAnchorService extends AnchorService {
     if (!message) {
       message = `Rejecting request to anchor CID ${candidate.cid.toString()} for document ${candidate.docId.toString()} because there is a better CID to anchor for the same document`;
     }
+    this.#feed.next({
+      status: AnchorStatus.FAILED,
+      docId: candidate.docId,
+      cid: candidate.cid,
+      message,
+    });
     this.emit(candidate.docId.toString(), {
       cid: candidate.cid,
       status: AnchorStatus.FAILED,
@@ -253,6 +266,13 @@ class InMemoryAnchorService extends AnchorService {
 
     // add a delay
     const handle = setTimeout(() => {
+      this.#feed.next({
+        status: AnchorStatus.ANCHORED,
+        docId: leaf.docId,
+        cid: leaf.cid,
+        message: "CID successfully anchored",
+        anchorRecord: cid,
+      });
       this.emit(leaf.docId.toString(), {
         cid: leaf.cid,
         status: AnchorStatus.ANCHORED,
