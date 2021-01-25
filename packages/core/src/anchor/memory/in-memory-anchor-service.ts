@@ -6,27 +6,26 @@ import {AnchorProof, AnchorService, AnchorStatus, CeramicApi, DoctypeUtils} from
 
 import type Dispatcher from '../../dispatcher'
 import Ceramic from "../../ceramic"
+import DocID from "@ceramicnetwork/docid";
 
 const DID_MATCHER = '^(did:([a-zA-Z0-9_]+):([a-zA-Z0-9_.-]+(:[a-zA-Z0-9_.-]+)*)((;[a-zA-Z0-9_.:%-]+=[a-zA-Z0-9_.:%-]*)*)(/[^#?]*)?)([?][^#]*)?(#.*)?';
 const CHAIN_ID = 'inmemory:12345'
 
 class Candidate {
   public cid: CID
-  public did?: string
-  public docId: string
+  public docId: DocID
 
   public readonly log: CID[]
 
-  constructor(cid: CID, docId?: string, log?: CID[]) {
+  constructor(cid: CID, docId?: DocID, log?: CID[]) {
     this.cid = cid
     this.docId = docId
     this.log = log
   }
 
   get key(): string {
-    return this.docId + this.did
+    return this.docId.toString()
   }
-
 }
 
 interface InMemoryAnchorConfig {
@@ -50,7 +49,7 @@ class InMemoryAnchorService extends AnchorService {
 
   private SAMPLE_ETH_TX_HASH = 'bagjqcgzaday6dzalvmy5ady2m5a5legq5zrbsnlxfc2bfxej532ds7htpova'
 
-  constructor (private _config: InMemoryAnchorConfig) {
+  constructor (_config: InMemoryAnchorConfig) {
     super()
 
     this._anchorDelay = _config?.anchorDelay ?? 0
@@ -83,22 +82,22 @@ class InMemoryAnchorService extends AnchorService {
   }
 
 
-    /**
+  /**
    * Filter candidates by document and DIDs
    * @private
    */
   async _findCandidates(): Promise<Candidate[]> {
     const groupedCandidates = await this._groupCandidatesByDocId(this._queue)
-    return await this._selectValidCandidates(groupedCandidates)
+    return this._selectValidCandidates(groupedCandidates)
   }
 
   async _groupCandidatesByDocId(candidates: Candidate[]): Promise<Record<string, Candidate[]>> {
     const result: Record<string, Candidate[]> = {};
 
     let req: Candidate = null
-    for (let index = 0; index < this._queue.length; index++) {
+    for (let index = 0; index < candidates.length; index++) {
       try {
-        req = this._queue[index]
+        req = candidates[index]
         const record = (await this._ceramic.ipfs.dag.get(req.cid)).value
         if (this._verifySignatures) {
           await this.verifySignedCommit(record)
@@ -113,17 +112,17 @@ class InMemoryAnchorService extends AnchorService {
         result[candidate.key].push(candidate)
       } catch (e) {
         console.error(e.message)
-        await this._failCandidate(req, e.message)
+        this._failCandidate(req, e.message)
       }
     }
 
     return result
   }
 
-  async _selectValidCandidates(groupedCandidates: Record<string, Candidate[]>): Promise<Candidate[]> {
+  _selectValidCandidates(groupedCandidates: Record<string, Candidate[]>): Candidate[] {
     const result: Candidate[] = []
     for (const compositeKey of Object.keys(groupedCandidates)) {
-      const candidates: Candidate[] = groupedCandidates[compositeKey]
+      const candidates = groupedCandidates[compositeKey]
 
       // When there are multiple valid candidate tips to anchor for the same docId, pick the one
       // with the largest log
@@ -135,19 +134,19 @@ class InMemoryAnchorService extends AnchorService {
         }
 
         if (c.log.length < selected.log.length) {
-          await this._failCandidate(c)
+          this._failCandidate(c)
         } else if (c.log.length > selected.log.length) {
-          await this._failCandidate(selected)
+          this._failCandidate(selected)
           selected = c
         } else {
           // If there are two conflicting candidates with the same log length, we must choose
           // which to anchor deterministically. We use the same arbitrary but deterministic strategy
           // that js-ceramic conflict resolution does: choosing the record whose CID is smaller
           if (c.cid.bytes < selected.cid.bytes) {
-            await this._failCandidate(selected)
+            this._failCandidate(selected)
             selected = c
           } else {
-            await this._failCandidate(c)
+            this._failCandidate(c)
           }
         }
       }
@@ -158,11 +157,11 @@ class InMemoryAnchorService extends AnchorService {
     return result
   }
 
-  async _failCandidate(candidate: Candidate, message?: string): Promise<void> {
+  _failCandidate(candidate: Candidate, message?: string): void {
     if (!message) {
       message = `Rejecting request to anchor CID ${candidate.cid.toString()} for document ${candidate.docId.toString()} because there is a better CID to anchor for the same document`
     }
-    this.emit(candidate.docId, { cid: candidate.cid, status: AnchorStatus.FAILED, message: message })
+    this.emit(candidate.docId.toString(), { cid: candidate.cid, status: AnchorStatus.FAILED, message: message })
   }
 
   /**
@@ -213,7 +212,7 @@ class InMemoryAnchorService extends AnchorService {
    * @param docId - Document ID
    * @param cid - Commit CID
    */
-  async requestAnchor(docId: string, cid: CID): Promise<void> {
+  async requestAnchor(docId: DocID, cid: CID): Promise<void> {
     const candidate: Candidate = new Candidate(cid, docId)
 
     if (this._anchorOnRequest) {
@@ -242,7 +241,7 @@ class InMemoryAnchorService extends AnchorService {
 
     // add a delay
     const handle = setTimeout(() => {
-      this.emit(leaf.docId, { cid: leaf.cid, status: AnchorStatus.ANCHORED, message: 'CID successfully anchored.', anchorRecord: cid })
+      this.emit(leaf.docId.toString(), { cid: leaf.cid, status: AnchorStatus.ANCHORED, message: 'CID successfully anchored.', anchorRecord: cid })
       clearTimeout(handle)
     }, this._anchorDelay)
   }

@@ -3,6 +3,7 @@ import CID from "cids";
 import { EventEmitter } from "events";
 import { AnchorProof } from "./doctype"
 import { CeramicApi } from "./ceramic-api"
+import DocID from "@ceramicnetwork/docid";
 
 /**
  * Describes anchoring service behavior
@@ -26,7 +27,7 @@ export abstract class AnchorService extends EventEmitter {
      * @param docId - Document ID
      * @param tip - CID tip
      */
-    abstract requestAnchor(docId: string, tip: CID): Promise<void>;
+    abstract requestAnchor(docId: DocID, tip: CID): Promise<void>;
 
     /**
      * Validate anchor proof commit

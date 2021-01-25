@@ -652,7 +652,7 @@ export class Document extends EventEmitter implements DocStateHolder {
         }
       }
     })
-    await this._context.anchorService.requestAnchor(this.id.toString(), this.tip)
+    await this._context.anchorService.requestAnchor(this.id.baseID, this.tip)
     const state = this._doctype.state
     state.anchorStatus = AnchorStatus.PENDING
     this._doctype.state = state

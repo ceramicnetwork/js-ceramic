@@ -6,13 +6,14 @@ import { CeramicConfig } from "../../ceramic"
 import { AnchorService, AnchorStatus } from "@ceramicnetwork/common"
 import { AnchorProof, CeramicApi } from "@ceramicnetwork/common"
 import * as uint8arrays from "uint8arrays";
+import DocID from "@ceramicnetwork/docid";
 
 /**
  * CID-docId pair
  */
 interface CidDoc {
     readonly cid: CID
-    readonly docId: string
+    readonly docId: DocID
 }
 
 const DEFAULT_POLL_TIME = 60000 // 60 seconds
@@ -95,7 +96,7 @@ export default class EthereumAnchorService extends AnchorService {
      * @param docId - Document ID
      * @param tip - Tip CID of the document
      */
-    async requestAnchor(docId: string, tip: CID): Promise<void> {
+    async requestAnchor(docId: DocID, tip: CID): Promise<void> {
         const cidDocPair: CidDoc = { cid: tip, docId }
 
         // send initial request
@@ -129,7 +130,7 @@ export default class EthereumAnchorService extends AnchorService {
             const json = await response.json()
             this.processRemoteResponse(cidDocPair, json)
         } else {
-            this.emit(cidDocPair.docId, {
+            this.emit(cidDocPair.docId.toString(), {
                 status: AnchorStatus.FAILED,
                 message: `Failed to send request. Status ${response.statusText}`
             })
@@ -151,7 +152,7 @@ export default class EthereumAnchorService extends AnchorService {
         while (poll) {
             if (started > maxTime) {
                 const failedRes = { cid: cidDoc.cid, status: 'FAILED', message: 'exceeded max timeout' }
-                this.emit(cidDoc.docId, failedRes)
+                this.emit(cidDoc.docId.toString(), failedRes)
                 return // exit loop
             }
 
@@ -164,7 +165,7 @@ export default class EthereumAnchorService extends AnchorService {
                 if (response.status === HTTP_STATUS_NOT_FOUND) {
                     // the anchor request does not exist, fail and stop polling
                     // TODO
-                    this.emit(cidDoc.docId, {
+                    this.emit(cidDoc.docId.toString(), {
                         cid: cidDoc.cid, status: AnchorStatus.FAILED, message: 'Request not found.'
                     })
                     poll = false
@@ -238,22 +239,22 @@ export default class EthereumAnchorService extends AnchorService {
     private processRemoteResponse(cidDoc: CidDoc, json: any): boolean {
         switch (json.status) {
             case "PENDING": {
-                this.emit(cidDoc.docId, { cid: cidDoc.cid, status: AnchorStatus.PENDING, message: json.message, anchorScheduledFor: json.scheduledAt })
+                this.emit(cidDoc.docId.toString(), { cid: cidDoc.cid, status: AnchorStatus.PENDING, message: json.message, anchorScheduledFor: json.scheduledAt })
                 return true
             }
             case "PROCESSING": {
-                this.emit(cidDoc.docId, { cid: cidDoc.cid, status: AnchorStatus.PROCESSING, message: json.message })
+                this.emit(cidDoc.docId.toString(), { cid: cidDoc.cid, status: AnchorStatus.PROCESSING, message: json.message })
                 return true
             }
             case "FAILED": {
-                this.emit(cidDoc.docId, { cid: cidDoc.cid, status: AnchorStatus.FAILED, message: json.message })
+                this.emit(cidDoc.docId.toString(), { cid: cidDoc.cid, status: AnchorStatus.FAILED, message: json.message })
                 return false
             }
             case "COMPLETED": {
                 const { anchorRecord } = json
                 const anchorRecordCid = new CID(anchorRecord.cid.toString())
 
-                this.emit(cidDoc.docId, {
+                this.emit(cidDoc.docId.toString(), {
                     cid: cidDoc.cid,
                     status: AnchorStatus.ANCHORED,
                     message: json.message,
