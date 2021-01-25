@@ -55,9 +55,11 @@
     "key-did-resolver": "^0.2.4",
     "level-ts": "^2.0.5",
     "lodash.clonedeep": "^4.5.0",
+    "lru_map": "^0.4.1",
     "multiformats": "3.0.3",
     "p-queue": "^6.6.1",
-    "typestub-multihashes": "^0.0.4"
+    "typestub-multihashes": "^0.0.4",
+    "uint8arrays": "^1.1.0"
   },
   "devDependencies": {
     "@babel/core": "^7.9.0",
@@ -77,8 +79,7 @@
     "ipfs-core": "0.3.0",
     "js-sha256": "^0.9.0",
     "key-did-provider-ed25519": "^1.0.0",
-    "tmp-promise": "^2.0.2",
-    "uint8arrays": "^1.1.0"
+    "tmp-promise": "^2.0.2"
   },
   "jest": {
     "testEnvironment": "node",
