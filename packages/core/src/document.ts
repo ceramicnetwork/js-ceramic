@@ -582,33 +582,15 @@ class Document extends EventEmitter implements DocStateHolder {
   }
 
   /**
-   * Returns whether the given CID is in the log, and there is a later log entry that is an anchor commit
-   * @param cid
-   */
-  async _isCidAnchored(cid: CID): Promise<boolean> {
-    let foundCid = false
-    for (const entry of this.state.log) {
-      if (entry.cid.equals(cid)) {
-        foundCid = true
-      }
-
-      if (foundCid && entry.type == CommitType.ANCHOR) {
-        return true
-      }
-    }
-    return false
-  }
-
-  /**
    * Request anchor for the latest document state
    */
   async anchor (): Promise<void> {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const doc = this
-    const tip: CID = this.tip
+    const requestTip: CID = this.tip
 
     this._context.anchorService.on(this.id.toString(), async function listener (asr: AnchorServiceResponse) {
-      if (!asr.cid.equals(tip)) {
+      if (!asr.cid.equals(requestTip)) {
         // This message is about a different tip for the same document
         return
       }
@@ -637,14 +619,10 @@ class Document extends EventEmitter implements DocStateHolder {
         }
         case 'FAILED': {
           doc._context.anchorService.removeListener(doc.id.toString(), listener)
-
-          if (await doc._isCidAnchored(tip)) {
-            // Even though the anchor request for this specific CID came back as FAILED, the cid
-            // still appears to be anchored.  This means that a later CID built on top of this
-            // one was anchored instead. In that case we should do nothing and simply return since
-            // the later CID that was successfully anchored should have already updated the state appropriately
+          if (requestTip !== doc.tip) {
             return
           }
+
           const state = doc._doctype.state
           state.anchorStatus = AnchorStatus.FAILED
           doc._doctype.state = state
