@@ -3,7 +3,7 @@ import CID from 'cids'
 import { EventEmitter } from 'events'
 import PQueue from 'p-queue'
 import cloneDeep from 'lodash.clonedeep'
-import AnchorServiceResponse from './anchor/anchor-service-response'
+import { AnchorServiceResponse } from './anchor/anchor-service-response'
 import Utils from './utils'
 import {
   AnchorProof,
@@ -613,21 +613,21 @@ export class Document extends EventEmitter implements DocStateHolder {
         return
       }
       switch (asr.status) {
-        case 'PENDING': {
+        case AnchorStatus.PENDING: {
           const state = doc._doctype.state
           state.anchorScheduledFor = asr.anchorScheduledFor
           doc._doctype.state = state
           await doc._updateStateIfPinned()
           return
         }
-        case 'PROCESSING': {
+        case AnchorStatus.PROCESSING: {
           const state = doc._doctype.state
           state.anchorStatus = AnchorStatus.PROCESSING
           doc._doctype.state = state
           await doc._updateStateIfPinned()
           return
         }
-        case 'COMPLETED': {
+        case AnchorStatus.ANCHORED: {
           doc._context.anchorService.removeListener(doc.id.toString(), listener)
 
           await doc._handleTip(asr.anchorRecord)
@@ -635,7 +635,7 @@ export class Document extends EventEmitter implements DocStateHolder {
           await doc._publishTip()
           return
         }
-        case 'FAILED': {
+        case AnchorStatus.FAILED: {
           doc._context.anchorService.removeListener(doc.id.toString(), listener)
 
           if (await doc._isCidAnchored(tip)) {

@@ -130,7 +130,7 @@ export default class EthereumAnchorService extends AnchorService {
             this.processRemoteResponse(cidDocPair, json)
         } else {
             this.emit(cidDocPair.docId, {
-                status: 'FAILED',
+                status: AnchorStatus.FAILED,
                 message: `Failed to send request. Status ${response.statusText}`
             })
         }
@@ -165,7 +165,7 @@ export default class EthereumAnchorService extends AnchorService {
                     // the anchor request does not exist, fail and stop polling
                     // TODO
                     this.emit(cidDoc.docId, {
-                        cid: cidDoc.cid, status: AnchorStatus[AnchorStatus.FAILED], message: 'Request not found.'
+                        cid: cidDoc.cid, status: AnchorStatus.FAILED, message: 'Request not found.'
                     })
                     poll = false
                     break
@@ -238,15 +238,15 @@ export default class EthereumAnchorService extends AnchorService {
     private processRemoteResponse(cidDoc: CidDoc, json: any): boolean {
         switch (json.status) {
             case "PENDING": {
-                this.emit(cidDoc.docId, { cid: cidDoc.cid, status: json.status, message: json.message, anchorScheduledFor: json.scheduledAt })
+                this.emit(cidDoc.docId, { cid: cidDoc.cid, status: AnchorStatus.PENDING, message: json.message, anchorScheduledFor: json.scheduledAt })
                 return true
             }
             case "PROCESSING": {
-                this.emit(cidDoc.docId, { cid: cidDoc.cid, status: json.status, message: json.message })
+                this.emit(cidDoc.docId, { cid: cidDoc.cid, status: AnchorStatus.PROCESSING, message: json.message })
                 return true
             }
             case "FAILED": {
-                this.emit(cidDoc.docId, { cid: cidDoc.cid, status: json.status, message: json.message })
+                this.emit(cidDoc.docId, { cid: cidDoc.cid, status: AnchorStatus.FAILED, message: json.message })
                 return false
             }
             case "COMPLETED": {
@@ -255,7 +255,7 @@ export default class EthereumAnchorService extends AnchorService {
 
                 this.emit(cidDoc.docId, {
                     cid: cidDoc.cid,
-                    status: json.status,
+                    status: AnchorStatus.ANCHORED,
                     message: json.message,
                     anchorRecord: anchorRecordCid
                 })

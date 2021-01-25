@@ -2,7 +2,7 @@ import CID from 'cids'
 import * as uint8arrays from 'uint8arrays'
 
 import * as didJwt from 'did-jwt'
-import { AnchorProof, AnchorService, CeramicApi, DoctypeUtils } from "@ceramicnetwork/common"
+import {AnchorProof, AnchorService, AnchorStatus, CeramicApi, DoctypeUtils} from "@ceramicnetwork/common"
 
 import type Dispatcher from '../../dispatcher'
 import Ceramic from "../../ceramic"
@@ -162,7 +162,7 @@ class InMemoryAnchorService extends AnchorService {
     if (!message) {
       message = `Rejecting request to anchor CID ${candidate.cid.toString()} for document ${candidate.docId.toString()} because there is a better CID to anchor for the same document`
     }
-    this.emit(candidate.docId, { cid: candidate.cid, status: 'FAILED', message: message })
+    this.emit(candidate.docId, { cid: candidate.cid, status: AnchorStatus.FAILED, message: message })
   }
 
   /**
@@ -242,7 +242,7 @@ class InMemoryAnchorService extends AnchorService {
 
     // add a delay
     const handle = setTimeout(() => {
-      this.emit(leaf.docId, { cid: leaf.cid, status: 'COMPLETED', message: 'CID successfully anchored.', anchorRecord: cid })
+      this.emit(leaf.docId, { cid: leaf.cid, status: AnchorStatus.ANCHORED, message: 'CID successfully anchored.', anchorRecord: cid })
       clearTimeout(handle)
     }, this._anchorDelay)
   }
