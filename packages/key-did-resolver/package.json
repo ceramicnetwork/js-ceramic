@@ -29,7 +29,7 @@
   "dependencies": {
     "@stablelib/ed25519": "^1.0.1",
     "multibase": "3.0.1",
-    "uint8arrays": "^1.1.0",
+    "uint8arrays": "^2.0.5",
     "varint": "^6.0.0"
   },
   "devDependencies": {
@@ -44,7 +44,7 @@
     "@types/varint": "^5.0.0",
     "@typescript-eslint/eslint-plugin": "^4.6.0",
     "@typescript-eslint/parser": "^4.6.0",
-    "babel-jest": "^25.1.0",
+    "babel-jest": "^26.6.3",
     "did-resolver": "^2.1.1",
     "eslint": "^6.8.0",
     "eslint-plugin-jest": "^23.8.2",
