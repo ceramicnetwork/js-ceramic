@@ -7,6 +7,9 @@ import { AnchorService, AnchorStatus } from "@ceramicnetwork/common";
 import { AnchorProof, CeramicApi } from "@ceramicnetwork/common";
 import * as uint8arrays from "uint8arrays";
 import DocID from "@ceramicnetwork/docid";
+import { Observable, Subject } from "rxjs";
+import { AnchorServiceResponse } from "../anchor-service-response";
+import { filter } from "rxjs/operators";
 
 /**
  * CID-docId pair
@@ -65,6 +68,8 @@ export default class EthereumAnchorService extends AnchorService {
   private readonly ethereumRpcEndpoint: string | undefined;
   private _chainId: string;
 
+  #feed: Subject<AnchorServiceResponse> = new Subject();
+
   /**
    * @param config - service configuration (polling interval, etc.)
    */
@@ -75,6 +80,10 @@ export default class EthereumAnchorService extends AnchorService {
       config.anchorServiceUrl + "/api/v0/service-info/supported_chains";
     this.ethereumRpcEndpoint = config.ethereumRpcUrl;
     this.setMaxListeners(MAX_NUMBER_OF_EVENT_LISTENERS);
+  }
+
+  anchorStatus$(docId: DocID): Observable<AnchorServiceResponse> {
+    return this.#feed.pipe(filter((r) => r.docId.baseID.equals(docId.baseID)));
   }
 
   /**
@@ -150,6 +159,12 @@ export default class EthereumAnchorService extends AnchorService {
       const json = await response.json();
       this.processRemoteResponse(cidDocPair, json);
     } else {
+      this.#feed.next({
+        status: AnchorStatus.FAILED,
+        docId: cidDocPair.docId,
+        cid: cidDocPair.cid,
+        message: `Failed to send request. Status ${response.statusText}`,
+      });
       this.emit(cidDocPair.docId.toString(), {
         status: AnchorStatus.FAILED,
         message: `Failed to send request. Status ${response.statusText}`,
@@ -175,12 +190,17 @@ export default class EthereumAnchorService extends AnchorService {
     let poll = true;
     while (poll) {
       if (started > maxTime) {
-        const failedRes = {
+        this.#feed.next({
+          status: AnchorStatus.FAILED,
+          docId: cidDoc.docId,
+          cid: cidDoc.cid,
+          message: "exceeded max timeout",
+        });
+        this.emit(cidDoc.docId.toString(), {
           cid: cidDoc.cid,
           status: "FAILED",
           message: "exceeded max timeout",
-        };
-        this.emit(cidDoc.docId.toString(), failedRes);
+        });
         return; // exit loop
       }
 
@@ -196,6 +216,12 @@ export default class EthereumAnchorService extends AnchorService {
         if (response.status === HTTP_STATUS_NOT_FOUND) {
           // the anchor request does not exist, fail and stop polling
           // TODO
+          this.#feed.next({
+            status: AnchorStatus.FAILED,
+            docId: cidDoc.docId,
+            cid: cidDoc.cid,
+            message: "Request not found",
+          });
           this.emit(cidDoc.docId.toString(), {
             cid: cidDoc.cid,
             status: AnchorStatus.FAILED,
@@ -283,6 +309,13 @@ export default class EthereumAnchorService extends AnchorService {
   private processRemoteResponse(cidDoc: CidDoc, json: any): boolean {
     switch (json.status) {
       case "PENDING": {
+        this.#feed.next({
+          status: AnchorStatus.PENDING,
+          docId: cidDoc.docId,
+          cid: cidDoc.cid,
+          message: json.message,
+          anchorScheduledFor: json.scheduledAt,
+        });
         this.emit(cidDoc.docId.toString(), {
           cid: cidDoc.cid,
           status: AnchorStatus.PENDING,
@@ -292,6 +325,12 @@ export default class EthereumAnchorService extends AnchorService {
         return true;
       }
       case "PROCESSING": {
+        this.#feed.next({
+          status: AnchorStatus.PROCESSING,
+          docId: cidDoc.docId,
+          cid: cidDoc.cid,
+          message: json.message,
+        });
         this.emit(cidDoc.docId.toString(), {
           cid: cidDoc.cid,
           status: AnchorStatus.PROCESSING,
@@ -300,6 +339,12 @@ export default class EthereumAnchorService extends AnchorService {
         return true;
       }
       case "FAILED": {
+        this.#feed.next({
+          status: AnchorStatus.FAILED,
+          docId: cidDoc.docId,
+          cid: cidDoc.cid,
+          message: json.message,
+        });
         this.emit(cidDoc.docId.toString(), {
           cid: cidDoc.cid,
           status: AnchorStatus.FAILED,
@@ -310,7 +355,13 @@ export default class EthereumAnchorService extends AnchorService {
       case "COMPLETED": {
         const { anchorRecord } = json;
         const anchorRecordCid = new CID(anchorRecord.cid.toString());
-
+        this.#feed.next({
+          status: AnchorStatus.ANCHORED,
+          docId: cidDoc.docId,
+          cid: cidDoc.cid,
+          message: json.message,
+          anchorRecord: anchorRecordCid,
+        });
         this.emit(cidDoc.docId.toString(), {
           cid: cidDoc.cid,
           status: AnchorStatus.ANCHORED,
