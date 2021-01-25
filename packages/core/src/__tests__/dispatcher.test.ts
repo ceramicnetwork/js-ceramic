@@ -1,6 +1,6 @@
 import Dispatcher, { MsgType } from '../dispatcher'
 import CID from 'cids'
-import Document from "../document"
+import { Document } from "../document"
 import { TileDoctype } from "@ceramicnetwork/doctype-tile"
 import DocID from "@ceramicnetwork/docid";
 

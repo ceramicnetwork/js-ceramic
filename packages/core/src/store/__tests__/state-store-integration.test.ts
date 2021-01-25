@@ -1,5 +1,5 @@
 import tmp from 'tmp-promise'
-import Document from "../../document"
+import { Document } from "../../document"
 import Dispatcher from "../../dispatcher"
 import { Doctype } from "@ceramicnetwork/common"
 import { AnchorService } from "@ceramicnetwork/common"

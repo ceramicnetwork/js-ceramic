@@ -5,7 +5,7 @@ import dagCBOR from "ipld-dag-cbor"
 import * as multihashes from 'multihashes'
 import * as sha256 from "@stablelib/sha256"
 
-import type Document from "./document"
+import type { Document } from "./document"
 import { DoctypeUtils, RootLogger, Logger, IpfsApi } from "@ceramicnetwork/common"
 import { TextDecoder } from 'util'
 import DocID from "@ceramicnetwork/docid";
