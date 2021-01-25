@@ -51,8 +51,9 @@
     "key-did-resolver": "^0.2.4",
     "level-ts": "^2.0.5",
     "lodash.clonedeep": "^4.5.0",
+    "multihashes": "^3.1.1",
     "p-queue": "^6.6.1",
-    "multihashes": "^3.1.1"
+    "tslib": "^2.1.0"
   },
   "devDependencies": {
     "@babel/core": "^7.9.0",
