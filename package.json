@@ -23,6 +23,7 @@
     "jest-environment-uint8array": "^1.0.0",
     "jest-mock-extended": "^1.0.10",
     "lerna": "^3.22.1",
+    "prettier": "^2.2.1",
     "ts-jest": "^26.4.4",
     "ts-node": "^9.0.0",
     "typedoc": "^0.19.2",
