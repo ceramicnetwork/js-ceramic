@@ -29,11 +29,13 @@ const BOOTSTRAP = {
 }
 
 export async function buildIpfsConnection(network: string, ipfsEndpoint?: string): Promise<IpfsApi>{
+    const bootstrapList = BOOTSTRAP[network] || []
+    let ipfs: IpfsApi
+
     if (ipfsEndpoint) {
-        return ipfsClient({ url: ipfsEndpoint, ipld: { formats: [dagJoseFormat] } })
+        ipfs = ipfsClient({ url: ipfsEndpoint, ipld: { formats: [dagJoseFormat] } })
     } else {
-        const bootstrapList = BOOTSTRAP[network] || []
-        const ipfs = await IPFS.create({
+        ipfs = await IPFS.create({
             ipld: {
                 formats: [dagJoseFormat]
             },
@@ -59,14 +61,15 @@ export async function buildIpfsConnection(network: string, ipfsEndpoint?: string
                 enabled: false
             }
         })
-        await Promise.all(bootstrapList.map(async node => {
-            try {
-                await ipfs.swarm.connect(node)
-            } catch (error) {
-                console.warn(`Can not connect to ${node}`)
-                console.warn(error)
-            }
-        }))
-        return ipfs
     }
+
+    await Promise.all(bootstrapList.map(async node => {
+        try {
+            await ipfs.swarm.connect(node)
+        } catch (error) {
+            console.warn(`Can not connect to ${node}`)
+            console.warn(error)
+        }
+    }))
+    return ipfs
 }
