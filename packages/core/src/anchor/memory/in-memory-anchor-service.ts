@@ -12,15 +12,7 @@ const DID_MATCHER = '^(did:([a-zA-Z0-9_]+):([a-zA-Z0-9_.-]+(:[a-zA-Z0-9_.-]+)*)(
 const CHAIN_ID = 'inmemory:12345'
 
 class Candidate {
-  public cid: CID
-  public docId: DocID
-
-  public readonly log: CID[]
-
-  constructor(cid: CID, docId?: DocID, log?: CID[]) {
-    this.cid = cid
-    this.docId = docId
-    this.log = log
+  constructor(readonly cid: CID, readonly docId?: DocID, readonly log?: CID[]) {
   }
 
   get key(): string {
@@ -34,27 +26,27 @@ interface InMemoryAnchorConfig {
   verifySignatures?: boolean;
 }
 
+const SAMPLE_ETH_TX_HASH = 'bagjqcgzaday6dzalvmy5ady2m5a5legq5zrbsnlxfc2bfxej532ds7htpova'
+
 /**
  * In-memory anchor service - used locally, not meant to be used in production code
  */
 class InMemoryAnchorService extends AnchorService {
-  private _ceramic: Ceramic
-  private _dispatcher: Dispatcher
+  #ceramic: Ceramic
+  #dispatcher: Dispatcher
 
-  private readonly _anchorDelay: number
-  private readonly _anchorOnRequest: boolean
-  private readonly _verifySignatures: boolean
+  readonly #anchorDelay: number
+  readonly #anchorOnRequest: boolean
+  readonly #verifySignatures: boolean
 
-  private _queue: Candidate[] = []
-
-  private SAMPLE_ETH_TX_HASH = 'bagjqcgzaday6dzalvmy5ady2m5a5legq5zrbsnlxfc2bfxej532ds7htpova'
+  #queue: Candidate[] = []
 
   constructor (_config: InMemoryAnchorConfig) {
     super()
 
-    this._anchorDelay = _config?.anchorDelay ?? 0
-    this._anchorOnRequest = _config?.anchorOnRequest ?? true
-    this._verifySignatures = _config?.verifySignatures ?? true
+    this.#anchorDelay = _config?.anchorDelay ?? 0
+    this.#anchorOnRequest = _config?.anchorOnRequest ?? true
+    this.#verifySignatures = _config?.verifySignatures ?? true
   }
 
   async init(): Promise<void> {
@@ -78,7 +70,7 @@ class InMemoryAnchorService extends AnchorService {
       await this._process(candidate)
     }
 
-    this._queue = [] // reset
+    this.#queue = [] // reset
   }
 
 
@@ -87,7 +79,7 @@ class InMemoryAnchorService extends AnchorService {
    * @private
    */
   async _findCandidates(): Promise<Candidate[]> {
-    const groupedCandidates = await this._groupCandidatesByDocId(this._queue)
+    const groupedCandidates = await this._groupCandidatesByDocId(this.#queue)
     return this._selectValidCandidates(groupedCandidates)
   }
 
@@ -98,8 +90,8 @@ class InMemoryAnchorService extends AnchorService {
     for (let index = 0; index < candidates.length; index++) {
       try {
         req = candidates[index]
-        const record = (await this._ceramic.ipfs.dag.get(req.cid)).value
-        if (this._verifySignatures) {
+        const record = (await this.#ceramic.ipfs.dag.get(req.cid)).value
+        if (this.#verifySignatures) {
           await this.verifySignedCommit(record)
         }
 
@@ -175,14 +167,14 @@ class InMemoryAnchorService extends AnchorService {
 
     let currentCommitId = commitId
     for (; ;) {
-      const currentCommit = (await this._ceramic.ipfs.dag.get(currentCommitId)).value
+      const currentCommit = (await this.#ceramic.ipfs.dag.get(currentCommitId)).value
       if (DoctypeUtils.isAnchorCommit(currentCommit)) {
         return history
       }
 
       let prevCommitId: CID
       if (DoctypeUtils.isSignedCommit(currentCommit)) {
-        const payload = (await this._ceramic.ipfs.dag.get(currentCommit.link)).value
+        const payload = (await this.#ceramic.ipfs.dag.get(currentCommit.link)).value
         prevCommitId = payload.prev
       } else {
         prevCommitId = currentCommit.prev
@@ -203,8 +195,8 @@ class InMemoryAnchorService extends AnchorService {
    * @param ceramic - Ceramic API used for various purposes
    */
   set ceramic(ceramic: CeramicApi) {
-    this._ceramic = ceramic as unknown as Ceramic
-    this._dispatcher = this._ceramic.dispatcher
+    this.#ceramic = ceramic as unknown as Ceramic
+    this.#dispatcher = this.#ceramic.dispatcher
   }
 
   /**
@@ -215,10 +207,10 @@ class InMemoryAnchorService extends AnchorService {
   async requestAnchor(docId: DocID, cid: CID): Promise<void> {
     const candidate: Candidate = new Candidate(cid, docId)
 
-    if (this._anchorOnRequest) {
+    if (this.#anchorOnRequest) {
       await this._process(candidate)
     } else {
-      this._queue.push(candidate)
+      this.#queue.push(candidate)
     }
   }
 
@@ -232,18 +224,18 @@ class InMemoryAnchorService extends AnchorService {
       chainId: CHAIN_ID,
       blockNumber: Date.now(),
       blockTimestamp: Date.now(),
-      txHash: new CID(this.SAMPLE_ETH_TX_HASH),
+      txHash: new CID(SAMPLE_ETH_TX_HASH),
       root: leaf.cid,
     }
-    const proof = await this._dispatcher.storeCommit(proofData)
+    const proof = await this.#dispatcher.storeCommit(proofData)
     const commit = { proof, path: '', prev: leaf.cid }
-    const cid = await this._dispatcher.storeCommit(commit)
+    const cid = await this.#dispatcher.storeCommit(commit)
 
     // add a delay
     const handle = setTimeout(() => {
       this.emit(leaf.docId.toString(), { cid: leaf.cid, status: AnchorStatus.ANCHORED, message: 'CID successfully anchored.', anchorRecord: cid })
       clearTimeout(handle)
-    }, this._anchorDelay)
+    }, this.#anchorDelay)
   }
 
   /**
@@ -260,7 +252,7 @@ class InMemoryAnchorService extends AnchorService {
     const decodedHeader = JSON.parse(jsonAsBase64url)
     const { kid } = decodedHeader
 
-    const didDoc = await this._ceramic.context.resolver.resolve(kid)
+    const didDoc = await this.#ceramic.context.resolver.resolve(kid)
     const jws = [_protected, payload, signature].join(".")
     await didJwt.verifyJWS(jws, didDoc.publicKey)
     return kid.match(RegExp(DID_MATCHER))[1]
