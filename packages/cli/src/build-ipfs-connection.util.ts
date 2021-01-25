@@ -21,7 +21,7 @@ const BOOTSTRAP = {
         '/dns4/ipfs-clay-cas.3boxlabs.com/tcp/4012/wss/p2p/QmbeBTzSccH8xYottaYeyVX8QsKyox1ExfRx7T1iBqRyCd'
     ],
     "dev-unstable": [
-        '/dns4/ipfs-dev.3boxlabs.com/tcp/4012/wss/p2p/QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn',
+        '/dns4/ipfs-dev.3boxlabs.com/tcp/4012/wss/p2p/Qmc4BVsZbVkuvax6SKgwq5BrcKjzBdwx5dW45cWfLVHabx',
         '/dns4/ipfs-dev.ceramic.network/tcp/4012/wss/p2p/QmStNqcAjwh6s2sxUWr2ZXT3MhRZmqpJ9Dj6fp3gPdHr6E',
         '/dns4/ipfs-dev-internal.3boxlabs.com/tcp/4012/wss/p2p/QmYkpxusRem2iup8ZAfVGYv7iq1ks1yyq2XxQh3z2a8xXq',
         '/dns4/ipfs-dev-cas.3boxlabs.com/tcp/4012/wss/p2p/QmPHLQoWhK4CMPPgxGQxjNYEp1fMB8NPpoLaaR2VDMNbcr'
