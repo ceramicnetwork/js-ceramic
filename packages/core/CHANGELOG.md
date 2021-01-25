@@ -3,6 +3,20 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.19.4](/compare/@ceramicnetwork/core@0.19.3...@ceramicnetwork/core@0.19.4) (2021-01-25)
+
+
+### Bug Fixes
+
+* **cli:** Add the peerlist for dev-unstable network (#853) 69ccb00, closes #853
+* **core:** Don't delete message key from pubsub system object (#855) 3b77db1, closes #855
+* **core:** Don't resubscribe to pubsub if using internal ipfs (#854) 24af0c2, closes #854
+* **core:** Fix flaky test (#852) d1b6a64, closes #852
+
+
+
+
+
 ## [0.19.3](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@0.19.2...@ceramicnetwork/core@0.19.3) (2021-01-25)
 
 
