@@ -1,10 +1,8 @@
 import Dispatcher, { MsgType } from '../dispatcher'
 import CID from 'cids'
-import * as u8a from 'uint8arrays'
 import Document from "../document"
 import { TileDoctype } from "@ceramicnetwork/doctype-tile"
 import DocID from "@ceramicnetwork/docid";
-
 
 const TOPIC = '/ceramic'
 const FAKE_CID = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
@@ -25,10 +23,6 @@ const ipfs = {
     stat: jest.fn(() => ({ size: 10 }))
   },
   id: (): any => ({ id: 'ipfsid' })
-}
-
-const randomSeqno = () => {
-  return u8a.fromString(Math.random().toString())
 }
 
 class TileDoctypeMock extends TileDoctype {
@@ -108,8 +102,7 @@ describe('Dispatcher', () => {
 
   it('errors on invalid message type', async () => {
     const id = '/ceramic/bagjqcgzaday6dzalvmy5ady2m5a5legq5zrbsnlxfc2bfxej532ds7htpova'
-    const seqno = randomSeqno()
-    await expect(dispatcher.handleMessage({ data: JSON.stringify({ typ: -1, id }), seqno })).rejects.toThrow("Unsupported message type: -1")
+    await expect(dispatcher.handleMessage({ data: JSON.stringify({ typ: -1, id }) })).rejects.toThrow("Unsupported message type: -1")
   })
 
   it('handle message correctly', async () => {
@@ -132,20 +125,17 @@ describe('Dispatcher', () => {
     const queryID = queryMessageSent.id
 
     // Handle UPDATE message
-    let seqno = randomSeqno()
     const updatePromise = new Promise(resolve => doc.on('update', resolve))
-    await dispatcher.handleMessage({ data: JSON.stringify({ typ: MsgType.UPDATE, doc: FAKE_DOC_ID, tip: FAKE_CID.toString() }), seqno })
+    await dispatcher.handleMessage({ data: JSON.stringify({ typ: MsgType.UPDATE, doc: FAKE_DOC_ID, tip: FAKE_CID.toString() }) })
     expect(await updatePromise).toEqual(FAKE_CID)
 
     // Handle QUERY message
-    seqno = randomSeqno()
-    await dispatcher.handleMessage({ data: JSON.stringify({ typ: MsgType.QUERY, doc: FAKE_DOC_ID, id: "1" }), seqno })
+    await dispatcher.handleMessage({ data: JSON.stringify({ typ: MsgType.QUERY, doc: FAKE_DOC_ID, id: "1" }) })
     expect(ipfs.pubsub.publish).lastCalledWith(TOPIC, JSON.stringify({ typ: MsgType.RESPONSE, id: "1", tips: {[FAKE_DOC_ID]: FAKE_CID.toString()} }))
 
     // Handle RESPONSE message
-    seqno = randomSeqno()
     const updatePromise2 = new Promise(resolve => doc.on('update', resolve))
-    await dispatcher.handleMessage({ data: JSON.stringify({ typ: MsgType.RESPONSE, id: queryID, tips: { [FAKE_DOC_ID]: FAKE_CID2.toString() } }), seqno })
+    await dispatcher.handleMessage({ data: JSON.stringify({ typ: MsgType.RESPONSE, id: queryID, tips: { [FAKE_DOC_ID]: FAKE_CID2.toString() } }) })
     expect(await updatePromise2).toEqual(FAKE_CID2)
   })
 })
