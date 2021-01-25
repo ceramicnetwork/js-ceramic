@@ -2,7 +2,8 @@ import fetch from "cross-fetch"
 import { IpfsApi } from "@ceramicnetwork/common"
 
 const PEER_FILE_URLS = {
-    "testnet-clay": "https://raw.githubusercontent.com/ceramicnetwork/peerlist/main/testnet-clay.json"
+    "testnet-clay": "https://raw.githubusercontent.com/ceramicnetwork/peerlist/main/testnet-clay.json",
+    "dev-unstable": "https://raw.githubusercontent.com/ceramicnetwork/peerlist/main/dev-unstable.json"
 }
 
 const PEER_DISCOVERY_INTERVAL_DELAY = 1000 * 60 * 60 // 1 hour
