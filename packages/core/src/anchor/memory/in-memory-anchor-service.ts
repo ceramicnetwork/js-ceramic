@@ -9,12 +9,12 @@ import {
   AnchorStatus,
   CeramicApi,
   DoctypeUtils,
+  AnchorServiceResponse,
 } from "@ceramicnetwork/common";
 
 import type Dispatcher from "../../dispatcher";
 import Ceramic from "../../ceramic";
 import DocID from "@ceramicnetwork/docid";
-import { AnchorServiceResponse } from "../anchor-service-response";
 
 const DID_MATCHER =
   "^(did:([a-zA-Z0-9_]+):([a-zA-Z0-9_.-]+(:[a-zA-Z0-9_.-]+)*)((;[a-zA-Z0-9_.:%-]+=[a-zA-Z0-9_.:%-]*)*)(/[^#?]*)?)([?][^#]*)?(#.*)?";

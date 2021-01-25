@@ -1,10 +1,9 @@
-import Dispatcher from './dispatcher'
-import CID from 'cids'
-import { EventEmitter } from 'events'
-import PQueue from 'p-queue'
-import cloneDeep from 'lodash.clonedeep'
-import { AnchorServiceResponse } from './anchor/anchor-service-response'
-import Utils from './utils'
+import Dispatcher from "./dispatcher";
+import CID from "cids";
+import { EventEmitter } from "events";
+import PQueue from "p-queue";
+import cloneDeep from "lodash.clonedeep";
+import Utils from "./utils";
 import {
   AnchorProof,
   AnchorCommit,
@@ -21,41 +20,44 @@ import {
   Logger,
   DocStateHolder,
   CommitType,
-} from '@ceramicnetwork/common'
-import DocID from '@ceramicnetwork/docid'
-import { PinStore } from './store/pin-store';
+  AnchorServiceResponse,
+} from "@ceramicnetwork/common";
+import DocID from "@ceramicnetwork/docid";
+import { PinStore } from "./store/pin-store";
 
 // DocOpts defaults for document load operations
-const DEFAULT_LOAD_DOCOPTS = {anchor: false, publish: false, sync: true}
+const DEFAULT_LOAD_DOCOPTS = { anchor: false, publish: false, sync: true };
 // DocOpts defaults for document write operations
-const DEFAULT_WRITE_DOCOPTS = {anchor: true, publish: true, sync: false}
+const DEFAULT_WRITE_DOCOPTS = { anchor: true, publish: true, sync: false };
 
 /**
  * Document handles the update logic of the Doctype instance
  */
 export class Document extends EventEmitter implements DocStateHolder {
-  private _genesisCid: CID
-  private _applyQueue: PQueue
+  private _genesisCid: CID;
+  private _applyQueue: PQueue;
 
-  public readonly commit: CID
+  public readonly commit: CID;
 
-  private _logger: Logger
-  private _isProcessing: boolean
+  private _logger: Logger;
+  private _isProcessing: boolean;
 
-  constructor (public readonly id: DocID,
-               public dispatcher: Dispatcher,
-               public pinStore: PinStore,
-               private _validate: boolean,
-               private _context: Context,
-               private _doctypeHandler: DoctypeHandler<Doctype>,
-               private _doctype: Doctype) {
-    super()
-    this.commit = id.commit
+  constructor(
+    public readonly id: DocID,
+    public dispatcher: Dispatcher,
+    public pinStore: PinStore,
+    private _validate: boolean,
+    private _context: Context,
+    private _doctypeHandler: DoctypeHandler<Doctype>,
+    private _doctype: Doctype
+  ) {
+    super();
+    this.commit = id.commit;
 
-    this._logger = RootLogger.getLogger(Document.name)
+    this._logger = RootLogger.getLogger(Document.name);
 
-    this._applyQueue = new PQueue({ concurrency: 1 })
-    this._genesisCid = id.cid
+    this._applyQueue = new PQueue({ concurrency: 1 });
+    this._genesisCid = id.cid;
   }
 
   /**
@@ -68,32 +70,44 @@ export class Document extends EventEmitter implements DocStateHolder {
    * @param opts - Initialization options
    * @param validate - Validate content against schema
    */
-  static async create<T extends Doctype> (
-      docId: DocID,
-      doctypeHandler: DoctypeHandler<Doctype>,
-      dispatcher: Dispatcher,
-      pinStore: PinStore,
-      context: Context,
-      opts: DocOpts = {},
-      validate = true,
+  static async create<T extends Doctype>(
+    docId: DocID,
+    doctypeHandler: DoctypeHandler<Doctype>,
+    dispatcher: Dispatcher,
+    pinStore: PinStore,
+    context: Context,
+    opts: DocOpts = {},
+    validate = true
   ): Promise<Document> {
     // Fill 'opts' with default values for any missing fields
-    opts = {...DEFAULT_WRITE_DOCOPTS, ...opts}
+    opts = { ...DEFAULT_WRITE_DOCOPTS, ...opts };
 
-    const doctype = new doctypeHandler.doctype(null, context) as T
-    const doc = new Document(docId, dispatcher, pinStore, validate, context, doctypeHandler, doctype)
+    const doctype = new doctypeHandler.doctype(null, context) as T;
+    const doc = new Document(
+      docId,
+      dispatcher,
+      pinStore,
+      validate,
+      context,
+      doctypeHandler,
+      doctype
+    );
 
-    const genesis = await dispatcher.retrieveCommit(docId.cid)
-    doc._doctype.state = await doc._doctypeHandler.applyCommit(genesis, doc._genesisCid, context)
+    const genesis = await dispatcher.retrieveCommit(docId.cid);
+    doc._doctype.state = await doc._doctypeHandler.applyCommit(
+      genesis,
+      doc._genesisCid,
+      context
+    );
 
     if (validate) {
-      const schema = await Document.loadSchema(context, doc._doctype)
+      const schema = await Document.loadSchema(context, doc._doctype);
       if (schema) {
-        Utils.validate(doc._doctype.content, schema)
+        Utils.validate(doc._doctype.content, schema);
       }
     }
 
-    return Document._syncDocumentToCurrent(doc, pinStore, opts)
+    return Document._syncDocumentToCurrent(doc, pinStore, opts);
   }
 
   /**
@@ -106,23 +120,33 @@ export class Document extends EventEmitter implements DocStateHolder {
    * @param opts - Initialization options
    * @param validate - Validate content against schema
    */
-  static async load<T extends Doctype> (
-      id: DocID,
-      handler: DoctypeHandler<T>,
-      dispatcher: Dispatcher,
-      pinStore: PinStore,
-      context: Context,
-      opts: DocOpts = {},
-      validate = true): Promise<Document> {
+  static async load<T extends Doctype>(
+    id: DocID,
+    handler: DoctypeHandler<T>,
+    dispatcher: Dispatcher,
+    pinStore: PinStore,
+    context: Context,
+    opts: DocOpts = {},
+    validate = true
+  ): Promise<Document> {
     // Fill 'opts' with default values for any missing fields
-    opts = {...DEFAULT_LOAD_DOCOPTS, ...opts}
+    opts = { ...DEFAULT_LOAD_DOCOPTS, ...opts };
 
     if (id.commit) {
-      throw new Error("Cannot use Document.load() to load a specific document commit.  Use Document.loadAtCommit() instead")
+      throw new Error(
+        "Cannot use Document.load() to load a specific document commit.  Use Document.loadAtCommit() instead"
+      );
     }
 
-    const doc = await Document._loadGenesis(id.baseID, handler, dispatcher, pinStore, context, validate)
-    return await Document._syncDocumentToCurrent(doc, pinStore, opts)
+    const doc = await Document._loadGenesis(
+      id.baseID,
+      handler,
+      dispatcher,
+      pinStore,
+      context,
+      validate
+    );
+    return await Document._syncDocumentToCurrent(doc, pinStore, opts);
   }
 
   /**
@@ -133,19 +157,23 @@ export class Document extends EventEmitter implements DocStateHolder {
    * @param opts
    * @private
    */
-  static async _syncDocumentToCurrent(doc: Document, pinStore: PinStore, opts: DocOpts): Promise<Document> {
+  static async _syncDocumentToCurrent(
+    doc: Document,
+    pinStore: PinStore,
+    opts: DocOpts
+  ): Promise<Document> {
     // TODO: Assert that doc contains only the genesis commit
-    const id = doc.id
+    const id = doc.id;
 
     // Update document state to cached state if any
-    const isStored = await pinStore.stateStore.exists(id)
+    const isStored = await pinStore.stateStore.exists(id);
     if (isStored) {
-      doc._doctype.state = await pinStore.stateStore.load(id)
+      doc._doctype.state = await pinStore.stateStore.load(id);
     }
 
     // Request current tip from pub/sub system and register for future updates
-    await doc._register(opts)
-    return doc
+    await doc._register(opts);
+    return doc;
   }
 
   /**
@@ -158,28 +186,40 @@ export class Document extends EventEmitter implements DocStateHolder {
    * @param id - DocID of the document including the requested commit
    * @param doc - Most current version of the document that we know about
    */
-  static async loadAtCommit<T extends Doctype> (
-      id: DocID,
-      doc: Document): Promise<Document> {
-
+  static async loadAtCommit<T extends Doctype>(
+    id: DocID,
+    doc: Document
+  ): Promise<Document> {
     // If 'commit' is ahead of 'doc', sync doc up to 'commit'
-    await doc._handleTip(id.commit)
+    await doc._handleTip(id.commit);
 
     // If 'commit' is not included in doc's log at this point, that means that conflict resolution
     // rejected it.
-    const commitIndex = await doc._findIndex(id.commit, doc._doctype.state.log)
+    const commitIndex = await doc._findIndex(id.commit, doc._doctype.state.log);
     if (commitIndex < 0) {
-      throw new Error(`Requested commit CID ${id.commit.toString()} not found in the log for document ${id.baseID.toString()}`)
+      throw new Error(
+        `Requested commit CID ${id.commit.toString()} not found in the log for document ${id.baseID.toString()}`
+      );
     }
 
     // If the requested commit is included in the log, but isn't the most recent commit, we need
     // to reset the state to the state at the requested commit.
-    const resetLog = doc._doctype.state.log.slice(0, commitIndex + 1)
-    const resetState = await doc._applyLogToState(resetLog.map((logEntry) => logEntry.cid))
-    let doctype = new doc._doctypeHandler.doctype(null, doc._context) as T
-    doctype.state = resetState
-    doctype = DoctypeUtils.makeReadOnly<T>(doctype as T)
-    return new Document(id, doc.dispatcher, doc.pinStore, doc._validate, doc._context, doc._doctypeHandler, doctype)
+    const resetLog = doc._doctype.state.log.slice(0, commitIndex + 1);
+    const resetState = await doc._applyLogToState(
+      resetLog.map((logEntry) => logEntry.cid)
+    );
+    let doctype = new doc._doctypeHandler.doctype(null, doc._context) as T;
+    doctype.state = resetState;
+    doctype = DoctypeUtils.makeReadOnly<T>(doctype as T);
+    return new Document(
+      id,
+      doc.dispatcher,
+      doc.pinStore,
+      doc._validate,
+      doc._context,
+      doc._doctypeHandler,
+      doctype
+    );
   }
 
   /**
@@ -194,29 +234,42 @@ export class Document extends EventEmitter implements DocStateHolder {
    * @private
    */
   private static async _loadGenesis<T extends Doctype>(
-      id: DocID,
-      handler: DoctypeHandler<T>,
-      dispatcher: Dispatcher,
-      pinStore: PinStore,
-      context: Context,
-      validate: boolean) {
-    const doctype = new handler.doctype(null, context) as T
-    const doc = new Document(id, dispatcher, pinStore, validate, context, handler, doctype)
+    id: DocID,
+    handler: DoctypeHandler<T>,
+    dispatcher: Dispatcher,
+    pinStore: PinStore,
+    context: Context,
+    validate: boolean
+  ) {
+    const doctype = new handler.doctype(null, context) as T;
+    const doc = new Document(
+      id,
+      dispatcher,
+      pinStore,
+      validate,
+      context,
+      handler,
+      doctype
+    );
 
-    const commit = await dispatcher.retrieveCommit(doc._genesisCid)
+    const commit = await dispatcher.retrieveCommit(doc._genesisCid);
     if (commit == null) {
-      throw new Error(`No commit found for CID ${id.commit.toString()}`)
+      throw new Error(`No commit found for CID ${id.commit.toString()}`);
     }
-    doc._doctype.state = await doc._doctypeHandler.applyCommit(commit, doc._genesisCid, context)
+    doc._doctype.state = await doc._doctypeHandler.applyCommit(
+      commit,
+      doc._genesisCid,
+      context
+    );
 
     if (validate) {
-      const schema = await Document.loadSchema(context, doc._doctype)
+      const schema = await Document.loadSchema(context, doc._doctype);
       if (schema) {
-        Utils.validate(doc._doctype.content, schema)
+        Utils.validate(doc._doctype.content, schema);
       }
     }
 
-    return doc
+    return doc;
   }
 
   /**
@@ -225,15 +278,15 @@ export class Document extends EventEmitter implements DocStateHolder {
    * @param commit - Commit data
    * @param opts - Document initialization options (request anchor, wait, etc.)
    */
-  async applyCommit (commit: any, opts: DocOpts = {}): Promise<void> {
+  async applyCommit(commit: any, opts: DocOpts = {}): Promise<void> {
     // Fill 'opts' with default values for any missing fields
-    opts = {...DEFAULT_WRITE_DOCOPTS, ...opts}
+    opts = { ...DEFAULT_WRITE_DOCOPTS, ...opts };
 
-    const cid = await this.dispatcher.storeCommit(commit)
+    const cid = await this.dispatcher.storeCommit(commit);
 
-    await this._handleTip(cid)
-    await this._updateStateIfPinned()
-    await this._applyOpts(opts)
+    await this._handleTip(cid);
+    await this._updateStateIfPinned();
+    await this._applyOpts(opts);
   }
 
   /**
@@ -242,12 +295,12 @@ export class Document extends EventEmitter implements DocStateHolder {
    * @param opts - Document initialization options (request anchor, wait, etc.)
    * @private
    */
-  async _register (opts: DocOpts): Promise<void> {
-    this.on('update', this._update)
+  async _register(opts: DocOpts): Promise<void> {
+    this.on("update", this._update);
 
-    await this.dispatcher.register(this)
+    await this.dispatcher.register(this);
 
-    await this._applyOpts(opts)
+    await this._applyOpts(opts);
   }
 
   /**
@@ -257,17 +310,17 @@ export class Document extends EventEmitter implements DocStateHolder {
    * @private
    */
   async _applyOpts(opts: DocOpts): Promise<void> {
-    const anchor = opts.anchor ?? true
-    const publish = opts.publish ?? true
-    const sync = opts.sync ?? true
+    const anchor = opts.anchor ?? true;
+    const publish = opts.publish ?? true;
+    const sync = opts.sync ?? true;
     if (anchor) {
-      await this.anchor()
+      await this.anchor();
     }
     if (publish) {
-      await this._publishTip()
+      await this._publishTip();
     }
     if (sync) {
-      await this._wait()
+      await this._wait();
     }
   }
 
@@ -277,9 +330,9 @@ export class Document extends EventEmitter implements DocStateHolder {
    * @private
    */
   async _updateStateIfPinned(): Promise<void> {
-    const isPinned = await this.pinStore.stateStore.exists(this.id)
+    const isPinned = await this.pinStore.stateStore.exists(this.id);
     if (isPinned) {
-      await this.pinStore.add(this._doctype)
+      await this.pinStore.add(this._doctype);
     }
   }
 
@@ -291,11 +344,11 @@ export class Document extends EventEmitter implements DocStateHolder {
    */
   async _update(cid: CID): Promise<void> {
     try {
-      await this._handleTip(cid)
+      await this._handleTip(cid);
     } catch (e) {
-      this._logger.error(e)
+      this._logger.error(e);
     } finally {
-      this._isProcessing = false
+      this._isProcessing = false;
     }
   }
 
@@ -307,18 +360,18 @@ export class Document extends EventEmitter implements DocStateHolder {
    */
   async _handleTip(cid: CID): Promise<void> {
     try {
-      this._isProcessing = true
+      this._isProcessing = true;
       await this._applyQueue.add(async () => {
-        const log = await this._fetchLog(cid)
+        const log = await this._fetchLog(cid);
         if (log.length) {
-          const updated = await this._applyLog(log)
+          const updated = await this._applyLog(log);
           if (updated) {
-            this._doctype.emit('change')
+            this._doctype.emit("change");
           }
         }
-      })
+      });
     } finally {
-      this._isProcessing = false
+      this._isProcessing = false;
     }
   }
 
@@ -329,32 +382,34 @@ export class Document extends EventEmitter implements DocStateHolder {
    * @param log - Found log so far
    * @private
    */
-  async _fetchLog (cid: CID, log: Array<CID> = []): Promise<Array<CID>> {
-    if (await this._isCidIncluded(cid, this._doctype.state.log)) { // already processed
-      return []
+  async _fetchLog(cid: CID, log: Array<CID> = []): Promise<Array<CID>> {
+    if (await this._isCidIncluded(cid, this._doctype.state.log)) {
+      // already processed
+      return [];
     }
-    const commit = await this.dispatcher.retrieveCommit(cid)
+    const commit = await this.dispatcher.retrieveCommit(cid);
     if (commit == null) {
-      throw new Error(`No commit found for CID ${cid.toString()}`)
+      throw new Error(`No commit found for CID ${cid.toString()}`);
     }
 
-    let payload = commit
+    let payload = commit;
     if (DoctypeUtils.isSignedCommit(commit)) {
-      payload = await this.dispatcher.retrieveCommit(commit.link)
+      payload = await this.dispatcher.retrieveCommit(commit.link);
       if (payload == null) {
-        throw new Error(`No commit found for CID ${commit.link.toString()}`)
+        throw new Error(`No commit found for CID ${commit.link.toString()}`);
       }
     }
-    const prevCid: CID = payload.prev
-    if (!prevCid) { // this is a fake log
-      return []
+    const prevCid: CID = payload.prev;
+    if (!prevCid) {
+      // this is a fake log
+      return [];
     }
-    log.unshift(cid)
+    log.unshift(cid);
     if (await this._isCidIncluded(prevCid, this._doctype.state.log)) {
       // we found the connection to the canonical log
-      return log
+      return log;
     }
-    return this._fetchLog(prevCid, log)
+    return this._fetchLog(prevCid, log);
   }
 
   /**
@@ -367,16 +422,16 @@ export class Document extends EventEmitter implements DocStateHolder {
   async _findIndex(cid: CID, log: Array<LogEntry>): Promise<number> {
     // const conflictIdx = this._doctype.state.log.findIndex(x => x.equals(commit.prev)) + 1
     for (let index = 0; index < log.length; index++) {
-      const c = log[index].cid
+      const c = log[index].cid;
       if (c.equals(cid)) {
-        return index
+        return index;
       }
-      const commit = await this.dispatcher.retrieveCommit(c)
+      const commit = await this.dispatcher.retrieveCommit(c);
       if (DoctypeUtils.isSignedCommit(commit) && commit.link.equals(cid)) {
-        return index
+        return index;
       }
     }
-    return -1
+    return -1;
   }
 
   /**
@@ -387,7 +442,7 @@ export class Document extends EventEmitter implements DocStateHolder {
    * @private
    */
   async _isCidIncluded(cid: CID, log: Array<LogEntry>): Promise<boolean> {
-    return (await this._findIndex(cid, log)) !== -1
+    return (await this._findIndex(cid, log)) !== -1;
   }
 
   /**
@@ -398,40 +453,47 @@ export class Document extends EventEmitter implements DocStateHolder {
    * @returns the DocState containing the log that is selected
    * @private
    */
-  static async _pickLogToAccept(state1: DocState, state2: DocState): Promise<DocState> {
-    const isState1Anchored = state1.anchorStatus === AnchorStatus.ANCHORED
-    const isState2Anchored = state2.anchorStatus === AnchorStatus.ANCHORED
+  static async _pickLogToAccept(
+    state1: DocState,
+    state2: DocState
+  ): Promise<DocState> {
+    const isState1Anchored = state1.anchorStatus === AnchorStatus.ANCHORED;
+    const isState2Anchored = state2.anchorStatus === AnchorStatus.ANCHORED;
 
     if (isState1Anchored != isState2Anchored) {
       // When one of the logs is anchored but not the other, take the one that is anchored
-      return isState1Anchored ? state1 : state2
+      return isState1Anchored ? state1 : state2;
     }
 
     if (isState1Anchored && isState2Anchored) {
       // compare anchor proofs if both states are anchored
-      const { anchorProof: proof1 } = state1
-      const { anchorProof: proof2 } = state2
+      const { anchorProof: proof1 } = state1;
+      const { anchorProof: proof2 } = state2;
 
       if (proof1.chainId != proof2.chainId) {
         // TODO: Add logic to handle conflicting updates anchored on different chains
-        throw new Error("Conflicting logs on the same document are anchored on different chains. Chain1: " +
-            proof1.chainId + ", chain2: " + proof2.chainId)
+        throw new Error(
+          "Conflicting logs on the same document are anchored on different chains. Chain1: " +
+            proof1.chainId +
+            ", chain2: " +
+            proof2.chainId
+        );
       }
 
       // Compare block heights to decide which to take
       if (proof1.blockNumber < proof2.blockNumber) {
-        return state1
+        return state1;
       } else if (proof2.blockNumber < proof1.blockNumber) {
-        return state2
+        return state2;
       }
       // If they have the same block number fall through to fallback mechanism
     }
 
     // The anchor states are the same for both logs. Compare log lengths and choose the one with longer length.
     if (state1.log.length > state2.log.length) {
-      return state1
+      return state1;
     } else if (state1.log.length < state2.log.length) {
-      return state2
+      return state2;
     }
 
     // If we got this far, that means that we don't have sufficient information to make a good
@@ -439,7 +501,10 @@ export class Document extends EventEmitter implements DocStateHolder {
     // is anchored, although it can also happen if both are anchored but in the same blockNumber or
     // blockTimestamp. At this point, the decision of which log to take is arbitrary, but we want it
     // to still be deterministic. Therefore, we take the log whose last entry has the lowest CID.
-    return state1.log[state1.log.length - 1].cid.bytes < state2.log[state2.log.length - 1].cid.bytes ? state1 : state2
+    return state1.log[state1.log.length - 1].cid.bytes <
+      state2.log[state2.log.length - 1].cid.bytes
+      ? state1
+      : state2;
   }
 
   /**
@@ -449,42 +514,57 @@ export class Document extends EventEmitter implements DocStateHolder {
    * @return true if the log resulted in an update to this document's state, false if not
    * @private
    */
-  async _applyLog (log: Array<CID>): Promise<boolean> {
+  async _applyLog(log: Array<CID>): Promise<boolean> {
     if (log[log.length - 1].equals(this.tip)) {
       // log already applied
-      return false
+      return false;
     }
-    const cid = log[0]
-    const commit = await this.dispatcher.retrieveCommit(cid)
-    let payload = commit
+    const cid = log[0];
+    const commit = await this.dispatcher.retrieveCommit(cid);
+    let payload = commit;
     if (DoctypeUtils.isSignedCommit(commit)) {
-      payload = await this.dispatcher.retrieveCommit(commit.link)
+      payload = await this.dispatcher.retrieveCommit(commit.link);
     }
     if (payload.prev.equals(this.tip)) {
       // the new log starts where the previous one ended
-      this._doctype.state = await this._applyLogToState(log, cloneDeep(this._doctype.state))
-      return true
+      this._doctype.state = await this._applyLogToState(
+        log,
+        cloneDeep(this._doctype.state)
+      );
+      return true;
     }
 
     // we have a conflict since prev is in the log of the local state, but isn't the tip
     // BEGIN CONFLICT RESOLUTION
-    const conflictIdx = await this._findIndex(payload.prev, this._doctype.state.log) + 1
-    const canonicalLog = this._doctype.state.log.map(({cid}) => cid) // copy log
-    const localLog = canonicalLog.splice(conflictIdx)
+    const conflictIdx =
+      (await this._findIndex(payload.prev, this._doctype.state.log)) + 1;
+    const canonicalLog = this._doctype.state.log.map(({ cid }) => cid); // copy log
+    const localLog = canonicalLog.splice(conflictIdx);
     // Compute state up till conflictIdx
-    let state: DocState = await this._applyLogToState(canonicalLog)
+    let state: DocState = await this._applyLogToState(canonicalLog);
     // Compute next transition in parallel
-    const localState = await this._applyLogToState(localLog, cloneDeep(state), true)
-    const remoteState = await this._applyLogToState(log, cloneDeep(state), true)
+    const localState = await this._applyLogToState(
+      localLog,
+      cloneDeep(state),
+      true
+    );
+    const remoteState = await this._applyLogToState(
+      log,
+      cloneDeep(state),
+      true
+    );
 
-    const selectedState = await Document._pickLogToAccept(localState, remoteState)
+    const selectedState = await Document._pickLogToAccept(
+      localState,
+      remoteState
+    );
     if (selectedState === localState) {
-      return false
+      return false;
     }
 
-    state = await this._applyLogToState(log, cloneDeep(state))
-    this._doctype.state = state
-    return true
+    state = await this._applyLogToState(log, cloneDeep(state));
+    this._doctype.state = state;
+    return true;
   }
 
   /**
@@ -496,46 +576,63 @@ export class Document extends EventEmitter implements DocStateHolder {
    * @param breakOnAnchor - Should break apply on anchor commits?
    * @private
    */
-  async _applyLogToState (log: Array<CID>, state?: DocState, breakOnAnchor?: boolean): Promise<DocState> {
-    const itr = log.entries()
-    let entry = itr.next()
-    while(!entry.done) {
-      const cid = entry.value[1]
-      const commit = await this.dispatcher.retrieveCommit(cid)
+  async _applyLogToState(
+    log: Array<CID>,
+    state?: DocState,
+    breakOnAnchor?: boolean
+  ): Promise<DocState> {
+    const itr = log.entries();
+    let entry = itr.next();
+    while (!entry.done) {
+      const cid = entry.value[1];
+      const commit = await this.dispatcher.retrieveCommit(cid);
       // TODO - should catch potential thrown error here
 
-      let payload = commit
+      let payload = commit;
       if (DoctypeUtils.isSignedCommit(commit)) {
-        payload = await this.dispatcher.retrieveCommit(commit.link)
+        payload = await this.dispatcher.retrieveCommit(commit.link);
       }
 
       if (payload.proof) {
         // it's an anchor commit
-        await this._verifyAnchorCommit(commit)
-        state = await this._doctypeHandler.applyCommit(commit, cid, this._context, state)
+        await this._verifyAnchorCommit(commit);
+        state = await this._doctypeHandler.applyCommit(
+          commit,
+          cid,
+          this._context,
+          state
+        );
       } else {
         // it's a signed commit
-        const tmpState = await this._doctypeHandler.applyCommit(commit, cid, this._context, state)
-        const isGenesis = !payload.prev
-        const effectiveState = isGenesis ? tmpState : tmpState.next
+        const tmpState = await this._doctypeHandler.applyCommit(
+          commit,
+          cid,
+          this._context,
+          state
+        );
+        const isGenesis = !payload.prev;
+        const effectiveState = isGenesis ? tmpState : tmpState.next;
         if (this._validate) {
-          const schemaId = effectiveState.metadata.schema
+          const schemaId = effectiveState.metadata.schema;
           if (schemaId) {
-            const schema = await Document.loadSchemaById(this._context, schemaId)
+            const schema = await Document.loadSchemaById(
+              this._context,
+              schemaId
+            );
             if (schema) {
-              Utils.validate(effectiveState.content, schema)
+              Utils.validate(effectiveState.content, schema);
             }
           }
         }
-        state = tmpState // if validation is successful
+        state = tmpState; // if validation is successful
       }
 
       if (breakOnAnchor && AnchorStatus.ANCHORED === state.anchorStatus) {
-        return state
+        return state;
       }
-      entry = itr.next()
+      entry = itr.next();
     }
-    return state
+    return state;
   }
 
   /**
@@ -544,32 +641,44 @@ export class Document extends EventEmitter implements DocStateHolder {
    * @param commit - Anchor commit
    * @private
    */
-  async _verifyAnchorCommit (commit: AnchorCommit): Promise<AnchorProof> {
-    const proofCID = commit.proof
-    const proof =  await this.dispatcher.retrieveFromIPFS(proofCID)
+  async _verifyAnchorCommit(commit: AnchorCommit): Promise<AnchorProof> {
+    const proofCID = commit.proof;
+    const proof = await this.dispatcher.retrieveFromIPFS(proofCID);
 
-    let prevCIDViaMerkleTree
+    let prevCIDViaMerkleTree;
     try {
       // optimize verification by using ipfs.dag.tree for fetching the nested CID
       if (commit.path.length === 0) {
-        prevCIDViaMerkleTree = proof.root
+        prevCIDViaMerkleTree = proof.root;
       } else {
-        const merkleTreeParentRecordPath = '/root/' + commit.path.substr(0, commit.path.lastIndexOf('/'))
-        const last: string = commit.path.substr(commit.path.lastIndexOf('/') + 1)
+        const merkleTreeParentRecordPath =
+          "/root/" + commit.path.substr(0, commit.path.lastIndexOf("/"));
+        const last: string = commit.path.substr(
+          commit.path.lastIndexOf("/") + 1
+        );
 
-        const merkleTreeParentRecord = await this.dispatcher.retrieveFromIPFS(proofCID, merkleTreeParentRecordPath)
-        prevCIDViaMerkleTree = merkleTreeParentRecord[last]
+        const merkleTreeParentRecord = await this.dispatcher.retrieveFromIPFS(
+          proofCID,
+          merkleTreeParentRecordPath
+        );
+        prevCIDViaMerkleTree = merkleTreeParentRecord[last];
       }
     } catch (e) {
-      throw new Error(`The anchor commit couldn't be verified. Reason ${e.message}`)
+      throw new Error(
+        `The anchor commit couldn't be verified. Reason ${e.message}`
+      );
     }
 
     if (commit.prev.toString() !== prevCIDViaMerkleTree.toString()) {
-      throw new Error(`The anchor commit proof ${commit.proof.toString()} with path ${commit.path} points to invalid 'prev' commit`)
+      throw new Error(
+        `The anchor commit proof ${commit.proof.toString()} with path ${
+          commit.path
+        } points to invalid 'prev' commit`
+      );
     }
 
-    await this._context.anchorService.validateChainInclusion(proof)
-    return proof
+    await this._context.anchorService.validateChainInclusion(proof);
+    return proof;
   }
 
   /**
@@ -577,8 +686,8 @@ export class Document extends EventEmitter implements DocStateHolder {
    *
    * @private
    */
-  async _publishTip (): Promise<void> {
-    await this.dispatcher.publishTip(this.id, this.tip)
+  async _publishTip(): Promise<void> {
+    await this.dispatcher.publishTip(this.id, this.tip);
   }
 
   /**
@@ -586,76 +695,85 @@ export class Document extends EventEmitter implements DocStateHolder {
    * @param cid
    */
   async _isCidAnchored(cid: CID): Promise<boolean> {
-    let foundCid = false
+    let foundCid = false;
     for (const entry of this.state.log) {
       if (entry.cid.equals(cid)) {
-        foundCid = true
+        foundCid = true;
       }
 
       if (foundCid && entry.type == CommitType.ANCHOR) {
-        return true
+        return true;
       }
     }
-    return false
+    return false;
   }
 
   /**
    * Request anchor for the latest document state
    */
-  async anchor (): Promise<void> {
+  async anchor(): Promise<void> {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
-    const doc = this
-    const tip: CID = this.tip
+    const doc = this;
+    const tip: CID = this.tip;
 
-    this._context.anchorService.on(this.id.toString(), async function listener (asr: AnchorServiceResponse) {
-      if (!asr.cid.equals(tip)) {
-        // This message is about a different tip for the same document
-        return
-      }
-      switch (asr.status) {
-        case AnchorStatus.PENDING: {
-          const state = doc._doctype.state
-          state.anchorScheduledFor = asr.anchorScheduledFor
-          doc._doctype.state = state
-          await doc._updateStateIfPinned()
-          return
+    this._context.anchorService.on(
+      this.id.toString(),
+      async function listener(asr: AnchorServiceResponse) {
+        if (!asr.cid.equals(tip)) {
+          // This message is about a different tip for the same document
+          return;
         }
-        case AnchorStatus.PROCESSING: {
-          const state = doc._doctype.state
-          state.anchorStatus = AnchorStatus.PROCESSING
-          doc._doctype.state = state
-          await doc._updateStateIfPinned()
-          return
-        }
-        case AnchorStatus.ANCHORED: {
-          doc._context.anchorService.removeListener(doc.id.toString(), listener)
-
-          await doc._handleTip(asr.anchorRecord)
-          await doc._updateStateIfPinned()
-          await doc._publishTip()
-          return
-        }
-        case AnchorStatus.FAILED: {
-          doc._context.anchorService.removeListener(doc.id.toString(), listener)
-
-          if (await doc._isCidAnchored(tip)) {
-            // Even though the anchor request for this specific CID came back as FAILED, the cid
-            // still appears to be anchored.  This means that a later CID built on top of this
-            // one was anchored instead. In that case we should do nothing and simply return since
-            // the later CID that was successfully anchored should have already updated the state appropriately
-            return
+        switch (asr.status) {
+          case AnchorStatus.PENDING: {
+            const state = doc._doctype.state;
+            state.anchorScheduledFor = asr.anchorScheduledFor;
+            doc._doctype.state = state;
+            await doc._updateStateIfPinned();
+            return;
           }
-          const state = doc._doctype.state
-          state.anchorStatus = AnchorStatus.FAILED
-          doc._doctype.state = state
-          return
+          case AnchorStatus.PROCESSING: {
+            const state = doc._doctype.state;
+            state.anchorStatus = AnchorStatus.PROCESSING;
+            doc._doctype.state = state;
+            await doc._updateStateIfPinned();
+            return;
+          }
+          case AnchorStatus.ANCHORED: {
+            doc._context.anchorService.removeListener(
+              doc.id.toString(),
+              listener
+            );
+
+            await doc._handleTip(asr.anchorRecord);
+            await doc._updateStateIfPinned();
+            await doc._publishTip();
+            return;
+          }
+          case AnchorStatus.FAILED: {
+            doc._context.anchorService.removeListener(
+              doc.id.toString(),
+              listener
+            );
+
+            if (await doc._isCidAnchored(tip)) {
+              // Even though the anchor request for this specific CID came back as FAILED, the cid
+              // still appears to be anchored.  This means that a later CID built on top of this
+              // one was anchored instead. In that case we should do nothing and simply return since
+              // the later CID that was successfully anchored should have already updated the state appropriately
+              return;
+            }
+            const state = doc._doctype.state;
+            state.anchorStatus = AnchorStatus.FAILED;
+            doc._doctype.state = state;
+            return;
+          }
         }
       }
-    })
-    await this._context.anchorService.requestAnchor(this.id.baseID, this.tip)
-    const state = this._doctype.state
-    state.anchorStatus = AnchorStatus.PENDING
-    this._doctype.state = state
+    );
+    await this._context.anchorService.requestAnchor(this.id.baseID, this.tip);
+    const state = this._doctype.state;
+    state.anchorStatus = AnchorStatus.PENDING;
+    this._doctype.state = state;
   }
 
   /**
@@ -664,8 +782,13 @@ export class Document extends EventEmitter implements DocStateHolder {
    * @param context - Ceramic context
    * @param doctype - Doctype instance
    */
-  static async loadSchema<T extends Doctype>(context: Context, doctype: Doctype): Promise<T> {
-    return doctype.state?.metadata?.schema ? Document.loadSchemaById(context, doctype.state.metadata.schema) : null
+  static async loadSchema<T extends Doctype>(
+    context: Context,
+    doctype: Doctype
+  ): Promise<T> {
+    return doctype.state?.metadata?.schema
+      ? Document.loadSchemaById(context, doctype.state.metadata.schema)
+      : null;
   }
 
   /**
@@ -674,71 +797,74 @@ export class Document extends EventEmitter implements DocStateHolder {
    * @param context - Ceramic context
    * @param schemaDocId - Schema document ID
    */
-  static async loadSchemaById<T extends Doctype>(context: Context, schemaDocId: string): Promise<T> {
+  static async loadSchemaById<T extends Doctype>(
+    context: Context,
+    schemaDocId: string
+  ): Promise<T> {
     if (schemaDocId) {
-      const schemaDocIdParsed = DocID.fromString(schemaDocId)
+      const schemaDocIdParsed = DocID.fromString(schemaDocId);
       if (!schemaDocIdParsed.commit) {
-        throw new Error("Commit missing when loading schema document")
+        throw new Error("Commit missing when loading schema document");
       }
-      const schemaDoc = await context.api.loadDocument(schemaDocId)
-      return schemaDoc.content
+      const schemaDoc = await context.api.loadDocument(schemaDocId);
+      return schemaDoc.content;
     }
-    return null
+    return null;
   }
 
   /**
    * Gets document content
    */
-  get content (): any {
-    const { next, content } = this._doctype.state
-    return next?.content ?? content
+  get content(): any {
+    const { next, content } = this._doctype.state;
+    return next?.content ?? content;
   }
 
   /**
    * Gets document state
    */
-  get state (): DocState {
-    return this._doctype.state
+  get state(): DocState {
+    return this._doctype.state;
   }
 
   /**
    * Gets document doctype name
    */
-  get doctype (): Doctype {
-    return this._doctype
+  get doctype(): Doctype {
+    return this._doctype;
   }
 
   /**
    * Gets document Tip commit CID
    */
-  get tip (): CID {
-    return this._doctype.tip
+  get tip(): CID {
+    return this._doctype.tip;
   }
 
   /**
    * Gets document controllers
    */
-  get controllers (): string[] {
-    return this._doctype.controllers
+  get controllers(): string[] {
+    return this._doctype.controllers;
   }
 
   /**
    * Gets document metadata
    */
-  get metadata (): DocMetadata {
-    return this._doctype.metadata
+  get metadata(): DocMetadata {
+    return this._doctype.metadata;
   }
 
   get commitId(): DocID {
-    return this._doctype.commitId
+    return this._doctype.commitId;
   }
 
   get allCommitIds(): Array<DocID> {
-    return this._doctype.allCommitIds
+    return this._doctype.allCommitIds;
   }
 
   get anchorCommitIds(): Array<DocID> {
-    return this._doctype.anchorCommitIds
+    return this._doctype.anchorCommitIds;
   }
 
   /**
@@ -748,36 +874,41 @@ export class Document extends EventEmitter implements DocStateHolder {
    */
   async _wait(): Promise<void> {
     // add response timeout for network change
-    return new Promise(resolve => {
-      let tid: any // eslint-disable-line prefer-const
+    return new Promise((resolve) => {
+      let tid: any; // eslint-disable-line prefer-const
       const clear = (): void => {
-        clearTimeout(tid)
-        this._doctype.off('change', clear)
-        resolve()
-      }
-      tid = setTimeout(clear, 3000)
-      this._doctype.on('change', clear)
-    })
+        clearTimeout(tid);
+        this._doctype.off("change", clear);
+        resolve();
+      };
+      tid = setTimeout(clear, 3000);
+      this._doctype.on("change", clear);
+    });
   }
 
   /**
    * Gracefully closes the document instance.
    */
-  async close (): Promise<void> {
-    this.off('update', this._update)
+  async close(): Promise<void> {
+    this.off("update", this._update);
 
-    this.dispatcher.unregister(this.id.toString())
+    this.dispatcher.unregister(this.id.toString());
 
-    await this._applyQueue.onEmpty()
+    await this._applyQueue.onEmpty();
 
-    this._context.anchorService && this._context.anchorService.removeAllListeners(this.id.toString())
-    await Utils.awaitCondition(() => this._isProcessing, () => false, 500)
+    this._context.anchorService &&
+      this._context.anchorService.removeAllListeners(this.id.toString());
+    await Utils.awaitCondition(
+      () => this._isProcessing,
+      () => false,
+      500
+    );
   }
 
   /**
    * Serializes the document content
    */
-  toString (): string {
-    return JSON.stringify(this._doctype.state.content)
+  toString(): string {
+    return JSON.stringify(this._doctype.state.content);
   }
 }

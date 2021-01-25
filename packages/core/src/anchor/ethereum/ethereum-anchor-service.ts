@@ -3,12 +3,16 @@ import fetch from "cross-fetch";
 import { decode } from "multihashes";
 import * as providers from "@ethersproject/providers";
 import { CeramicConfig } from "../../ceramic";
-import { AnchorService, AnchorStatus } from "@ceramicnetwork/common";
-import { AnchorProof, CeramicApi } from "@ceramicnetwork/common";
+import {
+  AnchorProof,
+  CeramicApi,
+  AnchorServiceResponse,
+  AnchorService,
+  AnchorStatus,
+} from "@ceramicnetwork/common";
 import * as uint8arrays from "uint8arrays";
 import DocID from "@ceramicnetwork/docid";
 import { Observable, Subject } from "rxjs";
-import { AnchorServiceResponse } from "../anchor-service-response";
 import { filter } from "rxjs/operators";
 
 /**
