@@ -55,7 +55,6 @@
     "key-did-resolver": "^0.2.4",
     "level-ts": "^2.0.5",
     "lodash.clonedeep": "^4.5.0",
-    "lru_map": "^0.4.1",
     "multiformats": "3.0.3",
     "p-queue": "^6.6.1",
     "typestub-multihashes": "^0.0.4",

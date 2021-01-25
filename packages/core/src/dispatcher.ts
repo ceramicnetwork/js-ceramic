@@ -4,8 +4,6 @@ import cloneDeep from 'lodash.clonedeep'
 import dagCBOR from "ipld-dag-cbor"
 import * as multihashes from 'typestub-multihashes'
 import * as sha256 from "@stablelib/sha256"
-import * as u8a from 'uint8arrays'
-import { LRUMap } from 'lru_map'
 
 import type Document from "./document"
 import { DoctypeUtils, RootLogger, Logger, IpfsApi } from "@ceramicnetwork/common"
@@ -16,7 +14,6 @@ const IPFS_GET_TIMEOUT = 30000 // 30 seconds
 const IPFS_MAX_RECORD_SIZE = 256000 // 256 KB
 const IPFS_RESUBSCRIBE_INTERVAL_DELAY = 1000 * 60 // 1 minute
 const TESTING = process.env.NODE_ENV == 'test'
-const SEEN_MSGS_LIMIT = 100
 
 /**
  * Ceramic Pub/Sub message type.
@@ -47,7 +44,6 @@ export default class Dispatcher extends EventEmitter {
   // Set of IDs for QUERY messages we have sent to the pub/sub topic but not yet heard a
   // corresponding RESPONSE message for. Maps the query ID to the primary DocID we were querying for.
   private readonly _outstandingQueryIds: Record<string, DocID>
-  private readonly _seenMsgs: LRUMap<string, boolean>
 
   private logger: Logger
   private _isRunning = true
@@ -57,7 +53,6 @@ export default class Dispatcher extends EventEmitter {
     super()
     this._documents = {}
     this._outstandingQueryIds = {}
-    this._seenMsgs = new LRUMap<string, boolean>(SEEN_MSGS_LIMIT)
     this.logger = RootLogger.getLogger(Dispatcher.name)
   }
 
@@ -67,7 +62,9 @@ export default class Dispatcher extends EventEmitter {
   async init(): Promise<void> {
     this._peerId = this._peerId || (await this._ipfs.id()).id
     await this._subscribe()
-    if (!TESTING) {
+    // If ipfs.libp2p is defined we have an internal ipfs node, this means that
+    // we don't want to resubscribe since it will add multiple handlers.
+    if (!TESTING && !this._ipfs.libp2p) {
       this._resubscribe()
     }
   }
@@ -239,13 +236,6 @@ export default class Dispatcher extends EventEmitter {
     if (!this._isRunning) {
       this.logger.error('Dispatcher has been closed')
       return
-    }
-    // Why doesn't libp2p do deduplication of messages?
-    const seqno = u8a.toString(message.seqno, 'base16')
-    if (this._seenMsgs.get(seqno)) {
-      return
-    } else {
-      this._seenMsgs.set(seqno, true)
     }
 
     if (message.from === this._peerId) {
