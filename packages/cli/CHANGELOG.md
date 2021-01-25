@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.20.3](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@0.20.2...@ceramicnetwork/cli@0.20.3) (2021-01-25)
+
+
+### Bug Fixes
+
+* **cli:** Fix pinningEndpoint cli arg ([#840](https://github.com/ceramicnetwork/js-ceramic/issues/840)) ([2951d65](https://github.com/ceramicnetwork/js-ceramic/commit/2951d6592e4c945c21de842c69a16fee5367bb68))
+
+
+
+
+
 ## [0.20.2](/compare/@ceramicnetwork/cli@0.20.1...@ceramicnetwork/cli@0.20.2) (2021-01-21)
 
 
