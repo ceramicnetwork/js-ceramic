@@ -5,7 +5,6 @@ import { decode } from "typestub-multihashes"
 import * as providers from "@ethersproject/providers"
 import { CeramicConfig } from "../../ceramic"
 
-import AnchorServiceResponse from "../anchor-service-response"
 import { AnchorService, AnchorStatus } from "@ceramicnetwork/common"
 import { AnchorProof, CeramicApi } from "@ceramicnetwork/common"
 
@@ -49,22 +48,20 @@ const BASE_CHAIN_ID = "eip155"
  * Ethereum anchor service that stores root CIDs on Ethereum blockchain
  */
 export default class EthereumAnchorService extends AnchorService {
-
-    private _ceramic: CeramicApi
-    private readonly cidToResMap: Map<CidDoc, AnchorServiceResponse>
     private readonly requestsApiEndpoint: string
     private readonly chainIdApiEndpoint: string
+    private readonly ethereumRpcEndpoint: string | undefined
     private _chainId: string
 
     /**
      * @param _config - service configuration (polling interval, etc.)
      */
-    constructor(private _config: CeramicConfig) {
+    constructor(_config: CeramicConfig) {
         super()
 
-        this.cidToResMap = new Map<CidDoc, AnchorServiceResponse>()
-        this.requestsApiEndpoint = this._config.anchorServiceUrl + '/api/v0/requests'
-        this.chainIdApiEndpoint = this._config.anchorServiceUrl + '/api/v0/service-info/supported_chains'
+        this.requestsApiEndpoint = _config.anchorServiceUrl + '/api/v0/requests'
+        this.chainIdApiEndpoint = _config.anchorServiceUrl + '/api/v0/service-info/supported_chains'
+        this.ethereumRpcEndpoint = _config.ethereumRpcUrl
 
         this.setMaxListeners(MAX_NUMBER_OF_EVENT_LISTENERS)
     }
@@ -75,7 +72,7 @@ export default class EthereumAnchorService extends AnchorService {
      * @param ceramic - Ceramic API used for various purposes
      */
     set ceramic(ceramic: CeramicApi) {
-        this._ceramic = ceramic
+        // Do Nothing
     }
 
     async init(): Promise<void> {
@@ -142,7 +139,6 @@ export default class EthereumAnchorService extends AnchorService {
         const json = await response.json()
 
         const res = { cid: cidDocPair.cid, status: json.status, message: json.message, anchorScheduledFor: json.scheduledAt }
-        this.cidToResMap.set(cidDocPair, res)
         this.emit(cidDocPair.docId, res)
     }
 
@@ -161,8 +157,6 @@ export default class EthereumAnchorService extends AnchorService {
         while (poll) {
             if (started > maxTime) {
                 const failedRes = { cid: cidDoc.cid, status: 'FAILED', message: 'exceeded max timeout' }
-                this.cidToResMap.set(cidDoc, failedRes)
-
                 this.emit(cidDoc.docId, failedRes)
                 return // exit loop
             }
@@ -259,8 +253,8 @@ export default class EthereumAnchorService extends AnchorService {
             throw new Error(`Unsupported chainId '${chain}'. Configured anchor service only supports '${this._chainId}'`)
         }
 
-        if (this._config.ethereumRpcUrl) {
-            return new providers.JsonRpcProvider(this._config.ethereumRpcUrl)
+        if (this.ethereumRpcEndpoint) {
+            return new providers.JsonRpcProvider(this.ethereumRpcEndpoint)
         }
 
         const ethNetwork: EthNetwork = ETH_CHAIN_ID_MAPPINGS[chain]
