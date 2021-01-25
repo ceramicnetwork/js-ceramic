@@ -253,9 +253,9 @@ export default class Dispatcher extends EventEmitter {
       parsedMessageData = JSON.parse(new TextDecoder('utf-8').decode(message.data))
     }
     // TODO: handle signature and key buffers in message data
-    delete message.key
-    delete message.signature
     const logMessage = { ...message, data: parsedMessageData }
+    delete logMessage.key
+    delete logMessage.signature
     this._log({ peer: this._peerId, event: 'received', topic: this.topic, message: logMessage })
 
     const { typ } = parsedMessageData
