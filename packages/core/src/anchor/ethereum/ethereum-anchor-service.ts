@@ -1,13 +1,11 @@
 import CID from "cids"
 import fetch from "cross-fetch"
-
-import * as uint8arrays from 'uint8arrays'
 import { decode } from "multihashes"
 import * as providers from "@ethersproject/providers"
 import { CeramicConfig } from "../../ceramic"
-
 import { AnchorService, AnchorStatus } from "@ceramicnetwork/common"
 import { AnchorProof, CeramicApi } from "@ceramicnetwork/common"
+import * as uint8arrays from "uint8arrays";
 
 /**
  * CID-docId pair
@@ -55,15 +53,13 @@ export default class EthereumAnchorService extends AnchorService {
     private _chainId: string
 
     /**
-     * @param _config - service configuration (polling interval, etc.)
+     * @param config - service configuration (polling interval, etc.)
      */
-    constructor(_config: CeramicConfig) {
+    constructor(config: CeramicConfig) {
         super()
-
-        this.requestsApiEndpoint = _config.anchorServiceUrl + '/api/v0/requests'
-        this.chainIdApiEndpoint = _config.anchorServiceUrl + '/api/v0/service-info/supported_chains'
-        this.ethereumRpcEndpoint = _config.ethereumRpcUrl
-
+        this.requestsApiEndpoint = config.anchorServiceUrl + '/api/v0/requests'
+        this.chainIdApiEndpoint = config.anchorServiceUrl + '/api/v0/service-info/supported_chains'
+        this.ethereumRpcEndpoint = config.ethereumRpcUrl
         this.setMaxListeners(MAX_NUMBER_OF_EVENT_LISTENERS)
     }
 
@@ -129,18 +125,15 @@ export default class EthereumAnchorService extends AnchorService {
             }
         })
 
-        if (!response.ok) {
+        if (response.ok) {
+            const json = await response.json()
+            this.processRemoteResponse(cidDocPair, json)
+        } else {
             this.emit(cidDocPair.docId, {
-                cid: cidDocPair.cid,
                 status: 'FAILED',
                 message: `Failed to send request. Status ${response.statusText}`
             })
-            return
         }
-        const json = await response.json()
-
-        const res = { cid: cidDocPair.cid, status: json.status, message: json.message, anchorScheduledFor: json.scheduledAt }
-        this.emit(cidDocPair.docId, res)
     }
 
     /**
@@ -179,31 +172,7 @@ export default class EthereumAnchorService extends AnchorService {
                 }
 
                 const json = await response.json()
-                switch (json.status) {
-                    case "PENDING": {
-                        // just log
-                        break
-                    }
-                    case "PROCESSING": {
-                        this.emit(cidDoc.docId, { cid: cidDoc.cid, status: json.status, message: json.message })
-                        break
-                    }
-                    case "FAILED": {
-                        this.emit(cidDoc.docId, { cid: cidDoc.cid, status: json.status, message: json.message })
-                        poll = false
-                        break
-                    }
-                    case "COMPLETED": {
-                        const { anchorRecord } = json
-                        const anchorRecordCid = new CID(anchorRecord.cid.toString())
-
-                        this.emit(cidDoc.docId, {
-                            cid: cidDoc.cid, status: json.status, message: json.message, anchorRecord: anchorRecordCid
-                        })
-                        poll = false
-                        break
-                    }
-                }
+                poll = this.processRemoteResponse(cidDoc, json)
             } catch (e) {
                 // just log
             }
@@ -266,4 +235,32 @@ export default class EthereumAnchorService extends AnchorService {
         return providers.getDefaultProvider(ethNetwork.network)
     }
 
+    private processRemoteResponse(cidDoc: CidDoc, json: any): boolean {
+        switch (json.status) {
+            case "PENDING": {
+                this.emit(cidDoc.docId, { cid: cidDoc.cid, status: json.status, message: json.message, anchorScheduledFor: json.scheduledAt })
+                return true
+            }
+            case "PROCESSING": {
+                this.emit(cidDoc.docId, { cid: cidDoc.cid, status: json.status, message: json.message })
+                return true
+            }
+            case "FAILED": {
+                this.emit(cidDoc.docId, { cid: cidDoc.cid, status: json.status, message: json.message })
+                return false
+            }
+            case "COMPLETED": {
+                const { anchorRecord } = json
+                const anchorRecordCid = new CID(anchorRecord.cid.toString())
+
+                this.emit(cidDoc.docId, {
+                    cid: cidDoc.cid,
+                    status: json.status,
+                    message: json.message,
+                    anchorRecord: anchorRecordCid
+                })
+                return false
+            }
+        }
+    }
 }
