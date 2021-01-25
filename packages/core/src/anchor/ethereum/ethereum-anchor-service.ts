@@ -1,7 +1,8 @@
 import CID from "cids"
 import fetch from "cross-fetch"
 
-import { decode } from "typestub-multihashes"
+import * as uint8arrays from 'uint8arrays'
+import { decode } from "multihashes"
 import * as providers from "@ethersproject/providers"
 import { CeramicConfig } from "../../ceramic"
 
@@ -214,8 +215,8 @@ export default class EthereumAnchorService extends AnchorService {
      * @param anchorProof - Anchor proof instance
      */
     async validateChainInclusion(anchorProof: AnchorProof): Promise<void> {
-        const decoded = decode(Buffer.from(anchorProof.txHash.multihash))
-        const txHash = decoded.digest.toString("hex")
+        const decoded = decode(anchorProof.txHash.multihash)
+        const txHash = uint8arrays.toString(decoded.digest, 'base16')
 
         // determine network based on a chain ID
         const provider: providers.BaseProvider = this._getEthProvider(anchorProof.chainId)

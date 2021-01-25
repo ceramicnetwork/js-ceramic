@@ -2,7 +2,7 @@ import { EventEmitter } from 'events'
 import CID from 'cids'
 import cloneDeep from 'lodash.clonedeep'
 import dagCBOR from "ipld-dag-cbor"
-import * as multihashes from 'typestub-multihashes'
+import * as multihashes from 'multihashes'
 import * as sha256 from "@stablelib/sha256"
 
 import type Document from "./document"
