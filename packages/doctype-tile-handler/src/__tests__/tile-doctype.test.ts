@@ -1,24 +1,25 @@
 import CID from 'cids'
-
 import dagCBOR from "ipld-dag-cbor"
-
 import { DID } from 'dids'
 import { Resolver } from "did-resolver"
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import KeyDidResolver from 'key-did-resolver'
 import { TileDoctypeHandler } from '../tile-doctype-handler'
-
+import * as sha256 from '@stablelib/sha256'
 import { TileDoctype } from "@ceramicnetwork/doctype-tile"
 import {AnchorCommit, CeramicApi, Context, DoctypeUtils, SignedCommitContainer} from "@ceramicnetwork/common"
+import * as uint8arrays from "uint8arrays";
+import cloneDeep from 'lodash.clonedeep'
 
 jest.mock('did-jwt', () => ({
     // TODO - We should test for when this function throws as well
     verifyJWS: (): void => { return }
 }))
 
-const cloneDeep = require('lodash.clonedeep') // eslint-disable-line @typescript-eslint/no-var-requires
-const { sha256 } = require('js-sha256') // eslint-disable-line @typescript-eslint/no-var-requires
-const hash = (data: string): CID => new CID(1, 'sha2-256', Buffer.from('1220' + sha256(data), 'hex'))
+const hash = (data: string): CID => {
+    const body = uint8arrays.concat([uint8arrays.fromString('1220', 'base16'), sha256.hash(uint8arrays.fromString(data))])
+    return new CID(1, 'sha2-256', body)
+}
 
 const FAKE_CID_1 = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
 const FAKE_CID_2 = new CID('bafybeig6xv5nwphfmvcnektpnojts44jqcuam7bmye2pb54adnrtccjlsu')

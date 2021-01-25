@@ -139,8 +139,7 @@ export default class Dispatcher extends EventEmitter {
     id = sha256.hash(id)
 
     // Multihash encoding
-    const buf = Buffer.from(id)
-    return multihashes.encode(buf, 'sha2-256')
+    return multihashes.encode(id, 'sha2-256')
   }
 
   /**

@@ -1,9 +1,7 @@
 import jsonpatch from 'fast-json-patch'
-
-import { encode as base64Encode } from '@ethersproject/base64'
-import { randomBytes } from '@ethersproject/random'
-
-import { DID } from 'dids'
+import * as uint8arrays from 'uint8arrays'
+import {randomBytes} from '@stablelib/random'
+import type { DID } from 'dids'
 import {
     Doctype,
     DoctypeConstructor,
@@ -67,7 +65,7 @@ export class TileDoctype extends Doctype {
      */
     static async makeGenesis<T extends CeramicCommit>(params: DocParams, context: Context): Promise<T> {
         // If 'deterministic' is undefined, default to creating document uniquely
-        const unique = params.deterministic ? '0' : base64Encode(randomBytes(12))
+        const unique = params.deterministic ? '0' : uint8arrays.toString(randomBytes(12), 'base64')
 
         const metadata: GenesisHeader = params.metadata || { controllers: [] }
         if (!metadata.controllers || metadata.controllers.length === 0) {

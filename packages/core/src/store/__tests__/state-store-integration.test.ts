@@ -20,10 +20,14 @@ import InMemoryAnchorService from "../../anchor/memory/in-memory-anchor-service"
 jest.mock('../../dispatcher', () => {
   const CID = require('cids') // eslint-disable-line @typescript-eslint/no-var-requires
   const cloneDeep = require('lodash.clonedeep') // eslint-disable-line @typescript-eslint/no-var-requires
-  const { sha256 } = require('js-sha256') // eslint-disable-line @typescript-eslint/no-var-requires
+  const sha256 = require('@stablelib/sha256') // eslint-disable-line @typescript-eslint/no-var-requires
+  const u8a = require('uint8arrays') // eslint-disable-line @typescript-eslint/no-var-requires
   const { DoctypeUtils } = require('@ceramicnetwork/common') // eslint-disable-line @typescript-eslint/no-var-requires
   const dagCBOR = require('ipld-dag-cbor') // eslint-disable-line @typescript-eslint/no-var-requires
-  const hash = (data: string): CID => new CID(1, 'sha2-256', Buffer.from('1220' + sha256(data), 'hex'))
+  const hash = (data: string): CID => {
+    const body = u8a.concat([u8a.fromString('1220', 'base16'), sha256.hash(u8a.fromString(data))])
+    return new CID(1, 'sha2-256', body)
+  }
 
   return (gossip: boolean): any => {
     const pinnedDocIds: Record<string, boolean> = {}
