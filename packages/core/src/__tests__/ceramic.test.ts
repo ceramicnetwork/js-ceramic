@@ -245,7 +245,6 @@ describe('Ceramic integration', () => {
     }, {
       anchor: false, publish: false, sync: false
     })
-    await syncDoc(doctype3) // sync anchor record for genesis
 
     expect(doctype3.content).toEqual(doctype1.content)
 
