@@ -257,8 +257,8 @@ class InMemoryAnchorService extends AnchorService {
     const { payload, signatures } = commit
     const { signature, protected: _protected } = signatures[0]
 
-    const jsonAsBase64url = uint8arrays.toString(uint8arrays.fromString(_protected, 'base64url'))
-    const decodedHeader = JSON.parse(jsonAsBase64url)
+    const decodedJsonString = uint8arrays.toString(uint8arrays.fromString(_protected, 'base64url'))
+    const decodedHeader = JSON.parse(decodedJsonString)
     const { kid } = decodedHeader
 
     const didDoc = await this._ceramic.context.resolver.resolve(kid)
