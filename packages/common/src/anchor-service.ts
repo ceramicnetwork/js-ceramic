@@ -1,6 +1,5 @@
 import CID from "cids";
 import type { Observable } from "rxjs";
-import { EventEmitter } from "events";
 import { AnchorProof, AnchorStatus } from "./doctype";
 import { CeramicApi } from "./ceramic-api";
 import DocID from "@ceramicnetwork/docid";
@@ -47,7 +46,7 @@ export type AnchorServiceResponse =
 /**
  * Describes anchoring service behavior
  */
-export abstract class AnchorService extends EventEmitter {
+export abstract class AnchorService {
   /**
    * Performs whatever initialization work is required by the specific anchor service implementation
    */

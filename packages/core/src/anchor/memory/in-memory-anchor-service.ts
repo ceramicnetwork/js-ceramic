@@ -59,9 +59,6 @@ class InMemoryAnchorService extends AnchorService {
     this.#anchorDelay = _config?.anchorDelay ?? 0;
     this.#anchorOnRequest = _config?.anchorOnRequest ?? true;
     this.#verifySignatures = _config?.verifySignatures ?? true;
-    this.#feed.subscribe((asr) => {
-      this.emit(asr.docId.toString(), asr);
-    });
   }
 
   async init(): Promise<void> {

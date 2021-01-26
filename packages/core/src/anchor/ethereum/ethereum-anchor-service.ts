@@ -79,11 +79,6 @@ export default class EthereumAnchorService extends AnchorService {
     this.requestsApiEndpoint = config.anchorServiceUrl + "/api/v0/requests";
     this.chainIdApiEndpoint = config.anchorServiceUrl + "/api/v0/service-info/supported_chains";
     this.ethereumRpcEndpoint = config.ethereumRpcUrl;
-    this.setMaxListeners(MAX_NUMBER_OF_EVENT_LISTENERS);
-
-    this.#feed.subscribe((asr) => {
-      this.emit(asr.docId.toString(), asr);
-    });
   }
 
   /**

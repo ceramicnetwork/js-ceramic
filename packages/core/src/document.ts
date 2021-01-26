@@ -776,7 +776,6 @@ export class Document extends EventEmitter implements DocStateHolder {
 
     await this._applyQueue.onEmpty();
 
-    this._context.anchorService && this._context.anchorService.removeAllListeners(this.id.toString());
     await Utils.awaitCondition(
       () => this._isProcessing,
       () => false,
