@@ -20,10 +20,10 @@ import {
   Logger,
   DocStateHolder,
   CommitType,
-  AnchorServiceResponse,
 } from "@ceramicnetwork/common";
 import DocID from "@ceramicnetwork/docid";
 import { PinStore } from "./store/pin-store";
+import { SubscriptionSet } from "./subscription-set";
 
 // DocOpts defaults for document load operations
 const DEFAULT_LOAD_DOCOPTS = { anchor: false, publish: false, sync: true };
@@ -41,6 +41,7 @@ export class Document extends EventEmitter implements DocStateHolder {
 
   private _logger: Logger;
   private _isProcessing: boolean;
+  private readonly subscriptionSet = new SubscriptionSet();
 
   constructor(
     public readonly id: DocID,
@@ -619,29 +620,24 @@ export class Document extends EventEmitter implements DocStateHolder {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const doc = this;
     const tip: CID = this.tip;
-
-    this._context.anchorService.on(this.id.toString(), async function listener(asr: AnchorServiceResponse) {
+    const subscription = this._context.anchorService.requestAnchor(this.id.baseID, this.tip).subscribe(async (asr) => {
       if (!asr.cid.equals(tip)) {
         // This message is about a different tip for the same document
         return;
       }
       switch (asr.status) {
         case AnchorStatus.PENDING: {
-          const state = doc._doctype.state;
-          state.anchorScheduledFor = asr.anchorScheduledFor;
-          doc._doctype.state = state;
+          doc._doctype.state = { ...doc._doctype.state, anchorScheduledFor: asr.anchorScheduledFor };
           await doc._updateStateIfPinned();
           return;
         }
         case AnchorStatus.PROCESSING: {
-          const state = doc._doctype.state;
-          state.anchorStatus = AnchorStatus.PROCESSING;
-          doc._doctype.state = state;
+          doc._doctype.state = { ...doc._doctype.state, anchorStatus: AnchorStatus.PROCESSING };
           await doc._updateStateIfPinned();
           return;
         }
         case AnchorStatus.ANCHORED: {
-          doc._context.anchorService.removeListener(doc.id.toString(), listener);
+          subscription.unsubscribe();
 
           await doc._handleTip(asr.anchorRecord);
           await doc._updateStateIfPinned();
@@ -649,7 +645,7 @@ export class Document extends EventEmitter implements DocStateHolder {
           return;
         }
         case AnchorStatus.FAILED: {
-          doc._context.anchorService.removeListener(doc.id.toString(), listener);
+          subscription.unsubscribe();
 
           if (await doc._isCidAnchored(tip)) {
             // Even though the anchor request for this specific CID came back as FAILED, the cid
@@ -658,17 +654,13 @@ export class Document extends EventEmitter implements DocStateHolder {
             // the later CID that was successfully anchored should have already updated the state appropriately
             return;
           }
-          const state = doc._doctype.state;
-          state.anchorStatus = AnchorStatus.FAILED;
-          doc._doctype.state = state;
+          doc._doctype.state = { ...doc._doctype.state, anchorStatus: AnchorStatus.FAILED };
           return;
         }
       }
     });
-    await this._context.anchorService.requestAnchor(this.id.baseID, this.tip);
-    const state = this._doctype.state;
-    state.anchorStatus = AnchorStatus.PENDING;
-    this._doctype.state = state;
+    this.subscriptionSet.add(subscription);
+    doc._doctype.state = { ...doc._doctype.state, anchorStatus: AnchorStatus.PENDING };
   }
 
   /**
@@ -777,6 +769,7 @@ export class Document extends EventEmitter implements DocStateHolder {
    * Gracefully closes the document instance.
    */
   async close(): Promise<void> {
+    this.subscriptionSet.close();
     this.off("update", this._update);
 
     this.dispatcher.unregister(this.id.toString());
