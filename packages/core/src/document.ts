@@ -267,7 +267,7 @@ export class Document extends EventEmitter implements DocStateHolder {
     const publish = opts.publish ?? true;
     const sync = opts.sync ?? true;
     if (anchor) {
-      await this.anchor();
+      this.anchor();
     }
     if (publish) {
       await this._publishTip();
@@ -616,11 +616,12 @@ export class Document extends EventEmitter implements DocStateHolder {
   /**
    * Request anchor for the latest document state
    */
-  async anchor(): Promise<void> {
+  anchor(): void {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const doc = this;
     const tip: CID = this.tip;
-    const subscription = this._context.anchorService.requestAnchor(this.id.baseID, this.tip).subscribe(async (asr) => {
+    const anchorStatus$ = this._context.anchorService.requestAnchor(this.id.baseID, this.tip);
+    const subscription = anchorStatus$.subscribe(async (asr) => {
       if (!asr.cid.equals(tip)) {
         // This message is about a different tip for the same document
         return;
