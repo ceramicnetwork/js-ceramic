@@ -11,8 +11,9 @@ const FAKE_DOC_ID = "kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohex
 
 const ipfs = {
   pubsub: {
+    ls: jest.fn(async () => Promise.resolve(TOPIC)),
     subscribe: jest.fn(),
-    unsubscribe: jest.fn(),
+    unsubscribe: jest.fn(async () => Promise.resolve()),
     publish: jest.fn()
   },
   dag: {
@@ -61,7 +62,7 @@ describe('Dispatcher', () => {
 
   it('closes correctly', async () => {
     await dispatcher.close()
-    expect(ipfs.pubsub.unsubscribe).toHaveBeenCalledTimes(1)
+    expect(ipfs.pubsub.unsubscribe).toHaveBeenCalledTimes(2)
     expect(ipfs.pubsub.unsubscribe).toHaveBeenCalledWith(TOPIC)
   })
 

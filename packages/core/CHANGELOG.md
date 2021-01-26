@@ -3,6 +3,45 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.19.5](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@0.19.4...@ceramicnetwork/core@0.19.5) (2021-01-26)
+
+
+### Bug Fixes
+
+* Decrease pubsub resubscribe timeout ([#858](https://github.com/ceramicnetwork/js-ceramic/issues/858)) ([10bc991](https://github.com/ceramicnetwork/js-ceramic/commit/10bc9911ee3356370f5e1603b85e32ebe86ac5c6))
+* **core:** Improve pubsub resubscribe logic ([#857](https://github.com/ceramicnetwork/js-ceramic/issues/857)) ([999cf6d](https://github.com/ceramicnetwork/js-ceramic/commit/999cf6d91b5016e5f9f636a0497c37b15e675f9f))
+
+
+
+
+
+## [0.19.4](/compare/@ceramicnetwork/core@0.19.3...@ceramicnetwork/core@0.19.4) (2021-01-25)
+
+
+### Bug Fixes
+
+* **cli:** Add the peerlist for dev-unstable network (#853) 69ccb00, closes #853
+* **core:** Don't delete message key from pubsub system object (#855) 3b77db1, closes #855
+* **core:** Don't resubscribe to pubsub if using internal ipfs (#854) 24af0c2, closes #854
+* **core:** Fix flaky test (#852) d1b6a64, closes #852
+
+
+
+
+
+## [0.19.3](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@0.19.2...@ceramicnetwork/core@0.19.3) (2021-01-25)
+
+
+### Bug Fixes
+
+* **core:** Dedupe pubsub messages in dispatcher ([#846](https://github.com/ceramicnetwork/js-ceramic/issues/846)) ([fbb0f37](https://github.com/ceramicnetwork/js-ceramic/commit/fbb0f3700ed89a1d398268011c084d1ca88662cb))
+* **core:** Don't erroneously set anchorStatus to FAILED when a later CID is anchored instead of an earlier one ([#839](https://github.com/ceramicnetwork/js-ceramic/issues/839)) ([aa961f0](https://github.com/ceramicnetwork/js-ceramic/commit/aa961f035617f4082288dd32edc241fb400cd04a))
+* **core:** Properly ignore old FAILED anchor responses ([#844](https://github.com/ceramicnetwork/js-ceramic/issues/844)) ([9e4b5d6](https://github.com/ceramicnetwork/js-ceramic/commit/9e4b5d6fb2e710011e930d75f00d2e786d66dde6))
+
+
+
+
+
 ## [0.19.2](/compare/@ceramicnetwork/core@0.19.1...@ceramicnetwork/core@0.19.2) (2021-01-21)
 
 

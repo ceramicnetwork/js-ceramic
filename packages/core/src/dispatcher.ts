@@ -12,7 +12,7 @@ import DocID from "@ceramicnetwork/docid";
 
 const IPFS_GET_TIMEOUT = 30000 // 30 seconds
 const IPFS_MAX_RECORD_SIZE = 256000 // 256 KB
-const IPFS_RESUBSCRIBE_INTERVAL_DELAY = 1000 * 60 // 1 minute
+const IPFS_RESUBSCRIBE_INTERVAL_DELAY = 1000 * 15 // 15 sec
 const TESTING = process.env.NODE_ENV == 'test'
 
 /**
@@ -61,8 +61,10 @@ export default class Dispatcher extends EventEmitter {
    */
   async init(): Promise<void> {
     this._peerId = this._peerId || (await this._ipfs.id()).id
-    await this._subscribe()
-    if (!TESTING) {
+    await this._subscribe(true)
+    // If ipfs.libp2p is defined we have an internal ipfs node, this means that
+    // we don't want to resubscribe since it will add multiple handlers.
+    if (!TESTING && !this._ipfs.libp2p) {
       this._resubscribe()
     }
   }
@@ -72,18 +74,24 @@ export default class Dispatcher extends EventEmitter {
    *
    * Logs error if subscribe fails.
    */
-  async _subscribe(): Promise<void> {
+  async _subscribe(force = false): Promise<void> {
     try {
-      await this._ipfs.pubsub.subscribe(
-        this.topic,
-        this.handleMessage,
-        // {timeout: IPFS_GET_TIMEOUT} // ipfs-core bug causes timeout option to throw https://github.com/ipfs/js-ipfs/issues/3472
-      )
-      this._log({peer: this._peerId, event: 'subscribed', topic: this.topic })
+      if (force || !(await this._ipfs.pubsub.ls()).includes(this.topic)) {
+        await this._ipfs.pubsub.unsubscribe(this.topic, this.handleMessage)
+        await this._ipfs.pubsub.subscribe(
+          this.topic,
+          this.handleMessage,
+          // {timeout: IPFS_GET_TIMEOUT} // ipfs-core bug causes timeout option to throw https://github.com/ipfs/js-ipfs/issues/3472
+        )
+        this._log({peer: this._peerId, event: 'subscribed', topic: this.topic })
+      }
     } catch (error) {
       // TODO: use logger
       if (error.message.includes('Already subscribed')) {
         this.logger.debug(error.message)
+      } else if (error.message.includes('The user aborted a request')) {
+        // for some reason the first call to pubsub.subscribe throws this error
+        this._subscribe(true)
       } else {
         console.error(error)
       }
@@ -251,6 +259,8 @@ export default class Dispatcher extends EventEmitter {
     }
     // TODO: handle signature and key buffers in message data
     const logMessage = { ...message, data: parsedMessageData }
+    delete logMessage.key
+    delete logMessage.signature
     this._log({ peer: this._peerId, event: 'received', topic: this.topic, message: logMessage })
 
     const { typ } = parsedMessageData
