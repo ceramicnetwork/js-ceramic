@@ -130,6 +130,7 @@ export default class EthereumAnchorService extends AnchorService {
             this.processRemoteResponse(cidDocPair, json)
         } else {
             this.emit(cidDocPair.docId, {
+                cid: cidDocPair.cid,
                 status: 'FAILED',
                 message: `Failed to send request. Status ${response.statusText}`
             })
