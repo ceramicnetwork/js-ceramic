@@ -6,9 +6,8 @@ import { CeramicConfig } from "../../ceramic";
 import { AnchorProof, CeramicApi, AnchorServiceResponse, AnchorService, AnchorStatus } from "@ceramicnetwork/common";
 import * as uint8arrays from "uint8arrays";
 import DocID from "@ceramicnetwork/docid";
-import { Observable, Subject } from "rxjs";
-import { filter } from "rxjs/operators";
-import PQueue from "p-queue";
+import { Observable, interval, from, concat, of } from "rxjs";
+import { concatMap, catchError } from "rxjs/operators";
 
 /**
  * CID-docId pair
@@ -20,8 +19,6 @@ interface CidDoc {
 
 const DEFAULT_POLL_TIME = 60000; // 60 seconds
 const DEFAULT_MAX_POLL_TIME = 7200000; // 2 hours
-
-const MAX_NUMBER_OF_EVENT_LISTENERS = 100; // soft limit for maximum number of listeners ~ concurrent anchoring requests
 
 const HTTP_STATUS_NOT_FOUND = 404;
 
@@ -58,8 +55,6 @@ const ETH_CHAIN_ID_MAPPINGS: Record<string, EthNetwork> = {
 
 const BASE_CHAIN_ID = "eip155";
 
-const queue = new PQueue({ concurrency: 1 });
-
 /**
  * Ethereum anchor service that stores root CIDs on Ethereum blockchain
  */
@@ -68,8 +63,6 @@ export default class EthereumAnchorService extends AnchorService {
   private readonly chainIdApiEndpoint: string;
   private readonly ethereumRpcEndpoint: string | undefined;
   private _chainId: string;
-
-  #feed: Subject<AnchorServiceResponse> = new Subject();
 
   /**
    * @param config - service configuration (polling interval, etc.)
@@ -117,22 +110,16 @@ export default class EthereumAnchorService extends AnchorService {
    */
   requestAnchor(docId: DocID, tip: CID): Observable<AnchorServiceResponse> {
     const cidDocPair: CidDoc = { cid: tip, docId };
-
-    queue
-      .add(async () => {
-        // send initial request
-        await this._sendReq(cidDocPair);
-        await this._poll(cidDocPair); // start polling
-      })
-      .catch((error) => {
-        this.#feed.next({
+    return concat(this.makeRequest(cidDocPair), this.poll(cidDocPair)).pipe(
+      catchError((error) =>
+        of<AnchorServiceResponse>({
           status: AnchorStatus.FAILED,
           docId: docId,
           cid: tip,
           message: error.message,
-        });
-      });
-    return this.#feed.pipe(filter((asr) => asr.docId.equals(docId) && asr.cid.equals(tip)));
+        })
+      )
+    );
   }
 
   /**
@@ -148,29 +135,28 @@ export default class EthereumAnchorService extends AnchorService {
    * @param cidDocPair - mapping
    * @private
    */
-  async _sendReq(cidDocPair: CidDoc): Promise<void> {
-    const response = await fetch(this.requestsApiEndpoint, {
-      method: "POST",
-      body: JSON.stringify({
-        docId: cidDocPair.docId,
-        cid: cidDocPair.cid.toString(),
-      }),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
-    if (response.ok) {
-      const json = await response.json();
-      this.processRemoteResponse(cidDocPair, json);
-    } else {
-      this.#feed.next({
-        status: AnchorStatus.FAILED,
-        docId: cidDocPair.docId,
-        cid: cidDocPair.cid,
-        message: `Failed to send request. Status ${response.statusText}`,
-      });
-    }
+  private makeRequest(cidDocPair: CidDoc): Observable<AnchorServiceResponse> {
+    return from(
+      fetch(this.requestsApiEndpoint, {
+        method: "POST",
+        body: JSON.stringify({
+          docId: cidDocPair.docId.toString(),
+          cid: cidDocPair.cid.toString(),
+        }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+    ).pipe(
+      concatMap(async (response) => {
+        if (response.ok) {
+          const json = await response.json();
+          return this.parseResponse(cidDocPair, json);
+        } else {
+          throw new Error(`Failed to send request. Status ${response.statusText}`);
+        }
+      })
+    );
   }
 
   /**
@@ -180,47 +166,27 @@ export default class EthereumAnchorService extends AnchorService {
    * @param maxPollingTime - Global timeout for max polling in milliseconds
    * @private
    */
-  async _poll(cidDoc: CidDoc, pollTime?: number, maxPollingTime?: number): Promise<void> {
+  private poll(cidDoc: CidDoc, pollTime?: number, maxPollingTime?: number): Observable<AnchorServiceResponse> {
     const started = new Date().getTime();
     const maxTime = started + (maxPollingTime | DEFAULT_MAX_POLL_TIME);
+    const requestUrl = [this.requestsApiEndpoint, cidDoc.cid.toString()].join("/");
 
-    let poll = true;
-    while (poll) {
-      if (started > maxTime) {
-        this.#feed.next({
-          status: AnchorStatus.FAILED,
-          docId: cidDoc.docId,
-          cid: cidDoc.cid,
-          message: "exceeded max timeout",
-        });
-        return; // exit loop
-      }
-
-      await new Promise((resolve) => setTimeout(resolve, DEFAULT_POLL_TIME));
-
-      try {
-        const requestUrl = [this.requestsApiEndpoint, cidDoc.cid.toString()].join("/");
-        const response = await fetch(requestUrl);
-
-        if (response.status === HTTP_STATUS_NOT_FOUND) {
-          // the anchor request does not exist, fail and stop polling
-          // TODO
-          this.#feed.next({
-            status: AnchorStatus.FAILED,
-            docId: cidDoc.docId,
-            cid: cidDoc.cid,
-            message: "Request not found",
-          });
-          poll = false;
-          break;
+    return interval(DEFAULT_POLL_TIME).pipe(
+      concatMap(async () => {
+        const now = new Date().getTime();
+        if (now > maxTime) {
+          throw new Error("Exceeded max timeout");
+        } else {
+          const response = await fetch(requestUrl);
+          if (response.status === HTTP_STATUS_NOT_FOUND) {
+            throw new Error("Request not found");
+          } else {
+            const json = await response.json();
+            return this.parseResponse(cidDoc, json);
+          }
         }
-
-        const json = await response.json();
-        poll = this.processRemoteResponse(cidDoc, json);
-      } catch (e) {
-        // just log
-      }
-    }
+      })
+    );
   }
 
   /**
@@ -279,48 +245,41 @@ export default class EthereumAnchorService extends AnchorService {
     return providers.getDefaultProvider(ethNetwork.network);
   }
 
-  private processRemoteResponse(cidDoc: CidDoc, json: any): boolean {
+  /**
+   * Parse JSON that CAS returns.
+   */
+  private parseResponse(cidDoc: CidDoc, json: any): AnchorServiceResponse {
     switch (json.status) {
-      case "PENDING": {
-        this.#feed.next({
+      case "PENDING":
+        return {
           status: AnchorStatus.PENDING,
           docId: cidDoc.docId,
           cid: cidDoc.cid,
           message: json.message,
           anchorScheduledFor: json.scheduledAt,
-        });
-        return true;
-      }
-      case "PROCESSING": {
-        this.#feed.next({
+        };
+      case "PROCESSING":
+        return {
           status: AnchorStatus.PROCESSING,
           docId: cidDoc.docId,
           cid: cidDoc.cid,
           message: json.message,
-        });
-        return true;
-      }
-      case "FAILED": {
-        this.#feed.next({
-          status: AnchorStatus.FAILED,
-          docId: cidDoc.docId,
-          cid: cidDoc.cid,
-          message: json.message,
-        });
-        return false;
-      }
+        };
+      case "FAILED":
+        throw new Error(json.message);
       case "COMPLETED": {
         const { anchorRecord } = json;
         const anchorRecordCid = new CID(anchorRecord.cid.toString());
-        this.#feed.next({
+        return {
           status: AnchorStatus.ANCHORED,
           docId: cidDoc.docId,
           cid: cidDoc.cid,
           message: json.message,
           anchorRecord: anchorRecordCid,
-        });
-        return false;
+        };
       }
+      default:
+        throw new Error(`Unexpected status: ${json.status}`);
     }
   }
 }

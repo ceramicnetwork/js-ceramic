@@ -1,5 +1,10 @@
 import { Subscription } from "rxjs";
 
+/**
+ * Track a set of active subscriptions. Unsubscribe from all at once.
+ *
+ * If a subscription gets unsubscribed, it auto-removes from the set.
+ */
 export class SubscriptionSet {
   constructor(readonly subscriptions: Set<Subscription> = new Set()) {}
 
