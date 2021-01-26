@@ -62,7 +62,9 @@ export default class Dispatcher extends EventEmitter {
   async init(): Promise<void> {
     this._peerId = this._peerId || (await this._ipfs.id()).id
     await this._subscribe()
-    if (!TESTING) {
+    // If ipfs.libp2p is defined we have an internal ipfs node, this means that
+    // we don't want to resubscribe since it will add multiple handlers.
+    if (!TESTING && !this._ipfs.libp2p) {
       this._resubscribe()
     }
   }
@@ -251,6 +253,8 @@ export default class Dispatcher extends EventEmitter {
     }
     // TODO: handle signature and key buffers in message data
     const logMessage = { ...message, data: parsedMessageData }
+    delete logMessage.key
+    delete logMessage.signature
     this._log({ peer: this._peerId, event: 'received', topic: this.topic, message: logMessage })
 
     const { typ } = parsedMessageData

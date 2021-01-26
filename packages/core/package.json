@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/core",
-  "version": "0.19.2",
+  "version": "0.19.4",
   "description": "Typescript implementation of the Ceramic protocol",
   "keywords": [
     "Ceramic",
@@ -51,8 +51,9 @@
     "key-did-resolver": "^0.2.4",
     "level-ts": "^2.0.5",
     "lodash.clonedeep": "^4.5.0",
+    "multihashes": "^3.1.1",
     "p-queue": "^6.6.1",
-    "multihashes": "^3.1.1"
+    "uint8arrays": "^2.0.5"
   },
   "devDependencies": {
     "@babel/core": "^7.9.0",
@@ -71,8 +72,7 @@
     "ipfs-core": "0.3.0",
     "key-did-provider-ed25519": "^1.0.0",
     "multiformats": "3.0.3",
-    "tmp-promise": "^2.0.2",
-    "uint8arrays": "^2.0.5"
+    "tmp-promise": "^2.0.2"
   },
   "jest": {
     "testEnvironment": "node",

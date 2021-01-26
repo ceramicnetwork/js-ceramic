@@ -3,6 +3,37 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.20.5](/compare/@ceramicnetwork/cli@0.20.4...@ceramicnetwork/cli@0.20.5) (2021-01-25)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+## [0.20.4](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@0.20.3...@ceramicnetwork/cli@0.20.4) (2021-01-25)
+
+
+### Bug Fixes
+
+* **core:** Connect to bootstrap nodes even when using external ipfs ([#848](https://github.com/ceramicnetwork/js-ceramic/issues/848)) ([1169bc8](https://github.com/ceramicnetwork/js-ceramic/commit/1169bc84a90e59959d2123287c8b56fb46f02d97))
+* update dev peer ids ([#847](https://github.com/ceramicnetwork/js-ceramic/issues/847)) ([78b5817](https://github.com/ceramicnetwork/js-ceramic/commit/78b581792ebc74670c0ca566e2d4aa874111a8af))
+
+
+
+
+
+## [0.20.3](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@0.20.2...@ceramicnetwork/cli@0.20.3) (2021-01-25)
+
+
+### Bug Fixes
+
+* **cli:** Fix pinningEndpoint cli arg ([#840](https://github.com/ceramicnetwork/js-ceramic/issues/840)) ([2951d65](https://github.com/ceramicnetwork/js-ceramic/commit/2951d6592e4c945c21de842c69a16fee5367bb68))
+
+
+
+
+
 ## [0.20.2](/compare/@ceramicnetwork/cli@0.20.1...@ceramicnetwork/cli@0.20.2) (2021-01-21)
 
 

@@ -21,7 +21,7 @@ const BOOTSTRAP = {
         '/dns4/ipfs-clay-cas.3boxlabs.com/tcp/4012/wss/p2p/QmbeBTzSccH8xYottaYeyVX8QsKyox1ExfRx7T1iBqRyCd'
     ],
     "dev-unstable": [
-        '/dns4/ipfs-dev.3boxlabs.com/tcp/4012/wss/p2p/QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn',
+        '/dns4/ipfs-dev.3boxlabs.com/tcp/4012/wss/p2p/Qmc4BVsZbVkuvax6SKgwq5BrcKjzBdwx5dW45cWfLVHabx',
         '/dns4/ipfs-dev.ceramic.network/tcp/4012/wss/p2p/QmStNqcAjwh6s2sxUWr2ZXT3MhRZmqpJ9Dj6fp3gPdHr6E',
         '/dns4/ipfs-dev-internal.3boxlabs.com/tcp/4012/wss/p2p/QmYkpxusRem2iup8ZAfVGYv7iq1ks1yyq2XxQh3z2a8xXq',
         '/dns4/ipfs-dev-cas.3boxlabs.com/tcp/4012/wss/p2p/QmPHLQoWhK4CMPPgxGQxjNYEp1fMB8NPpoLaaR2VDMNbcr'
@@ -29,11 +29,13 @@ const BOOTSTRAP = {
 }
 
 export async function buildIpfsConnection(network: string, ipfsEndpoint?: string): Promise<IpfsApi>{
+    const bootstrapList = BOOTSTRAP[network] || []
+    let ipfs: IpfsApi
+
     if (ipfsEndpoint) {
-        return ipfsClient({ url: ipfsEndpoint, ipld: { formats: [dagJoseFormat] } })
+        ipfs = ipfsClient({ url: ipfsEndpoint, ipld: { formats: [dagJoseFormat] } })
     } else {
-        const bootstrapList = BOOTSTRAP[network] || []
-        const ipfs = await IPFS.create({
+        ipfs = await IPFS.create({
             ipld: {
                 formats: [dagJoseFormat]
             },
@@ -59,14 +61,15 @@ export async function buildIpfsConnection(network: string, ipfsEndpoint?: string
                 enabled: false
             }
         })
-        await Promise.all(bootstrapList.map(async node => {
-            try {
-                await ipfs.swarm.connect(node)
-            } catch (error) {
-                console.warn(`Can not connect to ${node}`)
-                console.warn(error)
-            }
-        }))
-        return ipfs
     }
+
+    await Promise.all(bootstrapList.map(async node => {
+        try {
+            await ipfs.swarm.connect(node)
+        } catch (error) {
+            console.warn(`Can not connect to ${node}`)
+            console.warn(error)
+        }
+    }))
+    return ipfs
 }
