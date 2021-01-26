@@ -15,17 +15,14 @@ import {
 import type Dispatcher from "../../dispatcher";
 import Ceramic from "../../ceramic";
 import DocID from "@ceramicnetwork/docid";
+import PQueue from "p-queue";
 
 const DID_MATCHER =
   "^(did:([a-zA-Z0-9_]+):([a-zA-Z0-9_.-]+(:[a-zA-Z0-9_.-]+)*)((;[a-zA-Z0-9_.:%-]+=[a-zA-Z0-9_.:%-]*)*)(/[^#?]*)?)([?][^#]*)?(#.*)?";
 const CHAIN_ID = "inmemory:12345";
 
 class Candidate {
-  constructor(
-    readonly cid: CID,
-    readonly docId?: DocID,
-    readonly log?: CID[]
-  ) {}
+  constructor(readonly cid: CID, readonly docId?: DocID, readonly log?: CID[]) {}
 
   get key(): string {
     return this.docId.toString();
@@ -38,8 +35,9 @@ interface InMemoryAnchorConfig {
   verifySignatures?: boolean;
 }
 
-const SAMPLE_ETH_TX_HASH =
-  "bagjqcgzaday6dzalvmy5ady2m5a5legq5zrbsnlxfc2bfxej532ds7htpova";
+const SAMPLE_ETH_TX_HASH = "bagjqcgzaday6dzalvmy5ady2m5a5legq5zrbsnlxfc2bfxej532ds7htpova";
+
+const queue = new PQueue({ concurrency: 1 });
 
 /**
  * In-memory anchor service - used locally, not meant to be used in production code
@@ -61,10 +59,9 @@ class InMemoryAnchorService extends AnchorService {
     this.#anchorDelay = _config?.anchorDelay ?? 0;
     this.#anchorOnRequest = _config?.anchorOnRequest ?? true;
     this.#verifySignatures = _config?.verifySignatures ?? true;
-  }
-
-  anchorStatus$(docId: DocID): Observable<AnchorServiceResponse> {
-    return this.#feed.pipe(filter((r) => r.docId.baseID.equals(docId.baseID)));
+    this.#feed.subscribe((asr) => {
+      this.emit(asr.docId.toString(), asr);
+    });
   }
 
   async init(): Promise<void> {
@@ -100,39 +97,33 @@ class InMemoryAnchorService extends AnchorService {
     return this._selectValidCandidates(groupedCandidates);
   }
 
-  async _groupCandidatesByDocId(
-    candidates: Candidate[]
-  ): Promise<Record<string, Candidate[]>> {
+  async _groupCandidatesByDocId(candidates: Candidate[]): Promise<Record<string, Candidate[]>> {
     const result: Record<string, Candidate[]> = {};
+    await Promise.all(
+      candidates.map(async (req) => {
+        try {
+          const record = await this.#dispatcher.retrieveCommit(req.cid);
+          if (this.#verifySignatures) {
+            await this.verifySignedCommit(record);
+          }
 
-    let req: Candidate = null;
-    for (let index = 0; index < candidates.length; index++) {
-      try {
-        req = candidates[index];
-        const record = (await this.#ceramic.ipfs.dag.get(req.cid)).value;
-        if (this.#verifySignatures) {
-          await this.verifySignedCommit(record);
+          const log = await this._loadCommitHistory(req.cid);
+          const candidate = new Candidate(req.cid, req.docId, log);
+
+          if (!result[candidate.key]) {
+            result[candidate.key] = [];
+          }
+          result[candidate.key].push(candidate);
+        } catch (e) {
+          console.error(e.message);
+          this._failCandidate(req, e.message);
         }
-
-        const log = await this._loadCommitHistory(req.cid);
-        const candidate = new Candidate(new CID(req.cid), req.docId, log);
-
-        if (!result[candidate.key]) {
-          result[candidate.key] = [];
-        }
-        result[candidate.key].push(candidate);
-      } catch (e) {
-        console.error(e.message);
-        this._failCandidate(req, e.message);
-      }
-    }
-
+      })
+    );
     return result;
   }
 
-  _selectValidCandidates(
-    groupedCandidates: Record<string, Candidate[]>
-  ): Candidate[] {
+  _selectValidCandidates(groupedCandidates: Record<string, Candidate[]>): Candidate[] {
     const result: Candidate[] = [];
     for (const compositeKey of Object.keys(groupedCandidates)) {
       const candidates = groupedCandidates[compositeKey];
@@ -180,11 +171,6 @@ class InMemoryAnchorService extends AnchorService {
       cid: candidate.cid,
       message,
     });
-    this.emit(candidate.docId.toString(), {
-      cid: candidate.cid,
-      status: AnchorStatus.FAILED,
-      message: message,
-    });
   }
 
   /**
@@ -198,16 +184,14 @@ class InMemoryAnchorService extends AnchorService {
 
     let currentCommitId = commitId;
     for (;;) {
-      const currentCommit = (await this.#ceramic.ipfs.dag.get(currentCommitId))
-        .value;
+      const currentCommit = await this.#dispatcher.retrieveCommit(currentCommitId);
       if (DoctypeUtils.isAnchorCommit(currentCommit)) {
         return history;
       }
 
       let prevCommitId: CID;
       if (DoctypeUtils.isSignedCommit(currentCommit)) {
-        const payload = (await this.#ceramic.ipfs.dag.get(currentCommit.link))
-          .value;
+        const payload = await this.#dispatcher.retrieveCommit(currentCommit.link);
         prevCommitId = payload.prev;
       } else {
         prevCommitId = currentCommit.prev;
@@ -235,16 +219,28 @@ class InMemoryAnchorService extends AnchorService {
   /**
    * Send request to the anchoring service
    * @param docId - Document ID
-   * @param cid - Commit CID
+   * @param tip - Commit CID
    */
-  async requestAnchor(docId: DocID, cid: CID): Promise<void> {
-    const candidate: Candidate = new Candidate(cid, docId);
+  requestAnchor(docId: DocID, tip: CID): Observable<AnchorServiceResponse> {
+    const candidate = new Candidate(tip, docId);
 
     if (this.#anchorOnRequest) {
-      await this._process(candidate);
+      queue
+        .add(() => {
+          return this._process(candidate);
+        })
+        .catch((error) => {
+          this.#feed.next({
+            status: AnchorStatus.FAILED,
+            docId: candidate.docId,
+            cid: candidate.cid,
+            message: error.message,
+          });
+        });
     } else {
       this.#queue.push(candidate);
     }
+    return this.#feed.pipe(filter(asr => asr.docId.equals(docId) && asr.cid.equals(tip)))
   }
 
   /**
@@ -273,12 +269,6 @@ class InMemoryAnchorService extends AnchorService {
         message: "CID successfully anchored",
         anchorRecord: cid,
       });
-      this.emit(leaf.docId.toString(), {
-        cid: leaf.cid,
-        status: AnchorStatus.ANCHORED,
-        message: "CID successfully anchored.",
-        anchorRecord: cid,
-      });
       clearTimeout(handle);
     }, this.#anchorDelay);
   }
@@ -293,9 +283,7 @@ class InMemoryAnchorService extends AnchorService {
     const { payload, signatures } = commit;
     const { signature, protected: _protected } = signatures[0];
 
-    const jsonAsBase64url = uint8arrays.toString(
-      uint8arrays.fromString(_protected, "base64url")
-    );
+    const jsonAsBase64url = uint8arrays.toString(uint8arrays.fromString(_protected, "base64url"));
     const decodedHeader = JSON.parse(jsonAsBase64url);
     const { kid } = decodedHeader;
 

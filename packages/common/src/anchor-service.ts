@@ -1,5 +1,5 @@
 import CID from "cids";
-
+import type { Observable } from "rxjs";
 import { EventEmitter } from "events";
 import { AnchorProof, AnchorStatus } from "./doctype";
 import { CeramicApi } from "./ceramic-api";
@@ -65,7 +65,7 @@ export abstract class AnchorService extends EventEmitter {
    * @param docId - Document ID
    * @param tip - CID tip
    */
-  abstract requestAnchor(docId: DocID, tip: CID): Promise<void>;
+  abstract requestAnchor(docId: DocID, tip: CID): Observable<AnchorServiceResponse>
 
   /**
    * Validate anchor proof commit
