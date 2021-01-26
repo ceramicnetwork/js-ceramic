@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.19.5](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@0.19.4...@ceramicnetwork/core@0.19.5) (2021-01-26)
+
+
+### Bug Fixes
+
+* Decrease pubsub resubscribe timeout ([#858](https://github.com/ceramicnetwork/js-ceramic/issues/858)) ([10bc991](https://github.com/ceramicnetwork/js-ceramic/commit/10bc9911ee3356370f5e1603b85e32ebe86ac5c6))
+* **core:** Improve pubsub resubscribe logic ([#857](https://github.com/ceramicnetwork/js-ceramic/issues/857)) ([999cf6d](https://github.com/ceramicnetwork/js-ceramic/commit/999cf6d91b5016e5f9f636a0497c37b15e675f9f))
+
+
+
+
+
 ## [0.19.4](/compare/@ceramicnetwork/core@0.19.3...@ceramicnetwork/core@0.19.4) (2021-01-25)
 
 
