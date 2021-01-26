@@ -12,7 +12,7 @@ import DocID from "@ceramicnetwork/docid";
 
 const IPFS_GET_TIMEOUT = 30000 // 30 seconds
 const IPFS_MAX_RECORD_SIZE = 256000 // 256 KB
-const IPFS_RESUBSCRIBE_INTERVAL_DELAY = 1000 * 60 // 1 minute
+const IPFS_RESUBSCRIBE_INTERVAL_DELAY = 1000 * 15 // 15 sec
 const TESTING = process.env.NODE_ENV == 'test'
 
 /**
