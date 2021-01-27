@@ -1,6 +1,6 @@
 import CID from "cids";
 import * as uint8arrays from "uint8arrays";
-import { Observable, Subject } from "rxjs";
+import { Observable, Subject, concat, of } from "rxjs";
 import { filter } from "rxjs/operators";
 import * as didJwt from "did-jwt";
 import {
@@ -37,7 +37,8 @@ interface InMemoryAnchorConfig {
 
 const SAMPLE_ETH_TX_HASH = "bagjqcgzaday6dzalvmy5ady2m5a5legq5zrbsnlxfc2bfxej532ds7htpova";
 
-const queue = new PQueue({ concurrency: 1 });
+// Sequential execution of requestAnchor commands
+const requestAnchorQueue = new PQueue({ concurrency: 1 });
 
 /**
  * In-memory anchor service - used locally, not meant to be used in production code
@@ -220,9 +221,9 @@ class InMemoryAnchorService extends AnchorService {
    */
   requestAnchor(docId: DocID, tip: CID): Observable<AnchorServiceResponse> {
     const candidate = new Candidate(tip, docId);
-
+    const feed$ = this.#feed.pipe(filter((asr) => asr.docId.equals(docId) && asr.cid.equals(tip)));
     if (this.#anchorOnRequest) {
-      queue
+      requestAnchorQueue
         .add(() => {
           return this._process(candidate);
         })
@@ -234,10 +235,20 @@ class InMemoryAnchorService extends AnchorService {
             message: error.message,
           });
         });
+      return feed$;
     } else {
       this.#queue.push(candidate);
+      return concat(
+        of<AnchorServiceResponse>({
+          status: AnchorStatus.PENDING,
+          docId: docId,
+          cid: tip,
+          message: "Sending anchoring request",
+          anchorScheduledFor: null,
+        }),
+        feed$
+      );
     }
-    return this.#feed.pipe(filter(asr => asr.docId.equals(docId) && asr.cid.equals(tip)))
   }
 
   /**
