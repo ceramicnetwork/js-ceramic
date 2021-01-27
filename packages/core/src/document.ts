@@ -19,11 +19,11 @@ import {
   RootLogger,
   Logger,
   DocStateHolder,
-  CommitType,
 } from "@ceramicnetwork/common";
 import DocID from "@ceramicnetwork/docid";
 import { PinStore } from "./store/pin-store";
 import { SubscriptionSet } from "./subscription-set";
+import { concatMap } from "rxjs/operators";
 
 // DocOpts defaults for document load operations
 const DEFAULT_LOAD_DOCOPTS = { anchor: false, publish: false, sync: true };
@@ -604,41 +604,48 @@ export class Document extends EventEmitter implements DocStateHolder {
     const requestTip = this.tip;
 
     const anchorStatus$ = this._context.anchorService.requestAnchor(this.id.baseID, this.tip);
-    const subscription = anchorStatus$.subscribe(async (asr) => {
-      if (!asr.cid.equals(requestTip)) {
-        // This message is about a different tip for the same document
-        return;
-      }
-      switch (asr.status) {
-        case AnchorStatus.PENDING: {
-          doc._doctype.state = { ...doc._doctype.state, anchorStatus: AnchorStatus.PENDING, anchorScheduledFor: asr.anchorScheduledFor };
-          await doc._updateStateIfPinned();
-          return;
-        }
-        case AnchorStatus.PROCESSING: {
-          doc._doctype.state = { ...doc._doctype.state, anchorStatus: AnchorStatus.PROCESSING };
-          await doc._updateStateIfPinned();
-          return;
-        }
-        case AnchorStatus.ANCHORED: {
-          subscription.unsubscribe();
-
-          await doc._handleTip(asr.anchorRecord);
-          await doc._updateStateIfPinned();
-          await doc._publishTip();
-          return;
-        }
-        case AnchorStatus.FAILED: {
-          subscription.unsubscribe();
-
-          if (requestTip !== doc.tip) {
-            return
+    const subscription = anchorStatus$
+      .pipe(
+        concatMap(async (asr) => {
+          if (!asr.cid.equals(requestTip)) {
+            // This message is about a different tip for the same document
+            return;
           }
-          doc._doctype.state = { ...doc._doctype.state, anchorStatus: AnchorStatus.FAILED };
-          return;
-        }
-      }
-    });
+          switch (asr.status) {
+            case AnchorStatus.PENDING: {
+              const next = {
+                ...doc._doctype.state,
+                anchorStatus: AnchorStatus.PENDING,
+              }
+              if (asr.anchorScheduledFor) next.anchorScheduledFor = asr.anchorScheduledFor
+              doc._doctype.state = next
+              await doc._updateStateIfPinned();
+              return;
+            }
+            case AnchorStatus.PROCESSING: {
+              doc._doctype.state = { ...doc._doctype.state, anchorStatus: AnchorStatus.PROCESSING };
+              await doc._updateStateIfPinned();
+              return;
+            }
+            case AnchorStatus.ANCHORED: {
+              await doc._handleTip(asr.anchorRecord);
+              await doc._updateStateIfPinned();
+              await doc._publishTip();
+              subscription.unsubscribe();
+              return;
+            }
+            case AnchorStatus.FAILED: {
+              if (requestTip !== doc.tip) {
+                return;
+              }
+              doc._doctype.state = { ...doc._doctype.state, anchorStatus: AnchorStatus.FAILED };
+              subscription.unsubscribe();
+              return;
+            }
+          }
+        })
+      )
+      .subscribe();
     this.subscriptionSet.add(subscription);
   }
 
