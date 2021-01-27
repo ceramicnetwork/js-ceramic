@@ -22,6 +22,7 @@ import {
   MultiQuery,
   PinningBackendStatic,
   DocCache,
+  AnchorStatus
 } from "@ceramicnetwork/common"
 import { Resolver } from "did-resolver"
 
@@ -583,6 +584,20 @@ class Ceramic implements CeramicApi {
    */
   async getSupportedChains(): Promise<Array<string>> {
     return this._networkOptions.supportedChains
+  }
+
+  /**
+   * Load all the pinned documents, re-request PENDING or PROCESSING anchors.
+   */
+  async recoverDocuments() {
+    const list = await this.pinStore.stateStore.list()
+    await Promise.all(list.map(async docId => {
+      const document = await this._loadDoc(docId)
+      const toRecover = document.state?.anchorStatus === AnchorStatus.PENDING || document.state?.anchorStatus === AnchorStatus.PROCESSING
+      if (toRecover) {
+        document.anchor()
+      }
+    }))
   }
 
   /**

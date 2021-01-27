@@ -156,6 +156,7 @@ class CeramicDaemon {
     }
 
     const ceramic = await Ceramic.create(ipfs, ceramicConfig)
+    await ceramic.recoverDocuments()
     return new CeramicDaemon(ceramic, opts)
   }
 
