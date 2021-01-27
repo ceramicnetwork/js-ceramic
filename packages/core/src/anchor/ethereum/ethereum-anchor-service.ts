@@ -110,7 +110,7 @@ export default class EthereumAnchorService extends AnchorService {
    */
   requestAnchor(docId: DocID, tip: CID): Observable<AnchorServiceResponse> {
     const cidDocPair: CidDoc = { cid: tip, docId };
-    return concat(this.makeRequest(cidDocPair), this.poll(cidDocPair)).pipe(
+    return concat(this.announcePending(cidDocPair), this.makeRequest(cidDocPair), this.poll(cidDocPair)).pipe(
       catchError((error) =>
         of<AnchorServiceResponse>({
           status: AnchorStatus.FAILED,
@@ -128,6 +128,16 @@ export default class EthereumAnchorService extends AnchorService {
    */
   async getSupportedChains(): Promise<Array<string>> {
     return [this._chainId];
+  }
+
+  private announcePending(cidDoc: CidDoc): Observable<AnchorServiceResponse> {
+    return of({
+      status: AnchorStatus.PENDING,
+      docId: cidDoc.docId,
+      cid: cidDoc.cid,
+      message: "Sending anchoring request",
+      anchorScheduledFor: null,
+    });
   }
 
   /**

@@ -611,7 +611,7 @@ export class Document extends EventEmitter implements DocStateHolder {
       }
       switch (asr.status) {
         case AnchorStatus.PENDING: {
-          doc._doctype.state = { ...doc._doctype.state, anchorScheduledFor: asr.anchorScheduledFor };
+          doc._doctype.state = { ...doc._doctype.state, anchorStatus: AnchorStatus.PENDING, anchorScheduledFor: asr.anchorScheduledFor };
           await doc._updateStateIfPinned();
           return;
         }
@@ -640,7 +640,6 @@ export class Document extends EventEmitter implements DocStateHolder {
       }
     });
     this.subscriptionSet.add(subscription);
-    doc._doctype.state = { ...doc._doctype.state, anchorStatus: AnchorStatus.PENDING };
   }
 
   /**
