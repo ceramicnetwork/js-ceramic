@@ -728,9 +728,10 @@ class Document extends EventEmitter implements DocStateHolder {
     // add response timeout for network change
     return new Promise(resolve => {
       let tid: any // eslint-disable-line prefer-const
-      const clear = (): void => {
+      const clear = async (): Promise<void> => {
         clearTimeout(tid)
         this._doctype.off('change', clear)
+        await this._applyQueue.onEmpty()
         resolve()
       }
       tid = setTimeout(clear, 3000)
