@@ -9,25 +9,27 @@
     "publish:release-candidate": "lerna publish --no-push --conventional-prerelease --dist-tag next --preid rc",
     "publish:latest": "lerna publish --allow-branch master --conventional-graduate --create-release github",
     "lint": "lerna run lint",
-    "clear-deps": "lerna exec 'rm -rf package-lock.json node_modules' ; rm -rf package-lock.json node_modules",
-    "clean": "rm -rf ./lib"
+    "clean": "npm run clean:deps && npm run clean:coverage && npm run clean:build-artifacts",
+    "clean:deps": "rm -rf ./node_modules && rm -rf ./packages/*/node_modules",
+    "clean:coverage": "rm -rf ./packages/*/coverage",
+    "clean:build-artifacts": "rm -rf ./packages/*/lib"
   },
   "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^4.6.0",
+    "@typescript-eslint/parser": "^4.6.0",
+    "babel-jest": "^26.6.3",
     "docusaurus-plugin-typedoc": "^0.4.0",
+    "eslint": "^6.8.0",
+    "eslint-plugin-jest": "^23.8.2",
     "jest": "^26.6.3",
+    "jest-environment-uint8array": "^1.0.0",
+    "jest-mock-extended": "^1.0.10",
     "lerna": "^3.22.1",
     "ts-jest": "^26.4.4",
     "ts-node": "^9.0.0",
     "typedoc": "^0.19.2",
     "typedoc-plugin-lerna-packages": "^0.3.1",
     "typedoc-plugin-pages": "^1.0.1",
-    "typescript": "^4.0.5",
-    "jest-mock-extended": "^1.0.10",
-    "babel-jest": "^26.6.3",
-    "@typescript-eslint/eslint-plugin": "^4.6.0",
-    "@typescript-eslint/parser": "^4.6.0",
-    "eslint": "^6.8.0",
-    "eslint-plugin-jest": "^23.8.2",
-    "jest-environment-uint8array": "^1.0.0"
+    "typescript": "^4.0.5"
   }
 }

@@ -13,6 +13,7 @@
   "homepage": "",
   "license": "(Apache-2.0 OR MIT)",
   "main": "lib/ceramic.js",
+  "types": "lib/ceramic.d.ts",
   "directories": {
     "lib": "lib"
   },
@@ -38,7 +39,7 @@
     "@ceramicnetwork/pinning-aggregation": "^0.1.13",
     "@ceramicnetwork/pinning-ipfs-backend": "^0.1.13",
     "@ethersproject/base64": "^5.0.2",
-    "@ethersproject/providers": "^5.0.0-beta.144",
+    "@ethersproject/providers": "^5.0.18",
     "@ethersproject/random": "^5.0.2",
     "@stablelib/random": "^1.0.0",
     "@stablelib/sha256": "^1.0.0",
@@ -49,16 +50,13 @@
     "did-jwt": "^4.6.3",
     "did-resolver": "^2.1.1",
     "dids": "^1.1.0",
-    "fast-json-patch": "^2.2.1",
-    "ipfs-http-client": "48.1.1",
     "ipld-dag-cbor": "^0.17.0",
     "key-did-resolver": "^0.2.4",
     "level-ts": "^2.0.5",
     "lodash.clonedeep": "^4.5.0",
-    "multiformats": "3.0.3",
     "p-queue": "^6.6.1",
     "typestub-multihashes": "^0.0.4",
-    "uint8arrays": "^1.1.0"
+    "uint8arrays": "^2.0.5"
   },
   "devDependencies": {
     "@babel/core": "^7.9.0",
@@ -66,8 +64,6 @@
     "@babel/plugin-transform-modules-commonjs": "^7.10.4",
     "@babel/preset-env": "^7.8.4",
     "@babel/preset-typescript": "^7.9.0",
-    "@types/encoding-down": "^5.0.0",
-    "@types/events": "^3.0.0",
     "@types/node": "^13.13.15",
     "@typescript-eslint/eslint-plugin": "^4.6.0",
     "@typescript-eslint/parser": "^4.6.0",
@@ -78,6 +74,7 @@
     "ipfs-core": "0.3.0",
     "js-sha256": "^0.9.0",
     "key-did-provider-ed25519": "^1.0.0",
+    "multiformats": "3.0.3",
     "tmp-promise": "^2.0.2"
   },
   "jest": {

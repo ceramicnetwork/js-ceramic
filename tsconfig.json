@@ -13,6 +13,9 @@
    "experimentalDecorators": true,
    "sourceMap": true,
    "baseUrl": "./packages",
+   "typeRoots": [
+     "./types", "node_modules/@types"
+   ],
    "paths": {
      "@ceramicnetwork/*": ["./*/"]
    }

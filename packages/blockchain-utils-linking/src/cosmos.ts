@@ -1,7 +1,7 @@
 import { AccountID } from 'caip';
 import { AuthProvider } from './auth-provider';
 import { getConsentMessage, LinkProof } from './util';
-import { Tx, SignMeta } from '@tendermint/sig';
+import type { Tx, SignMeta } from '@tendermint/sig';
 import { hash } from '@stablelib/sha256';
 import * as uint8arrays from 'uint8arrays';
 
