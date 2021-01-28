@@ -38,7 +38,7 @@
     "@ceramicnetwork/pinning-aggregation": "^0.1.13",
     "@ceramicnetwork/pinning-ipfs-backend": "^0.1.13",
     "@ethersproject/base64": "^5.0.2",
-    "@ethersproject/providers": "^5.0.0-beta.144",
+    "@ethersproject/providers": "^5.0.18",
     "@ethersproject/random": "^5.0.2",
     "@stablelib/random": "^1.0.0",
     "@stablelib/sha256": "^1.0.0",
