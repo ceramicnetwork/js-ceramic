@@ -35,7 +35,7 @@
     "loglevel": "^1.7.0",
     "loglevel-plugin-prefix": "^0.8.4",
     "lru_map": "^0.4.1",
-    "uint8arrays": "^1.1.0"
+    "uint8arrays": "^2.0.5"
   },
   "devDependencies": {
     "@babel/core": "^7.9.0",

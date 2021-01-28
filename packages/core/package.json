@@ -58,7 +58,7 @@
     "multiformats": "3.0.3",
     "p-queue": "^6.6.1",
     "typestub-multihashes": "^0.0.4",
-    "uint8arrays": "^1.1.0"
+    "uint8arrays": "^2.0.5"
   },
   "devDependencies": {
     "@babel/core": "^7.9.0",
