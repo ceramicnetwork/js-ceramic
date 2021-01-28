@@ -9,7 +9,6 @@
     "publish:release-candidate": "lerna publish --no-push --conventional-prerelease --dist-tag next --preid rc",
     "publish:latest": "lerna publish --allow-branch master --conventional-graduate --create-release github",
     "lint": "lerna run lint",
-    "clear-deps": "lerna exec 'rm -rf package-lock.json node_modules' ; rm -rf package-lock.json node_modules",
     "clean": "npm run clean:deps && npm run clean:coverage && npm run clean:build-artifacts",
     "clean:deps": "rm -rf ./node_modules && rm -rf ./packages/*/node_modules",
     "clean:coverage": "rm -rf ./packages/*/coverage",
