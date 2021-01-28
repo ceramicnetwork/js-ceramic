@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.19.6](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@0.19.5...@ceramicnetwork/core@0.19.6) (2021-01-28)
+
+
+### Bug Fixes
+
+* **core:** Fully process incoming tips on first document load ([#862](https://github.com/ceramicnetwork/js-ceramic/issues/862)) ([5ba33ca](https://github.com/ceramicnetwork/js-ceramic/commit/5ba33ca381f296c6876a0ccd3a0f100bbf307177))
+
+
+
+
+
 ## [0.19.5](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@0.19.4...@ceramicnetwork/core@0.19.5) (2021-01-26)
 
 
