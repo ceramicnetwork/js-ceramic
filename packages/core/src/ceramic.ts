@@ -591,13 +591,13 @@ class Ceramic implements CeramicApi {
    */
   async recoverDocuments() {
     const list = await this.pinStore.stateStore.list()
-    await Promise.all(list.map(async docId => {
-      const document = await this._loadDoc(docId)
+    const documents = await Promise.all(list.map(docId => this._loadDoc(docId)))
+    documents.forEach(document => {
       const toRecover = document.state?.anchorStatus === AnchorStatus.PENDING || document.state?.anchorStatus === AnchorStatus.PROCESSING
       if (toRecover) {
         document.anchor()
       }
-    }))
+    })
   }
 
   /**
