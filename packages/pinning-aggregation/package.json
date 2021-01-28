@@ -27,13 +27,15 @@
     "lib": "lib"
   },
   "dependencies": {
-    "@ceramicnetwork/common": "^0.15.8",
     "@ceramicnetwork/pinning-ipfs-backend": "^0.1.13",
-    "@ceramicnetwork/pinning-powergate-backend": "^0.1.13",
     "@stablelib/base64": "^1.0.0",
     "@stablelib/sha256": "^1.0.0",
-    "cids": "1.0.2",
     "lodash": "^4.17.20"
+  },
+  "devDependencies": {
+    "@ceramicnetwork/common": "^0.15.8",
+    "@ceramicnetwork/pinning-powergate-backend": "^0.1.13",
+    "cids": "1.0.2"
   },
   "publishConfig": {
     "access": "public"

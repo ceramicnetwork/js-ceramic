@@ -1,6 +1,6 @@
 import _ from "lodash";
-import CID from "cids";
-import {
+import type CID from "cids";
+import type {
     CidList, PinningBackend, PinningBackendStatic, PinningInfo, Context,
 } from "@ceramicnetwork/common";
 import * as base64 from "@stablelib/base64";
