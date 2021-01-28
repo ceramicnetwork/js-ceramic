@@ -26,12 +26,9 @@
   },
   "dependencies": {
     "@ceramicnetwork/common": "^0.15.8",
-    "@ethersproject/base64": "^5.0.2",
-    "@ethersproject/random": "^5.0.2",
-    "base64url": "^3.0.1",
-    "cids": "1.0.2",
-    "dids": "^1.1.0",
-    "fast-json-patch": "^2.2.1"
+    "@stablelib/random": "^1.0.0",
+    "fast-json-patch": "^2.2.1",
+    "uint8arrays": "^2.0.5"
   },
   "devDependencies": {
     "@babel/core": "^7.9.0",
@@ -43,6 +40,7 @@
     "@typescript-eslint/eslint-plugin": "^4.6.0",
     "@typescript-eslint/parser": "^4.6.0",
     "babel-jest": "^26.6.3",
+    "dids": "^1.1.0",
     "eslint": "^6.8.0",
     "eslint-plugin-jest": "^23.8.2",
     "jest": "^26.6.3",
