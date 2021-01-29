@@ -46,7 +46,7 @@
     "cross-fetch": "^3.0.6",
     "did-jwt": "^4.6.3",
     "did-resolver": "^2.1.1",
-    "dids": "^1.1.0",
+    "dids": "^1.1.1",
     "ipld-dag-cbor": "^0.17.0",
     "key-did-resolver": "^0.2.4",
     "level-ts": "^2.0.5",
