@@ -34,7 +34,7 @@
     "cids": "1.0.2",
     "cross-fetch": "^3.0.6",
     "did-resolver": "^2.1.1",
-    "dids": "^1.1.0",
+    "dids": "^1.1.1",
     "key-did-resolver": "^0.2.4"
   },
   "devDependencies": {

@@ -3,10 +3,9 @@ import CID from 'cids'
 import * as didJwt from 'did-jwt'
 import { AnchorProof, AnchorService, CeramicApi, DoctypeUtils } from "@ceramicnetwork/common"
 
-import base64url from "base64url"
-
 import type Dispatcher from '../../dispatcher'
-import Ceramic, { CeramicConfig } from "../../ceramic"
+import Ceramic from "../../ceramic"
+import * as uint8arrays from "uint8arrays";
 
 const DID_MATCHER = '^(did:([a-zA-Z0-9_]+):([a-zA-Z0-9_.-]+(:[a-zA-Z0-9_.-]+)*)((;[a-zA-Z0-9_.:%-]+=[a-zA-Z0-9_.:%-]*)*)(/[^#?]*)?)([?][^#]*)?(#.*)?';
 const CHAIN_ID = 'inmemory:12345'
@@ -258,7 +257,8 @@ class InMemoryAnchorService extends AnchorService {
     const { payload, signatures } = commit
     const { signature, protected: _protected } = signatures[0]
 
-    const decodedHeader = JSON.parse(base64url.decode(_protected))
+    const decodedJsonString = uint8arrays.toString(uint8arrays.fromString(_protected, 'base64url'))
+    const decodedHeader = JSON.parse(decodedJsonString)
     const { kid } = decodedHeader
 
     const didDoc = await this._ceramic.context.resolver.resolve(kid)

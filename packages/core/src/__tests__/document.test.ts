@@ -12,7 +12,8 @@ import { TileDoctypeHandler } from '@ceramicnetwork/doctype-tile-handler'
 import { PinStore } from "../store/pin-store";
 import { LevelStateStore } from "../store/level-state-store";
 import { DID } from "dids"
-import { sha256 } from 'js-sha256'
+import * as sha256 from '@stablelib/sha256'
+import * as uint8arrays from 'uint8arrays'
 
 import { Resolver } from "did-resolver"
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
@@ -24,10 +25,14 @@ import InMemoryAnchorService from "../anchor/memory/in-memory-anchor-service"
 jest.mock('../dispatcher', () => {
   const CID = require('cids') // eslint-disable-line @typescript-eslint/no-var-requires
   const cloneDeep = require('lodash.clonedeep') // eslint-disable-line @typescript-eslint/no-var-requires
-  const { sha256 } = require('js-sha256') // eslint-disable-line @typescript-eslint/no-var-requires
+  const sha256 = require('@stablelib/sha256') // eslint-disable-line @typescript-eslint/no-var-requires
   const { DoctypeUtils } = require('@ceramicnetwork/common') // eslint-disable-line @typescript-eslint/no-var-requires
   const dagCBOR = require('ipld-dag-cbor') // eslint-disable-line @typescript-eslint/no-var-requires
-  const hash = (data: string): CID => new CID(1, 'sha2-256', Buffer.from('1220' + sha256(data), 'hex'))
+  const u8a = require('uint8arrays') // eslint-disable-line @typescript-eslint/no-var-requires
+  const hash = (data: string): CID => {
+    const body = u8a.concat([u8a.fromString('1220', 'base16'), sha256.hash(u8a.fromString(data))])
+    return new CID(1, 'sha2-256', body)
+  }
   return (gossip: boolean): any => {
     const recs: Record<any, any> = {}
     const docs: Record<string, Document> = {}
@@ -522,7 +527,10 @@ describe('Document', () => {
 
     beforeEach(() => {
       // Provide a random group of CIDs to work with, in increasing lexicographic order
-      const makeCID = (data: string): CID => new CID(1, 'sha2-256', Buffer.from('1220' + sha256(data), 'hex'))
+      const makeCID = (data: string): CID => {
+        const body = uint8arrays.concat([uint8arrays.fromString('1220', 'base16'), sha256.hash(uint8arrays.fromString(data))])
+        return new CID(1, 'sha2-256', body)
+      }
       cids = [makeCID("aaaa"),
               makeCID("bbbb"),
               makeCID("cccc"),
