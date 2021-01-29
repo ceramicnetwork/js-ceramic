@@ -1,7 +1,7 @@
 import tmp from 'tmp-promise'
 import { LevelStateStore } from "../level-state-store";
 import Level from "level-ts";
-import { AnchorStatus, Doctype, CommitType, SignatureStatus } from "@ceramicnetwork/common";
+import { AnchorStatus, Doctype, CommitType, SignatureStatus, DoctypeUtils } from "@ceramicnetwork/common";
 import CID from 'cids'
 import DocID from '@ceramicnetwork/docid'
 
@@ -68,7 +68,7 @@ test('#save and #load', async () => {
         ...state,
         log: state.log.map(e => ({ ...e, cid: e.cid.toString() }))
     }
-    expect(mockPut).toBeCalledWith(docId.toString(), storedState)
+    expect(mockPut).toBeCalledWith(docId.toString(), DoctypeUtils.serializeState(state))
 
     const retrieved = await stateStore.load(docId)
     expect(mockGet).toBeCalledWith(docId.toString())

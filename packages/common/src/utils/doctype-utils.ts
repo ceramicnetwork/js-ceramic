@@ -86,17 +86,17 @@ export class DoctypeUtils {
         const cloned = cloneDeep(state)
 
         cloned.log = cloned.log.map((entry: LogEntry) => ({ ...entry, cid: entry.cid.toString() }))
-        if (cloned.anchorStatus) {
+        if (cloned.anchorStatus != null) {
             cloned.anchorStatus = AnchorStatus[cloned.anchorStatus];
         }
-        if (cloned.anchorScheduledFor) {
+        if (cloned.anchorScheduledFor != null) {
             cloned.anchorScheduledFor = new Date(cloned.anchorScheduledFor).toLocaleString()
         }
-        if (cloned.anchorProof) {
+        if (cloned.anchorProof != null) {
             cloned.anchorProof.txHash = cloned.anchorProof.txHash.toString();
             cloned.anchorProof.root = cloned.anchorProof.root.toString();
         }
-        if (cloned.lastAnchored) {
+        if (cloned.lastAnchored != null) {
             cloned.lastAnchored = cloned.lastAnchored.toString()
         }
         return cloned
