@@ -67,7 +67,7 @@ export class TileDoctype extends Doctype {
      */
     static async makeGenesis<T extends CeramicCommit>(params: DocParams, context: Context): Promise<T> {
         // If 'deterministic' is undefined, default to creating document uniquely
-        const unique = params.deterministic ? '0' : uint8arrays.toString(randomBytes(12), 'base16')
+        const unique = params.deterministic ? '0' : uint8arrays.toString(randomBytes(12), 'base64')
 
         const metadata: GenesisHeader = params.metadata || { controllers: [] }
         if (!metadata.controllers || metadata.controllers.length === 0) {
