@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.19.7-rc.0](/compare/@ceramicnetwork/core@0.19.6...@ceramicnetwork/core@0.19.7-rc.0) (2021-01-29)
+
+
+### Bug Fixes
+
+* **common:** Don't serialize null state fields (#867) 51b7375, closes #867
+
+
+
+
+
 ## [0.19.6](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@0.19.5...@ceramicnetwork/core@0.19.6) (2021-01-28)
 
 

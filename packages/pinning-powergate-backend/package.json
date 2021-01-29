@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/pinning-powergate-backend",
-  "version": "0.1.13",
+  "version": "0.1.14-rc.0",
   "description": "Powergate Pinning backend",
   "keywords": [
     "ceramic",
@@ -33,7 +33,7 @@
     "lodash": "^4.17.20"
   },
   "devDependencies": {
-    "@ceramicnetwork/common": "^0.15.8",
+    "@ceramicnetwork/common": "^0.15.9-rc.0",
     "@types/lodash": "^4.14.162",
     "cids": "1.0.2"
   },

@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.15.9-rc.0](/compare/@ceramicnetwork/common@0.15.8...@ceramicnetwork/common@0.15.9-rc.0) (2021-01-29)
+
+
+### Bug Fixes
+
+* **common:** Don't serialize null state fields (#867) 51b7375, closes #867
+
+
+
+
+
 ## [0.15.8](/compare/@ceramicnetwork/common@0.15.7...@ceramicnetwork/common@0.15.8) (2021-01-21)
 
 
