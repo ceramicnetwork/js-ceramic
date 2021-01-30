@@ -88,17 +88,6 @@ class Document extends Doctype {
     return new Document(DoctypeUtils.deserializeState(state), context, apiUrl, config)
   }
 
-  static async loadDocumentCommits (docId: DocID | string, apiUrl: string): Promise<Array<Record<string, CeramicCommit>>> {
-    docId = typeDocID(docId)
-    const { commits } = await fetchJson(apiUrl + '/commits/' + docId.toString())
-
-    return commits.map((r: any) => {
-      return {
-        cid: r.cid, value: DoctypeUtils.deserializeCommit(r.value)
-      }
-    })
-  }
-
   async change(params: DocParams, opts: DocOpts): Promise<void> {
     await this.context.api.updateDocument(this, params, opts)
   }

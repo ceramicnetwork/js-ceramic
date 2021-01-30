@@ -512,15 +512,6 @@ class Ceramic implements CeramicApi {
   }
 
   /**
-   * Load all document records by document ID
-   * @param docId - Document ID
-   * @deprecated See `loadDocumentCommits`
-   */
-  async loadDocumentRecords(docId: DocID | string): Promise<Array<Record<string, any>>> {
-    return this.loadDocumentCommits(docId)
-  }
-
-  /**
    * Makes an update to an existing document.
    * @param doc - Document to update
    * @param params - Update parameters
