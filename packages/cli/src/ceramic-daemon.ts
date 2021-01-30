@@ -310,7 +310,7 @@ class CeramicDaemon {
     }
 
     try {
-      const doctype = await this.ceramic.applyCommit(docId, DoctypeUtils.deserializeCommit(commit), docOpts)
+      const doctype = await this.ceramic._applyCommit(docId, DoctypeUtils.deserializeCommit(commit), docOpts)
       res.json({ docId: doctype.id.toString(), state: DoctypeUtils.serializeState(doctype.state) })
     } catch (e) {
       return next(e)

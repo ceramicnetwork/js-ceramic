@@ -27,13 +27,10 @@ export class Caip10LinkDoctype extends Doctype {
      * Changes Caip10Link instance
      * @param params - Change parameters
      * @param opts - Initialization options
+     * @deprecated - Use CeramicApi.updateDocument instead
      */
     async change(params: Caip10LinkParams, opts?: DocOpts): Promise<void> {
-        const { content, metadata } = params
-
-        const updateCommit = await Caip10LinkDoctype._makeCommit(this, content, metadata?.schema)
-        const updated = await this.context.api.applyCommit(this.id.toString(), updateCommit, opts)
-        this.state = updated.state
+        await this.context.api.updateDocument(this, params, opts)
     }
 
     /**
@@ -76,19 +73,16 @@ export class Caip10LinkDoctype extends Doctype {
     }
 
     /**
-     * Creates change commit
-     * @param doctype - Caip10Link doctype instance
-     * @param newContent - Change content
-     * @param newSchema - Change schema
-     * @private
+     * Makes a new commit describing a change to the document.
+     * @param params
      */
-    static async _makeCommit (doctype: Caip10LinkDoctype, newContent: any, newSchema: string = null): Promise<CeramicCommit> {
-        if (newSchema) {
+    async _makeCommit(params: DocParams): Promise<CeramicCommit> {
+        if (params.metadata?.schema) {
             throw new Error('Schema not allowed on caip10-link doctype')
         }
-        if (newContent == null) {
+        if (params.content == null) {
             throw new Error('Proof must be given in doctype')
         }
-        return { data: newContent, prev: doctype.tip, id: doctype.state.log[0].cid }
+        return { data: params.content, prev: this.tip, id: this.state.log[0].cid }
     }
 }

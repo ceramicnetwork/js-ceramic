@@ -131,7 +131,7 @@ describe('Ceramic API', () => {
 
       const stateOg = docOg.state
 
-      await docOg.change({ content: { test: 'abcde' } })
+      await ceramic.updateDocument(docOg,{ content: { test: 'abcde' } })
 
       // wait for anchor (new commit)
       await anchorDoc(ceramic, docOg)
@@ -148,7 +148,7 @@ describe('Ceramic API', () => {
 
       // try to call doctype.change
       try {
-        await docV1.change({ content: { test: 'fghj' }, metadata: { controllers: docV1.controllers } })
+        await ceramic.updateDocument(docV1, { content: { test: 'fghj' }, metadata: { controllers: docV1.controllers } })
         throw new Error('Should not be able to update commit')
       } catch (e) {
         expect(e.message).toEqual('Historical document commits cannot be modified. Load the document without specifying a commit to make updates.')
@@ -156,7 +156,7 @@ describe('Ceramic API', () => {
 
       // // try to call Ceramic API directly
       try {
-        const updateRecord = await TileDoctype._makeCommit(docV1, ceramic.context.did, { content: { test: 'fghj' } })
+        const updateRecord = await docV1._makeCommit({ content: { test: 'fghj' } })
         await ceramic.context.api.applyRecord(docV1Id, updateRecord)
         throw new Error('Should not be able to update commit')
       } catch (e) {
@@ -289,7 +289,7 @@ describe('Ceramic API', () => {
         }
       })
 
-      await doctype.change({
+      await ceramic.updateDocument(doctype, {
         metadata: {
           controllers: [controller], schema: schemaDoc.commitId.toString()
         }
@@ -321,7 +321,7 @@ describe('Ceramic API', () => {
       })
 
       try {
-        await doctype.change({
+        await ceramic.updateDocument(doctype, {
           metadata: {
             controllers: [controller], schema: schemaDoc.commitId.toString()
           }
@@ -352,7 +352,7 @@ describe('Ceramic API', () => {
         }
       })
 
-      await doctype.change({
+      await ceramic.updateDocument(doctype, {
         content: { a: 'x' }, metadata: {
           controllers: [controller], schema: schemaDoc.commitId.toString()
         }
@@ -393,13 +393,13 @@ describe('Ceramic API', () => {
       // commit of the schema
       const updatedSchema = cloneDeep(stringMapSchema)
       updatedSchema.additionalProperties.type = "number"
-      await schemaDoc.change({content: updatedSchema})
+      await ceramic.updateDocument(schemaDoc, {content: updatedSchema})
       // wait for anchor
       await anchorDoc(ceramic, schemaDoc)
       expect(schemaDoc.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
       // Test that we can assign the updated schema to the document without error.
-      await doc.change({
+      await ceramic.updateDocument(doc, {
         metadata: {
           controllers: [controller], schema: schemaDoc.commitId.toString()
         }

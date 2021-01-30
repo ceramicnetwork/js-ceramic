@@ -197,16 +197,28 @@ export default class CeramicClient implements CeramicApi {
     return this.loadDocumentCommits(docId)
   }
 
-  applyCommit<T extends Doctype>(docId: string | DocID, commit: CeramicCommit, opts?: DocOpts): Promise<T> {
+  /**
+   * Makes an update to an existing document.
+   * @param doc - Document to update
+   * @param params - Update parameters
+   * @param opts - Additional options
+   */
+  async updateDocument<T extends Doctype>(doc: T, params: DocParams, opts?: DocOpts): Promise<void> {
+    const updateCommit = await doc._makeCommit(params)
+    const updated = await this._applyCommit(doc.id.toString(), updateCommit, opts)
+    doc.state = updated.state
+  }
+
+  _applyCommit<T extends Doctype>(docId: string | DocID, commit: CeramicCommit, opts?: DocOpts): Promise<T> {
     const effectiveDocId = typeDocID(docId)
-    return Document.applyCommit(this._apiUrl, effectiveDocId, commit, this.context, opts) as unknown as Promise<T>
+    return Document._applyCommit(this._apiUrl, effectiveDocId, commit, this.context, opts) as unknown as Promise<T>
   }
 
   /**
-   * @deprecated See `applyCommit`.
+   * @deprecated See `_applyCommit`.
    */
-  async applyRecord<T extends Doctype>(docId: DocID | string, record: CeramicCommit, opts?: DocOpts): Promise<T> {
-    return this.applyCommit(docId, record, opts)
+  async _applyRecord<T extends Doctype>(docId: DocID | string, record: CeramicCommit, opts?: DocOpts): Promise<T> {
+    return this._applyCommit(docId, record, opts)
   }
 
   addDoctypeHandler<T extends Doctype>(doctypeHandler: DoctypeHandler<T>): void {

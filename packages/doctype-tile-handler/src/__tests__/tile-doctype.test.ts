@@ -253,9 +253,7 @@ describe('TileDoctypeHandler', () => {
         const state = await tileDoctypeHandler.applyCommit(RECORDS.genesisGenerated.jws, FAKE_CID_1, context)
         const doctype = new TileDoctype(state, context)
 
-        await expect(TileDoctype._makeCommit(doctype, null, RECORDS.r1.desiredContent)).rejects.toThrow(/No DID/)
-
-        const record = await TileDoctype._makeCommit(doctype, did, RECORDS.r1.desiredContent) as SignedCommitContainer
+        const record = await doctype._makeCommit({content: RECORDS.r1.desiredContent}) as SignedCommitContainer
         const { jws: rJws, linkedBlock: rLinkedBlock} = record
         const rPayload = dagCBOR.util.deserialize(rLinkedBlock)
         expect({ jws: serialize(rJws), linkedPayload: serialize(rPayload)}).toEqual(RECORDS.r1.record)
@@ -274,7 +272,7 @@ describe('TileDoctypeHandler', () => {
         let state = await tileDoctypeHandler.applyCommit(genesisRecord.jws, FAKE_CID_1, context)
 
         const doctype = new TileDoctype(state, context)
-        const signedRecord = await TileDoctype._makeCommit(doctype, did, RECORDS.r1.desiredContent) as SignedCommitContainer
+        const signedRecord = await doctype._makeCommit({content: RECORDS.r1.desiredContent}) as SignedCommitContainer
 
         await context.ipfs.dag.put(signedRecord, FAKE_CID_2)
 
@@ -299,7 +297,7 @@ describe('TileDoctypeHandler', () => {
 
         // make a first update
         let doctype = new TileDoctype(genesisState, context)
-        const signedRecord1 = await TileDoctype._makeCommit(doctype, did, { other: { obj: 'content' } }, null, "a new schema") as SignedCommitContainer
+        const signedRecord1 = await doctype._makeCommit({content: { other: { obj: 'content' } }, metadata: {schema: "a new schema"}}) as SignedCommitContainer
 
         await context.ipfs.dag.put(signedRecord1, FAKE_CID_2)
         const sPayload1 = dagCBOR.util.deserialize(signedRecord1.linkedBlock)
@@ -309,7 +307,7 @@ describe('TileDoctypeHandler', () => {
 
         // make a second update on top of the first
         doctype = new TileDoctype(state1, context)
-        const signedRecord2 = await TileDoctype._makeCommit(doctype, did, { other: { obj2: 'fefe' } }) as SignedCommitContainer
+        const signedRecord2 = await doctype._makeCommit({content: { other: { obj2: 'fefe' } }}) as SignedCommitContainer
 
         await context.ipfs.dag.put(signedRecord2, FAKE_CID_3)
         const sPayload2 = dagCBOR.util.deserialize(signedRecord2.linkedBlock)
@@ -344,8 +342,8 @@ describe('TileDoctypeHandler', () => {
 
         const state = await tileDoctypeHandler.applyCommit(genesisRecord.jws, FAKE_CID_1, context)
         const doctype = new TileDoctype(state, context)
-        const makeCommit = TileDoctype._makeCommit(doctype, did, RECORDS.r1.desiredContent, [did.id, did.id])
-        await expect(makeCommit).rejects.toThrow(/Exactly one controller must be specified/)
+        const _makeCommit = doctype._makeCommit({content: RECORDS.r1.desiredContent, metadata: {controllers: [did.id, did.id]}})
+        await expect(_makeCommit).rejects.toThrow(/Exactly one controller must be specified/)
     })
 
     it('applies anchor record correctly', async () => {
@@ -361,7 +359,7 @@ describe('TileDoctypeHandler', () => {
         let state = await tileDoctypeHandler.applyCommit(genesisRecord.jws, FAKE_CID_1, context)
 
         const doctype = new TileDoctype(state, context)
-        const signedRecord = await TileDoctype._makeCommit(doctype, did, RECORDS.r1.desiredContent) as SignedCommitContainer
+        const signedRecord = await doctype._makeCommit({content: RECORDS.r1.desiredContent}) as SignedCommitContainer
 
         await context.ipfs.dag.put(signedRecord, FAKE_CID_2)
 

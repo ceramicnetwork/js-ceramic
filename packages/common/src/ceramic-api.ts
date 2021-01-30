@@ -44,12 +44,6 @@ export interface CeramicApi {
     did?: DID;
 
     /**
-     * Register Doctype handler
-     * @param doctypeHandler - DoctypeHandler instance
-     */
-    addDoctypeHandler<T extends Doctype>(doctypeHandler: DoctypeHandler<T>): void;
-
-    /**
      * Create Doctype instance
      * @param doctype - Doctype name
      * @param params - Create parameters
@@ -66,11 +60,46 @@ export interface CeramicApi {
     createDocumentFromGenesis<T extends Doctype>(doctype: string, genesis: any, opts?: DocOpts): Promise<T>;
 
     /**
+     * Makes an update to an existing document.
+     * @param doc - Document to update
+     * @param params - Update parameters
+     * @param opts - Additional options
+     */
+    updateDocument<T extends Doctype>(doc: T, params: DocParams, opts?: DocOpts): Promise<void>;
+
+    /**
      * Loads Doctype instance
      * @param docId - Document ID
      * @param opts - Initialization options
      */
     loadDocument<T extends Doctype>(docId: DocID | string, opts?: DocOpts): Promise<T>;
+
+    /**
+     * Set DID provider
+     * @param provider - DID provider instance
+     */
+    setDIDProvider (provider: DIDProvider): Promise<void>;
+
+    /**
+     * Register Doctype handler
+     * @param doctypeHandler - DoctypeHandler instance
+     */
+    addDoctypeHandler<T extends Doctype>(doctypeHandler: DoctypeHandler<T>): void;
+
+    /**
+     * @returns An array of the CAIP-2 chain IDs of the blockchains that are supported for anchoring
+     * documents.
+     */
+    getSupportedChains(): Promise<Array<string>>;
+
+    /**
+     * Closes Ceramic instance
+     */
+    close(): Promise<void>; // gracefully close the ceramic instance
+
+
+    /////////////// Below here is the advanced API, primarily for internal use. //////////////////
+    /////////////// Only use if you know what you're doing.                     //////////////////
 
     /**
      * Load all document commits by document ID
@@ -102,22 +131,6 @@ export interface CeramicApi {
      */
     applyCommit<T extends Doctype>(docId: DocID | string, commit: CeramicCommit, opts?: DocOpts): Promise<T>;
 
-    /**
-     * Set DID provider
-     * @param provider - DID provider instance
-     */
-    setDIDProvider (provider: DIDProvider): Promise<void>;
-
-    /**
-     * @returns An array of the CAIP-2 chain IDs of the blockchains that are supported for anchoring
-     * documents.
-     */
-    getSupportedChains(): Promise<Array<string>>;
-
-    /**
-     * Closes Ceramic instance
-     */
-    close(): Promise<void>; // gracefully close the ceramic instance
 }
 
 export interface MultiQuery {

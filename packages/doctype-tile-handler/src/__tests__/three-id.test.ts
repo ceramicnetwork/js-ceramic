@@ -230,9 +230,7 @@ it('makes signed record correctly', async () => {
     const state = await tileDoctypeHandler.applyCommit(RECORDS.genesisGenerated.jws, FAKE_CID_1, context)
     const doctype = new TileDoctype(state, context)
 
-    await expect(TileDoctype._makeCommit(doctype, null, RECORDS.r1.desiredContent)).rejects.toThrow(/No DID/)
-
-    const record = await TileDoctype._makeCommit(doctype, did, RECORDS.r1.desiredContent) as SignedCommitContainer
+    const record = await doctype._makeCommit({content: RECORDS.r1.desiredContent}) as SignedCommitContainer
     const {jws: rJws, linkedBlock: rLinkedBlock} = record
     const rPayload = dagCBOR.util.deserialize(rLinkedBlock)
     expect({jws: serialize(rJws), payload: serialize(rPayload)}).toEqual(RECORDS.r1.record)
@@ -254,7 +252,7 @@ it('applies signed record correctly', async () => {
     let state = await tileDoctypeHandler.applyCommit(genesisRecord.jws, FAKE_CID_1, context)
 
     const doctype = new TileDoctype(state, context)
-    const signedRecord = await TileDoctype._makeCommit(doctype, did, RECORDS.r1.desiredContent) as SignedCommitContainer
+    const signedRecord = await doctype._makeCommit({content: RECORDS.r1.desiredContent}) as SignedCommitContainer
 
     await context.ipfs.dag.put(signedRecord, FAKE_CID_2)
 
@@ -297,7 +295,7 @@ it('applies anchor record correctly', async () => {
     let state = await tileDoctypeHandler.applyCommit(genesisRecord.jws, FAKE_CID_1, context)
 
     const doctype = new TileDoctype(state, context)
-    const signedRecord = await TileDoctype._makeCommit(doctype, did, RECORDS.r1.desiredContent) as SignedCommitContainer
+    const signedRecord = await doctype._makeCommit({content: RECORDS.r1.desiredContent}) as SignedCommitContainer
 
     await context.ipfs.dag.put(signedRecord, FAKE_CID_2)
 

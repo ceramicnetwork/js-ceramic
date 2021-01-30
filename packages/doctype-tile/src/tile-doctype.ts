@@ -37,15 +37,10 @@ export class TileDoctype extends Doctype {
      * Change existing Tile doctype
      * @param params - Change parameters
      * @param opts - Initialization options
+     * @deprecated - Use CeramicApi.updateDocument instead
      */
     async change(params: TileParams, opts: DocOpts = {}): Promise<void> {
-        if (this.context.did == null) {
-            throw new Error('No DID authenticated')
-        }
-
-        const updateCommit = await TileDoctype._makeCommit(this, this.context.did, params.content, params.metadata?.controllers, params.metadata?.schema)
-        const updated = await this.context.api.applyCommit(this.id.toString(), updateCommit, opts)
-        this.state = updated.state
+        await this.context.api.updateDocument(this, params, opts)
     }
 
     /**
@@ -87,31 +82,34 @@ export class TileDoctype extends Doctype {
     }
 
     /**
-     * Make change commit
-     * @param doctype - Tile doctype instance
-     * @param did - DID instance
-     * @param newContent - New context
-     * @param newControllers - New controllers
-     * @param schema - New schema ID
-     * @private
+     * Makes a new SignedCommit describing a change to the document.
+     * @param params
      */
-    static async _makeCommit(doctype: Doctype, did: DID, newContent: any, newControllers?: string[], schema?: string): Promise<CeramicCommit> {
+    async _makeCommit(params: DocParams): Promise<CeramicCommit> {
+        const schema = params.metadata?.schema
+        const newControllers = params.metadata?.controllers
+        let newContent = params.content
+
+        if (this.context.did == null) {
+            throw new Error('No DID authenticated')
+        }
+
         const header: CommitHeader = {
             ...schema != null && { schema: schema },
             ...newControllers != null && { controllers: newControllers },
         }
 
         if (newContent == null) {
-            newContent = doctype.content
+            newContent = this.content
         }
 
         if (header.controllers && header.controllers.length !== 1) {
             throw new Error('Exactly one controller must be specified')
         }
 
-        const patch = jsonpatch.compare(doctype.content, newContent)
-        const commit: UnsignedCommit = { header, data: patch, prev: doctype.tip, id: doctype.state.log[0].cid }
-        return TileDoctype._signDagJWS(commit, did, doctype.controllers[0])
+        const patch = jsonpatch.compare(this.content, newContent)
+        const commit: UnsignedCommit = { header, data: patch, prev: this.tip, id: this.state.log[0].cid }
+        return TileDoctype._signDagJWS(commit, this.context.did, this.controllers[0])
     }
 
     /**

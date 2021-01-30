@@ -346,7 +346,7 @@ class Ceramic implements CeramicApi {
    * @deprecated See `applyCommit`
    */
   async applyRecord<T extends Doctype>(docId: DocID | string, record: CeramicCommit, opts?: DocOpts): Promise<T> {
-    return this.applyCommit(docId, record, opts)
+    return this._applyCommit(docId, record, opts)
   }
 
   /**
@@ -355,7 +355,7 @@ class Ceramic implements CeramicApi {
    * @param commit - Commit to be applied
    * @param opts - Initialization options
    */
-  async applyCommit<T extends Doctype>(docId: string | DocID, commit: CeramicCommit, opts?: DocOpts): Promise<T> {
+  async _applyCommit<T extends Doctype>(docId: string | DocID, commit: CeramicCommit, opts?: DocOpts): Promise<T> {
     docId = normalizeDocID(docId)
     if (docId.commit != null) {
       throw new Error('Historical document commits cannot be modified. Load the document without specifying a commit to make updates.')
@@ -518,6 +518,18 @@ class Ceramic implements CeramicApi {
    */
   async loadDocumentRecords(docId: DocID | string): Promise<Array<Record<string, any>>> {
     return this.loadDocumentCommits(docId)
+  }
+
+  /**
+   * Makes an update to an existing document.
+   * @param doc - Document to update
+   * @param params - Update parameters
+   * @param opts - Additional options
+   */
+  async updateDocument<T extends Doctype>(doc: T, params: DocParams, opts?: DocOpts): Promise<void> {
+    const updateCommit = await doc._makeCommit(params)
+    const updated = await this._applyCommit(doc.id.toString(), updateCommit, opts)
+    doc.state = updated.state
   }
 
   /**

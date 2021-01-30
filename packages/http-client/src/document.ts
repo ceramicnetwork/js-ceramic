@@ -69,7 +69,7 @@ class Document extends Doctype {
     return new Document(DoctypeUtils.deserializeState(state), context, apiUrl, config)
   }
 
-  static async applyCommit(apiUrl: string, docId: DocID | string, commit: CeramicCommit, context: Context, docOpts: DocOpts = {}): Promise<Document> {
+  static async _applyCommit(apiUrl: string, docId: DocID | string, commit: CeramicCommit, context: Context, docOpts: DocOpts = {}): Promise<Document> {
     docId = typeDocID(docId)
     const { state } = await fetchJson(apiUrl + '/commits', {
       method: 'post',
@@ -100,10 +100,12 @@ class Document extends Doctype {
   }
 
   async change(params: DocParams, opts: DocOpts): Promise<void> {
-    const doctype = new this.doctypeLogic(this.state, this.context)
+    await this.context.api.updateDocument(this, params, opts)
+  }
 
-    await doctype.change(params, opts)
-    this.state = doctype.state
+  async _makeCommit(params: DocParams): Promise<CeramicCommit> {
+    const doctype = new this.doctypeLogic(this.state, this.context)
+    return await doctype._makeCommit(params)
   }
 
   close(): void {

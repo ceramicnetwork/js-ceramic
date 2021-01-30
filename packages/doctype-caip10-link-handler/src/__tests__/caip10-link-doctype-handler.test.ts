@@ -131,7 +131,7 @@ describe('Caip10LinkHandler', () => {
     it('makes signed record correctly', async () => {
         const state = await handler.applyCommit(RECORDS.genesis, FAKE_CID_1, context)
         const doctype = new Caip10LinkDoctype(state, context)
-        const record = await Caip10LinkDoctype._makeCommit(doctype, RECORDS.r1.desiredContent)
+        const record = await doctype._makeCommit({content: RECORDS.r1.desiredContent})
         expect(record).toEqual(RECORDS.r1.commit)
     })
 

@@ -218,8 +218,15 @@ export abstract class Doctype extends EventEmitter implements DocStateHolder {
      * Makes a change on an existing document
      * @param params - Change parameters
      * @param opts - Initialization options
+     * @deprecated - Use CeramicApi.updateDocument instead.
      */
-    abstract change(params: DocParams, opts?: DocOpts): Promise<void>
+    abstract change(params: DocParams, opts?: DocOpts): Promise<void>;
+
+    /**
+     * Makes a new commit describing an update to the document.
+     * @param params - Parameters describing the change to the document
+     */
+    abstract _makeCommit(params: DocParams): Promise<CeramicCommit>;
 
 }
 

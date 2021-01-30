@@ -266,7 +266,7 @@ describe('Document', () => {
       expect(commit1).toEqual(commits[1])
       expect(commit1).toEqual(anchorCommits[0])
 
-      const updateRec = await TileDoctype._makeCommit(doc.doctype, user, newContent, doc.controllers)
+      const updateRec = await doc.doctype._makeCommit({content: newContent})
 
       commits = doc.allCommitIds
       anchorCommits = doc.anchorCommitIds
@@ -300,7 +300,7 @@ describe('Document', () => {
 
       // Apply a final record that never gets anchored and thus never becomes a proper commit
       const finalContent = {foo: 'bar'}
-      const updateRec2 = await TileDoctype._makeCommit(doc.doctype, user, finalContent, doc.controllers)
+      const updateRec2 = await doc.doctype._makeCommit({content: finalContent})
       await doc.applyCommit(updateRec2)
 
       commits = doc.allCommitIds
@@ -371,7 +371,7 @@ describe('Document', () => {
       const doc = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context)
       await anchorUpdate(anchorService, doc)
 
-      const updateRec = await TileDoctype._makeCommit(doc.doctype, user, newContent, doc.controllers)
+      const updateRec = await doc.doctype._makeCommit({content: newContent})
       await doc.applyCommit(updateRec)
 
       await anchorUpdate(anchorService, doc)
@@ -386,7 +386,7 @@ describe('Document', () => {
       await anchorUpdate(anchorService, doc1)
       const tipPreUpdate = doc1.tip
 
-      let updateRec = await TileDoctype._makeCommit(doc1.doctype, user, newContent, doc1.controllers)
+      let updateRec = await doc1.doctype._makeCommit({content: newContent})
       await doc1.applyCommit(updateRec)
 
       await anchorUpdate(anchorService, doc1)
@@ -401,7 +401,7 @@ describe('Document', () => {
       // TODO - better mock for anchors
 
       const conflictingNewContent = { asdf: 2342 }
-      updateRec = await TileDoctype._makeCommit(doc2.doctype, user, conflictingNewContent, doc2.controllers)
+      updateRec = await doc2.doctype._makeCommit({content: conflictingNewContent})
       await doc2.applyCommit(updateRec)
 
       await anchorUpdate(anchorService, doc2)
@@ -430,7 +430,7 @@ describe('Document', () => {
     it('handles consecutive anchors', async () => {
       const doc = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context)
 
-      const updateRec = await TileDoctype._makeCommit(doc.doctype, user, newContent, doc.controllers)
+      const updateRec = await doc.doctype._makeCommit({content: newContent})
       await doc.applyCommit(updateRec)
 
       await anchorUpdate(anchorService, doc)
@@ -468,7 +468,7 @@ describe('Document', () => {
       await anchorUpdate(anchorService, doc)
 
       try {
-        const updateRec = await TileDoctype._makeCommit(doc.doctype, user, null, doc.controllers, schemaDoc.commitId.toString())
+        const updateRec = await doc.doctype._makeCommit({metadata: {schema: schemaDoc.commitId.toString()}})
         await doc.applyCommit(updateRec)
         fail('Should not be able to assign a schema to a document that does not conform')
       } catch (e) {
@@ -490,7 +490,7 @@ describe('Document', () => {
       await anchorUpdate(anchorService, doc)
 
       try {
-        const updateRec = await TileDoctype._makeCommit(doc.doctype, user, nonConformingContent, doc.controllers)
+        const updateRec = await doc.doctype._makeCommit({content: nonConformingContent})
         await doc.applyCommit(updateRec)
         fail('Should not be able to assign a schema to a document that does not conform')
       } catch (e) {
@@ -772,7 +772,7 @@ describe('Document', () => {
       expect(dispatcher.publishTip).toHaveBeenCalledWith(doc1.id, doc1.tip)
       await anchorUpdate(anchorService, doc1)
 
-      const updateRec = await TileDoctype._makeCommit(doc1.doctype, user, newContent, doc1.controllers)
+      const updateRec = await doc1.doctype._makeCommit({content: newContent})
       await doc1.applyCommit(updateRec)
 
       expect(doc1.content).toEqual(newContent)
@@ -790,7 +790,7 @@ describe('Document', () => {
         doc2.doctype.on('change', resolve)
       })
 
-      const updateRec = await TileDoctype._makeCommit(doc1.doctype, user, newContent, doc1.controllers)
+      const updateRec = await doc1.doctype._makeCommit({content: newContent})
       await doc1.applyCommit(updateRec)
 
       expect(doc1.content).toEqual(newContent)

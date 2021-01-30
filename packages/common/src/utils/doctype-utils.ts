@@ -143,7 +143,7 @@ export class DoctypeUtils {
      * @param doctype - Doctype instance
      */
     static makeReadOnly<T extends Doctype>(doctype: T): T {
-        doctype.change = (): Promise<void> => {
+        doctype._makeCommit = (): Promise<CeramicCommit> => {
             throw new Error('Historical document commits cannot be modified. Load the document without specifying a commit to make updates.')
         }
         return doctype
