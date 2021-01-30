@@ -113,24 +113,6 @@ export interface CeramicApi {
      * @deprecated See `loadDocumentCommits`
      */
     loadDocumentRecords(docId: DocID | string): Promise<Array<Record<string, any>>>;
-
-    /**
-     * Applies commit on the existing document
-     * @param docId - Document ID
-     * @param commit - Commit to be applied
-     * @param opts - Initialization options
-     * @deprecated Use `applyCommit`
-     */
-    applyRecord<T extends Doctype>(docId: DocID | string, commit: CeramicCommit, opts?: DocOpts): Promise<T>;
-
-    /**
-     * Applies commit on the existing document
-     * @param docId - Document ID
-     * @param commit - Commit to be applied
-     * @param opts - Initialization options
-     */
-    applyCommit<T extends Doctype>(docId: DocID | string, commit: CeramicCommit, opts?: DocOpts): Promise<T>;
-
 }
 
 export interface MultiQuery {
