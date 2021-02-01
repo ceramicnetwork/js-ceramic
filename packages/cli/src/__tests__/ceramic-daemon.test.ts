@@ -151,6 +151,27 @@ describe('Ceramic interop: core <> http-client', () => {
         expect(DoctypeUtils.serializeState(doc3.state)).toEqual(DoctypeUtils.serializeState(doc4.state))
     })
 
+    it('loads document records correctly', async () => {
+        const doc1 = await core.createDocument(DOCTYPE_TILE, { content: { test: 123 } })
+        await waitChange(doc1)
+        const doc2 = await client.loadDocument(doc1.id)
+        expect(doc1.content).toEqual(doc2.content)
+
+        const records1 = await core.loadDocumentRecords(doc1.id)
+        expect(records1).toBeDefined()
+
+        const records2 = await client.loadDocumentRecords(doc2.id)
+        expect(records2).toBeDefined()
+
+        const serializeCommits = (commits: any): any => commits.map((r: any) => {
+            return {
+                cid: r.cid, value: DoctypeUtils.serializeCommit(r.value)
+            }
+        })
+
+        expect(serializeCommits(records1)).toEqual(serializeCommits(records2))
+    })
+
     it('makes and gets updates correctly', async () => {
         const doc1 = await core.createDocument(DOCTYPE_TILE, { content: { test: 123 } })
         await waitChange(doc1)

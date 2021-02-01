@@ -279,7 +279,7 @@ describe('Ceramic integration', () => {
     await anchor(ceramic1)
     await syncDoc(doctype1)
 
-    const logRecords = await ceramic1.loadDocumentCommits(doctype1.id)
+    const logRecords = await ceramic1.loadDocumentRecords(doctype1.id)
 
     let doctype2 = await ceramic2.createDocumentFromGenesis(DOCTYPE_TILE, logRecords[0].value, { anchor: false, publish: false })
     for (let i = 1; i < logRecords.length; i++) {

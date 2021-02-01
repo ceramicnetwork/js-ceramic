@@ -96,6 +96,23 @@ export interface CeramicApi {
      * Closes Ceramic instance
      */
     close(): Promise<void>; // gracefully close the ceramic instance
+
+
+    /////////////// Below here is the advanced API, primarily for internal use. //////////////////
+    /////////////// Only use if you know what you're doing.                     //////////////////
+
+    /**
+     * Load all document commits by document ID
+     * @param docId - Document ID
+     */
+    loadDocumentCommits(docId: DocID | string): Promise<Array<Record<string, any>>>;
+
+    /**
+     * Load all document commits by document ID
+     * @param docId - Document ID
+     * @deprecated See `loadDocumentCommits`
+     */
+    loadDocumentRecords(docId: DocID | string): Promise<Array<Record<string, any>>>;
 }
 
 export interface MultiQuery {

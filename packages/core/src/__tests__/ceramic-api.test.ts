@@ -427,7 +427,7 @@ describe('Ceramic API', () => {
       }
 
       const doctype = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, tileDocParams)
-      const logRecords = await ceramic.loadDocumentCommits(doctype.id)
+      const logRecords = await ceramic.loadDocumentRecords(doctype.id)
       expect(logRecords).toBeDefined()
 
       const expected = []

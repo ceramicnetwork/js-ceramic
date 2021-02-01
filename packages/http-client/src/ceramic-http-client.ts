@@ -185,6 +185,18 @@ export default class CeramicClient implements CeramicApi {
     }, {})
   }
 
+  loadDocumentCommits(docId: string | DocID): Promise<Record<string, any>[]> {
+    const effectiveDocId = typeDocID(docId)
+    return Document.loadDocumentCommits(effectiveDocId, this._apiUrl)
+  }
+
+  /**
+   * @deprecated See `loadDocumentCommits`.
+   */
+  async loadDocumentRecords(docId: DocID | string): Promise<Array<Record<string, any>>> {
+    return this.loadDocumentCommits(docId)
+  }
+
   /**
    * Makes an update to an existing document.
    * @param doc - Document to update
