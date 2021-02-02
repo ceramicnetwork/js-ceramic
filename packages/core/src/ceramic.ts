@@ -10,7 +10,7 @@ import {
   Context,
   DoctypeUtils,
   DocParams,
-  LoggerProvider,
+  LoggerProviderOld,
   LoggerPlugin,
   LoggerPluginOptions,
   AnchorService,
@@ -21,7 +21,7 @@ import {
   PinApi,
   MultiQuery,
   PinningBackendStatic,
-  DocCache,
+  DocCache, LoggerProvider,
 } from "@ceramicnetwork/common"
 import { Resolver } from "did-resolver"
 
@@ -58,6 +58,7 @@ export interface CeramicConfig {
 
   logLevel?: string;
   logToFiles?: boolean;
+  logPath?: string;
   logToFilesPlugin?: {
     plugin: LoggerPlugin;
     state: any;
@@ -261,13 +262,16 @@ class Ceramic implements CeramicApi {
    * @param config - Ceramic configuration
    */
   static async create(ipfs: IpfsApi, config: CeramicConfig = {}): Promise<Ceramic> {
-    LoggerProvider.init({
+    LoggerProvider.init({logLevel: config.logLevel, logToFiles: config.logToFiles, logPath: config.logPath})
+
+    // todo remove
+    LoggerProviderOld.init({
       level: config.logLevel? config.logLevel : 'silent',
       component: config.gateway? 'GATEWAY' : 'NODE',
     })
 
     if (config.logToFiles) {
-        LoggerProvider.addPlugin(
+        LoggerProviderOld.addPlugin(
             config.logToFilesPlugin.plugin,
             config.logToFilesPlugin.state,
             null,
