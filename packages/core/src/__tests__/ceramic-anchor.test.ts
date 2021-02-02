@@ -35,6 +35,7 @@ const createCeramic = async (ipfs: IpfsApi, anchorManual: boolean): Promise<Cera
   const ceramic = await Ceramic.create(ipfs, {
     pinsetDirectory: await tmp.tmpName(),
     anchorOnRequest: !anchorManual,
+    restoreDocuments: false,
     pubsubTopic: "/ceramic/inmemory/test" // necessary so Ceramic instances can talk to each other
   })
   const provider = new Ed25519Provider(seed)
