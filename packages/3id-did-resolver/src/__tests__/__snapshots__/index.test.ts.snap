@@ -5,7 +5,7 @@ Object {
   "@context": "https://w3id.org/did/v1",
   "authentication": Array [
     Object {
-      "publicKey": "did:3:bafyreiffkeeq4wq2htejqla2is5ognligi4lvjhwrpqpl2kazjdoecmugi#g75q7J22wuWRyHb",
+      "publicKey": "did:3:bafyreiffkeeq4wq2htejqla2is5ognligi4lvjhwrpqpl2kazjdoecmugi#7uFZ8RP1qUVU87P",
       "type": "Secp256k1SignatureAuthentication2018",
     },
   ],
@@ -21,8 +21,8 @@ Object {
   "publicKey": Array [
     Object {
       "controller": "did:3:bafyreiffkeeq4wq2htejqla2is5ognligi4lvjhwrpqpl2kazjdoecmugi",
-      "id": "did:3:bafyreiffkeeq4wq2htejqla2is5ognligi4lvjhwrpqpl2kazjdoecmugi#g75q7J22wuWRyHb",
-      "publicKeyBase58": "P8fYfHCRRHYkNwtVjRadhgftUsyEr6FUy65WttgSjqaW2eDXvJeXuCZRTdFM9JXc72eS5EDuu52fsdthsuWN7TS1",
+      "id": "did:3:bafyreiffkeeq4wq2htejqla2is5ognligi4lvjhwrpqpl2kazjdoecmugi#7uFZ8RP1qUVU87P",
+      "publicKeyBase58": "h3ZsRvyVTpF6NheK7BZGaKeFv2K4qZridCfaiVoNFeFf",
       "type": "Secp256k1VerificationKey2018",
     },
     Object {
