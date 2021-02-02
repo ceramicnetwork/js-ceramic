@@ -19,6 +19,7 @@ import {
   RootLogger,
   Logger,
   DocStateHolder,
+  UnreachableCaseError
 } from '@ceramicnetwork/common'
 import DocID from '@ceramicnetwork/docid'
 import { PinStore } from './store/pin-store';
@@ -629,6 +630,8 @@ class Document extends EventEmitter implements DocStateHolder {
                   subscription.unsubscribe();
                   return;
                 }
+                default:
+                  throw new UnreachableCaseError(asr, 'Unknown anchoring state')
               }
             })
         )
