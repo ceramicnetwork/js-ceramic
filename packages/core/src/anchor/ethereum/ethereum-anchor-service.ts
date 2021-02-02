@@ -52,7 +52,7 @@ const BASE_CHAIN_ID = "eip155"
 /**
  * Ethereum anchor service that stores root CIDs on Ethereum blockchain
  */
-export default class EthereumAnchorService extends AnchorService {
+export default class EthereumAnchorService implements AnchorService {
   private readonly requestsApiEndpoint: string;
   private readonly chainIdApiEndpoint: string;
   private readonly ethereumRpcEndpoint: string | undefined;
@@ -62,7 +62,6 @@ export default class EthereumAnchorService extends AnchorService {
    * @param config - service configuration (polling interval, etc.)
    */
   constructor(config: CeramicConfig) {
-    super();
     this.requestsApiEndpoint = config.anchorServiceUrl + "/api/v0/requests";
     this.chainIdApiEndpoint =
       config.anchorServiceUrl + "/api/v0/service-info/supported_chains";

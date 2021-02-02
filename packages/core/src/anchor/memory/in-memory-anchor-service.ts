@@ -48,7 +48,7 @@ const requestAnchorQueue = new PQueue({ concurrency: 1 });
 /**
  * In-memory anchor service - used locally, not meant to be used in production code
  */
-class InMemoryAnchorService extends AnchorService {
+class InMemoryAnchorService implements AnchorService {
   #ceramic: Ceramic;
   #dispatcher: Dispatcher;
 
@@ -60,8 +60,6 @@ class InMemoryAnchorService extends AnchorService {
   #queue: Candidate[] = [];
 
   constructor(_config: InMemoryAnchorConfig) {
-    super();
-
     this.#anchorDelay = _config?.anchorDelay ?? 0;
     this.#anchorOnRequest = _config?.anchorOnRequest ?? true;
     this.#verifySignatures = _config?.verifySignatures ?? true;
