@@ -89,7 +89,7 @@ const legacyResolve = async (ceramic: Ceramic, didId: string, commit?: string): 
 
   try {
     const docParams =  { deterministic: true, metadata: { controllers: [legacyPublicKeys.keyDid], family: '3id' } }
-    const doc = await ceramic.createDocument('tile', docParams, { applyOnly: true })
+    const doc = await ceramic.createDocument('tile', docParams, { anchor: false, publish: false })
     const didDoc = await resolve(ceramic, doc.id.toString(), commit, didId)
     return didDoc
   } catch(e) {
