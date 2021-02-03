@@ -49,6 +49,19 @@ const encodeKey = (key: Uint8Array, encryption?: boolean): string => {
   return `z${u8a.toString(bytes, 'base58btc')}`
 }
 
+// Consumes uncompressed hex key string, and returns compressed hex key string
+const compressKey = (key: string) => {
+  // reference: https://github.com/indutny/elliptic/blob/e71b2d9359c5fe9437fbf46f1f05096de447de57/lib/elliptic/curve/base.js#L298
+  // drop 1 byte prefix, point x & y 32 bytes each, hex encoded
+  const xpoint = key.slice(2, 66)
+  const ypoint = key.slice(66, 130)
+  // if even 
+  //@ts-expect-error arithmetic op hex string
+  const prefix = (ypoint & 1) === 0 ? '02' : '03'
+  return `${prefix}${xpoint}`
+}
+
+
 // Returns v0 3id public keys in ceramic 3id doc form
 const LegacyResolver = async (didId: string, ipfs = ipfsMock): Promise<any> => {
   const doc = (await ipfs.dag.get(didId)).value
@@ -63,8 +76,10 @@ const LegacyResolver = async (didId: string, ipfs = ipfsMock): Promise<any> => {
     throw new Error('Not a valid 3ID')
   }
 
-  const signing = encodeKey(u8a.fromString(signingKey, 'base16'))
+  const signingKeyCompressed = compressKey(signingKey)
+  const signing = encodeKey(u8a.fromString(signingKeyCompressed, 'base16'))
   const encryption = encodeKey(u8a.fromString(encryptionKey, 'base64pad'), true)
+  
   return {
     keyDid: `did:key:${signing}`,
     publicKeys: {
