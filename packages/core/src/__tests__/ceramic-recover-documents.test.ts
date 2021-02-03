@@ -33,19 +33,21 @@ const expectEqualStates = (state1: DocState, state2: DocState): void => {
     expect(DoctypeUtils.serializeState(state1)).toEqual(DoctypeUtils.serializeState(state2));
 };
 
-const anchor = async (ceramic: Ceramic): Promise<void> => {
+const anchor = async (ceramic: Ceramic, doc: Doctype): Promise<void> => {
+    const changeHandle = registerChangeListener(doc)
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     await ceramic.context.anchorService.anchor();
+    await changeHandle
 };
 
-const syncDoc = async (doctype: Doctype): Promise<void> => {
-    await new Promise<void>((resolve) => {
-        doctype.on("change", () => {
-            resolve();
-        });
-    });
-};
+function registerChangeListener (doc: Doctype): Promise<void> {
+    return new Promise(resolve => {
+        doc.on('change', () => {
+            resolve()
+        })
+    })
+}
 
 async function createCeramic(ipfs: IpfsApi, pinsetDirectory: string) {
     const ceramic = await Ceramic.create(ipfs, {
@@ -146,8 +148,7 @@ it("re-request anchors on #recoverDocuments", async () => {
     // doc2 is exact replica of doc1
     expectEqualStates(doc1.state, doc2.state);
     // Now CAS anchors
-    await anchor(ceramic2);
-    await syncDoc(doc2);
+    await anchor(ceramic2, doc2);
     // And the document is anchored
     expect(doc2.state.anchorStatus).toEqual(AnchorStatus.ANCHORED);
     await ceramic2.close();
