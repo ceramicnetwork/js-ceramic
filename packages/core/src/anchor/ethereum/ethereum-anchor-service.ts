@@ -103,9 +103,9 @@ export default class EthereumAnchorService implements AnchorService {
   requestAnchor(docId: DocID, tip: CID): Observable<AnchorServiceResponse> {
     const cidDocPair: CidDoc = { cid: tip, docId };
     return concat(
-      this.announcePending(cidDocPair),
-      this.makeRequest(cidDocPair),
-      this.poll(cidDocPair)
+      this._announcePending(cidDocPair),
+      this._makeRequest(cidDocPair),
+      this._poll(cidDocPair)
     ).pipe(
       catchError((error) =>
         of<AnchorServiceResponse>({
@@ -126,7 +126,7 @@ export default class EthereumAnchorService implements AnchorService {
     return [this._chainId];
   }
 
-  private announcePending(cidDoc: CidDoc): Observable<AnchorServiceResponse> {
+  private _announcePending(cidDoc: CidDoc): Observable<AnchorServiceResponse> {
     return of({
       status: AnchorStatus.PENDING,
       docId: cidDoc.docId,
@@ -141,7 +141,7 @@ export default class EthereumAnchorService implements AnchorService {
    * @param cidDocPair - mapping
    * @private
    */
-  private makeRequest(cidDocPair: CidDoc): Observable<AnchorServiceResponse> {
+  private _makeRequest(cidDocPair: CidDoc): Observable<AnchorServiceResponse> {
     return from(
       fetch(this.requestsApiEndpoint, {
         method: "POST",
@@ -174,7 +174,7 @@ export default class EthereumAnchorService implements AnchorService {
    * @param maxPollingTime - Global timeout for max polling in milliseconds
    * @private
    */
-  private poll(
+  private _poll(
     cidDoc: CidDoc,
     pollTime?: number,
     maxPollingTime?: number
