@@ -25,6 +25,7 @@ COPY packages/pinning-powergate-backend/package*.json ./packages/pinning-powerga
 RUN npx lerna bootstrap --hoist
 
 COPY packages ./packages
+COPY types ./types
 
 RUN npm run build
 
