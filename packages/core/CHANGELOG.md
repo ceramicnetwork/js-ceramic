@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.19.7](/compare/@ceramicnetwork/core@0.19.7-rc.0...@ceramicnetwork/core@0.19.7) (2021-02-04)
+
+
+### Bug Fixes
+
+* **core:** Add ipfs timeout everywhere we get from the dag (#886) e6d5e1b, closes #886
+
+
+
+
+
 ## [0.19.7-rc.0](/compare/@ceramicnetwork/core@0.19.6...@ceramicnetwork/core@0.19.7-rc.0) (2021-01-29)
 
 

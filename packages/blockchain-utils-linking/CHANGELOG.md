@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.1.0](/compare/@ceramicnetwork/blockchain-utils-linking@0.0.6-rc.0...@ceramicnetwork/blockchain-utils-linking@0.1.0) (2021-02-04)
+
+
+### Features
+
+* **blockchain-utils-linking:** Export auth providers (#882) e7e7163, closes #882
+
+
+
+
+
 ## [0.0.6-rc.0](/compare/@ceramicnetwork/blockchain-utils-linking@0.0.5...@ceramicnetwork/blockchain-utils-linking@0.0.6-rc.0) (2021-01-29)
 
 **Note:** Version bump only for package @ceramicnetwork/blockchain-utils-linking
