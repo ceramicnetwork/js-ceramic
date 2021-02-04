@@ -45,7 +45,7 @@
     "@ceramicnetwork/http-client": "^0.9.6",
     "@ceramicnetwork/ipfs-daemon": "^0.0.1",
     "@stablelib/random": "^1.0.0",
-    "commander": "^6.0.0",
+    "commander": "^7.0.0",
     "cors": "^2.8.5",
     "dag-jose": "^0.3.0",
     "express": "^4.17.1",
