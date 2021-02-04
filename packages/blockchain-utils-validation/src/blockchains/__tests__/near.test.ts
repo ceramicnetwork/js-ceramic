@@ -1,22 +1,39 @@
-import { signTx, Tx, SignMeta, createWalletFromMnemonic, Wallet, StdTx } from '@tendermint/sig';
+import { KeyPair } from 'near-api-js';
 import { validateLink } from '../near';
 import * as linking from "@ceramicnetwork/blockchain-utils-linking";
+import * as uint8arrays from 'uint8arrays';
+
+enum KeyType {
+  ED25519 = 0,
+}
+
+interface PublicKey {
+  keyType: KeyType;
+  data: Uint8Array;
+}
+
+interface Signature {
+  signature: Uint8Array;
+  publicKey: PublicKey;
+}
 
 const did = 'did:3:bafysdfwefwe';
-const mnemonic = 'test salon husband push melody usage fine ensure blade deal miss twin';
-const local_provider = createWalletFromMnemonic(mnemonic);
+const privateKey = 'ed25519:9hB3onqC56qBSHpHJaE6EyxKPyFxCxzRBkmjuVx6UqXwygvAmFbwnsLuZ2YHsYJqkPTCygVBwXpNzssvWvUySbd';
+const local_provider = KeyPair.fromString(privateKey);
 const chainRef = 'near-mainnet';
 
 class NearMockSigner {
-  readonly provider: Wallet;
+  readonly provider: KeyPair;
 
-  constructor(local_provider: Wallet) {
+  constructor(local_provider: KeyPair) {
     this.provider = local_provider;
   }
 
-  public async sign(msg : Tx, metadata : SignMeta) : Promise<StdTx>{
+  public async sign(message: String): Promise<Signature>{
     return new Promise((resolve): void => {
-      const signature = signTx(msg, metadata, this.provider);
+      const signature = this.provider.sign(
+        uint8arrays.fromString(message)
+      );
       resolve(signature);
     }); 
   }
@@ -28,7 +45,7 @@ describe('Blockchain: Near', () => {
       const provider = new NearMockSigner(local_provider);
       const authProvider = new linking.near.NearAuthProvider(
         provider,
-        local_provider.address,
+        local_provider.getPublicKey(),
         chainRef
       );
       const proof = await authProvider.createLink(did);
