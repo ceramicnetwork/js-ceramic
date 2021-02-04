@@ -3,20 +3,6 @@ import { validateLink } from '../near';
 import * as linking from "@ceramicnetwork/blockchain-utils-linking";
 import * as uint8arrays from 'uint8arrays';
 
-enum KeyType {
-  ED25519 = 0,
-}
-
-interface PublicKey {
-  keyType: KeyType;
-  data: Uint8Array;
-}
-
-interface Signature {
-  signature: Uint8Array;
-  publicKey: PublicKey;
-}
-
 const did = 'did:3:bafysdfwefwe';
 const privateKey = 'ed25519:9hB3onqC56qBSHpHJaE6EyxKPyFxCxzRBkmjuVx6UqXwygvAmFbwnsLuZ2YHsYJqkPTCygVBwXpNzssvWvUySbd';
 const local_provider = KeyPair.fromString(privateKey);
@@ -29,23 +15,24 @@ class NearMockSigner {
     this.provider = local_provider;
   }
 
-  public async sign(message: String): Promise<Signature>{
-    return new Promise((resolve): void => {
-      const signature = this.provider.sign(
-        uint8arrays.fromString(message)
-      );
-      resolve(signature);
-    }); 
+  public async sign(message: String): Promise<{ signature: String, account: String}>{
+    const { signature, publicKey } = await this.provider.sign(
+      uint8arrays.fromString(message)
+    );
+    return {
+      signature: uint8arrays.toString(signature, 'base64pad'),
+      account: uint8arrays.toString(publicKey.data, 'base64pad'),
+    };
   }
 }
 
-describe('Blockchain: Near', () => {
+describe('Blockchain: NEAR', () => {
   describe('validateLink', () => {
     test(`validate proof for ${chainRef}`, async () => {
       const provider = new NearMockSigner(local_provider);
       const authProvider = new linking.near.NearAuthProvider(
         provider,
-        local_provider.getPublicKey(),
+        local_provider.getPublicKey().toString(),
         chainRef
       );
       const proof = await authProvider.createLink(did);

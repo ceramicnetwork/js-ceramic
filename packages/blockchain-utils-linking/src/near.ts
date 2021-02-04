@@ -18,22 +18,20 @@ export class NearAuthProvider implements AuthProvider {
 
   async authenticate(message: string): Promise<string> {
     const encodedMsg = stringEncode(message);
-    const res = await this.provider.sign(encodedMsg);
-    const digest = hash(uint8arrays.fromString(res.signature.toString()))
+    const { signature } = await this.provider.sign(encodedMsg);
+    const digest = hash(signature);
     return `0x${uint8arrays.toString(digest, 'base16')}`
   }
 
   async createLink(did: string): Promise<LinkProof> {
     const { message, timestamp } = getConsentMessage(did);
-    const accountID = await this.accountId();
     const encodedMsg = stringEncode(message);
-    const res = await this.provider.sign(accountID.address, encodedMsg);
-    const signature = stringEncode(res.signature.toString());
+    const { signature, account } = await this.provider.sign(encodedMsg);
     const proof: LinkProof = {
       version: 1,
       message,
       signature,
-      account: accountID.toString(),
+      account,
       timestamp,
     };
     return proof;
