@@ -14,6 +14,8 @@ import {
     Context
 } from "@ceramicnetwork/common"
 
+const IPFS_GET_TIMEOUT = 30000 // 30 seconds
+
 export class Caip10LinkDoctypeHandler implements DoctypeHandler<Caip10LinkDoctype> {
     /**
      * Gets doctype name
@@ -144,7 +146,7 @@ export class Caip10LinkDoctypeHandler implements DoctypeHandler<Caip10LinkDoctyp
      */
     async _applyAnchor (context: Context, commit: any, cid: CID, state: DocState): Promise<DocState> {
         // TODO: Assert that the 'prev' of the commit being applied is the end of the log in 'state'
-        const proof = (await context.ipfs.dag.get(commit.proof)).value;
+        const proof = (await context.ipfs.dag.get(commit.proof, { timeout: IPFS_GET_TIMEOUT })).value;
 
         const supportedChains = await context.api.getSupportedChains()
         if (!supportedChains.includes(proof.chainId)) {

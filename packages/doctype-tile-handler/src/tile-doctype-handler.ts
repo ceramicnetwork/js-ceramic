@@ -22,6 +22,8 @@ import {
     AnchorCommit,
 } from "@ceramicnetwork/common"
 
+const IPFS_GET_TIMEOUT = 30000 // 30 seconds
+
 /**
  * Tile doctype handler implementation
  */
@@ -81,7 +83,7 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
         let payload = commit
         const isSigned = DoctypeUtils.isSignedCommit(commit)
         if (isSigned) {
-            payload = (await context.ipfs.dag.get(commit.link)).value
+            payload = (await context.ipfs.dag.get(commit.link, { timeout: IPFS_GET_TIMEOUT })).value
             await this._verifySignature(commit, context, payload.header.controllers[0])
         } else if (payload.data) {
             throw Error('Genesis commit with contents should always be signed')
@@ -113,7 +115,7 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
         // TODO: Assert that the 'prev' of the commit being applied is the end of the log in 'state'
         await this._verifySignature(commit, context, state.metadata.controllers[0])
 
-        const payload = (await context.ipfs.dag.get(commit.link)).value
+        const payload = (await context.ipfs.dag.get(commit.link, { timeout: IPFS_GET_TIMEOUT })).value
         if (!payload.id.equals(state.log[0].cid)) {
             throw new Error(`Invalid docId ${payload.id}, expected ${state.log[0].cid}`)
         }
@@ -148,7 +150,7 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
      */
     async _applyAnchor(context: Context, commit: AnchorCommit, cid: CID, state: DocState): Promise<DocState> {
         // TODO: Assert that the 'prev' of the commit being applied is the end of the log in 'state'
-        const proof = (await context.ipfs.dag.get(commit.proof)).value;
+        const proof = (await context.ipfs.dag.get(commit.proof, { timeout: IPFS_GET_TIMEOUT })).value;
 
         const supportedChains = await context.api.getSupportedChains()
         if (!supportedChains.includes(proof.chainId)) {

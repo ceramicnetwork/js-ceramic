@@ -9,6 +9,7 @@ import { promises as fs } from 'fs'
 import { IpfsPinning } from '@ceramicnetwork/pinning-ipfs-backend'
 
 const DEFAULT_PINSET_DIRECTORY = path.join(os.homedir(), ".ceramic", "pinset")
+const IPFS_GET_TIMEOUT = 30000 // 30 seconds
 
 export type Props = {
     networkName?: string;
@@ -36,7 +37,7 @@ export class PinStoreFactory {
         const pinning = PinningAggregation.build(this.context, this.pinningEndpoints, this.pinningBackends)
         const ipfs = this.context.ipfs
         const retrieve = async (cid: CID): Promise<any> => {
-            const blob = await ipfs.dag.get(cid)
+            const blob = await ipfs.dag.get(cid, { timeout: IPFS_GET_TIMEOUT })
             return blob?.value
         }
         const resolve = async (path: string): Promise<CID> => {

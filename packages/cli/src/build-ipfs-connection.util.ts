@@ -12,6 +12,7 @@ multiformats.multicodec.add(dagJose)
 const dagJoseFormat = legacy(multiformats, dagJose.name)
 
 const IPFS_DHT_SERVER_MODE = process.env.IPFS_DHT_SERVER_MODE === 'true'
+const IPFS_GET_TIMEOUT = 30000 // 30 seconds
 
 const BOOTSTRAP = {
     "testnet-clay": [
@@ -33,8 +34,9 @@ export async function buildIpfsConnection(network: string, ipfsEndpoint?: string
     let ipfs: IpfsApi
 
     if (ipfsEndpoint) {
-        ipfs = ipfsClient({ url: ipfsEndpoint, ipld: { formats: [dagJoseFormat] } })
+        ipfs = ipfsClient({ url: ipfsEndpoint, ipld: { formats: [dagJoseFormat] }, timeout: IPFS_GET_TIMEOUT })
     } else {
+        // TODO: Add global timeout, remove timeout from every call to ipfs.dag.get()
         ipfs = await IPFS.create({
             ipld: {
                 formats: [dagJoseFormat]
