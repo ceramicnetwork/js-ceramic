@@ -39,7 +39,7 @@ import InMemoryAnchorService from "./anchor/memory/in-memory-anchor-service"
 import { randomUint32 } from '@stablelib/random'
 
 const DEFAULT_DOC_CACHE_LIMIT = 500; // number of docs stored in the cache
-const IPFS_GET_TIMEOUT = 30000 // 30 seconds
+const IPFS_GET_TIMEOUT = 60000 // 1 minute
 const TESTING = process.env.NODE_ENV == 'test'
 
 /**

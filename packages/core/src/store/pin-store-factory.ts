@@ -9,7 +9,7 @@ import { promises as fs } from 'fs'
 import { IpfsPinning } from '@ceramicnetwork/pinning-ipfs-backend'
 
 const DEFAULT_PINSET_DIRECTORY = path.join(os.homedir(), ".ceramic", "pinset")
-const IPFS_GET_TIMEOUT = 30000 // 30 seconds
+const IPFS_GET_TIMEOUT = 60000 // 1 minute
 
 export type Props = {
     networkName?: string;

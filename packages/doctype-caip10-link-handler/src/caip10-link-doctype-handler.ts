@@ -14,7 +14,7 @@ import {
     Context
 } from "@ceramicnetwork/common"
 
-const IPFS_GET_TIMEOUT = 30000 // 30 seconds
+const IPFS_GET_TIMEOUT = 60000 // 1 minute
 
 export class Caip10LinkDoctypeHandler implements DoctypeHandler<Caip10LinkDoctype> {
     /**

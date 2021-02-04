@@ -12,7 +12,7 @@ multiformats.multicodec.add(dagJose)
 const dagJoseFormat = legacy(multiformats, dagJose.name)
 
 const IPFS_DHT_SERVER_MODE = process.env.IPFS_DHT_SERVER_MODE === 'true'
-const IPFS_GET_TIMEOUT = 30000 // 30 seconds
+const IPFS_GET_TIMEOUT = 60000 // 1 minute
 
 const BOOTSTRAP = {
     "testnet-clay": [

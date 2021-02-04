@@ -22,7 +22,7 @@ import {
     AnchorCommit,
 } from "@ceramicnetwork/common"
 
-const IPFS_GET_TIMEOUT = 30000 // 30 seconds
+const IPFS_GET_TIMEOUT = 60000 // 1 minute
 
 /**
  * Tile doctype handler implementation
