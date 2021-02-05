@@ -595,10 +595,6 @@ class Document extends EventEmitter implements DocStateHolder {
     const subscription = anchorStatus$
         .pipe(
             concatMap(async (asr) => {
-              if (!asr.cid.equals(requestTip)) {
-                // This message is about a different tip for the same document
-                return;
-              }
               switch (asr.status) {
                 case AnchorStatus.PENDING: {
                   const next = {
