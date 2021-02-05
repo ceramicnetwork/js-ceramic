@@ -30,6 +30,8 @@
  "references": [
    { "path": "./packages/core" },
    { "path": "./packages/3id-did-resolver" },
+   { "path": "./packages/ipfs-daemon" },
+   { "path": "./packages/ipfs-topology" },
    { "path": "./packages/key-did-resolver" },
    { "path": "./packages/http-client" },
    { "path": "./packages/docid" },

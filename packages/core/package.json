@@ -36,6 +36,7 @@
     "@ceramicnetwork/doctype-caip10-link-handler": "^0.13.2",
     "@ceramicnetwork/doctype-tile": "^0.13.3",
     "@ceramicnetwork/doctype-tile-handler": "^0.13.3",
+    "@ceramicnetwork/ipfs-topology": "^0.0.1",
     "@ceramicnetwork/pinning-aggregation": "^0.1.14",
     "@ceramicnetwork/pinning-ipfs-backend": "^0.1.14",
     "@ethersproject/providers": "^5.0.18",
