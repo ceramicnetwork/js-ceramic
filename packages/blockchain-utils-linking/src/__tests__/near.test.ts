@@ -69,9 +69,8 @@ describe('Blockchain: NEAR', () => {
         chainRef
       );
       const msg = 'hello'
-      const control = await authProvider.authenticate(msg);
-      await expect(authProvider.authenticate(msg)).resolves.toEqual(control);
-      await expect(authProvider.authenticate(msg)).resolves.toEqual(control);
+      await expect(authProvider.authenticate(msg)).toMatchSnapshot();
+      await expect(authProvider.authenticate(msg)).toMatchSnapshot();
     });
   });
 

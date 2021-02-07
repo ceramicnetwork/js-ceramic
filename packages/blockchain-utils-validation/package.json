@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/blockchain-utils-validation",
-  "version": "0.0.7-rc.0",
+  "version": "0.0.7",
   "description": "Blockchain utils for validation of linked blockchain accounts",
   "keywords": [
     "ceramic",
@@ -24,7 +24,7 @@
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/blockchain-utils-linking": "^0.0.6-rc.0",
+    "@ceramicnetwork/blockchain-utils-linking": "^0.1.0",
     "@ethersproject/contracts": "^5.0.9",
     "@ethersproject/providers": "^5.0.18",
     "@ethersproject/wallet": "^5.0.10",
@@ -33,6 +33,7 @@
     "@tendermint/sig": "^0.6.0",
     "@zondax/filecoin-signing-tools": "^0.13.0",
     "caip": "^0.9.2",
+    "near-api-js": "^0.36.3",
     "uint8arrays": "^2.0.5"
   },
   "devDependencies": {

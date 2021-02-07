@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.6.10](/compare/@ceramicnetwork/3id-did-resolver@0.6.10-rc.0...@ceramicnetwork/3id-did-resolver@0.6.10) (2021-02-04)
+
+
+### Bug Fixes
+
+* **3id-did-resolver:** compress legacy did key (#876) 7116cc9, closes #876
+
+
+
+
+
 ## [0.6.10-rc.0](/compare/@ceramicnetwork/3id-did-resolver@0.6.9...@ceramicnetwork/3id-did-resolver@0.6.10-rc.0) (2021-01-29)
 
 **Note:** Version bump only for package @ceramicnetwork/3id-did-resolver

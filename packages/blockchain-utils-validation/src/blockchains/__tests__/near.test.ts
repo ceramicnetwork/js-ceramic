@@ -15,7 +15,7 @@ class NearMockSigner {
     this.provider = local_provider;
   }
 
-  public async sign(message: String): Promise<{ signature: String, account: String}>{
+  public async sign(message: String): Promise<{ signature: String, account: String }> {
     const { signature, publicKey } = await this.provider.sign(
       uint8arrays.fromString(message)
     );
@@ -30,7 +30,7 @@ describe('Blockchain: NEAR', () => {
   describe('validateLink', () => {
     test(`validate proof for ${chainRef}`, async () => {
       const provider = new NearMockSigner(local_provider);
-      const authProvider = new linking.near.NearAuthProvider(
+      const authProvider = new linking.NearAuthProvider(
         provider,
         local_provider.getPublicKey().toString(),
         chainRef

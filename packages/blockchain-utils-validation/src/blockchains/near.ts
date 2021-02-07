@@ -13,7 +13,9 @@ export async function validateLink(
   const msg = uint8arrays.fromString(stringEncode(proof.message))
   const sig = uint8arrays.fromString(proof.signature, 'base64pad')
   const acct = uint8arrays.fromString(proof.account, 'base64pad')
-  const is_sig_valid: boolean = verify(msg, sig, acct);
+  
+  // REF: https://github.com/StableLib/stablelib/blob/master/packages/ed25519/ed25519.ts#L825
+  const is_sig_valid: boolean = verify(acct, msg, sig);
 
   return is_sig_valid ? proof : null;
 }
