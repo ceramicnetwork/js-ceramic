@@ -1,56 +1,25 @@
 import { AccountID } from 'caip';
 import { AuthProvider } from './auth-provider';
 import { getConsentMessage, LinkProof } from './util';
-import type { Tx, SignMeta } from '@tendermint/sig';
 import { hash } from '@stablelib/sha256';
 import * as uint8arrays from 'uint8arrays';
 
 const stringEncode = (str: string): string => uint8arrays.toString(uint8arrays.fromString(str), 'base64pad');
-
-// // return data in the cosmos unsigned transaction format
-// export function asTransaction(address: string, message: string): Tx {
-//   return {
-//     fee: {
-//       amount: [{ amount: '0', denom: '' }],
-//       gas: '0',
-//     },
-//     memo: message,
-//     msg: [
-//       {
-//         type: 'cosmos-sdk/MsgSend',
-//         value: {
-//           from_address: address,
-//           to_address: address,
-//           amount: [{ amount: '0', denom: '0' }],
-//         },
-//       },
-//     ],
-//   };
-// }
-
-// generate metadata for signing the transaction
-export function getMetaData(): SignMeta {
-  return {
-    account_number: '1',
-    chain_id: 'cosmos',
-    sequence: '0',
-  };
-}
 
 // REF: near.org
 export class NearAuthProvider implements AuthProvider {
   readonly isAuthProvider = true;
 
   constructor(
-    private readonly provider: any, 
+    private readonly provider: any,
+    // NOTE: address here is: ed25519 public key
     private readonly address: string,
     private readonly chainRef: string) {}
 
   async authenticate(message: string): Promise<string> {
-    const accountID = await this.accountId();
     const encodedMsg = stringEncode(message);
-    const res = await this.provider.sign(asTransaction(accountID.address, encodedMsg), getMetaData());
-    const digest = hash(uint8arrays.fromString(JSON.stringify(res.signatures[0])))
+    const res = await this.provider.sign(encodedMsg);
+    const digest = hash(uint8arrays.fromString(res.signature.toString()))
     return `0x${uint8arrays.toString(digest, 'base16')}`
   }
 
@@ -58,8 +27,8 @@ export class NearAuthProvider implements AuthProvider {
     const { message, timestamp } = getConsentMessage(did);
     const accountID = await this.accountId();
     const encodedMsg = stringEncode(message);
-    const res = await this.provider.sign(asTransaction(accountID.address, encodedMsg), getMetaData());
-    const signature = stringEncode(JSON.stringify(res.signatures[0]));
+    const res = await this.provider.sign(accountID.address, encodedMsg);
+    const signature = stringEncode(res.signature.toString());
     const proof: LinkProof = {
       version: 1,
       message,
@@ -77,6 +46,7 @@ export class NearAuthProvider implements AuthProvider {
     });
   }
 
+  // NOTE: address here is: ed25519 public key
   withAddress(address: string): AuthProvider {
     return new NearAuthProvider(this.provider, address, this.chainRef);
   }
