@@ -262,8 +262,6 @@ class Ceramic implements CeramicApi {
    * @param config - Ceramic configuration
    */
   static async create(ipfs: IpfsApi, config: CeramicConfig = {}): Promise<Ceramic> {
-    LoggerProvider.init({logLevel: config.logLevel, logToFiles: config.logToFiles, logPath: config.logPath})
-
     // todo remove
     LoggerProviderOld.init({
       level: config.logLevel? config.logLevel : 'silent',
@@ -279,11 +277,15 @@ class Ceramic implements CeramicApi {
         )
     }
 
+    // Initialize ceramic loggers
+    const logger = LoggerProvider.makeDiagnosticLogger({logLevel: config.logLevel, logToFiles: config.logToFiles, logPath: config.logPath})
+
     const anchorService = config.anchorServiceUrl ? new EthereumAnchorService(config) : new InMemoryAnchorService(config as any)
     await anchorService.init()
     const context: Context = {
       ipfs,
       anchorService,
+      logger,
     }
 
     const networkOptions = await Ceramic._generateNetworkOptions(config, anchorService)

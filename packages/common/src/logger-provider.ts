@@ -1,4 +1,4 @@
-import { DiagnosticsLogger, LogLevel } from '@ceramicnetwork/logger';
+import { DiagnosticsLogger, LogLevel, ServiceLogger } from '@ceramicnetwork/logger';
 import path from "path";
 import os from "os";
 
@@ -31,6 +31,15 @@ export class LoggerProvider {
         config = { ...DEFAULT_LOG_CONFIG, ...config }
 
         const logLevel: LogLevel = typeof config.logLevel == "string" ? logLevelMapping[config.logLevel] : config.logLevel
-        return new DiagnosticsLogger(config.logPath, logLevel, config.logToFiles);
+        const logPath = path.join(config.logPath, "diagnostics.log")
+        return new DiagnosticsLogger(logPath, logLevel, config.logToFiles);
+    }
+
+    static makeServiceLogger(serviceName: string, config: LoggerConfig): ServiceLogger {
+        config = { ...DEFAULT_LOG_CONFIG, ...config }
+
+        const logLevel: LogLevel = typeof config.logLevel == "string" ? logLevelMapping[config.logLevel] : config.logLevel
+        const logPath = path.join(config.logPath, `${serviceName}.log`)
+        return new ServiceLogger(serviceName, logPath, logLevel)
     }
 }
