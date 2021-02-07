@@ -28,6 +28,7 @@
   },
   "dependencies": {
     "@ceramicnetwork/docid": "^0.4.6-rc.0",
+    "@ceramicnetwork/logger": "^0.0.1",
     "cids": "1.0.2",
     "did-resolver": "^2.1.1",
     "lodash.clonedeep": "^4.5.0",

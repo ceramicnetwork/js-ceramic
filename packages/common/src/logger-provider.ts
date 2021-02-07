@@ -2,9 +2,6 @@ import { DiagnosticsLogger, LogLevel } from '@ceramicnetwork/logger';
 import path from "path";
 import os from "os";
 
-// Invalid to access before calling `initializeLogger()`
-export let logger: DiagnosticsLogger
-
 
 export interface LoggerConfig {
     logPath?: string,
@@ -29,10 +26,11 @@ const DEFAULT_LOG_CONFIG = {
  * Global Logger factory
  */
 export class LoggerProvider {
-    static init(config: LoggerConfig) {
+
+    static makeDiagnosticLogger(config: LoggerConfig): DiagnosticsLogger {
         config = { ...DEFAULT_LOG_CONFIG, ...config }
 
         const logLevel: LogLevel = typeof config.logLevel == "string" ? logLevelMapping[config.logLevel] : config.logLevel
-        logger = new DiagnosticsLogger(config.logPath, logLevel, config.logToFiles);
+        return new DiagnosticsLogger(config.logPath, logLevel, config.logToFiles);
     }
 }
