@@ -28,18 +28,22 @@ const DEFAULT_LOG_CONFIG = {
 export class LoggerProvider {
 
     static makeDiagnosticLogger(config: LoggerConfig): DiagnosticsLogger {
-        config = { ...DEFAULT_LOG_CONFIG, ...config }
 
-        const logLevel: LogLevel = typeof config.logLevel == "string" ? logLevelMapping[config.logLevel] : config.logLevel
-        const logPath = path.join(config.logPath, "diagnostics.log")
-        return new DiagnosticsLogger(logPath, logLevel, config.logToFiles);
+        const logToFiles = config.logToFiles ?? DEFAULT_LOG_CONFIG.logToFiles
+        const logDir = config.logPath ?? DEFAULT_LOG_CONFIG.logPath
+        let logLevel = typeof config.logLevel == "string" ? logLevelMapping[config.logLevel] : config.logLevel
+        logLevel = logLevel ?? DEFAULT_LOG_CONFIG.logLevel
+        const logPath = path.join(logDir, "diagnostics.log")
+
+        return new DiagnosticsLogger(logPath, logLevel, logToFiles);
     }
 
     static makeServiceLogger(serviceName: string, config: LoggerConfig): ServiceLogger {
-        config = { ...DEFAULT_LOG_CONFIG, ...config }
+        const logDir = config.logPath ?? DEFAULT_LOG_CONFIG.logPath
+        let logLevel = typeof config.logLevel == "string" ? logLevelMapping[config.logLevel] : config.logLevel
+        logLevel = logLevel ?? DEFAULT_LOG_CONFIG.logLevel
+        const logPath = path.join(logDir, `${serviceName}.log`)
 
-        const logLevel: LogLevel = typeof config.logLevel == "string" ? logLevelMapping[config.logLevel] : config.logLevel
-        const logPath = path.join(config.logPath, `${serviceName}.log`)
         return new ServiceLogger(serviceName, logPath, logLevel)
     }
 }
