@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/doctype-caip10-link",
-  "version": "0.13.2-rc.0",
+  "version": "0.13.2",
   "description": "Ceramic AccountLink doctype",
   "keywords": [
     "ceramic",
@@ -27,7 +27,7 @@
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/common": "^0.15.9-rc.0",
+    "@ceramicnetwork/common": "^0.15.9",
     "cids": "1.0.2"
   },
   "devDependencies": {

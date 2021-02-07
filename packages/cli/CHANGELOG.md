@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.20.8](/compare/@ceramicnetwork/cli@0.20.8-rc.0...@ceramicnetwork/cli@0.20.8) (2021-02-04)
+
+
+### Bug Fixes
+
+* **core:** Add ipfs timeout everywhere we get from the dag (#886) e6d5e1b, closes #886
+
+
+
+
+
 ## [0.20.8-rc.0](/compare/@ceramicnetwork/cli@0.20.7...@ceramicnetwork/cli@0.20.8-rc.0) (2021-01-29)
 
 **Note:** Version bump only for package @ceramicnetwork/cli

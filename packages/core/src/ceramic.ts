@@ -39,6 +39,7 @@ import InMemoryAnchorService from "./anchor/memory/in-memory-anchor-service"
 import { randomUint32 } from '@stablelib/random'
 
 const DEFAULT_DOC_CACHE_LIMIT = 500; // number of docs stored in the cache
+const IPFS_GET_TIMEOUT = 60000 // 1 minute
 const TESTING = process.env.NODE_ENV == 'test'
 
 /**
@@ -536,7 +537,7 @@ class Ceramic implements CeramicApi {
     const { state } = doc
 
     return Promise.all(state.log.map(async ({ cid }) => {
-      const record = (await this.ipfs.dag.get(cid)).value
+      const record = (await this.ipfs.dag.get(cid, { timeout: IPFS_GET_TIMEOUT })).value
       return {
         cid: cid.toString(),
         value: await DoctypeUtils.convertCommitToSignedCommitContainer(record, this.ipfs)
