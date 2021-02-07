@@ -8,7 +8,7 @@ exports[`Blockchain: NEAR authenticate entropy replication for near-mainnet 2`] 
 
 exports[`Blockchain: NEAR createLink create proof for near-mainnet 1`] = `
 Object {
-  "account": "YgaDUT7OqomE95jEp0ECZe6NYiEPyzexFI2+Op8gR6w=",
+  "account": "YgaDUT7OqomE95jEp0ECZe6NYiEPyzexFI2+Op8gR6w=@near:near-mainnet",
   "message": "Create a new account link to your identity.
 
 did:3:bafysdfwefwe 

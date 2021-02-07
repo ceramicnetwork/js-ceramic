@@ -27,11 +27,15 @@ export class NearAuthProvider implements AuthProvider {
     const { message, timestamp } = getConsentMessage(did);
     const encodedMsg = stringEncode(message);
     const { signature, account } = await this.provider.sign(encodedMsg);
+    const caipAccount = new AccountID({
+      address: account,
+      chainId: `near:${this.chainRef}`,
+    })
     const proof: LinkProof = {
       version: 1,
       message,
       signature,
-      account,
+      account: caipAccount.toString(),
       timestamp,
     };
     return proof;
