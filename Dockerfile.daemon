@@ -17,6 +17,8 @@ COPY packages/docid/package*.json ./packages/docid/
 COPY packages/doctype-caip10-link/package*.json ./packages/doctype-caip10-link/
 COPY packages/doctype-tile/package*.json ./packages/doctype-tile/
 COPY packages/http-client/package*.json ./packages/http-client/
+COPY packages/ipfs-daemon/package*.json ./packages/ipfs-daemon/
+COPY packages/ipfs-topology/package*.json ./packages/ipfs-topology/
 COPY packages/key-did-resolver/package*.json ./packages/key-did-resolver/
 COPY packages/pinning-aggregation/package*.json ./packages/pinning-aggregation/
 COPY packages/pinning-ipfs-backend/package*.json ./packages/pinning-ipfs-backend/
