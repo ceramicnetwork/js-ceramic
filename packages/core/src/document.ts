@@ -16,8 +16,6 @@ import {
   Context,
   DoctypeUtils,
   DocMetadata,
-  RootLogger,
-  Logger,
   DocStateHolder,
   UnreachableCaseError
 } from '@ceramicnetwork/common'
@@ -25,6 +23,7 @@ import DocID from '@ceramicnetwork/docid'
 import { PinStore } from './store/pin-store';
 import { SubscriptionSet } from "./subscription-set";
 import { concatMap } from "rxjs/operators";
+import { DiagnosticsLogger } from "@ceramicnetwork/logger";
 
 // DocOpts defaults for document load operations
 const DEFAULT_LOAD_DOCOPTS = {anchor: false, publish: false, sync: true}
@@ -40,7 +39,7 @@ class Document extends EventEmitter implements DocStateHolder {
 
   public readonly commit: CID
 
-  private _logger: Logger
+  private _logger: DiagnosticsLogger
   private _isProcessing: boolean
   private readonly subscriptionSet = new SubscriptionSet();
 
@@ -54,7 +53,7 @@ class Document extends EventEmitter implements DocStateHolder {
     super()
     this.commit = id.commit
 
-    this._logger = RootLogger.getLogger(Document.name)
+    this._logger = _context.logger
 
     this._applyQueue = new PQueue({ concurrency: 1 })
     this._genesisCid = id.cid
@@ -295,7 +294,7 @@ class Document extends EventEmitter implements DocStateHolder {
     try {
       await this._handleTip(cid)
     } catch (e) {
-      this._logger.error(e)
+      this._logger.err(e)
     } finally {
       this._isProcessing = false
     }
