@@ -3,6 +3,7 @@ import CID from 'cids'
 import Document from "../document"
 import { TileDoctype } from "@ceramicnetwork/doctype-tile"
 import DocID from "@ceramicnetwork/docid";
+import { LoggerProvider } from "@ceramicnetwork/common";
 
 const TOPIC = '/ceramic'
 const FAKE_CID = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
@@ -47,7 +48,7 @@ describe('Dispatcher', () => {
     ipfs.pubsub.unsubscribe.mockClear()
     ipfs.pubsub.publish.mockClear()
 
-    dispatcher = new Dispatcher(ipfs, TOPIC)
+    dispatcher = new Dispatcher(ipfs, TOPIC, LoggerProvider.makeDiagnosticLogger({}), LoggerProvider.makeServiceLogger("pubsub", {}))
     await dispatcher.init()
   })
 

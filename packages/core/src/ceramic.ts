@@ -283,7 +283,9 @@ class Ceramic implements CeramicApi {
     }
 
     // Initialize ceramic loggers
-    const logger = LoggerProvider.makeDiagnosticLogger({logLevel: config.logLevel, logToFiles: config.logToFiles, logPath: config.logPath})
+    const loggerConfig = {logLevel: config.logLevel, logToFiles: config.logToFiles, logPath: config.logPath}
+    const logger = LoggerProvider.makeDiagnosticLogger(loggerConfig)
+    const pubsubLogger = LoggerProvider.makeServiceLogger("pubsub", loggerConfig)
 
     const anchorService = config.anchorServiceUrl ? new EthereumAnchorService(config) : new InMemoryAnchorService(config as any)
     await anchorService.init()
@@ -295,7 +297,7 @@ class Ceramic implements CeramicApi {
 
     const networkOptions = await Ceramic._generateNetworkOptions(config, anchorService)
 
-    const dispatcher = new Dispatcher(ipfs, networkOptions.pubsubTopic)
+    const dispatcher = new Dispatcher(ipfs, networkOptions.pubsubTopic, logger, pubsubLogger)
     await dispatcher.init()
 
     const pinStoreProperties = {

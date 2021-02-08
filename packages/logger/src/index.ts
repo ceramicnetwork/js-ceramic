@@ -2,6 +2,7 @@ import { Logger, LoggerModes } from '@overnightjs/logger';
 import * as logfmt from 'logfmt';
 import util from 'util';
 import { RotatingFileStream } from './stream-helpers';
+import flatten from 'flat'
 
 enum LogStyle {
   info = 'info',
@@ -79,7 +80,6 @@ export class DiagnosticsLogger {
 }
 
 interface ServiceLog {
-  type: string;
   [key: string]: any;
 }
 
@@ -91,13 +91,18 @@ export class ServiceLogger {
   public readonly filePath: string;
   private readonly stream: RotatingFileStream;
   private readonly logLevel: LogLevel
+  private readonly logToFiles: boolean
 
-  constructor(service: string, filePath: string, logLevel: LogLevel) {
+  constructor(service: string, filePath: string, logLevel: LogLevel, logToFiles: boolean) {
     this.service = service;
     this.filePath = filePath;
-    const writeImmediately = true;
-    this.stream = new RotatingFileStream(this.filePath, writeImmediately);
     this.logLevel = logLevel
+    this.logToFiles = logToFiles
+
+    if (this.logToFiles) {
+      const writeImmediately = true;
+      this.stream = new RotatingFileStream(this.filePath, writeImmediately);
+    }
   }
 
   /**
@@ -109,8 +114,15 @@ export class ServiceLogger {
     const now = new Date();
     // RFC1123 timestamp
     const message = `[${now.toUTCString()}] service=${this.service} ${ServiceLogger.format(serviceLog)}`;
-    this.stream.write(util.format(message, '\n'));
-    if ((this.logLevel == LogLevel.debug) || logToConsole) {
+
+    if (this.logToFiles) {
+      this.stream.write(util.format(message, '\n'));
+    }
+
+    // Always respect `logToConsole` if it is explicitly passed.  If it isn't provided, then decide
+    // whether to log to console based on the log level.
+    logToConsole = logToConsole ?? this.logLevel == LogLevel.debug
+    if (logToConsole) {
       console.log(message);
     }
   }
@@ -120,6 +132,6 @@ export class ServiceLogger {
    * @param serviceLog Service log object
    */
   public static format(serviceLog: ServiceLog): string {
-    return logfmt.stringify(serviceLog);
+    return logfmt.stringify(flatten(serviceLog));
   }
 }
