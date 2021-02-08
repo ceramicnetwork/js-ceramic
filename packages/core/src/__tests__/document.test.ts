@@ -21,6 +21,7 @@ import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 jest.mock('../store/level-state-store')
 
 import InMemoryAnchorService from "../anchor/memory/in-memory-anchor-service"
+import {FakeTopology} from "./fake-topology";
 
 jest.mock('../dispatcher', () => {
   const CID = require('cids') // eslint-disable-line @typescript-eslint/no-var-requires
@@ -201,10 +202,11 @@ describe('Document', () => {
         supportedChains: ['inmemory:12345']
       }
 
-      ceramic = new Ceramic(dispatcher, pinStore, context, networkOptions)
+      const topology = new FakeTopology(dispatcher._ipfs, networkOptions.name)
+      ceramic = new Ceramic(dispatcher, pinStore, context, topology, networkOptions)
       ceramic._doctypeHandlers['tile'] = doctypeHandler
 
-      ceramicWithoutSchemaValidation = new Ceramic(dispatcher, pinStore, context, networkOptions, false)
+      ceramicWithoutSchemaValidation = new Ceramic(dispatcher, pinStore, context, topology, networkOptions, false)
       ceramicWithoutSchemaValidation._doctypeHandlers['tile'] = doctypeHandler
     })
 
@@ -761,8 +763,8 @@ describe('Document', () => {
         pubsubTopic: '/ceramic/inmemory',
         supportedChains: ['inmemory:12345']
       }
-
-      ceramic = new Ceramic(dispatcher, pinStore, context, networkOptions)
+      const topology = new FakeTopology(dispatcher._ipfs, networkOptions.name)
+      ceramic = new Ceramic(dispatcher, pinStore, context, topology, networkOptions)
       ceramic._doctypeHandlers['tile'] = doctypeHandler
     })
 

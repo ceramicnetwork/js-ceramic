@@ -3,6 +3,7 @@ import Document from './document'
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import KeyDidResolver from 'key-did-resolver'
 import DocID from '@ceramicnetwork/docid'
+import {IpfsTopology} from "@ceramicnetwork/ipfs-topology";
 import {
   Doctype,
   DoctypeHandler,
@@ -29,7 +30,6 @@ import { DID } from 'dids'
 import { TileDoctypeHandler } from "@ceramicnetwork/doctype-tile-handler"
 import { Caip10LinkDoctypeHandler } from "@ceramicnetwork/doctype-caip10-link-handler"
 import { PinStoreFactory } from "./store/pin-store-factory";
-import {cancelPeriodicConnectToPeersTask, periodicallyConnectToPeers} from "./peer-discovery";
 import { PinStore } from "./store/pin-store";
 import { PathTrie, TrieNode, promiseTimeout } from './utils'
 
@@ -118,6 +118,7 @@ class Ceramic implements CeramicApi {
   constructor (public dispatcher: Dispatcher,
                public pinStore: PinStore,
                context: Context,
+               readonly topology: IpfsTopology,
                private _networkOptions: CeramicNetworkOptions,
                private _validateDocs: boolean = true,
                docCacheLimit = DEFAULT_DOC_CACHE_LIMIT,
@@ -296,8 +297,8 @@ class Ceramic implements CeramicApi {
     }
     const pinStoreFactory = new PinStoreFactory(context, pinStoreProperties)
     const pinStore = await pinStoreFactory.open()
-
-    const ceramic = new Ceramic(dispatcher, pinStore, context, networkOptions, config.validateDocs, config.docCacheLimit, config.cacheDocCommits)
+    const topology = new IpfsTopology(ipfs, networkOptions.name)
+    const ceramic = new Ceramic(dispatcher, pinStore, context, topology, networkOptions, config.validateDocs, config.docCacheLimit, config.cacheDocCommits)
     anchorService.ceramic = ceramic
 
     const keyDidResolver = KeyDidResolver.getResolver()
@@ -312,7 +313,7 @@ class Ceramic implements CeramicApi {
 
     const doPeerDiscovery = config.useCentralizedPeerDiscovery ?? !TESTING
     if (doPeerDiscovery) {
-      await periodicallyConnectToPeers(networkOptions.name, ipfs)
+      await topology.start()
     }
 
     return ceramic
@@ -592,7 +593,7 @@ class Ceramic implements CeramicApi {
   async close (): Promise<void> {
     await this.pinStore.close()
     await this.dispatcher.close()
-    await cancelPeriodicConnectToPeersTask()
+    this.topology.stop()
   }
 }
 

@@ -1,0 +1,108 @@
+import fetch from "cross-fetch";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import type { IPFSAPI as IpfsApi } from "ipfs-core/dist/src/components";
+export type IpfsApi = typeof IpfsApi;
+
+const PEER_FILE_URLS = {
+  "testnet-clay":
+    "https://raw.githubusercontent.com/ceramicnetwork/peerlist/main/testnet-clay.json",
+  "dev-unstable":
+    "https://raw.githubusercontent.com/ceramicnetwork/peerlist/main/dev-unstable.json",
+};
+
+const BASE_BOOTSTRAP_LIST = {
+  "testnet-clay": [
+    "/dns4/ipfs-clay.3boxlabs.com/tcp/4012/wss/p2p/QmWiY3CbNawZjWnHXx3p3DXsg21pZYTj4CRY1iwMkhP8r3",
+    "/dns4/ipfs-clay.ceramic.network/tcp/4012/wss/p2p/QmSqeKpCYW89XrHHxtEQEWXmznp6o336jzwvdodbrGeLTk",
+    "/dns4/ipfs-clay-internal.3boxlabs.com/tcp/4012/wss/p2p/QmQotCKxiMWt935TyCBFTN23jaivxwrZ3uD58wNxeg5npi",
+    "/dns4/ipfs-clay-cas.3boxlabs.com/tcp/4012/wss/p2p/QmbeBTzSccH8xYottaYeyVX8QsKyox1ExfRx7T1iBqRyCd",
+  ],
+  "dev-unstable": [
+    "/dns4/ipfs-dev.3boxlabs.com/tcp/4012/wss/p2p/Qmc4BVsZbVkuvax6SKgwq5BrcKjzBdwx5dW45cWfLVHabx",
+    "/dns4/ipfs-dev.ceramic.network/tcp/4012/wss/p2p/QmStNqcAjwh6s2sxUWr2ZXT3MhRZmqpJ9Dj6fp3gPdHr6E",
+    "/dns4/ipfs-dev-internal.3boxlabs.com/tcp/4012/wss/p2p/QmYkpxusRem2iup8ZAfVGYv7iq1ks1yyq2XxQh3z2a8xXq",
+    "/dns4/ipfs-dev-cas.3boxlabs.com/tcp/4012/wss/p2p/QmPHLQoWhK4CMPPgxGQxjNYEp1fMB8NPpoLaaR2VDMNbcr",
+  ],
+};
+
+async function fetchJson(url: string): Promise<any> {
+  try {
+    const res = await fetch(url).then((response) => response.json());
+    if (res.error) {
+      throw new Error(res.error);
+    }
+    return res;
+  } catch (error) {
+    return []
+  }
+}
+
+export async function dynamicBoostrapList(network: string): Promise<string[]> {
+  const url = PEER_FILE_URLS[network];
+  if (!url) {
+    console.warn(
+      `Peer discovery is not supported for ceramic network ${network}. This node may fail to load documents from other nodes on the network`
+    );
+    return [];
+  }
+  console.log(`Connecting to peers found in '${url}'`);
+  const list = await fetchJson(url);
+  return list || [];
+}
+
+export async function forceBootstrapConnection(
+  ipfs: IpfsApi,
+  bootstrapList: string[]
+): Promise<void> {
+  await Promise.all(
+    bootstrapList.map(async (node) => {
+      try {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        await ipfs.swarm.connect(node);
+      } catch (error) {
+        console.warn(`Can not connect to ${node}`);
+        console.warn(error);
+      }
+    })
+  );
+
+  const connectedPeers = await ipfs.swarm.peers();
+  if (connectedPeers.length > 0) {
+    const peerAddresses = connectedPeers.map((obj) => obj.addr);
+    console.log(`Connected to peers: ${peerAddresses.join(", ")}`);
+  }
+}
+
+export const DEFAULT_PEER_DISCOVERY_PERIOD = 1000 * 60 * 60; // 1 hour
+
+export class IpfsTopology {
+  intervalId: any;
+
+  constructor(
+    readonly ipfs: IpfsApi,
+    readonly ceramicNetwork: string,
+    readonly period: number = DEFAULT_PEER_DISCOVERY_PERIOD
+  ) {}
+
+  async forceConnection(): Promise<void> {
+    const base: string[] = BASE_BOOTSTRAP_LIST[this.ceramicNetwork] || [];
+    const dynamic = await dynamicBoostrapList(this.ceramicNetwork);
+    const bootstrapList = base.concat(dynamic);
+    await forceBootstrapConnection(this.ipfs, bootstrapList);
+  }
+
+  async start() {
+    await this.forceConnection();
+    this.intervalId = setInterval(async () => {
+      await this.forceConnection();
+    }, this.period);
+  }
+
+  stop() {
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
+    }
+  }
+}
