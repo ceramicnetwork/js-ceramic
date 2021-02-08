@@ -9,7 +9,7 @@ import {
     Logger,
     LoggerMethodFactory,
     LoggerOptions,
-    LoggerProvider,
+    LoggerProviderOld,
     LoggerPluginOptions
 } from "@ceramicnetwork/common"
 
@@ -61,7 +61,7 @@ export class LogToFiles {
         rootLogger.methodFactory = (methodName: string, logLevel: any, loggerName: string): LoggerMethodFactory => {
             const rawMethod = originalFactory(methodName, logLevel, loggerName);
             return (...args: any[]): any => {
-                let message = LoggerProvider._interpolate(args)
+                let message = LoggerProviderOld._interpolate(args)
                 let jsonMessage
                 try {
                     jsonMessage = JSON.parse(message)

@@ -11,7 +11,7 @@ import {
   Context,
   DoctypeUtils,
   DocParams,
-  LoggerProvider,
+  LoggerProviderOld,
   LoggerPlugin,
   LoggerPluginOptions,
   AnchorService,
@@ -22,7 +22,9 @@ import {
   PinApi,
   MultiQuery,
   PinningBackendStatic,
-  DocCache, AnchorStatus,
+  DocCache,
+  AnchorStatus,
+  LoggerProvider,
 } from "@ceramicnetwork/common"
 import { Resolver } from "did-resolver"
 
@@ -59,6 +61,7 @@ export interface CeramicConfig {
 
   logLevel?: string;
   logToFiles?: boolean;
+  logPath?: string;
   logToFilesPlugin?: {
     plugin: LoggerPlugin;
     state: any;
@@ -264,13 +267,14 @@ class Ceramic implements CeramicApi {
    * @param config - Ceramic configuration
    */
   static async create(ipfs: IpfsApi, config: CeramicConfig = {}): Promise<Ceramic> {
-    LoggerProvider.init({
+    // todo remove
+    LoggerProviderOld.init({
       level: config.logLevel? config.logLevel : 'silent',
       component: config.gateway? 'GATEWAY' : 'NODE',
     })
 
     if (config.logToFiles) {
-        LoggerProvider.addPlugin(
+        LoggerProviderOld.addPlugin(
             config.logToFilesPlugin.plugin,
             config.logToFilesPlugin.state,
             null,
@@ -278,11 +282,15 @@ class Ceramic implements CeramicApi {
         )
     }
 
+    // Initialize ceramic loggers
+    const logger = LoggerProvider.makeDiagnosticLogger({logLevel: config.logLevel, logToFiles: config.logToFiles, logPath: config.logPath})
+
     const anchorService = config.anchorServiceUrl ? new EthereumAnchorService(config) : new InMemoryAnchorService(config as any)
     await anchorService.init()
     const context: Context = {
       ipfs,
       anchorService,
+      logger,
     }
 
     const networkOptions = await Ceramic._generateNetworkOptions(config, anchorService)

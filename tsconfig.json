@@ -40,6 +40,7 @@
    { "path": "./packages/doctype-caip10-link-handler" },
    { "path": "./packages/doctype-tile" },
    { "path": "./packages/doctype-tile-handler" },
+   { "path": "./packages/logger" },
    { "path": "./packages/pinning-aggregation" },
    { "path": "./packages/pinning-ipfs-backend" },
    { "path": "./packages/pinning-powergate-backend" },
