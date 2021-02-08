@@ -22,7 +22,7 @@ import {
   PinApi,
   MultiQuery,
   PinningBackendStatic,
-  DocCache,
+  DocCache, AnchorStatus,
 } from "@ceramicnetwork/common"
 import { Resolver } from "did-resolver"
 
@@ -73,6 +73,7 @@ export interface CeramicConfig {
   cacheDocCommits?: boolean; // adds 'docCacheLimit' additional cache entries if commits can be cached as well
 
   useCentralizedPeerDiscovery?: boolean;
+  restoreDocuments?: boolean;
 
   [index: string]: any; // allow arbitrary properties
 }
@@ -314,6 +315,11 @@ class Ceramic implements CeramicApi {
     const doPeerDiscovery = config.useCentralizedPeerDiscovery ?? !TESTING
     if (doPeerDiscovery) {
       await topology.start()
+    }
+
+    const restoreDocuments = config.restoreDocuments ?? true
+    if (restoreDocuments) {
+      await ceramic.restoreDocuments()
     }
 
     return ceramic
@@ -585,6 +591,20 @@ class Ceramic implements CeramicApi {
    */
   async getSupportedChains(): Promise<Array<string>> {
     return this._networkOptions.supportedChains
+  }
+
+  /**
+   * Load all the pinned documents, re-request PENDING or PROCESSING anchors.
+   */
+  async restoreDocuments() {
+    const list = await this.pinStore.stateStore.list()
+    const documents = await Promise.all(list.map(docId => this._loadDoc(docId)))
+    documents.forEach(document => {
+      const toRecover = document.state?.anchorStatus === AnchorStatus.PENDING || document.state?.anchorStatus === AnchorStatus.PROCESSING
+      if (toRecover) {
+        document.anchor()
+      }
+    })
   }
 
   /**

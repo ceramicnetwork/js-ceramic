@@ -46,6 +46,7 @@ const createCeramic = async (ipfs: IpfsApi, anchorOnRequest = false, docCacheLim
     anchorOnRequest,
     docCacheLimit,
     cacheDocCommits: cacheDocumentCommits,
+    restoreDocuments: false,
     pubsubTopic: "/ceramic/inmemory/test" // necessary so Ceramic instances can talk to each other
   })
   const provider = new Ed25519Provider(seed)
@@ -131,7 +132,7 @@ describe('Ceramic integration', () => {
 
   it('can create Ceramic instance on default network', async () => {
     const pinsetDirectory = await tmp.tmpName()
-    const ceramic = await Ceramic.create(ipfs1, {pinsetDirectory})
+    const ceramic = await Ceramic.create(ipfs1, {pinsetDirectory, restoreDocuments: false})
     await delay(1000)
     const supportedChains = await ceramic.getSupportedChains()
     expect(supportedChains).toEqual(['inmemory:12345'])
@@ -140,7 +141,7 @@ describe('Ceramic integration', () => {
 
   it('can create Ceramic instance explicitly on inmemory network', async () => {
     const pinsetDirectory = await tmp.tmpName()
-    const ceramic = await Ceramic.create(ipfs1, { networkName: 'inmemory', pinsetDirectory })
+    const ceramic = await Ceramic.create(ipfs1, { networkName: 'inmemory', pinsetDirectory, restoreDocuments: false })
     await delay(1000)
     const supportedChains = await ceramic.getSupportedChains()
     expect(supportedChains).toEqual(['inmemory:12345'])
@@ -149,14 +150,14 @@ describe('Ceramic integration', () => {
 
   it('cannot create Ceramic instance on network not supported by our anchor service', async () => {
     const pinsetDirectory = await tmp.tmpName()
-    await expect(Ceramic.create(ipfs1, { networkName: 'local', pinsetDirectory })).rejects.toThrow(
+    await expect(Ceramic.create(ipfs1, { networkName: 'local', pinsetDirectory, restoreDocuments: false })).rejects.toThrow(
         "No usable chainId for anchoring was found.  The ceramic network 'local' supports the chains: ['eip155:1337'], but the configured anchor service 'inmemory' only supports the chains: ['inmemory:12345']")
     await delay(1000)
   })
 
   it('cannot create Ceramic instance on invalid network', async () => {
     const pinsetDirectory = await tmp.tmpName()
-    await expect(Ceramic.create(ipfs1, { networkName: 'fakenetwork', pinsetDirectory })).rejects.toThrow("Unrecognized Ceramic network name: 'fakenetwork'. Supported networks are: 'mainnet', 'testnet-clay', 'dev-unstable', 'local', 'inmemory'")
+    await expect(Ceramic.create(ipfs1, { networkName: 'fakenetwork', pinsetDirectory, restoreDocuments: false })).rejects.toThrow("Unrecognized Ceramic network name: 'fakenetwork'. Supported networks are: 'mainnet', 'testnet-clay', 'dev-unstable', 'local', 'inmemory'")
     await delay(1000)
   })
 

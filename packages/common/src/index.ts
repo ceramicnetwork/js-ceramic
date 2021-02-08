@@ -6,6 +6,7 @@ export * from './utils/doctype-utils'
 export * from './logger-provider'
 export * from './pinning'
 export * from './doc-cache'
+export * from './unreachable-case-error'
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
