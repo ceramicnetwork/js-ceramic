@@ -36,6 +36,7 @@
     "@ceramicnetwork/doctype-caip10-link-handler": "^0.13.2",
     "@ceramicnetwork/doctype-tile": "^0.13.3",
     "@ceramicnetwork/doctype-tile-handler": "^0.13.3",
+    "@ceramicnetwork/ipfs-topology": "^0.0.1",
     "@ceramicnetwork/logger": "^0.0.1",
     "@ceramicnetwork/pinning-aggregation": "^0.1.14",
     "@ceramicnetwork/pinning-ipfs-backend": "^0.1.14",
@@ -55,6 +56,7 @@
     "lodash.clonedeep": "^4.5.0",
     "multihashes": "^3.1.2",
     "p-queue": "^6.6.1",
+    "rxjs": "^6.6.3",
     "uint8arrays": "^2.0.5"
   },
   "devDependencies": {
@@ -79,6 +81,9 @@
     "testEnvironment": "node",
     "transformIgnorePatterns": [
       "/node_modules(?!/did-jwt)/"
+    ],
+    "testMatch": [
+      "**/?(*.)+(spec|test).[jt]s?(x)"
     ]
   },
   "gitHead": "34eeee25597b0a60def72906c26d3afd6230aaf1"

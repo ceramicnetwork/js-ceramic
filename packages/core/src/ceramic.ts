@@ -3,6 +3,7 @@ import Document from './document'
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import KeyDidResolver from 'key-did-resolver'
 import DocID from '@ceramicnetwork/docid'
+import {IpfsTopology} from "@ceramicnetwork/ipfs-topology";
 import {
   Doctype,
   DoctypeHandler,
@@ -21,7 +22,9 @@ import {
   PinApi,
   MultiQuery,
   PinningBackendStatic,
-  DocCache, LoggerProvider,
+  DocCache,
+  AnchorStatus,
+  LoggerProvider,
 } from "@ceramicnetwork/common"
 import { Resolver } from "did-resolver"
 
@@ -29,7 +32,6 @@ import { DID } from 'dids'
 import { TileDoctypeHandler } from "@ceramicnetwork/doctype-tile-handler"
 import { Caip10LinkDoctypeHandler } from "@ceramicnetwork/doctype-caip10-link-handler"
 import { PinStoreFactory } from "./store/pin-store-factory";
-import {cancelPeriodicConnectToPeersTask, periodicallyConnectToPeers} from "./peer-discovery";
 import { PinStore } from "./store/pin-store";
 import { PathTrie, TrieNode, promiseTimeout } from './utils'
 
@@ -74,6 +76,7 @@ export interface CeramicConfig {
   cacheDocCommits?: boolean; // adds 'docCacheLimit' additional cache entries if commits can be cached as well
 
   useCentralizedPeerDiscovery?: boolean;
+  restoreDocuments?: boolean;
 
   [index: string]: any; // allow arbitrary properties
 }
@@ -119,6 +122,7 @@ class Ceramic implements CeramicApi {
   constructor (public dispatcher: Dispatcher,
                public pinStore: PinStore,
                context: Context,
+               readonly topology: IpfsTopology,
                private _networkOptions: CeramicNetworkOptions,
                private _validateDocs: boolean = true,
                docCacheLimit = DEFAULT_DOC_CACHE_LIMIT,
@@ -302,8 +306,8 @@ class Ceramic implements CeramicApi {
     }
     const pinStoreFactory = new PinStoreFactory(context, pinStoreProperties)
     const pinStore = await pinStoreFactory.open()
-
-    const ceramic = new Ceramic(dispatcher, pinStore, context, networkOptions, config.validateDocs, config.docCacheLimit, config.cacheDocCommits)
+    const topology = new IpfsTopology(ipfs, networkOptions.name)
+    const ceramic = new Ceramic(dispatcher, pinStore, context, topology, networkOptions, config.validateDocs, config.docCacheLimit, config.cacheDocCommits)
     anchorService.ceramic = ceramic
 
     const keyDidResolver = KeyDidResolver.getResolver()
@@ -318,7 +322,12 @@ class Ceramic implements CeramicApi {
 
     const doPeerDiscovery = config.useCentralizedPeerDiscovery ?? !TESTING
     if (doPeerDiscovery) {
-      await periodicallyConnectToPeers(networkOptions.name, ipfs)
+      await topology.start()
+    }
+
+    const restoreDocuments = config.restoreDocuments ?? true
+    if (restoreDocuments) {
+      await ceramic.restoreDocuments()
     }
 
     return ceramic
@@ -593,12 +602,26 @@ class Ceramic implements CeramicApi {
   }
 
   /**
+   * Load all the pinned documents, re-request PENDING or PROCESSING anchors.
+   */
+  async restoreDocuments() {
+    const list = await this.pinStore.stateStore.list()
+    const documents = await Promise.all(list.map(docId => this._loadDoc(docId)))
+    documents.forEach(document => {
+      const toRecover = document.state?.anchorStatus === AnchorStatus.PENDING || document.state?.anchorStatus === AnchorStatus.PROCESSING
+      if (toRecover) {
+        document.anchor()
+      }
+    })
+  }
+
+  /**
    * Close Ceramic instance gracefully
    */
   async close (): Promise<void> {
     await this.pinStore.close()
     await this.dispatcher.close()
-    await cancelPeriodicConnectToPeersTask()
+    this.topology.stop()
   }
 }
 
