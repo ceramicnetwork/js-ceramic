@@ -22,6 +22,8 @@ export async function buildIpfsConnection(network: string, ipfsEndpoint?: string
             ipfsDhtServerMode: IPFS_DHT_SERVER_MODE,
             ipfsEnableApi: true,
             ipfsEnableGateway: true,
+            // Do not setup peer connections in IPFS daemon.
+            // We do it in Ceramic instance itself.
             useCentralizedPeerDiscovery: false
         }).then(daemon => daemon.start())
         return ipfsDaemon.ipfs
