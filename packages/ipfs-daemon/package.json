@@ -14,10 +14,11 @@
     "lib": "lib"
   },
   "files": [
-    "lib"
+    "lib",
+    "bin"
   ],
   "bin": {
-    "ipfs-daemon": "lib/bin/ipfs-daemon.js"
+    "ipfs-daemon": "bin/ipfs-daemon.js"
   },
   "scripts": {
     "build": "../../node_modules/.bin/tsc -p tsconfig.json",
