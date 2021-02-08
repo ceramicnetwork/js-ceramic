@@ -15,7 +15,6 @@ import {
 import type Dispatcher from "../../dispatcher";
 import Ceramic from "../../ceramic";
 import DocID from "@ceramicnetwork/docid";
-import PQueue from "p-queue";
 
 const DID_MATCHER =
   "^(did:([a-zA-Z0-9_]+):([a-zA-Z0-9_.-]+(:[a-zA-Z0-9_.-]+)*)((;[a-zA-Z0-9_.:%-]+=[a-zA-Z0-9_.:%-]*)*)(/[^#?]*)?)([?][^#]*)?(#.*)?";
@@ -41,9 +40,6 @@ interface InMemoryAnchorConfig {
 
 const SAMPLE_ETH_TX_HASH =
   "bagjqcgzaday6dzalvmy5ady2m5a5legq5zrbsnlxfc2bfxej532ds7htpova";
-
-// Sequential execution of requestAnchor commands
-const requestAnchorQueue = new PQueue({ concurrency: 1 });
 
 /**
  * In-memory anchor service - used locally, not meant to be used in production code
@@ -236,18 +232,14 @@ class InMemoryAnchorService implements AnchorService {
       filter((asr) => asr.docId.equals(docId) && asr.cid.equals(tip))
     );
     if (this.#anchorOnRequest) {
-      requestAnchorQueue
-        .add(() => {
-          return this._process(candidate);
-        })
-        .catch((error) => {
-          this.#feed.next({
-            status: AnchorStatus.FAILED,
-            docId: candidate.docId,
-            cid: candidate.cid,
-            message: error.message,
-          });
+      this._process(candidate).catch((error) => {
+        this.#feed.next({
+          status: AnchorStatus.FAILED,
+          docId: candidate.docId,
+          cid: candidate.cid,
+          message: error.message,
         });
+      });
       return feed$;
     } else {
       this.#queue.push(candidate);
