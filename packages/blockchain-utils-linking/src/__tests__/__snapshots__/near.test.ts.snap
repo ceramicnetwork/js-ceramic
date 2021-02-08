@@ -2,9 +2,9 @@
 
 exports[`Blockchain: NEAR authenticate create proof for near-mainnet 1`] = `"0xa232a2a0bd58dc11b9c377ed0fd64309419ba245459833a006e45ba4159d8ac6"`;
 
-exports[`Blockchain: NEAR authenticate entropy replication for near-mainnet 1`] = `Promise {}`;
+exports[`Blockchain: NEAR authenticate entropy replication for near-mainnet 1`] = `"0x694092aec5edc7aaa96b55bdb285af014976fcf21912d6e96b35aaac2b997889"`;
 
-exports[`Blockchain: NEAR authenticate entropy replication for near-mainnet 2`] = `Promise {}`;
+exports[`Blockchain: NEAR authenticate entropy replication for near-mainnet 2`] = `"0x694092aec5edc7aaa96b55bdb285af014976fcf21912d6e96b35aaac2b997889"`;
 
 exports[`Blockchain: NEAR createLink create proof for near-mainnet 1`] = `
 Object {
