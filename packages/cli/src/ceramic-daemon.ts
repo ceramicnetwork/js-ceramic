@@ -1,12 +1,22 @@
 import express, { Request, Response, NextFunction } from 'express'
 import Ceramic from '@ceramicnetwork/core'
 import type { CeramicConfig} from "@ceramicnetwork/core"
-import { DoctypeUtils, RootLogger, Logger, IpfsApi, MultiQuery  } from "@ceramicnetwork/common"
+import { ServiceLogger } from "@ceramicnetwork/logger"
+import {
+  DoctypeUtils,
+  RootLogger,
+  Logger,
+  IpfsApi,
+  MultiQuery,
+  LoggerConfig,
+  LoggerProvider,
+} from "@ceramicnetwork/common"
 import { LogToFiles } from "./ceramic-logger-plugins"
 import DocID from "@ceramicnetwork/docid"
 import cors from 'cors'
 import * as core from "express-serve-static-core"
 import { cpuFree, freememPercentage } from "os-utils"
+import morgan from 'morgan';
 
 const DEFAULT_PORT = 7007
 const toApiPath = (ending: string): string => '/api/v0' + ending
@@ -48,6 +58,53 @@ interface MultiQueries {
   queries: Array<MultiQuery>
 }
 
+const ACCESS_LOG_FMT = 'ip=:remote-addr ts=:date[iso] method=:method path=:url http_version=:http-version req_header:req[header] status=:status content_length=:res[content-length] content_type=":res[content-type]" ref=:referrer user_agent=:user-agent elapsed_ms=:total-time[3]';
+
+const makeExpressMiddleware = function (config: LoggerConfig) {
+  const logger = LoggerProvider.makeServiceLogger("http", config)
+
+  return [morgan(ACCESS_LOG_FMT, { stream: logger })]
+};
+
+const makeCeramicConfig = function (opts: CreateOpts): CeramicConfig {
+  const ceramicConfig: CeramicConfig = {
+    logLevel: opts.debug ? 'debug' : 'silent',
+    gateway: opts.gateway || false,
+    networkName: opts.network
+  }
+
+  if (opts.anchorServiceUrl) {
+    ceramicConfig.ethereumRpcUrl = opts.ethereumRpcUrl
+    ceramicConfig.anchorServiceUrl = opts.anchorServiceUrl
+  } else if (ceramicConfig.networkName === "testnet-clay" || ceramicConfig.networkName === "dev-unstable") {
+    ceramicConfig.anchorServiceUrl = DEFAULT_ANCHOR_SERVICE_URL
+  }
+
+  if (opts.pubsubTopic) {
+    ceramicConfig.pubsubTopic = opts.pubsubTopic
+  }
+
+  if (opts.pinsetDirectory) {
+    ceramicConfig.pinsetDirectory = opts.pinsetDirectory
+  }
+
+  if (opts.pinningEndpoints) {
+    ceramicConfig.pinningEndpoints = opts.pinningEndpoints
+  }
+
+  if (opts.logToFiles) {
+    ceramicConfig.logToFiles = opts.logToFiles
+    ceramicConfig.logPath = opts.logPath
+    ceramicConfig.logToFilesPlugin = {
+      plugin: LogToFiles.main,
+      state: {blockedFiles: {}},
+      options: {logPath: opts.logPath}
+    }
+  }
+
+  return ceramicConfig
+}
+
 /**
  * Ceramic daemon implementation
  */
@@ -67,6 +124,12 @@ class CeramicDaemon {
     const app: core.Express = express()
     app.use(express.json())
     app.use(cors({ origin: opts.corsAllowedOrigins }))
+
+    const logConfig: LoggerConfig = { logPath: opts.logPath,
+                                      logToFiles: opts.logToFiles,
+                                      logLevel: opts.debug ? "debug" : "important" } // todo use LogLevel
+    const expressMiddleware = makeExpressMiddleware(logConfig)
+    app.use(expressMiddleware)
 
     this.registerAPIPaths(app, opts.gateway)
 
@@ -121,40 +184,7 @@ class CeramicDaemon {
   static async create (opts: CreateOpts): Promise<CeramicDaemon> {
     const { ipfs } = opts
 
-    const ceramicConfig: CeramicConfig = {
-      logLevel: opts.debug ? 'debug' : 'silent',
-      gateway: opts.gateway || false,
-      networkName: opts.network
-    }
-
-    if (opts.anchorServiceUrl) {
-      ceramicConfig.ethereumRpcUrl = opts.ethereumRpcUrl
-      ceramicConfig.anchorServiceUrl = opts.anchorServiceUrl
-    } else if (ceramicConfig.networkName === "testnet-clay" || ceramicConfig.networkName === "dev-unstable") {
-      ceramicConfig.anchorServiceUrl = DEFAULT_ANCHOR_SERVICE_URL
-    }
-
-    if (opts.pubsubTopic) {
-      ceramicConfig.pubsubTopic = opts.pubsubTopic
-    }
-
-    if (opts.pinsetDirectory) {
-      ceramicConfig.pinsetDirectory = opts.pinsetDirectory
-    }
-
-    if (opts.pinningEndpoints) {
-      ceramicConfig.pinningEndpoints = opts.pinningEndpoints
-    }
-
-    if (opts.logToFiles) {
-        ceramicConfig.logToFiles = opts.logToFiles
-        ceramicConfig.logPath = opts.logPath
-        ceramicConfig.logToFilesPlugin = {
-            plugin: LogToFiles.main,
-            state: {blockedFiles: {}},
-            options: {logPath: opts.logPath}
-        }
-    }
+    const ceramicConfig = makeCeramicConfig(opts)
 
     const ceramic = await Ceramic.create(ipfs, ceramicConfig)
     return new CeramicDaemon(ceramic, opts)
