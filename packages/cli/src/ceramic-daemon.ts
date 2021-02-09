@@ -127,7 +127,7 @@ class CeramicDaemon {
 
     const logConfig: LoggerConfig = { logPath: opts.logPath,
                                       logToFiles: opts.logToFiles,
-                                      logLevel: opts.debug ? "debug" : "important" } // todo use LogLevel
+                                      logLevel: opts.debug ? "debug" : "important" }
     const expressMiddleware = makeExpressMiddleware(logConfig)
     app.use(expressMiddleware)
 
