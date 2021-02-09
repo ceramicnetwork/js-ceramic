@@ -1,11 +1,10 @@
 import express, { Request, Response, NextFunction } from 'express'
 import Ceramic from '@ceramicnetwork/core'
 import type { CeramicConfig} from "@ceramicnetwork/core"
-import { ServiceLogger } from "@ceramicnetwork/logger"
+import { DiagnosticsLogger } from "@ceramicnetwork/logger"
 import {
   DoctypeUtils,
   RootLogger,
-  Logger,
   IpfsApi,
   MultiQuery,
   LoggerConfig,
@@ -110,16 +109,16 @@ const makeCeramicConfig = function (opts: CreateOpts): CeramicConfig {
  */
 class CeramicDaemon {
   private server: any
-  private logger: Logger
   private maxHealthyCpu: number
   private maxHealthyMemory: number
   private readonly debug: boolean
+  private readonly logger: DiagnosticsLogger
 
   constructor (public ceramic: Ceramic, opts: CreateOpts) {
     this.debug = opts.debug
-    this.logger = RootLogger.getLogger(CeramicDaemon.name)
     this.maxHealthyCpu = opts.maxHealthyCpu
     this.maxHealthyMemory = opts.maxHealthyMemory
+    this.logger = ceramic.context.logger
 
     const app: core.Express = express()
     app.use(express.json())
@@ -133,6 +132,7 @@ class CeramicDaemon {
 
     this.registerAPIPaths(app, opts.gateway)
 
+    const loggerOld = RootLogger.getLogger(CeramicDaemon.name)
     if (this.debug) {
       app.use((req: Request, res: Response, next: NextFunction): void => {
         const requestStart = Date.now()
@@ -153,7 +153,7 @@ class CeramicDaemon {
         res.on("finish", () => {
           const httpLog = this._buildHttpLog(requestStart, req, res, {requestError, body})
           const logString = JSON.stringify(httpLog)
-          this.logger.debug(logString)
+          loggerOld.debug(logString)
         })
         next()
       })
@@ -161,18 +161,18 @@ class CeramicDaemon {
 
     // next is required in function signature
     app.use((err: Error, req: Request, res: Response, next: NextFunction): void => {
-      this.logger.error(err)
+      loggerOld.error(err)
       if (res.statusCode < 300) { // 2xx indicates error has not yet been handled
         res.status(500)
       }
       res.send({error: err.message})
       // TODO: Get real request start
-      this.logger.error(JSON.stringify(this._buildHttpLog(Date.now(), req, res)))
+      loggerOld.error(JSON.stringify(this._buildHttpLog(Date.now(), req, res)))
     })
 
     const port = opts.port || DEFAULT_PORT
     this.server = app.listen(port, () => {
-      console.log('Ceramic API running on port ' + port)
+      this.logger.imp('Ceramic API running on port ' + port)
     })
     this.server.keepAliveTimeout = 60 * 1000
   }
