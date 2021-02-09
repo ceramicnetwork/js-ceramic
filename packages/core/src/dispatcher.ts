@@ -6,9 +6,10 @@ import * as multihashes from 'multihashes'
 import * as sha256 from "@stablelib/sha256"
 
 import type Document from "./document"
-import { DoctypeUtils, RootLogger, Logger, IpfsApi } from "@ceramicnetwork/common"
+import { DoctypeUtils, IpfsApi } from "@ceramicnetwork/common"
 import { TextDecoder } from 'util'
 import DocID from "@ceramicnetwork/docid";
+import { DiagnosticsLogger, ServiceLogger } from "@ceramicnetwork/logger";
 
 const IPFS_GET_TIMEOUT = 60000 // 1 minute
 const IPFS_MAX_RECORD_SIZE = 256000 // 256 KB
@@ -45,15 +46,13 @@ export default class Dispatcher extends EventEmitter {
   // corresponding RESPONSE message for. Maps the query ID to the primary DocID we were querying for.
   private readonly _outstandingQueryIds: Record<string, DocID>
 
-  private logger: Logger
   private _isRunning = true
   private _resubscribeInterval: any
 
-  constructor (public _ipfs: IpfsApi, public topic: string) {
+  constructor (public _ipfs: IpfsApi, public topic: string, private _logger: DiagnosticsLogger, private _pubsubLogger: ServiceLogger) {
     super()
     this._documents = {}
     this._outstandingQueryIds = {}
-    this.logger = RootLogger.getLogger(Dispatcher.name)
   }
 
   /**
@@ -83,14 +82,12 @@ export default class Dispatcher extends EventEmitter {
           this.handleMessage,
           // {timeout: IPFS_GET_TIMEOUT} // ipfs-core bug causes timeout option to throw https://github.com/ipfs/js-ipfs/issues/3472
         )
-        this._log({peer: this._peerId, event: 'subscribed', topic: this.topic })
+        this._pubsubLogger.log({peer: this._peerId, event: 'subscribed', topic: this.topic })
       }
     } catch (error) {
-      // TODO: use logger
       if (error.message.includes('Already subscribed')) {
-        this.logger.debug(error.message)
-      } else if (error.message.includes('The user aborted a request')) {
-        // for some reason the first call to pubsub.subscribe throws this error
+        this._logger.debug(error.message)
+      } else if (error.message.includes('The user aborted a request')) {        // for some reason the first call to pubsub.subscribe throws this error
         this._subscribe(true)
       } else {
         console.error(error)
@@ -123,7 +120,7 @@ export default class Dispatcher extends EventEmitter {
     this._outstandingQueryIds[payload.id] = document.id.baseID
 
     this._ipfs.pubsub.publish(this.topic, JSON.stringify(payload))
-    this._log({ peer: this._peerId, event: 'published', topic: this.topic, message: payload })
+    this._pubsubLogger.log({ peer: this._peerId, event: 'published', topic: this.topic, message: payload })
   }
 
   async _buildQueryMessage(document: Document): Promise<Record<string, any>> {
@@ -224,13 +221,13 @@ export default class Dispatcher extends EventEmitter {
    */
   async publishTip (docId: DocID, tip: CID): Promise<void> {
     if (!this._isRunning) {
-      this.logger.error('Dispatcher has been closed')
+      this._logger.err('Dispatcher has been closed')
       return
     }
 
     const payload = { typ: MsgType.UPDATE, doc: docId.baseID.toString(), tip: tip.toString() }
     await this._ipfs.pubsub.publish(this.topic, JSON.stringify(payload))
-    this._log({ peer: this._peerId, event: 'published', topic: this.topic, message: payload })
+    this._pubsubLogger.log({ peer: this._peerId, event: 'published', topic: this.topic, message: payload })
   }
 
   /**
@@ -240,7 +237,7 @@ export default class Dispatcher extends EventEmitter {
    */
   handleMessage = async (message: any): Promise<void> => {
     if (!this._isRunning) {
-      this.logger.error('Dispatcher has been closed')
+      this._logger.err('Dispatcher has been closed')
       return
     }
 
@@ -262,7 +259,7 @@ export default class Dispatcher extends EventEmitter {
     const logMessage = { ...message, data: parsedMessageData }
     delete logMessage.key
     delete logMessage.signature
-    this._log({ peer: this._peerId, event: 'received', topic: this.topic, message: logMessage })
+    this._pubsubLogger.log({ peer: this._peerId, event: 'received', topic: this.topic, message: logMessage })
 
     const { typ } = parsedMessageData
     switch (typ) {
@@ -322,7 +319,7 @@ export default class Dispatcher extends EventEmitter {
     tipMap[docId] = this._documents[docId].tip.toString()
     const payload = { typ: MsgType.RESPONSE, id, tips: tipMap}
     await this._ipfs.pubsub.publish(this.topic, JSON.stringify(payload))
-    this._log({ peer: this._peerId, event: 'published', topic: this.topic, message: payload })
+    this._pubsubLogger.log({ peer: this._peerId, event: 'published', topic: this.topic, message: payload })
   }
 
   /**
@@ -347,17 +344,6 @@ export default class Dispatcher extends EventEmitter {
     }
     this._documents[expectedDocID.toString()].emit('update', new CID(newTip))
     // TODO Iterate over all documents in 'tips' object and process the new tip for each
-  }
-
-  /**
-   * Logs one message
-   *
-   * @param msg - Message data
-   * @private
-   */
-  _log(msg: LogMessage): void {
-    const timestampedMsg = {timestamp: Date.now(), ...msg}
-    this.logger.debug(JSON.stringify(timestampedMsg))
   }
 
   /**

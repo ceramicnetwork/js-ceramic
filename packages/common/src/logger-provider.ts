@@ -39,11 +39,12 @@ export class LoggerProvider {
     }
 
     static makeServiceLogger(serviceName: string, config: LoggerConfig): ServiceLogger {
+        const logToFiles = config.logToFiles ?? DEFAULT_LOG_CONFIG.logToFiles
         const logDir = config.logPath ?? DEFAULT_LOG_CONFIG.logPath
         let logLevel = typeof config.logLevel == "string" ? logLevelMapping[config.logLevel] : config.logLevel
         logLevel = logLevel ?? DEFAULT_LOG_CONFIG.logLevel
         const logPath = path.join(logDir, `${serviceName}.log`)
 
-        return new ServiceLogger(serviceName, logPath, logLevel)
+        return new ServiceLogger(serviceName, logPath, logLevel, logToFiles)
     }
 }
