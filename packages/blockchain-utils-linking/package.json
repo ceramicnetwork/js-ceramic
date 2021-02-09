@@ -41,7 +41,8 @@
     "@tendermint/sig": "^0.6.0",
     "@zondax/filecoin-signing-tools": "^0.13.0",
     "eth-sig-util": "^3.0.0",
-    "ganache-core": "^2.13.1"
+    "ganache-core": "^2.13.1",
+    "near-api-js": "^0.36.3"
   },
   "jest": {
     "testEnvironment": "jest-environment-uint8array",

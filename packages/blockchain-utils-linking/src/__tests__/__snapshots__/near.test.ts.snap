@@ -1,0 +1,20 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Blockchain: NEAR authenticate create proof for near-mainnet 1`] = `"0xa232a2a0bd58dc11b9c377ed0fd64309419ba245459833a006e45ba4159d8ac6"`;
+
+exports[`Blockchain: NEAR authenticate entropy replication for near-mainnet 1`] = `"0x694092aec5edc7aaa96b55bdb285af014976fcf21912d6e96b35aaac2b997889"`;
+
+exports[`Blockchain: NEAR authenticate entropy replication for near-mainnet 2`] = `"0x694092aec5edc7aaa96b55bdb285af014976fcf21912d6e96b35aaac2b997889"`;
+
+exports[`Blockchain: NEAR createLink create proof for near-mainnet 1`] = `
+Object {
+  "account": "YgaDUT7OqomE95jEp0ECZe6NYiEPyzexFI2+Op8gR6w=@near:near-mainnet",
+  "message": "Create a new account link to your identity.
+
+did:3:bafysdfwefwe 
+Timestamp: 666",
+  "signature": "iHwSVuA1eauUN8Qch/bzKJo12MVAPi8X/vmedxPeUCC/froBV/g+paNbbCeg6b0Tfc7m+tNYDESQrs13497YCQ==",
+  "timestamp": 666,
+  "version": 1,
+}
+`;

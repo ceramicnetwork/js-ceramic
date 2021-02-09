@@ -11,3 +11,4 @@ export { FilecoinAuthProvider } from "./filecoin";
 export { EosioAuthProvider } from "./eosio";
 export { PolkadotAuthProvider } from "./polkadot";
 export { CosmosAuthProvider } from "./cosmos";
+export { NearAuthProvider } from "./near";
