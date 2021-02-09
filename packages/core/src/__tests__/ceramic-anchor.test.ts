@@ -311,7 +311,7 @@ describe('Ceramic anchoring', () => {
     expect(doctype1.content).toEqual({ x: 6 })
     expect(doctype1.state.log.length).toEqual(8)
 
-    const doctype2 = await ceramic2.loadDocument(doctype1.id)
+    const doctype2 = await ceramic2.loadDocument(doctype1.id, {sync: true})
     expect(doctype1.content).toEqual(doctype2.content)
     expect(doctype1.state.log.length).toEqual(doctype2.state.log.length)
 
