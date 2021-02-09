@@ -445,7 +445,7 @@ describe('Ceramic API', () => {
     })
 
     it('can store record if the size is lesser than the maximum size ~256KB', async () => {
-      ceramic = await createCeramic(ipfs)
+      ceramic = await createCeramic()
 
       const doctype = await ceramic.createDocument('tile', { content: { test: generateStringOfSize(10000) } })
       expect(doctype).not.toBeNull();
@@ -454,7 +454,7 @@ describe('Ceramic API', () => {
     })
 
     it('cannot store record if the size is greated than the maximum size ~256KB', async () => {
-      ceramic = await createCeramic(ipfs)
+      ceramic = await createCeramic()
 
       await expect(ceramic.createDocument('tile', { content: { test: generateStringOfSize(1000000) } })).rejects.toThrow(/exceeds the maximum block size of/)
       await ceramic.close()
