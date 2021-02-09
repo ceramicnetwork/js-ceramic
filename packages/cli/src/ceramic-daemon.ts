@@ -60,7 +60,7 @@ interface MultiQueries {
 const ACCESS_LOG_FMT = 'ip=:remote-addr ts=:date[iso] method=:method path=:url http_version=:http-version req_header:req[header] status=:status content_length=:res[content-length] content_type=":res[content-type]" ref=:referrer user_agent=:user-agent elapsed_ms=:total-time[3]';
 
 const makeExpressMiddleware = function (config: LoggerConfig) {
-  const logger = LoggerProvider.makeServiceLogger("http", config)
+  const logger = LoggerProvider.makeServiceLogger("http-access", config)
 
   return [morgan(ACCESS_LOG_FMT, { stream: logger })]
 };
