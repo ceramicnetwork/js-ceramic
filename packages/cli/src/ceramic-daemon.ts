@@ -57,9 +57,19 @@ interface MultiQueries {
   queries: Array<MultiQuery>
 }
 
-const ACCESS_LOG_FMT = 'ip=:remote-addr ts=:date[iso] method=:method path=:url http_version=:http-version req_header:req[header] status=:status content_length=:res[content-length] content_type=":res[content-type]" ref=:referrer user_agent=:user-agent elapsed_ms=:total-time[3]';
+const ACCESS_LOG_FMT = 'ip=:remote-addr ts=:date[iso] method=:method original_url=:original-url base_url=:base-url path=:path http_version=:http-version req_header:req[header] status=:status content_length=:res[content-length] content_type=":res[content-type]" ref=:referrer user_agent=:user-agent elapsed_ms=:total-time[3]';
 
 const makeExpressMiddleware = function (config: LoggerConfig) {
+  morgan.token<Request, Response>('original-url', function (req, res): any {
+    return req.originalUrl;
+  });
+  morgan.token<Request, Response>('base-url', function (req, res): any {
+    return req.baseUrl;
+  });
+  morgan.token<Request, Response>('path', function (req, res): any {
+    return req.path;
+  });
+
   const logger = LoggerProvider.makeServiceLogger("http-access", config)
 
   return [morgan(ACCESS_LOG_FMT, { stream: logger })]
