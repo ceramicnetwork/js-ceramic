@@ -40,6 +40,9 @@ import InMemoryAnchorService from "./anchor/memory/in-memory-anchor-service"
 
 import { randomUint32 } from '@stablelib/random'
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const packageJson = require('../package.json')
+
 const DEFAULT_DOC_CACHE_LIMIT = 500; // number of docs stored in the cache
 const IPFS_GET_TIMEOUT = 60000 // 1 minute
 const TESTING = process.env.NODE_ENV == 'test'
@@ -287,6 +290,8 @@ class Ceramic implements CeramicApi {
     const logger = LoggerProvider.makeDiagnosticLogger(loggerConfig)
     const pubsubLogger = LoggerProvider.makeServiceLogger("pubsub", loggerConfig)
 
+    logger.imp(`Starting Ceramic node at version ${packageJson.version} with config: \n${JSON.stringify(config, null, 2)}`)
+
     const anchorService = config.anchorServiceUrl ? new EthereumAnchorService(config) : new InMemoryAnchorService(config as any)
     await anchorService.init()
     const context: Context = {
@@ -296,6 +301,7 @@ class Ceramic implements CeramicApi {
     }
 
     const networkOptions = await Ceramic._generateNetworkOptions(config, anchorService)
+    logger.imp(`Connecting to ceramic network '${networkOptions.name}' using pubsub topic '${networkOptions.pubsubTopic}' with supported anchor chains ['${networkOptions.supportedChains.join("','")}']`)
 
     const dispatcher = new Dispatcher(ipfs, networkOptions.pubsubTopic, logger, pubsubLogger)
     await dispatcher.init()
