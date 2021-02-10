@@ -89,15 +89,20 @@ interface ServiceLog {
 export class ServiceLogger {
   public readonly service: string;
   public readonly filePath: string;
+  public readonly logToFiles: boolean
+  public readonly logToConsole: boolean
+  public readonly logLevel: LogLevel
+
   private readonly stream: RotatingFileStream;
-  private readonly logLevel: LogLevel
-  private readonly logToFiles: boolean
+
 
   constructor(service: string, filePath: string, logLevel: LogLevel, logToFiles: boolean) {
     this.service = service;
     this.filePath = filePath;
     this.logLevel = logLevel
     this.logToFiles = logToFiles
+
+    this.logToConsole = this.logLevel == LogLevel.debug
 
     if (this.logToFiles) {
       const writeImmediately = true;
@@ -108,21 +113,25 @@ export class ServiceLogger {
   /**
    * Converts the service log to logfmt and writes it to `this.filePath`
    * @param serviceLog Service log object
-   * @param logToConsole True to log to console in addition to file
    */
-  public log(serviceLog: ServiceLog, logToConsole?: boolean): void {
+  public log(serviceLog: ServiceLog): void {
+    this.write(ServiceLogger.format(serviceLog))
+  }
+
+  /**
+   * Writes the log message to the file stream and/or the console based on the config.
+   * @param message Content to log
+   */
+  public write(message: string): void {
     const now = new Date();
     // RFC1123 timestamp
-    const message = `[${now.toUTCString()}] service=${this.service} ${ServiceLogger.format(serviceLog)}`;
+    message = `[${now.toUTCString()}] service=${this.service} ${message}`;
 
     if (this.logToFiles) {
       this.stream.write(util.format(message, '\n'));
     }
 
-    // Always respect `logToConsole` if it is explicitly passed.  If it isn't provided, then decide
-    // whether to log to console based on the log level.
-    logToConsole = logToConsole ?? this.logLevel == LogLevel.debug
-    if (logToConsole) {
+    if (this.logToConsole) {
       console.log(message);
     }
   }
