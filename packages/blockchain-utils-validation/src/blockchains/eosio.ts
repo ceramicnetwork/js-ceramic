@@ -11,18 +11,13 @@ export async function validateLink(
   const { message, signature, account } = proof;
   const accountID = new AccountID(account);
   const { address, chainId } = accountID;
-  try {
-    const success = await SigningTools.verifySignature({
-      chainId: chainId.reference,
-      account: address,
-      signature,
-      data: linking.eosio.toPayload(message, accountID),
-    });
-    return success ? proof : null;
-  } catch (error) {
-    console.warn(error);
-    return null;
-  }
+  const success = await SigningTools.verifySignature({
+    chainId: chainId.reference,
+    account: address,
+    signature,
+    data: linking.eosio.toPayload(message, accountID),
+  });
+  return success ? proof : null;
 }
 
 const Handler: BlockchainHandler = {
