@@ -1,6 +1,6 @@
 import Ceramic from '../ceramic'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
-import {AnchorStatus, DocState, Doctype, IpfsApi, TestUtils} from "@ceramicnetwork/common"
+import {AnchorStatus, IpfsApi, TestUtils} from "@ceramicnetwork/common"
 import tmp from 'tmp-promise'
 import IPFS from 'ipfs-core'
 import * as u8a from 'uint8arrays'
