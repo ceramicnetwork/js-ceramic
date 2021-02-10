@@ -3,6 +3,7 @@ import * as uint8arrays from "uint8arrays";
 import { Observable, Subject, concat, of } from "rxjs";
 import { filter } from "rxjs/operators";
 import * as didJwt from "did-jwt";
+import { Resolver } from "did-resolver"
 import {
   AnchorProof,
   AnchorService,
@@ -15,6 +16,7 @@ import {
 import type Dispatcher from "../../dispatcher";
 import Ceramic from "../../ceramic";
 import DocID from "@ceramicnetwork/docid";
+import { DiagnosticsLogger } from "@ceramicnetwork/logger";
 
 const DID_MATCHER =
   "^(did:([a-zA-Z0-9_]+):([a-zA-Z0-9_.-]+(:[a-zA-Z0-9_.-]+)*)((;[a-zA-Z0-9_.:%-]+=[a-zA-Z0-9_.:%-]*)*)(/[^#?]*)?)([?][^#]*)?(#.*)?";
@@ -45,8 +47,9 @@ const SAMPLE_ETH_TX_HASH =
  * In-memory anchor service - used locally, not meant to be used in production code
  */
 class InMemoryAnchorService implements AnchorService {
-  #ceramic: Ceramic;
   #dispatcher: Dispatcher;
+  #resolver: Resolver;
+  #logger: DiagnosticsLogger;
 
   readonly #anchorDelay: number;
   readonly #anchorOnRequest: boolean;
@@ -114,7 +117,7 @@ class InMemoryAnchorService implements AnchorService {
           }
           result[candidate.key].push(candidate);
         } catch (e) {
-          console.error(e.message);
+          this.#logger.err(e.message)
           this._failCandidate(req, e.message);
         }
       })
@@ -216,9 +219,10 @@ class InMemoryAnchorService implements AnchorService {
    *
    * @param ceramic - Ceramic API used for various purposes
    */
-  set ceramic(ceramic: CeramicApi) {
-    this.#ceramic = (ceramic as unknown) as Ceramic;
-    this.#dispatcher = this.#ceramic.dispatcher;
+  set ceramic(ceramic: Ceramic) {
+    this.#dispatcher = ceramic.dispatcher;
+    this.#resolver = ceramic.context.resolver;
+    this.#logger = ceramic.context.logger;
   }
 
   /**
@@ -302,7 +306,7 @@ class InMemoryAnchorService implements AnchorService {
     const decodedHeader = JSON.parse(decodedJsonString);
     const { kid } = decodedHeader;
 
-    const didDoc = await this.#ceramic.context.resolver.resolve(kid);
+    const didDoc = await this.#resolver.resolve(kid);
     const jws = [_protected, payload, signature].join(".");
     await didJwt.verifyJWS(jws, didDoc.publicKey);
     return kid.match(RegExp(DID_MATCHER))[1];
