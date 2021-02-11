@@ -52,7 +52,6 @@ const generateStringOfSize = (size): string => {
 describe('Ceramic API', () => {
   jest.setTimeout(15000)
   let ipfs: IpfsApi;
-  let ceramic: Ceramic
 
   const DOCTYPE_TILE = 'tile'
 
@@ -81,13 +80,20 @@ describe('Ceramic API', () => {
 
   afterAll(async () => {
     await ipfs.stop(() => console.log('IPFS stopped'))
-    await ceramic?.close()
   })
 
   describe('API', () => {
-    it('can load the previous document commit', async () => {
-      ceramic = await createCeramic()
+    let ceramic: Ceramic
 
+    beforeEach(async () => {
+      ceramic = await createCeramic()
+    })
+
+    afterEach(async () => {
+      await ceramic.close()
+    })
+
+    it('can load the previous document commit', async () => {
       const controller = ceramic.context.did.id
 
       const docOg = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, {
@@ -141,13 +147,9 @@ describe('Ceramic API', () => {
       const docV2 = await ceramic.loadDocument<TileDoctype>(docV2Id)
       expect(docV2.content).toEqual({ test: "abcde" })
       expect(docV2.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
-
-      await ceramic.close()
     })
 
     it('cannot create document with invalid schema', async () => {
-      ceramic = await createCeramic()
-
       const controller = ceramic.context.did.id
 
       const schemaDoc = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, {
@@ -168,13 +170,9 @@ describe('Ceramic API', () => {
         console.log(e)
         expect(e.message).toEqual('Validation Error: data[\'a\'] should be string')
       }
-
-      await ceramic.close()
     })
 
     it('can create document with valid schema', async () => {
-      ceramic = await createCeramic()
-
       const controller = ceramic.context.did.id
 
       const schemaDoc = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, {
@@ -191,12 +189,9 @@ describe('Ceramic API', () => {
       await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, tileDocParams)
 
       await new Promise(resolve => setTimeout(resolve, 1000)) // wait to propagate
-      await ceramic.close()
     })
 
     it('must assign schema with specific commit', async () => {
-      ceramic = await createCeramic()
-
       const controller = ceramic.context.did.id
 
       const schemaDoc = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, {
@@ -218,11 +213,10 @@ describe('Ceramic API', () => {
       } catch (e) {
         expect(e.message).toEqual("Commit missing when loading schema document")
       }
-
-      await ceramic.close()
     })
 
     it('can create document with invalid schema if validation is not set', async () => {
+      await ceramic.close()
       ceramic = await createCeramic({ validateDocs: false })
 
       const controller = ceramic.context.did.id
@@ -245,8 +239,6 @@ describe('Ceramic API', () => {
     })
 
     it('can assign schema if content is valid', async () => {
-      ceramic = await createCeramic()
-
       const controller = ceramic.context.did.id
 
       const tileDocParams: TileParams = {
@@ -272,12 +264,9 @@ describe('Ceramic API', () => {
       expect(doctype.metadata.schema).toEqual(schemaDoc.commitId.toString())
 
       await new Promise(resolve => setTimeout(resolve, 1000)) // wait to propagate
-      await ceramic.close()
     })
 
     it('cannot assign schema if content is not valid', async () => {
-      ceramic = await createCeramic()
-
       const controller = ceramic.context.did.id
 
       const tileDocParams: TileParams = {
@@ -303,13 +292,9 @@ describe('Ceramic API', () => {
       } catch (e) {
         expect(e.message).toEqual('Validation Error: data[\'a\'] should be string')
       }
-
-      await ceramic.close()
     })
 
     it('can update valid content and assign schema at the same time', async () => {
-      ceramic = await createCeramic()
-
       const controller = ceramic.context.did.id
 
       const tileDocParams: TileParams = {
@@ -334,12 +319,9 @@ describe('Ceramic API', () => {
       expect(doctype.content).toEqual({ a: 'x' })
 
       await new Promise(resolve => setTimeout(resolve, 1000)) // wait to propagate
-      await ceramic.close()
     })
 
     it('can update schema and then assign to doc with now valid content', async () => {
-      ceramic = await createCeramic()
-
       const controller = ceramic.context.did.id
 
       // Create doc with content that has type 'number'.
@@ -384,13 +366,9 @@ describe('Ceramic API', () => {
       const doc2 = await ceramic.loadDocument(doc.id)
       expect(doc2.content).toEqual(doc.content)
       expect(doc2.metadata).toEqual(doc.metadata)
-
-      await ceramic.close()
     })
 
     it('can list log records', async () => {
-      ceramic = await createCeramic()
-
       const controller = ceramic.context.did.id
 
       const tileDocParams: TileParams = {
@@ -413,28 +391,21 @@ describe('Ceramic API', () => {
       }
 
       expect(logRecords).toEqual(expected)
-      await ceramic.close()
     })
 
     it('can store record if the size is lesser than the maximum size ~256KB', async () => {
-      ceramic = await createCeramic(ipfs)
-
       const doctype = await ceramic.createDocument('tile', { content: { test: generateStringOfSize(10000) } })
       expect(doctype).not.toBeNull();
-
-      await ceramic.close()
     })
 
     it('cannot store record if the size is greated than the maximum size ~256KB', async () => {
-      ceramic = await createCeramic(ipfs)
-
       await expect(ceramic.createDocument('tile', { content: { test: generateStringOfSize(1000000) } })).rejects.toThrow(/exceeds the maximum block size of/)
-      await ceramic.close()
     })
   })
 
   describe('API MultiQueries', () => {
 
+    let ceramic: Ceramic
     let docA, docB, docC, docD, docE, docF
     const notExistDocId = DocID.fromString('kjzl6cwe1jw1495fyn7770ujykvl1f8sskbzsevlux062ajragz9hp3akdqbmdg')
 
@@ -471,6 +442,10 @@ describe('Ceramic API', () => {
                    notDoc: '123' },
         metadata: { controllers: [controller] }
       })
+    })
+
+    afterAll(async () => {
+      await ceramic.close()
     })
 
     it('can load linked doc path, returns expected form', async () => {
