@@ -3,7 +3,6 @@ import { Ed25519Provider } from 'key-did-provider-ed25519'
 import { AnchorStatus, Doctype, IpfsApi } from "@ceramicnetwork/common"
 import tmp from 'tmp-promise'
 import * as u8a from 'uint8arrays'
-import * as _ from 'lodash'
 import { createIPFS, swarmConnect } from './ipfs-util';
 
 jest.mock('../store/level-state-store')
@@ -55,7 +54,7 @@ describe('Ceramic anchoring', () => {
   const DOCTYPE_TILE = 'tile'
 
   beforeEach(async () => {
-    [ipfs1, ipfs2, ipfs3] = await Promise.all(_.times(3).map(() => createIPFS()));
+    [ipfs1, ipfs2, ipfs3] = await Promise.all(Array.from({length: 3}).map(() => createIPFS()));
   })
 
   afterEach(async () => {

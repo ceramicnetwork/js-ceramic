@@ -1,4 +1,3 @@
-import _ from "lodash";
 import type CID from "cids";
 import type {
     CidList, PinningBackend, PinningBackendStatic, PinningInfo, Context,
@@ -13,6 +12,10 @@ export class UnknownPinningService extends Error {
 }
 
 const textEncoder = new TextEncoder();
+
+function uniq<A>(input: A[]): A[] {
+  return [...new Set(input)]
+}
 
 /**
  * Multitude of pinning services united.
@@ -76,7 +79,9 @@ export class PinningAggregation implements PinningBackend {
      * @param cid
      */
     async unpin(cid: CID): Promise<void> {
-        Promise.all(this.backends.map(async (service) => service.unpin(cid))).catch(_.noop);
+        Promise.all(this.backends.map(async (service) => service.unpin(cid))).catch(() => {
+          // noop
+        });
     }
 
     /**
@@ -84,16 +89,16 @@ export class PinningAggregation implements PinningBackend {
      */
     async ls(): Promise<CidList> {
         const perBackend = await Promise.all(this.backends.map((b) => b.ls()));
-        const allCids = _.uniq(_.flatMap(perBackend, (p) => _.keys(p)));
+        const allCids = uniq(perBackend.flatMap((p) => Object.keys(p)));
         const result: CidList = {};
         allCids.forEach((cid) => {
-            result[cid] = _.compact(_.flatMap(perBackend, (p) => p[cid]));
+            result[cid] = perBackend.flatMap((p) => p[cid]).filter(Boolean);
         });
         return result;
     }
 
     async info(): Promise<PinningInfo> {
         const perBackend = await Promise.all(this.backends.map((b) => b.info()));
-        return _.merge({}, ...perBackend);
+        return Object.assign({}, ...perBackend);
     }
 }

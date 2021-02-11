@@ -6,7 +6,6 @@ import { TileDoctype } from "@ceramicnetwork/doctype-tile"
 import * as u8a from 'uint8arrays'
 import DocID from "@ceramicnetwork/docid"
 import { createIPFS, swarmConnect } from './ipfs-util';
-import * as _ from 'lodash'
 
 jest.mock('../store/level-state-store')
 
@@ -58,7 +57,7 @@ describe('Ceramic integration', () => {
   const DOCTYPE_TILE = 'tile'
 
   beforeEach(async () => {
-    [ipfs1, ipfs2, ipfs3] = await Promise.all(_.times(3).map(() => createIPFS()));
+    [ipfs1, ipfs2, ipfs3] = await Promise.all(Array.from({length: 3}).map(() => createIPFS()));
   })
 
   afterEach(async () => {

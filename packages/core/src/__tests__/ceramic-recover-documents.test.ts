@@ -2,7 +2,6 @@ import Ceramic from "../ceramic";
 import { Ed25519Provider } from "key-did-provider-ed25519";
 import tmp from "tmp-promise";
 import { DoctypeUtils, DocState, Doctype, IpfsApi, AnchorStatus } from "@ceramicnetwork/common";
-import * as _ from 'lodash'
 import * as u8a from "uint8arrays";
 import { createIPFS } from './ipfs-util';
 
@@ -48,7 +47,7 @@ const DOCTYPE_TILE = "tile";
 
 beforeEach(async () => {
     [ipfs1, ipfs2] = await Promise.all(
-        _.times(2).map(() => createIPFS())
+      Array.from({length: 2}).map(() => createIPFS())
     );
 });
 

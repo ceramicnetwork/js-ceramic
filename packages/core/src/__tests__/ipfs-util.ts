@@ -5,7 +5,6 @@ import IPFS from 'ipfs-core';
 import { IpfsApi } from '@ceramicnetwork/common';
 import tmp from 'tmp-promise';
 import getPort from 'get-port';
-import * as _ from 'lodash';
 
 /**
  * Create an IPFS instance
@@ -26,7 +25,7 @@ export async function createIPFS(overrideConfig: Record<string, unknown> = {}): 
     },
   };
 
-  const config = _.merge({}, defaultConfig, overrideConfig);
+  const config = { ...defaultConfig, ...overrideConfig };
   const instance = await IPFS.create(config);
 
   // IPFS does not notify you when it stops.
