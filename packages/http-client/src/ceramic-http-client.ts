@@ -13,6 +13,8 @@ import {
   Doctype, DoctypeConstructor,
   DoctypeHandler,
   DoctypeUtils,
+  LoggerConfig,
+  LoggerProvider,
   MultiQuery,
   PinApi,
 } from "@ceramicnetwork/common"
@@ -22,6 +24,11 @@ import DocID from '@ceramicnetwork/docid'
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import KeyDidResolver from 'key-did-resolver'
 import { Resolver } from "did-resolver"
+import { LogLevel } from '@ceramicnetwork/logger';
+
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const packageJson = require('../package.json')
 
 const API_PATH = '/api/v0'
 const CERAMIC_HOST = 'http://localhost:7007'
@@ -34,6 +41,7 @@ export const DEFAULT_CLIENT_CONFIG: CeramicClientConfig = {
   docSyncInterval: 5000,
   docCacheLimit: 500,
   cacheDocCommits: false,
+  logger: {logToFiles: false, logLevel: LogLevel.warn}
 }
 
 /**
@@ -45,6 +53,7 @@ export interface CeramicClientConfig {
   docSyncInterval?: number
   docCacheLimit?: number;
   cacheDocCommits?: boolean;
+  logger?: LoggerConfig;
 }
 
 /**
@@ -74,7 +83,12 @@ export default class CeramicClient implements CeramicApi {
     this._apiUrl = combineURLs(apiHost, API_PATH)
     this._docCache = new DocCache(config.docCacheLimit, this._config.cacheDocCommits)
 
-    this.context = { api: this }
+    const logger = LoggerProvider.makeDiagnosticLogger(this._config.logger)
+
+    this.context = { api: this, logger }
+
+    logger.imp(`Starting Ceramic HTTP client at version ${packageJson.version} with config: \n${JSON.stringify(CeramicClient._redactConfigForLogging(config), null, 2)}`)
+
     this.pin = this._initPinApi()
 
     const keyDidResolver = KeyDidResolver.getResolver()
@@ -87,6 +101,20 @@ export default class CeramicClient implements CeramicApi {
       'tile': TileDoctype,
       'caip10-link': Caip10LinkDoctype
     }
+  }
+
+  /**
+   * Returns a copy of the given CeramicClientConfig object but with any potentially sensitive fields
+   * removed so that it is safe to log the whole thing.
+   * @param config
+   * @returns Copy of `config` with potentially sensitive information removed
+   * @private
+   */
+  private static _redactConfigForLogging(config: CeramicClientConfig): CeramicClientConfig {
+    // Currently there are no sensitive fields in `CeramicClientConfig`, but if we ever allowed you
+    // to provide the didProvider there, for example, we would want to filter that out so the user's
+    // secret seed doesn't get logged.
+    return config;
   }
 
   get did(): DID | undefined {
@@ -229,6 +257,7 @@ export default class CeramicClient implements CeramicApi {
     if (!this.context.did.authenticated) {
       await this.context.did.authenticate()
     }
+    this.context.logger.imp(`Now authenticated as DID ${this.context.did.id}`)
   }
 
   async getSupportedChains(): Promise<Array<string>> {
