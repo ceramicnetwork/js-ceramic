@@ -8,7 +8,6 @@ import {
   AnchorProof,
   AnchorService,
   AnchorStatus,
-  CeramicApi,
   DoctypeUtils,
   AnchorServiceResponse,
 } from "@ceramicnetwork/common";
@@ -220,9 +219,9 @@ class InMemoryAnchorService implements AnchorService {
    * @param ceramic - Ceramic API used for various purposes
    */
   set ceramic(ceramic: Ceramic) {
-    this.#dispatcher = ceramic.dispatcher;
-    this.#resolver = ceramic.context.resolver;
-    this.#logger = ceramic.context.logger;
+    this.#dispatcher = ceramic?.dispatcher;
+    this.#resolver = ceramic?.context?.resolver;
+    this.#logger = ceramic?.context?.logger;
   }
 
   /**
