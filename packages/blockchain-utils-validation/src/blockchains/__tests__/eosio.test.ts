@@ -55,7 +55,7 @@ describe("validateLink", () => {
 
     testAccount = new AccountID(`${jungleAccount}@eosio:${invalidCAIPChainId}`);
     proof.account = testAccount.toString();
-    await expect(validateLink(proof)).resolves.toEqual(null);
+    await expect(validateLink(proof)).rejects.toThrow(`No node found for chainId: ${invalidCAIPChainId}`)
   });
 
   test("Jungle", async () => {
@@ -82,6 +82,6 @@ describe("validateLink", () => {
       `${telosTestnetAccount}@eosio:${invalidCAIPChainId}`
     );
     proof.account = testAccount.toString();
-    await expect(validateLink(proof)).resolves.toEqual(null);
+    await expect(validateLink(proof)).rejects.toThrow(`No node found for chainId: ${invalidCAIPChainId}`)
   });
 });
