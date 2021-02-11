@@ -1,6 +1,6 @@
 import Ceramic from '../ceramic'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
-import { AnchorStatus, Doctype, IpfsApi } from "@ceramicnetwork/common"
+import {AnchorStatus, IpfsApi, TestUtils} from "@ceramicnetwork/common"
 import tmp from 'tmp-promise'
 import * as u8a from 'uint8arrays'
 import { createIPFS, swarmConnect } from './ipfs-util';
@@ -22,14 +22,6 @@ const createCeramic = async (ipfs: IpfsApi, anchorManual: boolean): Promise<Cera
   return ceramic
 }
 
-const registerChangeListener = function (doc: Doctype): Promise<void> {
-  return new Promise(resolve => {
-    doc.on('change', () => {
-      resolve()
-    })
-  })
-}
-
 /**
  * Registers a listener for change notifications on a document, instructs the anchor service to
  * perform an anchor, then waits for the change listener to resolve, indicating that the document
@@ -38,7 +30,7 @@ const registerChangeListener = function (doc: Doctype): Promise<void> {
  * @param doc
  */
 const anchorDoc = async (ceramic: Ceramic, doc: any): Promise<void> => {
-  const changeHandle = registerChangeListener(doc)
+  const changeHandle = TestUtils.registerChangeListener(doc)
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
   await ceramic.context.anchorService.anchor()
@@ -256,7 +248,11 @@ describe('Ceramic anchoring', () => {
     expect(doctype1.state.log.length).toEqual(8)
 
     const doctype2 = await ceramic2.loadDocument(doctype1.id)
-    expect(doctype1.content).toEqual(doctype2.content)
+    await TestUtils.waitForState(
+        doctype2,
+        5000, // 5 second timeout
+        (state) => state.content == doctype1.content,
+        () => expect(doctype1.content).toEqual(doctype2.content))
     expect(doctype1.state.log.length).toEqual(doctype2.state.log.length)
 
     await ceramic1.close()
@@ -290,8 +286,8 @@ describe('Ceramic anchoring', () => {
     const update1ShouldWin = doctype1.state.log[doctype1.state.log.length - 1].cid.bytes < doctype2.state.log[doctype2.state.log.length - 1].cid.bytes
     const winningContent = update1ShouldWin ? newContent1 : newContent2
 
-    const handle1 = registerChangeListener(doctype1)
-    const handle2 = registerChangeListener(doctype2)
+    const handle1 = TestUtils.registerChangeListener(doctype1)
+    const handle2 = TestUtils.registerChangeListener(doctype2)
 
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
