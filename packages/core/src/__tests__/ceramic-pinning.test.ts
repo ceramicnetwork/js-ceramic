@@ -1,10 +1,9 @@
 import Ceramic from '../ceramic'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import tmp from 'tmp-promise'
-import getPort from 'get-port'
 import { IpfsApi, CeramicApi } from '@ceramicnetwork/common';
 import * as u8a from 'uint8arrays'
-import { createIPFS } from './create-ipfs';
+import { createIPFS } from './ipfs-util';
 
 const seed = u8a.fromString('6e34b2e1a9624113d81ece8a8a22e6e97f0e145c25c1d4d2d0e62753b4060c83', 'base16')
 
@@ -34,27 +33,9 @@ describe('Ceramic document pinning', () => {
   let ipfs1: IpfsApi;
   let tmpFolder: any;
 
-  let p1Start = 4400
-  const pOffset = 100
-
   beforeEach(async () => {
     tmpFolder = await tmp.dir({ unsafeCleanup: true })
-
-    const buildConfig = (path: string, port: number): Record<string, unknown> => {
-      return {
-        repo: `${path}/ipfs${port}/`,
-        config: {
-          Addresses: { Swarm: [`/ip4/127.0.0.1/tcp/${port}`] }, Bootstrap: []
-        }
-      }
-    }
-
-    const findPort = async (start: number, offset: number): Promise<number> => {
-      return await getPort({port: getPort.makeRange(start + 1, start + offset)})
-    }
-
-    ipfs1 = await createIPFS(buildConfig(tmpFolder.path, await findPort(p1Start, pOffset)))
-    p1Start += pOffset
+    ipfs1 = await createIPFS()
   })
 
   afterEach(async () => {

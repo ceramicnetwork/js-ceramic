@@ -1,12 +1,12 @@
 import Ceramic from '../ceramic'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import tmp from 'tmp-promise'
-import getPort from 'get-port'
 import { DoctypeUtils, DocState, Doctype, IpfsApi } from "@ceramicnetwork/common"
 import { TileDoctype } from "@ceramicnetwork/doctype-tile"
 import * as u8a from 'uint8arrays'
 import DocID from "@ceramicnetwork/docid"
-import { createIPFS } from './create-ipfs';
+import { createIPFS } from './ipfs-util';
+import * as _ from 'lodash'
 
 jest.mock('../store/level-state-store')
 
@@ -57,57 +57,21 @@ describe('Ceramic integration', () => {
   let multaddr1: string;
   let multaddr2: string;
   let multaddr3: string;
-  let tmpFolder: any;
 
   const DOCTYPE_TILE = 'tile'
 
-  let p1Start = 4000
-  let p2Start = 4100
-  let p3Start = 4200
-
-  const pOffset = 100
-
-  let port1: number;
-  let port2: number;
-  let port3: number;
-
   beforeEach(async () => {
-    tmpFolder = await tmp.dir({ unsafeCleanup: true })
-
-    const buildConfig = (path: string, port: number): Record<string, unknown> => {
-      return {
-        repo: `${path}/ipfs${port}/`, config: {
-          Addresses: { Swarm: [`/ip4/127.0.0.1/tcp/${port}`] }, Bootstrap: []
-        }
-      }
-    }
-
-    const findPort = async (start: number, offset: number): Promise<number> => {
-      return await getPort({port: getPort.makeRange(start + 1, start + offset)})
-    }
-
-    ([port1, port2, port3] = await Promise.all([p1Start, p2Start, p3Start].map(start => findPort(start, pOffset))));
-    ([ipfs1, ipfs2, ipfs3] = await Promise.all([port1, port2, port3].map(port => createIPFS(buildConfig(tmpFolder.path, port)))));
-    ([p1Start, p2Start, p3Start] = [p1Start, p2Start, p3Start].map(start => start + pOffset))
+    [ipfs1, ipfs2, ipfs3] = await Promise.all(_.times(3).map(() => createIPFS()));
 
     multaddr1 = (await ipfs1.id()).addresses[0].toString()
     multaddr2 = (await ipfs2.id()).addresses[0].toString()
     multaddr3 = (await ipfs3.id()).addresses[0].toString()
-
-    const id1 = await ipfs1.id()
-    const id2 = await ipfs2.id()
-    const id3 = await ipfs3.id()
-    multaddr1 = id1.addresses[0].toString()
-    multaddr2 = id2.addresses[0].toString()
-    multaddr3 = id3.addresses[0].toString()
   })
 
   afterEach(async () => {
     await ipfs1.stop(() => console.log('IPFS1 stopped'))
     await ipfs2.stop(() => console.log('IPFS2 stopped'))
     await ipfs3.stop(() => console.log('IPFS3 stopped'))
-
-    await tmpFolder.cleanup()
   })
 
   it('can create Ceramic instance on default network', async () => {
