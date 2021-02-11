@@ -265,6 +265,19 @@ class Ceramic implements CeramicApi {
   }
 
   /**
+   * Returns a copy of the given CeramicConfig object but with any potentially sensitive fields
+   * removed so that it is safe to log the whole thing.
+   * @param config
+   * @returns Copy of `config` with potentially sensitive information removed
+   * @private
+   */
+  private static _redactConfigForLogging(config: CeramicConfig): CeramicConfig {
+    const redactedConfig = {...config}
+    delete redactedConfig.didProvider
+    return redactedConfig
+  }
+
+  /**
    * Create Ceramic instance
    * @param ipfs - IPFS instance
    * @param config - Ceramic configuration
@@ -290,7 +303,7 @@ class Ceramic implements CeramicApi {
     const logger = LoggerProvider.makeDiagnosticLogger(loggerConfig)
     const pubsubLogger = LoggerProvider.makeServiceLogger("pubsub", loggerConfig)
 
-    logger.imp(`Starting Ceramic node at version ${packageJson.version} with config: \n${JSON.stringify(config, null, 2)}`)
+    logger.imp(`Starting Ceramic node at version ${packageJson.version} with config: \n${JSON.stringify(Ceramic._redactConfigForLogging(config), null, 2)}`)
 
     const anchorService = config.anchorServiceUrl ? new EthereumAnchorService(config) : new InMemoryAnchorService(config as any)
     await anchorService.init()
