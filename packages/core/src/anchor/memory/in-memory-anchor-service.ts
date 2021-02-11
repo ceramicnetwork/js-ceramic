@@ -46,8 +46,8 @@ const SAMPLE_ETH_TX_HASH =
  * In-memory anchor service - used locally, not meant to be used in production code
  */
 class InMemoryAnchorService implements AnchorService {
+  #ceramic: Ceramic
   #dispatcher: Dispatcher;
-  #resolver: Resolver;
   #logger: DiagnosticsLogger;
 
   readonly #anchorDelay: number;
@@ -219,9 +219,9 @@ class InMemoryAnchorService implements AnchorService {
    * @param ceramic - Ceramic API used for various purposes
    */
   set ceramic(ceramic: Ceramic) {
-    this.#dispatcher = ceramic?.dispatcher;
-    this.#resolver = ceramic?.context?.resolver;
-    this.#logger = ceramic?.context?.logger;
+    this.#ceramic = ceramic;
+    this.#dispatcher = this.#ceramic.dispatcher;
+    this.#logger = this.#ceramic.context.logger;
   }
 
   /**
@@ -305,7 +305,7 @@ class InMemoryAnchorService implements AnchorService {
     const decodedHeader = JSON.parse(decodedJsonString);
     const { kid } = decodedHeader;
 
-    const didDoc = await this.#resolver.resolve(kid);
+    const didDoc = await this.#ceramic.context.resolver.resolve(kid);
     const jws = [_protected, payload, signature].join(".");
     await didJwt.verifyJWS(jws, didDoc.publicKey);
     return kid.match(RegExp(DID_MATCHER))[1];
