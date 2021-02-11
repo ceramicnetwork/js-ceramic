@@ -220,7 +220,7 @@ class InMemoryAnchorService implements AnchorService {
   set ceramic(ceramic: Ceramic) {
     this.#ceramic = ceramic;
     this.#dispatcher = this.#ceramic.dispatcher;
-    this.#logger = this.#ceramic.context.logger;
+    this.#logger = this.#ceramic?.context?.logger;
   }
 
   /**
