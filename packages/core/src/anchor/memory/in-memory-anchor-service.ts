@@ -3,7 +3,6 @@ import * as uint8arrays from "uint8arrays";
 import { Observable, Subject, concat, of } from "rxjs";
 import { filter } from "rxjs/operators";
 import * as didJwt from "did-jwt";
-import { Resolver } from "did-resolver"
 import {
   AnchorProof,
   AnchorService,
@@ -46,7 +45,7 @@ const SAMPLE_ETH_TX_HASH =
  * In-memory anchor service - used locally, not meant to be used in production code
  */
 class InMemoryAnchorService implements AnchorService {
-  #ceramic: Ceramic
+  #ceramic: Ceramic;
   #dispatcher: Dispatcher;
   #logger: DiagnosticsLogger;
 
