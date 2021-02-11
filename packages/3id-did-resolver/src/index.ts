@@ -76,7 +76,9 @@ const isLegacyDid = (didId: string): boolean => {
  * @param query
  */
 const getVersion = (query = ''): string | null => {
-  const versionParam = query.split('&').find(e => e.includes('version-id'))
+  // version-id was changed to versionId in the latest did-core spec
+  // https://github.com/w3c/did-core/pull/553
+  const versionParam = query.split('&').find(e => e.includes('versionId') || e.includes('version-id'))
   return versionParam ? versionParam.split('=')[1] : null
 }
 

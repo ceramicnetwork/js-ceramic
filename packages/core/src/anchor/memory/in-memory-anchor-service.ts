@@ -7,7 +7,6 @@ import {
   AnchorProof,
   AnchorService,
   AnchorStatus,
-  CeramicApi,
   DoctypeUtils,
   AnchorServiceResponse,
 } from "@ceramicnetwork/common";
@@ -15,6 +14,7 @@ import {
 import type Dispatcher from "../../dispatcher";
 import Ceramic from "../../ceramic";
 import DocID from "@ceramicnetwork/docid";
+import { DiagnosticsLogger } from "@ceramicnetwork/logger";
 
 const DID_MATCHER =
   "^(did:([a-zA-Z0-9_]+):([a-zA-Z0-9_.-]+(:[a-zA-Z0-9_.-]+)*)((;[a-zA-Z0-9_.:%-]+=[a-zA-Z0-9_.:%-]*)*)(/[^#?]*)?)([?][^#]*)?(#.*)?";
@@ -47,6 +47,7 @@ const SAMPLE_ETH_TX_HASH =
 class InMemoryAnchorService implements AnchorService {
   #ceramic: Ceramic;
   #dispatcher: Dispatcher;
+  #logger: DiagnosticsLogger;
 
   readonly #anchorDelay: number;
   readonly #anchorOnRequest: boolean;
@@ -114,7 +115,7 @@ class InMemoryAnchorService implements AnchorService {
           }
           result[candidate.key].push(candidate);
         } catch (e) {
-          console.error(e.message);
+          this.#logger.err(e.message)
           this._failCandidate(req, e.message);
         }
       })
@@ -216,9 +217,10 @@ class InMemoryAnchorService implements AnchorService {
    *
    * @param ceramic - Ceramic API used for various purposes
    */
-  set ceramic(ceramic: CeramicApi) {
-    this.#ceramic = (ceramic as unknown) as Ceramic;
+  set ceramic(ceramic: Ceramic) {
+    this.#ceramic = ceramic;
     this.#dispatcher = this.#ceramic.dispatcher;
+    this.#logger = this.#ceramic?.context?.logger;
   }
 
   /**

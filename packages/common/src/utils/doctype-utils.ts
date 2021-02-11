@@ -90,7 +90,7 @@ export class DoctypeUtils {
             cloned.anchorStatus = AnchorStatus[cloned.anchorStatus];
         }
         if (cloned.anchorScheduledFor != null) {
-            cloned.anchorScheduledFor = new Date(cloned.anchorScheduledFor).toLocaleString()
+            cloned.anchorScheduledFor = new Date(cloned.anchorScheduledFor).toISOString()
         }
         if (cloned.anchorProof != null) {
             cloned.anchorProof.txHash = cloned.anchorProof.txHash.toString();
