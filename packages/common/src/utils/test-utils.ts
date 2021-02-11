@@ -27,14 +27,20 @@ export class TestUtils {
                               predicate: (state: DocState) => boolean,
                               onFailure: () => void): Promise<void> {
         const timeoutPromise = new Promise(resolve => setTimeout(resolve, timeout))
-        const completionPromise = async function () {
-            let changeHandle = TestUtils.registerChangeListener(doc)
-            while (!predicate(doc.state)) {
-                await changeHandle
-                changeHandle = TestUtils.registerChangeListener(doc)
+        const completionPromise = new Promise<void>(resolve => {
+            const handler = () => {
+                if (predicate(doc.state)) {
+                    doc.off('change', handler)
+                    resolve()
+                }
             }
-        }
-        await Promise.race([timeoutPromise, completionPromise()])
+            doc.on('change', handler)
+
+            // Call handler() manually once to see if the predicate was already true
+            // before the handler was registered as a doc listener.
+            handler()
+        })
+        await Promise.race([timeoutPromise, completionPromise])
         if (!predicate(doc.state)) {
             onFailure()
         }
