@@ -2,34 +2,15 @@ import Ceramic from '../ceramic'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import { AnchorStatus, Doctype, IpfsApi } from "@ceramicnetwork/common"
 import tmp from 'tmp-promise'
-import IPFS from 'ipfs-core'
 import * as u8a from 'uint8arrays'
 
 import getPort from 'get-port'
 
-import dagJose from 'dag-jose'
-import basicsImport from 'multiformats/cjs/src/basics-import.js'
-import legacy from 'multiformats/cjs/src/legacy.js'
+import { createIPFS } from './create-ipfs';
 
 jest.mock('../store/level-state-store')
 
 const seed = u8a.fromString('6e34b2e1a9624113d81ece8a8a22e6e97f0e145c25c1d4d2d0e62753b4060c83', 'base16')
-
-/**
- * Create an IPFS instance
- * @param overrideConfig - IFPS config for override
- */
-const createIPFS =(overrideConfig: Record<string, unknown> = {}): Promise<IpfsApi> => {
-  basicsImport.multicodec.add(dagJose)
-  const format = legacy(basicsImport, dagJose.name)
-
-  const config = {
-    ipld: { formats: [format] },
-  }
-
-  Object.assign(config, overrideConfig)
-  return IPFS.create(config)
-}
 
 const createCeramic = async (ipfs: IpfsApi, anchorManual: boolean): Promise<Ceramic> => {
   const ceramic = await Ceramic.create(ipfs, {
