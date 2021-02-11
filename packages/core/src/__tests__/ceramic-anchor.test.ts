@@ -4,7 +4,7 @@ import { AnchorStatus, Doctype, IpfsApi } from "@ceramicnetwork/common"
 import tmp from 'tmp-promise'
 import * as u8a from 'uint8arrays'
 import * as _ from 'lodash'
-import { createIPFS } from './ipfs-util';
+import { createIPFS, swarmConnect } from './ipfs-util';
 
 jest.mock('../store/level-state-store')
 
@@ -51,16 +51,11 @@ describe('Ceramic anchoring', () => {
   let ipfs1: IpfsApi;
   let ipfs2: IpfsApi;
   let ipfs3: IpfsApi;
-  let multaddr1: string;
-  let multaddr2: string;
 
   const DOCTYPE_TILE = 'tile'
 
   beforeEach(async () => {
     [ipfs1, ipfs2, ipfs3] = await Promise.all(_.times(3).map(() => createIPFS()));
-
-    multaddr1 = (await ipfs1.id()).addresses[0].toString()
-    multaddr2 = (await ipfs2.id()).addresses[0].toString()
   })
 
   afterEach(async () => {
@@ -70,7 +65,7 @@ describe('Ceramic anchoring', () => {
   })
 
   it('test all records anchored', async () => {
-    await ipfs2.swarm.connect(multaddr1)
+    await swarmConnect(ipfs1, ipfs2)
 
     const [ceramic1, ceramic2] = await Promise.all([
       createCeramic(ipfs1, true),
@@ -98,7 +93,7 @@ describe('Ceramic anchoring', () => {
   })
 
   it('test no records anchored', async () => {
-    await ipfs2.swarm.connect(multaddr1)
+    await swarmConnect(ipfs2, ipfs1)
 
     const [ceramic1, ceramic2] = await Promise.all([
       createCeramic(ipfs1, true),
@@ -123,7 +118,7 @@ describe('Ceramic anchoring', () => {
   })
 
   it('test genesis anchored and others not', async () => {
-    await ipfs2.swarm.connect(multaddr1)
+    await swarmConnect(ipfs2, ipfs1)
 
     const [ceramic1, ceramic2] = await Promise.all([
       createCeramic(ipfs1, true),
@@ -151,7 +146,7 @@ describe('Ceramic anchoring', () => {
   })
 
   it('test genesis and the following anchored', async () => {
-    await ipfs2.swarm.connect(multaddr1)
+    await swarmConnect(ipfs2, ipfs1)
 
     const [ceramic1, ceramic2] = await Promise.all([
       createCeramic(ipfs1, true),
@@ -178,7 +173,7 @@ describe('Ceramic anchoring', () => {
   })
 
   it('test genesis anchored, the middle not, last one anchored', async () => {
-    await ipfs2.swarm.connect(multaddr1)
+    await swarmConnect(ipfs1, ipfs2)
 
     const [ceramic1, ceramic2] = await Promise.all([
       createCeramic(ipfs1, true),
@@ -205,7 +200,7 @@ describe('Ceramic anchoring', () => {
   })
 
   it('test last one anchored', async () => {
-    await ipfs2.swarm.connect(multaddr1)
+    await swarmConnect(ipfs1, ipfs2)
 
     const [ceramic1, ceramic2] = await Promise.all([
       createCeramic(ipfs1, true),
@@ -231,7 +226,7 @@ describe('Ceramic anchoring', () => {
   })
 
   it('in the middle anchored', async () => {
-    await ipfs2.swarm.connect(multaddr1)
+    await swarmConnect(ipfs1, ipfs2)
 
     const [ceramic1, ceramic2] = await Promise.all([
       createCeramic(ipfs1, true),
@@ -270,8 +265,8 @@ describe('Ceramic anchoring', () => {
   })
 
   it('test the same doc anchored twice (different Ceramic instances), first one wins)', async () => {
-    await ipfs3.swarm.connect(multaddr1)
-    await ipfs3.swarm.connect(multaddr2)
+    await swarmConnect(ipfs3, ipfs1)
+    await swarmConnect(ipfs3, ipfs2)
 
     const [ceramic1, ceramic2, ceramic3] = await Promise.all([
       createCeramic(ipfs1, true),

@@ -41,3 +41,14 @@ export async function createIPFS(overrideConfig: Record<string, unknown> = {}): 
     },
   });
 }
+
+/**
+ * Connect two IPFS instances via `swarm.connect`
+ *
+ * @param a - Initiates connection
+ * @param b - Receives connection
+ */
+export async function swarmConnect(a: IpfsApi, b: IpfsApi) {
+  const addressB = (await b.id()).addresses[0].toString();
+  await a.swarm.connect(addressB);
+}

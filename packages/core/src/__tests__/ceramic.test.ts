@@ -5,7 +5,7 @@ import { DoctypeUtils, DocState, Doctype, IpfsApi } from "@ceramicnetwork/common
 import { TileDoctype } from "@ceramicnetwork/doctype-tile"
 import * as u8a from 'uint8arrays'
 import DocID from "@ceramicnetwork/docid"
-import { createIPFS } from './ipfs-util';
+import { createIPFS, swarmConnect } from './ipfs-util';
 import * as _ from 'lodash'
 
 jest.mock('../store/level-state-store')
@@ -54,18 +54,11 @@ describe('Ceramic integration', () => {
   let ipfs1: IpfsApi;
   let ipfs2: IpfsApi;
   let ipfs3: IpfsApi;
-  let multaddr1: string;
-  let multaddr2: string;
-  let multaddr3: string;
 
   const DOCTYPE_TILE = 'tile'
 
   beforeEach(async () => {
     [ipfs1, ipfs2, ipfs3] = await Promise.all(_.times(3).map(() => createIPFS()));
-
-    multaddr1 = (await ipfs1.id()).addresses[0].toString()
-    multaddr2 = (await ipfs2.id()).addresses[0].toString()
-    multaddr3 = (await ipfs3.id()).addresses[0].toString()
   })
 
   afterEach(async () => {
@@ -106,7 +99,7 @@ describe('Ceramic integration', () => {
   })
 
   it('can propagate update across two connected nodes', async () => {
-    await ipfs2.swarm.connect(multaddr1)
+    await swarmConnect(ipfs2, ipfs1)
 
     const ceramic1 = await createCeramic(ipfs1)
     const ceramic2 = await createCeramic(ipfs2)
@@ -140,8 +133,8 @@ describe('Ceramic integration', () => {
   it('can propagate update across nodes with common connection', async () => {
     // ipfs1 <-> ipfs2 <-> ipfs3
     // ipfs1 <!-> ipfs3
-    await ipfs1.swarm.connect(multaddr2)
-    await ipfs2.swarm.connect(multaddr3)
+    await swarmConnect(ipfs1, ipfs2)
+    await swarmConnect(ipfs2, ipfs3)
 
     const ceramic1 = await createCeramic(ipfs1)
     const ceramic2 = await createCeramic(ipfs2)
@@ -160,8 +153,8 @@ describe('Ceramic integration', () => {
   it('can propagate multiple update across nodes with common connection', async () => {
     // ipfs1 <-> ipfs2 <-> ipfs3
     // ipfs1 <!-> ipfs3
-    await ipfs1.swarm.connect(multaddr2)
-    await ipfs2.swarm.connect(multaddr3)
+    await swarmConnect(ipfs1, ipfs2)
+    await swarmConnect(ipfs2, ipfs3)
 
     const ceramic1 = await createCeramic(ipfs1)
     const ceramic2 = await createCeramic(ipfs2)
