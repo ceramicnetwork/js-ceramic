@@ -364,8 +364,8 @@ class Ceramic implements CeramicApi {
 
     if (!this.context.did.authenticated) {
       await this.context.did.authenticate()
-      this.context.logger.imp(`Now authenticated as DID ${this.context.did.id}`)
     }
+    this.context.logger.imp(`Now authenticated as DID ${this.context.did.id}`)
   }
 
   /**
