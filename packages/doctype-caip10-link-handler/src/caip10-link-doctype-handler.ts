@@ -96,7 +96,12 @@ export class Caip10LinkDoctypeHandler implements DoctypeHandler<Caip10LinkDoctyp
      */
     async _applySigned (commit: any, cid: CID, state: DocState): Promise<DocState> {
         // TODO: Assert that the 'prev' of the commit being applied is the end of the log in 'state'
-        const validProof = await validateLink(commit.data)
+        let validProof = null
+        try {
+          validProof = await validateLink(commit.data)
+        } catch (e) {
+          throw new Error("Error while validating link proof for caip10-link signed commit: " + e.toString())
+        }
         if (!validProof) {
             throw new Error('Invalid proof for signed commit')
         }

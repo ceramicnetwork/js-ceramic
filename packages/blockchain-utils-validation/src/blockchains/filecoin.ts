@@ -14,14 +14,10 @@ export async function validateLink(
     proof.message
   );
   const transaction = signingTools.transactionSerialize(payload);
-  try {
-    const recover = signingTools.verifySignature(proof.signature, transaction);
-    if (recover) {
-      return proof;
-    } else {
-      return null;
-    }
-  } catch {
+  const recover = signingTools.verifySignature(proof.signature, transaction);
+  if (recover) {
+    return proof;
+  } else {
     return null;
   }
 }

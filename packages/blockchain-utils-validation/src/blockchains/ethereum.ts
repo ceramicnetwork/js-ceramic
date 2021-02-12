@@ -70,14 +70,10 @@ async function validateErc1271Link(
 }
 
 async function validateLink(proof: LinkProof): Promise<LinkProof | null> {
-  try {
-    if (proof.type === ADDRESS_TYPES.erc1271) {
-      return await validateErc1271Link(proof);
-    } else {
-      return await validateEoaLink(proof);
-    }
-  } catch {
-    return null;
+  if (proof.type === ADDRESS_TYPES.erc1271) {
+    return await validateErc1271Link(proof);
+  } else {
+    return await validateEoaLink(proof);
   }
 }
 

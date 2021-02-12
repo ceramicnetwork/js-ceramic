@@ -99,7 +99,7 @@ test("invalid ethereumEOA proof should return null", async () => {
   // wrong address
   const account = new AccountID({ address: addresses[1], chainId: "eip155:1" });
   const invalidProof = { account } as unknown as LinkProof;
-  expect(await ethereum.validateLink(invalidProof)).toBeFalsy();
+  await expect(ethereum.validateLink(invalidProof)).rejects.toThrow()
   // invalid signature
   const invalidSignatureProof = Object.assign(
     {},
@@ -108,7 +108,7 @@ test("invalid ethereumEOA proof should return null", async () => {
         "0xfa69ccf4a94db6132542abcabcabcab234b73f439700fbb748209890a5780f3365a5335f82d424d7f9a63ee41b637c116e64ef2f32c761bb065e4409f978c4babc",
     }
   ) as unknown as LinkProof;
-  expect(await ethereum.validateLink(invalidSignatureProof)).toBeFalsy();
+  await expect(ethereum.validateLink(invalidSignatureProof)).rejects.toThrow()
 });
 
 test("validateLink: valid ethereumEOA proof should return proof", async () => {
@@ -122,7 +122,7 @@ test("validateLink: valid ethereumEOA proof should return proof", async () => {
 
 test("validate v0 and v1 proofs", async () => {
   expect(await ethereum.validateLink(proofs.v0.valid as unknown as LinkProof)).toMatchSnapshot();
-  await expect(ethereum.validateLink(proofs.v0.invalid as unknown as LinkProof)).resolves.toEqual(null);
+  await expect(ethereum.validateLink(proofs.v0.invalid as unknown as LinkProof)).rejects.toThrow('invalid point')
   expect(await ethereum.validateLink(proofs.v1.valid as unknown as LinkProof)).toMatchSnapshot();
   expect(await ethereum.validateLink(proofs.v1.invalid as unknown as LinkProof)).toEqual(null);
 });
@@ -135,7 +135,7 @@ test("invalid erc1271 proof should return null", async () => {
     chainId: "eip155:" + GANACHE_CHAIN_ID,
   });
   const erc1271Proof = { account, type: "erc1271" } as unknown as LinkProof
-  expect(await ethereum.validateLink(erc1271Proof)).toBeFalsy();
+  await expect(ethereum.validateLink(erc1271Proof)).rejects.toThrow()
 });
 
 test("validateLink: valid erc1271 proof should return proof", async () => {
