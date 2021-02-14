@@ -39,6 +39,7 @@ import EthereumAnchorService from "./anchor/ethereum/ethereum-anchor-service"
 import InMemoryAnchorService from "./anchor/memory/in-memory-anchor-service"
 
 import { randomUint32 } from '@stablelib/random'
+import { LocalPinApi } from './local-pin-api';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const packageJson = require('../package.json')
@@ -137,7 +138,7 @@ class Ceramic implements CeramicApi {
 
     this._docCache = new DocCache(docCacheLimit, cacheDocumentCommits)
 
-    this.pin = this._initPinApi();
+    this.pin = new LocalPinApi(this.pinStore, this._docCache, this._loadDoc.bind(this))
     this.context = context
     this.context.api = this // set API reference
   }
@@ -154,40 +155,6 @@ class Ceramic implements CeramicApi {
    */
   get did(): DID | undefined {
     return this.context.did
-  }
-
-  /**
-   * Initialize Ceramic pinning API
-   * @private
-   */
-  _initPinApi(): PinApi {
-    return {
-      add: async (docId: DocID): Promise<void> => {
-        const document = await this._loadDoc(docId)
-        await this.pinStore.add(document.doctype)
-        this._docCache.pin(document)
-      },
-      rm: async (docId: DocID): Promise<void> => {
-        await this.pinStore.rm(docId)
-        this._docCache.unpin(docId)
-      },
-      ls: async (docId?: DocID): Promise<AsyncIterable<string>> => {
-        const docIds = await this.pinStore.ls(docId ? docId.baseID : null)
-        return {
-          [Symbol.asyncIterator](): any {
-            let index = 0
-            return {
-              next(): any {
-                if (index === docIds.length) {
-                  return Promise.resolve({ value: null, done: true });
-                }
-                return Promise.resolve({ value: docIds[index++], done: false });
-              }
-            };
-          }
-        }
-      }
-    }
   }
 
   private static async _generateNetworkOptions(config: CeramicConfig, anchorService: AnchorService): Promise<CeramicNetworkOptions> {

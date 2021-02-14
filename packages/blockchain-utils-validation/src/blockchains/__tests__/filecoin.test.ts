@@ -41,6 +41,6 @@ describe('validateLink', () => {
     const testAddr = await testnetProvider.getAccounts()
     const testAcc = new AccountID(`${testAddr[0]}@fil:t`)
     proof.account = testAcc.toString()
-    await expect(validateLink(proof)).resolves.toEqual(null)
+    await expect(validateLink(proof)).rejects.toEqual('Error verifying signature: BLS error | Size mismatch')
   })
 })
