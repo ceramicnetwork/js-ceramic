@@ -47,15 +47,11 @@ Uint8Array [
 
 exports[`DocID .toString() 1`] = `"kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s"`;
 
-exports[`DocID .toString(base) 1`] = `"zBEgHSXJoGTRkwcyVfXPnWmXzCSBZkLQVT4kB2euwxhipjw6MStntReK"`;
-
 exports[`DocID .toUrl() 1`] = `"ceramic://kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s"`;
 
 exports[`DocID .typeName if registered 1`] = `"docTypeName: no registered name available"`;
 
 exports[`DocID create by parts (type:int, cid:cid) 1`] = `"kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s"`;
-
-exports[`DocID create by parts (type:int, cid:string, commit:null, multibase) 1`] = `"bzyaqcamfaejcavftnvle5lps3q72mk26gtyfazvorl75qhvzmusjmopqu5k5dm54"`;
 
 exports[`DocID create by parts (type:string, cid:string, commit:null) 1`] = `"kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s"`;
 
@@ -73,7 +69,7 @@ exports[`DocID create from bytes with commit 0 1`] = `"k3y52l7qbv1frxwipl4hp7e6j
 
 exports[`DocID create from bytes with commit 1`] = `"k1dpgaqe3i64kjqcp801r3sn7ysi5i0k7nxvs7j351s7kewfzr3l7mdxnj7szwo4kr9mn2qki5nnj0cv836ythy1t1gya9s25cn1nexst3jxi5o3h6qprfyju"`;
 
-exports[`DocID create from bytes with multibase  1`] = `"bzyaqaamfaejcavftnvle5lps3q72mk26gtyfazvorl75qhvzmusjmopqu5k5dm54"`;
+exports[`DocID create from bytes with multibase  1`] = `"kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s"`;
 
 exports[`DocID create from legacy string "/ceramic/" 1`] = `"kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s"`;
 

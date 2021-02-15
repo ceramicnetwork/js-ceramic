@@ -124,15 +124,6 @@ describe('DocID', () => {
     expect(docid.toString()).toMatchSnapshot()
   })
 
-  it('create from bytes with multibase ',  () => {
-    const docid = DocID.fromBytes(docIdBytes, null)
-
-    expect(docid.type).toEqual(0)
-    expect(docid.cid.toString()).toEqual(cidStr)
-    expect(docid.commit).toBeFalsy()
-    expect(docid.toString()).toMatchSnapshot()
-  })
-
   it('create from string',  () => {
     const docid = DocID.fromString(docIdStr)
 
