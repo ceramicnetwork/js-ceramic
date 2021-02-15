@@ -1,187 +1,183 @@
 import { DocID } from '../doc-id';
-import CID from 'cids'
-import * as util from 'util'
+import CID from 'cids';
+import * as util from 'util';
+import * as multibase from 'multibase';
 
-const cidStr = 'bagcqcerakszw2vsovxznyp5gfnpdj4cqm2xiv76yd24wkjewhhykovorwo6a'
-const docIdStr = 'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
-const docIdUrl = 'ceramic://kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
-const docIdLegacy = '/ceramic/kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
+const CID_STRING = 'bagcqcerakszw2vsovxznyp5gfnpdj4cqm2xiv76yd24wkjewhhykovorwo6a';
+const DOC_ID_STRING = 'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s';
+const DOC_ID_URL = 'ceramic://kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s';
+const DOC_ID_BYTES = multibase.decode(DOC_ID_STRING);
+const DOC_ID_LEGACY = '/ceramic/kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s';
 
-const docIdStrCommit = 'k1dpgaqe3i64kjqcp801r3sn7ysi5i0k7nxvs7j351s7kewfzr3l7mdxnj7szwo4kr9mn2qki5nnj0cv836ythy1t1gya9s25cn1nexst3jxi5o3h6qprfyju'
-const docIdStrCommit0 = 'k3y52l7qbv1frxwipl4hp7e6jlu4f6u8upm2xv0irmedfkm5cnutmezzi3u7mytj4'
-const docIdLegacyCommit = '/ceramic/kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s?commit=bagjqcgzaday6dzalvmy5ady2m5a5legq5zrbsnlxfc2bfxej532ds7htpova'
-const docIdLegacyCommit0 = '/ceramic/kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s?commit=0'
+const DOC_ID_WITH_COMMIT =
+  'k1dpgaqe3i64kjqcp801r3sn7ysi5i0k7nxvs7j351s7kewfzr3l7mdxnj7szwo4kr9mn2qki5nnj0cv836ythy1t1gya9s25cn1nexst3jxi5o3h6qprfyju';
+const DOC_ID_WITH_COMMIT_BYTES = multibase.decode(DOC_ID_WITH_COMMIT);
+const DOC_ID_WITH_0_COMMIT = 'k3y52l7qbv1frxwipl4hp7e6jlu4f6u8upm2xv0irmedfkm5cnutmezzi3u7mytj4';
+const DOC_ID_WITH_0_COMMIT_BYTES = multibase.decode(DOC_ID_WITH_0_COMMIT);
+const DOC_ID_WITH_COMMIT_LEGACY =
+  '/ceramic/kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s?commit=bagjqcgzaday6dzalvmy5ady2m5a5legq5zrbsnlxfc2bfxej532ds7htpova';
+const DOC_ID_WITH_0_COMMIT_LEGACY = '/ceramic/kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s?commit=0';
 
-const docIdBytes = new Uint8Array([
-  206,   1,   0,   1, 133,   1,  18,  32,  84,
-179, 109,  86,  78, 173, 242, 220,  63, 166,
- 43,  94,  52, 240,  80, 102, 174, 138, 255,
-216,  30, 185, 101,  36, 150,  57, 240, 167,
- 85, 209, 179, 188
-])
+describe('constructor', () => {
+  test('create by parts (type:int, cid:cid)', () => {
+    const type = 0;
+    const cid = new CID(CID_STRING);
+    const docid = new DocID(type, cid);
 
-const docIdBytesCommit = new Uint8Array([
-  206,   1,   0,   1, 133,   1,  18,  32,  84, 179, 109,  86,
-   78, 173, 242, 220,  63, 166,  43,  94,  52, 240,  80, 102,
-  174, 138, 255, 216,  30, 185, 101,  36, 150,  57, 240, 167,
-   85, 209, 179, 188,   1, 147,   1,  27,  32,  24,  49, 225,
-  228,  11, 171,  49, 208,  15,  26, 103,  65, 213, 144, 208,
-  238,  98,  25,  53, 119,  40, 180,  18, 220, 137, 238, 244,
-   57, 124, 243, 123, 170
-])
+    expect(docid.type).toEqual(type);
+    expect(docid.cid.toString()).toEqual(CID_STRING);
+    expect(docid.toString()).toMatchSnapshot();
+  });
+});
 
-const docIdBytesCommit0 = new Uint8Array([
-  206,   1,   0,   1, 133,   1,  18,  32,  84,
-  179, 109,  86,  78, 173, 242, 220,  63, 166,
-   43,  94,  52, 240,  80, 102, 174, 138, 255,
-  216,  30, 185, 101,  36, 150,  57, 240, 167,
-   85, 209, 179, 188,   0
-])
+describe('.fromBytes', () => {
+  test('create from bytes ', () => {
+    const docid = DocID.fromBytes(DOC_ID_BYTES);
 
-describe('DocID', () => {
+    expect(docid.type).toEqual(0);
+    expect(docid.cid.toString()).toEqual(CID_STRING);
+    expect(docid.toString()).toMatchSnapshot();
+  });
 
-  it('create by parts (type:int, cid:cid)',  () => {
-    const type = 0
-    const cid = new CID(cidStr)
-    const docid = new DocID(type, cid)
+  test('fail to create from garbage bytes', () => {
+    expect(() =>
+      DocID.fromBytes(new CID('bagcqcerakszw2vsovxznyp5gfnpdj4cqm2xiv76yd24wkjewhhykovorwo6a').bytes),
+    ).toThrow();
+  });
 
-    expect(docid.type).toEqual(type)
-    expect(docid.cid.toString()).toEqual(cidStr)
-    expect(docid.toString()).toMatchSnapshot()
-  })
+  test('create from bytes including commit', () => {
+    const docid = DocID.fromBytes(DOC_ID_WITH_COMMIT_BYTES);
 
-  it('create from bytes ',  () => {
-    const docid = DocID.fromBytes(docIdBytes)
+    expect(docid.type).toEqual(0);
+    expect(docid.cid.toString()).toEqual(CID_STRING);
+    expect(docid.toString()).toMatchSnapshot();
+  });
 
-    expect(docid.type).toEqual(0)
-    expect(docid.cid.toString()).toEqual(cidStr)
-    expect(docid.toString()).toMatchSnapshot()
-  })
+  test('create from bytes including commit 0', () => {
+    const docid = DocID.fromBytes(DOC_ID_WITH_0_COMMIT_BYTES);
 
-  it('create from bytes inlcuding commit',  () => {
-    const docid = DocID.fromBytes(docIdBytesCommit)
+    expect(docid.type).toEqual(0);
+    expect(docid.cid.toString()).toEqual(CID_STRING);
+    expect(docid.toString()).toMatchSnapshot();
+  });
 
-    expect(docid.type).toEqual(0)
-    expect(docid.cid.toString()).toEqual(cidStr)
-    expect(docid.toString()).toMatchSnapshot()
-  })
+  test('roundtrip docID bytes', () => {
+    const docid = new DocID('tile', CID_STRING);
+    const docid2 = DocID.fromBytes(docid.bytes);
+    expect(docid.toString()).toEqual(docid2.toString());
+  });
+});
 
-  it('create from bytes inlcuding commit 0',  () => {
-    const docid = DocID.fromBytes(docIdBytesCommit0)
+describe('.fromString', () => {
+  test('create from string', () => {
+    const docid = DocID.fromString(DOC_ID_STRING);
 
-    expect(docid.type).toEqual(0)
-    expect(docid.cid.toString()).toEqual(cidStr)
-    expect(docid.toString()).toMatchSnapshot()
-  })
+    expect(docid.type).toEqual(0);
+    expect(docid.cid.toString()).toEqual(CID_STRING);
+    expect(docid.toString()).toMatchSnapshot();
+  });
 
-  it('create from string',  () => {
-    const docid = DocID.fromString(docIdStr)
+  test('create from string including commit', () => {
+    const docid = DocID.fromString(DOC_ID_WITH_COMMIT);
 
-    expect(docid.type).toEqual(0)
-    expect(docid.cid.toString()).toEqual(cidStr)
-    expect(docid.toString()).toMatchSnapshot()
-  })
+    expect(docid.type).toEqual(0);
+    expect(docid.cid.toString()).toEqual(CID_STRING);
+    expect(docid.toString()).toMatchSnapshot();
+  });
 
-  it('create from string including commit',  () => {
-    const docid = DocID.fromString(docIdStrCommit)
+  test('create from string including commit 0', () => {
+    const docid = DocID.fromString(DOC_ID_WITH_0_COMMIT);
 
-    expect(docid.type).toEqual(0)
-    expect(docid.cid.toString()).toEqual(cidStr)
-    expect(docid.toString()).toMatchSnapshot()
-  })
+    expect(docid.type).toEqual(0);
+    expect(docid.cid.toString()).toEqual(CID_STRING);
+    expect(docid.toString()).toMatchSnapshot();
+  });
 
-  it('create from string including commit 0',  () => {
-    const docid = DocID.fromString(docIdStrCommit0)
+  test('create from url string', () => {
+    const docid = DocID.fromString(DOC_ID_URL);
 
-    expect(docid.type).toEqual(0)
-    expect(docid.cid.toString()).toEqual(cidStr)
-    expect(docid.toString()).toMatchSnapshot()
-  })
+    expect(docid.type).toEqual(0);
+    expect(docid.cid.toString()).toEqual(CID_STRING);
+    expect(docid.toString()).toMatchSnapshot();
+  });
 
-  it('create from url string',  () => {
-    const docid = DocID.fromString(docIdUrl)
+  test('create from legacy string "/ceramic/"', () => {
+    const docid = DocID.fromString(DOC_ID_LEGACY);
 
-    expect(docid.type).toEqual(0)
-    expect(docid.cid.toString()).toEqual(cidStr)
-    expect(docid.toString()).toMatchSnapshot()
-  })
+    expect(docid.type).toEqual(0);
+    expect(docid.cid.toString()).toEqual(CID_STRING);
+    expect(docid.toString()).toMatchSnapshot();
+  });
 
-  it('create from legacy string "/ceramic/"',  () => {
-    const docid = DocID.fromString(docIdLegacy)
+  test('create from legacy string "/ceramic/" with commit param "?commit="', () => {
+    const docid = DocID.fromString(DOC_ID_WITH_COMMIT_LEGACY);
 
-    expect(docid.type).toEqual(0)
-    expect(docid.cid.toString()).toEqual(cidStr)
-    expect(docid.toString()).toMatchSnapshot()
-  })
+    expect(docid.type).toEqual(0);
+    expect(docid.cid.toString()).toEqual(CID_STRING);
+    expect(docid.toString()).toMatchSnapshot();
+  });
 
-  it('create from legacy string "/ceramic/" with commit param "?commit="',  () => {
-    const docid = DocID.fromString(docIdLegacyCommit)
+  test('create from legacy string "/ceramic/" with commit param "?commit=0"', () => {
+    const docid = DocID.fromString(DOC_ID_WITH_0_COMMIT_LEGACY);
 
-    expect(docid.type).toEqual(0)
-    expect(docid.cid.toString()).toEqual(cidStr)
-    expect(docid.toString()).toMatchSnapshot()
-  })
+    expect(docid.type).toEqual(0);
+    expect(docid.cid.toString()).toEqual(CID_STRING);
+    expect(docid.toString()).toMatchSnapshot();
+  });
 
-  it('create from legacy string "/ceramic/" with commit param "?commit=0"',  () => {
-    const docid = DocID.fromString(docIdLegacyCommit0)
+  test('roundtrip docID string', () => {
+    const docid = new DocID('tile', CID_STRING);
+    const docid2 = DocID.fromString(docid.toString());
+    expect(docid.toString()).toEqual(docid2.toString());
+  });
+});
 
-    expect(docid.type).toEqual(0)
-    expect(docid.cid.toString()).toEqual(cidStr)
-    expect(docid.toString()).toMatchSnapshot()
-  })
+test('.bytes', () => {
+  const docid = new DocID('tile', CID_STRING);
+  const bytes = docid.bytes;
+  expect(bytes).toBeDefined();
+  expect(bytes instanceof Uint8Array).toEqual(true);
+  expect(bytes).toMatchSnapshot();
+});
 
-  it('roundtrip docID string',  () => {
-    const docid = new DocID('tile', cidStr)
-    const docid2 = DocID.fromString(docid.toString())
-    expect(docid.toString()).toEqual(docid2.toString())
-  })
+test('.typeName if registered', () => {
+  const docid = new DocID('tile', CID_STRING);
+  expect(docid.typeName).toEqual('tile');
+  const docid2 = new DocID(10, CID_STRING);
+  expect(() => docid2.typeName).toThrowErrorMatchingSnapshot();
+});
 
-  it('roundtrip docID bytes',  () => {
-    const docid = new DocID('tile', cidStr)
-    const docid2 = DocID.fromBytes(docid.bytes)
-    expect(docid.toString()).toEqual(docid2.toString())
-  })
+test('.toString()', () => {
+  const docid = new DocID('tile', CID_STRING);
+  const str = docid.toString();
+  expect(str).toBeDefined();
+  expect(str).toMatchSnapshot();
+});
 
-  it('.bytes',  () => {
-    const docid = new DocID('tile', cidStr)
-    const bytes = docid.bytes
-    expect(bytes).toBeDefined()
-    expect(bytes instanceof Uint8Array).toEqual(true)
-    expect(bytes).toMatchSnapshot()
-  })
+test('.toUrl()', () => {
+  const docid = new DocID('tile', CID_STRING);
+  const str = docid.toUrl();
+  expect(str).toBeDefined();
+  expect(str.includes('ceramic://')).toEqual(true);
+  expect(str).toMatchSnapshot();
+});
 
-  it('.typeName if registered',  () => {
-    const docid = new DocID('tile', cidStr)
-    expect(docid.typeName).toEqual('tile')
-    const docid2 = new DocID(10, cidStr)
-    expect(() => docid2.typeName).toThrowErrorMatchingSnapshot()
-  })
-
-  it('.toString()',  () => {
-    const docid = new DocID('tile', cidStr)
-    const str = docid.toString()
-    expect(str).toBeDefined()
-    expect(str).toMatchSnapshot()
-  })
-
-  it('.toUrl()',  () => {
-    const docid = new DocID('tile', cidStr)
-    const str = docid.toUrl()
-    expect(str).toBeDefined()
-    expect(str.includes('ceramic://')).toEqual(true)
-    expect(str).toMatchSnapshot()
-  })
-
-  it('equals other DocID',  () => {
-    const docid = new DocID('tile', cidStr)
-    const docid2 = new DocID('tile', cidStr)
-    const docid3 = new DocID('caip10-link', cidStr)
-    expect(docid.equals(docid2)).toEqual(true)
-    expect(docid.equals(docid3)).toEqual(false)
-  })
-})
+test('equals other DocID', () => {
+  const docid = new DocID('tile', CID_STRING);
+  const docid2 = new DocID('tile', CID_STRING);
+  const docid3 = new DocID('caip10-link', CID_STRING);
+  expect(docid.equals(docid2)).toEqual(true);
+  expect(docid.equals(docid3)).toEqual(false);
+});
 
 test('nodejs inspect', () => {
-  const docid = new DocID('tile', cidStr)
-  expect(util.inspect(docid)).toMatchSnapshot()
-})
+  const docid = new DocID('tile', CID_STRING);
+  expect(util.inspect(docid)).toMatchSnapshot();
+});
+
+test('to primitive', () => {
+  const docid = new DocID('tile', CID_STRING);
+  expect(`${docid}`).toEqual(docid.toString());
+  expect(+docid).toBeNaN();
+  expect(docid + '').toEqual(docid.toString());
+});

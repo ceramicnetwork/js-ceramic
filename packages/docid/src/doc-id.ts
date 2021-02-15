@@ -8,10 +8,6 @@ import { DEFAULT_BASE, DOCID_CODEC } from './constants';
 import { readCid, readVarint } from './reading-bytes';
 import { Memoize } from 'typescript-memoize';
 
-function fromOther(other: DocID): DocID {
-  return new DocID(other.type, other.cid);
-}
-
 function fromBytes(bytes: Uint8Array): DocID {
   const [docCodec, docCodecRemainder] = readVarint(bytes);
   if (docCodec !== DOCID_CODEC) throw new Error('fromBytes: invalid docid, does not include docid codec');
@@ -35,11 +31,6 @@ export class DocID {
   readonly #doctype: number;
   readonly #cid: CID;
 
-  /**
-   * Copies the given DocID and returns a copy of it, optionally changing the commit to the one provided
-   * @param other
-   */
-  static fromOther = fromOther;
   static fromBytes = fromBytes;
   static fromString = fromString;
 
@@ -87,16 +78,6 @@ export class DocID {
    */
   get cid(): CID {
     return this.#cid;
-  }
-
-  /**
-   * Get CID codec name string
-   *
-   * @returns {string}
-   * @readonly
-   */
-  get codec(): string {
-    return this.#cid.codec;
   }
 
   /**

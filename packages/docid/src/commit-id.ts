@@ -12,10 +12,6 @@ import { DocID } from './doc-id';
 // '<multibase-prefix><multicodec-docid><doctype><genesis-cid-bytes>'
 // '<multibase-prefix><multicodec-docid><doctype><genesis-cid-bytes><commit-cid-bytes>'
 
-function fromOther(other: CommitId): CommitId {
-  return new CommitId(other.type, other.cid, other.commit);
-}
-
 function fromBytes(bytes: Uint8Array): CommitId {
   const [docCodec, docCodecRemainder] = readVarint(bytes);
   if (docCodec !== DOCID_CODEC) throw new Error('fromBytes: invalid docid, does not include docid codec');
@@ -78,12 +74,6 @@ export class CommitId {
   readonly #commit: CID | null;
   private _bytes: Uint8Array;
 
-  /**
-   * Copies the given DocID and returns a copy of it, optionally changing the commit to the one provided
-   * @param other
-   * @param commit
-   */
-  static fromOther = fromOther;
   static fromBytes = fromBytes;
   static fromString = fromString;
 
@@ -154,16 +144,6 @@ export class CommitId {
    */
   get commit(): CID {
     return this.#commit || this.#cid;
-  }
-
-  /**
-   * Get CID codec name string
-   *
-   * @returns {string}
-   * @readonly
-   */
-  get codec(): string {
-    return this.#cid.codec;
   }
 
   /**

@@ -2,6 +2,7 @@ import * as util from 'util';
 import { CommitId } from '../commit-id';
 import CID from 'cids';
 import * as multibase from 'multibase';
+import { DocID } from '../doc-id';
 
 const BASE_CID_STRING = 'bagcqcerakszw2vsovxznyp5gfnpdj4cqm2xiv76yd24wkjewhhykovorwo6a';
 const BASE_CID = new CID(BASE_CID_STRING);
@@ -53,6 +54,10 @@ describe('constructor', () => {
     expect(docid.commit).toEqual(BASE_CID);
     expect(docid.toString()).toMatchSnapshot();
   });
+
+  test('unknown doctype name', () => {
+    expect(() => new CommitId('invalid-garbage', BASE_CID_STRING, BASE_CID_STRING)).toThrow();
+  });
 });
 
 describe('#travel', () => {
@@ -81,13 +86,17 @@ describe('#travel', () => {
 });
 
 describe('.fromBytes', () => {
-  test('create from bytes ', () => {
+  test('create from bytes', () => {
     const docid = CommitId.fromBytes(DOC_ID_BYTES);
 
     expect(docid.type).toEqual(0);
     expect(docid.cid).toEqual(BASE_CID);
     expect(docid.commit).toEqual(BASE_CID);
     expect(docid.toString()).toMatchSnapshot();
+  });
+
+  test('invalid doc id', () => {
+    expect(() => CommitId.fromBytes(BASE_CID.bytes)).toThrow();
   });
 
   test('create from bytes inlcuding commit', () => {
@@ -262,4 +271,11 @@ describe('nodejs inspect', () => {
     const docid = new CommitId('tile', BASE_CID_STRING, COMMIT_CID_STRING);
     expect(util.inspect(docid)).toMatchSnapshot();
   });
+});
+
+test('to primitive', () => {
+  const docid = new CommitId('tile', BASE_CID_STRING, COMMIT_CID_STRING);
+  expect(`${docid}`).toEqual(docid.toString());
+  expect(+docid).toBeNaN();
+  expect(docid + '').toEqual(docid.toString());
 });
