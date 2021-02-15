@@ -48,15 +48,12 @@ export const DEFAULT_CLIENT_CONFIG: CeramicClientConfig = {
  * Ceramic client configuration
  */
 export interface CeramicClientConfig {
+  didResolver?: Resolver
   docSyncEnabled?: boolean
   docSyncInterval?: number
   docCacheLimit?: number;
   cacheDocCommits?: boolean;
   logger?: LoggerConfig;
-}
-
-export interface CeramicClientProvidedComponents {
-  didResolver?: Resolver;
 }
 
 /**
@@ -80,7 +77,7 @@ export default class CeramicClient implements CeramicApi {
   private readonly _config: CeramicClientConfig
   public readonly _doctypeConstructors: Record<string, DoctypeConstructor<Doctype>>
 
-  constructor (apiHost: string = CERAMIC_HOST, config: CeramicClientConfig = {}, components: CeramicClientProvidedComponents = {}) {
+  constructor (apiHost: string = CERAMIC_HOST, config: CeramicClientConfig = {}) {
     this._config = { ...DEFAULT_CLIENT_CONFIG, ...config }
 
     this._apiUrl = combineURLs(apiHost, API_PATH)
@@ -90,20 +87,34 @@ export default class CeramicClient implements CeramicApi {
 
     this.context = { api: this, logger }
 
-    logger.imp(`Starting Ceramic HTTP client at version ${packageJson.version} with config: \n${JSON.stringify(config, null, 2)}`)
+    logger.imp(`Starting Ceramic HTTP client at version ${packageJson.version} with config: \n${JSON.stringify(CeramicClient._redactConfigForLogging(config), null, 2)}`)
 
     this.pin = this._initPinApi()
 
     const keyDidResolver = KeyDidResolver.getResolver()
     const threeIdResolver = ThreeIdResolver.getResolver(this)
     this.context.resolver = new Resolver({
-      ...components.didResolver, ...threeIdResolver, ...keyDidResolver,
+      ...this._config.didResolver, ...threeIdResolver, ...keyDidResolver,
     })
 
     this._doctypeConstructors = {
       'tile': TileDoctype,
       'caip10-link': Caip10LinkDoctype
     }
+  }
+
+  /**
+   * Returns a copy of the given CeramicClientConfig object but with any potentially sensitive fields
+   * removed so that it is safe to log the whole thing.
+   * @param config
+   * @returns Copy of `config` with potentially sensitive information removed
+   * @private
+   */
+  private static _redactConfigForLogging(config: CeramicClientConfig): CeramicClientConfig {
+    // Currently there are no sensitive fields in `CeramicClientConfig`, but if we ever allowed you
+    // to provide the didProvider there, for example, we would want to filter that out so the user's
+    // secret seed doesn't get logged.
+    return config;
   }
 
   get did(): DID | undefined {

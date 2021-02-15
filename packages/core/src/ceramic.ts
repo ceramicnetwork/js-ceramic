@@ -244,7 +244,7 @@ class Ceramic implements CeramicApi {
    * @param config - Ceramic configuration
    * @param components - Ceramic internal components provided to `create` from higher level
    */
-  static async create(ipfs: IpfsApi, config: CeramicConfig = {}, components: CeramicProvidedComponents = {}): Promise<Ceramic> {
+  static async create(ipfs: IpfsApi, config: CeramicConfig = {}, components?: CeramicProvidedComponents): Promise<Ceramic> {
     // todo remove
     LoggerProviderOld.init({
       level: config.logLevel? config.logLevel : 'silent',
@@ -262,7 +262,7 @@ class Ceramic implements CeramicApi {
 
     // Initialize ceramic loggers
     const loggerConfig = {logLevel: config.logLevel, logToFiles: config.logToFiles, logPath: config.logPath}
-    const logger = components.logger ?? LoggerProvider.makeDiagnosticLogger(loggerConfig)
+    const logger = components?.logger ?? LoggerProvider.makeDiagnosticLogger(loggerConfig)
     const pubsubLogger = LoggerProvider.makeServiceLogger("pubsub", loggerConfig)
 
     logger.imp(`Starting Ceramic node at version ${packageJson.version} with config: \n${JSON.stringify(config, null, 2)}`)
@@ -285,7 +285,7 @@ class Ceramic implements CeramicApi {
       networkName: networkOptions.name,
       pinsetDirectory: config.pinsetDirectory,
       pinningEndpoints: config.pinningEndpoints,
-      pinningBackends: components.pinningBackends
+      pinningBackends: components?.pinningBackends
     }
     const pinStoreFactory = new PinStoreFactory(context, pinStoreProperties)
     const pinStore = await pinStoreFactory.open()
@@ -296,10 +296,10 @@ class Ceramic implements CeramicApi {
     const keyDidResolver = KeyDidResolver.getResolver()
     const threeIdResolver = ThreeIdResolver.getResolver(ceramic)
     ceramic.context.resolver = new Resolver({
-      ...components.didResolver, ...threeIdResolver, ...keyDidResolver,
+      ...components?.didResolver, ...threeIdResolver, ...keyDidResolver,
     })
 
-    if (components.didProvider) {
+    if (components?.didProvider) {
       await ceramic.setDIDProvider(components.didProvider)
     }
 
