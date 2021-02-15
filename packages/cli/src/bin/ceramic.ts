@@ -10,6 +10,7 @@ program
     .option('--validate-docs', 'Validate documents according to their schemas. It is enabled by default')
     .option('--ipfs-pinning-endpoint <url...>', 'Ipfs pinning endpoints')
     .option('--state-store-directory <string>', `The directory path used for storing pinned document state. Defaults to HOME_DIR/.ceramic/pinset`)
+    .option('--state-store-s3-bucket <string>', `The S3 bucket name to use for storing pinned document state. If not provided pinned document state will only be saved locally but not to S3.`)
     .option('--gateway', 'Makes read only endpoints available. It is disabled by default')
     .option('--port <int>', 'Port daemon is available. Default is 7007')
     .option('--debug', 'Enable debug logging level. Default is false')
@@ -28,6 +29,7 @@ program
         validateDocs,
         ipfsPinningEndpoint,
         stateStoreDirectory,
+        stateStoreS3Bucket,
         gateway,
         port,
         debug,
@@ -39,6 +41,9 @@ program
         maxHealthyMemory,
         corsAllowedOrigins
     }) => {
+        if (stateStoreDirectory && stateStoreS3Bucket) {
+          throw new Error("Cannot specify both --state-store-directory and --state-store-s3-bucket. Only one state store - either on local storage or on S3 - can be used at a time")
+        }
         await CeramicCliUtils.createDaemon(
             ipfsApi,
             ethereumRpc,
@@ -46,6 +51,7 @@ program
             validateDocs,
             ipfsPinningEndpoint,
             stateStoreDirectory,
+            stateStoreS3Bucket,
             gateway,
             port,
             debug,

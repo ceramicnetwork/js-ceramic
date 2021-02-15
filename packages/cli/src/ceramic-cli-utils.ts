@@ -40,6 +40,7 @@ export class CeramicCliUtils {
      * @param validateDocs - Validate docs according to schemas or not
      * @param ipfsPinningEndpoints - Ipfs pinning endpoints
      * @param stateStoreDirectory - Path to the directory that will be used for storing pinned document state
+     * @param stateStoreS3Bucket - S3 bucket name for storing pinned document state
      * @param gateway - read only endpoints available. It is disabled by default
      * @param port - port daemon is availabe. Default is 7007
      * @param debug - Enable debug logging level
@@ -58,6 +59,7 @@ export class CeramicCliUtils {
         validateDocs: boolean,
         ipfsPinningEndpoints: string[],
         stateStoreDirectory: string,
+        stateStoreS3Bucket: string,
         gateway: boolean,
         port: number,
         debug: boolean,
@@ -83,6 +85,10 @@ export class CeramicCliUtils {
             ethereumRpcUrl: ethereumRpc,
             anchorServiceUrl: anchorServiceApi,
             stateStoreDirectory,
+            s3StateStoreBucket: stateStoreS3Bucket,
+            s3StateStoreAwsRegion: process.env.AWS_DEFAULT_REGION,
+            s3StateStoreAwsAccessKey: process.env.AWS_ACCESS_KEY_ID,
+            s3StateStoreAwsSecretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
             validateDocs,
             ipfsPinningEndpoints,
             gateway,

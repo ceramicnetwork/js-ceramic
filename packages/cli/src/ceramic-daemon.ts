@@ -3,6 +3,7 @@ import Ceramic from '@ceramicnetwork/core'
 import type { CeramicConfig} from "@ceramicnetwork/core"
 import { DiagnosticsLogger, LogLevel } from "@ceramicnetwork/logger"
 import { buildIpfsConnection } from "./build-ipfs-connection.util";
+import { S3StateStore } from "./s3-state-store";
 import {
   DoctypeUtils,
   RootLogger,
@@ -33,6 +34,10 @@ export interface CreateOpts {
   ethereumRpcUrl?: string;
   anchorServiceUrl?: string;
   stateStoreDirectory?: string;
+  s3StateStoreBucket?: string;
+  s3StateStoreAwsRegion?: string;
+  s3StateStoreAwsAccessKey?: string;
+  s3StateStoreAwsSecretAccessKey?: string;
 
   validateDocs?: boolean;
   ipfsPinningEndpoints?: string[];
@@ -189,7 +194,16 @@ class CeramicDaemon {
     const ipfs = await buildIpfsConnection(
       opts.network, ceramicConfig.loggerProvider.getDiagnosticsLogger(), opts.ipfsHost)
 
-    const ceramic = await Ceramic.create(ipfs, ceramicConfig)
+    const [modules, params] = await Ceramic._processConfig(ipfs, ceramicConfig)
+
+    if (opts.s3StateStoreBucket) {
+      const s3StateStore = new S3StateStore(opts.s3StateStoreBucket, opts.s3StateStoreAwsRegion, opts.s3StateStoreAwsAccessKey, opts.s3StateStoreAwsSecretAccessKey)
+      modules.pinStoreFactory.setStateStore(s3StateStore)
+    }
+
+    const ceramic = new Ceramic(modules, params)
+    await ceramic._init(true, true)
+
     return new CeramicDaemon(ceramic, opts)
   }
 

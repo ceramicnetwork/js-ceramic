@@ -4,7 +4,7 @@ import { StateStore } from "./state-store"
 import DocID from '@ceramicnetwork/docid'
 
 /**
- * Ceramic store for saving documents locally
+ * Ceramic store for saving document state to a local leveldb instance
  */
 export class LevelStateStore implements StateStore {
     #store: Level
@@ -35,7 +35,7 @@ export class LevelStateStore implements StateStore {
     }
 
     /**
-     * Load document
+     * Load document state
      * @param docId - Document ID
      */
     async load(docId: DocID): Promise<DocState> {
