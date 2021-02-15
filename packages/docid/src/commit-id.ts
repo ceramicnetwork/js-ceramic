@@ -12,21 +12,21 @@ import { DocID } from './doc-id';
 // '<multibase-prefix><multicodec-docid><doctype><genesis-cid-bytes>'
 // '<multibase-prefix><multicodec-docid><doctype><genesis-cid-bytes><commit-cid-bytes>'
 
-function fromBytes(bytes: Uint8Array): CommitId {
+function fromBytes(bytes: Uint8Array): CommitID {
   const [docCodec, docCodecRemainder] = readVarint(bytes);
   if (docCodec !== DOCID_CODEC) throw new Error('fromBytes: invalid docid, does not include docid codec');
   const [doctype, doctypeRemainder] = readVarint(docCodecRemainder);
   const [base, baseRemainder] = readCid(doctypeRemainder);
   if (baseRemainder.length === 0) {
     // No commit AKA DocID
-    return new CommitId(doctype, base);
+    return new CommitID(doctype, base);
   } else if (baseRemainder.length === 1) {
     // Zero commit
-    return new CommitId(doctype, base, baseRemainder[0]);
+    return new CommitID(doctype, base, baseRemainder[0]);
   } else {
     // Commit
     const [commit] = readCid(baseRemainder);
-    return new CommitId(doctype, base, commit);
+    return new CommitID(doctype, base, commit);
   }
 }
 
@@ -57,7 +57,7 @@ function parseCommit(base: CID, commit: CID | string | number = null): CID | nul
   }
 }
 
-function fromString(input: string): CommitId {
+function fromString(input: string): CommitID {
   const protocolFree = input.replace('ceramic://', '').replace('/ceramic/', '');
   if (protocolFree.includes('commit')) {
     const commit = protocolFree.split('?')[1].split('=')[1];
@@ -68,7 +68,7 @@ function fromString(input: string): CommitId {
   }
 }
 
-export class CommitId {
+export class CommitID {
   readonly #doctype: number;
   readonly #cid: CID;
   readonly #commit: CID | null;
@@ -163,8 +163,8 @@ export class CommitId {
     return this._bytes;
   }
 
-  travel(commit: CID | string | number): CommitId {
-    return new CommitId(this.#doctype, this.#cid, commit);
+  travel(commit: CID | string | number): CommitID {
+    return new CommitID(this.#doctype, this.#cid, commit);
   }
 
   /**
@@ -172,7 +172,7 @@ export class CommitId {
    *
    * @param   {DocID}   other
    */
-  equals(other: CommitId): boolean {
+  equals(other: CommitID): boolean {
     return this.type === other.type && this.cid.equals(other.cid) && this.commit.equals(other.commit);
   }
 
