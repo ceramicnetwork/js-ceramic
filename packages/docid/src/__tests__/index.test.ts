@@ -1,4 +1,4 @@
-import DocID from '../index.ts'
+import { DocID } from '../doc-id';
 import CID from 'cids'
 
 const cidStr = 'bagcqcerakszw2vsovxznyp5gfnpdj4cqm2xiv76yd24wkjewhhykovorwo6a'
@@ -40,192 +40,163 @@ const docIdBytesCommit0 = new Uint8Array([
 
 describe('DocID', () => {
 
-  it('create by parts (type:int, cid:cid)', async () => {
+  it('create by parts (type:int, cid:cid)',  () => {
     const type = 0
     const cid = new CID(cidStr)
     const docid = new DocID(type, cid)
 
-    expect(docid.multibaseName).toEqual('base36')
     expect(docid.type).toEqual(type)
     expect(docid.cid.toString()).toEqual(cidStr)
     expect(docid.toString()).toMatchSnapshot()
   })
 
-  it('create by parts (type:int, cid:string, commit:null, multibase)', async () => {
-    const type = 1
-    const multibaseName = 'base32'
-    const docid = new DocID(type, cidStr, null, multibaseName)
-
-    expect(docid.multibaseName).toEqual(multibaseName)
-    expect(docid.type).toEqual(type)
-    expect(docid.cid.toString()).toEqual(cidStr)
-    expect(docid.toString()).toMatchSnapshot()
-  })
-
-  it('create by parts (type:string, cid:string, commit:null)', async () => {
+  it('create by parts (type:string, cid:string, commit:null)',  () => {
     const type = 'tile'
     const docid = new DocID(type, cidStr, null)
 
-    expect(docid.multibaseName).toEqual('base36')
     expect(docid.type).toEqual(0)
-    expect(docid._cid.toString()).toEqual(cidStr)
+    expect(docid.cid.toString()).toEqual(cidStr)
     expect(docid.commit).toBeFalsy()
     expect(docid.toString()).toMatchSnapshot()
   })
 
-  it('create by parts (type:string, cid:string, commit:string)', async () => {
+  it('create by parts (type:string, cid:string, commit:string)',  () => {
     const type = 'tile'
     const docid = new DocID(type, cidStr, cidStr)
 
-    expect(docid.multibaseName).toEqual('base36')
     expect(docid.type).toEqual(0)
     expect(docid.cid.toString()).toEqual(cidStr)
     expect(docid.commit.toString()).toEqual(cidStr)
     expect(docid.toString()).toMatchSnapshot()
   })
 
-  it('create from bytes ', async () => {
+  it('create from bytes ',  () => {
     const docid = DocID.fromBytes(docIdBytes)
 
-    expect(docid.multibaseName).toEqual('base36')
     expect(docid.type).toEqual(0)
-    expect(docid._cid.toString()).toEqual(cidStr)
+    expect(docid.cid.toString()).toEqual(cidStr)
     expect(docid.commit).toBeFalsy()
     expect(docid.toString()).toMatchSnapshot()
   })
 
-  it('create from bytes inlcuding commit', async () => {
+  it('create from bytes inlcuding commit',  () => {
     const docid = DocID.fromBytes(docIdBytesCommit)
 
-    expect(docid.multibaseName).toEqual('base36')
     expect(docid.type).toEqual(0)
     expect(docid.cid.toString()).toEqual(cidStr)
     expect(docid.commit.toString()).toEqual(commitCidStr)
     expect(docid.toString()).toMatchSnapshot()
   })
 
-  it('create from bytes inlcuding commit 0', async () => {
+  it('create from bytes inlcuding commit 0',  () => {
     const docid = DocID.fromBytes(docIdBytesCommit0)
 
-    expect(docid.multibaseName).toEqual('base36')
     expect(docid.type).toEqual(0)
     expect(docid.cid.toString()).toEqual(cidStr)
     expect(docid.commit.toString()).toEqual(cidStr)
     expect(docid.toString()).toMatchSnapshot()
   })
 
-  it('create from bytes with commit', async () => {
+  it('create from bytes with commit',  () => {
     const docid = DocID.fromBytes(docIdBytes, commitCidStr)
 
-    expect(docid.multibaseName).toEqual('base36')
     expect(docid.type).toEqual(0)
     expect(docid.cid.toString()).toEqual(cidStr)
     expect(docid.commit.toString()).toEqual(commitCidStr)
     expect(docid.toString()).toMatchSnapshot()
   })
 
-  it('create from bytes with commit (0) matching cid', async () => {
+  it('create from bytes with commit (0) matching cid',  () => {
     const docid = DocID.fromBytes(docIdBytes, cidStr)
 
-    expect(docid.multibaseName).toEqual('base36')
     expect(docid.type).toEqual(0)
     expect(docid.cid.toString()).toEqual(cidStr)
     expect(docid.commit.toString()).toEqual(cidStr)
     expect(docid.toString()).toMatchSnapshot()
   })
 
-  it('create from bytes with commit 0', async () => {
+  it('create from bytes with commit 0',  () => {
     const docid = DocID.fromBytes(docIdBytes, '0')
 
-    expect(docid.multibaseName).toEqual('base36')
     expect(docid.type).toEqual(0)
     expect(docid.cid.toString()).toEqual(cidStr)
     expect(docid.commit.toString()).toEqual(cidStr)
     expect(docid.toString()).toMatchSnapshot()
   })
 
-  it('create from bytes with multibase ', async () => {
-    const multibase = 'base32'
-    const docid = DocID.fromBytes(docIdBytes, null, multibase)
+  it('create from bytes with multibase ',  () => {
+    const docid = DocID.fromBytes(docIdBytes, null)
 
-    expect(docid.multibaseName).toEqual('base32')
     expect(docid.type).toEqual(0)
-    expect(docid._cid.toString()).toEqual(cidStr)
+    expect(docid.cid.toString()).toEqual(cidStr)
     expect(docid.commit).toBeFalsy()
     expect(docid.toString()).toMatchSnapshot()
   })
 
-  it('create from string', async () => {
+  it('create from string',  () => {
     const docid = DocID.fromString(docIdStr)
 
-    expect(docid.multibaseName).toEqual('base36')
     expect(docid.type).toEqual(0)
-    expect(docid._cid.toString()).toEqual(cidStr)
+    expect(docid.cid.toString()).toEqual(cidStr)
     expect(docid.commit).toBeFalsy()
     expect(docid.toString()).toMatchSnapshot()
   })
 
-  it('create from string including commit', async () => {
+  it('create from string including commit',  () => {
     const docid = DocID.fromString(docIdStrCommit)
 
-    expect(docid.multibaseName).toEqual('base36')
     expect(docid.type).toEqual(0)
     expect(docid.cid.toString()).toEqual(cidStr)
     expect(docid.commit.toString()).toEqual(commitCidStr)
     expect(docid.toString()).toMatchSnapshot()
   })
 
-  it('create from string including commit 0', async () => {
+  it('create from string including commit 0',  () => {
     const docid = DocID.fromString(docIdStrCommit0)
 
-    expect(docid.multibaseName).toEqual('base36')
     expect(docid.type).toEqual(0)
     expect(docid.cid.toString()).toEqual(cidStr)
     expect(docid.commit.toString()).toEqual(cidStr)
     expect(docid.toString()).toMatchSnapshot()
   })
 
-  it('create from string with commit', async () => {
+  it('create from string with commit',  () => {
     const docid = DocID.fromString(docIdStr, commitCidStr)
 
-    expect(docid.multibaseName).toEqual('base36')
     expect(docid.type).toEqual(0)
     expect(docid.cid.toString()).toEqual(cidStr)
     expect(docid.commit.toString()).toEqual(commitCidStr)
     expect(docid.toString()).toMatchSnapshot()
   })
 
-  it('create from string with commit (0) matching cid', async () => {
+  it('create from string with commit (0) matching cid',  () => {
     const docid = DocID.fromString(docIdStr, cidStr)
 
-    expect(docid.multibaseName).toEqual('base36')
     expect(docid.type).toEqual(0)
     expect(docid.cid.toString()).toEqual(cidStr)
     expect(docid.commit.toString()).toEqual(cidStr)
     expect(docid.toString()).toMatchSnapshot()
   })
 
-  it('create from string with commit 0', async () => {
+  it('create from string with commit 0',  () => {
     const docid = DocID.fromString(docIdStr, '0')
 
-    expect(docid.multibaseName).toEqual('base36')
     expect(docid.type).toEqual(0)
     expect(docid.cid.toString()).toEqual(cidStr)
     expect(docid.commit.toString()).toEqual(cidStr)
     expect(docid.toString()).toMatchSnapshot()
   })
 
-  it('create from string with commit 0 as a number', async () => {
+  it('create from string with commit 0 as a number',  () => {
     const docid = DocID.fromString(docIdStr, 0)
 
-    expect(docid.multibaseName).toEqual('base36')
     expect(docid.type).toEqual(0)
     expect(docid.cid.toString()).toEqual(cidStr)
     expect(docid.commit.toString()).toEqual(cidStr)
     expect(docid.toString()).toMatchSnapshot()
   })
 
-  it('Cannot specify commit as a number other than 0', async () => {
+  it('Cannot specify commit as a number other than 0',  () => {
     try {
       const docid = DocID.fromString(docIdStr, 1)
       throw new Error("Should not be able to specify commit as a non-zero number")
@@ -234,89 +205,79 @@ describe('DocID', () => {
     }
   })
 
-  it('create from url string', async () => {
+  it('create from url string',  () => {
     const docid = DocID.fromString(docIdUrl)
-    
-    expect(docid.multibaseName).toEqual('base36')
+
     expect(docid.type).toEqual(0)
-    expect(docid._cid.toString()).toEqual(cidStr)
+    expect(docid.cid.toString()).toEqual(cidStr)
     expect(docid.commit).toBeFalsy()
     expect(docid.toString()).toMatchSnapshot()
   })
 
-  it('create from legacy string "/ceramic/"', async () => {
+  it('create from legacy string "/ceramic/"',  () => {
     const docid = DocID.fromString(docIdLegacy)
-    
-    expect(docid.multibaseName).toEqual('base36')
+
     expect(docid.type).toEqual(0)
-    expect(docid._cid.toString()).toEqual(cidStr)
+    expect(docid.cid.toString()).toEqual(cidStr)
     expect(docid.commit).toBeFalsy()
     expect(docid.toString()).toMatchSnapshot()
   })
 
-  it('create from legacy string "/ceramic/" with commit param "?commit="', async () => {
+  it('create from legacy string "/ceramic/" with commit param "?commit="',  () => {
     const docid = DocID.fromString(docIdLegacyCommit)
-    
-    expect(docid.multibaseName).toEqual('base36')
+
     expect(docid.type).toEqual(0)
     expect(docid.cid.toString()).toEqual(cidStr)
     expect(docid.commit.toString()).toEqual(commitCidStr)
     expect(docid.toString()).toMatchSnapshot()
   })
 
-  it('create from legacy string "/ceramic/" with commit param "?commit=0"', async () => {
+  it('create from legacy string "/ceramic/" with commit param "?commit=0"',  () => {
     const docid = DocID.fromString(docIdLegacyCommit0)
-    
-    expect(docid.multibaseName).toEqual('base36')
+
     expect(docid.type).toEqual(0)
     expect(docid.cid.toString()).toEqual(cidStr)
     expect(docid.commit.toString()).toEqual(cidStr)
     expect(docid.toString()).toMatchSnapshot()
   })
 
-  it('roundtrip docID string', async () => {
+  it('roundtrip docID string',  () => {
     const docid = new DocID('tile', cidStr)
     const docid2 = DocID.fromString(docid.toString())
     expect(docid.toString()).toEqual(docid2.toString())
   })
 
-  it('roundtrip docID string with commit', async () => {
+  it('roundtrip docID string with commit',  () => {
     const docid = new DocID('tile', cidStr, commitCidStr)
     const docid2 = DocID.fromString(docid.toString())
     expect(docid.toString()).toEqual(docid2.toString())
   })
 
-  it('roundtrip docID string with commit 0', async () => {
+  it('roundtrip docID string with commit 0',  () => {
     const docid = new DocID('tile', cidStr, 0)
     const docid2 = DocID.fromString(docid.toString())
     expect(docid.toString()).toEqual(docid2.toString())
   })
 
-  it('roundtrip docID bytes', async () => {
+  it('roundtrip docID bytes',  () => {
     const docid = new DocID('tile', cidStr)
     const docid2 = DocID.fromBytes(docid.bytes)
     expect(docid.toString()).toEqual(docid2.toString())
   })
 
-  it('roundtrip docID bytes with commit', async () => {
+  it('roundtrip docID bytes with commit',  () => {
     const docid = new DocID('tile', cidStr, commitCidStr)
     const docid2 = DocID.fromBytes(docid.bytes)
     expect(docid.toString()).toEqual(docid2.toString())
   })
 
-  it('roundtrip docID bytes with commit', async () => {
+  it('roundtrip docID bytes with commit',  () => {
     const docid = new DocID('tile', cidStr, 0)
     const docid2 = DocID.fromBytes(docid.bytes)
     expect(docid.toString()).toEqual(docid2.toString())
   })
 
-  it('roundtrip .toString(base)', async () => {
-    const docid = new DocID('tile', cidStr, 0, 'base58btc')
-    const docid2 = DocID.fromString(docid.toString('base32'))
-    expect(docid.toString('base32')).toEqual(docid2.toString())
-  })
-
-  it('.bytes', async () => {
+  it('.bytes',  () => {
     const docid = new DocID('tile', cidStr)
     const bytes = docid.bytes
     expect(bytes).toBeDefined()
@@ -324,29 +285,21 @@ describe('DocID', () => {
     expect(bytes).toMatchSnapshot()
   })
 
-  it('.typeName if registered', async () => {
-    const docid = new DocID('tile', cidStr, null, 'devnet')
+  it('.typeName if registered',  () => {
+    const docid = new DocID('tile', cidStr, null)
     expect(docid.typeName).toEqual('tile')
     const docid2 = new DocID(10, cidStr)
     expect(() => docid2.typeName).toThrowErrorMatchingSnapshot()
   })
 
-  it('.toString()', async () => {
+  it('.toString()',  () => {
     const docid = new DocID('tile', cidStr)
     const str = docid.toString()
     expect(str).toBeDefined()
     expect(str).toMatchSnapshot()
   })
 
-  it('.toString(base)', async () => {
-    const docid = new DocID('tile', cidStr)
-    const str = docid.toString('base58btc')
-    expect(str).toBeDefined()
-    expect(str).toMatchSnapshot()
-    expect(docid.toString('base32')).not.toEqual(str)
-  })
-
-  it('.toUrl()', async () => {
+  it('.toUrl()',  () => {
     const docid = new DocID('tile', cidStr)
     const str = docid.toUrl()
     expect(str).toBeDefined()
@@ -354,7 +307,7 @@ describe('DocID', () => {
     expect(str).toMatchSnapshot()
   })
 
-  it('equals other DocID', async () => {
+  it('equals other DocID',  () => {
     const docid = new DocID('tile', cidStr)
     const docid2 = new DocID('tile', cidStr)
     const docid3 = new DocID('caip10-link', cidStr)
@@ -362,7 +315,7 @@ describe('DocID', () => {
     expect(docid.equals(docid3)).toEqual(false)
   })
 
-  it('equals other DocID bytes', async () => {
+  it('equals other DocID bytes',  () => {
     const docid = new DocID('tile', cidStr)
     const docid2 = new DocID('tile', cidStr)
     const docid3 = new DocID('caip10-link', cidStr)
@@ -370,7 +323,7 @@ describe('DocID', () => {
     expect(docid.equals(docid3.bytes)).toEqual(false)
   })
 
-  it('equals other DocID string', async () => {
+  it('equals other DocID string',  () => {
     const docid = new DocID('tile', cidStr)
     const docid2 = new DocID('tile', cidStr)
     const docid3 = new DocID('caip10-link', cidStr)
@@ -378,7 +331,7 @@ describe('DocID', () => {
     expect(docid.equals(docid3.toString())).toEqual(false)
   })
 
-  it('equals other DocID string with commit 0', async () => {
+  it('equals other DocID string with commit 0',  () => {
     // The first three docids should be equal and explicitly have the genesis CID as the commit
     const docid = new DocID('tile', cidStr, 0)
     const docid2 = new DocID('tile', cidStr, '0')
@@ -390,7 +343,7 @@ describe('DocID', () => {
     expect(docid.equals(docid4.toString())).toEqual(false)
   })
 
-  it('equals other DocID with commit', async () => {
+  it('equals other DocID with commit',  () => {
     const docid = new DocID('tile', cidStr, commitCidStr)
     const docid2 = new DocID('tile', cidStr, commitCidStr)
     const docid3 = new DocID('caip10-link', cidStr, 0)
@@ -398,7 +351,7 @@ describe('DocID', () => {
     expect(docid.equals(docid3)).toEqual(false)
   })
 
-  it('equals other DocID bytes with commit', async () => {
+  it('equals other DocID bytes with commit',  () => {
     const docid = new DocID('tile', cidStr, commitCidStr)
     const docid2 = new DocID('tile', cidStr, commitCidStr)
     const docid3 = new DocID('caip10-link', cidStr, 0)
@@ -406,7 +359,7 @@ describe('DocID', () => {
     expect(docid.equals(docid3.bytes)).toEqual(false)
   })
 
-  it('equals other DocID string with verion', async () => {
+  it('equals other DocID string with verion',  () => {
     const docid = new DocID('tile', cidStr, commitCidStr)
     const docid2 = new DocID('tile', cidStr, commitCidStr)
     const docid3 = new DocID('caip10-link', cidStr, 0)
@@ -414,15 +367,7 @@ describe('DocID', () => {
     expect(docid.equals(docid3.toString())).toEqual(false)
   })
 
-  it('equals other DocID string (base)', async () => {
-    const docid = new DocID('tile', cidStr)
-    const docid2 = new DocID('tile', cidStr)
-    const docid3 = new DocID('caip10-link', cidStr)
-    expect(docid.equals(docid2.toString('base32'))).toEqual(true)
-    expect(docid.equals(docid3.toString('base32'))).toEqual(false)
-  })
-
-  it('base DocID equals with different commits', async () => {
+  it('base DocID equals with different commits',  () => {
     const docid = new DocID('tile', cidStr, commitCidStr)
     const docid2 = new DocID('tile', cidStr, commitCidStr)
     const docid3 = new DocID('tile', cidStr, 0)
@@ -432,17 +377,17 @@ describe('DocID', () => {
     expect(docid.baseID.equals(docid3.baseID.toString())).toEqual(true)
   })
 
-  it('valid docID instance', async () => {
+  it('valid docID instance',  () => {
     const docid = new DocID('tile', cidStr)
     expect(DocID.isDocID(docid)).toEqual(true)
   })
 
-  it('valid docID bytes', async () => {
+  it('valid docID bytes',  () => {
     expect(DocID.isDocID(docIdBytes)).toEqual(true)
     expect(DocID.isDocID(docIdBytes.slice(2))).toEqual(false)
   })
 
-  it('valid docID string', async () => {
+  it('valid docID string',  () => {
     expect(DocID.isDocID(docIdStr)).toEqual(true)
     expect(DocID.isDocID(docIdStr.slice(2))).toEqual(false)
     expect(DocID.isDocID(docIdStr.slice(-2))).toEqual(false)
