@@ -1,18 +1,12 @@
 import CID from 'cids';
 import multibase from 'multibase';
-import doctypes from './doctype-table';
+import * as doctypes from './doctypes';
 import varint from 'varint';
 import uint8ArrayConcat from 'uint8arrays/concat';
 import uint8ArrayToString from 'uint8arrays/to-string';
 import { DEFAULT_BASE, DOCID_CODEC } from './constants';
 import { readCid, readVarint } from './reading-bytes';
 import { Memoize } from 'typescript-memoize';
-
-const getKey = (obj: { [key: string]: number }, value: number): string | undefined => {
-  for (const [k, v] of Object.entries(obj)) {
-    if (v === value) return k;
-  }
-};
 
 function fromOther(other: DocID): DocID {
   return new DocID(other.type, other.cid);
@@ -59,9 +53,9 @@ export class DocID {
    * new DocID(<docType>, <CID>|<cidStr>)
    */
   constructor(doctype: string | number, cid: CID | string) {
+    if (!(doctype || doctype === 0)) throw new Error('constructor: doctype required');
     if (!cid) throw new Error('constructor: cid required');
-    this.#doctype = typeof doctype === 'string' ? doctypes[doctype] : doctype;
-    if (!this.#doctype && this.#doctype !== 0) throw new Error('constructor: doctype required');
+    this.#doctype = typeof doctype === 'string' ? doctypes.indexByName(doctype) : doctype;
     this.#cid = typeof cid === 'string' ? new CID(cid) : cid;
   }
 
@@ -82,9 +76,7 @@ export class DocID {
    * @readonly
    */
   get typeName(): string {
-    const name = getKey(doctypes, this.#doctype);
-    if (!name) throw new Error('docTypeName: no registered name available');
-    return name;
+    return doctypes.nameByIndex(this.#doctype);
   }
 
   /**

@@ -49,7 +49,7 @@ exports[`DocID .toString() 1`] = `"kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i
 
 exports[`DocID .toUrl() 1`] = `"ceramic://kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s"`;
 
-exports[`DocID .typeName if registered 1`] = `"docTypeName: no registered name available"`;
+exports[`DocID .typeName if registered 1`] = `"No doctype registered for index 10"`;
 
 exports[`DocID create by parts (type:int, cid:cid) 1`] = `"kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s"`;
 

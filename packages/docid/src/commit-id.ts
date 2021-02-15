@@ -1,6 +1,6 @@
 import CID from 'cids';
 import multibase from 'multibase';
-import doctypes from './doctype-table';
+import doctypes from './doctypes';
 import varint from 'varint';
 import uint8ArrayConcat from 'uint8arrays/concat';
 import uint8ArrayToString from 'uint8arrays/to-string';
