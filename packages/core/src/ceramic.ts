@@ -88,7 +88,6 @@ export interface CeramicConfig {
 export interface CeramicProvidedComponents {
   didResolver?: Resolver;
   didProvider?: DIDProvider;
-  ipfs: IpfsApi;
   pinningBackends?: PinningBackendStatic[];
   logger?: DiagnosticsLogger;
 }
@@ -241,10 +240,11 @@ class Ceramic implements CeramicApi {
 
   /**
    * Create Ceramic instance
-   * @param components - Ceramic internal components provided to `create` from higher level
+   * @param ipfs - IPFS instance
    * @param config - Ceramic configuration
+   * @param components - Ceramic internal components provided to `create` from higher level
    */
-  static async create(components: CeramicProvidedComponents, config: CeramicConfig = {}): Promise<Ceramic> {
+  static async create(ipfs: IpfsApi, config: CeramicConfig = {}, components: CeramicProvidedComponents = {}): Promise<Ceramic> {
     // todo remove
     LoggerProviderOld.init({
       level: config.logLevel? config.logLevel : 'silent',
@@ -270,7 +270,7 @@ class Ceramic implements CeramicApi {
     const anchorService = config.anchorServiceUrl ? new EthereumAnchorService(config) : new InMemoryAnchorService(config as any)
     await anchorService.init()
     const context: Context = {
-      ipfs: components.ipfs,
+      ipfs,
       anchorService,
       logger,
     }
@@ -278,7 +278,7 @@ class Ceramic implements CeramicApi {
     const networkOptions = await Ceramic._generateNetworkOptions(config, anchorService)
     logger.imp(`Connecting to ceramic network '${networkOptions.name}' using pubsub topic '${networkOptions.pubsubTopic}' with supported anchor chains ['${networkOptions.supportedChains.join("','")}']`)
 
-    const dispatcher = new Dispatcher(components.ipfs, networkOptions.pubsubTopic, logger, pubsubLogger)
+    const dispatcher = new Dispatcher(ipfs, networkOptions.pubsubTopic, logger, pubsubLogger)
     await dispatcher.init()
 
     const pinStoreProperties = {
@@ -289,7 +289,7 @@ class Ceramic implements CeramicApi {
     }
     const pinStoreFactory = new PinStoreFactory(context, pinStoreProperties)
     const pinStore = await pinStoreFactory.open()
-    const topology = new IpfsTopology(components.ipfs, networkOptions.name)
+    const topology = new IpfsTopology(ipfs, networkOptions.name)
     const ceramic = new Ceramic(dispatcher, pinStore, context, topology, networkOptions, config.validateDocs, config.docCacheLimit, config.cacheDocCommits)
     anchorService.ceramic = ceramic
 

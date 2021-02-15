@@ -29,7 +29,7 @@ function registerChangeListener (doc: Doctype): Promise<void> {
 }
 
 async function createCeramic(ipfs: IpfsApi, pinsetDirectory: string) {
-    const ceramic = await Ceramic.create({ipfs}, {
+    const ceramic = await Ceramic.create(ipfs, {
         pinsetDirectory: pinsetDirectory,
         anchorOnRequest: false,
         pubsubTopic: PUBSUB_TOPIC, // necessary so Ceramic instances can talk to each other

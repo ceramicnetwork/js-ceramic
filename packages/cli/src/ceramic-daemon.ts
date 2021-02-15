@@ -196,7 +196,7 @@ class CeramicDaemon {
 
     const ceramicConfig = makeCeramicConfig(opts)
 
-    const ceramic = await Ceramic.create({ipfs}, ceramicConfig)
+    const ceramic = await Ceramic.create(ipfs, ceramicConfig)
     return new CeramicDaemon(ceramic, opts)
   }
 
