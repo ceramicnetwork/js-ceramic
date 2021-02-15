@@ -167,16 +167,6 @@ export class DocID {
   }
 
   /**
-   * Get multihash bytes of DocId
-   *
-   * @returns {Uint8Array}
-   * @readonly
-   */
-  get multihash (): Uint8Array {
-    return this._cid.multihash
-  }
-
-  /**
    * Get CID codec name string
    *
    * @returns {string}
