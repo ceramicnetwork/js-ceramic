@@ -4,8 +4,7 @@ import doctypes from './doctype-table'
 import varint from 'varint'
 import uint8ArrayConcat from 'uint8arrays/concat'
 import uint8ArrayToString from 'uint8arrays/to-string'
-const DOCID_CODEC = 206
-const DEFAULT_BASE = 'base36'
+import { DEFAULT_BASE, DOCID_CODEC } from './constants';
 
 const getKey = (obj: { [key: string]: number }, value: number): string | undefined => {
   for (const [k, v] of Object.entries(obj)) {
