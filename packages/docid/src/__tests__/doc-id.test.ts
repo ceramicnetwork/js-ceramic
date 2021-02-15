@@ -1,5 +1,6 @@
 import { DocID } from '../doc-id';
 import CID from 'cids'
+import * as util from 'util'
 
 const cidStr = 'bagcqcerakszw2vsovxznyp5gfnpdj4cqm2xiv76yd24wkjewhhykovorwo6a'
 const docIdStr = 'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
@@ -178,4 +179,9 @@ describe('DocID', () => {
     expect(docid.equals(docid2)).toEqual(true)
     expect(docid.equals(docid3)).toEqual(false)
   })
+})
+
+test('nodejs inspect', () => {
+  const docid = new DocID('tile', cidStr)
+  expect(util.inspect(docid)).toMatchSnapshot()
 })

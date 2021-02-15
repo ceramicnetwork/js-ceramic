@@ -72,3 +72,5 @@ exports[`DocID create from string including commit 0 1`] = `"kjzl6cwe1jw147dvq16
 exports[`DocID create from string including commit 1`] = `"kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s"`;
 
 exports[`DocID create from url string 1`] = `"kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s"`;
+
+exports[`nodejs inspect 1`] = `"DocID(kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s)"`;

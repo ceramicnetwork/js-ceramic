@@ -5,104 +5,105 @@ import varint from 'varint';
 import uint8ArrayConcat from 'uint8arrays/concat';
 import uint8ArrayToString from 'uint8arrays/to-string';
 import { DEFAULT_BASE, DOCID_CODEC } from './constants';
+import { readCid, readVarint } from './reading-bytes';
+import { DocID } from './doc-id';
 
 // Definition
 // '<multibase-prefix><multicodec-docid><doctype><genesis-cid-bytes>'
 // '<multibase-prefix><multicodec-docid><doctype><genesis-cid-bytes><commit-cid-bytes>'
 
-export class CommitId {
-  /**
-   * Create a new DocID.
-   *
-   * @param {string|number}      doctype
-   * @param {CID|string}         cid
-   * @param {CID|string}         commit CID. Pass '0' as shorthand for the genesis commit.
-   * @param {string}             [multibaseName = 'base36']
-   *
-   * @example
-   * new DocID(<docType>, <CID>|<cidStr>)
-   * new DocID(<docType>, <CID>|<cidStr>, <CommitCID>|<CommitCidStr>, <multibaseName>)
-   */
+function fromOther(other: CommitId): CommitId {
+  return new CommitId(other.type, other.cid, other.commit);
+}
 
-  private _doctype: number;
-  private _cid: CID;
-  private _bytes: Uint8Array;
-  private _commit: CID | undefined;
-
-  constructor(doctype: string | number, cid: CID | string, commit: CID | string | number = null) {
-    this._doctype = typeof doctype === 'string' ? doctypes.indexByName(doctype) : doctype;
-    if (!doctype && doctype !== 0) throw new Error('constructor: doctype required');
-    this._cid = typeof cid === 'string' ? new CID(cid) : cid;
-    if (typeof commit === 'number' && commit !== 0) {
-      throw new Error('Cannot specify commit as a number except to request commit 0 (the genesis commit)');
-    }
-    if (commit === '0' || commit === 0) {
-      this._commit = this._cid;
-    } else {
-      this._commit = typeof commit === 'string' ? new CID(commit) : commit;
-    }
+function fromBytes(bytes: Uint8Array): CommitId {
+  const [docCodec, docCodecRemainder] = readVarint(bytes);
+  if (docCodec !== DOCID_CODEC) throw new Error('fromBytes: invalid docid, does not include docid codec');
+  const [doctype, doctypeRemainder] = readVarint(docCodecRemainder);
+  const [base, baseRemainder] = readCid(doctypeRemainder);
+  if (baseRemainder.length === 0) {
+    // No commit AKA DocID
+    return new CommitId(doctype, base);
+  } else if (baseRemainder.length === 1) {
+    // Zero commit
+    return new CommitId(doctype, base, baseRemainder[0]);
+  } else {
+    // Commit
+    const [commit] = readCid(baseRemainder);
+    return new CommitId(doctype, base, commit);
   }
+}
+
+function parseCID(input: any) {
+  try {
+    return new CID(input);
+  } catch {
+    return undefined;
+  }
+}
+
+function parseCommit(base: CID, commit: CID | string | number = null): CID | null {
+  if (!commit) return null;
+
+  const commitCID = parseCID(commit);
+  if (commitCID) {
+    // CID-like
+    if (base.equals(commitCID)) {
+      return null;
+    } else {
+      return commitCID;
+    }
+  } else if (String(commit) === '0') {
+    // Zero as number or string
+    return null;
+  } else {
+    throw new Error('Cannot specify commit as a number except to request commit 0 (the genesis commit)');
+  }
+}
+
+function fromString(input: string): CommitId {
+  const protocolFree = input.replace('ceramic://', '').replace('/ceramic/', '');
+  if (protocolFree.includes('commit')) {
+    const commit = protocolFree.split('?')[1].split('=')[1];
+    const base = protocolFree.split('?')[0];
+    return fromBytes(multibase.decode(base)).travel(commit);
+  } else {
+    return fromBytes(multibase.decode(protocolFree));
+  }
+}
+
+export class CommitId {
+  readonly #doctype: number;
+  readonly #cid: CID;
+  readonly #commit: CID | null;
+  private _bytes: Uint8Array;
 
   /**
    * Copies the given DocID and returns a copy of it, optionally changing the commit to the one provided
    * @param other
    * @param commit
    */
-  static fromOther(other: CommitId, commit?: CID | string): CommitId {
-    if (!commit) {
-      commit = other.commit;
-    }
-    return new CommitId(other._doctype, other._cid, commit);
-  }
+  static fromOther = fromOther;
+  static fromBytes = fromBytes;
+  static fromString = fromString;
 
-  static fromBytes(bytes: Uint8Array, commit?: CID | string): CommitId {
-    const docCodec = varint.decode(bytes);
-    if (docCodec !== DOCID_CODEC) throw new Error('fromBytes: invalid docid, does not include docid codec');
-    bytes = bytes.slice(varint.decode.bytes);
-    const docType = varint.decode(bytes);
-    bytes = bytes.slice(varint.decode.bytes);
-
-    let cid;
-
-    try {
-      cid = new CID(bytes);
-    } catch (e) {
-      // Includes commit
-      const cidLength = CommitId._genesisCIDLength(bytes);
-      cid = new CID(bytes.slice(0, cidLength));
-      const commitBytes = bytes.slice(cidLength);
-      commit = commitBytes.length === 1 ? cid : new CID(commitBytes);
-    }
-
-    return new CommitId(docType, cid, commit);
-  }
-
-  static _genesisCIDLength(bytes: Uint8Array): number {
-    let offset = 0;
-
-    varint.decode(bytes); // cid version
-    offset += varint.decode.bytes;
-
-    varint.decode(bytes.slice(offset)); // cid codec
-    offset += varint.decode.bytes;
-
-    varint.decode(bytes.slice(offset)); //mh codec
-    offset += varint.decode.bytes;
-
-    const length = varint.decode(bytes.slice(offset)); //mh length
-    return offset + length + 1;
-  }
-
-  static fromString(docId: string, commit?: CID | string): CommitId {
-    docId = docId.split('ceramic://').pop();
-    // Likely temp, remove legacy once all ceramic update, but should make updating easier
-    docId = docId.split('/ceramic/').pop();
-    if (docId.includes('commit')) {
-      commit = docId.split('?')[1].split('=')[1];
-      docId = docId.split('?')[0];
-    }
-    const bytes = multibase.decode(docId);
-    return CommitId.fromBytes(bytes, commit);
+  /**
+   * Create a new DocID.
+   *
+   * @param {string|number}      doctype
+   * @param {CID|string}         cid
+   * @param {CID|string}         commit CID. Pass '0' as shorthand for the genesis commit.
+   *
+   * @example
+   * new DocID(<docType>, <CID>|<cidStr>)
+   * new DocID(<docType>, <CID>|<cidStr>, <CommitCID>|<CommitCidStr>, <multibaseName>)
+   */
+  constructor(doctype: string | number, cid: CID | string, commit: CID | string | number = null) {
+    if (!doctype && doctype !== 0) throw new Error('constructor: doctype required');
+    if (!cid) throw new Error('constructor: cid required');
+    this.#doctype = typeof doctype === 'string' ? doctypes.indexByName(doctype) : doctype;
+    this.#cid = typeof cid === 'string' ? new CID(cid) : cid;
+    this.#commit = parseCommit(this.#cid, commit);
   }
 
   /**
@@ -111,9 +112,8 @@ export class CommitId {
    * @returns {DocID}
    * @readonly
    */
-  get baseID(): CommitId {
-    if (!this.commit) return this;
-    return new CommitId(this.type, this.cid, null);
+  get baseID(): DocID {
+    return new DocID(this.#doctype, this.#cid);
   }
 
   /**
@@ -123,7 +123,7 @@ export class CommitId {
    * @readonly
    */
   get type(): number {
-    return this._doctype;
+    return this.#doctype;
   }
 
   /**
@@ -133,7 +133,7 @@ export class CommitId {
    * @readonly
    */
   get typeName(): string {
-    return doctypes.nameByIndex(this._doctype)
+    return doctypes.nameByIndex(this.#doctype);
   }
 
   /**
@@ -143,7 +143,7 @@ export class CommitId {
    * @readonly
    */
   get cid(): CID {
-    return this._cid;
+    return this.#cid;
   }
 
   /**
@@ -152,8 +152,8 @@ export class CommitId {
    * @returns {CID}
    * @readonly
    */
-  get commit(): CID | undefined {
-    return this._commit;
+  get commit(): CID {
+    return this.#commit || this.#cid;
   }
 
   /**
@@ -163,7 +163,7 @@ export class CommitId {
    * @readonly
    */
   get codec(): string {
-    return this._cid.codec;
+    return this.#cid.codec;
   }
 
   /**
@@ -177,38 +177,23 @@ export class CommitId {
       const codec = varint.encode(DOCID_CODEC);
       const doctype = varint.encode(this.type);
 
-      let commitBytes;
-      if (this.commit) {
-        commitBytes = this.cid.equals(this.commit) ? varint.encode(0) : this.commit.bytes;
-      } else {
-        commitBytes = new Uint8Array(0);
-      }
-
+      const commitBytes = this.#commit?.bytes || new Uint8Array(0);
       this._bytes = uint8ArrayConcat([codec, doctype, this.cid.bytes, commitBytes]);
     }
     return this._bytes;
+  }
+
+  travel(commit: CID | string | number): CommitId {
+    return new CommitId(this.#doctype, this.#cid, commit);
   }
 
   /**
    * Compare equality with another DocID.
    *
    * @param   {DocID}   other
-   * @returns {bool}
    */
-  equals(other: CommitId | Uint8Array | string): boolean {
-    let otherDocID;
-    if (typeof other === 'string') otherDocID = CommitId.fromString(other);
-    else if (other instanceof Uint8Array) {
-      otherDocID = CommitId.fromBytes(other);
-    } else {
-      otherDocID = other;
-    }
-
-    return (
-      this.type === otherDocID.type &&
-      (this.commit ? !!otherDocID.commit && this.commit.equals(otherDocID.commit) : !otherDocID.commit) &&
-      this.cid.equals(otherDocID.cid)
-    );
+  equals(other: CommitId): boolean {
+    return this.type === other.type && this.cid.equals(other.cid) && this.commit.equals(other.commit);
   }
 
   /**
@@ -228,38 +213,23 @@ export class CommitId {
   }
 
   /**
-   * DocId(k3y52l7mkcvtg023bt9txegccxe1bah8os3naw5asin3baf3l3t54atn0cuy98yws)
+   * If genesis commit:
+   * CommitID(k3y52l7mkcvtg023bt9txegccxe1bah8os3naw5asin3baf3l3t54atn0cuy98yws, 0)
+   *
+   * If commit:
+   * CommitID(k3y52l7mkcvtg023bt9txegccxe1bah8os3naw5asin3baf3l3t54atn0cuy98yws, bagjqcgzaday6dzalvmy5ady2m5a5legq5zrbsnlxfc2bfxej532ds7htpova)
    *
    * @returns {String}
    */
   [Symbol.for('nodejs.util.inspect.custom')](): string {
-    return `DocID(${this.toString()})`;
+    if (this.#commit) {
+      return `CommitID(${this.#cid.toString()}, ${this.#commit.toString()})`;
+    } else {
+      return `CommitID(${this.#cid.toString()}, 0)`;
+    }
   }
 
   [Symbol.toPrimitive](): string | Uint8Array {
     return this.toString();
-  }
-
-  /**
-   * Determine if given DocID, DocID string or bytes is a valid DocID
-   *
-   * @param   {any}     other
-   * @returns {Boolean}
-   */
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-  static isDocID(other: any): boolean {
-    try {
-      if (typeof other === 'string') {
-        CommitId.fromString(other);
-        return true;
-      } else if (other instanceof Uint8Array) {
-        CommitId.fromBytes(other);
-        return true;
-      } else {
-        return (other.type || other.type === 0) && Boolean(other.cid);
-      }
-    } catch (e) {
-      return false;
-    }
   }
 }
