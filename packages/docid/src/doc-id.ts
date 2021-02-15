@@ -94,6 +94,10 @@ export class DocID {
     return uint8ArrayConcat([codec, doctype, this.cid.bytes]);
   }
 
+  get baseID(): DocID {
+    return new DocID(this.#doctype, this.#cid);
+  }
+
   /**
    * Compare equality with another DocID.
    *

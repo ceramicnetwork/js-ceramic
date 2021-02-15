@@ -278,3 +278,10 @@ test('to primitive', () => {
   expect(+docid).toBeNaN();
   expect(docid + '').toEqual(docid.toString());
 });
+
+test('#baseID', () => {
+  const commitId = new CommitID('tile', BASE_CID_STRING, COMMIT_CID_STRING);
+  const docId = commitId.baseID;
+  expect(docId.type).toEqual(commitId.type);
+  expect(docId.cid).toEqual(commitId.cid);
+});
