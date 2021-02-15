@@ -1,8 +1,4 @@
-type JSONTable = {
-  [key: string]: number | undefined;
-};
-
-const table: JSONTable = {
+const table: Record<string, number | undefined> = {
   tile: 0,
   'caip10-link': 1,
 };

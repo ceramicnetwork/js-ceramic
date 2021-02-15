@@ -2,7 +2,6 @@ import { DocID } from '../doc-id';
 import CID from 'cids'
 
 const cidStr = 'bagcqcerakszw2vsovxznyp5gfnpdj4cqm2xiv76yd24wkjewhhykovorwo6a'
-const commitCidStr = 'bagjqcgzaday6dzalvmy5ady2m5a5legq5zrbsnlxfc2bfxej532ds7htpova'
 const docIdStr = 'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
 const docIdUrl = 'ceramic://kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
 const docIdLegacy = '/ceramic/kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
@@ -178,37 +177,5 @@ describe('DocID', () => {
     const docid3 = new DocID('caip10-link', cidStr)
     expect(docid.equals(docid2)).toEqual(true)
     expect(docid.equals(docid3)).toEqual(false)
-  })
-
-  it('equals other DocID bytes',  () => {
-    const docid = new DocID('tile', cidStr)
-    const docid2 = new DocID('tile', cidStr)
-    const docid3 = new DocID('caip10-link', cidStr)
-    expect(docid.equals(docid2.bytes)).toEqual(true)
-    expect(docid.equals(docid3.bytes)).toEqual(false)
-  })
-
-  it('equals other DocID string',  () => {
-    const docid = new DocID('tile', cidStr)
-    const docid2 = new DocID('tile', cidStr)
-    const docid3 = new DocID('caip10-link', cidStr)
-    expect(docid.equals(docid2.toString())).toEqual(true)
-    expect(docid.equals(docid3.toString())).toEqual(false)
-  })
-
-  it('valid docID instance',  () => {
-    const docid = new DocID('tile', cidStr)
-    expect(DocID.isDocID(docid)).toEqual(true)
-  })
-
-  it('valid docID bytes',  () => {
-    expect(DocID.isDocID(docIdBytes)).toEqual(true)
-    expect(DocID.isDocID(docIdBytes.slice(2))).toEqual(false)
-  })
-
-  it('valid docID string',  () => {
-    expect(DocID.isDocID(docIdStr)).toEqual(true)
-    expect(DocID.isDocID(docIdStr.slice(2))).toEqual(false)
-    expect(DocID.isDocID(docIdStr.slice(-2))).toEqual(false)
   })
 })
