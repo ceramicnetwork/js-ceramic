@@ -32,14 +32,12 @@ export class DocID {
 
   private _doctype: number
   private _cid: CID
-  private _multibaseName: string
   private _bytes: Uint8Array
   private _commit: CID | undefined
 
-  constructor (doctype: string | number, cid: CID | string, commit: CID | string | number = null, multibaseName = DEFAULT_BASE) {
+  constructor (doctype: string | number, cid: CID | string, commit: CID | string | number = null) {
     this._doctype = (typeof doctype === 'string') ? doctypes[doctype] : doctype
     if (!doctype && doctype !== 0) throw new Error('constructor: doctype required')
-    this._multibaseName = multibaseName
     this._cid = (typeof cid === 'string') ? new CID(cid) : cid
     if (typeof commit === 'number' && commit !== 0) {
       throw new Error('Cannot specify commit as a number except to request commit 0 (the genesis commit)')
@@ -61,10 +59,10 @@ export class DocID {
     if (!commit) {
       commit = other.commit
     }
-    return new DocID(other._doctype, other._cid, commit, other._multibaseName)
+    return new DocID(other._doctype, other._cid, commit)
   }
 
-  static fromBytes(bytes: Uint8Array, commit?: CID | string, multibaseName?: string): DocID {
+  static fromBytes(bytes: Uint8Array, commit?: CID | string): DocID {
     const docCodec = varint.decode(bytes)
     if (docCodec !== DOCID_CODEC) throw new Error('fromBytes: invalid docid, does not include docid codec')
     bytes = bytes.slice(varint.decode.bytes)
@@ -83,7 +81,7 @@ export class DocID {
       commit = commitBytes.length === 1 ? cid : new CID(commitBytes)
     }
 
-    return new DocID(docType, cid, commit, multibaseName)
+    return new DocID(docType, cid, commit)
   }
 
   static _genesisCIDLength(bytes: Uint8Array): number {
@@ -110,10 +108,8 @@ export class DocID {
       commit = docId.split('?')[1].split('=')[1]
       docId = docId.split('?')[0]
     }
-    const multibaseName = multibase.isEncoded(docId)
-    if (!multibaseName) throw new Error('fromString: requires base encoded string')
     const bytes = multibase.decode(docId)
-    return DocID.fromBytes(bytes, commit, multibaseName)
+    return DocID.fromBytes(bytes, commit)
   }
 
 
@@ -125,7 +121,7 @@ export class DocID {
    */
   get baseID (): DocID {
     if (!this.commit) return this
-    return new DocID(this.type, this.cid, null, this.multibaseName)
+    return new DocID(this.type, this.cid, null)
   }
 
   /**
@@ -168,16 +164,6 @@ export class DocID {
    */
   get commit (): CID | undefined {
     return this._commit
-  }
-
-  /**
-   * Get multibase name string
-   *
-   * @returns {string}
-   * @readonly
-   */
-  get multibaseName (): string {
-    return this._multibaseName
   }
 
   /**
@@ -248,22 +234,9 @@ export class DocID {
 
   /**
    * Encode the DocID into a string.
-   *
-   * @param   {string}   [base=this.multibaseName]   Base encoding to use.
-   * @returns {string}
    */
-  toBaseEncodedString (base: string = this.multibaseName): string {
-    return uint8ArrayToString(multibase.encode(base, this.bytes))
-  }
-
-  /**
-   * Encode the DocID into a string.
-   *
-   * @param   {string}   [base=this.multibaseName]   Base encoding to use.
-   * @returns {string}
-   */
-  toString(base?: string): string {
-    return this.toBaseEncodedString(base)
+  toString(): string {
+    return uint8ArrayToString(multibase.encode(DEFAULT_BASE, this.bytes))
   }
 
   /**
@@ -272,7 +245,7 @@ export class DocID {
    * @returns {string}
    */
   toUrl(): string {
-    return `ceramic://${this.toBaseEncodedString(DEFAULT_BASE)}`
+    return `ceramic://${this.toString()}`
   }
 
   /**
