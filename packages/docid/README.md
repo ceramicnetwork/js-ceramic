@@ -1,67 +1,128 @@
 # Ceramic DocId
 
-> This package contains Ceramic DocId implementation.
+> This package contains Ceramic DocID and CommitID implementation.
 
-Implements Ceramic DocIDs as defined in ceramic spec and [CIP](https://github.com/ceramicnetwork/CIP/blob/master/CIPs/CIP-59/CIP-59.md)
+Implements Ceramic DocIDs as defined in ceramic spec and [CIP](https://github.com/ceramicnetwork/CIP/blob/master/CIPs/CIP-59/CIP-59.md),
+represented as DocID and CommitID for API clarity.
+
+DocID represents a reference to a document as a whole, thus does not contain commit information.
+
+CommitID represents a reference to a particular commit in the document evolution.
 
 ```html
-<docid> ::= <multibase-prefix><multicodec-docid><doctype><genesis-cid-bytes>
+<docid>
+  ::=
+  <multibase-prefix
+    ><multicodec-docid
+      ><doctype><genesis-cid-bytes></genesis-cid-bytes></doctype></multicodec-docid></multibase-prefix
+></docid>
 ```
+
 or including DocID commit
 
 ```html
-<docid> ::= <multibase-prefix><multicodec-docid><doctype><genesis-cid-bytes><commit-cid-bytes>
+<commitid>
+  ::=
+  <multibase-prefix
+    ><multicodec-docid
+      ><doctype
+        ><genesis-cid-bytes
+          ><commit-cid-bytes></commit-cid-bytes></genesis-cid-bytes></doctype></multicodec-docid></multibase-prefix
+></commitid>
 ```
 
 ## Getting started
 
 ### Installation
+
 ```
 $ npm install @ceramicnetwork/docid
 ```
 
 ### Usage
 
-You can create an instance from the parts. Document type string or integer and CID instance or string are required. Commit CID and multibaseName are optional and default to null and 'base36' respectively. 
+To reference a document as a whole, use `DocID`. You can create an instance from the parts. Document type string or integer and CID instance or string are required.
 
-```js
-import DocID from '@ceramicnetwork/docid'
+```typescript
+import DocID from '@ceramicnetwork/docid';
+// alternatively: import { DocID } from '@ceramicnetwork/docid'
 
-const docid = new DocId('tile', 'bagcqcerakszw2vsov...', commit, 'devnet', 'base36)
+const docid = new DocId('tile', 'bagcqcerakszw2vsov...');
 
-docid.type           // 0
-docid.typeName       // 'tile'
-docid.multibaseName  // 'base36'
-docid.bytes          // Uint8Array(41) [ 206,   1,   0,   0,   1, 133,   1, ...] 
-docid.cid            // CID('bagcqcerakszw2vsov...')
-docid.toString()     
+docid.type; // 0
+docid.typeName; // 'tile'
+docid.bytes; // Uint8Array(41) [ 206,   1,   0,   0,   1, 133,   1, ...]
+docid.cid; // CID('bagcqcerakszw2vsov...')
+docid.toString();
 //k3y52l7mkcvtg023bt9txegccxe1bah8os3naw5asin3baf3l3t54atn0cuy98yws
-docid.toUrl()   
+docid.toUrl();
 //ceramic://k3y52l7mkcvtg023bt9txegccxe1bah8os3naw5asin3baf3l3t54atn0cuy98yws
 ```
 
 You can also create DocID instance from DocID string or bytes.
 
-```js
-const docid = DocID.fromString('k3y52l7mkcvtg023bt9txe...')
+```typescript
+const docid = DocID.fromString('k3y52l7mkcvtg023bt9txe...');
 ```
 
-```js
+```typescript
 const docid = DocID.fromBytes(Uint8Array(41) [ 206,   1,   0,   0,   1, 133,   1, ...])
 ```
 
-## Development
-Run tests:
+To reference particular point in a document evolution, use `CommitID`.
+In addition to document type (string or integer) and genesis reference (CID instance or string),
+one is expected to provide a reference to commit (CID instance or string). If you pass `0` or `'0'` (as string), `null`
+or just omit the value, this would reference a genesis commit.
+
+```typescript
+import { CommitID } from '@ceramicnetwork/docid';
+
+const commitId = new CommitID('tile', 'bagcqcerakszw2vsov...', 'bagcqcerakszw2vsov...');
+
+commitId.type; // 0
+commitId.typeName; // 'tile'
+commitId.bytes; // Uint8Array(41) [ 206,   1,   0,   0,   1, 133,   1, ...]
+commitId.cid; // CID('bagcqcerakszw2vsov...')
+commitId.commit; // CID('bagcqcerakszw2vsov...')
+
+commitId.toString();
+// k3y52l7mkcvtg023bt9txegccxe1bah8os3naw5asin3baf3l3t54atn0cuy98yws
+commitId.toUrl();
+// ceramic://k3y52l7mkcvtg023bt9txegccxe1bah8os3naw5asin3baf3l3t54atn0cuy98yws?version=k3y52l7mkcvt...
 ```
-$ npm test
+
+To reference specific CID from `DocID` or to change commit reference in `CommitID`, use `travel` method:
+
+```typescript
+commitId.travel('bagcqcerakszw2vsov...'); // #=> new CommitID for the same document
+docId.travel('bagcqcerakszw2vsov...'); // #=> new CommitID for the same document
+```
+
+`CommitID` (`DocID` for compatibility also) can get you base `DocID` via `#baseID`:
+
+```typescript
+commitId.baseID; // #=> DocID reference to the document
+docId.baseID; // #=> new DocID reference to the same document, effectively a shallow clone.
+```
+
+## Development
+
+Run tests:
+
+```shell
+npm test
 ```
 
 Run linter:
-```
+
+```shell
 npm run lint
 ```
 
 ## Contributing
+
 We are happy to accept small and large contributions. Make sure to check out the [Ceramic specifications](https://github.com/ceramicnetwork/specs) for details of how the protocol works.
 
 ## License
+
+MIT or Apache-2.0
