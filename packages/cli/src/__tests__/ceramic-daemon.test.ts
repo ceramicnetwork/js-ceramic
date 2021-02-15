@@ -82,7 +82,7 @@ describe('Ceramic interop: core <> http-client', () => {
         // anchorOnRequest to false in the config for the InMemoryAnchorService and anchor manually
         // throughout the tests.
         const pinsetDirectory = tmpFolder.path
-        core = await Ceramic.create(ipfs, {modules: {}, params: {pubsubTopic: topic, pinsetDirectory}})
+        core = await Ceramic.create(ipfs, {params: {pubsubTopic: topic, pinsetDirectory}})
 
         const doctypeHandler = new TileDoctypeHandler()
         doctypeHandler.verifyJWS = (): Promise<void> => { return }

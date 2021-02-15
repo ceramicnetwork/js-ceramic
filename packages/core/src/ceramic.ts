@@ -98,8 +98,8 @@ export interface CeramicModules {
  * of certain core components.
  */
 export interface CeramicConfig {
-  params: CeramicParams;
-  modules: CeramicModules
+  params?: CeramicParams;
+  modules?: CeramicModules
 }
 
 /**
@@ -253,30 +253,30 @@ class Ceramic implements CeramicApi {
    * @param ipfs - IPFS instance
    * @param config - Ceramic configuration
    */
-  static async create(ipfs: IpfsApi, config: CeramicConfig = {params: {}, modules: {}}): Promise<Ceramic> {
+  static async create(ipfs: IpfsApi, config: CeramicConfig = {}): Promise<Ceramic> {
     // todo remove
     LoggerProviderOld.init({
-      level: config.params.logLevel? config.params.logLevel : 'silent',
-      component: config.params.gateway? 'GATEWAY' : 'NODE',
+      level: config.params?.logLevel? config.params?.logLevel : 'silent',
+      component: config.params?.gateway? 'GATEWAY' : 'NODE',
     })
 
-    if (config.params.logToFiles) {
+    if (config.params?.logToFiles) {
         LoggerProviderOld.addPlugin(
-            config.params.logToFilesPlugin.plugin,
-            config.params.logToFilesPlugin.state,
+            config.params?.logToFilesPlugin.plugin,
+            config.params?.logToFilesPlugin.state,
             null,
-            config.params.logToFilesPlugin.options
+            config.params?.logToFilesPlugin.options
         )
     }
 
     // Initialize ceramic loggers
-    const loggerConfig = {logLevel: config.params.logLevel, logToFiles: config.params.logToFiles, logPath: config.params.logPath}
+    const loggerConfig = {logLevel: config.params?.logLevel, logToFiles: config.params?.logToFiles, logPath: config.params?.logPath}
     const logger = LoggerProvider.makeDiagnosticLogger(loggerConfig)
     const pubsubLogger = LoggerProvider.makeServiceLogger("pubsub", loggerConfig)
 
-    logger.imp(`Starting Ceramic node at version ${packageJson.version} with config: \n${JSON.stringify(config.params, null, 2)}`)
+    logger.imp(`Starting Ceramic node at version ${packageJson.version} with config: \n${JSON.stringify(config.params || {}, null, 2)}`)
 
-    const anchorService = config.params.anchorServiceUrl ? new EthereumAnchorService(config.params) : new InMemoryAnchorService(config.params as any)
+    const anchorService = config.params?.anchorServiceUrl ? new EthereumAnchorService(config.params || {}) : new InMemoryAnchorService(config.params || {} as any)
     await anchorService.init()
     const context: Context = {
       ipfs,
@@ -284,7 +284,7 @@ class Ceramic implements CeramicApi {
       logger,
     }
 
-    const networkOptions = await Ceramic._generateNetworkOptions(config.params, anchorService)
+    const networkOptions = await Ceramic._generateNetworkOptions(config?.params, anchorService)
     logger.imp(`Connecting to ceramic network '${networkOptions.name}' using pubsub topic '${networkOptions.pubsubTopic}' with supported anchor chains ['${networkOptions.supportedChains.join("','")}']`)
 
     const dispatcher = new Dispatcher(ipfs, networkOptions.pubsubTopic, logger, pubsubLogger)
@@ -292,32 +292,32 @@ class Ceramic implements CeramicApi {
 
     const pinStoreProperties = {
       networkName: networkOptions.name,
-      pinsetDirectory: config.params.pinsetDirectory,
-      pinningEndpoints: config.params.pinningEndpoints,
+      pinsetDirectory: config.params?.pinsetDirectory,
+      pinningEndpoints: config.params?.pinningEndpoints,
       pinningBackends: config.modules?.pinningBackends
     }
     const pinStoreFactory = new PinStoreFactory(context, pinStoreProperties)
     const pinStore = await pinStoreFactory.open()
     const topology = new IpfsTopology(ipfs, networkOptions.name)
-    const ceramic = new Ceramic(dispatcher, pinStore, context, topology, networkOptions, config.params.validateDocs, config.params.docCacheLimit, config.params.cacheDocCommits)
+    const ceramic = new Ceramic(dispatcher, pinStore, context, topology, networkOptions, config.params?.validateDocs, config.params?.docCacheLimit, config.params?.cacheDocCommits)
     anchorService.ceramic = ceramic
 
     const keyDidResolver = KeyDidResolver.getResolver()
     const threeIdResolver = ThreeIdResolver.getResolver(ceramic)
     ceramic.context.resolver = new Resolver({
-      ...config.modules.didResolver, ...threeIdResolver, ...keyDidResolver,
+      ...config.modules?.didResolver, ...threeIdResolver, ...keyDidResolver,
     })
 
-    if (config.modules.didProvider) {
-      await ceramic.setDIDProvider(config.modules.didProvider)
+    if (config.modules?.didProvider) {
+      await ceramic.setDIDProvider(config.modules?.didProvider)
     }
 
-    const doPeerDiscovery = config.params.useCentralizedPeerDiscovery ?? !TESTING
+    const doPeerDiscovery = config.params?.useCentralizedPeerDiscovery ?? !TESTING
     if (doPeerDiscovery) {
       await topology.start()
     }
 
-    const restoreDocuments = config.params.restoreDocuments ?? true
+    const restoreDocuments = config.params?.restoreDocuments ?? true
     if (restoreDocuments) {
       await ceramic.restoreDocuments()
     }
