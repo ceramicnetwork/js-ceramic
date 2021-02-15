@@ -3,7 +3,7 @@ import fetch from "cross-fetch"
 import * as uint8arrays from 'uint8arrays'
 import { decode } from "multihashes"
 import * as providers from "@ethersproject/providers"
-import { CeramicConfig } from "../../ceramic"
+import { CeramicParams } from "../../ceramic"
 import {
   AnchorProof,
   CeramicApi,
@@ -61,7 +61,7 @@ export default class EthereumAnchorService implements AnchorService {
   /**
    * @param config - service configuration (polling interval, etc.)
    */
-  constructor(config: CeramicConfig) {
+  constructor(config: CeramicParams) {
     this.requestsApiEndpoint = config.anchorServiceUrl + "/api/v0/requests";
     this.chainIdApiEndpoint =
       config.anchorServiceUrl + "/api/v0/service-info/supported_chains";

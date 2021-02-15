@@ -1,4 +1,4 @@
-import Ceramic, { CeramicConfig } from '../ceramic'
+import Ceramic, { CeramicParams } from '../ceramic'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import { TileDoctype, TileParams } from "@ceramicnetwork/doctype-tile"
 import { AnchorStatus, DoctypeUtils, IpfsApi } from "@ceramicnetwork/common"
@@ -64,10 +64,10 @@ describe('Ceramic API', () => {
     }
   }
 
-  const createCeramic = async (c: CeramicConfig = {}): Promise<Ceramic> => {
-    c.anchorOnRequest = false
-    c.restoreDocuments = false
-    const ceramic = await Ceramic.create(ipfs, c)
+  const createCeramic = async (params: CeramicParams = {}): Promise<Ceramic> => {
+    params.anchorOnRequest = false
+    params.restoreDocuments = false
+    const ceramic = await Ceramic.create(ipfs, {params, modules: {}})
 
     const provider = new Ed25519Provider(seed)
     await ceramic.setDIDProvider(provider)

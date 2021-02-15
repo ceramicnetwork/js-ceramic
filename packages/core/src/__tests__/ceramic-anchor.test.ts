@@ -10,12 +10,12 @@ jest.mock('../store/level-state-store')
 const seed = u8a.fromString('6e34b2e1a9624113d81ece8a8a22e6e97f0e145c25c1d4d2d0e62753b4060c83', 'base16')
 
 const createCeramic = async (ipfs: IpfsApi, anchorManual: boolean): Promise<Ceramic> => {
-  const ceramic = await Ceramic.create(ipfs, {
+  const ceramic = await Ceramic.create(ipfs, { modules: {}, params: {
     pinsetDirectory: await tmp.tmpName(),
     anchorOnRequest: !anchorManual,
     restoreDocuments: false,
     pubsubTopic: "/ceramic/inmemory/test" // necessary so Ceramic instances can talk to each other
-  })
+  }})
   const provider = new Ed25519Provider(seed)
   await ceramic.setDIDProvider(provider)
 

@@ -76,35 +76,35 @@ const makeExpressMiddleware = function (config: LoggerConfig) {
 };
 
 const makeCeramicConfig = function (opts: CreateOpts): CeramicConfig {
-  const ceramicConfig: CeramicConfig = {
+  const ceramicConfig: CeramicConfig = { modules: {}, params: {
     logLevel: opts.debug ? 'debug' : 'silent',
     gateway: opts.gateway || false,
     networkName: opts.network
-  }
+  }}
 
   if (opts.anchorServiceUrl) {
-    ceramicConfig.ethereumRpcUrl = opts.ethereumRpcUrl
-    ceramicConfig.anchorServiceUrl = opts.anchorServiceUrl
-  } else if (ceramicConfig.networkName === "testnet-clay" || ceramicConfig.networkName === "dev-unstable") {
-    ceramicConfig.anchorServiceUrl = DEFAULT_ANCHOR_SERVICE_URL
+    ceramicConfig.params.ethereumRpcUrl = opts.ethereumRpcUrl
+    ceramicConfig.params.anchorServiceUrl = opts.anchorServiceUrl
+  } else if (ceramicConfig.params.networkName === "testnet-clay" || ceramicConfig.params.networkName === "dev-unstable") {
+    ceramicConfig.params.anchorServiceUrl = DEFAULT_ANCHOR_SERVICE_URL
   }
 
   if (opts.pubsubTopic) {
-    ceramicConfig.pubsubTopic = opts.pubsubTopic
+    ceramicConfig.params.pubsubTopic = opts.pubsubTopic
   }
 
   if (opts.pinsetDirectory) {
-    ceramicConfig.pinsetDirectory = opts.pinsetDirectory
+    ceramicConfig.params.pinsetDirectory = opts.pinsetDirectory
   }
 
   if (opts.pinningEndpoints) {
-    ceramicConfig.pinningEndpoints = opts.pinningEndpoints
+    ceramicConfig.params.pinningEndpoints = opts.pinningEndpoints
   }
 
   if (opts.logToFiles) {
-    ceramicConfig.logToFiles = opts.logToFiles
-    ceramicConfig.logPath = opts.logPath
-    ceramicConfig.logToFilesPlugin = {
+    ceramicConfig.params.logToFiles = opts.logToFiles
+    ceramicConfig.params.logPath = opts.logPath
+    ceramicConfig.params.logToFilesPlugin = {
       plugin: LogToFiles.main,
       state: {blockedFiles: {}},
       options: {logPath: opts.logPath}
