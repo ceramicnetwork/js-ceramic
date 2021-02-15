@@ -9,26 +9,14 @@ DocID represents a reference to a document as a whole, thus does not contain com
 
 CommitID represents a reference to a particular commit in the document evolution.
 
-```html
-<docid>
-  ::=
-  <multibase-prefix
-    ><multicodec-docid
-      ><doctype><genesis-cid-bytes></genesis-cid-bytes></doctype></multicodec-docid></multibase-prefix
-></docid>
+```
+<docid> ::= <multibase-prefix><multicodec-docid><doctype><genesis-cid-bytes>
 ```
 
 or including DocID commit
 
-```html
-<commitid>
-  ::=
-  <multibase-prefix
-    ><multicodec-docid
-      ><doctype
-        ><genesis-cid-bytes
-          ><commit-cid-bytes></commit-cid-bytes></genesis-cid-bytes></doctype></multicodec-docid></multibase-prefix
-></commitid>
+```
+<docid> ::= <multibase-prefix><multicodec-docid><doctype><genesis-cid-bytes><commit-cid-bytes>
 ```
 
 ## Getting started
