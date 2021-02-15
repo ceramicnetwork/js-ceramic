@@ -7,7 +7,14 @@ import uint8ArrayToString from 'uint8arrays/to-string';
 import { DEFAULT_BASE, DOCID_CODEC } from './constants';
 import { readCid, readVarint } from './reading-bytes';
 import { Memoize } from 'typescript-memoize';
+import { CommitID } from './commit-id';
 
+/**
+ * Parse DocID from bytes representation.
+ *
+ * @param bytes - bytes representation of DocID.
+ * @see [[DocID#bytes]]
+ */
 function fromBytes(bytes: Uint8Array): DocID {
   const [docCodec, docCodecRemainder] = readVarint(bytes);
   if (docCodec !== DOCID_CODEC) throw new Error('fromBytes: invalid docid, does not include docid codec');
@@ -16,6 +23,13 @@ function fromBytes(bytes: Uint8Array): DocID {
   return new DocID(docType, cid);
 }
 
+/**
+ * Parse DocID from string representation.
+ *
+ * @param input - string representation of DocID, be it base36-encoded string or URL.
+ * @see [[DocID#toString]]
+ * @see [[DocID#toUrl]]
+ */
 function fromString(input: string): DocID {
   const protocolFree = input.replace('ceramic://', '').replace('/ceramic/', '');
   const commitFree = protocolFree.includes('commit') ? protocolFree.split('?')[0] : protocolFree;
@@ -23,10 +37,10 @@ function fromString(input: string): DocID {
   return fromBytes(bytes);
 }
 
-// Definition
-// '<multibase-prefix><multicodec-docid><doctype><genesis-cid-bytes>'
-// '<multibase-prefix><multicodec-docid><doctype><genesis-cid-bytes><commit-cid-bytes>'
-
+/**
+ * Document identifier, no commit information included.
+ * Encoded as '<multibase-prefix><multicodec-docid><doctype><genesis-cid-bytes>'
+ */
 export class DocID {
   readonly #doctype: number;
   readonly #cid: CID;
@@ -41,7 +55,11 @@ export class DocID {
    * @param {CID|string}         cid
    *
    * @example
-   * new DocID(<docType>, <CID>|<cidStr>)
+   * ```typescript
+   * new DocID('tile', 'bagcqcerakszw2vsovxznyp5gfnpdj4cqm2xiv76yd24wkjewhhykovorwo6a');
+   * new DocID('tile', cid);
+   * new DocID(0, cid);
+   * ```
    */
   constructor(doctype: string | number, cid: CID | string) {
     if (!(doctype || doctype === 0)) throw new Error('constructor: doctype required');
@@ -51,40 +69,28 @@ export class DocID {
   }
 
   /**
-   * Get doc type code
-   *
-   * @returns {number}
-   * @readonly
+   * Doc type code
    */
   get type(): number {
     return this.#doctype;
   }
 
   /**
-   * Get doc type name
-   *
-   * @returns {string}
-   * @readonly
+   * Doc type name
    */
   get typeName(): string {
     return doctypes.nameByIndex(this.#doctype);
   }
 
   /**
-   * Get CID
-   *
-   * @returns {CID}
-   * @readonly
+   * Genesis record CID
    */
   get cid(): CID {
     return this.#cid;
   }
 
   /**
-   * Get bytes of DocId
-   *
-   * @returns {Uint8Array}
-   * @readonly
+   * Bytes representation of DocID.
    */
   @Memoize()
   get bytes(): Uint8Array {
@@ -94,14 +100,23 @@ export class DocID {
     return uint8ArrayConcat([codec, doctype, this.cid.bytes]);
   }
 
+  /**
+   * Copy of self. Exists to maintain compatibility with CommitID.
+   * @readonly
+   */
   get baseID(): DocID {
     return new DocID(this.#doctype, this.#cid);
   }
 
   /**
+   * Construct new CommitID for the same document, but a new `commit` CID.
+   */
+  travel(commit: CID | string | number): CommitID {
+    return new CommitID(this.#doctype, this.#cid, commit);
+  }
+
+  /**
    * Compare equality with another DocID.
-   *
-   * @param   {DocID}   other
    */
   equals(other: DocID): boolean {
     if (other instanceof DocID) {
@@ -119,9 +134,7 @@ export class DocID {
   }
 
   /**
-   * Encode the DocID into a base36 url
-   *
-   * @returns {string}
+   * Encode the DocID into a base36 url.
    */
   toUrl(): string {
     return `ceramic://${this.toString()}`;
@@ -129,13 +142,14 @@ export class DocID {
 
   /**
    * DocId(k3y52l7mkcvtg023bt9txegccxe1bah8os3naw5asin3baf3l3t54atn0cuy98yws)
-   *
-   * @returns {String}
    */
   [Symbol.for('nodejs.util.inspect.custom')](): string {
     return `DocID(${this.toString()})`;
   }
 
+  /**
+   * String representation of DocID.
+   */
   [Symbol.toPrimitive](): string {
     return this.toString();
   }

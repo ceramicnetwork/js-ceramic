@@ -181,3 +181,30 @@ test('to primitive', () => {
   expect(+docid).toBeNaN();
   expect(docid + '').toEqual(docid.toString());
 });
+
+describe('#travel', () => {
+  const BASE_CID = new CID(CID_STRING);
+  const COMMIT_CID_STRING = 'bagjqcgzaday6dzalvmy5ady2m5a5legq5zrbsnlxfc2bfxej532ds7htpova';
+  const COMMIT_CID = new CID(COMMIT_CID_STRING);
+
+  const docId = new DocID('tile', BASE_CID);
+
+  test('to number 0', () => {
+    const traveller = docId.travel(0);
+    expect(traveller.commit).toEqual(BASE_CID);
+  });
+  test('to number 1', () => {
+    expect(() => docId.travel(1)).toThrowErrorMatchingSnapshot();
+  });
+  test('to commit CID', () => {
+    const traveller = docId.travel(COMMIT_CID);
+    expect(traveller.commit).toEqual(COMMIT_CID);
+  });
+  test('to commit CID as string', () => {
+    const traveller = docId.travel(COMMIT_CID_STRING);
+    expect(traveller.commit).toEqual(COMMIT_CID);
+  });
+  test('to garbage string', () => {
+    expect(() => docId.travel('garbage')).toThrow();
+  });
+});

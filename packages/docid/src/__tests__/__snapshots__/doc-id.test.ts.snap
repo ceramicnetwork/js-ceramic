@@ -1,5 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`#travel to number 1 1`] = `"Cannot specify commit as a number except to request commit 0 (the genesis commit)"`;
+
 exports[`.bytes 1`] = `
 Uint8Array [
   206,

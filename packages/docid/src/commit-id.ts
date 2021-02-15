@@ -8,10 +8,12 @@ import { DEFAULT_BASE, DOCID_CODEC } from './constants';
 import { readCid, readVarint } from './reading-bytes';
 import { DocID } from './doc-id';
 
-// Definition
-// '<multibase-prefix><multicodec-docid><doctype><genesis-cid-bytes>'
-// '<multibase-prefix><multicodec-docid><doctype><genesis-cid-bytes><commit-cid-bytes>'
-
+/**
+ * Parse CommitID from bytes representation.
+ *
+ * @param bytes - bytes representation of CommitID.
+ * @see [[CommitID#bytes]]
+ */
 function fromBytes(bytes: Uint8Array): CommitID {
   const [docCodec, docCodecRemainder] = readVarint(bytes);
   if (docCodec !== DOCID_CODEC) throw new Error('fromBytes: invalid docid, does not include docid codec');
@@ -30,7 +32,13 @@ function fromBytes(bytes: Uint8Array): CommitID {
   }
 }
 
-function parseCID(input: any) {
+/**
+ * Safely parse CID, be it CID instance or a string representation.
+ * Return `undefined` if not CID.
+ *
+ * @param input - CID or string.
+ */
+function parseCID(input: any): CID | undefined {
   try {
     return new CID(input);
   } catch {
@@ -38,13 +46,22 @@ function parseCID(input: any) {
   }
 }
 
-function parseCommit(base: CID, commit: CID | string | number = null): CID | null {
+/**
+ * Parse commit CID from string or number.
+ * `null` result indicates genesis commit.
+ * If `commit` is 0, `'0'`, `null` or is equal to `genesis` CID, result is `null`.
+ * Otherwise, return commit as proper CID.
+ *
+ * @param genesis - genesis CID for document
+ * @param commit - representation of commit, be it CID, 0, `'0'`, `null`
+ */
+function parseCommit(genesis: CID, commit: CID | string | number = null): CID | null {
   if (!commit) return null;
 
   const commitCID = parseCID(commit);
   if (commitCID) {
     // CID-like
-    if (base.equals(commitCID)) {
+    if (genesis.equals(commitCID)) {
       return null;
     } else {
       return commitCID;
@@ -57,6 +74,13 @@ function parseCommit(base: CID, commit: CID | string | number = null): CID | nul
   }
 }
 
+/**
+ * Parse CommitID from string representation.
+ *
+ * @param input - string representation of CommitID, be it base36-encoded string or URL.
+ * @see [[CommitID#toString]]
+ * @see [[CommitID#toUrl]]
+ */
 function fromString(input: string): CommitID {
   const protocolFree = input.replace('ceramic://', '').replace('/ceramic/', '');
   if (protocolFree.includes('commit')) {
@@ -68,10 +92,14 @@ function fromString(input: string): CommitID {
   }
 }
 
+/**
+ * Commit identifier, includes doctype, genesis CID, commit CID.
+ * Encoded as '<multibase-prefix><multicodec-docid><doctype><genesis-cid-bytes><commit-cid-bytes>'
+ */
 export class CommitID {
   readonly #doctype: number;
   readonly #cid: CID;
-  readonly #commit: CID | null;
+  readonly #commit: CID | null; // null ≝ genesis commit
   private _bytes: Uint8Array;
 
   static fromBytes = fromBytes;
@@ -82,11 +110,11 @@ export class CommitID {
    *
    * @param {string|number}      doctype
    * @param {CID|string}         cid
-   * @param {CID|string}         commit CID. Pass '0' as shorthand for the genesis commit.
+   * @param {CID|string}         commit CID. Pass '0', 0, or omit the value as shorthand for the genesis commit.
    *
    * @example
    * new DocID(<docType>, <CID>|<cidStr>)
-   * new DocID(<docType>, <CID>|<cidStr>, <CommitCID>|<CommitCidStr>, <multibaseName>)
+   * new DocID(<docType>, <CID>|<cidStr>, <CommitCID>|<CommitCidStr>)
    */
   constructor(doctype: string | number, cid: CID | string, commit: CID | string | number = null) {
     if (!doctype && doctype !== 0) throw new Error('constructor: doctype required');
@@ -97,60 +125,42 @@ export class CommitID {
   }
 
   /**
-   * Get base docID, always returns without commit
-   *
-   * @returns {DocID}
-   * @readonly
+   * Construct DocID, no commit information included
    */
   get baseID(): DocID {
     return new DocID(this.#doctype, this.#cid);
   }
 
   /**
-   * Get doc type code
-   *
-   * @returns {number}
-   * @readonly
+   * Doc type code
    */
   get type(): number {
     return this.#doctype;
   }
 
   /**
-   * Get doc type name
-   *
-   * @returns {string}
-   * @readonly
+   * Doc type name
    */
   get typeName(): string {
     return doctypes.nameByIndex(this.#doctype);
   }
 
   /**
-   * Get CID
-   *
-   * @returns {CID}
-   * @readonly
+   * Genesis CID
    */
   get cid(): CID {
     return this.#cid;
   }
 
   /**
-   * Get Commit CID
-   *
-   * @returns {CID}
-   * @readonly
+   * Commit CID
    */
   get commit(): CID {
     return this.#commit || this.#cid;
   }
 
   /**
-   * Get bytes of DocId
-   *
-   * @returns {Uint8Array}
-   * @readonly
+   * Bytes representation
    */
   get bytes(): Uint8Array {
     if (this._bytes == null) {
@@ -163,21 +173,22 @@ export class CommitID {
     return this._bytes;
   }
 
+  /**
+   * Construct new CommitID for the same document, but a new `commit` CID.
+   */
   travel(commit: CID | string | number): CommitID {
     return new CommitID(this.#doctype, this.#cid, commit);
   }
 
   /**
-   * Compare equality with another DocID.
-   *
-   * @param   {DocID}   other
+   * Compare equality with another CommitID.
    */
   equals(other: CommitID): boolean {
     return this.type === other.type && this.cid.equals(other.cid) && this.commit.equals(other.commit);
   }
 
   /**
-   * Encode the DocID into a string.
+   * Encode the CommitID into a string.
    */
   toString(): string {
     return uint8ArrayToString(multibase.encode(DEFAULT_BASE, this.bytes));
@@ -185,8 +196,6 @@ export class CommitID {
 
   /**
    * Encode the DocID into a base36 url
-   *
-   * @returns {string}
    */
   toUrl(): string {
     return `ceramic://${this.toString()}`;
@@ -209,6 +218,9 @@ export class CommitID {
     }
   }
 
+  /**
+   * String representation of CommitID.
+   */
   [Symbol.toPrimitive](): string | Uint8Array {
     return this.toString();
   }
