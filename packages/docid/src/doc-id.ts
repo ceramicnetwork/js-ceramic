@@ -30,15 +30,15 @@ export class DocID {
    * new DocID(<docType>, <CID>|<cidStr>, <CommitCID>|<CommitCidStr>, <multibaseName>)
    */
 
-  private _doctype: number;
-  private _cid: CID;
+  readonly #doctype: number;
+  readonly #cid: CID;
   private _bytes: Uint8Array;
 
   constructor(doctype: string | number, cid: CID | string) {
-    this._doctype = typeof doctype === 'string' ? doctypes[doctype] : doctype;
-    if (!this._doctype && this._doctype !== 0) throw new Error('constructor: doctype required');
-    this._cid = typeof cid === 'string' ? new CID(cid) : cid;
-    if (!this.cid) throw new Error('constructor: cid required');
+    if (!cid) throw new Error('constructor: cid required');
+    this.#doctype = typeof doctype === 'string' ? doctypes[doctype] : doctype;
+    if (!this.#doctype && this.#doctype !== 0) throw new Error('constructor: doctype required');
+    this.#cid = typeof cid === 'string' ? new CID(cid) : cid;
   }
 
   /**
@@ -46,7 +46,7 @@ export class DocID {
    * @param other
    */
   static fromOther(other: DocID): DocID {
-    return new DocID(other._doctype, other._cid);
+    return new DocID(other.type, other.cid);
   }
 
   static fromBytes(bytes: Uint8Array): DocID {
@@ -103,7 +103,7 @@ export class DocID {
    * @readonly
    */
   get type(): number {
-    return this._doctype;
+    return this.#doctype;
   }
 
   /**
@@ -113,7 +113,7 @@ export class DocID {
    * @readonly
    */
   get typeName(): string {
-    const name = getKey(doctypes, this._doctype);
+    const name = getKey(doctypes, this.#doctype);
     if (!name) throw new Error('docTypeName: no registered name available');
     return name;
   }
@@ -125,7 +125,7 @@ export class DocID {
    * @readonly
    */
   get cid(): CID {
-    return this._cid;
+    return this.#cid;
   }
 
   /**
@@ -135,7 +135,7 @@ export class DocID {
    * @readonly
    */
   get codec(): string {
-    return this._cid.codec;
+    return this.#cid.codec;
   }
 
   /**
