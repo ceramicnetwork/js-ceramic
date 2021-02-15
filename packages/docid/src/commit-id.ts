@@ -1,16 +1,10 @@
 import CID from 'cids';
 import multibase from 'multibase';
-import doctypes from './doctypes';
+import * as doctypes from './doctypes';
 import varint from 'varint';
 import uint8ArrayConcat from 'uint8arrays/concat';
 import uint8ArrayToString from 'uint8arrays/to-string';
 import { DEFAULT_BASE, DOCID_CODEC } from './constants';
-
-const getKey = (obj: { [key: string]: number }, value: number): string | undefined => {
-  for (const [k, v] of Object.entries(obj)) {
-    if (v === value) return k;
-  }
-};
 
 // Definition
 // '<multibase-prefix><multicodec-docid><doctype><genesis-cid-bytes>'
@@ -36,7 +30,7 @@ export class CommitId {
   private _commit: CID | undefined;
 
   constructor(doctype: string | number, cid: CID | string, commit: CID | string | number = null) {
-    this._doctype = typeof doctype === 'string' ? doctypes[doctype] : doctype;
+    this._doctype = typeof doctype === 'string' ? doctypes.indexByName(doctype) : doctype;
     if (!doctype && doctype !== 0) throw new Error('constructor: doctype required');
     this._cid = typeof cid === 'string' ? new CID(cid) : cid;
     if (typeof commit === 'number' && commit !== 0) {
@@ -47,7 +41,6 @@ export class CommitId {
     } else {
       this._commit = typeof commit === 'string' ? new CID(commit) : commit;
     }
-    if (!cid) throw new Error('constructor: cid required');
   }
 
   /**
@@ -140,9 +133,7 @@ export class CommitId {
    * @readonly
    */
   get typeName(): string {
-    const name = getKey(doctypes, this._doctype);
-    if (!name) throw new Error('docTypeName: no registered name available');
-    return name;
+    return doctypes.nameByIndex(this._doctype)
   }
 
   /**
