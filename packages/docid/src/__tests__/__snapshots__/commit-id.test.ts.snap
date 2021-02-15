@@ -44,40 +44,33 @@ Uint8Array [
   209,
   179,
   188,
+  0,
 ]
 `;
 
-exports[`.fromBytes create from bytes 1`] = `"kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s"`;
-
-exports[`.fromBytes create from bytes inlcuding commit 0 1`] = `"kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s"`;
+exports[`.fromBytes create from bytes inlcuding commit 0 1`] = `"k3y52l7qbv1frxwipl4hp7e6jlu4f6u8upm2xv0irmedfkm5cnutmezzi3u7mytj4"`;
 
 exports[`.fromBytes create from bytes inlcuding commit 1`] = `"k1dpgaqe3i64kjqcp801r3sn7ysi5i0k7nxvs7j351s7kewfzr3l7mdxnj7szwo4kr9mn2qki5nnj0cv836ythy1t1gya9s25cn1nexst3jxi5o3h6qprfyju"`;
 
-exports[`.fromString create from legacy string "/ceramic/" 1`] = `"kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s"`;
-
 exports[`.fromString create from legacy string "/ceramic/" with commit param "?commit=" 1`] = `"k1dpgaqe3i64kjqcp801r3sn7ysi5i0k7nxvs7j351s7kewfzr3l7mdxnj7szwo4kr9mn2qki5nnj0cv836ythy1t1gya9s25cn1nexst3jxi5o3h6qprfyju"`;
 
-exports[`.fromString create from legacy string "/ceramic/" with commit param "?commit=0" 1`] = `"kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s"`;
+exports[`.fromString create from legacy string "/ceramic/" with commit param "?commit=0" 1`] = `"k3y52l7qbv1frxwipl4hp7e6jlu4f6u8upm2xv0irmedfkm5cnutmezzi3u7mytj4"`;
 
-exports[`.fromString create from string 1`] = `"kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s"`;
-
-exports[`.fromString create from string including commit 0 1`] = `"kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s"`;
+exports[`.fromString create from string including commit 0 1`] = `"k3y52l7qbv1frxwipl4hp7e6jlu4f6u8upm2xv0irmedfkm5cnutmezzi3u7mytj4"`;
 
 exports[`.fromString create from string including commit 1`] = `"k1dpgaqe3i64kjqcp801r3sn7ysi5i0k7nxvs7j351s7kewfzr3l7mdxnj7szwo4kr9mn2qki5nnj0cv836ythy1t1gya9s25cn1nexst3jxi5o3h6qprfyju"`;
 
-exports[`.fromString create from url string 1`] = `"kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s"`;
+exports[`.toString() 1`] = `"k3y52l7qbv1frxwipl4hp7e6jlu4f6u8upm2xv0irmedfkm5cnutmezzi3u7mytj4"`;
 
-exports[`.toString() 1`] = `"kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s"`;
-
-exports[`.toUrl() 1`] = `"ceramic://kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s"`;
+exports[`.toUrl() 1`] = `"ceramic://k3y52l7qbv1frxwipl4hp7e6jlu4f6u8upm2xv0irmedfkm5cnutmezzi3u7mytj4"`;
 
 exports[`.typeName if registered 1`] = `"No doctype registered for index 10"`;
 
-exports[`constructor create by parts (type:int, cid:cid) 1`] = `"kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s"`;
+exports[`constructor create by parts (type:int, cid:cid) 1`] = `"k3y52l7qbv1frxwipl4hp7e6jlu4f6u8upm2xv0irmedfkm5cnutmezzi3u7mytj4"`;
 
-exports[`constructor create by parts (type:string, cid:string, commit:null) 1`] = `"kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s"`;
+exports[`constructor create by parts (type:string, cid:string, commit:null) 1`] = `"k3y52l7qbv1frxwipl4hp7e6jlu4f6u8upm2xv0irmedfkm5cnutmezzi3u7mytj4"`;
 
-exports[`constructor create by parts (type:string, cid:string, commit:string) 1`] = `"kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s"`;
+exports[`constructor create by parts (type:string, cid:string, commit:string) 1`] = `"k3y52l7qbv1frxwipl4hp7e6jlu4f6u8upm2xv0irmedfkm5cnutmezzi3u7mytj4"`;
 
 exports[`nodejs inspect commit 1`] = `"CommitID(bagcqcerakszw2vsovxznyp5gfnpdj4cqm2xiv76yd24wkjewhhykovorwo6a, bagjqcgzaday6dzalvmy5ady2m5a5legq5zrbsnlxfc2bfxej532ds7htpova)"`;
 

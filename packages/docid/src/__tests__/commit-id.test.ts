@@ -85,13 +85,8 @@ describe('#travel', () => {
 });
 
 describe('.fromBytes', () => {
-  test('create from bytes', () => {
-    const docid = CommitID.fromBytes(DOC_ID_BYTES);
-
-    expect(docid.type).toEqual(0);
-    expect(docid.cid).toEqual(BASE_CID);
-    expect(docid.commit).toEqual(BASE_CID);
-    expect(docid.toString()).toMatchSnapshot();
+  test('create from doc id bytes: failure', () => {
+    expect(() => CommitID.fromBytes(DOC_ID_BYTES)).toThrow();
   });
 
   test('invalid doc id', () => {
@@ -117,10 +112,10 @@ describe('.fromBytes', () => {
   });
 
   test('roundtrip docID bytes', () => {
-    const docid = new CommitID('tile', BASE_CID_STRING);
-    const docid2 = CommitID.fromBytes(docid.bytes);
-    expect(docid.toString()).toEqual(docid2.toString());
-    expect(docid.bytes).toEqual(docid2.bytes);
+    const commitId = new CommitID('tile', BASE_CID_STRING);
+    const commitId2 = CommitID.fromBytes(commitId.bytes);
+    expect(commitId.toString()).toEqual(commitId2.toString());
+    expect(commitId.bytes).toEqual(commitId2.bytes);
   });
 
   test('roundtrip docID bytes with commit', () => {
@@ -139,13 +134,8 @@ describe('.fromBytes', () => {
 });
 
 describe('.fromString', () => {
-  test('create from string', () => {
-    const docid = CommitID.fromString(DOC_ID_STRING);
-
-    expect(docid.type).toEqual(0);
-    expect(docid.cid).toEqual(BASE_CID);
-    expect(docid.commit).toEqual(BASE_CID);
-    expect(docid.toString()).toMatchSnapshot();
+  test('create from doc id string: fail', () => {
+    expect(() => CommitID.fromString(DOC_ID_STRING)).toThrow()
   });
 
   test('create from string including commit', () => {
@@ -166,22 +156,12 @@ describe('.fromString', () => {
     expect(docid.toString()).toMatchSnapshot();
   });
 
-  test('create from url string', () => {
-    const docid = CommitID.fromString(DOC_ID_URL);
-
-    expect(docid.type).toEqual(0);
-    expect(docid.cid).toEqual(BASE_CID);
-    expect(docid.commit).toEqual(BASE_CID);
-    expect(docid.toString()).toMatchSnapshot();
+  test('create from doc id url string: fail', () => {
+    expect(() => CommitID.fromString(DOC_ID_URL)).toThrow()
   });
 
-  test('create from legacy string "/ceramic/"', () => {
-    const docid = CommitID.fromString(DOC_ID_URL_LEGACY);
-
-    expect(docid.type).toEqual(0);
-    expect(docid.cid).toEqual(BASE_CID);
-    expect(docid.commit).toEqual(BASE_CID);
-    expect(docid.toString()).toMatchSnapshot();
+  test('create from legacy docid string "/ceramic/": fail', () => {
+    expect(() => CommitID.fromString(DOC_ID_URL_LEGACY))
   });
 
   test('create from legacy string "/ceramic/" with commit param "?commit="', () => {

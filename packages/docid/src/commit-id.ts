@@ -20,8 +20,7 @@ function fromBytes(bytes: Uint8Array): CommitID {
   const [doctype, doctypeRemainder] = readVarint(docCodecRemainder);
   const [base, baseRemainder] = readCid(doctypeRemainder);
   if (baseRemainder.length === 0) {
-    // No commit AKA DocID
-    return new CommitID(doctype, base);
+    throw new Error(`No commit information provided`)
   } else if (baseRemainder.length === 1) {
     // Zero commit
     return new CommitID(doctype, base, baseRemainder[0]);
@@ -86,7 +85,7 @@ function fromString(input: string): CommitID {
   if (protocolFree.includes('commit')) {
     const commit = protocolFree.split('?')[1].split('=')[1];
     const base = protocolFree.split('?')[0];
-    return fromBytes(multibase.decode(base)).travel(commit);
+    return DocID.fromString(base).travel(commit);
   } else {
     return fromBytes(multibase.decode(protocolFree));
   }
@@ -167,7 +166,7 @@ export class CommitID {
       const codec = varint.encode(DOCID_CODEC);
       const doctype = varint.encode(this.type);
 
-      const commitBytes = this.#commit?.bytes || new Uint8Array(0);
+      const commitBytes = this.#commit?.bytes || new Uint8Array([0]);
       this._bytes = uint8ArrayConcat([codec, doctype, this.cid.bytes, commitBytes]);
     }
     return this._bytes;
