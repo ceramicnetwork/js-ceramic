@@ -93,6 +93,13 @@ commitId.baseID; // #=> DocID reference to the document
 docId.baseID; // #=> new DocID reference to the same document, effectively a shallow clone.
 ```
 
+To parse an unknown input into proper CommitID or DocID, you could use `DocRef.from`:
+```typescript
+import { DocRef } from '@ceramicnetwork/docid';
+const input = 'bagcqcerakszw2vsov...' // could be instance of Uint8Array, DocID, CommitID either; or in URL form
+const docIdOrCommitId = DocRef.from(input) // throws if can not properly parse it into CommitID or DocID
+```
+
 ## Development
 
 Run tests:

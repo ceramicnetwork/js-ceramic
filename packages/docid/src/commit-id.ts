@@ -4,9 +4,11 @@ import * as doctypes from './doctypes';
 import varint from 'varint';
 import uint8ArrayConcat from 'uint8arrays/concat';
 import uint8ArrayToString from 'uint8arrays/to-string';
+import { Memoize } from 'typescript-memoize';
 import { DEFAULT_BASE, DOCID_CODEC } from './constants';
 import { readCid, readVarint } from './reading-bytes';
 import { DocID } from './doc-id';
+import { DocRef } from './doc-ref';
 
 /**
  * Parse CommitID from bytes representation.
@@ -20,7 +22,7 @@ function fromBytes(bytes: Uint8Array): CommitID {
   const [doctype, doctypeRemainder] = readVarint(docCodecRemainder);
   const [base, baseRemainder] = readCid(doctypeRemainder);
   if (baseRemainder.length === 0) {
-    throw new Error(`No commit information provided`)
+    throw new Error(`No commit information provided`);
   } else if (baseRemainder.length === 1) {
     // Zero commit
     return new CommitID(doctype, base, baseRemainder[0]);
@@ -95,11 +97,10 @@ function fromString(input: string): CommitID {
  * Commit identifier, includes doctype, genesis CID, commit CID.
  * Encoded as '<multibase-prefix><multicodec-docid><doctype><genesis-cid-bytes><commit-cid-bytes>'
  */
-export class CommitID {
+export class CommitID implements DocRef {
   readonly #doctype: number;
   readonly #cid: CID;
   readonly #commit: CID | null; // null ≝ genesis commit
-  private _bytes: Uint8Array;
 
   static fromBytes = fromBytes;
   static fromString = fromString;
@@ -161,15 +162,13 @@ export class CommitID {
   /**
    * Bytes representation
    */
+  @Memoize()
   get bytes(): Uint8Array {
-    if (this._bytes == null) {
-      const codec = varint.encode(DOCID_CODEC);
-      const doctype = varint.encode(this.type);
+    const codec = varint.encode(DOCID_CODEC);
+    const doctype = varint.encode(this.type);
 
-      const commitBytes = this.#commit?.bytes || new Uint8Array([0]);
-      this._bytes = uint8ArrayConcat([codec, doctype, this.cid.bytes, commitBytes]);
-    }
-    return this._bytes;
+    const commitBytes = this.#commit?.bytes || new Uint8Array([0]);
+    return uint8ArrayConcat([codec, doctype, this.cid.bytes, commitBytes]);
   }
 
   /**

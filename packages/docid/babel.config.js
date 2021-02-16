@@ -9,7 +9,9 @@ module.exports = {
 			useBuiltIns: false,
 			debug: false,
 		}],
-		'@babel/preset-typescript',
+		['@babel/preset-typescript', {
+      allowNamespaces: true
+    }]
 	],
 	"plugins": [
 		["@babel/plugin-transform-modules-commonjs", {

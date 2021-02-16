@@ -8,6 +8,7 @@ import { DEFAULT_BASE, DOCID_CODEC } from './constants';
 import { readCid, readVarint } from './reading-bytes';
 import { Memoize } from 'typescript-memoize';
 import { CommitID } from './commit-id';
+import { DocRef } from './doc-ref';
 
 /**
  * Parse DocID from bytes representation.
@@ -41,7 +42,7 @@ function fromString(input: string): DocID {
  * Document identifier, no commit information included.
  * Encoded as '<multibase-prefix><multicodec-docid><doctype><genesis-cid-bytes>'
  */
-export class DocID {
+export class DocID implements DocRef {
   readonly #doctype: number;
   readonly #cid: CID;
 
