@@ -1,7 +1,7 @@
 import { PinStore } from "../pin-store";
 import { StateStore } from "../state-store";
 import CID from 'cids';
-import { AnchorStatus, SignatureStatus, Doctype, PinningBackend } from "@ceramicnetwork/common";
+import { AnchorStatus, SignatureStatus, Doctype, PinningBackend, DocState, CommitType } from '@ceramicnetwork/common';
 
 let stateStore: StateStore
 let pinning: PinningBackend
@@ -17,22 +17,25 @@ beforeEach(() => {
         load: jest.fn()
     }
     pinning = {
+        id: 'test',
         open: jest.fn(),
         close: jest.fn(),
         pin: jest.fn(),
-        unpin: jest.fn()
+        unpin: jest.fn(),
+        ls: jest.fn(),
+        info: jest.fn()
     }
 })
 
-const state = {
-    doctype: 'fake',
+const state: DocState = {
+    doctype: 'tile',
     content: {num: 0},
     metadata: {
         controllers: ['']
     },
     signature: SignatureStatus.GENESIS,
     anchorStatus: AnchorStatus.NOT_REQUESTED,
-    log: [{ cid: new CID('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D') }]
+    log: [{ cid: new CID('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D'), type: CommitType.GENESIS }]
 }
 
 class FakeType extends Doctype {

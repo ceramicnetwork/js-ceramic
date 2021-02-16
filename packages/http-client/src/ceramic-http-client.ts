@@ -20,7 +20,7 @@ import {
 } from "@ceramicnetwork/common"
 import { TileDoctype } from "@ceramicnetwork/doctype-tile"
 import { Caip10LinkDoctype } from "@ceramicnetwork/doctype-caip10-link"
-import DocID from '@ceramicnetwork/docid'
+import { DocID, CommitID, DocRef } from '@ceramicnetwork/docid';
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import KeyDidResolver from 'key-did-resolver'
 import { Resolver } from "did-resolver"
@@ -176,12 +176,12 @@ export default class CeramicClient implements CeramicApi {
     return docFromCache as unknown as T
   }
 
-  async loadDocument<T extends Doctype>(docId: DocID | string): Promise<T> {
-    docId = typeDocID(docId)
+  async loadDocument<T extends Doctype>(docId: DocID | CommitID | string): Promise<T> {
+    const docRef = DocRef.from(docId)
 
-    let doc = this._docCache.get(docId) as Document
+    let doc = this._docCache.get(docRef.baseID) as Document
     if (doc == null) {
-      doc = await Document.load(docId, this._apiUrl, this.context, this._config)
+      doc = await Document.load(docRef, this._apiUrl, this.context, this._config)
       this._docCache.put(doc)
     } else {
       await doc._syncState()

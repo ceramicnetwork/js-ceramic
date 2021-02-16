@@ -4,7 +4,6 @@ import tmp from 'tmp-promise'
 import { DoctypeUtils, DocState, Doctype, IpfsApi } from "@ceramicnetwork/common"
 import { TileDoctype } from "@ceramicnetwork/doctype-tile"
 import * as u8a from 'uint8arrays'
-import DocID from "@ceramicnetwork/docid"
 import { createIPFS, swarmConnect } from './ipfs-util';
 
 jest.mock('../store/level-state-store')
@@ -353,15 +352,15 @@ describe('Ceramic integration', () => {
     await anchor(ceramic1)
     await syncDoc(doctype1)
 
-    const prevCommitDocId1 = DocID.fromOther(doctype1.id, doctype1.state.log[3].cid.toString())
+    const prevCommitDocId1 = doctype1.id.travel(doctype1.state.log[3].cid)
 
     const loadedDoctype1 = await ceramic2.loadDocument(prevCommitDocId1)
     expect(loadedDoctype1).toBeDefined()
 
-    expect(getDocFromCacheSpy2).toBeCalledTimes(2)
+    expect(getDocFromCacheSpy2).toBeCalledTimes(1)
     expect(putDocToCacheSpy2).toBeCalledTimes(2)
     expect(docCache2._baseDocCache.has(prevCommitDocId1.baseID.toString())).toBeTruthy()
-    expect(docCache2._commitDocCache.has(prevCommitDocId1.toString())).toBeTruthy()
+    expect(docCache2._commitDocCache.has(prevCommitDocId1.toString())).toBeFalsy()
 
     await ceramic1.close()
     await ceramic2.close()
@@ -399,12 +398,12 @@ describe('Ceramic integration', () => {
     await anchor(ceramic1)
     await syncDoc(doctype1)
 
-    const prevCommitDocId1 = DocID.fromOther(doctype1.id, doctype1.state.log[3].cid.toString())
+    const prevCommitDocId1 = doctype1.id.travel(doctype1.state.log[3].cid)
 
     const loadedDoctype1 = await ceramic2.loadDocument(prevCommitDocId1)
     expect(loadedDoctype1).toBeDefined()
 
-    expect(getDocFromCacheSpy2).toBeCalledTimes(2)
+    expect(getDocFromCacheSpy2).toBeCalledTimes(1)
     expect(putDocToCacheSpy2).toBeCalledTimes(2)
     expect(docCache2._baseDocCache.has(prevCommitDocId1.baseID.toString())).toBeTruthy()
     expect(docCache2._commitDocCache).toBeNull()

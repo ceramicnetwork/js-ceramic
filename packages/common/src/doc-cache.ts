@@ -1,5 +1,5 @@
 import { LRUMap } from 'lru_map'
-import DocID from "@ceramicnetwork/docid"
+import { DocID } from "@ceramicnetwork/docid"
 
 import { DocStateHolder } from "./doctype"
 
@@ -27,14 +27,7 @@ export class DocCache {
      * @param doc - DocStateHolder instance
      */
     put(doc: DocStateHolder): void {
-        if (doc.id.commit == null) {
-            this._baseDocCache.set(doc.id.baseID.toString(), doc)
-            return;
-        }
-
-        if (this._cacheCommits) {
-            this._commitDocCache.set(doc.id.toString(), doc)
-        }
+        this._baseDocCache.set(doc.id.baseID.toString(), doc)
     }
 
     /**
@@ -59,9 +52,6 @@ export class DocCache {
      * Puts to pinned
      */
     pin(doc: DocStateHolder) {
-        if (doc.id.commit != null) {
-            throw new Error(`Cannot pin a specific commit. Doc ID ${doc.id.toString()}`)
-        }
         this._pinnedDocCache[doc.id.toString()] = doc;
         this._baseDocCache.delete(doc.id.toString())
     }

@@ -2,7 +2,7 @@ import CID from 'cids'
 import cloneDeep from 'lodash.clonedeep'
 import { EventEmitter } from "events"
 import type { Context } from "./context"
-import DocID from '@ceramicnetwork/docid'
+import { DocID, CommitID } from '@ceramicnetwork/docid'
 import type { DagJWSResult, DagJWS } from 'dids'
 
 /**
@@ -178,24 +178,24 @@ export abstract class Doctype extends EventEmitter implements DocStateHolder {
         return this._state.log[this._state.log.length - 1].cid
     }
 
-    get commitId(): DocID {
-        return DocID.fromOther(this.id, this.tip)
+    get commitId(): CommitID {
+        return this.id.travel(this.tip)
     }
 
     /**
      * Lists available commits
      */
-    get allCommitIds(): Array<DocID> {
-      return this._state.log.map(({ cid }) => DocID.fromOther(this.id, cid))
+    get allCommitIds(): Array<CommitID> {
+      return this._state.log.map(({ cid }) => this.id.travel(cid))
     }
 
     /**
      * Lists available commits that correspond to anchor commits
      */
-    get anchorCommitIds(): Array<DocID> {
+    get anchorCommitIds(): Array<CommitID> {
         return this._state.log
             .filter(({ type }) => type === CommitType.ANCHOR)
-            .map(({ cid }) => DocID.fromOther(this.id, cid))
+            .map(({ cid }) => this.id.travel(cid))
     }
 
     get state(): DocState {

@@ -137,13 +137,6 @@ export class CeramicCliUtils {
      */
     static async change(docId: string, content: string, controllers: string, schemaDocId?: string): Promise<void> {
         const id = DocID.fromString(docId)
-
-        const commit = id.commit
-        if (commit) {
-            console.error(`No commits allowed. Invalid docId: ${id.toString()}`)
-            return
-        }
-
         await CeramicCliUtils._runWithCeramic(async (ceramic: CeramicClient) => {
             const parsedControllers = CeramicCliUtils._parseControllers(controllers)
             const parsedContent = CeramicCliUtils._parseContent(content)
