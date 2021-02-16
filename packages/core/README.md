@@ -25,7 +25,7 @@ const ipfs = Ipfs.create({
     ipld: { formats: [format] },
 })
 
-const config: CeramicConfig = { params: {}, modules: {} }
+const config: CeramicConfig = {}
 const ceramic = await Ceramic.create(ipfs, config)
 
 // create document example
