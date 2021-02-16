@@ -57,7 +57,7 @@ export interface CeramicConfig {
   didProvider?: DIDProvider;
 
   validateDocs?: boolean;
-  pinningEndpoints?: string[];
+  ipfsPinningEndpoints?: string[];
   pinningBackends?: PinningBackendStatic[];
 
   logLevel?: string;
@@ -270,7 +270,7 @@ class Ceramic implements CeramicApi {
     const pinStoreProperties = {
       networkName: networkOptions.name,
       pinsetDirectory: config.pinsetDirectory,
-      pinningEndpoints: config.pinningEndpoints,
+      pinningEndpoints: config.ipfsPinningEndpoints,
       pinningBackends: config.pinningBackends
     }
     const pinStoreFactory = new PinStoreFactory(context, pinStoreProperties)

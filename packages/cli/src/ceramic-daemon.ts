@@ -36,7 +36,7 @@ export interface CreateOpts {
   pinsetDirectory?: string;
 
   validateDocs?: boolean;
-  pinningEndpoints?: string[];
+  ipfsPinningEndpoints?: string[];
   gateway?: boolean;
   debug: boolean;
   logToFiles?: boolean;
@@ -97,8 +97,8 @@ const makeCeramicConfig = function (opts: CreateOpts): CeramicConfig {
     ceramicConfig.pinsetDirectory = opts.pinsetDirectory
   }
 
-  if (opts.pinningEndpoints) {
-    ceramicConfig.pinningEndpoints = opts.pinningEndpoints
+  if (opts.ipfsPinningEndpoints) {
+    ceramicConfig.ipfsPinningEndpoints = opts.ipfsPinningEndpoints
   }
 
   if (opts.logToFiles) {

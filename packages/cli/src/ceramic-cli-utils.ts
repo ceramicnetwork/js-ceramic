@@ -39,7 +39,7 @@ export class CeramicCliUtils {
      * @param ethereumRpc - Ethereum RPC URL
      * @param anchorServiceApi - Anchor service API URL
      * @param validateDocs - Validate docs according to schemas or not
-     * @param pinningEndpoints - Pinning endpoints
+     * @param ipfsPinningEndpoints - Ipfs pinning endpoints
      * @param pinsetDirectory - Path to the directory that will be used for storing pinned document state
      * @param gateway - read only endpoints available. It is disabled by default
      * @param port - port daemon is availabe. Default is 7007
@@ -57,7 +57,7 @@ export class CeramicCliUtils {
         ethereumRpc: string,
         anchorServiceApi: string,
         validateDocs: boolean,
-        pinningEndpoints: string[],
+        ipfsPinningEndpoints: string[],
         pinsetDirectory: string,
         gateway: boolean,
         port: number,
@@ -80,7 +80,7 @@ export class CeramicCliUtils {
             anchorServiceUrl: anchorServiceApi,
             pinsetDirectory,
             validateDocs,
-            pinningEndpoints,
+            ipfsPinningEndpoints,
             gateway,
             port,
             debug,
