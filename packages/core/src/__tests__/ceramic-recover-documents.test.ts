@@ -28,9 +28,9 @@ function registerChangeListener (doc: Doctype): Promise<void> {
     })
 }
 
-async function createCeramic(ipfs: IpfsApi, pinsetDirectory: string) {
+async function createCeramic(ipfs: IpfsApi, stateStoreDirectory: string) {
     const ceramic = await Ceramic.create(ipfs, {
-        stateStoreDirectory: pinsetDirectory,
+        stateStoreDirectory,
         anchorOnRequest: false,
         pubsubTopic: PUBSUB_TOPIC, // necessary so Ceramic instances can talk to each other
     });
@@ -57,10 +57,10 @@ afterEach(async () => {
 });
 
 it("re-request anchors on #recoverDocuments", async () => {
-    const pinsetDirectory = await tmp.tmpName();
+    const stateStoreDirectory = await tmp.tmpName();
 
     // Store
-    const ceramic1 = await createCeramic(ipfs1, pinsetDirectory);
+    const ceramic1 = await createCeramic(ipfs1, stateStoreDirectory);
     const controller = ceramic1.context.did.id;
 
     const doc1 = await ceramic1.createDocument(
@@ -73,7 +73,7 @@ it("re-request anchors on #recoverDocuments", async () => {
     await ceramic1.close();
 
     // Retrieve after being closed
-    const ceramic2 = await createCeramic(ipfs2, pinsetDirectory);
+    const ceramic2 = await createCeramic(ipfs2, stateStoreDirectory);
 
     const doc2 = await ceramic2.loadDocument(doc1.id);
     expect(doc2.state.anchorStatus).toEqual(AnchorStatus.PENDING);
