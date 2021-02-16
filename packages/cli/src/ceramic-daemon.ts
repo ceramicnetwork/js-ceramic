@@ -33,7 +33,7 @@ export interface CreateOpts {
 
   ethereumRpcUrl?: string;
   anchorServiceUrl?: string;
-  pinsetDirectory?: string;
+  stateStoreDirectory?: string;
 
   validateDocs?: boolean;
   ipfsPinningEndpoints?: string[];
@@ -93,8 +93,8 @@ const makeCeramicConfig = function (opts: CreateOpts): CeramicConfig {
     ceramicConfig.pubsubTopic = opts.pubsubTopic
   }
 
-  if (opts.pinsetDirectory) {
-    ceramicConfig.pinsetDirectory = opts.pinsetDirectory
+  if (opts.stateStoreDirectory) {
+    ceramicConfig.stateStoreDirectory = opts.stateStoreDirectory
   }
 
   if (opts.ipfsPinningEndpoints) {

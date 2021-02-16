@@ -51,7 +51,7 @@ const TESTING = process.env.NODE_ENV == 'test'
 export interface CeramicConfig {
   ethereumRpcUrl?: string;
   anchorServiceUrl?: string;
-  pinsetDirectory?: string;
+  stateStoreDirectory?: string;
 
   didResolver?: Resolver;
   didProvider?: DIDProvider;
@@ -269,7 +269,7 @@ class Ceramic implements CeramicApi {
 
     const pinStoreProperties = {
       networkName: networkOptions.name,
-      pinsetDirectory: config.pinsetDirectory,
+      pinsetDirectory: config.stateStoreDirectory,
       pinningEndpoints: config.ipfsPinningEndpoints,
       pinningBackends: config.pinningBackends
     }
