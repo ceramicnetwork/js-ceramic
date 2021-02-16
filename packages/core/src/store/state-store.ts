@@ -6,7 +6,6 @@ export interface StateStore {
     close(): Promise<void>;
     save(document: Doctype): Promise<void>;
     load(docId: DocID): Promise<DocState | null>;
-    exists(docId: DocID): Promise<boolean>;
     list(docId?: DocID): Promise<string[]>;
     remove(docId: DocID): Promise<void>;
 }

@@ -64,10 +64,6 @@ test('#save and #load', async () => {
     await stateStore.open()
     await stateStore.save(document)
     const docId = document.id.baseID
-    const storedState = {
-        ...state,
-        log: state.log.map(e => ({ ...e, cid: e.cid.toString() }))
-    }
     expect(mockPut).toBeCalledWith(docId.toString(), DoctypeUtils.serializeState(state))
 
     const retrieved = await stateStore.load(docId)
@@ -92,42 +88,11 @@ describe('#load', () => {
     })
 })
 
-describe('#exists', () => {
-    test('absent', async () => {
-        await stateStore.open()
-        const load = jest.spyOn(stateStore, 'load')
-        const docid = DocID.fromString(docIdTest)
-        await expect(stateStore.exists(docid)).resolves.toBeFalsy()
-        expect(load).toBeCalledWith(docid)
-    })
-
-    test('present', async () => {
-        await stateStore.open()
-        stateStore.load = jest.fn(async () => state)
-        const docid = DocID.fromString(docIdTest)
-        await expect(stateStore.exists(docid)).resolves.toBeTruthy()
-        expect(stateStore.load).toBeCalledWith(docid)
-    })
-})
-
-describe('#remove', () => {
-    test('absent', async () => {
-        await stateStore.open()
-        const exists = jest.spyOn(stateStore, 'exists').mockImplementation(async () => false)
-        const docid = DocID.fromString(docIdTest)
-        await stateStore.remove(docid)
-        expect(exists).toBeCalledWith(docid)
-        expect(mockDel).not.toBeCalled()
-    })
-
-    test('present', async () => {
-        await stateStore.open()
-        const exists = jest.spyOn(stateStore, 'exists').mockImplementation(async () => true)
-        const docid = DocID.fromString(docIdTest)
-        await stateStore.remove(docid)
-        expect(exists).toBeCalledWith(docid)
-        expect(mockDel).toBeCalledWith(docid.toString())
-    })
+test('#remove', async () => {
+    await stateStore.open()
+    const docid = DocID.fromString(docIdTest)
+    await stateStore.remove(docid)
+    expect(mockDel).toBeCalledWith(docid.toString())
 })
 
 describe('#list', () => {
@@ -139,14 +104,14 @@ describe('#list', () => {
     })
     test('report if docId is saved', async () => {
         await stateStore.open()
-        stateStore.exists = jest.fn(() => Promise.resolve(true))
+        stateStore.load = jest.fn(() => Promise.resolve(state))
         const docid = DocID.fromString(docIdTest)
         const list = await stateStore.list(docid)
         expect(list).toEqual([docid.toString()])
     })
     test('report if docId is absent', async () => {
         await stateStore.open()
-        stateStore.exists = jest.fn(() => Promise.resolve(false))
+        stateStore.load = jest.fn(() => Promise.resolve(null))
         const docid = DocID.fromString(docIdTest)
         const list = await stateStore.list(docid)
         expect(list).toEqual([])

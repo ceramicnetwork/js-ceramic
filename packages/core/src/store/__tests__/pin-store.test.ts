@@ -12,7 +12,6 @@ beforeEach(() => {
         close: jest.fn(),
         list: jest.fn(),
         remove: jest.fn(),
-        exists: jest.fn(),
         save: jest.fn(),
         load: jest.fn()
     }
