@@ -29,11 +29,11 @@ function registerChangeListener (doc: Doctype): Promise<void> {
 }
 
 async function createCeramic(ipfs: IpfsApi, pinsetDirectory: string) {
-    const ceramic = await Ceramic.create(ipfs, { modules: {}, params: {
+    const ceramic = await Ceramic.create(ipfs, {
         pinsetDirectory: pinsetDirectory,
         anchorOnRequest: false,
         pubsubTopic: PUBSUB_TOPIC, // necessary so Ceramic instances can talk to each other
-    }});
+    });
     const provider = new Ed25519Provider(SEED);
     await ceramic.setDIDProvider(provider);
     return ceramic;
