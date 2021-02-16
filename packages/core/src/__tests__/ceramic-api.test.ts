@@ -135,7 +135,6 @@ describe('Ceramic API', () => {
 
       await expect( async () => {
         const updateRecord = await TileDoctype._makeCommit(docV1, ceramic.context.did, { content: { test: 'fghj' } })
-        console.log('applyRecord.0')
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         await ceramic.context.api.applyRecord(docV1Id, updateRecord)
