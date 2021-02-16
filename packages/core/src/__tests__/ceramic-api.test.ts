@@ -141,18 +141,6 @@ describe('Ceramic API', () => {
         await ceramic.context.api.applyRecord(docV1Id, updateRecord)
       }).rejects.toThrow(/Not DocID/)
 
-      // // try to call Ceramic API directly
-      // try {
-      //   const updateRecord = await TileDoctype._makeCommit(docV1, ceramic.context.did, { content: { test: 'fghj' } })
-      //   console.log('applyRecord.0')
-      //   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      //   // @ts-ignore
-      //   await ceramic.context.api.applyRecord(docV1Id, updateRecord)
-      //   throw new Error('Should not be able to update commit')
-      // } catch (e) {
-      //   expect(e.message).toEqual('Historical document commits cannot be modified. Load the document without specifying a commit to make updates.')
-      // }
-
       // checkout not anchored commit
       const docV2Id = docOg.id.travel(docOg.state.log[2].cid)
       const docV2 = await ceramic.loadDocument<TileDoctype>(docV2Id)
