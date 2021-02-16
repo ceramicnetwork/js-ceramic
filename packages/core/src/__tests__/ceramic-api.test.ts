@@ -119,7 +119,7 @@ describe('Ceramic API', () => {
       expect(docOg.content).toEqual({ test: 'abcde' })
       expect(docOg.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
-      const docV1Id = docOg.id.travel(docOg.state.log[1].cid)
+      const docV1Id = docOg.id.atCommit(docOg.state.log[1].cid)
       const docV1 = await ceramic.loadDocument<TileDoctype>(docV1Id)
       expect(docV1.state).toEqual(stateOg)
       expect(docV1.content).toEqual({ test: 321 })
@@ -141,7 +141,7 @@ describe('Ceramic API', () => {
       }).rejects.toThrow(/Not DocID/)
 
       // checkout not anchored commit
-      const docV2Id = docOg.id.travel(docOg.state.log[2].cid)
+      const docV2Id = docOg.id.atCommit(docOg.state.log[2].cid)
       const docV2 = await ceramic.loadDocument<TileDoctype>(docV2Id)
       expect(docV2.content).toEqual({ test: "abcde" })
       expect(docV2.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)

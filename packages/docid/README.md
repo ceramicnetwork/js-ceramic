@@ -79,11 +79,11 @@ commitId.toUrl();
 // ceramic://k3y52l7mkcvtg023bt9txegccxe1bah8os3naw5asin3baf3l3t54atn0cuy98yws?version=k3y52l7mkcvt...
 ```
 
-To reference specific CID from `DocID` or to change commit reference in `CommitID`, use `travel` method:
+To reference specific CID from `DocID` or to change commit reference in `CommitID`, use `atCommit` method:
 
 ```typescript
-commitId.travel('bagcqcerakszw2vsov...'); // #=> new CommitID for the same document
-docId.travel('bagcqcerakszw2vsov...'); // #=> new CommitID for the same document
+commitId.atCommit('bagcqcerakszw2vsov...'); // #=> new CommitID for the same document
+docId.atCommit('bagcqcerakszw2vsov...'); // #=> new CommitID for the same document
 ```
 
 `CommitID` (`DocID` for compatibility also) can get you base `DocID` via `#baseID`:

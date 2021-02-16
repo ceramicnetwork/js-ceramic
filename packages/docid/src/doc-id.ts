@@ -112,7 +112,7 @@ export class DocID implements DocRef {
   /**
    * Construct new CommitID for the same document, but a new `commit` CID.
    */
-  travel(commit: CID | string | number): CommitID {
+  atCommit(commit: CID | string | number): CommitID {
     return new CommitID(this.#doctype, this.#cid, commit);
   }
 

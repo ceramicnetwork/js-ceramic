@@ -179,14 +179,14 @@ export abstract class Doctype extends EventEmitter implements DocStateHolder {
     }
 
     get commitId(): CommitID {
-        return this.id.travel(this.tip)
+        return this.id.atCommit(this.tip)
     }
 
     /**
      * Lists available commits
      */
     get allCommitIds(): Array<CommitID> {
-      return this._state.log.map(({ cid }) => this.id.travel(cid))
+      return this._state.log.map(({ cid }) => this.id.atCommit(cid))
     }
 
     /**
@@ -195,7 +195,7 @@ export abstract class Doctype extends EventEmitter implements DocStateHolder {
     get anchorCommitIds(): Array<CommitID> {
         return this._state.log
             .filter(({ type }) => type === CommitType.ANCHOR)
-            .map(({ cid }) => this.id.travel(cid))
+            .map(({ cid }) => this.id.atCommit(cid))
     }
 
     get state(): DocState {

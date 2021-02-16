@@ -12,7 +12,7 @@ export interface DocRef {
   readonly cid: CID;
   readonly bytes: Uint8Array;
   readonly baseID: DocID;
-  travel(commit: CID | string | number): CommitID;
+  atCommit(commit: CID | string | number): CommitID;
   equals(other: this): boolean;
   toString(): string;
   toUrl(): string;

@@ -101,7 +101,7 @@ const legacyResolve = async (ceramic: Ceramic, didId: string, commit?: string): 
 }
 
 const resolve = async (ceramic: Ceramic, didId: string, commit?: string, v03ID?: string): Promise<DIDDocument | null> =>  {
-  const commitId = DocID.fromString(didId).travel(commit)
+  const commitId = DocID.fromString(didId).atCommit(commit)
   const doctype = await ceramic.loadDocument(commitId)
   return wrapDocument(doctype.content, `did:3:${v03ID || didId}`)
 }

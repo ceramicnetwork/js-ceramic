@@ -59,28 +59,28 @@ describe('constructor', () => {
   });
 });
 
-describe('#travel', () => {
+describe('#atCommit', () => {
   const commitId = new CommitID('tile', BASE_CID, COMMIT_CID);
 
   test('to number 0', () => {
-    const traveller = commitId.travel(0);
+    const traveller = commitId.atCommit(0);
     expect(traveller.commit).toEqual(BASE_CID);
   });
   test('to number 1', () => {
-    expect(() => commitId.travel(1)).toThrowErrorMatchingSnapshot();
+    expect(() => commitId.atCommit(1)).toThrowErrorMatchingSnapshot();
   });
   test('to commit CID', () => {
     const commitId = new CommitID('tile', BASE_CID);
-    const traveller = commitId.travel(COMMIT_CID);
+    const traveller = commitId.atCommit(COMMIT_CID);
     expect(traveller.commit).toEqual(COMMIT_CID);
   });
   test('to commit CID as string', () => {
     const commitId = new CommitID('tile', BASE_CID);
-    const traveller = commitId.travel(COMMIT_CID_STRING);
+    const traveller = commitId.atCommit(COMMIT_CID_STRING);
     expect(traveller.commit).toEqual(COMMIT_CID);
   });
   test('to garbage string', () => {
-    expect(() => commitId.travel('garbage')).toThrow();
+    expect(() => commitId.atCommit('garbage')).toThrow();
   });
 });
 

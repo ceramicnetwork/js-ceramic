@@ -253,7 +253,7 @@ describe('Document', () => {
       const commit0 = doc.commitId
       expect(commits).toEqual([commit0])
 
-      expect(commit0.equals(doc.id.travel(doc.id.cid))).toBeTruthy()
+      expect(commit0.equals(doc.id.atCommit(doc.id.cid))).toBeTruthy()
       expect(anchorCommits.length).toEqual(0)
 
       await anchorUpdate(anchorService, doc)
@@ -315,7 +315,7 @@ describe('Document', () => {
       expect(doc.state.log.length).toEqual(5)
 
       // try to load a non-existing commit
-      const nonExistentCommitID = doc.id.travel(new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu'))
+      const nonExistentCommitID = doc.id.atCommit(new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu'))
       try {
         await Document.loadAtCommit(nonExistentCommitID, doc)
         fail('Should not be able to fetch non-existing commit')
@@ -419,11 +419,11 @@ describe('Document', () => {
       expect(doc1.content).toEqual(newContent)
 
       // Loading valid commit works
-      const docAtValidCommit = await Document.loadAtCommit(docId.travel(tipValidUpdate), doc1)
+      const docAtValidCommit = await Document.loadAtCommit(docId.atCommit(tipValidUpdate), doc1)
       expect(docAtValidCommit.content).toEqual(newContent)
 
       // Loading invalid commit fails
-      await expect(Document.loadAtCommit(docId.travel(tipInvalidUpdate), doc1)).rejects.toThrow(
+      await expect(Document.loadAtCommit(docId.atCommit(tipInvalidUpdate), doc1)).rejects.toThrow(
           `Requested commit CID ${tipInvalidUpdate.toString()} not found in the log for document ${docId.toString()}`
       )
     })

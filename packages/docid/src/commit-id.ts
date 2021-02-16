@@ -87,7 +87,7 @@ function fromString(input: string): CommitID {
   if (protocolFree.includes('commit')) {
     const commit = protocolFree.split('?')[1].split('=')[1];
     const base = protocolFree.split('?')[0];
-    return DocID.fromString(base).travel(commit);
+    return DocID.fromString(base).atCommit(commit);
   } else {
     return fromBytes(multibase.decode(protocolFree));
   }
@@ -174,7 +174,7 @@ export class CommitID implements DocRef {
   /**
    * Construct new CommitID for the same document, but a new `commit` CID.
    */
-  travel(commit: CID | string | number): CommitID {
+  atCommit(commit: CID | string | number): CommitID {
     return new CommitID(this.#doctype, this.#cid, commit);
   }
 

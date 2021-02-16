@@ -352,7 +352,7 @@ describe('Ceramic integration', () => {
     await anchor(ceramic1)
     await syncDoc(doctype1)
 
-    const prevCommitDocId1 = doctype1.id.travel(doctype1.state.log[3].cid)
+    const prevCommitDocId1 = doctype1.id.atCommit(doctype1.state.log[3].cid)
 
     const loadedDoctype1 = await ceramic2.loadDocument(prevCommitDocId1)
     expect(loadedDoctype1).toBeDefined()
@@ -398,7 +398,7 @@ describe('Ceramic integration', () => {
     await anchor(ceramic1)
     await syncDoc(doctype1)
 
-    const prevCommitDocId1 = doctype1.id.travel(doctype1.state.log[3].cid)
+    const prevCommitDocId1 = doctype1.id.atCommit(doctype1.state.log[3].cid)
 
     const loadedDoctype1 = await ceramic2.loadDocument(prevCommitDocId1)
     expect(loadedDoctype1).toBeDefined()
