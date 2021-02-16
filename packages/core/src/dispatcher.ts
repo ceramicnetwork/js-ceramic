@@ -90,7 +90,7 @@ export default class Dispatcher extends EventEmitter {
       } else if (error.message.includes('The user aborted a request')) {        // for some reason the first call to pubsub.subscribe throws this error
         this._subscribe(true)
       } else {
-        console.error(error)
+        this._logger.err(error.message)
       }
     }
   }
