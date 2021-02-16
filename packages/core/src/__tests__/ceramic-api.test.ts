@@ -67,7 +67,7 @@ describe('Ceramic API', () => {
   const createCeramic = async (params: CeramicParams = {}): Promise<Ceramic> => {
     params.anchorOnRequest = false
     params.restoreDocuments = false
-    const ceramic = await Ceramic.create(ipfs, {params})
+    const ceramic = await Ceramic.create(ipfs, {params, modules: {}})
 
     const provider = new Ed25519Provider(seed)
     await ceramic.setDIDProvider(provider)
