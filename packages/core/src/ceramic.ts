@@ -31,7 +31,6 @@ import { Resolver } from "did-resolver"
 import { DID } from 'dids'
 import { TileDoctypeHandler } from "@ceramicnetwork/doctype-tile-handler"
 import { Caip10LinkDoctypeHandler } from "@ceramicnetwork/doctype-caip10-link-handler"
-import { DiagnosticsLogger } from "@ceramicnetwork/logger";
 import { PinStoreFactory } from "./store/pin-store-factory";
 import { PinStore } from "./store/pin-store";
 import { PathTrie, TrieNode, promiseTimeout } from './utils'
@@ -50,15 +49,19 @@ const IPFS_GET_TIMEOUT = 60000 // 1 minute
 const TESTING = process.env.NODE_ENV == 'test'
 
 /**
- * Ceramic configuration parameters
+ * Ceramic configuration
  */
 export interface CeramicConfig {
   ethereumRpcUrl?: string;
   anchorServiceUrl?: string;
   pinsetDirectory?: string;
 
+  didResolver?: Resolver;
+  didProvider?: DIDProvider;
+
   validateDocs?: boolean;
   pinningEndpoints?: string[];
+  pinningBackends?: PinningBackendStatic[];
 
   logLevel?: string;
   logToFiles?: boolean;
@@ -80,16 +83,6 @@ export interface CeramicConfig {
   restoreDocuments?: boolean;
 
   [index: string]: any; // allow arbitrary properties
-}
-
-/**
- * Ceramic inner components provided during creation.
- */
-export interface CeramicProvidedComponents {
-  didResolver?: Resolver;
-  didProvider?: DIDProvider;
-  pinningBackends?: PinningBackendStatic[];
-  logger?: DiagnosticsLogger;
 }
 
 /**
@@ -239,12 +232,24 @@ class Ceramic implements CeramicApi {
   }
 
   /**
+   * Returns a copy of the given CeramicConfig object but with any potentially sensitive fields
+   * removed so that it is safe to log the whole thing.
+   * @param config
+   * @returns Copy of `config` with potentially sensitive information removed
+   * @private
+   */
+  private static _redactConfigForLogging(config: CeramicConfig): CeramicConfig {
+    const redactedConfig = {...config}
+    delete redactedConfig.didProvider
+    return redactedConfig
+  }
+
+  /**
    * Create Ceramic instance
    * @param ipfs - IPFS instance
    * @param config - Ceramic configuration
-   * @param components - Ceramic internal components provided to `create` from higher level
    */
-  static async create(ipfs: IpfsApi, config: CeramicConfig = {}, components?: CeramicProvidedComponents): Promise<Ceramic> {
+  static async create(ipfs: IpfsApi, config: CeramicConfig = {}): Promise<Ceramic> {
     // todo remove
     LoggerProviderOld.init({
       level: config.logLevel? config.logLevel : 'silent',
@@ -262,10 +267,10 @@ class Ceramic implements CeramicApi {
 
     // Initialize ceramic loggers
     const loggerConfig = {logLevel: config.logLevel, logToFiles: config.logToFiles, logPath: config.logPath}
-    const logger = components?.logger ?? LoggerProvider.makeDiagnosticLogger(loggerConfig)
+    const logger = LoggerProvider.makeDiagnosticLogger(loggerConfig)
     const pubsubLogger = LoggerProvider.makeServiceLogger("pubsub", loggerConfig)
 
-    logger.imp(`Starting Ceramic node at version ${packageJson.version} with config: \n${JSON.stringify(config, null, 2)}`)
+    logger.imp(`Starting Ceramic node at version ${packageJson.version} with config: \n${JSON.stringify(Ceramic._redactConfigForLogging(config), null, 2)}`)
 
     const anchorService = config.anchorServiceUrl ? new EthereumAnchorService(config) : new InMemoryAnchorService(config as any)
     await anchorService.init()
@@ -285,7 +290,7 @@ class Ceramic implements CeramicApi {
       networkName: networkOptions.name,
       pinsetDirectory: config.pinsetDirectory,
       pinningEndpoints: config.pinningEndpoints,
-      pinningBackends: components?.pinningBackends
+      pinningBackends: config.pinningBackends
     }
     const pinStoreFactory = new PinStoreFactory(context, pinStoreProperties)
     const pinStore = await pinStoreFactory.open()
@@ -296,11 +301,11 @@ class Ceramic implements CeramicApi {
     const keyDidResolver = KeyDidResolver.getResolver()
     const threeIdResolver = ThreeIdResolver.getResolver(ceramic)
     ceramic.context.resolver = new Resolver({
-      ...components?.didResolver, ...threeIdResolver, ...keyDidResolver,
+      ...config.didResolver, ...threeIdResolver, ...keyDidResolver,
     })
 
-    if (components?.didProvider) {
-      await ceramic.setDIDProvider(components.didProvider)
+    if (config.didProvider) {
+      await ceramic.setDIDProvider(config.didProvider)
     }
 
     const doPeerDiscovery = config.useCentralizedPeerDiscovery ?? !TESTING
