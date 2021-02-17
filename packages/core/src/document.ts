@@ -50,7 +50,7 @@ class Document extends EventEmitter implements DocStateHolder {
                private _doctype: Doctype) {
     super()
 
-    this._logger = _context.logger
+    this._logger = _context.loggerProvider.getDiagnosticsLogger()
 
     this._applyQueue = new PQueue({ concurrency: 1 })
     this._genesisCid = id.cid

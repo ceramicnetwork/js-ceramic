@@ -3,8 +3,7 @@ import { CeramicApi, DIDProvider } from "./ceramic-api"
 
 import { DID } from 'dids'
 import type { AnchorService } from "./anchor-service"
-import { IpfsApi } from "./index"
-import { DiagnosticsLogger } from "@ceramicnetwork/logger";
+import { IpfsApi, LoggerProvider } from "./index"
 
 /**
  * Encapsulates Ceramic context
@@ -15,7 +14,7 @@ export interface Context {
     resolver?: Resolver; // a DID resolver instance
     provider?: DIDProvider; // a DID provider (3ID provider initially)
     anchorService?: AnchorService;
-    logger?: DiagnosticsLogger,
+    loggerProvider?: LoggerProvider;
 
     api?: CeramicApi; // the self reference to the Ceramic API
 }

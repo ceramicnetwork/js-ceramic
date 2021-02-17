@@ -3,7 +3,7 @@ import Document from '../document'
 import tmp from 'tmp-promise'
 import Dispatcher from '../dispatcher'
 import Ceramic from "../ceramic"
-import { Context, PinningBackend } from "@ceramicnetwork/common"
+import { Context, LoggerProvider, PinningBackend } from "@ceramicnetwork/common"
 import { AnchorStatus, DocOpts, SignatureStatus } from "@ceramicnetwork/common"
 import { AnchorService } from "@ceramicnetwork/common"
 import { TileDoctype, TileParams } from "@ceramicnetwork/doctype-tile"
@@ -21,6 +21,7 @@ jest.mock('../store/level-state-store')
 
 import InMemoryAnchorService from "../anchor/memory/in-memory-anchor-service"
 import {FakeTopology} from "./fake-topology";
+import {PinStoreFactory} from "../store/pin-store-factory";
 
 jest.mock('../dispatcher', () => {
   const CID = require('cids') // eslint-disable-line @typescript-eslint/no-var-requires
@@ -94,6 +95,7 @@ jest.mock('../dispatcher', () => {
         // TODO: this doesn't actually handle path traversal properly
         return recs[cid.toString()]
       }),
+      init: jest.fn(),
     }
   }
 })
@@ -152,7 +154,7 @@ describe('Document', () => {
     let ceramicWithoutSchemaValidation: Ceramic;
     let context: Context;
 
-    beforeEach(() => {
+    beforeEach(async () => {
       dispatcher = Dispatcher(false)
       anchorService = new InMemoryAnchorService({anchorOnRequest:false, verifySignatures: false})
       user = new DID()
@@ -178,21 +180,14 @@ describe('Document', () => {
       })
 
       const resolver = new Resolver({ ...threeIdResolver })
+      const loggerProvider = new LoggerProvider()
       context = {
         did: user,
         anchorService,
         ipfs: dispatcher._ipfs,
+        loggerProvider,
         resolver,
         provider: null,
-      }
-
-      anchorService.ceramic = {
-        context: {
-          ipfs: dispatcher._ipfs,
-          resolver,
-        },
-        dispatcher,
-        ipfs: dispatcher._ipfs
       }
 
       const networkOptions = {
@@ -202,11 +197,41 @@ describe('Document', () => {
       }
 
       const topology = new FakeTopology(dispatcher._ipfs, networkOptions.name)
-      ceramic = new Ceramic(dispatcher, pinStore, context, topology, networkOptions)
-      ceramic._doctypeHandlers['tile'] = doctypeHandler
 
-      ceramicWithoutSchemaValidation = new Ceramic(dispatcher, pinStore, context, topology, networkOptions, false)
+      const pinStoreFactory = {
+        open: async() => {
+          return pinStore
+        }
+      };
+      const modules = {
+        anchorService,
+        didResolver: resolver,
+        dispatcher,
+        ipfs: dispatcher._ipfs,
+        ipfsTopology: topology,
+        loggerProvider,
+        pinStoreFactory: pinStoreFactory as any as PinStoreFactory,
+      }
+
+      const params = {
+        cacheDocumentCommits: true,
+        docCacheLimit: 100,
+        networkOptions,
+        validateDocs: true,
+      }
+
+      ceramic = new Ceramic(params, modules)
+      ceramic._doctypeHandlers['tile'] = doctypeHandler
+      ceramic.context.resolver = resolver
+      context.api = ceramic
+      await ceramic._init(false, false)
+
+      const paramsNoSchemaValidation = { ...params, validateDocs: false };
+      ceramicWithoutSchemaValidation = new Ceramic(paramsNoSchemaValidation, modules)
       ceramicWithoutSchemaValidation._doctypeHandlers['tile'] = doctypeHandler
+      ceramicWithoutSchemaValidation.context.resolver = resolver
+
+      await ceramicWithoutSchemaValidation._init(false, false)
     })
 
     it('is created correctly', async () => {
@@ -712,7 +737,7 @@ describe('Document', () => {
     let ceramic: Ceramic;
     let user: DID;
 
-    beforeEach(() => {
+    beforeEach(async () => {
       dispatcher = Dispatcher(true)
       anchorService = new InMemoryAnchorService({})
       anchorService.ceramic = {
@@ -741,20 +766,14 @@ describe('Document', () => {
       })
 
       const resolver = new Resolver({ ...threeIdResolver })
+      const loggerProvider = new LoggerProvider()
       context = {
         did: user,
         anchorService,
         ipfs: dispatcher._ipfs,
+        loggerProvider,
         resolver,
         provider: null,
-      }
-
-      anchorService.ceramic = {
-        context: {
-          ipfs: dispatcher._ipfs,
-          resolver,
-        },
-        dispatcher,
       }
 
       const networkOptions = {
@@ -763,8 +782,36 @@ describe('Document', () => {
         supportedChains: ['inmemory:12345']
       }
       const topology = new FakeTopology(dispatcher._ipfs, networkOptions.name)
-      ceramic = new Ceramic(dispatcher, pinStore, context, topology, networkOptions)
+
+      const pinStoreFactory = {
+        open: async() => {
+          return pinStore
+        }
+      };
+      const modules = {
+        anchorService,
+        didResolver: resolver,
+        dispatcher,
+        ipfs: dispatcher._ipfs,
+        ipfsTopology: topology,
+        loggerProvider,
+        pinStoreFactory: pinStoreFactory as any as PinStoreFactory,
+        pinningBackends: null,
+      }
+
+      const params = {
+        cacheDocumentCommits: true,
+        docCacheLimit: 100,
+        networkOptions,
+        pinStoreOptions: null,
+        validateDocs: true,
+      }
+
+      ceramic = new Ceramic(params, modules)
       ceramic._doctypeHandlers['tile'] = doctypeHandler
+      ceramic.context.resolver = resolver
+      context.api = ceramic
+      await ceramic._init(false, false)
     })
 
     it('should announce change to network', async () => {
