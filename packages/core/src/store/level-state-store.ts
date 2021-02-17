@@ -55,23 +55,11 @@ export class LevelStateStore implements StateStore {
     }
 
     /**
-     * Is document pinned locally?
-     * @param docId - Document ID
-     */
-    async exists(docId: DocID): Promise<boolean> {
-        const state = await this.load(docId.baseID);
-        return Boolean(state)
-    }
-
-    /**
      * Unpin document
      * @param docId - Document ID
      */
     async remove(docId: DocID): Promise<void> {
-        const isPresent = await this.exists(docId.baseID)
-        if (isPresent) {
-            await this.#store.del(docId.baseID.toString())
-        }
+        await this.#store.del(docId.baseID.toString())
     }
 
     /**
@@ -83,7 +71,7 @@ export class LevelStateStore implements StateStore {
         if (docId == null) {
             return this.#store.stream({ keys: true, values: false })
         } else {
-            const exists = await this.exists(docId.baseID)
+            const exists = Boolean(await this.load(docId.baseID))
             docIds = exists ? [docId.toString()] : []
         }
         return docIds

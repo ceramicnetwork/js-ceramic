@@ -139,9 +139,9 @@ class Document extends EventEmitter implements DocStateHolder {
     const id = doc.id
 
     // Update document state to cached state if any
-    const isStored = await pinStore.stateStore.exists(id)
-    if (isStored) {
-      doc._doctype.state = await pinStore.stateStore.load(id)
+    const pinnedState = await pinStore.stateStore.load(id)
+    if (pinnedState) {
+      doc._doctype.state = pinnedState
     }
 
     // Request current tip from pub/sub system and register for future updates
@@ -278,7 +278,7 @@ class Document extends EventEmitter implements DocStateHolder {
    * @private
    */
   async _updateStateIfPinned(): Promise<void> {
-    const isPinned = await this.pinStore.stateStore.exists(this.id)
+    const isPinned = Boolean(await this.pinStore.stateStore.load(this.id))
     if (isPinned) {
       await this.pinStore.add(this._doctype)
     }
