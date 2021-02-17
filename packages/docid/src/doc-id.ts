@@ -20,7 +20,10 @@ function fromBytes(bytes: Uint8Array): DocID {
   const [docCodec, docCodecRemainder] = readVarint(bytes);
   if (docCodec !== DOCID_CODEC) throw new Error('fromBytes: invalid docid, does not include docid codec');
   const [docType, docTypeRemainder] = readVarint(docCodecRemainder);
-  const [cid] = readCid(docTypeRemainder);
+  const [cid, cidRemainder] = readCid(docTypeRemainder);
+  if (cidRemainder.length > 0) {
+    throw new Error(`Invalid DocID: contains commit`)
+  }
   return new DocID(docType, cid);
 }
 

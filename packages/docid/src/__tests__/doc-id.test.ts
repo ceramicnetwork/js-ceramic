@@ -45,20 +45,12 @@ describe('.fromBytes', () => {
     ).toThrow();
   });
 
-  test('create from bytes including commit', () => {
-    const docid = DocID.fromBytes(DOC_ID_WITH_COMMIT_BYTES);
-
-    expect(docid.type).toEqual(0);
-    expect(docid.cid.toString()).toEqual(CID_STRING);
-    expect(docid.toString()).toMatchSnapshot();
+  test('create from bytes including commit: fail', () => {
+    expect(() => DocID.fromBytes(DOC_ID_WITH_COMMIT_BYTES)).toThrow()
   });
 
-  test('create from bytes including commit 0', () => {
-    const docid = DocID.fromBytes(DOC_ID_WITH_0_COMMIT_BYTES);
-
-    expect(docid.type).toEqual(0);
-    expect(docid.cid.toString()).toEqual(CID_STRING);
-    expect(docid.toString()).toMatchSnapshot();
+  test('create from bytes including commit 0: fail', () => {
+    expect(() => DocID.fromBytes(DOC_ID_WITH_0_COMMIT_BYTES)).toThrow()
   });
 
   test('roundtrip docID bytes', () => {
@@ -77,20 +69,12 @@ describe('.fromString', () => {
     expect(docid.toString()).toMatchSnapshot();
   });
 
-  test('create from string including commit', () => {
-    const docid = DocID.fromString(DOC_ID_WITH_COMMIT);
-
-    expect(docid.type).toEqual(0);
-    expect(docid.cid.toString()).toEqual(CID_STRING);
-    expect(docid.toString()).toMatchSnapshot();
+  test('create from string including commit: fail', () => {
+    expect(() => DocID.fromString(DOC_ID_WITH_COMMIT)).toThrow()
   });
 
-  test('create from string including commit 0', () => {
-    const docid = DocID.fromString(DOC_ID_WITH_0_COMMIT);
-
-    expect(docid.type).toEqual(0);
-    expect(docid.cid.toString()).toEqual(CID_STRING);
-    expect(docid.toString()).toMatchSnapshot();
+  test('create from string including commit 0: fail', () => {
+    expect(() => DocID.fromString(DOC_ID_WITH_0_COMMIT)).toThrow()
   });
 
   test('create from url string', () => {
