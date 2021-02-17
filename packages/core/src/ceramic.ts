@@ -297,7 +297,7 @@ class Ceramic implements CeramicApi {
       pinningEndpoints: config.ipfsPinningEndpoints,
       pinningBackends: config.pinningBackends
     }
-    const pinStoreFactory = new PinStoreFactory(context, pinStoreProperties)
+    const pinStoreFactory = new PinStoreFactory(ipfs, pinStoreProperties)
     const pinStore = await pinStoreFactory.open()
     const topology = new IpfsTopology(ipfs, networkOptions.name)
     const ceramic = new Ceramic(dispatcher, pinStore, context, topology, networkOptions, config.validateDocs, config.docCacheLimit, config.cacheDocCommits)

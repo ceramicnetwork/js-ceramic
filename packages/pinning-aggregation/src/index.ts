@@ -1,6 +1,7 @@
+
 import type CID from "cids";
 import type {
-    CidList, PinningBackend, PinningBackendStatic, PinningInfo, Context,
+  CidList, PinningBackend, PinningBackendStatic, PinningInfo, IpfsApi,
 } from "@ceramicnetwork/common";
 import * as base64 from "@stablelib/base64";
 import * as sha256 from "@stablelib/sha256";
@@ -24,7 +25,7 @@ export class PinningAggregation implements PinningBackend {
     readonly id: string;
     readonly backends: PinningBackend[];
 
-    static build(context: Context, connectionStrings: string[], pinners: Array<PinningBackendStatic> = []): PinningAggregation {
+    static build(ipfs: IpfsApi, connectionStrings: string[], pinners: Array<PinningBackendStatic> = []): PinningAggregation {
         const backends = connectionStrings.map<PinningBackend>((s) => {
             const protocol = s.match(`://`) ? new URL(s).protocol.replace(":", "") : s;
             const match = protocol.match(/^(\w+)\+?/);
@@ -32,7 +33,7 @@ export class PinningAggregation implements PinningBackend {
 
             const found = pinners.find((pinner) => pinner.designator === designator);
             if (found) {
-                return new found(s, context);
+                return new found(s, ipfs);
             } else {
                 throw new UnknownPinningService(designator);
             }

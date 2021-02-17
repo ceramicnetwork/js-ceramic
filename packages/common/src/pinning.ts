@@ -1,5 +1,5 @@
 import type CID from "cids";
-import type { Context } from "./context";
+import { IpfsApi } from "./index";
 
 export interface PinningBackend {
     id: string;
@@ -20,7 +20,7 @@ export interface PinningBackend {
 export interface PinningBackendStatic {
     designator: string;
 
-    new(connectionString: string, context: Context): PinningBackend;
+    new(connectionString: string, ipfs: IpfsApi): PinningBackend;
 }
 
 export type CidString = string;

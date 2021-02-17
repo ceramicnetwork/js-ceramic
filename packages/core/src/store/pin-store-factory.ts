@@ -1,4 +1,4 @@
-import { Context, PinningBackendStatic } from "@ceramicnetwork/common";
+import { IpfsApi, PinningBackendStatic } from "@ceramicnetwork/common";
 import { LevelStateStore } from "./level-state-store";
 import { PinningAggregation } from "@ceramicnetwork/pinning-aggregation";
 import { PinStore } from "./pin-store";
@@ -23,7 +23,7 @@ export class PinStoreFactory {
     readonly pinningEndpoints: string[]
     readonly pinningBackends: PinningBackendStatic[];
 
-    constructor(readonly context: Context, props: Props) {
+    constructor(readonly ipfs: IpfsApi, props: Props) {
         const directoryRoot = props.pinsetDirectory || DEFAULT_PINSET_DIRECTORY
         // Always store the pinning state in a network-specific directory
         this.stateStorePath = path.join(directoryRoot, props.networkName)
@@ -34,8 +34,8 @@ export class PinStoreFactory {
     async open(): Promise<PinStore> {
         await fs.mkdir(this.stateStorePath, { recursive: true }) // create dir if it doesn't exist
         const stateStore = new LevelStateStore(this.stateStorePath)
-        const pinning = PinningAggregation.build(this.context, this.pinningEndpoints, this.pinningBackends)
-        const ipfs = this.context.ipfs
+        const ipfs = this.ipfs
+        const pinning = PinningAggregation.build(ipfs, this.pinningEndpoints, this.pinningBackends)
         const retrieve = async (cid: CID): Promise<any> => {
             const blob = await ipfs.dag.get(cid, { timeout: IPFS_GET_TIMEOUT })
             return blob?.value

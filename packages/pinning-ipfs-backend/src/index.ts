@@ -31,10 +31,9 @@ export class IpfsPinning implements PinningBackend {
     readonly ipfsAddress: string;
     readonly id: string;
 
-    readonly #context: Context;
     #ipfs: IpfsApi | undefined;
 
-    constructor(readonly connectionString: string, context: Context) {
+    constructor(readonly connectionString: string, ipfs: IpfsApi) {
         if (connectionString == 'ipfs+context') {
             this.ipfsAddress = FROM_CONTEXT_HOST
         } else {
@@ -51,7 +50,7 @@ export class IpfsPinning implements PinningBackend {
                 this.ipfsAddress = `${protocol}://${ipfsHost}:${ipfsPort}`
             }
         }
-        this.#context = context;
+        this.#ipfs = ipfs;
 
         const bytes = textEncoder.encode(this.connectionString);
         const digest = base64.encodeURLSafe(sha256.hash(bytes));
@@ -64,9 +63,7 @@ export class IpfsPinning implements PinningBackend {
 
     async open(): Promise<void> {
         if (this.ipfsAddress === FROM_CONTEXT_HOST) {
-            if (this.#context.ipfs) {
-                this.#ipfs = this.#context.ipfs;
-            } else {
+            if (!this.#ipfs) {
                 throw new NoIpfsInstanceError();
             }
         } else {

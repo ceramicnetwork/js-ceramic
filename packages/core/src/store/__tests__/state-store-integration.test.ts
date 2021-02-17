@@ -213,7 +213,7 @@ describe('Level data store', () => {
     doctypeHandler.verifyJWS = async (): Promise<void> => { return }
 
     const levelPath = (await tmp.dir({unsafeCleanup: true})).path
-    const storeFactory = new PinStoreFactory(context, {
+    const storeFactory = new PinStoreFactory(context.ipfs, {
       pinsetDirectory: levelPath,
       pinningEndpoints: ['ipfs+context'],
       networkName: 'inmemory',
@@ -349,7 +349,7 @@ describe('Level data store', () => {
     await anchorUpdate(doc.doctype)
 
     const levelPath = (await tmp.dir({unsafeCleanup: true})).path
-    const storeFactoryLocal = new PinStoreFactory(context, {
+    const storeFactoryLocal = new PinStoreFactory(context.ipfs, {
       pinsetDirectory: levelPath,
       pinningEndpoints: ['ipfs+context'],
       networkName: "local",
@@ -363,7 +363,7 @@ describe('Level data store', () => {
     await localStore.close()
 
     // Now create a net pin store for a different ceramic network
-    const storeFactoryInMemory = new PinStoreFactory(context, {
+    const storeFactoryInMemory = new PinStoreFactory(context.ipfs, {
       pinsetDirectory: levelPath,
       pinningEndpoints: ['ipfs+context'],
       networkName: "inmemory",
