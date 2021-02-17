@@ -82,6 +82,7 @@ export class DocID implements DocRef {
   /**
    * Doc type name
    */
+  @Memoize()
   get typeName(): string {
     return doctypes.nameByIndex(this.#doctype);
   }
@@ -108,6 +109,7 @@ export class DocID implements DocRef {
    * Copy of self. Exists to maintain compatibility with CommitID.
    * @readonly
    */
+  @Memoize()
   get baseID(): DocID {
     return new DocID(this.#doctype, this.#cid);
   }
@@ -133,6 +135,7 @@ export class DocID implements DocRef {
   /**
    * Encode the DocID into a string.
    */
+  @Memoize()
   toString(): string {
     return uint8ArrayToString(multibase.encode(DEFAULT_BASE, this.bytes));
   }
@@ -140,6 +143,7 @@ export class DocID implements DocRef {
   /**
    * Encode the DocID into a base36 url.
    */
+  @Memoize()
   toUrl(): string {
     return `ceramic://${this.toString()}`;
   }
