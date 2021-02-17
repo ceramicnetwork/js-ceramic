@@ -81,8 +81,8 @@ describe('Ceramic interop: core <> http-client', () => {
         // performed yet by the time the test checks.  To eliminate this race condition we should set
         // anchorOnRequest to false in the config for the InMemoryAnchorService and anchor manually
         // throughout the tests.
-        const pinsetDirectory = tmpFolder.path
-        core = await Ceramic.create(ipfs, {pubsubTopic: topic, pinsetDirectory})
+        const stateStoreDirectory = tmpFolder.path
+        core = await Ceramic.create(ipfs, {pubsubTopic: topic, stateStoreDirectory})
 
         const doctypeHandler = new TileDoctypeHandler()
         doctypeHandler.verifyJWS = (): Promise<void> => { return }
