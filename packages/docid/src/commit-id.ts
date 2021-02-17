@@ -209,11 +209,7 @@ export class CommitID implements DocRef {
    * @returns {String}
    */
   [Symbol.for('nodejs.util.inspect.custom')](): string {
-    if (this.#commit) {
-      return `CommitID(${this.#cid.toString()}, ${this.#commit.toString()})`;
-    } else {
-      return `CommitID(${this.#cid.toString()}, 0)`;
-    }
+    return `CommitID(${this.toString()})`;
   }
 
   /**
