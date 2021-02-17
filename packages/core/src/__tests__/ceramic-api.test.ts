@@ -204,7 +204,7 @@ describe('Ceramic API', () => {
         }, content: { a: "test" }
       }
 
-      await expect(ceramic.createDocument(DOCTYPE_TILE, tileDocParams)).rejects.toThrow('No commit information provided')
+      await expect(ceramic.createDocument(DOCTYPE_TILE, tileDocParams)).rejects.toThrow('Commit missing when loading schema document')
     })
 
     it('can create document with invalid schema if validation is not set', async () => {

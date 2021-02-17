@@ -645,7 +645,12 @@ class Document extends EventEmitter implements DocStateHolder {
    */
   static async loadSchemaById<T extends Doctype>(context: Context, schemaDocId: string): Promise<T> {
     if (schemaDocId) {
-      const commitId = CommitID.fromString(schemaDocId)
+      let commitId: CommitID
+      try {
+        commitId = CommitID.fromString(schemaDocId)
+      } catch {
+        throw new Error("Commit missing when loading schema document")
+      }
       const schemaDoc = await context.api.loadDocument(commitId)
       return schemaDoc.content
     }
