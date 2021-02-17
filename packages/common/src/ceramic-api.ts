@@ -6,7 +6,7 @@ import {
     DocParams,
     CeramicCommit
 } from "./doctype"
-import DocID from '@ceramicnetwork/docid'
+import { DocID, CommitID } from '@ceramicnetwork/docid'
 
 /**
  * Describes Ceramic pinning functionality
@@ -70,7 +70,7 @@ export interface CeramicApi {
      * @param docId - Document ID
      * @param opts - Initialization options
      */
-    loadDocument<T extends Doctype>(docId: DocID | string, opts?: DocOpts): Promise<T>;
+    loadDocument<T extends Doctype>(docId: DocID | CommitID | string, opts?: DocOpts): Promise<T>;
 
     /**
      * Load all document commits by document ID

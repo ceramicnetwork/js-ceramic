@@ -212,7 +212,7 @@ describe('Ceramic interop: core <> http-client', () => {
         expect(doc.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
         // Load genesis commit
-        const v0Id = DocID.fromOther(doc.id, doc.id.cid)
+        const v0Id = doc.id.atCommit(doc.id.cid)
         const docV0Core = await core.loadDocument(v0Id)
         const docV0Client = await client.loadDocument(v0Id)
         expect(docV0Core.content).toEqual(content1)
@@ -220,7 +220,7 @@ describe('Ceramic interop: core <> http-client', () => {
         expect(DoctypeUtils.serializeState(docV0Core.state)).toEqual(DoctypeUtils.serializeState(docV0Client.state))
 
         // Load v1 (anchor on top of genesis commit)
-        const v1Id = DocID.fromOther(doc.id, doc.state.log[1].cid)
+        const v1Id = doc.id.atCommit(doc.state.log[1].cid)
         const docV1Core = await core.loadDocument(v1Id)
         const docV1Client = await client.loadDocument(v1Id)
         expect(docV1Core.content).toEqual(content1)
@@ -228,7 +228,7 @@ describe('Ceramic interop: core <> http-client', () => {
         expect(DoctypeUtils.serializeState(docV1Core.state)).toEqual(DoctypeUtils.serializeState(docV1Client.state))
 
         // Load v2
-        const v2Id = DocID.fromOther(doc.id, doc.state.log[2].cid)
+        const v2Id = doc.id.atCommit(doc.state.log[2].cid)
         const docV2Core = await core.loadDocument(v2Id)
         const docV2Client = await client.loadDocument(v2Id)
         expect(docV2Core.content).toEqual(content2)
@@ -236,7 +236,7 @@ describe('Ceramic interop: core <> http-client', () => {
         expect(DoctypeUtils.serializeState(docV2Core.state)).toEqual(DoctypeUtils.serializeState(docV2Client.state))
 
         // Load v3 (anchor on top of v2)
-        const v3Id = DocID.fromOther(doc.id, doc.state.log[3].cid)
+        const v3Id = doc.id.atCommit(doc.state.log[3].cid)
         const docV3Core = await core.loadDocument(v3Id)
         const docV3Client = await client.loadDocument(v3Id)
         expect(docV3Core.content).toEqual(content2)
@@ -244,7 +244,7 @@ describe('Ceramic interop: core <> http-client', () => {
         expect(DoctypeUtils.serializeState(docV3Core.state)).toEqual(DoctypeUtils.serializeState(docV3Client.state))
 
         // Load v4
-        const v4Id = DocID.fromOther(doc.id, doc.state.log[4].cid)
+        const v4Id = doc.id.atCommit(doc.state.log[4].cid)
         const docV4Core = await core.loadDocument(v4Id)
         const docV4Client = await client.loadDocument(v4Id)
         expect(docV4Core.content).toEqual(content3)
@@ -252,7 +252,7 @@ describe('Ceramic interop: core <> http-client', () => {
         expect(DoctypeUtils.serializeState(docV4Core.state)).toEqual(DoctypeUtils.serializeState(docV4Client.state))
 
         // Load v5
-        const v5Id = DocID.fromOther(doc.id, doc.state.log[5].cid)
+        const v5Id = doc.id.atCommit(doc.state.log[5].cid)
         const docV5Core = await core.loadDocument(v5Id)
         const docV5Client = await client.loadDocument(v5Id)
         expect(docV5Core.content).toEqual(content3)
@@ -291,7 +291,7 @@ describe('Ceramic interop: core <> http-client', () => {
                 {
                   docId: docA.id,
                   paths: ['/c']
-                }, 
+                },
                 {
                   docId: docB.id.toString(),
                   paths: ['/d']

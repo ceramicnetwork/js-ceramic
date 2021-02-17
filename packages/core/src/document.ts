@@ -19,7 +19,7 @@ import {
   DocStateHolder,
   UnreachableCaseError
 } from '@ceramicnetwork/common'
-import DocID from '@ceramicnetwork/docid'
+import DocID, { CommitID } from '@ceramicnetwork/docid';
 import { PinStore } from './store/pin-store';
 import { SubscriptionSet } from "./subscription-set";
 import { concatMap } from "rxjs/operators";
@@ -37,8 +37,6 @@ class Document extends EventEmitter implements DocStateHolder {
   private _genesisCid: CID
   private _applyQueue: PQueue
 
-  public readonly commit: CID
-
   private _logger: DiagnosticsLogger
   private _isProcessing: boolean
   private readonly subscriptionSet = new SubscriptionSet();
@@ -51,7 +49,6 @@ class Document extends EventEmitter implements DocStateHolder {
                private _doctypeHandler: DoctypeHandler<Doctype>,
                private _doctype: Doctype) {
     super()
-    this.commit = id.commit
 
     this._logger = _context.logger
 
@@ -118,11 +115,7 @@ class Document extends EventEmitter implements DocStateHolder {
     // Fill 'opts' with default values for any missing fields
     opts = {...DEFAULT_LOAD_DOCOPTS, ...opts}
 
-    if (id.commit) {
-      throw new Error("Cannot use Document.load() to load a specific document commit.  Use Document.loadAtCommit() instead")
-    }
-
-    const doc = await Document._loadGenesis(id.baseID, handler, dispatcher, pinStore, context, validate)
+    const doc = await Document._loadGenesis(id, handler, dispatcher, pinStore, context, validate)
     return await Document._syncDocumentToCurrent(doc, pinStore, opts)
   }
 
@@ -160,7 +153,7 @@ class Document extends EventEmitter implements DocStateHolder {
    * @param doc - Most current version of the document that we know about
    */
   static async loadAtCommit<T extends Doctype> (
-      id: DocID,
+      id: CommitID,
       doc: Document): Promise<Document> {
 
     // If 'commit' is ahead of 'doc', sync doc up to 'commit'
@@ -180,7 +173,7 @@ class Document extends EventEmitter implements DocStateHolder {
     let doctype = new doc._doctypeHandler.doctype(null, doc._context) as T
     doctype.state = resetState
     doctype = DoctypeUtils.makeReadOnly<T>(doctype as T)
-    return new Document(id, doc.dispatcher, doc.pinStore, doc._validate, doc._context, doc._doctypeHandler, doctype)
+    return new Document(id.baseID, doc.dispatcher, doc.pinStore, doc._validate, doc._context, doc._doctypeHandler, doctype)
   }
 
   /**
@@ -206,7 +199,7 @@ class Document extends EventEmitter implements DocStateHolder {
 
     const commit = await dispatcher.retrieveCommit(doc._genesisCid)
     if (commit == null) {
-      throw new Error(`No commit found for CID ${id.commit.toString()}`)
+      throw new Error(`No genesis commit found with CID ${doc._genesisCid.toString()}`)
     }
     doc._doctype.state = await doc._doctypeHandler.applyCommit(commit, doc._genesisCid, context)
 
@@ -652,11 +645,13 @@ class Document extends EventEmitter implements DocStateHolder {
    */
   static async loadSchemaById<T extends Doctype>(context: Context, schemaDocId: string): Promise<T> {
     if (schemaDocId) {
-      const schemaDocIdParsed = DocID.fromString(schemaDocId)
-      if (!schemaDocIdParsed.commit) {
+      let commitId: CommitID
+      try {
+        commitId = CommitID.fromString(schemaDocId)
+      } catch {
         throw new Error("Commit missing when loading schema document")
       }
-      const schemaDoc = await context.api.loadDocument(schemaDocId)
+      const schemaDoc = await context.api.loadDocument(commitId)
       return schemaDoc.content
     }
     return null
@@ -705,15 +700,15 @@ class Document extends EventEmitter implements DocStateHolder {
     return this._doctype.metadata
   }
 
-  get commitId(): DocID {
+  get commitId(): CommitID {
     return this._doctype.commitId
   }
 
-  get allCommitIds(): Array<DocID> {
+  get allCommitIds(): Array<CommitID> {
     return this._doctype.allCommitIds
   }
 
-  get anchorCommitIds(): Array<DocID> {
+  get anchorCommitIds(): Array<CommitID> {
     return this._doctype.anchorCommitIds
   }
 

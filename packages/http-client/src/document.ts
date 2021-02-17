@@ -2,7 +2,7 @@ import {
   CeramicCommit, Context, DocOpts, DocParams, DocState, Doctype, DoctypeConstructor, DoctypeUtils
 } from "@ceramicnetwork/common"
 
-import DocID from '@ceramicnetwork/docid'
+import DocID, { CommitID } from '@ceramicnetwork/docid';
 
 import { fetchJson, typeDocID, delay } from './utils'
 import { CeramicClientConfig } from "./ceramic-http-client"
@@ -82,15 +82,13 @@ class Document extends Doctype {
     return new Document(DoctypeUtils.deserializeState(state), context, apiUrl)
   }
 
-  static async load (docId: DocID | string, apiUrl: string, context: Context, config: CeramicClientConfig): Promise<Document> {
-    docId = typeDocID(docId)
+  static async load (docId: DocID | CommitID, apiUrl: string, context: Context, config: CeramicClientConfig): Promise<Document> {
     const { state } = await fetchJson(apiUrl + '/documents/' + docId.toString())
     return new Document(DoctypeUtils.deserializeState(state), context, apiUrl, config)
   }
 
-  static async loadDocumentCommits (docId: DocID | string, apiUrl: string): Promise<Array<Record<string, CeramicCommit>>> {
-    docId = typeDocID(docId)
-    const { commits } = await fetchJson(apiUrl + '/commits/' + docId.toString())
+  static async loadDocumentCommits (docId: DocID, apiUrl: string): Promise<Array<Record<string, CeramicCommit>>> {
+    const { commits } = await fetchJson(`${apiUrl}/commits/${docId}`)
 
     return commits.map((r: any) => {
       return {

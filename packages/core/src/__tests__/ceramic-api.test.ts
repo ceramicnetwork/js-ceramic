@@ -50,7 +50,7 @@ const generateStringOfSize = (size): string => {
 }
 
 describe('Ceramic API', () => {
-  jest.setTimeout(15000)
+  jest.setTimeout(60000)
   let ipfs: IpfsApi;
 
   const DOCTYPE_TILE = 'tile'
@@ -119,7 +119,7 @@ describe('Ceramic API', () => {
       expect(docOg.content).toEqual({ test: 'abcde' })
       expect(docOg.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
-      const docV1Id = DocID.fromOther(docOg.id, docOg.state.log[1].cid.toString())
+      const docV1Id = docOg.id.atCommit(docOg.state.log[1].cid)
       const docV1 = await ceramic.loadDocument<TileDoctype>(docV1Id)
       expect(docV1.state).toEqual(stateOg)
       expect(docV1.content).toEqual({ test: 321 })
@@ -133,17 +133,15 @@ describe('Ceramic API', () => {
         expect(e.message).toEqual('Historical document commits cannot be modified. Load the document without specifying a commit to make updates.')
       }
 
-      // // try to call Ceramic API directly
-      try {
+      await expect( async () => {
         const updateRecord = await TileDoctype._makeCommit(docV1, ceramic.context.did, { content: { test: 'fghj' } })
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
         await ceramic.context.api.applyRecord(docV1Id, updateRecord)
-        throw new Error('Should not be able to update commit')
-      } catch (e) {
-        expect(e.message).toEqual('Historical document commits cannot be modified. Load the document without specifying a commit to make updates.')
-      }
+      }).rejects.toThrow(/Not DocID/)
 
       // checkout not anchored commit
-      const docV2Id = DocID.fromOther(docOg.id, docOg.state.log[2].cid.toString())
+      const docV2Id = docOg.id.atCommit(docOg.state.log[2].cid)
       const docV2 = await ceramic.loadDocument<TileDoctype>(docV2Id)
       expect(docV2.content).toEqual({ test: "abcde" })
       expect(docV2.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
@@ -199,7 +197,6 @@ describe('Ceramic API', () => {
         metadata: { controllers: [controller] }
       })
 
-      expect(schemaDoc.id.commit).toBeFalsy()
       const schemaDocIdWithoutCommit = schemaDoc.id.toString()
       const tileDocParams: TileParams = {
         metadata: {
@@ -207,12 +204,7 @@ describe('Ceramic API', () => {
         }, content: { a: "test" }
       }
 
-      try {
-        await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, tileDocParams)
-        throw new Error("Should not be able to assign a schema without specifying the schema commit")
-      } catch (e) {
-        expect(e.message).toEqual("Commit missing when loading schema document")
-      }
+      await expect(ceramic.createDocument(DOCTYPE_TILE, tileDocParams)).rejects.toThrow('Commit missing when loading schema document')
     })
 
     it('can create document with invalid schema if validation is not set', async () => {

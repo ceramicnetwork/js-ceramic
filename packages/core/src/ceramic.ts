@@ -2,7 +2,7 @@ import Dispatcher from './dispatcher'
 import Document from './document'
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import KeyDidResolver from 'key-did-resolver'
-import DocID from '@ceramicnetwork/docid'
+import DocID, { CommitID, DocRef } from '@ceramicnetwork/docid';
 import {IpfsTopology} from "@ceramicnetwork/ipfs-topology";
 import {
   Doctype,
@@ -97,7 +97,12 @@ interface CeramicNetworkOptions {
 const DEFAULT_NETWORK = 'inmemory'
 
 const normalizeDocID = (docId: DocID | string): DocID => {
-  return (typeof docId === 'string') ? DocID.fromString(docId) : docId
+  const docRef = DocRef.from(docId)
+  if (docRef instanceof DocID) {
+    return docRef
+  } else {
+    throw new Error(`Not DocID: ${docRef}`)
+  }
 }
 
 const tryDocId = (id: string): DocID | null => {
@@ -361,11 +366,7 @@ class Ceramic implements CeramicApi {
    * @param opts - Initialization options
    */
   async applyCommit<T extends Doctype>(docId: string | DocID, commit: CeramicCommit, opts?: DocOpts): Promise<T> {
-    docId = normalizeDocID(docId)
-    if (docId.commit != null) {
-      throw new Error('Historical document commits cannot be modified. Load the document without specifying a commit to make updates.')
-    }
-    const doc = await this._loadDoc(docId, opts)
+    const doc = await this._loadDoc(normalizeDocID(docId), opts)
     await doc.applyCommit(commit, opts)
     return doc.doctype as T
   }
@@ -456,8 +457,7 @@ class Ceramic implements CeramicApi {
    * @param docId - Document ID
    * @param opts - Initialization options
    */
-  async loadDocument<T extends Doctype>(docId: DocID | string, opts: DocOpts = {}): Promise<T> {
-    docId = normalizeDocID(docId)
+  async loadDocument<T extends Doctype>(docId: DocID | CommitID | string, opts: DocOpts = {}): Promise<T> {
     const doc = await this._loadDoc(docId, opts)
     return doc.doctype as T
   }
@@ -548,38 +548,29 @@ class Ceramic implements CeramicApi {
    * @param docId - Document ID
    * @param opts - Initialization options
    */
-  async _loadDoc(docId: DocID | string, opts: DocOpts = {}): Promise<Document> {
-    docId = normalizeDocID(docId)
+  async _loadDoc(docId: DocID | CommitID | string, opts: DocOpts = {}): Promise<Document> {
+    const docRef = DocRef.from(docId)
 
     // If we already have cached exactly what we want, just return it from the cache
-    let doc = this._getDocFromCache(docId)
-    if (doc) {
-      return doc
-    }
-
-    // If we're requesting a specific commit, we should also check the cache for the current version
-    // of the document
-    doc = this._getDocFromCache(docId.baseID)
-
+    let doc = this._getDocFromCache(docRef.baseID)
     if (!doc) {
       // Load the current version of the document
-      const doctypeHandler = this._doctypeHandlers[docId.typeName]
+      const doctypeHandler = this._doctypeHandlers[docRef.typeName]
       if (!doctypeHandler) {
-        throw new Error(docId.typeName + " is not a valid doctype")
+        throw new Error(docRef.typeName + " is not a valid doctype")
       }
-      doc = await Document.load(docId.baseID, doctypeHandler, this.dispatcher, this.pinStore, this.context, opts)
+      doc = await Document.load(docRef.baseID, doctypeHandler, this.dispatcher, this.pinStore, this.context, opts)
       this._docCache.put(doc)
     }
 
-    if (!docId.commit) {
-      // Return current version of the document
+    if (docRef instanceof DocID) {
+      return doc
+    } else {
+      // We requested a specific commit
+      doc = await Document.loadAtCommit(docRef, doc)
+      this._docCache.put(doc)
       return doc
     }
-
-    // We requested a specific commit
-    doc = await Document.loadAtCommit(docId, doc)
-    this._docCache.put(doc)
-    return doc
   }
 
   /**

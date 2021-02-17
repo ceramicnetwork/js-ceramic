@@ -3,7 +3,6 @@ import Document from '../document'
 import tmp from 'tmp-promise'
 import Dispatcher from '../dispatcher'
 import Ceramic from "../ceramic"
-import DocID from '@ceramicnetwork/docid'
 import { Context, PinningBackend } from "@ceramicnetwork/common"
 import { AnchorStatus, DocOpts, SignatureStatus } from "@ceramicnetwork/common"
 import { AnchorService } from "@ceramicnetwork/common"
@@ -254,7 +253,7 @@ describe('Document', () => {
       const commit0 = doc.commitId
       expect(commits).toEqual([commit0])
 
-      expect(commit0).toEqual(DocID.fromOther(doc.id, doc.id.cid))
+      expect(commit0.equals(doc.id.atCommit(doc.id.cid))).toBeTruthy()
       expect(anchorCommits.length).toEqual(0)
 
       await anchorUpdate(anchorService, doc)
@@ -264,7 +263,7 @@ describe('Document', () => {
       expect(commits.length).toEqual(2)
       expect(anchorCommits.length).toEqual(1)
       const commit1 = doc.commitId
-      expect(commit1).not.toEqual(commit0)
+      expect(commit1.equals(commit0)).toBeFalsy()
       expect(commit1).toEqual(commits[1])
       expect(commit1).toEqual(anchorCommits[0])
 
@@ -282,7 +281,7 @@ describe('Document', () => {
       expect(commits.length).toEqual(3)
       expect(anchorCommits.length).toEqual(1)
       const commit2 = doc.commitId
-      expect(commit2).not.toEqual(commit1)
+      expect(commit2.equals(commit1)).toBeFalsy()
       expect(commit2).toEqual(commits[2])
 
       await anchorUpdate(anchorService, doc)
@@ -292,7 +291,7 @@ describe('Document', () => {
       expect(commits.length).toEqual(4)
       expect(anchorCommits.length).toEqual(2)
       const commit3 = doc.commitId
-      expect(commit3).not.toEqual(commit2)
+      expect(commit3.equals(commit2)).toBeFalsy()
       expect(commit3).toEqual(commits[3])
       expect(commit3).toEqual(anchorCommits[1])
 
@@ -310,13 +309,13 @@ describe('Document', () => {
       expect(commits.length).toEqual(5)
       expect(anchorCommits.length).toEqual(2)
       const commit4 = doc.commitId
-      expect(commit4).not.toEqual(commit3)
+      expect(commit4.equals(commit3)).toBeFalsy()
       expect(commit4).toEqual(commits[4])
-      expect(commit4).not.toEqual(anchorCommits[1])
+      expect(commit4.equals(anchorCommits[1])).toBeFalsy()
       expect(doc.state.log.length).toEqual(5)
 
       // try to load a non-existing commit
-      const nonExistentCommitID = DocID.fromOther(doc.id, new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu'))
+      const nonExistentCommitID = doc.id.atCommit(new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu'))
       try {
         await Document.loadAtCommit(nonExistentCommitID, doc)
         fail('Should not be able to fetch non-existing commit')
@@ -420,11 +419,11 @@ describe('Document', () => {
       expect(doc1.content).toEqual(newContent)
 
       // Loading valid commit works
-      const docAtValidCommit = await Document.loadAtCommit(DocID.fromOther(docId, tipValidUpdate), doc1)
+      const docAtValidCommit = await Document.loadAtCommit(docId.atCommit(tipValidUpdate), doc1)
       expect(docAtValidCommit.content).toEqual(newContent)
 
       // Loading invalid commit fails
-      await expect(Document.loadAtCommit(DocID.fromOther(docId, tipInvalidUpdate), doc1)).rejects.toThrow(
+      await expect(Document.loadAtCommit(docId.atCommit(tipInvalidUpdate), doc1)).rejects.toThrow(
           `Requested commit CID ${tipInvalidUpdate.toString()} not found in the log for document ${docId.toString()}`
       )
     })
