@@ -199,7 +199,7 @@ class Document extends EventEmitter implements DocStateHolder {
 
     const commit = await dispatcher.retrieveCommit(doc._genesisCid)
     if (commit == null) {
-      throw new Error(`No commit found for CID ${id.toString()}`)
+      throw new Error(`No genesis commit found with CID ${doc._genesisCid.toString()}`)
     }
     doc._doctype.state = await doc._doctypeHandler.applyCommit(commit, doc._genesisCid, context)
 
