@@ -23,8 +23,12 @@ export class LoggerProvider {
 
     private readonly _diagnosticLogger: DiagnosticsLogger
 
-    constructor(config?: LoggerConfig) {
-      this.config = {...DEFAULT_LOG_CONFIG, ...config}
+    constructor(config: LoggerConfig = {}) {
+      this.config = {
+        logLevel: config.logLevel !== undefined ? config.logLevel : DEFAULT_LOG_CONFIG.logLevel,
+        logToFiles: config.logToFiles !== undefined ? config.logToFiles : DEFAULT_LOG_CONFIG.logToFiles,
+        logPath: config.logPath !== undefined ? config.logPath : DEFAULT_LOG_CONFIG.logPath,
+      }
       this._diagnosticLogger = this._makeDiagnosticLogger()
     }
 
