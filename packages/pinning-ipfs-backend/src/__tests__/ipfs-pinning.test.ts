@@ -26,15 +26,15 @@ describe("constructor", () => {
 });
 
 describe("#open", () => {
-    test("use IPFS from context if __context", async () => {
-        const context = ({ ipfs: jest.fn() } as unknown) as Context;
-        const pinning = new IpfsPinning("ipfs+context", context);
+    test("use provided IPFS", async () => {
+        const ipfs = jest.fn()
+        const pinning = new IpfsPinning("ipfs+context", ipfs);
         await pinning.open();
-        expect(pinning.ipfs).toBe(context.ipfs);
+        expect(pinning.ipfs).toBe(ipfs);
     });
-    test("throw if no IPFS instance in context", async () => {
-        const context = {};
-        const pinning = new IpfsPinning("ipfs+context", context);
+    test("throw if no IPFS instance", async () => {
+        const ipfs = null;
+        const pinning = new IpfsPinning("ipfs+context", ipfs);
         await expect(pinning.open.bind(pinning)).rejects.toThrow(NoIpfsInstanceError);
     });
     test("use IPFS client pointed to #ipfsAddress", async () => {
@@ -47,14 +47,13 @@ describe("#open", () => {
 describe("#pin", () => {
     test("call ipfs instance", async () => {
         const add = jest.fn();
-        const context = ({
-            ipfs: {
-                pin: {
-                    add: add,
-                },
-            },
-        } as unknown) as Context;
-        const pinning = new IpfsPinning("ipfs+context", context);
+        const ipfs = {
+          pin: {
+            add: add,
+          },
+        };
+
+        const pinning = new IpfsPinning("ipfs+context", ipfs);
         await pinning.open();
         const cid = new CID("QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D");
         await pinning.pin(cid);
@@ -62,8 +61,8 @@ describe("#pin", () => {
     });
 
     test("silently pass if no IPFS instance", async () => {
-        const context = {} as Context;
-        const pinning = new IpfsPinning("ipfs+context", context);
+        const ipfs = null
+        const pinning = new IpfsPinning("ipfs+context", ipfs);
         const cid = new CID("QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D");
         await expect(pinning.pin(cid)).resolves.toBeUndefined();
     });
@@ -72,14 +71,13 @@ describe("#pin", () => {
 describe("#unpin", () => {
     test("call ipfs instance", async () => {
         const rm = jest.fn();
-        const context = ({
-            ipfs: {
-                pin: {
-                    rm: rm,
-                },
-            },
-        } as unknown) as Context;
-        const pinning = new IpfsPinning("ipfs+context", context);
+        const ipfs = {
+          pin: {
+            rm: rm,
+          },
+        };
+
+        const pinning = new IpfsPinning("ipfs+context", ipfs);
         await pinning.open();
         const cid = new CID("QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D");
         await pinning.unpin(cid);
@@ -87,8 +85,8 @@ describe("#unpin", () => {
     });
 
     test("silently pass if no IPFS instance", async () => {
-        const context = {} as Context;
-        const pinning = new IpfsPinning("ipfs+context", context);
+        const ipfs = null
+        const pinning = new IpfsPinning("ipfs+context", ipfs);
         const cid = new CID("QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D");
         await expect(pinning.unpin(cid)).resolves.toBeUndefined();
     });
@@ -99,14 +97,12 @@ describe("#ls", () => {
         const cids = [new CID("QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D"), new CID("QmWXShtJXt6Mw3FH7hVCQvR56xPcaEtSj4YFSGjp2QxA4v"),];
         const lsResult = cids.map((cid) => ({ cid: cid, type: "direct" }));
         const ls = jest.fn(() => asyncIterableFromArray(lsResult));
-        const context = ({
-            ipfs: {
-                pin: {
-                    ls: ls,
-                },
-            },
-        } as unknown) as Context;
-        const pinning = new IpfsPinning("ipfs+context", context);
+        const ipfs = {
+          pin: {
+            ls: ls,
+          },
+        };
+        const pinning = new IpfsPinning("ipfs+context", ipfs);
         await pinning.open();
         const result = await pinning.ls();
         cids.forEach((cid) => {
@@ -115,8 +111,8 @@ describe("#ls", () => {
     });
 
     test("return empty array if no ipfs", async () => {
-        const context = ({} as unknown) as Context;
-        const pinning = new IpfsPinning("ipfs+context", context);
+        const ipfs = null
+        const pinning = new IpfsPinning("ipfs+context", ipfs);
         const result = await pinning.ls();
         expect(result).toEqual({});
     });
