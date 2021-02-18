@@ -2,6 +2,7 @@ import fetch from "cross-fetch";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import type { IPFSAPI as IpfsApi } from "ipfs-core/dist/src/components";
+import { DiagnosticsLogger  } from "@ceramicnetwork/logger";
 export type IpfsApi = typeof IpfsApi;
 
 const PEER_FILE_URLS = {
@@ -38,43 +39,6 @@ async function fetchJson(url: string): Promise<any> {
   }
 }
 
-export async function dynamicBoostrapList(network: string): Promise<string[]> {
-  const url = PEER_FILE_URLS[network];
-  if (!url) {
-    console.warn(
-      `Peer discovery is not supported for ceramic network ${network}. This node may fail to load documents from other nodes on the network`
-    );
-    return [];
-  }
-  console.log(`Connecting to peers found in '${url}'`);
-  const list = await fetchJson(url);
-  return list || [];
-}
-
-export async function forceBootstrapConnection(
-  ipfs: IpfsApi,
-  bootstrapList: string[]
-): Promise<void> {
-  await Promise.all(
-    bootstrapList.map(async (node) => {
-      try {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        await ipfs.swarm.connect(node);
-      } catch (error) {
-        console.warn(`Can not connect to ${node}`);
-        console.warn(error);
-      }
-    })
-  );
-
-  const connectedPeers = await ipfs.swarm.peers();
-  if (connectedPeers.length > 0) {
-    const peerAddresses = connectedPeers.map((obj) => obj.addr);
-    console.log(`Connected to peers: ${peerAddresses.join(", ")}`);
-  }
-}
-
 export const DEFAULT_PEER_DISCOVERY_PERIOD = 1000 * 60 * 60; // 1 hour
 
 export class IpfsTopology {
@@ -83,14 +47,15 @@ export class IpfsTopology {
   constructor(
     readonly ipfs: IpfsApi,
     readonly ceramicNetwork: string,
+    readonly logger: DiagnosticsLogger,
     readonly period: number = DEFAULT_PEER_DISCOVERY_PERIOD
   ) {}
 
   async forceConnection(): Promise<void> {
     const base: string[] = BASE_BOOTSTRAP_LIST[this.ceramicNetwork] || [];
-    const dynamic = await dynamicBoostrapList(this.ceramicNetwork);
+    const dynamic = await this._dynamicBoostrapList(this.ceramicNetwork);
     const bootstrapList = base.concat(dynamic);
-    await forceBootstrapConnection(this.ipfs, bootstrapList);
+    await this._forceBootstrapConnection(this.ipfs, bootstrapList);
   }
 
   async start() {
@@ -103,6 +68,43 @@ export class IpfsTopology {
   stop() {
     if (this.intervalId) {
       clearInterval(this.intervalId);
+    }
+  }
+
+  private async _dynamicBoostrapList(network: string): Promise<string[]> {
+    const url = PEER_FILE_URLS[network];
+    if (!url) {
+      this.logger.warn(
+        `Peer discovery is not supported for ceramic network ${network}. This node may fail to load documents from other nodes on the network`
+      );
+      return [];
+    }
+    this.logger.imp(`Connecting to peers found in '${url}'`);
+    const list = await fetchJson(url);
+    return list || [];
+  }
+
+  private async _forceBootstrapConnection(
+    ipfs: IpfsApi,
+    bootstrapList: string[]
+  ): Promise<void> {
+    await Promise.all(
+      bootstrapList.map(async (node) => {
+        try {
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          await ipfs.swarm.connect(node);
+        } catch (error) {
+          this.logger.warn(`Can not connect to ${node}`);
+          this.logger.warn(error);
+        }
+      })
+    );
+
+    const connectedPeers = await ipfs.swarm.peers();
+    if (connectedPeers.length > 0) {
+      const peerAddresses = connectedPeers.map((obj) => obj.addr);
+      this.logger.imp(`Connected to peers: ${peerAddresses.join(", ")}`);
     }
   }
 }

@@ -2,10 +2,10 @@ import express, { Request, Response, NextFunction } from 'express'
 import Ceramic from '@ceramicnetwork/core'
 import type { CeramicConfig} from "@ceramicnetwork/core"
 import { DiagnosticsLogger, LogLevel } from "@ceramicnetwork/logger"
+import { buildIpfsConnection } from "./build-ipfs-connection.util";
 import {
   DoctypeUtils,
   RootLogger,
-  IpfsApi,
   MultiQuery,
   LoggerConfig,
   LoggerProvider,
@@ -27,7 +27,6 @@ const DEFAULT_ANCHOR_SERVICE_URL = "https://cas-clay.3boxlabs.com"
  */
 export interface CreateOpts {
   ipfsHost?: string;
-  ipfs?: IpfsApi;
   port?: number;
   corsAllowedOrigins: string | RegExp[];
 
@@ -185,9 +184,10 @@ class CeramicDaemon {
    * @param opts - Ceramic daemon options
    */
   static async create (opts: CreateOpts): Promise<CeramicDaemon> {
-    const { ipfs } = opts
-
     const ceramicConfig = makeCeramicConfig(opts)
+
+    const ipfs = await buildIpfsConnection(
+      opts.network, ceramicConfig.loggerProvider.getDiagnosticsLogger(), opts.ipfsHost)
 
     const ceramic = await Ceramic.create(ipfs, ceramicConfig)
     return new CeramicDaemon(ceramic, opts)

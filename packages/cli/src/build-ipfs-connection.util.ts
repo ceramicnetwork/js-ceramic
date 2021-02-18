@@ -7,6 +7,7 @@ import multiformats from 'multiformats/basics'
 import legacy from 'multiformats/legacy'
 import ipfsClient from "ipfs-http-client"
 import { IpfsApi } from "@ceramicnetwork/common"
+import { DiagnosticsLogger } from "@ceramicnetwork/logger";
 
 multiformats.multicodec.add(dagJose)
 const dagJoseFormat = legacy(multiformats, dagJose.name)
@@ -14,7 +15,7 @@ const dagJoseFormat = legacy(multiformats, dagJose.name)
 const IPFS_DHT_SERVER_MODE = process.env.IPFS_DHT_SERVER_MODE === 'true'
 const IPFS_GET_TIMEOUT = 60000 // 1 minute
 
-export async function buildIpfsConnection(network: string, ipfsEndpoint?: string): Promise<IpfsApi>{
+export async function buildIpfsConnection(network: string, logger: DiagnosticsLogger, ipfsEndpoint?: string): Promise<IpfsApi>{
     if (ipfsEndpoint) {
         return ipfsClient({ url: ipfsEndpoint, ipld: { formats: [dagJoseFormat] }, timeout: IPFS_GET_TIMEOUT })
     } else {
@@ -24,7 +25,8 @@ export async function buildIpfsConnection(network: string, ipfsEndpoint?: string
             ipfsEnableGateway: true,
             // Do not setup peer connections in IPFS daemon.
             // We do it in Ceramic instance itself.
-            useCentralizedPeerDiscovery: false
+            useCentralizedPeerDiscovery: false,
+            logger,
         }).then(daemon => daemon.start())
         return ipfsDaemon.ipfs
     }

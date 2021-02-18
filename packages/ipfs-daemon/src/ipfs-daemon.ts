@@ -4,6 +4,7 @@ import HttpApi from 'ipfs-http-server'
 import HttpGateway from 'ipfs-http-gateway'
 import dagJose from "dag-jose";
 import {IpfsTopology} from "@ceramicnetwork/ipfs-topology";
+import { DiagnosticsLogger, LogLevel } from "@ceramicnetwork/logger";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import multiformats from 'multiformats/basics'
@@ -36,8 +37,9 @@ export interface Configuration {
     ipfsBootstrap: string[]
     ceramicNetwork: string
     useCentralizedPeerDiscovery: boolean
-    healthcheckEnabled: boolean,
+    healthcheckEnabled: boolean
     healthcheckPort: number
+    logger: DiagnosticsLogger
 }
 
 export class IpfsDaemon {
@@ -76,7 +78,8 @@ export class IpfsDaemon {
             ceramicNetwork: ceramicNetwork,
             useCentralizedPeerDiscovery: useCentralizedPeerDiscovery,
             healthcheckEnabled: props.healthcheckEnabled ?? (process.env.HEALTHCHECK_ENABLED === 'true'),
-            healthcheckPort: props.healthcheckPort || (process.env.HEALTHCHECK_PORT != null ? parseInt(process.env.HEALTHCHECK_PORT) : 8011)
+            healthcheckPort: props.healthcheckPort || (process.env.HEALTHCHECK_PORT != null ? parseInt(process.env.HEALTHCHECK_PORT) : 8011),
+            logger: props.logger ?? new DiagnosticsLogger(LogLevel.important, false),
         }
 
         const repo = configuration.ipfsS3RepoEnabled ? createRepo({
@@ -152,7 +155,7 @@ export class IpfsDaemon {
 
         const api = configuration.ipfsEnableApi ? new HttpApi(ipfs) : undefined
         const gateway = configuration.ipfsEnableGateway ? new HttpGateway(ipfs) : undefined
-        const topology = configuration.useCentralizedPeerDiscovery ? new IpfsTopology(ipfs, configuration.ceramicNetwork) : undefined
+        const topology = configuration.useCentralizedPeerDiscovery ? new IpfsTopology(ipfs, configuration.ceramicNetwork, configuration.logger) : undefined
         const healthcheck = configuration.healthcheckEnabled ? new HealthcheckServer(ipfs, configuration.healthcheckPort, configuration.tcpHost) : undefined
         return new IpfsDaemon(configuration, ipfs, api, gateway, topology, healthcheck)
     }
@@ -162,12 +165,12 @@ export class IpfsDaemon {
 
         if (this.api) {
             await this.api.start()
-            console.log('IPFS API server listening on ' + this.configuration.ipfsApiPort)
+            this.configuration.logger.imp('IPFS API server listening on ' + this.configuration.ipfsApiPort)
         }
 
         if (this.gateway) {
             await this.gateway.start()
-            console.log('IPFS Gateway server listening on ' + this.configuration.ipfsGatewayPort)
+            this.configuration.logger.imp('IPFS Gateway server listening on ' + this.configuration.ipfsGatewayPort)
         }
 
         await this.topology?.start()

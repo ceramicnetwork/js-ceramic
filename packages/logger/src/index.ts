@@ -27,7 +27,7 @@ export class DiagnosticsLogger {
   private readonly includeStackTrace: boolean;
   private readonly logToFiles
 
-  constructor(logPath: string, logLevel: LogLevel, logToFiles: boolean) {
+  constructor(logLevel: LogLevel, logToFiles: boolean, logPath?: string) {
     this.logLevel = logLevel;
     this.includeStackTrace = this.logLevel == LogLevel.debug ? true : false;
     this.logToFiles = logToFiles
