@@ -35,7 +35,7 @@ export class LoggerProvider {
     private _makeDiagnosticLogger(): DiagnosticsLogger {
         const logPath = path.join(this.config.logPath, "diagnostics.log")
 
-        return new DiagnosticsLogger(logPath, this.config.logLevel, this.config.logToFiles);
+        return new DiagnosticsLogger(this.config.logLevel, this.config.logToFiles, logPath);
     }
 
     public getDiagnosticsLogger(): DiagnosticsLogger {

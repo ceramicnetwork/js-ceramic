@@ -36,7 +36,11 @@
     "transformIgnorePatterns": [],
     "modulePathIgnorePatterns": [
       "lib"
-    ]
+    ],
+    "moduleNameMapper": {
+      "multiformats/basics": "multiformats/cjs/src/basics-import.js",
+      "multiformats/legacy": "multiformats/cjs/src/legacy.js"
+    }
   },
   "dependencies": {
     "@ceramicnetwork/common": "^0.15.9",

@@ -7,13 +7,11 @@ import { promises as fs } from 'fs'
 
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import CeramicClient from "@ceramicnetwork/http-client"
-import { CeramicApi, DoctypeUtils, LoggerConfig, LoggerProvider } from "@ceramicnetwork/common"
+import { CeramicApi, DoctypeUtils, LoggerConfig } from "@ceramicnetwork/common"
 import { LogLevel } from '@ceramicnetwork/logger';
 import DocID from '@ceramicnetwork/docid'
 
 import CeramicDaemon, { CreateOpts } from "./ceramic-daemon"
-
-import {buildIpfsConnection} from "./build-ipfs-connection.util";
 
 const DEFAULT_CLI_CONFIG_FILE = 'config.json'
 const DEFAULT_CLI_CONFIG_PATH = path.join(os.homedir(), '.ceramic')
@@ -95,7 +93,7 @@ export class CeramicCliUtils {
             maxHealthyCpu,
             maxHealthyMemory,
             corsAllowedOrigins: _corsAllowedOrigins,
-            ipfs: await buildIpfsConnection(network, ipfsApi)
+            ipfsHost: ipfsApi,
         }
         return CeramicDaemon.create(config)
     }

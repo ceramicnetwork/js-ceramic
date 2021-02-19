@@ -323,7 +323,7 @@ class Ceramic implements CeramicApi {
       pinningBackends: config.pinningBackends,
     }
 
-    const ipfsTopology = new IpfsTopology(ipfs, networkOptions.name)
+    const ipfsTopology = new IpfsTopology(ipfs, networkOptions.name, logger)
     const pinStoreFactory = new PinStoreFactory(ipfs, pinStoreOptions)
     const dispatcher = new Dispatcher(ipfs, networkOptions.pubsubTopic, logger, pubsubLogger)
 
