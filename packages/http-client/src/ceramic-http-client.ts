@@ -90,7 +90,7 @@ export default class CeramicClient implements CeramicApi {
 
     this.context = { api: this, loggerProvider }
 
-    this._logger.imp(`Starting Ceramic HTTP client at version ${packageJson.version} with config: \n${JSON.stringify(config, null, 2)}`)
+    this._logger.debug(`Starting Ceramic HTTP client at version ${packageJson.version} with config: \n${JSON.stringify(config, null, 2)}`)
 
     this.pin = this._initPinApi()
 
@@ -246,7 +246,7 @@ export default class CeramicClient implements CeramicApi {
     if (!this.context.did.authenticated) {
       await this.context.did.authenticate()
     }
-    this._logger.imp(`Now authenticated as DID ${this.context.did.id}`)
+    this._logger.debug(`Now authenticated as DID ${this.context.did.id}`)
   }
 
   async getSupportedChains(): Promise<Array<string>> {
