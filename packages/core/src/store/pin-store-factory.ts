@@ -8,12 +8,12 @@ import path from "path";
 import os from "os";
 import { IpfsPinning } from '@ceramicnetwork/pinning-ipfs-backend'
 
-const DEFAULT_PINSET_DIRECTORY = path.join(os.homedir(), ".ceramic", "pinset")
+const DEFAULT_STATE_STORE_DIRECTORY = path.join(os.homedir(), ".ceramic", "statestore")
 const IPFS_GET_TIMEOUT = 60000 // 1 minute
 
 export type Props = {
     networkName?: string;
-    pinsetDirectory?: string; // todo rename
+    stateStoreDirectory?: string;
     pinningEndpoints?: string[];
     pinningBackends?: PinningBackendStatic[];
 }
@@ -27,7 +27,7 @@ export class PinStoreFactory {
 
     constructor(readonly ipfs: IpfsApi, props: Props) {
         this.networkName = props.networkName
-        this.localStateStoreDirectory = props.pinsetDirectory || DEFAULT_PINSET_DIRECTORY
+        this.localStateStoreDirectory = props.stateStoreDirectory || DEFAULT_STATE_STORE_DIRECTORY
         this.pinningEndpoints = props.pinningEndpoints && props.pinningEndpoints.length > 0 ? props.pinningEndpoints : ['ipfs+context']
         this.pinningBackends = props.pinningBackends && props.pinningBackends.length > 0 ? props.pinningBackends : [IpfsPinning]
     }

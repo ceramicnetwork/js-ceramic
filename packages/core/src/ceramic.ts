@@ -318,7 +318,7 @@ class Ceramic implements CeramicApi {
 
     const pinStoreOptions = {
       networkName: networkOptions.name,
-      pinsetDirectory: config.stateStoreDirectory,
+      stateStoreDirectory: config.stateStoreDirectory,
       pinningEndpoints: config.ipfsPinningEndpoints,
       pinningBackends: config.pinningBackends,
     }

@@ -9,7 +9,7 @@ program
     .option('--anchor-service-api <url>', 'The anchor service URL to use')
     .option('--validate-docs', 'Validate documents according to their schemas. It is enabled by default')
     .option('--ipfs-pinning-endpoint <url...>', 'Ipfs pinning endpoints')
-    .option('--state-store-directory <string>', `The directory path used for storing pinned document state. Defaults to HOME_DIR/.ceramic/pinset`)
+    .option('--state-store-directory <string>', `The directory path used for storing pinned document state. Defaults to HOME_DIR/.ceramic/statestore`)
     .option('--state-store-s3-bucket <string>', `The S3 bucket name to use for storing pinned document state. If not provided pinned document state will only be saved locally but not to S3.`)
     .option('--gateway', 'Makes read only endpoints available. It is disabled by default')
     .option('--port <int>', 'Port daemon is available. Default is 7007')
