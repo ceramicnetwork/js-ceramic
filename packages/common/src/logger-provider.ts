@@ -5,15 +5,8 @@ import os from "os";
 
 export interface LoggerConfig {
     logPath?: string,
-    logLevel?: LogLevel | string,
+    logLevel?: LogLevel,
     logToFiles?: boolean,
-}
-
-
-const logLevelMapping = {
-    'debug': LogLevel.debug,
-    'important': LogLevel.important,
-    'warn': LogLevel.warn
 }
 
 const DEFAULT_LOG_CONFIG = {
@@ -26,25 +19,32 @@ const DEFAULT_LOG_CONFIG = {
  * Global Logger factory
  */
 export class LoggerProvider {
+    public readonly config: LoggerConfig
 
-    static makeDiagnosticLogger(config: LoggerConfig): DiagnosticsLogger {
+    private readonly _diagnosticLogger: DiagnosticsLogger
 
-        const logToFiles = config.logToFiles ?? DEFAULT_LOG_CONFIG.logToFiles
-        const logDir = config.logPath ?? DEFAULT_LOG_CONFIG.logPath
-        let logLevel = typeof config.logLevel == "string" ? logLevelMapping[config.logLevel] : config.logLevel
-        logLevel = logLevel ?? DEFAULT_LOG_CONFIG.logLevel
-        const logPath = path.join(logDir, "diagnostics.log")
-
-        return new DiagnosticsLogger(logPath, logLevel, logToFiles);
+    constructor(config: LoggerConfig = {}) {
+      this.config = {
+        logLevel: config.logLevel !== undefined ? config.logLevel : DEFAULT_LOG_CONFIG.logLevel,
+        logToFiles: config.logToFiles !== undefined ? config.logToFiles : DEFAULT_LOG_CONFIG.logToFiles,
+        logPath: config.logPath !== undefined ? config.logPath : DEFAULT_LOG_CONFIG.logPath,
+      }
+      this._diagnosticLogger = this._makeDiagnosticLogger()
     }
 
-    static makeServiceLogger(serviceName: string, config: LoggerConfig): ServiceLogger {
-        const logToFiles = config.logToFiles ?? DEFAULT_LOG_CONFIG.logToFiles
-        const logDir = config.logPath ?? DEFAULT_LOG_CONFIG.logPath
-        let logLevel = typeof config.logLevel == "string" ? logLevelMapping[config.logLevel] : config.logLevel
-        logLevel = logLevel ?? DEFAULT_LOG_CONFIG.logLevel
-        const logPath = path.join(logDir, `${serviceName}.log`)
+    private _makeDiagnosticLogger(): DiagnosticsLogger {
+        const logPath = path.join(this.config.logPath, "diagnostics.log")
 
-        return new ServiceLogger(serviceName, logPath, logLevel, logToFiles)
+        return new DiagnosticsLogger(logPath, this.config.logLevel, this.config.logToFiles);
+    }
+
+    public getDiagnosticsLogger(): DiagnosticsLogger {
+      return this._diagnosticLogger
+    }
+
+    public makeServiceLogger(serviceName: string): ServiceLogger {
+        const logPath = path.join(this.config.logPath, `${serviceName}.log`)
+
+        return new ServiceLogger(serviceName, logPath, this.config.logLevel, this.config.logToFiles)
     }
 }

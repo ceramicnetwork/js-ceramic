@@ -7,7 +7,8 @@ import { promises as fs } from 'fs'
 
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import CeramicClient from "@ceramicnetwork/http-client"
-import { CeramicApi, DoctypeUtils } from "@ceramicnetwork/common"
+import { CeramicApi, DoctypeUtils, LoggerConfig, LoggerProvider } from "@ceramicnetwork/common"
+import { LogLevel } from '@ceramicnetwork/logger';
 import DocID from '@ceramicnetwork/docid'
 
 import CeramicDaemon, { CreateOpts } from "./ceramic-daemon"
@@ -74,6 +75,11 @@ export class CeramicCliUtils {
         if (corsAllowedOrigins != null && corsAllowedOrigins != '*') {
             _corsAllowedOrigins = corsAllowedOrigins.split(' ').map((origin) => new RegExp(origin))
         }
+        const loggerConfig: LoggerConfig = {
+          logToFiles,
+          logPath,
+          logLevel: debug ? LogLevel.debug : LogLevel.important,
+        }
 
         const config: CreateOpts = {
             ethereumRpcUrl: ethereumRpc,
@@ -83,9 +89,7 @@ export class CeramicCliUtils {
             ipfsPinningEndpoints,
             gateway,
             port,
-            debug,
-            logToFiles,
-            logPath,
+            loggerConfig,
             network,
             pubsubTopic,
             maxHealthyCpu,

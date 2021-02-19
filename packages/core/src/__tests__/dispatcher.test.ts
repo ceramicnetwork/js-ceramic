@@ -40,6 +40,7 @@ class TileDoctypeMock extends TileDoctype {
 describe('Dispatcher', () => {
 
   let dispatcher: Dispatcher
+  let loggerProvider: LoggerProvider
 
   beforeEach(async () => {
     ipfs.dag.put.mockClear()
@@ -48,7 +49,8 @@ describe('Dispatcher', () => {
     ipfs.pubsub.unsubscribe.mockClear()
     ipfs.pubsub.publish.mockClear()
 
-    dispatcher = new Dispatcher(ipfs, TOPIC, LoggerProvider.makeDiagnosticLogger({}), LoggerProvider.makeServiceLogger("pubsub", {}))
+    loggerProvider = new LoggerProvider()
+    dispatcher = new Dispatcher(ipfs, TOPIC, loggerProvider.getDiagnosticsLogger(), loggerProvider.makeServiceLogger("pubsub"))
     await dispatcher.init()
   })
 
@@ -73,7 +75,7 @@ describe('Dispatcher', () => {
       dispatcher,
       null,
       false,
-      {},
+      {loggerProvider},
       null,
       null
     )
@@ -113,7 +115,7 @@ describe('Dispatcher', () => {
       dispatcher,
       null,
       false,
-      {},
+      {loggerProvider},
       null,
       null
     )

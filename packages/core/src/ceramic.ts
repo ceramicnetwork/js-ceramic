@@ -25,12 +25,14 @@ import {
   DocCache,
   AnchorStatus,
   LoggerProvider,
+  LoggerConfig,
 } from "@ceramicnetwork/common"
 import { Resolver } from "did-resolver"
 
 import { DID } from 'dids'
 import { TileDoctypeHandler } from "@ceramicnetwork/doctype-tile-handler"
 import { Caip10LinkDoctypeHandler } from "@ceramicnetwork/doctype-caip10-link-handler"
+import { DiagnosticsLogger, LogLevel } from "@ceramicnetwork/logger";
 import { PinStoreFactory } from "./store/pin-store-factory";
 import { PinStore } from "./store/pin-store";
 import { PathTrie, TrieNode, promiseTimeout } from './utils'
@@ -57,15 +59,12 @@ export interface CeramicConfig {
   stateStoreDirectory?: string;
 
   didResolver?: Resolver;
-  didProvider?: DIDProvider;
 
   validateDocs?: boolean;
   ipfsPinningEndpoints?: string[];
   pinningBackends?: PinningBackendStatic[];
 
-  logLevel?: string;
-  logToFiles?: boolean;
-  logPath?: string;
+  loggerProvider?: LoggerProvider;
   logToFilesPlugin?: {
     plugin: LoggerPlugin;
     state: any;
@@ -84,6 +83,34 @@ export interface CeramicConfig {
 
   [index: string]: any; // allow arbitrary properties
 }
+
+/**
+ * Modules that Ceramic uses internally.
+ * Most users will not provide this directly but will let it be derived automatically from the
+ * `CeramicConfig` via `Ceramic.create()`.
+ */
+export interface CeramicModules {
+  anchorService: AnchorService,
+  didResolver: Resolver,
+  dispatcher: Dispatcher,
+  ipfs: IpfsApi,
+  ipfsTopology: IpfsTopology,
+  loggerProvider: LoggerProvider,
+  pinStoreFactory: PinStoreFactory,
+}
+
+/**
+ * Parameters that control internal Ceramic behavior.
+ * Most users will not provide this directly but will let it be derived automatically from the
+ * `CeramicConfig` via `Ceramic.create()`.
+ */
+export interface CeramicParameters {
+  cacheDocumentCommits: boolean,
+  docCacheLimit: number,
+  networkOptions: CeramicNetworkOptions,
+  validateDocs: boolean,
+}
+
 
 /**
  * Protocol options that are derived from the Ceramic network name (e.g. "mainnet", "testnet-clay", etc) specified
@@ -120,32 +147,51 @@ const tryDocId = (id: string): DocID | null => {
  * `$ npm install --save @ceramicnetwork/core`
  */
 class Ceramic implements CeramicApi {
-  private readonly _doctypeHandlers: Record<string, DoctypeHandler<Doctype>>
 
-  public readonly pin: PinApi
   public readonly context: Context
+  public readonly dispatcher: Dispatcher
 
+  public pin: PinApi // Set during init()
+  public pinStore: PinStore // Set during init()
+
+  private readonly _doctypeHandlers: Record<string, DoctypeHandler<Doctype>>
   private readonly _docCache: DocCache
+  private readonly _ipfsTopology: IpfsTopology
+  private readonly _logger: DiagnosticsLogger
+  private readonly _networkOptions: CeramicNetworkOptions
+  private readonly _pinStoreFactory: PinStoreFactory
+  private readonly _validateDocs: boolean
 
-  // TODO: Make the constructor private and force the use of Ceramic.create() everywhere
-  constructor (public dispatcher: Dispatcher,
-               public pinStore: PinStore,
-               context: Context,
-               readonly topology: IpfsTopology,
-               private _networkOptions: CeramicNetworkOptions,
-               private _validateDocs: boolean = true,
-               docCacheLimit = DEFAULT_DOC_CACHE_LIMIT,
-               cacheDocumentCommits = true) {
+  constructor (modules: CeramicModules, params: CeramicParameters) {
+    this._ipfsTopology = modules.ipfsTopology
+    this._logger = modules.loggerProvider.getDiagnosticsLogger()
+    this._pinStoreFactory = modules.pinStoreFactory
+    this.dispatcher = modules.dispatcher
+
+    this._validateDocs = params.validateDocs
+    this._networkOptions = params.networkOptions
+
+    const keyDidResolver = KeyDidResolver.getResolver()
+    const threeIdResolver = ThreeIdResolver.getResolver(this)
+    const resolver = new Resolver({
+      ...modules.didResolver, ...threeIdResolver, ...keyDidResolver,
+    })
+
+    this.context = {
+      api: this,
+      anchorService: modules.anchorService,
+      resolver,
+      ipfs: modules.ipfs,
+      loggerProvider: modules.loggerProvider,
+    }
+    this.context.anchorService.ceramic = this
+
     this._doctypeHandlers = {
       'tile': new TileDoctypeHandler(),
       'caip10-link': new Caip10LinkDoctypeHandler()
     }
 
-    this._docCache = new DocCache(docCacheLimit, cacheDocumentCommits)
-
-    this.pin = new LocalPinApi(this.pinStore, this._docCache, this._loadDoc.bind(this))
-    this.context = context
-    this.context.api = this // set API reference
+    this._docCache = new DocCache(params.docCacheLimit, params.cacheDocumentCommits)
   }
 
   /**
@@ -237,16 +283,68 @@ class Ceramic implements CeramicApi {
   }
 
   /**
-   * Returns a copy of the given CeramicConfig object but with any potentially sensitive fields
-   * removed so that it is safe to log the whole thing.
-   * @param config
-   * @returns Copy of `config` with potentially sensitive information removed
-   * @private
+   * Parses the given `CeramicConfig` and generates the appropriate `CeramicParameters` and
+   * `CeramicModules` from it. This usually should not be called directly - most users will prefer
+   * to call `Ceramic.create()` instead which calls this internally.
    */
-  private static _redactConfigForLogging(config: CeramicConfig): CeramicConfig {
-    const redactedConfig = {...config}
-    delete redactedConfig.didProvider
-    return redactedConfig
+  static async _processConfig(ipfs: IpfsApi, config: CeramicConfig): Promise<[CeramicModules, CeramicParameters]> {
+    // todo remove all code related to LoggerProviderOld
+    LoggerProviderOld.init({
+      level: config.loggerProvider?.config.logLevel == LogLevel.debug ? 'debug' : 'silent',
+      component: config.gateway? 'GATEWAY' : 'NODE',
+    })
+
+    if (config.logToFiles) {
+      LoggerProviderOld.addPlugin(
+        config.logToFilesPlugin.plugin,
+        config.logToFilesPlugin.state,
+        null,
+        config.logToFilesPlugin.options
+      )
+    }
+
+    // Initialize ceramic loggers
+    const loggerProvider = config.loggerProvider ?? new LoggerProvider()
+    const logger = loggerProvider.getDiagnosticsLogger()
+    const pubsubLogger = loggerProvider.makeServiceLogger("pubsub")
+
+    logger.imp(`Starting Ceramic node at version ${packageJson.version} with config: \n${JSON.stringify(config, null, 2)}`)
+
+    const anchorService = config.anchorServiceUrl ? new EthereumAnchorService(config) : new InMemoryAnchorService(config as any)
+    await anchorService.init()
+
+    const networkOptions = await Ceramic._generateNetworkOptions(config, anchorService)
+    logger.imp(`Connecting to ceramic network '${networkOptions.name}' using pubsub topic '${networkOptions.pubsubTopic}' with supported anchor chains ['${networkOptions.supportedChains.join("','")}']`)
+
+    const pinStoreOptions = {
+      networkName: networkOptions.name,
+      pinsetDirectory: config.stateStoreDirectory,
+      pinningEndpoints: config.ipfsPinningEndpoints,
+      pinningBackends: config.pinningBackends,
+    }
+
+    const ipfsTopology = new IpfsTopology(ipfs, networkOptions.name)
+    const pinStoreFactory = new PinStoreFactory(ipfs, pinStoreOptions)
+    const dispatcher = new Dispatcher(ipfs, networkOptions.pubsubTopic, logger, pubsubLogger)
+
+    const params = {
+      cacheDocumentCommits: config.cacheDocCommits ?? true,
+      docCacheLimit: config.docCacheLimit ?? DEFAULT_DOC_CACHE_LIMIT,
+      networkOptions,
+      validateDocs: config.validateDocs ?? true,
+    }
+
+    const modules = {
+      anchorService,
+      didResolver: config.didResolver,
+      dispatcher,
+      ipfs,
+      ipfsTopology,
+      loggerProvider,
+      pinStoreFactory,
+    }
+
+    return [modules, params]
   }
 
   /**
@@ -255,75 +353,37 @@ class Ceramic implements CeramicApi {
    * @param config - Ceramic configuration
    */
   static async create(ipfs: IpfsApi, config: CeramicConfig = {}): Promise<Ceramic> {
-    // todo remove
-    LoggerProviderOld.init({
-      level: config.logLevel? config.logLevel : 'silent',
-      component: config.gateway? 'GATEWAY' : 'NODE',
-    })
+    const [modules, params] = await Ceramic._processConfig(ipfs, config)
 
-    if (config.logToFiles) {
-        LoggerProviderOld.addPlugin(
-            config.logToFilesPlugin.plugin,
-            config.logToFilesPlugin.state,
-            null,
-            config.logToFilesPlugin.options
-        )
-    }
-
-    // Initialize ceramic loggers
-    const loggerConfig = {logLevel: config.logLevel, logToFiles: config.logToFiles, logPath: config.logPath}
-    const logger = LoggerProvider.makeDiagnosticLogger(loggerConfig)
-    const pubsubLogger = LoggerProvider.makeServiceLogger("pubsub", loggerConfig)
-
-    logger.imp(`Starting Ceramic node at version ${packageJson.version} with config: \n${JSON.stringify(Ceramic._redactConfigForLogging(config), null, 2)}`)
-
-    const anchorService = config.anchorServiceUrl ? new EthereumAnchorService(config) : new InMemoryAnchorService(config as any)
-    await anchorService.init()
-    const context: Context = {
-      ipfs,
-      anchorService,
-      logger,
-    }
-
-    const networkOptions = await Ceramic._generateNetworkOptions(config, anchorService)
-    logger.imp(`Connecting to ceramic network '${networkOptions.name}' using pubsub topic '${networkOptions.pubsubTopic}' with supported anchor chains ['${networkOptions.supportedChains.join("','")}']`)
-
-    const dispatcher = new Dispatcher(ipfs, networkOptions.pubsubTopic, logger, pubsubLogger)
-    await dispatcher.init()
-
-    const pinStoreProperties = {
-      networkName: networkOptions.name,
-      pinsetDirectory: config.stateStoreDirectory,
-      pinningEndpoints: config.ipfsPinningEndpoints,
-      pinningBackends: config.pinningBackends
-    }
-    const pinStoreFactory = new PinStoreFactory(ipfs, pinStoreProperties)
-    const pinStore = await pinStoreFactory.open()
-    const topology = new IpfsTopology(ipfs, networkOptions.name)
-    const ceramic = new Ceramic(dispatcher, pinStore, context, topology, networkOptions, config.validateDocs, config.docCacheLimit, config.cacheDocCommits)
-    anchorService.ceramic = ceramic
-
-    const keyDidResolver = KeyDidResolver.getResolver()
-    const threeIdResolver = ThreeIdResolver.getResolver(ceramic)
-    ceramic.context.resolver = new Resolver({
-      ...config.didResolver, ...threeIdResolver, ...keyDidResolver,
-    })
-
-    if (config.didProvider) {
-      await ceramic.setDIDProvider(config.didProvider)
-    }
+    const ceramic = new Ceramic(modules, params)
 
     const doPeerDiscovery = config.useCentralizedPeerDiscovery ?? !TESTING
-    if (doPeerDiscovery) {
-      await topology.start()
-    }
-
     const restoreDocuments = config.restoreDocuments ?? true
-    if (restoreDocuments) {
-      await ceramic.restoreDocuments()
-    }
+
+    await ceramic._init(doPeerDiscovery, restoreDocuments)
 
     return ceramic
+  }
+
+  /**
+   * Finishes initialization and startup of a Ceramic instance. This usually should not be called
+   * directly - most users will prefer to call `Ceramic.create()` instead which calls this internally.
+   * @param doPeerDiscovery - Controls whether we connect to the "peerlist" to manually perform IPFS peer discovery
+   * @param restoreDocuments - Controls whether we attempt to load pinned document state into memory at startup
+   */
+  async _init(doPeerDiscovery: boolean, restoreDocuments: boolean): Promise<void> {
+    this.pinStore = await this._pinStoreFactory.open()
+    this.pin = new LocalPinApi(this.pinStore, this._docCache, this._loadDoc.bind(this))
+
+    if (doPeerDiscovery) {
+      await this._ipfsTopology.start()
+    }
+
+    await this.dispatcher.init()
+
+    if (restoreDocuments) {
+      await this.restoreDocuments()
+    }
   }
 
   /**
@@ -337,7 +397,7 @@ class Ceramic implements CeramicApi {
     if (!this.context.did.authenticated) {
       await this.context.did.authenticate()
     }
-    this.context.logger.imp(`Now authenticated as DID ${this.context.did.id}`)
+    this._logger.imp(`Now authenticated as DID ${this.context.did.id}`)
   }
 
   /**
@@ -601,7 +661,7 @@ class Ceramic implements CeramicApi {
   async close (): Promise<void> {
     await this.pinStore.close()
     await this.dispatcher.close()
-    this.topology.stop()
+    this._ipfsTopology.stop()
   }
 }
 

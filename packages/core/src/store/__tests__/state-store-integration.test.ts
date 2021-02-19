@@ -1,7 +1,7 @@
 import tmp from 'tmp-promise'
 import Document from "../../document"
 import Dispatcher from "../../dispatcher"
-import { Doctype } from "@ceramicnetwork/common"
+import {Doctype, LoggerProvider} from "@ceramicnetwork/common"
 import { AnchorService } from "@ceramicnetwork/common"
 import { Context } from "@ceramicnetwork/common"
 import { TileDoctype } from "@ceramicnetwork/doctype-tile"
@@ -167,9 +167,6 @@ describe('Level data store', () => {
     // anchorOnRequest to false in the config for the InMemoryAnchorService and anchor manually
     // throughout the tests.
     anchorService = new InMemoryAnchorService({})
-    anchorService.ceramic = {
-      dispatcher
-    }
 
     const user: DID = new DID()
     user.createJWS = jest.fn(async () => {
@@ -193,19 +190,18 @@ describe('Level data store', () => {
 
     const api = {getSupportedChains: jest.fn(async () => {return await anchorService.getSupportedChains()})}
     const resolver = new Resolver({ ...threeIdResolver })
+    const loggerProvider = new LoggerProvider()
     context = {
       ipfs: dispatcher._ipfs,
       did: user,
+      loggerProvider,
       resolver,
       anchorService,
       api,
     }
 
     anchorService.ceramic = {
-      context: {
-        ipfs: dispatcher._ipfs,
-        resolver,
-      },
+      context,
       dispatcher,
     }
 

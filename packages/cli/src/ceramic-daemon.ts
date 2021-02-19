@@ -1,7 +1,7 @@
 import express, { Request, Response, NextFunction } from 'express'
 import Ceramic from '@ceramicnetwork/core'
 import type { CeramicConfig} from "@ceramicnetwork/core"
-import { DiagnosticsLogger } from "@ceramicnetwork/logger"
+import { DiagnosticsLogger, LogLevel } from "@ceramicnetwork/logger"
 import {
   DoctypeUtils,
   RootLogger,
@@ -38,9 +38,7 @@ export interface CreateOpts {
   validateDocs?: boolean;
   ipfsPinningEndpoints?: string[];
   gateway?: boolean;
-  debug: boolean;
-  logToFiles?: boolean;
-  logPath?: string;
+  loggerConfig?: LoggerConfig,
   network?: string;
   pubsubTopic?: string;
 
@@ -59,7 +57,7 @@ interface MultiQueries {
 
 const ACCESS_LOG_FMT = 'ip=:remote-addr ts=:date[iso] method=:method original_url=:original-url base_url=:base-url path=:path http_version=:http-version req_header:req[header] status=:status content_length=:res[content-length] content_type=":res[content-type]" ref=:referrer user_agent=:user-agent elapsed_ms=:total-time[3]';
 
-const makeExpressMiddleware = function (config: LoggerConfig) {
+const makeExpressMiddleware = function (loggerProvider: LoggerProvider) {
   morgan.token<Request, Response>('original-url', function (req, res): any {
     return req.originalUrl;
   });
@@ -70,14 +68,15 @@ const makeExpressMiddleware = function (config: LoggerConfig) {
     return req.path;
   });
 
-  const logger = LoggerProvider.makeServiceLogger("http-access", config)
+  const logger = loggerProvider.makeServiceLogger("http-access")
 
   return [morgan(ACCESS_LOG_FMT, { stream: logger })]
 };
 
 const makeCeramicConfig = function (opts: CreateOpts): CeramicConfig {
+  const loggerProvider = new LoggerProvider(opts.loggerConfig)
   const ceramicConfig: CeramicConfig = {
-    logLevel: opts.debug ? 'debug' : 'silent',
+    loggerProvider,
     gateway: opts.gateway || false,
     networkName: opts.network
   }
@@ -101,13 +100,12 @@ const makeCeramicConfig = function (opts: CreateOpts): CeramicConfig {
     ceramicConfig.ipfsPinningEndpoints = opts.ipfsPinningEndpoints
   }
 
-  if (opts.logToFiles) {
-    ceramicConfig.logToFiles = opts.logToFiles
-    ceramicConfig.logPath = opts.logPath
+  if (opts.loggerConfig?.logToFiles) {
+    // TODO remove when LoggerProviderOld is removed from 'common' package
     ceramicConfig.logToFilesPlugin = {
       plugin: LogToFiles.main,
       state: {blockedFiles: {}},
-      options: {logPath: opts.logPath}
+      options: {logPath: opts.loggerConfig.logPath}
     }
   }
 
@@ -121,29 +119,24 @@ class CeramicDaemon {
   private server: any
   private maxHealthyCpu: number
   private maxHealthyMemory: number
-  private readonly debug: boolean
   private readonly logger: DiagnosticsLogger
 
   constructor (public ceramic: Ceramic, opts: CreateOpts) {
-    this.debug = opts.debug
     this.maxHealthyCpu = opts.maxHealthyCpu
     this.maxHealthyMemory = opts.maxHealthyMemory
-    this.logger = ceramic.context.logger
+    this.logger = ceramic.context.loggerProvider.getDiagnosticsLogger()
 
     const app: core.Express = express()
     app.use(express.json())
     app.use(cors({ origin: opts.corsAllowedOrigins }))
 
-    const logConfig: LoggerConfig = { logPath: opts.logPath,
-                                      logToFiles: opts.logToFiles,
-                                      logLevel: opts.debug ? "debug" : "important" }
-    const expressMiddleware = makeExpressMiddleware(logConfig)
+    const expressMiddleware = makeExpressMiddleware(ceramic.context.loggerProvider)
     app.use(expressMiddleware)
 
     this.registerAPIPaths(app, opts.gateway)
 
     const loggerOld = RootLogger.getLogger(CeramicDaemon.name)
-    if (this.debug) {
+    if (opts.loggerConfig?.logLevel == LogLevel.debug) {
       app.use((req: Request, res: Response, next: NextFunction): void => {
         const requestStart = Date.now()
 
