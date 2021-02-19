@@ -35,9 +35,6 @@ export interface CreateOpts {
   anchorServiceUrl?: string;
   stateStoreDirectory?: string;
   s3StateStoreBucket?: string;
-  s3StateStoreAwsRegion?: string;
-  s3StateStoreAwsAccessKey?: string;
-  s3StateStoreAwsSecretAccessKey?: string;
 
   validateDocs?: boolean;
   ipfsPinningEndpoints?: string[];
@@ -197,7 +194,7 @@ class CeramicDaemon {
     const [modules, params] = await Ceramic._processConfig(ipfs, ceramicConfig)
 
     if (opts.s3StateStoreBucket) {
-      const s3StateStore = new S3StateStore(opts.s3StateStoreBucket, opts.s3StateStoreAwsRegion, opts.s3StateStoreAwsAccessKey, opts.s3StateStoreAwsSecretAccessKey)
+      const s3StateStore = new S3StateStore(opts.s3StateStoreBucket)
       modules.pinStoreFactory.setStateStore(s3StateStore)
     }
 

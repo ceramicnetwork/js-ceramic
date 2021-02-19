@@ -3,7 +3,6 @@ import DocID from '@ceramicnetwork/docid'
 import { StateStore } from "@ceramicnetwork/core";
 import LevelUp from "levelup";
 import S3LevelDOWN from "s3leveldown"
-import AWS from "aws-sdk"
 import toArray from "stream-to-array"
 
 /**
@@ -11,32 +10,17 @@ import toArray from "stream-to-array"
  */
 export class S3StateStore implements StateStore {
   readonly #bucketName: string
-  readonly #awsRegion: string
-  readonly #awsAccessKeyId: string
-  readonly #awsSecretAccessKey: string
-
   #store
 
-  constructor(bucketName: string, awsRegion: string, awsAccessKeyId: string, awsSecretAccessKey: string) {
+  constructor(bucketName: string) {
     this.#bucketName = bucketName
-    this.#awsRegion = awsRegion
-    this.#awsAccessKeyId = awsAccessKeyId
-    this.#awsSecretAccessKey = awsSecretAccessKey
   }
 
   /**
    * Open pinning service
    */
   async open(): Promise<void> {
-    AWS.config.update({ region: this.#awsRegion });
-    const s3 = new AWS.S3({
-      accessKeyId: this.#awsAccessKeyId,
-      secretAccessKey: this.#awsSecretAccessKey,
-      apiVersion: '2006-03-01',
-      s3ForcePathStyle: true,
-      signatureVersion: 'v4'
-    });
-    this.#store = new LevelUp(new S3LevelDOWN(this.#bucketName, s3));
+    this.#store = new LevelUp(new S3LevelDOWN(this.#bucketName));
   }
 
   /**
