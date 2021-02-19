@@ -138,7 +138,7 @@ beforeEach(async () => {
     unpin: jest.fn()
   }
   pinStore = new PinStore(stateStore, pinning, jest.fn(), jest.fn())
-  await pinStore.open()
+  await pinStore.open('fakeNetwork')
 })
 
 describe('Document', () => {

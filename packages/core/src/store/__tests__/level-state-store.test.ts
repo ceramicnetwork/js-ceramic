@@ -33,6 +33,7 @@ class FakeType extends Doctype {
 
 let levelPath: string
 let stateStore: LevelStateStore
+const NETWORK = "fakeNetwork"
 
 beforeEach(async () => {
     mockStorage = new Map()
@@ -55,13 +56,14 @@ const state = {
 test('#open', async () => {
     expect(Level).not.toBeCalled()
     expect(stateStore.store).toBeUndefined()
-    await stateStore.open()
-    expect(Level).toBeCalledWith(levelPath)
+    await stateStore.open(NETWORK)
+    const expectedPath = levelPath + "/" + NETWORK
+    expect(Level).toBeCalledWith(expectedPath)
 })
 
 test('#save and #load', async () => {
     const document = new FakeType(state, {})
-    await stateStore.open()
+    await stateStore.open(NETWORK)
     await stateStore.save(document)
     const docId = document.id.baseID
     expect(mockPut).toBeCalledWith(docId.toString(), DoctypeUtils.serializeState(state))
@@ -74,7 +76,7 @@ test('#save and #load', async () => {
 describe('#load', () => {
     test('#load not found', async () => {
         mockGet = jest.fn(() => { throw {notFound: true}})
-        await stateStore.open()
+        await stateStore.open(NETWORK)
         const docid = DocID.fromString(docIdTest)
         const retrieved = await stateStore.load(docid)
         expect(retrieved).toBeNull()
@@ -82,14 +84,14 @@ describe('#load', () => {
 
     test('#load passes errors', async () => {
         mockGet = jest.fn(() => { throw new Error('something internal to LevelDB')})
-        await stateStore.open()
+        await stateStore.open(NETWORK)
         const docid = DocID.fromString(docIdTest)
         await expect(stateStore.load(docid)).rejects.toThrow('something internal to LevelDB')
     })
 })
 
 test('#remove', async () => {
-    await stateStore.open()
+    await stateStore.open(NETWORK)
     const docid = DocID.fromString(docIdTest)
     await stateStore.remove(docid)
     expect(mockDel).toBeCalledWith(docid.toString())
@@ -97,20 +99,20 @@ test('#remove', async () => {
 
 describe('#list', () => {
     test('saved entries', async () => {
-        await stateStore.open()
+        await stateStore.open(NETWORK)
         const list = await stateStore.list()
         expect(list).toEqual(mockStreamResult)
         expect(mockStream).toBeCalledWith({keys: true, values: false})
     })
     test('report if docId is saved', async () => {
-        await stateStore.open()
+        await stateStore.open(NETWORK)
         stateStore.load = jest.fn(() => Promise.resolve(state))
         const docid = DocID.fromString(docIdTest)
         const list = await stateStore.list(docid)
         expect(list).toEqual([docid.toString()])
     })
     test('report if docId is absent', async () => {
-        await stateStore.open()
+        await stateStore.open(NETWORK)
         stateStore.load = jest.fn(() => Promise.resolve(null))
         const docid = DocID.fromString(docIdTest)
         const list = await stateStore.list(docid)

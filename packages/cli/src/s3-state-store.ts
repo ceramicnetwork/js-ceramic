@@ -19,8 +19,9 @@ export class S3StateStore implements StateStore {
   /**
    * Open pinning service
    */
-  async open(): Promise<void> {
-    this.#store = new LevelUp(new S3LevelDOWN(this.#bucketName));
+  async open(networkName: string): Promise<void> {
+    const location = this.#bucketName + '/' + networkName + '/state-store'
+    this.#store = new LevelUp(new S3LevelDOWN(location));
   }
 
   /**

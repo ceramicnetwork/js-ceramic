@@ -6,7 +6,6 @@ import { StateStore } from "./state-store";
 import CID from 'cids'
 import path from "path";
 import os from "os";
-import { promises as fs } from 'fs'
 import { IpfsPinning } from '@ceramicnetwork/pinning-ipfs-backend'
 
 const DEFAULT_PINSET_DIRECTORY = path.join(os.homedir(), ".ceramic", "pinset")
@@ -14,21 +13,21 @@ const IPFS_GET_TIMEOUT = 60000 // 1 minute
 
 export type Props = {
     networkName?: string;
-    pinsetDirectory?: string;
+    pinsetDirectory?: string; // todo rename
     pinningEndpoints?: string[];
     pinningBackends?: PinningBackendStatic[];
 }
 
 export class PinStoreFactory {
-    readonly localStateStorePath: string
+    readonly localStateStoreDirectory: string
     readonly pinningEndpoints: string[]
-    readonly pinningBackends: PinningBackendStatic[];
+    readonly pinningBackends: PinningBackendStatic[]
+    readonly networkName: string
     private _stateStore: StateStore
 
     constructor(readonly ipfs: IpfsApi, props: Props) {
-        const directoryRoot = props.pinsetDirectory || DEFAULT_PINSET_DIRECTORY
-        // Always store the pinning state in a network-specific directory
-        this.localStateStorePath = path.join(directoryRoot, props.networkName)
+        this.networkName = props.networkName
+        this.localStateStoreDirectory = props.pinsetDirectory || DEFAULT_PINSET_DIRECTORY
         this.pinningEndpoints = props.pinningEndpoints && props.pinningEndpoints.length > 0 ? props.pinningEndpoints : ['ipfs+context']
         this.pinningBackends = props.pinningBackends && props.pinningBackends.length > 0 ? props.pinningBackends : [IpfsPinning]
     }
@@ -40,8 +39,7 @@ export class PinStoreFactory {
     public async open(): Promise<PinStore> {
         if (!this._stateStore) {
           // Default to local leveldb backed state store if no other StateStore implementation is provided
-          await fs.mkdir(this.localStateStorePath, { recursive: true }) // create dir if it doesn't exist
-          this._stateStore = new LevelStateStore(this.localStateStorePath)
+          this._stateStore = new LevelStateStore(this.localStateStoreDirectory)
         }
         const ipfs = this.ipfs
         const pinning = PinningAggregation.build(ipfs, this.pinningEndpoints, this.pinningBackends)
@@ -53,7 +51,7 @@ export class PinStoreFactory {
             return (await ipfs.dag.resolve(path)).cid
         }
         const pinStore = new PinStore(this._stateStore, pinning, retrieve, resolve)
-        await pinStore.open()
+        await pinStore.open(this.networkName)
         return pinStore
     }
 }
