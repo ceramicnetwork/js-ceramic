@@ -220,14 +220,14 @@ describe('Document', () => {
         validateDocs: true,
       }
 
-      ceramic = new Ceramic(params, modules)
+      ceramic = new Ceramic(modules, params)
       ceramic._doctypeHandlers['tile'] = doctypeHandler
       ceramic.context.resolver = resolver
       context.api = ceramic
       await ceramic._init(false, false)
 
       const paramsNoSchemaValidation = { ...params, validateDocs: false };
-      ceramicWithoutSchemaValidation = new Ceramic(paramsNoSchemaValidation, modules)
+      ceramicWithoutSchemaValidation = new Ceramic(modules, paramsNoSchemaValidation)
       ceramicWithoutSchemaValidation._doctypeHandlers['tile'] = doctypeHandler
       ceramicWithoutSchemaValidation.context.resolver = resolver
 
@@ -807,7 +807,7 @@ describe('Document', () => {
         validateDocs: true,
       }
 
-      ceramic = new Ceramic(params, modules)
+      ceramic = new Ceramic(modules, params)
       ceramic._doctypeHandlers['tile'] = doctypeHandler
       ceramic.context.resolver = resolver
       context.api = ceramic

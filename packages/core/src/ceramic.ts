@@ -162,8 +162,7 @@ class Ceramic implements CeramicApi {
   private readonly _pinStoreFactory: PinStoreFactory
   private readonly _validateDocs: boolean
 
-  constructor (params: CeramicParameters,
-               modules: CeramicModules) {
+  constructor (modules: CeramicModules, params: CeramicParameters) {
     this._ipfsTopology = modules.ipfsTopology
     this._logger = modules.loggerProvider.getDiagnosticsLogger()
     this._pinStoreFactory = modules.pinStoreFactory
@@ -288,7 +287,7 @@ class Ceramic implements CeramicApi {
    * `CeramicModules` from it. This usually should not be called directly - most users will prefer
    * to call `Ceramic.create()` instead which calls this internally.
    */
-  static async _processConfig(ipfs: IpfsApi, config: CeramicConfig): Promise<[CeramicParameters, CeramicModules]> {
+  static async _processConfig(ipfs: IpfsApi, config: CeramicConfig): Promise<[CeramicModules, CeramicParameters]> {
     // todo remove all code related to LoggerProviderOld
     LoggerProviderOld.init({
       level: config.loggerProvider?.config.logLevel == LogLevel.debug ? 'debug' : 'silent',
@@ -345,7 +344,7 @@ class Ceramic implements CeramicApi {
       pinStoreFactory,
     }
 
-    return [params, modules]
+    return [modules, params]
   }
 
   /**
@@ -354,9 +353,9 @@ class Ceramic implements CeramicApi {
    * @param config - Ceramic configuration
    */
   static async create(ipfs: IpfsApi, config: CeramicConfig = {}): Promise<Ceramic> {
-    const [params, modules] = await Ceramic._processConfig(ipfs, config)
+    const [modules, params] = await Ceramic._processConfig(ipfs, config)
 
-    const ceramic = new Ceramic(params, modules)
+    const ceramic = new Ceramic(modules, params)
 
     const doPeerDiscovery = config.useCentralizedPeerDiscovery ?? !TESTING
     const restoreDocuments = config.restoreDocuments ?? true
