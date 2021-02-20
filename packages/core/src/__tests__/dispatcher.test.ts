@@ -4,6 +4,7 @@ import Document from "../document"
 import { TileDoctype } from "@ceramicnetwork/doctype-tile"
 import DocID from "@ceramicnetwork/docid";
 import { LoggerProvider } from "@ceramicnetwork/common";
+import { Repository } from '../repository';
 
 const TOPIC = '/ceramic'
 const FAKE_CID = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
@@ -50,7 +51,8 @@ describe('Dispatcher', () => {
     ipfs.pubsub.publish.mockClear()
 
     loggerProvider = new LoggerProvider()
-    dispatcher = new Dispatcher(ipfs, TOPIC, loggerProvider.getDiagnosticsLogger(), loggerProvider.makeServiceLogger("pubsub"))
+    const repository = new Repository()
+    dispatcher = new Dispatcher(ipfs, TOPIC, repository, loggerProvider.getDiagnosticsLogger(), loggerProvider.makeServiceLogger("pubsub"))
     await dispatcher.init()
   })
 
@@ -59,7 +61,7 @@ describe('Dispatcher', () => {
   })
 
   it('is constructed correctly', async () => {
-    expect((dispatcher as any)._documents).toEqual({})
+    expect((dispatcher as any).repository).toBeInstanceOf(Repository)
     expect(ipfs.pubsub.subscribe).toHaveBeenCalledWith(TOPIC, expect.anything())
   })
 
