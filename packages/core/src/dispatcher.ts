@@ -1,4 +1,3 @@
-import { EventEmitter } from 'events'
 import CID from 'cids'
 import cloneDeep from 'lodash.clonedeep'
 import dagCBOR from "ipld-dag-cbor"
@@ -39,7 +38,7 @@ interface LogMessage {
 /**
  * Ceramic core Dispatcher used for handling messages from pub/sub topic.
  */
-export default class Dispatcher extends EventEmitter {
+export default class Dispatcher {
   private _peerId: string
   private readonly _documents: Record<string, Document>
   // Set of IDs for QUERY messages we have sent to the pub/sub topic but not yet heard a
@@ -50,7 +49,6 @@ export default class Dispatcher extends EventEmitter {
   private _resubscribeInterval: any
 
   constructor (public _ipfs: IpfsApi, public topic: string, private _logger: DiagnosticsLogger, private _pubsubLogger: ServiceLogger) {
-    super()
     this._documents = {}
     this._outstandingQueryIds = {}
   }
