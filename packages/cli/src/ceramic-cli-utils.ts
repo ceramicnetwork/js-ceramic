@@ -45,7 +45,7 @@ export class CeramicCliUtils {
      * @param port - port daemon is availabe. Default is 7007
      * @param debug - Enable debug logging level
      * @param logToFiles - Enable writing logs to files
-     * @param logPath - Store log files in this directory
+     * @param logDirectory - Store log files in this directory
      * @param network - The Ceramic network to connect to
      * @param pubsubTopic - Pub/sub topic to use for protocol messages.
      * @param maxHealthyCpu - Max fraction of total CPU usage considered healthy. Default is 0.7
@@ -64,7 +64,7 @@ export class CeramicCliUtils {
         port: number,
         debug: boolean,
         logToFiles: boolean,
-        logPath: string,
+        logDirectory: string,
         network = DEFAULT_NETWORK,
         pubsubTopic: string,
         maxHealthyCpu = 0.7,
@@ -77,7 +77,7 @@ export class CeramicCliUtils {
         }
         const loggerConfig: LoggerConfig = {
           logToFiles,
-          logPath,
+          logDirectory,
           logLevel: debug ? LogLevel.debug : LogLevel.important,
         }
 

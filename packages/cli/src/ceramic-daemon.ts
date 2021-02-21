@@ -106,7 +106,7 @@ const makeCeramicConfig = function (opts: CreateOpts): CeramicConfig {
     ceramicConfig.logToFilesPlugin = {
       plugin: LogToFiles.main,
       state: {blockedFiles: {}},
-      options: {logPath: opts.loggerConfig.logPath}
+      options: {logPath: opts.loggerConfig.logDirectory}
     }
   }
 
