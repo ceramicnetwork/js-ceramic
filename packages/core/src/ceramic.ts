@@ -373,7 +373,7 @@ class Ceramic implements CeramicApi {
    */
   async _init(doPeerDiscovery: boolean, restoreDocuments: boolean): Promise<void> {
     this.pinStore = await this._pinStoreFactory.open()
-    this.pin = new LocalPinApi(this.pinStore, this._docCache, this._loadDoc.bind(this))
+    this.pin = new LocalPinApi(this.pinStore, this._docCache, this._loadDoc.bind(this), this._logger)
 
     if (doPeerDiscovery) {
       await this._ipfsTopology.start()
@@ -405,6 +405,7 @@ class Ceramic implements CeramicApi {
    * @param doctypeHandler - Document type handler
    */
   addDoctypeHandler<T extends Doctype>(doctypeHandler: DoctypeHandler<T>): void {
+    this._logger.debug(`Registered handler for ${doctypeHandler.name} doctype`)
     this._doctypeHandlers[doctypeHandler.name] = doctypeHandler
   }
 
@@ -467,11 +468,14 @@ class Ceramic implements CeramicApi {
 
     let doc = this._getDocFromCache(docId)
     if (doc) {
+      this._logger.verbose(`Document ${docId.toString()} loaded from cache`)
       return doc
     }
 
     doc = await Document.create(docId, doctypeHandler, this.dispatcher, this.pinStore, this.context, opts, this._validateDocs);
     this._docCache.put(doc)
+
+    this._logger.verbose(`Document ${docId.toString()} successfully created`)
     return doc
   }
 
@@ -483,6 +487,7 @@ class Ceramic implements CeramicApi {
    */
   async createDocumentFromGenesis<T extends Doctype>(doctype: string, genesis: any, opts: DocOpts = {}): Promise<T> {
     const doc = await this._createDocFromGenesis(doctype, genesis, opts)
+    this._logger.verbose(`Document ${doc.id.toString()} successfully created from genesis contents`)
     return doc.doctype as T
   }
 
@@ -519,6 +524,7 @@ class Ceramic implements CeramicApi {
    */
   async loadDocument<T extends Doctype>(docId: DocID | CommitID | string, opts: DocOpts = {}): Promise<T> {
     const doc = await this._loadDoc(docId, opts)
+    this._logger.verbose(`Document ${docId.toString()} successfully loaded`)
     return doc.doctype as T
   }
 
@@ -594,13 +600,15 @@ class Ceramic implements CeramicApi {
     const doc = await this.loadDocument(effectiveDocId)
     const { state } = doc
 
-    return Promise.all(state.log.map(async ({ cid }) => {
+    const results = await Promise.all(state.log.map(async ({ cid }) => {
       const record = (await this.ipfs.dag.get(cid, { timeout: IPFS_GET_TIMEOUT })).value
       return {
         cid: cid.toString(),
         value: await DoctypeUtils.convertCommitToSignedCommitContainer(record, this.ipfs)
       }
     }))
+    this._logger.verbose(`Successfully loaded ${results.length} commits for document ${docId.toString()}`)
+    return results
   }
 
   /**
@@ -653,15 +661,18 @@ class Ceramic implements CeramicApi {
         document.anchor()
       }
     })
+    this._logger.verbose(`Successfully restored ${documents.length} pinned documents`)
   }
 
   /**
    * Close Ceramic instance gracefully
    */
   async close (): Promise<void> {
+    this._logger.imp("Closing Ceramic instance")
     await this.pinStore.close()
     await this.dispatcher.close()
     this._ipfsTopology.stop()
+    this._logger.imp("Ceramic instance closed successfully")
   }
 }
 
