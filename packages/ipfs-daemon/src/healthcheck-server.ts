@@ -4,10 +4,11 @@ import express from "express"
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import type { IPFSAPI as IpfsApi } from 'ipfs-core/dist/src/components'
+import { DiagnosticsLogger } from '@ceramicnetwork/logger'
 export type IpfsApi = typeof IpfsApi
 
 export class HealthcheckServer {
-    constructor(readonly ipfs: IpfsApi, readonly port: number, readonly host: string) {
+    constructor(readonly ipfs: IpfsApi, readonly port: number, readonly host: string, readonly logger: DiagnosticsLogger) {
     }
 
 
@@ -17,7 +18,7 @@ export class HealthcheckServer {
         app.get('/', async (req, res) => {
             if (!this.ipfs.isOnline()) {
                 const message = "Service offline"
-                console.error(message)
+                this.logger.err(message)
                 return res.status(503).send(message)
             }
 
@@ -32,14 +33,14 @@ export class HealthcheckServer {
 
             if (cpuUsage > maxHealthyCpu || memUsage > maxHealthyMemory) {
                 const stats = `cpuUsage=${cpuUsage} maxHealthyCpu=${maxHealthyCpu} freeCpu=${freeCpu} memoryUsage=${memUsage} maxHealthyMemory=${maxHealthyMemory} freeMemory=${freeMemory}`
-                console.error(stats)
+                this.logger.err(stats)
                 return res.status(503).send("Insufficient resources")
             }
             return res.status(200).send("Alive")
         })
 
         app.listen(this.port, this.host, () => {
-            console.log(`Healthcheck server is listening on ${this.port}`)
+            this.logger.imp(`Healthcheck server is listening on ${this.port}`)
         })
     }
 }
