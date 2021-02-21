@@ -199,7 +199,7 @@ describe('Document', () => {
       const topology = new FakeTopology(dispatcher._ipfs, networkOptions.name)
 
       const pinStoreFactory = {
-        open: async() => {
+        createPinStore: async() => {
           return pinStore
         }
       };
@@ -784,7 +784,7 @@ describe('Document', () => {
       const topology = new FakeTopology(dispatcher._ipfs, networkOptions.name)
 
       const pinStoreFactory = {
-        open: async() => {
+        createPinStore: async() => {
           return pinStore
         }
       };

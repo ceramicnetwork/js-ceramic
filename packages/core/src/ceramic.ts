@@ -372,7 +372,7 @@ class Ceramic implements CeramicApi {
    * @param restoreDocuments - Controls whether we attempt to load pinned document state into memory at startup
    */
   async _init(doPeerDiscovery: boolean, restoreDocuments: boolean): Promise<void> {
-    this.pinStore = await this._pinStoreFactory.open()
+    this.pinStore = await this._pinStoreFactory.createPinStore()
     this.pin = new LocalPinApi(this.pinStore, this._docCache, this._loadDoc.bind(this))
 
     if (doPeerDiscovery) {

@@ -36,7 +36,7 @@ export class PinStoreFactory {
       this._stateStore = stateStore
     }
 
-    public async open(): Promise<PinStore> {
+    public async createPinStore(): Promise<PinStore> {
         if (!this._stateStore) {
           // Default to local leveldb backed state store if no other StateStore implementation is provided
           this._stateStore = new LevelStateStore(this.localStateStoreDirectory)
