@@ -3,7 +3,7 @@ import cloneDeep from 'lodash.clonedeep'
 import dagCBOR from "ipld-dag-cbor"
 import * as multihashes from 'multihashes'
 import * as sha256 from "@stablelib/sha256"
-
+import * as pubsubMessage from './pubsub/pubsub-message'
 import type Document from "./document"
 import { DoctypeUtils, IpfsApi } from "@ceramicnetwork/common"
 import { TextDecoder } from 'util'
@@ -110,13 +110,11 @@ export default class Dispatcher {
     this.repository.add(document)
 
     // Build a QUERY message to send to the pub/sub topic to request the latest tip for this document
-    const payload = this._buildQueryMessage(document)
+    const message = pubsubMessage.buildQueryMessage(document.id)
 
     // Store the query id so we'll process the corresponding RESPONSE message when it comes in
-    this._outstandingQueryIds[payload.id] = document.id.baseID
-
-    this._ipfs.pubsub.publish(this.topic, JSON.stringify(payload))
-    this._pubsubLogger.log({ peer: this._peerId, event: 'published', topic: this.topic, message: payload })
+    this._outstandingQueryIds[message.id] = document.id
+    await this.publish(message)
   }
 
   _buildQueryMessage(document: Document): Record<string, any> {
@@ -214,14 +212,7 @@ export default class Dispatcher {
    * @param tip - Commit CID
    */
   async publishTip (docId: DocID, tip: CID): Promise<void> {
-    if (!this._isRunning) {
-      this._logger.err('Dispatcher has been closed')
-      return
-    }
-
-    const payload = { typ: MsgType.UPDATE, doc: docId.baseID.toString(), tip: tip.toString() }
-    await this._ipfs.pubsub.publish(this.topic, JSON.stringify(payload))
-    this._pubsubLogger.log({ peer: this._peerId, event: 'published', topic: this.topic, message: payload })
+    await this.publish({ typ: MsgType.UPDATE, doc: docId, tip: tip })
   }
 
   /**
@@ -352,5 +343,15 @@ export default class Dispatcher {
     await this.repository.close()
 
     await this._ipfs.pubsub.unsubscribe(this.topic)
+  }
+
+  private async publish(message: pubsubMessage.PubsubMessage) {
+    if (!this._isRunning) {
+      this._logger.err('Dispatcher has been closed')
+      return
+    }
+
+    await this._ipfs.pubsub.publish(this.topic, pubsubMessage.serialize(message))
+    this._pubsubLogger.log({ peer: this._peerId, event: 'published', topic: this.topic, message: message })
   }
 }
