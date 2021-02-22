@@ -4,6 +4,7 @@ import { PinStore } from '../store/pin-store';
 import DocID from '@ceramicnetwork/docid';
 import Document from '../document';
 import * as random from '@stablelib/random';
+import { LoggerProvider } from "@ceramicnetwork/common";
 
 const DOC_ID = DocID.fromString('k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki');
 
@@ -13,7 +14,7 @@ const docCache = ({ pin: jest.fn(), unpin: jest.fn() } as unknown) as DocCache;
 const document = ({ doctype: 'tile' } as unknown) as Document;
 const loadDoc = jest.fn(async () => document);
 
-const pinApi = new LocalPinApi(pinStore, docCache, loadDoc);
+const pinApi = new LocalPinApi(pinStore, docCache, loadDoc, new LoggerProvider().getDiagnosticsLogger())
 
 async function toArray<A>(iterable: AsyncIterable<A>): Promise<A[]> {
   const result: A[] = [];

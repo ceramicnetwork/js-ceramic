@@ -14,6 +14,7 @@ program
     .option('--gateway', 'Makes read only endpoints available. It is disabled by default')
     .option('--port <int>', 'Port daemon is available. Default is 7007')
     .option('--debug', 'Enable debug logging level. Default is false')
+    .option('--verbose', 'Enable verbose logging level. Default is false')
     .option('--log-to-files', 'If debug is true, write logs to files. Default is false')
     .option('--log-directory <dir>', 'Store logs in this directory. Defaults to HOME_DIR/.ceramic/logs')
     .option('--network <name>', 'Name of the ceramic network to connect to. One of: "mainnet", "testnet-clay", "local", or "inmemory". Defaults to "testnet-clay"')
@@ -33,6 +34,7 @@ program
         gateway,
         port,
         debug,
+        verbose,
         logToFiles,
         logDirectory,
         network,
@@ -55,6 +57,7 @@ program
             gateway,
             port,
             debug,
+            verbose,
             logToFiles,
             logDirectory,
             network,

@@ -44,6 +44,7 @@ export class CeramicCliUtils {
      * @param gateway - read only endpoints available. It is disabled by default
      * @param port - port daemon is availabe. Default is 7007
      * @param debug - Enable debug logging level
+     * @param verbose - Enable verbose logging
      * @param logToFiles - Enable writing logs to files
      * @param logDirectory - Store log files in this directory
      * @param network - The Ceramic network to connect to
@@ -63,6 +64,7 @@ export class CeramicCliUtils {
         gateway: boolean,
         port: number,
         debug: boolean,
+        verbose: boolean,
         logToFiles: boolean,
         logDirectory: string,
         network = DEFAULT_NETWORK,
@@ -75,10 +77,11 @@ export class CeramicCliUtils {
         if (corsAllowedOrigins != null && corsAllowedOrigins != '*') {
             _corsAllowedOrigins = corsAllowedOrigins.split(' ').map((origin) => new RegExp(origin))
         }
+        const logLevel = verbose ? LogLevel.verbose : (debug ? LogLevel.debug : LogLevel.important)
         const loggerConfig: LoggerConfig = {
           logToFiles,
           logDirectory,
-          logLevel: debug ? LogLevel.debug : LogLevel.important,
+          logLevel,
         }
 
         const config: CreateOpts = {
