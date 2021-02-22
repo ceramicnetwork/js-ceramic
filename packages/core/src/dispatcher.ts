@@ -2,24 +2,16 @@ import CID from 'cids'
 import cloneDeep from 'lodash.clonedeep'
 import * as pubsubMessage from './pubsub/pubsub-message'
 import type Document from "./document"
-import { DoctypeUtils, IpfsApi } from '@ceramicnetwork/common';
+import { DoctypeUtils, IpfsApi, UnreachableCaseError } from '@ceramicnetwork/common';
 import DocID from "@ceramicnetwork/docid";
 import { DiagnosticsLogger, ServiceLogger } from "@ceramicnetwork/logger";
 import { Repository } from './repository';
+import { MsgType } from './pubsub/pubsub-message';
 
 const IPFS_GET_TIMEOUT = 60000 // 1 minute
 const IPFS_MAX_RECORD_SIZE = 256000 // 256 KB
 const IPFS_RESUBSCRIBE_INTERVAL_DELAY = 1000 * 15 // 15 sec
 const TESTING = process.env.NODE_ENV == 'test'
-
-/**
- * Ceramic Pub/Sub message type.
- */
-export enum MsgType {
-  UPDATE,
-  QUERY,
-  RESPONSE
-}
 
 /**
  * Describes one log message from the Dispatcher.
@@ -213,9 +205,8 @@ export default class Dispatcher {
         await this._handleResponseMessage(message)
         break
       default:
-        throw new Error("Unsupported message type: " + message.typ)
+        throw new UnreachableCaseError(message, `Unsupported message type`)
     }
-
   }
 
   /**

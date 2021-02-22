@@ -1,11 +1,11 @@
-import Dispatcher, { MsgType } from '../dispatcher'
+import Dispatcher  from '../dispatcher'
 import CID from 'cids'
 import Document from "../document"
 import { TileDoctype } from "@ceramicnetwork/doctype-tile"
 import DocID from "@ceramicnetwork/docid";
 import { LoggerProvider } from "@ceramicnetwork/common";
 import * as uint8arrays from 'uint8arrays';
-import { PubsubMessage, serialize } from '../pubsub/pubsub-message';
+import { PubsubMessage, serialize, MsgType } from '../pubsub/pubsub-message';
 import { Repository } from '../repository';
 
 const TOPIC = '/ceramic'
