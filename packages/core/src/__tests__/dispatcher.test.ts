@@ -51,7 +51,7 @@ function asIpfsMessage(data: PubsubMessage) {
 describe('Dispatcher', () => {
 
   let dispatcher: Dispatcher
-  let loggerProvider: LoggerProvider
+  const loggerProvider = new LoggerProvider()
 
   beforeEach(async () => {
     ipfs.dag.put.mockClear()
@@ -60,7 +60,6 @@ describe('Dispatcher', () => {
     ipfs.pubsub.unsubscribe.mockClear()
     ipfs.pubsub.publish.mockClear()
 
-    loggerProvider = new LoggerProvider()
     const repository = new Repository()
     dispatcher = new Dispatcher(ipfs, TOPIC, repository, loggerProvider.getDiagnosticsLogger(), loggerProvider.makeServiceLogger("pubsub"))
     await dispatcher.init()
