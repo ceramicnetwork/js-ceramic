@@ -2,8 +2,7 @@ import CID from 'cids'
 import cloneDeep from 'lodash.clonedeep'
 import * as pubsubMessage from './pubsub/pubsub-message'
 import type Document from "./document"
-import { DoctypeUtils, IpfsApi } from "@ceramicnetwork/common"
-import { TextDecoder } from 'util'
+import { DoctypeUtils, IpfsApi } from '@ceramicnetwork/common';
 import DocID from "@ceramicnetwork/docid";
 import { DiagnosticsLogger, ServiceLogger } from "@ceramicnetwork/logger";
 import { Repository } from './repository';
@@ -190,47 +189,31 @@ export default class Dispatcher {
   /**
    * Handles one message from the pub/sub topic.
    *
-   * @param message - Message data
+   * @param envelope - Message data
    */
-  handleMessage = async (message: any): Promise<void> => {
+  handleMessage = async (envelope: any): Promise<void> => {
     if (!this._isRunning) {
       this._logger.err('Dispatcher has been closed')
       return
     }
 
-    if (message.from === this._peerId) {
+    if (envelope.from === this._peerId) {
       return
     }
 
-    // TODO: This is not a great way to handle the message because we don't
-    // don't know its type/contents. Ideally we can make this method generic
-    // against specific interfaces and follow IPFS specs for
-    // types (e.g. message data should be a buffer)
-    let parsedMessageData
-    if (typeof message.data === 'string') {
-      parsedMessageData = JSON.parse(message.data)
-    } else {
-      parsedMessageData = JSON.parse(new TextDecoder('utf-8').decode(message.data))
-    }
-    // TODO: handle signature and key buffers in message data
-    const logMessage = { ...message, data: parsedMessageData }
-    delete logMessage.key
-    delete logMessage.signature
-    this._pubsubLogger.log({ peer: this._peerId, event: 'received', topic: this.topic, message: logMessage })
-
-    const { typ } = parsedMessageData
-    switch (typ) {
+    const message = pubsubMessage.deserialize(envelope, this._pubsubLogger, this._peerId, this.topic)
+    switch (message.typ) {
       case MsgType.UPDATE:
-        await this._handleUpdateMessage(parsedMessageData)
+        await this._handleUpdateMessage(message)
         break
       case MsgType.QUERY:
-        await this._handleQueryMessage(parsedMessageData)
+        await this._handleQueryMessage(message)
         break
       case MsgType.RESPONSE:
-        await this._handleResponseMessage(parsedMessageData)
+        await this._handleResponseMessage(message)
         break
       default:
-        throw new Error("Unsupported message type: " + typ)
+        throw new Error("Unsupported message type: " + message.typ)
     }
 
   }
@@ -240,9 +223,10 @@ export default class Dispatcher {
    * @param message
    * @private
    */
-  async _handleUpdateMessage(message: any): Promise<void> {
-    const { doc, tip } = message
-    const docId = DocID.fromString(doc)
+  async _handleUpdateMessage(message: pubsubMessage.UpdateMessage): Promise<void> {
+    // TODO Add validation the message adheres to the proper format.
+
+    const { doc: docId, tip } = message
     if (await this.repository.has(docId)) {
       // TODO: add cache of cids here so that we don't emit event
       // multiple times if we get the message more than once.
@@ -257,10 +241,10 @@ export default class Dispatcher {
    * @param message
    * @private
    */
-  async _handleQueryMessage(message: any): Promise<void> {
+  async _handleQueryMessage(message: pubsubMessage.QueryMessage): Promise<void> {
     // TODO Add validation the message adheres to the proper format.
-    const { doc, id } = message
-    const docId = DocID.fromString(doc)
+
+    const { doc: docId, id } = message
     if (await this.repository.has(docId)) {
       const document = await this.repository.get(docId)
       // TODO: Should we validate that the 'id' field is the correct hash of the rest of the message?
@@ -280,8 +264,7 @@ export default class Dispatcher {
    * @param message
    * @private
    */
-  async _handleResponseMessage(message: any): Promise<void> {
-    // TODO Add validation the message adheres to the proper format.
+  async _handleResponseMessage(message: pubsubMessage.ResponseMessage): Promise<void> {
     const { id: queryId, tips } = message
 
     if (!this._outstandingQueryIds[queryId]) {
@@ -291,7 +274,7 @@ export default class Dispatcher {
 
     const expectedDocID = this._outstandingQueryIds[queryId]
     if (expectedDocID) {
-      const newTip = tips[expectedDocID.toString()]
+      const newTip = tips.get[expectedDocID.toString()]
       if (!newTip) {
         throw new Error("Response to query with ID '" + queryId + "' is missing expected new tip for docID '" +
           expectedDocID + "'")
