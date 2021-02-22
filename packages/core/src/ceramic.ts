@@ -308,7 +308,7 @@ class Ceramic implements CeramicApi {
     const logger = loggerProvider.getDiagnosticsLogger()
     const pubsubLogger = loggerProvider.makeServiceLogger("pubsub")
 
-    logger.imp(`Starting Ceramic node at version ${packageJson.version} with config: \n${JSON.stringify(config, null, 2)}`)
+    logger.imp(`Starting Ceramic node at version ${packageJson.version} with config: \n${JSON.stringify(this._cleanupConfigForLogging(config), null, 2)}`)
 
     const anchorService = config.anchorServiceUrl ? new EthereumAnchorService(config) : new InMemoryAnchorService(config as any)
     await anchorService.init()
@@ -345,6 +345,28 @@ class Ceramic implements CeramicApi {
     }
 
     return [modules, params]
+  }
+
+  /**
+   * Takes a CeramicConfig and returns an object that can be logged containing the relevant
+   * properties of the config, but with complex objects removed or replaced with strings or
+   * simple objects containing their relevant pieces.
+   *
+   * @param config
+   */
+  static _cleanupConfigForLogging(config: CeramicConfig) : Record<string, any> {
+    const configCopy = {...config}
+
+    const loggerConfig = config.loggerProvider.config
+
+    delete configCopy.didResolver
+    delete configCopy.pinningBackends
+    delete configCopy.logToFilesPlugin
+    delete configCopy.loggerProvider
+
+    configCopy.loggerConfig = loggerConfig
+
+    return configCopy
   }
 
   /**
