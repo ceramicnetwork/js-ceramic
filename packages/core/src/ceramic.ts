@@ -459,15 +459,6 @@ class Ceramic implements CeramicApi {
   }
 
   /**
-   * Get document from cache by DocID
-   * @param docId - Document ID
-   * @private
-   */
-  private _getDocFromCache(docId: DocID): Document {
-    return this._docCache.get(docId) as Document
-  }
-
-  /**
    * Create doctype instance
    * @param doctype - Document type
    * @param params - Create parameters
