@@ -357,14 +357,16 @@ class Ceramic implements CeramicApi {
   static _cleanupConfigForLogging(config: CeramicConfig) : Record<string, any> {
     const configCopy = {...config}
 
-    const loggerConfig = config.loggerProvider.config
+    const loggerConfig = config.loggerProvider?.config
 
     delete configCopy.didResolver
     delete configCopy.pinningBackends
     delete configCopy.logToFilesPlugin
     delete configCopy.loggerProvider
 
-    configCopy.loggerConfig = loggerConfig
+    if (loggerConfig) {
+      configCopy.loggerConfig = loggerConfig
+    }
 
     return configCopy
   }
