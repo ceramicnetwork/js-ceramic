@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.10.0-rc.0](/compare/@ceramicnetwork/http-client@0.9.6...@ceramicnetwork/http-client@0.10.0-rc.0) (2021-02-22)
+
+
+### Features
+
+* **core:** Clean up Ceramic.create() and accept LoggerProvider in CeramicConfig (#1021) a53c534, closes #1021
+* Unbundle DocID into DocID and CommitID (#1009) c2707f2, closes #1009
+
+
+
+
+
 ## [0.9.6](/compare/@ceramicnetwork/http-client@0.9.6-rc.0...@ceramicnetwork/http-client@0.9.6) (2021-02-04)
 
 **Note:** Version bump only for package @ceramicnetwork/http-client

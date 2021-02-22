@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/ipfs-topology",
-  "version": "0.0.1",
+  "version": "0.0.2-rc.0",
   "description": "Setup IPFS topology right",
   "keywords": [
     "ipfs",
@@ -24,7 +24,7 @@
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/logger": "^0.0.1",
+    "@ceramicnetwork/logger": "^0.1.0-rc.0",
     "cross-fetch": "^3.0.6",
     "express": "^4.17.1"
   },
@@ -39,7 +39,7 @@
     "babel-jest": "^26.6.3",
     "eslint": "^6.8.0",
     "eslint-plugin-jest": "^23.8.2",
-    "jest": "^26.6.3",
-    "ipfs": "0.52.2"
+    "ipfs": "0.52.2",
+    "jest": "^26.6.3"
   }
 }

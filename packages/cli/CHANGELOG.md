@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.21.0-rc.0](/compare/@ceramicnetwork/cli@0.20.8...@ceramicnetwork/cli@0.21.0-rc.0) (2021-02-22)
+
+
+### Features
+
+* **core:** Clean up Ceramic.create() and accept LoggerProvider in CeramicConfig (#1021) a53c534, closes #1021
+* Unbundle DocID into DocID and CommitID (#1009) c2707f2, closes #1009
+* **core:** Add new logger package (#878) 9756868, closes #878
+
+
+
+
+
 ## [0.20.8](/compare/@ceramicnetwork/cli@0.20.8-rc.0...@ceramicnetwork/cli@0.20.8) (2021-02-04)
 
 

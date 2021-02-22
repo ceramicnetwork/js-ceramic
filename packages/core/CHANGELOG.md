@@ -3,6 +3,21 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.20.0-rc.0](/compare/@ceramicnetwork/core@0.19.7...@ceramicnetwork/core@0.20.0-rc.0) (2021-02-22)
+
+
+### Features
+
+* **core:** Clean up Ceramic.create() and accept LoggerProvider in CeramicConfig (#1021) a53c534, closes #1021
+* Unbundle DocID into DocID and CommitID (#1009) c2707f2, closes #1009
+* **core:** Remove 'exists' method from StateStore API (#1011) dd58039, closes #1011
+* extract local pin api (#991) bc53d72, closes #991
+* **core:** Add new logger package (#878) 9756868, closes #878
+
+
+
+
+
 ## [0.19.7](/compare/@ceramicnetwork/core@0.19.7-rc.0...@ceramicnetwork/core@0.19.7) (2021-02-04)
 
 

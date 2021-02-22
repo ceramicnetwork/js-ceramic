@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.5.0-rc.0](/compare/@ceramicnetwork/docid@0.4.6...@ceramicnetwork/docid@0.5.0-rc.0) (2021-02-22)
+
+
+### Features
+
+* Unbundle DocID into DocID and CommitID (#1009) c2707f2, closes #1009
+
+
+
+
+
 ## [0.4.6](/compare/@ceramicnetwork/docid@0.4.6-rc.0...@ceramicnetwork/docid@0.4.6) (2021-02-04)
 
 **Note:** Version bump only for package @ceramicnetwork/docid

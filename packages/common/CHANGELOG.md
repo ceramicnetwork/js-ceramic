@@ -3,6 +3,24 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.16.0-rc.0](/compare/@ceramicnetwork/common@0.15.9...@ceramicnetwork/common@0.16.0-rc.0) (2021-02-22)
+
+
+### Bug Fixes
+
+* **common:** Show timezone with anchorScheduledFor property #897 (#951) be2b472, closes #897 #951
+
+
+### Features
+
+* **core:** Clean up Ceramic.create() and accept LoggerProvider in CeramicConfig (#1021) a53c534, closes #1021
+* Unbundle DocID into DocID and CommitID (#1009) c2707f2, closes #1009
+* **core:** Add new logger package (#878) 9756868, closes #878
+
+
+
+
+
 ## [0.15.9](/compare/@ceramicnetwork/common@0.15.9-rc.0...@ceramicnetwork/common@0.15.9) (2021-02-04)
 
 **Note:** Version bump only for package @ceramicnetwork/common

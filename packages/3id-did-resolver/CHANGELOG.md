@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.7.0-rc.0](/compare/@ceramicnetwork/3id-did-resolver@0.6.10...@ceramicnetwork/3id-did-resolver@0.7.0-rc.0) (2021-02-22)
+
+
+### Bug Fixes
+
+* **3id-did-resovler:** support new versionId query param (#933) 7b6974f, closes #933
+
+
+### Features
+
+* Unbundle DocID into DocID and CommitID (#1009) c2707f2, closes #1009
+
+
+
+
+
 ## [0.6.10](/compare/@ceramicnetwork/3id-did-resolver@0.6.10-rc.0...@ceramicnetwork/3id-did-resolver@0.6.10) (2021-02-04)
 
 
