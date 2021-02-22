@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/common",
-  "version": "0.16.0-rc.1",
+  "version": "0.16.0-rc.2",
   "description": "Ceramic common types and utilities",
   "keywords": [
     "ceramic",
@@ -27,8 +27,8 @@
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/docid": "^0.5.0-rc.0",
-    "@ceramicnetwork/logger": "^0.1.0-rc.0",
+    "@ceramicnetwork/docid": "^0.5.0-rc.2",
+    "@ceramicnetwork/logger": "^0.1.0-rc.2",
     "cids": "1.0.2",
     "did-resolver": "^2.1.1",
     "events": "^3.2.0",
