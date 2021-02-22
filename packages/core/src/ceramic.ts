@@ -290,7 +290,7 @@ class Ceramic implements CeramicApi {
   static async _processConfig(ipfs: IpfsApi, config: CeramicConfig): Promise<[CeramicModules, CeramicParameters]> {
     // todo remove all code related to LoggerProviderOld
     LoggerProviderOld.init({
-      level: config.loggerProvider?.config.logLevel == LogLevel.debug ? 'debug' : 'silent',
+      level: config.loggerProvider?.config.logLevel <= LogLevel.debug ? 'debug' : 'silent',
       component: config.gateway? 'GATEWAY' : 'NODE',
     })
 
