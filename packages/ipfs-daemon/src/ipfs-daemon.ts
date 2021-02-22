@@ -156,7 +156,7 @@ export class IpfsDaemon {
         const api = configuration.ipfsEnableApi ? new HttpApi(ipfs) : undefined
         const gateway = configuration.ipfsEnableGateway ? new HttpGateway(ipfs) : undefined
         const topology = configuration.useCentralizedPeerDiscovery ? new IpfsTopology(ipfs, configuration.ceramicNetwork, configuration.logger) : undefined
-        const healthcheck = configuration.healthcheckEnabled ? new HealthcheckServer(ipfs, configuration.healthcheckPort, configuration.tcpHost) : undefined
+        const healthcheck = configuration.healthcheckEnabled ? new HealthcheckServer(ipfs, configuration.healthcheckPort, configuration.tcpHost, configuration.logger) : undefined
         return new IpfsDaemon(configuration, ipfs, api, gateway, topology, healthcheck)
     }
 
