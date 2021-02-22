@@ -1,8 +1,5 @@
 import CID from 'cids'
 import cloneDeep from 'lodash.clonedeep'
-import dagCBOR from "ipld-dag-cbor"
-import * as multihashes from 'multihashes'
-import * as sha256 from "@stablelib/sha256"
 import * as pubsubMessage from './pubsub/pubsub-message'
 import type Document from "./document"
 import { DoctypeUtils, IpfsApi } from "@ceramicnetwork/common"
@@ -115,31 +112,6 @@ export default class Dispatcher {
     // Store the query id so we'll process the corresponding RESPONSE message when it comes in
     this._outstandingQueryIds[message.id] = document.id
     await this.publish(message)
-  }
-
-  _buildQueryMessage(document: Document): Record<string, any> {
-    const message = { typ: MsgType.QUERY, doc: document.id.baseID.toString() }
-
-    // Add 'id' to message that is a hash of the message contents.
-    const id = this._hashMessage(message)
-
-    return {...message, id: id.toString()}
-  }
-
-  /**
-   * Computes a sha-256 multihash of the input message canonicalized using dag-cbor
-   * @param message
-   */
-  _hashMessage(message: any) : Uint8Array {
-    // DAG-CBOR encoding
-    let id: Uint8Array = dagCBOR.util.serialize(message)
-
-    // SHA-256 hash
-    id = sha256.hash(id)
-
-    // Multihash encoding
-    const buf = Buffer.from(id)
-    return multihashes.encode(buf, 'sha2-256')
   }
 
   /**
