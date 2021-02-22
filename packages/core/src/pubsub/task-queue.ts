@@ -21,6 +21,7 @@ export class TaskQueue {
    * Add task to queue.
    */
   add(f: Task<void>): void {
+    console.log('tq.add')
     this.#pq.add(f).catch((error) => {
       const retry = () => this.add(f);
       this.onError(error, retry);
@@ -31,6 +32,7 @@ export class TaskQueue {
    * Wait till all the tasks are completed.
    */
   onIdle(): Promise<void> {
+    console.log('tq.onIdle')
     return this.#pq.onIdle();
   }
 

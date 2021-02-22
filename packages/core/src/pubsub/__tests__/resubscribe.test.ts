@@ -78,7 +78,7 @@ test('pass incoming message', async () => {
     });
   });
   const feed$ = new Subject<IPFSPubsubMessage>();
-  const ipfsA = {
+  const fauxIpfs = {
     pubsub: {
       subscribe: async (_, handler) => {
         feed$.subscribe(handler);
@@ -87,7 +87,7 @@ test('pass incoming message', async () => {
       ls: jest.fn(() => []),
     },
   };
-  const incoming$ = new Resubscribe(ipfsA, TOPIC, 30000, PEER_ID, pubsubLogger, diagnosticsLogger, taskQueue);
+  const incoming$ = new Resubscribe(fauxIpfs, TOPIC, 30000, PEER_ID, pubsubLogger, diagnosticsLogger, taskQueue);
   const result: any[] = [];
   const subscription = incoming$.subscribe((message) => {
     result.push(message);

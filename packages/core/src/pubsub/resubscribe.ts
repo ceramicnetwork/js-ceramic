@@ -24,6 +24,7 @@ async function resubscribe(
   if (!isSubscribed) {
     await ipfs.pubsub.unsubscribe(topic, handler);
     await ipfs.pubsub.subscribe(topic, handler);
+    console.log('doSubscribe.0');
     pubsubLogger.log({ peer: peerId, event: 'subscribed', topic: topic });
   }
 }
@@ -61,10 +62,13 @@ export class Resubscribe extends Observable<IPFSPubsubMessage> {
         });
 
       const handler = (message: IPFSPubsubMessage) => {
+        console.log('resubscribe.0.handler', message);
         subscriber.next(message);
       };
 
-      tasks.add(() => resubscribe(ipfs, topic, peerId, pubsubLogger, handler));
+      tasks.add(() => {
+        return resubscribe(ipfs, topic, peerId, pubsubLogger, handler);
+      });
 
       const ensureSubscribed = setInterval(async () => {
         tasks.add(() => resubscribe(ipfs, topic, peerId, pubsubLogger, handler));

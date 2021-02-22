@@ -86,16 +86,9 @@ export function serialize(message: PubsubMessage): string {
   }
 }
 
-export function deserialize(message: any, pubsubLogger: ServiceLogger, peerId: string, topic: string): PubsubMessage {
+export function deserialize(message: any): PubsubMessage {
   const asString = new TextDecoder('utf-8').decode(message.data);
   const parsed = JSON.parse(asString);
-
-  // TODO: handle signature and key buffers in message data
-  // TODO: Logger does not belong here
-  const logMessage = { ...message, data: parsed };
-  delete logMessage.key;
-  delete logMessage.signature;
-  pubsubLogger.log({ peer: peerId, event: 'received', topic: topic, message: logMessage });
 
   const typ = parsed.typ as MsgType;
   switch (typ) {

@@ -193,7 +193,13 @@ export default class Dispatcher {
       return
     }
 
-    const message = pubsubMessage.deserialize(envelope, this._pubsubLogger, this._peerId, this.topic)
+    const message = pubsubMessage.deserialize(envelope)
+    // TODO: handle signature and key buffers in message data
+    // TODO: Logger does not belong here
+    const logMessage = { ...envelope, data: message };
+    delete logMessage.key;
+    delete logMessage.signature;
+    this._pubsubLogger.log({ peer: this._peerId, event: 'received', topic: this.topic, message: logMessage });
     switch (message.typ) {
       case MsgType.UPDATE:
         await this._handleUpdateMessage(message)
