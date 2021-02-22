@@ -5,6 +5,7 @@ import { RotatingFileStream } from './stream-helpers';
 import flatten from 'flat'
 
 enum LogStyle {
+  verbose = 'info',
   info = 'info',
   imp = 'imp',
   warn = 'warn',
@@ -12,9 +13,10 @@ enum LogStyle {
 }
 
 export enum LogLevel {
-  debug = 1,
-  important = 2,
-  warn = 3
+  verbose,
+  debug,
+  important,
+  warn,
 }
 
 /**
@@ -29,7 +31,7 @@ export class DiagnosticsLogger {
 
   constructor(logLevel: LogLevel, logToFiles: boolean, logPath?: string) {
     this.logLevel = logLevel;
-    this.includeStackTrace = this.logLevel == LogLevel.debug ? true : false;
+    this.includeStackTrace = this.logLevel <= LogLevel.debug ? true : false;
     this.logToFiles = logToFiles
 
     const removeTimestamp = true;
@@ -45,6 +47,13 @@ export class DiagnosticsLogger {
    */
   public write(content: string | object): void {
     this.debug(content);
+  }
+
+  public verbose(content: string | object): void {
+    if (this.logLevel > LogLevel.verbose) {
+      return;
+    }
+    this.log(LogStyle.verbose, content);
   }
 
   public debug(content: string | object): void {
@@ -102,7 +111,7 @@ export class ServiceLogger {
     this.logLevel = logLevel
     this.logToFiles = logToFiles
 
-    this.logToConsole = this.logLevel == LogLevel.debug
+    this.logToConsole = this.logLevel <= LogLevel.debug
 
     if (this.logToFiles) {
       const writeImmediately = true;

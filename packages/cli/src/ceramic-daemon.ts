@@ -135,7 +135,7 @@ class CeramicDaemon {
     this.registerAPIPaths(app, opts.gateway)
 
     const loggerOld = RootLogger.getLogger(CeramicDaemon.name)
-    if (opts.loggerConfig?.logLevel == LogLevel.debug) {
+    if (opts.loggerConfig?.logLevel <= LogLevel.debug) {
       app.use((req: Request, res: Response, next: NextFunction): void => {
         const requestStart = Date.now()
 
