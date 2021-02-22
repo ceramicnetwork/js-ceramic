@@ -22,10 +22,8 @@ import {
   PinApi,
   MultiQuery,
   PinningBackendStatic,
-  DocCache,
   AnchorStatus,
   LoggerProvider,
-  LoggerConfig,
 } from "@ceramicnetwork/common"
 import { Resolver } from "did-resolver"
 
@@ -157,7 +155,7 @@ class Ceramic implements CeramicApi {
   public pinStore: PinStore // Set during init()
 
   private readonly _doctypeHandlers: Record<string, DoctypeHandler<Doctype>>
-  private readonly _docCache: DocCache
+  private readonly _repository: Repository
   private readonly _ipfsTopology: IpfsTopology
   private readonly _logger: DiagnosticsLogger
   private readonly _networkOptions: CeramicNetworkOptions
@@ -193,7 +191,7 @@ class Ceramic implements CeramicApi {
       'caip10-link': new Caip10LinkDoctypeHandler()
     }
 
-    this._docCache = new DocCache(params.docCacheLimit, params.cacheDocumentCommits)
+    this._repository = modules.repository
   }
 
   /**
@@ -401,7 +399,7 @@ class Ceramic implements CeramicApi {
    */
   async _init(doPeerDiscovery: boolean, restoreDocuments: boolean): Promise<void> {
     this.pinStore = await this._pinStoreFactory.createPinStore()
-    this.pin = new LocalPinApi(this.pinStore, this._docCache, this._loadDoc.bind(this), this._logger)
+    this.pin = new LocalPinApi(this.pinStore, this._loadDoc.bind(this), this._logger)
 
     if (doPeerDiscovery) {
       await this._ipfsTopology.start()
@@ -494,17 +492,15 @@ class Ceramic implements CeramicApi {
     const genesisCid = await this.dispatcher.storeCommit(genesis)
     const docId = new DocID(doctype, genesisCid)
 
-    let doc = this._getDocFromCache(docId)
-    if (doc) {
+    if (await this._repository.has(docId)) {
       this._logger.verbose(`Document ${docId.toString()} loaded from cache`)
-      return doc
+      return this._repository.get(docId)
+    } else {
+      const document = await Document.create(docId, doctypeHandler, this.dispatcher, this.pinStore, this.context, opts, this._validateDocs);
+      // this.repository.add(document) TODO See Document#register, it adds to the repository too
+      this._logger.verbose(`Document ${docId.toString()} successfully created`)
+      return document
     }
-
-    doc = await Document.create(docId, doctypeHandler, this.dispatcher, this.pinStore, this.context, opts, this._validateDocs);
-    this._docCache.put(doc)
-
-    this._logger.verbose(`Document ${docId.toString()} successfully created`)
-    return doc
   }
 
   /**
@@ -535,14 +531,13 @@ class Ceramic implements CeramicApi {
 
     const docId = new DocID(doctype, genesisCid)
 
-    let doc = this._getDocFromCache(docId)
-    if (doc) {
-      return doc
+    if (await this._repository.has(docId)) {
+      return this._repository.get(docId)
+    } else {
+      const document = await Document.create(docId, doctypeHandler, this.dispatcher, this.pinStore, this.context, opts, this._validateDocs);
+      // this.repository.add(document) TODO See Document#register, it adds to the repository too
+      return document
     }
-
-    doc = await Document.create(docId, doctypeHandler, this.dispatcher, this.pinStore, this.context, opts, this._validateDocs);
-    this._docCache.put(doc)
-    return doc
   }
 
   /**
@@ -646,26 +641,25 @@ class Ceramic implements CeramicApi {
    */
   async _loadDoc(docId: DocID | CommitID | string, opts: DocOpts = {}): Promise<Document> {
     const docRef = DocRef.from(docId)
-
-    // If we already have cached exactly what we want, just return it from the cache
-    let doc = this._getDocFromCache(docRef.baseID)
-    if (!doc) {
+    let doc: Document
+    if (await this._repository.has(docRef.baseID)) {
+      doc = await this._repository.get(docRef.baseID)
+    } else {
       // Load the current version of the document
       const doctypeHandler = this._doctypeHandlers[docRef.typeName]
       if (!doctypeHandler) {
         throw new Error(docRef.typeName + " is not a valid doctype")
       }
       doc = await Document.load(docRef.baseID, doctypeHandler, this.dispatcher, this.pinStore, this.context, opts)
-      this._docCache.put(doc)
+      this._repository.add(doc)
     }
 
+    // If DocID is requested, return the document
     if (docRef instanceof DocID) {
       return doc
     } else {
-      // We requested a specific commit
-      doc = await Document.loadAtCommit(docRef, doc)
-      this._docCache.put(doc)
-      return doc
+      // Here CommitID is requested, let's return document at specific commit
+      return Document.loadAtCommit(docRef, doc)
     }
   }
 
