@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/doctype-tile-handler",
-  "version": "0.13.4-rc.0",
+  "version": "0.13.4-rc.1",
   "description": "Ceramic Tile doctype handler",
   "keywords": [
     "ceramic",
