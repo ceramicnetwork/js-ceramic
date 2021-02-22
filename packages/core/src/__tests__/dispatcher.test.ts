@@ -5,6 +5,7 @@ import { TileDoctype } from "@ceramicnetwork/doctype-tile"
 import DocID from "@ceramicnetwork/docid";
 import { LoggerProvider } from "@ceramicnetwork/common";
 import * as uint8arrays from 'uint8arrays';
+import { asIpfsMessage } from '../pubsub/__tests__/as-ipfs-message';
 import { PubsubMessage, serialize, MsgType } from '../pubsub/pubsub-message';
 import { Repository } from '../repository';
 
@@ -37,14 +38,6 @@ class TileDoctypeMock extends TileDoctype {
 
   get tip() {
     return FAKE_CID
-  }
-}
-
-function asIpfsMessage(data: PubsubMessage) {
-  const asBytes = uint8arrays.fromString(serialize(data))
-  return {
-    from: 'outer-space',
-    data: asBytes
   }
 }
 

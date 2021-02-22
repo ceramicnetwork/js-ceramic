@@ -1,7 +1,14 @@
 import { IpfsApi, LoggerProvider } from '@ceramicnetwork/common';
 import { createIPFS } from '../../__tests__/ipfs-util';
-import { PubsubIncoming } from '../pubsub-incoming';
+import { IPFSPubsubMessage, PubsubIncoming } from '../pubsub-incoming';
 import { TaskQueue } from '../task-queue';
+import { delay } from './delay';
+import { asIpfsMessage } from './as-ipfs-message';
+import { MsgType } from '../pubsub-message';
+import { DocID } from '@ceramicnetwork/docid';
+import { Subject } from 'rxjs';
+
+const FAKE_DOC_ID = DocID.fromString('kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s');
 
 let ipfs: IpfsApi;
 
@@ -14,14 +21,10 @@ afterEach(async () => {
 });
 
 const TOPIC = '/test';
-const loggerProvider = new LoggerProvider()
-const pubsubLogger = loggerProvider.makeServiceLogger("pubsub")
-const diagnosticsLogger = loggerProvider.getDiagnosticsLogger()
-const PEER_ID = 'FAKE_PEER_ID'
-
-async function delay(ms: number): Promise<void> {
-  return new Promise<void>((resolve) => setTimeout(() => resolve(), ms));
-}
+const loggerProvider = new LoggerProvider();
+const pubsubLogger = loggerProvider.makeServiceLogger('pubsub');
+const diagnosticsLogger = loggerProvider.getDiagnosticsLogger();
+const PEER_ID = 'FAKE_PEER_ID';
 
 test('subscribe and unsubscribe', async () => {
   const taskQueue = new TaskQueue();
@@ -41,7 +44,15 @@ test('subscribe and unsubscribe', async () => {
 test('resubscribe', async () => {
   const taskQueue = new TaskQueue();
   const resubscribePeriod = 200;
-  const incoming = new PubsubIncoming(ipfs, TOPIC, resubscribePeriod, PEER_ID, pubsubLogger, diagnosticsLogger, taskQueue);
+  const incoming = new PubsubIncoming(
+    ipfs,
+    TOPIC,
+    resubscribePeriod,
+    PEER_ID,
+    pubsubLogger,
+    diagnosticsLogger,
+    taskQueue,
+  );
   const subscribeSpy = jest.spyOn(ipfs.pubsub, 'subscribe');
   const unsubscribeSpy = jest.spyOn(ipfs.pubsub, 'unsubscribe');
   const subscription = incoming.subscribe();
@@ -53,5 +64,37 @@ test('resubscribe', async () => {
   expect(unsubscribeSpy).toBeCalledTimes(3); // +1 on resubscribe, +1 on force-unsubscribe few lines above
   expect(subscribeSpy).toBeCalledTimes(2); // +1 on resubscribe
   expect(await ipfs.pubsub.ls()).toEqual([TOPIC]); // And now we subscribed
+  subscription.unsubscribe();
+});
+
+test('pass incoming message', async () => {
+  const taskQueue = new TaskQueue();
+  const length = 10;
+  const messages = Array.from({ length }).map((_, index) => {
+    return asIpfsMessage({
+      typ: MsgType.QUERY,
+      id: index.toString(),
+      doc: FAKE_DOC_ID,
+    });
+  });
+  const feed$ = new Subject<IPFSPubsubMessage>();
+  const ipfsA = {
+    pubsub: {
+      subscribe: async (_, handler) => {
+        feed$.subscribe(handler);
+      },
+      unsubscribe: jest.fn(),
+      ls: jest.fn(() => []),
+    },
+  };
+  const incoming = new PubsubIncoming(ipfsA, TOPIC, 30000, PEER_ID, pubsubLogger, diagnosticsLogger, taskQueue);
+  const result: any[] = [];
+  const subscription = incoming.subscribe((message) => {
+    result.push(message);
+  });
+  await taskQueue.onIdle(); // Wait till fully subscribed
+  messages.forEach((m) => feed$.next(m));
+  expect(result).toEqual(messages);
+  feed$.complete();
   subscription.unsubscribe();
 });

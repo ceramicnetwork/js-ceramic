@@ -5,7 +5,7 @@ import { DiagnosticsLogger, ServiceLogger } from '@ceramicnetwork/logger';
 
 // Typestub for pubsub message.
 // At some future time this type definition should be provided by IPFS.
-export type PubsubMessage = {
+export type IPFSPubsubMessage = {
   from: string;
   seqno: Uint8Array;
   data: Uint8Array;
@@ -17,7 +17,7 @@ async function resubscribe(
   topic: string,
   peerId: string,
   pubsubLogger: ServiceLogger,
-  handler: (message: PubsubMessage) => void,
+  handler: (message: IPFSPubsubMessage) => void,
 ) {
   const listeningTopics = await ipfs.pubsub.ls();
   const isSubscribed = listeningTopics.includes(topic);
@@ -32,7 +32,7 @@ async function resubscribe(
  * Incoming IPFS PubSub message stream as Observable.
  * Ensures that ipfs subscription to a topic is established by periodically re-subscribing.
  */
-export class PubsubIncoming extends Observable<PubsubMessage> {
+export class PubsubIncoming extends Observable<IPFSPubsubMessage> {
   constructor(
     ipfs: IpfsApi,
     topic: string,
@@ -60,7 +60,7 @@ export class PubsubIncoming extends Observable<PubsubMessage> {
           }
         });
 
-      const handler = (message: PubsubMessage) => {
+      const handler = (message: IPFSPubsubMessage) => {
         subscriber.next(message);
       };
 
