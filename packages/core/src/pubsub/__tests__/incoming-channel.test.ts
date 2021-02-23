@@ -113,7 +113,7 @@ describe('filterOuter', () => {
         PEER_ID,
       );
     });
-    const messages = outerMessages.concat(innerMessages);
+    const messages = innerMessages.concat(outerMessages);
     const feed$ = from(messages);
     const ipfs = {
       pubsub: {
@@ -127,7 +127,8 @@ describe('filterOuter', () => {
     };
     const incoming$ = new IncomingChannel(ipfs, TOPIC, 30000, pubsubLogger, diagnosticsLogger);
     const result: any[] = [];
-    const subscription = incoming$.pipe(filterOuter(ipfs)).subscribe((message) => {
+    const peerId$ = from(ipfs.id().then((_) => _.id));
+    const subscription = incoming$.pipe(filterOuter(peerId$)).subscribe((message) => {
       result.push(message);
     });
     await incoming$.tasks.onIdle(); // Wait till fully subscribed

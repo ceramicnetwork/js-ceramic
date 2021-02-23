@@ -3,7 +3,7 @@ import { Memoize } from 'typescript-memoize';
 import { IpfsApi } from '@ceramicnetwork/common';
 import { TaskQueue } from './task-queue';
 import { DiagnosticsLogger, ServiceLogger } from '@ceramicnetwork/logger';
-import { pipe, from, MonoTypeOperatorFunction } from 'rxjs';
+import { pipe, MonoTypeOperatorFunction } from 'rxjs';
 import { map, filter, concatMap } from 'rxjs/operators';
 
 // Typestub for pubsub message.
@@ -91,8 +91,7 @@ export class IncomingChannel extends Observable<IPFSPubsubMessage> {
 /**
  * Pass only messages from other IPFS nodes.
  */
-export function filterOuter(ipfs: IpfsApi): MonoTypeOperatorFunction<IPFSPubsubMessage> {
-  const peerId$ = from<Promise<string>>(ipfs.id().then((_) => _.id));
+export function filterOuter(peerId$: Observable<string>): MonoTypeOperatorFunction<IPFSPubsubMessage> {
   return pipe(
     concatMap((data: IPFSPubsubMessage) => {
       return peerId$.pipe(map((peerId) => ({ isOuter: data.from !== peerId, entry: data })));

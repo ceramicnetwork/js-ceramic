@@ -1,6 +1,6 @@
 import { LoggerProvider } from '@ceramicnetwork/common';
 import { Pubsub } from '../pubsub';
-import { MsgType } from '../pubsub-message';
+import { MsgType, serialize } from '../pubsub-message';
 import { DocID } from '@ceramicnetwork/docid';
 import { bufferCount, first } from 'rxjs/operators';
 import * as random from '@stablelib/random';
@@ -49,4 +49,26 @@ test('pass incoming messages, omit garbage', async () => {
   // Even if garbage is first, we only receive well-formed messages
   const received = pubsub.pipe(bufferCount(LENGTH), first()).toPromise();
   expect(await received).toEqual(MESSAGES);
+});
+
+test('publish', async () => {
+  const ipfs = {
+    pubsub: {
+      subscribe: jest.fn(),
+      unsubscribe: jest.fn(),
+      ls: jest.fn(() => []),
+      publish: jest.fn(),
+    },
+    id: async () => ({ id: PEER_ID }),
+  };
+  const pubsub = new Pubsub(ipfs, TOPIC, 3000, pubsubLogger, diagnosticsLogger);
+  const message = {
+    typ: MsgType.QUERY as MsgType.QUERY,
+    id: random.randomString(32),
+    doc: FAKE_DOC_ID,
+  };
+  const subscription = pubsub.publish(message);
+  subscription.add(() => { // Can be replaced with delay, but this is faster.
+    expect(ipfs.pubsub.publish).toBeCalledWith(TOPIC, serialize(message));
+  });
 });
