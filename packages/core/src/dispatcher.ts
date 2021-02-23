@@ -271,7 +271,7 @@ export default class Dispatcher {
 
     const expectedDocID = this._outstandingQueryIds[queryId]
     if (expectedDocID) {
-      const newTip = tips.get[expectedDocID.toString()]
+      const newTip = tips.get(expectedDocID.toString())
       if (!newTip) {
         throw new Error("Response to query with ID '" + queryId + "' is missing expected new tip for docID '" +
           expectedDocID + "'")
