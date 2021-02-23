@@ -288,9 +288,14 @@ class Ceramic implements CeramicApi {
    * to call `Ceramic.create()` instead which calls this internally.
    */
   static async _processConfig(ipfs: IpfsApi, config: CeramicConfig): Promise<[CeramicModules, CeramicParameters]> {
+    // Initialize ceramic loggers
+    const loggerProvider = config.loggerProvider ?? new LoggerProvider()
+    const logger = loggerProvider.getDiagnosticsLogger()
+    const pubsubLogger = loggerProvider.makeServiceLogger("pubsub")
+
     // todo remove all code related to LoggerProviderOld
     LoggerProviderOld.init({
-      level: config.loggerProvider?.config.logLevel <= LogLevel.debug ? 'debug' : 'silent',
+      level: loggerProvider.config.logLevel <= LogLevel.debug ? 'debug' : 'silent',
       component: config.gateway? 'GATEWAY' : 'NODE',
     })
 
@@ -302,11 +307,6 @@ class Ceramic implements CeramicApi {
         config.logToFilesPlugin.options
       )
     }
-
-    // Initialize ceramic loggers
-    const loggerProvider = config.loggerProvider ?? new LoggerProvider()
-    const logger = loggerProvider.getDiagnosticsLogger()
-    const pubsubLogger = loggerProvider.makeServiceLogger("pubsub")
 
     logger.imp(`Starting Ceramic node at version ${packageJson.version} with config: \n${JSON.stringify(this._cleanupConfigForLogging(config), null, 2)}`)
 
