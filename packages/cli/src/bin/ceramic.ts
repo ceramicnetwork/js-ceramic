@@ -9,13 +9,14 @@ program
     .option('--anchor-service-api <url>', 'The anchor service URL to use')
     .option('--validate-docs', 'Validate documents according to their schemas. It is enabled by default')
     .option('--ipfs-pinning-endpoint <url...>', 'Ipfs pinning endpoints')
-    .option('--state-store-directory <string>', `The directory path used for storing pinned document state. Defaults to HOME_DIR/.ceramic/pinset`)
+    .option('--state-store-directory <string>', `The directory path used for storing pinned document state. Defaults to HOME_DIR/.ceramic/statestore`)
+    .option('--state-store-s3-bucket <string>', `The S3 bucket name to use for storing pinned document state. If not provided pinned document state will only be saved locally but not to S3.`)
     .option('--gateway', 'Makes read only endpoints available. It is disabled by default')
     .option('--port <int>', 'Port daemon is available. Default is 7007')
     .option('--debug', 'Enable debug logging level. Default is false')
     .option('--verbose', 'Enable verbose logging level. Default is false')
     .option('--log-to-files', 'If debug is true, write logs to files. Default is false')
-    .option('--log-path <dir>', 'Store logs in this directory. Defaults to "/usr/local/var/log/ceramic"')
+    .option('--log-directory <dir>', 'Store logs in this directory. Defaults to HOME_DIR/.ceramic/logs')
     .option('--network <name>', 'Name of the ceramic network to connect to. One of: "mainnet", "testnet-clay", "local", or "inmemory". Defaults to "testnet-clay"')
     .option('--pubsubTopic <string>', 'Pub/sub topic to use for protocol messages')
     .option('--max-healthy-cpu <decimal>', 'Fraction of total CPU usage considered healthy. Defaults to 0.7')
@@ -29,18 +30,22 @@ program
         validateDocs,
         ipfsPinningEndpoint,
         stateStoreDirectory,
+        stateStoreS3Bucket,
         gateway,
         port,
         debug,
         verbose,
         logToFiles,
-        logPath,
+        logDirectory,
         network,
         pubsubTopic,
         maxHealthyCpu,
         maxHealthyMemory,
         corsAllowedOrigins
     }) => {
+        if (stateStoreDirectory && stateStoreS3Bucket) {
+          throw new Error("Cannot specify both --state-store-directory and --state-store-s3-bucket. Only one state store - either on local storage or on S3 - can be used at a time")
+        }
         await CeramicCliUtils.createDaemon(
             ipfsApi,
             ethereumRpc,
@@ -48,12 +53,13 @@ program
             validateDocs,
             ipfsPinningEndpoint,
             stateStoreDirectory,
+            stateStoreS3Bucket,
             gateway,
             port,
             debug,
             verbose,
             logToFiles,
-            logPath,
+            logDirectory,
             network,
             pubsubTopic,
             maxHealthyCpu,

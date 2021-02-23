@@ -5,6 +5,7 @@ import { AnchorStatus, SignatureStatus, Doctype, PinningBackend, DocState, Commi
 
 let stateStore: StateStore
 let pinning: PinningBackend
+const NETWORK = "fakeNetwork"
 
 beforeEach(() => {
     stateStore = {
@@ -45,8 +46,8 @@ class FakeType extends Doctype {
 
 test('#open', async () => {
     const pinStore = new PinStore(stateStore, pinning, jest.fn(), jest.fn())
-    await pinStore.open()
-    expect(stateStore.open).toBeCalled()
+    await pinStore.open(NETWORK)
+    expect(stateStore.open).toBeCalledWith(NETWORK)
     expect(pinning.open).toBeCalled()
 })
 

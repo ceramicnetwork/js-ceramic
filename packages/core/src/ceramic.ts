@@ -288,9 +288,14 @@ class Ceramic implements CeramicApi {
    * to call `Ceramic.create()` instead which calls this internally.
    */
   static async _processConfig(ipfs: IpfsApi, config: CeramicConfig): Promise<[CeramicModules, CeramicParameters]> {
+    // Initialize ceramic loggers
+    const loggerProvider = config.loggerProvider ?? new LoggerProvider()
+    const logger = loggerProvider.getDiagnosticsLogger()
+    const pubsubLogger = loggerProvider.makeServiceLogger("pubsub")
+
     // todo remove all code related to LoggerProviderOld
     LoggerProviderOld.init({
-      level: config.loggerProvider?.config.logLevel <= LogLevel.debug ? 'debug' : 'silent',
+      level: loggerProvider.config.logLevel <= LogLevel.debug ? 'debug' : 'silent',
       component: config.gateway? 'GATEWAY' : 'NODE',
     })
 
@@ -303,11 +308,6 @@ class Ceramic implements CeramicApi {
       )
     }
 
-    // Initialize ceramic loggers
-    const loggerProvider = config.loggerProvider ?? new LoggerProvider()
-    const logger = loggerProvider.getDiagnosticsLogger()
-    const pubsubLogger = loggerProvider.makeServiceLogger("pubsub")
-
     logger.imp(`Starting Ceramic node at version ${packageJson.version} with config: \n${JSON.stringify(this._cleanupConfigForLogging(config), null, 2)}`)
 
     const anchorService = config.anchorServiceUrl ? new EthereumAnchorService(config) : new InMemoryAnchorService(config as any)
@@ -318,7 +318,7 @@ class Ceramic implements CeramicApi {
 
     const pinStoreOptions = {
       networkName: networkOptions.name,
-      pinsetDirectory: config.stateStoreDirectory,
+      stateStoreDirectory: config.stateStoreDirectory,
       pinningEndpoints: config.ipfsPinningEndpoints,
       pinningBackends: config.pinningBackends,
     }
@@ -396,7 +396,7 @@ class Ceramic implements CeramicApi {
    * @param restoreDocuments - Controls whether we attempt to load pinned document state into memory at startup
    */
   async _init(doPeerDiscovery: boolean, restoreDocuments: boolean): Promise<void> {
-    this.pinStore = await this._pinStoreFactory.open()
+    this.pinStore = await this._pinStoreFactory.createPinStore()
     this.pin = new LocalPinApi(this.pinStore, this._docCache, this._loadDoc.bind(this), this._logger)
 
     if (doPeerDiscovery) {
