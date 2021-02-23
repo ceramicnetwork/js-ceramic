@@ -1,48 +1,52 @@
-import { createIPFS, swarmConnect } from '../../__tests__/ipfs-util';
-import { IpfsApi, LoggerProvider } from '@ceramicnetwork/common';
+import { LoggerProvider } from '@ceramicnetwork/common';
 import { Pubsub } from '../pubsub';
-import { TaskQueue } from '../task-queue';
-import { MsgType, QueryMessage, serialize } from '../pubsub-message';
+import { MsgType } from '../pubsub-message';
 import { DocID } from '@ceramicnetwork/docid';
-import { delay } from './delay';
 import { bufferCount, first } from 'rxjs/operators';
+import * as random from '@stablelib/random';
+import { asIpfsMessage } from './as-ipfs-message';
+import { from } from 'rxjs';
 
-let ipfsA: IpfsApi;
-let ipfsB: IpfsApi;
-
-beforeEach(async () => {
-  ipfsA = await createIPFS();
-  ipfsB = await createIPFS()
-  await swarmConnect(ipfsB, ipfsA)
-});
-
-afterEach(async () => {
-  await ipfsA.stop();
-  await ipfsB.stop()
-});
-
-const TOPIC = 'test'
-const loggerProvider = new LoggerProvider()
-const pubsubLogger = loggerProvider.makeServiceLogger('pubsub')
-const diagnosticsLogger = loggerProvider.getDiagnosticsLogger()
+const TOPIC = 'test';
+const loggerProvider = new LoggerProvider();
+const pubsubLogger = loggerProvider.makeServiceLogger('pubsub');
+const diagnosticsLogger = loggerProvider.getDiagnosticsLogger();
 const FAKE_DOC_ID = DocID.fromString('kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s');
+const OUTER_PEER_ID = 'OUTER_PEER_ID';
+const PEER_ID = 'PEER_ID';
 
-test('pass incoming message', async () => {
-  const messages = Array.from({length: 10}).map<QueryMessage>((_, i) => {
-    return {
-      typ: MsgType.QUERY as MsgType.QUERY,
-      id: i.toString(),
-      doc: FAKE_DOC_ID
-    }
-  })
-  const taskQueue = new TaskQueue()
-  const pubsub = new Pubsub(ipfsA, TOPIC, 3000, pubsubLogger, diagnosticsLogger, taskQueue)
-  const subscription = pubsub.pipe(bufferCount(10), first()).toPromise()
-  await delay(100) // Plumbing
-  await Promise.all(messages.map(async (message) => {
-    await ipfsB.pubsub.publish(TOPIC, serialize(message))
-  }))
-  expect(await subscription).toEqual(messages)
+const LENGTH = 2;
+const MESSAGES = Array.from({ length: LENGTH }).map((_, index) => {
+  return {
+    typ: MsgType.QUERY as MsgType.QUERY,
+    id: index.toString(),
+    doc: FAKE_DOC_ID,
+  };
+});
+const OUTER_MESSAGES = MESSAGES.map((message) => asIpfsMessage(message, OUTER_PEER_ID));
+const OUTER_GARBAGE = Array.from({ length: LENGTH }).map(() => {
+  return {
+    from: OUTER_PEER_ID,
+    data: random.randomBytes(32),
+    topicIDs: [TOPIC],
+    seqno: random.randomBytes(10),
+  };
 });
 
-test.todo('omit mis-formatted messages');
+test('pass incoming messages, omit garbage', async () => {
+  const feed$ = from(OUTER_GARBAGE.concat(OUTER_MESSAGES));
+  const ipfs = {
+    pubsub: {
+      subscribe: async (_, handler) => {
+        feed$.subscribe(handler);
+      },
+      unsubscribe: jest.fn(),
+      ls: jest.fn(() => []),
+    },
+    id: async () => ({ id: PEER_ID }),
+  };
+  const pubsub = new Pubsub(ipfs, TOPIC, 3000, pubsubLogger, diagnosticsLogger);
+  // Even if garbage is first, we only receive well-formed messages
+  const received = pubsub.pipe(bufferCount(LENGTH), first()).toPromise();
+  expect(await received).toEqual(MESSAGES);
+});

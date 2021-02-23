@@ -1,6 +1,6 @@
 import { PubsubMessage, serialize } from '../pubsub-message';
 import * as uint8arrays from 'uint8arrays';
-import { IPFSPubsubMessage } from '../resubscribe';
+import { IPFSPubsubMessage } from '../incoming-channel';
 import * as random from '@stablelib/random';
 
 export function asIpfsMessage(data: PubsubMessage, from?: string): IPFSPubsubMessage {

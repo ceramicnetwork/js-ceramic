@@ -1,15 +1,18 @@
-import { Observable, EMPTY, pipe } from 'rxjs';
+import { Observable, EMPTY, pipe, of } from 'rxjs';
 import { deserialize, PubsubMessage } from './pubsub-message';
 import { IpfsApi } from '@ceramicnetwork/common';
-import { PubsubIncoming } from './pubsub-incoming';
-import { map, catchError } from 'rxjs/operators';
-import { IPFSPubsubMessage, Resubscribe } from './resubscribe';
+import { map, catchError, mergeMap } from 'rxjs/operators';
+import { IncomingChannel, filterOuter } from './incoming-channel';
 import { DiagnosticsLogger, ServiceLogger } from '@ceramicnetwork/logger';
-import { TaskQueue } from './task-queue';
 
+// Internal observable that does not emit if error happens.
 const ipfsToPubsub = pipe(
-  map<IPFSPubsubMessage, PubsubMessage>((message) => deserialize(message)),
-  catchError(() => EMPTY),
+  mergeMap((message) =>
+    of(message).pipe(
+      map(deserialize),
+      catchError(() => EMPTY),
+    ),
+  ),
 );
 
 export class Pubsub extends Observable<PubsubMessage> {
@@ -19,13 +22,10 @@ export class Pubsub extends Observable<PubsubMessage> {
     private readonly resubscribeEvery: number,
     pubsubLogger: ServiceLogger,
     logger: DiagnosticsLogger,
-    taskQueue?: TaskQueue,
   ) {
     super((subscriber) => {
-      const incoming$Factory = (peerId: string) =>
-        new Resubscribe(ipfs, topic, resubscribeEvery, peerId, pubsubLogger, logger, taskQueue);
-      const incoming$ = new PubsubIncoming(ipfs, incoming$Factory);
-      incoming$.pipe(ipfsToPubsub).subscribe(subscriber);
+      const incoming$ = new IncomingChannel(ipfs, topic, resubscribeEvery, pubsubLogger, logger);
+      incoming$.pipe(filterOuter(ipfs), ipfsToPubsub).subscribe(subscriber);
     });
   }
 

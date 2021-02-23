@@ -5,7 +5,6 @@ import dagCBOR from 'ipld-dag-cbor';
 import * as multihashes from 'multihashes';
 import * as sha256 from '@stablelib/sha256';
 import { TextDecoder } from 'util';
-import { ServiceLogger } from '@ceramicnetwork/logger';
 import * as uint8arrays from 'uint8arrays';
 
 /**
