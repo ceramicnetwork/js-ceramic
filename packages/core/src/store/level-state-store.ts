@@ -2,14 +2,16 @@ import Level from "level-ts";
 import { DocState, Doctype, DoctypeUtils } from "@ceramicnetwork/common"
 import { StateStore } from "./state-store"
 import DocID from '@ceramicnetwork/docid'
+import { promises as fs } from 'fs'
+import path from "path";
 
 /**
- * Ceramic store for saving documents locally
+ * Ceramic store for saving document state to a local leveldb instance
  */
 export class LevelStateStore implements StateStore {
     #store: Level
 
-    constructor(private storePath: string) {
+    constructor(private storeRoot: string) {
     }
 
     /**
@@ -22,8 +24,11 @@ export class LevelStateStore implements StateStore {
     /**
      * Open pinning service
      */
-    async open(): Promise<void> {
-        this.#store = new Level(this.storePath);
+    async open(networkName: string): Promise<void> {
+        // Always store the pinning state in a network-specific directory
+        const storePath = path.join(this.storeRoot, networkName)
+        await fs.mkdir(storePath, { recursive: true }) // create dir if it doesn't exist
+        this.#store = new Level(storePath);
     }
 
     /**
@@ -35,7 +40,7 @@ export class LevelStateStore implements StateStore {
     }
 
     /**
-     * Load document
+     * Load document state
      * @param docId - Document ID
      */
     async load(docId: DocID): Promise<DocState> {

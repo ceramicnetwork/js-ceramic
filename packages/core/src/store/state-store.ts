@@ -2,7 +2,7 @@ import { DocState, Doctype } from "@ceramicnetwork/common"
 import DocID from '@ceramicnetwork/docid'
 
 export interface StateStore {
-    open(): Promise<void>;
+    open(networkName: string): Promise<void>;
     close(): Promise<void>;
     save(document: Doctype): Promise<void>;
     load(docId: DocID): Promise<DocState | null>;

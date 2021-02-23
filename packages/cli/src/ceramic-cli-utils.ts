@@ -40,12 +40,13 @@ export class CeramicCliUtils {
      * @param validateDocs - Validate docs according to schemas or not
      * @param ipfsPinningEndpoints - Ipfs pinning endpoints
      * @param stateStoreDirectory - Path to the directory that will be used for storing pinned document state
+     * @param stateStoreS3Bucket - S3 bucket name for storing pinned document state
      * @param gateway - read only endpoints available. It is disabled by default
      * @param port - port daemon is availabe. Default is 7007
      * @param debug - Enable debug logging level
      * @param verbose - Enable verbose logging
      * @param logToFiles - Enable writing logs to files
-     * @param logPath - Store log files in this directory
+     * @param logDirectory - Store log files in this directory
      * @param network - The Ceramic network to connect to
      * @param pubsubTopic - Pub/sub topic to use for protocol messages.
      * @param maxHealthyCpu - Max fraction of total CPU usage considered healthy. Default is 0.7
@@ -59,12 +60,13 @@ export class CeramicCliUtils {
         validateDocs: boolean,
         ipfsPinningEndpoints: string[],
         stateStoreDirectory: string,
+        stateStoreS3Bucket: string,
         gateway: boolean,
         port: number,
         debug: boolean,
         verbose: boolean,
         logToFiles: boolean,
-        logPath: string,
+        logDirectory: string,
         network = DEFAULT_NETWORK,
         pubsubTopic: string,
         maxHealthyCpu = 0.7,
@@ -78,7 +80,7 @@ export class CeramicCliUtils {
         const logLevel = verbose ? LogLevel.verbose : (debug ? LogLevel.debug : LogLevel.important)
         const loggerConfig: LoggerConfig = {
           logToFiles,
-          logPath,
+          logDirectory,
           logLevel,
         }
 
@@ -86,6 +88,7 @@ export class CeramicCliUtils {
             ethereumRpcUrl: ethereumRpc,
             anchorServiceUrl: anchorServiceApi,
             stateStoreDirectory,
+            s3StateStoreBucket: stateStoreS3Bucket,
             validateDocs,
             ipfsPinningEndpoints,
             gateway,

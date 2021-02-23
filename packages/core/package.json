@@ -12,8 +12,8 @@
   "author": "Joel Torstensson <oed3933@gmail.com>",
   "homepage": "",
   "license": "(Apache-2.0 OR MIT)",
-  "main": "lib/ceramic.js",
-  "types": "lib/ceramic.d.ts",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "directories": {
     "lib": "lib"
   },

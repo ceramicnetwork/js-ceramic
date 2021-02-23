@@ -210,11 +210,11 @@ describe('Level data store', () => {
 
     const levelPath = (await tmp.dir({unsafeCleanup: true})).path
     const storeFactory = new PinStoreFactory(context.ipfs, {
-      pinsetDirectory: levelPath,
+      stateStoreDirectory: levelPath,
       pinningEndpoints: ['ipfs+context'],
       networkName: 'inmemory',
     })
-    store = await storeFactory.open()
+    store = await storeFactory.createPinStore()
   })
 
   it('pins document correctly without IPFS pinning', async () => {
@@ -346,11 +346,11 @@ describe('Level data store', () => {
 
     const levelPath = (await tmp.dir({unsafeCleanup: true})).path
     const storeFactoryLocal = new PinStoreFactory(context.ipfs, {
-      pinsetDirectory: levelPath,
+      stateStoreDirectory: levelPath,
       pinningEndpoints: ['ipfs+context'],
       networkName: "local",
     })
-    const localStore = await storeFactoryLocal.open()
+    const localStore = await storeFactoryLocal.createPinStore()
 
     await localStore.stateStore.save(doc.doctype)
     let docState = await localStore.stateStore.load(doc.id)
@@ -360,11 +360,11 @@ describe('Level data store', () => {
 
     // Now create a net pin store for a different ceramic network
     const storeFactoryInMemory = new PinStoreFactory(context.ipfs, {
-      pinsetDirectory: levelPath,
+      stateStoreDirectory: levelPath,
       pinningEndpoints: ['ipfs+context'],
       networkName: "inmemory",
     })
-    const inMemoryStore = await storeFactoryInMemory.open()
+    const inMemoryStore = await storeFactoryInMemory.createPinStore()
 
     // The new pin store shouldn't be able to see docs that were pinned on the other network
     docState = await inMemoryStore.stateStore.load(doc.id)

@@ -4,14 +4,14 @@ import os from "os";
 
 
 export interface LoggerConfig {
-    logPath?: string,
+    logDirectory?: string,
     logLevel?: LogLevel,
     logToFiles?: boolean,
 }
 
 const DEFAULT_LOG_CONFIG = {
     logLevel: LogLevel.important,
-    logPath: path.join(os.homedir(), ".ceramic", "logs/"),
+    logDirectory: path.join(os.homedir(), ".ceramic", "logs/"),
     logToFiles: false
 }
 
@@ -27,13 +27,13 @@ export class LoggerProvider {
       this.config = {
         logLevel: config.logLevel !== undefined ? config.logLevel : DEFAULT_LOG_CONFIG.logLevel,
         logToFiles: config.logToFiles !== undefined ? config.logToFiles : DEFAULT_LOG_CONFIG.logToFiles,
-        logPath: config.logPath !== undefined ? config.logPath : DEFAULT_LOG_CONFIG.logPath,
+        logDirectory: config.logDirectory !== undefined ? config.logDirectory : DEFAULT_LOG_CONFIG.logDirectory,
       }
       this._diagnosticLogger = this._makeDiagnosticLogger()
     }
 
     private _makeDiagnosticLogger(): DiagnosticsLogger {
-        const logPath = path.join(this.config.logPath, "diagnostics.log")
+        const logPath = path.join(this.config.logDirectory, "diagnostics.log")
 
         return new DiagnosticsLogger(this.config.logLevel, this.config.logToFiles, logPath);
     }
@@ -43,7 +43,7 @@ export class LoggerProvider {
     }
 
     public makeServiceLogger(serviceName: string): ServiceLogger {
-        const logPath = path.join(this.config.logPath, `${serviceName}.log`)
+        const logPath = path.join(this.config.logDirectory, `${serviceName}.log`)
 
         return new ServiceLogger(serviceName, logPath, this.config.logLevel, this.config.logToFiles)
     }
