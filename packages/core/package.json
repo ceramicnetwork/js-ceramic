@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/core",
-  "version": "0.20.0-rc.4",
+  "version": "0.20.0-rc.5",
   "description": "Typescript implementation of the Ceramic protocol",
   "keywords": [
     "Ceramic",
@@ -29,17 +29,17 @@
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/3id-did-resolver": "^0.7.0-rc.4",
-    "@ceramicnetwork/common": "^0.16.0-rc.4",
+    "@ceramicnetwork/3id-did-resolver": "^0.7.0-rc.5",
+    "@ceramicnetwork/common": "^0.16.0-rc.5",
     "@ceramicnetwork/docid": "^0.5.0-rc.2",
-    "@ceramicnetwork/doctype-caip10-link": "^0.13.3-rc.4",
-    "@ceramicnetwork/doctype-caip10-link-handler": "^0.13.3-rc.4",
-    "@ceramicnetwork/doctype-tile": "^0.13.4-rc.4",
-    "@ceramicnetwork/doctype-tile-handler": "^0.13.4-rc.4",
+    "@ceramicnetwork/doctype-caip10-link": "^0.13.3-rc.5",
+    "@ceramicnetwork/doctype-caip10-link-handler": "^0.13.3-rc.5",
+    "@ceramicnetwork/doctype-tile": "^0.13.4-rc.5",
+    "@ceramicnetwork/doctype-tile-handler": "^0.13.4-rc.5",
     "@ceramicnetwork/ipfs-topology": "^0.0.2-rc.3",
     "@ceramicnetwork/logger": "^0.1.0-rc.3",
-    "@ceramicnetwork/pinning-aggregation": "^0.1.15-rc.4",
-    "@ceramicnetwork/pinning-ipfs-backend": "^0.1.15-rc.4",
+    "@ceramicnetwork/pinning-aggregation": "^0.1.15-rc.5",
+    "@ceramicnetwork/pinning-ipfs-backend": "^0.1.15-rc.5",
     "@ethersproject/providers": "^5.0.18",
     "@stablelib/random": "^1.0.0",
     "@stablelib/sha256": "^1.0.0",
