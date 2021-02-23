@@ -3,17 +3,6 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-# [0.21.0-rc.5](/compare/@ceramicnetwork/cli@0.21.0-rc.3...@ceramicnetwork/cli@0.21.0-rc.5) (2021-02-23)
-
-
-### Features
-
-* **cli:** Add S3StateStore (#1041) 45e9d27, closes #1041
-
-
-
-
-
 # [0.21.0-rc.4](/compare/@ceramicnetwork/cli@0.21.0-rc.3...@ceramicnetwork/cli@0.21.0-rc.4) (2021-02-23)
 
 
