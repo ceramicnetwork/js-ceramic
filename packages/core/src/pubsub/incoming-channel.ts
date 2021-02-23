@@ -90,6 +90,7 @@ export class IncomingChannel extends Observable<IPFSPubsubMessage> {
 
 /**
  * Pass only messages from other IPFS nodes.
+ * @param peerId$ - Own peer id.
  */
 export function filterOuter(peerId$: Observable<string>): MonoTypeOperatorFunction<IPFSPubsubMessage> {
   return pipe(
