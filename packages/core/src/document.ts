@@ -739,7 +739,7 @@ class Document extends EventEmitter implements DocStateHolder {
     this.subscriptionSet.close();
     this.off('update', this._update)
 
-    this.dispatcher.unregister(this.id.toString())
+    this.dispatcher.unregister(this.id)
 
     await this._applyQueue.onEmpty()
 

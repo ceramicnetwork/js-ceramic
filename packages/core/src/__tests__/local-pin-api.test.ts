@@ -1,4 +1,3 @@
-import { DocCache } from '@ceramicnetwork/common';
 import { LocalPinApi } from '../local-pin-api';
 import { PinStore } from '../store/pin-store';
 import DocID from '@ceramicnetwork/docid';
@@ -9,12 +8,11 @@ import { LoggerProvider } from "@ceramicnetwork/common";
 const DOC_ID = DocID.fromString('k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki');
 
 const pinStore = ({ add: jest.fn(), rm: jest.fn(), ls: jest.fn() } as unknown) as PinStore;
-const docCache = ({ pin: jest.fn(), unpin: jest.fn() } as unknown) as DocCache;
 
 const document = ({ doctype: 'tile' } as unknown) as Document;
 const loadDoc = jest.fn(async () => document);
 
-const pinApi = new LocalPinApi(pinStore, docCache, loadDoc, new LoggerProvider().getDiagnosticsLogger())
+const pinApi = new LocalPinApi(pinStore, loadDoc, new LoggerProvider().getDiagnosticsLogger())
 
 async function toArray<A>(iterable: AsyncIterable<A>): Promise<A[]> {
   const result: A[] = [];
@@ -26,13 +24,11 @@ test('add', async () => {
   await pinApi.add(DOC_ID);
   expect(loadDoc).toBeCalledWith(DOC_ID);
   expect(pinStore.add).toBeCalledWith(document.doctype);
-  expect(docCache.pin).toBeCalledWith(document);
 });
 
 test('rm', async () => {
   await pinApi.rm(DOC_ID);
   expect(pinStore.rm).toBeCalledWith(DOC_ID);
-  expect(docCache.unpin).toBeCalledWith(DOC_ID);
 });
 
 describe('ls', () => {

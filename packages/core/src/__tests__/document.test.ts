@@ -22,6 +22,7 @@ jest.mock('../store/level-state-store')
 import InMemoryAnchorService from "../anchor/memory/in-memory-anchor-service"
 import {FakeTopology} from "./fake-topology";
 import {PinStoreFactory} from "../store/pin-store-factory";
+import { Repository } from '../repository';
 
 jest.mock('../dispatcher', () => {
   const CID = require('cids') // eslint-disable-line @typescript-eslint/no-var-requires
@@ -198,6 +199,7 @@ describe('Document', () => {
 
       const topology = new FakeTopology(dispatcher._ipfs, networkOptions.name)
 
+      const repository = new Repository()
       const pinStoreFactory = {
         createPinStore: async() => {
           return pinStore
@@ -211,6 +213,7 @@ describe('Document', () => {
         ipfsTopology: topology,
         loggerProvider,
         pinStoreFactory: pinStoreFactory as any as PinStoreFactory,
+        repository
       }
 
       const params = {
@@ -767,6 +770,7 @@ describe('Document', () => {
 
       const resolver = new Resolver({ ...threeIdResolver })
       const loggerProvider = new LoggerProvider()
+      const repository = new Repository()
       context = {
         did: user,
         anchorService,
@@ -797,6 +801,7 @@ describe('Document', () => {
         loggerProvider,
         pinStoreFactory: pinStoreFactory as any as PinStoreFactory,
         pinningBackends: null,
+        repository
       }
 
       const params = {
