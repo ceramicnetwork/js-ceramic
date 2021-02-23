@@ -38,7 +38,7 @@ async function resubscribe(
  *
  * One could simplify this by removing periodic re-subscription and serialization via task-queue.
  * Unfortunately, we can end up with concurrency issues: trying to unsubscribe while (or right after) other instance tries to subscribe.
- * So, better keep it here.
+ * So, better keep it all together.
  */
 export class IncomingChannel extends Observable<IPFSPubsubMessage> {
   constructor(
