@@ -43,12 +43,13 @@ test('pass incoming messages, omit garbage', async () => {
       unsubscribe: jest.fn(),
       ls: jest.fn(() => []),
     },
-    id: async () => ({ id: PEER_ID }),
+    id: jest.fn(async () => ({ id: PEER_ID })),
   };
   const pubsub = new Pubsub(ipfs, TOPIC, 3000, pubsubLogger, diagnosticsLogger);
   // Even if garbage is first, we only receive well-formed messages
   const received = pubsub.pipe(bufferCount(LENGTH), first()).toPromise();
   expect(await received).toEqual(MESSAGES);
+  expect(ipfs.id).toBeCalledTimes(2); // One in Pubsub, another in IncomingChannel resubscribe
 });
 
 test('publish', async () => {
@@ -59,7 +60,7 @@ test('publish', async () => {
       ls: jest.fn(() => []),
       publish: jest.fn(),
     },
-    id: async () => ({ id: PEER_ID }),
+    id: jest.fn(async () => ({ id: PEER_ID })),
   };
   const pubsub = new Pubsub(ipfs, TOPIC, 3000, pubsubLogger, diagnosticsLogger);
   const message = {
@@ -68,7 +69,9 @@ test('publish', async () => {
     doc: FAKE_DOC_ID,
   };
   const subscription = pubsub.publish(message);
-  subscription.add(() => { // Can be replaced with delay, but this is faster.
+  subscription.add(() => {
+    // Can be replaced with delay, but this is faster.
     expect(ipfs.pubsub.publish).toBeCalledWith(TOPIC, serialize(message));
   });
+  expect(ipfs.id).toBeCalledTimes(1);
 });
