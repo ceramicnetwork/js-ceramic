@@ -57,7 +57,7 @@ export class DocID implements DocRef {
   static fromString = fromString;
 
   static [Symbol.hasInstance](instance: any): boolean {
-    return '_tag' in instance && instance._tag === TAG;
+    return typeof instance === 'object' && '_tag' in instance && instance._tag === TAG;
   }
 
   /**
