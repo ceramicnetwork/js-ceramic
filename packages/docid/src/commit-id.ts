@@ -93,17 +93,25 @@ function fromString(input: string): CommitID {
   }
 }
 
+const TAG = Symbol.for('@ceramicnetwork/docid/CommitID');
+
 /**
  * Commit identifier, includes doctype, genesis CID, commit CID.
  * Encoded as '<multibase-prefix><multicodec-docid><doctype><genesis-cid-bytes><commit-cid-bytes>'
  */
 export class CommitID implements DocRef {
+  protected readonly _tag = TAG;
+
   readonly #doctype: number;
   readonly #cid: CID;
   readonly #commit: CID | null; // null ≝ genesis commit
 
   static fromBytes = fromBytes;
   static fromString = fromString;
+
+  static [Symbol.hasInstance](instance: any): boolean {
+    return '_tag' in instance && instance._tag === TAG;
+  }
 
   /**
    * Create a new DocID.

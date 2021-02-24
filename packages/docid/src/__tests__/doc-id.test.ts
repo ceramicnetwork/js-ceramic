@@ -192,3 +192,12 @@ describe('#atCommit', () => {
     expect(() => docId.atCommit('garbage')).toThrow();
   });
 });
+
+test('instanceof', () => {
+  const docId = DocID.fromString(DOC_ID_STRING)
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  const instanceSpy = jest.spyOn(DocID, Symbol.hasInstance)
+  expect(docId instanceof DocID).toBeTruthy()
+  expect(instanceSpy).toBeCalledWith(docId)
+})
