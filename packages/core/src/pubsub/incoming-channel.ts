@@ -13,6 +13,8 @@ export type IPFSPubsubMessage = {
   seqno: Uint8Array;
   data: Uint8Array;
   topicIDs: string[];
+  signature: Uint8Array;
+  key: Uint8Array;
 };
 
 async function resubscribe(
