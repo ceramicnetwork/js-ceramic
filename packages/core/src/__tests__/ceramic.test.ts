@@ -444,6 +444,7 @@ describe('Ceramic integration', () => {
       metadata: { controllers: [ceramic.did.id], schema: noteSchema.commitId.toUrl() },
     })
     await expect(doc.change({ content: { date: 'invalid-date' } })).rejects.toThrow()
+    await ceramic.close();
   })
 
 })
