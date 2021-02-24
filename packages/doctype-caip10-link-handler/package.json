@@ -34,7 +34,7 @@
   "devDependencies": {
     "@stablelib/sha256": "^1.0.0",
     "@types/lodash.clonedeep": "^4.5.6",
-    "cids": "1.0.2",
+    "cids": "1.1.5",
     "lodash.clonedeep": "^4.5.0",
     "uint8arrays": "^2.0.5"
   },

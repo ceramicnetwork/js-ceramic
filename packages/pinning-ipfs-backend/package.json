@@ -31,7 +31,7 @@
   },
   "devDependencies": {
     "@ceramicnetwork/common": "^0.16.0-rc.5",
-    "cids": "1.0.2",
+    "cids": "1.1.5",
     "ts-jest": "^26.4.4"
   },
   "publishConfig": {

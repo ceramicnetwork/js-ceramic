@@ -44,7 +44,7 @@
     "@stablelib/random": "^1.0.0",
     "@stablelib/sha256": "^1.0.0",
     "ajv": "^6.12.3",
-    "cids": "1.0.2",
+    "cids": "1.1.5",
     "cross-fetch": "^3.0.6",
     "did-jwt": "^4.6.3",
     "did-resolver": "^2.1.1",
