@@ -64,8 +64,8 @@ export class IncomingChannel extends Observable<IPFSPubsubMessage> {
         // Remove pending subscription attempts.
         this.tasks.clear();
         // Unsubscribe only after a currently running task is finished.
-        this.tasks.add(() => {
-          return ipfs.pubsub.unsubscribe(topic, handler);
+        this.tasks.add(async () => {
+          await ipfs.pubsub.unsubscribe(topic, handler);
         });
       };
     });
