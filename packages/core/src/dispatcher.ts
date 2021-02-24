@@ -6,87 +6,28 @@ import { DoctypeUtils, IpfsApi, UnreachableCaseError } from '@ceramicnetwork/com
 import DocID from "@ceramicnetwork/docid";
 import { DiagnosticsLogger, ServiceLogger } from "@ceramicnetwork/logger";
 import { Repository } from './repository';
-import { MsgType } from './pubsub/pubsub-message';
+import { MsgType, PubsubMessage } from './pubsub/pubsub-message';
+import { Pubsub } from './pubsub/pubsub';
+import { Subscription } from 'rxjs';
 
 const IPFS_GET_TIMEOUT = 60000 // 1 minute
 const IPFS_MAX_RECORD_SIZE = 256000 // 256 KB
 const IPFS_RESUBSCRIBE_INTERVAL_DELAY = 1000 * 15 // 15 sec
-const TESTING = process.env.NODE_ENV == 'test'
-
-/**
- * Describes one log message from the Dispatcher.
- */
-interface LogMessage {
-  peer: string;
-  event: string;
-  topic: string;
-  from?: string;
-  message?: Record<string, unknown>;
-}
 
 /**
  * Ceramic core Dispatcher used for handling messages from pub/sub topic.
  */
 export default class Dispatcher {
-  private _peerId: string
+  readonly pubsub: Pubsub
+  readonly pubsubSubscription: Subscription
   // Set of IDs for QUERY messages we have sent to the pub/sub topic but not yet heard a
   // corresponding RESPONSE message for. Maps the query ID to the primary DocID we were querying for.
   private readonly _outstandingQueryIds: Record<string, DocID>
 
-  private _isRunning = true
-  private _resubscribeInterval: any
-
-  constructor (public _ipfs: IpfsApi, public topic: string, readonly repository: Repository, private _logger: DiagnosticsLogger, private _pubsubLogger: ServiceLogger) {
+  constructor (readonly _ipfs: IpfsApi, private readonly topic: string, readonly repository: Repository, private readonly _logger: DiagnosticsLogger, private readonly _pubsubLogger: ServiceLogger) {
     this._outstandingQueryIds = {}
-  }
-
-  /**
-   * Initialize Dispatcher instance.
-   */
-  async init(): Promise<void> {
-    this._peerId = this._peerId || (await this._ipfs.id()).id
-    await this._subscribe(true)
-    // If ipfs.libp2p is defined we have an internal ipfs node, this means that
-    // we don't want to resubscribe since it will add multiple handlers.
-    if (!TESTING && !this._ipfs.libp2p) {
-      this._resubscribe()
-    }
-  }
-
-  /**
-   * Subscribes IPFS pubsub to `this.topic` and logs a `subscribe` event.
-   *
-   * Logs error if subscribe fails.
-   */
-  async _subscribe(force = false): Promise<void> {
-    try {
-      if (force || !(await this._ipfs.pubsub.ls()).includes(this.topic)) {
-        await this._ipfs.pubsub.unsubscribe(this.topic, this.handleMessage)
-        await this._ipfs.pubsub.subscribe(
-          this.topic,
-          this.handleMessage,
-          // {timeout: IPFS_GET_TIMEOUT} // ipfs-core bug causes timeout option to throw https://github.com/ipfs/js-ipfs/issues/3472
-        )
-        this._pubsubLogger.log({peer: this._peerId, event: 'subscribed', topic: this.topic })
-      }
-    } catch (error) {
-      if (error.message.includes('Already subscribed')) {
-        this._logger.debug(error.message)
-      } else if (error.message.includes('The user aborted a request')) {        // for some reason the first call to pubsub.subscribe throws this error
-        this._subscribe(true)
-      } else {
-        this._logger.err(error.message)
-      }
-    }
-  }
-
-  /**
-   * Periodically subscribes to IPFS pubsub topic.
-   */
-  _resubscribe(): void {
-    this._resubscribeInterval = setInterval(async () => {
-      await this._subscribe()
-    }, IPFS_RESUBSCRIBE_INTERVAL_DELAY)
+    this.pubsub = new Pubsub(_ipfs, topic, IPFS_RESUBSCRIBE_INTERVAL_DELAY, _pubsubLogger, _logger)
+    this.pubsubSubscription = this.pubsub.subscribe(this.handleMessage.bind(this))
   }
 
   /**
@@ -102,7 +43,7 @@ export default class Dispatcher {
 
     // Store the query id so we'll process the corresponding RESPONSE message when it comes in
     this._outstandingQueryIds[message.id] = document.id
-    await this.publish(message)
+    this.publish(message)
   }
 
   /**
@@ -174,32 +115,14 @@ export default class Dispatcher {
    * @param docId  - Document ID
    * @param tip - Commit CID
    */
-  async publishTip (docId: DocID, tip: CID): Promise<void> {
-    await this.publish({ typ: MsgType.UPDATE, doc: docId, tip: tip })
+  publishTip (docId: DocID, tip: CID): Subscription {
+    return this.publish({ typ: MsgType.UPDATE, doc: docId, tip: tip })
   }
 
   /**
-   * Handles one message from the pub/sub topic.
-   *
-   * @param envelope - Message data
+   * Handles one message from the pubsub topic.
    */
-  handleMessage = async (envelope: any): Promise<void> => {
-    if (!this._isRunning) {
-      this._logger.err('Dispatcher has been closed')
-      return
-    }
-
-    if (envelope.from === this._peerId) {
-      return
-    }
-
-    const message = pubsubMessage.deserialize(envelope)
-    // TODO: handle signature and key buffers in message data
-    // TODO: Logger does not belong here
-    const logMessage = { ...envelope, data: message };
-    delete logMessage.key;
-    delete logMessage.signature;
-    this._pubsubLogger.log({ peer: this._peerId, event: 'received', topic: this.topic, message: logMessage });
+  async handleMessage(message: PubsubMessage): Promise<void> {
     switch (message.typ) {
       case MsgType.UPDATE:
         await this._handleUpdateMessage(message)
@@ -248,11 +171,8 @@ export default class Dispatcher {
 
       // Build RESPONSE message and send it out on the pub/sub topic
       // TODO: Handle 'paths' for multiquery support
-      const tipMap = {}
-      tipMap[docId.toString()] = document.tip.toString()
-      const payload = { typ: MsgType.RESPONSE, id, tips: tipMap}
-      await this._ipfs.pubsub.publish(this.topic, JSON.stringify(payload))
-      this._pubsubLogger.log({ peer: this._peerId, event: 'published', topic: this.topic, message: payload })
+      const tipMap = new Map().set(docId.toString(), document.tip)
+      this.publish({ typ: MsgType.RESPONSE, id, tips: tipMap})
     }
   }
 
@@ -288,22 +208,11 @@ export default class Dispatcher {
    * Gracefully closes the Dispatcher.
    */
   async close(): Promise<void> {
-    this._isRunning = false
-
-    clearInterval(this._resubscribeInterval)
-
+    this.pubsubSubscription.unsubscribe()
     await this.repository.close()
-
-    await this._ipfs.pubsub.unsubscribe(this.topic)
   }
 
-  private async publish(message: pubsubMessage.PubsubMessage) {
-    if (!this._isRunning) {
-      this._logger.err('Dispatcher has been closed')
-      return
-    }
-
-    await this._ipfs.pubsub.publish(this.topic, pubsubMessage.serialize(message))
-    this._pubsubLogger.log({ peer: this._peerId, event: 'published', topic: this.topic, message: message })
+  private publish(message: pubsubMessage.PubsubMessage): Subscription {
+    return this.pubsub.publish(message)
   }
 }

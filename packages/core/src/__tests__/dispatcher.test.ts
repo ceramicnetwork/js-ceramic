@@ -4,10 +4,9 @@ import Document from "../document"
 import { TileDoctype } from "@ceramicnetwork/doctype-tile"
 import DocID from "@ceramicnetwork/docid";
 import { LoggerProvider } from "@ceramicnetwork/common";
-import * as uint8arrays from 'uint8arrays';
-import { asIpfsMessage } from '../pubsub/__tests__/as-ipfs-message';
-import { PubsubMessage, serialize, MsgType } from '../pubsub/pubsub-message';
+import { serialize, MsgType } from '../pubsub/pubsub-message';
 import { Repository } from '../repository';
+import { delay } from '../pubsub/__tests__/delay';
 
 const TOPIC = '/ceramic'
 const FAKE_CID = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
@@ -16,7 +15,7 @@ const FAKE_DOC_ID = DocID.fromString("kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c
 
 const ipfs = {
   pubsub: {
-    ls: jest.fn(async () => Promise.resolve(TOPIC)),
+    ls: jest.fn(async () => Promise.resolve([])),
     subscribe: jest.fn(),
     unsubscribe: jest.fn(async () => Promise.resolve()),
     publish: jest.fn()
@@ -28,7 +27,7 @@ const ipfs = {
   block: {
     stat: jest.fn(() => ({ size: 10 }))
   },
-  id: (): any => ({ id: 'ipfsid' })
+  id: async () => ({ id: 'ipfsid' })
 }
 
 class TileDoctypeMock extends TileDoctype {
@@ -55,7 +54,6 @@ describe('Dispatcher', () => {
 
     const repository = new Repository()
     dispatcher = new Dispatcher(ipfs, TOPIC, repository, loggerProvider.getDiagnosticsLogger(), loggerProvider.makeServiceLogger("pubsub"))
-    await dispatcher.init()
   })
 
   afterEach(async () => {
@@ -64,13 +62,14 @@ describe('Dispatcher', () => {
 
   it('is constructed correctly', async () => {
     expect((dispatcher as any).repository).toBeInstanceOf(Repository)
+    await delay(100) // Wait for plumbing
     expect(ipfs.pubsub.subscribe).toHaveBeenCalledWith(TOPIC, expect.anything())
   })
 
   it('closes correctly', async () => {
     await dispatcher.close()
-    expect(ipfs.pubsub.unsubscribe).toHaveBeenCalledTimes(2)
-    expect(ipfs.pubsub.unsubscribe).toHaveBeenCalledWith(TOPIC)
+    expect(ipfs.pubsub.unsubscribe).toHaveBeenCalledTimes(1)
+    expect(ipfs.pubsub.unsubscribe).toHaveBeenCalledWith(TOPIC, expect.anything())
   })
 
   it('makes registration correctly', async () => {
@@ -103,22 +102,18 @@ describe('Dispatcher', () => {
 
   it('publishes tip correctly', async () => {
     const tip = new CID('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D')
-    dispatcher.publishTip(FAKE_DOC_ID, tip)
-    expect(ipfs.pubsub.publish).toHaveBeenCalledWith(TOPIC, serialize({ typ: MsgType.UPDATE, doc: FAKE_DOC_ID, tip: tip }))
+    const subscription = dispatcher.publishTip(FAKE_DOC_ID, tip)
+    subscription.add(() => { // Could be delay, but this is faster
+      expect(ipfs.pubsub.publish).toHaveBeenCalledWith(TOPIC, serialize({ typ: MsgType.UPDATE, doc: FAKE_DOC_ID, tip: tip }))
+    })
   })
 
   it('errors on invalid message type', async () => {
-    const id = '/ceramic/bagjqcgzaday6dzalvmy5ady2m5a5legq5zrbsnlxfc2bfxej532ds7htpova'
-    const asBytes = uint8arrays.fromString(JSON.stringify({ typ: -1, id }))
-    const ipfsMessage = {
-      from: 'outer-space',
-      data: asBytes
-    }
-
+    const message = { typ: -1, id: '/ceramic/bagjqcgzaday6dzalvmy5ady2m5a5legq5zrbsnlxfc2bfxej532ds7htpova' };
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    await expect(dispatcher.handleMessage(ipfsMessage)).rejects.toThrow("Unhandled -1: Unknown message type")
-  })
+    await expect(dispatcher.handleMessage(message)).rejects.toThrow(/Unsupported message type/);
+  });
 
   it('handle message correctly', async () => {
     const doc = new Document(
@@ -141,17 +136,17 @@ describe('Dispatcher', () => {
 
     // Handle UPDATE message
     const updatePromise = new Promise(resolve => doc.on('update', resolve))
-    await dispatcher.handleMessage(asIpfsMessage({ typ: MsgType.UPDATE, doc: FAKE_DOC_ID, tip: FAKE_CID }))
+    await dispatcher.handleMessage({ typ: MsgType.UPDATE, doc: FAKE_DOC_ID, tip: FAKE_CID })
     expect(await updatePromise).toEqual(FAKE_CID)
 
     // Handle QUERY message
-    await dispatcher.handleMessage(asIpfsMessage({ typ: MsgType.QUERY, doc: FAKE_DOC_ID, id: "1" }))
+    await dispatcher.handleMessage({ typ: MsgType.QUERY, doc: FAKE_DOC_ID, id: "1" })
     expect(ipfs.pubsub.publish).lastCalledWith(TOPIC, serialize({ typ: MsgType.RESPONSE, id: "1", tips: new Map().set(FAKE_DOC_ID.toString(), FAKE_CID) }))
 
     // Handle RESPONSE message
     const updatePromise2 = new Promise(resolve => doc.on('update', resolve))
-    const tips = new Map().set(FAKE_DOC_ID, FAKE_CID2)
-    await dispatcher.handleMessage(asIpfsMessage({ typ: MsgType.RESPONSE, id: queryID, tips: tips }))
+    const tips = new Map().set(FAKE_DOC_ID.toString(), FAKE_CID2)
+    await dispatcher.handleMessage({ typ: MsgType.RESPONSE, id: queryID, tips: tips })
     expect(await updatePromise2).toEqual(FAKE_CID2)
   })
 })
