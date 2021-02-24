@@ -135,7 +135,7 @@ describe('.fromBytes', () => {
 
 describe('.fromString', () => {
   test('create from doc id string: fail', () => {
-    expect(() => CommitID.fromString(DOC_ID_STRING)).toThrow()
+    expect(() => CommitID.fromString(DOC_ID_STRING)).toThrow();
   });
 
   test('create from string including commit', () => {
@@ -157,11 +157,11 @@ describe('.fromString', () => {
   });
 
   test('create from doc id url string: fail', () => {
-    expect(() => CommitID.fromString(DOC_ID_URL)).toThrow()
+    expect(() => CommitID.fromString(DOC_ID_URL)).toThrow();
   });
 
   test('create from legacy docid string "/ceramic/": fail', () => {
-    expect(() => CommitID.fromString(DOC_ID_URL_LEGACY))
+    expect(() => CommitID.fromString(DOC_ID_URL_LEGACY));
   });
 
   test('create from legacy string "/ceramic/" with commit param "?commit="', () => {
@@ -264,4 +264,13 @@ test('#baseID', () => {
   const docId = commitId.baseID;
   expect(docId.type).toEqual(commitId.type);
   expect(docId.cid).toEqual(commitId.cid);
+});
+
+test('instanceof', () => {
+  const commitId = new CommitID('tile', BASE_CID_STRING, COMMIT_CID_STRING);
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  const instanceSpy = jest.spyOn(CommitID, Symbol.hasInstance);
+  expect(commitId instanceof CommitID).toBeTruthy();
+  expect(instanceSpy).toBeCalledWith(commitId);
 });

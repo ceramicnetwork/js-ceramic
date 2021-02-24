@@ -22,7 +22,7 @@ function fromBytes(bytes: Uint8Array): DocID {
   const [docType, docTypeRemainder] = readVarint(docCodecRemainder);
   const [cid, cidRemainder] = readCid(docTypeRemainder);
   if (cidRemainder.length > 0) {
-    throw new Error(`Invalid DocID: contains commit`)
+    throw new Error(`Invalid DocID: contains commit`);
   }
   return new DocID(docType, cid);
 }
@@ -41,16 +41,24 @@ function fromString(input: string): DocID {
   return fromBytes(bytes);
 }
 
+const TAG = Symbol.for('@ceramicnetwork/docid/DocID');
+
 /**
  * Document identifier, no commit information included.
  * Encoded as '<multibase-prefix><multicodec-docid><doctype><genesis-cid-bytes>'
  */
 export class DocID implements DocRef {
+  protected readonly _tag = TAG;
+
   readonly #doctype: number;
   readonly #cid: CID;
 
   static fromBytes = fromBytes;
   static fromString = fromString;
+
+  static [Symbol.hasInstance](instance: any): boolean {
+    return typeof instance === 'object' && '_tag' in instance && instance._tag === TAG;
+  }
 
   /**
    * Create a new DocID.
