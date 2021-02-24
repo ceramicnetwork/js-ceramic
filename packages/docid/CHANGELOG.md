@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.5.0-rc.3](/compare/@ceramicnetwork/docid@0.5.0-rc.2...@ceramicnetwork/docid@0.5.0-rc.3) (2021-02-24)
+
+
+### Features
+
+* **docid:** Custom instanceof predicate (#1059) cd31434, closes #1059
+
+
+
+
+
 # [0.5.0-rc.2](/compare/@ceramicnetwork/docid@0.5.0-rc.0...@ceramicnetwork/docid@0.5.0-rc.2) (2021-02-22)
 
 **Note:** Version bump only for package @ceramicnetwork/docid
