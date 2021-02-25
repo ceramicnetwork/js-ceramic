@@ -405,8 +405,6 @@ class Ceramic implements CeramicApi {
       await this._ipfsTopology.start()
     }
 
-    await this.dispatcher.init()
-
     if (restoreDocuments) {
       await this.restoreDocuments()
     }

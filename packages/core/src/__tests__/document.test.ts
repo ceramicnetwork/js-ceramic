@@ -197,7 +197,7 @@ describe('Document', () => {
         supportedChains: ['inmemory:12345']
       }
 
-      const topology = new FakeTopology(dispatcher._ipfs, networkOptions.name)
+      const topology = new FakeTopology(dispatcher._ipfs, networkOptions.name, loggerProvider.getDiagnosticsLogger())
 
       const repository = new Repository()
       const pinStoreFactory = {
@@ -785,7 +785,7 @@ describe('Document', () => {
         pubsubTopic: '/ceramic/inmemory',
         supportedChains: ['inmemory:12345']
       }
-      const topology = new FakeTopology(dispatcher._ipfs, networkOptions.name)
+      const topology = new FakeTopology(dispatcher._ipfs, networkOptions.name, loggerProvider.getDiagnosticsLogger())
 
       const pinStoreFactory = {
         createPinStore: async() => {

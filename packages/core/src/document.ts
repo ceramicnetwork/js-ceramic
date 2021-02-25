@@ -258,7 +258,7 @@ class Document extends EventEmitter implements DocStateHolder {
       this.anchor();
     }
     if (publish) {
-      await this._publishTip()
+      this._publishTip()
     }
     if (sync) {
       await this._wait()
@@ -571,8 +571,8 @@ class Document extends EventEmitter implements DocStateHolder {
    *
    * @private
    */
-  async _publishTip (): Promise<void> {
-    await this.dispatcher.publishTip(this.id, this.tip)
+  _publishTip (): void {
+    this.dispatcher.publishTip(this.id, this.tip)
   }
 
   /**
@@ -606,7 +606,7 @@ class Document extends EventEmitter implements DocStateHolder {
                 case AnchorStatus.ANCHORED: {
                   await doc._handleTip(asr.anchorRecord);
                   await doc._updateStateIfPinned();
-                  await doc._publishTip();
+                  doc._publishTip();
                   subscription.unsubscribe();
                   return;
                 }
