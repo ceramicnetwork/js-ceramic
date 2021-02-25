@@ -52,7 +52,7 @@ export function buildQueryMessage(docId: DocID): QueryMessage {
     typ: MsgType.QUERY as MsgType.QUERY,
     doc: docId,
   };
-  const id = messageHash(payload);
+  const id = messageHash({...payload, doc: docId.toString()});
   return {
     ...payload,
     id: id,

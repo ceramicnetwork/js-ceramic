@@ -41,7 +41,7 @@ export class IncomingChannel extends Observable<IPFSPubsubMessage> {
   // Subscription attempts must be sequential, in FIFO order.
   // Last call to unsubscribe must execute after all the attempts are done,
   // and all the attempts yet inactive are cleared.
-  readonly tasks: TaskQueue = buildResubscribeQueue(this.logger);
+  readonly tasks: TaskQueue;
 
   constructor(
     readonly ipfs: IpfsApi,
@@ -70,6 +70,7 @@ export class IncomingChannel extends Observable<IPFSPubsubMessage> {
         });
       };
     });
+    this.tasks = buildResubscribeQueue(logger);
   }
 
   private async resubscribe(handler: (message: IPFSPubsubMessage) => void): Promise<void> {
