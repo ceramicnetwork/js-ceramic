@@ -1,12 +1,18 @@
 import CID from 'cids'
 import cloneDeep from 'lodash.clonedeep'
-import * as pubsubMessage from './pubsub/pubsub-message'
 import type Document from "./document"
 import { DoctypeUtils, IpfsApi, UnreachableCaseError } from '@ceramicnetwork/common';
 import DocID from "@ceramicnetwork/docid";
 import { DiagnosticsLogger, ServiceLogger } from "@ceramicnetwork/logger";
 import { Repository } from './repository';
-import { MsgType, PubsubMessage } from './pubsub/pubsub-message';
+import {
+  buildQueryMessage,
+  MsgType,
+  PubsubMessage,
+  QueryMessage,
+  ResponseMessage,
+  UpdateMessage,
+} from './pubsub/pubsub-message';
 import { Pubsub } from './pubsub/pubsub';
 import { Subscription } from 'rxjs';
 
@@ -39,7 +45,7 @@ export default class Dispatcher {
     this.repository.add(document)
 
     // Build a QUERY message to send to the pub/sub topic to request the latest tip for this document
-    const message = pubsubMessage.buildQueryMessage(document.id)
+    const message = buildQueryMessage(document.id)
 
     // Store the query id so we'll process the corresponding RESPONSE message when it comes in
     this._outstandingQueryIds[message.id] = document.id
@@ -143,7 +149,7 @@ export default class Dispatcher {
    * @param message
    * @private
    */
-  async _handleUpdateMessage(message: pubsubMessage.UpdateMessage): Promise<void> {
+  async _handleUpdateMessage(message: UpdateMessage): Promise<void> {
     // TODO Add validation the message adheres to the proper format.
 
     const { doc: docId, tip } = message
@@ -161,7 +167,7 @@ export default class Dispatcher {
    * @param message
    * @private
    */
-  async _handleQueryMessage(message: pubsubMessage.QueryMessage): Promise<void> {
+  async _handleQueryMessage(message: QueryMessage): Promise<void> {
     // TODO Add validation the message adheres to the proper format.
 
     const { doc: docId, id } = message
@@ -181,7 +187,7 @@ export default class Dispatcher {
    * @param message
    * @private
    */
-  async _handleResponseMessage(message: pubsubMessage.ResponseMessage): Promise<void> {
+  async _handleResponseMessage(message: ResponseMessage): Promise<void> {
     const { id: queryId, tips } = message
 
     if (!this._outstandingQueryIds[queryId]) {
@@ -212,7 +218,13 @@ export default class Dispatcher {
     await this.repository.close()
   }
 
-  private publish(message: pubsubMessage.PubsubMessage): Subscription {
+  /**
+   * Publish a message to IPFS pubsub as a fire-and-forget operation.
+   *
+   * You could use returned Subscription to react when the operation is finished.
+   * Feel free to disregard it though.
+   */
+  private publish(message: PubsubMessage): Subscription {
     return this.pubsub.publish(message)
   }
 }
