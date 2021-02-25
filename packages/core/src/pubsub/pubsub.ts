@@ -63,7 +63,9 @@ export class Pubsub extends Observable<PubsubMessage> {
 
   /**
    * Publish message to IPFS Pubsub as a "fire and forget" command.
-   * Returned Subscription is free to ignore.
+   *
+   * You could use returned Subscription to react when the operation is finished.
+   * Feel free to disregard it though.
    */
   publish(message: PubsubMessage): Subscription {
     return this.peerId$
