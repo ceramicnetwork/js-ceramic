@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.7.0-rc.7](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/3id-did-resolver@0.6.10...@ceramicnetwork/3id-did-resolver@0.7.0-rc.7) (2021-02-25)
+
+
+### Bug Fixes
+
+* **3id-did-resovler:** support new versionId query param ([#933](https://github.com/ceramicnetwork/js-ceramic/issues/933)) ([7b6974f](https://github.com/ceramicnetwork/js-ceramic/commit/7b6974f108747b8a67d7014d91bb3dd98fee673c))
+
+
+### Features
+
+* Unbundle DocID into DocID and CommitID ([#1009](https://github.com/ceramicnetwork/js-ceramic/issues/1009)) ([c2707f2](https://github.com/ceramicnetwork/js-ceramic/commit/c2707f212a9d23c88525b667944d24210e192f80))
+
+
+
+
+
 # [0.7.0-rc.6](/compare/@ceramicnetwork/3id-did-resolver@0.7.0-rc.5...@ceramicnetwork/3id-did-resolver@0.7.0-rc.6) (2021-02-24)
 
 **Note:** Version bump only for package @ceramicnetwork/3id-did-resolver

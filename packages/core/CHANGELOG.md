@@ -3,6 +3,31 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.20.0-rc.7](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@0.19.7...@ceramicnetwork/core@0.20.0-rc.7) (2021-02-25)
+
+
+### Bug Fixes
+
+* **core:** Generate Query id differently ([#1063](https://github.com/ceramicnetwork/js-ceramic/issues/1063)) ([c58f114](https://github.com/ceramicnetwork/js-ceramic/commit/c58f114253d50464c784e909c40dd43f89be72fb))
+* **core:** Init TaskQueue differently in IncomingChannel ([#1065](https://github.com/ceramicnetwork/js-ceramic/issues/1065)) ([d0e9af0](https://github.com/ceramicnetwork/js-ceramic/commit/d0e9af036838930ee8713697bf6c319662d9f23d))
+
+
+### Features
+
+* Feed of pubsub messages ([#1058](https://github.com/ceramicnetwork/js-ceramic/issues/1058)) ([2d2bb5c](https://github.com/ceramicnetwork/js-ceramic/commit/2d2bb5c11082bd76d495817482e8ac21af20f6e5))
+* **docid:** Custom instanceof predicate ([#1059](https://github.com/ceramicnetwork/js-ceramic/issues/1059)) ([cd31434](https://github.com/ceramicnetwork/js-ceramic/commit/cd31434dedc2a3795b98192c29ec3c6f3f7b2479))
+* Introduce Repository ([#1044](https://github.com/ceramicnetwork/js-ceramic/issues/1044)) ([7d8ef3d](https://github.com/ceramicnetwork/js-ceramic/commit/7d8ef3d47dc187728a7cb934cf2530026326f30d))
+* **cli:** Add S3StateStore ([#1041](https://github.com/ceramicnetwork/js-ceramic/issues/1041)) ([45e9d27](https://github.com/ceramicnetwork/js-ceramic/commit/45e9d27d50d3bddf3c32e331542839fda682675e))
+* **core:** Clean up Ceramic.create() and accept LoggerProvider in CeramicConfig ([#1021](https://github.com/ceramicnetwork/js-ceramic/issues/1021)) ([a53c534](https://github.com/ceramicnetwork/js-ceramic/commit/a53c534f89baab0b2a31cc8cbe9694efcc5cfa3f))
+* Unbundle DocID into DocID and CommitID ([#1009](https://github.com/ceramicnetwork/js-ceramic/issues/1009)) ([c2707f2](https://github.com/ceramicnetwork/js-ceramic/commit/c2707f212a9d23c88525b667944d24210e192f80))
+* **core:** Remove 'exists' method from StateStore API ([#1011](https://github.com/ceramicnetwork/js-ceramic/issues/1011)) ([dd58039](https://github.com/ceramicnetwork/js-ceramic/commit/dd580395c1615807eb313619058dca147d784379))
+* extract local pin api ([#991](https://github.com/ceramicnetwork/js-ceramic/issues/991)) ([bc53d72](https://github.com/ceramicnetwork/js-ceramic/commit/bc53d727045fc918e30462d3e7136699f405dbdc))
+* **core:** Add new logger package ([#878](https://github.com/ceramicnetwork/js-ceramic/issues/878)) ([9756868](https://github.com/ceramicnetwork/js-ceramic/commit/9756868697344515635ca7fd634bd214bf419948))
+
+
+
+
+
 # [0.20.0-rc.6](/compare/@ceramicnetwork/core@0.20.0-rc.5...@ceramicnetwork/core@0.20.0-rc.6) (2021-02-24)
 
 

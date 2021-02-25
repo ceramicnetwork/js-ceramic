@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.5.0-rc.4](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/docid@0.4.6...@ceramicnetwork/docid@0.5.0-rc.4) (2021-02-25)
+
+
+### Features
+
+* **docid:** Custom instanceof predicate ([#1059](https://github.com/ceramicnetwork/js-ceramic/issues/1059)) ([cd31434](https://github.com/ceramicnetwork/js-ceramic/commit/cd31434dedc2a3795b98192c29ec3c6f3f7b2479))
+* Unbundle DocID into DocID and CommitID ([#1009](https://github.com/ceramicnetwork/js-ceramic/issues/1009)) ([c2707f2](https://github.com/ceramicnetwork/js-ceramic/commit/c2707f212a9d23c88525b667944d24210e192f80))
+
+
+
+
+
 # [0.5.0-rc.3](/compare/@ceramicnetwork/docid@0.5.0-rc.2...@ceramicnetwork/docid@0.5.0-rc.3) (2021-02-24)
 
 

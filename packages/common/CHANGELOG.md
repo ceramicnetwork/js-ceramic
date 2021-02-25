@@ -3,6 +3,26 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.16.0-rc.7](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@0.15.9...@ceramicnetwork/common@0.16.0-rc.7) (2021-02-25)
+
+
+### Bug Fixes
+
+* **common:** Show timezone with anchorScheduledFor property [#897](https://github.com/ceramicnetwork/js-ceramic/issues/897) ([#951](https://github.com/ceramicnetwork/js-ceramic/issues/951)) ([be2b472](https://github.com/ceramicnetwork/js-ceramic/commit/be2b472640d35165efeb61437b83a81f29e878be))
+
+
+### Features
+
+* Feed of pubsub messages ([#1058](https://github.com/ceramicnetwork/js-ceramic/issues/1058)) ([2d2bb5c](https://github.com/ceramicnetwork/js-ceramic/commit/2d2bb5c11082bd76d495817482e8ac21af20f6e5))
+* **cli:** Add S3StateStore ([#1041](https://github.com/ceramicnetwork/js-ceramic/issues/1041)) ([45e9d27](https://github.com/ceramicnetwork/js-ceramic/commit/45e9d27d50d3bddf3c32e331542839fda682675e))
+* **core:** Clean up Ceramic.create() and accept LoggerProvider in CeramicConfig ([#1021](https://github.com/ceramicnetwork/js-ceramic/issues/1021)) ([a53c534](https://github.com/ceramicnetwork/js-ceramic/commit/a53c534f89baab0b2a31cc8cbe9694efcc5cfa3f))
+* Unbundle DocID into DocID and CommitID ([#1009](https://github.com/ceramicnetwork/js-ceramic/issues/1009)) ([c2707f2](https://github.com/ceramicnetwork/js-ceramic/commit/c2707f212a9d23c88525b667944d24210e192f80))
+* **core:** Add new logger package ([#878](https://github.com/ceramicnetwork/js-ceramic/issues/878)) ([9756868](https://github.com/ceramicnetwork/js-ceramic/commit/9756868697344515635ca7fd634bd214bf419948))
+
+
+
+
+
 # [0.16.0-rc.6](/compare/@ceramicnetwork/common@0.16.0-rc.5...@ceramicnetwork/common@0.16.0-rc.6) (2021-02-24)
 
 **Note:** Version bump only for package @ceramicnetwork/common

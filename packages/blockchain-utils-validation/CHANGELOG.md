@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.1.0-rc.3](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/blockchain-utils-validation@0.0.7...@ceramicnetwork/blockchain-utils-validation@0.1.0-rc.3) (2021-02-25)
+
+
+### Features
+
+* support near protocol ([#881](https://github.com/ceramicnetwork/js-ceramic/issues/881)) ([d50f36e](https://github.com/ceramicnetwork/js-ceramic/commit/d50f36e0ecc24d26ae90a7ee4bedbe1ee006f0f7)), closes [#880](https://github.com/ceramicnetwork/js-ceramic/issues/880)
+
+
+
+
+
 # [0.1.0-rc.2](/compare/@ceramicnetwork/blockchain-utils-validation@0.1.0-rc.0...@ceramicnetwork/blockchain-utils-validation@0.1.0-rc.2) (2021-02-22)
 
 **Note:** Version bump only for package @ceramicnetwork/blockchain-utils-validation

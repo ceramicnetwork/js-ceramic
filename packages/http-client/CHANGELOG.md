@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.10.0-rc.7](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/http-client@0.9.6...@ceramicnetwork/http-client@0.10.0-rc.7) (2021-02-25)
+
+
+### Features
+
+* **core:** Clean up Ceramic.create() and accept LoggerProvider in CeramicConfig ([#1021](https://github.com/ceramicnetwork/js-ceramic/issues/1021)) ([a53c534](https://github.com/ceramicnetwork/js-ceramic/commit/a53c534f89baab0b2a31cc8cbe9694efcc5cfa3f))
+* Unbundle DocID into DocID and CommitID ([#1009](https://github.com/ceramicnetwork/js-ceramic/issues/1009)) ([c2707f2](https://github.com/ceramicnetwork/js-ceramic/commit/c2707f212a9d23c88525b667944d24210e192f80))
+
+
+
+
+
 # [0.10.0-rc.6](/compare/@ceramicnetwork/http-client@0.10.0-rc.5...@ceramicnetwork/http-client@0.10.0-rc.6) (2021-02-24)
 
 **Note:** Version bump only for package @ceramicnetwork/http-client
