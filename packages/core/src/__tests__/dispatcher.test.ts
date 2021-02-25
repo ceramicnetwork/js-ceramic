@@ -102,10 +102,14 @@ describe('Dispatcher', () => {
 
   it('publishes tip correctly', async () => {
     const tip = new CID('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D')
-    const subscription = dispatcher.publishTip(FAKE_DOC_ID, tip)
-    subscription.add(() => { // Could be delay, but this is faster
-      expect(ipfs.pubsub.publish).toHaveBeenCalledWith(TOPIC, serialize({ typ: MsgType.UPDATE, doc: FAKE_DOC_ID, tip: tip }))
+    // Test if subscription ends. It always will, but better be on the safe side.
+    await new Promise<void>(resolve => {
+      const subscription = dispatcher.publishTip(FAKE_DOC_ID, tip)
+      subscription.add(() => { // Could be delay, but this is faster
+        resolve()
+      })
     })
+    expect(ipfs.pubsub.publish).toHaveBeenCalledWith(TOPIC, serialize({ typ: MsgType.UPDATE, doc: FAKE_DOC_ID, tip: tip }))
   })
 
   it('errors on invalid message type', async () => {
