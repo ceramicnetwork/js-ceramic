@@ -17,6 +17,7 @@ export class TaskQueue {
    * It is called when a task errors.
    * The first parameter is an error object.
    * The second parameter, if called, would re-add the task to the queue again.
+   * Useful if you know an error indicates another attempt to execute the task is necessary.
    *
    * @param onError - Common error handler.
    */
