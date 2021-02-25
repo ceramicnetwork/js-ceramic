@@ -1,5 +1,4 @@
 import { interval, Observable } from 'rxjs';
-import { Memoize } from 'typescript-memoize';
 import { IpfsApi } from '@ceramicnetwork/common';
 import { TaskQueue } from './task-queue';
 import { DiagnosticsLogger, ServiceLogger } from '@ceramicnetwork/logger';
@@ -17,21 +16,17 @@ export type IPFSPubsubMessage = {
   key: Uint8Array;
 };
 
-async function resubscribe(
-  ipfs: IpfsApi,
-  topic: string,
-  pubsubLogger: ServiceLogger,
-  handler: (message: IPFSPubsubMessage) => void,
-) {
-  const listeningTopics = await ipfs.pubsub.ls();
-  const isSubscribed = listeningTopics.includes(topic);
-  if (!isSubscribed) {
-    await ipfs.pubsub.unsubscribe(topic, handler);
-    await ipfs.pubsub.subscribe(topic, handler);
-    const ipfsId = await ipfs.id();
-    const peerId = ipfsId.id;
-    pubsubLogger.log({ peer: peerId, event: 'subscribed', topic: topic });
-  }
+function buildResubscribeQueue(logger: DiagnosticsLogger) {
+  return new TaskQueue((error, retry) => {
+    if (error.message.includes('Already subscribed')) {
+      logger.debug(error.message);
+    } else if (error.message.includes('The user aborted a request')) {
+      // For some reason the first call to pubsub.subscribe throws this error.
+      retry();
+    } else {
+      logger.err(error.message);
+    }
+  });
 }
 
 /**
@@ -43,50 +38,50 @@ async function resubscribe(
  * So, better keep it all together.
  */
 export class IncomingChannel extends Observable<IPFSPubsubMessage> {
+  // Subscription attempts must be sequential, in FIFO order.
+  // Last call to unsubscribe must execute after all the attempts are done,
+  // and all the attempts yet inactive are cleared.
+  readonly tasks: TaskQueue = buildResubscribeQueue(this.logger);
+
   constructor(
-    ipfs: IpfsApi,
-    topic: string,
-    resubscribeEvery: number,
-    pubsubLogger: ServiceLogger,
+    readonly ipfs: IpfsApi,
+    readonly topic: string,
+    readonly resubscribeEvery: number,
+    readonly pubsubLogger: ServiceLogger,
     readonly logger: DiagnosticsLogger,
   ) {
     super((subscriber) => {
       const handler = (message: IPFSPubsubMessage) => subscriber.next(message);
 
-      this.tasks.add(() => resubscribe(ipfs, topic, pubsubLogger, handler));
+      this.tasks.add(() => this.resubscribe(handler));
 
-      const ensureSubscribed = interval(resubscribeEvery).subscribe(() => {
-        this.tasks.add(() => resubscribe(ipfs, topic, pubsubLogger, handler));
+      const ensureSubscribed = interval(this.resubscribeEvery).subscribe(() => {
+        this.tasks.add(() => this.resubscribe(handler));
       });
 
       return () => {
+        // Stop single source of subscription attempts
         ensureSubscribed.unsubscribe();
         // Remove pending subscription attempts.
         this.tasks.clear();
         // Unsubscribe only after a currently running task is finished.
         this.tasks.add(async () => {
-          await ipfs.pubsub.unsubscribe(topic, handler);
+          await this.ipfs.pubsub.unsubscribe(this.topic, handler);
         });
       };
     });
   }
 
-  // We want all the tasks added to execute in FIFO order.
-  // Subscription attempts must be sequential.
-  // Last call to unsubscribe must execute after all the attempts are done,
-  // and all the attempts yet inactive are cleared.
-  @Memoize()
-  get tasks() {
-    return new TaskQueue((error, retry) => {
-      if (error.message.includes('Already subscribed')) {
-        this.logger.debug(error.message);
-      } else if (error.message.includes('The user aborted a request')) {
-        // For some reason the first call to pubsub.subscribe throws this error.
-        retry();
-      } else {
-        this.logger.err(error.message);
-      }
-    });
+  private async resubscribe(handler: (message: IPFSPubsubMessage) => void): Promise<void> {
+    const listeningTopics = await this.ipfs.pubsub.ls();
+    const isSubscribed = listeningTopics.includes(this.topic);
+    if (!isSubscribed) {
+      await this.ipfs.pubsub.unsubscribe(this.topic, handler);
+      await this.ipfs.pubsub.subscribe(this.topic, handler);
+      const ipfsId = await this.ipfs.id();
+      const peerId = ipfsId.id;
+      this.pubsubLogger.log({ peer: peerId, event: 'subscribed', topic: this.topic });
+    }
   }
 }
 
