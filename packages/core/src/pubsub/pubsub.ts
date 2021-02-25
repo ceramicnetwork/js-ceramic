@@ -4,7 +4,6 @@ import { IpfsApi } from '@ceramicnetwork/common';
 import { map, catchError, mergeMap, withLatestFrom } from 'rxjs/operators';
 import { IncomingChannel, filterOuter, IPFSPubsubMessage } from './incoming-channel';
 import { DiagnosticsLogger, ServiceLogger } from '@ceramicnetwork/logger';
-import { Memoize } from 'typescript-memoize';
 
 /**
  * Deserialize incoming message in an internal observable that does not emit if error happens.
@@ -41,6 +40,8 @@ function ipfsToPubsub(
  * Receive and publish messages to IPFS pubsub.
  */
 export class Pubsub extends Observable<PubsubMessage> {
+  private readonly peerId$: Observable<string>
+
   constructor(
     private readonly ipfs: IpfsApi,
     private readonly topic: string,
@@ -55,11 +56,9 @@ export class Pubsub extends Observable<PubsubMessage> {
         .pipe(filterOuter(this.peerId$), ipfsToPubsub(this.peerId$, pubsubLogger, topic))
         .subscribe(subscriber);
     });
-  }
-
-  @Memoize()
-  private get peerId$() {
-    return from<Promise<string>>(this.ipfs.id().then((_) => _.id));
+    // Textually, `this.peerId$` appears after it is called.
+    // Really, subscription is lazy, so `this.peerId$` is populated before the actual subscription act.
+    this.peerId$ = from<Promise<string>>(this.ipfs.id().then((_) => _.id))
   }
 
   /**
