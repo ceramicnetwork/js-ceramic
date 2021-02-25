@@ -1,6 +1,6 @@
 import { IpfsApi, LoggerProvider } from '@ceramicnetwork/common';
 import { createIPFS } from '../../__tests__/ipfs-util';
-import { IncomingChannel, filterOuter } from '../incoming-channel';
+import { IncomingChannel, filterExternal } from '../incoming-channel';
 import { delay } from './delay';
 import { asIpfsMessage } from './as-ipfs-message';
 import { MsgType } from '../pubsub-message';
@@ -128,7 +128,7 @@ describe('filterOuter', () => {
     const incoming$ = new IncomingChannel(ipfs, TOPIC, 30000, pubsubLogger, diagnosticsLogger);
     const result: any[] = [];
     const peerId$ = from(ipfs.id().then((_) => _.id));
-    const subscription = incoming$.pipe(filterOuter(peerId$)).subscribe((message) => {
+    const subscription = incoming$.pipe(filterExternal(peerId$)).subscribe((message) => {
       result.push(message);
     });
     await incoming$.tasks.onIdle(); // Wait till fully subscribed

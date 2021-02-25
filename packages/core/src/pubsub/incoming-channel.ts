@@ -87,12 +87,12 @@ export class IncomingChannel extends Observable<IPFSPubsubMessage> {
 
 /**
  * Pass only messages from other IPFS nodes.
- * @param peerId$ - Own peer id.
+ * @param ownPeerId$ - Own peer id.
  */
-export function filterOuter(peerId$: Observable<string>): MonoTypeOperatorFunction<IPFSPubsubMessage> {
+export function filterExternal(ownPeerId$: Observable<string>): MonoTypeOperatorFunction<IPFSPubsubMessage> {
   return pipe(
     concatMap((data: IPFSPubsubMessage) => {
-      return peerId$.pipe(map((peerId) => ({ isOuter: data.from !== peerId, entry: data })));
+      return ownPeerId$.pipe(map((peerId) => ({ isOuter: data.from !== peerId, entry: data })));
     }),
     // Filter the container object synchronously for the value in each data container object
     filter((data) => data.isOuter),

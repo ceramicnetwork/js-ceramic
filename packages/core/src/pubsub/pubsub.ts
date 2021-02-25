@@ -2,7 +2,7 @@ import { Observable, EMPTY, pipe, of, from, Subscription, UnaryFunction } from '
 import { deserialize, PubsubMessage, serialize } from './pubsub-message';
 import { IpfsApi } from '@ceramicnetwork/common';
 import { map, catchError, mergeMap, withLatestFrom } from 'rxjs/operators';
-import { IncomingChannel, filterOuter, IPFSPubsubMessage } from './incoming-channel';
+import { IncomingChannel, filterExternal, IPFSPubsubMessage } from './incoming-channel';
 import { DiagnosticsLogger, ServiceLogger } from '@ceramicnetwork/logger';
 
 /**
@@ -53,7 +53,7 @@ export class Pubsub extends Observable<PubsubMessage> {
       const incoming$ = new IncomingChannel(ipfs, topic, resubscribeEvery, pubsubLogger, logger);
 
       incoming$
-        .pipe(filterOuter(this.peerId$), ipfsToPubsub(this.peerId$, pubsubLogger, topic))
+        .pipe(filterExternal(this.peerId$), ipfsToPubsub(this.peerId$, pubsubLogger, topic))
         .subscribe(subscriber);
     });
     // Textually, `this.peerId$` appears after it is called.
