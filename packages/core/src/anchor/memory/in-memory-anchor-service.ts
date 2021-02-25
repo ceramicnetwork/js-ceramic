@@ -223,6 +223,10 @@ class InMemoryAnchorService implements AnchorService {
     this.#logger = this.#ceramic?.context?.loggerProvider.getDiagnosticsLogger();
   }
 
+  get url() {
+    return "<inmemory>"
+  }
+
   /**
    * Send request to the anchoring service
    * @param docId - Document ID

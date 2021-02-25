@@ -194,7 +194,6 @@ describe('Document', () => {
       const networkOptions = {
         name: 'inmemory',
         pubsubTopic: '/ceramic/inmemory',
-        supportedChains: ['inmemory:12345']
       }
 
       const topology = new FakeTopology(dispatcher._ipfs, networkOptions.name, loggerProvider.getDiagnosticsLogger())
@@ -220,6 +219,7 @@ describe('Document', () => {
         cacheDocumentCommits: true,
         docCacheLimit: 100,
         networkOptions,
+        supportedChains: ['inmemory:12345'],
         validateDocs: true,
       }
 
@@ -783,7 +783,6 @@ describe('Document', () => {
       const networkOptions = {
         name: 'inmemory',
         pubsubTopic: '/ceramic/inmemory',
-        supportedChains: ['inmemory:12345']
       }
       const topology = new FakeTopology(dispatcher._ipfs, networkOptions.name, loggerProvider.getDiagnosticsLogger())
 
@@ -808,6 +807,7 @@ describe('Document', () => {
         cacheDocumentCommits: true,
         docCacheLimit: 100,
         networkOptions,
+        supportedChains: ['inmemory:12345'],
         pinStoreOptions: null,
         validateDocs: true,
       }

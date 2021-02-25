@@ -49,6 +49,22 @@ const DEFAULT_DOC_CACHE_LIMIT = 500; // number of docs stored in the cache
 const IPFS_GET_TIMEOUT = 60000 // 1 minute
 const TESTING = process.env.NODE_ENV == 'test'
 
+const DEFAULT_ANCHOR_SERVICE_URLS = {
+  "testnet-clay": "https://cas-clay.3boxlabs.com",
+  "dev-unstable": "https://cas-dev.3boxlabs.com",
+  "local": "http://localhost:8081",
+}
+
+const DEFAULT_LOCAL_ETHEREUM_RPC = "http://localhost:7545" // default Ganache port
+
+const SUPPORTED_CHAINS_BY_NETWORK = {
+  "mainnet": ["eip155:1"], // Ethereum mainnet
+  "testnet-clay": ["eip155:3", "eip155:4"], // Ethereum Ropsten, Rinkeby
+  "dev-unstable": ["eip155:3", "eip155:4"], // Ethereum Ropsten, Rinkeby
+  "local": ["eip155:1337"], // Ganache
+  "inmemory": ["inmemory:12345"], // Our fake in-memory anchor service chainId
+}
+
 /**
  * Ceramic configuration
  */
@@ -108,16 +124,16 @@ export interface CeramicParameters {
   cacheDocumentCommits: boolean,
   docCacheLimit: number,
   networkOptions: CeramicNetworkOptions,
+  supportedChains: string[],
   validateDocs: boolean,
 }
 
 
 /**
- * Protocol options that are derived from the Ceramic network name (e.g. "mainnet", "testnet-clay", etc) specified
+ * Protocol options that are derived from the specified Ceramic network name (e.g. "mainnet", "testnet-clay", etc)
  */
 interface CeramicNetworkOptions {
   name: string, // Must be one of the supported network names
-  supportedChains: string[], // A list of CAIP-2 chainIds that are acceptable anchor proof locations
   pubsubTopic: string, // The topic that will be used for broadcasting protocol messages
 }
 
@@ -160,6 +176,7 @@ class Ceramic implements CeramicApi {
   private readonly _logger: DiagnosticsLogger
   private readonly _networkOptions: CeramicNetworkOptions
   private readonly _pinStoreFactory: PinStoreFactory
+  private readonly _supportedChains: Array<string>
   private readonly _validateDocs: boolean
 
   constructor (modules: CeramicModules, params: CeramicParameters) {
@@ -170,6 +187,7 @@ class Ceramic implements CeramicApi {
 
     this._validateDocs = params.validateDocs
     this._networkOptions = params.networkOptions
+    this._supportedChains = params.supportedChains
 
     const keyDidResolver = KeyDidResolver.getResolver()
     const threeIdResolver = ThreeIdResolver.getResolver(this)
@@ -208,7 +226,7 @@ class Ceramic implements CeramicApi {
     return this.context.did
   }
 
-  private static async _generateNetworkOptions(config: CeramicConfig, anchorService: AnchorService): Promise<CeramicNetworkOptions> {
+  private static _generateNetworkOptions(config: CeramicConfig): CeramicNetworkOptions {
     const networkName = config.networkName || DEFAULT_NETWORK
 
     if (config.pubsubTopic && (networkName !== "inmemory" && networkName !== "local")) {
@@ -216,21 +234,17 @@ class Ceramic implements CeramicApi {
     }
 
     let pubsubTopic
-    let networkChains
     switch (networkName) {
       case "mainnet": {
         pubsubTopic = "/ceramic/mainnet"
-        networkChains = ["eip155:1"] // Ethereum mainnet
         break
       }
       case "testnet-clay": {
         pubsubTopic = "/ceramic/testnet-clay"
-        networkChains = ["eip155:3", "eip155:4"] // Ethereum Ropsten, Rinkeby
         break
       }
       case "dev-unstable": {
         pubsubTopic = "/ceramic/dev-unstable"
-        networkChains = ["eip155:3", "eip155:4"] // Ethereum Ropsten, Rinkeby
         break
       }
       case "local": {
@@ -243,7 +257,6 @@ class Ceramic implements CeramicApi {
           const rand = randomUint32()
           pubsubTopic = "/ceramic/local-" + rand
         }
-        networkChains = ["eip155:1337"] // Ganache
         break
       }
       case "inmemory": {
@@ -256,7 +269,6 @@ class Ceramic implements CeramicApi {
           const rand = randomUint32()
           pubsubTopic = "/ceramic/inmemory-" + rand
         }
-        networkChains = ["inmemory:12345"] // Our fake in-memory anchor service chainId
         break
       }
       default: {
@@ -268,18 +280,31 @@ class Ceramic implements CeramicApi {
       throw new Error("Ceramic mainnet is not yet supported")
     }
 
+    return {name: networkName, pubsubTopic}
+  }
+
+  /**
+   * Given the ceramic network we are running on and the anchor service we are connected to, figure
+   * out the set of caip2 chain IDs that are supported for document anchoring
+   * @param networkName
+   * @param anchorService
+   * @private
+   */
+  private static async _loadSupportedChains(networkName: string, anchorService: AnchorService): Promise<Array<string>> {
+    const networkChains = SUPPORTED_CHAINS_BY_NETWORK[networkName]
+
     // Now that we know the set of supported chains for the specified network, get the actually
     // configured chainId from the anchorService and make sure it's valid.
     const anchorServiceChains = await anchorService.getSupportedChains()
     const usableChains = networkChains.filter(c => anchorServiceChains.includes(c))
     if (usableChains.length === 0) {
       throw new Error("No usable chainId for anchoring was found.  The ceramic network '" + networkName
-          + "' supports the chains: ['" + networkChains.join("', '")
-          + "'], but the configured anchor service '" + (config.anchorServiceURL ?? "inmemory")
-          + "' only supports the chains: ['" + anchorServiceChains.join("', '") + "']")
+        + "' supports the chains: ['" + networkChains.join("', '")
+        + "'], but the configured anchor service '" + anchorService.url
+        + "' only supports the chains: ['" + anchorServiceChains.join("', '") + "']")
     }
 
-    return {name: networkName, pubsubTopic, supportedChains: usableChains}
+    return usableChains
   }
 
   /**
@@ -310,11 +335,19 @@ class Ceramic implements CeramicApi {
 
     logger.imp(`Starting Ceramic node at version ${packageJson.version} with config: \n${JSON.stringify(this._cleanupConfigForLogging(config), null, 2)}`)
 
-    const anchorService = config.anchorServiceUrl ? new EthereumAnchorService(config) : new InMemoryAnchorService(config as any)
+    const networkOptions = Ceramic._generateNetworkOptions(config)
+
+    const anchorServiceUrl = config.anchorServiceUrl || DEFAULT_ANCHOR_SERVICE_URLS[networkOptions.name]
+    let ethereumRpcUrl = config.ethereumRpcUrl
+    if (!ethereumRpcUrl && networkOptions.name == "local") {
+      ethereumRpcUrl = DEFAULT_LOCAL_ETHEREUM_RPC
+    }
+    const anchorService = networkOptions.name != "inmemory" ? new EthereumAnchorService(anchorServiceUrl, ethereumRpcUrl) : new InMemoryAnchorService(config as any)
     await anchorService.init()
 
-    const networkOptions = await Ceramic._generateNetworkOptions(config, anchorService)
-    logger.imp(`Connecting to ceramic network '${networkOptions.name}' using pubsub topic '${networkOptions.pubsubTopic}' with supported anchor chains ['${networkOptions.supportedChains.join("','")}']`)
+    const supportedChains = await Ceramic._loadSupportedChains(networkOptions.name, anchorService)
+
+    logger.imp(`Connecting to ceramic network '${networkOptions.name}' using pubsub topic '${networkOptions.pubsubTopic}' and connecting to anchor service '${anchorService.url}' with supported anchor chains ['${supportedChains.join("','")}']`)
 
     const pinStoreOptions = {
       networkName: networkOptions.name,
@@ -332,6 +365,7 @@ class Ceramic implements CeramicApi {
       cacheDocumentCommits: config.cacheDocCommits ?? true,
       docCacheLimit: config.docCacheLimit ?? DEFAULT_DOC_CACHE_LIMIT,
       networkOptions,
+      supportedChains,
       validateDocs: config.validateDocs ?? true,
     }
 
@@ -657,7 +691,7 @@ class Ceramic implements CeramicApi {
    * documents.
    */
   async getSupportedChains(): Promise<Array<string>> {
-    return this._networkOptions.supportedChains
+    return this._supportedChains
   }
 
   /**
