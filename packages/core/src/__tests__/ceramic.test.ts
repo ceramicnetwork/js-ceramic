@@ -75,7 +75,7 @@ describe('Ceramic integration', () => {
     await ceramic.close()
   })
 
-  it.only('can close ceramic right after creating document', async () => {
+  it.only('start up then immediately shut down ceramic node', async () => {
     const ceramic = await createCeramic(ipfs1)
     await delay(1000)
     await ceramic.close()
