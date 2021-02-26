@@ -5,6 +5,7 @@ import { DoctypeUtils, DocState, Doctype, IpfsApi } from "@ceramicnetwork/common
 import { TileDoctype } from "@ceramicnetwork/doctype-tile"
 import * as u8a from 'uint8arrays'
 import { createIPFS, swarmConnect } from './ipfs-util';
+import InMemoryAnchorService from "../anchor/memory/in-memory-anchor-service";
 
 jest.mock('../store/level-state-store')
 
@@ -85,8 +86,8 @@ describe('Ceramic integration', () => {
 
   it('cannot create Ceramic instance on network not supported by our anchor service', async () => {
     const stateStoreDirectory = await tmp.tmpName()
-    await expect(Ceramic.create(ipfs1, { networkName: 'local', stateStoreDirectory, restoreDocuments: false })).rejects.toThrow(
-        "No usable chainId for anchoring was found.  The ceramic network 'local' supports the chains: ['eip155:1337'], but the configured anchor service 'inmemory' only supports the chains: ['inmemory:12345']")
+    await expect(Ceramic._loadSupportedChains("local", new InMemoryAnchorService({}))).rejects.toThrow(
+        "No usable chainId for anchoring was found.  The ceramic network 'local' supports the chains: ['eip155:1337'], but the configured anchor service '<inmemory>' only supports the chains: ['inmemory:12345']")
     await delay(1000)
   })
 

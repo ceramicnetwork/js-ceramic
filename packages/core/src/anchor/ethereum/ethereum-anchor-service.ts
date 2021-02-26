@@ -55,17 +55,16 @@ const BASE_CHAIN_ID = "eip155"
 export default class EthereumAnchorService implements AnchorService {
   private readonly requestsApiEndpoint: string;
   private readonly chainIdApiEndpoint: string;
-  private readonly ethereumRpcEndpoint: string | undefined;
   private _chainId: string;
 
   /**
-   * @param config - service configuration (polling interval, etc.)
+   * @param anchorServiceUrl
+   * @param ethereumRpcEndpoint
    */
-  constructor(config: CeramicConfig) {
-    this.requestsApiEndpoint = config.anchorServiceUrl + "/api/v0/requests";
+  constructor(readonly anchorServiceUrl: string, readonly ethereumRpcEndpoint: string) {
+    this.requestsApiEndpoint = this.anchorServiceUrl + "/api/v0/requests";
     this.chainIdApiEndpoint =
-      config.anchorServiceUrl + "/api/v0/service-info/supported_chains";
-    this.ethereumRpcEndpoint = config.ethereumRpcUrl;
+      this.anchorServiceUrl + "/api/v0/service-info/supported_chains";
   }
 
   /**
@@ -75,6 +74,10 @@ export default class EthereumAnchorService implements AnchorService {
    */
   set ceramic(ceramic: CeramicApi) {
     // Do Nothing
+  }
+
+  get url() {
+    return this.anchorServiceUrl
   }
 
     async init(): Promise<void> {

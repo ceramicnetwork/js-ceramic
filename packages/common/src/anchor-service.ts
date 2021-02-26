@@ -60,6 +60,11 @@ export interface AnchorService {
   ceramic: CeramicApi;
 
   /**
+   * URL of the connected anchor service
+   */
+  url: string;
+
+  /**
    * Request anchor commit on blockchain
    * @param docId - Document ID
    * @param tip - CID tip

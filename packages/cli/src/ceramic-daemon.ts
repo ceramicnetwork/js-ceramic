@@ -21,8 +21,6 @@ import morgan from 'morgan';
 const DEFAULT_PORT = 7007
 const toApiPath = (ending: string): string => '/api/v0' + ending
 
-const DEFAULT_ANCHOR_SERVICE_URL = "https://cas-clay.3boxlabs.com"
-
 /**
  * Daemon create options
  */
@@ -85,8 +83,6 @@ const makeCeramicConfig = function (opts: CreateOpts): CeramicConfig {
   if (opts.anchorServiceUrl) {
     ceramicConfig.ethereumRpcUrl = opts.ethereumRpcUrl
     ceramicConfig.anchorServiceUrl = opts.anchorServiceUrl
-  } else if (ceramicConfig.networkName === "testnet-clay" || ceramicConfig.networkName === "dev-unstable") {
-    ceramicConfig.anchorServiceUrl = DEFAULT_ANCHOR_SERVICE_URL
   }
 
   if (opts.pubsubTopic) {
