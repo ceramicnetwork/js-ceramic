@@ -75,6 +75,12 @@ describe('Ceramic integration', () => {
     await ceramic.close()
   })
 
+  it.only('can close ceramic right after creating document', async () => {
+    const ceramic = await createCeramic(ipfs1)
+    await delay(1000)
+    await ceramic.close()
+  })
+
   it('can create Ceramic instance explicitly on inmemory network', async () => {
     const stateStoreDirectory = await tmp.tmpName()
     const ceramic = await Ceramic.create(ipfs1, { networkName: 'inmemory', stateStoreDirectory, restoreDocuments: false })
