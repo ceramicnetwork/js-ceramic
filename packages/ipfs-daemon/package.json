@@ -38,7 +38,7 @@
     "ipfs": "0.52.2",
     "ipfs-http-gateway": "^0.3.0",
     "ipfs-http-server": "0.3.1",
-    "multiformats": "3.0.3",
+    "multiformats": "4.5.3",
     "os-utils": "^0.0.14"
   },
   "devDependencies": {
