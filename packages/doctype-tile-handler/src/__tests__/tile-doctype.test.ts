@@ -204,6 +204,26 @@ describe('TileDoctypeHandler', () => {
         expect(serialized).toEqual(signed)
     })
 
+    it('Does not sign commit if no content', async () => {
+        const commit = await TileDoctype.makeGenesis({ metadata: { controllers: [did.id] } }, context)
+        expect(commit.header.controllers[0]).toEqual(did.id)
+    })
+
+    it('Takes controller from authenticated DID if controller not specified', async () => {
+        const signedCommitWithContent = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data }, context)
+        const { jws, linkedBlock } = signedCommitWithContent as SignedCommitContainer
+        expect(jws).toBeDefined()
+        expect(linkedBlock).toBeDefined()
+
+        const payload = dagCBOR.util.deserialize(linkedBlock)
+        expect(payload.data).toEqual(RECORDS.genesis.data)
+        expect(payload.header.controllers[0]).toEqual(did.id)
+
+        const commitWithoutContent = await TileDoctype.makeGenesis({}, context)
+        expect(commitWithoutContent.data).toBeUndefined
+        expect(commitWithoutContent.header.controllers[0]).toEqual(did.id)
+    })
+
     it('throws if more than one controller', async () => {
         const record1Promised = TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id, "did:key:zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV"] }, deterministic: true }, context)
         await expect(record1Promised).rejects.toThrow(/Exactly one controller must be specified/)
