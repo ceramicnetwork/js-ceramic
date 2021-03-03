@@ -11,7 +11,7 @@ import {
   AnchorServiceResponse,
 } from "@ceramicnetwork/common";
 
-import type Dispatcher from "../../dispatcher";
+import type { Dispatcher } from "../../dispatcher";
 import Ceramic from "../../ceramic";
 import DocID from "@ceramicnetwork/docid";
 import { DiagnosticsLogger } from "@ceramicnetwork/logger";

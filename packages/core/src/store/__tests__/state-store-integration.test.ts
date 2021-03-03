@@ -1,6 +1,6 @@
 import tmp from 'tmp-promise'
 import { Document } from "../../document"
-import Dispatcher from "../../dispatcher"
+import { Dispatcher } from "../../dispatcher"
 import {Doctype, LoggerProvider} from "@ceramicnetwork/common"
 import { AnchorService } from "@ceramicnetwork/common"
 import { Context } from "@ceramicnetwork/common"
@@ -29,7 +29,7 @@ jest.mock('../../dispatcher', () => {
     return new CID(1, 'sha2-256', body)
   }
 
-  return (gossip: boolean): any => {
+  const Dispatcher = (gossip: boolean): any => {
     const pinnedDocIds: Record<string, boolean> = {}
     const recs: Record<any, any> = {}
     const docs: Record<string, Document> = {}
@@ -138,6 +138,8 @@ jest.mock('../../dispatcher', () => {
       recs,
     }
   }
+
+  return { Dispatcher }
 })
 
 const anchorUpdate = (doctype: Doctype): Promise<void> => new Promise(resolve => doctype.on('change', resolve))

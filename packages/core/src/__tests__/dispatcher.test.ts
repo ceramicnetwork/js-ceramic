@@ -1,4 +1,4 @@
-import Dispatcher  from '../dispatcher'
+import { Dispatcher }  from '../dispatcher'
 import CID from 'cids'
 import { Document } from "../document"
 import { TileDoctype } from "@ceramicnetwork/doctype-tile"

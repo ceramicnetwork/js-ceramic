@@ -23,7 +23,7 @@ const IPFS_RESUBSCRIBE_INTERVAL_DELAY = 1000 * 15 // 15 sec
 /**
  * Ceramic core Dispatcher used for handling messages from pub/sub topic.
  */
-export default class Dispatcher {
+export class Dispatcher {
   readonly pubsub: Pubsub
   readonly pubsubSubscription: Subscription
   // Set of IDs for QUERY messages we have sent to the pub/sub topic but not yet heard a

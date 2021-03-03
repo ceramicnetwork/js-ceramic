@@ -1,4 +1,4 @@
-import Dispatcher from './dispatcher'
+import { Dispatcher } from './dispatcher'
 import { Document } from './document'
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import KeyDidResolver from 'key-did-resolver'

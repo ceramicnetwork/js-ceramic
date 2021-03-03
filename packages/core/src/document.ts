@@ -1,4 +1,4 @@
-import Dispatcher from './dispatcher'
+import { Dispatcher } from './dispatcher'
 import CID from 'cids'
 import { EventEmitter } from 'events'
 import PQueue from 'p-queue'
