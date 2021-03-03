@@ -17,7 +17,7 @@ import {
 import DocID, { CommitID } from '@ceramicnetwork/docid';
 import { PinStore } from './store/pin-store';
 import { SubscriptionSet } from "./subscription-set";
-import { concatMap } from "rxjs/operators";
+import { concatMap, distinctUntilChanged } from "rxjs/operators";
 import { DiagnosticsLogger } from "@ceramicnetwork/logger";
 import { validateState } from './validate-state';
 import { BehaviorSubject } from 'rxjs'
@@ -51,8 +51,9 @@ export class Document extends EventEmitter implements DocStateHolder {
     this.state$ = new BehaviorSubject(initialState)
     const doctype = new _doctypeHandler.doctype(initialState, _context)
     this._doctype = isReadOnly ? DoctypeUtils.makeReadOnly(doctype) : doctype
-    this.state$.subscribe(state => {
-      this._doctype.state = state
+    this.state$.pipe(distinctUntilChanged()).subscribe(state => {
+      this._doctype.state = state;
+      this._doctype.emit('change');
     })
 
     this.id = new DocID(initialState.doctype, initialState.log[0].cid)
@@ -279,7 +280,6 @@ export class Document extends EventEmitter implements DocStateHolder {
       const next = await this.conflictResolution.applyTip(this.state$.value, cid);
       if (next) {
         this.state$.next(next);
-        this._doctype.emit('change');
       }
     });
   }
