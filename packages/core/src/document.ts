@@ -24,6 +24,7 @@ import { PinStore } from './store/pin-store';
 import { SubscriptionSet } from "./subscription-set";
 import { concatMap } from "rxjs/operators";
 import { DiagnosticsLogger } from "@ceramicnetwork/logger";
+import { validateState } from './validate-state';
 
 // DocOpts defaults for document load operations
 const DEFAULT_LOAD_DOCOPTS = {anchor: false, publish: false, sync: true}
@@ -83,10 +84,7 @@ export class Document extends EventEmitter implements DocStateHolder {
     doc._doctype.state = await doc._doctypeHandler.applyCommit(genesis, doc.id.cid, context)
 
     if (validate) {
-      const schema = await Document.loadSchema(context, doc._doctype)
-      if (schema) {
-        Utils.validate(doc._doctype.content, schema)
-      }
+      await validateState(doc.state, doc.content, context.api.loadDocument.bind(context.api))
     }
 
     return Document._syncDocumentToCurrent(doc, pinStore, opts)
@@ -202,10 +200,7 @@ export class Document extends EventEmitter implements DocStateHolder {
     doc._doctype.state = await doc._doctypeHandler.applyCommit(commit, doc.id.cid, context)
 
     if (validate) {
-      const schema = await Document.loadSchema(context, doc._doctype)
-      if (schema) {
-        Utils.validate(doc._doctype.content, schema)
-      }
+      await validateState(doc.state, doc.content, context.api.loadDocument.bind(context.api))
     }
 
     return doc
@@ -511,13 +506,7 @@ export class Document extends EventEmitter implements DocStateHolder {
         const isGenesis = !payload.prev
         const effectiveState = isGenesis ? tmpState : tmpState.next
         if (this._validate) {
-          const schemaId = effectiveState.metadata.schema
-          if (schemaId) {
-            const schema = await Document.loadSchemaById(this._context, schemaId)
-            if (schema) {
-              Utils.validate(effectiveState.content, schema)
-            }
-          }
+          await validateState(effectiveState, effectiveState.content, this._context.api.loadDocument.bind(this._context.api))
         }
         state = tmpState // if validation is successful
       }
