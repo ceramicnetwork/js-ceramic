@@ -173,9 +173,6 @@ export class Document extends EventEmitter implements DocStateHolder {
     // to reset the state to the state at the requested commit.
     const resetLog = doc._doctype.state.log.slice(0, commitIndex + 1)
     const resetState = await doc._applyLogToState(resetLog.map((logEntry) => logEntry.cid))
-    let doctype = new doc._doctypeHandler.doctype(null, doc._context) as T
-    doctype.state = resetState
-    doctype = DoctypeUtils.makeReadOnly<T>(doctype as T)
     return new Document(resetState, doc.dispatcher, doc.pinStore, doc._validate, doc._context, doc._doctypeHandler, true)
   }
 
