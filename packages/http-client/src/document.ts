@@ -7,7 +7,7 @@ import DocID, { CommitID } from '@ceramicnetwork/docid';
 import { fetchJson, typeDocID, delay } from './utils'
 import { CeramicClientConfig } from "./ceramic-http-client"
 
-class Document extends Doctype {
+export class Document extends Doctype {
 
   private _syncEnabled: boolean
   private readonly _syncInterval: number
@@ -108,5 +108,3 @@ class Document extends Doctype {
     this._syncEnabled = false
   }
 }
-
-export default Document
