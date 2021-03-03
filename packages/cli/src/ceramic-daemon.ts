@@ -124,6 +124,7 @@ class CeramicDaemon {
     this.logger = ceramic.context.loggerProvider.getDiagnosticsLogger()
 
     const app: core.Express = express()
+    app.set('trust proxy', true)
     app.use(express.json())
     app.use(cors({ origin: opts.corsAllowedOrigins }))
 
