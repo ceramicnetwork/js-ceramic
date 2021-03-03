@@ -1,5 +1,5 @@
 import CID from 'cids'
-import Document from '../document'
+import { Document } from '../document'
 import tmp from 'tmp-promise'
 import Dispatcher from '../dispatcher'
 import Ceramic from "../ceramic"

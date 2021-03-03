@@ -33,7 +33,7 @@ const DEFAULT_WRITE_DOCOPTS = {anchor: true, publish: true, sync: false}
 /**
  * Document handles the update logic of the Doctype instance
  */
-class Document extends EventEmitter implements DocStateHolder {
+export class Document extends EventEmitter implements DocStateHolder {
   private _genesisCid: CID
   private _applyQueue: PQueue
 
@@ -753,5 +753,3 @@ class Document extends EventEmitter implements DocStateHolder {
     return JSON.stringify(this._doctype.state.content)
   }
 }
-
-export default Document
