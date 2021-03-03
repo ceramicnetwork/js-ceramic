@@ -430,6 +430,7 @@ export class Document extends EventEmitter implements DocStateHolder {
     this.dispatcher.unregister(this.id)
 
     await this._applyQueue.onIdle()
+    this.state$.complete();
   }
 
   /**
