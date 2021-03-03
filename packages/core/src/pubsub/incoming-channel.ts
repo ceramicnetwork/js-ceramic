@@ -24,7 +24,7 @@ function buildResubscribeQueue(logger: DiagnosticsLogger) {
       // For some reason the first call to pubsub.subscribe throws this error.
       retry();
     } else {
-      logger.err(error.message);
+      logger.err(error);
     }
   });
 }

@@ -115,7 +115,7 @@ class InMemoryAnchorService implements AnchorService {
           }
           result[candidate.key].push(candidate);
         } catch (e) {
-          this.#logger.err(e.message)
+          this.#logger.err(e)
           this._failCandidate(req, e.message);
         }
       })
