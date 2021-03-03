@@ -606,36 +606,6 @@ export class Document extends EventEmitter implements DocStateHolder {
   }
 
   /**
-   * Loads schema for the Doctype
-   *
-   * @param context - Ceramic context
-   * @param doctype - Doctype instance
-   */
-  static async loadSchema<T extends Doctype>(context: Context, doctype: Doctype): Promise<T> {
-    return doctype.state?.metadata?.schema ? Document.loadSchemaById(context, doctype.state.metadata.schema) : null
-  }
-
-  /**
-   * Loads schema by ID
-   *
-   * @param context - Ceramic context
-   * @param schemaDocId - Schema document ID
-   */
-  static async loadSchemaById<T extends Doctype>(context: Context, schemaDocId: string): Promise<T> {
-    if (schemaDocId) {
-      let commitId: CommitID
-      try {
-        commitId = CommitID.fromString(schemaDocId)
-      } catch {
-        throw new Error("Commit missing when loading schema document")
-      }
-      const schemaDoc = await context.api.loadDocument(commitId)
-      return schemaDoc.content
-    }
-    return null
-  }
-
-  /**
    * Gets document content
    */
   get content (): any {
