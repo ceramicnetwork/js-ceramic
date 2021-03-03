@@ -13,7 +13,6 @@ import {
 import { validateState } from './validate-state';
 import { Dispatcher } from './dispatcher';
 import cloneDeep from 'lodash.clonedeep';
-import { Memoize } from 'typescript-memoize';
 import { CommitID } from '@ceramicnetwork/docid';
 
 /**
@@ -122,7 +121,6 @@ export class HistoryLog {
 
   constructor(private readonly dispatcher: Dispatcher, readonly items: CID[]) {}
 
-  @Memoize()
   get length(): number {
     return this.items.length;
   }
@@ -130,12 +128,10 @@ export class HistoryLog {
   /**
    * Determines if the HistoryLog includes a CID, returning true or false as appropriate.
    */
-  @Memoize()
   async includes(cid: CID): Promise<boolean> {
     return this.findIndex(cid).then((index) => index !== -1);
   }
 
-  @Memoize()
   get last(): CID {
     return this.items[this.items.length - 1];
   }
@@ -145,7 +141,6 @@ export class HistoryLog {
    *
    * @param cid - CID value
    */
-  @Memoize()
   async findIndex(cid: CID): Promise<number> {
     for (let index = 0; index < this.items.length; index++) {
       const current = this.items[index];
@@ -167,7 +162,8 @@ export class HistoryLog {
 }
 
 /**
- * Fetch log to find a connection for the given CID
+ * Fetch log to find a connection for the given CID.
+ * Expands SignedCommits and adds a CID into the log for their inner `link` records
  *
  * @param dispatcher - Get commit from IPFS
  * @param cid - Commit CID
@@ -263,8 +259,9 @@ export class ConflictResolution {
 
   /**
    * Applies the log to the state.
+   *
    * @param initialState - State to apply log to.
-   * @param initialStateLog - HistoryLog representation of the `initialState.log`
+   * @param initialStateLog - HistoryLog representation of the `initialState.log` with SignedCommits expanded out and CIDs for their `link` record included in the log.
    * @param log - commits to apply
    */
   async applyLog(initialState: DocState, initialStateLog: HistoryLog, log: Array<CID>): Promise<DocState | null> {
@@ -320,7 +317,7 @@ export class ConflictResolution {
   /**
    * Return state at `commitId` version.
    */
-  async rewind(initialState: DocState, commitId: CommitID) {
+  async rewind(initialState: DocState, commitId: CommitID): Promise<DocState> {
     // If 'commit' is ahead of 'doc', sync doc up to 'commit'
     const baseState = (await this.applyTip(initialState, commitId.commit)) || initialState;
 
@@ -328,7 +325,6 @@ export class ConflictResolution {
 
     // If 'commit' is not included in doc's log at this point, that means that conflict resolution
     // rejected it.
-    // const commitIndex = await doc._findIndex(id.commit, doc.state.log)
     const commitIndex = await baseStateLog.findIndex(commitId.commit);
     if (commitIndex < 0) {
       throw new Error(
