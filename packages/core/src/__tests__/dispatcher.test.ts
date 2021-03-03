@@ -90,7 +90,6 @@ describe('Dispatcher', () => {
       {loggerProvider},
       fakeHandler,
     )
-    // doc['_doctype'] = new TileDoctypeMock(null, {})
     await dispatcher.register(doc)
 
     const publishArgs = ipfs.pubsub.publish.mock.calls[0]
