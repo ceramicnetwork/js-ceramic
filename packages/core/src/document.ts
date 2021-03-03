@@ -24,6 +24,7 @@ import { SubscriptionSet } from "./subscription-set";
 import { concatMap } from "rxjs/operators";
 import { DiagnosticsLogger } from "@ceramicnetwork/logger";
 import { validateState } from './validate-state';
+import { BehaviorSubject } from 'rxjs'
 
 // DocOpts defaults for document load operations
 const DEFAULT_LOAD_DOCOPTS = {anchor: false, publish: false, sync: true}
@@ -34,19 +35,29 @@ const DEFAULT_WRITE_DOCOPTS = {anchor: true, publish: true, sync: false}
  * Document handles the update logic of the Doctype instance
  */
 export class Document extends EventEmitter implements DocStateHolder {
+  readonly id: DocID
   private _applyQueue: PQueue
-
+  private readonly state$: BehaviorSubject<DocState>
+  private _doctype: Doctype
   private _logger: DiagnosticsLogger
   private readonly subscriptionSet = new SubscriptionSet();
 
-  constructor (public readonly id: DocID,
+  constructor (initialState: DocState,
                public dispatcher: Dispatcher,
                public pinStore: PinStore,
                private _validate: boolean,
                private _context: Context,
                private _doctypeHandler: DoctypeHandler<Doctype>,
-               private _doctype: Doctype) {
+               private isReadOnly = false) {
     super()
+    this.state$ = new BehaviorSubject(initialState)
+    const doctype = new _doctypeHandler.doctype(initialState, _context)
+    this._doctype = isReadOnly ? DoctypeUtils.makeReadOnly(doctype) : doctype
+    this.state$.subscribe(state => {
+      this._doctype.state = state
+    })
+
+    this.id = new DocID(initialState.doctype, initialState.log[0].cid)
 
     this._logger = _context.loggerProvider.getDiagnosticsLogger()
 
@@ -75,11 +86,9 @@ export class Document extends EventEmitter implements DocStateHolder {
     // Fill 'opts' with default values for any missing fields
     opts = {...DEFAULT_WRITE_DOCOPTS, ...opts}
 
-    const doctype = new doctypeHandler.doctype(null, context) as T
-    const doc = new Document(docId, dispatcher, pinStore, validate, context, doctypeHandler, doctype)
-
     const genesis = await dispatcher.retrieveCommit(docId.cid)
-    doc._doctype.state = await doc._doctypeHandler.applyCommit(genesis, doc.id.cid, context)
+    const state = await doctypeHandler.applyCommit(genesis, docId.cid, context)
+    const doc = new Document(state, dispatcher, pinStore, validate, context, doctypeHandler)
 
     if (validate) {
       await validateState(doc.state, doc.content, context.api.loadDocument.bind(context.api))
@@ -167,7 +176,7 @@ export class Document extends EventEmitter implements DocStateHolder {
     let doctype = new doc._doctypeHandler.doctype(null, doc._context) as T
     doctype.state = resetState
     doctype = DoctypeUtils.makeReadOnly<T>(doctype as T)
-    return new Document(id.baseID, doc.dispatcher, doc.pinStore, doc._validate, doc._context, doc._doctypeHandler, doctype)
+    return new Document(resetState, doc.dispatcher, doc.pinStore, doc._validate, doc._context, doc._doctypeHandler, true)
   }
 
   /**
@@ -188,14 +197,12 @@ export class Document extends EventEmitter implements DocStateHolder {
       pinStore: PinStore,
       context: Context,
       validate: boolean) {
-    const doctype = new handler.doctype(null, context) as T
-    const doc = new Document(id, dispatcher, pinStore, validate, context, handler, doctype)
-
-    const commit = await dispatcher.retrieveCommit(doc.id.cid)
+    const commit = await dispatcher.retrieveCommit(id.cid)
     if (commit == null) {
-      throw new Error(`No genesis commit found with CID ${doc.id.cid.toString()}`)
+      throw new Error(`No genesis commit found with CID ${id.cid.toString()}`)
     }
-    doc._doctype.state = await doc._doctypeHandler.applyCommit(commit, doc.id.cid, context)
+    const state = await handler.applyCommit(commit, id.cid, context)
+    const doc = new Document(state, dispatcher, pinStore, validate, context, handler)
 
     if (validate) {
       await validateState(doc.state, doc.content, context.api.loadDocument.bind(context.api))
