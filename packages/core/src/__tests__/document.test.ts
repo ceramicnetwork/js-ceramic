@@ -276,9 +276,9 @@ describe('Document', () => {
     it('it handles commits correctly (valid, invalid, non-existent)', async () => {
       const doc = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context)
 
-      let commits = doc.allCommitIds
-      let anchorCommits = doc.anchorCommitIds
-      const commit0 = doc.commitId
+      let commits = doc.doctype.allCommitIds
+      let anchorCommits = doc.doctype.anchorCommitIds
+      const commit0 = doc.doctype.commitId
       expect(commits).toEqual([commit0])
 
       expect(commit0.equals(doc.id.atCommit(doc.id.cid))).toBeTruthy()
@@ -286,39 +286,39 @@ describe('Document', () => {
 
       await anchorUpdate(anchorService, doc)
 
-      commits = doc.allCommitIds
-      anchorCommits = doc.anchorCommitIds
+      commits = doc.doctype.allCommitIds
+      anchorCommits = doc.doctype.anchorCommitIds
       expect(commits.length).toEqual(2)
       expect(anchorCommits.length).toEqual(1)
-      const commit1 = doc.commitId
+      const commit1 = doc.doctype.commitId
       expect(commit1.equals(commit0)).toBeFalsy()
       expect(commit1).toEqual(commits[1])
       expect(commit1).toEqual(anchorCommits[0])
 
-      const updateRec = await TileDoctype._makeCommit(doc.doctype, user, newContent, doc.controllers)
+      const updateRec = await TileDoctype._makeCommit(doc.doctype, user, newContent, doc.doctype.controllers)
 
-      commits = doc.allCommitIds
-      anchorCommits = doc.anchorCommitIds
+      commits = doc.doctype.allCommitIds
+      anchorCommits = doc.doctype.anchorCommitIds
       expect(commits.length).toEqual(2)
       expect(anchorCommits.length).toEqual(1)
 
       await doc.applyCommit(updateRec)
 
-      commits = doc.allCommitIds
-      anchorCommits = doc.anchorCommitIds
+      commits = doc.doctype.allCommitIds
+      anchorCommits = doc.doctype.anchorCommitIds
       expect(commits.length).toEqual(3)
       expect(anchorCommits.length).toEqual(1)
-      const commit2 = doc.commitId
+      const commit2 = doc.doctype.commitId
       expect(commit2.equals(commit1)).toBeFalsy()
       expect(commit2).toEqual(commits[2])
 
       await anchorUpdate(anchorService, doc)
 
-      commits = doc.allCommitIds
-      anchorCommits = doc.anchorCommitIds
+      commits = doc.doctype.allCommitIds
+      anchorCommits = doc.doctype.anchorCommitIds
       expect(commits.length).toEqual(4)
       expect(anchorCommits.length).toEqual(2)
-      const commit3 = doc.commitId
+      const commit3 = doc.doctype.commitId
       expect(commit3.equals(commit2)).toBeFalsy()
       expect(commit3).toEqual(commits[3])
       expect(commit3).toEqual(anchorCommits[1])
@@ -329,14 +329,14 @@ describe('Document', () => {
 
       // Apply a final record that never gets anchored and thus never becomes a proper commit
       const finalContent = {foo: 'bar'}
-      const updateRec2 = await TileDoctype._makeCommit(doc.doctype, user, finalContent, doc.controllers)
+      const updateRec2 = await TileDoctype._makeCommit(doc.doctype, user, finalContent, doc.doctype.controllers)
       await doc.applyCommit(updateRec2)
 
-      commits = doc.allCommitIds
-      anchorCommits = doc.anchorCommitIds
+      commits = doc.doctype.allCommitIds
+      anchorCommits = doc.doctype.anchorCommitIds
       expect(commits.length).toEqual(5)
       expect(anchorCommits.length).toEqual(2)
-      const commit4 = doc.commitId
+      const commit4 = doc.doctype.commitId
       expect(commit4.equals(commit3)).toBeFalsy()
       expect(commit4).toEqual(commits[4])
       expect(commit4.equals(anchorCommits[1])).toBeFalsy()
@@ -355,41 +355,41 @@ describe('Document', () => {
       const docV0 = await doc.rewind(commit0);
       expect(docV0.id.equals(commit0.baseID)).toBeTruthy()
       expect(docV0.state.log.length).toEqual(1)
-      expect(docV0.controllers).toEqual(controllers)
+      expect(docV0.doctype.controllers).toEqual(controllers)
       expect(docV0.content).toEqual(initialContent)
       expect(docV0.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
 
       const docV1 = await doc.rewind(commit1);
       expect(docV1.id.equals(commit1.baseID)).toBeTruthy()
       expect(docV1.state.log.length).toEqual(2)
-      expect(docV1.controllers).toEqual(controllers)
+      expect(docV1.doctype.controllers).toEqual(controllers)
       expect(docV1.content).toEqual(initialContent)
       expect(docV1.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
       const docV2 = await doc.rewind(commit2);
       expect(docV2.id.equals(commit2.baseID)).toBeTruthy()
       expect(docV2.state.log.length).toEqual(3)
-      expect(docV2.controllers).toEqual(controllers)
+      expect(docV2.doctype.controllers).toEqual(controllers)
       expect(docV2.content).toEqual(newContent)
       expect(docV2.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
 
       const docV3 = await doc.rewind(commit3);
       expect(docV3.id.equals(commit3.baseID)).toBeTruthy()
       expect(docV3.state.log.length).toEqual(4)
-      expect(docV3.controllers).toEqual(controllers)
+      expect(docV3.doctype.controllers).toEqual(controllers)
       expect(docV3.content).toEqual(newContent)
       expect(docV3.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
       const docV4 = await doc.rewind(commit4);
       expect(docV4.id.equals(commit4.baseID)).toBeTruthy()
       expect(docV4.state.log.length).toEqual(5)
-      expect(docV4.controllers).toEqual(controllers)
+      expect(docV4.doctype.controllers).toEqual(controllers)
       expect(docV4.content).toEqual(finalContent)
       expect(docV4.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
 
       // try to call doctype.change on doc that's tied to a specific commit
       try {
-        await docV4.doctype.change({ content: doc.content, controllers: doc.controllers })
+        await docV4.doctype.change({ content: doc.content, controllers: doc.doctype.controllers })
         fail('Should not be able to change document that was loaded at a specific commit')
       } catch (e) {
         expect(e.message).toEqual('Historical document commits cannot be modified. Load the document without specifying a commit to make updates.')
@@ -400,7 +400,7 @@ describe('Document', () => {
       const doc = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context)
       await anchorUpdate(anchorService, doc)
 
-      const updateRec = await TileDoctype._makeCommit(doc.doctype, user, newContent, doc.controllers)
+      const updateRec = await TileDoctype._makeCommit(doc.doctype, user, newContent, doc.doctype.controllers)
       await doc.applyCommit(updateRec)
 
       await anchorUpdate(anchorService, doc)
@@ -415,7 +415,7 @@ describe('Document', () => {
       await anchorUpdate(anchorService, doc1)
       const tipPreUpdate = doc1.tip
 
-      let updateRec = await TileDoctype._makeCommit(doc1.doctype, user, newContent, doc1.controllers)
+      let updateRec = await TileDoctype._makeCommit(doc1.doctype, user, newContent, doc1.doctype.controllers)
       await doc1.applyCommit(updateRec)
 
       await anchorUpdate(anchorService, doc1)
@@ -430,7 +430,7 @@ describe('Document', () => {
       // TODO - better mock for anchors
 
       const conflictingNewContent = { asdf: 2342 }
-      updateRec = await TileDoctype._makeCommit(doc2.doctype, user, conflictingNewContent, doc2.controllers)
+      updateRec = await TileDoctype._makeCommit(doc2.doctype, user, conflictingNewContent, doc2.doctype.controllers)
       await doc2.applyCommit(updateRec)
 
       await anchorUpdate(anchorService, doc2)
@@ -459,7 +459,7 @@ describe('Document', () => {
     it('handles consecutive anchors', async () => {
       const doc = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context)
 
-      const updateRec = await TileDoctype._makeCommit(doc.doctype, user, newContent, doc.controllers)
+      const updateRec = await TileDoctype._makeCommit(doc.doctype, user, newContent, doc.doctype.controllers)
       await doc.applyCommit(updateRec)
 
       await anchorUpdate(anchorService, doc)
@@ -476,7 +476,7 @@ describe('Document', () => {
       try {
         const docParams = {
           content: {stuff: 1},
-          metadata: {controllers, schema: schemaDoc.commitId.toString()}
+          metadata: {controllers, schema: schemaDoc.doctype.commitId.toString()}
         }
         await create(docParams, ceramic, context)
         fail('Should not be able to create a document with an invalid schema')
@@ -497,7 +497,7 @@ describe('Document', () => {
       await anchorUpdate(anchorService, doc)
 
       try {
-        const updateRec = await TileDoctype._makeCommit(doc.doctype, user, null, doc.controllers, schemaDoc.commitId.toString())
+        const updateRec = await TileDoctype._makeCommit(doc.doctype, user, null, doc.doctype.controllers, schemaDoc.doctype.commitId.toString())
         await doc.applyCommit(updateRec)
         fail('Should not be able to assign a schema to a document that does not conform')
       } catch (e) {
@@ -513,13 +513,13 @@ describe('Document', () => {
       const nonConformingContent = {stuff: 1}
       const docParams = {
         content: conformingContent,
-        metadata: {controllers, schema: schemaDoc.commitId.toString()}
+        metadata: {controllers, schema: schemaDoc.doctype.commitId.toString()}
       }
       const doc = await create(docParams, ceramic, context)
       await anchorUpdate(anchorService, doc)
 
       try {
-        const updateRec = await TileDoctype._makeCommit(doc.doctype, user, nonConformingContent, doc.controllers)
+        const updateRec = await TileDoctype._makeCommit(doc.doctype, user, nonConformingContent, doc.doctype.controllers)
         await doc.applyCommit(updateRec)
         fail('Should not be able to assign a schema to a document that does not conform')
       } catch (e) {
@@ -533,14 +533,14 @@ describe('Document', () => {
 
       const docParams = {
         content: {stuff: 1},
-        metadata: {controllers, schema: schemaDoc.commitId.toString()}
+        metadata: {controllers, schema: schemaDoc.doctype.commitId.toString()}
       }
       // Create a document that isn't conforming to the schema
       const doc = await create(docParams, ceramicWithoutSchemaValidation, context)
       await anchorUpdate(anchorService, doc)
 
       expect(doc.content).toEqual({stuff:1})
-      expect(doc.metadata.schema).toEqual(schemaDoc.commitId.toString())
+      expect(doc.doctype.metadata.schema).toEqual(schemaDoc.doctype.commitId.toString())
 
       try {
         await Document.load(doc.id, doctypeHandler, dispatcher, pinStore, context, { sync: false })
@@ -648,7 +648,7 @@ describe('Document', () => {
       expect(dispatcher.publishTip).toHaveBeenCalledWith(doc1.id, doc1.tip)
       await anchorUpdate(anchorService, doc1)
 
-      const updateRec = await TileDoctype._makeCommit(doc1.doctype, user, newContent, doc1.controllers)
+      const updateRec = await TileDoctype._makeCommit(doc1.doctype, user, newContent, doc1.doctype.controllers)
       await doc1.applyCommit(updateRec)
 
       expect(doc1.content).toEqual(newContent)
@@ -666,7 +666,7 @@ describe('Document', () => {
         doc2.doctype.on('change', resolve)
       })
 
-      const updateRec = await TileDoctype._makeCommit(doc1.doctype, user, newContent, doc1.controllers)
+      const updateRec = await TileDoctype._makeCommit(doc1.doctype, user, newContent, doc1.doctype.controllers)
       await doc1.applyCommit(updateRec)
 
       expect(doc1.content).toEqual(newContent)

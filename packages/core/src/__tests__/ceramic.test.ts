@@ -85,7 +85,6 @@ describe('Ceramic integration', () => {
   })
 
   it('cannot create Ceramic instance on network not supported by our anchor service', async () => {
-    const stateStoreDirectory = await tmp.tmpName()
     await expect(Ceramic._loadSupportedChains("local", new InMemoryAnchorService({}))).rejects.toThrow(
         "No usable chainId for anchoring was found.  The ceramic network 'local' supports the chains: ['eip155:1337'], but the configured anchor service '<inmemory>' only supports the chains: ['inmemory:12345']")
     await delay(1000)

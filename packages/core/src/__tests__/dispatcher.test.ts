@@ -34,11 +34,11 @@ class TileDoctypeMock extends TileDoctype {
   get doctype() {
     return 'tile'
   }
-
-  get tip() {
-    return FAKE_CID
-  }
 }
+
+const fakeHandler = {
+  doctype: TileDoctypeMock
+} as unknown as DoctypeHandler<TileDoctypeMock>
 
 describe('Dispatcher', () => {
 
@@ -73,9 +73,6 @@ describe('Dispatcher', () => {
   })
 
   it('makes registration correctly', async () => {
-    const fakeHandler = {
-      doctype: TileDoctypeMock
-    } as unknown as DoctypeHandler<TileDoctypeMock>
     const fakeDocState = {
       doctype: 'tile',
       log: [
@@ -131,10 +128,20 @@ describe('Dispatcher', () => {
   });
 
   it('handle message correctly', async () => {
-    const fakeHandler = {
-      doctype: TileDoctypeMock
-    } as unknown as DoctypeHandler<TileDoctypeMock>
-    const fakeDocState = {
+    async function register(state: DocState) {
+      const document = new Document(
+        state,
+        dispatcher,
+        null,
+        false,
+        {loggerProvider},
+        fakeHandler
+      )
+      await dispatcher.register(document)
+      return document
+    }
+
+    const initialState = {
       doctype: 'tile',
       log: [
         {
@@ -143,15 +150,7 @@ describe('Dispatcher', () => {
         }
       ]
     } as unknown as DocState
-    const doc = new Document(
-      fakeDocState,
-      dispatcher,
-      null,
-      false,
-      {loggerProvider},
-      fakeHandler
-    )
-    await dispatcher.register(doc)
+    const doc = await register(initialState)
 
     // Store the query ID sent when the doc is registered so we can use it as the response ID later
     const publishArgs = ipfs.pubsub.publish.mock.calls[0]
@@ -164,12 +163,18 @@ describe('Dispatcher', () => {
     await dispatcher.handleMessage({ typ: MsgType.UPDATE, doc: FAKE_DOC_ID, tip: FAKE_CID })
     expect(await updatePromise).toEqual(FAKE_CID)
 
-    // Handle QUERY message
+    const continuationState = {
+      ...initialState, log: initialState.log.concat({
+        cid: FAKE_CID,
+        type: CommitType.SIGNED,
+      }),
+    } as unknown as DocState;
+    const doc2 = await register(continuationState)
     await dispatcher.handleMessage({ typ: MsgType.QUERY, doc: FAKE_DOC_ID, id: "1" })
     expect(ipfs.pubsub.publish).lastCalledWith(TOPIC, serialize({ typ: MsgType.RESPONSE, id: "1", tips: new Map().set(FAKE_DOC_ID.toString(), FAKE_CID) }))
 
     // Handle RESPONSE message
-    const updatePromise2 = new Promise(resolve => doc.on('update', resolve))
+    const updatePromise2 = new Promise(resolve => doc2.on('update', resolve))
     const tips = new Map().set(FAKE_DOC_ID.toString(), FAKE_CID2)
     await dispatcher.handleMessage({ typ: MsgType.RESPONSE, id: queryID, tips: tips })
     expect(await updatePromise2).toEqual(FAKE_CID2)

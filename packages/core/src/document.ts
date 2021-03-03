@@ -371,33 +371,8 @@ export class Document extends EventEmitter implements DocStateHolder {
    * Gets document Tip commit CID
    */
   get tip (): CID {
-    return this._doctype.tip
-  }
-
-  /**
-   * Gets document controllers
-   */
-  get controllers (): string[] {
-    return this._doctype.controllers
-  }
-
-  /**
-   * Gets document metadata
-   */
-  get metadata (): DocMetadata {
-    return this._doctype.metadata
-  }
-
-  get commitId(): CommitID {
-    return this._doctype.commitId
-  }
-
-  get allCommitIds(): Array<CommitID> {
-    return this._doctype.allCommitIds
-  }
-
-  get anchorCommitIds(): Array<CommitID> {
-    return this._doctype.anchorCommitIds
+    const log = this.state$.value.log
+    return log[log.length - 1].cid
   }
 
   /**
