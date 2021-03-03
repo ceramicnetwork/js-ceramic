@@ -34,7 +34,6 @@ const DEFAULT_WRITE_DOCOPTS = {anchor: true, publish: true, sync: false}
  * Document handles the update logic of the Doctype instance
  */
 export class Document extends EventEmitter implements DocStateHolder {
-  private _genesisCid: CID
   private _applyQueue: PQueue
 
   private _logger: DiagnosticsLogger
@@ -53,7 +52,6 @@ export class Document extends EventEmitter implements DocStateHolder {
     this._logger = _context.loggerProvider.getDiagnosticsLogger()
 
     this._applyQueue = new PQueue({ concurrency: 1 })
-    this._genesisCid = id.cid
   }
 
   /**
@@ -82,7 +80,7 @@ export class Document extends EventEmitter implements DocStateHolder {
     const doc = new Document(docId, dispatcher, pinStore, validate, context, doctypeHandler, doctype)
 
     const genesis = await dispatcher.retrieveCommit(docId.cid)
-    doc._doctype.state = await doc._doctypeHandler.applyCommit(genesis, doc._genesisCid, context)
+    doc._doctype.state = await doc._doctypeHandler.applyCommit(genesis, doc.id.cid, context)
 
     if (validate) {
       const schema = await Document.loadSchema(context, doc._doctype)
@@ -197,11 +195,11 @@ export class Document extends EventEmitter implements DocStateHolder {
     const doctype = new handler.doctype(null, context) as T
     const doc = new Document(id, dispatcher, pinStore, validate, context, handler, doctype)
 
-    const commit = await dispatcher.retrieveCommit(doc._genesisCid)
+    const commit = await dispatcher.retrieveCommit(doc.id.cid)
     if (commit == null) {
-      throw new Error(`No genesis commit found with CID ${doc._genesisCid.toString()}`)
+      throw new Error(`No genesis commit found with CID ${doc.id.cid.toString()}`)
     }
-    doc._doctype.state = await doc._doctypeHandler.applyCommit(commit, doc._genesisCid, context)
+    doc._doctype.state = await doc._doctypeHandler.applyCommit(commit, doc.id.cid, context)
 
     if (validate) {
       const schema = await Document.loadSchema(context, doc._doctype)
