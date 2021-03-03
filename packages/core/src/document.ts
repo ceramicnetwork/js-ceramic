@@ -155,28 +155,11 @@ export class Document extends EventEmitter implements DocStateHolder {
    * known current version of the document, throws an error. Intentionally does not register the new
    * document so that it does not get notifications about newer commits, since we want it tied to a
    * specific commit.
-   * @param id - DocID of the document including the requested commit
-   * @param doc - Most current version of the document that we know about
+   * @param commitId - DocID of the document including the requested commit
    */
-  static async loadAtCommit<T extends Doctype> (
-      id: CommitID,
-      doc: Document): Promise<Document> {
-
-    // If 'commit' is ahead of 'doc', sync doc up to 'commit'
-    await doc._handleTip(id.commit)
-
-    // If 'commit' is not included in doc's log at this point, that means that conflict resolution
-    // rejected it.
-    const commitIndex = await doc._findIndex(id.commit, doc._doctype.state.log)
-    if (commitIndex < 0) {
-      throw new Error(`Requested commit CID ${id.commit.toString()} not found in the log for document ${id.baseID.toString()}`)
-    }
-
-    // If the requested commit is included in the log, but isn't the most recent commit, we need
-    // to reset the state to the state at the requested commit.
-    const resetLog = doc._doctype.state.log.slice(0, commitIndex + 1)
-    const resetState = await doc._applyLogToState(resetLog.map((logEntry) => logEntry.cid))
-    return new Document(resetState, doc.dispatcher, doc.pinStore, doc._validate, doc._context, doc._doctypeHandler, true)
+  async rewind(commitId: CommitID): Promise<Document> {
+    const resetState = await this.conflictResolution.rewind(this.state$.value, commitId)
+    return new Document(resetState, this.dispatcher, this.pinStore, this._validate, this._context, this._doctypeHandler, true)
   }
 
   /**

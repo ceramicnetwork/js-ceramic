@@ -682,7 +682,7 @@ class Ceramic implements CeramicApi {
       return doc
     } else {
       // Here CommitID is requested, let's return document at specific commit
-      return Document.loadAtCommit(docRef, doc)
+      return doc.rewind(docRef)
     }
   }
 

@@ -347,42 +347,42 @@ describe('Document', () => {
       // try to load a non-existing commit
       const nonExistentCommitID = doc.id.atCommit(new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu'))
       try {
-        await Document.loadAtCommit(nonExistentCommitID, doc)
+        await doc.rewind(nonExistentCommitID)
         fail('Should not be able to fetch non-existing commit')
       } catch (e) {
         expect(e.message).toContain(`No commit found for CID ${nonExistentCommitID.commit?.toString()}`)
       }
 
       // Correctly check out a specific commit
-      const docV0 = await Document.loadAtCommit(commit0, doc)
+      const docV0 = await doc.rewind(commit0);
       expect(docV0.id.equals(commit0.baseID)).toBeTruthy()
       expect(docV0.state.log.length).toEqual(1)
       expect(docV0.controllers).toEqual(controllers)
       expect(docV0.content).toEqual(initialContent)
       expect(docV0.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
 
-      const docV1 = await Document.loadAtCommit(commit1, doc)
+      const docV1 = await doc.rewind(commit1);
       expect(docV1.id.equals(commit1.baseID)).toBeTruthy()
       expect(docV1.state.log.length).toEqual(2)
       expect(docV1.controllers).toEqual(controllers)
       expect(docV1.content).toEqual(initialContent)
       expect(docV1.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
-      const docV2 = await Document.loadAtCommit(commit2, doc)
+      const docV2 = await doc.rewind(commit2);
       expect(docV2.id.equals(commit2.baseID)).toBeTruthy()
       expect(docV2.state.log.length).toEqual(3)
       expect(docV2.controllers).toEqual(controllers)
       expect(docV2.content).toEqual(newContent)
       expect(docV2.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
 
-      const docV3 = await Document.loadAtCommit(commit3, doc)
+      const docV3 = await doc.rewind(commit3);
       expect(docV3.id.equals(commit3.baseID)).toBeTruthy()
       expect(docV3.state.log.length).toEqual(4)
       expect(docV3.controllers).toEqual(controllers)
       expect(docV3.content).toEqual(newContent)
       expect(docV3.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
-      const docV4 = await Document.loadAtCommit(commit4, doc)
+      const docV4 = await doc.rewind(commit4);
       expect(docV4.id.equals(commit4.baseID)).toBeTruthy()
       expect(docV4.state.log.length).toEqual(5)
       expect(docV4.controllers).toEqual(controllers)
@@ -449,11 +449,11 @@ describe('Document', () => {
       expect(doc1.content).toEqual(newContent)
 
       // Loading valid commit works
-      const docAtValidCommit = await Document.loadAtCommit(docId.atCommit(tipValidUpdate), doc1)
+      const docAtValidCommit = await doc1.rewind(docId.atCommit(tipValidUpdate));
       expect(docAtValidCommit.content).toEqual(newContent)
 
       // Loading invalid commit fails
-      await expect(Document.loadAtCommit(docId.atCommit(tipInvalidUpdate), doc1)).rejects.toThrow(
+      await expect(doc1.rewind(docId.atCommit(tipInvalidUpdate))).rejects.toThrow(
           `Requested commit CID ${tipInvalidUpdate.toString()} not found in the log for document ${docId.toString()}`
       )
     })
