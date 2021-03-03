@@ -3,7 +3,6 @@ import CID from 'cids'
 import { EventEmitter } from 'events'
 import PQueue from 'p-queue'
 import cloneDeep from 'lodash.clonedeep'
-import Utils from './utils'
 import {
   AnchorProof,
   AnchorCommit,
@@ -38,7 +37,6 @@ export class Document extends EventEmitter implements DocStateHolder {
   private _applyQueue: PQueue
 
   private _logger: DiagnosticsLogger
-  private _isProcessing: boolean
   private readonly subscriptionSet = new SubscriptionSet();
 
   constructor (public readonly id: DocID,
@@ -281,8 +279,6 @@ export class Document extends EventEmitter implements DocStateHolder {
       await this._handleTip(cid)
     } catch (e) {
       this._logger.err(e)
-    } finally {
-      this._isProcessing = false
     }
   }
 
@@ -293,20 +289,15 @@ export class Document extends EventEmitter implements DocStateHolder {
    * @private
    */
   async _handleTip(cid: CID): Promise<void> {
-    try {
-      this._isProcessing = true
-      await this._applyQueue.add(async () => {
-        const log = await this._fetchLog(cid)
-        if (log.length) {
-          const updated = await this._applyLog(log)
-          if (updated) {
-            this._doctype.emit('change')
-          }
+    await this._applyQueue.add(async () => {
+      const log = await this._fetchLog(cid)
+      if (log.length) {
+        const updated = await this._applyLog(log)
+        if (updated) {
+          this._doctype.emit('change')
         }
-      })
-    } finally {
-      this._isProcessing = false
-    }
+      }
+    })
   }
 
   /**
@@ -728,9 +719,7 @@ export class Document extends EventEmitter implements DocStateHolder {
 
     this.dispatcher.unregister(this.id)
 
-    await this._applyQueue.onEmpty()
-
-    await Utils.awaitCondition(() => this._isProcessing, () => false, 500)
+    await this._applyQueue.onIdle()
   }
 
   /**
