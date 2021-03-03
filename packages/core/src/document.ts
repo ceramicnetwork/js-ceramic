@@ -91,7 +91,7 @@ export class Document extends EventEmitter implements DocStateHolder {
     const doc = new Document(state, dispatcher, pinStore, validate, context, doctypeHandler)
 
     if (validate) {
-      await validateState(doc.state, doc.content, context.api.loadDocument.bind(context.api))
+      await validateState(doc.state, doc.doctype.content, context.api.loadDocument.bind(context.api))
     }
 
     return Document._syncDocumentToCurrent(doc, pinStore, opts)
@@ -185,7 +185,7 @@ export class Document extends EventEmitter implements DocStateHolder {
     const doc = new Document(state, dispatcher, pinStore, validate, context, handler)
 
     if (validate) {
-      await validateState(doc.state, doc.content, context.api.loadDocument.bind(context.api))
+      await validateState(doc.state, doc.doctype.content, context.api.loadDocument.bind(context.api))
     }
 
     return doc
@@ -346,14 +346,6 @@ export class Document extends EventEmitter implements DocStateHolder {
   }
 
   /**
-   * Gets document content
-   */
-  get content (): any {
-    const { next, content } = this._doctype.state
-    return next?.content ?? content
-  }
-
-  /**
    * Gets document state
    */
   get state (): DocState {
@@ -412,6 +404,6 @@ export class Document extends EventEmitter implements DocStateHolder {
    * Serializes the document content
    */
   toString (): string {
-    return JSON.stringify(this._doctype.state.content)
+    return JSON.stringify(this.state$.value.content)
   }
 }

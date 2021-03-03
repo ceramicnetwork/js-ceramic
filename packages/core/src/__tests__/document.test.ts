@@ -240,7 +240,7 @@ describe('Document', () => {
     it('is created correctly', async () => {
       const doc = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context)
 
-      expect(doc.content).toEqual(initialContent)
+      expect(doc.doctype.content).toEqual(initialContent)
       expect(dispatcher.register).toHaveBeenCalledWith(doc)
       expect(doc.state.anchorStatus).toEqual(AnchorStatus.PENDING)
       await anchorUpdate(anchorService, doc)
@@ -252,7 +252,7 @@ describe('Document', () => {
       const doc2 = await Document.load(doc1.id, doctypeHandler, dispatcher, pinStore, context, { sync: false })
 
       expect(doc1.id).toEqual(doc2.id)
-      expect(doc1.content).toEqual(initialContent)
+      expect(doc1.doctype.content).toEqual(initialContent)
       expect(doc1.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
     })
 
@@ -263,14 +263,14 @@ describe('Document', () => {
       const log = tmpDoc.state.log
       const doc = await Document.load(docId, doctypeHandler, dispatcher, pinStore, context, { sync: false })
       // changes will not load since no network and no local tip storage yet
-      expect(doc.content).toEqual(initialContent)
+      expect(doc.doctype.content).toEqual(initialContent)
       expect(doc.state).toEqual(expect.objectContaining({ signature: SignatureStatus.SIGNED, anchorStatus: 0 }))
       // _handleTip is intended to be called by the dispatcher
       // should return a promise that resolves when tip is added
       await doc._handleTip(log[1].cid)
       expect(doc.state.signature).toEqual(SignatureStatus.SIGNED)
       expect(doc.state.anchorStatus).not.toEqual(AnchorStatus.NOT_REQUESTED)
-      expect(doc.content).toEqual(initialContent)
+      expect(doc.doctype.content).toEqual(initialContent)
     })
 
     it('it handles commits correctly (valid, invalid, non-existent)', async () => {
@@ -323,7 +323,7 @@ describe('Document', () => {
       expect(commit3).toEqual(commits[3])
       expect(commit3).toEqual(anchorCommits[1])
 
-      expect(doc.content).toEqual(newContent)
+      expect(doc.doctype.content).toEqual(newContent)
       expect(doc.state.signature).toEqual(SignatureStatus.SIGNED)
       expect(doc.state.anchorStatus).not.toEqual(AnchorStatus.NOT_REQUESTED)
 
@@ -356,40 +356,40 @@ describe('Document', () => {
       expect(docV0.id.equals(commit0.baseID)).toBeTruthy()
       expect(docV0.state.log.length).toEqual(1)
       expect(docV0.doctype.controllers).toEqual(controllers)
-      expect(docV0.content).toEqual(initialContent)
+      expect(docV0.doctype.content).toEqual(initialContent)
       expect(docV0.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
 
       const docV1 = await doc.rewind(commit1);
       expect(docV1.id.equals(commit1.baseID)).toBeTruthy()
       expect(docV1.state.log.length).toEqual(2)
       expect(docV1.doctype.controllers).toEqual(controllers)
-      expect(docV1.content).toEqual(initialContent)
+      expect(docV1.doctype.content).toEqual(initialContent)
       expect(docV1.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
       const docV2 = await doc.rewind(commit2);
       expect(docV2.id.equals(commit2.baseID)).toBeTruthy()
       expect(docV2.state.log.length).toEqual(3)
       expect(docV2.doctype.controllers).toEqual(controllers)
-      expect(docV2.content).toEqual(newContent)
+      expect(docV2.doctype.content).toEqual(newContent)
       expect(docV2.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
 
       const docV3 = await doc.rewind(commit3);
       expect(docV3.id.equals(commit3.baseID)).toBeTruthy()
       expect(docV3.state.log.length).toEqual(4)
       expect(docV3.doctype.controllers).toEqual(controllers)
-      expect(docV3.content).toEqual(newContent)
+      expect(docV3.doctype.content).toEqual(newContent)
       expect(docV3.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
       const docV4 = await doc.rewind(commit4);
       expect(docV4.id.equals(commit4.baseID)).toBeTruthy()
       expect(docV4.state.log.length).toEqual(5)
       expect(docV4.doctype.controllers).toEqual(controllers)
-      expect(docV4.content).toEqual(finalContent)
+      expect(docV4.doctype.content).toEqual(finalContent)
       expect(docV4.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
 
       // try to call doctype.change on doc that's tied to a specific commit
       try {
-        await docV4.doctype.change({ content: doc.content, controllers: doc.doctype.controllers })
+        await docV4.doctype.change({ content: doc.doctype.content, controllers: doc.doctype.controllers })
         fail('Should not be able to change document that was loaded at a specific commit')
       } catch (e) {
         expect(e.message).toEqual('Historical document commits cannot be modified. Load the document without specifying a commit to make updates.')
@@ -404,7 +404,7 @@ describe('Document', () => {
       await doc.applyCommit(updateRec)
 
       await anchorUpdate(anchorService, doc)
-      expect(doc.content).toEqual(newContent)
+      expect(doc.doctype.content).toEqual(newContent)
       expect(doc.state.signature).toEqual(SignatureStatus.SIGNED)
       expect(doc.state.anchorStatus).not.toEqual(AnchorStatus.NOT_REQUESTED)
     })
@@ -419,7 +419,7 @@ describe('Document', () => {
       await doc1.applyCommit(updateRec)
 
       await anchorUpdate(anchorService, doc1)
-      expect(doc1.content).toEqual(newContent)
+      expect(doc1.doctype.content).toEqual(newContent)
       const tipValidUpdate = doc1.tip
       // create invalid change that happened after main change
       const doc2 = await Document.load(docId, doctypeHandler, dispatcher, pinStore, context, { sync: false })
@@ -435,20 +435,20 @@ describe('Document', () => {
 
       await anchorUpdate(anchorService, doc2)
       const tipInvalidUpdate = doc2.tip
-      expect(doc2.content).toEqual(conflictingNewContent)
+      expect(doc2.doctype.content).toEqual(conflictingNewContent)
       // loading tip from valid log to doc with invalid
       // log results in valid state
       await doc2._handleTip(tipValidUpdate)
-      expect(doc2.content).toEqual(newContent)
+      expect(doc2.doctype.content).toEqual(newContent)
 
       // loading tip from invalid log to doc with valid
       // log results in valid state
       await doc1._handleTip(tipInvalidUpdate)
-      expect(doc1.content).toEqual(newContent)
+      expect(doc1.doctype.content).toEqual(newContent)
 
       // Loading valid commit works
       const docAtValidCommit = await doc1.rewind(docId.atCommit(tipValidUpdate));
-      expect(docAtValidCommit.content).toEqual(newContent)
+      expect(docAtValidCommit.doctype.content).toEqual(newContent)
 
       // Loading invalid commit fails
       await expect(doc1.rewind(docId.atCommit(tipInvalidUpdate))).rejects.toThrow(
@@ -463,7 +463,7 @@ describe('Document', () => {
       await doc.applyCommit(updateRec)
 
       await anchorUpdate(anchorService, doc)
-      expect(doc.content).toEqual(newContent)
+      expect(doc.doctype.content).toEqual(newContent)
       expect(doc.state.log).toHaveLength(3)
       expect(doc.state.signature).toEqual(SignatureStatus.SIGNED)
       expect(doc.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
@@ -539,7 +539,7 @@ describe('Document', () => {
       const doc = await create(docParams, ceramicWithoutSchemaValidation, context)
       await anchorUpdate(anchorService, doc)
 
-      expect(doc.content).toEqual({stuff:1})
+      expect(doc.doctype.content).toEqual({stuff:1})
       expect(doc.doctype.metadata.schema).toEqual(schemaDoc.doctype.commitId.toString())
 
       try {
@@ -651,7 +651,7 @@ describe('Document', () => {
       const updateRec = await TileDoctype._makeCommit(doc1.doctype, user, newContent, doc1.doctype.controllers)
       await doc1.applyCommit(updateRec)
 
-      expect(doc1.content).toEqual(newContent)
+      expect(doc1.doctype.content).toEqual(newContent)
 
       expect(dispatcher.publishTip).toHaveBeenCalledTimes(3)
       expect(dispatcher.publishTip).toHaveBeenCalledWith(doc1.id, doc1.tip)
@@ -669,10 +669,10 @@ describe('Document', () => {
       const updateRec = await TileDoctype._makeCommit(doc1.doctype, user, newContent, doc1.doctype.controllers)
       await doc1.applyCommit(updateRec)
 
-      expect(doc1.content).toEqual(newContent)
+      expect(doc1.doctype.content).toEqual(newContent)
 
       await updatePromise
-      expect(doc2.content).toEqual(newContent)
+      expect(doc2.doctype.content).toEqual(newContent)
     })
 
     it('should publish tip on network request', async () => {
