@@ -25,6 +25,7 @@ import { concatMap } from "rxjs/operators";
 import { DiagnosticsLogger } from "@ceramicnetwork/logger";
 import { validateState } from './validate-state';
 import { BehaviorSubject } from 'rxjs'
+import { ConflictResolution } from './conflict-resolution';
 
 // DocOpts defaults for document load operations
 const DEFAULT_LOAD_DOCOPTS = {anchor: false, publish: false, sync: true}
@@ -41,6 +42,7 @@ export class Document extends EventEmitter implements DocStateHolder {
   private _doctype: Doctype
   private _logger: DiagnosticsLogger
   private readonly subscriptionSet = new SubscriptionSet();
+  private readonly conflictResolution: ConflictResolution;
 
   constructor (initialState: DocState,
                public dispatcher: Dispatcher,
@@ -62,6 +64,7 @@ export class Document extends EventEmitter implements DocStateHolder {
     this._logger = _context.loggerProvider.getDiagnosticsLogger()
 
     this._applyQueue = new PQueue({ concurrency: 1 })
+    this.conflictResolution = new ConflictResolution(_context, dispatcher, _doctypeHandler, _validate);
   }
 
   /**
@@ -294,14 +297,12 @@ export class Document extends EventEmitter implements DocStateHolder {
    */
   async _handleTip(cid: CID): Promise<void> {
     await this._applyQueue.add(async () => {
-      const log = await this._fetchLog(cid)
-      if (log.length) {
-        const updated = await this._applyLog(log)
-        if (updated) {
-          this._doctype.emit('change')
-        }
+      const next = await this.conflictResolution.applyTip(this.state$.value, cid);
+      if (next) {
+        this.state$.next(next);
+        this._doctype.emit('change');
       }
-    })
+    });
   }
 
   /**
