@@ -285,14 +285,14 @@ describe('Ceramic anchoring', () => {
       // doctype1 anchors successfully, doctype2 fails to anchor
       // doctype1 sends a tip, doctype2 updates state based on the tip
       // so we wait till doctype2 handles the tip and changes anchorStatus to anchored
-      await TestUtils.waitForState(doctype2, 1000, state => state.anchorStatus === AnchorStatus.ANCHORED, () => {
+      await TestUtils.waitForState(doctype2, 2000, state => state.anchorStatus === AnchorStatus.ANCHORED, () => {
         throw new Error(`doctype2 not anchored still`)
       })
     } else {
       // doctype2 anchors successfully, doctype1 fails to anchor
       // doctype2 sends a tip, doctype1 updates state based on the tip
       // so we wait till doctype1 handles the tip and changes anchorStatus to anchored
-      await TestUtils.waitForState(doctype1, 1000, state => state.anchorStatus === AnchorStatus.ANCHORED, () => {
+      await TestUtils.waitForState(doctype1, 2000, state => state.anchorStatus === AnchorStatus.ANCHORED, () => {
         throw new Error(`doctype1 not anchored still`)
       })
     }
