@@ -39,8 +39,7 @@ const ceramicMockWithIDX = {
         publicKeys: {
           [signing.slice(-15)]: signing,
           [encryption.slice(-15)]: encryption,
-        },
-        idx: 'ceramic://rootId'
+        }
       }
     }
   }
