@@ -158,9 +158,9 @@ describe('Dispatcher', () => {
     const queryID = queryMessageSent.id
 
     // Handle UPDATE message
-    const updatePromise = new Promise(resolve => doc.on('update', resolve))
+    doc._update = jest.fn()
     await dispatcher.handleMessage({ typ: MsgType.UPDATE, doc: FAKE_DOC_ID, tip: FAKE_CID })
-    expect(await updatePromise).toEqual(FAKE_CID)
+    expect(doc._update).toBeCalledWith(FAKE_CID)
 
     const continuationState = {
       ...initialState, log: initialState.log.concat({
@@ -173,9 +173,9 @@ describe('Dispatcher', () => {
     expect(ipfs.pubsub.publish).lastCalledWith(TOPIC, serialize({ typ: MsgType.RESPONSE, id: "1", tips: new Map().set(FAKE_DOC_ID.toString(), FAKE_CID) }))
 
     // Handle RESPONSE message
-    const updatePromise2 = new Promise(resolve => doc2.on('update', resolve))
+    doc2._update = jest.fn()
     const tips = new Map().set(FAKE_DOC_ID.toString(), FAKE_CID2)
     await dispatcher.handleMessage({ typ: MsgType.RESPONSE, id: queryID, tips: tips })
-    expect(await updatePromise2).toEqual(FAKE_CID2)
+    expect(doc2._update).toBeCalledWith(FAKE_CID2)
   })
 })

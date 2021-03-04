@@ -157,7 +157,7 @@ export class Dispatcher {
       // TODO: add cache of cids here so that we don't emit event
       // multiple times if we get the message more than once.
       const document = await this.repository.get(docId)
-      document.emit('update', new CID(tip))
+      await document._update(tip)
       // TODO: Handle 'anchorService' if present in message
     }
   }
@@ -204,7 +204,7 @@ export class Dispatcher {
       }
       if (await this.repository.has(expectedDocID)) {
         const document = await this.repository.get(expectedDocID)
-        document.emit('update', new CID(newTip))
+        await document._update(newTip)
         // TODO Iterate over all documents in 'tips' object and process the new tip for each
       }
     }

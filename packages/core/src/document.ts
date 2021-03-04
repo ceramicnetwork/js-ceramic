@@ -1,6 +1,5 @@
 import { Dispatcher } from './dispatcher'
 import CID from 'cids'
-import { EventEmitter } from 'events'
 import PQueue from 'p-queue'
 import {
   AnchorStatus,
@@ -30,7 +29,7 @@ const DEFAULT_WRITE_DOCOPTS = {anchor: true, publish: true, sync: false}
 /**
  * Document handles the update logic of the Doctype instance
  */
-export class Document extends EventEmitter implements DocStateHolder {
+export class Document implements DocStateHolder {
   readonly id: DocID
   private _applyQueue: PQueue
   private readonly state$: BehaviorSubject<DocState>
@@ -46,7 +45,6 @@ export class Document extends EventEmitter implements DocStateHolder {
                private _context: Context,
                private _doctypeHandler: DoctypeHandler<Doctype>,
                private isReadOnly = false) {
-    super()
     this.state$ = new BehaviorSubject(initialState)
     const doctype = new _doctypeHandler.doctype(initialState, _context)
     this._doctype = isReadOnly ? DoctypeUtils.makeReadOnly(doctype) : doctype
@@ -214,8 +212,6 @@ export class Document extends EventEmitter implements DocStateHolder {
    * @private
    */
   async _register (opts: DocOpts): Promise<void> {
-    this.on('update', this._update)
-
     await this.dispatcher.register(this)
 
     await this._applyOpts(opts)
@@ -387,7 +383,6 @@ export class Document extends EventEmitter implements DocStateHolder {
    */
   async close (): Promise<void> {
     this.subscriptionSet.close();
-    this.off('update', this._update)
 
     this.dispatcher.unregister(this.id)
 
