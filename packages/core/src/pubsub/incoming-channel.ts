@@ -30,6 +30,11 @@ function buildResubscribeQueue(logger: DiagnosticsLogger) {
 }
 
 /**
+ * How many attempts for connection to do if IPFS is considered stopped before giving up.
+ */
+const ATTEMPTS_BEFORE_ERROR = 3
+
+/**
  * Incoming IPFS PubSub message stream as Observable.
  * Ensures that ipfs subscription to a topic is live by periodically re-subscribing.
  *
@@ -54,12 +59,17 @@ export class IncomingChannel extends Observable<IPFSPubsubMessage> {
       const handler = (message: IPFSPubsubMessage) => subscriber.next(message);
 
       this.tasks.add(() => this.resubscribe(handler));
+      let attemptsRemaining = ATTEMPTS_BEFORE_ERROR;
 
       const ensureSubscribed = interval(this.resubscribeEvery).subscribe(() => {
         if (this.isIpfsRunning) {
           this.tasks.add(() => this.resubscribe(handler));
         } else {
-          subscriber.error(new Error(`IPFS has stopped`))
+          if (attemptsRemaining > 0) {
+            attemptsRemaining--;
+          } else {
+            subscriber.error(new Error(`IPFS has stopped`))
+          }
         }
       });
 
@@ -78,7 +88,7 @@ export class IncomingChannel extends Observable<IPFSPubsubMessage> {
   }
 
   private get isIpfsRunning(): boolean {
-    return Boolean(this.ipfs && this.ipfs.pubsub)
+    return Boolean(this.ipfs && this.ipfs.pubsub && this.ipfs.pubsub.ls)
   }
 
   private async resubscribe(handler: (message: IPFSPubsubMessage) => void): Promise<void> {
