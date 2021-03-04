@@ -399,6 +399,8 @@ export class Document extends EventEmitter implements DocStateHolder {
    * Serializes the document content
    */
   toString (): string {
-    return JSON.stringify(this.state$.value.content)
+    const { next, content } = this.state$.value
+    const effectiveContent = next?.content ?? content
+    return JSON.stringify(effectiveContent)
   }
 }
