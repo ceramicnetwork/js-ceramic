@@ -1,5 +1,5 @@
 import { combineURLs, fetchJson, typeDocID } from "./utils"
-import Document from './document'
+import { Document } from './document'
 
 import { DID } from 'dids'
 import {

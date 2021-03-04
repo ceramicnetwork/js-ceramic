@@ -1,15 +1,10 @@
-import Dispatcher from './dispatcher'
+import { Dispatcher } from './dispatcher'
 import CID from 'cids'
 import { EventEmitter } from 'events'
 import PQueue from 'p-queue'
-import cloneDeep from 'lodash.clonedeep'
-import Utils from './utils'
 import {
-  AnchorProof,
-  AnchorCommit,
   AnchorStatus,
   DocState,
-  LogEntry,
   Doctype,
   DoctypeHandler,
   DocOpts,
@@ -22,8 +17,11 @@ import {
 import DocID, { CommitID } from '@ceramicnetwork/docid';
 import { PinStore } from './store/pin-store';
 import { SubscriptionSet } from "./subscription-set";
-import { concatMap } from "rxjs/operators";
+import { concatMap, distinctUntilChanged } from "rxjs/operators";
 import { DiagnosticsLogger } from "@ceramicnetwork/logger";
+import { validateState } from './validate-state';
+import { BehaviorSubject } from 'rxjs'
+import { ConflictResolution } from './conflict-resolution';
 
 // DocOpts defaults for document load operations
 const DEFAULT_LOAD_DOCOPTS = {anchor: false, publish: false, sync: true}
@@ -33,27 +31,37 @@ const DEFAULT_WRITE_DOCOPTS = {anchor: true, publish: true, sync: false}
 /**
  * Document handles the update logic of the Doctype instance
  */
-class Document extends EventEmitter implements DocStateHolder {
-  private _genesisCid: CID
+export class Document extends EventEmitter implements DocStateHolder {
+  readonly id: DocID
   private _applyQueue: PQueue
-
+  private readonly state$: BehaviorSubject<DocState>
+  private _doctype: Doctype
   private _logger: DiagnosticsLogger
-  private _isProcessing: boolean
   private readonly subscriptionSet = new SubscriptionSet();
+  private readonly conflictResolution: ConflictResolution;
 
-  constructor (public readonly id: DocID,
+  constructor (initialState: DocState,
                public dispatcher: Dispatcher,
                public pinStore: PinStore,
                private _validate: boolean,
                private _context: Context,
                private _doctypeHandler: DoctypeHandler<Doctype>,
-               private _doctype: Doctype) {
+               private isReadOnly = false) {
     super()
+    this.state$ = new BehaviorSubject(initialState)
+    const doctype = new _doctypeHandler.doctype(initialState, _context)
+    this._doctype = isReadOnly ? DoctypeUtils.makeReadOnly(doctype) : doctype
+    this.state$.pipe(distinctUntilChanged()).subscribe(state => {
+      this._doctype.state = state;
+      this._doctype.emit('change');
+    })
+
+    this.id = new DocID(initialState.doctype, initialState.log[0].cid)
 
     this._logger = _context.loggerProvider.getDiagnosticsLogger()
 
     this._applyQueue = new PQueue({ concurrency: 1 })
-    this._genesisCid = id.cid
+    this.conflictResolution = new ConflictResolution(_context, dispatcher, _doctypeHandler, _validate);
   }
 
   /**
@@ -78,17 +86,12 @@ class Document extends EventEmitter implements DocStateHolder {
     // Fill 'opts' with default values for any missing fields
     opts = {...DEFAULT_WRITE_DOCOPTS, ...opts}
 
-    const doctype = new doctypeHandler.doctype(null, context) as T
-    const doc = new Document(docId, dispatcher, pinStore, validate, context, doctypeHandler, doctype)
-
     const genesis = await dispatcher.retrieveCommit(docId.cid)
-    doc._doctype.state = await doc._doctypeHandler.applyCommit(genesis, doc._genesisCid, context)
+    const state = await doctypeHandler.applyCommit(genesis, docId.cid, context)
+    const doc = new Document(state, dispatcher, pinStore, validate, context, doctypeHandler)
 
     if (validate) {
-      const schema = await Document.loadSchema(context, doc._doctype)
-      if (schema) {
-        Utils.validate(doc._doctype.content, schema)
-      }
+      await validateState(doc.state, doc.doctype.content, context.api.loadDocument.bind(context.api))
     }
 
     return Document._syncDocumentToCurrent(doc, pinStore, opts)
@@ -149,31 +152,11 @@ class Document extends EventEmitter implements DocStateHolder {
    * known current version of the document, throws an error. Intentionally does not register the new
    * document so that it does not get notifications about newer commits, since we want it tied to a
    * specific commit.
-   * @param id - DocID of the document including the requested commit
-   * @param doc - Most current version of the document that we know about
+   * @param commitId - DocID of the document including the requested commit
    */
-  static async loadAtCommit<T extends Doctype> (
-      id: CommitID,
-      doc: Document): Promise<Document> {
-
-    // If 'commit' is ahead of 'doc', sync doc up to 'commit'
-    await doc._handleTip(id.commit)
-
-    // If 'commit' is not included in doc's log at this point, that means that conflict resolution
-    // rejected it.
-    const commitIndex = await doc._findIndex(id.commit, doc._doctype.state.log)
-    if (commitIndex < 0) {
-      throw new Error(`Requested commit CID ${id.commit.toString()} not found in the log for document ${id.baseID.toString()}`)
-    }
-
-    // If the requested commit is included in the log, but isn't the most recent commit, we need
-    // to reset the state to the state at the requested commit.
-    const resetLog = doc._doctype.state.log.slice(0, commitIndex + 1)
-    const resetState = await doc._applyLogToState(resetLog.map((logEntry) => logEntry.cid))
-    let doctype = new doc._doctypeHandler.doctype(null, doc._context) as T
-    doctype.state = resetState
-    doctype = DoctypeUtils.makeReadOnly<T>(doctype as T)
-    return new Document(id.baseID, doc.dispatcher, doc.pinStore, doc._validate, doc._context, doc._doctypeHandler, doctype)
+  async rewind(commitId: CommitID): Promise<Document> {
+    const resetState = await this.conflictResolution.rewind(this.state$.value, commitId)
+    return new Document(resetState, this.dispatcher, this.pinStore, this._validate, this._context, this._doctypeHandler, true)
   }
 
   /**
@@ -194,20 +177,15 @@ class Document extends EventEmitter implements DocStateHolder {
       pinStore: PinStore,
       context: Context,
       validate: boolean) {
-    const doctype = new handler.doctype(null, context) as T
-    const doc = new Document(id, dispatcher, pinStore, validate, context, handler, doctype)
-
-    const commit = await dispatcher.retrieveCommit(doc._genesisCid)
+    const commit = await dispatcher.retrieveCommit(id.cid)
     if (commit == null) {
-      throw new Error(`No genesis commit found with CID ${doc._genesisCid.toString()}`)
+      throw new Error(`No genesis commit found with CID ${id.cid.toString()}`)
     }
-    doc._doctype.state = await doc._doctypeHandler.applyCommit(commit, doc._genesisCid, context)
+    const state = await handler.applyCommit(commit, id.cid, context)
+    const doc = new Document(state, dispatcher, pinStore, validate, context, handler)
 
     if (validate) {
-      const schema = await Document.loadSchema(context, doc._doctype)
-      if (schema) {
-        Utils.validate(doc._doctype.content, schema)
-      }
+      await validateState(doc.state, doc.doctype.content, context.api.loadDocument.bind(context.api))
     }
 
     return doc
@@ -288,8 +266,6 @@ class Document extends EventEmitter implements DocStateHolder {
       await this._handleTip(cid)
     } catch (e) {
       this._logger.err(e)
-    } finally {
-      this._isProcessing = false
     }
   }
 
@@ -300,270 +276,12 @@ class Document extends EventEmitter implements DocStateHolder {
    * @private
    */
   async _handleTip(cid: CID): Promise<void> {
-    try {
-      this._isProcessing = true
-      await this._applyQueue.add(async () => {
-        const log = await this._fetchLog(cid)
-        if (log.length) {
-          const updated = await this._applyLog(log)
-          if (updated) {
-            this._doctype.emit('change')
-          }
-        }
-      })
-    } finally {
-      this._isProcessing = false
-    }
-  }
-
-  /**
-   * Fetch log to find a connection for the given CID
-   *
-   * @param cid - Commit CID
-   * @param log - Found log so far
-   * @private
-   */
-  async _fetchLog (cid: CID, log: Array<CID> = []): Promise<Array<CID>> {
-    if (await this._isCidIncluded(cid, this._doctype.state.log)) { // already processed
-      return []
-    }
-    const commit = await this.dispatcher.retrieveCommit(cid)
-    if (commit == null) {
-      throw new Error(`No commit found for CID ${cid.toString()}`)
-    }
-
-    let payload = commit
-    if (DoctypeUtils.isSignedCommit(commit)) {
-      payload = await this.dispatcher.retrieveCommit(commit.link)
-      if (payload == null) {
-        throw new Error(`No commit found for CID ${commit.link.toString()}`)
+    await this._applyQueue.add(async () => {
+      const next = await this.conflictResolution.applyTip(this.state$.value, cid);
+      if (next) {
+        this.state$.next(next);
       }
-    }
-    const prevCid: CID = payload.prev
-    if (!prevCid) { // this is a fake log
-      return []
-    }
-    log.unshift(cid)
-    if (await this._isCidIncluded(prevCid, this._doctype.state.log)) {
-      // we found the connection to the canonical log
-      return log
-    }
-    return this._fetchLog(prevCid, log)
-  }
-
-  /**
-   * Find index of the commit in the array. If the commit is signed, fetch the payload
-   *
-   * @param cid - CID value
-   * @param log - Log array
-   * @private
-   */
-  async _findIndex(cid: CID, log: Array<LogEntry>): Promise<number> {
-    // const conflictIdx = this._doctype.state.log.findIndex(x => x.equals(commit.prev)) + 1
-    for (let index = 0; index < log.length; index++) {
-      const c = log[index].cid
-      if (c.equals(cid)) {
-        return index
-      }
-      const commit = await this.dispatcher.retrieveCommit(c)
-      if (DoctypeUtils.isSignedCommit(commit) && commit.link.equals(cid)) {
-        return index
-      }
-    }
-    return -1
-  }
-
-  /**
-   * Is CID included in the log. If the commit is signed, fetch the payload
-   *
-   * @param cid - CID value
-   * @param log - Log array
-   * @private
-   */
-  async _isCidIncluded(cid: CID, log: Array<LogEntry>): Promise<boolean> {
-    return (await this._findIndex(cid, log)) !== -1
-  }
-
-  /**
-   * Given two different DocStates representing two different conflicting histories of the same
-   * document, pick which commit to accept, in accordance with our conflict resolution strategy
-   * @param state1 - first log's state
-   * @param state2 - second log's state
-   * @returns the DocState containing the log that is selected
-   * @private
-   */
-  static async _pickLogToAccept(state1: DocState, state2: DocState): Promise<DocState> {
-    const isState1Anchored = state1.anchorStatus === AnchorStatus.ANCHORED
-    const isState2Anchored = state2.anchorStatus === AnchorStatus.ANCHORED
-
-    if (isState1Anchored != isState2Anchored) {
-      // When one of the logs is anchored but not the other, take the one that is anchored
-      return isState1Anchored ? state1 : state2
-    }
-
-    if (isState1Anchored && isState2Anchored) {
-      // compare anchor proofs if both states are anchored
-      const { anchorProof: proof1 } = state1
-      const { anchorProof: proof2 } = state2
-
-      if (proof1.chainId != proof2.chainId) {
-        // TODO: Add logic to handle conflicting updates anchored on different chains
-        throw new Error("Conflicting logs on the same document are anchored on different chains. Chain1: " +
-            proof1.chainId + ", chain2: " + proof2.chainId)
-      }
-
-      // Compare block heights to decide which to take
-      if (proof1.blockNumber < proof2.blockNumber) {
-        return state1
-      } else if (proof2.blockNumber < proof1.blockNumber) {
-        return state2
-      }
-      // If they have the same block number fall through to fallback mechanism
-    }
-
-    // The anchor states are the same for both logs. Compare log lengths and choose the one with longer length.
-    if (state1.log.length > state2.log.length) {
-      return state1
-    } else if (state1.log.length < state2.log.length) {
-      return state2
-    }
-
-    // If we got this far, that means that we don't have sufficient information to make a good
-    // decision about which log to choose.  The most common way this can happen is that neither log
-    // is anchored, although it can also happen if both are anchored but in the same blockNumber or
-    // blockTimestamp. At this point, the decision of which log to take is arbitrary, but we want it
-    // to still be deterministic. Therefore, we take the log whose last entry has the lowest CID.
-    return state1.log[state1.log.length - 1].cid.bytes < state2.log[state2.log.length - 1].cid.bytes ? state1 : state2
-  }
-
-  /**
-   * Applies the log to the document
-   *
-   * @param log - Log of commit CIDs
-   * @return true if the log resulted in an update to this document's state, false if not
-   * @private
-   */
-  async _applyLog (log: Array<CID>): Promise<boolean> {
-    if (log[log.length - 1].equals(this.tip)) {
-      // log already applied
-      return false
-    }
-    const cid = log[0]
-    const commit = await this.dispatcher.retrieveCommit(cid)
-    let payload = commit
-    if (DoctypeUtils.isSignedCommit(commit)) {
-      payload = await this.dispatcher.retrieveCommit(commit.link)
-    }
-    if (payload.prev.equals(this.tip)) {
-      // the new log starts where the previous one ended
-      this._doctype.state = await this._applyLogToState(log, cloneDeep(this._doctype.state))
-      return true
-    }
-
-    // we have a conflict since prev is in the log of the local state, but isn't the tip
-    // BEGIN CONFLICT RESOLUTION
-    const conflictIdx = await this._findIndex(payload.prev, this._doctype.state.log) + 1
-    const canonicalLog = this._doctype.state.log.map(({cid}) => cid) // copy log
-    const localLog = canonicalLog.splice(conflictIdx)
-    // Compute state up till conflictIdx
-    let state: DocState = await this._applyLogToState(canonicalLog)
-    // Compute next transition in parallel
-    const localState = await this._applyLogToState(localLog, cloneDeep(state), true)
-    const remoteState = await this._applyLogToState(log, cloneDeep(state), true)
-
-    const selectedState = await Document._pickLogToAccept(localState, remoteState)
-    if (selectedState === localState) {
-      return false
-    }
-
-    state = await this._applyLogToState(log, cloneDeep(state))
-    this._doctype.state = state
-    return true
-  }
-
-  /**
-   * Applies the log to the document and updates the state.
-   * TODO: make this static so it's immediately obvious that this doesn't mutate the document
-   *
-   * @param log - Log of commit CIDs
-   * @param state - Document state
-   * @param breakOnAnchor - Should break apply on anchor commits?
-   * @private
-   */
-  async _applyLogToState (log: Array<CID>, state?: DocState, breakOnAnchor?: boolean): Promise<DocState> {
-    const itr = log.entries()
-    let entry = itr.next()
-    while(!entry.done) {
-      const cid = entry.value[1]
-      const commit = await this.dispatcher.retrieveCommit(cid)
-      // TODO - should catch potential thrown error here
-
-      let payload = commit
-      if (DoctypeUtils.isSignedCommit(commit)) {
-        payload = await this.dispatcher.retrieveCommit(commit.link)
-      }
-
-      if (payload.proof) {
-        // it's an anchor commit
-        await this._verifyAnchorCommit(commit)
-        state = await this._doctypeHandler.applyCommit(commit, cid, this._context, state)
-      } else {
-        // it's a signed commit
-        const tmpState = await this._doctypeHandler.applyCommit(commit, cid, this._context, state)
-        const isGenesis = !payload.prev
-        const effectiveState = isGenesis ? tmpState : tmpState.next
-        if (this._validate) {
-          const schemaId = effectiveState.metadata.schema
-          if (schemaId) {
-            const schema = await Document.loadSchemaById(this._context, schemaId)
-            if (schema) {
-              Utils.validate(effectiveState.content, schema)
-            }
-          }
-        }
-        state = tmpState // if validation is successful
-      }
-
-      if (breakOnAnchor && AnchorStatus.ANCHORED === state.anchorStatus) {
-        return state
-      }
-      entry = itr.next()
-    }
-    return state
-  }
-
-  /**
-   * Verifies anchor commit structure
-   *
-   * @param commit - Anchor commit
-   * @private
-   */
-  async _verifyAnchorCommit (commit: AnchorCommit): Promise<AnchorProof> {
-    const proofCID = commit.proof
-    const proof =  await this.dispatcher.retrieveFromIPFS(proofCID)
-
-    let prevCIDViaMerkleTree
-    try {
-      // optimize verification by using ipfs.dag.tree for fetching the nested CID
-      if (commit.path.length === 0) {
-        prevCIDViaMerkleTree = proof.root
-      } else {
-        const merkleTreeParentRecordPath = '/root/' + commit.path.substr(0, commit.path.lastIndexOf('/'))
-        const last: string = commit.path.substr(commit.path.lastIndexOf('/') + 1)
-
-        const merkleTreeParentRecord = await this.dispatcher.retrieveFromIPFS(proofCID, merkleTreeParentRecordPath)
-        prevCIDViaMerkleTree = merkleTreeParentRecord[last]
-      }
-    } catch (e) {
-      throw new Error(`The anchor commit couldn't be verified. Reason ${e.message}`)
-    }
-
-    if (commit.prev.toString() !== prevCIDViaMerkleTree.toString()) {
-      throw new Error(`The anchor commit proof ${commit.proof.toString()} with path ${commit.path} points to invalid 'prev' commit`)
-    }
-
-    await this._context.anchorService.validateChainInclusion(proof)
-    return proof
+    });
   }
 
   /**
@@ -628,44 +346,6 @@ class Document extends EventEmitter implements DocStateHolder {
   }
 
   /**
-   * Loads schema for the Doctype
-   *
-   * @param context - Ceramic context
-   * @param doctype - Doctype instance
-   */
-  static async loadSchema<T extends Doctype>(context: Context, doctype: Doctype): Promise<T> {
-    return doctype.state?.metadata?.schema ? Document.loadSchemaById(context, doctype.state.metadata.schema) : null
-  }
-
-  /**
-   * Loads schema by ID
-   *
-   * @param context - Ceramic context
-   * @param schemaDocId - Schema document ID
-   */
-  static async loadSchemaById<T extends Doctype>(context: Context, schemaDocId: string): Promise<T> {
-    if (schemaDocId) {
-      let commitId: CommitID
-      try {
-        commitId = CommitID.fromString(schemaDocId)
-      } catch {
-        throw new Error("Commit missing when loading schema document")
-      }
-      const schemaDoc = await context.api.loadDocument(commitId)
-      return schemaDoc.content
-    }
-    return null
-  }
-
-  /**
-   * Gets document content
-   */
-  get content (): any {
-    const { next, content } = this._doctype.state
-    return next?.content ?? content
-  }
-
-  /**
    * Gets document state
    */
   get state (): DocState {
@@ -683,33 +363,8 @@ class Document extends EventEmitter implements DocStateHolder {
    * Gets document Tip commit CID
    */
   get tip (): CID {
-    return this._doctype.tip
-  }
-
-  /**
-   * Gets document controllers
-   */
-  get controllers (): string[] {
-    return this._doctype.controllers
-  }
-
-  /**
-   * Gets document metadata
-   */
-  get metadata (): DocMetadata {
-    return this._doctype.metadata
-  }
-
-  get commitId(): CommitID {
-    return this._doctype.commitId
-  }
-
-  get allCommitIds(): Array<CommitID> {
-    return this._doctype.allCommitIds
-  }
-
-  get anchorCommitIds(): Array<CommitID> {
-    return this._doctype.anchorCommitIds
+    const log = this.state$.value.log
+    return log[log.length - 1].cid
   }
 
   /**
@@ -741,17 +396,14 @@ class Document extends EventEmitter implements DocStateHolder {
 
     this.dispatcher.unregister(this.id)
 
-    await this._applyQueue.onEmpty()
-
-    await Utils.awaitCondition(() => this._isProcessing, () => false, 500)
+    await this._applyQueue.onIdle()
+    this.state$.complete();
   }
 
   /**
    * Serializes the document content
    */
   toString (): string {
-    return JSON.stringify(this._doctype.state.content)
+    return JSON.stringify(this.state$.value.content)
   }
 }
-
-export default Document

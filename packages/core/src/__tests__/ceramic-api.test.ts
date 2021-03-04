@@ -398,7 +398,7 @@ describe('Ceramic API', () => {
   describe('API MultiQueries', () => {
 
     let ceramic: Ceramic
-    let docA, docB, docC, docD, docE, docF
+    let docA: TileDoctype, docB: TileDoctype, docC: TileDoctype, docD: TileDoctype, docE: TileDoctype, docF: TileDoctype
     const notExistDocId = DocID.fromString('kjzl6cwe1jw1495fyn7770ujykvl1f8sskbzsevlux062ajragz9hp3akdqbmdg')
 
     beforeAll(async () => {

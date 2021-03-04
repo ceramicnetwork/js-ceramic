@@ -4,6 +4,7 @@ import {AnchorStatus, IpfsApi, TestUtils} from "@ceramicnetwork/common"
 import tmp from 'tmp-promise'
 import * as u8a from 'uint8arrays'
 import { createIPFS, swarmConnect } from './ipfs-util';
+import { TileDoctype } from '@ceramicnetwork/doctype-tile';
 
 jest.mock('../store/level-state-store')
 
@@ -225,7 +226,7 @@ describe('Ceramic anchoring', () => {
     ])
     const controller = ceramic1.context.did.id
 
-    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { x: 1 } }, { anchor: false, publish: false })
+    const doctype1 = await ceramic1.createDocument<TileDoctype>(DOCTYPE_TILE, { content: { x: 1 } }, { anchor: false, publish: false })
     await doctype1.change({ content: { x: doctype1.content.x + 1 }, metadata: { controllers: [controller] } }, { anchor: false, publish: false })
 
     expect(doctype1.content).toEqual({ x: 2 })
@@ -247,7 +248,7 @@ describe('Ceramic anchoring', () => {
     expect(doctype1.content).toEqual({ x: 6 })
     expect(doctype1.state.log.length).toEqual(8)
 
-    const doctype2 = await ceramic2.loadDocument(doctype1.id)
+    const doctype2 = await ceramic2.loadDocument<TileDoctype>(doctype1.id)
     await TestUtils.waitForState(
         doctype2,
         5000, // 5 second timeout

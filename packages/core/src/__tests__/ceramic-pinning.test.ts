@@ -4,6 +4,7 @@ import tmp from 'tmp-promise'
 import { IpfsApi, CeramicApi } from '@ceramicnetwork/common';
 import * as u8a from 'uint8arrays'
 import { createIPFS } from './ipfs-util';
+import { TileDoctype } from '@ceramicnetwork/doctype-tile';
 
 const seed = u8a.fromString('6e34b2e1a9624113d81ece8a8a22e6e97f0e145c25c1d4d2d0e62753b4060c83', 'base16')
 
@@ -19,7 +20,7 @@ const createCeramic = async (ipfs: IpfsApi, stateStoreDirectory, anchorOnRequest
   return ceramic
 }
 
-const createDoc = async (ceramic: CeramicApi, controller: string, family: string) => {
+async function createDoc (ceramic: CeramicApi, controller: string, family: string): Promise<TileDoctype> {
   return ceramic.createDocument(
     'tile',
     { deterministic: true, metadata: { controllers: [controller], family } },

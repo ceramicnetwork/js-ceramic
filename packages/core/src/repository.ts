@@ -1,4 +1,4 @@
-import Document from './document';
+import { Document } from './document';
 import DocID from '@ceramicnetwork/docid';
 
 export class Repository {

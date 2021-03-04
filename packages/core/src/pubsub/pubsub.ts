@@ -80,7 +80,7 @@ export class Pubsub extends Observable<PubsubMessage> {
           this.pubsubLogger.log({ peer: peerId, event: 'published', topic: this.topic, message: message });
         },
         error: (error) => {
-          this.logger.err(error.message);
+          this.logger.err(error);
         },
       });
   }

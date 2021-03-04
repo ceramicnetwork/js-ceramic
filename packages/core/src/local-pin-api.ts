@@ -1,6 +1,6 @@
 import { PinApi } from '@ceramicnetwork/common';
 import DocID from '@ceramicnetwork/docid';
-import Document from './document';
+import { Document } from './document';
 import { PinStore } from './store/pin-store';
 import { DiagnosticsLogger } from "@ceramicnetwork/logger";
 

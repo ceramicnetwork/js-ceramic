@@ -1,7 +1,7 @@
 import { LocalPinApi } from '../local-pin-api';
 import { PinStore } from '../store/pin-store';
 import DocID from '@ceramicnetwork/docid';
-import Document from '../document';
+import { Document } from '../document';
 import * as random from '@stablelib/random';
 import { LoggerProvider } from "@ceramicnetwork/common";
 

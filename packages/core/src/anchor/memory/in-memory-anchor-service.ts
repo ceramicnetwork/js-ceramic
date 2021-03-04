@@ -11,7 +11,7 @@ import {
   AnchorServiceResponse,
 } from "@ceramicnetwork/common";
 
-import type Dispatcher from "../../dispatcher";
+import type { Dispatcher } from "../../dispatcher";
 import Ceramic from "../../ceramic";
 import DocID from "@ceramicnetwork/docid";
 import { DiagnosticsLogger } from "@ceramicnetwork/logger";
@@ -115,7 +115,7 @@ class InMemoryAnchorService implements AnchorService {
           }
           result[candidate.key].push(candidate);
         } catch (e) {
-          this.#logger.err(e.message)
+          this.#logger.err(e)
           this._failCandidate(req, e.message);
         }
       })

@@ -1,5 +1,5 @@
-import Dispatcher from './dispatcher'
-import Document from './document'
+import { Dispatcher } from './dispatcher'
+import { Document } from './document'
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import KeyDidResolver from 'key-did-resolver'
 import DocID, { CommitID, DocRef } from '@ceramicnetwork/docid';
@@ -682,7 +682,7 @@ class Ceramic implements CeramicApi {
       return doc
     } else {
       // Here CommitID is requested, let's return document at specific commit
-      return Document.loadAtCommit(docRef, doc)
+      return doc.rewind(docRef)
     }
   }
 
