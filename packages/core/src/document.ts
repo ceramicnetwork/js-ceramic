@@ -22,9 +22,9 @@ import { BehaviorSubject } from 'rxjs'
 import { ConflictResolution } from './conflict-resolution';
 
 // DocOpts defaults for document load operations
-const DEFAULT_LOAD_DOCOPTS = {anchor: false, publish: false, sync: true}
+export const DEFAULT_LOAD_DOCOPTS = {anchor: false, publish: false, sync: true}
 // DocOpts defaults for document write operations
-const DEFAULT_WRITE_DOCOPTS = {anchor: true, publish: true, sync: false}
+export const DEFAULT_WRITE_DOCOPTS = {anchor: true, publish: true, sync: false}
 
 /**
  * Document handles the update logic of the Doctype instance
@@ -62,41 +62,8 @@ export class Document implements DocStateHolder {
   }
 
   /**
-   * Creates new Doctype with params
-   * @param docId - Document ID
-   * @param doctypeHandler - DoctypeHandler instance
-   * @param dispatcher - Dispatcher instance
-   * @param pinStore - PinStore instance
-   * @param context - Ceramic context
-   * @param opts - Initialization options
-   * @param validate - Validate content against schema
-   */
-  static async create<T extends Doctype> (
-      docId: DocID,
-      doctypeHandler: DoctypeHandler<Doctype>,
-      dispatcher: Dispatcher,
-      pinStore: PinStore,
-      context: Context,
-      opts: DocOpts = {},
-      validate = true,
-  ): Promise<Document> {
-    // Fill 'opts' with default values for any missing fields
-    opts = {...DEFAULT_WRITE_DOCOPTS, ...opts}
-
-    const genesis = await dispatcher.retrieveCommit(docId.cid)
-    const state = await doctypeHandler.applyCommit(genesis, docId.cid, context)
-    const doc = new Document(state, dispatcher, pinStore, validate, context, doctypeHandler)
-
-    if (validate) {
-      await validateState(doc.state, doc.doctype.content, context.api.loadDocument.bind(context.api))
-    }
-
-    return Document._syncDocumentToCurrent(doc, pinStore, opts)
-  }
-
-  /**
    * Loads the Doctype by id
-   * @param id - Document ID
+   * @param docId - Document ID
    * @param handler - find handler
    * @param dispatcher - Dispatcher instance
    * @param pinStore - PinStore instance
@@ -105,7 +72,7 @@ export class Document implements DocStateHolder {
    * @param validate - Validate content against schema
    */
   static async load<T extends Doctype> (
-      id: DocID,
+      docId: DocID,
       handler: DoctypeHandler<T>,
       dispatcher: Dispatcher,
       pinStore: PinStore,
@@ -115,31 +82,36 @@ export class Document implements DocStateHolder {
     // Fill 'opts' with default values for any missing fields
     opts = {...DEFAULT_LOAD_DOCOPTS, ...opts}
 
-    const doc = await Document._loadGenesis(id, handler, dispatcher, pinStore, context, validate)
-    return await Document._syncDocumentToCurrent(doc, pinStore, opts)
+    const genesis = await dispatcher.retrieveCommit(docId.cid)
+    if (!genesis) {
+      throw new Error(`No genesis commit found with CID ${docId.cid.toString()}`)
+    }
+    const state = await handler.applyCommit(genesis, docId.cid, context)
+    const doc = new Document(state, dispatcher, pinStore, validate, context, handler)
+
+    if (validate) {
+      await validateState(doc.state, doc.doctype.content, context.api.loadDocument.bind(context.api))
+    }
+    return doc._syncDocumentToCurrent(pinStore, opts)
   }
 
   /**
    * Takes a document containing only the genesis commit and kicks off the process to load and apply
    * the most recent Tip to it.
-   * @param doc - Document containing only the genesis commit
    * @param pinStore
    * @param opts
    * @private
    */
-  static async _syncDocumentToCurrent(doc: Document, pinStore: PinStore, opts: DocOpts): Promise<Document> {
-    // TODO: Assert that doc contains only the genesis commit
-    const id = doc.id
-
+  async _syncDocumentToCurrent(pinStore: PinStore, opts: DocOpts): Promise<Document> {
     // Update document state to cached state if any
-    const pinnedState = await pinStore.stateStore.load(id)
+    const pinnedState = await pinStore.stateStore.load(this.id)
     if (pinnedState) {
-      doc.state$.next(pinnedState)
+      this.state$.next(pinnedState)
     }
 
     // Request current tip from pub/sub system and register for future updates
-    await doc._register(opts)
-    return doc
+    await this._register(opts)
+    return this
   }
 
   /**
@@ -154,38 +126,6 @@ export class Document implements DocStateHolder {
   async rewind(commitId: CommitID): Promise<Document> {
     const resetState = await this.conflictResolution.rewind(this.state$.value, commitId)
     return new Document(resetState, this.dispatcher, this.pinStore, this._validate, this._context, this._doctypeHandler, true)
-  }
-
-  /**
-   * Loads the genesis commit and builds a Document object off it, but does not register for updates
-   * or apply any additional commits past the genesis commit.
-   * @param id - Document id
-   * @param handler
-   * @param dispatcher
-   * @param pinStore
-   * @param context
-   * @param validate
-   * @private
-   */
-  private static async _loadGenesis<T extends Doctype>(
-      id: DocID,
-      handler: DoctypeHandler<T>,
-      dispatcher: Dispatcher,
-      pinStore: PinStore,
-      context: Context,
-      validate: boolean) {
-    const commit = await dispatcher.retrieveCommit(id.cid)
-    if (commit == null) {
-      throw new Error(`No genesis commit found with CID ${id.cid.toString()}`)
-    }
-    const state = await handler.applyCommit(commit, id.cid, context)
-    const doc = new Document(state, dispatcher, pinStore, validate, context, handler)
-
-    if (validate) {
-      await validateState(doc.state, doc.doctype.content, context.api.loadDocument.bind(context.api))
-    }
-
-    return doc
   }
 
   /**

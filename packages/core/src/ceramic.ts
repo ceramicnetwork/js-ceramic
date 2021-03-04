@@ -1,5 +1,5 @@
 import { Dispatcher } from './dispatcher'
-import { Document } from './document'
+import { DEFAULT_WRITE_DOCOPTS, Document } from './document';
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import KeyDidResolver from 'key-did-resolver'
 import DocID, { CommitID, DocRef } from '@ceramicnetwork/docid';
@@ -519,7 +519,7 @@ class Ceramic implements CeramicApi {
       this._logger.verbose(`Document ${docId.toString()} loaded from cache`)
       return this._repository.get(docId)
     } else {
-      const document = await Document.create(docId, doctypeHandler, this.dispatcher, this.pinStore, this.context, opts, this._validateDocs);
+      const document = await Document.load(docId, doctypeHandler, this.dispatcher, this.pinStore, this.context, {...DEFAULT_WRITE_DOCOPTS, ...opts}, this._validateDocs);
       // this.repository.add(document) TODO See Document#register, it adds to the repository too
       this._logger.verbose(`Document ${docId.toString()} successfully created`)
       return document
@@ -557,7 +557,7 @@ class Ceramic implements CeramicApi {
     if (await this._repository.has(docId)) {
       return this._repository.get(docId)
     } else {
-      const document = await Document.create(docId, doctypeHandler, this.dispatcher, this.pinStore, this.context, opts, this._validateDocs);
+      const document = await Document.load(docId, doctypeHandler, this.dispatcher, this.pinStore, this.context, {...DEFAULT_WRITE_DOCOPTS, ...opts}, this._validateDocs);
       // this.repository.add(document) TODO See Document#register, it adds to the repository too
       return document
     }
