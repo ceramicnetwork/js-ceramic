@@ -5,15 +5,10 @@ export class Repository {
   readonly #map: Map<string, Document> = new Map();
 
   /**
-   * Stub for async loading of the document.
+   * Async loading of the document stored on disk or running in memory.
    */
-  async get(docId: DocID): Promise<Document> {
-    const found = this.#map.get(docId.toString());
-    if (found) {
-      return found;
-    } else {
-      throw new Error(`No document found for id ${docId}`);
-    }
+  async get(docId: DocID): Promise<Document | null> {
+    return this.#map.get(docId.toString());
   }
 
   /**
@@ -21,13 +16,6 @@ export class Repository {
    */
   add(document: Document): void {
     this.#map.set(document.id.toString(), document);
-  }
-
-  /**
-   * The document is in memory or on disk to load.
-   */
-  async has(docId: DocID): Promise<boolean> {
-    return this.#map.has(docId.toString());
   }
 
   /**

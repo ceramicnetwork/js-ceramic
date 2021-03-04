@@ -199,6 +199,11 @@ describe('Document', () => {
       const topology = new FakeTopology(dispatcher._ipfs, networkOptions.name, loggerProvider.getDiagnosticsLogger())
 
       const repository = new Repository()
+      const pinStoreFactory = {
+        createPinStore: () => {
+          return pinStore
+        }
+      };
       const modules = {
         anchorService,
         didResolver: resolver,
@@ -206,7 +211,7 @@ describe('Document', () => {
         ipfs: dispatcher._ipfs,
         ipfsTopology: topology,
         loggerProvider,
-        pinStore: pinStore,
+        pinStoreFactory: pinStoreFactory,
         repository
       }
 
@@ -604,6 +609,11 @@ describe('Document', () => {
       }
       const topology = new FakeTopology(dispatcher._ipfs, networkOptions.name, loggerProvider.getDiagnosticsLogger())
 
+      const pinStoreFactory = {
+        createPinStore: () => {
+          return pinStore
+        }
+      };
       const modules = {
         anchorService,
         didResolver: resolver,
@@ -611,7 +621,7 @@ describe('Document', () => {
         ipfs: dispatcher._ipfs,
         ipfsTopology: topology,
         loggerProvider,
-        pinStore: pinStore,
+        pinStoreFactory: pinStoreFactory,
         pinningBackends: null,
         repository
       }

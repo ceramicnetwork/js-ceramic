@@ -153,10 +153,10 @@ export class Dispatcher {
     // TODO Add validation the message adheres to the proper format.
 
     const { doc: docId, tip } = message
-    if (await this.repository.has(docId)) {
+    const document = await this.repository.get(docId)
+    if (document) {
       // TODO: add cache of cids here so that we don't emit event
       // multiple times if we get the message more than once.
-      const document = await this.repository.get(docId)
       await document._update(tip)
       // TODO: Handle 'anchorService' if present in message
     }
@@ -171,8 +171,8 @@ export class Dispatcher {
     // TODO Add validation the message adheres to the proper format.
 
     const { doc: docId, id } = message
-    if (await this.repository.has(docId)) {
-      const document = await this.repository.get(docId)
+    const document = await this.repository.get(docId)
+    if (document) {
       // TODO: Should we validate that the 'id' field is the correct hash of the rest of the message?
 
       // Build RESPONSE message and send it out on the pub/sub topic
@@ -202,8 +202,8 @@ export class Dispatcher {
         throw new Error("Response to query with ID '" + queryId + "' is missing expected new tip for docID '" +
           expectedDocID + "'")
       }
-      if (await this.repository.has(expectedDocID)) {
-        const document = await this.repository.get(expectedDocID)
+      const document = await this.repository.get(expectedDocID)
+      if (document) {
         await document._update(newTip)
         // TODO Iterate over all documents in 'tips' object and process the new tip for each
       }

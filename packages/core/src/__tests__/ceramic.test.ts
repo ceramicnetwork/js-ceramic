@@ -330,7 +330,6 @@ describe('Ceramic integration', () => {
     const docCache1 = (ceramic1 as any)._repository
     const putDocToCacheSpy1 = jest.spyOn(docCache1, 'add');
     const getDocFromCacheSpy1 = jest.spyOn(docCache1, 'get');
-    const hasDocFromCacheSpy1 = jest.spyOn(docCache1, 'has');
 
     const docCache2 = (ceramic2 as any)._repository
     const putDocToCacheSpy2 = jest.spyOn(docCache2, 'add');
@@ -343,13 +342,11 @@ describe('Ceramic integration', () => {
     await syncDoc(doctype1)
 
     expect(putDocToCacheSpy1).toBeCalledTimes(1)
-    expect(hasDocFromCacheSpy1).toBeCalledTimes(1)
-    expect(getDocFromCacheSpy1).toBeCalledTimes(0)
-    expect(docCache1.has(doctype1.id.baseID.toString())).toBeTruthy()
+    expect(getDocFromCacheSpy1).toBeCalledTimes(1)
+    await expect(docCache1.get(doctype1.id.baseID.toString())).resolves.toBeTruthy()
 
     putDocToCacheSpy1.mockClear()
     getDocFromCacheSpy1.mockClear()
-    hasDocFromCacheSpy1.mockClear()
 
     await doctype1.change({ content: { test: 'abcde' }, metadata: { controllers: [controller] } })
 
@@ -361,9 +358,9 @@ describe('Ceramic integration', () => {
     const loadedDoctype1 = await ceramic2.loadDocument(prevCommitDocId1)
     expect(loadedDoctype1).toBeDefined()
 
-    expect(getDocFromCacheSpy2).toBeCalledTimes(1)
+    expect(getDocFromCacheSpy2).toBeCalledTimes(7)
     expect(putDocToCacheSpy2).toBeCalledTimes(2)
-    expect(docCache2.has(prevCommitDocId1.baseID.toString())).toBeTruthy()
+    await expect(docCache2.get(prevCommitDocId1.baseID.toString())).resolves.toBeTruthy()
 
     await ceramic1.close()
     await ceramic2.close()
@@ -377,7 +374,6 @@ describe('Ceramic integration', () => {
     const docCache1 = (ceramic1 as any)._repository
     const putDocToCacheSpy1 = jest.spyOn(docCache1, 'add');
     const getDocFromCacheSpy1 = jest.spyOn(docCache1, 'get');
-    const hasDocFromCacheSpy1 = jest.spyOn(docCache1, 'has');
 
     const docCache2 = (ceramic2 as any)._repository
     const putDocToCacheSpy2 = jest.spyOn(docCache2, 'add');
@@ -390,8 +386,7 @@ describe('Ceramic integration', () => {
     await syncDoc(doctype1)
 
     expect(putDocToCacheSpy1).toBeCalledTimes(1)
-    expect(hasDocFromCacheSpy1).toBeCalledTimes(1)
-    expect(docCache1.has(doctype1.id.baseID.toString())).toBeTruthy()
+    await expect(docCache1.get(doctype1.id.baseID.toString())).resolves.toBeTruthy()
 
     putDocToCacheSpy1.mockClear()
     getDocFromCacheSpy1.mockClear()
@@ -406,9 +401,9 @@ describe('Ceramic integration', () => {
     const loadedDoctype1 = await ceramic2.loadDocument(prevCommitDocId1)
     expect(loadedDoctype1).toBeDefined()
 
-    expect(getDocFromCacheSpy2).toBeCalledTimes(1)
+    expect(getDocFromCacheSpy2).toBeCalledTimes(7)
     expect(putDocToCacheSpy2).toBeCalledTimes(2)
-    expect(docCache2.has(prevCommitDocId1.baseID.toString())).toBeTruthy()
+    await expect(docCache2.get(prevCommitDocId1.baseID.toString())).resolves.toBeTruthy()
 
     await ceramic1.close()
     await ceramic2.close()

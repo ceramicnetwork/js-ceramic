@@ -508,9 +508,10 @@ class Ceramic implements CeramicApi {
     const genesisCid = await this.dispatcher.storeCommit(genesis)
     const docId = new DocID(doctype, genesisCid)
 
-    if (await this._repository.has(docId)) {
+    const found = await this._repository.get(docId)
+    if (found) {
       this._logger.verbose(`Document ${docId.toString()} loaded from cache`)
-      return this._repository.get(docId)
+      return found
     } else {
       const document = await Document.load(docId, doctypeHandler, this.dispatcher, this.pinStore, this.context, {...DEFAULT_WRITE_DOCOPTS, ...opts}, this._validateDocs);
       // this.repository.add(document) TODO See Document#register, it adds to the repository too
@@ -543,8 +544,9 @@ class Ceramic implements CeramicApi {
     const doctypeHandler = this._doctypeHandlers.get(doctype)
     const docId = new DocID(doctype, genesisCid)
 
-    if (await this._repository.has(docId)) {
-      return this._repository.get(docId)
+    const found = await this._repository.get(docId)
+    if (found) {
+      return found
     } else {
       const document = await Document.load(docId, doctypeHandler, this.dispatcher, this.pinStore, this.context, {...DEFAULT_WRITE_DOCOPTS, ...opts}, this._validateDocs);
       // this.repository.add(document) TODO See Document#register, it adds to the repository too
@@ -653,10 +655,8 @@ class Ceramic implements CeramicApi {
    */
   async _loadDoc(docId: DocID | CommitID | string, opts: DocOpts = {}): Promise<Document> {
     const docRef = DocRef.from(docId)
-    let doc: Document
-    if (await this._repository.has(docRef.baseID)) {
-      doc = await this._repository.get(docRef.baseID)
-    } else {
+    let doc = await this._repository.get(docRef.baseID)
+    if (!doc) {
       // Load the current version of the document
       const doctypeHandler = this._doctypeHandlers.get(docRef.typeName)
       doc = await Document.load(docRef.baseID, doctypeHandler, this.dispatcher, this.pinStore, this.context, opts)
