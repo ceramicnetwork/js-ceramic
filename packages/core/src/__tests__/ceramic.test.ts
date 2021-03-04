@@ -355,6 +355,7 @@ describe('Ceramic integration', () => {
 
     const prevCommitDocId1 = doctype1.id.atCommit(doctype1.state.log[3].cid)
 
+    await delay(500)
     expect(getSpy2).toBeCalledTimes(2)
     expect(addSpy2).toBeCalledTimes(0)
     const loadedDoctype1 = await ceramic2.loadDocument(prevCommitDocId1)
@@ -403,6 +404,7 @@ describe('Ceramic integration', () => {
 
     const prevCommitDocId1 = doctype1.id.atCommit(doctype1.state.log[3].cid)
 
+    await delay(500)
     expect(getSpy2).toBeCalledTimes(2)
     expect(addSpy2).toBeCalledTimes(0)
     const doctype2 = await ceramic2.loadDocument(prevCommitDocId1)
