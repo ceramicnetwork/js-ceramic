@@ -327,40 +327,42 @@ describe('Ceramic integration', () => {
     const ceramic2 = await createCeramic(ipfs2, false, 1)
     const controller = ceramic1.context.did.id
 
-    const docCache1 = (ceramic1 as any)._repository
-    const putDocToCacheSpy1 = jest.spyOn(docCache1, 'add');
-    const getDocFromCacheSpy1 = jest.spyOn(docCache1, 'get');
+    const repository1 = (ceramic1 as any)._repository
+    const addSpy1 = jest.spyOn(repository1, 'add');
+    const getSpy1 = jest.spyOn(repository1, 'get');
 
-    const docCache2 = (ceramic2 as any)._repository
-    const putDocToCacheSpy2 = jest.spyOn(docCache2, 'add');
-    const getDocFromCacheSpy2 = jest.spyOn(docCache2, 'get');
+    const repository2 = (ceramic2 as any)._repository
+    const addSpy2 = jest.spyOn(repository2, 'add');
+    const getSpy2 = jest.spyOn(repository2, 'get');
 
-    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { test: 456 }, metadata: { controllers: [controller], tags: ['3id'] } })
+    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { test: 456 }, metadata: { controllers: [controller], tags: ['3id'] } }, {publish: false})
     expect(doctype1).toBeDefined()
 
     await anchor(ceramic1)
     await syncDoc(doctype1)
 
-    expect(putDocToCacheSpy1).toBeCalledTimes(1)
-    expect(getDocFromCacheSpy1).toBeCalledTimes(1)
-    await expect(docCache1.get(doctype1.id.baseID.toString())).resolves.toBeTruthy()
+    expect(addSpy1).toBeCalledTimes(1)
+    expect(getSpy1).toBeCalledTimes(1)
+    await expect(repository1.get(doctype1.id.baseID.toString())).resolves.toBeTruthy()
 
-    putDocToCacheSpy1.mockClear()
-    getDocFromCacheSpy1.mockClear()
+    addSpy1.mockClear()
+    getSpy1.mockClear()
 
-    await doctype1.change({ content: { test: 'abcde' }, metadata: { controllers: [controller] } })
+    await doctype1.change({ content: { test: 'abcde' }, metadata: { controllers: [controller] } }, {publish: false})
 
     await anchor(ceramic1)
     await syncDoc(doctype1)
 
     const prevCommitDocId1 = doctype1.id.atCommit(doctype1.state.log[3].cid)
 
+    expect(getSpy2).toBeCalledTimes(2)
+    expect(addSpy2).toBeCalledTimes(0)
     const loadedDoctype1 = await ceramic2.loadDocument(prevCommitDocId1)
     expect(loadedDoctype1).toBeDefined()
 
-    expect(getDocFromCacheSpy2).toBeCalledTimes(7)
-    expect(putDocToCacheSpy2).toBeCalledTimes(1)
-    await expect(docCache2.get(prevCommitDocId1.baseID.toString())).resolves.toBeTruthy()
+    expect(getSpy2).toBeCalledTimes(5)
+    expect(addSpy2).toBeCalledTimes(1)
+    await expect(repository2.get(prevCommitDocId1.baseID.toString())).resolves.toBeTruthy()
 
     await ceramic1.close()
     await ceramic2.close()
@@ -371,39 +373,44 @@ describe('Ceramic integration', () => {
     const ceramic2 = await createCeramic(ipfs2, false, 1, false)
     const controller = ceramic1.context.did.id
 
-    const docCache1 = (ceramic1 as any)._repository
-    const putDocToCacheSpy1 = jest.spyOn(docCache1, 'add');
-    const getDocFromCacheSpy1 = jest.spyOn(docCache1, 'get');
+    const repository1 = (ceramic1 as any)._repository
+    const addSpy1 = jest.spyOn(repository1, 'add');
+    const getSpy1 = jest.spyOn(repository1, 'get');
 
-    const docCache2 = (ceramic2 as any)._repository
-    const putDocToCacheSpy2 = jest.spyOn(docCache2, 'add');
-    const getDocFromCacheSpy2 = jest.spyOn(docCache2, 'get');
+    const repository2 = (ceramic2 as any)._repository
+    const addSpy2 = jest.spyOn(repository2, 'add');
+    const getSpy2 = jest.spyOn(repository2, 'get');
 
-    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { test: 456 }, metadata: { controllers: [controller], tags: ['3id'] } })
+    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { test: 456 }, metadata: { controllers: [controller], tags: ['3id'] } }, {publish: false})
+    expect(getSpy1).toBeCalledTimes(1)
+    expect(addSpy1).toBeCalledTimes(1)
     expect(doctype1).toBeDefined()
 
     await anchor(ceramic1)
     await syncDoc(doctype1)
 
-    expect(putDocToCacheSpy1).toBeCalledTimes(1)
-    await expect(docCache1.get(doctype1.id.baseID.toString())).resolves.toBeTruthy()
+    await expect(repository1.get(doctype1.id.baseID.toString())).resolves.toBeTruthy()
 
-    putDocToCacheSpy1.mockClear()
-    getDocFromCacheSpy1.mockClear()
+    addSpy1.mockClear()
+    getSpy1.mockClear()
 
-    await doctype1.change({ content: { test: 'abcde' }, metadata: { controllers: [controller] } })
+    await doctype1.change({ content: { test: 'abcde' }, metadata: { controllers: [controller] } }, {publish: false})
+    expect(getSpy1).toBeCalledTimes(1)
+    expect(addSpy1).toBeCalledTimes(0)
 
     await anchor(ceramic1)
     await syncDoc(doctype1)
 
     const prevCommitDocId1 = doctype1.id.atCommit(doctype1.state.log[3].cid)
 
-    const loadedDoctype1 = await ceramic2.loadDocument(prevCommitDocId1)
-    expect(loadedDoctype1).toBeDefined()
+    expect(getSpy2).toBeCalledTimes(2)
+    expect(addSpy2).toBeCalledTimes(0)
+    const doctype2 = await ceramic2.loadDocument(prevCommitDocId1)
+    expect(doctype2).toBeDefined()
 
-    expect(getDocFromCacheSpy2).toBeCalledTimes(7)
-    expect(putDocToCacheSpy2).toBeCalledTimes(1)
-    await expect(docCache2.get(prevCommitDocId1.baseID.toString())).resolves.toBeTruthy()
+    expect(getSpy2).toHaveBeenCalledTimes(5)
+    expect(addSpy2).toBeCalledTimes(1)
+    await expect(repository2.get(prevCommitDocId1.baseID.toString())).resolves.toBeTruthy()
 
     await ceramic1.close()
     await ceramic2.close()
