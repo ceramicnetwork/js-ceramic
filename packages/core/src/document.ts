@@ -277,6 +277,14 @@ export class Document implements DocStateHolder {
   }
 
   /**
+   * Gets document content
+   */
+  get content (): any {
+    const { next, content } = this.state
+    return next?.content ?? content
+  }
+
+  /**
    * Gets document state
    */
   get state (): DocState {

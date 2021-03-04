@@ -40,6 +40,8 @@ import { randomUint32 } from '@stablelib/random'
 import { LocalPinApi } from './local-pin-api';
 import { Repository } from './repository';
 import { HandlersMap } from './handlers-map';
+import { LoadingQueue } from './state-management/loading-queue';
+import { DocumentFactory } from './state-management/document-factory';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const packageJson = require('../package.json')
@@ -176,6 +178,7 @@ class Ceramic implements CeramicApi {
   private readonly _networkOptions: CeramicNetworkOptions
   private readonly _supportedChains: Array<string>
   private readonly _validateDocs: boolean
+  private readonly loadingQueue: LoadingQueue
 
   constructor (modules: CeramicModules, params: CeramicParameters) {
     this._ipfsTopology = modules.ipfsTopology
@@ -206,6 +209,8 @@ class Ceramic implements CeramicApi {
     this._doctypeHandlers = new HandlersMap(this._logger)
 
     this._repository = modules.repository
+    const documentFactory = new DocumentFactory(this.dispatcher, this.pinStore, this.context, this._validateDocs, this._doctypeHandlers)
+    this.loadingQueue = new LoadingQueue(this._repository, this.dispatcher, this._doctypeHandlers, this.context, this.pinStore, this._logger, documentFactory)
   }
 
   /**
@@ -456,7 +461,6 @@ class Ceramic implements CeramicApi {
    * @param doctypeHandler - Document type handler
    */
   addDoctypeHandler<T extends Doctype>(doctypeHandler: DoctypeHandler<T>): void {
-    this._logger.debug(`Registered handler for ${doctypeHandler.name} doctype`)
     this._doctypeHandlers.add(doctypeHandler)
   }
 
@@ -490,34 +494,9 @@ class Ceramic implements CeramicApi {
    * @param opts - Initialization options
    */
   async createDocument<T extends Doctype>(doctype: string, params: DocParams, opts?: DocOpts): Promise<T> {
-    const doc = await this._createDoc(doctype, params, opts)
-    return doc.doctype as T
-  }
-
-  /**
-   * Create document instance
-   * @param doctype - Document type
-   * @param params - Create parameters
-   * @param opts - Initialization options
-   * @private
-   */
-  async _createDoc(doctype: string, params: DocParams, opts: DocOpts = {}): Promise<Document> {
-    const doctypeHandler = this._doctypeHandlers.get(doctype)
-
-    const genesis = await doctypeHandler.doctype.makeGenesis(params, this.context, opts)
-    const genesisCid = await this.dispatcher.storeCommit(genesis)
-    const docId = new DocID(doctype, genesisCid)
-
-    const found = await this._repository.get(docId)
-    if (found) {
-      this._logger.verbose(`Document ${docId.toString()} loaded from cache`)
-      return found
-    } else {
-      const document = await Document.load(docId, doctypeHandler, this.dispatcher, this.pinStore, this.context, {...DEFAULT_WRITE_DOCOPTS, ...opts}, this._validateDocs);
-      // this.repository.add(document) TODO See Document#register, it adds to the repository too
-      this._logger.verbose(`Document ${docId.toString()} successfully created`)
-      return document
-    }
+    const handler = this._doctypeHandlers.get(doctype);
+    const genesis = await handler.doctype.makeGenesis(params, this.context, opts);
+    return this.createDocumentFromGenesis(doctype, genesis, opts);
   }
 
   /**
@@ -527,9 +506,8 @@ class Ceramic implements CeramicApi {
    * @param opts - Initialization options
    */
   async createDocumentFromGenesis<T extends Doctype>(doctype: string, genesis: any, opts: DocOpts = {}): Promise<T> {
-    const doc = await this._createDocFromGenesis(doctype, genesis, opts)
-    this._logger.verbose(`Document ${doc.id.toString()} successfully created from genesis contents`)
-    return doc.doctype as T
+    const document = await this._createDocFromGenesis(doctype, genesis, opts)
+    return document.doctype as T;
   }
 
   /**
@@ -540,18 +518,9 @@ class Ceramic implements CeramicApi {
    * @private
    */
   async _createDocFromGenesis(doctype: string, genesis: any, opts: DocOpts = {}): Promise<Document> {
-    const genesisCid = await this.dispatcher.storeCommit(genesis)
-    const doctypeHandler = this._doctypeHandlers.get(doctype)
-    const docId = new DocID(doctype, genesisCid)
-
-    const found = await this._repository.get(docId)
-    if (found) {
-      return found
-    } else {
-      const document = await Document.load(docId, doctypeHandler, this.dispatcher, this.pinStore, this.context, {...DEFAULT_WRITE_DOCOPTS, ...opts}, this._validateDocs);
-      // this.repository.add(document) TODO See Document#register, it adds to the repository too
-      return document
-    }
+    const genesisCid = await this.dispatcher.storeCommit(genesis);
+    const docId = new DocID(doctype, genesisCid);
+    return this.loadingQueue.load(docId, {...DEFAULT_WRITE_DOCOPTS, ...opts});
   }
 
   /**
@@ -655,13 +624,7 @@ class Ceramic implements CeramicApi {
    */
   async _loadDoc(docId: DocID | CommitID | string, opts: DocOpts = {}): Promise<Document> {
     const docRef = DocRef.from(docId)
-    let doc = await this._repository.get(docRef.baseID)
-    if (!doc) {
-      // Load the current version of the document
-      const doctypeHandler = this._doctypeHandlers.get(docRef.typeName)
-      doc = await Document.load(docRef.baseID, doctypeHandler, this.dispatcher, this.pinStore, this.context, opts)
-      this._repository.add(doc)
-    }
+    const doc = await this.loadingQueue.load(docRef.baseID, opts)
 
     // If DocID is requested, return the document
     if (docRef instanceof DocID) {

@@ -14,7 +14,7 @@ export class Repository {
   /**
    * Stub for adding the document.
    */
-  add(document: Document): void {
+  async add(document: Document): Promise<void> {
     this.#map.set(document.id.toString(), document);
   }
 

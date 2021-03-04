@@ -359,7 +359,7 @@ describe('Ceramic integration', () => {
     expect(loadedDoctype1).toBeDefined()
 
     expect(getDocFromCacheSpy2).toBeCalledTimes(7)
-    expect(putDocToCacheSpy2).toBeCalledTimes(2)
+    expect(putDocToCacheSpy2).toBeCalledTimes(1)
     await expect(docCache2.get(prevCommitDocId1.baseID.toString())).resolves.toBeTruthy()
 
     await ceramic1.close()
@@ -402,7 +402,7 @@ describe('Ceramic integration', () => {
     expect(loadedDoctype1).toBeDefined()
 
     expect(getDocFromCacheSpy2).toBeCalledTimes(7)
-    expect(putDocToCacheSpy2).toBeCalledTimes(2)
+    expect(putDocToCacheSpy2).toBeCalledTimes(1)
     await expect(docCache2.get(prevCommitDocId1.baseID.toString())).resolves.toBeTruthy()
 
     await ceramic1.close()

@@ -42,8 +42,6 @@ export class Dispatcher {
    * @param document - Document instance
    */
   register (document: Document): void {
-    this.repository.add(document)
-
     // Build a QUERY message to send to the pub/sub topic to request the latest tip for this document
     const message = buildQueryMessage(document.id)
 

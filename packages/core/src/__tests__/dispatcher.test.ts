@@ -43,6 +43,7 @@ const fakeHandler = {
 describe('Dispatcher', () => {
 
   let dispatcher: Dispatcher
+  const repository = new Repository()
   const loggerProvider = new LoggerProvider()
 
   beforeEach(async () => {
@@ -52,7 +53,6 @@ describe('Dispatcher', () => {
     ipfs.pubsub.unsubscribe.mockClear()
     ipfs.pubsub.publish.mockClear()
 
-    const repository = new Repository()
     dispatcher = new Dispatcher(ipfs, TOPIC, repository, loggerProvider.getDiagnosticsLogger(), loggerProvider.makeServiceLogger("pubsub"))
   })
 
@@ -137,6 +137,7 @@ describe('Dispatcher', () => {
         fakeHandler
       )
       dispatcher.register(document)
+      await repository.add(document)
       return document
     }
 
