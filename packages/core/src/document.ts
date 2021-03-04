@@ -331,9 +331,6 @@ export class Document implements DocStateHolder {
    */
   async close (): Promise<void> {
     this.subscriptionSet.close();
-
-    this.dispatcher.unregister(this.id)
-
     await this._applyQueue.onIdle()
     this.state$.complete();
   }

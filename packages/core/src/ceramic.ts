@@ -166,13 +166,13 @@ const tryDocId = (id: string): DocID | null => {
 class Ceramic implements CeramicApi {
 
   public readonly context: Context
-  public readonly dispatcher: Dispatcher
 
-  public readonly pin: PinApi;
-  public readonly pinStore: PinStore;
+  public readonly dispatcher: Dispatcher; // Set during init()
+  public readonly pin: PinApi; // Set during init()
+  public readonly pinStore: PinStore; // Set during init()
+  private readonly _repository: Repository; // Set during init()
 
   private readonly _doctypeHandlers: HandlersMap
-  private readonly _repository: Repository
   private readonly _ipfsTopology: IpfsTopology
   private readonly _logger: DiagnosticsLogger
   private readonly _networkOptions: CeramicNetworkOptions
@@ -209,7 +209,9 @@ class Ceramic implements CeramicApi {
     this._doctypeHandlers = new HandlersMap(this._logger)
 
     this._repository = modules.repository
+    this._repository.setStateStore(this.pinStore.stateStore)
     const documentFactory = new DocumentFactory(this.dispatcher, this.pinStore, this.context, this._validateDocs, this._doctypeHandlers)
+    this._repository.setDocumentFactory(documentFactory)
     this.loadingQueue = new LoadingQueue(this._repository, this.dispatcher, this._doctypeHandlers, this.context, this.pinStore, this._logger, documentFactory)
   }
 
@@ -359,7 +361,7 @@ class Ceramic implements CeramicApi {
 
     const ipfsTopology = new IpfsTopology(ipfs, networkOptions.name, logger)
     const pinStoreFactory = new PinStoreFactory(ipfs, pinStoreOptions)
-    const repository = new Repository()
+    const repository = new Repository(config.docCacheLimit)
     const dispatcher = new Dispatcher(ipfs, networkOptions.pubsubTopic, repository, logger, pubsubLogger)
 
     const params = {

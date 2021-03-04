@@ -3,10 +3,13 @@ import CID from 'cids'
 import { Document } from "../document"
 import { TileDoctype } from "@ceramicnetwork/doctype-tile"
 import DocID from "@ceramicnetwork/docid";
-import { CommitType, DocState, DoctypeHandler, LoggerProvider } from '@ceramicnetwork/common';
+import { CommitType, DocState, DoctypeHandler, LoggerProvider, PinningBackend } from '@ceramicnetwork/common';
 import { serialize, MsgType } from '../pubsub/pubsub-message';
 import { Repository } from '../state-management/repository';
 import { delay } from '../pubsub/__tests__/delay';
+import tmp from 'tmp-promise'
+import { LevelStateStore } from '../store/level-state-store';
+import { PinStore } from '../store/pin-store';
 
 const TOPIC = '/ceramic'
 const FAKE_CID = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
@@ -43,7 +46,7 @@ const fakeHandler = {
 describe('Dispatcher', () => {
 
   let dispatcher: Dispatcher
-  const repository = new Repository()
+  let repository: Repository
   const loggerProvider = new LoggerProvider()
 
   beforeEach(async () => {
@@ -53,6 +56,10 @@ describe('Dispatcher', () => {
     ipfs.pubsub.unsubscribe.mockClear()
     ipfs.pubsub.publish.mockClear()
 
+    const levelPath = await tmp.tmpName()
+    const stateStore = new LevelStateStore(levelPath)
+    repository = new Repository(100)
+    repository.setStateStore(stateStore)
     dispatcher = new Dispatcher(ipfs, TOPIC, repository, loggerProvider.getDiagnosticsLogger(), loggerProvider.makeServiceLogger("pubsub"))
   })
 

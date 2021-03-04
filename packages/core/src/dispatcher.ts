@@ -51,13 +51,6 @@ export class Dispatcher {
   }
 
   /**
-   * Unregister document by ID.
-   */
-  unregister (docId: DocID): void {
-    this.repository.delete(docId)
-  }
-
-  /**
    * Store Ceramic commit (genesis|signed|anchor).
    *
    * @param data - Ceramic commit data
