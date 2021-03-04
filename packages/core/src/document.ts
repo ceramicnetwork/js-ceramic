@@ -136,7 +136,7 @@ export class Document extends EventEmitter implements DocStateHolder {
     // Update document state to cached state if any
     const pinnedState = await pinStore.stateStore.load(id)
     if (pinnedState) {
-      doc._doctype.state = pinnedState
+      doc.state$.next(pinnedState)
     }
 
     // Request current tip from pub/sub system and register for future updates
@@ -344,7 +344,7 @@ export class Document extends EventEmitter implements DocStateHolder {
    * Gets document state
    */
   get state (): DocState {
-    return this._doctype.state
+    return this.state$.value
   }
 
   /**
