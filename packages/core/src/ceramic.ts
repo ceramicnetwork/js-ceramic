@@ -359,14 +359,16 @@ class Ceramic implements CeramicApi {
       pinningBackends: config.pinningBackends,
     }
 
+    const docCacheLimit = config.docCacheLimit ?? DEFAULT_DOC_CACHE_LIMIT
+
     const ipfsTopology = new IpfsTopology(ipfs, networkOptions.name, logger)
     const pinStoreFactory = new PinStoreFactory(ipfs, pinStoreOptions)
-    const repository = new Repository(config.docCacheLimit)
+    const repository = new Repository(docCacheLimit)
     const dispatcher = new Dispatcher(ipfs, networkOptions.pubsubTopic, repository, logger, pubsubLogger)
 
     const params = {
       cacheDocumentCommits: config.cacheDocCommits ?? true,
-      docCacheLimit: config.docCacheLimit ?? DEFAULT_DOC_CACHE_LIMIT,
+      docCacheLimit: docCacheLimit,
       networkOptions,
       supportedChains,
       validateDocs: config.validateDocs ?? true,
