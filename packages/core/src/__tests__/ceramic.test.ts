@@ -355,15 +355,11 @@ describe('Ceramic integration', () => {
     await syncDoc(doctype1)
 
     const prevCommitDocId1 = doctype1.id.atCommit(doctype1.state.log[3].cid)
-
-    await delay(500)
-    expect(getSpy2).toBeCalledTimes(3)
-    expect(addSpy2).toBeCalledTimes(0)
+    expect(addSpy2).not.toBeCalled()
     const loadedDoctype1 = await ceramic2.loadDocument(prevCommitDocId1)
     expect(loadedDoctype1).toBeDefined()
 
-    await delay(500)
-    expect(getSpy2).toBeCalledTimes(5)
+    expect(getSpy2).toBeCalled()
     expect(addSpy2).toBeCalledTimes(1)
     await expect(repository2.get(prevCommitDocId1.baseID.toString())).resolves.toBeTruthy()
 
@@ -406,15 +402,11 @@ describe('Ceramic integration', () => {
     await syncDoc(doctype1)
 
     const prevCommitDocId1 = doctype1.id.atCommit(doctype1.state.log[3].cid)
-
-    await delay(500)
-    expect(getSpy2).toBeCalledTimes(5)
-    expect(addSpy2).toBeCalledTimes(0)
+    expect(addSpy2).not.toBeCalled()
     const doctype2 = await ceramic2.loadDocument(prevCommitDocId1)
     expect(doctype2).toBeDefined()
 
-    await delay(500)
-    expect(getSpy2).toHaveBeenCalledTimes(7)
+    expect(getSpy2).toBeCalled()
     expect(addSpy2).toBeCalledTimes(1)
     await expect(repository2.get(prevCommitDocId1.baseID.toString())).resolves.toBeTruthy()
 
