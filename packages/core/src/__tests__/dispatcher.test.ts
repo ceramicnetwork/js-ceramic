@@ -90,7 +90,7 @@ describe('Dispatcher', () => {
       {loggerProvider},
       fakeHandler,
     )
-    await dispatcher.register(doc)
+    dispatcher.register(doc)
 
     const publishArgs = ipfs.pubsub.publish.mock.calls[0]
     expect(publishArgs[0]).toEqual(TOPIC)
@@ -136,7 +136,7 @@ describe('Dispatcher', () => {
         {loggerProvider},
         fakeHandler
       )
-      await dispatcher.register(document)
+      dispatcher.register(document)
       return document
     }
 

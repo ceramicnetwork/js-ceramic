@@ -152,7 +152,7 @@ export class Document implements DocStateHolder {
    * @private
    */
   async _register (opts: DocOpts): Promise<void> {
-    await this.dispatcher.register(this)
+    this.dispatcher.register(this)
 
     await this._applyOpts(opts)
   }

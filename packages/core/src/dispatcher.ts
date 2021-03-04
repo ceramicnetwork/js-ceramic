@@ -41,7 +41,7 @@ export class Dispatcher {
    *
    * @param document - Document instance
    */
-  async register (document: Document): Promise<void> {
+  register (document: Document): void {
     this.repository.add(document)
 
     // Build a QUERY message to send to the pub/sub topic to request the latest tip for this document
