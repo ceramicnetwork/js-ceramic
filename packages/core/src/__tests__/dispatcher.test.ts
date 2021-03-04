@@ -91,7 +91,7 @@ describe('Dispatcher', () => {
       fakeHandler,
     )
     dispatcher.register(doc)
-
+    await delay(100) // Wait for plumbing
     const publishArgs = ipfs.pubsub.publish.mock.calls[0]
     expect(publishArgs[0]).toEqual(TOPIC)
     const queryMessageSent = JSON.parse(publishArgs[1])
