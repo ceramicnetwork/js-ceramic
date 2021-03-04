@@ -111,7 +111,7 @@ describe("#open", () => {
         expect(aggregation.backends[1]).toBeInstanceOf(FakePinning);
         aggregation.backends[0].open = jest.fn();
         aggregation.backends[1].open = jest.fn();
-        await aggregation.open();
+        aggregation.open();
         expect(aggregation.backends[0].open).toBeCalled();
         expect(aggregation.backends[1].open).toBeCalled();
     });
@@ -122,7 +122,7 @@ describe("#open", () => {
             throw new Error(`oops`);
         });
         aggregation.backends[1].open = jest.fn();
-        await expect(aggregation.open()).rejects.toThrow("oops");
+        expect(() => aggregation.open()).toThrow("oops");
     });
 });
 
