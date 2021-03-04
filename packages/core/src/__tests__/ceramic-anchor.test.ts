@@ -51,19 +51,20 @@ describe('Ceramic anchoring', () => {
 
   const DOCTYPE_TILE = 'tile'
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     [ipfs1, ipfs2, ipfs3] = await Promise.all(Array.from({length: 3}).map(() => createIPFS()));
+    await swarmConnect(ipfs1, ipfs2)
+    await swarmConnect(ipfs2, ipfs3)
+    await swarmConnect(ipfs1, ipfs3)
   })
 
-  afterEach(async () => {
+  afterAll(async () => {
     await ipfs1.stop()
     await ipfs2.stop()
     await ipfs3.stop()
   })
 
   it('test all records anchored', async () => {
-    await swarmConnect(ipfs1, ipfs2)
-
     const [ceramic1, ceramic2] = await Promise.all([
       createCeramic(ipfs1, true),
       createCeramic(ipfs2, false)
@@ -90,8 +91,6 @@ describe('Ceramic anchoring', () => {
   })
 
   it('test no records anchored', async () => {
-    await swarmConnect(ipfs2, ipfs1)
-
     const [ceramic1, ceramic2] = await Promise.all([
       createCeramic(ipfs1, true),
       createCeramic(ipfs2, false)
@@ -115,8 +114,6 @@ describe('Ceramic anchoring', () => {
   })
 
   it('test genesis anchored and others not', async () => {
-    await swarmConnect(ipfs2, ipfs1)
-
     const [ceramic1, ceramic2] = await Promise.all([
       createCeramic(ipfs1, true),
       createCeramic(ipfs2, false)
@@ -143,8 +140,6 @@ describe('Ceramic anchoring', () => {
   })
 
   it('test genesis and the following anchored', async () => {
-    await swarmConnect(ipfs2, ipfs1)
-
     const [ceramic1, ceramic2] = await Promise.all([
       createCeramic(ipfs1, true),
       createCeramic(ipfs2, false)
@@ -170,8 +165,6 @@ describe('Ceramic anchoring', () => {
   })
 
   it('test genesis anchored, the middle not, last one anchored', async () => {
-    await swarmConnect(ipfs1, ipfs2)
-
     const [ceramic1, ceramic2] = await Promise.all([
       createCeramic(ipfs1, true),
       createCeramic(ipfs2, false)
@@ -197,8 +190,6 @@ describe('Ceramic anchoring', () => {
   })
 
   it('test last one anchored', async () => {
-    await swarmConnect(ipfs1, ipfs2)
-
     const [ceramic1, ceramic2] = await Promise.all([
       createCeramic(ipfs1, true),
       createCeramic(ipfs2, false)
@@ -223,8 +214,6 @@ describe('Ceramic anchoring', () => {
   })
 
   it('in the middle anchored', async () => {
-    await swarmConnect(ipfs1, ipfs2)
-
     const [ceramic1, ceramic2] = await Promise.all([
       createCeramic(ipfs1, true),
       createCeramic(ipfs2, false)
@@ -266,9 +255,6 @@ describe('Ceramic anchoring', () => {
   })
 
   it('test the same doc anchored twice (different Ceramic instances), first one wins)', async () => {
-    await swarmConnect(ipfs3, ipfs1)
-    await swarmConnect(ipfs3, ipfs2)
-
     const [ceramic1, ceramic2, ceramic3] = await Promise.all([
       createCeramic(ipfs1, true),
       createCeramic(ipfs2, true),
