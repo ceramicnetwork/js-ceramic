@@ -56,7 +56,11 @@ export class IncomingChannel extends Observable<IPFSPubsubMessage> {
       this.tasks.add(() => this.resubscribe(handler));
 
       const ensureSubscribed = interval(this.resubscribeEvery).subscribe(() => {
-        this.tasks.add(() => this.resubscribe(handler));
+        if (this.isIpfsRunning) {
+          this.tasks.add(() => this.resubscribe(handler));
+        } else {
+          subscriber.error(new Error(`IPFS has stopped`))
+        }
       });
 
       return () => {
@@ -66,11 +70,15 @@ export class IncomingChannel extends Observable<IPFSPubsubMessage> {
         this.tasks.clear();
         // Unsubscribe only after a currently running task is finished.
         this.tasks.add(async () => {
-          await this.ipfs.pubsub.unsubscribe(this.topic, handler);
+          await this.ipfs.pubsub?.unsubscribe(this.topic, handler);
         });
       };
     });
     this.tasks = buildResubscribeQueue(logger);
+  }
+
+  private get isIpfsRunning(): boolean {
+    return Boolean(this.ipfs && this.ipfs.pubsub)
   }
 
   private async resubscribe(handler: (message: IPFSPubsubMessage) => void): Promise<void> {
