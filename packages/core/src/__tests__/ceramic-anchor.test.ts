@@ -1,10 +1,15 @@
 import Ceramic from '../ceramic'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
-import {AnchorStatus, IpfsApi, TestUtils} from "@ceramicnetwork/common"
+import {
+  AnchorStatus,
+  IpfsApi,
+  TestUtils,
+} from '@ceramicnetwork/common';
 import tmp from 'tmp-promise'
 import * as u8a from 'uint8arrays'
 import { createIPFS, swarmConnect } from './ipfs-util';
 import { TileDoctype } from '@ceramicnetwork/doctype-tile';
+import InMemoryAnchorService from '../anchor/memory/in-memory-anchor-service';
 
 jest.mock('../store/level-state-store')
 
@@ -51,9 +56,9 @@ describe('Ceramic anchoring', () => {
   })
 
   afterEach(async () => {
-    await ipfs1.stop(() => console.log('IPFS1 stopped'))
-    await ipfs2.stop(() => console.log('IPFS2 stopped'))
-    await ipfs3.stop(() => console.log('IPFS3 stopped'))
+    await ipfs1.stop()
+    await ipfs2.stop()
+    await ipfs3.stop()
   })
 
   it('test all records anchored', async () => {
@@ -271,8 +276,9 @@ describe('Ceramic anchoring', () => {
     ])
     const controller = ceramic1.context.did.id
 
-    ceramic1.context.anchorService = ceramic3.context.anchorService // use ceramic3 in-memory anchor service
-    ceramic2.context.anchorService = ceramic3.context.anchorService // use ceramic3 in-memory anchor service
+    const anchorService = ceramic3.context.anchorService as InMemoryAnchorService
+    ceramic1.context.anchorService = anchorService // use ceramic3 in-memory anchor service
+    ceramic2.context.anchorService = anchorService // use ceramic3 in-memory anchor service
 
     const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { x: 1 } }, { anchor: false, publish: true })
     const doctype2 = await ceramic2.loadDocument(doctype1.id)
@@ -287,15 +293,23 @@ describe('Ceramic anchoring', () => {
     const update1ShouldWin = doctype1.state.log[doctype1.state.log.length - 1].cid.bytes < doctype2.state.log[doctype2.state.log.length - 1].cid.bytes
     const winningContent = update1ShouldWin ? newContent1 : newContent2
 
-    const handle1 = TestUtils.registerChangeListener(doctype1)
-    const handle2 = TestUtils.registerChangeListener(doctype2)
+    await anchorService.anchor()
 
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    await ceramic3.context.anchorService.anchor()
-
-    await handle1
-    await handle2
+    if (update1ShouldWin) {
+      // doctype1 anchors successfully, doctype2 fails to anchor
+      // doctype1 sends a tip, doctype2 updates state based on the tip
+      // so we wait till doctype2 handles the tip and changes anchorStatus to anchored
+      await TestUtils.waitForState(doctype2, 1000, state => state.anchorStatus === AnchorStatus.ANCHORED, () => {
+        throw new Error(`doctype2 not anchored still`)
+      })
+    } else {
+      // doctype2 anchors successfully, doctype1 fails to anchor
+      // doctype2 sends a tip, doctype1 updates state based on the tip
+      // so we wait till doctype1 handles the tip and changes anchorStatus to anchored
+      await TestUtils.waitForState(doctype1, 1000, state => state.anchorStatus === AnchorStatus.ANCHORED, () => {
+        throw new Error(`doctype1 not anchored still`)
+      })
+    }
 
     // Only one of the updates should have won
     expect(doctype1.state.log.length).toEqual(3)

@@ -10,7 +10,6 @@ import {
   DocOpts,
   Context,
   DoctypeUtils,
-  DocMetadata,
   DocStateHolder,
   UnreachableCaseError
 } from '@ceramicnetwork/common'
@@ -297,10 +296,6 @@ export class Document extends EventEmitter implements DocStateHolder {
    * Request anchor for the latest document state
    */
   anchor(): void {
-    // eslint-disable-next-line @typescript-eslint/no-this-alias
-    const doc = this
-    const requestTip: CID = this.tip
-
     const anchorStatus$ = this._context.anchorService.requestAnchor(this.id.baseID, this.tip);
     const subscription = anchorStatus$
         .pipe(
@@ -308,31 +303,31 @@ export class Document extends EventEmitter implements DocStateHolder {
               switch (asr.status) {
                 case AnchorStatus.PENDING: {
                   const next = {
-                    ...doc._doctype.state,
+                    ...this.state$.value,
                     anchorStatus: AnchorStatus.PENDING,
                   }
                   if (asr.anchorScheduledFor) next.anchorScheduledFor = asr.anchorScheduledFor
-                  doc._doctype.state = next
-                  await doc._updateStateIfPinned();
+                  this.state$.next(next)
+                  await this._updateStateIfPinned();
                   return;
                 }
                 case AnchorStatus.PROCESSING: {
-                  doc._doctype.state = { ...doc._doctype.state, anchorStatus: AnchorStatus.PROCESSING };
-                  await doc._updateStateIfPinned();
+                  this.state$.next({ ...this.state$.value, anchorStatus: AnchorStatus.PROCESSING });
+                  await this._updateStateIfPinned();
                   return;
                 }
                 case AnchorStatus.ANCHORED: {
-                  await doc._handleTip(asr.anchorRecord);
-                  await doc._updateStateIfPinned();
-                  doc._publishTip();
+                  await this._handleTip(asr.anchorRecord);
+                  await this._updateStateIfPinned();
+                  this._publishTip();
                   subscription.unsubscribe();
                   return;
                 }
                 case AnchorStatus.FAILED: {
-                  if (requestTip !== doc.tip) {
+                  if (!asr.cid.equals(this.tip)) {
                     return;
                   }
-                  doc._doctype.state = { ...doc._doctype.state, anchorStatus: AnchorStatus.FAILED };
+                  this.state$.next({ ...this.state$.value, anchorStatus: AnchorStatus.FAILED })
                   subscription.unsubscribe();
                   return;
                 }
