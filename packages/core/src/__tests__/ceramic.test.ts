@@ -61,9 +61,9 @@ describe('Ceramic integration', () => {
   })
 
   afterEach(async () => {
-    await ipfs1.stop(() => console.log('IPFS1 stopped'))
-    await ipfs2.stop(() => console.log('IPFS2 stopped'))
-    await ipfs3.stop(() => console.log('IPFS3 stopped'))
+    await ipfs1.stop()
+    await ipfs2.stop()
+    await ipfs3.stop()
   })
 
   it('can create Ceramic instance on default network', async () => {
@@ -323,6 +323,7 @@ describe('Ceramic integration', () => {
   // })
 
   it('can utilize doc commit cache', async () => {
+    await swarmConnect(ipfs1, ipfs2)
     const ceramic1 = await createCeramic(ipfs1, false, 2)
     const ceramic2 = await createCeramic(ipfs2, false, 1)
     const controller = ceramic1.context.did.id
@@ -371,6 +372,7 @@ describe('Ceramic integration', () => {
   })
 
   it('cannot utilize disabled doc commit cache', async () => {
+    await swarmConnect(ipfs1, ipfs2)
     const ceramic1 = await createCeramic(ipfs1, false, 2)
     const ceramic2 = await createCeramic(ipfs2, false, 1, false)
     const controller = ceramic1.context.did.id
@@ -383,7 +385,7 @@ describe('Ceramic integration', () => {
     const addSpy2 = jest.spyOn(repository2, 'add');
     const getSpy2 = jest.spyOn(repository2, 'get');
 
-    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { test: 456 }, metadata: { controllers: [controller], tags: ['3id'] } }, {publish: false})
+    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { test: 456 }, metadata: { controllers: [controller], tags: ['3id'] } })
     expect(getSpy1).toBeCalledTimes(1)
     expect(addSpy1).toBeCalledTimes(1)
     expect(doctype1).toBeDefined()
@@ -396,7 +398,7 @@ describe('Ceramic integration', () => {
     addSpy1.mockClear()
     getSpy1.mockClear()
 
-    await doctype1.change({ content: { test: 'abcde' }, metadata: { controllers: [controller] } }, {publish: false})
+    await doctype1.change({ content: { test: 'abcde' }, metadata: { controllers: [controller] } })
     expect(getSpy1).toBeCalledTimes(1)
     expect(addSpy1).toBeCalledTimes(0)
 
@@ -406,13 +408,13 @@ describe('Ceramic integration', () => {
     const prevCommitDocId1 = doctype1.id.atCommit(doctype1.state.log[3].cid)
 
     await delay(500)
-    expect(getSpy2).toBeCalledTimes(3)
+    expect(getSpy2).toBeCalledTimes(5)
     expect(addSpy2).toBeCalledTimes(0)
     const doctype2 = await ceramic2.loadDocument(prevCommitDocId1)
     expect(doctype2).toBeDefined()
 
     await delay(500)
-    expect(getSpy2).toHaveBeenCalledTimes(5)
+    expect(getSpy2).toHaveBeenCalledTimes(7)
     expect(addSpy2).toBeCalledTimes(1)
     await expect(repository2.get(prevCommitDocId1.baseID.toString())).resolves.toBeTruthy()
 
