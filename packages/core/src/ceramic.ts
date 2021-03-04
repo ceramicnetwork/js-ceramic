@@ -110,7 +110,7 @@ export interface CeramicModules {
   ipfs: IpfsApi,
   ipfsTopology: IpfsTopology,
   loggerProvider: LoggerProvider,
-  pinStore: PinStore,
+  pinStoreFactory: PinStoreFactory,
   repository: Repository
 }
 
@@ -180,7 +180,7 @@ class Ceramic implements CeramicApi {
   constructor (modules: CeramicModules, params: CeramicParameters) {
     this._ipfsTopology = modules.ipfsTopology
     this._logger = modules.loggerProvider.getDiagnosticsLogger()
-    this.pinStore = modules.pinStore
+    this.pinStore = modules.pinStoreFactory.createPinStore()
     this.pin = new LocalPinApi(this.pinStore, this._loadDoc.bind(this), this._logger)
     this.dispatcher = modules.dispatcher
 
@@ -355,7 +355,6 @@ class Ceramic implements CeramicApi {
     const ipfsTopology = new IpfsTopology(ipfs, networkOptions.name, logger)
     const pinStoreFactory = new PinStoreFactory(ipfs, pinStoreOptions)
     const repository = new Repository()
-    const pinStore = pinStoreFactory.createPinStore()
     const dispatcher = new Dispatcher(ipfs, networkOptions.pubsubTopic, repository, logger, pubsubLogger)
 
     const params = {
@@ -375,7 +374,6 @@ class Ceramic implements CeramicApi {
       loggerProvider,
       pinStoreFactory,
       repository,
-      pinStore
     }
 
     return [modules, params]
