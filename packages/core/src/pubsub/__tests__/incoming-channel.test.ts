@@ -56,6 +56,19 @@ describe('connection', () => {
     expect(await ipfs.pubsub.ls()).toEqual([TOPIC]); // And now we subscribed
     subscription.unsubscribe();
   });
+
+  test('on stopped ipfs', async () => {
+    const resubscribePeriod = 200;
+    const incoming$ = new IncomingChannel(ipfs, TOPIC, resubscribePeriod, pubsubLogger, diagnosticsLogger);
+    const subscribeSpy = jest.spyOn(ipfs.pubsub, 'subscribe');
+    const unsubscribeSpy = jest.spyOn(ipfs.pubsub, 'unsubscribe');
+    const incomingChannelPromise = incoming$.toPromise()
+    await incoming$.tasks.onIdle();
+    expect(subscribeSpy).toBeCalledTimes(1); // Initial pubsub.subscribe
+    expect(unsubscribeSpy).toBeCalledTimes(1); // Resubscribe attempt: _unsubscribe_ then subscribe
+    await ipfs.stop();
+    await expect(incomingChannelPromise).rejects.toThrow(`IPFS has stopped`)
+  })
 });
 
 test('pass incoming message', async () => {
