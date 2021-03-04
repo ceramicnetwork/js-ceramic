@@ -4,7 +4,7 @@ import { IpfsApi } from "./index";
 export interface PinningBackend {
     id: string;
 
-    open(): Promise<void>;
+    open(): void;
 
     close(): Promise<void>;
 

@@ -59,7 +59,7 @@ export class PowergatePinningBackend implements PinningBackend {
         return this.#pow;
     }
 
-    async open(): Promise<void> {
+    open(): void {
         this.#pow = createPow({ host: this.endpoint });
         this.#pow.setToken(this.token);
     }

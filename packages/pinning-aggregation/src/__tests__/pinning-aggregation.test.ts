@@ -36,7 +36,7 @@ class FakePinning implements PinningBackend {
         // Do Nothing
     }
 
-    async open(): Promise<void> {
+    open(): void {
         // Do Nothing
     }
 

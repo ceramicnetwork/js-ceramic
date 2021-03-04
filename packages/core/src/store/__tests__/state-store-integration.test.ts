@@ -223,7 +223,7 @@ describe('Level data store', () => {
       pinningEndpoints: ['ipfs+context'],
       networkName: 'inmemory',
     })
-    store = await storeFactory.createPinStore()
+    store = storeFactory.createPinStore()
   })
 
   it('pins document correctly without IPFS pinning', async () => {
@@ -359,7 +359,7 @@ describe('Level data store', () => {
       pinningEndpoints: ['ipfs+context'],
       networkName: "local",
     })
-    const localStore = await storeFactoryLocal.createPinStore()
+    const localStore = storeFactoryLocal.createPinStore()
 
     await localStore.stateStore.save(doc.doctype)
     let docState = await localStore.stateStore.load(doc.id)
@@ -373,7 +373,7 @@ describe('Level data store', () => {
       pinningEndpoints: ['ipfs+context'],
       networkName: "inmemory",
     })
-    const inMemoryStore = await storeFactoryInMemory.createPinStore()
+    const inMemoryStore = storeFactoryInMemory.createPinStore()
 
     // The new pin store shouldn't be able to see docs that were pinned on the other network
     docState = await inMemoryStore.stateStore.load(doc.id)

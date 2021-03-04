@@ -61,7 +61,7 @@ export class IpfsPinning implements PinningBackend {
         return this.#ipfs;
     }
 
-    async open(): Promise<void> {
+    open(): void {
         if (this.ipfsAddress === FROM_CONTEXT_HOST) {
             if (!this.#ipfs) {
                 throw new NoIpfsInstanceError();

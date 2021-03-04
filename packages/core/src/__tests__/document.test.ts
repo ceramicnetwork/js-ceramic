@@ -139,7 +139,7 @@ beforeEach(async () => {
     unpin: jest.fn()
   }
   pinStore = new PinStore(stateStore, pinning, jest.fn(), jest.fn())
-  await pinStore.open('fakeNetwork')
+  pinStore.open('fakeNetwork')
 })
 
 describe('Document', () => {
@@ -199,11 +199,6 @@ describe('Document', () => {
       const topology = new FakeTopology(dispatcher._ipfs, networkOptions.name, loggerProvider.getDiagnosticsLogger())
 
       const repository = new Repository()
-      const pinStoreFactory = {
-        createPinStore: async() => {
-          return pinStore
-        }
-      };
       const modules = {
         anchorService,
         didResolver: resolver,
@@ -211,7 +206,7 @@ describe('Document', () => {
         ipfs: dispatcher._ipfs,
         ipfsTopology: topology,
         loggerProvider,
-        pinStoreFactory: pinStoreFactory as any as PinStoreFactory,
+        pinStore: pinStore,
         repository
       }
 
@@ -609,11 +604,6 @@ describe('Document', () => {
       }
       const topology = new FakeTopology(dispatcher._ipfs, networkOptions.name, loggerProvider.getDiagnosticsLogger())
 
-      const pinStoreFactory = {
-        createPinStore: async() => {
-          return pinStore
-        }
-      };
       const modules = {
         anchorService,
         didResolver: resolver,
@@ -621,7 +611,7 @@ describe('Document', () => {
         ipfs: dispatcher._ipfs,
         ipfsTopology: topology,
         loggerProvider,
-        pinStoreFactory: pinStoreFactory as any as PinStoreFactory,
+        pinStore: pinStore,
         pinningBackends: null,
         repository
       }

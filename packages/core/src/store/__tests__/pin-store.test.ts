@@ -46,7 +46,7 @@ class FakeType extends Doctype {
 
 test('#open', async () => {
     const pinStore = new PinStore(stateStore, pinning, jest.fn(), jest.fn())
-    await pinStore.open(NETWORK)
+    pinStore.open(NETWORK)
     expect(stateStore.open).toBeCalledWith(NETWORK)
     expect(pinning.open).toBeCalled()
 })

@@ -28,8 +28,6 @@ import {
 import { Resolver } from "did-resolver"
 
 import { DID } from 'dids'
-import { TileDoctypeHandler } from "@ceramicnetwork/doctype-tile-handler"
-import { Caip10LinkDoctypeHandler } from "@ceramicnetwork/doctype-caip10-link-handler"
 import { DiagnosticsLogger, LogLevel } from "@ceramicnetwork/logger";
 import { PinStoreFactory } from "./store/pin-store-factory";
 import { PinStore } from "./store/pin-store";
@@ -112,7 +110,7 @@ export interface CeramicModules {
   ipfs: IpfsApi,
   ipfsTopology: IpfsTopology,
   loggerProvider: LoggerProvider,
-  pinStoreFactory: PinStoreFactory,
+  pinStore: PinStore,
   repository: Repository
 }
 
@@ -168,22 +166,22 @@ class Ceramic implements CeramicApi {
   public readonly context: Context
   public readonly dispatcher: Dispatcher
 
-  public pin: PinApi // Set during init()
-  public pinStore: PinStore // Set during init()
+  public readonly pin: PinApi;
+  public readonly pinStore: PinStore;
 
   private readonly _doctypeHandlers: HandlersMap
   private readonly _repository: Repository
   private readonly _ipfsTopology: IpfsTopology
   private readonly _logger: DiagnosticsLogger
   private readonly _networkOptions: CeramicNetworkOptions
-  private readonly _pinStoreFactory: PinStoreFactory
   private readonly _supportedChains: Array<string>
   private readonly _validateDocs: boolean
 
   constructor (modules: CeramicModules, params: CeramicParameters) {
     this._ipfsTopology = modules.ipfsTopology
     this._logger = modules.loggerProvider.getDiagnosticsLogger()
-    this._pinStoreFactory = modules.pinStoreFactory
+    this.pinStore = modules.pinStore
+    this.pin = new LocalPinApi(this.pinStore, this._loadDoc.bind(this), this._logger)
     this.dispatcher = modules.dispatcher
 
     this._validateDocs = params.validateDocs
@@ -357,6 +355,7 @@ class Ceramic implements CeramicApi {
     const ipfsTopology = new IpfsTopology(ipfs, networkOptions.name, logger)
     const pinStoreFactory = new PinStoreFactory(ipfs, pinStoreOptions)
     const repository = new Repository()
+    const pinStore = pinStoreFactory.createPinStore()
     const dispatcher = new Dispatcher(ipfs, networkOptions.pubsubTopic, repository, logger, pubsubLogger)
 
     const params = {
@@ -375,7 +374,8 @@ class Ceramic implements CeramicApi {
       ipfsTopology,
       loggerProvider,
       pinStoreFactory,
-      repository
+      repository,
+      pinStore
     }
 
     return [modules, params]
@@ -430,9 +430,6 @@ class Ceramic implements CeramicApi {
    * @param restoreDocuments - Controls whether we attempt to load pinned document state into memory at startup
    */
   async _init(doPeerDiscovery: boolean, restoreDocuments: boolean): Promise<void> {
-    this.pinStore = await this._pinStoreFactory.createPinStore()
-    this.pin = new LocalPinApi(this.pinStore, this._loadDoc.bind(this), this._logger)
-
     if (doPeerDiscovery) {
       await this._ipfsTopology.start()
     }

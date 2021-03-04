@@ -14,9 +14,9 @@ export class PinStore {
       readonly resolve: (path: string) => Promise<CID>
     ) {}
 
-    async open(networkName: string): Promise<void> {
-        await this.stateStore.open(networkName)
-        await this.pinning.open()
+    open(networkName: string): void {
+        this.stateStore.open(networkName)
+        this.pinning.open()
     }
 
     async close(): Promise<void> {
