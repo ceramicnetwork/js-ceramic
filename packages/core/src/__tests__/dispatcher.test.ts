@@ -5,7 +5,7 @@ import { TileDoctype } from "@ceramicnetwork/doctype-tile"
 import DocID from "@ceramicnetwork/docid";
 import { CommitType, DocState, DoctypeHandler, LoggerProvider } from '@ceramicnetwork/common';
 import { serialize, MsgType } from '../pubsub/pubsub-message';
-import { Repository } from '../repository';
+import { Repository } from '../state-management/repository';
 import { delay } from '../pubsub/__tests__/delay';
 
 const TOPIC = '/ceramic'

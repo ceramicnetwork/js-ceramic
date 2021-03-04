@@ -38,7 +38,7 @@ import InMemoryAnchorService from "./anchor/memory/in-memory-anchor-service"
 
 import { randomUint32 } from '@stablelib/random'
 import { LocalPinApi } from './local-pin-api';
-import { Repository } from './repository';
+import { Repository } from './state-management/repository';
 import { HandlersMap } from './handlers-map';
 import { LoadingQueue } from './state-management/loading-queue';
 import { DocumentFactory } from './state-management/document-factory';

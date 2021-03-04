@@ -1,4 +1,4 @@
-import { Repository } from '../repository';
+import { Repository } from './repository';
 import { DocID } from '@ceramicnetwork/docid';
 import { Document } from '../document';
 import { HandlersMap } from '../handlers-map';

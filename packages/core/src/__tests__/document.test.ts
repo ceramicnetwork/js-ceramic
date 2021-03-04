@@ -20,7 +20,7 @@ jest.mock('../store/level-state-store')
 import InMemoryAnchorService from "../anchor/memory/in-memory-anchor-service"
 import {FakeTopology} from "./fake-topology";
 import {PinStoreFactory} from "../store/pin-store-factory";
-import { Repository } from '../repository';
+import { Repository } from '../state-management/repository';
 
 jest.mock('../dispatcher', () => {
   const CID = require('cids') // eslint-disable-line @typescript-eslint/no-var-requires
