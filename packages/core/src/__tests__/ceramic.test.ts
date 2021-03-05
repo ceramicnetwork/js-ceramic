@@ -64,6 +64,7 @@ describe('Ceramic integration', () => {
     await ipfs1.stop(() => console.log('IPFS1 stopped'))
     await ipfs2.stop(() => console.log('IPFS2 stopped'))
     await ipfs3.stop(() => console.log('IPFS3 stopped'))
+    await delay(1000)
   })
 
   it('can create Ceramic instance on default network', async () => {
