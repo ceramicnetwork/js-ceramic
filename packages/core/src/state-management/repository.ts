@@ -3,6 +3,7 @@ import DocID from '@ceramicnetwork/docid';
 import { AsyncLruMap } from './async-lru-map';
 import { StateStore } from '../store/state-store';
 import { DocumentFactory } from './document-factory';
+import { DocState } from '@ceramicnetwork/common';
 
 export class Repository {
   readonly #map: AsyncLruMap<Document>;
@@ -26,7 +27,8 @@ export class Repository {
   }
 
   /**
-   * Stub for async loading of the document.
+   * Return a document, either from cache or re-constructed from state store.
+   * Adds the document to cache.
    */
   async get(docId: DocID): Promise<Document | undefined> {
     const fromMemory = await this.#map.get(docId.toString());
@@ -42,6 +44,20 @@ export class Repository {
         } else {
           return undefined;
         }
+      }
+    }
+  }
+
+  /**
+   * Return a document state, either from cache or from state store.
+   */
+  async docState(docId: DocID): Promise<DocState | undefined> {
+    const fromMemory = await this.#map.get(docId.toString());
+    if (fromMemory) {
+      return fromMemory.state;
+    } else {
+      if (this.#stateStore && this.#documentFactory) {
+        return this.#stateStore.load(docId);
       }
     }
   }

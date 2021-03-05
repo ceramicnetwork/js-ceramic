@@ -162,13 +162,14 @@ export class Dispatcher {
     // TODO Add validation the message adheres to the proper format.
 
     const { doc: docId, id } = message
-    const document = await this.repository.get(docId)
-    if (document) {
+    const docState = await this.repository.docState(docId)
+    if (docState) {
       // TODO: Should we validate that the 'id' field is the correct hash of the rest of the message?
 
+      const tip = docState.log[docState.log.length - 1].cid
       // Build RESPONSE message and send it out on the pub/sub topic
       // TODO: Handle 'paths' for multiquery support
-      const tipMap = new Map().set(docId.toString(), document.tip)
+      const tipMap = new Map().set(docId.toString(), tip)
       this.publish({ typ: MsgType.RESPONSE, id, tips: tipMap})
     }
   }
