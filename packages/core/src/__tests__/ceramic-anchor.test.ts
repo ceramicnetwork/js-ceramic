@@ -280,22 +280,12 @@ describe('Ceramic anchoring', () => {
     const winningContent = update1ShouldWin ? newContent1 : newContent2
 
     await anchorService.anchor()
-
-    if (update1ShouldWin) {
-      // doctype1 anchors successfully, doctype2 fails to anchor
-      // doctype1 sends a tip, doctype2 updates state based on the tip
-      // so we wait till doctype2 handles the tip and changes anchorStatus to anchored
-      await TestUtils.waitForState(doctype2, 2000, state => state.anchorStatus === AnchorStatus.ANCHORED, () => {
-        throw new Error(`doctype2 not anchored still`)
-      })
-    } else {
-      // doctype2 anchors successfully, doctype1 fails to anchor
-      // doctype2 sends a tip, doctype1 updates state based on the tip
-      // so we wait till doctype1 handles the tip and changes anchorStatus to anchored
-      await TestUtils.waitForState(doctype1, 2000, state => state.anchorStatus === AnchorStatus.ANCHORED, () => {
-        throw new Error(`doctype1 not anchored still`)
-      })
-    }
+    await TestUtils.waitForState(doctype2, 2000, state => state.anchorStatus === AnchorStatus.ANCHORED, () => {
+      throw new Error(`doctype2 not anchored still`)
+    })
+    await TestUtils.waitForState(doctype1, 2000, state => state.anchorStatus === AnchorStatus.ANCHORED, () => {
+      throw new Error(`doctype1 not anchored still`)
+    })
 
     // Only one of the updates should have won
     expect(doctype1.state.log.length).toEqual(3)
