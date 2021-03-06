@@ -167,10 +167,10 @@ class Ceramic implements CeramicApi {
 
   public readonly context: Context
 
-  public readonly dispatcher: Dispatcher; // Set during init()
-  public readonly pin: PinApi; // Set during init()
-  public readonly pinStore: PinStore; // Set during init()
-  private readonly _repository: Repository; // Set during init()
+  public readonly dispatcher: Dispatcher;
+  public readonly pin: PinApi;
+  public readonly pinStore: PinStore;
+  private readonly _repository: Repository;
 
   private readonly _doctypeHandlers: HandlersMap
   private readonly _ipfsTopology: IpfsTopology
