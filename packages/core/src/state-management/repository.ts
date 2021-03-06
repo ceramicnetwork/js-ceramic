@@ -70,7 +70,7 @@ export class Repository {
   }
 
   /**
-   * Remove from memory. Stub.
+   * Removes the document from the cache
    * @param docId
    */
   async delete(docId: DocID): Promise<void> {
