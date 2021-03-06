@@ -18,17 +18,15 @@ export class NamedPQueue {
    *
    * There can only be one `queue` or `remove` operation running at a time.
    */
-  private queue(name: string): Promise<PQueue> {
-    return this.#operations.use(async () => {
-      const found = this.#lanes.get(name);
-      if (found) {
-        return found;
-      } else {
-        const queue = new PQueue({ concurrency: 1 });
-        this.#lanes.set(name, queue);
-        return queue;
-      }
-    });
+  private queue(name: string): PQueue {
+    const found = this.#lanes.get(name);
+    if (found) {
+      return found;
+    } else {
+      const queue = new PQueue({ concurrency: 1 });
+      this.#lanes.set(name, queue);
+      return queue;
+    }
   }
 
   /**
@@ -54,10 +52,13 @@ export class NamedPQueue {
    * Returns result of the task execution.
    */
   async add<A>(name: string, f: () => Promise<A>): Promise<A> {
-    const queue = await this.queue(name);
-    return queue.add(f).then(async (result) => {
+    const release = await this.#operations.acquire();
+    const queue = this.queue(name);
+    const task = queue.add(f).then(async (result) => {
       await this.remove(name);
       return result;
     });
+    release();
+    return task;
   }
 }
