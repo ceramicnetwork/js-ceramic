@@ -16,7 +16,7 @@ export class Repository {
     });
   }
 
-  // This should not be here, but here we are with the initialization process.
+  // Ideally this would be provided in the constructor, but circular dependencies in our initialization process make this necessary for now
   setDocumentFactory(documentFactory: DocumentFactory): void {
     this.#documentFactory = documentFactory;
   }
