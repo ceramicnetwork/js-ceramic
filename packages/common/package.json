@@ -29,7 +29,7 @@
   "dependencies": {
     "@ceramicnetwork/docid": "^0.5.0-rc.4",
     "@ceramicnetwork/logger": "^0.1.0-rc.4",
-    "cids": "1.0.2",
+    "cids": "^1.1.6",
     "did-resolver": "^2.1.1",
     "events": "^3.2.0",
     "lodash.clonedeep": "^4.5.0",
