@@ -26,7 +26,7 @@
   "dependencies": {
     "@ceramicnetwork/blockchain-utils-linking": "^0.2.0-rc.3",
     "@ethersproject/contracts": "^5.0.9",
-    "@ethersproject/providers": "^5.0.18",
+    "@ethersproject/providers": "5.0.23",
     "@ethersproject/wallet": "^5.0.10",
     "@polkadot/util-crypto": "^5.2.3",
     "@smontero/eosio-signing-tools": "^0.0.6",
