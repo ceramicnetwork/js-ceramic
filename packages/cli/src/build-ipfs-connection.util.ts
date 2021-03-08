@@ -2,15 +2,16 @@ import {IpfsDaemon} from "@ceramicnetwork/ipfs-daemon";
 
 import dagJose from 'dag-jose'
 // @ts-ignore
-import multiformats from 'multiformats/basics'
-// @ts-ignore
 import legacy from 'multiformats/legacy'
 import ipfsClient from "ipfs-http-client"
 import { IpfsApi } from "@ceramicnetwork/common"
 import { DiagnosticsLogger } from "@ceramicnetwork/logger";
+import { sha256 } from 'multiformats/hashes/sha2'
 
-multiformats.multicodec.add(dagJose)
-const dagJoseFormat = legacy(multiformats, dagJose.name)
+const hasher = {}
+hasher[sha256.code] = sha256
+const dagJoseFormat = legacy(dagJose, {hashes: hasher})
+
 
 const IPFS_DHT_SERVER_MODE = process.env.IPFS_DHT_SERVER_MODE === 'true'
 const IPFS_GET_TIMEOUT = 60000 // 1 minute

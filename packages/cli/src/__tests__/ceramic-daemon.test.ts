@@ -10,8 +10,8 @@ import { EventEmitter } from "events"
 import * as u8a from 'uint8arrays'
 
 import dagJose from 'dag-jose'
-import basicsImport from 'multiformats/cjs/src/basics-import.js'
-import legacy from 'multiformats/cjs/src/legacy.js'
+import { sha256 } from 'multiformats/hashes/sha2'
+import legacy from 'multiformats/legacy'
 import DocID from "@ceramicnetwork/docid";
 
 const seed = u8a.fromString('6e34b2e1a9624113d81ece8a8a22e6e97f0e145c25c1d4d2d0e62753b4060c83', 'base16')
@@ -35,8 +35,9 @@ const topic = '/ceramic'
  * @param overrideConfig - IFPS config for override
  */
 const createIPFS = (overrideConfig: Record<string, unknown> = {}): Promise<IpfsApi> => {
-    basicsImport.multicodec.add(dagJose)
-    const format = legacy(basicsImport, dagJose.name)
+    const hasher = {}
+    hasher[sha256.code] = sha256
+    const format = legacy(dagJose, {hashes: hasher})
 
     const config = {
         ipld: { formats: [format] },

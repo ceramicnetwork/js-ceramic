@@ -45,7 +45,7 @@
     "@stablelib/sha256": "^1.0.0",
     "ajv": "^6.12.3",
     "await-semaphore": "^0.1.3",
-    "cids": "1.0.2",
+    "cids": "^1.1.6",
     "cross-fetch": "^3.0.6",
     "did-jwt": "^5.0.0",
     "did-resolver": "^3.0.1",
@@ -73,9 +73,9 @@
     "eslint": "^6.8.0",
     "eslint-plugin-jest": "^23.8.2",
     "get-port": "^5.1.1",
-    "ipfs-core": "0.3.0",
+    "ipfs": "^0.54.2",
     "key-did-provider-ed25519": "^1.0.1",
-    "multiformats": "3.0.3",
+    "multiformats": "^4.6.1",
     "tmp-promise": "^2.0.2"
   },
   "jest": {
@@ -85,7 +85,11 @@
     ],
     "testMatch": [
       "**/?(*.)+(spec|test).[jt]s?(x)"
-    ]
+    ],
+    "moduleNameMapper": {
+      "multiformats/legacy": "multiformats/cjs/src/legacy.js",
+      "multiformats/hashes/sha2": "multiformats/cjs/src/hashes/sha2.js"
+    }
   },
   "gitHead": "34eeee25597b0a60def72906c26d3afd6230aaf1"
 }
