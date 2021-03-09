@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.2.0-rc.4](/compare/@ceramicnetwork/blockchain-utils-linking@0.2.0-rc.2...@ceramicnetwork/blockchain-utils-linking@0.2.0-rc.4) (2021-03-09)
+
+
+### Bug Fixes
+
+* **blockchain-utils-linking:** Pin @ethersproject/providers to previous version (#1094) 89fcebe, closes #1094
+
+
+
+
+
 # [0.2.0-rc.3](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/blockchain-utils-linking@0.1.0...@ceramicnetwork/blockchain-utils-linking@0.2.0-rc.3) (2021-02-25)
 
 

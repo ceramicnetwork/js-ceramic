@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.13.3-rc.8](/compare/@ceramicnetwork/doctype-caip10-link-handler@0.13.3-rc.6...@ceramicnetwork/doctype-caip10-link-handler@0.13.3-rc.8) (2021-03-09)
+
+
+### Bug Fixes
+
+* **core:** Clear anchorScheduledFor when doc gets anchored (#1100) 73468f4, closes #1100
+
+
+
+
+
 ## [0.13.3-rc.7](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/doctype-caip10-link-handler@0.13.2...@ceramicnetwork/doctype-caip10-link-handler@0.13.3-rc.7) (2021-02-25)
 
 **Note:** Version bump only for package @ceramicnetwork/doctype-caip10-link-handler

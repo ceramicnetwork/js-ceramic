@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.13.4-rc.8](/compare/@ceramicnetwork/doctype-tile@0.13.4-rc.6...@ceramicnetwork/doctype-tile@0.13.4-rc.8) (2021-03-09)
+
+**Note:** Version bump only for package @ceramicnetwork/doctype-tile
+
+
+
+
+
 ## [0.13.4-rc.7](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/doctype-tile@0.13.3...@ceramicnetwork/doctype-tile@0.13.4-rc.7) (2021-02-25)
 
 **Note:** Version bump only for package @ceramicnetwork/doctype-tile

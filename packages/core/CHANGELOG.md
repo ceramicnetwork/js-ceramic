@@ -3,6 +3,32 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.20.0-rc.8](/compare/@ceramicnetwork/core@0.20.0-rc.6...@ceramicnetwork/core@0.20.0-rc.8) (2021-03-09)
+
+
+### Bug Fixes
+
+* **core:** Generate Query id differently (#1063) c58f114, closes #1063
+* **core:** Init TaskQueue differently in IncomingChannel (#1065) d0e9af0, closes #1065
+
+
+### Features
+
+* **core:** Add types and more JSDoc to conflict-resolution 58f31d5
+* **core:** Document.loadAtCommit -> Document#rewind 2600734
+* **core:** Document#tip relies on state information only 029e8d6
+* **core:** Drop Document#content 8cabb01
+* **core:** Emit doctype change event on state change inside Document fe63bb6
+* **core:** Externalize conflict resolution 7d224c9
+* **core:** Externalize state validation 3d3164e
+* **core:** Replace _applyQueue.onEmpty + custom processing logic with _applyQueue.onIdle b602a44
+* **core:** Running state inside a Document 02d3b52
+* Feed of pubsub messages (#1058) 2d2bb5c, closes #1058
+
+
+
+
+
 # [0.20.0-rc.7](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@0.19.7...@ceramicnetwork/core@0.20.0-rc.7) (2021-02-25)
 
 

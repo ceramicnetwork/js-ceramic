@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/ipfs-topology",
-  "version": "0.0.2-rc.4",
+  "version": "0.0.2-rc.5",
   "description": "Setup IPFS topology right",
   "keywords": [
     "ipfs",
@@ -24,7 +24,7 @@
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/logger": "^0.1.0-rc.4",
+    "@ceramicnetwork/logger": "^0.1.0-rc.5",
     "cross-fetch": "^3.0.6",
     "express": "^4.17.1"
   },

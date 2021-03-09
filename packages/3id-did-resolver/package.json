@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/3id-did-resolver",
-  "version": "0.7.0-rc.7",
+  "version": "0.7.0-rc.8",
   "description": "DID Resolver for the 3ID method",
   "keywords": [
     "Ceramic",
@@ -27,8 +27,8 @@
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/common": "^0.16.0-rc.7",
-    "@ceramicnetwork/docid": "^0.5.0-rc.4",
+    "@ceramicnetwork/common": "^0.16.0-rc.8",
+    "@ceramicnetwork/docid": "^0.5.0-rc.5",
     "cids": "1.0.2",
     "cross-fetch": "^3.0.6",
     "lru_map": "^0.4.1",

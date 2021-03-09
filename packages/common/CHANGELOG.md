@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.16.0-rc.8](/compare/@ceramicnetwork/common@0.16.0-rc.6...@ceramicnetwork/common@0.16.0-rc.8) (2021-03-09)
+
+
+### Features
+
+* Feed of pubsub messages (#1058) 2d2bb5c, closes #1058
+
+
+
+
+
 # [0.16.0-rc.7](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@0.15.9...@ceramicnetwork/common@0.16.0-rc.7) (2021-02-25)
 
 

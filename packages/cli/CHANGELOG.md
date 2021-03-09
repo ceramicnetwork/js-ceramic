@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.21.0-rc.8](/compare/@ceramicnetwork/cli@0.21.0-rc.6...@ceramicnetwork/cli@0.21.0-rc.8) (2021-03-09)
+
+
+### Features
+
+* get origin in logs (#1078) 560bf15, closes #1078
+
+
+
+
+
 # [0.21.0-rc.7](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@0.20.8...@ceramicnetwork/cli@0.21.0-rc.7) (2021-02-25)
 
 
