@@ -66,7 +66,7 @@ export class IncomingChannel extends Observable<IPFSPubsubMessage> {
         this.tasks.clear();
         // Unsubscribe only after a currently running task is finished.
         this.tasks.add(async () => {
-          await this.ipfs.pubsub.unsubscribe(this.topic, handler);
+          await this.ipfs.pubsub?.unsubscribe(this.topic, handler);
         });
       };
     });

@@ -2,7 +2,7 @@ import Level from "level-ts";
 import { DocState, Doctype, DoctypeUtils } from "@ceramicnetwork/common"
 import { StateStore } from "./state-store"
 import DocID from '@ceramicnetwork/docid'
-import { promises as fs } from 'fs'
+import * as fs from 'fs'
 import path from "path";
 
 /**
@@ -24,10 +24,10 @@ export class LevelStateStore implements StateStore {
     /**
      * Open pinning service
      */
-    async open(networkName: string): Promise<void> {
+    open(networkName: string): void {
         // Always store the pinning state in a network-specific directory
         const storePath = path.join(this.storeRoot, networkName)
-        await fs.mkdir(storePath, { recursive: true }) // create dir if it doesn't exist
+        fs.mkdirSync(storePath, { recursive: true }) // create dir if it doesn't exist
         this.#store = new Level(storePath);
     }
 

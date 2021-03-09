@@ -3,10 +3,13 @@ import CID from 'cids'
 import { Document } from "../document"
 import { TileDoctype } from "@ceramicnetwork/doctype-tile"
 import DocID from "@ceramicnetwork/docid";
-import { CommitType, DocState, DoctypeHandler, LoggerProvider } from '@ceramicnetwork/common';
+import { CommitType, DocState, DoctypeHandler, LoggerProvider, PinningBackend } from '@ceramicnetwork/common';
 import { serialize, MsgType } from '../pubsub/pubsub-message';
-import { Repository } from '../repository';
+import { Repository } from '../state-management/repository';
 import { delay } from '../pubsub/__tests__/delay';
+import tmp from 'tmp-promise'
+import { LevelStateStore } from '../store/level-state-store';
+import { PinStore } from '../store/pin-store';
 
 const TOPIC = '/ceramic'
 const FAKE_CID = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
@@ -43,6 +46,7 @@ const fakeHandler = {
 describe('Dispatcher', () => {
 
   let dispatcher: Dispatcher
+  let repository: Repository
   const loggerProvider = new LoggerProvider()
 
   beforeEach(async () => {
@@ -52,7 +56,10 @@ describe('Dispatcher', () => {
     ipfs.pubsub.unsubscribe.mockClear()
     ipfs.pubsub.publish.mockClear()
 
-    const repository = new Repository()
+    const levelPath = await tmp.tmpName()
+    const stateStore = new LevelStateStore(levelPath)
+    repository = new Repository(100)
+    repository.setStateStore(stateStore)
     dispatcher = new Dispatcher(ipfs, TOPIC, repository, loggerProvider.getDiagnosticsLogger(), loggerProvider.makeServiceLogger("pubsub"))
   })
 
@@ -90,8 +97,8 @@ describe('Dispatcher', () => {
       {loggerProvider},
       fakeHandler,
     )
-    await dispatcher.register(doc)
-
+    dispatcher.register(doc)
+    await delay(100) // Wait for plumbing
     const publishArgs = ipfs.pubsub.publish.mock.calls[0]
     expect(publishArgs[0]).toEqual(TOPIC)
     const queryMessageSent = JSON.parse(publishArgs[1])
@@ -136,7 +143,8 @@ describe('Dispatcher', () => {
         {loggerProvider},
         fakeHandler
       )
-      await dispatcher.register(document)
+      dispatcher.register(document)
+      await repository.add(document)
       return document
     }
 
@@ -158,9 +166,9 @@ describe('Dispatcher', () => {
     const queryID = queryMessageSent.id
 
     // Handle UPDATE message
-    const updatePromise = new Promise(resolve => doc.on('update', resolve))
+    doc._update = jest.fn()
     await dispatcher.handleMessage({ typ: MsgType.UPDATE, doc: FAKE_DOC_ID, tip: FAKE_CID })
-    expect(await updatePromise).toEqual(FAKE_CID)
+    expect(doc._update).toBeCalledWith(FAKE_CID)
 
     const continuationState = {
       ...initialState, log: initialState.log.concat({
@@ -173,9 +181,9 @@ describe('Dispatcher', () => {
     expect(ipfs.pubsub.publish).lastCalledWith(TOPIC, serialize({ typ: MsgType.RESPONSE, id: "1", tips: new Map().set(FAKE_DOC_ID.toString(), FAKE_CID) }))
 
     // Handle RESPONSE message
-    const updatePromise2 = new Promise(resolve => doc2.on('update', resolve))
+    doc2._update = jest.fn()
     const tips = new Map().set(FAKE_DOC_ID.toString(), FAKE_CID2)
     await dispatcher.handleMessage({ typ: MsgType.RESPONSE, id: queryID, tips: tips })
-    expect(await updatePromise2).toEqual(FAKE_CID2)
+    expect(doc2._update).toBeCalledWith(FAKE_CID2)
   })
 })

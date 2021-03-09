@@ -20,7 +20,7 @@ jest.mock('../store/level-state-store')
 import InMemoryAnchorService from "../anchor/memory/in-memory-anchor-service"
 import {FakeTopology} from "./fake-topology";
 import {PinStoreFactory} from "../store/pin-store-factory";
-import { Repository } from '../repository';
+import { Repository } from '../state-management/repository';
 
 jest.mock('../dispatcher', () => {
   const CID = require('cids') // eslint-disable-line @typescript-eslint/no-var-requires
@@ -139,7 +139,7 @@ beforeEach(async () => {
     unpin: jest.fn()
   }
   pinStore = new PinStore(stateStore, pinning, jest.fn(), jest.fn())
-  await pinStore.open('fakeNetwork')
+  pinStore.open('fakeNetwork')
 })
 
 describe('Document', () => {
@@ -198,12 +198,12 @@ describe('Document', () => {
 
       const topology = new FakeTopology(dispatcher._ipfs, networkOptions.name, loggerProvider.getDiagnosticsLogger())
 
-      const repository = new Repository()
+      const repository = new Repository(100)
       const pinStoreFactory = {
-        createPinStore: async() => {
+        createPinStore: () => {
           return pinStore
         }
-      };
+      } as unknown as PinStoreFactory;
       const modules = {
         anchorService,
         didResolver: resolver,
@@ -211,7 +211,8 @@ describe('Document', () => {
         ipfs: dispatcher._ipfs,
         ipfsTopology: topology,
         loggerProvider,
-        pinStoreFactory: pinStoreFactory as any as PinStoreFactory,
+        pinStoreFactory: pinStoreFactory,
+        pinStore: pinStore,
         repository
       }
 
@@ -223,15 +224,15 @@ describe('Document', () => {
         validateDocs: true,
       }
 
-      ceramic = new Ceramic(modules, params)
-      ceramic._doctypeHandlers['tile'] = doctypeHandler
+      ceramic = new Ceramic(modules, params);
+      (ceramic as any)._doctypeHandlers.add(doctypeHandler)
       ceramic.context.resolver = resolver
       context.api = ceramic
       await ceramic._init(false, false)
 
       const paramsNoSchemaValidation = { ...params, validateDocs: false };
-      ceramicWithoutSchemaValidation = new Ceramic(modules, paramsNoSchemaValidation)
-      ceramicWithoutSchemaValidation._doctypeHandlers['tile'] = doctypeHandler
+      ceramicWithoutSchemaValidation = new Ceramic(modules, paramsNoSchemaValidation);
+      (ceramicWithoutSchemaValidation as any)._doctypeHandlers.add(doctypeHandler)
       ceramicWithoutSchemaValidation.context.resolver = resolver
 
       await ceramicWithoutSchemaValidation._init(false, false)
@@ -593,7 +594,7 @@ describe('Document', () => {
 
       const resolver = new Resolver({ ...threeIdResolver })
       const loggerProvider = new LoggerProvider()
-      const repository = new Repository()
+      const repository = new Repository(100)
       context = {
         did: user,
         anchorService,
@@ -610,7 +611,7 @@ describe('Document', () => {
       const topology = new FakeTopology(dispatcher._ipfs, networkOptions.name, loggerProvider.getDiagnosticsLogger())
 
       const pinStoreFactory = {
-        createPinStore: async() => {
+        createPinStore: () => {
           return pinStore
         }
       };
@@ -621,7 +622,8 @@ describe('Document', () => {
         ipfs: dispatcher._ipfs,
         ipfsTopology: topology,
         loggerProvider,
-        pinStoreFactory: pinStoreFactory as any as PinStoreFactory,
+        pinStoreFactory: pinStoreFactory,
+        pinStore: pinStore,
         pinningBackends: null,
         repository
       }
@@ -635,8 +637,8 @@ describe('Document', () => {
         validateDocs: true,
       }
 
-      ceramic = new Ceramic(modules, params)
-      ceramic._doctypeHandlers['tile'] = doctypeHandler
+      ceramic = new Ceramic(modules, params);
+      (ceramic as any)._doctypeHandlers.add(doctypeHandler)
       ceramic.context.resolver = resolver
       context.api = ceramic
       await ceramic._init(false, false)

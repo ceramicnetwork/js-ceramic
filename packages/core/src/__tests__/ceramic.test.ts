@@ -61,9 +61,9 @@ describe('Ceramic integration', () => {
   })
 
   afterEach(async () => {
-    await ipfs1.stop(() => console.log('IPFS1 stopped'))
-    await ipfs2.stop(() => console.log('IPFS2 stopped'))
-    await ipfs3.stop(() => console.log('IPFS3 stopped'))
+    await ipfs1.stop()
+    await ipfs2.stop()
+    await ipfs3.stop()
   })
 
   it('can create Ceramic instance on default network', async () => {
@@ -323,92 +323,92 @@ describe('Ceramic integration', () => {
   // })
 
   it('can utilize doc commit cache', async () => {
+    await swarmConnect(ipfs1, ipfs2)
     const ceramic1 = await createCeramic(ipfs1, false, 2)
     const ceramic2 = await createCeramic(ipfs2, false, 1)
     const controller = ceramic1.context.did.id
 
-    const docCache1 = (ceramic1 as any)._repository
-    const putDocToCacheSpy1 = jest.spyOn(docCache1, 'add');
-    const getDocFromCacheSpy1 = jest.spyOn(docCache1, 'get');
-    const hasDocFromCacheSpy1 = jest.spyOn(docCache1, 'has');
+    const repository1 = (ceramic1 as any)._repository
+    const addSpy1 = jest.spyOn(repository1, 'add');
+    const getSpy1 = jest.spyOn(repository1, 'get');
 
-    const docCache2 = (ceramic2 as any)._repository
-    const putDocToCacheSpy2 = jest.spyOn(docCache2, 'add');
-    const getDocFromCacheSpy2 = jest.spyOn(docCache2, 'get');
+    const repository2 = (ceramic2 as any)._repository
+    const addSpy2 = jest.spyOn(repository2, 'add');
+    const getSpy2 = jest.spyOn(repository2, 'get');
 
-    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { test: 456 }, metadata: { controllers: [controller], tags: ['3id'] } })
+    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { test: 456 }, metadata: { controllers: [controller], tags: ['3id'] } }, {publish: false})
     expect(doctype1).toBeDefined()
 
     await anchor(ceramic1)
     await syncDoc(doctype1)
 
-    expect(putDocToCacheSpy1).toBeCalledTimes(1)
-    expect(hasDocFromCacheSpy1).toBeCalledTimes(1)
-    expect(getDocFromCacheSpy1).toBeCalledTimes(0)
-    expect(docCache1.has(doctype1.id.baseID.toString())).toBeTruthy()
+    expect(addSpy1).toBeCalledTimes(1)
+    expect(getSpy1).toBeCalledTimes(1)
+    await expect(repository1.get(doctype1.id.baseID.toString())).resolves.toBeTruthy()
 
-    putDocToCacheSpy1.mockClear()
-    getDocFromCacheSpy1.mockClear()
-    hasDocFromCacheSpy1.mockClear()
+    addSpy1.mockClear()
+    getSpy1.mockClear()
 
-    await doctype1.change({ content: { test: 'abcde' }, metadata: { controllers: [controller] } })
+    await doctype1.change({ content: { test: 'abcde' }, metadata: { controllers: [controller] } }, {publish: false})
 
     await anchor(ceramic1)
     await syncDoc(doctype1)
 
     const prevCommitDocId1 = doctype1.id.atCommit(doctype1.state.log[3].cid)
-
+    expect(addSpy2).not.toBeCalled()
     const loadedDoctype1 = await ceramic2.loadDocument(prevCommitDocId1)
     expect(loadedDoctype1).toBeDefined()
 
-    expect(getDocFromCacheSpy2).toBeCalledTimes(1)
-    expect(putDocToCacheSpy2).toBeCalledTimes(2)
-    expect(docCache2.has(prevCommitDocId1.baseID.toString())).toBeTruthy()
+    expect(getSpy2).toBeCalled()
+    expect(addSpy2).toBeCalledTimes(1)
+    await expect(repository2.get(prevCommitDocId1.baseID.toString())).resolves.toBeTruthy()
 
     await ceramic1.close()
     await ceramic2.close()
   })
 
   it('cannot utilize disabled doc commit cache', async () => {
+    await swarmConnect(ipfs1, ipfs2)
     const ceramic1 = await createCeramic(ipfs1, false, 2)
     const ceramic2 = await createCeramic(ipfs2, false, 1, false)
     const controller = ceramic1.context.did.id
 
-    const docCache1 = (ceramic1 as any)._repository
-    const putDocToCacheSpy1 = jest.spyOn(docCache1, 'add');
-    const getDocFromCacheSpy1 = jest.spyOn(docCache1, 'get');
-    const hasDocFromCacheSpy1 = jest.spyOn(docCache1, 'has');
+    const repository1 = (ceramic1 as any)._repository
+    const addSpy1 = jest.spyOn(repository1, 'add');
+    const getSpy1 = jest.spyOn(repository1, 'get');
 
-    const docCache2 = (ceramic2 as any)._repository
-    const putDocToCacheSpy2 = jest.spyOn(docCache2, 'add');
-    const getDocFromCacheSpy2 = jest.spyOn(docCache2, 'get');
+    const repository2 = (ceramic2 as any)._repository
+    const addSpy2 = jest.spyOn(repository2, 'add');
+    const getSpy2 = jest.spyOn(repository2, 'get');
 
     const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { test: 456 }, metadata: { controllers: [controller], tags: ['3id'] } })
+    expect(getSpy1).toBeCalledTimes(1)
+    expect(addSpy1).toBeCalledTimes(1)
     expect(doctype1).toBeDefined()
 
     await anchor(ceramic1)
     await syncDoc(doctype1)
 
-    expect(putDocToCacheSpy1).toBeCalledTimes(1)
-    expect(hasDocFromCacheSpy1).toBeCalledTimes(1)
-    expect(docCache1.has(doctype1.id.baseID.toString())).toBeTruthy()
+    await expect(repository1.get(doctype1.id.baseID.toString())).resolves.toBeTruthy()
 
-    putDocToCacheSpy1.mockClear()
-    getDocFromCacheSpy1.mockClear()
+    addSpy1.mockClear()
+    getSpy1.mockClear()
 
     await doctype1.change({ content: { test: 'abcde' }, metadata: { controllers: [controller] } })
+    expect(getSpy1).toBeCalledTimes(1)
+    expect(addSpy1).toBeCalledTimes(0)
 
     await anchor(ceramic1)
     await syncDoc(doctype1)
 
     const prevCommitDocId1 = doctype1.id.atCommit(doctype1.state.log[3].cid)
+    expect(addSpy2).not.toBeCalled()
+    const doctype2 = await ceramic2.loadDocument(prevCommitDocId1)
+    expect(doctype2).toBeDefined()
 
-    const loadedDoctype1 = await ceramic2.loadDocument(prevCommitDocId1)
-    expect(loadedDoctype1).toBeDefined()
-
-    expect(getDocFromCacheSpy2).toBeCalledTimes(1)
-    expect(putDocToCacheSpy2).toBeCalledTimes(2)
-    expect(docCache2.has(prevCommitDocId1.baseID.toString())).toBeTruthy()
+    expect(getSpy2).toBeCalled()
+    expect(addSpy2).toBeCalledTimes(1)
+    await expect(repository2.get(prevCommitDocId1.baseID.toString())).resolves.toBeTruthy()
 
     await ceramic1.close()
     await ceramic2.close()

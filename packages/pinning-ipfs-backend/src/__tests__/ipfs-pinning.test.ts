@@ -29,17 +29,17 @@ describe("#open", () => {
     test("use provided IPFS", async () => {
         const ipfs = jest.fn()
         const pinning = new IpfsPinning("ipfs+context", ipfs);
-        await pinning.open();
+        pinning.open();
         expect(pinning.ipfs).toBe(ipfs);
     });
     test("throw if no IPFS instance", async () => {
         const ipfs = null;
         const pinning = new IpfsPinning("ipfs+context", ipfs);
-        await expect(pinning.open.bind(pinning)).rejects.toThrow(NoIpfsInstanceError);
+        expect(() => pinning.open()).toThrow(NoIpfsInstanceError);
     });
     test("use IPFS client pointed to #ipfsAddress", async () => {
         const pinning = new IpfsPinning("ipfs+https://example.com", {});
-        await pinning.open();
+        pinning.open();
         expect(ipfsClient).toBeCalledWith({ url: "https://example.com:5001" });
     });
 });
@@ -54,7 +54,7 @@ describe("#pin", () => {
         };
 
         const pinning = new IpfsPinning("ipfs+context", ipfs);
-        await pinning.open();
+        pinning.open();
         const cid = new CID("QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D");
         await pinning.pin(cid);
         expect(add).toBeCalledWith(cid, { recursive: false });
@@ -78,7 +78,7 @@ describe("#unpin", () => {
         };
 
         const pinning = new IpfsPinning("ipfs+context", ipfs);
-        await pinning.open();
+        pinning.open();
         const cid = new CID("QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D");
         await pinning.unpin(cid);
         expect(rm).toBeCalledWith(cid);
@@ -103,7 +103,7 @@ describe("#ls", () => {
           },
         };
         const pinning = new IpfsPinning("ipfs+context", ipfs);
-        await pinning.open();
+        pinning.open();
         const result = await pinning.ls();
         cids.forEach((cid) => {
             expect(result[cid.toString()]).toEqual([pinning.id]);

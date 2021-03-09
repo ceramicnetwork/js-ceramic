@@ -87,7 +87,7 @@ describe('Ceramic interop: core <> http-client', () => {
         const doctypeHandler = new TileDoctypeHandler()
         doctypeHandler.verifyJWS = (): Promise<void> => { return }
         // @ts-ignore
-        core._doctypeHandlers['tile'] = doctypeHandler
+        core._doctypeHandlers.add(doctypeHandler)
 
         daemon = new CeramicDaemon(core, { port, debug: false })
         client = new CeramicClient(apiUrl, { docSyncEnabled: true, docSyncInterval: 1000 })

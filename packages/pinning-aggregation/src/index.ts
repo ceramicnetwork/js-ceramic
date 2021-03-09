@@ -54,8 +54,8 @@ export class PinningAggregation implements PinningBackend {
      * Open all the services.
      * Async semantics: every call should succeed.
      */
-    async open(): Promise<void> {
-        await Promise.all(this.backends.map(async (service) => service.open()));
+    open(): void {
+        this.backends.forEach((service) => service.open())
     }
 
     /**

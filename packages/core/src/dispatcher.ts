@@ -4,7 +4,7 @@ import type { Document } from "./document"
 import { DoctypeUtils, IpfsApi, UnreachableCaseError } from '@ceramicnetwork/common';
 import DocID from "@ceramicnetwork/docid";
 import { DiagnosticsLogger, ServiceLogger } from "@ceramicnetwork/logger";
-import { Repository } from './repository';
+import { Repository } from './state-management/repository';
 import {
   buildQueryMessage,
   MsgType,
@@ -41,22 +41,13 @@ export class Dispatcher {
    *
    * @param document - Document instance
    */
-  async register (document: Document): Promise<void> {
-    this.repository.add(document)
-
+  register (document: Document): void {
     // Build a QUERY message to send to the pub/sub topic to request the latest tip for this document
     const message = buildQueryMessage(document.id)
 
     // Store the query id so we'll process the corresponding RESPONSE message when it comes in
     this._outstandingQueryIds[message.id] = document.id
     this.publish(message)
-  }
-
-  /**
-   * Unregister document by ID.
-   */
-  unregister (docId: DocID): void {
-    this.repository.delete(docId)
   }
 
   /**
@@ -153,11 +144,11 @@ export class Dispatcher {
     // TODO Add validation the message adheres to the proper format.
 
     const { doc: docId, tip } = message
-    if (await this.repository.has(docId)) {
+    const document = await this.repository.get(docId)
+    if (document) {
       // TODO: add cache of cids here so that we don't emit event
       // multiple times if we get the message more than once.
-      const document = await this.repository.get(docId)
-      document.emit('update', new CID(tip))
+      await document._update(tip)
       // TODO: Handle 'anchorService' if present in message
     }
   }
@@ -171,13 +162,14 @@ export class Dispatcher {
     // TODO Add validation the message adheres to the proper format.
 
     const { doc: docId, id } = message
-    if (await this.repository.has(docId)) {
-      const document = await this.repository.get(docId)
+    const docState = await this.repository.docState(docId)
+    if (docState) {
       // TODO: Should we validate that the 'id' field is the correct hash of the rest of the message?
 
+      const tip = docState.log[docState.log.length - 1].cid
       // Build RESPONSE message and send it out on the pub/sub topic
       // TODO: Handle 'paths' for multiquery support
-      const tipMap = new Map().set(docId.toString(), document.tip)
+      const tipMap = new Map().set(docId.toString(), tip)
       this.publish({ typ: MsgType.RESPONSE, id, tips: tipMap})
     }
   }
@@ -202,9 +194,9 @@ export class Dispatcher {
         throw new Error("Response to query with ID '" + queryId + "' is missing expected new tip for docID '" +
           expectedDocID + "'")
       }
-      if (await this.repository.has(expectedDocID)) {
-        const document = await this.repository.get(expectedDocID)
-        document.emit('update', new CID(newTip))
+      const document = await this.repository.get(expectedDocID)
+      if (document) {
+        await document._update(newTip)
         // TODO Iterate over all documents in 'tips' object and process the new tip for each
       }
     }

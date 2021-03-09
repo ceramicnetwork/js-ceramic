@@ -36,7 +36,7 @@ export class PinStoreFactory {
       this._stateStore = stateStore
     }
 
-    public async createPinStore(): Promise<PinStore> {
+    public createPinStore(): PinStore {
         if (!this._stateStore) {
           // Default to local leveldb backed state store if no other StateStore implementation is provided
           this._stateStore = new LevelStateStore(this.localStateStoreDirectory)
@@ -51,7 +51,7 @@ export class PinStoreFactory {
             return (await ipfs.dag.resolve(path)).cid
         }
         const pinStore = new PinStore(this._stateStore, pinning, retrieve, resolve)
-        await pinStore.open(this.networkName)
+        pinStore.open(this.networkName)
         return pinStore
     }
 }

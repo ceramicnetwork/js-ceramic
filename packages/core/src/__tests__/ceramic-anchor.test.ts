@@ -1,10 +1,15 @@
 import Ceramic from '../ceramic'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
-import {AnchorStatus, IpfsApi, TestUtils} from "@ceramicnetwork/common"
+import {
+  AnchorStatus,
+  IpfsApi,
+  TestUtils,
+} from '@ceramicnetwork/common';
 import tmp from 'tmp-promise'
 import * as u8a from 'uint8arrays'
 import { createIPFS, swarmConnect } from './ipfs-util';
 import { TileDoctype } from '@ceramicnetwork/doctype-tile';
+import InMemoryAnchorService from '../anchor/memory/in-memory-anchor-service';
 
 jest.mock('../store/level-state-store')
 
@@ -46,19 +51,20 @@ describe('Ceramic anchoring', () => {
 
   const DOCTYPE_TILE = 'tile'
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     [ipfs1, ipfs2, ipfs3] = await Promise.all(Array.from({length: 3}).map(() => createIPFS()));
+    await swarmConnect(ipfs1, ipfs2)
+    await swarmConnect(ipfs2, ipfs3)
+    await swarmConnect(ipfs1, ipfs3)
   })
 
-  afterEach(async () => {
-    await ipfs1.stop(() => console.log('IPFS1 stopped'))
-    await ipfs2.stop(() => console.log('IPFS2 stopped'))
-    await ipfs3.stop(() => console.log('IPFS3 stopped'))
+  afterAll(async () => {
+    await ipfs1.stop()
+    await ipfs2.stop()
+    await ipfs3.stop()
   })
 
   it('test all records anchored', async () => {
-    await swarmConnect(ipfs1, ipfs2)
-
     const [ceramic1, ceramic2] = await Promise.all([
       createCeramic(ipfs1, true),
       createCeramic(ipfs2, false)
@@ -85,8 +91,6 @@ describe('Ceramic anchoring', () => {
   })
 
   it('test no records anchored', async () => {
-    await swarmConnect(ipfs2, ipfs1)
-
     const [ceramic1, ceramic2] = await Promise.all([
       createCeramic(ipfs1, true),
       createCeramic(ipfs2, false)
@@ -110,8 +114,6 @@ describe('Ceramic anchoring', () => {
   })
 
   it('test genesis anchored and others not', async () => {
-    await swarmConnect(ipfs2, ipfs1)
-
     const [ceramic1, ceramic2] = await Promise.all([
       createCeramic(ipfs1, true),
       createCeramic(ipfs2, false)
@@ -138,8 +140,6 @@ describe('Ceramic anchoring', () => {
   })
 
   it('test genesis and the following anchored', async () => {
-    await swarmConnect(ipfs2, ipfs1)
-
     const [ceramic1, ceramic2] = await Promise.all([
       createCeramic(ipfs1, true),
       createCeramic(ipfs2, false)
@@ -165,8 +165,6 @@ describe('Ceramic anchoring', () => {
   })
 
   it('test genesis anchored, the middle not, last one anchored', async () => {
-    await swarmConnect(ipfs1, ipfs2)
-
     const [ceramic1, ceramic2] = await Promise.all([
       createCeramic(ipfs1, true),
       createCeramic(ipfs2, false)
@@ -192,8 +190,6 @@ describe('Ceramic anchoring', () => {
   })
 
   it('test last one anchored', async () => {
-    await swarmConnect(ipfs1, ipfs2)
-
     const [ceramic1, ceramic2] = await Promise.all([
       createCeramic(ipfs1, true),
       createCeramic(ipfs2, false)
@@ -218,8 +214,6 @@ describe('Ceramic anchoring', () => {
   })
 
   it('in the middle anchored', async () => {
-    await swarmConnect(ipfs1, ipfs2)
-
     const [ceramic1, ceramic2] = await Promise.all([
       createCeramic(ipfs1, true),
       createCeramic(ipfs2, false)
@@ -261,9 +255,6 @@ describe('Ceramic anchoring', () => {
   })
 
   it('test the same doc anchored twice (different Ceramic instances), first one wins)', async () => {
-    await swarmConnect(ipfs3, ipfs1)
-    await swarmConnect(ipfs3, ipfs2)
-
     const [ceramic1, ceramic2, ceramic3] = await Promise.all([
       createCeramic(ipfs1, true),
       createCeramic(ipfs2, true),
@@ -271,8 +262,9 @@ describe('Ceramic anchoring', () => {
     ])
     const controller = ceramic1.context.did.id
 
-    ceramic1.context.anchorService = ceramic3.context.anchorService // use ceramic3 in-memory anchor service
-    ceramic2.context.anchorService = ceramic3.context.anchorService // use ceramic3 in-memory anchor service
+    const anchorService = ceramic3.context.anchorService as InMemoryAnchorService
+    ceramic1.context.anchorService = anchorService // use ceramic3 in-memory anchor service
+    ceramic2.context.anchorService = anchorService // use ceramic3 in-memory anchor service
 
     const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { x: 1 } }, { anchor: false, publish: true })
     const doctype2 = await ceramic2.loadDocument(doctype1.id)
@@ -287,15 +279,13 @@ describe('Ceramic anchoring', () => {
     const update1ShouldWin = doctype1.state.log[doctype1.state.log.length - 1].cid.bytes < doctype2.state.log[doctype2.state.log.length - 1].cid.bytes
     const winningContent = update1ShouldWin ? newContent1 : newContent2
 
-    const handle1 = TestUtils.registerChangeListener(doctype1)
-    const handle2 = TestUtils.registerChangeListener(doctype2)
-
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    await ceramic3.context.anchorService.anchor()
-
-    await handle1
-    await handle2
+    await anchorService.anchor()
+    await TestUtils.waitForState(doctype2, 2000, state => state.anchorStatus === AnchorStatus.ANCHORED, () => {
+      throw new Error(`doctype2 not anchored still`)
+    })
+    await TestUtils.waitForState(doctype1, 2000, state => state.anchorStatus === AnchorStatus.ANCHORED, () => {
+      throw new Error(`doctype1 not anchored still`)
+    })
 
     // Only one of the updates should have won
     expect(doctype1.state.log.length).toEqual(3)
