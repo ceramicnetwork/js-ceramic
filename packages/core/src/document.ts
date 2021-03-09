@@ -70,6 +70,7 @@ export class Document implements DocStateHolder {
    * @param context - Ceramic context
    * @param opts - Initialization options
    * @param validate - Validate content against schema
+   * @deprecated
    */
   static async load<T extends Doctype> (
       docId: DocID,
@@ -92,25 +93,24 @@ export class Document implements DocStateHolder {
     if (validate) {
       await validateState(doc.state, doc.doctype.content, context.api.loadDocument.bind(context.api))
     }
-    return doc._syncDocumentToCurrent(pinStore, opts)
+    const pinnedState = await pinStore.stateStore.load(docId)
+    if (pinnedState) {
+      doc.state$.next(pinnedState)
+    }
+    return doc._syncDocumentToCurrent(opts)
   }
 
   /**
    * Takes a document containing only the genesis commit and kicks off the process to load and apply
    * the most recent Tip to it.
-   * @param pinStore
    * @param opts
    * @private
    */
-  async _syncDocumentToCurrent(pinStore: PinStore, opts: DocOpts): Promise<Document> {
-    // Update document state to cached state if any
-    const pinnedState = await pinStore.stateStore.load(this.id)
-    if (pinnedState) {
-      this.state$.next(pinnedState)
-    }
-
+  async _syncDocumentToCurrent(opts: DocOpts): Promise<Document> {
     // Request current tip from pub/sub system and register for future updates
-    await this._register(opts)
+    this.dispatcher.register(this)
+
+    await this._applyOpts(opts)
     return this
   }
 
@@ -142,18 +142,6 @@ export class Document implements DocStateHolder {
 
     await this._handleTip(cid)
     await this._updateStateIfPinned()
-    await this._applyOpts(opts)
-  }
-
-  /**
-   * Register document to the Dispatcher
-   *
-   * @param opts - Document initialization options (request anchor, wait, etc.)
-   * @private
-   */
-  async _register (opts: DocOpts): Promise<void> {
-    this.dispatcher.register(this)
-
     await this._applyOpts(opts)
   }
 

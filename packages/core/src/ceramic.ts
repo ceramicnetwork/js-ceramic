@@ -211,7 +211,7 @@ class Ceramic implements CeramicApi {
 
     const documentFactory = new DocumentFactory(this.dispatcher, pinStore, this.context, this._validateDocs, this._doctypeHandlers)
     this._repository.setDocumentFactory(documentFactory)
-    this.loadingQueue = new LoadingQueue(this._repository, this.dispatcher, this._doctypeHandlers, this.context, pinStore, this._logger, documentFactory)
+    this.loadingQueue = new LoadingQueue(this._repository, this.dispatcher, this._doctypeHandlers, this.context, this._logger, documentFactory)
   }
 
   /**

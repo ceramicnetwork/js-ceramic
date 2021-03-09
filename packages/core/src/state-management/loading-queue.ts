@@ -4,7 +4,6 @@ import { Document } from '../document';
 import { HandlersMap } from '../handlers-map';
 import { Context, DocOpts } from '@ceramicnetwork/common';
 import { Dispatcher } from '../dispatcher';
-import { PinStore } from '../store/pin-store';
 import { DiagnosticsLogger } from '@ceramicnetwork/logger';
 import { NamedPQueue } from './named-p-queue';
 import { DocumentFactory } from './document-factory';
@@ -22,7 +21,6 @@ export class LoadingQueue {
     private readonly dispatcher: Dispatcher,
     private readonly handlers: HandlersMap,
     private readonly context: Context,
-    private readonly pinStore: PinStore,
     private readonly logger: DiagnosticsLogger,
     private readonly documentFactory: DocumentFactory,
   ) {}
@@ -45,7 +43,7 @@ export class LoadingQueue {
         const state = await handler.applyCommit(commit, docId.cid, this.context);
         const document = await this.documentFactory.build(state);
         await this.repository.add(document);
-        await document._syncDocumentToCurrent(this.pinStore, opts);
+        await document._syncDocumentToCurrent(opts);
         this.logger.verbose(`Document ${docId.toString()} successfully loaded`);
         return document;
       }
