@@ -169,7 +169,6 @@ class Ceramic implements CeramicApi {
 
   public readonly dispatcher: Dispatcher;
   public readonly pin: PinApi;
-  public readonly pinStore: PinStore;
   private readonly _repository: Repository;
 
   private readonly _doctypeHandlers: HandlersMap
@@ -183,8 +182,10 @@ class Ceramic implements CeramicApi {
   constructor (modules: CeramicModules, params: CeramicParameters) {
     this._ipfsTopology = modules.ipfsTopology
     this._logger = modules.loggerProvider.getDiagnosticsLogger()
-    this.pinStore = modules.pinStoreFactory.createPinStore()
-    this.pin = new LocalPinApi(this.pinStore, this._loadDoc.bind(this), this._logger)
+    const pinStore = modules.pinStoreFactory.createPinStore()
+    this._repository = modules.repository
+    this._repository.setPinStore(pinStore)
+    this.pin = new LocalPinApi(this._repository, this._loadDoc.bind(this), this._logger)
     this.dispatcher = modules.dispatcher
 
     this._validateDocs = params.validateDocs
@@ -208,11 +209,9 @@ class Ceramic implements CeramicApi {
 
     this._doctypeHandlers = new HandlersMap(this._logger)
 
-    this._repository = modules.repository
-    this._repository.setPinStore(this.pinStore)
-    const documentFactory = new DocumentFactory(this.dispatcher, this.pinStore, this.context, this._validateDocs, this._doctypeHandlers)
+    const documentFactory = new DocumentFactory(this.dispatcher, pinStore, this.context, this._validateDocs, this._doctypeHandlers)
     this._repository.setDocumentFactory(documentFactory)
-    this.loadingQueue = new LoadingQueue(this._repository, this.dispatcher, this._doctypeHandlers, this.context, this.pinStore, this._logger, documentFactory)
+    this.loadingQueue = new LoadingQueue(this._repository, this.dispatcher, this._doctypeHandlers, this.context, pinStore, this._logger, documentFactory)
   }
 
   /**

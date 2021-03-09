@@ -1,9 +1,8 @@
 import { Document } from '../document';
 import DocID from '@ceramicnetwork/docid';
 import { AsyncLruMap } from './async-lru-map';
-import { StateStore } from '../store/state-store';
 import { DocumentFactory } from './document-factory';
-import { DocState } from '@ceramicnetwork/common';
+import { DocState, DocStateHolder } from '@ceramicnetwork/common';
 import { PinStore } from '../store/pin-store';
 
 export class Repository {
@@ -70,6 +69,14 @@ export class Repository {
     await this.#map.set(document.id.toString(), document);
   }
 
+  pin(docStateHolder: DocStateHolder): Promise<void> {
+    return this.#pinStore.add(docStateHolder)
+  }
+
+  unpin(docId: DocID): Promise<void> {
+    return this.#pinStore.rm(docId)
+  }
+
   /**
    * Removes the document from the cache
    * @param docId
@@ -78,9 +85,9 @@ export class Repository {
     await this.#map.delete(docId.toString());
   }
 
-  async list(): Promise<string[]> {
+  async list(docId?: DocID): Promise<string[]> {
     if (this.#pinStore) {
-      return this.#pinStore.stateStore.list()
+      return this.#pinStore.stateStore.list(docId)
     } else {
       return []
     }
