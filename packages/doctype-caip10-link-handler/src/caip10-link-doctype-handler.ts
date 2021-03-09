@@ -164,9 +164,11 @@ export class Caip10LinkDoctypeHandler implements DoctypeHandler<Caip10LinkDoctyp
         let content = state.content
         if (state.next?.content) {
             content = state.next.content
-            delete state.next.content
-            delete state.next.metadata
         }
+
+        delete state.next
+        delete state.anchorScheduledFor
+
         return {
             ...state,
             content,

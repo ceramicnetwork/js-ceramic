@@ -146,7 +146,6 @@ Object {
     ],
     "family": "caip10-eip155:1",
   },
-  "next": Object {},
   "signature": 2,
 }
 `;
