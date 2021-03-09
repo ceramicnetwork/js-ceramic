@@ -174,6 +174,7 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
         }
 
         delete state.next
+        delete state.anchorScheduledFor
 
         return {
             ...state, content, metadata, anchorStatus: AnchorStatus.ANCHORED, anchorProof: proof,
