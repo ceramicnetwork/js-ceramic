@@ -8,7 +8,7 @@ import { PinStore } from '../store/pin-store';
 export class Repository {
   readonly #map: AsyncLruMap<Document>;
   #documentFactory?: DocumentFactory;
-  #pinStore?: PinStore
+  #pinStore?: PinStore;
 
   constructor(limit: number) {
     this.#map = new AsyncLruMap(limit, async (entry) => {
@@ -23,7 +23,24 @@ export class Repository {
 
   // Ideally this would be provided in the constructor, but circular dependencies in our initialization process make this necessary for now
   setPinStore(pinStore: PinStore) {
-    this.#pinStore = pinStore
+    this.#pinStore = pinStore;
+  }
+
+  async fromMemory(docId: DocID): Promise<Document | undefined> {
+    return this.#map.get(docId.toString());
+  }
+
+  async fromStateStore(docId: DocID): Promise<Document | undefined> {
+    if (this.#pinStore && this.#documentFactory) {
+      const docState = await this.#pinStore.stateStore.load(docId);
+      if (docState) {
+        const document = await this.#documentFactory.build(docState);
+        await this.#map.set(docId.toString(), document);
+        return document;
+      } else {
+        return undefined;
+      }
+    }
   }
 
   /**
@@ -31,21 +48,9 @@ export class Repository {
    * Adds the document to cache.
    */
   async get(docId: DocID): Promise<Document | undefined> {
-    const fromMemory = await this.#map.get(docId.toString());
-    if (fromMemory) {
-      return fromMemory;
-    } else {
-      if (this.#pinStore && this.#documentFactory) {
-        const docState = await this.#pinStore.stateStore.load(docId);
-        if (docState) {
-          const document = await this.#documentFactory.build(docState);
-          await this.#map.set(docId.toString(), document)
-          return document
-        } else {
-          return undefined;
-        }
-      }
-    }
+    const fromMemory = await this.fromMemory(docId);
+    if (fromMemory) return fromMemory;
+    return this.fromStateStore(docId);
   }
 
   /**
@@ -70,11 +75,11 @@ export class Repository {
   }
 
   pin(docStateHolder: DocStateHolder): Promise<void> {
-    return this.#pinStore.add(docStateHolder)
+    return this.#pinStore.add(docStateHolder);
   }
 
   unpin(docId: DocID): Promise<void> {
-    return this.#pinStore.rm(docId)
+    return this.#pinStore.rm(docId);
   }
 
   /**
@@ -87,9 +92,9 @@ export class Repository {
 
   async list(docId?: DocID): Promise<string[]> {
     if (this.#pinStore) {
-      return this.#pinStore.stateStore.list(docId)
+      return this.#pinStore.stateStore.list(docId);
     } else {
-      return []
+      return [];
     }
   }
 
@@ -97,6 +102,6 @@ export class Repository {
     for (const [, document] of this.#map) {
       await document.close();
     }
-    await this.#pinStore.close()
+    await this.#pinStore.close();
   }
 }
