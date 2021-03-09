@@ -207,7 +207,6 @@ export class Dispatcher {
    */
   async close(): Promise<void> {
     this.pubsubSubscription.unsubscribe()
-    await this.repository.close()
   }
 
   /**

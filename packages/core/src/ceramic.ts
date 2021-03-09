@@ -669,6 +669,7 @@ class Ceramic implements CeramicApi {
     this._logger.imp("Closing Ceramic instance")
     await this.pinStore.close()
     await this.dispatcher.close()
+    await this._repository.close()
     this._ipfsTopology.stop()
     this._logger.imp("Ceramic instance closed successfully")
   }
