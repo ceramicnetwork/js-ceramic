@@ -35,7 +35,7 @@
     "dag-jose": "^0.3.0",
     "datastore-s3": "^3.0.0",
     "express": "^4.17.1",
-    "ipfs": "0.52.2",
+    "ipfs": "0.54.3",
     "ipfs-http-gateway": "^0.3.0",
     "ipfs-http-server": "0.3.1",
     "multiformats": "3.0.3",
