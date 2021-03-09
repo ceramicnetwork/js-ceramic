@@ -4,11 +4,12 @@ import { AsyncLruMap } from './async-lru-map';
 import { StateStore } from '../store/state-store';
 import { DocumentFactory } from './document-factory';
 import { DocState } from '@ceramicnetwork/common';
+import { PinStore } from '../store/pin-store';
 
 export class Repository {
   readonly #map: AsyncLruMap<Document>;
   #documentFactory?: DocumentFactory;
-  #stateStore?: StateStore
+  #pinStore?: PinStore
 
   constructor(limit: number) {
     this.#map = new AsyncLruMap(limit, async (entry) => {
@@ -22,8 +23,8 @@ export class Repository {
   }
 
   // Ideally this would be provided in the constructor, but circular dependencies in our initialization process make this necessary for now
-  setStateStore(stateStore: StateStore) {
-    this.#stateStore = stateStore
+  setPinStore(pinStore: PinStore) {
+    this.#pinStore = pinStore
   }
 
   /**
@@ -35,8 +36,8 @@ export class Repository {
     if (fromMemory) {
       return fromMemory;
     } else {
-      if (this.#stateStore && this.#documentFactory) {
-        const docState = await this.#stateStore.load(docId);
+      if (this.#pinStore && this.#documentFactory) {
+        const docState = await this.#pinStore.stateStore.load(docId);
         if (docState) {
           const document = await this.#documentFactory.build(docState);
           await this.#map.set(docId.toString(), document)
@@ -56,8 +57,8 @@ export class Repository {
     if (fromMemory) {
       return fromMemory.state;
     } else {
-      if (this.#stateStore && this.#documentFactory) {
-        return this.#stateStore.load(docId);
+      if (this.#pinStore && this.#documentFactory) {
+        return this.#pinStore.stateStore.load(docId);
       }
     }
   }
@@ -77,9 +78,18 @@ export class Repository {
     await this.#map.delete(docId.toString());
   }
 
+  async list(): Promise<string[]> {
+    if (this.#pinStore) {
+      return this.#pinStore.stateStore.list()
+    } else {
+      return []
+    }
+  }
+
   async close(): Promise<void> {
     for (const [, document] of this.#map) {
       await document.close();
     }
+    await this.#pinStore.close()
   }
 }

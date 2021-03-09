@@ -209,7 +209,7 @@ class Ceramic implements CeramicApi {
     this._doctypeHandlers = new HandlersMap(this._logger)
 
     this._repository = modules.repository
-    this._repository.setStateStore(this.pinStore.stateStore)
+    this._repository.setPinStore(this.pinStore)
     const documentFactory = new DocumentFactory(this.dispatcher, this.pinStore, this.context, this._validateDocs, this._doctypeHandlers)
     this._repository.setDocumentFactory(documentFactory)
     this.loadingQueue = new LoadingQueue(this._repository, this.dispatcher, this._doctypeHandlers, this.context, this.pinStore, this._logger, documentFactory)
@@ -651,7 +651,7 @@ class Ceramic implements CeramicApi {
    * Load all the pinned documents, re-request PENDING or PROCESSING anchors.
    */
   async restoreDocuments() {
-    const list = await this.pinStore.stateStore.list()
+    const list = await this._repository.list()
     const documents = await Promise.all(list.map(docId => this._loadDoc(docId)))
     documents.forEach(document => {
       const toRecover = document.state?.anchorStatus === AnchorStatus.PENDING || document.state?.anchorStatus === AnchorStatus.PROCESSING
@@ -667,7 +667,6 @@ class Ceramic implements CeramicApi {
    */
   async close (): Promise<void> {
     this._logger.imp("Closing Ceramic instance")
-    await this.pinStore.close()
     await this.dispatcher.close()
     await this._repository.close()
     this._ipfsTopology.stop()
