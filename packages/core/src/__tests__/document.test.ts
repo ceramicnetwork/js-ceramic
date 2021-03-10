@@ -658,37 +658,5 @@ describe('Document', () => {
       expect(dispatcher.publishTip).toHaveBeenCalledTimes(3)
       expect(dispatcher.publishTip).toHaveBeenCalledWith(doc1.id, doc1.tip)
     })
-
-    it('documents share updates', async () => {
-      const doc1 = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context)
-      await anchorUpdate(anchorService, doc1)
-      const doc2 = await Document.load(doc1.id, doctypeHandler, dispatcher, pinStore, context, { sync: false })
-
-      const updatePromise = new Promise(resolve => {
-        doc2.doctype.on('change', resolve)
-      })
-
-      const updateRec = await TileDoctype._makeCommit(doc1.doctype, user, newContent, doc1.doctype.controllers)
-      await doc1.applyCommit(updateRec)
-
-      expect(doc1.doctype.content).toEqual(newContent)
-
-      await updatePromise
-      expect(doc2.doctype.content).toEqual(newContent)
-    })
-
-    it('should publish tip on network request', async () => {
-      const doc = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context)
-      expect(dispatcher.publishTip).toHaveBeenCalledTimes(1)
-      expect(dispatcher.publishTip).toHaveBeenNthCalledWith(1, doc.id, doc.tip)
-
-      await dispatcher._requestTip(doc.id)
-
-      expect(dispatcher.publishTip).toHaveBeenCalledTimes(2)
-      expect(dispatcher.publishTip).toHaveBeenNthCalledWith(2, doc.id, doc.tip)
-
-      // wait a bit to complete document handling
-      await new Promise(resolve => setTimeout(resolve, 1000))
-    })
   })
 })
