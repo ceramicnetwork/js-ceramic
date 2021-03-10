@@ -1,4 +1,4 @@
-import { Document } from '../document';
+import { DEFAULT_LOAD_DOCOPTS, Document } from '../document';
 import DocID from '@ceramicnetwork/docid';
 import { AsyncLruMap } from './async-lru-map';
 import { DocumentFactory } from './document-factory';
@@ -52,8 +52,9 @@ export class Repository {
   }
 
   async fromNetwork(docId: DocID, opts: DocOpts = {}): Promise<Document> {
-    const document = await this.#networkLoad.load(docId, opts);
+    const document = await this.#networkLoad.load(docId);
     await this.add(document);
+    await document._syncDocumentToCurrent({ ...DEFAULT_LOAD_DOCOPTS, ...opts });
     return document;
   }
 
@@ -69,9 +70,9 @@ export class Repository {
 
   async has(docId: DocID): Promise<boolean> {
     const fromMemory = await this.fromMemory(docId);
-    if (fromMemory) return true
+    if (fromMemory) return true;
     const fromState = await this.#pinStore.stateStore.load(docId);
-    return Boolean(fromState)
+    return Boolean(fromState);
   }
 
   /**
@@ -83,7 +84,7 @@ export class Repository {
       const fromMemory = await this.fromMemory(docId);
       if (fromMemory) return fromMemory;
       return this.fromStateStore(docId);
-    })
+    });
   }
 
   /**
@@ -132,9 +133,16 @@ export class Repository {
   }
 
   async close(): Promise<void> {
+    const documents = [];
     for (const [, document] of this.#map) {
-      await document.close();
+      documents.push(document);
     }
+    await Promise.all(
+      documents.map(async (d) => {
+        await this.#map.delete(d.id);
+        await d.close();
+      }),
+    );
     await this.#pinStore.close();
   }
 }

@@ -30,7 +30,6 @@ import { Resolver } from "did-resolver"
 import { DID } from 'dids'
 import { DiagnosticsLogger, LogLevel } from "@ceramicnetwork/logger";
 import { PinStoreFactory } from "./store/pin-store-factory";
-import { PinStore } from "./store/pin-store";
 import { PathTrie, TrieNode, promiseTimeout } from './utils'
 
 import EthereumAnchorService from "./anchor/ethereum/ethereum-anchor-service"
@@ -40,7 +39,6 @@ import { randomUint32 } from '@stablelib/random'
 import { LocalPinApi } from './local-pin-api';
 import { Repository } from './state-management/repository';
 import { HandlersMap } from './handlers-map';
-import { LoadingQueue } from './state-management/loading-queue';
 import { DocumentFactory } from './state-management/document-factory';
 import { NetworkLoad } from './state-management/network-load';
 
@@ -178,14 +176,12 @@ class Ceramic implements CeramicApi {
   private readonly _networkOptions: CeramicNetworkOptions
   private readonly _supportedChains: Array<string>
   private readonly _validateDocs: boolean
-  private readonly loadingQueue: LoadingQueue
 
   constructor (modules: CeramicModules, params: CeramicParameters) {
     this._ipfsTopology = modules.ipfsTopology
     this._logger = modules.loggerProvider.getDiagnosticsLogger()
     const pinStore = modules.pinStoreFactory.createPinStore()
     this._repository = modules.repository
-    this._repository.setPinStore(pinStore)
     this.pin = new LocalPinApi(this._repository, this._loadDoc.bind(this), this._logger)
     this.dispatcher = modules.dispatcher
 
@@ -212,9 +208,9 @@ class Ceramic implements CeramicApi {
 
     const documentFactory = new DocumentFactory(this.dispatcher, pinStore, this.context, this._validateDocs, this._doctypeHandlers)
     const networkLoad = new NetworkLoad(this.dispatcher, this._doctypeHandlers, this.context, this._logger, documentFactory)
+    this._repository.setPinStore(pinStore)
     this._repository.setDocumentFactory(documentFactory);
     this._repository.setNetworkLoad(networkLoad);
-    this.loadingQueue = new LoadingQueue(this._repository, this.dispatcher, this._doctypeHandlers, this.context, this._logger, documentFactory)
   }
 
   /**
@@ -526,7 +522,7 @@ class Ceramic implements CeramicApi {
   async _createDocFromGenesis(doctype: string, genesis: any, opts: DocOpts = {}): Promise<Document> {
     const genesisCid = await this.dispatcher.storeCommit(genesis);
     const docId = new DocID(doctype, genesisCid);
-    return this.loadingQueue.load(docId, {...DEFAULT_WRITE_DOCOPTS, ...opts});
+    return this._repository.load(docId, {...DEFAULT_WRITE_DOCOPTS, ...opts});
   }
 
   /**
@@ -631,7 +627,7 @@ class Ceramic implements CeramicApi {
   async _loadDoc(docId: DocID | CommitID | string, opts: DocOpts = {}): Promise<Document> {
     const docRef = DocRef.from(docId)
     // const doc = await this._repository.load(docRef.baseID, opts)
-    const doc = await this.loadingQueue.load(docRef.baseID, opts)
+    const doc = await this._repository.load(docRef.baseID, opts)
 
     // If DocID is requested, return the document
     if (docRef instanceof DocID) {

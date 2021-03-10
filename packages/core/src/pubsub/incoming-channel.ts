@@ -60,7 +60,6 @@ export class IncomingChannel extends Observable<IPFSPubsubMessage> {
       });
 
       return () => {
-        console.log('incoming-channel.unsubscribe.0')
         // Stop single source of subscription attempts
         ensureSubscribed.unsubscribe();
         // Remove pending subscription attempts.

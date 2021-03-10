@@ -1,7 +1,6 @@
 import { buildQueryMessage, MsgType, PubsubMessage, ResponseMessage } from './pubsub-message';
 import { Observable, Subject, Subscription, SubscriptionLike } from 'rxjs';
-import { filter, map, take } from 'rxjs/operators';
-import { Pubsub } from './pubsub';
+import { filter, map, take, tap } from 'rxjs/operators';
 import { DocID } from '@ceramicnetwork/docid';
 import CID from 'cids';
 
@@ -12,7 +11,10 @@ export class MessageBus extends Observable<PubsubMessage> implements Subscriptio
   private readonly pubsubSubscription: Subscription;
   private readonly feed$: Subject<PubsubMessage> = new Subject<PubsubMessage>();
 
-  constructor(readonly pubsub: Pubsub, readonly outstandingQueries: Map<string, DocID> = new Map()) {
+  constructor(
+    readonly pubsub: Observable<PubsubMessage> & { next: (m: PubsubMessage) => Subscription },
+    readonly outstandingQueries: Map<string, DocID> = new Map(),
+  ) {
     super((subscriber) => {
       this.feed$.subscribe(subscriber);
     });

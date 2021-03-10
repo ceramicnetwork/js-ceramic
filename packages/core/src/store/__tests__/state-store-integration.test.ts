@@ -15,6 +15,8 @@ import CID from 'cids'
 import { Resolver } from "did-resolver"
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import InMemoryAnchorService from "../../anchor/memory/in-memory-anchor-service"
+import type { Pubsub } from '../../pubsub/pubsub';
+
 
 // mock Dispatcher
 jest.mock('../../dispatcher', () => {
@@ -24,6 +26,8 @@ jest.mock('../../dispatcher', () => {
   const { DoctypeUtils } = require('@ceramicnetwork/common') // eslint-disable-line @typescript-eslint/no-var-requires
   const dagCBOR = require('ipld-dag-cbor') // eslint-disable-line @typescript-eslint/no-var-requires
   const u8a = require('uint8arrays') // eslint-disable-line @typescript-eslint/no-var-requires
+  const { MessageBus } = require('../../pubsub/message-bus') // eslint-disable-line @typescript-eslint/no-var-requires
+  const { from } = require('rxjs') // eslint-disable-line @typescript-eslint/no-var-requires
   const hash = (data: string): CID => {
     const body = u8a.concat([u8a.fromString('1220', 'base16'), sha256.hash(u8a.fromString(data))])
     return new CID(1, 'sha2-256', body)
@@ -42,6 +46,9 @@ jest.mock('../../dispatcher', () => {
         return cid
       }
     }
+    const pubsub = from([]) as unknown as Pubsub
+    pubsub.next = jest.fn()
+    const messageBus = new MessageBus(pubsub)
     return {
       _ipfs: {
         id: (): any => ({ id: 'ipfsid' }), dag: {
@@ -93,6 +100,7 @@ jest.mock('../../dispatcher', () => {
           })
         },
       },
+      messageBus,
       register: jest.fn((doc) => {
         docs[doc.id] = doc
       }),

@@ -3,8 +3,7 @@ import { HandlersMap } from '../handlers-map';
 import { DiagnosticsLogger } from '@ceramicnetwork/logger';
 import { DocumentFactory } from './document-factory';
 import { Document } from '../document';
-import { DEFAULT_LOAD_DOCOPTS } from './loading-queue';
-import { Context, DocOpts } from '@ceramicnetwork/common';
+import { Context } from '@ceramicnetwork/common';
 import { DocID } from '@ceramicnetwork/docid';
 
 export class NetworkLoad {
@@ -16,11 +15,9 @@ export class NetworkLoad {
     private readonly documentFactory: DocumentFactory,
   ) {}
 
-  async load(docId: DocID, opts: DocOpts = {}): Promise<Document> {
-    console.log('network.load.0', docId, opts)
+  async load(docId: DocID): Promise<Document> {
     // Load the current version of the document
     const handler = this.handlers.get(docId.typeName);
-    opts = { ...DEFAULT_LOAD_DOCOPTS, ...opts };
     const genesisCid = docId.cid;
     const commit = await this.dispatcher.retrieveCommit(genesisCid);
     if (commit == null) {
@@ -28,9 +25,6 @@ export class NetworkLoad {
     }
     const state = await handler.applyCommit(commit, docId.cid, this.context);
     const document = await this.documentFactory.build(state);
-    console.log('network.load.1', new Date(), opts, document.state)
-    await document._syncDocumentToCurrent(opts);
-    console.log('network.load.2', new Date(), document.state)
     this.logger.verbose(`Document ${docId.toString()} successfully loaded`);
     return document;
   }
