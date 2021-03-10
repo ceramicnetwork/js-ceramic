@@ -28,27 +28,13 @@ export class Dispatcher {
   readonly messageBus: MessageBus
   // Set of IDs for QUERY messages we have sent to the pub/sub topic but not yet heard a
   // corresponding RESPONSE message for. Maps the query ID to the primary DocID we were querying for.
-  private readonly _outstandingQueryIds: Record<string, DocID>
+  private readonly _outstandingQueryIds: Map<string, DocID>;
 
   constructor (readonly _ipfs: IpfsApi, private readonly topic: string, readonly repository: Repository, private readonly _logger: DiagnosticsLogger, private readonly _pubsubLogger: ServiceLogger) {
-    this._outstandingQueryIds = {}
     const pubsub = new Pubsub(_ipfs, topic, IPFS_RESUBSCRIBE_INTERVAL_DELAY, _pubsubLogger, _logger)
-    this.messageBus = new MessageBus(pubsub)
+    this._outstandingQueryIds = new Map();
+    this.messageBus = new MessageBus(pubsub, this._outstandingQueryIds)
     this.messageBus.subscribe(this.handleMessage.bind(this))
-  }
-
-  /**
-   * Register one document.
-   *
-   * @param document - Document instance
-   */
-  register (document: Document): void {
-    // Build a QUERY message to send to the pub/sub topic to request the latest tip for this document
-    const message = buildQueryMessage(document.id)
-
-    // Store the query id so we'll process the corresponding RESPONSE message when it comes in
-    this._outstandingQueryIds[message.id] = document.id
-    this.publish(message)
   }
 
   /**
@@ -142,12 +128,10 @@ export class Dispatcher {
    * @private
    */
   async _handleUpdateMessage(message: UpdateMessage): Promise<void> {
-    console.log('_handleUpdateMessage.0', message)
     // TODO Add validation the message adheres to the proper format.
 
     const { doc: docId, tip } = message
     const document = await this.repository.get(docId)
-    console.log('_handleUpdateMessage.1', message, document)
     if (document) {
       // TODO: add cache of cids here so that we don't emit event
       // multiple times if we get the message more than once.
@@ -184,13 +168,7 @@ export class Dispatcher {
    */
   async _handleResponseMessage(message: ResponseMessage): Promise<void> {
     const { id: queryId, tips } = message
-
-    if (!this._outstandingQueryIds[queryId]) {
-      // We're not expecting this RESPONSE message
-      return
-    }
-
-    const expectedDocID = this._outstandingQueryIds[queryId]
+    const expectedDocID = this._outstandingQueryIds.get(queryId)
     if (expectedDocID) {
       const newTip = tips.get(expectedDocID.toString())
       if (!newTip) {
@@ -200,6 +178,7 @@ export class Dispatcher {
       const document = await this.repository.get(expectedDocID)
       if (document) {
         await document._update(newTip)
+        this._outstandingQueryIds.delete(queryId)
         // TODO Iterate over all documents in 'tips' object and process the new tip for each
       }
     }

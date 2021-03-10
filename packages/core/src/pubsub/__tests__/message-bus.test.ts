@@ -1,12 +1,12 @@
-import { MsgType } from '../pubsub-message';
+import { buildQueryMessage, MsgType, ResponseMessage } from '../pubsub-message';
 import { asIpfsMessage } from './as-ipfs-message';
 import { DocID } from '@ceramicnetwork/docid';
-import { from } from 'rxjs';
+import { from, Subscription, of } from 'rxjs';
 import { MessageBus } from '../message-bus';
 import { Pubsub } from '../pubsub';
-import { bufferCount, first, delay } from 'rxjs/operators';
-import { Subscription } from 'rxjs';
+import { bufferCount, delay, first, timeoutWith } from 'rxjs/operators';
 import * as random from '@stablelib/random';
+import CID from 'cids';
 
 const FAKE_DOC_ID = DocID.fromString('kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s');
 const OUTER_PEER_ID = 'OUTER_PEER_ID';
@@ -45,7 +45,7 @@ test('publish to pubsub', async () => {
   expect(pubsub.next).toBeCalledTimes(1);
   expect(pubsub.next).toBeCalledWith(message);
 });
-test('not publish to pubsub if closed', () => {
+test('not publish to pubsub if closed', async () => {
   const pubsub = ({
     subscribe: jest.fn(() => Subscription.EMPTY),
     next: jest.fn(),
@@ -58,6 +58,7 @@ test('not publish to pubsub if closed', () => {
   };
   messageBus.unsubscribe();
   messageBus.next(message);
+  await new Promise(resolve => setTimeout(resolve, 100))
   expect(pubsub.next).toBeCalledTimes(0);
 });
 
@@ -70,4 +71,33 @@ test('unsubscribe', async () => {
   expect(subscription1.closed).toBeTruthy();
   expect(subscription2.closed).toBeTruthy();
   expect(messageBus.closed).toBeTruthy();
+});
+
+describe('queryNetwork', () => {
+  const FAKE_CID = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu');
+  const queryMessage = buildQueryMessage(FAKE_DOC_ID);
+  const responseMessage: ResponseMessage = {
+    typ: MsgType.RESPONSE,
+    id: queryMessage.id,
+    tips: new Map().set(FAKE_DOC_ID.toString(), FAKE_CID),
+  };
+  const pubsub = (from([responseMessage]).pipe(delay(300)) as unknown) as Pubsub;
+  pubsub.next = jest.fn();
+
+  test('return tip', async () => {
+    const messageBus = new MessageBus(pubsub);
+    const response = await messageBus.queryNetwork(FAKE_DOC_ID).toPromise();
+    expect(pubsub.next).toBeCalledWith(queryMessage);
+    expect(response).toEqual(FAKE_CID);
+  });
+
+  test('timeout: return undefined', async () => {
+    const messageBus = new MessageBus(pubsub);
+    const response = await messageBus
+      .queryNetwork(FAKE_DOC_ID)
+      .pipe(timeoutWith(200, of(undefined)))
+      .toPromise();
+    expect(pubsub.next).toBeCalledWith(queryMessage);
+    expect(response).toEqual(undefined);
+  });
 });
