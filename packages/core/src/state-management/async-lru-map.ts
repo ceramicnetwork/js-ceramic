@@ -60,7 +60,7 @@ export class AsyncLruMap<A> {
   }
 
   async get(key: string): Promise<A | undefined> {
-    return this.sync.add(key, async () => {
+    return this.sync.run(key, async () => {
       // First, find our cache entry
       const entry = this._keymap.get(key);
       if (!entry) return; // Not cached. Sorry.
@@ -71,7 +71,7 @@ export class AsyncLruMap<A> {
   }
 
   async set(key: string, value: A): Promise<AsyncLruMap<A>> {
-    return this.sync.add(key, async () => {
+    return this.sync.run(key, async () => {
       let entry = this._keymap.get(key);
 
       if (entry) {
@@ -129,7 +129,7 @@ export class AsyncLruMap<A> {
   }
 
   async delete(key: string): Promise<A> {
-    return this.sync.add(key, async () => {
+    return this.sync.run(key, async () => {
       const entry = this._keymap.get(key);
       if (!entry) return;
       this._keymap.delete(entry.key);

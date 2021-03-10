@@ -10,7 +10,7 @@ test('sequential tasks', async () => {
   const times = Array.from({ length: N }).map((_, index) => index);
   await Promise.all(
     times.map((i) => {
-      return queue.add(name, async () => {
+      return queue.run(name, async () => {
         results.push(i);
       });
     }),
@@ -30,7 +30,7 @@ test('parallel queues', async () => {
   const forName = (name: string) =>
     Promise.all(
       times.map((index) => {
-        return queue.add(name, async () => {
+        return queue.run(name, async () => {
           const found = results[name];
           if (found) {
             found.push(index);
@@ -59,7 +59,7 @@ test('truly parallel', async () => {
     });
   };
   const now = new Date().valueOf()
-  const tasks = [queue.add('foo', () => fire(timeout)), queue.add('blah', () => fire(timeout))];
+  const tasks = [queue.run('foo', () => fire(timeout)), queue.run('blah', () => fire(timeout))];
   const whenFired = await Promise.all(tasks);
   whenFired.forEach(when => {
     const delta = Math.abs((when - now) - timeout)

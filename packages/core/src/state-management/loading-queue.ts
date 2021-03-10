@@ -26,7 +26,7 @@ export class LoadingQueue {
   ) {}
 
   async load(docId: DocID, opts: DocOpts = {}): Promise<Document> {
-    return this.sync.add(docId.toString(), async () => {
+    return this.sync.run(docId.toString(), async () => {
       const found = await this.repository.get(docId);
       if (found) {
         this.logger.verbose(`Document ${docId.toString()} loaded from cache`);
