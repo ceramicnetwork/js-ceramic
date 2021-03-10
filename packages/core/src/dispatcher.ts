@@ -141,10 +141,12 @@ export class Dispatcher {
    * @private
    */
   async _handleUpdateMessage(message: UpdateMessage): Promise<void> {
+    console.log('_handleUpdateMessage.0', message)
     // TODO Add validation the message adheres to the proper format.
 
     const { doc: docId, tip } = message
     const document = await this.repository.get(docId)
+    console.log('_handleUpdateMessage.1', message, document)
     if (document) {
       // TODO: add cache of cids here so that we don't emit event
       // multiple times if we get the message more than once.

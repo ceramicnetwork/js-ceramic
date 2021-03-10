@@ -2,13 +2,17 @@ import { Document } from '../document';
 import DocID from '@ceramicnetwork/docid';
 import { AsyncLruMap } from './async-lru-map';
 import { DocumentFactory } from './document-factory';
-import { DocState, DocStateHolder } from '@ceramicnetwork/common';
+import { DocOpts, DocState, DocStateHolder } from '@ceramicnetwork/common';
 import { PinStore } from '../store/pin-store';
+import { NetworkLoad } from './network-load';
+import { NamedPQueue } from './named-p-queue';
 
 export class Repository {
+  readonly sync: NamedPQueue = new NamedPQueue();
   readonly #map: AsyncLruMap<Document>;
   #documentFactory?: DocumentFactory;
   #pinStore?: PinStore;
+  #networkLoad?: NetworkLoad;
 
   constructor(limit: number) {
     this.#map = new AsyncLruMap(limit, async (entry) => {
@@ -26,6 +30,10 @@ export class Repository {
     this.#pinStore = pinStore;
   }
 
+  setNetworkLoad(networkLoad: NetworkLoad) {
+    this.#networkLoad = networkLoad;
+  }
+
   async fromMemory(docId: DocID): Promise<Document | undefined> {
     return this.#map.get(docId.toString());
   }
@@ -35,7 +43,7 @@ export class Repository {
       const docState = await this.#pinStore.stateStore.load(docId);
       if (docState) {
         const document = await this.#documentFactory.build(docState);
-        await this.#map.set(docId.toString(), document);
+        await this.add(document);
         return document;
       } else {
         return undefined;
@@ -43,14 +51,39 @@ export class Repository {
     }
   }
 
+  async fromNetwork(docId: DocID, opts: DocOpts = {}): Promise<Document> {
+    const document = await this.#networkLoad.load(docId, opts);
+    await this.add(document);
+    return document;
+  }
+
+  async load(docId: DocID, opts: DocOpts = {}): Promise<Document> {
+    return this.sync.run(docId.toString(), async () => {
+      const fromMemory = await this.fromMemory(docId);
+      if (fromMemory) return fromMemory;
+      const fromStateStore = await this.fromStateStore(docId);
+      if (fromStateStore) return fromStateStore;
+      return this.fromNetwork(docId, opts);
+    });
+  }
+
+  async has(docId: DocID): Promise<boolean> {
+    const fromMemory = await this.fromMemory(docId);
+    if (fromMemory) return true
+    const fromState = await this.#pinStore.stateStore.load(docId);
+    return Boolean(fromState)
+  }
+
   /**
    * Return a document, either from cache or re-constructed from state store.
    * Adds the document to cache.
    */
   async get(docId: DocID): Promise<Document | undefined> {
-    const fromMemory = await this.fromMemory(docId);
-    if (fromMemory) return fromMemory;
-    return this.fromStateStore(docId);
+    return this.sync.run(docId.toString(), async () => {
+      const fromMemory = await this.fromMemory(docId);
+      if (fromMemory) return fromMemory;
+      return this.fromStateStore(docId);
+    })
   }
 
   /**

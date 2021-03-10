@@ -42,6 +42,7 @@ import { Repository } from './state-management/repository';
 import { HandlersMap } from './handlers-map';
 import { LoadingQueue } from './state-management/loading-queue';
 import { DocumentFactory } from './state-management/document-factory';
+import { NetworkLoad } from './state-management/network-load';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const packageJson = require('../package.json')
@@ -210,7 +211,9 @@ class Ceramic implements CeramicApi {
     this._doctypeHandlers = new HandlersMap(this._logger)
 
     const documentFactory = new DocumentFactory(this.dispatcher, pinStore, this.context, this._validateDocs, this._doctypeHandlers)
-    this._repository.setDocumentFactory(documentFactory)
+    const networkLoad = new NetworkLoad(this.dispatcher, this._doctypeHandlers, this.context, this._logger, documentFactory)
+    this._repository.setDocumentFactory(documentFactory);
+    this._repository.setNetworkLoad(networkLoad);
     this.loadingQueue = new LoadingQueue(this._repository, this.dispatcher, this._doctypeHandlers, this.context, this._logger, documentFactory)
   }
 
@@ -627,6 +630,7 @@ class Ceramic implements CeramicApi {
    */
   async _loadDoc(docId: DocID | CommitID | string, opts: DocOpts = {}): Promise<Document> {
     const docRef = DocRef.from(docId)
+    // const doc = await this._repository.load(docRef.baseID, opts)
     const doc = await this.loadingQueue.load(docRef.baseID, opts)
 
     // If DocID is requested, return the document
