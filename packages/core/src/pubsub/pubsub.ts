@@ -67,7 +67,7 @@ export class Pubsub extends Observable<PubsubMessage> {
    * You could use returned Subscription to react when the operation is finished.
    * Feel free to disregard it though.
    */
-  publish(message: PubsubMessage): Subscription {
+  next(message: PubsubMessage): Subscription {
     return this.peerId$
       .pipe(
         mergeMap(async (peerId) => {
