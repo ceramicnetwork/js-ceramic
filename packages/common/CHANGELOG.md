@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.16.0-rc.9](/compare/@ceramicnetwork/common@0.16.0-rc.8...@ceramicnetwork/common@0.16.0-rc.9) (2021-03-10)
+
+
+### Bug Fixes
+
+* **core:** Don't display anchorScheduledFor at all when anchored (#1101) 3be9e74, closes #1101
+
+
+
+
+
 # [0.16.0-rc.8](/compare/@ceramicnetwork/common@0.16.0-rc.6...@ceramicnetwork/common@0.16.0-rc.8) (2021-03-09)
 
 

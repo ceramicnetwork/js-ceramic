@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/http-client",
-  "version": "0.10.0-rc.8",
+  "version": "0.10.0-rc.9",
   "description": "An http client for the ceramic network",
   "keywords": [
     "Ceramic",
@@ -26,11 +26,11 @@
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/3id-did-resolver": "^0.7.0-rc.8",
-    "@ceramicnetwork/common": "^0.16.0-rc.8",
+    "@ceramicnetwork/3id-did-resolver": "^0.7.0-rc.9",
+    "@ceramicnetwork/common": "^0.16.0-rc.9",
     "@ceramicnetwork/docid": "^0.5.0-rc.5",
-    "@ceramicnetwork/doctype-caip10-link": "^0.13.3-rc.8",
-    "@ceramicnetwork/doctype-tile": "^0.13.4-rc.8",
+    "@ceramicnetwork/doctype-caip10-link": "^0.13.3-rc.9",
+    "@ceramicnetwork/doctype-tile": "^0.13.4-rc.9",
     "@ceramicnetwork/logger": "^0.1.0-rc.5",
     "cids": "1.0.2",
     "cross-fetch": "^3.0.6",
