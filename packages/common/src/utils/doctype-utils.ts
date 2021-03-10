@@ -124,7 +124,7 @@ export class DoctypeUtils {
             if (showScheduledFor) {
                 cloned.anchorScheduledFor = Date.parse(cloned.anchorScheduledFor); // ISO format of the UTC time
             } else {
-                cloned.anchorScheduledFor = null;
+                delete cloned.anchorScheduledFor;
             }
         }
         if (cloned.lastAnchored) {
