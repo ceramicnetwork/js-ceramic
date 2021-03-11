@@ -28,12 +28,9 @@ export class Dispatcher {
   readonly messageBus: MessageBus
   // Set of IDs for QUERY messages we have sent to the pub/sub topic but not yet heard a
   // corresponding RESPONSE message for. Maps the query ID to the primary DocID we were querying for.
-  private readonly _outstandingQueryIds: Map<string, DocID>;
-
   constructor (readonly _ipfs: IpfsApi, private readonly topic: string, readonly repository: Repository, private readonly _logger: DiagnosticsLogger, private readonly _pubsubLogger: ServiceLogger) {
     const pubsub = new Pubsub(_ipfs, topic, IPFS_RESUBSCRIBE_INTERVAL_DELAY, _pubsubLogger, _logger)
-    this._outstandingQueryIds = new Map();
-    this.messageBus = new MessageBus(pubsub, this._outstandingQueryIds)
+    this.messageBus = new MessageBus(pubsub)
     this.messageBus.subscribe(this.handleMessage.bind(this))
   }
 
@@ -168,7 +165,7 @@ export class Dispatcher {
    */
   async _handleResponseMessage(message: ResponseMessage): Promise<void> {
     const { id: queryId, tips } = message
-    const expectedDocID = this._outstandingQueryIds.get(queryId)
+    const expectedDocID = this.messageBus.outstandingQueries.get(queryId)
     if (expectedDocID) {
       const newTip = tips.get(expectedDocID.toString())
       if (!newTip) {
@@ -178,7 +175,7 @@ export class Dispatcher {
       const document = await this.repository.get(expectedDocID)
       if (document) {
         await document._update(newTip)
-        this._outstandingQueryIds.delete(queryId)
+        this.messageBus.outstandingQueries.delete(queryId)
         // TODO Iterate over all documents in 'tips' object and process the new tip for each
       }
     }

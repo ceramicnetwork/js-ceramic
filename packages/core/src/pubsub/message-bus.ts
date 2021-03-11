@@ -8,12 +8,12 @@ import CID from 'cids';
  * Multiplexing IPFS Pubsub.
  */
 export class MessageBus extends Observable<PubsubMessage> implements SubscriptionLike {
+  readonly outstandingQueries: Map<string, DocID> = new Map();
   private readonly pubsubSubscription: Subscription;
   private readonly feed$: Subject<PubsubMessage> = new Subject<PubsubMessage>();
 
   constructor(
     readonly pubsub: Observable<PubsubMessage> & { next: (m: PubsubMessage) => Subscription },
-    readonly outstandingQueries: Map<string, DocID> = new Map(),
   ) {
     super((subscriber) => {
       this.feed$.subscribe(subscriber);
