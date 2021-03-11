@@ -262,7 +262,7 @@ describe('Ceramic interop: core <> http-client', () => {
 
     describe('multiqueries', () => {
         let docA, docB, docC, docD
-        beforeAll(async () => {
+        beforeEach(async () => {
           const controller = core.context.did.id
           docD = await core.createDocument(DOCTYPE_TILE, {
             content: { test: '321d'  },
@@ -314,7 +314,7 @@ describe('Ceramic interop: core <> http-client', () => {
 
         let docA, docB
 
-        beforeAll(async () => {
+        beforeEach(async () => {
             docB = await core.createDocument(DOCTYPE_TILE, { content: { foo: 'bar' } })
             docA = await core.createDocument(DOCTYPE_TILE, { content: { foo: 'baz' } })
         })
