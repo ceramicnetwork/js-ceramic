@@ -83,7 +83,7 @@ export class Repository {
   }
 
   /**
-   * Return a document, either from cache or re-constructed from state store.
+   * Return a document, either from cache or re-constructed from state store, but will not load from the network.
    * Adds the document to cache.
    */
   async get(docId: DocID): Promise<Document | undefined> {
