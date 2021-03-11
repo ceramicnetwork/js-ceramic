@@ -119,13 +119,6 @@ describe('TileDoctypeHandler', () => {
     let context: Context;
 
     beforeAll(() => {
-        did = new DID()
-        did.createJWS = jest.fn(async () => {
-            // fake jws
-            return { payload: 'bbbb', signatures: [{ protected: 'eyJraWQiOiJkaWQ6MzprMnQ2d3lmc3U0cGcwdDJuNGo4bXMzczMzeHNncWpodHRvMDRtdnE4dzVhMnY1eG80OGlkeXozOGw3eWRraT92ZXJzaW9uPTAjc2lnbmluZyIsImFsZyI6IkVTMjU2SyJ9', signature: 'cccc'}]}
-        })
-        did._id = 'did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki'
-
         const recs: Record<string, any> = {}
         const ipfs = {
             dag: {
@@ -162,14 +155,22 @@ describe('TileDoctypeHandler', () => {
 
         const api = { getSupportedChains: jest.fn(async () => {return ["fakechain:123"]}) }
         const keyDidResolver = KeyDidResolver.getResolver()
+        const resolver = new Resolver({
+            ...threeIdResolver,
+            ...keyDidResolver,
+        })
+        did = new DID({ resolver })
+        did.createJWS = jest.fn(async () => {
+            // fake jws
+            return { payload: 'bbbb', signatures: [{ protected: 'eyJraWQiOiJkaWQ6MzprMnQ2d3lmc3U0cGcwdDJuNGo4bXMzczMzeHNncWpodHRvMDRtdnE4dzVhMnY1eG80OGlkeXozOGw3eWRraT92ZXJzaW9uPTAjc2lnbmluZyIsImFsZyI6IkVTMjU2SyJ9', signature: 'cccc'}]}
+        })
+        did._id = 'did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki'
+
         context = {
             did,
             ipfs: ipfs,
             anchorService: null,
-            resolver: new Resolver({
-                ...threeIdResolver,
-                ...keyDidResolver,
-            }),
+            resolver,
             api: api as unknown as CeramicApi
         }
     })

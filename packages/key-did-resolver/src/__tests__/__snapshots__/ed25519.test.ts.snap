@@ -23,7 +23,7 @@ Object {
       "type": "X25519KeyAgreementKey2019",
     },
   ],
-  "publicKey": Array [
+  "verificationMethod": Array [
     Object {
       "controller": "did:key:z6MktvqCyLxTsXUH1tUZncNdVeEZ7hNh7npPRbUU27GTrYb8",
       "id": "did:key:z6MktvqCyLxTsXUH1tUZncNdVeEZ7hNh7npPRbUU27GTrYb8#z6MktvqCyLxTsXUH1tUZncNdVeEZ7hNh7npPRbUU27GTrYb8",

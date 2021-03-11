@@ -34,8 +34,8 @@
     "@ceramicnetwork/logger": "^0.1.0-rc.5",
     "cids": "1.0.2",
     "cross-fetch": "^3.0.6",
-    "did-resolver": "^2.1.1",
-    "dids": "^1.1.1",
+    "did-resolver": "^3.0.1",
+    "dids": "^2.0.0",
     "key-did-resolver": "^0.2.5"
   },
   "devDependencies": {

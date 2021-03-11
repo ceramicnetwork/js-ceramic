@@ -8,11 +8,11 @@ export function keyToDidDoc (pubKeyBytes: Uint8Array, fingerprint: string): any 
   const keyId = `${did}#${fingerprint}`
   return {
     id: did,
-    publicKey: [{
+    verificationMethod: [{
       id: keyId,
       type: 'Secp256k1VerificationKey2018',
       controller: did,
-      publicKeyHex: u8a.toString(pubKeyBytes, "base16"),
+      publicKeyBase58: u8a.toString(pubKeyBytes, "base58btc"),
     }],
     authentication: [keyId],
     assertionMethod: [keyId],

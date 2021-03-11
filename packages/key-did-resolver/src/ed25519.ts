@@ -21,7 +21,7 @@ export function keyToDidDoc (pubKeyBytes: Uint8Array, fingerprint: string): any 
   const x25519KeyId = `${did}#${encodeKey(x25519PubBytes)}`
   return {
     id: did,
-    publicKey: [{
+    verificationMethod: [{
       id: keyId,
       type: 'Ed25519VerificationKey2018',
       controller: did,

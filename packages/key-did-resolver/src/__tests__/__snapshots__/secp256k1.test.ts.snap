@@ -15,11 +15,11 @@ Object {
     "did:key:zQ3shbgnTGcgBpXPdBjDur3ATMDWhS7aPs6FRFkWR19Lb9Zwz#zQ3shbgnTGcgBpXPdBjDur3ATMDWhS7aPs6FRFkWR19Lb9Zwz",
   ],
   "id": "did:key:zQ3shbgnTGcgBpXPdBjDur3ATMDWhS7aPs6FRFkWR19Lb9Zwz",
-  "publicKey": Array [
+  "verificationMethod": Array [
     Object {
       "controller": "did:key:zQ3shbgnTGcgBpXPdBjDur3ATMDWhS7aPs6FRFkWR19Lb9Zwz",
       "id": "did:key:zQ3shbgnTGcgBpXPdBjDur3ATMDWhS7aPs6FRFkWR19Lb9Zwz#zQ3shbgnTGcgBpXPdBjDur3ATMDWhS7aPs6FRFkWR19Lb9Zwz",
-      "publicKeyHex": "02d41c913f542ae671e6df17a456c7dd6a280479d491120629daf92130602cd135",
+      "publicKeyBase58": "qjdSRUCiVtAjwdYVTxHQXd9FnMPRaYCtKpkchofTw66G",
       "type": "Secp256k1VerificationKey2018",
     },
   ],
