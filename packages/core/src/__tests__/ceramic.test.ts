@@ -1,7 +1,7 @@
 import Ceramic from '../ceramic'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import tmp from 'tmp-promise'
-import { DoctypeUtils, DocState, Doctype, IpfsApi } from "@ceramicnetwork/common"
+import { DoctypeUtils, DocState, Doctype, IpfsApi, TestUtils } from '@ceramicnetwork/common';
 import { TileDoctype } from "@ceramicnetwork/doctype-tile"
 import * as u8a from 'uint8arrays'
 import { createIPFS, swarmConnect } from './ipfs-util';
@@ -185,12 +185,11 @@ describe('Ceramic integration', () => {
     await doctype1.change({ content: { test: 'abcde' }, metadata: { controllers: [controller] } })
 
     await anchor(ceramic1)
-    await syncDoc(doctype3) // sync signed update record
-    await syncDoc(doctype3) // sync anchor record for signed update
 
     expect(doctype1.content).toEqual({ test: 'abcde' })
-    expect(doctype3.content).toEqual(doctype1.content)
-    expectEqualStates(doctype3.state, doctype1.state)
+    await TestUtils.waitForState(doctype3, 2000, state => DoctypeUtils.statesEqual(state, doctype1.state), () => {
+      throw new Error(`doctype3.state should equal doctype1.state`)
+    })
 
     await ceramic1.close()
     await ceramic2.close()

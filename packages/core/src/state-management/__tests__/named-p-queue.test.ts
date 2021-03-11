@@ -63,6 +63,6 @@ test('truly parallel', async () => {
   const whenFired = await Promise.all(tasks);
   whenFired.forEach(when => {
     const delta = Math.abs((when - now) - timeout)
-    expect(delta).toBeLessThan(10)
+    expect(delta).toBeLessThan(timeout)
   })
 });
