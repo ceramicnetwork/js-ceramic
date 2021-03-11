@@ -649,7 +649,7 @@ class Ceramic implements CeramicApi {
    * Load all the pinned documents, re-request PENDING or PROCESSING anchors.
    */
   async restoreDocuments() {
-    const list = await this._repository.list()
+    const list = await this._repository.listPinned()
     const documents = await Promise.all(list.map(docId => this._loadDoc(docId)))
     documents.forEach(document => {
       const toRecover = document.state?.anchorStatus === AnchorStatus.PENDING || document.state?.anchorStatus === AnchorStatus.PROCESSING

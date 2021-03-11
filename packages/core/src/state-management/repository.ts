@@ -124,7 +124,11 @@ export class Repository {
     await this.#map.delete(docId.toString());
   }
 
-  async list(docId?: DocID): Promise<string[]> {
+  /**
+   * List pinned documents as array of DocID strings.
+   * If `docId` is passed, indicate if it is pinned.
+   */
+  async listPinned(docId?: DocID): Promise<string[]> {
     if (this.#pinStore) {
       return this.#pinStore.stateStore.list(docId);
     } else {

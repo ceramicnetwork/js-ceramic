@@ -35,26 +35,26 @@ describe('ls', () => {
   test('no docId: list all', async () => {
     const length = Math.floor(Math.random() * 10);
     const expected = Array.from({ length }).map(() => random.randomString(10));
-    repository.list = jest.fn(async () => expected);
+    repository.listPinned = jest.fn(async () => expected);
     const iterable = await pinApi.ls();
     const actual = await toArray(iterable);
     expect(actual).toEqual(expected);
-    expect(repository.list).toBeCalledWith(null);
+    expect(repository.listPinned).toBeCalledWith(null);
   });
   test('docId: present: list it', async () => {
     const expected = [DOC_ID.toString()];
-    repository.list = jest.fn(async () => expected);
+    repository.listPinned = jest.fn(async () => expected);
     const iterable = await pinApi.ls(DOC_ID);
     const actual = await toArray(iterable);
     expect(actual).toEqual(expected);
-    expect(repository.list).toBeCalledWith(DOC_ID);
+    expect(repository.listPinned).toBeCalledWith(DOC_ID);
   });
   test('docId: absent: empty list', async () => {
     const expected = [];
-    repository.list = jest.fn(async () => expected);
+    repository.listPinned = jest.fn(async () => expected);
     const iterable = await pinApi.ls(DOC_ID);
     const actual = await toArray(iterable);
     expect(actual).toEqual(expected);
-    expect(repository.list).toBeCalledWith(DOC_ID);
+    expect(repository.listPinned).toBeCalledWith(DOC_ID);
   });
 });

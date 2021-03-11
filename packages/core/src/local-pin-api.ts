@@ -27,7 +27,7 @@ export class LocalPinApi implements PinApi {
   }
 
   async ls(docId?: DocID): Promise<AsyncIterable<string>> {
-    const docIds = await this.repository.list(docId ? docId.baseID : null);
+    const docIds = await this.repository.listPinned(docId ? docId.baseID : null);
     return {
       [Symbol.asyncIterator](): any {
         let index = 0;
