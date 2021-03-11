@@ -51,7 +51,7 @@ export class NamedPQueue {
    *
    * Returns result of the task execution.
    */
-  async add<A>(name: string, f: () => Promise<A>): Promise<A> {
+  async run<A>(name: string, f: () => Promise<A>): Promise<A> {
     const release = await this.#operations.acquire();
     const queue = this.queue(name);
     const task = queue.add(f).then(async (result) => {

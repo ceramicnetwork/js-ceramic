@@ -68,7 +68,7 @@ test('publish', async () => {
     id: random.randomString(32),
     doc: FAKE_DOC_ID,
   };
-  const subscription = pubsub.publish(message);
+  const subscription = pubsub.next(message);
   subscription.add(() => {
     // Can be replaced with delay, but this is faster.
     expect(ipfs.pubsub.publish).toBeCalledWith(TOPIC, serialize(message));

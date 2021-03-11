@@ -3,7 +3,7 @@ import CID from 'cids'
 import { Document } from "../document"
 import { TileDoctype } from "@ceramicnetwork/doctype-tile"
 import DocID from "@ceramicnetwork/docid";
-import { CommitType, DocState, DoctypeHandler, LoggerProvider, PinningBackend } from '@ceramicnetwork/common';
+import { CommitType, DocState, DoctypeHandler, LoggerProvider } from '@ceramicnetwork/common';
 import { serialize, MsgType } from '../pubsub/pubsub-message';
 import { Repository } from '../state-management/repository';
 import { delay } from '../pubsub/__tests__/delay';
@@ -59,7 +59,10 @@ describe('Dispatcher', () => {
     const levelPath = await tmp.tmpName()
     const stateStore = new LevelStateStore(levelPath)
     repository = new Repository(100)
-    repository.setStateStore(stateStore)
+    const pinStore = {
+      stateStore
+    } as unknown as PinStore
+    repository.setPinStore(pinStore)
     dispatcher = new Dispatcher(ipfs, TOPIC, repository, loggerProvider.getDiagnosticsLogger(), loggerProvider.makeServiceLogger("pubsub"))
   })
 
@@ -77,33 +80,6 @@ describe('Dispatcher', () => {
     await dispatcher.close()
     expect(ipfs.pubsub.unsubscribe).toHaveBeenCalledTimes(1)
     expect(ipfs.pubsub.unsubscribe).toHaveBeenCalledWith(TOPIC, expect.anything())
-  })
-
-  it('makes registration correctly', async () => {
-    const fakeDocState = {
-      doctype: 'tile',
-      log: [
-        {
-          cid: FAKE_DOC_ID.cid,
-          type: CommitType.GENESIS
-        }
-      ]
-    } as unknown as DocState
-    const doc = new Document(
-      fakeDocState,
-      dispatcher,
-      null,
-      false,
-      {loggerProvider},
-      fakeHandler,
-    )
-    dispatcher.register(doc)
-    await delay(100) // Wait for plumbing
-    const publishArgs = ipfs.pubsub.publish.mock.calls[0]
-    expect(publishArgs[0]).toEqual(TOPIC)
-    const queryMessageSent = JSON.parse(publishArgs[1])
-    delete queryMessageSent.id
-    expect(queryMessageSent).toEqual({typ: MsgType.QUERY, doc: FAKE_DOC_ID.toString()})
   })
 
   it('store record correctly', async () => {
@@ -143,7 +119,7 @@ describe('Dispatcher', () => {
         {loggerProvider},
         fakeHandler
       )
-      dispatcher.register(document)
+      dispatcher.messageBus.queryNetwork(document.id).subscribe()
       await repository.add(document)
       return document
     }

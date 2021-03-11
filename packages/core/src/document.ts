@@ -15,10 +15,10 @@ import {
 import DocID, { CommitID } from '@ceramicnetwork/docid';
 import { PinStore } from './store/pin-store';
 import { SubscriptionSet } from "./subscription-set";
-import { concatMap, distinctUntilChanged } from "rxjs/operators";
+import { catchError, concatMap, distinctUntilChanged, timeoutWith } from "rxjs/operators";
 import { DiagnosticsLogger } from "@ceramicnetwork/logger";
 import { validateState } from './validate-state';
-import { BehaviorSubject } from 'rxjs'
+import { BehaviorSubject, Observable, of, empty } from 'rxjs'
 import { ConflictResolution } from './conflict-resolution';
 
 // DocOpts defaults for document load operations
@@ -70,6 +70,7 @@ export class Document implements DocStateHolder {
    * @param context - Ceramic context
    * @param opts - Initialization options
    * @param validate - Validate content against schema
+   * @deprecated
    */
   static async load<T extends Doctype> (
       docId: DocID,
@@ -92,25 +93,21 @@ export class Document implements DocStateHolder {
     if (validate) {
       await validateState(doc.state, doc.doctype.content, context.api.loadDocument.bind(context.api))
     }
-    return doc._syncDocumentToCurrent(pinStore, opts)
+    const pinnedState = await pinStore.stateStore.load(docId)
+    if (pinnedState) {
+      doc.state$.next(pinnedState)
+    }
+    return doc._syncDocumentToCurrent(opts)
   }
 
   /**
    * Takes a document containing only the genesis commit and kicks off the process to load and apply
    * the most recent Tip to it.
-   * @param pinStore
    * @param opts
    * @private
    */
-  async _syncDocumentToCurrent(pinStore: PinStore, opts: DocOpts): Promise<Document> {
-    // Update document state to cached state if any
-    const pinnedState = await pinStore.stateStore.load(this.id)
-    if (pinnedState) {
-      this.state$.next(pinnedState)
-    }
-
-    // Request current tip from pub/sub system and register for future updates
-    await this._register(opts)
+  async _syncDocumentToCurrent(opts: DocOpts): Promise<Document> {
+    await this._applyOpts(opts)
     return this
   }
 
@@ -135,26 +132,16 @@ export class Document implements DocStateHolder {
    * @param opts - Document initialization options (request anchor, wait, etc.)
    */
   async applyCommit (commit: any, opts: DocOpts = {}): Promise<void> {
-    // Fill 'opts' with default values for any missing fields
-    opts = {...DEFAULT_WRITE_DOCOPTS, ...opts}
+    await this._applyQueue.add(async () => {
+      // Fill 'opts' with default values for any missing fields
+      opts = {...DEFAULT_WRITE_DOCOPTS, ...opts}
 
-    const cid = await this.dispatcher.storeCommit(commit)
+      const cid = await this.dispatcher.storeCommit(commit)
 
-    await this._handleTip(cid)
-    await this._updateStateIfPinned()
-    await this._applyOpts(opts)
-  }
-
-  /**
-   * Register document to the Dispatcher
-   *
-   * @param opts - Document initialization options (request anchor, wait, etc.)
-   * @private
-   */
-  async _register (opts: DocOpts): Promise<void> {
-    this.dispatcher.register(this)
-
-    await this._applyOpts(opts)
+      await this._handleTip(cid)
+      await this._updateStateIfPinned()
+      await this._applyOpts(opts)
+    })
   }
 
   /**
@@ -173,8 +160,11 @@ export class Document implements DocStateHolder {
     if (publish) {
       this._publishTip()
     }
+    const tip$ = this.dispatcher.messageBus.queryNetwork(this.id)
     if (sync) {
-      await this._wait()
+      await this._wait(tip$)
+    } else {
+      this.subscriptionSet.add(tip$.subscribe());
     }
   }
 
@@ -197,11 +187,13 @@ export class Document implements DocStateHolder {
    * @private
    */
   async _update(cid: CID): Promise<void> {
-    try {
-      await this._handleTip(cid)
-    } catch (e) {
-      this._logger.err(e)
-    }
+    await this._applyQueue.add(async () => {
+      try {
+        await this._handleTip(cid)
+      } catch (e) {
+        this._logger.err(e)
+      }
+    })
   }
 
   /**
@@ -211,12 +203,10 @@ export class Document implements DocStateHolder {
    * @private
    */
   async _handleTip(cid: CID): Promise<void> {
-    await this._applyQueue.add(async () => {
-      const next = await this.conflictResolution.applyTip(this.state$.value, cid);
-      if (next) {
-        this.state$.next(next);
-      }
-    });
+    const next = await this.conflictResolution.applyTip(this.state$.value, cid);
+    if (next) {
+      this.state$.next(next);
+    }
   }
 
   /**
@@ -234,16 +224,19 @@ export class Document implements DocStateHolder {
   anchor(): void {
     const anchorStatus$ = this._context.anchorService.requestAnchor(this.id.baseID, this.tip);
     const subscription = anchorStatus$
-        .pipe(
-            concatMap(async (asr) => {
+      .subscribe(
+        async (asr) => {
+          if (this.state$.closed) return;
+          try {
+            await this._applyQueue.add(async () => {
               switch (asr.status) {
                 case AnchorStatus.PENDING: {
                   const next = {
                     ...this.state$.value,
                     anchorStatus: AnchorStatus.PENDING,
-                  }
-                  if (asr.anchorScheduledFor) next.anchorScheduledFor = asr.anchorScheduledFor
-                  this.state$.next(next)
+                  };
+                  if (asr.anchorScheduledFor) next.anchorScheduledFor = asr.anchorScheduledFor;
+                  this.state$.next(next);
                   await this._updateStateIfPinned();
                   return;
                 }
@@ -263,16 +256,18 @@ export class Document implements DocStateHolder {
                   if (!asr.cid.equals(this.tip)) {
                     return;
                   }
-                  this.state$.next({ ...this.state$.value, anchorStatus: AnchorStatus.FAILED })
+                  this.state$.next({ ...this.state$.value, anchorStatus: AnchorStatus.FAILED });
                   subscription.unsubscribe();
                   return;
                 }
                 default:
-                  throw new UnreachableCaseError(asr, 'Unknown anchoring state')
+                  throw new UnreachableCaseError(asr, 'Unknown anchoring state');
               }
-            })
-        )
-        .subscribe();
+            });
+          } catch (error) {
+            this._logger.err(error)
+          }
+        })
     this.subscriptionSet.add(subscription);
   }
 
@@ -311,19 +306,11 @@ export class Document implements DocStateHolder {
    *
    * @private
    */
-  async _wait(): Promise<void> {
-    // add response timeout for network change
-    return new Promise(resolve => {
-      let tid: any // eslint-disable-line prefer-const
-      const clear = async (): Promise<void> => {
-        clearTimeout(tid)
-        this._doctype.off('change', clear)
-        await this._applyQueue.onEmpty()
-        resolve()
-      }
-      tid = setTimeout(clear, 3000)
-      this._doctype.on('change', clear)
-    })
+  async _wait(tip$: Observable<CID | undefined>): Promise<void> {
+    const tip = await tip$.pipe(timeoutWith(3000, of(undefined))).toPromise()
+    if (tip) {
+      await this._update(tip)
+    }
   }
 
   /**
@@ -331,8 +318,11 @@ export class Document implements DocStateHolder {
    */
   async close (): Promise<void> {
     this.subscriptionSet.close();
-    await this._applyQueue.onIdle()
-    this.state$.complete();
+    await this._applyQueue.onIdle();
+    if (!this.state$.closed) {
+      this.state$.complete();
+      this.state$.unsubscribe();
+    }
   }
 
   /**

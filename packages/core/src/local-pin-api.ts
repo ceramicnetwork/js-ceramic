@@ -3,30 +3,31 @@ import DocID from '@ceramicnetwork/docid';
 import { Document } from './document';
 import { PinStore } from './store/pin-store';
 import { DiagnosticsLogger } from "@ceramicnetwork/logger";
+import { Repository } from './state-management/repository';
 
 /**
  * PinApi for Ceramic core.
  */
 export class LocalPinApi implements PinApi {
   constructor(
-    private readonly pinStore: PinStore,
+    private readonly repository: Repository,
     private readonly loadDoc: (docId: DocID) => Promise<Document>,
     private readonly logger: DiagnosticsLogger,
   ) {}
 
   async add(docId: DocID): Promise<void> {
     const document = await this.loadDoc(docId);
-    await this.pinStore.add(document.doctype);
+    await this.repository.pin(document.doctype);
     this.logger.verbose(`Pinned document ${docId.toString()}`)
   }
 
   async rm(docId: DocID): Promise<void> {
-    await this.pinStore.rm(docId);
+    await this.repository.unpin(docId);
     this.logger.verbose(`Unpinned document ${docId.toString()}`)
   }
 
   async ls(docId?: DocID): Promise<AsyncIterable<string>> {
-    const docIds = await this.pinStore.ls(docId ? docId.baseID : null);
+    const docIds = await this.repository.listPinned(docId ? docId.baseID : null);
     return {
       [Symbol.asyncIterator](): any {
         let index = 0;

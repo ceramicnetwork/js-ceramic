@@ -148,7 +148,7 @@ export class HistoryLog {
         return index;
       }
       const commit = await this.dispatcher.retrieveCommit(current);
-      if (DoctypeUtils.isSignedCommit(commit) && commit.link.equals(cid)) {
+      if (commit && DoctypeUtils.isSignedCommit(commit) && commit.link && commit.link.equals(cid)) {
         return index;
       }
     }

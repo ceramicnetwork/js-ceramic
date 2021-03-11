@@ -5,7 +5,6 @@ import { Dispatcher } from '../dispatcher'
 import Ceramic from "../ceramic"
 import { Context, LoggerProvider, PinningBackend } from "@ceramicnetwork/common"
 import { AnchorStatus, DocOpts, SignatureStatus } from "@ceramicnetwork/common"
-import { AnchorService } from "@ceramicnetwork/common"
 import { TileDoctype, TileParams } from "@ceramicnetwork/doctype-tile"
 import { TileDoctypeHandler } from '@ceramicnetwork/doctype-tile-handler'
 import { PinStore } from "../store/pin-store";
@@ -21,6 +20,7 @@ import InMemoryAnchorService from "../anchor/memory/in-memory-anchor-service"
 import {FakeTopology} from "./fake-topology";
 import {PinStoreFactory} from "../store/pin-store-factory";
 import { Repository } from '../state-management/repository';
+import { Pubsub } from '../pubsub/pubsub';
 
 jest.mock('../dispatcher', () => {
   const CID = require('cids') // eslint-disable-line @typescript-eslint/no-var-requires
@@ -29,14 +29,19 @@ jest.mock('../dispatcher', () => {
   const { DoctypeUtils } = require('@ceramicnetwork/common') // eslint-disable-line @typescript-eslint/no-var-requires
   const dagCBOR = require('ipld-dag-cbor') // eslint-disable-line @typescript-eslint/no-var-requires
   const u8a = require('uint8arrays') // eslint-disable-line @typescript-eslint/no-var-requires
+  const { MessageBus } = require('../pubsub/message-bus') // eslint-disable-line @typescript-eslint/no-var-requires
+  const { from } = require('rxjs') // eslint-disable-line @typescript-eslint/no-var-requires
   const hash = (data: string): CID => {
     const body = u8a.concat([u8a.fromString('1220', 'base16'), sha256.hash(u8a.fromString(data))])
     return new CID(1, 'sha2-256', body)
   }
-  const Dispatcher = (gossip: boolean): any => {
+  const Dispatcher = (gossip: boolean, docs: Record<string, Document> = {}): any => {
     const recs: Record<any, any> = {}
-    const docs: Record<string, Document> = {}
+    const pubsub = from([]) as unknown as Pubsub
+    pubsub.next = jest.fn()
+    const messageBus = new MessageBus(pubsub)
     return {
+      messageBus,
       _ipfs: {
         dag: {
           put(rec: any): any {
@@ -77,11 +82,7 @@ jest.mock('../dispatcher', () => {
         recs[cid.toString()] = clone
         return cid
       }),
-      publishTip: jest.fn((id, tip) => {
-        if (gossip) {
-          docs[id]._handleTip(tip)
-        }
-      }),
+      publishTip: jest.fn(),
       _requestTip: (id: string): void => {
         if (gossip) {
           docs[id]._publishTip()
@@ -95,6 +96,9 @@ jest.mock('../dispatcher', () => {
         return recs[cid.toString()]
       }),
       init: jest.fn(),
+      close: () => {
+        messageBus.unsubscribe();
+      }
     }
   }
 
@@ -113,7 +117,7 @@ const create = async (params: TileParams, ceramic: Ceramic, context: Context, op
   }
 
   const record = await TileDoctype.makeGenesis({ content, metadata }, context)
-  return await ceramic._createDocFromGenesis("tile", record, opts)
+  return ceramic._createDocFromGenesis("tile", record, opts)
 }
 
 const stringMapSchema = {
@@ -231,7 +235,8 @@ describe('Document', () => {
       await ceramic._init(false, false)
 
       const paramsNoSchemaValidation = { ...params, validateDocs: false };
-      ceramicWithoutSchemaValidation = new Ceramic(modules, paramsNoSchemaValidation);
+      const modulesNoSchemaValidation = {...modules, repository: new Repository(100)}
+      ceramicWithoutSchemaValidation = new Ceramic(modulesNoSchemaValidation, paramsNoSchemaValidation);
       (ceramicWithoutSchemaValidation as any)._doctypeHandlers.add(doctypeHandler)
       ceramicWithoutSchemaValidation.context.resolver = resolver
 
@@ -239,10 +244,11 @@ describe('Document', () => {
     })
 
     it('is created correctly', async () => {
+      const queryNetworkSpy = jest.spyOn(dispatcher.messageBus, 'queryNetwork')
       const doc = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context)
 
       expect(doc.doctype.content).toEqual(initialContent)
-      expect(dispatcher.register).toHaveBeenCalledWith(doc)
+      expect(queryNetworkSpy).toHaveBeenCalledWith(doc.id)
       expect(doc.state.anchorStatus).toEqual(AnchorStatus.PENDING)
       await anchorUpdate(anchorService, doc)
       expect(doc.state.anchorStatus).not.toEqual(AnchorStatus.NOT_REQUESTED)
@@ -474,16 +480,12 @@ describe('Document', () => {
       const schemaDoc = await create({ content: stringMapSchema, metadata: { controllers } }, ceramic, context)
       await anchorUpdate(anchorService, schemaDoc)
 
-      try {
-        const docParams = {
-          content: {stuff: 1},
-          metadata: {controllers, schema: schemaDoc.doctype.commitId.toString()}
-        }
-        await create(docParams, ceramic, context)
-        fail('Should not be able to create a document with an invalid schema')
-      } catch (e) {
-        expect(e.message).toEqual('Validation Error: data[\'stuff\'] should be string')
+      const docParams = {
+        content: {stuff: 1},
+        metadata: {controllers, schema: schemaDoc.doctype.commitId.toString()}
       }
+
+      await expect(create(docParams, ceramic, context)).rejects.toThrow("Validation Error: data['stuff'] should be string")
     })
 
     it('Enforces schema in update that assigns schema', async () => {
@@ -559,13 +561,15 @@ describe('Document', () => {
 
     let dispatcher: any;
     let doctypeHandler: TileDoctypeHandler;
-    let anchorService: AnchorService;
+    let anchorService: InMemoryAnchorService;
     let context: Context;
     let ceramic: Ceramic;
     let user: DID;
+    const docs = {}
+    const gossip = true
 
     beforeEach(async () => {
-      dispatcher = Dispatcher(true)
+      dispatcher = Dispatcher(gossip, docs)
       anchorService = new InMemoryAnchorService({})
       anchorService.ceramic = {
         dispatcher,
@@ -644,6 +648,10 @@ describe('Document', () => {
       await ceramic._init(false, false)
     })
 
+    afterEach(async () => {
+      await ceramic.close();
+    })
+
     it('should announce change to network', async () => {
       const doc1 = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context)
       expect(dispatcher.publishTip).toHaveBeenCalledTimes(1)
@@ -657,38 +665,6 @@ describe('Document', () => {
 
       expect(dispatcher.publishTip).toHaveBeenCalledTimes(3)
       expect(dispatcher.publishTip).toHaveBeenCalledWith(doc1.id, doc1.tip)
-    })
-
-    it('documents share updates', async () => {
-      const doc1 = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context)
-      await anchorUpdate(anchorService, doc1)
-      const doc2 = await Document.load(doc1.id, doctypeHandler, dispatcher, pinStore, context, { sync: false })
-
-      const updatePromise = new Promise(resolve => {
-        doc2.doctype.on('change', resolve)
-      })
-
-      const updateRec = await TileDoctype._makeCommit(doc1.doctype, user, newContent, doc1.doctype.controllers)
-      await doc1.applyCommit(updateRec)
-
-      expect(doc1.doctype.content).toEqual(newContent)
-
-      await updatePromise
-      expect(doc2.doctype.content).toEqual(newContent)
-    })
-
-    it('should publish tip on network request', async () => {
-      const doc = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context)
-      expect(dispatcher.publishTip).toHaveBeenCalledTimes(1)
-      expect(dispatcher.publishTip).toHaveBeenNthCalledWith(1, doc.id, doc.tip)
-
-      await dispatcher._requestTip(doc.id)
-
-      expect(dispatcher.publishTip).toHaveBeenCalledTimes(2)
-      expect(dispatcher.publishTip).toHaveBeenNthCalledWith(2, doc.id, doc.tip)
-
-      // wait a bit to complete document handling
-      await new Promise(resolve => setTimeout(resolve, 1000))
     })
   })
 })

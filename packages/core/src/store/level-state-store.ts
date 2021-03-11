@@ -1,5 +1,5 @@
 import Level from "level-ts";
-import { DocState, Doctype, DoctypeUtils } from "@ceramicnetwork/common"
+import { DocState, DocStateHolder, DoctypeUtils } from '@ceramicnetwork/common';
 import { StateStore } from "./state-store"
 import DocID from '@ceramicnetwork/docid'
 import * as fs from 'fs'
@@ -33,10 +33,10 @@ export class LevelStateStore implements StateStore {
 
     /**
      * Pin document
-     * @param document - Document instance
+     * @param docStateHolder - Document instance
      */
-    async save(document: Doctype): Promise<void> {
-        await this.#store.put(document.id.baseID.toString(), DoctypeUtils.serializeState(document.state))
+    async save(docStateHolder: DocStateHolder): Promise<void> {
+        await this.#store.put(docStateHolder.id.baseID.toString(), DoctypeUtils.serializeState(docStateHolder.state))
     }
 
     /**

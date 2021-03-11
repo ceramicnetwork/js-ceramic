@@ -1,7 +1,7 @@
 import Ceramic from '../ceramic'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import tmp from 'tmp-promise'
-import { DoctypeUtils, DocState, Doctype, IpfsApi } from "@ceramicnetwork/common"
+import { DoctypeUtils, DocState, Doctype, IpfsApi, TestUtils } from '@ceramicnetwork/common';
 import { TileDoctype } from "@ceramicnetwork/doctype-tile"
 import * as u8a from 'uint8arrays'
 import { createIPFS, swarmConnect } from './ipfs-util';
@@ -178,22 +178,19 @@ describe('Ceramic integration', () => {
       content: { test: 321 },
       metadata: { controllers: [controller], tags: ['3id'] },
       deterministic: true,
-    }, {
-      anchor: false, publish: false, sync: false
     })
-    await syncDoc(doctype3) // sync anchor record for genesis
 
     expect(doctype3.content).toEqual(doctype1.content)
 
     await doctype1.change({ content: { test: 'abcde' }, metadata: { controllers: [controller] } })
 
     await anchor(ceramic1)
-    await syncDoc(doctype3) // sync signed update record
-    await syncDoc(doctype3) // sync anchor record for signed update
 
     expect(doctype1.content).toEqual({ test: 'abcde' })
-    expect(doctype3.content).toEqual(doctype1.content)
-    expectEqualStates(doctype3.state, doctype1.state)
+    await TestUtils.waitForState(doctype3, 2000, state => DoctypeUtils.statesEqual(state, doctype1.state), () => {
+      throw new Error(`doctype3.state should equal doctype1.state`)
+    })
+
     await ceramic1.close()
     await ceramic2.close()
     await ceramic3.close()
@@ -330,11 +327,11 @@ describe('Ceramic integration', () => {
 
     const repository1 = (ceramic1 as any)._repository
     const addSpy1 = jest.spyOn(repository1, 'add');
-    const getSpy1 = jest.spyOn(repository1, 'get');
+    const loadSpy1 = jest.spyOn(repository1, 'load');
 
     const repository2 = (ceramic2 as any)._repository
     const addSpy2 = jest.spyOn(repository2, 'add');
-    const getSpy2 = jest.spyOn(repository2, 'get');
+    const loadSpy2 = jest.spyOn(repository2, 'load');
 
     const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { test: 456 }, metadata: { controllers: [controller], tags: ['3id'] } }, {publish: false})
     expect(doctype1).toBeDefined()
@@ -343,11 +340,11 @@ describe('Ceramic integration', () => {
     await syncDoc(doctype1)
 
     expect(addSpy1).toBeCalledTimes(1)
-    expect(getSpy1).toBeCalledTimes(1)
+    expect(loadSpy1).toBeCalledTimes(1)
     await expect(repository1.get(doctype1.id.baseID.toString())).resolves.toBeTruthy()
 
     addSpy1.mockClear()
-    getSpy1.mockClear()
+    loadSpy1.mockClear()
 
     await doctype1.change({ content: { test: 'abcde' }, metadata: { controllers: [controller] } }, {publish: false})
 
@@ -359,7 +356,7 @@ describe('Ceramic integration', () => {
     const loadedDoctype1 = await ceramic2.loadDocument(prevCommitDocId1)
     expect(loadedDoctype1).toBeDefined()
 
-    expect(getSpy2).toBeCalled()
+    expect(loadSpy2).toBeCalled()
     expect(addSpy2).toBeCalledTimes(1)
     await expect(repository2.get(prevCommitDocId1.baseID.toString())).resolves.toBeTruthy()
 
@@ -375,14 +372,14 @@ describe('Ceramic integration', () => {
 
     const repository1 = (ceramic1 as any)._repository
     const addSpy1 = jest.spyOn(repository1, 'add');
-    const getSpy1 = jest.spyOn(repository1, 'get');
+    const loadSpy1 = jest.spyOn(repository1, 'load');
 
     const repository2 = (ceramic2 as any)._repository
     const addSpy2 = jest.spyOn(repository2, 'add');
-    const getSpy2 = jest.spyOn(repository2, 'get');
+    const loadSpy2 = jest.spyOn(repository2, 'load');
 
     const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { test: 456 }, metadata: { controllers: [controller], tags: ['3id'] } })
-    expect(getSpy1).toBeCalledTimes(1)
+    expect(loadSpy1).toBeCalledTimes(1)
     expect(addSpy1).toBeCalledTimes(1)
     expect(doctype1).toBeDefined()
 
@@ -392,10 +389,10 @@ describe('Ceramic integration', () => {
     await expect(repository1.get(doctype1.id.baseID.toString())).resolves.toBeTruthy()
 
     addSpy1.mockClear()
-    getSpy1.mockClear()
+    loadSpy1.mockClear()
 
     await doctype1.change({ content: { test: 'abcde' }, metadata: { controllers: [controller] } })
-    expect(getSpy1).toBeCalledTimes(1)
+    expect(loadSpy1).toBeCalledTimes(1)
     expect(addSpy1).toBeCalledTimes(0)
 
     await anchor(ceramic1)
@@ -406,7 +403,7 @@ describe('Ceramic integration', () => {
     const doctype2 = await ceramic2.loadDocument(prevCommitDocId1)
     expect(doctype2).toBeDefined()
 
-    expect(getSpy2).toBeCalled()
+    expect(loadSpy2).toBeCalled()
     expect(addSpy2).toBeCalledTimes(1)
     await expect(repository2.get(prevCommitDocId1.baseID.toString())).resolves.toBeTruthy()
 

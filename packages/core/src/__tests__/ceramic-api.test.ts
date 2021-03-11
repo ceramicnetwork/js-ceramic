@@ -225,9 +225,6 @@ describe('Ceramic API', () => {
       }
 
       await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, tileDocParams)
-
-      await new Promise(resolve => setTimeout(resolve, 1000)) // wait to propagate
-      await ceramic.close()
     })
 
     it('can assign schema if content is valid', async () => {
