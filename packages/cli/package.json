@@ -61,7 +61,7 @@
     "levelup": "^4.4.0",
     "logfmt": "^1.3.2",
     "morgan": "^1.10.0",
-    "multiformats": "3.0.3",
+    "multiformats": "4.6.1",
     "os-utils": "0.0.14",
     "s3leveldown": "^2.2.1",
     "stream-to-array": "^2.3.0",
