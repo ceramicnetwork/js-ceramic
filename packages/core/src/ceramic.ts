@@ -626,7 +626,6 @@ class Ceramic implements CeramicApi {
    */
   async _loadDoc(docId: DocID | CommitID | string, opts: DocOpts = {}): Promise<Document> {
     const docRef = DocRef.from(docId)
-    // const doc = await this._repository.load(docRef.baseID, opts)
     const doc = await this._repository.load(docRef.baseID, opts)
 
     // If DocID is requested, return the document
