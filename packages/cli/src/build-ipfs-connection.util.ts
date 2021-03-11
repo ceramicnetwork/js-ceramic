@@ -1,7 +1,6 @@
 import {IpfsDaemon} from "@ceramicnetwork/ipfs-daemon";
 
 import dagJose from 'dag-jose'
-// @ts-ignore
 import legacy from 'multiformats/legacy'
 import ipfsClient from "ipfs-http-client"
 import { IpfsApi } from "@ceramicnetwork/common"
