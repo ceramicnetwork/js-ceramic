@@ -34,7 +34,7 @@
   "devDependencies": {
     "@ceramicnetwork/common": "^0.16.0-rc.9",
     "@ceramicnetwork/pinning-powergate-backend": "^0.1.15-rc.9",
-    "cids": "^1.1.6"
+    "cids": "~1.1.6"
   },
   "publishConfig": {
     "access": "public"
