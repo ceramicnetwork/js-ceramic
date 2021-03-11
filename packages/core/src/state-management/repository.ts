@@ -68,6 +68,9 @@ export class Repository {
     });
   }
 
+  /**
+  * Checks if we can get the document state without having to load it via pubsub (i.e. we have the document state in our in-memory cache or in the state store)
+  */
   async has(docId: DocID): Promise<boolean> {
     const fromMemory = await this.fromMemory(docId);
     if (fromMemory) return true;
