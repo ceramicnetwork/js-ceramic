@@ -2,7 +2,7 @@ import type CID from 'cids'
 
 import * as didJwt from 'did-jwt'
 import * as uint8arrays from 'uint8arrays'
-import type { PublicKey } from 'did-resolver'
+import type { DIDResolutionResult } from 'did-resolver'
 
 import jsonpatch from 'fast-json-patch'
 import cloneDeep from 'lodash.clonedeep'
@@ -188,33 +188,19 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
      * @param did - DID value
      * @private
      */
-    async _verifySignature(commit: any, context: Context, did: string): Promise<void> {
-        const { payload, signatures } = commit
-        const { signature,  protected: _protected } = signatures[0]
-
-        const jsonString = uint8arrays.toString(uint8arrays.fromString(_protected, 'base64url'))
-        const decodedHeader = JSON.parse(jsonString)
-        const { kid } = decodedHeader
-        if (!kid.startsWith(did)) {
-            throw new Error(`Signature was made with wrong DID. Expected: ${did}, got: ${kid}`)
-        }
-
-        const { publicKey } = await context.resolver.resolve(kid)
-        const jws = [_protected, payload, signature].join('.')
+    async _verifySignature(commit: any, context: Context, did: string): Promise<DIDResolutionResult> {
+        let result
         try {
-            await this.verifyJWS(jws, publicKey)
+            result = await context.did.verifyJWS(commit)
         } catch (e) {
             throw new Error('Invalid signature for signed commit. ' + e)
         }
+        const { kid, didResolutionResult } = result
+        // TODO - this needs to be changed to support NFT dids
+        // and the did-core "controller" property in general.
+        if (!kid.startsWith(did)) {
+            throw new Error(`Signature was made with wrong DID. Expected: ${did}, got: ${kid}`)
+        }
+        return didResolutionResult
     }
-
-    /**
-     * Verifies JWS token
-     * @param jws - JWS token
-     * @param pubkeys - public key(s)
-     */
-    async verifyJWS(jws: string, pubkeys: PublicKey[]): Promise<void> {
-        await didJwt.verifyJWS(jws, pubkeys)
-    }
-
 }

@@ -2,7 +2,6 @@
 
 exports[`Ed25519 mapper successfully resolves the document from did 1`] = `
 Object {
-  "@context": "https://w3id.org/did/v1",
   "assertionMethod": Array [
     "did:key:z6MktvqCyLxTsXUH1tUZncNdVeEZ7hNh7npPRbUU27GTrYb8#z6MktvqCyLxTsXUH1tUZncNdVeEZ7hNh7npPRbUU27GTrYb8",
   ],
@@ -24,7 +23,7 @@ Object {
       "type": "X25519KeyAgreementKey2019",
     },
   ],
-  "publicKey": Array [
+  "verificationMethod": Array [
     Object {
       "controller": "did:key:z6MktvqCyLxTsXUH1tUZncNdVeEZ7hNh7npPRbUU27GTrYb8",
       "id": "did:key:z6MktvqCyLxTsXUH1tUZncNdVeEZ7hNh7npPRbUU27GTrYb8#z6MktvqCyLxTsXUH1tUZncNdVeEZ7hNh7npPRbUU27GTrYb8",

@@ -15,6 +15,7 @@ import type { Dispatcher } from "../../dispatcher";
 import Ceramic from "../../ceramic";
 import DocID from "@ceramicnetwork/docid";
 import { DiagnosticsLogger } from "@ceramicnetwork/logger";
+import type { DagJWS } from 'dids'
 
 const DID_MATCHER =
   "^(did:([a-zA-Z0-9_]+):([a-zA-Z0-9_.-]+(:[a-zA-Z0-9_.-]+)*)((;[a-zA-Z0-9_.:%-]+=[a-zA-Z0-9_.:%-]*)*)(/[^#?]*)?)([?][^#]*)?(#.*)?";
@@ -298,20 +299,13 @@ class InMemoryAnchorService implements AnchorService {
    * @return DID
    * @private
    */
-  async verifySignedCommit(commit: Record<string, unknown>): Promise<string> {
-    const { payload, signatures } = commit;
-    const { signature, protected: _protected } = signatures[0];
-
-    const decodedJsonString = uint8arrays.toString(
-      uint8arrays.fromString(_protected, "base64url")
-    );
-    const decodedHeader = JSON.parse(decodedJsonString);
-    const { kid } = decodedHeader;
-
-    const didDoc = await this.#ceramic.context.resolver.resolve(kid);
-    const jws = [_protected, payload, signature].join(".");
-    await didJwt.verifyJWS(jws, didDoc.publicKey);
-    return kid.match(RegExp(DID_MATCHER))[1];
+  async verifySignedCommit(commit: DagJWS): Promise<string> {
+    try {
+      const { kid } = await this.#ceramic.context.did.verifyJWS(commit)
+      return kid.match(RegExp(DID_MATCHER))[1];
+    } catch (e) {
+      throw new Error('Invalid signature for signed commit. ' + e)
+    }
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

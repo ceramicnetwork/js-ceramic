@@ -10,7 +10,7 @@ interface IPFS {
   dag: DAG;
 }
 
-// Legacy 3ids available from 3box, other v1 will always be resolved through ipfs and other services 
+// Legacy 3ids available from 3box, other v1 will always be resolved through ipfs and other services
 const THREEBOX_API_URL = 'https://ipfs.3box.io'
 const LIMIT = 100
 const fetchCache = new LRUMap<string, any>(LIMIT)
@@ -55,7 +55,7 @@ const compressKey = (key: string) => {
   // drop 1 byte prefix, point x & y 32 bytes each, hex encoded
   const xpoint = key.slice(2, 66)
   const ypoint = key.slice(66, 130)
-  // if even 
+  // if even
   //@ts-expect-error arithmetic op hex string
   const prefix = (ypoint & 1) === 0 ? '02' : '03'
   return `${prefix}${xpoint}`
@@ -79,7 +79,7 @@ const LegacyResolver = async (didId: string, ipfs = ipfsMock): Promise<any> => {
   const signingKeyCompressed = compressKey(signingKey)
   const signing = encodeKey(u8a.fromString(signingKeyCompressed, 'base16'))
   const encryption = encodeKey(u8a.fromString(encryptionKey, 'base64pad'), true)
-  
+
   return {
     keyDid: `did:key:${signing}`,
     publicKeys: {

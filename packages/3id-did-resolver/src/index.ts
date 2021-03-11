@@ -1,4 +1,13 @@
-import type { ParsedDID, DIDResolver, DIDDocument } from 'did-resolver'
+import type {
+  DIDResolver,
+  DIDResolutionResult,
+  DIDResolutionOptions,
+  DIDDocument,
+  ParsedDID,
+  Resolver,
+  ResolverRegistry,
+  VerificationMethod
+} from 'did-resolver'
 import { Doctype } from "@ceramicnetwork/common"
 import LegacyResolver from './legacyResolver'
 import * as u8a from 'uint8arrays'
@@ -10,56 +19,42 @@ interface Ceramic {
   createDocument(type: string, content: any, opts: any): Promise<Doctype>;
 }
 
-interface ResolverRegistry {
-  [index: string]: DIDResolver;
-}
-
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function wrapDocument(content: any, did: string): DIDDocument {
   if (!(content && content.publicKeys)) throw new Error('Not a valid 3ID')
   const startDoc: DIDDocument = {
-    '@context': 'https://w3id.org/did/v1',
     id: did,
-    publicKey: [],
+    verificationMethod: [],
     authentication: [],
-    keyAgreement: []
+    keyAgreement: [],
+    publicKey: []
   }
-  const doc = Object.entries(content.publicKeys as string[]).reduce((diddoc, [keyName, keyValue]) => {
+  return Object.entries(content.publicKeys as string[]).reduce((diddoc, [keyName, keyValue]) => {
     const keyBuf = u8a.fromString(keyValue.slice(1), 'base58btc')
-    // remove multicodec varint
-    const publicKeyBase58 =  u8a.toString(keyBuf.slice(2), 'base58btc')
+    const entry: VerificationMethod = {
+      id: `${did}#${keyName}`,
+      type: '',
+      controller: did,
+      // remove multicodec varint
+      publicKeyBase58: u8a.toString(keyBuf.slice(2), 'base58btc')
+    }
     if (keyBuf[0] === 0xe7) { // it's secp256k1
-      diddoc.publicKey.push({
-        id: `${did}#${keyName}`,
-        type: 'Secp256k1VerificationKey2018',
-        controller: did,
-        publicKeyBase58
-      })
-      diddoc.authentication.push({
-        type: 'Secp256k1SignatureAuthentication2018',
-        publicKey: `${did}#${keyName}`,
-      })
+      entry.type = 'EcdsaSecp256k1Signature2019'
+      diddoc.verificationMethod.push(entry)
+      diddoc.authentication.push(entry)
+      diddoc.publicKey.push(entry)
     } else if (keyBuf[0] === 0xec) { // it's x25519
-      // old key format, likely not needed in the future
-      diddoc.publicKey.push({
-        id: `${did}#${keyName}`,
-        type: 'Curve25519EncryptionPublicKey',
-        controller: did,
-        publicKeyBase58
-      })
-      // new keyAgreement format for x25519 keys
-      diddoc.keyAgreement.push({
-        id: `${did}#${keyName}`,
-        type: 'X25519KeyAgreementKey2019',
-        controller: did,
-        publicKeyBase58
-      })
+      entry.type = 'X25519KeyAgreementKey2019'
+      diddoc.verificationMethod.push(entry)
+      diddoc.keyAgreement.push(entry)
+      diddoc.publicKey.push(entry)
     }
     return diddoc
   }, startDoc)
-
-  return doc
 }
+
+const DID_LD_JSON = 'application/did+ld+json'
+const DID_JSON = 'application/did+json'
 
 const isLegacyDid = (didId: string): boolean => {
   try {
@@ -107,12 +102,31 @@ const resolve = async (ceramic: Ceramic, didId: string, commit?: string, v03ID?:
 }
 
 export default {
-  getResolver: (ceramic: Ceramic): ResolverRegistry => {
-    return {
-      '3': async (did: string, parsed: ParsedDID): Promise<DIDDocument | null> => {
-        const version = getVersion(parsed.query)
-        return isLegacyDid(parsed.id) ? legacyResolve(ceramic, parsed.id, version) : resolve(ceramic, parsed.id, version)
+  getResolver: (ceramic: Ceramic): ResolverRegistry => ({
+    '3': async (did: string, parsed: ParsedDID, resolver: Resolver, options: DIDResolutionOptions): Promise<DIDResolutionResult> => {
+      const contentType = options.accept || DID_JSON
+      const response: DIDResolutionResult = {
+        didResolutionMetadata: { contentType },
+        didDocument: null,
+        didDocumentMetadata: {}
       }
+      try {
+        const version = getVersion(parsed.query)
+        const doc = await (isLegacyDid(parsed.id) ? legacyResolve(ceramic, parsed.id, version) : resolve(ceramic, parsed.id, version))
+        if (contentType === DID_LD_JSON) {
+          doc['@context'] = 'https://w3id.org/did/v1',
+          response.didDocument = doc
+        } else if (contentType === DID_JSON) {
+          response.didDocument = doc
+        } else {
+          delete response.didResolutionMetadata.contentType
+          response.didResolutionMetadata.error = 'representationNotSupported'
+        }
+      } catch (e) {
+        response.didResolutionMetadata.error = 'invalidDid'
+        response.didResolutionMetadata.message = e.toString()
+      }
+      return response
     }
-  }
+  })
 }

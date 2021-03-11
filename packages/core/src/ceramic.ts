@@ -199,6 +199,7 @@ class Ceramic implements CeramicApi {
       api: this,
       anchorService: modules.anchorService,
       resolver,
+      did: new DID({ resolver }),
       ipfs: modules.ipfs,
       loggerProvider: modules.loggerProvider,
     }
@@ -450,7 +451,7 @@ class Ceramic implements CeramicApi {
    */
   async setDIDProvider (provider: DIDProvider): Promise<void> {
     this.context.provider = provider;
-    this.context.did = new DID( { provider, resolver: this.context.resolver })
+    this.context.did = new DID({ provider, resolver: this.context.resolver })
 
     if (!this.context.did.authenticated) {
       await this.context.did.authenticate()

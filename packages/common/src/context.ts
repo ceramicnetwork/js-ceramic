@@ -1,4 +1,4 @@
-import { Resolver } from "did-resolver"
+import type { Resolver } from "did-resolver"
 import { CeramicApi, DIDProvider } from "./ceramic-api"
 
 import { DID } from 'dids'

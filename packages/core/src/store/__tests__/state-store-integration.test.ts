@@ -223,7 +223,9 @@ describe('Level data store', () => {
     }
 
     doctypeHandler = new TileDoctypeHandler()
-    doctypeHandler.verifyJWS = async (): Promise<void> => { return }
+    // TODO - we should probably do this more properly.
+    // Would require larger rewrite of this test.
+    doctypeHandler._verifySignature = async (): Promise<void> => { return }
 
     const levelPath = (await tmp.dir({unsafeCleanup: true})).path
     const storeFactory = new PinStoreFactory(context.ipfs, {

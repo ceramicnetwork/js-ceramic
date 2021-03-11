@@ -118,19 +118,6 @@ let tileDoctypeHandler: TileDoctypeHandler
 let context: Context
 
 beforeAll(() => {
-    did = new DID()
-    did.createJWS = jest.fn(async () => {
-        // fake jws
-        return {
-            payload: 'bbbb',
-            signatures: [{
-                protected: 'eyJraWQiOiJkaWQ6a2V5OnpRM3Nod3NDZ0ZhbkJheDZVaWFMdTFvR3ZNN3ZodXFvVzg4VkJVaVVUQ2VIYlRlVFYiLCJhbGciOiJFUzI1NksifQ',
-                signature: 'cccc'
-            }]
-        }
-    })
-    did._id = 'did:key:zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV'
-
     const recs: Record<string, any> = {}
     const ipfs = {
         dag: {
@@ -173,12 +160,26 @@ beforeAll(() => {
         })
     }
     const keyDidResolver = KeyDidResolver.getResolver()
+    const resolver = new Resolver({
+        ...threeIdResolver, ...keyDidResolver
+    })
+    did = new DID({ resolver })
+    did.createJWS = jest.fn(async () => {
+        // fake jws
+        return {
+            payload: 'bbbb',
+            signatures: [{
+                protected: 'eyJraWQiOiJkaWQ6a2V5OnpRM3Nod3NDZ0ZhbkJheDZVaWFMdTFvR3ZNN3ZodXFvVzg4VkJVaVVUQ2VIYlRlVFYiLCJhbGciOiJFUzI1NksifQ',
+                signature: 'cccc'
+            }]
+        }
+    })
+    did._id = 'did:key:zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV'
+
     context = {
         did,
         ipfs,
-        resolver: new Resolver({
-            ...threeIdResolver, ...keyDidResolver
-        }),
+        resolver,
         anchorService: null,
         api: api as unknown as CeramicApi,
     }
