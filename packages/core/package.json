@@ -29,7 +29,7 @@
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/3id-did-resolver": "^0.7.0-rc.9",
+    "@ceramicnetwork/3id-did-resolver": "^1.0.0",
     "@ceramicnetwork/common": "^0.16.0-rc.9",
     "@ceramicnetwork/docid": "^0.5.0-rc.5",
     "@ceramicnetwork/doctype-caip10-link": "^0.13.3-rc.9",
@@ -52,7 +52,7 @@
     "dids": "^2.0.0",
     "events": "^3.2.0",
     "ipld-dag-cbor": "^0.17.0",
-    "key-did-resolver": "^0.2.5",
+    "key-did-resolver": "^1.0.0",
     "level-ts": "^2.0.5",
     "lodash.clonedeep": "^4.5.0",
     "multihashes": "^3.1.2",
@@ -74,7 +74,7 @@
     "eslint-plugin-jest": "^23.8.2",
     "get-port": "^5.1.1",
     "ipfs-core": "0.3.0",
-    "key-did-provider-ed25519": "^1.0.0",
+    "key-did-provider-ed25519": "^1.0.1",
     "multiformats": "3.0.3",
     "tmp-promise": "^2.0.2"
   },
