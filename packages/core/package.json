@@ -73,7 +73,7 @@
     "eslint": "^6.8.0",
     "eslint-plugin-jest": "^23.8.2",
     "get-port": "^5.1.1",
-    "ipfs-core": "0.3.0",
+    "ipfs-core": "0.5.4",
     "key-did-provider-ed25519": "^1.0.1",
     "multiformats": "3.0.3",
     "tmp-promise": "^2.0.2"
