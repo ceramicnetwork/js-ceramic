@@ -96,6 +96,9 @@ jest.mock('../dispatcher', () => {
         return recs[cid.toString()]
       }),
       init: jest.fn(),
+      close: () => {
+        messageBus.unsubscribe();
+      }
     }
   }
 
@@ -643,6 +646,10 @@ describe('Document', () => {
       ceramic.context.resolver = resolver
       context.api = ceramic
       await ceramic._init(false, false)
+    })
+
+    afterEach(async () => {
+      await ceramic.close();
     })
 
     it('should announce change to network', async () => {
