@@ -1,6 +1,5 @@
 import { Dispatcher } from './dispatcher'
 import CID from 'cids'
-import PQueue from 'p-queue'
 import {
   AnchorStatus,
   CommitType,
@@ -19,9 +18,10 @@ import { SubscriptionSet } from "./subscription-set";
 import { distinctUntilChanged, timeoutWith } from "rxjs/operators";
 import { DiagnosticsLogger } from "@ceramicnetwork/logger";
 import { validateState } from './validate-state';
-import { BehaviorSubject, Observable, of } from 'rxjs'
+import { Observable, of } from 'rxjs'
 import { ConflictResolution } from './conflict-resolution';
 import { RunningState } from './state-management/running-state';
+import { TaskQueue } from './pubsub/task-queue';
 
 // DocOpts defaults for document load operations
 export const DEFAULT_LOAD_DOCOPTS = {anchor: false, publish: false, sync: true}
@@ -33,7 +33,7 @@ export const DEFAULT_WRITE_DOCOPTS = {anchor: true, publish: true, sync: false}
  */
 export class Document implements DocStateHolder {
   readonly id: DocID
-  private _applyQueue: PQueue
+  private tasks: TaskQueue
   private _doctype: Doctype
   private _logger: DiagnosticsLogger
   private readonly subscriptionSet = new SubscriptionSet();
@@ -57,7 +57,9 @@ export class Document implements DocStateHolder {
 
     this._logger = _context.loggerProvider.getDiagnosticsLogger()
 
-    this._applyQueue = new PQueue({ concurrency: 1 })
+    this.tasks = new TaskQueue(error => {
+      this._logger.err(error)
+    })
     this.conflictResolution = new ConflictResolution(_context, dispatcher, _doctypeHandler, _validate);
   }
 
@@ -134,7 +136,7 @@ export class Document implements DocStateHolder {
    * @param opts - Document initialization options (request anchor, wait, etc.)
    */
   async applyCommit (commit: any, opts: DocOpts = {}): Promise<void> {
-    await this._applyQueue.add(async () => {
+    await this.tasks.run(async () => {
       // Fill 'opts' with default values for any missing fields
       opts = {...DEFAULT_WRITE_DOCOPTS, ...opts}
 
@@ -188,13 +190,9 @@ export class Document implements DocStateHolder {
    * @param cid - Document Tip CID
    * @private
    */
-  async _update(cid: CID): Promise<void> {
-    await this._applyQueue.add(async () => {
-      try {
-        await this._handleTip(cid)
-      } catch (e) {
-        this._logger.err(e)
-      }
+  update(cid: CID): void {
+    this.tasks.add(async () => {
+      await this._handleTip(cid)
     })
   }
 
@@ -230,7 +228,7 @@ export class Document implements DocStateHolder {
         async (asr) => {
           if (this.state$.closed) return;
           try {
-            await this._applyQueue.add(async () => {
+            await this.tasks.run(async () => {
               switch (asr.status) {
                 case AnchorStatus.PENDING: {
                   const next = {
@@ -332,7 +330,7 @@ export class Document implements DocStateHolder {
   async _wait(tip$: Observable<CID | undefined>): Promise<void> {
     const tip = await tip$.pipe(timeoutWith(3000, of(undefined))).toPromise()
     if (tip) {
-      await this._update(tip)
+      await this._handleTip(tip)
     }
   }
 
@@ -341,7 +339,7 @@ export class Document implements DocStateHolder {
    */
   async close (): Promise<void> {
     this.subscriptionSet.close();
-    await this._applyQueue.onIdle();
+    await this.tasks.onIdle();
     if (!this.state$.closed) {
       this.state$.complete();
       this.state$.unsubscribe();
