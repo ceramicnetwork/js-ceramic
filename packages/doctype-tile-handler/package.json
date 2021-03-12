@@ -27,10 +27,8 @@
   "dependencies": {
     "@ceramicnetwork/common": "^0.16.0-rc.9",
     "@ceramicnetwork/doctype-tile": "^0.13.4-rc.9",
-    "did-jwt": "^5.0.0",
     "fast-json-patch": "^2.2.1",
-    "lodash.clonedeep": "^4.5.0",
-    "uint8arrays": "^2.0.5"
+    "lodash.clonedeep": "^4.5.0"
   },
   "devDependencies": {
     "@ceramicnetwork/3id-did-resolver": "^1.0.0",
@@ -40,7 +38,8 @@
     "did-resolver": "^3.0.1",
     "dids": "^2.0.0",
     "ipld-dag-cbor": "^0.17.0",
-    "key-did-resolver": "^1.0.0"
+    "key-did-resolver": "^1.0.0",
+    "uint8arrays": "^2.0.5"
   },
   "jest": {
     "testEnvironment": "jest-environment-uint8array",

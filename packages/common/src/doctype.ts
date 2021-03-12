@@ -102,6 +102,7 @@ export enum CommitType {
 export interface LogEntry {
   cid: CID
   type: CommitType
+  timestamp?: number
 }
 /**
  * Document state
