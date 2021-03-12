@@ -17,7 +17,6 @@ import DocID, { CommitID } from '@ceramicnetwork/docid';
 import { PinStore } from './store/pin-store';
 import { SubscriptionSet } from "./subscription-set";
 import { distinctUntilChanged, timeoutWith } from "rxjs/operators";
-import { validateState } from './validate-state';
 import { Observable, of } from 'rxjs'
 import { ConflictResolution } from './conflict-resolution';
 import { RunningState } from './state-management/running-state';
