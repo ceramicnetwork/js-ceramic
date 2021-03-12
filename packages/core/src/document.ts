@@ -223,51 +223,44 @@ export class Document implements DocStateHolder {
    */
   anchor(): void {
     const anchorStatus$ = this._context.anchorService.requestAnchor(this.id.baseID, this.tip);
-    const subscription = anchorStatus$
-      .subscribe(
-        async (asr) => {
-          if (this.state$.closed) return;
-          try {
-            await this.tasks.run(async () => {
-              switch (asr.status) {
-                case AnchorStatus.PENDING: {
-                  const next = {
-                    ...this.state$.value,
-                    anchorStatus: AnchorStatus.PENDING,
-                  };
-                  if (asr.anchorScheduledFor) next.anchorScheduledFor = asr.anchorScheduledFor;
-                  this.state$.next(next);
-                  await this._updateStateIfPinned();
-                  return;
-                }
-                case AnchorStatus.PROCESSING: {
-                  this.state$.next({ ...this.state$.value, anchorStatus: AnchorStatus.PROCESSING });
-                  await this._updateStateIfPinned();
-                  return;
-                }
-                case AnchorStatus.ANCHORED: {
-                  await this._handleTip(asr.anchorRecord);
-                  await this._updateStateIfPinned();
-                  this._publishTip();
-                  subscription.unsubscribe();
-                  return;
-                }
-                case AnchorStatus.FAILED: {
-                  if (!asr.cid.equals(this.tip)) {
-                    return;
-                  }
-                  this.state$.next({ ...this.state$.value, anchorStatus: AnchorStatus.FAILED });
-                  subscription.unsubscribe();
-                  return;
-                }
-                default:
-                  throw new UnreachableCaseError(asr, 'Unknown anchoring state');
-              }
-            });
-          } catch (error) {
-            this._logger.err(error)
+    const subscription = anchorStatus$.subscribe((asr) => {
+      this.tasks.add(async () => {
+        switch (asr.status) {
+          case AnchorStatus.PENDING: {
+            const next = {
+              ...this.state$.value,
+              anchorStatus: AnchorStatus.PENDING,
+            };
+            if (asr.anchorScheduledFor) next.anchorScheduledFor = asr.anchorScheduledFor;
+            this.state$.next(next);
+            await this._updateStateIfPinned();
+            return;
           }
-        })
+          case AnchorStatus.PROCESSING: {
+            this.state$.next({ ...this.state$.value, anchorStatus: AnchorStatus.PROCESSING });
+            await this._updateStateIfPinned();
+            return;
+          }
+          case AnchorStatus.ANCHORED: {
+            await this._handleTip(asr.anchorRecord);
+            await this._updateStateIfPinned();
+            this._publishTip();
+            subscription.unsubscribe();
+            return;
+          }
+          case AnchorStatus.FAILED: {
+            if (!asr.cid.equals(this.tip)) {
+              return;
+            }
+            this.state$.next({ ...this.state$.value, anchorStatus: AnchorStatus.FAILED });
+            subscription.unsubscribe();
+            return;
+          }
+          default:
+            throw new UnreachableCaseError(asr, 'Unknown anchoring state');
+        }
+      });
+    })
     this.subscriptionSet.add(subscription);
   }
 
