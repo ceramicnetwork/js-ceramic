@@ -1,392 +1,164 @@
-import tmp from 'tmp-promise'
-import { DEFAULT_WRITE_DOCOPTS, Document } from '../../document';
-import { Dispatcher } from "../../dispatcher"
-import {Doctype, LoggerProvider} from "@ceramicnetwork/common"
-import { AnchorService } from "@ceramicnetwork/common"
-import { Context } from "@ceramicnetwork/common"
-import { TileDoctype } from "@ceramicnetwork/doctype-tile"
-import {TileDoctypeHandler} from '@ceramicnetwork/doctype-tile-handler'
-import { PinStore } from "../pin-store";
-import { PinStoreFactory } from "../pin-store-factory";
-import { DID } from 'dids'
-import DocID from "@ceramicnetwork/docid"
-import CID from 'cids'
+import tmp from 'tmp-promise';
+import {
+  AnchorStatus,
+  CommitType,
+  DocState,
+  IpfsApi,
+  SignatureStatus,
+} from '@ceramicnetwork/common';
+import { PinStore } from '../pin-store';
+import { PinStoreFactory } from '../pin-store-factory';
+import DocID from '@ceramicnetwork/docid';
+import CID from 'cids';
+import { createIPFS } from '../../__tests__/ipfs-util';
+import { createCeramic } from '../../__tests__/create-ceramic';
+import { anchorUpdate } from '../../state-management/__tests__/anchor-update';
 
-import { Resolver } from "did-resolver"
-import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
-import InMemoryAnchorService from "../../anchor/memory/in-memory-anchor-service"
-import type { Pubsub } from '../../pubsub/pubsub';
+const FAKE_CID = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu');
 
-
-// mock Dispatcher
-jest.mock('../../dispatcher', () => {
-  const CID = require('cids') // eslint-disable-line @typescript-eslint/no-var-requires
-  const cloneDeep = require('lodash.clonedeep') // eslint-disable-line @typescript-eslint/no-var-requires
-  const sha256 = require('@stablelib/sha256') // eslint-disable-line @typescript-eslint/no-var-requires
-  const { DoctypeUtils } = require('@ceramicnetwork/common') // eslint-disable-line @typescript-eslint/no-var-requires
-  const dagCBOR = require('ipld-dag-cbor') // eslint-disable-line @typescript-eslint/no-var-requires
-  const u8a = require('uint8arrays') // eslint-disable-line @typescript-eslint/no-var-requires
-  const { MessageBus } = require('../../pubsub/message-bus') // eslint-disable-line @typescript-eslint/no-var-requires
-  const { from } = require('rxjs') // eslint-disable-line @typescript-eslint/no-var-requires
-  const hash = (data: string): CID => {
-    const body = u8a.concat([u8a.fromString('1220', 'base16'), sha256.hash(u8a.fromString(data))])
-    return new CID(1, 'sha2-256', body)
-  }
-
-  const Dispatcher = (gossip: boolean): any => {
-    const pinnedDocIds: Record<string, boolean> = {}
-    const recs: Record<any, any> = {}
-    const docs: Record<string, Document> = {}
-    const deepResolve = (cid: CID, remaining: string[]): CID => {
-      if (remaining.length > 0) {
-        const record = recs[cid.toString()]
-        const next = record[remaining[0]] as CID
-        return deepResolve(next, remaining.slice(1))
-      } else {
-        return cid
-      }
-    }
-    const pubsub = from([]) as unknown as Pubsub
-    pubsub.next = jest.fn()
-    const messageBus = new MessageBus(pubsub)
-    return {
-      _ipfs: {
-        id: (): any => ({ id: 'ipfsid' }), dag: {
-          put(rec: any): any {
-            // stringify as a way of doing deep copy
-            const clone = cloneDeep(rec)
-            const cid = hash(JSON.stringify(clone))
-            recs[cid.toString()] = clone
-            return cid
-          },
-          get(cid: any): any {
-            return {
-              value: recs[cid.toString()]
-            }
-          },
-          resolve(query: string) {
-            const path = query.split('/')
-            const cid = new CID(path[0])
-            return deepResolve(cid, path.slice(1))
-          }
-        },
-        pin: {
-          add: jest.fn((cid: string) => {
-            pinnedDocIds[cid] = true
-            return
-          }), rm: jest.fn((cid: string) => {
-            delete pinnedDocIds[cid]
-            return
-          }), ls: jest.fn((cid?: string): AsyncIterable<string> => {
-            let keys: string[];
-            if (cid) {
-              keys = pinnedDocIds[cid] ? [cid] : []
-            } else {
-              keys = Object.keys(pinnedDocIds)
-            }
-            return {
-              [Symbol.asyncIterator](): any {
-                let index = 0
-                return {
-                  next(): any {
-                    if (index === keys.length) {
-                      return Promise.resolve({ value: null, done: true });
-                    }
-                    return Promise.resolve({ value: keys[index++], done: false });
-                  }
-                };
-              }
-            }
-          })
-        },
-      },
-      messageBus,
-      register: jest.fn((doc) => {
-        docs[doc.id] = doc
-      }),
-      storeCommit: jest.fn(async (rec) => {
-        if (DoctypeUtils.isSignedCommitContainer(rec)) {
-          const { jws, linkedBlock } = rec
-          const block = dagCBOR.util.deserialize(linkedBlock)
-
-          const cidLink = hash(JSON.stringify(block))
-          recs[cidLink.toString()] = block
-
-          const clone = cloneDeep(jws)
-          clone.link = cidLink
-          const cidJws = hash(JSON.stringify(clone))
-          recs[cidJws.toString()] = clone
-          return cidJws
-        }
-
-        // stringify as a way of doing deep copy
-        const clone = cloneDeep(rec)
-        const cid = hash(JSON.stringify(clone))
-        recs[cid.toString()] = clone
-        return cid
-      }),
-      publishTip: jest.fn((id, tip) => {
-        if (gossip) {
-          docs[id]._handleTip(tip)
-        }
-      }),
-      _requestTip: (id: string): void => {
-        if (gossip) {
-          docs[id]._publishTip()
-        }
-      },
-      retrieveCommit: jest.fn(cid => {
-        return recs[cid.toString()]
-      }),
-      retrieveFromIPFS: jest.fn((cid, path) => {
-        // TODO: this doesn't actually handle path traversal properly
-        return recs[cid.toString()]
-      }),
-      pinnedDocIds,
-      recs,
-    }
-  }
-
-  return { Dispatcher }
-})
-
-const anchorUpdate = (doctype: Doctype): Promise<void> => new Promise(resolve => doctype.on('change', resolve))
+const ipfs = ({
+  dag: {
+    get: jest.fn(),
+  },
+  pin: {
+    add: jest.fn(),
+  },
+} as unknown) as IpfsApi;
 
 describe('Level data store', () => {
+  let store: PinStore;
 
-  const initialContent = { abc: 123, def: 456 }
-  const controllers = ['did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki']
-
-  let store: PinStore
-  let dispatcher: Dispatcher
-  let doctypeHandler: TileDoctypeHandler
-  let anchorService: AnchorService
-  let context: Context
+  const docId = new DocID('tile', FAKE_CID);
+  const docState: DocState = {
+    doctype: 'tile',
+    content: {},
+    metadata: { controllers: ['foo'] },
+    signature: SignatureStatus.GENESIS,
+    anchorStatus: AnchorStatus.NOT_REQUESTED,
+    log: [{ cid: FAKE_CID, type: CommitType.GENESIS }],
+  };
 
   beforeEach(async () => {
-    dispatcher = Dispatcher()
-    dispatcher.pinnedDocIds = {}
-    dispatcher.recs = {}
-
-    dispatcher._ipfs.pin.ls.mockClear()
-    dispatcher._ipfs.pin.rm.mockClear()
-    dispatcher._ipfs.pin.add.mockClear()
-
-    // TODO: Many of the tests in this file are racy and depend on an anchor not having been
-    // performed yet by the time the test checks.  To eliminate this race condition we should set
-    // anchorOnRequest to false in the config for the InMemoryAnchorService and anchor manually
-    // throughout the tests.
-    anchorService = new InMemoryAnchorService({})
-
-    const user: DID = new DID()
-    user.createJWS = jest.fn(async () => {
-      // fake jws
-      return { payload: 'bbbb', signatures: [{ protected: 'eyJraWQiOiJkaWQ6MzprMnQ2d3lmc3U0cGcwdDJuNGo4bXMzczMzeHNncWpodHRvMDRtdnE4dzVhMnY1eG80OGlkeXozOGw3eWRraT92ZXJzaW9uPTAjc2lnbmluZyIsImFsZyI6IkVTMjU2SyJ9', signature: 'cccc'}]}
-    })
-    user._id = 'did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki'
-
-    const threeIdResolver = ThreeIdResolver.getResolver({
-      loadDocument: (): any => {
-        return Promise.resolve({
-          content: {
-            "publicKeys": {
-              "signing": "zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV",
-              "encryption": "z6LSfQabSbJzX8WAm1qdQcHCHTzVv8a2u6F7kmzdodfvUCo9"
-            }
-          }
-        })
-      }
-    })
-
-    const api = {
-      getSupportedChains: jest.fn(async () => {
-        return await anchorService.getSupportedChains()
-      }),
-      loadDocument: () => {
-        throw new Error(`Mocked for test: api.loadDocument`)
-      }
-    }
-    const resolver = new Resolver({ ...threeIdResolver })
-    const loggerProvider = new LoggerProvider()
-    context = {
-      ipfs: dispatcher._ipfs,
-      did: user,
-      loggerProvider,
-      resolver,
-      anchorService,
-      api,
-    }
-
-    anchorService.ceramic = {
-      context,
-      dispatcher,
-    }
-
-    doctypeHandler = new TileDoctypeHandler()
-    // TODO - we should probably do this more properly.
-    // Would require larger rewrite of this test.
-    doctypeHandler._verifySignature = async (): Promise<void> => { return }
-
-    const levelPath = (await tmp.dir({unsafeCleanup: true})).path
-    const storeFactory = new PinStoreFactory(context.ipfs, {
+    const levelPath = (await tmp.dir({ unsafeCleanup: true })).path;
+    const storeFactory = new PinStoreFactory(ipfs, {
       stateStoreDirectory: levelPath,
       pinningEndpoints: ['ipfs+context'],
       networkName: 'inmemory',
-    })
-    store = storeFactory.createPinStore()
-  })
+    });
+    store = storeFactory.createPinStore();
+  });
 
   it('pins document correctly without IPFS pinning', async () => {
-    const genesis = await TileDoctype.makeGenesis({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, context)
-    const genesisCid = await dispatcher.storeCommit(genesis)
-    const docId = new DocID('tile', genesisCid)
-    const doc = await Document.load(docId, doctypeHandler, dispatcher, store, context, DEFAULT_WRITE_DOCOPTS)
-
-    await anchorUpdate(doc.doctype)
-
-    let docState = await store.stateStore.load(doc.id)
-    expect(docState).toBeNull()
-
-    await store.stateStore.save(doc.doctype)
-    expect(dispatcher._ipfs.pin.add).toHaveBeenCalledTimes(0)
-
-    docState = await store.stateStore.load(doc.id)
-    expect(docState).toBeDefined()
-  })
+    await expect(store.stateStore.load(docId)).resolves.toBeNull();
+    const pinSpy = jest.spyOn(store.pinning, 'pin');
+    await store.stateStore.save({ id: docId, state: docState });
+    expect(pinSpy).toBeCalledTimes(0);
+    await expect(store.stateStore.load(docId)).resolves.toEqual(docState);
+  });
 
   it('pins not anchored document correctly with IPFS pinning', async () => {
-    const genesis = await TileDoctype.makeGenesis({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, context)
-    const genesisCid = await dispatcher.storeCommit(genesis)
-    const docId = new DocID('tile', genesisCid)
-    const doc = await Document.load(docId, doctypeHandler, dispatcher, store, context, {
-      anchor: false, publish: false, sync: false,
-    })
+    const state: DocState = {
+      ...docState,
+      log: [{ cid: FAKE_CID, type: CommitType.GENESIS }],
+    };
+    await expect(store.stateStore.load(docId)).resolves.toBeNull();
+    const pinSpy = jest.spyOn(store.pinning, 'pin');
+    await store.add({ id: docId, state: state });
+    expect(pinSpy).toBeCalledWith(FAKE_CID);
+    expect(pinSpy).toBeCalledTimes(1);
+    await expect(store.stateStore.load(docId)).resolves.toEqual(state);
+  });
 
-    let docState = await store.stateStore.load(doc.id)
-    expect(docState).toBeNull()
+  it('adds and removes pinned document', async () => {
+    const realIpfs = await createIPFS();
+    const ceramic = await createCeramic(realIpfs);
+    const controllers = [ceramic.did.id];
 
-    await store.add(doc.doctype)
-    expect(dispatcher._ipfs.pin.add).toHaveBeenCalledTimes(1)
+    const doc = await ceramic.createDocument('tile', {
+      content: { stuff: 1 },
+      metadata: { controllers, tags: ['3id'] },
+    });
+    await anchorUpdate(ceramic, doc);
 
-    docState = await store.stateStore.load(doc.id)
-    expect(docState).toBeDefined()
-  })
+    const pinSpy = jest.spyOn(realIpfs.pin, 'add');
+    await ceramic.pin.add(doc.id);
+    expect(pinSpy).toBeCalledTimes(4);
 
-  it('pins document correctly with IPFS pinning', async () => {
-    const genesis = await TileDoctype.makeGenesis({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, context)
-    const genesisCid = await dispatcher.storeCommit(genesis)
-    const docId = new DocID('tile', genesisCid)
-    const doc = await Document.load(docId, doctypeHandler, dispatcher, store, context, DEFAULT_WRITE_DOCOPTS)
-    await anchorUpdate(doc.doctype)
+    const unpinSpy = jest.spyOn(realIpfs.pin, 'rm');
+    await ceramic.pin.rm(doc.id);
+    expect(unpinSpy).toBeCalledTimes(4);
 
-    let docState = await store.stateStore.load(doc.id)
-    expect(docState).toBeNull()
-
-    await store.add(doc.doctype)
-    expect(dispatcher._ipfs.pin.add).toHaveBeenCalledTimes(4)
-
-    docState = await store.stateStore.load(doc.id)
-    expect(docState).toBeDefined()
-  })
-
-  it('removes pinned document', async () => {
-    const genesis = await TileDoctype.makeGenesis({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, context)
-    const genesisCid = await dispatcher.storeCommit(genesis)
-    const docId = new DocID('tile', genesisCid)
-    const doc = await Document.load(docId, doctypeHandler, dispatcher, store, context, DEFAULT_WRITE_DOCOPTS)
-    await anchorUpdate(doc.doctype)
-
-    await store.add(doc.doctype)
-    expect(dispatcher._ipfs.pin.add).toHaveBeenCalledTimes(4)
-
-    await store.rm(doc.id)
-    expect(dispatcher._ipfs.pin.rm).toHaveBeenCalledTimes(4)
-  })
+    await ceramic.close();
+    await realIpfs.stop();
+  });
 
   it('skips removing unpinned document', async () => {
-    const genesis = await TileDoctype.makeGenesis({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, context)
-    const genesisCid = await dispatcher.storeCommit(genesis)
-    const docId = new DocID('tile', genesisCid)
-    const doc = await Document.load(docId, doctypeHandler, dispatcher, store, context, DEFAULT_WRITE_DOCOPTS)
-    await anchorUpdate(doc.doctype)
+    await expect(store.stateStore.load(docId)).resolves.toBeNull();
+    const unpinSpy = jest.spyOn(store.pinning, 'unpin');
+    await store.rm(docId);
+    expect(unpinSpy).toBeCalledTimes(0);
+  });
 
-    await store.rm(doc.id)
-    expect(dispatcher._ipfs.pin.rm).toHaveBeenCalledTimes(0)
-  })
+  test('list pinned documents', async () => {
+    const realIpfs = await createIPFS();
+    const ceramic = await createCeramic(realIpfs);
+    const controllers = [ceramic.did.id];
 
-  it('lists pinned documents', async () => {
-    const genesis = await TileDoctype.makeGenesis({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, context)
-    const genesisCid = await dispatcher.storeCommit(genesis)
-    const docId = new DocID('tile', genesisCid)
-    const doc = await Document.load(docId, doctypeHandler, dispatcher, store, context, DEFAULT_WRITE_DOCOPTS)
-    await anchorUpdate(doc.doctype)
+    const doc1 = await ceramic.createDocument('tile', {
+      content: { stuff: 1 },
+      metadata: { controllers },
+    });
+    await ceramic.pin.add(doc1.id);
 
-    await store.add(doc.doctype)
-    expect(dispatcher._ipfs.pin.add).toHaveBeenCalledTimes(4)
+    const doc2 = await ceramic.createDocument('tile', {
+      content: { stuff: 2 },
+      metadata: { controllers },
+    });
+    await ceramic.pin.add(doc2.id);
 
-    let pinned = []
-    let iterator = await store.ls(doc.id)
+    const pinned = [];
+    const iterator = await ceramic.pin.ls();
     for await (const id of iterator) {
-      pinned.push(id)
+      pinned.push(id);
     }
-    expect(pinned.length).toEqual(1)
-    expect(dispatcher._ipfs.pin.ls).toHaveBeenCalledTimes(0)
 
-    pinned = []
-    iterator = await store.ls()
-    for await (const id of iterator) {
-      pinned.push(id)
+    expect(pinned.includes(doc1.id.toString())).toBeTruthy();
+    expect(pinned.includes(doc2.id.toString())).toBeTruthy();
+
+    const pinnedSingle = [];
+    for await (const id of await ceramic.pin.ls(new DocID('tile', FAKE_CID))) {
+      pinned.push(id);
     }
-  })
 
-  it('lists empty for unpinned document', async () => {
-    const genesis = await TileDoctype.makeGenesis({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, context)
-    const genesisCid = await dispatcher.storeCommit(genesis)
-    const docId = new DocID('tile', genesisCid)
-    const doc = await Document.load(docId, doctypeHandler, dispatcher, store, context, DEFAULT_WRITE_DOCOPTS)
-    await anchorUpdate(doc.doctype)
+    expect(pinnedSingle).toEqual([]);
 
-    const pinned = []
-    const iterator = await store.ls(doc.id)
-    for await (const id of iterator) {
-      pinned.push(id)
-    }
-    expect(pinned.length).toEqual(0)
-    expect(dispatcher._ipfs.pin.ls).toHaveBeenCalledTimes(0)
-  })
+    await ceramic.close();
+    await realIpfs.stop();
+  });
 
   it('pins in different networks', async () => {
-    // Create a document to test with
-    const genesis = await TileDoctype.makeGenesis({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, context)
-    const genesisCid = await dispatcher.storeCommit(genesis)
-    const docId = new DocID('tile', genesisCid)
-    const doc = await Document.load(docId, doctypeHandler, dispatcher, store, context, DEFAULT_WRITE_DOCOPTS)
-    await anchorUpdate(doc.doctype)
-
-    const levelPath = (await tmp.dir({unsafeCleanup: true})).path
-    const storeFactoryLocal = new PinStoreFactory(context.ipfs, {
+    const levelPath = (await tmp.dir({ unsafeCleanup: true })).path;
+    const storeFactoryLocal = new PinStoreFactory(ipfs, {
       stateStoreDirectory: levelPath,
       pinningEndpoints: ['ipfs+context'],
-      networkName: "local",
-    })
-    const localStore = storeFactoryLocal.createPinStore()
+      networkName: 'local',
+    });
+    const localStore = storeFactoryLocal.createPinStore();
 
-    await localStore.stateStore.save(doc.doctype)
-    let docState = await localStore.stateStore.load(doc.id)
-    expect(docState).toBeDefined()
+    await localStore.stateStore.save({ id: docId, state: docState });
+    await expect(localStore.stateStore.load(docId)).resolves.toEqual(docState);
 
-    await localStore.close()
+    await localStore.close();
 
     // Now create a net pin store for a different ceramic network
-    const storeFactoryInMemory = new PinStoreFactory(context.ipfs, {
+    const storeFactoryInMemory = new PinStoreFactory(ipfs, {
       stateStoreDirectory: levelPath,
       pinningEndpoints: ['ipfs+context'],
-      networkName: "inmemory",
-    })
-    const inMemoryStore = storeFactoryInMemory.createPinStore()
+      networkName: 'inmemory',
+    });
+    const inMemoryStore = storeFactoryInMemory.createPinStore();
 
     // The new pin store shouldn't be able to see docs that were pinned on the other network
-    docState = await inMemoryStore.stateStore.load(doc.id)
-    expect(docState).toBeNull()
-  })
-})
+    await expect(inMemoryStore.stateStore.load(docId)).resolves.toBeNull();
+  });
+});
