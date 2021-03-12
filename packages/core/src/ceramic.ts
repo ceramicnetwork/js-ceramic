@@ -168,7 +168,7 @@ class Ceramic implements CeramicApi {
 
   public readonly dispatcher: Dispatcher;
   public readonly pin: PinApi;
-  private readonly _repository: Repository;
+  readonly repository: Repository;
 
   private readonly _doctypeHandlers: HandlersMap
   private readonly _ipfsTopology: IpfsTopology
@@ -181,8 +181,8 @@ class Ceramic implements CeramicApi {
     this._ipfsTopology = modules.ipfsTopology
     this._logger = modules.loggerProvider.getDiagnosticsLogger()
     const pinStore = modules.pinStoreFactory.createPinStore()
-    this._repository = modules.repository
-    this.pin = new LocalPinApi(this._repository, this._loadDoc.bind(this), this._logger)
+    this.repository = modules.repository
+    this.pin = new LocalPinApi(this.repository, this._loadDoc.bind(this), this._logger)
     this.dispatcher = modules.dispatcher
 
     this._validateDocs = params.validateDocs
@@ -209,9 +209,9 @@ class Ceramic implements CeramicApi {
 
     const documentFactory = new DocumentFactory(this.dispatcher, pinStore, this.context, this._validateDocs, this._doctypeHandlers)
     const networkLoad = new NetworkLoad(this.dispatcher, this._doctypeHandlers, this.context, this._logger, documentFactory)
-    this._repository.setPinStore(pinStore)
-    this._repository.setDocumentFactory(documentFactory);
-    this._repository.setNetworkLoad(networkLoad);
+    this.repository.setPinStore(pinStore)
+    this.repository.setDocumentFactory(documentFactory);
+    this.repository.setNetworkLoad(networkLoad);
   }
 
   /**
@@ -523,7 +523,7 @@ class Ceramic implements CeramicApi {
   async _createDocFromGenesis(doctype: string, genesis: any, opts: DocOpts = {}): Promise<Document> {
     const genesisCid = await this.dispatcher.storeCommit(genesis);
     const docId = new DocID(doctype, genesisCid);
-    return this._repository.load(docId, {...DEFAULT_WRITE_DOCOPTS, ...opts});
+    return this.repository.load(docId, {...DEFAULT_WRITE_DOCOPTS, ...opts});
   }
 
   /**
@@ -628,7 +628,7 @@ class Ceramic implements CeramicApi {
    */
   async _loadDoc(docId: DocID | CommitID | string, opts: DocOpts = {}): Promise<Document> {
     const docRef = DocRef.from(docId)
-    const doc = await this._repository.load(docRef.baseID, opts)
+    const doc = await this.repository.load(docRef.baseID, opts)
 
     // If DocID is requested, return the document
     if (docRef instanceof CommitID) {
@@ -654,7 +654,7 @@ class Ceramic implements CeramicApi {
    * Load all the pinned documents, re-request PENDING or PROCESSING anchors.
    */
   async restoreDocuments() {
-    const list = await this._repository.listPinned()
+    const list = await this.repository.listPinned()
     const documents = await Promise.all(list.map(docId => this._loadDoc(docId)))
     documents.forEach(document => {
       const toRecover = document.state?.anchorStatus === AnchorStatus.PENDING || document.state?.anchorStatus === AnchorStatus.PROCESSING
@@ -671,7 +671,7 @@ class Ceramic implements CeramicApi {
   async close (): Promise<void> {
     this._logger.imp("Closing Ceramic instance")
     await this.dispatcher.close()
-    await this._repository.close()
+    await this.repository.close()
     this._ipfsTopology.stop()
     this._logger.imp("Ceramic instance closed successfully")
   }
