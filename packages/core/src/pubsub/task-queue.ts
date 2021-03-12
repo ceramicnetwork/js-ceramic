@@ -24,13 +24,20 @@ export class TaskQueue {
   constructor(private readonly onError: (error: Error, retry: () => void) => void = noop) {}
 
   /**
-   * Add task to queue.
+   * Add task to queue. Fire-and-forget semantics.
    */
   add(task: Task<void>): void {
     this.#pq.add(task).catch((error) => {
       const retry = () => this.add(task);
       this.onError(error, retry);
     });
+  }
+
+  /**
+   * Add task and wait till it is completed.
+   */
+  run<T>(task: Task<T>): Promise<T> {
+    return this.#pq.add(task)
   }
 
   /**
