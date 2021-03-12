@@ -21,6 +21,7 @@ import {FakeTopology} from "./fake-topology";
 import {PinStoreFactory} from "../store/pin-store-factory";
 import { Repository } from '../state-management/repository';
 import { Pubsub } from '../pubsub/pubsub';
+import { RunningState } from '../state-management/running-state';
 
 jest.mock('../dispatcher', () => {
   const CID = require('cids') // eslint-disable-line @typescript-eslint/no-var-requires
@@ -158,6 +159,7 @@ describe('Document', () => {
     let ceramic: Ceramic;
     let ceramicWithoutSchemaValidation: Ceramic;
     let context: Context;
+    let repository: Repository
 
     beforeEach(async () => {
       dispatcher = Dispatcher(false)
@@ -204,7 +206,7 @@ describe('Document', () => {
 
       const topology = new FakeTopology(dispatcher._ipfs, networkOptions.name, loggerProvider.getDiagnosticsLogger())
 
-      const repository = new Repository(100)
+      repository = new Repository(100)
       const pinStoreFactory = {
         createPinStore: () => {
           return pinStore
@@ -258,7 +260,7 @@ describe('Document', () => {
 
     it('is loaded correctly', async () => {
       const doc1 = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context, { anchor: false, publish: false, sync: false })
-      const doc2 = await Document.load(doc1.id, doctypeHandler, dispatcher, pinStore, context, { sync: false })
+      const doc2 = await repository.load(doc1.id, {sync: false})
 
       expect(doc1.id).toEqual(doc2.id)
       expect(doc1.doctype.content).toEqual(initialContent)
@@ -270,8 +272,9 @@ describe('Document', () => {
       await anchorUpdate(anchorService, tmpDoc)
       const docId = tmpDoc.id
       const log = tmpDoc.state.log
-      const doc = await Document.load(docId, doctypeHandler, dispatcher, pinStore, context, { sync: false })
-      // changes will not load since no network and no local tip storage yet
+
+      const initialState = await tmpDoc.rewind(docId.atCommit(docId.cid)).then(doc => doc.state)
+      const doc = new Document(new RunningState(initialState), dispatcher, pinStore, true, context, doctypeHandler)
       expect(doc.doctype.content).toEqual(initialContent)
       expect(doc.state).toEqual(expect.objectContaining({ signature: SignatureStatus.SIGNED, anchorStatus: 0 }))
       // _handleTip is intended to be called by the dispatcher
@@ -431,7 +434,9 @@ describe('Document', () => {
       expect(doc1.doctype.content).toEqual(newContent)
       const tipValidUpdate = doc1.tip
       // create invalid change that happened after main change
-      const doc2 = await Document.load(docId, doctypeHandler, dispatcher, pinStore, context, { sync: false })
+
+      const initialState = await doc1.rewind(docId.atCommit(docId.cid)).then(doc => doc.state)
+      const doc2 = new Document(new RunningState(initialState), dispatcher, pinStore, true, context, doctypeHandler)
       await doc2._handleTip(tipPreUpdate)
       // add short wait to get different anchor time
       // sometime the tests are very fast
@@ -527,29 +532,6 @@ describe('Document', () => {
         const updateRec = await TileDoctype._makeCommit(doc.doctype, user, nonConformingContent, doc.doctype.controllers)
         await doc.applyCommit(updateRec)
         fail('Should not be able to assign a schema to a document that does not conform')
-      } catch (e) {
-        expect(e.message).toEqual('Validation Error: data[\'stuff\'] should be string')
-      }
-    })
-
-    it('Enforces schema when loading genesis record', async () => {
-      const schemaDoc = await create({ content: stringMapSchema, metadata: { controllers } }, ceramic, context)
-      await anchorUpdate(anchorService, schemaDoc)
-
-      const docParams = {
-        content: {stuff: 1},
-        metadata: {controllers, schema: schemaDoc.doctype.commitId.toString()}
-      }
-      // Create a document that isn't conforming to the schema
-      const doc = await create(docParams, ceramicWithoutSchemaValidation, context)
-      await anchorUpdate(anchorService, doc)
-
-      expect(doc.doctype.content).toEqual({stuff:1})
-      expect(doc.doctype.metadata.schema).toEqual(schemaDoc.doctype.commitId.toString())
-
-      try {
-        await Document.load(doc.id, doctypeHandler, dispatcher, pinStore, context, { sync: false })
-        fail("Should not be able to load a document that doesn't conform to its schema")
       } catch (e) {
         expect(e.message).toEqual('Validation Error: data[\'stuff\'] should be string')
       }
