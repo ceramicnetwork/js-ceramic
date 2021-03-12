@@ -1,6 +1,6 @@
 import { BehaviorSubject } from 'rxjs';
 import { DocState, DocStateHolder } from '@ceramicnetwork/common';
-import DocID from 'docid/lib';
+import { DocID } from '@ceramicnetwork/docid';
 
 export class RunningState extends BehaviorSubject<DocState> implements DocStateHolder {
   readonly id: DocID;
