@@ -79,6 +79,13 @@ export interface CeramicApi {
     loadDocumentCommits(docId: DocID | string): Promise<Array<Record<string, any>>>;
 
     /**
+     * Load all document types instances for given multiqueries
+     * @param queries - Array of MultiQueries
+     * @param timeout - Timeout in milliseconds
+     */
+    multiQuery(queries: Array<MultiQuery>, timeout?: number):  Promise<Record<string, Doctype>>;
+
+    /**
      * Load all document commits by document ID
      * @param docId - Document ID
      * @deprecated See `loadDocumentCommits`
@@ -121,6 +128,16 @@ export interface CeramicApi {
 }
 
 export interface MultiQuery {
+    /**
+     * The DocID of the document to load
+     */
     docId: DocID | string
+    /**
+     * An array of paths used to look for linked documents
+     */
     paths?: Array<string>
+    /**
+     * Load a previous version of the document based on unix timestamp
+     */
+    atTime?: number
 }

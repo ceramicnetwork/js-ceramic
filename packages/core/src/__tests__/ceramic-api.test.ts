@@ -397,6 +397,8 @@ describe('Ceramic API', () => {
     let ceramic: Ceramic
     let docA: TileDoctype, docB: TileDoctype, docC: TileDoctype, docD: TileDoctype, docE: TileDoctype, docF: TileDoctype
     const notExistDocId = DocID.fromString('kjzl6cwe1jw1495fyn7770ujykvl1f8sskbzsevlux062ajragz9hp3akdqbmdg')
+    const docFTimestamps = []
+    const docFStates = []
 
     beforeAll(async () => {
       ceramic = await createCeramic()
@@ -431,6 +433,18 @@ describe('Ceramic API', () => {
                    notDoc: '123' },
         metadata: { controllers: [controller] }
       })
+
+      // test data for the atTime feature
+      docFStates.push(docF.state)
+      docFTimestamps.push(Date.now())
+      await docF.change({ content: { ...docF.content, update: 'new stuff' }})
+      await anchorDoc(ceramic, docF)
+      docFTimestamps.push(Date.now())
+      docFStates.push(docF.state)
+      await docF.change({ content: { ...docF.content, update: 'newer stuff' }})
+      await anchorDoc(ceramic, docF)
+      docFTimestamps.push(Date.now())
+      docFStates.push(docF.state)
     })
 
     afterAll(async () => {
@@ -438,7 +452,7 @@ describe('Ceramic API', () => {
     })
 
     it('can load linked doc path, returns expected form', async () => {
-      const docs = await ceramic._loadLinkedDocuments(docA.id, ['/b/e'])
+      const docs = await ceramic._loadLinkedDocuments({ docId: docA.id, paths: ['/b/e'] })
       // inlcudes all linked docs in path, including root, key by docid string
       expect(docs[docA.id.toString()]).toBeTruthy()
       expect(docs[docB.id.toString()]).toBeTruthy()
@@ -450,7 +464,7 @@ describe('Ceramic API', () => {
     })
 
     it('can load multiple paths', async () => {
-      const docs = await ceramic._loadLinkedDocuments(docA.id, ['/b/e/f', '/c', '/b/d'])
+      const docs = await ceramic._loadLinkedDocuments({ docId: docA.id, paths: ['/b/e/f', '/c', '/b/d'] })
       expect(Object.keys(docs).length).toEqual(6)
       expect(docs[docA.id.toString()]).toBeTruthy()
       expect(docs[docB.id.toString()]).toBeTruthy()
@@ -461,7 +475,7 @@ describe('Ceramic API', () => {
     })
 
     it('can load multiple paths, including redundant subpaths and paths', async () => {
-      const docs = await ceramic._loadLinkedDocuments(docA.id, ['/b/e/f', '/c', '/b/d', '/b', 'b/e'])
+      const docs = await ceramic._loadLinkedDocuments({ docId: docA.id, paths: ['/b/e/f', '/c', '/b/d', '/b', 'b/e'] })
       expect(Object.keys(docs).length).toEqual(6)
       expect(docs[docA.id.toString()]).toBeTruthy()
       expect(docs[docB.id.toString()]).toBeTruthy()
@@ -472,7 +486,7 @@ describe('Ceramic API', () => {
     })
 
     it('can load multiple paths and ignore paths that dont exist', async () => {
-      const docs = await ceramic._loadLinkedDocuments(docA.id, ['/b', '/c/g/h', 'c/g/j', '/c/k'])
+      const docs = await ceramic._loadLinkedDocuments({ docId: docA.id, paths: ['/b', '/c/g/h', 'c/g/j', '/c/k'] })
       expect(Object.keys(docs).length).toEqual(3)
       expect(docs[docA.id.toString()]).toBeTruthy()
       expect(docs[docB.id.toString()]).toBeTruthy()
@@ -480,7 +494,7 @@ describe('Ceramic API', () => {
     })
 
     it('can load multiple paths and ignore invalid paths (ie not docs)', async () => {
-      const docs = await ceramic._loadLinkedDocuments(docA.id, ['/b', '/b/notDoc', '/notDoc'])
+      const docs = await ceramic._loadLinkedDocuments({ docId: docA.id, paths: ['/b', '/b/notDoc', '/notDoc'] })
       expect(Object.keys(docs).length).toEqual(2)
       expect(docs[docA.id.toString()]).toBeTruthy()
       expect(docs[docB.id.toString()]).toBeTruthy()
@@ -557,6 +571,37 @@ describe('Ceramic API', () => {
         expect(docs[docA.id.toString()]).toBeTruthy()
         expect(docs[docB.id.toString()]).toBeTruthy()
         expect(docs[docE.id.toString()]).toBeTruthy()
+    })
+
+    it('loads the same document at multiple points in time', async () => {
+      const queries = [
+        {
+          docId: docF.id,
+          atTime: docFTimestamps[0]
+        },
+        {
+          docId: docF.id,
+          atTime: docFTimestamps[1]
+        },
+        {
+          docId: docF.id,
+          atTime: docFTimestamps[2]
+        },
+        {
+          docId: docF.id,
+        }
+      ]
+      const docs = await ceramic.multiQuery(queries)
+
+      expect(Object.keys(docs).length).toEqual(4)
+      const states = Object.values(docs).map(doc => doc.state)
+      // annoying thing, was pending when snapshotted but will
+      // obviously not be when rewinded
+      docFStates[0].anchorStatus = 0
+      expect(states[0]).toEqual(docFStates[0])
+      expect(states[1]).toEqual(docFStates[1])
+      expect(states[2]).toEqual(docFStates[2])
+      expect(states[3]).toEqual(docF.state)
     })
   })
 })

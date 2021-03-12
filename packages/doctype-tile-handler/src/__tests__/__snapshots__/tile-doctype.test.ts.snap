@@ -4,6 +4,7 @@ exports[`TileDoctypeHandler applies anchor record correctly 1`] = `
 Object {
   "anchorProof": Object {
     "blockNumber": 123456,
+    "blockTimestamp": 29872349872,
     "chainId": "fakechain:123",
   },
   "anchorStatus": 3,
@@ -140,6 +141,7 @@ Object {
         ],
         "version": 1,
       },
+      "timestamp": 29872349872,
       "type": 2,
     },
   ],

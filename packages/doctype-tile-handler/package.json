@@ -27,10 +27,8 @@
   "dependencies": {
     "@ceramicnetwork/common": "^0.16.0-rc.10",
     "@ceramicnetwork/doctype-tile": "^0.14.0-rc.0",
-    "did-jwt": "^5.0.0",
     "fast-json-patch": "^2.2.1",
-    "lodash.clonedeep": "^4.5.0",
-    "uint8arrays": "^2.0.5"
+    "lodash.clonedeep": "^4.5.0"
   },
   "devDependencies": {
     "@ceramicnetwork/3id-did-resolver": "^1.1.0-rc.0",

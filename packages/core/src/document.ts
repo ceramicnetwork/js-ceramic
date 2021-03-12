@@ -3,6 +3,7 @@ import CID from 'cids'
 import PQueue from 'p-queue'
 import {
   AnchorStatus,
+  CommitType,
   DocState,
   Doctype,
   DoctypeHandler,
@@ -269,6 +270,27 @@ export class Document implements DocStateHolder {
           }
         })
     this.subscriptionSet.add(subscription);
+  }
+
+  /**
+   * Find the relevant AnchorCommit given a particular timestamp.
+   * Will return an AnchorCommit whose timestamp is earlier to or
+   * equal the requested timestamp.
+   *
+   * @param timestamp - unix timestamp
+   */
+  findCommitAt(timestamp: number): CommitID {
+    let commitCid: CID = this.state.log[0].cid
+    for (const entry of this.state.log) {
+      if (entry.type === CommitType.ANCHOR) {
+        if (entry.timestamp <= timestamp) {
+          commitCid = entry.cid
+        } else {
+          break
+        }
+      }
+    }
+    return this.id.atCommit(commitCid)
   }
 
   /**

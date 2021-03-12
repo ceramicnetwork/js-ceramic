@@ -1,7 +1,5 @@
 import type CID from 'cids'
 
-import * as didJwt from 'did-jwt'
-import * as uint8arrays from 'uint8arrays'
 import type { DIDResolutionResult } from 'did-resolver'
 
 import jsonpatch from 'fast-json-patch'
@@ -159,7 +157,7 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
                 + supportedChains.join("', '") + "'")
         }
 
-        state.log.push({ cid, type: CommitType.ANCHOR })
+        state.log.push({ cid, type: CommitType.ANCHOR, timestamp: proof.blockTimestamp })
         let content = state.content
         let metadata = state.metadata
 

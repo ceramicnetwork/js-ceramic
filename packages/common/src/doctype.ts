@@ -79,8 +79,10 @@ export interface DocMetadata {
  */
 export interface DocParams {
     metadata?: DocMetadata
-    // deterministic is a tri-state. True means means always create the document deterministically,
-    // false means always force the document to be unique, undefined means use the default behavior
+    /**
+     * deterministic is a tri-state. True means means always create the document deterministically,
+     * false means always force the document to be unique, undefined means use the default behavior
+     */
     deterministic?: boolean
 
     [index: string]: any // allow arbitrary properties
@@ -102,6 +104,7 @@ export enum CommitType {
 export interface LogEntry {
   cid: CID
   type: CommitType
+  timestamp?: number
 }
 /**
  * Document state
@@ -123,14 +126,25 @@ export interface DocState {
  * behaviors that are performed as part of the operation.
  */
 export interface DocOpts {
-    // Whether or not to request an anchor after performing the operation.
+    /**
+     * Whether or not to request an anchor after performing the operation.
+     */
     anchor?: boolean
 
-    // Whether or not to publish the current tip commit to the pubsub channel after performing the operation.
+    /**
+     * Whether or not to publish the current tip commit to the pubsub channel after performing the operation.
+     */
     publish?: boolean
 
-    // Whether or not to wait a short period of time to hear about new tips for the document after performing the operation.
+    /**
+     * Whether or not to wait a short period of time to hear about new tips for the document after performing the operation.
+     */
     sync?: boolean
+
+    /**
+     * Load a previous version of the document based on unix timestamp
+     */
+    atTime?: number
 }
 
 /**
