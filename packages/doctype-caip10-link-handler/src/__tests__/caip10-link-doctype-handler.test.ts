@@ -132,7 +132,11 @@ describe('Caip10LinkHandler', () => {
         const state = await handler.applyCommit(RECORDS.genesis, FAKE_CID_1, context)
         const doctype = new Caip10LinkDoctype(state, context)
         const record = await Caip10LinkDoctype._makeCommit(doctype, RECORDS.r1.desiredContent)
-        expect(record).toEqual(RECORDS.r1.commit)
+        // Have to compare the 'id' and 'prev' CIDs manually (with toString()) otherwise jest gets
+        // confused by Symbol(@ipld/js-cid/CID)
+        expect(record.data).toEqual(RECORDS.r1.commit.data)
+        expect(record.id.toString()).toEqual(RECORDS.r1.commit.id.toString())
+        expect(record.prev.toString()).toEqual(RECORDS.r1.commit.prev.toString())
     })
 
     it('applies signed record correctly', async () => {

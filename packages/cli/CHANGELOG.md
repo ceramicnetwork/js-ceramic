@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.21.0-rc.10](/compare/@ceramicnetwork/cli@0.21.0-rc.9...@ceramicnetwork/cli@0.21.0-rc.10) (2021-03-12)
+
+
+### Features
+
+* upgrade 3id did resolver (#1108) 24ef6d4, closes #1108
+
+
+
+
+
 # [0.21.0-rc.9](/compare/@ceramicnetwork/cli@0.21.0-rc.8...@ceramicnetwork/cli@0.21.0-rc.9) (2021-03-10)
 
 **Note:** Version bump only for package @ceramicnetwork/cli

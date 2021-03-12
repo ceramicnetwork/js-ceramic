@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.1.0-rc.0](/compare/key-did-resolver@0.2.5...key-did-resolver@1.1.0-rc.0) (2021-03-12)
+
+
+### Features
+
+* upgrade 3id did resolver (#1108) 24ef6d4, closes #1108
+
+
+
+
+
 ## [0.2.5](/compare/key-did-resolver@0.2.5-rc.0...key-did-resolver@0.2.5) (2021-02-04)
 
 **Note:** Version bump only for package key-did-resolver

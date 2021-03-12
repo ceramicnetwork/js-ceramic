@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.5.0-rc.6](/compare/@ceramicnetwork/docid@0.5.0-rc.5...@ceramicnetwork/docid@0.5.0-rc.6) (2021-03-12)
+
+
+### Features
+
+* upgrade 3id did resolver (#1108) 24ef6d4, closes #1108
+
+
+
+
+
 # [0.5.0-rc.5](/compare/@ceramicnetwork/docid@0.5.0-rc.3...@ceramicnetwork/docid@0.5.0-rc.5) (2021-03-09)
 
 **Note:** Version bump only for package @ceramicnetwork/docid

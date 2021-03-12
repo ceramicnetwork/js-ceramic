@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.2.0-rc.0](/compare/@ceramicnetwork/pinning-aggregation@0.1.15-rc.9...@ceramicnetwork/pinning-aggregation@0.2.0-rc.0) (2021-03-12)
+
+
+### Features
+
+* upgrade 3id did resolver (#1108) 24ef6d4, closes #1108
+
+
+
+
+
 ## [0.1.15-rc.9](/compare/@ceramicnetwork/pinning-aggregation@0.1.15-rc.8...@ceramicnetwork/pinning-aggregation@0.1.15-rc.9) (2021-03-10)
 
 **Note:** Version bump only for package @ceramicnetwork/pinning-aggregation

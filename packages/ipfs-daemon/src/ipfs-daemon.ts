@@ -5,17 +5,15 @@ import HttpGateway from 'ipfs-http-gateway'
 import dagJose from "dag-jose";
 import {IpfsTopology} from "@ceramicnetwork/ipfs-topology";
 import { DiagnosticsLogger, LogLevel } from "@ceramicnetwork/logger";
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-import multiformats from 'multiformats/basics'
+import { sha256 } from 'multiformats/hashes/sha2'
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import legacy from 'multiformats/legacy'
 import {IpfsApi, HealthcheckServer} from "./healthcheck-server";
 
-
-multiformats.multicodec.add(dagJose)
-const format = legacy(multiformats, dagJose.name)
+const hasher = {}
+hasher[sha256.code] = sha256
+const format = legacy(dagJose, {hashes: hasher})
 
 export interface Configuration {
     tcpHost: string

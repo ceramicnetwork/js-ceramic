@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/docid",
-  "version": "0.5.0-rc.5",
+  "version": "0.5.0-rc.6",
   "description": "Ceramic Document Ids",
   "keywords": [
     "ceramic",
@@ -25,9 +25,9 @@
     "lib": "lib"
   },
   "dependencies": {
-    "cids": "1.0.2",
-    "multibase": "3.0.1",
-    "multicodec": "2.0.0",
+    "cids": "^1.1.6",
+    "multibase": "~4.0.2",
+    "multicodec": "~3.0.1",
     "typescript-memoize": "^1.0.0-alpha.4",
     "uint8arrays": "^2.0.5",
     "varint": "^6.0.0"
