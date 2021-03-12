@@ -544,21 +544,22 @@ class Ceramic implements CeramicApi {
    * @param timeout - Timeout in milliseconds
    * @private
    */
-  async _loadLinkedDocuments(id: DocID | string, paths: string[], timeout = 7000): Promise<Record<string, Doctype>> {
-    id = normalizeDocID(id)
+  async _loadLinkedDocuments(query: MultiQuery, timeout = 7000): Promise<Record<string, Doctype>> {
+    const id = normalizeDocID(query.docId)
     const pathTrie = new PathTrie()
-    paths.forEach(path => pathTrie.add(path))
+    query.paths?.forEach(path => pathTrie.add(path))
 
     const index = {}
 
     const walkNext = async (node: TrieNode, docId: DocID) => {
       let doc
       try {
-        doc = await promiseTimeout(timeout, this.loadDocument(docId))
+        doc = await promiseTimeout(timeout, this.loadDocument(docId, { atTime: query.atTime }))
       } catch (e) {
         return Promise.resolve()
       }
-      index[docId.toString()] = doc
+      const docRef = query.atTime ? docId.atCommit(doc.tip) : docId
+      index[docRef.toString()] = doc
 
       const promiseList = Object.keys(node.children).map(key => {
         const keyDocId = doc.content[key] ? tryDocId(doc.content[key]) : null
@@ -582,7 +583,7 @@ class Ceramic implements CeramicApi {
   async multiQuery(queries: Array<MultiQuery>, timeout?: number):  Promise<Record<string, Doctype>> {
     const queryPromises = queries.map(query => {
       try {
-        return this._loadLinkedDocuments(query.docId, query.paths, timeout)
+        return this._loadLinkedDocuments(query, timeout)
       } catch (e) {
         return Promise.resolve({})
       }
@@ -630,11 +631,14 @@ class Ceramic implements CeramicApi {
     const doc = await this._repository.load(docRef.baseID, opts)
 
     // If DocID is requested, return the document
-    if (docRef instanceof DocID) {
-      return doc
-    } else {
+    if (docRef instanceof CommitID) {
       // Here CommitID is requested, let's return document at specific commit
       return doc.rewind(docRef)
+    } else if (opts.atTime) {
+      const commitId = doc.findCommitAt(opts.atTime)
+      return doc.rewind(commitId)
+    } else {
+      return doc
     }
   }
 
