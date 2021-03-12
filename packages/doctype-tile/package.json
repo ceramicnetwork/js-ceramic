@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/doctype-tile",
-  "version": "0.13.4-rc.9",
+  "version": "0.14.0-rc.0",
   "description": "Ceramic Tile doctype",
   "keywords": [
     "ceramic",
@@ -25,7 +25,7 @@
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/common": "^0.16.0-rc.9",
+    "@ceramicnetwork/common": "^0.16.0-rc.10",
     "@stablelib/random": "^1.0.0",
     "fast-json-patch": "^2.2.1",
     "uint8arrays": "^2.0.5"

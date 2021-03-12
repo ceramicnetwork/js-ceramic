@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.2.0-rc.5](/compare/@ceramicnetwork/blockchain-utils-linking@0.2.0-rc.4...@ceramicnetwork/blockchain-utils-linking@0.2.0-rc.5) (2021-03-12)
+
+
+### Features
+
+* upgrade 3id did resolver (#1108) 24ef6d4, closes #1108
+
+
+
+
+
 # [0.2.0-rc.4](/compare/@ceramicnetwork/blockchain-utils-linking@0.2.0-rc.2...@ceramicnetwork/blockchain-utils-linking@0.2.0-rc.4) (2021-03-09)
 
 
