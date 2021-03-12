@@ -1,7 +1,7 @@
 import dagJose from 'dag-jose';
-import basicsImport from 'multiformats/cjs/src/basics-import.js';
-import legacy from 'multiformats/cjs/src/legacy.js';
-import IPFS from 'ipfs-core';
+import { sha256 } from 'multiformats/hashes/sha2'
+import legacy from 'multiformats/legacy'
+import IPFS from 'ipfs';
 import { IpfsApi } from '@ceramicnetwork/common';
 import tmp from 'tmp-promise';
 import getPort from 'get-port';
@@ -11,8 +11,9 @@ import getPort from 'get-port';
  * @param overrideConfig - IFPS config for override
  */
 export async function createIPFS(overrideConfig: Record<string, unknown> = {}): Promise<IpfsApi> {
-  basicsImport.multicodec.add(dagJose);
-  const format = legacy(basicsImport, dagJose.name);
+  const hasher = {}
+  hasher[sha256.code] = sha256
+  const format = legacy(dagJose, {hashes: hasher})
   const tmpFolder = await tmp.dir({ unsafeCleanup: true });
 
   const port = await getPort();
@@ -26,6 +27,8 @@ export async function createIPFS(overrideConfig: Record<string, unknown> = {}): 
   };
 
   const config = { ...defaultConfig, ...overrideConfig };
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
   const instance = await IPFS.create(config);
 
   // IPFS does not notify you when it stops.

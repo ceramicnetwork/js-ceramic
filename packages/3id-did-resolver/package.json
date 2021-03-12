@@ -29,7 +29,7 @@
   "dependencies": {
     "@ceramicnetwork/common": "^0.16.0-rc.9",
     "@ceramicnetwork/docid": "^0.5.0-rc.5",
-    "cids": "1.0.2",
+    "cids": "~1.1.6",
     "cross-fetch": "^3.0.6",
     "lru_map": "^0.4.1",
     "uint8arrays": "^2.0.5"
