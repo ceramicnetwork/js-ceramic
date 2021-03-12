@@ -274,7 +274,7 @@ export class Document implements DocStateHolder {
 
   /**
    * Find the relevant AnchorCommit given a particular timestamp.
-   * Will return an AnchorCommit whos timestamp is earlier to or
+   * Will return an AnchorCommit whose timestamp is earlier to or
    * equal the requested timestamp.
    *
    * @param timestamp - unix timestamp
