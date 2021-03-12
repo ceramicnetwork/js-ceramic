@@ -102,7 +102,7 @@ export class Repository {
     if (fromMemory) {
       return fromMemory.state;
     } else {
-      if (this.#pinStore && this.#documentFactory) {
+      if (this.#pinStore) {
         return this.#pinStore.stateStore.load(docId);
       }
     }
