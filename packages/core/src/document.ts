@@ -65,46 +65,6 @@ export class Document implements DocStateHolder {
   }
 
   /**
-   * Loads the Doctype by id
-   * @param docId - Document ID
-   * @param handler - find handler
-   * @param dispatcher - Dispatcher instance
-   * @param pinStore - PinStore instance
-   * @param context - Ceramic context
-   * @param opts - Initialization options
-   * @param validate - Validate content against schema
-   * @deprecated
-   */
-  static async load<T extends Doctype> (
-      docId: DocID,
-      handler: DoctypeHandler<T>,
-      dispatcher: Dispatcher,
-      pinStore: PinStore,
-      context: Context,
-      opts: DocOpts = {},
-      validate = true): Promise<Document> {
-    // Fill 'opts' with default values for any missing fields
-    opts = {...DEFAULT_LOAD_DOCOPTS, ...opts}
-
-    const genesis = await dispatcher.retrieveCommit(docId.cid)
-    if (!genesis) {
-      throw new Error(`No genesis commit found with CID ${docId.cid.toString()}`)
-    }
-    const state = await handler.applyCommit(genesis, docId.cid, context)
-    const state$ = new RunningState(state)
-    const doc = new Document(state$, dispatcher, pinStore, validate, context, handler)
-
-    if (validate) {
-      await validateState(doc.state, doc.doctype.content, context.api.loadDocument.bind(context.api))
-    }
-    const pinnedState = await pinStore.stateStore.load(docId)
-    if (pinnedState) {
-      doc.state$.next(pinnedState)
-    }
-    return doc._syncDocumentToCurrent(opts)
-  }
-
-  /**
    * Takes a document containing only the genesis commit and kicks off the process to load and apply
    * the most recent Tip to it.
    * @param opts
