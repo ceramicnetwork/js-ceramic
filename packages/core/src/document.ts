@@ -10,13 +10,13 @@ import {
   Context,
   DoctypeUtils,
   DocStateHolder,
-  UnreachableCaseError
-} from '@ceramicnetwork/common'
+  UnreachableCaseError,
+  AnchorService,
+} from '@ceramicnetwork/common';
 import DocID, { CommitID } from '@ceramicnetwork/docid';
 import { PinStore } from './store/pin-store';
 import { SubscriptionSet } from "./subscription-set";
 import { distinctUntilChanged, timeoutWith } from "rxjs/operators";
-import { DiagnosticsLogger } from "@ceramicnetwork/logger";
 import { validateState } from './validate-state';
 import { Observable, of } from 'rxjs'
 import { ConflictResolution } from './conflict-resolution';
@@ -35,13 +35,13 @@ export class Document implements DocStateHolder {
   readonly id: DocID
   private tasks: TaskQueue
   private _doctype: Doctype
-  private _logger: DiagnosticsLogger
   private readonly subscriptionSet = new SubscriptionSet();
   private readonly conflictResolution: ConflictResolution;
+  private readonly anchorService: AnchorService;
 
   constructor (readonly state$: RunningState,
-               public dispatcher: Dispatcher,
-               public pinStore: PinStore,
+               readonly dispatcher: Dispatcher,
+               readonly pinStore: PinStore,
                private _validate: boolean,
                private _context: Context,
                private _doctypeHandler: DoctypeHandler<Doctype>,
@@ -55,12 +55,13 @@ export class Document implements DocStateHolder {
 
     this.id = state$.id
 
-    this._logger = _context.loggerProvider.getDiagnosticsLogger()
+    const logger = _context.loggerProvider.getDiagnosticsLogger()
 
     this.tasks = new TaskQueue(error => {
-      this._logger.err(error)
+      logger.err(error)
     })
     this.conflictResolution = new ConflictResolution(_context, dispatcher, _doctypeHandler, _validate);
+    this.anchorService = _context.anchorService;
   }
 
   /**
@@ -222,7 +223,7 @@ export class Document implements DocStateHolder {
    * Request anchor for the latest document state
    */
   anchor(): void {
-    const anchorStatus$ = this._context.anchorService.requestAnchor(this.id.baseID, this.tip);
+    const anchorStatus$ = this.anchorService.requestAnchor(this.id.baseID, this.tip);
     const subscription = anchorStatus$.subscribe((asr) => {
       this.tasks.add(async () => {
         switch (asr.status) {
