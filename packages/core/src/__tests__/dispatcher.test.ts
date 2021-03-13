@@ -10,6 +10,7 @@ import { delay } from '../pubsub/__tests__/delay';
 import tmp from 'tmp-promise'
 import { LevelStateStore } from '../store/level-state-store';
 import { PinStore } from '../store/pin-store';
+import { RunningState } from '../state-management/running-state';
 
 const TOPIC = '/ceramic'
 const FAKE_CID = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
@@ -111,8 +112,9 @@ describe('Dispatcher', () => {
 
   it('handle message correctly', async () => {
     async function register(state: DocState) {
+      const runningState = new RunningState(state)
       const document = new Document(
-        state,
+        runningState,
         dispatcher,
         null,
         false,

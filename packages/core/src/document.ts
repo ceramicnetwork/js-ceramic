@@ -16,11 +16,12 @@ import {
 import DocID, { CommitID } from '@ceramicnetwork/docid';
 import { PinStore } from './store/pin-store';
 import { SubscriptionSet } from "./subscription-set";
-import { catchError, concatMap, distinctUntilChanged, timeoutWith } from "rxjs/operators";
+import { distinctUntilChanged, timeoutWith } from "rxjs/operators";
 import { DiagnosticsLogger } from "@ceramicnetwork/logger";
 import { validateState } from './validate-state';
-import { BehaviorSubject, Observable, of, empty } from 'rxjs'
+import { BehaviorSubject, Observable, of } from 'rxjs'
 import { ConflictResolution } from './conflict-resolution';
+import { RunningState } from './state-management/running-state';
 
 // DocOpts defaults for document load operations
 export const DEFAULT_LOAD_DOCOPTS = {anchor: false, publish: false, sync: true}
@@ -33,28 +34,26 @@ export const DEFAULT_WRITE_DOCOPTS = {anchor: true, publish: true, sync: false}
 export class Document implements DocStateHolder {
   readonly id: DocID
   private _applyQueue: PQueue
-  private readonly state$: BehaviorSubject<DocState>
   private _doctype: Doctype
   private _logger: DiagnosticsLogger
   private readonly subscriptionSet = new SubscriptionSet();
   private readonly conflictResolution: ConflictResolution;
 
-  constructor (initialState: DocState,
+  constructor (readonly state$: RunningState,
                public dispatcher: Dispatcher,
                public pinStore: PinStore,
                private _validate: boolean,
                private _context: Context,
                private _doctypeHandler: DoctypeHandler<Doctype>,
                private isReadOnly = false) {
-    this.state$ = new BehaviorSubject(initialState)
-    const doctype = new _doctypeHandler.doctype(initialState, _context)
+    const doctype = new _doctypeHandler.doctype(state$.value, _context)
     this._doctype = isReadOnly ? DoctypeUtils.makeReadOnly(doctype) : doctype
     this.state$.pipe(distinctUntilChanged()).subscribe(state => {
       this._doctype.state = state;
       this._doctype.emit('change');
     })
 
-    this.id = new DocID(initialState.doctype, initialState.log[0].cid)
+    this.id = state$.id
 
     this._logger = _context.loggerProvider.getDiagnosticsLogger()
 
@@ -89,7 +88,8 @@ export class Document implements DocStateHolder {
       throw new Error(`No genesis commit found with CID ${docId.cid.toString()}`)
     }
     const state = await handler.applyCommit(genesis, docId.cid, context)
-    const doc = new Document(state, dispatcher, pinStore, validate, context, handler)
+    const state$ = new RunningState(state)
+    const doc = new Document(state$, dispatcher, pinStore, validate, context, handler)
 
     if (validate) {
       await validateState(doc.state, doc.doctype.content, context.api.loadDocument.bind(context.api))
@@ -123,7 +123,8 @@ export class Document implements DocStateHolder {
    */
   async rewind(commitId: CommitID): Promise<Document> {
     const resetState = await this.conflictResolution.rewind(this.state$.value, commitId)
-    return new Document(resetState, this.dispatcher, this.pinStore, this._validate, this._context, this._doctypeHandler, true)
+    const state$ = new RunningState(resetState)
+    return new Document(state$, this.dispatcher, this.pinStore, this._validate, this._context, this._doctypeHandler, true)
   }
 
   /**
