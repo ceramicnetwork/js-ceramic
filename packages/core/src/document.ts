@@ -17,7 +17,7 @@ import DocID, { CommitID } from '@ceramicnetwork/docid';
 import { PinStore } from './store/pin-store';
 import { SubscriptionSet } from "./subscription-set";
 import { distinctUntilChanged, timeoutWith } from "rxjs/operators";
-import { Observable, of } from 'rxjs'
+import { Observable, of, Subscription } from 'rxjs'
 import { ConflictResolution } from './conflict-resolution';
 import { RunningState } from './state-management/running-state';
 import { TaskQueue } from './pubsub/task-queue';
@@ -181,7 +181,7 @@ export class Document implements DocStateHolder {
   /**
    * Request anchor for the latest document state
    */
-  anchor(): void {
+  anchor(): Subscription {
     const anchorStatus$ = this.anchorService.requestAnchor(this.id.baseID, this.tip);
     const subscription = anchorStatus$.subscribe((asr) => {
       this.tasks.add(async () => {
@@ -222,6 +222,7 @@ export class Document implements DocStateHolder {
       });
     })
     this.subscriptionSet.add(subscription);
+    return subscription;
   }
 
   /**
