@@ -1,12 +1,10 @@
 import CID from 'cids'
 import cloneDeep from 'lodash.clonedeep'
-import type { Document } from "./document"
 import { DoctypeUtils, IpfsApi, UnreachableCaseError } from '@ceramicnetwork/common';
 import DocID from "@ceramicnetwork/docid";
 import { DiagnosticsLogger, ServiceLogger } from "@ceramicnetwork/logger";
 import { Repository } from './state-management/repository';
 import {
-  buildQueryMessage,
   MsgType,
   PubsubMessage,
   QueryMessage,
