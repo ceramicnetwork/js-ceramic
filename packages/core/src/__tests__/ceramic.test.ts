@@ -1,7 +1,7 @@
 import Ceramic from '../ceramic'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import tmp from 'tmp-promise'
-import { DoctypeUtils, DocState, Doctype, IpfsApi, TestUtils } from '@ceramicnetwork/common';
+import { DoctypeUtils, Doctype, IpfsApi, TestUtils } from '@ceramicnetwork/common';
 import { TileDoctype } from "@ceramicnetwork/doctype-tile"
 import * as u8a from 'uint8arrays'
 import { createIPFS, swarmConnect } from './ipfs-util';
@@ -10,10 +10,6 @@ import InMemoryAnchorService from "../anchor/memory/in-memory-anchor-service";
 jest.mock('../store/level-state-store')
 
 const seed = u8a.fromString('6e34b2e1a9624113d81ece8a8a22e6e97f0e145c25c1d4d2d0e62753b4060c83', 'base16')
-
-const expectEqualStates = (state1: DocState, state2: DocState): void => {
-  expect(DoctypeUtils.serializeState(state1)).toEqual(DoctypeUtils.serializeState(state2))
-}
 
 async function delay(mills: number): Promise<void> {
   await new Promise<void>(resolve => setTimeout(() => resolve(), mills))
@@ -104,7 +100,7 @@ describe('Ceramic integration', () => {
     const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { test: 123 } }, { anchor: false, publish: false })
     const doctype2 = await ceramic2.loadDocument(doctype1.id)
     expect(doctype1.content).toEqual(doctype2.content)
-    expectEqualStates(doctype1.state, doctype2.state)
+    expect(DoctypeUtils.statesEqual(doctype1.state, doctype2.state));
     await ceramic1.close()
     await ceramic2.close()
   })
@@ -220,7 +216,7 @@ describe('Ceramic integration', () => {
     }
 
     expect(doctype1.content).toEqual(doctype2.content)
-    expectEqualStates(doctype1.state, doctype2.state)
+    expect(DoctypeUtils.statesEqual(doctype1.state, doctype2.state));
 
     await ceramic1.close()
     await ceramic2.close()

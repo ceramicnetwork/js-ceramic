@@ -67,5 +67,5 @@ describe('validation', () => {
     await permissiveCeramic.close();
     // Load it: Expect failure
     await expect(repository.load(invalidDoc.id)).rejects.toThrow("Validation Error: data['stuff'] should be string");
-  }, 10000);
+  }, 20000);
 });
