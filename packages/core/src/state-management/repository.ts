@@ -11,7 +11,7 @@ export class Repository {
   readonly sync: NamedPQueue = new NamedPQueue();
   readonly #map: AsyncLruMap<Document>;
   #documentFactory?: DocumentFactory;
-  #pinStore?: PinStore;
+  pinStore?: PinStore;
   #networkLoad?: NetworkLoad;
 
   constructor(limit: number) {
@@ -27,7 +27,7 @@ export class Repository {
 
   // Ideally this would be provided in the constructor, but circular dependencies in our initialization process make this necessary for now
   setPinStore(pinStore: PinStore) {
-    this.#pinStore = pinStore;
+    this.pinStore = pinStore;
   }
 
   setNetworkLoad(networkLoad: NetworkLoad) {
@@ -39,8 +39,8 @@ export class Repository {
   }
 
   async fromStateStore(docId: DocID): Promise<Document | undefined> {
-    if (this.#pinStore && this.#documentFactory) {
-      const docState = await this.#pinStore.stateStore.load(docId);
+    if (this.pinStore && this.#documentFactory) {
+      const docState = await this.pinStore.stateStore.load(docId);
       if (docState) {
         const document = await this.#documentFactory.build(docState);
         await this.add(document);
@@ -78,7 +78,7 @@ export class Repository {
   async has(docId: DocID): Promise<boolean> {
     const fromMemory = await this.fromMemory(docId);
     if (fromMemory) return true;
-    const fromState = await this.#pinStore.stateStore.load(docId);
+    const fromState = await this.pinStore.stateStore.load(docId);
     return Boolean(fromState);
   }
 
@@ -102,8 +102,8 @@ export class Repository {
     if (fromMemory) {
       return fromMemory.state;
     } else {
-      if (this.#pinStore) {
-        return this.#pinStore.stateStore.load(docId);
+      if (this.pinStore) {
+        return this.pinStore.stateStore.load(docId);
       }
     }
   }
@@ -116,11 +116,11 @@ export class Repository {
   }
 
   pin(docStateHolder: DocStateHolder): Promise<void> {
-    return this.#pinStore.add(docStateHolder);
+    return this.pinStore.add(docStateHolder);
   }
 
   unpin(docId: DocID): Promise<void> {
-    return this.#pinStore.rm(docId);
+    return this.pinStore.rm(docId);
   }
 
   /**
@@ -136,8 +136,8 @@ export class Repository {
    * If `docId` is passed, indicate if it is pinned.
    */
   async listPinned(docId?: DocID): Promise<string[]> {
-    if (this.#pinStore) {
-      return this.#pinStore.stateStore.list(docId);
+    if (this.pinStore) {
+      return this.pinStore.stateStore.list(docId);
     } else {
       return [];
     }
@@ -154,6 +154,6 @@ export class Repository {
         await d.close();
       }),
     );
-    await this.#pinStore.close();
+    await this.pinStore.close();
   }
 }
