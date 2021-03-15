@@ -40,7 +40,6 @@ export class Document implements DocStateHolder {
   constructor (readonly state$: RunningState,
                readonly dispatcher: Dispatcher,
                readonly pinStore: PinStore,
-               private _validate: boolean,
                private _context: Context,
                private _doctypeHandler: DoctypeHandler<Doctype>,
                private isReadOnly = false,
@@ -60,7 +59,7 @@ export class Document implements DocStateHolder {
       logger.err(error)
     })
     this.anchorService = _context.anchorService;
-    this.conflictResolution = new ConflictResolution(_context, this.anchorService, this.stateValidation, dispatcher, _doctypeHandler, _validate);
+    this.conflictResolution = new ConflictResolution(_context, this.anchorService, this.stateValidation, dispatcher, _doctypeHandler);
   }
 
   /**
@@ -86,7 +85,7 @@ export class Document implements DocStateHolder {
   async rewind(commitId: CommitID): Promise<Document> {
     const resetState = await this.conflictResolution.rewind(this.state$.value, commitId)
     const state$ = new RunningState(resetState)
-    return new Document(state$, this.dispatcher, this.pinStore, this._validate, this._context, this._doctypeHandler, true, this.stateValidation)
+    return new Document(state$, this.dispatcher, this.pinStore, this._context, this._doctypeHandler, true, this.stateValidation)
   }
 
   /**

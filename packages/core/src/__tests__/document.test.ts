@@ -51,7 +51,7 @@ test('constructor', async () => {
   const dispatcher = ceramic.dispatcher;
   const pinStore = ceramic.repository.pinStore;
   const context = ceramic.context;
-  const doc = new Document(runningState, dispatcher, pinStore, true, context, new TileDoctypeHandler(), false, (ceramic as any).stateValidation);
+  const doc = new Document(runningState, dispatcher, pinStore, context, new TileDoctypeHandler(), false, (ceramic as any).stateValidation);
 
   expect(doc.id).toEqual(DOC_ID);
   expect(doc.state.content).toEqual(INITIAL_CONTENT);
@@ -262,7 +262,6 @@ test('handles basic conflict', async () => {
     new RunningState(initialState),
     ceramic.dispatcher,
     ceramic.repository.pinStore,
-    true,
     ceramic.context,
     new TileDoctypeHandler(),
     false,

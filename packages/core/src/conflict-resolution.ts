@@ -213,9 +213,7 @@ export class ConflictResolution {
     private readonly stateValidation: StateValidation,
     private readonly dispatcher: Dispatcher,
     private readonly handler: DoctypeHandler<Doctype>,
-    private readonly isValidationEnabled: boolean,
-  ) {
-  }
+  ) {}
 
   /**
    * Applies the log to the document and updates the state.
@@ -242,9 +240,7 @@ export class ConflictResolution {
         const tmpState = await this.handler.applyCommit(commit, cid, this.context, state);
         const isGenesis = !payload.prev;
         const effectiveState = isGenesis ? tmpState : tmpState.next;
-        if (this.isValidationEnabled) {
-          await this.stateValidation.validate(effectiveState, effectiveState.content);
-        }
+        await this.stateValidation.validate(effectiveState, effectiveState.content);
         state = tmpState; // if validation is successful
       }
 
