@@ -4,7 +4,7 @@ import { Ed25519Provider } from 'key-did-provider-ed25519'
 import tmp from 'tmp-promise'
 import IPFS from 'ipfs-core'
 import CeramicDaemon from '../ceramic-daemon'
-import { AnchorStatus, DoctypeUtils, IpfsApi } from "@ceramicnetwork/common"
+import { AnchorStatus, DoctypeUtils, IpfsApi, TestUtils } from "@ceramicnetwork/common"
 import { TileDoctypeHandler } from "@ceramicnetwork/doctype-tile-handler"
 import { EventEmitter } from "events"
 import * as u8a from 'uint8arrays'
@@ -15,17 +15,6 @@ import legacy from 'multiformats/legacy'
 import DocID from "@ceramicnetwork/docid";
 
 const seed = u8a.fromString('6e34b2e1a9624113d81ece8a8a22e6e97f0e145c25c1d4d2d0e62753b4060c83', 'base16')
-const waitChange = (doc: EventEmitter, count = 1): Promise<void> => {
-    return new Promise(resolve => {
-        let c = 0
-        doc.on('change', () => {
-            if (++c === count) {
-                resolve()
-                doc.removeAllListeners('change')
-            }
-        })
-    })
-}
 const port = 7777
 const apiUrl = 'http://localhost:' + port
 const topic = '/ceramic'
@@ -78,12 +67,8 @@ describe('Ceramic interop: core <> http-client', () => {
     })
 
     beforeEach(async () => {
-        // TODO: Many of the tests in this file are racy and depend on an anchor not having been
-        // performed yet by the time the test checks.  To eliminate this race condition we should set
-        // anchorOnRequest to false in the config for the InMemoryAnchorService and anchor manually
-        // throughout the tests.
         const stateStoreDirectory = tmpFolder.path
-        core = await Ceramic.create(ipfs, {pubsubTopic: topic, stateStoreDirectory})
+        core = await Ceramic.create(ipfs, {pubsubTopic: topic, stateStoreDirectory, anchorOnRequest: false})
 
         const doctypeHandler = new TileDoctypeHandler()
         doctypeHandler.verifyJWS = (): Promise<void> => { return }
@@ -103,6 +88,20 @@ describe('Ceramic interop: core <> http-client', () => {
         await daemon.close()
         await core.close()
     })
+
+    /**
+     * Registers a listener for change notifications on a document, instructs the anchor service to
+     * perform an anchor, then waits for the change listener to resolve, indicating that the document
+     * got anchored.
+     * @param doc
+     */
+    const anchorDoc = async (doc: any): Promise<void> => {
+        const changeHandle = TestUtils.registerChangeListener(doc)
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        await daemon.ceramic.context.anchorService.anchor()
+        await changeHandle
+    }
 
     it('properly creates document', async () => {
         const doc1 = await core.createDocument(DOCTYPE_TILE, { content: { test: 123 } }, {
@@ -129,24 +128,24 @@ describe('Ceramic interop: core <> http-client', () => {
 
     it('gets anchor record updates', async () => {
         const doc1 = await client.createDocument(DOCTYPE_TILE, { content: { test: 123 } })
-        await waitChange(doc1, 1)
+        await anchorDoc(doc1)
         expect(doc1.state.log.length).toEqual(2)
         expect(doc1.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
         const doc2 = await client.createDocument(DOCTYPE_TILE, { content: { test: 1234 } })
-        await waitChange(doc2, 1)
+        await anchorDoc(doc2)
         expect(doc2.state.log.length).toEqual(2)
         expect(doc2.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
     })
 
     it('loads documents correctly', async () => {
         const doc1 = await core.createDocument(DOCTYPE_TILE, { content: { test: 123 } })
-        await waitChange(doc1)
+        await anchorDoc(doc1)
         const doc2 = await client.loadDocument(doc1.id)
         expect(doc1.content).toEqual(doc2.content)
         expect(DoctypeUtils.serializeState(doc1.state)).toEqual(DoctypeUtils.serializeState(doc2.state))
 
         const doc3 = await client.createDocument(DOCTYPE_TILE, { content: { test: 456 } })
-        await waitChange(doc3)
+        await anchorDoc(doc3)
         const doc4 = await core.loadDocument(doc3.id)
         expect(doc3.content).toEqual(doc4.content)
         expect(DoctypeUtils.serializeState(doc3.state)).toEqual(DoctypeUtils.serializeState(doc4.state))
@@ -154,7 +153,7 @@ describe('Ceramic interop: core <> http-client', () => {
 
     it('loads document records correctly', async () => {
         const doc1 = await core.createDocument(DOCTYPE_TILE, { content: { test: 123 } })
-        await waitChange(doc1)
+        await anchorDoc(doc1)
         const doc2 = await client.loadDocument(doc1.id)
         expect(doc1.content).toEqual(doc2.content)
 
@@ -174,21 +173,26 @@ describe('Ceramic interop: core <> http-client', () => {
     })
 
     it('makes and gets updates correctly', async () => {
-        const doc1 = await core.createDocument(DOCTYPE_TILE, { content: { test: 123 } })
-        await waitChange(doc1)
+        const initialContent = { test: 123 }
+        const middleContent = { test: 123, abc: 987 }
+        const finalContent = { test: 456, abc: 654 }
+
+        const doc1 = await core.createDocument(DOCTYPE_TILE, { content: initialContent })
+        await anchorDoc(doc1)
         const doc2 = await client.loadDocument(doc1.id)
         // change from core viewable in client
-        await doc1.change({ content: { test: 123, abc: 987 } })
-        await waitChange(doc1)
-        await waitChange(doc2)
+        await doc1.change({ content: middleContent })
+        const onChange = TestUtils.registerChangeListener(doc2)
+        await anchorDoc(doc1)
+        await onChange
+        expect(doc1.content).toEqual(middleContent)
         expect(doc1.content).toEqual(doc2.content)
         expect(DoctypeUtils.serializeState(doc1.state)).toEqual(DoctypeUtils.serializeState(doc2.state))
         // change from client viewable in core
 
-        const finalContent = { test: 456, abc: 654 }
         await doc2.change({ content: finalContent })
+        await anchorDoc(doc2)
 
-        await waitChange(doc2)
         expect(doc1.content).toEqual(doc2.content)
         expect(doc1.content).toEqual(finalContent)
         expect(DoctypeUtils.serializeState(doc1.state)).toEqual(DoctypeUtils.serializeState(doc2.state))
@@ -200,15 +204,15 @@ describe('Ceramic interop: core <> http-client', () => {
         const content2 = {test: 456}
         const content3 = {test: 789}
         const doc = await core.createDocument(DOCTYPE_TILE, {content: content1})
-        await waitChange(doc)
+        await anchorDoc(doc)
         expect(doc.state.log.length).toEqual(2)
         expect(doc.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
         await doc.change({content: content2})
-        await waitChange(doc)
+        await anchorDoc(doc)
         expect(doc.state.log.length).toEqual(4)
         expect(doc.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
         await doc.change({content: content3})
-        await waitChange(doc)
+        await anchorDoc(doc)
         expect(doc.state.log.length).toEqual(6)
         expect(doc.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 

@@ -8,7 +8,7 @@ export class TestUtils {
      */
     static registerChangeListener(doc: Doctype): Promise<void> {
         return new Promise(resolve => {
-            doc.on('change', () => {
+            doc.once('change', () => {
                 resolve()
             })
         })
