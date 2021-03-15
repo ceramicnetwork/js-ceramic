@@ -24,6 +24,13 @@ export class TaskQueue {
   constructor(private readonly onError: (error: Error, retry: () => void) => void = noop) {}
 
   /**
+   * Size of the queue.
+   */
+  get size(): number {
+    return this.#pq.size
+  }
+
+  /**
    * Add task to queue. Fire-and-forget semantics.
    */
   add(task: Task<void>): void {

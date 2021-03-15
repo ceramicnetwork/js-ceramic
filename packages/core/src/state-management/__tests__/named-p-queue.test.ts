@@ -1,11 +1,11 @@
-import PQueue from 'p-queue';
 import { NamedPQueue } from '../named-p-queue';
+import { TaskQueue } from '../../pubsub/task-queue';
 
 test('sequential tasks', async () => {
   const name = 'foo';
   const N = 10;
   const results = [];
-  const lanes = new Map<string, PQueue>();
+  const lanes = new Map<string, TaskQueue>();
   const queue = new NamedPQueue(lanes);
   const times = Array.from({ length: N }).map((_, index) => index);
   await Promise.all(
@@ -23,7 +23,7 @@ test('parallel queues', async () => {
   const N = 10;
   const names = ['foo', 'blah'];
   const results: Record<string, number[]> = {};
-  const lanes = new Map<string, PQueue>();
+  const lanes = new Map<string, TaskQueue>();
   const queue = new NamedPQueue(lanes);
   const times = Array.from({ length: N }).map((_, index) => index);
 
