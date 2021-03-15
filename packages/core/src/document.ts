@@ -21,6 +21,7 @@ import { ConflictResolution } from './conflict-resolution';
 import { RunningState } from './state-management/running-state';
 import { TaskQueue } from './pubsub/task-queue';
 import { StateValidation } from './state-management/state-validation';
+import { ContextfulHandler } from './state-management/contextful-handler';
 
 // DocOpts defaults for document load operations
 export const DEFAULT_LOAD_DOCOPTS = {anchor: false, publish: false, sync: true}
@@ -44,7 +45,8 @@ export class Document implements DocStateHolder {
                private _doctypeHandler: DoctypeHandler<Doctype>,
                private isReadOnly = false,
                private readonly stateValidation: StateValidation) {
-    const doctype = new _doctypeHandler.doctype(state$.value, _context)
+    const handler = new ContextfulHandler(_context, this._doctypeHandler);
+    const doctype = handler.doctype(state$.value);
     this._doctype = isReadOnly ? DoctypeUtils.makeReadOnly(doctype) : doctype
     this.state$.subscribe(state => {
       this._doctype.state = state;
@@ -59,7 +61,7 @@ export class Document implements DocStateHolder {
       logger.err(error)
     })
     this.anchorService = _context.anchorService;
-    this.conflictResolution = new ConflictResolution(_context, this.anchorService, this.stateValidation, dispatcher, _doctypeHandler);
+    this.conflictResolution = new ConflictResolution(this.anchorService, this.stateValidation, dispatcher, handler);
   }
 
   /**
