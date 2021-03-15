@@ -5,6 +5,7 @@ import { PinStore } from '../store/pin-store';
 import { HandlersMap } from '../handlers-map';
 import { RunningState } from './running-state';
 import { StateValidation } from './state-validation';
+import { ContextfulHandler } from './contextful-handler';
 
 export class DocumentFactory {
   constructor(
@@ -16,7 +17,7 @@ export class DocumentFactory {
   ) {}
 
   async build(initialState: DocState) {
-    const handler = this.handlers.get(initialState.doctype);
+    const handler = new ContextfulHandler(this.context, this.handlers.get(initialState.doctype));
     const state$ = new RunningState(initialState);
     const document = new Document(state$, this.dispatcher, this.pinStore, this.context, handler, false, this.stateValidation);
     await this.stateValidation.validate(document.state, document.content);

@@ -9,6 +9,7 @@ import { createCeramic } from './create-ceramic';
 import Ceramic from '../ceramic';
 import { anchorUpdate } from '../state-management/__tests__/anchor-update';
 import { TileDoctype } from '@ceramicnetwork/doctype-tile';
+import { ContextfulHandler } from '../state-management/contextful-handler';
 
 const FAKE_CID = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu');
 const DOC_ID = new DocID('tile', FAKE_CID);
@@ -51,7 +52,8 @@ test('constructor', async () => {
   const dispatcher = ceramic.dispatcher;
   const pinStore = ceramic.repository.pinStore;
   const context = ceramic.context;
-  const doc = new Document(runningState, dispatcher, pinStore, context, new TileDoctypeHandler(), false, (ceramic as any).stateValidation);
+  const handler = new ContextfulHandler(context, new TileDoctypeHandler())
+  const doc = new Document(runningState, dispatcher, pinStore, context, handler, false, (ceramic as any).stateValidation);
 
   expect(doc.id).toEqual(DOC_ID);
   expect(doc.state.content).toEqual(INITIAL_CONTENT);
@@ -258,12 +260,13 @@ test('handles basic conflict', async () => {
   // create invalid change that happened after main change
 
   const initialState = await doc1.rewind(docId.atCommit(docId.cid)).then((doc) => doc.state);
+  const handler = new ContextfulHandler(ceramic.context, new TileDoctypeHandler())
   const doc2 = new Document(
     new RunningState(initialState),
     ceramic.dispatcher,
     ceramic.repository.pinStore,
     ceramic.context,
-    new TileDoctypeHandler(),
+    handler,
     false,
     (ceramic as any).stateValidation
   );

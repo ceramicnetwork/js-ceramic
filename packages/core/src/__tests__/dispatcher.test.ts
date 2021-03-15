@@ -12,6 +12,7 @@ import { LevelStateStore } from '../store/level-state-store';
 import { PinStore } from '../store/pin-store';
 import { RunningState } from '../state-management/running-state';
 import { FauxStateValidation, RealStateValidation } from '../state-management/state-validation';
+import { ContextfulHandler } from '../state-management/contextful-handler';
 
 const TOPIC = '/ceramic';
 const FAKE_CID = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu');
@@ -123,12 +124,16 @@ describe('Dispatcher', () => {
   it('handle message correctly', async () => {
     async function register(state: DocState) {
       const runningState = new RunningState(state);
-      const document = new Document(
+      // eslint-disable-next-line prefer-const
+      let document: Document
+      const context = { loggerProvider, api: ({ loadDocument: async () => document } as unknown) as CeramicApi }
+      const handler = new ContextfulHandler(context, fakeHandler)
+      document = new Document(
         runningState,
         dispatcher,
         null,
         { loggerProvider, api: ({ loadDocument: async () => document } as unknown) as CeramicApi },
-        fakeHandler,
+        handler,
         false,
         new FauxStateValidation(),
       );
