@@ -1,6 +1,6 @@
 import PQueue from 'p-queue';
 
-const noop = () => {
+export const noop = () => {
   // Do Nothing
 };
 

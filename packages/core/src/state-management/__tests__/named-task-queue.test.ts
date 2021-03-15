@@ -1,5 +1,5 @@
 import { NamedTaskQueue } from '../named-task-queue';
-import { TaskQueue } from '../../pubsub/task-queue';
+import { noop, TaskQueue } from '../../pubsub/task-queue';
 
 describe('run', () => {
   test('sequential tasks', async () => {
@@ -7,7 +7,7 @@ describe('run', () => {
     const N = 10;
     const results = [];
     const lanes = new Map<string, TaskQueue>();
-    const queue = new NamedTaskQueue(lanes);
+    const queue = new NamedTaskQueue(noop, lanes);
     const times = Array.from({ length: N }).map((_, index) => index);
     await Promise.all(
       times.map((i) => {
@@ -25,7 +25,7 @@ describe('run', () => {
     const names = ['foo', 'blah'];
     const results: Record<string, number[]> = {};
     const lanes = new Map<string, TaskQueue>();
-    const queue = new NamedTaskQueue(lanes);
+    const queue = new NamedTaskQueue(noop, lanes);
     const times = Array.from({ length: N }).map((_, index) => index);
 
     const forName = (name: string) =>
@@ -56,7 +56,7 @@ describe('add', () => {
     const N = 10;
     const results = [];
     const lanes = new Map<string, TaskQueue>();
-    const queue = new NamedTaskQueue(lanes);
+    const queue = new NamedTaskQueue(noop, lanes);
     const times = Array.from({ length: N }).map((_, index) => index);
     times.forEach((i) => {
       queue.add(name, async () => {
@@ -73,7 +73,7 @@ describe('add', () => {
     const names = ['foo', 'blah'];
     const results: Record<string, number[]> = {};
     const lanes = new Map<string, TaskQueue>();
-    const queue = new NamedTaskQueue(lanes);
+    const queue = new NamedTaskQueue(noop, lanes);
     const times = Array.from({ length: N }).map((_, index) => index);
 
     names.forEach((name) => {
@@ -114,4 +114,24 @@ test('truly parallel', async () => {
     const delta = Math.abs(when - now - timeout);
     expect(delta).toBeLessThan(timeout);
   });
+});
+
+test('onError', async () => {
+  const name = 'foo';
+  const N = 10;
+  const errors: any[] = [];
+  const lanes = new Map<string, TaskQueue>();
+  const queue = new NamedTaskQueue((error) => errors.push(error), lanes);
+  const times = Array.from({ length: N }).map((_, index) => index);
+  times.map((i) => {
+    queue.add(name, async () => {
+      throw new Error(`Happy #${i}`);
+    });
+  });
+  await lanes.get(name).onIdle();
+  times.map((i) => {
+    expect(errors[i]).toBeInstanceOf(Error);
+    expect(errors[i].message).toEqual(`Happy #${i}`);
+  });
+  expect(lanes.size).toEqual(0);
 });
