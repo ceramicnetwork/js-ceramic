@@ -15,7 +15,6 @@ import {
 } from '@ceramicnetwork/common';
 import DocID, { CommitID } from '@ceramicnetwork/docid';
 import { PinStore } from './store/pin-store';
-import { SubscriptionSet } from "./subscription-set";
 import { timeoutWith } from "rxjs/operators";
 import { Observable, of, Subscription } from 'rxjs'
 import { ConflictResolution } from './conflict-resolution';
@@ -34,7 +33,6 @@ export class Document implements DocStateHolder {
   readonly id: DocID
   private tasks: TaskQueue
   private _doctype: Doctype
-  private readonly subscriptionSet = new SubscriptionSet();
   private readonly conflictResolution: ConflictResolution;
   private readonly anchorService: AnchorService;
 
@@ -128,7 +126,7 @@ export class Document implements DocStateHolder {
     if (sync) {
       await this._wait(tip$)
     } else {
-      this.subscriptionSet.add(tip$.subscribe());
+      this.state$.add(tip$.subscribe())
     }
   }
 
@@ -221,7 +219,7 @@ export class Document implements DocStateHolder {
         }
       });
     })
-    this.subscriptionSet.add(subscription);
+    this.state$.add(subscription);
     return subscription;
   }
 
@@ -292,12 +290,8 @@ export class Document implements DocStateHolder {
    * Gracefully closes the document instance.
    */
   async close (): Promise<void> {
-    this.subscriptionSet.close();
     await this.tasks.onIdle();
-    if (!this.state$.closed) {
-      this.state$.complete();
-      this.state$.unsubscribe();
-    }
+    this.state$.complete()
   }
 
   /**
