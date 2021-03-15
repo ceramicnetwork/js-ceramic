@@ -20,6 +20,7 @@ import { Observable, of, Subscription } from 'rxjs'
 import { ConflictResolution } from './conflict-resolution';
 import { RunningState } from './state-management/running-state';
 import { TaskQueue } from './pubsub/task-queue';
+import { StateValidation } from './state-management/state-validation';
 
 // DocOpts defaults for document load operations
 export const DEFAULT_LOAD_DOCOPTS = {anchor: false, publish: false, sync: true}
@@ -42,7 +43,8 @@ export class Document implements DocStateHolder {
                private _validate: boolean,
                private _context: Context,
                private _doctypeHandler: DoctypeHandler<Doctype>,
-               private isReadOnly = false) {
+               private isReadOnly = false,
+               private readonly stateValidation: StateValidation) {
     const doctype = new _doctypeHandler.doctype(state$.value, _context)
     this._doctype = isReadOnly ? DoctypeUtils.makeReadOnly(doctype) : doctype
     this.state$.subscribe(state => {
@@ -58,7 +60,7 @@ export class Document implements DocStateHolder {
       logger.err(error)
     })
     this.anchorService = _context.anchorService;
-    this.conflictResolution = new ConflictResolution(_context, this.anchorService, dispatcher, _doctypeHandler, _validate);
+    this.conflictResolution = new ConflictResolution(_context, this.anchorService, this.stateValidation, dispatcher, _doctypeHandler, _validate);
   }
 
   /**
@@ -84,7 +86,7 @@ export class Document implements DocStateHolder {
   async rewind(commitId: CommitID): Promise<Document> {
     const resetState = await this.conflictResolution.rewind(this.state$.value, commitId)
     const state$ = new RunningState(resetState)
-    return new Document(state$, this.dispatcher, this.pinStore, this._validate, this._context, this._doctypeHandler, true)
+    return new Document(state$, this.dispatcher, this.pinStore, this._validate, this._context, this._doctypeHandler, true, this.stateValidation)
   }
 
   /**

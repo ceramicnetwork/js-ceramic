@@ -90,7 +90,7 @@ describe('Level data store', () => {
 
     await ceramic.close();
     await realIpfs.stop();
-  });
+  }, 10000);
 
   it('skips removing unpinned document', async () => {
     await expect(store.stateStore.load(docId)).resolves.toBeNull();
