@@ -18,7 +18,6 @@ import { Observable, of, Subscription } from 'rxjs'
 import { ConflictResolution } from './conflict-resolution';
 import { RunningState } from './state-management/running-state';
 import { TaskQueue } from './pubsub/task-queue';
-import { StateValidation } from './state-management/state-validation';
 import { ContextfulHandler } from './state-management/contextful-handler';
 
 // DocOpts defaults for document load operations
@@ -50,7 +49,6 @@ export class Document implements DocStateHolder {
     })
 
     this.id = state$.id
-    // this.conflictResolution = new ConflictResolution(this.anchorService, this.stateValidation, dispatcher, handler);
   }
 
   /**
