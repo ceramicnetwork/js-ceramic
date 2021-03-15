@@ -209,6 +209,7 @@ export async function fetchLog(
 export class ConflictResolution {
   constructor(
     private readonly context: Context,
+    private readonly anchorService: AnchorService,
     private readonly dispatcher: Dispatcher,
     private readonly handler: DoctypeHandler<Doctype>,
     private readonly isValidationEnabled: boolean,
@@ -232,7 +233,7 @@ export class ConflictResolution {
 
       if (payload.proof) {
         // it's an anchor commit
-        await verifyAnchorCommit(this.dispatcher, this.context.anchorService, commit);
+        await verifyAnchorCommit(this.dispatcher, this.anchorService, commit);
         state = await this.handler.applyCommit(commit, cid, this.context, state);
       } else {
         // it's a signed commit
