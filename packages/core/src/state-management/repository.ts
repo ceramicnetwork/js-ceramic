@@ -124,14 +124,6 @@ export class Repository {
   }
 
   /**
-   * Removes the document from the cache
-   * @param docId
-   */
-  async delete(docId: DocID): Promise<void> {
-    await this.#map.delete(docId.toString());
-  }
-
-  /**
    * List pinned documents as array of DocID strings.
    * If `docId` is passed, indicate if it is pinned.
    */
