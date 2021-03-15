@@ -4,16 +4,15 @@ import {
   AnchorProof,
   AnchorService,
   AnchorStatus,
-  Context,
   DocState,
   Doctype,
-  DoctypeHandler,
   DoctypeUtils,
 } from '@ceramicnetwork/common';
 import { Dispatcher } from './dispatcher';
 import cloneDeep from 'lodash.clonedeep';
 import { CommitID } from '@ceramicnetwork/docid';
 import { StateValidation } from './state-management/state-validation';
+import { ContextfulHandler } from './state-management/contextful-handler';
 
 /**
  * Verifies anchor commit structure
@@ -208,11 +207,10 @@ export async function fetchLog(
 
 export class ConflictResolution {
   constructor(
-    private readonly context: Context,
     private readonly anchorService: AnchorService,
     private readonly stateValidation: StateValidation,
     private readonly dispatcher: Dispatcher,
-    private readonly handler: DoctypeHandler<Doctype>,
+    private readonly handler: ContextfulHandler<Doctype>,
   ) {}
 
   /**
@@ -234,10 +232,10 @@ export class ConflictResolution {
       if (payload.proof) {
         // it's an anchor commit
         await verifyAnchorCommit(this.dispatcher, this.anchorService, commit);
-        state = await this.handler.applyCommit(commit, cid, this.context, state);
+        state = await this.handler.applyCommit(commit, cid, state);
       } else {
         // it's a signed commit
-        const tmpState = await this.handler.applyCommit(commit, cid, this.context, state);
+        const tmpState = await this.handler.applyCommit(commit, cid, state);
         const isGenesis = !payload.prev;
         const effectiveState = isGenesis ? tmpState : tmpState.next;
         await this.stateValidation.validate(effectiveState, effectiveState.content);
