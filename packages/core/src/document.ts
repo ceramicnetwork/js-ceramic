@@ -7,7 +7,6 @@ import {
   Doctype,
   DocOpts,
   DoctypeUtils,
-  DocStateHolder,
   UnreachableCaseError,
   AnchorService,
 } from '@ceramicnetwork/common';
@@ -16,7 +15,7 @@ import { PinStore } from './store/pin-store';
 import { timeoutWith } from "rxjs/operators";
 import { Observable, of, Subscription } from 'rxjs'
 import { ConflictResolution } from './conflict-resolution';
-import { RunningState } from './state-management/running-state';
+import { RunningState, RunningStateLike } from './state-management/running-state';
 import { TaskQueue } from './pubsub/task-queue';
 import { ContextfulHandler } from './state-management/contextful-handler';
 
@@ -28,7 +27,7 @@ export const DEFAULT_WRITE_DOCOPTS = {anchor: true, publish: true, sync: false}
 /**
  * Document handles the update logic of the Doctype instance
  */
-export class Document implements DocStateHolder {
+export class Document extends Observable<DocState> implements RunningStateLike {
   readonly id: DocID
   private _doctype: Doctype
 
@@ -41,6 +40,9 @@ export class Document implements DocStateHolder {
                private readonly conflictResolution: ConflictResolution,
                private readonly isReadOnly = false,
                ) {
+    super(subscriber => {
+      this.state$.subscribe(subscriber)
+    })
     const doctype = handler.doctype(state$.value);
     this._doctype = isReadOnly ? DoctypeUtils.makeReadOnly(doctype) : doctype
     this.state$.subscribe(state => {
@@ -49,6 +51,10 @@ export class Document implements DocStateHolder {
     })
 
     this.id = state$.id
+  }
+
+  get value() {
+    return this.state$.value
   }
 
   /**
