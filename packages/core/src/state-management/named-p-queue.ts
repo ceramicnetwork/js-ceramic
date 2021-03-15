@@ -54,4 +54,18 @@ export class NamedPQueue {
       return result;
     });
   }
+
+  /**
+   * Add task to the queue, fire-and-forget semantics.
+   *
+   * All the tasks added under the same name are executed sequentially.
+   * Tasks with different names are executed in parallel.
+   */
+  add(name: string, f: () => Promise<void>): void {
+    const queue = this.queue(name);
+    queue.add(async () => {
+      await f();
+      this.remove(name);
+    });
+  }
 }
