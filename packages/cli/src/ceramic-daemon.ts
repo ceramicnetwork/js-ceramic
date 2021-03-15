@@ -81,8 +81,11 @@ const makeCeramicConfig = function (opts: CreateOpts): CeramicConfig {
   }
 
   if (opts.anchorServiceUrl) {
-    ceramicConfig.ethereumRpcUrl = opts.ethereumRpcUrl
     ceramicConfig.anchorServiceUrl = opts.anchorServiceUrl
+  }
+
+  if (opts.ethereumRpcUrl) {
+    ceramicConfig.ethereumRpcUrl = opts.ethereumRpcUrl
   }
 
   if (opts.pubsubTopic) {
