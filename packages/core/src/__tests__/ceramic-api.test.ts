@@ -435,15 +435,18 @@ describe('Ceramic API', () => {
       })
 
       // test data for the atTime feature
+      const delay = () => new Promise(resolve => setTimeout(resolve, 1000))
       docFStates.push(docF.state)
-      docFTimestamps.push(Date.now())
+      docFTimestamps.push(Math.floor(Date.now() / 1000))
       await docF.change({ content: { ...docF.content, update: 'new stuff' }})
       await anchorDoc(ceramic, docF)
-      docFTimestamps.push(Date.now())
+      docFTimestamps.push(Math.floor(Date.now() / 1000))
+      await delay()
       docFStates.push(docF.state)
       await docF.change({ content: { ...docF.content, update: 'newer stuff' }})
       await anchorDoc(ceramic, docF)
-      docFTimestamps.push(Date.now())
+      docFTimestamps.push(Math.floor(Date.now() / 1000))
+      await delay()
       docFStates.push(docF.state)
     })
 

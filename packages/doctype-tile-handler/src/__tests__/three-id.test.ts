@@ -88,7 +88,7 @@ const RECORDS = {
     r2: {record: {proof: FAKE_CID_4}},
     proof: {
         blockNumber: 123456,
-        blockTimestamp: 29872349872,
+        blockTimestamp: 1615799679,
         chainId: 'fakechain:123',
     }
 }
