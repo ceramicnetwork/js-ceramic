@@ -59,13 +59,17 @@ describe('validation', () => {
     });
     await anchorUpdate(ceramic, schema);
     // Create invalid doc
-    const permissiveCeramic = await createCeramic(ipfs, { validateDocs: false });
+    const ipfs2 = await createIPFS();
+    const permissiveCeramic = await createCeramic(ipfs2, { validateDocs: false });
     const invalidDoc = await permissiveCeramic.createDocument('tile', {
       content: { stuff: 1 },
       metadata: { controllers, schema: schema.commitId.toString() },
     });
     // Load it: Expect failure
-    await expect(repository.load(invalidDoc.id)).rejects.toThrow("Validation Error: data['stuff'] should be string");
+    await expect(repository.load(invalidDoc.id, { sync: false })).rejects.toThrow(
+      "Validation Error: data['stuff'] should be string",
+    );
     await permissiveCeramic.close();
+    await ipfs2.stop();
   }, 20000);
 });

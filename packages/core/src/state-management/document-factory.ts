@@ -11,19 +11,15 @@ export class DocumentFactory {
     private readonly dispatcher: Dispatcher,
     private readonly pinStore: PinStore,
     private readonly context: Context,
-    private readonly validateDocs: boolean,
     private readonly handlers: HandlersMap,
     private readonly stateValidation: StateValidation,
   ) {}
 
   async build(initialState: DocState) {
-    const validate = this.validateDocs;
     const handler = this.handlers.get(initialState.doctype);
     const state$ = new RunningState(initialState);
-    const document = new Document(state$, this.dispatcher, this.pinStore, validate, this.context, handler, false, this.stateValidation);
-    if (validate) {
-      await this.stateValidation.validate(document.state, document.content);
-    }
+    const document = new Document(state$, this.dispatcher, this.pinStore, this.context, handler, false, this.stateValidation);
+    await this.stateValidation.validate(document.state, document.content);
     return document;
   }
 }

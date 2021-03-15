@@ -4,10 +4,23 @@ import Utils from '../utils';
 
 type LoadDocumentFunc = <T extends Doctype>(docId: CommitID) => Promise<T>;
 
+export interface StateValidation {
+  validate(state: DocState | DocNext, content: any): Promise<void>;
+}
+
+/**
+ * Pretend validating. Do nothing.
+ */
+export class FauxStateValidation implements StateValidation {
+  async validate(state: DocState | DocNext, content: any): Promise<void> {
+    return;
+  }
+}
+
 /**
  * Validate document state against its schema.
  */
-export class StateValidation {
+export class RealStateValidation implements StateValidation {
   constructor(private readonly loadDocument: LoadDocumentFunc) {}
 
   /**

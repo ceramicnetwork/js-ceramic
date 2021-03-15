@@ -11,7 +11,7 @@ import tmp from 'tmp-promise';
 import { LevelStateStore } from '../store/level-state-store';
 import { PinStore } from '../store/pin-store';
 import { RunningState } from '../state-management/running-state';
-import { StateValidation } from '../state-management/state-validation';
+import { FauxStateValidation, RealStateValidation } from '../state-management/state-validation';
 
 const TOPIC = '/ceramic';
 const FAKE_CID = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu');
@@ -127,11 +127,10 @@ describe('Dispatcher', () => {
         runningState,
         dispatcher,
         null,
-        false,
         { loggerProvider, api: ({ loadDocument: async () => document } as unknown) as CeramicApi },
         fakeHandler,
         false,
-        ({ validate: () => Promise.resolve() } as unknown) as StateValidation,
+        new FauxStateValidation(),
       );
       dispatcher.messageBus.queryNetwork(document.id).subscribe();
       await repository.add(document);
