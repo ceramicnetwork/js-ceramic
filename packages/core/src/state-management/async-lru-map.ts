@@ -1,4 +1,4 @@
-import { NamedPQueue } from './named-p-queue';
+import { NamedTaskQueue } from './named-task-queue';
 
 const NEWER = Symbol('newer');
 const OLDER = Symbol('older');
@@ -22,12 +22,12 @@ export class AsyncLruMap<A> {
   _keymap: Map<string, Entry<A>> = new Map();
   newest?: Entry<A>;
   oldest?: Entry<A>;
-  sync: NamedPQueue;
+  sync: NamedTaskQueue;
 
   constructor(
     public readonly limit: number,
     private readonly onEvicted: (entry: Entry<A>) => Promise<void> = noop,
-    sync: NamedPQueue = new NamedPQueue(),
+    sync: NamedTaskQueue = new NamedTaskQueue(),
   ) {
     this.size = 0;
     this.sync = sync;

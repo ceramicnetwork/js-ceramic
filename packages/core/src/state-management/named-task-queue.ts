@@ -4,7 +4,7 @@ import { TaskQueue } from '../pubsub/task-queue';
  * Set of named PQueues.
  * When a task is done, it checks for pending tasks. No pending tasks means PQueue for the name is cleared.
  */
-export class NamedPQueue {
+export class NamedTaskQueue {
   #lanes: Map<string, TaskQueue>;
 
   constructor(lanes: Map<string, TaskQueue> = new Map()) {

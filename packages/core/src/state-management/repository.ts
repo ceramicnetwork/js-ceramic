@@ -5,10 +5,10 @@ import { DocumentFactory } from './document-factory';
 import { DocOpts, DocState, DocStateHolder } from '@ceramicnetwork/common';
 import { PinStore } from '../store/pin-store';
 import { NetworkLoad } from './network-load';
-import { NamedPQueue } from './named-p-queue';
+import { NamedTaskQueue } from './named-task-queue';
 
 export class Repository {
-  readonly loadingQ: NamedPQueue = new NamedPQueue();
+  readonly loadingQ: NamedTaskQueue = new NamedTaskQueue();
   readonly #map: AsyncLruMap<Document>;
   #documentFactory?: DocumentFactory;
   pinStore?: PinStore;
