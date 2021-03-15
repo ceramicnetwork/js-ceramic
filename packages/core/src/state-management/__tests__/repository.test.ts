@@ -1,4 +1,4 @@
-import { IpfsApi } from '@ceramicnetwork/common';
+import { DoctypeUtils, IpfsApi } from '@ceramicnetwork/common';
 import Ceramic from '../../ceramic';
 import { createIPFS } from '../../__tests__/ipfs-util';
 import { Repository } from '../repository';
@@ -43,7 +43,7 @@ describe('load', () => {
     const fromStateStoreSpy = jest.spyOn(repository, 'fromStateStore');
     const fromNetwork = jest.spyOn(repository, 'fromNetwork');
     const doc2 = await repository.load(doc1.id, { sync: false });
-    expect(doc1.state).toEqual(doc2.state);
+    expect(DoctypeUtils.statesEqual(doc1.state, doc2.state)).toBeTruthy();
     expect(fromMemorySpy).toBeCalledTimes(1);
     expect(fromStateStoreSpy).toBeCalledTimes(0);
     expect(fromNetwork).toBeCalledTimes(0);
