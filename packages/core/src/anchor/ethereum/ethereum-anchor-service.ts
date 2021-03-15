@@ -14,6 +14,7 @@ import {
 import DocID from "@ceramicnetwork/docid";
 import { Observable, interval, from, concat, of } from "rxjs";
 import { concatMap, catchError } from "rxjs/operators";
+import {Block, TransactionResponse } from "@ethersproject/providers"
 
 /**
  * CID-docId pair
@@ -207,21 +208,48 @@ export default class EthereumAnchorService implements AnchorService {
   }
 
   /**
+   * Given a chainId and a transaction hash, loads information from ethereum about the transaction
+   * and block the transaction was included in.
+   * Testing has shown that when no ethereumRpcEndpoint has been provided and we are therefore using
+   * the ethersproject's defaultProvider, we sometimes get back null for the transaction or block,
+   * so this function also includes some extra error handling and throws exceptions with a warning
+   * to use an actual ethereum rpc endpoint if the above behavior is seen.
+   * @param chainId
+   * @param txHash
+   * @private
+   */
+  private async _getTransactionAndBlockInfo(chainId: string, txHash: string): Promise<[TransactionResponse, Block]> {
+    // determine network based on a chain ID
+    const provider: providers.BaseProvider = this._getEthProvider(chainId);
+    const transaction = await provider.getTransaction(txHash);
+
+    if (!transaction) {
+      if (!this.ethereumRpcEndpoint) {
+        throw new Error(`Failed to load transaction data for transaction ${txHash}. Try providing an ethereum rpc endpoint`)
+      } else {
+        throw new Error(`Failed to load transaction data for transaction ${txHash}`)
+      }
+    }
+    const block = await provider.getBlock(transaction.blockHash);
+    if (!block) {
+      if (!this.ethereumRpcEndpoint) {
+        throw new Error(`Failed to load transaction data for block with block number ${transaction.blockNumber} and block hash ${transaction.blockHash}. Try providing an ethereum rpc endpoint`)
+      } else {
+        throw new Error(`Failed to load transaction data for block with block number ${transaction.blockNumber} and block hash ${transaction.blockHash}`)
+      }
+    }
+    return [transaction, block]
+  }
+
+  /**
    * Validate anchor proof on the chain
    * @param anchorProof - Anchor proof instance
    */
   async validateChainInclusion(anchorProof: AnchorProof): Promise<void> {
     const decoded = decode(anchorProof.txHash.multihash);
-    const txHash = uint8arrays.toString(decoded.digest, "base16");
+    const txHash = "0x" + uint8arrays.toString(decoded.digest, "base16");
 
-    // determine network based on a chain ID
-    const provider: providers.BaseProvider = this._getEthProvider(
-      anchorProof.chainId
-    );
-
-    const transaction = await provider.getTransaction("0x" + txHash);
-    const block = await provider.getBlock(transaction.blockHash);
-
+    const [transaction, block] = await this._getTransactionAndBlockInfo(anchorProof.chainId, txHash)
     const txValueHexNumber = parseInt(transaction.data, 16);
     const rootValueHexNumber = parseInt(
       "0x" + anchorProof.root.toBaseEncodedString("base16"),
