@@ -8,7 +8,7 @@ import { NetworkLoad } from './network-load';
 import { NamedPQueue } from './named-p-queue';
 
 export class Repository {
-  readonly sync: NamedPQueue = new NamedPQueue();
+  readonly loadingQ: NamedPQueue = new NamedPQueue();
   readonly #map: AsyncLruMap<Document>;
   #documentFactory?: DocumentFactory;
   pinStore?: PinStore;
@@ -63,7 +63,7 @@ export class Repository {
   * Starts by checking if the document state is present in the in-memory cache, if not then then checks the state store, and finally loads the document from pubsub.
   */
   async load(docId: DocID, opts: DocOpts = {}): Promise<Document> {
-    return this.sync.run(docId.toString(), async () => {
+    return this.loadingQ.run(docId.toString(), async () => {
       const fromMemory = await this.fromMemory(docId);
       if (fromMemory) return fromMemory;
       const fromStateStore = await this.fromStateStore(docId);
@@ -87,7 +87,7 @@ export class Repository {
    * Adds the document to cache.
    */
   async get(docId: DocID): Promise<Document | undefined> {
-    return this.sync.run(docId.toString(), async () => {
+    return this.loadingQ.run(docId.toString(), async () => {
       const fromMemory = await this.fromMemory(docId);
       if (fromMemory) return fromMemory;
       return this.fromStateStore(docId);
