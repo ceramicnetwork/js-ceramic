@@ -1,4 +1,4 @@
-import { NamedPQueue } from '../named-p-queue';
+import { NamedTaskQueue } from '../named-task-queue';
 import { TaskQueue } from '../../pubsub/task-queue';
 
 describe('run', () => {
@@ -7,7 +7,7 @@ describe('run', () => {
     const N = 10;
     const results = [];
     const lanes = new Map<string, TaskQueue>();
-    const queue = new NamedPQueue(lanes);
+    const queue = new NamedTaskQueue(lanes);
     const times = Array.from({ length: N }).map((_, index) => index);
     await Promise.all(
       times.map((i) => {
@@ -25,7 +25,7 @@ describe('run', () => {
     const names = ['foo', 'blah'];
     const results: Record<string, number[]> = {};
     const lanes = new Map<string, TaskQueue>();
-    const queue = new NamedPQueue(lanes);
+    const queue = new NamedTaskQueue(lanes);
     const times = Array.from({ length: N }).map((_, index) => index);
 
     const forName = (name: string) =>
@@ -56,7 +56,7 @@ describe('add', () => {
     const N = 10;
     const results = [];
     const lanes = new Map<string, TaskQueue>();
-    const queue = new NamedPQueue(lanes);
+    const queue = new NamedTaskQueue(lanes);
     const times = Array.from({ length: N }).map((_, index) => index);
     times.forEach((i) => {
       queue.add(name, async () => {
@@ -73,7 +73,7 @@ describe('add', () => {
     const names = ['foo', 'blah'];
     const results: Record<string, number[]> = {};
     const lanes = new Map<string, TaskQueue>();
-    const queue = new NamedPQueue(lanes);
+    const queue = new NamedTaskQueue(lanes);
     const times = Array.from({ length: N }).map((_, index) => index);
 
     names.forEach((name) => {
@@ -98,7 +98,7 @@ describe('add', () => {
 });
 
 test('truly parallel', async () => {
-  const queue = new NamedPQueue();
+  const queue = new NamedTaskQueue();
   const timeout = 200;
   const fire = (ms: number) => {
     return new Promise<number>((resolve) => {
