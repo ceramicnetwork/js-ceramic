@@ -144,14 +144,10 @@ export class Repository {
   async close(): Promise<void> {
     await this.loadingQ.close();
     await this.executionQ.close();
-    const documents = [];
-    for (const [, document] of this.#map) {
-      documents.push(document);
-    }
     await Promise.all(
-      documents.map(async (d) => {
-        await this.#map.delete(d.id);
-        d.close();
+      Array.from(this.#map).map(async ([id, document]) => {
+        await this.#map.delete(id);
+        document.close();
       }),
     );
     await this.pinStore.close();
