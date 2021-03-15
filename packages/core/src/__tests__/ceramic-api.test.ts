@@ -6,33 +6,11 @@ import DocID from '@ceramicnetwork/docid'
 import * as u8a from 'uint8arrays'
 import cloneDeep from 'lodash.clonedeep'
 import { createIPFS } from './ipfs-util';
+import { anchorUpdate } from '../state-management/__tests__/anchor-update';
 
 jest.mock('../store/level-state-store')
 
 const seed = u8a.fromString('6e34b2e1a9624113d81ece8a8a22e6e97f0e145c25c1d4d2d0e62753b4060c83', 'base16')
-
-const registerChangeListener = function (doc: any): Promise<void> {
-  return new Promise(resolve => {
-    doc.on('change', () => {
-      resolve()
-    })
-  })
-}
-
-/**
- * Registers a listener for change notifications on a document, instructs the anchor service to
- * perform an anchor, then waits for the change listener to resolve, indicating that the document
- * got anchored.
- * @param ceramic
- * @param doc
- */
-const anchorDoc = async (ceramic: Ceramic, doc: any): Promise<void> => {
-  const changeHandle = registerChangeListener(doc)
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  await ceramic.context.anchorService.anchor()
-  await changeHandle
-}
 
 /**
  * Generates string of particular size in bytes
@@ -102,7 +80,7 @@ describe('Ceramic API', () => {
       })
 
       // wait for anchor (new commit)
-      await anchorDoc(ceramic, docOg)
+      await anchorUpdate(ceramic, docOg)
 
       expect(docOg.state.log.length).toEqual(2)
       expect(docOg.content).toEqual({ test: 321 })
@@ -113,7 +91,7 @@ describe('Ceramic API', () => {
       await docOg.change({ content: { test: 'abcde' } })
 
       // wait for anchor (new commit)
-      await anchorDoc(ceramic, docOg)
+      await anchorUpdate(ceramic, docOg)
 
       expect(docOg.state.log.length).toEqual(4)
       expect(docOg.content).toEqual({ test: 'abcde' })
@@ -321,7 +299,7 @@ describe('Ceramic API', () => {
         content: { a: 1 },
       }
       const doc = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, tileDocParams)
-      await anchorDoc(ceramic, doc)
+      await anchorUpdate(ceramic, doc)
 
       // Create schema that enforces that the content value is a string, which would reject
       // the document created above.
@@ -330,7 +308,7 @@ describe('Ceramic API', () => {
         metadata: { controllers: [controller] }
       })
       // wait for anchor
-      await anchorDoc(ceramic, schemaDoc)
+      await anchorUpdate(ceramic, schemaDoc)
       expect(schemaDoc.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
       // Update the schema to expect a number, so now the original doc should conform to the new
@@ -339,7 +317,7 @@ describe('Ceramic API', () => {
       updatedSchema.additionalProperties.type = "number"
       await schemaDoc.change({content: updatedSchema})
       // wait for anchor
-      await anchorDoc(ceramic, schemaDoc)
+      await anchorUpdate(ceramic, schemaDoc)
       expect(schemaDoc.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
       // Test that we can assign the updated schema to the document without error.
@@ -348,7 +326,7 @@ describe('Ceramic API', () => {
           controllers: [controller], schema: schemaDoc.commitId.toString()
         }
       })
-      await anchorDoc(ceramic, doc)
+      await anchorUpdate(ceramic, doc)
       expect(doc.content).toEqual({ a: 1 })
 
       // Test that we can reload the document without issue
@@ -438,11 +416,11 @@ describe('Ceramic API', () => {
       docFStates.push(docF.state)
       docFTimestamps.push(Date.now())
       await docF.change({ content: { ...docF.content, update: 'new stuff' }})
-      await anchorDoc(ceramic, docF)
+      await anchorUpdate(ceramic, docF)
       docFTimestamps.push(Date.now())
       docFStates.push(docF.state)
       await docF.change({ content: { ...docF.content, update: 'newer stuff' }})
-      await anchorDoc(ceramic, docF)
+      await anchorUpdate(ceramic, docF)
       docFTimestamps.push(Date.now())
       docFStates.push(docF.state)
     })
