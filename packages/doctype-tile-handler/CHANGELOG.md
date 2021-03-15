@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.14.0-rc.1](/compare/@ceramicnetwork/doctype-tile-handler@0.14.0-rc.0...@ceramicnetwork/doctype-tile-handler@0.14.0-rc.1) (2021-03-15)
+
+
+### Bug Fixes
+
+* **core:** Use seconds for unix timstamp for inmemory anchors (#1131) 3d4a98a, closes #1131
+
+
+### Features
+
+* **core:** enable the use of timestamps (#1117) f417e27, closes #1117
+
+
+
+
+
 # [0.14.0-rc.0](/compare/@ceramicnetwork/doctype-tile-handler@0.13.4-rc.9...@ceramicnetwork/doctype-tile-handler@0.14.0-rc.0) (2021-03-12)
 
 

@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.21.0-rc.11](/compare/@ceramicnetwork/cli@0.21.0-rc.10...@ceramicnetwork/cli@0.21.0-rc.11) (2021-03-15)
+
+
+### Bug Fixes
+
+* **cli:** Allow specifying ethereumRpcUrl without anchorServiceUrl (#1124) ee59e1b, closes #1124
+
+
+
+
+
 # [0.21.0-rc.10](/compare/@ceramicnetwork/cli@0.21.0-rc.9...@ceramicnetwork/cli@0.21.0-rc.10) (2021-03-12)
 
 

@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.16.0-rc.11](/compare/@ceramicnetwork/common@0.16.0-rc.10...@ceramicnetwork/common@0.16.0-rc.11) (2021-03-15)
+
+
+### Features
+
+* **core:** enable the use of timestamps (#1117) f417e27, closes #1117
+
+
+
+
+
 # [0.16.0-rc.10](/compare/@ceramicnetwork/common@0.16.0-rc.9...@ceramicnetwork/common@0.16.0-rc.10) (2021-03-12)
 
 

@@ -3,6 +3,23 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.20.0-rc.11](/compare/@ceramicnetwork/core@0.20.0-rc.10...@ceramicnetwork/core@0.20.0-rc.11) (2021-03-15)
+
+
+### Bug Fixes
+
+* **core:** Use seconds for unix timstamp for inmemory anchors (#1131) 3d4a98a, closes #1131
+
+
+### Features
+
+* Introduce Running State (#1118) 58bfe80, closes #1118
+* **core:** enable the use of timestamps (#1117) f417e27, closes #1117
+
+
+
+
+
 # [0.20.0-rc.10](/compare/@ceramicnetwork/core@0.20.0-rc.9...@ceramicnetwork/core@0.20.0-rc.10) (2021-03-12)
 
 
