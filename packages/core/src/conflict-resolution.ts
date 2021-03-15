@@ -10,10 +10,10 @@ import {
   DoctypeHandler,
   DoctypeUtils,
 } from '@ceramicnetwork/common';
-import { validateState } from './validate-state';
 import { Dispatcher } from './dispatcher';
 import cloneDeep from 'lodash.clonedeep';
 import { CommitID } from '@ceramicnetwork/docid';
+import { StateValidation } from './state-management/state-validation';
 
 /**
  * Verifies anchor commit structure
@@ -210,10 +210,12 @@ export class ConflictResolution {
   constructor(
     private readonly context: Context,
     private readonly anchorService: AnchorService,
+    private readonly stateValidation: StateValidation,
     private readonly dispatcher: Dispatcher,
     private readonly handler: DoctypeHandler<Doctype>,
     private readonly isValidationEnabled: boolean,
-  ) {}
+  ) {
+  }
 
   /**
    * Applies the log to the document and updates the state.
@@ -241,11 +243,7 @@ export class ConflictResolution {
         const isGenesis = !payload.prev;
         const effectiveState = isGenesis ? tmpState : tmpState.next;
         if (this.isValidationEnabled) {
-          await validateState(
-            effectiveState,
-            effectiveState.content,
-            this.context.api.loadDocument.bind(this.context.api),
-          );
+          await this.stateValidation.validate(effectiveState, effectiveState.content);
         }
         state = tmpState; // if validation is successful
       }

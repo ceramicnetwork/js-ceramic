@@ -41,6 +41,7 @@ import { Repository } from './state-management/repository';
 import { HandlersMap } from './handlers-map';
 import { DocumentFactory } from './state-management/document-factory';
 import { NetworkLoad } from './state-management/network-load';
+import { StateValidation } from './state-management/state-validation';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const packageJson = require('../package.json')
@@ -176,6 +177,7 @@ class Ceramic implements CeramicApi {
   private readonly _networkOptions: CeramicNetworkOptions
   private readonly _supportedChains: Array<string>
   private readonly _validateDocs: boolean
+  private readonly stateValidation: StateValidation
 
   constructor (modules: CeramicModules, params: CeramicParameters) {
     this._ipfsTopology = modules.ipfsTopology
@@ -207,7 +209,8 @@ class Ceramic implements CeramicApi {
 
     this._doctypeHandlers = new HandlersMap(this._logger)
 
-    const documentFactory = new DocumentFactory(this.dispatcher, pinStore, this.context, this._validateDocs, this._doctypeHandlers)
+    this.stateValidation = new StateValidation(this.loadDocument.bind(this));
+    const documentFactory = new DocumentFactory(this.dispatcher, pinStore, this.context, this._validateDocs, this._doctypeHandlers, this.stateValidation)
     const networkLoad = new NetworkLoad(this.dispatcher, this._doctypeHandlers, this.context, this._logger, documentFactory)
     this.repository.setPinStore(pinStore)
     this.repository.setDocumentFactory(documentFactory);
