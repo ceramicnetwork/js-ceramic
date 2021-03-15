@@ -57,7 +57,7 @@ export class RunningState extends BehaviorSubject<DocState> implements RunningSt
   /**
    * Mark the RunningState complete, closed, and unsubscribe from related subscriptions in subscriptionSet.
    */
-  complete() {
+  close() {
     this.subscriptionSet.unsubscribe();
     super.complete();
     this.unsubscribe();
