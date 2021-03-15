@@ -1,15 +1,13 @@
-import PQueue from 'p-queue';
-import { Mutex } from 'await-semaphore';
+import { TaskQueue } from '../pubsub/task-queue';
 
 /**
  * Set of named PQueues.
  * When a task is done, it checks for pending tasks. No pending tasks means PQueue for the name is cleared.
  */
 export class NamedPQueue {
-  #lanes: Map<string, PQueue>;
-  #operations: Mutex = new Mutex();
+  #lanes: Map<string, TaskQueue>;
 
-  constructor(lanes: Map<string, PQueue> = new Map()) {
+  constructor(lanes: Map<string, TaskQueue> = new Map()) {
     this.#lanes = lanes;
   }
 
@@ -18,12 +16,12 @@ export class NamedPQueue {
    *
    * There can only be one `queue` or `remove` operation running at a time.
    */
-  private queue(name: string): PQueue {
+  private queue(name: string): TaskQueue {
     const found = this.#lanes.get(name);
     if (found) {
       return found;
     } else {
-      const queue = new PQueue({ concurrency: 1 });
+      const queue = new TaskQueue();
       this.#lanes.set(name, queue);
       return queue;
     }
@@ -34,31 +32,26 @@ export class NamedPQueue {
    *
    * There can only be one `queue` or `remove` operation running at a time.
    */
-  private remove(name: string): Promise<void> {
-    return this.#operations.use(async () => {
-      const found = this.#lanes.get(name);
-      if (found && found.size === 0) {
-        this.#lanes.delete(name);
-      }
-    });
+  private remove(name: string): void {
+    const found = this.#lanes.get(name);
+    if (found && found.size === 0) {
+      this.#lanes.delete(name);
+    }
   }
 
   /**
-   * Add task to the queue.
+   * Add task to the queue, wait for the execution.
    *
    * All the tasks added under the same name are executed sequentially.
    * Tasks with different names are executed in parallel.
    *
    * Returns result of the task execution.
    */
-  async run<A>(name: string, f: () => Promise<A>): Promise<A> {
-    const release = await this.#operations.acquire();
+  run<A>(name: string, f: () => Promise<A>): Promise<A> {
     const queue = this.queue(name);
-    const task = queue.add(f).then(async (result) => {
+    return queue.run(f).then(async (result) => {
       await this.remove(name);
       return result;
     });
-    release();
-    return task;
   }
 }
