@@ -1,52 +1,54 @@
 import { NamedPQueue } from '../named-p-queue';
 import { TaskQueue } from '../../pubsub/task-queue';
 
-test('sequential tasks', async () => {
-  const name = 'foo';
-  const N = 10;
-  const results = [];
-  const lanes = new Map<string, TaskQueue>();
-  const queue = new NamedPQueue(lanes);
-  const times = Array.from({ length: N }).map((_, index) => index);
-  await Promise.all(
-    times.map((i) => {
-      return queue.run(name, async () => {
-        results.push(i);
-      });
-    }),
-  );
-  expect(results).toEqual(times);
-  expect(lanes.size).toEqual(0);
-});
-
-test('parallel queues', async () => {
-  const N = 10;
-  const names = ['foo', 'blah'];
-  const results: Record<string, number[]> = {};
-  const lanes = new Map<string, TaskQueue>();
-  const queue = new NamedPQueue(lanes);
-  const times = Array.from({ length: N }).map((_, index) => index);
-
-  const forName = (name: string) =>
-    Promise.all(
-      times.map((index) => {
+describe('run', () => {
+  test('sequential tasks', async () => {
+    const name = 'foo';
+    const N = 10;
+    const results = [];
+    const lanes = new Map<string, TaskQueue>();
+    const queue = new NamedPQueue(lanes);
+    const times = Array.from({ length: N }).map((_, index) => index);
+    await Promise.all(
+      times.map((i) => {
         return queue.run(name, async () => {
-          const found = results[name];
-          if (found) {
-            found.push(index);
-          } else {
-            results[name] = [index];
-          }
+          results.push(i);
         });
       }),
     );
-
-  await Promise.all(names.map((name) => forName(name)));
-  names.forEach((name) => {
-    expect(results[name]).toEqual(times);
+    expect(results).toEqual(times);
+    expect(lanes.size).toEqual(0);
   });
-  expect(lanes.size).toEqual(0);
-});
+
+  test('parallel queues', async () => {
+    const N = 10;
+    const names = ['foo', 'blah'];
+    const results: Record<string, number[]> = {};
+    const lanes = new Map<string, TaskQueue>();
+    const queue = new NamedPQueue(lanes);
+    const times = Array.from({ length: N }).map((_, index) => index);
+
+    const forName = (name: string) =>
+      Promise.all(
+        times.map((index) => {
+          return queue.run(name, async () => {
+            const found = results[name];
+            if (found) {
+              found.push(index);
+            } else {
+              results[name] = [index];
+            }
+          });
+        }),
+      );
+
+    await Promise.all(names.map((name) => forName(name)));
+    names.forEach((name) => {
+      expect(results[name]).toEqual(times);
+    });
+    expect(lanes.size).toEqual(0);
+  });
+})
 
 test('truly parallel', async () => {
   const queue = new NamedPQueue();
