@@ -16,7 +16,7 @@ import {
 import DocID, { CommitID } from '@ceramicnetwork/docid';
 import { PinStore } from './store/pin-store';
 import { SubscriptionSet } from "./subscription-set";
-import { distinctUntilChanged, timeoutWith } from "rxjs/operators";
+import { timeoutWith } from "rxjs/operators";
 import { Observable, of, Subscription } from 'rxjs'
 import { ConflictResolution } from './conflict-resolution';
 import { RunningState } from './state-management/running-state';
@@ -47,7 +47,7 @@ export class Document implements DocStateHolder {
                private isReadOnly = false) {
     const doctype = new _doctypeHandler.doctype(state$.value, _context)
     this._doctype = isReadOnly ? DoctypeUtils.makeReadOnly(doctype) : doctype
-    this.state$.pipe(distinctUntilChanged()).subscribe(state => {
+    this.state$.subscribe(state => {
       this._doctype.state = state;
       this._doctype.emit('change');
     })
