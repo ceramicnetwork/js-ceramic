@@ -1,10 +1,12 @@
 import { NamedTaskQueue } from '../named-task-queue';
 import { noop, TaskQueue } from '../../pubsub/task-queue';
 
+const N = 10;
+const name = 'foo';
+const names = ['foo', 'blah'];
+
 describe('run', () => {
   test('sequential tasks', async () => {
-    const name = 'foo';
-    const N = 10;
     const results = [];
     const lanes = new Map<string, TaskQueue>();
     const queue = new NamedTaskQueue(noop, lanes);
@@ -21,8 +23,6 @@ describe('run', () => {
   });
 
   test('parallel queues', async () => {
-    const N = 10;
-    const names = ['foo', 'blah'];
     const results: Record<string, number[]> = {};
     const lanes = new Map<string, TaskQueue>();
     const queue = new NamedTaskQueue(noop, lanes);
@@ -52,8 +52,6 @@ describe('run', () => {
 
 describe('add', () => {
   test('sequential tasks', async () => {
-    const name = 'foo';
-    const N = 10;
     const results = [];
     const lanes = new Map<string, TaskQueue>();
     const queue = new NamedTaskQueue(noop, lanes);
@@ -69,8 +67,6 @@ describe('add', () => {
   });
 
   test('parallel queues', async () => {
-    const N = 10;
-    const names = ['foo', 'blah'];
     const results: Record<string, number[]> = {};
     const lanes = new Map<string, TaskQueue>();
     const queue = new NamedTaskQueue(noop, lanes);
@@ -117,8 +113,6 @@ test('truly parallel', async () => {
 });
 
 test('onError', async () => {
-  const name = 'foo';
-  const N = 10;
   const errors: any[] = [];
   const lanes = new Map<string, TaskQueue>();
   const queue = new NamedTaskQueue((error) => errors.push(error), lanes);
@@ -133,5 +127,28 @@ test('onError', async () => {
     expect(errors[i]).toBeInstanceOf(Error);
     expect(errors[i].message).toEqual(`Happy #${i}`);
   });
+  expect(lanes.size).toEqual(0);
+});
+
+test('onIdle', async () => {
+  const lanes = new Map<string, TaskQueue>();
+  const queue = new NamedTaskQueue(noop, lanes);
+  const times = Array.from({ length: N }).map((_, index) => index);
+
+  names.forEach((name) => {
+    times.map(() => {
+      queue.add(name, async () => {
+        const waitingTime = Math.floor(Math.random() * 100) // Delay to set up spying
+        await new Promise((resolve) => setTimeout(resolve, waitingTime));
+      });
+    });
+  });
+  const laneFoo = lanes.get(names[0]);
+  const laneBlah = lanes.get(names[1]);
+  const onIdleFoo = jest.spyOn(laneFoo, 'onIdle');
+  const onIdleBlah = jest.spyOn(laneBlah, 'onIdle');
+  await queue.onIdle();
+  expect(onIdleBlah).toBeCalledTimes(1);
+  expect(onIdleFoo).toBeCalledTimes(1);
   expect(lanes.size).toEqual(0);
 });

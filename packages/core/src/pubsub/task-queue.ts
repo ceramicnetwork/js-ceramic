@@ -4,12 +4,17 @@ export const noop = () => {
   // Do Nothing
 };
 
-type Task<TaskResultType> = (() => PromiseLike<TaskResultType>) | (() => TaskResultType);
+export type Task<TaskResultType> = () => Promise<TaskResultType>;
+
+export interface TaskQueueLike {
+  add(task: Task<void>): void;
+  run<T>(task: Task<T>): Promise<T>;
+}
 
 /**
  * PQueue with synchronous `add` and a common error-handler.
  */
-export class TaskQueue {
+export class TaskQueue implements TaskQueueLike {
   #pq = new PQueue({ concurrency: 1 });
 
   /**
@@ -27,7 +32,7 @@ export class TaskQueue {
    * Size of the queue.
    */
   get size(): number {
-    return this.#pq.size
+    return this.#pq.size;
   }
 
   /**
@@ -44,7 +49,7 @@ export class TaskQueue {
    * Add task and wait till it is completed.
    */
   run<T>(task: Task<T>): Promise<T> {
-    return this.#pq.add(task)
+    return this.#pq.add(task);
   }
 
   /**
@@ -59,5 +64,9 @@ export class TaskQueue {
    */
   clear() {
     this.#pq.clear();
+  }
+
+  pause() {
+    this.#pq.pause()
   }
 }

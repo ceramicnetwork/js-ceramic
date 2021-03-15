@@ -69,7 +69,7 @@ describe('Dispatcher', () => {
 
     const levelPath = await tmp.tmpName();
     const stateStore = new LevelStateStore(levelPath);
-    repository = new Repository(100);
+    repository = new Repository(100, loggerProvider.getDiagnosticsLogger());
     const pinStore = ({
       stateStore,
     } as unknown) as PinStore;

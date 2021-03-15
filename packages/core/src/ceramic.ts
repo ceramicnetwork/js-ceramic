@@ -209,8 +209,9 @@ class Ceramic implements CeramicApi {
 
     this._doctypeHandlers = new HandlersMap(this._logger)
 
+    // This initialization block below has to be redone.
     this.stateValidation = this._validateDocs ? new RealStateValidation(this.loadDocument.bind(this)) : new FauxStateValidation()
-    const documentFactory = new DocumentFactory(this.dispatcher, pinStore, this.context, this._doctypeHandlers, this.stateValidation)
+    const documentFactory = new DocumentFactory(this.dispatcher, pinStore, this.context, this._doctypeHandlers, this.stateValidation, this.repository.executionQ)
     const networkLoad = new NetworkLoad(this.dispatcher, this._doctypeHandlers, this.context, this._logger, documentFactory)
     this.repository.setPinStore(pinStore)
     this.repository.setDocumentFactory(documentFactory);
@@ -365,7 +366,7 @@ class Ceramic implements CeramicApi {
 
     const ipfsTopology = new IpfsTopology(ipfs, networkOptions.name, logger)
     const pinStoreFactory = new PinStoreFactory(ipfs, pinStoreOptions)
-    const repository = new Repository(docCacheLimit)
+    const repository = new Repository(docCacheLimit, logger)
     const dispatcher = new Dispatcher(ipfs, networkOptions.pubsubTopic, repository, logger, pubsubLogger)
 
     const params = {

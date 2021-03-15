@@ -16,7 +16,7 @@ import { timeoutWith } from "rxjs/operators";
 import { Observable, of, Subscription } from 'rxjs'
 import { ConflictResolution } from './conflict-resolution';
 import { RunningState, RunningStateLike } from './state-management/running-state';
-import { TaskQueue } from './pubsub/task-queue';
+import { TaskQueue, TaskQueueLike } from './pubsub/task-queue';
 import { ContextfulHandler } from './state-management/contextful-handler';
 
 // DocOpts defaults for document load operations
@@ -34,7 +34,7 @@ export class Document extends Observable<DocState> implements RunningStateLike {
   constructor (readonly state$: RunningState,
                private readonly dispatcher: Dispatcher,
                private readonly pinStore: PinStore,
-               private readonly tasks: TaskQueue,
+               private readonly tasks: TaskQueueLike,
                private readonly anchorService: AnchorService,
                private readonly handler: ContextfulHandler,
                private readonly conflictResolution: ConflictResolution,
@@ -285,8 +285,7 @@ export class Document extends Observable<DocState> implements RunningStateLike {
   /**
    * Gracefully closes the document instance.
    */
-  async close (): Promise<void> {
-    await this.tasks.onIdle();
+  close (): void {
     this.state$.complete()
   }
 

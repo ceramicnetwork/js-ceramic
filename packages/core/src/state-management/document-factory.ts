@@ -6,8 +6,9 @@ import { HandlersMap } from '../handlers-map';
 import { RunningState } from './running-state';
 import { StateValidation } from './state-validation';
 import { ContextfulHandler } from './contextful-handler';
-import { TaskQueue } from '../pubsub/task-queue';
 import { ConflictResolution } from '../conflict-resolution';
+import { ExecutionQueue } from './execution-queue';
+import { DocID } from '@ceramicnetwork/docid';
 
 export class DocumentFactory {
   constructor(
@@ -16,22 +17,20 @@ export class DocumentFactory {
     private readonly context: Context,
     private readonly handlers: HandlersMap,
     private readonly stateValidation: StateValidation,
+    private readonly executionQ: ExecutionQueue,
   ) {}
 
   async build(initialState: DocState) {
     const handler = new ContextfulHandler(this.context, this.handlers.get(initialState.doctype));
     const state$ = new RunningState(initialState);
     const anchorService = this.context.anchorService;
-    const diagnosticsLogger = this.context.loggerProvider.getDiagnosticsLogger();
-    const tasks = new TaskQueue((error) => {
-      diagnosticsLogger.err(error);
-    });
     const conflictResolution = new ConflictResolution(anchorService, this.stateValidation, this.dispatcher, handler);
+    const docId = new DocID(initialState.doctype, initialState.log[0].cid);
     const document = new Document(
       state$,
       this.dispatcher,
       this.pinStore,
-      tasks,
+      this.executionQ.forDocument(docId),
       anchorService,
       handler,
       conflictResolution,

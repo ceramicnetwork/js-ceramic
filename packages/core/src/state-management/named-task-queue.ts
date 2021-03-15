@@ -66,4 +66,22 @@ export class NamedTaskQueue {
       await f().finally(() => this.remove(name));
     });
   }
+
+  /**
+   * Wait till all the present lanes are idle.
+   */
+  async onIdle(): Promise<void> {
+    const lanes = Array.from(this.lanes.values());
+    await Promise.all(lanes.map((lane) => lane.onIdle()));
+  }
+
+  async close() {
+    await this.onIdle();
+    this.pause();
+  }
+
+  pause(): void {
+    const lanes = Array.from(this.lanes.values());
+    lanes.map((l) => l.pause());
+  }
 }

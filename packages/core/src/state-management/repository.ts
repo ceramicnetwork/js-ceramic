@@ -6,17 +6,23 @@ import { DocOpts, DocState, DocStateHolder } from '@ceramicnetwork/common';
 import { PinStore } from '../store/pin-store';
 import { NetworkLoad } from './network-load';
 import { NamedTaskQueue } from './named-task-queue';
+import { DiagnosticsLogger } from '@ceramicnetwork/logger';
+import { ExecutionQueue } from './execution-queue';
 
 export class Repository {
   readonly loadingQ: NamedTaskQueue = new NamedTaskQueue();
+  readonly executionQ: ExecutionQueue;
+
   readonly #map: AsyncLruMap<Document>;
   #documentFactory?: DocumentFactory;
   pinStore?: PinStore;
   #networkLoad?: NetworkLoad;
 
-  constructor(limit: number) {
+  constructor(limit: number, logger: DiagnosticsLogger) {
+    this.executionQ = new ExecutionQueue(logger);
     this.#map = new AsyncLruMap(limit, async (entry) => {
-      await entry.value.close();
+      entry.value.close();
+      await this.executionQ.tasks.lanes.get(entry.value.id.toString()).onIdle();
     });
   }
 
@@ -59,9 +65,9 @@ export class Repository {
   }
 
   /**
-  * Returns a document from wherever we can get information about it.
-  * Starts by checking if the document state is present in the in-memory cache, if not then then checks the state store, and finally loads the document from pubsub.
-  */
+   * Returns a document from wherever we can get information about it.
+   * Starts by checking if the document state is present in the in-memory cache, if not then then checks the state store, and finally loads the document from pubsub.
+   */
   async load(docId: DocID, opts: DocOpts = {}): Promise<Document> {
     return this.loadingQ.run(docId.toString(), async () => {
       const fromMemory = await this.fromMemory(docId);
@@ -73,8 +79,8 @@ export class Repository {
   }
 
   /**
-  * Checks if we can get the document state without having to load it via pubsub (i.e. we have the document state in our in-memory cache or in the state store)
-  */
+   * Checks if we can get the document state without having to load it via pubsub (i.e. we have the document state in our in-memory cache or in the state store)
+   */
   async has(docId: DocID): Promise<boolean> {
     const fromMemory = await this.fromMemory(docId);
     if (fromMemory) return true;
@@ -136,6 +142,8 @@ export class Repository {
   }
 
   async close(): Promise<void> {
+    await this.loadingQ.close();
+    await this.executionQ.close();
     const documents = [];
     for (const [, document] of this.#map) {
       documents.push(document);
@@ -143,7 +151,7 @@ export class Repository {
     await Promise.all(
       documents.map(async (d) => {
         await this.#map.delete(d.id);
-        await d.close();
+        d.close();
       }),
     );
     await this.pinStore.close();
