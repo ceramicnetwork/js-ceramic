@@ -57,8 +57,8 @@ export class Document implements DocStateHolder {
     this.tasks = new TaskQueue(error => {
       logger.err(error)
     })
-    this.conflictResolution = new ConflictResolution(_context, dispatcher, _doctypeHandler, _validate);
     this.anchorService = _context.anchorService;
+    this.conflictResolution = new ConflictResolution(_context, this.anchorService, dispatcher, _doctypeHandler, _validate);
   }
 
   /**
