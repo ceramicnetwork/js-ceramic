@@ -269,10 +269,11 @@ class InMemoryAnchorService implements AnchorService {
    */
   async _process(leaf: Candidate): Promise<void> {
     // creates fake anchor commit
+    const timestamp = Math.floor(Date.now() / 1000)
     const proofData: AnchorProof = {
       chainId: CHAIN_ID,
-      blockNumber: Date.now(),
-      blockTimestamp: Date.now(),
+      blockNumber: timestamp,
+      blockTimestamp: timestamp,
       txHash: new CID(SAMPLE_ETH_TX_HASH),
       root: leaf.cid,
     };
