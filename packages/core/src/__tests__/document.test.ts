@@ -10,6 +10,8 @@ import Ceramic from '../ceramic';
 import { anchorUpdate } from '../state-management/__tests__/anchor-update';
 import { TileDoctype } from '@ceramicnetwork/doctype-tile';
 import { ContextfulHandler } from '../state-management/contextful-handler';
+import { TaskQueue } from '../pubsub/task-queue';
+import { ConflictResolution } from '../conflict-resolution';
 
 const FAKE_CID = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu');
 const DOC_ID = new DocID('tile', FAKE_CID);
@@ -52,8 +54,18 @@ test('constructor', async () => {
   const dispatcher = ceramic.dispatcher;
   const pinStore = ceramic.repository.pinStore;
   const context = ceramic.context;
-  const handler = new ContextfulHandler(context, new TileDoctypeHandler())
-  const doc = new Document(runningState, dispatcher, pinStore, context, handler, false, (ceramic as any).stateValidation);
+  const handler = new ContextfulHandler(context, new TileDoctypeHandler());
+  const anchorService = ceramic.context.anchorService;
+  const tasks = new TaskQueue((error) => {
+    ceramic.context.loggerProvider.getDiagnosticsLogger().err(error);
+  });
+  const conflictResolution = new ConflictResolution(
+    anchorService,
+    (ceramic as any).stateValidation,
+    dispatcher,
+    handler,
+  );
+  const doc = new Document(runningState, dispatcher, pinStore, tasks, anchorService, handler, conflictResolution);
 
   expect(doc.id).toEqual(DOC_ID);
   expect(doc.state.content).toEqual(INITIAL_CONTENT);
@@ -260,15 +272,25 @@ test('handles basic conflict', async () => {
   // create invalid change that happened after main change
 
   const initialState = await doc1.rewind(docId.atCommit(docId.cid)).then((doc) => doc.state);
-  const handler = new ContextfulHandler(ceramic.context, new TileDoctypeHandler())
+  const handler = new ContextfulHandler(ceramic.context, new TileDoctypeHandler());
+  const anchorService = ceramic.context.anchorService;
+  const tasks = new TaskQueue((error) => {
+    ceramic.context.loggerProvider.getDiagnosticsLogger().err(error);
+  });
+  const conflictResolution = new ConflictResolution(
+    anchorService,
+    (ceramic as any).stateValidation,
+    ceramic.dispatcher,
+    handler,
+  );
   const doc2 = new Document(
     new RunningState(initialState),
     ceramic.dispatcher,
     ceramic.repository.pinStore,
-    ceramic.context,
+    tasks,
+    anchorService,
     handler,
-    false,
-    (ceramic as any).stateValidation
+    conflictResolution,
   );
   await doc2._handleTip(tipPreUpdate);
   await new Promise(resolve => setTimeout(resolve, 1000))
@@ -344,15 +366,15 @@ test('enforce previously assigned schema during future update', async () => {
 });
 
 test('should announce change to network', async () => {
-  const publishTip = jest.spyOn(ceramic.dispatcher, 'publishTip')
-  const doctype1 = await ceramic.createDocument('tile', { content: INITIAL_CONTENT, metadata: { controllers } })
-  const doc1 = await ceramic.repository.load(doctype1.id)
-  expect(publishTip).toHaveBeenCalledTimes(1)
-  expect(publishTip).toHaveBeenCalledWith(doctype1.id, doctype1.tip)
-  await publishTip.mockClear()
+  const publishTip = jest.spyOn(ceramic.dispatcher, 'publishTip');
+  const doctype1 = await ceramic.createDocument('tile', { content: INITIAL_CONTENT, metadata: { controllers } });
+  const doc1 = await ceramic.repository.load(doctype1.id);
+  expect(publishTip).toHaveBeenCalledTimes(1);
+  expect(publishTip).toHaveBeenCalledWith(doctype1.id, doctype1.tip);
+  await publishTip.mockClear();
 
-  const updateRec = await TileDoctype._makeCommit(doctype1, ceramic.did, {foo: 34}, doctype1.controllers)
-  await doc1.applyCommit(updateRec)
-  expect(publishTip).toHaveBeenCalledTimes(1)
-  expect(publishTip).toHaveBeenCalledWith(doctype1.id, doctype1.tip)
+  const updateRec = await TileDoctype._makeCommit(doctype1, ceramic.did, { foo: 34 }, doctype1.controllers);
+  await doc1.applyCommit(updateRec);
+  expect(publishTip).toHaveBeenCalledTimes(1);
+  expect(publishTip).toHaveBeenCalledWith(doctype1.id, doctype1.tip);
 });

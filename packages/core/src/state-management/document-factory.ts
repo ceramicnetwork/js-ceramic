@@ -6,6 +6,8 @@ import { HandlersMap } from '../handlers-map';
 import { RunningState } from './running-state';
 import { StateValidation } from './state-validation';
 import { ContextfulHandler } from './contextful-handler';
+import { TaskQueue } from '../pubsub/task-queue';
+import { ConflictResolution } from '../conflict-resolution';
 
 export class DocumentFactory {
   constructor(
@@ -19,7 +21,21 @@ export class DocumentFactory {
   async build(initialState: DocState) {
     const handler = new ContextfulHandler(this.context, this.handlers.get(initialState.doctype));
     const state$ = new RunningState(initialState);
-    const document = new Document(state$, this.dispatcher, this.pinStore, this.context, handler, false, this.stateValidation);
+    const anchorService = this.context.anchorService;
+    const diagnosticsLogger = this.context.loggerProvider.getDiagnosticsLogger();
+    const tasks = new TaskQueue((error) => {
+      diagnosticsLogger.err(error);
+    });
+    const conflictResolution = new ConflictResolution(anchorService, this.stateValidation, this.dispatcher, handler);
+    const document = new Document(
+      state$,
+      this.dispatcher,
+      this.pinStore,
+      tasks,
+      anchorService,
+      handler,
+      conflictResolution,
+    );
     await this.stateValidation.validate(document.state, document.content);
     return document;
   }

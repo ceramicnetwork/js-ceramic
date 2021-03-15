@@ -5,9 +5,7 @@ import {
   CommitType,
   DocState,
   Doctype,
-  DoctypeHandler,
   DocOpts,
-  Context,
   DoctypeUtils,
   DocStateHolder,
   UnreachableCaseError,
@@ -33,18 +31,17 @@ export const DEFAULT_WRITE_DOCOPTS = {anchor: true, publish: true, sync: false}
  */
 export class Document implements DocStateHolder {
   readonly id: DocID
-  private tasks: TaskQueue
   private _doctype: Doctype
-  private readonly conflictResolution: ConflictResolution;
-  private readonly anchorService: AnchorService;
 
   constructor (readonly state$: RunningState,
-               readonly dispatcher: Dispatcher,
-               readonly pinStore: PinStore,
-               private _context: Context,
-               private handler: ContextfulHandler,
-               private isReadOnly = false,
-               private readonly stateValidation: StateValidation) {
+               private readonly dispatcher: Dispatcher,
+               private readonly pinStore: PinStore,
+               private readonly tasks: TaskQueue,
+               private readonly anchorService: AnchorService,
+               private readonly handler: ContextfulHandler,
+               private readonly conflictResolution: ConflictResolution,
+               private readonly isReadOnly = false,
+               ) {
     const doctype = handler.doctype(state$.value);
     this._doctype = isReadOnly ? DoctypeUtils.makeReadOnly(doctype) : doctype
     this.state$.subscribe(state => {
@@ -53,14 +50,7 @@ export class Document implements DocStateHolder {
     })
 
     this.id = state$.id
-
-    const logger = _context.loggerProvider.getDiagnosticsLogger()
-
-    this.tasks = new TaskQueue(error => {
-      logger.err(error)
-    })
-    this.anchorService = _context.anchorService;
-    this.conflictResolution = new ConflictResolution(this.anchorService, this.stateValidation, dispatcher, handler);
+    // this.conflictResolution = new ConflictResolution(this.anchorService, this.stateValidation, dispatcher, handler);
   }
 
   /**
@@ -86,7 +76,7 @@ export class Document implements DocStateHolder {
   async rewind(commitId: CommitID): Promise<Document> {
     const resetState = await this.conflictResolution.rewind(this.state$.value, commitId)
     const state$ = new RunningState(resetState)
-    return new Document(state$, this.dispatcher, this.pinStore, this._context, this.handler, true, this.stateValidation)
+    return new Document(state$, this.dispatcher, this.pinStore, this.tasks, this.anchorService, this.handler, this.conflictResolution, true)
   }
 
   /**
