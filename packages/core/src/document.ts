@@ -236,7 +236,7 @@ export class Document implements DocStateHolder {
     let commitCid: CID = this.state.log[0].cid
     for (const entry of this.state.log) {
       if (entry.type === CommitType.ANCHOR) {
-        if (entry.timestamp <= timestamp) {
+        if (entry.timestamp && entry.timestamp <= timestamp) {
           commitCid = entry.cid
         } else {
           break
