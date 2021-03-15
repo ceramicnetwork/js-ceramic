@@ -16,8 +16,8 @@ import { timeoutWith } from "rxjs/operators";
 import { Observable, of, Subscription } from 'rxjs'
 import { ConflictResolution } from './conflict-resolution';
 import { RunningState, RunningStateLike } from './state-management/running-state';
-import { TaskQueueLike } from './pubsub/task-queue';
 import { ContextfulHandler } from './state-management/contextful-handler';
+import { ExecLike } from './state-management/execution-queue';
 
 // DocOpts defaults for document load operations
 export const DEFAULT_LOAD_DOCOPTS = {anchor: false, publish: false, sync: true}
@@ -34,7 +34,7 @@ export class Document extends Observable<DocState> implements RunningStateLike {
   constructor (readonly state$: RunningState,
                private readonly dispatcher: Dispatcher,
                private readonly pinStore: PinStore,
-               private readonly tasks: TaskQueueLike,
+               private readonly tasks: ExecLike,
                private readonly anchorService: AnchorService,
                private readonly handler: ContextfulHandler,
                private readonly conflictResolution: ConflictResolution,
@@ -96,8 +96,7 @@ export class Document extends Observable<DocState> implements RunningStateLike {
 
       const cid = await this.dispatcher.storeCommit(commit)
 
-      await this._handleTip(cid)
-      await this._updateStateIfPinned()
+      await this._handleTip(this.state$, cid)
       await this._applyOpts(opts)
     })
   }
@@ -113,14 +112,14 @@ export class Document extends Observable<DocState> implements RunningStateLike {
     const publish = opts.publish ?? true
     const sync = opts.sync ?? true
     if (anchor) {
-      this.anchor();
+      this.anchor(this.state$);
     }
     if (publish) {
-      this._publishTip()
+      this._publishTip(this.state$)
     }
     const tip$ = this.dispatcher.messageBus.queryNetwork(this.id)
     if (sync) {
-      await this._wait(tip$)
+      await this._wait(this.state$, tip$)
     } else {
       this.state$.add(tip$.subscribe())
     }
@@ -131,10 +130,10 @@ export class Document extends Observable<DocState> implements RunningStateLike {
    *
    * @private
    */
-  async _updateStateIfPinned(): Promise<void> {
-    const isPinned = Boolean(await this.pinStore.stateStore.load(this.id))
+  async _updateStateIfPinned(state$: RunningState): Promise<void> {
+    const isPinned = Boolean(await this.pinStore.stateStore.load(state$.id))
     if (isPinned) {
-      await this.pinStore.add(this._doctype)
+      await this.pinStore.add(state$)
     }
   }
 
@@ -145,21 +144,23 @@ export class Document extends Observable<DocState> implements RunningStateLike {
    * @private
    */
   update(cid: CID): void {
-    this.tasks.add(async () => {
-      await this._handleTip(cid)
+    this.tasks.addE(async (state$) => {
+      await this._handleTip(state$, cid)
     })
   }
 
   /**
    * Handles Tip from the PubSub topic
    *
+   * @param state$ - Running State
    * @param cid - Document Tip CID
    * @private
    */
-  async _handleTip(cid: CID): Promise<void> {
-    const next = await this.conflictResolution.applyTip(this.state$.value, cid);
+  async _handleTip(state$: RunningState, cid: CID): Promise<void> {
+    const next = await this.conflictResolution.applyTip(state$.value, cid);
     if (next) {
-      this.state$.next(next);
+      state$.next(next);
+      await this._updateStateIfPinned(state$);
     }
   }
 
@@ -168,37 +169,36 @@ export class Document extends Observable<DocState> implements RunningStateLike {
    *
    * @private
    */
-  _publishTip (): void {
-    this.dispatcher.publishTip(this.id, this.tip)
+  _publishTip (state$: RunningState): void {
+    this.dispatcher.publishTip(state$.id, state$.tip)
   }
 
   /**
    * Request anchor for the latest document state
    */
-  anchor(): Subscription {
+  anchor(state$: RunningState): Subscription {
     const anchorStatus$ = this.anchorService.requestAnchor(this.id.baseID, this.tip);
     const subscription = anchorStatus$.subscribe((asr) => {
-      this.tasks.add(async () => {
+      this.tasks.addE(async (state$) => {
         switch (asr.status) {
           case AnchorStatus.PENDING: {
             const next = {
-              ...this.state$.value,
+              ...state$.value,
               anchorStatus: AnchorStatus.PENDING,
             };
             if (asr.anchorScheduledFor) next.anchorScheduledFor = asr.anchorScheduledFor;
-            this.state$.next(next);
-            await this._updateStateIfPinned();
+            state$.next(next);
+            await this._updateStateIfPinned(state$);
             return;
           }
           case AnchorStatus.PROCESSING: {
-            this.state$.next({ ...this.state$.value, anchorStatus: AnchorStatus.PROCESSING });
-            await this._updateStateIfPinned();
+            state$.next({ ...state$.value, anchorStatus: AnchorStatus.PROCESSING });
+            await this._updateStateIfPinned(state$);
             return;
           }
           case AnchorStatus.ANCHORED: {
-            await this._handleTip(asr.anchorRecord);
-            await this._updateStateIfPinned();
-            this._publishTip();
+            await this._handleTip(state$, asr.anchorRecord);
+            this._publishTip(state$);
             subscription.unsubscribe();
             return;
           }
@@ -206,7 +206,7 @@ export class Document extends Observable<DocState> implements RunningStateLike {
             if (!asr.cid.equals(this.tip)) {
               return;
             }
-            this.state$.next({ ...this.state$.value, anchorStatus: AnchorStatus.FAILED });
+            state$.next({ ...state$.value, anchorStatus: AnchorStatus.FAILED });
             subscription.unsubscribe();
             return;
           }
@@ -215,7 +215,7 @@ export class Document extends Observable<DocState> implements RunningStateLike {
         }
       });
     })
-    this.state$.add(subscription);
+    state$.add(subscription);
     return subscription;
   }
 
@@ -224,13 +224,14 @@ export class Document extends Observable<DocState> implements RunningStateLike {
    * Will return an AnchorCommit whose timestamp is earlier to or
    * equal the requested timestamp.
    *
+   * @param state$
    * @param timestamp - unix timestamp
    */
-  findCommitAt(timestamp: number): CommitID {
-    let commitCid: CID = this.state.log[0].cid
-    for (const entry of this.state.log) {
+  findCommitAt(state$: RunningState, timestamp: number): CommitID {
+    let commitCid: CID = state$.value.log[0].cid
+    for (const entry of state$.value.log) {
       if (entry.type === CommitType.ANCHOR) {
-        if (entry.timestamp && entry.timestamp <= timestamp) {
+        if (entry.timestamp <= timestamp) {
           commitCid = entry.cid
         } else {
           break
@@ -275,10 +276,10 @@ export class Document extends Observable<DocState> implements RunningStateLike {
    *
    * @private
    */
-  async _wait(tip$: Observable<CID | undefined>): Promise<void> {
+  async _wait(state$: RunningState, tip$: Observable<CID | undefined>): Promise<void> {
     const tip = await tip$.pipe(timeoutWith(3000, of(undefined))).toPromise()
     if (tip) {
-      await this._handleTip(tip)
+      await this._handleTip(state$, tip)
     }
   }
 

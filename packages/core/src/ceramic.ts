@@ -639,7 +639,7 @@ class Ceramic implements CeramicApi {
       // Here CommitID is requested, let's return document at specific commit
       return doc.rewind(docRef)
     } else if (opts.atTime) {
-      const commitId = doc.findCommitAt(opts.atTime)
+      const commitId = doc.findCommitAt(doc.state$, opts.atTime)
       return doc.rewind(commitId)
     } else {
       return doc
@@ -663,7 +663,7 @@ class Ceramic implements CeramicApi {
     documents.forEach(document => {
       const toRecover = document.state?.anchorStatus === AnchorStatus.PENDING || document.state?.anchorStatus === AnchorStatus.PROCESSING
       if (toRecover) {
-        document.anchor()
+        document.anchor(document.state$)
       }
     })
     this._logger.verbose(`Successfully restored ${documents.length} pinned documents`)

@@ -2,6 +2,7 @@ import { BehaviorSubject, Subscription, Subscribable, ObservableLike, Observable
 import { DocState, DocStateHolder, DoctypeUtils } from '@ceramicnetwork/common';
 import { DocID } from '@ceramicnetwork/docid';
 import { SubscriptionSet } from '../subscription-set';
+import CID from 'cids'
 
 /**
  * `pipe` aspect of rxjs Observable.
@@ -24,7 +25,7 @@ interface Pipeable<T> {
 }
 
 export interface RunningStateLike extends DocStateHolder, Subscribable<DocState>, Pipeable<DocState> {
-  value: DocState
+  value: DocState;
 }
 
 export class RunningState extends BehaviorSubject<DocState> implements RunningStateLike {
@@ -41,6 +42,10 @@ export class RunningState extends BehaviorSubject<DocState> implements RunningSt
     if (!DoctypeUtils.statesEqual(current, next)) {
       super.next(next);
     }
+  }
+
+  get tip(): CID {
+    return this.value.log[this.value.log.length - 1].cid
   }
 
   get state() {

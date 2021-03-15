@@ -19,7 +19,7 @@ export class Repository {
   #networkLoad?: NetworkLoad;
 
   constructor(limit: number, logger: DiagnosticsLogger) {
-    this.executionQ = new ExecutionQueue(logger);
+    this.executionQ = new ExecutionQueue(logger, (docId) => this.get(docId).then((doc) => doc.state$));
     this.#map = new AsyncLruMap(limit, async (entry) => {
       entry.value.close();
       await this.executionQ.tasks.lanes.get(entry.value.id.toString()).onIdle();

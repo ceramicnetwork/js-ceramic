@@ -1,5 +1,12 @@
 import { DocID } from '@ceramicnetwork/docid';
-import { AnchorStatus, CommitType, DocState, DoctypeUtils, IpfsApi, SignatureStatus } from '@ceramicnetwork/common';
+import {
+  AnchorStatus,
+  CommitType,
+  DocState,
+  DoctypeUtils,
+  IpfsApi,
+  SignatureStatus,
+} from '@ceramicnetwork/common';
 import CID from 'cids';
 import { RunningState } from '../state-management/running-state';
 import { Document } from '../document';
@@ -10,8 +17,8 @@ import Ceramic from '../ceramic';
 import { anchorUpdate } from '../state-management/__tests__/anchor-update';
 import { TileDoctype } from '@ceramicnetwork/doctype-tile';
 import { ContextfulHandler } from '../state-management/contextful-handler';
-import { TaskQueue } from '../pubsub/task-queue';
 import { ConflictResolution } from '../conflict-resolution';
+import { ExecLike } from '../state-management/execution-queue';
 
 const FAKE_CID = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu');
 const DOC_ID = new DocID('tile', FAKE_CID);
@@ -56,9 +63,7 @@ test('constructor', async () => {
   const context = ceramic.context;
   const handler = new ContextfulHandler(context, new TileDoctypeHandler());
   const anchorService = ceramic.context.anchorService;
-  const tasks = new TaskQueue((error) => {
-    ceramic.context.loggerProvider.getDiagnosticsLogger().err(error);
-  });
+  const tasks = ceramic.repository.executionQ.forDocument(runningState.id)
   const conflictResolution = new ConflictResolution(
     anchorService,
     (ceramic as any).stateValidation,
@@ -80,7 +85,7 @@ describe('anchor', () => {
     });
     const doc = await ceramic.repository.load(doctype.id);
     await new Promise((resolve) => {
-      doc.anchor().add(resolve);
+      doc.anchor(doc.state$).add(resolve);
     });
     expect(doc.state.anchorStatus).toEqual(AnchorStatus.ANCHORED);
   });
@@ -92,7 +97,7 @@ test('_handleTip', async () => {
     metadata: { controllers },
   });
   const doc1 = await ceramic.repository.load(doctype1.id);
-  await new Promise((resolve) => doc1.anchor().add(resolve));
+  await new Promise((resolve) => doc1.anchor(doc1.state$).add(resolve));
 
   const ceramic2 = await createCeramic(ipfs);
   const doctype2 = await ceramic2.loadDocument(doctype1.id, { sync: false });
@@ -101,7 +106,7 @@ test('_handleTip', async () => {
   expect(doctype2.content).toEqual(doctype1.content);
   expect(doctype2.state).toEqual(expect.objectContaining({ signature: SignatureStatus.SIGNED, anchorStatus: 0 }));
 
-  await doc2._handleTip(doctype1.state.log[1].cid);
+  await doc2._handleTip(doc2.state$, doctype1.state.log[1].cid);
 
   expect(doctype2.state).toEqual(doctype1.state);
   await ceramic2.close();
@@ -274,25 +279,32 @@ test('handles basic conflict', async () => {
   const initialState = await doc1.rewind(docId.atCommit(docId.cid)).then((doc) => doc.state);
   const handler = new ContextfulHandler(ceramic.context, new TileDoctypeHandler());
   const anchorService = ceramic.context.anchorService;
-  const tasks = new TaskQueue((error) => {
-    ceramic.context.loggerProvider.getDiagnosticsLogger().err(error);
-  });
   const conflictResolution = new ConflictResolution(
     anchorService,
     (ceramic as any).stateValidation,
     ceramic.dispatcher,
     handler,
   );
+  const state$ = new RunningState(initialState)
+  const baseExecutionQ = ceramic.repository.executionQ.forDocument(state$.id)
+  const executionQ: ExecLike = {
+    ...baseExecutionQ,
+    addE: task => {
+      baseExecutionQ.add(async () => {
+        await task(state$)
+      })
+    }
+  }
   const doc2 = new Document(
-    new RunningState(initialState),
+    state$,
     ceramic.dispatcher,
     ceramic.repository.pinStore,
-    tasks,
+    executionQ,
     anchorService,
     handler,
     conflictResolution,
   );
-  await doc2._handleTip(tipPreUpdate);
+  await doc2._handleTip(doc2.state$, tipPreUpdate);
 
   const conflictingNewContent = { asdf: 2342 };
   updateRec = await TileDoctype._makeCommit(doc2.doctype, ceramic.did, conflictingNewContent, doc2.doctype.controllers);
@@ -303,12 +315,12 @@ test('handles basic conflict', async () => {
   expect(doc2.doctype.content).toEqual(conflictingNewContent);
   // loading tip from valid log to doc with invalid
   // log results in valid state
-  await doc2._handleTip(tipValidUpdate);
+  await doc2._handleTip(doc2.state$, tipValidUpdate);
   expect(doc2.doctype.content).toEqual(newContent);
 
   // loading tip from invalid log to doc with valid
   // log results in valid state
-  await doc1._handleTip(tipInvalidUpdate);
+  await doc1._handleTip(doc1.state$, tipInvalidUpdate);
   expect(doctype1.content).toEqual(newContent);
 
   // Loading valid commit works
@@ -319,7 +331,7 @@ test('handles basic conflict', async () => {
   await expect(doc1.rewind(docId.atCommit(tipInvalidUpdate))).rejects.toThrow(
     `Requested commit CID ${tipInvalidUpdate.toString()} not found in the log for document ${docId.toString()}`,
   );
-});
+}, 10000);
 
 test('enforces schema in update that assigns schema', async () => {
   const schemaDoc = await ceramic.createDocument('tile', {
