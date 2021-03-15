@@ -60,7 +60,7 @@ export class Repository {
   async fromNetwork(docId: DocID, opts: DocOpts = {}): Promise<Document> {
     const document = await this.#networkLoad.load(docId);
     await this.add(document);
-    await document._syncDocumentToCurrent({ ...DEFAULT_LOAD_DOCOPTS, ...opts });
+    await document._syncDocumentToCurrent(document.state$, { ...DEFAULT_LOAD_DOCOPTS, ...opts });
     return document;
   }
 

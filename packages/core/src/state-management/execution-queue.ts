@@ -6,6 +6,7 @@ import { RunningState } from './running-state';
 
 export interface ExecLike extends TaskQueueLike {
   addE: (task: (state$: RunningState) => Promise<void>) => void;
+  runE<T>(task: (state$: RunningState) => Promise<T>): Promise<T>;
 }
 
 export class ExecutionQueue {
@@ -29,11 +30,17 @@ export class ExecutionQueue {
       run: run.bind(this),
       addE: (task) => {
         add(async () => {
-          const doc = await this.get(docId)
+          const doc = await this.get(docId);
           if (doc) {
-            await task(doc)
+            await task(doc);
           }
-        })
+        });
+      },
+      runE: (task) => {
+        return run(async () => {
+          const doc = await this.get(docId);
+          return task(doc);
+        });
       },
     };
   }

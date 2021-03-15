@@ -60,11 +60,12 @@ export class Document extends Observable<DocState> implements RunningStateLike {
   /**
    * Takes a document containing only the genesis commit and kicks off the process to load and apply
    * the most recent Tip to it.
+   * @param state$
    * @param opts
    * @private
    */
-  async _syncDocumentToCurrent(opts: DocOpts): Promise<Document> {
-    await this._applyOpts(opts)
+  async _syncDocumentToCurrent(state$: RunningState, opts: DocOpts): Promise<Document> {
+    await this._applyOpts(state$, opts)
     return this
   }
 
@@ -90,38 +91,39 @@ export class Document extends Observable<DocState> implements RunningStateLike {
    * @param opts - Document initialization options (request anchor, wait, etc.)
    */
   async applyCommit (commit: any, opts: DocOpts = {}): Promise<void> {
-    await this.tasks.run(async () => {
+    await this.tasks.runE(async (state$) => {
       // Fill 'opts' with default values for any missing fields
       opts = {...DEFAULT_WRITE_DOCOPTS, ...opts}
 
       const cid = await this.dispatcher.storeCommit(commit)
 
-      await this._handleTip(this.state$, cid)
-      await this._applyOpts(opts)
+      await this._handleTip(state$, cid)
+      await this._applyOpts(state$, opts)
     })
   }
 
   /**
    * Apply initialization options
    *
+   * @param state$ - Running State
    * @param opts - Initialization options (request anchor, wait, etc.)
    * @private
    */
-  async _applyOpts(opts: DocOpts): Promise<void> {
+  async _applyOpts(state$: RunningState, opts: DocOpts): Promise<void> {
     const anchor = opts.anchor ?? true
     const publish = opts.publish ?? true
     const sync = opts.sync ?? true
     if (anchor) {
-      this.anchor(this.state$);
+      this.anchor(state$);
     }
     if (publish) {
-      this._publishTip(this.state$)
+      this._publishTip(state$)
     }
-    const tip$ = this.dispatcher.messageBus.queryNetwork(this.id)
+    const tip$ = this.dispatcher.messageBus.queryNetwork(state$.id)
     if (sync) {
-      await this._wait(this.state$, tip$)
+      await this._wait(state$, tip$)
     } else {
-      this.state$.add(tip$.subscribe())
+      state$.add(tip$.subscribe())
     }
   }
 

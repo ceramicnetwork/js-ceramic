@@ -1,12 +1,5 @@
 import { DocID } from '@ceramicnetwork/docid';
-import {
-  AnchorStatus,
-  CommitType,
-  DocState,
-  DoctypeUtils,
-  IpfsApi,
-  SignatureStatus,
-} from '@ceramicnetwork/common';
+import { AnchorStatus, CommitType, DocState, DoctypeUtils, IpfsApi, SignatureStatus } from '@ceramicnetwork/common';
 import CID from 'cids';
 import { RunningState } from '../state-management/running-state';
 import { Document } from '../document';
@@ -63,7 +56,7 @@ test('constructor', async () => {
   const context = ceramic.context;
   const handler = new ContextfulHandler(context, new TileDoctypeHandler());
   const anchorService = ceramic.context.anchorService;
-  const tasks = ceramic.repository.executionQ.forDocument(runningState.id)
+  const tasks = ceramic.repository.executionQ.forDocument(runningState.id);
   const conflictResolution = new ConflictResolution(
     anchorService,
     (ceramic as any).stateValidation,
@@ -285,16 +278,21 @@ test('handles basic conflict', async () => {
     ceramic.dispatcher,
     handler,
   );
-  const state$ = new RunningState(initialState)
-  const baseExecutionQ = ceramic.repository.executionQ.forDocument(state$.id)
+  const state$ = new RunningState(initialState);
+  const baseExecutionQ = ceramic.repository.executionQ.forDocument(state$.id);
   const executionQ: ExecLike = {
     ...baseExecutionQ,
-    addE: task => {
+    addE: (task) => {
       baseExecutionQ.add(async () => {
-        await task(state$)
-      })
-    }
-  }
+        await task(state$);
+      });
+    },
+    runE: (task) => {
+      return baseExecutionQ.run(async () => {
+        return task(state$);
+      });
+    },
+  };
   const doc2 = new Document(
     state$,
     ceramic.dispatcher,
