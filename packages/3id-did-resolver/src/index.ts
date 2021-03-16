@@ -8,16 +8,11 @@ import type {
   ResolverRegistry,
   VerificationMethod
 } from 'did-resolver'
-import { Doctype } from "@ceramicnetwork/common"
+import { Doctype, CeramicApi } from "@ceramicnetwork/common"
 import LegacyResolver from './legacyResolver'
 import * as u8a from 'uint8arrays'
 import { DocID, CommitID } from '@ceramicnetwork/docid'
 import CID from 'cids'
-
-interface Ceramic {
-  loadDocument(docId: DocID | CommitID): Promise<Doctype>;
-  createDocument(type: string, content: any, opts: any): Promise<Doctype>;
-}
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function wrapDocument(content: any, did: string): DIDDocument {
@@ -77,7 +72,7 @@ const getVersion = (query = ''): string | null => {
   return versionParam ? versionParam.split('=')[1] : null
 }
 
-const legacyResolve = async (ceramic: Ceramic, didId: string, commit?: string): Promise<DIDDocument | null> => {
+const legacyResolve = async (ceramic: CeramicApi, didId: string, commit?: string): Promise<DIDDocument | null> => {
   const legacyPublicKeys = await LegacyResolver(didId) // can add opt to pass ceramic ipfs to resolve
   if (!legacyPublicKeys) return null
 
@@ -95,8 +90,8 @@ const legacyResolve = async (ceramic: Ceramic, didId: string, commit?: string): 
   }
 }
 
-const resolve = async (ceramic: Ceramic, didId: string, commit?: string, v03ID?: string): Promise<DIDDocument | null> =>  {
-  let docRef = DocID.fromString(didId)
+const resolve = async (ceramic: CeramicApi, didId: string, commit?: string, v03ID?: string): Promise<DIDDocument | null> =>  {
+  let docRef: DocID | CommitID = DocID.fromString(didId)
   if (commit) {
     docRef = docRef.atCommit(commit)
   }
@@ -105,7 +100,7 @@ const resolve = async (ceramic: Ceramic, didId: string, commit?: string, v03ID?:
 }
 
 export default {
-  getResolver: (ceramic: Ceramic): ResolverRegistry => ({
+  getResolver: (ceramic: CeramicApi): ResolverRegistry => ({
     '3': async (did: string, parsed: ParsedDID, resolver: Resolver, options: DIDResolutionOptions): Promise<DIDResolutionResult> => {
       const contentType = options.accept || DID_JSON
       const response: DIDResolutionResult = {

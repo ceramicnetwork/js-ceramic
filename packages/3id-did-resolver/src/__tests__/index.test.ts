@@ -22,12 +22,22 @@ import { Resolver } from 'did-resolver'
 import DocID from '@ceramicnetwork/docid'
 import CeramicClient from '@ceramicnetwork/http-client'
 
+const DID_LD_JSON = 'application/did+ld+json'
+
 const vectors = require('./vectors.json')
 
 const v1 = '3IDv1'
 const v0 = '3IDv0'
 
+const toLdFormat = result => {
+  const newResult = { ...result }
+  newResult.didResolutionMetadata.contentType = DID_LD_JSON
+  newResult.didDocument['@context'] = 'https://w3id.org/did/v1'
+  return newResult
+}
+
 describe('3ID DID Resolver', () => {
+  jest.setTimeout(10000)
   let ceramic
 
   beforeAll(async () => {
@@ -45,7 +55,8 @@ describe('3ID DID Resolver', () => {
       const resolver = new Resolver(threeIdResolver)
       const did = vectors[v1].did + query.params[0]
       expect(await resolver.resolve(did)).toEqual(query.result)
-    }, 20000)
+      expect(await resolver.resolve(did, { accept: DID_LD_JSON })).toEqual(toLdFormat(query.result))
+    })
   })
 
   describe('3IDv0', () => {
@@ -56,6 +67,7 @@ describe('3ID DID Resolver', () => {
       const res = await resolver.resolve(did)
       console.log('resu', JSON.stringify(res))
       expect(res).toEqual(query.result)
-    }, 20000)
+      expect(await resolver.resolve(did, { accept: DID_LD_JSON })).toEqual(toLdFormat(query.result))
+    })
   })
 })
