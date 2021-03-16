@@ -433,21 +433,6 @@ describe('Ceramic API', () => {
                    notDoc: '123' },
         metadata: { controllers: [controller] }
       })
-
-      // test data for the atTime feature
-      const delay = () => new Promise(resolve => setTimeout(resolve, 1000))
-      docFStates.push(docF.state)
-      docFTimestamps.push(Math.floor(Date.now() / 1000))
-      await docF.change({ content: { ...docF.content, update: 'new stuff' }})
-      await anchorDoc(ceramic, docF)
-      docFTimestamps.push(Math.floor(Date.now() / 1000))
-      await delay()
-      docFStates.push(docF.state)
-      await docF.change({ content: { ...docF.content, update: 'newer stuff' }})
-      await anchorDoc(ceramic, docF)
-      docFTimestamps.push(Math.floor(Date.now() / 1000))
-      await delay()
-      docFStates.push(docF.state)
     })
 
     afterAll(async () => {
@@ -577,6 +562,26 @@ describe('Ceramic API', () => {
     })
 
     it('loads the same document at multiple points in time', async () => {
+      // test data for the atTime feature
+      const delay = () => new Promise(resolve => setTimeout(resolve, 1000))
+      docFStates.push(docF.state)
+      // timestamp before the first anchor commit
+      docFTimestamps.push(Math.floor(Date.now() / 1000))
+      await delay()
+      await docF.change({ content: { ...docF.content, update: 'new stuff' }})
+      await anchorDoc(ceramic, docF)
+      await delay()
+      // timestamp between the first and the second anchor commit
+      docFTimestamps.push(Math.floor(Date.now() / 1000))
+      docFStates.push(docF.state)
+      await delay()
+      await docF.change({ content: { ...docF.content, update: 'newer stuff' }})
+      await anchorDoc(ceramic, docF)
+      await delay()
+      // timestamp after the second anchor commit
+      docFTimestamps.push(Math.floor(Date.now() / 1000))
+      docFStates.push(docF.state)
+
       const queries = [
         {
           docId: docF.id,
