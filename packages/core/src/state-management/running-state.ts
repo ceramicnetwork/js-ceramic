@@ -1,4 +1,4 @@
-import { BehaviorSubject, Subscription, Subscribable, Observable, OperatorFunction } from 'rxjs';
+import { BehaviorSubject, Subscription, Subscribable, Observable, OperatorFunction, of } from 'rxjs';
 import { DocState, DocStateHolder, DoctypeUtils } from '@ceramicnetwork/common';
 import { DocID } from '@ceramicnetwork/docid';
 import { SubscriptionSet } from '../subscription-set';

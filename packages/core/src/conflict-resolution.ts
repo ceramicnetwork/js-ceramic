@@ -3,7 +3,7 @@ import {
   AnchorCommit,
   AnchorProof,
   AnchorService,
-  AnchorStatus, Context,
+  AnchorStatus, CommitType, Context,
   DocState,
   Doctype,
   DoctypeUtils,
@@ -14,6 +14,7 @@ import { CommitID } from '@ceramicnetwork/docid';
 import { StateValidation } from './state-management/state-validation';
 import { ContextfulHandler } from './state-management/contextful-handler';
 import { HandlersMap } from './handlers-map';
+import { RunningState, RunningStateLike } from './state-management/running-state';
 
 /**
  * Verifies anchor commit structure
@@ -204,6 +205,20 @@ export async function fetchLog(
     return log.reverse();
   }
   return fetchLog(dispatcher, prevCid, stateLog, log);
+}
+
+export function commitAtTime(state$: RunningStateLike, timestamp: number): CommitID {
+  let commitCid: CID = state$.value.log[0].cid
+  for (const entry of state$.value.log) {
+    if (entry.type === CommitType.ANCHOR) {
+      if (entry.timestamp <= timestamp) {
+        commitCid = entry.cid
+      } else {
+        break
+      }
+    }
+  }
+  return this.id.atCommit(commitCid)
 }
 
 export class ConflictResolution {

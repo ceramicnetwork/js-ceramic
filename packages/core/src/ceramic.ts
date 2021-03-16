@@ -640,6 +640,7 @@ class Ceramic implements CeramicApi {
     // If DocID is requested, return the document
     if (docRef instanceof CommitID) {
       // Here CommitID is requested, let's return document at specific commit
+      // this.repository.stateManager.rewind(doc.state$, docRef)
       return doc.rewind(docRef)
     } else if (opts.atTime) {
       const commitId = doc.findCommitAt(doc.state$, opts.atTime)

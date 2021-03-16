@@ -1,12 +1,14 @@
 import { Dispatcher } from '../dispatcher';
 import { PinStore } from '../store/pin-store';
 import { ExecutionQueue } from './execution-queue';
-import { ConflictResolution } from '../conflict-resolution';
+import { commitAtTime, ConflictResolution } from '../conflict-resolution';
 import { AnchorService, AnchorStatus, DocOpts, UnreachableCaseError } from '@ceramicnetwork/common';
-import { RunningState } from './running-state';
+import { RunningState, RunningStateLike } from './running-state';
 import CID from 'cids';
 import { timeoutWith } from 'rxjs/operators';
 import { of, Subscription } from 'rxjs';
+import { SnapshotState } from './snapshot-state';
+import { CommitID } from '@ceramicnetwork/docid';
 
 export class StateManager {
   constructor(
@@ -24,10 +26,20 @@ export class StateManager {
    * @param opts
    */
   syncGenesis(state$: RunningState, opts: DocOpts): Promise<void> {
-    return this.applyOpts(state$, opts)
+    return this.applyOpts(state$, opts);
   }
 
-  async applyOpts(state$: RunningState, opts: DocOpts) {
+  async rewind(state$: RunningStateLike, commitId: CommitID): Promise<SnapshotState> {
+    const snapshot = await this.conflictResolution.rewind(state$.value, commitId);
+    return new SnapshotState(snapshot);
+  }
+
+  atTime(state$: RunningStateLike, timestamp: number): Promise<SnapshotState> {
+    const commitId = commitAtTime(state$, timestamp)
+    return this.rewind(state$, commitId)
+  }
+
+  private async applyOpts(state$: RunningState, opts: DocOpts) {
     const anchor = opts.anchor ?? true;
     const publish = opts.publish ?? true;
     const sync = opts.sync ?? true;
@@ -67,7 +79,7 @@ export class StateManager {
     this.dispatcher.publishTip(state$.id, state$.tip);
   }
 
-  anchor(state$: RunningState): Subscription {
+  private anchor(state$: RunningState): Subscription {
     const anchorStatus$ = this.anchorService.requestAnchor(state$.id, state$.tip);
     const tasks = this.executionQ.forDocument(state$.id);
     const subscription = anchorStatus$.subscribe((asr) => {

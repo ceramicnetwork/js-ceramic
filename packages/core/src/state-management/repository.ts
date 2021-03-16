@@ -20,7 +20,7 @@ export class Repository {
 
   readonly #map: LRUMap<string, Document>;
   #documentFactory?: DocumentFactory;
-  #stateManager: StateManager;
+  stateManager: StateManager;
   pinStore?: PinStore;
   #networkLoad?: NetworkLoad;
 
@@ -38,7 +38,7 @@ export class Repository {
   // Ideally this would be provided in the constructor, but circular dependencies in our initialization process make this necessary for now
   setDocumentFactory(documentFactory: DocumentFactory): void {
     this.#documentFactory = documentFactory;
-    this.#stateManager = new StateManager(
+    this.stateManager = new StateManager(
       this.#documentFactory.dispatcher,
       this.#documentFactory.pinStore,
       this.executionQ,
@@ -77,7 +77,7 @@ export class Repository {
   async fromNetwork(docId: DocID, opts: DocOpts = {}): Promise<Document> {
     const document = await this.#networkLoad.load(docId);
     await this.add(document);
-    await this.#stateManager.syncGenesis(document.state$, opts);
+    await this.stateManager.syncGenesis(document.state$, opts);
     return document;
   }
 
