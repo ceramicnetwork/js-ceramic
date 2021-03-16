@@ -162,26 +162,22 @@ export class CeramicCliUtils {
 
     /**
      * Show document content
-     * @param docId - Document ID
+     * @param docRef - Document ID
      */
-    static async show(docId: string): Promise<void> {
-        const id = DocID.fromString(docId)
-
+    static async show(docRef: string): Promise<void> {
         await CeramicCliUtils._runWithCeramic(async (ceramic: CeramicApi) => {
-            const doc = await ceramic.loadDocument(id)
+            const doc = await ceramic.loadDocument(docRef)
             console.log(JSON.stringify(doc.content, null, 2))
         })
     }
 
     /**
      * Show document state
-     * @param docId - Document ID
+     * @param docRef - Document ID or Commit ID
      */
-    static async state(docId: string): Promise<void> {
-        const id = DocID.fromString(docId)
-
+    static async state(docRef: string): Promise<void> {
         await CeramicCliUtils._runWithCeramic(async (ceramic: CeramicApi) => {
-            const doc = await ceramic.loadDocument(id)
+            const doc = await ceramic.loadDocument(docRef)
             console.log(JSON.stringify(DoctypeUtils.serializeState(doc.state), null, 2))
         })
     }
