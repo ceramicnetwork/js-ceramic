@@ -1,9 +1,8 @@
 import { PinApi } from '@ceramicnetwork/common';
 import DocID from '@ceramicnetwork/docid';
-import { Document } from './document';
-import { PinStore } from './store/pin-store';
 import { DiagnosticsLogger } from "@ceramicnetwork/logger";
 import { Repository } from './state-management/repository';
+import { RunningStateLike } from './state-management/running-state';
 
 /**
  * PinApi for Ceramic core.
@@ -11,13 +10,13 @@ import { Repository } from './state-management/repository';
 export class LocalPinApi implements PinApi {
   constructor(
     private readonly repository: Repository,
-    private readonly loadDoc: (docId: DocID) => Promise<Document>,
+    private readonly loadDoc: (docId: DocID) => Promise<RunningStateLike>,
     private readonly logger: DiagnosticsLogger,
   ) {}
 
   async add(docId: DocID): Promise<void> {
-    const document = await this.loadDoc(docId);
-    await this.repository.pin(document);
+    const state$ = await this.loadDoc(docId);
+    await this.repository.pin(state$);
     this.logger.verbose(`Pinned document ${docId.toString()}`)
   }
 

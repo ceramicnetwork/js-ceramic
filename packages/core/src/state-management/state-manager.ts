@@ -9,6 +9,7 @@ import { timeoutWith } from 'rxjs/operators';
 import { of, Subscription } from 'rxjs';
 import { SnapshotState } from './snapshot-state';
 import { CommitID } from '@ceramicnetwork/docid';
+import { DEFAULT_WRITE_DOCOPTS } from '../document';
 
 export class StateManager {
   constructor(
@@ -35,8 +36,8 @@ export class StateManager {
   }
 
   atTime(state$: RunningStateLike, timestamp: number): Promise<SnapshotState> {
-    const commitId = commitAtTime(state$, timestamp)
-    return this.rewind(state$, commitId)
+    const commitId = commitAtTime(state$, timestamp);
+    return this.rewind(state$, commitId);
   }
 
   private async applyOpts(state$: RunningState, opts: DocOpts) {
@@ -79,7 +80,25 @@ export class StateManager {
     this.dispatcher.publishTip(state$.id, state$.tip);
   }
 
-  private anchor(state$: RunningState): Subscription {
+  update(state$: RunningState, tip: CID) {
+    this.executionQ.forDocument(state$.id).addE(async (state$) => {
+      await this.handleTip(state$, tip);
+    });
+  }
+
+  applyCommit(state$: RunningState, commit: any, opts: DocOpts = {}) {
+    return this.executionQ.forDocument(state$.id).runE(async (state$) => {
+      // Fill 'opts' with default values for any missing fields
+      opts = { ...DEFAULT_WRITE_DOCOPTS, ...opts };
+
+      const cid = await this.dispatcher.storeCommit(commit);
+
+      await this.handleTip(state$, cid);
+      await this.applyOpts(state$, opts);
+    });
+  }
+
+  anchor(state$: RunningState): Subscription {
     const anchorStatus$ = this.anchorService.requestAnchor(state$.id, state$.tip);
     const tasks = this.executionQ.forDocument(state$.id);
     const subscription = anchorStatus$.subscribe((asr) => {

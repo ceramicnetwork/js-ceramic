@@ -1,5 +1,5 @@
 import { Dispatcher } from './dispatcher'
-import { DEFAULT_LOAD_DOCOPTS, DEFAULT_WRITE_DOCOPTS, Document } from './document';
+import { DEFAULT_LOAD_DOCOPTS, DEFAULT_WRITE_DOCOPTS } from './document';
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import KeyDidResolver from 'key-did-resolver'
 import DocID, { CommitID, DocRef } from '@ceramicnetwork/docid';
@@ -44,6 +44,7 @@ import { NetworkLoad } from './state-management/network-load';
 import { FauxStateValidation, RealStateValidation, StateValidation } from './state-management/state-validation';
 import { doctypeFromState } from './state-management/doctype-from-state';
 import { ConflictResolution } from './conflict-resolution';
+import { RunningState, RunningStateLike } from './state-management/running-state';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const packageJson = require('../package.json')
@@ -492,9 +493,9 @@ class Ceramic implements CeramicApi {
    * @param opts - Initialization options
    */
   async applyCommit<T extends Doctype>(docId: string | DocID, commit: CeramicCommit, opts?: DocOpts): Promise<T> {
-    const doc = await this._loadDoc(normalizeDocID(docId), opts)
-    await doc.applyCommit(commit, opts)
-    return doctypeFromState<T>(this.context, this._doctypeHandlers, doc.state$, doc.isReadOnly)
+    const state$ = await this.__loadDoc(normalizeDocID(docId), opts)
+    await this.repository.stateManager.applyCommit(state$, commit, opts)
+    return doctypeFromState<T>(this.context, this._doctypeHandlers, state$)
   }
 
   /**
@@ -516,8 +517,8 @@ class Ceramic implements CeramicApi {
    * @param opts - Initialization options
    */
   async createDocumentFromGenesis<T extends Doctype>(doctype: string, genesis: any, opts: DocOpts = {}): Promise<T> {
-    const document = await this._createDocFromGenesis(doctype, genesis, opts)
-    return doctypeFromState<T>(this.context, this._doctypeHandlers, document.state$, document.isReadOnly)
+    const state$ = await this._createDocFromGenesis(doctype, genesis, opts)
+    return doctypeFromState<T>(this.context, this._doctypeHandlers, state$)
   }
 
   /**
@@ -527,7 +528,7 @@ class Ceramic implements CeramicApi {
    * @param opts - Initialization options
    * @private
    */
-  async _createDocFromGenesis(doctype: string, genesis: any, opts: DocOpts = {}): Promise<Document> {
+  async _createDocFromGenesis(doctype: string, genesis: any, opts: DocOpts = {}): Promise<RunningState> {
     const genesisCid = await this.dispatcher.storeCommit(genesis);
     const docId = new DocID(doctype, genesisCid);
     return this.repository.load(docId, {...DEFAULT_WRITE_DOCOPTS, ...opts});
@@ -539,9 +540,19 @@ class Ceramic implements CeramicApi {
    * @param opts - Initialization options
    */
   async loadDocument<T extends Doctype>(docId: DocID | CommitID | string, opts: DocOpts = {}): Promise<T> {
-    const doc = await this._loadDoc(docId, opts)
+    const docRef = DocRef.from(docId)
+    const base$ = await this.__loadDoc(docRef.baseID, opts)
     this._logger.verbose(`Document ${docId.toString()} successfully loaded`)
-    return doctypeFromState<T>(this.context, this._doctypeHandlers, doc.state$, doc.isReadOnly)
+    if (docRef instanceof CommitID) {
+      // Here CommitID is requested, let's return document at specific commit
+      const snapshot$ = await this.repository.stateManager.rewind(base$, docRef)
+      return doctypeFromState<T>(this.context, this._doctypeHandlers, snapshot$, true)
+    } else if (opts.atTime) {
+      const snapshot$ = await this.repository.stateManager.atTime(base$, opts.atTime)
+      return doctypeFromState<T>(this.context, this._doctypeHandlers, snapshot$, true)
+    } else {
+      return doctypeFromState<T>(this.context, this._doctypeHandlers, base$, false)
+    }
   }
 
   /**
@@ -633,21 +644,23 @@ class Ceramic implements CeramicApi {
    * @param docId - Document ID
    * @param opts - Initialization options
    */
-  async _loadDoc(docId: DocID | CommitID | string, opts: DocOpts = {}): Promise<Document> {
+  async _loadDoc(docId: DocID | CommitID | string, opts: DocOpts = {}): Promise<RunningStateLike> {
     const docRef = DocRef.from(docId)
-    const doc = await this.repository.load(docRef.baseID, {...DEFAULT_LOAD_DOCOPTS, ...opts})
+    const state$ = await this.repository.load(docRef.baseID, {...DEFAULT_LOAD_DOCOPTS, ...opts})
 
     // If DocID is requested, return the document
     if (docRef instanceof CommitID) {
       // Here CommitID is requested, let's return document at specific commit
-      // this.repository.stateManager.rewind(doc.state$, docRef)
-      return doc.rewind(docRef)
+      return this.repository.stateManager.rewind(state$, docRef)
     } else if (opts.atTime) {
-      const commitId = doc.findCommitAt(doc.state$, opts.atTime)
-      return doc.rewind(commitId)
+      return this.repository.stateManager.atTime(state$, opts.atTime)
     } else {
-      return doc
+      return state$
     }
+  }
+
+  async __loadDoc(docId: DocID, opts: DocOpts = {}): Promise<RunningState> {
+    return this.repository.load(docId, {...DEFAULT_LOAD_DOCOPTS, ...opts})
   }
 
   /**
@@ -663,11 +676,11 @@ class Ceramic implements CeramicApi {
    */
   async restoreDocuments() {
     const list = await this.repository.listPinned()
-    const documents = await Promise.all(list.map(docId => this._loadDoc(docId)))
-    documents.forEach(document => {
-      const toRecover = document.state?.anchorStatus === AnchorStatus.PENDING || document.state?.anchorStatus === AnchorStatus.PROCESSING
+    const documents = await Promise.all(list.map(docId => this.__loadDoc(DocID.fromString(docId))))
+    documents.forEach(state => {
+      const toRecover = state.value.anchorStatus === AnchorStatus.PENDING || state.value.anchorStatus === AnchorStatus.PROCESSING
       if (toRecover) {
-        document.anchor(document.state$)
+        this.repository.stateManager.anchor(state)
       }
     })
     this._logger.verbose(`Successfully restored ${documents.length} pinned documents`)

@@ -1,4 +1,3 @@
-import { Document } from '../document';
 import DocID from '@ceramicnetwork/docid';
 import { DocumentFactory } from './document-factory';
 import { DocOpts, DocState, DocStateHolder } from '@ceramicnetwork/common';
@@ -18,14 +17,14 @@ export class Repository {
 
   readonly feed$: Subject<DocState>;
 
-  readonly #map: LRUMap<string, Document>;
+  readonly #map: LRUMap<string, RunningState>;
   #documentFactory?: DocumentFactory;
   stateManager: StateManager;
   pinStore?: PinStore;
   #networkLoad?: NetworkLoad;
 
   constructor(limit: number, logger: DiagnosticsLogger) {
-    this.executionQ = new ExecutionQueue(logger, (docId) => this.get(docId).then((doc) => doc.state$));
+    this.executionQ = new ExecutionQueue(logger, (docId) => this.get(docId));
     this.#map = new LRUMap(100);
     this.#map.shift = function () {
       const entry = LRUMap.prototype.shift.call(this);
@@ -56,36 +55,35 @@ export class Repository {
     this.#networkLoad = networkLoad;
   }
 
-  fromMemory(docId: DocID): Document | undefined {
+  fromMemory(docId: DocID): RunningState | undefined {
     return this.#map.get(docId.toString());
   }
 
-  async fromStateStore(docId: DocID): Promise<Document | undefined> {
+  async fromStateStore(docId: DocID): Promise<RunningState | undefined> {
     if (this.pinStore && this.#documentFactory) {
       const docState = await this.pinStore.stateStore.load(docId);
       if (docState) {
         const runningState = new RunningState(docState);
-        const document = await this.#documentFactory.build(runningState);
-        await this.add(document);
-        return document;
+        await this.add(runningState);
+        return runningState;
       } else {
         return undefined;
       }
     }
   }
 
-  async fromNetwork(docId: DocID, opts: DocOpts = {}): Promise<Document> {
-    const document = await this.#networkLoad.load(docId);
-    await this.add(document);
-    await this.stateManager.syncGenesis(document.state$, opts);
-    return document;
+  async fromNetwork(docId: DocID, opts: DocOpts = {}): Promise<RunningState> {
+    const state$ = await this.#networkLoad.load(docId);
+    await this.add(state$);
+    await this.stateManager.syncGenesis(state$, opts);
+    return state$;
   }
 
   /**
    * Returns a document from wherever we can get information about it.
    * Starts by checking if the document state is present in the in-memory cache, if not then then checks the state store, and finally loads the document from pubsub.
    */
-  async load(docId: DocID, opts: DocOpts = {}): Promise<Document> {
+  async load(docId: DocID, opts: DocOpts = {}): Promise<RunningState> {
     return this.loadingQ.run(docId.toString(), async () => {
       const fromMemory = this.fromMemory(docId);
       if (fromMemory) return fromMemory;
@@ -109,7 +107,7 @@ export class Repository {
    * Return a document, either from cache or re-constructed from state store, but will not load from the network.
    * Adds the document to cache.
    */
-  async get(docId: DocID): Promise<Document | undefined> {
+  async get(docId: DocID): Promise<RunningState | undefined> {
     return this.loadingQ.run(docId.toString(), async () => {
       const fromMemory = this.fromMemory(docId);
       if (fromMemory) return fromMemory;
@@ -134,8 +132,8 @@ export class Repository {
   /**
    * Stub for adding the document.
    */
-  add(document: Document): void {
-    this.#map.set(document.id.toString(), document);
+  add(state: RunningState): void {
+    this.#map.set(state.id.toString(), state);
   }
 
   pin(docStateHolder: DocStateHolder): Promise<void> {
