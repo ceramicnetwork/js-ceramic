@@ -1,5 +1,13 @@
 import { DocID } from '@ceramicnetwork/docid';
-import { AnchorStatus, CommitType, DocState, DoctypeUtils, IpfsApi, SignatureStatus } from '@ceramicnetwork/common';
+import {
+  AnchorStatus,
+  CommitType,
+  DocState,
+  DoctypeUtils,
+  IpfsApi,
+  LoggerProvider,
+  SignatureStatus,
+} from '@ceramicnetwork/common';
 import CID from 'cids';
 import { RunningState } from '../state-management/running-state';
 import { Document } from '../document';
@@ -13,6 +21,7 @@ import { ContextfulHandler } from '../state-management/contextful-handler';
 import { ConflictResolution } from '../conflict-resolution';
 import { ExecLike } from '../state-management/execution-queue';
 import { doctypeFromState } from '../state-management/doctype-from-state';
+import { HandlersMap } from '../handlers-map';
 
 const FAKE_CID = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu');
 const DOC_ID = new DocID('tile', FAKE_CID);
@@ -37,6 +46,7 @@ const STRING_MAP_SCHEMA = {
 let ipfs: IpfsApi;
 let ceramic: Ceramic;
 let controllers: string[];
+const logger = new LoggerProvider().getDiagnosticsLogger()
 
 beforeAll(async () => {
   ipfs = await createIPFS();
@@ -55,14 +65,14 @@ test('constructor', async () => {
   const dispatcher = ceramic.dispatcher;
   const pinStore = ceramic.repository.pinStore;
   const context = ceramic.context;
-  const handler = new ContextfulHandler(context, new TileDoctypeHandler());
   const anchorService = ceramic.context.anchorService;
   const tasks = ceramic.repository.executionQ.forDocument(runningState.id);
   const conflictResolution = new ConflictResolution(
     anchorService,
     (ceramic as any).stateValidation,
     dispatcher,
-    handler,
+    context,
+    new HandlersMap(logger, new Map().set('tile', new TileDoctypeHandler))
   );
   const doc = new Document(runningState, dispatcher, pinStore, tasks, anchorService, conflictResolution);
 
@@ -271,13 +281,13 @@ test('handles basic conflict', async () => {
   // create invalid change that happened after main change
 
   const initialState = await doc1.rewind(docId.atCommit(docId.cid)).then((doc) => doc.state);
-  const handler = new ContextfulHandler(ceramic.context, new TileDoctypeHandler());
   const anchorService = ceramic.context.anchorService;
   const conflictResolution = new ConflictResolution(
     anchorService,
     (ceramic as any).stateValidation,
     ceramic.dispatcher,
-    handler,
+    ceramic.context,
+    new HandlersMap(logger, new Map().set('tile', new TileDoctypeHandler))
   );
   const state$ = new RunningState(initialState);
   const baseExecutionQ = ceramic.repository.executionQ.forDocument(state$.id);

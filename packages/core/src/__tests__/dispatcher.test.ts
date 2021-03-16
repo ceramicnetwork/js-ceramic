@@ -21,6 +21,7 @@ import { RunningState } from '../state-management/running-state';
 import { FauxStateValidation } from '../state-management/state-validation';
 import { ContextfulHandler } from '../state-management/contextful-handler';
 import { ConflictResolution } from '../conflict-resolution';
+import { HandlersMap } from '../handlers-map';
 
 const TOPIC = '/ceramic';
 const FAKE_CID = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu');
@@ -68,7 +69,7 @@ describe('Dispatcher', () => {
 
     const levelPath = await tmp.tmpName();
     const stateStore = new LevelStateStore(levelPath);
-    stateStore.open('test')
+    stateStore.open('test');
     repository = new Repository(100, loggerProvider.getDiagnosticsLogger());
     const pinStore = ({
       stateStore,
@@ -136,9 +137,14 @@ describe('Dispatcher', () => {
       // eslint-disable-next-line prefer-const
       let document: Document;
       const context = { loggerProvider, api: ({ loadDocument: async () => document } as unknown) as CeramicApi };
-      const handler = new ContextfulHandler(context, fakeHandler);
       const anchorService = (jest.fn() as unknown) as AnchorService;
-      const conflictResolution = new ConflictResolution(anchorService, new FauxStateValidation(), dispatcher, handler);
+      const conflictResolution = new ConflictResolution(
+        anchorService,
+        new FauxStateValidation(),
+        dispatcher,
+        context,
+        new HandlersMap(loggerProvider.getDiagnosticsLogger(), new Map().set('tile', fakeHandler)),
+      );
       document = new Document(
         runningState,
         dispatcher,

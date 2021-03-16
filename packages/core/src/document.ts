@@ -46,18 +46,6 @@ export class Document extends Observable<DocState> implements RunningStateLike {
   }
 
   /**
-   * Takes a document containing only the genesis commit and kicks off the process to load and apply
-   * the most recent Tip to it.
-   * @param state$
-   * @param opts
-   * @private
-   */
-  async _syncDocumentToCurrent(state$: RunningState, opts: DocOpts): Promise<Document> {
-    await this._applyOpts(state$, opts)
-    return this
-  }
-
-  /**
    * Takes the most recent known-about version of a document and a specific commit and returns a new
    * Document instance representing the same document but set to the state of the document at the
    * requested commit.  If the requested commit is for a branch of history that conflicts with the

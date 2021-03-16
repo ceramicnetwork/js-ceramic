@@ -1,5 +1,5 @@
 import { Dispatcher } from './dispatcher'
-import { DEFAULT_WRITE_DOCOPTS, Document } from './document';
+import { DEFAULT_LOAD_DOCOPTS, DEFAULT_WRITE_DOCOPTS, Document } from './document';
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import KeyDidResolver from 'key-did-resolver'
 import DocID, { CommitID, DocRef } from '@ceramicnetwork/docid';
@@ -43,6 +43,7 @@ import { DocumentFactory } from './state-management/document-factory';
 import { NetworkLoad } from './state-management/network-load';
 import { FauxStateValidation, RealStateValidation, StateValidation } from './state-management/state-validation';
 import { doctypeFromState } from './state-management/doctype-from-state';
+import { ConflictResolution } from './conflict-resolution';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const packageJson = require('../package.json')
@@ -212,7 +213,8 @@ class Ceramic implements CeramicApi {
 
     // This initialization block below has to be redone.
     this.stateValidation = this._validateDocs ? new RealStateValidation(this.loadDocument.bind(this)) : new FauxStateValidation()
-    const documentFactory = new DocumentFactory(this.dispatcher, pinStore, this.context, this._doctypeHandlers, this.stateValidation, this.repository.executionQ)
+    const conflictResolution = new ConflictResolution(this.context.anchorService, this.stateValidation, this.dispatcher, this.context, this._doctypeHandlers)
+    const documentFactory = new DocumentFactory(this.dispatcher, pinStore, this.context, conflictResolution, this.stateValidation, this.repository.executionQ)
     const networkLoad = new NetworkLoad(this.dispatcher, this._doctypeHandlers, this.context, this._logger, documentFactory)
     this.repository.setPinStore(pinStore)
     this.repository.setDocumentFactory(documentFactory);
@@ -633,7 +635,7 @@ class Ceramic implements CeramicApi {
    */
   async _loadDoc(docId: DocID | CommitID | string, opts: DocOpts = {}): Promise<Document> {
     const docRef = DocRef.from(docId)
-    const doc = await this.repository.load(docRef.baseID, opts)
+    const doc = await this.repository.load(docRef.baseID, {...DEFAULT_LOAD_DOCOPTS, ...opts})
 
     // If DocID is requested, return the document
     if (docRef instanceof CommitID) {

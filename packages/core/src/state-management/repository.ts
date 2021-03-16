@@ -1,4 +1,4 @@
-import { DEFAULT_LOAD_DOCOPTS, Document } from '../document';
+import { Document } from '../document';
 import DocID from '@ceramicnetwork/docid';
 import { DocumentFactory } from './document-factory';
 import { DocOpts, DocState, DocStateHolder } from '@ceramicnetwork/common';
@@ -10,15 +10,17 @@ import { ExecutionQueue } from './execution-queue';
 import { RunningState } from './running-state';
 import { LRUMap } from 'lru_map';
 import { Subject } from 'rxjs';
+import { StateManager } from './state-manager';
 
 export class Repository {
   readonly loadingQ: NamedTaskQueue = new NamedTaskQueue();
   readonly executionQ: ExecutionQueue;
 
-  readonly feed$: Subject<DocState>
+  readonly feed$: Subject<DocState>;
 
   readonly #map: LRUMap<string, Document>;
   #documentFactory?: DocumentFactory;
+  #stateManager: StateManager;
   pinStore?: PinStore;
   #networkLoad?: NetworkLoad;
 
@@ -36,6 +38,13 @@ export class Repository {
   // Ideally this would be provided in the constructor, but circular dependencies in our initialization process make this necessary for now
   setDocumentFactory(documentFactory: DocumentFactory): void {
     this.#documentFactory = documentFactory;
+    this.#stateManager = new StateManager(
+      this.#documentFactory.dispatcher,
+      this.#documentFactory.pinStore,
+      this.executionQ,
+      this.#documentFactory.context.anchorService,
+      this.#documentFactory.conflictResolution,
+    );
   }
 
   // Ideally this would be provided in the constructor, but circular dependencies in our initialization process make this necessary for now
@@ -68,7 +77,7 @@ export class Repository {
   async fromNetwork(docId: DocID, opts: DocOpts = {}): Promise<Document> {
     const document = await this.#networkLoad.load(docId);
     await this.add(document);
-    await document._syncDocumentToCurrent(document.state$, { ...DEFAULT_LOAD_DOCOPTS, ...opts });
+    await this.#stateManager.syncGenesis(document.state$, opts);
     return document;
   }
 
