@@ -41,7 +41,7 @@ export class Document extends Observable<DocState> implements RunningStateLike {
     this.id = state$.id
   }
 
-  get value() {
+  get value(): DocState {
     return this.state$.value
   }
 
@@ -67,7 +67,7 @@ export class Document extends Observable<DocState> implements RunningStateLike {
    * @param commitId - DocID of the document including the requested commit
    */
   async rewind(commitId: CommitID): Promise<Document> {
-    const resetState = await this.conflictResolution.rewind(this.state$.value, commitId)
+    const resetState = await this.conflictResolution.rewind(this.value, commitId)
     const state$ = new RunningState(resetState)
     return new Document(state$, this.dispatcher, this.pinStore, this.tasks, this.anchorService, this.conflictResolution, true)
   }
@@ -235,7 +235,7 @@ export class Document extends Observable<DocState> implements RunningStateLike {
    * Gets document content
    */
   get content (): any {
-    const { next, content } = this.state
+    const { next, content } = this.value
     return next?.content ?? content
   }
 
@@ -243,14 +243,14 @@ export class Document extends Observable<DocState> implements RunningStateLike {
    * Gets document state
    */
   get state (): DocState {
-    return this.state$.value
+    return this.value
   }
 
   /**
    * Gets document Tip commit CID
    */
   get tip (): CID {
-    const log = this.state$.value.log
+    const log = this.value.log
     return log[log.length - 1].cid
   }
 
@@ -277,6 +277,6 @@ export class Document extends Observable<DocState> implements RunningStateLike {
    * Serializes the document content
    */
   toString (): string {
-    return JSON.stringify(this.state$.value)
+    return JSON.stringify(this.value)
   }
 }
