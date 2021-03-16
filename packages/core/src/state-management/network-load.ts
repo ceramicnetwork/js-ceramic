@@ -5,6 +5,7 @@ import { DocumentFactory } from './document-factory';
 import { Document } from '../document';
 import { Context } from '@ceramicnetwork/common';
 import { DocID } from '@ceramicnetwork/docid';
+import { RunningState } from './running-state';
 
 export class NetworkLoad {
   constructor(
@@ -24,7 +25,8 @@ export class NetworkLoad {
       throw new Error(`No genesis commit found with CID ${genesisCid.toString()}`);
     }
     const state = await handler.applyCommit(commit, docId.cid, this.context);
-    const document = await this.documentFactory.build(state);
+    const runningState = new RunningState(state)
+    const document = await this.documentFactory.build(runningState);
     this.logger.verbose(`Document ${docId.toString()} successfully loaded`);
     return document;
   }

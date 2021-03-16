@@ -269,7 +269,7 @@ export class Document extends Observable<DocState> implements RunningStateLike {
   /**
    * Gracefully closes the document instance.
    */
-  close (): void {
+  complete (): void {
     this.state$.complete()
   }
 

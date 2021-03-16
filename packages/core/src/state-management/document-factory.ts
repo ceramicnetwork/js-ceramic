@@ -1,4 +1,4 @@
-import { Context, DocState } from '@ceramicnetwork/common';
+import { Context } from '@ceramicnetwork/common';
 import { Document } from '../document';
 import { Dispatcher } from '../dispatcher';
 import { PinStore } from '../store/pin-store';
@@ -20,12 +20,11 @@ export class DocumentFactory {
     private readonly executionQ: ExecutionQueue,
   ) {}
 
-  async build(initialState: DocState) {
-    const handler = new ContextfulHandler(this.context, this.handlers.get(initialState.doctype));
-    const state$ = new RunningState(initialState);
+  async build(state$: RunningState) {
+    const handler = new ContextfulHandler(this.context, this.handlers.get(state$.value.doctype));
     const anchorService = this.context.anchorService;
     const conflictResolution = new ConflictResolution(anchorService, this.stateValidation, this.dispatcher, handler);
-    const docId = new DocID(initialState.doctype, initialState.log[0].cid);
+    const docId = new DocID(state$.value.doctype, state$.value.log[0].cid);
     const document = new Document(
       state$,
       this.dispatcher,

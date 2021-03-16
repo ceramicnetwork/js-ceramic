@@ -8,6 +8,7 @@ import { NetworkLoad } from './network-load';
 import { NamedTaskQueue } from './named-task-queue';
 import { DiagnosticsLogger } from '@ceramicnetwork/logger';
 import { ExecutionQueue } from './execution-queue';
+import { RunningState } from './running-state';
 
 export class Repository {
   readonly loadingQ: NamedTaskQueue = new NamedTaskQueue();
@@ -21,8 +22,8 @@ export class Repository {
   constructor(limit: number, logger: DiagnosticsLogger) {
     this.executionQ = new ExecutionQueue(logger, (docId) => this.get(docId).then((doc) => doc.state$));
     this.#map = new AsyncLruMap(limit, async (entry) => {
-      entry.value.close();
-      await this.executionQ.tasks.lanes.get(entry.value.id.toString()).onIdle();
+      entry.value.complete();
+      // await this.executionQ.tasks.lanes.get(entry.value.id.toString()).onIdle();
     });
   }
 
@@ -48,7 +49,8 @@ export class Repository {
     if (this.pinStore && this.#documentFactory) {
       const docState = await this.pinStore.stateStore.load(docId);
       if (docState) {
-        const document = await this.#documentFactory.build(docState);
+        const runningState = new RunningState(docState)
+        const document = await this.#documentFactory.build(runningState);
         await this.add(document);
         return document;
       } else {
@@ -147,7 +149,7 @@ export class Repository {
     await Promise.all(
       Array.from(this.#map).map(async ([id, document]) => {
         await this.#map.delete(id);
-        document.close();
+        document.complete();
       }),
     );
     await this.pinStore.close();
