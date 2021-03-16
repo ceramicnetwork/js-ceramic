@@ -96,8 +96,11 @@ const legacyResolve = async (ceramic: Ceramic, didId: string, commit?: string): 
 }
 
 const resolve = async (ceramic: Ceramic, didId: string, commit?: string, v03ID?: string): Promise<DIDDocument | null> =>  {
-  const commitId = DocID.fromString(didId).atCommit(commit)
-  const doctype = await ceramic.loadDocument(commitId)
+  let docRef = DocID.fromString(didId)
+  if (commit) {
+    docRef = docRef.atCommit(commit)
+  }
+  const doctype = await ceramic.loadDocument(docRef)
   return wrapDocument(doctype.content, `did:3:${v03ID || didId}`)
 }
 
@@ -123,6 +126,7 @@ export default {
           response.didResolutionMetadata.error = 'representationNotSupported'
         }
       } catch (e) {
+        console.log(e)
         response.didResolutionMetadata.error = 'invalidDid'
         response.didResolutionMetadata.message = e.toString()
       }
