@@ -145,7 +145,6 @@ describe('Dispatcher', () => {
         repository.pinStore,
         repository.executionQ.forDocument(runningState.id),
         (jest.fn() as unknown) as AnchorService,
-        handler,
         conflictResolution,
       );
       dispatcher.messageBus.queryNetwork(document.id).subscribe();

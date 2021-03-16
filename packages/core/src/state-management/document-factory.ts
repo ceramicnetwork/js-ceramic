@@ -32,7 +32,6 @@ export class DocumentFactory {
       this.pinStore,
       this.executionQ.forDocument(docId),
       anchorService,
-      handler,
       conflictResolution,
     );
     await this.stateValidation.validate(document.state, document.content);

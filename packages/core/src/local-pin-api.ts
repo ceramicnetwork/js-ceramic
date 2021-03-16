@@ -17,7 +17,7 @@ export class LocalPinApi implements PinApi {
 
   async add(docId: DocID): Promise<void> {
     const document = await this.loadDoc(docId);
-    await this.repository.pin(document.doctype);
+    await this.repository.pin(document);
     this.logger.verbose(`Pinned document ${docId.toString()}`)
   }
 

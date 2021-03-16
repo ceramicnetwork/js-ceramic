@@ -12,6 +12,7 @@ import { TileDoctype } from '@ceramicnetwork/doctype-tile';
 import { ContextfulHandler } from '../state-management/contextful-handler';
 import { ConflictResolution } from '../conflict-resolution';
 import { ExecLike } from '../state-management/execution-queue';
+import { doctypeFromState } from '../state-management/doctype-from-state';
 
 const FAKE_CID = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu');
 const DOC_ID = new DocID('tile', FAKE_CID);
@@ -63,7 +64,7 @@ test('constructor', async () => {
     dispatcher,
     handler,
   );
-  const doc = new Document(runningState, dispatcher, pinStore, tasks, anchorService, handler, conflictResolution);
+  const doc = new Document(runningState, dispatcher, pinStore, tasks, anchorService, conflictResolution);
 
   expect(doc.id).toEqual(DOC_ID);
   expect(doc.state.content).toEqual(INITIAL_CONTENT);
@@ -162,38 +163,38 @@ test('commit history and rewind', async () => {
   // Correctly check out a specific commit
   const docV0 = await doc.rewind(commit0);
   expect(docV0.id.equals(commit0.baseID)).toBeTruthy();
-  expect(docV0.state.log.length).toEqual(1);
-  expect(docV0.doctype.controllers).toEqual(controllers);
-  expect(docV0.doctype.content).toEqual(INITIAL_CONTENT);
-  expect(docV0.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED);
+  expect(docV0.state$.value.log.length).toEqual(1);
+  expect(docV0.state$.value.metadata.controllers).toEqual(controllers);
+  expect(docV0.state$.value.content).toEqual(INITIAL_CONTENT);
+  expect(docV0.state$.value.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED);
 
   const docV1 = await doc.rewind(commit1);
   expect(docV1.id.equals(commit1.baseID)).toBeTruthy();
-  expect(docV1.state.log.length).toEqual(2);
-  expect(docV1.doctype.controllers).toEqual(controllers);
-  expect(docV1.doctype.content).toEqual(INITIAL_CONTENT);
-  expect(docV1.state.anchorStatus).toEqual(AnchorStatus.ANCHORED);
+  expect(docV1.state$.value.log.length).toEqual(2);
+  expect(docV1.state$.value.metadata.controllers).toEqual(controllers);
+  expect(docV1.state$.value.content).toEqual(INITIAL_CONTENT);
+  expect(docV1.state$.value.anchorStatus).toEqual(AnchorStatus.ANCHORED);
 
   const docV2 = await doc.rewind(commit2);
   expect(docV2.id.equals(commit2.baseID)).toBeTruthy();
-  expect(docV2.state.log.length).toEqual(3);
-  expect(docV2.doctype.controllers).toEqual(controllers);
-  expect(docV2.doctype.content).toEqual(newContent);
-  expect(docV2.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED);
+  expect(docV2.state$.value.log.length).toEqual(3);
+  expect(docV2.state$.value.metadata.controllers).toEqual(controllers);
+  expect(docV2.state$.value.next.content).toEqual(newContent);
+  expect(docV2.state$.value.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED);
 
   const docV3 = await doc.rewind(commit3);
   expect(docV3.id.equals(commit3.baseID)).toBeTruthy();
-  expect(docV3.state.log.length).toEqual(4);
-  expect(docV3.doctype.controllers).toEqual(controllers);
-  expect(docV3.doctype.content).toEqual(newContent);
-  expect(docV3.state.anchorStatus).toEqual(AnchorStatus.ANCHORED);
+  expect(docV3.state$.value.log.length).toEqual(4);
+  expect(docV3.state$.value.metadata.controllers).toEqual(controllers);
+  expect(docV3.state$.value.content).toEqual(newContent);
+  expect(docV3.state$.value.anchorStatus).toEqual(AnchorStatus.ANCHORED);
 
   const docV4 = await doc.rewind(commit4);
   expect(docV4.id.equals(commit4.baseID)).toBeTruthy();
-  expect(docV4.state.log.length).toEqual(5);
-  expect(docV4.doctype.controllers).toEqual(controllers);
-  expect(docV4.doctype.content).toEqual(finalContent);
-  expect(docV4.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED);
+  expect(docV4.state$.value.log.length).toEqual(5);
+  expect(docV4.state$.value.metadata.controllers).toEqual(controllers);
+  expect(docV4.state$.value.next.content).toEqual(finalContent);
+  expect(docV4.state$.value.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED);
 });
 
 describe('rewind', () => {
@@ -237,7 +238,7 @@ describe('rewind', () => {
     const snapshot = await doc2.rewind(doctype1.commitId);
 
     expect(DoctypeUtils.statesEqual(snapshot.state, doctype1.state));
-    const snapshotDoctype = snapshot.doctype;
+    const snapshotDoctype = doctypeFromState(ceramic2.context, ceramic2._doctypeHandlers, snapshot.state$, snapshot.isReadOnly);
     await expect(
       snapshotDoctype.change({
         content: { abc: 1010 },
@@ -299,22 +300,22 @@ test('handles basic conflict', async () => {
     ceramic.repository.pinStore,
     executionQ,
     anchorService,
-    handler,
     conflictResolution,
   );
   await doc2._handleTip(doc2.state$, tipPreUpdate);
 
   const conflictingNewContent = { asdf: 2342 };
-  updateRec = await TileDoctype._makeCommit(doc2.doctype, ceramic.did, conflictingNewContent, doc2.doctype.controllers);
+  const doctype2 = doctypeFromState(ceramic.context, ceramic._doctypeHandlers, doc2.state$, doc2.isReadOnly)
+  updateRec = await TileDoctype._makeCommit(doctype2, ceramic.did, conflictingNewContent, doctype2.controllers);
   await doc2.applyCommit(updateRec);
 
-  await anchorUpdate(ceramic, doc2.doctype);
+  await anchorUpdate(ceramic, doctype2);
   const tipInvalidUpdate = doc2.tip;
-  expect(doc2.doctype.content).toEqual(conflictingNewContent);
+  expect(doctype2.content).toEqual(conflictingNewContent);
   // loading tip from valid log to doc with invalid
   // log results in valid state
   await doc2._handleTip(doc2.state$, tipValidUpdate);
-  expect(doc2.doctype.content).toEqual(newContent);
+  expect(doctype2.content).toEqual(newContent);
 
   // loading tip from invalid log to doc with valid
   // log results in valid state
@@ -323,7 +324,7 @@ test('handles basic conflict', async () => {
 
   // Loading valid commit works
   const docAtValidCommit = await doc1.rewind(docId.atCommit(tipValidUpdate));
-  expect(docAtValidCommit.doctype.content).toEqual(newContent);
+  expect(docAtValidCommit.state$.value.content).toEqual(newContent);
 
   // Loading invalid commit fails
   await expect(doc1.rewind(docId.atCommit(tipInvalidUpdate))).rejects.toThrow(

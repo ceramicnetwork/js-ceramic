@@ -42,6 +42,7 @@ import { HandlersMap } from './handlers-map';
 import { DocumentFactory } from './state-management/document-factory';
 import { NetworkLoad } from './state-management/network-load';
 import { FauxStateValidation, RealStateValidation, StateValidation } from './state-management/state-validation';
+import { doctypeFromState } from './state-management/doctype-from-state';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const packageJson = require('../package.json')
@@ -171,7 +172,7 @@ class Ceramic implements CeramicApi {
   public readonly pin: PinApi;
   readonly repository: Repository;
 
-  private readonly _doctypeHandlers: HandlersMap
+  readonly _doctypeHandlers: HandlersMap
   private readonly _ipfsTopology: IpfsTopology
   private readonly _logger: DiagnosticsLogger
   private readonly _networkOptions: CeramicNetworkOptions
@@ -491,7 +492,7 @@ class Ceramic implements CeramicApi {
   async applyCommit<T extends Doctype>(docId: string | DocID, commit: CeramicCommit, opts?: DocOpts): Promise<T> {
     const doc = await this._loadDoc(normalizeDocID(docId), opts)
     await doc.applyCommit(commit, opts)
-    return doc.doctype as T
+    return doctypeFromState<T>(this.context, this._doctypeHandlers, doc.state$, doc.isReadOnly)
   }
 
   /**
@@ -514,7 +515,7 @@ class Ceramic implements CeramicApi {
    */
   async createDocumentFromGenesis<T extends Doctype>(doctype: string, genesis: any, opts: DocOpts = {}): Promise<T> {
     const document = await this._createDocFromGenesis(doctype, genesis, opts)
-    return document.doctype as T;
+    return doctypeFromState<T>(this.context, this._doctypeHandlers, document.state$, document.isReadOnly)
   }
 
   /**
@@ -538,7 +539,7 @@ class Ceramic implements CeramicApi {
   async loadDocument<T extends Doctype>(docId: DocID | CommitID | string, opts: DocOpts = {}): Promise<T> {
     const doc = await this._loadDoc(docId, opts)
     this._logger.verbose(`Document ${docId.toString()} successfully loaded`)
-    return doc.doctype as T
+    return doctypeFromState<T>(this.context, this._doctypeHandlers, doc.state$, doc.isReadOnly)
   }
 
   /**

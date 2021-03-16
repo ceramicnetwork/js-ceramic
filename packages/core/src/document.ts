@@ -4,9 +4,7 @@ import {
   AnchorStatus,
   CommitType,
   DocState,
-  Doctype,
   DocOpts,
-  DoctypeUtils,
   UnreachableCaseError,
   AnchorService,
 } from '@ceramicnetwork/common';
@@ -16,7 +14,6 @@ import { timeoutWith } from "rxjs/operators";
 import { Observable, of, Subscription } from 'rxjs'
 import { ConflictResolution } from './conflict-resolution';
 import { RunningState, RunningStateLike } from './state-management/running-state';
-import { ContextfulHandler } from './state-management/contextful-handler';
 import { ExecLike } from './state-management/execution-queue';
 
 // DocOpts defaults for document load operations
@@ -29,27 +26,18 @@ export const DEFAULT_WRITE_DOCOPTS = {anchor: true, publish: true, sync: false}
  */
 export class Document extends Observable<DocState> implements RunningStateLike {
   readonly id: DocID
-  private _doctype: Doctype
 
   constructor (readonly state$: RunningState,
                private readonly dispatcher: Dispatcher,
                private readonly pinStore: PinStore,
                private readonly tasks: ExecLike,
                private readonly anchorService: AnchorService,
-               private readonly handler: ContextfulHandler,
                private readonly conflictResolution: ConflictResolution,
-               private readonly isReadOnly = false,
+               readonly isReadOnly = false,
                ) {
     super(subscriber => {
       this.state$.subscribe(subscriber)
     })
-    const doctype = handler.doctype(state$.value);
-    this._doctype = isReadOnly ? DoctypeUtils.makeReadOnly(doctype) : doctype
-    this.state$.subscribe(state => {
-      this._doctype.state = state;
-      this._doctype.emit('change');
-    })
-
     this.id = state$.id
   }
 
@@ -81,7 +69,7 @@ export class Document extends Observable<DocState> implements RunningStateLike {
   async rewind(commitId: CommitID): Promise<Document> {
     const resetState = await this.conflictResolution.rewind(this.state$.value, commitId)
     const state$ = new RunningState(resetState)
-    return new Document(state$, this.dispatcher, this.pinStore, this.tasks, this.anchorService, this.handler, this.conflictResolution, true)
+    return new Document(state$, this.dispatcher, this.pinStore, this.tasks, this.anchorService, this.conflictResolution, true)
   }
 
   /**
@@ -256,13 +244,6 @@ export class Document extends Observable<DocState> implements RunningStateLike {
    */
   get state (): DocState {
     return this.state$.value
-  }
-
-  /**
-   * Gets document doctype name
-   */
-  get doctype (): Doctype {
-    return this._doctype
   }
 
   /**
