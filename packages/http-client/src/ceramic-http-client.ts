@@ -14,8 +14,6 @@ import {
   DoctypeConstructor,
   DoctypeHandler,
   DoctypeUtils,
-  LoggerConfig,
-  LoggerProvider,
   MultiQuery,
   PinApi,
 } from "@ceramicnetwork/common"
@@ -25,7 +23,6 @@ import { DocID, CommitID, DocRef } from '@ceramicnetwork/docid';
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import KeyDidResolver from 'key-did-resolver'
 import { Resolver } from "did-resolver"
-import { DiagnosticsLogger, LogLevel } from '@ceramicnetwork/logger';
 
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -42,7 +39,6 @@ export const DEFAULT_CLIENT_CONFIG: CeramicClientConfig = {
   docSyncInterval: 5000,
   docCacheLimit: 500,
   cacheDocCommits: false,
-  logger: {logToFiles: false, logLevel: LogLevel.warn}
 }
 
 /**
@@ -54,7 +50,6 @@ export interface CeramicClientConfig {
   docSyncInterval?: number
   docCacheLimit?: number;
   cacheDocCommits?: boolean;
-  logger?: LoggerConfig;
 }
 
 /**
@@ -77,7 +72,6 @@ export default class CeramicClient implements CeramicApi {
 
   private readonly _config: CeramicClientConfig
   public readonly _doctypeConstructors: Record<string, DoctypeConstructor<Doctype>>
-  private readonly _logger: DiagnosticsLogger
 
   constructor (apiHost: string = CERAMIC_HOST, config: CeramicClientConfig = {}) {
     this._config = { ...DEFAULT_CLIENT_CONFIG, ...config }
@@ -85,12 +79,7 @@ export default class CeramicClient implements CeramicApi {
     this._apiUrl = combineURLs(apiHost, API_PATH)
     this._docCache = new DocCache(config.docCacheLimit, this._config.cacheDocCommits)
 
-    const loggerProvider = new LoggerProvider(config.logger)
-    this._logger = loggerProvider.getDiagnosticsLogger()
-
-    this.context = { api: this, loggerProvider }
-
-    this._logger.debug(`Starting Ceramic HTTP client at version ${packageJson.version} with config: \n${JSON.stringify(config, null, 2)}`)
+    this.context = { api: this }
 
     this.pin = this._initPinApi()
 
@@ -246,7 +235,6 @@ export default class CeramicClient implements CeramicApi {
     if (!this.context.did.authenticated) {
       await this.context.did.authenticate()
     }
-    this._logger.debug(`Now authenticated as DID ${this.context.did.id}`)
   }
 
   async getSupportedChains(): Promise<Array<string>> {
