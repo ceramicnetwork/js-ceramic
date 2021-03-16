@@ -12,9 +12,7 @@ export class MessageBus extends Observable<PubsubMessage> implements Subscriptio
   private readonly pubsubSubscription: Subscription;
   private readonly feed$: Subject<PubsubMessage> = new Subject<PubsubMessage>();
 
-  constructor(
-    readonly pubsub: Observable<PubsubMessage> & { next: (m: PubsubMessage) => Subscription },
-  ) {
+  constructor(readonly pubsub: Observable<PubsubMessage> & { next: (m: PubsubMessage) => Subscription }) {
     super((subscriber) => {
       this.feed$.subscribe(subscriber);
     });
@@ -25,7 +23,7 @@ export class MessageBus extends Observable<PubsubMessage> implements Subscriptio
    * Return true if stopped. Necessary for SubscriptionLike interface.
    */
   get closed() {
-    return this.feed$.closed;
+    return this.feed$.isStopped;
   }
 
   /**
@@ -63,9 +61,6 @@ export class MessageBus extends Observable<PubsubMessage> implements Subscriptio
    */
   unsubscribe(): void {
     if (!this.pubsubSubscription.closed) this.pubsubSubscription.unsubscribe();
-    if (!this.feed$.closed) {
-      this.feed$.complete();
-      this.feed$.unsubscribe();
-    }
+    this.feed$.complete();
   }
 }

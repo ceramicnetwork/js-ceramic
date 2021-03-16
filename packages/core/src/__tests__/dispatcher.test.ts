@@ -18,9 +18,8 @@ import tmp from 'tmp-promise';
 import { LevelStateStore } from '../store/level-state-store';
 import { PinStore } from '../store/pin-store';
 import { RunningState } from '../state-management/running-state';
-import { FauxStateValidation, RealStateValidation } from '../state-management/state-validation';
+import { FauxStateValidation } from '../state-management/state-validation';
 import { ContextfulHandler } from '../state-management/contextful-handler';
-import { TaskQueue } from '../pubsub/task-queue';
 import { ConflictResolution } from '../conflict-resolution';
 
 const TOPIC = '/ceramic';
@@ -69,6 +68,7 @@ describe('Dispatcher', () => {
 
     const levelPath = await tmp.tmpName();
     const stateStore = new LevelStateStore(levelPath);
+    stateStore.open('test')
     repository = new Repository(100, loggerProvider.getDiagnosticsLogger());
     const pinStore = ({
       stateStore,
@@ -131,23 +131,19 @@ describe('Dispatcher', () => {
   });
 
   it('handle message correctly', async () => {
-    const logger = loggerProvider.getDiagnosticsLogger();
     async function register(state: DocState) {
       const runningState = new RunningState(state);
       // eslint-disable-next-line prefer-const
       let document: Document;
       const context = { loggerProvider, api: ({ loadDocument: async () => document } as unknown) as CeramicApi };
       const handler = new ContextfulHandler(context, fakeHandler);
-      const tasks = new TaskQueue((error) => {
-        logger.err(error);
-      });
       const anchorService = (jest.fn() as unknown) as AnchorService;
       const conflictResolution = new ConflictResolution(anchorService, new FauxStateValidation(), dispatcher, handler);
       document = new Document(
         runningState,
         dispatcher,
-        null,
-        tasks,
+        repository.pinStore,
+        repository.executionQ.forDocument(runningState.id),
         (jest.fn() as unknown) as AnchorService,
         handler,
         conflictResolution,

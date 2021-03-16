@@ -1,8 +1,8 @@
-import { BehaviorSubject, Subscription, Subscribable, ObservableLike, Observable, OperatorFunction } from 'rxjs';
+import { BehaviorSubject, Subscription, Subscribable, Observable, OperatorFunction } from 'rxjs';
 import { DocState, DocStateHolder, DoctypeUtils } from '@ceramicnetwork/common';
 import { DocID } from '@ceramicnetwork/docid';
 import { SubscriptionSet } from '../subscription-set';
-import CID from 'cids'
+import CID from 'cids';
 
 /**
  * `pipe` aspect of rxjs Observable.
@@ -45,7 +45,7 @@ export class RunningState extends BehaviorSubject<DocState> implements RunningSt
   }
 
   get tip(): CID {
-    return this.value.log[this.value.log.length - 1].cid
+    return this.value.log[this.value.log.length - 1].cid;
   }
 
   get state() {
@@ -62,9 +62,8 @@ export class RunningState extends BehaviorSubject<DocState> implements RunningSt
   /**
    * Mark the RunningState complete, closed, and unsubscribe from related subscriptions in subscriptionSet.
    */
-  close() {
+  complete() {
     this.subscriptionSet.unsubscribe();
     super.complete();
-    this.unsubscribe();
   }
 }
