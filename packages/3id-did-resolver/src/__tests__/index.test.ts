@@ -1,15 +1,16 @@
 jest.mock('cross-fetch', () => {
   const mockedCalls = require('./vectors.json')['http-mock']
-  return jest.fn(async (url, opts) => ({
+  return jest.fn(async (url, opts = {}) => ({
       ok: true,
       json: async () => {
         const call = mockedCalls[url]
-        console.log('u', url)
-        if (call.expectedBody && (
-            opts.method !== 'post' ||
-            opts.body !== JSON.stringify(call.expectedBody)
-        )) {
-          throw new Error('invalid http request for mock')
+        if (opts.method === 'post') {
+          const { response } = call.find(({ expectedBody }) => opts.body === JSON.stringify(expectedBody))
+          if (response) {
+            return response
+          } else {
+            throw new Error('invalid http request for mock')
+          }
         }
         return call.response
       }
@@ -28,6 +29,7 @@ const vectors = require('./vectors.json')
 
 const v1 = '3IDv1'
 const v0 = '3IDv0'
+const v0NoUpdates = '3IDv0-no-updates'
 
 const toLdFormat = result => {
   const newResult = { ...result }
@@ -37,7 +39,7 @@ const toLdFormat = result => {
 }
 
 describe('3ID DID Resolver', () => {
-  jest.setTimeout(10000)
+  jest.setTimeout(20000)
   let ceramic
 
   beforeAll(async () => {
@@ -55,18 +57,32 @@ describe('3ID DID Resolver', () => {
       const resolver = new Resolver(threeIdResolver)
       const did = vectors[v1].did + query.params[0]
       expect(await resolver.resolve(did)).toEqual(query.result)
+      if (query.params[1]) {
+        const didVTime = vectors[v1].did + query.params[1]
+        expect(await resolver.resolve(didVTime)).toEqual(query.result)
+      }
       expect(await resolver.resolve(did, { accept: DID_LD_JSON })).toEqual(toLdFormat(query.result))
     })
   })
 
   describe('3IDv0', () => {
+    test('resolves 3id with no updates', async () => {
+      const threeIdResolver = ThreeIdResolver.getResolver(ceramic)
+      const resolver = new Resolver(threeIdResolver)
+      const query = vectors[v0NoUpdates].query
+      const did = vectors[v0NoUpdates].did + query.params[0]
+      expect(await resolver.resolve(did)).toEqual(query.result)
+    })
+
     test.each(vectors[v0].queries)('resolves 3id documents correctly %#', async (query) => {
       const threeIdResolver = ThreeIdResolver.getResolver(ceramic)
       const resolver = new Resolver(threeIdResolver)
       const did = vectors[v0].did + query.params[0]
-      const res = await resolver.resolve(did)
-      console.log('resu', JSON.stringify(res))
-      expect(res).toEqual(query.result)
+      expect(await resolver.resolve(did)).toEqual(query.result)
+      if (query.params[1]) {
+        const didVTime = vectors[v0].did + query.params[1]
+        expect(await resolver.resolve(didVTime)).toEqual(query.result)
+      }
       expect(await resolver.resolve(did, { accept: DID_LD_JSON })).toEqual(toLdFormat(query.result))
     })
   })
