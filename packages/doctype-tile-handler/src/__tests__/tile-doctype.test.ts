@@ -4,7 +4,7 @@ import dagCBOR from "ipld-dag-cbor"
 
 import { DID } from 'dids'
 import { Resolver } from "did-resolver"
-import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
+import { wrapDocument } from '@ceramicnetwork/3id-did-resolver'
 import KeyDidResolver from 'key-did-resolver'
 import { TileDoctypeHandler } from '../tile-doctype-handler'
 import * as uint8arrays from "uint8arrays"
@@ -18,6 +18,7 @@ jest.mock('did-jwt', () => ({
     // TODO - We should test for when this function throws as well
     verifyJWS: (): void => { return }
 }))
+import didJWT from 'did-jwt'
 
 
 
@@ -140,19 +141,20 @@ describe('TileDoctypeHandler', () => {
             }
         }
 
-        const threeIdResolver = ThreeIdResolver.getResolver({
-            loadDocument: (): any => {
-                return Promise.resolve({
-                    content: {
-                        "publicKeys": {
-                            "signing": "zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV",
-                            "encryption": "z6LSfQabSbJzX8WAm1qdQcHCHTzVv8a2u6F7kmzdodfvUCo9"
-                        }
-                    }
-                })
-            },
-            createDocument: (): any => { return null }
-        })
+        const threeIdResolver = {
+          '3': async (did) => ({
+            didResolutionMetadata: { contentType: 'application/did+json' },
+            didDocument: wrapDocument({
+                  content: {
+                      "publicKeys": {
+                          "signing": "zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV",
+                          "encryption": "z6LSfQabSbJzX8WAm1qdQcHCHTzVv8a2u6F7kmzdodfvUCo9"
+                      }
+                  }
+              }, did),
+            didDocumentMetadata: {}
+          })
+        }
 
         const api = { getSupportedChains: jest.fn(async () => {return ["fakechain:123"]}) }
         const keyDidResolver = KeyDidResolver.getResolver()
