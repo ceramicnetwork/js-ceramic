@@ -24,6 +24,7 @@ export class NetworkLoad {
       throw new Error(`No genesis commit found with CID ${genesisCid.toString()}`);
     }
     const state = await handler.applyCommit(commit, docId.cid, this.context);
+    await this.documentFactory.stateValidation.validate(state, state.content);
     const runningState = new RunningState(state)
     this.logger.verbose(`Document ${docId.toString()} successfully loaded`);
     return runningState;

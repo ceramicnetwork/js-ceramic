@@ -218,12 +218,12 @@ export function commitAtTime(state$: RunningStateLike, timestamp: number): Commi
       }
     }
   }
-  return this.id.atCommit(commitCid)
+  return state$.id.atCommit(commitCid)
 }
 
 export class ConflictResolution {
   constructor(
-    private readonly anchorService: AnchorService,
+    public anchorService: AnchorService,
     private readonly stateValidation: StateValidation,
     private readonly dispatcher: Dispatcher,
     private readonly context: Context,

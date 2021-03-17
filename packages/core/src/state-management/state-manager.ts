@@ -16,8 +16,8 @@ export class StateManager {
     private readonly dispatcher: Dispatcher,
     private readonly pinStore: PinStore,
     private readonly executionQ: ExecutionQueue,
-    private readonly anchorService: AnchorService,
-    private readonly conflictResolution: ConflictResolution,
+    public anchorService: AnchorService,
+    public conflictResolution: ConflictResolution,
   ) {}
 
   /**
@@ -61,7 +61,7 @@ export class StateManager {
     }
   }
 
-  private async handleTip(state$: RunningState, cid: CID): Promise<void> {
+  async handleTip(state$: RunningState, cid: CID): Promise<void> {
     const next = await this.conflictResolution.applyTip(state$.value, cid);
     if (next) {
       state$.next(next);

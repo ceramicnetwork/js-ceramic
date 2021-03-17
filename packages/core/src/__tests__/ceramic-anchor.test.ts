@@ -249,8 +249,9 @@ describe('Ceramic anchoring', () => {
     const controller = ceramic1.context.did.id
 
     const anchorService = ceramic3.context.anchorService as InMemoryAnchorService
-    ceramic1.context.anchorService = anchorService // use ceramic3 in-memory anchor service
-    ceramic2.context.anchorService = anchorService // use ceramic3 in-memory anchor service
+    // use ceramic3 in-memory anchor service, ugly as hell
+    ceramic1.repository.stateManager.anchorService = anchorService
+    ceramic2.repository.stateManager.anchorService = anchorService
 
     const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { x: 1 } }, { anchor: false, publish: true })
     const doctype2 = await ceramic2.loadDocument(doctype1.id)

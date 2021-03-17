@@ -87,11 +87,11 @@ describe('anchor', () => {
       content: INITIAL_CONTENT,
       metadata: { controllers: [ceramic.did.id] },
     });
-    const doc = await ceramic.repository.load(doctype.id);
+    const doc$ = await ceramic.repository.load(doctype.id);
     await new Promise((resolve) => {
-      doc.anchor(doc.state$).add(resolve);
+      ceramic.repository.stateManager.anchor(doc$).add(resolve)
     });
-    expect(doc.state.anchorStatus).toEqual(AnchorStatus.ANCHORED);
+    expect(doc$.value.anchorStatus).toEqual(AnchorStatus.ANCHORED);
   });
 });
 
@@ -101,7 +101,9 @@ test('_handleTip', async () => {
     metadata: { controllers },
   });
   const doc1 = await ceramic.repository.load(doctype1.id);
-  await new Promise((resolve) => doc1.anchor(doc1.state$).add(resolve));
+  await new Promise((resolve) => {
+    ceramic.repository.stateManager.anchor(doc1).add(resolve)
+  });
 
   const ceramic2 = await createCeramic(ipfs);
   const doctype2 = await ceramic2.loadDocument(doctype1.id, { sync: false });
@@ -110,7 +112,8 @@ test('_handleTip', async () => {
   expect(doctype2.content).toEqual(doctype1.content);
   expect(doctype2.state).toEqual(expect.objectContaining({ signature: SignatureStatus.SIGNED, anchorStatus: 0 }));
 
-  await doc2._handleTip(doc2.state$, doctype1.state.log[1].cid);
+
+  await ceramic2.repository.stateManager.handleTip(doc2, doctype1.state.log[1].cid)
 
   expect(doctype2.state).toEqual(doctype1.state);
   await ceramic2.close();

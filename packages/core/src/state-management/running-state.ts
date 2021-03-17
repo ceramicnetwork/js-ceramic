@@ -48,7 +48,7 @@ export class RunningState extends BehaviorSubject<DocState> implements RunningSt
     return this.value.log[this.value.log.length - 1].cid;
   }
 
-  get state() {
+  get state(): DocState {
     return this.value;
   }
 

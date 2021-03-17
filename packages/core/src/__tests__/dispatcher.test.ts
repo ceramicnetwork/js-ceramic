@@ -22,6 +22,7 @@ import { FauxStateValidation } from '../state-management/state-validation';
 import { ContextfulHandler } from '../state-management/contextful-handler';
 import { ConflictResolution } from '../conflict-resolution';
 import { HandlersMap } from '../handlers-map';
+import { StateManager } from '../state-management/state-manager';
 
 const TOPIC = '/ceramic';
 const FAKE_CID = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu');
@@ -132,30 +133,14 @@ describe('Dispatcher', () => {
   });
 
   it('handle message correctly', async () => {
+    dispatcher.repository.stateManager = {} as unknown as StateManager
+
     async function register(state: DocState) {
       const runningState = new RunningState(state);
-      // eslint-disable-next-line prefer-const
-      let document: Document;
-      const context = { loggerProvider, api: ({ loadDocument: async () => document } as unknown) as CeramicApi };
-      const anchorService = (jest.fn() as unknown) as AnchorService;
-      const conflictResolution = new ConflictResolution(
-        anchorService,
-        new FauxStateValidation(),
-        dispatcher,
-        context,
-        new HandlersMap(loggerProvider.getDiagnosticsLogger(), new Map().set('tile', fakeHandler)),
-      );
-      document = new Document(
-        runningState,
-        dispatcher,
-        repository.pinStore,
-        repository.executionQ.forDocument(runningState.id),
-        (jest.fn() as unknown) as AnchorService,
-        conflictResolution,
-      );
-      dispatcher.messageBus.queryNetwork(document.id).subscribe();
-      await repository.add(document);
-      return document;
+      repository.add(runningState);
+      dispatcher.messageBus.queryNetwork(runningState.id).subscribe();
+      await delay(100)
+      return runningState;
     }
 
     const initialState = ({
@@ -167,7 +152,7 @@ describe('Dispatcher', () => {
         },
       ],
     } as unknown) as DocState;
-    const doc = await register(initialState);
+    const state$ = await register(initialState);
 
     // Store the query ID sent when the doc is registered so we can use it as the response ID later
     const publishArgs = ipfs.pubsub.publish.mock.calls[0];
@@ -176,9 +161,9 @@ describe('Dispatcher', () => {
     const queryID = queryMessageSent.id;
 
     // Handle UPDATE message
-    doc.update = jest.fn();
+    dispatcher.repository.stateManager.update = jest.fn()
     await dispatcher.handleMessage({ typ: MsgType.UPDATE, doc: FAKE_DOC_ID, tip: FAKE_CID });
-    expect(doc.update).toBeCalledWith(FAKE_CID);
+    expect(dispatcher.repository.stateManager.update).toBeCalledWith(state$, FAKE_CID);
 
     const continuationState = ({
       ...initialState,
@@ -195,9 +180,8 @@ describe('Dispatcher', () => {
     );
 
     // Handle RESPONSE message
-    doc2.update = jest.fn();
     const tips = new Map().set(FAKE_DOC_ID.toString(), FAKE_CID2);
     await dispatcher.handleMessage({ typ: MsgType.RESPONSE, id: queryID, tips: tips });
-    expect(doc2.update).toBeCalledWith(FAKE_CID2);
+    expect(dispatcher.repository.stateManager.update).toBeCalledWith(doc2, FAKE_CID2);
   });
 });
