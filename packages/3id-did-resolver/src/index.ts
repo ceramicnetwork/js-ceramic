@@ -1,5 +1,4 @@
 import type {
-  DIDResolver,
   DIDResolutionResult,
   DIDResolutionOptions,
   DIDDocument,
@@ -12,7 +11,7 @@ import type {
 import type { DocState, MultiQuery, CeramicApi } from "@ceramicnetwork/common"
 import LegacyResolver from './legacyResolver'
 import * as u8a from 'uint8arrays'
-import { DocID, CommitID } from '@ceramicnetwork/docid'
+import { DocID } from '@ceramicnetwork/docid'
 import CID from 'cids'
 //import dagCBOR from 'ipld-dag-cbor'
 
@@ -64,7 +63,7 @@ export function wrapDocument(content: any, did: string): DIDDocument | null {
 
 function extractMetadata(resolvedState: DocState, fullState: DocState): DIDDocumentMetadata {
   const metadata: DIDDocumentMetadata = {}
-  let { timestamp: updated, cid: versionId } = resolvedState.log.pop() || {}
+  const { timestamp: updated, cid: versionId } = resolvedState.log.pop() || {}
 
   const {
     timestamp: nextUpdate,

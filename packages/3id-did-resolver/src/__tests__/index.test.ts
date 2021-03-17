@@ -1,4 +1,5 @@
 jest.mock('cross-fetch', () => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const mockedCalls = require('./vectors.json')['http-mock']
   return jest.fn(async (url, opts = {}) => ({
       ok: true,
@@ -16,16 +17,14 @@ jest.mock('cross-fetch', () => {
       }
     }))
 })
-import fetch from 'cross-fetch'
 
 import ThreeIdResolver from '../index'
 import { Resolver } from 'did-resolver'
-import DocID from '@ceramicnetwork/docid'
 import CeramicClient from '@ceramicnetwork/http-client'
 
 const DID_LD_JSON = 'application/did+ld+json'
 
-const vectors = require('./vectors.json')
+import vectors from './vectors.json'
 
 const v1 = '3IDv1'
 const v0 = '3IDv0'
