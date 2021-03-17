@@ -433,9 +433,8 @@ describe('Document', () => {
       // create invalid change that happened after main change
       const doc2 = await Document.load(docId, doctypeHandler, dispatcher, pinStore, context, { sync: false })
       await doc2._handleTip(tipPreUpdate)
-      // add short wait to get different anchor time
-      // sometime the tests are very fast
-      await new Promise(resolve => setTimeout(resolve, 1))
+      // add one second wait to get different anchor time
+      await new Promise(resolve => setTimeout(resolve, 1000))
       // TODO - better mock for anchors
 
       const conflictingNewContent = { asdf: 2342 }
