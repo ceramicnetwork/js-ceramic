@@ -80,7 +80,7 @@ export class StateManager {
     this.dispatcher.publishTip(state$.id, state$.tip);
   }
 
-  update(state$: RunningState, tip: CID) {
+  update(state$: RunningState, tip: CID): void {
     this.executionQ.forDocument(state$.id).addE(async (state$) => {
       await this.handleTip(state$, tip);
     });
