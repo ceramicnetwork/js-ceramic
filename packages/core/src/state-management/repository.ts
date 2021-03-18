@@ -12,7 +12,7 @@ import { Subject } from 'rxjs';
 import { StateManager } from './state-manager';
 
 export class Repository {
-  readonly loadingQ: NamedTaskQueue = new NamedTaskQueue();
+  readonly loadingQ: NamedTaskQueue;
   readonly executionQ: ExecutionQueue;
 
   readonly feed$: Subject<DocState>;
@@ -24,6 +24,9 @@ export class Repository {
   #networkLoad?: NetworkLoad;
 
   constructor(limit: number, logger: DiagnosticsLogger) {
+    this.loadingQ = new NamedTaskQueue(error => {
+      logger.err(error)
+    })
     this.executionQ = new ExecutionQueue(logger, (docId) => this.get(docId));
     this.#map = new LRUMap(100);
     this.#map.shift = function () {
