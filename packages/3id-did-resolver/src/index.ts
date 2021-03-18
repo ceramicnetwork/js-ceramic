@@ -27,6 +27,13 @@ const isLegacyDid = (didId: string): boolean => {
   }
 }
 
+/**
+ * Wraps the content from the Ceramic 3ID docuemnt tile and formats it
+ * as a proper DIDDocument.
+ *
+ * @param content - the content from the 3ID Ceramic tile
+ * @param did - the did to use when wrapping the document
+ */
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function wrapDocument(content: any, did: string): DIDDocument | null {
   if (!(content && content.publicKeys)) return null
@@ -61,15 +68,23 @@ export function wrapDocument(content: any, did: string): DIDDocument | null {
   }, startDoc)
 }
 
-function extractMetadata(resolvedState: DocState, fullState: DocState): DIDDocumentMetadata {
+/**
+ * Extracts the DIDDocumentMetadata for the 3ID that we have resolved.
+ * Requires the latest version of the 3ID ceramic docuemnt state as
+ * well as the state of the version we are resolving
+ *
+ * @param requestedVersionState - the DocState of the version of the 3ID we are resolving
+ * @param latestVersionState - the DocState of the latest version of the 3ID we are resolving
+ */
+function extractMetadata(requestedVersionState: DocState, latestVersionState: DocState): DIDDocumentMetadata {
   const metadata: DIDDocumentMetadata = {}
-  const { timestamp: updated, cid: versionId } = resolvedState.log.pop() || {}
+  const { timestamp: updated, cid: versionId } = requestedVersionState.log.pop() || {}
 
   const {
     timestamp: nextUpdate,
     cid: nextVersionId
-  } = fullState.log.find(({ timestamp }) => timestamp > updated || (!updated && timestamp)) || {}
-  const created = fullState.log.find(({ timestamp }) => Boolean(timestamp))?.timestamp
+  } = latestVersionState.log.find(({ timestamp }) => timestamp > updated || (!updated && timestamp)) || {}
+  const created = latestVersionState.log.find(({ timestamp }) => Boolean(timestamp))?.timestamp
 
   if (created) {
     metadata.created = (new Date(created * 1000)).toISOString()
@@ -81,7 +96,7 @@ function extractMetadata(resolvedState: DocState, fullState: DocState): DIDDocum
     metadata.nextUpdate = (new Date(nextUpdate * 1000)).toISOString()
   }
   if (versionId) {
-    metadata.versionId = resolvedState.log.length === 0 ? '0' : versionId?.toString()
+    metadata.versionId = requestedVersionState.log.length === 0 ? '0' : versionId?.toString()
   }
   if (nextVersionId) {
     metadata.nextVersionId = nextVersionId.toString()
@@ -140,10 +155,10 @@ const resolve = async (ceramic: CeramicApi, didId: string, verNfo: VersionInfo, 
   }
   const resp = await ceramic.multiQuery(query)
 
-  const fullState = resp[didId].state
+  const latestVersionState = resp[didId].state
   const commitIdStr = commitId?.toString() || Object.keys(resp).find(k => k !== didId)
-  const resolvedState = resp[commitIdStr]?.state || fullState
-  const metadata = extractMetadata(resolvedState, fullState)
+  const requestedVersionState = resp[commitIdStr]?.state || latestVersionState
+  const metadata = extractMetadata(requestedVersionState, latestVersionState)
 
   const content = resp[commitIdStr || didId].content
   const document = wrapDocument(content, `did:3:${v03ID || didId}`)
