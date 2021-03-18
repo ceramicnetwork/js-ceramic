@@ -17,7 +17,6 @@ import { createCeramic } from './create-ceramic';
 import Ceramic from '../ceramic';
 import { anchorUpdate } from '../state-management/__tests__/anchor-update';
 import { TileDoctype } from '@ceramicnetwork/doctype-tile';
-import { ContextfulHandler } from '../state-management/contextful-handler';
 import { ConflictResolution } from '../conflict-resolution';
 import { ExecLike } from '../state-management/execution-queue';
 import { doctypeFromState } from '../state-management/doctype-from-state';
@@ -141,7 +140,7 @@ test('commit history and rewind', async () => {
 
   const newContent = { abc: 321, def: 456, gh: 987 };
   const updateRec = await TileDoctype._makeCommit(doctype, ceramic.did, newContent, doctype.controllers);
-  await doc.applyCommit(updateRec);
+  await ceramic.repository.stateManager.applyCommit(doc, updateRec)
   expect(doctype.allCommitIds.length).toEqual(3);
   expect(doctype.anchorCommitIds.length).toEqual(1);
   const commit2 = doctype.allCommitIds[2];
@@ -163,7 +162,7 @@ test('commit history and rewind', async () => {
   // Apply a final record that does not get anchored
   const finalContent = { foo: 'bar' };
   const updateRec2 = await TileDoctype._makeCommit(doctype, ceramic.did, finalContent, doctype.controllers);
-  await doc.applyCommit(updateRec2);
+  await ceramic.repository.stateManager.applyCommit(doc, updateRec2)
 
   expect(doctype.allCommitIds.length).toEqual(5);
   expect(doctype.anchorCommitIds.length).toEqual(2);
@@ -174,40 +173,40 @@ test('commit history and rewind', async () => {
   expect(doctype.state.log.length).toEqual(5);
 
   // Correctly check out a specific commit
-  const docV0 = await doc.rewind(commit0);
+  const docV0 = await ceramic.repository.stateManager.rewind(doc, commit0)
   expect(docV0.id.equals(commit0.baseID)).toBeTruthy();
-  expect(docV0.state$.value.log.length).toEqual(1);
-  expect(docV0.state$.value.metadata.controllers).toEqual(controllers);
-  expect(docV0.state$.value.content).toEqual(INITIAL_CONTENT);
-  expect(docV0.state$.value.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED);
+  expect(docV0.value.log.length).toEqual(1);
+  expect(docV0.value.metadata.controllers).toEqual(controllers);
+  expect(docV0.value.content).toEqual(INITIAL_CONTENT);
+  expect(docV0.value.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED);
 
-  const docV1 = await doc.rewind(commit1);
+  const docV1 = await ceramic.repository.stateManager.rewind(doc, commit1);
   expect(docV1.id.equals(commit1.baseID)).toBeTruthy();
-  expect(docV1.state$.value.log.length).toEqual(2);
-  expect(docV1.state$.value.metadata.controllers).toEqual(controllers);
-  expect(docV1.state$.value.content).toEqual(INITIAL_CONTENT);
-  expect(docV1.state$.value.anchorStatus).toEqual(AnchorStatus.ANCHORED);
+  expect(docV1.value.log.length).toEqual(2);
+  expect(docV1.value.metadata.controllers).toEqual(controllers);
+  expect(docV1.value.content).toEqual(INITIAL_CONTENT);
+  expect(docV1.value.anchorStatus).toEqual(AnchorStatus.ANCHORED);
 
-  const docV2 = await doc.rewind(commit2);
+  const docV2 = await ceramic.repository.stateManager.rewind(doc, commit2);
   expect(docV2.id.equals(commit2.baseID)).toBeTruthy();
-  expect(docV2.state$.value.log.length).toEqual(3);
-  expect(docV2.state$.value.metadata.controllers).toEqual(controllers);
-  expect(docV2.state$.value.next.content).toEqual(newContent);
-  expect(docV2.state$.value.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED);
+  expect(docV2.value.log.length).toEqual(3);
+  expect(docV2.value.metadata.controllers).toEqual(controllers);
+  expect(docV2.value.next.content).toEqual(newContent);
+  expect(docV2.value.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED);
 
-  const docV3 = await doc.rewind(commit3);
+  const docV3 = await ceramic.repository.stateManager.rewind(doc, commit3);
   expect(docV3.id.equals(commit3.baseID)).toBeTruthy();
-  expect(docV3.state$.value.log.length).toEqual(4);
-  expect(docV3.state$.value.metadata.controllers).toEqual(controllers);
-  expect(docV3.state$.value.content).toEqual(newContent);
-  expect(docV3.state$.value.anchorStatus).toEqual(AnchorStatus.ANCHORED);
+  expect(docV3.value.log.length).toEqual(4);
+  expect(docV3.value.metadata.controllers).toEqual(controllers);
+  expect(docV3.value.content).toEqual(newContent);
+  expect(docV3.value.anchorStatus).toEqual(AnchorStatus.ANCHORED);
 
-  const docV4 = await doc.rewind(commit4);
+  const docV4 = await ceramic.repository.stateManager.rewind(doc, commit4);
   expect(docV4.id.equals(commit4.baseID)).toBeTruthy();
-  expect(docV4.state$.value.log.length).toEqual(5);
-  expect(docV4.state$.value.metadata.controllers).toEqual(controllers);
-  expect(docV4.state$.value.next.content).toEqual(finalContent);
-  expect(docV4.state$.value.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED);
+  expect(docV4.value.log.length).toEqual(5);
+  expect(docV4.value.metadata.controllers).toEqual(controllers);
+  expect(docV4.value.next.content).toEqual(finalContent);
+  expect(docV4.value.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED);
 });
 
 describe('rewind', () => {
@@ -227,7 +226,7 @@ describe('rewind', () => {
         return originalRetrieve(cid);
       }
     });
-    await expect(doc.rewind(nonExistentCommitID)).rejects.toThrow(
+    await expect(ceramic.repository.stateManager.rewind(doc, nonExistentCommitID)).rejects.toThrow(
       `No commit found for CID ${nonExistentCommitID.commit?.toString()}`,
     );
   });
@@ -248,10 +247,10 @@ describe('rewind', () => {
     const ceramic2 = await createCeramic(ipfs, { anchorOnRequest: false });
     const doctype2 = await ceramic2.createDocument('tile', genesisParams);
     const doc2 = await ceramic2.repository.load(doctype2.id);
-    const snapshot = await doc2.rewind(doctype1.commitId);
+    const snapshot = await ceramic2.repository.stateManager.rewind(doc2, doctype1.commitId);
 
     expect(DoctypeUtils.statesEqual(snapshot.state, doctype1.state));
-    const snapshotDoctype = doctypeFromState(ceramic2.context, ceramic2._doctypeHandlers, snapshot.state$, snapshot.isReadOnly);
+    const snapshotDoctype = doctypeFromState(ceramic2.context, ceramic2._doctypeHandlers, snapshot, true);
     await expect(
       snapshotDoctype.change({
         content: { abc: 1010 },
@@ -276,14 +275,14 @@ test('handles basic conflict', async () => {
 
   const newContent = { abc: 321, def: 456, gh: 987 };
   let updateRec = await TileDoctype._makeCommit(doctype1, ceramic.did, newContent, doctype1.controllers);
-  await doc1.applyCommit(updateRec);
+  await ceramic.repository.stateManager.applyCommit(doc1, updateRec);
 
   await anchorUpdate(ceramic, doctype1);
   expect(doctype1.content).toEqual(newContent);
   const tipValidUpdate = doctype1.tip;
   // create invalid change that happened after main change
 
-  const initialState = await doc1.rewind(docId.atCommit(docId.cid)).then((doc) => doc.state);
+  const initialState = await ceramic.repository.stateManager.rewind(doc1, docId.atCommit(docId.cid)).then((doc) => doc.state);
   const anchorService = ceramic.context.anchorService;
   const conflictResolution = new ConflictResolution(
     anchorService,
@@ -332,15 +331,15 @@ test('handles basic conflict', async () => {
 
   // loading tip from invalid log to doc with valid
   // log results in valid state
-  await doc1._handleTip(doc1.state$, tipInvalidUpdate);
+  await ceramic.repository.stateManager.handleTip(doc1, tipInvalidUpdate);
   expect(doctype1.content).toEqual(newContent);
 
   // Loading valid commit works
-  const docAtValidCommit = await doc1.rewind(docId.atCommit(tipValidUpdate));
-  expect(docAtValidCommit.state$.value.content).toEqual(newContent);
+  const docAtValidCommit = await ceramic.repository.stateManager.rewind(doc1, docId.atCommit(tipValidUpdate));
+  expect(docAtValidCommit.value.content).toEqual(newContent);
 
   // Loading invalid commit fails
-  await expect(doc1.rewind(docId.atCommit(tipInvalidUpdate))).rejects.toThrow(
+  await expect(ceramic.repository.stateManager.rewind(doc1, docId.atCommit(tipInvalidUpdate))).rejects.toThrow(
     `Requested commit CID ${tipInvalidUpdate.toString()} not found in the log for document ${docId.toString()}`,
   );
 }, 10000);
@@ -365,7 +364,7 @@ test('enforces schema in update that assigns schema', async () => {
     doctype.controllers,
     schemaDoc.commitId.toString(),
   );
-  await expect(doc.applyCommit(updateRec)).rejects.toThrow("Validation Error: data['stuff'] should be string");
+  await expect(ceramic.repository.stateManager.applyCommit(doc, updateRec)).rejects.toThrow("Validation Error: data['stuff'] should be string");
 });
 
 test('enforce previously assigned schema during future update', async () => {
@@ -385,7 +384,7 @@ test('enforce previously assigned schema during future update', async () => {
   await anchorUpdate(ceramic, doctype);
 
   const updateRec = await TileDoctype._makeCommit(doctype, ceramic.did, nonConformingContent, doctype.controllers);
-  await expect(doc.applyCommit(updateRec)).rejects.toThrow("Validation Error: data['stuff'] should be string");
+  await expect(ceramic.repository.stateManager.applyCommit(doc, updateRec)).rejects.toThrow("Validation Error: data['stuff'] should be string");
 });
 
 test('should announce change to network', async () => {
@@ -397,7 +396,7 @@ test('should announce change to network', async () => {
   await publishTip.mockClear();
 
   const updateRec = await TileDoctype._makeCommit(doctype1, ceramic.did, { foo: 34 }, doctype1.controllers);
-  await doc1.applyCommit(updateRec);
+  await ceramic.repository.stateManager.applyCommit(doc1, updateRec);
   expect(publishTip).toHaveBeenCalledTimes(1);
   expect(publishTip).toHaveBeenCalledWith(doctype1.id, doctype1.tip);
 });

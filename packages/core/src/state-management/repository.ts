@@ -1,8 +1,6 @@
 import DocID from '@ceramicnetwork/docid';
-import { DocumentFactory } from './document-factory';
-import { AnchorStatus, DocOpts, DocState, DocStateHolder } from '@ceramicnetwork/common';
+import { AnchorService, AnchorStatus, Context, DocOpts, DocState, DocStateHolder } from '@ceramicnetwork/common';
 import { PinStore } from '../store/pin-store';
-import { NetworkLoad } from './network-load';
 import { NamedTaskQueue } from './named-task-queue';
 import { DiagnosticsLogger } from '@ceramicnetwork/logger';
 import { ExecutionQueue } from './execution-queue';
@@ -10,6 +8,20 @@ import { RunningState } from './running-state';
 import { LRUMap } from 'lru_map';
 import { Subject } from 'rxjs';
 import { StateManager } from './state-manager';
+import type { Dispatcher } from '../dispatcher';
+import type { ConflictResolution } from '../conflict-resolution';
+import type { HandlersMap } from '../handlers-map';
+import type { StateValidation } from './state-validation';
+
+export type RepositoryDependencies = {
+  dispatcher: Dispatcher,
+  pinStore: PinStore,
+  context: Context,
+  handlers: HandlersMap
+  anchorService: AnchorService,
+  conflictResolution: ConflictResolution,
+  stateValidation: StateValidation
+}
 
 export class Repository {
   readonly loadingQ: NamedTaskQueue;
@@ -18,15 +30,14 @@ export class Repository {
   readonly feed$: Subject<DocState>;
 
   readonly #map: LRUMap<string, RunningState>;
-  #documentFactory?: DocumentFactory;
+  #deps: RepositoryDependencies;
   stateManager: StateManager;
   pinStore?: PinStore;
-  #networkLoad?: NetworkLoad;
 
-  constructor(limit: number, logger: DiagnosticsLogger) {
-    this.loadingQ = new NamedTaskQueue(error => {
-      logger.err(error)
-    })
+  constructor(limit: number, private readonly logger: DiagnosticsLogger) {
+    this.loadingQ = new NamedTaskQueue((error) => {
+      logger.err(error);
+    });
     this.executionQ = new ExecutionQueue(logger, (docId) => this.get(docId));
     this.#map = new LRUMap(limit);
     this.#map.shift = function () {
@@ -38,24 +49,16 @@ export class Repository {
   }
 
   // Ideally this would be provided in the constructor, but circular dependencies in our initialization process make this necessary for now
-  setDocumentFactory(documentFactory: DocumentFactory): void {
-    this.#documentFactory = documentFactory;
+  setDeps(deps: RepositoryDependencies): void {
+    this.#deps = deps;
+    this.pinStore = deps.pinStore;
     this.stateManager = new StateManager(
-      this.#documentFactory.dispatcher,
-      this.#documentFactory.pinStore,
+      deps.dispatcher,
+      deps.pinStore,
       this.executionQ,
-      this.#documentFactory.context.anchorService,
-      this.#documentFactory.conflictResolution,
+      deps.anchorService,
+      deps.conflictResolution,
     );
-  }
-
-  // Ideally this would be provided in the constructor, but circular dependencies in our initialization process make this necessary for now
-  setPinStore(pinStore: PinStore) {
-    this.pinStore = pinStore;
-  }
-
-  setNetworkLoad(networkLoad: NetworkLoad) {
-    this.#networkLoad = networkLoad;
   }
 
   fromMemory(docId: DocID): RunningState | undefined {
@@ -63,26 +66,35 @@ export class Repository {
   }
 
   async fromStateStore(docId: DocID): Promise<RunningState | undefined> {
-    if (this.pinStore && this.#documentFactory) {
-      const docState = await this.pinStore.stateStore.load(docId);
-      if (docState) {
-        const runningState = new RunningState(docState);
-        await this.add(runningState);
-        const toRecover = runningState.value.anchorStatus === AnchorStatus.PENDING || runningState.value.anchorStatus === AnchorStatus.PROCESSING
-        if (toRecover) {
-          this.stateManager.anchor(runningState)
-        }
-        return runningState;
-      } else {
-        return undefined;
+    const docState = await this.#deps.pinStore.stateStore.load(docId);
+    if (docState) {
+      const runningState = new RunningState(docState);
+      await this.add(runningState);
+      const toRecover =
+        runningState.value.anchorStatus === AnchorStatus.PENDING ||
+        runningState.value.anchorStatus === AnchorStatus.PROCESSING;
+      if (toRecover) {
+        this.stateManager.anchor(runningState);
       }
+      return runningState;
+    } else {
+      return undefined;
     }
   }
 
   async fromNetwork(docId: DocID, opts: DocOpts = {}): Promise<RunningState> {
-    const state$ = await this.#networkLoad.load(docId);
+    const handler = this.#deps.handlers.get(docId.typeName);
+    const genesisCid = docId.cid;
+    const commit = await this.#deps.dispatcher.retrieveCommit(genesisCid);
+    if (commit == null) {
+      throw new Error(`No genesis commit found with CID ${genesisCid.toString()}`);
+    }
+    const state = await handler.applyCommit(commit, docId.cid, this.#deps.context);
+    await this.#deps.stateValidation.validate(state, state.content);
+    const state$ = new RunningState(state)
     await this.add(state$);
     await this.stateManager.syncGenesis(state$, opts);
+    this.logger.verbose(`Document ${docId.toString()} successfully loaded`);
     return state$;
   }
 
@@ -106,7 +118,7 @@ export class Repository {
   async has(docId: DocID): Promise<boolean> {
     const fromMemory = this.fromMemory(docId);
     if (fromMemory) return true;
-    const fromState = await this.pinStore.stateStore.load(docId);
+    const fromState = await this.#deps.pinStore.stateStore.load(docId);
     return Boolean(fromState);
   }
 
@@ -130,9 +142,7 @@ export class Repository {
     if (fromMemory) {
       return fromMemory.state;
     } else {
-      if (this.pinStore) {
-        return this.pinStore.stateStore.load(docId);
-      }
+      return this.#deps.pinStore.stateStore.load(docId);
     }
   }
 
@@ -144,11 +154,11 @@ export class Repository {
   }
 
   pin(docStateHolder: DocStateHolder): Promise<void> {
-    return this.pinStore.add(docStateHolder);
+    return this.#deps.pinStore.add(docStateHolder);
   }
 
   unpin(docId: DocID): Promise<void> {
-    return this.pinStore.rm(docId);
+    return this.#deps.pinStore.rm(docId);
   }
 
   /**
@@ -156,11 +166,7 @@ export class Repository {
    * If `docId` is passed, indicate if it is pinned.
    */
   async listPinned(docId?: DocID): Promise<string[]> {
-    if (this.pinStore) {
-      return this.pinStore.stateStore.list(docId);
-    } else {
-      return [];
-    }
+    return this.#deps.pinStore.stateStore.list(docId);
   }
 
   async close(): Promise<void> {
@@ -170,6 +176,6 @@ export class Repository {
       this.#map.delete(id);
       document.complete();
     });
-    await this.pinStore.close();
+    await this.#deps.pinStore.close();
   }
 }

@@ -1,27 +1,20 @@
 import { Dispatcher } from '../dispatcher';
 import CID from 'cids';
-import { Document } from '../document';
 import { TileDoctype } from '@ceramicnetwork/doctype-tile';
 import DocID from '@ceramicnetwork/docid';
 import {
-  AnchorService,
-  CeramicApi,
   CommitType,
   DocState,
   DoctypeHandler,
   LoggerProvider,
 } from '@ceramicnetwork/common';
 import { serialize, MsgType } from '../pubsub/pubsub-message';
-import { Repository } from '../state-management/repository';
+import { Repository, RepositoryDependencies } from '../state-management/repository';
 import { delay } from '../pubsub/__tests__/delay';
 import tmp from 'tmp-promise';
 import { LevelStateStore } from '../store/level-state-store';
 import { PinStore } from '../store/pin-store';
 import { RunningState } from '../state-management/running-state';
-import { FauxStateValidation } from '../state-management/state-validation';
-import { ContextfulHandler } from '../state-management/contextful-handler';
-import { ConflictResolution } from '../conflict-resolution';
-import { HandlersMap } from '../handlers-map';
 import { StateManager } from '../state-management/state-manager';
 
 const TOPIC = '/ceramic';
@@ -75,7 +68,7 @@ describe('Dispatcher', () => {
     const pinStore = ({
       stateStore,
     } as unknown) as PinStore;
-    repository.setPinStore(pinStore);
+    repository.setDeps({pinStore} as unknown as RepositoryDependencies);
     dispatcher = new Dispatcher(
       ipfs,
       TOPIC,

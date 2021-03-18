@@ -22,7 +22,6 @@ import {
   PinApi,
   MultiQuery,
   PinningBackendStatic,
-  AnchorStatus,
   LoggerProvider,
 } from "@ceramicnetwork/common"
 import { Resolver } from "did-resolver"
@@ -39,8 +38,6 @@ import { randomUint32 } from '@stablelib/random'
 import { LocalPinApi } from './local-pin-api';
 import { Repository } from './state-management/repository';
 import { HandlersMap } from './handlers-map';
-import { DocumentFactory } from './state-management/document-factory';
-import { NetworkLoad } from './state-management/network-load';
 import { FauxStateValidation, RealStateValidation, StateValidation } from './state-management/state-validation';
 import { doctypeFromState } from './state-management/doctype-from-state';
 import { ConflictResolution } from './conflict-resolution';
@@ -185,7 +182,6 @@ class Ceramic implements CeramicApi {
   constructor (modules: CeramicModules, params: CeramicParameters) {
     this._ipfsTopology = modules.ipfsTopology
     this._logger = modules.loggerProvider.getDiagnosticsLogger()
-    const pinStore = modules.pinStoreFactory.createPinStore()
     this.repository = modules.repository
     this.pin = new LocalPinApi(this.repository, this._loadDoc.bind(this), this._logger)
     this.dispatcher = modules.dispatcher
@@ -215,11 +211,16 @@ class Ceramic implements CeramicApi {
     // This initialization block below has to be redone.
     this.stateValidation = this._validateDocs ? new RealStateValidation(this.loadDocument.bind(this)) : new FauxStateValidation()
     const conflictResolution = new ConflictResolution(this.context.anchorService, this.stateValidation, this.dispatcher, this.context, this._doctypeHandlers)
-    const documentFactory = new DocumentFactory(this.dispatcher, pinStore, this.context, conflictResolution, this.stateValidation, this.repository.executionQ)
-    const networkLoad = new NetworkLoad(this.dispatcher, this._doctypeHandlers, this.context, this._logger, documentFactory)
-    this.repository.setPinStore(pinStore)
-    this.repository.setDocumentFactory(documentFactory);
-    this.repository.setNetworkLoad(networkLoad);
+    const pinStore = modules.pinStoreFactory.createPinStore()
+    this.repository.setDeps({
+      dispatcher: this.dispatcher,
+      pinStore: pinStore,
+      context: this.context,
+      handlers: this._doctypeHandlers,
+      anchorService: modules.anchorService,
+      conflictResolution: conflictResolution,
+      stateValidation: this.stateValidation
+    });
   }
 
   /**
