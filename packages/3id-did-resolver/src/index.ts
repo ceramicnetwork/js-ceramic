@@ -28,7 +28,7 @@ const isLegacyDid = (didId: string): boolean => {
 }
 
 /**
- * Wraps the content from the Ceramic 3ID docuemnt tile and formats it
+ * Wraps the content from the Ceramic 3ID document tile and formats it
  * as a proper DIDDocument.
  *
  * @param content - the content from the 3ID Ceramic tile
