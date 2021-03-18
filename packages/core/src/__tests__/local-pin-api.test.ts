@@ -1,18 +1,24 @@
 import { LocalPinApi } from '../local-pin-api';
 import DocID from '@ceramicnetwork/docid';
-import { Document } from '../document';
 import * as random from '@stablelib/random';
-import { LoggerProvider } from "@ceramicnetwork/common";
+import { CommitType, DocState, LoggerProvider } from '@ceramicnetwork/common';
 import { Repository } from '../state-management/repository';
+import CID from 'cids';
+import { RunningState } from '../state-management/running-state';
 
 const DOC_ID = DocID.fromString('k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki');
+const FAKE_CID = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu');
 
 const repository = ({ pin: jest.fn(), unpin: jest.fn(), list: jest.fn() } as unknown) as Repository;
 
-const document = ({ doctype: 'tile' } as unknown) as Document;
-const loadDoc = jest.fn(async () => document);
+const docState = ({
+  doctype: 'tile',
+  log: [{ cid: FAKE_CID, type: CommitType.GENESIS }],
+} as unknown) as DocState;
+const state$ = new RunningState(docState)
+const loadDoc = jest.fn(async () => state$);
 
-const pinApi = new LocalPinApi(repository, loadDoc, new LoggerProvider().getDiagnosticsLogger())
+const pinApi = new LocalPinApi(repository, loadDoc, new LoggerProvider().getDiagnosticsLogger());
 
 async function toArray<A>(iterable: AsyncIterable<A>): Promise<A[]> {
   const result: A[] = [];
@@ -23,7 +29,7 @@ async function toArray<A>(iterable: AsyncIterable<A>): Promise<A[]> {
 test('add', async () => {
   await pinApi.add(DOC_ID);
   expect(loadDoc).toBeCalledWith(DOC_ID);
-  expect(repository.pin).toBeCalledWith(document);
+  expect(repository.pin).toBeCalledWith(state$);
 });
 
 test('rm', async () => {

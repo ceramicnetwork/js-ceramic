@@ -1,8 +1,5 @@
-import { DocID } from '@ceramicnetwork/docid';
 import {
   AnchorStatus,
-  CommitType,
-  DocState,
   DoctypeUtils,
   IpfsApi,
   LoggerProvider,
@@ -10,29 +7,15 @@ import {
 } from '@ceramicnetwork/common';
 import CID from 'cids';
 import { RunningState } from '../state-management/running-state';
-import { Document } from '../document';
-import { TileDoctypeHandler } from '@ceramicnetwork/doctype-tile-handler';
 import { createIPFS } from './ipfs-util';
 import { createCeramic } from './create-ceramic';
 import Ceramic from '../ceramic';
 import { anchorUpdate } from '../state-management/__tests__/anchor-update';
 import { TileDoctype } from '@ceramicnetwork/doctype-tile';
-import { ConflictResolution } from '../conflict-resolution';
-import { ExecLike } from '../state-management/execution-queue';
 import { doctypeFromState } from '../state-management/doctype-from-state';
-import { HandlersMap } from '../handlers-map';
 
 const FAKE_CID = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu');
-const DOC_ID = new DocID('tile', FAKE_CID);
 const INITIAL_CONTENT = { abc: 123, def: 456 };
-const INITIAL_DOC_STATE: DocState = {
-  doctype: 'tile',
-  content: INITIAL_CONTENT,
-  metadata: { controllers: ['foo'] },
-  signature: SignatureStatus.GENESIS,
-  anchorStatus: AnchorStatus.NOT_REQUESTED,
-  log: [{ cid: FAKE_CID, type: CommitType.GENESIS }],
-};
 const STRING_MAP_SCHEMA = {
   $schema: 'http://json-schema.org/draft-07/schema#',
   title: 'StringMap',
@@ -59,27 +42,6 @@ afterAll(async () => {
   await ipfs.stop();
 });
 
-test('constructor', async () => {
-  const runningState = new RunningState(INITIAL_DOC_STATE);
-  const dispatcher = ceramic.dispatcher;
-  const pinStore = ceramic.repository.pinStore;
-  const context = ceramic.context;
-  const anchorService = ceramic.context.anchorService;
-  const tasks = ceramic.repository.executionQ.forDocument(runningState.id);
-  const conflictResolution = new ConflictResolution(
-    anchorService,
-    (ceramic as any).stateValidation,
-    dispatcher,
-    context,
-    new HandlersMap(logger, new Map().set('tile', new TileDoctypeHandler))
-  );
-  const doc = new Document(runningState, dispatcher, pinStore, tasks, anchorService, conflictResolution);
-
-  expect(doc.id).toEqual(DOC_ID);
-  expect(doc.state.content).toEqual(INITIAL_CONTENT);
-  expect(doc.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED);
-});
-
 describe('anchor', () => {
   test('anchor call', async () => {
     const doctype = await ceramic.createDocument('tile', {
@@ -94,7 +56,7 @@ describe('anchor', () => {
   });
 });
 
-test('_handleTip', async () => {
+test('handleTip', async () => {
   const doctype1 = await ceramic.createDocument('tile', {
     content: INITIAL_CONTENT,
     metadata: { controllers },
@@ -283,50 +245,21 @@ test('handles basic conflict', async () => {
   // create invalid change that happened after main change
 
   const initialState = await ceramic.repository.stateManager.rewind(doc1, docId.atCommit(docId.cid)).then((doc) => doc.state);
-  const anchorService = ceramic.context.anchorService;
-  const conflictResolution = new ConflictResolution(
-    anchorService,
-    (ceramic as any).stateValidation,
-    ceramic.dispatcher,
-    ceramic.context,
-    new HandlersMap(logger, new Map().set('tile', new TileDoctypeHandler))
-  );
   const state$ = new RunningState(initialState);
-  const baseExecutionQ = ceramic.repository.executionQ.forDocument(state$.id);
-  const executionQ: ExecLike = {
-    ...baseExecutionQ,
-    addE: (task) => {
-      baseExecutionQ.add(async () => {
-        await task(state$);
-      });
-    },
-    runE: (task) => {
-      return baseExecutionQ.run(async () => {
-        return task(state$);
-      });
-    },
-  };
-  const doc2 = new Document(
-    state$,
-    ceramic.dispatcher,
-    ceramic.repository.pinStore,
-    executionQ,
-    anchorService,
-    conflictResolution,
-  );
-  await doc2._handleTip(doc2.state$, tipPreUpdate);
+  ceramic.repository.add(state$);
+  await ceramic.repository.stateManager.handleTip(state$, tipPreUpdate)
 
   const conflictingNewContent = { asdf: 2342 };
-  const doctype2 = doctypeFromState(ceramic.context, ceramic._doctypeHandlers, doc2.state$, doc2.isReadOnly)
+  const doctype2 = doctypeFromState(ceramic.context, ceramic._doctypeHandlers, state$)
   updateRec = await TileDoctype._makeCommit(doctype2, ceramic.did, conflictingNewContent, doctype2.controllers);
-  await doc2.applyCommit(updateRec);
+  await ceramic.repository.stateManager.applyCommit(state$, updateRec);
 
   await anchorUpdate(ceramic, doctype2);
-  const tipInvalidUpdate = doc2.tip;
+  const tipInvalidUpdate = state$.tip;
   expect(doctype2.content).toEqual(conflictingNewContent);
   // loading tip from valid log to doc with invalid
   // log results in valid state
-  await doc2._handleTip(doc2.state$, tipValidUpdate);
+  await ceramic.repository.stateManager.handleTip(state$, tipValidUpdate)
   expect(doctype2.content).toEqual(newContent);
 
   // loading tip from invalid log to doc with valid

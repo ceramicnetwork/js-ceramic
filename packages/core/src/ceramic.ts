@@ -1,5 +1,5 @@
 import { Dispatcher } from './dispatcher'
-import { DEFAULT_LOAD_DOCOPTS, DEFAULT_WRITE_DOCOPTS } from './document';
+import { DEFAULT_WRITE_DOCOPTS, DEFAULT_LOAD_DOCOPTS } from './state-management/state-manager';
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import KeyDidResolver from 'key-did-resolver'
 import DocID, { CommitID, DocRef } from '@ceramicnetwork/docid';

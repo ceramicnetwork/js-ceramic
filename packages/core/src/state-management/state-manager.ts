@@ -9,7 +9,11 @@ import { timeoutWith } from 'rxjs/operators';
 import { of, Subscription } from 'rxjs';
 import { SnapshotState } from './snapshot-state';
 import { CommitID } from '@ceramicnetwork/docid';
-import { DEFAULT_WRITE_DOCOPTS } from '../document';
+
+// DocOpts defaults for document load operations
+export const DEFAULT_LOAD_DOCOPTS = {anchor: false, publish: false, sync: true}
+// DocOpts defaults for document write operations
+export const DEFAULT_WRITE_DOCOPTS = {anchor: true, publish: true, sync: false}
 
 export class StateManager {
   constructor(
@@ -30,16 +34,42 @@ export class StateManager {
     return this.applyOpts(state$, opts);
   }
 
+  /**
+   * Takes the most recent known-about version of a document and a specific commit and returns a new
+   * Document instance representing the same document but set to the state of the document at the
+   * requested commit.  If the requested commit is for a branch of history that conflicts with the
+   * known current version of the document, throws an error. Intentionally does not register the new
+   * document so that it does not get notifications about newer commits, since we want it tied to a
+   * specific commit.
+   *
+   * @param state$
+   * @param commitId - DocID of the document including the requested commit
+   */
   async rewind(state$: RunningStateLike, commitId: CommitID): Promise<SnapshotState> {
     const snapshot = await this.conflictResolution.rewind(state$.value, commitId);
     return new SnapshotState(snapshot);
   }
 
+  /**
+   * Find the relevant AnchorCommit given a particular timestamp.
+   * Will return an AnchorCommit whose timestamp is earlier to or
+   * equal the requested timestamp.
+   *
+   * @param state$
+   * @param timestamp - unix timestamp
+   */
   atTime(state$: RunningStateLike, timestamp: number): Promise<SnapshotState> {
     const commitId = commitAtTime(state$, timestamp);
     return this.rewind(state$, commitId);
   }
 
+  /**
+   * Apply initialization options
+   *
+   * @param state$ - Running State
+   * @param opts - Initialization options (request anchor, wait, etc.)
+   * @private
+   */
   private async applyOpts(state$: RunningState, opts: DocOpts) {
     const anchor = opts.anchor ?? true;
     const publish = opts.publish ?? true;
@@ -80,13 +110,27 @@ export class StateManager {
     this.dispatcher.publishTip(state$.id, state$.tip);
   }
 
+  /**
+   * Handles update from the PubSub topic
+   *
+   * @param state$
+   * @param tip - Document Tip CID
+   * @private
+   */
   update(state$: RunningState, tip: CID): void {
     this.executionQ.forDocument(state$.id).addE(async (state$) => {
       await this.handleTip(state$, tip);
     });
   }
 
-  applyCommit(state$: RunningState, commit: any, opts: DocOpts = {}) {
+  /**
+   * Applies commit to the existing state
+   *
+   * @param state$ - Running State to update
+   * @param commit - Commit data
+   * @param opts - Document initialization options (request anchor, wait, etc.)
+   */
+  applyCommit(state$: RunningState, commit: any, opts: DocOpts = {}): Promise<void> {
     return this.executionQ.forDocument(state$.id).runE(async (state$) => {
       // Fill 'opts' with default values for any missing fields
       opts = { ...DEFAULT_WRITE_DOCOPTS, ...opts };
@@ -98,6 +142,9 @@ export class StateManager {
     });
   }
 
+  /**
+   * Request anchor for the latest document state
+   */
   anchor(state$: RunningState): Subscription {
     const anchorStatus$ = this.anchorService.requestAnchor(state$.id, state$.tip);
     const tasks = this.executionQ.forDocument(state$.id);
