@@ -28,7 +28,7 @@ export class Repository {
       logger.err(error)
     })
     this.executionQ = new ExecutionQueue(logger, (docId) => this.get(docId));
-    this.#map = new LRUMap(100);
+    this.#map = new LRUMap(limit);
     this.#map.shift = function () {
       const entry = LRUMap.prototype.shift.call(this);
       entry.value.complete();
