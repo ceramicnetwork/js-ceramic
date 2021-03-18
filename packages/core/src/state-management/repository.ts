@@ -31,7 +31,7 @@ export class Repository {
     this.#map = new LRUMap(limit);
     this.#map.shift = function () {
       const entry = LRUMap.prototype.shift.call(this);
-      entry.value.complete();
+      entry[1].complete();
       return entry;
     };
     this.feed$ = new Subject();
