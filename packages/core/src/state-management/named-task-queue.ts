@@ -62,9 +62,10 @@ export class NamedTaskQueue {
    */
   add(name: string, f: () => Promise<void>): void {
     const queue = this.queue(name);
-    queue.add(async () => {
-      await f().finally(() => this.remove(name));
-    });
+    queue.add(
+      () => f(),
+      () => this.remove(name),
+    );
   }
 
   /**

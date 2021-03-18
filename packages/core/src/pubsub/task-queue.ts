@@ -7,7 +7,7 @@ export const noop = () => {
 export type Task<TaskResultType> = () => Promise<TaskResultType>;
 
 export interface TaskQueueLike {
-  add(task: Task<void>): void;
+  add(task: Task<void>, onFinally?: () => void | Promise<void>): void;
   run<T>(task: Task<T>): Promise<T>;
 }
 
@@ -38,11 +38,11 @@ export class TaskQueue implements TaskQueueLike {
   /**
    * Add task to queue. Fire-and-forget semantics.
    */
-  add(task: Task<void>): void {
+  add(task, onFinally?): void {
     this.#pq.add(task).catch((error) => {
-      const retry = () => this.add(task);
+      const retry = () => this.add(task, onFinally);
       this.onError(error, retry);
-    });
+    }).finally(() => onFinally?.())
   }
 
   /**
