@@ -70,7 +70,7 @@ export function wrapDocument(content: any, did: string): DIDDocument | null {
 
 /**
  * Extracts the DIDDocumentMetadata for the 3ID that we have resolved.
- * Requires the latest version of the 3ID ceramic docuemnt state as
+ * Requires the latest version of the 3ID ceramic document state as
  * well as the state of the version we are resolving
  *
  * @param requestedVersionState - the DocState of the version of the 3ID we are resolving
