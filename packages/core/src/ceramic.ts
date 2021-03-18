@@ -545,13 +545,13 @@ class Ceramic implements CeramicApi {
    * @private
    */
   async _loadLinkedDocuments(query: MultiQuery, timeout = 7000): Promise<Record<string, Doctype>> {
-    const id = normalizeDocID(query.docId)
+    const id = DocRef.from(query.docId)
     const pathTrie = new PathTrie()
     query.paths?.forEach(path => pathTrie.add(path))
 
     const index = {}
 
-    const walkNext = async (node: TrieNode, docId: DocID) => {
+    const walkNext = async (node: TrieNode, docId: DocID | CommitID) => {
       let doc
       try {
         doc = await promiseTimeout(timeout, this.loadDocument(docId, { atTime: query.atTime }))

@@ -24,7 +24,8 @@ const fetchJson = async (url: string): Promise<any> =>  {
     fetchCache.set(url, json)
     return json
   } else {
-    throw new Error('Not a valid 3ID')  }
+    throw new Error('Not a valid 3ID')
+  }
 }
 
 const didDocReq = (cid: string): string => `${THREEBOX_API_URL}/did-doc?cid=${encodeURIComponent(cid)}`

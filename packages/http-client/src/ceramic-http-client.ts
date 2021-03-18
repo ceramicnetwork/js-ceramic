@@ -172,7 +172,8 @@ export default class CeramicClient implements CeramicApi {
     const queriesJSON = queries.map(q => {
       return {
         docId: typeof q.docId === 'string' ? q.docId : q.docId.toString(),
-        paths: q.paths
+        paths: q.paths,
+        atTime: q.atTime
       }
     })
 
