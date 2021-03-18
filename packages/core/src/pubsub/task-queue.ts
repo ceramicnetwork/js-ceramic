@@ -29,10 +29,10 @@ export class TaskQueue implements TaskQueueLike {
   constructor(private readonly onError: (error: Error, retry: () => void) => void = noop) {}
 
   /**
-   * Size of the queue.
+   * Size of the queue. Counts both deferred and currently running tasks.
    */
   get size(): number {
-    return this.#pq.size;
+    return this.#pq.size + this.#pq.pending;
   }
 
   /**
