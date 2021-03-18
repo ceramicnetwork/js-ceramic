@@ -1,6 +1,6 @@
 import DocID from '@ceramicnetwork/docid';
 import { DocumentFactory } from './document-factory';
-import { DocOpts, DocState, DocStateHolder } from '@ceramicnetwork/common';
+import { AnchorStatus, DocOpts, DocState, DocStateHolder } from '@ceramicnetwork/common';
 import { PinStore } from '../store/pin-store';
 import { NetworkLoad } from './network-load';
 import { NamedTaskQueue } from './named-task-queue';
@@ -68,6 +68,10 @@ export class Repository {
       if (docState) {
         const runningState = new RunningState(docState);
         await this.add(runningState);
+        const toRecover = runningState.value.anchorStatus === AnchorStatus.PENDING || runningState.value.anchorStatus === AnchorStatus.PROCESSING
+        if (toRecover) {
+          this.stateManager.anchor(runningState)
+        }
         return runningState;
       } else {
         return undefined;

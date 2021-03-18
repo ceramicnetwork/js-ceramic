@@ -449,7 +449,7 @@ class Ceramic implements CeramicApi {
     }
 
     if (restoreDocuments) {
-      await this.restoreDocuments()
+      this.restoreDocuments()
     }
   }
 
@@ -674,16 +674,17 @@ class Ceramic implements CeramicApi {
   /**
    * Load all the pinned documents, re-request PENDING or PROCESSING anchors.
    */
-  async restoreDocuments() {
-    const list = await this.repository.listPinned()
-    const documents = await Promise.all(list.map(docId => this.__loadDoc(DocID.fromString(docId))))
-    documents.forEach(state => {
-      const toRecover = state.value.anchorStatus === AnchorStatus.PENDING || state.value.anchorStatus === AnchorStatus.PROCESSING
-      if (toRecover) {
-        this.repository.stateManager.anchor(state)
-      }
+  restoreDocuments() {
+    this.repository.listPinned().then(async list => {
+      let n = 0
+      await Promise.all(list.map(async docId => {
+        await this.__loadDoc(DocID.fromString(docId))
+        n++;
+      }))
+      this._logger.verbose(`Successfully restored ${n} pinned documents`)
+    }).catch(error => {
+      this._logger.err(error)
     })
-    this._logger.verbose(`Successfully restored ${documents.length} pinned documents`)
   }
 
   /**
