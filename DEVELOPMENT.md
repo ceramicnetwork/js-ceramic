@@ -9,7 +9,7 @@ $ cd js-ceramic
 ```
 This project uses npm and lerna to manage packages and dependencies. To install dependencies for all packages in this repo:
 ```
-$ npm run bootstrap
+$ npm install
 ```
 Then build all packages:
 ```
