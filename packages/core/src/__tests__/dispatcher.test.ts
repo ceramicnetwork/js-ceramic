@@ -132,7 +132,6 @@ describe('Dispatcher', () => {
       const runningState = new RunningState(state);
       repository.add(runningState);
       dispatcher.messageBus.queryNetwork(runningState.id).subscribe();
-      await delay(100)
       return runningState;
     }
 
