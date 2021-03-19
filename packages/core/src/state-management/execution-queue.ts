@@ -18,7 +18,7 @@ export interface ExecutionLane {
    * The point of `run` (as opposed to `add`) is to pass an error to the caller if it is throw inside a task.
    * Note "fire-and-forget" comment for the `doc` method.
    */
-  run<T>(task: (state$: RunningState) => Promise<T>): Promise<T>;
+  run<T>(task: (state$: RunningState) => Promise<T>): Promise<T | undefined>;
 }
 
 /**
@@ -51,7 +51,9 @@ export class ExecutionQueue {
       run: (task) => {
         return this.tasks.run(docId.toString(), async () => {
           const doc = await this.get(docId);
-          return task(doc);
+          if (doc) {
+            return task(doc);
+          }
         });
       },
     };

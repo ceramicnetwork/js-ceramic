@@ -24,15 +24,31 @@ export type RepositoryDependencies = {
 }
 
 export class Repository {
+  /**
+   * Serialize loading operations per docId.
+   */
   readonly loadingQ: NamedTaskQueue;
+
+  /**
+   * Serialize operations on state per docId.
+   * Ensure that the task is run with a currently run state by abstracting over state loading.
+   */
   readonly executionQ: ExecutionQueue;
 
-  readonly feed$: Subject<DocState>;
-
+  /**
+   * In-memory cache of the currently running documents.
+   */
   readonly #map: LRUMap<string, RunningState>;
+
+  /**
+   * Various dependencies.
+   */
   #deps: RepositoryDependencies;
+
+  /**
+   * Instance of StateManager for performing operations on document state.
+   */
   stateManager: StateManager;
-  pinStore?: PinStore;
 
   constructor(limit: number, private readonly logger: DiagnosticsLogger) {
     this.loadingQ = new NamedTaskQueue((error) => {
@@ -45,13 +61,11 @@ export class Repository {
       entry[1].complete();
       return entry;
     };
-    this.feed$ = new Subject();
   }
 
   // Ideally this would be provided in the constructor, but circular dependencies in our initialization process make this necessary for now
   setDeps(deps: RepositoryDependencies): void {
     this.#deps = deps;
-    this.pinStore = deps.pinStore;
     this.stateManager = new StateManager(
       deps.dispatcher,
       deps.pinStore,
