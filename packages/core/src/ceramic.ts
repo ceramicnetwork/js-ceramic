@@ -209,8 +209,9 @@ class Ceramic implements CeramicApi {
     this._doctypeHandlers = new HandlersMap(this._logger)
 
     // This initialization block below has to be redone.
+    // Things below should be passed here as `modules` variable.
     this.stateValidation = this._validateDocs ? new RealStateValidation(this.loadDocument.bind(this)) : new FauxStateValidation()
-    const conflictResolution = new ConflictResolution(this.context.anchorService, this.stateValidation, this.dispatcher, this.context, this._doctypeHandlers)
+    const conflictResolution = new ConflictResolution(modules.anchorService, this.stateValidation, this.dispatcher, this.context, this._doctypeHandlers)
     const pinStore = modules.pinStoreFactory.createPinStore()
     this.repository.setDeps({
       dispatcher: this.dispatcher,
