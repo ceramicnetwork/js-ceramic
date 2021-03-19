@@ -118,7 +118,7 @@ export class StateManager {
    * @private
    */
   update(state$: RunningState, tip: CID): void {
-    this.executionQ.forDocument(state$.id).addE(async (state$) => {
+    this.executionQ.forDocument(state$.id).add(async (state$) => {
       await this.handleTip(state$, tip);
     });
   }
@@ -131,7 +131,7 @@ export class StateManager {
    * @param opts - Document initialization options (request anchor, wait, etc.)
    */
   applyCommit(state$: RunningState, commit: any, opts: DocOpts = {}): Promise<void> {
-    return this.executionQ.forDocument(state$.id).runE(async (state$) => {
+    return this.executionQ.forDocument(state$.id).run(async (state$) => {
       // Fill 'opts' with default values for any missing fields
       opts = { ...DEFAULT_WRITE_DOCOPTS, ...opts };
 
@@ -149,7 +149,7 @@ export class StateManager {
     const anchorStatus$ = this.anchorService.requestAnchor(state$.id, state$.tip);
     const tasks = this.executionQ.forDocument(state$.id);
     const subscription = anchorStatus$.subscribe((asr) => {
-      tasks.addE(async (state$) => {
+      tasks.add(async (state$) => {
         switch (asr.status) {
           case AnchorStatus.PENDING: {
             const next = {

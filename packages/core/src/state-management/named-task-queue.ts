@@ -47,9 +47,9 @@ export class NamedTaskQueue {
    *
    * Returns result of the task execution.
    */
-  run<A>(name: string, f: () => Promise<A>): Promise<A> {
+  run<A>(name: string, task: () => Promise<A>): Promise<A> {
     const queue = this.queue(name);
-    return queue.run(f).finally(() => {
+    return queue.run(task).finally(() => {
       this.remove(name);
     });
   }
@@ -60,10 +60,10 @@ export class NamedTaskQueue {
    * All the tasks added under the same name are executed sequentially.
    * Tasks with different names are executed in parallel.
    */
-  add(name: string, f: () => Promise<void>): void {
+  add(name: string, task: () => Promise<void>): void {
     const queue = this.queue(name);
     queue.add(
-      () => f(),
+      () => task(),
       () => this.remove(name),
     );
   }
