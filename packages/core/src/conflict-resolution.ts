@@ -3,18 +3,20 @@ import {
   AnchorCommit,
   AnchorProof,
   AnchorService,
-  AnchorStatus, CommitType, Context,
+  AnchorStatus,
+  CommitType,
+  Context,
   DocState,
   Doctype,
+  DoctypeHandler,
   DoctypeUtils,
 } from '@ceramicnetwork/common';
 import { Dispatcher } from './dispatcher';
 import cloneDeep from 'lodash.clonedeep';
 import { CommitID } from '@ceramicnetwork/docid';
 import { StateValidation } from './state-management/state-validation';
-import { ContextfulHandler } from './state-management/contextful-handler';
 import { HandlersMap } from './handlers-map';
-import { RunningState, RunningStateLike } from './state-management/running-state';
+import { RunningStateLike } from './state-management/running-state';
 
 /**
  * Verifies anchor commit structure
@@ -208,17 +210,17 @@ export async function fetchLog(
 }
 
 export function commitAtTime(state$: RunningStateLike, timestamp: number): CommitID {
-  let commitCid: CID = state$.value.log[0].cid
+  let commitCid: CID = state$.value.log[0].cid;
   for (const entry of state$.value.log) {
     if (entry.type === CommitType.ANCHOR) {
       if (entry.timestamp <= timestamp) {
-        commitCid = entry.cid
+        commitCid = entry.cid;
       } else {
-        break
+        break;
       }
     }
   }
-  return state$.id.atCommit(commitCid)
+  return state$.id.atCommit(commitCid);
 }
 
 export class ConflictResolution {
@@ -227,13 +229,18 @@ export class ConflictResolution {
     private readonly stateValidation: StateValidation,
     private readonly dispatcher: Dispatcher,
     private readonly context: Context,
-    private readonly handlers: HandlersMap
+    private readonly handlers: HandlersMap,
   ) {}
 
   /**
    * Applies the log to the document and updates the state.
    */
-  private async applyLogToState(handler: ContextfulHandler, log: Array<CID>, state?: DocState, breakOnAnchor?: boolean): Promise<DocState> {
+  private async applyLogToState<T extends Doctype>(
+    handler: DoctypeHandler<T>,
+    log: Array<CID>,
+    state?: DocState,
+    breakOnAnchor?: boolean,
+  ): Promise<DocState> {
     const itr = log.entries();
     let entry = itr.next();
     while (!entry.done) {
@@ -249,10 +256,10 @@ export class ConflictResolution {
       if (payload.proof) {
         // it's an anchor commit
         await verifyAnchorCommit(this.dispatcher, this.anchorService, commit);
-        state = await handler.applyCommit(commit, cid, state);
+        state = await handler.applyCommit(commit, cid, this.context, state);
       } else {
         // it's a signed commit
-        const tmpState = await handler.applyCommit(commit, cid, state);
+        const tmpState = await handler.applyCommit(commit, cid, this.context, state);
         const isGenesis = !payload.prev;
         const effectiveState = isGenesis ? tmpState : tmpState.next;
         await this.stateValidation.validate(effectiveState, effectiveState.content);
@@ -274,8 +281,12 @@ export class ConflictResolution {
    * @param initialStateLog - HistoryLog representation of the `initialState.log` with SignedCommits expanded out and CIDs for their `link` record included in the log.
    * @param log - commits to apply
    */
-  private async applyLog(initialState: DocState, initialStateLog: HistoryLog, log: Array<CID>): Promise<DocState | null> {
-    const handler = new ContextfulHandler(this.context, this.handlers.get(initialState.doctype))
+  private async applyLog(
+    initialState: DocState,
+    initialStateLog: HistoryLog,
+    log: Array<CID>,
+  ): Promise<DocState | null> {
+    const handler = this.handlers.get(initialState.doctype);
     const tip = initialStateLog.last;
     if (log[log.length - 1].equals(tip)) {
       // log already applied
@@ -346,7 +357,7 @@ export class ConflictResolution {
     // If the requested commit is included in the log, but isn't the most recent commit, we need
     // to reset the state to the state at the requested commit.
     const resetLog = baseStateLog.slice(0, commitIndex + 1).items;
-    const handler = new ContextfulHandler(this.context, this.handlers.get(initialState.doctype))
+    const handler = this.handlers.get(initialState.doctype);
     return this.applyLogToState(handler, resetLog);
   }
 }
