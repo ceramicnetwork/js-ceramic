@@ -495,7 +495,7 @@ class Ceramic implements CeramicApi {
    * @param opts - Initialization options
    */
   async applyCommit<T extends Doctype>(docId: string | DocID, commit: CeramicCommit, opts?: DocOpts): Promise<T> {
-    const state$ = await this.__loadDoc(normalizeDocID(docId), opts)
+    const state$ = await this._loadDoc(normalizeDocID(docId), opts)
     await this.repository.stateManager.applyCommit(state$, commit, opts)
     return doctypeFromState<T>(this.context, this._doctypeHandlers, state$)
   }
@@ -543,7 +543,7 @@ class Ceramic implements CeramicApi {
    */
   async loadDocument<T extends Doctype>(docId: DocID | CommitID | string, opts: DocOpts = {}): Promise<T> {
     const docRef = DocRef.from(docId)
-    const base$ = await this.__loadDoc(docRef.baseID, opts)
+    const base$ = await this._loadDoc(docRef.baseID, opts)
     this._logger.verbose(`Document ${docId.toString()} successfully loaded`)
     if (docRef instanceof CommitID) {
       // Here CommitID is requested, let's return document at specific commit
@@ -646,22 +646,7 @@ class Ceramic implements CeramicApi {
    * @param docId - Document ID
    * @param opts - Initialization options
    */
-  async _loadDoc(docId: DocID | CommitID | string, opts: DocOpts = {}): Promise<RunningStateLike> {
-    const docRef = DocRef.from(docId)
-    const state$ = await this.repository.load(docRef.baseID, {...DEFAULT_LOAD_DOCOPTS, ...opts})
-
-    // If DocID is requested, return the document
-    if (docRef instanceof CommitID) {
-      // Here CommitID is requested, let's return document at specific commit
-      return this.repository.stateManager.rewind(state$, docRef)
-    } else if (opts.atTime) {
-      return this.repository.stateManager.atTime(state$, opts.atTime)
-    } else {
-      return state$
-    }
-  }
-
-  async __loadDoc(docId: DocID, opts: DocOpts = {}): Promise<RunningState> {
+  async _loadDoc(docId: DocID, opts: DocOpts = {}): Promise<RunningState> {
     return this.repository.load(docId, {...DEFAULT_LOAD_DOCOPTS, ...opts})
   }
 
@@ -680,7 +665,7 @@ class Ceramic implements CeramicApi {
     this.repository.listPinned().then(async list => {
       let n = 0
       await Promise.all(list.map(async docId => {
-        await this.__loadDoc(DocID.fromString(docId))
+        await this._loadDoc(DocID.fromString(docId))
         n++;
       }))
       this._logger.verbose(`Successfully restored ${n} pinned documents`)
