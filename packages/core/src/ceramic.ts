@@ -41,7 +41,7 @@ import { HandlersMap } from './handlers-map';
 import { FauxStateValidation, RealStateValidation, StateValidation } from './state-management/state-validation';
 import { doctypeFromState } from './state-management/doctype-from-state';
 import { ConflictResolution } from './conflict-resolution';
-import { RunningState, RunningStateLike } from './state-management/running-state';
+import { RunningState } from './state-management/running-state';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const packageJson = require('../package.json')
