@@ -35,15 +35,12 @@ export class StateManager {
   }
 
   /**
-   * Takes the most recent known-about version of a document and a specific commit and returns a new
-   * Document instance representing the same document but set to the state of the document at the
-   * requested commit.  If the requested commit is for a branch of history that conflicts with the
-   * known current version of the document, throws an error. Intentionally does not register the new
-   * document so that it does not get notifications about newer commits, since we want it tied to a
-   * specific commit.
+   * Take the version of a document state and a specific commit and returns a snapshot of a state
+   * at the requested commit. If the requested commit is for a branch of history that conflicts with the
+   * known commits, throw an error.
    *
-   * @param state$
-   * @param commitId - DocID of the document including the requested commit
+   * @param state$ - Document state to rewind.
+   * @param commitId - Requested commit.
    */
   async rewind(state$: RunningStateLike, commitId: CommitID): Promise<SnapshotState> {
     const snapshot = await this.conflictResolution.rewind(state$.value, commitId);
