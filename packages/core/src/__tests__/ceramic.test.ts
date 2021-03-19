@@ -1,7 +1,7 @@
 import Ceramic from '../ceramic'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import tmp from 'tmp-promise'
-import { DoctypeUtils, Doctype, IpfsApi, TestUtils } from '@ceramicnetwork/common';
+import { DoctypeUtils, Doctype, IpfsApi, TestUtils, DocState } from '@ceramicnetwork/common';
 import { TileDoctype } from "@ceramicnetwork/doctype-tile"
 import * as u8a from 'uint8arrays'
 import { createIPFS, swarmConnect } from './ipfs-util';
@@ -42,6 +42,10 @@ const syncDoc = async (doctype: Doctype): Promise<void> => {
       resolve()
     })
   })
+}
+
+function expectEqualStates(a: DocState, b: DocState) {
+  expect(DoctypeUtils.serializeState(a)).toEqual(DoctypeUtils.serializeState(b))
 }
 
 describe('Ceramic integration', () => {
@@ -100,7 +104,7 @@ describe('Ceramic integration', () => {
     const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { test: 123 } }, { anchor: false, publish: false })
     const doctype2 = await ceramic2.loadDocument(doctype1.id)
     expect(doctype1.content).toEqual(doctype2.content)
-    expect(DoctypeUtils.statesEqual(doctype1.state, doctype2.state));
+    expectEqualStates(doctype1.state, doctype2.state)
     await ceramic1.close()
     await ceramic2.close()
   })
@@ -216,7 +220,7 @@ describe('Ceramic integration', () => {
     }
 
     expect(doctype1.content).toEqual(doctype2.content)
-    expect(DoctypeUtils.statesEqual(doctype1.state, doctype2.state));
+    expectEqualStates(doctype1.state, doctype2.state);
 
     await ceramic1.close()
     await ceramic2.close()
