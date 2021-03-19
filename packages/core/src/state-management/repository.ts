@@ -161,7 +161,7 @@ export class Repository {
   }
 
   /**
-   * Stub for adding the document.
+   * Adds the document to the in-memory cache
    */
   add(state: RunningState): void {
     this.#map.set(state.id.toString(), state);
