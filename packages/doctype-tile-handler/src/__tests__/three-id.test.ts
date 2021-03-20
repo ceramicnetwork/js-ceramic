@@ -39,7 +39,7 @@ const RECORDS = {
                     signature: "cccc"
                 }
             ],
-            link: new CID("bafyreia4yhrqevqys35mvccnfmgcrpne6fxrdpqaonif7njq3gh7so633e")
+            link: new CID("bafyreig7dosektvux6a55mphri6piy3g5k4otxinanfevjeehix6rqfeym")
         },
         linkedBlock: {
             data: {
@@ -55,7 +55,6 @@ const RECORDS = {
                     "3id",
                 ]
             },
-            unique: "0",
         }
     },
     r1: {
@@ -212,7 +211,8 @@ it('applies genesis record correctly', async () => {
 
     const record = await TileDoctype.makeGenesis({
         content: RECORDS.genesis.data,
-        metadata: {controllers: [did.id], tags: ['3id']}
+        metadata: {controllers: [did.id], tags: ['3id']},
+        deterministic: true,
     }, context) as SignedCommitContainer
     await context.ipfs.dag.put(record, FAKE_CID_1)
 
@@ -245,7 +245,8 @@ it('applies signed record correctly', async () => {
 
     const genesisRecord = await TileDoctype.makeGenesis({
         content: RECORDS.genesis.data,
-        metadata: {controllers: [did.id], tags: ['3id']}
+        metadata: {controllers: [did.id], tags: ['3id']},
+        deterministic: true,
     }, context) as SignedCommitContainer
     await context.ipfs.dag.put(genesisRecord, FAKE_CID_1)
 
@@ -288,7 +289,8 @@ it('applies anchor record correctly', async () => {
 
     const genesisRecord = await TileDoctype.makeGenesis({
         content: RECORDS.genesis.data,
-        metadata: {controllers: [did.id], tags: ['3id']}
+        metadata: {controllers: [did.id], tags: ['3id']},
+        deterministic: true,
     }, context) as SignedCommitContainer
     await context.ipfs.dag.put(genesisRecord, FAKE_CID_1)
 
