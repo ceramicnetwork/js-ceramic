@@ -174,10 +174,10 @@ describe('Ceramic interop: core <> http-client', () => {
         expect(serializeCommits(records1)).toEqual(serializeCommits(records2))
     })
 
-    it('makes and gets updates correctly', async () => {
-        const initialContent = { test: 123 }
-        const middleContent = { test: 123, abc: 987 }
-        const finalContent = { test: 456, abc: 654 }
+    it('makes and gets updates correctly with manual sync', async () => {
+        const initialContent = { a: 'initial' }
+        const middleContent = { ...initialContent, b: 'middle' }
+        const finalContent = { ...middleContent, c: 'final' }
 
         const doc1 = await core.createDocument(DOCTYPE_TILE, { content: initialContent })
         await anchorDoc(doc1)
@@ -187,6 +187,7 @@ describe('Ceramic interop: core <> http-client', () => {
         const onChange = TestUtils.registerChangeListener(doc2)
         await anchorDoc(doc1)
         await onChange
+        await doc2.sync()
         expect(doc1.content).toEqual(middleContent)
         expect(doc1.content).toEqual(doc2.content)
         expect(DoctypeUtils.serializeState(doc1.state)).toEqual(DoctypeUtils.serializeState(doc2.state))
@@ -194,7 +195,8 @@ describe('Ceramic interop: core <> http-client', () => {
 
         await doc2.change({ content: finalContent })
         await anchorDoc(doc2)
-
+        await doc2.sync()
+        await doc1.sync()
         expect(doc1.content).toEqual(doc2.content)
         expect(doc1.content).toEqual(finalContent)
         expect(DoctypeUtils.serializeState(doc1.state)).toEqual(DoctypeUtils.serializeState(doc2.state))

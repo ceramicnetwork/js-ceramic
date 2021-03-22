@@ -1,7 +1,7 @@
 import {BehaviorSubject, Subscription, interval, pipe, Observable} from 'rxjs'
 import {concatMap, filter} from 'rxjs/operators'
 import {
-  CeramicCommit, Context, DocOpts, DocState, DoctypeUtils, RunningStateLike,
+  CeramicCommit, DocOpts, DocState, DoctypeUtils, RunningStateLike,
 } from '@ceramicnetwork/common';
 
 import DocID, { CommitID } from '@ceramicnetwork/docid';

@@ -68,7 +68,7 @@ export default class CeramicClient implements CeramicApi {
   private readonly _config: CeramicClientConfig
   public readonly _doctypeConstructors: Record<string, DoctypeConstructor<Doctype>>
 
-  constructor (apiHost: string = CERAMIC_HOST, config: CeramicClientConfig = {}) {
+  constructor (apiHost: string = CERAMIC_HOST, config: Partial<CeramicClientConfig> = {}) {
     this._config = { ...DEFAULT_CLIENT_CONFIG, ...config }
 
     this._apiUrl = combineURLs(apiHost, API_PATH)
@@ -131,22 +131,20 @@ export default class CeramicClient implements CeramicApi {
     const doctypeConstructor = this.findDoctypeConstructor(doctype)
     const genesis = await doctypeConstructor.makeGenesis(params, this.context, opts)
 
-    return await this.createDocumentFromGenesis(doctype, genesis, opts)
+    return this.createDocumentFromGenesis(doctype, genesis, opts)
   }
 
   async createDocumentFromGenesis<T extends Doctype>(doctype: string, genesis: any, opts?: DocOpts): Promise<T> {
     const doc = await Document.createFromGenesis(this._apiUrl, doctype, genesis, opts, this._config)
 
-    let docFromCache = this._docCache.get(doc.id.toString())
-    if (docFromCache == null) {
-      this._docCache.set(doc.id.toString(), doc)
-      docFromCache = doc
-    } else if (!DoctypeUtils.statesEqual(doc.state, docFromCache.state)) {
-      docFromCache.next(doc.state)
+    const found = this._docCache.get(doc.id.toString())
+    if (found) {
+      if (!DoctypeUtils.statesEqual(doc.state, found.state)) found.next(doc.state);
+      return this.buildDoctype<T>(found);
+    } else {
+      this._docCache.set(doc.id.toString(), doc);
+      return this.buildDoctype<T>(doc);
     }
-
-    const doctypeConstructor = this.findDoctypeConstructor<T>(doc.state.doctype)
-    return new doctypeConstructor(docFromCache, this.context)
   }
 
   async loadDocument<T extends Doctype>(docId: DocID | CommitID | string): Promise<T> {
@@ -158,9 +156,7 @@ export default class CeramicClient implements CeramicApi {
       doc = await Document.load(docRef, this._apiUrl, this._config)
       this._docCache.set(doc.id.toString(), doc)
     }
-
-    const doctypeConstructor = this.findDoctypeConstructor<T>(doc.state.doctype)
-    return new doctypeConstructor(doc, this.context)
+    return this.buildDoctype<T>(doc)
   }
 
   async multiQuery(queries: Array<MultiQuery>): Promise<Record<string, Doctype>> {
@@ -183,8 +179,7 @@ export default class CeramicClient implements CeramicApi {
       const [k, v] = e
       const state = DoctypeUtils.deserializeState(v)
       const doc = new Document(state, this._apiUrl, this._config)
-      const doctypeConstructor = this.findDoctypeConstructor(doc.state.doctype)
-      acc[k] = new doctypeConstructor(doc, this.context)
+      acc[k] = this.buildDoctype(doc)
       return acc
     }, {})
   }
@@ -224,6 +219,11 @@ export default class CeramicClient implements CeramicApi {
     } else {
       throw new Error(`Failed to find doctype constructor for doctype ${doctype}`)
     }
+  }
+
+  private buildDoctype<T extends Doctype = Doctype>(document: Document) {
+    const doctypeConstructor = this.findDoctypeConstructor<T>(document.state.doctype)
+    return new doctypeConstructor(document, this.context)
   }
 
   async setDIDProvider(provider: DIDProvider): Promise<void> {
