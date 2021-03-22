@@ -3,6 +3,24 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.20.0](/compare/@ceramicnetwork/core@0.20.0-rc.11...@ceramicnetwork/core@0.20.0) (2021-03-22)
+
+
+### Bug Fixes
+
+* **core:** Fix test by waiting long enough for new anchor timestamp (#1136) 82fef5d, closes #1136
+* **core:** stablize the test for the atTime feature (#1132) e625a27, closes #1132
+
+
+### Features
+
+* **3id-did-resolver:** did metadata resolution (#1139) 818bde1, closes #1139
+* **core:** Meat of State Refactor: final concurrency model (#1130) 345d3d1, closes #1130 #1141
+
+
+
+
+
 # [0.20.0-rc.11](/compare/@ceramicnetwork/core@0.20.0-rc.10...@ceramicnetwork/core@0.20.0-rc.11) (2021-03-15)
 
 

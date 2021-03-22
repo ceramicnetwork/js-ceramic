@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.16.0](/compare/@ceramicnetwork/common@0.16.0-rc.11...@ceramicnetwork/common@0.16.0) (2021-03-22)
+
+
+### Features
+
+* **core:** Meat of State Refactor: final concurrency model (#1130) 345d3d1, closes #1130 #1141
+
+
+
+
+
 # [0.16.0-rc.11](/compare/@ceramicnetwork/common@0.16.0-rc.10...@ceramicnetwork/common@0.16.0-rc.11) (2021-03-15)
 
 

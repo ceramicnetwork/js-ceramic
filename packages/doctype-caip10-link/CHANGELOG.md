@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.13.3](/compare/@ceramicnetwork/doctype-caip10-link@0.13.3-rc.11...@ceramicnetwork/doctype-caip10-link@0.13.3) (2021-03-22)
+
+**Note:** Version bump only for package @ceramicnetwork/doctype-caip10-link
+
+
+
+
+
 ## [0.13.3-rc.11](/compare/@ceramicnetwork/doctype-caip10-link@0.13.3-rc.10...@ceramicnetwork/doctype-caip10-link@0.13.3-rc.11) (2021-03-15)
 
 **Note:** Version bump only for package @ceramicnetwork/doctype-caip10-link

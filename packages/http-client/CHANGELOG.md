@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.10.0](/compare/@ceramicnetwork/http-client@0.10.0-rc.11...@ceramicnetwork/http-client@0.10.0) (2021-03-22)
+
+
+### Bug Fixes
+
+* **http-client:** Don't use the logger in the http-client (#1138) 0dfdb27, closes #1138
+
+
+### Features
+
+* **3id-did-resolver:** did metadata resolution (#1139) 818bde1, closes #1139
+
+
+
+
+
 # [0.10.0-rc.11](/compare/@ceramicnetwork/http-client@0.10.0-rc.10...@ceramicnetwork/http-client@0.10.0-rc.11) (2021-03-15)
 
 **Note:** Version bump only for package @ceramicnetwork/http-client
