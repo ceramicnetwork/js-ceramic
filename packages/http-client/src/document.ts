@@ -1,37 +1,17 @@
-import {BehaviorSubject, Subscription, interval, merge, pipe, Observable} from 'rxjs'
-import {concatMap, filter} from 'rxjs/operators'
-import {
-  CeramicCommit, DocOpts, DocState, DoctypeUtils, RunningStateLike,
-} from '@ceramicnetwork/common';
-
-import DocID, { CommitID } from '@ceramicnetwork/docid';
-
-import { fetchJson, typeDocID } from './utils'
-import { CeramicClientConfig } from "./ceramic-http-client"
-
-function mapTask<T>(f: () => Promise<T>) {
-  let isProcessing = false;
-  return pipe(
-    filter(() => !isProcessing),
-    concatMap(async () => {
-      isProcessing = true;
-      try {
-        return await f()
-      } finally {
-        isProcessing = false;
-      }
-    })
-  )
-}
+import { BehaviorSubject, interval, Observable } from 'rxjs'
+import { throttle } from 'rxjs/operators'
+import { CeramicCommit, DocOpts, DocState, DoctypeUtils, RunningStateLike } from '@ceramicnetwork/common';
+import { DocID, CommitID } from '@ceramicnetwork/docid';
+import { fetchJson } from './utils'
 
 export class Document extends Observable<DocState> implements RunningStateLike {
   readonly state$: BehaviorSubject<DocState>;
 
-  constructor (initial: DocState, private _apiUrl: string, config: CeramicClientConfig) {
+  constructor (initial: DocState, private _apiUrl: string, docSyncInterval: number) {
     super(subscriber => {
       this.state$.subscribe(subscriber);
 
-      const periodicUpdates = interval(config.docSyncInterval).pipe(mapTask(() => this._syncState())).subscribe()
+      const periodicUpdates = interval(docSyncInterval).pipe(throttle(() => this._syncState())).subscribe()
 
       return () => {
         periodicUpdates.unsubscribe()
@@ -69,7 +49,7 @@ export class Document extends Observable<DocState> implements RunningStateLike {
     return new DocID(this.state$.value.doctype, this.state$.value.log[0].cid)
   }
 
-  static async createFromGenesis (apiUrl: string, doctype: string, genesis: any, docOpts: DocOpts = {}, config: CeramicClientConfig): Promise<Document> {
+  static async createFromGenesis (apiUrl: string, doctype: string, genesis: any, docOpts: DocOpts = {}, docSyncInterval: number): Promise<Document> {
     const { state } = await fetchJson(apiUrl + '/documents', {
       method: 'post',
       body: {
@@ -78,10 +58,10 @@ export class Document extends Observable<DocState> implements RunningStateLike {
         docOpts,
       }
     })
-    return new Document(DoctypeUtils.deserializeState(state), apiUrl, config)
+    return new Document(DoctypeUtils.deserializeState(state), apiUrl, docSyncInterval)
   }
 
-  static async applyCommit(apiUrl: string, docId: DocID | string, commit: CeramicCommit, docOpts: DocOpts = {}, config: CeramicClientConfig): Promise<Document> {
+  static async applyCommit(apiUrl: string, docId: DocID | string, commit: CeramicCommit, docOpts: DocOpts = {}, docSyncInterval: number): Promise<Document> {
     const { state } = await fetchJson(apiUrl + '/commits', {
       method: 'post',
       body: {
@@ -90,12 +70,12 @@ export class Document extends Observable<DocState> implements RunningStateLike {
         docOpts,
       }
     })
-    return new Document(DoctypeUtils.deserializeState(state), apiUrl, config)
+    return new Document(DoctypeUtils.deserializeState(state), apiUrl, docSyncInterval)
   }
 
-  static async load (docId: DocID | CommitID, apiUrl: string, config: CeramicClientConfig): Promise<Document> {
+  static async load (docId: DocID | CommitID, apiUrl: string, docSyncInterval: number): Promise<Document> {
     const { state } = await fetchJson(apiUrl + '/documents/' + docId.toString())
-    return new Document(DoctypeUtils.deserializeState(state), apiUrl, config)
+    return new Document(DoctypeUtils.deserializeState(state), apiUrl, docSyncInterval)
   }
 
   static async loadDocumentCommits (docId: DocID, apiUrl: string): Promise<Array<Record<string, CeramicCommit>>> {
@@ -108,7 +88,7 @@ export class Document extends Observable<DocState> implements RunningStateLike {
     })
   }
 
-  close(): void {
+  complete(): void {
     this.state$.complete()
   }
 }

@@ -133,7 +133,7 @@ export default class CeramicClient implements CeramicApi {
   }
 
   async createDocumentFromGenesis<T extends Doctype>(doctype: string, genesis: any, opts?: DocOpts): Promise<T> {
-    const doc = await Document.createFromGenesis(this._apiUrl, doctype, genesis, opts, this._config)
+    const doc = await Document.createFromGenesis(this._apiUrl, doctype, genesis, opts, this._config.docSyncInterval)
 
     const found = this._docCache.get(doc.id.toString())
     if (found) {
@@ -151,7 +151,7 @@ export default class CeramicClient implements CeramicApi {
     if (doc) {
       await doc._syncState(docRef)
     } else {
-      doc = await Document.load(docRef, this._apiUrl, this._config)
+      doc = await Document.load(docRef, this._apiUrl, this._config.docSyncInterval)
       this._docCache.set(doc.id.toString(), doc)
     }
     return this.buildDoctype<T>(doc)
@@ -176,7 +176,7 @@ export default class CeramicClient implements CeramicApi {
     return Object.entries(results).reduce((acc, e) => {
       const [k, v] = e
       const state = DoctypeUtils.deserializeState(v)
-      const doc = new Document(state, this._apiUrl, this._config)
+      const doc = new Document(state, this._apiUrl, this._config.docSyncInterval)
       acc[k] = this.buildDoctype(doc)
       return acc
     }, {})
@@ -196,7 +196,7 @@ export default class CeramicClient implements CeramicApi {
 
   async applyCommit<T extends Doctype>(docId: string | DocID, commit: CeramicCommit, opts?: DocOpts): Promise<T> {
     const effectiveDocId = typeDocID(docId)
-    const document = await Document.applyCommit(this._apiUrl, effectiveDocId, commit, opts, this._config)
+    const document = await Document.applyCommit(this._apiUrl, effectiveDocId, commit, opts, this._config.docSyncInterval)
     return this.buildDoctype<T>(document)
   }
 
@@ -247,7 +247,7 @@ export default class CeramicClient implements CeramicApi {
 
   async close (): Promise<void> {
     Array.from(this._docCache).map(([, document]) => {
-      document.close()
+      document.complete()
     })
     this._docCache.clear()
   }
