@@ -35,7 +35,8 @@
     "cross-fetch": "^3.0.6",
     "did-resolver": "^3.0.1",
     "dids": "^2.0.0",
-    "key-did-resolver": "^1.1.1-rc.3"
+    "key-did-resolver": "^1.1.1-rc.3",
+    "rxjs": "^6.6.6"
   },
   "devDependencies": {
     "@babel/core": "^7.9.0",

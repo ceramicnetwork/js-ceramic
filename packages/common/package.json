@@ -60,7 +60,7 @@
     "ipfs-core": "~0.5.2",
     "jest": "^26.6.3",
     "json-schema-to-typescript": "^9.1.1",
-    "rxjs": "^6.6.3",
+    "rxjs": "^6.6.6",
     "tmp-promise": "^2.0.2",
     "ts-node": "^9.0.0",
     "tsc-watch": "^4.2.9",
