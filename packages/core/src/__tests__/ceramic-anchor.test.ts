@@ -10,6 +10,7 @@ import * as u8a from 'uint8arrays'
 import { createIPFS, swarmConnect } from './ipfs-util';
 import { TileDoctype } from '@ceramicnetwork/doctype-tile';
 import InMemoryAnchorService from '../anchor/memory/in-memory-anchor-service';
+import { anchorUpdate } from '../state-management/__tests__/anchor-update';
 
 jest.mock('../store/level-state-store')
 
@@ -26,21 +27,6 @@ const createCeramic = async (ipfs: IpfsApi, anchorManual: boolean): Promise<Cera
   await ceramic.setDIDProvider(provider)
 
   return ceramic
-}
-
-/**
- * Registers a listener for change notifications on a document, instructs the anchor service to
- * perform an anchor, then waits for the change listener to resolve, indicating that the document
- * got anchored.
- * @param ceramic
- * @param doc
- */
-const anchorDoc = async (ceramic: Ceramic, doc: any): Promise<void> => {
-  const changeHandle = TestUtils.registerChangeListener(doc)
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  await ceramic.context.anchorService.anchor()
-  await changeHandle
 }
 
 describe('Ceramic anchoring', () => {
@@ -76,7 +62,7 @@ describe('Ceramic anchoring', () => {
     await doctype1.change({ content: { a: 2 }, metadata: { controllers: [controller] } }, {})
     await doctype1.change({ content: { a: 3 }, metadata: { controllers: [controller] } }, {})
 
-    await anchorDoc(ceramic1, doctype1)
+    await anchorUpdate(ceramic1, doctype1)
 
     expect(doctype1.content).toEqual({ a: 3 })
     expect(doctype1.state.log.length).toEqual(4)
@@ -126,7 +112,7 @@ describe('Ceramic anchoring', () => {
 
     expect(doctype1.state.log.length).toEqual(3)
 
-    await anchorDoc(ceramic1, doctype1)
+    await anchorUpdate(ceramic1, doctype1)
 
     expect(doctype1.content).toEqual({ a: 123, b: 4567 })
     expect(doctype1.state.log.length).toEqual(2)
@@ -151,7 +137,7 @@ describe('Ceramic anchoring', () => {
 
     expect(doctype1.state.log.length).toEqual(2)
 
-    await anchorDoc(ceramic1, doctype1)
+    await anchorUpdate(ceramic1, doctype1)
 
     expect(doctype1.content).toEqual({ a: 4567 })
     expect(doctype1.state.log.length).toEqual(3)
@@ -176,7 +162,7 @@ describe('Ceramic anchoring', () => {
     await doctype1.change({ content: { x: doctype1.content.x + 1 }, metadata: { controllers: [controller] } }, { anchor: false, publish: false })
     await doctype1.change({ content: { x: doctype1.content.x + 1 }, metadata: { controllers: [controller] } }, { anchor: true, publish: true })
 
-    await anchorDoc(ceramic1, doctype1)
+    await anchorUpdate(ceramic1, doctype1)
 
     expect(doctype1.content).toEqual({ x: 3 })
     expect(doctype1.state.log.length).toEqual(4)
@@ -200,7 +186,7 @@ describe('Ceramic anchoring', () => {
     await doctype1.change({ content: { x: doctype1.content.x + 1 }, metadata: { controllers: [controller] } }, { anchor: false, publish: false })
     await doctype1.change({ content: { x: doctype1.content.x + 1 }, metadata: { controllers: [controller] } }, { anchor: true, publish: true })
 
-    await anchorDoc(ceramic1, doctype1)
+    await anchorUpdate(ceramic1, doctype1)
 
     expect(doctype1.content).toEqual({ x: 3 })
     expect(doctype1.state.log.length).toEqual(4)
@@ -228,7 +214,7 @@ describe('Ceramic anchoring', () => {
 
     await doctype1.change({ content: { x: doctype1.content.x + 1 }, metadata: { controllers: [controller] } }, { anchor: true, publish: true })
 
-    await anchorDoc(ceramic1, doctype1)
+    await anchorUpdate(ceramic1, doctype1)
 
     expect(doctype1.content).toEqual({ x: 3 })
     expect(doctype1.state.log.length).toEqual(4)
@@ -237,7 +223,7 @@ describe('Ceramic anchoring', () => {
     await doctype1.change({ content: { x: doctype1.content.x + 1 }, metadata: { controllers: [controller] } }, { anchor: false, publish: false })
     await doctype1.change({ content: { x: doctype1.content.x + 1 }, metadata: { controllers: [controller] } }, { anchor: true, publish: true })
 
-    await anchorDoc(ceramic1, doctype1)
+    await anchorUpdate(ceramic1, doctype1)
 
     expect(doctype1.content).toEqual({ x: 6 })
     expect(doctype1.state.log.length).toEqual(8)
@@ -263,8 +249,9 @@ describe('Ceramic anchoring', () => {
     const controller = ceramic1.context.did.id
 
     const anchorService = ceramic3.context.anchorService as InMemoryAnchorService
-    ceramic1.context.anchorService = anchorService // use ceramic3 in-memory anchor service
-    ceramic2.context.anchorService = anchorService // use ceramic3 in-memory anchor service
+    // use ceramic3 in-memory anchor service, ugly as hell
+    ceramic1.repository.stateManager.anchorService = anchorService
+    ceramic2.repository.stateManager.anchorService = anchorService
 
     const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { x: 1 } }, { anchor: false, publish: true })
     const doctype2 = await ceramic2.loadDocument(doctype1.id)

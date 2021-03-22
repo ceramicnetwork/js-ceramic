@@ -4,15 +4,19 @@ import {
   AnchorProof,
   AnchorService,
   AnchorStatus,
+  CommitType,
+  Context,
   DocState,
   Doctype,
+  DoctypeHandler,
   DoctypeUtils,
 } from '@ceramicnetwork/common';
 import { Dispatcher } from './dispatcher';
 import cloneDeep from 'lodash.clonedeep';
 import { CommitID } from '@ceramicnetwork/docid';
 import { StateValidation } from './state-management/state-validation';
-import { ContextfulHandler } from './state-management/contextful-handler';
+import { HandlersMap } from './handlers-map';
+import { RunningStateLike } from './state-management/running-state';
 
 /**
  * Verifies anchor commit structure
@@ -205,18 +209,38 @@ export async function fetchLog(
   return fetchLog(dispatcher, prevCid, stateLog, log);
 }
 
+export function commitAtTime(state$: RunningStateLike, timestamp: number): CommitID {
+  let commitCid: CID = state$.value.log[0].cid;
+  for (const entry of state$.value.log) {
+    if (entry.type === CommitType.ANCHOR) {
+      if (entry.timestamp <= timestamp) {
+        commitCid = entry.cid;
+      } else {
+        break;
+      }
+    }
+  }
+  return state$.id.atCommit(commitCid);
+}
+
 export class ConflictResolution {
   constructor(
-    private readonly anchorService: AnchorService,
+    public anchorService: AnchorService,
     private readonly stateValidation: StateValidation,
     private readonly dispatcher: Dispatcher,
-    private readonly handler: ContextfulHandler<Doctype>,
+    private readonly context: Context,
+    private readonly handlers: HandlersMap,
   ) {}
 
   /**
    * Applies the log to the document and updates the state.
    */
-  async applyLogToState(log: Array<CID>, state?: DocState, breakOnAnchor?: boolean): Promise<DocState> {
+  private async applyLogToState<T extends Doctype>(
+    handler: DoctypeHandler<T>,
+    log: Array<CID>,
+    state?: DocState,
+    breakOnAnchor?: boolean,
+  ): Promise<DocState> {
     const itr = log.entries();
     let entry = itr.next();
     while (!entry.done) {
@@ -232,10 +256,10 @@ export class ConflictResolution {
       if (payload.proof) {
         // it's an anchor commit
         await verifyAnchorCommit(this.dispatcher, this.anchorService, commit);
-        state = await this.handler.applyCommit(commit, cid, state);
+        state = await handler.applyCommit(commit, cid, this.context, state);
       } else {
         // it's a signed commit
-        const tmpState = await this.handler.applyCommit(commit, cid, state);
+        const tmpState = await handler.applyCommit(commit, cid, this.context, state);
         const isGenesis = !payload.prev;
         const effectiveState = isGenesis ? tmpState : tmpState.next;
         await this.stateValidation.validate(effectiveState, effectiveState.content);
@@ -257,7 +281,12 @@ export class ConflictResolution {
    * @param initialStateLog - HistoryLog representation of the `initialState.log` with SignedCommits expanded out and CIDs for their `link` record included in the log.
    * @param log - commits to apply
    */
-  async applyLog(initialState: DocState, initialStateLog: HistoryLog, log: Array<CID>): Promise<DocState | null> {
+  private async applyLog(
+    initialState: DocState,
+    initialStateLog: HistoryLog,
+    log: Array<CID>,
+  ): Promise<DocState | null> {
+    const handler = this.handlers.get(initialState.doctype);
     const tip = initialStateLog.last;
     if (log[log.length - 1].equals(tip)) {
       // log already applied
@@ -271,7 +300,7 @@ export class ConflictResolution {
     }
     if (payload.prev.equals(tip)) {
       // the new log starts where the previous one ended
-      return this.applyLogToState(log, cloneDeep(initialState));
+      return this.applyLogToState(handler, log, cloneDeep(initialState));
     }
 
     // we have a conflict since prev is in the log of the local state, but isn't the tip
@@ -280,17 +309,17 @@ export class ConflictResolution {
     const canonicalLog = initialStateLog.items;
     const localLog = canonicalLog.splice(conflictIdx);
     // Compute state up till conflictIdx
-    const state: DocState = await this.applyLogToState(canonicalLog);
+    const state: DocState = await this.applyLogToState(handler, canonicalLog);
     // Compute next transition in parallel
-    const localState = await this.applyLogToState(localLog, cloneDeep(state), true);
-    const remoteState = await this.applyLogToState(log, cloneDeep(state), true);
+    const localState = await this.applyLogToState(handler, localLog, cloneDeep(state), true);
+    const remoteState = await this.applyLogToState(handler, log, cloneDeep(state), true);
 
     const selectedState = await pickLogToAccept(localState, remoteState);
     if (selectedState === localState) {
       return null;
     }
 
-    return this.applyLogToState(log, cloneDeep(state));
+    return this.applyLogToState(handler, log, cloneDeep(state));
   }
 
   /**
@@ -328,6 +357,7 @@ export class ConflictResolution {
     // If the requested commit is included in the log, but isn't the most recent commit, we need
     // to reset the state to the state at the requested commit.
     const resetLog = baseStateLog.slice(0, commitIndex + 1).items;
-    return this.applyLogToState(resetLog);
+    const handler = this.handlers.get(initialState.doctype);
+    return this.applyLogToState(handler, resetLog);
   }
 }

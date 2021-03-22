@@ -1,27 +1,21 @@
 import { Dispatcher } from '../dispatcher';
 import CID from 'cids';
-import { Document } from '../document';
 import { TileDoctype } from '@ceramicnetwork/doctype-tile';
 import DocID from '@ceramicnetwork/docid';
 import {
-  AnchorService,
-  CeramicApi,
   CommitType,
   DocState,
   DoctypeHandler,
   LoggerProvider,
 } from '@ceramicnetwork/common';
 import { serialize, MsgType } from '../pubsub/pubsub-message';
-import { Repository } from '../state-management/repository';
+import { Repository, RepositoryDependencies } from '../state-management/repository';
 import { delay } from '../pubsub/__tests__/delay';
 import tmp from 'tmp-promise';
 import { LevelStateStore } from '../store/level-state-store';
 import { PinStore } from '../store/pin-store';
 import { RunningState } from '../state-management/running-state';
-import { FauxStateValidation, RealStateValidation } from '../state-management/state-validation';
-import { ContextfulHandler } from '../state-management/contextful-handler';
-import { TaskQueue } from '../pubsub/task-queue';
-import { ConflictResolution } from '../conflict-resolution';
+import { StateManager } from '../state-management/state-manager';
 
 const TOPIC = '/ceramic';
 const FAKE_CID = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu');
@@ -69,11 +63,12 @@ describe('Dispatcher', () => {
 
     const levelPath = await tmp.tmpName();
     const stateStore = new LevelStateStore(levelPath);
-    repository = new Repository(100);
+    stateStore.open('test');
+    repository = new Repository(100, loggerProvider.getDiagnosticsLogger());
     const pinStore = ({
       stateStore,
     } as unknown) as PinStore;
-    repository.setPinStore(pinStore);
+    repository.setDeps({pinStore} as unknown as RepositoryDependencies);
     dispatcher = new Dispatcher(
       ipfs,
       TOPIC,
@@ -131,30 +126,13 @@ describe('Dispatcher', () => {
   });
 
   it('handle message correctly', async () => {
-    const logger = loggerProvider.getDiagnosticsLogger();
+    dispatcher.repository.stateManager = {} as unknown as StateManager
+
     async function register(state: DocState) {
       const runningState = new RunningState(state);
-      // eslint-disable-next-line prefer-const
-      let document: Document;
-      const context = { loggerProvider, api: ({ loadDocument: async () => document } as unknown) as CeramicApi };
-      const handler = new ContextfulHandler(context, fakeHandler);
-      const tasks = new TaskQueue((error) => {
-        logger.err(error);
-      });
-      const anchorService = (jest.fn() as unknown) as AnchorService;
-      const conflictResolution = new ConflictResolution(anchorService, new FauxStateValidation(), dispatcher, handler);
-      document = new Document(
-        runningState,
-        dispatcher,
-        null,
-        tasks,
-        (jest.fn() as unknown) as AnchorService,
-        handler,
-        conflictResolution,
-      );
-      dispatcher.messageBus.queryNetwork(document.id).subscribe();
-      await repository.add(document);
-      return document;
+      repository.add(runningState);
+      dispatcher.messageBus.queryNetwork(runningState.id).subscribe();
+      return runningState;
     }
 
     const initialState = ({
@@ -166,7 +144,7 @@ describe('Dispatcher', () => {
         },
       ],
     } as unknown) as DocState;
-    const doc = await register(initialState);
+    const state$ = await register(initialState);
 
     // Store the query ID sent when the doc is registered so we can use it as the response ID later
     const publishArgs = ipfs.pubsub.publish.mock.calls[0];
@@ -175,9 +153,9 @@ describe('Dispatcher', () => {
     const queryID = queryMessageSent.id;
 
     // Handle UPDATE message
-    doc.update = jest.fn();
+    dispatcher.repository.stateManager.update = jest.fn()
     await dispatcher.handleMessage({ typ: MsgType.UPDATE, doc: FAKE_DOC_ID, tip: FAKE_CID });
-    expect(doc.update).toBeCalledWith(FAKE_CID);
+    expect(dispatcher.repository.stateManager.update).toBeCalledWith(state$, FAKE_CID);
 
     const continuationState = ({
       ...initialState,
@@ -194,9 +172,8 @@ describe('Dispatcher', () => {
     );
 
     // Handle RESPONSE message
-    doc2.update = jest.fn();
     const tips = new Map().set(FAKE_DOC_ID.toString(), FAKE_CID2);
     await dispatcher.handleMessage({ typ: MsgType.RESPONSE, id: queryID, tips: tips });
-    expect(doc2.update).toBeCalledWith(FAKE_CID2);
+    expect(dispatcher.repository.stateManager.update).toBeCalledWith(doc2, FAKE_CID2);
   });
 });

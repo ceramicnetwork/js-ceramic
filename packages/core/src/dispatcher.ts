@@ -130,7 +130,7 @@ export class Dispatcher {
     if (document) {
       // TODO: add cache of cids here so that we don't emit event
       // multiple times if we get the message more than once.
-      document.update(tip)
+      this.repository.stateManager.update(document, tip)
       // TODO: Handle 'anchorService' if present in message
     }
   }
@@ -172,7 +172,7 @@ export class Dispatcher {
       }
       const document = await this.repository.get(expectedDocID)
       if (document) {
-        document.update(newTip)
+        this.repository.stateManager.update(document, newTip)
         this.messageBus.outstandingQueries.delete(queryId)
         // TODO Iterate over all documents in 'tips' object and process the new tip for each
       }

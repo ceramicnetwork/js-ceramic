@@ -36,7 +36,7 @@ export class LevelStateStore implements StateStore {
      * @param docStateHolder - Document instance
      */
     async save(docStateHolder: DocStateHolder): Promise<void> {
-        await this.#store.put(docStateHolder.id.baseID.toString(), DoctypeUtils.serializeState(docStateHolder.state))
+        await this.#store.put(docStateHolder.id.toString(), DoctypeUtils.serializeState(docStateHolder.state))
     }
 
     /**
