@@ -30,7 +30,6 @@ const CERAMIC_HOST = 'http://localhost:7007'
  * Default Ceramic client configuration
  */
 export const DEFAULT_CLIENT_CONFIG: CeramicClientConfig = {
-  docSyncEnabled: false,
   docSyncInterval: 5000,
   docCacheLimit: 500,
   cacheDocCommits: false,
@@ -41,9 +40,8 @@ export const DEFAULT_CLIENT_CONFIG: CeramicClientConfig = {
  */
 export interface CeramicClientConfig {
   didResolver?: Resolver
-  docSyncEnabled?: boolean
-  docSyncInterval?: number
-  docCacheLimit?: number;
+  docSyncInterval: number
+  docCacheLimit: number;
   cacheDocCommits?: boolean;
 }
 
@@ -196,9 +194,10 @@ export default class CeramicClient implements CeramicApi {
     return this.loadDocumentCommits(docId)
   }
 
-  applyCommit<T extends Doctype>(docId: string | DocID, commit: CeramicCommit, opts?: DocOpts): Promise<T> {
+  async applyCommit<T extends Doctype>(docId: string | DocID, commit: CeramicCommit, opts?: DocOpts): Promise<T> {
     const effectiveDocId = typeDocID(docId)
-    return Document.applyCommit(this._apiUrl, effectiveDocId, commit, opts) as unknown as Promise<T>
+    const document = await Document.applyCommit(this._apiUrl, effectiveDocId, commit, opts, this._config)
+    return this.buildDoctype<T>(document)
   }
 
   /**

@@ -4,7 +4,7 @@ import { Ed25519Provider } from 'key-did-provider-ed25519'
 import tmp from 'tmp-promise'
 import IPFS from 'ipfs-core'
 import CeramicDaemon from '../ceramic-daemon'
-import { AnchorStatus, Doctype, DoctypeUtils, IpfsApi, TestUtils } from '@ceramicnetwork/common';
+import { AnchorStatus, Doctype, DoctypeUtils, IpfsApi } from '@ceramicnetwork/common';
 import { TileDoctypeHandler } from "@ceramicnetwork/doctype-tile-handler"
 import { filter, take } from "rxjs/operators"
 import * as u8a from 'uint8arrays'
@@ -76,7 +76,7 @@ describe('Ceramic interop: core <> http-client', () => {
         core._doctypeHandlers.add(doctypeHandler)
 
         daemon = new CeramicDaemon(core, { port, debug: false })
-        client = new CeramicClient(apiUrl, { docSyncEnabled: true, docSyncInterval: 1000 })
+        client = new CeramicClient(apiUrl, { docSyncInterval: 500 })
 
         const provider = new Ed25519Provider(seed)
         await core.setDIDProvider(provider)
@@ -172,6 +172,36 @@ describe('Ceramic interop: core <> http-client', () => {
         })
 
         expect(serializeCommits(records1)).toEqual(serializeCommits(records2))
+    })
+
+    it('makes and gets updates correctly with subscription', async () => {
+      function delay(ms: number) {
+        return new Promise(resolve => setTimeout(resolve, ms))
+      }
+      const initialContent = { a: 'initial' }
+      const middleContent = { ...initialContent, b: 'middle' }
+      const finalContent = { ...middleContent, c: 'final' }
+
+      const doc1 = await core.createDocument(DOCTYPE_TILE, { content: initialContent })
+      await anchorDoc(doc1)
+      const doc2 = await client.loadDocument(doc1.id)
+      doc1.subscribe()
+      doc2.subscribe()
+      // change from core viewable in client
+      await doc1.change({ content: middleContent })
+      await anchorDoc(doc1)
+      await delay(1000) // 2x polling interval
+      expect(doc1.content).toEqual(middleContent)
+      expect(doc1.content).toEqual(doc2.content)
+      expect(DoctypeUtils.serializeState(doc1.state)).toEqual(DoctypeUtils.serializeState(doc2.state))
+      // change from client viewable in core
+
+      await doc2.change({ content: finalContent })
+      await anchorDoc(doc2)
+      await delay(1000) // 2x polling interval
+      expect(doc1.content).toEqual(doc2.content)
+      expect(doc1.content).toEqual(finalContent)
+      expect(DoctypeUtils.serializeState(doc1.state)).toEqual(DoctypeUtils.serializeState(doc2.state))
     })
 
     it('makes and gets updates correctly with manual sync', async () => {

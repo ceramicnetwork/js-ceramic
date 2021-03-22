@@ -1,4 +1,4 @@
-import {BehaviorSubject, Subscription, interval, pipe, Observable} from 'rxjs'
+import {BehaviorSubject, Subscription, interval, merge, pipe, Observable} from 'rxjs'
 import {concatMap, filter} from 'rxjs/operators'
 import {
   CeramicCommit, DocOpts, DocState, DoctypeUtils, RunningStateLike,
@@ -26,25 +26,18 @@ function mapTask<T>(f: () => Promise<T>) {
 
 export class Document extends Observable<DocState> implements RunningStateLike {
   readonly state$: BehaviorSubject<DocState>;
-  private periodicSync: Subscription;
 
-  private readonly _syncInterval: number
-
-  constructor (initial: DocState, private _apiUrl: string, config: CeramicClientConfig = { docSyncEnabled: false }) {
+  constructor (initial: DocState, private _apiUrl: string, config: CeramicClientConfig) {
     super(subscriber => {
       this.state$.subscribe(subscriber);
+
+      const periodicUpdates = interval(config.docSyncInterval).pipe(mapTask(() => this._syncState())).subscribe()
+
+      return () => {
+        periodicUpdates.unsubscribe()
+      }
     })
     this.state$ = new BehaviorSubject(initial)
-    this._syncInterval = config.docSyncInterval
-
-    if (config.docSyncEnabled) {
-      this.periodicSync = interval(this._syncInterval).pipe(
-        mapTask(async () => {
-          await this._syncState();
-        })).subscribe();
-    } else {
-      this.periodicSync = Subscription.EMPTY;
-    }
   }
 
   get value(): DocState {
@@ -88,8 +81,7 @@ export class Document extends Observable<DocState> implements RunningStateLike {
     return new Document(DoctypeUtils.deserializeState(state), apiUrl, config)
   }
 
-  static async applyCommit(apiUrl: string, docId: DocID | string, commit: CeramicCommit, docOpts: DocOpts = {}): Promise<Document> {
-    docId = typeDocID(docId)
+  static async applyCommit(apiUrl: string, docId: DocID | string, commit: CeramicCommit, docOpts: DocOpts = {}, config: CeramicClientConfig): Promise<Document> {
     const { state } = await fetchJson(apiUrl + '/commits', {
       method: 'post',
       body: {
@@ -98,7 +90,7 @@ export class Document extends Observable<DocState> implements RunningStateLike {
         docOpts,
       }
     })
-    return new Document(DoctypeUtils.deserializeState(state), apiUrl)
+    return new Document(DoctypeUtils.deserializeState(state), apiUrl, config)
   }
 
   static async load (docId: DocID | CommitID, apiUrl: string, config: CeramicClientConfig): Promise<Document> {
@@ -117,7 +109,6 @@ export class Document extends Observable<DocState> implements RunningStateLike {
   }
 
   close(): void {
-    this.periodicSync.unsubscribe()
     this.state$.complete()
   }
 }
