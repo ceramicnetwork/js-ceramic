@@ -13,14 +13,14 @@ import type { HandlersMap } from '../handlers-map';
 import type { StateValidation } from './state-validation';
 
 export type RepositoryDependencies = {
-  dispatcher: Dispatcher,
-  pinStore: PinStore,
-  context: Context,
-  handlers: HandlersMap
-  anchorService: AnchorService,
-  conflictResolution: ConflictResolution,
-  stateValidation: StateValidation
-}
+  dispatcher: Dispatcher;
+  pinStore: PinStore;
+  context: Context;
+  handlers: HandlersMap;
+  anchorService: AnchorService;
+  conflictResolution: ConflictResolution;
+  stateValidation: StateValidation;
+};
 
 export class Repository {
   /**
@@ -37,7 +37,7 @@ export class Repository {
   /**
    * In-memory cache of the currently running documents.
    */
-  readonly #map: LRUMap<string, RunningState>;
+  readonly inmemory: LRUMap<string, RunningState>;
 
   /**
    * Various dependencies.
@@ -54,8 +54,8 @@ export class Repository {
       logger.err(error);
     });
     this.executionQ = new ExecutionQueue(logger, (docId) => this.get(docId));
-    this.#map = new LRUMap(limit);
-    this.#map.shift = function () {
+    this.inmemory = new LRUMap(limit);
+    this.inmemory.shift = function () {
       const entry = LRUMap.prototype.shift.call(this);
       entry[1].complete();
       return entry;
@@ -75,14 +75,14 @@ export class Repository {
   }
 
   fromMemory(docId: DocID): RunningState | undefined {
-    return this.#map.get(docId.toString());
+    return this.inmemory.get(docId.toString());
   }
 
   async fromStateStore(docId: DocID): Promise<RunningState | undefined> {
     const docState = await this.#deps.pinStore.stateStore.load(docId);
     if (docState) {
       const runningState = new RunningState(docState);
-      await this.add(runningState);
+      this.add(runningState);
       const toRecover =
         runningState.value.anchorStatus === AnchorStatus.PENDING ||
         runningState.value.anchorStatus === AnchorStatus.PROCESSING;
@@ -104,8 +104,8 @@ export class Repository {
     }
     const state = await handler.applyCommit(commit, docId.cid, this.#deps.context);
     await this.#deps.stateValidation.validate(state, state.content);
-    const state$ = new RunningState(state)
-    await this.add(state$);
+    const state$ = new RunningState(state);
+    this.add(state$);
     await this.stateManager.syncGenesis(state$, opts);
     this.logger.verbose(`Document ${docId.toString()} successfully loaded`);
     return state$;
@@ -151,7 +151,7 @@ export class Repository {
    * Return a document state, either from cache or from state store.
    */
   async docState(docId: DocID): Promise<DocState | undefined> {
-    const fromMemory = this.#map.get(docId.toString());
+    const fromMemory = this.inmemory.get(docId.toString());
     if (fromMemory) {
       return fromMemory.state;
     } else {
@@ -163,7 +163,7 @@ export class Repository {
    * Adds the document to the in-memory cache
    */
   add(state: RunningState): void {
-    this.#map.set(state.id.toString(), state);
+    this.inmemory.set(state.id.toString(), state);
   }
 
   pin(docStateHolder: DocStateHolder): Promise<void> {
@@ -185,8 +185,8 @@ export class Repository {
   async close(): Promise<void> {
     await this.loadingQ.close();
     await this.executionQ.close();
-    Array.from(this.#map).forEach(([id, document]) => {
-      this.#map.delete(id);
+    Array.from(this.inmemory).forEach(([id, document]) => {
+      this.inmemory.delete(id);
       document.complete();
     });
     await this.#deps.pinStore.close();
