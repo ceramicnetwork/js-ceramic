@@ -1,15 +1,33 @@
+import {BehaviorSubject, Subscription, interval, pipe} from 'rxjs'
+import {concatMap, filter} from 'rxjs/operators'
 import {
   CeramicCommit, Context, DocOpts, DocParams, DocState, Doctype, DoctypeConstructor, DoctypeUtils
 } from "@ceramicnetwork/common"
 
 import DocID, { CommitID } from '@ceramicnetwork/docid';
 
-import { fetchJson, typeDocID, delay } from './utils'
+import { fetchJson, typeDocID } from './utils'
 import { CeramicClientConfig } from "./ceramic-http-client"
 
-export class Document extends Doctype {
+function mapTask<T>(f: () => Promise<T>) {
+  let isProcessing = false;
+  return pipe(
+    filter(() => !isProcessing),
+    concatMap(async () => {
+      isProcessing = true;
+      try {
+        return await f()
+      } finally {
+        isProcessing = false;
+      }
+    })
+  )
+}
 
-  private _syncEnabled: boolean
+export class Document extends Doctype {
+  readonly state$: BehaviorSubject<DocState>;
+  readonly periodicSync: Subscription;
+
   private readonly _syncInterval: number
 
   public doctypeLogic: DoctypeConstructor<Doctype>
@@ -17,11 +35,20 @@ export class Document extends Doctype {
   constructor (state: DocState, context: Context, private _apiUrl: string, config: CeramicClientConfig = { docSyncEnabled: false }) {
     super(state, context)
 
-    this._syncEnabled = config.docSyncEnabled
+    this.state$ = new BehaviorSubject(state)
+    this.state$.subscribe(state => {
+      this.state = state
+      this.emit('change')
+    })
     this._syncInterval = config.docSyncInterval
 
-    if (this._syncEnabled) {
-      this._syncPeriodically() // start syncing
+    if (config.docSyncEnabled) {
+      this.periodicSync = interval(this._syncInterval).pipe(
+        mapTask(async () => {
+          await this._syncState();
+        })).subscribe();
+    } else {
+      this.periodicSync = Subscription.EMPTY;
     }
   }
 
@@ -33,28 +60,12 @@ export class Document extends Doctype {
     const { state } = await fetchJson(this._apiUrl + '/documents/' + this.id.toString())
 
     if (JSON.stringify(DoctypeUtils.serializeState(this.state)) !== JSON.stringify(state)) {
-      this.state = DoctypeUtils.deserializeState(state)
-      this.emit('change')
-    }
-  }
-
-  /**
-   * Sync document states periodically
-   * @private
-   */
-  async _syncPeriodically() {
-    while (this._syncEnabled) {
-      try {
-        await this._syncState()
-      } catch (e) {
-        // failed to sync state
-      }
-      await delay(this._syncInterval)
+      this.state$.next(DoctypeUtils.deserializeState(state))
     }
   }
 
   get id(): DocID {
-    return new DocID(this.state.doctype, this.state.log[0].cid)
+    return new DocID(this.state$.value.doctype, this.state$.value.log[0].cid)
   }
 
   static async createFromGenesis (apiUrl: string, doctype: string, genesis: any, context: Context, docOpts: DocOpts = {}, config: CeramicClientConfig): Promise<Document> {
@@ -98,13 +109,14 @@ export class Document extends Doctype {
   }
 
   async change(params: DocParams, opts: DocOpts): Promise<void> {
-    const doctype = new this.doctypeLogic(this.state, this.context)
+    const doctype = new this.doctypeLogic(this.state$.value, this.context)
 
     await doctype.change(params, opts)
-    this.state = doctype.state
+    this.state$.next(doctype.state)
   }
 
   close(): void {
-    this._syncEnabled = false
+    this.periodicSync.unsubscribe()
+    this.state$.complete()
   }
 }
