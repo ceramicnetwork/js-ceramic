@@ -4,7 +4,7 @@ import { Ed25519Provider } from 'key-did-provider-ed25519'
 import tmp from 'tmp-promise'
 import IPFS from 'ipfs-core'
 import CeramicDaemon from '../ceramic-daemon'
-import { AnchorStatus, DoctypeUtils, IpfsApi, TestUtils } from "@ceramicnetwork/common"
+import { AnchorStatus, Doctype, DoctypeUtils, IpfsApi, TestUtils } from '@ceramicnetwork/common';
 import { TileDoctypeHandler } from "@ceramicnetwork/doctype-tile-handler"
 import { EventEmitter } from "events"
 import * as u8a from 'uint8arrays'
@@ -95,8 +95,16 @@ describe('Ceramic interop: core <> http-client', () => {
      * got anchored.
      * @param doc
      */
-    const anchorDoc = async (doc: any): Promise<void> => {
-        const changeHandle = TestUtils.registerChangeListener(doc)
+    const anchorDoc = async (doc: Doctype): Promise<void> => {
+        const changeHandle = new Promise<void>(resolve => {
+          const onChange = () => {
+            if (doc.state.anchorStatus === AnchorStatus.ANCHORED || doc.state.anchorStatus === AnchorStatus.FAILED) {
+              doc.off('change', onChange)
+              resolve()
+            }
+          }
+          doc.on('change', onChange)
+        })
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         await daemon.ceramic.context.anchorService.anchor()

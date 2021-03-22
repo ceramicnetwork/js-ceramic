@@ -1,4 +1,4 @@
-import { Subscription } from "rxjs";
+import { Subscription } from 'rxjs';
 
 /**
  * Track a set of active subscriptions. Unsubscribe them all at once.
@@ -21,7 +21,7 @@ export class SubscriptionSet {
   /**
    * Unsubscribe all the subscriptions.
    */
-  close() {
+  unsubscribe() {
     this.subscriptions.forEach((s) => s.unsubscribe());
   }
 }

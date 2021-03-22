@@ -1,12 +1,10 @@
 import CID from 'cids'
 import cloneDeep from 'lodash.clonedeep'
-import type { Document } from "./document"
 import { DoctypeUtils, IpfsApi, UnreachableCaseError } from '@ceramicnetwork/common';
 import DocID from "@ceramicnetwork/docid";
 import { DiagnosticsLogger, ServiceLogger } from "@ceramicnetwork/logger";
 import { Repository } from './state-management/repository';
 import {
-  buildQueryMessage,
   MsgType,
   PubsubMessage,
   QueryMessage,
@@ -132,7 +130,7 @@ export class Dispatcher {
     if (document) {
       // TODO: add cache of cids here so that we don't emit event
       // multiple times if we get the message more than once.
-      await document._update(tip)
+      this.repository.stateManager.update(document, tip)
       // TODO: Handle 'anchorService' if present in message
     }
   }
@@ -174,7 +172,7 @@ export class Dispatcher {
       }
       const document = await this.repository.get(expectedDocID)
       if (document) {
-        await document._update(newTip)
+        this.repository.stateManager.update(document, newTip)
         this.messageBus.outstandingQueries.delete(queryId)
         // TODO Iterate over all documents in 'tips' object and process the new tip for each
       }
