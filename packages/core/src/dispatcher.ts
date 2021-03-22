@@ -126,13 +126,10 @@ export class Dispatcher {
     // TODO Add validation the message adheres to the proper format.
 
     const { doc: docId, tip } = message
-    const document = await this.repository.get(docId)
-    if (document) {
-      // TODO: add cache of cids here so that we don't emit event
-      // multiple times if we get the message more than once.
-      this.repository.stateManager.update(document, tip)
-      // TODO: Handle 'anchorService' if present in message
-    }
+    // TODO: add cache of cids here so that we don't emit event
+    // multiple times if we get the message more than once.
+    this.repository.stateManager.update(docId, tip)
+    // TODO: Handle 'anchorService' if present in message
   }
 
   /**
@@ -170,12 +167,9 @@ export class Dispatcher {
         throw new Error("Response to query with ID '" + queryId + "' is missing expected new tip for docID '" +
           expectedDocID + "'")
       }
-      const document = await this.repository.get(expectedDocID)
-      if (document) {
-        this.repository.stateManager.update(document, newTip)
-        this.messageBus.outstandingQueries.delete(queryId)
-        // TODO Iterate over all documents in 'tips' object and process the new tip for each
-      }
+      this.repository.stateManager.update(expectedDocID, newTip)
+      this.messageBus.outstandingQueries.delete(queryId)
+      // TODO Iterate over all documents in 'tips' object and process the new tip for each
     }
   }
 

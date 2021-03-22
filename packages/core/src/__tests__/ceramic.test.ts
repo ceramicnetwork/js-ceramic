@@ -324,7 +324,6 @@ describe('Ceramic integration', () => {
 
     expect(addSpy1).toBeCalledTimes(1)
     expect(loadSpy1).toBeCalledTimes(1)
-    await expect(repository1.get(doctype1.id.baseID)).resolves.toBeTruthy()
 
     addSpy1.mockClear()
     loadSpy1.mockClear()
@@ -340,7 +339,6 @@ describe('Ceramic integration', () => {
 
     expect(loadSpy2).toBeCalled()
     expect(addSpy2).toBeCalledTimes(1)
-    await expect(repository2.get(prevCommitDocId1.baseID)).resolves.toBeTruthy()
 
     await ceramic1.close()
     await ceramic2.close()
@@ -367,8 +365,6 @@ describe('Ceramic integration', () => {
 
     await anchorUpdate(ceramic1, doctype1)
 
-    await expect(repository1.get(doctype1.id.baseID)).resolves.toBeTruthy()
-
     addSpy1.mockClear()
     loadSpy1.mockClear()
 
@@ -385,7 +381,6 @@ describe('Ceramic integration', () => {
 
     expect(loadSpy2).toBeCalled()
     expect(addSpy2).toBeCalledTimes(1)
-    await expect(repository2.get(prevCommitDocId1.baseID)).resolves.toBeTruthy()
 
     await ceramic1.close()
     await ceramic2.close()

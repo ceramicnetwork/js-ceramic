@@ -155,7 +155,7 @@ describe('Dispatcher', () => {
     // Handle UPDATE message
     dispatcher.repository.stateManager.update = jest.fn()
     await dispatcher.handleMessage({ typ: MsgType.UPDATE, doc: FAKE_DOC_ID, tip: FAKE_CID });
-    expect(dispatcher.repository.stateManager.update).toBeCalledWith(state$, FAKE_CID);
+    expect(dispatcher.repository.stateManager.update).toBeCalledWith(state$.id, FAKE_CID);
 
     const continuationState = ({
       ...initialState,
@@ -174,6 +174,6 @@ describe('Dispatcher', () => {
     // Handle RESPONSE message
     const tips = new Map().set(FAKE_DOC_ID.toString(), FAKE_CID2);
     await dispatcher.handleMessage({ typ: MsgType.RESPONSE, id: queryID, tips: tips });
-    expect(dispatcher.repository.stateManager.update).toBeCalledWith(doc2, FAKE_CID2);
+    expect(dispatcher.repository.stateManager.update).toBeCalledWith(doc2.id, FAKE_CID2);
   });
 });

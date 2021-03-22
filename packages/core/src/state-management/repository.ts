@@ -77,11 +77,11 @@ export class Repository {
     );
   }
 
-  fromMemory(docId: DocID): RunningState | undefined {
+  private fromMemory(docId: DocID): RunningState | undefined {
     return this.inmemory.get(docId.toString());
   }
 
-  async fromStateStore(docId: DocID): Promise<RunningState | undefined> {
+  private async fromStateStore(docId: DocID): Promise<RunningState | undefined> {
     const docState = await this.#deps.pinStore.stateStore.load(docId);
     if (docState) {
       const runningState = new RunningState(docState);
@@ -98,7 +98,7 @@ export class Repository {
     }
   }
 
-  async fromNetwork(docId: DocID, opts: DocOpts = {}): Promise<RunningState> {
+  private async fromNetwork(docId: DocID, opts: DocOpts = {}): Promise<RunningState> {
     const handler = this.#deps.handlers.get(docId.typeName);
     const genesisCid = docId.cid;
     const commit = await this.#deps.dispatcher.retrieveCommit(genesisCid);
@@ -185,7 +185,7 @@ export class Repository {
    * If `docId` is passed, indicate if it is pinned.
    */
   async listPinned(docId?: DocID): Promise<string[]> {
-    return this.#deps.pinStore.stateStore.list(docId);
+    return this.#deps.pinStore.ls(docId);
   }
 
   async close(): Promise<void> {

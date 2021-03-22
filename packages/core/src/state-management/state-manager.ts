@@ -8,7 +8,7 @@ import CID from 'cids';
 import { concatMap, timeoutWith } from 'rxjs/operators';
 import { of, Subscription } from 'rxjs';
 import { SnapshotState } from './snapshot-state';
-import { CommitID } from '@ceramicnetwork/docid';
+import { CommitID, DocID } from '@ceramicnetwork/docid';
 
 // DocOpts defaults for document load operations
 export const DEFAULT_LOAD_DOCOPTS = { anchor: false, publish: false, sync: true };
@@ -110,12 +110,12 @@ export class StateManager {
   /**
    * Handles update from the PubSub topic
    *
-   * @param state$
+   * @param docId
    * @param tip - Document Tip CID
    * @private
    */
-  update(state$: RunningState, tip: CID): void {
-    this.executionQ.forDocument(state$.id).add(async (state$) => {
+  update(docId: DocID, tip: CID): void {
+    this.executionQ.forDocument(docId).add(async (state$) => {
       await this.handleTip(state$, tip);
     });
   }
