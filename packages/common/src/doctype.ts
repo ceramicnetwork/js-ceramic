@@ -232,7 +232,7 @@ export abstract class Doctype extends Observable<DocState> implements DocStateHo
 
     async sync(): Promise<void> {
       const document = await this._context.api.loadDocument(this.id)
-      this._state = document.state$.value
+      this._state = document.state
     }
 
     /**
