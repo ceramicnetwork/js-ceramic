@@ -5,15 +5,15 @@ import { commitAtTime, ConflictResolution } from '../conflict-resolution';
 import { AnchorService, AnchorStatus, DocOpts, UnreachableCaseError, RunningStateLike } from '@ceramicnetwork/common';
 import { RunningState } from './running-state';
 import CID from 'cids';
-import { throttle, timeoutWith } from 'rxjs/operators';
+import { concatMap, timeoutWith } from 'rxjs/operators';
 import { of, Subscription } from 'rxjs';
 import { SnapshotState } from './snapshot-state';
 import { CommitID } from '@ceramicnetwork/docid';
 
 // DocOpts defaults for document load operations
-export const DEFAULT_LOAD_DOCOPTS = {anchor: false, publish: false, sync: true}
+export const DEFAULT_LOAD_DOCOPTS = { anchor: false, publish: false, sync: true };
 // DocOpts defaults for document write operations
-export const DEFAULT_WRITE_DOCOPTS = {anchor: true, publish: true, sync: false}
+export const DEFAULT_WRITE_DOCOPTS = { anchor: true, publish: true, sync: false };
 
 export class StateManager {
   constructor(
@@ -144,44 +144,45 @@ export class StateManager {
    */
   anchor(state$: RunningState): Subscription {
     const anchorStatus$ = this.anchorService.requestAnchor(state$.id, state$.tip);
-    const tasks = this.executionQ.forDocument(state$.id);
-    const subscription = anchorStatus$.pipe(throttle((asr) => {
-      return tasks.run(async (state$) => {
-        switch (asr.status) {
-          case AnchorStatus.PENDING: {
-            const next = {
-              ...state$.value,
-              anchorStatus: AnchorStatus.PENDING,
-            };
-            if (asr.anchorScheduledFor) next.anchorScheduledFor = asr.anchorScheduledFor;
-            state$.next(next);
-            await this.updateStateIfPinned(state$);
-            return;
-          }
-          case AnchorStatus.PROCESSING: {
-            state$.next({ ...state$.value, anchorStatus: AnchorStatus.PROCESSING });
-            await this.updateStateIfPinned(state$);
-            return;
-          }
-          case AnchorStatus.ANCHORED: {
-            await this.handleTip(state$, asr.anchorRecord);
-            this.publishTip(state$);
-            subscription.unsubscribe();
-            return;
-          }
-          case AnchorStatus.FAILED: {
-            if (!asr.cid.equals(state$.tip)) {
+    const subscription = anchorStatus$
+      .pipe(
+        concatMap(async (asr) => {
+          switch (asr.status) {
+            case AnchorStatus.PENDING: {
+              const next = {
+                ...state$.value,
+                anchorStatus: AnchorStatus.PENDING,
+              };
+              if (asr.anchorScheduledFor) next.anchorScheduledFor = asr.anchorScheduledFor;
+              state$.next(next);
+              await this.updateStateIfPinned(state$);
               return;
             }
-            state$.next({ ...state$.value, anchorStatus: AnchorStatus.FAILED });
-            subscription.unsubscribe();
-            return;
+            case AnchorStatus.PROCESSING: {
+              state$.next({ ...state$.value, anchorStatus: AnchorStatus.PROCESSING });
+              await this.updateStateIfPinned(state$);
+              return;
+            }
+            case AnchorStatus.ANCHORED: {
+              await this.handleTip(state$, asr.anchorRecord);
+              this.publishTip(state$);
+              subscription.unsubscribe();
+              return;
+            }
+            case AnchorStatus.FAILED: {
+              if (!asr.cid.equals(state$.tip)) {
+                return;
+              }
+              state$.next({ ...state$.value, anchorStatus: AnchorStatus.FAILED });
+              subscription.unsubscribe();
+              return;
+            }
+            default:
+              throw new UnreachableCaseError(asr, 'Unknown anchoring state');
           }
-          default:
-            throw new UnreachableCaseError(asr, 'Unknown anchoring state');
-        }
-      });
-    })).subscribe();
+        }),
+      )
+      .subscribe();
     state$.add(subscription);
     return subscription;
   }
