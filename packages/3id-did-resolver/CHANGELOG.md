@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.1.0](/compare/@ceramicnetwork/3id-did-resolver@1.1.0-rc.1...@ceramicnetwork/3id-did-resolver@1.1.0) (2021-03-22)
+
+
+### Features
+
+* **3id-did-resolver:** did metadata resolution (#1139) 818bde1, closes #1139
+
+
+
+
+
 # [1.1.0-rc.1](/compare/@ceramicnetwork/3id-did-resolver@1.1.0-rc.0...@ceramicnetwork/3id-did-resolver@1.1.0-rc.1) (2021-03-15)
 
 **Note:** Version bump only for package @ceramicnetwork/3id-did-resolver

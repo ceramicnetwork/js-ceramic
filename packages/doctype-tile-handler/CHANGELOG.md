@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.14.0](/compare/@ceramicnetwork/doctype-tile-handler@0.14.0-rc.1...@ceramicnetwork/doctype-tile-handler@0.14.0) (2021-03-22)
+
+
+### Features
+
+* **3id-did-resolver:** did metadata resolution (#1139) 818bde1, closes #1139
+
+
+
+
+
 # [0.14.0-rc.1](/compare/@ceramicnetwork/doctype-tile-handler@0.14.0-rc.0...@ceramicnetwork/doctype-tile-handler@0.14.0-rc.1) (2021-03-15)
 
 

@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/common",
-  "version": "0.16.0-rc.11",
+  "version": "0.16.0",
   "description": "Ceramic common types and utilities",
   "keywords": [
     "ceramic",
@@ -27,8 +27,8 @@
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/docid": "^0.5.0-rc.6",
-    "@ceramicnetwork/logger": "^0.1.0-rc.5",
+    "@ceramicnetwork/docid": "^0.5.0",
+    "@ceramicnetwork/logger": "^0.1.0",
     "cids": "~1.1.6",
     "events": "^3.2.0",
     "lodash.clonedeep": "^4.5.0",
