@@ -5,7 +5,7 @@ import { commitAtTime, ConflictResolution } from '../conflict-resolution';
 import { AnchorService, AnchorStatus, DocOpts, UnreachableCaseError, RunningStateLike } from '@ceramicnetwork/common';
 import { RunningState } from './running-state';
 import CID from 'cids';
-import { timeoutWith } from 'rxjs/operators';
+import { throttle, timeoutWith } from 'rxjs/operators';
 import { of, Subscription } from 'rxjs';
 import { SnapshotState } from './snapshot-state';
 import { CommitID } from '@ceramicnetwork/docid';
@@ -145,8 +145,8 @@ export class StateManager {
   anchor(state$: RunningState): Subscription {
     const anchorStatus$ = this.anchorService.requestAnchor(state$.id, state$.tip);
     const tasks = this.executionQ.forDocument(state$.id);
-    const subscription = anchorStatus$.subscribe((asr) => {
-      tasks.add(async (state$) => {
+    const subscription = anchorStatus$.pipe(throttle((asr) => {
+      return tasks.run(async (state$) => {
         switch (asr.status) {
           case AnchorStatus.PENDING: {
             const next = {
@@ -181,7 +181,7 @@ export class StateManager {
             throw new UnreachableCaseError(asr, 'Unknown anchoring state');
         }
       });
-    });
+    })).subscribe();
     state$.add(subscription);
     return subscription;
   }
