@@ -87,6 +87,7 @@
     "eslint-plugin-jest": "^23.8.2",
     "ipfs-core": "~0.5.2",
     "jest": "^26.6.3",
+    "rxjs": "^6.6.6",
     "tmp-promise": "^2.0.2"
   },
   "gitHead": "34eeee25597b0a60def72906c26d3afd6230aaf1"

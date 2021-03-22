@@ -192,9 +192,9 @@ export class CeramicCliUtils {
         await CeramicCliUtils._runWithCeramic(async (ceramic: CeramicApi) => {
             const doc = await ceramic.loadDocument(id)
             console.log(JSON.stringify(doc.content, null, 2))
-            doc.on('change', () => {
-                console.log('--- document changed ---')
-                console.log(JSON.stringify(doc.content, null, 2))
+            doc.subscribe(() => {
+              console.log('--- document changed ---')
+              console.log(JSON.stringify(doc.content, null, 2))
             })
         })
     }

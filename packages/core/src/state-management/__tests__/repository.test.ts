@@ -39,6 +39,7 @@ describe('load', () => {
       content: { foo: Math.random().toString() },
       metadata: { controllers },
     });
+    doc1.subscribe();
     const fromMemorySpy = jest.spyOn(repository, 'fromMemory');
     const fromStateStoreSpy = jest.spyOn(repository, 'fromStateStore');
     const fromNetwork = jest.spyOn(repository, 'fromNetwork');

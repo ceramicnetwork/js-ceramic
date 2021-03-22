@@ -1,8 +1,8 @@
-import {BehaviorSubject, Subscription, interval, pipe} from 'rxjs'
+import {BehaviorSubject, Subscription, interval, pipe, Observable} from 'rxjs'
 import {concatMap, filter} from 'rxjs/operators'
 import {
-  CeramicCommit, Context, DocOpts, DocParams, DocState, Doctype, DoctypeConstructor, DoctypeUtils
-} from "@ceramicnetwork/common"
+  CeramicCommit, Context, DocOpts, DocState, DoctypeUtils, RunningStateLike,
+} from '@ceramicnetwork/common';
 
 import DocID, { CommitID } from '@ceramicnetwork/docid';
 
@@ -24,22 +24,17 @@ function mapTask<T>(f: () => Promise<T>) {
   )
 }
 
-export class Document extends Doctype {
+export class Document extends Observable<DocState> implements RunningStateLike {
   readonly state$: BehaviorSubject<DocState>;
-  readonly periodicSync: Subscription;
+  private periodicSync: Subscription;
 
   private readonly _syncInterval: number
 
-  public doctypeLogic: DoctypeConstructor<Doctype>
-
-  constructor (state: DocState, context: Context, private _apiUrl: string, config: CeramicClientConfig = { docSyncEnabled: false }) {
-    super(state, context)
-
-    this.state$ = new BehaviorSubject(state)
-    this.state$.subscribe(state => {
-      this.state = state
-      this.emit('change')
+  constructor (initial: DocState, private _apiUrl: string, config: CeramicClientConfig = { docSyncEnabled: false }) {
+    super(subscriber => {
+      this.state$.subscribe(subscriber);
     })
+    this.state$ = new BehaviorSubject(initial)
     this._syncInterval = config.docSyncInterval
 
     if (config.docSyncEnabled) {
@@ -52,15 +47,28 @@ export class Document extends Doctype {
     }
   }
 
+  get value(): DocState {
+    return this.state$.value
+  }
+
+  get state(): DocState {
+    return this.state$.value
+  }
+
+  next(state: DocState): void {
+    this.state$.next(state)
+  }
+
   /**
    * Sync document state
    * @private
    */
-  async _syncState() {
-    const { state } = await fetchJson(this._apiUrl + '/documents/' + this.id.toString())
+  async _syncState(id?: DocID | CommitID) {
+    const effectiveId = id || this.id
+    const { state } = await fetchJson(this._apiUrl + '/documents/' + effectiveId.toString())
 
-    if (JSON.stringify(DoctypeUtils.serializeState(this.state)) !== JSON.stringify(state)) {
-      this.state$.next(DoctypeUtils.deserializeState(state))
+    if (JSON.stringify(DoctypeUtils.serializeState(this.state$.value)) !== JSON.stringify(state)) {
+      this.next(DoctypeUtils.deserializeState(state))
     }
   }
 
@@ -68,7 +76,7 @@ export class Document extends Doctype {
     return new DocID(this.state$.value.doctype, this.state$.value.log[0].cid)
   }
 
-  static async createFromGenesis (apiUrl: string, doctype: string, genesis: any, context: Context, docOpts: DocOpts = {}, config: CeramicClientConfig): Promise<Document> {
+  static async createFromGenesis (apiUrl: string, doctype: string, genesis: any, docOpts: DocOpts = {}, config: CeramicClientConfig): Promise<Document> {
     const { state } = await fetchJson(apiUrl + '/documents', {
       method: 'post',
       body: {
@@ -77,10 +85,10 @@ export class Document extends Doctype {
         docOpts,
       }
     })
-    return new Document(DoctypeUtils.deserializeState(state), context, apiUrl, config)
+    return new Document(DoctypeUtils.deserializeState(state), apiUrl, config)
   }
 
-  static async applyCommit(apiUrl: string, docId: DocID | string, commit: CeramicCommit, context: Context, docOpts: DocOpts = {}): Promise<Document> {
+  static async applyCommit(apiUrl: string, docId: DocID | string, commit: CeramicCommit, docOpts: DocOpts = {}): Promise<Document> {
     docId = typeDocID(docId)
     const { state } = await fetchJson(apiUrl + '/commits', {
       method: 'post',
@@ -90,12 +98,12 @@ export class Document extends Doctype {
         docOpts,
       }
     })
-    return new Document(DoctypeUtils.deserializeState(state), context, apiUrl)
+    return new Document(DoctypeUtils.deserializeState(state), apiUrl)
   }
 
-  static async load (docId: DocID | CommitID, apiUrl: string, context: Context, config: CeramicClientConfig): Promise<Document> {
+  static async load (docId: DocID | CommitID, apiUrl: string, config: CeramicClientConfig): Promise<Document> {
     const { state } = await fetchJson(apiUrl + '/documents/' + docId.toString())
-    return new Document(DoctypeUtils.deserializeState(state), context, apiUrl, config)
+    return new Document(DoctypeUtils.deserializeState(state), apiUrl, config)
   }
 
   static async loadDocumentCommits (docId: DocID, apiUrl: string): Promise<Array<Record<string, CeramicCommit>>> {
@@ -106,13 +114,6 @@ export class Document extends Doctype {
         cid: r.cid, value: DoctypeUtils.deserializeCommit(r.value)
       }
     })
-  }
-
-  async change(params: DocParams, opts: DocOpts): Promise<void> {
-    const doctype = new this.doctypeLogic(this.state$.value, this.context)
-
-    await doctype.change(params, opts)
-    this.state$.next(doctype.state)
   }
 
   close(): void {

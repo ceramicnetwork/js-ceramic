@@ -1,11 +1,12 @@
 import Ceramic from '../ceramic'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import tmp from 'tmp-promise'
-import { DoctypeUtils, Doctype, IpfsApi, TestUtils, DocState } from '@ceramicnetwork/common';
+import { DoctypeUtils, IpfsApi, TestUtils, DocState } from '@ceramicnetwork/common';
 import { TileDoctype } from "@ceramicnetwork/doctype-tile"
 import * as u8a from 'uint8arrays'
 import { createIPFS, swarmConnect } from './ipfs-util';
 import InMemoryAnchorService from "../anchor/memory/in-memory-anchor-service";
+import { anchorUpdate } from '../state-management/__tests__/anchor-update';
 
 jest.mock('../store/level-state-store')
 
@@ -28,20 +29,6 @@ const createCeramic = async (ipfs: IpfsApi, anchorOnRequest = false, docCacheLim
   await ceramic.setDIDProvider(provider)
 
   return ceramic
-}
-
-const anchor = async (ceramic: Ceramic): Promise<void> => {
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  await ceramic.context.anchorService.anchor()
-}
-
-const syncDoc = async (doctype: Doctype): Promise<void> => {
-  await new Promise<void>(resolve => {
-    doctype.on('change', () => {
-      resolve()
-    })
-  })
 }
 
 function expectEqualStates(a: DocState, b: DocState) {
@@ -117,7 +104,7 @@ describe('Ceramic integration', () => {
 
     const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { test: 456 }, metadata: { controllers: [controller], tags: ['3id'] } })
 
-    await anchor(ceramic1)
+    await anchorUpdate(ceramic1, doctype1)
 
     // we can't load document from id since nodes are not connected
     // so we won't find the genesis object from it's CID
@@ -167,8 +154,7 @@ describe('Ceramic integration', () => {
       deterministic: true,
     })
 
-    await anchor(ceramic1)
-    await syncDoc(doctype1)
+    await anchorUpdate(ceramic1, doctype1)
 
     // Through a different ceramic instance create a new document with the same contents that will
     // therefore resolve to the same genesis record and thus the same docId.  Make sure the new
@@ -184,7 +170,7 @@ describe('Ceramic integration', () => {
 
     await doctype1.change({ content: { test: 'abcde' }, metadata: { controllers: [controller] } })
 
-    await anchor(ceramic1)
+    await anchorUpdate(ceramic1, doctype1)
 
     expect(doctype1.content).toEqual({ test: 'abcde' })
     await TestUtils.waitForState(doctype3, 2000, state => DoctypeUtils.statesEqual(state, doctype1.state), () => {
@@ -204,13 +190,11 @@ describe('Ceramic integration', () => {
 
     const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { test: 456 }, metadata: { controllers: [controller], tags: ['3id'] } })
 
-    await anchor(ceramic1)
-    await syncDoc(doctype1)
+    await anchorUpdate(ceramic1, doctype1)
 
     await doctype1.change({ content: { test: 'abcde' }, metadata: { controllers: [controller] } })
 
-    await anchor(ceramic1)
-    await syncDoc(doctype1)
+    await anchorUpdate(ceramic1, doctype1)
 
     const logRecords = await ceramic1.loadDocumentRecords(doctype1.id)
 
@@ -336,8 +320,7 @@ describe('Ceramic integration', () => {
     const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { test: 456 }, metadata: { controllers: [controller], tags: ['3id'] } }, {publish: false})
     expect(doctype1).toBeDefined()
 
-    await anchor(ceramic1)
-    await syncDoc(doctype1)
+    await anchorUpdate(ceramic1, doctype1)
 
     expect(addSpy1).toBeCalledTimes(1)
     expect(loadSpy1).toBeCalledTimes(1)
@@ -348,8 +331,7 @@ describe('Ceramic integration', () => {
 
     await doctype1.change({ content: { test: 'abcde' }, metadata: { controllers: [controller] } }, {publish: false})
 
-    await anchor(ceramic1)
-    await syncDoc(doctype1)
+    await anchorUpdate(ceramic1, doctype1)
 
     const prevCommitDocId1 = doctype1.id.atCommit(doctype1.state.log[3].cid)
     expect(addSpy2).not.toBeCalled()
@@ -383,8 +365,7 @@ describe('Ceramic integration', () => {
     expect(addSpy1).toBeCalledTimes(1)
     expect(doctype1).toBeDefined()
 
-    await anchor(ceramic1)
-    await syncDoc(doctype1)
+    await anchorUpdate(ceramic1, doctype1)
 
     await expect(repository1.get(doctype1.id.baseID)).resolves.toBeTruthy()
 
@@ -395,8 +376,7 @@ describe('Ceramic integration', () => {
     expect(loadSpy1).toBeCalledTimes(1)
     expect(addSpy1).toBeCalledTimes(0)
 
-    await anchor(ceramic1)
-    await syncDoc(doctype1)
+    await anchorUpdate(ceramic1, doctype1)
 
     const prevCommitDocId1 = doctype1.id.atCommit(doctype1.state.log[3].cid)
     expect(addSpy2).not.toBeCalled()

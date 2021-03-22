@@ -6,7 +6,6 @@ import { DiagnosticsLogger } from '@ceramicnetwork/common';
 import { ExecutionQueue } from './execution-queue';
 import { RunningState } from './running-state';
 import { LRUMap } from 'lru_map';
-import { Subject } from 'rxjs';
 import { StateManager } from './state-manager';
 import type { Dispatcher } from '../dispatcher';
 import type { ConflictResolution } from '../conflict-resolution';

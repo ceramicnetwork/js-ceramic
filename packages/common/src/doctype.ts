@@ -1,9 +1,11 @@
 import CID from 'cids'
 import cloneDeep from 'lodash.clonedeep'
-import { EventEmitter } from "events"
 import type { Context } from "./context"
 import { DocID, CommitID } from '@ceramicnetwork/docid'
 import type { DagJWSResult, DagJWS } from 'dids'
+import { RunningStateLike } from './running-state-like';
+import { Observable } from 'rxjs'
+import { tap } from 'rxjs/operators'
 
 /**
  * Describes signature status
@@ -162,9 +164,16 @@ export interface DocStateHolder {
 /**
  * Describes common doctype attributes
  */
-export abstract class Doctype extends EventEmitter implements DocStateHolder {
-    constructor(private _state: DocState, private _context: Context) {
-        super()
+export abstract class Doctype extends Observable<DocState> implements DocStateHolder {
+    protected _state: DocState
+
+    constructor(private readonly state$: RunningStateLike, private _context: Context) {
+        super(subscriber => {
+          state$.pipe(tap(state => {
+            this._state = state
+          })).subscribe(subscriber)
+        })
+        this._state = cloneDeep(state$.value)
     }
 
     get id(): DocID {
@@ -217,16 +226,13 @@ export abstract class Doctype extends EventEmitter implements DocStateHolder {
         return cloneDeep(this._state)
     }
 
-    set state(state: DocState) {
-        this._state = state
-    }
-
-    set context(context: Context) {
-        this._context = context
-    }
-
     get context(): Context {
         return this._context
+    }
+
+    async sync(): Promise<void> {
+      const document = await this._context.api.loadDocument(this.id)
+      this._state = document.state$.value
     }
 
     /**
@@ -252,10 +258,10 @@ export function DoctypeStatic<T>() {
 export interface DoctypeConstructor<T extends Doctype> {
     /**
      * Constructor signature
-     * @param state - Doctype state
+     * @param state$ - Doctype state
      * @param context - Ceramic context
      */
-    new(state: DocState, context: Context): T
+    new(state$: RunningStateLike, context: Context): T
 
     /**
      * Makes genesis commit

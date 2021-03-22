@@ -1,8 +1,10 @@
 import { mock } from 'jest-mock-extended'
 
 import Utils from '../../utils'
-import { CeramicApi, Doctype, DocState } from "@ceramicnetwork/common"
+import { CeramicApi, Doctype, DocState, TestUtils, CommitType } from '@ceramicnetwork/common';
+import CID from 'cids'
 
+const FAKE_CID = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu');
 
 class BasicDoctype extends Doctype {
     change(): Promise<void> {
@@ -22,14 +24,22 @@ describe('Doctype', () => {
     }
 
     beforeAll(() => {
-        const docSchemaState = mock<DocState>()
-        docSchemaState.content = schema
-        docSchemaState.metadata = {
+        const docSchemaState = {
+          content: schema,
+          doctype: 'tile',
+          metadata: {
             controllers: [],
             schema: 'ceramic://1234567'
-        }
+          },
+          log: [
+            {
+              type: CommitType.GENESIS,
+              cid: FAKE_CID
+            }
+          ]
+        } as unknown as DocState
 
-        const schemaDoc = new BasicDoctype(docSchemaState, null)
+        const schemaDoc = new BasicDoctype(TestUtils.runningState(docSchemaState), null)
 
         ceramic = mock<CeramicApi>()
         ceramic.loadDocument.mockReturnValue(new Promise<Doctype>((resolve) => {
@@ -38,30 +48,46 @@ describe('Doctype', () => {
     })
 
     it('should pass schema validation', async () => {
-        const state = mock<DocState>()
-        state.metadata = {
+        const state = {
+          doctype: 'tile',
+          metadata: {
             controllers: [],
             schema: 'ceramic://1234567'
-        }
-        state.content = {
+          },
+          content: {
             'x': 'y'
-        }
+          },
+          log: [
+            {
+              type: CommitType.GENESIS,
+              cid: FAKE_CID
+            }
+          ]
+        } as unknown as DocState
 
-        const doc = new BasicDoctype(state, { api: ceramic })
+        const doc = new BasicDoctype(TestUtils.runningState(state), { api: ceramic })
         await Utils.validateDoctype(doc)
     })
 
     it('should fail schema validation', async () => {
-        const state = mock<DocState>()
-        state.metadata = {
+        const state = {
+          doctype: 'tile',
+          metadata: {
             controllers: [],
             schema: 'ceramic://1234567'
-        }
-        state.content = {
+          },
+          content: {
             'x': 1
-        }
+          },
+          log: [
+            {
+              type: CommitType.GENESIS,
+              cid: FAKE_CID
+            }
+          ]
+        } as unknown as DocState;
 
-        const doc = new BasicDoctype(state, { api: ceramic })
+        const doc = new BasicDoctype(TestUtils.runningState(state), { api: ceramic })
         try {
             await Utils.validateDoctype(doc)
             throw new Error('Should not be able to validate invalid data')

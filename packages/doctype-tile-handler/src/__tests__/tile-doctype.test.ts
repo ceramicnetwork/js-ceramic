@@ -12,13 +12,12 @@ import * as sha256 from '@stablelib/sha256'
 import cloneDeep from 'lodash.clonedeep'
 
 import { TileDoctype } from "@ceramicnetwork/doctype-tile"
-import {AnchorCommit, CeramicApi, Context, DoctypeUtils, SignedCommitContainer} from "@ceramicnetwork/common"
+import {AnchorCommit, CeramicApi, Context, DoctypeUtils, SignedCommitContainer, TestUtils} from "@ceramicnetwork/common"
 
 jest.mock('did-jwt', () => ({
     // TODO - We should test for when this function throws as well
     verifyJWS: (): void => { return }
 }))
-import didJWT from 'did-jwt'
 
 
 
@@ -274,7 +273,8 @@ describe('TileDoctypeHandler', () => {
         await context.ipfs.dag.put(RECORDS.genesisGenerated.linkedBlock, RECORDS.genesisGenerated.jws.link)
 
         const state = await tileDoctypeHandler.applyCommit(RECORDS.genesisGenerated.jws, FAKE_CID_1, context)
-        const doctype = new TileDoctype(state, context)
+        const state$ = TestUtils.runningState(state)
+        const doctype = new TileDoctype(state$, context)
 
         await expect(TileDoctype._makeCommit(doctype, null, RECORDS.r1.desiredContent)).rejects.toThrow(/No DID/)
 
@@ -296,7 +296,8 @@ describe('TileDoctypeHandler', () => {
         // apply genesis
         let state = await tileDoctypeHandler.applyCommit(genesisRecord.jws, FAKE_CID_1, context)
 
-        const doctype = new TileDoctype(state, context)
+        const state$ = TestUtils.runningState(state)
+        const doctype = new TileDoctype(state$, context)
         const signedRecord = await TileDoctype._makeCommit(doctype, did, RECORDS.r1.desiredContent) as SignedCommitContainer
 
         await context.ipfs.dag.put(signedRecord, FAKE_CID_2)
@@ -321,7 +322,8 @@ describe('TileDoctypeHandler', () => {
         const genesisState = await tileDoctypeHandler.applyCommit(genesisRecord.jws, FAKE_CID_1, context)
 
         // make a first update
-        let doctype = new TileDoctype(genesisState, context)
+        const state$ = TestUtils.runningState(genesisState)
+        let doctype = new TileDoctype(state$, context)
         const signedRecord1 = await TileDoctype._makeCommit(doctype, did, { other: { obj: 'content' } }, null, "a new schema") as SignedCommitContainer
 
         await context.ipfs.dag.put(signedRecord1, FAKE_CID_2)
@@ -331,7 +333,8 @@ describe('TileDoctypeHandler', () => {
         const state1 = await tileDoctypeHandler.applyCommit(signedRecord1.jws, FAKE_CID_2, context, deepCopy(genesisState))
 
         // make a second update on top of the first
-        doctype = new TileDoctype(state1, context)
+        const state1$ = TestUtils.runningState(state1)
+        doctype = new TileDoctype(state1$, context)
         const signedRecord2 = await TileDoctype._makeCommit(doctype, did, { other: { obj2: 'fefe' } }) as SignedCommitContainer
 
         await context.ipfs.dag.put(signedRecord2, FAKE_CID_3)
@@ -383,7 +386,8 @@ describe('TileDoctypeHandler', () => {
         // apply genesis
         let state = await tileDoctypeHandler.applyCommit(genesisRecord.jws, FAKE_CID_1, context)
 
-        const doctype = new TileDoctype(state, context)
+        const state$ = TestUtils.runningState(state)
+        const doctype = new TileDoctype(state$, context)
         const signedRecord = await TileDoctype._makeCommit(doctype, did, RECORDS.r1.desiredContent) as SignedCommitContainer
 
         await context.ipfs.dag.put(signedRecord, FAKE_CID_2)

@@ -28,7 +28,6 @@ const STRING_MAP_SCHEMA = {
 let ipfs: IpfsApi;
 let ceramic: Ceramic;
 let controllers: string[];
-const logger = new LoggerProvider().getDiagnosticsLogger()
 
 beforeAll(async () => {
   ipfs = await createIPFS();
@@ -61,6 +60,7 @@ test('handleTip', async () => {
     content: INITIAL_CONTENT,
     metadata: { controllers },
   });
+  doctype1.subscribe()
   const doc1 = await ceramic.repository.load(doctype1.id);
   await new Promise((resolve) => {
     ceramic.repository.stateManager.anchor(doc1).add(resolve)
@@ -68,6 +68,7 @@ test('handleTip', async () => {
 
   const ceramic2 = await createCeramic(ipfs);
   const doctype2 = await ceramic2.loadDocument(doctype1.id, { sync: false });
+  doctype2.subscribe()
   const doc2 = await ceramic2.repository.load(doctype2.id);
 
   expect(doctype2.content).toEqual(doctype1.content);
@@ -85,6 +86,7 @@ test('commit history and rewind', async () => {
     content: INITIAL_CONTENT,
     metadata: { controllers },
   });
+  doctype.subscribe()
   const doc = await ceramic.repository.load(doctype.id);
 
   const commit0 = doctype.allCommitIds[0];
@@ -230,6 +232,7 @@ test('handles basic conflict', async () => {
     content: INITIAL_CONTENT,
     metadata: { controllers },
   });
+  doctype1.subscribe();
   const doc1 = await ceramic.repository.load(doctype1.id);
   const docId = doctype1.id;
   await anchorUpdate(ceramic, doctype1);
@@ -252,6 +255,7 @@ test('handles basic conflict', async () => {
 
   const conflictingNewContent = { asdf: 2342 };
   const doctype2 = doctypeFromState(ceramic.context, ceramic._doctypeHandlers, state$)
+  doctype2.subscribe();
   updateRec = await TileDoctype._makeCommit(doctype2, ceramic.did, conflictingNewContent, doctype2.controllers);
   await ceramic.repository.stateManager.applyCommit(state$, updateRec);
 
@@ -324,6 +328,7 @@ test('enforce previously assigned schema during future update', async () => {
 test('should announce change to network', async () => {
   const publishTip = jest.spyOn(ceramic.dispatcher, 'publishTip');
   const doctype1 = await ceramic.createDocument('tile', { content: INITIAL_CONTENT, metadata: { controllers } });
+  doctype1.subscribe();
   const doc1 = await ceramic.repository.load(doctype1.id);
   expect(publishTip).toHaveBeenCalledTimes(1);
   expect(publishTip).toHaveBeenCalledWith(doctype1.id, doctype1.tip);

@@ -9,10 +9,6 @@ export function doctypeFromState<T extends Doctype>(
   isReadonly = false,
 ): T {
   const handler = handlersMap.get<T>(state$.value.doctype);
-  const doctype = new handler.doctype(state$.value, context);
-  state$.subscribe((state) => {
-    doctype.state = state;
-    doctype.emit('change');
-  });
+  const doctype = new handler.doctype(state$, context);
   return isReadonly ? DoctypeUtils.makeReadOnly(doctype) : doctype;
 }
