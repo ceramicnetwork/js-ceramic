@@ -1,6 +1,5 @@
-import { Context, Doctype, DoctypeUtils } from '@ceramicnetwork/common';
+import { Context, Doctype, DoctypeUtils, RunningStateLike } from '@ceramicnetwork/common';
 import { HandlersMap } from '../handlers-map';
-import { RunningStateLike } from './running-state';
 
 // Should be removed when Doctype accepts RunningStateLike
 export function doctypeFromState<T extends Doctype>(

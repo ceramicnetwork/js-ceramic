@@ -1,6 +1,5 @@
 import { Observable, of } from 'rxjs';
-import { RunningStateLike } from './running-state';
-import { DocState } from '@ceramicnetwork/common';
+import { DocState, RunningStateLike } from '@ceramicnetwork/common';
 import { DocID } from '@ceramicnetwork/docid';
 
 /**

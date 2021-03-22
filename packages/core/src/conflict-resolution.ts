@@ -10,13 +10,13 @@ import {
   Doctype,
   DoctypeHandler,
   DoctypeUtils,
+  RunningStateLike
 } from '@ceramicnetwork/common';
 import { Dispatcher } from './dispatcher';
 import cloneDeep from 'lodash.clonedeep';
 import { CommitID } from '@ceramicnetwork/docid';
 import { StateValidation } from './state-management/state-validation';
 import { HandlersMap } from './handlers-map';
-import { RunningStateLike } from './state-management/running-state';
 
 /**
  * Verifies anchor commit structure
