@@ -11,6 +11,7 @@ import type { Dispatcher } from '../dispatcher';
 import type { ConflictResolution } from '../conflict-resolution';
 import type { HandlersMap } from '../handlers-map';
 import type { StateValidation } from './state-validation';
+import { Subject } from 'rxjs';
 
 export type RepositoryDependencies = {
   dispatcher: Dispatcher;
@@ -38,6 +39,8 @@ export class Repository {
    * In-memory cache of the currently running documents.
    */
   readonly inmemory: LRUMap<string, RunningState>;
+
+  readonly feed$: Subject<DocState> = new Subject<DocState>();
 
   /**
    * Various dependencies.
@@ -162,8 +165,11 @@ export class Repository {
   /**
    * Adds the document to the in-memory cache
    */
-  add(state: RunningState): void {
-    this.inmemory.set(state.id.toString(), state);
+  add(state$: RunningState): void {
+    state$.subscribe({
+      next: this.feed$.next.bind(this.feed$),
+    });
+    this.inmemory.set(state$.id.toString(), state$);
   }
 
   pin(docStateHolder: DocStateHolder): Promise<void> {

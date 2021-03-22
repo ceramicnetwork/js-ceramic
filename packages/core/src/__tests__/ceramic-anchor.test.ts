@@ -254,7 +254,9 @@ describe('Ceramic anchoring', () => {
     ceramic2.repository.stateManager.anchorService = anchorService
 
     const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { x: 1 } }, { anchor: false, publish: true })
+    doctype1.subscribe();
     const doctype2 = await ceramic2.loadDocument(doctype1.id)
+    doctype2.subscribe();
 
     // Create two conflicting updates, each on a different ceramic instance
     const newContent1 = { x: 7 }

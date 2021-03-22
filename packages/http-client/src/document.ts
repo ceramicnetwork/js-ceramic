@@ -1,4 +1,4 @@
-import { BehaviorSubject, interval, Observable } from 'rxjs'
+import { BehaviorSubject, Observable, timer } from 'rxjs'
 import { throttle } from 'rxjs/operators'
 import { CeramicCommit, DocOpts, DocState, DoctypeUtils, RunningStateLike } from '@ceramicnetwork/common';
 import { DocID, CommitID } from '@ceramicnetwork/docid';
@@ -11,7 +11,7 @@ export class Document extends Observable<DocState> implements RunningStateLike {
     super(subscriber => {
       this.state$.subscribe(subscriber);
 
-      const periodicUpdates = interval(docSyncInterval).pipe(throttle(() => this._syncState())).subscribe()
+      const periodicUpdates = timer(0, docSyncInterval).pipe(throttle(() => this._syncState())).subscribe()
 
       return () => {
         periodicUpdates.unsubscribe()
@@ -36,7 +36,7 @@ export class Document extends Observable<DocState> implements RunningStateLike {
    * Sync document state
    * @private
    */
-  async _syncState(id?: DocID | CommitID) {
+  async _syncState(id?: DocID | CommitID): Promise<void> {
     const effectiveId = id || this.id
     const { state } = await fetchJson(this._apiUrl + '/documents/' + effectiveId.toString())
 
