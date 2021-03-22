@@ -1,4 +1,4 @@
-import { Context, DocState, Doctype, DoctypeUtils } from '@ceramicnetwork/common';
+import { Context, DocState, Doctype } from '@ceramicnetwork/common';
 import { Observable } from 'rxjs';
 import { HandlersMap } from '../handlers-map';
 import { StateLink } from './state-link';
@@ -20,9 +20,9 @@ export function doctypeFromState<T extends Doctype>(
   const handler = handlersMap.get<T>(state.doctype);
   const state$ = new StateLink(state, update$);
   const doctype = new handler.doctype(state$, context);
-  if (update$) {
-    return doctype;
-  } else {
-    return DoctypeUtils.makeReadOnly(doctype);
+  if (!update$) {
+    doctype.makeReadOnly()
   }
+
+  return doctype;
 }

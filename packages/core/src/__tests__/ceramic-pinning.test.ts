@@ -21,10 +21,10 @@ const createCeramic = async (ipfs: IpfsApi, stateStoreDirectory, anchorOnRequest
 }
 
 async function createDoc (ceramic: CeramicApi, controller: string, family: string): Promise<TileDoctype> {
-  return ceramic.createDocument(
-    'tile',
-    { deterministic: true, metadata: { controllers: [controller], family } },
-    { anchor: false, publish: false }
+  return TileDoctype.create(ceramic,
+      null,
+      { deterministic: true, controllers: [controller], family },
+      { anchor: false, publish: false }
   )
 }
 
@@ -48,7 +48,7 @@ describe('Ceramic document pinning', () => {
     let ceramic = await createCeramic(ipfs1, tmpFolder.path)
     const doc1 = await createDoc(ceramic, ceramic.did.id, 'test')
     const content = { some: 'data' }
-    await doc1.change({ content })
+    await doc1.update(content)
     expect(doc1.content).toEqual(content)
     await ceramic.close()
 
@@ -63,7 +63,7 @@ describe('Ceramic document pinning', () => {
     const doc1 = await createDoc(ceramic, ceramic.did.id, 'test')
     await ceramic.pin.add(doc1.id)
     const content = { some: 'data' }
-    await doc1.change({ content })
+    await doc1.update(content)
     expect(doc1.content).toEqual(content)
     await ceramic.close()
 
@@ -78,7 +78,7 @@ describe('Ceramic document pinning', () => {
     const doc1 = await createDoc(ceramic, ceramic.did.id, 'test')
     await ceramic.pin.add(doc1.id)
     const content = { some: 'data' }
-    await doc1.change({ content })
+    await doc1.update(content)
     expect(doc1.content).toEqual(content)
     await ceramic.close()
 

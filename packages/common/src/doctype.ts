@@ -22,6 +22,7 @@ export enum AnchorStatus {
 
 export interface CommitHeader {
     controllers: Array<string>
+    family?: string
     schema?: string
     tags?: Array<string>
 
@@ -70,6 +71,7 @@ export type CeramicCommit = GenesisCommit | UnsignedCommit | AnchorCommit | Sign
  */
 export interface DocMetadata {
     controllers: Array<string>
+    family?: string
     schema?: string
     tags?: Array<string>
 
@@ -78,6 +80,7 @@ export interface DocMetadata {
 
 /**
  * Document params
+ * TODO: remove once DoctypeConstructor.makeGenesis is removed
  */
 export interface DocParams {
     metadata?: DocMetadata
@@ -230,11 +233,10 @@ export abstract class Doctype extends Observable<DocState> implements DocStateHo
     }
 
     /**
-     * Makes a change on an existing document
-     * @param params - Change parameters
-     * @param opts - Initialization options
+     * Makes this document read-only. After this has been called any future attempts to call
+     * mutation methods on the instance will throw.
      */
-    abstract change(params: DocParams, opts?: DocOpts): Promise<void>
+    abstract makeReadOnly()
 
 }
 
@@ -262,6 +264,8 @@ export interface DoctypeConstructor<T extends Doctype> {
      * @param params - Create parameters
      * @param context - Ceramic context
      * @param opts - Initialization options
+     * @deprecated
+     * TODO: Remove this when Ceramic.createDocument is removed
      */
     makeGenesis(params: DocParams, context?: Context, opts?: DocOpts): Promise<CeramicCommit>
 }

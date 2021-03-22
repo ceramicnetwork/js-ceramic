@@ -7,7 +7,7 @@ import CID from 'cids'
 const FAKE_CID = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu');
 
 class BasicDoctype extends Doctype {
-    change(): Promise<void> {
+    makeReadOnly() {
         throw new Error('Not implemented')
     }
 }

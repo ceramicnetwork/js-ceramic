@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/doctype-caip10-link",
-  "version": "0.13.4",
+  "version": "0.14.0-rc.0",
   "description": "Ceramic AccountLink doctype",
   "keywords": [
     "ceramic",

@@ -26,7 +26,7 @@ jest.mock('level-ts', () => {
 })
 
 class FakeType extends Doctype {
-    change(): Promise<void> {
+    makeReadOnly() {
         throw new Error("Method not implemented.");
     }
 }

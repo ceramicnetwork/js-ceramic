@@ -29,7 +29,7 @@
   "dependencies": {
     "@ceramicnetwork/blockchain-utils-validation": "^0.1.1",
     "@ceramicnetwork/common": "^0.17.0",
-    "@ceramicnetwork/doctype-caip10-link": "^0.13.4"
+    "@ceramicnetwork/doctype-caip10-link": "^0.14.0-rc.0"
   },
   "devDependencies": {
     "@ceramicnetwork/docid": "^0.5.1",

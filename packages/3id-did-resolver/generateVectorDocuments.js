@@ -8,8 +8,10 @@
  * The result of this script, which is a commit log for a 3IDv0 and a 3IDv1,
  * can be found in the 'vectorDocuments.json' file in the test folder.
  */
+
 const Ceramic = require('@ceramicnetwork/http-client').default
 const ThreeIdProvider = require('3id-did-provider').default
+const TileDoctype = require('@ceramicnetwork/doctype-tile').default
 const u8a = require('uint8arrays')
 const { randomBytes } = require('@stablelib/random')
 const dagCBOR = require('ipld-dag-cbor')
@@ -84,15 +86,13 @@ const setLegacyDoc = async (ceramic, doc, keyset) => {
   const didstr = ceramic.did.id
   await ceramic.setDIDProvider(oldProvider)
 
-  await doc.change({
-    metadata: { controllers: [didstr] },
-    content: {
-      publicKeys: {
-        [signing.slice(-15)]: signing,
-        [encryption.slice(-15)]: encryption,
-      }
-    }
-  })
+  await doc.update(
+      { publicKeys: {
+          [signing.slice(-15)]: signing,
+          [encryption.slice(-15)]: encryption,
+        }},
+      { controllers: [didstr] })
+
   await ceramic.setDIDProvider(provider)
   await waitForAnchor(doc)
 }
@@ -123,8 +123,9 @@ const legacyDid = async (threeId, threeIdGenesisCopy, ceramic) => {
   // uses the first public key of the seed for the v1 threeId as the keydid.
   // sorry for the magic here -.-
   await ceramic.setDIDProvider(threeIdGenesisCopy.getDidProvider())
-  const docParams =  { deterministic: true, metadata: { controllers: [firstKeyDid], family: '3id' } }
-  const doc = await ceramic.createDocument('tile', docParams, { anchor: false, publish: false })
+  const metadata = { controllers: [firstKeyDid], family: '3id', deterministic: true }
+  const doc = await TileDoctype.create(
+      ceramic, null, metadata, { anchor:false, publish: false })
 
   await setLegacyDoc(ceramic, doc, keysets[1])
   console.log('rotated v0 keys once')

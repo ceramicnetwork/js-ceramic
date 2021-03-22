@@ -11,6 +11,11 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * **common, logger:** Clean up dependencies (#1164) 191ad31, closes #1164
 
 
+### Features
+
+* **tile-doctype:** Update Tile API 7d694f7
+
+
 
 
 

@@ -83,13 +83,13 @@ program
     })
 
 program
-    .command('change <docId>')
-    .option('--content <content>', 'Change document content')
+    .command('update <docId>')
+    .option('--content <content>', 'Update document content')
     .option('--controllers <controllers>', 'Change controllers of this document (only 3ID)')
-    .option('--schema <schema>', 'Change the schema document ID')
+    .option('--schema <schema>', 'Change the schema CommitID')
     .description('Update the content of a document')
     .action(async (docId, { content, controllers, schema }) => {
-        await CeramicCliUtils.change(docId, content, controllers, schema)
+        await CeramicCliUtils.update(docId, content, controllers, schema)
     })
 
 program
@@ -137,11 +137,11 @@ schemas
     })
 
 schemas
-    .command('change <docId> <new-content>')
+    .command('update <docId> <new-content>')
     .option('--controllers <controllers>', 'Change controllers of this document (only 3ID)')
     .description('Update the content of a schema')
     .action(async (docId, content, { controllers }) => {
-        await CeramicCliUtils.schemaChangeDoc(docId, content, controllers)
+        await CeramicCliUtils.schemaUpdateDoc(docId, content, controllers)
     })
 
 const pin = program.command('pin')
