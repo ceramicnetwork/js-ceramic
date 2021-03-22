@@ -129,16 +129,6 @@ export class Repository {
   }
 
   /**
-   * Checks if we can get the document state without having to load it via pubsub (i.e. we have the document state in our in-memory cache or in the state store)
-   */
-  async has(docId: DocID): Promise<boolean> {
-    const fromMemory = this.fromMemory(docId);
-    if (fromMemory) return true;
-    const fromState = await this.#deps.pinStore.stateStore.load(docId);
-    return Boolean(fromState);
-  }
-
-  /**
    * Return a document, either from cache or re-constructed from state store, but will not load from the network.
    * Adds the document to cache.
    */
