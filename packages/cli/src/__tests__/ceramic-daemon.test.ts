@@ -184,10 +184,9 @@ describe('Ceramic interop: core <> http-client', () => {
         const doc2 = await client.loadDocument(doc1.id)
         // change from core viewable in client
         await doc1.change({ content: middleContent })
-        const onChange = TestUtils.registerChangeListener(doc2)
         await anchorDoc(doc1)
-        await onChange
         await doc2.sync()
+        await doc1.sync()
         expect(doc1.content).toEqual(middleContent)
         expect(doc1.content).toEqual(doc2.content)
         expect(DoctypeUtils.serializeState(doc1.state)).toEqual(DoctypeUtils.serializeState(doc2.state))
