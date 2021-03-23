@@ -84,11 +84,6 @@ export async function isERC1271(
   );
 }
 
-export function normalizeAccountId(account: AccountID): AccountID {
-  account.address = account.address.toLowerCase();
-  return account;
-}
-
 function utf8toHex(message: string): string {
   const bytes = uint8arrays.fromString(message);
   const hex = uint8arrays.toString(bytes, "base16");
@@ -154,7 +149,7 @@ export async function createLink(
     provider: any,
     opts: any
 ): Promise<LinkProof> {
-  account = normalizeAccountId(account);
+  account.address = account.address.toLowerCase();
   if (await isERC1271(account, provider)) {
     return createErc1271Link(did, account, provider, opts);
   } else {
@@ -168,7 +163,7 @@ export async function authenticate(
     provider: any
 ): Promise<string> {
   if (account) {
-    account = normalizeAccountId(account);
+    account.address = account.address.toLowerCase();
   }
   if (provider.isAuthereum) {
     return provider.signMessageWithSigningKey(message);
