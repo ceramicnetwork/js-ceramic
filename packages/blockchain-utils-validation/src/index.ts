@@ -1,5 +1,6 @@
 import { LinkProof } from "@ceramicnetwork/blockchain-utils-linking";
 import ethereum from "./blockchains/ethereum";
+import avalanche from "./blockchains/avalanche";
 import filecoin from "./blockchains/filecoin";
 import polkadot from "./blockchains/polkadot";
 import eosio from "./blockchains/eosio";
@@ -9,6 +10,7 @@ import { AccountID } from "caip";
 
 const handlers = {
   [ethereum.namespace]: ethereum,
+  [avalanche.namespace]: avalanche,
   [filecoin.namespace]: filecoin,
   [polkadot.namespace]: polkadot,
   [eosio.namespace]: eosio,
