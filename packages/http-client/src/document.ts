@@ -5,19 +5,16 @@ import { DocID, CommitID } from '@ceramicnetwork/docid';
 import { fetchJson } from './utils'
 
 export class Document extends Observable<DocState> implements RunningStateLike {
-  readonly state$: BehaviorSubject<DocState>;
+  private readonly state$: BehaviorSubject<DocState>;
 
   constructor (initial: DocState, private _apiUrl: string, docSyncInterval: number) {
     super(subscriber => {
-      this.state$.subscribe(subscriber);
-
-      const periodicUpdates = timer(0, docSyncInterval).pipe(throttle(() => this._syncState())).subscribe()
-
-      return () => {
-        periodicUpdates.unsubscribe()
-      }
+      const periodicUpdates = timer(0, docSyncInterval).pipe(throttle(() => this._syncState())).subscribe();
+      this.state$.subscribe(subscriber).add(() => {
+        periodicUpdates.unsubscribe();
+      })
     })
-    this.state$ = new BehaviorSubject(initial)
+    this.state$ = new BehaviorSubject(initial);
   }
 
   get value(): DocState {

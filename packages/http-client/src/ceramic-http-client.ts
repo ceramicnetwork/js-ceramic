@@ -15,7 +15,7 @@ import {
   DoctypeUtils,
   MultiQuery,
   PinApi,
-} from "@ceramicnetwork/common"
+} from '@ceramicnetwork/common';
 import { TileDoctype } from "@ceramicnetwork/doctype-tile"
 import { Caip10LinkDoctype } from "@ceramicnetwork/doctype-caip10-link"
 import { DocID, CommitID, DocRef } from '@ceramicnetwork/docid';

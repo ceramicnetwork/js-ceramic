@@ -1,26 +1,34 @@
-import { DocState, RunningStateLike } from '@ceramicnetwork/common';
-import { Observable } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
 import { DocID } from '@ceramicnetwork/docid';
-import { filter, tap } from 'rxjs/operators';
+import { DocState, RunningStateLike } from '@ceramicnetwork/common';
 
+/**
+ * Maintain Doctype state. Can be updated from inside, thus maintaining separate states per doctype.
+ * If subscribed, gets external updates from `update$` feed.
+ */
 export class StateLink extends Observable<DocState> implements RunningStateLike {
-  constructor(private _state: DocState, feed$: Observable<DocState>) {
+  private readonly state$: BehaviorSubject<DocState>;
+
+  constructor(private readonly initial: DocState, update$: Observable<DocState>) {
     super((subscriber) => {
-      feed$
-        .pipe(
-          filter((state) => state.log[0].cid.equals(_state.log[0].cid)),
-          tap((state) => (this._state = state)),
-        )
-        .subscribe(subscriber);
+      const update$S = update$.subscribe(this.state$);
+      this.state$.subscribe(subscriber).add(() => {
+        update$S.unsubscribe();
+      });
     });
+    this.state$ = new BehaviorSubject(initial);
+  }
+
+  next(state: DocState): void {
+    this.state$.next(state);
   }
 
   get state(): DocState {
-    return this._state;
+    return this.state$.value;
   }
 
   get value(): DocState {
-    return this._state;
+    return this.state$.value;
   }
 
   get id(): DocID {

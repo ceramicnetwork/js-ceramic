@@ -45,7 +45,7 @@ export class TileDoctype extends Doctype {
 
         const updateCommit = await TileDoctype._makeCommit(this, this.context.did, params.content, params.metadata?.controllers, params.metadata?.schema)
         const updated = await this.context.api.applyCommit(this.id.toString(), updateCommit, opts)
-        this._state = updated.state
+        this.state$.next(updated.state);
     }
 
     /**
