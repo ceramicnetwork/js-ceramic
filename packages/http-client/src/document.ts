@@ -1,11 +1,11 @@
-import { BehaviorSubject, Observable, timer } from 'rxjs'
+import { Observable, timer } from 'rxjs'
 import { throttle } from 'rxjs/operators'
-import { CeramicCommit, DocOpts, DocState, DoctypeUtils, RunningStateLike } from '@ceramicnetwork/common';
+import { CeramicCommit, DocOpts, DocState, DoctypeUtils, RunningStateLike, DocStateSubject } from '@ceramicnetwork/common';
 import { DocID, CommitID } from '@ceramicnetwork/docid';
 import { fetchJson } from './utils'
 
 export class Document extends Observable<DocState> implements RunningStateLike {
-  private readonly state$: BehaviorSubject<DocState>;
+  private readonly state$: DocStateSubject;
 
   constructor (initial: DocState, private _apiUrl: string, docSyncInterval: number) {
     super(subscriber => {
@@ -14,7 +14,7 @@ export class Document extends Observable<DocState> implements RunningStateLike {
         periodicUpdates.unsubscribe();
       })
     })
-    this.state$ = new BehaviorSubject(initial);
+    this.state$ = new DocStateSubject(initial);
   }
 
   get value(): DocState {
