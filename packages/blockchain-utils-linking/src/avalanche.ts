@@ -15,6 +15,8 @@ const ADDRESS_TYPES = {
 };
 
 const CHAIN_NAMESPACE = "eip155";
+// ChainId = 43114 for mainnet
+// ChainId = 43113 for fuji testnet
 
 /**
  *  AuthProvider which can be used for Ethereum providers with standard interface
