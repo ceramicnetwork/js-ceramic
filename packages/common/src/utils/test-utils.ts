@@ -37,6 +37,7 @@ export class TestUtils {
                               timeout: number,
                               predicate: (state: DocState) => boolean,
                               onFailure: () => void): Promise<void> {
+        if (predicate(doc.state)) return;
         const timeoutPromise = new Promise(resolve => setTimeout(resolve, timeout))
         const completionPromise = doc.pipe(filter(state => predicate(state))).toPromise()
         await Promise.race([timeoutPromise, completionPromise])
