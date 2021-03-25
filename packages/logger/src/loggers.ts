@@ -1,7 +1,6 @@
 import { Logger, LoggerModes } from '@overnightjs/logger';
 import * as logfmt from 'logfmt';
 import util from 'util';
-import { RotatingFileStream } from './stream-helpers';
 import flatten from 'flat'
 
 enum LogStyle {
@@ -19,17 +18,21 @@ export enum LogLevel {
   warn,
 }
 
+export interface WriteableStream {
+  write: (message: string) => void
+}
+
 /**
  * Logs to the console based on log level
  */
 export class DiagnosticsLogger {
   public readonly logLevel: LogLevel;
   private readonly logger: Logger;
-  private readonly fileLogger: RotatingFileStream;
+  private readonly fileLogger: WriteableStream;
   private readonly includeStackTrace: boolean;
   private readonly logToFiles
 
-  constructor(logLevel: LogLevel, logToFiles: boolean, fileLogger?: RotatingFileStream) {
+  constructor(logLevel: LogLevel, logToFiles: boolean, fileLogger?: WriteableStream) {
     this.logLevel = logLevel;
     this.includeStackTrace = this.logLevel <= LogLevel.debug ? true : false;
     this.logToFiles = logToFiles
@@ -99,10 +102,10 @@ export class ServiceLogger {
   public readonly logToConsole: boolean
   public readonly logLevel: LogLevel
 
-  private readonly stream: RotatingFileStream;
+  private readonly stream: WriteableStream;
 
 
-  constructor(service: string, logLevel: LogLevel, logToFiles: boolean, stream: RotatingFileStream) {
+  constructor(service: string, logLevel: LogLevel, logToFiles: boolean, stream: WriteableStream) {
     this.service = service;
     this.logLevel = logLevel
     this.logToFiles = logToFiles

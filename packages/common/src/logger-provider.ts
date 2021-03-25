@@ -1,14 +1,14 @@
 import {
     DiagnosticsLogger,
     LogLevel,
-    RotatingFileStream,
-    ServiceLogger
+    ServiceLogger,
+    WriteableStream,
 } from '@ceramicnetwork/logger';
 import path from "path";
 import os from "os";
 
 export interface FileLoggerFactory {
-    (logPath: string): RotatingFileStream;
+    (logPath: string): WriteableStream;
 }
 
 export interface LoggerConfig {
