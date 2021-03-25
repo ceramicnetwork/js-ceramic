@@ -6,11 +6,11 @@ jest.mock('cross-fetch', () => {
       json: async () => {
         const call = mockedCalls[url]
         if (opts.method === 'post') {
-          const { response } = call.find(({ expectedBody }) => opts.body === JSON.stringify(expectedBody))
-          if (response) {
-            return response
+          const result = call.find(({ expectedBody }) => opts.body === JSON.stringify(expectedBody))
+          if (result?.response) {
+            return result.response
           } else {
-            throw new Error('invalid http request for mock')
+            throw new Error('Could not find response for http body: ' + opts.body)
           }
         }
         return call.response

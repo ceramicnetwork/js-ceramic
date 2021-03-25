@@ -130,6 +130,8 @@ describe('Ceramic interop: core <> http-client', () => {
         // TODO fix: logs are different because of the kid version (0 != anchored CID)
         delete state1.log
         delete state2.log
+        delete state1.metadata.unique
+        delete state2.metadata.unique
 
         expect(state1).toEqual(state2)
     })

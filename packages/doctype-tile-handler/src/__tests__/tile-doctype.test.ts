@@ -35,7 +35,7 @@ const FAKE_CID_4 = new CID('bafybeig6xv5nwphfmvcnektpnojts66jqcuam7bmye2pb54adnr
 // did:3:bafyasdfasdf
 
 const RECORDS = {
-    genesis: { header: { controllers: [ 'did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki' ] }, data: { much: 'data' }, unique: '0' },
+    genesis: { header: { controllers: [ 'did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki' ] }, data: { much: 'data' } },
     genesisGenerated: {
         "jws": {
             "payload": "bbbb",
@@ -56,7 +56,6 @@ const RECORDS = {
                     "did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki"
                 ]
             },
-            "unique": "0",
         }
     },
     r1: {
@@ -257,7 +256,7 @@ describe('TileDoctypeHandler', () => {
     it('applies genesis record correctly', async () => {
         const tileHandler = new TileDoctypeHandler()
 
-        const record = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id] } }, context) as SignedCommitContainer
+        const record = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id] }, deterministic: true }, context) as SignedCommitContainer
         await context.ipfs.dag.put(record, FAKE_CID_1)
 
         const payload = dagCBOR.util.deserialize(record.linkedBlock)
@@ -288,7 +287,7 @@ describe('TileDoctypeHandler', () => {
     it('applies signed record correctly', async () => {
         const tileDoctypeHandler = new TileDoctypeHandler()
 
-        const genesisRecord = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id] } }, context) as SignedCommitContainer
+        const genesisRecord = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id] }, deterministic: true }, context) as SignedCommitContainer
         await context.ipfs.dag.put(genesisRecord, FAKE_CID_1)
 
         const payload = dagCBOR.util.deserialize(genesisRecord.linkedBlock)
@@ -314,7 +313,7 @@ describe('TileDoctypeHandler', () => {
         const deepCopy = o => DoctypeUtils.deserializeState(DoctypeUtils.serializeState(o))
         const tileDoctypeHandler = new TileDoctypeHandler()
 
-        const genesisRecord = await TileDoctype.makeGenesis({ content: { test: 'data' }, metadata: { controllers: [did.id] } }, context) as SignedCommitContainer
+        const genesisRecord = await TileDoctype.makeGenesis({ content: { test: 'data' }, metadata: { controllers: [did.id] }, deterministic: true }, context) as SignedCommitContainer
         await context.ipfs.dag.put(genesisRecord, FAKE_CID_1)
         const payload = dagCBOR.util.deserialize(genesisRecord.linkedBlock)
         await context.ipfs.dag.put(payload, genesisRecord.jws.link)
@@ -375,7 +374,7 @@ describe('TileDoctypeHandler', () => {
     it('applies anchor record correctly', async () => {
         const tileDoctypeHandler = new TileDoctypeHandler()
 
-        const genesisRecord = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id] } }, context) as SignedCommitContainer
+        const genesisRecord = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id] }, deterministic: true }, context) as SignedCommitContainer
         await context.ipfs.dag.put(genesisRecord, FAKE_CID_1)
 
         const payload = dagCBOR.util.deserialize(genesisRecord.linkedBlock)
@@ -404,7 +403,7 @@ describe('TileDoctypeHandler', () => {
     it('Does not apply anchor record on unsupported chain', async () => {
         const tileDoctypeHandler = new TileDoctypeHandler()
 
-        const genesisRecord = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id] } }, context) as SignedCommitContainer
+        const genesisRecord = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id] }, deterministic: true }, context) as SignedCommitContainer
         await context.ipfs.dag.put(genesisRecord, FAKE_CID_1)
 
         const payload = dagCBOR.util.deserialize(genesisRecord.linkedBlock)

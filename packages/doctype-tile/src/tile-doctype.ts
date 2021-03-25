@@ -66,9 +66,6 @@ export class TileDoctype extends Doctype {
      * @param context - Ceramic context
      */
     static async makeGenesis<T extends CeramicCommit>(params: DocParams, context: Context): Promise<T> {
-        // If 'deterministic' is undefined, default to creating document uniquely
-        const unique = params.deterministic ? '0' : uint8arrays.toString(randomBytes(12), 'base64')
-
         const metadata: GenesisHeader = params.metadata || { controllers: [] }
         if (!metadata.controllers || metadata.controllers.length === 0) {
             if (context.did) {
@@ -82,7 +79,12 @@ export class TileDoctype extends Doctype {
             throw new Error('Exactly one controller must be specified')
         }
 
-        const commit: GenesisCommit = { data: params.content, header: metadata, unique }
+        // If 'deterministic' is undefined, default to creating document uniquely
+        if (!params.deterministic) {
+            metadata.unique = uint8arrays.toString(randomBytes(12), 'base64')
+        }
+
+        const commit: GenesisCommit = { data: params.content, header: metadata }
         return (params.content ? await TileDoctype._signDagJWS(commit, context.did, metadata.controllers[0]): commit) as T
     }
 

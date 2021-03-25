@@ -27,12 +27,13 @@ export interface CommitHeader {
     [index: string]: any // allow support for future changes
 }
 
-export type GenesisHeader = CommitHeader
+export interface GenesisHeader extends CommitHeader {
+  unique?: string
+}
 
 export type GenesisCommit = {
     header: GenesisHeader
     data?: any
-    unique?: string
 }
 
 export interface UnsignedCommit {
