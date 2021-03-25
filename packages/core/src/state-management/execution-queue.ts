@@ -31,7 +31,7 @@ export class ExecutionQueue {
 
   constructor(logger: DiagnosticsLogger, readonly get: (docId: DocID) => Promise<RunningState>) {
     this.tasks = new NamedTaskQueue((error) => {
-      logger.err(error);
+      logger.err(error.toString());
     });
   }
 

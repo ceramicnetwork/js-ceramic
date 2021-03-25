@@ -52,7 +52,7 @@ export class Repository {
 
   constructor(limit: number, private readonly logger: DiagnosticsLogger) {
     this.loadingQ = new NamedTaskQueue((error) => {
-      logger.err(error);
+      logger.err(error.toString());
     });
     this.executionQ = new ExecutionQueue(logger, (docId) => this.get(docId));
     this.#map = new LRUMap(limit);
