@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.20.1-rc.1](/compare/@ceramicnetwork/core@0.20.1-rc.0...@ceramicnetwork/core@0.20.1-rc.1) (2021-03-25)
+
+
+### Reverts
+
+* Revert "update some deps" 2f195fc
+
+
+
+
+
 ## [0.20.1-rc.0](/compare/@ceramicnetwork/core@0.20.0...@ceramicnetwork/core@0.20.1-rc.0) (2021-03-25)
 
 **Note:** Version bump only for package @ceramicnetwork/core
