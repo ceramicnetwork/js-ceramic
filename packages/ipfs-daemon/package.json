@@ -29,7 +29,7 @@
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/common": "^0.16.1-rc.1"
+    "@ceramicnetwork/common": "^0.16.1-rc.0",
     "@ceramicnetwork/ipfs-topology": "^0.0.3-rc.0",
     "aws-sdk": "^2.782.0",
     "dag-jose": "^0.3.0",

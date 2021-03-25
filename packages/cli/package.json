@@ -43,7 +43,7 @@
     }
   },
   "dependencies": {
-    "@ceramicnetwork/common": "^0.16.1-rc.1",
+    "@ceramicnetwork/common": "^0.16.1-rc.0",
     "@ceramicnetwork/core": "^0.20.1-rc.0",
     "@ceramicnetwork/docid": "^0.5.1-rc.0",
     "@ceramicnetwork/http-client": "^0.10.1-rc.0",
