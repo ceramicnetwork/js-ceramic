@@ -4,6 +4,15 @@ import { filter } from 'rxjs/operators';
 import { HandlersMap } from '../handlers-map';
 import { StateLink } from './state-link';
 
+/**
+ * Build Doctype from the current state and update feed.
+ *
+ * @param context - Ceramic context
+ * @param handlersMap - available doctype handlers
+ * @param state - current state of the doctype
+ * @param feed$ - feed of updates. Probably it is a general feed of updates from Repository#feed$, so we filter by DocID just in case.
+ * @param isReadonly - disables `change` on Doctype.
+ */
 export function doctypeFromState<T extends Doctype>(
   context: Context,
   handlersMap: HandlersMap,

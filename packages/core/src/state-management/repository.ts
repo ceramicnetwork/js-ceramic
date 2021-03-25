@@ -40,6 +40,9 @@ export class Repository {
    */
   readonly inmemory: LRUMap<string, RunningState>;
 
+  /**
+   * Global feed of DocState updates, for all of the documents processed.
+   */
   readonly feed$: Subject<DocState> = new Subject<DocState>();
 
   /**
