@@ -330,11 +330,7 @@ test('should announce change to network', async () => {
   doctype1.subscribe();
   const doc1 = await ceramic.repository.load(doctype1.id);
   expect(publishTip).toHaveBeenCalledTimes(1);
-  // Can not use `toHaveBeenCalledWith` as below due to CID incompatibilities (hello symbol equality)
-  // expect(publishTip).toHaveBeenCalledWith(doctype1.id, doctype1.tip);
-  // So fall back to manual check
-  expect(publishTip.mock.calls[0][0].toString()).toEqual(doctype1.id.toString())
-  expect(publishTip.mock.calls[0][1].toString()).toEqual(doctype1.tip.toString())
+  expect(publishTip).toHaveBeenCalledWith(doctype1.id, doctype1.tip);
   await publishTip.mockClear();
 
   const updateRec = await TileDoctype._makeCommit(doctype1, ceramic.did, { foo: 34 }, doctype1.controllers);
