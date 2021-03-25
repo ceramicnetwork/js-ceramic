@@ -1,4 +1,9 @@
-import { DiagnosticsLogger, LogLevel, ServiceLogger } from '@ceramicnetwork/logger';
+import {
+    DiagnosticsLogger,
+    LogLevel,
+    RotatingFileStream,
+    ServiceLogger
+} from '@ceramicnetwork/logger';
 import path from "path";
 import os from "os";
 
@@ -34,8 +39,9 @@ export class LoggerProvider {
 
     private _makeDiagnosticLogger(): DiagnosticsLogger {
         const logPath = path.join(this.config.logDirectory, "diagnostics.log")
+        const stream = new RotatingFileStream(logPath, true)
 
-        return new DiagnosticsLogger(this.config.logLevel, this.config.logToFiles, logPath);
+        return new DiagnosticsLogger(this.config.logLevel, this.config.logToFiles, stream);
     }
 
     public getDiagnosticsLogger(): DiagnosticsLogger {
@@ -44,7 +50,8 @@ export class LoggerProvider {
 
     public makeServiceLogger(serviceName: string): ServiceLogger {
         const logPath = path.join(this.config.logDirectory, `${serviceName}.log`)
+        const stream = new RotatingFileStream(logPath, true)
 
-        return new ServiceLogger(serviceName, logPath, this.config.logLevel, this.config.logToFiles)
+        return new ServiceLogger(serviceName, this.config.logLevel, this.config.logToFiles, stream)
     }
 }

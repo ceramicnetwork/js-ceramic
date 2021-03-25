@@ -29,16 +29,14 @@ export class DiagnosticsLogger {
   private readonly includeStackTrace: boolean;
   private readonly logToFiles
 
-  constructor(logLevel: LogLevel, logToFiles: boolean, logPath?: string) {
+  constructor(logLevel: LogLevel, logToFiles: boolean, fileLogger?: RotatingFileStream) {
     this.logLevel = logLevel;
     this.includeStackTrace = this.logLevel <= LogLevel.debug ? true : false;
     this.logToFiles = logToFiles
+    this.fileLogger = fileLogger
 
     const removeTimestamp = true;
     this.logger = new Logger(LoggerModes.Console, '', removeTimestamp);
-    if (this.logToFiles) {
-      this.fileLogger = new RotatingFileStream(logPath, true);
-    }
   }
 
   /**
@@ -97,7 +95,6 @@ interface ServiceLog {
  */
 export class ServiceLogger {
   public readonly service: string;
-  public readonly filePath: string;
   public readonly logToFiles: boolean
   public readonly logToConsole: boolean
   public readonly logLevel: LogLevel
@@ -105,18 +102,13 @@ export class ServiceLogger {
   private readonly stream: RotatingFileStream;
 
 
-  constructor(service: string, filePath: string, logLevel: LogLevel, logToFiles: boolean) {
+  constructor(service: string, logLevel: LogLevel, logToFiles: boolean, stream: RotatingFileStream) {
     this.service = service;
-    this.filePath = filePath;
     this.logLevel = logLevel
     this.logToFiles = logToFiles
+    this.stream = stream
 
     this.logToConsole = this.logLevel <= LogLevel.debug
-
-    if (this.logToFiles) {
-      const writeImmediately = true;
-      this.stream = new RotatingFileStream(this.filePath, writeImmediately);
-    }
   }
 
   /**
