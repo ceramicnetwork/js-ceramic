@@ -31,18 +31,20 @@ const CERAMIC_HOST = 'http://localhost:7007'
  */
 export const DEFAULT_CLIENT_CONFIG: CeramicClientConfig = {
   docSyncInterval: 5000,
-  docCacheLimit: 500,
-  cacheDocCommits: false,
 }
 
 /**
  * Ceramic client configuration
  */
 export interface CeramicClientConfig {
+  /**
+   * DID Resolver. Would add one to did:3 and did:key resolver.
+   */
   didResolver?: Resolver
+  /**
+   * Period of synchronisation, in milliseconds. Active when subscribing document.
+   */
   docSyncInterval: number
-  docCacheLimit: number;
-  cacheDocCommits?: boolean;
 }
 
 /**
