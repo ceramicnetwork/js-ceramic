@@ -156,7 +156,7 @@ export class Repository {
   }
 
   /**
-   * Adds the document to the in-memory cache
+   * Adds the document's RunningState to the in-memory cache and subscribes the Repository's global feed$ to receive changes emitted by that RunningState
    */
   add(state$: RunningState): void {
     state$.subscribe({
