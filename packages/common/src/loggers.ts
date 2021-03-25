@@ -46,40 +46,40 @@ export class DiagnosticsLogger {
    * Calls `this.debug`. Used for stream interfaces.
    * @param content Content to log
    */
-  public write(content: string | object): void {
+  public write(content: string | Record<string, unknown>): void {
     this.debug(content);
   }
 
-  public verbose(content: string | object): void {
+  public verbose(content: string | Record<string, unknown>): void {
     if (this.logLevel > LogLevel.verbose) {
       return;
     }
     this.log(LogStyle.verbose, content);
   }
 
-  public debug(content: string | object): void {
+  public debug(content: string | Record<string, unknown>): void {
     if (this.logLevel > LogLevel.debug) {
       return;
     }
     this.log(LogStyle.info, content);
   }
 
-  public imp(content: string | object): void {
+  public imp(content: string | Record<string, unknown>): void {
     if (this.logLevel > LogLevel.important) {
       return;
     }
     this.log(LogStyle.imp, content);
   }
 
-  public warn(content: string | object): void {
+  public warn(content: string | Record<string, unknown>): void {
     this.log(LogStyle.warn, content);
   }
 
-  public err(content: string | object): void {
+  public err(content: string | Record<string, unknown>): void {
     this.log(LogStyle.err, content);
   }
 
-  private log(style: LogStyle, content: string | object): void {
+  private log(style: LogStyle, content: string | Record<string, unknown>): void {
     this.logger[style](content, this.includeStackTrace);
     if (this.logToFiles) {
       const now = new Date();
