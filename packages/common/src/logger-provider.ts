@@ -48,7 +48,7 @@ export class LoggerProvider {
 
     private _makeDiagnosticLogger(): DiagnosticsLogger {
         const logPath = path.join(this.config.logDirectory, "diagnostics.log")
-        const stream = this._fileLoggerFactory(logPath)
+        const stream = this.config.logToFiles ? this._fileLoggerFactory(logPath) : null
 
         return new DiagnosticsLogger(this.config.logLevel, this.config.logToFiles, stream);
     }
@@ -59,7 +59,7 @@ export class LoggerProvider {
 
     public makeServiceLogger(serviceName: string): ServiceLogger {
         const logPath = path.join(this.config.logDirectory, `${serviceName}.log`)
-        const stream = this._fileLoggerFactory(logPath)
+        const stream = this.config.logToFiles ? this._fileLoggerFactory(logPath) : null
 
         return new ServiceLogger(serviceName, this.config.logLevel, this.config.logToFiles, stream)
     }
