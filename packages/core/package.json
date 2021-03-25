@@ -37,7 +37,6 @@
     "@ceramicnetwork/doctype-tile": "^0.14.0",
     "@ceramicnetwork/doctype-tile-handler": "^0.14.0",
     "@ceramicnetwork/ipfs-topology": "^0.0.2",
-    "@ceramicnetwork/logger": "^0.1.0",
     "@ceramicnetwork/pinning-aggregation": "^0.2.0",
     "@ceramicnetwork/pinning-ipfs-backend": "^0.2.0",
     "@ethersproject/providers": "^5.0.18",

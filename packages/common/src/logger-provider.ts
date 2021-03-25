@@ -3,7 +3,7 @@ import {
     LogLevel,
     ServiceLogger,
     WriteableStream,
-} from '@ceramicnetwork/logger';
+} from './loggers';
 import path from "path";
 import os from "os";
 

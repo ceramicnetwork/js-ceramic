@@ -9,8 +9,10 @@ import {
   DoctypeHandler,
   DocOpts,
   Context,
+  DiagnosticsLogger,
   DoctypeUtils,
   DocParams,
+  LogLevel,
   LoggerProviderOld,
   LoggerPlugin,
   LoggerPluginOptions,
@@ -27,7 +29,6 @@ import {
 import { Resolver } from "did-resolver"
 
 import { DID } from 'dids'
-import { DiagnosticsLogger, LogLevel } from "@ceramicnetwork/logger";
 import { PinStoreFactory } from "./store/pin-store-factory";
 import { PathTrie, TrieNode, promiseTimeout } from './utils'
 

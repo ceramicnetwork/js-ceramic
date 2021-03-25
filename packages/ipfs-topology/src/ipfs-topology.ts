@@ -2,7 +2,7 @@ import fetch from "cross-fetch";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import type { IPFSAPI as IpfsApi } from "ipfs-core/dist/src/components";
-import { DiagnosticsLogger  } from "@ceramicnetwork/logger";
+import { DiagnosticsLogger  } from "@ceramicnetwork/common";
 export type IpfsApi = typeof IpfsApi;
 
 const PEER_FILE_URLS = {

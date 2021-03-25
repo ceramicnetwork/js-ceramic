@@ -4,7 +4,7 @@ import dagJose from 'dag-jose'
 import legacy from 'multiformats/legacy'
 import ipfsClient from "ipfs-http-client"
 import { IpfsApi } from "@ceramicnetwork/common"
-import { DiagnosticsLogger } from "@ceramicnetwork/logger";
+import { DiagnosticsLogger } from "@ceramicnetwork/common";
 import { sha256 } from 'multiformats/hashes/sha2'
 
 const hasher = {}

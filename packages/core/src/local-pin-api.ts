@@ -1,6 +1,6 @@
 import { PinApi } from '@ceramicnetwork/common';
 import DocID from '@ceramicnetwork/docid';
-import { DiagnosticsLogger } from "@ceramicnetwork/logger";
+import { DiagnosticsLogger } from "@ceramicnetwork/common";
 import { Repository } from './state-management/repository';
 import { RunningStateLike } from './state-management/running-state';
 

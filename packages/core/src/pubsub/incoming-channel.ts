@@ -1,7 +1,7 @@
 import { interval, Observable } from 'rxjs';
 import { IpfsApi } from '@ceramicnetwork/common';
 import { TaskQueue } from './task-queue';
-import { DiagnosticsLogger, ServiceLogger } from '@ceramicnetwork/logger';
+import { DiagnosticsLogger, ServiceLogger } from '@ceramicnetwork/common';
 import { pipe, MonoTypeOperatorFunction } from 'rxjs';
 import { map, filter, concatMap } from 'rxjs/operators';
 

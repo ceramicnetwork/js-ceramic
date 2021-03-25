@@ -1,14 +1,16 @@
 import express, { Request, Response, NextFunction } from 'express'
 import Ceramic from '@ceramicnetwork/core'
 import type { CeramicConfig} from "@ceramicnetwork/core"
-import { DiagnosticsLogger, LogLevel, RotatingFileStream } from "@ceramicnetwork/logger"
+import { RotatingFileStream } from "@ceramicnetwork/logger"
 import { buildIpfsConnection } from "./build-ipfs-connection.util";
 import { S3StateStore } from "./s3-state-store";
 import {
+  DiagnosticsLogger,
   DoctypeUtils,
   RootLogger,
   MultiQuery,
   LoggerConfig,
+  LogLevel,
   LoggerProvider,
 } from "@ceramicnetwork/common"
 import { LogToFiles } from "./ceramic-logger-plugins"
