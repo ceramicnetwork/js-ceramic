@@ -67,7 +67,7 @@ export class Caip10LinkDoctype extends Doctype {
             throw new Error('Exactly one controller must be specified')
         }
 
-        const [, linkedChainId] = metadata.controllers[0].split('@') // eslint-disable-line @typescript-eslint/no-unused-vars
+        const [, linkedChainId] = metadata.controllers[0].split('@');
         if (!linkedChainId) {
             throw new Error('Chain ID must be specified according to CAIP-10')
         }
