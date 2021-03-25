@@ -127,7 +127,7 @@ export class Dispatcher {
 
     const { doc: docId, tip } = message
     // TODO: add cache of cids here so that we don't emit event
-    // multiple times if we get the message more than once.
+    // multiple times if we get the message from more than one peer.
     this.repository.stateManager.update(docId, tip)
     // TODO: Handle 'anchorService' if present in message
   }
