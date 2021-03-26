@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.1-rc.3](/compare/@ceramicnetwork/logger@0.1.0...@ceramicnetwork/logger@0.1.1-rc.3) (2021-03-26)
+
+
+### Bug Fixes
+
+* **common, logger:** Clean up dependencies 57ffa67
+
+
+
+
+
 ## [0.1.1-rc.2](/compare/@ceramicnetwork/logger@0.1.0...@ceramicnetwork/logger@0.1.1-rc.2) (2021-03-26)
 
 
