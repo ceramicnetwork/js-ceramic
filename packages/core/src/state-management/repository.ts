@@ -2,7 +2,7 @@ import DocID from '@ceramicnetwork/docid';
 import { AnchorService, AnchorStatus, Context, DocOpts, DocState, DocStateHolder } from '@ceramicnetwork/common';
 import { PinStore } from '../store/pin-store';
 import { NamedTaskQueue } from './named-task-queue';
-import { DiagnosticsLogger } from '@ceramicnetwork/logger';
+import { DiagnosticsLogger } from '@ceramicnetwork/common';
 import { ExecutionQueue } from './execution-queue';
 import { RunningState } from './running-state';
 import { LRUMap } from 'lru_map';

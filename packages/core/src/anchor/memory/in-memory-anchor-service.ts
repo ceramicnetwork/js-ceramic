@@ -14,7 +14,7 @@ import {
 import type { Dispatcher } from "../../dispatcher";
 import Ceramic from "../../ceramic";
 import DocID from "@ceramicnetwork/docid";
-import { DiagnosticsLogger } from "@ceramicnetwork/logger";
+import { DiagnosticsLogger } from "@ceramicnetwork/common";
 import type { DagJWS } from 'dids'
 
 const DID_MATCHER =

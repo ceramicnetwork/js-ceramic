@@ -2,7 +2,7 @@ import CID from 'cids'
 import cloneDeep from 'lodash.clonedeep'
 import { DoctypeUtils, IpfsApi, UnreachableCaseError } from '@ceramicnetwork/common';
 import DocID from "@ceramicnetwork/docid";
-import { DiagnosticsLogger, ServiceLogger } from "@ceramicnetwork/logger";
+import { DiagnosticsLogger, ServiceLogger } from "@ceramicnetwork/common";
 import { Repository } from './state-management/repository';
 import {
   MsgType,

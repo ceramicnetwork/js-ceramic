@@ -1,6 +1,6 @@
 import { NamedTaskQueue } from './named-task-queue';
 import { DocID } from '@ceramicnetwork/docid';
-import { DiagnosticsLogger } from '@ceramicnetwork/logger';
+import { DiagnosticsLogger } from '@ceramicnetwork/common';
 import { RunningState } from './running-state';
 
 /**

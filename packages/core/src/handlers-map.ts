@@ -1,7 +1,7 @@
 import { TileDoctypeHandler } from '@ceramicnetwork/doctype-tile-handler';
 import { Caip10LinkDoctypeHandler } from '@ceramicnetwork/doctype-caip10-link-handler';
 import { Doctype, DoctypeHandler } from '@ceramicnetwork/common';
-import { DiagnosticsLogger } from '@ceramicnetwork/logger';
+import { DiagnosticsLogger } from '@ceramicnetwork/common';
 
 /**
  * Container for doctype handlers. Maps doctype name to the handler instance.

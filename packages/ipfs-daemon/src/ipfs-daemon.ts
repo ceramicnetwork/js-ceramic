@@ -4,7 +4,7 @@ import HttpApi from 'ipfs-http-server'
 import HttpGateway from 'ipfs-http-gateway'
 import dagJose from "dag-jose";
 import {IpfsTopology} from "@ceramicnetwork/ipfs-topology";
-import { DiagnosticsLogger, LogLevel } from "@ceramicnetwork/logger";
+import { DiagnosticsLogger, LogLevel } from "@ceramicnetwork/common";
 import { sha256 } from 'multiformats/hashes/sha2'
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore

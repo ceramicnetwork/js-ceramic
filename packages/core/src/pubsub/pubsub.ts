@@ -3,7 +3,7 @@ import { deserialize, PubsubMessage, serialize } from './pubsub-message';
 import { IpfsApi } from '@ceramicnetwork/common';
 import { map, catchError, mergeMap, withLatestFrom } from 'rxjs/operators';
 import { IncomingChannel, filterExternal, IPFSPubsubMessage } from './incoming-channel';
-import { DiagnosticsLogger, ServiceLogger } from '@ceramicnetwork/logger';
+import { DiagnosticsLogger, ServiceLogger } from '@ceramicnetwork/common';
 
 /**
  * Deserialize incoming message in an internal observable that does not emit if error happens.

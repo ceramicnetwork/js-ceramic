@@ -8,7 +8,7 @@ import { promises as fs } from 'fs'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import CeramicClient from "@ceramicnetwork/http-client"
 import { CeramicApi, DoctypeUtils, LoggerConfig } from "@ceramicnetwork/common"
-import { LogLevel } from '@ceramicnetwork/logger';
+import { LogLevel } from '@ceramicnetwork/common';
 import DocID from '@ceramicnetwork/docid'
 
 import CeramicDaemon, { CreateOpts } from "./ceramic-daemon"

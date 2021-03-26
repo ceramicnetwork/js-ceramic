@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.14.1-rc.1](/compare/@ceramicnetwork/doctype-tile-handler@0.14.1-rc.0...@ceramicnetwork/doctype-tile-handler@0.14.1-rc.1) (2021-03-25)
+
+**Note:** Version bump only for package @ceramicnetwork/doctype-tile-handler
+
+
+
+
+
+## [0.14.1-rc.0](/compare/@ceramicnetwork/doctype-tile-handler@0.14.0...@ceramicnetwork/doctype-tile-handler@0.14.1-rc.0) (2021-03-25)
+
+**Note:** Version bump only for package @ceramicnetwork/doctype-tile-handler
+
+
+
+
+
 # [0.14.0](/compare/@ceramicnetwork/doctype-tile-handler@0.14.0-rc.1...@ceramicnetwork/doctype-tile-handler@0.14.0) (2021-03-22)
 
 

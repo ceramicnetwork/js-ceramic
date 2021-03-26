@@ -1,7 +1,6 @@
 import { Logger, LoggerModes } from '@overnightjs/logger';
 import * as logfmt from 'logfmt';
 import util from 'util';
-import { RotatingFileStream } from './stream-helpers';
 import flatten from 'flat'
 
 enum LogStyle {
@@ -19,66 +18,68 @@ export enum LogLevel {
   warn,
 }
 
+export interface WriteableStream {
+  write: (message: string) => void
+}
+
 /**
  * Logs to the console based on log level
  */
 export class DiagnosticsLogger {
   public readonly logLevel: LogLevel;
   private readonly logger: Logger;
-  private readonly fileLogger: RotatingFileStream;
+  private readonly fileLogger: WriteableStream;
   private readonly includeStackTrace: boolean;
   private readonly logToFiles
 
-  constructor(logLevel: LogLevel, logToFiles: boolean, logPath?: string) {
+  constructor(logLevel: LogLevel, logToFiles: boolean, fileLogger?: WriteableStream) {
     this.logLevel = logLevel;
     this.includeStackTrace = this.logLevel <= LogLevel.debug ? true : false;
     this.logToFiles = logToFiles
+    this.fileLogger = fileLogger
 
     const removeTimestamp = true;
     this.logger = new Logger(LoggerModes.Console, '', removeTimestamp);
-    if (this.logToFiles) {
-      this.fileLogger = new RotatingFileStream(logPath, true);
-    }
   }
 
   /**
    * Calls `this.debug`. Used for stream interfaces.
    * @param content Content to log
    */
-  public write(content: string | object): void {
+  public write(content: string | Record<string, unknown> | Error): void {
     this.debug(content);
   }
 
-  public verbose(content: string | object): void {
+  public verbose(content: string | Record<string, unknown> | Error): void {
     if (this.logLevel > LogLevel.verbose) {
       return;
     }
     this.log(LogStyle.verbose, content);
   }
 
-  public debug(content: string | object): void {
+  public debug(content: string | Record<string, unknown> | Error): void {
     if (this.logLevel > LogLevel.debug) {
       return;
     }
     this.log(LogStyle.info, content);
   }
 
-  public imp(content: string | object): void {
+  public imp(content: string | Record<string, unknown> | Error): void {
     if (this.logLevel > LogLevel.important) {
       return;
     }
     this.log(LogStyle.imp, content);
   }
 
-  public warn(content: string | object): void {
+  public warn(content: string | Record<string, unknown> | Error): void {
     this.log(LogStyle.warn, content);
   }
 
-  public err(content: string | object): void {
+  public err(content: string | Record<string, unknown> | Error): void {
     this.log(LogStyle.err, content);
   }
 
-  private log(style: LogStyle, content: string | object): void {
+  private log(style: LogStyle, content: string | Record<string, unknown> | Error): void {
     this.logger[style](content, this.includeStackTrace);
     if (this.logToFiles) {
       const now = new Date();
@@ -97,26 +98,20 @@ interface ServiceLog {
  */
 export class ServiceLogger {
   public readonly service: string;
-  public readonly filePath: string;
   public readonly logToFiles: boolean
   public readonly logToConsole: boolean
   public readonly logLevel: LogLevel
 
-  private readonly stream: RotatingFileStream;
+  private readonly stream: WriteableStream;
 
 
-  constructor(service: string, filePath: string, logLevel: LogLevel, logToFiles: boolean) {
+  constructor(service: string, logLevel: LogLevel, logToFiles: boolean, stream: WriteableStream) {
     this.service = service;
-    this.filePath = filePath;
     this.logLevel = logLevel
     this.logToFiles = logToFiles
+    this.stream = stream
 
     this.logToConsole = this.logLevel <= LogLevel.debug
-
-    if (this.logToFiles) {
-      const writeImmediately = true;
-      this.stream = new RotatingFileStream(this.filePath, writeImmediately);
-    }
   }
 
   /**
