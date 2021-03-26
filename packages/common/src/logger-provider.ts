@@ -17,9 +17,11 @@ export interface LoggerConfig {
     logToFiles?: boolean,
 }
 
+// Can't have a default log directory as that would require using the `path` module before we know
+// for sure if it's safe to do so. If `logToFiles` is false we must avoid using any node-specific
+// functionality as we might be running in-browser
 const DEFAULT_LOG_CONFIG = {
     logLevel: LogLevel.important,
-    logDirectory: path.join(os.homedir(), ".ceramic", "logs/"),
     logToFiles: false
 }
 
@@ -37,7 +39,7 @@ export class LoggerProvider {
       this.config = {
         logLevel: config.logLevel !== undefined ? config.logLevel : DEFAULT_LOG_CONFIG.logLevel,
         logToFiles: config.logToFiles !== undefined ? config.logToFiles : DEFAULT_LOG_CONFIG.logToFiles,
-        logDirectory: config.logDirectory !== undefined ? config.logDirectory : DEFAULT_LOG_CONFIG.logDirectory,
+        logDirectory: config.logDirectory,
       }
       this._fileLoggerFactory = fileLoggerFactory
       if (this.config.logToFiles && !this._fileLoggerFactory) {
@@ -46,9 +48,19 @@ export class LoggerProvider {
       this._diagnosticLogger = this._makeDiagnosticLogger()
     }
 
+    private _getLogPath(filename: string) {
+        if (!this.config.logToFiles) {
+            throw new Error("Tried to generate log path when logToFiles is false") // This indicates a programming error
+        }
+        const logDirectory = this.config.logDirectory || path.join(os.homedir(), ".ceramic", "logs/")
+        return path.join(logDirectory, filename)
+    }
+
     private _makeDiagnosticLogger(): DiagnosticsLogger {
-        const logPath = path.join(this.config.logDirectory, "diagnostics.log")
-        const stream = this.config.logToFiles ? this._fileLoggerFactory(logPath) : null
+        let stream = null
+        if (this.config.logToFiles) {
+            stream = this._fileLoggerFactory(this._getLogPath("diagnostics.log"))
+        }
 
         return new DiagnosticsLogger(this.config.logLevel, this.config.logToFiles, stream);
     }
@@ -58,8 +70,10 @@ export class LoggerProvider {
     }
 
     public makeServiceLogger(serviceName: string): ServiceLogger {
-        const logPath = path.join(this.config.logDirectory, `${serviceName}.log`)
-        const stream = this.config.logToFiles ? this._fileLoggerFactory(logPath) : null
+        let stream = null
+        if (this.config.logToFiles) {
+            stream = this._fileLoggerFactory(this._getLogPath(`${serviceName}.log`))
+        }
 
         return new ServiceLogger(serviceName, this.config.logLevel, this.config.logToFiles, stream)
     }
