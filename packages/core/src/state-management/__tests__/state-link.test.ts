@@ -28,7 +28,7 @@ test('emit on distinct changes', async () => {
   } as unknown) as DocState;
 
   const feed$ = new Observable<DocState>();
-  const state$ = new StateLink(initial, feed$);
+  const state$ = new StateLink(initial, () => feed$);
   const updates: DocState[] = [];
   state$.subscribe((state) => {
     updates.push(state);

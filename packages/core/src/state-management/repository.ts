@@ -1,17 +1,24 @@
 import DocID from '@ceramicnetwork/docid';
-import { AnchorService, AnchorStatus, Context, DocOpts, DocState, DocStateHolder } from '@ceramicnetwork/common';
+import {
+  AnchorService,
+  AnchorStatus,
+  Context,
+  DocOpts,
+  DocState,
+  DocStateHolder,
+} from '@ceramicnetwork/common';
 import { PinStore } from '../store/pin-store';
 import { NamedTaskQueue } from './named-task-queue';
 import { DiagnosticsLogger } from '@ceramicnetwork/common';
 import { ExecutionQueue } from './execution-queue';
 import { RunningState } from './running-state';
-import { LRUMap } from 'lru_map';
 import { StateManager } from './state-manager';
 import type { Dispatcher } from '../dispatcher';
 import type { ConflictResolution } from '../conflict-resolution';
 import type { HandlersMap } from '../handlers-map';
 import type { StateValidation } from './state-validation';
-import { Subject } from 'rxjs';
+import { Observable } from 'rxjs';
+import { StateCache } from './state-cache';
 
 export type RepositoryDependencies = {
   dispatcher: Dispatcher;
@@ -38,12 +45,7 @@ export class Repository {
   /**
    * In-memory cache of the currently running documents.
    */
-  readonly inmemory: LRUMap<string, RunningState>;
-
-  /**
-   * Global feed of DocState updates, for all of the documents processed.
-   */
-  readonly feed$: Subject<DocState> = new Subject<DocState>();
+  readonly inmemory: StateCache<RunningState>;
 
   /**
    * Various dependencies.
@@ -60,12 +62,8 @@ export class Repository {
       logger.err(error);
     });
     this.executionQ = new ExecutionQueue(logger, (docId) => this.get(docId));
-    this.inmemory = new LRUMap(limit);
-    this.inmemory.shift = function () {
-      const entry = LRUMap.prototype.shift.call(this);
-      entry[1].complete();
-      return entry;
-    };
+    this.inmemory = new StateCache(limit, (state$) => state$.complete());
+    this.updates$ = this.updates$.bind(this);
   }
 
   // Ideally this would be provided in the constructor, but circular dependencies in our initialization process make this necessary for now
@@ -159,9 +157,6 @@ export class Repository {
    * Adds the document's RunningState to the in-memory cache and subscribes the Repository's global feed$ to receive changes emitted by that RunningState
    */
   add(state$: RunningState): void {
-    state$.subscribe({
-      next: this.feed$.next.bind(this.feed$),
-    });
     this.inmemory.set(state$.id.toString(), state$);
   }
 
@@ -179,6 +174,35 @@ export class Repository {
    */
   async listPinned(docId?: DocID): Promise<string[]> {
     return this.#deps.pinStore.ls(docId);
+  }
+
+  /**
+   * Updates for the DocState, even if a (pinned or not pinned) document has already been evicted.
+   * Marks the document as durable, that is not subject to cache eviction.
+   *
+   * First, we try to get the running state from memory or state store. If found, it is used as a source
+   * of updates. If not found, we use DocState passed as `init` param as a future source of updates.
+   * Anyway, we mark it as unevictable.
+   *
+   * When a subscription to the observable stops, we check if there are other subscriptions to the same
+   * RunningState. We only consider the RunningState free, if there are no more subscriptions.
+   * This RunningState is subject to future cache eviction.
+   *
+   * @param init
+   */
+  updates$(init: DocState): Observable<DocState> {
+    return new Observable<DocState>((subscriber) => {
+      const id = new DocID(init.doctype, init.log[0].cid);
+      this.get(id).then((found) => {
+        const state$ = found || new RunningState(init);
+        this.inmemory.endure(id.toString(), state$);
+        state$.subscribe(subscriber).add(() => {
+          if (state$.observers.length === 0) {
+            this.inmemory.free(id.toString());
+          }
+        });
+      });
+    });
   }
 
   async close(): Promise<void> {

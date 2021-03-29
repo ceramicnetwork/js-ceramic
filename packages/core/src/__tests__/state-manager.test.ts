@@ -207,7 +207,7 @@ describe('rewind', () => {
     const snapshot = await ceramic2.repository.stateManager.rewind(doc2, doctype1.commitId);
 
     expect(DoctypeUtils.statesEqual(snapshot.state, doctype1.state));
-    const snapshotDoctype = doctypeFromState(ceramic2.context, ceramic2._doctypeHandlers, snapshot.value, snapshot, true);
+    const snapshotDoctype = doctypeFromState(ceramic2.context, ceramic2._doctypeHandlers, snapshot.value);
     await expect(
       snapshotDoctype.change({
         content: { abc: 1010 },
@@ -249,7 +249,7 @@ test('handles basic conflict', async () => {
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
   const conflictingNewContent = { asdf: 2342 };
-  const doctype2 = doctypeFromState(ceramic.context, ceramic._doctypeHandlers, state$.value, ceramic.repository.feed$);
+  const doctype2 = doctypeFromState(ceramic.context, ceramic._doctypeHandlers, state$.value, ceramic.repository.updates$);
   doctype2.subscribe();
   updateRec = await TileDoctype._makeCommit(doctype2, ceramic.did, conflictingNewContent, doctype2.controllers);
   await ceramic.repository.stateManager.applyCommit(state$, updateRec);

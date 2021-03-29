@@ -2,7 +2,7 @@ import { LRUMap } from 'lru_map';
 
 export class StateCache<T> implements Iterable<[string, T]> {
   readonly volatile: LRUMap<string, T>;
-  readonly persistent: Map<string, T>;
+  readonly durable: Map<string, T>;
 
   constructor(limit: number, private readonly onEvicted?: (item: T) => void) {
     this.volatile = new LRUMap(limit);
@@ -11,11 +11,11 @@ export class StateCache<T> implements Iterable<[string, T]> {
       onEvicted?.(entry[1]);
       return entry;
     };
-    this.persistent = new Map();
+    this.durable = new Map();
   }
 
   get(key: string): T | undefined {
-    const fromPersistent = this.persistent.get(key);
+    const fromPersistent = this.durable.get(key);
     if (fromPersistent) {
       return fromPersistent;
     } else {
@@ -24,24 +24,32 @@ export class StateCache<T> implements Iterable<[string, T]> {
   }
 
   set(key: string, value: T): void {
+    if (this.durable.has(key)) {
+      this.durable.set(key, value);
+    }
     this.volatile.set(key, value);
   }
 
-  persist(key: string, value: T): void {
-    this.persistent.set(key, value);
+  delete(key: string) {
+    this.durable.delete(key);
+    this.volatile.delete(key);
+  }
+
+  endure(key: string, value: T): void {
+    this.durable.set(key, value);
     this.volatile.delete(key);
   }
 
   free(key: string) {
-    const entry = this.persistent.get(key);
+    const entry = this.durable.get(key);
     if (entry) {
       this.volatile.set(key, entry);
-      this.persistent.delete(key);
+      this.durable.delete(key);
     }
   }
 
   *entries(): Generator<[string, T]> {
-    for (const entry of this.persistent.entries()) {
+    for (const entry of this.durable.entries()) {
       yield entry;
     }
     for (const entry of this.volatile) {

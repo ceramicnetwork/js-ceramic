@@ -7,7 +7,7 @@ test('get and set', () => {
   expect(cache.get('a')).toEqual('a');
   expect(cache.get('b')).toEqual('b');
   expect(cache.volatile.size).toEqual(2);
-  expect(cache.persistent.size).toEqual(0);
+  expect(cache.durable.size).toEqual(0);
 });
 
 describe('LRU', () => {
@@ -23,7 +23,7 @@ describe('LRU', () => {
     expect(b).not.toBeCalled();
     expect(c).not.toBeCalled();
     expect(cache.volatile.size).toEqual(2);
-    expect(cache.persistent.size).toEqual(0);
+    expect(cache.durable.size).toEqual(0);
   });
 
   test('persist and LRU eviction', () => {
@@ -32,7 +32,7 @@ describe('LRU', () => {
     });
     const [a, b, c, d] = [jest.fn(), jest.fn(), jest.fn(), jest.fn()];
     cache.set('a', a);
-    cache.persist('a', a);
+    cache.endure('a', a);
     cache.set('b', b);
     cache.set('c', c);
     cache.set('d', d);
@@ -41,7 +41,7 @@ describe('LRU', () => {
     expect(c).not.toBeCalled();
     expect(d).not.toBeCalled();
     expect(cache.volatile.size).toEqual(2);
-    expect(cache.persistent.size).toEqual(1);
+    expect(cache.durable.size).toEqual(1);
   });
 
   test('free', () => {
@@ -50,7 +50,7 @@ describe('LRU', () => {
     });
     const [a, b, c, d] = [jest.fn(), jest.fn(), jest.fn(), jest.fn()];
     cache.set('a', a);
-    cache.persist('a', a);
+    cache.endure('a', a);
     cache.set('b', b);
     cache.free('a');
     cache.set('c', c);
@@ -60,7 +60,7 @@ describe('LRU', () => {
     expect(c).not.toBeCalled();
     expect(d).not.toBeCalled();
     expect(cache.volatile.size).toEqual(2);
-    expect(cache.persistent.size).toEqual(0);
+    expect(cache.durable.size).toEqual(0);
   });
 });
 
@@ -70,7 +70,7 @@ describe('iteration', () => {
   beforeEach(() => {
     cache = new StateCache(2);
     cache.set('a', 1);
-    cache.persist('a', 1);
+    cache.endure('a', 1);
     cache.set('b', 2);
     cache.set('c', 3);
     cache.set('d', 4);
@@ -108,5 +108,40 @@ describe('iteration', () => {
     }
     expect(values).toEqual(expected);
     expect(Array.from(cache.values())).toEqual(expected);
+  });
+});
+
+describe('delete', () => {
+  let cache: StateCache<number>;
+
+  beforeEach(() => {
+    cache = new StateCache<number>(2);
+    cache.set('a', 1);
+    cache.endure('a', 1);
+    cache.set('b', 2);
+    cache.set('c', 3);
+    cache.set('d', 4);
+  });
+
+  test('volatile', () => {
+    cache.delete('d');
+    expect(Array.from(cache.volatile)).toEqual([['c', 3]]);
+    expect(Array.from(cache.durable)).toEqual([['a', 1]]);
+  });
+  test('persistent', () => {
+    cache.delete('a');
+    expect(Array.from(cache.volatile)).toEqual([
+      ['c', 3],
+      ['d', 4],
+    ]);
+    expect(Array.from(cache.durable)).toEqual([]);
+  });
+  test('non-existent', () => {
+    cache.delete('e')
+    expect(Array.from(cache.volatile)).toEqual([
+      ['c', 3],
+      ['d', 4],
+    ]);
+    expect(Array.from(cache.durable)).toEqual([['a', 1]]);
   });
 });
