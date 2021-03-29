@@ -36,10 +36,7 @@ export class Document extends Observable<DocState> implements RunningStateLike {
   async _syncState(id?: DocID | CommitID): Promise<void> {
     const effectiveId = id || this.id
     const { state } = await fetchJson(this._apiUrl + '/documents/' + effectiveId.toString())
-
-    if (JSON.stringify(DoctypeUtils.serializeState(this.state$.value)) !== JSON.stringify(state)) {
-      this.next(DoctypeUtils.deserializeState(state))
-    }
+    this.state$.next(DoctypeUtils.deserializeState(state))
   }
 
   get id(): DocID {
