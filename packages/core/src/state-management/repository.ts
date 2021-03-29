@@ -1,12 +1,5 @@
 import DocID from '@ceramicnetwork/docid';
-import {
-  AnchorService,
-  AnchorStatus,
-  Context,
-  DocOpts,
-  DocState,
-  DocStateHolder,
-} from '@ceramicnetwork/common';
+import { AnchorService, AnchorStatus, Context, DocOpts, DocState, DocStateHolder } from '@ceramicnetwork/common';
 import { PinStore } from '../store/pin-store';
 import { NamedTaskQueue } from './named-task-queue';
 import { DiagnosticsLogger } from '@ceramicnetwork/common';
@@ -75,6 +68,7 @@ export class Repository {
       this.executionQ,
       deps.anchorService,
       deps.conflictResolution,
+      this.logger,
     );
   }
 

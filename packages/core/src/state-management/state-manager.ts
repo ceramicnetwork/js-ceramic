@@ -2,11 +2,18 @@ import { Dispatcher } from '../dispatcher';
 import { PinStore } from '../store/pin-store';
 import { ExecutionQueue } from './execution-queue';
 import { commitAtTime, ConflictResolution } from '../conflict-resolution';
-import { AnchorService, AnchorStatus, DocOpts, UnreachableCaseError, RunningStateLike } from '@ceramicnetwork/common';
+import {
+  AnchorService,
+  AnchorStatus,
+  DocOpts,
+  UnreachableCaseError,
+  RunningStateLike,
+  DiagnosticsLogger,
+} from '@ceramicnetwork/common';
 import { RunningState } from './running-state';
 import CID from 'cids';
-import { concatMap, timeoutWith } from 'rxjs/operators';
-import { of, Subscription } from 'rxjs';
+import { catchError, concatMap, timeoutWith } from 'rxjs/operators';
+import { empty, of, Subscription } from 'rxjs';
 import { SnapshotState } from './snapshot-state';
 import { CommitID, DocID } from '@ceramicnetwork/docid';
 
@@ -22,6 +29,7 @@ export class StateManager {
     private readonly executionQ: ExecutionQueue,
     public anchorService: AnchorService,
     public conflictResolution: ConflictResolution,
+    private readonly logger: DiagnosticsLogger,
   ) {}
 
   /**
@@ -180,6 +188,10 @@ export class StateManager {
             default:
               throw new UnreachableCaseError(asr, 'Unknown anchoring state');
           }
+        }),
+        catchError((error) => {
+          this.logger.err(error);
+          return empty;
         }),
       )
       .subscribe();
