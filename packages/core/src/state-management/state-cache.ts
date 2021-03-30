@@ -30,11 +30,13 @@ export class StateCache<T> implements Iterable<[string, T]> {
   }
 
   /**
-   * Set value to volatile bucket. Remove from durable.
+   * Set value to volatile bucket. Update value in durable bucket, if present.
    */
   set(key: string, value: T): void {
+    if (this.durable.has(key)) {
+      this.durable.set(key, value);
+    }
     this.volatile.set(key, value);
-    this.durable.delete(key);
   }
 
   /**
