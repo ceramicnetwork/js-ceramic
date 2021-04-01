@@ -37,7 +37,7 @@
   },
   "devDependencies": {
     "@glif/filecoin-address": "^1.1.0-beta.15",
-    "@glif/local-managed-provider": "^1.1.0-beta.15",
+    "@glif/local-managed-provider": "1.1.0-beta.15",
     "@polkadot/api": "^3.0.1",
     "@polkadot/keyring": "^5.0.1",
     "@polkadot/types": "^3.0.1",
