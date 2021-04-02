@@ -17,7 +17,7 @@ program
     .option('--verbose', 'Enable verbose logging level. Default is false')
     .option('--log-to-files', 'If debug is true, write logs to files. Default is false')
     .option('--log-directory <dir>', 'Store logs in this directory. Defaults to HOME_DIR/.ceramic/logs')
-    .option('--network <name>', 'Name of the ceramic network to connect to. One of: "mainnet", "testnet-clay", "local", or "inmemory". Defaults to "testnet-clay"')
+    .option('--network <name>', 'Name of the ceramic network to connect to. One of: "mainnet", "testnet-clay", "dev-unstable", "local", or "inmemory". Defaults to "testnet-clay"')
     .option('--pubsubTopic <string>', 'Pub/sub topic to use for protocol messages')
     .option('--max-healthy-cpu <decimal>', 'Fraction of total CPU usage considered healthy. Defaults to 0.7')
     .option('--max-healthy-memory <decimal>', 'Fraction of total memory usage considered healthy. Defaults to 0.7')
