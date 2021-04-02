@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.18.0-rc.0](/compare/@ceramicnetwork/common@0.17.0...@ceramicnetwork/common@0.18.0-rc.0) (2021-04-02)
+
+
+### Features
+
+* **core, http-client, common:** Doctype accepts Running State (#1150) 0b708d4, closes #1150
+* **tile-doctype:** Update Tile API 48f30e1
+
+
+
+
+
 # [0.17.0](/compare/@ceramicnetwork/common@0.16.0...@ceramicnetwork/common@0.17.0) (2021-04-02)
 
 
