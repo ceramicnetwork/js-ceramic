@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.1.1](/compare/@ceramicnetwork/blockchain-utils-validation@0.1.0...@ceramicnetwork/blockchain-utils-validation@0.1.1) (2021-04-02)
+
+
+### Bug Fixes
+
+* **blockchain-utils-linking:** Pin version of @glif/local-managed-provider to unbreak test (#1183) b5ae20f, closes #1183
+* **common, logger:** Clean up dependencies (#1164) 191ad31, closes #1164
+
+
+
+
+
 ## [0.1.1-rc.3](/compare/@ceramicnetwork/blockchain-utils-validation@0.1.0...@ceramicnetwork/blockchain-utils-validation@0.1.1-rc.3) (2021-03-26)
 
 **Note:** Version bump only for package @ceramicnetwork/blockchain-utils-validation

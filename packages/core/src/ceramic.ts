@@ -25,6 +25,7 @@ import {
   MultiQuery,
   PinningBackendStatic,
   LoggerProvider,
+  Networks,
 } from "@ceramicnetwork/common"
 import { Resolver } from "did-resolver"
 
@@ -52,19 +53,22 @@ const IPFS_GET_TIMEOUT = 60000 // 1 minute
 const TESTING = process.env.NODE_ENV == 'test'
 
 const DEFAULT_ANCHOR_SERVICE_URLS = {
-  "testnet-clay": "https://cas-clay.3boxlabs.com",
-  "dev-unstable": "https://cas-dev.3boxlabs.com",
-  "local": "http://localhost:8081",
+  [Networks.MAINNET]: "https://cas.3boxlabs.com",
+  [Networks.ELP]: "https://cas.3boxlabs.com",
+  [Networks.TESTNET_CLAY]: "https://cas-clay.3boxlabs.com",
+  [Networks.DEV_UNSTABLE]: "https://cas-dev.3boxlabs.com",
+  [Networks.LOCAL]: "http://localhost:8081",
 }
 
 const DEFAULT_LOCAL_ETHEREUM_RPC = "http://localhost:7545" // default Ganache port
 
 const SUPPORTED_CHAINS_BY_NETWORK = {
-  "mainnet": ["eip155:1"], // Ethereum mainnet
-  "testnet-clay": ["eip155:3", "eip155:4"], // Ethereum Ropsten, Rinkeby
-  "dev-unstable": ["eip155:3", "eip155:4"], // Ethereum Ropsten, Rinkeby
-  "local": ["eip155:1337"], // Ganache
-  "inmemory": ["inmemory:12345"], // Our fake in-memory anchor service chainId
+  [Networks.MAINNET]: ["eip155:1"], // Ethereum mainnet
+  [Networks.ELP]: ["eip155:1"], // Ethereum mainnet
+  [Networks.TESTNET_CLAY]: ["eip155:3", "eip155:4"], // Ethereum Ropsten, Rinkeby
+  [Networks.DEV_UNSTABLE]: ["eip155:3", "eip155:4"], // Ethereum Ropsten, Rinkeby
+  [Networks.LOCAL]: ["eip155:1337"], // Ganache
+  [Networks.INMEMORY]: ["inmemory:12345"], // Our fake in-memory anchor service chainId
 }
 
 /**
@@ -139,7 +143,7 @@ interface CeramicNetworkOptions {
   pubsubTopic: string, // The topic that will be used for broadcasting protocol messages
 }
 
-const DEFAULT_NETWORK = 'inmemory'
+const DEFAULT_NETWORK = Networks.INMEMORY
 
 const normalizeDocID = (docId: DocID | string): DocID => {
   const docRef = DocRef.from(docId)
@@ -242,25 +246,29 @@ class Ceramic implements CeramicApi {
   private static _generateNetworkOptions(config: CeramicConfig): CeramicNetworkOptions {
     const networkName = config.networkName || DEFAULT_NETWORK
 
-    if (config.pubsubTopic && (networkName !== "inmemory" && networkName !== "local")) {
+    if (config.pubsubTopic && (networkName !== Networks.INMEMORY && networkName !== Networks.LOCAL)) {
       throw new Error("Specifying pub/sub topic is only supported for the 'inmemory' and 'local' networks")
     }
 
     let pubsubTopic
     switch (networkName) {
-      case "mainnet": {
+      case Networks.MAINNET: {
         pubsubTopic = "/ceramic/mainnet"
         break
       }
-      case "testnet-clay": {
+      case Networks.ELP: {
+        pubsubTopic = "/ceramic/mainnet"
+        break
+      }
+      case Networks.TESTNET_CLAY: {
         pubsubTopic = "/ceramic/testnet-clay"
         break
       }
-      case "dev-unstable": {
+      case Networks.DEV_UNSTABLE: {
         pubsubTopic = "/ceramic/dev-unstable"
         break
       }
-      case "local": {
+      case Networks.LOCAL: {
         // Default to a random pub/sub topic so that local deployments are isolated from each other
         // by default.  Allow specifying a specific pub/sub topic so that test deployments *can*
         // be made to talk to each other if needed.
@@ -272,7 +280,7 @@ class Ceramic implements CeramicApi {
         }
         break
       }
-      case "inmemory": {
+      case Networks.INMEMORY: {
         // Default to a random pub/sub topic so that inmemory deployments are isolated from each other
         // by default.  Allow specifying a specific pub/sub topic so that test deployments *can*
         // be made to talk to each other if needed.
@@ -289,7 +297,7 @@ class Ceramic implements CeramicApi {
       }
     }
 
-    if (networkName == "mainnet") {
+    if (networkName == Networks.MAINNET) {
       throw new Error("Ceramic mainnet is not yet supported")
     }
 
@@ -352,10 +360,10 @@ class Ceramic implements CeramicApi {
 
     const anchorServiceUrl = config.anchorServiceUrl || DEFAULT_ANCHOR_SERVICE_URLS[networkOptions.name]
     let ethereumRpcUrl = config.ethereumRpcUrl
-    if (!ethereumRpcUrl && networkOptions.name == "local") {
+    if (!ethereumRpcUrl && networkOptions.name == Networks.LOCAL) {
       ethereumRpcUrl = DEFAULT_LOCAL_ETHEREUM_RPC
     }
-    const anchorService = networkOptions.name != "inmemory" ? new EthereumAnchorService(anchorServiceUrl, ethereumRpcUrl) : new InMemoryAnchorService(config as any)
+    const anchorService = networkOptions.name != Networks.INMEMORY ? new EthereumAnchorService(anchorServiceUrl, ethereumRpcUrl) : new InMemoryAnchorService(config as any)
     await anchorService.init()
 
     const supportedChains = await Ceramic._loadSupportedChains(networkOptions.name, anchorService)

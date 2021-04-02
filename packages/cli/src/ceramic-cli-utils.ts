@@ -1,21 +1,20 @@
-import os from "os"
-import path from "path"
+import os from 'os'
+import path from 'path'
 import { randomBytes } from '@stablelib/random'
 import * as u8a from 'uint8arrays'
 
 import { promises as fs } from 'fs'
 
 import { Ed25519Provider } from 'key-did-provider-ed25519'
-import CeramicClient from "@ceramicnetwork/http-client"
-import { CeramicApi, DoctypeUtils, LoggerConfig } from "@ceramicnetwork/common"
-import { LogLevel } from '@ceramicnetwork/common';
+import CeramicClient from '@ceramicnetwork/http-client'
+import { CeramicApi, DoctypeUtils, LoggerConfig, LogLevel, Networks } from '@ceramicnetwork/common'
 import DocID from '@ceramicnetwork/docid'
 
-import CeramicDaemon, { CreateOpts } from "./ceramic-daemon"
+import CeramicDaemon, { CreateOpts } from './ceramic-daemon'
 
 const DEFAULT_CLI_CONFIG_FILE = 'config.json'
 const DEFAULT_CLI_CONFIG_PATH = path.join(os.homedir(), '.ceramic')
-const DEFAULT_NETWORK = 'testnet-clay'
+const DEFAULT_NETWORK = Networks.TESTNET_CLAY
 
 /**
  * CLI configuration

@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.5.1](/compare/@ceramicnetwork/docid@0.5.0...@ceramicnetwork/docid@0.5.1) (2021-04-02)
+
+
+### Bug Fixes
+
+* **common, logger:** Clean up dependencies (#1164) 191ad31, closes #1164
+
+
+
+
+
 ## [0.5.1-rc.3](/compare/@ceramicnetwork/docid@0.5.0...@ceramicnetwork/docid@0.5.1-rc.3) (2021-03-26)
 
 **Note:** Version bump only for package @ceramicnetwork/docid

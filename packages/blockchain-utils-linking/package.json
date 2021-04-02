@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/blockchain-utils-linking",
-  "version": "0.2.1-rc.3",
+  "version": "0.3.0",
   "description": "Blockchain utils for linking blockchain accounts to DID",
   "keywords": [
     "ceramic",
@@ -32,7 +32,7 @@
   "devDependencies": {
     "@ethersproject/providers": "5.0.23",
     "@glif/filecoin-address": "^1.1.0-beta.15",
-    "@glif/local-managed-provider": "^1.1.0-beta.15",
+    "@glif/local-managed-provider": "1.1.0-beta.15",
     "@polkadot/api": "^3.0.1",
     "@polkadot/keyring": "^5.0.1",
     "@polkadot/types": "^3.0.1",

@@ -3,6 +3,23 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.17.0](/compare/@ceramicnetwork/common@0.16.0...@ceramicnetwork/common@0.17.0) (2021-04-02)
+
+
+### Bug Fixes
+
+* **common:** Don't use node packages at runtime in the logger if we might be running in-browser (#1165) 937c4f4, closes #1165
+* **common, logger:** Clean up dependencies (#1164) 191ad31, closes #1164
+
+
+### Features
+
+* add networks enum and elp (#1187) 7a60b30, closes #1187
+
+
+
+
+
 ## [0.16.1-rc.4](/compare/@ceramicnetwork/common@0.16.0...@ceramicnetwork/common@0.16.1-rc.4) (2021-03-26)
 
 

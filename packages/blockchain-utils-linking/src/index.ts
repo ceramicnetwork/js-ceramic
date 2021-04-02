@@ -7,6 +7,7 @@ export * as eosio from "./eosio";
 export * as cosmos from "./cosmos";
 
 export { EthereumAuthProvider } from "./ethereum";
+export { EthereumAuthProvider as AvalancheAuthProvider } from "./ethereum";
 export { FilecoinAuthProvider } from "./filecoin";
 export { EosioAuthProvider } from "./eosio";
 export { PolkadotAuthProvider } from "./polkadot";

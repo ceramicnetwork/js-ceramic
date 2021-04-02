@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.0.3](/compare/@ceramicnetwork/ipfs-daemon@0.0.2...@ceramicnetwork/ipfs-daemon@0.0.3) (2021-04-02)
+
+
+### Bug Fixes
+
+* remove cpu and memory from healthcheck (#1182) b818689, closes #1182
+* **common, logger:** Clean up dependencies (#1164) 191ad31, closes #1164
+
+
+
+
+
 ## [0.0.3-rc.4](/compare/@ceramicnetwork/ipfs-daemon@0.0.2...@ceramicnetwork/ipfs-daemon@0.0.3-rc.4) (2021-03-26)
 
 **Note:** Version bump only for package @ceramicnetwork/ipfs-daemon
