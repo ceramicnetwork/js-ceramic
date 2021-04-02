@@ -26,7 +26,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 ### Features
 
-* **tile-doctype:** Update Tile API 7d694f7
+* add networks enum and elp (#1187) 7a60b30, closes #1187
 
 
 
