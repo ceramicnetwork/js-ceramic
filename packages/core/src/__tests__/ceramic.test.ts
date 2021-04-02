@@ -84,15 +84,6 @@ describe('Ceramic integration', () => {
     await ceramic.close()
   })
 
-  it('can create Ceramic instance explicitly on elp network', async () => {
-    const stateStoreDirectory = await tmp.tmpName()
-    const ceramic = await Ceramic.create(ipfs1, { networkName: 'elp', stateStoreDirectory, restoreDocuments: false })
-    await delay(1000)
-    const supportedChains = await ceramic.getSupportedChains()
-    expect(supportedChains).toEqual(['eip155:1'])
-    await ceramic.close()
-  })
-
   it('cannot create Ceramic instance on network not supported by our anchor service', async () => {
     await expect(Ceramic._loadSupportedChains("local", new InMemoryAnchorService({}))).rejects.toThrow(
         "No usable chainId for anchoring was found.  The ceramic network 'local' supports the chains: ['eip155:1337'], but the configured anchor service '<inmemory>' only supports the chains: ['inmemory:12345']")
