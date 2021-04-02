@@ -2,18 +2,25 @@ import { Dispatcher } from '../dispatcher';
 import { PinStore } from '../store/pin-store';
 import { ExecutionQueue } from './execution-queue';
 import { commitAtTime, ConflictResolution } from '../conflict-resolution';
-import { AnchorService, AnchorStatus, DocOpts, UnreachableCaseError } from '@ceramicnetwork/common';
-import { RunningState, RunningStateLike } from './running-state';
+import {
+  AnchorService,
+  AnchorStatus,
+  DocOpts,
+  UnreachableCaseError,
+  RunningStateLike,
+  DiagnosticsLogger,
+} from '@ceramicnetwork/common';
+import { RunningState } from './running-state';
 import CID from 'cids';
-import { timeoutWith } from 'rxjs/operators';
-import { of, Subscription } from 'rxjs';
+import { catchError, concatMap, timeoutWith } from 'rxjs/operators';
+import { empty, of, Subscription } from 'rxjs';
 import { SnapshotState } from './snapshot-state';
-import { CommitID } from '@ceramicnetwork/docid';
+import { CommitID, DocID } from '@ceramicnetwork/docid';
 
 // DocOpts defaults for document load operations
-export const DEFAULT_LOAD_DOCOPTS = {anchor: false, publish: false, sync: true}
+export const DEFAULT_LOAD_DOCOPTS = { anchor: false, publish: false, sync: true };
 // DocOpts defaults for document write operations
-export const DEFAULT_WRITE_DOCOPTS = {anchor: true, publish: true, sync: false}
+export const DEFAULT_WRITE_DOCOPTS = { anchor: true, publish: true, sync: false };
 
 export class StateManager {
   constructor(
@@ -22,6 +29,7 @@ export class StateManager {
     private readonly executionQ: ExecutionQueue,
     public anchorService: AnchorService,
     public conflictResolution: ConflictResolution,
+    private readonly logger: DiagnosticsLogger,
   ) {}
 
   /**
@@ -110,12 +118,12 @@ export class StateManager {
   /**
    * Handles update from the PubSub topic
    *
-   * @param state$
+   * @param docId
    * @param tip - Document Tip CID
    * @private
    */
-  update(state$: RunningState, tip: CID): void {
-    this.executionQ.forDocument(state$.id).add(async (state$) => {
+  update(docId: DocID, tip: CID): void {
+    this.executionQ.forDocument(docId).add(async (state$) => {
       await this.handleTip(state$, tip);
     });
   }
@@ -144,44 +152,49 @@ export class StateManager {
    */
   anchor(state$: RunningState): Subscription {
     const anchorStatus$ = this.anchorService.requestAnchor(state$.id, state$.tip);
-    const tasks = this.executionQ.forDocument(state$.id);
-    const subscription = anchorStatus$.subscribe((asr) => {
-      tasks.add(async (state$) => {
-        switch (asr.status) {
-          case AnchorStatus.PENDING: {
-            const next = {
-              ...state$.value,
-              anchorStatus: AnchorStatus.PENDING,
-            };
-            if (asr.anchorScheduledFor) next.anchorScheduledFor = asr.anchorScheduledFor;
-            state$.next(next);
-            await this.updateStateIfPinned(state$);
-            return;
-          }
-          case AnchorStatus.PROCESSING: {
-            state$.next({ ...state$.value, anchorStatus: AnchorStatus.PROCESSING });
-            await this.updateStateIfPinned(state$);
-            return;
-          }
-          case AnchorStatus.ANCHORED: {
-            await this.handleTip(state$, asr.anchorRecord);
-            this.publishTip(state$);
-            subscription.unsubscribe();
-            return;
-          }
-          case AnchorStatus.FAILED: {
-            if (!asr.cid.equals(state$.tip)) {
+    const subscription = anchorStatus$
+      .pipe(
+        concatMap(async (asr) => {
+          switch (asr.status) {
+            case AnchorStatus.PENDING: {
+              const next = {
+                ...state$.value,
+                anchorStatus: AnchorStatus.PENDING,
+              };
+              if (asr.anchorScheduledFor) next.anchorScheduledFor = asr.anchorScheduledFor;
+              state$.next(next);
+              await this.updateStateIfPinned(state$);
               return;
             }
-            state$.next({ ...state$.value, anchorStatus: AnchorStatus.FAILED });
-            subscription.unsubscribe();
-            return;
+            case AnchorStatus.PROCESSING: {
+              state$.next({ ...state$.value, anchorStatus: AnchorStatus.PROCESSING });
+              await this.updateStateIfPinned(state$);
+              return;
+            }
+            case AnchorStatus.ANCHORED: {
+              await this.handleTip(state$, asr.anchorRecord);
+              this.publishTip(state$);
+              subscription.unsubscribe();
+              return;
+            }
+            case AnchorStatus.FAILED: {
+              if (!asr.cid.equals(state$.tip)) {
+                return;
+              }
+              state$.next({ ...state$.value, anchorStatus: AnchorStatus.FAILED });
+              subscription.unsubscribe();
+              return;
+            }
+            default:
+              throw new UnreachableCaseError(asr, 'Unknown anchoring state');
           }
-          default:
-            throw new UnreachableCaseError(asr, 'Unknown anchoring state');
-        }
-      });
-    });
+        }),
+        catchError((error) => {
+          this.logger.err(error);
+          return empty;
+        }),
+      )
+      .subscribe();
     state$.add(subscription);
     return subscription;
   }

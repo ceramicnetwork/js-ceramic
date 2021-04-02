@@ -7,6 +7,7 @@ import {
   CommitType,
   Context,
   DocState,
+  DocStateHolder,
   Doctype,
   DoctypeHandler,
   DoctypeUtils,
@@ -16,7 +17,6 @@ import cloneDeep from 'lodash.clonedeep';
 import { CommitID } from '@ceramicnetwork/docid';
 import { StateValidation } from './state-management/state-validation';
 import { HandlersMap } from './handlers-map';
-import { RunningStateLike } from './state-management/running-state';
 
 /**
  * Verifies anchor commit structure
@@ -209,9 +209,9 @@ export async function fetchLog(
   return fetchLog(dispatcher, prevCid, stateLog, log);
 }
 
-export function commitAtTime(state$: RunningStateLike, timestamp: number): CommitID {
-  let commitCid: CID = state$.value.log[0].cid;
-  for (const entry of state$.value.log) {
+export function commitAtTime(stateHolder: DocStateHolder, timestamp: number): CommitID {
+  let commitCid: CID = stateHolder.state.log[0].cid;
+  for (const entry of stateHolder.state.log) {
     if (entry.type === CommitType.ANCHOR) {
       if (entry.timestamp <= timestamp) {
         commitCid = entry.cid;
@@ -220,7 +220,7 @@ export function commitAtTime(state$: RunningStateLike, timestamp: number): Commi
       }
     }
   }
-  return state$.id.atCommit(commitCid);
+  return stateHolder.id.atCommit(commitCid);
 }
 
 export class ConflictResolution {

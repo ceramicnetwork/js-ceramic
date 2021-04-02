@@ -1,9 +1,10 @@
 import CID from 'cids'
 import cloneDeep from 'lodash.clonedeep'
-import { EventEmitter } from "events"
 import type { Context } from "./context"
 import { DocID, CommitID } from '@ceramicnetwork/docid'
 import type { DagJWSResult, DagJWS } from 'dids'
+import { Observable } from 'rxjs'
+import { RunningStateLike } from './running-state-like';
 
 /**
  * Describes signature status
@@ -162,26 +163,28 @@ export interface DocStateHolder {
 /**
  * Describes common doctype attributes
  */
-export abstract class Doctype extends EventEmitter implements DocStateHolder {
-    constructor(private _state: DocState, private _context: Context) {
-        super()
+export abstract class Doctype extends Observable<DocState> implements DocStateHolder {
+    constructor(protected readonly state$: RunningStateLike, private _context: Context) {
+        super(subscriber => {
+          state$.subscribe(subscriber)
+        })
     }
 
     get id(): DocID {
-        return new DocID(this._state.doctype, this._state.log[0].cid)
+        return new DocID(this.state$.value.doctype, this.state$.value.log[0].cid)
     }
 
     get doctype(): string {
-        return this._state.doctype
+        return this.state$.value.doctype
     }
 
     get content(): any {
-        const { next, content } = this._state
+        const { next, content } = this.state$.value
         return cloneDeep(next?.content ?? content)
     }
 
     get metadata(): DocMetadata {
-        const { next, metadata } = this._state
+        const { next, metadata } = this.state$.value
         return cloneDeep(next?.metadata ?? metadata)
     }
 
@@ -190,7 +193,7 @@ export abstract class Doctype extends EventEmitter implements DocStateHolder {
     }
 
     get tip(): CID {
-        return this._state.log[this._state.log.length - 1].cid
+        return this.state$.value.log[this.state$.value.log.length - 1].cid
     }
 
     get commitId(): CommitID {
@@ -201,32 +204,29 @@ export abstract class Doctype extends EventEmitter implements DocStateHolder {
      * Lists available commits
      */
     get allCommitIds(): Array<CommitID> {
-      return this._state.log.map(({ cid }) => this.id.atCommit(cid))
+      return this.state$.value.log.map(({ cid }) => this.id.atCommit(cid))
     }
 
     /**
      * Lists available commits that correspond to anchor commits
      */
     get anchorCommitIds(): Array<CommitID> {
-        return this._state.log
+        return this.state$.value.log
             .filter(({ type }) => type === CommitType.ANCHOR)
             .map(({ cid }) => this.id.atCommit(cid))
     }
 
     get state(): DocState {
-        return cloneDeep(this._state)
-    }
-
-    set state(state: DocState) {
-        this._state = state
-    }
-
-    set context(context: Context) {
-        this._context = context
+        return cloneDeep(this.state$.value)
     }
 
     get context(): Context {
         return this._context
+    }
+
+    async sync(): Promise<void> {
+      const document = await this._context.api.loadDocument(this.id)
+      this.state$.next(document.state)
     }
 
     /**
@@ -252,10 +252,10 @@ export function DoctypeStatic<T>() {
 export interface DoctypeConstructor<T extends Doctype> {
     /**
      * Constructor signature
-     * @param state - Doctype state
+     * @param state$ - Doctype state
      * @param context - Ceramic context
      */
-    new(state: DocState, context: Context): T
+    new(state$: RunningStateLike, context: Context): T
 
     /**
      * Makes genesis commit

@@ -506,7 +506,7 @@ class Ceramic implements CeramicApi {
   async applyCommit<T extends Doctype>(docId: string | DocID, commit: CeramicCommit, opts?: DocOpts): Promise<T> {
     const state$ = await this._loadDoc(normalizeDocID(docId), opts)
     await this.repository.stateManager.applyCommit(state$, commit, opts)
-    return doctypeFromState<T>(this.context, this._doctypeHandlers, state$)
+    return doctypeFromState<T>(this.context, this._doctypeHandlers, state$.value, this.repository.updates$)
   }
 
   /**
@@ -529,7 +529,7 @@ class Ceramic implements CeramicApi {
    */
   async createDocumentFromGenesis<T extends Doctype>(doctype: string, genesis: any, opts: DocOpts = {}): Promise<T> {
     const state$ = await this._createDocFromGenesis(doctype, genesis, opts)
-    return doctypeFromState<T>(this.context, this._doctypeHandlers, state$)
+    return doctypeFromState<T>(this.context, this._doctypeHandlers, state$.value, this.repository.updates$)
   }
 
   /**
@@ -557,19 +557,18 @@ class Ceramic implements CeramicApi {
     if (docRef instanceof CommitID) {
       // Here CommitID is requested, let's return document at specific commit
       const snapshot$ = await this.repository.stateManager.rewind(base$, docRef)
-      return doctypeFromState<T>(this.context, this._doctypeHandlers, snapshot$, true)
+      return doctypeFromState<T>(this.context, this._doctypeHandlers, snapshot$.value)
     } else if (opts.atTime) {
       const snapshot$ = await this.repository.stateManager.atTime(base$, opts.atTime)
-      return doctypeFromState<T>(this.context, this._doctypeHandlers, snapshot$, true)
+      return doctypeFromState<T>(this.context, this._doctypeHandlers, snapshot$.value)
     } else {
-      return doctypeFromState<T>(this.context, this._doctypeHandlers, base$, false)
+      return doctypeFromState<T>(this.context, this._doctypeHandlers, base$.value, this.repository.updates$)
     }
   }
 
   /**
    * Load all document type instance for given paths
-   * @param id - Document ID (root)
-   * @param paths - relative paths to documents to load
+   * @param query
    * @param timeout - Timeout in milliseconds
    * @private
    */

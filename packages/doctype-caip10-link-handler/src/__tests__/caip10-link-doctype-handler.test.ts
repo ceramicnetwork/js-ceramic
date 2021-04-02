@@ -3,7 +3,7 @@ import { Caip10LinkDoctypeHandler } from '../caip10-link-doctype-handler'
 import cloneDeep from 'lodash.clonedeep'
 import CID from 'cids'
 import { Caip10LinkDoctype } from "@ceramicnetwork/doctype-caip10-link"
-import {CeramicApi, CeramicCommit, Context} from "@ceramicnetwork/common"
+import { CeramicApi, CeramicCommit, Context, TestUtils } from '@ceramicnetwork/common';
 import sha256 from '@stablelib/sha256'
 import * as uint8arrays from 'uint8arrays'
 
@@ -130,7 +130,8 @@ describe('Caip10LinkHandler', () => {
 
     it('makes signed record correctly', async () => {
         const state = await handler.applyCommit(RECORDS.genesis, FAKE_CID_1, context)
-        const doctype = new Caip10LinkDoctype(state, context)
+        const state$ = TestUtils.runningState(state)
+        const doctype = new Caip10LinkDoctype(state$, context)
         const record = await Caip10LinkDoctype._makeCommit(doctype, RECORDS.r1.desiredContent)
         // Have to compare the 'id' and 'prev' CIDs manually (with toString()) otherwise jest gets
         // confused by Symbol(@ipld/js-cid/CID)

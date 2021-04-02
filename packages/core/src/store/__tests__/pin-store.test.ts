@@ -1,7 +1,15 @@
 import { PinStore } from "../pin-store";
 import { StateStore } from "../state-store";
 import CID from 'cids';
-import { AnchorStatus, SignatureStatus, Doctype, PinningBackend, DocState, CommitType } from '@ceramicnetwork/common';
+import {
+  AnchorStatus,
+  SignatureStatus,
+  Doctype,
+  PinningBackend,
+  DocState,
+  CommitType,
+  TestUtils,
+} from '@ceramicnetwork/common';
 
 let stateStore: StateStore
 let pinning: PinningBackend
@@ -61,7 +69,7 @@ test('#close', async () => {
 describe('#add', () => {
     test('save and pin', async () => {
         const pinStore = new PinStore(stateStore, pinning, jest.fn(), jest.fn())
-        const document = new FakeType(state, {})
+        const document = new FakeType(TestUtils.runningState(state), {})
         await pinStore.add(document)
         expect(stateStore.save).toBeCalledWith(document)
         expect(pinning.pin).toBeCalledTimes(1)
@@ -88,7 +96,7 @@ describe('#add', () => {
             }
         })
         const pinStore = new PinStore(stateStore, pinning, retrieve, resolve)
-        const document = new FakeType(state, {})
+        const document = new FakeType(TestUtils.runningState(state), {})
         await pinStore.add(document)
         expect(stateStore.save).toBeCalledWith(document)
         expect(pinning.pin).toBeCalledTimes(4)
@@ -125,7 +133,7 @@ describe('#add', () => {
             }
         })
         const pinStore = new PinStore(stateStore, pinning, retrieve, resolve)
-        const document = new FakeType(state, {})
+        const document = new FakeType(TestUtils.runningState(state), {})
         await pinStore.add(document)
         expect(stateStore.save).toBeCalledWith(document)
         expect(pinning.pin).toBeCalledTimes(6)
@@ -140,7 +148,7 @@ describe('#add', () => {
 
 test('#rm', async () => {
     const pinStore = new PinStore(stateStore, pinning, jest.fn(), jest.fn())
-    const document = new FakeType(state, {})
+    const document = new FakeType(TestUtils.runningState(state), {})
     stateStore.load = jest.fn(async () => state)
     await pinStore.rm(document.id)
     expect(stateStore.remove).toBeCalledWith(document.id)
@@ -149,7 +157,7 @@ test('#rm', async () => {
 
 test('#ls', async () => {
     const pinStore = new PinStore(stateStore, pinning, jest.fn(), jest.fn())
-    const document = new FakeType(state, {})
+    const document = new FakeType(TestUtils.runningState(state), {})
     const list = ['1', '2', '3']
     stateStore.list = jest.fn(async () => list)
     const result = await pinStore.ls(document.id)

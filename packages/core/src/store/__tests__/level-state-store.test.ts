@@ -1,7 +1,7 @@
 import tmp from 'tmp-promise'
 import { LevelStateStore } from "../level-state-store";
 import Level from "level-ts";
-import { AnchorStatus, Doctype, CommitType, SignatureStatus, DoctypeUtils } from "@ceramicnetwork/common";
+import { AnchorStatus, Doctype, CommitType, SignatureStatus, DoctypeUtils, TestUtils } from '@ceramicnetwork/common';
 import CID from 'cids'
 import DocID from '@ceramicnetwork/docid'
 
@@ -62,7 +62,7 @@ test('#open', async () => {
 })
 
 test('#save and #load', async () => {
-    const document = new FakeType(state, {})
+    const document = new FakeType(TestUtils.runningState(state), {})
     stateStore.open(NETWORK)
     await stateStore.save(document)
     const docId = document.id.baseID

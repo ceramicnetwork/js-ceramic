@@ -7,7 +7,6 @@ import {
   CeramicCommit,
   Context,
   DIDProvider,
-  DocCache,
   DocOpts,
   DocParams,
   Doctype,
@@ -16,17 +15,13 @@ import {
   DoctypeUtils,
   MultiQuery,
   PinApi,
-} from "@ceramicnetwork/common"
+} from '@ceramicnetwork/common';
 import { TileDoctype } from "@ceramicnetwork/doctype-tile"
 import { Caip10LinkDoctype } from "@ceramicnetwork/doctype-caip10-link"
 import { DocID, CommitID, DocRef } from '@ceramicnetwork/docid';
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import KeyDidResolver from 'key-did-resolver'
 import { Resolver } from "did-resolver"
-
-
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const packageJson = require('../package.json')
 
 const API_PATH = '/api/v0'
 const CERAMIC_HOST = 'http://localhost:7007'
@@ -35,21 +30,21 @@ const CERAMIC_HOST = 'http://localhost:7007'
  * Default Ceramic client configuration
  */
 export const DEFAULT_CLIENT_CONFIG: CeramicClientConfig = {
-  docSyncEnabled: false,
   docSyncInterval: 5000,
-  docCacheLimit: 500,
-  cacheDocCommits: false,
 }
 
 /**
  * Ceramic client configuration
  */
 export interface CeramicClientConfig {
+  /**
+   * DID Resolver. Would add one to did:3 and did:key resolver.
+   */
   didResolver?: Resolver
-  docSyncEnabled?: boolean
-  docSyncInterval?: number
-  docCacheLimit?: number;
-  cacheDocCommits?: boolean;
+  /**
+   * Period of synchronisation, in milliseconds. Active when subscribing document.
+   */
+  docSyncInterval: number
 }
 
 /**
@@ -64,7 +59,7 @@ export default class CeramicClient implements CeramicApi {
    * always have access to the most recent known-about version, without needing
    * to explicitly re-load the document.
    */
-  private readonly _docCache: DocCache
+  private readonly _docCache: Map<string, Document>
   private _supportedChains: Array<string>
 
   public readonly pin: PinApi
@@ -73,11 +68,12 @@ export default class CeramicClient implements CeramicApi {
   private readonly _config: CeramicClientConfig
   public readonly _doctypeConstructors: Record<string, DoctypeConstructor<Doctype>>
 
-  constructor (apiHost: string = CERAMIC_HOST, config: CeramicClientConfig = {}) {
+  constructor (apiHost: string = CERAMIC_HOST, config: Partial<CeramicClientConfig> = {}) {
     this._config = { ...DEFAULT_CLIENT_CONFIG, ...config }
 
     this._apiUrl = combineURLs(apiHost, API_PATH)
-    this._docCache = new DocCache(config.docCacheLimit, this._config.cacheDocCommits)
+    // this._docCache = new LRUMap(config.docCacheLimit) Not now. We do not know what to do when document is evicted on HTTP client.
+    this._docCache = new Map()
 
     this.context = { api: this }
 
@@ -135,37 +131,32 @@ export default class CeramicClient implements CeramicApi {
     const doctypeConstructor = this.findDoctypeConstructor(doctype)
     const genesis = await doctypeConstructor.makeGenesis(params, this.context, opts)
 
-    return await this.createDocumentFromGenesis(doctype, genesis, opts)
+    return this.createDocumentFromGenesis(doctype, genesis, opts)
   }
 
   async createDocumentFromGenesis<T extends Doctype>(doctype: string, genesis: any, opts?: DocOpts): Promise<T> {
-    const doc = await Document.createFromGenesis(this._apiUrl, doctype, genesis, this.context, opts, this._config)
+    const doc = await Document.createFromGenesis(this._apiUrl, doctype, genesis, opts, this._config.docSyncInterval)
 
-    let docFromCache = this._docCache.get(doc.id) as Document
-    if (docFromCache == null) {
-      this._docCache.put(doc)
-      docFromCache = doc
-    } else if (!DoctypeUtils.statesEqual(doc.state, docFromCache.state)) {
-      docFromCache.state = doc.state
-      docFromCache.emit('change')
+    const found = this._docCache.get(doc.id.toString())
+    if (found) {
+      if (!DoctypeUtils.statesEqual(doc.state, found.state)) found.next(doc.state);
+      return this.buildDoctype<T>(found);
+    } else {
+      this._docCache.set(doc.id.toString(), doc);
+      return this.buildDoctype<T>(doc);
     }
-
-    doc.doctypeLogic = this.findDoctypeConstructor(doc.state.doctype)
-    return docFromCache as unknown as T
   }
 
   async loadDocument<T extends Doctype>(docId: DocID | CommitID | string): Promise<T> {
     const docRef = DocRef.from(docId)
-
-    let doc = this._docCache.get(docRef.baseID) as Document
-    if (doc == null) {
-      doc = await Document.load(docRef, this._apiUrl, this.context, this._config)
-      this._docCache.put(doc)
+    let doc = this._docCache.get(docRef.baseID.toString())
+    if (doc) {
+      await doc._syncState(docRef)
     } else {
-      await doc._syncState()
+      doc = await Document.load(docRef, this._apiUrl, this._config.docSyncInterval)
+      this._docCache.set(doc.id.toString(), doc)
     }
-    doc.doctypeLogic = this.findDoctypeConstructor(doc.state.doctype)
-    return doc as unknown as T
+    return this.buildDoctype<T>(doc)
   }
 
   async multiQuery(queries: Array<MultiQuery>): Promise<Record<string, Doctype>> {
@@ -187,7 +178,8 @@ export default class CeramicClient implements CeramicApi {
     return Object.entries(results).reduce((acc, e) => {
       const [k, v] = e
       const state = DoctypeUtils.deserializeState(v)
-      acc[k] = new Document(state, this.context, this._apiUrl, this._config)
+      const doc = new Document(state, this._apiUrl, this._config.docSyncInterval)
+      acc[k] = this.buildDoctype(doc)
       return acc
     }, {})
   }
@@ -204,9 +196,10 @@ export default class CeramicClient implements CeramicApi {
     return this.loadDocumentCommits(docId)
   }
 
-  applyCommit<T extends Doctype>(docId: string | DocID, commit: CeramicCommit, opts?: DocOpts): Promise<T> {
+  async applyCommit<T extends Doctype>(docId: string | DocID, commit: CeramicCommit, opts?: DocOpts): Promise<T> {
     const effectiveDocId = typeDocID(docId)
-    return Document.applyCommit(this._apiUrl, effectiveDocId, commit, this.context, opts) as unknown as Promise<T>
+    const document = await Document.applyCommit(this._apiUrl, effectiveDocId, commit, opts, this._config.docSyncInterval)
+    return this.buildDoctype<T>(document)
   }
 
   /**
@@ -227,6 +220,11 @@ export default class CeramicClient implements CeramicApi {
     } else {
       throw new Error(`Failed to find doctype constructor for doctype ${doctype}`)
     }
+  }
+
+  private buildDoctype<T extends Doctype = Doctype>(document: Document) {
+    const doctypeConstructor = this.findDoctypeConstructor<T>(document.state.doctype)
+    return new doctypeConstructor(document, this.context)
   }
 
   async setDIDProvider(provider: DIDProvider): Promise<void> {
@@ -250,7 +248,9 @@ export default class CeramicClient implements CeramicApi {
   }
 
   async close (): Promise<void> {
-    this._docCache.applyToAll((d: Document) => d.close())
+    Array.from(this._docCache).map(([, document]) => {
+      document.complete()
+    })
     this._docCache.clear()
   }
 }

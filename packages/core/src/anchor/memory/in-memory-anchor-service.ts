@@ -1,8 +1,6 @@
 import CID from "cids";
-import * as uint8arrays from "uint8arrays";
 import { Observable, Subject, concat, of } from "rxjs";
 import { filter } from "rxjs/operators";
-import * as didJwt from "did-jwt";
 import {
   AnchorProof,
   AnchorService,
@@ -247,20 +245,19 @@ class InMemoryAnchorService implements AnchorService {
           message: error.message,
         });
       });
-      return feed$;
     } else {
       this.#queue.push(candidate);
-      return concat(
-        of<AnchorServiceResponse>({
-          status: AnchorStatus.PENDING,
-          docId: docId,
-          cid: tip,
-          message: "Sending anchoring request",
-          anchorScheduledFor: null,
-        }),
-        feed$
-      );
     }
+    return concat(
+      of<AnchorServiceResponse>({
+        status: AnchorStatus.PENDING,
+        docId: docId,
+        cid: tip,
+        message: "Sending anchoring request",
+        anchorScheduledFor: null,
+      }),
+      feed$
+    );
   }
 
   /**

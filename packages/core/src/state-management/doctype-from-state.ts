@@ -1,19 +1,28 @@
-import { Context, Doctype, DoctypeUtils } from '@ceramicnetwork/common';
+import { Context, DocState, Doctype, DoctypeUtils } from '@ceramicnetwork/common';
+import { Observable } from 'rxjs';
 import { HandlersMap } from '../handlers-map';
-import { RunningStateLike } from './running-state';
+import { StateLink } from './state-link';
 
-// Should be removed when Doctype accepts RunningStateLike
+/**
+ * Build Doctype from the current state and update feed.
+ *
+ * @param context - Ceramic context
+ * @param handlersMap - available doctype handlers
+ * @param state - current state of the doctype
+ * @param update$ - On-demand feed of updates for the document
+ */
 export function doctypeFromState<T extends Doctype>(
   context: Context,
   handlersMap: HandlersMap,
-  state$: RunningStateLike,
-  isReadonly = false,
+  state: DocState,
+  update$?: (init: DocState) => Observable<DocState>,
 ): T {
-  const handler = handlersMap.get<T>(state$.value.doctype);
-  const doctype = new handler.doctype(state$.value, context);
-  state$.subscribe((state) => {
-    doctype.state = state;
-    doctype.emit('change');
-  });
-  return isReadonly ? DoctypeUtils.makeReadOnly(doctype) : doctype;
+  const handler = handlersMap.get<T>(state.doctype);
+  const state$ = new StateLink(state, update$);
+  const doctype = new handler.doctype(state$, context);
+  if (update$) {
+    return doctype;
+  } else {
+    return DoctypeUtils.makeReadOnly(doctype);
+  }
 }

@@ -4,6 +4,7 @@ import { createIPFS } from '../../__tests__/ipfs-util';
 import { Repository } from '../repository';
 import { anchorUpdate } from './anchor-update';
 import { createCeramic } from '../../__tests__/create-ceramic';
+import { delay } from '../../pubsub/__tests__/delay';
 
 let ipfs: IpfsApi;
 let ceramic: Ceramic;
@@ -39,6 +40,7 @@ describe('load', () => {
       content: { foo: Math.random().toString() },
       metadata: { controllers },
     });
+    doc1.subscribe();
     const fromMemorySpy = jest.spyOn(repository, 'fromMemory');
     const fromStateStoreSpy = jest.spyOn(repository, 'fromStateStore');
     const fromNetwork = jest.spyOn(repository, 'fromNetwork');
@@ -72,4 +74,19 @@ describe('validation', () => {
     await permissiveCeramic.close();
     await ipfs2.stop();
   }, 20000);
+});
+
+test('subscribe makes state endured', async () => {
+  const durableStart = ceramic.repository.inmemory.durable.size;
+  const volatileStart = ceramic.repository.inmemory.volatile.size;
+  const doc1 = await ceramic.createDocument('tile', {
+    content: { foo: Math.random().toString() },
+    metadata: { controllers },
+  });
+  expect(ceramic.repository.inmemory.durable.size).toEqual(durableStart);
+  expect(ceramic.repository.inmemory.volatile.size).toEqual(volatileStart + 1);
+  doc1.subscribe();
+  await delay(200); // Wait for rxjs plumbing
+  expect(ceramic.repository.inmemory.durable.size).toEqual(durableStart + 1);
+  expect(ceramic.repository.inmemory.volatile.size).toEqual(volatileStart);
 });

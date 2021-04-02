@@ -4,7 +4,7 @@ import dagCBOR from "ipld-dag-cbor"
 import KeyDidResolver from 'key-did-resolver'
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import {DID} from 'dids'
-import {AnchorCommit, CeramicApi, Context, SignedCommitContainer} from "@ceramicnetwork/common"
+import { AnchorCommit, CeramicApi, Context, SignedCommitContainer, TestUtils } from '@ceramicnetwork/common';
 import {TileDoctypeHandler} from "../tile-doctype-handler"
 import {TileDoctype} from "@ceramicnetwork/doctype-tile";
 import cloneDeep from 'lodash.clonedeep'
@@ -230,7 +230,8 @@ it('makes signed record correctly', async () => {
     await context.ipfs.dag.put(RECORDS.genesisGenerated.linkedBlock, RECORDS.genesisGenerated.jws.link)
 
     const state = await tileDoctypeHandler.applyCommit(RECORDS.genesisGenerated.jws, FAKE_CID_1, context)
-    const doctype = new TileDoctype(state, context)
+    const state$ = TestUtils.runningState(state)
+    const doctype = new TileDoctype(state$, context)
 
     await expect(TileDoctype._makeCommit(doctype, null, RECORDS.r1.desiredContent)).rejects.toThrow(/No DID/)
 
@@ -256,7 +257,8 @@ it('applies signed record correctly', async () => {
     // apply genesis
     let state = await tileDoctypeHandler.applyCommit(genesisRecord.jws, FAKE_CID_1, context)
 
-    const doctype = new TileDoctype(state, context)
+    const state$ = TestUtils.runningState(state)
+    const doctype = new TileDoctype(state$, context)
     const signedRecord = await TileDoctype._makeCommit(doctype, did, RECORDS.r1.desiredContent) as SignedCommitContainer
 
     await context.ipfs.dag.put(signedRecord, FAKE_CID_2)
@@ -300,7 +302,8 @@ it('applies anchor record correctly', async () => {
     // apply genesis
     let state = await tileDoctypeHandler.applyCommit(genesisRecord.jws, FAKE_CID_1, context)
 
-    const doctype = new TileDoctype(state, context)
+    const state$ = TestUtils.runningState(state)
+    const doctype = new TileDoctype(state$, context)
     const signedRecord = await TileDoctype._makeCommit(doctype, did, RECORDS.r1.desiredContent) as SignedCommitContainer
 
     await context.ipfs.dag.put(signedRecord, FAKE_CID_2)
