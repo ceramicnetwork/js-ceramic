@@ -1,5 +1,5 @@
 import jsonpatch from 'fast-json-patch'
-import { Operation } from 'fast-json-patch'
+import type { Operation } from 'fast-json-patch'
 
 import * as uint8arrays from 'uint8arrays'
 import { randomBytes } from '@stablelib/random'
@@ -176,7 +176,7 @@ export class TileDoctype<T = Record<string, any>> extends Doctype {
      */
     async update(content: T, metadata?: TileMetadataArgs, opts: DocOpts = {}): Promise<void> {
         const updateCommit = await this._makeCommit(this.context.did, content, metadata)
-        const updated = await this.context.api.applyCommit(this.id.toString(), updateCommit, opts)
+        const updated = await this.context.api.applyCommit(this.id, updateCommit, opts)
         this.state$.next(updated.state)
     }
 
@@ -190,7 +190,7 @@ export class TileDoctype<T = Record<string, any>> extends Doctype {
         const header = headerFromMetadata(this.metadata)
         const unsignedCommit: UnsignedCommit = { header, data: jsonPatch, prev: this.tip, id: this.state$.id.cid }
         const commit = await _signDagJWS(unsignedCommit, this.context.did, this.controllers[0])
-        const updated = await this.context.api.applyCommit(this.id.toString(), commit, opts)
+        const updated = await this.context.api.applyCommit(this.id, commit, opts)
         this.state$.next(updated.state)
     }
 
