@@ -18,6 +18,10 @@
   "files": [
     "lib"
   ],
+  "browser": {
+    "./lib/logger-provider.js": "./lib/logger-provider-browser.js",
+    "./lib/loggers.js": "./lib/loggers-browser.js"
+  },
   "scripts": {
     "test": "./node_modules/.bin/jest --coverage --passWithNoTests",
     "build": "../../node_modules/.bin/tsc -p tsconfig.json",
