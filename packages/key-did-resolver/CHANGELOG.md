@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.1.1](/compare/key-did-resolver@1.1.0...key-did-resolver@1.1.1) (2021-04-02)
+
+
+### Bug Fixes
+
+* **common, logger:** Clean up dependencies (#1164) 191ad31, closes #1164
+
+
+
+
+
 ## [1.1.1-rc.3](/compare/key-did-resolver@1.1.0...key-did-resolver@1.1.1-rc.3) (2021-03-26)
 
 **Note:** Version bump only for package key-did-resolver

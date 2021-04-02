@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.14.1](/compare/@ceramicnetwork/doctype-tile@0.14.0...@ceramicnetwork/doctype-tile@0.14.1) (2021-04-02)
+
+
+### Bug Fixes
+
+* **common, logger:** Clean up dependencies (#1164) 191ad31, closes #1164
+
+
+
+
+
 ## [0.14.1-rc.4](/compare/@ceramicnetwork/doctype-tile@0.14.0...@ceramicnetwork/doctype-tile@0.14.1-rc.4) (2021-03-26)
 
 **Note:** Version bump only for package @ceramicnetwork/doctype-tile

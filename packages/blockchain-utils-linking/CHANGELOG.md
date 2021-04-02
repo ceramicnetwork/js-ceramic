@@ -3,6 +3,23 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.3.0](/compare/@ceramicnetwork/blockchain-utils-linking@0.2.0...@ceramicnetwork/blockchain-utils-linking@0.3.0) (2021-04-02)
+
+
+### Bug Fixes
+
+* **blockchain-utils-linking:** Pin version of @glif/local-managed-provider to unbreak test (#1183) b5ae20f, closes #1183
+* **common, logger:** Clean up dependencies (#1164) 191ad31, closes #1164
+
+
+### Features
+
+* **blockchain-utils-linking:** Addition of Avalanche C-Chain Support (#1157) eb90f18, closes #1157
+
+
+
+
+
 ## [0.2.1-rc.3](/compare/@ceramicnetwork/blockchain-utils-linking@0.2.0...@ceramicnetwork/blockchain-utils-linking@0.2.1-rc.3) (2021-03-26)
 
 **Note:** Version bump only for package @ceramicnetwork/blockchain-utils-linking
