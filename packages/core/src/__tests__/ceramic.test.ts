@@ -88,10 +88,10 @@ describe('Ceramic integration', () => {
 
     const ceramic1 = await createCeramic(ipfs1)
     const ceramic2 = await createCeramic(ipfs2)
-    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { test: 123 } }, { anchor: false, publish: false })
-    const doctype2 = await ceramic2.loadDocument(doctype1.id)
-    expect(doctype1.content).toEqual(doctype2.content)
-    expectEqualStates(doctype1.state, doctype2.state)
+    const doc1 = await TileDoctype.create(ceramic1, {test: 123}, null, { anchor: false, publish: false })
+    const doc2 = await TileDoctype.load(ceramic2, doc1.id)
+    expect(doc1.content).toEqual(doc2.content)
+    expectEqualStates(doc1.state, doc2.state)
     await ceramic1.close()
     await ceramic2.close()
   })
@@ -100,17 +100,15 @@ describe('Ceramic integration', () => {
     const ceramic1 = await createCeramic(ipfs1)
     const ceramic2 = await createCeramic(ipfs2)
 
-    const controller = ceramic1.context.did.id
+    const doc1 = await TileDoctype.create(ceramic1, {test: 456})
 
-    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { test: 456 }, metadata: { controllers: [controller], tags: ['3id'] } })
-
-    await anchorUpdate(ceramic1, doctype1)
+    await anchorUpdate(ceramic1, doc1)
 
     // we can't load document from id since nodes are not connected
     // so we won't find the genesis object from it's CID
-    const doctype2 = await ceramic2.createDocument(DOCTYPE_TILE, { content: { test: 456 }, metadata: { controllers: [controller], tags: ['3id'] } },{ anchor: false, publish: false })
-    expect(doctype1.content).toEqual(doctype2.content)
-    expect(doctype2.state).toEqual(expect.objectContaining({ content: { test: 456 } }))
+    const doc2 = await TileDoctype.create(ceramic2, {test: 456}, null, { anchor: false, publish: false })
+    expect(doc1.content).toEqual(doc2.content)
+    expect(doc2.state).toEqual(expect.objectContaining({ content: { test: 456 } }))
     await ceramic1.close()
     await ceramic2.close()
   })
@@ -125,11 +123,10 @@ describe('Ceramic integration', () => {
     const ceramic2 = await createCeramic(ipfs2)
     const ceramic3 = await createCeramic(ipfs3)
 
-    const controller = ceramic1.context.did.id
     // ceramic node 2 shouldn't need to have the document open in order to forward the message
-    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { test: 789 }, metadata: { controllers: [controller], tags: ['3id'] } }, { anchor: false, publish: false })
-    const doctype3 = await ceramic3.createDocument(DOCTYPE_TILE, { content: { test: 789 }, metadata: { controllers: [controller], tags: ['3id'] } }, { anchor: false, publish: false })
-    expect(doctype3.content).toEqual(doctype1.content)
+    const doc1 = await TileDoctype.create(ceramic1, {test: 789}, null, { anchor: false, publish: false })
+    const doc3 = await TileDoctype.create(ceramic3, {test: 789}, null, { anchor: false, publish: false })
+    expect(doc3.content).toEqual(doc1.content)
     await ceramic1.close()
     await ceramic2.close()
     await ceramic3.close()
@@ -145,35 +142,25 @@ describe('Ceramic integration', () => {
     const ceramic2 = await createCeramic(ipfs2)
     const ceramic3 = await createCeramic(ipfs3)
 
-    const controller = ceramic1.did.id
-
     // ceramic node 2 shouldn't need to have the document open in order to forward the message
-    const doctype1 = await ceramic1.createDocument<TileDoctype>(DOCTYPE_TILE, {
-      content: { test: 321 },
-      metadata: { controllers: [controller], tags: ['3id']},
-      deterministic: true,
-    })
+    const doc1 = await TileDoctype.create(ceramic1, {test: 321}, {deterministic: true})
 
-    await anchorUpdate(ceramic1, doctype1)
+    await anchorUpdate(ceramic1, doc1)
 
     // Through a different ceramic instance create a new document with the same contents that will
     // therefore resolve to the same genesis record and thus the same docId.  Make sure the new
     // Document object can see the updates made to the first Document object since they represent
     // the same Document in the network.
-    const doctype3 = await ceramic3.createDocument<TileDoctype>(DOCTYPE_TILE, {
-      content: { test: 321 },
-      metadata: { controllers: [controller], tags: ['3id'] },
-      deterministic: true,
-    })
+    const doc3 = await TileDoctype.create(ceramic3, {test: 321}, {deterministic: true})
 
-    expect(doctype3.content).toEqual(doctype1.content)
+    expect(doc3.content).toEqual(doc1.content)
 
-    await doctype1.change({ content: { test: 'abcde' }, metadata: { controllers: [controller] } })
+    await doc1.update({ test: 'abcde' })
 
-    await anchorUpdate(ceramic1, doctype1)
+    await anchorUpdate(ceramic1, doc1)
 
-    expect(doctype1.content).toEqual({ test: 'abcde' })
-    await TestUtils.waitForState(doctype3, 2000, state => DoctypeUtils.statesEqual(state, doctype1.state), () => {
+    expect(doc1.content).toEqual({ test: 'abcde' })
+    await TestUtils.waitForState(doc3, 2000, state => DoctypeUtils.statesEqual(state, doc1.state), () => {
       throw new Error(`doctype3.state should equal doctype1.state`)
     })
 
@@ -186,25 +173,23 @@ describe('Ceramic integration', () => {
     const ceramic1 = await createCeramic(ipfs1)
     const ceramic2 = await createCeramic(ipfs2)
 
-    const controller = ceramic1.context.did.id
+    const doc1 = await TileDoctype.create(ceramic1, { test: 456 })
 
-    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { test: 456 }, metadata: { controllers: [controller], tags: ['3id'] } })
+    await anchorUpdate(ceramic1, doc1)
 
-    await anchorUpdate(ceramic1, doctype1)
+    await doc1.update({ test: 'abcde' })
 
-    await doctype1.change({ content: { test: 'abcde' }, metadata: { controllers: [controller] } })
+    await anchorUpdate(ceramic1, doc1)
 
-    await anchorUpdate(ceramic1, doctype1)
+    const logCommits = await ceramic1.loadDocumentCommits(doc1.id)
 
-    const logRecords = await ceramic1.loadDocumentRecords(doctype1.id)
-
-    let doctype2 = await ceramic2.createDocumentFromGenesis(DOCTYPE_TILE, logRecords[0].value, { anchor: false, publish: false })
-    for (let i = 1; i < logRecords.length; i++) {
-      doctype2 = await ceramic2.applyRecord(doctype2.id, logRecords[i].value, { anchor: false, publish: false })
+    let doc2 = await TileDoctype.createFromGenesis(ceramic2, logCommits[0].value, { anchor: false, publish: false })
+    for (let i = 1; i < logCommits.length; i++) {
+      doc2 = await ceramic2.applyCommit(doc2.id, logCommits[i].value, { anchor: false, publish: false })
     }
 
-    expect(doctype1.content).toEqual(doctype2.content)
-    expectEqualStates(doctype1.state, doctype2.state);
+    expect(doc1.content).toEqual(doc2.content)
+    expectEqualStates(doc1.state, doc2.state);
 
     await ceramic1.close()
     await ceramic2.close()
@@ -317,10 +302,10 @@ describe('Ceramic integration', () => {
     const addSpy2 = jest.spyOn(repository2, 'add');
     const loadSpy2 = jest.spyOn(repository2, 'load');
 
-    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { test: 456 }, metadata: { controllers: [controller], tags: ['3id'] } }, {publish: false})
-    expect(doctype1).toBeDefined()
+    const doc1 = await TileDoctype.create(ceramic1, { test: 456 }, null, { publish: false })
+    expect(doc1).toBeDefined()
 
-    await anchorUpdate(ceramic1, doctype1)
+    await anchorUpdate(ceramic1, doc1)
 
     expect(addSpy1).toBeCalledTimes(1)
     expect(loadSpy1).toBeCalledTimes(1)
@@ -328,14 +313,14 @@ describe('Ceramic integration', () => {
     addSpy1.mockClear()
     loadSpy1.mockClear()
 
-    await doctype1.change({ content: { test: 'abcde' }, metadata: { controllers: [controller] } }, {publish: false})
+    await doc1.update({ test: 'abcde' }, null, { publish: false })
 
-    await anchorUpdate(ceramic1, doctype1)
+    await anchorUpdate(ceramic1, doc1)
 
-    const prevCommitDocId1 = doctype1.id.atCommit(doctype1.state.log[3].cid)
+    const prevCommitDocId1 = doc1.id.atCommit(doc1.state.log[3].cid)
     expect(addSpy2).not.toBeCalled()
-    const loadedDoctype1 = await ceramic2.loadDocument(prevCommitDocId1)
-    expect(loadedDoctype1).toBeDefined()
+    const loadedDoc1 = await ceramic2.loadDocument(prevCommitDocId1)
+    expect(loadedDoc1).toBeDefined()
 
     expect(loadSpy2).toBeCalled()
     expect(addSpy2).toBeCalledTimes(1)
@@ -358,26 +343,26 @@ describe('Ceramic integration', () => {
     const addSpy2 = jest.spyOn(repository2, 'add');
     const loadSpy2 = jest.spyOn(repository2, 'load');
 
-    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { test: 456 }, metadata: { controllers: [controller], tags: ['3id'] } })
+    const doc1 = await TileDoctype.create(ceramic1, { test: 456 })
     expect(loadSpy1).toBeCalledTimes(1)
     expect(addSpy1).toBeCalledTimes(1)
-    expect(doctype1).toBeDefined()
+    expect(doc1).toBeDefined()
 
-    await anchorUpdate(ceramic1, doctype1)
+    await anchorUpdate(ceramic1, doc1)
 
     addSpy1.mockClear()
     loadSpy1.mockClear()
 
-    await doctype1.change({ content: { test: 'abcde' }, metadata: { controllers: [controller] } })
+    await doc1.update({ test: 'abcde' })
     expect(loadSpy1).toBeCalledTimes(1)
     expect(addSpy1).toBeCalledTimes(0)
 
-    await anchorUpdate(ceramic1, doctype1)
+    await anchorUpdate(ceramic1, doc1)
 
-    const prevCommitDocId1 = doctype1.id.atCommit(doctype1.state.log[3].cid)
+    const prevCommitDocId1 = doc1.id.atCommit(doc1.state.log[3].cid)
     expect(addSpy2).not.toBeCalled()
-    const doctype2 = await ceramic2.loadDocument(prevCommitDocId1)
-    expect(doctype2).toBeDefined()
+    const doc2 = await ceramic2.loadDocument(prevCommitDocId1)
+    expect(doc2).toBeDefined()
 
     expect(loadSpy2).toBeCalled()
     expect(addSpy2).toBeCalledTimes(1)
@@ -406,16 +391,13 @@ describe('Ceramic integration', () => {
       },
       required: ['date', 'text'],
     }
-    const noteSchema = await ceramic.createDocument('tile', {
-      content: NoteSchema,
-      metadata: { controllers: [ceramic.did.id] },
-    })
+    const noteSchema = await TileDoctype.create(ceramic, NoteSchema)
 
-    const doc = await ceramic.createDocument('tile', {
-      content: { date: '2021-01-06T14:28:00.000Z', text: 'hello first' },
-      metadata: { controllers: [ceramic.did.id], schema: noteSchema.commitId.toUrl() },
-    })
-    await expect(doc.change({ content: { date: 'invalid-date' } })).rejects.toThrow()
+    const doc = await TileDoctype.create(ceramic,
+        { date: '2021-01-06T14:28:00.000Z', text: 'hello first' },
+        { schema: noteSchema.commitId.toUrl()})
+
+    await expect(doc.update({ date: 'invalid-date' })).rejects.toThrow()
     await ceramic.close();
   })
 

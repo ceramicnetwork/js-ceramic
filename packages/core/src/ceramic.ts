@@ -514,6 +514,7 @@ class Ceramic implements CeramicApi {
    * @param doctype - Document type
    * @param params - Create parameters
    * @param opts - Initialization options
+   * @deprecated
    */
   async createDocument<T extends Doctype>(doctype: string, params: DocParams, opts?: DocOpts): Promise<T> {
     const handler = this._doctypeHandlers.get(doctype);

@@ -6,6 +6,7 @@ import {
   IpfsApi,
   SignatureStatus,
 } from '@ceramicnetwork/common';
+import { TileDoctype } from "@ceramicnetwork/doctype-tile";
 import { PinStore } from '../pin-store';
 import { PinStoreFactory } from '../pin-store-factory';
 import DocID from '@ceramicnetwork/docid';
@@ -72,12 +73,8 @@ describe('Level data store', () => {
   it('adds and removes pinned document', async () => {
     const realIpfs = await createIPFS();
     const ceramic = await createCeramic(realIpfs);
-    const controllers = [ceramic.did.id];
 
-    const doc = await ceramic.createDocument('tile', {
-      content: { stuff: 1 },
-      metadata: { controllers, tags: ['3id'] },
-    });
+    const doc = await TileDoctype.create(ceramic, { stuff: 1 });
     await anchorUpdate(ceramic, doc);
 
     const pinSpy = jest.spyOn(realIpfs.pin, 'add');
@@ -102,18 +99,11 @@ describe('Level data store', () => {
   test('list pinned documents', async () => {
     const realIpfs = await createIPFS();
     const ceramic = await createCeramic(realIpfs);
-    const controllers = [ceramic.did.id];
 
-    const doc1 = await ceramic.createDocument('tile', {
-      content: { stuff: 1 },
-      metadata: { controllers },
-    });
+    const doc1 = await TileDoctype.create(ceramic, { stuff: 1 });
     await ceramic.pin.add(doc1.id);
 
-    const doc2 = await ceramic.createDocument('tile', {
-      content: { stuff: 2 },
-      metadata: { controllers },
-    });
+    const doc2 = await TileDoctype.create(ceramic, { stuff: 2 });
     await ceramic.pin.add(doc2.id);
 
     const pinned = [];

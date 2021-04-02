@@ -9,6 +9,7 @@ import type {
   VerificationMethod
 } from 'did-resolver'
 import type { DocState, MultiQuery, CeramicApi } from "@ceramicnetwork/common"
+import { TileDoctype } from "@ceramicnetwork/doctype-tile"
 import LegacyResolver from './legacyResolver'
 import * as u8a from 'uint8arrays'
 import { DocID } from '@ceramicnetwork/docid'
@@ -131,8 +132,8 @@ const legacyResolve = async (ceramic: CeramicApi, didId: string, verNfo: Version
   // This would remove one request to ceramic.
   //const genesisCommit = { header: { family: '3id', controllers: [legacyPublicKeys.keyDid] }, unique: '0' }
   //const docid = new DocID('tile', await dagCBOR.util.cid(new Uint8Array(dagCBOR.util.serialize(genesisCommit))))
-  const docParams =  { deterministic: true, metadata: { controllers: [legacyPublicKeys.keyDid], family: '3id' } }
-  const docid = (await ceramic.createDocument('tile', docParams, { anchor: false, publish: false })).id
+  const metadata =  { controllers: [legacyPublicKeys.keyDid], family: '3id', deterministic: true }
+  const docid = (await TileDoctype.create(ceramic, null, metadata, { anchor: false, publish: false })).id
   const didResult = await resolve(ceramic, docid.toString(), verNfo, didId)
   if (didResult.didDocument === null) {
     didResult.didDocument = wrapDocument(legacyPublicKeys, `did:3:${didId}`)

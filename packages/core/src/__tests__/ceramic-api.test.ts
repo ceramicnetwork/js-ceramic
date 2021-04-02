@@ -72,12 +72,7 @@ describe('Ceramic API', () => {
     })
 
     it('can load the previous document commit', async () => {
-      const controller = ceramic.context.did.id
-
-      const docOg = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, {
-        content: { test: 321 },
-        metadata: { controllers: [controller] }
-      })
+      const docOg = await TileDoctype.create(ceramic, { test: 321 })
 
       // wait for anchor (new commit)
       await anchorUpdate(ceramic, docOg)
@@ -88,7 +83,7 @@ describe('Ceramic API', () => {
 
       const stateOg = docOg.state
 
-      await docOg.change({ content: { test: 'abcde' } })
+      await docOg.update({test: 'abcde'})
 
       // wait for anchor (new commit)
       await anchorUpdate(ceramic, docOg)
@@ -103,45 +98,34 @@ describe('Ceramic API', () => {
       expect(docV1.content).toEqual({ test: 321 })
       expect(docV1.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
-      // try to call doctype.change
+      // try to call doctype.update
       try {
-        await docV1.change({ content: { test: 'fghj' }, metadata: { controllers: docV1.controllers } })
+        await docV1.update({ test: 'fghj' })
         throw new Error('Should not be able to update commit')
       } catch (e) {
         expect(e.message).toEqual('Historical document commits cannot be modified. Load the document without specifying a commit to make updates.')
       }
 
       await expect( async () => {
-        const updateRecord = await TileDoctype._makeCommit(docV1, ceramic.context.did, { content: { test: 'fghj' } })
+        const updateRecord = await docV1._makeCommit(ceramic.context.did, { test: 'fghj' })
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
-        await ceramic.context.api.applyRecord(docV1Id, updateRecord)
+        await ceramic.context.api.applyCommit(docV1Id, updateRecord)
       }).rejects.toThrow(/Not DocID/)
 
       // checkout not anchored commit
       const docV2Id = docOg.id.atCommit(docOg.state.log[2].cid)
-      const docV2 = await ceramic.loadDocument<TileDoctype>(docV2Id)
+      const docV2 = await TileDoctype.load(ceramic, docV2Id)
       expect(docV2.content).toEqual({ test: "abcde" })
       expect(docV2.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
     })
 
     it('cannot create document with invalid schema', async () => {
-      const controller = ceramic.context.did.id
-
-      const schemaDoc = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, {
-        content: stringMapSchema,
-        metadata: { controllers: [controller] }
-      })
-
-      const tileDocParams: TileParams = {
-        metadata: {
-          schema: schemaDoc.commitId.toString(), controllers: [controller]
-        }, content: { a: 1 },
-      }
+      const schemaDoc = await TileDoctype.create(ceramic, stringMapSchema)
 
       try {
-        await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, tileDocParams)
-        throw new Error('Should not be able to create an invalid document')
+        await TileDoctype.create(ceramic, {a: 1}, {schema: schemaDoc.commitId})
+        fail('Should not be able to create an invalid document')
       } catch (e) {
         console.log(e)
         expect(e.message).toEqual('Validation Error: data[\'a\'] should be string')
@@ -149,164 +133,64 @@ describe('Ceramic API', () => {
     })
 
     it('can create document with valid schema', async () => {
-      const controller = ceramic.context.did.id
-
-      const schemaDoc = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, {
-        content: stringMapSchema,
-        metadata: { controllers: [controller] }
-      })
-
-      const tileDocParams: TileParams = {
-        metadata: {
-          schema: schemaDoc.commitId.toString(), controllers: [controller]
-        }, content: { a: "test" }
-      }
-
-      await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, tileDocParams)
-
-      await new Promise(resolve => setTimeout(resolve, 1000)) // wait to propagate
+      const schemaDoc = await TileDoctype.create(ceramic, stringMapSchema)
+      await TileDoctype.create(ceramic, {a: "test"}, {schema: schemaDoc.commitId})
     })
 
     it('must assign schema with specific commit', async () => {
-      const controller = ceramic.context.did.id
-
-      const schemaDoc = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, {
-        content: stringMapSchema,
-        metadata: { controllers: [controller] }
-      })
-
-      const schemaDocIdWithoutCommit = schemaDoc.id.toString()
-      const tileDocParams: TileParams = {
-        metadata: {
-          schema: schemaDocIdWithoutCommit, controllers: [controller]
-        }, content: { a: "test" }
-      }
-
-      await expect(ceramic.createDocument(DOCTYPE_TILE, tileDocParams)).rejects.toThrow('Commit missing when loading schema document')
+      const schemaDoc = await TileDoctype.create(ceramic, stringMapSchema)
+      await expect(TileDoctype.create(ceramic, {a: 1}, {schema: schemaDoc.id.toString()})).rejects.toThrow('Schema must be a CommitID')
     })
 
     it('can create document with invalid schema if validation is not set', async () => {
       await ceramic.close()
       ceramic = await createCeramic({ validateDocs: false })
 
-      const controller = ceramic.context.did.id
-
-      const schemaDoc = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, {
-        content: stringMapSchema,
-        metadata: { controllers: [controller] }
-      })
-
-      const tileDocParams: TileParams = {
-        metadata: {
-          schema: schemaDoc.commitId.toString(), controllers: [controller]
-        }, content: { a: 1 },
-      }
-
-      await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, tileDocParams)
+      const schemaDoc = await TileDoctype.create(ceramic, stringMapSchema)
+      await TileDoctype.create(ceramic, {a: 1}, {schema: schemaDoc.commitId})
     })
 
     it('can assign schema if content is valid', async () => {
-      const controller = ceramic.context.did.id
+      const doc = await TileDoctype.create(ceramic, {a: 'x'})
+      const schemaDoc = await TileDoctype.create(ceramic, stringMapSchema)
+      await doc.update(doc.content, {schema: schemaDoc.commitId})
 
-      const tileDocParams: TileParams = {
-        metadata: {
-          controllers: [controller]
-        }, content: { a: 'x' },
-      }
-
-      const doctype = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, tileDocParams)
-      const schemaDoc = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, {
-        content: stringMapSchema, metadata: {
-          controllers: [controller]
-        }
-      })
-
-      await doctype.change({
-        metadata: {
-          controllers: [controller], schema: schemaDoc.commitId.toString()
-        }
-      })
-
-      expect(doctype.content).toEqual({ a: 'x' })
-      expect(doctype.metadata.schema).toEqual(schemaDoc.commitId.toString())
-
-      await new Promise(resolve => setTimeout(resolve, 1000)) // wait to propagate
+      expect(doc.content).toEqual({ a: 'x' })
+      expect(doc.metadata.schema).toEqual(schemaDoc.commitId.toString())
     })
 
     it('cannot assign schema if content is not valid', async () => {
-      const controller = ceramic.context.did.id
-
-      const tileDocParams: TileParams = {
-        metadata: {
-          controllers: [controller]
-        }, content: { a: 1 },
-      }
-
-      const doctype = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, tileDocParams)
-      const schemaDoc = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, {
-        content: stringMapSchema, metadata: {
-          controllers: [controller]
-        }
-      })
+      const doc = await TileDoctype.create(ceramic, {a: 1})
+      const schemaDoc = await TileDoctype.create(ceramic, stringMapSchema)
 
       try {
-        await doctype.change({
-          metadata: {
-            controllers: [controller], schema: schemaDoc.commitId.toString()
-          }
-        })
-        throw new Error('Should not be able to update the document with invalid content')
+        await doc.update(doc.content, {schema: schemaDoc.commitId})
+        fail('Should not be able to update the document with invalid content')
       } catch (e) {
         expect(e.message).toEqual('Validation Error: data[\'a\'] should be string')
       }
     })
 
     it('can update valid content and assign schema at the same time', async () => {
-      const controller = ceramic.context.did.id
+      const doc = await TileDoctype.create(ceramic, {a: 1})
+      const schemaDoc = await TileDoctype.create(ceramic, stringMapSchema)
 
-      const tileDocParams: TileParams = {
-        metadata: {
-          controllers: [controller]
-        }, content: { a: 1 },
-      }
+      await doc.update({a: 'x'}, {schema: schemaDoc.commitId})
 
-      const doctype = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, tileDocParams)
-      const schemaDoc = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, {
-        content: stringMapSchema, metadata: {
-          controllers: [controller]
-        }
-      })
-
-      await doctype.change({
-        content: { a: 'x' }, metadata: {
-          controllers: [controller], schema: schemaDoc.commitId.toString()
-        }
-      })
-
-      expect(doctype.content).toEqual({ a: 'x' })
-
-      await new Promise(resolve => setTimeout(resolve, 1000)) // wait to propagate
+      expect(doc.content).toEqual({ a: 'x' })
     })
 
     it('can update schema and then assign to doc with now valid content', async () => {
       const controller = ceramic.context.did.id
 
       // Create doc with content that has type 'number'.
-      const tileDocParams: TileParams = {
-        metadata: {
-          controllers: [controller]
-        },
-        content: { a: 1 },
-      }
-      const doc = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, tileDocParams)
+      const doc = await TileDoctype.create(ceramic, {a: 1})
       await anchorUpdate(ceramic, doc)
 
       // Create schema that enforces that the content value is a string, which would reject
       // the document created above.
-      const schemaDoc = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, {
-        content: stringMapSchema,
-        metadata: { controllers: [controller] }
-      })
+      const schemaDoc = await TileDoctype.create(ceramic, stringMapSchema)
+
       // wait for anchor
       await anchorUpdate(ceramic, schemaDoc)
       expect(schemaDoc.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
@@ -315,17 +199,13 @@ describe('Ceramic API', () => {
       // commit of the schema
       const updatedSchema = cloneDeep(stringMapSchema)
       updatedSchema.additionalProperties.type = "number"
-      await schemaDoc.change({content: updatedSchema})
+      await schemaDoc.update(updatedSchema)
       // wait for anchor
       await anchorUpdate(ceramic, schemaDoc)
       expect(schemaDoc.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
       // Test that we can assign the updated schema to the document without error.
-      await doc.change({
-        metadata: {
-          controllers: [controller], schema: schemaDoc.commitId.toString()
-        }
-      })
+      await doc.update(doc.content, {schema: schemaDoc.commitId})
       await anchorUpdate(ceramic, doc)
       expect(doc.content).toEqual({ a: 1 })
 
@@ -336,20 +216,12 @@ describe('Ceramic API', () => {
     })
 
     it('can list log records', async () => {
-      const controller = ceramic.context.did.id
-
-      const tileDocParams: TileParams = {
-        metadata: {
-          controllers: [controller]
-        }, content: { a: 1 },
-      }
-
-      const doctype = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, tileDocParams)
-      const logRecords = await ceramic.loadDocumentRecords(doctype.id)
+      const doc = await TileDoctype.create(ceramic, {a: 1})
+      const logRecords = await ceramic.loadDocumentCommits(doc.id)
       expect(logRecords).toBeDefined()
 
       const expected = []
-      for (const { cid } of doctype.state.log) {
+      for (const { cid } of doc.state.log) {
         const record = (await ceramic.ipfs.dag.get(cid)).value
         expected.push({
           cid: cid.toString(),
@@ -361,12 +233,12 @@ describe('Ceramic API', () => {
     })
 
     it('can store record if the size is lesser than the maximum size ~256KB', async () => {
-      const doctype = await ceramic.createDocument('tile', { content: { test: generateStringOfSize(10000) } })
+      const doctype = await TileDoctype.create(ceramic, { test: generateStringOfSize(10000) })
       expect(doctype).not.toBeNull();
     })
 
     it('cannot store record if the size is greated than the maximum size ~256KB', async () => {
-      await expect(ceramic.createDocument('tile', { content: { test: generateStringOfSize(1000000) } })).rejects.toThrow(/exceeds the maximum block size of/)
+      await expect(TileDoctype.create(ceramic, { test: generateStringOfSize(1000000) })).rejects.toThrow(/exceeds the maximum block size of/)
     })
   })
 
@@ -380,37 +252,18 @@ describe('Ceramic API', () => {
 
     beforeAll(async () => {
       ceramic = await createCeramic()
-      const controller = ceramic.context.did.id
 
-      docF = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, {
-        content: { test: '321f' },
-        metadata: { controllers: [controller] }
-      })
-      docE = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, {
-        content: { f: docF.id.toUrl() },
-        metadata: { controllers: [controller] }
-      })
-      docD = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, {
-        content: { test: '321d'  },
-        metadata: { controllers: [controller] }
-      })
-      docC = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, {
-        content: { test: '321c' },
-        metadata: { controllers: [controller] }
-      })
-      docB = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, {
-        content: { e: docE.id.toUrl(),
-                   d: docD.id.toUrl(),
-                   notDoc: '123' },
-        metadata: { controllers: [controller] }
-      })
-      docA = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, {
-        content: { b: docB.id.toUrl(),
-                   c: docC.id.toUrl(),
-                   notExistDocId: notExistDocId.toUrl(),
-                   notDoc: '123' },
-        metadata: { controllers: [controller] }
-      })
+      docF = await TileDoctype.create(ceramic, { test: '321f' })
+      docE = await TileDoctype.create(ceramic, { f: docF.id.toUrl() })
+      docD = await TileDoctype.create(ceramic, { test: '321d' })
+      docC = await TileDoctype.create(ceramic, { test: '321c' })
+      docB = await TileDoctype.create(ceramic, { e: docE.id.toUrl(),
+                                                  d: docD.id.toUrl(),
+                                                  notDoc: '123' })
+      docA = await TileDoctype.create(ceramic, { b: docB.id.toUrl(),
+                                                  c: docC.id.toUrl(),
+                                                  notExistDocId: notExistDocId.toUrl(),
+                                                  notDoc: '123' })
     })
 
     afterAll(async () => {
@@ -546,14 +399,14 @@ describe('Ceramic API', () => {
       // timestamp before the first anchor commit
       docFTimestamps.push(Math.floor(Date.now() / 1000))
       await delay()
-      await docF.change({ content: { ...docF.content, update: 'new stuff' }})
+      await docF.update({ ...docF.content, update: 'new stuff' })
       await anchorUpdate(ceramic, docF)
       await delay()
       // timestamp between the first and the second anchor commit
       docFTimestamps.push(Math.floor(Date.now() / 1000))
       docFStates.push(docF.state)
       await delay()
-      await docF.change({ content: { ...docF.content, update: 'newer stuff' }})
+      await docF.update({ ...docF.content, update: 'newer stuff' })
       await anchorUpdate(ceramic, docF)
       await delay()
       // timestamp after the second anchor commit

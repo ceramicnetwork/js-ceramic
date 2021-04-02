@@ -5,11 +5,10 @@ import type { DIDResolutionResult } from 'did-resolver'
 import jsonpatch from 'fast-json-patch'
 import cloneDeep from 'lodash.clonedeep'
 
-import { TileDoctype, TileParams, DOCTYPE_NAME } from "@ceramicnetwork/doctype-tile"
+import { TileDoctype } from "@ceramicnetwork/doctype-tile"
 import {
     AnchorStatus,
     Context,
-    DocOpts,
     DocState,
     CommitType,
     DoctypeConstructor,
@@ -30,7 +29,7 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
      * Gets doctype name
      */
     get name(): string {
-        return DOCTYPE_NAME
+        return TileDoctype.DOCTYPE_NAME
     }
 
     /**
@@ -38,16 +37,6 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
      */
     get doctype(): DoctypeConstructor<TileDoctype> {
         return TileDoctype
-    }
-
-    /**
-     * Create new Tile doctype instance
-     * @param params - Create parameters
-     * @param context - Ceramic context
-     * @param opts - Initialization options
-     */
-    async create(params: TileParams, context: Context, opts?: DocOpts): Promise<TileDoctype> {
-        return TileDoctype.create(params, context, opts)
     }
 
     /**
@@ -92,7 +81,7 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
         }
 
         return {
-            doctype: DOCTYPE_NAME,
+            doctype: TileDoctype.DOCTYPE_NAME,
             content: payload.data || {},
             metadata: payload.header,
             signature: isSigned? SignatureStatus.SIGNED : SignatureStatus.GENESIS,

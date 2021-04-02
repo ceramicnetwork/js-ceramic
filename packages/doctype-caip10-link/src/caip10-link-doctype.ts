@@ -17,6 +17,10 @@ export interface Caip10LinkParams extends DocParams {
     content?: Record<string, unknown>;
 }
 
+const throwReadOnlyError = (): Promise<void> => {
+    throw new Error('Historical document commits cannot be modified. Load the document without specifying a commit to make updates.')
+}
+
 /**
  * Caip10Link doctype implementation
  */
@@ -47,6 +51,14 @@ export class Caip10LinkDoctype extends Doctype {
 
         const commit = await Caip10LinkDoctype.makeGenesis({ content, metadata }, context)
         return context.api.createDocumentFromGenesis(DOCTYPE_NAME, commit, opts)
+    }
+
+    /**
+     * Makes this document read-only. After this has been called any future attempts to call
+     * mutation methods on the instance will throw.
+     */
+    makeReadOnly() {
+        this.change = throwReadOnlyError
     }
 
     /**

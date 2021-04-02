@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.2.0-rc.1](/compare/@ceramicnetwork/3id-did-resolver@1.1.1...@ceramicnetwork/3id-did-resolver@1.2.0-rc.1) (2021-04-02)
+
+
+### Features
+
+* **tile-doctype:** Update Tile API 48f30e1
+
+
+
+
+
 ## [1.1.1](/compare/@ceramicnetwork/3id-did-resolver@1.1.0...@ceramicnetwork/3id-did-resolver@1.1.1) (2021-04-02)
 
 
@@ -11,6 +22,9 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * **common, logger:** Clean up dependencies (#1164) 191ad31, closes #1164
 
 
+### Features
+
+* **tile-doctype:** Update Tile API 7d694f7
 
 
 

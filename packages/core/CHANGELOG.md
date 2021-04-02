@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.22.0-rc.0](/compare/@ceramicnetwork/core@0.21.0...@ceramicnetwork/core@0.22.0-rc.0) (2021-04-02)
+
+
+### Features
+
+* **core, http-client, common:** Doctype accepts Running State (#1150) 0b708d4, closes #1150
+* **tile-doctype:** Update Tile API 48f30e1
+
+
+
+
+
 # [0.21.0](/compare/@ceramicnetwork/core@0.20.0...@ceramicnetwork/core@0.21.0) (2021-04-02)
 
 
@@ -14,7 +26,6 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 ### Features
 
 * add networks enum and elp (#1187) 7a60b30, closes #1187
-
 
 
 

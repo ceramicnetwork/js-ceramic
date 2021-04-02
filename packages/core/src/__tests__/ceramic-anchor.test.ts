@@ -35,8 +35,6 @@ describe('Ceramic anchoring', () => {
   let ipfs2: IpfsApi;
   let ipfs3: IpfsApi;
 
-  const DOCTYPE_TILE = 'tile'
-
   beforeAll(async () => {
     [ipfs1, ipfs2, ipfs3] = await Promise.all(Array.from({length: 3}).map(() => createIPFS()));
     await swarmConnect(ipfs1, ipfs2)
@@ -56,11 +54,9 @@ describe('Ceramic anchoring', () => {
       createCeramic(ipfs2, false)
     ])
 
-    const controller = ceramic1.context.did.id
-
-    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { a: 1 } }, {})
-    await doctype1.change({ content: { a: 2 }, metadata: { controllers: [controller] } }, {})
-    await doctype1.change({ content: { a: 3 }, metadata: { controllers: [controller] } }, {})
+    const doctype1 = await TileDoctype.create(ceramic1, { a: 1 })
+    await doctype1.update({ a: 2 })
+    await doctype1.update({ a: 3 })
 
     await anchorUpdate(ceramic1, doctype1)
 
@@ -82,11 +78,9 @@ describe('Ceramic anchoring', () => {
       createCeramic(ipfs2, false)
     ])
 
-    const controller = ceramic1.context.did.id
-
-    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { a: 1 } }, { anchor: false, publish: false })
-    await doctype1.change({ content: { a: 2 }, metadata: { controllers: [controller] } }, { anchor: false, publish: false })
-    await doctype1.change({ content: { a: 3 }, metadata: { controllers: [controller] } }, { anchor: false, publish: false })
+    const doctype1 = await TileDoctype.create(ceramic1, { a: 1 }, null, { anchor: false, publish: false })
+    await doctype1.update({ a: 2 }, null, { anchor: false, publish: false })
+    await doctype1.update({ a: 3 }, null, { anchor: false, publish: false })
 
     expect(doctype1.content).toEqual({ a: 3 })
     expect(doctype1.state.log.length).toEqual(3)
@@ -104,11 +98,10 @@ describe('Ceramic anchoring', () => {
       createCeramic(ipfs1, true),
       createCeramic(ipfs2, false)
     ])
-    const controller = ceramic1.context.did.id
 
-    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { a: 123, b: 4567 } }, {})
-    await doctype1.change({ content: { a: 4567 }, metadata: { controllers: [controller] } }, { anchor: false, publish: false })
-    await doctype1.change({ content: { b: 123 }, metadata: { controllers: [controller] } }, { anchor: false, publish: false })
+    const doctype1 = await TileDoctype.create(ceramic1, { a: 123, b: 4567 })
+    await doctype1.update({ a: 4567 }, null, { anchor: false, publish: false })
+    await doctype1.update({ b: 123 }, null, { anchor: false, publish: false })
 
     expect(doctype1.state.log.length).toEqual(3)
 
@@ -130,10 +123,9 @@ describe('Ceramic anchoring', () => {
       createCeramic(ipfs1, true),
       createCeramic(ipfs2, false)
     ])
-    const controller = ceramic1.context.did.id
 
-    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { a: 123 } })
-    await doctype1.change({ content: { a: 4567 }, metadata: { controllers: [controller] } })
+    const doctype1 = await TileDoctype.create(ceramic1, { a: 123 })
+    await doctype1.update({ a: 4567 })
 
     expect(doctype1.state.log.length).toEqual(2)
 
@@ -155,12 +147,10 @@ describe('Ceramic anchoring', () => {
       createCeramic(ipfs1, true),
       createCeramic(ipfs2, false)
     ])
-    const controller = ceramic1.context.did.id
 
-    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { x: 1 } }, {})
-
-    await doctype1.change({ content: { x: doctype1.content.x + 1 }, metadata: { controllers: [controller] } }, { anchor: false, publish: false })
-    await doctype1.change({ content: { x: doctype1.content.x + 1 }, metadata: { controllers: [controller] } }, { anchor: true, publish: true })
+    const doctype1 = await TileDoctype.create(ceramic1, { x: 1 })
+    await doctype1.update({ x: doctype1.content.x + 1 }, null, { anchor: false, publish: false })
+    await doctype1.update({ x: doctype1.content.x + 1 }, null, { anchor: true, publish: true })
 
     await anchorUpdate(ceramic1, doctype1)
 
@@ -180,11 +170,10 @@ describe('Ceramic anchoring', () => {
       createCeramic(ipfs1, true),
       createCeramic(ipfs2, false)
     ])
-    const controller = ceramic1.context.did.id
 
-    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { x: 1 } }, { anchor: false, publish: false })
-    await doctype1.change({ content: { x: doctype1.content.x + 1 }, metadata: { controllers: [controller] } }, { anchor: false, publish: false })
-    await doctype1.change({ content: { x: doctype1.content.x + 1 }, metadata: { controllers: [controller] } }, { anchor: true, publish: true })
+    const doctype1 = await TileDoctype.create(ceramic1, { x: 1 }, null, {anchor: false, publish: false})
+    await doctype1.update({ x: doctype1.content.x + 1 }, null, { anchor: false, publish: false })
+    await doctype1.update({ x: doctype1.content.x + 1 }, null, { anchor: true, publish: true })
 
     await anchorUpdate(ceramic1, doctype1)
 
@@ -204,24 +193,23 @@ describe('Ceramic anchoring', () => {
       createCeramic(ipfs1, true),
       createCeramic(ipfs2, false)
     ])
-    const controller = ceramic1.context.did.id
 
-    const doctype1 = await ceramic1.createDocument<TileDoctype>(DOCTYPE_TILE, { content: { x: 1 } }, { anchor: false, publish: false })
-    await doctype1.change({ content: { x: doctype1.content.x + 1 }, metadata: { controllers: [controller] } }, { anchor: false, publish: false })
+    const doctype1 = await TileDoctype.create(ceramic1, { x: 1 }, null, {anchor: false, publish: false})
+    await doctype1.update({ x: doctype1.content.x + 1 }, null, { anchor: false, publish: false })
 
     expect(doctype1.content).toEqual({ x: 2 })
     expect(doctype1.state.log.length).toEqual(2)
 
-    await doctype1.change({ content: { x: doctype1.content.x + 1 }, metadata: { controllers: [controller] } }, { anchor: true, publish: true })
+    await doctype1.update({ x: doctype1.content.x + 1 }, null, { anchor: true, publish: true })
 
     await anchorUpdate(ceramic1, doctype1)
 
     expect(doctype1.content).toEqual({ x: 3 })
     expect(doctype1.state.log.length).toEqual(4)
 
-    await doctype1.change({ content: { x: doctype1.content.x + 1 }, metadata: { controllers: [controller] } }, { anchor: false, publish: false })
-    await doctype1.change({ content: { x: doctype1.content.x + 1 }, metadata: { controllers: [controller] } }, { anchor: false, publish: false })
-    await doctype1.change({ content: { x: doctype1.content.x + 1 }, metadata: { controllers: [controller] } }, { anchor: true, publish: true })
+    await doctype1.update({ x: doctype1.content.x + 1 }, null, { anchor: false, publish: false })
+    await doctype1.update({ x: doctype1.content.x + 1 }, null, { anchor: false, publish: false })
+    await doctype1.update({ x: doctype1.content.x + 1 }, null, { anchor: true, publish: true })
 
     await anchorUpdate(ceramic1, doctype1)
 
@@ -246,23 +234,22 @@ describe('Ceramic anchoring', () => {
       createCeramic(ipfs2, true),
       createCeramic(ipfs3, true),
     ])
-    const controller = ceramic1.context.did.id
 
     const anchorService = ceramic3.context.anchorService as InMemoryAnchorService
     // use ceramic3 in-memory anchor service, ugly as hell
     ceramic1.repository.stateManager.anchorService = anchorService
     ceramic2.repository.stateManager.anchorService = anchorService
 
-    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { x: 1 } }, { anchor: false, publish: true })
+    const doctype1 = await TileDoctype.create(ceramic1, { x: 1 }, null, { anchor: false, publish: true })
     doctype1.subscribe();
-    const doctype2 = await ceramic2.loadDocument(doctype1.id)
+    const doctype2 = await TileDoctype.load(ceramic2, doctype1.id)
     doctype2.subscribe();
 
     // Create two conflicting updates, each on a different ceramic instance
     const newContent1 = { x: 7 }
     const newContent2 = { x: 5 }
-    await doctype1.change({ content: newContent1, metadata: { controllers: [controller] } }, { anchor: true, publish: false })
-    await doctype2.change({ content: newContent2, metadata: { controllers: [controller] } }, { anchor: true, publish: false })
+    await doctype1.update(newContent1, null, { anchor: true, publish: false })
+    await doctype2.update(newContent2, null, { anchor: true, publish: false })
 
     // Which update wins depends on which update got assigned the lower CID
     const update1ShouldWin = doctype1.state.log[doctype1.state.log.length - 1].cid.bytes < doctype2.state.log[doctype2.state.log.length - 1].cid.bytes

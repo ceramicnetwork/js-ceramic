@@ -139,17 +139,6 @@ export class DoctypeUtils {
     }
 
     /**
-     * Make doctype readonly
-     * @param doctype - Doctype instance
-     */
-    static makeReadOnly<T extends Doctype>(doctype: T): T {
-        doctype.change = async (): Promise<void> => {
-            throw new Error('Historical document commits cannot be modified. Load the document without specifying a commit to make updates.')
-        }
-        return doctype
-    }
-
-    /**
      * Converts commit to SignedCommitContainer. The only difference is with signed commit for now
      * @param commit - Commit value
      * @param ipfs - IPFS instance

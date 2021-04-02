@@ -127,6 +127,9 @@ export default class CeramicClient implements CeramicApi {
     }
   }
 
+  /**
+   * @deprecated
+   */
   async createDocument<T extends Doctype>(doctype: string, params: DocParams, opts?: DocOpts): Promise<T> {
     const doctypeConstructor = this.findDoctypeConstructor(doctype)
     const genesis = await doctypeConstructor.makeGenesis(params, this.context, opts)

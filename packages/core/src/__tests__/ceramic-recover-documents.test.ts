@@ -2,6 +2,7 @@ import Ceramic from "../ceramic";
 import { Ed25519Provider } from "key-did-provider-ed25519";
 import tmp from "tmp-promise";
 import { DoctypeUtils, DocState, IpfsApi, AnchorStatus } from "@ceramicnetwork/common";
+import { TileDoctype } from "@ceramicnetwork/doctype-tile";
 import * as u8a from "uint8arrays";
 import { createIPFS } from './ipfs-util';
 import { anchorUpdate } from '../state-management/__tests__/anchor-update';
@@ -28,8 +29,6 @@ jest.setTimeout(60000);
 let ipfs1: IpfsApi;
 let ipfs2: IpfsApi;
 
-const DOCTYPE_TILE = "tile";
-
 beforeEach(async () => {
     [ipfs1, ipfs2] = await Promise.all(
       Array.from({length: 2}).map(() => createIPFS())
@@ -46,13 +45,8 @@ it("re-request anchors on #recoverDocuments", async () => {
 
     // Store
     const ceramic1 = await createCeramic(ipfs1, stateStoreDirectory);
-    const controller = ceramic1.context.did.id;
 
-    const doc1 = await ceramic1.createDocument(
-        DOCTYPE_TILE,
-        { content: { test: 456 }, metadata: { controllers: [controller], tags: ["3id"] } },
-        { anchor: true }
-    );
+    const doc1 = await TileDoctype.create(ceramic1, { test: 456 });
     doc1.subscribe();
     await ceramic1.pin.add(doc1.id);
     expect(doc1.state.anchorStatus).toEqual(AnchorStatus.PENDING);

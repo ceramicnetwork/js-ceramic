@@ -299,7 +299,7 @@ class InMemoryAnchorService implements AnchorService {
    */
   async verifySignedCommit(commit: DagJWS): Promise<string> {
     try {
-      const { kid } = await this.#ceramic.context.did.verifyJWS(commit)
+      const { kid } = await this.#ceramic.did.verifyJWS(commit)
       return kid.match(RegExp(DID_MATCHER))[1];
     } catch (e) {
       throw new Error('Invalid signature for signed commit. ' + e)

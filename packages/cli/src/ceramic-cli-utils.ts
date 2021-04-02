@@ -8,9 +8,10 @@ import { promises as fs } from 'fs'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import CeramicClient from '@ceramicnetwork/http-client'
 import { CeramicApi, DoctypeUtils, LoggerConfig, LogLevel, Networks } from '@ceramicnetwork/common'
-import DocID from '@ceramicnetwork/docid'
+import DocID, {CommitID} from '@ceramicnetwork/docid'
 
 import CeramicDaemon, { CreateOpts } from './ceramic-daemon'
+import { TileDoctype } from "@ceramicnetwork/doctype-tile";
 
 const DEFAULT_CLI_CONFIG_FILE = 'config.json'
 const DEFAULT_CLI_CONFIG_PATH = path.join(os.homedir(), '.ceramic')
@@ -116,16 +117,9 @@ export class CeramicCliUtils {
         await CeramicCliUtils._runWithCeramic(async (ceramic: CeramicClient) => {
             const parsedControllers = CeramicCliUtils._parseControllers(controllers)
             const parsedContent = CeramicCliUtils._parseContent(content)
+            const metadata = { controllers: parsedControllers, schema: schemaDocId, deterministic }
 
-            const params = {
-                content: parsedContent,
-                metadata: {
-                    controllers: parsedControllers, schema: schemaDocId
-                },
-                deterministic,
-            }
-
-            const doc = await ceramic.createDocument(doctype, params, {
+            const doc = await TileDoctype.create(ceramic, parsedContent, metadata, {
                 anchor: !onlyGenesis,
                 publish: !onlyGenesis,
             })
@@ -136,24 +130,24 @@ export class CeramicCliUtils {
     }
 
     /**
-     * Change document
+     * Update document
      * @param docId - Document ID
      * @param content - Document content
      * @param controllers - Document controllers
-     * @param schemaDocId - Optional schema document ID
+     * @param schemaCommitId - Optional schema document CommitID
      */
-    static async change(docId: string, content: string, controllers: string, schemaDocId?: string): Promise<void> {
+    static async update(docId: string, content: string, controllers: string, schemaCommitId?: string): Promise<void> {
         const id = DocID.fromString(docId)
+        if (id.type != TileDoctype.DOCTYPE_ID) {
+            throw new Error(`CLI does not currently support updating doctypes other than 'tile'. DocID ${id.toString()} has doctype '${id.typeName}'`)
+        }
+        const schemaId = CommitID.fromString(schemaCommitId)
         await CeramicCliUtils._runWithCeramic(async (ceramic: CeramicClient) => {
             const parsedControllers = CeramicCliUtils._parseControllers(controllers)
             const parsedContent = CeramicCliUtils._parseContent(content)
 
-            const doc = await ceramic.loadDocument(id)
-            await doc.change({
-                content: parsedContent, metadata: {
-                    controllers: parsedControllers, schema: schemaDocId
-                }
-            })
+            const doc = await TileDoctype.load(ceramic, id)
+            await doc.update(parsedContent, { controllers: parsedControllers, schema: schemaId })
 
             console.log(JSON.stringify(doc.content, null, 2))
         })
@@ -238,15 +232,15 @@ export class CeramicCliUtils {
     }
 
     /**
-     * Change schema document
+     * Update schema document
      * @param schemaDocId - Schema document ID
      * @param content - Schema document content
      * @param controllers - Schema document controllers
      */
-    static async schemaChangeDoc(schemaDocId: string, content: string, controllers: string): Promise<void> {
+    static async schemaUpdateDoc(schemaDocId: string, content: string, controllers: string): Promise<void> {
         DocID.fromString(schemaDocId)
         // TODO validate schema on the client side
-        return CeramicCliUtils.change(schemaDocId, content, controllers, null)
+        return CeramicCliUtils.update(schemaDocId, content, controllers, null)
     }
 
     /**

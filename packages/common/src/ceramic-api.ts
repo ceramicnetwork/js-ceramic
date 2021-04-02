@@ -3,7 +3,6 @@ import {
     Doctype,
     DoctypeHandler,
     DocOpts,
-    DocParams,
     CeramicCommit
 } from "./doctype"
 import { DocID, CommitID } from '@ceramicnetwork/docid'
@@ -48,14 +47,6 @@ export interface CeramicApi {
      * @param doctypeHandler - DoctypeHandler instance
      */
     addDoctypeHandler<T extends Doctype>(doctypeHandler: DoctypeHandler<T>): void;
-
-    /**
-     * Create Doctype instance
-     * @param doctype - Doctype name
-     * @param params - Create parameters
-     * @param opts - Initialization options
-     */
-    createDocument<T extends Doctype>(doctype: string, params: DocParams, opts?: DocOpts): Promise<T>;
 
     /**
      * Create Doctype from genesis commit
