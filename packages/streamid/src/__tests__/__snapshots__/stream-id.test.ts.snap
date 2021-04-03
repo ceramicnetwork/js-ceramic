@@ -63,8 +63,8 @@ exports[`.toString() 1`] = `"kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcr
 
 exports[`.toUrl() 1`] = `"ceramic://kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s"`;
 
-exports[`.typeName if registered 1`] = `"No doctype registered for index 10"`;
+exports[`.typeName if registered 1`] = `"No stream type registered for index 10"`;
 
 exports[`constructor create by parts (type:int, cid:cid) 1`] = `"kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s"`;
 
-exports[`nodejs inspect 1`] = `"DocID(kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s)"`;
+exports[`nodejs inspect 1`] = `"StreamID(kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s)"`;

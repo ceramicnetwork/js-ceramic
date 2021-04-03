@@ -1,10 +1,10 @@
 {
-  "name": "@ceramicnetwork/docid",
+  "name": "@ceramicnetwork/streamid",
   "version": "0.5.1",
-  "description": "Ceramic Document Ids",
+  "description": "Ceramic Stream Ids",
   "keywords": [
     "ceramic",
-    "DocId"
+    "StreamId"
   ],
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
