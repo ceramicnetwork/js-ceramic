@@ -27,6 +27,7 @@ export async function createIPFS(overrideConfig: Record<string, unknown> = {}): 
   };
 
   const config = { ...defaultConfig, ...overrideConfig };
+  // TODO: @rvagg dag-jose ipld format?
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
   const instance = await IPFS.create(config);
@@ -51,6 +52,6 @@ export async function createIPFS(overrideConfig: Record<string, unknown> = {}): 
  * @param b - Receives connection
  */
 export async function swarmConnect(a: IpfsApi, b: IpfsApi) {
-  const addressB = (await b.id()).addresses[0].toString();
+  const addressB = (await b.id()).addresses[0];
   await a.swarm.connect(addressB);
 }

@@ -17,7 +17,7 @@ const IPFS_GET_TIMEOUT = 60000 // 1 minute
 
 export async function buildIpfsConnection(network: string, logger: DiagnosticsLogger, ipfsEndpoint?: string): Promise<IpfsApi>{
     if (ipfsEndpoint) {
-        return ipfsClient({ url: ipfsEndpoint, ipld: { formats: [dagJoseFormat] }, timeout: IPFS_GET_TIMEOUT })
+        return ipfsClient.create({ url: ipfsEndpoint, ipld: { formats: [dagJoseFormat] }, timeout: IPFS_GET_TIMEOUT })
     } else {
         const ipfsDaemon = await IpfsDaemon.create({
             ipfsDhtServerMode: IPFS_DHT_SERVER_MODE,

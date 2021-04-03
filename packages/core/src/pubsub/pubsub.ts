@@ -4,6 +4,7 @@ import { IpfsApi } from '@ceramicnetwork/common';
 import { map, catchError, mergeMap, withLatestFrom } from 'rxjs/operators';
 import { IncomingChannel, filterExternal, IPFSPubsubMessage } from './incoming-channel';
 import { DiagnosticsLogger, ServiceLogger } from '@ceramicnetwork/common';
+import uint8ArrayFromString from 'uint8arrays/from-string';
 
 /**
  * Deserialize incoming message in an internal observable that does not emit if error happens.
@@ -73,7 +74,7 @@ export class Pubsub extends Observable<PubsubMessage> {
       .pipe(
         mergeMap(async (peerId) => {
           const serializedMessage = serialize(message);
-          await this.ipfs.pubsub.publish(this.topic, serializedMessage);
+          await this.ipfs.pubsub.publish(this.topic, uint8ArrayFromString(serialize(message)));
           return { peerId, serializedMessage };
         }),
       )

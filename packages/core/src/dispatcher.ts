@@ -61,7 +61,8 @@ export class Dispatcher {
    * @param cid - Commit CID
    */
   async retrieveCommit (cid: CID | string): Promise<any> {
-    const record = await this._ipfs.dag.get(cid, { timeout: IPFS_GET_TIMEOUT })
+    const asCid = typeof cid === 'string' ? new CID(cid) : cid
+    const record = await this._ipfs.dag.get(asCid, { timeout: IPFS_GET_TIMEOUT })
     await this._restrictRecordSize(cid)
     return cloneDeep(record.value)
   }
@@ -72,7 +73,8 @@ export class Dispatcher {
    * @param path - optional IPLD path to load, starting from the object represented by `cid`
    */
   async retrieveFromIPFS (cid: CID | string, path?: string): Promise<any> {
-    const record = await this._ipfs.dag.get(cid, { timeout: IPFS_GET_TIMEOUT, path })
+    const asCid = typeof cid === 'string' ? new CID(cid) : cid
+    const record = await this._ipfs.dag.get(asCid, { timeout: IPFS_GET_TIMEOUT, path })
     return cloneDeep(record.value)
   }
 

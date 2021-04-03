@@ -1,5 +1,6 @@
 import fetch from "cross-fetch";
 import type { DiagnosticsLogger, IpfsApi  } from "@ceramicnetwork/common";
+import type Multiaddr from 'multiaddr';
 
 const PEER_FILE_URLS = {
   "testnet-clay":
@@ -48,7 +49,7 @@ export class IpfsTopology {
   ) {}
 
   async forceConnection(): Promise<void> {
-    const base: string[] = BASE_BOOTSTRAP_LIST[this.ceramicNetwork] || [];
+    const base: Multiaddr[] = BASE_BOOTSTRAP_LIST[this.ceramicNetwork] || [];
     const dynamic = await this._dynamicBoostrapList(this.ceramicNetwork);
     const bootstrapList = base.concat(dynamic);
     await this._forceBootstrapConnection(this.ipfs, bootstrapList);
@@ -67,7 +68,7 @@ export class IpfsTopology {
     }
   }
 
-  private async _dynamicBoostrapList(network: string): Promise<string[]> {
+  private async _dynamicBoostrapList(network: string): Promise<Multiaddr[]> {
     const url = PEER_FILE_URLS[network];
     if (!url) {
       this.logger.warn(
@@ -82,13 +83,11 @@ export class IpfsTopology {
 
   private async _forceBootstrapConnection(
     ipfs: IpfsApi,
-    bootstrapList: string[]
+    bootstrapList: Multiaddr[]
   ): Promise<void> {
     await Promise.all(
       bootstrapList.map(async (node) => {
         try {
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-ignore
           await ipfs.swarm.connect(node);
         } catch (error) {
           this.logger.warn(`Can not connect to ${node}`);

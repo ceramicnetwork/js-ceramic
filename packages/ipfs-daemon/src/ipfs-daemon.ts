@@ -89,19 +89,20 @@ export class IpfsDaemon {
         const ipfs = await IPFS.create({
             start: false,
             repo,
+            // TODO: @rvagg dag-jose?
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
             ipld: {formats: [format]},
             libp2p: {
-                config: {
-                    dht: {
-                        enabled: false,
-                        clientMode: !configuration.ipfsDhtServerMode,
-                        randomWalk: false,
-                    },
-                    pubsub: {
-                        enabled: configuration.ipfsEnablePubsub,
-                    },
+                dht: {
+                    enabled: false,
+                    clientMode: !configuration.ipfsDhtServerMode,
+                    randomWalk: false,
+                },
+                pubsub: {
+                    // TODO: @rvagg is this gone?
+                    // @ts-ignore
+                    enabled: configuration.ipfsEnablePubsub,
                 },
                 addresses: {
                     announce: configuration.announceAddressList,
@@ -120,8 +121,6 @@ export class IpfsDaemon {
                     ...configuration.ipfsEnableGateway && {Gateway: `/ip4/${configuration.tcpHost}/tcp/${configuration.ipfsGatewayPort}`}
                     ,
                 },
-                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                // @ts-ignore
                 API: {
                     HTTPHeaders: {
                         "Access-Control-Allow-Origin": [
@@ -149,6 +148,8 @@ export class IpfsDaemon {
             },
         })
 
+        // TODO: @rvagg - JSIPFS type seems like a problem, expects .libp2p and .ipld properties
+        // @ts-ignore
         const api = configuration.ipfsEnableApi ? new HttpApi(ipfs) : undefined
         const gateway = configuration.ipfsEnableGateway ? new HttpGateway(ipfs) : undefined
         const topology = configuration.useCentralizedPeerDiscovery ? new IpfsTopology(ipfs, configuration.ceramicNetwork, configuration.logger) : undefined
