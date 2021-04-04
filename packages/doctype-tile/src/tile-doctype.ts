@@ -71,42 +71,6 @@ function _signDagJWS(commit: CeramicCommit, did: DID, controller: string): Promi
     return did.createDagJWS(commit, { did: controller })
 }
 
-/**
- * Create genesis commit
- * @param did - DID making (and signing) the commit
- * @param content - genesis content
- * @param metadata - genesis metadata
- * @private
- */
-async function _makeGenesis<T>(did: DID, content: T | null, metadata?: TileMetadataArgs): Promise<CeramicCommit> {
-    if (!metadata) {
-        metadata = {}
-    }
-
-    if (!metadata.controllers || metadata.controllers.length === 0) {
-        if (did) {
-            metadata.controllers = [did.id]
-        } else {
-            throw new Error('No controllers specified')
-        }
-    }
-    if (metadata.controllers?.length !== 1) {
-        throw new Error('Exactly one controller must be specified')
-    }
-
-    const header = headerFromMetadata(metadata)
-    if (!metadata?.deterministic) {
-        header.unique = uint8arrays.toString(randomBytes(12), 'base64')
-    }
-
-    if (content == null) {
-        // No signature needed if no genesis content
-        return { header }
-    }
-    const commit: GenesisCommit = { data: content, header }
-    return await _signDagJWS(commit, did, metadata.controllers[0])
-}
-
 async function throwReadOnlyError (): Promise<void> {
     throw new Error('Historical document commits cannot be modified. Load the document without specifying a commit to make updates.')
 }
@@ -128,7 +92,7 @@ export class TileDoctype<T = Record<string, any>> extends Doctype {
      * @param opts - Additional options
      */
     static async create<T>(ceramic: CeramicApi, content: T | null | undefined, metadata?: TileMetadataArgs, opts: DocOpts = {}): Promise<TileDoctype<T>> {
-      const commit = await _makeGenesis(ceramic.did, content, metadata)
+      const commit = await TileDoctype._makeGenesis(ceramic.did, content, metadata)
       return ceramic.createDocumentFromGenesis<TileDoctype>(TileDoctype.DOCTYPE_NAME, commit, opts)
     }
 
@@ -198,6 +162,7 @@ export class TileDoctype<T = Record<string, any>> extends Doctype {
      * @param did - DID making (and signing) the commit
      * @param newContent
      * @param newMetadata
+     * @private
      */
     async _makeCommit(did: DID, newContent: T | undefined, newMetadata?: TileMetadataArgs): Promise<CeramicCommit> {
         const header = headerFromMetadata(newMetadata)
@@ -213,6 +178,43 @@ export class TileDoctype<T = Record<string, any>> extends Doctype {
         const patch = jsonpatch.compare(this.content, newContent)
         const commit: UnsignedCommit = { header, data: patch, prev: this.tip, id: this.state.log[0].cid }
         return _signDagJWS(commit, did, this.controllers[0])
+    }
+
+    /**
+     * Create genesis commit.
+     * Placed on the TileDoctype class as a static method only for use in testing.
+     * @param did - DID making (and signing) the commit
+     * @param content - genesis content
+     * @param metadata - genesis metadata
+     * @private
+     */
+    static async _makeGenesis<T>(did: DID, content: T | null, metadata?: TileMetadataArgs): Promise<CeramicCommit> {
+        if (!metadata) {
+            metadata = {}
+        }
+
+        if (!metadata.controllers || metadata.controllers.length === 0) {
+            if (did) {
+                metadata.controllers = [did.id]
+            } else {
+                throw new Error('No controllers specified')
+            }
+        }
+        if (metadata.controllers?.length !== 1) {
+            throw new Error('Exactly one controller must be specified')
+        }
+
+        const header = headerFromMetadata(metadata)
+        if (!metadata?.deterministic) {
+            header.unique = uint8arrays.toString(randomBytes(12), 'base64')
+        }
+
+        if (content == null) {
+            // No signature needed if no genesis content
+            return { header }
+        }
+        const commit: GenesisCommit = { data: content, header }
+        return await _signDagJWS(commit, did, metadata.controllers[0])
     }
 
 }
