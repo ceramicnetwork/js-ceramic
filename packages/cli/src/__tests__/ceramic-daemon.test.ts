@@ -4,11 +4,15 @@ import { Ed25519Provider } from 'key-did-provider-ed25519'
 import tmp from 'tmp-promise'
 import IPFS from 'ipfs-core'
 import CeramicDaemon from '../ceramic-daemon'
-import { AnchorStatus, Doctype, DoctypeUtils, IpfsApi } from '@ceramicnetwork/common';
+import { AnchorStatus, CeramicApi, Doctype, DoctypeUtils, IpfsApi } from '@ceramicnetwork/common';
 import { TileDoctypeHandler } from "@ceramicnetwork/doctype-tile-handler"
 import { TileDoctype } from "@ceramicnetwork/doctype-tile";
 import { filter, take } from "rxjs/operators"
 import * as u8a from 'uint8arrays'
+import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
+import KeyDidResolver from 'key-did-resolver'
+import { Resolver } from "did-resolver"
+import { DID } from 'dids'
 
 import dagJose from 'dag-jose'
 import { sha256 } from 'multiformats/hashes/sha2'
@@ -37,6 +41,17 @@ const createIPFS = (overrideConfig: Record<string, unknown> = {}): Promise<IpfsA
     return IPFS.create(config)
 }
 
+const makeDID = function(seed: Uint8Array, ceramic: CeramicApi): DID {
+    const provider = new Ed25519Provider(seed)
+
+    const keyDidResolver = KeyDidResolver.getResolver()
+    const threeIdResolver = ThreeIdResolver.getResolver(ceramic)
+    const resolver = new Resolver({
+        ...threeIdResolver, ...keyDidResolver,
+    })
+    return new DID({ provider, resolver })
+}
+
 describe('Ceramic interop: core <> http-client', () => {
     jest.setTimeout(30000)
     let ipfs: IpfsApi
@@ -44,8 +59,6 @@ describe('Ceramic interop: core <> http-client', () => {
     let core: Ceramic
     let daemon: CeramicDaemon
     let client: CeramicClient
-
-    const DOCTYPE_TILE = 'tile'
 
     beforeAll(async () => {
         tmpFolder = await tmp.dir({ unsafeCleanup: true })
@@ -79,9 +92,8 @@ describe('Ceramic interop: core <> http-client', () => {
         daemon = new CeramicDaemon(core, { port, debug: false })
         client = new CeramicClient(apiUrl, { docSyncInterval: 500 })
 
-        const provider = new Ed25519Provider(seed)
-        await core.setDIDProvider(provider)
-        await client.setDIDProvider(provider)
+        await core.setDID(makeDID(seed, core))
+        await client.setDID(makeDID(seed, client))
     })
 
     afterEach(async () => {
