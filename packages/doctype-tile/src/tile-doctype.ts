@@ -197,7 +197,7 @@ export class TileDoctype<T = Record<string, any>> extends Doctype {
         if (!metadata.controllers || metadata.controllers.length === 0) {
             if (did) {
                 if (!did.authenticated) {
-                    did.authenticate()
+                    await did.authenticate()
                 }
                 metadata.controllers = [did.id]
             } else {
