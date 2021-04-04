@@ -1,7 +1,5 @@
 import { Dispatcher } from './dispatcher'
 import { DEFAULT_WRITE_DOCOPTS, DEFAULT_LOAD_DOCOPTS } from './state-management/state-manager';
-import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
-import KeyDidResolver from 'key-did-resolver'
 import DocID, { CommitID, DocRef } from '@ceramicnetwork/docid';
 import {IpfsTopology} from "@ceramicnetwork/ipfs-topology";
 import {
@@ -19,7 +17,6 @@ import {
   AnchorService,
   CeramicApi,
   CeramicCommit,
-  DIDProvider,
   IpfsApi,
   PinApi,
   MultiQuery,
@@ -27,7 +24,6 @@ import {
   LoggerProvider,
   Networks,
 } from "@ceramicnetwork/common"
-import { Resolver } from "did-resolver"
 
 import { DID } from 'dids'
 import { PinStoreFactory } from "./store/pin-store-factory";
@@ -79,8 +75,6 @@ export interface CeramicConfig {
   anchorServiceUrl?: string;
   stateStoreDirectory?: string;
 
-  didResolver?: Resolver;
-
   validateDocs?: boolean;
   ipfsPinningEndpoints?: string[];
   pinningBackends?: PinningBackendStatic[];
@@ -112,7 +106,6 @@ export interface CeramicConfig {
  */
 export interface CeramicModules {
   anchorService: AnchorService,
-  didResolver: Resolver,
   dispatcher: Dispatcher,
   ipfs: IpfsApi,
   ipfsTopology: IpfsTopology,
@@ -195,17 +188,9 @@ class Ceramic implements CeramicApi {
     this._networkOptions = params.networkOptions
     this._supportedChains = params.supportedChains
 
-    const keyDidResolver = KeyDidResolver.getResolver()
-    const threeIdResolver = ThreeIdResolver.getResolver(this)
-    const resolver = new Resolver({
-      ...modules.didResolver, ...threeIdResolver, ...keyDidResolver,
-    })
-
     this.context = {
       api: this,
       anchorService: modules.anchorService,
-      resolver,
-      did: new DID({ resolver }),
       ipfs: modules.ipfs,
       loggerProvider: modules.loggerProvider,
     }
@@ -394,7 +379,6 @@ class Ceramic implements CeramicApi {
 
     const modules = {
       anchorService,
-      didResolver: config.didResolver,
       dispatcher,
       ipfs,
       ipfsTopology,
@@ -418,7 +402,6 @@ class Ceramic implements CeramicApi {
 
     const loggerConfig = config.loggerProvider?.config
 
-    delete configCopy.didResolver
     delete configCopy.pinningBackends
     delete configCopy.logToFilesPlugin
     delete configCopy.loggerProvider
@@ -465,17 +448,16 @@ class Ceramic implements CeramicApi {
   }
 
   /**
-   * Set DID provider
-   * @param provider - DID provider instance
+   * Sets the DID instance that will be used to author commits to documents. The DID instance
+   * also includes the DID Resolver that will be used to verify commits from others.
+   * @param did
    */
-  async setDIDProvider (provider: DIDProvider): Promise<void> {
-    this.context.provider = provider;
-    this.context.did = new DID({ provider, resolver: this.context.resolver })
-
-    if (!this.context.did.authenticated) {
-      await this.context.did.authenticate()
+  async setDID(did: DID): Promise<void> {
+    this.context.did = did
+    if (!did.authenticated) {
+      await this.did.authenticate()
     }
-    this._logger.imp(`Now authenticated as DID ${this.context.did.id}`)
+    this._logger.imp(`Now authenticated as DID ${did}`)
   }
 
   /**

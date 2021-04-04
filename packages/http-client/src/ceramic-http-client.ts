@@ -6,7 +6,6 @@ import {
   CeramicApi,
   CeramicCommit,
   Context,
-  DIDProvider,
   DocOpts,
   DocParams,
   Doctype,
@@ -19,9 +18,6 @@ import {
 import { TileDoctype } from "@ceramicnetwork/doctype-tile"
 import { Caip10LinkDoctype } from "@ceramicnetwork/doctype-caip10-link"
 import { DocID, CommitID, DocRef } from '@ceramicnetwork/docid';
-import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
-import KeyDidResolver from 'key-did-resolver'
-import { Resolver } from "did-resolver"
 
 const API_PATH = '/api/v0'
 const CERAMIC_HOST = 'http://localhost:7007'
@@ -37,10 +33,6 @@ export const DEFAULT_CLIENT_CONFIG: CeramicClientConfig = {
  * Ceramic client configuration
  */
 export interface CeramicClientConfig {
-  /**
-   * DID Resolver. Would add one to did:3 and did:key resolver.
-   */
-  didResolver?: Resolver
   /**
    * Period of synchronisation, in milliseconds. Active when subscribing document.
    */
@@ -78,12 +70,6 @@ export default class CeramicClient implements CeramicApi {
     this.context = { api: this }
 
     this.pin = this._initPinApi()
-
-    const keyDidResolver = KeyDidResolver.getResolver()
-    const threeIdResolver = ThreeIdResolver.getResolver(this)
-    this.context.resolver = new Resolver({
-      ...this._config.didResolver, ...threeIdResolver, ...keyDidResolver,
-    })
 
     this._doctypeConstructors = {
       'tile': TileDoctype,
@@ -230,12 +216,10 @@ export default class CeramicClient implements CeramicApi {
     return new doctypeConstructor(document, this.context)
   }
 
-  async setDIDProvider(provider: DIDProvider): Promise<void> {
-    this.context.provider = provider;
-    this.context.did = new DID( { provider, resolver: this.context.resolver })
-
-    if (!this.context.did.authenticated) {
-      await this.context.did.authenticate()
+  async setDID(did: DID): Promise<void> {
+    this.context.did = did
+    if (!did.authenticated) {
+      await this.did.authenticate()
     }
   }
 

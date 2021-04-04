@@ -7,6 +7,10 @@ import * as u8a from 'uint8arrays'
 import { createIPFS, swarmConnect } from './ipfs-util';
 import InMemoryAnchorService from "../anchor/memory/in-memory-anchor-service";
 import { anchorUpdate } from '../state-management/__tests__/anchor-update';
+import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
+import KeyDidResolver from 'key-did-resolver'
+import { Resolver } from "did-resolver"
+import { DID } from 'dids'
 
 jest.mock('../store/level-state-store')
 
@@ -14,6 +18,17 @@ const seed = u8a.fromString('6e34b2e1a9624113d81ece8a8a22e6e97f0e145c25c1d4d2d0e
 
 async function delay(mills: number): Promise<void> {
   await new Promise<void>(resolve => setTimeout(() => resolve(), mills))
+}
+
+const makeDID = function(seed: Uint8Array, ceramic: Ceramic): DID {
+  const provider = new Ed25519Provider(seed)
+
+  const keyDidResolver = KeyDidResolver.getResolver()
+  const threeIdResolver = ThreeIdResolver.getResolver(ceramic)
+  const resolver = new Resolver({
+    ...threeIdResolver, ...keyDidResolver,
+  })
+  return new DID({ provider, resolver })
 }
 
 const createCeramic = async (ipfs: IpfsApi, anchorOnRequest = false, docCacheLimit = 100, cacheDocumentCommits = true): Promise<Ceramic> => {
@@ -25,8 +40,7 @@ const createCeramic = async (ipfs: IpfsApi, anchorOnRequest = false, docCacheLim
     restoreDocuments: false,
     pubsubTopic: "/ceramic/inmemory/test" // necessary so Ceramic instances can talk to each other
   })
-  const provider = new Ed25519Provider(seed)
-  await ceramic.setDIDProvider(provider)
+  await ceramic.setDID(makeDID(seed, ceramic))
 
   return ceramic
 }
@@ -40,8 +54,6 @@ describe('Ceramic integration', () => {
   let ipfs1: IpfsApi;
   let ipfs2: IpfsApi;
   let ipfs3: IpfsApi;
-
-  const DOCTYPE_TILE = 'tile'
 
   beforeEach(async () => {
     [ipfs1, ipfs2, ipfs3] = await Promise.all(Array.from({length: 3}).map(() => createIPFS()));

@@ -11,8 +11,6 @@ import { IpfsApi, LoggerProvider } from "./index"
 export interface Context {
     did?: DID;
     ipfs?: IpfsApi; // an ipfs instance
-    resolver?: Resolver; // a DID resolver instance
-    provider?: DIDProvider; // a DID provider (3ID provider initially)
     anchorService?: AnchorService;
     loggerProvider?: LoggerProvider;
 

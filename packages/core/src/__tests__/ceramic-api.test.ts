@@ -7,6 +7,10 @@ import * as u8a from 'uint8arrays'
 import cloneDeep from 'lodash.clonedeep'
 import { createIPFS } from './ipfs-util';
 import { anchorUpdate } from '../state-management/__tests__/anchor-update';
+import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
+import KeyDidResolver from 'key-did-resolver'
+import { Resolver } from "did-resolver"
+import { DID } from 'dids'
 
 jest.mock('../store/level-state-store')
 
@@ -31,8 +35,6 @@ describe('Ceramic API', () => {
   jest.setTimeout(60000)
   let ipfs: IpfsApi;
 
-  const DOCTYPE_TILE = 'tile'
-
   const stringMapSchema = {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "StringMap",
@@ -42,13 +44,23 @@ describe('Ceramic API', () => {
     }
   }
 
+  const makeDID = function(seed: Uint8Array, ceramic: Ceramic): DID {
+    const provider = new Ed25519Provider(seed)
+
+    const keyDidResolver = KeyDidResolver.getResolver()
+    const threeIdResolver = ThreeIdResolver.getResolver(ceramic)
+    const resolver = new Resolver({
+      ...threeIdResolver, ...keyDidResolver,
+    })
+    return new DID({ provider, resolver })
+  }
+
   const createCeramic = async (c: CeramicConfig = {}): Promise<Ceramic> => {
     c.anchorOnRequest = false
     c.restoreDocuments = false
     const ceramic = await Ceramic.create(ipfs, c)
 
-    const provider = new Ed25519Provider(seed)
-    await ceramic.setDIDProvider(provider)
+    await ceramic.setDID(makeDID(seed, ceramic))
     return ceramic
   }
 
