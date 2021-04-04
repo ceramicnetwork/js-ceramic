@@ -7,7 +7,6 @@ import {
   CeramicCommit,
   Context,
   DocOpts,
-  DocParams,
   Doctype,
   DoctypeConstructor,
   DoctypeHandler,
@@ -111,16 +110,6 @@ export default class CeramicClient implements CeramicApi {
         }
       }
     }
-  }
-
-  /**
-   * @deprecated
-   */
-  async createDocument<T extends Doctype>(doctype: string, params: DocParams, opts?: DocOpts): Promise<T> {
-    const doctypeConstructor = this.findDoctypeConstructor(doctype)
-    const genesis = await doctypeConstructor.makeGenesis(params, this.context, opts)
-
-    return this.createDocumentFromGenesis(doctype, genesis, opts)
   }
 
   async createDocumentFromGenesis<T extends Doctype>(doctype: string, genesis: any, opts?: DocOpts): Promise<T> {

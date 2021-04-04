@@ -9,7 +9,6 @@ import {
   Context,
   DiagnosticsLogger,
   DoctypeUtils,
-  DocParams,
   LogLevel,
   LoggerProviderOld,
   LoggerPlugin,
@@ -486,19 +485,6 @@ class Ceramic implements CeramicApi {
     const state$ = await this._loadDoc(normalizeDocID(docId), opts)
     await this.repository.stateManager.applyCommit(state$, commit, opts)
     return doctypeFromState<T>(this.context, this._doctypeHandlers, state$.value, this.repository.updates$)
-  }
-
-  /**
-   * Create doctype instance
-   * @param doctype - Document type
-   * @param params - Create parameters
-   * @param opts - Initialization options
-   * @deprecated
-   */
-  async createDocument<T extends Doctype>(doctype: string, params: DocParams, opts?: DocOpts): Promise<T> {
-    const handler = this._doctypeHandlers.get(doctype);
-    const genesis = await handler.doctype.makeGenesis(params, this.context, opts);
-    return this.createDocumentFromGenesis(doctype, genesis, opts);
   }
 
   /**

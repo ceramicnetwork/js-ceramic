@@ -3,9 +3,10 @@ import {
   DoctypeConstructor,
   DoctypeStatic,
   DocOpts,
-  DocParams,
   Context,
-  CeramicCommit, UnsignedCommit,
+  CeramicCommit,
+  UnsignedCommit,
+  DocMetadata,
 } from '@ceramicnetwork/common';
 
 export const DOCTYPE_NAME = 'caip10-link'
@@ -13,8 +14,16 @@ export const DOCTYPE_NAME = 'caip10-link'
 /**
  * Caip10Link parameters
  */
-export interface Caip10LinkParams extends DocParams {
+export interface Caip10LinkParams {
+    metadata?: DocMetadata
+    /**
+     * deterministic is a tri-state. True means means always create the document deterministically,
+     * false means always force the document to be unique, undefined means use the default behavior
+     */
+    deterministic?: boolean
     content?: Record<string, unknown>;
+
+    [index: string]: any // allow arbitrary properties
 }
 
 const throwReadOnlyError = (): Promise<void> => {
