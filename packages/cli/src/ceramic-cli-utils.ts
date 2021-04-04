@@ -13,6 +13,11 @@ import DocID, {CommitID} from '@ceramicnetwork/docid'
 import CeramicDaemon, { CreateOpts } from './ceramic-daemon'
 import { TileDoctype } from "@ceramicnetwork/doctype-tile";
 
+import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
+import KeyDidResolver from 'key-did-resolver'
+import { Resolver } from "did-resolver"
+import { DID } from 'dids'
+
 const DEFAULT_CLI_CONFIG_FILE = 'config.json'
 const DEFAULT_CLI_CONFIG_PATH = path.join(os.homedir(), '.ceramic')
 const DEFAULT_NETWORK = Networks.TESTNET_CLAY
@@ -287,6 +292,24 @@ export class CeramicCliUtils {
     }
 
     /**
+     * Creates an Ed25519-based key-did from a given seed for use with the CLI. The DID instance
+     * has a KeyDidResolver and ThreeIdResolver pre-loaded so that the Ceramic daemon will be
+     * able to resolve both 'did:key' and 'did:3' DIDs.
+     * @param seed
+     * @param ceramic
+     */
+    static _makeDID(seed: Uint8Array, ceramic: CeramicClient): DID {
+        const provider = new Ed25519Provider(seed)
+
+        const keyDidResolver = KeyDidResolver.getResolver()
+        const threeIdResolver = ThreeIdResolver.getResolver(ceramic)
+        const resolver = new Resolver({
+            ...threeIdResolver, ...keyDidResolver,
+        })
+        return new DID({ provider, resolver })
+    }
+
+    /**
      * Open Ceramic and execute function
      * @param fn - Function to be executed
      * @private
@@ -309,8 +332,7 @@ export class CeramicCliUtils {
         }
 
         const seed = u8a.fromString(cliConfig.seed, 'base16')
-        const provider = new Ed25519Provider(seed)
-        await ceramic.setDIDProvider(provider)
+        await ceramic.setDID(CeramicCliUtils._makeDID(seed, ceramic))
 
         try {
             await fn(ceramic)

@@ -101,10 +101,11 @@ export interface CeramicApi {
     applyCommit<T extends Doctype>(docId: DocID | string, commit: CeramicCommit, opts?: DocOpts): Promise<T>;
 
     /**
-     * Set DID provider
-     * @param provider - DID provider instance
+     * Sets the DID instance that will be used to author commits to documents. The DID instance
+     * also includes the DID Resolver that will be used to verify commits from others.
+     * @param did
      */
-    setDIDProvider (provider: DIDProvider): Promise<void>;
+    setDID(did: DID): Promise<void>;
 
     /**
      * @returns An array of the CAIP-2 chain IDs of the blockchains that are supported for anchoring
