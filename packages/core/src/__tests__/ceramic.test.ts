@@ -304,7 +304,6 @@ describe('Ceramic integration', () => {
     await swarmConnect(ipfs1, ipfs2)
     const ceramic1 = await createCeramic(ipfs1, false, 2)
     const ceramic2 = await createCeramic(ipfs2, false, 1)
-    const controller = ceramic1.context.did.id
 
     const repository1 = ceramic1.repository
     const addSpy1 = jest.spyOn(repository1, 'add');
@@ -345,7 +344,6 @@ describe('Ceramic integration', () => {
     await swarmConnect(ipfs1, ipfs2)
     const ceramic1 = await createCeramic(ipfs1, false, 2)
     const ceramic2 = await createCeramic(ipfs2, false, 1, false)
-    const controller = ceramic1.context.did.id
 
     const repository1 = ceramic1.repository
     const addSpy1 = jest.spyOn(repository1, 'add');

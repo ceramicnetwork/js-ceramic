@@ -30,6 +30,7 @@ const createCeramic = async (ipfs: IpfsApi, stateStoreDirectory, anchorOnRequest
     pubsubTopic: "/ceramic/inmemory/test" // necessary so Ceramic instances can talk to each other
   })
   await ceramic.setDID(makeDID(seed, ceramic))
+  await ceramic.did.authenticate()
 
   return ceramic
 }
