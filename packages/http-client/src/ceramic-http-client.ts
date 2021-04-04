@@ -207,9 +207,6 @@ export default class CeramicClient implements CeramicApi {
 
   async setDID(did: DID): Promise<void> {
     this.context.did = did
-    if (!did.authenticated) {
-      await this.did.authenticate()
-    }
   }
 
   async getSupportedChains(): Promise<Array<string>> {

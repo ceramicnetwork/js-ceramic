@@ -193,8 +193,6 @@ describe('Ceramic API', () => {
     })
 
     it('can update schema and then assign to doc with now valid content', async () => {
-      const controller = ceramic.context.did.id
-
       // Create doc with content that has type 'number'.
       const doc = await TileDoctype.create(ceramic, {a: 1})
       await anchorUpdate(ceramic, doc)

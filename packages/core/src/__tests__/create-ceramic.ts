@@ -28,6 +28,7 @@ export async function createCeramic(ipfs: IpfsApi, config?: CeramicConfig & { se
   });
   const did = new DID({ provider, resolver });
   await ceramic.setDID(did);
+  await did.authenticate();
 
   return ceramic;
 }
