@@ -454,10 +454,7 @@ class Ceramic implements CeramicApi {
    */
   async setDID(did: DID): Promise<void> {
     this.context.did = did
-    if (!did.authenticated) {
-      await this.did.authenticate()
-    }
-    this._logger.imp(`Now authenticated as DID ${did}`)
+    this._logger.imp(`Now using DID ${did}`)
   }
 
   /**

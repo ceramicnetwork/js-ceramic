@@ -73,10 +73,13 @@ function headerFromMetadata(metadata?: TileMetadataArgs | DocMetadata): CommitHe
  * @param controller - Controller
  * @private
  */
-function _signDagJWS(commit: CeramicCommit, did: DID, controller: string): Promise<SignedCommitContainer> {
+async function _signDagJWS(commit: CeramicCommit, did: DID, controller: string): Promise<SignedCommitContainer> {
     // check for DID and authentication
-    if (did == null || !did.authenticated) {
+    if (did == null) {
         throw new Error('No DID authenticated')
+    }
+    if (!did.authenticated) {
+        await did.authenticate()
     }
     return did.createDagJWS(commit, { did: controller })
 }
