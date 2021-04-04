@@ -191,7 +191,7 @@ it('is constructed correctly', async () => {
 })
 
 it('makes genesis record correctly', async () => {
-    const record = await TileDoctype._makeGenesis(
+    const record = await TileDoctype.makeGenesis(
         did,
         RECORDS.genesis.data,
         {...RECORDS.genesis.header, deterministic: true}) as SignedCommitContainer
@@ -205,7 +205,7 @@ it('makes genesis record correctly', async () => {
 it('applies genesis record correctly', async () => {
     const tileHandler = new TileDoctypeHandler()
 
-    const record = await TileDoctype._makeGenesis(
+    const record = await TileDoctype.makeGenesis(
         did,
         RECORDS.genesis.data,
         { controllers: [did.id], tags: ['3id'], deterministic: true }) as SignedCommitContainer
@@ -239,7 +239,7 @@ it('makes signed record correctly', async () => {
 it('applies signed record correctly', async () => {
     const tileDoctypeHandler = new TileDoctypeHandler()
 
-    const genesisRecord = await TileDoctype._makeGenesis(
+    const genesisRecord = await TileDoctype.makeGenesis(
         did,
         RECORDS.genesis.data,
         { controllers: [did.id], tags: ['3id'], deterministic: true }) as SignedCommitContainer
@@ -268,7 +268,7 @@ it('applies signed record correctly', async () => {
 it('throws error if record signed by wrong DID', async () => {
     const tileDoctypeHandler = new TileDoctypeHandler()
 
-    const genesisRecord = await TileDoctype._makeGenesis(
+    const genesisRecord = await TileDoctype.makeGenesis(
         did,
         RECORDS.genesis.data,
         { controllers: ['did:3:fake'], tags: ['3id'], deterministic: true }) as SignedCommitContainer
@@ -283,7 +283,7 @@ it('throws error if record signed by wrong DID', async () => {
 it('applies anchor record correctly', async () => {
     const tileDoctypeHandler = new TileDoctypeHandler()
 
-    const genesisRecord = await TileDoctype._makeGenesis(
+    const genesisRecord = await TileDoctype.makeGenesis(
         did,
         RECORDS.genesis.data,
         { controllers: [did.id], tags: ['3id'], deterministic: true }) as SignedCommitContainer

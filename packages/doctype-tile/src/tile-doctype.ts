@@ -92,7 +92,7 @@ export class TileDoctype<T = Record<string, any>> extends Doctype {
      * @param opts - Additional options
      */
     static async create<T>(ceramic: CeramicApi, content: T | null | undefined, metadata?: TileMetadataArgs, opts: DocOpts = {}): Promise<TileDoctype<T>> {
-      const commit = await TileDoctype._makeGenesis(ceramic.did, content, metadata)
+      const commit = await TileDoctype.makeGenesis(ceramic.did, content, metadata)
       return ceramic.createDocumentFromGenesis<TileDoctype>(TileDoctype.DOCTYPE_NAME, commit, opts)
     }
 
@@ -182,13 +182,11 @@ export class TileDoctype<T = Record<string, any>> extends Doctype {
 
     /**
      * Create genesis commit.
-     * Placed on the TileDoctype class as a static method only for use in testing.
      * @param did - DID making (and signing) the commit
      * @param content - genesis content
      * @param metadata - genesis metadata
-     * @private
      */
-    static async _makeGenesis<T>(did: DID, content: T | null, metadata?: TileMetadataArgs): Promise<CeramicCommit> {
+    static async makeGenesis<T>(did: DID, content: T | null, metadata?: TileMetadataArgs): Promise<CeramicCommit> {
         if (!metadata) {
             metadata = {}
         }
