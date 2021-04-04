@@ -453,7 +453,6 @@ class Ceramic implements CeramicApi {
    */
   async setDID(did: DID): Promise<void> {
     this.context.did = did
-    this._logger.imp(`Now using DID ${did}`)
   }
 
   /**

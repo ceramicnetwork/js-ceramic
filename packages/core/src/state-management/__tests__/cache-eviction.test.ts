@@ -31,7 +31,7 @@ test('cache eviction', async () => {
 test('Doctype not subscribed, RunningState in cache', async () => {
   const document = await TileDoctype.create(ceramic, INITIAL);
   const state$ = await ceramic.repository.load(document.id);
-  const updateRecord = await document._makeCommit(ceramic.context.did, UPDATED);
+  const updateRecord = await document.makeCommit(ceramic, UPDATED);
   await ceramic.repository.stateManager.applyCommit(state$, updateRecord);
   // Doctype does not see the change
   expect(document.state.content).toEqual(INITIAL);
@@ -47,8 +47,7 @@ test('Doctype not subscribed, RunningState evicted', async () => {
   await TileDoctype.create(ceramic, { 'evict': true });
 
   const state2$ = await ceramic.repository.load(document.id);
-  const updateRecord = await new TileDoctype(state$, ceramic.context)._makeCommit(
-      ceramic.context.did, UPDATED);
+  const updateRecord = await new TileDoctype(state$, ceramic.context).makeCommit(ceramic, UPDATED);
   await ceramic.repository.stateManager.applyCommit(state2$, updateRecord);
 
   // Doctype does not see the change
@@ -63,7 +62,7 @@ test('Doctype subscribed, RunningState in cache', async () => {
   const document = await TileDoctype.create(ceramic, INITIAL);
   document.subscribe();
   const state$ = await ceramic.repository.load(document.id);
-  const updateRecord = await document._makeCommit(ceramic.context.did, UPDATED);
+  const updateRecord = await document.makeCommit(ceramic, UPDATED);
   await ceramic.repository.stateManager.applyCommit(state$, updateRecord);
   // Doctype sees the change
   expect(document.state.content).toEqual(INITIAL);
@@ -81,8 +80,7 @@ test('Doctype subscribed, RunningState not evicted', async () => {
 
   const state2$ = await ceramic.repository.load(document.id);
   expect(state2$).toBe(state$);
-  const updateRecord = await new TileDoctype(state$, ceramic.context)._makeCommit(
-      ceramic.context.did, UPDATED);
+  const updateRecord = await new TileDoctype(state$, ceramic.context).makeCommit(ceramic, UPDATED);
   await ceramic.repository.stateManager.applyCommit(state2$, updateRecord);
 
   // Doctype sees change

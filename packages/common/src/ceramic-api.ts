@@ -41,6 +41,7 @@ export type { DIDProvider } from 'dids'
 export interface CeramicApi {
     pin: PinApi;
     did?: DID;
+    // logger: DiagnosticsLogger; // TODO uncomment once logger is available on http-client
 
     /**
      * Register Doctype handler
