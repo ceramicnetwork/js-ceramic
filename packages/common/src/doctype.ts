@@ -79,21 +79,6 @@ export interface DocMetadata {
 }
 
 /**
- * Document params
- * TODO: remove once DoctypeConstructor.makeGenesis is removed
- */
-export interface DocParams {
-    metadata?: DocMetadata
-    /**
-     * deterministic is a tri-state. True means means always create the document deterministically,
-     * false means always force the document to be unique, undefined means use the default behavior
-     */
-    deterministic?: boolean
-
-    [index: string]: any // allow arbitrary properties
-}
-
-/**
  * Document information about the next iteration
  */
 export interface DocNext {
@@ -258,16 +243,6 @@ export interface DoctypeConstructor<T extends Doctype> {
      * @param context - Ceramic context
      */
     new(state$: RunningStateLike, context: Context): T
-
-    /**
-     * Makes genesis commit
-     * @param params - Create parameters
-     * @param context - Ceramic context
-     * @param opts - Initialization options
-     * @deprecated
-     * TODO: Remove this when Ceramic.createDocument is removed
-     */
-    makeGenesis(params: DocParams, context?: Context, opts?: DocOpts): Promise<CeramicCommit>
 }
 
 /**

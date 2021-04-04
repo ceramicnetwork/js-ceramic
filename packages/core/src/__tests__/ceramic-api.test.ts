@@ -1,6 +1,6 @@
 import Ceramic, { CeramicConfig } from '../ceramic'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
-import { TileDoctype, TileParams } from "@ceramicnetwork/doctype-tile"
+import { TileDoctype } from "@ceramicnetwork/doctype-tile"
 import { AnchorStatus, DoctypeUtils, IpfsApi } from "@ceramicnetwork/common"
 import DocID from '@ceramicnetwork/docid'
 import * as u8a from 'uint8arrays'

@@ -12,9 +12,6 @@ import {
     CeramicCommit,
     CommitHeader,
     DocOpts,
-    DocParams,
-    Context,
-    GenesisHeader,
     GenesisCommit,
     UnsignedCommit,
     CeramicApi,
@@ -22,13 +19,6 @@ import {
     DocMetadata,
 } from "@ceramicnetwork/common"
 import { CommitID, DocID, DocRef } from "@ceramicnetwork/docid";
-
-/**
- * Tile doctype parameters
- */
-export interface TileParams extends DocParams {
-    content?: Record<string, unknown>;
-}
 
 /**
  * Arguments used to generate the metadata for Tile documents
@@ -201,36 +191,6 @@ export class TileDoctype<T = Record<string, any>> extends Doctype {
     makeReadOnly() {
         this.update = throwReadOnlyError
         this.patch = throwReadOnlyError
-    }
-
-    /**
-     * Creates genesis commit
-     * @param params - Create parameters
-     * @param context - Ceramic context
-     * @deprecated
-     * TODO: Remove this when Ceramic.createDocument is removed
-     */
-    static async makeGenesis(params: DocParams, context: Context): Promise<CeramicCommit> {
-        const metadata: GenesisHeader = params.metadata || { controllers: [] }
-        if (!metadata.controllers || metadata.controllers.length === 0) {
-            if (context.did) {
-                metadata.controllers = [context.did.id]
-            } else {
-                throw new Error('No controllers specified')
-            }
-        }
-
-        if (metadata.controllers.length !== 1) {
-            throw new Error('Exactly one controller must be specified')
-        }
-
-        // If 'deterministic' is undefined, default to creating document uniquely
-        if (!params.deterministic) {
-            metadata.unique = uint8arrays.toString(randomBytes(12), 'base64')
-        }
-
-        const commit: GenesisCommit = { data: params.content, header: metadata }
-        return (commit.data ? await _signDagJWS(commit, context.did, metadata.controllers[0]): commit)
     }
 
     /**
