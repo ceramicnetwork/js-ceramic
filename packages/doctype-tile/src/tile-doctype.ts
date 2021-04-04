@@ -98,6 +98,9 @@ async function _makeGenesis<T>(did: DID, content: T | null, metadata?: TileMetad
 
     if (!metadata.controllers || metadata.controllers.length === 0) {
         if (did) {
+            if (!did.authenticated) {
+                await did.authenticate()
+            }
             metadata.controllers = [did.id]
         } else {
             throw new Error('No controllers specified')
@@ -217,6 +220,9 @@ export class TileDoctype<T = Record<string, any>> extends Doctype {
         const metadata: GenesisHeader = params.metadata || { controllers: [] }
         if (!metadata.controllers || metadata.controllers.length === 0) {
             if (context.did) {
+                if (!context.did.authenticated) {
+                    await context.did.authenticate()
+                }
                 metadata.controllers = [context.did.id]
             } else {
                 throw new Error('No controllers specified')
