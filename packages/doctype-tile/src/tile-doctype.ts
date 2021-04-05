@@ -119,7 +119,7 @@ export class TileDoctype<T = Record<string, any>> extends Doctype {
     static async load(ceramic: CeramicApi, docId: DocID | CommitID | string, opts: DocOpts = {}): Promise<TileDoctype> {
         const docRef = DocRef.from(docId)
         if (docRef.type != TileDoctype.DOCTYPE_ID) {
-            throw new Error(`DocID ${docRef.toString()} does not refer to a 'tile' doctype, but to a ${docRef.typeName}`)
+            throw new Error(`DocID ${docRef.toString()} does not refer to a '${TileDoctype.DOCTYPE_NAME}' doctype, but to a ${docRef.typeName}`)
         }
 
         return ceramic.loadDocument<TileDoctype>(docRef, opts)
