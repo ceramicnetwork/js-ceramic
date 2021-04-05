@@ -95,6 +95,7 @@ export interface CeramicConfig {
   pubsubTopic?: string;
 
   docCacheLimit?: number;
+  concurrentTasksLimit?: number;
   cacheDocCommits?: boolean; // adds 'docCacheLimit' additional cache entries if commits can be cached as well
 
   useCentralizedPeerDiscovery?: boolean;
@@ -126,6 +127,7 @@ export interface CeramicModules {
 export interface CeramicParameters {
   cacheDocumentCommits: boolean,
   docCacheLimit: number,
+  concurrentTasksLimit: number,
   networkOptions: CeramicNetworkOptions,
   supportedChains: string[],
   validateDocs: boolean,
@@ -374,15 +376,17 @@ class Ceramic implements CeramicApi {
     }
 
     const docCacheLimit = config.docCacheLimit ?? DEFAULT_DOC_CACHE_LIMIT
+    const concurrentTasksLimit = config.concurrentTasksLimit ?? docCacheLimit
 
     const ipfsTopology = new IpfsTopology(ipfs, networkOptions.name, logger)
     const pinStoreFactory = new PinStoreFactory(ipfs, pinStoreOptions)
-    const repository = new Repository(docCacheLimit, logger)
+    const repository = new Repository(docCacheLimit, logger, concurrentTasksLimit)
     const dispatcher = new Dispatcher(ipfs, networkOptions.pubsubTopic, repository, logger, pubsubLogger)
 
-    const params = {
+    const params: CeramicParameters = {
       cacheDocumentCommits: config.cacheDocCommits ?? true,
       docCacheLimit: docCacheLimit,
+      concurrentTasksLimit: concurrentTasksLimit,
       networkOptions,
       supportedChains,
       validateDocs: config.validateDocs ?? true,

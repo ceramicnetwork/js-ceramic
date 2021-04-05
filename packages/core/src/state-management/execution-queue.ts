@@ -2,6 +2,7 @@ import { NamedTaskQueue } from './named-task-queue';
 import { DocID } from '@ceramicnetwork/docid';
 import { DiagnosticsLogger } from '@ceramicnetwork/common';
 import { RunningState } from './running-state';
+import { Semaphore } from 'await-semaphore';
 
 /**
  * Ensures tasks are executed sequentially.
@@ -28,11 +29,17 @@ export interface ExecutionLane {
  */
 export class ExecutionQueue {
   readonly tasks: NamedTaskQueue;
+  readonly semaphore: Semaphore;
 
-  constructor(logger: DiagnosticsLogger, readonly get: (docId: DocID) => Promise<RunningState>) {
+  constructor(
+    concurrencyLimit: number,
+    logger: DiagnosticsLogger,
+    readonly get: (docId: DocID) => Promise<RunningState>,
+  ) {
     this.tasks = new NamedTaskQueue((error) => {
       logger.err(error);
     });
+    this.semaphore = new Semaphore(concurrencyLimit);
   }
 
   /**
@@ -44,7 +51,7 @@ export class ExecutionQueue {
         return this.tasks.add(docId.toString(), async () => {
           const doc = await this.get(docId);
           if (doc) {
-            await task(doc);
+            return this.semaphore.use(() => task(doc));
           }
         });
       },
@@ -52,7 +59,7 @@ export class ExecutionQueue {
         return this.tasks.run(docId.toString(), async () => {
           const doc = await this.get(docId);
           if (doc) {
-            return task(doc);
+            return this.semaphore.use(() => task(doc));
           }
         });
       },

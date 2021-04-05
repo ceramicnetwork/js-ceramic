@@ -57,12 +57,18 @@ export class Repository {
    */
   stateManager: StateManager;
 
-  constructor(limit: number, private readonly logger: DiagnosticsLogger) {
+  /**
+   * @param cacheLimit - Maximum number of documents to store in memory cache.
+   * @param logger - Where we put diagnostics messages.
+   * @param concurrencyLimit - Maximum number of concurrently running tasks on the documents.
+   */
+  constructor(cacheLimit: number, private readonly logger: DiagnosticsLogger, concurrencyLimit?: number) {
     this.loadingQ = new NamedTaskQueue((error) => {
       logger.err(error);
     });
-    this.executionQ = new ExecutionQueue(logger, (docId) => this.get(docId));
-    this.inmemory = new StateCache(limit, (state$) => state$.complete());
+    const effectiveConcurrencyLimit = cacheLimit || concurrencyLimit;
+    this.executionQ = new ExecutionQueue(effectiveConcurrencyLimit, logger, (docId) => this.get(docId));
+    this.inmemory = new StateCache(cacheLimit, (state$) => state$.complete());
     this.updates$ = this.updates$.bind(this);
   }
 
