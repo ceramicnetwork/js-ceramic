@@ -5,6 +5,7 @@ import { DiagnosticsLogger } from '@ceramicnetwork/common';
 
 /**
  * Container for doctype handlers. Maps doctype name to the handler instance.
+ * TODO: This should map from doctype id rather than doctype name.
  */
 export class HandlersMap {
   private readonly handlers: Map<string, DoctypeHandler<Doctype>>;

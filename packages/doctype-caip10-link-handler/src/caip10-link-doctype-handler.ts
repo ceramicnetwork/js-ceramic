@@ -1,12 +1,12 @@
 import type CID from 'cids'
 import { validateLink } from "@ceramicnetwork/blockchain-utils-validation"
-import { Caip10LinkDoctype, Caip10LinkParams, DOCTYPE_NAME } from "@ceramicnetwork/doctype-caip10-link"
+import { LinkProof } from "@ceramicnetwork/blockchain-utils-linking"
+import { Caip10LinkDoctype } from "@ceramicnetwork/doctype-caip10-link"
 import {
     AnchorStatus,
     DocState,
     DoctypeConstructor,
     DoctypeHandler,
-    DocOpts,
     SignatureStatus,
     CommitType,
     CeramicCommit,
@@ -21,7 +21,7 @@ export class Caip10LinkDoctypeHandler implements DoctypeHandler<Caip10LinkDoctyp
      * Gets doctype name
      */
     get name(): string {
-        return DOCTYPE_NAME
+        return Caip10LinkDoctype.DOCTYPE_NAME
     }
 
     /**
@@ -29,16 +29,6 @@ export class Caip10LinkDoctypeHandler implements DoctypeHandler<Caip10LinkDoctyp
      */
     get doctype(): DoctypeConstructor<Caip10LinkDoctype> {
         return Caip10LinkDoctype
-    }
-
-    /**
-     * Creates Caip10Link instance
-     * @param params - Create parameters
-     * @param context - Ceramic context
-     * @param opts - Initialization options
-     */
-    async create(params: Caip10LinkParams, context: Context, opts?: DocOpts): Promise<Caip10LinkDoctype> {
-        return Caip10LinkDoctype.create(params, context, opts);
     }
 
     /**
@@ -67,9 +57,13 @@ export class Caip10LinkDoctypeHandler implements DoctypeHandler<Caip10LinkDoctyp
      * @private
      */
     async _applyGenesis (commit: any, cid: CID): Promise<DocState> {
+        if (commit.data ) {
+            throw new Error('Caip10Link genesis commit cannot have data')
+        }
+
         // TODO - verify genesis commit
         const state = {
-            doctype: DOCTYPE_NAME,
+            doctype: Caip10LinkDoctype.DOCTYPE_NAME,
             content: null,
             next: {
                 content: null
@@ -88,6 +82,16 @@ export class Caip10LinkDoctypeHandler implements DoctypeHandler<Caip10LinkDoctyp
     }
 
     /**
+     * Thin wrapper around 'validateLink' function from blockchain-utils-validation to allow
+     * injecting a mock implementation for ease of unit testing.
+     * @param proof
+     * @private
+     */
+    private async _validateLink(proof: LinkProof): Promise<void> {
+        await validateLink(proof)
+    }
+
+    /**
      * Applies signed commit
      * @param commit - Signed commit
      * @param cid - Signed commit CID
@@ -98,7 +102,7 @@ export class Caip10LinkDoctypeHandler implements DoctypeHandler<Caip10LinkDoctyp
         // TODO: Assert that the 'prev' of the commit being applied is the end of the log in 'state'
         let validProof = null
         try {
-          validProof = await validateLink(commit.data)
+          validProof = await this._validateLink(commit.data)
         } catch (e) {
           throw new Error("Error while validating link proof for caip10-link signed commit: " + e.toString())
         }

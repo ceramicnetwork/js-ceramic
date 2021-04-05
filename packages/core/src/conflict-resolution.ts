@@ -255,6 +255,7 @@ export class ConflictResolution {
 
       if (payload.proof) {
         // it's an anchor commit
+        // TODO: Anchor validation should be done by the doctype-handler as part of applying the anchor commit
         await verifyAnchorCommit(this.dispatcher, this.anchorService, commit);
         state = await handler.applyCommit(commit, cid, this.context, state);
       } else {
@@ -262,6 +263,7 @@ export class ConflictResolution {
         const tmpState = await handler.applyCommit(commit, cid, this.context, state);
         const isGenesis = !payload.prev;
         const effectiveState = isGenesis ? tmpState : tmpState.next;
+        // TODO: Schema validation should be done by the doctype-handler as part of applying the commit
         await this.stateValidation.validate(effectiveState, effectiveState.content);
         state = tmpState; // if validation is successful
       }
