@@ -15,6 +15,9 @@ import {
 } from "@ceramicnetwork/common"
 import { LogToFiles } from "./ceramic-logger-plugins"
 import DocID from "@ceramicnetwork/docid"
+import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
+import KeyDidResolver from 'key-did-resolver'
+import { DID } from 'dids'
 import cors from 'cors'
 import * as core from "express-serve-static-core"
 import { cpuFree, freememPercentage } from "os-utils"
@@ -202,6 +205,12 @@ class CeramicDaemon {
 
     const ceramic = new Ceramic(modules, params)
     await ceramic._init(true, true)
+
+    const did = new DID({ resolver: {
+      ...KeyDidResolver.getResolver(),
+      ...ThreeIdResolver.getResolver(ceramic)
+    }})
+    await ceramic.setDID(did)
 
     return new CeramicDaemon(ceramic, opts)
   }
