@@ -62,12 +62,11 @@ export class Repository {
    * @param logger - Where we put diagnostics messages.
    * @param concurrencyLimit - Maximum number of concurrently running tasks on the documents.
    */
-  constructor(cacheLimit: number, private readonly logger: DiagnosticsLogger, concurrencyLimit?: number) {
+  constructor(cacheLimit: number, concurrencyLimit: number, private readonly logger: DiagnosticsLogger) {
     this.loadingQ = new NamedTaskQueue((error) => {
       logger.err(error);
     });
-    const effectiveConcurrencyLimit = cacheLimit || concurrencyLimit;
-    this.executionQ = new ExecutionQueue(effectiveConcurrencyLimit, logger, (docId) => this.get(docId));
+    this.executionQ = new ExecutionQueue(concurrencyLimit, logger, (docId) => this.get(docId));
     this.inmemory = new StateCache(cacheLimit, (state$) => state$.complete());
     this.updates$ = this.updates$.bind(this);
   }
