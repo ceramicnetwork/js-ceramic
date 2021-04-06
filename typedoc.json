@@ -51,6 +51,15 @@
             "source": "./docs-src/guides/add-new-blockchain.md"
           }
         ]
+      },
+      {
+        "title": "ADRs",
+        "pages": [
+          {
+            "title": "1. State Refactor",
+            "source": "./docs-src/adr/1-state-refactor.adr.md"
+          }
+        ]
       }
     ]
   }
