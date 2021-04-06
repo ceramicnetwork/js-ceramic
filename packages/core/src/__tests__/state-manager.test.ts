@@ -63,7 +63,7 @@ test('handleTip', async () => {
   expect(doc2.content).toEqual(doc1.content);
   expect(doc2.state).toEqual(expect.objectContaining({ signature: SignatureStatus.SIGNED, anchorStatus: 0 }));
 
-  await ceramic2.repository.stateManager.handleTip(docState2, doc1.state.log[1].cid);
+  await (ceramic2.repository.stateManager as any).handleTip(docState2, doc1.state.log[1].cid);
 
   expect(doc2.state).toEqual(doc1.state);
   await ceramic2.close();
@@ -221,7 +221,7 @@ test('handles basic conflict', async () => {
     .then((doc) => doc.state);
   const state$ = new RunningState(initialState);
   ceramic.repository.add(state$);
-  await ceramic.repository.stateManager.handleTip(state$, tipPreUpdate);
+  await (ceramic.repository.stateManager as any).handleTip(state$, tipPreUpdate);
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
   const conflictingNewContent = { asdf: 2342 };
@@ -235,12 +235,12 @@ test('handles basic conflict', async () => {
   expect(doc2.content).toEqual(conflictingNewContent);
   // loading tip from valid log to doc with invalid
   // log results in valid state
-  await ceramic.repository.stateManager.handleTip(state$, tipValidUpdate);
+  await (ceramic.repository.stateManager as any).handleTip(state$, tipValidUpdate);
   expect(doc2.content).toEqual(newContent);
 
   // loading tip from invalid log to doc with valid
   // log results in valid state
-  await ceramic.repository.stateManager.handleTip(docState1, tipInvalidUpdate);
+  await (ceramic.repository.stateManager as any).handleTip(docState1, tipInvalidUpdate);
   expect(doc1.content).toEqual(newContent);
 
   // Loading valid commit works

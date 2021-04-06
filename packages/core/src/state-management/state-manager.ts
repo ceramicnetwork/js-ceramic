@@ -95,7 +95,7 @@ export class StateManager {
     }
   }
 
-  async handleTip(state$: RunningState, cid: CID): Promise<void> {
+  private async handleTip(state$: RunningState, cid: CID): Promise<void> {
     const next = await this.conflictResolution.applyTip(state$.value, cid);
     if (next) {
       state$.next(next);
