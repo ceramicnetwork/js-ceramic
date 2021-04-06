@@ -20,7 +20,6 @@ import KeyDidResolver from 'key-did-resolver'
 import { DID } from 'dids'
 import cors from 'cors'
 import * as core from "express-serve-static-core"
-import { cpuFree, freememPercentage } from "os-utils"
 import morgan from 'morgan';
 
 const DEFAULT_PORT = 7007
@@ -45,9 +44,6 @@ export interface CreateOpts {
   loggerConfig?: LoggerConfig,
   network?: string;
   pubsubTopic?: string;
-
-  maxHealthyCpu: number;
-  maxHealthyMemory: number;
 }
 
 interface HttpLog {
@@ -122,13 +118,9 @@ const makeCeramicConfig = function (opts: CreateOpts): CeramicConfig {
  */
 class CeramicDaemon {
   private server: any
-  private maxHealthyCpu: number
-  private maxHealthyMemory: number
   private readonly logger: DiagnosticsLogger
 
   constructor (public ceramic: Ceramic, opts: CreateOpts) {
-    this.maxHealthyCpu = opts.maxHealthyCpu
-    this.maxHealthyMemory = opts.maxHealthyMemory
     this.logger = ceramic.context.loggerProvider.getDiagnosticsLogger()
 
     const app: core.Express = express()
@@ -267,22 +259,8 @@ class CeramicDaemon {
     return httpLog
   }
 
-  async healthcheck (req: Request, res: Response, next: NextFunction): Promise<void> {
-    const freeCpu: any = await new Promise((resolve) => cpuFree(resolve))
-    const cpuUsage: number = 1 - freeCpu
-
-    const freeMemory = freememPercentage()
-    const memUsage: number = 1 - freeMemory
-
-    const stats = `maxHealthyCpu=${this.maxHealthyCpu} cpuUsage=${cpuUsage} freeCpu=${freeCpu} maxHealthyMemory=${this.maxHealthyMemory} memoryUsage=${memUsage} freeMemory=${freeMemory}`
-
-    if (cpuUsage > this.maxHealthyCpu || memUsage > this.maxHealthyMemory) {
-      this.logger.debug(stats)
-      res.status(503)
-      return next(new Error('Ceramic failed a healthcheck. Insufficient resources.'))
-    } else {
-      res.status(200).send('Alive!')
-    }
+  healthcheck (req: Request, res: Response, next: NextFunction): void {
+    res.status(200).send('Alive!')
   }
 
   /**

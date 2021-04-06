@@ -39,8 +39,6 @@ program
         logDirectory,
         network,
         pubsubTopic,
-        maxHealthyCpu,
-        maxHealthyMemory,
         corsAllowedOrigins
     }) => {
         if (stateStoreDirectory && stateStoreS3Bucket) {
@@ -62,8 +60,6 @@ program
             logDirectory,
             network,
             pubsubTopic,
-            maxHealthyCpu,
-            maxHealthyMemory,
             corsAllowedOrigins
         )
     })
