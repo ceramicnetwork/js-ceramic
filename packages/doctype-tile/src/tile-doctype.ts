@@ -4,7 +4,6 @@ import type { Operation } from 'fast-json-patch'
 import * as uint8arrays from 'uint8arrays'
 import { randomBytes } from '@stablelib/random'
 
-import type { DID } from 'dids'
 import {
     Doctype,
     DoctypeConstructor,
@@ -17,7 +16,7 @@ import {
     CeramicApi,
     SignedCommitContainer,
     DocMetadata,
-    DiagnosticsLogger,
+    CeramicSigner,
 } from "@ceramicnetwork/common"
 import { CommitID, DocID, DocRef } from "@ceramicnetwork/docid";
 
@@ -30,21 +29,6 @@ export interface TileMetadataArgs {
   schema?: CommitID | string
   tags?: Array<string>
   deterministic?: boolean
-}
-
-interface CeramicCommon {
-    logger?: DiagnosticsLogger
-}
-
-/**
- * Interface for an object that contains a DID that can be used to sign Ceramic commits.
- * Any implementation of CeramicAPI will match this interface, though if no CeramicAPI instance is
- * available users can provide any object containing an authenticated DID instance.
- */
-interface CeramicSigner extends CeramicCommon {
-    did?: DID
-
-    [index: string]: any // allow arbitrary properties
 }
 
 /**
