@@ -6,7 +6,7 @@ import { DiagnosticsLogger } from '@ceramicnetwork/common';
  */
 export function errorHandler(logger: DiagnosticsLogger): ErrorRequestHandler {
   return (err: Error, req: Request, res: Response, next: NextFunction) => {
-    (req as any).error = err // Allow other middlewares access the error
+    res.locals.error = err; // Allow other middlewares access the error
     logger.err(err);
     if (res.headersSent) {
       return next(err);
