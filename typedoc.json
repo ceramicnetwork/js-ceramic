@@ -30,6 +30,10 @@
               {
                 "title": "Pinning",
                 "source": "./docs-src/architecture/pinning.md"
+              },
+              {
+                "title": "State Management",
+                "source": "./docs-src/architecture/state-management.md"
               }
             ]
           }
