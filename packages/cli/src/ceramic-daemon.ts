@@ -282,7 +282,7 @@ class CeramicDaemon {
   }
 
   async _notSupported (req: Request, res: Response): Promise<void> {
-    res.status(400).json({ status: 'error', message: 'Method not supported by read only Ceramic Gateway' })
+    res.status(400).json({ error: 'Method not supported by read only Ceramic Gateway' })
   }
 
   async getSupportedChains (req: Request, res: Response): Promise<void> {
