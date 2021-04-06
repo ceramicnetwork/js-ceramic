@@ -43,6 +43,7 @@
     }
   },
   "dependencies": {
+    "@awaitjs/express": "^0.7.2",
     "@ceramicnetwork/3id-did-resolver": "^1.2.0-rc.1",
     "@ceramicnetwork/common": "^0.18.0-rc.0",
     "@ceramicnetwork/core": "^0.22.0-rc.0",
