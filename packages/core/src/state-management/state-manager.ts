@@ -20,6 +20,17 @@ import { SnapshotState } from './snapshot-state';
 import { CommitID, DocID } from '@ceramicnetwork/docid';
 
 export class StateManager {
+
+  /**
+   * @param dispatcher - currently used instance of Dispatcher
+   * @param pinStore - currently used instance of PinStore
+   * @param executionQ - currently used instance of ExecutionQueue
+   * @param anchorService - currently used instance of AnchorService
+   * @param conflictResolution - currently used instance of ConflictResolution
+   * @param logger - Logger
+   * @param fromMemoryOrStore - load RunningState from in-memory cache or from state store, see `Repository#get`.
+   * @param load - `Repository#load`
+   */
   constructor(
     private readonly dispatcher: Dispatcher,
     private readonly pinStore: PinStore,
@@ -27,7 +38,7 @@ export class StateManager {
     public anchorService: AnchorService,
     public conflictResolution: ConflictResolution,
     private readonly logger: DiagnosticsLogger,
-    private readonly get: (docId: DocID) => Promise<RunningState | undefined>,
+    private readonly fromMemoryOrStore: (docId: DocID) => Promise<RunningState | undefined>,
     private readonly load: (docId: DocID, opts?: LoadOpts | CreateOpts | UpdateOpts) => Promise<RunningState>,
   ) {}
 
