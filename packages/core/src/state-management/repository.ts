@@ -66,7 +66,7 @@ export class Repository {
     this.loadingQ = new NamedTaskQueue((error) => {
       logger.err(error);
     });
-    this.executionQ = new ExecutionQueue(concurrencyLimit, logger, (docId) => this.get(docId));
+    this.executionQ = new ExecutionQueue(concurrencyLimit, logger);
     this.inmemory = new StateCache(cacheLimit, (state$) => state$.complete());
     this.updates$ = this.updates$.bind(this);
   }
@@ -81,6 +81,8 @@ export class Repository {
       deps.anchorService,
       deps.conflictResolution,
       this.logger,
+      (docId) => this.get(docId),
+      (docId) => this.load(docId),
     );
   }
 

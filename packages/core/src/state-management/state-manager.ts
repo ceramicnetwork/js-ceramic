@@ -27,6 +27,8 @@ export class StateManager {
     public anchorService: AnchorService,
     public conflictResolution: ConflictResolution,
     private readonly logger: DiagnosticsLogger,
+    private readonly get: (docId: DocID) => Promise<RunningState | undefined>,
+    private readonly load: (docId: DocID, opts?: LoadOpts | CreateOpts | UpdateOpts) => Promise<RunningState>,
   ) {}
 
   /**
@@ -120,24 +122,27 @@ export class StateManager {
    * @private
    */
   update(docId: DocID, tip: CID): void {
-    this.executionQ.forDocument(docId).add(async (state$) => {
-      await this.handleTip(state$, tip);
+    this.executionQ.forDocument(docId).add(async () => {
+      const state$ = await this.get(docId);
+      if (state$) await this.handleTip(state$, tip);
     });
   }
 
   /**
    * Applies commit to the existing state
    *
-   * @param state$ - Running State to update
+   * @param docId - Document ID to update
    * @param commit - Commit data
    * @param opts - Document initialization options (request anchor, wait, etc.)
    */
-  applyCommit(state$: RunningState, commit: any, opts: CreateOpts | UpdateOpts): Promise<void> {
-    return this.executionQ.forDocument(state$.id).run(async (state$) => {
+  applyCommit(docId: DocID, commit: any, opts: CreateOpts | UpdateOpts): Promise<RunningState> {
+    return this.executionQ.forDocument(docId).run(async () => {
+      const state$ = await this.load(docId, opts)
       const cid = await this.dispatcher.storeCommit(commit);
 
       await this.handleTip(state$, cid);
       await this.applyOpts(state$, opts);
+      return state$
     });
   }
 
