@@ -23,5 +23,5 @@ export function logRequests(loggerProvider: LoggerProvider): any[] {
 
   const logger = loggerProvider.makeServiceLogger('http-access');
 
-  return [morgan(ACCESS_LOG_FMT, { stream: logger })];
+  return morgan(ACCESS_LOG_FMT, { stream: logger });
 }
