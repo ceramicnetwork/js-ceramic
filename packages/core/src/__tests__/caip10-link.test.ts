@@ -12,7 +12,6 @@ import { anchorUpdate } from '../state-management/__tests__/anchor-update';
 import MockDate from 'mockdate'
 
 jest.mock('../store/level-state-store')
-MockDate.set('2018-10-01')
 
 const seed = u8a.fromString('6e34b2e1a9624113d81ece8a8a22e6e97f0e145c25c1d4d2d0e62753b4060c83', 'base16')
 
@@ -44,9 +43,11 @@ describe('Ceramic API', () => {
 
   beforeAll(async () => {
     ipfs = await createIPFS()
+    MockDate.set('2018-10-01')
   })
 
   afterAll(async () => {
+    MockDate.reset()
     await ipfs.stop(() => console.log('IPFS stopped'))
   })
 
