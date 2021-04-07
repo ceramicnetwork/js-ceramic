@@ -12,7 +12,6 @@ import { anchorUpdate } from '../state-management/__tests__/anchor-update';
 import MockDate from 'mockdate'
 
 jest.mock('../store/level-state-store')
-MockDate.set('2018-10-01')
 
 const seed = u8a.fromString('6e34b2e1a9624113d81ece8a8a22e6e97f0e145c25c1d4d2d0e62753b4060c83', 'base16')
 
@@ -44,10 +43,12 @@ describe('Ceramic API', () => {
 
   beforeAll(async () => {
     ipfs = await createIPFS()
+    MockDate.set('2018-10-01')
   })
 
   afterAll(async () => {
     await ipfs.stop(() => console.log('IPFS stopped'))
+    MockDate.reset()
   })
 
   describe('Caip10Link test', () => {
@@ -67,7 +68,7 @@ describe('Ceramic API', () => {
       await ceramic.close()
     })
 
-    it('Create from valid account id', async () => {
+    it.only('Create from valid account id', async () => {
       const account = '0x0123456789abcdefghijklmnopqrstuvwxyz0000@eip155:1'
       const link = await Caip10LinkDoctype.fromAccount(ceramic, account, { anchor: false })
       expect(link.metadata.controllers).toHaveLength(1)
