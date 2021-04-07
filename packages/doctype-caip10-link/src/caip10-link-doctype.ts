@@ -7,7 +7,7 @@ import {
     UnsignedCommit,
     GenesisCommit,
 } from '@ceramicnetwork/common';
-import {AuthProvider, LinkProof} from "@ceramicnetwork/blockchain-utils-linking";
+import { AuthProvider, LinkProof } from "@ceramicnetwork/blockchain-utils-linking";
 import { CommitID, DocID, DocRef } from "@ceramicnetwork/docid";
 import { AccountID } from "caip";
 import { DID } from "dids";
