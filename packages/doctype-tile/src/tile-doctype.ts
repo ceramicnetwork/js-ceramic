@@ -111,9 +111,9 @@ export class TileDoctype<T = Record<string, any>> extends Doctype {
      * @param genesisCommit - Genesis commit (first commit in document log)
      * @param opts - Additional options
      */
-    static async createFromGenesis(ceramic: CeramicApi, genesisCommit: GenesisCommit, opts: DocOpts = {}): Promise<TileDoctype> {
+    static async createFromGenesis<T>(ceramic: CeramicApi, genesisCommit: GenesisCommit, opts: DocOpts = {}): Promise<TileDoctype<T>> {
         const commit = (genesisCommit.data ? await _signDagJWS(ceramic, genesisCommit, genesisCommit.header.controllers[0]): genesisCommit)
-        return ceramic.createDocumentFromGenesis<TileDoctype>(TileDoctype.DOCTYPE_NAME, commit, opts)
+        return ceramic.createDocumentFromGenesis<TileDoctype<T>>(TileDoctype.DOCTYPE_NAME, commit, opts)
     }
 
     /**
@@ -122,13 +122,13 @@ export class TileDoctype<T = Record<string, any>> extends Doctype {
      * @param docId - DocID to load.  Must correspond to a Tile doctype
      * @param opts - Additional options
      */
-    static async load(ceramic: CeramicApi, docId: DocID | CommitID | string, opts: DocOpts = {}): Promise<TileDoctype> {
+    static async load<T>(ceramic: CeramicApi, docId: DocID | CommitID | string, opts: DocOpts = {}): Promise<TileDoctype<T>> {
         const docRef = DocRef.from(docId)
         if (docRef.type != TileDoctype.DOCTYPE_ID) {
             throw new Error(`DocID ${docRef.toString()} does not refer to a 'tile' doctype, but to a ${docRef.typeName}`)
         }
 
-        return ceramic.loadDocument<TileDoctype>(docRef, opts)
+        return ceramic.loadDocument<TileDoctype<T>>(docRef, opts)
     }
 
     /**
