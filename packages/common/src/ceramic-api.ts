@@ -37,7 +37,7 @@ export interface PinApi {
 export type { DIDProvider } from 'dids'
 
 interface CeramicCommon {
-    logger?: DiagnosticsLogger
+    logger?: DiagnosticsLogger // todo LoggerProvider instead
 }
 
 /**

@@ -163,7 +163,7 @@ const tryDocId = (id: string): DocID | null => {
 class Ceramic implements CeramicApi {
 
   public readonly context: Context
-  public readonly logger: DiagnosticsLogger
+  public readonly logger: DiagnosticsLogger // todo expose LoggerProvider instead
   public readonly dispatcher: Dispatcher;
   public readonly pin: PinApi;
   readonly repository: Repository;
