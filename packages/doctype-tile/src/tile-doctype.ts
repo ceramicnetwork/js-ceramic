@@ -62,8 +62,8 @@ async function _ensureAuthenticated(signer: CeramicSigner) {
     }
     if (!signer.did.authenticated) {
         await signer.did.authenticate()
-        if (signer.logger) {
-            signer.logger.imp(`Now authenticated as DID ${signer.did.id}`)
+        if (signer.loggerProvider) {
+            signer.loggerProvider.getDiagnosticsLogger().imp(`Now authenticated as DID ${signer.did.id}`)
         }
     }
 }

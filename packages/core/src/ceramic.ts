@@ -163,13 +163,14 @@ const tryDocId = (id: string): DocID | null => {
 class Ceramic implements CeramicApi {
 
   public readonly context: Context
-  public readonly logger: DiagnosticsLogger // todo expose LoggerProvider instead
   public readonly dispatcher: Dispatcher;
+  public readonly loggerProvider: LoggerProvider;
   public readonly pin: PinApi;
   readonly repository: Repository;
 
   readonly _doctypeHandlers: HandlersMap
   private readonly _ipfsTopology: IpfsTopology
+  private readonly _logger: DiagnosticsLogger
   private readonly _networkOptions: CeramicNetworkOptions
   private readonly _supportedChains: Array<string>
   private readonly _validateDocs: boolean
@@ -177,9 +178,10 @@ class Ceramic implements CeramicApi {
 
   constructor (modules: CeramicModules, params: CeramicParameters) {
     this._ipfsTopology = modules.ipfsTopology
-    this.logger = modules.loggerProvider.getDiagnosticsLogger()
+    this.loggerProvider = modules.loggerProvider
+    this._logger = modules.loggerProvider.getDiagnosticsLogger()
     this.repository = modules.repository
-    this.pin = new LocalPinApi(this.repository, this._loadDoc.bind(this), this.logger)
+    this.pin = new LocalPinApi(this.repository, this._loadDoc.bind(this), this._logger)
     this.dispatcher = modules.dispatcher
 
     this._validateDocs = params.validateDocs
@@ -194,7 +196,7 @@ class Ceramic implements CeramicApi {
     }
     this.context.anchorService.ceramic = this
 
-    this._doctypeHandlers = new HandlersMap(this.logger)
+    this._doctypeHandlers = new HandlersMap(this._logger)
 
     // This initialization block below has to be redone.
     // Things below should be passed here as `modules` variable.
@@ -517,7 +519,7 @@ class Ceramic implements CeramicApi {
   async loadDocument<T extends Doctype>(docId: DocID | CommitID | string, opts: DocOpts = {}): Promise<T> {
     const docRef = DocRef.from(docId)
     const base$ = await this._loadDoc(docRef.baseID, opts)
-    this.logger.verbose(`Document ${docId.toString()} successfully loaded`)
+    this._logger.verbose(`Document ${docId.toString()} successfully loaded`)
     if (docRef instanceof CommitID) {
       // Here CommitID is requested, let's return document at specific commit
       const snapshot$ = await this.repository.stateManager.rewind(base$, docRef)
@@ -609,7 +611,7 @@ class Ceramic implements CeramicApi {
         value: await DoctypeUtils.convertCommitToSignedCommitContainer(record, this.ipfs)
       }
     }))
-    this.logger.verbose(`Successfully loaded ${results.length} commits for document ${docId.toString()}`)
+    this._logger.verbose(`Successfully loaded ${results.length} commits for document ${docId.toString()}`)
     return results
   }
 
@@ -640,9 +642,9 @@ class Ceramic implements CeramicApi {
         await this._loadDoc(DocID.fromString(docId))
         n++;
       }))
-      this.logger.verbose(`Successfully restored ${n} pinned documents`)
+      this._logger.verbose(`Successfully restored ${n} pinned documents`)
     }).catch(error => {
-      this.logger.err(error)
+      this._logger.err(error)
     })
   }
 
@@ -650,11 +652,11 @@ class Ceramic implements CeramicApi {
    * Close Ceramic instance gracefully
    */
   async close (): Promise<void> {
-    this.logger.imp("Closing Ceramic instance")
+    this._logger.imp("Closing Ceramic instance")
     await this.dispatcher.close()
     await this.repository.close()
     this._ipfsTopology.stop()
-    this.logger.imp("Ceramic instance closed successfully")
+    this._logger.imp("Ceramic instance closed successfully")
   }
 }
 

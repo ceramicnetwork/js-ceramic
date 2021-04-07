@@ -6,7 +6,7 @@ import {
     CeramicCommit
 } from "./doctype"
 import { DocID, CommitID } from '@ceramicnetwork/docid'
-import { DiagnosticsLogger } from "./loggers";
+import { LoggerProvider } from "./logger-provider";
 
 /**
  * Describes Ceramic pinning functionality
@@ -37,7 +37,7 @@ export interface PinApi {
 export type { DIDProvider } from 'dids'
 
 interface CeramicCommon {
-    logger?: DiagnosticsLogger // todo LoggerProvider instead
+    loggerProvider?: LoggerProvider
 }
 
 /**
@@ -57,7 +57,7 @@ export interface CeramicSigner extends CeramicCommon {
 export interface CeramicApi extends CeramicSigner {
     pin: PinApi;
     did: DID | null;
-    // logger: DiagnosticsLogger; // TODO uncomment once logger is available on http-client
+    // loggerProvider: LoggerProvider; // TODO uncomment once logger is available on http-client
 
     /**
      * Register Doctype handler
