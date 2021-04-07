@@ -98,14 +98,26 @@ describe('Caip10LinkHandler', () => {
         expect(commit).toEqual(RECORDS.genesis)
     })
 
-    it('applies genesis commit correctly', async () => {
-        const state = await handler.applyCommit(RECORDS.genesis, FAKE_CID_1, context)
-        expect(state).toMatchSnapshot()
-    })
-
     it('throws an error if genesis commit has data', async () => {
         const genesisWithData = { ...RECORDS.genesis, data: {} }
         await expect(handler.applyCommit(genesisWithData, FAKE_CID_1, context)).rejects.toThrow(/cannot have data/)
+    })
+
+    it('throws an error if genesis commit has no controllers specified', async () => {
+        const genesisWithoutControllers = cloneDeep(RECORDS.genesis)
+        delete genesisWithoutControllers.header.controllers
+        await expect(handler.applyCommit(genesisWithoutControllers, FAKE_CID_1, context)).rejects.toThrow(/Exactly one controller must be specified/i)
+    })
+
+    it('throws an error if genesis commit has more than one controller', async () => {
+        const genesisWithMultipleControllers = cloneDeep(RECORDS.genesis)
+        genesisWithMultipleControllers.header.controllers.push('0x25954ef14cebbc9af3d79876489a9cfe87043f20@eip155:1')
+        await expect(handler.applyCommit(genesisWithMultipleControllers, FAKE_CID_1, context)).rejects.toThrow(/Exactly one controller must be specified/i)
+    })
+
+    it('applies genesis commit correctly', async () => {
+        const state = await handler.applyCommit(RECORDS.genesis, FAKE_CID_1, context)
+        expect(state).toMatchSnapshot()
     })
 
     it('makes update commit correctly', async () => {

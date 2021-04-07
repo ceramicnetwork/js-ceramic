@@ -87,8 +87,8 @@ export class Caip10LinkDoctypeHandler implements DoctypeHandler<Caip10LinkDoctyp
      * @param proof
      * @private
      */
-    private async _validateLink(proof: LinkProof): Promise<void> {
-        await validateLink(proof)
+    private async _validateLink(proof: LinkProof): Promise<LinkProof | null> {
+        return await validateLink(proof)
     }
 
     /**
