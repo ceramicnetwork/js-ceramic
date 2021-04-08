@@ -11,6 +11,7 @@ import { AuthProvider, LinkProof } from "@ceramicnetwork/blockchain-utils-linkin
 import { CommitID, DocID, DocRef } from "@ceramicnetwork/docid";
 import { AccountID } from "caip";
 import { DID } from "dids";
+import cloneDeep from "lodash.clonedeep";
 
 const throwReadOnlyError = (): Promise<void> => {
     throw new Error('Historical document commits cannot be modified. Load the document without specifying a commit to make updates.')
@@ -24,6 +25,13 @@ export class Caip10LinkDoctype extends Doctype {
 
     static DOCTYPE_NAME = 'caip10-link'
     static DOCTYPE_ID = 1
+
+    /**
+     * Returns the DID linked to the CAIP10 address this object represents.
+     */
+    get did(): string | null {
+        return this._getContent()
+    }
 
     /**
      * Creates a Caip10Link for the given CAIP10 address. Initially created without a link to any DID,
@@ -59,7 +67,7 @@ export class Caip10LinkDoctype extends Doctype {
      * create a verifiable link from the CAIP10 address to the DID.
      * @param did - The DID being linked to the CAIP10 address that this Caip10Link object represents.
      *   If the 'did' provided is an instance of the DID type, the DID must already be authenticated
-     *   so that the did string it represents is available.
+     *   so that the did string it represents is avapilable.
      * @param authProvider - AuthProvider instance from the "@ceramicnetwork/blockchain-utils-linking" package.
      *   Must include support for the blockchain that the CAIP10 address associated with this Caip10Link lives on.
      * @param opts - Additional options

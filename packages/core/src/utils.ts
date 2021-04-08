@@ -1,6 +1,7 @@
 import ajv from "ajv"
 
 import { Doctype } from "@ceramicnetwork/common"
+import {TileDoctype} from "@ceramicnetwork/doctype-tile";
 
 /**
  * Various utility functions
@@ -45,16 +46,16 @@ export default class Utils {
     }
 
     /**
-     * Validate Doctype against schema
+     * Validate TileDoctype against schema
      */
-    static async validateDoctype(doctype: Doctype): Promise<void> {
-        const schemaDocId = doctype.state?.metadata?.schema
+    static async validateSchema(doc: TileDoctype): Promise<void> {
+        const schemaDocId = doc.state?.metadata?.schema
         if (schemaDocId) {
-            const schemaDoc = await doctype.context.api.loadDocument(schemaDocId)
+            const schemaDoc = await doc.context.api.loadDocument<TileDoctype>(schemaDocId)
             if (!schemaDoc) {
                 throw new Error(`Schema not found for ${schemaDocId}`)
             }
-            Utils.validate(doctype.content, schemaDoc.content)
+            Utils.validate(doc.content, schemaDoc.content)
         }
     }
 

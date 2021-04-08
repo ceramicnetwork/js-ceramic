@@ -158,7 +158,7 @@ export class CeramicCliUtils {
      */
     static async show(docRef: string): Promise<void> {
         await CeramicCliUtils._runWithCeramic(async (ceramic: CeramicApi) => {
-            const doc = await ceramic.loadDocument(docRef)
+            const doc = await TileDoctype.load(ceramic, docRef)
             console.log(JSON.stringify(doc.content, null, 2))
         })
     }
@@ -182,7 +182,7 @@ export class CeramicCliUtils {
         const id = DocID.fromString(docId)
 
         await CeramicCliUtils._runWithCeramic(async (ceramic: CeramicApi) => {
-            const doc = await ceramic.loadDocument(id)
+            const doc = await TileDoctype.load(ceramic, id)
             console.log(JSON.stringify(doc.content, null, 2))
             doc.subscribe(() => {
               console.log('--- document changed ---')

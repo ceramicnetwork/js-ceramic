@@ -6,9 +6,13 @@ import CID from 'cids'
 
 const FAKE_CID = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu');
 
-class BasicDoctype extends Doctype {
+class BasicDoctypeWithContent extends Doctype {
     makeReadOnly() {
         throw new Error('Not implemented')
+    }
+
+    get content(): Record<string, any> {
+        return this._getContent()
     }
 }
 
@@ -39,7 +43,7 @@ describe('Doctype', () => {
           ]
         } as unknown as DocState
 
-        const schemaDoc = new BasicDoctype(TestUtils.runningState(docSchemaState), null)
+        const schemaDoc = new BasicDoctypeWithContent(TestUtils.runningState(docSchemaState), null)
 
         ceramic = mock<CeramicApi>()
         ceramic.loadDocument.mockReturnValue(new Promise<Doctype>((resolve) => {
@@ -65,8 +69,8 @@ describe('Doctype', () => {
           ]
         } as unknown as DocState
 
-        const doc = new BasicDoctype(TestUtils.runningState(state), { api: ceramic })
-        await Utils.validateDoctype(doc)
+        const doc = new BasicDoctypeWithContent(TestUtils.runningState(state), { api: ceramic })
+        await Utils.validateSchema(doc)
     })
 
     it('should fail schema validation', async () => {
@@ -87,9 +91,9 @@ describe('Doctype', () => {
           ]
         } as unknown as DocState;
 
-        const doc = new BasicDoctype(TestUtils.runningState(state), { api: ceramic })
+        const doc = new BasicDoctypeWithContent(TestUtils.runningState(state), { api: ceramic })
         try {
-            await Utils.validateDoctype(doc)
+            await Utils.validateSchema(doc)
             throw new Error('Should not be able to validate invalid data')
         } catch (e) {
             expect(e.message).toEqual('Validation Error: data[\'x\'] should be string')

@@ -70,7 +70,7 @@ describe('Ceramic API', () => {
       const link = await Caip10LinkDoctype.fromAccount(ceramic, account, { anchor: false })
       expect(link.metadata.controllers).toHaveLength(1)
       expect(link.metadata.controllers[0]).toEqual(account)
-      expect(link.content).toBeNull()
+      expect(link.did).toBeNull()
       expect(link.state.log).toHaveLength(1)
       expect(link.state).toMatchSnapshot()
     })
@@ -92,7 +92,7 @@ describe('Ceramic API', () => {
       const link = await Caip10LinkDoctype.fromAccount(ceramic, account, { anchor: false })
       await link.setDid(ceramic.did, authProvider, { anchor: false })
 
-      expect(link.content).toEqual(ceramic.did.id)
+      expect(link.did).toEqual(ceramic.did.id)
       expect(link.state.log).toHaveLength(2)
       expect(authProvider.createLink).toHaveBeenCalledTimes(1)
       expect(validateLink).toHaveBeenCalledTimes(1)
@@ -109,8 +109,8 @@ describe('Ceramic API', () => {
 
       const link2 = await Caip10LinkDoctype.fromAccount(ceramic, account, { anchor: false })
       expect(link1.id).toEqual(link2.id)
-      expect(link1.content).toEqual(ceramic.did.id)
-      expect(link2.content).toEqual(link1.content)
+      expect(link1.did).toEqual(ceramic.did.id)
+      expect(link2.did).toEqual(link1.did)
       expect(DoctypeUtils.serializeState(link2.state)).toEqual(DoctypeUtils.serializeState(link1.state))
     })
 
@@ -124,8 +124,8 @@ describe('Ceramic API', () => {
 
       const link2 = await Caip10LinkDoctype.load(ceramic, link1.id)
       expect(link1.id).toEqual(link2.id)
-      expect(link1.content).toEqual(ceramic.did.id)
-      expect(link2.content).toEqual(link1.content)
+      expect(link1.did).toEqual(ceramic.did.id)
+      expect(link2.did).toEqual(link1.did)
       expect(DoctypeUtils.serializeState(link2.state)).toEqual(DoctypeUtils.serializeState(link1.state))
     })
 
@@ -144,7 +144,7 @@ describe('Ceramic API', () => {
       await anchorUpdate(ceramic, link)
       expect(link.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
-      expect(link.content).toEqual(ceramic.did.id)
+      expect(link.did).toEqual(ceramic.did.id)
       expect(link.state.log).toHaveLength(4)
       expect(link.state).toMatchSnapshot()
     })
