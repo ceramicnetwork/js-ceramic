@@ -151,11 +151,6 @@ beforeAll(() => {
         },
     } as any as CeramicApi)
 
-    const api = {
-        getSupportedChains: jest.fn(async () => {
-            return ["fakechain:123"]
-        })
-    }
     const keyDidResolver = KeyDidResolver.getResolver()
     const resolver = new Resolver({
         ...threeIdResolver, ...keyDidResolver
@@ -172,6 +167,12 @@ beforeAll(() => {
         }
     })
     did._id = 'did:key:zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV'
+    const api = {
+        getSupportedChains: jest.fn(async () => {
+            return ["fakechain:123"]
+        }),
+        did,
+    }
 
     context = {
         did,
@@ -192,7 +193,7 @@ it('is constructed correctly', async () => {
 
 it('makes genesis record correctly', async () => {
     const record = await TileDoctype.makeGenesis(
-        did,
+        context.api,
         RECORDS.genesis.data,
         {...RECORDS.genesis.header, deterministic: true}) as SignedCommitContainer
     const {jws, linkedBlock} = record
@@ -206,7 +207,7 @@ it('applies genesis record correctly', async () => {
     const tileHandler = new TileDoctypeHandler()
 
     const record = await TileDoctype.makeGenesis(
-        did,
+        context.api,
         RECORDS.genesis.data,
         { controllers: [did.id], tags: ['3id'], deterministic: true }) as SignedCommitContainer
     await context.ipfs.dag.put(record, FAKE_CID_1)
@@ -228,9 +229,9 @@ it('makes signed record correctly', async () => {
     const state$ = TestUtils.runningState(state)
     const doctype = new TileDoctype(state$, context)
 
-    await expect(doctype._makeCommit(null, RECORDS.r1.desiredContent)).rejects.toThrow(/No DID/)
+    await expect(doctype.makeCommit({} as CeramicApi, RECORDS.r1.desiredContent)).rejects.toThrow(/No DID/)
 
-    const record = await doctype._makeCommit(did, RECORDS.r1.desiredContent) as SignedCommitContainer
+    const record = await doctype.makeCommit(context.api, RECORDS.r1.desiredContent) as SignedCommitContainer
     const {jws: rJws, linkedBlock: rLinkedBlock} = record
     const rPayload = dagCBOR.util.deserialize(rLinkedBlock)
     expect({jws: serialize(rJws), payload: serialize(rPayload)}).toEqual(RECORDS.r1.record)
@@ -240,7 +241,7 @@ it('applies signed record correctly', async () => {
     const tileDoctypeHandler = new TileDoctypeHandler()
 
     const genesisRecord = await TileDoctype.makeGenesis(
-        did,
+        context.api,
         RECORDS.genesis.data,
         { controllers: [did.id], tags: ['3id'], deterministic: true }) as SignedCommitContainer
     await context.ipfs.dag.put(genesisRecord, FAKE_CID_1)
@@ -253,7 +254,7 @@ it('applies signed record correctly', async () => {
 
     const state$ = TestUtils.runningState(state)
     const doctype = new TileDoctype(state$, context)
-    const signedRecord = await doctype._makeCommit(did, RECORDS.r1.desiredContent) as SignedCommitContainer
+    const signedRecord = await doctype.makeCommit(context.api, RECORDS.r1.desiredContent) as SignedCommitContainer
 
     await context.ipfs.dag.put(signedRecord, FAKE_CID_2)
 
@@ -269,7 +270,7 @@ it('throws error if record signed by wrong DID', async () => {
     const tileDoctypeHandler = new TileDoctypeHandler()
 
     const genesisRecord = await TileDoctype.makeGenesis(
-        did,
+        context.api,
         RECORDS.genesis.data,
         { controllers: ['did:3:fake'], tags: ['3id'], deterministic: true }) as SignedCommitContainer
     await context.ipfs.dag.put(genesisRecord, FAKE_CID_1)
@@ -284,7 +285,7 @@ it('applies anchor record correctly', async () => {
     const tileDoctypeHandler = new TileDoctypeHandler()
 
     const genesisRecord = await TileDoctype.makeGenesis(
-        did,
+        context.api,
         RECORDS.genesis.data,
         { controllers: [did.id], tags: ['3id'], deterministic: true }) as SignedCommitContainer
     await context.ipfs.dag.put(genesisRecord, FAKE_CID_1)
@@ -297,7 +298,7 @@ it('applies anchor record correctly', async () => {
 
     const state$ = TestUtils.runningState(state)
     const doctype = new TileDoctype(state$, context)
-    const signedRecord = await doctype._makeCommit(did, RECORDS.r1.desiredContent) as SignedCommitContainer
+    const signedRecord = await doctype.makeCommit(context.api, RECORDS.r1.desiredContent) as SignedCommitContainer
 
     await context.ipfs.dag.put(signedRecord, FAKE_CID_2)
 

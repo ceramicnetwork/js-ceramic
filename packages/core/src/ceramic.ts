@@ -163,13 +163,12 @@ const tryDocId = (id: string): DocID | null => {
 class Ceramic implements CeramicApi {
 
   public readonly context: Context
-
   public readonly dispatcher: Dispatcher;
+  public readonly loggerProvider: LoggerProvider;
   public readonly pin: PinApi;
   readonly repository: Repository;
 
   readonly _doctypeHandlers: HandlersMap
-  readonly loggerProvider: LoggerProvider;
   private readonly _ipfsTopology: IpfsTopology
   private readonly _logger: DiagnosticsLogger
   private readonly _networkOptions: CeramicNetworkOptions
@@ -179,7 +178,7 @@ class Ceramic implements CeramicApi {
 
   constructor (modules: CeramicModules, params: CeramicParameters) {
     this._ipfsTopology = modules.ipfsTopology
-    this.loggerProvider = modules.loggerProvider;
+    this.loggerProvider = modules.loggerProvider
     this._logger = modules.loggerProvider.getDiagnosticsLogger()
     this.repository = modules.repository
     this.pin = new LocalPinApi(this.repository, this._loadDoc.bind(this), this._logger)
@@ -455,7 +454,6 @@ class Ceramic implements CeramicApi {
    */
   async setDID(did: DID): Promise<void> {
     this.context.did = did
-    this._logger.imp(`Now using DID ${did}`)
   }
 
   /**

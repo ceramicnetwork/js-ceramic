@@ -119,7 +119,7 @@ describe('Ceramic API', () => {
       }
 
       await expect( async () => {
-        const updateRecord = await docV1._makeCommit(ceramic.context.did, { test: 'fghj' })
+        const updateRecord = await docV1.makeCommit(ceramic, { test: 'fghj' })
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         await ceramic.context.api.applyCommit(docV1Id, updateRecord)
