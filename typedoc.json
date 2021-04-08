@@ -30,6 +30,10 @@
               {
                 "title": "Pinning",
                 "source": "./docs-src/architecture/pinning.md"
+              },
+              {
+                "title": "State Management",
+                "source": "./docs-src/architecture/state-management.md"
               }
             ]
           }
@@ -45,6 +49,15 @@
           {
             "title": "Add support for new blockchain",
             "source": "./docs-src/guides/add-new-blockchain.md"
+          }
+        ]
+      },
+      {
+        "title": "ADRs",
+        "pages": [
+          {
+            "title": "1. State Refactor",
+            "source": "./docs-src/adr/1-state-refactor.adr.md"
           }
         ]
       }
