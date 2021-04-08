@@ -1,6 +1,7 @@
 import Ceramic, { CeramicConfig } from '../ceramic'
 import { Caip10LinkDoctype } from "@ceramicnetwork/doctype-caip10-link"
 import { AnchorStatus, DoctypeUtils, IpfsApi } from "@ceramicnetwork/common"
+import { validateLink } from "@ceramicnetwork/blockchain-utils-validation"
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import KeyDidResolver from 'key-did-resolver'
 import { Resolver } from "did-resolver"
@@ -11,6 +12,10 @@ import { anchorUpdate } from '../state-management/__tests__/anchor-update';
 import MockDate from 'mockdate'
 
 jest.mock('../store/level-state-store')
+
+jest.mock('@ceramicnetwork/blockchain-utils-validation')
+validateLink.mockImplementation(async (proof) => { return proof })
+
 
 const seed = u8a.fromString('6e34b2e1a9624113d81ece8a8a22e6e97f0e145c25c1d4d2d0e62753b4060c83', 'base16')
 
@@ -50,14 +55,10 @@ describe('Ceramic API', () => {
   describe('Caip10Link test', () => {
     let ceramic: Ceramic
     let authProvider
-    let validateLinkSpy
 
     beforeEach(async () => {
       ceramic = await createCeramic()
       authProvider = { createLink: jest.fn() }
-      const caip10handler = ceramic._doctypeHandlers.get(Caip10LinkDoctype.DOCTYPE_NAME)
-      validateLinkSpy = jest.spyOn(caip10handler, "_validateLink")
-      validateLinkSpy.mockImplementation(async (proof) => { return proof })
     })
 
     afterEach(async () => {
@@ -94,7 +95,7 @@ describe('Ceramic API', () => {
       expect(link.content).toEqual(ceramic.did.id)
       expect(link.state.log).toHaveLength(2)
       expect(authProvider.createLink).toHaveBeenCalledTimes(1)
-      expect(validateLinkSpy).toHaveBeenCalledTimes(1)
+      expect(validateLink).toHaveBeenCalledTimes(1)
       expect(link.state).toMatchSnapshot()
     })
 

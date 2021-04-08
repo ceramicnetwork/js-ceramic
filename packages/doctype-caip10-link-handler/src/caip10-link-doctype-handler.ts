@@ -82,16 +82,6 @@ export class Caip10LinkDoctypeHandler implements DoctypeHandler<Caip10LinkDoctyp
     }
 
     /**
-     * Thin wrapper around 'validateLink' function from blockchain-utils-validation to allow
-     * injecting a mock implementation for ease of unit testing.
-     * @param proof
-     * @private
-     */
-    private async _validateLink(proof: LinkProof): Promise<LinkProof | null> {
-        return await validateLink(proof)
-    }
-
-    /**
      * Applies signed commit
      * @param commit - Signed commit
      * @param cid - Signed commit CID
@@ -102,7 +92,7 @@ export class Caip10LinkDoctypeHandler implements DoctypeHandler<Caip10LinkDoctyp
         // TODO: Assert that the 'prev' of the commit being applied is the end of the log in 'state'
         let validProof = null
         try {
-          validProof = await this._validateLink(commit.data)
+          validProof = await validateLink(commit.data)
         } catch (e) {
           throw new Error("Error while validating link proof for caip10-link signed commit: " + e.toString())
         }
