@@ -6,6 +6,8 @@ We have chosen to separate in-memory document cache from document processing. Th
 
 Document processing is organised as a per-document task queue. It maintains sequential order of tasks on the same document. At any time only single task is executed per document. It is then task's responsibility to acquire state the way it considers appropriate.
 
+Implementation is heavily based on [rxjs](https://rxjs.dev) primitives like [Observable](https://rxjs.dev/guide/observable) and [BehaviorSubject](https://rxjs.dev/guide/subject#behaviorsubject). Ceramic node operates in a concurrent, asynchronous environment. This naturally leads to event-based, [reactive](https://en.wikipedia.org/wiki/Reactive_programming) implementation. For example, we have an updatable feed of a document state updates as a cornerstone abstraction. Vanilla EventEmitters do not compose well: one can not easily chain few EventEmitters together, neither could represent _feed of events_. [Rxjs](https://rxjs.dev) library allows us to do that. It provides advanced primitives so that we can focus on critical infrastructure, not on low-level plumbing.
+
 ### Dynamic View
 
 Disposition:
@@ -44,7 +46,7 @@ So, at any time, we are sure we start subscription with the latest available sta
 
 ### Doctype and State
 
-As part of state refactor effort we have decided to maintain a certain semantics for how Doctype updates state. After created, Doctype maintains just the state it was initialized with. It only updates state after being manually changed or when subscribed. In the latter case, the state gets continuously updated. If looked from the inside, one could notice a Doctype relies on `RunningStateLike` instance to maintain the state. One could see `RunningStateLike` as either an Observable of DocState with an access to the current value, or as BehaviorSubject with some additional getters. The reason for this, is we want to avoid explicit memory management in Doctype instances. Any way `RunningStateLike` is a kind of Subject, that has to be explicitly closed, and as one could see from sections above managing document state life cycle is complicated. Ceramic instance performs that closing behavior when the CeramicAPI instance itself is closed, and that frees a developer from closing every Doctype manually. However, the more open and subscribed Doctype instances there, the more memory is used, as having lots of subscribed Doctype instances can cause the in-memory cache to grow behind the configured max cache size.
+As part of state refactor effort we have decided to maintain a certain semantics for how Doctype updates state. After created, Doctype maintains just the state it was initialized with. It only updates state after being manually changed or when subscribed. In the latter case, the state gets continuously updated. If looked from the inside, one could notice a Doctype relies on `RunningStateLike` instance to maintain the state. One could see `RunningStateLike` as either an [Observable](https://rxjs.dev/guide/observable) of DocState with an access to the current value, or as [BehaviorSubject](https://rxjs.dev/guide/subject#behaviorsubject) with some additional getters. The reason for this, is we want to avoid explicit memory management in Doctype instances. Any way `RunningStateLike` is a kind of [Subject](https://rxjs.dev/guide/subject), that has to be explicitly closed, and as one could see from sections above managing document state life cycle is complicated. Ceramic instance performs that closing behavior when the CeramicAPI instance itself is closed, and that frees a developer from closing every Doctype manually. However, the more open and subscribed Doctype instances there, the more memory is used, as having lots of subscribed Doctype instances can cause the in-memory cache to grow behind the configured max cache size.
 
 ![Relationship between doctype and state](media://state-management/doctype-and-state.png)
 
@@ -54,7 +56,7 @@ The main concept behind component structure is running document. Let's call a *r
 
 ### RunningState
 
-We start our construction with a concept of Running state. Running state is implemented as class `RunningState` based on BehaviorSubject. For the people unfamiliar with rxjs, it is like a [reference](https://en.wikipedia.org/wiki/Reference_(computer_science)) to a value, document state in our case, that one could update or subscribe to for updates.
+We start our construction with a concept of Running state. Running state is implemented as class `RunningState` based on [BehaviorSubject](https://rxjs.dev/guide/subject#behaviorsubject). For the people unfamiliar with [rxjs](https://rxjs.dev), it is like a [reference](https://en.wikipedia.org/wiki/Reference_(computer_science)) to a value, document state in our case, that one could update or subscribe to for updates.
 
 Repository shepherds a list of document states, be they running or sleeping. In theory, one could suggest a design that maintains a list of raw state values. With our design based on BehaviorSubject and rxjs, one have a sort of referential transparency. An instance of `RunningState` could be passed around freely always delievering the latest value. With a theoretical alternative design, we would have to care about possible case of stale values, non-garbage-collected event emitters, and this creates too much unnecessary complexity.
 
