@@ -26,7 +26,7 @@ We want to maintain document state consistency in the presence of concurrent ope
 
 * Option 1: On cache eviction wait for the operations on a document to finish.
 
-  With the LRU semantics, it means calling asynchronous function on an evicted document (`await document.close`). Since we do not want to end up with having two documents running in memory at the same time, cache eviction effectively blocks further documents to be processed until the evicted one is finished.
+  With the LRU semantics, it means calling asynchronous function on an evicted document (`await document.close`). Since we do not want to end up with having two instances of the same document running in memory at the same time (potential conflict) or having more documents in memory than the configured cache size, cache eviction effectively blocks further documents to be processed until the evicted one is finished.
 
   Pro:
 
