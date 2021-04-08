@@ -250,7 +250,7 @@ describe('TileDoctypeHandler', () => {
     })
 
     it('creates genesis records without DID if content is undefined', async () => {
-        await expect(TileDoctype.makeGenesis({} as CeramicApi, { foo: 'asdf' }, { controllers: [did.id] })).rejects.toThrow('No DID authenticated')
+        await expect(TileDoctype.makeGenesis({} as CeramicApi, { foo: 'asdf' }, { controllers: [did.id] })).rejects.toThrow('No DID provided')
         const record1 = await TileDoctype.makeGenesis({} as CeramicApi, null, { controllers: [did.id] })
 
         expect(record1).toBeDefined()
