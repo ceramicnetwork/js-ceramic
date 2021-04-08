@@ -156,13 +156,13 @@ class CeramicDaemon {
     if (!gateway) {
       app.postAsync(toApiPath('/documents'), this.createDocFromGenesis.bind(this))
       app.postAsync(toApiPath('/commits'), this.applyCommit.bind(this))
-      app.postAsync(toApiPath('/records'), this.applyCommit.bind(this))
+      app.postAsync(toApiPath('/records'), this.applyCommit.bind(this)) // deprecated
       app.postAsync(toApiPath('/pins/:docid'), this.pinDocument.bind(this))
       app.deleteAsync(toApiPath('/pins/:docid'), this.unpinDocument.bind(this))
     } else {
       app.postAsync(toApiPath('/documents'), this.createReadOnlyDocFromGenesis.bind(this))
       app.postAsync(toApiPath('/commits'),  this._notSupported.bind(this))
-      app.postAsync(toApiPath('/records'),  this._notSupported.bind(this))
+      app.postAsync(toApiPath('/records'),  this._notSupported.bind(this)) // deprecated
       app.postAsync(toApiPath('/pins/:docid'),  this._notSupported.bind(this))
       app.deleteAsync(toApiPath('/pins/:docid'),  this._notSupported.bind(this))
     }

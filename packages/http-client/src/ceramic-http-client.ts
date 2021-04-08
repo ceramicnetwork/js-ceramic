@@ -3,16 +3,17 @@ import { Document } from './document'
 
 import { DID } from 'dids'
 import {
+  CreateOpts,
   CeramicApi,
   CeramicCommit,
   Context,
-  DocOpts,
   Doctype,
   DoctypeConstructor,
   DoctypeHandler,
   DoctypeUtils,
   MultiQuery,
   PinApi,
+  UpdateOpts,
 } from '@ceramicnetwork/common';
 import { TileDoctype } from "@ceramicnetwork/doctype-tile"
 import { Caip10LinkDoctype } from "@ceramicnetwork/doctype-caip10-link"
@@ -27,6 +28,8 @@ const CERAMIC_HOST = 'http://localhost:7007'
 export const DEFAULT_CLIENT_CONFIG: CeramicClientConfig = {
   docSyncInterval: 5000,
 }
+
+const DEFAULT_CREATE_FROM_GENESIS_OPTS = { anchor: true, publish: true, sync: true }
 
 /**
  * Ceramic client configuration
@@ -112,7 +115,8 @@ export default class CeramicClient implements CeramicApi {
     }
   }
 
-  async createDocumentFromGenesis<T extends Doctype>(doctype: string, genesis: any, opts?: DocOpts): Promise<T> {
+  async createDocumentFromGenesis<T extends Doctype>(doctype: string, genesis: any, opts: CreateOpts = {}): Promise<T> {
+    opts = { ...DEFAULT_CREATE_FROM_GENESIS_OPTS, ...opts };
     const doc = await Document.createFromGenesis(this._apiUrl, doctype, genesis, opts, this._config.docSyncInterval)
 
     const found = this._docCache.get(doc.id.toString())
@@ -167,7 +171,7 @@ export default class CeramicClient implements CeramicApi {
     return Document.loadDocumentCommits(effectiveDocId, this._apiUrl)
   }
 
-  async applyCommit<T extends Doctype>(docId: string | DocID, commit: CeramicCommit, opts?: DocOpts): Promise<T> {
+  async applyCommit<T extends Doctype>(docId: string | DocID, commit: CeramicCommit, opts: CreateOpts | UpdateOpts): Promise<T> {
     const effectiveDocId = typeDocID(docId)
     const document = await Document.applyCommit(this._apiUrl, effectiveDocId, commit, opts, this._config.docSyncInterval)
     return this.buildDoctype<T>(document)

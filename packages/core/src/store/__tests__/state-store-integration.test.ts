@@ -100,10 +100,10 @@ describe('Level data store', () => {
     const realIpfs = await createIPFS();
     const ceramic = await createCeramic(realIpfs);
 
-    const doc1 = await TileDoctype.create(ceramic, { stuff: 1 });
+    const doc1 = await TileDoctype.create(ceramic, { stuff: 1 }, null, { anchor: false, publish: false });
     await ceramic.pin.add(doc1.id);
 
-    const doc2 = await TileDoctype.create(ceramic, { stuff: 2 });
+    const doc2 = await TileDoctype.create(ceramic, { stuff: 2 }, null, { anchor: false, publish: false });
     await ceramic.pin.add(doc2.id);
 
     const pinned = [];

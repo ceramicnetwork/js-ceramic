@@ -1,14 +1,14 @@
 import { Dispatcher } from './dispatcher'
-import { DEFAULT_WRITE_DOCOPTS, DEFAULT_LOAD_DOCOPTS } from './state-management/state-manager';
 import DocID, { CommitID, DocRef } from '@ceramicnetwork/docid';
 import {IpfsTopology} from "@ceramicnetwork/ipfs-topology";
 import {
+  CreateOpts,
   Doctype,
   DoctypeHandler,
-  DocOpts,
   Context,
   DiagnosticsLogger,
   DoctypeUtils,
+  LoadOpts,
   LogLevel,
   LoggerProviderOld,
   LoggerPlugin,
@@ -22,6 +22,7 @@ import {
   PinningBackendStatic,
   LoggerProvider,
   Networks,
+  UpdateOpts,
 } from "@ceramicnetwork/common"
 
 import { DID } from 'dids'
@@ -65,6 +66,9 @@ const SUPPORTED_CHAINS_BY_NETWORK = {
   [Networks.LOCAL]: ["eip155:1337"], // Ganache
   [Networks.INMEMORY]: ["inmemory:12345"], // Our fake in-memory anchor service chainId
 }
+
+const DEFAULT_CREATE_FROM_GENESIS_OPTS = { anchor: true, publish: true, sync: true }
+const DEFAULT_LOAD_OPTS = { sync: true }
 
 /**
  * Ceramic configuration
@@ -181,8 +185,8 @@ class Ceramic implements CeramicApi {
     this.loggerProvider = modules.loggerProvider
     this._logger = modules.loggerProvider.getDiagnosticsLogger()
     this.repository = modules.repository
-    this.pin = new LocalPinApi(this.repository, this._loadDoc.bind(this), this._logger)
     this.dispatcher = modules.dispatcher
+    this.pin = this._buildPinApi()
 
     this._validateDocs = params.validateDocs
     this._networkOptions = params.networkOptions
@@ -226,6 +230,12 @@ class Ceramic implements CeramicApi {
    */
   get did(): DID | undefined {
     return this.context.did
+  }
+
+  private _buildPinApi(): PinApi {
+    const boundDocLoader = this._loadDoc.bind(this)
+    const loaderWithSyncSet = (docid) => { return boundDocLoader(docid, { sync: true })}
+    return new LocalPinApi(this.repository, loaderWithSyncSet, this._logger)
   }
 
   private static _generateNetworkOptions(config: CeramicConfig): CeramicNetworkOptions {
@@ -470,8 +480,8 @@ class Ceramic implements CeramicApi {
    * @param commit - Commit to be applied
    * @param opts - Initialization options
    */
-  async applyCommit<T extends Doctype>(docId: string | DocID, commit: CeramicCommit, opts?: DocOpts): Promise<T> {
-    const state$ = await this._loadDoc(normalizeDocID(docId), opts)
+  async applyCommit<T extends Doctype>(docId: string | DocID, commit: CeramicCommit, opts: CreateOpts | UpdateOpts): Promise<T> {
+    const state$ = await this._loadDoc(normalizeDocID(docId), opts as CreateOpts)
     await this.repository.stateManager.applyCommit(state$, commit, opts)
     return doctypeFromState<T>(this.context, this._doctypeHandlers, state$.value, this.repository.updates$)
   }
@@ -482,7 +492,8 @@ class Ceramic implements CeramicApi {
    * @param genesis - Genesis CID
    * @param opts - Initialization options
    */
-  async createDocumentFromGenesis<T extends Doctype>(doctype: string, genesis: any, opts: DocOpts = {}): Promise<T> {
+  async createDocumentFromGenesis<T extends Doctype>(doctype: string, genesis: any, opts: CreateOpts = {}): Promise<T> {
+    opts = { ...DEFAULT_CREATE_FROM_GENESIS_OPTS, ...opts };
     const state$ = await this._createDocFromGenesis(doctype, genesis, opts)
     return doctypeFromState<T>(this.context, this._doctypeHandlers, state$.value, this.repository.updates$)
   }
@@ -494,10 +505,10 @@ class Ceramic implements CeramicApi {
    * @param opts - Initialization options
    * @private
    */
-  async _createDocFromGenesis(doctype: string, genesis: any, opts: DocOpts = {}): Promise<RunningState> {
+  async _createDocFromGenesis(doctype: string, genesis: any, opts: CreateOpts): Promise<RunningState> {
     const genesisCid = await this.dispatcher.storeCommit(genesis);
     const docId = new DocID(doctype, genesisCid);
-    return this.repository.load(docId, {...DEFAULT_WRITE_DOCOPTS, ...opts});
+    return this.repository.load(docId, opts);
   }
 
   /**
@@ -505,7 +516,8 @@ class Ceramic implements CeramicApi {
    * @param docId - Document ID
    * @param opts - Initialization options
    */
-  async loadDocument<T extends Doctype>(docId: DocID | CommitID | string, opts: DocOpts = {}): Promise<T> {
+  async loadDocument<T extends Doctype>(docId: DocID | CommitID | string, opts: LoadOpts = {}): Promise<T> {
+    opts = { ...DEFAULT_LOAD_OPTS, ...opts };
     const docRef = DocRef.from(docId)
     const base$ = await this._loadDoc(docRef.baseID, opts)
     this._logger.verbose(`Document ${docId.toString()} successfully loaded`)
@@ -600,8 +612,8 @@ class Ceramic implements CeramicApi {
    * @param docId - Document ID
    * @param opts - Initialization options
    */
-  async _loadDoc(docId: DocID, opts: DocOpts = {}): Promise<RunningState> {
-    return this.repository.load(docId, {...DEFAULT_LOAD_DOCOPTS, ...opts})
+  async _loadDoc(docId: DocID, opts: LoadOpts): Promise<RunningState> {
+    return this.repository.load(docId, opts)
   }
 
   /**
@@ -619,7 +631,7 @@ class Ceramic implements CeramicApi {
     this.repository.listPinned().then(async list => {
       let n = 0
       await Promise.all(list.map(async docId => {
-        await this._loadDoc(DocID.fromString(docId))
+        await this._loadDoc(DocID.fromString(docId), { sync: true })
         n++;
       }))
       this._logger.verbose(`Successfully restored ${n} pinned documents`)
