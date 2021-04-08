@@ -86,7 +86,7 @@ export class IpfsDaemon {
             bucket: configuration.awsBucketName,
             accessKeyId: configuration.awsAccessKeyId,
             secretAccessKey: configuration.awsSecretAccessKey,
-        }) : null
+        }) : configuration.ipfsPath
 
         const ipfs = await IPFS.create({
             start: false,
