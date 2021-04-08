@@ -22,7 +22,7 @@ In any case, we maintain a LRU cache of documents to achieve a goal of constant 
 
 Document operations can be invoked from few places. One is external API commands: HTTP endpoints of a Ceramic node. Another is JS API: calling in-process Ceramic node. The third one is IPFS pubsub. Also, there is anchoring mechanism, that is a continuous polling of the anchor service. These could be started concurrently.
 
-We want to maintain document state consistency in the presence of concurrent operations. Under no circumstances two operations are allowed to change the document at the same time.
+We want to maintain document state consistency in the presence of concurrent operations. Under no circumstances two operations are allowed to change the same document at the same time.
 
 * Option 1: On cache eviction wait for the operations on a document to finish.
 
