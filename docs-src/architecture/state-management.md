@@ -1,5 +1,5 @@
 # State Management
-
+Last updated: 2021-04-07
 ## Overview
 
 We have chosen to separate in-memory document cache from document processing. The in-memory document cache maintains a list of document states as LRU map. There is a limit on how many documents it stores at the same time. If the limit is achieved, the oldest document gets evicted.
