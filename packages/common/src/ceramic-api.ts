@@ -56,7 +56,6 @@ export interface CeramicSigner extends CeramicCommon {
  */
 export interface CeramicApi extends CeramicSigner {
     pin: PinApi;
-    did: DID | null;
     // loggerProvider: LoggerProvider; // TODO uncomment once logger is available on http-client
 
     /**

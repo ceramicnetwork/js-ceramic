@@ -58,7 +58,7 @@ function headerFromMetadata(metadata?: TileMetadataArgs | DocMetadata): CommitHe
 
 async function _ensureAuthenticated(signer: CeramicSigner) {
     if (signer.did == null) {
-        throw new Error('No DID authenticated')
+        throw new Error('No DID provided')
     }
     if (!signer.did.authenticated) {
         await signer.did.authenticate()
