@@ -50,7 +50,7 @@ As part of state refactor effort we have decided to maintain a certain semantics
 
 ## Components
 
-The main concept behind component structure is running document. Let's call a *running document* (or _running state_) an entity that has its state in memory, as opposed to *sleeping document* that is stored in a persistent storage. We want to make sure that there is always only one instance of document running. We want to provide same access pattern for a document be it running or sleeping, or even if it is to be loaded from network.
+The main concept behind component structure is running document. Let's call a *running document* (or _running state_) an entity that has its state in memory, as opposed to *sleeping document* that is stored in a persistent storage. We want to make sure that there is always at max one instance of document running. We want to provide same access pattern for a document be it running or sleeping, or even if it is to be loaded from network.
 
 ### RunningState
 
