@@ -43,6 +43,7 @@
     }
   },
   "dependencies": {
+    "@awaitjs/express": "^0.7.2",
     "@ceramicnetwork/3id-did-resolver": "^1.2.0-rc.1",
     "@ceramicnetwork/common": "^0.18.0-rc.0",
     "@ceramicnetwork/core": "^0.22.0-rc.0",
@@ -67,7 +68,6 @@
     "logfmt": "^1.3.2",
     "morgan": "^1.10.0",
     "multiformats": "~4.6.1",
-    "os-utils": "0.0.14",
     "s3leveldown": "^2.2.1",
     "stream-to-array": "^2.3.0",
     "uint8arrays": "^2.0.5"

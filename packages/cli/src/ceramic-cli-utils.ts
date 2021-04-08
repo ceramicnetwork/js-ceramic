@@ -54,8 +54,6 @@ export class CeramicCliUtils {
      * @param logDirectory - Store log files in this directory
      * @param network - The Ceramic network to connect to
      * @param pubsubTopic - Pub/sub topic to use for protocol messages.
-     * @param maxHealthyCpu - Max fraction of total CPU usage considered healthy. Default is 0.7
-     * @param maxHealthyMemory - Max fraction of total memory usage considered healthy. Default is 0.7
      * @param corsAllowedOrigins - Origins for Access-Control-Allow-Origin header. Default is all
      */
     static async createDaemon(
@@ -74,8 +72,6 @@ export class CeramicCliUtils {
         logDirectory: string,
         network = DEFAULT_NETWORK,
         pubsubTopic: string,
-        maxHealthyCpu = 0.7,
-        maxHealthyMemory = 0.7,
         corsAllowedOrigins: string
     ): Promise<CeramicDaemon> {
         let _corsAllowedOrigins: string | RegExp[] = '*'
@@ -101,8 +97,6 @@ export class CeramicCliUtils {
             loggerConfig,
             network,
             pubsubTopic,
-            maxHealthyCpu,
-            maxHealthyMemory,
             corsAllowedOrigins: _corsAllowedOrigins,
             ipfsHost: ipfsApi,
         }
