@@ -2,7 +2,6 @@ import Ceramic, { CeramicConfig } from '../ceramic'
 import { Caip10LinkDoctype } from "@ceramicnetwork/doctype-caip10-link"
 import { AnchorStatus, DoctypeUtils, IpfsApi } from "@ceramicnetwork/common"
 import { Ed25519Provider } from 'key-did-provider-ed25519'
-import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import KeyDidResolver from 'key-did-resolver'
 import { Resolver } from "did-resolver"
 import { DID } from 'dids'
@@ -19,14 +18,11 @@ describe('Ceramic API', () => {
   jest.setTimeout(60000)
   let ipfs: IpfsApi;
 
-  const makeDID = function(seed: Uint8Array, ceramic: Ceramic): DID {
+  const makeDID = function(seed: Uint8Array): DID {
     const provider = new Ed25519Provider(seed)
 
     const keyDidResolver = KeyDidResolver.getResolver()
-    const threeIdResolver = ThreeIdResolver.getResolver(ceramic)
-    const resolver = new Resolver({
-      ...threeIdResolver, ...keyDidResolver,
-    })
+    const resolver = new Resolver({ ...keyDidResolver })
     return new DID({ provider, resolver })
   }
 
@@ -36,19 +32,19 @@ describe('Ceramic API', () => {
     c.restoreDocuments = false
     const ceramic = await Ceramic.create(ipfs, c)
 
-    await ceramic.setDID(makeDID(seed, ceramic))
+    await ceramic.setDID(makeDID(seed))
     await ceramic.did.authenticate()
     return ceramic
   }
 
   beforeAll(async () => {
     ipfs = await createIPFS()
-    MockDate.set('2018-10-01')
+    MockDate.set('2018-10-01') // So that the anchors happen at a predictable blockNumber/blockTimestamp
   })
 
   afterAll(async () => {
     MockDate.reset()
-    await ipfs.stop(() => console.log('IPFS stopped'))
+    await ipfs.stop()
   })
 
   describe('Caip10Link test', () => {

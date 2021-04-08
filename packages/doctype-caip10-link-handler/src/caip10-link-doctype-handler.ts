@@ -57,7 +57,7 @@ export class Caip10LinkDoctypeHandler implements DoctypeHandler<Caip10LinkDoctyp
      * @private
      */
     async _applyGenesis (commit: any, cid: CID): Promise<DocState> {
-        if (commit.data ) {
+        if (commit.data) {
             throw new Error('Caip10Link genesis commit cannot have data')
         }
 
