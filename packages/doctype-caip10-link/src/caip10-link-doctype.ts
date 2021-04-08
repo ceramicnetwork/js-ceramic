@@ -87,7 +87,7 @@ export class Caip10LinkDoctype extends Doctype {
      */
     async setDidProof(proof: LinkProof, opts: DocOpts = {}): Promise<void> {
         const commit = this.makeCommit(proof)
-        const updated = await this.context.api.applyCommit(this.id, commit, opts)
+        const updated = await this.api.applyCommit(this.id, commit, opts)
         this.state$.next(updated.state);
     }
 

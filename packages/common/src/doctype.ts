@@ -5,6 +5,7 @@ import { DocID, CommitID } from '@ceramicnetwork/docid'
 import type { DagJWSResult, DagJWS } from 'dids'
 import { Observable } from 'rxjs'
 import { RunningStateLike } from './running-state-like';
+import { CeramicApi } from "./ceramic-api";
 
 /**
  * Describes signature status
@@ -166,6 +167,10 @@ export abstract class Doctype extends Observable<DocState> implements DocStateHo
         return this.state$.value.doctype
     }
 
+    get api(): CeramicApi {
+        return this._context.api
+    }
+
     get metadata(): DocMetadata {
         const { next, metadata } = this.state$.value
         return cloneDeep(next?.metadata ?? metadata)
@@ -203,12 +208,8 @@ export abstract class Doctype extends Observable<DocState> implements DocStateHo
         return cloneDeep(this.state$.value)
     }
 
-    get context(): Context {
-        return this._context
-    }
-
     async sync(): Promise<void> {
-      const document = await this._context.api.loadDocument(this.id)
+      const document = await this.api.loadDocument(this.id)
       this.state$.next(document.state)
     }
 
