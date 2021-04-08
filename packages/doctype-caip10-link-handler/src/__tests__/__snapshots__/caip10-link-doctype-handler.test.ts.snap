@@ -150,7 +150,7 @@ Object {
 }
 `;
 
-exports[`Caip10LinkHandler applies genesis record correctly 1`] = `
+exports[`Caip10LinkHandler applies genesis commit correctly 1`] = `
 Object {
   "anchorStatus": 0,
   "content": null,
@@ -213,7 +213,7 @@ Object {
 }
 `;
 
-exports[`Caip10LinkHandler applies signed record correctly 1`] = `
+exports[`Caip10LinkHandler applies signed commit correctly 1`] = `
 Object {
   "anchorStatus": 0,
   "content": null,

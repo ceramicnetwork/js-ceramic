@@ -6,6 +6,7 @@ import { Caip10LinkDoctype } from "@ceramicnetwork/doctype-caip10-link"
 import { CeramicApi, CeramicCommit, Context, TestUtils } from '@ceramicnetwork/common';
 import sha256 from '@stablelib/sha256'
 import * as uint8arrays from 'uint8arrays'
+import { AccountID } from "caip";
 
 const digest = (input: string) => uint8arrays.toString(sha256.hash(uint8arrays.fromString(input)), 'base16')
 const hash = (data: string): CID => new CID(1, 'sha2-256', Buffer.from('1220' + digest(data), 'hex'))
@@ -19,8 +20,10 @@ const FAKE_CID_6 = new CID('bafybeig6xv5nwphfmvcnektpnojts55jqcuam7bmye2pb54adnr
 const FAKE_CID_7 = new CID('bafybeig6xv5nwphfmvcnektpnojts66jqcuam7bmye2pb54adnrtccjlwu')
 const FAKE_CID_8 = new CID('bafybeig6xv5nwphfmvcnektpnojts66jqcuam6bmye2pb54adnrtccjlwu')
 
+const ACCOUNT = '0x0544DcF4fcE959C6C4F3b7530190cB5E1BD67Cb8@eip155:1'
+
 const RECORDS = {
-    genesis: { header: { controllers: [ '0x0544DcF4fcE959C6C4F3b7530190cB5E1BD67Cb8@eip155:1' ], family: "caip10-eip155:1" } },
+    genesis: { header: { controllers: [ ACCOUNT ], family: "caip10-eip155:1" } },
     r1: {
         desiredContent: {
             version: 2,
@@ -90,49 +93,38 @@ describe('Caip10LinkHandler', () => {
         expect(handler.name).toEqual('caip10-link')
     })
 
-    it('makes genesis record correctly', async () => {
-        const record = await Caip10LinkDoctype.makeGenesis({ content: undefined, metadata: RECORDS.genesis.header }, context)
-        expect(record).toEqual(RECORDS.genesis)
+    it('makes genesis commit correctly', async () => {
+        const commit = Caip10LinkDoctype.makeGenesis(new AccountID(ACCOUNT))
+        expect(commit).toEqual(RECORDS.genesis)
     })
 
-    it('throws an error if genesis record has content', async () => {
-        const content = {}
-        await expect(Caip10LinkDoctype.makeGenesis({ content }, context)).rejects.toThrow(/Cannot have content/i)
+    it('throws an error if genesis commit has data', async () => {
+        const genesisWithData = { ...RECORDS.genesis, data: {} }
+        await expect(handler.applyCommit(genesisWithData, FAKE_CID_1, context)).rejects.toThrow(/cannot have data/)
     })
 
-    it('throws an error if genesis record has no metadata specified', async () => {
-        const content: any = undefined
-        const controllers: any = undefined
-        await expect(Caip10LinkDoctype.makeGenesis({ content, controllers }, context)).rejects.toThrow(/Metadata must be specified/i)
+    it('throws an error if genesis commit has no controllers specified', async () => {
+        const genesisWithoutControllers = cloneDeep(RECORDS.genesis)
+        delete genesisWithoutControllers.header.controllers
+        await expect(handler.applyCommit(genesisWithoutControllers, FAKE_CID_1, context)).rejects.toThrow(/Exactly one controller must be specified/i)
     })
 
-    it('throws an error if genesis record has no controllers specified', async () => {
-        const content: any = undefined
-        await expect(Caip10LinkDoctype.makeGenesis({ content, metadata: {} }, context)).rejects.toThrow(/Exactly one controller must be specified/i)
+    it('throws an error if genesis commit has more than one controller', async () => {
+        const genesisWithMultipleControllers = cloneDeep(RECORDS.genesis)
+        genesisWithMultipleControllers.header.controllers.push('0x25954ef14cebbc9af3d79876489a9cfe87043f20@eip155:1')
+        await expect(handler.applyCommit(genesisWithMultipleControllers, FAKE_CID_1, context)).rejects.toThrow(/Exactly one controller must be specified/i)
     })
 
-    it('throws an error if genesis record has more than one controller', async () => {
-        const content: any = undefined
-        const controllers = [...RECORDS.genesis.header.controllers, '0x25954ef14cebbc9af3d79876489a9cfe87043f20@eip155:1']
-        await expect(Caip10LinkDoctype.makeGenesis({ content, metadata: { controllers } }, context)).rejects.toThrow(/Exactly one controller must be specified/i)
-    })
-
-    it('throws an error if genesis record has controller not in CAIP-10 format', async () => {
-        const content: any = undefined
-        const controllers = RECORDS.genesis.header.controllers.map(address => address.split('@')[0])
-        await expect(Caip10LinkDoctype.makeGenesis({ content, metadata: { controllers } }, context)).rejects.toThrow(/According to CAIP-10/i)
-    })
-
-    it('applies genesis record correctly', async () => {
+    it('applies genesis commit correctly', async () => {
         const state = await handler.applyCommit(RECORDS.genesis, FAKE_CID_1, context)
         expect(state).toMatchSnapshot()
     })
 
-    it('makes signed record correctly', async () => {
+    it('makes update commit correctly', async () => {
         const state = await handler.applyCommit(RECORDS.genesis, FAKE_CID_1, context)
         const state$ = TestUtils.runningState(state)
         const doctype = new Caip10LinkDoctype(state$, context)
-        const record = await Caip10LinkDoctype._makeCommit(doctype, RECORDS.r1.desiredContent)
+        const record = await doctype.makeCommit(RECORDS.r1.desiredContent)
         // Have to compare the 'id' and 'prev' CIDs manually (with toString()) otherwise jest gets
         // confused by Symbol(@ipld/js-cid/CID)
         expect(record.data).toEqual(RECORDS.r1.commit.data)
@@ -140,7 +132,7 @@ describe('Caip10LinkHandler', () => {
         expect(record.prev.toString()).toEqual(RECORDS.r1.commit.prev.toString())
     })
 
-    it('applies signed record correctly', async () => {
+    it('applies signed commit correctly', async () => {
         let state = await handler.applyCommit(RECORDS.genesis, FAKE_CID_1, context)
         state = await handler.applyCommit(RECORDS.r1.commit, FAKE_CID_2, context, state)
         expect(state).toMatchSnapshot()
