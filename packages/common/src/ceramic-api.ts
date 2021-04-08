@@ -93,22 +93,6 @@ export interface CeramicApi extends CeramicSigner {
     multiQuery(queries: Array<MultiQuery>, timeout?: number):  Promise<Record<string, Doctype>>;
 
     /**
-     * Load all document commits by document ID
-     * @param docId - Document ID
-     * @deprecated See `loadDocumentCommits`
-     */
-    loadDocumentRecords(docId: DocID | string): Promise<Array<Record<string, any>>>;
-
-    /**
-     * Applies commit on the existing document
-     * @param docId - Document ID
-     * @param commit - Commit to be applied
-     * @param opts - Initialization options
-     * @deprecated Use `applyCommit`
-     */
-    applyRecord<T extends Doctype>(docId: DocID | string, commit: CeramicCommit, opts?: DocOpts): Promise<T>;
-
-    /**
      * Applies commit on the existing document
      * @param docId - Document ID
      * @param commit - Commit to be applied
