@@ -38,7 +38,7 @@ One of the features is ability to subscribe to document changes. When a consumer
 
 - document is in memory ⇒ we use in-memory state
 - document is pinned but not in memory ⇒ we load from the state store,
-- document is not pinned and not in memory ⇒ we use state from Doctype.
+- document is not pinned and not in memory ⇒ we use the state from Doctype instance that requested the subscription.
 
 So, at any time, we are sure we start subscription with the latest available state.
 
