@@ -5,7 +5,9 @@ import { commitAtTime, ConflictResolution } from '../conflict-resolution';
 import {
   AnchorService,
   AnchorStatus,
-  DocOpts,
+  CreateOpts,
+  LoadOpts,
+  UpdateOpts,
   UnreachableCaseError,
   RunningStateLike,
   DiagnosticsLogger,
@@ -16,11 +18,6 @@ import { catchError, concatMap, timeoutWith } from 'rxjs/operators';
 import { empty, of, Subscription } from 'rxjs';
 import { SnapshotState } from './snapshot-state';
 import { CommitID, DocID } from '@ceramicnetwork/docid';
-
-// DocOpts defaults for document load operations
-export const DEFAULT_LOAD_DOCOPTS = { anchor: false, publish: false, sync: true };
-// DocOpts defaults for document write operations
-export const DEFAULT_WRITE_DOCOPTS = { anchor: true, publish: true, sync: false };
 
 export class StateManager {
   constructor(
@@ -38,7 +35,7 @@ export class StateManager {
    * @param state$
    * @param opts
    */
-  syncGenesis(state$: RunningState, opts: DocOpts): Promise<void> {
+  syncGenesis(state$: RunningState, opts: LoadOpts): Promise<void> {
     return this.applyOpts(state$, opts);
   }
 
@@ -75,10 +72,10 @@ export class StateManager {
    * @param opts - Initialization options (request anchor, wait, etc.)
    * @private
    */
-  private async applyOpts(state$: RunningState, opts: DocOpts) {
-    const anchor = opts.anchor ?? true;
-    const publish = opts.publish ?? true;
-    const sync = opts.sync ?? true;
+  private async applyOpts(state$: RunningState, opts: CreateOpts | UpdateOpts | LoadOpts) {
+    const anchor = (opts as any).anchor
+    const publish = (opts as any).publish
+    const sync = (opts as any).sync
     if (anchor) {
       this.anchor(state$);
     }
@@ -135,11 +132,8 @@ export class StateManager {
    * @param commit - Commit data
    * @param opts - Document initialization options (request anchor, wait, etc.)
    */
-  applyCommit(state$: RunningState, commit: any, opts: DocOpts = {}): Promise<void> {
+  applyCommit(state$: RunningState, commit: any, opts: CreateOpts | UpdateOpts): Promise<void> {
     return this.executionQ.forDocument(state$.id).run(async (state$) => {
-      // Fill 'opts' with default values for any missing fields
-      opts = { ...DEFAULT_WRITE_DOCOPTS, ...opts };
-
       const cid = await this.dispatcher.storeCommit(commit);
 
       await this.handleTip(state$, cid);

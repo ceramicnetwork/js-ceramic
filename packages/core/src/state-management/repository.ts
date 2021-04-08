@@ -1,5 +1,12 @@
 import DocID from '@ceramicnetwork/docid';
-import { AnchorService, AnchorStatus, Context, DocOpts, DocState, DocStateHolder } from '@ceramicnetwork/common';
+import {
+  AnchorService,
+  AnchorStatus,
+  Context,
+  DocState,
+  DocStateHolder,
+  LoadOpts
+} from '@ceramicnetwork/common';
 import { PinStore } from '../store/pin-store';
 import { NamedTaskQueue } from './named-task-queue';
 import { DiagnosticsLogger } from '@ceramicnetwork/common';
@@ -93,7 +100,7 @@ export class Repository {
     }
   }
 
-  private async fromNetwork(docId: DocID, opts: DocOpts = {}): Promise<RunningState> {
+  private async fromNetwork(docId: DocID, opts: LoadOpts): Promise<RunningState> {
     const handler = this.#deps.handlers.get(docId.typeName);
     const genesisCid = docId.cid;
     const commit = await this.#deps.dispatcher.retrieveCommit(genesisCid);
@@ -113,7 +120,7 @@ export class Repository {
    * Returns a document from wherever we can get information about it.
    * Starts by checking if the document state is present in the in-memory cache, if not then then checks the state store, and finally loads the document from pubsub.
    */
-  async load(docId: DocID, opts: DocOpts = {}): Promise<RunningState> {
+  async load(docId: DocID, opts: LoadOpts): Promise<RunningState> {
     return this.loadingQ.run(docId.toString(), async () => {
       const fromMemory = this.fromMemory(docId);
       if (fromMemory) return fromMemory;
