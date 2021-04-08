@@ -30,7 +30,7 @@ Q2: How memory grows based on this behaviour?
 
 When 4α runs, and the document cache contains 3 entries (2,3,4), in total we have 4 document states, since task 1α has not released document 1 state to garbage collector. Let us call this a _spawned_ task - the one that operates on a document that is no longer in cache. When a new task appears for a new document, we will end up with one more spawned task with one more instance of the document state residing in memory. This way memory grows based on how much concurrent operations we have. To bound this growth, we added a configuration parameter `concurrentTasksLimit`. This is a maximum number of concurrently running tasks for all the documents we have. When this limit is reached, the next task has to wait till one of the tasks is done.
 
-One could consider ``concurrentTasksLimit` as a ceiling for another vector of memory growh, compared to the cache limit. This vector is related to bursts of document processing.
+One could consider `concurrentTasksLimit` as a ceiling for another vector of memory growh, compared to the cache limit. This vector is related to bursts of document processing.
 
 ### Subscriptions and two parts of cache
 
