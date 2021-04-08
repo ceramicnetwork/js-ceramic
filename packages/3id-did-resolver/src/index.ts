@@ -161,7 +161,7 @@ const resolve = async (ceramic: CeramicApi, didId: string, verNfo: VersionInfo, 
   const requestedVersionState = resp[commitIdStr]?.state || latestVersionState
   const metadata = extractMetadata(requestedVersionState, latestVersionState)
 
-  const content = resp[commitIdStr || didId].content
+  const content = (resp[commitIdStr || didId] as TileDoctype).content
   const document = wrapDocument(content, `did:3:${v03ID || didId}`)
 
   return {

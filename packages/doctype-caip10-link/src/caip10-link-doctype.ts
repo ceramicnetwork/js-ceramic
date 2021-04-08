@@ -11,6 +11,7 @@ import { AuthProvider, LinkProof } from "@ceramicnetwork/blockchain-utils-linkin
 import { CommitID, DocID, DocRef } from "@ceramicnetwork/docid";
 import { AccountID } from "caip";
 import { DID } from "dids";
+import cloneDeep from "lodash.clonedeep";
 
 const throwReadOnlyError = (): Promise<void> => {
     throw new Error('Historical document commits cannot be modified. Load the document without specifying a commit to make updates.')
@@ -24,6 +25,13 @@ export class Caip10LinkDoctype extends Doctype {
 
     static DOCTYPE_NAME = 'caip10-link'
     static DOCTYPE_ID = 1
+
+    /**
+     * Returns the DID linked to the CAIP10 address this object represents.
+     */
+    get did(): string | null {
+        return this._getContent()
+    }
 
     /**
      * Creates a Caip10Link for the given CAIP10 address. Initially created without a link to any DID,

@@ -166,11 +166,6 @@ export abstract class Doctype extends Observable<DocState> implements DocStateHo
         return this.state$.value.doctype
     }
 
-    get content(): any {
-        const { next, content } = this.state$.value
-        return cloneDeep(next?.content ?? content)
-    }
-
     get metadata(): DocMetadata {
         const { next, metadata } = this.state$.value
         return cloneDeep(next?.metadata ?? metadata)
@@ -215,6 +210,11 @@ export abstract class Doctype extends Observable<DocState> implements DocStateHo
     async sync(): Promise<void> {
       const document = await this._context.api.loadDocument(this.id)
       this.state$.next(document.state)
+    }
+
+    protected _getContent(): any {
+        const { next, content } = this.state$.value
+        return cloneDeep(next?.content ?? content)
     }
 
     /**
