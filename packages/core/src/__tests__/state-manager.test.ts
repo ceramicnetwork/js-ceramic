@@ -87,7 +87,7 @@ test('commit history and rewind', async () => {
   expect(commit1).toEqual(doc.anchorCommitIds[0]);
 
   const newContent = { abc: 321, def: 456, gh: 987 };
-  const updateRec = await doc._makeCommit(ceramic.did, newContent)
+  const updateRec = await doc.makeCommit(ceramic, newContent)
   await ceramic.repository.stateManager.applyCommit(docState, updateRec);
   expect(doc.allCommitIds.length).toEqual(3);
   expect(doc.anchorCommitIds.length).toEqual(1);
@@ -109,7 +109,7 @@ test('commit history and rewind', async () => {
 
   // Apply a final record that does not get anchored
   const finalContent = { foo: 'bar' };
-  const updateRec2 = await doc._makeCommit(ceramic.did, finalContent)
+  const updateRec2 = await doc.makeCommit(ceramic, finalContent)
   await ceramic.repository.stateManager.applyCommit(docState, updateRec2);
 
   expect(doc.allCommitIds.length).toEqual(5);
@@ -208,7 +208,7 @@ test('handles basic conflict', async () => {
   const tipPreUpdate = doc1.tip;
 
   const newContent = { abc: 321, def: 456, gh: 987 };
-  let updateRec = await doc1._makeCommit(ceramic.did, newContent)
+  let updateRec = await doc1.makeCommit(ceramic, newContent)
   await ceramic.repository.stateManager.applyCommit(docState1, updateRec);
 
   await anchorUpdate(ceramic, doc1);
@@ -227,7 +227,7 @@ test('handles basic conflict', async () => {
   const conflictingNewContent = { asdf: 2342 };
   const doc2 = doctypeFromState<TileDoctype>(ceramic.context, ceramic._doctypeHandlers, state$.value, ceramic.repository.updates$);
   doc2.subscribe();
-  updateRec = await doc2._makeCommit(ceramic.did, conflictingNewContent)
+  updateRec = await doc2.makeCommit(ceramic, conflictingNewContent)
   await ceramic.repository.stateManager.applyCommit(state$, updateRec);
 
   await anchorUpdate(ceramic, doc2);
@@ -260,7 +260,7 @@ test('enforces schema in update that assigns schema', async () => {
   const doc = await TileDoctype.create(ceramic, { stuff: 1 });
   const docState = await ceramic.repository.load(doc.id);
   await anchorUpdate(ceramic, doc);
-  const updateRec = await doc._makeCommit(ceramic.did, null, { schema: schemaDoc.commitId });
+  const updateRec = await doc.makeCommit(ceramic, null, { schema: schemaDoc.commitId });
   await expect(ceramic.repository.stateManager.applyCommit(docState, updateRec)).rejects.toThrow(
     "Validation Error: data['stuff'] should be string",
   );
@@ -276,7 +276,7 @@ test('enforce previously assigned schema during future update', async () => {
   const docState = await ceramic.repository.load(doc.id);
   await anchorUpdate(ceramic, doc);
 
-  const updateRec = await doc._makeCommit(ceramic.did, nonConformingContent);
+  const updateRec = await doc.makeCommit(ceramic, nonConformingContent);
   await expect(ceramic.repository.stateManager.applyCommit(docState, updateRec)).rejects.toThrow(
     "Validation Error: data['stuff'] should be string",
   );
@@ -291,7 +291,7 @@ test('should announce change to network', async () => {
   expect(publishTip).toHaveBeenCalledWith(doc1.id, doc1.tip);
   await publishTip.mockClear();
 
-  const updateRec = await doc1._makeCommit(ceramic.did, { foo: 34 });
+  const updateRec = await doc1.makeCommit(ceramic, { foo: 34 });
   await ceramic.repository.stateManager.applyCommit(docState1, updateRec);
   expect(publishTip).toHaveBeenCalledWith(doc1.id, doc1.tip);
 });

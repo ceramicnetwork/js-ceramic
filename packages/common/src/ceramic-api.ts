@@ -1,4 +1,4 @@
-import { DID, DIDProvider } from 'dids'
+import { DID } from 'dids'
 import {
     Doctype,
     DoctypeHandler,
@@ -6,6 +6,7 @@ import {
     CeramicCommit
 } from "./doctype"
 import { DocID, CommitID } from '@ceramicnetwork/docid'
+import { LoggerProvider } from "./logger-provider";
 
 /**
  * Describes Ceramic pinning functionality
@@ -35,12 +36,27 @@ export interface PinApi {
  */
 export type { DIDProvider } from 'dids'
 
+interface CeramicCommon {
+    loggerProvider?: LoggerProvider
+}
+
+/**
+ * Interface for an object that contains a DID that can be used to sign Ceramic commits.
+ * Any implementation of CeramicAPI will match this interface, though if no CeramicAPI instance is
+ * available users can provide any object containing an authenticated DID instance.
+ */
+export interface CeramicSigner extends CeramicCommon {
+    did: DID | null
+
+    [index: string]: any // allow arbitrary properties
+}
+
 /**
  * Describes Ceramic node API
  */
-export interface CeramicApi {
+export interface CeramicApi extends CeramicSigner {
     pin: PinApi;
-    did?: DID;
+    // loggerProvider: LoggerProvider; // TODO uncomment once logger is available on http-client
 
     /**
      * Register Doctype handler

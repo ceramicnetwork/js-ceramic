@@ -38,8 +38,7 @@
     "ipfs": "~0.54.2",
     "ipfs-http-gateway": "~0.3.2",
     "ipfs-http-server": "~0.3.3",
-    "multiformats": "~4.6.1",
-    "os-utils": "^0.0.14"
+    "multiformats": "~4.6.1"
   },
   "devDependencies": {
     "@babel/core": "^7.9.0",
