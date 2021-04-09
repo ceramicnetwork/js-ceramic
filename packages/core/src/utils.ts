@@ -1,7 +1,6 @@
 import ajv from "ajv"
 
-import { Doctype } from "@ceramicnetwork/common"
-import {TileDoctype} from "@ceramicnetwork/doctype-tile";
+import type { TileDoctype } from "@ceramicnetwork/doctype-tile"
 
 /**
  * Various utility functions

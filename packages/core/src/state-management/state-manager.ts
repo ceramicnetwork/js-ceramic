@@ -191,7 +191,7 @@ export class StateManager {
         }),
         catchError((error) => {
           this.logger.err(error);
-          return empty;
+          return empty();
         }),
       )
       .subscribe();
