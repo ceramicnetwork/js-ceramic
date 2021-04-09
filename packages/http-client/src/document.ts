@@ -43,25 +43,25 @@ export class Document extends Observable<DocState> implements RunningStateLike {
     return new DocID(this.state$.value.doctype, this.state$.value.log[0].cid)
   }
 
-  static async createFromGenesis (apiUrl: string, doctype: string, genesis: any, docOpts: DocOpts = {}, docSyncInterval: number): Promise<Document> {
+  static async createFromGenesis (apiUrl: string, doctype: string, genesis: any, opts: DocOpts = {}, docSyncInterval: number): Promise<Document> {
     const { state } = await fetchJson(apiUrl + '/documents', {
       method: 'post',
       body: {
         doctype,
         genesis: DoctypeUtils.serializeCommit(genesis),
-        docOpts,
+        opts,
       }
     })
     return new Document(DoctypeUtils.deserializeState(state), apiUrl, docSyncInterval)
   }
 
-  static async applyCommit(apiUrl: string, docId: DocID | string, commit: CeramicCommit, docOpts: DocOpts = {}, docSyncInterval: number): Promise<Document> {
+  static async applyCommit(apiUrl: string, docId: DocID | string, commit: CeramicCommit, opts: DocOpts = {}, docSyncInterval: number): Promise<Document> {
     const { state } = await fetchJson(apiUrl + '/commits', {
       method: 'post',
       body: {
         docId: docId.toString(),
         commit: DoctypeUtils.serializeCommit(commit),
-        docOpts,
+        opts,
       }
     })
     return new Document(DoctypeUtils.deserializeState(state), apiUrl, docSyncInterval)

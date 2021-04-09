@@ -177,8 +177,8 @@ class CeramicDaemon {
    * @dev Useful when the docId is unknown, but you have the genesis contents
    */
   async createDocFromGenesis (req: Request, res: Response): Promise<void> {
-    const { doctype, genesis, docOpts } = req.body
-    const doc = await this.ceramic.createDocumentFromGenesis(doctype, DoctypeUtils.deserializeCommit(genesis), docOpts)
+    const { doctype, genesis, opts } = req.body
+    const doc = await this.ceramic.createDocumentFromGenesis(doctype, DoctypeUtils.deserializeCommit(genesis), opts)
     res.json({ docId: doc.id.toString(), state: DoctypeUtils.serializeState(doc.state) })
   }
 
@@ -190,8 +190,8 @@ class CeramicDaemon {
    * to rename this, e.g. `loadDocFromGenesis`
    */
   async createReadOnlyDocFromGenesis (req: Request, res: Response): Promise<void> {
-    const { doctype, genesis, docOpts } = req.body
-    const readOnlyDocOpts = { ...docOpts, anchor: false, publish: false }
+    const { doctype, genesis, opts } = req.body
+    const readOnlyDocOpts = { ...opts, anchor: false, publish: false }
     const doc = await this.ceramic.createDocumentFromGenesis(doctype, DoctypeUtils.deserializeCommit(genesis), readOnlyDocOpts)
     res.json({ docId: doc.id.toString(), state: DoctypeUtils.serializeState(doc.state) })
   }
@@ -224,12 +224,12 @@ class CeramicDaemon {
    * Apply one commit to the existing document
    */
   async applyCommit (req: Request, res: Response): Promise<void> {
-    const { docId, commit, docOpts } = req.body
+    const { docId, commit, opts } = req.body
     if (!(docId && commit)) {
       throw new Error('docId and commit are required in order to apply commit')
     }
 
-    const doctype = await this.ceramic.applyCommit(docId, DoctypeUtils.deserializeCommit(commit), docOpts)
+    const doctype = await this.ceramic.applyCommit(docId, DoctypeUtils.deserializeCommit(commit), opts)
     res.json({ docId: doctype.id.toString(), state: DoctypeUtils.serializeState(doctype.state) })
   }
 
