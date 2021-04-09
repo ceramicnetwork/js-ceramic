@@ -164,26 +164,26 @@ export class StateManager {
               if (asr.anchorScheduledFor) next.anchorScheduledFor = asr.anchorScheduledFor;
               state$.next(next);
               await this.updateStateIfPinned(state$);
-              return empty();
+              return;
             }
             case AnchorStatus.PROCESSING: {
               state$.next({ ...state$.value, anchorStatus: AnchorStatus.PROCESSING });
               await this.updateStateIfPinned(state$);
-              return empty();
+              return;
             }
             case AnchorStatus.ANCHORED: {
               await this.handleTip(state$, asr.anchorRecord);
               this.publishTip(state$);
               subscription.unsubscribe();
-              return empty();
+              return;
             }
             case AnchorStatus.FAILED: {
               if (!asr.cid.equals(state$.tip)) {
-                return empty();
+                return;
               }
               state$.next({ ...state$.value, anchorStatus: AnchorStatus.FAILED });
               subscription.unsubscribe();
-              return empty();
+              return;
             }
             default:
               throw new UnreachableCaseError(asr, 'Unknown anchoring state');
