@@ -35,6 +35,7 @@
     "cross-fetch": "^3.0.6",
     "dids": "^2.0.0",
     "lru_map": "^0.4.1",
+    "query-string": "7.0.0",
     "rxjs": "^6.6.6"
   },
   "devDependencies": {

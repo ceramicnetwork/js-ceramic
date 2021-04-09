@@ -125,13 +125,13 @@ export default class CeramicClient implements CeramicApi {
     }
   }
 
-  async loadDocument<T extends Doctype>(docId: DocID | CommitID | string): Promise<T> {
+  async loadDocument<T extends Doctype>(docId: DocID | CommitID | string, opts?: DocOpts): Promise<T> {
     const docRef = DocRef.from(docId)
     let doc = this._docCache.get(docRef.baseID.toString())
     if (doc) {
       await doc._syncState(docRef)
     } else {
-      doc = await Document.load(docRef, this._apiUrl, this._config.docSyncInterval)
+      doc = await Document.load(docRef, this._apiUrl, this._config.docSyncInterval, opts)
       this._docCache.set(doc.id.toString(), doc)
     }
     return this.buildDoctype<T>(doc)
