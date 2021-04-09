@@ -122,7 +122,7 @@ describe('Ceramic API', () => {
         const updateRecord = await docV1.makeCommit(ceramic, { test: 'fghj' })
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
-        await ceramic.context.api.applyCommit(docV1Id, updateRecord)
+        await ceramic.applyCommit(docV1Id, updateRecord)
       }).rejects.toThrow(/Not DocID/)
 
       // checkout not anchored commit

@@ -146,8 +146,8 @@ export class TileDoctype<T = Record<string, any>> extends Doctype {
      * @param opts - Additional options
      */
     async update(content: T, metadata?: TileMetadataArgs, opts: DocOpts = {}): Promise<void> {
-        const updateCommit = await this.makeCommit(this.context.api, content, metadata)
-        const updated = await this.context.api.applyCommit(this.id, updateCommit, opts)
+        const updateCommit = await this.makeCommit(this.api, content, metadata)
+        const updated = await this.api.applyCommit(this.id, updateCommit, opts)
         this.state$.next(updated.state)
     }
 
@@ -160,8 +160,8 @@ export class TileDoctype<T = Record<string, any>> extends Doctype {
     async patch(jsonPatch: Operation[], opts: DocOpts = {}): Promise<void> {
         const header = headerFromMetadata(this.metadata)
         const unsignedCommit: UnsignedCommit = { header, data: jsonPatch, prev: this.tip, id: this.state$.id.cid }
-        const commit = await _signDagJWS(this.context.api, unsignedCommit, this.controllers[0])
-        const updated = await this.context.api.applyCommit(this.id, commit, opts)
+        const commit = await _signDagJWS(this.api, unsignedCommit, this.controllers[0])
+        const updated = await this.api.applyCommit(this.id, commit, opts)
         this.state$.next(updated.state)
     }
 

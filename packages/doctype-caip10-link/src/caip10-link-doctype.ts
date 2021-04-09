@@ -67,7 +67,7 @@ export class Caip10LinkDoctype extends Doctype {
      * create a verifiable link from the CAIP10 address to the DID.
      * @param did - The DID being linked to the CAIP10 address that this Caip10Link object represents.
      *   If the 'did' provided is an instance of the DID type, the DID must already be authenticated
-     *   so that the did string it represents is available.
+     *   so that the did string it represents is avapilable.
      * @param authProvider - AuthProvider instance from the "@ceramicnetwork/blockchain-utils-linking" package.
      *   Must include support for the blockchain that the CAIP10 address associated with this Caip10Link lives on.
      * @param opts - Additional options
@@ -87,7 +87,7 @@ export class Caip10LinkDoctype extends Doctype {
      */
     async setDidProof(proof: LinkProof, opts: DocOpts = {}): Promise<void> {
         const commit = this.makeCommit(proof)
-        const updated = await this.context.api.applyCommit(this.id, commit, opts)
+        const updated = await this.api.applyCommit(this.id, commit, opts)
         this.state$.next(updated.state);
     }
 
