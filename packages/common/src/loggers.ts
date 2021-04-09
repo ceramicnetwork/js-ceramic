@@ -132,7 +132,7 @@ export class ServiceLogger {
     message = `[${now.toUTCString()}] service=${this.service} ${message}`;
 
     if (this.logToFiles) {
-      this.stream.write(util.format(message, '\n'));
+      this.stream.write(util.format(message, '\n').replace(/\n\s*\n$/, '\n'));
     }
 
     if (this.logToConsole) {
