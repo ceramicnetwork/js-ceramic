@@ -465,17 +465,6 @@ class Ceramic implements CeramicApi {
   }
 
   /**
-   * Applies record on a given document
-   * @param docId - Document ID
-   * @param record - Record to be applied
-   * @param opts - Initialization options
-   * @deprecated See `applyCommit`
-   */
-  async applyRecord<T extends Doctype>(docId: DocID | string, record: CeramicCommit, opts?: DocOpts): Promise<T> {
-    return this.applyCommit(docId, record, opts)
-  }
-
-  /**
    * Applies commit on a given document
    * @param docId - Document ID
    * @param commit - Commit to be applied
@@ -584,15 +573,6 @@ class Ceramic implements CeramicApi {
     })
     const results = await Promise.all(queryPromises)
     return results.reduce((acc, res) => ({ ...acc, ...res}), {})
-  }
-
-  /**
-   * Load all document records by document ID
-   * @param docId - Document ID
-   * @deprecated See `loadDocumentCommits`
-   */
-  async loadDocumentRecords(docId: DocID | string): Promise<Array<Record<string, any>>> {
-    return this.loadDocumentCommits(docId)
   }
 
   /**

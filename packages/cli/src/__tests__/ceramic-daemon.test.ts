@@ -136,7 +136,7 @@ describe('Ceramic interop: core <> http-client', () => {
         expect(state1).toEqual(state2)
     })
 
-    it('gets anchor record updates', async () => {
+    it('gets anchor commit updates', async () => {
         const doc1 = await TileDoctype.create(core, { test: 123 });
         await anchorDoc(doc1)
         expect(doc1.state.log.length).toEqual(2)
@@ -161,17 +161,17 @@ describe('Ceramic interop: core <> http-client', () => {
         expect(DoctypeUtils.serializeState(doc3.state)).toEqual(DoctypeUtils.serializeState(doc4.state))
     })
 
-    it('loads document records correctly', async () => {
+    it('loads document commits correctly', async () => {
         const doc1 = await TileDoctype.create(core, { test: 123 });
         await anchorDoc(doc1)
-        const doc2 = await client.loadDocument(doc1.id)
+        const doc2 = await TileDoctype.load(client, doc1.id)
         expect(doc1.content).toEqual(doc2.content)
 
-        const records1 = await core.loadDocumentRecords(doc1.id)
-        expect(records1).toBeDefined()
+        const commits1 = await core.loadDocumentCommits(doc1.id)
+        expect(commits1).toBeDefined()
 
-        const records2 = await client.loadDocumentRecords(doc2.id)
-        expect(records2).toBeDefined()
+        const commits2 = await client.loadDocumentCommits(doc2.id)
+        expect(commits2).toBeDefined()
 
         const serializeCommits = (commits: any): any => commits.map((r: any) => {
             return {
@@ -179,7 +179,7 @@ describe('Ceramic interop: core <> http-client', () => {
             }
         })
 
-        expect(serializeCommits(records1)).toEqual(serializeCommits(records2))
+        expect(serializeCommits(commits1)).toEqual(serializeCommits(commits2))
     })
 
     it('makes and gets updates correctly with subscription', async () => {
