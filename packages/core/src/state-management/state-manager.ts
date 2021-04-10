@@ -85,14 +85,12 @@ export class StateManager {
     if (publish) {
       this.publishTip(state$);
     }
-    const tip$ = this.dispatcher.messageBus.queryNetwork(state$.id);
     if (sync) {
+      const tip$ = this.dispatcher.messageBus.queryNetwork(state$.id);
       const tip = await tip$.pipe(timeoutWith(3000, of(undefined))).toPromise();
       if (tip) {
         await this.handleTip(state$, tip);
       }
-    } else {
-      state$.add(tip$.subscribe());
     }
   }
 
