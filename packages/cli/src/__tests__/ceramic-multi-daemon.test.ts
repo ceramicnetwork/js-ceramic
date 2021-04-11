@@ -93,6 +93,10 @@ describe('Ceramic interop between multiple daemons and http clients', () => {
         tmpFolder3 = await tmp.dir({ unsafeCleanup: true });
 
         [ipfs1, ipfs2, ipfs3] = await Promise.all([tmpFolder1, tmpFolder2, tmpFolder3].map((tmpFolder) => createIPFS(tmpFolder)));
+
+        // Make sure nodes 2 and 3 can load updates from node 1
+        await swarmConnect(ipfs1, ipfs2)
+        await swarmConnect(ipfs1, ipfs3)
     })
 
     afterAll(async () => {
@@ -102,14 +106,14 @@ describe('Ceramic interop between multiple daemons and http clients', () => {
 
     beforeEach(async () => {
         core1 = await makeCeramicCore(ipfs1, tmpFolder1.path)
-        core2 = await makeCeramicCore(ipfs1, tmpFolder1.path)
-        core3 = await makeCeramicCore(ipfs1, tmpFolder1.path)
+        core2 = await makeCeramicCore(ipfs2, tmpFolder1.path)
+        core3 = await makeCeramicCore(ipfs3, tmpFolder1.path)
         const port1 = await getPort()
         const port2 = await getPort()
         const port3 = await getPort()
         daemon1 = new CeramicDaemon(core1, { port: port1 })
-        daemon2 = new CeramicDaemon(core1, { port: port2 })
-        daemon3 = new CeramicDaemon(core1, { port: port3 })
+        daemon2 = new CeramicDaemon(core2, { port: port2 })
+        daemon3 = new CeramicDaemon(core3, { port: port3 })
         client1 = new CeramicClient('http://localhost:' + port1, { docSyncInterval: 500 })
         client2 = new CeramicClient('http://localhost:' + port2, { docSyncInterval: 500 })
         client3 = new CeramicClient('http://localhost:' + port3, { docSyncInterval: 500 })
@@ -129,10 +133,6 @@ describe('Ceramic interop between multiple daemons and http clients', () => {
     })
 
     it('respects sync DocOpts', async () => {
-        // Make sure the new nodes can load updates from the original node
-        await swarmConnect(ipfs1, ipfs2)
-        await swarmConnect(ipfs1, ipfs3)
-
         const initialContent = {test: 123}
         const updatedContent = {test: 456}
         // Create a document with updates on the first node so that the updates aren't visible
