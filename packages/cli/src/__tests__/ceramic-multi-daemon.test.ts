@@ -129,23 +129,6 @@ describe('Ceramic interop between multiple daemons and http clients', () => {
     })
 
     it('respects sync DocOpts', async () => {
-        // Set up 2 additional ceramic daemons
-        tmpFolder2 = await tmp.dir({unsafeCleanup: true})
-        ipfs2 = await createIPFS(tmpFolder2.path)
-        core2 = await makeCeramicCore(ipfs2, tmpFolder2.path)
-        await core2.setDID(makeDID(seed, core1))
-        const daemonPort2 = await getPort()
-        daemon2 = new CeramicDaemon(core2, { port: daemonPort2 })
-        client2 = new CeramicClient('http://localhost:' + daemonPort2)
-
-        tmpFolder3 = await tmp.dir({unsafeCleanup: true})
-        ipfs3 = await createIPFS(tmpFolder3.path)
-        core3 = await makeCeramicCore(ipfs3, tmpFolder2.path)
-        await core3.setDID(makeDID(seed, core1))
-        const daemonPort3 = await getPort()
-        daemon3 = new CeramicDaemon(core3, { port: daemonPort3 })
-        client3 = new CeramicClient('http://localhost:' + daemonPort3)
-
         // Make sure the new nodes can load updates from the original node
         await swarmConnect(ipfs1, ipfs2)
         await swarmConnect(ipfs1, ipfs3)
