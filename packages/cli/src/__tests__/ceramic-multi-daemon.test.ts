@@ -70,6 +70,8 @@ const makeCeramicCore = async(ipfs: IpfsApi, stateStoreDirectory: string): Promi
 }
 
 describe('Ceramic interop between multiple daemons and http clients', () => {
+    jest.setTimeout(20000)
+
     let ipfs1: IpfsApi
     let ipfs2: IpfsApi
     let tmpFolder1: any
