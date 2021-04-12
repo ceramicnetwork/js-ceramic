@@ -18,26 +18,30 @@ import dagJose from 'dag-jose'
 import { sha256 } from 'multiformats/hashes/sha2'
 import legacy from 'multiformats/legacy'
 import DocID from "@ceramicnetwork/docid";
+import getPort from "get-port";
 
 const seed = u8a.fromString('6e34b2e1a9624113d81ece8a8a22e6e97f0e145c25c1d4d2d0e62753b4060c83', 'base16')
-const port = 7777
-const apiUrl = 'http://localhost:' + port
-const topic = '/ceramic'
+const TOPIC = '/ceramic'
 
 /**
  * Create an IPFS instance
- * @param overrideConfig - IFPS config for override
  */
-const createIPFS = (overrideConfig: Record<string, unknown> = {}): Promise<IpfsApi> => {
+const createIPFS = async (path: string): Promise<IpfsApi> => {
+    const port = await getPort()
     const hasher = {}
     hasher[sha256.code] = sha256
     const format = legacy(dagJose, {hashes: hasher})
 
     const config = {
         ipld: { formats: [format] },
+        repo: `${path}/ipfs${port}/`,
+        config: {
+            Addresses: { Swarm: [`/ip4/127.0.0.1/tcp/${port}`] },
+            Discovery: { DNS: { Enabled: false }, webRTCStar: { Enabled: false }},
+            Bootstrap: []
+        }
     }
 
-    Object.assign(config, overrideConfig)
     return IPFS.create(config)
 }
 
@@ -52,6 +56,16 @@ const makeDID = function(seed: Uint8Array, ceramic: CeramicApi): DID {
     return new DID({ provider, resolver })
 }
 
+const makeCeramicCore = async(ipfs: IpfsApi, stateStoreDirectory: string): Promise<Ceramic> => {
+    const core = await Ceramic.create(ipfs, {pubsubTopic: TOPIC, stateStoreDirectory, anchorOnRequest: false})
+
+    const doctypeHandler = new TileDoctypeHandler()
+    doctypeHandler.verifyJWS = (): Promise<void> => { return }
+    // @ts-ignore
+    core._doctypeHandlers.add(doctypeHandler)
+    return core
+}
+
 describe('Ceramic interop: core <> http-client', () => {
     jest.setTimeout(30000)
     let ipfs: IpfsApi
@@ -62,17 +76,7 @@ describe('Ceramic interop: core <> http-client', () => {
 
     beforeAll(async () => {
         tmpFolder = await tmp.dir({ unsafeCleanup: true })
-        ipfs = await createIPFS({
-            repo: `${tmpFolder.path}/ipfs${5011}/`, config: {
-                Addresses: { Swarm: [`/ip4/127.0.0.1/tcp/${5011}`] }, Discovery: {
-                    MDNS: { Enabled: false }, webRTCStar: { Enabled: false }
-                }, Bootstrap: []
-            }
-        })
-        if (!ipfs.pubsub) {
-            ipfs.pubsub = {}
-        }
-        ipfs.pubsub.subscribe = jest.fn()
+        ipfs = await createIPFS(tmpFolder.path)
     })
 
     afterAll(async () => {
@@ -81,15 +85,10 @@ describe('Ceramic interop: core <> http-client', () => {
     })
 
     beforeEach(async () => {
-        const stateStoreDirectory = tmpFolder.path
-        core = await Ceramic.create(ipfs, {pubsubTopic: topic, stateStoreDirectory, anchorOnRequest: false})
-
-        const doctypeHandler = new TileDoctypeHandler()
-        doctypeHandler.verifyJWS = (): Promise<void> => { return }
-        // @ts-ignore
-        core._doctypeHandlers.add(doctypeHandler)
-
-        daemon = new CeramicDaemon(core, { port, debug: false })
+        core = await makeCeramicCore(ipfs, tmpFolder.path)
+        const port = await getPort()
+        const apiUrl = 'http://localhost:' + port
+        daemon = new CeramicDaemon(core, { port })
         client = new CeramicClient(apiUrl, { docSyncInterval: 500 })
 
         await core.setDID(makeDID(seed, core))
@@ -141,8 +140,8 @@ describe('Ceramic interop: core <> http-client', () => {
         await anchorDoc(doc1)
         expect(doc1.state.log.length).toEqual(2)
         expect(doc1.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
-        const doc2 = await TileDoctype.create(client, { test: 1234 });
-        await anchorDoc(doc2)
+        const doc2 = await TileDoctype.create(client, { test: 1234 })
+        await anchorDoc(doc2);
         expect(doc2.state.log.length).toEqual(2)
         expect(doc2.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
     })

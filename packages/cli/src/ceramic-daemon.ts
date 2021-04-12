@@ -29,7 +29,7 @@ const toApiPath = (ending: string): string => '/api/v0' + ending
 export interface CreateOpts {
   ipfsHost?: string;
   port?: number;
-  corsAllowedOrigins: string | RegExp[];
+  corsAllowedOrigins?: string | RegExp[];
 
   ethereumRpcUrl?: string;
   anchorServiceUrl?: string;
@@ -86,6 +86,31 @@ function makeCeramicConfig (opts: CreateOpts): CeramicConfig {
   }
 
   return ceramicConfig
+}
+
+/**
+ * Takes a query object and parses the values to give them proper types instead of having everything
+ * as strings
+ * @param opts
+ */
+function parseQueryObject(opts: Record<string, any>): Record<string, string | boolean | number> {
+  const docOpts = {}
+  for (const [key, value] of Object.entries(opts)) {
+    if (typeof value == 'string') {
+      if (value === "true") {
+        docOpts[key] = true
+      } else if (value === "false") {
+        docOpts[key] = false
+      } else if (!isNaN(parseInt(value))) {
+        docOpts[key] = parseInt(value)
+      } else {
+        docOpts[key] = value
+      }
+    } else {
+      docOpts[key] = value
+    }
+  }
+  return docOpts
 }
 
 /**
@@ -200,7 +225,8 @@ class CeramicDaemon {
    * Get document state
    */
   async state (req: Request, res: Response): Promise<void> {
-    const doc = await this.ceramic.loadDocument(req.params.docid)
+    const opts = parseQueryObject(req.query)
+    const doc = await this.ceramic.loadDocument(req.params.docid, opts)
     res.json({ docId: doc.id.toString(), state: DoctypeUtils.serializeState(doc.state) })
   }
 
