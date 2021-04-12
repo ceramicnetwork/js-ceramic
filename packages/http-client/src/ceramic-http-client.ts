@@ -11,6 +11,7 @@ import {
   DoctypeConstructor,
   DoctypeHandler,
   DoctypeUtils,
+  LoadOpts,
   MultiQuery,
   PinApi,
   UpdateOpts,
@@ -31,6 +32,7 @@ export const DEFAULT_CLIENT_CONFIG: CeramicClientConfig = {
 
 const DEFAULT_APPLY_COMMIT_OPTS = { anchor: true, publish: true, sync: false }
 const DEFAULT_CREATE_FROM_GENESIS_OPTS = { anchor: true, publish: true, sync: true }
+const DEFAULT_LOAD_OPTS = { sync: true }
 
 /**
  * Ceramic client configuration
@@ -130,7 +132,8 @@ export default class CeramicClient implements CeramicApi {
     }
   }
 
-  async loadDocument<T extends Doctype>(docId: DocID | CommitID | string, opts?: DocOpts): Promise<T> {
+  async loadDocument<T extends Doctype>(docId: DocID | CommitID | string, opts: LoadOpts = {}): Promise<T> {
+    opts = { ...DEFAULT_LOAD_OPTS, ...opts };
     const docRef = DocRef.from(docId)
     let doc = this._docCache.get(docRef.baseID.toString())
     if (doc) {

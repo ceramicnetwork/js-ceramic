@@ -1,6 +1,15 @@
 import { Observable, timer } from 'rxjs'
 import { throttle } from 'rxjs/operators'
-import { CeramicCommit, CreateOpts, DocState, DoctypeUtils, RunningStateLike, DocStateSubject, UpdateOpts } from '@ceramicnetwork/common';
+import {
+  CeramicCommit,
+  CreateOpts,
+  DocState,
+  DoctypeUtils,
+  RunningStateLike,
+  DocStateSubject,
+  LoadOpts,
+  UpdateOpts,
+} from '@ceramicnetwork/common';
 import { DocID, CommitID } from '@ceramicnetwork/docid';
 import { fetchJson } from './utils'
 import QueryString from 'query-string'
@@ -68,7 +77,7 @@ export class Document extends Observable<DocState> implements RunningStateLike {
     return new Document(DoctypeUtils.deserializeState(state), apiUrl, docSyncInterval)
   }
 
-  static async load (docId: DocID | CommitID, apiUrl: string, docSyncInterval: number, opts?: DocOpts): Promise<Document> {
+  static async load (docId: DocID | CommitID, apiUrl: string, docSyncInterval: number, opts: LoadOpts): Promise<Document> {
     const url = apiUrl + '/documents/' + docId.toString() + '?' + QueryString.stringify(opts)
     const { state } = await fetchJson(url)
     return new Document(DoctypeUtils.deserializeState(state), apiUrl, docSyncInterval)
