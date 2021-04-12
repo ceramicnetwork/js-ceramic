@@ -9,6 +9,7 @@ import {
   MultiQuery,
   LoggerConfig,
   LoggerProvider,
+  DiagnosticsLogger
 } from "@ceramicnetwork/common"
 import { LogToFiles } from "./ceramic-logger-plugins"
 import StreamID from "@ceramicnetwork/streamid"
@@ -19,6 +20,7 @@ import cors from 'cors'
 import { errorHandler } from './daemon/error-handler';
 import { addAsync, ExpressWithAsync } from '@awaitjs/express'
 import { logRequests } from './daemon/log-requests';
+import type { Server } from 'http';
 
 const DEFAULT_PORT = 7007
 const toApiPath = (ending: string): string => '/api/v0' + ending
@@ -121,26 +123,33 @@ function parseQueryObject(opts: Record<string, any>): Record<string, string | bo
  * Ceramic daemon implementation
  */
 class CeramicDaemon {
-  private server: any
+  private server?: Server;
+  private readonly app: ExpressWithAsync;
+  private readonly diagnosticsLogger: DiagnosticsLogger;
 
-  constructor (public ceramic: Ceramic, opts: CreateOpts) {
-    const diagnosticsLogger = ceramic.loggerProvider.getDiagnosticsLogger()
-    const app = addAsync(express());
-    app.set('trust proxy', true)
-    app.use(express.json())
-    app.use(cors({ origin: opts.corsAllowedOrigins }))
+  constructor (public ceramic: Ceramic, private readonly opts: CreateOpts) {
+    this.diagnosticsLogger = ceramic.loggerProvider.getDiagnosticsLogger()
+    this.app = addAsync(express());
+    this.app.set('trust proxy', true)
+    this.app.use(express.json())
+    this.app.use(cors({ origin: opts.corsAllowedOrigins }))
 
-    app.use(logRequests(ceramic.loggerProvider))
+    this.app.use(logRequests(ceramic.loggerProvider))
 
-    this.registerAPIPaths(app, opts.gateway)
+    this.registerAPIPaths(this.app, opts.gateway)
 
-    app.use(errorHandler(diagnosticsLogger))
+    this.app.use(errorHandler(this.diagnosticsLogger))
+  }
 
-    const port = opts.port || DEFAULT_PORT
-    this.server = app.listen(port, () => {
-      diagnosticsLogger.imp('Ceramic API running on port ' + port)
+  async listen(): Promise<void> {
+    return new Promise<void>((resolve) => {
+      const port = this.opts.port || DEFAULT_PORT
+      this.server = this.app.listen(port, () => {
+        this.diagnosticsLogger.imp('Ceramic API running on port ' + port)
+        resolve()
+      })
+      this.server.keepAliveTimeout = 60 * 1000
     })
-    this.server.keepAliveTimeout = 60 * 1000
   }
 
   /**
@@ -169,7 +178,9 @@ class CeramicDaemon {
     }})
     await ceramic.setDID(did)
 
-    return new CeramicDaemon(ceramic, opts)
+    const daemon = new CeramicDaemon(ceramic, opts)
+    await daemon.listen()
+    return daemon
   }
 
   registerAPIPaths (app: ExpressWithAsync, gateway: boolean): void {
@@ -408,7 +419,16 @@ class CeramicDaemon {
    * Close Ceramic daemon
    */
   async close (): Promise<void> {
-    return this.server.close()
+    return new Promise<void>((resolve, reject) => {
+      if (!this.server) resolve();
+      this.server.close(err => {
+        if (err) {
+          reject(err)
+        } else {
+          resolve()
+        }
+      })
+    })
   }
 }
 
