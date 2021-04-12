@@ -41,7 +41,7 @@ export interface CeramicClientConfig {
   /**
    * Period of synchronisation, in milliseconds. Active when subscribing document.
    */
-  docSyncInterval: number
+  docSyncInterval: number // todo rename to syncInterval
 }
 
 /**

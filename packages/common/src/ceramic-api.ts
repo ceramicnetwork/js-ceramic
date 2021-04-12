@@ -124,10 +124,12 @@ export interface MultiQuery {
      * The StreamID of the document to load
      */
     streamId: StreamID | string
+
     /**
      * An array of paths used to look for linked documents
      */
     paths?: Array<string>
+
     /**
      * Load a previous version of the document based on unix timestamp
      */
