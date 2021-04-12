@@ -67,6 +67,7 @@ const SUPPORTED_CHAINS_BY_NETWORK = {
   [Networks.INMEMORY]: ["inmemory:12345"], // Our fake in-memory anchor service chainId
 }
 
+const DEFAULT_APPLY_COMMIT_OPTS = { anchor: true, publish: true, sync: false }
 const DEFAULT_CREATE_FROM_GENESIS_OPTS = { anchor: true, publish: true, sync: true }
 const DEFAULT_LOAD_OPTS = { sync: true }
 
@@ -480,7 +481,8 @@ class Ceramic implements CeramicApi {
    * @param commit - Commit to be applied
    * @param opts - Initialization options
    */
-  async applyCommit<T extends Doctype>(docId: string | DocID, commit: CeramicCommit, opts: CreateOpts | UpdateOpts): Promise<T> {
+  async applyCommit<T extends Doctype>(docId: string | DocID, commit: CeramicCommit, opts: CreateOpts | UpdateOpts = {}): Promise<T> {
+    opts = { ...DEFAULT_APPLY_COMMIT_OPTS, ...opts };
     const state$ = await this._loadDoc(normalizeDocID(docId), opts as CreateOpts)
     await this.repository.stateManager.applyCommit(state$, commit, opts)
     return doctypeFromState<T>(this.context, this._doctypeHandlers, state$.value, this.repository.updates$)

@@ -29,6 +29,7 @@ export const DEFAULT_CLIENT_CONFIG: CeramicClientConfig = {
   docSyncInterval: 5000,
 }
 
+const DEFAULT_APPLY_COMMIT_OPTS = { anchor: true, publish: true, sync: false }
 const DEFAULT_CREATE_FROM_GENESIS_OPTS = { anchor: true, publish: true, sync: true }
 
 /**
@@ -171,7 +172,8 @@ export default class CeramicClient implements CeramicApi {
     return Document.loadDocumentCommits(effectiveDocId, this._apiUrl)
   }
 
-  async applyCommit<T extends Doctype>(docId: string | DocID, commit: CeramicCommit, opts: CreateOpts | UpdateOpts): Promise<T> {
+  async applyCommit<T extends Doctype>(docId: string | DocID, commit: CeramicCommit, opts: CreateOpts | UpdateOpts = {}): Promise<T> {
+    opts = { ...DEFAULT_APPLY_COMMIT_OPTS, ...opts };
     const effectiveDocId = typeDocID(docId)
     const document = await Document.applyCommit(this._apiUrl, effectiveDocId, commit, opts, this._config.docSyncInterval)
     return this.buildDoctype<T>(document)

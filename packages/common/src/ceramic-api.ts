@@ -98,7 +98,7 @@ export interface CeramicApi extends CeramicSigner {
      * @param commit - Commit to be applied
      * @param opts - Initialization options
      */
-    applyCommit<T extends Doctype>(docId: DocID | string, commit: CeramicCommit, opts: CreateOpts | UpdateOpts): Promise<T>;
+    applyCommit<T extends Doctype>(docId: DocID | string, commit: CeramicCommit, opts?: CreateOpts | UpdateOpts): Promise<T>;
 
     /**
      * Sets the DID instance that will be used to author commits to documents. The DID instance
