@@ -5,12 +5,14 @@ import * as uint8arrays from 'uint8arrays'
 import { randomBytes } from '@stablelib/random'
 
 import {
+    CreateOpts,
+    LoadOpts,
+    UpdateOpts,
     Doctype,
     DoctypeConstructor,
     DoctypeStatic,
     CeramicCommit,
     CommitHeader,
-    DocOpts,
     GenesisCommit,
     UnsignedCommit,
     CeramicApi,
@@ -19,7 +21,6 @@ import {
     CeramicSigner,
 } from "@ceramicnetwork/common"
 import { CommitID, DocID, DocRef } from "@ceramicnetwork/docid";
-import cloneDeep from "lodash.clonedeep";
 
 /**
  * Arguments used to generate the metadata for Tile documents
@@ -31,6 +32,9 @@ export interface TileMetadataArgs {
   tags?: Array<string>
   deterministic?: boolean
 }
+
+const DEFAULT_LOAD_OPTS = { sync: true }
+const DEFAULT_UPDATE_OPTS = { anchor: true, publish: true }
 
 /**
  * Converts from metadata format into CommitHeader format to be put into a CeramicCommit
@@ -108,7 +112,9 @@ export class TileDoctype<T = Record<string, any>> extends Doctype {
      * @param metadata - Genesis metadata
      * @param opts - Additional options
      */
-    static async create<T>(ceramic: CeramicApi, content: T | null | undefined, metadata?: TileMetadataArgs, opts: DocOpts = {}): Promise<TileDoctype<T>> {
+    static async create<T>(ceramic: CeramicApi, content: T | null | undefined, metadata?: TileMetadataArgs, opts: CreateOpts = {}): Promise<TileDoctype<T>> {
+      // sync by default if creating a deterministic document
+      opts = { anchor: true, publish: true, sync: !!metadata?.deterministic, ...opts };
       const commit = await TileDoctype.makeGenesis(ceramic, content, metadata)
       return ceramic.createDocumentFromGenesis<TileDoctype<T>>(TileDoctype.DOCTYPE_NAME, commit, opts)
     }
@@ -119,7 +125,9 @@ export class TileDoctype<T = Record<string, any>> extends Doctype {
      * @param genesisCommit - Genesis commit (first commit in document log)
      * @param opts - Additional options
      */
-    static async createFromGenesis<T>(ceramic: CeramicApi, genesisCommit: GenesisCommit, opts: DocOpts = {}): Promise<TileDoctype<T>> {
+    static async createFromGenesis<T>(ceramic: CeramicApi, genesisCommit: GenesisCommit, opts: CreateOpts = {}): Promise<TileDoctype<T>> {
+        // sync by default when creating from genesis
+        opts = { anchor: true, publish: true, sync: true, ...opts };
         const commit = (genesisCommit.data ? await _signDagJWS(ceramic, genesisCommit, genesisCommit.header.controllers[0]): genesisCommit)
         return ceramic.createDocumentFromGenesis<TileDoctype<T>>(TileDoctype.DOCTYPE_NAME, commit, opts)
     }
@@ -130,7 +138,8 @@ export class TileDoctype<T = Record<string, any>> extends Doctype {
      * @param docId - DocID to load.  Must correspond to a Tile doctype
      * @param opts - Additional options
      */
-    static async load<T>(ceramic: CeramicApi, docId: DocID | CommitID | string, opts: DocOpts = {}): Promise<TileDoctype<T>> {
+    static async load<T>(ceramic: CeramicApi, docId: DocID | CommitID | string, opts: LoadOpts = {}): Promise<TileDoctype<T>> {
+        opts = { ...DEFAULT_LOAD_OPTS, ...opts };
         const docRef = DocRef.from(docId)
         if (docRef.type != TileDoctype.DOCTYPE_ID) {
             throw new Error(`DocID ${docRef.toString()} does not refer to a '${TileDoctype.DOCTYPE_NAME}' doctype, but to a ${docRef.typeName}`)
@@ -145,7 +154,8 @@ export class TileDoctype<T = Record<string, any>> extends Doctype {
      * @param metadata - Changes to make to the metadata.  Only fields that are specified will be changed.
      * @param opts - Additional options
      */
-    async update(content: T, metadata?: TileMetadataArgs, opts: DocOpts = {}): Promise<void> {
+    async update(content: T, metadata?: TileMetadataArgs, opts: UpdateOpts = {}): Promise<void> {
+        opts = { ...DEFAULT_UPDATE_OPTS, ...opts };
         const updateCommit = await this.makeCommit(this.api, content, metadata)
         const updated = await this.api.applyCommit(this.id, updateCommit, opts)
         this.state$.next(updated.state)
@@ -157,7 +167,8 @@ export class TileDoctype<T = Record<string, any>> extends Doctype {
      * @param jsonPatch - JSON patch diff of document contents
      * @param opts - Additional options
      */
-    async patch(jsonPatch: Operation[], opts: DocOpts = {}): Promise<void> {
+    async patch(jsonPatch: Operation[], opts: UpdateOpts = {}): Promise<void> {
+        opts = { ...DEFAULT_UPDATE_OPTS, ...opts };
         const header = headerFromMetadata(this.metadata)
         const unsignedCommit: UnsignedCommit = { header, data: jsonPatch, prev: this.tip, id: this.state$.id.cid }
         const commit = await _signDagJWS(this.api, unsignedCommit, this.controllers[0])
