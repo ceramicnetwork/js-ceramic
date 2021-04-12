@@ -54,7 +54,7 @@ interface MultiQueries {
   queries: Array<MultiQueryWithDocId>
 }
 
-function makeCeramicConfig (opts: CreateOpts): CeramicConfig {
+export function makeCeramicConfig (opts: CreateOpts): CeramicConfig {
   const loggerProvider = new LoggerProvider(opts.loggerConfig, (logPath: string) => { return new RotatingFileStream(logPath, true)})
   const ceramicConfig: CeramicConfig = {
     loggerProvider,
