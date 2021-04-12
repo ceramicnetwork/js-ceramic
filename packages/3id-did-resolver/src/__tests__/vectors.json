@@ -159,13 +159,13 @@
       }
     },
     "http://localhost:7007/api/v0/documents": [{
-      "expectedBody": {"doctype":"tile","genesis":{"header":{"controllers":["did:key:zQ3shcMwX6vEZkbCWrZqL5W47yditTzauxC5x4WNbgo5r2PbW"],"family":"3id"}},"docOpts":{"anchor":false,"publish":false}},
+      "expectedBody": {"doctype":"tile","genesis":{"header":{"controllers":["did:key:zQ3shcMwX6vEZkbCWrZqL5W47yditTzauxC5x4WNbgo5r2PbW"],"family":"3id"}},"docOpts":{"anchor":false,"publish":false,"sync":true}},
       "response": {
         "docId":"k2t6wyfsu4pfzxkvkqs4sxhgk2vy60icvko3jngl56qzmdewud4lscf5p93wna",
         "state":{"doctype":"tile","content":{"publicKeys":{"ALmMYTWJ5UKJ4CM":"zQ3shi9zKgi8T5x8gD41cGUbXfnvextDoVALmMYTWJ5UKJ4CM","ybNYrGwCnFBSJza":"z6LSrJMTEUvAWvnv63NmvN9zZ54HMR15TybNYrGwCnFBSJza"}},"metadata":{"family":"3id","controllers":["did:key:z6Mkte2hed9vh5xaKPhxF8EpA5jj71BF4Gk1efkuRvNPmgRN"]},"signature":2,"anchorStatus":"ANCHORED","log":[{"cid":"bafyreiecg6f5fcfkyhtrcwn6v2k3gtoyrshxbm5lqua4s337huq2meefay","type":0},{"cid":"bagcqcera3jzvu6lfkstkgr5ykabaaikf5uu2dqum4n2q33c2mj4v6byanria","type":1},{"cid":"bafyreie7ova3gtkvkgla6cslvism7kjn4uzhtngahyir5dng2pfa4vouja","type":2,"timestamp":1615908910},{"cid":"bagcqcera4nkr2zsd55zozxllhdoacn7qwz47xj23cecjub3mcrx35uf2zz5q","type":1},{"cid":"bafyreihlb5brxifcy3eb7v4vqw27r56clvizkt5x5gricdh77w45kwvq4y","type":2,"timestamp":1615909089}],"anchorProof":{"root":"bagcqcera4nkr2zsd55zozxllhdoacn7qwz47xj23cecjub3mcrx35uf2zz5q","txHash":"bagjqcgzazuikj3gdyfbghkknahtuavveqnft6rnjr4u7bbijohbczzsmr6ha","chainId":"eip155:3","blockNumber":9849831,"blockTimestamp":1615909089}}
       }
     }, {
-      "expectedBody": {"doctype":"tile","genesis":{"header":{"controllers":["did:key:zQ3shcMwX6vEZkhBgM38F4erHWNDfsHQhxtHrJdUDqh515pT2"],"family":"3id"}},"docOpts":{"anchor":false,"publish":false}},
+      "expectedBody": {"doctype":"tile","genesis":{"header":{"controllers":["did:key:zQ3shcMwX6vEZkhBgM38F4erHWNDfsHQhxtHrJdUDqh515pT2"],"family":"3id"}},"docOpts":{"anchor":false,"publish":false,"sync":true}},
       "response": {
         "docId":"k2t6wyfsu4pfxkwr4xlff0joqfejg1b42ujhzo4xcf0ujw2upuko0mf5b7834q",
         "state":{"doctype":"tile","content":{},"metadata":{"family":"3id","controllers":["did:key:zQ3shcMwX6vEZkhBgM38F4erHWNDfsHQhxtHrJdUDqh515pT2"]},"signature":0,"anchorStatus":"NOT_REQUESTED","log":[{"cid":"bafyreibd3imfprrpgsvm7qciu7pszyaevvy5acg74ksckbfpjkxhqnke3i","type":0}]}

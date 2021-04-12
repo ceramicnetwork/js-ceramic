@@ -2,9 +2,9 @@ import { DID } from 'dids'
 import {
     Doctype,
     DoctypeHandler,
-    DocOpts,
     CeramicCommit
 } from "./doctype"
+import { CreateOpts, LoadOpts, UpdateOpts } from "./docopts"
 import { DocID, CommitID } from '@ceramicnetwork/docid'
 import { LoggerProvider } from "./logger-provider";
 
@@ -70,14 +70,14 @@ export interface CeramicApi extends CeramicSigner {
      * @param genesis - Genesis commit
      * @param opts - Initialization options
      */
-    createDocumentFromGenesis<T extends Doctype>(doctype: string, genesis: any, opts?: DocOpts): Promise<T>;
+    createDocumentFromGenesis<T extends Doctype>(doctype: string, genesis: any, opts?: CreateOpts): Promise<T>;
 
     /**
      * Loads Doctype instance
      * @param docId - Document ID
      * @param opts - Initialization options
      */
-    loadDocument<T extends Doctype>(docId: DocID | CommitID | string, opts?: DocOpts): Promise<T>;
+    loadDocument<T extends Doctype>(docId: DocID | CommitID | string, opts?: LoadOpts): Promise<T>;
 
     /**
      * Load all document commits by document ID
@@ -98,7 +98,7 @@ export interface CeramicApi extends CeramicSigner {
      * @param commit - Commit to be applied
      * @param opts - Initialization options
      */
-    applyCommit<T extends Doctype>(docId: DocID | string, commit: CeramicCommit, opts?: DocOpts): Promise<T>;
+    applyCommit<T extends Doctype>(docId: DocID | string, commit: CeramicCommit, opts?: CreateOpts | UpdateOpts): Promise<T>;
 
     /**
      * Sets the DID instance that will be used to author commits to documents. The DID instance
