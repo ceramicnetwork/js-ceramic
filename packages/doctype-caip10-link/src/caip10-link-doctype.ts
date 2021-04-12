@@ -18,7 +18,7 @@ const throwReadOnlyError = (): Promise<void> => {
     throw new Error('Historical document commits cannot be modified. Load the document without specifying a commit to make updates.')
 }
 
-const DEFAULT_CREATE_OPTS = { anchor: true, publish: true, sync: true }
+const DEFAULT_CREATE_OPTS = { anchor: false, publish: true, sync: true }
 const DEFAULT_UPDATE_OPTS = { anchor: true, publish: true }
 const DEFAULT_LOAD_OPTS = { sync: true }
 
