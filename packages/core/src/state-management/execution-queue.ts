@@ -1,5 +1,5 @@
 import { NamedTaskQueue } from './named-task-queue';
-import { DocID } from '@ceramicnetwork/docid';
+import { StreamID } from '@ceramicnetwork/streamid';
 import { DiagnosticsLogger } from '@ceramicnetwork/common';
 import { Semaphore } from 'await-semaphore';
 import { TaskQueueLike } from '../pubsub/task-queue';
@@ -23,15 +23,15 @@ export class ExecutionQueue {
   /**
    * Return execution lane for a document.
    */
-  forDocument(docId: DocID): TaskQueueLike {
+  forDocument(streamId: StreamID): TaskQueueLike {
     return {
       add: (task) => {
-        return this.tasks.add(docId.toString(), () => {
+        return this.tasks.add(streamId.toString(), () => {
           return this.semaphore.use(() => task());
         });
       },
       run: (task) => {
-        return this.tasks.run(docId.toString(), () => {
+        return this.tasks.run(streamId.toString(), () => {
           return this.semaphore.use(() => task());
         });
       },

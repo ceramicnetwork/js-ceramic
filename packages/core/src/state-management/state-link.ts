@@ -1,5 +1,5 @@
 import { Observable, Subscription } from 'rxjs';
-import { DocID } from '@ceramicnetwork/docid';
+import { StreamID } from '@ceramicnetwork/streamid';
 import { DocState, RunningStateLike, DocStateSubject } from '@ceramicnetwork/common';
 
 /**
@@ -35,7 +35,7 @@ export class StateLink extends Observable<DocState> implements RunningStateLike 
     return this.state$.value;
   }
 
-  get id(): DocID {
-    return new DocID(this.state.doctype, this.state.log[this.state.log.length - 1].cid);
+  get id(): StreamID {
+    return new StreamID(this.state.doctype, this.state.log[this.state.log.length - 1].cid);
   }
 }

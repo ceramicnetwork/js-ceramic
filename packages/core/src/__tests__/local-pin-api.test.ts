@@ -1,12 +1,12 @@
 import { LocalPinApi } from '../local-pin-api';
-import DocID from '@ceramicnetwork/docid';
+import StreamID from '@ceramicnetwork/streamid';
 import * as random from '@stablelib/random';
 import { CommitType, DocState, LoggerProvider } from '@ceramicnetwork/common';
 import { Repository } from '../state-management/repository';
 import CID from 'cids';
 import { RunningState } from '../state-management/running-state';
 
-const DOC_ID = DocID.fromString('k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki');
+const DOC_ID = StreamID.fromString('k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki');
 const FAKE_CID = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu');
 
 const repository = ({ pin: jest.fn(), unpin: jest.fn(), list: jest.fn() } as unknown) as Repository;
@@ -38,7 +38,7 @@ test('rm', async () => {
 });
 
 describe('ls', () => {
-  test('no docId: list all', async () => {
+  test('no streamId: list all', async () => {
     const length = Math.floor(Math.random() * 10);
     const expected = Array.from({ length }).map(() => random.randomString(10));
     repository.listPinned = jest.fn(async () => expected);
@@ -47,7 +47,7 @@ describe('ls', () => {
     expect(actual).toEqual(expected);
     expect(repository.listPinned).toBeCalledWith(null);
   });
-  test('docId: present: list it', async () => {
+  test('streamId: present: list it', async () => {
     const expected = [DOC_ID.toString()];
     repository.listPinned = jest.fn(async () => expected);
     const iterable = await pinApi.ls(DOC_ID);
@@ -55,7 +55,7 @@ describe('ls', () => {
     expect(actual).toEqual(expected);
     expect(repository.listPinned).toBeCalledWith(DOC_ID);
   });
-  test('docId: absent: empty list', async () => {
+  test('streamId: absent: empty list', async () => {
     const expected = [];
     repository.listPinned = jest.fn(async () => expected);
     const iterable = await pinApi.ls(DOC_ID);

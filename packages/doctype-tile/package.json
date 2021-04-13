@@ -26,6 +26,7 @@
   },
   "dependencies": {
     "@ceramicnetwork/common": "^0.18.0-rc.0",
+    "@ceramicnetwork/streamid": "^0.5.1",
     "@stablelib/random": "^1.0.0",
     "fast-json-patch": "^2.2.1",
     "uint8arrays": "^2.0.5"

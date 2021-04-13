@@ -9,7 +9,7 @@ import {
 import { TileDoctype } from "@ceramicnetwork/doctype-tile";
 import { PinStore } from '../pin-store';
 import { PinStoreFactory } from '../pin-store-factory';
-import DocID from '@ceramicnetwork/docid';
+import StreamID from '@ceramicnetwork/streamid';
 import CID from 'cids';
 import { createIPFS } from '../../__tests__/ipfs-util';
 import { createCeramic } from '../../__tests__/create-ceramic';
@@ -29,7 +29,7 @@ const ipfs = ({
 describe('Level data store', () => {
   let store: PinStore;
 
-  const docId = new DocID('tile', FAKE_CID);
+  const streamId = new StreamID('tile', FAKE_CID);
   const docState: DocState = {
     doctype: 'tile',
     content: {},
@@ -50,11 +50,11 @@ describe('Level data store', () => {
   });
 
   it('pins document correctly without IPFS pinning', async () => {
-    await expect(store.stateStore.load(docId)).resolves.toBeNull();
+    await expect(store.stateStore.load(streamId)).resolves.toBeNull();
     const pinSpy = jest.spyOn(store.pinning, 'pin');
-    await store.stateStore.save({ id: docId, state: docState });
+    await store.stateStore.save({ id: streamId, state: docState });
     expect(pinSpy).toBeCalledTimes(0);
-    await expect(store.stateStore.load(docId)).resolves.toEqual(docState);
+    await expect(store.stateStore.load(streamId)).resolves.toEqual(docState);
   });
 
   it('pins not anchored document correctly with IPFS pinning', async () => {
@@ -62,12 +62,12 @@ describe('Level data store', () => {
       ...docState,
       log: [{ cid: FAKE_CID, type: CommitType.GENESIS }],
     };
-    await expect(store.stateStore.load(docId)).resolves.toBeNull();
+    await expect(store.stateStore.load(streamId)).resolves.toBeNull();
     const pinSpy = jest.spyOn(store.pinning, 'pin');
-    await store.add({ id: docId, state: state });
+    await store.add({ id: streamId, state: state });
     expect(pinSpy).toBeCalledWith(FAKE_CID);
     expect(pinSpy).toBeCalledTimes(1);
-    await expect(store.stateStore.load(docId)).resolves.toEqual(state);
+    await expect(store.stateStore.load(streamId)).resolves.toEqual(state);
   });
 
   it('adds and removes pinned document', async () => {
@@ -90,9 +90,9 @@ describe('Level data store', () => {
   }, 10000);
 
   it('skips removing unpinned document', async () => {
-    await expect(store.stateStore.load(docId)).resolves.toBeNull();
+    await expect(store.stateStore.load(streamId)).resolves.toBeNull();
     const unpinSpy = jest.spyOn(store.pinning, 'unpin');
-    await store.rm(docId);
+    await store.rm(streamId);
     expect(unpinSpy).toBeCalledTimes(0);
   });
 
@@ -116,7 +116,7 @@ describe('Level data store', () => {
     expect(pinned.includes(doc2.id.toString())).toBeTruthy();
 
     const pinnedSingle = [];
-    for await (const id of await ceramic.pin.ls(new DocID('tile', FAKE_CID))) {
+    for await (const id of await ceramic.pin.ls(new StreamID('tile', FAKE_CID))) {
       pinned.push(id);
     }
 
@@ -135,8 +135,8 @@ describe('Level data store', () => {
     });
     const localStore = storeFactoryLocal.createPinStore();
 
-    await localStore.stateStore.save({ id: docId, state: docState });
-    await expect(localStore.stateStore.load(docId)).resolves.toEqual(docState);
+    await localStore.stateStore.save({ id: streamId, state: docState });
+    await expect(localStore.stateStore.load(streamId)).resolves.toEqual(docState);
 
     await localStore.close();
 
@@ -149,6 +149,6 @@ describe('Level data store', () => {
     const inMemoryStore = storeFactoryInMemory.createPinStore();
 
     // The new pin store shouldn't be able to see docs that were pinned on the other network
-    await expect(inMemoryStore.stateStore.load(docId)).resolves.toBeNull();
+    await expect(inMemoryStore.stateStore.load(streamId)).resolves.toBeNull();
   });
 });

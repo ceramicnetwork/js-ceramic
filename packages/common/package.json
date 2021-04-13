@@ -27,7 +27,7 @@
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/docid": "^0.5.1",
+    "@ceramicnetwork/streamid": "^0.5.1",
     "@overnightjs/logger": "^1.2.0",
     "@types/logfmt": "^1.2.1",
     "cids": "~1.1.6",

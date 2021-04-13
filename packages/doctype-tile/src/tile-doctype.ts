@@ -20,7 +20,7 @@ import {
     DocMetadata,
     CeramicSigner,
 } from "@ceramicnetwork/common"
-import { CommitID, DocID, DocRef } from "@ceramicnetwork/docid";
+import { CommitID, StreamID, StreamRef } from "@ceramicnetwork/streamid";
 
 /**
  * Arguments used to generate the metadata for Tile documents
@@ -133,19 +133,19 @@ export class TileDoctype<T = Record<string, any>> extends Doctype {
     }
 
     /**
-     * Loads a Tile document from a given DocID
+     * Loads a Tile document from a given StreamID
      * @param ceramic - Instance of CeramicAPI used to communicate with the Ceramic network
-     * @param docId - DocID to load.  Must correspond to a Tile doctype
+     * @param streamId - StreamID to load.  Must correspond to a Tile doctype
      * @param opts - Additional options
      */
-    static async load<T>(ceramic: CeramicApi, docId: DocID | CommitID | string, opts: LoadOpts = {}): Promise<TileDoctype<T>> {
+    static async load<T>(ceramic: CeramicApi, streamId: StreamID | CommitID | string, opts: LoadOpts = {}): Promise<TileDoctype<T>> {
         opts = { ...DEFAULT_LOAD_OPTS, ...opts };
-        const docRef = DocRef.from(docId)
-        if (docRef.type != TileDoctype.DOCTYPE_ID) {
-            throw new Error(`DocID ${docRef.toString()} does not refer to a '${TileDoctype.DOCTYPE_NAME}' doctype, but to a ${docRef.typeName}`)
+        const streamRef = StreamRef.from(streamId)
+        if (streamRef.type != TileDoctype.DOCTYPE_ID) {
+            throw new Error(`StreamID ${streamRef.toString()} does not refer to a '${TileDoctype.DOCTYPE_NAME}' doctype, but to a ${streamRef.typeName}`)
         }
 
-        return ceramic.loadDocument<TileDoctype<T>>(docRef, opts)
+        return ceramic.loadDocument<TileDoctype<T>>(streamRef, opts)
     }
 
     /**

@@ -87,7 +87,7 @@ describe('Ceramic interop between multiple daemons and http clients', () => {
         tmpFolder1 = await tmp.dir({ unsafeCleanup: true });
         tmpFolder2 = await tmp.dir({ unsafeCleanup: true });
 
-        [ipfs1, ipfs2] = await Promise.all([tmpFolder1, tmpFolder2].map((tmpFolder) => createIPFS(tmpFolder)));
+        [ipfs1, ipfs2] = await Promise.all([tmpFolder1, tmpFolder2].map((tmpFolder) => createIPFS(tmpFolder.path)));
 
         // Make sure the nodes can talk to each other
         await swarmConnect(ipfs1, ipfs2)

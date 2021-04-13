@@ -2,7 +2,7 @@ import Ceramic, { CeramicConfig } from '../ceramic'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import { TileDoctype } from "@ceramicnetwork/doctype-tile"
 import { AnchorStatus, DoctypeUtils, IpfsApi } from "@ceramicnetwork/common"
-import DocID from '@ceramicnetwork/docid'
+import StreamID from '@ceramicnetwork/streamid'
 import * as u8a from 'uint8arrays'
 import cloneDeep from 'lodash.clonedeep'
 import { createIPFS } from './ipfs-util';
@@ -123,7 +123,7 @@ describe('Ceramic API', () => {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         await ceramic.applyCommit(docV1Id, updateRecord, { anchor: false, publish: false })
-      }).rejects.toThrow(/Not DocID/)
+      }).rejects.toThrow(/Not StreamID/)
 
       // checkout not anchored commit
       const docV2Id = docOg.id.atCommit(docOg.state.log[2].cid)
@@ -256,7 +256,7 @@ describe('Ceramic API', () => {
 
     let ceramic: Ceramic
     let docA: TileDoctype, docB: TileDoctype, docC: TileDoctype, docD: TileDoctype, docE: TileDoctype, docF: TileDoctype
-    const notExistDocId = DocID.fromString('kjzl6cwe1jw1495fyn7770ujykvl1f8sskbzsevlux062ajragz9hp3akdqbmdg')
+    const notExistStreamId = StreamID.fromString('kjzl6cwe1jw1495fyn7770ujykvl1f8sskbzsevlux062ajragz9hp3akdqbmdg')
     const docFTimestamps = []
     const docFStates = []
 
@@ -272,7 +272,7 @@ describe('Ceramic API', () => {
                                                   notDoc: '123' })
       docA = await TileDoctype.create(ceramic, { b: docB.id.toUrl(),
                                                   c: docC.id.toUrl(),
-                                                  notExistDocId: notExistDocId.toUrl(),
+                                                  notExistStreamId: notExistStreamId.toUrl(),
                                                   notDoc: '123' })
     })
 
@@ -281,8 +281,8 @@ describe('Ceramic API', () => {
     })
 
     it('can load linked doc path, returns expected form', async () => {
-      const docs = await ceramic._loadLinkedDocuments({ docId: docA.id, paths: ['/b/e'] })
-      // inlcudes all linked docs in path, including root, key by docid string
+      const docs = await ceramic._loadLinkedDocuments({ streamId: docA.id, paths: ['/b/e'] })
+      // inlcudes all linked docs in path, including root, key by streamid string
       expect(docs[docA.id.toString()]).toBeTruthy()
       expect(docs[docB.id.toString()]).toBeTruthy()
       expect(docs[docE.id.toString()]).toBeTruthy()
@@ -293,7 +293,7 @@ describe('Ceramic API', () => {
     })
 
     it('can load multiple paths', async () => {
-      const docs = await ceramic._loadLinkedDocuments({ docId: docA.id, paths: ['/b/e/f', '/c', '/b/d'] })
+      const docs = await ceramic._loadLinkedDocuments({ streamId: docA.id, paths: ['/b/e/f', '/c', '/b/d'] })
       expect(Object.keys(docs).length).toEqual(6)
       expect(docs[docA.id.toString()]).toBeTruthy()
       expect(docs[docB.id.toString()]).toBeTruthy()
@@ -304,7 +304,7 @@ describe('Ceramic API', () => {
     })
 
     it('can load multiple paths, including redundant subpaths and paths', async () => {
-      const docs = await ceramic._loadLinkedDocuments({ docId: docA.id, paths: ['/b/e/f', '/c', '/b/d', '/b', 'b/e'] })
+      const docs = await ceramic._loadLinkedDocuments({ streamId: docA.id, paths: ['/b/e/f', '/c', '/b/d', '/b', 'b/e'] })
       expect(Object.keys(docs).length).toEqual(6)
       expect(docs[docA.id.toString()]).toBeTruthy()
       expect(docs[docB.id.toString()]).toBeTruthy()
@@ -315,7 +315,7 @@ describe('Ceramic API', () => {
     })
 
     it('can load multiple paths and ignore paths that dont exist', async () => {
-      const docs = await ceramic._loadLinkedDocuments({ docId: docA.id, paths: ['/b', '/c/g/h', 'c/g/j', '/c/k'] })
+      const docs = await ceramic._loadLinkedDocuments({ streamId: docA.id, paths: ['/b', '/c/g/h', 'c/g/j', '/c/k'] })
       expect(Object.keys(docs).length).toEqual(3)
       expect(docs[docA.id.toString()]).toBeTruthy()
       expect(docs[docB.id.toString()]).toBeTruthy()
@@ -323,7 +323,7 @@ describe('Ceramic API', () => {
     })
 
     it('can load multiple paths and ignore invalid paths (ie not docs)', async () => {
-      const docs = await ceramic._loadLinkedDocuments({ docId: docA.id, paths: ['/b', '/b/notDoc', '/notDoc'] })
+      const docs = await ceramic._loadLinkedDocuments({ streamId: docA.id, paths: ['/b', '/b/notDoc', '/notDoc'] })
       expect(Object.keys(docs).length).toEqual(2)
       expect(docs[docA.id.toString()]).toBeTruthy()
       expect(docs[docB.id.toString()]).toBeTruthy()
@@ -332,11 +332,11 @@ describe('Ceramic API', () => {
     it('can load docs for array of multiqueries', async () => {
       const queries = [
         {
-          docId: docA.id,
+          streamId: docA.id,
           paths: ['/b']
         },
         {
-          docId: docE.id,
+          streamId: docE.id,
           paths: ['/f']
         }
       ]
@@ -352,11 +352,11 @@ describe('Ceramic API', () => {
     it('can load docs for array of overlapping multiqueries', async () => {
       const queries = [
         {
-          docId: docA.id,
+          streamId: docA.id,
           paths: ['/b', '/c']
         },
         {
-          docId: docB.id,
+          streamId: docB.id,
           paths: ['/e/f', '/d']
         }
       ]
@@ -364,14 +364,14 @@ describe('Ceramic API', () => {
       expect(Object.keys(docs).length).toEqual(6)
     })
 
-    it('can load docs for array of multiqueries even if docid or path throws error', async () => {
+    it('can load docs for array of multiqueries even if streamid or path throws error', async () => {
       const queries = [
         {
-          docId: docA.id,
-          paths: ['/b/d', '/notExistDocId']
+          streamId: docA.id,
+          paths: ['/b/d', '/notExistStreamId']
         },
         {
-          docId: notExistDocId,
+          streamId: notExistStreamId,
           paths: ['/e/f' , '/d']
         }
       ]
@@ -382,15 +382,15 @@ describe('Ceramic API', () => {
     it('can load docs for array of multiqueries including paths that dont exist', async () => {
       const queries = [
         {
-          docId: docA.id,
+          streamId: docA.id,
           paths: ['/1', '2/3/4', '5/6']
         },
         {
-          docId: docE.id,
+          streamId: docE.id,
           paths: ['/1', '2/3/4', '5/6']
         },
         {
-          docId: docB.id,
+          streamId: docB.id,
           paths: ['/1', '2/3/4', '5/6']
         }
       ]
@@ -425,19 +425,19 @@ describe('Ceramic API', () => {
 
       const queries = [
         {
-          docId: docF.id,
+          streamId: docF.id,
           atTime: docFTimestamps[0]
         },
         {
-          docId: docF.id,
+          streamId: docF.id,
           atTime: docFTimestamps[1]
         },
         {
-          docId: docF.id,
+          streamId: docF.id,
           atTime: docFTimestamps[2]
         },
         {
-          docId: docF.id,
+          streamId: docF.id,
         }
       ]
       const docs = await ceramic.multiQuery(queries)

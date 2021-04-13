@@ -14,7 +14,7 @@ import {
 } from '@ceramicnetwork/common';
 import { Dispatcher } from './dispatcher';
 import cloneDeep from 'lodash.clonedeep';
-import { CommitID } from '@ceramicnetwork/docid';
+import { CommitID } from '@ceramicnetwork/streamid';
 import { StateValidation } from './state-management/state-validation';
 import { HandlersMap } from './handlers-map';
 

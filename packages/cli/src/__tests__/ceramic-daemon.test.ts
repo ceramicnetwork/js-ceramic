@@ -17,7 +17,7 @@ import { DID } from 'dids'
 import dagJose from 'dag-jose'
 import { sha256 } from 'multiformats/hashes/sha2'
 import legacy from 'multiformats/legacy'
-import DocID from "@ceramicnetwork/docid";
+import StreamID from "@ceramicnetwork/streamid";
 import getPort from "get-port";
 
 const seed = u8a.fromString('6e34b2e1a9624113d81ece8a8a22e6e97f0e145c25c1d4d2d0e62753b4060c83', 'base16')
@@ -315,14 +315,14 @@ describe('Ceramic interop: core <> http-client', () => {
         })
 
         it('responds to multiqueries request', async () => {
-            //mixed docId types
+            //mixed streamId types
             const queries = [
                 {
-                  docId: docA.id,
+                  streamId: docA.id,
                   paths: ['/c']
                 },
                 {
-                  docId: docB.id.toString(),
+                  streamId: docB.id.toString(),
                   paths: ['/d']
                 }
             ]
@@ -348,8 +348,8 @@ describe('Ceramic interop: core <> http-client', () => {
             docA = await TileDoctype.create(core, { foo: 'baz' })
         })
 
-        const pinLs = async (docId?: DocID): Promise<Array<any>> => {
-            const pinnedDocsIterator = await client.pin.ls(docId);
+        const pinLs = async (streamId?: StreamID): Promise<Array<any>> => {
+            const pinnedDocsIterator = await client.pin.ls(streamId);
             const docs = [];
             for await (const doc of pinnedDocsIterator) {
                 docs.push(doc)
@@ -369,11 +369,11 @@ describe('Ceramic interop: core <> http-client', () => {
             pinnedDocs = await pinLs()
             expect(pinnedDocs).toEqual([docA.id.toString()])
 
-            // Make sure docA shows as pinned when checking for its specific docId
+            // Make sure docA shows as pinned when checking for its specific streamId
             pinnedDocs = await pinLs(docA.id)
             expect(pinnedDocs).toEqual([docA.id.toString()])
 
-            // Make sure docB doesn't show up as pinned when checking for its docId
+            // Make sure docB doesn't show up as pinned when checking for its streamId
             pinnedDocs = await pinLs(docB.id)
             expect(pinnedDocs).toHaveLength(0)
 
@@ -397,11 +397,11 @@ describe('Ceramic interop: core <> http-client', () => {
             pinnedDocs = await pinLs()
             expect(pinnedDocs).toEqual([docB.id.toString()])
 
-            // Make sure docB still shows as pinned when checking for its specific docId
+            // Make sure docB still shows as pinned when checking for its specific streamId
             pinnedDocs = await pinLs(docB.id)
             expect(pinnedDocs).toEqual([docB.id.toString()])
 
-            // Make sure docA no longer shows up as pinned when checking for its docId
+            // Make sure docA no longer shows up as pinned when checking for its streamId
             pinnedDocs = await pinLs(docA.id)
             expect(pinnedDocs).toHaveLength(0)
         })

@@ -1,6 +1,6 @@
 import { buildQueryMessage, MsgType, ResponseMessage } from '../pubsub-message';
 import { asIpfsMessage } from './as-ipfs-message';
-import { DocID } from '@ceramicnetwork/docid';
+import { StreamID } from '@ceramicnetwork/streamid';
 import { from, Subscription, of } from 'rxjs';
 import { MessageBus } from '../message-bus';
 import { Pubsub } from '../pubsub';
@@ -8,7 +8,7 @@ import { bufferCount, delay, first, timeoutWith } from 'rxjs/operators';
 import * as random from '@stablelib/random';
 import CID from 'cids';
 
-const FAKE_DOC_ID = DocID.fromString('kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s');
+const FAKE_DOC_ID = StreamID.fromString('kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s');
 const OUTER_PEER_ID = 'OUTER_PEER_ID';
 
 const LENGTH = 2;

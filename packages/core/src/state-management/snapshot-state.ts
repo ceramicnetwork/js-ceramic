@@ -1,6 +1,6 @@
 import { Observable, of } from 'rxjs';
 import { DocState, RunningStateLike } from '@ceramicnetwork/common';
-import { DocID } from '@ceramicnetwork/docid';
+import { StreamID } from '@ceramicnetwork/streamid';
 
 /**
  * Snapshot of a document state at some commit. Unlike `RunningState` this can not be updated.
@@ -8,7 +8,7 @@ import { DocID } from '@ceramicnetwork/docid';
  * `StateManager#rewind` or `StateManager#atTime`.
  */
 export class SnapshotState extends Observable<DocState> implements RunningStateLike {
-  readonly id: DocID;
+  readonly id: StreamID;
   readonly state: DocState;
 
   constructor(readonly value: DocState) {
@@ -16,7 +16,7 @@ export class SnapshotState extends Observable<DocState> implements RunningStateL
       of(value).subscribe(subscriber);
     });
     this.state = value;
-    this.id = new DocID(this.state.doctype, this.state.log[0].cid);
+    this.id = new StreamID(this.state.doctype, this.state.log[0].cid);
   }
 
   next(value: DocState): void {

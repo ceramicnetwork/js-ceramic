@@ -1,4 +1,4 @@
-import { combineURLs, fetchJson, typeDocID } from "./utils"
+import { combineURLs, fetchJson, typeStreamID } from "./utils"
 import { Document } from './document'
 
 import { DID } from 'dids'
@@ -18,7 +18,7 @@ import {
 } from '@ceramicnetwork/common';
 import { TileDoctype } from "@ceramicnetwork/doctype-tile"
 import { Caip10LinkDoctype } from "@ceramicnetwork/doctype-caip10-link"
-import { DocID, CommitID, DocRef } from '@ceramicnetwork/docid';
+import { StreamID, CommitID, StreamRef } from '@ceramicnetwork/streamid';
 
 const API_PATH = '/api/v0'
 const CERAMIC_HOST = 'http://localhost:7007'
@@ -88,28 +88,28 @@ export default class CeramicClient implements CeramicApi {
 
   _initPinApi(): PinApi {
     return {
-      add: async (docId: DocID): Promise<void> => {
-        await fetchJson(this._apiUrl + '/pins' + `/${docId.toString()}`, { method: 'post' })
+      add: async (streamId: StreamID): Promise<void> => {
+        await fetchJson(this._apiUrl + '/pins' + `/${streamId.toString()}`, { method: 'post' })
       },
-      rm: async (docId: DocID): Promise<void> => {
-        await fetchJson(this._apiUrl + '/pins' + `/${docId.toString()}`, { method: 'delete' })
+      rm: async (streamId: StreamID): Promise<void> => {
+        await fetchJson(this._apiUrl + '/pins' + `/${streamId.toString()}`, { method: 'delete' })
       },
-      ls: async (docId?: DocID): Promise<AsyncIterable<string>> => {
+      ls: async (streamId?: StreamID): Promise<AsyncIterable<string>> => {
         let url = this._apiUrl + '/pins'
-        if (docId) {
-          url += `/${docId.toString()}`
+        if (streamId) {
+          url += `/${streamId.toString()}`
         }
         const result = await fetchJson(url)
-        const { pinnedDocIds } = result
+        const { pinnedStreamIds } = result
         return {
           [Symbol.asyncIterator](): AsyncIterator<string, any, undefined> {
             let index = 0
             return {
               next(): Promise<IteratorResult<string>> {
-                if (index === pinnedDocIds.length) {
+                if (index === pinnedStreamIds.length) {
                   return Promise.resolve({ value: null, done: true });
                 }
-                return Promise.resolve({ value: pinnedDocIds[index++], done: false });
+                return Promise.resolve({ value: pinnedStreamIds[index++], done: false });
               }
             }
           }
@@ -132,14 +132,14 @@ export default class CeramicClient implements CeramicApi {
     }
   }
 
-  async loadDocument<T extends Doctype>(docId: DocID | CommitID | string, opts: LoadOpts = {}): Promise<T> {
+  async loadDocument<T extends Doctype>(streamId: StreamID | CommitID | string, opts: LoadOpts = {}): Promise<T> {
     opts = { ...DEFAULT_LOAD_OPTS, ...opts };
-    const docRef = DocRef.from(docId)
-    let doc = this._docCache.get(docRef.baseID.toString())
+    const streamRef = StreamRef.from(streamId)
+    let doc = this._docCache.get(streamRef.baseID.toString())
     if (doc) {
-      await doc._syncState(docRef)
+      await doc._syncState(streamRef)
     } else {
-      doc = await Document.load(docRef, this._apiUrl, this._config.docSyncInterval, opts)
+      doc = await Document.load(streamRef, this._apiUrl, this._config.docSyncInterval, opts)
       this._docCache.set(doc.id.toString(), doc)
     }
     return this.buildDoctype<T>(doc)
@@ -148,7 +148,7 @@ export default class CeramicClient implements CeramicApi {
   async multiQuery(queries: Array<MultiQuery>): Promise<Record<string, Doctype>> {
     const queriesJSON = queries.map(q => {
       return {
-        docId: typeof q.docId === 'string' ? q.docId : q.docId.toString(),
+        streamId: typeof q.streamId === 'string' ? q.streamId : q.streamId.toString(),
         paths: q.paths,
         atTime: q.atTime
       }
@@ -170,15 +170,15 @@ export default class CeramicClient implements CeramicApi {
     }, {})
   }
 
-  loadDocumentCommits(docId: string | DocID): Promise<Record<string, any>[]> {
-    const effectiveDocId = typeDocID(docId)
-    return Document.loadDocumentCommits(effectiveDocId, this._apiUrl)
+  loadDocumentCommits(streamId: string | StreamID): Promise<Record<string, any>[]> {
+    const effectiveStreamId = typeStreamID(streamId)
+    return Document.loadDocumentCommits(effectiveStreamId, this._apiUrl)
   }
 
-  async applyCommit<T extends Doctype>(docId: string | DocID, commit: CeramicCommit, opts: CreateOpts | UpdateOpts = {}): Promise<T> {
+  async applyCommit<T extends Doctype>(streamId: string | StreamID, commit: CeramicCommit, opts: CreateOpts | UpdateOpts = {}): Promise<T> {
     opts = { ...DEFAULT_APPLY_COMMIT_OPTS, ...opts };
-    const effectiveDocId = typeDocID(docId)
-    const document = await Document.applyCommit(this._apiUrl, effectiveDocId, commit, opts, this._config.docSyncInterval)
+    const effectiveStreamId = typeStreamID(streamId)
+    const document = await Document.applyCommit(this._apiUrl, effectiveStreamId, commit, opts, this._config.docSyncInterval)
     return this.buildDoctype<T>(document)
   }
 
