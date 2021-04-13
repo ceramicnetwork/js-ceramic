@@ -200,7 +200,7 @@ export class Repository {
    */
   updates$(init: DocState): Observable<DocState> {
     return new Observable<DocState>((subscriber) => {
-      const id = new StreamID(init.doctype, init.log[0].cid);
+      const id = new StreamID(init.type, init.log[0].cid);
       this.get(id).then((found) => {
         const state$ = found || new RunningState(init);
         this.inmemory.endure(id.toString(), state$);

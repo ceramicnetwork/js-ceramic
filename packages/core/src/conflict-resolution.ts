@@ -288,7 +288,7 @@ export class ConflictResolution {
     initialStateLog: HistoryLog,
     log: Array<CID>,
   ): Promise<DocState | null> {
-    const handler = this.handlers.get(initialState.doctype);
+    const handler = this.handlers.get(initialState.type);
     const tip = initialStateLog.last;
     if (log[log.length - 1].equals(tip)) {
       // log already applied
@@ -359,7 +359,7 @@ export class ConflictResolution {
     // If the requested commit is included in the log, but isn't the most recent commit, we need
     // to reset the state to the state at the requested commit.
     const resetLog = baseStateLog.slice(0, commitIndex + 1).items;
-    const handler = this.handlers.get(initialState.doctype);
+    const handler = this.handlers.get(initialState.type);
     return this.applyLogToState(handler, resetLog);
   }
 }

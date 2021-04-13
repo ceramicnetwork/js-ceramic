@@ -10,7 +10,7 @@ export class RunningState extends DocStateSubject implements RunningStateLike {
 
   constructor(initial: DocState) {
     super(initial);
-    this.id = new StreamID(initial.doctype, initial.log[0].cid);
+    this.id = new StreamID(initial.type, initial.log[0].cid);
   }
 
   get tip(): CID {

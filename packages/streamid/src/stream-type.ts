@@ -3,7 +3,7 @@ const registry: Record<string, number | undefined> = {
   'caip10-link': 1,
 };
 
-export function indexByName(name: string): number {
+function indexByName(name: string): number {
   const index = registry[name];
   if (typeof index !== 'undefined') {
     return index;
@@ -12,11 +12,16 @@ export function indexByName(name: string): number {
   }
 }
 
-export function nameByIndex(index: number): string {
+function nameByIndex(index: number): string {
   const pair = Object.entries(registry).find(([, v]) => v === index);
   if (pair) {
     return pair[0];
   } else {
     throw new Error(`No stream type registered for index ${index}`);
   }
+}
+
+export class StreamType {
+  static nameByIndex = nameByIndex;
+  static indexByName = indexByName;
 }

@@ -63,7 +63,7 @@ export default class CeramicClient implements CeramicApi {
   public readonly context: Context
 
   private readonly _config: CeramicClientConfig
-  public readonly _doctypeConstructors: Record<string, StreamConstructor<Stream>>
+  public readonly _doctypeConstructors: Record<number, StreamConstructor<Stream>>
 
   constructor (apiHost: string = CERAMIC_HOST, config: Partial<CeramicClientConfig> = {}) {
     this._config = { ...DEFAULT_CLIENT_CONFIG, ...config }
@@ -77,8 +77,8 @@ export default class CeramicClient implements CeramicApi {
     this.pin = this._initPinApi()
 
     this._doctypeConstructors = {
-      'tile': TileDocument,
-      'caip10-link': Caip10Link
+      [TileDocument.DOCTYPE_ID]: TileDocument,
+      [Caip10Link.DOCTYPE_ID]: Caip10Link
     }
   }
 
@@ -186,8 +186,8 @@ export default class CeramicClient implements CeramicApi {
     this._doctypeConstructors[doctypeHandler.name] = doctypeHandler.doctype
   }
 
-  findStreamConstructor<T extends Stream>(doctype: string) {
-    const constructor = this._doctypeConstructors[doctype]
+  findStreamConstructor<T extends Stream>(type: number) {
+    const constructor = this._doctypeConstructors[type]
     if (constructor) {
       return constructor as StreamConstructor<T>
     } else {
@@ -196,7 +196,7 @@ export default class CeramicClient implements CeramicApi {
   }
 
   private buildStream<T extends Stream = Stream>(document: Document) {
-    const doctypeConstructor = this.findStreamConstructor<T>(document.state.doctype)
+    const doctypeConstructor = this.findStreamConstructor<T>(document.state.type)
     return new doctypeConstructor(document, this.context)
   }
 

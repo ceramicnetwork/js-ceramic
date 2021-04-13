@@ -11,7 +11,7 @@ class FakeRunningState extends BehaviorSubject<DocState> implements RunningState
   constructor(value: DocState) {
     super(value);
     this.state = this.value;
-    this.id = new StreamID(this.state.doctype, this.state.log[0].cid);
+    this.id = new StreamID(this.state.type, this.state.log[0].cid);
   }
 }
 

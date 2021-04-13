@@ -36,6 +36,6 @@ export class StateLink extends Observable<DocState> implements RunningStateLike 
   }
 
   get id(): StreamID {
-    return new StreamID(this.state.doctype, this.state.log[this.state.log.length - 1].cid);
+    return new StreamID(this.state.type, this.state.log[this.state.log.length - 1].cid);
   }
 }

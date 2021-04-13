@@ -1,6 +1,5 @@
 import CID from 'cids';
 import multibase from 'multibase';
-import * as streamtypes from './streamtypes';
 import varint from 'varint';
 import uint8ArrayConcat from 'uint8arrays/concat';
 import uint8ArrayToString from 'uint8arrays/to-string';
@@ -9,6 +8,7 @@ import { readCid, readVarint } from './reading-bytes';
 import { Memoize } from 'typescript-memoize';
 import { CommitID } from './commit-id';
 import { StreamRef } from './stream-ref';
+import { StreamType } from './stream-type';
 
 /**
  * Parse StreamID from bytes representation.
@@ -76,7 +76,7 @@ export class StreamID implements StreamRef {
   constructor(type: string | number, cid: CID | string) {
     if (!(type || type === 0)) throw new Error('constructor: type required');
     if (!cid) throw new Error('constructor: cid required');
-    this.#type = typeof type === 'string' ? streamtypes.indexByName(type) : type;
+    this.#type = typeof type === 'string' ? StreamType.indexByName(type) : type;
     this.#cid = typeof cid === 'string' ? new CID(cid) : cid;
   }
 
@@ -92,7 +92,7 @@ export class StreamID implements StreamRef {
    */
   @Memoize()
   get typeName(): string {
-    return streamtypes.nameByIndex(this.#type);
+    return StreamType.nameByIndex(this.#type);
   }
 
   /**

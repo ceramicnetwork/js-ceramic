@@ -1,6 +1,6 @@
 import CID from 'cids';
 import multibase from 'multibase';
-import * as streamtypes from './streamtypes';
+import { StreamType } from './stream-type';
 import varint from 'varint';
 import uint8ArrayConcat from 'uint8arrays/concat';
 import uint8ArrayToString from 'uint8arrays/to-string';
@@ -127,7 +127,7 @@ export class CommitID implements StreamRef {
   constructor(type: string | number, cid: CID | string, commit: CID | string | number = null) {
     if (!type && type !== 0) throw new Error('constructor: type required');
     if (!cid) throw new Error('constructor: cid required');
-    this.#type = typeof type === 'string' ? streamtypes.indexByName(type) : type;
+    this.#type = typeof type === 'string' ? StreamType.indexByName(type) : type;
     this.#cid = typeof cid === 'string' ? new CID(cid) : cid;
     this.#commit = parseCommit(this.#cid, commit);
   }
@@ -152,7 +152,7 @@ export class CommitID implements StreamRef {
    */
   @Memoize()
   get typeName(): string {
-    return streamtypes.nameByIndex(this.#type);
+    return StreamType.nameByIndex(this.#type);
   }
 
   /**
