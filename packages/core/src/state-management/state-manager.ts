@@ -100,7 +100,7 @@ export class StateManager {
     if (sync) {
       const tip$ = this.dispatcher.messageBus.queryNetwork(state$.id);
 
-      const syncTimeout = (opts as LoadOpts).syncTimeout != undefined ? (opts as LoadOpts).syncTimeout : DEFAULT_SYNC_TIMEOUT
+      const syncTimeout = (opts as LoadOpts).syncTimeoutMillis != undefined ? (opts as LoadOpts).syncTimeoutMillis : DEFAULT_SYNC_TIMEOUT
       if (syncTimeout == 0) { // timeout of zero means don't wait for the response at all
         return
       }

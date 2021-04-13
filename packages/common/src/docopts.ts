@@ -8,7 +8,7 @@ interface BasicLoadOpts {
     /**
      * How long to wait for a response from pubsub when syncing a document.
      */
-    syncTimeout?: number
+    syncTimeoutMillis?: number
 
     /**
      * Setting this to true means we will always sync the current tip from pubsub even if we have

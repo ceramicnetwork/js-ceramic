@@ -261,7 +261,7 @@ test('enforces schema in update that assigns schema', async () => {
   const docState = await ceramic.repository.load(doc.id, {});
   await anchorUpdate(ceramic, doc);
   const updateRec = await doc.makeCommit(ceramic, null, { schema: schemaDoc.commitId });
-  await expect(ceramic.repository.stateManager.applyCommit(docState.id, updateRec)).rejects.toThrow(
+  await expect(ceramic.repository.stateManager.applyCommit(docState.id, updateRec, {})).rejects.toThrow(
     "Validation Error: data['stuff'] should be string",
   );
 });
