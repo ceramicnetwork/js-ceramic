@@ -32,6 +32,7 @@
     "clean": "rm -rf ./lib"
   },
   "jest": {
+    "testRegex": ".(spec|test).ts$",
     "testEnvironment": "node",
     "transformIgnorePatterns": [],
     "modulePathIgnorePatterns": [

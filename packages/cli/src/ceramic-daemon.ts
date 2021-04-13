@@ -11,7 +11,6 @@ import {
   LoggerProvider,
   DiagnosticsLogger
 } from "@ceramicnetwork/common"
-import { LogToFiles } from "./ceramic-logger-plugins"
 import StreamID from "@ceramicnetwork/streamid"
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import KeyDidResolver from 'key-did-resolver'
@@ -80,15 +79,6 @@ export function makeCeramicConfig (opts: CreateOpts): CeramicConfig {
 
   if (opts.ipfsPinningEndpoints) {
     ceramicConfig.ipfsPinningEndpoints = opts.ipfsPinningEndpoints
-  }
-
-  if (opts.loggerConfig?.logToFiles) {
-    // TODO remove when LoggerProviderOld is removed from 'common' package
-    ceramicConfig.logToFilesPlugin = {
-      plugin: LogToFiles.main,
-      state: {blockedFiles: {}},
-      options: {logPath: opts.loggerConfig.logDirectory}
-    }
   }
 
   return ceramicConfig

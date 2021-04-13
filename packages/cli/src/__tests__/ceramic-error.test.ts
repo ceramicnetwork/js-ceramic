@@ -28,12 +28,6 @@ function safeRead(filepath: string): string {
   }
 }
 
-function safeClean(filepath: string): void {
-  if (fs.existsSync(filepath)) {
-    return fs.unlinkSync(filepath);
-  }
-}
-
 beforeAll(async () => {
   tmpFolder = await tmp.dir({ unsafeCleanup: true });
   ipfs = await createIPFS(tmpFolder.path);
