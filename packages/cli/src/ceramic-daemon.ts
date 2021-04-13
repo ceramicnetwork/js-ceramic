@@ -271,7 +271,8 @@ class CeramicDaemon {
    * Apply one commit to the existing document
    */
   async applyCommit (req: Request, res: Response): Promise<void> {
-    const { streamId, commit, docOpts } = req.body
+    const { docId, commit, docOpts } = req.body
+    const streamId = req.body.streamId || docId
     if (!(streamId && commit)) {
       throw new Error('streamId and commit are required in order to apply commit')
     }

@@ -151,6 +151,7 @@ export default class EthereumAnchorService implements AnchorService {
         method: "POST",
         body: JSON.stringify({
           streamId: cidDocPair.streamId.toString(),
+          docId: cidDocPair.streamId.toString(),
           cid: cidDocPair.cid.toString(),
         }),
         headers: {
