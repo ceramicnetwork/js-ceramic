@@ -12,7 +12,7 @@
     "lib"
   ],
   "scripts": {
-    "test": "../../node_modules/.bin/jest --coverage",
+    "test": "../../node_modules/.bin/jest --coverage --env=node",
     "build": "../../node_modules/.bin/tsc -p tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",

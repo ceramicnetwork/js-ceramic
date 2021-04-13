@@ -13,6 +13,11 @@ import DocID, {CommitID} from '@ceramicnetwork/docid'
 import CeramicDaemon, { CreateOpts } from './ceramic-daemon'
 import { TileDoctype } from "@ceramicnetwork/doctype-tile";
 
+import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
+import KeyDidResolver from 'key-did-resolver'
+import { Resolver } from "did-resolver"
+import { DID } from 'dids'
+
 const DEFAULT_CLI_CONFIG_FILE = 'config.json'
 const DEFAULT_CLI_CONFIG_PATH = path.join(os.homedir(), '.ceramic')
 const DEFAULT_NETWORK = Networks.TESTNET_CLAY
@@ -49,8 +54,6 @@ export class CeramicCliUtils {
      * @param logDirectory - Store log files in this directory
      * @param network - The Ceramic network to connect to
      * @param pubsubTopic - Pub/sub topic to use for protocol messages.
-     * @param maxHealthyCpu - Max fraction of total CPU usage considered healthy. Default is 0.7
-     * @param maxHealthyMemory - Max fraction of total memory usage considered healthy. Default is 0.7
      * @param corsAllowedOrigins - Origins for Access-Control-Allow-Origin header. Default is all
      */
     static async createDaemon(
@@ -69,8 +72,6 @@ export class CeramicCliUtils {
         logDirectory: string,
         network = DEFAULT_NETWORK,
         pubsubTopic: string,
-        maxHealthyCpu = 0.7,
-        maxHealthyMemory = 0.7,
         corsAllowedOrigins: string
     ): Promise<CeramicDaemon> {
         let _corsAllowedOrigins: string | RegExp[] = '*'
@@ -96,8 +97,6 @@ export class CeramicCliUtils {
             loggerConfig,
             network,
             pubsubTopic,
-            maxHealthyCpu,
-            maxHealthyMemory,
             corsAllowedOrigins: _corsAllowedOrigins,
             ipfsHost: ipfsApi,
         }
@@ -159,7 +158,7 @@ export class CeramicCliUtils {
      */
     static async show(docRef: string): Promise<void> {
         await CeramicCliUtils._runWithCeramic(async (ceramic: CeramicApi) => {
-            const doc = await ceramic.loadDocument(docRef)
+            const doc = await TileDoctype.load(ceramic, docRef)
             console.log(JSON.stringify(doc.content, null, 2))
         })
     }
@@ -183,7 +182,7 @@ export class CeramicCliUtils {
         const id = DocID.fromString(docId)
 
         await CeramicCliUtils._runWithCeramic(async (ceramic: CeramicApi) => {
-            const doc = await ceramic.loadDocument(id)
+            const doc = await TileDoctype.load(ceramic, id)
             console.log(JSON.stringify(doc.content, null, 2))
             doc.subscribe(() => {
               console.log('--- document changed ---')
@@ -287,6 +286,24 @@ export class CeramicCliUtils {
     }
 
     /**
+     * Creates an Ed25519-based key-did from a given seed for use with the CLI. The DID instance
+     * has a KeyDidResolver and ThreeIdResolver pre-loaded so that the Ceramic daemon will be
+     * able to resolve both 'did:key' and 'did:3' DIDs.
+     * @param seed
+     * @param ceramic
+     */
+    static _makeDID(seed: Uint8Array, ceramic: CeramicClient): DID {
+        const provider = new Ed25519Provider(seed)
+
+        const keyDidResolver = KeyDidResolver.getResolver()
+        const threeIdResolver = ThreeIdResolver.getResolver(ceramic)
+        const resolver = new Resolver({
+            ...threeIdResolver, ...keyDidResolver,
+        })
+        return new DID({ provider, resolver })
+    }
+
+    /**
      * Open Ceramic and execute function
      * @param fn - Function to be executed
      * @private
@@ -309,8 +326,7 @@ export class CeramicCliUtils {
         }
 
         const seed = u8a.fromString(cliConfig.seed, 'base16')
-        const provider = new Ed25519Provider(seed)
-        await ceramic.setDIDProvider(provider)
+        await ceramic.setDID(CeramicCliUtils._makeDID(seed, ceramic))
 
         try {
             await fn(ceramic)

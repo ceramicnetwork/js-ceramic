@@ -1,8 +1,18 @@
 import { Observable, timer } from 'rxjs'
 import { throttle } from 'rxjs/operators'
-import { CeramicCommit, DocOpts, DocState, DoctypeUtils, RunningStateLike, DocStateSubject } from '@ceramicnetwork/common';
+import {
+  CeramicCommit,
+  CreateOpts,
+  DocState,
+  DoctypeUtils,
+  RunningStateLike,
+  DocStateSubject,
+  LoadOpts,
+  UpdateOpts,
+} from '@ceramicnetwork/common';
 import { DocID, CommitID } from '@ceramicnetwork/docid';
 import { fetchJson } from './utils'
+import QueryString from 'query-string'
 
 export class Document extends Observable<DocState> implements RunningStateLike {
   private readonly state$: DocStateSubject;
@@ -43,7 +53,7 @@ export class Document extends Observable<DocState> implements RunningStateLike {
     return new DocID(this.state$.value.doctype, this.state$.value.log[0].cid)
   }
 
-  static async createFromGenesis (apiUrl: string, doctype: string, genesis: any, docOpts: DocOpts = {}, docSyncInterval: number): Promise<Document> {
+  static async createFromGenesis (apiUrl: string, doctype: string, genesis: any, docOpts: CreateOpts, docSyncInterval: number): Promise<Document> {
     const { state } = await fetchJson(apiUrl + '/documents', {
       method: 'post',
       body: {
@@ -55,7 +65,7 @@ export class Document extends Observable<DocState> implements RunningStateLike {
     return new Document(DoctypeUtils.deserializeState(state), apiUrl, docSyncInterval)
   }
 
-  static async applyCommit(apiUrl: string, docId: DocID | string, commit: CeramicCommit, docOpts: DocOpts = {}, docSyncInterval: number): Promise<Document> {
+  static async applyCommit(apiUrl: string, docId: DocID | string, commit: CeramicCommit, docOpts: UpdateOpts, docSyncInterval: number): Promise<Document> {
     const { state } = await fetchJson(apiUrl + '/commits', {
       method: 'post',
       body: {
@@ -67,8 +77,9 @@ export class Document extends Observable<DocState> implements RunningStateLike {
     return new Document(DoctypeUtils.deserializeState(state), apiUrl, docSyncInterval)
   }
 
-  static async load (docId: DocID | CommitID, apiUrl: string, docSyncInterval: number): Promise<Document> {
-    const { state } = await fetchJson(apiUrl + '/documents/' + docId.toString())
+  static async load (docId: DocID | CommitID, apiUrl: string, docSyncInterval: number, opts: LoadOpts): Promise<Document> {
+    const url = apiUrl + '/documents/' + docId.toString() + '?' + QueryString.stringify(opts)
+    const { state } = await fetchJson(url)
     return new Document(DoctypeUtils.deserializeState(state), apiUrl, docSyncInterval)
   }
 

@@ -5,6 +5,7 @@ import { DocID, CommitID } from '@ceramicnetwork/docid'
 import type { DagJWSResult, DagJWS } from 'dids'
 import { Observable } from 'rxjs'
 import { RunningStateLike } from './running-state-like';
+import { CeramicApi } from "./ceramic-api";
 
 /**
  * Describes signature status
@@ -79,21 +80,6 @@ export interface DocMetadata {
 }
 
 /**
- * Document params
- * TODO: remove once DoctypeConstructor.makeGenesis is removed
- */
-export interface DocParams {
-    metadata?: DocMetadata
-    /**
-     * deterministic is a tri-state. True means means always create the document deterministically,
-     * false means always force the document to be unique, undefined means use the default behavior
-     */
-    deterministic?: boolean
-
-    [index: string]: any // allow arbitrary properties
-}
-
-/**
  * Document information about the next iteration
  */
 export interface DocNext {
@@ -127,32 +113,6 @@ export interface DocState {
 }
 
 /**
- * Options that are passed to each operation on a document (create, change, load) that control
- * behaviors that are performed as part of the operation.
- */
-export interface DocOpts {
-    /**
-     * Whether or not to request an anchor after performing the operation.
-     */
-    anchor?: boolean
-
-    /**
-     * Whether or not to publish the current tip commit to the pubsub channel after performing the operation.
-     */
-    publish?: boolean
-
-    /**
-     * Whether or not to wait a short period of time to hear about new tips for the document after performing the operation.
-     */
-    sync?: boolean
-
-    /**
-     * Load a previous version of the document based on unix timestamp
-     */
-    atTime?: number
-}
-
-/**
  * Describes object which stores DocState.
  *
  * Note: the interface should be removed once we refactor documents.
@@ -181,9 +141,8 @@ export abstract class Doctype extends Observable<DocState> implements DocStateHo
         return this.state$.value.doctype
     }
 
-    get content(): any {
-        const { next, content } = this.state$.value
-        return cloneDeep(next?.content ?? content)
+    get api(): CeramicApi {
+        return this._context.api
     }
 
     get metadata(): DocMetadata {
@@ -223,13 +182,15 @@ export abstract class Doctype extends Observable<DocState> implements DocStateHo
         return cloneDeep(this.state$.value)
     }
 
-    get context(): Context {
-        return this._context
+    async sync(): Promise<void> {
+      // TODO force sync even if doc already in cache
+      const document = await this.api.loadDocument(this.id, { sync: true })
+      this.state$.next(document.state)
     }
 
-    async sync(): Promise<void> {
-      const document = await this._context.api.loadDocument(this.id)
-      this.state$.next(document.state)
+    protected _getContent(): any {
+        const { next, content } = this.state$.value
+        return cloneDeep(next?.content ?? content)
     }
 
     /**
@@ -258,16 +219,6 @@ export interface DoctypeConstructor<T extends Doctype> {
      * @param context - Ceramic context
      */
     new(state$: RunningStateLike, context: Context): T
-
-    /**
-     * Makes genesis commit
-     * @param params - Create parameters
-     * @param context - Ceramic context
-     * @param opts - Initialization options
-     * @deprecated
-     * TODO: Remove this when Ceramic.createDocument is removed
-     */
-    makeGenesis(params: DocParams, context?: Context, opts?: DocOpts): Promise<CeramicCommit>
 }
 
 /**

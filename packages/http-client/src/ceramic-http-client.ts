@@ -3,25 +3,22 @@ import { Document } from './document'
 
 import { DID } from 'dids'
 import {
+  CreateOpts,
   CeramicApi,
   CeramicCommit,
   Context,
-  DIDProvider,
-  DocOpts,
-  DocParams,
   Doctype,
   DoctypeConstructor,
   DoctypeHandler,
   DoctypeUtils,
+  LoadOpts,
   MultiQuery,
   PinApi,
+  UpdateOpts,
 } from '@ceramicnetwork/common';
 import { TileDoctype } from "@ceramicnetwork/doctype-tile"
 import { Caip10LinkDoctype } from "@ceramicnetwork/doctype-caip10-link"
 import { DocID, CommitID, DocRef } from '@ceramicnetwork/docid';
-import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
-import KeyDidResolver from 'key-did-resolver'
-import { Resolver } from "did-resolver"
 
 const API_PATH = '/api/v0'
 const CERAMIC_HOST = 'http://localhost:7007'
@@ -33,14 +30,14 @@ export const DEFAULT_CLIENT_CONFIG: CeramicClientConfig = {
   docSyncInterval: 5000,
 }
 
+const DEFAULT_APPLY_COMMIT_OPTS = { anchor: true, publish: true, sync: false }
+const DEFAULT_CREATE_FROM_GENESIS_OPTS = { anchor: true, publish: true, sync: true }
+const DEFAULT_LOAD_OPTS = { sync: true }
+
 /**
  * Ceramic client configuration
  */
 export interface CeramicClientConfig {
-  /**
-   * DID Resolver. Would add one to did:3 and did:key resolver.
-   */
-  didResolver?: Resolver
   /**
    * Period of synchronisation, in milliseconds. Active when subscribing document.
    */
@@ -78,12 +75,6 @@ export default class CeramicClient implements CeramicApi {
     this.context = { api: this }
 
     this.pin = this._initPinApi()
-
-    const keyDidResolver = KeyDidResolver.getResolver()
-    const threeIdResolver = ThreeIdResolver.getResolver(this)
-    this.context.resolver = new Resolver({
-      ...this._config.didResolver, ...threeIdResolver, ...keyDidResolver,
-    })
 
     this._doctypeConstructors = {
       'tile': TileDoctype,
@@ -127,17 +118,8 @@ export default class CeramicClient implements CeramicApi {
     }
   }
 
-  /**
-   * @deprecated
-   */
-  async createDocument<T extends Doctype>(doctype: string, params: DocParams, opts?: DocOpts): Promise<T> {
-    const doctypeConstructor = this.findDoctypeConstructor(doctype)
-    const genesis = await doctypeConstructor.makeGenesis(params, this.context, opts)
-
-    return this.createDocumentFromGenesis(doctype, genesis, opts)
-  }
-
-  async createDocumentFromGenesis<T extends Doctype>(doctype: string, genesis: any, opts?: DocOpts): Promise<T> {
+  async createDocumentFromGenesis<T extends Doctype>(doctype: string, genesis: any, opts: CreateOpts = {}): Promise<T> {
+    opts = { ...DEFAULT_CREATE_FROM_GENESIS_OPTS, ...opts };
     const doc = await Document.createFromGenesis(this._apiUrl, doctype, genesis, opts, this._config.docSyncInterval)
 
     const found = this._docCache.get(doc.id.toString())
@@ -150,13 +132,14 @@ export default class CeramicClient implements CeramicApi {
     }
   }
 
-  async loadDocument<T extends Doctype>(docId: DocID | CommitID | string): Promise<T> {
+  async loadDocument<T extends Doctype>(docId: DocID | CommitID | string, opts: LoadOpts = {}): Promise<T> {
+    opts = { ...DEFAULT_LOAD_OPTS, ...opts };
     const docRef = DocRef.from(docId)
     let doc = this._docCache.get(docRef.baseID.toString())
     if (doc) {
       await doc._syncState(docRef)
     } else {
-      doc = await Document.load(docRef, this._apiUrl, this._config.docSyncInterval)
+      doc = await Document.load(docRef, this._apiUrl, this._config.docSyncInterval, opts)
       this._docCache.set(doc.id.toString(), doc)
     }
     return this.buildDoctype<T>(doc)
@@ -192,24 +175,11 @@ export default class CeramicClient implements CeramicApi {
     return Document.loadDocumentCommits(effectiveDocId, this._apiUrl)
   }
 
-  /**
-   * @deprecated See `loadDocumentCommits`.
-   */
-  async loadDocumentRecords(docId: DocID | string): Promise<Array<Record<string, any>>> {
-    return this.loadDocumentCommits(docId)
-  }
-
-  async applyCommit<T extends Doctype>(docId: string | DocID, commit: CeramicCommit, opts?: DocOpts): Promise<T> {
+  async applyCommit<T extends Doctype>(docId: string | DocID, commit: CeramicCommit, opts: CreateOpts | UpdateOpts = {}): Promise<T> {
+    opts = { ...DEFAULT_APPLY_COMMIT_OPTS, ...opts };
     const effectiveDocId = typeDocID(docId)
     const document = await Document.applyCommit(this._apiUrl, effectiveDocId, commit, opts, this._config.docSyncInterval)
     return this.buildDoctype<T>(document)
-  }
-
-  /**
-   * @deprecated See `applyCommit`.
-   */
-  async applyRecord<T extends Doctype>(docId: DocID | string, record: CeramicCommit, opts?: DocOpts): Promise<T> {
-    return this.applyCommit(docId, record, opts)
   }
 
   addDoctypeHandler<T extends Doctype>(doctypeHandler: DoctypeHandler<T>): void {
@@ -230,13 +200,8 @@ export default class CeramicClient implements CeramicApi {
     return new doctypeConstructor(document, this.context)
   }
 
-  async setDIDProvider(provider: DIDProvider): Promise<void> {
-    this.context.provider = provider;
-    this.context.did = new DID( { provider, resolver: this.context.resolver })
-
-    if (!this.context.did.authenticated) {
-      await this.context.did.authenticate()
-    }
+  async setDID(did: DID): Promise<void> {
+    this.context.did = did
   }
 
   async getSupportedChains(): Promise<Array<string>> {

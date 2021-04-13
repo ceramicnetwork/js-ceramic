@@ -30,9 +30,9 @@ test('cache eviction', async () => {
 
 test('Doctype not subscribed, RunningState in cache', async () => {
   const document = await TileDoctype.create(ceramic, INITIAL);
-  const state$ = await ceramic.repository.load(document.id);
-  const updateRecord = await document._makeCommit(ceramic.context.did, UPDATED);
-  await ceramic.repository.stateManager.applyCommit(state$, updateRecord);
+  const state$ = await ceramic.repository.load(document.id, {});
+  const updateRecord = await document.makeCommit(ceramic, UPDATED);
+  await ceramic.repository.stateManager.applyCommit(state$, updateRecord, { anchor: false, publish: false });
   // Doctype does not see the change
   expect(document.state.content).toEqual(INITIAL);
   expect(document.state.next).toBeUndefined();
@@ -43,13 +43,12 @@ test('Doctype not subscribed, RunningState in cache', async () => {
 
 test('Doctype not subscribed, RunningState evicted', async () => {
   const document = await TileDoctype.create(ceramic, INITIAL);
-  const state$ = await ceramic.repository.load(document.id);
+  const state$ = await ceramic.repository.load(document.id, {});
   await TileDoctype.create(ceramic, { 'evict': true });
 
-  const state2$ = await ceramic.repository.load(document.id);
-  const updateRecord = await new TileDoctype(state$, ceramic.context)._makeCommit(
-      ceramic.context.did, UPDATED);
-  await ceramic.repository.stateManager.applyCommit(state2$, updateRecord);
+  const state2$ = await ceramic.repository.load(document.id, {});
+  const updateRecord = await new TileDoctype(state$, ceramic.context).makeCommit(ceramic, UPDATED);
+  await ceramic.repository.stateManager.applyCommit(state2$, updateRecord, { anchor: false, publish: false });
 
   // Doctype does not see the change
   expect(document.state.content).toEqual(INITIAL);
@@ -62,9 +61,9 @@ test('Doctype not subscribed, RunningState evicted', async () => {
 test('Doctype subscribed, RunningState in cache', async () => {
   const document = await TileDoctype.create(ceramic, INITIAL);
   document.subscribe();
-  const state$ = await ceramic.repository.load(document.id);
-  const updateRecord = await document._makeCommit(ceramic.context.did, UPDATED);
-  await ceramic.repository.stateManager.applyCommit(state$, updateRecord);
+  const state$ = await ceramic.repository.load(document.id, {});
+  const updateRecord = await document.makeCommit(ceramic, UPDATED);
+  await ceramic.repository.stateManager.applyCommit(state$, updateRecord, { anchor: false, publish: false });
   // Doctype sees the change
   expect(document.state.content).toEqual(INITIAL);
   expect(document.state.next.content).toEqual(UPDATED);
@@ -76,14 +75,13 @@ test('Doctype subscribed, RunningState in cache', async () => {
 test('Doctype subscribed, RunningState not evicted', async () => {
   const document = await TileDoctype.create(ceramic, INITIAL);
   document.subscribe();
-  const state$ = await ceramic.repository.load(document.id);
+  const state$ = await ceramic.repository.load(document.id, {});
   await TileDoctype.create(ceramic, { 'evict': true });
 
-  const state2$ = await ceramic.repository.load(document.id);
+  const state2$ = await ceramic.repository.load(document.id, {});
   expect(state2$).toBe(state$);
-  const updateRecord = await new TileDoctype(state$, ceramic.context)._makeCommit(
-      ceramic.context.did, UPDATED);
-  await ceramic.repository.stateManager.applyCommit(state2$, updateRecord);
+  const updateRecord = await new TileDoctype(state$, ceramic.context).makeCommit(ceramic, UPDATED);
+  await ceramic.repository.stateManager.applyCommit(state2$, updateRecord, { anchor: false, publish: false });
 
   // Doctype sees change
   expect(document.state.content).toEqual(INITIAL);
@@ -95,10 +93,10 @@ test('Doctype subscribed, RunningState not evicted', async () => {
 
 test('RunningState stops updating after evicted', async () => {
   const createDocument = () => {
-    return TileDoctype.create(ceramic, INITIAL, { deterministic: true });
+    return TileDoctype.create(ceramic, INITIAL, { deterministic: true }, { sync: false });
   };
   const document1 = await createDocument();
-  const runningState1 = await ceramic.repository.load(document1.id);
+  const runningState1 = await ceramic.repository.load(document1.id, {});
   await document1.update({stage: 'changed-1' });
   expect(runningState1.state.next.content).toEqual({ stage: 'changed-1' }); // Running state gets update
 
@@ -114,7 +112,7 @@ test('RunningState stops updating after evicted', async () => {
   expect(document2.content).toEqual({ stage: 'changed-concurrently' });
   expect(runningState1.state.next.content).toEqual({ stage: 'changed-1' }); // Running state did not get update
 
-  const runningState2 = await ceramic.repository.load(document2.id); // Running state for document2 AKA document1
+  const runningState2 = await ceramic.repository.load(document2.id, {}); // Running state for document2 AKA document1
   expect(runningState2.state.next.content).toEqual({ stage: 'changed-concurrently' }); // It is updated
 
   const document3 = await ceramic.loadDocument(document2.id);
@@ -123,10 +121,10 @@ test('RunningState stops updating after evicted', async () => {
 
 test('StateLink receives updates', async () => {
   const createDocument = () => {
-    return TileDoctype.create(ceramic, INITIAL, { deterministic: true });
+    return TileDoctype.create(ceramic, INITIAL, { deterministic: true }, { sync: false });
   };
   const document1 = await createDocument();
-  const runningState1 = await ceramic.repository.load(document1.id);
+  const runningState1 = await ceramic.repository.load(document1.id, {});
   await document1.update({ stage: 'changed-1' });
   expect(runningState1.state.next.content).toEqual({ stage: 'changed-1' }); // Running state gets update
 
@@ -187,10 +185,10 @@ describe('evicted then subscribed', () => {
   });
 
   test('pinned', async () => {
-    const doc1 = await TileDoctype.create(ceramic, { foo: Math.random().toString() }, { deterministic: true });
+    const doc1 = await TileDoctype.create(ceramic, { foo: Math.random().toString() }, { deterministic: true }, { sync: false });
     await ceramic.pin.add(doc1.id);
 
-    const doc2 = await TileDoctype.create(ceramic, doc1.content, { deterministic: true });
+    const doc2 = await TileDoctype.create(ceramic, doc1.content, { deterministic: true }, { sync: false });
     expect(DoctypeUtils.serializeState(doc1.state)).toEqual(DoctypeUtils.serializeState(doc2.state));
 
     // Divergence: doc2 < doc1

@@ -38,7 +38,7 @@ afterAll(async () => {
 describe('anchor', () => {
   test('anchor call', async () => {
     const doc = await TileDoctype.create(ceramic, INITIAL_CONTENT);
-    const doc$ = await ceramic.repository.load(doc.id);
+    const doc$ = await ceramic.repository.load(doc.id, {});
     await new Promise((resolve) => {
       ceramic.repository.stateManager.anchor(doc$).add(resolve);
     });
@@ -47,17 +47,18 @@ describe('anchor', () => {
 });
 
 test('handleTip', async () => {
-  const doc1 = await TileDoctype.create(ceramic, INITIAL_CONTENT);
+  const doc1 = await TileDoctype.create(ceramic, INITIAL_CONTENT, null, { anchor:false });
   doc1.subscribe();
-  const docState1 = await ceramic.repository.load(doc1.id);
+  const docState1 = await ceramic.repository.load(doc1.id, {});
   await new Promise((resolve) => {
     ceramic.repository.stateManager.anchor(docState1).add(resolve);
   });
 
+
   const ceramic2 = await createCeramic(ipfs);
-  const doc2 = await ceramic2.loadDocument(doc1.id, { sync: false });
+  const doc2 = await ceramic2.loadDocument<TileDoctype>(doc1.id, { sync: false });
   doc2.subscribe();
-  const docState2 = await ceramic2.repository.load(doc2.id);
+  const docState2 = await ceramic2.repository.load(doc2.id, {});
 
   expect(doc2.content).toEqual(doc1.content);
   expect(doc2.state).toEqual(expect.objectContaining({ signature: SignatureStatus.SIGNED, anchorStatus: 0 }));
@@ -71,12 +72,11 @@ test('handleTip', async () => {
 test('commit history and rewind', async () => {
   const doc = await TileDoctype.create(ceramic, INITIAL_CONTENT);
   doc.subscribe();
-  const docState = await ceramic.repository.load(doc.id);
+  const docState = await ceramic.repository.load(doc.id, {});
 
   const commit0 = doc.allCommitIds[0];
   expect(doc.commitId).toEqual(commit0);
   expect(commit0.equals(docState.id.atCommit(docState.id.cid))).toBeTruthy();
-  expect(doc.anchorCommitIds.length).toEqual(0);
 
   await anchorUpdate(ceramic, doc);
   expect(doc.allCommitIds.length).toEqual(2);
@@ -87,8 +87,8 @@ test('commit history and rewind', async () => {
   expect(commit1).toEqual(doc.anchorCommitIds[0]);
 
   const newContent = { abc: 321, def: 456, gh: 987 };
-  const updateRec = await doc._makeCommit(ceramic.did, newContent)
-  await ceramic.repository.stateManager.applyCommit(docState, updateRec);
+  const updateRec = await doc.makeCommit(ceramic, newContent)
+  await ceramic.repository.stateManager.applyCommit(docState, updateRec, { anchor: true, publish: false });
   expect(doc.allCommitIds.length).toEqual(3);
   expect(doc.anchorCommitIds.length).toEqual(1);
   const commit2 = doc.allCommitIds[2];
@@ -109,8 +109,8 @@ test('commit history and rewind', async () => {
 
   // Apply a final record that does not get anchored
   const finalContent = { foo: 'bar' };
-  const updateRec2 = await doc._makeCommit(ceramic.did, finalContent)
-  await ceramic.repository.stateManager.applyCommit(docState, updateRec2);
+  const updateRec2 = await doc.makeCommit(ceramic, finalContent)
+  await ceramic.repository.stateManager.applyCommit(docState, updateRec2, { anchor: true, publish: false });
 
   expect(doc.allCommitIds.length).toEqual(5);
   expect(doc.anchorCommitIds.length).toEqual(2);
@@ -160,7 +160,7 @@ test('commit history and rewind', async () => {
 describe('rewind', () => {
   test('non-existing commit', async () => {
     const doc = await TileDoctype.create(ceramic, INITIAL_CONTENT);
-    const docState = await ceramic.repository.load(doc.id);
+    const docState = await ceramic.repository.load(doc.id, {});
     // Emulate loading a non-existing commit
     const nonExistentCommitID = doc.id.atCommit(FAKE_CID);
     const originalRetrieve = ceramic.dispatcher.retrieveCommit.bind(ceramic.dispatcher);
@@ -177,14 +177,14 @@ describe('rewind', () => {
   });
 
   test('return read-only snapshot', async () => {
-    const doc1 = await TileDoctype.create(ceramic, INITIAL_CONTENT, { deterministic: true });
+    const doc1 = await TileDoctype.create(ceramic, INITIAL_CONTENT, { deterministic: true }, { sync: false });
     await anchorUpdate(ceramic, doc1);
     await doc1.update({ abc: 321, def: 456, gh: 987 });
     await anchorUpdate(ceramic, doc1);
 
     const ceramic2 = await createCeramic(ipfs, { anchorOnRequest: false });
-    const doc2 = await TileDoctype.create(ceramic, INITIAL_CONTENT, { deterministic: true });
-    const docState2 = await ceramic2.repository.load(doc2.id);
+    const doc2 = await TileDoctype.create(ceramic, INITIAL_CONTENT, { deterministic: true }, { sync: false });
+    const docState2 = await ceramic2.repository.load(doc2.id, {});
     const snapshot = await ceramic2.repository.stateManager.rewind(docState2, doc1.commitId);
 
     expect(DoctypeUtils.statesEqual(snapshot.state, doc1.state));
@@ -202,14 +202,14 @@ describe('rewind', () => {
 test('handles basic conflict', async () => {
   const doc1 = await TileDoctype.create(ceramic, INITIAL_CONTENT);
   doc1.subscribe();
-  const docState1 = await ceramic.repository.load(doc1.id);
+  const docState1 = await ceramic.repository.load(doc1.id, {});
   const docId = doc1.id;
   await anchorUpdate(ceramic, doc1);
   const tipPreUpdate = doc1.tip;
 
   const newContent = { abc: 321, def: 456, gh: 987 };
-  let updateRec = await doc1._makeCommit(ceramic.did, newContent)
-  await ceramic.repository.stateManager.applyCommit(docState1, updateRec);
+  let updateRec = await doc1.makeCommit(ceramic, newContent)
+  await ceramic.repository.stateManager.applyCommit(docState1, updateRec, { anchor: true, publish: false });
 
   await anchorUpdate(ceramic, doc1);
   expect(doc1.content).toEqual(newContent);
@@ -227,8 +227,8 @@ test('handles basic conflict', async () => {
   const conflictingNewContent = { asdf: 2342 };
   const doc2 = doctypeFromState<TileDoctype>(ceramic.context, ceramic._doctypeHandlers, state$.value, ceramic.repository.updates$);
   doc2.subscribe();
-  updateRec = await doc2._makeCommit(ceramic.did, conflictingNewContent)
-  await ceramic.repository.stateManager.applyCommit(state$, updateRec);
+  updateRec = await doc2.makeCommit(ceramic, conflictingNewContent)
+  await ceramic.repository.stateManager.applyCommit(state$, updateRec, { anchor: true, publish: false });
 
   await anchorUpdate(ceramic, doc2);
   const tipInvalidUpdate = state$.tip;
@@ -258,9 +258,9 @@ test('enforces schema in update that assigns schema', async () => {
   await anchorUpdate(ceramic, schemaDoc);
 
   const doc = await TileDoctype.create(ceramic, { stuff: 1 });
-  const docState = await ceramic.repository.load(doc.id);
+  const docState = await ceramic.repository.load(doc.id, {});
   await anchorUpdate(ceramic, doc);
-  const updateRec = await doc._makeCommit(ceramic.did, null, { schema: schemaDoc.commitId });
+  const updateRec = await doc.makeCommit(ceramic, null, { schema: schemaDoc.commitId });
   await expect(ceramic.repository.stateManager.applyCommit(docState, updateRec)).rejects.toThrow(
     "Validation Error: data['stuff'] should be string",
   );
@@ -273,11 +273,11 @@ test('enforce previously assigned schema during future update', async () => {
   const conformingContent = { stuff: 'foo' };
   const nonConformingContent = { stuff: 1 };
   const doc = await TileDoctype.create(ceramic, conformingContent, { schema: schemaDoc.commitId });
-  const docState = await ceramic.repository.load(doc.id);
+  const docState = await ceramic.repository.load(doc.id, {});
   await anchorUpdate(ceramic, doc);
 
-  const updateRec = await doc._makeCommit(ceramic.did, nonConformingContent);
-  await expect(ceramic.repository.stateManager.applyCommit(docState, updateRec)).rejects.toThrow(
+  const updateRec = await doc.makeCommit(ceramic, nonConformingContent);
+  await expect(ceramic.repository.stateManager.applyCommit(docState, updateRec, { anchor: false, publish: false })).rejects.toThrow(
     "Validation Error: data['stuff'] should be string",
   );
 });
@@ -286,12 +286,12 @@ test('should announce change to network', async () => {
   const publishTip = jest.spyOn(ceramic.dispatcher, 'publishTip');
   const doc1 = await TileDoctype.create(ceramic, INITIAL_CONTENT);
   doc1.subscribe();
-  const docState1 = await ceramic.repository.load(doc1.id);
+  const docState1 = await ceramic.repository.load(doc1.id, {});
   expect(publishTip).toHaveBeenCalledTimes(1);
   expect(publishTip).toHaveBeenCalledWith(doc1.id, doc1.tip);
   await publishTip.mockClear();
 
-  const updateRec = await doc1._makeCommit(ceramic.did, { foo: 34 });
-  await ceramic.repository.stateManager.applyCommit(docState1, updateRec);
+  const updateRec = await doc1.makeCommit(ceramic, { foo: 34 });
+  await ceramic.repository.stateManager.applyCommit(docState1, updateRec, { anchor: false, publish: true });
   expect(publishTip).toHaveBeenCalledWith(doc1.id, doc1.tip);
 });

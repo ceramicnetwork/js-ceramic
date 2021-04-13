@@ -11,6 +11,10 @@
 
 const Ceramic = require('@ceramicnetwork/http-client').default
 const ThreeIdProvider = require('3id-did-provider').default
+const ThreeIdResolver = require('@ceramicnetwork/3id-did-resolver').default
+const KeyDidResolver = require('key-did-resolver').default
+const { Resolver } = require('did-resolver')
+const { DID } = require('dids')
 const TileDoctype = require('@ceramicnetwork/doctype-tile').default
 const u8a = require('uint8arrays')
 const { randomBytes } = require('@stablelib/random')
@@ -77,14 +81,24 @@ const waitForAnchor = doc => new Promise(resolve => {
   })
 })
 
+const makeDID = function(provider, ceramic) {
+  const keyDidResolver = KeyDidResolver.getResolver()
+  const threeIdResolver = ThreeIdResolver.getResolver(ceramic)
+  const resolver = new Resolver({
+    ...threeIdResolver, ...keyDidResolver,
+  })
+  return new DID({ provider, resolver })
+}
+
 const setLegacyDoc = async (ceramic, doc, keyset) => {
   const signing = encodeKey(keyset.signingPub, 'secp256k1')
   const encryption = encodeKey(keyset.encPub, 'x25519')
   const oldProvider = ceramic.did._client.connection
   const provider = new Ed25519Provider(keyset.seed)
-  await ceramic.setDIDProvider(provider)
-  const didstr = ceramic.did.id
-  await ceramic.setDIDProvider(oldProvider)
+  const didWithProvider = makeDID(provider, ceramic)
+  const didWithOldProvider = makeDID(oldProvider, ceramic)
+  const didstr = didWithProvider.id
+  await ceramic.setDID(didWithOldProvider)
 
   await doc.update(
       { publicKeys: {
@@ -93,7 +107,7 @@ const setLegacyDoc = async (ceramic, doc, keyset) => {
         }},
       { controllers: [didstr] })
 
-  await ceramic.setDIDProvider(provider)
+  await ceramic.setDID(didWithProvider)
   await waitForAnchor(doc)
 }
 
@@ -122,7 +136,7 @@ const legacyDid = async (threeId, threeIdGenesisCopy, ceramic) => {
 
   // uses the first public key of the seed for the v1 threeId as the keydid.
   // sorry for the magic here -.-
-  await ceramic.setDIDProvider(threeIdGenesisCopy.getDidProvider())
+  await ceramic.setDID(makeDID(threeIdGenesisCopy.getDidProvider(), ceramic))
   const metadata = { controllers: [firstKeyDid], family: '3id', deterministic: true }
   const doc = await TileDoctype.create(
       ceramic, null, metadata, { anchor:false, publish: false })
@@ -168,7 +182,7 @@ const generate = async () => {
     disableIDX: true
   })
 
-  await ceramic.setDIDProvider(threeId.getDidProvider())
+  await ceramic.setDID(makeDID(threeId.getDidProvider(), ceramic))
   // rotate keys once
   await rotateKeys(threeId, 'a', 'b')
   console.log('rotated v1 keys once')

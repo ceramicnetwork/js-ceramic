@@ -1,11 +1,12 @@
-import { DID, DIDProvider } from 'dids'
+import { DID } from 'dids'
 import {
     Doctype,
     DoctypeHandler,
-    DocOpts,
     CeramicCommit
 } from "./doctype"
+import { CreateOpts, LoadOpts, UpdateOpts } from "./docopts"
 import { DocID, CommitID } from '@ceramicnetwork/docid'
+import { LoggerProvider } from "./logger-provider";
 
 /**
  * Describes Ceramic pinning functionality
@@ -35,12 +36,27 @@ export interface PinApi {
  */
 export type { DIDProvider } from 'dids'
 
+interface CeramicCommon {
+    loggerProvider?: LoggerProvider
+}
+
+/**
+ * Interface for an object that contains a DID that can be used to sign Ceramic commits.
+ * Any implementation of CeramicAPI will match this interface, though if no CeramicAPI instance is
+ * available users can provide any object containing an authenticated DID instance.
+ */
+export interface CeramicSigner extends CeramicCommon {
+    did: DID | null
+
+    [index: string]: any // allow arbitrary properties
+}
+
 /**
  * Describes Ceramic node API
  */
-export interface CeramicApi {
+export interface CeramicApi extends CeramicSigner {
     pin: PinApi;
-    did?: DID;
+    // loggerProvider: LoggerProvider; // TODO uncomment once logger is available on http-client
 
     /**
      * Register Doctype handler
@@ -54,14 +70,14 @@ export interface CeramicApi {
      * @param genesis - Genesis commit
      * @param opts - Initialization options
      */
-    createDocumentFromGenesis<T extends Doctype>(doctype: string, genesis: any, opts?: DocOpts): Promise<T>;
+    createDocumentFromGenesis<T extends Doctype>(doctype: string, genesis: any, opts?: CreateOpts): Promise<T>;
 
     /**
      * Loads Doctype instance
      * @param docId - Document ID
      * @param opts - Initialization options
      */
-    loadDocument<T extends Doctype>(docId: DocID | CommitID | string, opts?: DocOpts): Promise<T>;
+    loadDocument<T extends Doctype>(docId: DocID | CommitID | string, opts?: LoadOpts): Promise<T>;
 
     /**
      * Load all document commits by document ID
@@ -77,34 +93,19 @@ export interface CeramicApi {
     multiQuery(queries: Array<MultiQuery>, timeout?: number):  Promise<Record<string, Doctype>>;
 
     /**
-     * Load all document commits by document ID
-     * @param docId - Document ID
-     * @deprecated See `loadDocumentCommits`
-     */
-    loadDocumentRecords(docId: DocID | string): Promise<Array<Record<string, any>>>;
-
-    /**
-     * Applies commit on the existing document
-     * @param docId - Document ID
-     * @param commit - Commit to be applied
-     * @param opts - Initialization options
-     * @deprecated Use `applyCommit`
-     */
-    applyRecord<T extends Doctype>(docId: DocID | string, commit: CeramicCommit, opts?: DocOpts): Promise<T>;
-
-    /**
      * Applies commit on the existing document
      * @param docId - Document ID
      * @param commit - Commit to be applied
      * @param opts - Initialization options
      */
-    applyCommit<T extends Doctype>(docId: DocID | string, commit: CeramicCommit, opts?: DocOpts): Promise<T>;
+    applyCommit<T extends Doctype>(docId: DocID | string, commit: CeramicCommit, opts?: CreateOpts | UpdateOpts): Promise<T>;
 
     /**
-     * Set DID provider
-     * @param provider - DID provider instance
+     * Sets the DID instance that will be used to author commits to documents. The DID instance
+     * also includes the DID Resolver that will be used to verify commits from others.
+     * @param did
      */
-    setDIDProvider (provider: DIDProvider): Promise<void>;
+    setDID(did: DID): Promise<void>;
 
     /**
      * @returns An array of the CAIP-2 chain IDs of the blockchains that are supported for anchoring

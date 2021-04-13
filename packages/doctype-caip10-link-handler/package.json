@@ -19,7 +19,7 @@
     "lib"
   ],
   "scripts": {
-    "test": "../../node_modules/.bin/jest --coverage",
+    "test": "../../node_modules/.bin/jest --coverage --env=node",
     "build": "../../node_modules/.bin/tsc -p tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
@@ -27,6 +27,7 @@
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
+    "@ceramicnetwork/blockchain-utils-linking": "^0.4.0-rc.0",
     "@ceramicnetwork/blockchain-utils-validation": "^0.1.2-rc.0",
     "@ceramicnetwork/common": "^0.18.0-rc.0",
     "@ceramicnetwork/doctype-caip10-link": "^0.14.0-rc.1"

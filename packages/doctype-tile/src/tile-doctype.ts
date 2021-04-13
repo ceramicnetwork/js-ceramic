@@ -4,31 +4,23 @@ import type { Operation } from 'fast-json-patch'
 import * as uint8arrays from 'uint8arrays'
 import { randomBytes } from '@stablelib/random'
 
-import type { DID } from 'dids'
 import {
+    CreateOpts,
+    LoadOpts,
+    UpdateOpts,
     Doctype,
     DoctypeConstructor,
     DoctypeStatic,
     CeramicCommit,
     CommitHeader,
-    DocOpts,
-    DocParams,
-    Context,
-    GenesisHeader,
     GenesisCommit,
     UnsignedCommit,
     CeramicApi,
     SignedCommitContainer,
     DocMetadata,
+    CeramicSigner,
 } from "@ceramicnetwork/common"
 import { CommitID, DocID, DocRef } from "@ceramicnetwork/docid";
-
-/**
- * Tile doctype parameters
- */
-export interface TileParams extends DocParams {
-    content?: Record<string, unknown>;
-}
 
 /**
  * Arguments used to generate the metadata for Tile documents
@@ -40,6 +32,9 @@ export interface TileMetadataArgs {
   tags?: Array<string>
   deterministic?: boolean
 }
+
+const DEFAULT_LOAD_OPTS = { sync: true }
+const DEFAULT_UPDATE_OPTS = { anchor: true, publish: true }
 
 /**
  * Converts from metadata format into CommitHeader format to be put into a CeramicCommit
@@ -66,55 +61,28 @@ function headerFromMetadata(metadata?: TileMetadataArgs | DocMetadata): CommitHe
     return header
 }
 
+async function _ensureAuthenticated(signer: CeramicSigner) {
+    if (signer.did == null) {
+        throw new Error('No DID provided')
+    }
+    if (!signer.did.authenticated) {
+        await signer.did.authenticate()
+        if (signer.loggerProvider) {
+            signer.loggerProvider.getDiagnosticsLogger().imp(`Now authenticated as DID ${signer.did.id}`)
+        }
+    }
+}
+
 /**
  * Sign Tile commit
- * @param did - DID instance
+ * @param signer - Object containing the DID to use to sign the commit
  * @param commit - Commit to be signed
  * @param controller - Controller
  * @private
  */
-function _signDagJWS(commit: CeramicCommit, did: DID, controller: string): Promise<SignedCommitContainer> {
-    // check for DID and authentication
-    if (did == null || !did.authenticated) {
-        throw new Error('No DID authenticated')
-    }
-    return did.createDagJWS(commit, { did: controller })
-}
-
-/**
- * Create genesis commit
- * @param did - DID making (and signing) the commit
- * @param content - genesis content
- * @param metadata - genesis metadata
- * @private
- */
-async function _makeGenesis<T>(did: DID, content: T | null, metadata?: TileMetadataArgs): Promise<CeramicCommit> {
-    if (!metadata) {
-        metadata = {}
-    }
-
-    if (!metadata.controllers || metadata.controllers.length === 0) {
-        if (did) {
-            metadata.controllers = [did.id]
-        } else {
-            throw new Error('No controllers specified')
-        }
-    }
-    if (metadata.controllers?.length !== 1) {
-        throw new Error('Exactly one controller must be specified')
-    }
-
-    const header = headerFromMetadata(metadata)
-    if (!metadata?.deterministic) {
-        header.unique = uint8arrays.toString(randomBytes(12), 'base64')
-    }
-
-    if (content == null) {
-        // No signature needed if no genesis content
-        return { header }
-    }
-    const commit: GenesisCommit = { data: content, header }
-    return await _signDagJWS(commit, did, metadata.controllers[0])
+async function _signDagJWS(signer: CeramicSigner, commit: CeramicCommit, controller: string): Promise<SignedCommitContainer> {
+    await _ensureAuthenticated(signer)
+    return signer.did.createDagJWS(commit, { did: controller })
 }
 
 async function throwReadOnlyError (): Promise<void> {
@@ -131,15 +99,24 @@ export class TileDoctype<T = Record<string, any>> extends Doctype {
     static DOCTYPE_ID = 0
 
     /**
+     * Returns the contents of this document
+     */
+    get content(): T {
+        return this._getContent()
+    }
+
+    /**
      * Creates a Tile document.
      * @param ceramic - Instance of CeramicAPI used to communicate with the Ceramic network
      * @param content - Genesis contents. If 'null', then no signature is required to make the genesis commit
      * @param metadata - Genesis metadata
      * @param opts - Additional options
      */
-    static async create<T>(ceramic: CeramicApi, content: T | null | undefined, metadata?: TileMetadataArgs, opts: DocOpts = {}): Promise<TileDoctype<T>> {
-      const commit = await _makeGenesis(ceramic.did, content, metadata)
-      return ceramic.createDocumentFromGenesis<TileDoctype>(TileDoctype.DOCTYPE_NAME, commit, opts)
+    static async create<T>(ceramic: CeramicApi, content: T | null | undefined, metadata?: TileMetadataArgs, opts: CreateOpts = {}): Promise<TileDoctype<T>> {
+      // sync by default if creating a deterministic document
+      opts = { anchor: true, publish: true, sync: !!metadata?.deterministic, ...opts };
+      const commit = await TileDoctype.makeGenesis(ceramic, content, metadata)
+      return ceramic.createDocumentFromGenesis<TileDoctype<T>>(TileDoctype.DOCTYPE_NAME, commit, opts)
     }
 
     /**
@@ -148,9 +125,11 @@ export class TileDoctype<T = Record<string, any>> extends Doctype {
      * @param genesisCommit - Genesis commit (first commit in document log)
      * @param opts - Additional options
      */
-    static async createFromGenesis(ceramic: CeramicApi, genesisCommit: GenesisCommit, opts: DocOpts = {}): Promise<TileDoctype> {
-        const commit = (genesisCommit.data ? await _signDagJWS(genesisCommit, ceramic.did, genesisCommit.header.controllers[0]): genesisCommit)
-        return ceramic.createDocumentFromGenesis<TileDoctype>(TileDoctype.DOCTYPE_NAME, commit, opts)
+    static async createFromGenesis<T>(ceramic: CeramicApi, genesisCommit: GenesisCommit, opts: CreateOpts = {}): Promise<TileDoctype<T>> {
+        // sync by default when creating from genesis
+        opts = { anchor: true, publish: true, sync: true, ...opts };
+        const commit = (genesisCommit.data ? await _signDagJWS(ceramic, genesisCommit, genesisCommit.header.controllers[0]): genesisCommit)
+        return ceramic.createDocumentFromGenesis<TileDoctype<T>>(TileDoctype.DOCTYPE_NAME, commit, opts)
     }
 
     /**
@@ -159,13 +138,14 @@ export class TileDoctype<T = Record<string, any>> extends Doctype {
      * @param docId - DocID to load.  Must correspond to a Tile doctype
      * @param opts - Additional options
      */
-    static async load(ceramic: CeramicApi, docId: DocID | CommitID | string, opts: DocOpts = {}): Promise<TileDoctype> {
+    static async load<T>(ceramic: CeramicApi, docId: DocID | CommitID | string, opts: LoadOpts = {}): Promise<TileDoctype<T>> {
+        opts = { ...DEFAULT_LOAD_OPTS, ...opts };
         const docRef = DocRef.from(docId)
         if (docRef.type != TileDoctype.DOCTYPE_ID) {
-            throw new Error(`DocID ${docRef.toString()} does not refer to a 'tile' doctype, but to a ${docRef.typeName}`)
+            throw new Error(`DocID ${docRef.toString()} does not refer to a '${TileDoctype.DOCTYPE_NAME}' doctype, but to a ${docRef.typeName}`)
         }
 
-        return ceramic.loadDocument<TileDoctype>(docRef, opts)
+        return ceramic.loadDocument<TileDoctype<T>>(docRef, opts)
     }
 
     /**
@@ -174,9 +154,10 @@ export class TileDoctype<T = Record<string, any>> extends Doctype {
      * @param metadata - Changes to make to the metadata.  Only fields that are specified will be changed.
      * @param opts - Additional options
      */
-    async update(content: T, metadata?: TileMetadataArgs, opts: DocOpts = {}): Promise<void> {
-        const updateCommit = await this._makeCommit(this.context.did, content, metadata)
-        const updated = await this.context.api.applyCommit(this.id, updateCommit, opts)
+    async update(content: T, metadata?: TileMetadataArgs, opts: UpdateOpts = {}): Promise<void> {
+        opts = { ...DEFAULT_UPDATE_OPTS, ...opts };
+        const updateCommit = await this.makeCommit(this.api, content, metadata)
+        const updated = await this.api.applyCommit(this.id, updateCommit, opts)
         this.state$.next(updated.state)
     }
 
@@ -186,11 +167,12 @@ export class TileDoctype<T = Record<string, any>> extends Doctype {
      * @param jsonPatch - JSON patch diff of document contents
      * @param opts - Additional options
      */
-    async patch(jsonPatch: Operation[], opts: DocOpts = {}): Promise<void> {
+    async patch(jsonPatch: Operation[], opts: UpdateOpts = {}): Promise<void> {
+        opts = { ...DEFAULT_UPDATE_OPTS, ...opts };
         const header = headerFromMetadata(this.metadata)
         const unsignedCommit: UnsignedCommit = { header, data: jsonPatch, prev: this.tip, id: this.state$.id.cid }
-        const commit = await _signDagJWS(unsignedCommit, this.context.did, this.controllers[0])
-        const updated = await this.context.api.applyCommit(this.id, commit, opts)
+        const commit = await _signDagJWS(this.api, unsignedCommit, this.controllers[0])
+        const updated = await this.api.applyCommit(this.id, commit, opts)
         this.state$.next(updated.state)
     }
 
@@ -204,42 +186,12 @@ export class TileDoctype<T = Record<string, any>> extends Doctype {
     }
 
     /**
-     * Creates genesis commit
-     * @param params - Create parameters
-     * @param context - Ceramic context
-     * @deprecated
-     * TODO: Remove this when Ceramic.createDocument is removed
-     */
-    static async makeGenesis(params: DocParams, context: Context): Promise<CeramicCommit> {
-        const metadata: GenesisHeader = params.metadata || { controllers: [] }
-        if (!metadata.controllers || metadata.controllers.length === 0) {
-            if (context.did) {
-                metadata.controllers = [context.did.id]
-            } else {
-                throw new Error('No controllers specified')
-            }
-        }
-
-        if (metadata.controllers.length !== 1) {
-            throw new Error('Exactly one controller must be specified')
-        }
-
-        // If 'deterministic' is undefined, default to creating document uniquely
-        if (!params.deterministic) {
-            metadata.unique = uint8arrays.toString(randomBytes(12), 'base64')
-        }
-
-        const commit: GenesisCommit = { data: params.content, header: metadata }
-        return (commit.data ? await _signDagJWS(commit, context.did, metadata.controllers[0]): commit)
-    }
-
-    /**
      * Make a commit to update the document
-     * @param did - DID making (and signing) the commit
+     * @param signer - Object containing the DID making (and signing) the commit
      * @param newContent
      * @param newMetadata
      */
-    async _makeCommit(did: DID, newContent: T | undefined, newMetadata?: TileMetadataArgs): Promise<CeramicCommit> {
+    async makeCommit(signer: CeramicSigner, newContent: T | undefined, newMetadata?: TileMetadataArgs): Promise<CeramicCommit> {
         const header = headerFromMetadata(newMetadata)
 
         if (newContent == null) {
@@ -252,7 +204,43 @@ export class TileDoctype<T = Record<string, any>> extends Doctype {
 
         const patch = jsonpatch.compare(this.content, newContent)
         const commit: UnsignedCommit = { header, data: patch, prev: this.tip, id: this.state.log[0].cid }
-        return _signDagJWS(commit, did, this.controllers[0])
+        return _signDagJWS(signer, commit, this.controllers[0])
+    }
+
+    /**
+     * Create genesis commit.
+     * @param signer - Object containing the DID making (and signing) the commit
+     * @param content - genesis content
+     * @param metadata - genesis metadata
+     */
+    static async makeGenesis<T>(signer: CeramicSigner, content: T | null, metadata?: TileMetadataArgs): Promise<CeramicCommit> {
+        if (!metadata) {
+            metadata = {}
+        }
+
+        if (!metadata.controllers || metadata.controllers.length === 0) {
+            if (signer.did) {
+                await _ensureAuthenticated(signer)
+                metadata.controllers = [signer.did.id]
+            } else {
+                throw new Error('No controllers specified')
+            }
+        }
+        if (metadata.controllers?.length !== 1) {
+            throw new Error('Exactly one controller must be specified')
+        }
+
+        const header = headerFromMetadata(metadata)
+        if (!metadata?.deterministic) {
+            header.unique = uint8arrays.toString(randomBytes(12), 'base64')
+        }
+
+        if (content == null) {
+            // No signature needed if no genesis content
+            return { header }
+        }
+        const commit: GenesisCommit = { data: content, header }
+        return await _signDagJWS(signer, commit, metadata.controllers[0])
     }
 
 }

@@ -4,37 +4,66 @@ import { Ed25519Provider } from 'key-did-provider-ed25519'
 import tmp from 'tmp-promise'
 import IPFS from 'ipfs-core'
 import CeramicDaemon from '../ceramic-daemon'
-import { AnchorStatus, Doctype, DoctypeUtils, IpfsApi } from '@ceramicnetwork/common';
+import { AnchorStatus, CeramicApi, Doctype, DoctypeUtils, IpfsApi } from '@ceramicnetwork/common';
 import { TileDoctypeHandler } from "@ceramicnetwork/doctype-tile-handler"
 import { TileDoctype } from "@ceramicnetwork/doctype-tile";
 import { filter, take } from "rxjs/operators"
 import * as u8a from 'uint8arrays'
+import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
+import KeyDidResolver from 'key-did-resolver'
+import { Resolver } from "did-resolver"
+import { DID } from 'dids'
 
 import dagJose from 'dag-jose'
 import { sha256 } from 'multiformats/hashes/sha2'
 import legacy from 'multiformats/legacy'
 import DocID from "@ceramicnetwork/docid";
+import getPort from "get-port";
 
 const seed = u8a.fromString('6e34b2e1a9624113d81ece8a8a22e6e97f0e145c25c1d4d2d0e62753b4060c83', 'base16')
-const port = 7777
-const apiUrl = 'http://localhost:' + port
-const topic = '/ceramic'
+const TOPIC = '/ceramic'
 
 /**
  * Create an IPFS instance
- * @param overrideConfig - IFPS config for override
  */
-const createIPFS = (overrideConfig: Record<string, unknown> = {}): Promise<IpfsApi> => {
+const createIPFS = async (path: string): Promise<IpfsApi> => {
+    const port = await getPort()
     const hasher = {}
     hasher[sha256.code] = sha256
     const format = legacy(dagJose, {hashes: hasher})
 
     const config = {
         ipld: { formats: [format] },
+        repo: `${path}/ipfs${port}/`,
+        config: {
+            Addresses: { Swarm: [`/ip4/127.0.0.1/tcp/${port}`] },
+            Discovery: { DNS: { Enabled: false }, webRTCStar: { Enabled: false }},
+            Bootstrap: []
+        }
     }
 
-    Object.assign(config, overrideConfig)
     return IPFS.create(config)
+}
+
+const makeDID = function(seed: Uint8Array, ceramic: CeramicApi): DID {
+    const provider = new Ed25519Provider(seed)
+
+    const keyDidResolver = KeyDidResolver.getResolver()
+    const threeIdResolver = ThreeIdResolver.getResolver(ceramic)
+    const resolver = new Resolver({
+        ...threeIdResolver, ...keyDidResolver,
+    })
+    return new DID({ provider, resolver })
+}
+
+const makeCeramicCore = async(ipfs: IpfsApi, stateStoreDirectory: string): Promise<Ceramic> => {
+    const core = await Ceramic.create(ipfs, {pubsubTopic: TOPIC, stateStoreDirectory, anchorOnRequest: false})
+
+    const doctypeHandler = new TileDoctypeHandler()
+    doctypeHandler.verifyJWS = (): Promise<void> => { return }
+    // @ts-ignore
+    core._doctypeHandlers.add(doctypeHandler)
+    return core
 }
 
 describe('Ceramic interop: core <> http-client', () => {
@@ -45,21 +74,9 @@ describe('Ceramic interop: core <> http-client', () => {
     let daemon: CeramicDaemon
     let client: CeramicClient
 
-    const DOCTYPE_TILE = 'tile'
-
     beforeAll(async () => {
         tmpFolder = await tmp.dir({ unsafeCleanup: true })
-        ipfs = await createIPFS({
-            repo: `${tmpFolder.path}/ipfs${5011}/`, config: {
-                Addresses: { Swarm: [`/ip4/127.0.0.1/tcp/${5011}`] }, Discovery: {
-                    MDNS: { Enabled: false }, webRTCStar: { Enabled: false }
-                }, Bootstrap: []
-            }
-        })
-        if (!ipfs.pubsub) {
-            ipfs.pubsub = {}
-        }
-        ipfs.pubsub.subscribe = jest.fn()
+        ipfs = await createIPFS(tmpFolder.path)
     })
 
     afterAll(async () => {
@@ -68,20 +85,14 @@ describe('Ceramic interop: core <> http-client', () => {
     })
 
     beforeEach(async () => {
-        const stateStoreDirectory = tmpFolder.path
-        core = await Ceramic.create(ipfs, {pubsubTopic: topic, stateStoreDirectory, anchorOnRequest: false})
-
-        const doctypeHandler = new TileDoctypeHandler()
-        doctypeHandler.verifyJWS = (): Promise<void> => { return }
-        // @ts-ignore
-        core._doctypeHandlers.add(doctypeHandler)
-
-        daemon = new CeramicDaemon(core, { port, debug: false })
+        core = await makeCeramicCore(ipfs, tmpFolder.path)
+        const port = await getPort()
+        const apiUrl = 'http://localhost:' + port
+        daemon = new CeramicDaemon(core, { port })
         client = new CeramicClient(apiUrl, { docSyncInterval: 500 })
 
-        const provider = new Ed25519Provider(seed)
-        await core.setDIDProvider(provider)
-        await client.setDIDProvider(provider)
+        await core.setDID(makeDID(seed, core))
+        await client.setDID(makeDID(seed, client))
     })
 
     afterEach(async () => {
@@ -124,13 +135,13 @@ describe('Ceramic interop: core <> http-client', () => {
         expect(state1).toEqual(state2)
     })
 
-    it('gets anchor record updates', async () => {
+    it('gets anchor commit updates', async () => {
         const doc1 = await TileDoctype.create(core, { test: 123 });
         await anchorDoc(doc1)
         expect(doc1.state.log.length).toEqual(2)
         expect(doc1.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
-        const doc2 = await TileDoctype.create(client, { test: 1234 });
-        await anchorDoc(doc2)
+        const doc2 = await TileDoctype.create(client, { test: 1234 })
+        await anchorDoc(doc2);
         expect(doc2.state.log.length).toEqual(2)
         expect(doc2.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
     })
@@ -149,17 +160,17 @@ describe('Ceramic interop: core <> http-client', () => {
         expect(DoctypeUtils.serializeState(doc3.state)).toEqual(DoctypeUtils.serializeState(doc4.state))
     })
 
-    it('loads document records correctly', async () => {
+    it('loads document commits correctly', async () => {
         const doc1 = await TileDoctype.create(core, { test: 123 });
         await anchorDoc(doc1)
-        const doc2 = await client.loadDocument(doc1.id)
+        const doc2 = await TileDoctype.load(client, doc1.id)
         expect(doc1.content).toEqual(doc2.content)
 
-        const records1 = await core.loadDocumentRecords(doc1.id)
-        expect(records1).toBeDefined()
+        const commits1 = await core.loadDocumentCommits(doc1.id)
+        expect(commits1).toBeDefined()
 
-        const records2 = await client.loadDocumentRecords(doc2.id)
-        expect(records2).toBeDefined()
+        const commits2 = await client.loadDocumentCommits(doc2.id)
+        expect(commits2).toBeDefined()
 
         const serializeCommits = (commits: any): any => commits.map((r: any) => {
             return {
@@ -167,7 +178,7 @@ describe('Ceramic interop: core <> http-client', () => {
             }
         })
 
-        expect(serializeCommits(records1)).toEqual(serializeCommits(records2))
+        expect(serializeCommits(commits1)).toEqual(serializeCommits(commits2))
     })
 
     it('makes and gets updates correctly with subscription', async () => {

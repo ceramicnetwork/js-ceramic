@@ -27,6 +27,9 @@ test('emit on distinct changes', async () => {
   } as unknown) as DocState;
 
   const state$ = new Document(initial, '', 1000);
+  // Disable background polling to avoid getting an error from node-fetch since there's no
+  // daemon listening to receive the requests.
+  state$._syncState = async function() { /* do nothing*/ }
   const updates: DocState[] = [];
   state$.subscribe((state) => {
     updates.push(state);
@@ -55,4 +58,6 @@ test('emit on distinct changes', async () => {
   expect(updates.length).toEqual(2);
   expect(updates[0]).toBe(initial);
   expect(updates[1]).toBe(second);
+
+  state$.complete()
 });

@@ -1,12 +1,16 @@
 import Ceramic, { CeramicConfig } from '../ceramic'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
-import { TileDoctype, TileParams } from "@ceramicnetwork/doctype-tile"
+import { TileDoctype } from "@ceramicnetwork/doctype-tile"
 import { AnchorStatus, DoctypeUtils, IpfsApi } from "@ceramicnetwork/common"
 import DocID from '@ceramicnetwork/docid'
 import * as u8a from 'uint8arrays'
 import cloneDeep from 'lodash.clonedeep'
 import { createIPFS } from './ipfs-util';
 import { anchorUpdate } from '../state-management/__tests__/anchor-update';
+import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
+import KeyDidResolver from 'key-did-resolver'
+import { Resolver } from "did-resolver"
+import { DID } from 'dids'
 
 jest.mock('../store/level-state-store')
 
@@ -31,8 +35,6 @@ describe('Ceramic API', () => {
   jest.setTimeout(60000)
   let ipfs: IpfsApi;
 
-  const DOCTYPE_TILE = 'tile'
-
   const stringMapSchema = {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "StringMap",
@@ -42,13 +44,23 @@ describe('Ceramic API', () => {
     }
   }
 
+  const makeDID = function(seed: Uint8Array, ceramic: Ceramic): DID {
+    const provider = new Ed25519Provider(seed)
+
+    const keyDidResolver = KeyDidResolver.getResolver()
+    const threeIdResolver = ThreeIdResolver.getResolver(ceramic)
+    const resolver = new Resolver({
+      ...threeIdResolver, ...keyDidResolver,
+    })
+    return new DID({ provider, resolver })
+  }
+
   const createCeramic = async (c: CeramicConfig = {}): Promise<Ceramic> => {
     c.anchorOnRequest = false
     c.restoreDocuments = false
     const ceramic = await Ceramic.create(ipfs, c)
 
-    const provider = new Ed25519Provider(seed)
-    await ceramic.setDIDProvider(provider)
+    await ceramic.setDID(makeDID(seed, ceramic))
     return ceramic
   }
 
@@ -107,10 +119,10 @@ describe('Ceramic API', () => {
       }
 
       await expect( async () => {
-        const updateRecord = await docV1._makeCommit(ceramic.context.did, { test: 'fghj' })
+        const updateRecord = await docV1.makeCommit(ceramic, { test: 'fghj' })
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
-        await ceramic.context.api.applyCommit(docV1Id, updateRecord)
+        await ceramic.applyCommit(docV1Id, updateRecord, { anchor: false, publish: false })
       }).rejects.toThrow(/Not DocID/)
 
       // checkout not anchored commit
@@ -181,8 +193,6 @@ describe('Ceramic API', () => {
     })
 
     it('can update schema and then assign to doc with now valid content', async () => {
-      const controller = ceramic.context.did.id
-
       // Create doc with content that has type 'number'.
       const doc = await TileDoctype.create(ceramic, {a: 1})
       await anchorUpdate(ceramic, doc)
