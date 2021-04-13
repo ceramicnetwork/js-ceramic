@@ -101,9 +101,6 @@ export class StateManager {
       const tip$ = this.dispatcher.messageBus.queryNetwork(state$.id);
 
       const syncTimeout = (opts as LoadOpts).syncTimeoutMillis != undefined ? (opts as LoadOpts).syncTimeoutMillis : DEFAULT_SYNC_TIMEOUT
-      if (syncTimeout == 0) { // timeout of zero means don't wait for the response at all
-        return
-      }
       const tip = await tip$.pipe(timeoutWith(syncTimeout, of(undefined))).toPromise();
       if (tip) {
         await this.handleTip(state$, tip);
