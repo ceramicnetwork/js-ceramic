@@ -57,7 +57,7 @@ describe('validation', () => {
     await anchorUpdate(ceramic, schema);
     // Create invalid doc
     const ipfs2 = await createIPFS();
-    const permissiveCeramic = await createCeramic(ipfs2, { validateDocs: false });
+    const permissiveCeramic = await createCeramic(ipfs2, { validateStreams: false });
     const invalidDoc = await TileDoctype.create(permissiveCeramic, { stuff: 1 }, { schema: schema.commitId });
     // Load it: Expect failure
     await expect(repository.load(invalidDoc.id, { sync: false })).rejects.toThrow(
