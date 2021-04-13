@@ -1,4 +1,4 @@
-import DocID from '@ceramicnetwork/docid';
+import StreamID from '@ceramicnetwork/streamid';
 import {
   AnchorService,
   AnchorStatus,
@@ -32,12 +32,12 @@ export type RepositoryDependencies = {
 
 export class Repository {
   /**
-   * Serialize loading operations per docId.
+   * Serialize loading operations per streamId.
    */
   readonly loadingQ: NamedTaskQueue;
 
   /**
-   * Serialize operations on state per docId.
+   * Serialize operations on state per streamId.
    * Ensure that the task is run with a currently run state by abstracting over state loading.
    */
   readonly executionQ: ExecutionQueue;
@@ -61,7 +61,7 @@ export class Repository {
     this.loadingQ = new NamedTaskQueue((error) => {
       logger.err(error);
     });
-    this.executionQ = new ExecutionQueue(logger, (docId) => this.get(docId));
+    this.executionQ = new ExecutionQueue(logger, (streamId) => this.get(streamId));
     this.inmemory = new StateCache(limit, (state$) => state$.complete());
     this.updates$ = this.updates$.bind(this);
   }
@@ -79,12 +79,12 @@ export class Repository {
     );
   }
 
-  private fromMemory(docId: DocID): RunningState | undefined {
-    return this.inmemory.get(docId.toString());
+  private fromMemory(streamId: StreamID): RunningState | undefined {
+    return this.inmemory.get(streamId.toString());
   }
 
-  private async fromStateStore(docId: DocID): Promise<RunningState | undefined> {
-    const docState = await this.#deps.pinStore.stateStore.load(docId);
+  private async fromStateStore(streamId: StreamID): Promise<RunningState | undefined> {
+    const docState = await this.#deps.pinStore.stateStore.load(streamId);
     if (docState) {
       const runningState = new RunningState(docState);
       this.add(runningState);
@@ -100,19 +100,19 @@ export class Repository {
     }
   }
 
-  private async fromNetwork(docId: DocID, opts: LoadOpts): Promise<RunningState> {
-    const handler = this.#deps.handlers.get(docId.typeName);
-    const genesisCid = docId.cid;
+  private async fromNetwork(streamId: StreamID, opts: LoadOpts): Promise<RunningState> {
+    const handler = this.#deps.handlers.get(streamId.typeName);
+    const genesisCid = streamId.cid;
     const commit = await this.#deps.dispatcher.retrieveCommit(genesisCid);
     if (commit == null) {
       throw new Error(`No genesis commit found with CID ${genesisCid.toString()}`);
     }
-    const state = await handler.applyCommit(commit, docId.cid, this.#deps.context);
+    const state = await handler.applyCommit(commit, streamId.cid, this.#deps.context);
     await this.#deps.stateValidation.validate(state, state.content);
     const state$ = new RunningState(state);
     this.add(state$);
     await this.stateManager.syncGenesis(state$, opts);
-    this.logger.verbose(`Document ${docId.toString()} successfully loaded`);
+    this.logger.verbose(`Document ${streamId.toString()} successfully loaded`);
     return state$;
   }
 
@@ -120,13 +120,13 @@ export class Repository {
    * Returns a document from wherever we can get information about it.
    * Starts by checking if the document state is present in the in-memory cache, if not then then checks the state store, and finally loads the document from pubsub.
    */
-  async load(docId: DocID, opts: LoadOpts): Promise<RunningState> {
-    return this.loadingQ.run(docId.toString(), async () => {
-      const fromMemory = this.fromMemory(docId);
+  async load(streamId: StreamID, opts: LoadOpts): Promise<RunningState> {
+    return this.loadingQ.run(streamId.toString(), async () => {
+      const fromMemory = this.fromMemory(streamId);
       if (fromMemory) return fromMemory;
-      const fromStateStore = await this.fromStateStore(docId);
+      const fromStateStore = await this.fromStateStore(streamId);
       if (fromStateStore) return fromStateStore;
-      return this.fromNetwork(docId, opts);
+      return this.fromNetwork(streamId, opts);
     });
   }
 
@@ -134,23 +134,23 @@ export class Repository {
    * Return a document, either from cache or re-constructed from state store, but will not load from the network.
    * Adds the document to cache.
    */
-  async get(docId: DocID): Promise<RunningState | undefined> {
-    return this.loadingQ.run(docId.toString(), async () => {
-      const fromMemory = this.fromMemory(docId);
+  async get(streamId: StreamID): Promise<RunningState | undefined> {
+    return this.loadingQ.run(streamId.toString(), async () => {
+      const fromMemory = this.fromMemory(streamId);
       if (fromMemory) return fromMemory;
-      return this.fromStateStore(docId);
+      return this.fromStateStore(streamId);
     });
   }
 
   /**
    * Return a document state, either from cache or from state store.
    */
-  async docState(docId: DocID): Promise<DocState | undefined> {
-    const fromMemory = this.inmemory.get(docId.toString());
+  async docState(streamId: StreamID): Promise<DocState | undefined> {
+    const fromMemory = this.inmemory.get(streamId.toString());
     if (fromMemory) {
       return fromMemory.state;
     } else {
-      return this.#deps.pinStore.stateStore.load(docId);
+      return this.#deps.pinStore.stateStore.load(streamId);
     }
   }
 
@@ -165,16 +165,16 @@ export class Repository {
     return this.#deps.pinStore.add(docStateHolder);
   }
 
-  unpin(docId: DocID): Promise<void> {
-    return this.#deps.pinStore.rm(docId);
+  unpin(streamId: StreamID): Promise<void> {
+    return this.#deps.pinStore.rm(streamId);
   }
 
   /**
-   * List pinned documents as array of DocID strings.
-   * If `docId` is passed, indicate if it is pinned.
+   * List pinned documents as array of StreamID strings.
+   * If `streamId` is passed, indicate if it is pinned.
    */
-  async listPinned(docId?: DocID): Promise<string[]> {
-    return this.#deps.pinStore.ls(docId);
+  async listPinned(streamId?: StreamID): Promise<string[]> {
+    return this.#deps.pinStore.ls(streamId);
   }
 
   /**
@@ -193,7 +193,7 @@ export class Repository {
    */
   updates$(init: DocState): Observable<DocState> {
     return new Observable<DocState>((subscriber) => {
-      const id = new DocID(init.doctype, init.log[0].cid);
+      const id = new StreamID(init.doctype, init.log[0].cid);
       this.get(id).then((found) => {
         const state$ = found || new RunningState(init);
         this.inmemory.endure(id.toString(), state$);

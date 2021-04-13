@@ -1,7 +1,7 @@
 import { Dispatcher } from '../dispatcher';
 import CID from 'cids';
 import { TileDoctype } from '@ceramicnetwork/doctype-tile';
-import DocID from '@ceramicnetwork/docid';
+import StreamID from '@ceramicnetwork/streamid';
 import {
   CommitType,
   DocState,
@@ -20,7 +20,7 @@ import { StateManager } from '../state-management/state-manager';
 const TOPIC = '/ceramic';
 const FAKE_CID = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu');
 const FAKE_CID2 = new CID('bafybeig6xv5nwphfmvcnektpnojts44jqcuam7bmye2pb54adnrtccjlsu');
-const FAKE_DOC_ID = DocID.fromString('kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s');
+const FAKE_DOC_ID = StreamID.fromString('kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s');
 
 const ipfs = {
   pubsub: {

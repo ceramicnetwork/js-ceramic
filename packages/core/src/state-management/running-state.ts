@@ -1,16 +1,16 @@
 import { Subscription } from 'rxjs';
 import { DocState, RunningStateLike, DocStateSubject } from '@ceramicnetwork/common';
-import { DocID } from '@ceramicnetwork/docid';
+import { StreamID } from '@ceramicnetwork/streamid';
 import { SubscriptionSet } from '../subscription-set';
 import CID from 'cids';
 
 export class RunningState extends DocStateSubject implements RunningStateLike {
-  readonly id: DocID;
+  readonly id: StreamID;
   readonly subscriptionSet: SubscriptionSet = new SubscriptionSet();
 
   constructor(initial: DocState) {
     super(initial);
-    this.id = new DocID(initial.doctype, initial.log[0].cid);
+    this.id = new StreamID(initial.doctype, initial.log[0].cid);
   }
 
   get tip(): CID {

@@ -2,16 +2,16 @@ import {DocState, Doctype} from "../doctype";
 import {take, filter} from 'rxjs/operators'
 import { BehaviorSubject } from "rxjs";
 import { RunningStateLike } from '../running-state-like';
-import { DocID } from '@ceramicnetwork/docid';
+import { StreamID } from '@ceramicnetwork/streamid';
 
 class FakeRunningState extends BehaviorSubject<DocState> implements RunningStateLike {
-  readonly id: DocID;
+  readonly id: StreamID;
   readonly state: DocState;
 
   constructor(value: DocState) {
     super(value);
     this.state = this.value;
-    this.id = new DocID(this.state.doctype, this.state.log[0].cid);
+    this.id = new StreamID(this.state.doctype, this.state.log[0].cid);
   }
 }
 

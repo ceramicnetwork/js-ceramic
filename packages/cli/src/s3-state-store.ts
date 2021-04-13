@@ -1,5 +1,5 @@
 import { DocState, Doctype, DoctypeUtils } from "@ceramicnetwork/common"
-import DocID from '@ceramicnetwork/docid'
+import StreamID from '@ceramicnetwork/streamid'
 import { StateStore } from "@ceramicnetwork/core";
 import LevelUp from "levelup";
 import S3LevelDOWN from "s3leveldown"
@@ -34,11 +34,11 @@ export class S3StateStore implements StateStore {
 
   /**
    * Load document state
-   * @param docId - Document ID
+   * @param streamId - Document ID
    */
-  async load(docId: DocID): Promise<DocState> {
+  async load(streamId: StreamID): Promise<DocState> {
     try {
-      const state = await this.#store.get(docId.baseID.toString())
+      const state = await this.#store.get(streamId.baseID.toString())
       if (state) {
         return DoctypeUtils.deserializeState(JSON.parse(state));
       } else {
@@ -54,23 +54,23 @@ export class S3StateStore implements StateStore {
 
   /**
    * Unpin document
-   * @param docId - Document ID
+   * @param streamId - Document ID
    */
-  async remove(docId: DocID): Promise<void> {
-    await this.#store.del(docId.baseID.toString())
+  async remove(streamId: StreamID): Promise<void> {
+    await this.#store.del(streamId.baseID.toString())
   }
 
   /**
    * List pinned document
-   * @param docId - Document ID
+   * @param streamId - Document ID
    */
-  async list(docId?: DocID): Promise<string[]> {
-    if (docId == null) {
+  async list(streamId?: StreamID): Promise<string[]> {
+    if (streamId == null) {
       const bufArray = await toArray(this.#store.createKeyStream())
       return bufArray.map((buf) => buf.toString())
     }  else {
-      const exists = Boolean(await this.load(docId.baseID))
-      return exists ? [docId.toString()] : []
+      const exists = Boolean(await this.load(streamId.baseID))
+      return exists ? [streamId.toString()] : []
     }
   }
 

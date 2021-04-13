@@ -47,7 +47,7 @@
     "@ceramicnetwork/3id-did-resolver": "^1.2.0-rc.1",
     "@ceramicnetwork/common": "^0.18.0-rc.0",
     "@ceramicnetwork/core": "^0.22.0-rc.0",
-    "@ceramicnetwork/docid": "^0.5.1",
+    "@ceramicnetwork/streamid": "^0.5.1",
     "@ceramicnetwork/doctype-tile": "^0.15.0-rc.1",
     "@ceramicnetwork/http-client": "^0.11.0-rc.1",
     "@ceramicnetwork/ipfs-daemon": "^0.0.4-rc.0",

@@ -31,7 +31,7 @@
   "dependencies": {
     "@ceramicnetwork/3id-did-resolver": "^1.2.0-rc.1",
     "@ceramicnetwork/common": "^0.18.0-rc.0",
-    "@ceramicnetwork/docid": "^0.5.1",
+    "@ceramicnetwork/streamid": "^0.5.1",
     "@ceramicnetwork/doctype-caip10-link": "^0.14.0-rc.1",
     "@ceramicnetwork/doctype-caip10-link-handler": "^0.14.0-rc.0",
     "@ceramicnetwork/doctype-tile": "^0.15.0-rc.1",

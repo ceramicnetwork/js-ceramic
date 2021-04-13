@@ -5,7 +5,7 @@ import {
     CeramicCommit
 } from "./doctype"
 import { CreateOpts, LoadOpts, UpdateOpts } from "./docopts"
-import { DocID, CommitID } from '@ceramicnetwork/docid'
+import { StreamID, CommitID } from '@ceramicnetwork/streamid'
 import { LoggerProvider } from "./logger-provider";
 
 /**
@@ -14,21 +14,21 @@ import { LoggerProvider } from "./logger-provider";
 export interface PinApi {
     /**
      * Pin document
-     * @param docId - Document ID
+     * @param streamId - Document ID
      */
-    add(docId: DocID): Promise<void>;
+    add(streamId: StreamID): Promise<void>;
 
     /**
      * Unpin document
-     * @param docId - Document ID
+     * @param streamId - Document ID
      */
-    rm(docId: DocID): Promise<void>;
+    rm(streamId: StreamID): Promise<void>;
 
     /**
      * List pinned documents
-     * @param docId - Document ID for filtering
+     * @param streamId - Document ID for filtering
      */
-    ls(docId?: DocID): Promise<AsyncIterable<string>>;
+    ls(streamId?: StreamID): Promise<AsyncIterable<string>>;
 }
 
 /**
@@ -74,16 +74,16 @@ export interface CeramicApi extends CeramicSigner {
 
     /**
      * Loads Doctype instance
-     * @param docId - Document ID
+     * @param streamId - Document ID
      * @param opts - Initialization options
      */
-    loadDocument<T extends Doctype>(docId: DocID | CommitID | string, opts?: LoadOpts): Promise<T>;
+    loadDocument<T extends Doctype>(streamId: StreamID | CommitID | string, opts?: LoadOpts): Promise<T>;
 
     /**
      * Load all document commits by document ID
-     * @param docId - Document ID
+     * @param streamId - Document ID
      */
-    loadDocumentCommits(docId: DocID | string): Promise<Array<Record<string, any>>>;
+    loadDocumentCommits(streamId: StreamID | string): Promise<Array<Record<string, any>>>;
 
     /**
      * Load all document types instances for given multiqueries
@@ -94,11 +94,11 @@ export interface CeramicApi extends CeramicSigner {
 
     /**
      * Applies commit on the existing document
-     * @param docId - Document ID
+     * @param streamId - Document ID
      * @param commit - Commit to be applied
      * @param opts - Initialization options
      */
-    applyCommit<T extends Doctype>(docId: DocID | string, commit: CeramicCommit, opts?: CreateOpts | UpdateOpts): Promise<T>;
+    applyCommit<T extends Doctype>(streamId: StreamID | string, commit: CeramicCommit, opts?: CreateOpts | UpdateOpts): Promise<T>;
 
     /**
      * Sets the DID instance that will be used to author commits to documents. The DID instance
@@ -121,9 +121,9 @@ export interface CeramicApi extends CeramicSigner {
 
 export interface MultiQuery {
     /**
-     * The DocID of the document to load
+     * The StreamID of the document to load
      */
-    docId: DocID | string
+    streamId: StreamID | string
     /**
      * An array of paths used to look for linked documents
      */

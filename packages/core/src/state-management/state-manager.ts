@@ -17,7 +17,7 @@ import CID from 'cids';
 import { catchError, concatMap, timeoutWith } from 'rxjs/operators';
 import { empty, of, Subscription } from 'rxjs';
 import { SnapshotState } from './snapshot-state';
-import { CommitID, DocID } from '@ceramicnetwork/docid';
+import { CommitID, StreamID } from '@ceramicnetwork/streamid';
 
 export class StateManager {
   constructor(
@@ -115,12 +115,12 @@ export class StateManager {
   /**
    * Handles update from the PubSub topic
    *
-   * @param docId
+   * @param streamId
    * @param tip - Document Tip CID
    * @private
    */
-  update(docId: DocID, tip: CID): void {
-    this.executionQ.forDocument(docId).add(async (state$) => {
+  update(streamId: StreamID, tip: CID): void {
+    this.executionQ.forDocument(streamId).add(async (state$) => {
       await this.handleTip(state$, tip);
     });
   }

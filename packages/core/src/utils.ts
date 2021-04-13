@@ -48,11 +48,11 @@ export default class Utils {
      * Validate TileDoctype against schema
      */
     static async validateSchema(doc: TileDoctype): Promise<void> {
-        const schemaDocId = doc.state?.metadata?.schema
-        if (schemaDocId) {
-            const schemaDoc = await doc.api.loadDocument<TileDoctype>(schemaDocId)
+        const schemaStreamId = doc.state?.metadata?.schema
+        if (schemaStreamId) {
+            const schemaDoc = await doc.api.loadDocument<TileDoctype>(schemaStreamId)
             if (!schemaDoc) {
-                throw new Error(`Schema not found for ${schemaDocId}`)
+                throw new Error(`Schema not found for ${schemaStreamId}`)
             }
             Utils.validate(doc.content, schemaDoc.content)
         }
@@ -63,13 +63,13 @@ export default class Utils {
 export class TrieNode {
     public key: string
     public children:  Record<string, TrieNode>
-  
+
     constructor(key = '') {
       this.key = key
       this.children = {}
     }
 }
-  
+
 export class PathTrie {
     public root: TrieNode
 

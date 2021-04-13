@@ -10,7 +10,7 @@ import {
   LoadOpts,
   UpdateOpts,
 } from '@ceramicnetwork/common';
-import { DocID, CommitID } from '@ceramicnetwork/docid';
+import { StreamID, CommitID } from '@ceramicnetwork/streamid';
 import { fetchJson } from './utils'
 import QueryString from 'query-string'
 
@@ -43,14 +43,14 @@ export class Document extends Observable<DocState> implements RunningStateLike {
    * Sync document state
    * @private
    */
-  async _syncState(id?: DocID | CommitID): Promise<void> {
+  async _syncState(id?: StreamID | CommitID): Promise<void> {
     const effectiveId = id || this.id
     const { state } = await fetchJson(this._apiUrl + '/documents/' + effectiveId.toString())
     this.state$.next(DoctypeUtils.deserializeState(state))
   }
 
-  get id(): DocID {
-    return new DocID(this.state$.value.doctype, this.state$.value.log[0].cid)
+  get id(): StreamID {
+    return new StreamID(this.state$.value.doctype, this.state$.value.log[0].cid)
   }
 
   static async createFromGenesis (apiUrl: string, doctype: string, genesis: any, docOpts: CreateOpts, docSyncInterval: number): Promise<Document> {
@@ -65,11 +65,11 @@ export class Document extends Observable<DocState> implements RunningStateLike {
     return new Document(DoctypeUtils.deserializeState(state), apiUrl, docSyncInterval)
   }
 
-  static async applyCommit(apiUrl: string, docId: DocID | string, commit: CeramicCommit, docOpts: UpdateOpts, docSyncInterval: number): Promise<Document> {
+  static async applyCommit(apiUrl: string, streamId: StreamID | string, commit: CeramicCommit, docOpts: UpdateOpts, docSyncInterval: number): Promise<Document> {
     const { state } = await fetchJson(apiUrl + '/commits', {
       method: 'post',
       body: {
-        docId: docId.toString(),
+        streamId: streamId.toString(),
         commit: DoctypeUtils.serializeCommit(commit),
         docOpts,
       }
@@ -77,14 +77,14 @@ export class Document extends Observable<DocState> implements RunningStateLike {
     return new Document(DoctypeUtils.deserializeState(state), apiUrl, docSyncInterval)
   }
 
-  static async load (docId: DocID | CommitID, apiUrl: string, docSyncInterval: number, opts: LoadOpts): Promise<Document> {
-    const url = apiUrl + '/documents/' + docId.toString() + '?' + QueryString.stringify(opts)
+  static async load (streamId: StreamID | CommitID, apiUrl: string, docSyncInterval: number, opts: LoadOpts): Promise<Document> {
+    const url = apiUrl + '/documents/' + streamId.toString() + '?' + QueryString.stringify(opts)
     const { state } = await fetchJson(url)
     return new Document(DoctypeUtils.deserializeState(state), apiUrl, docSyncInterval)
   }
 
-  static async loadDocumentCommits (docId: DocID, apiUrl: string): Promise<Array<Record<string, CeramicCommit>>> {
-    const { commits } = await fetchJson(`${apiUrl}/commits/${docId}`)
+  static async loadDocumentCommits (streamId: StreamID, apiUrl: string): Promise<Array<Record<string, CeramicCommit>>> {
+    const { commits } = await fetchJson(`${apiUrl}/commits/${streamId}`)
 
     return commits.map((r: any) => {
       return {

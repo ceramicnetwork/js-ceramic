@@ -1,5 +1,5 @@
 import { Dispatcher } from './dispatcher'
-import DocID, { CommitID, DocRef } from '@ceramicnetwork/docid';
+import StreamID, { CommitID, StreamRef } from '@ceramicnetwork/streamid';
 import {IpfsTopology} from "@ceramicnetwork/ipfs-topology";
 import {
   CreateOpts,
@@ -142,18 +142,18 @@ interface CeramicNetworkOptions {
 
 const DEFAULT_NETWORK = Networks.INMEMORY
 
-const normalizeDocID = (docId: DocID | string): DocID => {
-  const docRef = DocRef.from(docId)
-  if (docRef instanceof DocID) {
-    return docRef
+const normalizeStreamID = (streamId: StreamID | string): StreamID => {
+  const streamRef = StreamRef.from(streamId)
+  if (streamRef instanceof StreamID) {
+    return streamRef
   } else {
-    throw new Error(`Not DocID: ${docRef}`)
+    throw new Error(`Not StreamID: ${streamRef}`)
   }
 }
 
-const tryDocId = (id: string): DocID | null => {
+const tryStreamId = (id: string): StreamID | null => {
   try {
-    return DocID.fromString(id)
+    return StreamID.fromString(id)
   } catch(e) {
     return null
   }
@@ -235,7 +235,7 @@ class Ceramic implements CeramicApi {
 
   private _buildPinApi(): PinApi {
     const boundDocLoader = this._loadDoc.bind(this)
-    const loaderWithSyncSet = (docid) => { return boundDocLoader(docid, { sync: true })}
+    const loaderWithSyncSet = (streamid) => { return boundDocLoader(streamid, { sync: true })}
     return new LocalPinApi(this.repository, loaderWithSyncSet, this._logger)
   }
 
@@ -477,13 +477,13 @@ class Ceramic implements CeramicApi {
 
   /**
    * Applies commit on a given document
-   * @param docId - Document ID
+   * @param streamId - Document ID
    * @param commit - Commit to be applied
    * @param opts - Initialization options
    */
-  async applyCommit<T extends Doctype>(docId: string | DocID, commit: CeramicCommit, opts: CreateOpts | UpdateOpts = {}): Promise<T> {
+  async applyCommit<T extends Doctype>(streamId: string | StreamID, commit: CeramicCommit, opts: CreateOpts | UpdateOpts = {}): Promise<T> {
     opts = { ...DEFAULT_APPLY_COMMIT_OPTS, ...opts };
-    const state$ = await this._loadDoc(normalizeDocID(docId), opts as CreateOpts)
+    const state$ = await this._loadDoc(normalizeStreamID(streamId), opts as CreateOpts)
     await this.repository.stateManager.applyCommit(state$, commit, opts)
     return doctypeFromState<T>(this.context, this._doctypeHandlers, state$.value, this.repository.updates$)
   }
@@ -509,23 +509,23 @@ class Ceramic implements CeramicApi {
    */
   async _createDocFromGenesis(doctype: string, genesis: any, opts: CreateOpts): Promise<RunningState> {
     const genesisCid = await this.dispatcher.storeCommit(genesis);
-    const docId = new DocID(doctype, genesisCid);
-    return this.repository.load(docId, opts);
+    const streamId = new StreamID(doctype, genesisCid);
+    return this.repository.load(streamId, opts);
   }
 
   /**
    * Load document type instance
-   * @param docId - Document ID
+   * @param streamId - Document ID
    * @param opts - Initialization options
    */
-  async loadDocument<T extends Doctype>(docId: DocID | CommitID | string, opts: LoadOpts = {}): Promise<T> {
+  async loadDocument<T extends Doctype>(streamId: StreamID | CommitID | string, opts: LoadOpts = {}): Promise<T> {
     opts = { ...DEFAULT_LOAD_OPTS, ...opts };
-    const docRef = DocRef.from(docId)
-    const base$ = await this._loadDoc(docRef.baseID, opts)
-    this._logger.verbose(`Document ${docId.toString()} successfully loaded`)
-    if (docRef instanceof CommitID) {
+    const streamRef = StreamRef.from(streamId)
+    const base$ = await this._loadDoc(streamRef.baseID, opts)
+    this._logger.verbose(`Document ${streamId.toString()} successfully loaded`)
+    if (streamRef instanceof CommitID) {
       // Here CommitID is requested, let's return document at specific commit
-      const snapshot$ = await this.repository.stateManager.rewind(base$, docRef)
+      const snapshot$ = await this.repository.stateManager.rewind(base$, streamRef)
       return doctypeFromState<T>(this.context, this._doctypeHandlers, snapshot$.value)
     } else if (opts.atTime) {
       const snapshot$ = await this.repository.stateManager.atTime(base$, opts.atTime)
@@ -542,25 +542,25 @@ class Ceramic implements CeramicApi {
    * @private
    */
   async _loadLinkedDocuments(query: MultiQuery, timeout = 7000): Promise<Record<string, Doctype>> {
-    const id = DocRef.from(query.docId)
+    const id = StreamRef.from(query.streamId)
     const pathTrie = new PathTrie()
     query.paths?.forEach(path => pathTrie.add(path))
 
     const index = {}
 
-    const walkNext = async (node: TrieNode, docId: DocID | CommitID) => {
+    const walkNext = async (node: TrieNode, streamId: StreamID | CommitID) => {
       let doc
       try {
-        doc = await promiseTimeout(timeout, this.loadDocument(docId, { atTime: query.atTime }))
+        doc = await promiseTimeout(timeout, this.loadDocument(streamId, { atTime: query.atTime }))
       } catch (e) {
         return Promise.resolve()
       }
-      const docRef = query.atTime ? docId.atCommit(doc.tip) : docId
-      index[docRef.toString()] = doc
+      const streamRef = query.atTime ? streamId.atCommit(doc.tip) : streamId
+      index[streamRef.toString()] = doc
 
       const promiseList = Object.keys(node.children).map(key => {
-        const keyDocId = doc.content[key] ? tryDocId(doc.content[key]) : null
-        if (keyDocId) return walkNext(node.children[key], keyDocId)
+        const keyStreamId = doc.content[key] ? tryStreamId(doc.content[key]) : null
+        if (keyStreamId) return walkNext(node.children[key], keyStreamId)
         return Promise.resolve()
       })
 
@@ -591,11 +591,11 @@ class Ceramic implements CeramicApi {
 
   /**
    * Load all document commits by document ID
-   * @param docId - Document ID
+   * @param streamId - Document ID
    */
-  async loadDocumentCommits(docId: string | DocID): Promise<Record<string, any>[]> {
-    const effectiveDocId = normalizeDocID(docId)
-    const doc = await this.loadDocument(effectiveDocId)
+  async loadDocumentCommits(streamId: string | StreamID): Promise<Record<string, any>[]> {
+    const effectiveStreamId = normalizeStreamID(streamId)
+    const doc = await this.loadDocument(effectiveStreamId)
     const { state } = doc
 
     const results = await Promise.all(state.log.map(async ({ cid }) => {
@@ -605,17 +605,17 @@ class Ceramic implements CeramicApi {
         value: await DoctypeUtils.convertCommitToSignedCommitContainer(record, this.ipfs)
       }
     }))
-    this._logger.verbose(`Successfully loaded ${results.length} commits for document ${docId.toString()}`)
+    this._logger.verbose(`Successfully loaded ${results.length} commits for document ${streamId.toString()}`)
     return results
   }
 
   /**
    * Load document instance
-   * @param docId - Document ID
+   * @param streamId - Document ID
    * @param opts - Initialization options
    */
-  async _loadDoc(docId: DocID, opts: LoadOpts): Promise<RunningState> {
-    return this.repository.load(docId, opts)
+  async _loadDoc(streamId: StreamID, opts: LoadOpts): Promise<RunningState> {
+    return this.repository.load(streamId, opts)
   }
 
   /**
@@ -632,8 +632,8 @@ class Ceramic implements CeramicApi {
   restoreDocuments() {
     this.repository.listPinned().then(async list => {
       let n = 0
-      await Promise.all(list.map(async docId => {
-        await this._loadDoc(DocID.fromString(docId), { sync: true })
+      await Promise.all(list.map(async streamId => {
+        await this._loadDoc(StreamID.fromString(streamId), { sync: true })
         n++;
       }))
       this._logger.verbose(`Successfully restored ${n} pinned documents`)

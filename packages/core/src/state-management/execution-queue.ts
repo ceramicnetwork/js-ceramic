@@ -1,5 +1,5 @@
 import { NamedTaskQueue } from './named-task-queue';
-import { DocID } from '@ceramicnetwork/docid';
+import { StreamID } from '@ceramicnetwork/streamid';
 import { DiagnosticsLogger } from '@ceramicnetwork/common';
 import { RunningState } from './running-state';
 
@@ -29,7 +29,7 @@ export interface ExecutionLane {
 export class ExecutionQueue {
   readonly tasks: NamedTaskQueue;
 
-  constructor(logger: DiagnosticsLogger, readonly get: (docId: DocID) => Promise<RunningState>) {
+  constructor(logger: DiagnosticsLogger, readonly get: (streamId: StreamID) => Promise<RunningState>) {
     this.tasks = new NamedTaskQueue((error) => {
       logger.err(error);
     });
@@ -38,19 +38,19 @@ export class ExecutionQueue {
   /**
    * Return execution lane for a document.
    */
-  forDocument(docId: DocID): ExecutionLane {
+  forDocument(streamId: StreamID): ExecutionLane {
     return {
       add: (task) => {
-        return this.tasks.add(docId.toString(), async () => {
-          const doc = await this.get(docId);
+        return this.tasks.add(streamId.toString(), async () => {
+          const doc = await this.get(streamId);
           if (doc) {
             await task(doc);
           }
         });
       },
       run: (task) => {
-        return this.tasks.run(docId.toString(), async () => {
-          const doc = await this.get(docId);
+        return this.tasks.run(streamId.toString(), async () => {
+          const doc = await this.get(streamId);
           if (doc) {
             return task(doc);
           }

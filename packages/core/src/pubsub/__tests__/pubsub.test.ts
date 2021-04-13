@@ -1,7 +1,7 @@
 import { LoggerProvider } from '@ceramicnetwork/common';
 import { Pubsub } from '../pubsub';
 import { MsgType, serialize } from '../pubsub-message';
-import { DocID } from '@ceramicnetwork/docid';
+import { StreamID } from '@ceramicnetwork/streamid';
 import { bufferCount, first } from 'rxjs/operators';
 import * as random from '@stablelib/random';
 import { asIpfsMessage } from './as-ipfs-message';
@@ -11,7 +11,7 @@ const TOPIC = 'test';
 const loggerProvider = new LoggerProvider();
 const pubsubLogger = loggerProvider.makeServiceLogger('pubsub');
 const diagnosticsLogger = loggerProvider.getDiagnosticsLogger();
-const FAKE_DOC_ID = DocID.fromString('kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s');
+const FAKE_DOC_ID = StreamID.fromString('kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s');
 const OUTER_PEER_ID = 'OUTER_PEER_ID';
 const PEER_ID = 'PEER_ID';
 

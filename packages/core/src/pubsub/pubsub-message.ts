@@ -1,4 +1,4 @@
-import DocID from '@ceramicnetwork/docid';
+import StreamID from '@ceramicnetwork/streamid';
 import CID from 'cids';
 import { UnreachableCaseError } from '@ceramicnetwork/common';
 import dagCBOR from 'ipld-dag-cbor';
@@ -18,14 +18,14 @@ export enum MsgType {
 
 export type UpdateMessage = {
   typ: MsgType.UPDATE;
-  doc: DocID;
+  doc: StreamID;
   tip: CID;
 };
 
 export type QueryMessage = {
   typ: MsgType.QUERY;
   id: string;
-  doc: DocID;
+  doc: StreamID;
 };
 
 export type ResponseMessage = {
@@ -47,12 +47,12 @@ function messageHash(message: any): string {
   return uint8arrays.toString(multihashes.encode(id, 'sha2-256'), 'base64url');
 }
 
-export function buildQueryMessage(docId: DocID): QueryMessage {
+export function buildQueryMessage(streamId: StreamID): QueryMessage {
   const payload = {
     typ: MsgType.QUERY as MsgType.QUERY,
-    doc: docId,
+    doc: streamId,
   };
-  const id = messageHash({...payload, doc: docId.toString()});
+  const id = messageHash({...payload, doc: streamId.toString()});
   return {
     ...payload,
     id: id,
@@ -94,7 +94,7 @@ export function deserialize(message: any): PubsubMessage {
     case MsgType.UPDATE: {
       return {
         typ: MsgType.UPDATE,
-        doc: DocID.fromString(parsed.doc),
+        doc: StreamID.fromString(parsed.doc),
         tip: new CID(parsed.tip),
       };
     }
@@ -111,7 +111,7 @@ export function deserialize(message: any): PubsubMessage {
       return {
         typ: MsgType.QUERY,
         id: parsed.id,
-        doc: DocID.fromString(parsed.doc),
+        doc: StreamID.fromString(parsed.doc),
       };
     default:
       throw new UnreachableCaseError(typ, 'Unknown message type');

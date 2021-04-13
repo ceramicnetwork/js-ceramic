@@ -160,7 +160,7 @@ describe('Ceramic integration', () => {
     await anchorUpdate(ceramic1, doc1)
 
     // Through a different ceramic instance create a new document with the same contents that will
-    // therefore resolve to the same genesis record and thus the same docId.  Make sure the new
+    // therefore resolve to the same genesis record and thus the same streamId.  Make sure the new
     // Document object can see the updates made to the first Document object since they represent
     // the same Document in the network.
     const doc3 = await TileDoctype.create(ceramic3, {test: 321}, {deterministic: true})
@@ -328,9 +328,9 @@ describe('Ceramic integration', () => {
 
     await anchorUpdate(ceramic1, doc1)
 
-    const prevCommitDocId1 = doc1.id.atCommit(doc1.state.log[3].cid)
+    const prevCommitStreamId1 = doc1.id.atCommit(doc1.state.log[3].cid)
     expect(addSpy2).not.toBeCalled()
-    const loadedDoc1 = await ceramic2.loadDocument(prevCommitDocId1)
+    const loadedDoc1 = await ceramic2.loadDocument(prevCommitStreamId1)
     expect(loadedDoc1).toBeDefined()
 
     expect(loadSpy2).toBeCalled()
@@ -369,9 +369,9 @@ describe('Ceramic integration', () => {
 
     await anchorUpdate(ceramic1, doc1)
 
-    const prevCommitDocId1 = doc1.id.atCommit(doc1.state.log[3].cid)
+    const prevCommitStreamId1 = doc1.id.atCommit(doc1.state.log[3].cid)
     expect(addSpy2).not.toBeCalled()
-    const doc2 = await ceramic2.loadDocument(prevCommitDocId1)
+    const doc2 = await ceramic2.loadDocument(prevCommitStreamId1)
     expect(doc2).toBeDefined()
 
     expect(loadSpy2).toBeCalled()

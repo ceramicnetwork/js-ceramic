@@ -1,9 +1,9 @@
 import { DocNext, DocState, Doctype } from '@ceramicnetwork/common';
-import { CommitID } from '@ceramicnetwork/docid';
+import { CommitID } from '@ceramicnetwork/streamid';
 import Utils from '../utils';
 import {TileDoctype} from "@ceramicnetwork/doctype-tile";
 
-type LoadDocumentFunc = <T extends Doctype>(docId: CommitID) => Promise<T>;
+type LoadDocumentFunc = <T extends Doctype>(streamId: CommitID) => Promise<T>;
 
 export interface StateValidation {
   validate(state: DocState | DocNext, content: any): Promise<void>;
@@ -27,12 +27,12 @@ export class RealStateValidation implements StateValidation {
   /**
    * Load schema by ID
    *
-   * @param schemaDocId - Schema document ID
+   * @param schemaStreamId - Schema document ID
    */
-  private loadSchemaById<T extends any>(schemaDocId: string): Promise<T | null> {
+  private loadSchemaById<T extends any>(schemaStreamId: string): Promise<T | null> {
     let commitId: CommitID;
     try {
-      commitId = CommitID.fromString(schemaDocId);
+      commitId = CommitID.fromString(schemaStreamId);
     } catch {
       throw new Error('Commit missing when loading schema document');
     }

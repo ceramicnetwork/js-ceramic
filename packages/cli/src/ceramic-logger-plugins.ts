@@ -74,7 +74,7 @@ export class LogToFiles {
                     else {
                         const filePrefix = loggerName.toLowerCase()
                         await LogToFiles._write(pluginState.blockedFiles, basePath, filePrefix, message)
-                        await LogToFiles._writeDocId(pluginState.blockedFiles, basePath, filePrefix, jsonMessage.message)
+                        await LogToFiles._writeStreamId(pluginState.blockedFiles, basePath, filePrefix, jsonMessage.message)
                     }
                 })
                 rawMethod(...args)
@@ -103,13 +103,13 @@ export class LogToFiles {
     }
 
     /**
-     * Writes the docId in `message` to file, if `message` contains a docId
+     * Writes the streamId in `message` to file, if `message` contains a streamId
      * @notice The write operation overwrites the existing file at `${basePath}${filePrefix}.log`
      * @param basePath Base directory for file
      * @param filePrefix Prefix of file name to write to
-     * @param jsonMessage Message containing the docId
+     * @param jsonMessage Message containing the streamId
      */
-    private static async _writeDocId (
+    private static async _writeStreamId (
         blockedFiles: BlockedFiles,
         basePath: string,
         filePrefix: string,
@@ -118,10 +118,10 @@ export class LogToFiles {
         if (!jsonMessage) {
             return
         }
-        const docId = jsonMessage.doc
-        if (docId) {
-            const filePath = `${basePath}${filePrefix}-docids.log`
-            const result = await LogToFiles._writeStream(blockedFiles, filePath, docId, 'w')
+        const streamId = jsonMessage.doc
+        if (streamId) {
+            const filePath = `${basePath}${filePrefix}-streamids.log`
+            const result = await LogToFiles._writeStream(blockedFiles, filePath, streamId, 'w')
             if (result.blocked) await LogToFiles._writeBlockedWarning(blockedFiles, basePath, filePath)
         }
     }
