@@ -182,7 +182,7 @@ class CeramicDaemon {
     app.getAsync(toApiPath('/node/healthcheck'), this.healthcheck.bind(this))
 
     app.getAsync(toApiPath('/documents/:docid'), this.stateOld.bind(this)) // Deprecated
-    app.getAsync(toApiPath('/records/:docid'), this.commits.bind(this)) // Deprecated
+    app.getAsync(toApiPath('/records/:streamid'), this.commits.bind(this)) // Deprecated
 
     if (!gateway) {
       app.postAsync(toApiPath('/streams'), this.createStreamFromGenesis.bind(this))
