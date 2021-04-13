@@ -39,7 +39,7 @@ export class StateManager {
     public conflictResolution: ConflictResolution,
     private readonly logger: DiagnosticsLogger,
     private readonly fromMemoryOrStore: (docId: DocID) => Promise<RunningState | undefined>,
-    private readonly load: (docId: DocID, opts?: LoadOpts | CreateOpts | UpdateOpts) => Promise<RunningState>,
+    private readonly load: (docId: DocID, opts?: LoadOpts | CreateOpts) => Promise<RunningState>,
   ) {}
 
   /**
@@ -134,7 +134,7 @@ export class StateManager {
    */
   update(docId: DocID, tip: CID): void {
     this.executionQ.forDocument(docId).add(async () => {
-      const state$ = await this.get(docId);
+      const state$ = await this.fromMemoryOrStore(docId);
       if (state$) await this.handleTip(state$, tip);
     });
   }

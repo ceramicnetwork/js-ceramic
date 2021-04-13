@@ -2,10 +2,10 @@ import DocID from '@ceramicnetwork/docid';
 import {
   AnchorService,
   AnchorStatus,
-  Context,
+  Context, CreateOpts,
   DocState,
   DocStateHolder,
-  LoadOpts
+  LoadOpts,
 } from '@ceramicnetwork/common';
 import { PinStore } from '../store/pin-store';
 import { NamedTaskQueue } from './named-task-queue';
@@ -82,7 +82,7 @@ export class Repository {
       deps.conflictResolution,
       this.logger,
       (docId) => this.get(docId),
-      (docId) => this.load(docId),
+      (docId, opts) => this.load(docId, opts),
     );
   }
 
@@ -127,7 +127,7 @@ export class Repository {
    * Returns a document from wherever we can get information about it.
    * Starts by checking if the document state is present in the in-memory cache, if not then then checks the state store, and finally loads the document from pubsub.
    */
-  async load(docId: DocID, opts: LoadOpts): Promise<RunningState> {
+  async load(docId: DocID, opts: LoadOpts | CreateOpts): Promise<RunningState> {
     return this.loadingQ.run(docId.toString(), async () => {
       const fromMemory = this.fromMemory(docId);
       if (fromMemory) return fromMemory;
