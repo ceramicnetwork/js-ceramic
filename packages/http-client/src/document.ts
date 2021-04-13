@@ -40,12 +40,12 @@ export class Document extends Observable<DocState> implements RunningStateLike {
   }
 
   /**
-   * Sync document state
+   * Sync stream state
    * @private
    */
   async _syncState(id?: StreamID | CommitID): Promise<void> {
     const effectiveId = id || this.id
-    const { state } = await fetchJson(this._apiUrl + '/documents/' + effectiveId.toString())
+    const { state } = await fetchJson(this._apiUrl + '/streams/' + effectiveId.toString())
     this.state$.next(DoctypeUtils.deserializeState(state))
   }
 
@@ -53,32 +53,32 @@ export class Document extends Observable<DocState> implements RunningStateLike {
     return new StreamID(this.state$.value.doctype, this.state$.value.log[0].cid)
   }
 
-  static async createFromGenesis (apiUrl: string, doctype: string, genesis: any, docOpts: CreateOpts, docSyncInterval: number): Promise<Document> {
-    const { state } = await fetchJson(apiUrl + '/documents', {
+  static async createFromGenesis (apiUrl: string, streamtype: string, genesis: any, opts: CreateOpts, docSyncInterval: number): Promise<Document> {
+    const { state } = await fetchJson(apiUrl + '/streams', {
       method: 'post',
       body: {
-        doctype,
+        streamtype,
         genesis: DoctypeUtils.serializeCommit(genesis),
-        docOpts,
+        opts,
       }
     })
     return new Document(DoctypeUtils.deserializeState(state), apiUrl, docSyncInterval)
   }
 
-  static async applyCommit(apiUrl: string, streamId: StreamID | string, commit: CeramicCommit, docOpts: UpdateOpts, docSyncInterval: number): Promise<Document> {
+  static async applyCommit(apiUrl: string, streamId: StreamID | string, commit: CeramicCommit, opts: UpdateOpts, docSyncInterval: number): Promise<Document> {
     const { state } = await fetchJson(apiUrl + '/commits', {
       method: 'post',
       body: {
         streamId: streamId.toString(),
         commit: DoctypeUtils.serializeCommit(commit),
-        docOpts,
+        opts,
       }
     })
     return new Document(DoctypeUtils.deserializeState(state), apiUrl, docSyncInterval)
   }
 
   static async load (streamId: StreamID | CommitID, apiUrl: string, docSyncInterval: number, opts: LoadOpts): Promise<Document> {
-    const url = apiUrl + '/documents/' + streamId.toString() + '?' + QueryString.stringify(opts)
+    const url = apiUrl + '/streams/' + streamId.toString() + '?' + QueryString.stringify(opts)
     const { state } = await fetchJson(url)
     return new Document(DoctypeUtils.deserializeState(state), apiUrl, docSyncInterval)
   }
