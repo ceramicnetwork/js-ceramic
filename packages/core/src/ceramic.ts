@@ -95,6 +95,7 @@ export interface CeramicConfig {
   pubsubTopic?: string;
 
   docCacheLimit?: number;
+  concurrentRequestsLimit?: number;
   cacheDocCommits?: boolean; // adds 'docCacheLimit' additional cache entries if commits can be cached as well
 
   useCentralizedPeerDiscovery?: boolean;
@@ -125,7 +126,6 @@ export interface CeramicModules {
  */
 export interface CeramicParameters {
   cacheDocumentCommits: boolean,
-  docCacheLimit: number,
   networkOptions: CeramicNetworkOptions,
   supportedChains: string[],
   validateDocs: boolean,
@@ -374,15 +374,15 @@ class Ceramic implements CeramicApi {
     }
 
     const docCacheLimit = config.docCacheLimit ?? DEFAULT_DOC_CACHE_LIMIT
+    const concurrentRequestsLimit = config.concurrentRequestsLimit ?? docCacheLimit
 
     const ipfsTopology = new IpfsTopology(ipfs, networkOptions.name, logger)
     const pinStoreFactory = new PinStoreFactory(ipfs, pinStoreOptions)
-    const repository = new Repository(docCacheLimit, logger)
+    const repository = new Repository(docCacheLimit, concurrentRequestsLimit, logger)
     const dispatcher = new Dispatcher(ipfs, networkOptions.pubsubTopic, repository, logger, pubsubLogger)
 
-    const params = {
+    const params: CeramicParameters = {
       cacheDocumentCommits: config.cacheDocCommits ?? true,
-      docCacheLimit: docCacheLimit,
       networkOptions,
       supportedChains,
       validateDocs: config.validateDocs ?? true,
@@ -483,8 +483,7 @@ class Ceramic implements CeramicApi {
    */
   async applyCommit<T extends Doctype>(docId: string | DocID, commit: CeramicCommit, opts: CreateOpts | UpdateOpts = {}): Promise<T> {
     opts = { ...DEFAULT_APPLY_COMMIT_OPTS, ...opts };
-    const state$ = await this._loadDoc(normalizeDocID(docId), opts as CreateOpts)
-    await this.repository.stateManager.applyCommit(state$, commit, opts)
+    const state$ = await this.repository.stateManager.applyCommit(normalizeDocID(docId), commit, opts as CreateOpts)
     return doctypeFromState<T>(this.context, this._doctypeHandlers, state$.value, this.repository.updates$)
   }
 

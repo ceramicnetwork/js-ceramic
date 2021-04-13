@@ -20,6 +20,17 @@ import { SnapshotState } from './snapshot-state';
 import { CommitID, DocID } from '@ceramicnetwork/docid';
 
 export class StateManager {
+
+  /**
+   * @param dispatcher - currently used instance of Dispatcher
+   * @param pinStore - currently used instance of PinStore
+   * @param executionQ - currently used instance of ExecutionQueue
+   * @param anchorService - currently used instance of AnchorService
+   * @param conflictResolution - currently used instance of ConflictResolution
+   * @param logger - Logger
+   * @param fromMemoryOrStore - load RunningState from in-memory cache or from state store, see `Repository#get`.
+   * @param load - `Repository#load`
+   */
   constructor(
     private readonly dispatcher: Dispatcher,
     private readonly pinStore: PinStore,
@@ -27,6 +38,8 @@ export class StateManager {
     public anchorService: AnchorService,
     public conflictResolution: ConflictResolution,
     private readonly logger: DiagnosticsLogger,
+    private readonly fromMemoryOrStore: (docId: DocID) => Promise<RunningState | undefined>,
+    private readonly load: (docId: DocID, opts?: LoadOpts | CreateOpts) => Promise<RunningState>,
   ) {}
 
   /**
@@ -93,7 +106,7 @@ export class StateManager {
     }
   }
 
-  async handleTip(state$: RunningState, cid: CID): Promise<void> {
+  private async handleTip(state$: RunningState, cid: CID): Promise<void> {
     const next = await this.conflictResolution.applyTip(state$.value, cid);
     if (next) {
       state$.next(next);
@@ -120,24 +133,27 @@ export class StateManager {
    * @private
    */
   update(docId: DocID, tip: CID): void {
-    this.executionQ.forDocument(docId).add(async (state$) => {
-      await this.handleTip(state$, tip);
+    this.executionQ.forDocument(docId).add(async () => {
+      const state$ = await this.fromMemoryOrStore(docId);
+      if (state$) await this.handleTip(state$, tip);
     });
   }
 
   /**
    * Applies commit to the existing state
    *
-   * @param state$ - Running State to update
+   * @param docId - Document ID to update
    * @param commit - Commit data
    * @param opts - Document initialization options (request anchor, wait, etc.)
    */
-  applyCommit(state$: RunningState, commit: any, opts: CreateOpts | UpdateOpts): Promise<void> {
-    return this.executionQ.forDocument(state$.id).run(async (state$) => {
+  applyCommit(docId: DocID, commit: any, opts: CreateOpts | UpdateOpts): Promise<RunningState> {
+    return this.executionQ.forDocument(docId).run(async () => {
+      const state$ = await this.load(docId, opts)
       const cid = await this.dispatcher.storeCommit(commit);
 
       await this.handleTip(state$, cid);
       await this.applyOpts(state$, opts);
+      return state$
     });
   }
 
