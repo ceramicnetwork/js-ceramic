@@ -11,7 +11,7 @@ import { CeramicApi, DoctypeUtils, LoggerConfig, LogLevel, Networks } from '@cer
 import StreamID, {CommitID} from '@ceramicnetwork/streamid'
 
 import CeramicDaemon, { CreateOpts } from './ceramic-daemon'
-import { TileDoctype } from "@ceramicnetwork/doctype-tile";
+import { TileDoctype, TileMetadataArgs } from "@ceramicnetwork/doctype-tile";
 
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import KeyDidResolver from 'key-did-resolver'
@@ -140,13 +140,17 @@ export class CeramicCliUtils {
         if (id.type != TileDoctype.DOCTYPE_ID) {
             throw new Error(`CLI does not currently support updating doctypes other than 'tile'. StreamID ${id.toString()} has doctype '${id.typeName}'`)
         }
-        const schemaId = CommitID.fromString(schemaCommitId)
         await CeramicCliUtils._runWithCeramic(async (ceramic: CeramicClient) => {
             const parsedControllers = CeramicCliUtils._parseControllers(controllers)
             const parsedContent = CeramicCliUtils._parseContent(content)
 
             const doc = await TileDoctype.load(ceramic, id)
-            await doc.update(parsedContent, { controllers: parsedControllers, schema: schemaId })
+            const metadata: TileMetadataArgs = { controllers: parsedControllers }
+            if (schemaCommitId) {
+                const schemaId = CommitID.fromString(schemaCommitId)
+                metadata.schema = schemaId
+            }
+            await doc.update(parsedContent, metadata)
 
             console.log(JSON.stringify(doc.content, null, 2))
         })

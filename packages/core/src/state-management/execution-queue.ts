@@ -1,25 +1,8 @@
 import { NamedTaskQueue } from './named-task-queue';
 import { StreamID } from '@ceramicnetwork/streamid';
 import { DiagnosticsLogger } from '@ceramicnetwork/common';
-import { RunningState } from './running-state';
-
-/**
- * Ensures tasks are executed sequentially.
- * Each task can accept currently running state.
- */
-export interface ExecutionLane {
-  /**
-   * Add task to the execution lane, and disregard its result. Fire-and-forget semantics.
-   */
-  add: (task: (state$: RunningState) => Promise<void>) => void;
-
-  /**
-   * Add task to the execution lane. Return its result in Promise.
-   * The point of `run` (as opposed to `add`) is to pass an error to the caller if it is throw inside a task.
-   * Note "fire-and-forget" comment for the `doc` method.
-   */
-  run<T>(task: (state$: RunningState) => Promise<T>): Promise<T | undefined>;
-}
+import { Semaphore } from 'await-semaphore';
+import { TaskQueueLike } from '../pubsub/task-queue';
 
 /**
  * Serialize tasks running on the same document.
@@ -28,32 +11,28 @@ export interface ExecutionLane {
  */
 export class ExecutionQueue {
   readonly tasks: NamedTaskQueue;
+  readonly semaphore: Semaphore;
 
-  constructor(logger: DiagnosticsLogger, readonly get: (streamId: StreamID) => Promise<RunningState>) {
+  constructor(concurrencyLimit: number, logger: DiagnosticsLogger) {
     this.tasks = new NamedTaskQueue((error) => {
       logger.err(error);
     });
+    this.semaphore = new Semaphore(concurrencyLimit);
   }
 
   /**
    * Return execution lane for a document.
    */
-  forDocument(streamId: StreamID): ExecutionLane {
+  forDocument(streamId: StreamID): TaskQueueLike {
     return {
       add: (task) => {
-        return this.tasks.add(streamId.toString(), async () => {
-          const doc = await this.get(streamId);
-          if (doc) {
-            await task(doc);
-          }
+        return this.tasks.add(streamId.toString(), () => {
+          return this.semaphore.use(() => task());
         });
       },
       run: (task) => {
-        return this.tasks.run(streamId.toString(), async () => {
-          const doc = await this.get(streamId);
-          if (doc) {
-            return task(doc);
-          }
+        return this.tasks.run(streamId.toString(), () => {
+          return this.semaphore.use(() => task());
         });
       },
     };

@@ -49,14 +49,13 @@
     "did-jwt": "^5.0.0",
     "did-resolver": "^3.0.1",
     "dids": "^2.0.0",
-    "events": "^3.2.0",
     "ipld-dag-cbor": "^0.17.0",
     "key-did-resolver": "^1.1.1",
     "level-ts": "^2.0.5",
     "lodash.clonedeep": "^4.5.0",
     "multihashes": "^3.1.2",
     "p-queue": "^6.6.1",
-    "rxjs": "^6.6.6",
+    "rxjs": "^6.6.7",
     "uint8arrays": "^2.0.5"
   },
   "devDependencies": {

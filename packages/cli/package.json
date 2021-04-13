@@ -79,7 +79,6 @@
     "@babel/preset-typescript": "^7.9.0",
     "@babel/register": "^7.10.5",
     "@ceramicnetwork/doctype-tile-handler": "^0.15.0-rc.1",
-    "@types/events": "^3.0.0",
     "@types/express": "^4.17.2",
     "@types/levelup": "^4.3.0",
     "@types/logfmt": "^1.2.1",
@@ -93,7 +92,7 @@
     "get-port": "^5.1.1",
     "ipfs-core": "~0.5.2",
     "jest": "^26.6.3",
-    "rxjs": "^6.6.6",
+    "rxjs": "^6.6.7",
     "tmp-promise": "^2.0.2"
   },
   "gitHead": "34eeee25597b0a60def72906c26d3afd6230aaf1"

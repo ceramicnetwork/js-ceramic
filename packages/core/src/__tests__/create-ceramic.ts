@@ -4,10 +4,10 @@ import * as uint8arrays from 'uint8arrays';
 import * as sha256 from '@stablelib/sha256';
 import tmp from 'tmp-promise';
 import { Ed25519Provider } from 'key-did-provider-ed25519';
-import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
-import KeyDidResolver from 'key-did-resolver'
-import { Resolver } from "did-resolver"
-import { DID } from 'dids'
+import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver';
+import KeyDidResolver from 'key-did-resolver';
+import { Resolver } from 'did-resolver';
+import { DID } from 'dids';
 
 export async function createCeramic(ipfs: IpfsApi, config?: CeramicConfig & { seed?: string }): Promise<Ceramic> {
   const appliedConfig = {
@@ -24,7 +24,8 @@ export async function createCeramic(ipfs: IpfsApi, config?: CeramicConfig & { se
   const keyDidResolver = KeyDidResolver.getResolver();
   const threeIdResolver = ThreeIdResolver.getResolver(ceramic);
   const resolver = new Resolver({
-    ...threeIdResolver, ...keyDidResolver,
+    ...threeIdResolver,
+    ...keyDidResolver,
   });
   const did = new DID({ provider, resolver });
   await ceramic.setDID(did);

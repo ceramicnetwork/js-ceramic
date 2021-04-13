@@ -6,8 +6,23 @@ export const noop = () => {
 
 export type Task<TaskResultType> = () => Promise<TaskResultType>;
 
+/**
+ * TaskQueue aspect.
+ */
 export interface TaskQueueLike {
+  /**
+   * Add task to the queue, and disregard its result. Fire-and-forget semantics.
+   *
+   * @param task - task to run
+   * @param onFinally - function to call when the task is finished, optional
+   */
   add(task: Task<void>, onFinally?: () => void | Promise<void>): void;
+
+  /**
+   * Add task to the queue. Return its result in Promise.
+   * The point of `run` (as opposed to `add`) is to pass an error to the caller if it is throw inside a task.
+   * Note "fire-and-forget" comment for the `add` method.
+   */
   run<T>(task: Task<T>): Promise<T>;
 }
 

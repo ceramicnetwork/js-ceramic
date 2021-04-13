@@ -2,10 +2,10 @@ import StreamID from '@ceramicnetwork/streamid';
 import {
   AnchorService,
   AnchorStatus,
-  Context,
+  Context, CreateOpts,
   DocState,
   DocStateHolder,
-  LoadOpts
+  LoadOpts,
 } from '@ceramicnetwork/common';
 import { PinStore } from '../store/pin-store';
 import { NamedTaskQueue } from './named-task-queue';
@@ -57,12 +57,17 @@ export class Repository {
    */
   stateManager: StateManager;
 
-  constructor(limit: number, private readonly logger: DiagnosticsLogger) {
+  /**
+   * @param cacheLimit - Maximum number of documents to store in memory cache.
+   * @param logger - Where we put diagnostics messages.
+   * @param concurrencyLimit - Maximum number of concurrently running tasks on the documents.
+   */
+  constructor(cacheLimit: number, concurrencyLimit: number, private readonly logger: DiagnosticsLogger) {
     this.loadingQ = new NamedTaskQueue((error) => {
       logger.err(error);
     });
-    this.executionQ = new ExecutionQueue(logger, (streamId) => this.get(streamId));
-    this.inmemory = new StateCache(limit, (state$) => state$.complete());
+    this.executionQ = new ExecutionQueue(concurrencyLimit, logger);
+    this.inmemory = new StateCache(cacheLimit, (state$) => state$.complete());
     this.updates$ = this.updates$.bind(this);
   }
 
@@ -76,6 +81,8 @@ export class Repository {
       deps.anchorService,
       deps.conflictResolution,
       this.logger,
+      (streamId) => this.get(streamId),
+      (streamId, opts) => this.load(streamId, opts),
     );
   }
 
@@ -120,7 +127,7 @@ export class Repository {
    * Returns a document from wherever we can get information about it.
    * Starts by checking if the document state is present in the in-memory cache, if not then then checks the state store, and finally loads the document from pubsub.
    */
-  async load(streamId: StreamID, opts: LoadOpts): Promise<RunningState> {
+  async load(streamId: StreamID, opts: LoadOpts | CreateOpts): Promise<RunningState> {
     return this.loadingQ.run(streamId.toString(), async () => {
       const fromMemory = this.fromMemory(streamId);
       if (fromMemory) return fromMemory;

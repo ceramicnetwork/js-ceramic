@@ -36,7 +36,7 @@
     "dids": "^2.0.0",
     "lru_map": "^0.4.1",
     "query-string": "7.0.0",
-    "rxjs": "^6.6.6"
+    "rxjs": "^6.6.7"
   },
   "devDependencies": {
     "@babel/core": "^7.9.0",

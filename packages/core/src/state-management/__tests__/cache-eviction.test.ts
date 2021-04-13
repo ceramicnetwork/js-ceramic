@@ -32,7 +32,7 @@ test('Doctype not subscribed, RunningState in cache', async () => {
   const document = await TileDoctype.create(ceramic, INITIAL);
   const state$ = await ceramic.repository.load(document.id, {});
   const updateRecord = await document.makeCommit(ceramic, UPDATED);
-  await ceramic.repository.stateManager.applyCommit(state$, updateRecord, { anchor: false, publish: false });
+  await ceramic.repository.stateManager.applyCommit(state$.id, updateRecord, { anchor: false, publish: false });
   // Doctype does not see the change
   expect(document.state.content).toEqual(INITIAL);
   expect(document.state.next).toBeUndefined();
@@ -48,7 +48,7 @@ test('Doctype not subscribed, RunningState evicted', async () => {
 
   const state2$ = await ceramic.repository.load(document.id, {});
   const updateRecord = await new TileDoctype(state$, ceramic.context).makeCommit(ceramic, UPDATED);
-  await ceramic.repository.stateManager.applyCommit(state2$, updateRecord, { anchor: false, publish: false });
+  await ceramic.repository.stateManager.applyCommit(state2$.id, updateRecord, { anchor: false, publish: false });
 
   // Doctype does not see the change
   expect(document.state.content).toEqual(INITIAL);
@@ -63,7 +63,7 @@ test('Doctype subscribed, RunningState in cache', async () => {
   document.subscribe();
   const state$ = await ceramic.repository.load(document.id, {});
   const updateRecord = await document.makeCommit(ceramic, UPDATED);
-  await ceramic.repository.stateManager.applyCommit(state$, updateRecord, { anchor: false, publish: false });
+  await ceramic.repository.stateManager.applyCommit(state$.id, updateRecord, { anchor: false, publish: false });
   // Doctype sees the change
   expect(document.state.content).toEqual(INITIAL);
   expect(document.state.next.content).toEqual(UPDATED);
@@ -81,7 +81,7 @@ test('Doctype subscribed, RunningState not evicted', async () => {
   const state2$ = await ceramic.repository.load(document.id, {});
   expect(state2$).toBe(state$);
   const updateRecord = await new TileDoctype(state$, ceramic.context).makeCommit(ceramic, UPDATED);
-  await ceramic.repository.stateManager.applyCommit(state2$, updateRecord, { anchor: false, publish: false });
+  await ceramic.repository.stateManager.applyCommit(state2$.id, updateRecord, { anchor: false, publish: false });
 
   // Doctype sees change
   expect(document.state.content).toEqual(INITIAL);
