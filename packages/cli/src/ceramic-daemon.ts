@@ -187,8 +187,8 @@ class CeramicDaemon {
     if (!gateway) {
       app.postAsync(toApiPath('/streams'), this.createStreamFromGenesis.bind(this))
       app.postAsync(toApiPath('/commits'), this.applyCommit.bind(this))
-      app.postAsync(toApiPath('/pins/:streamid'), this.pinDocument.bind(this))
-      app.deleteAsync(toApiPath('/pins/:streamid'), this.unpinDocument.bind(this))
+      app.postAsync(toApiPath('/pins/:streamid'), this.pinStream.bind(this))
+      app.deleteAsync(toApiPath('/pins/:streamid'), this.unpinStream.bind(this))
 
       app.postAsync(toApiPath('/documents'), this.createDocFromGenesis.bind(this)) // Deprecated
       app.postAsync(toApiPath('/records'), this.applyCommit.bind(this)) // Deprecated
@@ -350,10 +350,9 @@ class CeramicDaemon {
   }
 
   /**
-   * Pin document
-   * // todo rename
+   * Pin stream
    */
-  async pinDocument (req: Request, res: Response): Promise<void> {
+  async pinStream (req: Request, res: Response): Promise<void> {
     const streamId = StreamID.fromString(req.params.streamid || req.params.docid)
     await this.ceramic.pin.add(streamId)
     res.json({
@@ -364,9 +363,9 @@ class CeramicDaemon {
   }
 
   /**
-   * Unpin document
+   * Unpin stream
    */
-  async unpinDocument (req: Request, res: Response): Promise<void> {
+  async unpinStream (req: Request, res: Response): Promise<void> {
     const streamId = StreamID.fromString(req.params.streamid || req.params.docid)
     await this.ceramic.pin.rm(streamId)
     res.json({
@@ -377,7 +376,7 @@ class CeramicDaemon {
   }
 
   /**
-   * List pinned documents
+   * List pinned streams
    */
   async listPinned (req: Request, res: Response): Promise<void> {
     let streamId: StreamID;
