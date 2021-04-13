@@ -67,9 +67,9 @@ const SUPPORTED_CHAINS_BY_NETWORK = {
   [Networks.INMEMORY]: ["inmemory:12345"], // Our fake in-memory anchor service chainId
 }
 
-const DEFAULT_APPLY_COMMIT_OPTS = { anchor: true, publish: true, sync: false }
-const DEFAULT_CREATE_FROM_GENESIS_OPTS = { anchor: true, publish: true, sync: true }
-const DEFAULT_LOAD_OPTS = { sync: true }
+const DEFAULT_APPLY_COMMIT_OPTS = { anchor: true, publish: true, sync: false, forceSync: false }
+const DEFAULT_CREATE_FROM_GENESIS_OPTS = { anchor: true, publish: true, sync: true, forceSync: false }
+const DEFAULT_LOAD_OPTS = { sync: true, forceSync: false }
 
 /**
  * Ceramic configuration
@@ -632,7 +632,7 @@ class Ceramic implements CeramicApi {
     this.repository.listPinned().then(async list => {
       let n = 0
       await Promise.all(list.map(async docId => {
-        await this._loadDoc(DocID.fromString(docId), { sync: true })
+        await this._loadDoc(DocID.fromString(docId), { sync: true, forceSync: true })
         n++;
       }))
       this._logger.verbose(`Successfully restored ${n} pinned documents`)

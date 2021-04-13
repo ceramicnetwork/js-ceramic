@@ -131,9 +131,8 @@ describe('Ceramic interop between multiple daemons and http clients', () => {
         // Loading the doc with sync:false should only load the initial genesis contents
         const doc2 = await TileDoctype.load(client2, doc1.id, {sync: false})
         expect(doc2.content).toEqual(initialContent)
-        // TODO uncomment when sync() is changed to always force sync
-        //await doc2.sync()
-        //expect(doc2.content).toEqual(updatedContent)
+        await doc2.sync()
+        expect(doc2.content).toEqual(updatedContent)
     })
 
     it("does sync if sync: true", async () => {

@@ -69,7 +69,7 @@ const legacyDoc = {
 const waitForAnchor = doc => new Promise(resolve => {
   console.log('waiting for anchor')
   let iid = setInterval(async () => {
-    await doc._syncState()
+    await doc._syncState(doc.id, { sync: true })
   }, 40000)
   doc.on('change', () => {
     console.log(new Date(doc.state.anchorScheduledFor))

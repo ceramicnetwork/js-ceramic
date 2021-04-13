@@ -96,14 +96,14 @@ export class Repository {
       const runningState = new RunningState(docState);
       this.add(runningState);
       const toRecover =
-        runningState.value.anchorStatus === AnchorStatus.PENDING ||
-        runningState.value.anchorStatus === AnchorStatus.PROCESSING;
+          runningState.value.anchorStatus === AnchorStatus.PENDING ||
+          runningState.value.anchorStatus === AnchorStatus.PROCESSING;
       if (toRecover) {
         this.stateManager.anchor(runningState);
       }
       return runningState;
     } else {
-      return undefined;
+      return undefined
     }
   }
 
@@ -128,11 +128,25 @@ export class Repository {
    * Starts by checking if the document state is present in the in-memory cache, if not then then checks the state store, and finally loads the document from pubsub.
    */
   async load(docId: DocID, opts: LoadOpts | CreateOpts): Promise<RunningState> {
+    if (opts.forceSync && !opts.sync) {
+      throw new Error("Cannot set 'forceSync' without also setting 'sync'")
+    }
+
     return this.loadingQ.run(docId.toString(), async () => {
       const fromMemory = this.fromMemory(docId);
-      if (fromMemory) return fromMemory;
+      if (fromMemory) {
+        if (opts.forceSync) {
+          await this.stateManager.syncGenesis(fromMemory, opts)
+        }
+        return fromMemory;
+      }
       const fromStateStore = await this.fromStateStore(docId);
-      if (fromStateStore) return fromStateStore;
+      if (fromStateStore) {
+        if (opts.forceSync) {
+          await this.stateManager.syncGenesis(fromStateStore, opts)
+        }
+        return fromStateStore;
+      }
       return this.fromNetwork(docId, opts);
     });
   }

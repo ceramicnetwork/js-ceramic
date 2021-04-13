@@ -30,9 +30,9 @@ export const DEFAULT_CLIENT_CONFIG: CeramicClientConfig = {
   docSyncInterval: 5000,
 }
 
-const DEFAULT_APPLY_COMMIT_OPTS = { anchor: true, publish: true, sync: false }
-const DEFAULT_CREATE_FROM_GENESIS_OPTS = { anchor: true, publish: true, sync: true }
-const DEFAULT_LOAD_OPTS = { sync: true }
+const DEFAULT_APPLY_COMMIT_OPTS = { anchor: true, publish: true, sync: false, forceSync: false }
+const DEFAULT_CREATE_FROM_GENESIS_OPTS = { anchor: true, publish: true, sync: true, forceSync: false }
+const DEFAULT_LOAD_OPTS = { sync: true, forceSync: false }
 
 /**
  * Ceramic client configuration
@@ -137,7 +137,7 @@ export default class CeramicClient implements CeramicApi {
     const docRef = DocRef.from(docId)
     let doc = this._docCache.get(docRef.baseID.toString())
     if (doc) {
-      await doc._syncState(docRef)
+      await doc._syncState(docRef, opts)
     } else {
       doc = await Document.load(docRef, this._apiUrl, this._config.docSyncInterval, opts)
       this._docCache.set(doc.id.toString(), doc)

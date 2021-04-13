@@ -19,7 +19,7 @@ export class Document extends Observable<DocState> implements RunningStateLike {
 
   constructor (initial: DocState, private _apiUrl: string, docSyncInterval: number) {
     super(subscriber => {
-      const periodicUpdates = timer(0, docSyncInterval).pipe(throttle(() => this._syncState())).subscribe();
+      const periodicUpdates = timer(0, docSyncInterval).pipe(throttle(() => this._syncState(this.id, { sync: true }))).subscribe();
       this.state$.subscribe(subscriber).add(() => {
         periodicUpdates.unsubscribe();
       })
@@ -43,9 +43,8 @@ export class Document extends Observable<DocState> implements RunningStateLike {
    * Sync document state
    * @private
    */
-  async _syncState(id?: DocID | CommitID): Promise<void> {
-    const effectiveId = id || this.id
-    const { state } = await fetchJson(this._apiUrl + '/documents/' + effectiveId.toString())
+  async _syncState(id: DocID | CommitID, opts: LoadOpts): Promise<void> {
+    const state = await Document._load(id, this._apiUrl, opts)
     this.state$.next(DoctypeUtils.deserializeState(state))
   }
 
@@ -77,9 +76,14 @@ export class Document extends Observable<DocState> implements RunningStateLike {
     return new Document(DoctypeUtils.deserializeState(state), apiUrl, docSyncInterval)
   }
 
-  static async load (docId: DocID | CommitID, apiUrl: string, docSyncInterval: number, opts: LoadOpts): Promise<Document> {
+  private static async _load(docId: DocID | CommitID, apiUrl: string, opts: LoadOpts): Promise<DocState> {
     const url = apiUrl + '/documents/' + docId.toString() + '?' + QueryString.stringify(opts)
     const { state } = await fetchJson(url)
+    return state
+  }
+
+  static async load (docId: DocID | CommitID, apiUrl: string, docSyncInterval: number, opts: LoadOpts): Promise<Document> {
+    const state = await Document._load(docId, apiUrl, opts)
     return new Document(DoctypeUtils.deserializeState(state), apiUrl, docSyncInterval)
   }
 

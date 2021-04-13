@@ -33,7 +33,7 @@ export interface TileMetadataArgs {
   deterministic?: boolean
 }
 
-const DEFAULT_LOAD_OPTS = { sync: true }
+const DEFAULT_LOAD_OPTS = { sync: true, forceSync: false }
 const DEFAULT_UPDATE_OPTS = { anchor: true, publish: true }
 
 /**

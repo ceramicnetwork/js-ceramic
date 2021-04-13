@@ -1,10 +1,20 @@
-
 interface BasicLoadOpts {
     /**
      * Whether or not to wait a short period of time to hear about new tips for the document after
      * performing the operation.
      */
     sync?: boolean
+
+    /**
+     * How long to wait for a response from pubsub when syncing a document.
+     */
+    syncTimeout?: number
+
+    /**
+     * Setting this to true means we will always sync the current tip from pubsub even if we have
+     * a version of the stream state stored in cache or in the state store for pinned streams.
+     */
+    forceSync?: boolean
 }
 
 /**

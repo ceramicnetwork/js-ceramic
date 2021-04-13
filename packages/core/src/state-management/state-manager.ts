@@ -19,6 +19,8 @@ import { empty, of, Subscription } from 'rxjs';
 import { SnapshotState } from './snapshot-state';
 import { CommitID, DocID } from '@ceramicnetwork/docid';
 
+const DEFAULT_SYNC_TIMEOUT = 3000
+
 export class StateManager {
 
   /**
@@ -95,14 +97,17 @@ export class StateManager {
     if (publish) {
       this.publishTip(state$);
     }
-    const tip$ = this.dispatcher.messageBus.queryNetwork(state$.id);
     if (sync) {
-      const tip = await tip$.pipe(timeoutWith(3000, of(undefined))).toPromise();
+      const tip$ = this.dispatcher.messageBus.queryNetwork(state$.id);
+
+      const syncTimeout = (opts as LoadOpts).syncTimeout != undefined ? (opts as LoadOpts).syncTimeout : DEFAULT_SYNC_TIMEOUT
+      if (syncTimeout == 0) { // timeout of zero means don't wait for the response at all
+        return
+      }
+      const tip = await tip$.pipe(timeoutWith(syncTimeout, of(undefined))).toPromise();
       if (tip) {
         await this.handleTip(state$, tip);
       }
-    } else {
-      state$.add(tip$.subscribe());
     }
   }
 
