@@ -1,0 +1,134 @@
+(node:182562) V8: /home/spencer/js-ceramic4/node_modules/ipld-dag-cbor/node_modules/borc/src/decoder.asm.js:3 Linking failure in asm.js: Unexpected stdlib member
+(Use `node --trace-warnings ...` to show where the warning was created)
+  console.log
+    generating 2048-bit (rsa only) RSA keypair...
+
+      at createPeerId (../../node_modules/ipfs-core/src/components/init.js:312:5)
+          at async Promise.all (index 0)
+
+  console.log
+    generating 2048-bit (rsa only) RSA keypair...
+
+      at createPeerId (../../node_modules/ipfs-core/src/components/init.js:312:5)
+          at async Promise.all (index 1)
+
+  console.log
+    generating 2048-bit (rsa only) RSA keypair...
+
+      at createPeerId (../../node_modules/ipfs-core/src/components/init.js:312:5)
+          at async Promise.all (index 2)
+
+  console.log
+    to get started, enter:
+
+      at initAssets (../../node_modules/ipfs-core/src/runtime/init-assets-nodejs.js:13:3)
+          at async Promise.all (index 0)
+
+  console.log
+    	jsipfs cat /ipfs/QmfGBRT6BbWJd7yUc2uYdaUZJBbnEFvTqehPFoSMQ6wgdr/readme
+
+      at initAssets (../../node_modules/ipfs-core/src/runtime/init-assets-nodejs.js:14:3)
+          at async Promise.all (index 0)
+
+  console.log
+    to get started, enter:
+
+      at initAssets (../../node_modules/ipfs-core/src/runtime/init-assets-nodejs.js:13:3)
+          at async Promise.all (index 2)
+
+  console.log
+    	jsipfs cat /ipfs/QmfGBRT6BbWJd7yUc2uYdaUZJBbnEFvTqehPFoSMQ6wgdr/readme
+
+      at initAssets (../../node_modules/ipfs-core/src/runtime/init-assets-nodejs.js:14:3)
+          at async Promise.all (index 2)
+
+  console.log
+    to get started, enter:
+
+      at initAssets (../../node_modules/ipfs-core/src/runtime/init-assets-nodejs.js:13:3)
+          at async Promise.all (index 1)
+
+  console.log
+    	jsipfs cat /ipfs/QmfGBRT6BbWJd7yUc2uYdaUZJBbnEFvTqehPFoSMQ6wgdr/readme
+
+      at initAssets (../../node_modules/ipfs-core/src/runtime/init-assets-nodejs.js:14:3)
+          at async Promise.all (index 1)
+
+  console.log
+    Swarm listening on /ip4/127.0.0.1/tcp/34501/p2p/QmfDuHaCE2WYZf5riXCLCRLbKJUGnM91Ec6hMvUqQdhWnd
+
+      at ../../node_modules/ipfs-core/src/components/start.js:96:56
+          at Array.forEach (<anonymous>)
+          at async Promise.all (index 0)
+
+  console.log
+    Swarm listening on /ip4/127.0.0.1/tcp/38629/p2p/QmQrEmH6RmuyB2LHLXqomKAM4aFXui9Gca79DURz7krd7V
+
+      at ../../node_modules/ipfs-core/src/components/start.js:96:56
+          at Array.forEach (<anonymous>)
+          at async Promise.all (index 2)
+
+  console.log
+    Swarm listening on /ip4/127.0.0.1/tcp/33883/p2p/QmQ3gXBhUgQ2g3oLGB1N8MzkYWXLmHLiyLdftcBGMJ4A6Y
+
+      at ../../node_modules/ipfs-core/src/components/start.js:96:56
+          at Array.forEach (<anonymous>)
+          at async Promise.all (index 1)
+
+  console.log
+    [35mStarting Ceramic node at version 0.20.0-rc.7 with config: [39m
+    [35m{[39m
+    [35m  "stateStoreDirectory": "/tmp/tmp-18256254BYQj6egtwr",[39m
+    [35m  "anchorOnRequest": false,[39m
+    [35m  "docCacheLimit": 100,[39m
+    [35m  "cacheDocCommits": true,[39m
+    [35m  "restoreDocuments": false,[39m
+    [35m  "pubsubTopic": "/ceramic/inmemory/test"[39m
+    [35m}[39m
+
+      at Function.Object.<anonymous>.Logger.PrintLog (../../node_modules/@overnightjs/logger/lib/Logger.js:173:21)
+
+  console.log
+    [35mConnecting to ceramic network 'inmemory' using pubsub topic '/ceramic/inmemory/test' and connecting to anchor service '<inmemory>' with supported anchor chains ['inmemory:12345'][39m
+
+      at Function.Object.<anonymous>.Logger.PrintLog (../../node_modules/@overnightjs/logger/lib/Logger.js:173:21)
+
+  console.log
+    [35mNow authenticated as DID did:key:z6MkjKeH8SgVAYCvTBoyxx7uRJFGM2a9HUeFwfJfd6ctuA3X[39m
+
+      at Function.Object.<anonymous>.Logger.PrintLog (../../node_modules/@overnightjs/logger/lib/Logger.js:173:21)
+
+PASS src/__tests__/ceramic.test.ts (6.594 s)
+  Ceramic integration
+    ✓ start up then immediately shut down ceramic node (4204 ms)
+    ○ skipped can create Ceramic instance on default network
+    ○ skipped can create Ceramic instance explicitly on inmemory network
+    ○ skipped cannot create Ceramic instance on network not supported by our anchor service
+    ○ skipped cannot create Ceramic instance on invalid network
+    ○ skipped can propagate update across two connected nodes
+    ○ skipped won't propagate update across two disconnected nodes
+    ○ skipped can propagate update across nodes with common connection
+    ○ skipped can propagate multiple update across nodes with common connection
+    ○ skipped can apply existing records successfully
+    ○ skipped can utilize doc commit cache
+    ○ skipped cannot utilize disabled doc commit cache
+    ○ skipped validates schema on doc change
+
+Test Suites: 1 passed, 1 total
+Tests:       12 skipped, 1 passed, 13 total
+Snapshots:   0 total
+Time:        6.614 s, estimated 7 s
+Ran all test suites matching /ceramic.test.ts/i.
+  console.log
+    [35mClosing Ceramic instance[39m
+
+      at Function.Object.<anonymous>.Logger.PrintLog (../../node_modules/@overnightjs/logger/lib/Logger.js:173:21)
+
+  console.log
+    [35mCeramic instance closed successfully[39m
+
+      at Function.Object.<anonymous>.Logger.PrintLog (../../node_modules/@overnightjs/logger/lib/Logger.js:173:21)
+
+Jest did not exit one second after the test run has completed.
+
+This usually means that there are asynchronous operations that weren't stopped in your tests. Consider running Jest with `--detectOpenHandles` to troubleshoot this issue.

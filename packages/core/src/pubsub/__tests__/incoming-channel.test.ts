@@ -4,10 +4,10 @@ import { IncomingChannel, filterExternal } from '../incoming-channel';
 import { delay } from './delay';
 import { asIpfsMessage } from './as-ipfs-message';
 import { MsgType } from '../pubsub-message';
-import { DocID } from '@ceramicnetwork/docid';
+import { StreamID } from '@ceramicnetwork/streamid';
 import { from } from 'rxjs';
 
-const FAKE_DOC_ID = DocID.fromString('kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s');
+const FAKE_DOC_ID = StreamID.fromString('kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s');
 
 const TOPIC = '/test';
 const loggerProvider = new LoggerProvider();

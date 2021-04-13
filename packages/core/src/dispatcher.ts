@@ -1,7 +1,7 @@
 import CID from 'cids'
 import cloneDeep from 'lodash.clonedeep'
 import { DoctypeUtils, IpfsApi, UnreachableCaseError } from '@ceramicnetwork/common';
-import DocID from "@ceramicnetwork/docid";
+import StreamID from "@ceramicnetwork/streamid";
 import { DiagnosticsLogger, ServiceLogger } from "@ceramicnetwork/common";
 import { Repository } from './state-management/repository';
 import {
@@ -25,7 +25,7 @@ const IPFS_RESUBSCRIBE_INTERVAL_DELAY = 1000 * 15 // 15 sec
 export class Dispatcher {
   readonly messageBus: MessageBus
   // Set of IDs for QUERY messages we have sent to the pub/sub topic but not yet heard a
-  // corresponding RESPONSE message for. Maps the query ID to the primary DocID we were querying for.
+  // corresponding RESPONSE message for. Maps the query ID to the primary StreamID we were querying for.
   constructor (readonly _ipfs: IpfsApi, private readonly topic: string, readonly repository: Repository, private readonly _logger: DiagnosticsLogger, private readonly _pubsubLogger: ServiceLogger) {
     const pubsub = new Pubsub(_ipfs, topic, IPFS_RESUBSCRIBE_INTERVAL_DELAY, _pubsubLogger, _logger)
     this.messageBus = new MessageBus(pubsub)
@@ -91,11 +91,11 @@ export class Dispatcher {
   /**
    * Publishes Tip commit to pub/sub topic.
    *
-   * @param docId  - Document ID
+   * @param streamId  - Document ID
    * @param tip - Commit CID
    */
-  publishTip (docId: DocID, tip: CID): Subscription {
-    return this.publish({ typ: MsgType.UPDATE, doc: docId, tip: tip })
+  publishTip (streamId: StreamID, tip: CID): Subscription {
+    return this.publish({ typ: MsgType.UPDATE, doc: streamId, tip: tip })
   }
 
   /**
@@ -125,10 +125,10 @@ export class Dispatcher {
   async _handleUpdateMessage(message: UpdateMessage): Promise<void> {
     // TODO Add validation the message adheres to the proper format.
 
-    const { doc: docId, tip } = message
+    const { doc: streamId, tip } = message
     // TODO: add cache of cids here so that we don't emit event
     // multiple times if we get the message from more than one peer.
-    this.repository.stateManager.update(docId, tip)
+    this.repository.stateManager.update(streamId, tip)
     // TODO: Handle 'anchorService' if present in message
   }
 
@@ -140,15 +140,15 @@ export class Dispatcher {
   async _handleQueryMessage(message: QueryMessage): Promise<void> {
     // TODO Add validation the message adheres to the proper format.
 
-    const { doc: docId, id } = message
-    const docState = await this.repository.docState(docId)
+    const { doc: streamId, id } = message
+    const docState = await this.repository.docState(streamId)
     if (docState) {
       // TODO: Should we validate that the 'id' field is the correct hash of the rest of the message?
 
       const tip = docState.log[docState.log.length - 1].cid
       // Build RESPONSE message and send it out on the pub/sub topic
       // TODO: Handle 'paths' for multiquery support
-      const tipMap = new Map().set(docId.toString(), tip)
+      const tipMap = new Map().set(streamId.toString(), tip)
       this.publish({ typ: MsgType.RESPONSE, id, tips: tipMap})
     }
   }
@@ -160,14 +160,14 @@ export class Dispatcher {
    */
   async _handleResponseMessage(message: ResponseMessage): Promise<void> {
     const { id: queryId, tips } = message
-    const expectedDocID = this.messageBus.outstandingQueries.get(queryId)
-    if (expectedDocID) {
-      const newTip = tips.get(expectedDocID.toString())
+    const expectedStreamID = this.messageBus.outstandingQueries.get(queryId)
+    if (expectedStreamID) {
+      const newTip = tips.get(expectedStreamID.toString())
       if (!newTip) {
-        throw new Error("Response to query with ID '" + queryId + "' is missing expected new tip for docID '" +
-          expectedDocID + "'")
+        throw new Error("Response to query with ID '" + queryId + "' is missing expected new tip for StreamID '" +
+          expectedStreamID + "'")
       }
-      this.repository.stateManager.update(expectedDocID, newTip)
+      this.repository.stateManager.update(expectedStreamID, newTip)
       this.messageBus.outstandingQueries.delete(queryId)
       // TODO Iterate over all documents in 'tips' object and process the new tip for each
     }

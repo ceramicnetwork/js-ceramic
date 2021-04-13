@@ -1,7 +1,7 @@
 import Level from "level-ts";
 import { DocState, DocStateHolder, DoctypeUtils } from '@ceramicnetwork/common';
 import { StateStore } from "./state-store"
-import DocID from '@ceramicnetwork/docid'
+import StreamID from '@ceramicnetwork/streamid'
 import * as fs from 'fs'
 import path from "path";
 
@@ -41,11 +41,11 @@ export class LevelStateStore implements StateStore {
 
     /**
      * Load document state
-     * @param docId - Document ID
+     * @param streamId - Document ID
      */
-    async load(docId: DocID): Promise<DocState> {
+    async load(streamId: StreamID): Promise<DocState> {
         try {
-            const state = await this.#store.get(docId.baseID.toString())
+            const state = await this.#store.get(streamId.baseID.toString())
             if (state) {
                 return DoctypeUtils.deserializeState(state);
             } else {
@@ -61,25 +61,25 @@ export class LevelStateStore implements StateStore {
 
     /**
      * Unpin document
-     * @param docId - Document ID
+     * @param streamId - Document ID
      */
-    async remove(docId: DocID): Promise<void> {
-        await this.#store.del(docId.baseID.toString())
+    async remove(streamId: StreamID): Promise<void> {
+        await this.#store.del(streamId.baseID.toString())
     }
 
     /**
      * List pinned document
-     * @param docId - Document ID
+     * @param streamId - Document ID
      */
-    async list(docId?: DocID): Promise<string[]> {
-        let docIds: string[]
-        if (docId == null) {
+    async list(streamId?: StreamID): Promise<string[]> {
+        let streamIds: string[]
+        if (streamId == null) {
             return this.#store.stream({ keys: true, values: false })
         } else {
-            const exists = Boolean(await this.load(docId.baseID))
-            docIds = exists ? [docId.toString()] : []
+            const exists = Boolean(await this.load(streamId.baseID))
+            streamIds = exists ? [streamId.toString()] : []
         }
-        return docIds
+        return streamIds
     }
 
     /**

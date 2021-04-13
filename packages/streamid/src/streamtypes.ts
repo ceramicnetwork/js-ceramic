@@ -8,7 +8,7 @@ export function indexByName(name: string): number {
   if (typeof index !== 'undefined') {
     return index;
   } else {
-    throw new Error(`No doctype registered for name ${name}`);
+    throw new Error(`No stream type registered for name ${name}`);
   }
 }
 
@@ -17,6 +17,6 @@ export function nameByIndex(index: number): string {
   if (pair) {
     return pair[0];
   } else {
-    throw new Error(`No doctype registered for index ${index}`);
+    throw new Error(`No stream type registered for index ${index}`);
   }
 }

@@ -10,7 +10,7 @@ import {
     GenesisCommit,
 } from '@ceramicnetwork/common';
 import { AuthProvider, LinkProof } from "@ceramicnetwork/blockchain-utils-linking";
-import { CommitID, DocID, DocRef } from "@ceramicnetwork/docid";
+import { CommitID, StreamID, StreamRef } from "@ceramicnetwork/streamid";
 import { AccountID } from "caip";
 import { DID } from "dids";
 
@@ -101,19 +101,19 @@ export class Caip10LinkDoctype extends Doctype {
     }
 
     /**
-     * Loads a Caip10Link from a given DocID
+     * Loads a Caip10Link from a given StreamID
      * @param ceramic - Instance of CeramicAPI used to communicate with the Ceramic network
-     * @param docId - DocID to load.  Must correspond to a Caip10Link doctype
+     * @param streamId - StreamID to load.  Must correspond to a Caip10Link doctype
      * @param opts - Additional options
      */
-    static async load(ceramic: CeramicApi, docId: DocID | CommitID | string, opts: LoadOpts = {}): Promise<Caip10LinkDoctype> {
+    static async load(ceramic: CeramicApi, streamId: StreamID | CommitID | string, opts: LoadOpts = {}): Promise<Caip10LinkDoctype> {
         opts = { ...DEFAULT_LOAD_OPTS, ...opts };
-        const docRef = DocRef.from(docId)
-        if (docRef.type != Caip10LinkDoctype.DOCTYPE_ID) {
-            throw new Error(`DocID ${docRef.toString()} does not refer to a '${Caip10LinkDoctype.DOCTYPE_NAME}' doctype, but to a ${docRef.typeName}`)
+        const streamRef = StreamRef.from(streamId)
+        if (streamRef.type != Caip10LinkDoctype.DOCTYPE_ID) {
+            throw new Error(`StreamID ${streamRef.toString()} does not refer to a '${Caip10LinkDoctype.DOCTYPE_NAME}' doctype, but to a ${streamRef.typeName}`)
         }
 
-        return ceramic.loadDocument<Caip10LinkDoctype>(docRef, opts)
+        return ceramic.loadDocument<Caip10LinkDoctype>(streamRef, opts)
     }
 
     /**

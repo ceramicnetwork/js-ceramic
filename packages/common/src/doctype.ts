@@ -1,7 +1,7 @@
 import CID from 'cids'
 import cloneDeep from 'lodash.clonedeep'
 import type { Context } from "./context"
-import { DocID, CommitID } from '@ceramicnetwork/docid'
+import { StreamID, CommitID } from '@ceramicnetwork/streamid'
 import type { DagJWSResult, DagJWS } from 'dids'
 import { Observable } from 'rxjs'
 import { RunningStateLike } from './running-state-like';
@@ -119,7 +119,7 @@ export interface DocState {
  *
  */
 export interface DocStateHolder {
-    id: DocID;
+    id: StreamID;
     state: DocState;
 }
 
@@ -133,8 +133,8 @@ export abstract class Doctype extends Observable<DocState> implements DocStateHo
         })
     }
 
-    get id(): DocID {
-        return new DocID(this.state$.value.doctype, this.state$.value.log[0].cid)
+    get id(): StreamID {
+        return new StreamID(this.state$.value.doctype, this.state$.value.log[0].cid)
     }
 
     get doctype(): string {

@@ -1,5 +1,5 @@
 import fetch from "cross-fetch"
-import DocID from "@ceramicnetwork/docid"
+import StreamID from "@ceramicnetwork/streamid"
 
 interface FetchOpts {
   body?: any
@@ -20,8 +20,8 @@ export async function fetchJson(url: string, opts: FetchOpts = {}): Promise<any>
     return res
 }
 
-export function typeDocID(docId: DocID | string): DocID  {
-    return (typeof docId === 'string') ? DocID.fromString(docId) : docId
+export function typeStreamID(streamId: StreamID | string): StreamID  {
+    return (typeof streamId === 'string') ? StreamID.fromString(streamId) : streamId
 }
 
 export function combineURLs(baseURL, relativeURL) {

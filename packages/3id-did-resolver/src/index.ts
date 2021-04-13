@@ -12,7 +12,7 @@ import type { DocState, MultiQuery, CeramicApi } from "@ceramicnetwork/common"
 import { TileDoctype } from "@ceramicnetwork/doctype-tile"
 import LegacyResolver from './legacyResolver'
 import * as u8a from 'uint8arrays'
-import { DocID } from '@ceramicnetwork/docid'
+import { StreamID } from '@ceramicnetwork/streamid'
 import CID from 'cids'
 //import dagCBOR from 'ipld-dag-cbor'
 
@@ -128,13 +128,13 @@ function getVersionInfo(query = ''): VersionInfo {
 const legacyResolve = async (ceramic: CeramicApi, didId: string, verNfo: VersionInfo): Promise<DIDResolutionResult> => {
   const legacyPublicKeys = await LegacyResolver(didId) // can add opt to pass ceramic ipfs to resolve
 
-  // TODO - calculate docid using a CID, annoyingly not working because of dependency issues.
+  // TODO - calculate streamid using a CID, annoyingly not working because of dependency issues.
   // This would remove one request to ceramic.
   //const genesisCommit = { header: { family: '3id', controllers: [legacyPublicKeys.keyDid] }, unique: '0' }
-  //const docid = new DocID('tile', await dagCBOR.util.cid(new Uint8Array(dagCBOR.util.serialize(genesisCommit))))
+  //const streamid = new StreamID('tile', await dagCBOR.util.cid(new Uint8Array(dagCBOR.util.serialize(genesisCommit))))
   const metadata =  { controllers: [legacyPublicKeys.keyDid], family: '3id', deterministic: true }
-  const docid = (await TileDoctype.create(ceramic, null, metadata, { anchor: false, publish: false })).id
-  const didResult = await resolve(ceramic, docid.toString(), verNfo, didId)
+  const streamid = (await TileDoctype.create(ceramic, null, metadata, { anchor: false, publish: false })).id
+  const didResult = await resolve(ceramic, streamid.toString(), verNfo, didId)
   if (didResult.didDocument === null) {
     didResult.didDocument = wrapDocument(legacyPublicKeys, `did:3:${didId}`)
   }
@@ -142,15 +142,15 @@ const legacyResolve = async (ceramic: CeramicApi, didId: string, verNfo: Version
 }
 
 const resolve = async (ceramic: CeramicApi, didId: string, verNfo: VersionInfo, v03ID?: string): Promise<DIDResolutionResult> =>  {
-  const docId = DocID.fromString(didId)
+  const streamId = StreamID.fromString(didId)
   let commitId
-  const query: Array<MultiQuery> = [{ docId }]
+  const query: Array<MultiQuery> = [{ streamId }]
   if (verNfo.commit) {
-    commitId = docId.atCommit(verNfo.commit)
-    query.push({ docId: commitId })
+    commitId = streamId.atCommit(verNfo.commit)
+    query.push({ streamId: commitId })
   } else if (verNfo.timestamp) {
     query.push({
-      docId,
+      streamId,
       atTime: verNfo.timestamp
     })
   }

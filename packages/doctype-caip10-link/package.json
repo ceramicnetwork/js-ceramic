@@ -29,6 +29,7 @@
   "dependencies": {
     "@ceramicnetwork/blockchain-utils-linking": "^0.4.0-rc.0",
     "@ceramicnetwork/common": "^0.18.0-rc.0",
+    "@ceramicnetwork/streamid": "^0.5.1",
     "caip": "~0.9.2",
     "cids": "~1.1.6",
     "dids": "~2.0.0"

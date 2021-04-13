@@ -1,14 +1,14 @@
 import CID from 'cids';
 import multibase from 'multibase';
-import * as doctypes from './doctypes';
+import * as streamtypes from './streamtypes';
 import varint from 'varint';
 import uint8ArrayConcat from 'uint8arrays/concat';
 import uint8ArrayToString from 'uint8arrays/to-string';
 import { Memoize } from 'typescript-memoize';
-import { DEFAULT_BASE, DOCID_CODEC } from './constants';
+import { DEFAULT_BASE, STREAMID_CODEC } from './constants';
 import { readCid, readVarint } from './reading-bytes';
-import { DocID } from './doc-id';
-import { DocRef } from './doc-ref';
+import { StreamID } from './stream-id';
+import { StreamRef } from './stream-ref';
 
 /**
  * Parse CommitID from bytes representation.
@@ -17,19 +17,19 @@ import { DocRef } from './doc-ref';
  * @see [[CommitID#bytes]]
  */
 function fromBytes(bytes: Uint8Array): CommitID {
-  const [docCodec, docCodecRemainder] = readVarint(bytes);
-  if (docCodec !== DOCID_CODEC) throw new Error('fromBytes: invalid docid, does not include docid codec');
-  const [doctype, doctypeRemainder] = readVarint(docCodecRemainder);
-  const [base, baseRemainder] = readCid(doctypeRemainder);
+  const [streamCodec, streamCodecRemainder] = readVarint(bytes);
+  if (streamCodec !== STREAMID_CODEC) throw new Error('fromBytes: invalid streamid, does not include streamid codec');
+  const [type, streamtypeRemainder] = readVarint(streamCodecRemainder);
+  const [base, baseRemainder] = readCid(streamtypeRemainder);
   if (baseRemainder.length === 0) {
     throw new Error(`No commit information provided`);
   } else if (baseRemainder.length === 1) {
     // Zero commit
-    return new CommitID(doctype, base, baseRemainder[0]);
+    return new CommitID(type, base, baseRemainder[0]);
   } else {
     // Commit
     const [commit] = readCid(baseRemainder);
-    return new CommitID(doctype, base, commit);
+    return new CommitID(type, base, commit);
   }
 }
 
@@ -53,7 +53,7 @@ function parseCID(input: any): CID | undefined {
  * If `commit` is 0, `'0'`, `null` or is equal to `genesis` CID, result is `null`.
  * Otherwise, return commit as proper CID.
  *
- * @param genesis - genesis CID for document
+ * @param genesis - genesis CID for stream
  * @param commit - representation of commit, be it CID, 0, `'0'`, `null`
  */
 function parseCommit(genesis: CID, commit: CID | string | number = null): CID | null {
@@ -87,22 +87,22 @@ function fromString(input: string): CommitID {
   if (protocolFree.includes('commit')) {
     const commit = protocolFree.split('?')[1].split('=')[1];
     const base = protocolFree.split('?')[0];
-    return DocID.fromString(base).atCommit(commit);
+    return StreamID.fromString(base).atCommit(commit);
   } else {
     return fromBytes(multibase.decode(protocolFree));
   }
 }
 
-const TAG = Symbol.for('@ceramicnetwork/docid/CommitID');
+const TAG = Symbol.for('@ceramicnetwork/streamid/CommitID');
 
 /**
- * Commit identifier, includes doctype, genesis CID, commit CID.
- * Encoded as '<multibase-prefix><multicodec-docid><doctype><genesis-cid-bytes><commit-cid-bytes>'
+ * Commit identifier, includes type, genesis CID, commit CID.
+ * Encoded as '<multibase-prefix><multicodec-streamid><type><genesis-cid-bytes><commit-cid-bytes>'
  */
-export class CommitID implements DocRef {
+export class CommitID implements StreamRef {
   protected readonly _tag = TAG;
 
-  readonly #doctype: number;
+  readonly #type: number;
   readonly #cid: CID;
   readonly #commit: CID | null; // null ≝ genesis commit
 
@@ -114,45 +114,45 @@ export class CommitID implements DocRef {
   }
 
   /**
-   * Create a new DocID.
+   * Create a new StreamID.
    *
-   * @param {string|number}      doctype
+   * @param {string|number}      stream type
    * @param {CID|string}         cid
    * @param {CID|string}         commit CID. Pass '0', 0, or omit the value as shorthand for the genesis commit.
    *
    * @example
-   * new DocID(<docType>, <CID>|<cidStr>)
-   * new DocID(<docType>, <CID>|<cidStr>, <CommitCID>|<CommitCidStr>)
+   * new StreamID(<type>, <CID>|<cidStr>)
+   * new StreamID(<type>, <CID>|<cidStr>, <CommitCID>|<CommitCidStr>)
    */
-  constructor(doctype: string | number, cid: CID | string, commit: CID | string | number = null) {
-    if (!doctype && doctype !== 0) throw new Error('constructor: doctype required');
+  constructor(type: string | number, cid: CID | string, commit: CID | string | number = null) {
+    if (!type && type !== 0) throw new Error('constructor: type required');
     if (!cid) throw new Error('constructor: cid required');
-    this.#doctype = typeof doctype === 'string' ? doctypes.indexByName(doctype) : doctype;
+    this.#type = typeof type === 'string' ? streamtypes.indexByName(type) : type;
     this.#cid = typeof cid === 'string' ? new CID(cid) : cid;
     this.#commit = parseCommit(this.#cid, commit);
   }
 
   /**
-   * Construct DocID, no commit information included
+   * Construct StreamID, no commit information included
    */
   @Memoize()
-  get baseID(): DocID {
-    return new DocID(this.#doctype, this.#cid);
+  get baseID(): StreamID {
+    return new StreamID(this.#type, this.#cid);
   }
 
   /**
-   * Doc type code
+   * Stream type code
    */
   get type(): number {
-    return this.#doctype;
+    return this.#type;
   }
 
   /**
-   * Doc type name
+   * Stream type name
    */
   @Memoize()
   get typeName(): string {
-    return doctypes.nameByIndex(this.#doctype);
+    return streamtypes.nameByIndex(this.#type);
   }
 
   /**
@@ -175,18 +175,18 @@ export class CommitID implements DocRef {
    */
   @Memoize()
   get bytes(): Uint8Array {
-    const codec = varint.encode(DOCID_CODEC);
-    const doctype = varint.encode(this.type);
+    const codec = varint.encode(STREAMID_CODEC);
+    const type = varint.encode(this.type);
 
     const commitBytes = this.#commit?.bytes || new Uint8Array([0]);
-    return uint8ArrayConcat([codec, doctype, this.cid.bytes, commitBytes]);
+    return uint8ArrayConcat([codec, type, this.cid.bytes, commitBytes]);
   }
 
   /**
-   * Construct new CommitID for the same document, but a new `commit` CID.
+   * Construct new CommitID for the same stream, but a new `commit` CID.
    */
   atCommit(commit: CID | string | number): CommitID {
-    return new CommitID(this.#doctype, this.#cid, commit);
+    return new CommitID(this.#type, this.#cid, commit);
   }
 
   /**
@@ -205,7 +205,7 @@ export class CommitID implements DocRef {
   }
 
   /**
-   * Encode the DocID into a base36 url
+   * Encode the StreamID into a base36 url
    */
   @Memoize()
   toUrl(): string {

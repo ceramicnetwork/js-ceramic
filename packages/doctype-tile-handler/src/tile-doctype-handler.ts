@@ -104,7 +104,7 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
 
         const payload = (await context.ipfs.dag.get(commit.link, { timeout: IPFS_GET_TIMEOUT })).value
         if (!payload.id.equals(state.log[0].cid)) {
-            throw new Error(`Invalid docId ${payload.id}, expected ${state.log[0].cid}`)
+            throw new Error(`Invalid streamId ${payload.id}, expected ${state.log[0].cid}`)
         }
 
         if (payload.header.controllers && payload.header.controllers.length !== 1) {

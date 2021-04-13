@@ -203,7 +203,7 @@ test('handles basic conflict', async () => {
   const doc1 = await TileDoctype.create(ceramic, INITIAL_CONTENT);
   doc1.subscribe();
   const docState1 = await ceramic.repository.load(doc1.id, {});
-  const docId = doc1.id;
+  const streamId = doc1.id;
   await anchorUpdate(ceramic, doc1);
   const tipPreUpdate = doc1.tip;
 
@@ -217,7 +217,7 @@ test('handles basic conflict', async () => {
   // create invalid change that happened after main change
 
   const initialState = await ceramic.repository.stateManager
-    .rewind(docState1, docId.atCommit(docId.cid))
+    .rewind(docState1, streamId.atCommit(streamId.cid))
     .then((doc) => doc.state);
   const state$ = new RunningState(initialState);
   ceramic.repository.add(state$);
@@ -244,12 +244,12 @@ test('handles basic conflict', async () => {
   expect(doc1.content).toEqual(newContent);
 
   // Loading valid commit works
-  const docAtValidCommit = await ceramic.repository.stateManager.rewind(docState1, docId.atCommit(tipValidUpdate));
+  const docAtValidCommit = await ceramic.repository.stateManager.rewind(docState1, streamId.atCommit(tipValidUpdate));
   expect(docAtValidCommit.value.content).toEqual(newContent);
 
   // Loading invalid commit fails
-  await expect(ceramic.repository.stateManager.rewind(docState1, docId.atCommit(tipInvalidUpdate))).rejects.toThrow(
-    `Requested commit CID ${tipInvalidUpdate.toString()} not found in the log for document ${docId.toString()}`,
+  await expect(ceramic.repository.stateManager.rewind(docState1, streamId.atCommit(tipInvalidUpdate))).rejects.toThrow(
+    `Requested commit CID ${tipInvalidUpdate.toString()} not found in the log for document ${streamId.toString()}`,
   );
 }, 10000);
 

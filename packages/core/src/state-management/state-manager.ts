@@ -17,7 +17,7 @@ import CID from 'cids';
 import { catchError, concatMap, timeoutWith } from 'rxjs/operators';
 import { empty, of, Subscription } from 'rxjs';
 import { SnapshotState } from './snapshot-state';
-import { CommitID, DocID } from '@ceramicnetwork/docid';
+import { CommitID, StreamID } from '@ceramicnetwork/streamid';
 
 const DEFAULT_SYNC_TIMEOUT = 3000
 
@@ -40,8 +40,8 @@ export class StateManager {
     public anchorService: AnchorService,
     public conflictResolution: ConflictResolution,
     private readonly logger: DiagnosticsLogger,
-    private readonly fromMemoryOrStore: (docId: DocID) => Promise<RunningState | undefined>,
-    private readonly load: (docId: DocID, opts?: LoadOpts | CreateOpts) => Promise<RunningState>,
+    private readonly fromMemoryOrStore: (streamId: StreamID) => Promise<RunningState | undefined>,
+    private readonly load: (streamId: StreamID, opts?: LoadOpts | CreateOpts) => Promise<RunningState>,
   ) {}
 
   /**
@@ -130,13 +130,13 @@ export class StateManager {
   /**
    * Handles update from the PubSub topic
    *
-   * @param docId
+   * @param streamId
    * @param tip - Document Tip CID
    * @private
    */
-  update(docId: DocID, tip: CID): void {
-    this.executionQ.forDocument(docId).add(async () => {
-      const state$ = await this.fromMemoryOrStore(docId);
+  update(streamId: StreamID, tip: CID): void {
+    this.executionQ.forDocument(streamId).add(async () => {
+      const state$ = await this.fromMemoryOrStore(streamId);
       if (state$) await this.handleTip(state$, tip);
     });
   }
@@ -144,13 +144,13 @@ export class StateManager {
   /**
    * Applies commit to the existing state
    *
-   * @param docId - Document ID to update
+   * @param streamId - Document ID to update
    * @param commit - Commit data
    * @param opts - Document initialization options (request anchor, wait, etc.)
    */
-  applyCommit(docId: DocID, commit: any, opts: CreateOpts | UpdateOpts): Promise<RunningState> {
-    return this.executionQ.forDocument(docId).run(async () => {
-      const state$ = await this.load(docId, opts)
+  applyCommit(streamId: StreamID, commit: any, opts: CreateOpts | UpdateOpts): Promise<RunningState> {
+    return this.executionQ.forDocument(streamId).run(async () => {
+      const state$ = await this.load(streamId, opts)
       const cid = await this.dispatcher.storeCommit(commit);
 
       await this.handleTip(state$, cid);
