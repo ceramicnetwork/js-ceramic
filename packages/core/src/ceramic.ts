@@ -9,10 +9,6 @@ import {
   DiagnosticsLogger,
   DoctypeUtils,
   LoadOpts,
-  LogLevel,
-  LoggerProviderOld,
-  LoggerPlugin,
-  LoggerPluginOptions,
   AnchorService,
   CeramicApi,
   CeramicCommit,
@@ -79,27 +75,21 @@ export interface CeramicConfig {
   anchorServiceUrl?: string;
   stateStoreDirectory?: string;
 
-  validateDocs?: boolean;
+  validateStreams?: boolean;
   ipfsPinningEndpoints?: string[];
   pinningBackends?: PinningBackendStatic[];
 
   loggerProvider?: LoggerProvider;
-  logToFilesPlugin?: {
-    plugin: LoggerPlugin;
-    state: any;
-    options: LoggerPluginOptions;
-  };
   gateway?: boolean;
 
   networkName?: string;
   pubsubTopic?: string;
 
-  docCacheLimit?: number;
+  streamCacheLimit?: number;
   concurrentRequestsLimit?: number;
-  cacheDocCommits?: boolean; // adds 'docCacheLimit' additional cache entries if commits can be cached as well
 
   useCentralizedPeerDiscovery?: boolean;
-  restoreDocuments?: boolean;
+  restoreStreams?: boolean;
 
   [index: string]: any; // allow arbitrary properties
 }
@@ -125,10 +115,9 @@ export interface CeramicModules {
  * `CeramicConfig` via `Ceramic.create()`.
  */
 export interface CeramicParameters {
-  cacheDocumentCommits: boolean,
   networkOptions: CeramicNetworkOptions,
   supportedChains: string[],
-  validateDocs: boolean,
+  validateStreams: boolean,
 }
 
 
@@ -178,7 +167,7 @@ class Ceramic implements CeramicApi {
   private readonly _logger: DiagnosticsLogger
   private readonly _networkOptions: CeramicNetworkOptions
   private readonly _supportedChains: Array<string>
-  private readonly _validateDocs: boolean
+  private readonly _validateStreams: boolean
   private readonly stateValidation: StateValidation
 
   constructor (modules: CeramicModules, params: CeramicParameters) {
@@ -189,7 +178,7 @@ class Ceramic implements CeramicApi {
     this.dispatcher = modules.dispatcher
     this.pin = this._buildPinApi()
 
-    this._validateDocs = params.validateDocs
+    this._validateStreams = params.validateStreams
     this._networkOptions = params.networkOptions
     this._supportedChains = params.supportedChains
 
@@ -205,7 +194,7 @@ class Ceramic implements CeramicApi {
 
     // This initialization block below has to be redone.
     // Things below should be passed here as `modules` variable.
-    this.stateValidation = this._validateDocs ? new RealStateValidation(this.loadDocument.bind(this)) : new FauxStateValidation()
+    this.stateValidation = this._validateStreams ? new RealStateValidation(this.loadDocument.bind(this)) : new FauxStateValidation()
     const conflictResolution = new ConflictResolution(modules.anchorService, this.stateValidation, this.dispatcher, this.context, this._doctypeHandlers)
     const pinStore = modules.pinStoreFactory.createPinStore()
     this.repository.setDeps({
@@ -335,21 +324,6 @@ class Ceramic implements CeramicApi {
     const logger = loggerProvider.getDiagnosticsLogger()
     const pubsubLogger = loggerProvider.makeServiceLogger("pubsub")
 
-    // todo remove all code related to LoggerProviderOld
-    LoggerProviderOld.init({
-      level: loggerProvider.config.logLevel <= LogLevel.debug ? 'debug' : 'silent',
-      component: config.gateway? 'GATEWAY' : 'NODE',
-    })
-
-    if (config.logToFiles) {
-      LoggerProviderOld.addPlugin(
-        config.logToFilesPlugin.plugin,
-        config.logToFilesPlugin.state,
-        null,
-        config.logToFilesPlugin.options
-      )
-    }
-
     logger.imp(`Starting Ceramic node at version ${packageJson.version} with config: \n${JSON.stringify(this._cleanupConfigForLogging(config), null, 2)}`)
 
     const networkOptions = Ceramic._generateNetworkOptions(config)
@@ -373,19 +347,18 @@ class Ceramic implements CeramicApi {
       pinningBackends: config.pinningBackends,
     }
 
-    const docCacheLimit = config.docCacheLimit ?? DEFAULT_DOC_CACHE_LIMIT
-    const concurrentRequestsLimit = config.concurrentRequestsLimit ?? docCacheLimit
+    const streamCacheLimit = config.streamCacheLimit ?? DEFAULT_DOC_CACHE_LIMIT
+    const concurrentRequestsLimit = config.concurrentRequestsLimit ?? streamCacheLimit
 
     const ipfsTopology = new IpfsTopology(ipfs, networkOptions.name, logger)
     const pinStoreFactory = new PinStoreFactory(ipfs, pinStoreOptions)
-    const repository = new Repository(docCacheLimit, concurrentRequestsLimit, logger)
+    const repository = new Repository(streamCacheLimit, concurrentRequestsLimit, logger)
     const dispatcher = new Dispatcher(ipfs, networkOptions.pubsubTopic, repository, logger, pubsubLogger)
 
     const params: CeramicParameters = {
-      cacheDocumentCommits: config.cacheDocCommits ?? true,
       networkOptions,
       supportedChains,
-      validateDocs: config.validateDocs ?? true,
+      validateStreams: config.validateStreams ?? true,
     }
 
     const modules = {
@@ -414,7 +387,6 @@ class Ceramic implements CeramicApi {
     const loggerConfig = config.loggerProvider?.config
 
     delete configCopy.pinningBackends
-    delete configCopy.logToFilesPlugin
     delete configCopy.loggerProvider
 
     if (loggerConfig) {
@@ -435,9 +407,9 @@ class Ceramic implements CeramicApi {
     const ceramic = new Ceramic(modules, params)
 
     const doPeerDiscovery = config.useCentralizedPeerDiscovery ?? !TESTING
-    const restoreDocuments = config.restoreDocuments ?? true
+    const restoreStreams = config.restoreStreams ?? true
 
-    await ceramic._init(doPeerDiscovery, restoreDocuments)
+    await ceramic._init(doPeerDiscovery, restoreStreams)
 
     return ceramic
   }
@@ -446,15 +418,15 @@ class Ceramic implements CeramicApi {
    * Finishes initialization and startup of a Ceramic instance. This usually should not be called
    * directly - most users will prefer to call `Ceramic.create()` instead which calls this internally.
    * @param doPeerDiscovery - Controls whether we connect to the "peerlist" to manually perform IPFS peer discovery
-   * @param restoreDocuments - Controls whether we attempt to load pinned document state into memory at startup
+   * @param restoreStreams - Controls whether we attempt to load pinned stream state into memory at startup
    */
-  async _init(doPeerDiscovery: boolean, restoreDocuments: boolean): Promise<void> {
+  async _init(doPeerDiscovery: boolean, restoreStreams: boolean): Promise<void> {
     if (doPeerDiscovery) {
       await this._ipfsTopology.start()
     }
 
-    if (restoreDocuments) {
-      this.restoreDocuments()
+    if (restoreStreams) {
+      this.restoreStreams()
     }
   }
 
@@ -626,9 +598,9 @@ class Ceramic implements CeramicApi {
   }
 
   /**
-   * Load all the pinned documents, re-request PENDING or PROCESSING anchors.
+   * Load all the pinned streams, re-request PENDING or PROCESSING anchors.
    */
-  restoreDocuments() {
+  restoreStreams() {
     this.repository.listPinned().then(async list => {
       let n = 0
       await Promise.all(list.map(async streamId => {

@@ -17,9 +17,9 @@ import QueryString from 'query-string'
 export class Document extends Observable<DocState> implements RunningStateLike {
   private readonly state$: DocStateSubject;
 
-  constructor (initial: DocState, private _apiUrl: string, docSyncInterval: number) {
+  constructor (initial: DocState, private _apiUrl: string, syncInterval: number) {
     super(subscriber => {
-      const periodicUpdates = timer(0, docSyncInterval).pipe(throttle(() => this._syncState(this.id, { sync: true }))).subscribe();
+      const periodicUpdates = timer(0, syncInterval).pipe(throttle(() => this._syncState(this.id, { sync: true }))).subscribe();
       this.state$.subscribe(subscriber).add(() => {
         periodicUpdates.unsubscribe();
       })
@@ -52,7 +52,7 @@ export class Document extends Observable<DocState> implements RunningStateLike {
     return new StreamID(this.state$.value.doctype, this.state$.value.log[0].cid)
   }
 
-  static async createFromGenesis (apiUrl: string, streamtype: string, genesis: any, opts: CreateOpts, docSyncInterval: number): Promise<Document> {
+  static async createFromGenesis (apiUrl: string, streamtype: string, genesis: any, opts: CreateOpts, syncInterval: number): Promise<Document> {
     const { state } = await fetchJson(apiUrl + '/streams', {
       method: 'post',
       body: {
@@ -61,10 +61,10 @@ export class Document extends Observable<DocState> implements RunningStateLike {
         opts,
       }
     })
-    return new Document(DoctypeUtils.deserializeState(state), apiUrl, docSyncInterval)
+    return new Document(DoctypeUtils.deserializeState(state), apiUrl, syncInterval)
   }
 
-  static async applyCommit(apiUrl: string, streamId: StreamID | string, commit: CeramicCommit, opts: UpdateOpts, docSyncInterval: number): Promise<Document> {
+  static async applyCommit(apiUrl: string, streamId: StreamID | string, commit: CeramicCommit, opts: UpdateOpts, syncInterval: number): Promise<Document> {
     const { state } = await fetchJson(apiUrl + '/commits', {
       method: 'post',
       body: {
@@ -73,7 +73,7 @@ export class Document extends Observable<DocState> implements RunningStateLike {
         opts,
       }
     })
-    return new Document(DoctypeUtils.deserializeState(state), apiUrl, docSyncInterval)
+    return new Document(DoctypeUtils.deserializeState(state), apiUrl, syncInterval)
   }
 
   private static async _load(streamId: StreamID | CommitID, apiUrl: string, opts: LoadOpts): Promise<DocState> {
@@ -82,9 +82,9 @@ export class Document extends Observable<DocState> implements RunningStateLike {
     return state
   }
 
-  static async load (streamId: StreamID | CommitID, apiUrl: string, docSyncInterval: number, opts: LoadOpts): Promise<Document> {
+  static async load (streamId: StreamID | CommitID, apiUrl: string, syncInterval: number, opts: LoadOpts): Promise<Document> {
     const state = await Document._load(streamId, apiUrl, opts)
-    return new Document(DoctypeUtils.deserializeState(state), apiUrl, docSyncInterval)
+    return new Document(DoctypeUtils.deserializeState(state), apiUrl, syncInterval)
   }
 
   static async loadDocumentCommits (streamId: StreamID, apiUrl: string): Promise<Array<Record<string, CeramicCommit>>> {

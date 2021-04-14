@@ -13,8 +13,8 @@ export async function createCeramic(ipfs: IpfsApi, config?: CeramicConfig & { se
   const appliedConfig = {
     stateStoreDirectory: await tmp.tmpName(),
     anchorOnRequest: false,
-    docCacheLimit: 100,
-    restoreDocuments: false,
+    streamCacheLimit: 100,
+    restoreStreams: false,
     pubsubTopic: '/ceramic/inmemory/test', // necessary so Ceramic instances can talk to each other
     ...config,
   };

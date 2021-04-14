@@ -35,7 +35,7 @@ const createCeramic = async (ipfs: IpfsApi, anchorManual: boolean): Promise<Cera
   const ceramic = await Ceramic.create(ipfs, {
     stateStoreDirectory: await tmp.tmpName(),
     anchorOnRequest: !anchorManual,
-    restoreDocuments: false,
+    restoreStreams: false,
     pubsubTopic: "/ceramic/inmemory/test" // necessary so Ceramic instances can talk to each other
   })
   await ceramic.setDID(makeDID(seed, ceramic))

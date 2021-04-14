@@ -1,62 +1,20 @@
 import Ceramic from '@ceramicnetwork/core'
 import CeramicClient from '@ceramicnetwork/http-client'
-import { Ed25519Provider } from 'key-did-provider-ed25519'
-import tmp from 'tmp-promise'
-import IPFS from 'ipfs-core'
+import * as tmp from 'tmp-promise'
 import CeramicDaemon from '../ceramic-daemon'
-import { CeramicApi, IpfsApi } from '@ceramicnetwork/common';
+import { IpfsApi } from '@ceramicnetwork/common';
 import { TileDoctypeHandler } from "@ceramicnetwork/doctype-tile-handler"
 import { TileDoctype } from "@ceramicnetwork/doctype-tile";
-import * as u8a from 'uint8arrays'
-import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
-import KeyDidResolver from 'key-did-resolver'
-import { Resolver } from "did-resolver"
-import { DID } from 'dids'
-
-import dagJose from 'dag-jose'
-import { sha256 } from 'multiformats/hashes/sha2'
-import legacy from 'multiformats/legacy'
 import getPort from "get-port";
+import { createIPFS } from './create-ipfs';
+import { makeDID } from './make-did';
 
-const seed = u8a.fromString('6e34b2e1a9624113d81ece8a8a22e6e97f0e145c25c1d4d2d0e62753b4060c83', 'base16')
+const seed = 'SEED'
 const TOPIC = '/ceramic'
 
 async function swarmConnect(a: IpfsApi, b: IpfsApi) {
     const addressB = (await b.id()).addresses[0].toString();
     await a.swarm.connect(addressB);
-}
-
-/**
- * Create an IPFS instance
- */
-const createIPFS = async (path: string): Promise<IpfsApi> => {
-    const port = await getPort()
-    const hasher = {}
-    hasher[sha256.code] = sha256
-    const format = legacy(dagJose, {hashes: hasher})
-
-    const config = {
-        ipld: { formats: [format] },
-        repo: `${path}/ipfs${port}/`,
-        config: {
-            Addresses: { Swarm: [`/ip4/127.0.0.1/tcp/${port}`] },
-            Discovery: { DNS: { Enabled: false }, webRTCStar: { Enabled: false }},
-            Bootstrap: []
-        }
-    }
-
-    return IPFS.create(config)
-}
-
-const makeDID = function(seed: Uint8Array, ceramic: CeramicApi): DID {
-    const provider = new Ed25519Provider(seed)
-
-    const keyDidResolver = KeyDidResolver.getResolver()
-    const threeIdResolver = ThreeIdResolver.getResolver(ceramic)
-    const resolver = new Resolver({
-        ...threeIdResolver, ...keyDidResolver,
-    })
-    return new DID({ provider, resolver })
 }
 
 const makeCeramicCore = async(ipfs: IpfsApi, stateStoreDirectory: string): Promise<Ceramic> => {
@@ -74,8 +32,8 @@ describe('Ceramic interop between multiple daemons and http clients', () => {
 
     let ipfs1: IpfsApi
     let ipfs2: IpfsApi
-    let tmpFolder1: any
-    let tmpFolder2: any
+    let tmpFolder1: tmp.DirectoryResult
+    let tmpFolder2: tmp.DirectoryResult
     let core1: Ceramic
     let core2: Ceramic
     let daemon1: CeramicDaemon
@@ -95,7 +53,7 @@ describe('Ceramic interop between multiple daemons and http clients', () => {
 
     afterAll(async () => {
         await Promise.all([ipfs1.stop(), ipfs2.stop()])
-        await Promise.all([tmpFolder1.clean(), tmpFolder2.cleanup()])
+        await Promise.all([tmpFolder1.cleanup(), tmpFolder2.cleanup()])
     })
 
     beforeEach(async () => {
@@ -104,14 +62,16 @@ describe('Ceramic interop between multiple daemons and http clients', () => {
         const port1 = await getPort()
         const port2 = await getPort()
         daemon1 = new CeramicDaemon(core1, { port: port1 })
+        await daemon1.listen()
         daemon2 = new CeramicDaemon(core2, { port: port2 })
-        client1 = new CeramicClient('http://localhost:' + port1, { docSyncInterval: 500 })
-        client2 = new CeramicClient('http://localhost:' + port2, { docSyncInterval: 500 })
+        await daemon2.listen()
+        client1 = new CeramicClient('http://localhost:' + port1, { syncInterval: 500 })
+        client2 = new CeramicClient('http://localhost:' + port2, { syncInterval: 500 })
 
-        await core1.setDID(makeDID(seed, core1))
-        await client1.setDID(makeDID(seed, client1))
-        await core2.setDID(makeDID(seed, core2))
-        await client2.setDID(makeDID(seed, client2))
+        await core1.setDID(makeDID(core1, seed))
+        await client1.setDID(makeDID(client1, seed))
+        await core2.setDID(makeDID(core2, seed))
+        await client2.setDID(makeDID(client2, seed))
     })
 
     afterEach(async () => {

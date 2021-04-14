@@ -57,7 +57,7 @@ describe('Ceramic API', () => {
 
   const createCeramic = async (c: CeramicConfig = {}): Promise<Ceramic> => {
     c.anchorOnRequest = false
-    c.restoreDocuments = false
+    c.restoreStreams = false
     const ceramic = await Ceramic.create(ipfs, c)
 
     await ceramic.setDID(makeDID(seed, ceramic))
@@ -156,7 +156,7 @@ describe('Ceramic API', () => {
 
     it('can create document with invalid schema if validation is not set', async () => {
       await ceramic.close()
-      ceramic = await createCeramic({ validateDocs: false })
+      ceramic = await createCeramic({ validateStreams: false })
 
       const schemaDoc = await TileDoctype.create(ceramic, stringMapSchema)
       await TileDoctype.create(ceramic, {a: 1}, {schema: schemaDoc.commitId})
