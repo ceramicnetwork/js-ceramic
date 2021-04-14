@@ -9,10 +9,6 @@ import {
   DiagnosticsLogger,
   DoctypeUtils,
   LoadOpts,
-  LogLevel,
-  LoggerProviderOld,
-  LoggerPlugin,
-  LoggerPluginOptions,
   AnchorService,
   CeramicApi,
   CeramicCommit,
@@ -84,11 +80,6 @@ export interface CeramicConfig {
   pinningBackends?: PinningBackendStatic[];
 
   loggerProvider?: LoggerProvider;
-  logToFilesPlugin?: {
-    plugin: LoggerPlugin;
-    state: any;
-    options: LoggerPluginOptions;
-  };
   gateway?: boolean;
 
   networkName?: string;
@@ -335,21 +326,6 @@ class Ceramic implements CeramicApi {
     const logger = loggerProvider.getDiagnosticsLogger()
     const pubsubLogger = loggerProvider.makeServiceLogger("pubsub")
 
-    // todo remove all code related to LoggerProviderOld
-    LoggerProviderOld.init({
-      level: loggerProvider.config.logLevel <= LogLevel.debug ? 'debug' : 'silent',
-      component: config.gateway? 'GATEWAY' : 'NODE',
-    })
-
-    if (config.logToFiles) {
-      LoggerProviderOld.addPlugin(
-        config.logToFilesPlugin.plugin,
-        config.logToFilesPlugin.state,
-        null,
-        config.logToFilesPlugin.options
-      )
-    }
-
     logger.imp(`Starting Ceramic node at version ${packageJson.version} with config: \n${JSON.stringify(this._cleanupConfigForLogging(config), null, 2)}`)
 
     const networkOptions = Ceramic._generateNetworkOptions(config)
@@ -414,7 +390,6 @@ class Ceramic implements CeramicApi {
     const loggerConfig = config.loggerProvider?.config
 
     delete configCopy.pinningBackends
-    delete configCopy.logToFilesPlugin
     delete configCopy.loggerProvider
 
     if (loggerConfig) {
