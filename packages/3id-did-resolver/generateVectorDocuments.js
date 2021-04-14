@@ -15,7 +15,7 @@ const ThreeIdResolver = require('@ceramicnetwork/3id-did-resolver').default
 const KeyDidResolver = require('key-did-resolver').default
 const { Resolver } = require('did-resolver')
 const { DID } = require('dids')
-const TileDoctype = require('@ceramicnetwork/doctype-tile').default
+const TileDocument = require('@ceramicnetwork/doctype-tile').default
 const u8a = require('uint8arrays')
 const { randomBytes } = require('@stablelib/random')
 const dagCBOR = require('ipld-dag-cbor')
@@ -138,7 +138,7 @@ const legacyDid = async (threeId, threeIdGenesisCopy, ceramic) => {
   // sorry for the magic here -.-
   await ceramic.setDID(makeDID(threeIdGenesisCopy.getDidProvider(), ceramic))
   const metadata = { controllers: [firstKeyDid], family: '3id', deterministic: true }
-  const doc = await TileDoctype.create(
+  const doc = await TileDocument.create(
       ceramic, null, metadata, { anchor:false, publish: false })
 
   await setLegacyDoc(ceramic, doc, keysets[1])

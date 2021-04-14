@@ -5,7 +5,7 @@ import type { DIDResolutionResult } from 'did-resolver'
 import jsonpatch from 'fast-json-patch'
 import cloneDeep from 'lodash.clonedeep'
 
-import { TileDoctype } from "@ceramicnetwork/doctype-tile"
+import { TileDocument } from "@ceramicnetwork/doctype-tile"
 import {
     AnchorStatus,
     Context,
@@ -24,19 +24,19 @@ const IPFS_GET_TIMEOUT = 60000 // 1 minute
 /**
  * Tile doctype handler implementation
  */
-export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
+export class TileDocumentHandler implements DoctypeHandler<TileDocument> {
     /**
      * Gets doctype name
      */
     get name(): string {
-        return TileDoctype.DOCTYPE_NAME
+        return TileDocument.DOCTYPE_NAME
     }
 
     /**
      * Gets doctype class
      */
-    get doctype(): DoctypeConstructor<TileDoctype> {
-        return TileDoctype
+    get doctype(): DoctypeConstructor<TileDocument> {
+        return TileDocument
     }
 
     /**
@@ -81,7 +81,7 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
         }
 
         return {
-            doctype: TileDoctype.DOCTYPE_NAME,
+            doctype: TileDocument.DOCTYPE_NAME,
             content: payload.data || {},
             metadata: payload.header,
             signature: isSigned? SignatureStatus.SIGNED : SignatureStatus.GENESIS,

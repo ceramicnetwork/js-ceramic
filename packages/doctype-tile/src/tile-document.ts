@@ -92,8 +92,8 @@ async function throwReadOnlyError (): Promise<void> {
 /**
  * Tile doctype implementation
  */
-@DoctypeStatic<DoctypeConstructor<TileDoctype>>()
-export class TileDoctype<T = Record<string, any>> extends Doctype {
+@DoctypeStatic<DoctypeConstructor<TileDocument>>()
+export class TileDocument<T = Record<string, any>> extends Doctype {
 
     static DOCTYPE_NAME = 'tile'
     static DOCTYPE_ID = 0
@@ -112,11 +112,11 @@ export class TileDoctype<T = Record<string, any>> extends Doctype {
      * @param metadata - Genesis metadata
      * @param opts - Additional options
      */
-    static async create<T>(ceramic: CeramicApi, content: T | null | undefined, metadata?: TileMetadataArgs, opts: CreateOpts = {}): Promise<TileDoctype<T>> {
+    static async create<T>(ceramic: CeramicApi, content: T | null | undefined, metadata?: TileMetadataArgs, opts: CreateOpts = {}): Promise<TileDocument<T>> {
       // sync by default if creating a deterministic document
       opts = { anchor: true, publish: true, sync: !!metadata?.deterministic, ...opts };
-      const commit = await TileDoctype.makeGenesis(ceramic, content, metadata)
-      return ceramic.createDocumentFromGenesis<TileDoctype<T>>(TileDoctype.DOCTYPE_NAME, commit, opts)
+      const commit = await TileDocument.makeGenesis(ceramic, content, metadata)
+      return ceramic.createDocumentFromGenesis<TileDocument<T>>(TileDocument.DOCTYPE_NAME, commit, opts)
     }
 
     /**
@@ -125,11 +125,11 @@ export class TileDoctype<T = Record<string, any>> extends Doctype {
      * @param genesisCommit - Genesis commit (first commit in document log)
      * @param opts - Additional options
      */
-    static async createFromGenesis<T>(ceramic: CeramicApi, genesisCommit: GenesisCommit, opts: CreateOpts = {}): Promise<TileDoctype<T>> {
+    static async createFromGenesis<T>(ceramic: CeramicApi, genesisCommit: GenesisCommit, opts: CreateOpts = {}): Promise<TileDocument<T>> {
         // sync by default when creating from genesis
         opts = { anchor: true, publish: true, sync: true, ...opts };
         const commit = (genesisCommit.data ? await _signDagJWS(ceramic, genesisCommit, genesisCommit.header.controllers[0]): genesisCommit)
-        return ceramic.createDocumentFromGenesis<TileDoctype<T>>(TileDoctype.DOCTYPE_NAME, commit, opts)
+        return ceramic.createDocumentFromGenesis<TileDocument<T>>(TileDocument.DOCTYPE_NAME, commit, opts)
     }
 
     /**
@@ -138,14 +138,14 @@ export class TileDoctype<T = Record<string, any>> extends Doctype {
      * @param streamId - StreamID to load.  Must correspond to a Tile doctype
      * @param opts - Additional options
      */
-    static async load<T>(ceramic: CeramicApi, streamId: StreamID | CommitID | string, opts: LoadOpts = {}): Promise<TileDoctype<T>> {
+    static async load<T>(ceramic: CeramicApi, streamId: StreamID | CommitID | string, opts: LoadOpts = {}): Promise<TileDocument<T>> {
         opts = { ...DEFAULT_LOAD_OPTS, ...opts };
         const streamRef = StreamRef.from(streamId)
-        if (streamRef.type != TileDoctype.DOCTYPE_ID) {
-            throw new Error(`StreamID ${streamRef.toString()} does not refer to a '${TileDoctype.DOCTYPE_NAME}' doctype, but to a ${streamRef.typeName}`)
+        if (streamRef.type != TileDocument.DOCTYPE_ID) {
+            throw new Error(`StreamID ${streamRef.toString()} does not refer to a '${TileDocument.DOCTYPE_NAME}' doctype, but to a ${streamRef.typeName}`)
         }
 
-        return ceramic.loadDocument<TileDoctype<T>>(streamRef, opts)
+        return ceramic.loadDocument<TileDocument<T>>(streamRef, opts)
     }
 
     /**

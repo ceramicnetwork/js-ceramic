@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`TileDoctypeHandler applies anchor record correctly 1`] = `
+exports[`TileDocumentHandler applies anchor record correctly 1`] = `
 Object {
   "anchorProof": Object {
     "blockNumber": 123456,
@@ -154,7 +154,7 @@ Object {
 }
 `;
 
-exports[`TileDoctypeHandler applies genesis record correctly 1`] = `
+exports[`TileDocumentHandler applies genesis record correctly 1`] = `
 Object {
   "anchorStatus": 0,
   "content": Object {
@@ -215,7 +215,7 @@ Object {
 }
 `;
 
-exports[`TileDoctypeHandler applies signed record correctly 1`] = `
+exports[`TileDocumentHandler applies signed record correctly 1`] = `
 Object {
   "anchorStatus": 0,
   "content": Object {
@@ -330,7 +330,7 @@ Object {
 }
 `;
 
-exports[`TileDoctypeHandler multiple consecutive updates 1`] = `
+exports[`TileDocumentHandler multiple consecutive updates 1`] = `
 Object {
   "anchorStatus": 0,
   "content": Object {

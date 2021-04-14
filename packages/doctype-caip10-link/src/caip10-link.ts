@@ -25,8 +25,8 @@ const DEFAULT_LOAD_OPTS = { sync: true }
 /**
  * Caip10Link doctype implementation
  */
-@DoctypeStatic<DoctypeConstructor<Caip10LinkDoctype>>()
-export class Caip10LinkDoctype extends Doctype {
+@DoctypeStatic<DoctypeConstructor<Caip10Link>>()
+export class Caip10Link extends Doctype {
 
     static DOCTYPE_NAME = 'caip10-link'
     static DOCTYPE_ID = 1
@@ -47,11 +47,11 @@ export class Caip10LinkDoctype extends Doctype {
      */
     static async fromAccount(ceramic: CeramicApi,
                              accountId: string | AccountID,
-                             opts: CreateOpts = {}): Promise<Caip10LinkDoctype> {
+                             opts: CreateOpts = {}): Promise<Caip10Link> {
         opts = { ...DEFAULT_CREATE_OPTS, ...opts };
         const normalizedAccountId = new AccountID(accountId)
-        const genesisCommit = Caip10LinkDoctype.makeGenesis(normalizedAccountId)
-        return Caip10LinkDoctype.fromGenesis(ceramic, genesisCommit, opts)
+        const genesisCommit = Caip10Link.makeGenesis(normalizedAccountId)
+        return Caip10Link.fromGenesis(ceramic, genesisCommit, opts)
     }
 
     /**
@@ -62,10 +62,10 @@ export class Caip10LinkDoctype extends Doctype {
      */
     static async fromGenesis(ceramic: CeramicApi,
                              genesisCommit: GenesisCommit,
-                             opts: CreateOpts = {}): Promise<Caip10LinkDoctype> {
+                             opts: CreateOpts = {}): Promise<Caip10Link> {
         opts = { ...DEFAULT_CREATE_OPTS, ...opts };
-        return ceramic.createDocumentFromGenesis<Caip10LinkDoctype>(
-            Caip10LinkDoctype.DOCTYPE_NAME, genesisCommit, opts)
+        return ceramic.createDocumentFromGenesis<Caip10Link>(
+            Caip10Link.DOCTYPE_NAME, genesisCommit, opts)
     }
 
     /**
@@ -106,14 +106,14 @@ export class Caip10LinkDoctype extends Doctype {
      * @param streamId - StreamID to load.  Must correspond to a Caip10Link doctype
      * @param opts - Additional options
      */
-    static async load(ceramic: CeramicApi, streamId: StreamID | CommitID | string, opts: LoadOpts = {}): Promise<Caip10LinkDoctype> {
+    static async load(ceramic: CeramicApi, streamId: StreamID | CommitID | string, opts: LoadOpts = {}): Promise<Caip10Link> {
         opts = { ...DEFAULT_LOAD_OPTS, ...opts };
         const streamRef = StreamRef.from(streamId)
-        if (streamRef.type != Caip10LinkDoctype.DOCTYPE_ID) {
-            throw new Error(`StreamID ${streamRef.toString()} does not refer to a '${Caip10LinkDoctype.DOCTYPE_NAME}' doctype, but to a ${streamRef.typeName}`)
+        if (streamRef.type != Caip10Link.DOCTYPE_ID) {
+            throw new Error(`StreamID ${streamRef.toString()} does not refer to a '${Caip10Link.DOCTYPE_NAME}' doctype, but to a ${streamRef.typeName}`)
         }
 
-        return ceramic.loadDocument<Caip10LinkDoctype>(streamRef, opts)
+        return ceramic.loadDocument<Caip10Link>(streamRef, opts)
     }
 
     /**

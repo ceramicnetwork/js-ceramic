@@ -1,7 +1,7 @@
 import type CID from 'cids'
 import { validateLink } from "@ceramicnetwork/blockchain-utils-validation"
 import { LinkProof } from "@ceramicnetwork/blockchain-utils-linking"
-import { Caip10LinkDoctype } from "@ceramicnetwork/doctype-caip10-link"
+import { Caip10Link } from "@ceramicnetwork/doctype-caip10-link"
 import {
     AnchorStatus,
     DocState,
@@ -16,19 +16,19 @@ import {
 
 const IPFS_GET_TIMEOUT = 60000 // 1 minute
 
-export class Caip10LinkDoctypeHandler implements DoctypeHandler<Caip10LinkDoctype> {
+export class Caip10LinkHandler implements DoctypeHandler<Caip10Link> {
     /**
      * Gets doctype name
      */
     get name(): string {
-        return Caip10LinkDoctype.DOCTYPE_NAME
+        return Caip10Link.DOCTYPE_NAME
     }
 
     /**
      * Gets doctype class
      */
-    get doctype(): DoctypeConstructor<Caip10LinkDoctype> {
-        return Caip10LinkDoctype
+    get doctype(): DoctypeConstructor<Caip10Link> {
+        return Caip10Link
     }
 
     /**
@@ -63,7 +63,7 @@ export class Caip10LinkDoctypeHandler implements DoctypeHandler<Caip10LinkDoctyp
 
         // TODO - verify genesis commit
         const state = {
-            doctype: Caip10LinkDoctype.DOCTYPE_NAME,
+            doctype: Caip10Link.DOCTYPE_NAME,
             content: null,
             next: {
                 content: null

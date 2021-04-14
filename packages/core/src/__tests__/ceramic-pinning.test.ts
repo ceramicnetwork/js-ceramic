@@ -4,7 +4,7 @@ import tmp from 'tmp-promise'
 import { IpfsApi, CeramicApi } from '@ceramicnetwork/common';
 import * as u8a from 'uint8arrays'
 import { createIPFS } from './ipfs-util';
-import { TileDoctype } from '@ceramicnetwork/doctype-tile';
+import { TileDocument } from '@ceramicnetwork/doctype-tile';
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import KeyDidResolver from 'key-did-resolver'
 import { Resolver } from "did-resolver"
@@ -35,8 +35,8 @@ const createCeramic = async (ipfs: IpfsApi, stateStoreDirectory, anchorOnRequest
   return ceramic
 }
 
-async function createDoc (ceramic: CeramicApi, controller: string, family: string): Promise<TileDoctype> {
-  return TileDoctype.create(ceramic,
+async function createDoc (ceramic: CeramicApi, controller: string, family: string): Promise<TileDocument> {
+  return TileDocument.create(ceramic,
       null,
       { deterministic: true, controllers: [controller], family },
       { anchor: false, publish: false }

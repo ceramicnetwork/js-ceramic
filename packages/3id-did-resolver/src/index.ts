@@ -9,7 +9,7 @@ import type {
   VerificationMethod
 } from 'did-resolver'
 import type { DocState, MultiQuery, CeramicApi } from "@ceramicnetwork/common"
-import { TileDoctype } from "@ceramicnetwork/doctype-tile"
+import { TileDocument } from "@ceramicnetwork/doctype-tile"
 import LegacyResolver from './legacyResolver'
 import * as u8a from 'uint8arrays'
 import { StreamID } from '@ceramicnetwork/streamid'
@@ -133,7 +133,7 @@ const legacyResolve = async (ceramic: CeramicApi, didId: string, verNfo: Version
   //const genesisCommit = { header: { family: '3id', controllers: [legacyPublicKeys.keyDid] }, unique: '0' }
   //const streamid = new StreamID('tile', await dagCBOR.util.cid(new Uint8Array(dagCBOR.util.serialize(genesisCommit))))
   const metadata =  { controllers: [legacyPublicKeys.keyDid], family: '3id', deterministic: true }
-  const streamid = (await TileDoctype.create(ceramic, null, metadata, { anchor: false, publish: false })).id
+  const streamid = (await TileDocument.create(ceramic, null, metadata, { anchor: false, publish: false })).id
   const didResult = await resolve(ceramic, streamid.toString(), verNfo, didId)
   if (didResult.didDocument === null) {
     didResult.didDocument = wrapDocument(legacyPublicKeys, `did:3:${didId}`)
@@ -161,7 +161,7 @@ const resolve = async (ceramic: CeramicApi, didId: string, verNfo: VersionInfo, 
   const requestedVersionState = resp[commitIdStr]?.state || latestVersionState
   const metadata = extractMetadata(requestedVersionState, latestVersionState)
 
-  const content = (resp[commitIdStr || didId] as TileDoctype).content
+  const content = (resp[commitIdStr || didId] as TileDocument).content
   const document = wrapDocument(content, `did:3:${v03ID || didId}`)
 
   return {

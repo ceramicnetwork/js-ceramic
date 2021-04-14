@@ -11,7 +11,7 @@ import { CeramicApi, DoctypeUtils, LoggerConfig, LogLevel, Networks } from '@cer
 import StreamID, {CommitID} from '@ceramicnetwork/streamid'
 
 import CeramicDaemon, { CreateOpts } from './ceramic-daemon'
-import { TileDoctype, TileMetadataArgs } from "@ceramicnetwork/doctype-tile";
+import { TileDocument, TileMetadataArgs } from "@ceramicnetwork/doctype-tile";
 
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import KeyDidResolver from 'key-did-resolver'
@@ -118,7 +118,7 @@ export class CeramicCliUtils {
             const parsedContent = CeramicCliUtils._parseContent(content)
             const metadata = { controllers: parsedControllers, schema: schemaStreamId, deterministic }
 
-            const doc = await TileDoctype.create(ceramic, parsedContent, metadata, {
+            const doc = await TileDocument.create(ceramic, parsedContent, metadata, {
                 anchor: !onlyGenesis,
                 publish: !onlyGenesis,
             })
@@ -137,14 +137,14 @@ export class CeramicCliUtils {
      */
     static async update(streamId: string, content: string, controllers: string, schemaCommitId?: string): Promise<void> {
         const id = StreamID.fromString(streamId)
-        if (id.type != TileDoctype.DOCTYPE_ID) {
+        if (id.type != TileDocument.DOCTYPE_ID) {
             throw new Error(`CLI does not currently support updating doctypes other than 'tile'. StreamID ${id.toString()} has doctype '${id.typeName}'`)
         }
         await CeramicCliUtils._runWithCeramic(async (ceramic: CeramicClient) => {
             const parsedControllers = CeramicCliUtils._parseControllers(controllers)
             const parsedContent = CeramicCliUtils._parseContent(content)
 
-            const doc = await TileDoctype.load(ceramic, id)
+            const doc = await TileDocument.load(ceramic, id)
             const metadata: TileMetadataArgs = { controllers: parsedControllers }
             if (schemaCommitId) {
                 const schemaId = CommitID.fromString(schemaCommitId)
@@ -162,7 +162,7 @@ export class CeramicCliUtils {
      */
     static async show(streamRef: string): Promise<void> {
         await CeramicCliUtils._runWithCeramic(async (ceramic: CeramicApi) => {
-            const stream = await TileDoctype.load(ceramic, streamRef)
+            const stream = await TileDocument.load(ceramic, streamRef)
             console.log(JSON.stringify(stream.content, null, 2))
         })
     }
@@ -186,7 +186,7 @@ export class CeramicCliUtils {
         const id = StreamID.fromString(streamId)
 
         await CeramicCliUtils._runWithCeramic(async (ceramic: CeramicApi) => {
-            const doc = await TileDoctype.load(ceramic, id)
+            const doc = await TileDocument.load(ceramic, id)
             console.log(JSON.stringify(doc.content, null, 2))
             doc.subscribe(() => {
               console.log('--- document changed ---')

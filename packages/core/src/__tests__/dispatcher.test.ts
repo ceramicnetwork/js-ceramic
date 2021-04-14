@@ -1,6 +1,6 @@
 import { Dispatcher } from '../dispatcher';
 import CID from 'cids';
-import { TileDoctype } from '@ceramicnetwork/doctype-tile';
+import { TileDocument } from '@ceramicnetwork/doctype-tile';
 import StreamID from '@ceramicnetwork/streamid';
 import {
   CommitType,
@@ -39,15 +39,15 @@ const ipfs = {
   id: async () => ({ id: 'ipfsid' }),
 };
 
-class TileDoctypeMock extends TileDoctype {
+class TileDocumentMock extends TileDocument {
   get doctype() {
     return 'tile';
   }
 }
 
 const fakeHandler = ({
-  doctype: TileDoctypeMock,
-} as unknown) as DoctypeHandler<TileDoctypeMock>;
+  doctype: TileDocumentMock,
+} as unknown) as DoctypeHandler<TileDocumentMock>;
 
 describe('Dispatcher', () => {
   let dispatcher: Dispatcher;

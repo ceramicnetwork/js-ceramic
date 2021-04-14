@@ -6,7 +6,7 @@ import {
   IpfsApi,
   SignatureStatus,
 } from '@ceramicnetwork/common';
-import { TileDoctype } from "@ceramicnetwork/doctype-tile";
+import { TileDocument } from "@ceramicnetwork/doctype-tile";
 import { PinStore } from '../pin-store';
 import { PinStoreFactory } from '../pin-store-factory';
 import StreamID from '@ceramicnetwork/streamid';
@@ -74,7 +74,7 @@ describe('Level data store', () => {
     const realIpfs = await createIPFS();
     const ceramic = await createCeramic(realIpfs);
 
-    const doc = await TileDoctype.create(ceramic, { stuff: 1 });
+    const doc = await TileDocument.create(ceramic, { stuff: 1 });
     await anchorUpdate(ceramic, doc);
 
     const pinSpy = jest.spyOn(realIpfs.pin, 'add');
@@ -100,10 +100,10 @@ describe('Level data store', () => {
     const realIpfs = await createIPFS();
     const ceramic = await createCeramic(realIpfs);
 
-    const doc1 = await TileDoctype.create(ceramic, { stuff: 1 }, null, { anchor: false, publish: false });
+    const doc1 = await TileDocument.create(ceramic, { stuff: 1 }, null, { anchor: false, publish: false });
     await ceramic.pin.add(doc1.id);
 
-    const doc2 = await TileDoctype.create(ceramic, { stuff: 2 }, null, { anchor: false, publish: false });
+    const doc2 = await TileDocument.create(ceramic, { stuff: 2 }, null, { anchor: false, publish: false });
     await ceramic.pin.add(doc2.id);
 
     const pinned = [];

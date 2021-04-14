@@ -21,12 +21,12 @@ One interface worth noting is the `CeramicAPI` interface which lets the develope
 
 The [[Doctype]] interface extends the `EventEmitter` interface which means that the developer can subscribe to events emitted from the Ceramic node like the `change` event (*more events will be defined in the future*).
 
-The method `change` is more or less sugar coding for the developer since all the operations can be implemented using the [[CeramicApi]] interface. For example the [[TileDoctype]] included in the Ceramic node out-of-the-box.
+The method `change` is more or less sugar coding for the developer since all the operations can be implemented using the [[CeramicApi]] interface. For example the [[TileDocument]] included in the Ceramic node out-of-the-box.
 
 
 # DoctypeHandler
 
-The [[DoctypeHandler]] interface is used for determining the next **state** of the document. The method worth noting is `applyRecord` which is used for that *state transition*. For example the [[TileDoctypeHandler]] is included in the Ceramic node out-of-the-box as well.
+The [[DoctypeHandler]] interface is used for determining the next **state** of the document. The method worth noting is `applyRecord` which is used for that *state transition*. For example the [[TileDocumentHandler]] is included in the Ceramic node out-of-the-box as well.
 
 The [[DoctypeHandler]] uses [[CeramicApi]] which is included in the [[Context]] instance.
 

@@ -16,8 +16,8 @@ import {
   PinApi,
   UpdateOpts,
 } from '@ceramicnetwork/common';
-import { TileDoctype } from "@ceramicnetwork/doctype-tile"
-import { Caip10LinkDoctype } from "@ceramicnetwork/doctype-caip10-link"
+import { TileDocument } from "@ceramicnetwork/doctype-tile"
+import { Caip10Link } from "@ceramicnetwork/doctype-caip10-link"
 import { StreamID, CommitID, StreamRef } from '@ceramicnetwork/streamid';
 
 const API_PATH = '/api/v0'
@@ -77,8 +77,8 @@ export default class CeramicClient implements CeramicApi {
     this.pin = this._initPinApi()
 
     this._doctypeConstructors = {
-      'tile': TileDoctype,
-      'caip10-link': Caip10LinkDoctype
+      'tile': TileDocument,
+      'caip10-link': Caip10Link
     }
   }
 

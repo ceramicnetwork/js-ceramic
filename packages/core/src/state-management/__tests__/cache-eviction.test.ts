@@ -1,7 +1,7 @@
 import { DoctypeUtils, IpfsApi } from '@ceramicnetwork/common';
 import { createIPFS } from '../../__tests__/ipfs-util';
 import { createCeramic } from '../../__tests__/create-ceramic';
-import { TileDoctype } from '@ceramicnetwork/doctype-tile';
+import { TileDocument } from '@ceramicnetwork/doctype-tile';
 import Ceramic from '../../ceramic';
 import { delay } from '../../pubsub/__tests__/delay';
 
@@ -22,14 +22,14 @@ const INITIAL = { stage: 'initial' };
 const UPDATED = { stage: 'updated' };
 
 test('cache eviction', async () => {
-  await TileDoctype.create(ceramic, INITIAL);
+  await TileDocument.create(ceramic, INITIAL);
   expect(ceramic.repository.inmemory.volatile.size).toEqual(1);
-  await TileDoctype.create(ceramic, UPDATED);
+  await TileDocument.create(ceramic, UPDATED);
   expect(ceramic.repository.inmemory.volatile.size).toEqual(1);
 });
 
 test('Doctype not subscribed, RunningState in cache', async () => {
-  const document = await TileDoctype.create(ceramic, INITIAL);
+  const document = await TileDocument.create(ceramic, INITIAL);
   const state$ = await ceramic.repository.load(document.id, {});
   const updateRecord = await document.makeCommit(ceramic, UPDATED);
   await ceramic.repository.stateManager.applyCommit(state$.id, updateRecord, { anchor: false, publish: false });
@@ -42,12 +42,12 @@ test('Doctype not subscribed, RunningState in cache', async () => {
 });
 
 test('Doctype not subscribed, RunningState evicted', async () => {
-  const document = await TileDoctype.create(ceramic, INITIAL);
+  const document = await TileDocument.create(ceramic, INITIAL);
   const state$ = await ceramic.repository.load(document.id, {});
-  await TileDoctype.create(ceramic, { 'evict': true });
+  await TileDocument.create(ceramic, { 'evict': true });
 
   const state2$ = await ceramic.repository.load(document.id, {});
-  const updateRecord = await new TileDoctype(state$, ceramic.context).makeCommit(ceramic, UPDATED);
+  const updateRecord = await new TileDocument(state$, ceramic.context).makeCommit(ceramic, UPDATED);
   await ceramic.repository.stateManager.applyCommit(state2$.id, updateRecord, { anchor: false, publish: false });
 
   // Doctype does not see the change
@@ -59,7 +59,7 @@ test('Doctype not subscribed, RunningState evicted', async () => {
 });
 
 test('Doctype subscribed, RunningState in cache', async () => {
-  const document = await TileDoctype.create(ceramic, INITIAL);
+  const document = await TileDocument.create(ceramic, INITIAL);
   document.subscribe();
   const state$ = await ceramic.repository.load(document.id, {});
   const updateRecord = await document.makeCommit(ceramic, UPDATED);
@@ -73,14 +73,14 @@ test('Doctype subscribed, RunningState in cache', async () => {
 });
 
 test('Doctype subscribed, RunningState not evicted', async () => {
-  const document = await TileDoctype.create(ceramic, INITIAL);
+  const document = await TileDocument.create(ceramic, INITIAL);
   document.subscribe();
   const state$ = await ceramic.repository.load(document.id, {});
-  await TileDoctype.create(ceramic, { 'evict': true });
+  await TileDocument.create(ceramic, { 'evict': true });
 
   const state2$ = await ceramic.repository.load(document.id, {});
   expect(state2$).toBe(state$);
-  const updateRecord = await new TileDoctype(state$, ceramic.context).makeCommit(ceramic, UPDATED);
+  const updateRecord = await new TileDocument(state$, ceramic.context).makeCommit(ceramic, UPDATED);
   await ceramic.repository.stateManager.applyCommit(state2$.id, updateRecord, { anchor: false, publish: false });
 
   // Doctype sees change
@@ -93,7 +93,7 @@ test('Doctype subscribed, RunningState not evicted', async () => {
 
 test('RunningState stops updating after evicted', async () => {
   const createDocument = () => {
-    return TileDoctype.create(ceramic, INITIAL, { deterministic: true }, { sync: false });
+    return TileDocument.create(ceramic, INITIAL, { deterministic: true }, { sync: false });
   };
   const document1 = await createDocument();
   const runningState1 = await ceramic.repository.load(document1.id, {});
@@ -101,7 +101,7 @@ test('RunningState stops updating after evicted', async () => {
   expect(runningState1.state.next.content).toEqual({ stage: 'changed-1' }); // Running state gets update
 
   expect(ceramic.repository.inmemory.volatile.size).toEqual(1);
-  await TileDoctype.create(ceramic, { 'evict': true }); // Now doc1 is evicted
+  await TileDocument.create(ceramic, { 'evict': true }); // Now doc1 is evicted
   expect(ceramic.repository.inmemory.volatile.size).toEqual(1);
   expect(runningState1.isStopped).toBeTruthy(); // RunningState is stopped after eviction
 
@@ -121,7 +121,7 @@ test('RunningState stops updating after evicted', async () => {
 
 test('StateLink receives updates', async () => {
   const createDocument = () => {
-    return TileDoctype.create(ceramic, INITIAL, { deterministic: true }, { sync: false });
+    return TileDocument.create(ceramic, INITIAL, { deterministic: true }, { sync: false });
   };
   const document1 = await createDocument();
   const runningState1 = await ceramic.repository.load(document1.id, {});
@@ -129,7 +129,7 @@ test('StateLink receives updates', async () => {
   expect(runningState1.state.next.content).toEqual({ stage: 'changed-1' }); // Running state gets update
 
   expect(ceramic.repository.inmemory.volatile.size).toEqual(1);
-  await TileDoctype.create(ceramic, { 'evict': true }); // Now doc1 is evicted
+  await TileDocument.create(ceramic, { 'evict': true }); // Now doc1 is evicted
   expect(ceramic.repository.inmemory.volatile.size).toEqual(1);
   expect(runningState1.isStopped).toBeTruthy(); // RunningState is stopped after eviction
 
@@ -147,7 +147,7 @@ test('StateLink receives updates', async () => {
 test('free if no one subscribed', async () => {
   const durableStart = ceramic.repository.inmemory.durable.size;
   const volatileStart = ceramic.repository.inmemory.volatile.size;
-  const doc1 = await TileDoctype.create(ceramic, INITIAL);
+  const doc1 = await TileDocument.create(ceramic, INITIAL);
   expect(ceramic.repository.inmemory.volatile.size).toEqual(volatileStart + 1)
   expect(ceramic.repository.inmemory.durable.size).toEqual(durableStart)
   const subscription1 = doc1.subscribe()
@@ -171,9 +171,9 @@ test('free if no one subscribed', async () => {
 
 describe('evicted then subscribed', () => {
   test('not pinned', async () => {
-    const doc1 = await TileDoctype.create(ceramic, INITIAL);
+    const doc1 = await TileDocument.create(ceramic, INITIAL);
     // Evict
-    await TileDoctype.create(ceramic, { 'evict': true });
+    await TileDocument.create(ceramic, { 'evict': true });
     // No more doc1 in memory, and it is not pinned!
     expect(ceramic.repository.inmemory.get(doc1.id.toString())).toBeUndefined();
     doc1.subscribe();
@@ -185,10 +185,10 @@ describe('evicted then subscribed', () => {
   });
 
   test('pinned', async () => {
-    const doc1 = await TileDoctype.create(ceramic, { foo: Math.random().toString() }, { deterministic: true }, { sync: false });
+    const doc1 = await TileDocument.create(ceramic, { foo: Math.random().toString() }, { deterministic: true }, { sync: false });
     await ceramic.pin.add(doc1.id);
 
-    const doc2 = await TileDoctype.create(ceramic, doc1.content, { deterministic: true }, { sync: false });
+    const doc2 = await TileDocument.create(ceramic, doc1.content, { deterministic: true }, { sync: false });
     expect(DoctypeUtils.serializeState(doc1.state)).toEqual(DoctypeUtils.serializeState(doc2.state));
 
     // Divergence: doc2 < doc1

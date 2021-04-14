@@ -2,7 +2,7 @@ import Ceramic from '../ceramic'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import tmp from 'tmp-promise'
 import { DoctypeUtils, IpfsApi, TestUtils, DocState } from '@ceramicnetwork/common';
-import { TileDoctype } from "@ceramicnetwork/doctype-tile"
+import { TileDocument } from "@ceramicnetwork/doctype-tile"
 import * as u8a from 'uint8arrays'
 import { createIPFS, swarmConnect } from './ipfs-util';
 import InMemoryAnchorService from "../anchor/memory/in-memory-anchor-service";
@@ -99,8 +99,8 @@ describe('Ceramic integration', () => {
 
     const ceramic1 = await createCeramic(ipfs1)
     const ceramic2 = await createCeramic(ipfs2)
-    const doc1 = await TileDoctype.create(ceramic1, {test: 123}, null, { anchor: false, publish: false })
-    const doc2 = await TileDoctype.load(ceramic2, doc1.id)
+    const doc1 = await TileDocument.create(ceramic1, {test: 123}, null, { anchor: false, publish: false })
+    const doc2 = await TileDocument.load(ceramic2, doc1.id)
     expect(doc1.content).toEqual(doc2.content)
     expectEqualStates(doc1.state, doc2.state)
     await ceramic1.close()
@@ -111,13 +111,13 @@ describe('Ceramic integration', () => {
     const ceramic1 = await createCeramic(ipfs1)
     const ceramic2 = await createCeramic(ipfs2)
 
-    const doc1 = await TileDoctype.create(ceramic1, {test: 456})
+    const doc1 = await TileDocument.create(ceramic1, {test: 456})
 
     await anchorUpdate(ceramic1, doc1)
 
     // we can't load document from id since nodes are not connected
     // so we won't find the genesis object from it's CID
-    const doc2 = await TileDoctype.create(ceramic2, {test: 456}, null, { anchor: false, publish: false })
+    const doc2 = await TileDocument.create(ceramic2, {test: 456}, null, { anchor: false, publish: false })
     expect(doc1.content).toEqual(doc2.content)
     expect(doc2.state).toEqual(expect.objectContaining({ content: { test: 456 } }))
     await ceramic1.close()
@@ -135,8 +135,8 @@ describe('Ceramic integration', () => {
     const ceramic3 = await createCeramic(ipfs3)
 
     // ceramic node 2 shouldn't need to have the document open in order to forward the message
-    const doc1 = await TileDoctype.create(ceramic1, {test: 789}, null, { anchor: false, publish: false })
-    const doc3 = await TileDoctype.create(ceramic3, {test: 789}, null, { anchor: false, publish: false })
+    const doc1 = await TileDocument.create(ceramic1, {test: 789}, null, { anchor: false, publish: false })
+    const doc3 = await TileDocument.create(ceramic3, {test: 789}, null, { anchor: false, publish: false })
     expect(doc3.content).toEqual(doc1.content)
     await ceramic1.close()
     await ceramic2.close()
@@ -154,7 +154,7 @@ describe('Ceramic integration', () => {
     const ceramic3 = await createCeramic(ipfs3)
 
     // ceramic node 2 shouldn't need to have the document open in order to forward the message
-    const doc1 = await TileDoctype.create(ceramic1, {test: 321}, {deterministic: true})
+    const doc1 = await TileDocument.create(ceramic1, {test: 321}, {deterministic: true})
 
     await anchorUpdate(ceramic1, doc1)
 
@@ -162,7 +162,7 @@ describe('Ceramic integration', () => {
     // therefore resolve to the same genesis record and thus the same streamId.  Make sure the new
     // Document object can see the updates made to the first Document object since they represent
     // the same Document in the network.
-    const doc3 = await TileDoctype.create(ceramic3, {test: 321}, {deterministic: true})
+    const doc3 = await TileDocument.create(ceramic3, {test: 321}, {deterministic: true})
 
     expect(doc3.content).toEqual(doc1.content)
 
@@ -184,7 +184,7 @@ describe('Ceramic integration', () => {
     const ceramic1 = await createCeramic(ipfs1)
     const ceramic2 = await createCeramic(ipfs2)
 
-    const doc1 = await TileDoctype.create(ceramic1, { test: 456 })
+    const doc1 = await TileDocument.create(ceramic1, { test: 456 })
 
     await anchorUpdate(ceramic1, doc1)
 
@@ -194,7 +194,7 @@ describe('Ceramic integration', () => {
 
     const logCommits = await ceramic1.loadDocumentCommits(doc1.id)
 
-    let doc2 = await TileDoctype.createFromGenesis(ceramic2, logCommits[0].value, { anchor: false, publish: false })
+    let doc2 = await TileDocument.createFromGenesis(ceramic2, logCommits[0].value, { anchor: false, publish: false })
     for (let i = 1; i < logCommits.length; i++) {
       doc2 = await ceramic2.applyCommit(doc2.id, logCommits[i].value, { anchor: false, publish: false })
     }
@@ -312,7 +312,7 @@ describe('Ceramic integration', () => {
     const addSpy2 = jest.spyOn(repository2, 'add');
     const loadSpy2 = jest.spyOn(repository2, 'load');
 
-    const doc1 = await TileDoctype.create(ceramic1, { test: 456 }, null, { publish: false })
+    const doc1 = await TileDocument.create(ceramic1, { test: 456 }, null, { publish: false })
     expect(doc1).toBeDefined()
 
     await anchorUpdate(ceramic1, doc1)
@@ -352,7 +352,7 @@ describe('Ceramic integration', () => {
     const addSpy2 = jest.spyOn(repository2, 'add');
     const loadSpy2 = jest.spyOn(repository2, 'load');
 
-    const doc1 = await TileDoctype.create(ceramic1, { test: 456 })
+    const doc1 = await TileDocument.create(ceramic1, { test: 456 })
     expect(loadSpy1).toBeCalledTimes(1)
     expect(addSpy1).toBeCalledTimes(1)
     expect(doc1).toBeDefined()
@@ -400,9 +400,9 @@ describe('Ceramic integration', () => {
       },
       required: ['date', 'text'],
     }
-    const noteSchema = await TileDoctype.create(ceramic, NoteSchema)
+    const noteSchema = await TileDocument.create(ceramic, NoteSchema)
 
-    const doc = await TileDoctype.create(ceramic,
+    const doc = await TileDocument.create(ceramic,
         { date: '2021-01-06T14:28:00.000Z', text: 'hello first' },
         { schema: noteSchema.commitId.toUrl()})
 

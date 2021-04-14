@@ -1,6 +1,6 @@
 import Ceramic, { CeramicConfig } from '../ceramic'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
-import { TileDoctype } from "@ceramicnetwork/doctype-tile"
+import { TileDocument } from "@ceramicnetwork/doctype-tile"
 import { AnchorStatus, DoctypeUtils, IpfsApi } from "@ceramicnetwork/common"
 import StreamID from '@ceramicnetwork/streamid'
 import * as u8a from 'uint8arrays'
@@ -84,7 +84,7 @@ describe('Ceramic API', () => {
     })
 
     it('can load the previous document commit', async () => {
-      const docOg = await TileDoctype.create(ceramic, { test: 321 })
+      const docOg = await TileDocument.create(ceramic, { test: 321 })
 
       // wait for anchor (new commit)
       await anchorUpdate(ceramic, docOg)
@@ -105,7 +105,7 @@ describe('Ceramic API', () => {
       expect(docOg.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
       const docV1Id = docOg.id.atCommit(docOg.state.log[1].cid)
-      const docV1 = await ceramic.loadDocument<TileDoctype>(docV1Id)
+      const docV1 = await ceramic.loadDocument<TileDocument>(docV1Id)
       expect(docV1.state).toEqual(stateOg)
       expect(docV1.content).toEqual({ test: 321 })
       expect(docV1.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
@@ -127,16 +127,16 @@ describe('Ceramic API', () => {
 
       // checkout not anchored commit
       const docV2Id = docOg.id.atCommit(docOg.state.log[2].cid)
-      const docV2 = await TileDoctype.load(ceramic, docV2Id)
+      const docV2 = await TileDocument.load(ceramic, docV2Id)
       expect(docV2.content).toEqual({ test: "abcde" })
       expect(docV2.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
     })
 
     it('cannot create document with invalid schema', async () => {
-      const schemaDoc = await TileDoctype.create(ceramic, stringMapSchema)
+      const schemaDoc = await TileDocument.create(ceramic, stringMapSchema)
 
       try {
-        await TileDoctype.create(ceramic, {a: 1}, {schema: schemaDoc.commitId})
+        await TileDocument.create(ceramic, {a: 1}, {schema: schemaDoc.commitId})
         fail('Should not be able to create an invalid document')
       } catch (e) {
         console.log(e)
@@ -145,26 +145,26 @@ describe('Ceramic API', () => {
     })
 
     it('can create document with valid schema', async () => {
-      const schemaDoc = await TileDoctype.create(ceramic, stringMapSchema)
-      await TileDoctype.create(ceramic, {a: "test"}, {schema: schemaDoc.commitId})
+      const schemaDoc = await TileDocument.create(ceramic, stringMapSchema)
+      await TileDocument.create(ceramic, {a: "test"}, {schema: schemaDoc.commitId})
     })
 
     it('must assign schema with specific commit', async () => {
-      const schemaDoc = await TileDoctype.create(ceramic, stringMapSchema)
-      await expect(TileDoctype.create(ceramic, {a: 1}, {schema: schemaDoc.id.toString()})).rejects.toThrow('Schema must be a CommitID')
+      const schemaDoc = await TileDocument.create(ceramic, stringMapSchema)
+      await expect(TileDocument.create(ceramic, {a: 1}, {schema: schemaDoc.id.toString()})).rejects.toThrow('Schema must be a CommitID')
     })
 
     it('can create document with invalid schema if validation is not set', async () => {
       await ceramic.close()
       ceramic = await createCeramic({ validateStreams: false })
 
-      const schemaDoc = await TileDoctype.create(ceramic, stringMapSchema)
-      await TileDoctype.create(ceramic, {a: 1}, {schema: schemaDoc.commitId})
+      const schemaDoc = await TileDocument.create(ceramic, stringMapSchema)
+      await TileDocument.create(ceramic, {a: 1}, {schema: schemaDoc.commitId})
     })
 
     it('can assign schema if content is valid', async () => {
-      const doc = await TileDoctype.create(ceramic, {a: 'x'})
-      const schemaDoc = await TileDoctype.create(ceramic, stringMapSchema)
+      const doc = await TileDocument.create(ceramic, {a: 'x'})
+      const schemaDoc = await TileDocument.create(ceramic, stringMapSchema)
       await doc.update(doc.content, {schema: schemaDoc.commitId})
 
       expect(doc.content).toEqual({ a: 'x' })
@@ -172,8 +172,8 @@ describe('Ceramic API', () => {
     })
 
     it('cannot assign schema if content is not valid', async () => {
-      const doc = await TileDoctype.create(ceramic, {a: 1})
-      const schemaDoc = await TileDoctype.create(ceramic, stringMapSchema)
+      const doc = await TileDocument.create(ceramic, {a: 1})
+      const schemaDoc = await TileDocument.create(ceramic, stringMapSchema)
 
       try {
         await doc.update(doc.content, {schema: schemaDoc.commitId})
@@ -184,8 +184,8 @@ describe('Ceramic API', () => {
     })
 
     it('can update valid content and assign schema at the same time', async () => {
-      const doc = await TileDoctype.create(ceramic, {a: 1})
-      const schemaDoc = await TileDoctype.create(ceramic, stringMapSchema)
+      const doc = await TileDocument.create(ceramic, {a: 1})
+      const schemaDoc = await TileDocument.create(ceramic, stringMapSchema)
 
       await doc.update({a: 'x'}, {schema: schemaDoc.commitId})
 
@@ -194,12 +194,12 @@ describe('Ceramic API', () => {
 
     it('can update schema and then assign to doc with now valid content', async () => {
       // Create doc with content that has type 'number'.
-      const doc = await TileDoctype.create(ceramic, {a: 1})
+      const doc = await TileDocument.create(ceramic, {a: 1})
       await anchorUpdate(ceramic, doc)
 
       // Create schema that enforces that the content value is a string, which would reject
       // the document created above.
-      const schemaDoc = await TileDoctype.create(ceramic, stringMapSchema)
+      const schemaDoc = await TileDocument.create(ceramic, stringMapSchema)
 
       // wait for anchor
       await anchorUpdate(ceramic, schemaDoc)
@@ -226,7 +226,7 @@ describe('Ceramic API', () => {
     })
 
     it('can list log records', async () => {
-      const doc = await TileDoctype.create(ceramic, {a: 1})
+      const doc = await TileDocument.create(ceramic, {a: 1})
       const logRecords = await ceramic.loadDocumentCommits(doc.id)
       expect(logRecords).toBeDefined()
 
@@ -243,19 +243,19 @@ describe('Ceramic API', () => {
     })
 
     it('can store record if the size is lesser than the maximum size ~256KB', async () => {
-      const doctype = await TileDoctype.create(ceramic, { test: generateStringOfSize(10000) })
+      const doctype = await TileDocument.create(ceramic, { test: generateStringOfSize(10000) })
       expect(doctype).not.toBeNull();
     })
 
     it('cannot store record if the size is greated than the maximum size ~256KB', async () => {
-      await expect(TileDoctype.create(ceramic, { test: generateStringOfSize(1000000) })).rejects.toThrow(/exceeds the maximum block size of/)
+      await expect(TileDocument.create(ceramic, { test: generateStringOfSize(1000000) })).rejects.toThrow(/exceeds the maximum block size of/)
     })
   })
 
   describe('API MultiQueries', () => {
 
     let ceramic: Ceramic
-    let docA: TileDoctype, docB: TileDoctype, docC: TileDoctype, docD: TileDoctype, docE: TileDoctype, docF: TileDoctype
+    let docA: TileDocument, docB: TileDocument, docC: TileDocument, docD: TileDocument, docE: TileDocument, docF: TileDocument
     const notExistStreamId = StreamID.fromString('kjzl6cwe1jw1495fyn7770ujykvl1f8sskbzsevlux062ajragz9hp3akdqbmdg')
     const docFTimestamps = []
     const docFStates = []
@@ -263,14 +263,14 @@ describe('Ceramic API', () => {
     beforeAll(async () => {
       ceramic = await createCeramic()
 
-      docF = await TileDoctype.create(ceramic, { test: '321f' })
-      docE = await TileDoctype.create(ceramic, { f: docF.id.toUrl() })
-      docD = await TileDoctype.create(ceramic, { test: '321d' })
-      docC = await TileDoctype.create(ceramic, { test: '321c' })
-      docB = await TileDoctype.create(ceramic, { e: docE.id.toUrl(),
+      docF = await TileDocument.create(ceramic, { test: '321f' })
+      docE = await TileDocument.create(ceramic, { f: docF.id.toUrl() })
+      docD = await TileDocument.create(ceramic, { test: '321d' })
+      docC = await TileDocument.create(ceramic, { test: '321c' })
+      docB = await TileDocument.create(ceramic, { e: docE.id.toUrl(),
                                                   d: docD.id.toUrl(),
                                                   notDoc: '123' })
-      docA = await TileDoctype.create(ceramic, { b: docB.id.toUrl(),
+      docA = await TileDocument.create(ceramic, { b: docB.id.toUrl(),
                                                   c: docC.id.toUrl(),
                                                   notExistStreamId: notExistStreamId.toUrl(),
                                                   notDoc: '123' })

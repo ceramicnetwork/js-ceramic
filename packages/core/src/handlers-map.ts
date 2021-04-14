@@ -1,5 +1,5 @@
-import { TileDoctypeHandler } from '@ceramicnetwork/doctype-tile-handler';
-import { Caip10LinkDoctypeHandler } from '@ceramicnetwork/doctype-caip10-link-handler';
+import { TileDocumentHandler } from '@ceramicnetwork/doctype-tile-handler';
+import { Caip10LinkHandler } from '@ceramicnetwork/doctype-caip10-link-handler';
 import { Doctype, DoctypeHandler } from '@ceramicnetwork/common';
 import { DiagnosticsLogger } from '@ceramicnetwork/common';
 
@@ -12,7 +12,7 @@ export class HandlersMap {
 
   constructor(private readonly logger: DiagnosticsLogger, handlers?: Map<string, DoctypeHandler<Doctype>>) {
     this.handlers =
-      handlers || new Map().set('tile', new TileDoctypeHandler()).set('caip10-link', new Caip10LinkDoctypeHandler());
+      handlers || new Map().set('tile', new TileDocumentHandler()).set('caip10-link', new Caip10LinkHandler());
   }
 
   /**
