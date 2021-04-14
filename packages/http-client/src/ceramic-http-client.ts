@@ -27,7 +27,7 @@ const CERAMIC_HOST = 'http://localhost:7007'
  * Default Ceramic client configuration
  */
 export const DEFAULT_CLIENT_CONFIG: CeramicClientConfig = {
-  streamSyncInterval: 5000,
+  syncInterval: 5000,
 }
 
 const DEFAULT_APPLY_COMMIT_OPTS = { anchor: true, publish: true, sync: false }
@@ -41,7 +41,7 @@ export interface CeramicClientConfig {
   /**
    * Period of synchronisation, in milliseconds. Active when subscribing document.
    */
-  streamSyncInterval: number
+  syncInterval: number
 }
 
 /**
@@ -120,7 +120,7 @@ export default class CeramicClient implements CeramicApi {
 
   async createDocumentFromGenesis<T extends Doctype>(doctype: string, genesis: any, opts: CreateOpts = {}): Promise<T> {
     opts = { ...DEFAULT_CREATE_FROM_GENESIS_OPTS, ...opts };
-    const doc = await Document.createFromGenesis(this._apiUrl, doctype, genesis, opts, this._config.streamSyncInterval)
+    const doc = await Document.createFromGenesis(this._apiUrl, doctype, genesis, opts, this._config.syncInterval)
 
     const found = this._docCache.get(doc.id.toString())
     if (found) {
@@ -139,7 +139,7 @@ export default class CeramicClient implements CeramicApi {
     if (doc) {
       await doc._syncState(streamRef)
     } else {
-      doc = await Document.load(streamRef, this._apiUrl, this._config.streamSyncInterval, opts)
+      doc = await Document.load(streamRef, this._apiUrl, this._config.syncInterval, opts)
       this._docCache.set(doc.id.toString(), doc)
     }
     return this.buildDoctype<T>(doc)
@@ -164,7 +164,7 @@ export default class CeramicClient implements CeramicApi {
     return Object.entries(results).reduce((acc, e) => {
       const [k, v] = e
       const state = DoctypeUtils.deserializeState(v)
-      const doc = new Document(state, this._apiUrl, this._config.streamSyncInterval)
+      const doc = new Document(state, this._apiUrl, this._config.syncInterval)
       acc[k] = this.buildDoctype(doc)
       return acc
     }, {})
@@ -178,7 +178,7 @@ export default class CeramicClient implements CeramicApi {
   async applyCommit<T extends Doctype>(streamId: string | StreamID, commit: CeramicCommit, opts: CreateOpts | UpdateOpts = {}): Promise<T> {
     opts = { ...DEFAULT_APPLY_COMMIT_OPTS, ...opts };
     const effectiveStreamId = typeStreamID(streamId)
-    const stream = await Document.applyCommit(this._apiUrl, effectiveStreamId, commit, opts, this._config.streamSyncInterval)
+    const stream = await Document.applyCommit(this._apiUrl, effectiveStreamId, commit, opts, this._config.syncInterval)
     return this.buildDoctype<T>(stream)
   }
 
