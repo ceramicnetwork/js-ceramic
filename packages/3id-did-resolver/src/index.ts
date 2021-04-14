@@ -180,7 +180,7 @@ export default {
         const didResult = await (isLegacyDid(parsed.id) ? legacyResolve(ceramic, parsed.id, verNfo) : resolve(ceramic, parsed.id, verNfo))
 
         if (contentType === DID_LD_JSON) {
-          didResult.didDocument['@context'] = 'https://w3id.org/did/v1'
+          didResult.didDocument['@context'] = 'https://www.w3.org/ns/did/v1'
           didResult.didResolutionMetadata.contentType = DID_LD_JSON
         } else if (contentType !== DID_JSON) {
           didResult.didDocument = null
