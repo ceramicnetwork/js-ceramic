@@ -1,60 +1,19 @@
 import Ceramic from '@ceramicnetwork/core'
 import CeramicClient from '@ceramicnetwork/http-client'
-import { Ed25519Provider } from 'key-did-provider-ed25519'
 import tmp from 'tmp-promise'
-import IPFS from 'ipfs-core'
 import CeramicDaemon from '../ceramic-daemon'
-import { AnchorStatus, CeramicApi, Doctype, DoctypeUtils, IpfsApi } from '@ceramicnetwork/common';
+import { AnchorStatus, Doctype, DoctypeUtils, IpfsApi } from '@ceramicnetwork/common';
 import { TileDoctypeHandler } from "@ceramicnetwork/doctype-tile-handler"
 import { TileDoctype } from "@ceramicnetwork/doctype-tile";
 import { filter, take } from "rxjs/operators"
-import * as u8a from 'uint8arrays'
-import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
-import KeyDidResolver from 'key-did-resolver'
-import { Resolver } from "did-resolver"
-import { DID } from 'dids'
 
-import dagJose from 'dag-jose'
-import { sha256 } from 'multiformats/hashes/sha2'
-import legacy from 'multiformats/legacy'
 import StreamID from "@ceramicnetwork/streamid";
 import getPort from "get-port";
+import { createIPFS } from './create-ipfs';
+import { makeDID } from './make-did';
 
-const seed = u8a.fromString('6e34b2e1a9624113d81ece8a8a22e6e97f0e145c25c1d4d2d0e62753b4060c83', 'base16')
+const seed = 'SEED'
 const TOPIC = '/ceramic'
-
-/**
- * Create an IPFS instance
- */
-const createIPFS = async (path: string): Promise<IpfsApi> => {
-    const port = await getPort()
-    const hasher = {}
-    hasher[sha256.code] = sha256
-    const format = legacy(dagJose, {hashes: hasher})
-
-    const config = {
-        ipld: { formats: [format] },
-        repo: `${path}/ipfs${port}/`,
-        config: {
-            Addresses: { Swarm: [`/ip4/127.0.0.1/tcp/${port}`] },
-            Discovery: { DNS: { Enabled: false }, webRTCStar: { Enabled: false }},
-            Bootstrap: []
-        }
-    }
-
-    return IPFS.create(config)
-}
-
-const makeDID = function(seed: Uint8Array, ceramic: CeramicApi): DID {
-    const provider = new Ed25519Provider(seed)
-
-    const keyDidResolver = KeyDidResolver.getResolver()
-    const threeIdResolver = ThreeIdResolver.getResolver(ceramic)
-    const resolver = new Resolver({
-        ...threeIdResolver, ...keyDidResolver,
-    })
-    return new DID({ provider, resolver })
-}
 
 const makeCeramicCore = async(ipfs: IpfsApi, stateStoreDirectory: string): Promise<Ceramic> => {
     const core = await Ceramic.create(ipfs, {pubsubTopic: TOPIC, stateStoreDirectory, anchorOnRequest: false})
@@ -89,10 +48,11 @@ describe('Ceramic interop: core <> http-client', () => {
         const port = await getPort()
         const apiUrl = 'http://localhost:' + port
         daemon = new CeramicDaemon(core, { port })
+        await daemon.listen()
         client = new CeramicClient(apiUrl, { syncInterval: 500 })
 
-        await core.setDID(makeDID(seed, core))
-        await client.setDID(makeDID(seed, client))
+        await core.setDID(makeDID(core, seed))
+        await client.setDID(makeDID(client, seed))
     })
 
     afterEach(async () => {
