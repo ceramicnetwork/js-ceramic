@@ -7,10 +7,10 @@ program
     .option('--ipfs-api <url>', 'The ipfs http api to use')
     .option('--ethereum-rpc <url>', 'The Ethereum RPC URL used for communicating with Ethereum blockchain')
     .option('--anchor-service-api <url>', 'The anchor service URL to use')
-    .option('--validate-docs', 'Validate documents according to their schemas. It is enabled by default')
+    .option('--validate-streams', 'Validate streams according to their schemas. It is enabled by default')
     .option('--ipfs-pinning-endpoint <url...>', 'Ipfs pinning endpoints')
-    .option('--state-store-directory <string>', `The directory path used for storing pinned document state. Defaults to HOME_DIR/.ceramic/statestore`)
-    .option('--state-store-s3-bucket <string>', `The S3 bucket name to use for storing pinned document state. If not provided pinned document state will only be saved locally but not to S3.`)
+    .option('--state-store-directory <string>', `The directory path used for storing pinned stream state. Defaults to HOME_DIR/.ceramic/statestore`)
+    .option('--state-store-s3-bucket <string>', `The S3 bucket name to use for storing pinned stream state. If not provided pinned stream state will only be saved locally but not to S3.`)
     .option('--gateway', 'Makes read only endpoints available. It is disabled by default')
     .option('--port <int>', 'Port daemon is available. Default is 7007')
     .option('--debug', 'Enable debug logging level. Default is false')
@@ -27,7 +27,7 @@ program
         ipfsApi,
         ethereumRpc,
         anchorServiceApi,
-        validateDocs,
+        validateStreams,
         ipfsPinningEndpoint,
         stateStoreDirectory,
         stateStoreS3Bucket,
@@ -48,7 +48,7 @@ program
             ipfsApi,
             ethereumRpc,
             anchorServiceApi,
-            validateDocs,
+            validateStreams,
             ipfsPinningEndpoint,
             stateStoreDirectory,
             stateStoreS3Bucket,
@@ -65,7 +65,7 @@ program
     })
 
 program
-    .command('create <doctype>')
+    .command('create <streamtype>')
     .option('--content <content>', 'New document content')
     .option('--only-genesis', 'Only create the genesis object. No anchor will be created')
     .option('--controllers <controllers>', 'Specify a comma-separated list of the controllers of the document. Controllers are the users that are allowed to publish updates to this document. Defaults to current user')
@@ -90,28 +90,28 @@ program
 
 program
     .command('show <streamId> [<anchor>]')
-    .description('Show the content of a document')
+    .description('Show the content of a stream')
     .action(async (streamId) => {
         await CeramicCliUtils.show(streamId)
     })
 
 program
     .command('state <streamId> [<anchor>]')
-    .description('Show the state of a document')
+    .description('Show the state of a stream')
     .action(async (streamId) => {
         await CeramicCliUtils.state(streamId)
     })
 
 program
     .command('watch <streamId>')
-    .description('Watch for updates in a document')
+    .description('Watch for updates in a stream')
     .action(async (streamId) => {
         await CeramicCliUtils.watch(streamId)
     })
 
 program
     .command('commits <streamId>')
-    .description('List document commits')
+    .description('List stream commits')
     .action(async (streamId) => {
         await CeramicCliUtils.commits(streamId)
     })
@@ -145,21 +145,21 @@ pin.description('Ceramic local pinning API')
 
 pin
     .command('add <streamId>')
-    .description('Pin document')
+    .description('Pin stream')
     .action(async (streamId) => {
         await CeramicCliUtils.pinAdd(streamId)
     });
 
 pin
     .command('rm <streamId>')
-    .description('Unpin document')
+    .description('Unpin stream')
     .action(async (streamId) => {
         await CeramicCliUtils.pinRm(streamId)
     });
 
 pin
     .command('ls [<streamId>]')
-    .description('List pinned documents')
+    .description('List pinned streams')
     .action(async (streamId) => {
         await CeramicCliUtils.pinLs(streamId)
     })

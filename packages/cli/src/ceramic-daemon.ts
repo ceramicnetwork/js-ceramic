@@ -37,7 +37,7 @@ export interface CreateOpts {
   stateStoreDirectory?: string;
   s3StateStoreBucket?: string;
 
-  validateDocs?: boolean;
+  validateStreams?: boolean;
   ipfsPinningEndpoints?: string[];
   gateway?: boolean;
   loggerConfig?: LoggerConfig,
@@ -58,27 +58,13 @@ export function makeCeramicConfig (opts: CreateOpts): CeramicConfig {
   const ceramicConfig: CeramicConfig = {
     loggerProvider,
     gateway: opts.gateway || false,
-    networkName: opts.network
-  }
-
-  if (opts.anchorServiceUrl) {
-    ceramicConfig.anchorServiceUrl = opts.anchorServiceUrl
-  }
-
-  if (opts.ethereumRpcUrl) {
-    ceramicConfig.ethereumRpcUrl = opts.ethereumRpcUrl
-  }
-
-  if (opts.pubsubTopic) {
-    ceramicConfig.pubsubTopic = opts.pubsubTopic
-  }
-
-  if (opts.stateStoreDirectory) {
-    ceramicConfig.stateStoreDirectory = opts.stateStoreDirectory
-  }
-
-  if (opts.ipfsPinningEndpoints) {
-    ceramicConfig.ipfsPinningEndpoints = opts.ipfsPinningEndpoints
+    anchorServiceUrl: opts.anchorServiceUrl,
+    ethereumRpcUrl: opts.ethereumRpcUrl,
+    ipfsPinningEndpoints: opts.ipfsPinningEndpoints,
+    networkName: opts.network,
+    pubsubTopic: opts.pubsubTopic,
+    stateStoreDirectory: opts.stateStoreDirectory,
+    validateStreams: opts.validateStreams,
   }
 
   return ceramicConfig
@@ -90,23 +76,23 @@ export function makeCeramicConfig (opts: CreateOpts): CeramicConfig {
  * @param opts
  */
 function parseQueryObject(opts: Record<string, any>): Record<string, string | boolean | number> {
-  const docOpts = {}
+  const typedOpts = {}
   for (const [key, value] of Object.entries(opts)) {
     if (typeof value == 'string') {
       if (value === "true") {
-        docOpts[key] = true
+        typedOpts[key] = true
       } else if (value === "false") {
-        docOpts[key] = false
+        typedOpts[key] = false
       } else if (!isNaN(parseInt(value))) {
-        docOpts[key] = parseInt(value)
+        typedOpts[key] = parseInt(value)
       } else {
-        docOpts[key] = value
+        typedOpts[key] = value
       }
     } else {
-      docOpts[key] = value
+      typedOpts[key] = value
     }
   }
-  return docOpts
+  return typedOpts
 }
 
 /**

@@ -31,13 +31,12 @@ const makeDID = function(seed: Uint8Array, ceramic: Ceramic): DID {
   return new DID({ provider, resolver })
 }
 
-const createCeramic = async (ipfs: IpfsApi, anchorOnRequest = false, docCacheLimit = 100, cacheDocumentCommits = true): Promise<Ceramic> => {
+const createCeramic = async (ipfs: IpfsApi, anchorOnRequest = false, streamCacheLimit = 100): Promise<Ceramic> => {
   const ceramic = await Ceramic.create(ipfs, {
     stateStoreDirectory: await tmp.tmpName(),
     anchorOnRequest,
-    docCacheLimit,
-    cacheDocCommits: cacheDocumentCommits,
-    restoreDocuments: false,
+    streamCacheLimit,
+    restoreStreams: false,
     pubsubTopic: "/ceramic/inmemory/test" // necessary so Ceramic instances can talk to each other
   })
   await ceramic.setDID(makeDID(seed, ceramic))
@@ -67,7 +66,7 @@ describe('Ceramic integration', () => {
 
   it('can create Ceramic instance on default network', async () => {
     const stateStoreDirectory = await tmp.tmpName()
-    const ceramic = await Ceramic.create(ipfs1, {stateStoreDirectory, restoreDocuments: false})
+    const ceramic = await Ceramic.create(ipfs1, {stateStoreDirectory, restoreStreams: false})
     await delay(1000)
     const supportedChains = await ceramic.getSupportedChains()
     expect(supportedChains).toEqual(['inmemory:12345'])
@@ -76,7 +75,7 @@ describe('Ceramic integration', () => {
 
   it('can create Ceramic instance explicitly on inmemory network', async () => {
     const stateStoreDirectory = await tmp.tmpName()
-    const ceramic = await Ceramic.create(ipfs1, { networkName: 'inmemory', stateStoreDirectory, restoreDocuments: false })
+    const ceramic = await Ceramic.create(ipfs1, { networkName: 'inmemory', stateStoreDirectory, restoreStreams: false })
     await delay(1000)
     const supportedChains = await ceramic.getSupportedChains()
     expect(supportedChains).toEqual(['inmemory:12345'])
@@ -91,7 +90,7 @@ describe('Ceramic integration', () => {
 
   it('cannot create Ceramic instance on invalid network', async () => {
     const stateStoreDirectory = await tmp.tmpName()
-    await expect(Ceramic.create(ipfs1, { networkName: 'fakenetwork', stateStoreDirectory, restoreDocuments: false })).rejects.toThrow("Unrecognized Ceramic network name: 'fakenetwork'. Supported networks are: 'mainnet', 'testnet-clay', 'dev-unstable', 'local', 'inmemory'")
+    await expect(Ceramic.create(ipfs1, { networkName: 'fakenetwork', stateStoreDirectory, restoreStreams: false })).rejects.toThrow("Unrecognized Ceramic network name: 'fakenetwork'. Supported networks are: 'mainnet', 'testnet-clay', 'dev-unstable', 'local', 'inmemory'")
     await delay(1000)
   })
 
