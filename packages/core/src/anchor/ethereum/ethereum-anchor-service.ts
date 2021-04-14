@@ -3,7 +3,7 @@ import fetch from "cross-fetch"
 import * as uint8arrays from 'uint8arrays'
 import { decode } from "multihashes"
 import * as providers from "@ethersproject/providers"
-import { CeramicConfig } from "../../ceramic"
+import { LRUMap } from 'lru_map';
 import {
   AnchorProof,
   CeramicApi,
@@ -49,6 +49,7 @@ const ETH_CHAIN_ID_MAPPINGS: Record<string, EthNetwork> = {
 }
 
 const BASE_CHAIN_ID = "eip155"
+const MAX_PROVIDERS_COUNT = 100
 
 /**
  * Ethereum anchor service that stores root CIDs on Ethereum blockchain
@@ -57,6 +58,7 @@ export default class EthereumAnchorService implements AnchorService {
   private readonly requestsApiEndpoint: string;
   private readonly chainIdApiEndpoint: string;
   private _chainId: string;
+  private readonly providersCache: LRUMap<string, providers.BaseProvider>
 
   /**
    * @param anchorServiceUrl
@@ -66,6 +68,7 @@ export default class EthereumAnchorService implements AnchorService {
     this.requestsApiEndpoint = this.anchorServiceUrl + "/api/v0/requests";
     this.chainIdApiEndpoint =
       this.anchorServiceUrl + "/api/v0/service-info/supported_chains";
+    this.providersCache = new LRUMap(MAX_PROVIDERS_COUNT)
   }
 
   /**
@@ -278,6 +281,9 @@ export default class EthereumAnchorService implements AnchorService {
    * @private
    */
   private _getEthProvider(chain: string): providers.BaseProvider {
+    const fromCache = this.providersCache.get(chain);
+    if (fromCache) return fromCache;
+
     if (!chain.startsWith("eip155")) {
       throw new Error(
         `Unsupported chainId '${chain}' - must be eip155 namespace`
@@ -291,7 +297,9 @@ export default class EthereumAnchorService implements AnchorService {
     }
 
     if (this.ethereumRpcEndpoint) {
-      return new providers.JsonRpcProvider(this.ethereumRpcEndpoint);
+      const provider = new providers.JsonRpcProvider(this.ethereumRpcEndpoint);
+      this.providersCache.set(chain, provider);
+      return provider;
     }
 
     const ethNetwork: EthNetwork = ETH_CHAIN_ID_MAPPINGS[chain];
@@ -299,7 +307,9 @@ export default class EthereumAnchorService implements AnchorService {
       throw new Error(`No ethereum provider available for chainId ${chain}`);
     }
 
-    return providers.getDefaultProvider(ethNetwork.network);
+    const provider = providers.getDefaultProvider(ethNetwork.network);
+    this.providersCache.set(chain, provider);
+    return provider;
   }
 
   /**
