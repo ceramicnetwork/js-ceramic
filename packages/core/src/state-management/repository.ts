@@ -96,18 +96,18 @@ export class Repository {
       const runningState = new RunningState(docState);
       this.add(runningState);
       const toRecover =
-          runningState.value.anchorStatus === AnchorStatus.PENDING ||
-          runningState.value.anchorStatus === AnchorStatus.PROCESSING;
+        runningState.value.anchorStatus === AnchorStatus.PENDING ||
+        runningState.value.anchorStatus === AnchorStatus.PROCESSING;
       if (toRecover) {
         this.stateManager.anchor(runningState);
       }
       return runningState;
     } else {
-      return undefined
+      return undefined;
     }
   }
 
-  private async fromNetwork(streamId: StreamID, opts: LoadOpts): Promise<RunningState> {
+  private async fromNetwork(streamId: StreamID): Promise<RunningState> {
     const handler = this.#deps.handlers.get(streamId.typeName);
     const genesisCid = streamId.cid;
     const commit = await this.#deps.dispatcher.retrieveCommit(genesisCid);
@@ -118,8 +118,7 @@ export class Repository {
     await this.#deps.stateValidation.validate(state, state.content);
     const state$ = new RunningState(state);
     this.add(state$);
-    await this.stateManager.syncGenesis(state$, opts);
-    this.logger.verbose(`Document ${streamId.toString()} successfully loaded`);
+    this.logger.verbose(`Stream ${streamId.toString()} successfully loaded`); // todo where should this go
     return state$;
   }
 
@@ -128,26 +127,16 @@ export class Repository {
    * Starts by checking if the document state is present in the in-memory cache, if not then then checks the state store, and finally loads the document from pubsub.
    */
   async load(streamId: StreamID, opts: LoadOpts | CreateOpts): Promise<RunningState> {
-    if (opts.forceSync && !opts.sync) {
-      throw new Error("Cannot set 'forceSync' without also setting 'sync'")
-    }
-
     return this.loadingQ.run(streamId.toString(), async () => {
-      const fromMemory = this.fromMemory(streamId);
-      if (fromMemory) {
-        if (opts.forceSync) {
-          await this.stateManager.syncGenesis(fromMemory, opts)
-        }
-        return fromMemory;
+      let state = this.fromMemory(streamId);
+      if (!state) {
+        state = await this.fromStateStore(streamId);
       }
-      const fromStateStore = await this.fromStateStore(streamId);
-      if (fromStateStore) {
-        if (opts.forceSync) {
-          await this.stateManager.syncGenesis(fromStateStore, opts)
-        }
-        return fromStateStore;
+      if (!state && !opts.fromCacheOnly) {
+        state = await this.fromNetwork(streamId);
       }
-      return this.fromNetwork(streamId, opts);
+      await this.stateManager.sync(state, opts);
+      return state
     });
   }
 

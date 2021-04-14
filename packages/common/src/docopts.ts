@@ -11,10 +11,11 @@ interface BasicLoadOpts {
     syncTimeoutMillis?: number
 
     /**
-     * Setting this to true means we will always sync the current tip from pubsub even if we have
-     * a version of the stream state stored in cache or in the state store for pinned streams.
+     * Setting this to true means we won't try to load the stream from the network or query pubsub
+     * for the current tip. We'll only return the stream if it exists in our in-memory cache
+     * or in the state store for pinned streams. This option is incompatible with sync:true.
      */
-    forceSync?: boolean
+    fromCacheOnly?: boolean
 }
 
 /**

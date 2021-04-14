@@ -45,12 +45,12 @@ export class StateManager {
   ) {}
 
   /**
-   * Takes a document containing only the genesis commit and kicks off the process to load and apply
-   * the most recent Tip to it.
+   * Takes a stream state that might not contain the complete log (and might in fact contain only the
+   * genesis commit) and kicks off the process to load and apply the most recent Tip to it.
    * @param state$
    * @param opts
    */
-  syncGenesis(state$: RunningState, opts: LoadOpts): Promise<void> {
+  sync(state$: RunningState, opts: LoadOpts): Promise<void> {
     return this.applyOpts(state$, opts);
   }
 
@@ -91,19 +91,29 @@ export class StateManager {
     const anchor = (opts as any).anchor
     const publish = (opts as any).publish
     const sync = (opts as any).sync
+    const fromCacheOnly = (opts as any).fromCacheOnly
+
+    if (sync && fromCacheOnly) {
+      throw new Error("Cannot set both 'sync' and 'fromCacheOnly'")
+    }
+
     if (anchor) {
       this.anchor(state$);
     }
     if (publish) {
       this.publishTip(state$);
     }
-    if (sync) {
-      const tip$ = this.dispatcher.messageBus.queryNetwork(state$.id);
 
-      const syncTimeout = (opts as LoadOpts).syncTimeoutMillis != undefined ? (opts as LoadOpts).syncTimeoutMillis : DEFAULT_SYNC_TIMEOUT
-      const tip = await tip$.pipe(timeoutWith(syncTimeout, of(undefined))).toPromise();
-      if (tip) {
-        await this.handleTip(state$, tip);
+    if (!fromCacheOnly) {
+      const tip$ = this.dispatcher.messageBus.queryNetwork(state$.id);
+      if (sync) {
+        const syncTimeout = (opts as LoadOpts).syncTimeoutMillis != undefined ? (opts as LoadOpts).syncTimeoutMillis : DEFAULT_SYNC_TIMEOUT
+        const tip = await tip$.pipe(timeoutWith(syncTimeout, of(undefined))).toPromise();
+        if (tip) {
+          await this.handleTip(state$, tip);
+        }
+      } else {
+        state$.add(tip$.subscribe());
       }
     }
   }

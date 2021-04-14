@@ -30,9 +30,9 @@ export const DEFAULT_CLIENT_CONFIG: CeramicClientConfig = {
   docSyncInterval: 5000,
 }
 
-const DEFAULT_APPLY_COMMIT_OPTS = { anchor: true, publish: true, sync: false, forceSync: false }
-const DEFAULT_CREATE_FROM_GENESIS_OPTS = { anchor: true, publish: true, sync: true, forceSync: false }
-const DEFAULT_LOAD_OPTS = { sync: true, forceSync: false }
+const DEFAULT_APPLY_COMMIT_OPTS = { anchor: true, publish: true, sync: false, fromCacheOnly: false }
+const DEFAULT_CREATE_FROM_GENESIS_OPTS = { anchor: true, publish: true, sync: true, fromCacheOnly: false }
+const DEFAULT_LOAD_OPTS = { sync: true, fromCacheOnly: false }
 
 /**
  * Ceramic client configuration

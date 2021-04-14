@@ -183,7 +183,7 @@ export abstract class Doctype extends Observable<DocState> implements DocStateHo
     }
 
     async sync(): Promise<void> {
-      const document = await this.api.loadDocument(this.id, { sync: true, forceSync: true })
+      const document = await this.api.loadDocument(this.id, { sync: true })
       this.state$.next(document.state)
     }
 
