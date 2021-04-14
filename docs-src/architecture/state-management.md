@@ -40,13 +40,13 @@ One of the features is ability to subscribe to document changes. When a consumer
 
 - document is in memory ⇒ we use in-memory state
 - document is pinned but not in memory ⇒ we load from the state store,
-- document is not pinned and not in memory ⇒ we use the state from Doctype instance that requested the subscription.
+- document is not pinned and not in memory ⇒ we use the state from Stream instance that requested the subscription.
 
 So, at any time, we are sure we start subscription with the latest available state.
 
-### Doctype and State
+### Stream and State
 
-As part of state refactor effort we have decided to maintain a certain semantics for how Doctype updates state. After created, Doctype maintains just the state it was initialized with. It only updates state after being manually changed or when subscribed. In the latter case, the state gets continuously updated. If looked from the inside, one could notice a Doctype relies on `RunningStateLike` instance to maintain the state. One could see `RunningStateLike` as either an [Observable](https://rxjs.dev/guide/observable) of DocState with an access to the current value, or as [BehaviorSubject](https://rxjs.dev/guide/subject#behaviorsubject) with some additional getters. The reason for this, is we want to avoid explicit memory management in Doctype instances. Any way `RunningStateLike` is a kind of [Subject](https://rxjs.dev/guide/subject), that has to be explicitly closed, and as one could see from sections above managing document state life cycle is complicated. Ceramic instance performs that closing behavior when the CeramicAPI instance itself is closed, and that frees a developer from closing every Doctype manually. However, the more open and subscribed Doctype instances there, the more memory is used, as having lots of subscribed Doctype instances can cause the in-memory cache to grow behind the configured max cache size.
+As part of state refactor effort we have decided to maintain a certain semantics for how Stream updates state. After created, Stream maintains just the state it was initialized with. It only updates state after being manually changed or when subscribed. In the latter case, the state gets continuously updated. If looked from the inside, one could notice a Stream relies on `RunningStateLike` instance to maintain the state. One could see `RunningStateLike` as either an [Observable](https://rxjs.dev/guide/observable) of DocState with an access to the current value, or as [BehaviorSubject](https://rxjs.dev/guide/subject#behaviorsubject) with some additional getters. The reason for this, is we want to avoid explicit memory management in Stream instances. Any way `RunningStateLike` is a kind of [Subject](https://rxjs.dev/guide/subject), that has to be explicitly closed, and as one could see from sections above managing document state life cycle is complicated. Ceramic instance performs that closing behavior when the CeramicAPI instance itself is closed, and that frees a developer from closing every Stream manually. However, the more open and subscribed Stream instances there, the more memory is used, as having lots of subscribed Stream instances can cause the in-memory cache to grow behind the configured max cache size.
 
 ![Relationship between doctype and state](media://state-management/doctype-and-state.png)
 
@@ -62,7 +62,7 @@ Repository shepherds a list of document states, be they running or sleeping. In 
 
 `RunningState` implements interface `RunningStateLike`. It is beneficial for us to have the same interface across few semantically different classes. While `RunningState` represents, sorry for a tautology, a _running_ state, in some cases we want to provide a snapshot of a document state at a certain time or commit. This is achieved in `SnapshotState`. It can not be updated.
 
-We also have `StateLink`  implementing `RunningStateLike`. Its initial state is set on construction time. It can be updated, and update only changes local state. It can be subscribed to, and this actually triggers subscription to another upstream Observable (returned from `Repository#updates$` in production case). This way we achieve behavior outlined in Subscriptions section, while maintaining single responsibility for the entity. `StateLink` maintains state local to Doctype. The upstream observable handles Repository-specific logic.
+We also have `StateLink`  implementing `RunningStateLike`. Its initial state is set on construction time. It can be updated, and update only changes local state. It can be subscribed to, and this actually triggers subscription to another upstream Observable (returned from `Repository#updates$` in production case). This way we achieve behavior outlined in Subscriptions section, while maintaining single responsibility for the entity. `StateLink` maintains state local to Stream. The upstream observable handles Repository-specific logic.
 
 ![Running State Hierarchy](media://state-management/running-state-hierarchy.png)
 

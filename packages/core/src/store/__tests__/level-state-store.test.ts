@@ -1,7 +1,7 @@
 import tmp from 'tmp-promise'
 import { LevelStateStore } from "../level-state-store";
 import Level from "level-ts";
-import { AnchorStatus, Doctype, CommitType, SignatureStatus, DoctypeUtils, TestUtils } from '@ceramicnetwork/common';
+import { AnchorStatus, Stream, CommitType, SignatureStatus, StreamUtils, TestUtils } from '@ceramicnetwork/common';
 import CID from 'cids'
 import StreamID from '@ceramicnetwork/streamid'
 
@@ -25,7 +25,7 @@ jest.mock('level-ts', () => {
     })
 })
 
-class FakeType extends Doctype {
+class FakeType extends Stream {
     makeReadOnly() {
         throw new Error("Method not implemented.");
     }
@@ -66,7 +66,7 @@ test('#save and #load', async () => {
     stateStore.open(NETWORK)
     await stateStore.save(document)
     const streamId = document.id.baseID
-    expect(mockPut).toBeCalledWith(streamId.toString(), DoctypeUtils.serializeState(state))
+    expect(mockPut).toBeCalledWith(streamId.toString(), StreamUtils.serializeState(state))
 
     const retrieved = await stateStore.load(streamId)
     expect(mockGet).toBeCalledWith(streamId.toString())

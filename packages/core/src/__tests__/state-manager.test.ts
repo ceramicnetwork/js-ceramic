@@ -1,4 +1,4 @@
-import { AnchorStatus, DoctypeUtils, IpfsApi, SignatureStatus } from '@ceramicnetwork/common';
+import { AnchorStatus, StreamUtils, IpfsApi, SignatureStatus } from '@ceramicnetwork/common';
 import CID from 'cids';
 import { RunningState } from '../state-management/running-state';
 import { createIPFS } from './ipfs-util';
@@ -187,10 +187,10 @@ describe('rewind', () => {
     const docState2 = await ceramic2.repository.load(doc2.id, {});
     const snapshot = await ceramic2.repository.stateManager.rewind(docState2, doc1.commitId);
 
-    expect(DoctypeUtils.statesEqual(snapshot.state, doc1.state));
-    const snapshotDoctype = doctypeFromState<TileDocument>(ceramic2.context, ceramic2._doctypeHandlers, snapshot.value);
+    expect(StreamUtils.statesEqual(snapshot.state, doc1.state));
+    const snapshotStream = doctypeFromState<TileDocument>(ceramic2.context, ceramic2._doctypeHandlers, snapshot.value);
     await expect(
-      snapshotDoctype.update({ abc: 1010 }),
+      snapshotStream.update({ abc: 1010 }),
     ).rejects.toThrow(
       'Historical document commits cannot be modified. Load the document without specifying a commit to make updates.',
     );

@@ -1,7 +1,7 @@
 import Ceramic from '../ceramic'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import tmp from 'tmp-promise'
-import { DoctypeUtils, IpfsApi, TestUtils, DocState } from '@ceramicnetwork/common';
+import { StreamUtils, IpfsApi, TestUtils, DocState } from '@ceramicnetwork/common';
 import { TileDocument } from "@ceramicnetwork/doctype-tile"
 import * as u8a from 'uint8arrays'
 import { createIPFS, swarmConnect } from './ipfs-util';
@@ -45,7 +45,7 @@ const createCeramic = async (ipfs: IpfsApi, anchorOnRequest = false, streamCache
 }
 
 function expectEqualStates(a: DocState, b: DocState) {
-  expect(DoctypeUtils.serializeState(a)).toEqual(DoctypeUtils.serializeState(b))
+  expect(StreamUtils.serializeState(a)).toEqual(StreamUtils.serializeState(b))
 }
 
 describe('Ceramic integration', () => {
@@ -171,7 +171,7 @@ describe('Ceramic integration', () => {
     await anchorUpdate(ceramic1, doc1)
 
     expect(doc1.content).toEqual({ test: 'abcde' })
-    await TestUtils.waitForState(doc3, 2000, state => DoctypeUtils.statesEqual(state, doc1.state), () => {
+    await TestUtils.waitForState(doc3, 2000, state => StreamUtils.statesEqual(state, doc1.state), () => {
       throw new Error(`doctype3.state should equal doctype1.state`)
     })
 

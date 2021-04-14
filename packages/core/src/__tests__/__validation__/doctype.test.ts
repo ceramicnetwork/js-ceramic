@@ -1,12 +1,12 @@
 import { mock } from 'jest-mock-extended'
 
 import Utils from '../../utils'
-import { CeramicApi, Doctype, DocState, TestUtils, CommitType } from '@ceramicnetwork/common';
+import { CeramicApi, Stream, DocState, TestUtils, CommitType } from '@ceramicnetwork/common';
 import CID from 'cids'
 
 const FAKE_CID = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu');
 
-class BasicDoctypeWithContent extends Doctype {
+class BasicStreamWithContent extends Stream {
     makeReadOnly() {
         throw new Error('Not implemented')
     }
@@ -16,7 +16,7 @@ class BasicDoctypeWithContent extends Doctype {
     }
 }
 
-describe('Doctype', () => {
+describe('Stream', () => {
     let ceramic: any
     const schema = {
         "$schema": "http://json-schema.org/draft-07/schema#",
@@ -43,10 +43,10 @@ describe('Doctype', () => {
           ]
         } as unknown as DocState
 
-        const schemaDoc = new BasicDoctypeWithContent(TestUtils.runningState(docSchemaState), null)
+        const schemaDoc = new BasicStreamWithContent(TestUtils.runningState(docSchemaState), null)
 
         ceramic = mock<CeramicApi>()
-        ceramic.loadDocument.mockReturnValue(new Promise<Doctype>((resolve) => {
+        ceramic.loadDocument.mockReturnValue(new Promise<Stream>((resolve) => {
             resolve(schemaDoc);
         }));
     })
@@ -69,7 +69,7 @@ describe('Doctype', () => {
           ]
         } as unknown as DocState
 
-        const doc = new BasicDoctypeWithContent(TestUtils.runningState(state), { api: ceramic })
+        const doc = new BasicStreamWithContent(TestUtils.runningState(state), { api: ceramic })
         await Utils.validateSchema(doc)
     })
 
@@ -91,7 +91,7 @@ describe('Doctype', () => {
           ]
         } as unknown as DocState;
 
-        const doc = new BasicDoctypeWithContent(TestUtils.runningState(state), { api: ceramic })
+        const doc = new BasicStreamWithContent(TestUtils.runningState(state), { api: ceramic })
         try {
             await Utils.validateSchema(doc)
             throw new Error('Should not be able to validate invalid data')

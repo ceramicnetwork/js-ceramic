@@ -5,7 +5,7 @@ import StreamID from '@ceramicnetwork/streamid';
 import {
   CommitType,
   DocState,
-  DoctypeHandler,
+  StreamHandler,
   LoggerProvider,
 } from '@ceramicnetwork/common';
 import { serialize, MsgType } from '../pubsub/pubsub-message';
@@ -47,7 +47,7 @@ class TileDocumentMock extends TileDocument {
 
 const fakeHandler = ({
   doctype: TileDocumentMock,
-} as unknown) as DoctypeHandler<TileDocumentMock>;
+} as unknown) as StreamHandler<TileDocumentMock>;
 
 describe('Dispatcher', () => {
   let dispatcher: Dispatcher;

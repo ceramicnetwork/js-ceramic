@@ -1,4 +1,4 @@
-import {DocState, Doctype} from "../doctype";
+import {DocState, Stream} from "../stream";
 import {take, filter} from 'rxjs/operators'
 import { BehaviorSubject } from "rxjs";
 import { RunningStateLike } from '../running-state-like';
@@ -21,7 +21,7 @@ export class TestUtils {
      * Returns a Promise that resolves when there is an update to the given document's state.
      * @param doc
      */
-    static registerChangeListener(doc: Doctype): Promise<DocState> {
+    static registerChangeListener(doc: Stream): Promise<DocState> {
         return doc.pipe(take(1)).toPromise()
     }
 
@@ -33,7 +33,7 @@ export class TestUtils {
      * @param predicate - function that takes the document's DocState as input and returns true when this function can stop waiting
      * @param onFailure - function called if we time out before the predicate becomes true
      */
-    static async waitForState(doc: Doctype,
+    static async waitForState(doc: Stream,
                               timeout: number,
                               predicate: (state: DocState) => boolean,
                               onFailure: () => void): Promise<void> {

@@ -5,7 +5,7 @@ import { RotatingFileStream } from "@ceramicnetwork/logger"
 import { buildIpfsConnection } from "./build-ipfs-connection.util";
 import { S3StateStore } from "./s3-state-store";
 import {
-  DoctypeUtils,
+  StreamUtils,
   MultiQuery,
   LoggerConfig,
   LoggerProvider,
@@ -201,11 +201,11 @@ class CeramicDaemon {
    */
   async createDocFromGenesis (req: Request, res: Response): Promise<void> {
     const { doctype, genesis, docOpts } = req.body
-    const doc = await this.ceramic.createDocumentFromGenesis(doctype, DoctypeUtils.deserializeCommit(genesis), docOpts)
+    const doc = await this.ceramic.createDocumentFromGenesis(doctype, StreamUtils.deserializeCommit(genesis), docOpts)
     res.json({
       streamId: doc.id.toString(),
       docId: doc.id.toString(),
-      state: DoctypeUtils.serializeState(doc.state)
+      state: StreamUtils.serializeState(doc.state)
     })
   }
 
@@ -215,8 +215,8 @@ class CeramicDaemon {
    */
   async createStreamFromGenesis (req: Request, res: Response): Promise<void> {
     const { streamtype, genesis, opts } = req.body
-    const stream = await this.ceramic.createDocumentFromGenesis(streamtype, DoctypeUtils.deserializeCommit(genesis), opts)
-    res.json({ streamId: stream.id.toString(), state: DoctypeUtils.serializeState(stream.state) })
+    const stream = await this.ceramic.createDocumentFromGenesis(streamtype, StreamUtils.deserializeCommit(genesis), opts)
+    res.json({ streamId: stream.id.toString(), state: StreamUtils.serializeState(stream.state) })
   }
 
   /**
@@ -231,11 +231,11 @@ class CeramicDaemon {
   async createReadOnlyDocFromGenesis (req: Request, res: Response): Promise<void> {
     const { doctype, genesis, docOpts } = req.body
     const readOnlyDocOpts = { ...docOpts, anchor: false, publish: false }
-    const doc = await this.ceramic.createDocumentFromGenesis(doctype, DoctypeUtils.deserializeCommit(genesis), readOnlyDocOpts)
+    const doc = await this.ceramic.createDocumentFromGenesis(doctype, StreamUtils.deserializeCommit(genesis), readOnlyDocOpts)
     res.json({
       streamId: doc.id.toString(),
       docId: doc.id.toString(),
-      state: DoctypeUtils.serializeState(doc.state)
+      state: StreamUtils.serializeState(doc.state)
     })
   }
 
@@ -249,8 +249,8 @@ class CeramicDaemon {
   async createReadOnlyStreamFromGenesis (req: Request, res: Response): Promise<void> {
     const { streamtype, genesis, opts } = req.body
     const readOnlyOpts = { ...opts, anchor: false, publish: false }
-    const stream = await this.ceramic.createDocumentFromGenesis(streamtype, DoctypeUtils.deserializeCommit(genesis), readOnlyOpts)
-    res.json({ streamId: stream.id.toString(), state: DoctypeUtils.serializeState(stream.state) })
+    const stream = await this.ceramic.createDocumentFromGenesis(streamtype, StreamUtils.deserializeCommit(genesis), readOnlyOpts)
+    res.json({ streamId: stream.id.toString(), state: StreamUtils.serializeState(stream.state) })
   }
 
   /**
@@ -259,7 +259,7 @@ class CeramicDaemon {
   async state (req: Request, res: Response): Promise<void> {
     const opts = parseQueryObject(req.query)
     const stream = await this.ceramic.loadDocument(req.params.streamid, opts)
-    res.json({ streamId: stream.id.toString(), state: DoctypeUtils.serializeState(stream.state) })
+    res.json({ streamId: stream.id.toString(), state: StreamUtils.serializeState(stream.state) })
   }
 
   /**
@@ -270,7 +270,7 @@ class CeramicDaemon {
   async stateOld (req: Request, res: Response): Promise<void> {
     const opts = parseQueryObject(req.query)
     const doc = await this.ceramic.loadDocument(req.params.docid, opts)
-    res.json({ docId: doc.id.toString(), state: DoctypeUtils.serializeState(doc.state) })
+    res.json({ docId: doc.id.toString(), state: StreamUtils.serializeState(doc.state) })
   }
 
   /**
@@ -282,7 +282,7 @@ class CeramicDaemon {
     const serializedCommits = commits.map((r: any) => {
       return {
         cid: r.cid,
-        value: DoctypeUtils.serializeCommit(r.value)
+        value: StreamUtils.serializeCommit(r.value)
       }
     })
 
@@ -304,11 +304,11 @@ class CeramicDaemon {
       throw new Error('streamId and commit are required in order to apply commit')
     }
 
-    const stream = await this.ceramic.applyCommit(streamId, DoctypeUtils.deserializeCommit(commit), docOpts)
+    const stream = await this.ceramic.applyCommit(streamId, StreamUtils.deserializeCommit(commit), docOpts)
     res.json({
       streamId: stream.id.toString(),
       docId: stream.id.toString(),
-      state: DoctypeUtils.serializeState(stream.state)
+      state: StreamUtils.serializeState(stream.state)
     })
   }
 
@@ -330,7 +330,7 @@ class CeramicDaemon {
     const results = await this.ceramic.multiQuery(queries)
     const response = Object.entries(results).reduce((acc, e) => {
       const [k, v] = e
-      acc[k] = DoctypeUtils.serializeState(v.state)
+      acc[k] = StreamUtils.serializeState(v.state)
       return acc
     }, {})
     res.json(response)

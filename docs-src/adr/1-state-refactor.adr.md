@@ -59,7 +59,7 @@ We chosen option 2. It allows us to limit memory growth by constant factor, and 
 - We have configurable number of documents running in memory (`CeramicConfig.docCacheLimit`) - ceiling on memory growth when processing load is low.
 - We have configurable number of concurrent document-processing tasks (`CeramicConfig.concurrentRequestsLimit`) - ceiling on memory growth when processing load is high.
 - It unlocks an ability to limit a number of concurrently loading documents in future.
-- Event flows are composable, which allows us to have well-defined semantics of Doctype state management with regards to subscriptions.
+- Event flows are composable, which allows us to have well-defined semantics of Stream state management with regards to subscriptions.
 
 ### Negative Consequences
 

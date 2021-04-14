@@ -7,7 +7,7 @@ import { promises as fs } from 'fs'
 
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import CeramicClient from '@ceramicnetwork/http-client'
-import { CeramicApi, DoctypeUtils, LoggerConfig, LogLevel, Networks } from '@ceramicnetwork/common'
+import { CeramicApi, StreamUtils, LoggerConfig, LogLevel, Networks } from '@ceramicnetwork/common'
 import StreamID, {CommitID} from '@ceramicnetwork/streamid'
 
 import CeramicDaemon, { CreateOpts } from './ceramic-daemon'
@@ -174,7 +174,7 @@ export class CeramicCliUtils {
     static async state(streamRef: string): Promise<void> {
         await CeramicCliUtils._runWithCeramic(async (ceramic: CeramicApi) => {
             const stream = await ceramic.loadDocument(streamRef)
-            console.log(JSON.stringify(DoctypeUtils.serializeState(stream.state), null, 2))
+            console.log(JSON.stringify(StreamUtils.serializeState(stream.state), null, 2))
         })
     }
 

@@ -3,11 +3,11 @@ import StreamID, { CommitID, StreamRef } from '@ceramicnetwork/streamid';
 import {IpfsTopology} from "@ceramicnetwork/ipfs-topology";
 import {
   CreateOpts,
-  Doctype,
-  DoctypeHandler,
+  Stream,
+  StreamHandler,
   Context,
   DiagnosticsLogger,
-  DoctypeUtils,
+  StreamUtils,
   LoadOpts,
   AnchorService,
   CeramicApi,
@@ -443,7 +443,7 @@ class Ceramic implements CeramicApi {
    * Register new doctype handler
    * @param doctypeHandler - Document type handler
    */
-  addDoctypeHandler<T extends Doctype>(doctypeHandler: DoctypeHandler<T>): void {
+  addStreamHandler<T extends Stream>(doctypeHandler: StreamHandler<T>): void {
     this._doctypeHandlers.add(doctypeHandler)
   }
 
@@ -453,7 +453,7 @@ class Ceramic implements CeramicApi {
    * @param commit - Commit to be applied
    * @param opts - Initialization options
    */
-  async applyCommit<T extends Doctype>(streamId: string | StreamID, commit: CeramicCommit, opts: CreateOpts | UpdateOpts = {}): Promise<T> {
+  async applyCommit<T extends Stream>(streamId: string | StreamID, commit: CeramicCommit, opts: CreateOpts | UpdateOpts = {}): Promise<T> {
     opts = { ...DEFAULT_APPLY_COMMIT_OPTS, ...opts };
     const state$ = await this.repository.stateManager.applyCommit(normalizeStreamID(streamId), commit, opts as CreateOpts)
     return doctypeFromState<T>(this.context, this._doctypeHandlers, state$.value, this.repository.updates$)
@@ -465,7 +465,7 @@ class Ceramic implements CeramicApi {
    * @param genesis - Genesis CID
    * @param opts - Initialization options
    */
-  async createDocumentFromGenesis<T extends Doctype>(doctype: string, genesis: any, opts: CreateOpts = {}): Promise<T> {
+  async createDocumentFromGenesis<T extends Stream>(doctype: string, genesis: any, opts: CreateOpts = {}): Promise<T> {
     opts = { ...DEFAULT_CREATE_FROM_GENESIS_OPTS, ...opts };
     const state$ = await this._createDocFromGenesis(doctype, genesis, opts)
     return doctypeFromState<T>(this.context, this._doctypeHandlers, state$.value, this.repository.updates$)
@@ -489,7 +489,7 @@ class Ceramic implements CeramicApi {
    * @param streamId - Document ID
    * @param opts - Initialization options
    */
-  async loadDocument<T extends Doctype>(streamId: StreamID | CommitID | string, opts: LoadOpts = {}): Promise<T> {
+  async loadDocument<T extends Stream>(streamId: StreamID | CommitID | string, opts: LoadOpts = {}): Promise<T> {
     opts = { ...DEFAULT_LOAD_OPTS, ...opts };
     const streamRef = StreamRef.from(streamId)
     const base$ = await this._loadDoc(streamRef.baseID, opts)
@@ -512,7 +512,7 @@ class Ceramic implements CeramicApi {
    * @param timeout - Timeout in milliseconds
    * @private
    */
-  async _loadLinkedDocuments(query: MultiQuery, timeout = 7000): Promise<Record<string, Doctype>> {
+  async _loadLinkedDocuments(query: MultiQuery, timeout = 7000): Promise<Record<string, Stream>> {
     const id = StreamRef.from(query.streamId)
     const pathTrie = new PathTrie()
     query.paths?.forEach(path => pathTrie.add(path))
@@ -548,7 +548,7 @@ class Ceramic implements CeramicApi {
    * @param queries - Array of MultiQueries
    * @param timeout - Timeout in milliseconds
    */
-  async multiQuery(queries: Array<MultiQuery>, timeout?: number):  Promise<Record<string, Doctype>> {
+  async multiQuery(queries: Array<MultiQuery>, timeout?: number):  Promise<Record<string, Stream>> {
     const queryPromises = queries.map(query => {
       try {
         return this._loadLinkedDocuments(query, timeout)
@@ -573,7 +573,7 @@ class Ceramic implements CeramicApi {
       const record = (await this.ipfs.dag.get(cid, { timeout: IPFS_GET_TIMEOUT })).value
       return {
         cid: cid.toString(),
-        value: await DoctypeUtils.convertCommitToSignedCommitContainer(record, this.ipfs)
+        value: await StreamUtils.convertCommitToSignedCommitContainer(record, this.ipfs)
       }
     }))
     this._logger.verbose(`Successfully loaded ${results.length} commits for document ${streamId.toString()}`)

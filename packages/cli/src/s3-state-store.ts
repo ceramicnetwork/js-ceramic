@@ -1,4 +1,4 @@
-import { DocState, Doctype, DoctypeUtils } from "@ceramicnetwork/common"
+import { DocState, Stream, StreamUtils } from "@ceramicnetwork/common"
 import StreamID from '@ceramicnetwork/streamid'
 import { StateStore } from "@ceramicnetwork/core";
 import LevelUp from "levelup";
@@ -28,8 +28,8 @@ export class S3StateStore implements StateStore {
    * Pin document
    * @param document - Document instance
    */
-  async save(document: Doctype): Promise<void> {
-    await this.#store.put(document.id.baseID.toString(), JSON.stringify(DoctypeUtils.serializeState(document.state)))
+  async save(document: Stream): Promise<void> {
+    await this.#store.put(document.id.baseID.toString(), JSON.stringify(StreamUtils.serializeState(document.state)))
   }
 
   /**
@@ -40,7 +40,7 @@ export class S3StateStore implements StateStore {
     try {
       const state = await this.#store.get(streamId.baseID.toString())
       if (state) {
-        return DoctypeUtils.deserializeState(JSON.parse(state));
+        return StreamUtils.deserializeState(JSON.parse(state));
       } else {
         return null;
       }

@@ -1,6 +1,6 @@
 import CID from 'cids'
 import cloneDeep from 'lodash.clonedeep'
-import { DoctypeUtils, IpfsApi, UnreachableCaseError } from '@ceramicnetwork/common';
+import { StreamUtils, IpfsApi, UnreachableCaseError } from '@ceramicnetwork/common';
 import StreamID from "@ceramicnetwork/streamid";
 import { DiagnosticsLogger, ServiceLogger } from "@ceramicnetwork/common";
 import { Repository } from './state-management/repository';
@@ -38,7 +38,7 @@ export class Dispatcher {
    * @param data - Ceramic commit data
    */
   async storeCommit (data: any): Promise<CID> {
-    if (DoctypeUtils.isSignedCommitContainer(data)) {
+    if (StreamUtils.isSignedCommitContainer(data)) {
       const { jws, linkedBlock } = data
       // put the JWS into the ipfs dag
       const cid = await this._ipfs.dag.put(jws, { format: 'dag-jose', hashAlg: 'sha2-256' })

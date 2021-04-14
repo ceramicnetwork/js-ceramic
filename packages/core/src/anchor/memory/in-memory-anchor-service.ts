@@ -5,7 +5,7 @@ import {
   AnchorProof,
   AnchorService,
   AnchorStatus,
-  DoctypeUtils,
+  StreamUtils,
   AnchorServiceResponse,
 } from "@ceramicnetwork/common";
 
@@ -188,12 +188,12 @@ class InMemoryAnchorService implements AnchorService {
       const currentCommit = await this.#dispatcher.retrieveCommit(
         currentCommitId
       );
-      if (DoctypeUtils.isAnchorCommit(currentCommit)) {
+      if (StreamUtils.isAnchorCommit(currentCommit)) {
         return history;
       }
 
       let prevCommitId: CID;
-      if (DoctypeUtils.isSignedCommit(currentCommit)) {
+      if (StreamUtils.isSignedCommit(currentCommit)) {
         const payload = await this.#dispatcher.retrieveCommit(
           currentCommit.link
         );

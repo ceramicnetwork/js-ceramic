@@ -1,6 +1,6 @@
 import CID from "cids";
 import type { Observable } from "rxjs";
-import { AnchorProof, AnchorStatus } from "./doctype";
+import { AnchorProof, AnchorStatus } from "./stream";
 import { CeramicApi } from "./ceramic-api";
 import StreamID from "@ceramicnetwork/streamid";
 

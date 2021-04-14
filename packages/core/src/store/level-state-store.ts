@@ -1,5 +1,5 @@
 import Level from "level-ts";
-import { DocState, DocStateHolder, DoctypeUtils } from '@ceramicnetwork/common';
+import { DocState, DocStateHolder, StreamUtils } from '@ceramicnetwork/common';
 import { StateStore } from "./state-store"
 import StreamID from '@ceramicnetwork/streamid'
 import * as fs from 'fs'
@@ -36,7 +36,7 @@ export class LevelStateStore implements StateStore {
      * @param docStateHolder - Document instance
      */
     async save(docStateHolder: DocStateHolder): Promise<void> {
-        await this.#store.put(docStateHolder.id.toString(), DoctypeUtils.serializeState(docStateHolder.state))
+        await this.#store.put(docStateHolder.id.toString(), StreamUtils.serializeState(docStateHolder.state))
     }
 
     /**
@@ -47,7 +47,7 @@ export class LevelStateStore implements StateStore {
         try {
             const state = await this.#store.get(streamId.baseID.toString())
             if (state) {
-                return DoctypeUtils.deserializeState(state);
+                return StreamUtils.deserializeState(state);
             } else {
                 return null;
             }

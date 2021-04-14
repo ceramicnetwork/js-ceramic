@@ -1,7 +1,7 @@
 import Ceramic from "../ceramic";
 import { Ed25519Provider } from "key-did-provider-ed25519";
 import tmp from "tmp-promise";
-import { DoctypeUtils, DocState, IpfsApi, AnchorStatus } from "@ceramicnetwork/common";
+import { StreamUtils, DocState, IpfsApi, AnchorStatus } from "@ceramicnetwork/common";
 import { TileDocument } from "@ceramicnetwork/doctype-tile";
 import * as u8a from "uint8arrays";
 import { createIPFS } from './ipfs-util';
@@ -15,7 +15,7 @@ const PUBSUB_TOPIC = "/ceramic/inmemory/test";
 const SEED = u8a.fromString("6e34b2e1a9624113d81ece8a8a22e6e97f0e145c25c1d4d2d0e62753b4060c83", "base16");
 
 const expectEqualStates = (state1: DocState, state2: DocState): void => {
-    expect(DoctypeUtils.serializeState(state1)).toEqual(DoctypeUtils.serializeState(state2));
+    expect(StreamUtils.serializeState(state1)).toEqual(StreamUtils.serializeState(state2));
 };
 
 const makeDID = function(seed: Uint8Array, ceramic: Ceramic): DID {

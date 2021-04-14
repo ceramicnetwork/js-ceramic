@@ -1,9 +1,9 @@
 import { DID } from 'dids'
 import {
-    Doctype,
-    DoctypeHandler,
+    Stream,
+    StreamHandler,
     CeramicCommit
-} from "./doctype"
+} from "./stream"
 import { CreateOpts, LoadOpts, UpdateOpts } from "./docopts"
 import { StreamID, CommitID } from '@ceramicnetwork/streamid'
 import { LoggerProvider } from "./logger-provider";
@@ -59,25 +59,25 @@ export interface CeramicApi extends CeramicSigner {
     // loggerProvider: LoggerProvider; // TODO uncomment once logger is available on http-client
 
     /**
-     * Register Doctype handler
-     * @param doctypeHandler - DoctypeHandler instance
+     * Register Stream handler
+     * @param doctypeHandler - StreamHandler instance
      */
-    addDoctypeHandler<T extends Doctype>(doctypeHandler: DoctypeHandler<T>): void;
+    addStreamHandler<T extends Stream>(doctypeHandler: StreamHandler<T>): void;
 
     /**
-     * Create Doctype from genesis commit
+     * Create Stream from genesis commit
      * @param doctype - Document type
      * @param genesis - Genesis commit
      * @param opts - Initialization options
      */
-    createDocumentFromGenesis<T extends Doctype>(doctype: string, genesis: any, opts?: CreateOpts): Promise<T>;
+    createDocumentFromGenesis<T extends Stream>(doctype: string, genesis: any, opts?: CreateOpts): Promise<T>;
 
     /**
-     * Loads Doctype instance
+     * Loads Stream instance
      * @param streamId - Document ID
      * @param opts - Initialization options
      */
-    loadDocument<T extends Doctype>(streamId: StreamID | CommitID | string, opts?: LoadOpts): Promise<T>;
+    loadDocument<T extends Stream>(streamId: StreamID | CommitID | string, opts?: LoadOpts): Promise<T>;
 
     /**
      * Load all document commits by document ID
@@ -90,7 +90,7 @@ export interface CeramicApi extends CeramicSigner {
      * @param queries - Array of MultiQueries
      * @param timeout - Timeout in milliseconds
      */
-    multiQuery(queries: Array<MultiQuery>, timeout?: number):  Promise<Record<string, Doctype>>;
+    multiQuery(queries: Array<MultiQuery>, timeout?: number):  Promise<Record<string, Stream>>;
 
     /**
      * Applies commit on the existing document
@@ -98,7 +98,7 @@ export interface CeramicApi extends CeramicSigner {
      * @param commit - Commit to be applied
      * @param opts - Initialization options
      */
-    applyCommit<T extends Doctype>(streamId: StreamID | string, commit: CeramicCommit, opts?: CreateOpts | UpdateOpts): Promise<T>;
+    applyCommit<T extends Stream>(streamId: StreamID | string, commit: CeramicCommit, opts?: CreateOpts | UpdateOpts): Promise<T>;
 
     /**
      * Sets the DID instance that will be used to author commits to documents. The DID instance

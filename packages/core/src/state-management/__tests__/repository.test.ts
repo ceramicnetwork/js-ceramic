@@ -1,4 +1,4 @@
-import { DoctypeUtils, IpfsApi } from '@ceramicnetwork/common';
+import { StreamUtils, IpfsApi } from '@ceramicnetwork/common';
 import { TileDocument } from "@ceramicnetwork/doctype-tile";
 import Ceramic from '../../ceramic';
 import { createIPFS } from '../../__tests__/ipfs-util';
@@ -43,7 +43,7 @@ describe('load', () => {
     const fromStateStoreSpy = jest.spyOn(repository, 'fromStateStore');
     const fromNetwork = jest.spyOn(repository, 'fromNetwork');
     const doc2 = await repository.load(doc1.id, { sync: false });
-    expect(DoctypeUtils.statesEqual(doc1.state, doc2.state)).toBeTruthy();
+    expect(StreamUtils.statesEqual(doc1.state, doc2.state)).toBeTruthy();
     expect(fromMemorySpy).toBeCalledTimes(1);
     expect(fromStateStoreSpy).toBeCalledTimes(0);
     expect(fromNetwork).toBeCalledTimes(0);

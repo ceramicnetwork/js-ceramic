@@ -43,7 +43,7 @@
         "title": "Guides",
         "pages": [
           {
-            "title": "Create a Doctype",
+            "title": "Create a Stream",
             "source": "./docs-src/guides/create-doctype.md"
           },
           {
