@@ -31,6 +31,10 @@ export class Caip10Link extends Stream {
     static DOCTYPE_NAME = 'caip10-link'
     static DOCTYPE_ID = 1
 
+    get doctype(): string {
+      return Caip10LinkDoctype.DOCTYPE_NAME;
+    }
+
     /**
      * Returns the DID linked to the CAIP10 address this object represents.
      */
