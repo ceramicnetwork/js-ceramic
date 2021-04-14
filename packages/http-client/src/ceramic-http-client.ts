@@ -39,7 +39,7 @@ const DEFAULT_LOAD_OPTS = { sync: true }
  */
 export interface CeramicClientConfig {
   /**
-   * Period of synchronisation, in milliseconds. Active when subscribing document.
+   * How frequently the http-client polls the daemon for updates to subscribed-to streams, in milliseconds.
    */
   syncInterval: number
 }
