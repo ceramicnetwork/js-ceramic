@@ -5,7 +5,8 @@ import {
   Context, CreateOpts,
   DocState,
   DocStateHolder,
-  LoadOpts, SyncOptions,
+  LoadOpts,
+  SyncOptions,
 } from '@ceramicnetwork/common';
 import { PinStore } from '../store/pin-store';
 import { NamedTaskQueue } from './named-task-queue';
@@ -120,7 +121,7 @@ export class Repository {
     await this.#deps.stateValidation.validate(state, state.content);
     const state$ = new RunningState(state);
     this.add(state$);
-    this.logger.verbose(`Document ${streamId.toString()} successfully loaded`); // todo
+    this.logger.verbose(`Genesis commit for stream ${streamId.toString()} successfully loaded`);
     return state$;
   }
 

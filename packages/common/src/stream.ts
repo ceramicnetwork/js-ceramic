@@ -183,7 +183,8 @@ export abstract class Stream extends Observable<DocState> implements DocStateHol
         return cloneDeep(this.state$.value)
     }
 
-    async sync(opts: LoadOpts = { sync: SyncOptions.PREFER_CACHE }): Promise<void> {
+    async sync(opts: LoadOpts = {}): Promise<void> {
+      opts = { sync: SyncOptions.PREFER_CACHE, ...opts }
       const document = await this.api.loadDocument(this.id, opts)
       this.state$.next(document.state)
     }

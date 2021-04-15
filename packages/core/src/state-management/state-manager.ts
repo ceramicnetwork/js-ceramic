@@ -18,9 +18,6 @@ import { catchError, concatMap, timeoutWith } from 'rxjs/operators';
 import { empty, of, Subscription } from 'rxjs';
 import { SnapshotState } from './snapshot-state';
 import { CommitID, StreamID } from '@ceramicnetwork/streamid';
-import * as stream from "stream";
-
-const DEFAULT_SYNC_TIMEOUT = 3000
 
 export class StateManager {
 
@@ -107,6 +104,7 @@ export class StateManager {
     const next = await this.conflictResolution.applyTip(state$.value, cid);
     if (next) {
       state$.next(next);
+      this.logger.verbose(`Stream ${state$.id.toString()} successfully updated to tip ${cid.toString()}`);
       await this.updateStateIfPinned(state$);
     }
   }
@@ -145,8 +143,8 @@ export class StateManager {
    */
   applyCommit(streamId: StreamID, commit: any, opts: CreateOpts | UpdateOpts): Promise<RunningState> {
     return this.executionQ.forDocument(streamId).run(async () => {
-      const cid = await this.dispatcher.storeCommit(commit);
       const state$ = await this.load(streamId, opts)
+      const cid = await this.dispatcher.storeCommit(commit);
 
       await this._handleTip(state$, cid);
       await this.applyWriteOpts(state$, opts);

@@ -18,7 +18,8 @@ import {
   PinningBackendStatic,
   LoggerProvider,
   Networks,
-  UpdateOpts, SyncOptions,
+  UpdateOpts,
+  SyncOptions,
 } from "@ceramicnetwork/common"
 
 import { DID } from 'dids'

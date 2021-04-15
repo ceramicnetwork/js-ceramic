@@ -9,7 +9,8 @@ import {
   MultiQuery,
   LoggerConfig,
   LoggerProvider,
-  DiagnosticsLogger, SyncOptions
+  DiagnosticsLogger,
+  SyncOptions
 } from "@ceramicnetwork/common"
 import StreamID from "@ceramicnetwork/streamid"
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'

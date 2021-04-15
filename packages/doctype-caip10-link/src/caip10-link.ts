@@ -4,10 +4,11 @@ import {
     Stream,
     StreamConstructor,
     StreamStatic,
+    SyncOptions,
     LoadOpts,
     UpdateOpts,
     UnsignedCommit,
-    GenesisCommit, SyncOptions,
+    GenesisCommit,
 } from '@ceramicnetwork/common';
 import { AuthProvider, LinkProof } from "@ceramicnetwork/blockchain-utils-linking";
 import { CommitID, StreamID, StreamRef } from "@ceramicnetwork/streamid";

@@ -14,7 +14,8 @@ import {
   LoadOpts,
   MultiQuery,
   PinApi,
-  UpdateOpts, SyncOptions,
+  UpdateOpts,
+  SyncOptions,
 } from '@ceramicnetwork/common';
 import { TileDocument } from "@ceramicnetwork/doctype-tile"
 import { Caip10Link } from "@ceramicnetwork/doctype-caip10-link"
