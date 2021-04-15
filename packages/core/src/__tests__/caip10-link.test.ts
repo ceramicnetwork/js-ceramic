@@ -1,5 +1,5 @@
 import Ceramic, { CeramicConfig } from '../ceramic'
-import { Caip10LinkDoctype } from "@ceramicnetwork/doctype-caip10-link"
+import { Caip10Link } from "@ceramicnetwork/doctype-caip10-link"
 import { AnchorStatus, DoctypeUtils, IpfsApi } from "@ceramicnetwork/common"
 import { validateLink } from "@ceramicnetwork/blockchain-utils-validation"
 import { Ed25519Provider } from 'key-did-provider-ed25519'
@@ -67,7 +67,7 @@ describe('Ceramic API', () => {
 
     it('Create from valid account id', async () => {
       const account = '0x0123456789abcdefghijklmnopqrstuvwxyz0000@eip155:1'
-      const link = await Caip10LinkDoctype.fromAccount(ceramic, account)
+      const link = await Caip10Link.fromAccount(ceramic, account)
       expect(link.metadata.controllers).toHaveLength(1)
       expect(link.metadata.controllers[0]).toEqual(account)
       expect(link.did).toBeNull()
@@ -79,9 +79,9 @@ describe('Ceramic API', () => {
       const invalid1 = '0x0123456789abcdefghijklmnopqrstuvwxyz0000'
       const invalid2 = '0x0123456789abcdefghijklmnopqrstuvwxyz0000@eip155'
       const invalid3 = '@eip155:1'
-      await expect(Caip10LinkDoctype.fromAccount(ceramic, invalid1)).rejects.toThrow(/Invalid accountId provided/)
-      await expect(Caip10LinkDoctype.fromAccount(ceramic, invalid2)).rejects.toThrow(/Invalid chainId provided/)
-      await expect(Caip10LinkDoctype.fromAccount(ceramic, invalid3)).rejects.toThrow(/Invalid accountId provided/)
+      await expect(Caip10Link.fromAccount(ceramic, invalid1)).rejects.toThrow(/Invalid accountId provided/)
+      await expect(Caip10Link.fromAccount(ceramic, invalid2)).rejects.toThrow(/Invalid chainId provided/)
+      await expect(Caip10Link.fromAccount(ceramic, invalid3)).rejects.toThrow(/Invalid accountId provided/)
     })
 
     it('Create and link DID', async () => {
@@ -89,7 +89,7 @@ describe('Ceramic API', () => {
       const linkProof = { account, did: ceramic.did.id }
       authProvider.createLink.mockReturnValueOnce(linkProof)
 
-      const link = await Caip10LinkDoctype.fromAccount(ceramic, account)
+      const link = await Caip10Link.fromAccount(ceramic, account)
       await link.setDid(ceramic.did, authProvider, { anchor: false })
 
       expect(link.did).toEqual(ceramic.did.id)
@@ -104,10 +104,10 @@ describe('Ceramic API', () => {
       const linkProof = { account, did: ceramic.did.id }
       authProvider.createLink.mockReturnValueOnce(linkProof)
 
-      const link1 = await Caip10LinkDoctype.fromAccount(ceramic, account)
+      const link1 = await Caip10Link.fromAccount(ceramic, account)
       await link1.setDid(ceramic.did, authProvider, { anchor: false })
 
-      const link2 = await Caip10LinkDoctype.fromAccount(ceramic, account)
+      const link2 = await Caip10Link.fromAccount(ceramic, account)
       expect(link1.id).toEqual(link2.id)
       expect(link1.did).toEqual(ceramic.did.id)
       expect(link2.did).toEqual(link1.did)
@@ -119,10 +119,10 @@ describe('Ceramic API', () => {
       const linkProof = { account, did: ceramic.did.id }
       authProvider.createLink.mockReturnValueOnce(linkProof)
 
-      const link1 = await Caip10LinkDoctype.fromAccount(ceramic, account)
+      const link1 = await Caip10Link.fromAccount(ceramic, account)
       await link1.setDid(ceramic.did, authProvider, { anchor: false })
 
-      const link2 = await Caip10LinkDoctype.load(ceramic, link1.id)
+      const link2 = await Caip10Link.load(ceramic, link1.id)
       expect(link1.id).toEqual(link2.id)
       expect(link1.did).toEqual(ceramic.did.id)
       expect(link2.did).toEqual(link1.did)
@@ -134,7 +134,7 @@ describe('Ceramic API', () => {
       const linkProof = { account, did: ceramic.did.id }
       authProvider.createLink.mockReturnValueOnce(linkProof)
 
-      const link = await Caip10LinkDoctype.fromAccount(ceramic, account, { anchor: true })
+      const link = await Caip10Link.fromAccount(ceramic, account, { anchor: true })
       expect(link.state.anchorStatus).toEqual(AnchorStatus.PENDING)
       await anchorUpdate(ceramic, link)
       expect(link.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)

@@ -3,8 +3,8 @@ import CeramicClient from '@ceramicnetwork/http-client'
 import * as tmp from 'tmp-promise'
 import CeramicDaemon from '../ceramic-daemon'
 import { IpfsApi } from '@ceramicnetwork/common';
-import { TileDoctypeHandler } from "@ceramicnetwork/doctype-tile-handler"
-import { TileDoctype } from "@ceramicnetwork/doctype-tile";
+import { TileDocumentHandler } from "@ceramicnetwork/doctype-tile-handler"
+import { TileDocument } from "@ceramicnetwork/doctype-tile";
 import getPort from "get-port";
 import { createIPFS } from './create-ipfs';
 import { makeDID } from './make-did';
@@ -20,7 +20,7 @@ async function swarmConnect(a: IpfsApi, b: IpfsApi) {
 const makeCeramicCore = async(ipfs: IpfsApi, stateStoreDirectory: string): Promise<Ceramic> => {
     const core = await Ceramic.create(ipfs, {pubsubTopic: TOPIC, stateStoreDirectory, anchorOnRequest: false})
 
-    const doctypeHandler = new TileDoctypeHandler()
+    const doctypeHandler = new TileDocumentHandler()
     doctypeHandler.verifyJWS = (): Promise<void> => { return }
     // @ts-ignore
     core._doctypeHandlers.add(doctypeHandler)
@@ -85,11 +85,11 @@ describe('Ceramic interop between multiple daemons and http clients', () => {
         const updatedContent = {test: 456}
         // Create a document with updates on the first node so that the updates aren't visible
         // on node 2 and 3 without querying pubsub
-        const doc1 = await TileDoctype.create(core1, initialContent, null, {anchor: false});
+        const doc1 = await TileDocument.create(core1, initialContent, null, {anchor: false});
         await doc1.update(updatedContent)
 
         // Loading the doc with sync:false should only load the initial genesis contents
-        const doc2 = await TileDoctype.load(client2, doc1.id, {sync: false})
+        const doc2 = await TileDocument.load(client2, doc1.id, {sync: false})
         expect(doc2.content).toEqual(initialContent)
         // TODO uncomment when sync() is changed to always force sync
         //await doc2.sync()
@@ -101,11 +101,11 @@ describe('Ceramic interop between multiple daemons and http clients', () => {
         const updatedContent = {test: 456}
         // Create a document with updates on the first node so that the updates aren't visible
         // on node 2 and 3 without querying pubsub
-        const doc1 = await TileDoctype.create(core1, initialContent, null, {anchor: false});
+        const doc1 = await TileDocument.create(core1, initialContent, null, {anchor: false});
         await doc1.update(updatedContent)
 
         // Loading the doc with sync:true should get the current contents
-        const doc2 = await TileDoctype.load(client2, doc1.id, {sync: true})
+        const doc2 = await TileDocument.load(client2, doc1.id, {sync: true})
         expect(doc2.content).toEqual(updatedContent)
     })
 })

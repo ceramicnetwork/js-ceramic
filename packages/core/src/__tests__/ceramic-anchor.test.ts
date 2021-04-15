@@ -8,7 +8,7 @@ import {
 import tmp from 'tmp-promise'
 import * as u8a from 'uint8arrays'
 import { createIPFS, swarmConnect } from './ipfs-util';
-import { TileDoctype } from '@ceramicnetwork/doctype-tile';
+import { TileDocument } from '@ceramicnetwork/doctype-tile';
 import InMemoryAnchorService from '../anchor/memory/in-memory-anchor-service';
 import { anchorUpdate } from '../state-management/__tests__/anchor-update';
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
@@ -68,7 +68,7 @@ describe('Ceramic anchoring', () => {
       createCeramic(ipfs2, false)
     ])
 
-    const doctype1 = await TileDoctype.create(ceramic1, { a: 1 })
+    const doctype1 = await TileDocument.create(ceramic1, { a: 1 })
     await doctype1.update({ a: 2 })
     await doctype1.update({ a: 3 })
 
@@ -92,7 +92,7 @@ describe('Ceramic anchoring', () => {
       createCeramic(ipfs2, false)
     ])
 
-    const doctype1 = await TileDoctype.create(ceramic1, { a: 1 }, null, { anchor: false, publish: false })
+    const doctype1 = await TileDocument.create(ceramic1, { a: 1 }, null, { anchor: false, publish: false })
     await doctype1.update({ a: 2 }, null, { anchor: false, publish: false })
     await doctype1.update({ a: 3 }, null, { anchor: false, publish: false })
 
@@ -113,7 +113,7 @@ describe('Ceramic anchoring', () => {
       createCeramic(ipfs2, false)
     ])
 
-    const doctype1 = await TileDoctype.create(ceramic1, { a: 123, b: 4567 })
+    const doctype1 = await TileDocument.create(ceramic1, { a: 123, b: 4567 })
     await doctype1.update({ a: 4567 }, null, { anchor: false, publish: false })
     await doctype1.update({ b: 123 }, null, { anchor: false, publish: false })
 
@@ -138,7 +138,7 @@ describe('Ceramic anchoring', () => {
       createCeramic(ipfs2, false)
     ])
 
-    const doctype1 = await TileDoctype.create(ceramic1, { a: 123 })
+    const doctype1 = await TileDocument.create(ceramic1, { a: 123 })
     await doctype1.update({ a: 4567 })
 
     expect(doctype1.state.log.length).toEqual(2)
@@ -162,7 +162,7 @@ describe('Ceramic anchoring', () => {
       createCeramic(ipfs2, false)
     ])
 
-    const doctype1 = await TileDoctype.create(ceramic1, { x: 1 })
+    const doctype1 = await TileDocument.create(ceramic1, { x: 1 })
     await doctype1.update({ x: doctype1.content.x + 1 }, null, { anchor: false, publish: false })
     await doctype1.update({ x: doctype1.content.x + 1 }, null, { anchor: true, publish: true })
 
@@ -185,7 +185,7 @@ describe('Ceramic anchoring', () => {
       createCeramic(ipfs2, false)
     ])
 
-    const doctype1 = await TileDoctype.create(ceramic1, { x: 1 }, null, {anchor: false, publish: false})
+    const doctype1 = await TileDocument.create(ceramic1, { x: 1 }, null, {anchor: false, publish: false})
     await doctype1.update({ x: doctype1.content.x + 1 }, null, { anchor: false, publish: false })
     await doctype1.update({ x: doctype1.content.x + 1 }, null, { anchor: true, publish: true })
 
@@ -208,7 +208,7 @@ describe('Ceramic anchoring', () => {
       createCeramic(ipfs2, false)
     ])
 
-    const doctype1 = await TileDoctype.create(ceramic1, { x: 1 }, null, {anchor: false, publish: false})
+    const doctype1 = await TileDocument.create(ceramic1, { x: 1 }, null, {anchor: false, publish: false})
     await doctype1.update({ x: doctype1.content.x + 1 }, null, { anchor: false, publish: false })
 
     expect(doctype1.content).toEqual({ x: 2 })
@@ -230,7 +230,7 @@ describe('Ceramic anchoring', () => {
     expect(doctype1.content).toEqual({ x: 6 })
     expect(doctype1.state.log.length).toEqual(8)
 
-    const doctype2 = await ceramic2.loadDocument<TileDoctype>(doctype1.id)
+    const doctype2 = await ceramic2.loadDocument<TileDocument>(doctype1.id)
     await TestUtils.waitForState(
         doctype2,
         5000, // 5 second timeout
@@ -254,9 +254,9 @@ describe('Ceramic anchoring', () => {
     ceramic1.repository.stateManager.anchorService = anchorService
     ceramic2.repository.stateManager.anchorService = anchorService
 
-    const doctype1 = await TileDoctype.create(ceramic1, { x: 1 }, null, { anchor: false, publish: true })
+    const doctype1 = await TileDocument.create(ceramic1, { x: 1 }, null, { anchor: false, publish: true })
     doctype1.subscribe();
-    const doctype2 = await TileDoctype.load(ceramic2, doctype1.id)
+    const doctype2 = await TileDocument.load(ceramic2, doctype1.id)
     doctype2.subscribe();
 
     // Create two conflicting updates, each on a different ceramic instance

@@ -1,5 +1,5 @@
 import { DoctypeUtils, IpfsApi } from '@ceramicnetwork/common';
-import { TileDoctype } from "@ceramicnetwork/doctype-tile";
+import { TileDocument } from "@ceramicnetwork/doctype-tile";
 import Ceramic from '../../ceramic';
 import { createIPFS } from '../../__tests__/ipfs-util';
 import { Repository } from '../repository';
@@ -37,7 +37,7 @@ const STRING_MAP_SCHEMA = {
 
 describe('load', () => {
   test('from memory', async () => {
-    const doc1 = await TileDoctype.create(ceramic, { foo: 'bar' });
+    const doc1 = await TileDocument.create(ceramic, { foo: 'bar' });
     doc1.subscribe();
     const fromMemorySpy = jest.spyOn(repository, 'fromMemory');
     const fromStateStoreSpy = jest.spyOn(repository, 'fromStateStore');
@@ -53,12 +53,12 @@ describe('load', () => {
 describe('validation', () => {
   test('when loading genesis ', async () => {
     // Create schema
-    const schema = await TileDoctype.create(ceramic, STRING_MAP_SCHEMA);
+    const schema = await TileDocument.create(ceramic, STRING_MAP_SCHEMA);
     await anchorUpdate(ceramic, schema);
     // Create invalid doc
     const ipfs2 = await createIPFS();
     const permissiveCeramic = await createCeramic(ipfs2, { validateStreams: false });
-    const invalidDoc = await TileDoctype.create(permissiveCeramic, { stuff: 1 }, { schema: schema.commitId });
+    const invalidDoc = await TileDocument.create(permissiveCeramic, { stuff: 1 }, { schema: schema.commitId });
     // Load it: Expect failure
     await expect(repository.load(invalidDoc.id, { sync: false })).rejects.toThrow(
       "Validation Error: data['stuff'] should be string",
@@ -71,7 +71,7 @@ describe('validation', () => {
 test('subscribe makes state endured', async () => {
   const durableStart = ceramic.repository.inmemory.durable.size;
   const volatileStart = ceramic.repository.inmemory.volatile.size;
-  const doc1 = await TileDoctype.create(ceramic, { foo: 'bar' });
+  const doc1 = await TileDocument.create(ceramic, { foo: 'bar' });
   expect(ceramic.repository.inmemory.durable.size).toEqual(durableStart);
   expect(ceramic.repository.inmemory.volatile.size).toEqual(volatileStart + 1);
   doc1.subscribe();

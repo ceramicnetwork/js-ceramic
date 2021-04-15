@@ -1,1 +1,1 @@
-export * from './tile-doctype'
+export * from './tile-document'

@@ -1,1 +1,1 @@
-export * from './tile-doctype-handler'
+export * from './tile-document-handler'

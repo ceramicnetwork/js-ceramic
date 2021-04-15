@@ -1,7 +1,7 @@
 import { DocNext, DocState, Doctype } from '@ceramicnetwork/common';
 import { CommitID } from '@ceramicnetwork/streamid';
 import Utils from '../utils';
-import {TileDoctype} from "@ceramicnetwork/doctype-tile";
+import {TileDocument} from "@ceramicnetwork/doctype-tile";
 
 type LoadDocumentFunc = <T extends Doctype>(streamId: CommitID) => Promise<T>;
 
@@ -36,7 +36,7 @@ export class RealStateValidation implements StateValidation {
     } catch {
       throw new Error('Commit missing when loading schema document');
     }
-    return this.loadDocument<TileDoctype<T>>(commitId).then((doc) => doc.content);
+    return this.loadDocument<TileDocument<T>>(commitId).then((doc) => doc.content);
   }
 
   /**

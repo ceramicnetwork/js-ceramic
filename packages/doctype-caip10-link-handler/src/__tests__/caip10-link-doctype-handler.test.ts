@@ -1,8 +1,8 @@
-import { Caip10LinkDoctypeHandler } from '../caip10-link-doctype-handler'
+import { Caip10LinkHandler } from '../caip10-link-handler'
 
 import cloneDeep from 'lodash.clonedeep'
 import CID from 'cids'
-import { Caip10LinkDoctype } from "@ceramicnetwork/doctype-caip10-link"
+import { Caip10Link } from "@ceramicnetwork/doctype-caip10-link"
 import { CeramicApi, CeramicCommit, Context, TestUtils } from '@ceramicnetwork/common';
 import sha256 from '@stablelib/sha256'
 import * as uint8arrays from 'uint8arrays'
@@ -57,10 +57,10 @@ const RECORDS = {
 
 describe('Caip10LinkHandler', () => {
     let context: Context
-    let handler: Caip10LinkDoctypeHandler
+    let handler: Caip10LinkHandler
 
     beforeEach(() => {
-        handler = new Caip10LinkDoctypeHandler()
+        handler = new Caip10LinkHandler()
         const recs: Record<string, any> = {}
         const ipfs = {
             dag: {
@@ -94,7 +94,7 @@ describe('Caip10LinkHandler', () => {
     })
 
     it('makes genesis commit correctly', async () => {
-        const commit = Caip10LinkDoctype.makeGenesis(new AccountID(ACCOUNT))
+        const commit = Caip10Link.makeGenesis(new AccountID(ACCOUNT))
         expect(commit).toEqual(RECORDS.genesis)
     })
 
@@ -123,7 +123,7 @@ describe('Caip10LinkHandler', () => {
     it('makes update commit correctly', async () => {
         const state = await handler.applyCommit(RECORDS.genesis, FAKE_CID_1, context)
         const state$ = TestUtils.runningState(state)
-        const doctype = new Caip10LinkDoctype(state$, context)
+        const doctype = new Caip10Link(state$, context)
         const record = await doctype.makeCommit(RECORDS.r1.desiredContent)
         // Have to compare the 'id' and 'prev' CIDs manually (with toString()) otherwise jest gets
         // confused by Symbol(@ipld/js-cid/CID)

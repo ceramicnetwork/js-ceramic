@@ -3,8 +3,8 @@ import CeramicClient from '@ceramicnetwork/http-client'
 import tmp from 'tmp-promise'
 import CeramicDaemon from '../ceramic-daemon'
 import { AnchorStatus, Doctype, DoctypeUtils, IpfsApi } from '@ceramicnetwork/common';
-import { TileDoctypeHandler } from "@ceramicnetwork/doctype-tile-handler"
-import { TileDoctype } from "@ceramicnetwork/doctype-tile";
+import { TileDocumentHandler } from "@ceramicnetwork/doctype-tile-handler"
+import { TileDocument } from "@ceramicnetwork/doctype-tile";
 import { filter, take } from "rxjs/operators"
 
 import StreamID from "@ceramicnetwork/streamid";
@@ -18,7 +18,7 @@ const TOPIC = '/ceramic'
 const makeCeramicCore = async(ipfs: IpfsApi, stateStoreDirectory: string): Promise<Ceramic> => {
     const core = await Ceramic.create(ipfs, {pubsubTopic: TOPIC, stateStoreDirectory, anchorOnRequest: false})
 
-    const doctypeHandler = new TileDoctypeHandler()
+    const doctypeHandler = new TileDocumentHandler()
     doctypeHandler.verifyJWS = (): Promise<void> => { return }
     // @ts-ignore
     core._doctypeHandlers.add(doctypeHandler)
@@ -76,9 +76,9 @@ describe('Ceramic interop: core <> http-client', () => {
     }
 
     it('properly creates document', async () => {
-        const doc1 = await TileDoctype.create(core, { test: 123 }, null,
+        const doc1 = await TileDocument.create(core, { test: 123 }, null,
             { anchor: false, publish: false, sync: false });
-        const doc2 = await TileDoctype.create(client, { test: 123 }, null,
+        const doc2 = await TileDocument.create(client, { test: 123 }, null,
             { anchor: false, publish: false, sync: false });
 
         expect(doc1.content).toEqual(doc2.content)
@@ -96,24 +96,24 @@ describe('Ceramic interop: core <> http-client', () => {
     })
 
     it('gets anchor commit updates', async () => {
-        const doc1 = await TileDoctype.create(core, { test: 123 });
+        const doc1 = await TileDocument.create(core, { test: 123 });
         await anchorDoc(doc1)
         expect(doc1.state.log.length).toEqual(2)
         expect(doc1.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
-        const doc2 = await TileDoctype.create(client, { test: 1234 })
+        const doc2 = await TileDocument.create(client, { test: 1234 })
         await anchorDoc(doc2);
         expect(doc2.state.log.length).toEqual(2)
         expect(doc2.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
     })
 
     it('loads documents correctly', async () => {
-        const doc1 = await TileDoctype.create(core, { test: 123 });
+        const doc1 = await TileDocument.create(core, { test: 123 });
         await anchorDoc(doc1)
         const doc2 = await client.loadDocument(doc1.id)
         expect(doc1.content).toEqual(doc2.content)
         expect(DoctypeUtils.serializeState(doc1.state)).toEqual(DoctypeUtils.serializeState(doc2.state))
 
-        const doc3 = await TileDoctype.create(client, { test: 456 });
+        const doc3 = await TileDocument.create(client, { test: 456 });
         await anchorDoc(doc3)
         const doc4 = await core.loadDocument(doc3.id)
         expect(doc3.content).toEqual(doc4.content)
@@ -121,9 +121,9 @@ describe('Ceramic interop: core <> http-client', () => {
     })
 
     it('loads document commits correctly', async () => {
-        const doc1 = await TileDoctype.create(core, { test: 123 });
+        const doc1 = await TileDocument.create(core, { test: 123 });
         await anchorDoc(doc1)
-        const doc2 = await TileDoctype.load(client, doc1.id)
+        const doc2 = await TileDocument.load(client, doc1.id)
         expect(doc1.content).toEqual(doc2.content)
 
         const commits1 = await core.loadDocumentCommits(doc1.id)
@@ -149,9 +149,9 @@ describe('Ceramic interop: core <> http-client', () => {
       const middleContent = { ...initialContent, b: 'middle' }
       const finalContent = { ...middleContent, c: 'final' }
 
-      const doc1 = await TileDoctype.create(core, initialContent);
+      const doc1 = await TileDocument.create(core, initialContent);
       await anchorDoc(doc1)
-      const doc2 = await client.loadDocument<TileDoctype>(doc1.id)
+      const doc2 = await client.loadDocument<TileDocument>(doc1.id)
       doc1.subscribe()
       doc2.subscribe()
       // change from core viewable in client
@@ -176,9 +176,9 @@ describe('Ceramic interop: core <> http-client', () => {
         const middleContent = { ...initialContent, b: 'middle' }
         const finalContent = { ...middleContent, c: 'final' }
 
-        const doc1 = await TileDoctype.create(core, initialContent);
+        const doc1 = await TileDocument.create(core, initialContent);
         await anchorDoc(doc1)
-        const doc2 = await client.loadDocument<TileDoctype>(doc1.id)
+        const doc2 = await client.loadDocument<TileDocument>(doc1.id)
         // change from core viewable in client
         await doc1.update(middleContent)
         await anchorDoc(doc1)
@@ -203,7 +203,7 @@ describe('Ceramic interop: core <> http-client', () => {
         const content1 = {test: 123}
         const content2 = {test: 456}
         const content3 = {test: 789}
-        const doc = await TileDoctype.create(core, content1);
+        const doc = await TileDocument.create(core, content1);
         await anchorDoc(doc)
         expect(doc.state.log.length).toEqual(2)
         expect(doc.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
@@ -268,10 +268,10 @@ describe('Ceramic interop: core <> http-client', () => {
     describe('multiqueries', () => {
         let docA, docB, docC, docD
         beforeEach(async () => {
-          docD = await TileDoctype.create(core, { test: '321d' });
-          docC = await TileDoctype.create(core, { test: '321c' });
-          docB = await TileDoctype.create(core, { d: docD.id.toUrl(), notDoc: '123' });
-          docA = await TileDoctype.create(core, { b: docB.id.toUrl(), c: docC.id.toUrl(), notDoc: '123' });
+          docD = await TileDocument.create(core, { test: '321d' });
+          docC = await TileDocument.create(core, { test: '321c' });
+          docB = await TileDocument.create(core, { d: docD.id.toUrl(), notDoc: '123' });
+          docA = await TileDocument.create(core, { b: docB.id.toUrl(), c: docC.id.toUrl(), notDoc: '123' });
         })
 
         it('responds to multiqueries request', async () => {
@@ -304,8 +304,8 @@ describe('Ceramic interop: core <> http-client', () => {
         let docA, docB
 
         beforeEach(async () => {
-            docB = await TileDoctype.create(core, { foo: 'bar' })
-            docA = await TileDoctype.create(core, { foo: 'baz' })
+            docB = await TileDocument.create(core, { foo: 'bar' })
+            docA = await TileDocument.create(core, { foo: 'baz' })
         })
 
         const pinLs = async (streamId?: StreamID): Promise<Array<any>> => {
