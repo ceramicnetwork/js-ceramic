@@ -4,7 +4,7 @@ import { LinkProof } from "@ceramicnetwork/blockchain-utils-linking"
 import { Caip10Link } from "@ceramicnetwork/doctype-caip10-link"
 import {
     AnchorStatus,
-    DocState,
+    StreamState,
     StreamConstructor,
     StreamHandler,
     SignatureStatus,
@@ -38,7 +38,7 @@ export class Caip10LinkHandler implements StreamHandler<Caip10Link> {
      * @param context - Ceramic context
      * @param state - Document state
      */
-    async applyCommit(commit: CeramicCommit, cid: CID, context: Context, state?: DocState): Promise<DocState> {
+    async applyCommit(commit: CeramicCommit, cid: CID, context: Context, state?: StreamState): Promise<StreamState> {
         if (state == null) {
             return this._applyGenesis(commit, cid)
         }
@@ -56,7 +56,7 @@ export class Caip10LinkHandler implements StreamHandler<Caip10Link> {
      * @param cid - Genesis commit CID
      * @private
      */
-    async _applyGenesis (commit: any, cid: CID): Promise<DocState> {
+    async _applyGenesis (commit: any, cid: CID): Promise<StreamState> {
         if (commit.data) {
             throw new Error('Caip10Link genesis commit cannot have data')
         }
@@ -88,7 +88,7 @@ export class Caip10LinkHandler implements StreamHandler<Caip10Link> {
      * @param state - Document state
      * @private
      */
-    async _applySigned (commit: any, cid: CID, state: DocState): Promise<DocState> {
+    async _applySigned (commit: any, cid: CID, state: StreamState): Promise<StreamState> {
         // TODO: Assert that the 'prev' of the commit being applied is the end of the log in 'state'
         let validProof = null
         try {
@@ -143,7 +143,7 @@ export class Caip10LinkHandler implements StreamHandler<Caip10Link> {
      * @param state - Document state
      * @private
      */
-    async _applyAnchor (context: Context, commit: any, cid: CID, state: DocState): Promise<DocState> {
+    async _applyAnchor (context: Context, commit: any, cid: CID, state: StreamState): Promise<StreamState> {
         // TODO: Assert that the 'prev' of the commit being applied is the end of the log in 'state'
         const proof = (await context.ipfs.dag.get(commit.proof, { timeout: IPFS_GET_TIMEOUT })).value;
 

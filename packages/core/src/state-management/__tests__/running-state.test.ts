@@ -1,5 +1,5 @@
 import CID from 'cids';
-import { CommitType, DocState } from '@ceramicnetwork/common';
+import { CommitType, StreamState } from '@ceramicnetwork/common';
 import { RunningState } from '../running-state';
 
 const FAKE_CID_1 = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu');
@@ -14,7 +14,7 @@ test('emit on distinct changes', async () => {
         cid: FAKE_CID_1,
       },
     ],
-  } as unknown) as DocState;
+  } as unknown) as StreamState;
   const second = ({
     ...initial,
     log: [
@@ -24,10 +24,10 @@ test('emit on distinct changes', async () => {
         cid: FAKE_CID2,
       },
     ],
-  } as unknown) as DocState;
+  } as unknown) as StreamState;
 
   const state$ = new RunningState(initial);
-  const updates: DocState[] = [];
+  const updates: StreamState[] = [];
   state$.subscribe((state) => {
     updates.push(state);
   });

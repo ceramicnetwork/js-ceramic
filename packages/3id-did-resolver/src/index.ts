@@ -8,7 +8,7 @@ import type {
   ResolverRegistry,
   VerificationMethod
 } from 'did-resolver'
-import type { DocState, MultiQuery, CeramicApi } from "@ceramicnetwork/common"
+import type { StreamState, MultiQuery, CeramicApi } from "@ceramicnetwork/common"
 import { TileDocument } from "@ceramicnetwork/doctype-tile"
 import LegacyResolver from './legacyResolver'
 import * as u8a from 'uint8arrays'
@@ -74,10 +74,10 @@ export function wrapDocument(content: any, did: string): DIDDocument | null {
  * Requires the latest version of the 3ID ceramic document state as
  * well as the state of the version we are resolving
  *
- * @param requestedVersionState - the DocState of the version of the 3ID we are resolving
- * @param latestVersionState - the DocState of the latest version of the 3ID we are resolving
+ * @param requestedVersionState - the StreamState of the version of the 3ID we are resolving
+ * @param latestVersionState - the StreamState of the latest version of the 3ID we are resolving
  */
-function extractMetadata(requestedVersionState: DocState, latestVersionState: DocState): DIDDocumentMetadata {
+function extractMetadata(requestedVersionState: StreamState, latestVersionState: StreamState): DIDDocumentMetadata {
   const metadata: DIDDocumentMetadata = {}
   const { timestamp: updated, cid: versionId } = requestedVersionState.log.pop() || {}
 

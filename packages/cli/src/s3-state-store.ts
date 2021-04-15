@@ -1,4 +1,4 @@
-import { DocState, Stream, StreamUtils } from "@ceramicnetwork/common"
+import { StreamState, Stream, StreamUtils } from "@ceramicnetwork/common"
 import StreamID from '@ceramicnetwork/streamid'
 import { StateStore } from "@ceramicnetwork/core";
 import LevelUp from "levelup";
@@ -36,7 +36,7 @@ export class S3StateStore implements StateStore {
    * Load document state
    * @param streamId - Document ID
    */
-  async load(streamId: StreamID): Promise<DocState> {
+  async load(streamId: StreamID): Promise<StreamState> {
     try {
       const state = await this.#store.get(streamId.baseID.toString())
       if (state) {

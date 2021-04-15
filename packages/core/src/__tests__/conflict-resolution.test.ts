@@ -1,7 +1,7 @@
 import CID from 'cids';
 import * as uint8arrays from 'uint8arrays';
 import * as sha256 from '@stablelib/sha256';
-import { AnchorStatus, DocState } from '@ceramicnetwork/common';
+import { AnchorStatus, StreamState } from '@ceramicnetwork/common';
 import { pickLogToAccept } from '../conflict-resolution';
 
 describe('pickLogToAccept', () => {
@@ -33,13 +33,13 @@ describe('pickLogToAccept', () => {
       anchorStatus: AnchorStatus.NOT_REQUESTED,
       log: [{ cid: cids[1] }, { cid: cids[2] }],
       metadata: {},
-    } as unknown) as DocState;
+    } as unknown) as StreamState;
 
     const state2 = ({
       anchorStatus: AnchorStatus.PENDING,
       log: [{ cid: cids[4] }, { cid: cids[0] }],
       metadata: {},
-    } as unknown) as DocState;
+    } as unknown) as StreamState;
 
     // When neither log is anchored and log lengths are the same we should pick the log whose last entry has the
     // smaller CID.
@@ -52,13 +52,13 @@ describe('pickLogToAccept', () => {
       anchorStatus: AnchorStatus.NOT_REQUESTED,
       log: [{ cid: cids[1] }, { cid: cids[2] }, { cid: cids[3] }],
       metadata: {},
-    } as unknown) as DocState;
+    } as unknown) as StreamState;
 
     const state2 = ({
       anchorStatus: AnchorStatus.PENDING,
       log: [{ cid: cids[4] }, { cid: cids[0] }],
       metadata: {},
-    } as unknown) as DocState;
+    } as unknown) as StreamState;
 
     // When neither log is anchored and log lengths are different we should pick the log with greater length
     expect(await pickLogToAccept(state1, state2)).toEqual(state1);
@@ -68,11 +68,11 @@ describe('pickLogToAccept', () => {
   it('One log anchored before the other', async () => {
     const state1 = ({
       anchorStatus: AnchorStatus.PENDING,
-    } as unknown) as DocState;
+    } as unknown) as StreamState;
 
     const state2 = ({
       anchorStatus: AnchorStatus.ANCHORED,
-    } as unknown) as DocState;
+    } as unknown) as StreamState;
 
     // When only one of the logs has been anchored, we pick the anchored one
     expect(await pickLogToAccept(state1, state2)).toEqual(state2);
@@ -87,7 +87,7 @@ describe('pickLogToAccept', () => {
     const state1 = ({
       anchorStatus: AnchorStatus.ANCHORED,
       anchorProof: proof1,
-    } as unknown) as DocState;
+    } as unknown) as StreamState;
 
     const proof2 = {
       chainId: 'chain2',
@@ -96,7 +96,7 @@ describe('pickLogToAccept', () => {
     const state2 = ({
       anchorStatus: AnchorStatus.ANCHORED,
       anchorProof: proof2,
-    } as unknown) as DocState;
+    } as unknown) as StreamState;
 
     // We do not currently support multiple blockchains
     await expect(pickLogToAccept(state1, state2)).rejects.toThrow(
@@ -115,7 +115,7 @@ describe('pickLogToAccept', () => {
     const state1 = ({
       anchorStatus: AnchorStatus.ANCHORED,
       anchorProof: proof1,
-    } as unknown) as DocState;
+    } as unknown) as StreamState;
 
     const proof2 = {
       chainId: 'myblockchain',
@@ -124,7 +124,7 @@ describe('pickLogToAccept', () => {
     const state2 = ({
       anchorStatus: AnchorStatus.ANCHORED,
       anchorProof: proof2,
-    } as unknown) as DocState;
+    } as unknown) as StreamState;
 
     // When anchored in the same blockchain, should take log with earlier block number
     expect(await pickLogToAccept(state1, state2)).toEqual(state2);
@@ -141,7 +141,7 @@ describe('pickLogToAccept', () => {
       anchorProof: proof1,
       metadata: {},
       log: [{ cid: cids[1] }, { cid: cids[2] }, { cid: cids[3] }],
-    } as unknown) as DocState;
+    } as unknown) as StreamState;
 
     const proof2 = {
       chainId: 'myblockchain',
@@ -152,7 +152,7 @@ describe('pickLogToAccept', () => {
       anchorProof: proof2,
       metadata: {},
       log: [{ cid: cids[4] }, { cid: cids[0] }],
-    } as unknown) as DocState;
+    } as unknown) as StreamState;
 
     // When anchored in the same blockchain, same block, and with same log lengths, we should choose the one with
     // longer log length
@@ -170,7 +170,7 @@ describe('pickLogToAccept', () => {
       anchorProof: proof1,
       metadata: {},
       log: [{ cid: cids[1] }, { cid: cids[2] }],
-    } as unknown) as DocState;
+    } as unknown) as StreamState;
 
     const proof2 = {
       chainId: 'myblockchain',
@@ -181,7 +181,7 @@ describe('pickLogToAccept', () => {
       anchorProof: proof2,
       metadata: {},
       log: [{ cid: cids[4] }, { cid: cids[0] }],
-    } as unknown) as DocState;
+    } as unknown) as StreamState;
 
     // When anchored in the same blockchain, same block, and with same log lengths, we should use
     // the fallback mechanism of picking the log whose last entry has the smaller CID

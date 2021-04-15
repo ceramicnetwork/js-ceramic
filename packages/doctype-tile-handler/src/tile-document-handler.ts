@@ -9,7 +9,7 @@ import { TileDocument } from "@ceramicnetwork/doctype-tile"
 import {
     AnchorStatus,
     Context,
-    DocState,
+    StreamState,
     CommitType,
     StreamConstructor,
     StreamHandler,
@@ -46,7 +46,7 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
      * @param context - Ceramic context
      * @param state - Document state
      */
-    async applyCommit(commit: CeramicCommit, cid: CID, context: Context, state?: DocState): Promise<DocState> {
+    async applyCommit(commit: CeramicCommit, cid: CID, context: Context, state?: StreamState): Promise<StreamState> {
         if (state == null) {
             // apply genesis
             return this._applyGenesis(commit, cid, context)
@@ -66,7 +66,7 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
      * @param context - Ceramic context
      * @private
      */
-    async _applyGenesis(commit: any, cid: CID, context: Context): Promise<DocState> {
+    async _applyGenesis(commit: any, cid: CID, context: Context): Promise<StreamState> {
         let payload = commit
         const isSigned = StreamUtils.isSignedCommit(commit)
         if (isSigned) {
@@ -98,7 +98,7 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
      * @param context - Ceramic context
      * @private
      */
-    async _applySigned(commit: any, cid: CID, state: DocState, context: Context): Promise<DocState> {
+    async _applySigned(commit: any, cid: CID, state: StreamState, context: Context): Promise<StreamState> {
         // TODO: Assert that the 'prev' of the commit being applied is the end of the log in 'state'
         await this._verifySignature(commit, context, state.metadata.controllers[0])
 
@@ -135,7 +135,7 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
      * @param state - Document state
      * @private
      */
-    async _applyAnchor(context: Context, commit: AnchorCommit, cid: CID, state: DocState): Promise<DocState> {
+    async _applyAnchor(context: Context, commit: AnchorCommit, cid: CID, state: StreamState): Promise<StreamState> {
         // TODO: Assert that the 'prev' of the commit being applied is the end of the log in 'state'
         const proof = (await context.ipfs.dag.get(commit.proof, { timeout: IPFS_GET_TIMEOUT })).value;
 

@@ -8,7 +8,7 @@ import {
     IpfsApi,
     SignedCommit, SignedCommitContainer
 } from "../index"
-import { AnchorStatus, DocState, LogEntry } from "../stream"
+import { AnchorStatus, StreamState, LogEntry } from "../stream"
 import { DagJWS } from "dids"
 
 /**
@@ -106,7 +106,7 @@ export class StreamUtils {
      * Deserializes stream cloned from over the network transfer
      * @param state - Stream cloned
      */
-    static deserializeState(state: any): DocState {
+    static deserializeState(state: any): StreamState {
         const cloned = cloneDeep(state)
 
         cloned.log = cloned.log.map((entry: any): LogEntry => ({ ...entry, cid: new CID(entry.cid) }))
@@ -133,7 +133,7 @@ export class StreamUtils {
         return cloned
     }
 
-    static statesEqual(state1: DocState, state2: DocState): boolean {
+    static statesEqual(state1: StreamState, state2: StreamState): boolean {
         return JSON.stringify(StreamUtils.serializeState(state1)) ===
         JSON.stringify(StreamUtils.serializeState(state2))
     }

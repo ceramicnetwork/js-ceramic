@@ -6,8 +6,8 @@ import {
   AnchorStatus,
   CommitType,
   Context,
-  DocState,
-  DocStateHolder,
+  StreamState,
+  StreamStateHolder,
   Stream,
   StreamHandler,
   StreamUtils,
@@ -60,13 +60,13 @@ async function verifyAnchorCommit(
 }
 
 /**
- * Given two different DocStates representing two different conflicting histories of the same
+ * Given two different StreamStates representing two different conflicting histories of the same
  * document, pick which commit to accept, in accordance with our conflict resolution strategy
  * @param state1 - first log's state
  * @param state2 - second log's state
- * @returns the DocState containing the log that is selected
+ * @returns the StreamState containing the log that is selected
  */
-export async function pickLogToAccept(state1: DocState, state2: DocState): Promise<DocState> {
+export async function pickLogToAccept(state1: StreamState, state2: StreamState): Promise<StreamState> {
   const isState1Anchored = state1.anchorStatus === AnchorStatus.ANCHORED;
   const isState2Anchored = state2.anchorStatus === AnchorStatus.ANCHORED;
 
@@ -115,7 +115,7 @@ export async function pickLogToAccept(state1: DocState, state2: DocState): Promi
 }
 
 export class HistoryLog {
-  static fromState(dispatcher: Dispatcher, state: DocState): HistoryLog {
+  static fromState(dispatcher: Dispatcher, state: StreamState): HistoryLog {
     return new HistoryLog(
       dispatcher,
       state.log.map((_) => _.cid),
@@ -209,7 +209,7 @@ export async function fetchLog(
   return fetchLog(dispatcher, prevCid, stateLog, log);
 }
 
-export function commitAtTime(stateHolder: DocStateHolder, timestamp: number): CommitID {
+export function commitAtTime(stateHolder: StreamStateHolder, timestamp: number): CommitID {
   let commitCid: CID = stateHolder.state.log[0].cid;
   for (const entry of stateHolder.state.log) {
     if (entry.type === CommitType.ANCHOR) {
@@ -238,9 +238,9 @@ export class ConflictResolution {
   private async applyLogToState<T extends Stream>(
     handler: StreamHandler<T>,
     log: Array<CID>,
-    state?: DocState,
+    state?: StreamState,
     breakOnAnchor?: boolean,
-  ): Promise<DocState> {
+  ): Promise<StreamState> {
     const itr = log.entries();
     let entry = itr.next();
     while (!entry.done) {
@@ -284,10 +284,10 @@ export class ConflictResolution {
    * @param log - commits to apply
    */
   private async applyLog(
-    initialState: DocState,
+    initialState: StreamState,
     initialStateLog: HistoryLog,
     log: Array<CID>,
-  ): Promise<DocState | null> {
+  ): Promise<StreamState | null> {
     const handler = this.handlers.get(initialState.doctype);
     const tip = initialStateLog.last;
     if (log[log.length - 1].equals(tip)) {
@@ -311,7 +311,7 @@ export class ConflictResolution {
     const canonicalLog = initialStateLog.items;
     const localLog = canonicalLog.splice(conflictIdx);
     // Compute state up till conflictIdx
-    const state: DocState = await this.applyLogToState(handler, canonicalLog);
+    const state: StreamState = await this.applyLogToState(handler, canonicalLog);
     // Compute next transition in parallel
     const localState = await this.applyLogToState(handler, localLog, cloneDeep(state), true);
     const remoteState = await this.applyLogToState(handler, log, cloneDeep(state), true);
@@ -330,7 +330,7 @@ export class ConflictResolution {
    * @param initialState - State to start from
    * @param tip - Commit CID
    */
-  async applyTip(initialState: DocState, tip: CID): Promise<DocState | null> {
+  async applyTip(initialState: StreamState, tip: CID): Promise<StreamState | null> {
     const stateLog = HistoryLog.fromState(this.dispatcher, initialState);
     const log = await fetchLog(this.dispatcher, tip, stateLog);
     if (log.length) {
@@ -341,7 +341,7 @@ export class ConflictResolution {
   /**
    * Return state at `commitId` version.
    */
-  async rewind(initialState: DocState, commitId: CommitID): Promise<DocState> {
+  async rewind(initialState: StreamState, commitId: CommitID): Promise<StreamState> {
     // If 'commit' is ahead of 'doc', sync doc up to 'commit'
     const baseState = (await this.applyTip(initialState, commitId.commit)) || initialState;
 
