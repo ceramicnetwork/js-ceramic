@@ -42,7 +42,7 @@ describe('load', () => {
     const fromMemorySpy = jest.spyOn(repository, 'fromMemory');
     const fromStateStoreSpy = jest.spyOn(repository, 'fromStateStore');
     const fromNetwork = jest.spyOn(repository, 'fromNetwork');
-    const doc2 = await repository.load(doc1.id, { sync: false });
+    const doc2 = await repository.load(doc1.id, { syncTimeoutMillis: 0 });
     expect(StreamUtils.statesEqual(doc1.state, doc2.state)).toBeTruthy();
     expect(fromMemorySpy).toBeCalledTimes(1);
     expect(fromStateStoreSpy).toBeCalledTimes(0);
@@ -60,7 +60,7 @@ describe('validation', () => {
     const permissiveCeramic = await createCeramic(ipfs2, { validateStreams: false });
     const invalidDoc = await TileDocument.create(permissiveCeramic, { stuff: 1 }, { schema: schema.commitId });
     // Load it: Expect failure
-    await expect(repository.load(invalidDoc.id, { sync: false })).rejects.toThrow(
+    await expect(repository.load(invalidDoc.id, { syncTimeoutMillis: 0 })).rejects.toThrow(
       "Validation Error: data['stuff'] should be string",
     );
     await permissiveCeramic.close();

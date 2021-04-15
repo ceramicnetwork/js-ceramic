@@ -105,7 +105,7 @@ describe('Ceramic interop between multiple daemons and http clients', () => {
         const doc1 = await TileDocument.create(core1, initialContent, null, {anchor: false});
         await doc1.update(updatedContent)
 
-        // Loading the doc with sync:true should get the current contents
+        // Loading the doc with default sync behavior should get current contents
         const doc2 = await TileDocument.load(client2, doc1.id)
         expect(doc2.content).toEqual(updatedContent)
     })

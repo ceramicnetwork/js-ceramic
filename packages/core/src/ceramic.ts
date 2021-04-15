@@ -225,7 +225,7 @@ class Ceramic implements CeramicApi {
 
   private _buildPinApi(): PinApi {
     const boundDocLoader = this._loadDoc.bind(this)
-    const loaderWithSyncSet = (streamid) => { return boundDocLoader(streamid, { sync: true })}
+    const loaderWithSyncSet = (streamid) => { return boundDocLoader(streamid, { sync: SyncOptions.PREFER_CACHE })}
     return new LocalPinApi(this.repository, loaderWithSyncSet, this._logger)
   }
 
