@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/cli",
-  "version": "0.22.1-rc.0",
+  "version": "0.22.1-rc.1",
   "description": "Typescript implementation of the Ceramic CLI",
   "keywords": [
     "Ceramic",
@@ -43,11 +43,11 @@
     }
   },
   "dependencies": {
-    "@ceramicnetwork/common": "^0.17.1-rc.0",
-    "@ceramicnetwork/core": "^0.21.1-rc.0",
-    "@ceramicnetwork/docid": "^0.5.2-rc.0",
-    "@ceramicnetwork/http-client": "^0.10.2-rc.0",
-    "@ceramicnetwork/ipfs-daemon": "^0.0.4-rc.0",
+    "@ceramicnetwork/common": "^0.17.1-rc.1",
+    "@ceramicnetwork/core": "^0.21.1-rc.1",
+    "@ceramicnetwork/docid": "^0.5.2-rc.1",
+    "@ceramicnetwork/http-client": "^0.10.2-rc.1",
+    "@ceramicnetwork/ipfs-daemon": "^0.0.4-rc.1",
     "@ceramicnetwork/logger": "^0.1.1",
     "@stablelib/random": "^1.0.0",
     "aws-sdk": "^2.844.0",
@@ -73,7 +73,7 @@
     "@babel/preset-env": "^7.8.4",
     "@babel/preset-typescript": "^7.9.0",
     "@babel/register": "^7.10.5",
-    "@ceramicnetwork/doctype-tile-handler": "^0.14.2-rc.0",
+    "@ceramicnetwork/doctype-tile-handler": "^0.14.2-rc.1",
     "@types/events": "^3.0.0",
     "@types/express": "^4.17.2",
     "@types/levelup": "^4.3.0",
