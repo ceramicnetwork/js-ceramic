@@ -18,6 +18,7 @@ import { catchError, concatMap, timeoutWith } from 'rxjs/operators';
 import { empty, of, Subscription } from 'rxjs';
 import { SnapshotState } from './snapshot-state';
 import { CommitID, StreamID } from '@ceramicnetwork/streamid';
+import * as stream from "stream";
 
 const DEFAULT_SYNC_TIMEOUT = 3000
 
@@ -45,13 +46,17 @@ export class StateManager {
   ) {}
 
   /**
-   * Takes a document containing only the genesis commit and kicks off the process to load and apply
-   * the most recent Tip to it.
+   * Takes a stream state that might not contain the complete log (and might in fact contain only the
+   * genesis commit) and kicks off the process to load and apply the most recent Tip to it.
    * @param state$
-   * @param opts
+   * @param timeoutMillis
    */
-  syncGenesis(state$: RunningState, opts: LoadOpts): Promise<void> {
-    return this.applyOpts(state$, opts);
+  async sync(state$: RunningState, timeoutMillis: number): Promise<void> {
+    const tip$ = this.dispatcher.messageBus.queryNetwork(state$.id);
+    const tip = await tip$.pipe(timeoutWith(timeoutMillis, of(undefined))).toPromise();
+    if (tip) {
+      await this._handleTip(state$, tip);
+    }
   }
 
   /**
@@ -81,35 +86,24 @@ export class StateManager {
   }
 
   /**
-   * Apply initialization options
+   * Apply options relating to authoring a new commit
    *
    * @param state$ - Running State
-   * @param opts - Initialization options (request anchor, wait, etc.)
+   * @param opts - Initialization options (request anchor, publish to pubsub, etc.)
    * @private
    */
-  private async applyOpts(state$: RunningState, opts: CreateOpts | UpdateOpts | LoadOpts) {
+  applyWriteOpts(state$: RunningState, opts: CreateOpts | UpdateOpts) {
     const anchor = (opts as any).anchor
     const publish = (opts as any).publish
-    const sync = (opts as any).sync
     if (anchor) {
       this.anchor(state$);
     }
     if (publish) {
       this.publishTip(state$);
     }
-    const tip$ = this.dispatcher.messageBus.queryNetwork(state$.id);
-    if (sync) {
-      const syncTimeout = (opts as LoadOpts).syncTimeoutMillis != undefined ? (opts as LoadOpts).syncTimeoutMillis : DEFAULT_SYNC_TIMEOUT
-      const tip = await tip$.pipe(timeoutWith(syncTimeout, of(undefined))).toPromise();
-      if (tip) {
-        await this.handleTip(state$, tip);
-      }
-    } else {
-      state$.add(tip$.subscribe());
-    }
   }
 
-  private async handleTip(state$: RunningState, cid: CID): Promise<void> {
+  private async _handleTip(state$: RunningState, cid: CID): Promise<void> {
     const next = await this.conflictResolution.applyTip(state$.value, cid);
     if (next) {
       state$.next(next);
@@ -138,7 +132,7 @@ export class StateManager {
   update(streamId: StreamID, tip: CID): void {
     this.executionQ.forDocument(streamId).add(async () => {
       const state$ = await this.fromMemoryOrStore(streamId);
-      if (state$) await this.handleTip(state$, tip);
+      if (state$) await this._handleTip(state$, tip);
     });
   }
 
@@ -151,11 +145,11 @@ export class StateManager {
    */
   applyCommit(streamId: StreamID, commit: any, opts: CreateOpts | UpdateOpts): Promise<RunningState> {
     return this.executionQ.forDocument(streamId).run(async () => {
-      const state$ = await this.load(streamId, opts)
       const cid = await this.dispatcher.storeCommit(commit);
+      const state$ = await this.load(streamId, opts)
 
-      await this.handleTip(state$, cid);
-      await this.applyOpts(state$, opts);
+      await this._handleTip(state$, cid);
+      await this.applyWriteOpts(state$, opts);
       return state$
     });
   }
@@ -185,7 +179,7 @@ export class StateManager {
               return;
             }
             case AnchorStatus.ANCHORED: {
-              await this.handleTip(state$, asr.anchorRecord);
+              await this._handleTip(state$, asr.anchorRecord);
               this.publishTip(state$);
               subscription.unsubscribe();
               return;

@@ -1,11 +1,12 @@
 import CID from 'cids'
 import cloneDeep from 'lodash.clonedeep'
-import type { Context } from "./context"
-import { StreamID, CommitID } from '@ceramicnetwork/streamid'
-import type { DagJWSResult, DagJWS } from 'dids'
-import { Observable } from 'rxjs'
-import { RunningStateLike } from './running-state-like';
-import { CeramicApi } from "./ceramic-api";
+import type {Context} from "./context"
+import {CommitID, StreamID} from '@ceramicnetwork/streamid'
+import type {DagJWS, DagJWSResult} from 'dids'
+import {Observable} from 'rxjs'
+import {RunningStateLike} from './running-state-like';
+import {CeramicApi} from "./ceramic-api";
+import {LoadOpts, SyncOptions} from "./docopts";
 
 /**
  * Describes signature status
@@ -182,9 +183,8 @@ export abstract class Stream extends Observable<DocState> implements DocStateHol
         return cloneDeep(this.state$.value)
     }
 
-    async sync(): Promise<void> {
-      // TODO force sync even if doc already in cache
-      const document = await this.api.loadDocument(this.id, { sync: true })
+    async sync(opts: LoadOpts = { sync: SyncOptions.PREFER_CACHE }): Promise<void> {
+      const document = await this.api.loadDocument(this.id, opts)
       this.state$.next(document.state)
     }
 

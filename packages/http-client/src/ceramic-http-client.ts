@@ -14,7 +14,7 @@ import {
   LoadOpts,
   MultiQuery,
   PinApi,
-  UpdateOpts,
+  UpdateOpts, SyncOptions,
 } from '@ceramicnetwork/common';
 import { TileDocument } from "@ceramicnetwork/doctype-tile"
 import { Caip10Link } from "@ceramicnetwork/doctype-caip10-link"
@@ -30,9 +30,9 @@ export const DEFAULT_CLIENT_CONFIG: CeramicClientConfig = {
   syncInterval: 5000,
 }
 
-const DEFAULT_APPLY_COMMIT_OPTS = { anchor: true, publish: true, sync: false }
-const DEFAULT_CREATE_FROM_GENESIS_OPTS = { anchor: true, publish: true, sync: true }
-const DEFAULT_LOAD_OPTS = { sync: true }
+const DEFAULT_APPLY_COMMIT_OPTS = { anchor: true, publish: true, sync: SyncOptions.PREFER_CACHE }
+const DEFAULT_CREATE_FROM_GENESIS_OPTS = { anchor: true, publish: true, sync: SyncOptions.PREFER_CACHE }
+const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE }
 
 /**
  * Ceramic client configuration
@@ -137,7 +137,7 @@ export default class CeramicClient implements CeramicApi {
     const streamRef = StreamRef.from(streamId)
     let doc = this._docCache.get(streamRef.baseID.toString())
     if (doc) {
-      await doc._syncState(streamRef)
+      await doc._syncState(streamRef, opts)
     } else {
       doc = await Document.load(streamRef, this._apiUrl, this._config.syncInterval, opts)
       this._docCache.set(doc.id.toString(), doc)

@@ -5,7 +5,7 @@ import {
   Context, CreateOpts,
   DocState,
   DocStateHolder,
-  LoadOpts,
+  LoadOpts, SyncOptions,
 } from '@ceramicnetwork/common';
 import { PinStore } from '../store/pin-store';
 import { NamedTaskQueue } from './named-task-queue';
@@ -29,6 +29,8 @@ export type RepositoryDependencies = {
   conflictResolution: ConflictResolution;
   stateValidation: StateValidation;
 };
+
+const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE, syncTimeoutMillis: 3000 }
 
 export class Repository {
   /**
@@ -118,23 +120,48 @@ export class Repository {
     await this.#deps.stateValidation.validate(state, state.content);
     const state$ = new RunningState(state);
     this.add(state$);
-    await this.stateManager.syncGenesis(state$, opts);
-    this.logger.verbose(`Document ${streamId.toString()} successfully loaded`);
+    this.logger.verbose(`Document ${streamId.toString()} successfully loaded`); // todo
     return state$;
   }
 
   /**
    * Returns a document from wherever we can get information about it.
-   * Starts by checking if the document state is present in the in-memory cache, if not then then checks the state store, and finally loads the document from pubsub.
+   * Starts by checking if the document state is present in the in-memory cache, if not then
+   * checks the state store, and finally loads the document from pubsub.
    */
-  async load(streamId: StreamID, opts: LoadOpts | CreateOpts): Promise<RunningState> {
+  async load(streamId: StreamID, opts: LoadOpts): Promise<RunningState> {
+    opts = { ...DEFAULT_LOAD_OPTS, ...opts }
+
     return this.loadingQ.run(streamId.toString(), async () => {
-      const fromMemory = this.fromMemory(streamId);
-      if (fromMemory) return fromMemory;
-      const fromStateStore = await this.fromStateStore(streamId);
-      if (fromStateStore) return fromStateStore;
-      return this.fromNetwork(streamId, opts);
+      let stream = this.fromMemory(streamId);
+      if (!stream) {
+        stream = await this.fromStateStore(streamId);
+      }
+
+      if (stream && opts.sync == SyncOptions.PREFER_CACHE) {
+        return stream
+      }
+
+      if (!stream) {
+        stream = await this.fromNetwork(streamId, opts);
+      }
+      await this.stateManager.sync(stream, opts.syncTimeoutMillis);
+      return stream
+
+
     });
+  }
+
+  /**
+   * Handles new stream creation by loading genesis commit into memory and then handling the given
+   * CreateOpts for the genesis commit.
+   * @param streamId
+   * @param opts
+   */
+  async applyCreateOpts(streamId: StreamID, opts: CreateOpts): Promise<RunningState> {
+    const state = await this.load(streamId, opts)
+    this.stateManager.applyWriteOpts(state, opts)
+    return state
   }
 
   /**
