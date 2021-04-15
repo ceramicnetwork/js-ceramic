@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.13.5-rc.0](/compare/@ceramicnetwork/doctype-caip10-link-handler@0.13.4...@ceramicnetwork/doctype-caip10-link-handler@0.13.5-rc.0) (2021-04-15)
+
+
+### Bug Fixes
+
+* Fix tests by using node environment for jest (#1212) aff01c6, closes #1212
+
+
+
+
+
 ## [0.13.4](/compare/@ceramicnetwork/doctype-caip10-link-handler@0.13.3...@ceramicnetwork/doctype-caip10-link-handler@0.13.4) (2021-04-02)
 
 

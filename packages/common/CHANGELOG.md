@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.17.1-rc.0](/compare/@ceramicnetwork/common@0.17.0...@ceramicnetwork/common@0.17.1-rc.0) (2021-04-15)
+
+
+### Bug Fixes
+
+* Fix tests by using node environment for jest (#1212) aff01c6, closes #1212
+
+
+
+
+
 # [0.17.0](/compare/@ceramicnetwork/common@0.16.0...@ceramicnetwork/common@0.17.0) (2021-04-02)
 
 
