@@ -5,6 +5,11 @@ interface BasicLoadOpts {
      * performing the operation.
      */
     sync?: boolean
+
+    /**
+     * How long to wait for a response from pubsub when syncing a stream.
+     */
+    syncTimeoutMillis?: number
 }
 
 /**

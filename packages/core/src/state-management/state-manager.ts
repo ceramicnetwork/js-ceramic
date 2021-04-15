@@ -19,6 +19,8 @@ import { empty, of, Subscription } from 'rxjs';
 import { SnapshotState } from './snapshot-state';
 import { CommitID, StreamID } from '@ceramicnetwork/streamid';
 
+const DEFAULT_SYNC_TIMEOUT = 3000
+
 export class StateManager {
 
   /**
@@ -97,7 +99,8 @@ export class StateManager {
     }
     const tip$ = this.dispatcher.messageBus.queryNetwork(state$.id);
     if (sync) {
-      const tip = await tip$.pipe(timeoutWith(3000, of(undefined))).toPromise();
+      const syncTimeout = (opts as LoadOpts).syncTimeoutMillis != undefined ? (opts as LoadOpts).syncTimeoutMillis : DEFAULT_SYNC_TIMEOUT
+      const tip = await tip$.pipe(timeoutWith(syncTimeout, of(undefined))).toPromise();
       if (tip) {
         await this.handleTip(state$, tip);
       }
