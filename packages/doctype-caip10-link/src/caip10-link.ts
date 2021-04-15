@@ -1,9 +1,9 @@
 import {
     CeramicApi,
     CreateOpts,
-    Doctype,
-    DoctypeConstructor,
-    DoctypeStatic,
+    Stream,
+    StreamConstructor,
+    StreamStatic,
     LoadOpts,
     UpdateOpts,
     UnsignedCommit,
@@ -25,8 +25,8 @@ const DEFAULT_LOAD_OPTS = { sync: true }
 /**
  * Caip10Link doctype implementation
  */
-@DoctypeStatic<DoctypeConstructor<Caip10Link>>()
-export class Caip10Link extends Doctype {
+@StreamStatic<StreamConstructor<Caip10Link>>()
+export class Caip10Link extends Stream {
 
     static DOCTYPE_NAME = 'caip10-link'
     static DOCTYPE_ID = 1

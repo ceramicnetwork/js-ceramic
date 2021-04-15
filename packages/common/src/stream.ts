@@ -126,7 +126,7 @@ export interface DocStateHolder {
 /**
  * Describes common doctype attributes
  */
-export abstract class Doctype extends Observable<DocState> implements DocStateHolder {
+export abstract class Stream extends Observable<DocState> implements DocStateHolder {
     constructor(protected readonly state$: RunningStateLike, private _context: Context) {
         super(subscriber => {
           state$.subscribe(subscriber)
@@ -202,20 +202,20 @@ export abstract class Doctype extends Observable<DocState> implements DocStateHo
 }
 
 /**
- * Doctype decorator
+ * Stream decorator
  * @constructor
  */
-export function DoctypeStatic<T>() {
+export function StreamStatic<T>() {
     return <U extends T>(constructor: U): any => { constructor }
 }
 
 /**
- * Doctype static signatures
+ * Stream static signatures
  */
-export interface DoctypeConstructor<T extends Doctype> {
+export interface StreamConstructor<T extends Stream> {
     /**
      * Constructor signature
-     * @param state$ - Doctype state
+     * @param state$ - Stream state
      * @param context - Ceramic context
      */
     new(state$: RunningStateLike, context: Context): T
@@ -224,7 +224,7 @@ export interface DoctypeConstructor<T extends Doctype> {
 /**
  * Describes document type handler functionality
  */
-export interface DoctypeHandler<T extends Doctype> {
+export interface StreamHandler<T extends Stream> {
     /**
      * The string name of the doctype
      */
@@ -233,7 +233,7 @@ export interface DoctypeHandler<T extends Doctype> {
     /**
      * The doctype class
      */
-    doctype: DoctypeConstructor<T>
+    doctype: StreamConstructor<T>
 
     /**
      * Applies commit to the document (genesis|signed|anchored)

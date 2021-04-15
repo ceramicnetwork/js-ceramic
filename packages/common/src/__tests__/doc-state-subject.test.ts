@@ -1,6 +1,6 @@
 import CID from 'cids';
 import { DocStateSubject } from '../doc-state-subject';
-import { CommitType, DocState } from "../doctype";
+import { CommitType, DocState } from "../stream";
 
 const FAKE_CID_1 = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu');
 const FAKE_CID2 = new CID('bafybeig6xv5nwphfmvcnektpnojts44jqcuam7bmye2pb54adnrtccjlsu');

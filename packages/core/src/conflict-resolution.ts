@@ -8,9 +8,9 @@ import {
   Context,
   DocState,
   DocStateHolder,
-  Doctype,
-  DoctypeHandler,
-  DoctypeUtils,
+  Stream,
+  StreamHandler,
+  StreamUtils,
 } from '@ceramicnetwork/common';
 import { Dispatcher } from './dispatcher';
 import cloneDeep from 'lodash.clonedeep';
@@ -151,7 +151,7 @@ export class HistoryLog {
         return index;
       }
       const commit = await this.dispatcher.retrieveCommit(current);
-      if (commit && DoctypeUtils.isSignedCommit(commit) && commit.link && commit.link.equals(cid)) {
+      if (commit && StreamUtils.isSignedCommit(commit) && commit.link && commit.link.equals(cid)) {
         return index;
       }
     }
@@ -190,7 +190,7 @@ export async function fetchLog(
   }
 
   let payload = commit;
-  if (DoctypeUtils.isSignedCommit(commit)) {
+  if (StreamUtils.isSignedCommit(commit)) {
     payload = await dispatcher.retrieveCommit(commit.link);
     if (payload == null) {
       throw new Error(`No commit found for CID ${commit.link.toString()}`);
@@ -235,8 +235,8 @@ export class ConflictResolution {
   /**
    * Applies the log to the document and updates the state.
    */
-  private async applyLogToState<T extends Doctype>(
-    handler: DoctypeHandler<T>,
+  private async applyLogToState<T extends Stream>(
+    handler: StreamHandler<T>,
     log: Array<CID>,
     state?: DocState,
     breakOnAnchor?: boolean,
@@ -249,7 +249,7 @@ export class ConflictResolution {
       // TODO - should catch potential thrown error here
 
       let payload = commit;
-      if (DoctypeUtils.isSignedCommit(commit)) {
+      if (StreamUtils.isSignedCommit(commit)) {
         payload = await this.dispatcher.retrieveCommit(commit.link);
       }
 
@@ -297,7 +297,7 @@ export class ConflictResolution {
     const cid = log[0];
     const commit = await this.dispatcher.retrieveCommit(cid);
     let payload = commit;
-    if (DoctypeUtils.isSignedCommit(commit)) {
+    if (StreamUtils.isSignedCommit(commit)) {
       payload = await this.dispatcher.retrieveCommit(commit.link);
     }
     if (payload.prev.equals(tip)) {

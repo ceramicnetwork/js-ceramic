@@ -1,7 +1,7 @@
 import Ceramic, { CeramicConfig } from '../ceramic'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import { TileDocument } from "@ceramicnetwork/doctype-tile"
-import { AnchorStatus, DoctypeUtils, IpfsApi } from "@ceramicnetwork/common"
+import { AnchorStatus, StreamUtils, IpfsApi } from "@ceramicnetwork/common"
 import StreamID from '@ceramicnetwork/streamid'
 import * as u8a from 'uint8arrays'
 import cloneDeep from 'lodash.clonedeep'
@@ -235,7 +235,7 @@ describe('Ceramic API', () => {
         const record = (await ceramic.ipfs.dag.get(cid)).value
         expected.push({
           cid: cid.toString(),
-          value: await DoctypeUtils.convertCommitToSignedCommitContainer(record, ipfs)
+          value: await StreamUtils.convertCommitToSignedCommitContainer(record, ipfs)
         })
       }
 

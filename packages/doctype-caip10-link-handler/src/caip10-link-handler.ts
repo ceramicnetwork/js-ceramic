@@ -5,8 +5,8 @@ import { Caip10Link } from "@ceramicnetwork/doctype-caip10-link"
 import {
     AnchorStatus,
     DocState,
-    DoctypeConstructor,
-    DoctypeHandler,
+    StreamConstructor,
+    StreamHandler,
     SignatureStatus,
     CommitType,
     CeramicCommit,
@@ -16,7 +16,7 @@ import {
 
 const IPFS_GET_TIMEOUT = 60000 // 1 minute
 
-export class Caip10LinkHandler implements DoctypeHandler<Caip10Link> {
+export class Caip10LinkHandler implements StreamHandler<Caip10Link> {
     /**
      * Gets doctype name
      */
@@ -27,7 +27,7 @@ export class Caip10LinkHandler implements DoctypeHandler<Caip10Link> {
     /**
      * Gets doctype class
      */
-    get doctype(): DoctypeConstructor<Caip10Link> {
+    get doctype(): StreamConstructor<Caip10Link> {
         return Caip10Link
     }
 

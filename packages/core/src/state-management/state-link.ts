@@ -3,7 +3,7 @@ import { StreamID } from '@ceramicnetwork/streamid';
 import { DocState, RunningStateLike, DocStateSubject } from '@ceramicnetwork/common';
 
 /**
- * Maintain Doctype state. Can be updated from inside, thus maintaining separate states per doctype instance.
+ * Maintain Stream state. Can be updated from inside, thus maintaining separate states per doctype instance.
  * If subscribed, gets external updates from `update$` feed.
  */
 export class StateLink extends Observable<DocState> implements RunningStateLike {

@@ -12,7 +12,7 @@ import * as sha256 from '@stablelib/sha256'
 import cloneDeep from 'lodash.clonedeep'
 
 import { TileDocument } from "@ceramicnetwork/doctype-tile"
-import {AnchorCommit, CeramicApi, Context, DoctypeUtils, SignedCommitContainer, TestUtils} from "@ceramicnetwork/common"
+import {AnchorCommit, CeramicApi, Context, StreamUtils, SignedCommitContainer, TestUtils} from "@ceramicnetwork/common"
 
 jest.mock('did-jwt', () => ({
     // TODO - We should test for when this function throws as well
@@ -315,7 +315,7 @@ describe('TileDocumentHandler', () => {
     })
 
     it('multiple consecutive updates', async () => {
-        const deepCopy = o => DoctypeUtils.deserializeState(DoctypeUtils.serializeState(o))
+        const deepCopy = o => StreamUtils.deserializeState(StreamUtils.serializeState(o))
         const tileDocumentHandler = new TileDocumentHandler()
 
         const genesisRecord = await TileDocument.makeGenesis(context.api, { test: 'data' }, { deterministic: true }) as SignedCommitContainer

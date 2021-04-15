@@ -8,9 +8,9 @@ import {
     CreateOpts,
     LoadOpts,
     UpdateOpts,
-    Doctype,
-    DoctypeConstructor,
-    DoctypeStatic,
+    Stream,
+    StreamConstructor,
+    StreamStatic,
     CeramicCommit,
     CommitHeader,
     GenesisCommit,
@@ -92,8 +92,8 @@ async function throwReadOnlyError (): Promise<void> {
 /**
  * Tile doctype implementation
  */
-@DoctypeStatic<DoctypeConstructor<TileDocument>>()
-export class TileDocument<T = Record<string, any>> extends Doctype {
+@StreamStatic<StreamConstructor<TileDocument>>()
+export class TileDocument<T = Record<string, any>> extends Stream {
 
     static DOCTYPE_NAME = 'tile'
     static DOCTYPE_ID = 0

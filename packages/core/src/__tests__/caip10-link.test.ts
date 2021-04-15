@@ -1,6 +1,6 @@
 import Ceramic, { CeramicConfig } from '../ceramic'
 import { Caip10Link } from "@ceramicnetwork/doctype-caip10-link"
-import { AnchorStatus, DoctypeUtils, IpfsApi } from "@ceramicnetwork/common"
+import { AnchorStatus, StreamUtils, IpfsApi } from "@ceramicnetwork/common"
 import { validateLink } from "@ceramicnetwork/blockchain-utils-validation"
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import KeyDidResolver from 'key-did-resolver'
@@ -111,7 +111,7 @@ describe('Ceramic API', () => {
       expect(link1.id).toEqual(link2.id)
       expect(link1.did).toEqual(ceramic.did.id)
       expect(link2.did).toEqual(link1.did)
-      expect(DoctypeUtils.serializeState(link2.state)).toEqual(DoctypeUtils.serializeState(link1.state))
+      expect(StreamUtils.serializeState(link2.state)).toEqual(StreamUtils.serializeState(link1.state))
     })
 
     it('Load works', async () => {
@@ -126,7 +126,7 @@ describe('Ceramic API', () => {
       expect(link1.id).toEqual(link2.id)
       expect(link1.did).toEqual(ceramic.did.id)
       expect(link2.did).toEqual(link1.did)
-      expect(DoctypeUtils.serializeState(link2.state)).toEqual(DoctypeUtils.serializeState(link1.state))
+      expect(StreamUtils.serializeState(link2.state)).toEqual(StreamUtils.serializeState(link1.state))
     })
 
     it('Anchoring works', async () => {

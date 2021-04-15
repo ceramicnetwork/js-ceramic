@@ -1,6 +1,6 @@
 import { BehaviorSubject } from 'rxjs';
-import { DocState } from './doctype';
-import { DoctypeUtils } from './utils/doctype-utils';
+import { DocState } from './stream';
+import { StreamUtils } from './utils/stream-utils';
 
 /**
  * BehaviourSubject<DocState> that emits only distinct values.
@@ -8,7 +8,7 @@ import { DoctypeUtils } from './utils/doctype-utils';
 export class DocStateSubject extends BehaviorSubject<DocState> {
   next(next: DocState) {
     const current = this.value;
-    if (!DoctypeUtils.statesEqual(current, next)) {
+    if (!StreamUtils.statesEqual(current, next)) {
       super.next(next);
     }
   }

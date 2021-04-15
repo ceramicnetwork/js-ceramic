@@ -24,7 +24,7 @@ export default class Utils {
 
     /**
      * Validates model against JSON-Schema
-     * @param schema - Doctype schema
+     * @param schema - Stream schema
      */
     static isSchemaValid(schema: Record<string, unknown>): boolean {
         Utils.validator.compile(schema) // throws an error on invalid schema
@@ -33,8 +33,8 @@ export default class Utils {
 
     /**
      * Validates model against JSON-Schema
-     * @param content - Doctype content
-     * @param schema - Doctype schema
+     * @param content - Stream content
+     * @param schema - Stream schema
      */
     static validate(content: any, schema: any): void {
         const isValid = Utils.validator.validate(schema, content)

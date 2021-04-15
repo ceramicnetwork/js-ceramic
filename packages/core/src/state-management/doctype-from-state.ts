@@ -1,17 +1,17 @@
-import { Context, DocState, Doctype } from '@ceramicnetwork/common';
+import { Context, DocState, Stream } from '@ceramicnetwork/common';
 import { Observable } from 'rxjs';
 import { HandlersMap } from '../handlers-map';
 import { StateLink } from './state-link';
 
 /**
- * Build Doctype from the current state and update feed.
+ * Build Stream from the current state and update feed.
  *
  * @param context - Ceramic context
  * @param handlersMap - available doctype handlers
  * @param state - current state of the doctype
  * @param update$ - On-demand feed of updates for the document
  */
-export function doctypeFromState<T extends Doctype>(
+export function doctypeFromState<T extends Stream>(
   context: Context,
   handlersMap: HandlersMap,
   state: DocState,

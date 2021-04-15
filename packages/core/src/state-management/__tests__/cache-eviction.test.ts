@@ -1,4 +1,4 @@
-import { DoctypeUtils, IpfsApi } from '@ceramicnetwork/common';
+import { StreamUtils, IpfsApi } from '@ceramicnetwork/common';
 import { createIPFS } from '../../__tests__/ipfs-util';
 import { createCeramic } from '../../__tests__/create-ceramic';
 import { TileDocument } from '@ceramicnetwork/doctype-tile';
@@ -28,12 +28,12 @@ test('cache eviction', async () => {
   expect(ceramic.repository.inmemory.volatile.size).toEqual(1);
 });
 
-test('Doctype not subscribed, RunningState in cache', async () => {
+test('Stream not subscribed, RunningState in cache', async () => {
   const document = await TileDocument.create(ceramic, INITIAL);
   const state$ = await ceramic.repository.load(document.id, {});
   const updateRecord = await document.makeCommit(ceramic, UPDATED);
   await ceramic.repository.stateManager.applyCommit(state$.id, updateRecord, { anchor: false, publish: false });
-  // Doctype does not see the change
+  // Stream does not see the change
   expect(document.state.content).toEqual(INITIAL);
   expect(document.state.next).toBeUndefined();
   // RunningState sees the change
@@ -41,7 +41,7 @@ test('Doctype not subscribed, RunningState in cache', async () => {
   expect(state$.state.content).toEqual(INITIAL);
 });
 
-test('Doctype not subscribed, RunningState evicted', async () => {
+test('Stream not subscribed, RunningState evicted', async () => {
   const document = await TileDocument.create(ceramic, INITIAL);
   const state$ = await ceramic.repository.load(document.id, {});
   await TileDocument.create(ceramic, { 'evict': true });
@@ -50,7 +50,7 @@ test('Doctype not subscribed, RunningState evicted', async () => {
   const updateRecord = await new TileDocument(state$, ceramic.context).makeCommit(ceramic, UPDATED);
   await ceramic.repository.stateManager.applyCommit(state2$.id, updateRecord, { anchor: false, publish: false });
 
-  // Doctype does not see the change
+  // Stream does not see the change
   expect(document.state.content).toEqual(INITIAL);
   expect(document.state.next).toBeUndefined();
   // RunningState does not see the change
@@ -58,13 +58,13 @@ test('Doctype not subscribed, RunningState evicted', async () => {
   expect(state$.state.next).toBeUndefined();
 });
 
-test('Doctype subscribed, RunningState in cache', async () => {
+test('Stream subscribed, RunningState in cache', async () => {
   const document = await TileDocument.create(ceramic, INITIAL);
   document.subscribe();
   const state$ = await ceramic.repository.load(document.id, {});
   const updateRecord = await document.makeCommit(ceramic, UPDATED);
   await ceramic.repository.stateManager.applyCommit(state$.id, updateRecord, { anchor: false, publish: false });
-  // Doctype sees the change
+  // Stream sees the change
   expect(document.state.content).toEqual(INITIAL);
   expect(document.state.next.content).toEqual(UPDATED);
   // RunningState sees the change
@@ -72,7 +72,7 @@ test('Doctype subscribed, RunningState in cache', async () => {
   expect(state$.state.content).toEqual(INITIAL);
 });
 
-test('Doctype subscribed, RunningState not evicted', async () => {
+test('Stream subscribed, RunningState not evicted', async () => {
   const document = await TileDocument.create(ceramic, INITIAL);
   document.subscribe();
   const state$ = await ceramic.repository.load(document.id, {});
@@ -83,7 +83,7 @@ test('Doctype subscribed, RunningState not evicted', async () => {
   const updateRecord = await new TileDocument(state$, ceramic.context).makeCommit(ceramic, UPDATED);
   await ceramic.repository.stateManager.applyCommit(state2$.id, updateRecord, { anchor: false, publish: false });
 
-  // Doctype sees change
+  // Stream sees change
   expect(document.state.content).toEqual(INITIAL);
   expect(document.state.next.content).toEqual(UPDATED);
   // RunningState does not see the change
@@ -181,7 +181,7 @@ describe('evicted then subscribed', () => {
     const inmemory = ceramic.repository.inmemory.get(doc1.id.toString());
     // We set to memory the latest known state, i.e. from doctype.state
     expect(inmemory).toBeDefined();
-    expect(DoctypeUtils.serializeState(inmemory.state)).toEqual(DoctypeUtils.serializeState(doc1.state));
+    expect(StreamUtils.serializeState(inmemory.state)).toEqual(StreamUtils.serializeState(doc1.state));
   });
 
   test('pinned', async () => {
@@ -189,18 +189,18 @@ describe('evicted then subscribed', () => {
     await ceramic.pin.add(doc1.id);
 
     const doc2 = await TileDocument.create(ceramic, doc1.content, { deterministic: true }, { sync: false });
-    expect(DoctypeUtils.serializeState(doc1.state)).toEqual(DoctypeUtils.serializeState(doc2.state));
+    expect(StreamUtils.serializeState(doc1.state)).toEqual(StreamUtils.serializeState(doc2.state));
 
     // Divergence: doc2 < doc1
     await doc1.update({ blah: 333 });
-    expect(DoctypeUtils.serializeState(doc1.state)).not.toEqual(DoctypeUtils.serializeState(doc2.state));
+    expect(StreamUtils.serializeState(doc1.state)).not.toEqual(StreamUtils.serializeState(doc2.state));
 
     doc2.subscribe();
     await delay(100); // Wait for plumbing
     const inmemory = ceramic.repository.inmemory.get(doc2.id.toString());
     // We set to memory the pinned state, instead of the one from doctype.state
     expect(inmemory).toBeDefined();
-    expect(DoctypeUtils.serializeState(inmemory.state)).toEqual(DoctypeUtils.serializeState(doc1.state));
-    expect(DoctypeUtils.serializeState(inmemory.state)).toEqual(DoctypeUtils.serializeState(doc2.state));
+    expect(StreamUtils.serializeState(inmemory.state)).toEqual(StreamUtils.serializeState(doc1.state));
+    expect(StreamUtils.serializeState(inmemory.state)).toEqual(StreamUtils.serializeState(doc2.state));
   });
 });

@@ -11,9 +11,9 @@ import {
     Context,
     DocState,
     CommitType,
-    DoctypeConstructor,
-    DoctypeHandler,
-    DoctypeUtils,
+    StreamConstructor,
+    StreamHandler,
+    StreamUtils,
     SignatureStatus,
     CeramicCommit,
     AnchorCommit,
@@ -24,7 +24,7 @@ const IPFS_GET_TIMEOUT = 60000 // 1 minute
 /**
  * Tile doctype handler implementation
  */
-export class TileDocumentHandler implements DoctypeHandler<TileDocument> {
+export class TileDocumentHandler implements StreamHandler<TileDocument> {
     /**
      * Gets doctype name
      */
@@ -35,7 +35,7 @@ export class TileDocumentHandler implements DoctypeHandler<TileDocument> {
     /**
      * Gets doctype class
      */
-    get doctype(): DoctypeConstructor<TileDocument> {
+    get doctype(): StreamConstructor<TileDocument> {
         return TileDocument
     }
 
@@ -68,7 +68,7 @@ export class TileDocumentHandler implements DoctypeHandler<TileDocument> {
      */
     async _applyGenesis(commit: any, cid: CID, context: Context): Promise<DocState> {
         let payload = commit
-        const isSigned = DoctypeUtils.isSignedCommit(commit)
+        const isSigned = StreamUtils.isSignedCommit(commit)
         if (isSigned) {
             payload = (await context.ipfs.dag.get(commit.link, { timeout: IPFS_GET_TIMEOUT })).value
             await this._verifySignature(commit, context, payload.header.controllers[0])

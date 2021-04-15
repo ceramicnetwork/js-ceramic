@@ -8,13 +8,13 @@ import {
     IpfsApi,
     SignedCommit, SignedCommitContainer
 } from "../index"
-import { AnchorStatus, DocState, Doctype, LogEntry } from "../doctype"
+import { AnchorStatus, DocState, LogEntry } from "../stream"
 import { DagJWS } from "dids"
 
 /**
- * Doctype related utils
+ * Stream related utils
  */
-export class DoctypeUtils {
+export class StreamUtils {
 
     /**
      * Serializes commit
@@ -23,17 +23,17 @@ export class DoctypeUtils {
     static serializeCommit(commit: any): any {
         const cloned = cloneDeep(commit)
 
-        if (DoctypeUtils.isSignedCommitContainer(cloned)) {
+        if (StreamUtils.isSignedCommitContainer(cloned)) {
             cloned.jws.link = cloned.jws.link.toString()
             cloned.linkedBlock = u8a.toString(cloned.linkedBlock, 'base64')
             return cloned
         }
 
-        if (DoctypeUtils.isSignedCommit(cloned)) {
+        if (StreamUtils.isSignedCommit(cloned)) {
             cloned.link = cloned.link.toString()
         }
 
-        if (DoctypeUtils.isAnchorCommit(cloned)) {
+        if (StreamUtils.isAnchorCommit(cloned)) {
             cloned.proof = cloned.proof.toString()
         }
 
@@ -54,17 +54,17 @@ export class DoctypeUtils {
     static deserializeCommit(commit: any): any {
         const cloned = cloneDeep(commit)
 
-        if (DoctypeUtils.isSignedCommitContainer(cloned)) {
+        if (StreamUtils.isSignedCommitContainer(cloned)) {
             cloned.jws.link = new CID(cloned.jws.link)
             cloned.linkedBlock = u8a.fromString(cloned.linkedBlock, 'base64')
             return cloned
         }
 
-        if (DoctypeUtils.isSignedCommit(cloned)) {
+        if (StreamUtils.isSignedCommit(cloned)) {
             cloned.link = new CID(cloned.link)
         }
 
-        if (DoctypeUtils.isAnchorCommit(cloned)) {
+        if (StreamUtils.isAnchorCommit(cloned)) {
             cloned.proof = new CID(cloned.proof)
         }
 
@@ -79,8 +79,8 @@ export class DoctypeUtils {
     }
 
     /**
-     * Serializes doctype state for over the network transfer
-     * @param state - Doctype state
+     * Serializes stream state for over the network transfer
+     * @param state - Stream state
      */
     static serializeState(state: any): any {
         const cloned = cloneDeep(state)
@@ -103,8 +103,8 @@ export class DoctypeUtils {
     }
 
     /**
-     * Deserializes doctype cloned from over the network transfer
-     * @param state - Doctype cloned
+     * Deserializes stream cloned from over the network transfer
+     * @param state - Stream cloned
      */
     static deserializeState(state: any): DocState {
         const cloned = cloneDeep(state)
@@ -134,8 +134,8 @@ export class DoctypeUtils {
     }
 
     static statesEqual(state1: DocState, state2: DocState): boolean {
-        return JSON.stringify(DoctypeUtils.serializeState(state1)) ===
-        JSON.stringify(DoctypeUtils.serializeState(state2))
+        return JSON.stringify(StreamUtils.serializeState(state1)) ===
+        JSON.stringify(StreamUtils.serializeState(state2))
     }
 
     /**
@@ -144,7 +144,7 @@ export class DoctypeUtils {
      * @param ipfs - IPFS instance
      */
     static async convertCommitToSignedCommitContainer(commit: CeramicCommit, ipfs: IpfsApi): Promise<CeramicCommit> {
-        if (DoctypeUtils.isSignedCommit(commit)) {
+        if (StreamUtils.isSignedCommit(commit)) {
             const block = await ipfs.block.get((commit as DagJWS).link)
             const linkedBlock = block.data instanceof Uint8Array ? block.data : new Uint8Array(block.data.buffer)
             return {

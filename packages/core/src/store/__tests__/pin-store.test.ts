@@ -4,7 +4,7 @@ import CID from 'cids';
 import {
   AnchorStatus,
   SignatureStatus,
-  Doctype,
+  Stream,
   PinningBackend,
   DocState,
   CommitType,
@@ -46,7 +46,7 @@ const state: DocState = {
     log: [{ cid: new CID('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D'), type: CommitType.GENESIS }]
 }
 
-class FakeType extends Doctype {
+class FakeType extends Stream {
     makeReadOnly() {
         throw new Error("Method not implemented.");
     }

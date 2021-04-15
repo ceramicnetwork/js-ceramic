@@ -1,5 +1,5 @@
 import { HandlersMap } from '../handlers-map';
-import { Doctype, DoctypeHandler, LoggerProvider } from '@ceramicnetwork/common';
+import { Stream, StreamHandler, LoggerProvider } from '@ceramicnetwork/common';
 import { TileDocumentHandler } from '@ceramicnetwork/doctype-tile-handler';
 import { Caip10LinkHandler } from '@ceramicnetwork/doctype-caip10-link-handler';
 
@@ -13,14 +13,14 @@ describe('constructor', () => {
     expect(handlers.get('caip10-link')).toBeInstanceOf(Caip10LinkHandler);
   });
   test('custom handlers', () => {
-    const customHandler = (jest.fn() as unknown) as DoctypeHandler<Doctype>;
+    const customHandler = (jest.fn() as unknown) as StreamHandler<Stream>;
     const handlers = new HandlersMap(logger, new Map().set('custom', customHandler));
     expect(handlers.get('custom')).toBe(customHandler);
   });
 });
 
 test('set and get', () => {
-  const customHandler = ({ name: 'custom' } as unknown) as DoctypeHandler<Doctype>;
+  const customHandler = ({ name: 'custom' } as unknown) as StreamHandler<Stream>;
   const handlers = new HandlersMap(logger);
   expect(() => handlers.get('custom')).toThrow();
   handlers.add(customHandler);

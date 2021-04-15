@@ -7,10 +7,10 @@ import {
   CeramicApi,
   CeramicCommit,
   Context,
-  Doctype,
-  DoctypeConstructor,
-  DoctypeHandler,
-  DoctypeUtils,
+  Stream,
+  StreamConstructor,
+  StreamHandler,
+  StreamUtils,
   LoadOpts,
   MultiQuery,
   PinApi,
@@ -63,7 +63,7 @@ export default class CeramicClient implements CeramicApi {
   public readonly context: Context
 
   private readonly _config: CeramicClientConfig
-  public readonly _doctypeConstructors: Record<string, DoctypeConstructor<Doctype>>
+  public readonly _doctypeConstructors: Record<string, StreamConstructor<Stream>>
 
   constructor (apiHost: string = CERAMIC_HOST, config: Partial<CeramicClientConfig> = {}) {
     this._config = { ...DEFAULT_CLIENT_CONFIG, ...config }
@@ -118,21 +118,21 @@ export default class CeramicClient implements CeramicApi {
     }
   }
 
-  async createDocumentFromGenesis<T extends Doctype>(doctype: string, genesis: any, opts: CreateOpts = {}): Promise<T> {
+  async createDocumentFromGenesis<T extends Stream>(doctype: string, genesis: any, opts: CreateOpts = {}): Promise<T> {
     opts = { ...DEFAULT_CREATE_FROM_GENESIS_OPTS, ...opts };
     const doc = await Document.createFromGenesis(this._apiUrl, doctype, genesis, opts, this._config.syncInterval)
 
     const found = this._docCache.get(doc.id.toString())
     if (found) {
-      if (!DoctypeUtils.statesEqual(doc.state, found.state)) found.next(doc.state);
-      return this.buildDoctype<T>(found);
+      if (!StreamUtils.statesEqual(doc.state, found.state)) found.next(doc.state);
+      return this.buildStream<T>(found);
     } else {
       this._docCache.set(doc.id.toString(), doc);
-      return this.buildDoctype<T>(doc);
+      return this.buildStream<T>(doc);
     }
   }
 
-  async loadDocument<T extends Doctype>(streamId: StreamID | CommitID | string, opts: LoadOpts = {}): Promise<T> {
+  async loadDocument<T extends Stream>(streamId: StreamID | CommitID | string, opts: LoadOpts = {}): Promise<T> {
     opts = { ...DEFAULT_LOAD_OPTS, ...opts };
     const streamRef = StreamRef.from(streamId)
     let doc = this._docCache.get(streamRef.baseID.toString())
@@ -142,10 +142,10 @@ export default class CeramicClient implements CeramicApi {
       doc = await Document.load(streamRef, this._apiUrl, this._config.syncInterval, opts)
       this._docCache.set(doc.id.toString(), doc)
     }
-    return this.buildDoctype<T>(doc)
+    return this.buildStream<T>(doc)
   }
 
-  async multiQuery(queries: Array<MultiQuery>): Promise<Record<string, Doctype>> {
+  async multiQuery(queries: Array<MultiQuery>): Promise<Record<string, Stream>> {
     const queriesJSON = queries.map(q => {
       return {
         streamId: typeof q.streamId === 'string' ? q.streamId : q.streamId.toString(),
@@ -163,9 +163,9 @@ export default class CeramicClient implements CeramicApi {
 
     return Object.entries(results).reduce((acc, e) => {
       const [k, v] = e
-      const state = DoctypeUtils.deserializeState(v)
+      const state = StreamUtils.deserializeState(v)
       const doc = new Document(state, this._apiUrl, this._config.syncInterval)
-      acc[k] = this.buildDoctype(doc)
+      acc[k] = this.buildStream(doc)
       return acc
     }, {})
   }
@@ -175,28 +175,28 @@ export default class CeramicClient implements CeramicApi {
     return Document.loadDocumentCommits(effectiveStreamId, this._apiUrl)
   }
 
-  async applyCommit<T extends Doctype>(streamId: string | StreamID, commit: CeramicCommit, opts: CreateOpts | UpdateOpts = {}): Promise<T> {
+  async applyCommit<T extends Stream>(streamId: string | StreamID, commit: CeramicCommit, opts: CreateOpts | UpdateOpts = {}): Promise<T> {
     opts = { ...DEFAULT_APPLY_COMMIT_OPTS, ...opts };
     const effectiveStreamId = typeStreamID(streamId)
     const stream = await Document.applyCommit(this._apiUrl, effectiveStreamId, commit, opts, this._config.syncInterval)
-    return this.buildDoctype<T>(stream)
+    return this.buildStream<T>(stream)
   }
 
-  addDoctypeHandler<T extends Doctype>(doctypeHandler: DoctypeHandler<T>): void {
+  addStreamHandler<T extends Stream>(doctypeHandler: StreamHandler<T>): void {
     this._doctypeConstructors[doctypeHandler.name] = doctypeHandler.doctype
   }
 
-  findDoctypeConstructor<T extends Doctype>(doctype: string) {
+  findStreamConstructor<T extends Stream>(doctype: string) {
     const constructor = this._doctypeConstructors[doctype]
     if (constructor) {
-      return constructor as DoctypeConstructor<T>
+      return constructor as StreamConstructor<T>
     } else {
       throw new Error(`Failed to find doctype constructor for doctype ${doctype}`)
     }
   }
 
-  private buildDoctype<T extends Doctype = Doctype>(document: Document) {
-    const doctypeConstructor = this.findDoctypeConstructor<T>(document.state.doctype)
+  private buildStream<T extends Stream = Stream>(document: Document) {
+    const doctypeConstructor = this.findStreamConstructor<T>(document.state.doctype)
     return new doctypeConstructor(document, this.context)
   }
 
