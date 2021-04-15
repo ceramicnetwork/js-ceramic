@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.21.1-rc.1](/compare/@ceramicnetwork/core@0.21.0...@ceramicnetwork/core@0.21.1-rc.1) (2021-04-15)
+
+
+### Bug Fixes
+
+* Fix tests by using node environment for jest (#1212) 14309e5, closes #1212
+* **core:** Cache providers per network (#1262) 07d1419, closes #1262
+
+
+
+
+
 ## [0.21.1-rc.0](/compare/@ceramicnetwork/core@0.21.0...@ceramicnetwork/core@0.21.1-rc.0) (2021-04-15)
 
 
