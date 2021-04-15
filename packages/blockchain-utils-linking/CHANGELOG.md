@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.3.1-rc.0](/compare/@ceramicnetwork/blockchain-utils-linking@0.3.0...@ceramicnetwork/blockchain-utils-linking@0.3.1-rc.0) (2021-04-15)
+
+
+### Bug Fixes
+
+* Fix tests by using node environment for jest (#1212) aff01c6, closes #1212
+
+
+
+
+
 # [0.3.0](/compare/@ceramicnetwork/blockchain-utils-linking@0.2.0...@ceramicnetwork/blockchain-utils-linking@0.3.0) (2021-04-02)
 
 
