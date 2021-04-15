@@ -148,8 +148,6 @@ export class Repository {
       }
       await this.stateManager.sync(stream, opts.syncTimeoutMillis);
       return stream
-
-
     });
   }
 

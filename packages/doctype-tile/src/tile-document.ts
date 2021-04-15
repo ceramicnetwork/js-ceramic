@@ -133,7 +133,7 @@ export class TileDocument<T = Record<string, any>> extends Stream {
      */
     static async createFromGenesis<T>(ceramic: CeramicApi, genesisCommit: GenesisCommit, opts: CreateOpts = {}): Promise<TileDocument<T>> {
         opts = { ...DEFAULT_CREATE_OPTS, ...opts };
-        if (!genesisCommit.header?.unique && opts.syncTimeoutMillis == undefined) {
+        if (genesisCommit.header?.unique && opts.syncTimeoutMillis == undefined) {
             // By default you don't want to wait to sync doc state from pubsub when creating a unique
             // document as there shouldn't be any existing state for this doc on the network.
             opts.syncTimeoutMillis = 0
