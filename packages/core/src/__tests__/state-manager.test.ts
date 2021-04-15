@@ -184,7 +184,7 @@ describe('rewind', () => {
 
     const ceramic2 = await createCeramic(ipfs, { anchorOnRequest: false });
     const doc2 = await TileDocument.create(ceramic, INITIAL_CONTENT, { deterministic: true }, { syncTimeoutMillis: 0 });
-    const docState2 = await ceramic2.repository.load(doc2.id, {});
+    const docState2 = await ceramic2.repository.load(doc2.id, { syncTimeoutMillis: 0 });
     const snapshot = await ceramic2.repository.stateManager.rewind(docState2, doc1.commitId);
 
     expect(StreamUtils.statesEqual(snapshot.state, doc1.state));
