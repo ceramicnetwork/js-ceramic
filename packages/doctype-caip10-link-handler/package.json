@@ -41,10 +41,7 @@
     "uint8arrays": "^2.0.5"
   },
   "jest": {
-    "testEnvironment": "node",
-    "transformIgnorePatterns": [
-      "/node_modules(?!/did-jwt)/"
-    ]
+    "testEnvironment": "node"
   },
   "gitHead": "34eeee25597b0a60def72906c26d3afd6230aaf1"
 }
