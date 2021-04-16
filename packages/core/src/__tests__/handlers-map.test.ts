@@ -14,17 +14,18 @@ describe('constructor', () => {
   });
   test('custom handlers', () => {
     const customHandler = (jest.fn() as unknown) as StreamHandler<Stream>;
-    const handlers = new HandlersMap(logger, new Map().set('custom', customHandler));
-    expect(handlers.get('custom')).toBe(customHandler);
+    const handlers = new HandlersMap(logger, new Map().set(13, customHandler));
+    expect(handlers.get(13)).toBe(customHandler);
   });
 });
 
 test('set and get', () => {
-  const customHandler = ({ name: 'custom' } as unknown) as StreamHandler<Stream>;
+  const customHandler = ({ name: 'custom', type: 13 } as unknown) as StreamHandler<Stream>;
   const handlers = new HandlersMap(logger);
   expect(() => handlers.get('custom')).toThrow();
   handlers.add(customHandler);
-  expect(handlers.get('custom')).toBe(customHandler);
+  expect(() => handlers.get('custom')).toThrow();
+  expect(handlers.get(13)).toBe(customHandler);
 });
 
 test('get non-existing', () => {

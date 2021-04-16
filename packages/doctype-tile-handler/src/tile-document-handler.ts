@@ -25,6 +25,9 @@ const IPFS_GET_TIMEOUT = 60000 // 1 minute
  * Tile doctype handler implementation
  */
 export class TileDocumentHandler implements StreamHandler<TileDocument> {
+    get type(): number {
+      return TileDocument.DOCTYPE_ID
+    }
     /**
      * Gets doctype name
      */
@@ -81,7 +84,7 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
         }
 
         return {
-            doctype: TileDocument.DOCTYPE_NAME,
+            type: TileDocument.DOCTYPE_ID,
             content: payload.data || {},
             metadata: payload.header,
             signature: isSigned? SignatureStatus.SIGNED : SignatureStatus.GENESIS,

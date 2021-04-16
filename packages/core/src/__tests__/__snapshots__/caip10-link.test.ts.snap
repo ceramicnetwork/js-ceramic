@@ -95,7 +95,6 @@ Object {
   },
   "anchorStatus": 3,
   "content": "did:key:z6MkjKeH8SgVAYCvTBoyxx7uRJFGM2a9HUeFwfJfd6ctuA3X",
-  "doctype": "caip10-link",
   "log": Array [
     Object {
       "cid": Object {
@@ -277,6 +276,7 @@ Object {
     "family": "caip10-eip155:1",
   },
   "signature": 2,
+  "type": 1,
 }
 `;
 
@@ -284,7 +284,6 @@ exports[`Ceramic API Caip10Link test Create and link DID 1`] = `
 Object {
   "anchorStatus": 0,
   "content": null,
-  "doctype": "caip10-link",
   "log": Array [
     Object {
       "cid": Object {
@@ -390,6 +389,7 @@ Object {
     },
   },
   "signature": 2,
+  "type": 1,
 }
 `;
 
@@ -397,7 +397,6 @@ exports[`Ceramic API Caip10Link test Create from valid account id 1`] = `
 Object {
   "anchorStatus": 0,
   "content": null,
-  "doctype": "caip10-link",
   "log": Array [
     Object {
       "cid": Object {
@@ -453,5 +452,6 @@ Object {
     "content": null,
   },
   "signature": 0,
+  "type": 1,
 }
 `;

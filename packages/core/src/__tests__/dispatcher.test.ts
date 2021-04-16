@@ -136,7 +136,7 @@ describe('Dispatcher', () => {
     }
 
     const initialState = ({
-      doctype: 'tile',
+      type: 0,
       log: [
         {
           cid: FAKE_DOC_ID.cid,

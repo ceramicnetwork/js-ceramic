@@ -32,7 +32,7 @@
     "@ceramicnetwork/doctype-caip10-link": "^0.14.0-rc.1",
     "@ceramicnetwork/doctype-tile": "^0.15.0-rc.1",
     "cids": "~1.1.6",
-    "cross-fetch": "^3.0.6",
+    "cross-fetch": "^3.1.4",
     "dids": "^2.0.0",
     "lru_map": "^0.4.1",
     "query-string": "7.0.0",

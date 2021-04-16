@@ -278,11 +278,11 @@ describe('TileDocumentHandler', () => {
 
         const state = await tileDocumentHandler.applyCommit(RECORDS.genesisGenerated.jws, FAKE_CID_1, context)
         const state$ = TestUtils.runningState(state)
-        const doctype = new TileDocument(state$, context)
+        const doc = new TileDocument(state$, context)
 
-        await expect(doctype.makeCommit({} as CeramicApi, RECORDS.r1.desiredContent)).rejects.toThrow(/No DID/)
+        await expect(doc.makeCommit({} as CeramicApi, RECORDS.r1.desiredContent)).rejects.toThrow(/No DID/)
 
-        const record = await doctype.makeCommit(context.api, RECORDS.r1.desiredContent) as SignedCommitContainer
+        const record = await doc.makeCommit(context.api, RECORDS.r1.desiredContent) as SignedCommitContainer
         const { jws: rJws, linkedBlock: rLinkedBlock} = record
         const rPayload = dagCBOR.util.deserialize(rLinkedBlock)
         expect({ jws: serialize(rJws), linkedPayload: serialize(rPayload)}).toEqual(RECORDS.r1.record)
@@ -301,8 +301,8 @@ describe('TileDocumentHandler', () => {
         let state = await tileDocumentHandler.applyCommit(genesisRecord.jws, FAKE_CID_1, context)
 
         const state$ = TestUtils.runningState(state)
-        const doctype = new TileDocument(state$, context)
-        const signedRecord = await doctype.makeCommit(context.api, RECORDS.r1.desiredContent) as SignedCommitContainer
+        const doc = new TileDocument(state$, context)
+        const signedRecord = await doc.makeCommit(context.api, RECORDS.r1.desiredContent) as SignedCommitContainer
 
         await context.ipfs.dag.put(signedRecord, FAKE_CID_2)
 
@@ -327,8 +327,8 @@ describe('TileDocumentHandler', () => {
 
         // make a first update
         const state$ = TestUtils.runningState(genesisState)
-        let doctype = new TileDocument(state$, context)
-        const signedRecord1 = await doctype.makeCommit(context.api, { other: { obj: 'content' } }) as SignedCommitContainer
+        let doc = new TileDocument(state$, context)
+        const signedRecord1 = await doc.makeCommit(context.api, { other: { obj: 'content' } }) as SignedCommitContainer
 
         await context.ipfs.dag.put(signedRecord1, FAKE_CID_2)
         const sPayload1 = dagCBOR.util.deserialize(signedRecord1.linkedBlock)
@@ -338,8 +338,8 @@ describe('TileDocumentHandler', () => {
 
         // make a second update on top of the first
         const state1$ = TestUtils.runningState(state1)
-        doctype = new TileDocument(state1$, context)
-        const signedRecord2 = await doctype.makeCommit(context.api, { other: { obj2: 'fefe' } }) as SignedCommitContainer
+        doc = new TileDocument(state1$, context)
+        const signedRecord2 = await doc.makeCommit(context.api, { other: { obj2: 'fefe' } }) as SignedCommitContainer
 
         await context.ipfs.dag.put(signedRecord2, FAKE_CID_3)
         const sPayload2 = dagCBOR.util.deserialize(signedRecord2.linkedBlock)
@@ -373,8 +373,8 @@ describe('TileDocumentHandler', () => {
         await context.ipfs.dag.put(payload, genesisRecord.jws.link)
 
         const state = await tileDocumentHandler.applyCommit(genesisRecord.jws, FAKE_CID_1, context)
-        const doctype = new TileDocument(state, context)
-        const makeCommit = doctype.makeCommit(context.api, RECORDS.r1.desiredContent, { controllers: [did.id, did.id] })
+        const doc = new TileDocument(state, context)
+        const makeCommit = doc.makeCommit(context.api, RECORDS.r1.desiredContent, { controllers: [did.id, did.id] })
         await expect(makeCommit).rejects.toThrow(/Exactly one controller must be specified/)
     })
 
@@ -391,8 +391,8 @@ describe('TileDocumentHandler', () => {
         let state = await tileDocumentHandler.applyCommit(genesisRecord.jws, FAKE_CID_1, context)
 
         const state$ = TestUtils.runningState(state)
-        const doctype = new TileDocument(state$, context)
-        const signedRecord = await doctype.makeCommit(context.api, RECORDS.r1.desiredContent) as SignedCommitContainer
+        const doc = new TileDocument(state$, context)
+        const signedRecord = await doc.makeCommit(context.api, RECORDS.r1.desiredContent) as SignedCommitContainer
 
         await context.ipfs.dag.put(signedRecord, FAKE_CID_2)
 

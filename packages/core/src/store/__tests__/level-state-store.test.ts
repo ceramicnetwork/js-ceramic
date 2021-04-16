@@ -43,7 +43,7 @@ beforeEach(async () => {
 })
 
 const state = {
-    doctype: 'tile',
+    type: 0,
     content: {num: 0},
     metadata: {
         controllers: ['']

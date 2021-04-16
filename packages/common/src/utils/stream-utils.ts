@@ -10,6 +10,7 @@ import {
 } from "../index"
 import { AnchorStatus, StreamState, LogEntry } from "../stream"
 import { DagJWS } from "dids"
+import { StreamType } from '@ceramicnetwork/streamid';
 
 /**
  * Stream related utils
@@ -82,8 +83,8 @@ export class StreamUtils {
      * Serializes stream state for over the network transfer
      * @param state - Stream state
      */
-    static serializeState(state: any): any {
-        const cloned = cloneDeep(state)
+    static serializeState(state: DocState): any {
+        const cloned = cloneDeep(state) as any
 
         cloned.log = cloned.log.map((entry: LogEntry) => ({ ...entry, cid: entry.cid.toString() }))
         if (cloned.anchorStatus != null) {
@@ -99,6 +100,9 @@ export class StreamUtils {
         if (cloned.lastAnchored != null) {
             cloned.lastAnchored = cloned.lastAnchored.toString()
         }
+
+        cloned.doctype = StreamType.nameByCode(cloned.type)
+
         return cloned
     }
 
@@ -108,6 +112,11 @@ export class StreamUtils {
      */
     static deserializeState(state: any): StreamState {
         const cloned = cloneDeep(state)
+
+        if (cloned.doctype) {
+          cloned.type = StreamType.codeByName(cloned.doctype)
+          delete cloned.doctype
+        }
 
         cloned.log = cloned.log.map((entry: any): LogEntry => ({ ...entry, cid: new CID(entry.cid) }))
         if (cloned.anchorProof) {

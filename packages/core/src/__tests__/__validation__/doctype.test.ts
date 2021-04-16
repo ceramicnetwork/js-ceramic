@@ -30,7 +30,7 @@ describe('Stream', () => {
     beforeAll(() => {
         const docSchemaState = {
           content: schema,
-          doctype: 'tile',
+          type: 0,
           metadata: {
             controllers: [],
             schema: 'ceramic://1234567'
@@ -53,7 +53,7 @@ describe('Stream', () => {
 
     it('should pass schema validation', async () => {
         const state = {
-          doctype: 'tile',
+          type: 0,
           metadata: {
             controllers: [],
             schema: 'ceramic://1234567'
@@ -75,7 +75,7 @@ describe('Stream', () => {
 
     it('should fail schema validation', async () => {
         const state = {
-          doctype: 'tile',
+          type: 0,
           metadata: {
             controllers: [],
             schema: 'ceramic://1234567'
