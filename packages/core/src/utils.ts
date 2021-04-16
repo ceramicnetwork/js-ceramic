@@ -1,4 +1,6 @@
-import ajv from "ajv"
+import Ajv from "ajv"
+import addFormats from "ajv-formats"
+import { Memoize } from 'typescript-memoize';
 
 import type { TileDocument } from "@ceramicnetwork/doctype-tile"
 
@@ -7,7 +9,12 @@ import type { TileDocument } from "@ceramicnetwork/doctype-tile"
  */
 export default class Utils {
 
-    static validator: any = new ajv({ allErrors: true })
+    @Memoize()
+    static get validator() {
+      const ajv = new Ajv({ allErrors: true });
+      addFormats(ajv);
+      return ajv;
+    }
 
     /**
      * Awaits on condition for certain amount of time
@@ -28,7 +35,7 @@ export default class Utils {
      */
     static isSchemaValid(schema: Record<string, unknown>): boolean {
         Utils.validator.compile(schema) // throws an error on invalid schema
-        return Utils.validator.validateSchema(schema) // call validate schema just in case
+        return Utils.validator.validateSchema(schema) as boolean // call validate schema just in case
     }
 
     /**
