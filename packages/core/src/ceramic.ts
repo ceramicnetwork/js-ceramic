@@ -465,23 +465,12 @@ class Ceramic implements CeramicApi {
    * @param genesis - Genesis CID
    * @param opts - Initialization options
    */
-  async createDocumentFromGenesis<T extends Stream>(doctype: string, genesis: any, opts: CreateOpts = {}): Promise<T> {
+  async createStreamFromGenesis<T extends Stream>(doctype: string, genesis: any, opts: CreateOpts = {}): Promise<T> {
     opts = { ...DEFAULT_CREATE_FROM_GENESIS_OPTS, ...opts };
-    const state$ = await this._createDocFromGenesis(doctype, genesis, opts)
-    return doctypeFromState<T>(this.context, this._doctypeHandlers, state$.value, this.repository.updates$)
-  }
-
-  /**
-   * Creates document from genesis record
-   * @param doctype - Document type
-   * @param genesis - Genesis record
-   * @param opts - Initialization options
-   * @private
-   */
-  async _createDocFromGenesis(doctype: string, genesis: any, opts: CreateOpts): Promise<RunningState> {
     const genesisCid = await this.dispatcher.storeCommit(genesis);
     const streamId = new StreamID(doctype, genesisCid);
-    return this.repository.load(streamId, opts);
+    const state$ = await this.repository.load(streamId, opts);
+    return doctypeFromState<T>(this.context, this._doctypeHandlers, state$.value, this.repository.updates$)
   }
 
   /**

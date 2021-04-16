@@ -120,7 +120,7 @@ export class TileDocument<T = Record<string, any>> extends Stream {
       // sync by default if creating a deterministic document
       opts = { anchor: true, publish: true, sync: !!metadata?.deterministic, ...opts };
       const commit = await TileDocument.makeGenesis(ceramic, content, metadata)
-      return ceramic.createDocumentFromGenesis<TileDocument<T>>(TileDocument.DOCTYPE_NAME, commit, opts)
+      return ceramic.createStreamFromGenesis<TileDocument<T>>(TileDocument.DOCTYPE_NAME, commit, opts)
     }
 
     /**
@@ -133,7 +133,7 @@ export class TileDocument<T = Record<string, any>> extends Stream {
         // sync by default when creating from genesis
         opts = { anchor: true, publish: true, sync: true, ...opts };
         const commit = (genesisCommit.data ? await _signDagJWS(ceramic, genesisCommit, genesisCommit.header.controllers[0]): genesisCommit)
-        return ceramic.createDocumentFromGenesis<TileDocument<T>>(TileDocument.DOCTYPE_NAME, commit, opts)
+        return ceramic.createStreamFromGenesis<TileDocument<T>>(TileDocument.DOCTYPE_NAME, commit, opts)
     }
 
     /**

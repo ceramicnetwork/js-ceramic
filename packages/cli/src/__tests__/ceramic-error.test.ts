@@ -86,7 +86,7 @@ test('write to http-access', async () => {
 
 test('write error to http access log: no error code', async () => {
   const httpAccessLogPath = path.resolve(tmpFolder.path, 'http-access.log');
-  core.createDocumentFromGenesis = async () => {
+  core.createStreamFromGenesis = async () => {
     throw new Error(`BANG`);
   };
   await expect(
@@ -106,7 +106,7 @@ test('write error to http access log: with error code', async () => {
   class FauxError extends Error {
     readonly code = 345;
   }
-  core.createDocumentFromGenesis = async () => {
+  core.createStreamFromGenesis = async () => {
     throw new FauxError(`BANG`);
   };
   await expect(
@@ -123,7 +123,7 @@ test('write error to http access log: with error code', async () => {
 
 test('report error to diagnostics log', async () => {
   const diagnosticsLogPath = path.resolve(tmpFolder.path, 'diagnostics.log');
-  core.createDocumentFromGenesis = async () => {
+  core.createStreamFromGenesis = async () => {
     throw new Error(`BANG`);
   };
   await expect(

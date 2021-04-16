@@ -64,7 +64,7 @@ export class Caip10Link extends Stream {
                              genesisCommit: GenesisCommit,
                              opts: CreateOpts = {}): Promise<Caip10Link> {
         opts = { ...DEFAULT_CREATE_OPTS, ...opts };
-        return ceramic.createDocumentFromGenesis<Caip10Link>(
+        return ceramic.createStreamFromGenesis<Caip10Link>(
             Caip10Link.DOCTYPE_NAME, genesisCommit, opts)
     }
 
