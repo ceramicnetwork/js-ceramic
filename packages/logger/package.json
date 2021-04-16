@@ -47,10 +47,5 @@
     "ts-node": "^9.0.0",
     "tsc-watch": "^4.2.9",
     "typescript-json-schema": "^0.42.0"
-  },
-  "jest": {
-    "transformIgnorePatterns": [
-      "/node_modules(?!/did-jwt)/"
-    ]
   }
 }
