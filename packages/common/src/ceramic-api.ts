@@ -66,11 +66,11 @@ export interface CeramicApi extends CeramicSigner {
 
     /**
      * Create Stream from genesis commit
-     * @param doctype - Document type
+     * @param type - Stream type
      * @param genesis - Genesis commit
      * @param opts - Initialization options
      */
-    createStreamFromGenesis<T extends Stream>(doctype: string, genesis: any, opts?: CreateOpts): Promise<T>;
+    createStreamFromGenesis<T extends Stream>(type: number, genesis: any, opts?: CreateOpts): Promise<T>;
 
     /**
      * Loads Stream instance

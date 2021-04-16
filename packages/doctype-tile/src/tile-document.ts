@@ -122,7 +122,7 @@ export class TileDocument<T = Record<string, any>> extends Stream {
           opts.syncTimeoutSeconds = 0
       }
       const commit = await TileDocument.makeGenesis(ceramic, content, metadata)
-      return ceramic.createStreamFromGenesis<TileDocument<T>>(TileDocument.STREAM_TYPE_NAME, commit, opts)
+      return ceramic.createStreamFromGenesis<TileDocument<T>>(TileDocument.STREAM_TYPE_ID, commit, opts)
     }
 
     /**
@@ -139,7 +139,7 @@ export class TileDocument<T = Record<string, any>> extends Stream {
             opts.syncTimeoutSeconds = 0
         }
         const commit = (genesisCommit.data ? await _signDagJWS(ceramic, genesisCommit, genesisCommit.header.controllers[0]): genesisCommit)
-        return ceramic.createStreamFromGenesis<TileDocument<T>>(TileDocument.STREAM_TYPE_NAME, commit, opts)
+        return ceramic.createStreamFromGenesis<TileDocument<T>>(TileDocument.STREAM_TYPE_ID, commit, opts)
     }
 
     /**

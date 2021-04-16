@@ -53,11 +53,11 @@ export class Document extends Observable<StreamState> implements RunningStateLik
     return new StreamID(this.state$.value.type, this.state$.value.log[0].cid)
   }
 
-  static async createFromGenesis (apiUrl: string, streamtype: string, genesis: any, opts: CreateOpts, syncInterval: number): Promise<Document> {
+  static async createFromGenesis (apiUrl: string, type: number, genesis: any, opts: CreateOpts, syncInterval: number): Promise<Document> {
     const { state } = await fetchJson(apiUrl + '/streams', {
       method: 'post',
       body: {
-        streamtype,
+        type,
         genesis: StreamUtils.serializeCommit(genesis),
         opts,
       }
