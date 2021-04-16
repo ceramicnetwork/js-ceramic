@@ -93,7 +93,7 @@ test('Stream subscribed, RunningState not evicted', async () => {
 
 test('RunningState stops updating after evicted', async () => {
   const createDocument = () => {
-    return TileDocument.create(ceramic, INITIAL, { deterministic: true }, { syncTimeoutMillis: 0 });
+    return TileDocument.create(ceramic, INITIAL, { deterministic: true }, { syncTimeoutSeconds: 0 });
   };
   const document1 = await createDocument();
   const runningState1 = await ceramic.repository.load(document1.id, {});
@@ -121,7 +121,7 @@ test('RunningState stops updating after evicted', async () => {
 
 test('StateLink receives updates', async () => {
   const createDocument = () => {
-    return TileDocument.create(ceramic, INITIAL, { deterministic: true }, { syncTimeoutMillis: 0 });
+    return TileDocument.create(ceramic, INITIAL, { deterministic: true }, { syncTimeoutSeconds: 0 });
   };
   const document1 = await createDocument();
   const runningState1 = await ceramic.repository.load(document1.id, {});
@@ -185,10 +185,10 @@ describe('evicted then subscribed', () => {
   });
 
   test('pinned', async () => {
-    const doc1 = await TileDocument.create(ceramic, { foo: Math.random().toString() }, { deterministic: true }, { syncTimeoutMillis: 0 });
+    const doc1 = await TileDocument.create(ceramic, { foo: Math.random().toString() }, { deterministic: true }, { syncTimeoutSeconds: 0 });
     await ceramic.pin.add(doc1.id);
 
-    const doc2 = await TileDocument.create(ceramic, doc1.content, { deterministic: true }, { syncTimeoutMillis: 0 });
+    const doc2 = await TileDocument.create(ceramic, doc1.content, { deterministic: true }, { syncTimeoutSeconds: 0 });
     expect(StreamUtils.serializeState(doc1.state)).toEqual(StreamUtils.serializeState(doc2.state));
 
     // Divergence: doc2 < doc1

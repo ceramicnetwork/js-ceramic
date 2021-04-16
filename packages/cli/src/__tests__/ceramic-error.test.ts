@@ -74,7 +74,7 @@ afterAll(async () => {
 
 test('write to http-access', async () => {
   const httpAccessLogPath = path.resolve(tmpFolder.path, 'http-access.log');
-  await TileDocument.create(client, { test: 123 }, null, { anchor: false, publish: false, syncTimeoutMillis:0 });
+  await TileDocument.create(client, { test: 123 }, null, { anchor: false, publish: false, syncTimeoutSeconds:0 });
   await new Promise((resolve) => setTimeout(resolve, 1000));
   const httpAccessLog = safeRead(httpAccessLogPath);
   const lines = httpAccessLog.split('\n');
@@ -90,7 +90,7 @@ test('write error to http access log: no error code', async () => {
     throw new Error(`BANG`);
   };
   await expect(
-    TileDocument.create(client, { test: 123 }, null, { anchor: false, publish: false, syncTimeoutMillis:0 }),
+    TileDocument.create(client, { test: 123 }, null, { anchor: false, publish: false, syncTimeoutSeconds:0 }),
   ).rejects.toThrow();
   await new Promise((resolve) => setTimeout(resolve, 300));
   const httpAccessLog = safeRead(httpAccessLogPath);
@@ -110,7 +110,7 @@ test('write error to http access log: with error code', async () => {
     throw new FauxError(`BANG`);
   };
   await expect(
-    TileDocument.create(client, { test: 123 }, null, { anchor: false, publish: false, syncTimeoutMillis:0 }),
+    TileDocument.create(client, { test: 123 }, null, { anchor: false, publish: false, syncTimeoutSeconds:0 }),
   ).rejects.toThrow();
   await new Promise((resolve) => setTimeout(resolve, 300));
   const httpAccessLog = safeRead(httpAccessLogPath);
@@ -127,7 +127,7 @@ test('report error to diagnostics log', async () => {
     throw new Error(`BANG`);
   };
   await expect(
-    TileDocument.create(client, { test: 123 }, null, { anchor: false, publish: false, syncTimeoutMillis:0 }),
+    TileDocument.create(client, { test: 123 }, null, { anchor: false, publish: false, syncTimeoutSeconds:0 }),
   ).rejects.toThrow();
   await new Promise((resolve) => setTimeout(resolve, 300));
   const diagnosticsLog = safeRead(diagnosticsLogPath);

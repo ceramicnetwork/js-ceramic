@@ -1,7 +1,7 @@
 /**
  * Enum describing different modes for syncing a stream.
  * - SYNC_ALWAYS - Means that regardless of whether or not the document is found in the node's cache
- *   we will always query pubsub for the current tip for the stream and wait up to 'syncTimeoutMillis'
+ *   we will always query pubsub for the current tip for the stream and wait up to 'syncTimeoutSeconds'
  *   for the response.
  * - PREFER_CACHE - Means that if the stream is found in the node's in-memory cache or pin store,
  *   then the cached version is returned without performing any query to the pubsub network for the
@@ -21,7 +21,7 @@ interface BasicLoadOpts {
     /**
      * How long to wait for a response from pubsub when syncing a stream.
      */
-    syncTimeoutMillis?: number
+    syncTimeoutSeconds?: number
 }
 
 /**

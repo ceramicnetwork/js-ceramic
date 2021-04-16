@@ -77,9 +77,9 @@ describe('Ceramic interop: core <> http-client', () => {
 
     it('properly creates document', async () => {
         const doc1 = await TileDocument.create(core, { test: 123 }, null,
-            { anchor: false, publish: false, syncTimeoutMillis: 0 });
+            { anchor: false, publish: false, syncTimeoutSeconds: 0 });
         const doc2 = await TileDocument.create(client, { test: 123 }, null,
-            { anchor: false, publish: false, syncTimeoutMillis: 0 });
+            { anchor: false, publish: false, syncTimeoutSeconds: 0 });
 
         expect(doc1.content).toEqual(doc2.content)
 

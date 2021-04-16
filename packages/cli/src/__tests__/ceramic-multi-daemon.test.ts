@@ -80,7 +80,7 @@ describe('Ceramic interop between multiple daemons and http clients', () => {
         await Promise.all([core1.close(), core2.close()])
     })
 
-    it("doesn't sync if syncTimeoutMillis:0", async () => {
+    it("doesn't sync if syncTimeoutSeconds:0", async () => {
         const initialContent = {test: 123}
         const updatedContent = {test: 456}
         // Create a document with updates on the first node so that the updates aren't visible
@@ -89,7 +89,7 @@ describe('Ceramic interop between multiple daemons and http clients', () => {
         await doc1.update(updatedContent)
 
         // Loading the doc without syncing the tip should only load the initial genesis contents
-        const doc2 = await TileDocument.load(client2, doc1.id, {syncTimeoutMillis: 0})
+        const doc2 = await TileDocument.load(client2, doc1.id, {syncTimeoutSeconds: 0})
         expect(doc2.content).toEqual(initialContent)
 
         // Now query daemon2 again and ensure that the update is successfully loaded

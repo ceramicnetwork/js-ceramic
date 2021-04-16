@@ -31,7 +31,7 @@ export type RepositoryDependencies = {
   stateValidation: StateValidation;
 };
 
-const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE, syncTimeoutMillis: 3000 }
+const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE, syncTimeoutSeconds: 3 }
 
 export class Repository {
   /**
@@ -146,7 +146,7 @@ export class Repository {
       if (!stream) {
         stream = await this.fromNetwork(streamId, opts);
       }
-      await this.stateManager.sync(stream, opts.syncTimeoutMillis);
+      await this.stateManager.sync(stream, opts.syncTimeoutSeconds * 1000);
       return stream
     });
   }

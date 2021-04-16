@@ -56,7 +56,7 @@ test('handleTip', async () => {
 
 
   const ceramic2 = await createCeramic(ipfs);
-  const doc2 = await ceramic2.loadDocument<TileDocument>(doc1.id, { syncTimeoutMillis:0 });
+  const doc2 = await ceramic2.loadDocument<TileDocument>(doc1.id, { syncTimeoutSeconds:0 });
   doc2.subscribe();
   const streamState2 = await ceramic2.repository.load(doc2.id, {});
 
@@ -177,14 +177,14 @@ describe('rewind', () => {
   });
 
   test('return read-only snapshot', async () => {
-    const doc1 = await TileDocument.create<any>(ceramic, INITIAL_CONTENT, { deterministic: true }, { syncTimeoutMillis: 0 });
+    const doc1 = await TileDocument.create<any>(ceramic, INITIAL_CONTENT, { deterministic: true }, { syncTimeoutSeconds: 0 });
     await anchorUpdate(ceramic, doc1);
     await doc1.update({ abc: 321, def: 456, gh: 987 });
     await anchorUpdate(ceramic, doc1);
 
     const ceramic2 = await createCeramic(ipfs, { anchorOnRequest: false });
-    const doc2 = await TileDocument.create(ceramic, INITIAL_CONTENT, { deterministic: true }, { syncTimeoutMillis: 0 });
-    const streamState2 = await ceramic2.repository.load(doc2.id, { syncTimeoutMillis: 0 });
+    const doc2 = await TileDocument.create(ceramic, INITIAL_CONTENT, { deterministic: true }, { syncTimeoutSeconds: 0 });
+    const streamState2 = await ceramic2.repository.load(doc2.id, { syncTimeoutSeconds: 0 });
     const snapshot = await ceramic2.repository.stateManager.rewind(streamState2, doc1.commitId);
 
     expect(StreamUtils.statesEqual(snapshot.state, doc1.state));

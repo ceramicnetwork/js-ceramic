@@ -120,10 +120,10 @@ export class TileDocument<T = Record<string, any>> extends Stream {
      */
     static async create<T>(ceramic: CeramicApi, content: T | null | undefined, metadata?: TileMetadataArgs, opts: CreateOpts = {}): Promise<TileDocument<T>> {
       opts = { ...DEFAULT_CREATE_OPTS, ...opts };
-      if (!metadata?.deterministic && opts.syncTimeoutMillis == undefined) {
+      if (!metadata?.deterministic && opts.syncTimeoutSeconds == undefined) {
           // By default you don't want to wait to sync doc state from pubsub when creating a unique
           // document as there shouldn't be any existing state for this doc on the network.
-          opts.syncTimeoutMillis = 0
+          opts.syncTimeoutSeconds = 0
       }
       const commit = await TileDocument.makeGenesis(ceramic, content, metadata)
       return ceramic.createDocumentFromGenesis<TileDocument<T>>(TileDocument.DOCTYPE_NAME, commit, opts)
@@ -137,10 +137,10 @@ export class TileDocument<T = Record<string, any>> extends Stream {
      */
     static async createFromGenesis<T>(ceramic: CeramicApi, genesisCommit: GenesisCommit, opts: CreateOpts = {}): Promise<TileDocument<T>> {
         opts = { ...DEFAULT_CREATE_OPTS, ...opts };
-        if (genesisCommit.header?.unique && opts.syncTimeoutMillis == undefined) {
+        if (genesisCommit.header?.unique && opts.syncTimeoutSeconds == undefined) {
             // By default you don't want to wait to sync doc state from pubsub when creating a unique
             // document as there shouldn't be any existing state for this doc on the network.
-            opts.syncTimeoutMillis = 0
+            opts.syncTimeoutSeconds = 0
         }
         const commit = (genesisCommit.data ? await _signDagJWS(ceramic, genesisCommit, genesisCommit.header.controllers[0]): genesisCommit)
         return ceramic.createDocumentFromGenesis<TileDocument<T>>(TileDocument.DOCTYPE_NAME, commit, opts)
