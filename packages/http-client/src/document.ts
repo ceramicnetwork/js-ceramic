@@ -77,7 +77,7 @@ export class Document extends Observable<StreamState> implements RunningStateLik
     return new Document(StreamUtils.deserializeState(state), apiUrl, syncInterval)
   }
 
-  private static async _load(streamId: StreamID | CommitID, apiUrl: string, opts: LoadOpts): Promise<DocState> {
+  private static async _load(streamId: StreamID | CommitID, apiUrl: string, opts: LoadOpts): Promise<StreamState> {
     const url = apiUrl + '/streams/' + streamId.toString() + '?' + QueryString.stringify(opts)
     const { state } = await fetchJson(url)
     return state
