@@ -3,11 +3,11 @@ import { throttle } from 'rxjs/operators'
 import {
   CeramicCommit,
   CreateOpts,
-  DocState,
+  StreamState,
   StreamUtils,
   SyncOptions,
   RunningStateLike,
-  DocStateSubject,
+  StreamStateSubject,
   LoadOpts,
   UpdateOpts,
 } from '@ceramicnetwork/common';
@@ -15,28 +15,28 @@ import { StreamID, CommitID } from '@ceramicnetwork/streamid';
 import { fetchJson } from './utils'
 import QueryString from 'query-string'
 
-export class Document extends Observable<DocState> implements RunningStateLike {
-  private readonly state$: DocStateSubject;
+export class Document extends Observable<StreamState> implements RunningStateLike {
+  private readonly state$: StreamStateSubject;
 
-  constructor (initial: DocState, private _apiUrl: string, syncInterval: number) {
+  constructor (initial: StreamState, private _apiUrl: string, syncInterval: number) {
     super(subscriber => {
       const periodicUpdates = timer(0, syncInterval).pipe(throttle(() => this._syncState(this.id, { sync: SyncOptions.PREFER_CACHE }))).subscribe();
       this.state$.subscribe(subscriber).add(() => {
         periodicUpdates.unsubscribe();
       })
     })
-    this.state$ = new DocStateSubject(initial);
+    this.state$ = new StreamStateSubject(initial);
   }
 
-  get value(): DocState {
+  get value(): StreamState {
     return this.state$.value
   }
 
-  get state(): DocState {
+  get state(): StreamState {
     return this.state$.value
   }
 
-  next(state: DocState): void {
+  next(state: StreamState): void {
     this.state$.next(state)
   }
 
@@ -50,7 +50,7 @@ export class Document extends Observable<DocState> implements RunningStateLike {
   }
 
   get id(): StreamID {
-    return new StreamID(this.state$.value.doctype, this.state$.value.log[0].cid)
+    return new StreamID(this.state$.value.type, this.state$.value.log[0].cid)
   }
 
   static async createFromGenesis (apiUrl: string, streamtype: string, genesis: any, opts: CreateOpts, syncInterval: number): Promise<Document> {

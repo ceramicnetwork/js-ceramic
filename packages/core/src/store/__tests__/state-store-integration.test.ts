@@ -2,7 +2,7 @@ import tmp from 'tmp-promise';
 import {
   AnchorStatus,
   CommitType,
-  DocState,
+  StreamState,
   IpfsApi,
   SignatureStatus,
 } from '@ceramicnetwork/common';
@@ -30,8 +30,8 @@ describe('Level data store', () => {
   let store: PinStore;
 
   const streamId = new StreamID('tile', FAKE_CID);
-  const docState: DocState = {
-    doctype: 'tile',
+  const streamState: StreamState = {
+    type: 0,
     content: {},
     metadata: { controllers: ['foo'] },
     signature: SignatureStatus.GENESIS,
@@ -52,14 +52,14 @@ describe('Level data store', () => {
   it('pins document correctly without IPFS pinning', async () => {
     await expect(store.stateStore.load(streamId)).resolves.toBeNull();
     const pinSpy = jest.spyOn(store.pinning, 'pin');
-    await store.stateStore.save({ id: streamId, state: docState });
+    await store.stateStore.save({ id: streamId, state: streamState });
     expect(pinSpy).toBeCalledTimes(0);
-    await expect(store.stateStore.load(streamId)).resolves.toEqual(docState);
+    await expect(store.stateStore.load(streamId)).resolves.toEqual(streamState);
   });
 
   it('pins not anchored document correctly with IPFS pinning', async () => {
-    const state: DocState = {
-      ...docState,
+    const state: StreamState = {
+      ...streamState,
       log: [{ cid: FAKE_CID, type: CommitType.GENESIS }],
     };
     await expect(store.stateStore.load(streamId)).resolves.toBeNull();
@@ -135,8 +135,8 @@ describe('Level data store', () => {
     });
     const localStore = storeFactoryLocal.createPinStore();
 
-    await localStore.stateStore.save({ id: streamId, state: docState });
-    await expect(localStore.stateStore.load(streamId)).resolves.toEqual(docState);
+    await localStore.stateStore.save({ id: streamId, state: streamState });
+    await expect(localStore.stateStore.load(streamId)).resolves.toEqual(streamState);
 
     await localStore.close();
 

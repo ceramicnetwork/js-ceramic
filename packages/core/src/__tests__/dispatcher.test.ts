@@ -4,7 +4,7 @@ import { TileDocument } from '@ceramicnetwork/doctype-tile';
 import StreamID from '@ceramicnetwork/streamid';
 import {
   CommitType,
-  DocState,
+  StreamState,
   StreamHandler,
   LoggerProvider,
 } from '@ceramicnetwork/common';
@@ -128,7 +128,7 @@ describe('Dispatcher', () => {
   it('handle message correctly', async () => {
     dispatcher.repository.stateManager = {} as unknown as StateManager
 
-    async function register(state: DocState) {
+    async function register(state: StreamState) {
       const runningState = new RunningState(state);
       repository.add(runningState);
       dispatcher.messageBus.queryNetwork(runningState.id).subscribe();
@@ -136,14 +136,14 @@ describe('Dispatcher', () => {
     }
 
     const initialState = ({
-      doctype: 'tile',
+      type: 0,
       log: [
         {
           cid: FAKE_DOC_ID.cid,
           type: CommitType.GENESIS,
         },
       ],
-    } as unknown) as DocState;
+    } as unknown) as StreamState;
     const state$ = await register(initialState);
 
     // Store the query ID sent when the doc is registered so we can use it as the response ID later
@@ -163,7 +163,7 @@ describe('Dispatcher', () => {
         cid: FAKE_CID,
         type: CommitType.SIGNED,
       }),
-    } as unknown) as DocState;
+    } as unknown) as StreamState;
     const doc2 = await register(continuationState);
     await dispatcher.handleMessage({ typ: MsgType.QUERY, doc: FAKE_DOC_ID, id: '1' });
     expect(ipfs.pubsub.publish).lastCalledWith(

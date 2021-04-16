@@ -6,10 +6,11 @@ import {
   SignatureStatus,
   Stream,
   PinningBackend,
-  DocState,
+  StreamState,
   CommitType,
   TestUtils,
 } from '@ceramicnetwork/common';
+import { TileDoctype } from '@ceramicnetwork/doctype-tile';
 
 let stateStore: StateStore
 let pinning: PinningBackend
@@ -35,8 +36,8 @@ beforeEach(() => {
     }
 })
 
-const state: DocState = {
-    doctype: 'tile',
+const state: StreamState = {
+    type: 0,
     content: {num: 0},
     metadata: {
         controllers: ['']

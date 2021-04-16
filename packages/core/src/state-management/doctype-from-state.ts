@@ -1,4 +1,4 @@
-import { Context, DocState, Stream } from '@ceramicnetwork/common';
+import { Context, StreamState, Stream } from '@ceramicnetwork/common';
 import { Observable } from 'rxjs';
 import { HandlersMap } from '../handlers-map';
 import { StateLink } from './state-link';
@@ -14,10 +14,10 @@ import { StateLink } from './state-link';
 export function doctypeFromState<T extends Stream>(
   context: Context,
   handlersMap: HandlersMap,
-  state: DocState,
-  update$?: (init: DocState) => Observable<DocState>,
+  state: StreamState,
+  update$?: (init: StreamState) => Observable<StreamState>,
 ): T {
-  const handler = handlersMap.get<T>(state.doctype);
+  const handler = handlersMap.get<T>(state.type);
   const state$ = new StateLink(state, update$);
   const doctype = new handler.doctype(state$, context);
   if (!update$) {

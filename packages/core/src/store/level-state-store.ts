@@ -1,5 +1,5 @@
 import Level from "level-ts";
-import { DocState, DocStateHolder, StreamUtils } from '@ceramicnetwork/common';
+import { StreamState, StreamStateHolder, StreamUtils } from '@ceramicnetwork/common';
 import { StateStore } from "./state-store"
 import StreamID from '@ceramicnetwork/streamid'
 import * as fs from 'fs'
@@ -27,23 +27,25 @@ export class LevelStateStore implements StateStore {
     open(networkName: string): void {
         // Always store the pinning state in a network-specific directory
         const storePath = path.join(this.storeRoot, networkName)
-        fs.mkdirSync(storePath, { recursive: true }) // create dir if it doesn't exist
+        if (fs) {
+            fs.mkdirSync(storePath, { recursive: true }) // create dir if it doesn't exist
+        }
         this.#store = new Level(storePath);
     }
 
     /**
      * Pin document
-     * @param docStateHolder - Document instance
+     * @param streamStateHolder - Document instance
      */
-    async save(docStateHolder: DocStateHolder): Promise<void> {
-        await this.#store.put(docStateHolder.id.toString(), StreamUtils.serializeState(docStateHolder.state))
+    async save(streamStateHolder: StreamStateHolder): Promise<void> {
+        await this.#store.put(streamStateHolder.id.toString(), StreamUtils.serializeState(streamStateHolder.state))
     }
 
     /**
      * Load document state
      * @param streamId - Document ID
      */
-    async load(streamId: StreamID): Promise<DocState> {
+    async load(streamId: StreamID): Promise<StreamState> {
         try {
             const state = await this.#store.get(streamId.baseID.toString())
             if (state) {

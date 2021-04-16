@@ -1,7 +1,7 @@
 import { mock } from 'jest-mock-extended'
 
 import Utils from '../../utils'
-import { CeramicApi, Stream, DocState, TestUtils, CommitType } from '@ceramicnetwork/common';
+import { CeramicApi, Stream, StreamState, TestUtils, CommitType } from '@ceramicnetwork/common';
 import CID from 'cids'
 
 const FAKE_CID = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu');
@@ -30,7 +30,7 @@ describe('Stream', () => {
     beforeAll(() => {
         const docSchemaState = {
           content: schema,
-          doctype: 'tile',
+          type: 0,
           metadata: {
             controllers: [],
             schema: 'ceramic://1234567'
@@ -41,7 +41,7 @@ describe('Stream', () => {
               cid: FAKE_CID
             }
           ]
-        } as unknown as DocState
+        } as unknown as StreamState
 
         const schemaDoc = new BasicStreamWithContent(TestUtils.runningState(docSchemaState), null)
 
@@ -53,7 +53,7 @@ describe('Stream', () => {
 
     it('should pass schema validation', async () => {
         const state = {
-          doctype: 'tile',
+          type: 0,
           metadata: {
             controllers: [],
             schema: 'ceramic://1234567'
@@ -67,7 +67,7 @@ describe('Stream', () => {
               cid: FAKE_CID
             }
           ]
-        } as unknown as DocState
+        } as unknown as StreamState
 
         const doc = new BasicStreamWithContent(TestUtils.runningState(state), { api: ceramic })
         await Utils.validateSchema(doc)
@@ -75,7 +75,7 @@ describe('Stream', () => {
 
     it('should fail schema validation', async () => {
         const state = {
-          doctype: 'tile',
+          type: 0,
           metadata: {
             controllers: [],
             schema: 'ceramic://1234567'
@@ -89,7 +89,7 @@ describe('Stream', () => {
               cid: FAKE_CID
             }
           ]
-        } as unknown as DocState;
+        } as unknown as StreamState;
 
         const doc = new BasicStreamWithContent(TestUtils.runningState(state), { api: ceramic })
         try {

@@ -101,8 +101,8 @@ export interface LogEntry {
 /**
  * Document state
  */
-export interface DocState {
-    doctype: string
+export interface StreamState {
+    type: number
     content: any
     next?: DocNext
     metadata: DocMetadata
@@ -114,20 +114,20 @@ export interface DocState {
 }
 
 /**
- * Describes object which stores DocState.
+ * Describes object which stores StreamState.
  *
  * Note: the interface should be removed once we refactor documents.
  *
  */
-export interface DocStateHolder {
+export interface StreamStateHolder {
     id: StreamID;
-    state: DocState;
+    state: StreamState;
 }
 
 /**
  * Describes common doctype attributes
  */
-export abstract class Stream extends Observable<DocState> implements DocStateHolder {
+export abstract class Stream extends Observable<StreamState> implements StreamStateHolder {
     constructor(protected readonly state$: RunningStateLike, private _context: Context) {
         super(subscriber => {
           state$.subscribe(subscriber)
@@ -135,11 +135,7 @@ export abstract class Stream extends Observable<DocState> implements DocStateHol
     }
 
     get id(): StreamID {
-        return new StreamID(this.state$.value.doctype, this.state$.value.log[0].cid)
-    }
-
-    get doctype(): string {
-        return this.state$.value.doctype
+        return new StreamID(this.state$.value.type, this.state$.value.log[0].cid)
     }
 
     get api(): CeramicApi {
@@ -179,7 +175,7 @@ export abstract class Stream extends Observable<DocState> implements DocStateHol
             .map(({ cid }) => this.id.atCommit(cid))
     }
 
-    get state(): DocState {
+    get state(): StreamState {
         return cloneDeep(this.state$.value)
     }
 
@@ -226,6 +222,7 @@ export interface StreamConstructor<T extends Stream> {
  * Describes document type handler functionality
  */
 export interface StreamHandler<T extends Stream> {
+    type: number
     /**
      * The string name of the doctype
      */
@@ -243,5 +240,5 @@ export interface StreamHandler<T extends Stream> {
      * @param context - Ceramic context
      * @param state - Document state
      */
-    applyCommit(commit: CeramicCommit, cid: CID, context: Context, state?: DocState): Promise<DocState>
+    applyCommit(commit: CeramicCommit, cid: CID, context: Context, state?: StreamState): Promise<StreamState>
 }

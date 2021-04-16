@@ -1,7 +1,7 @@
 import { LocalPinApi } from '../local-pin-api';
 import StreamID from '@ceramicnetwork/streamid';
 import * as random from '@stablelib/random';
-import { CommitType, DocState, LoggerProvider } from '@ceramicnetwork/common';
+import { CommitType, StreamState, LoggerProvider } from '@ceramicnetwork/common';
 import { Repository } from '../state-management/repository';
 import CID from 'cids';
 import { RunningState } from '../state-management/running-state';
@@ -11,11 +11,11 @@ const FAKE_CID = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtc
 
 const repository = ({ pin: jest.fn(), unpin: jest.fn(), list: jest.fn() } as unknown) as Repository;
 
-const docState = ({
-  doctype: 'tile',
+const streamState = ({
+  type: 0,
   log: [{ cid: FAKE_CID, type: CommitType.GENESIS }],
-} as unknown) as DocState;
-const state$ = new RunningState(docState)
+} as unknown) as StreamState;
+const state$ = new RunningState(streamState)
 const loadDoc = jest.fn(async () => state$);
 
 const pinApi = new LocalPinApi(repository, loadDoc, new LoggerProvider().getDiagnosticsLogger());
