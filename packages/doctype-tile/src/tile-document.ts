@@ -106,7 +106,7 @@ export class TileDocument<T = Record<string, any>> extends Stream {
     }
 
     get doctype(): string {
-      return TileDoctype.DOCTYPE_NAME;
+      return TileDocument.DOCTYPE_NAME;
     }
 
     /**

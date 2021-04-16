@@ -76,7 +76,7 @@ export class StreamID implements StreamRef {
   constructor(type: string | number, cid: CID | string) {
     if (!(type || type === 0)) throw new Error('constructor: type required');
     if (!cid) throw new Error('constructor: cid required');
-    this.#type = typeof type === 'string' ? StreamType.indexByName(type) : type;
+    this.#type = typeof type === 'string' ? StreamType.codeByName(type) : type;
     this.#cid = typeof cid === 'string' ? new CID(cid) : cid;
   }
 
@@ -92,7 +92,7 @@ export class StreamID implements StreamRef {
    */
   @Memoize()
   get typeName(): string {
-    return StreamType.nameByIndex(this.#type);
+    return StreamType.nameByCode(this.#type);
   }
 
   /**

@@ -191,7 +191,7 @@ export default class CeramicClient implements CeramicApi {
     if (constructor) {
       return constructor as StreamConstructor<T>
     } else {
-      throw new Error(`Failed to find doctype constructor for doctype ${doctype}`)
+      throw new Error(`Failed to find constructor for stream ${type}`)
     }
   }
 

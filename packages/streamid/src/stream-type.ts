@@ -3,7 +3,7 @@ const registry: Record<string, number | undefined> = {
   'caip10-link': 1,
 };
 
-function indexByName(name: string): number {
+function codeByName(name: string): number {
   const index = registry[name];
   if (typeof index !== 'undefined') {
     return index;
@@ -12,7 +12,7 @@ function indexByName(name: string): number {
   }
 }
 
-function nameByIndex(index: number): string {
+function nameByCode(index: number): string {
   const pair = Object.entries(registry).find(([, v]) => v === index);
   if (pair) {
     return pair[0];
@@ -22,6 +22,6 @@ function nameByIndex(index: number): string {
 }
 
 export class StreamType {
-  static nameByIndex = nameByIndex;
-  static indexByName = indexByName;
+  static nameByCode = nameByCode;
+  static codeByName = codeByName;
 }

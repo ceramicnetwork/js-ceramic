@@ -116,7 +116,7 @@ export class CommitID implements StreamRef {
   /**
    * Create a new StreamID.
    *
-   * @param {string|number}      stream type
+   * @param type
    * @param {CID|string}         cid
    * @param {CID|string}         commit CID. Pass '0', 0, or omit the value as shorthand for the genesis commit.
    *
@@ -127,7 +127,7 @@ export class CommitID implements StreamRef {
   constructor(type: string | number, cid: CID | string, commit: CID | string | number = null) {
     if (!type && type !== 0) throw new Error('constructor: type required');
     if (!cid) throw new Error('constructor: cid required');
-    this.#type = typeof type === 'string' ? StreamType.indexByName(type) : type;
+    this.#type = typeof type === 'string' ? StreamType.codeByName(type) : type;
     this.#cid = typeof cid === 'string' ? new CID(cid) : cid;
     this.#commit = parseCommit(this.#cid, commit);
   }
@@ -152,7 +152,7 @@ export class CommitID implements StreamRef {
    */
   @Memoize()
   get typeName(): string {
-    return StreamType.nameByIndex(this.#type);
+    return StreamType.nameByCode(this.#type);
   }
 
   /**

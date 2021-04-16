@@ -127,7 +127,6 @@ export interface DocStateHolder {
  * Describes common doctype attributes
  */
 export abstract class Stream extends Observable<DocState> implements DocStateHolder {
-    abstract readonly doctype: string
     constructor(protected readonly state$: RunningStateLike, private _context: Context) {
         super(subscriber => {
           state$.subscribe(subscriber)

@@ -4,26 +4,25 @@ import { Stream, StreamHandler } from '@ceramicnetwork/common';
 import { DiagnosticsLogger } from '@ceramicnetwork/common';
 import { StreamType } from '@ceramicnetwork/streamid';
 
-type Registry = Map<number, DoctypeHandler<Doctype>>
+type Registry = Map<number, StreamHandler<Stream>>
+
+function defaultHandlers(): Registry {
+  const tile = new TileDocumentHandler()
+  const caip10Link = new Caip10LinkHandler()
+  const handlers = new Map<number, StreamHandler<Stream>>()
+  handlers.set(tile.type, tile)
+  handlers.set(caip10Link.type, caip10Link)
+  return handlers
+}
 
 /**
  * Container for doctype handlers. Maps doctype name to the handler instance.
- * TODO: This should map from doctype id rather than doctype name.
  */
 export class HandlersMap {
   private readonly handlers: Registry;
 
   constructor(private readonly logger: DiagnosticsLogger, handlers?: Registry) {
-    this.handlers = handlers || this.defaultHandlers()
-  }
-
-  private defaultHandlers(): Registry {
-    const tile = new TileDoctypeHandler()
-    const caip10Link = new Caip10LinkDoctypeHandler()
-    const handlers = new Map<number, DoctypeHandler<Doctype>>()
-    handlers.set(tile.type, tile)
-    handlers.set(caip10Link.type, caip10Link)
-    return handlers
+    this.handlers = handlers || defaultHandlers()
   }
 
   /**
@@ -32,7 +31,7 @@ export class HandlersMap {
    * @param type - name or id of the handler.
    */
   get<T extends Stream>(type: string | number): StreamHandler<T> {
-    const id = typeof type == 'string' ? StreamType.indexByName(type) : type
+    const id = typeof type == 'string' ? StreamType.codeByName(type) : type
     const handler = this.handlers.get(id);
     if (handler) {
       return handler as StreamHandler<T>;

@@ -101,7 +101,7 @@ export class StreamUtils {
             cloned.lastAnchored = cloned.lastAnchored.toString()
         }
 
-        cloned.doctype = StreamType.nameByIndex(cloned.type)
+        cloned.doctype = StreamType.nameByCode(cloned.type)
 
         return cloned
     }
@@ -114,7 +114,7 @@ export class StreamUtils {
         const cloned = cloneDeep(state)
 
         if (cloned.doctype) {
-          cloned.type = StreamType.indexByName(cloned.doctype)
+          cloned.type = StreamType.codeByName(cloned.doctype)
           delete cloned.doctype
         }
 
