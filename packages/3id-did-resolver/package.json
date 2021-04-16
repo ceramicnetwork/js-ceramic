@@ -31,7 +31,7 @@
     "@ceramicnetwork/streamid": "^0.5.1",
     "@ceramicnetwork/doctype-tile": "^0.15.0-rc.1",
     "cids": "~1.1.6",
-    "cross-fetch": "^3.0.6",
+    "cross-fetch": "^3.1.4",
     "lru_map": "^0.4.1",
     "uint8arrays": "^2.0.5"
   },
