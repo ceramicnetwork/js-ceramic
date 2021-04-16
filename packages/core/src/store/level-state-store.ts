@@ -27,7 +27,7 @@ export class LevelStateStore implements StateStore {
     open(networkName: string): void {
         // Always store the pinning state in a network-specific directory
         const storePath = path.join(this.storeRoot, networkName)
-        if (!!fs) {
+        if (fs) {
             fs.mkdirSync(storePath, { recursive: true }) // create dir if it doesn't exist
         }
         this.#store = new Level(storePath);
