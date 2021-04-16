@@ -35,7 +35,7 @@
     "@stablelib/sha256": "^1.0.0",
     "@types/lodash.clonedeep": "^4.5.6",
     "cids": "~1.1.6",
-    "did-resolver": "^3.0.1",
+    "did-resolver": "^3.1.0",
     "dids": "^2.0.0",
     "ipld-dag-cbor": "^0.17.0",
     "key-did-resolver": "^1.1.1"
