@@ -5,6 +5,7 @@ import {
   CreateOpts,
   StreamState,
   StreamUtils,
+  SyncOptions,
   RunningStateLike,
   StreamStateSubject,
   LoadOpts,
@@ -19,7 +20,7 @@ export class Document extends Observable<StreamState> implements RunningStateLik
 
   constructor (initial: StreamState, private _apiUrl: string, syncInterval: number) {
     super(subscriber => {
-      const periodicUpdates = timer(0, syncInterval).pipe(throttle(() => this._syncState())).subscribe();
+      const periodicUpdates = timer(0, syncInterval).pipe(throttle(() => this._syncState(this.id, { sync: SyncOptions.PREFER_CACHE }))).subscribe();
       this.state$.subscribe(subscriber).add(() => {
         periodicUpdates.unsubscribe();
       })
@@ -43,9 +44,8 @@ export class Document extends Observable<StreamState> implements RunningStateLik
    * Sync stream state
    * @private
    */
-  async _syncState(id?: StreamID | CommitID): Promise<void> {
-    const effectiveId = id || this.id
-    const { state } = await fetchJson(this._apiUrl + '/streams/' + effectiveId.toString())
+  async _syncState(streamId: StreamID | CommitID, opts: LoadOpts): Promise<void> {
+    const state = await Document._load(streamId, this._apiUrl, opts)
     this.state$.next(StreamUtils.deserializeState(state))
   }
 
@@ -77,9 +77,14 @@ export class Document extends Observable<StreamState> implements RunningStateLik
     return new Document(StreamUtils.deserializeState(state), apiUrl, syncInterval)
   }
 
-  static async load (streamId: StreamID | CommitID, apiUrl: string, syncInterval: number, opts: LoadOpts): Promise<Document> {
+  private static async _load(streamId: StreamID | CommitID, apiUrl: string, opts: LoadOpts): Promise<StreamState> {
     const url = apiUrl + '/streams/' + streamId.toString() + '?' + QueryString.stringify(opts)
     const { state } = await fetchJson(url)
+    return state
+  }
+
+  static async load (streamId: StreamID | CommitID, apiUrl: string, syncInterval: number, opts: LoadOpts): Promise<Document> {
+    const state = await Document._load(streamId, apiUrl, opts)
     return new Document(StreamUtils.deserializeState(state), apiUrl, syncInterval)
   }
 

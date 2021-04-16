@@ -19,6 +19,7 @@ import {
   LoggerProvider,
   Networks,
   UpdateOpts,
+  SyncOptions,
 } from "@ceramicnetwork/common"
 
 import { DID } from 'dids'
@@ -63,9 +64,9 @@ const SUPPORTED_CHAINS_BY_NETWORK = {
   [Networks.INMEMORY]: ["inmemory:12345"], // Our fake in-memory anchor service chainId
 }
 
-const DEFAULT_APPLY_COMMIT_OPTS = { anchor: true, publish: true, sync: false }
-const DEFAULT_CREATE_FROM_GENESIS_OPTS = { anchor: true, publish: true, sync: true }
-const DEFAULT_LOAD_OPTS = { sync: true }
+const DEFAULT_APPLY_COMMIT_OPTS = { anchor: true, publish: true, sync: SyncOptions.PREFER_CACHE }
+const DEFAULT_CREATE_FROM_GENESIS_OPTS = { anchor: true, publish: true, sync: SyncOptions.PREFER_CACHE }
+const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE }
 
 /**
  * Ceramic configuration
@@ -224,7 +225,7 @@ class Ceramic implements CeramicApi {
 
   private _buildPinApi(): PinApi {
     const boundDocLoader = this._loadDoc.bind(this)
-    const loaderWithSyncSet = (streamid) => { return boundDocLoader(streamid, { sync: true })}
+    const loaderWithSyncSet = (streamid) => { return boundDocLoader(streamid, { sync: SyncOptions.PREFER_CACHE })}
     return new LocalPinApi(this.repository, loaderWithSyncSet, this._logger)
   }
 
@@ -481,7 +482,7 @@ class Ceramic implements CeramicApi {
   async _createDocFromGenesis(doctype: string, genesis: any, opts: CreateOpts): Promise<RunningState> {
     const genesisCid = await this.dispatcher.storeCommit(genesis);
     const streamId = new StreamID(doctype, genesisCid);
-    return this.repository.load(streamId, opts);
+    return this.repository.applyCreateOpts(streamId, opts);
   }
 
   /**
@@ -604,7 +605,7 @@ class Ceramic implements CeramicApi {
     this.repository.listPinned().then(async list => {
       let n = 0
       await Promise.all(list.map(async streamId => {
-        await this._loadDoc(StreamID.fromString(streamId), { sync: true })
+        await this._loadDoc(StreamID.fromString(streamId), { sync: SyncOptions.SYNC_ALWAYS })
         n++;
       }))
       this._logger.verbose(`Successfully restored ${n} pinned documents`)

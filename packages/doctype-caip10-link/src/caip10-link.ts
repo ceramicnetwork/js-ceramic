@@ -4,6 +4,7 @@ import {
     Stream,
     StreamConstructor,
     StreamStatic,
+    SyncOptions,
     LoadOpts,
     UpdateOpts,
     UnsignedCommit,
@@ -18,9 +19,9 @@ const throwReadOnlyError = (): Promise<void> => {
     throw new Error('Historical document commits cannot be modified. Load the document without specifying a commit to make updates.')
 }
 
-const DEFAULT_CREATE_OPTS = { anchor: false, publish: true, sync: true }
+const DEFAULT_CREATE_OPTS = { anchor: false, publish: true, sync: SyncOptions.PREFER_CACHE }
 const DEFAULT_UPDATE_OPTS = { anchor: true, publish: true }
-const DEFAULT_LOAD_OPTS = { sync: true }
+const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE }
 
 /**
  * Caip10Link doctype implementation
