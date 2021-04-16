@@ -6,7 +6,7 @@ import {
   SignatureStatus,
   Stream,
   PinningBackend,
-  DocState,
+  StreamState,
   CommitType,
   TestUtils,
 } from '@ceramicnetwork/common';
@@ -36,7 +36,7 @@ beforeEach(() => {
     }
 })
 
-const state: DocState = {
+const state: StreamState = {
     type: 0,
     content: {num: 0},
     metadata: {

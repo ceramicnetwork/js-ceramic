@@ -215,8 +215,8 @@ it('applies genesis record correctly', async () => {
     const payload = dagCBOR.util.deserialize(record.linkedBlock)
     await context.ipfs.dag.put(payload, record.jws.link)
 
-    const docState = await tileHandler.applyCommit(record.jws, FAKE_CID_1, context)
-    expect(docState).toMatchSnapshot()
+    const streamState = await tileHandler.applyCommit(record.jws, FAKE_CID_1, context)
+    expect(streamState).toMatchSnapshot()
 })
 
 it('makes signed record correctly', async () => {

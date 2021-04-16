@@ -100,7 +100,7 @@ export interface LogEntry {
 /**
  * Document state
  */
-export interface DocState {
+export interface StreamState {
     type: number
     content: any
     next?: DocNext
@@ -113,20 +113,20 @@ export interface DocState {
 }
 
 /**
- * Describes object which stores DocState.
+ * Describes object which stores StreamState.
  *
  * Note: the interface should be removed once we refactor documents.
  *
  */
-export interface DocStateHolder {
+export interface StreamStateHolder {
     id: StreamID;
-    state: DocState;
+    state: StreamState;
 }
 
 /**
  * Describes common doctype attributes
  */
-export abstract class Stream extends Observable<DocState> implements DocStateHolder {
+export abstract class Stream extends Observable<StreamState> implements StreamStateHolder {
     constructor(protected readonly state$: RunningStateLike, private _context: Context) {
         super(subscriber => {
           state$.subscribe(subscriber)
@@ -174,7 +174,7 @@ export abstract class Stream extends Observable<DocState> implements DocStateHol
             .map(({ cid }) => this.id.atCommit(cid))
     }
 
-    get state(): DocState {
+    get state(): StreamState {
         return cloneDeep(this.state$.value)
     }
 
@@ -239,5 +239,5 @@ export interface StreamHandler<T extends Stream> {
      * @param context - Ceramic context
      * @param state - Document state
      */
-    applyCommit(commit: CeramicCommit, cid: CID, context: Context, state?: DocState): Promise<DocState>
+    applyCommit(commit: CeramicCommit, cid: CID, context: Context, state?: StreamState): Promise<StreamState>
 }

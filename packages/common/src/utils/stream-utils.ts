@@ -8,7 +8,7 @@ import {
     IpfsApi,
     SignedCommit, SignedCommitContainer
 } from "../index"
-import { AnchorStatus, DocState, LogEntry } from "../stream"
+import { AnchorStatus, StreamState, LogEntry } from "../stream"
 import { DagJWS } from "dids"
 import { StreamType } from '@ceramicnetwork/streamid';
 
@@ -83,7 +83,7 @@ export class StreamUtils {
      * Serializes stream state for over the network transfer
      * @param state - Stream state
      */
-    static serializeState(state: DocState): any {
+    static serializeState(state: StreamState): any {
         const cloned = cloneDeep(state) as any
 
         cloned.log = cloned.log.map((entry: LogEntry) => ({ ...entry, cid: entry.cid.toString() }))
@@ -110,7 +110,7 @@ export class StreamUtils {
      * Deserializes stream cloned from over the network transfer
      * @param state - Stream cloned
      */
-    static deserializeState(state: any): DocState {
+    static deserializeState(state: any): StreamState {
         const cloned = cloneDeep(state)
 
         if (cloned.doctype) {
@@ -142,7 +142,7 @@ export class StreamUtils {
         return cloned
     }
 
-    static statesEqual(state1: DocState, state2: DocState): boolean {
+    static statesEqual(state1: StreamState, state2: StreamState): boolean {
         return JSON.stringify(StreamUtils.serializeState(state1)) ===
         JSON.stringify(StreamUtils.serializeState(state2))
     }

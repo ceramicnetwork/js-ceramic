@@ -141,11 +141,11 @@ export class Dispatcher {
     // TODO Add validation the message adheres to the proper format.
 
     const { doc: streamId, id } = message
-    const docState = await this.repository.docState(streamId)
-    if (docState) {
+    const streamState = await this.repository.streamState(streamId)
+    if (streamState) {
       // TODO: Should we validate that the 'id' field is the correct hash of the rest of the message?
 
-      const tip = docState.log[docState.log.length - 1].cid
+      const tip = streamState.log[streamState.log.length - 1].cid
       // Build RESPONSE message and send it out on the pub/sub topic
       // TODO: Handle 'paths' for multiquery support
       const tipMap = new Map().set(streamId.toString(), tip)

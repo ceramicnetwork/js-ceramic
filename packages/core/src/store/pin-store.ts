@@ -1,5 +1,5 @@
 import { StateStore } from "./state-store";
-import { LogEntry, DocState, PinningBackend, DocStateHolder } from '@ceramicnetwork/common';
+import { LogEntry, StreamState, PinningBackend, StreamStateHolder } from '@ceramicnetwork/common';
 import CID from "cids"
 import StreamID from '@ceramicnetwork/streamid'
 
@@ -24,9 +24,9 @@ export class PinStore {
         await this.pinning.close()
     }
 
-    async add(docStateHolder: DocStateHolder): Promise<void> {
-        await this.stateStore.save(docStateHolder)
-        const points = await this.pointsOfInterest(docStateHolder.state)
+    async add(streamStateHolder: StreamStateHolder): Promise<void> {
+        await this.stateStore.save(streamStateHolder)
+        const points = await this.pointsOfInterest(streamStateHolder.state)
         await Promise.all(points.map(point => this.pinning.pin(point)))
     }
 
@@ -45,7 +45,7 @@ export class PinStore {
         return this.stateStore.list(streamId)
     }
 
-    protected async pointsOfInterest(state: DocState): Promise<Array<CID>> {
+    protected async pointsOfInterest(state: StreamState): Promise<Array<CID>> {
         const log = state.log as Array<LogEntry>
 
         const points: CID[] = []

@@ -3,8 +3,8 @@ import {
   AnchorService,
   AnchorStatus,
   Context, CreateOpts,
-  DocState,
-  DocStateHolder,
+  StreamState,
+  StreamStateHolder,
   LoadOpts,
 } from '@ceramicnetwork/common';
 import { PinStore } from '../store/pin-store';
@@ -91,9 +91,9 @@ export class Repository {
   }
 
   private async fromStateStore(streamId: StreamID): Promise<RunningState | undefined> {
-    const docState = await this.#deps.pinStore.stateStore.load(streamId);
-    if (docState) {
-      const runningState = new RunningState(docState);
+    const streamState = await this.#deps.pinStore.stateStore.load(streamId);
+    if (streamState) {
+      const runningState = new RunningState(streamState);
       this.add(runningState);
       const toRecover =
         runningState.value.anchorStatus === AnchorStatus.PENDING ||
@@ -152,7 +152,7 @@ export class Repository {
   /**
    * Return a document state, either from cache or from state store.
    */
-  async docState(streamId: StreamID): Promise<DocState | undefined> {
+  async streamState(streamId: StreamID): Promise<StreamState | undefined> {
     const fromMemory = this.inmemory.get(streamId.toString());
     if (fromMemory) {
       return fromMemory.state;
@@ -168,8 +168,8 @@ export class Repository {
     this.inmemory.set(state$.id.toString(), state$);
   }
 
-  pin(docStateHolder: DocStateHolder): Promise<void> {
-    return this.#deps.pinStore.add(docStateHolder);
+  pin(streamStateHolder: StreamStateHolder): Promise<void> {
+    return this.#deps.pinStore.add(streamStateHolder);
   }
 
   unpin(streamId: StreamID): Promise<void> {
@@ -185,11 +185,11 @@ export class Repository {
   }
 
   /**
-   * Updates for the DocState, even if a (pinned or not pinned) document has already been evicted.
+   * Updates for the StreamState, even if a (pinned or not pinned) document has already been evicted.
    * Marks the document as durable, that is not subject to cache eviction.
    *
    * First, we try to get the running state from memory or state store. If found, it is used as a source
-   * of updates. If not found, we use DocState passed as `init` param as a future source of updates.
+   * of updates. If not found, we use StreamState passed as `init` param as a future source of updates.
    * Anyway, we mark it as unevictable.
    *
    * When a subscription to the observable stops, we check if there are other subscriptions to the same
@@ -198,8 +198,8 @@ export class Repository {
    *
    * @param init
    */
-  updates$(init: DocState): Observable<DocState> {
-    return new Observable<DocState>((subscriber) => {
+  updates$(init: StreamState): Observable<StreamState> {
+    return new Observable<StreamState>((subscriber) => {
       const id = new StreamID(init.type, init.log[0].cid);
       this.get(id).then((found) => {
         const state$ = found || new RunningState(init);
