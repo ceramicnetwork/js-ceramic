@@ -6,7 +6,7 @@ import { createCeramic } from './create-ceramic';
 import Ceramic from '../ceramic';
 import { anchorUpdate } from '../state-management/__tests__/anchor-update';
 import { TileDocument } from '@ceramicnetwork/doctype-tile';
-import { doctypeFromState } from '../state-management/doctype-from-state';
+import { streamFromState } from '../state-management/stream-from-state';
 
 const FAKE_CID = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu');
 const INITIAL_CONTENT = { abc: 123, def: 456 };
@@ -188,7 +188,7 @@ describe('rewind', () => {
     const snapshot = await ceramic2.repository.stateManager.rewind(streamState2, doc1.commitId);
 
     expect(StreamUtils.statesEqual(snapshot.state, doc1.state));
-    const snapshotStream = doctypeFromState<TileDocument>(ceramic2.context, ceramic2._doctypeHandlers, snapshot.value);
+    const snapshotStream = streamFromState<TileDocument>(ceramic2.context, ceramic2._doctypeHandlers, snapshot.value);
     await expect(
       snapshotStream.update({ abc: 1010 }),
     ).rejects.toThrow(
@@ -225,7 +225,7 @@ test('handles basic conflict', async () => {
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
   const conflictingNewContent = { asdf: 2342 };
-  const doc2 = doctypeFromState<TileDocument>(ceramic.context, ceramic._doctypeHandlers, state$.value, ceramic.repository.updates$);
+  const doc2 = streamFromState<TileDocument>(ceramic.context, ceramic._doctypeHandlers, state$.value, ceramic.repository.updates$);
   doc2.subscribe();
   updateRec = await doc2.makeCommit(ceramic, conflictingNewContent)
   await ceramic.repository.stateManager.applyCommit(state$.id, updateRec, { anchor: true, publish: false });

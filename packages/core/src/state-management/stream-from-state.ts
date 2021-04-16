@@ -11,7 +11,7 @@ import { StateLink } from './state-link';
  * @param state - current state of the doctype
  * @param update$ - On-demand feed of updates for the document
  */
-export function doctypeFromState<T extends Stream>(
+export function streamFromState<T extends Stream>(
   context: Context,
   handlersMap: HandlersMap,
   state: StreamState,
@@ -19,10 +19,10 @@ export function doctypeFromState<T extends Stream>(
 ): T {
   const handler = handlersMap.get<T>(state.type);
   const state$ = new StateLink(state, update$);
-  const doctype = new handler.doctype(state$, context);
+  const stream = new handler.stream_constructor(state$, context);
   if (!update$) {
-    doctype.makeReadOnly()
+    stream.makeReadOnly()
   }
 
-  return doctype;
+  return stream;
 }

@@ -95,18 +95,14 @@ async function throwReadOnlyError (): Promise<void> {
 @StreamStatic<StreamConstructor<TileDocument>>()
 export class TileDocument<T = Record<string, any>> extends Stream {
 
-    static DOCTYPE_NAME = 'tile'
-    static DOCTYPE_ID = 0
+    static STREAM_TYPE_NAME = 'tile'
+    static STREAM_TYPE_ID = 0
 
     /**
      * Returns the contents of this document
      */
     get content(): T {
         return this._getContent()
-    }
-
-    get doctype(): string {
-      return TileDocument.DOCTYPE_NAME;
     }
 
     /**
@@ -120,7 +116,7 @@ export class TileDocument<T = Record<string, any>> extends Stream {
       // sync by default if creating a deterministic document
       opts = { anchor: true, publish: true, sync: !!metadata?.deterministic, ...opts };
       const commit = await TileDocument.makeGenesis(ceramic, content, metadata)
-      return ceramic.createStreamFromGenesis<TileDocument<T>>(TileDocument.DOCTYPE_NAME, commit, opts)
+      return ceramic.createStreamFromGenesis<TileDocument<T>>(TileDocument.STREAM_TYPE_NAME, commit, opts)
     }
 
     /**
@@ -133,7 +129,7 @@ export class TileDocument<T = Record<string, any>> extends Stream {
         // sync by default when creating from genesis
         opts = { anchor: true, publish: true, sync: true, ...opts };
         const commit = (genesisCommit.data ? await _signDagJWS(ceramic, genesisCommit, genesisCommit.header.controllers[0]): genesisCommit)
-        return ceramic.createStreamFromGenesis<TileDocument<T>>(TileDocument.DOCTYPE_NAME, commit, opts)
+        return ceramic.createStreamFromGenesis<TileDocument<T>>(TileDocument.STREAM_TYPE_NAME, commit, opts)
     }
 
     /**
@@ -145,8 +141,8 @@ export class TileDocument<T = Record<string, any>> extends Stream {
     static async load<T>(ceramic: CeramicApi, streamId: StreamID | CommitID | string, opts: LoadOpts = {}): Promise<TileDocument<T>> {
         opts = { ...DEFAULT_LOAD_OPTS, ...opts };
         const streamRef = StreamRef.from(streamId)
-        if (streamRef.type != TileDocument.DOCTYPE_ID) {
-            throw new Error(`StreamID ${streamRef.toString()} does not refer to a '${TileDocument.DOCTYPE_NAME}' doctype, but to a ${streamRef.typeName}`)
+        if (streamRef.type != TileDocument.STREAM_TYPE_ID) {
+            throw new Error(`StreamID ${streamRef.toString()} does not refer to a '${TileDocument.STREAM_TYPE_NAME}' doctype, but to a ${streamRef.typeName}`)
         }
 
         return ceramic.loadDocument<TileDocument<T>>(streamRef, opts)

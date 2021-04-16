@@ -77,8 +77,8 @@ export default class CeramicClient implements CeramicApi {
     this.pin = this._initPinApi()
 
     this._doctypeConstructors = {
-      [TileDocument.DOCTYPE_ID]: TileDocument,
-      [Caip10Link.DOCTYPE_ID]: Caip10Link
+      [TileDocument.STREAM_TYPE_ID]: TileDocument,
+      [Caip10Link.STREAM_TYPE_ID]: Caip10Link
     }
   }
 
@@ -183,7 +183,7 @@ export default class CeramicClient implements CeramicApi {
   }
 
   addStreamHandler<T extends Stream>(doctypeHandler: StreamHandler<T>): void {
-    this._doctypeConstructors[doctypeHandler.name] = doctypeHandler.doctype
+    this._doctypeConstructors[doctypeHandler.name] = doctypeHandler.stream_constructor
   }
 
   findStreamConstructor<T extends Stream>(type: number) {

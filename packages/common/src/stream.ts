@@ -221,16 +221,20 @@ export interface StreamConstructor<T extends Stream> {
  * Describes document type handler functionality
  */
 export interface StreamHandler<T extends Stream> {
-    type: number
     /**
-     * The string name of the doctype
+     * The ID number of the streamtype. This is specified by the table within CIP-59.
+     */
+    type: number
+
+    /**
+     * The string name of the streamtype
      */
     name: string
 
     /**
-     * The doctype class
+     * The constructor used to instantiate an instance of the handled streamtype.
      */
-    doctype: StreamConstructor<T>
+    stream_constructor: StreamConstructor<T>
 
     /**
      * Applies commit to the document (genesis|signed|anchored)

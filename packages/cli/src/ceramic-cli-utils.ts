@@ -137,7 +137,7 @@ export class CeramicCliUtils {
      */
     static async update(streamId: string, content: string, controllers: string, schemaCommitId?: string): Promise<void> {
         const id = StreamID.fromString(streamId)
-        if (id.type != TileDocument.DOCTYPE_ID) {
+        if (id.type != TileDocument.STREAM_TYPE_ID) {
             throw new Error(`CLI does not currently support updating doctypes other than 'tile'. StreamID ${id.toString()} has doctype '${id.typeName}'`)
         }
         await CeramicCliUtils._runWithCeramic(async (ceramic: CeramicClient) => {

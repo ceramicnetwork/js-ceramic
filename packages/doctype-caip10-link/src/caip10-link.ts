@@ -28,8 +28,8 @@ const DEFAULT_LOAD_OPTS = { sync: true }
 @StreamStatic<StreamConstructor<Caip10Link>>()
 export class Caip10Link extends Stream {
 
-    static DOCTYPE_NAME = 'caip10-link'
-    static DOCTYPE_ID = 1
+    static STREAM_TYPE_NAME = 'caip10-link'
+    static STREAM_TYPE_ID = 1
 
     /**
      * Returns the DID linked to the CAIP10 address this object represents.
@@ -65,7 +65,7 @@ export class Caip10Link extends Stream {
                              opts: CreateOpts = {}): Promise<Caip10Link> {
         opts = { ...DEFAULT_CREATE_OPTS, ...opts };
         return ceramic.createStreamFromGenesis<Caip10Link>(
-            Caip10Link.DOCTYPE_NAME, genesisCommit, opts)
+            Caip10Link.STREAM_TYPE_NAME, genesisCommit, opts)
     }
 
     /**
@@ -109,8 +109,8 @@ export class Caip10Link extends Stream {
     static async load(ceramic: CeramicApi, streamId: StreamID | CommitID | string, opts: LoadOpts = {}): Promise<Caip10Link> {
         opts = { ...DEFAULT_LOAD_OPTS, ...opts };
         const streamRef = StreamRef.from(streamId)
-        if (streamRef.type != Caip10Link.DOCTYPE_ID) {
-            throw new Error(`StreamID ${streamRef.toString()} does not refer to a '${Caip10Link.DOCTYPE_NAME}' doctype, but to a ${streamRef.typeName}`)
+        if (streamRef.type != Caip10Link.STREAM_TYPE_ID) {
+            throw new Error(`StreamID ${streamRef.toString()} does not refer to a '${Caip10Link.STREAM_TYPE_NAME}' doctype, but to a ${streamRef.typeName}`)
         }
 
         return ceramic.loadDocument<Caip10Link>(streamRef, opts)
