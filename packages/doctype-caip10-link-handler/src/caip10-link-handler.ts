@@ -17,6 +17,9 @@ import {
 const IPFS_GET_TIMEOUT = 60000 // 1 minute
 
 export class Caip10LinkHandler implements StreamHandler<Caip10Link> {
+    get type(): number {
+      return Caip10Link.DOCTYPE_ID
+    }
     /**
      * Gets doctype name
      */
@@ -63,7 +66,7 @@ export class Caip10LinkHandler implements StreamHandler<Caip10Link> {
 
         // TODO - verify genesis commit
         const state = {
-            doctype: Caip10Link.DOCTYPE_NAME,
+            type: Caip10Link.DOCTYPE_ID,
             content: null,
             next: {
                 content: null

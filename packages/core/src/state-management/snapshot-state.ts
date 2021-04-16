@@ -16,7 +16,7 @@ export class SnapshotState extends Observable<DocState> implements RunningStateL
       of(value).subscribe(subscriber);
     });
     this.state = value;
-    this.id = new StreamID(this.state.doctype, this.state.log[0].cid);
+    this.id = new StreamID(this.state.type, this.state.log[0].cid);
   }
 
   next(value: DocState): void {

@@ -19,7 +19,7 @@
     "lib"
   ],
   "scripts": {
-    "test": "../../node_modules/.bin/jest --coverage --env=node",
+    "test": "../../node_modules/.bin/jest --coverage",
     "build": "../../node_modules/.bin/tsc -p tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
@@ -41,6 +41,7 @@
     "uint8arrays": "^2.0.5"
   },
   "jest": {
+    "testEnvironment": "node",
     "transformIgnorePatterns": [
       "/node_modules(?!/did-jwt)/"
     ]

@@ -12,7 +12,6 @@ Object {
     "much": "data",
     "very": "content",
   },
-  "doctype": "tile",
   "log": Array [
     Object {
       "cid": Object {
@@ -151,6 +150,7 @@ Object {
     ],
   },
   "signature": 2,
+  "type": 0,
 }
 `;
 
@@ -160,7 +160,6 @@ Object {
   "content": Object {
     "much": "data",
   },
-  "doctype": "tile",
   "log": Array [
     Object {
       "cid": Object {
@@ -212,6 +211,7 @@ Object {
     ],
   },
   "signature": 2,
+  "type": 0,
 }
 `;
 
@@ -221,7 +221,6 @@ Object {
   "content": Object {
     "much": "data",
   },
-  "doctype": "tile",
   "log": Array [
     Object {
       "cid": Object {
@@ -327,6 +326,7 @@ Object {
     },
   },
   "signature": 2,
+  "type": 0,
 }
 `;
 
@@ -336,7 +336,6 @@ Object {
   "content": Object {
     "test": "data",
   },
-  "doctype": "tile",
   "log": Array [
     Object {
       "cid": Object {
@@ -486,5 +485,6 @@ Object {
     },
   },
   "signature": 2,
+  "type": 0,
 }
 `;

@@ -50,7 +50,7 @@ export class Document extends Observable<DocState> implements RunningStateLike {
   }
 
   get id(): StreamID {
-    return new StreamID(this.state$.value.doctype, this.state$.value.log[0].cid)
+    return new StreamID(this.state$.value.type, this.state$.value.log[0].cid)
   }
 
   static async createFromGenesis (apiUrl: string, streamtype: string, genesis: any, opts: CreateOpts, syncInterval: number): Promise<Document> {

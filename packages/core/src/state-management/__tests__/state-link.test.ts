@@ -8,7 +8,7 @@ const FAKE_CID2 = new CID('bafybeig6xv5nwphfmvcnektpnojts44jqcuam7bmye2pb54adnrt
 
 test('emit on distinct changes', async () => {
   const initial = ({
-    doctype: 'tile',
+    type: 0,
     log: [
       {
         type: CommitType.GENESIS,

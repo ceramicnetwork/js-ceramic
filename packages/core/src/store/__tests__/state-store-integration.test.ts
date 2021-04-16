@@ -31,7 +31,7 @@ describe('Level data store', () => {
 
   const streamId = new StreamID('tile', FAKE_CID);
   const docState: DocState = {
-    doctype: 'tile',
+    type: 0,
     content: {},
     metadata: { controllers: ['foo'] },
     signature: SignatureStatus.GENESIS,

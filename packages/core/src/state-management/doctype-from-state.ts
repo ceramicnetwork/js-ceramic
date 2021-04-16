@@ -17,7 +17,7 @@ export function doctypeFromState<T extends Stream>(
   state: DocState,
   update$?: (init: DocState) => Observable<DocState>,
 ): T {
-  const handler = handlersMap.get<T>(state.doctype);
+  const handler = handlersMap.get<T>(state.type);
   const state$ = new StateLink(state, update$);
   const doctype = new handler.doctype(state$, context);
   if (!update$) {

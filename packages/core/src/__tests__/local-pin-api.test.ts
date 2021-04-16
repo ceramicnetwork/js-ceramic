@@ -12,7 +12,7 @@ const FAKE_CID = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtc
 const repository = ({ pin: jest.fn(), unpin: jest.fn(), list: jest.fn() } as unknown) as Repository;
 
 const docState = ({
-  doctype: 'tile',
+  type: 0,
   log: [{ cid: FAKE_CID, type: CommitType.GENESIS }],
 } as unknown) as DocState;
 const state$ = new RunningState(docState)
