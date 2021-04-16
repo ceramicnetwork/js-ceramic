@@ -18,10 +18,10 @@ const TOPIC = '/ceramic'
 const makeCeramicCore = async(ipfs: IpfsApi, stateStoreDirectory: string): Promise<Ceramic> => {
     const core = await Ceramic.create(ipfs, {pubsubTopic: TOPIC, stateStoreDirectory, anchorOnRequest: false})
 
-    const doctypeHandler = new TileDocumentHandler()
-    doctypeHandler.verifyJWS = (): Promise<void> => { return }
+    const handler = new TileDocumentHandler()
+    handler.verifyJWS = (): Promise<void> => { return }
     // @ts-ignore
-    core._doctypeHandlers.add(doctypeHandler)
+    core._doctypeHandlers.add(handler)
     return core
 }
 
