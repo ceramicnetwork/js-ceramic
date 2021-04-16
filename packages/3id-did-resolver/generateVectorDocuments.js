@@ -12,6 +12,7 @@
 const Ceramic = require('@ceramicnetwork/http-client').default
 const ThreeIdProvider = require('3id-did-provider').default
 const ThreeIdResolver = require('@ceramicnetwork/3id-did-resolver').default
+const { SyncOptions } = require('@ceramicnetwork/common')
 const KeyDidResolver = require('key-did-resolver').default
 const { Resolver } = require('did-resolver')
 const { DID } = require('dids')
@@ -69,7 +70,7 @@ const legacyDoc = {
 const waitForAnchor = doc => new Promise(resolve => {
   console.log('waiting for anchor')
   let iid = setInterval(async () => {
-    await doc._syncState()
+    await doc._syncState(doc.id, { sync: SyncOptions.PREFER_CACHE})
   }, 40000)
   doc.on('change', () => {
     console.log(new Date(doc.state.anchorScheduledFor))

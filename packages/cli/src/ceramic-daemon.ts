@@ -9,7 +9,8 @@ import {
   MultiQuery,
   LoggerConfig,
   LoggerProvider,
-  DiagnosticsLogger
+  DiagnosticsLogger,
+  SyncOptions
 } from "@ceramicnetwork/common"
 import StreamID from "@ceramicnetwork/streamid"
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
@@ -93,6 +94,22 @@ function parseQueryObject(opts: Record<string, any>): Record<string, string | bo
     }
   }
   return typedOpts
+}
+
+/**
+ * Converts 'sync' option sent as a bool by outdated http-clients to the current format of an enum.
+ * The old behaviors don't map directly to the new behaviors, so we take the best approximation.
+ * TODO remove this once we no longer need to support clients older than v1.0.0
+ * @param opts
+ */
+function upconvertLegacySyncOption(opts: Record<string, any>) {
+  if (typeof opts.sync == "boolean") {
+    if (opts.sync) {
+      opts.sync = SyncOptions.SYNC_ALWAYS
+    } else {
+      opts.sync = SyncOptions.PREFER_CACHE
+    }
+  }
 }
 
 /**
@@ -201,6 +218,7 @@ class CeramicDaemon {
    */
   async createDocFromGenesis (req: Request, res: Response): Promise<void> {
     const { doctype, genesis, docOpts } = req.body
+    upconvertLegacySyncOption(docOpts)
     const doc = await this.ceramic.createStreamFromGenesis(doctype, StreamUtils.deserializeCommit(genesis), docOpts)
     res.json({
       streamId: doc.id.toString(),
@@ -227,9 +245,9 @@ class CeramicDaemon {
    * to rename this, e.g. `loadStreamFromGenesis`
    * @deprecated
    */
-
   async createReadOnlyDocFromGenesis (req: Request, res: Response): Promise<void> {
     const { doctype, genesis, docOpts } = req.body
+    upconvertLegacySyncOption(docOpts)
     const readOnlyDocOpts = { ...docOpts, anchor: false, publish: false }
     const doc = await this.ceramic.createStreamFromGenesis(doctype, StreamUtils.deserializeCommit(genesis), readOnlyDocOpts)
     res.json({
@@ -269,6 +287,7 @@ class CeramicDaemon {
    */
   async stateOld (req: Request, res: Response): Promise<void> {
     const opts = parseQueryObject(req.query)
+    upconvertLegacySyncOption(opts)
     const doc = await this.ceramic.loadDocument(req.params.docid, opts)
     res.json({ docId: doc.id.toString(), state: StreamUtils.serializeState(doc.state) })
   }
@@ -299,12 +318,14 @@ class CeramicDaemon {
    */
   async applyCommit (req: Request, res: Response): Promise<void> {
     const { docId, commit, docOpts } = req.body
+    const opts = req.body.opts || docOpts
+    upconvertLegacySyncOption(opts)
     const streamId = req.body.streamId || docId
     if (!(streamId && commit)) {
       throw new Error('streamId and commit are required in order to apply commit')
     }
 
-    const stream = await this.ceramic.applyCommit(streamId, StreamUtils.deserializeCommit(commit), docOpts)
+    const stream = await this.ceramic.applyCommit(streamId, StreamUtils.deserializeCommit(commit), opts)
     res.json({
       streamId: stream.id.toString(),
       docId: stream.id.toString(),
