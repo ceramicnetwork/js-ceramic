@@ -83,7 +83,7 @@ export class StreamUtils {
      * Serializes stream state for over the network transfer
      * @param state - Stream state
      */
-    static serializeState(state: DocState): any {
+    static serializeState(state: StreamState): any {
         const cloned = cloneDeep(state) as any
 
         cloned.log = cloned.log.map((entry: LogEntry) => ({ ...entry, cid: entry.cid.toString() }))
