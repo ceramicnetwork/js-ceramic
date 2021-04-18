@@ -91,11 +91,11 @@ export class Dispatcher {
   /**
    * Publishes Tip commit to pub/sub topic.
    *
-   * @param streamId  - Document ID
+   * @param streamId  - Stream ID
    * @param tip - Commit CID
    */
   publishTip (streamId: StreamID, tip: CID): Subscription {
-    return this.publish({ typ: MsgType.UPDATE, doc: streamId, tip: tip })
+    return this.publish({ typ: MsgType.UPDATE, stream: streamId, tip: tip })
   }
 
   /**
@@ -125,7 +125,7 @@ export class Dispatcher {
   async _handleUpdateMessage(message: UpdateMessage): Promise<void> {
     // TODO Add validation the message adheres to the proper format.
 
-    const { doc: streamId, tip } = message
+    const { stream: streamId, tip } = message
     // TODO: add cache of cids here so that we don't emit event
     // multiple times if we get the message from more than one peer.
     this.repository.stateManager.update(streamId, tip)
@@ -140,7 +140,7 @@ export class Dispatcher {
   async _handleQueryMessage(message: QueryMessage): Promise<void> {
     // TODO Add validation the message adheres to the proper format.
 
-    const { doc: streamId, id } = message
+    const { stream: streamId, id } = message
     const streamState = await this.repository.streamState(streamId)
     if (streamState) {
       // TODO: Should we validate that the 'id' field is the correct hash of the rest of the message?
@@ -169,7 +169,7 @@ export class Dispatcher {
       }
       this.repository.stateManager.update(expectedStreamID, newTip)
       this.messageBus.outstandingQueries.delete(queryId)
-      // TODO Iterate over all documents in 'tips' object and process the new tip for each
+      // TODO Iterate over all streams in 'tips' object and process the new tip for each
     }
   }
 

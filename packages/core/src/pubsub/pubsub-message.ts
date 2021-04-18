@@ -18,14 +18,14 @@ export enum MsgType {
 
 export type UpdateMessage = {
   typ: MsgType.UPDATE;
-  doc: StreamID;
+  stream: StreamID;
   tip: CID;
 };
 
 export type QueryMessage = {
   typ: MsgType.QUERY;
   id: string;
-  doc: StreamID;
+  stream: StreamID;
 };
 
 export type ResponseMessage = {
@@ -50,9 +50,9 @@ function messageHash(message: any): string {
 export function buildQueryMessage(streamId: StreamID): QueryMessage {
   const payload = {
     typ: MsgType.QUERY as MsgType.QUERY,
-    doc: streamId,
+    stream: streamId,
   };
-  const id = messageHash({...payload, doc: streamId.toString()});
+  const id = messageHash({...payload, stream: streamId.toString()});
   return {
     ...payload,
     id: id,
@@ -64,7 +64,8 @@ export function serialize(message: PubsubMessage): string {
     case MsgType.QUERY: {
       return JSON.stringify({
         ...message,
-        doc: message.doc.toString(),
+        doc: message.stream.toString(), // todo remove once we no longer support interop with nodes older than v1.0.0
+        stream: message.stream.toString(),
       });
     }
     case MsgType.RESPONSE: {
@@ -77,7 +78,8 @@ export function serialize(message: PubsubMessage): string {
       return JSON.stringify(payload);
     }
     case MsgType.UPDATE: {
-      const payload = { typ: MsgType.UPDATE, doc: message.doc.toString(), tip: message.tip.toString() };
+      // todo remove 'doc' once we no longer support interop with nodes older than v1.0.0
+      const payload = { typ: MsgType.UPDATE, doc: message.stream.toString(), stream: message.stream.toString(), tip: message.tip.toString() };
       return JSON.stringify(payload);
     }
     default:
@@ -92,9 +94,10 @@ export function deserialize(message: any): PubsubMessage {
   const typ = parsed.typ as MsgType;
   switch (typ) {
     case MsgType.UPDATE: {
+      const stream = StreamID.fromString(parsed.stream || parsed.doc)
       return {
         typ: MsgType.UPDATE,
-        doc: StreamID.fromString(parsed.doc),
+        stream,
         tip: new CID(parsed.tip),
       };
     }
@@ -107,12 +110,14 @@ export function deserialize(message: any): PubsubMessage {
         tips: tips,
       };
     }
-    case MsgType.QUERY:
+    case MsgType.QUERY: {
+      const stream = StreamID.fromString(parsed.stream || parsed.doc)
       return {
         typ: MsgType.QUERY,
         id: parsed.id,
-        doc: StreamID.fromString(parsed.doc),
+        stream,
       };
+    }
     default:
       throw new UnreachableCaseError(typ, 'Unknown message type');
   }
