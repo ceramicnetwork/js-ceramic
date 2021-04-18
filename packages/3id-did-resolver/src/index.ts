@@ -29,6 +29,13 @@ const isLegacyDid = (didId: string): boolean => {
 }
 
 /**
+ * Converts unix timestamp to ISO string without ms.
+ */
+const formatTime = (timestamp: number): string => {
+  return (new Date(timestamp * 1000)).toISOString().split('.')[0] + 'Z'
+}
+
+/**
  * Wraps the content from the Ceramic 3ID document tile and formats it
  * as a proper DIDDocument.
  *
@@ -43,6 +50,8 @@ export function wrapDocument(content: any, did: string): DIDDocument | null {
     verificationMethod: [],
     authentication: [],
     keyAgreement: [],
+    // publicKey is mainly here for backwards compatibility. It's not
+    // part of the did-core spec and can likely be safely removed.
     publicKey: []
   }
   return Object.entries(content.publicKeys as string[]).reduce((diddoc, [keyName, keyValue]) => {
@@ -53,6 +62,8 @@ export function wrapDocument(content: any, did: string): DIDDocument | null {
       controller: did,
       // remove multicodec varint
       publicKeyBase58: u8a.toString(keyBuf.slice(2), 'base58btc')
+      // We might want to use 'publicKeyMultibase' here if it
+      // ends up in the did-core spec.
     }
     if (keyBuf[0] === 0xe7) { // it's secp256k1
       entry.type = 'EcdsaSecp256k1Signature2019'
@@ -88,13 +99,13 @@ function extractMetadata(requestedVersionState: StreamState, latestVersionState:
   const created = latestVersionState.log.find(({ timestamp }) => Boolean(timestamp))?.timestamp
 
   if (created) {
-    metadata.created = (new Date(created * 1000)).toISOString()
+    metadata.created = formatTime(created)
   }
   if (updated) {
-    metadata.updated = (new Date(updated * 1000)).toISOString()
+    metadata.updated = formatTime(updated)
   }
   if (nextUpdate) {
-    metadata.nextUpdate = (new Date(nextUpdate * 1000)).toISOString()
+    metadata.nextUpdate = formatTime(nextUpdate)
   }
   if (versionId) {
     metadata.versionId = requestedVersionState.log.length === 0 ? '0' : versionId?.toString()
