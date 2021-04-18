@@ -50,9 +50,6 @@ export function wrapDocument(content: any, did: string): DIDDocument | null {
     verificationMethod: [],
     authentication: [],
     keyAgreement: [],
-    // publicKey is mainly here for backwards compatibility. It's not
-    // part of the did-core spec and can likely be safely removed.
-    publicKey: []
   }
   return Object.entries(content.publicKeys as string[]).reduce((diddoc, [keyName, keyValue]) => {
     const keyBuf = u8a.fromString(keyValue.slice(1), 'base58btc')
@@ -69,12 +66,10 @@ export function wrapDocument(content: any, did: string): DIDDocument | null {
       entry.type = 'EcdsaSecp256k1Signature2019'
       diddoc.verificationMethod.push(entry)
       diddoc.authentication.push(entry)
-      diddoc.publicKey.push(entry)
     } else if (keyBuf[0] === 0xec) { // it's x25519
       entry.type = 'X25519KeyAgreementKey2019'
       diddoc.verificationMethod.push(entry)
       diddoc.keyAgreement.push(entry)
-      diddoc.publicKey.push(entry)
     }
     return diddoc
   }, startDoc)
