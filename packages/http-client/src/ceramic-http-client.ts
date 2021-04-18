@@ -119,9 +119,9 @@ export default class CeramicClient implements CeramicApi {
     }
   }
 
-  async createStreamFromGenesis<T extends Stream>(doctype: string, genesis: any, opts: CreateOpts = {}): Promise<T> {
+  async createStreamFromGenesis<T extends Stream>(type: number, genesis: any, opts: CreateOpts = {}): Promise<T> {
     opts = { ...DEFAULT_CREATE_FROM_GENESIS_OPTS, ...opts };
-    const doc = await Document.createFromGenesis(this._apiUrl, doctype, genesis, opts, this._config.syncInterval)
+    const doc = await Document.createFromGenesis(this._apiUrl, type, genesis, opts, this._config.syncInterval)
 
     const found = this._docCache.get(doc.id.toString())
     if (found) {

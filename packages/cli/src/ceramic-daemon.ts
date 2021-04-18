@@ -12,7 +12,7 @@ import {
   DiagnosticsLogger,
   SyncOptions
 } from "@ceramicnetwork/common"
-import StreamID from "@ceramicnetwork/streamid"
+import StreamID, {StreamType} from "@ceramicnetwork/streamid"
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import KeyDidResolver from 'key-did-resolver'
 import { DID } from 'dids'
@@ -219,7 +219,8 @@ class CeramicDaemon {
   async createDocFromGenesis (req: Request, res: Response): Promise<void> {
     const { doctype, genesis, docOpts } = req.body
     upconvertLegacySyncOption(docOpts)
-    const doc = await this.ceramic.createStreamFromGenesis(doctype, StreamUtils.deserializeCommit(genesis), docOpts)
+    const type = StreamType.codeByName(doctype)
+    const doc = await this.ceramic.createStreamFromGenesis(type, StreamUtils.deserializeCommit(genesis), docOpts)
     res.json({
       streamId: doc.id.toString(),
       docId: doc.id.toString(),
@@ -232,8 +233,8 @@ class CeramicDaemon {
    * @dev Useful when the streamId is unknown, but you have the genesis contents
    */
   async createStreamFromGenesis (req: Request, res: Response): Promise<void> {
-    const { streamtype, genesis, opts } = req.body
-    const stream = await this.ceramic.createStreamFromGenesis(streamtype, StreamUtils.deserializeCommit(genesis), opts)
+    const { type, genesis, opts } = req.body
+    const stream = await this.ceramic.createStreamFromGenesis(type, StreamUtils.deserializeCommit(genesis), opts)
     res.json({ streamId: stream.id.toString(), state: StreamUtils.serializeState(stream.state) })
   }
 
@@ -248,8 +249,9 @@ class CeramicDaemon {
   async createReadOnlyDocFromGenesis (req: Request, res: Response): Promise<void> {
     const { doctype, genesis, docOpts } = req.body
     upconvertLegacySyncOption(docOpts)
+    const type = StreamType.codeByName(doctype)
     const readOnlyDocOpts = { ...docOpts, anchor: false, publish: false }
-    const doc = await this.ceramic.createStreamFromGenesis(doctype, StreamUtils.deserializeCommit(genesis), readOnlyDocOpts)
+    const doc = await this.ceramic.createStreamFromGenesis(type, StreamUtils.deserializeCommit(genesis), readOnlyDocOpts)
     res.json({
       streamId: doc.id.toString(),
       docId: doc.id.toString(),
@@ -265,9 +267,9 @@ class CeramicDaemon {
    * to rename this, e.g. `loadStreamFromGenesis`
    */
   async createReadOnlyStreamFromGenesis (req: Request, res: Response): Promise<void> {
-    const { streamtype, genesis, opts } = req.body
+    const { type, genesis, opts } = req.body
     const readOnlyOpts = { ...opts, anchor: false, publish: false }
-    const stream = await this.ceramic.createStreamFromGenesis(streamtype, StreamUtils.deserializeCommit(genesis), readOnlyOpts)
+    const stream = await this.ceramic.createStreamFromGenesis(type, StreamUtils.deserializeCommit(genesis), readOnlyOpts)
     res.json({ streamId: stream.id.toString(), state: StreamUtils.serializeState(stream.state) })
   }
 

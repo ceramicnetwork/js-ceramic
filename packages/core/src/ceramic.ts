@@ -462,14 +462,14 @@ class Ceramic implements CeramicApi {
 
   /**
    * Creates doctype from genesis record
-   * @param doctype - Document type
+   * @param type - Stream type
    * @param genesis - Genesis CID
    * @param opts - Initialization options
    */
-  async createStreamFromGenesis<T extends Stream>(doctype: string, genesis: any, opts: CreateOpts = {}): Promise<T> {
+  async createStreamFromGenesis<T extends Stream>(type: number, genesis: any, opts: CreateOpts = {}): Promise<T> {
     opts = { ...DEFAULT_CREATE_FROM_GENESIS_OPTS, ...opts };
     const genesisCid = await this.dispatcher.storeCommit(genesis);
-    const streamId = new StreamID(doctype, genesisCid);
+    const streamId = new StreamID(type, genesisCid);
     const state$ = await this.repository.applyCreateOpts(streamId, opts);
     return streamFromState<T>(this.context, this._doctypeHandlers, state$.value, this.repository.updates$)
   }
