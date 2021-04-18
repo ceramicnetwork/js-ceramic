@@ -26,19 +26,14 @@ const IPFS_GET_TIMEOUT = 60000 // 1 minute
  */
 export class TileDocumentHandler implements StreamHandler<TileDocument> {
     get type(): number {
-      return TileDocument.DOCTYPE_ID
-    }
-    /**
-     * Gets doctype name
-     */
-    get name(): string {
-        return TileDocument.DOCTYPE_NAME
+      return TileDocument.STREAM_TYPE_ID
     }
 
-    /**
-     * Gets doctype class
-     */
-    get doctype(): StreamConstructor<TileDocument> {
+    get name(): string {
+        return TileDocument.STREAM_TYPE_NAME
+    }
+
+    get stream_constructor(): StreamConstructor<TileDocument> {
         return TileDocument
     }
 
@@ -84,7 +79,7 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
         }
 
         return {
-            type: TileDocument.DOCTYPE_ID,
+            type: TileDocument.STREAM_TYPE_ID,
             content: payload.data || {},
             metadata: payload.header,
             signature: isSigned? SignatureStatus.SIGNED : SignatureStatus.GENESIS,

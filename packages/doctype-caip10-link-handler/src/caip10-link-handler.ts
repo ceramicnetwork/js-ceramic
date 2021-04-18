@@ -1,6 +1,5 @@
 import type CID from 'cids'
 import { validateLink } from "@ceramicnetwork/blockchain-utils-validation"
-import { LinkProof } from "@ceramicnetwork/blockchain-utils-linking"
 import { Caip10Link } from "@ceramicnetwork/doctype-caip10-link"
 import {
     AnchorStatus,
@@ -18,19 +17,14 @@ const IPFS_GET_TIMEOUT = 60000 // 1 minute
 
 export class Caip10LinkHandler implements StreamHandler<Caip10Link> {
     get type(): number {
-      return Caip10Link.DOCTYPE_ID
-    }
-    /**
-     * Gets doctype name
-     */
-    get name(): string {
-        return Caip10Link.DOCTYPE_NAME
+      return Caip10Link.STREAM_TYPE_ID
     }
 
-    /**
-     * Gets doctype class
-     */
-    get doctype(): StreamConstructor<Caip10Link> {
+    get name(): string {
+        return Caip10Link.STREAM_TYPE_NAME
+    }
+
+    get stream_constructor(): StreamConstructor<Caip10Link> {
         return Caip10Link
     }
 
@@ -66,7 +60,7 @@ export class Caip10LinkHandler implements StreamHandler<Caip10Link> {
 
         // TODO - verify genesis commit
         const state = {
-            type: Caip10Link.DOCTYPE_ID,
+            type: Caip10Link.STREAM_TYPE_ID,
             content: null,
             next: {
                 content: null

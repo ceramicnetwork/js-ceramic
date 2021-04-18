@@ -78,8 +78,8 @@ export default class CeramicClient implements CeramicApi {
     this.pin = this._initPinApi()
 
     this._doctypeConstructors = {
-      [TileDocument.DOCTYPE_ID]: TileDocument,
-      [Caip10Link.DOCTYPE_ID]: Caip10Link
+      [TileDocument.STREAM_TYPE_ID]: TileDocument,
+      [Caip10Link.STREAM_TYPE_ID]: Caip10Link
     }
   }
 
@@ -119,7 +119,7 @@ export default class CeramicClient implements CeramicApi {
     }
   }
 
-  async createDocumentFromGenesis<T extends Stream>(doctype: string, genesis: any, opts: CreateOpts = {}): Promise<T> {
+  async createStreamFromGenesis<T extends Stream>(doctype: string, genesis: any, opts: CreateOpts = {}): Promise<T> {
     opts = { ...DEFAULT_CREATE_FROM_GENESIS_OPTS, ...opts };
     const doc = await Document.createFromGenesis(this._apiUrl, doctype, genesis, opts, this._config.syncInterval)
 
@@ -184,7 +184,7 @@ export default class CeramicClient implements CeramicApi {
   }
 
   addStreamHandler<T extends Stream>(doctypeHandler: StreamHandler<T>): void {
-    this._doctypeConstructors[doctypeHandler.name] = doctypeHandler.doctype
+    this._doctypeConstructors[doctypeHandler.name] = doctypeHandler.stream_constructor
   }
 
   findStreamConstructor<T extends Stream>(type: number) {

@@ -219,7 +219,7 @@ class CeramicDaemon {
   async createDocFromGenesis (req: Request, res: Response): Promise<void> {
     const { doctype, genesis, docOpts } = req.body
     upconvertLegacySyncOption(docOpts)
-    const doc = await this.ceramic.createDocumentFromGenesis(doctype, StreamUtils.deserializeCommit(genesis), docOpts)
+    const doc = await this.ceramic.createStreamFromGenesis(doctype, StreamUtils.deserializeCommit(genesis), docOpts)
     res.json({
       streamId: doc.id.toString(),
       docId: doc.id.toString(),
@@ -233,7 +233,7 @@ class CeramicDaemon {
    */
   async createStreamFromGenesis (req: Request, res: Response): Promise<void> {
     const { streamtype, genesis, opts } = req.body
-    const stream = await this.ceramic.createDocumentFromGenesis(streamtype, StreamUtils.deserializeCommit(genesis), opts)
+    const stream = await this.ceramic.createStreamFromGenesis(streamtype, StreamUtils.deserializeCommit(genesis), opts)
     res.json({ streamId: stream.id.toString(), state: StreamUtils.serializeState(stream.state) })
   }
 
@@ -249,7 +249,7 @@ class CeramicDaemon {
     const { doctype, genesis, docOpts } = req.body
     upconvertLegacySyncOption(docOpts)
     const readOnlyDocOpts = { ...docOpts, anchor: false, publish: false }
-    const doc = await this.ceramic.createDocumentFromGenesis(doctype, StreamUtils.deserializeCommit(genesis), readOnlyDocOpts)
+    const doc = await this.ceramic.createStreamFromGenesis(doctype, StreamUtils.deserializeCommit(genesis), readOnlyDocOpts)
     res.json({
       streamId: doc.id.toString(),
       docId: doc.id.toString(),
@@ -267,7 +267,7 @@ class CeramicDaemon {
   async createReadOnlyStreamFromGenesis (req: Request, res: Response): Promise<void> {
     const { streamtype, genesis, opts } = req.body
     const readOnlyOpts = { ...opts, anchor: false, publish: false }
-    const stream = await this.ceramic.createDocumentFromGenesis(streamtype, StreamUtils.deserializeCommit(genesis), readOnlyOpts)
+    const stream = await this.ceramic.createStreamFromGenesis(streamtype, StreamUtils.deserializeCommit(genesis), readOnlyOpts)
     res.json({ streamId: stream.id.toString(), state: StreamUtils.serializeState(stream.state) })
   }
 

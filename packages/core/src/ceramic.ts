@@ -34,7 +34,7 @@ import { LocalPinApi } from './local-pin-api';
 import { Repository } from './state-management/repository';
 import { HandlersMap } from './handlers-map';
 import { FauxStateValidation, RealStateValidation, StateValidation } from './state-management/state-validation';
-import { doctypeFromState } from './state-management/doctype-from-state';
+import { streamFromState } from './state-management/stream-from-state';
 import { ConflictResolution } from './conflict-resolution';
 import { RunningState } from './state-management/running-state';
 
@@ -457,7 +457,7 @@ class Ceramic implements CeramicApi {
   async applyCommit<T extends Stream>(streamId: string | StreamID, commit: CeramicCommit, opts: CreateOpts | UpdateOpts = {}): Promise<T> {
     opts = { ...DEFAULT_APPLY_COMMIT_OPTS, ...opts };
     const state$ = await this.repository.stateManager.applyCommit(normalizeStreamID(streamId), commit, opts as CreateOpts)
-    return doctypeFromState<T>(this.context, this._doctypeHandlers, state$.value, this.repository.updates$)
+    return streamFromState<T>(this.context, this._doctypeHandlers, state$.value, this.repository.updates$)
   }
 
   /**
@@ -466,23 +466,12 @@ class Ceramic implements CeramicApi {
    * @param genesis - Genesis CID
    * @param opts - Initialization options
    */
-  async createDocumentFromGenesis<T extends Stream>(doctype: string, genesis: any, opts: CreateOpts = {}): Promise<T> {
+  async createStreamFromGenesis<T extends Stream>(doctype: string, genesis: any, opts: CreateOpts = {}): Promise<T> {
     opts = { ...DEFAULT_CREATE_FROM_GENESIS_OPTS, ...opts };
-    const state$ = await this._createDocFromGenesis(doctype, genesis, opts)
-    return doctypeFromState<T>(this.context, this._doctypeHandlers, state$.value, this.repository.updates$)
-  }
-
-  /**
-   * Creates document from genesis record
-   * @param doctype - Document type
-   * @param genesis - Genesis record
-   * @param opts - Initialization options
-   * @private
-   */
-  async _createDocFromGenesis(doctype: string, genesis: any, opts: CreateOpts): Promise<RunningState> {
     const genesisCid = await this.dispatcher.storeCommit(genesis);
     const streamId = new StreamID(doctype, genesisCid);
-    return this.repository.applyCreateOpts(streamId, opts);
+    const state$ = await this.repository.applyCreateOpts(streamId, opts);
+    return streamFromState<T>(this.context, this._doctypeHandlers, state$.value, this.repository.updates$)
   }
 
   /**
@@ -498,12 +487,12 @@ class Ceramic implements CeramicApi {
     if (streamRef instanceof CommitID) {
       // Here CommitID is requested, let's return document at specific commit
       const snapshot$ = await this.repository.stateManager.rewind(base$, streamRef)
-      return doctypeFromState<T>(this.context, this._doctypeHandlers, snapshot$.value)
+      return streamFromState<T>(this.context, this._doctypeHandlers, snapshot$.value)
     } else if (opts.atTime) {
       const snapshot$ = await this.repository.stateManager.atTime(base$, opts.atTime)
-      return doctypeFromState<T>(this.context, this._doctypeHandlers, snapshot$.value)
+      return streamFromState<T>(this.context, this._doctypeHandlers, snapshot$.value)
     } else {
-      return doctypeFromState<T>(this.context, this._doctypeHandlers, base$.value, this.repository.updates$)
+      return streamFromState<T>(this.context, this._doctypeHandlers, base$.value, this.repository.updates$)
     }
   }
 
