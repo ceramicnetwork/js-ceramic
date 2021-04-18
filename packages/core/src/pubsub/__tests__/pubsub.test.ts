@@ -11,7 +11,7 @@ const TOPIC = 'test';
 const loggerProvider = new LoggerProvider();
 const pubsubLogger = loggerProvider.makeServiceLogger('pubsub');
 const diagnosticsLogger = loggerProvider.getDiagnosticsLogger();
-const FAKE_DOC_ID = StreamID.fromString('kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s');
+const FAKE_STREAM_ID = StreamID.fromString('kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s');
 const OUTER_PEER_ID = 'OUTER_PEER_ID';
 const PEER_ID = 'PEER_ID';
 
@@ -20,7 +20,7 @@ const MESSAGES = Array.from({ length: LENGTH }).map((_, index) => {
   return {
     typ: MsgType.QUERY as MsgType.QUERY,
     id: index.toString(),
-    doc: FAKE_DOC_ID,
+    doc: FAKE_STREAM_ID,
   };
 });
 const OUTER_MESSAGES = MESSAGES.map((message) => asIpfsMessage(message, OUTER_PEER_ID));
@@ -66,7 +66,7 @@ test('publish', async () => {
   const message = {
     typ: MsgType.QUERY as MsgType.QUERY,
     id: random.randomString(32),
-    doc: FAKE_DOC_ID,
+    doc: FAKE_STREAM_ID,
   };
   const subscription = pubsub.next(message);
   subscription.add(() => {

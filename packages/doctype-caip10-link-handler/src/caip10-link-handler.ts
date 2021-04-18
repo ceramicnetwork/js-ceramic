@@ -33,7 +33,7 @@ export class Caip10LinkHandler implements StreamHandler<Caip10Link> {
      * @param commit - Commit to be applied
      * @param cid - Commit CID
      * @param context - Ceramic context
-     * @param state - Document state
+     * @param state - Stream state
      */
     async applyCommit(commit: CeramicCommit, cid: CID, context: Context, state?: StreamState): Promise<StreamState> {
         if (state == null) {
@@ -82,7 +82,7 @@ export class Caip10LinkHandler implements StreamHandler<Caip10Link> {
      * Applies signed commit
      * @param commit - Signed commit
      * @param cid - Signed commit CID
-     * @param state - Document state
+     * @param state - Stream state
      * @private
      */
     async _applySigned (commit: any, cid: CID, state: StreamState): Promise<StreamState> {
@@ -115,7 +115,7 @@ export class Caip10LinkHandler implements StreamHandler<Caip10Link> {
 
         const addressCaip10 = [address, chainId].join('@')
         if (addressCaip10.toLowerCase() !== state.metadata.controllers[0].toLowerCase()) {
-            throw new Error("Address doesn't match document controller")
+            throw new Error("Address doesn't match stream controller")
         }
         state.log.push({ cid, type: CommitType.SIGNED })
         return {
@@ -137,7 +137,7 @@ export class Caip10LinkHandler implements StreamHandler<Caip10Link> {
      * @param context - Ceramic context
      * @param commit - Anchor commit
      * @param cid - Anchor commit CID
-     * @param state - Document state
+     * @param state - Stream state
      * @private
      */
     async _applyAnchor (context: Context, commit: any, cid: CID, state: StreamState): Promise<StreamState> {

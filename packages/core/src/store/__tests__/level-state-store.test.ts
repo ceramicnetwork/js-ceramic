@@ -62,10 +62,10 @@ test('#open', async () => {
 })
 
 test('#save and #load', async () => {
-    const document = new FakeType(TestUtils.runningState(state), {})
+    const stream = new FakeType(TestUtils.runningState(state), {})
     stateStore.open(NETWORK)
-    await stateStore.save(document)
-    const streamId = document.id.baseID
+    await stateStore.save(stream)
+    const streamId = stream.id.baseID
     expect(mockPut).toBeCalledWith(streamId.toString(), StreamUtils.serializeState(state))
 
     const retrieved = await stateStore.load(streamId)

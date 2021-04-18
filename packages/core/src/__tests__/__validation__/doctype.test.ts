@@ -46,7 +46,7 @@ describe('Stream', () => {
         const schemaDoc = new BasicStreamWithContent(TestUtils.runningState(docSchemaState), null)
 
         ceramic = mock<CeramicApi>()
-        ceramic.loadDocument.mockReturnValue(new Promise<Stream>((resolve) => {
+        ceramic.loadStream.mockReturnValue(new Promise<Stream>((resolve) => {
             resolve(schemaDoc);
         }));
     })

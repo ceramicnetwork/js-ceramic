@@ -78,7 +78,7 @@ describe('Ceramic anchoring', () => {
     expect(stream1.state.log.length).toEqual(4)
     expect(stream1.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
-    const stream2 = await ceramic2.loadDocument(stream1.id)
+    const stream2 = await ceramic2.loadStream(stream1.id)
     expect(stream1.content).toEqual(stream2.content)
     expect(stream1.state.log.length).toEqual(stream2.state.log.length)
 
@@ -99,7 +99,7 @@ describe('Ceramic anchoring', () => {
     expect(stream1.content).toEqual({ a: 3 })
     expect(stream1.state.log.length).toEqual(3)
 
-    const stream2 = await ceramic2.loadDocument(stream1.id)
+    const stream2 = await ceramic2.loadStream(stream1.id)
     expect(stream1.content).toEqual(stream2.content)
     expect(stream1.state.log.length).toEqual(stream2.state.log.length)
 
@@ -124,7 +124,7 @@ describe('Ceramic anchoring', () => {
     expect(stream1.content).toEqual({ a: 123, b: 4567 })
     expect(stream1.state.log.length).toEqual(2)
 
-    const stream2 = await ceramic2.loadDocument(stream1.id)
+    const stream2 = await ceramic2.loadStream(stream1.id)
     expect(stream1.content).toEqual(stream2.content)
     expect(stream1.state.log.length).toEqual(stream2.state.log.length)
 
@@ -148,7 +148,7 @@ describe('Ceramic anchoring', () => {
     expect(stream1.content).toEqual({ a: 4567 })
     expect(stream1.state.log.length).toEqual(3)
 
-    const stream2 = await ceramic2.loadDocument(stream1.id)
+    const stream2 = await ceramic2.loadStream(stream1.id)
     expect(stream1.content).toEqual(stream2.content)
     expect(stream1.state.log.length).toEqual(stream2.state.log.length)
 
@@ -171,7 +171,7 @@ describe('Ceramic anchoring', () => {
     expect(stream1.content).toEqual({ x: 3 })
     expect(stream1.state.log.length).toEqual(4)
 
-    const stream2 = await ceramic2.loadDocument(stream1.id)
+    const stream2 = await ceramic2.loadStream(stream1.id)
     expect(stream1.content).toEqual(stream2.content)
     expect(stream1.state.log.length).toEqual(stream2.state.log.length)
 
@@ -194,7 +194,7 @@ describe('Ceramic anchoring', () => {
     expect(stream1.content).toEqual({ x: 3 })
     expect(stream1.state.log.length).toEqual(4)
 
-    const stream2 = await ceramic2.loadDocument(stream1.id)
+    const stream2 = await ceramic2.loadStream(stream1.id)
     expect(stream1.content).toEqual(stream2.content)
     expect(stream1.state.log.length).toEqual(stream2.state.log.length)
 
@@ -230,7 +230,7 @@ describe('Ceramic anchoring', () => {
     expect(stream1.content).toEqual({ x: 6 })
     expect(stream1.state.log.length).toEqual(8)
 
-    const stream2 = await ceramic2.loadDocument<TileDocument>(stream1.id)
+    const stream2 = await ceramic2.loadStream<TileDocument>(stream1.id)
     await TestUtils.waitForState(
         stream2,
         5000, // 5 second timeout
@@ -286,7 +286,7 @@ describe('Ceramic anchoring', () => {
     expect(stream2.content).toEqual(winningContent)
 
 
-    const stream3 = await ceramic3.loadDocument<TileDocument>(stream1.id)
+    const stream3 = await ceramic3.loadStream<TileDocument>(stream1.id)
     expect(stream3.content).toEqual(winningContent)
     expect(stream3.state.log.length).toEqual(3)
 

@@ -1,6 +1,6 @@
-# Ceramic Account Link doctype
+# Ceramic Account Link stream type
 
-> This package contains the Caip-10 Link doctype implementation.
+> This package contains the Caip-10 Link stream implementation.
 
 ### Installation
 ```shell

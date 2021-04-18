@@ -23,7 +23,7 @@ const makeCeramicCore = async(ipfs: IpfsApi, stateStoreDirectory: string): Promi
     const handler = new TileDocumentHandler()
     handler.verifyJWS = (): Promise<void> => { return }
     // @ts-ignore
-    core._doctypeHandlers.add(handler)
+    core._streamHandlers.add(handler)
     return core
 }
 

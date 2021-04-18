@@ -4,7 +4,7 @@ import CID from "cids"
 import StreamID from '@ceramicnetwork/streamid'
 
 /**
- * Encapsulates logic for pinning documents
+ * Encapsulates logic for pinning streams
  */
 export class PinStore {
     constructor(

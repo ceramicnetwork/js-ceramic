@@ -50,7 +50,7 @@ export default class Utils {
     static async validateSchema(doc: TileDocument): Promise<void> {
         const schemaStreamId = doc.state?.metadata?.schema
         if (schemaStreamId) {
-            const schemaDoc = await doc.api.loadDocument<TileDocument>(schemaStreamId)
+            const schemaDoc = await doc.api.loadStream<TileDocument>(schemaStreamId)
             if (!schemaDoc) {
                 throw new Error(`Schema not found for ${schemaStreamId}`)
             }

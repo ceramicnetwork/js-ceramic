@@ -5,7 +5,7 @@ import { Semaphore } from 'await-semaphore';
 import { TaskQueueLike } from '../pubsub/task-queue';
 
 /**
- * Serialize tasks running on the same document.
+ * Serialize tasks running on the same stream.
  * Ensure that a task is run with the currently available running state - either from memory or from state store.
  * This makes a task code simpler.
  */
@@ -21,9 +21,9 @@ export class ExecutionQueue {
   }
 
   /**
-   * Return execution lane for a document.
+   * Return execution lane for a stream.
    */
-  forDocument(streamId: StreamID): TaskQueueLike {
+  forStream(streamId: StreamID): TaskQueueLike {
     return {
       add: (task) => {
         return this.tasks.add(streamId.toString(), () => {

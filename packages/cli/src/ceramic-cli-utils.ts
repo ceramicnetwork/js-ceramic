@@ -105,14 +105,13 @@ export class CeramicCliUtils {
 
     /**
      * Internal helper for creating documents
-     * @param doctype - Document type
      * @param content - Document content
      * @param controllers - Document controllers
      * @param onlyGenesis - Create only a genesis commit (no publish or anchor)
      * @param deterministic - If true, documents will not be guaranteed to be unique. Documents with identical content will get de-duped.
      * @param schemaStreamId - Schema document ID
      */
-    static async _createDoc(doctype: string, content: string, controllers: string, onlyGenesis: boolean, deterministic: boolean, schemaStreamId: string = null): Promise<void> {
+    static async _createDoc(content: string, controllers: string, onlyGenesis: boolean, deterministic: boolean, schemaStreamId: string = null): Promise<void> {
         await CeramicCliUtils._runWithCeramic(async (ceramic: CeramicClient) => {
             const parsedControllers = CeramicCliUtils._parseControllers(controllers)
             const parsedContent = CeramicCliUtils._parseContent(content)
@@ -138,7 +137,7 @@ export class CeramicCliUtils {
     static async update(streamId: string, content: string, controllers: string, schemaCommitId?: string): Promise<void> {
         const id = StreamID.fromString(streamId)
         if (id.type != TileDocument.STREAM_TYPE_ID) {
-            throw new Error(`CLI does not currently support updating doctypes other than 'tile'. StreamID ${id.toString()} has doctype '${id.typeName}'`)
+            throw new Error(`CLI does not currently support updating stream types other than 'tile'. StreamID ${id.toString()} has streamtype '${id.typeName}'`)
         }
         await CeramicCliUtils._runWithCeramic(async (ceramic: CeramicClient) => {
             const parsedControllers = CeramicCliUtils._parseControllers(controllers)
@@ -173,7 +172,7 @@ export class CeramicCliUtils {
      */
     static async state(streamRef: string): Promise<void> {
         await CeramicCliUtils._runWithCeramic(async (ceramic: CeramicApi) => {
-            const stream = await ceramic.loadDocument(streamRef)
+            const stream = await ceramic.loadStream(streamRef)
             console.log(JSON.stringify(StreamUtils.serializeState(stream.state), null, 2))
         })
     }
@@ -203,7 +202,7 @@ export class CeramicCliUtils {
         const id = StreamID.fromString(streamId)
 
         await CeramicCliUtils._runWithCeramic(async (ceramic: CeramicApi) => {
-            const stream = await ceramic.loadDocument(id)
+            const stream = await ceramic.loadStream(id)
             const commits = stream.allCommitIds.map(v => v.toString())
             console.log(JSON.stringify(commits, null, 2))
         })
@@ -211,15 +210,14 @@ export class CeramicCliUtils {
 
     /**
      * Create non-schema document
-     * @param streamtype - Stream type
      * @param content - Document content
      * @param controllers - Document controllers
      * @param onlyGenesis - Create only a genesis commit (no publish or anchor)
      * @param deterministic - If true, documents will not be guaranteed to be unique. Documents with identical content will get de-duped.
      * @param schemaStreamId - Schema document ID
      */
-    static async nonSchemaCreateDoc(streamtype: string, content: string, controllers: string, onlyGenesis: boolean, deterministic: boolean, schemaStreamId: string = null): Promise<void> {
-        return CeramicCliUtils._createDoc(streamtype, content, controllers, onlyGenesis, deterministic, schemaStreamId)
+    static async nonSchemaCreateDoc(content: string, controllers: string, onlyGenesis: boolean, deterministic: boolean, schemaStreamId: string = null): Promise<void> {
+        return CeramicCliUtils._createDoc(content, controllers, onlyGenesis, deterministic, schemaStreamId)
     }
 
     /**
@@ -231,7 +229,7 @@ export class CeramicCliUtils {
      */
     static async schemaCreateDoc(content: string, controllers: string, onlyGenesis: boolean, deterministic: boolean): Promise<void> {
         // TODO validate schema on the client side
-        return CeramicCliUtils._createDoc('tile', content, controllers, onlyGenesis, deterministic)
+        return CeramicCliUtils._createDoc(content, controllers, onlyGenesis, deterministic)
     }
 
     /**

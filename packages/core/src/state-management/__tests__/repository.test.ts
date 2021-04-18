@@ -37,13 +37,13 @@ const STRING_MAP_SCHEMA = {
 
 describe('load', () => {
   test('from memory', async () => {
-    const doc1 = await TileDocument.create(ceramic, { foo: 'bar' });
-    doc1.subscribe();
+    const stream1 = await TileDocument.create(ceramic, { foo: 'bar' });
+    stream1.subscribe();
     const fromMemorySpy = jest.spyOn(repository, 'fromMemory');
     const fromStateStoreSpy = jest.spyOn(repository, 'fromStateStore');
     const fromNetwork = jest.spyOn(repository, 'fromNetwork');
-    const doc2 = await repository.load(doc1.id, { syncTimeoutSeconds: 0 });
-    expect(StreamUtils.statesEqual(doc1.state, doc2.state)).toBeTruthy();
+    const stream2 = await repository.load(stream1.id, { syncTimeoutSeconds: 0 });
+    expect(StreamUtils.statesEqual(stream1.state, stream2.state)).toBeTruthy();
     expect(fromMemorySpy).toBeCalledTimes(1);
     expect(fromStateStoreSpy).toBeCalledTimes(0);
     expect(fromNetwork).toBeCalledTimes(0);
@@ -55,7 +55,7 @@ describe('validation', () => {
     // Create schema
     const schema = await TileDocument.create(ceramic, STRING_MAP_SCHEMA);
     await anchorUpdate(ceramic, schema);
-    // Create invalid doc
+    // Create invalid stream
     const ipfs2 = await createIPFS();
     const permissiveCeramic = await createCeramic(ipfs2, { validateStreams: false });
     const invalidDoc = await TileDocument.create(permissiveCeramic, { stuff: 1 }, { schema: schema.commitId });
@@ -71,10 +71,10 @@ describe('validation', () => {
 test('subscribe makes state endured', async () => {
   const durableStart = ceramic.repository.inmemory.durable.size;
   const volatileStart = ceramic.repository.inmemory.volatile.size;
-  const doc1 = await TileDocument.create(ceramic, { foo: 'bar' });
+  const stream1 = await TileDocument.create(ceramic, { foo: 'bar' });
   expect(ceramic.repository.inmemory.durable.size).toEqual(durableStart);
   expect(ceramic.repository.inmemory.volatile.size).toEqual(volatileStart + 1);
-  doc1.subscribe();
+  stream1.subscribe();
   await delay(200); // Wait for rxjs plumbing
   expect(ceramic.repository.inmemory.durable.size).toEqual(durableStart + 1);
   expect(ceramic.repository.inmemory.volatile.size).toEqual(volatileStart);
