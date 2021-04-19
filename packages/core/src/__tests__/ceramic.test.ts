@@ -2,7 +2,7 @@ import Ceramic from '../ceramic'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import tmp from 'tmp-promise'
 import { StreamUtils, IpfsApi, TestUtils, StreamState } from '@ceramicnetwork/common';
-import { TileDocument } from "@ceramicnetwork/doctype-tile"
+import { TileDocument } from "@ceramicnetwork/stream-tile"
 import * as u8a from 'uint8arrays'
 import { createIPFS, swarmConnect } from './ipfs-util';
 import InMemoryAnchorService from "../anchor/memory/in-memory-anchor-service";

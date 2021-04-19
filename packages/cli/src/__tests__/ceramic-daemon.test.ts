@@ -3,8 +3,8 @@ import CeramicClient from '@ceramicnetwork/http-client'
 import tmp from 'tmp-promise'
 import CeramicDaemon from '../ceramic-daemon'
 import { AnchorStatus, Stream, StreamUtils, IpfsApi } from '@ceramicnetwork/common';
-import { TileDocumentHandler } from "@ceramicnetwork/doctype-tile-handler"
-import { TileDocument } from "@ceramicnetwork/doctype-tile";
+import { TileDocumentHandler } from "@ceramicnetwork/stream-tile-handler"
+import { TileDocument } from "@ceramicnetwork/stream-tile";
 import { filter, take } from "rxjs/operators"
 
 import StreamID from "@ceramicnetwork/streamid";

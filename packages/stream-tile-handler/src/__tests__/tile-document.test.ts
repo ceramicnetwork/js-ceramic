@@ -11,7 +11,11 @@ import * as uint8arrays from "uint8arrays"
 import * as sha256 from '@stablelib/sha256'
 import cloneDeep from 'lodash.clonedeep'
 
+<<<<<<< HEAD:packages/stream-tile-handler/src/__tests__/tile-document.test.ts
 import { TileDocument } from "@ceramicnetwork/doctype-tile"
+=======
+import { TileDocument } from "@ceramicnetwork/stream-tile"
+>>>>>>> origin/release-candidate:packages/doctype-tile-handler/src/__tests__/tile-doctype.test.ts
 import {AnchorCommit, CeramicApi, Context, StreamUtils, SignedCommitContainer, TestUtils} from "@ceramicnetwork/common"
 
 jest.mock('did-jwt', () => ({

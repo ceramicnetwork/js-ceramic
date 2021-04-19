@@ -7,7 +7,7 @@ import * as random from '@stablelib/random';
 import CeramicDaemon, { makeCeramicConfig } from '../ceramic-daemon';
 import CeramicClient from '@ceramicnetwork/http-client';
 import { makeDID } from './make-did';
-import { TileDocument } from '@ceramicnetwork/doctype-tile';
+import { TileDocument } from '@ceramicnetwork/stream-tile';
 import * as path from 'path';
 import * as fs from 'fs';
 

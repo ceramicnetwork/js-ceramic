@@ -1,6 +1,6 @@
 import Ceramic, { CeramicConfig } from '../ceramic'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
-import { TileDocument } from "@ceramicnetwork/doctype-tile"
+import { TileDocument } from "@ceramicnetwork/stream-tile"
 import { AnchorStatus, StreamUtils, IpfsApi } from "@ceramicnetwork/common"
 import StreamID from '@ceramicnetwork/streamid'
 import * as u8a from 'uint8arrays'

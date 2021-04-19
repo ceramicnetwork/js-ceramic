@@ -17,8 +17,8 @@ import {
   UpdateOpts,
   SyncOptions,
 } from '@ceramicnetwork/common';
-import { TileDocument } from "@ceramicnetwork/doctype-tile"
-import { Caip10Link } from "@ceramicnetwork/doctype-caip10-link"
+import { TileDocument } from "@ceramicnetwork/stream-tile"
+import { Caip10Link } from "@ceramicnetwork/stream-caip10-link"
 import { StreamID, CommitID, StreamRef } from '@ceramicnetwork/streamid';
 
 const API_PATH = '/api/v0'

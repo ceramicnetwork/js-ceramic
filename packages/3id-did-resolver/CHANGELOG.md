@@ -3,6 +3,41 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.2.0-rc.5](/compare/@ceramicnetwork/3id-did-resolver@1.2.0-rc.4...@ceramicnetwork/3id-did-resolver@1.2.0-rc.5) (2021-04-19)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
+# [1.2.0-rc.4](/compare/@ceramicnetwork/3id-did-resolver@1.2.0-rc.3...@ceramicnetwork/3id-did-resolver@1.2.0-rc.4) (2021-04-19)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
+# [1.2.0-rc.3](/compare/@ceramicnetwork/3id-did-resolver@1.2.0-rc.2...@ceramicnetwork/3id-did-resolver@1.2.0-rc.3) (2021-04-19)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
+# [1.2.0-rc.2](/compare/@ceramicnetwork/3id-did-resolver@1.1.1...@ceramicnetwork/3id-did-resolver@1.2.0-rc.2) (2021-04-19)
+
+
+### Bug Fixes
+
+* Fix tests by using node environment for jest (#1212) aff01c6, closes #1212
+
+
+
+
+
 # [1.2.0-rc.1](/compare/@ceramicnetwork/3id-did-resolver@1.1.1...@ceramicnetwork/3id-did-resolver@1.2.0-rc.1) (2021-04-02)
 
 

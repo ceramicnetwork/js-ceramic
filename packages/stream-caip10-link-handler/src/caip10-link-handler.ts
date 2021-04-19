@@ -1,6 +1,10 @@
 import type CID from 'cids'
 import { validateLink } from "@ceramicnetwork/blockchain-utils-validation"
+<<<<<<< HEAD:packages/stream-caip10-link-handler/src/caip10-link-handler.ts
 import { Caip10Link } from "@ceramicnetwork/doctype-caip10-link"
+=======
+import { Caip10Link } from "@ceramicnetwork/stream-caip10-link"
+>>>>>>> origin/release-candidate:packages/doctype-caip10-link-handler/src/caip10-link-doctype-handler.ts
 import {
     AnchorStatus,
     StreamState,

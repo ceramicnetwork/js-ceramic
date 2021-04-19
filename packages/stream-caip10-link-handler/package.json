@@ -1,7 +1,7 @@
 {
-  "name": "@ceramicnetwork/doctype-caip10-link-handler",
-  "version": "0.14.0-rc.0",
-  "description": "Ceramic AccountLink doctype handler",
+  "name": "@ceramicnetwork/stream-caip10-link-handler",
+  "version": "1.0.0-rc.2",
+  "description": "Ceramic AccountLink stream handler",
   "keywords": [
     "ceramic",
     "account-link",
@@ -19,7 +19,7 @@
     "lib"
   ],
   "scripts": {
-    "test": "../../node_modules/.bin/jest --coverage",
+    "test": "../../node_modules/.bin/jest --coverage --env=node",
     "build": "../../node_modules/.bin/tsc -p tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
@@ -27,9 +27,9 @@
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/blockchain-utils-validation": "^0.1.2-rc.0",
-    "@ceramicnetwork/common": "^0.18.0-rc.0",
-    "@ceramicnetwork/doctype-caip10-link": "^0.14.0-rc.1"
+    "@ceramicnetwork/blockchain-utils-validation": "^1.0.0-rc.2",
+    "@ceramicnetwork/common": "^1.0.0-rc.2",
+    "@ceramicnetwork/stream-caip10-link": "^1.0.0-rc.2"
   },
   "devDependencies": {
     "@stablelib/sha256": "^1.0.0",
@@ -42,5 +42,5 @@
     "testEnvironment": "node",
     "resolver": "<rootDir>/../../tools/jest-resolver.js"
   },
-  "gitHead": "34eeee25597b0a60def72906c26d3afd6230aaf1"
+  "gitHead": "4f42c6ac204ad25e66efda4e24aed12c339b3c98"
 }

@@ -8,7 +8,7 @@ import {
 import tmp from 'tmp-promise'
 import * as u8a from 'uint8arrays'
 import { createIPFS, swarmConnect } from './ipfs-util';
-import { TileDocument } from '@ceramicnetwork/doctype-tile';
+import { TileDocument } from '@ceramicnetwork/stream-tile';
 import InMemoryAnchorService from '../anchor/memory/in-memory-anchor-service';
 import { anchorUpdate } from '../state-management/__tests__/anchor-update';
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'

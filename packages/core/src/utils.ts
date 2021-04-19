@@ -2,7 +2,7 @@ import Ajv from "ajv"
 import addFormats from "ajv-formats"
 import { Memoize } from 'typescript-memoize';
 
-import type { TileDocument } from "@ceramicnetwork/doctype-tile"
+import type { TileDocument } from "@ceramicnetwork/stream-tile"
 
 /**
  * Various utility functions

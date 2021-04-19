@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/blockchain-utils-validation",
-  "version": "0.1.2-rc.0",
+  "version": "1.0.0-rc.2",
   "description": "Blockchain utils for validation of linked blockchain accounts",
   "keywords": [
     "ceramic",
@@ -16,7 +16,7 @@
     "lib"
   ],
   "scripts": {
-    "test": "../../node_modules/.bin/jest",
+    "test": "../../node_modules/.bin/jest --env=node",
     "build": "../../node_modules/.bin/tsc -p tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
@@ -24,7 +24,7 @@
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/blockchain-utils-linking": "^0.4.0-rc.0",
+    "@ceramicnetwork/blockchain-utils-linking": "^1.0.0-rc.1",
     "@ethersproject/contracts": "^5.0.9",
     "@ethersproject/providers": "5.0.23",
     "@ethersproject/wallet": "^5.0.10",

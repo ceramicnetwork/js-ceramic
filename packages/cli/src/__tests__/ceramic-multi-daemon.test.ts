@@ -3,8 +3,8 @@ import CeramicClient from '@ceramicnetwork/http-client'
 import * as tmp from 'tmp-promise'
 import CeramicDaemon from '../ceramic-daemon'
 import { IpfsApi, SyncOptions } from '@ceramicnetwork/common';
-import { TileDocumentHandler } from "@ceramicnetwork/doctype-tile-handler"
-import { TileDocument } from "@ceramicnetwork/doctype-tile";
+import { TileDocumentHandler } from "@ceramicnetwork/stream-tile-handler"
+import { TileDocument } from "@ceramicnetwork/stream-tile";
 import getPort from "get-port";
 import { createIPFS } from './create-ipfs';
 import { makeDID } from './make-did';

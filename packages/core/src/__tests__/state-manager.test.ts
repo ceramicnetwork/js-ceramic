@@ -5,7 +5,7 @@ import { createIPFS } from './ipfs-util';
 import { createCeramic } from './create-ceramic';
 import Ceramic from '../ceramic';
 import { anchorUpdate } from '../state-management/__tests__/anchor-update';
-import { TileDocument } from '@ceramicnetwork/doctype-tile';
+import { TileDocument } from '@ceramicnetwork/stream-tile';
 import { streamFromState } from '../state-management/stream-from-state';
 
 const FAKE_CID = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu');

@@ -6,7 +6,7 @@ import {
   IpfsApi,
   SignatureStatus,
 } from '@ceramicnetwork/common';
-import { TileDocument } from "@ceramicnetwork/doctype-tile";
+import { TileDocument } from "@ceramicnetwork/stream-tile";
 import { PinStore } from '../pin-store';
 import { PinStoreFactory } from '../pin-store-factory';
 import StreamID from '@ceramicnetwork/streamid';

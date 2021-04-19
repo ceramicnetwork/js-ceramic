@@ -1,6 +1,6 @@
 import { Dispatcher } from '../dispatcher';
 import CID from 'cids';
-import { TileDocument } from '@ceramicnetwork/doctype-tile';
+import { TileDocument } from '@ceramicnetwork/stream-tile';
 import StreamID from '@ceramicnetwork/streamid';
 import {
   CommitType,
