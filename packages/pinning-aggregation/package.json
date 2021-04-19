@@ -31,9 +31,9 @@
     "@stablelib/sha256": "^1.0.0"
   },
   "devDependencies": {
-    "@ceramicnetwork/common": "^0.18.0-rc.1",
-    "@ceramicnetwork/pinning-ipfs-backend": "^0.2.2-rc.2",
-    "@ceramicnetwork/pinning-powergate-backend": "^0.2.2-rc.2",
+    "@ceramicnetwork/common": "^1.0.0-rc.1",
+    "@ceramicnetwork/pinning-ipfs-backend": "^1.0.0-rc.1",
+    "@ceramicnetwork/pinning-powergate-backend": "^1.0.0-rc.1",
     "cids": "~1.1.6"
   },
   "publishConfig": {
