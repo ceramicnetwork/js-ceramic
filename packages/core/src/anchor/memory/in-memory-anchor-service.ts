@@ -86,7 +86,7 @@ class InMemoryAnchorService implements AnchorService {
   }
 
   /**
-   * Filter candidates by document and DIDs
+   * Filter candidates by stream and DIDs
    * @private
    */
   async _findCandidates(): Promise<Candidate[]> {
@@ -164,7 +164,7 @@ class InMemoryAnchorService implements AnchorService {
 
   _failCandidate(candidate: Candidate, message?: string): void {
     if (!message) {
-      message = `Rejecting request to anchor CID ${candidate.cid.toString()} for document ${candidate.streamId.toString()} because there is a better CID to anchor for the same document`;
+      message = `Rejecting request to anchor CID ${candidate.cid.toString()} for stream ${candidate.streamId.toString()} because there is a better CID to anchor for the same stream`;
     }
     this.#feed.next({
       status: AnchorStatus.FAILED,
@@ -228,7 +228,7 @@ class InMemoryAnchorService implements AnchorService {
 
   /**
    * Send request to the anchoring service
-   * @param streamId - Document ID
+   * @param streamId - Stream ID
    * @param tip - Commit CID
    */
   requestAnchor(streamId: StreamID, tip: CID): Observable<AnchorServiceResponse> {

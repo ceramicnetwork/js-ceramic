@@ -21,7 +21,7 @@ const makeCeramicCore = async(ipfs: IpfsApi, stateStoreDirectory: string): Promi
     const handler = new TileDocumentHandler()
     handler.verifyJWS = (): Promise<void> => { return }
     // @ts-ignore
-    core._doctypeHandlers.add(handler)
+    core._streamHandlers.add(handler)
     return core
 }
 
@@ -110,13 +110,13 @@ describe('Ceramic interop: core <> http-client', () => {
     it('loads documents correctly', async () => {
         const doc1 = await TileDocument.create(core, { test: 123 });
         await anchorDoc(doc1)
-        const doc2 = await client.loadDocument(doc1.id)
+        const doc2 = await client.loadStream(doc1.id)
         expect(doc1.content).toEqual(doc2.content)
         expect(StreamUtils.serializeState(doc1.state)).toEqual(StreamUtils.serializeState(doc2.state))
 
         const doc3 = await TileDocument.create(client, { test: 456 });
         await anchorDoc(doc3)
-        const doc4 = await core.loadDocument(doc3.id)
+        const doc4 = await core.loadStream(doc3.id)
         expect(doc3.content).toEqual(doc4.content)
         expect(StreamUtils.serializeState(doc3.state)).toEqual(StreamUtils.serializeState(doc4.state))
     })
@@ -127,10 +127,10 @@ describe('Ceramic interop: core <> http-client', () => {
         const doc2 = await TileDocument.load(client, doc1.id)
         expect(doc1.content).toEqual(doc2.content)
 
-        const commits1 = await core.loadDocumentCommits(doc1.id)
+        const commits1 = await core.loadStreamCommits(doc1.id)
         expect(commits1).toBeDefined()
 
-        const commits2 = await client.loadDocumentCommits(doc2.id)
+        const commits2 = await client.loadStreamCommits(doc2.id)
         expect(commits2).toBeDefined()
 
         const serializeCommits = (commits: any): any => commits.map((r: any) => {
@@ -152,7 +152,7 @@ describe('Ceramic interop: core <> http-client', () => {
 
       const doc1 = await TileDocument.create(core, initialContent);
       await anchorDoc(doc1)
-      const doc2 = await client.loadDocument<TileDocument>(doc1.id)
+      const doc2 = await client.loadStream<TileDocument>(doc1.id)
       doc1.subscribe()
       doc2.subscribe()
       // change from core viewable in client
@@ -179,7 +179,7 @@ describe('Ceramic interop: core <> http-client', () => {
 
         const doc1 = await TileDocument.create(core, initialContent);
         await anchorDoc(doc1)
-        const doc2 = await client.loadDocument<TileDocument>(doc1.id)
+        const doc2 = await client.loadStream<TileDocument>(doc1.id)
         // change from core viewable in client
         await doc1.update(middleContent)
         await anchorDoc(doc1)
@@ -219,48 +219,48 @@ describe('Ceramic interop: core <> http-client', () => {
 
         // Load genesis commit
         const v0Id = doc.id.atCommit(doc.id.cid)
-        const docV0Core = await core.loadDocument(v0Id)
-        const docV0Client = await client.loadDocument(v0Id)
+        const docV0Core = await core.loadStream(v0Id)
+        const docV0Client = await client.loadStream(v0Id)
         expect(docV0Core.content).toEqual(content1)
         expect(docV0Core.state.log.length).toEqual(1)
         expect(StreamUtils.serializeState(docV0Core.state)).toEqual(StreamUtils.serializeState(docV0Client.state))
 
         // Load v1 (anchor on top of genesis commit)
         const v1Id = doc.id.atCommit(doc.state.log[1].cid)
-        const docV1Core = await core.loadDocument(v1Id)
-        const docV1Client = await client.loadDocument(v1Id)
+        const docV1Core = await core.loadStream(v1Id)
+        const docV1Client = await client.loadStream(v1Id)
         expect(docV1Core.content).toEqual(content1)
         expect(docV1Core.state.log.length).toEqual(2)
         expect(StreamUtils.serializeState(docV1Core.state)).toEqual(StreamUtils.serializeState(docV1Client.state))
 
         // Load v2
         const v2Id = doc.id.atCommit(doc.state.log[2].cid)
-        const docV2Core = await core.loadDocument(v2Id)
-        const docV2Client = await client.loadDocument(v2Id)
+        const docV2Core = await core.loadStream(v2Id)
+        const docV2Client = await client.loadStream(v2Id)
         expect(docV2Core.content).toEqual(content2)
         expect(docV2Core.state.log.length).toEqual(3)
         expect(StreamUtils.serializeState(docV2Core.state)).toEqual(StreamUtils.serializeState(docV2Client.state))
 
         // Load v3 (anchor on top of v2)
         const v3Id = doc.id.atCommit(doc.state.log[3].cid)
-        const docV3Core = await core.loadDocument(v3Id)
-        const docV3Client = await client.loadDocument(v3Id)
+        const docV3Core = await core.loadStream(v3Id)
+        const docV3Client = await client.loadStream(v3Id)
         expect(docV3Core.content).toEqual(content2)
         expect(docV3Core.state.log.length).toEqual(4)
         expect(StreamUtils.serializeState(docV3Core.state)).toEqual(StreamUtils.serializeState(docV3Client.state))
 
         // Load v4
         const v4Id = doc.id.atCommit(doc.state.log[4].cid)
-        const docV4Core = await core.loadDocument(v4Id)
-        const docV4Client = await client.loadDocument(v4Id)
+        const docV4Core = await core.loadStream(v4Id)
+        const docV4Client = await client.loadStream(v4Id)
         expect(docV4Core.content).toEqual(content3)
         expect(docV4Core.state.log.length).toEqual(5)
         expect(StreamUtils.serializeState(docV4Core.state)).toEqual(StreamUtils.serializeState(docV4Client.state))
 
         // Load v5
         const v5Id = doc.id.atCommit(doc.state.log[5].cid)
-        const docV5Core = await core.loadDocument(v5Id)
-        const docV5Client = await client.loadDocument(v5Id)
+        const docV5Core = await core.loadStream(v5Id)
+        const docV5Client = await client.loadStream(v5Id)
         expect(docV5Core.content).toEqual(content3)
         expect(docV5Core.state.log.length).toEqual(6)
         expect(StreamUtils.serializeState(docV5Core.state)).toEqual(StreamUtils.serializeState(docV5Client.state))

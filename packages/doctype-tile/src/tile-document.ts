@@ -18,7 +18,7 @@ import {
     UnsignedCommit,
     CeramicApi,
     SignedCommitContainer,
-    DocMetadata,
+    StreamMetadata,
     CeramicSigner,
 } from "@ceramicnetwork/common"
 import { CommitID, StreamID, StreamRef } from "@ceramicnetwork/streamid";
@@ -42,7 +42,7 @@ const DEFAULT_UPDATE_OPTS = { anchor: true, publish: true }
  * Converts from metadata format into CommitHeader format to be put into a CeramicCommit
  * @param metadata
  */
-function headerFromMetadata(metadata?: TileMetadataArgs | DocMetadata): CommitHeader {
+function headerFromMetadata(metadata?: TileMetadataArgs | StreamMetadata): CommitHeader {
     if (typeof metadata?.schema === 'string') {
         try {
             CommitID.fromString(metadata.schema)
@@ -88,7 +88,7 @@ async function _signDagJWS(signer: CeramicSigner, commit: CeramicCommit, control
 }
 
 async function throwReadOnlyError (): Promise<void> {
-    throw new Error('Historical document commits cannot be modified. Load the document without specifying a commit to make updates.')
+    throw new Error('Historical stream commits cannot be modified. Load the stream without specifying a commit to make updates.')
 }
 
 /**
@@ -155,7 +155,7 @@ export class TileDocument<T = Record<string, any>> extends Stream {
             throw new Error(`StreamID ${streamRef.toString()} does not refer to a '${TileDocument.STREAM_TYPE_NAME}' doctype, but to a ${streamRef.typeName}`)
         }
 
-        return ceramic.loadDocument<TileDocument<T>>(streamRef, opts)
+        return ceramic.loadStream<TileDocument<T>>(streamRef, opts)
     }
 
     /**

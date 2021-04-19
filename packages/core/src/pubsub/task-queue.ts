@@ -63,7 +63,7 @@ export class TaskQueue implements TaskQueueLike {
   /**
    * Add task and wait till it is completed.
    * The point of `run` (as opposed to `add`) is to pass an error to the caller if it is throw inside a task.
-   * Note "fire-and-forget" comment for the `doc` method.
+   * Note "fire-and-forget" comment for the `add` method.
    */
   run<T>(task: Task<T>): Promise<T> {
     return this.#pq.add(task);

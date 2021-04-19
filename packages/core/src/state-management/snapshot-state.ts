@@ -3,7 +3,7 @@ import { StreamState, RunningStateLike } from '@ceramicnetwork/common';
 import { StreamID } from '@ceramicnetwork/streamid';
 
 /**
- * Snapshot of a document state at some commit. Unlike `RunningState` this can not be updated.
+ * Snapshot of a stream state at some commit. Unlike `RunningState` this can not be updated.
  * Only a subset of operations could be performed with an instance of SnapshotState, like
  * `StateManager#rewind` or `StateManager#atTime`.
  */

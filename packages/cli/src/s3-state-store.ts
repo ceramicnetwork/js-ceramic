@@ -6,7 +6,7 @@ import S3LevelDOWN from "s3leveldown"
 import toArray from "stream-to-array"
 
 /**
- * Ceramic store for saving document state to S3
+ * Ceramic store for saving stream state to S3
  */
 export class S3StateStore implements StateStore {
   readonly #bucketName: string
@@ -25,16 +25,16 @@ export class S3StateStore implements StateStore {
   }
 
   /**
-   * Pin document
-   * @param document - Document instance
+   * Pin stream
+   * @param stream - Stream instance
    */
-  async save(document: Stream): Promise<void> {
-    await this.#store.put(document.id.baseID.toString(), JSON.stringify(StreamUtils.serializeState(document.state)))
+  async save(stream: Stream): Promise<void> {
+    await this.#store.put(stream.id.baseID.toString(), JSON.stringify(StreamUtils.serializeState(stream.state)))
   }
 
   /**
-   * Load document state
-   * @param streamId - Document ID
+   * Load stream state
+   * @param streamId - stream ID
    */
   async load(streamId: StreamID): Promise<StreamState> {
     try {
@@ -53,16 +53,16 @@ export class S3StateStore implements StateStore {
   }
 
   /**
-   * Unpin document
-   * @param streamId - Document ID
+   * Unpin stream
+   * @param streamId - Stream ID
    */
   async remove(streamId: StreamID): Promise<void> {
     await this.#store.del(streamId.baseID.toString())
   }
 
   /**
-   * List pinned document
-   * @param streamId - Document ID
+   * List pinned streams
+   * @param streamId - Stream ID
    */
   async list(streamId?: StreamID): Promise<string[]> {
     if (streamId == null) {

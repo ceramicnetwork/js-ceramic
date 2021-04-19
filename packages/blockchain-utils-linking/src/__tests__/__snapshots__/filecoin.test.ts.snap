@@ -32,7 +32,7 @@ AccountID {
 
 exports[`authenticate mainnet 1`] = `"F5gy3IHoKUNJOUEQQMHg1iTZGa4Ef3TeT+deaBKkkYFK3Aur5y3XuOL4NNygsn9lYPnPsvXUvtBiyy4+yZ6geQE="`;
 
-exports[`authenticate mainnet BLS 1`] = `"r1QYs+G633VEW/i5EUZVMm/SqdH5fvsylvql0chOeMJAEB6jsD9NKfgeap6mVepVE+IA2iqFdqi+F0lTkRicrxvOLs7siyPXAQZPivx34oxSEdN55LNbXL6EAIE+3p4W"`;
+exports[`authenticate mainnet BLS 1`] = `"l0T9NqhSymgeeLpI1RCVmiaeAJtOkhHv4dDSIzFk71DEF9Ki+kye9qixTy/vips9CZxndMOVzGId26DJP88H02E3Y+f1IUzKpghbDK36zjc00q+FNIkCctKhuLh4/oi0"`;
 
 exports[`authenticate testnet 1`] = `"APHUqaCLuyqunqfYJl8YAq3/p6oO9iiEAGkGQILzZAEMR/L28/F+iN2ismhMJCm9yr8VjIqgneiaFIkr65fimgA="`;
 
@@ -57,7 +57,7 @@ Object {
 
 did:3:bafysdfwefwe 
 Timestamp: 0",
-  "signature": "iyq0tKJ98dHb3zMA1ijHySlEOxq9P+2dQpL6jJna8gTKRifjj0FVAsUJc5uUePC/DOw2TJA7YabYV+dQBld4BH3QYuV4Y9NNWBJCfGo8d8raKYNGxPzhSZ+5sVeawf0p",
+  "signature": "kRdlpjx9+nr+DUioLJmfcCcKkkDNbGfJZ8yZRT5MZXbZjad4CO1ycfgpff6OLmhdCOaO15/hI2YGfveaz1ZQPiKavYt87mUEWig83EzX1xAxHtW0qDTH5e5Awor5JaVt",
   "timestamp": 0,
   "type": "eoa-tx",
   "version": 2,

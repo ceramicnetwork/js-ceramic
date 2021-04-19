@@ -17,7 +17,7 @@ export class NoIpfsInstanceError extends Error {
 const textEncoder = new TextEncoder();
 
 /**
- * Pin document to a IPFS node.
+ * Pin stream to a IPFS node.
  *
  * +connectionString+ indicates what node to connect to. It has a form of URL starting with `ipfs` protocol,
  * for example: `ipfs://3.3.3.3:5001`. It would translate into `http://3.3.3.3:5001` IPFS endpoint connection.

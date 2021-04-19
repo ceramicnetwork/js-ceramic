@@ -278,7 +278,7 @@ class CeramicDaemon {
    */
   async state (req: Request, res: Response): Promise<void> {
     const opts = parseQueryObject(req.query)
-    const stream = await this.ceramic.loadDocument(req.params.streamid, opts)
+    const stream = await this.ceramic.loadStream(req.params.streamid, opts)
     res.json({ streamId: stream.id.toString(), state: StreamUtils.serializeState(stream.state) })
   }
 
@@ -290,7 +290,7 @@ class CeramicDaemon {
   async stateOld (req: Request, res: Response): Promise<void> {
     const opts = parseQueryObject(req.query)
     upconvertLegacySyncOption(opts)
-    const doc = await this.ceramic.loadDocument(req.params.docid, opts)
+    const doc = await this.ceramic.loadStream(req.params.docid, opts)
     res.json({ docId: doc.id.toString(), state: StreamUtils.serializeState(doc.state) })
   }
 
@@ -299,7 +299,7 @@ class CeramicDaemon {
    */
   async commits (req: Request, res: Response): Promise<void> {
     const streamId = StreamID.fromString(req.params.streamid || req.params.docid)
-    const commits = await this.ceramic.loadDocumentCommits(streamId)
+    const commits = await this.ceramic.loadStreamCommits(streamId)
     const serializedCommits = commits.map((r: any) => {
       return {
         cid: r.cid,

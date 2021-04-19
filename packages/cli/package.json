@@ -31,18 +31,6 @@
     "lint": "./node_modules/.bin/eslint ./src --ext .js,.jsx,.ts,.tsx",
     "clean": "rm -rf ./lib"
   },
-  "jest": {
-    "testRegex": ".(spec|test).ts$",
-    "testEnvironment": "node",
-    "transformIgnorePatterns": [],
-    "modulePathIgnorePatterns": [
-      "lib"
-    ],
-    "moduleNameMapper": {
-      "multiformats/legacy": "multiformats/cjs/src/legacy.js",
-      "multiformats/hashes/sha2": "multiformats/cjs/src/hashes/sha2.js"
-    }
-  },
   "dependencies": {
     "@awaitjs/express": "^0.7.2",
     "@ceramicnetwork/3id-did-resolver": "^1.2.0-rc.1",
@@ -59,7 +47,7 @@
     "cors": "^2.8.5",
     "dag-jose": "^0.3.0",
     "dids": "^2.0.0",
-    "did-resolver": "^3.0.1",
+    "did-resolver": "^3.1.0",
     "express": "^4.17.1",
     "flat": "^5.0.2",
     "ipfs-http-client": "~49.0.3",
@@ -96,6 +84,15 @@
     "jest": "^26.6.3",
     "rxjs": "^6.6.7",
     "tmp-promise": "^2.0.2"
+  },
+  "jest": {
+    "testRegex": ".(spec|test).ts$",
+    "testEnvironment": "node",
+    "transformIgnorePatterns": [],
+    "modulePathIgnorePatterns": [
+      "lib"
+    ],
+    "resolver": "<rootDir>/../../tools/jest-resolver.js"
   },
   "gitHead": "34eeee25597b0a60def72906c26d3afd6230aaf1"
 }

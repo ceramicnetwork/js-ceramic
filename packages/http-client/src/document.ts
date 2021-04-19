@@ -88,7 +88,7 @@ export class Document extends Observable<StreamState> implements RunningStateLik
     return new Document(StreamUtils.deserializeState(state), apiUrl, syncInterval)
   }
 
-  static async loadDocumentCommits (streamId: StreamID, apiUrl: string): Promise<Array<Record<string, CeramicCommit>>> {
+  static async loadStreamCommits (streamId: StreamID, apiUrl: string): Promise<Array<Record<string, CeramicCommit>>> {
     const { commits } = await fetchJson(`${apiUrl}/commits/${streamId}`)
 
     return commits.map((r: any) => {

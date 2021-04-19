@@ -46,7 +46,7 @@ export class Repository {
   readonly executionQ: ExecutionQueue;
 
   /**
-   * In-memory cache of the currently running documents.
+   * In-memory cache of the currently running streams.
    */
   readonly inmemory: StateCache<RunningState>;
 
@@ -56,14 +56,14 @@ export class Repository {
   #deps: RepositoryDependencies;
 
   /**
-   * Instance of StateManager for performing operations on document state.
+   * Instance of StateManager for performing operations on stream state.
    */
   stateManager: StateManager;
 
   /**
-   * @param cacheLimit - Maximum number of documents to store in memory cache.
+   * @param cacheLimit - Maximum number of streams to store in memory cache.
    * @param logger - Where we put diagnostics messages.
-   * @param concurrencyLimit - Maximum number of concurrently running tasks on the documents.
+   * @param concurrencyLimit - Maximum number of concurrently running tasks on the streams.
    */
   constructor(cacheLimit: number, concurrencyLimit: number, private readonly logger: DiagnosticsLogger) {
     this.loadingQ = new NamedTaskQueue((error) => {
@@ -126,9 +126,9 @@ export class Repository {
   }
 
   /**
-   * Returns a document from wherever we can get information about it.
-   * Starts by checking if the document state is present in the in-memory cache, if not then
-   * checks the state store, and finally loads the document from pubsub.
+   * Returns a stream from wherever we can get information about it.
+   * Starts by checking if the stream state is present in the in-memory cache, if not then
+   * checks the state store, and finally loads the stream from pubsub.
    */
   async load(streamId: StreamID, opts: LoadOpts): Promise<RunningState> {
     opts = { ...DEFAULT_LOAD_OPTS, ...opts }
@@ -164,8 +164,8 @@ export class Repository {
   }
 
   /**
-   * Return a document, either from cache or re-constructed from state store, but will not load from the network.
-   * Adds the document to cache.
+   * Return a stream, either from cache or re-constructed from state store, but will not load from the network.
+   * Adds the stream to cache.
    */
   async get(streamId: StreamID): Promise<RunningState | undefined> {
     return this.loadingQ.run(streamId.toString(), async () => {
@@ -176,7 +176,7 @@ export class Repository {
   }
 
   /**
-   * Return a document state, either from cache or from state store.
+   * Return a stream state, either from cache or from state store.
    */
   async streamState(streamId: StreamID): Promise<StreamState | undefined> {
     const fromMemory = this.inmemory.get(streamId.toString());
@@ -188,7 +188,7 @@ export class Repository {
   }
 
   /**
-   * Adds the document's RunningState to the in-memory cache and subscribes the Repository's global feed$ to receive changes emitted by that RunningState
+   * Adds the stream's RunningState to the in-memory cache and subscribes the Repository's global feed$ to receive changes emitted by that RunningState
    */
   add(state$: RunningState): void {
     this.inmemory.set(state$.id.toString(), state$);
@@ -203,7 +203,7 @@ export class Repository {
   }
 
   /**
-   * List pinned documents as array of StreamID strings.
+   * List pinned streams as array of StreamID strings.
    * If `streamId` is passed, indicate if it is pinned.
    */
   async listPinned(streamId?: StreamID): Promise<string[]> {
@@ -211,8 +211,8 @@ export class Repository {
   }
 
   /**
-   * Updates for the StreamState, even if a (pinned or not pinned) document has already been evicted.
-   * Marks the document as durable, that is not subject to cache eviction.
+   * Updates for the StreamState, even if a (pinned or not pinned) stream has already been evicted.
+   * Marks the stream as durable, that is not subject to cache eviction.
    *
    * First, we try to get the running state from memory or state store. If found, it is used as a source
    * of updates. If not found, we use StreamState passed as `init` param as a future source of updates.
@@ -242,9 +242,9 @@ export class Repository {
   async close(): Promise<void> {
     await this.loadingQ.close();
     await this.executionQ.close();
-    Array.from(this.inmemory).forEach(([id, document]) => {
+    Array.from(this.inmemory).forEach(([id, stream]) => {
       this.inmemory.delete(id);
-      document.complete();
+      stream.complete();
     });
     await this.#deps.pinStore.close();
   }

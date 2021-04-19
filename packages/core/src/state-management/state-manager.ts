@@ -57,11 +57,11 @@ export class StateManager {
   }
 
   /**
-   * Take the version of a document state and a specific commit and returns a snapshot of a state
+   * Take the version of a stream state and a specific commit and returns a snapshot of a state
    * at the requested commit. If the requested commit is for a branch of history that conflicts with the
    * known commits, throw an error.
    *
-   * @param state$ - Document state to rewind.
+   * @param state$ - Stream state to rewind.
    * @param commitId - Requested commit.
    */
   async rewind(state$: RunningStateLike, commitId: CommitID): Promise<SnapshotState> {
@@ -124,11 +124,11 @@ export class StateManager {
    * Handles update from the PubSub topic
    *
    * @param streamId
-   * @param tip - Document Tip CID
+   * @param tip - Stream Tip CID
    * @private
    */
   update(streamId: StreamID, tip: CID): void {
-    this.executionQ.forDocument(streamId).add(async () => {
+    this.executionQ.forStream(streamId).add(async () => {
       const state$ = await this.fromMemoryOrStore(streamId);
       if (state$) await this._handleTip(state$, tip);
     });
@@ -137,12 +137,12 @@ export class StateManager {
   /**
    * Applies commit to the existing state
    *
-   * @param streamId - Document ID to update
+   * @param streamId - Stream ID to update
    * @param commit - Commit data
-   * @param opts - Document initialization options (request anchor, wait, etc.)
+   * @param opts - Stream initialization options (request anchor, wait, etc.)
    */
   applyCommit(streamId: StreamID, commit: any, opts: CreateOpts | UpdateOpts): Promise<RunningState> {
-    return this.executionQ.forDocument(streamId).run(async () => {
+    return this.executionQ.forStream(streamId).run(async () => {
       const state$ = await this.load(streamId, opts)
       const cid = await this.dispatcher.storeCommit(commit);
 
@@ -153,7 +153,7 @@ export class StateManager {
   }
 
   /**
-   * Request anchor for the latest document state
+   * Request anchor for the latest stream state
    */
   anchor(state$: RunningState): Subscription {
     const anchorStatus$ = this.anchorService.requestAnchor(state$.id, state$.tip);

@@ -19,7 +19,7 @@ import {Block, TransactionResponse } from "@ethersproject/providers"
 /**
  * CID-streamId pair
  */
-interface CidDoc {
+interface CidAndStream {
     readonly cid: CID
     readonly streamId: StreamID
 }
@@ -103,16 +103,16 @@ export default class EthereumAnchorService implements AnchorService {
     }
 
   /**
-   * Requests anchoring service for current tip of the document
-   * @param streamId - Document ID
-   * @param tip - Tip CID of the document
+   * Requests anchoring service for current tip of the stream
+   * @param streamId - Stream ID
+   * @param tip - Tip CID of the stream
    */
   requestAnchor(streamId: StreamID, tip: CID): Observable<AnchorServiceResponse> {
-    const cidDocPair: CidDoc = { cid: tip, streamId };
+    const cidStreamPair: CidAndStream = { cid: tip, streamId };
     return concat(
-      this._announcePending(cidDocPair),
-      this._makeRequest(cidDocPair),
-      this._poll(cidDocPair)
+      this._announcePending(cidStreamPair),
+      this._makeRequest(cidStreamPair),
+      this._poll(cidStreamPair)
     ).pipe(
       catchError((error) =>
         of<AnchorServiceResponse>({
@@ -133,11 +133,11 @@ export default class EthereumAnchorService implements AnchorService {
     return [this._chainId];
   }
 
-  private _announcePending(cidDoc: CidDoc): Observable<AnchorServiceResponse> {
+  private _announcePending(cidStream: CidAndStream): Observable<AnchorServiceResponse> {
     return of({
       status: AnchorStatus.PENDING,
-      streamId: cidDoc.streamId,
-      cid: cidDoc.cid,
+      streamId: cidStream.streamId,
+      cid: cidStream.cid,
       message: "Sending anchoring request",
       anchorScheduledFor: null,
     });
@@ -145,17 +145,17 @@ export default class EthereumAnchorService implements AnchorService {
 
   /**
    * Send requests to an external Ceramic Anchor Service
-   * @param cidDocPair - mapping
+   * @param cidStreamPair - mapping
    * @private
    */
-  private _makeRequest(cidDocPair: CidDoc): Observable<AnchorServiceResponse> {
+  private _makeRequest(cidStreamPair: CidAndStream): Observable<AnchorServiceResponse> {
     return from(
       fetch(this.requestsApiEndpoint, {
         method: "POST",
         body: JSON.stringify({
-          streamId: cidDocPair.streamId.toString(),
-          docId: cidDocPair.streamId.toString(),
-          cid: cidDocPair.cid.toString(),
+          streamId: cidStreamPair.streamId.toString(),
+          docId: cidStreamPair.streamId.toString(),
+          cid: cidStreamPair.cid.toString(),
         }),
         headers: {
           "Content-Type": "application/json",
@@ -165,7 +165,7 @@ export default class EthereumAnchorService implements AnchorService {
       concatMap(async (response) => {
         if (response.ok) {
           const json = await response.json();
-          return this.parseResponse(cidDocPair, json);
+          return this.parseResponse(cidStreamPair, json);
         } else {
           throw new Error(
             `Failed to send request. Status ${response.statusText}`
@@ -176,20 +176,20 @@ export default class EthereumAnchorService implements AnchorService {
   }
 
   /**
-   * Start polling for CidDocPair mapping
-   * @param cidDoc - CID to Doc mapping
+   * Start polling for CidAndStream mapping
+   * @param cidStream - CID to Stream mapping
    * @param pollTime - Single poll timeout
    * @param maxPollingTime - Global timeout for max polling in milliseconds
    * @private
    */
   private _poll(
-    cidDoc: CidDoc,
+    cidStream: CidAndStream,
     pollTime?: number,
     maxPollingTime?: number
   ): Observable<AnchorServiceResponse> {
     const started = new Date().getTime();
     const maxTime = started + (maxPollingTime | DEFAULT_MAX_POLL_TIME);
-    const requestUrl = [this.requestsApiEndpoint, cidDoc.cid.toString()].join(
+    const requestUrl = [this.requestsApiEndpoint, cidStream.cid.toString()].join(
       "/"
     );
 
@@ -204,7 +204,7 @@ export default class EthereumAnchorService implements AnchorService {
             throw new Error("Request not found");
           } else {
             const json = await response.json();
-            return this.parseResponse(cidDoc, json);
+            return this.parseResponse(cidStream, json);
           }
         }
       })
@@ -315,21 +315,21 @@ export default class EthereumAnchorService implements AnchorService {
   /**
    * Parse JSON that CAS returns.
    */
-  private parseResponse(cidDoc: CidDoc, json: any): AnchorServiceResponse {
+  private parseResponse(cidStream: CidAndStream, json: any): AnchorServiceResponse {
     switch (json.status) {
       case "PENDING":
         return {
           status: AnchorStatus.PENDING,
-          streamId: cidDoc.streamId,
-          cid: cidDoc.cid,
+          streamId: cidStream.streamId,
+          cid: cidStream.cid,
           message: json.message,
           anchorScheduledFor: json.scheduledAt,
         };
       case "PROCESSING":
         return {
           status: AnchorStatus.PROCESSING,
-          streamId: cidDoc.streamId,
-          cid: cidDoc.cid,
+          streamId: cidStream.streamId,
+          cid: cidStream.cid,
           message: json.message,
         };
       case "FAILED":
@@ -339,8 +339,8 @@ export default class EthereumAnchorService implements AnchorService {
         const anchorRecordCid = new CID(anchorRecord.cid.toString());
         return {
           status: AnchorStatus.ANCHORED,
-          streamId: cidDoc.streamId,
-          cid: cidDoc.cid,
+          streamId: cidStream.streamId,
+          cid: cidStream.cid,
           message: json.message,
           anchorRecord: anchorRecordCid,
         };

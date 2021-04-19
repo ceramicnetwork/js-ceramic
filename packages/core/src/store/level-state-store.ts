@@ -6,7 +6,7 @@ import * as fs from 'fs'
 import path from "path";
 
 /**
- * Ceramic store for saving document state to a local leveldb instance
+ * Ceramic store for saving stream state to a local leveldb instance
  */
 export class LevelStateStore implements StateStore {
     #store: Level
@@ -34,7 +34,7 @@ export class LevelStateStore implements StateStore {
     }
 
     /**
-     * Pin document
+     * Pin stream
      * @param streamStateHolder - Document instance
      */
     async save(streamStateHolder: StreamStateHolder): Promise<void> {
@@ -42,7 +42,7 @@ export class LevelStateStore implements StateStore {
     }
 
     /**
-     * Load document state
+     * Load stream state
      * @param streamId - Document ID
      */
     async load(streamId: StreamID): Promise<StreamState> {
@@ -62,7 +62,7 @@ export class LevelStateStore implements StateStore {
     }
 
     /**
-     * Unpin document
+     * Unpin stream
      * @param streamId - Document ID
      */
     async remove(streamId: StreamID): Promise<void> {
@@ -70,7 +70,7 @@ export class LevelStateStore implements StateStore {
     }
 
     /**
-     * List pinned document
+     * List pinned stream
      * @param streamId - Document ID
      */
     async list(streamId?: StreamID): Promise<string[]> {

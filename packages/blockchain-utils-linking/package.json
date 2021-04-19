@@ -17,7 +17,7 @@
     "lib"
   ],
   "scripts": {
-    "test": "../../node_modules/.bin/jest --env=node",
+    "test": "../../node_modules/.bin/jest",
     "build": "../../node_modules/.bin/tsc -p tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
@@ -31,22 +31,23 @@
   },
   "devDependencies": {
     "@ethersproject/providers": "5.0.23",
-    "@glif/filecoin-address": "^1.1.0-beta.15",
-    "@glif/local-managed-provider": "1.1.0-beta.15",
-    "@polkadot/api": "^3.0.1",
-    "@polkadot/keyring": "^5.0.1",
-    "@polkadot/types": "^3.0.1",
-    "@polkadot/util": "^5.0.1",
-    "@polkadot/util-crypto": "^5.2.3",
+    "@glif/filecoin-address": "1.1.0",
+    "@glif/local-managed-provider": "1.1.0",
+    "@polkadot/api": "^4.6.2",
+    "@polkadot/keyring": "^6.2.1",
+    "@polkadot/types": "^4.6.2",
+    "@polkadot/util": "^6.2.1",
+    "@polkadot/util-crypto": "^6.2.1",
     "@smontero/eosio-local-provider": "^0.0.3",
     "@tendermint/sig": "^0.6.0",
-    "@zondax/filecoin-signing-tools": "^0.13.0",
+    "@zondax/filecoin-signing-tools": "^0.14.0",
     "eth-sig-util": "^3.0.0",
     "ganache-core": "^2.13.1",
     "near-api-js": "^0.36.3"
   },
   "jest": {
-    "testEnvironment": "jest-environment-uint8array"
+    "testEnvironment": "node",
+    "resolver": "<rootDir>/../../tools/jest-resolver.js"
   },
   "gitHead": "34eeee25597b0a60def72906c26d3afd6230aaf1"
 }
