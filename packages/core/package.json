@@ -83,10 +83,7 @@
     "testMatch": [
       "**/?(*.)+(spec|test).[jt]s?(x)"
     ],
-    "moduleNameMapper": {
-      "multiformats/legacy": "multiformats/cjs/src/legacy.js",
-      "multiformats/hashes/sha2": "multiformats/cjs/src/hashes/sha2.js"
-    }
+    "resolver": "<rootDir>/../../tools/jest-resolver.js"
   },
   "gitHead": "34eeee25597b0a60def72906c26d3afd6230aaf1"
 }
