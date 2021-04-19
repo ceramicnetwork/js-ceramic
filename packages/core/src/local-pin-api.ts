@@ -9,19 +9,19 @@ import { Repository } from './state-management/repository';
 export class LocalPinApi implements PinApi {
   constructor(
     private readonly repository: Repository,
-    private readonly loadDoc: (streamId: StreamID) => Promise<RunningStateLike>,
+    private readonly loadStream: (streamId: StreamID) => Promise<RunningStateLike>,
     private readonly logger: DiagnosticsLogger,
   ) {}
 
   async add(streamId: StreamID): Promise<void> {
-    const state$ = await this.loadDoc(streamId);
+    const state$ = await this.loadStream(streamId);
     await this.repository.pin(state$);
-    this.logger.verbose(`Pinned document ${streamId.toString()}`)
+    this.logger.verbose(`Pinned stream ${streamId.toString()}`)
   }
 
   async rm(streamId: StreamID): Promise<void> {
     await this.repository.unpin(streamId);
-    this.logger.verbose(`Unpinned document ${streamId.toString()}`)
+    this.logger.verbose(`Unpinned stream ${streamId.toString()}`)
   }
 
   async ls(streamId?: StreamID): Promise<AsyncIterable<string>> {

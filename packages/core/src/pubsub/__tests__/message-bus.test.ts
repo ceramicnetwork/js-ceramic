@@ -8,7 +8,7 @@ import { bufferCount, delay, first, timeoutWith } from 'rxjs/operators';
 import * as random from '@stablelib/random';
 import CID from 'cids';
 
-const FAKE_DOC_ID = StreamID.fromString('kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s');
+const FAKE_STREAM_ID = StreamID.fromString('kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s');
 const OUTER_PEER_ID = 'OUTER_PEER_ID';
 
 const LENGTH = 2;
@@ -16,7 +16,7 @@ const MESSAGES = Array.from({ length: LENGTH }).map((_, index) => {
   return {
     typ: MsgType.QUERY as MsgType.QUERY,
     id: index.toString(),
-    doc: FAKE_DOC_ID,
+    doc: FAKE_STREAM_ID,
   };
 });
 const OUTER_MESSAGES = MESSAGES.map((message) => asIpfsMessage(message, OUTER_PEER_ID));
@@ -39,7 +39,7 @@ test('publish to pubsub', async () => {
   const message = {
     typ: MsgType.QUERY as MsgType.QUERY,
     id: random.randomString(32),
-    doc: FAKE_DOC_ID,
+    doc: FAKE_STREAM_ID,
   };
   messageBus.next(message);
   expect(pubsub.next).toBeCalledTimes(1);
@@ -54,7 +54,7 @@ test('not publish to pubsub if closed', async () => {
   const message = {
     typ: MsgType.QUERY as MsgType.QUERY,
     id: random.randomString(32),
-    doc: FAKE_DOC_ID,
+    doc: FAKE_STREAM_ID,
   };
   messageBus.unsubscribe();
   messageBus.next(message);
@@ -75,18 +75,18 @@ test('unsubscribe', async () => {
 
 describe('queryNetwork', () => {
   const FAKE_CID = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu');
-  const queryMessage = buildQueryMessage(FAKE_DOC_ID);
+  const queryMessage = buildQueryMessage(FAKE_STREAM_ID);
   const responseMessage: ResponseMessage = {
     typ: MsgType.RESPONSE,
     id: queryMessage.id,
-    tips: new Map().set(FAKE_DOC_ID.toString(), FAKE_CID),
+    tips: new Map().set(FAKE_STREAM_ID.toString(), FAKE_CID),
   };
   const pubsub = (from([responseMessage]).pipe(delay(300)) as unknown) as Pubsub;
   pubsub.next = jest.fn();
 
   test('return tip', async () => {
     const messageBus = new MessageBus(pubsub);
-    const response = await messageBus.queryNetwork(FAKE_DOC_ID).toPromise();
+    const response = await messageBus.queryNetwork(FAKE_STREAM_ID).toPromise();
     expect(pubsub.next).toBeCalledWith(queryMessage);
     expect(response).toEqual(FAKE_CID);
   });
@@ -94,7 +94,7 @@ describe('queryNetwork', () => {
   test('timeout: return undefined', async () => {
     const messageBus = new MessageBus(pubsub);
     const response = await messageBus
-      .queryNetwork(FAKE_DOC_ID)
+      .queryNetwork(FAKE_STREAM_ID)
       .pipe(timeoutWith(200, of(undefined)))
       .toPromise();
     expect(pubsub.next).toBeCalledWith(queryMessage);

@@ -69,9 +69,9 @@ export type SignedCommitContainer = DagJWSResult
 export type CeramicCommit = GenesisCommit | UnsignedCommit | AnchorCommit | SignedCommit | SignedCommitContainer
 
 /**
- * Document metadata
+ * Stream metadata
  */
-export interface DocMetadata {
+export interface StreamMetadata {
     controllers: Array<string>
     family?: string
     schema?: string
@@ -81,12 +81,12 @@ export interface DocMetadata {
 }
 
 /**
- * Document information about the next iteration
+ * Stream information about the next iteration
  */
-export interface DocNext {
+export interface StreamNext {
     content?: any
     controllers?: Array<string>
-    metadata?: DocMetadata
+    metadata?: StreamMetadata
 }
 
 export enum CommitType {
@@ -99,13 +99,13 @@ export interface LogEntry {
   timestamp?: number
 }
 /**
- * Document state
+ * Stream state
  */
 export interface StreamState {
     type: number
     content: any
-    next?: DocNext
-    metadata: DocMetadata
+    next?: StreamNext
+    metadata: StreamMetadata
     signature: SignatureStatus
     anchorStatus: AnchorStatus
     anchorScheduledFor?: number // only present when anchor status is pending
@@ -116,7 +116,7 @@ export interface StreamState {
 /**
  * Describes object which stores StreamState.
  *
- * Note: the interface should be removed once we refactor documents.
+ * Note: the interface should be removed once we refactor streams.
  *
  */
 export interface StreamStateHolder {
@@ -125,7 +125,7 @@ export interface StreamStateHolder {
 }
 
 /**
- * Describes common doctype attributes
+ * Describes common stream attributes
  */
 export abstract class Stream extends Observable<StreamState> implements StreamStateHolder {
     constructor(protected readonly state$: RunningStateLike, private _context: Context) {
@@ -142,7 +142,7 @@ export abstract class Stream extends Observable<StreamState> implements StreamSt
         return this._context.api
     }
 
-    get metadata(): DocMetadata {
+    get metadata(): StreamMetadata {
         const { next, metadata } = this.state$.value
         return cloneDeep(next?.metadata ?? metadata)
     }
@@ -181,8 +181,8 @@ export abstract class Stream extends Observable<StreamState> implements StreamSt
 
     async sync(opts: LoadOpts = {}): Promise<void> {
       opts = { sync: SyncOptions.PREFER_CACHE, ...opts }
-      const document = await this.api.loadDocument(this.id, opts)
-      this.state$.next(document.state)
+      const stream = await this.api.loadStream(this.id, opts)
+      this.state$.next(stream.state)
     }
 
     protected _getContent(): any {
@@ -191,7 +191,7 @@ export abstract class Stream extends Observable<StreamState> implements StreamSt
     }
 
     /**
-     * Makes this document read-only. After this has been called any future attempts to call
+     * Makes this stream read-only. After this has been called any future attempts to call
      * mutation methods on the instance will throw.
      */
     abstract makeReadOnly()
@@ -219,7 +219,7 @@ export interface StreamConstructor<T extends Stream> {
 }
 
 /**
- * Describes document type handler functionality
+ * Describes stream type handler functionality
  */
 export interface StreamHandler<T extends Stream> {
     /**
@@ -238,11 +238,11 @@ export interface StreamHandler<T extends Stream> {
     stream_constructor: StreamConstructor<T>
 
     /**
-     * Applies commit to the document (genesis|signed|anchored)
+     * Applies commit to the stream (genesis|signed|anchored)
      * @param commit - Commit instance
      * @param cid - Record CID
      * @param context - Ceramic context
-     * @param state - Document state
+     * @param state - Stream state
      */
     applyCommit(commit: CeramicCommit, cid: CID, context: Context, state?: StreamState): Promise<StreamState>
 }

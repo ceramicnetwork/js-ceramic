@@ -61,7 +61,7 @@ async function verifyAnchorCommit(
 
 /**
  * Given two different StreamStates representing two different conflicting histories of the same
- * document, pick which commit to accept, in accordance with our conflict resolution strategy
+ * stream, pick which commit to accept, in accordance with our conflict resolution strategy
  * @param state1 - first log's state
  * @param state2 - second log's state
  * @returns the StreamState containing the log that is selected
@@ -83,7 +83,7 @@ export async function pickLogToAccept(state1: StreamState, state2: StreamState):
     if (proof1.chainId != proof2.chainId) {
       // TODO: Add logic to handle conflicting updates anchored on different chains
       throw new Error(
-        'Conflicting logs on the same document are anchored on different chains. Chain1: ' +
+        'Conflicting logs on the same stream are anchored on different chains. Chain1: ' +
           proof1.chainId +
           ', chain2: ' +
           proof2.chainId,
@@ -170,7 +170,7 @@ export class HistoryLog {
  *
  * @param dispatcher - Get commit from IPFS
  * @param cid - Commit CID
- * @param stateLog - Log from the current document state
+ * @param stateLog - Log from the current stream state
  * @param log - Found log so far
  * @private
  */
@@ -233,7 +233,7 @@ export class ConflictResolution {
   ) {}
 
   /**
-   * Applies the log to the document and updates the state.
+   * Applies the log to the stream and updates the state.
    */
   private async applyLogToState<T extends Stream>(
     handler: StreamHandler<T>,
@@ -255,7 +255,7 @@ export class ConflictResolution {
 
       if (payload.proof) {
         // it's an anchor commit
-        // TODO: Anchor validation should be done by the doctype-handler as part of applying the anchor commit
+        // TODO: Anchor validation should be done by the StreamHandler as part of applying the anchor commit
         await verifyAnchorCommit(this.dispatcher, this.anchorService, commit);
         state = await handler.applyCommit(commit, cid, this.context, state);
       } else {
@@ -263,7 +263,7 @@ export class ConflictResolution {
         const tmpState = await handler.applyCommit(commit, cid, this.context, state);
         const isGenesis = !payload.prev;
         const effectiveState = isGenesis ? tmpState : tmpState.next;
-        // TODO: Schema validation should be done by the doctype-handler as part of applying the commit
+        // TODO: Schema validation should be done by the StreamHandler as part of applying the commit
         await this.stateValidation.validate(effectiveState, effectiveState.content);
         state = tmpState; // if validation is successful
       }
@@ -342,17 +342,17 @@ export class ConflictResolution {
    * Return state at `commitId` version.
    */
   async rewind(initialState: StreamState, commitId: CommitID): Promise<StreamState> {
-    // If 'commit' is ahead of 'doc', sync doc up to 'commit'
+    // If 'commit' is ahead of 'initialState', sync state up to 'commit'
     const baseState = (await this.applyTip(initialState, commitId.commit)) || initialState;
 
     const baseStateLog = HistoryLog.fromState(this.dispatcher, baseState);
 
-    // If 'commit' is not included in doc's log at this point, that means that conflict resolution
+    // If 'commit' is not included in stream's log at this point, that means that conflict resolution
     // rejected it.
     const commitIndex = await baseStateLog.findIndex(commitId.commit);
     if (commitIndex < 0) {
       throw new Error(
-        `Requested commit CID ${commitId.commit.toString()} not found in the log for document ${commitId.baseID.toString()}`,
+        `Requested commit CID ${commitId.commit.toString()} not found in the log for stream ${commitId.baseID.toString()}`,
       );
     }
 

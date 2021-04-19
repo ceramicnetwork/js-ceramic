@@ -1,6 +1,6 @@
-# Ceramic Tile doctype
+# Ceramic TileDocument stream type
 
-> This package contains Tile doctype implementation.
+> This package contains Tile stream implementation.
 
 ### Installation
 ```shell

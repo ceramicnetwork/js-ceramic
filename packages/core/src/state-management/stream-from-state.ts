@@ -7,9 +7,9 @@ import { StateLink } from './state-link';
  * Build Stream from the current state and update feed.
  *
  * @param context - Ceramic context
- * @param handlersMap - available doctype handlers
- * @param state - current state of the doctype
- * @param update$ - On-demand feed of updates for the document
+ * @param handlersMap - available stream handlers
+ * @param state - current state of the stream
+ * @param update$ - On-demand feed of updates for the stream
  */
 export function streamFromState<T extends Stream>(
   context: Context,

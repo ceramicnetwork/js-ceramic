@@ -139,7 +139,7 @@ beforeAll(() => {
     }
 
     const threeIdResolver = ThreeIdResolver.getResolver({
-        loadDocument: (): any => {
+        loadStream: (): any => {
             return Promise.resolve({
                 content: {
                     "publicKeys": {

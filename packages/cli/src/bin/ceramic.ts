@@ -74,8 +74,11 @@ program
         'that creating a document with identical content to an existing document will be a no-op.')
     .option('--schema <schema>', 'Schema document ID')
     .description('Create a new document')
-    .action(async (doctype, { content, onlyGenesis, controllers, deterministic, schema }) => {
-        await CeramicCliUtils.nonSchemaCreateDoc(doctype, content, controllers, onlyGenesis, deterministic, schema)
+    .action(async (streamtype, { content, onlyGenesis, controllers, deterministic, schema }) => {
+        if (streamtype != 'tile') {
+            throw new Error("CLI does not currently support creating stream types other than 'tile'")
+        }
+        await CeramicCliUtils.nonSchemaCreateDoc(content, controllers, onlyGenesis, deterministic, schema)
     })
 
 program

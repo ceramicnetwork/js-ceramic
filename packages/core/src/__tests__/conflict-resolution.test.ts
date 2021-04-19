@@ -100,10 +100,10 @@ describe('pickLogToAccept', () => {
 
     // We do not currently support multiple blockchains
     await expect(pickLogToAccept(state1, state2)).rejects.toThrow(
-      'Conflicting logs on the same document are anchored on different chains. Chain1: chain1, chain2: chain2',
+      'Conflicting logs on the same stream are anchored on different chains. Chain1: chain1, chain2: chain2',
     );
     await expect(pickLogToAccept(state2, state1)).rejects.toThrow(
-      'Conflicting logs on the same document are anchored on different chains. Chain1: chain2, chain2: chain1',
+      'Conflicting logs on the same stream are anchored on different chains. Chain1: chain2, chain2: chain1',
     );
   });
 

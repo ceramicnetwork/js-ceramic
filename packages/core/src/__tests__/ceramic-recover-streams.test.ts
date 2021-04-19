@@ -54,29 +54,29 @@ afterEach(async () => {
     await ipfs2.stop();
 });
 
-it("re-request anchors on #recoverDocuments", async () => {
+it("re-request anchors on #recoverStreams", async () => {
     const stateStoreDirectory = await tmp.tmpName();
 
     // Store
     const ceramic1 = await createCeramic(ipfs1, stateStoreDirectory);
 
-    const doc1 = await TileDocument.create(ceramic1, { test: 456 });
-    doc1.subscribe();
-    await ceramic1.pin.add(doc1.id);
-    expect(doc1.state.anchorStatus).toEqual(AnchorStatus.PENDING);
+    const stream1 = await TileDocument.create(ceramic1, { test: 456 });
+    stream1.subscribe();
+    await ceramic1.pin.add(stream1.id);
+    expect(stream1.state.anchorStatus).toEqual(AnchorStatus.PENDING);
     await ceramic1.close();
 
     // Retrieve after being closed
     const ceramic2 = await createCeramic(ipfs2, stateStoreDirectory);
 
-    const doc2 = await ceramic2.loadDocument(doc1.id);
-    doc2.subscribe()
-    expect(doc2.state.anchorStatus).toEqual(AnchorStatus.PENDING);
-    // doc2 is exact replica of doc1
-    expectEqualStates(doc1.state, doc2.state);
+    const stream2 = await ceramic2.loadStream(stream1.id);
+    stream2.subscribe()
+    expect(stream2.state.anchorStatus).toEqual(AnchorStatus.PENDING);
+    // stream2 is exact replica of stream1
+    expectEqualStates(stream1.state, stream2.state);
     // Now CAS anchors
-    await anchorUpdate(ceramic2, doc2);
-    // And the document is anchored
-    expect(doc2.state.anchorStatus).toEqual(AnchorStatus.ANCHORED);
+    await anchorUpdate(ceramic2, stream2);
+    // And the stream is anchored
+    expect(stream2.state.anchorStatus).toEqual(AnchorStatus.ANCHORED);
     await ceramic2.close();
 });

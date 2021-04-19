@@ -10,7 +10,6 @@ import {
   CommitType,
   TestUtils,
 } from '@ceramicnetwork/common';
-import { TileDoctype } from '@ceramicnetwork/doctype-tile';
 
 let stateStore: StateStore
 let pinning: PinningBackend
@@ -70,9 +69,9 @@ test('#close', async () => {
 describe('#add', () => {
     test('save and pin', async () => {
         const pinStore = new PinStore(stateStore, pinning, jest.fn(), jest.fn())
-        const document = new FakeType(TestUtils.runningState(state), {})
-        await pinStore.add(document)
-        expect(stateStore.save).toBeCalledWith(document)
+        const stream = new FakeType(TestUtils.runningState(state), {})
+        await pinStore.add(stream)
+        expect(stateStore.save).toBeCalledWith(stream)
         expect(pinning.pin).toBeCalledTimes(1)
         expect(pinning.pin.mock.calls[0][0].toString()).toEqual(state.log[0].cid.toString())
     })
@@ -97,9 +96,9 @@ describe('#add', () => {
             }
         })
         const pinStore = new PinStore(stateStore, pinning, retrieve, resolve)
-        const document = new FakeType(TestUtils.runningState(state), {})
-        await pinStore.add(document)
-        expect(stateStore.save).toBeCalledWith(document)
+        const stream = new FakeType(TestUtils.runningState(state), {})
+        await pinStore.add(stream)
+        expect(stateStore.save).toBeCalledWith(stream)
         expect(pinning.pin).toBeCalledTimes(4)
         expect(pinning.pin.mock.calls[0][0].toString()).toEqual(stateWithProof.log[0].cid.toString())
         expect(pinning.pin.mock.calls[1][0].toString()).toEqual(stateWithProof.log[1].cid.toString())
@@ -134,9 +133,9 @@ describe('#add', () => {
             }
         })
         const pinStore = new PinStore(stateStore, pinning, retrieve, resolve)
-        const document = new FakeType(TestUtils.runningState(state), {})
-        await pinStore.add(document)
-        expect(stateStore.save).toBeCalledWith(document)
+        const stream = new FakeType(TestUtils.runningState(state), {})
+        await pinStore.add(stream)
+        expect(stateStore.save).toBeCalledWith(stream)
         expect(pinning.pin).toBeCalledTimes(6)
         expect(pinning.pin.mock.calls[0][0].toString()).toEqual(stateWithProof.log[0].cid.toString())
         expect(pinning.pin.mock.calls[1][0].toString()).toEqual(stateWithProof.log[1].cid.toString())
@@ -149,19 +148,19 @@ describe('#add', () => {
 
 test('#rm', async () => {
     const pinStore = new PinStore(stateStore, pinning, jest.fn(), jest.fn())
-    const document = new FakeType(TestUtils.runningState(state), {})
+    const stream = new FakeType(TestUtils.runningState(state), {})
     stateStore.load = jest.fn(async () => state)
-    await pinStore.rm(document.id)
-    expect(stateStore.remove).toBeCalledWith(document.id)
+    await pinStore.rm(stream.id)
+    expect(stateStore.remove).toBeCalledWith(stream.id)
     expect(pinning.unpin).toBeCalledWith(state.log[0].cid)
 })
 
 test('#ls', async () => {
     const pinStore = new PinStore(stateStore, pinning, jest.fn(), jest.fn())
-    const document = new FakeType(TestUtils.runningState(state), {})
+    const stream = new FakeType(TestUtils.runningState(state), {})
     const list = ['1', '2', '3']
     stateStore.list = jest.fn(async () => list)
-    const result = await pinStore.ls(document.id)
+    const result = await pinStore.ls(stream.id)
     expect(result).toEqual(list)
-    expect(stateStore.list).toBeCalledWith(document.id)
+    expect(stateStore.list).toBeCalledWith(stream.id)
 })

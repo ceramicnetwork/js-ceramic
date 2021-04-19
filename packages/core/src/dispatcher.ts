@@ -91,7 +91,7 @@ export class Dispatcher {
   /**
    * Publishes Tip commit to pub/sub topic.
    *
-   * @param streamId  - Document ID
+   * @param streamId  - Stream ID
    * @param tip - Commit CID
    */
   publishTip (streamId: StreamID, tip: CID): Subscription {
@@ -169,7 +169,7 @@ export class Dispatcher {
       }
       this.repository.stateManager.update(expectedStreamID, newTip)
       this.messageBus.outstandingQueries.delete(queryId)
-      // TODO Iterate over all documents in 'tips' object and process the new tip for each
+      // TODO Iterate over all streams in 'tips' object and process the new tip for each
     }
   }
 

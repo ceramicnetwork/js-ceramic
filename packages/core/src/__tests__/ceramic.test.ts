@@ -99,10 +99,10 @@ describe('Ceramic integration', () => {
 
     const ceramic1 = await createCeramic(ipfs1)
     const ceramic2 = await createCeramic(ipfs2)
-    const doc1 = await TileDocument.create(ceramic1, {test: 123}, null, { anchor: false, publish: false })
-    const doc2 = await TileDocument.load(ceramic2, doc1.id)
-    expect(doc1.content).toEqual(doc2.content)
-    expectEqualStates(doc1.state, doc2.state)
+    const stream1 = await TileDocument.create(ceramic1, {test: 123}, null, { anchor: false, publish: false })
+    const stream2 = await TileDocument.load(ceramic2, stream1.id)
+    expect(stream1.content).toEqual(stream2.content)
+    expectEqualStates(stream1.state, stream2.state)
     await ceramic1.close()
     await ceramic2.close()
   })
@@ -111,15 +111,15 @@ describe('Ceramic integration', () => {
     const ceramic1 = await createCeramic(ipfs1)
     const ceramic2 = await createCeramic(ipfs2)
 
-    const doc1 = await TileDocument.create(ceramic1, {test: 456})
+    const stream1 = await TileDocument.create(ceramic1, {test: 456})
 
-    await anchorUpdate(ceramic1, doc1)
+    await anchorUpdate(ceramic1, stream1)
 
-    // we can't load document from id since nodes are not connected
+    // we can't load stream from id since nodes are not connected
     // so we won't find the genesis object from it's CID
-    const doc2 = await TileDocument.create(ceramic2, {test: 456}, null, { anchor: false, publish: false })
-    expect(doc1.content).toEqual(doc2.content)
-    expect(doc2.state).toEqual(expect.objectContaining({ content: { test: 456 } }))
+    const stream2 = await TileDocument.create(ceramic2, {test: 456}, null, { anchor: false, publish: false })
+    expect(stream1.content).toEqual(stream2.content)
+    expect(stream2.state).toEqual(expect.objectContaining({ content: { test: 456 } }))
     await ceramic1.close()
     await ceramic2.close()
   })
@@ -134,10 +134,10 @@ describe('Ceramic integration', () => {
     const ceramic2 = await createCeramic(ipfs2)
     const ceramic3 = await createCeramic(ipfs3)
 
-    // ceramic node 2 shouldn't need to have the document open in order to forward the message
-    const doc1 = await TileDocument.create(ceramic1, {test: 789}, null, { anchor: false, publish: false })
-    const doc3 = await TileDocument.create(ceramic3, {test: 789}, null, { anchor: false, publish: false })
-    expect(doc3.content).toEqual(doc1.content)
+    // ceramic node 2 shouldn't need to have the stream open in order to forward the message
+    const stream1 = await TileDocument.create(ceramic1, {test: 789}, null, { anchor: false, publish: false })
+    const stream3 = await TileDocument.create(ceramic3, {test: 789}, null, { anchor: false, publish: false })
+    expect(stream3.content).toEqual(stream1.content)
     await ceramic1.close()
     await ceramic2.close()
     await ceramic3.close()
@@ -153,26 +153,26 @@ describe('Ceramic integration', () => {
     const ceramic2 = await createCeramic(ipfs2)
     const ceramic3 = await createCeramic(ipfs3)
 
-    // ceramic node 2 shouldn't need to have the document open in order to forward the message
-    const doc1 = await TileDocument.create(ceramic1, {test: 321}, {deterministic: true})
+    // ceramic node 2 shouldn't need to have the stream open in order to forward the message
+    const stream1 = await TileDocument.create(ceramic1, {test: 321}, {deterministic: true})
 
-    await anchorUpdate(ceramic1, doc1)
+    await anchorUpdate(ceramic1, stream1)
 
-    // Through a different ceramic instance create a new document with the same contents that will
+    // Through a different ceramic instance create a new stream with the same contents that will
     // therefore resolve to the same genesis record and thus the same streamId.  Make sure the new
     // Document object can see the updates made to the first Document object since they represent
     // the same Document in the network.
-    const doc3 = await TileDocument.create(ceramic3, {test: 321}, {deterministic: true})
+    const stream3 = await TileDocument.create(ceramic3, {test: 321}, {deterministic: true})
 
-    expect(doc3.content).toEqual(doc1.content)
+    expect(stream3.content).toEqual(stream1.content)
 
-    await doc1.update({ test: 'abcde' })
+    await stream1.update({ test: 'abcde' })
 
-    await anchorUpdate(ceramic1, doc1)
+    await anchorUpdate(ceramic1, stream1)
 
-    expect(doc1.content).toEqual({ test: 'abcde' })
-    await TestUtils.waitForState(doc3, 2000, state => StreamUtils.statesEqual(state, doc1.state), () => {
-      throw new Error(`doctype3.state should equal doctype1.state`)
+    expect(stream1.content).toEqual({ test: 'abcde' })
+    await TestUtils.waitForState(stream3, 2000, state => StreamUtils.statesEqual(state, stream1.state), () => {
+      throw new Error(`streamtype3.state should equal streamtype1.state`)
     })
 
     await ceramic1.close()
@@ -184,23 +184,23 @@ describe('Ceramic integration', () => {
     const ceramic1 = await createCeramic(ipfs1)
     const ceramic2 = await createCeramic(ipfs2)
 
-    const doc1 = await TileDocument.create(ceramic1, { test: 456 })
+    const stream1 = await TileDocument.create(ceramic1, { test: 456 })
 
-    await anchorUpdate(ceramic1, doc1)
+    await anchorUpdate(ceramic1, stream1)
 
-    await doc1.update({ test: 'abcde' })
+    await stream1.update({ test: 'abcde' })
 
-    await anchorUpdate(ceramic1, doc1)
+    await anchorUpdate(ceramic1, stream1)
 
-    const logCommits = await ceramic1.loadDocumentCommits(doc1.id)
+    const logCommits = await ceramic1.loadStreamCommits(stream1.id)
 
-    let doc2 = await TileDocument.createFromGenesis(ceramic2, logCommits[0].value, { anchor: false, publish: false })
+    let stream2 = await TileDocument.createFromGenesis(ceramic2, logCommits[0].value, { anchor: false, publish: false })
     for (let i = 1; i < logCommits.length; i++) {
-      doc2 = await ceramic2.applyCommit(doc2.id, logCommits[i].value, { anchor: false, publish: false })
+      stream2 = await ceramic2.applyCommit(stream2.id, logCommits[i].value, { anchor: false, publish: false })
     }
 
-    expect(doc1.content).toEqual(doc2.content)
-    expectEqualStates(doc1.state, doc2.state);
+    expect(stream1.content).toEqual(stream2.content)
+    expectEqualStates(stream1.state, stream2.state);
 
     await ceramic1.close()
     await ceramic2.close()
@@ -208,98 +208,98 @@ describe('Ceramic integration', () => {
 
 
   // TODO Can not yet
-  // it('can evict from doc cache', async () => {
+  // it('can evict from stream cache', async () => {
   //   const ceramic1 = await createCeramic(ipfs1, false, 1)
   //   const controller = ceramic1.context.did.id
   //
-  //   const docCache1 = ceramic1._docCache
-  //   const putDocToCacheSpy1 = jest.spyOn(docCache1, 'put');
-  //   const getDocFromCacheSpy1 = jest.spyOn(docCache1, 'get');
+  //   const streamCache1 = ceramic1._streamCache
+  //   const putDocToCacheSpy1 = jest.spyOn(streamCache1, 'put');
+  //   const getDocFromCacheSpy1 = jest.spyOn(streamCache1, 'get');
   //
-  //   const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { test: 456 }, metadata: { controllers: [controller], tags: ['3id'] } })
-  //   expect(doctype1).toBeDefined()
+  //   const streamtype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { test: 456 }, metadata: { controllers: [controller], tags: ['3id'] } })
+  //   expect(streamtype1).toBeDefined()
   //
   //   await anchor(ceramic1)
-  //   await syncDoc(doctype1)
+  //   await syncDoc(streamtype1)
   //
   //   expect(putDocToCacheSpy1).toBeCalledTimes(1)
   //   expect(getDocFromCacheSpy1).toBeCalledTimes(1)
-  //   expect(docCache1._baseDocCache.has(doctype1.id.baseID.toString())).toBeTruthy()
-  //   expect(docCache1._commitDocCache.has(doctype1.id.toString())).toBeFalsy()
+  //   expect(streamCache1._baseDocCache.has(streamtype1.id.baseID.toString())).toBeTruthy()
+  //   expect(streamCache1._commitDocCache.has(streamtype1.id.toString())).toBeFalsy()
   //
   //   putDocToCacheSpy1.mockClear()
   //   getDocFromCacheSpy1.mockClear()
   //
-  //   const doctype2 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { test: 3456789 }, metadata: { controllers: [controller], tags: ['3id'] } })
-  //   expect(doctype2).toBeDefined()
+  //   const streamtype2 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { test: 3456789 }, metadata: { controllers: [controller], tags: ['3id'] } })
+  //   expect(streamtype2).toBeDefined()
   //
   //   await anchor(ceramic1)
-  //   await syncDoc(doctype2)
+  //   await syncDoc(streamtype2)
   //
   //   expect(putDocToCacheSpy1).toBeCalledTimes(1)
   //   expect(getDocFromCacheSpy1).toBeCalledTimes(1)
-  //   expect(docCache1._baseDocCache.has(doctype1.id.baseID.toString())).toBeFalsy()
-  //   expect(docCache1._baseDocCache.has(doctype2.id.baseID.toString())).toBeTruthy()
-  //   expect(docCache1._commitDocCache.has(doctype1.id.toString())).toBeFalsy()
-  //   expect(docCache1._commitDocCache.has(doctype2.id.toString())).toBeFalsy()
+  //   expect(streamCache1._baseDocCache.has(streamtype1.id.baseID.toString())).toBeFalsy()
+  //   expect(streamCache1._baseDocCache.has(streamtype2.id.baseID.toString())).toBeTruthy()
+  //   expect(streamCache1._commitDocCache.has(streamtype1.id.toString())).toBeFalsy()
+  //   expect(streamCache1._commitDocCache.has(streamtype2.id.toString())).toBeFalsy()
   //
   //   await ceramic1.close()
   // })
 
   // TODO Can not yet
-  // it('can pin/unpin doc to/from cache', async () => {
+  // it('can pin/unpin stream to/from cache', async () => {
   //   const ceramic1 = await createCeramic(ipfs1, false, 1)
   //   const controller = ceramic1.context.did.id
   //
-  //   const docCache1 = ceramic1._docCache
-  //   const putDocToCacheSpy1 = jest.spyOn(docCache1, 'put');
-  //   const getDocFromCacheSpy1 = jest.spyOn(docCache1, 'get');
-  //   const pinDocToCacheSpy1 = jest.spyOn(docCache1, 'pin');
-  //   const unpinDocToCacheSpy1 = jest.spyOn(docCache1, 'unpin');
+  //   const streamCache1 = ceramic1._streamCache
+  //   const putDocToCacheSpy1 = jest.spyOn(streamCache1, 'put');
+  //   const getDocFromCacheSpy1 = jest.spyOn(streamCache1, 'get');
+  //   const pinDocToCacheSpy1 = jest.spyOn(streamCache1, 'pin');
+  //   const unpinDocToCacheSpy1 = jest.spyOn(streamCache1, 'unpin');
   //
-  //   const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { test: 456 }, metadata: { controllers: [controller], tags: ['3id'] } })
-  //   expect(doctype1).toBeDefined()
+  //   const streamtype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { test: 456 }, metadata: { controllers: [controller], tags: ['3id'] } })
+  //   expect(streamtype1).toBeDefined()
   //
   //   await anchor(ceramic1)
-  //   await syncDoc(doctype1)
+  //   await syncDoc(streamtype1)
   //
   //   expect(putDocToCacheSpy1).toBeCalledTimes(1)
   //   expect(getDocFromCacheSpy1).toBeCalledTimes(1)
-  //   expect(docCache1._baseDocCache.has(doctype1.id.baseID.toString())).toBeTruthy()
-  //   expect(docCache1._commitDocCache.has(doctype1.id.toString())).toBeFalsy()
+  //   expect(streamCache1._baseDocCache.has(streamtype1.id.baseID.toString())).toBeTruthy()
+  //   expect(streamCache1._commitDocCache.has(streamtype1.id.toString())).toBeFalsy()
   //
   //   putDocToCacheSpy1.mockClear()
   //   getDocFromCacheSpy1.mockClear()
   //
-  //   await ceramic1.pin.add(doctype1.id)
+  //   await ceramic1.pin.add(streamtype1.id)
   //
   //   expect(putDocToCacheSpy1).toBeCalledTimes(0)
   //   expect(getDocFromCacheSpy1).toBeCalledTimes(1)
   //   expect(pinDocToCacheSpy1).toBeCalledTimes(1)
   //   expect(unpinDocToCacheSpy1).toBeCalledTimes(0)
-  //   expect(docCache1._pinnedDocCache[doctype1.id.baseID.toString()]).toBeDefined()
-  //   expect(docCache1._baseDocCache.has(doctype1.id.baseID.toString())).toBeFalsy()
-  //   expect(docCache1._commitDocCache.has(doctype1.id.toString())).toBeFalsy()
+  //   expect(streamCache1._pinnedDocCache[streamtype1.id.baseID.toString()]).toBeDefined()
+  //   expect(streamCache1._baseDocCache.has(streamtype1.id.baseID.toString())).toBeFalsy()
+  //   expect(streamCache1._commitDocCache.has(streamtype1.id.toString())).toBeFalsy()
   //
   //   putDocToCacheSpy1.mockClear()
   //   getDocFromCacheSpy1.mockClear()
   //   pinDocToCacheSpy1.mockClear()
   //   unpinDocToCacheSpy1.mockClear()
   //
-  //   await ceramic1.pin.rm(doctype1.id)
+  //   await ceramic1.pin.rm(streamtype1.id)
   //
   //   expect(putDocToCacheSpy1).toBeCalledTimes(1)
   //   expect(getDocFromCacheSpy1).toBeCalledTimes(0)
   //   expect(pinDocToCacheSpy1).toBeCalledTimes(0)
   //   expect(unpinDocToCacheSpy1).toBeCalledTimes(1)
-  //   expect(docCache1._pinnedDocCache[doctype1.id.baseID.toString()]).toBeUndefined()
-  //   expect(docCache1._baseDocCache.has(doctype1.id.baseID.toString())).toBeTruthy()
-  //   expect(docCache1._commitDocCache.has(doctype1.id.toString())).toBeFalsy()
+  //   expect(streamCache1._pinnedDocCache[streamtype1.id.baseID.toString()]).toBeUndefined()
+  //   expect(streamCache1._baseDocCache.has(streamtype1.id.baseID.toString())).toBeTruthy()
+  //   expect(streamCache1._commitDocCache.has(streamtype1.id.toString())).toBeFalsy()
   //
   //   await ceramic1.close()
   // })
 
-  it('can utilize doc commit cache', async () => {
+  it('can utilize stream commit cache', async () => {
     await swarmConnect(ipfs1, ipfs2)
     const ceramic1 = await createCeramic(ipfs1, false, 2)
     const ceramic2 = await createCeramic(ipfs2, false, 1)
@@ -312,10 +312,10 @@ describe('Ceramic integration', () => {
     const addSpy2 = jest.spyOn(repository2, 'add');
     const loadSpy2 = jest.spyOn(repository2, 'load');
 
-    const doc1 = await TileDocument.create(ceramic1, { test: 456 }, null, { publish: false })
-    expect(doc1).toBeDefined()
+    const stream1 = await TileDocument.create(ceramic1, { test: 456 }, null, { publish: false })
+    expect(stream1).toBeDefined()
 
-    await anchorUpdate(ceramic1, doc1)
+    await anchorUpdate(ceramic1, stream1)
 
     expect(addSpy1).toBeCalledTimes(1)
     expect(loadSpy1).toBeCalledTimes(1)
@@ -323,13 +323,13 @@ describe('Ceramic integration', () => {
     addSpy1.mockClear()
     loadSpy1.mockClear()
 
-    await doc1.update({ test: 'abcde' }, null, { publish: false })
+    await stream1.update({ test: 'abcde' }, null, { publish: false })
 
-    await anchorUpdate(ceramic1, doc1)
+    await anchorUpdate(ceramic1, stream1)
 
-    const prevCommitStreamId1 = doc1.id.atCommit(doc1.state.log[3].cid)
+    const prevCommitStreamId1 = stream1.id.atCommit(stream1.state.log[3].cid)
     expect(addSpy2).not.toBeCalled()
-    const loadedDoc1 = await ceramic2.loadDocument(prevCommitStreamId1)
+    const loadedDoc1 = await ceramic2.loadStream(prevCommitStreamId1)
     expect(loadedDoc1).toBeDefined()
 
     expect(loadSpy2).toBeCalled()
@@ -339,7 +339,7 @@ describe('Ceramic integration', () => {
     await ceramic2.close()
   })
 
-  it('cannot utilize disabled doc commit cache', async () => {
+  it('cannot utilize disabled stream commit cache', async () => {
     await swarmConnect(ipfs1, ipfs2)
     const ceramic1 = await createCeramic(ipfs1, false, 2)
     const ceramic2 = await createCeramic(ipfs2, false, 1, false)
@@ -352,26 +352,26 @@ describe('Ceramic integration', () => {
     const addSpy2 = jest.spyOn(repository2, 'add');
     const loadSpy2 = jest.spyOn(repository2, 'load');
 
-    const doc1 = await TileDocument.create(ceramic1, { test: 456 })
+    const stream1 = await TileDocument.create(ceramic1, { test: 456 })
     expect(loadSpy1).toBeCalledTimes(1)
     expect(addSpy1).toBeCalledTimes(1)
-    expect(doc1).toBeDefined()
+    expect(stream1).toBeDefined()
 
-    await anchorUpdate(ceramic1, doc1)
+    await anchorUpdate(ceramic1, stream1)
 
     addSpy1.mockClear()
     loadSpy1.mockClear()
 
-    await doc1.update({ test: 'abcde' })
+    await stream1.update({ test: 'abcde' })
     expect(loadSpy1).toBeCalledTimes(1)
     expect(addSpy1).toBeCalledTimes(0)
 
-    await anchorUpdate(ceramic1, doc1)
+    await anchorUpdate(ceramic1, stream1)
 
-    const prevCommitStreamId1 = doc1.id.atCommit(doc1.state.log[3].cid)
+    const prevCommitStreamId1 = stream1.id.atCommit(stream1.state.log[3].cid)
     expect(addSpy2).not.toBeCalled()
-    const doc2 = await ceramic2.loadDocument(prevCommitStreamId1)
-    expect(doc2).toBeDefined()
+    const stream2 = await ceramic2.loadStream(prevCommitStreamId1)
+    expect(stream2).toBeDefined()
 
     expect(loadSpy2).toBeCalled()
     expect(addSpy2).toBeCalledTimes(1)
@@ -380,7 +380,7 @@ describe('Ceramic integration', () => {
     await ceramic2.close()
   })
 
-  it('validates schema on doc change', async () => {
+  it('validates schema on stream change', async () => {
     const ceramic = await createCeramic(ipfs1)
 
     const NoteSchema = {
@@ -402,11 +402,11 @@ describe('Ceramic integration', () => {
     }
     const noteSchema = await TileDocument.create(ceramic, NoteSchema)
 
-    const doc = await TileDocument.create(ceramic,
+    const stream = await TileDocument.create(ceramic,
         { date: '2021-01-06T14:28:00.000Z', text: 'hello first' },
         { schema: noteSchema.commitId.toUrl()})
 
-    await expect(doc.update({ date: 'invalid-date' })).rejects.toThrow()
+    await expect(stream.update({ date: 'invalid-date' })).rejects.toThrow()
     await ceramic.close();
   })
 

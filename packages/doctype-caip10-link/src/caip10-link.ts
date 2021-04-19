@@ -16,7 +16,7 @@ import { AccountID } from "caip";
 import { DID } from "dids";
 
 const throwReadOnlyError = (): Promise<void> => {
-    throw new Error('Historical document commits cannot be modified. Load the document without specifying a commit to make updates.')
+    throw new Error('Historical stream commits cannot be modified. Load the stream without specifying a commit to make updates.')
 }
 
 const DEFAULT_CREATE_OPTS = { anchor: false, publish: true, sync: SyncOptions.PREFER_CACHE }
@@ -58,7 +58,7 @@ export class Caip10Link extends Stream {
     /**
      * Create Caip10Link from the genesis commit
      * @param ceramic - Instance of CeramicAPI used to communicate with the Ceramic network
-     * @param genesisCommit - Genesis commit (first commit in document log)
+     * @param genesisCommit - Genesis commit (first commit in stream log)
      * @param opts - Additional options
      */
     static async fromGenesis(ceramic: CeramicApi,
@@ -114,7 +114,7 @@ export class Caip10Link extends Stream {
             throw new Error(`StreamID ${streamRef.toString()} does not refer to a '${Caip10Link.STREAM_TYPE_NAME}' doctype, but to a ${streamRef.typeName}`)
         }
 
-        return ceramic.loadDocument<Caip10Link>(streamRef, opts)
+        return ceramic.loadStream<Caip10Link>(streamRef, opts)
     }
 
     /**
@@ -136,7 +136,7 @@ export class Caip10Link extends Stream {
     }
 
     /**
-     * Makes this document read-only. After this has been called any future attempts to call
+     * Makes this stream read-only. After this has been called any future attempts to call
      * mutation methods on the instance will throw.
      */
     makeReadOnly() {

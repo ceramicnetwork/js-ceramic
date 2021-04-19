@@ -66,7 +66,7 @@ export interface AnchorService {
 
   /**
    * Request anchor commit on blockchain
-   * @param streamId - Document ID
+   * @param streamId - Stream ID
    * @param tip - CID tip
    */
   requestAnchor(streamId: StreamID, tip: CID): Observable<AnchorServiceResponse>;

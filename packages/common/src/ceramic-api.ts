@@ -74,34 +74,34 @@ export interface CeramicApi extends CeramicSigner {
 
     /**
      * Loads Stream instance
-     * @param streamId - Document ID
+     * @param streamId - Stream ID
      * @param opts - Initialization options
      */
-    loadDocument<T extends Stream>(streamId: StreamID | CommitID | string, opts?: LoadOpts): Promise<T>;
+    loadStream<T extends Stream>(streamId: StreamID | CommitID | string, opts?: LoadOpts): Promise<T>;
 
     /**
-     * Load all document commits by document ID
-     * @param streamId - Document ID
+     * Load all stream commits by stream ID
+     * @param streamId - Stream ID
      */
-    loadDocumentCommits(streamId: StreamID | string): Promise<Array<Record<string, any>>>;
+    loadStreamCommits(streamId: StreamID | string): Promise<Array<Record<string, any>>>;
 
     /**
-     * Load all document types instances for given multiqueries
+     * Load all stream types instances for given multiqueries
      * @param queries - Array of MultiQueries
      * @param timeout - Timeout in milliseconds
      */
     multiQuery(queries: Array<MultiQuery>, timeout?: number):  Promise<Record<string, Stream>>;
 
     /**
-     * Applies commit on the existing document
-     * @param streamId - Document ID
+     * Applies commit on the existing stream
+     * @param streamId - Stream ID
      * @param commit - Commit to be applied
      * @param opts - Initialization options
      */
     applyCommit<T extends Stream>(streamId: StreamID | string, commit: CeramicCommit, opts?: CreateOpts | UpdateOpts): Promise<T>;
 
     /**
-     * Sets the DID instance that will be used to author commits to documents. The DID instance
+     * Sets the DID instance that will be used to author commits to stream. The DID instance
      * also includes the DID Resolver that will be used to verify commits from others.
      * @param did
      */
@@ -109,7 +109,7 @@ export interface CeramicApi extends CeramicSigner {
 
     /**
      * @returns An array of the CAIP-2 chain IDs of the blockchains that are supported for anchoring
-     * documents.
+     * stream.
      */
     getSupportedChains(): Promise<Array<string>>;
 
@@ -121,17 +121,17 @@ export interface CeramicApi extends CeramicSigner {
 
 export interface MultiQuery {
     /**
-     * The StreamID of the document to load
+     * The StreamID of the stream to load
      */
     streamId: StreamID | string
 
     /**
-     * An array of paths used to look for linked documents
+     * An array of paths used to look for linked stream
      */
     paths?: Array<string>
 
     /**
-     * Load a previous version of the document based on unix timestamp
+     * Load a previous version of the stream based on unix timestamp
      */
     atTime?: number
 }
