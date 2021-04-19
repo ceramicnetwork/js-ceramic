@@ -134,14 +134,7 @@ describe('Ceramic API', () => {
 
     it('cannot create document with invalid schema', async () => {
       const schemaDoc = await TileDocument.create(ceramic, stringMapSchema)
-
-      try {
-        await TileDocument.create(ceramic, {a: 1}, {schema: schemaDoc.commitId})
-        fail('Should not be able to create an invalid document')
-      } catch (e) {
-        console.log(e)
-        expect(e.message).toEqual('Validation Error: data[\'a\'] should be string')
-      }
+      await expect(TileDocument.create(ceramic, {a: 1}, {schema: schemaDoc.commitId})).rejects.toThrow('Validation Error: data/a must be string')
     })
 
     it('can create document with valid schema', async () => {
@@ -174,13 +167,7 @@ describe('Ceramic API', () => {
     it('cannot assign schema if content is not valid', async () => {
       const doc = await TileDocument.create(ceramic, {a: 1})
       const schemaDoc = await TileDocument.create(ceramic, stringMapSchema)
-
-      try {
-        await doc.update(doc.content, {schema: schemaDoc.commitId})
-        fail('Should not be able to update the document with invalid content')
-      } catch (e) {
-        expect(e.message).toEqual('Validation Error: data[\'a\'] should be string')
-      }
+      await expect(doc.update(doc.content, {schema: schemaDoc.commitId})).rejects.toThrow(`Validation Error: data/a must be string`)
     })
 
     it('can update valid content and assign schema at the same time', async () => {
