@@ -1,10 +1,10 @@
-# Ceramic Tile doctype handler
+# Ceramic Tile Document stream handler
 
-> This package contains Tile doctype handler implementation.
+> This package contains Tile Document stream handler implementation.
 
 ### Installation
 ```shell
-npm install @ceramicnetwork/doctype-tile-handler
+npm install @ceramicnetwork/stream-tile-handler
 ```
 
 ## Contributing

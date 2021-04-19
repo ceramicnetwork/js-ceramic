@@ -12,7 +12,7 @@ $ npm install @ceramicnetwork/core
 ### Usage
 ```
 import Ceramic from '@ceramicnetwork/core'
-import TileDocument from '@ceramicnetwork/doctype-tile'
+import TileDocument from '@ceramicnetwork/stream-tile'
 
 import IPFS from 'ipfs'
 import dagJose from 'dag-jose'

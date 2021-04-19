@@ -4,7 +4,7 @@
 
 ### Installation
 ```shell
-npm install @ceramicnetwork/doctype-tile
+npm install @ceramicnetwork/stream-tile
 ```
 
 ## Contributing
