@@ -5,11 +5,11 @@ exports[`EthereumAuthProvider authenticate 1`] = `"0x92d414fa574ea420dae28a58454
 exports[`EthereumAuthProvider createLink 1`] = `
 Object {
   "account": "0x8fe2c4516e920425e177658aaac451ca0463ed69@eip155:1337",
-  "message": "Create a new account link to your identity.
+  "message": "Link this account to your identity
 
 did:3:bafysdfwefwe 
 Timestamp: 0",
-  "signature": "0xe84fcb7b7aa7ca303e0db8008af549cddc55be485b0374a6ba260369ce2e753111c7b03f0a0cdf7c164bc99711ba012abb1d63447d6e168d121ffd3ca5e8d3441b",
+  "signature": "0x4b71ddc9261244b86d19588c828b5867bf4cda399183190ecca86fbd1b3803c16b2158118a75f99cdf2a0e41bb61afde137c5e300c28301fc1db7c85349b49d31b",
   "timestamp": 0,
   "type": "ethereum-eoa",
   "version": 2,
@@ -21,10 +21,10 @@ exports[`authenticate correctly sign auth message 1`] = `"0xcf54e7560501fa53e3f7
 exports[`createLink create erc1271 proof correctly 1`] = `
 Object {
   "account": "0xbe6c27620b271dd76f1787cdef1f4375cff3fa1f@eip155:1337",
-  "message": "Create a new account link to your identity.
+  "message": "Link this account to your identity
 
 did:3:bafysdfwefwe",
-  "signature": "0x9feb4c429a673415edb63f42b5a302b669b2e479e3b44d4ac41ec7f09d53d6494063bf53dddaed16c1d229ca4cb0841b2360d52777289c57ba539c1ddff9144f1b",
+  "signature": "0x39b83baea57e2e7ca49e904a145758d791086074cdc83d2824a65aef1a89ba397e20c32f9e60a6b1a232de3bd89b39537e3ef676ae750b1cd79266147a4312d01c",
   "type": "erc1271",
   "version": 2,
 }
@@ -33,10 +33,10 @@ did:3:bafysdfwefwe",
 exports[`createLink create ethereumEOA proof correctly 1`] = `
 Object {
   "account": "0x8fe2c4516e920425e177658aaac451ca0463ed69@eip155:1",
-  "message": "Create a new account link to your identity.
+  "message": "Link this account to your identity
 
 did:3:bafysdfwefwe",
-  "signature": "0x9feb4c429a673415edb63f42b5a302b669b2e479e3b44d4ac41ec7f09d53d6494063bf53dddaed16c1d229ca4cb0841b2360d52777289c57ba539c1ddff9144f1b",
+  "signature": "0x39b83baea57e2e7ca49e904a145758d791086074cdc83d2824a65aef1a89ba397e20c32f9e60a6b1a232de3bd89b39537e3ef676ae750b1cd79266147a4312d01c",
   "type": "ethereum-eoa",
   "version": 2,
 }

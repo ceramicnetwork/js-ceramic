@@ -39,11 +39,11 @@ exports[`authenticate testnet 1`] = `"APHUqaCLuyqunqfYJl8YAq3/p6oO9iiEAGkGQILzZA
 exports[`createLink generate proof on mainnet 1`] = `
 Object {
   "account": "f1ymbkm43ysdiruibji6c6m2iy5bxwbuv5d6cdqmy@fil:f",
-  "message": "Create a new account link to your identity.
+  "message": "Link this account to your identity
 
 did:3:bafysdfwefwe 
 Timestamp: 0",
-  "signature": "V39yp3WzEVGJ0mZ5mKywD7N4jTvVhiYDAT5iGM1MjjFDeKA38hWlrMcWZx7Bz6YaYpV2GZqZjpdC64grGxMliAA=",
+  "signature": "1fdKVV63t8PBPtfQukpgZ7rSCRLTb6Md8WIvluJ34r5g4z9/5y+Bx6th4+XcabGcYa+xs/sWDE+6N/iPoEtOtAE=",
   "timestamp": 0,
   "type": "eoa-tx",
   "version": 2,
@@ -53,11 +53,11 @@ Timestamp: 0",
 exports[`createLink generate proof on mainnet for BLS key 1`] = `
 Object {
   "account": "f3vbrwhphivdxyvs3pxpp54w73664bgxmb7ed4du4ohhu3dc6f5y264cs72yluw7mjbwnlrtzq543ys57plzka@fil:f",
-  "message": "Create a new account link to your identity.
+  "message": "Link this account to your identity
 
 did:3:bafysdfwefwe 
 Timestamp: 0",
-  "signature": "kRdlpjx9+nr+DUioLJmfcCcKkkDNbGfJZ8yZRT5MZXbZjad4CO1ycfgpff6OLmhdCOaO15/hI2YGfveaz1ZQPiKavYt87mUEWig83EzX1xAxHtW0qDTH5e5Awor5JaVt",
+  "signature": "rtfIxcc9ylobBgZLvDd6lfvFAzM6m0i8ir3cEmtDAOocGfHawtEA9T1t6dm2kowjC4kXXZ/R0XhGzclcjmETADZpDao8LN7/kxJXRmy7jV7Zeuw3341PYzEYpxXOXFuZ",
   "timestamp": 0,
   "type": "eoa-tx",
   "version": 2,
@@ -67,11 +67,11 @@ Timestamp: 0",
 exports[`createLink generate proof on testnet 1`] = `
 Object {
   "account": "t17lxg2i2otnl7mmpw2ocd6o4e3b4un3272vny6ka@fil:t",
-  "message": "Create a new account link to your identity.
+  "message": "Link this account to your identity
 
 did:3:bafysdfwefwe 
 Timestamp: 0",
-  "signature": "UhcbW66J4k9r4GtLpyuyEMpdMydKOo+LtC5+IaM1PTYqRtACwDj86EyZDgmI7gbLPpGNyA70hwcgxIkg+nF9zgA=",
+  "signature": "hdSH6KHzd8uE3U5m06MKkGqHae0WLbjrww3CTiOA22ZS6uDxcJwqrJSEj9fon2xdyTf2wP3om+AYWOVT7KpJwwA=",
   "timestamp": 0,
   "type": "eoa-tx",
   "version": 2,
