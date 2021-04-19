@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/pinning-aggregation",
-  "version": "0.2.2-rc.2",
+  "version": "1.0.0-rc.0",
   "description": "Aggregated pinning",
   "keywords": [
     "ceramic",
