@@ -11,7 +11,7 @@ import * as uint8arrays from "uint8arrays"
 import * as sha256 from '@stablelib/sha256'
 import cloneDeep from 'lodash.clonedeep'
 
-import { TileDocument } from "@ceramicnetwork/doctype-tile"
+import { TileDocument } from "@ceramicnetwork/stream-tile"
 import {AnchorCommit, CeramicApi, Context, StreamUtils, SignedCommitContainer, TestUtils} from "@ceramicnetwork/common"
 
 jest.mock('did-jwt', () => ({

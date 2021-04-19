@@ -2,7 +2,7 @@ import { Caip10LinkHandler } from '../caip10-link-handler'
 
 import cloneDeep from 'lodash.clonedeep'
 import CID from 'cids'
-import { Caip10Link } from "@ceramicnetwork/doctype-caip10-link"
+import { Caip10Link } from "@ceramicnetwork/stream-caip10-link"
 import { CeramicApi, CeramicCommit, Context, TestUtils } from '@ceramicnetwork/common';
 import sha256 from '@stablelib/sha256'
 import * as uint8arrays from 'uint8arrays'

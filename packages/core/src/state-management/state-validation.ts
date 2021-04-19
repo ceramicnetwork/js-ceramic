@@ -1,7 +1,7 @@
 import { StreamNext, StreamState, Stream } from '@ceramicnetwork/common';
 import { CommitID } from '@ceramicnetwork/streamid';
 import Utils from '../utils';
-import {TileDocument} from "@ceramicnetwork/doctype-tile";
+import {TileDocument} from "@ceramicnetwork/stream-tile";
 
 type LoadDocumentFunc = <T extends Stream>(streamId: CommitID) => Promise<T>;
 

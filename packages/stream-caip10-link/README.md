@@ -1,10 +1,10 @@
-# Ceramic Tile doctype handler
+# Ceramic Account Link stream type
 
-> This package contains Tile doctype handler implementation.
+> This package contains the Caip-10 Link stream implementation.
 
 ### Installation
 ```shell
-npm install @ceramicnetwork/doctype-tile-handler
+npm install @ceramicnetwork/stream-caip10-link
 ```
 
 ## Contributing

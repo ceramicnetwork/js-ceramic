@@ -1,6 +1,6 @@
 import type CID from 'cids'
 import { validateLink } from "@ceramicnetwork/blockchain-utils-validation"
-import { Caip10Link } from "@ceramicnetwork/doctype-caip10-link"
+import { Caip10Link } from "@ceramicnetwork/stream-caip10-link"
 import {
     AnchorStatus,
     StreamState,

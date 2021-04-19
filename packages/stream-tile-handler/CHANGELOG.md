@@ -3,6 +3,52 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.0.0-rc.2](/compare/@ceramicnetwork/stream-tile-handler@1.0.0-rc.1...@ceramicnetwork/stream-tile-handler@1.0.0-rc.2) (2021-04-19)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
+
+
+
+
+
+# [1.0.0-rc.1](/compare/@ceramicnetwork/stream-tile-handler@0.15.0-rc.4...@ceramicnetwork/stream-tile-handler@1.0.0-rc.1) (2021-04-19)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
+
+
+
+
+
+# [0.15.0-rc.4](/compare/@ceramicnetwork/stream-tile-handler@0.15.0-rc.3...@ceramicnetwork/stream-tile-handler@0.15.0-rc.4) (2021-04-19)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
+
+
+
+
+
+# 0.15.0-rc.3 (2021-04-19)
+
+
+### Features
+
+* Rename packages from 'doctype' prefix to 'streamtype' prefix dfa6453
+
+
+
+
+
+# [0.15.0-rc.2](/compare/@ceramicnetwork/doctype-tile-handler@0.14.1...@ceramicnetwork/doctype-tile-handler@0.15.0-rc.2) (2021-04-19)
+
+
+### Bug Fixes
+
+* Fix tests by using node environment for jest (#1212) aff01c6, closes #1212
+
+
+
+
+
 # [0.15.0-rc.1](/compare/@ceramicnetwork/doctype-tile-handler@0.14.1...@ceramicnetwork/doctype-tile-handler@0.15.0-rc.1) (2021-04-02)
 
 

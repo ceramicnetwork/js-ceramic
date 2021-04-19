@@ -4,7 +4,7 @@ import tmp from 'tmp-promise'
 import { IpfsApi, CeramicApi } from '@ceramicnetwork/common';
 import * as u8a from 'uint8arrays'
 import { createIPFS } from './ipfs-util';
-import { TileDocument } from '@ceramicnetwork/doctype-tile';
+import { TileDocument } from '@ceramicnetwork/stream-tile';
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import KeyDidResolver from 'key-did-resolver'
 import { Resolver } from "did-resolver"

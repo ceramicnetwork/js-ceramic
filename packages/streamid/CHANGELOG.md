@@ -3,6 +3,44 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.0.0-rc.1](/compare/@ceramicnetwork/streamid@0.5.2-rc.0...@ceramicnetwork/streamid@1.0.0-rc.1) (2021-04-19)
+
+**Note:** Version bump only for package @ceramicnetwork/streamid
+
+
+
+
+
+## 0.5.2-rc.0 (2021-04-19)
+
+**Note:** Version bump only for package @ceramicnetwork/streamid
+
+
+
+
+
+## [0.5.2-rc.1](/compare/@ceramicnetwork/docid@0.5.1...@ceramicnetwork/docid@0.5.2-rc.1) (2021-04-15)
+
+
+### Bug Fixes
+
+* Fix tests by using node environment for jest (#1212) 14309e5, closes #1212
+
+
+
+
+
+## [0.5.2-rc.0](/compare/@ceramicnetwork/docid@0.5.1...@ceramicnetwork/docid@0.5.2-rc.0) (2021-04-15)
+
+
+### Bug Fixes
+
+* Fix tests by using node environment for jest (#1212) aff01c6, closes #1212
+
+
+
+
+
 ## [0.5.1](/compare/@ceramicnetwork/docid@0.5.0...@ceramicnetwork/docid@0.5.1) (2021-04-02)
 
 

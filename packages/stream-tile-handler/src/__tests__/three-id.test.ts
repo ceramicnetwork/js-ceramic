@@ -6,7 +6,7 @@ import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import {DID} from 'dids'
 import { AnchorCommit, CeramicApi, Context, SignedCommitContainer, TestUtils } from '@ceramicnetwork/common';
 import {TileDocumentHandler} from "../tile-document-handler"
-import {TileDocument} from "@ceramicnetwork/doctype-tile";
+import {TileDocument} from "@ceramicnetwork/stream-tile";
 import cloneDeep from 'lodash.clonedeep'
 import * as sha256 from '@stablelib/sha256'
 import * as uint8arrays from "uint8arrays";

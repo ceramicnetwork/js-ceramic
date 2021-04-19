@@ -1,5 +1,5 @@
 import Ceramic, { CeramicConfig } from '../ceramic'
-import { Caip10Link } from "@ceramicnetwork/doctype-caip10-link"
+import { Caip10Link } from "@ceramicnetwork/stream-caip10-link"
 import { AnchorStatus, StreamUtils, IpfsApi } from "@ceramicnetwork/common"
 import { validateLink } from "@ceramicnetwork/blockchain-utils-validation"
 import { Ed25519Provider } from 'key-did-provider-ed25519'
