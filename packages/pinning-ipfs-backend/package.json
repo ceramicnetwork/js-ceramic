@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/pinning-ipfs-backend",
-  "version": "1.0.0-rc.0",
+  "version": "1.0.0-rc.1",
   "description": "IPFS Pinning backend",
   "keywords": [
     "ceramic",
