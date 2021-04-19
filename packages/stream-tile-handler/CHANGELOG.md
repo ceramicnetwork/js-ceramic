@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# 0.15.0-rc.3 (2021-04-19)
+
+
+### Features
+
+* Rename packages from 'doctype' prefix to 'streamtype' prefix dfa6453
+
+
+
+
+
 # [0.15.0-rc.2](/compare/@ceramicnetwork/doctype-tile-handler@0.14.1...@ceramicnetwork/doctype-tile-handler@0.15.0-rc.2) (2021-04-19)
 
 
