@@ -1,12 +1,12 @@
-import { DID, DIDProvider } from 'dids'
+import type { DID } from 'dids'
 import {
-    Doctype,
-    DoctypeHandler,
-    DocOpts,
-    DocParams,
+    Stream,
+    StreamHandler,
     CeramicCommit
-} from "./doctype"
-import { DocID, CommitID } from '@ceramicnetwork/docid'
+} from "./stream"
+import { CreateOpts, LoadOpts, UpdateOpts } from "./docopts"
+import { StreamID, CommitID } from '@ceramicnetwork/streamid'
+import { LoggerProvider } from "./logger-provider";
 
 /**
  * Describes Ceramic pinning functionality
@@ -14,21 +14,21 @@ import { DocID, CommitID } from '@ceramicnetwork/docid'
 export interface PinApi {
     /**
      * Pin document
-     * @param docId - Document ID
+     * @param streamId - Document ID
      */
-    add(docId: DocID): Promise<void>;
+    add(streamId: StreamID): Promise<void>;
 
     /**
      * Unpin document
-     * @param docId - Document ID
+     * @param streamId - Document ID
      */
-    rm(docId: DocID): Promise<void>;
+    rm(streamId: StreamID): Promise<void>;
 
     /**
      * List pinned documents
-     * @param docId - Document ID for filtering
+     * @param streamId - Document ID for filtering
      */
-    ls(docId?: DocID): Promise<AsyncIterable<string>>;
+    ls(streamId?: StreamID): Promise<AsyncIterable<string>>;
 }
 
 /**
@@ -36,88 +36,80 @@ export interface PinApi {
  */
 export type { DIDProvider } from 'dids'
 
+interface CeramicCommon {
+    loggerProvider?: LoggerProvider
+}
+
+/**
+ * Interface for an object that contains a DID that can be used to sign Ceramic commits.
+ * Any implementation of CeramicAPI will match this interface, though if no CeramicAPI instance is
+ * available users can provide any object containing an authenticated DID instance.
+ */
+export interface CeramicSigner extends CeramicCommon {
+    did: DID | null
+
+    [index: string]: any // allow arbitrary properties
+}
+
 /**
  * Describes Ceramic node API
  */
-export interface CeramicApi {
+export interface CeramicApi extends CeramicSigner {
     pin: PinApi;
-    did?: DID;
+    // loggerProvider: LoggerProvider; // TODO uncomment once logger is available on http-client
 
     /**
-     * Register Doctype handler
-     * @param doctypeHandler - DoctypeHandler instance
+     * Register Stream handler
+     * @param doctypeHandler - StreamHandler instance
      */
-    addDoctypeHandler<T extends Doctype>(doctypeHandler: DoctypeHandler<T>): void;
+    addStreamHandler<T extends Stream>(doctypeHandler: StreamHandler<T>): void;
 
     /**
-     * Create Doctype instance
-     * @param doctype - Doctype name
-     * @param params - Create parameters
-     * @param opts - Initialization options
-     */
-    createDocument<T extends Doctype>(doctype: string, params: DocParams, opts?: DocOpts): Promise<T>;
-
-    /**
-     * Create Doctype from genesis commit
-     * @param doctype - Document type
+     * Create Stream from genesis commit
+     * @param type - Stream type
      * @param genesis - Genesis commit
      * @param opts - Initialization options
      */
-    createDocumentFromGenesis<T extends Doctype>(doctype: string, genesis: any, opts?: DocOpts): Promise<T>;
+    createStreamFromGenesis<T extends Stream>(type: number, genesis: any, opts?: CreateOpts): Promise<T>;
 
     /**
-     * Loads Doctype instance
-     * @param docId - Document ID
+     * Loads Stream instance
+     * @param streamId - Stream ID
      * @param opts - Initialization options
      */
-    loadDocument<T extends Doctype>(docId: DocID | CommitID | string, opts?: DocOpts): Promise<T>;
+    loadStream<T extends Stream>(streamId: StreamID | CommitID | string, opts?: LoadOpts): Promise<T>;
 
     /**
-     * Load all document commits by document ID
-     * @param docId - Document ID
+     * Load all stream commits by stream ID
+     * @param streamId - Stream ID
      */
-    loadDocumentCommits(docId: DocID | string): Promise<Array<Record<string, any>>>;
+    loadStreamCommits(streamId: StreamID | string): Promise<Array<Record<string, any>>>;
 
     /**
-     * Load all document types instances for given multiqueries
+     * Load all stream types instances for given multiqueries
      * @param queries - Array of MultiQueries
      * @param timeout - Timeout in milliseconds
      */
-    multiQuery(queries: Array<MultiQuery>, timeout?: number):  Promise<Record<string, Doctype>>;
+    multiQuery(queries: Array<MultiQuery>, timeout?: number):  Promise<Record<string, Stream>>;
 
     /**
-     * Load all document commits by document ID
-     * @param docId - Document ID
-     * @deprecated See `loadDocumentCommits`
-     */
-    loadDocumentRecords(docId: DocID | string): Promise<Array<Record<string, any>>>;
-
-    /**
-     * Applies commit on the existing document
-     * @param docId - Document ID
-     * @param commit - Commit to be applied
-     * @param opts - Initialization options
-     * @deprecated Use `applyCommit`
-     */
-    applyRecord<T extends Doctype>(docId: DocID | string, commit: CeramicCommit, opts?: DocOpts): Promise<T>;
-
-    /**
-     * Applies commit on the existing document
-     * @param docId - Document ID
+     * Applies commit on the existing stream
+     * @param streamId - Stream ID
      * @param commit - Commit to be applied
      * @param opts - Initialization options
      */
-    applyCommit<T extends Doctype>(docId: DocID | string, commit: CeramicCommit, opts?: DocOpts): Promise<T>;
+    applyCommit<T extends Stream>(streamId: StreamID | string, commit: CeramicCommit, opts?: CreateOpts | UpdateOpts): Promise<T>;
 
     /**
-     * Set DID provider
-     * @param provider - DID provider instance
+     * Sets the DID instance that will be used to author commits to stream. The DID instance
+     * also includes the DID Resolver that will be used to verify commits from others.
+     * @param did
      */
-    setDIDProvider (provider: DIDProvider): Promise<void>;
+    setDID(did: DID): Promise<void>;
 
     /**
      * @returns An array of the CAIP-2 chain IDs of the blockchains that are supported for anchoring
-     * documents.
+     * stream.
      */
     getSupportedChains(): Promise<Array<string>>;
 
@@ -129,15 +121,17 @@ export interface CeramicApi {
 
 export interface MultiQuery {
     /**
-     * The DocID of the document to load
+     * The StreamID of the stream to load
      */
-    docId: DocID | string
+    streamId: StreamID | string
+
     /**
-     * An array of paths used to look for linked documents
+     * An array of paths used to look for linked stream
      */
     paths?: Array<string>
+
     /**
-     * Load a previous version of the document based on unix timestamp
+     * Load a previous version of the stream based on unix timestamp
      */
     atTime?: number
 }

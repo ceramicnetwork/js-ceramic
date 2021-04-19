@@ -4,7 +4,7 @@ This document provides a basic overview to how js-ceramic is implemented. It goe
 
 ## Ceramic Api
 
-CeramicApi is an interface that both CeramicCore and CeramicHttpClient implements. It provides all the methods needed by a developer to build on top of Ceramic. An instance of CeramicApi allows only one user to be set at a time, using the [DID](https://github.com/ceramicnetwork/js-did) interface. The main methods that this interface provides are `createDocument`, and `loadDocument` which both return *Doctype* instances.
+CeramicApi is an interface that both CeramicCore and CeramicHttpClient implements. It provides all the methods needed by a developer to build on top of Ceramic. An instance of CeramicApi allows only one user to be set at a time, using the [DID](https://github.com/ceramicnetwork/js-did) interface. The main methods that this interface provides are `createDocument`, and `loadDocument` which both return *Stream* instances.
 
 ![CeramicApi](media://ceramic-api.png)
 

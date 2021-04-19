@@ -4,12 +4,10 @@ import HttpApi from 'ipfs-http-server'
 import HttpGateway from 'ipfs-http-gateway'
 import dagJose from "dag-jose";
 import {IpfsTopology} from "@ceramicnetwork/ipfs-topology";
-import { DiagnosticsLogger, LogLevel } from "@ceramicnetwork/common";
+import { DiagnosticsLogger, LogLevel, IpfsApi } from "@ceramicnetwork/common";
 import { sha256 } from 'multiformats/hashes/sha2'
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
 import legacy from 'multiformats/legacy'
-import {IpfsApi, HealthcheckServer} from "./healthcheck-server";
+import { HealthcheckServer } from "./healthcheck-server";
 
 const hasher = {}
 hasher[sha256.code] = sha256
@@ -86,7 +84,7 @@ export class IpfsDaemon {
             bucket: configuration.awsBucketName,
             accessKeyId: configuration.awsAccessKeyId,
             secretAccessKey: configuration.awsSecretAccessKey,
-        }) : null
+        }) : configuration.ipfsPath
 
         const ipfs = await IPFS.create({
             start: false,

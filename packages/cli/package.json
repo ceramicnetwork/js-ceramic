@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/cli",
-  "version": "0.22.1-rc.1",
+  "version": "0.23.0-rc.0",
   "description": "Typescript implementation of the Ceramic CLI",
   "keywords": [
     "Ceramic",
@@ -24,70 +24,62 @@
     "ceramic": "./bin/ceramic.js"
   },
   "scripts": {
-    "test": "./node_modules/.bin/jest --coverage --env=node",
+    "test": "./node_modules/.bin/jest --coverage --runInBand --env=node",
     "build": "../../node_modules/.bin/tsc -p tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
     "lint": "./node_modules/.bin/eslint ./src --ext .js,.jsx,.ts,.tsx",
     "clean": "rm -rf ./lib"
   },
-  "jest": {
-    "testEnvironment": "node",
-    "transformIgnorePatterns": [],
-    "modulePathIgnorePatterns": [
-      "lib"
-    ],
-    "moduleNameMapper": {
-      "multiformats/legacy": "multiformats/cjs/src/legacy.js",
-      "multiformats/hashes/sha2": "multiformats/cjs/src/hashes/sha2.js"
-    }
-  },
   "dependencies": {
-    "@ceramicnetwork/common": "^0.17.1-rc.1",
-    "@ceramicnetwork/core": "^0.21.1-rc.1",
-    "@ceramicnetwork/docid": "^0.5.2-rc.1",
-    "@ceramicnetwork/http-client": "^0.10.2-rc.1",
-    "@ceramicnetwork/ipfs-daemon": "^0.0.4-rc.1",
+    "@awaitjs/express": "^0.7.2",
+    "@ceramicnetwork/3id-did-resolver": "^1.2.0-rc.1",
+    "@ceramicnetwork/common": "^0.18.0-rc.0",
+    "@ceramicnetwork/core": "^0.22.0-rc.0",
+    "@ceramicnetwork/streamid": "^0.5.1",
+    "@ceramicnetwork/doctype-tile": "^0.15.0-rc.1",
+    "@ceramicnetwork/http-client": "^0.11.0-rc.1",
+    "@ceramicnetwork/ipfs-daemon": "^0.0.4-rc.0",
     "@ceramicnetwork/logger": "^0.1.1",
     "@stablelib/random": "^1.0.0",
     "aws-sdk": "^2.844.0",
     "commander": "^7.0.0",
     "cors": "^2.8.5",
     "dag-jose": "^0.3.0",
+    "dids": "^2.0.0",
+    "did-resolver": "^3.1.0",
     "express": "^4.17.1",
     "flat": "^5.0.2",
     "ipfs-http-client": "~49.0.3",
     "key-did-provider-ed25519": "^1.0.1",
+    "key-did-resolver": "^1.1.1",
     "levelup": "^4.4.0",
-    "logfmt": "^1.3.2",
     "morgan": "^1.10.0",
     "multiformats": "~4.6.1",
-    "os-utils": "0.0.14",
     "s3leveldown": "^2.2.1",
     "stream-to-array": "^2.3.0",
     "uint8arrays": "^2.0.5"
   },
   "devDependencies": {
-    "@babel/core": "^7.9.0",
-    "@babel/plugin-transform-modules-commonjs": "^7.10.4",
-    "@babel/preset-env": "^7.8.4",
-    "@babel/preset-typescript": "^7.9.0",
-    "@babel/register": "^7.10.5",
-    "@ceramicnetwork/doctype-tile-handler": "^0.14.2-rc.1",
-    "@types/events": "^3.0.0",
-    "@types/express": "^4.17.2",
+    "@ceramicnetwork/doctype-tile-handler": "^0.15.0-rc.1",
+    "@stablelib/sha256": "^1.0.0",
+    "@types/express": "^4.17.8",
     "@types/levelup": "^4.3.0",
-    "@types/logfmt": "^1.2.1",
     "@types/node": "^13.13.15",
     "@types/stream-to-array": "^2.3.0",
-    "@typescript-eslint/eslint-plugin": "^4.6.0",
-    "@typescript-eslint/parser": "^4.6.0",
-    "babel-jest": "^26.6.3",
-    "eslint": "^6.8.0",
-    "eslint-plugin-jest": "^23.8.2",
+    "get-port": "^5.1.1",
     "ipfs-core": "~0.5.2",
-    "jest": "^26.6.3",
+    "rxjs": "^6.6.7",
     "tmp-promise": "^2.0.2"
+  },
+  "jest": {
+    "testRegex": ".(spec|test).ts$",
+    "testEnvironment": "node",
+    "transformIgnorePatterns": [],
+    "modulePathIgnorePatterns": [
+      "lib"
+    ],
+    "resolver": "<rootDir>/../../tools/jest-resolver.js"
   },
   "gitHead": "34eeee25597b0a60def72906c26d3afd6230aaf1"
 }

@@ -7,10 +7,10 @@ program
     .option('--ipfs-api <url>', 'The ipfs http api to use')
     .option('--ethereum-rpc <url>', 'The Ethereum RPC URL used for communicating with Ethereum blockchain')
     .option('--anchor-service-api <url>', 'The anchor service URL to use')
-    .option('--validate-docs', 'Validate documents according to their schemas. It is enabled by default')
+    .option('--validate-streams', 'Validate streams according to their schemas. It is enabled by default')
     .option('--ipfs-pinning-endpoint <url...>', 'Ipfs pinning endpoints')
-    .option('--state-store-directory <string>', `The directory path used for storing pinned document state. Defaults to HOME_DIR/.ceramic/statestore`)
-    .option('--state-store-s3-bucket <string>', `The S3 bucket name to use for storing pinned document state. If not provided pinned document state will only be saved locally but not to S3.`)
+    .option('--state-store-directory <string>', `The directory path used for storing pinned stream state. Defaults to HOME_DIR/.ceramic/statestore`)
+    .option('--state-store-s3-bucket <string>', `The S3 bucket name to use for storing pinned stream state. If not provided pinned stream state will only be saved locally but not to S3.`)
     .option('--gateway', 'Makes read only endpoints available. It is disabled by default')
     .option('--port <int>', 'Port daemon is available. Default is 7007')
     .option('--debug', 'Enable debug logging level. Default is false')
@@ -27,7 +27,7 @@ program
         ipfsApi,
         ethereumRpc,
         anchorServiceApi,
-        validateDocs,
+        validateStreams,
         ipfsPinningEndpoint,
         stateStoreDirectory,
         stateStoreS3Bucket,
@@ -39,8 +39,6 @@ program
         logDirectory,
         network,
         pubsubTopic,
-        maxHealthyCpu,
-        maxHealthyMemory,
         corsAllowedOrigins
     }) => {
         if (stateStoreDirectory && stateStoreS3Bucket) {
@@ -50,7 +48,7 @@ program
             ipfsApi,
             ethereumRpc,
             anchorServiceApi,
-            validateDocs,
+            validateStreams,
             ipfsPinningEndpoint,
             stateStoreDirectory,
             stateStoreS3Bucket,
@@ -62,14 +60,12 @@ program
             logDirectory,
             network,
             pubsubTopic,
-            maxHealthyCpu,
-            maxHealthyMemory,
             corsAllowedOrigins
         )
     })
 
 program
-    .command('create <doctype>')
+    .command('create <streamtype>')
     .option('--content <content>', 'New document content')
     .option('--only-genesis', 'Only create the genesis object. No anchor will be created')
     .option('--controllers <controllers>', 'Specify a comma-separated list of the controllers of the document. Controllers are the users that are allowed to publish updates to this document. Defaults to current user')
@@ -78,46 +74,49 @@ program
         'that creating a document with identical content to an existing document will be a no-op.')
     .option('--schema <schema>', 'Schema document ID')
     .description('Create a new document')
-    .action(async (doctype, { content, onlyGenesis, controllers, deterministic, schema }) => {
-        await CeramicCliUtils.nonSchemaCreateDoc(doctype, content, controllers, onlyGenesis, deterministic, schema)
+    .action(async (streamtype, { content, onlyGenesis, controllers, deterministic, schema }) => {
+        if (streamtype != 'tile') {
+            throw new Error("CLI does not currently support creating stream types other than 'tile'")
+        }
+        await CeramicCliUtils.nonSchemaCreateDoc(content, controllers, onlyGenesis, deterministic, schema)
     })
 
 program
-    .command('change <docId>')
-    .option('--content <content>', 'Change document content')
+    .command('update <streamId>')
+    .option('--content <content>', 'Update document content')
     .option('--controllers <controllers>', 'Change controllers of this document (only 3ID)')
-    .option('--schema <schema>', 'Change the schema document ID')
+    .option('--schema <schema>', 'Change the schema CommitID')
     .description('Update the content of a document')
-    .action(async (docId, { content, controllers, schema }) => {
-        await CeramicCliUtils.change(docId, content, controllers, schema)
+    .action(async (streamId, { content, controllers, schema }) => {
+        await CeramicCliUtils.update(streamId, content, controllers, schema)
     })
 
 program
-    .command('show <docId> [<anchor>]')
-    .description('Show the content of a document')
-    .action(async (docId) => {
-        await CeramicCliUtils.show(docId)
+    .command('show <streamId> [<anchor>]')
+    .description('Show the content of a stream')
+    .action(async (streamId) => {
+        await CeramicCliUtils.show(streamId)
     })
 
 program
-    .command('state <docId> [<anchor>]')
-    .description('Show the state of a document')
-    .action(async (docId) => {
-        await CeramicCliUtils.state(docId)
+    .command('state <streamId> [<anchor>]')
+    .description('Show the state of a stream')
+    .action(async (streamId) => {
+        await CeramicCliUtils.state(streamId)
     })
 
 program
-    .command('watch <docId>')
-    .description('Watch for updates in a document')
-    .action(async (docId) => {
-        await CeramicCliUtils.watch(docId)
+    .command('watch <streamId>')
+    .description('Watch for updates in a stream')
+    .action(async (streamId) => {
+        await CeramicCliUtils.watch(streamId)
     })
 
 program
-    .command('commits <docId>')
-    .description('List document commits')
-    .action(async (docId) => {
-        await CeramicCliUtils.commits(docId)
+    .command('commits <streamId>')
+    .description('List stream commits')
+    .action(async (streamId) => {
+        await CeramicCliUtils.commits(streamId)
     })
 
 const schemas = program.command('schema')
@@ -137,35 +136,35 @@ schemas
     })
 
 schemas
-    .command('change <docId> <new-content>')
+    .command('update <streamId> <new-content>')
     .option('--controllers <controllers>', 'Change controllers of this document (only 3ID)')
     .description('Update the content of a schema')
-    .action(async (docId, content, { controllers }) => {
-        await CeramicCliUtils.schemaChangeDoc(docId, content, controllers)
+    .action(async (streamId, content, { controllers }) => {
+        await CeramicCliUtils.schemaUpdateDoc(streamId, content, controllers)
     })
 
 const pin = program.command('pin')
 pin.description('Ceramic local pinning API')
 
 pin
-    .command('add <docId>')
-    .description('Pin document')
-    .action(async (docId) => {
-        await CeramicCliUtils.pinAdd(docId)
+    .command('add <streamId>')
+    .description('Pin stream')
+    .action(async (streamId) => {
+        await CeramicCliUtils.pinAdd(streamId)
     });
 
 pin
-    .command('rm <docId>')
-    .description('Unpin document')
-    .action(async (docId) => {
-        await CeramicCliUtils.pinRm(docId)
+    .command('rm <streamId>')
+    .description('Unpin stream')
+    .action(async (streamId) => {
+        await CeramicCliUtils.pinRm(streamId)
     });
 
 pin
-    .command('ls [<docId>]')
-    .description('List pinned documents')
-    .action(async (docId) => {
-        await CeramicCliUtils.pinLs(docId)
+    .command('ls [<streamId>]')
+    .description('List pinned streams')
+    .action(async (streamId) => {
+        await CeramicCliUtils.pinLs(streamId)
     })
 
 const config = program.command('config')

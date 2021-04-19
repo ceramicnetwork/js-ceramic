@@ -3,7 +3,7 @@ import { validateLink } from "../eosio";
 import { AccountID } from "caip";
 import * as linking from "@ceramicnetwork/blockchain-utils-linking";
 
-jest.setTimeout(15000);
+jest.setTimeout(30000);
 
 const did = "did:3:bafysdfwefwe";
 const telosTestnetChainId =

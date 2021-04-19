@@ -34,7 +34,7 @@
    { "path": "./packages/ipfs-topology" },
    { "path": "./packages/key-did-resolver" },
    { "path": "./packages/http-client" },
-   { "path": "./packages/docid" },
+   { "path": "./packages/streamid" },
    { "path": "./packages/common" },
    { "path": "./packages/doctype-caip10-link" },
    { "path": "./packages/doctype-caip10-link-handler" },

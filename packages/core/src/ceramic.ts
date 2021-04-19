@@ -1,33 +1,26 @@
 import { Dispatcher } from './dispatcher'
-import { DEFAULT_WRITE_DOCOPTS, DEFAULT_LOAD_DOCOPTS } from './state-management/state-manager';
-import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
-import KeyDidResolver from 'key-did-resolver'
-import DocID, { CommitID, DocRef } from '@ceramicnetwork/docid';
+import StreamID, { CommitID, StreamRef } from '@ceramicnetwork/streamid';
 import {IpfsTopology} from "@ceramicnetwork/ipfs-topology";
 import {
-  Doctype,
-  DoctypeHandler,
-  DocOpts,
+  CreateOpts,
+  Stream,
+  StreamHandler,
   Context,
   DiagnosticsLogger,
-  DoctypeUtils,
-  DocParams,
-  LogLevel,
-  LoggerProviderOld,
-  LoggerPlugin,
-  LoggerPluginOptions,
+  StreamUtils,
+  LoadOpts,
   AnchorService,
   CeramicApi,
   CeramicCommit,
-  DIDProvider,
   IpfsApi,
   PinApi,
   MultiQuery,
   PinningBackendStatic,
   LoggerProvider,
   Networks,
+  UpdateOpts,
+  SyncOptions,
 } from "@ceramicnetwork/common"
-import { Resolver } from "did-resolver"
 
 import { DID } from 'dids'
 import { PinStoreFactory } from "./store/pin-store-factory";
@@ -41,14 +34,14 @@ import { LocalPinApi } from './local-pin-api';
 import { Repository } from './state-management/repository';
 import { HandlersMap } from './handlers-map';
 import { FauxStateValidation, RealStateValidation, StateValidation } from './state-management/state-validation';
-import { doctypeFromState } from './state-management/doctype-from-state';
+import { streamFromState } from './state-management/stream-from-state';
 import { ConflictResolution } from './conflict-resolution';
 import { RunningState } from './state-management/running-state';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const packageJson = require('../package.json')
 
-const DEFAULT_DOC_CACHE_LIMIT = 500; // number of docs stored in the cache
+const DEFAULT_DOC_CACHE_LIMIT = 500; // number of streams stored in the cache
 const IPFS_GET_TIMEOUT = 60000 // 1 minute
 const TESTING = process.env.NODE_ENV == 'test'
 
@@ -71,6 +64,10 @@ const SUPPORTED_CHAINS_BY_NETWORK = {
   [Networks.INMEMORY]: ["inmemory:12345"], // Our fake in-memory anchor service chainId
 }
 
+const DEFAULT_APPLY_COMMIT_OPTS = { anchor: true, publish: true, sync: SyncOptions.PREFER_CACHE }
+const DEFAULT_CREATE_FROM_GENESIS_OPTS = { anchor: true, publish: true, sync: SyncOptions.PREFER_CACHE }
+const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE }
+
 /**
  * Ceramic configuration
  */
@@ -79,28 +76,21 @@ export interface CeramicConfig {
   anchorServiceUrl?: string;
   stateStoreDirectory?: string;
 
-  didResolver?: Resolver;
-
-  validateDocs?: boolean;
+  validateStreams?: boolean;
   ipfsPinningEndpoints?: string[];
   pinningBackends?: PinningBackendStatic[];
 
   loggerProvider?: LoggerProvider;
-  logToFilesPlugin?: {
-    plugin: LoggerPlugin;
-    state: any;
-    options: LoggerPluginOptions;
-  };
   gateway?: boolean;
 
   networkName?: string;
   pubsubTopic?: string;
 
-  docCacheLimit?: number;
-  cacheDocCommits?: boolean; // adds 'docCacheLimit' additional cache entries if commits can be cached as well
+  streamCacheLimit?: number;
+  concurrentRequestsLimit?: number;
 
   useCentralizedPeerDiscovery?: boolean;
-  restoreDocuments?: boolean;
+  restoreStreams?: boolean;
 
   [index: string]: any; // allow arbitrary properties
 }
@@ -112,7 +102,6 @@ export interface CeramicConfig {
  */
 export interface CeramicModules {
   anchorService: AnchorService,
-  didResolver: Resolver,
   dispatcher: Dispatcher,
   ipfs: IpfsApi,
   ipfsTopology: IpfsTopology,
@@ -127,11 +116,9 @@ export interface CeramicModules {
  * `CeramicConfig` via `Ceramic.create()`.
  */
 export interface CeramicParameters {
-  cacheDocumentCommits: boolean,
-  docCacheLimit: number,
   networkOptions: CeramicNetworkOptions,
   supportedChains: string[],
-  validateDocs: boolean,
+  validateStreams: boolean,
 }
 
 
@@ -145,18 +132,18 @@ interface CeramicNetworkOptions {
 
 const DEFAULT_NETWORK = Networks.INMEMORY
 
-const normalizeDocID = (docId: DocID | string): DocID => {
-  const docRef = DocRef.from(docId)
-  if (docRef instanceof DocID) {
-    return docRef
+const normalizeStreamID = (streamId: StreamID | string): StreamID => {
+  const streamRef = StreamRef.from(streamId)
+  if (streamRef instanceof StreamID) {
+    return streamRef
   } else {
-    throw new Error(`Not DocID: ${docRef}`)
+    throw new Error(`Not StreamID: ${streamRef}`)
   }
 }
 
-const tryDocId = (id: string): DocID | null => {
+const tryStreamId = (id: string): StreamID | null => {
   try {
-    return DocID.fromString(id)
+    return StreamID.fromString(id)
   } catch(e) {
     return null
   }
@@ -171,58 +158,51 @@ const tryDocId = (id: string): DocID | null => {
 class Ceramic implements CeramicApi {
 
   public readonly context: Context
-
   public readonly dispatcher: Dispatcher;
+  public readonly loggerProvider: LoggerProvider;
   public readonly pin: PinApi;
   readonly repository: Repository;
 
-  readonly _doctypeHandlers: HandlersMap
+  readonly _streamHandlers: HandlersMap
   private readonly _ipfsTopology: IpfsTopology
   private readonly _logger: DiagnosticsLogger
   private readonly _networkOptions: CeramicNetworkOptions
   private readonly _supportedChains: Array<string>
-  private readonly _validateDocs: boolean
+  private readonly _validateStreams: boolean
   private readonly stateValidation: StateValidation
 
   constructor (modules: CeramicModules, params: CeramicParameters) {
     this._ipfsTopology = modules.ipfsTopology
+    this.loggerProvider = modules.loggerProvider
     this._logger = modules.loggerProvider.getDiagnosticsLogger()
     this.repository = modules.repository
-    this.pin = new LocalPinApi(this.repository, this._loadDoc.bind(this), this._logger)
     this.dispatcher = modules.dispatcher
+    this.pin = this._buildPinApi()
 
-    this._validateDocs = params.validateDocs
+    this._validateStreams = params.validateStreams
     this._networkOptions = params.networkOptions
     this._supportedChains = params.supportedChains
-
-    const keyDidResolver = KeyDidResolver.getResolver()
-    const threeIdResolver = ThreeIdResolver.getResolver(this)
-    const resolver = new Resolver({
-      ...modules.didResolver, ...threeIdResolver, ...keyDidResolver,
-    })
 
     this.context = {
       api: this,
       anchorService: modules.anchorService,
-      resolver,
-      did: new DID({ resolver }),
       ipfs: modules.ipfs,
       loggerProvider: modules.loggerProvider,
     }
     this.context.anchorService.ceramic = this
 
-    this._doctypeHandlers = new HandlersMap(this._logger)
+    this._streamHandlers = new HandlersMap(this._logger)
 
     // This initialization block below has to be redone.
     // Things below should be passed here as `modules` variable.
-    this.stateValidation = this._validateDocs ? new RealStateValidation(this.loadDocument.bind(this)) : new FauxStateValidation()
-    const conflictResolution = new ConflictResolution(modules.anchorService, this.stateValidation, this.dispatcher, this.context, this._doctypeHandlers)
+    this.stateValidation = this._validateStreams ? new RealStateValidation(this.loadStream.bind(this)) : new FauxStateValidation()
+    const conflictResolution = new ConflictResolution(modules.anchorService, this.stateValidation, this.dispatcher, this.context, this._streamHandlers)
     const pinStore = modules.pinStoreFactory.createPinStore()
     this.repository.setDeps({
       dispatcher: this.dispatcher,
       pinStore: pinStore,
       context: this.context,
-      handlers: this._doctypeHandlers,
+      handlers: this._streamHandlers,
       anchorService: modules.anchorService,
       conflictResolution: conflictResolution,
       stateValidation: this.stateValidation
@@ -241,6 +221,12 @@ class Ceramic implements CeramicApi {
    */
   get did(): DID | undefined {
     return this.context.did
+  }
+
+  private _buildPinApi(): PinApi {
+    const boundDocLoader = this._loadDoc.bind(this)
+    const loaderWithSyncSet = (streamid) => { return boundDocLoader(streamid, { sync: SyncOptions.PREFER_CACHE })}
+    return new LocalPinApi(this.repository, loaderWithSyncSet, this._logger)
   }
 
   private static _generateNetworkOptions(config: CeramicConfig): CeramicNetworkOptions {
@@ -306,7 +292,7 @@ class Ceramic implements CeramicApi {
 
   /**
    * Given the ceramic network we are running on and the anchor service we are connected to, figure
-   * out the set of caip2 chain IDs that are supported for document anchoring
+   * out the set of caip2 chain IDs that are supported for stream anchoring
    * @param networkName
    * @param anchorService
    * @private
@@ -339,21 +325,6 @@ class Ceramic implements CeramicApi {
     const logger = loggerProvider.getDiagnosticsLogger()
     const pubsubLogger = loggerProvider.makeServiceLogger("pubsub")
 
-    // todo remove all code related to LoggerProviderOld
-    LoggerProviderOld.init({
-      level: loggerProvider.config.logLevel <= LogLevel.debug ? 'debug' : 'silent',
-      component: config.gateway? 'GATEWAY' : 'NODE',
-    })
-
-    if (config.logToFiles) {
-      LoggerProviderOld.addPlugin(
-        config.logToFilesPlugin.plugin,
-        config.logToFilesPlugin.state,
-        null,
-        config.logToFilesPlugin.options
-      )
-    }
-
     logger.imp(`Starting Ceramic node at version ${packageJson.version} with config: \n${JSON.stringify(this._cleanupConfigForLogging(config), null, 2)}`)
 
     const networkOptions = Ceramic._generateNetworkOptions(config)
@@ -377,24 +348,22 @@ class Ceramic implements CeramicApi {
       pinningBackends: config.pinningBackends,
     }
 
-    const docCacheLimit = config.docCacheLimit ?? DEFAULT_DOC_CACHE_LIMIT
+    const streamCacheLimit = config.streamCacheLimit ?? DEFAULT_DOC_CACHE_LIMIT
+    const concurrentRequestsLimit = config.concurrentRequestsLimit ?? streamCacheLimit
 
     const ipfsTopology = new IpfsTopology(ipfs, networkOptions.name, logger)
     const pinStoreFactory = new PinStoreFactory(ipfs, pinStoreOptions)
-    const repository = new Repository(docCacheLimit, logger)
+    const repository = new Repository(streamCacheLimit, concurrentRequestsLimit, logger)
     const dispatcher = new Dispatcher(ipfs, networkOptions.pubsubTopic, repository, logger, pubsubLogger)
 
-    const params = {
-      cacheDocumentCommits: config.cacheDocCommits ?? true,
-      docCacheLimit: docCacheLimit,
+    const params: CeramicParameters = {
       networkOptions,
       supportedChains,
-      validateDocs: config.validateDocs ?? true,
+      validateStreams: config.validateStreams ?? true,
     }
 
     const modules = {
       anchorService,
-      didResolver: config.didResolver,
       dispatcher,
       ipfs,
       ipfsTopology,
@@ -418,9 +387,7 @@ class Ceramic implements CeramicApi {
 
     const loggerConfig = config.loggerProvider?.config
 
-    delete configCopy.didResolver
     delete configCopy.pinningBackends
-    delete configCopy.logToFilesPlugin
     delete configCopy.loggerProvider
 
     if (loggerConfig) {
@@ -441,9 +408,9 @@ class Ceramic implements CeramicApi {
     const ceramic = new Ceramic(modules, params)
 
     const doPeerDiscovery = config.useCentralizedPeerDiscovery ?? !TESTING
-    const restoreDocuments = config.restoreDocuments ?? true
+    const restoreStreams = config.restoreStreams ?? true
 
-    await ceramic._init(doPeerDiscovery, restoreDocuments)
+    await ceramic._init(doPeerDiscovery, restoreStreams)
 
     return ceramic
   }
@@ -452,147 +419,109 @@ class Ceramic implements CeramicApi {
    * Finishes initialization and startup of a Ceramic instance. This usually should not be called
    * directly - most users will prefer to call `Ceramic.create()` instead which calls this internally.
    * @param doPeerDiscovery - Controls whether we connect to the "peerlist" to manually perform IPFS peer discovery
-   * @param restoreDocuments - Controls whether we attempt to load pinned document state into memory at startup
+   * @param restoreStreams - Controls whether we attempt to load pinned stream state into memory at startup
    */
-  async _init(doPeerDiscovery: boolean, restoreDocuments: boolean): Promise<void> {
+  async _init(doPeerDiscovery: boolean, restoreStreams: boolean): Promise<void> {
     if (doPeerDiscovery) {
       await this._ipfsTopology.start()
     }
 
-    if (restoreDocuments) {
-      this.restoreDocuments()
+    if (restoreStreams) {
+      this.restoreStreams()
     }
   }
 
   /**
-   * Set DID provider
-   * @param provider - DID provider instance
+   * Sets the DID instance that will be used to author commits to streams. The DID instance
+   * also includes the DID Resolver that will be used to verify commits from others.
+   * @param did
    */
-  async setDIDProvider (provider: DIDProvider): Promise<void> {
-    this.context.provider = provider;
-    this.context.did = new DID({ provider, resolver: this.context.resolver })
-
-    if (!this.context.did.authenticated) {
-      await this.context.did.authenticate()
-    }
-    this._logger.imp(`Now authenticated as DID ${this.context.did.id}`)
+  async setDID(did: DID): Promise<void> {
+    this.context.did = did
   }
 
   /**
-   * Register new doctype handler
-   * @param doctypeHandler - Document type handler
+   * Register new stream handler
+   * @param streamHandler - Stream type handler
    */
-  addDoctypeHandler<T extends Doctype>(doctypeHandler: DoctypeHandler<T>): void {
-    this._doctypeHandlers.add(doctypeHandler)
+  addStreamHandler<T extends Stream>(streamHandler: StreamHandler<T>): void {
+    this._streamHandlers.add(streamHandler)
   }
 
   /**
-   * Applies record on a given document
-   * @param docId - Document ID
-   * @param record - Record to be applied
-   * @param opts - Initialization options
-   * @deprecated See `applyCommit`
-   */
-  async applyRecord<T extends Doctype>(docId: DocID | string, record: CeramicCommit, opts?: DocOpts): Promise<T> {
-    return this.applyCommit(docId, record, opts)
-  }
-
-  /**
-   * Applies commit on a given document
-   * @param docId - Document ID
+   * Applies commit on a given stream
+   * @param streamId - Stream ID
    * @param commit - Commit to be applied
    * @param opts - Initialization options
    */
-  async applyCommit<T extends Doctype>(docId: string | DocID, commit: CeramicCommit, opts?: DocOpts): Promise<T> {
-    const state$ = await this._loadDoc(normalizeDocID(docId), opts)
-    await this.repository.stateManager.applyCommit(state$, commit, opts)
-    return doctypeFromState<T>(this.context, this._doctypeHandlers, state$)
+  async applyCommit<T extends Stream>(streamId: string | StreamID, commit: CeramicCommit, opts: CreateOpts | UpdateOpts = {}): Promise<T> {
+    opts = { ...DEFAULT_APPLY_COMMIT_OPTS, ...opts };
+    const state$ = await this.repository.stateManager.applyCommit(normalizeStreamID(streamId), commit, opts as CreateOpts)
+    return streamFromState<T>(this.context, this._streamHandlers, state$.value, this.repository.updates$)
   }
 
   /**
-   * Create doctype instance
-   * @param doctype - Document type
-   * @param params - Create parameters
-   * @param opts - Initialization options
-   */
-  async createDocument<T extends Doctype>(doctype: string, params: DocParams, opts?: DocOpts): Promise<T> {
-    const handler = this._doctypeHandlers.get(doctype);
-    const genesis = await handler.doctype.makeGenesis(params, this.context, opts);
-    return this.createDocumentFromGenesis(doctype, genesis, opts);
-  }
-
-  /**
-   * Creates doctype from genesis record
-   * @param doctype - Document type
+   * Creates stream from genesis record
+   * @param type - Stream type
    * @param genesis - Genesis CID
    * @param opts - Initialization options
    */
-  async createDocumentFromGenesis<T extends Doctype>(doctype: string, genesis: any, opts: DocOpts = {}): Promise<T> {
-    const state$ = await this._createDocFromGenesis(doctype, genesis, opts)
-    return doctypeFromState<T>(this.context, this._doctypeHandlers, state$)
-  }
-
-  /**
-   * Creates document from genesis record
-   * @param doctype - Document type
-   * @param genesis - Genesis record
-   * @param opts - Initialization options
-   * @private
-   */
-  async _createDocFromGenesis(doctype: string, genesis: any, opts: DocOpts = {}): Promise<RunningState> {
+  async createStreamFromGenesis<T extends Stream>(type: number, genesis: any, opts: CreateOpts = {}): Promise<T> {
+    opts = { ...DEFAULT_CREATE_FROM_GENESIS_OPTS, ...opts };
     const genesisCid = await this.dispatcher.storeCommit(genesis);
-    const docId = new DocID(doctype, genesisCid);
-    return this.repository.load(docId, {...DEFAULT_WRITE_DOCOPTS, ...opts});
+    const streamId = new StreamID(type, genesisCid);
+    const state$ = await this.repository.applyCreateOpts(streamId, opts);
+    return streamFromState<T>(this.context, this._streamHandlers, state$.value, this.repository.updates$)
   }
 
   /**
-   * Load document type instance
-   * @param docId - Document ID
+   * Load stream type instance
+   * @param streamId - Stream ID
    * @param opts - Initialization options
    */
-  async loadDocument<T extends Doctype>(docId: DocID | CommitID | string, opts: DocOpts = {}): Promise<T> {
-    const docRef = DocRef.from(docId)
-    const base$ = await this._loadDoc(docRef.baseID, opts)
-    this._logger.verbose(`Document ${docId.toString()} successfully loaded`)
-    if (docRef instanceof CommitID) {
-      // Here CommitID is requested, let's return document at specific commit
-      const snapshot$ = await this.repository.stateManager.rewind(base$, docRef)
-      return doctypeFromState<T>(this.context, this._doctypeHandlers, snapshot$, true)
+  async loadStream<T extends Stream>(streamId: StreamID | CommitID | string, opts: LoadOpts = {}): Promise<T> {
+    opts = { ...DEFAULT_LOAD_OPTS, ...opts };
+    const streamRef = StreamRef.from(streamId)
+    const base$ = await this._loadDoc(streamRef.baseID, opts)
+    this._logger.verbose(`Stream ${streamId.toString()} successfully loaded`)
+    if (streamRef instanceof CommitID) {
+      // Here CommitID is requested, let's return stream at specific commit
+      const snapshot$ = await this.repository.stateManager.rewind(base$, streamRef)
+      return streamFromState<T>(this.context, this._streamHandlers, snapshot$.value)
     } else if (opts.atTime) {
       const snapshot$ = await this.repository.stateManager.atTime(base$, opts.atTime)
-      return doctypeFromState<T>(this.context, this._doctypeHandlers, snapshot$, true)
+      return streamFromState<T>(this.context, this._streamHandlers, snapshot$.value)
     } else {
-      return doctypeFromState<T>(this.context, this._doctypeHandlers, base$, false)
+      return streamFromState<T>(this.context, this._streamHandlers, base$.value, this.repository.updates$)
     }
   }
 
   /**
-   * Load all document type instance for given paths
-   * @param id - Document ID (root)
-   * @param paths - relative paths to documents to load
+   * Load all stream type instance for given paths
+   * @param query
    * @param timeout - Timeout in milliseconds
    * @private
    */
-  async _loadLinkedDocuments(query: MultiQuery, timeout = 7000): Promise<Record<string, Doctype>> {
-    const id = DocRef.from(query.docId)
+  async _loadLinkedStreams(query: MultiQuery, timeout = 7000): Promise<Record<string, Stream>> {
+    const id = StreamRef.from(query.streamId)
     const pathTrie = new PathTrie()
     query.paths?.forEach(path => pathTrie.add(path))
 
     const index = {}
 
-    const walkNext = async (node: TrieNode, docId: DocID | CommitID) => {
-      let doc
+    const walkNext = async (node: TrieNode, streamId: StreamID | CommitID) => {
+      let stream
       try {
-        doc = await promiseTimeout(timeout, this.loadDocument(docId, { atTime: query.atTime }))
+        stream = await promiseTimeout(timeout, this.loadStream(streamId, { atTime: query.atTime }))
       } catch (e) {
         return Promise.resolve()
       }
-      const docRef = query.atTime ? docId.atCommit(doc.tip) : docId
-      index[docRef.toString()] = doc
+      const streamRef = query.atTime ? streamId.atCommit(stream.tip) : streamId
+      index[streamRef.toString()] = stream
 
       const promiseList = Object.keys(node.children).map(key => {
-        const keyDocId = doc.content[key] ? tryDocId(doc.content[key]) : null
-        if (keyDocId) return walkNext(node.children[key], keyDocId)
+        const keyStreamId = stream.content[key] ? tryStreamId(stream.content[key]) : null
+        if (keyStreamId) return walkNext(node.children[key], keyStreamId)
         return Promise.resolve()
       })
 
@@ -605,14 +534,14 @@ class Ceramic implements CeramicApi {
   }
 
   /**
-   * Load all document types instances for given multiqueries
+   * Load all stream types instances for given multiqueries
    * @param queries - Array of MultiQueries
    * @param timeout - Timeout in milliseconds
    */
-  async multiQuery(queries: Array<MultiQuery>, timeout?: number):  Promise<Record<string, Doctype>> {
+  async multiQuery(queries: Array<MultiQuery>, timeout?: number):  Promise<Record<string, Stream>> {
     const queryPromises = queries.map(query => {
       try {
-        return this._loadLinkedDocuments(query, timeout)
+        return this._loadLinkedStreams(query, timeout)
       } catch (e) {
         return Promise.resolve({})
       }
@@ -622,62 +551,53 @@ class Ceramic implements CeramicApi {
   }
 
   /**
-   * Load all document records by document ID
-   * @param docId - Document ID
-   * @deprecated See `loadDocumentCommits`
+   * Load all stream commits by stream ID
+   * @param streamId - Stream ID
    */
-  async loadDocumentRecords(docId: DocID | string): Promise<Array<Record<string, any>>> {
-    return this.loadDocumentCommits(docId)
-  }
-
-  /**
-   * Load all document commits by document ID
-   * @param docId - Document ID
-   */
-  async loadDocumentCommits(docId: string | DocID): Promise<Record<string, any>[]> {
-    const effectiveDocId = normalizeDocID(docId)
-    const doc = await this.loadDocument(effectiveDocId)
-    const { state } = doc
+  async loadStreamCommits(streamId: string | StreamID): Promise<Record<string, any>[]> {
+    const effectiveStreamId = normalizeStreamID(streamId)
+    const stream = await this.loadStream(effectiveStreamId)
+    const { state } = stream
 
     const results = await Promise.all(state.log.map(async ({ cid }) => {
       const record = (await this.ipfs.dag.get(cid, { timeout: IPFS_GET_TIMEOUT })).value
       return {
         cid: cid.toString(),
-        value: await DoctypeUtils.convertCommitToSignedCommitContainer(record, this.ipfs)
+        value: await StreamUtils.convertCommitToSignedCommitContainer(record, this.ipfs)
       }
     }))
-    this._logger.verbose(`Successfully loaded ${results.length} commits for document ${docId.toString()}`)
+    this._logger.verbose(`Successfully loaded ${results.length} commits for stream ${streamId.toString()}`)
     return results
   }
 
   /**
-   * Load document instance
-   * @param docId - Document ID
+   * Load stream instance
+   * @param streamId - Stream ID
    * @param opts - Initialization options
    */
-  async _loadDoc(docId: DocID, opts: DocOpts = {}): Promise<RunningState> {
-    return this.repository.load(docId, {...DEFAULT_LOAD_DOCOPTS, ...opts})
+  async _loadDoc(streamId: StreamID, opts: LoadOpts): Promise<RunningState> {
+    return this.repository.load(streamId, opts)
   }
 
   /**
    * @returns An array of the CAIP-2 chain IDs of the blockchains that are supported for anchoring
-   * documents.
+   * streams.
    */
   async getSupportedChains(): Promise<Array<string>> {
     return this._supportedChains
   }
 
   /**
-   * Load all the pinned documents, re-request PENDING or PROCESSING anchors.
+   * Load all the pinned streams, re-request PENDING or PROCESSING anchors.
    */
-  restoreDocuments() {
+  restoreStreams() {
     this.repository.listPinned().then(async list => {
       let n = 0
-      await Promise.all(list.map(async docId => {
-        await this._loadDoc(DocID.fromString(docId))
+      await Promise.all(list.map(async streamId => {
+        await this._loadDoc(StreamID.fromString(streamId), { sync: SyncOptions.SYNC_ALWAYS })
         n++;
       }))
-      this._logger.verbose(`Successfully restored ${n} pinned documents`)
+      this._logger.verbose(`Successfully restored ${n} pinned streams`)
     }).catch(error => {
       this._logger.err(error)
     })

@@ -8,8 +8,15 @@
  * The result of this script, which is a commit log for a 3IDv0 and a 3IDv1,
  * can be found in the 'vectorDocuments.json' file in the test folder.
  */
+
 const Ceramic = require('@ceramicnetwork/http-client').default
 const ThreeIdProvider = require('3id-did-provider').default
+const ThreeIdResolver = require('@ceramicnetwork/3id-did-resolver').default
+const { SyncOptions } = require('@ceramicnetwork/common')
+const KeyDidResolver = require('key-did-resolver').default
+const { Resolver } = require('did-resolver')
+const { DID } = require('dids')
+const TileDocument = require('@ceramicnetwork/doctype-tile').default
 const u8a = require('uint8arrays')
 const { randomBytes } = require('@stablelib/random')
 const dagCBOR = require('ipld-dag-cbor')
@@ -63,7 +70,7 @@ const legacyDoc = {
 const waitForAnchor = doc => new Promise(resolve => {
   console.log('waiting for anchor')
   let iid = setInterval(async () => {
-    await doc._syncState()
+    await doc._syncState(doc.id, { sync: SyncOptions.PREFER_CACHE})
   }, 40000)
   doc.on('change', () => {
     console.log(new Date(doc.state.anchorScheduledFor))
@@ -75,25 +82,33 @@ const waitForAnchor = doc => new Promise(resolve => {
   })
 })
 
+const makeDID = function(provider, ceramic) {
+  const keyDidResolver = KeyDidResolver.getResolver()
+  const threeIdResolver = ThreeIdResolver.getResolver(ceramic)
+  const resolver = new Resolver({
+    ...threeIdResolver, ...keyDidResolver,
+  })
+  return new DID({ provider, resolver })
+}
+
 const setLegacyDoc = async (ceramic, doc, keyset) => {
   const signing = encodeKey(keyset.signingPub, 'secp256k1')
   const encryption = encodeKey(keyset.encPub, 'x25519')
   const oldProvider = ceramic.did._client.connection
   const provider = new Ed25519Provider(keyset.seed)
-  await ceramic.setDIDProvider(provider)
-  const didstr = ceramic.did.id
-  await ceramic.setDIDProvider(oldProvider)
+  const didWithProvider = makeDID(provider, ceramic)
+  const didWithOldProvider = makeDID(oldProvider, ceramic)
+  const didstr = didWithProvider.id
+  await ceramic.setDID(didWithOldProvider)
 
-  await doc.change({
-    metadata: { controllers: [didstr] },
-    content: {
-      publicKeys: {
-        [signing.slice(-15)]: signing,
-        [encryption.slice(-15)]: encryption,
-      }
-    }
-  })
-  await ceramic.setDIDProvider(provider)
+  await doc.update(
+      { publicKeys: {
+          [signing.slice(-15)]: signing,
+          [encryption.slice(-15)]: encryption,
+        }},
+      { controllers: [didstr] })
+
+  await ceramic.setDID(didWithProvider)
   await waitForAnchor(doc)
 }
 
@@ -122,9 +137,10 @@ const legacyDid = async (threeId, threeIdGenesisCopy, ceramic) => {
 
   // uses the first public key of the seed for the v1 threeId as the keydid.
   // sorry for the magic here -.-
-  await ceramic.setDIDProvider(threeIdGenesisCopy.getDidProvider())
-  const docParams =  { deterministic: true, metadata: { controllers: [firstKeyDid], family: '3id' } }
-  const doc = await ceramic.createDocument('tile', docParams, { anchor: false, publish: false })
+  await ceramic.setDID(makeDID(threeIdGenesisCopy.getDidProvider(), ceramic))
+  const metadata = { controllers: [firstKeyDid], family: '3id', deterministic: true }
+  const doc = await TileDocument.create(
+      ceramic, null, metadata, { anchor:false, publish: false })
 
   await setLegacyDoc(ceramic, doc, keysets[1])
   console.log('rotated v0 keys once')
@@ -167,7 +183,7 @@ const generate = async () => {
     disableIDX: true
   })
 
-  await ceramic.setDIDProvider(threeId.getDidProvider())
+  await ceramic.setDID(makeDID(threeId.getDidProvider(), ceramic))
   // rotate keys once
   await rotateKeys(threeId, 'a', 'b')
   console.log('rotated v1 keys once')

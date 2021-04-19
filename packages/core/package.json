@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/core",
-  "version": "0.21.1-rc.1",
+  "version": "0.22.0-rc.0",
   "description": "Typescript implementation of the Ceramic protocol",
   "keywords": [
     "Ceramic",
@@ -29,66 +29,52 @@
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/3id-did-resolver": "^1.1.2-rc.1",
-    "@ceramicnetwork/common": "^0.17.1-rc.1",
-    "@ceramicnetwork/docid": "^0.5.2-rc.1",
-    "@ceramicnetwork/doctype-caip10-link": "^0.13.5-rc.1",
-    "@ceramicnetwork/doctype-caip10-link-handler": "^0.13.5-rc.1",
-    "@ceramicnetwork/doctype-tile": "^0.14.2-rc.1",
-    "@ceramicnetwork/doctype-tile-handler": "^0.14.2-rc.1",
-    "@ceramicnetwork/ipfs-topology": "^0.0.4-rc.1",
-    "@ceramicnetwork/pinning-aggregation": "^0.2.2-rc.1",
-    "@ceramicnetwork/pinning-ipfs-backend": "^0.2.2-rc.1",
-    "@ethersproject/providers": "^5.0.18",
+    "@ceramicnetwork/common": "^0.18.0-rc.0",
+    "@ceramicnetwork/streamid": "^0.5.1",
+    "@ceramicnetwork/doctype-caip10-link": "^0.14.0-rc.1",
+    "@ceramicnetwork/doctype-caip10-link-handler": "^0.14.0-rc.0",
+    "@ceramicnetwork/doctype-tile": "^0.15.0-rc.1",
+    "@ceramicnetwork/doctype-tile-handler": "^0.15.0-rc.1",
+    "@ceramicnetwork/ipfs-topology": "^0.0.4-rc.0",
+    "@ceramicnetwork/pinning-aggregation": "^0.2.2-rc.0",
+    "@ceramicnetwork/pinning-ipfs-backend": "^0.2.2-rc.0",
+    "@ethersproject/providers": "5.0.23",
     "@stablelib/random": "^1.0.0",
     "@stablelib/sha256": "^1.0.0",
-    "ajv": "^6.12.3",
+    "ajv": "^8.1.0",
+    "ajv-formats": "^2.0.2",
     "await-semaphore": "^0.1.3",
     "cids": "~1.1.6",
-    "cross-fetch": "^3.0.6",
-    "did-jwt": "^5.0.0",
-    "did-resolver": "^3.0.1",
+    "cross-fetch": "^3.1.4",
     "dids": "^2.0.0",
-    "events": "^3.2.0",
     "ipld-dag-cbor": "^0.17.0",
-    "key-did-resolver": "^1.1.2-rc.1",
     "level-ts": "^2.0.5",
     "lodash.clonedeep": "^4.5.0",
     "multihashes": "^3.1.2",
     "p-queue": "^6.6.1",
-    "rxjs": "^6.6.3",
+    "rxjs": "^6.6.7",
     "uint8arrays": "^2.0.5"
   },
   "devDependencies": {
-    "@babel/core": "^7.9.0",
-    "@babel/plugin-proposal-decorators": "^7.10.1",
-    "@babel/plugin-transform-modules-commonjs": "^7.10.4",
-    "@babel/preset-env": "^7.8.4",
-    "@babel/preset-typescript": "^7.9.0",
+    "@ceramicnetwork/3id-did-resolver": "^1.2.0-rc.1",
+    "@ceramicnetwork/blockchain-utils-validation": "^0.1.2-rc.0",
     "@types/node": "^13.13.15",
-    "@typescript-eslint/eslint-plugin": "^4.6.0",
-    "@typescript-eslint/parser": "^4.6.0",
     "dag-jose": "^0.3.0",
-    "eslint": "^6.8.0",
-    "eslint-plugin-jest": "^23.8.2",
+    "did-resolver": "^3.1.0",
     "get-port": "^5.1.1",
     "ipfs": "~0.54.2",
+    "key-did-resolver": "^1.1.1",
     "key-did-provider-ed25519": "^1.0.1",
+    "mockdate": "^3.0.5",
     "multiformats": "~4.6.1",
     "tmp-promise": "^2.0.2"
   },
   "jest": {
     "testEnvironment": "node",
-    "transformIgnorePatterns": [
-      "/node_modules(?!/did-jwt)/"
-    ],
     "testMatch": [
       "**/?(*.)+(spec|test).[jt]s?(x)"
     ],
-    "moduleNameMapper": {
-      "multiformats/legacy": "multiformats/cjs/src/legacy.js",
-      "multiformats/hashes/sha2": "multiformats/cjs/src/hashes/sha2.js"
-    }
+    "resolver": "<rootDir>/../../tools/jest-resolver.js"
   },
   "gitHead": "34eeee25597b0a60def72906c26d3afd6230aaf1"
 }

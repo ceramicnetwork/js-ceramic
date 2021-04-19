@@ -1,0 +1,23 @@
+FROM node:14
+
+RUN apt-get update && apt-get install -y netcat
+
+WORKDIR /js-ceramic
+
+COPY package.json package-lock.json ./
+RUN npm install
+
+COPY lerna.json tsconfig.json ./
+
+COPY packages ./packages
+
+RUN npx lerna bootstrap --hoist
+
+COPY types ./types
+
+RUN npm run build
+
+EXPOSE 5011
+EXPOSE 9011
+
+ENTRYPOINT ["./packages/ipfs-daemon/bin/ipfs-daemon.js"]

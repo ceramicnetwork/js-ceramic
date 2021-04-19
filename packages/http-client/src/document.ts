@@ -1,110 +1,104 @@
+import { Observable, timer } from 'rxjs'
+import { throttle } from 'rxjs/operators'
 import {
-  CeramicCommit, Context, DocOpts, DocParams, DocState, Doctype, DoctypeConstructor, DoctypeUtils
-} from "@ceramicnetwork/common"
+  CeramicCommit,
+  CreateOpts,
+  StreamState,
+  StreamUtils,
+  SyncOptions,
+  RunningStateLike,
+  StreamStateSubject,
+  LoadOpts,
+  UpdateOpts,
+} from '@ceramicnetwork/common';
+import { StreamID, CommitID } from '@ceramicnetwork/streamid';
+import { fetchJson } from './utils'
+import QueryString from 'query-string'
 
-import DocID, { CommitID } from '@ceramicnetwork/docid';
+export class Document extends Observable<StreamState> implements RunningStateLike {
+  private readonly state$: StreamStateSubject;
 
-import { fetchJson, typeDocID, delay } from './utils'
-import { CeramicClientConfig } from "./ceramic-http-client"
+  constructor (initial: StreamState, private _apiUrl: string, syncInterval: number) {
+    super(subscriber => {
+      const periodicUpdates = timer(0, syncInterval).pipe(throttle(() => this._syncState(this.id, { sync: SyncOptions.PREFER_CACHE }))).subscribe();
+      this.state$.subscribe(subscriber).add(() => {
+        periodicUpdates.unsubscribe();
+      })
+    })
+    this.state$ = new StreamStateSubject(initial);
+  }
 
-export class Document extends Doctype {
+  get value(): StreamState {
+    return this.state$.value
+  }
 
-  private _syncEnabled: boolean
-  private readonly _syncInterval: number
+  get state(): StreamState {
+    return this.state$.value
+  }
 
-  public doctypeLogic: DoctypeConstructor<Doctype>
-
-  constructor (state: DocState, context: Context, private _apiUrl: string, config: CeramicClientConfig = { docSyncEnabled: false }) {
-    super(state, context)
-
-    this._syncEnabled = config.docSyncEnabled
-    this._syncInterval = config.docSyncInterval
-
-    if (this._syncEnabled) {
-      this._syncPeriodically() // start syncing
-    }
+  next(state: StreamState): void {
+    this.state$.next(state)
   }
 
   /**
-   * Sync document state
+   * Sync stream state
    * @private
    */
-  async _syncState() {
-    const { state } = await fetchJson(this._apiUrl + '/documents/' + this.id.toString())
-
-    if (JSON.stringify(DoctypeUtils.serializeState(this.state)) !== JSON.stringify(state)) {
-      this.state = DoctypeUtils.deserializeState(state)
-      this.emit('change')
-    }
+  async _syncState(streamId: StreamID | CommitID, opts: LoadOpts): Promise<void> {
+    const state = await Document._load(streamId, this._apiUrl, opts)
+    this.state$.next(StreamUtils.deserializeState(state))
   }
 
-  /**
-   * Sync document states periodically
-   * @private
-   */
-  async _syncPeriodically() {
-    while (this._syncEnabled) {
-      try {
-        await this._syncState()
-      } catch (e) {
-        // failed to sync state
-      }
-      await delay(this._syncInterval)
-    }
+  get id(): StreamID {
+    return new StreamID(this.state$.value.type, this.state$.value.log[0].cid)
   }
 
-  get id(): DocID {
-    return new DocID(this.state.doctype, this.state.log[0].cid)
-  }
-
-  static async createFromGenesis (apiUrl: string, doctype: string, genesis: any, context: Context, docOpts: DocOpts = {}, config: CeramicClientConfig): Promise<Document> {
-    const { state } = await fetchJson(apiUrl + '/documents', {
+  static async createFromGenesis (apiUrl: string, type: number, genesis: any, opts: CreateOpts, syncInterval: number): Promise<Document> {
+    const { state } = await fetchJson(apiUrl + '/streams', {
       method: 'post',
       body: {
-        doctype,
-        genesis: DoctypeUtils.serializeCommit(genesis),
-        docOpts,
+        type,
+        genesis: StreamUtils.serializeCommit(genesis),
+        opts,
       }
     })
-    return new Document(DoctypeUtils.deserializeState(state), context, apiUrl, config)
+    return new Document(StreamUtils.deserializeState(state), apiUrl, syncInterval)
   }
 
-  static async applyCommit(apiUrl: string, docId: DocID | string, commit: CeramicCommit, context: Context, docOpts: DocOpts = {}): Promise<Document> {
-    docId = typeDocID(docId)
+  static async applyCommit(apiUrl: string, streamId: StreamID | string, commit: CeramicCommit, opts: UpdateOpts, syncInterval: number): Promise<Document> {
     const { state } = await fetchJson(apiUrl + '/commits', {
       method: 'post',
       body: {
-        docId: docId.toString(),
-        commit: DoctypeUtils.serializeCommit(commit),
-        docOpts,
+        streamId: streamId.toString(),
+        commit: StreamUtils.serializeCommit(commit),
+        opts,
       }
     })
-    return new Document(DoctypeUtils.deserializeState(state), context, apiUrl)
+    return new Document(StreamUtils.deserializeState(state), apiUrl, syncInterval)
   }
 
-  static async load (docId: DocID | CommitID, apiUrl: string, context: Context, config: CeramicClientConfig): Promise<Document> {
-    const { state } = await fetchJson(apiUrl + '/documents/' + docId.toString())
-    return new Document(DoctypeUtils.deserializeState(state), context, apiUrl, config)
+  private static async _load(streamId: StreamID | CommitID, apiUrl: string, opts: LoadOpts): Promise<StreamState> {
+    const url = apiUrl + '/streams/' + streamId.toString() + '?' + QueryString.stringify(opts)
+    const { state } = await fetchJson(url)
+    return state
   }
 
-  static async loadDocumentCommits (docId: DocID, apiUrl: string): Promise<Array<Record<string, CeramicCommit>>> {
-    const { commits } = await fetchJson(`${apiUrl}/commits/${docId}`)
+  static async load (streamId: StreamID | CommitID, apiUrl: string, syncInterval: number, opts: LoadOpts): Promise<Document> {
+    const state = await Document._load(streamId, apiUrl, opts)
+    return new Document(StreamUtils.deserializeState(state), apiUrl, syncInterval)
+  }
+
+  static async loadStreamCommits (streamId: StreamID, apiUrl: string): Promise<Array<Record<string, CeramicCommit>>> {
+    const { commits } = await fetchJson(`${apiUrl}/commits/${streamId}`)
 
     return commits.map((r: any) => {
       return {
-        cid: r.cid, value: DoctypeUtils.deserializeCommit(r.value)
+        cid: r.cid, value: StreamUtils.deserializeCommit(r.value)
       }
     })
   }
 
-  async change(params: DocParams, opts: DocOpts): Promise<void> {
-    const doctype = new this.doctypeLogic(this.state, this.context)
-
-    await doctype.change(params, opts)
-    this.state = doctype.state
-  }
-
-  close(): void {
-    this._syncEnabled = false
+  complete(): void {
+    this.state$.complete()
   }
 }

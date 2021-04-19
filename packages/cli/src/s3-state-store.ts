@@ -1,12 +1,12 @@
-import { DocState, Doctype, DoctypeUtils } from "@ceramicnetwork/common"
-import DocID from '@ceramicnetwork/docid'
+import { StreamState, Stream, StreamUtils } from "@ceramicnetwork/common"
+import StreamID from '@ceramicnetwork/streamid'
 import { StateStore } from "@ceramicnetwork/core";
 import LevelUp from "levelup";
 import S3LevelDOWN from "s3leveldown"
 import toArray from "stream-to-array"
 
 /**
- * Ceramic store for saving document state to S3
+ * Ceramic store for saving stream state to S3
  */
 export class S3StateStore implements StateStore {
   readonly #bucketName: string
@@ -25,22 +25,22 @@ export class S3StateStore implements StateStore {
   }
 
   /**
-   * Pin document
-   * @param document - Document instance
+   * Pin stream
+   * @param stream - Stream instance
    */
-  async save(document: Doctype): Promise<void> {
-    await this.#store.put(document.id.baseID.toString(), JSON.stringify(DoctypeUtils.serializeState(document.state)))
+  async save(stream: Stream): Promise<void> {
+    await this.#store.put(stream.id.baseID.toString(), JSON.stringify(StreamUtils.serializeState(stream.state)))
   }
 
   /**
-   * Load document state
-   * @param docId - Document ID
+   * Load stream state
+   * @param streamId - stream ID
    */
-  async load(docId: DocID): Promise<DocState> {
+  async load(streamId: StreamID): Promise<StreamState> {
     try {
-      const state = await this.#store.get(docId.baseID.toString())
+      const state = await this.#store.get(streamId.baseID.toString())
       if (state) {
-        return DoctypeUtils.deserializeState(JSON.parse(state));
+        return StreamUtils.deserializeState(JSON.parse(state));
       } else {
         return null;
       }
@@ -53,24 +53,24 @@ export class S3StateStore implements StateStore {
   }
 
   /**
-   * Unpin document
-   * @param docId - Document ID
+   * Unpin stream
+   * @param streamId - Stream ID
    */
-  async remove(docId: DocID): Promise<void> {
-    await this.#store.del(docId.baseID.toString())
+  async remove(streamId: StreamID): Promise<void> {
+    await this.#store.del(streamId.baseID.toString())
   }
 
   /**
-   * List pinned document
-   * @param docId - Document ID
+   * List pinned streams
+   * @param streamId - Stream ID
    */
-  async list(docId?: DocID): Promise<string[]> {
-    if (docId == null) {
+  async list(streamId?: StreamID): Promise<string[]> {
+    if (streamId == null) {
       const bufArray = await toArray(this.#store.createKeyStream())
       return bufArray.map((buf) => buf.toString())
     }  else {
-      const exists = Boolean(await this.load(docId.baseID))
-      return exists ? [docId.toString()] : []
+      const exists = Boolean(await this.load(streamId.baseID))
+      return exists ? [streamId.toString()] : []
     }
   }
 

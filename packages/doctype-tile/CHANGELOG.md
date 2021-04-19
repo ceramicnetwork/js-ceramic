@@ -3,17 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-## [0.14.2-rc.1](/compare/@ceramicnetwork/doctype-tile@0.14.1...@ceramicnetwork/doctype-tile@0.14.2-rc.1) (2021-04-15)
-
-**Note:** Version bump only for package @ceramicnetwork/doctype-tile
+# [0.15.0-rc.1](/compare/@ceramicnetwork/doctype-tile@0.14.1...@ceramicnetwork/doctype-tile@0.15.0-rc.1) (2021-04-02)
 
 
+### Features
 
-
-
-## [0.14.2-rc.0](/compare/@ceramicnetwork/doctype-tile@0.14.1...@ceramicnetwork/doctype-tile@0.14.2-rc.0) (2021-04-15)
-
-**Note:** Version bump only for package @ceramicnetwork/doctype-tile
+* **core, http-client, common:** Doctype accepts Running State (#1150) 0b708d4, closes #1150
+* **tile-doctype:** Update Tile API 48f30e1
 
 
 

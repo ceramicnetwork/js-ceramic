@@ -1,11 +1,11 @@
 import { Dispatcher } from '../dispatcher';
 import CID from 'cids';
-import { TileDoctype } from '@ceramicnetwork/doctype-tile';
-import DocID from '@ceramicnetwork/docid';
+import { TileDocument } from '@ceramicnetwork/doctype-tile';
+import StreamID from '@ceramicnetwork/streamid';
 import {
   CommitType,
-  DocState,
-  DoctypeHandler,
+  StreamState,
+  StreamHandler,
   LoggerProvider,
 } from '@ceramicnetwork/common';
 import { serialize, MsgType } from '../pubsub/pubsub-message';
@@ -20,7 +20,7 @@ import { StateManager } from '../state-management/state-manager';
 const TOPIC = '/ceramic';
 const FAKE_CID = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu');
 const FAKE_CID2 = new CID('bafybeig6xv5nwphfmvcnektpnojts44jqcuam7bmye2pb54adnrtccjlsu');
-const FAKE_DOC_ID = DocID.fromString('kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s');
+const FAKE_STREAM_ID = StreamID.fromString('kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s');
 
 const ipfs = {
   pubsub: {
@@ -39,15 +39,15 @@ const ipfs = {
   id: async () => ({ id: 'ipfsid' }),
 };
 
-class TileDoctypeMock extends TileDoctype {
+class TileDocumentMock extends TileDocument {
   get doctype() {
     return 'tile';
   }
 }
 
 const fakeHandler = ({
-  doctype: TileDoctypeMock,
-} as unknown) as DoctypeHandler<TileDoctypeMock>;
+  doctype: TileDocumentMock,
+} as unknown) as StreamHandler<TileDocumentMock>;
 
 describe('Dispatcher', () => {
   let dispatcher: Dispatcher;
@@ -64,7 +64,7 @@ describe('Dispatcher', () => {
     const levelPath = await tmp.tmpName();
     const stateStore = new LevelStateStore(levelPath);
     stateStore.open('test');
-    repository = new Repository(100, loggerProvider.getDiagnosticsLogger());
+    repository = new Repository(100, 100, loggerProvider.getDiagnosticsLogger());
     const pinStore = ({
       stateStore,
     } as unknown) as PinStore;
@@ -106,7 +106,7 @@ describe('Dispatcher', () => {
     const tip = new CID('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D');
     // Test if subscription ends. It always will, but better be on the safe side.
     await new Promise<void>((resolve) => {
-      const subscription = dispatcher.publishTip(FAKE_DOC_ID, tip);
+      const subscription = dispatcher.publishTip(FAKE_STREAM_ID, tip);
       subscription.add(() => {
         // Could be delay, but this is faster
         resolve();
@@ -114,7 +114,7 @@ describe('Dispatcher', () => {
     });
     expect(ipfs.pubsub.publish).toHaveBeenCalledWith(
       TOPIC,
-      serialize({ typ: MsgType.UPDATE, doc: FAKE_DOC_ID, tip: tip }),
+      serialize({ typ: MsgType.UPDATE, stream: FAKE_STREAM_ID, tip: tip }),
     );
   });
 
@@ -128,7 +128,7 @@ describe('Dispatcher', () => {
   it('handle message correctly', async () => {
     dispatcher.repository.stateManager = {} as unknown as StateManager
 
-    async function register(state: DocState) {
+    async function register(state: StreamState) {
       const runningState = new RunningState(state);
       repository.add(runningState);
       dispatcher.messageBus.queryNetwork(runningState.id).subscribe();
@@ -136,17 +136,17 @@ describe('Dispatcher', () => {
     }
 
     const initialState = ({
-      doctype: 'tile',
+      type: 0,
       log: [
         {
-          cid: FAKE_DOC_ID.cid,
+          cid: FAKE_STREAM_ID.cid,
           type: CommitType.GENESIS,
         },
       ],
-    } as unknown) as DocState;
+    } as unknown) as StreamState;
     const state$ = await register(initialState);
 
-    // Store the query ID sent when the doc is registered so we can use it as the response ID later
+    // Store the query ID sent when the stream is registered so we can use it as the response ID later
     const publishArgs = ipfs.pubsub.publish.mock.calls[0];
     expect(publishArgs[0]).toEqual(TOPIC);
     const queryMessageSent = JSON.parse(publishArgs[1]);
@@ -154,8 +154,8 @@ describe('Dispatcher', () => {
 
     // Handle UPDATE message
     dispatcher.repository.stateManager.update = jest.fn()
-    await dispatcher.handleMessage({ typ: MsgType.UPDATE, doc: FAKE_DOC_ID, tip: FAKE_CID });
-    expect(dispatcher.repository.stateManager.update).toBeCalledWith(state$, FAKE_CID);
+    await dispatcher.handleMessage({ typ: MsgType.UPDATE, stream: FAKE_STREAM_ID, tip: FAKE_CID });
+    expect(dispatcher.repository.stateManager.update).toBeCalledWith(state$.id, FAKE_CID);
 
     const continuationState = ({
       ...initialState,
@@ -163,17 +163,17 @@ describe('Dispatcher', () => {
         cid: FAKE_CID,
         type: CommitType.SIGNED,
       }),
-    } as unknown) as DocState;
-    const doc2 = await register(continuationState);
-    await dispatcher.handleMessage({ typ: MsgType.QUERY, doc: FAKE_DOC_ID, id: '1' });
+    } as unknown) as StreamState;
+    const stream2 = await register(continuationState);
+    await dispatcher.handleMessage({ typ: MsgType.QUERY, stream: FAKE_STREAM_ID, id: '1' });
     expect(ipfs.pubsub.publish).lastCalledWith(
       TOPIC,
-      serialize({ typ: MsgType.RESPONSE, id: '1', tips: new Map().set(FAKE_DOC_ID.toString(), FAKE_CID) }),
+      serialize({ typ: MsgType.RESPONSE, id: '1', tips: new Map().set(FAKE_STREAM_ID.toString(), FAKE_CID) }),
     );
 
     // Handle RESPONSE message
-    const tips = new Map().set(FAKE_DOC_ID.toString(), FAKE_CID2);
+    const tips = new Map().set(FAKE_STREAM_ID.toString(), FAKE_CID2);
     await dispatcher.handleMessage({ typ: MsgType.RESPONSE, id: queryID, tips: tips });
-    expect(dispatcher.repository.stateManager.update).toBeCalledWith(doc2, FAKE_CID2);
+    expect(dispatcher.repository.stateManager.update).toBeCalledWith(stream2.id, FAKE_CID2);
   });
 });

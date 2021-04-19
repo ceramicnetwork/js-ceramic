@@ -3,17 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-## [0.10.2-rc.1](/compare/@ceramicnetwork/http-client@0.10.1...@ceramicnetwork/http-client@0.10.2-rc.1) (2021-04-15)
-
-**Note:** Version bump only for package @ceramicnetwork/http-client
+# [0.11.0-rc.1](/compare/@ceramicnetwork/http-client@0.10.1...@ceramicnetwork/http-client@0.11.0-rc.1) (2021-04-02)
 
 
+### Features
 
-
-
-## [0.10.2-rc.0](/compare/@ceramicnetwork/http-client@0.10.1...@ceramicnetwork/http-client@0.10.2-rc.0) (2021-04-15)
-
-**Note:** Version bump only for package @ceramicnetwork/http-client
+* **core, http-client, common:** Doctype accepts Running State (#1150) 0b708d4, closes #1150
+* **tile-doctype:** Update Tile API 48f30e1
 
 
 

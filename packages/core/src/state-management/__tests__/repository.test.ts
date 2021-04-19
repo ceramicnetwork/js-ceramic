@@ -1,9 +1,11 @@
-import { DoctypeUtils, IpfsApi } from '@ceramicnetwork/common';
+import { StreamUtils, IpfsApi } from '@ceramicnetwork/common';
+import { TileDocument } from "@ceramicnetwork/doctype-tile";
 import Ceramic from '../../ceramic';
 import { createIPFS } from '../../__tests__/ipfs-util';
 import { Repository } from '../repository';
 import { anchorUpdate } from './anchor-update';
 import { createCeramic } from '../../__tests__/create-ceramic';
+import { delay } from '../../pubsub/__tests__/delay';
 
 let ipfs: IpfsApi;
 let ceramic: Ceramic;
@@ -35,15 +37,13 @@ const STRING_MAP_SCHEMA = {
 
 describe('load', () => {
   test('from memory', async () => {
-    const doc1 = await ceramic.createDocument('tile', {
-      content: { foo: Math.random().toString() },
-      metadata: { controllers },
-    });
+    const stream1 = await TileDocument.create(ceramic, { foo: 'bar' });
+    stream1.subscribe();
     const fromMemorySpy = jest.spyOn(repository, 'fromMemory');
     const fromStateStoreSpy = jest.spyOn(repository, 'fromStateStore');
     const fromNetwork = jest.spyOn(repository, 'fromNetwork');
-    const doc2 = await repository.load(doc1.id, { sync: false });
-    expect(DoctypeUtils.statesEqual(doc1.state, doc2.state)).toBeTruthy();
+    const stream2 = await repository.load(stream1.id, { syncTimeoutSeconds: 0 });
+    expect(StreamUtils.statesEqual(stream1.state, stream2.state)).toBeTruthy();
     expect(fromMemorySpy).toBeCalledTimes(1);
     expect(fromStateStoreSpy).toBeCalledTimes(0);
     expect(fromNetwork).toBeCalledTimes(0);
@@ -53,23 +53,29 @@ describe('load', () => {
 describe('validation', () => {
   test('when loading genesis ', async () => {
     // Create schema
-    const schema = await ceramic.createDocument('tile', {
-      content: STRING_MAP_SCHEMA,
-      metadata: { controllers },
-    });
+    const schema = await TileDocument.create(ceramic, STRING_MAP_SCHEMA);
     await anchorUpdate(ceramic, schema);
-    // Create invalid doc
+    // Create invalid stream
     const ipfs2 = await createIPFS();
-    const permissiveCeramic = await createCeramic(ipfs2, { validateDocs: false });
-    const invalidDoc = await permissiveCeramic.createDocument('tile', {
-      content: { stuff: 1 },
-      metadata: { controllers, schema: schema.commitId.toString() },
-    });
+    const permissiveCeramic = await createCeramic(ipfs2, { validateStreams: false });
+    const invalidDoc = await TileDocument.create(permissiveCeramic, { stuff: 1 }, { schema: schema.commitId });
     // Load it: Expect failure
-    await expect(repository.load(invalidDoc.id, { sync: false })).rejects.toThrow(
-      "Validation Error: data['stuff'] should be string",
+    await expect(repository.load(invalidDoc.id, { syncTimeoutSeconds: 0 })).rejects.toThrow(
+      "Validation Error: data/stuff must be string",
     );
     await permissiveCeramic.close();
     await ipfs2.stop();
   }, 20000);
+});
+
+test('subscribe makes state endured', async () => {
+  const durableStart = ceramic.repository.inmemory.durable.size;
+  const volatileStart = ceramic.repository.inmemory.volatile.size;
+  const stream1 = await TileDocument.create(ceramic, { foo: 'bar' });
+  expect(ceramic.repository.inmemory.durable.size).toEqual(durableStart);
+  expect(ceramic.repository.inmemory.volatile.size).toEqual(volatileStart + 1);
+  stream1.subscribe();
+  await delay(200); // Wait for rxjs plumbing
+  expect(ceramic.repository.inmemory.durable.size).toEqual(durableStart + 1);
+  expect(ceramic.repository.inmemory.volatile.size).toEqual(volatileStart);
 });

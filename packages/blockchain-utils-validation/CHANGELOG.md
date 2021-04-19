@@ -3,23 +3,9 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-## [0.1.2-rc.1](/compare/@ceramicnetwork/blockchain-utils-validation@0.1.1...@ceramicnetwork/blockchain-utils-validation@0.1.2-rc.1) (2021-04-15)
+## [0.1.2-rc.0](/compare/@ceramicnetwork/blockchain-utils-validation@0.1.1...@ceramicnetwork/blockchain-utils-validation@0.1.2-rc.0) (2021-04-02)
 
-
-### Bug Fixes
-
-* Fix tests by using node environment for jest (#1212) 14309e5, closes #1212
-
-
-
-
-
-## [0.1.2-rc.0](/compare/@ceramicnetwork/blockchain-utils-validation@0.1.1...@ceramicnetwork/blockchain-utils-validation@0.1.2-rc.0) (2021-04-15)
-
-
-### Bug Fixes
-
-* Fix tests by using node environment for jest (#1212) aff01c6, closes #1212
+**Note:** Version bump only for package @ceramicnetwork/blockchain-utils-validation
 
 
 
