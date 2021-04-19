@@ -1,9 +1,5 @@
 import fetch from "cross-fetch";
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-import type { IPFSAPI as IpfsApi } from "ipfs-core/dist/src/components";
-import { DiagnosticsLogger  } from "@ceramicnetwork/common";
-export type IpfsApi = typeof IpfsApi;
+import type { DiagnosticsLogger, IpfsApi  } from "@ceramicnetwork/common";
 
 const PEER_FILE_URLS = {
   "testnet-clay":

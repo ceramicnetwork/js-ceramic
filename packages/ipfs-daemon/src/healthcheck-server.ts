@@ -1,10 +1,5 @@
 import express from "express"
-
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-import type { IPFSAPI as IpfsApi } from 'ipfs-core/dist/src/components'
-import { DiagnosticsLogger } from '@ceramicnetwork/common'
-export type IpfsApi = typeof IpfsApi
+import type { DiagnosticsLogger, IpfsApi } from '@ceramicnetwork/common'
 
 export class HealthcheckServer {
     constructor(readonly ipfs: IpfsApi, readonly port: number, readonly host: string, readonly logger: DiagnosticsLogger) {

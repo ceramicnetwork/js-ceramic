@@ -9,7 +9,7 @@ import {
     SignedCommit, SignedCommitContainer
 } from "../index"
 import { AnchorStatus, StreamState, LogEntry } from "../stream"
-import { DagJWS } from "dids"
+import type { DagJWS } from "dids"
 import { StreamType } from '@ceramicnetwork/streamid';
 
 /**

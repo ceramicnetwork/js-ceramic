@@ -25,9 +25,8 @@
     "lib": "lib"
   },
   "dependencies": {
-    "cids": "^1.1.6",
+    "cids": "~1.1.6",
     "multibase": "~4.0.2",
-    "multicodec": "~3.0.1",
     "typescript-memoize": "^1.0.0-alpha.4",
     "uint8arrays": "^2.0.5",
     "varint": "^6.0.0"
