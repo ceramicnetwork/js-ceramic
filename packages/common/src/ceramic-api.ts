@@ -1,4 +1,4 @@
-import { DID } from 'dids'
+import type { DID } from 'dids'
 import {
     Stream,
     StreamHandler,

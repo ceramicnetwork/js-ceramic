@@ -10,10 +10,10 @@ import {
     UnsignedCommit,
     GenesisCommit,
 } from '@ceramicnetwork/common';
-import { AuthProvider, LinkProof } from "@ceramicnetwork/blockchain-utils-linking";
+import type { AuthProvider, LinkProof } from "@ceramicnetwork/blockchain-utils-linking";
 import { CommitID, StreamID, StreamRef } from "@ceramicnetwork/streamid";
 import { AccountID } from "caip";
-import { DID } from "dids";
+import type { DID } from "dids";
 
 const throwReadOnlyError = (): Promise<void> => {
     throw new Error('Historical stream commits cannot be modified. Load the stream without specifying a commit to make updates.')
