@@ -28,8 +28,8 @@
   },
   "dependencies": {
     "@ceramicnetwork/common": "^0.18.0-rc.1",
-    "@ceramicnetwork/doctype-caip10-link": "^0.14.0-rc.2",
-    "@ceramicnetwork/doctype-tile": "^0.15.0-rc.2",
+    "@ceramicnetwork/stream-caip10-link": "^0.14.0-rc.4",
+    "@ceramicnetwork/stream-tile": "^0.15.0-rc.4",
     "@ceramicnetwork/streamid": "^0.5.2-rc.0",
     "cross-fetch": "^3.1.4",
     "query-string": "7.0.0",
