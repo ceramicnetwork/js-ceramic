@@ -1,7 +1,7 @@
 {
-  "name": "@ceramicnetwork/doctype-caip10-link-handler",
+  "name": "@ceramicnetwork/stream-caip10-link-handler",
   "version": "0.14.0-rc.1",
-  "description": "Ceramic AccountLink doctype handler",
+  "description": "Ceramic AccountLink stream handler",
   "keywords": [
     "ceramic",
     "account-link",
