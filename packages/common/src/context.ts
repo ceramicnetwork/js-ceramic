@@ -1,9 +1,7 @@
-import type { Resolver } from "did-resolver"
-import { CeramicApi, DIDProvider } from "./ceramic-api"
-
-import { DID } from 'dids'
+import type { CeramicApi } from "./ceramic-api"
+import type { DID } from 'dids'
 import type { AnchorService } from "./anchor-service"
-import { IpfsApi, LoggerProvider } from "./index"
+import type { IpfsApi, LoggerProvider } from "./index"
 
 /**
  * Encapsulates Ceramic context

@@ -1,7 +1,7 @@
 import { combineURLs, fetchJson, typeStreamID } from "./utils"
 import { Document } from './document'
 
-import { DID } from 'dids'
+import type { DID } from 'dids'
 import {
   CreateOpts,
   CeramicApi,

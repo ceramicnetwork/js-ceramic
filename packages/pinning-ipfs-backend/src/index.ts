@@ -1,5 +1,5 @@
 import type {
-    CidList, PinningBackend, PinningInfo, Context, IpfsApi,
+    CidList, PinningBackend, PinningInfo, IpfsApi,
 } from "@ceramicnetwork/common";
 import type CID from "cids";
 import * as sha256 from "@stablelib/sha256";
