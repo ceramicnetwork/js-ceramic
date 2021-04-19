@@ -1,7 +1,7 @@
 import { HandlersMap } from '../handlers-map';
 import { Stream, StreamHandler, LoggerProvider } from '@ceramicnetwork/common';
-import { TileDocumentHandler } from '@ceramicnetwork/doctype-tile-handler';
-import { Caip10LinkHandler } from '@ceramicnetwork/doctype-caip10-link-handler';
+import { TileDocumentHandler } from '@ceramicnetwork/stream-tile-handler';
+import { Caip10LinkHandler } from '@ceramicnetwork/stream-caip10-link-handler';
 
 const loggerProvider = new LoggerProvider();
 const logger = loggerProvider.getDiagnosticsLogger();

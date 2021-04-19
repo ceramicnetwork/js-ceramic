@@ -9,7 +9,7 @@ import type {
   VerificationMethod
 } from 'did-resolver'
 import type { StreamState, MultiQuery, CeramicApi } from "@ceramicnetwork/common"
-import { TileDocument } from "@ceramicnetwork/doctype-tile"
+import { TileDocument } from "@ceramicnetwork/stream-tile"
 import LegacyResolver from './legacyResolver'
 import * as u8a from 'uint8arrays'
 import { StreamID } from '@ceramicnetwork/streamid'

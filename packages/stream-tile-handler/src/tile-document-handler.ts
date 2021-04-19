@@ -5,7 +5,7 @@ import type { DIDResolutionResult } from 'did-resolver'
 import jsonpatch from 'fast-json-patch'
 import cloneDeep from 'lodash.clonedeep'
 
-import { TileDocument } from "@ceramicnetwork/doctype-tile"
+import { TileDocument } from "@ceramicnetwork/stream-tile"
 import {
     AnchorStatus,
     Context,

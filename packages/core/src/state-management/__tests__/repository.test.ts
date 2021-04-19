@@ -1,5 +1,5 @@
 import { StreamUtils, IpfsApi } from '@ceramicnetwork/common';
-import { TileDocument } from "@ceramicnetwork/doctype-tile";
+import { TileDocument } from "@ceramicnetwork/stream-tile";
 import Ceramic from '../../ceramic';
 import { createIPFS } from '../../__tests__/ipfs-util';
 import { Repository } from '../repository';

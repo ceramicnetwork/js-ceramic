@@ -1,5 +1,5 @@
-import { TileDocumentHandler } from '@ceramicnetwork/doctype-tile-handler';
-import { Caip10LinkHandler } from '@ceramicnetwork/doctype-caip10-link-handler';
+import { TileDocumentHandler } from '@ceramicnetwork/stream-tile-handler';
+import { Caip10LinkHandler } from '@ceramicnetwork/stream-caip10-link-handler';
 import { Stream, StreamHandler } from '@ceramicnetwork/common';
 import { DiagnosticsLogger } from '@ceramicnetwork/common';
 import { StreamType } from '@ceramicnetwork/streamid';

@@ -11,7 +11,7 @@ import { CeramicApi, StreamUtils, LoggerConfig, LogLevel, Networks } from '@cera
 import StreamID, {CommitID} from '@ceramicnetwork/streamid'
 
 import CeramicDaemon, { CreateOpts } from './ceramic-daemon'
-import { TileDocument, TileMetadataArgs } from "@ceramicnetwork/doctype-tile";
+import { TileDocument, TileMetadataArgs } from "@ceramicnetwork/stream-tile";
 
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import KeyDidResolver from 'key-did-resolver'
