@@ -94,6 +94,7 @@ export function deserialize(message: any): PubsubMessage {
   const typ = parsed.typ as MsgType;
   switch (typ) {
     case MsgType.UPDATE: {
+      // TODO don't take streamid from 'doc' once we no longer interop with nodes older than v1.0.0
       const stream = StreamID.fromString(parsed.stream || parsed.doc)
       return {
         typ: MsgType.UPDATE,
@@ -111,6 +112,7 @@ export function deserialize(message: any): PubsubMessage {
       };
     }
     case MsgType.QUERY: {
+      // TODO don't take streamid from 'doc' once we no longer interop with nodes older than v1.0.0
       const stream = StreamID.fromString(parsed.stream || parsed.doc)
       return {
         typ: MsgType.QUERY,
