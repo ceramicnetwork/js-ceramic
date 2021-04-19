@@ -61,7 +61,7 @@ describe('validation', () => {
     const invalidDoc = await TileDocument.create(permissiveCeramic, { stuff: 1 }, { schema: schema.commitId });
     // Load it: Expect failure
     await expect(repository.load(invalidDoc.id, { syncTimeoutSeconds: 0 })).rejects.toThrow(
-      "Validation Error: data['stuff'] should be string",
+      "Validation Error: data/stuff must be string",
     );
     await permissiveCeramic.close();
     await ipfs2.stop();

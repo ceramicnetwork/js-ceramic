@@ -262,7 +262,7 @@ test('enforces schema in update that assigns schema', async () => {
   await anchorUpdate(ceramic, stream);
   const updateRec = await stream.makeCommit(ceramic, null, { schema: schemaDoc.commitId });
   await expect(ceramic.repository.stateManager.applyCommit(streamState.id, updateRec)).rejects.toThrow(
-    "Validation Error: data['stuff'] should be string",
+    "Validation Error: data/stuff must be string",
   );
 });
 
@@ -278,7 +278,7 @@ test('enforce previously assigned schema during future update', async () => {
 
   const updateRec = await stream.makeCommit(ceramic, nonConformingContent);
   await expect(ceramic.repository.stateManager.applyCommit(streamState.id, updateRec, { anchor: false, publish: false })).rejects.toThrow(
-    "Validation Error: data['stuff'] should be string",
+    "Validation Error: data/stuff must be string",
   );
 });
 
