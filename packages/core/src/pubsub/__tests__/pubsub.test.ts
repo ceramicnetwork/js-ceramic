@@ -20,7 +20,7 @@ const MESSAGES = Array.from({ length: LENGTH }).map((_, index) => {
   return {
     typ: MsgType.QUERY as MsgType.QUERY,
     id: index.toString(),
-    doc: FAKE_STREAM_ID,
+    stream: FAKE_STREAM_ID,
   };
 });
 const OUTER_MESSAGES = MESSAGES.map((message) => asIpfsMessage(message, OUTER_PEER_ID));
@@ -66,7 +66,7 @@ test('publish', async () => {
   const message = {
     typ: MsgType.QUERY as MsgType.QUERY,
     id: random.randomString(32),
-    doc: FAKE_STREAM_ID,
+    stream: FAKE_STREAM_ID,
   };
   const subscription = pubsub.next(message);
   subscription.add(() => {

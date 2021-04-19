@@ -64,7 +64,7 @@ test('pass incoming message', async () => {
     return asIpfsMessage({
       typ: MsgType.QUERY,
       id: index.toString(),
-      doc: FAKE_STREAM_ID,
+      stream: FAKE_STREAM_ID,
     });
   });
   const feed$ = from(messages);
@@ -98,7 +98,7 @@ describe('filterOuter', () => {
         {
           typ: MsgType.QUERY,
           id: index.toString(),
-          doc: FAKE_STREAM_ID,
+          stream: FAKE_STREAM_ID,
         },
         OUTER_PEER_ID,
       );
@@ -108,7 +108,7 @@ describe('filterOuter', () => {
         {
           typ: MsgType.QUERY,
           id: index.toString(),
-          doc: FAKE_STREAM_ID,
+          stream: FAKE_STREAM_ID,
         },
         PEER_ID,
       );

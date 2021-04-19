@@ -95,7 +95,7 @@ export class Dispatcher {
    * @param tip - Commit CID
    */
   publishTip (streamId: StreamID, tip: CID): Subscription {
-    return this.publish({ typ: MsgType.UPDATE, doc: streamId, tip: tip })
+    return this.publish({ typ: MsgType.UPDATE, stream: streamId, tip: tip })
   }
 
   /**
@@ -125,7 +125,7 @@ export class Dispatcher {
   async _handleUpdateMessage(message: UpdateMessage): Promise<void> {
     // TODO Add validation the message adheres to the proper format.
 
-    const { doc: streamId, tip } = message
+    const { stream: streamId, tip } = message
     // TODO: add cache of cids here so that we don't emit event
     // multiple times if we get the message from more than one peer.
     this.repository.stateManager.update(streamId, tip)
@@ -140,7 +140,7 @@ export class Dispatcher {
   async _handleQueryMessage(message: QueryMessage): Promise<void> {
     // TODO Add validation the message adheres to the proper format.
 
-    const { doc: streamId, id } = message
+    const { stream: streamId, id } = message
     const streamState = await this.repository.streamState(streamId)
     if (streamState) {
       // TODO: Should we validate that the 'id' field is the correct hash of the rest of the message?
