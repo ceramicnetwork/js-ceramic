@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.11.0-rc.3](/compare/@ceramicnetwork/http-client@0.11.0-rc.2...@ceramicnetwork/http-client@0.11.0-rc.3) (2021-04-19)
+
+**Note:** Version bump only for package @ceramicnetwork/http-client
+
+
+
+
+
 # [0.11.0-rc.2](/compare/@ceramicnetwork/http-client@0.10.1...@ceramicnetwork/http-client@0.11.0-rc.2) (2021-04-19)
 
 **Note:** Version bump only for package @ceramicnetwork/http-client

@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.15.0-rc.4](/compare/@ceramicnetwork/stream-tile@0.15.0-rc.3...@ceramicnetwork/stream-tile@0.15.0-rc.4) (2021-04-19)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile
+
+
+
+
+
 # 0.15.0-rc.3 (2021-04-19)
 
 
