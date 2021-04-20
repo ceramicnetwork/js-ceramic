@@ -10,7 +10,7 @@ jobs:
     name: Build and push
     runs-on: ubuntu-latest
     env:
-      BRANCH: ${GITHUB_REF##*/}
+      BRANCH: ${{ GITHUB_REF##*/ }}
       SHA_TAG: ${{ github.sha }}
     steps:
       -
