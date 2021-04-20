@@ -5,5 +5,5 @@
   "moduleNameMapper": {
     "^@zondax/filecoin-signing-tools/nodejs$": "@zondax/filecoin-signing-tools"
   },
-  "resolver": "<rootDir>/../../tools/jest-resolver.js"
+  "resolver": "jest-resolver-enhanced"
 }
