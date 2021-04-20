@@ -24,11 +24,11 @@
     "ceramic": "./bin/ceramic.js"
   },
   "scripts": {
-    "test": "./node_modules/.bin/jest --coverage --runInBand --env=node",
+    "test": "../../node_modules/.bin/jest --coverage --runInBand --env=node",
     "build": "../../node_modules/.bin/tsc -p tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
-    "lint": "./node_modules/.bin/eslint ./src --ext .js,.jsx,.ts,.tsx",
+    "lint": "../../node_modules/.bin/eslint ./src --ext .js,.jsx,.ts,.tsx",
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
@@ -47,12 +47,12 @@
     "cors": "^2.8.5",
     "dag-jose": "^0.3.0",
     "did-resolver": "^3.1.0",
-    "dids": "^2.0.0",
+    "dids": "^2.1.0",
     "express": "^4.17.1",
     "flat": "^5.0.2",
     "ipfs-http-client": "~49.0.3",
-    "key-did-provider-ed25519": "^1.0.1",
-    "key-did-resolver": "^1.1.1",
+    "key-did-provider-ed25519": "^1.1.0",
+    "key-did-resolver": "^1.1.2-rc.2",
     "levelup": "^4.4.0",
     "morgan": "^1.10.0",
     "multiformats": "~4.6.1",
@@ -79,7 +79,7 @@
     "modulePathIgnorePatterns": [
       "lib"
     ],
-    "resolver": "<rootDir>/../../tools/jest-resolver.js"
+    "resolver": "jest-resolver-enhanced"
   },
   "gitHead": "34eeee25597b0a60def72906c26d3afd6230aaf1"
 }
