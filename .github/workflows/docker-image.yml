@@ -59,7 +59,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       -
         name: Push js-ceramic image
-        run: docker push ceramicnetwork/js-ceramic --all-tags docker.io/ceramicnetwork/js-ceramic
+        run: docker image push --all-tags docker.io/ceramicnetwork/js-ceramic
       -
         name: Push ipfs-daemon image
-        run: docker push ceramicnetwork/ipfs-daemon --all-tags docker.io/ceramicnetwork/ipfs-daemon
+        run: docker image push --all-tags docker.io/ceramicnetwork/ipfs-daemon
