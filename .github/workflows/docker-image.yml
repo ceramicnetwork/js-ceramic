@@ -10,12 +10,14 @@ jobs:
     name: Build and push
     runs-on: ubuntu-latest
     env:
-      BRANCH: ${{ GITHUB_REF##*/ }}
       SHA_TAG: ${{ github.sha }}
     steps:
       -
         name: Check out the repo
         uses: actions/checkout@v2
+      -
+        name: Set branch name
+        run: echo "BRANCH=${GITHUB_REF##*/}" >> $GITHUB_ENV
       -
         name: Set env tag
         if: ${{ env.BRANCH == 'master' }}
