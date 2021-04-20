@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.0.0-rc.2](/compare/@ceramicnetwork/streamid@1.0.0-rc.1...@ceramicnetwork/streamid@1.0.0-rc.2) (2021-04-20)
+
+
+### Features
+
+* DocState contains type as number (#1250) 56501e2, closes #1250
+* **streamid:** Rename DocID to StreamID (#1195) 65754d1, closes #1195
+
+
+
+
+
 # [1.0.0-rc.1](/compare/@ceramicnetwork/streamid@0.5.2-rc.0...@ceramicnetwork/streamid@1.0.0-rc.1) (2021-04-19)
 
 **Note:** Version bump only for package @ceramicnetwork/streamid

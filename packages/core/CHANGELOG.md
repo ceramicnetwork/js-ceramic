@@ -3,6 +3,44 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.0.0-rc.3](/compare/@ceramicnetwork/core@1.0.0-rc.2...@ceramicnetwork/core@1.0.0-rc.3) (2021-04-20)
+
+
+### Bug Fixes
+
+* **core:** Cache providers per network (#1262) 05aba6f, closes #1262
+* **core:** Fix error handling for failed anchors (#1221) 6ecf04c, closes #1221
+* **store:** web browsers don't have access to fs (#1273) 2301e79, closes #1273
+* Fix tests by using node environment for jest (#1212) 0f04006, closes #1212
+
+
+### Features
+
+* **common:** Change 'sync' option to an enum and refine sync behaviors (#1269) 0b652fb, closes #1269
+* **common:** Miscellaneous renames from document-based to stream-based terminology (#1290) 2ca935e, closes #1290
+* **common:** Remove deprecated methods named with Records instead of Commits (#1217) 43fa46a, closes #1217
+* **common:** Rename createDocumentFromGenesis to createStreamFromGenesis (#1285) 0dbfbf3, closes #1285
+* **common:** Rename Doctype to Stream (#1266) 4ebb6ac, closes #1266
+* **common:** Update createStreamFromGenesis to take 'type' number instead of 'doctype' string (#1286) 967cf11, closes #1286
+* **common,core:** Split DocOpts into CreateOpts, LoadOpts, and UpdateOpts (#1229) 85ccbb8, closes #1229
+* **core:** Limit total number of the tasks executed concurrently (#1202) 6583a7e, closes #1202
+* **core:** Update pubsub messages to use 'stream' instead of 'doc' (#1291) 62e87b1, closes #1291
+* DocState contains type as number (#1250) 56501e2, closes #1250
+* **core, http-client:** Remove default DID Resolver and make apps provide via CeramicAPI.setDID() (#1196) e9b3c18, closes #1196
+* **core, http-client, common:** Doctype accepts Running State (#1150) 0b708d4, closes #1150
+* **core,http-client,cli:** Update config options from document to stream-based terminology (#1249) 5ce0969, closes #1249
+* **doctype-caip10-link:** Don't anchor by default when creating Caip10Links (#1234) e180889, closes #1234
+* **doctype-caip10-link:** Rename 'content' to 'did' for Caip10Link (#1216) f594ff0, closes #1216
+* **doctype-caip10-link:** Update Caip10LinkDoctype API (#1213) afcf354, closes #1213
+* **doctype-tile:** Log when DID is authenticated (#1199) 9d4a779, closes #1199
+* **doctype-tile,doctype-caip10-link:** Rename TileDoctype and Caip10LinkDoctype to TileDocument and Caip10Link (#1264) ed7ee3c, closes #1264
+* **streamid:** Rename DocID to StreamID (#1195) 65754d1, closes #1195
+* **tile-doctype:** Update Tile API (#1180) 90973ee, closes #1180
+
+
+
+
+
 # [1.0.0-rc.2](/compare/@ceramicnetwork/core@1.0.0-rc.1...@ceramicnetwork/core@1.0.0-rc.2) (2021-04-19)
 
 **Note:** Version bump only for package @ceramicnetwork/core

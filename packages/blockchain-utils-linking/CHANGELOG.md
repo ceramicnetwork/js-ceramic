@@ -3,6 +3,24 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.0.0-rc.2](/compare/@ceramicnetwork/blockchain-utils-linking@1.0.0-rc.1...@ceramicnetwork/blockchain-utils-linking@1.0.0-rc.2) (2021-04-20)
+
+
+### Bug Fixes
+
+* **blockchain-utils-linking:** pass through opts authProvider for eoaSignAccount (#1268) ae33805, closes #1268
+* Fix tests by using node environment for jest (#1212) 0f04006, closes #1212
+
+
+### Features
+
+* **blockchain-utils-linking:** default link sign message 42a1d7e
+* **tile-doctype:** Update Tile API (#1180) 90973ee, closes #1180
+
+
+
+
+
 # [1.0.0-rc.1](/compare/@ceramicnetwork/blockchain-utils-linking@0.4.0-rc.1...@ceramicnetwork/blockchain-utils-linking@1.0.0-rc.1) (2021-04-19)
 
 **Note:** Version bump only for package @ceramicnetwork/blockchain-utils-linking

@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.0.0-rc.3](/compare/@ceramicnetwork/blockchain-utils-validation@1.0.0-rc.2...@ceramicnetwork/blockchain-utils-validation@1.0.0-rc.3) (2021-04-20)
+
+
+### Bug Fixes
+
+* Fix tests by using node environment for jest (#1212) 0f04006, closes #1212
+
+
+### Features
+
+* **tile-doctype:** Update Tile API (#1180) 90973ee, closes #1180
+
+
+
+
+
 # [1.0.0-rc.2](/compare/@ceramicnetwork/blockchain-utils-validation@1.0.0-rc.1...@ceramicnetwork/blockchain-utils-validation@1.0.0-rc.2) (2021-04-19)
 
 **Note:** Version bump only for package @ceramicnetwork/blockchain-utils-validation

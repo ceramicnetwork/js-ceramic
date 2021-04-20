@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.1.2-rc.3](/compare/key-did-resolver@1.1.2-rc.2...key-did-resolver@1.1.2-rc.3) (2021-04-20)
+
+
+### Bug Fixes
+
+* Fix tests by using node environment for jest (#1212) 0f04006, closes #1212
+
+
+
+
+
 ## [1.1.2-rc.2](/compare/key-did-resolver@1.1.1...key-did-resolver@1.1.2-rc.2) (2021-04-19)
 
 

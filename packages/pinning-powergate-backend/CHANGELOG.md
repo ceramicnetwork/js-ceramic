@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.0.0-rc.3](/compare/@ceramicnetwork/pinning-powergate-backend@1.0.0-rc.2...@ceramicnetwork/pinning-powergate-backend@1.0.0-rc.3) (2021-04-20)
+
+
+### Features
+
+* **tile-doctype:** Update Tile API (#1180) 90973ee, closes #1180
+
+
+
+
+
 # [1.0.0-rc.2](/compare/@ceramicnetwork/pinning-powergate-backend@1.0.0-rc.1...@ceramicnetwork/pinning-powergate-backend@1.0.0-rc.2) (2021-04-19)
 
 **Note:** Version bump only for package @ceramicnetwork/pinning-powergate-backend

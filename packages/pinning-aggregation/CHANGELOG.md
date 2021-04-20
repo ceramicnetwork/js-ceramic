@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.0.0-rc.3](/compare/@ceramicnetwork/pinning-aggregation@1.0.0-rc.2...@ceramicnetwork/pinning-aggregation@1.0.0-rc.3) (2021-04-20)
+
+
+### Features
+
+* **common:** Miscellaneous renames from document-based to stream-based terminology (#1290) 2ca935e, closes #1290
+* **tile-doctype:** Update Tile API (#1180) 90973ee, closes #1180
+
+
+
+
+
 
 # [1.0.0-rc.2](/compare/@ceramicnetwork/pinning-aggregation@1.0.0-rc.1...@ceramicnetwork/pinning-aggregation@1.0.0-rc.2) (2021-04-19)
 
