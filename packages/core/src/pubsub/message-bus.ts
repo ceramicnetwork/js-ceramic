@@ -38,7 +38,7 @@ export class MessageBus extends Observable<PubsubMessage> implements Subscriptio
   }
 
   /**
-   * Query network for tips of document.
+   * Query network for tips of a stream.
    *
    * Sends query message to a network, adding the message id to outstandingQueries.
    * Returns CID of the tip based on response message.

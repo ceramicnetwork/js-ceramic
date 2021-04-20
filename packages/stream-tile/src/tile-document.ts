@@ -92,7 +92,7 @@ async function throwReadOnlyError (): Promise<void> {
 }
 
 /**
- * Tile doctype implementation
+ * TileDocument stream implementation
  */
 @StreamStatic<StreamConstructor<TileDocument>>()
 export class TileDocument<T = Record<string, any>> extends Stream {
@@ -145,14 +145,14 @@ export class TileDocument<T = Record<string, any>> extends Stream {
     /**
      * Loads a Tile document from a given StreamID
      * @param ceramic - Instance of CeramicAPI used to communicate with the Ceramic network
-     * @param streamId - StreamID to load.  Must correspond to a Tile doctype
+     * @param streamId - StreamID to load.  Must correspond to a TileDocument
      * @param opts - Additional options
      */
     static async load<T>(ceramic: CeramicApi, streamId: StreamID | CommitID | string, opts: LoadOpts = {}): Promise<TileDocument<T>> {
         opts = { ...DEFAULT_LOAD_OPTS, ...opts };
         const streamRef = StreamRef.from(streamId)
         if (streamRef.type != TileDocument.STREAM_TYPE_ID) {
-            throw new Error(`StreamID ${streamRef.toString()} does not refer to a '${TileDocument.STREAM_TYPE_NAME}' doctype, but to a ${streamRef.typeName}`)
+            throw new Error(`StreamID ${streamRef.toString()} does not refer to a '${TileDocument.STREAM_TYPE_NAME}' stream, but to a ${streamRef.typeName}`)
         }
 
         return ceramic.loadStream<TileDocument<T>>(streamRef, opts)

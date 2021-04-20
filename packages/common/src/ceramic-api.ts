@@ -13,20 +13,20 @@ import { LoggerProvider } from "./logger-provider";
  */
 export interface PinApi {
     /**
-     * Pin document
-     * @param streamId - Document ID
+     * Pin stream
+     * @param streamId - Stream ID
      */
     add(streamId: StreamID): Promise<void>;
 
     /**
-     * Unpin document
-     * @param streamId - Document ID
+     * Unpin stream
+     * @param streamId - Stream ID
      */
     rm(streamId: StreamID): Promise<void>;
 
     /**
-     * List pinned documents
-     * @param streamId - Document ID for filtering
+     * List pinned streams
+     * @param streamId - Stream ID for filtering
      */
     ls(streamId?: StreamID): Promise<AsyncIterable<string>>;
 }
@@ -60,9 +60,9 @@ export interface CeramicApi extends CeramicSigner {
 
     /**
      * Register Stream handler
-     * @param doctypeHandler - StreamHandler instance
+     * @param streamHandler - StreamHandler instance
      */
-    addStreamHandler<T extends Stream>(doctypeHandler: StreamHandler<T>): void;
+    addStreamHandler<T extends Stream>(streamHandler: StreamHandler<T>): void;
 
     /**
      * Create Stream from genesis commit

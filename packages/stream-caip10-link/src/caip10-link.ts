@@ -24,7 +24,7 @@ const DEFAULT_UPDATE_OPTS = { anchor: true, publish: true }
 const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE }
 
 /**
- * Caip10Link doctype implementation
+ * Caip10Link stream implementation
  */
 @StreamStatic<StreamConstructor<Caip10Link>>()
 export class Caip10Link extends Stream {
@@ -104,14 +104,14 @@ export class Caip10Link extends Stream {
     /**
      * Loads a Caip10Link from a given StreamID
      * @param ceramic - Instance of CeramicAPI used to communicate with the Ceramic network
-     * @param streamId - StreamID to load.  Must correspond to a Caip10Link doctype
+     * @param streamId - StreamID to load.  Must correspond to a Caip10Link
      * @param opts - Additional options
      */
     static async load(ceramic: CeramicApi, streamId: StreamID | CommitID | string, opts: LoadOpts = {}): Promise<Caip10Link> {
         opts = { ...DEFAULT_LOAD_OPTS, ...opts };
         const streamRef = StreamRef.from(streamId)
         if (streamRef.type != Caip10Link.STREAM_TYPE_ID) {
-            throw new Error(`StreamID ${streamRef.toString()} does not refer to a '${Caip10Link.STREAM_TYPE_NAME}' doctype, but to a ${streamRef.typeName}`)
+            throw new Error(`StreamID ${streamRef.toString()} does not refer to a '${Caip10Link.STREAM_TYPE_NAME}' stream, but to a ${streamRef.typeName}`)
         }
 
         return ceramic.loadStream<Caip10Link>(streamRef, opts)

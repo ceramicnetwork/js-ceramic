@@ -1,6 +1,6 @@
 /**
  * Enum describing different modes for syncing a stream.
- * - SYNC_ALWAYS - Means that regardless of whether or not the document is found in the node's cache
+ * - SYNC_ALWAYS - Means that regardless of whether or not the stream is found in the node's cache
  *   we will always query pubsub for the current tip for the stream and wait up to 'syncTimeoutSeconds'
  *   for the response.
  * - PREFER_CACHE - Means that if the stream is found in the node's in-memory cache or pin store,
@@ -25,17 +25,17 @@ interface BasicLoadOpts {
 }
 
 /**
- * Extra options passed as part of operations that load a document
+ * Extra options passed as part of operations that load a stream
  */
 export interface LoadOpts extends BasicLoadOpts {
     /**
-     * Load a previous version of the document based on unix timestamp
+     * Load a previous version of the stream based on unix timestamp
      */
     atTime?: number
 }
 
 /**
- * Extra options passed as part of operations that perform updates to documents
+ * Extra options passed as part of operations that perform updates to streams
  */
 export interface UpdateOpts {
     /**
@@ -51,6 +51,6 @@ export interface UpdateOpts {
 }
 
 /**
- * Extra options passed as part of operations that create documents
+ * Extra options passed as part of operations that create streams
  */
 export interface CreateOpts extends UpdateOpts, BasicLoadOpts {}

@@ -39,16 +39,6 @@ const ipfs = {
   id: async () => ({ id: 'ipfsid' }),
 };
 
-class TileDocumentMock extends TileDocument {
-  get doctype() {
-    return 'tile';
-  }
-}
-
-const fakeHandler = ({
-  doctype: TileDocumentMock,
-} as unknown) as StreamHandler<TileDocumentMock>;
-
 describe('Dispatcher', () => {
   let dispatcher: Dispatcher;
   let repository: Repository;

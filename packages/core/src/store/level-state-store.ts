@@ -35,7 +35,7 @@ export class LevelStateStore implements StateStore {
 
     /**
      * Pin stream
-     * @param streamStateHolder - Document instance
+     * @param streamStateHolder - Stream instance
      */
     async save(streamStateHolder: StreamStateHolder): Promise<void> {
         await this.#store.put(streamStateHolder.id.toString(), StreamUtils.serializeState(streamStateHolder.state))
@@ -43,7 +43,7 @@ export class LevelStateStore implements StateStore {
 
     /**
      * Load stream state
-     * @param streamId - Document ID
+     * @param streamId - Stream ID
      */
     async load(streamId: StreamID): Promise<StreamState> {
         try {
@@ -63,7 +63,7 @@ export class LevelStateStore implements StateStore {
 
     /**
      * Unpin stream
-     * @param streamId - Document ID
+     * @param streamId - Stream ID
      */
     async remove(streamId: StreamID): Promise<void> {
         await this.#store.del(streamId.baseID.toString())
@@ -71,7 +71,7 @@ export class LevelStateStore implements StateStore {
 
     /**
      * List pinned stream
-     * @param streamId - Document ID
+     * @param streamId - Stream ID
      */
     async list(streamId?: StreamID): Promise<string[]> {
         let streamIds: string[]
