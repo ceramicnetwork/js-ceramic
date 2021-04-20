@@ -41,6 +41,7 @@ jobs:
         name: Build js-ceramic image
         run: |
           docker buildx build . --file Dockerfile.daemon \
+            --tag ceramicnetwork/js-ceramic \
             --tag ceramicnetwork/js-ceramic:${{ env.ENV_TAG }} \
             --tag ceramicnetwork/js-ceramic:${{ env.SHA_TAG }} \
             --tag ceramicnetwork/js-ceramic:${{ env.BRANCH }}
@@ -48,6 +49,7 @@ jobs:
         name: Build ipfs-daemon image
         run: |
           docker buildx build . --file Dockerfile.ipfs-daemon \
+            --tag ceramicnetwork/ipfs-daemon \
             --tag ceramicnetwork/ipfs-daemon:${{ env.ENV_TAG }} \
             --tag ceramicnetwork/ipfs-daemon:${{ env.SHA_TAG }} \
             --tag ceramicnetwork/ipfs-daemon:${{ env.BRANCH }}
