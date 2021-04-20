@@ -22,12 +22,16 @@ jobs:
         run: echo "ENV_TAG=latest" >> $GITHUB_ENV
       -
         name: Set env tag
+        if: ${{ env.BRANCH == 'release-candidate' }}
+        run: echo "ENV_TAG=tnet" >> $GITHUB_ENV
+      -
+        name: Set env tag
         if: ${{ env.BRANCH == 'develop' }}
         run: echo "ENV_TAG=dev" >> $GITHUB_ENV
       -
-        name: Set env tag
-        if: ${{ env.BRANCH == 'release-candidate' }}
-        run: echo "ENV_TAG=tnet" >> $GITHUB_ENV
+        name: Set env tag (default)
+        if: ${{ env.ENV_TAG == '' }}
+        run: echo "ENV_TAG=dev" >> $GITHUB_ENV
       - 
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
