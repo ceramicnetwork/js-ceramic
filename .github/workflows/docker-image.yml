@@ -59,7 +59,7 @@ jobs:
           IMAGE_ID: "ceramicnetwork/ipfs-daemon"
         run: |
           docker buildx build . --file Dockerfile.ipfs-daemon \
+            --output "type=image,push=true" \
             --tag ${{ env.IMAGE_ID }}:${{ env.ENV_TAG }} \
             --tag ${{ env.IMAGE_ID }}:${{ env.SHA_TAG }} \
             --tag ${{ env.IMAGE_ID }}:${{ env.BRANCH }}
-          docker image push --all-tags docker.io/ceramicnetwork/ipfs-daemon
