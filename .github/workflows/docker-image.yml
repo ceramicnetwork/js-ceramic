@@ -9,8 +9,6 @@ jobs:
   push_js_ceramic:
     name: Build and push
     runs-on: ubuntu-latest
-    env:
-      SHA_TAG: ${{ github.sha }}
     steps:
       -
         name: Check out the repo
@@ -19,15 +17,20 @@ jobs:
         name: Set branch name
         run: echo "BRANCH=${GITHUB_REF##*/}" >> $GITHUB_ENV
       -
-        name: Set env tag
+        name: Set sha tag
+        run: |
+          SHA_TAG=$(git rev-parse --short=12 "${{ github.sha }}")
+          echo "SHA_TAG=$SHA_TAG" >> $GITHUB_ENV
+      -
+        name: Set master branch tag
         if: ${{ env.BRANCH == 'master' }}
         run: echo "ENV_TAG=latest" >> $GITHUB_ENV
       -
-        name: Set env tag
+        name: Set rc branch tag
         if: ${{ env.BRANCH == 'release-candidate' }}
         run: echo "ENV_TAG=tnet" >> $GITHUB_ENV
       -
-        name: Set env tag
+        name: Set develop branch tag
         if: ${{ env.BRANCH == 'develop' }}
         run: echo "ENV_TAG=dev" >> $GITHUB_ENV
       -
