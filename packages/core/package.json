@@ -63,7 +63,7 @@
     "did-resolver": "^3.1.0",
     "get-port": "^5.1.1",
     "ipfs": "~0.54.2",
-    "key-did-resolver": "^1.1.1",
+    "key-did-resolver": "^1.1.2-rc.2",
     "key-did-provider-ed25519": "^1.1.0",
     "mockdate": "^3.0.5",
     "multiformats": "~4.6.1",
