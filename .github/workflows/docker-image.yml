@@ -31,14 +31,14 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           push: true
-          tags: "@ceramicnetwork/js-ceramic:$NOW_TAG\n@ceramicnetwork/js-ceramic:$SHA_TAG\n"
+          tags: "@ceramicnetwork/js-ceramic:${{ env.NOW_TAG }}\n@ceramicnetwork/js-ceramic:${{ env.SHA_TAG }}\n"
       -
         name: Build and push ipfs-daemon
         id: ipfs_daemon
         uses: docker/build-push-action@v2
         with:
           push: true
-          tags: "@ceramicnetwork/ipfs-daemon:$NOW_TAG\n@ceramicnetwork/ipfs-daemon:$SHA_TAG\n"
+          tags: "@ceramicnetwork/ipfs-daemon:${{ env.NOW_TAG }}\n@ceramicnetwork/ipfs-daemon:${{ env.SHA_TAG }}\n"
       -
         name: Image digest
         run: |
