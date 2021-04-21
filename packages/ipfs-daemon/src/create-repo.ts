@@ -55,23 +55,18 @@ export function createRepo(options: any, s3Options: any): any {
     storageBackendOptions: {
       root: {
         ...storeConfig,
-        sharding: false,
       },
       blocks: {
         ...storeConfig,
-        sharding: true,
       },
       keys: {
         ...storeConfig,
-        sharding: false,
       },
       datastore: {
         ...storeConfig,
-        sharding: false,
       },
       pins: {
         ...storeConfig,
-        sharding: true,
       },
     },
     lock: effectiveLock,
