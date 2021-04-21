@@ -22,7 +22,7 @@ import {
 const IPFS_GET_TIMEOUT = 60000 // 1 minute
 
 /**
- * Tile doctype handler implementation
+ * TileDocument stream handler implementation
  */
 export class TileDocumentHandler implements StreamHandler<TileDocument> {
     get type(): number {

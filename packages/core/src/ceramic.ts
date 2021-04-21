@@ -41,7 +41,7 @@ import { RunningState } from './state-management/running-state';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const packageJson = require('../package.json')
 
-const DEFAULT_DOC_CACHE_LIMIT = 500; // number of streams stored in the cache
+const DEFAULT_CACHE_LIMIT = 500; // number of streams stored in the cache
 const IPFS_GET_TIMEOUT = 60000 // 1 minute
 const TESTING = process.env.NODE_ENV == 'test'
 
@@ -224,8 +224,8 @@ class Ceramic implements CeramicApi {
   }
 
   private _buildPinApi(): PinApi {
-    const boundDocLoader = this._loadDoc.bind(this)
-    const loaderWithSyncSet = (streamid) => { return boundDocLoader(streamid, { sync: SyncOptions.PREFER_CACHE })}
+    const boundStreamLoader = this._loadStream.bind(this)
+    const loaderWithSyncSet = (streamid) => { return boundStreamLoader(streamid, { sync: SyncOptions.PREFER_CACHE })}
     return new LocalPinApi(this.repository, loaderWithSyncSet, this._logger)
   }
 
@@ -348,7 +348,7 @@ class Ceramic implements CeramicApi {
       pinningBackends: config.pinningBackends,
     }
 
-    const streamCacheLimit = config.streamCacheLimit ?? DEFAULT_DOC_CACHE_LIMIT
+    const streamCacheLimit = config.streamCacheLimit ?? DEFAULT_CACHE_LIMIT
     const concurrentRequestsLimit = config.concurrentRequestsLimit ?? streamCacheLimit
 
     const ipfsTopology = new IpfsTopology(ipfs, networkOptions.name, logger)
@@ -482,7 +482,7 @@ class Ceramic implements CeramicApi {
   async loadStream<T extends Stream>(streamId: StreamID | CommitID | string, opts: LoadOpts = {}): Promise<T> {
     opts = { ...DEFAULT_LOAD_OPTS, ...opts };
     const streamRef = StreamRef.from(streamId)
-    const base$ = await this._loadDoc(streamRef.baseID, opts)
+    const base$ = await this._loadStream(streamRef.baseID, opts)
     this._logger.verbose(`Stream ${streamId.toString()} successfully loaded`)
     if (streamRef instanceof CommitID) {
       // Here CommitID is requested, let's return stream at specific commit
@@ -575,7 +575,7 @@ class Ceramic implements CeramicApi {
    * @param streamId - Stream ID
    * @param opts - Initialization options
    */
-  async _loadDoc(streamId: StreamID, opts: LoadOpts): Promise<RunningState> {
+  async _loadStream(streamId: StreamID, opts: LoadOpts): Promise<RunningState> {
     return this.repository.load(streamId, opts)
   }
 
@@ -594,7 +594,7 @@ class Ceramic implements CeramicApi {
     this.repository.listPinned().then(async list => {
       let n = 0
       await Promise.all(list.map(async streamId => {
-        await this._loadDoc(StreamID.fromString(streamId), { sync: SyncOptions.SYNC_ALWAYS })
+        await this._loadStream(StreamID.fromString(streamId), { sync: SyncOptions.SYNC_ALWAYS })
         n++;
       }))
       this._logger.verbose(`Successfully restored ${n} pinned streams`)
