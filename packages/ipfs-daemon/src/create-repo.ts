@@ -1,6 +1,6 @@
 import S3 from 'aws-sdk/clients/s3';
 import IPFSRepo from 'ipfs-repo';
-import S3Store from 'datastore-s3';
+import { makeStorageBackends } from './make-storage-backends';
 
 // A mock lock
 const notALock = {
@@ -24,10 +24,10 @@ const notALock = {
  * @param {Object} s3Options
  * @returns {Object}
  */
-export function createRepo(options: any, s3Options: any): any {
+export function createRepo(options: any, s3Options: any): IPFSRepo {
   const { bucket, region, accessKeyId, secretAccessKey } = s3Options;
 
-  const { path, createIfMissing, lock } = options;
+  const { path, createIfMissing, lock, local } = options;
 
   const storeConfig = {
     s3: new S3({
@@ -45,13 +45,7 @@ export function createRepo(options: any, s3Options: any): any {
   const effectiveLock = lock || notALock;
 
   return new IPFSRepo(path, {
-    storageBackends: {
-      root: S3Store,
-      blocks: S3Store,
-      keys: S3Store,
-      datastore: S3Store,
-      pins: S3Store,
-    },
+    storageBackends: makeStorageBackends(local),
     storageBackendOptions: {
       root: {
         ...storeConfig,
