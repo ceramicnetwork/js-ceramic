@@ -1,4 +1,3 @@
-import {createRepo} from 'datastore-s3'
 import IPFS from 'ipfs'
 import HttpApi from 'ipfs-http-server'
 import HttpGateway from 'ipfs-http-gateway'
@@ -8,6 +7,7 @@ import { DiagnosticsLogger, LogLevel, IpfsApi } from "@ceramicnetwork/common";
 import { sha256 } from 'multiformats/hashes/sha2'
 import legacy from 'multiformats/legacy'
 import { HealthcheckServer } from "./healthcheck-server";
+import { createRepo } from './create-repo';
 
 const hasher = {}
 hasher[sha256.code] = sha256
