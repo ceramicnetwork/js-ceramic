@@ -1,6 +1,6 @@
 import S3 from 'aws-sdk/clients/s3';
 import IPFSRepo from 'ipfs-repo';
-import S3Store from 'datastore-s3'
+import S3Store from 'datastore-s3';
 
 // A mock lock
 const notALock = {
@@ -58,6 +58,7 @@ export function createRepo(options: any, s3Options: any): any {
       },
       blocks: {
         ...storeConfig,
+        sharding: true,
       },
       keys: {
         ...storeConfig,
