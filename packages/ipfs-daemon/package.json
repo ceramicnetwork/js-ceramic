@@ -32,7 +32,7 @@
     "@ceramicnetwork/common": "^1.0.0-rc.2",
     "@ceramicnetwork/ipfs-topology": "^1.0.0-rc.2",
     "dag-jose": "^0.3.0",
-    "datastore-s3": "^3.0.0",
+    "datastore-s3": "^5.0.0",
     "express": "^4.17.1",
     "ipfs": "~0.54.2",
     "ipfs-http-gateway": "~0.3.2",
