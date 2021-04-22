@@ -21,7 +21,7 @@ export interface Configuration {
     awsAccessKeyId?: string
     awsSecretAccessKey?: string
     announceAddressList: string[]
-    ipfsLocal?: string
+    ipfsLocalPrefix?: string
     ipfsCreateIfMissing: boolean
     ipfsSwarmTcpPort: number
     ipfsSwarmWsPort: number
@@ -61,7 +61,7 @@ export class IpfsDaemon {
             tcpHost: props.tcpHost || process.env.TCP_HOST || '0.0.0.0',
             ipfsPath: props.ipfsPath || process.env.IPFS_PATH || 'ipfs',
             ipfsS3RepoEnabled: props.ipfsS3RepoEnabled ?? fromBooleanInput(process.env.IPFS_S3_REPO_ENABLED, false),
-            ipfsLocal: props.ipfsLocal || process.env.IPFS_LOCAL,
+            ipfsLocalPrefix: props.ipfsLocalPrefix || process.env.IPFS_LOCAL_PREFIX,
             ipfsCreateIfMissing: ipfsCreateIfMissing,
 
             awsBucketName: props.awsBucketName || process.env.AWS_BUCKET_NAME,
@@ -92,7 +92,7 @@ export class IpfsDaemon {
 
         const repo = configuration.ipfsS3RepoEnabled ? createRepo({
             path: configuration.ipfsPath,
-            local: configuration.ipfsLocal,
+            localPrefix: configuration.ipfsLocalPrefix,
             createIfMissing: configuration.ipfsCreateIfMissing
         }, {
             bucket: configuration.awsBucketName,

@@ -27,7 +27,7 @@ const notALock = {
 export function createRepo(options: any, s3Options: any): IPFSRepo {
   const { bucket, region, accessKeyId, secretAccessKey } = s3Options;
 
-  const { path, createIfMissing, lock, local } = options;
+  const { path, createIfMissing, lock, localPrefix } = options;
 
   const storeConfig = {
     s3: new S3({
@@ -45,7 +45,7 @@ export function createRepo(options: any, s3Options: any): IPFSRepo {
   const effectiveLock = lock || notALock;
 
   return new IPFSRepo(path, {
-    storageBackends: makeStorageBackends(local),
+    storageBackends: makeStorageBackends(localPrefix),
     storageBackendOptions: {
       root: {
         ...storeConfig,

@@ -19,14 +19,14 @@ function LocalDatastoreFS(localPath: string) {
   };
 }
 
-export function makeStorageBackends(localIpfs?: string): any {
-  if (localIpfs) {
+export function makeStorageBackends(localPrefix?: string): any {
+  if (localPrefix) {
     return {
-      root: LocalDatastoreFS(localIpfs),
+      root: LocalDatastoreFS(localPrefix),
       blocks: DatastoreS3,
-      keys: LocalDatastoreFS(localIpfs),
-      datastore: LocalDatastoreLevel(localIpfs),
-      pins: LocalDatastoreLevel(localIpfs),
+      keys: LocalDatastoreFS(localPrefix),
+      datastore: LocalDatastoreLevel(localPrefix),
+      pins: LocalDatastoreLevel(localPrefix),
     };
   } else {
     return {
