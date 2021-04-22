@@ -2,11 +2,11 @@ import { Logger, LoggerModes } from '@overnightjs/logger';
 import * as logfmt from 'logfmt';
 import util from 'util';
 import flatten from 'flat'
-import { 
-  ServiceLoggerBase, 
-  DiagnosticsLoggerBase, 
-  LogStyle, 
-  LogLevel, 
+import {
+  ServiceLoggerBase,
+  DiagnosticsLoggerBase,
+  LogStyle,
+  LogLevel,
   ServiceLog,
 WriteableStream } from './logger-base'
 
@@ -43,6 +43,9 @@ export class ServiceLogger extends ServiceLoggerBase {
     super.write(message)
 
     if (this.logToFiles) {
+      const now = new Date();
+      // RFC1123 timestamp
+      message = `[${now.toUTCString()}] service=${this.service} ${message}`;
       this.stream.write(util.format(message, '\n').replace(/\n\s*\n$/, '\n'));
     }
   }
