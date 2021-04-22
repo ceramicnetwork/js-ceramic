@@ -45,8 +45,8 @@ export class ServiceLogger extends ServiceLoggerBase {
     if (this.logToFiles) {
       const now = new Date();
       // RFC1123 timestamp
-      message = `[${now.toUTCString()}] service=${this.service} ${message}`;
-      this.stream.write(util.format(message, '\n').replace(/\n\s*\n$/, '\n'));
+      message = `[${now.toUTCString()}] service=${this.service} ${util.format(message, '\n').replace(/\n\s*\n$/, '\n')}`;
+      this.stream.write(message);
     }
   }
 
