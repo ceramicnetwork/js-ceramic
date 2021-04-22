@@ -40,6 +40,14 @@ export interface Configuration {
     logger: DiagnosticsLogger
 }
 
+function fromBooleanInput(input: string | undefined, byDefault?: boolean): boolean {
+  if (input) {
+    return input == 'true';
+  } else {
+    return Boolean(byDefault)
+  }
+}
+
 export class IpfsDaemon {
     constructor(readonly configuration: Configuration, readonly ipfs: IpfsApi, readonly api?: HttpApi, readonly gateway?: HttpGateway, readonly topology?: IpfsTopology, readonly healthcheck?: HealthcheckServer) {
     }
@@ -48,13 +56,13 @@ export class IpfsDaemon {
         const ceramicNetwork = props.ceramicNetwork || process.env.CERAMIC_NETWORK
         const useCentralizedPeerDiscovery = props.useCentralizedPeerDiscovery ?? process.env.NODE_ENV != 'test'
         const ipfsBootstrap = props.ipfsBootstrap || (process.env.IPFS_BOOTSTRAP ? process.env.IPFS_BOOTSTRAP.split(' ') : [])
-
+        const ipfsCreateIfMissing = props.ipfsCreateIfMissing ?? fromBooleanInput(process.env.IPFS_CREATE_IF_MISSING, true);
         const configuration: Configuration = {
             tcpHost: props.tcpHost || process.env.TCP_HOST || '0.0.0.0',
             ipfsPath: props.ipfsPath || process.env.IPFS_PATH || 'ipfs',
-            ipfsS3RepoEnabled: props.ipfsS3RepoEnabled ?? process.env.IPFS_S3_REPO_ENABLED === 'true',
+            ipfsS3RepoEnabled: props.ipfsS3RepoEnabled ?? fromBooleanInput(process.env.IPFS_S3_REPO_ENABLED, false),
             ipfsLocal: props.ipfsLocal || process.env.IPFS_LOCAL,
-            ipfsCreateIfMissing: props.ipfsCreateIfMissing ?? process.env.IPFS_CREATE_IF_MISSING == 'true',
+            ipfsCreateIfMissing: ipfsCreateIfMissing,
 
             awsBucketName: props.awsBucketName || process.env.AWS_BUCKET_NAME,
             awsAccessKeyId: props.awsBucketName || process.env.AWS_ACCESS_KEY_ID,
@@ -64,20 +72,20 @@ export class IpfsDaemon {
             ipfsSwarmTcpPort: props.ipfsSwarmTcpPort || Number(process.env.IPFS_SWARM_TCP_PORT) || 4011,
             ipfsSwarmWsPort: props.ipfsSwarmWsPort || Number(process.env.IPFS_SWARM_WS_PORT) || 4012,
 
-            ipfsEnableApi: props.ipfsEnableApi || (process.env.IPFS_ENABLE_API ? process.env.IPFS_ENABLE_API === 'true' : true),
+            ipfsEnableApi: props.ipfsEnableApi || fromBooleanInput(process.env.IPFS_ENABLE_API, true),
             ipfsApiPort: props.ipfsApiPort || Number(process.env.IPFS_API_PORT) || 5011,
 
-            ipfsEnableGateway: props.ipfsEnableGateway ?? (process.env.IPFS_ENABLE_GATEWAY ? process.env.IPFS_ENABLE_GATEWAY === 'true' : true),
+            ipfsEnableGateway: props.ipfsEnableGateway ?? fromBooleanInput(process.env.IPFS_ENABLE_GATEWAY, false),
             ipfsGatewayPort: props.ipfsGatewayPort || Number(process.env.IPFS_GATEWAY_PORT) || 9011,
-            ipfsDhtServerMode: props.ipfsDhtServerMode ?? (process.env.IPFS_DHT_SERVER_MODE === 'true'),
+            ipfsDhtServerMode: props.ipfsDhtServerMode ?? fromBooleanInput(process.env.IPFS_DHT_SERVER_MODE, false),
 
-            ipfsEnablePubsub: props.ipfsEnablePubsub ?? (process.env.IPFS_ENABLE_PUBSUB ? process.env.IPFS_ENABLE_PUBSUB === 'true' : true),
+            ipfsEnablePubsub: props.ipfsEnablePubsub ?? fromBooleanInput(process.env.IPFS_ENABLE_PUBSUB, true),
             ipfsPubsubTopics: props.ipfsPubsubTopics ?? (process.env.IPFS_PUBSUB_TOPICS ? process.env.IPFS_PUBSUB_TOPICS.split(' ') : []),
 
             ipfsBootstrap: ipfsBootstrap,
             ceramicNetwork: ceramicNetwork,
             useCentralizedPeerDiscovery: useCentralizedPeerDiscovery,
-            healthcheckEnabled: props.healthcheckEnabled ?? (process.env.HEALTHCHECK_ENABLED === 'true'),
+            healthcheckEnabled: props.healthcheckEnabled ?? fromBooleanInput(process.env.HEALTHCHECK_ENABLED, false),
             healthcheckPort: props.healthcheckPort || (process.env.HEALTHCHECK_PORT != null ? parseInt(process.env.HEALTHCHECK_PORT) : 8011),
             logger: props.logger ?? new DiagnosticsLogger(LogLevel.important, false),
         }
