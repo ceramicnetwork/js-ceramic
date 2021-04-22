@@ -7,7 +7,7 @@ import { DiagnosticsLogger, LogLevel, IpfsApi } from "@ceramicnetwork/common";
 import { sha256 } from 'multiformats/hashes/sha2'
 import legacy from 'multiformats/legacy'
 import { HealthcheckServer } from "./healthcheck-server";
-import { createRepo } from './create-repo';
+import { createRepo, StorageBackend } from './create-repo';
 
 const hasher = {}
 hasher[sha256.code] = sha256
@@ -16,12 +16,16 @@ const format = legacy(dagJose, {hashes: hasher})
 export interface Configuration {
     tcpHost: string
     ipfsPath: string
-    ipfsS3RepoEnabled: boolean
     awsBucketName?: string
     awsAccessKeyId?: string
     awsSecretAccessKey?: string
     announceAddressList: string[]
     ipfsLocalPrefix?: string
+    ipfsBackendRoot: StorageBackend,
+    ipfsBackendBlocks: StorageBackend,
+    ipfsBackendKeys: StorageBackend,
+    ipfsBackendPins: StorageBackend,
+    ipfsBackendDatastore: StorageBackend,
     ipfsCreateIfMissing: boolean
     ipfsSwarmTcpPort: number
     ipfsSwarmWsPort: number
@@ -60,9 +64,13 @@ export class IpfsDaemon {
         const configuration: Configuration = {
             tcpHost: props.tcpHost || process.env.TCP_HOST || '0.0.0.0',
             ipfsPath: props.ipfsPath || process.env.IPFS_PATH || 'ipfs',
-            ipfsS3RepoEnabled: props.ipfsS3RepoEnabled ?? fromBooleanInput(process.env.IPFS_S3_REPO_ENABLED, false),
             ipfsLocalPrefix: props.ipfsLocalPrefix || process.env.IPFS_LOCAL_PREFIX,
             ipfsCreateIfMissing: ipfsCreateIfMissing,
+            ipfsBackendRoot: props.ipfsBackendRoot ?? StorageBackend.fromEnv(process.env.IPFS_BACKEND_ROOT),
+            ipfsBackendBlocks: props.ipfsBackendBlocks ?? StorageBackend.fromEnv(process.env.IPFS_BACKEND_BLOCKS),
+            ipfsBackendKeys: props.ipfsBackendKeys ?? StorageBackend.fromEnv(process.env.IPFS_BACKEND_KEYS),
+            ipfsBackendPins: props.ipfsBackendPins ?? StorageBackend.fromEnv(process.env.IPFS_BACKEND_PINS),
+            ipfsBackendDatastore: props.ipfsBackendDatastore ?? StorageBackend.fromEnv(process.env.IPFS_BACKEND_DATASTORE),
 
             awsBucketName: props.awsBucketName || process.env.AWS_BUCKET_NAME,
             awsAccessKeyId: props.awsBucketName || process.env.AWS_ACCESS_KEY_ID,
@@ -90,15 +98,22 @@ export class IpfsDaemon {
             logger: props.logger ?? new DiagnosticsLogger(LogLevel.important, false),
         }
 
-        const repo = configuration.ipfsS3RepoEnabled ? createRepo({
+        const repo = createRepo({
             path: configuration.ipfsPath,
             localPrefix: configuration.ipfsLocalPrefix,
-            createIfMissing: configuration.ipfsCreateIfMissing
+            createIfMissing: configuration.ipfsCreateIfMissing,
+            backends: {
+              root: configuration.ipfsBackendRoot,
+              blocks: configuration.ipfsBackendBlocks,
+              keys: configuration.ipfsBackendKeys,
+              pins: configuration.ipfsBackendPins,
+              datastore: configuration.ipfsBackendDatastore
+            }
         }, {
             bucket: configuration.awsBucketName,
             accessKeyId: configuration.awsAccessKeyId,
             secretAccessKey: configuration.awsSecretAccessKey,
-        }) : configuration.ipfsPath
+        })
 
         const ipfs = await IPFS.create({
             start: false,
