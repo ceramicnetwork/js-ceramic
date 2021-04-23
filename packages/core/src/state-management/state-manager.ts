@@ -186,6 +186,7 @@ export class StateManager {
               if (!asr.cid.equals(state$.tip)) {
                 return;
               }
+              this.logger.warn(`Anchor failed for commit ${asr.cid.toString()} of stream ${asr.streamId}: ${asr.message}`)
               state$.next({ ...state$.value, anchorStatus: AnchorStatus.FAILED });
               subscription.unsubscribe();
               return;
