@@ -101,6 +101,7 @@ export class StateManager {
   }
 
   private async _handleTip(state$: RunningState, cid: CID): Promise<void> {
+    this.logger.verbose(`Learned of new tip ${cid.toString()} for stream ${state$.id.toString()}`);
     const next = await this.conflictResolution.applyTip(state$.value, cid);
     if (next) {
       state$.next(next);
@@ -196,7 +197,7 @@ export class StateManager {
           }
         }),
         catchError((error) => {
-          this.logger.err(error);
+          this.logger.err(`Error while anchoring stream ${state$.id.toString()}:\n${error}`)
           return empty();
         }),
       )
