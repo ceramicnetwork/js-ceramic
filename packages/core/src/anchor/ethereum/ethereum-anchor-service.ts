@@ -267,11 +267,11 @@ export default class EthereumAnchorService implements AnchorService {
     }
 
     if (anchorProof.blockNumber !== transaction.blockNumber) {
-      throw new Error(`Block numbers are not the same`);
+      throw new Error(`Block numbers are not the same. AnchorProof blockNumber: ${anchorProof.blockNumber}, eth txn blockNumber: ${transaction.blockNumber}`);
     }
 
     if (anchorProof.blockTimestamp !== block.timestamp) {
-      throw new Error(`Block timestamps are not the same`);
+      throw new Error(`Block timestamps are not the same. AnchorProof blockTimestamp: ${anchorProof.blockTimestamp}, eth txn blockTimestamp: ${block.timestamp}`);
     }
   }
 
