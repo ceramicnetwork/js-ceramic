@@ -483,7 +483,6 @@ class Ceramic implements CeramicApi {
     opts = { ...DEFAULT_LOAD_OPTS, ...opts };
     const streamRef = StreamRef.from(streamId)
     const base$ = await this._loadStream(streamRef.baseID, opts)
-    this._logger.verbose(`Stream ${streamId.toString()} successfully loaded`)
     if (streamRef instanceof CommitID) {
       // Here CommitID is requested, let's return stream at specific commit
       const snapshot$ = await this.repository.stateManager.rewind(base$, streamRef)
