@@ -24,7 +24,8 @@ function ipfsToPubsub(
       of(incoming).pipe(
         map((incoming) => {
           const message = deserialize(incoming);
-          const logMessage = { ...incoming, data: message };
+          const serializedMessage = serialize(message);
+          const logMessage = { ...incoming, ...JSON.parse(serializedMessage) };
           delete logMessage.key;
           delete logMessage.signature;
           pubsubLogger.log({ peer: peerId, event: 'received', topic: topic, message: logMessage });
@@ -71,13 +72,15 @@ export class Pubsub extends Observable<PubsubMessage> {
     return this.peerId$
       .pipe(
         mergeMap(async (peerId) => {
-          await this.ipfs.pubsub.publish(this.topic, serialize(message));
-          return peerId;
+          const serializedMessage = serialize(message);
+          await this.ipfs.pubsub.publish(this.topic, serializedMessage);
+          return { peerId, serializedMessage };
         }),
       )
       .subscribe({
-        next: (peerId) => {
-          this.pubsubLogger.log({ peer: peerId, event: 'published', topic: this.topic, message: message });
+        next: ({ peerId, serializedMessage }) => {
+          const logMessage = { ...message, ...JSON.parse(serializedMessage) };
+          this.pubsubLogger.log({ peer: peerId, event: 'published', topic: this.topic, message: logMessage });
         },
         error: (error) => {
           this.logger.err(error);
