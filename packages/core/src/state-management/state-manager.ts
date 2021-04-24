@@ -197,7 +197,8 @@ export class StateManager {
           }
         }),
         catchError((error) => {
-          this.logger.err(`Error while anchoring stream ${state$.id.toString()}:\n${error}`)
+          this.logger.err(`Error while anchoring stream ${state$.id.toString()}:${error}`)
+          this.logger.err(error)
           return empty();
         }),
       )
