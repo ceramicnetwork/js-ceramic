@@ -197,8 +197,10 @@ export class StateManager {
           }
         }),
         catchError((error) => {
+          // TODO: Combine these two log statements into one line so that they can't get split up in the
+          // log output.
           this.logger.err(`Error while anchoring stream ${state$.id.toString()}:${error}`)
-          this.logger.err(error)
+          this.logger.err(error)  // Log stack trace
           return empty();
         }),
       )

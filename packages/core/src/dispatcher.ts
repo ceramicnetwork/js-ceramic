@@ -138,8 +138,10 @@ export class Dispatcher {
           throw new UnreachableCaseError(message, `Unsupported message type`)
       }
     } catch (e) {
+      // TODO: Combine these two log statements into one line so that they can't get split up in the
+      // log output.
       this._logger.err(`Error while processing ${messageTypeToString(message.typ)} message from pubsub: ${e}`)
-      this._logger.err(e)
+      this._logger.err(e)  // Log stack trace
     }
   }
 
