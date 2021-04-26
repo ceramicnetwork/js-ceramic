@@ -10,6 +10,7 @@ import {
   AnchorServiceResponse,
   AnchorService,
   AnchorStatus,
+  DiagnosticsLogger,
 } from "@ceramicnetwork/common";
 import StreamID from "@ceramicnetwork/streamid";
 import { Observable, interval, from, concat, of } from "rxjs";
@@ -59,16 +60,18 @@ export default class EthereumAnchorService implements AnchorService {
   private readonly chainIdApiEndpoint: string;
   private _chainId: string;
   private readonly providersCache: LRUMap<string, providers.BaseProvider>
+  private readonly _logger: DiagnosticsLogger
 
   /**
    * @param anchorServiceUrl
    * @param ethereumRpcEndpoint
    */
-  constructor(readonly anchorServiceUrl: string, readonly ethereumRpcEndpoint: string) {
+  constructor(readonly anchorServiceUrl: string, readonly ethereumRpcEndpoint: string, logger: DiagnosticsLogger) {
     this.requestsApiEndpoint = this.anchorServiceUrl + "/api/v0/requests";
     this.chainIdApiEndpoint =
       this.anchorServiceUrl + "/api/v0/service-info/supported_chains";
     this.providersCache = new LRUMap(MAX_PROVIDERS_COUNT)
+    this._logger = logger
   }
 
   /**
@@ -245,7 +248,8 @@ export default class EthereumAnchorService implements AnchorService {
       }
       return [transaction, block]
     } catch (e) {
-      throw new Error(`Error loading transaction info for transaction ${txHash} from Ethereum: ${e}`)
+      this._logger.err(`Error loading transaction info for transaction ${txHash} from Ethereum: ${e}`)
+      throw e
     }
   }
 

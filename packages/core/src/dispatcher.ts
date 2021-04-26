@@ -79,7 +79,8 @@ export class Dispatcher {
       await this._restrictRecordSize(cid)
       return cloneDeep(record.value)
     } catch (e) {
-      throw new Error(`Error while loading commit CID ${cid.toString()} from IPFS: ${e}`)
+      this._logger.err(`Error while loading commit CID ${cid.toString()} from IPFS: ${e}`)
+      throw e
     }
   }
 
@@ -93,7 +94,8 @@ export class Dispatcher {
       const record = await this._ipfs.dag.get(cid, {timeout: IPFS_GET_TIMEOUT, path})
       return cloneDeep(record.value)
     } catch (e) {
-      throw new Error(`Error while loading CID ${cid.toString()} from IPFS: ${e}`)
+      this._logger.err(`Error while loading CID ${cid.toString()} from IPFS: ${e}`)
+      throw e
     }
   }
 
