@@ -334,7 +334,7 @@ class Ceramic implements CeramicApi {
     if (!ethereumRpcUrl && networkOptions.name == Networks.LOCAL) {
       ethereumRpcUrl = DEFAULT_LOCAL_ETHEREUM_RPC
     }
-    const anchorService = networkOptions.name != Networks.INMEMORY ? new EthereumAnchorService(anchorServiceUrl, ethereumRpcUrl) : new InMemoryAnchorService(config as any)
+    const anchorService = networkOptions.name != Networks.INMEMORY ? new EthereumAnchorService(anchorServiceUrl, ethereumRpcUrl, logger) : new InMemoryAnchorService(config as any)
     await anchorService.init()
 
     const supportedChains = await Ceramic._loadSupportedChains(networkOptions.name, anchorService)
