@@ -4,7 +4,9 @@ import { IpfsApi } from '@ceramicnetwork/common';
 import { map, catchError, mergeMap, withLatestFrom } from 'rxjs/operators';
 import { IncomingChannel, filterExternal, IPFSPubsubMessage } from './incoming-channel';
 import { DiagnosticsLogger, ServiceLogger } from '@ceramicnetwork/common';
-import uint8ArrayFromString from 'uint8arrays/from-string';
+import { TextDecoder } from 'util';
+
+const textDecoder = new TextDecoder('utf-8')
 
 /**
  * Deserialize incoming message in an internal observable that does not emit if error happens.
@@ -26,7 +28,7 @@ function ipfsToPubsub(
         map((incoming) => {
           const message = deserialize(incoming);
           const serializedMessage = serialize(message);
-          const logMessage = { ...incoming, ...JSON.parse(serializedMessage) };
+          const logMessage = { ...incoming, ...JSON.parse(textDecoder.decode(serializedMessage)) };
           delete logMessage.key;
           delete logMessage.signature;
           pubsubLogger.log({ peer: peerId, event: 'received', topic: topic, message: logMessage });
@@ -74,13 +76,13 @@ export class Pubsub extends Observable<PubsubMessage> {
       .pipe(
         mergeMap(async (peerId) => {
           const serializedMessage = serialize(message);
-          await this.ipfs.pubsub.publish(this.topic, uint8ArrayFromString(serialize(message)));
+          await this.ipfs.pubsub.publish(this.topic, serialize(message));
           return { peerId, serializedMessage };
         }),
       )
       .subscribe({
         next: ({ peerId, serializedMessage }) => {
-          const logMessage = { ...message, ...JSON.parse(serializedMessage) };
+          const logMessage = { ...message, ...JSON.parse(textDecoder.decode(serializedMessage)) };
           this.pubsubLogger.log({ peer: peerId, event: 'published', topic: this.topic, message: logMessage });
         },
         error: (error) => {

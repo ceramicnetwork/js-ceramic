@@ -4,7 +4,7 @@ import { UnreachableCaseError } from '@ceramicnetwork/common';
 import dagCBOR from 'ipld-dag-cbor';
 import * as multihashes from 'multihashes';
 import * as sha256 from '@stablelib/sha256';
-import { TextDecoder } from 'util';
+import { TextDecoder, TextEncoder } from 'util';
 import * as uint8arrays from 'uint8arrays';
 
 /**
@@ -36,6 +36,9 @@ export type ResponseMessage = {
 
 export type PubsubMessage = UpdateMessage | QueryMessage | ResponseMessage;
 
+const textEncoder = new TextEncoder('utf-8')
+const textDecoder = new TextDecoder('utf-8')
+
 function messageHash(message: any): string {
   // DAG-CBOR encoding
   const encoded = dagCBOR.util.serialize(message);
@@ -59,14 +62,14 @@ export function buildQueryMessage(streamId: StreamID): QueryMessage {
   };
 }
 
-export function serialize(message: PubsubMessage): string {
+export function serialize(message: PubsubMessage): Uint8Array {
   switch (message.typ) {
     case MsgType.QUERY: {
-      return JSON.stringify({
+      return textEncoder.encode(JSON.stringify({
         ...message,
         doc: message.stream.toString(), // todo remove once we no longer support interop with nodes older than v1.0.0
         stream: message.stream.toString(),
-      });
+      }));
     }
     case MsgType.RESPONSE: {
       const tips = {};
@@ -75,12 +78,12 @@ export function serialize(message: PubsubMessage): string {
         ...message,
         tips: tips,
       };
-      return JSON.stringify(payload);
+      return textEncoder.encode(JSON.stringify(payload));
     }
     case MsgType.UPDATE: {
       // todo remove 'doc' once we no longer support interop with nodes older than v1.0.0
       const payload = { typ: MsgType.UPDATE, doc: message.stream.toString(), stream: message.stream.toString(), tip: message.tip.toString() };
-      return JSON.stringify(payload);
+      return textEncoder.encode(JSON.stringify(payload));
     }
     default:
       throw new UnreachableCaseError(message, 'Unknown message type');
@@ -88,7 +91,7 @@ export function serialize(message: PubsubMessage): string {
 }
 
 export function deserialize(message: any): PubsubMessage {
-  const asString = new TextDecoder('utf-8').decode(message.data);
+  const asString = textDecoder.decode(message.data);
   const parsed = JSON.parse(asString);
 
   const typ = parsed.typ as MsgType;
