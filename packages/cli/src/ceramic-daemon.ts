@@ -124,7 +124,7 @@ class CeramicDaemon {
     this.diagnosticsLogger = ceramic.loggerProvider.getDiagnosticsLogger()
     this.app = addAsync(express());
     this.app.set('trust proxy', true)
-    this.app.use(express.json())
+    this.app.use(express.json({limit: '1mb'}))
     this.app.use(cors({ origin: opts.corsAllowedOrigins }))
 
     this.app.use(logRequests(ceramic.loggerProvider))
