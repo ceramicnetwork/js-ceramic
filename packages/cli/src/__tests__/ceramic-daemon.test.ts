@@ -25,6 +25,21 @@ const makeCeramicCore = async(ipfs: IpfsApi, stateStoreDirectory: string): Promi
     return core
 }
 
+/**
+ * Generates string of particular size in bytes
+ * @param size - Size in bytes
+ */
+const generateStringOfSize = (size): string => {
+    const chars = 'abcdefghijklmnopqrstuvwxyz'.split('');
+    const len = chars.length;
+    const random_data = [];
+
+    while (size--) {
+        random_data.push(chars[Math.random() * len | 0]);
+    }
+    return random_data.join('');
+}
+
 describe('Ceramic interop: core <> http-client', () => {
     jest.setTimeout(30000)
     let ipfs: IpfsApi
@@ -74,6 +89,15 @@ describe('Ceramic interop: core <> http-client', () => {
         await daemon.ceramic.context.anchorService.anchor()
         await changeHandle
     }
+
+    it('can store commit if the size is lesser than the maximum size ~256KB', async () => {
+        const streamtype = await TileDocument.create(client, { test: generateStringOfSize(200000) })
+        expect(streamtype).not.toBeNull();
+    })
+
+    it('cannot store commit if the size is greater than the maximum size ~256KB', async () => {
+        await expect(TileDocument.create(client, { test: generateStringOfSize(300000) })).rejects.toThrow(/exceeds the maximum block size of/)
+    })
 
     it('properly creates document', async () => {
         const doc1 = await TileDocument.create(core, { test: 123 }, null,
