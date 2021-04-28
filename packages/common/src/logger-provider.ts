@@ -24,10 +24,11 @@ export class LoggerProvider extends LoggerProviderBase {
         return new DiagnosticsLogger(this.config.logLevel, this.config.logToFiles, stream);
     }
 
-    public makeServiceLogger(serviceName: string): ServiceLogger {
+    public makeServiceLogger(serviceName: string, fileName?: string): ServiceLogger {
         let stream = null
         if (this.config.logToFiles) {
-            stream = this._fileLoggerFactory(this._getLogPath(`${serviceName}.log`))
+            const logName = fileName || serviceName
+            stream = this._fileLoggerFactory(this._getLogPath(`${logName}.log`))
         }
 
         return new ServiceLogger(serviceName, this.config.logLevel, this.config.logToFiles, stream)
