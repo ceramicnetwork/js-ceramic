@@ -39,9 +39,9 @@ export namespace StorageBackend {
   }
 }
 
-type Options = {
+type RepoOptions = {
   path: string;
-  localPrefix: string | undefined;
+  localPathPrefix: string | undefined;
   createIfMissing: boolean;
   backends: Record<string, StorageBackend>;
 };
@@ -83,23 +83,26 @@ function LocalDatastoreLevel(pathPrefix: string | undefined) {
   };
 }
 
-function makeBackend(config: any, name: string, options: Options, s3: () => S3, defaultBackend: any) {
-  const backend = options.backends[name] as StorageBackend;
+/**
+ * Add repository backend to IPFS configuration.
+ */
+function setRepoBackend(config: any, name: string, repoOptions: RepoOptions, s3: () => S3, defaultBackend: any) {
+  const backend = repoOptions.backends[name] as StorageBackend;
   switch (backend) {
     case StorageBackend.DEFAULT:
       config.storageBackendOptions ||= {};
       config.storageBackendOptions[name] = {
-        createIfMissing: options.createIfMissing,
+        createIfMissing: repoOptions.createIfMissing,
       };
       config.storageBackends ||= {};
-      config.storageBackends[name] = defaultBackend(options.localPrefix);
+      config.storageBackends[name] = defaultBackend(repoOptions.localPathPrefix);
       return;
     case StorageBackend.S3:
       if (!s3) throw new Error(`Expect s3 configuration for backend ${name}`);
       config.storageBackendOptions ||= {};
       config.storageBackendOptions[name] = {
         s3: s3(),
-        createIfMissing: options.createIfMissing,
+        createIfMissing: repoOptions.createIfMissing,
       };
       config.storageBackends ||= {};
       config.storageBackends[name] = DatastoreS3;
@@ -110,13 +113,8 @@ function makeBackend(config: any, name: string, options: Options, s3: () => S3, 
 }
 /**
  * A convenience method for creating an S3 backed IPFS repo
- *
- * @param {Object} S3Store
- * @param {Object} options
- * @param {Object} s3Options
- * @returns {Object}
  */
-export function createRepo(options: Options, s3Options: S3Options): IPFSRepo {
+export function createRepo(options: RepoOptions, s3Options: S3Options): IPFSRepo {
   let _s3: S3 | undefined = undefined;
   function s3() {
     const { bucket, region, accessKeyId, secretAccessKey } = s3Options;
@@ -137,11 +135,11 @@ export function createRepo(options: Options, s3Options: S3Options): IPFSRepo {
   const config = {
     lock: notALock,
   };
-  makeBackend(config, 'root', options, s3, LocalDatastoreFS);
-  makeBackend(config, 'blocks', options, s3, LocalDatastoreFS);
-  makeBackend(config, 'keys', options, s3, LocalDatastoreFS);
-  makeBackend(config, 'datastore', options, s3, LocalDatastoreLevel);
-  makeBackend(config, 'pins', options, s3, LocalDatastoreLevel);
+  setRepoBackend(config, 'root', options, s3, LocalDatastoreFS);
+  setRepoBackend(config, 'blocks', options, s3, LocalDatastoreFS);
+  setRepoBackend(config, 'keys', options, s3, LocalDatastoreFS);
+  setRepoBackend(config, 'datastore', options, s3, LocalDatastoreLevel);
+  setRepoBackend(config, 'pins', options, s3, LocalDatastoreLevel);
 
   return new IPFSRepo(options.path, config);
 }

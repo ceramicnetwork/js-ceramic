@@ -20,7 +20,7 @@ export interface Configuration {
     awsAccessKeyId?: string
     awsSecretAccessKey?: string
     announceAddressList: string[]
-    ipfsLocalPrefix?: string
+    ipfsLocalPathPrefix?: string
     ipfsBackendRoot: StorageBackend,
     ipfsBackendBlocks: StorageBackend,
     ipfsBackendKeys: StorageBackend,
@@ -64,7 +64,7 @@ export class IpfsDaemon {
         const configuration: Configuration = {
             tcpHost: props.tcpHost || process.env.TCP_HOST || '0.0.0.0',
             ipfsPath: props.ipfsPath || process.env.IPFS_PATH || 'ipfs',
-            ipfsLocalPrefix: props.ipfsLocalPrefix || process.env.IPFS_LOCAL_PREFIX,
+            ipfsLocalPathPrefix: props.ipfsLocalPathPrefix || process.env.IPFS_LOCAL_PREFIX,
             ipfsCreateIfMissing: ipfsCreateIfMissing,
             ipfsBackendRoot: props.ipfsBackendRoot ?? StorageBackend.fromEnv(process.env.IPFS_BACKEND_ROOT),
             ipfsBackendBlocks: props.ipfsBackendBlocks ?? StorageBackend.fromEnv(process.env.IPFS_BACKEND_BLOCKS),
@@ -100,7 +100,7 @@ export class IpfsDaemon {
 
         const repo = createRepo({
             path: configuration.ipfsPath,
-            localPrefix: configuration.ipfsLocalPrefix,
+            localPathPrefix: configuration.ipfsLocalPathPrefix,
             createIfMissing: configuration.ipfsCreateIfMissing,
             backends: {
               root: configuration.ipfsBackendRoot,
