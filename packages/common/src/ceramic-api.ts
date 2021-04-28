@@ -46,7 +46,7 @@ interface CeramicCommon {
  * available users can provide any object containing an authenticated DID instance.
  */
 export interface CeramicSigner extends CeramicCommon {
-    did: DID | null
+    did: DID | undefined
 
     [index: string]: any // allow arbitrary properties
 }
