@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.0.0-rc.7](/compare/@ceramicnetwork/cli@1.0.0-rc.6...@ceramicnetwork/cli@1.0.0-rc.7) (2021-04-28)
+
+
+### Bug Fixes
+
+* **cli:** Allow large requests to http API (#1324) 714922d, closes #1324
+
+
+
+
+
 # [1.0.0-rc.6](/compare/@ceramicnetwork/cli@1.0.0-rc.5...@ceramicnetwork/cli@1.0.0-rc.6) (2021-04-26)
 
 **Note:** Version bump only for package @ceramicnetwork/cli
