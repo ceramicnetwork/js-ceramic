@@ -27,11 +27,33 @@ import { CommitID, StreamID, StreamRef } from "@ceramicnetwork/streamid";
  * Arguments used to generate the metadata for Tile documents
  */
 export interface TileMetadataArgs {
-  controllers?: Array<string>
-  family?: string
-  schema?: CommitID | string
-  tags?: Array<string>
-  deterministic?: boolean
+    /**
+     * The DID(s) that are allowed to author updates to this TileDocument
+     */
+    controllers?: Array<string>
+
+    /**
+     * Allows grouping similar documents into "families". Primarily used by indexing services.
+     */
+    family?: string
+
+    /**
+     * Allows tagging documents with additional information. Primarily used by indexing services.
+     */
+    tags?: Array<string>
+
+    /**
+     * If specified, must refer to another TileDocument whose contents are a JSON-schema specification.
+     * The content of this document will then be enforced to conform to the linked schema.
+     */
+    schema?: CommitID | string
+
+    /**
+     * If true, then two calls to TileDocument.create() with the same content and the same metadata
+     * will only create a single document with the same StreamID. If false, then otherwise
+     * identical documents will generate unique StreamIDs and be able to be updated independently.
+     */
+    deterministic?: boolean
 }
 
 const DEFAULT_CREATE_OPTS = { anchor: true, publish: true, sync: SyncOptions.PREFER_CACHE }
