@@ -268,9 +268,7 @@ test('#baseID', () => {
 
 test('instanceof', () => {
   const commitId = new CommitID('tile', BASE_CID_STRING, COMMIT_CID_STRING);
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  const instanceSpy = jest.spyOn(CommitID, Symbol.hasInstance);
-  expect(commitId instanceof CommitID).toBeTruthy();
+  const instanceSpy = jest.spyOn(CommitID, 'isInstance');
+  expect(CommitID.isInstance(commitId)).toBeTruthy();
   expect(instanceSpy).toBeCalledWith(commitId);
 });

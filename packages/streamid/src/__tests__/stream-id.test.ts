@@ -194,10 +194,8 @@ describe('#atCommit', () => {
 });
 
 test('instanceof', () => {
-  const streamId = StreamID.fromString(STREAM_ID_STRING)
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  const instanceSpy = jest.spyOn(StreamID, Symbol.hasInstance)
-  expect(streamId instanceof StreamID).toBeTruthy()
-  expect(instanceSpy).toBeCalledWith(streamId)
-})
+  const streamId = StreamID.fromString(STREAM_ID_STRING);
+  const instanceSpy = jest.spyOn(StreamID, 'isInstance');
+  expect(StreamID.isInstance(streamId)).toBeTruthy();
+  expect(instanceSpy).toBeCalledWith(streamId);
+});
