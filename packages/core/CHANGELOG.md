@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.0.0-rc.9](/compare/@ceramicnetwork/core@1.0.0-rc.8...@ceramicnetwork/core@1.0.0-rc.9) (2021-04-29)
+
+
+### Reverts
+
+* Revert "fix(core): Add 2 retries when loading CIDs from IPFS (#1334)" 6101b0b, closes #1334
+
+
+
+
+
 # [1.0.0-rc.8](/compare/@ceramicnetwork/core@1.0.0-rc.7...@ceramicnetwork/core@1.0.0-rc.8) (2021-04-29)
 
 
