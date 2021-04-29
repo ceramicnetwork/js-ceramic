@@ -134,7 +134,7 @@ const DEFAULT_NETWORK = Networks.INMEMORY
 
 const normalizeStreamID = (streamId: StreamID | string): StreamID => {
   const streamRef = StreamRef.from(streamId)
-  if (streamRef instanceof StreamID) {
+  if (StreamID.isInstance(streamRef)) {
     return streamRef
   } else {
     throw new Error(`Not StreamID: ${streamRef}`)
@@ -483,7 +483,7 @@ class Ceramic implements CeramicApi {
     opts = { ...DEFAULT_LOAD_OPTS, ...opts };
     const streamRef = StreamRef.from(streamId)
     const base$ = await this._loadStream(streamRef.baseID, opts)
-    if (streamRef instanceof CommitID) {
+    if (CommitID.isInstance(streamRef)) {
       // Here CommitID is requested, let's return stream at specific commit
       const snapshot$ = await this.repository.stateManager.rewind(base$, streamRef)
       return streamFromState<T>(this.context, this._streamHandlers, snapshot$.value)
