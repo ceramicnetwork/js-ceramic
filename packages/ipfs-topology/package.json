@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/ipfs-topology",
-  "version": "1.0.0-rc.5",
+  "version": "1.0.0-rc.6",
   "description": "Setup IPFS topology right",
   "keywords": [
     "ipfs",
@@ -27,7 +27,7 @@
     "cross-fetch": "^3.1.4"
   },
   "devDependencies": {
-    "@ceramicnetwork/common": "^1.0.0-rc.5",
+    "@ceramicnetwork/common": "^1.0.0-rc.6",
     "@types/node": "^13.13.15"
   }
 }

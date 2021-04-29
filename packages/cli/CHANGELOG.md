@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.0.0-rc.9](/compare/@ceramicnetwork/cli@1.0.0-rc.8...@ceramicnetwork/cli@1.0.0-rc.9) (2021-04-29)
+
+
+### Features
+
+* **cli:** allow daemon hostname to be configured (#1329) feba266, closes #1329
+
+
+
+
+
 # [1.0.0-rc.8](/compare/@ceramicnetwork/cli@1.0.0-rc.7...@ceramicnetwork/cli@1.0.0-rc.8) (2021-04-28)
 
 **Note:** Version bump only for package @ceramicnetwork/cli
