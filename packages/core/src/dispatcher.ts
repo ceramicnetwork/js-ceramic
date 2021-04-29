@@ -92,7 +92,7 @@ export class Dispatcher {
             const record = await this._ipfs.dag.get(cid, {timeout: IPFS_GET_TIMEOUT, path})
             return cloneDeep(record.value)
         } catch (e) {
-            this._logger.err(`Error while loading CID ${cid.toString()} from IPFS: ${e}. Retries remaining ${IPFS_RETRIES - i}`)
+            this._logger.err(`Error while loading CID ${cid.toString()} from IPFS: ${e}. Retries remaining: ${IPFS_RETRIES - i}`)
             if (i < IPFS_RETRIES) {
                 continue
             }
