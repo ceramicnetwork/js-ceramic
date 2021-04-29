@@ -55,7 +55,7 @@
     "key-did-resolver": "^1.2.0-rc.0",
     "levelup": "^4.4.0",
     "morgan": "^1.10.0",
-    "multiformats": "~4.6.1",
+    "multiformats": "~7.0.0",
     "s3leveldown": "^2.2.1",
     "stream-to-array": "^2.3.0",
     "uint8arrays": "^2.0.5"
