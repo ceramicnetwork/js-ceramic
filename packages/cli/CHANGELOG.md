@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.0.0-rc.12](/compare/@ceramicnetwork/cli@1.0.0-rc.11...@ceramicnetwork/cli@1.0.0-rc.12) (2021-04-30)
+
+
+### Features
+
+* **cli:** use 0 address for default hostname (#1330) 50ea615, closes #1330
+
+
+
+
+
 # [1.0.0-rc.11](/compare/@ceramicnetwork/cli@1.0.0-rc.10...@ceramicnetwork/cli@1.0.0-rc.11) (2021-04-29)
 
 **Note:** Version bump only for package @ceramicnetwork/cli
