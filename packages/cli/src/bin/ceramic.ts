@@ -13,7 +13,7 @@ program
     .option('--state-store-s3-bucket <string>', `The S3 bucket name to use for storing pinned stream state. If not provided pinned stream state will only be saved locally but not to S3.`)
     .option('--gateway', 'Makes read only endpoints available. It is disabled by default')
     .option('--port <int>', 'Port daemon is available on. Default is 7007')
-    .option('--hostname <string>', 'Host daemon is available on. Default is "localhost"')
+    .option('--hostname <string>', 'Host daemon is available on. Default is 0.0.0.0')
     .option('--debug', 'Enable debug logging level. Default is false')
     .option('--verbose', 'Enable verbose logging level. Default is false')
     .option('--log-to-files', 'If debug is true, write logs to files. Default is false')

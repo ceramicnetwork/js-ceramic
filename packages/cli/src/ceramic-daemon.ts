@@ -22,7 +22,7 @@ import { addAsync, ExpressWithAsync } from '@awaitjs/express'
 import { logRequests } from './daemon/log-requests';
 import type { Server } from 'http';
 
-const DEFAULT_HOSTNAME = 'localhost'
+const DEFAULT_HOSTNAME = '0.0.0.0'
 const DEFAULT_PORT = 7007
 const toApiPath = (ending: string): string => '/api/v0' + ending
 
