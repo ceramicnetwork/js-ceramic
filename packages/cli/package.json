@@ -43,6 +43,7 @@
     "@ceramicnetwork/streamid": "^1.0.0-rc.2",
     "@stablelib/random": "^1.0.0",
     "aws-sdk": "^2.844.0",
+    "blockcodec-to-ipld-format": "^0.0.1",
     "commander": "^7.0.0",
     "cors": "^2.8.5",
     "dag-jose": "^0.3.0",
@@ -50,12 +51,11 @@
     "dids": "^2.1.0",
     "express": "^4.17.1",
     "flat": "^5.0.2",
-    "ipfs-http-client": "^49.0.5-rc.3",
+    "ipfs-http-client": "next",
     "key-did-provider-ed25519": "^1.1.0",
     "key-did-resolver": "^1.1.2-rc.3",
-    "levelup": "^4.4.0",
+    "levelup": "^5.0.0",
     "morgan": "^1.10.0",
-    "multiformats": "~4.6.1",
     "s3leveldown": "^2.2.1",
     "stream-to-array": "^2.3.0",
     "uint8arrays": "^2.0.5"
@@ -68,9 +68,8 @@
     "@types/node": "^13.13.15",
     "@types/stream-to-array": "^2.3.0",
     "get-port": "^5.1.1",
-    "ipfs-core": "~0.5.2",
+    "ipfs-core": "next",
     "rxjs": "^6.6.7",
-    "ipfs-core": "~0.5.5-rc.3",
     "tmp-promise": "^2.0.2"
   },
   "jest": {

@@ -1,7 +1,6 @@
 import dagJose from 'dag-jose';
-import { sha256 } from 'multiformats/hashes/sha2'
-import legacy from 'multiformats/legacy'
-import IPFS from 'ipfs';
+import { convert } from 'blockcodec-to-ipld-format'
+import IPFS from 'ipfs-core';
 import { IpfsApi } from '@ceramicnetwork/common';
 import tmp from 'tmp-promise';
 import getPort from 'get-port';
@@ -11,9 +10,7 @@ import getPort from 'get-port';
  * @param overrideConfig - IFPS config for override
  */
 export async function createIPFS(overrideConfig: Record<string, unknown> = {}): Promise<IpfsApi> {
-  const hasher = {}
-  hasher[sha256.code] = sha256
-  const format = legacy(dagJose, {hashes: hasher})
+  const format = convert(dagJose)
   const tmpFolder = await tmp.dir({ unsafeCleanup: true });
 
   const port = await getPort();

@@ -1,6 +1,6 @@
 import fetch from "cross-fetch";
 import type { DiagnosticsLogger, IpfsApi  } from "@ceramicnetwork/common";
-import type Multiaddr from 'multiaddr';
+import { Multiaddr } from 'multiaddr';
 
 const PEER_FILE_URLS = {
   "testnet-clay":

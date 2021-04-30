@@ -27,7 +27,7 @@
   "dependencies": {
     "@stablelib/base64": "^1.0.0",
     "@stablelib/sha256": "^1.0.0",
-    "ipfs-http-client": "^49.0.5-rc.3"
+    "ipfs-http-client": "next"
   },
   "devDependencies": {
     "@ceramicnetwork/common": "^1.0.0-rc.4",

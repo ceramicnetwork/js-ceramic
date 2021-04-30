@@ -1,15 +1,12 @@
 import {IpfsDaemon} from "@ceramicnetwork/ipfs-daemon";
 
 import dagJose from 'dag-jose'
-import legacy from 'multiformats/legacy'
+import { convert } from 'blockcodec-to-ipld-format'
 import ipfsClient from "ipfs-http-client"
 import { IpfsApi } from "@ceramicnetwork/common"
 import { DiagnosticsLogger } from "@ceramicnetwork/common";
-import { sha256 } from 'multiformats/hashes/sha2'
 
-const hasher = {}
-hasher[sha256.code] = sha256
-const dagJoseFormat = legacy(dagJose, {hashes: hasher})
+const dagJoseFormat = convert(dagJose)
 
 
 const IPFS_DHT_SERVER_MODE = process.env.IPFS_DHT_SERVER_MODE === 'true'

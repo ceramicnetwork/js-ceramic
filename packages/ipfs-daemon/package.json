@@ -31,13 +31,13 @@
   "dependencies": {
     "@ceramicnetwork/common": "^1.0.0-rc.4",
     "@ceramicnetwork/ipfs-topology": "^1.0.0-rc.4",
+    "blockcodec-to-ipld-format": "^0.0.1",
     "dag-jose": "^0.3.0",
     "datastore-s3": "^5.0.0",
     "express": "^4.17.1",
-    "ipfs-core-types": "~0.3.2-rc.6",
-    "ipfs-http-gateway": "~0.3.3-rc.6",
-    "ipfs-http-server": "~0.3.5-rc.3",
-    "multiformats": "~4.6.1"
+    "ipfs-core-types": "next",
+    "ipfs-http-gateway": "next",
+    "ipfs-http-server": "next"
   },
   "devDependencies": {
     "@types/express": "^4.17.8",

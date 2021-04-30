@@ -36,7 +36,7 @@ export type ResponseMessage = {
 
 export type PubsubMessage = UpdateMessage | QueryMessage | ResponseMessage;
 
-const textEncoder = new TextEncoder('utf-8')
+const textEncoder = new TextEncoder()
 const textDecoder = new TextDecoder('utf-8')
 
 function messageHash(message: any): string {
