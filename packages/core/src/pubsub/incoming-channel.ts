@@ -54,7 +54,7 @@ export class IncomingChannel extends Observable<IPFSPubsubMessage> {
       const handler = (message: IPFSPubsubMessage) => subscriber.next(message);
       const complete = () => subscriber.complete();
 
-      this.tasks.add(() => this.resubscribe(handler, complete));
+      this.tasks.add(() => this.resubscribe(handler, complete, true));
 
       const ensureSubscribed = interval(this.resubscribeEvery).subscribe(() => {
         this.tasks.add(() => this.resubscribe(handler, complete));
@@ -74,12 +74,12 @@ export class IncomingChannel extends Observable<IPFSPubsubMessage> {
     this.tasks = buildResubscribeQueue(logger);
   }
 
-  private async resubscribe(handler: (message: IPFSPubsubMessage) => void, complete: () => void): Promise<void> {
+  private async resubscribe(handler: (message: IPFSPubsubMessage) => void, complete: () => void, forceSubscribe = false): Promise<void> {
     const isRunning = this.ipfs && this.ipfs.pubsub && this.ipfs.pubsub.ls;
     if (isRunning) {
       const listeningTopics = await this.ipfs.pubsub.ls();
       const isSubscribed = listeningTopics.includes(this.topic);
-      if (!isSubscribed) {
+      if (!isSubscribed || forceSubscribe) {
         await this.ipfs.pubsub.unsubscribe(this.topic, handler);
         await this.ipfs.pubsub.subscribe(this.topic, handler);
         const ipfsId = await this.ipfs.id();
