@@ -109,7 +109,10 @@ export class CommitID implements StreamRef {
   static fromBytes = fromBytes;
   static fromString = fromString;
 
-  static [Symbol.hasInstance](instance: any): boolean {
+  // WORKAROUND. Weird replacement for Symbol.hasInstance due to
+  // this old bug in Babel https://github.com/babel/babel/issues/4452
+  // which is used by CRA, which is widely popular.
+  static isInstance(instance: any): instance is CommitID {
     return typeof instance === 'object' && '_tag' in instance && instance._tag === TAG;
   }
 

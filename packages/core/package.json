@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/core",
-  "version": "1.0.0-rc.5",
+  "version": "1.0.0-rc.10",
   "description": "Typescript implementation of the Ceramic protocol",
   "keywords": [
     "Ceramic",
@@ -29,15 +29,15 @@
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/common": "^1.0.0-rc.4",
-    "@ceramicnetwork/ipfs-topology": "^1.0.0-rc.4",
-    "@ceramicnetwork/pinning-aggregation": "^1.0.0-rc.4",
-    "@ceramicnetwork/pinning-ipfs-backend": "^1.0.0-rc.4",
-    "@ceramicnetwork/stream-caip10-link": "^1.0.0-rc.4",
-    "@ceramicnetwork/stream-caip10-link-handler": "^1.0.0-rc.4",
-    "@ceramicnetwork/stream-tile": "^1.0.0-rc.4",
-    "@ceramicnetwork/stream-tile-handler": "^1.0.0-rc.4",
-    "@ceramicnetwork/streamid": "^1.0.0-rc.2",
+    "@ceramicnetwork/common": "^1.0.0-rc.6",
+    "@ceramicnetwork/ipfs-topology": "^1.0.0-rc.7",
+    "@ceramicnetwork/pinning-aggregation": "^1.0.0-rc.6",
+    "@ceramicnetwork/pinning-ipfs-backend": "^1.0.0-rc.6",
+    "@ceramicnetwork/stream-caip10-link": "^1.0.0-rc.6",
+    "@ceramicnetwork/stream-caip10-link-handler": "^1.0.0-rc.6",
+    "@ceramicnetwork/stream-tile": "^1.0.0-rc.6",
+    "@ceramicnetwork/stream-tile-handler": "^1.0.0-rc.6",
+    "@ceramicnetwork/streamid": "^1.0.0-rc.3",
     "@ethersproject/providers": "5.0.23",
     "@stablelib/random": "^1.0.0",
     "@stablelib/sha256": "^1.0.0",
@@ -57,7 +57,7 @@
     "uint8arrays": "^2.0.5"
   },
   "devDependencies": {
-    "@ceramicnetwork/3id-did-resolver": "^1.2.0-rc.7",
+    "@ceramicnetwork/3id-did-resolver": "^1.2.0-rc.9",
     "@ceramicnetwork/blockchain-utils-validation": "^1.0.0-rc.3",
     "@types/node": "^13.13.15",
     "dag-jose": "^0.3.0",
@@ -65,7 +65,7 @@
     "get-port": "^5.1.1",
     "ipfs-core": "next",
     "key-did-provider-ed25519": "^1.1.0",
-    "key-did-resolver": "^1.1.2-rc.3",
+    "key-did-resolver": "^1.2.0-rc.0",
     "mockdate": "^3.0.5",
     "tmp-promise": "^2.0.2"
   },

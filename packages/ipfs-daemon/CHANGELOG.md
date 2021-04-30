@@ -3,6 +3,38 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.0.0-rc.8](/compare/@ceramicnetwork/ipfs-daemon@1.0.0-rc.7...@ceramicnetwork/ipfs-daemon@1.0.0-rc.8) (2021-04-29)
+
+**Note:** Version bump only for package @ceramicnetwork/ipfs-daemon
+
+
+
+
+
+# [1.0.0-rc.7](/compare/@ceramicnetwork/ipfs-daemon@1.0.0-rc.6...@ceramicnetwork/ipfs-daemon@1.0.0-rc.7) (2021-04-29)
+
+**Note:** Version bump only for package @ceramicnetwork/ipfs-daemon
+
+
+
+
+
+# [1.0.0-rc.6](/compare/@ceramicnetwork/ipfs-daemon@1.0.0-rc.5...@ceramicnetwork/ipfs-daemon@1.0.0-rc.6) (2021-04-28)
+
+**Note:** Version bump only for package @ceramicnetwork/ipfs-daemon
+
+
+
+
+
+# [1.0.0-rc.5](/compare/@ceramicnetwork/ipfs-daemon@1.0.0-rc.4...@ceramicnetwork/ipfs-daemon@1.0.0-rc.5) (2021-04-28)
+
+**Note:** Version bump only for package @ceramicnetwork/ipfs-daemon
+
+
+
+
+
 # [1.0.0-rc.4](/compare/@ceramicnetwork/ipfs-daemon@1.0.0-rc.3...@ceramicnetwork/ipfs-daemon@1.0.0-rc.4) (2021-04-23)
 
 **Note:** Version bump only for package @ceramicnetwork/ipfs-daemon

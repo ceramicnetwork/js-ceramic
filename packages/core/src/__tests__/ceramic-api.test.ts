@@ -229,13 +229,13 @@ describe('Ceramic API', () => {
       expect(logRecords).toEqual(expected)
     })
 
-    it('can store record if the size is lesser than the maximum size ~256KB', async () => {
-      const streamtype = await TileDocument.create(ceramic, { test: generateStringOfSize(10000) })
+    it('can store commit if the size is lesser than the maximum size ~256KB', async () => {
+      const streamtype = await TileDocument.create(ceramic, { test: generateStringOfSize(200000) })
       expect(streamtype).not.toBeNull();
     })
 
-    it('cannot store record if the size is greated than the maximum size ~256KB', async () => {
-      await expect(TileDocument.create(ceramic, { test: generateStringOfSize(1000000) })).rejects.toThrow(/exceeds the maximum block size of/)
+    it('cannot store commit if the size is greater than the maximum size ~256KB', async () => {
+      await expect(TileDocument.create(ceramic, { test: generateStringOfSize(300000) })).rejects.toThrow(/exceeds the maximum block size of/)
     })
   })
 

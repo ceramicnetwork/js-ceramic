@@ -1,14 +1,17 @@
 /**
  * Enum describing different modes for syncing a stream.
- * - SYNC_ALWAYS - Means that regardless of whether or not the stream is found in the node's cache
- *   we will always query pubsub for the current tip for the stream and wait up to 'syncTimeoutSeconds'
- *   for the response.
- * - PREFER_CACHE - Means that if the stream is found in the node's in-memory cache or pin store,
- *   then the cached version is returned without performing any query to the pubsub network for the
- *   current tip.
  */
 export enum SyncOptions {
+    /**
+     *  If the stream is found in the node's in-memory cache or pin store, then return the cached version
+     *  without performing any query to the pubsub network for the current tip.
+     */
     PREFER_CACHE,
+
+    /**
+     *  Always query pubsub for the current tip for the stream and wait up to 'syncTimeoutSeconds'
+     *   for the response, regardless of whether or not the stream is found in the node's cache
+     */
     SYNC_ALWAYS,
 }
 

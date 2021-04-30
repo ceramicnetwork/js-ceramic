@@ -19,6 +19,19 @@ const IPFS_GET_TIMEOUT = 60000 // 1 minute
 const IPFS_MAX_RECORD_SIZE = 256000 // 256 KB
 const IPFS_RESUBSCRIBE_INTERVAL_DELAY = 1000 * 15 // 15 sec
 
+function messageTypeToString(type: MsgType): string {
+  switch (type) {
+    case MsgType.UPDATE:
+      return "Update"
+    case MsgType.QUERY:
+      return "Query"
+    case MsgType.RESPONSE:
+      return "Response"
+    default:
+      throw new UnreachableCaseError(type, `Unsupported message type`)
+  }
+}
+
 /**
  * Ceramic core Dispatcher used for handling messages from pub/sub topic.
  */
@@ -61,10 +74,15 @@ export class Dispatcher {
    * @param cid - Commit CID
    */
   async retrieveCommit (cid: CID | string): Promise<any> {
-    const asCid = typeof cid === 'string' ? new CID(cid) : cid
-    const record = await this._ipfs.dag.get(asCid, { timeout: IPFS_GET_TIMEOUT })
-    await this._restrictRecordSize(cid)
-    return cloneDeep(record.value)
+    try {
+      const asCid = typeof cid === 'string' ? new CID(cid) : cid
+      const record = await this._ipfs.dag.get(asCid, {timeout: IPFS_GET_TIMEOUT})
+      await this._restrictRecordSize(cid)
+      return cloneDeep(record.value)
+    } catch (e) {
+      this._logger.err(`Error while loading commit CID ${cid.toString()} from IPFS: ${e}`)
+      throw e
+    }
   }
 
   /**
@@ -73,9 +91,14 @@ export class Dispatcher {
    * @param path - optional IPLD path to load, starting from the object represented by `cid`
    */
   async retrieveFromIPFS (cid: CID | string, path?: string): Promise<any> {
-    const asCid = typeof cid === 'string' ? new CID(cid) : cid
-    const record = await this._ipfs.dag.get(asCid, { timeout: IPFS_GET_TIMEOUT, path })
-    return cloneDeep(record.value)
+    try {
+      const asCid = typeof cid === 'string' ? new CID(cid) : cid
+      const record = await this._ipfs.dag.get(asCid, {timeout: IPFS_GET_TIMEOUT, path})
+      return cloneDeep(record.value)
+    } catch (e) {
+      this._logger.err(`Error while loading CID ${cid.toString()} from IPFS: ${e}`)
+      throw e
+    }
   }
 
   /**
@@ -104,18 +127,25 @@ export class Dispatcher {
    * Handles one message from the pubsub topic.
    */
   async handleMessage(message: PubsubMessage): Promise<void> {
-    switch (message.typ) {
-      case MsgType.UPDATE:
-        await this._handleUpdateMessage(message)
-        break
-      case MsgType.QUERY:
-        await this._handleQueryMessage(message)
-        break
-      case MsgType.RESPONSE:
-        await this._handleResponseMessage(message)
-        break
-      default:
-        throw new UnreachableCaseError(message, `Unsupported message type`)
+    try {
+      switch (message.typ) {
+        case MsgType.UPDATE:
+          await this._handleUpdateMessage(message)
+          break
+        case MsgType.QUERY:
+          await this._handleQueryMessage(message)
+          break
+        case MsgType.RESPONSE:
+          await this._handleResponseMessage(message)
+          break
+        default:
+          throw new UnreachableCaseError(message, `Unsupported message type`)
+      }
+    } catch (e) {
+      // TODO: Combine these two log statements into one line so that they can't get split up in the
+      // log output.
+      this._logger.err(`Error while processing ${messageTypeToString(message.typ)} message from pubsub: ${e}`)
+      this._logger.err(e)  // Log stack trace
     }
   }
 

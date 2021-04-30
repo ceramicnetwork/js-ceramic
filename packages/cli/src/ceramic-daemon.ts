@@ -22,6 +22,7 @@ import { addAsync, ExpressWithAsync } from '@awaitjs/express'
 import { logRequests } from './daemon/log-requests';
 import type { Server } from 'http';
 
+const DEFAULT_HOSTNAME = '0.0.0.0'
 const DEFAULT_PORT = 7007
 const toApiPath = (ending: string): string => '/api/v0' + ending
 
@@ -31,6 +32,7 @@ const toApiPath = (ending: string): string => '/api/v0' + ending
 export interface CreateOpts {
   ipfsHost?: string;
   port?: number;
+  hostname?: string;
   corsAllowedOrigins?: string | RegExp[];
 
   ethereumRpcUrl?: string;
@@ -124,7 +126,7 @@ class CeramicDaemon {
     this.diagnosticsLogger = ceramic.loggerProvider.getDiagnosticsLogger()
     this.app = addAsync(express());
     this.app.set('trust proxy', true)
-    this.app.use(express.json())
+    this.app.use(express.json({limit: '1mb'}))
     this.app.use(cors({ origin: opts.corsAllowedOrigins }))
 
     this.app.use(logRequests(ceramic.loggerProvider))
@@ -137,8 +139,9 @@ class CeramicDaemon {
   async listen(): Promise<void> {
     return new Promise<void>((resolve) => {
       const port = this.opts.port || DEFAULT_PORT
-      this.server = this.app.listen(port, () => {
-        this.diagnosticsLogger.imp('Ceramic API running on port ' + port)
+      const hostname = this.opts.hostname || DEFAULT_HOSTNAME
+      this.server = this.app.listen(port, hostname, () => {
+        this.diagnosticsLogger.imp(`Ceramic API running on ${hostname}:${port}'`)
         resolve()
       })
       this.server.keepAliveTimeout = 60 * 1000

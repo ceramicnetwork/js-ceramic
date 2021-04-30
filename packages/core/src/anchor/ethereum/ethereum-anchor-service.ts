@@ -10,6 +10,7 @@ import {
   AnchorServiceResponse,
   AnchorService,
   AnchorStatus,
+  DiagnosticsLogger,
 } from "@ceramicnetwork/common";
 import StreamID from "@ceramicnetwork/streamid";
 import { Observable, interval, from, concat, of } from "rxjs";
@@ -59,16 +60,18 @@ export default class EthereumAnchorService implements AnchorService {
   private readonly chainIdApiEndpoint: string;
   private _chainId: string;
   private readonly providersCache: LRUMap<string, providers.BaseProvider>
+  private readonly _logger: DiagnosticsLogger
 
   /**
    * @param anchorServiceUrl
    * @param ethereumRpcEndpoint
    */
-  constructor(readonly anchorServiceUrl: string, readonly ethereumRpcEndpoint: string) {
+  constructor(readonly anchorServiceUrl: string, readonly ethereumRpcEndpoint: string, logger: DiagnosticsLogger) {
     this.requestsApiEndpoint = this.anchorServiceUrl + "/api/v0/requests";
     this.chainIdApiEndpoint =
       this.anchorServiceUrl + "/api/v0/service-info/supported_chains";
     this.providersCache = new LRUMap(MAX_PROVIDERS_COUNT)
+    this._logger = logger
   }
 
   /**
@@ -223,26 +226,31 @@ export default class EthereumAnchorService implements AnchorService {
    * @private
    */
   private async _getTransactionAndBlockInfo(chainId: string, txHash: string): Promise<[TransactionResponse, Block]> {
-    // determine network based on a chain ID
-    const provider: providers.BaseProvider = this._getEthProvider(chainId);
-    const transaction = await provider.getTransaction(txHash);
+    try {
+      // determine network based on a chain ID
+      const provider: providers.BaseProvider = this._getEthProvider(chainId);
+      const transaction = await provider.getTransaction(txHash);
 
-    if (!transaction) {
-      if (!this.ethereumRpcEndpoint) {
-        throw new Error(`Failed to load transaction data for transaction ${txHash}. Try providing an ethereum rpc endpoint`)
-      } else {
-        throw new Error(`Failed to load transaction data for transaction ${txHash}`)
+      if (!transaction) {
+        if (!this.ethereumRpcEndpoint) {
+          throw new Error(`Failed to load transaction data for transaction ${txHash}. Try providing an ethereum rpc endpoint`)
+        } else {
+          throw new Error(`Failed to load transaction data for transaction ${txHash}`)
+        }
       }
-    }
-    const block = await provider.getBlock(transaction.blockHash);
-    if (!block) {
-      if (!this.ethereumRpcEndpoint) {
-        throw new Error(`Failed to load transaction data for block with block number ${transaction.blockNumber} and block hash ${transaction.blockHash}. Try providing an ethereum rpc endpoint`)
-      } else {
-        throw new Error(`Failed to load transaction data for block with block number ${transaction.blockNumber} and block hash ${transaction.blockHash}`)
+      const block = await provider.getBlock(transaction.blockHash);
+      if (!block) {
+        if (!this.ethereumRpcEndpoint) {
+          throw new Error(`Failed to load transaction data for block with block number ${transaction.blockNumber} and block hash ${transaction.blockHash}. Try providing an ethereum rpc endpoint`)
+        } else {
+          throw new Error(`Failed to load transaction data for block with block number ${transaction.blockNumber} and block hash ${transaction.blockHash}`)
+        }
       }
+      return [transaction, block]
+    } catch (e) {
+      this._logger.err(`Error loading transaction info for transaction ${txHash} from Ethereum: ${e}`)
+      throw e
     }
-    return [transaction, block]
   }
 
   /**

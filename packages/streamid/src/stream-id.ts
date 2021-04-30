@@ -56,7 +56,10 @@ export class StreamID implements StreamRef {
   static fromBytes = fromBytes;
   static fromString = fromString;
 
-  static [Symbol.hasInstance](instance: any): boolean {
+  // WORKARDOUND Weird replacement for Symbol.hasInstance due to
+  // this old bug in Babel https://github.com/babel/babel/issues/4452
+  // which is used by CRA, which is widely popular.
+  static isInstance(instance: any): instance is StreamID {
     return typeof instance === 'object' && '_tag' in instance && instance._tag === TAG;
   }
 
@@ -133,7 +136,7 @@ export class StreamID implements StreamRef {
    * Compare equality with another StreamID.
    */
   equals(other: StreamID): boolean {
-    if (other instanceof StreamID) {
+    if (StreamID.isInstance(other)) {
       return this.type === other.type && this.cid.equals(other.cid);
     } else {
       return false;

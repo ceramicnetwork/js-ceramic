@@ -44,9 +44,9 @@ export namespace StreamRef {
    */
   // eslint-disable-next-line no-inner-declarations
   export function from(input: StreamID | CommitID | string | Uint8Array): StreamID | CommitID {
-    if (input instanceof StreamID) {
+    if (StreamID.isInstance(input)) {
       return input;
-    } else if (input instanceof CommitID) {
+    } else if (CommitID.isInstance(input)) {
       return input;
     } else if (input instanceof Uint8Array) {
       // Lazy computation: try CommitID, then StreamID, then complain

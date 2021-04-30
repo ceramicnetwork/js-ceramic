@@ -134,7 +134,7 @@ const DEFAULT_NETWORK = Networks.INMEMORY
 
 const normalizeStreamID = (streamId: StreamID | string): StreamID => {
   const streamRef = StreamRef.from(streamId)
-  if (streamRef instanceof StreamID) {
+  if (StreamID.isInstance(streamRef)) {
     return streamRef
   } else {
     throw new Error(`Not StreamID: ${streamRef}`)
@@ -334,7 +334,7 @@ class Ceramic implements CeramicApi {
     if (!ethereumRpcUrl && networkOptions.name == Networks.LOCAL) {
       ethereumRpcUrl = DEFAULT_LOCAL_ETHEREUM_RPC
     }
-    const anchorService = networkOptions.name != Networks.INMEMORY ? new EthereumAnchorService(anchorServiceUrl, ethereumRpcUrl) : new InMemoryAnchorService(config as any)
+    const anchorService = networkOptions.name != Networks.INMEMORY ? new EthereumAnchorService(anchorServiceUrl, ethereumRpcUrl, logger) : new InMemoryAnchorService(config as any)
     await anchorService.init()
 
     const supportedChains = await Ceramic._loadSupportedChains(networkOptions.name, anchorService)
@@ -483,7 +483,7 @@ class Ceramic implements CeramicApi {
     opts = { ...DEFAULT_LOAD_OPTS, ...opts };
     const streamRef = StreamRef.from(streamId)
     const base$ = await this._loadStream(streamRef.baseID, opts)
-    if (streamRef instanceof CommitID) {
+    if (CommitID.isInstance(streamRef)) {
       // Here CommitID is requested, let's return stream at specific commit
       const snapshot$ = await this.repository.stateManager.rewind(base$, streamRef)
       return streamFromState<T>(this.context, this._streamHandlers, snapshot$.value)
