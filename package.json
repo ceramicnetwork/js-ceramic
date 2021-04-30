@@ -2,7 +2,7 @@
   "name": "root",
   "private": true,
   "scripts": {
-    "postinstall": "lerna bootstrap --hoist",
+    "postinstall": "lerna bootstrap --hoist --ci",
     "test": "lerna exec npm t",
     "build": "lerna run build",
     "docs": "./node_modules/.bin/typedoc",

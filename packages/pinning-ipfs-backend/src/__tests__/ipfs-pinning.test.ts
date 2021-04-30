@@ -2,32 +2,34 @@ import ipfsClient from "ipfs-http-client"
 import CID from "cids";
 import { IpfsPinning, NoIpfsInstanceError } from "../index";
 import { asyncIterableFromArray } from "./async-iterable-from-array.util";
-import type { Context } from "@ceramicnetwork/common"
+import type { IPFS } from "ipfs-core-types";
 
 jest.mock("ipfs-http-client");
 
 beforeEach(() => {
-    (ipfsClient as any).mockClear();
+    (ipfsClient.create as any).mockClear();
 });
 
 describe("constructor", () => {
+    const ipfs = ({} as unknown) as IPFS;
+
     test("set IPFS address to ipfs+context", () => {
-        const pinning = new IpfsPinning("ipfs+context", {});
+        const pinning = new IpfsPinning("ipfs+context", ipfs);
         expect(pinning.ipfsAddress).toEqual("ipfs+context");
     });
     test("set IPFS address from ipfs+http protocol", () => {
-        const pinning = new IpfsPinning("ipfs+http://example.com", {});
+        const pinning = new IpfsPinning("ipfs+http://example.com", ipfs);
         expect(pinning.ipfsAddress).toEqual("http://example.com:5001");
     });
     test("set IPFS address from ipfs+https protocol", () => {
-        const pinning = new IpfsPinning("ipfs+https://example.com", {});
+        const pinning = new IpfsPinning("ipfs+https://example.com", ipfs);
         expect(pinning.ipfsAddress).toEqual("https://example.com:5001");
     });
 });
 
 describe("#open", () => {
     test("use provided IPFS", async () => {
-        const ipfs = jest.fn()
+        const ipfs = (jest.fn() as unknown) as IPFS
         const pinning = new IpfsPinning("ipfs+context", ipfs);
         pinning.open();
         expect(pinning.ipfs).toBe(ipfs);
@@ -38,20 +40,21 @@ describe("#open", () => {
         expect(() => pinning.open()).toThrow(NoIpfsInstanceError);
     });
     test("use IPFS client pointed to #ipfsAddress", async () => {
-        const pinning = new IpfsPinning("ipfs+https://example.com", {});
+        const ipfs = ({} as unknown) as IPFS;
+        const pinning = new IpfsPinning("ipfs+https://example.com", ipfs);
         pinning.open();
-        expect(ipfsClient).toBeCalledWith({ url: "https://example.com:5001" });
+        expect(ipfsClient.create).toBeCalledWith({ url: "https://example.com:5001" });
     });
 });
 
 describe("#pin", () => {
     test("call ipfs instance", async () => {
         const add = jest.fn();
-        const ipfs = {
+        const ipfs = ({
           pin: {
             add: add,
           },
-        };
+        } as unknown) as IPFS;
 
         const pinning = new IpfsPinning("ipfs+context", ipfs);
         pinning.open();
@@ -71,11 +74,11 @@ describe("#pin", () => {
 describe("#unpin", () => {
     test("call ipfs instance", async () => {
         const rm = jest.fn();
-        const ipfs = {
+        const ipfs = ({
           pin: {
             rm: rm,
           },
-        };
+        } as unknown) as IPFS;
 
         const pinning = new IpfsPinning("ipfs+context", ipfs);
         pinning.open();
@@ -97,11 +100,11 @@ describe("#ls", () => {
         const cids = [new CID("QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D"), new CID("QmWXShtJXt6Mw3FH7hVCQvR56xPcaEtSj4YFSGjp2QxA4v"),];
         const lsResult = cids.map((cid) => ({ cid: cid, type: "direct" }));
         const ls = jest.fn(() => asyncIterableFromArray(lsResult));
-        const ipfs = {
+        const ipfs = ({
           pin: {
             ls: ls,
           },
-        };
+        } as unknown) as IPFS;
         const pinning = new IpfsPinning("ipfs+context", ipfs);
         pinning.open();
         const result = await pinning.ls();
@@ -119,15 +122,15 @@ describe("#ls", () => {
 });
 
 test("#id", async () => {
-    const context = ({} as unknown) as Context;
-    const pinning = new IpfsPinning("ipfs+context", context);
+    const ipfs = ({} as unknown) as IPFS;
+    const pinning = new IpfsPinning("ipfs+context", ipfs);
     const id = pinning.id;
     expect(id).toEqual("ipfs@KMzaB1J_CpotKvSIzMgcP7laSSnAV2VHux-9_jZ9oQs=");
 });
 
 test("#info", async () => {
-    const context = ({} as unknown) as Context;
-    const pinning = new IpfsPinning("ipfs+context", context);
+    const ipfs = ({} as unknown) as IPFS;
+    const pinning = new IpfsPinning("ipfs+context", ipfs);
     const info = await pinning.info();
     expect(info).toEqual({
         "ipfs@KMzaB1J_CpotKvSIzMgcP7laSSnAV2VHux-9_jZ9oQs=": {},
