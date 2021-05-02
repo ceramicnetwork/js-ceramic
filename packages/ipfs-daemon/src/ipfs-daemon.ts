@@ -174,8 +174,6 @@ export class IpfsDaemon {
             },
         })
 
-        // TODO: @rvagg - JSIPFS type seems like a problem, expects .libp2p and .ipld properties
-        // @ts-ignore
         const api = configuration.ipfsEnableApi ? new HttpApi(ipfs) : undefined
         const gateway = configuration.ipfsEnableGateway ? new HttpGateway(ipfs) : undefined
         const topology = configuration.useCentralizedPeerDiscovery ? new IpfsTopology(ipfs, configuration.ceramicNetwork, configuration.logger) : undefined
