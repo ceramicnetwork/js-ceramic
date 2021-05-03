@@ -366,11 +366,11 @@ describe('sync', () => {
     (stateManager as any)._handleTip = fakeHandleTip;
     const state$ = ({ id: FAKE_STREAM_ID } as unknown) as RunningState;
     await stateManager.sync(state$, 1000);
-    expect(fakeHandleTip).toBeCalledTimes(6)
-    response.slice(0, 6).forEach((r) => {
+    expect(fakeHandleTip).toBeCalledTimes(5)
+    response.slice(0, 5).forEach((r) => {
       expect(fakeHandleTip).toHaveBeenCalledWith(state$, r);
     });
-    response.slice(7, 10).forEach((r) => {
+    response.slice(6, 10).forEach((r) => {
       expect(fakeHandleTip).not.toHaveBeenCalledWith(state$, r);
     });
   });

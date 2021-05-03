@@ -4,7 +4,7 @@ import { StreamID } from '@ceramicnetwork/streamid';
 import { from, Subscription, Observable } from 'rxjs';
 import { MAX_RESPONSE_INTERVAL, MessageBus } from '../message-bus';
 import { Pubsub } from '../pubsub';
-import { bufferCount, delay, first } from 'rxjs/operators';
+import { bufferCount, concatMap, delay, first } from 'rxjs/operators';
 import * as random from '@stablelib/random';
 import CID from 'cids';
 
@@ -101,8 +101,13 @@ describe('queryNetwork', () => {
     expect(responses).toEqual([FAKE_CID1, FAKE_CID2]);
   });
 
-  test('timeout: no message passed', async () => {
-    const pubsub = (from([responseMessage1]).pipe(delay(MAX_RESPONSE_INTERVAL * 2)) as unknown) as Pubsub;
+  test('delayed message', async () => {
+    const pubsub = (from([responseMessage1, responseMessage2]).pipe(
+      concatMap(async (r) => {
+        await new Promise((resolve) => setTimeout(resolve, MAX_RESPONSE_INTERVAL * 2));
+        return r;
+      }),
+    ) as unknown) as Pubsub;
     pubsub.next = jest.fn();
     const messageBus = new MessageBus(pubsub);
     const responses = [];
@@ -111,17 +116,18 @@ describe('queryNetwork', () => {
     });
     await new Promise<void>((resolve) => subscription.add(resolve));
     expect(pubsub.next).toBeCalledWith(queryMessage);
-    expect(responses).toEqual([]);
+    expect(responses).toEqual([FAKE_CID1]);
   });
 
-  test('timeout in sequence', async () => {
+  test('late first message', async () => {
     const pubsub = (new Observable<ResponseMessage>((subscriber) => {
       setTimeout(() => {
         subscriber.next(responseMessage1);
         setTimeout(() => {
           subscriber.next(responseMessage2);
-        }, MAX_RESPONSE_INTERVAL * 1.1);
-      }, MAX_RESPONSE_INTERVAL * 0.5)
+          subscriber.complete();
+        }, MAX_RESPONSE_INTERVAL * 2);
+      }, MAX_RESPONSE_INTERVAL * 3);
     }) as unknown) as Pubsub;
     (pubsub as any).next = jest.fn();
     const messageBus = new MessageBus(pubsub);

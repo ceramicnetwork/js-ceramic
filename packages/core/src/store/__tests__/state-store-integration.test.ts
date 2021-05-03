@@ -87,7 +87,7 @@ describe('Level data store', () => {
 
     await ceramic.close();
     await realIpfs.stop();
-  }, 10000);
+  }, 20000);
 
   it('skips removing unpinned stream', async () => {
     await expect(store.stateStore.load(streamId)).resolves.toBeNull();
