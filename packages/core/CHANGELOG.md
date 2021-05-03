@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.0.0-rc.12](/compare/@ceramicnetwork/core@1.0.0-rc.11...@ceramicnetwork/core@1.0.0-rc.12) (2021-05-03)
+
+
+### Bug Fixes
+
+* accept multiple pubsub responses (#1348) fa2d72a, closes #1348
+
+
+
+
+
 # [1.0.0-rc.11](/compare/@ceramicnetwork/core@1.0.0-rc.10...@ceramicnetwork/core@1.0.0-rc.11) (2021-04-30)
 
 
