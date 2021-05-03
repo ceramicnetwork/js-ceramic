@@ -4,7 +4,7 @@ import { filter, map, timeoutWith } from 'rxjs/operators';
 import { StreamID } from '@ceramicnetwork/streamid';
 import CID from 'cids';
 
-export const MAX_RESPONSE_INTERVAL = 200; // milliseconds
+export const MAX_RESPONSE_INTERVAL = 300; // milliseconds
 
 /**
  * Multiplexing IPFS Pubsub.
