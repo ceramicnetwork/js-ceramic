@@ -21,7 +21,8 @@
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
     "lint": "../../node_modules/.bin/eslint ./src --ext .js,.jsx,.ts,.tsx",
-    "clean": "rm -rf ./lib"
+    "clean": "rm -rf ./lib",
+    "test": "exit 0"
   },
   "dependencies": {
     "cross-fetch": "^3.1.4"
