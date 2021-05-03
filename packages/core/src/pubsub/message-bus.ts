@@ -1,8 +1,29 @@
 import { buildQueryMessage, MsgType, PubsubMessage, ResponseMessage } from './pubsub-message';
-import { Observable, Subject, Subscription, SubscriptionLike } from 'rxjs';
-import { filter, map, take, tap } from 'rxjs/operators';
+import { Observable, Subject, Subscription, SubscriptionLike, pipe, UnaryFunction } from 'rxjs';
+import { filter, map, takeUntil, tap } from 'rxjs/operators';
 import { StreamID } from '@ceramicnetwork/streamid';
 import CID from 'cids';
+
+export const MAX_RESPONSE_INTERVAL = 300; // milliseconds
+
+/**
+ * Stop emitting if +betweenMs+ passed since the last emitted value.
+ *
+ * @param betweenMs - max interval between the sequential values.
+ */
+function betweenTimeout<T>(betweenMs: number): UnaryFunction<Observable<T>, Observable<T>> {
+  const stop = new Subject<boolean>();
+  let trigger = undefined;
+  return pipe(
+    tap(() => {
+      if (trigger) clearTimeout(trigger);
+      trigger = setTimeout(() => {
+        stop.next(true);
+      }, betweenMs);
+    }),
+    takeUntil(stop),
+  );
+}
 
 /**
  * Multiplexing IPFS Pubsub.
@@ -52,7 +73,8 @@ export class MessageBus extends Observable<PubsubMessage> implements Subscriptio
         (message): message is ResponseMessage => message.typ === MsgType.RESPONSE && message.id === queryMessage.id,
       ),
       map((message) => message.tips.get(streamId.toString())),
-      take(1),
+      filter((tip) => !!tip),
+      betweenTimeout(MAX_RESPONSE_INTERVAL),
     );
   }
 
