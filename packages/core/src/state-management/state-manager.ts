@@ -14,8 +14,8 @@ import {
 } from '@ceramicnetwork/common';
 import { RunningState } from './running-state';
 import CID from 'cids';
-import { catchError, concatMap, timeoutWith } from 'rxjs/operators';
-import { empty, of, Subscription } from 'rxjs';
+import { catchError, concatMap, takeUntil } from 'rxjs/operators';
+import { empty, Subscription, timer } from 'rxjs';
 import { SnapshotState } from './snapshot-state';
 import { CommitID, StreamID } from '@ceramicnetwork/streamid';
 
@@ -50,10 +50,12 @@ export class StateManager {
    */
   async sync(state$: RunningState, timeoutMillis: number): Promise<void> {
     const tip$ = this.dispatcher.messageBus.queryNetwork(state$.id);
-    const tip = await tip$.pipe(timeoutWith(timeoutMillis, of(undefined))).toPromise();
-    if (tip) {
-      await this._handleTip(state$, tip);
-    }
+    await tip$
+      .pipe(
+        takeUntil(timer(timeoutMillis)),
+        concatMap((tip) => this._handleTip(state$, tip)),
+      )
+      .toPromise();
   }
 
   /**

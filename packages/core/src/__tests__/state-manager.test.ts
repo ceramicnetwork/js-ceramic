@@ -1,4 +1,4 @@
-import { AnchorStatus, StreamUtils, IpfsApi, SignatureStatus } from '@ceramicnetwork/common';
+import { AnchorStatus, IpfsApi, SignatureStatus, StreamUtils } from '@ceramicnetwork/common';
 import CID from 'cids';
 import { RunningState } from '../state-management/running-state';
 import { createIPFS } from './ipfs-util';
@@ -7,6 +7,12 @@ import Ceramic from '../ceramic';
 import { anchorUpdate } from '../state-management/__tests__/anchor-update';
 import { TileDocument } from '@ceramicnetwork/stream-tile';
 import { streamFromState } from '../state-management/stream-from-state';
+import * as uint8arrays from 'uint8arrays';
+import * as sha256 from '@stablelib/sha256';
+import { StreamID } from '@ceramicnetwork/streamid';
+import { from, timer } from 'rxjs';
+import { concatMap, map } from 'rxjs/operators';
+import { MAX_RESPONSE_INTERVAL } from '../pubsub/message-bus';
 
 const FAKE_CID = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu');
 const INITIAL_CONTENT = { abc: 123, def: 456 };
@@ -22,6 +28,8 @@ const STRING_MAP_SCHEMA = {
 let ipfs: IpfsApi;
 let ceramic: Ceramic;
 let controllers: string[];
+
+jest.setTimeout(10000);
 
 beforeAll(async () => {
   ipfs = await createIPFS();
@@ -261,7 +269,7 @@ test('enforces schema in update that assigns schema', async () => {
   const streamState = await ceramic.repository.load(stream.id, {});
   await anchorUpdate(ceramic, stream);
   const updateRec = await stream.makeCommit(ceramic, null, { schema: schemaDoc.commitId });
-  await expect(ceramic.repository.stateManager.applyCommit(streamState.id, updateRec)).rejects.toThrow(
+  await expect(ceramic.repository.stateManager.applyCommit(streamState.id, updateRec, {})).rejects.toThrow(
     "Validation Error: data/stuff must be string",
   );
 });
@@ -294,4 +302,85 @@ test('should announce change to network', async () => {
   const updateRec = await stream1.makeCommit(ceramic, { foo: 34 });
   await ceramic.repository.stateManager.applyCommit(streamState1.id, updateRec, { anchor: false, publish: true });
   expect(publishTip).toHaveBeenCalledWith(stream1.id, stream1.tip);
+});
+
+describe('sync', () => {
+  let originalCeramic: Ceramic;
+
+  beforeEach(() => {
+    originalCeramic = ceramic;
+  });
+
+  afterEach(() => {
+    ceramic = originalCeramic;
+  });
+
+  const FAKE_STREAM_ID = StreamID.fromString('kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s');
+  function digest(input: string) {
+    return uint8arrays.toString(sha256.hash(uint8arrays.fromString(input)), 'base16');
+  }
+  function hash(data: string): CID {
+    return new CID(1, 'sha2-256', Buffer.from('1220' + digest(data), 'hex'));
+  }
+
+  function responseTips(amount: number) {
+    const times = Array.from({ length: amount }).map((_, index) => index);
+    return times.map((n) => hash(n.toString()));
+  }
+
+  test('handle first received', async () => {
+    const stateManager = ceramic.repository.stateManager;
+    const response = responseTips(1);
+    ceramic.dispatcher.messageBus.queryNetwork = () => from(response);
+    const fakeHandleTip = jest.fn(() => Promise.resolve());
+    (stateManager as any)._handleTip = fakeHandleTip;
+    const state$ = ({ id: FAKE_STREAM_ID } as unknown) as RunningState;
+    await stateManager.sync(state$, 1000);
+    expect(fakeHandleTip).toHaveBeenCalledWith(state$, response[0]);
+  });
+  test('handle all received', async () => {
+    const stateManager = ceramic.repository.stateManager;
+    const amount = 10;
+    const response = responseTips(amount);
+    ceramic.dispatcher.messageBus.queryNetwork = () => from(response);
+    const fakeHandleTip = jest.fn(() => Promise.resolve());
+    (stateManager as any)._handleTip = fakeHandleTip;
+    const state$ = ({ id: FAKE_STREAM_ID } as unknown) as RunningState;
+    await stateManager.sync(state$, 1000);
+    response.forEach((r) => {
+      expect(fakeHandleTip).toHaveBeenCalledWith(state$, r);
+    });
+  });
+  test('not handle delayed', async () => {
+    const stateManager = ceramic.repository.stateManager;
+    const amount = 10;
+    const response = responseTips(amount);
+    ceramic.dispatcher.messageBus.queryNetwork = () =>
+      from(response).pipe(
+        concatMap(async (value, index) => {
+          await new Promise((resolve) => setTimeout(resolve, index * MAX_RESPONSE_INTERVAL * 0.3));
+          return value;
+        }),
+      );
+    const fakeHandleTip = jest.fn(() => Promise.resolve());
+    (stateManager as any)._handleTip = fakeHandleTip;
+    const state$ = ({ id: FAKE_STREAM_ID } as unknown) as RunningState;
+    await stateManager.sync(state$, 1000);
+    expect(fakeHandleTip).toBeCalledTimes(6)
+    response.slice(0, 6).forEach((r) => {
+      expect(fakeHandleTip).toHaveBeenCalledWith(state$, r);
+    });
+    response.slice(7, 10).forEach((r) => {
+      expect(fakeHandleTip).not.toHaveBeenCalledWith(state$, r);
+    });
+  });
+  test('stop after timeout', async () => {
+    const stateManager = ceramic.repository.stateManager;
+    ceramic.dispatcher.messageBus.queryNetwork = () => timer(0, MAX_RESPONSE_INTERVAL * 0.5).pipe(map(n => hash(n.toString())))
+    const fakeHandleTip = jest.fn(() => Promise.resolve());
+    (stateManager as any)._handleTip = fakeHandleTip;
+    const state$ = ({ id: FAKE_STREAM_ID } as unknown) as RunningState;
+    await stateManager.sync(state$, MAX_RESPONSE_INTERVAL * 10);
+    expect(fakeHandleTip).toBeCalledTimes(20)
+  });
 });

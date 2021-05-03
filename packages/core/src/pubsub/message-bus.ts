@@ -1,8 +1,10 @@
 import { buildQueryMessage, MsgType, PubsubMessage, ResponseMessage } from './pubsub-message';
-import { Observable, Subject, Subscription, SubscriptionLike } from 'rxjs';
-import { filter, map, take, tap } from 'rxjs/operators';
+import { Observable, Subject, Subscription, SubscriptionLike, EMPTY } from 'rxjs';
+import { filter, map, timeoutWith } from 'rxjs/operators';
 import { StreamID } from '@ceramicnetwork/streamid';
 import CID from 'cids';
+
+export const MAX_RESPONSE_INTERVAL = 200; // milliseconds
 
 /**
  * Multiplexing IPFS Pubsub.
@@ -52,7 +54,8 @@ export class MessageBus extends Observable<PubsubMessage> implements Subscriptio
         (message): message is ResponseMessage => message.typ === MsgType.RESPONSE && message.id === queryMessage.id,
       ),
       map((message) => message.tips.get(streamId.toString())),
-      take(1),
+      filter(tip => !!tip),
+      timeoutWith(MAX_RESPONSE_INTERVAL, EMPTY),
     );
   }
 
