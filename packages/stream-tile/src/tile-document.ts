@@ -186,7 +186,7 @@ export class TileDocument<T = Record<string, any>> extends Stream {
      * @param metadata - Changes to make to the metadata.  Only fields that are specified will be changed.
      * @param opts - Additional options
      */
-    async update(content: T, metadata?: TileMetadataArgs, opts: UpdateOpts = {}): Promise<void> {
+    async update(content: T | null | undefined, metadata?: TileMetadataArgs, opts: UpdateOpts = {}): Promise<void> {
         opts = { ...DEFAULT_UPDATE_OPTS, ...opts };
         const updateCommit = await this.makeCommit(this.api, content, metadata)
         const updated = await this.api.applyCommit(this.id, updateCommit, opts)
@@ -223,7 +223,7 @@ export class TileDocument<T = Record<string, any>> extends Stream {
      * @param newContent
      * @param newMetadata
      */
-    async makeCommit(signer: CeramicSigner, newContent: T | undefined, newMetadata?: TileMetadataArgs): Promise<CeramicCommit> {
+    async makeCommit(signer: CeramicSigner, newContent: T | null | undefined, newMetadata?: TileMetadataArgs): Promise<CeramicCommit> {
         const header = headerFromMetadata(newMetadata)
 
         if (newContent == null) {
@@ -245,7 +245,7 @@ export class TileDocument<T = Record<string, any>> extends Stream {
      * @param content - genesis content
      * @param metadata - genesis metadata
      */
-    static async makeGenesis<T>(signer: CeramicSigner, content: T | null, metadata?: TileMetadataArgs): Promise<CeramicCommit> {
+    static async makeGenesis<T>(signer: CeramicSigner, content: T | null | undefined, metadata?: TileMetadataArgs): Promise<CeramicCommit> {
         if (!metadata) {
             metadata = {}
         }
