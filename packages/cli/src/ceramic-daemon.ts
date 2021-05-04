@@ -104,8 +104,8 @@ function parseQueryObject(opts: Record<string, any>): Record<string, string | bo
  * TODO remove this once we no longer need to support clients older than v1.0.0
  * @param opts
  */
-function upconvertLegacySyncOption(opts: Record<string, any>) {
-  if (typeof opts.sync == "boolean") {
+function upconvertLegacySyncOption(opts: Record<string, any> | undefined) {
+  if (typeof opts?.sync == "boolean") {
     if (opts.sync) {
       opts.sync = SyncOptions.SYNC_ALWAYS
     } else {
