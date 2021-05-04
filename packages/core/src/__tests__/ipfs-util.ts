@@ -24,9 +24,6 @@ export async function createIPFS(overrideConfig: Record<string, unknown> = {}): 
   };
 
   const config = { ...defaultConfig, ...overrideConfig };
-  // TODO: @rvagg dag-jose ipld format?
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
   const instance = await IPFS.create(config);
 
   // IPFS does not notify you when it stops.

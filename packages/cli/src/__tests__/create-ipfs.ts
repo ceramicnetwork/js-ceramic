@@ -21,6 +21,5 @@ export async function createIPFS(path: string): Promise<IpfsApi> {
     },
   };
 
-  // @ts-ignore
   return IPFS.create(config);
 }

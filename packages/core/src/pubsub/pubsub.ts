@@ -76,7 +76,7 @@ export class Pubsub extends Observable<PubsubMessage> {
       .pipe(
         mergeMap(async (peerId) => {
           const serializedMessage = serialize(message);
-          await this.ipfs.pubsub.publish(this.topic, serialize(message));
+          await this.ipfs.pubsub.publish(this.topic, serializedMessage);
           return { peerId, serializedMessage };
         }),
       )

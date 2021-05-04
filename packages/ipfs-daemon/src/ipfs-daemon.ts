@@ -115,9 +115,6 @@ export class IpfsDaemon {
         const ipfs = await IPFS.create({
             start: false,
             repo,
-            // TODO: @rvagg dag-jose?
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
             ipld: {formats: [format]},
             libp2p: {
                 config: {

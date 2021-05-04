@@ -14,6 +14,5 @@ export * from './unreachable-case-error'
 export * from './running-state-like'
 export * from './stream-state-subject'
 
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 import type { IPFS } from 'ipfs-core-types'
 export type IpfsApi = IPFS

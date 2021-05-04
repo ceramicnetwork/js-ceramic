@@ -32,7 +32,7 @@
     "@ceramicnetwork/common": "^1.0.0-rc.6",
     "@ceramicnetwork/ipfs-topology": "^1.0.0-rc.7",
     "aws-sdk": "^2.895.0",
-    "blockcodec-to-ipld-format": "^0.0.1",
+    "blockcodec-to-ipld-format": "^0.0.2",
     "dag-jose": "^0.3.0",
     "datastore-fs": "^4.0.0",
     "datastore-level": "^5.0.1",

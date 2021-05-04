@@ -43,7 +43,7 @@
     "@ceramicnetwork/streamid": "^1.0.0-rc.3",
     "@stablelib/random": "^1.0.0",
     "aws-sdk": "^2.844.0",
-    "blockcodec-to-ipld-format": "^0.0.1",
+    "blockcodec-to-ipld-format": "^0.0.2",
     "commander": "^7.0.0",
     "cors": "^2.8.5",
     "dag-jose": "^0.3.0",
