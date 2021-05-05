@@ -24,7 +24,7 @@
     "prebuild": "npm run clean",
     "lint": "../../node_modules/.bin/eslint ./src --ext .js,.jsx,.ts,.tsx",
     "clean": "rm -rf ./lib",
-    "test": "../../node_modules/.bin/jest --coverage --passWithNoTests --env=node"
+    "test": "../../node_modules/.bin/jest --coverage --passWithNoTests"
   },
   "dependencies": {
     "@ceramicnetwork/common": "^1.0.0-rc.6",
@@ -41,6 +41,7 @@
     "dids": "^2.1.0"
   },
   "jest": {
+    "testEnvironment": "node",
     "testMatch": [
       "**/?(*.)+(spec|test).[jt]s?(x)"
     ]
