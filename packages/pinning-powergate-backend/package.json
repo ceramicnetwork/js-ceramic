@@ -29,7 +29,7 @@
   "dependencies": {
     "@stablelib/base64": "^1.0.0",
     "@stablelib/sha256": "^1.0.0",
-    "@textile/powergate-client": "^2.0.1"
+    "@textile/powergate-client": "^4.1.0"
   },
   "devDependencies": {
     "@ceramicnetwork/common": "^1.0.0",
