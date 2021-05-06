@@ -178,9 +178,16 @@ export default class CeramicClient implements CeramicApi {
 
   async applyCommit<T extends Stream>(streamId: string | StreamID, commit: CeramicCommit, opts: CreateOpts | UpdateOpts = {}): Promise<T> {
     opts = { ...DEFAULT_APPLY_COMMIT_OPTS, ...opts };
-    const effectiveStreamId = typeStreamID(streamId)
-    const stream = await Document.applyCommit(this._apiUrl, effectiveStreamId, commit, opts, this._config.syncInterval)
-    return this.buildStream<T>(stream)
+    const effectiveStreamId: StreamID = typeStreamID(streamId);
+    const document = await Document.applyCommit(this._apiUrl, effectiveStreamId, commit, opts, this._config.syncInterval);
+    const fromCache = this._streamCache.get(effectiveStreamId.toString());
+    if (fromCache) {
+      fromCache.next(document.state);
+      return this.buildStream<T>(document);
+    } else {
+      this._streamCache.set(effectiveStreamId.toString(), document);
+      return this.buildStream<T>(document);
+    }
   }
 
   addStreamHandler<T extends Stream>(streamHandler: StreamHandler<T>): void {
