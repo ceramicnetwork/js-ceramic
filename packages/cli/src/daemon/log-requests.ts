@@ -2,7 +2,7 @@ import { LoggerProvider } from '@ceramicnetwork/common';
 import { Request, Response } from 'express';
 import morgan from 'morgan';
 
-const ACCESS_LOG_FMT = 'ip=:remote-addr ts=:date[iso] method=:method original_url=:original-url base_url=:base-url path=:path:params http_version=:http-version req_header:req[header] status=:status content_length=:res[content-length] content_type=":res[content-type]" ref=:referrer user_agent=:user-agent elapsed_ms=:total-time[3] error_message=:error-message error_code=:error-code';
+const ACCESS_LOG_FMT = 'ip=:remote-addr ts=:date[iso] method=:method original_url=:original-url base_url=:base-url path=:path:params http_version=:http-version req_header:req[header] status=:status content_length=:res[content-length] content_type=":res[content-type]" ref=:referrer user_agent=:user-agent elapsed_ms=:total-time[3] error_message=":error-message" error_code=:error-code';
 
 export function logRequests(loggerProvider: LoggerProvider): any[] {
   morgan.token<Request, Response>('error-message', (req, res: Response) => {

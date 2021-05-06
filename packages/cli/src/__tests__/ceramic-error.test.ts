@@ -79,7 +79,7 @@ test('write to http-access', async () => {
   const httpAccessLog = safeRead(httpAccessLogPath);
   const lines = httpAccessLog.split('\n');
   const lastLine = lines[lines.length - 2];
-  expect(lastLine).toContain('error_message=-');
+  expect(lastLine).toContain('error_message="-"');
   expect(lastLine).toContain('error_code=-');
   expect(lastLine).toContain('status=200');
 });
@@ -87,7 +87,7 @@ test('write to http-access', async () => {
 test('write error to http access log: no error code', async () => {
   const httpAccessLogPath = path.resolve(tmpFolder.path, 'http-access.log');
   core.createStreamFromGenesis = async () => {
-    throw new Error(`BANG`);
+    throw new Error(`BANG BANG`);
   };
   await expect(
     TileDocument.create(client, { test: 123 }, null, { anchor: false, publish: false, syncTimeoutSeconds:0 }),
@@ -96,7 +96,7 @@ test('write error to http access log: no error code', async () => {
   const httpAccessLog = safeRead(httpAccessLogPath);
   const lines = httpAccessLog.split('\n');
   const lastLine = lines[lines.length - 2];
-  expect(lastLine).toContain('error_message=BANG');
+  expect(lastLine).toContain('error_message="BANG BANG"');
   expect(lastLine).toContain('error_code=-');
   expect(lastLine).toContain('status=500');
 });
@@ -107,7 +107,7 @@ test('write error to http access log: with error code', async () => {
     readonly code = 345;
   }
   core.createStreamFromGenesis = async () => {
-    throw new FauxError(`BANG`);
+    throw new FauxError(`BANG BANG`);
   };
   await expect(
     TileDocument.create(client, { test: 123 }, null, { anchor: false, publish: false, syncTimeoutSeconds:0 }),
@@ -116,7 +116,7 @@ test('write error to http access log: with error code', async () => {
   const httpAccessLog = safeRead(httpAccessLogPath);
   const lines = httpAccessLog.split('\n');
   const lastLine = lines[lines.length - 2];
-  expect(lastLine).toContain('error_message=BANG');
+  expect(lastLine).toContain('error_message="BANG BANG"');
   expect(lastLine).toContain('error_code=345');
   expect(lastLine).toContain('status=500');
 });
