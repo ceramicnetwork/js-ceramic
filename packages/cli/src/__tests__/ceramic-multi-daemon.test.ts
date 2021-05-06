@@ -1,7 +1,7 @@
 import Ceramic from '@ceramicnetwork/core'
 import CeramicClient from '@ceramicnetwork/http-client'
 import * as tmp from 'tmp-promise'
-import CeramicDaemon from '../ceramic-daemon'
+import { CeramicDaemon } from '../ceramic-daemon'
 import { IpfsApi, SyncOptions } from '@ceramicnetwork/common';
 import { TileDocumentHandler } from "@ceramicnetwork/stream-tile-handler"
 import { TileDocument } from "@ceramicnetwork/stream-tile";

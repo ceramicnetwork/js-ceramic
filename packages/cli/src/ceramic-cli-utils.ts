@@ -10,7 +10,7 @@ import CeramicClient from '@ceramicnetwork/http-client'
 import { CeramicApi, StreamUtils, LoggerConfig, LogLevel, Networks } from '@ceramicnetwork/common'
 import StreamID, {CommitID} from '@ceramicnetwork/streamid'
 
-import CeramicDaemon, { CreateOpts } from './ceramic-daemon'
+import { CreateOpts, CeramicDaemon } from './ceramic-daemon'
 import { TileDocument, TileMetadataArgs } from "@ceramicnetwork/stream-tile";
 
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'

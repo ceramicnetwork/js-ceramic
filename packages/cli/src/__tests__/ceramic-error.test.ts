@@ -4,7 +4,7 @@ import * as tmp from 'tmp-promise';
 import { createIPFS } from './create-ipfs';
 import Ceramic from '@ceramicnetwork/core';
 import * as random from '@stablelib/random';
-import CeramicDaemon, { makeCeramicConfig } from '../ceramic-daemon';
+import { makeCeramicConfig, CeramicDaemon } from '../ceramic-daemon';
 import CeramicClient from '@ceramicnetwork/http-client';
 import { makeDID } from './make-did';
 import { TileDocument } from '@ceramicnetwork/stream-tile';
@@ -58,7 +58,7 @@ beforeAll(async () => {
   });
   await daemon.listen();
   const apiUrl = `http://localhost:${daemonPort}`;
-  client = new CeramicClient(apiUrl, { docSyncInterval: 500 });
+  client = new CeramicClient(apiUrl, { syncInterval: 500 });
 
   await core.setDID(makeDID(core));
   await client.setDID(makeDID(client, SEED));
