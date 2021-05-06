@@ -18,13 +18,12 @@ import KeyDidResolver from 'key-did-resolver'
 import { DID } from 'dids'
 import cors from 'cors'
 import { errorHandler } from './daemon/error-handler';
-import { addAsync, ExpressWithAsync } from '@awaitjs/express'
+import { addAsync, ExpressWithAsync, Router } from '@awaitjs/express'
 import { logRequests } from './daemon/log-requests';
 import type { Server } from 'http';
 
 const DEFAULT_HOSTNAME = '0.0.0.0'
 const DEFAULT_PORT = 7007
-const toApiPath = (ending: string): string => '/api/v0' + ending
 
 /**
  * Daemon create options
@@ -180,34 +179,37 @@ class CeramicDaemon {
   }
 
   registerAPIPaths (app: ExpressWithAsync, gateway: boolean): void {
-    app.getAsync(toApiPath('/commits/:streamid'), this.commits.bind(this))
-    app.postAsync(toApiPath('/multiqueries'), this.multiQuery.bind(this))
-    app.getAsync(toApiPath('/streams/:streamid'), this.state.bind(this))
-    app.getAsync(toApiPath('/pins/:streamid'), this.listPinned.bind(this))
-    app.getAsync(toApiPath('/pins'), this.listPinned.bind(this))
-    app.getAsync(toApiPath('/node/chains'), this.getSupportedChains.bind(this))
-    app.getAsync(toApiPath('/node/healthcheck'), this.healthcheck.bind(this))
+    const router = Router()
+    router.getAsync('/commits/:streamid', this.commits.bind(this))
+    router.postAsync('/multiqueries', this.multiQuery.bind(this))
+    router.getAsync('/streams/:streamid', this.state.bind(this))
+    router.getAsync('/pins/:streamid', this.listPinned.bind(this))
+    router.getAsync('/pins', this.listPinned.bind(this))
+    router.getAsync('/node/chains', this.getSupportedChains.bind(this))
+    router.getAsync('/node/healthcheck', this.healthcheck.bind(this))
 
-    app.getAsync(toApiPath('/documents/:docid'), this.stateOld.bind(this)) // Deprecated
-    app.getAsync(toApiPath('/records/:streamid'), this.commits.bind(this)) // Deprecated
+    router.getAsync('/documents/:docid', this.stateOld.bind(this)) // Deprecated
+    router.getAsync('/records/:streamid', this.commits.bind(this)) // Deprecated
 
     if (!gateway) {
-      app.postAsync(toApiPath('/streams'), this.createStreamFromGenesis.bind(this))
-      app.postAsync(toApiPath('/commits'), this.applyCommit.bind(this))
-      app.postAsync(toApiPath('/pins/:streamid'), this.pinStream.bind(this))
-      app.deleteAsync(toApiPath('/pins/:streamid'), this.unpinStream.bind(this))
+      router.postAsync('/streams', this.createStreamFromGenesis.bind(this))
+      router.postAsync('/commits', this.applyCommit.bind(this))
+      router.postAsync('/pins/:streamid', this.pinStream.bind(this))
+      router.deleteAsync('/pins/:streamid', this.unpinStream.bind(this))
 
-      app.postAsync(toApiPath('/documents'), this.createDocFromGenesis.bind(this)) // Deprecated
-      app.postAsync(toApiPath('/records'), this.applyCommit.bind(this)) // Deprecated
+      router.postAsync('/documents', this.createDocFromGenesis.bind(this)) // Deprecated
+      router.postAsync('/records', this.applyCommit.bind(this)) // Deprecated
     } else {
-      app.postAsync(toApiPath('/streams'), this.createReadOnlyStreamFromGenesis.bind(this))
-      app.postAsync(toApiPath('/commits'),  this._notSupported.bind(this))
-      app.postAsync(toApiPath('/pins/:streamid'),  this._notSupported.bind(this))
-      app.deleteAsync(toApiPath('/pins/:streamid'),  this._notSupported.bind(this))
+      router.postAsync('/streams', this.createReadOnlyStreamFromGenesis.bind(this))
+      router.postAsync('/commits',  this._notSupported.bind(this))
+      router.postAsync('/pins/:streamid',  this._notSupported.bind(this))
+      router.deleteAsync('/pins/:streamid',  this._notSupported.bind(this))
 
-      app.postAsync(toApiPath('/documents'), this.createReadOnlyDocFromGenesis.bind(this)) // Deprecated
-      app.postAsync(toApiPath('/records'),  this._notSupported.bind(this)) // Deprecated
+      router.postAsync('/documents', this.createReadOnlyDocFromGenesis.bind(this)) // Deprecated
+      router.postAsync('/records',  this._notSupported.bind(this)) // Deprecated
     }
+
+    app.use('/api/v0', router)
   }
 
   healthcheck (req: Request, res: Response): void {
