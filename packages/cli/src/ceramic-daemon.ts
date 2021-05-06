@@ -179,37 +179,53 @@ class CeramicDaemon {
   }
 
   registerAPIPaths (app: ExpressWithAsync, gateway: boolean): void {
-    const router = Router()
-    router.getAsync('/commits/:streamid', this.commits.bind(this))
-    router.postAsync('/multiqueries', this.multiQuery.bind(this))
-    router.getAsync('/streams/:streamid', this.state.bind(this))
-    router.getAsync('/pins/:streamid', this.listPinned.bind(this))
-    router.getAsync('/pins', this.listPinned.bind(this))
-    router.getAsync('/node/chains', this.getSupportedChains.bind(this))
-    router.getAsync('/node/healthcheck', this.healthcheck.bind(this))
+    const baseRouter = Router()
+    const commitsRouter = Router()
+    const documentsRouter = Router()
+    const multiqueriesRouter = Router()
+    const nodeRouter = Router()
+    const pinsRouter = Router()
+    const recordsRouter = Router()
+    const streamsRouter = Router()
 
-    router.getAsync('/documents/:docid', this.stateOld.bind(this)) // Deprecated
-    router.getAsync('/records/:streamid', this.commits.bind(this)) // Deprecated
+    commitsRouter.getAsync('/:streamid', this.commits.bind(this))
+    multiqueriesRouter.postAsync('/', this.multiQuery.bind(this))
+    streamsRouter.getAsync('/:streamid', this.state.bind(this))
+    pinsRouter.getAsync('/:streamid', this.listPinned.bind(this))
+    pinsRouter.getAsync('/', this.listPinned.bind(this))
+    nodeRouter.getAsync('/chains', this.getSupportedChains.bind(this))
+    nodeRouter.getAsync('/healthcheck', this.healthcheck.bind(this))
+    documentsRouter.getAsync('/:docid', this.stateOld.bind(this)) // Deprecated
+    recordsRouter.getAsync('/:streamid', this.commits.bind(this)) // Deprecated
 
     if (!gateway) {
-      router.postAsync('/streams', this.createStreamFromGenesis.bind(this))
-      router.postAsync('/commits', this.applyCommit.bind(this))
-      router.postAsync('/pins/:streamid', this.pinStream.bind(this))
-      router.deleteAsync('/pins/:streamid', this.unpinStream.bind(this))
+      streamsRouter.postAsync('/', this.createStreamFromGenesis.bind(this))
+      commitsRouter.postAsync('/', this.applyCommit.bind(this))
+      pinsRouter.postAsync('/:streamid', this.pinStream.bind(this))
+      pinsRouter.deleteAsync('/:streamid', this.unpinStream.bind(this))
 
-      router.postAsync('/documents', this.createDocFromGenesis.bind(this)) // Deprecated
-      router.postAsync('/records', this.applyCommit.bind(this)) // Deprecated
+      documentsRouter.postAsync('/', this.createDocFromGenesis.bind(this)) // Deprecated
+      recordsRouter.postAsync('/', this.applyCommit.bind(this)) // Deprecated
     } else {
-      router.postAsync('/streams', this.createReadOnlyStreamFromGenesis.bind(this))
-      router.postAsync('/commits',  this._notSupported.bind(this))
-      router.postAsync('/pins/:streamid',  this._notSupported.bind(this))
-      router.deleteAsync('/pins/:streamid',  this._notSupported.bind(this))
+      streamsRouter.postAsync('/', this.createReadOnlyStreamFromGenesis.bind(this))
+      commitsRouter.postAsync('/',  this._notSupported.bind(this))
+      pinsRouter.postAsync('/:streamid',  this._notSupported.bind(this))
+      pinsRouter.deleteAsync('/:streamid',  this._notSupported.bind(this))
 
-      router.postAsync('/documents', this.createReadOnlyDocFromGenesis.bind(this)) // Deprecated
-      router.postAsync('/records',  this._notSupported.bind(this)) // Deprecated
+      documentsRouter.postAsync('/', this.createReadOnlyDocFromGenesis.bind(this)) // Deprecated
+      recordsRouter.postAsync('/',  this._notSupported.bind(this)) // Deprecated
     }
 
-    app.use('/api/v0', router)
+    baseRouter.use('/commits', commitsRouter)
+    baseRouter.use('/documents', documentsRouter)
+    baseRouter.use('/multiqueries', multiqueriesRouter)
+    baseRouter.use('/node', nodeRouter)
+    baseRouter.use('/pins', pinsRouter)
+    baseRouter.use('/records', recordsRouter)
+    baseRouter.use('/streams', streamsRouter)
+    baseRouter.use(errorHandler(this.diagnosticsLogger))
+
+    app.use('/api/v0', baseRouter)
   }
 
   healthcheck (req: Request, res: Response): void {
