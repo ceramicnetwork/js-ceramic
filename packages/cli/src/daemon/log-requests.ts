@@ -21,14 +21,16 @@ export function logRequests(loggerProvider: LoggerProvider): any[] {
     return req.path;
   });
   morgan.token<Request, Response>('params', (req) => {
-    const keys = Object.keys(req.params);
-    if (keys.length < 1) {
-      return ' params=-';
+    if (req.params) {
+      const keys = Object.keys(req.params);
+      if (keys.length > 0) {
+        const params = keys.reduce((prev, curr) => {
+          return prev + ` params.${curr}=${req.params[curr]}`;
+        }, '');
+        return params;
+      }
     }
-    const params = keys.reduce((prev, curr) => {
-        return prev + ` params.${curr}=${req.params[curr]}`;
-    }, '');
-    return params;
+    return ' params=-';
   });
 
   const logger = loggerProvider.makeServiceLogger('http-access');
