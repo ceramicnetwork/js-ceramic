@@ -45,8 +45,8 @@ describe('applyCommit', () => {
     });
   });
 
-  describe('document not in cache', () => {
-    test('add to cache', async () => {
+  describe('document in cache', () => {
+    test('update existing document', async () => {
       const document1 = new Document(initial, API_URL, 1000);
       const document2 = new Document(second, API_URL, 1000);
       Document.applyCommit = jest.fn(async () => document2);
