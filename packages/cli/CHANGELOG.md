@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.0.0](/compare/@ceramicnetwork/cli@1.0.0-rc.13...@ceramicnetwork/cli@1.0.0) (2021-05-06)
+
+
+### Bug Fixes
+
+* **cli:** Handle undefined docOpts in legacy http endpoints (#1353) a473ce5, closes #1353
+
+
+### Features
+
+* Expose CeramicDaemon from cli package (#1357) 28d0e65, closes #1357
+
+
+
+
+
 # [1.0.0-rc.13](/compare/@ceramicnetwork/cli@1.0.0-rc.12...@ceramicnetwork/cli@1.0.0-rc.13) (2021-05-03)
 
 **Note:** Version bump only for package @ceramicnetwork/cli
