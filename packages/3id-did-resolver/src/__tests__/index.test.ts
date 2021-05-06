@@ -33,7 +33,7 @@ const v0NoUpdates = '3IDv0-no-updates'
 const toLdFormat = result => {
   const newResult = { ...result }
   newResult.didResolutionMetadata.contentType = DID_LD_JSON
-  newResult.didDocument['@context'] = 'https://w3id.org/did/v1'
+  newResult.didDocument['@context'] = 'https://www.w3.org/ns/did/v1'
   return newResult
 }
 

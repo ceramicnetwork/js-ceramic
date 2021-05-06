@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/3id-did-resolver",
-  "version": "1.1.2",
+  "version": "1.2.0-rc.9",
   "description": "DID Resolver for the 3ID method",
   "keywords": [
     "Ceramic",
@@ -19,39 +19,26 @@
     "lib"
   ],
   "scripts": {
-    "test": "./node_modules/.bin/jest --coverage --env=node",
+    "test": "../../node_modules/.bin/jest --coverage --env=node",
     "build": "../../node_modules/.bin/tsc -p tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
-    "lint": "./node_modules/.bin/eslint ./src --ext .js,.jsx,.ts,.tsx",
+    "lint": "../../node_modules/.bin/eslint ./src --ext .js,.jsx,.ts,.tsx",
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/common": "^0.17.1",
-    "@ceramicnetwork/docid": "^0.5.2",
+    "@ceramicnetwork/common": "^1.0.0-rc.6",
+    "@ceramicnetwork/stream-tile": "^1.0.0-rc.6",
+    "@ceramicnetwork/streamid": "^1.0.0-rc.3",
     "cids": "~1.1.6",
-    "cross-fetch": "^3.0.6",
+    "cross-fetch": "^3.1.4",
     "lru_map": "^0.4.1",
     "uint8arrays": "^2.0.5"
   },
   "devDependencies": {
-    "@babel/core": "^7.9.0",
-    "@babel/preset-env": "^7.8.4",
-    "@babel/preset-typescript": "^7.9.0",
-    "@ceramicnetwork/http-client": "^0.10.2",
+    "@ceramicnetwork/http-client": "^1.0.0-rc.6",
     "@types/node": "^13.13.15",
-    "@typescript-eslint/eslint-plugin": "^4.6.0",
-    "@typescript-eslint/parser": "^4.6.0",
-    "babel-jest": "^26.6.3",
-    "did-resolver": "^3.0.1",
-    "eslint": "^6.8.0",
-    "eslint-plugin-jest": "^23.8.2",
-    "jest": "^26.6.3"
-  },
-  "jest": {
-    "transformIgnorePatterns": [
-      "/node_modules(?!/did-jwt)/"
-    ]
+    "did-resolver": "^3.1.0"
   },
   "gitHead": "34eeee25597b0a60def72906c26d3afd6230aaf1"
 }

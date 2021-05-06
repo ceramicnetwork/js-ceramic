@@ -14,6 +14,10 @@ const ADDRESS_TYPES = {
   erc1271: "erc1271",
 };
 
+type EthProviderOpts = {
+  eoaSignAccount?: string
+}
+
 const CHAIN_NAMESPACE = "eip155";
 
 /**
@@ -24,7 +28,8 @@ export class EthereumAuthProvider implements AuthProvider {
 
   constructor(
       private readonly provider: any,
-      private readonly address: string
+      private readonly address: string,
+      private readonly opts: EthProviderOpts = {}
   ) {}
 
   async accountId() {
@@ -44,7 +49,7 @@ export class EthereumAuthProvider implements AuthProvider {
 
   async createLink(did: string): Promise<LinkProof> {
     const accountId = await this.accountId();
-    return createLink(did, accountId, this.provider, { type: "ethereum-eoa" });
+    return createLink(did, accountId, this.provider, this.opts);
   }
 
   withAddress(address: string): AuthProvider {

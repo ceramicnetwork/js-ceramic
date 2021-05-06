@@ -1,13 +1,20 @@
-import ajv from "ajv"
+import Ajv from "ajv"
+import addFormats from "ajv-formats"
+import { Memoize } from 'typescript-memoize';
 
-import { Doctype } from "@ceramicnetwork/common"
+import type { TileDocument } from "@ceramicnetwork/stream-tile"
 
 /**
  * Various utility functions
  */
 export default class Utils {
 
-    static validator: any = new ajv({ allErrors: true })
+    @Memoize()
+    static get validator() {
+      const ajv = new Ajv({ allErrors: true });
+      addFormats(ajv);
+      return ajv;
+    }
 
     /**
      * Awaits on condition for certain amount of time
@@ -24,17 +31,17 @@ export default class Utils {
 
     /**
      * Validates model against JSON-Schema
-     * @param schema - Doctype schema
+     * @param schema - Stream schema
      */
     static isSchemaValid(schema: Record<string, unknown>): boolean {
         Utils.validator.compile(schema) // throws an error on invalid schema
-        return Utils.validator.validateSchema(schema) // call validate schema just in case
+        return Utils.validator.validateSchema(schema) as boolean // call validate schema just in case
     }
 
     /**
      * Validates model against JSON-Schema
-     * @param content - Doctype content
-     * @param schema - Doctype schema
+     * @param content - Stream content
+     * @param schema - Stream schema
      */
     static validate(content: any, schema: any): void {
         const isValid = Utils.validator.validate(schema, content)
@@ -45,16 +52,16 @@ export default class Utils {
     }
 
     /**
-     * Validate Doctype against schema
+     * Validate TileDocument against schema
      */
-    static async validateDoctype(doctype: Doctype): Promise<void> {
-        const schemaDocId = doctype.state?.metadata?.schema
-        if (schemaDocId) {
-            const schemaDoc = await doctype.context.api.loadDocument(schemaDocId)
+    static async validateSchema(doc: TileDocument): Promise<void> {
+        const schemaStreamId = doc.state?.metadata?.schema
+        if (schemaStreamId) {
+            const schemaDoc = await doc.api.loadStream<TileDocument>(schemaStreamId)
             if (!schemaDoc) {
-                throw new Error(`Schema not found for ${schemaDocId}`)
+                throw new Error(`Schema not found for ${schemaStreamId}`)
             }
-            Utils.validate(doctype.content, schemaDoc.content)
+            Utils.validate(doc.content, schemaDoc.content)
         }
     }
 
@@ -63,13 +70,13 @@ export default class Utils {
 export class TrieNode {
     public key: string
     public children:  Record<string, TrieNode>
-  
+
     constructor(key = '') {
       this.key = key
       this.children = {}
     }
 }
-  
+
 export class PathTrie {
     public root: TrieNode
 

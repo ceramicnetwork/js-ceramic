@@ -1,12 +1,12 @@
 import CID from "cids";
 import type { Observable } from "rxjs";
-import { AnchorProof, AnchorStatus } from "./doctype";
+import { AnchorProof, AnchorStatus } from "./stream";
 import { CeramicApi } from "./ceramic-api";
-import DocID from "@ceramicnetwork/docid";
+import StreamID from "@ceramicnetwork/streamid";
 
 export interface AnchorServicePending {
   readonly status: AnchorStatus.PENDING;
-  readonly docId: DocID;
+  readonly streamId: StreamID;
   readonly cid: CID;
   readonly message: string;
   readonly anchorScheduledFor: number;
@@ -14,14 +14,14 @@ export interface AnchorServicePending {
 
 export interface AnchorServiceProcessing {
   readonly status: AnchorStatus.PROCESSING;
-  readonly docId: DocID;
+  readonly streamId: StreamID;
   readonly cid: CID;
   readonly message: string;
 }
 
 export interface AnchorServiceAnchored {
   readonly status: AnchorStatus.ANCHORED;
-  readonly docId: DocID;
+  readonly streamId: StreamID;
   readonly cid: CID;
   readonly message: string;
   readonly anchorRecord: CID;
@@ -29,7 +29,7 @@ export interface AnchorServiceAnchored {
 
 export interface AnchorServiceFailed {
   readonly status: AnchorStatus.FAILED;
-  readonly docId: DocID;
+  readonly streamId: StreamID;
   readonly cid: CID;
   readonly message: string;
 }
@@ -66,10 +66,10 @@ export interface AnchorService {
 
   /**
    * Request anchor commit on blockchain
-   * @param docId - Document ID
+   * @param streamId - Stream ID
    * @param tip - CID tip
    */
-  requestAnchor(docId: DocID, tip: CID): Observable<AnchorServiceResponse>;
+  requestAnchor(streamId: StreamID, tip: CID): Observable<AnchorServiceResponse>;
 
   /**
    * Validate anchor proof commit

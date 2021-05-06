@@ -1,25 +1,28 @@
-import express, { Request, Response, NextFunction } from 'express'
+import express, { Request, Response } from 'express'
 import Ceramic from '@ceramicnetwork/core'
 import type { CeramicConfig} from "@ceramicnetwork/core"
 import { RotatingFileStream } from "@ceramicnetwork/logger"
 import { buildIpfsConnection } from "./build-ipfs-connection.util";
 import { S3StateStore } from "./s3-state-store";
 import {
-  DiagnosticsLogger,
-  DoctypeUtils,
-  RootLogger,
+  StreamUtils,
   MultiQuery,
   LoggerConfig,
-  LogLevel,
   LoggerProvider,
+  DiagnosticsLogger,
+  SyncOptions
 } from "@ceramicnetwork/common"
-import { LogToFiles } from "./ceramic-logger-plugins"
-import DocID from "@ceramicnetwork/docid"
+import StreamID, {StreamType} from "@ceramicnetwork/streamid"
+import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
+import KeyDidResolver from 'key-did-resolver'
+import { DID } from 'dids'
 import cors from 'cors'
-import * as core from "express-serve-static-core"
-import { cpuFree, freememPercentage } from "os-utils"
-import morgan from 'morgan';
+import { errorHandler } from './daemon/error-handler';
+import { addAsync, ExpressWithAsync } from '@awaitjs/express'
+import { logRequests } from './daemon/log-requests';
+import type { Server } from 'http';
 
+const DEFAULT_HOSTNAME = '0.0.0.0'
 const DEFAULT_PORT = 7007
 const toApiPath = (ending: string): string => '/api/v0' + ending
 
@@ -29,158 +32,120 @@ const toApiPath = (ending: string): string => '/api/v0' + ending
 export interface CreateOpts {
   ipfsHost?: string;
   port?: number;
-  corsAllowedOrigins: string | RegExp[];
+  hostname?: string;
+  corsAllowedOrigins?: string | RegExp[];
 
   ethereumRpcUrl?: string;
   anchorServiceUrl?: string;
   stateStoreDirectory?: string;
   s3StateStoreBucket?: string;
 
-  validateDocs?: boolean;
+  validateStreams?: boolean;
   ipfsPinningEndpoints?: string[];
   gateway?: boolean;
   loggerConfig?: LoggerConfig,
   network?: string;
   pubsubTopic?: string;
-
-  maxHealthyCpu: number;
-  maxHealthyMemory: number;
 }
 
-interface HttpLog {
-  request: Record<string, unknown>;
-  response?: Record<string, unknown>;
+interface MultiQueryWithDocId extends MultiQuery {
+  docId?: string
 }
 
 interface MultiQueries {
-  queries: Array<MultiQuery>
+  queries: Array<MultiQueryWithDocId>
 }
 
-const ACCESS_LOG_FMT = 'ip=:remote-addr ts=:date[iso] method=:method original_url=:original-url base_url=:base-url path=:path http_version=:http-version req_header:req[header] status=:status content_length=:res[content-length] content_type=":res[content-type]" ref=:referrer user_agent=:user-agent elapsed_ms=:total-time[3]';
-
-const makeExpressMiddleware = function (loggerProvider: LoggerProvider) {
-  morgan.token<Request, Response>('original-url', function (req, res): any {
-    return req.originalUrl;
-  });
-  morgan.token<Request, Response>('base-url', function (req, res): any {
-    return req.baseUrl;
-  });
-  morgan.token<Request, Response>('path', function (req, res): any {
-    return req.path;
-  });
-
-  const logger = loggerProvider.makeServiceLogger("http-access")
-
-  return [morgan(ACCESS_LOG_FMT, { stream: logger })]
-};
-
-const makeCeramicConfig = function (opts: CreateOpts): CeramicConfig {
+export function makeCeramicConfig (opts: CreateOpts): CeramicConfig {
   const loggerProvider = new LoggerProvider(opts.loggerConfig, (logPath: string) => { return new RotatingFileStream(logPath, true)})
   const ceramicConfig: CeramicConfig = {
     loggerProvider,
     gateway: opts.gateway || false,
-    networkName: opts.network
-  }
-
-  if (opts.anchorServiceUrl) {
-    ceramicConfig.anchorServiceUrl = opts.anchorServiceUrl
-  }
-
-  if (opts.ethereumRpcUrl) {
-    ceramicConfig.ethereumRpcUrl = opts.ethereumRpcUrl
-  }
-
-  if (opts.pubsubTopic) {
-    ceramicConfig.pubsubTopic = opts.pubsubTopic
-  }
-
-  if (opts.stateStoreDirectory) {
-    ceramicConfig.stateStoreDirectory = opts.stateStoreDirectory
-  }
-
-  if (opts.ipfsPinningEndpoints) {
-    ceramicConfig.ipfsPinningEndpoints = opts.ipfsPinningEndpoints
-  }
-
-  if (opts.loggerConfig?.logToFiles) {
-    // TODO remove when LoggerProviderOld is removed from 'common' package
-    ceramicConfig.logToFilesPlugin = {
-      plugin: LogToFiles.main,
-      state: {blockedFiles: {}},
-      options: {logPath: opts.loggerConfig.logDirectory}
-    }
+    anchorServiceUrl: opts.anchorServiceUrl,
+    ethereumRpcUrl: opts.ethereumRpcUrl,
+    ipfsPinningEndpoints: opts.ipfsPinningEndpoints,
+    networkName: opts.network,
+    pubsubTopic: opts.pubsubTopic,
+    stateStoreDirectory: opts.stateStoreDirectory,
+    validateStreams: opts.validateStreams,
   }
 
   return ceramicConfig
 }
 
 /**
+ * Takes a query object and parses the values to give them proper types instead of having everything
+ * as strings
+ * @param opts
+ */
+function parseQueryObject(opts: Record<string, any>): Record<string, string | boolean | number> {
+  const typedOpts = {}
+  for (const [key, value] of Object.entries(opts)) {
+    if (typeof value == 'string') {
+      if (value === "true") {
+        typedOpts[key] = true
+      } else if (value === "false") {
+        typedOpts[key] = false
+      } else if (!isNaN(parseInt(value))) {
+        typedOpts[key] = parseInt(value)
+      } else {
+        typedOpts[key] = value
+      }
+    } else {
+      typedOpts[key] = value
+    }
+  }
+  return typedOpts
+}
+
+/**
+ * Converts 'sync' option sent as a bool by outdated http-clients to the current format of an enum.
+ * The old behaviors don't map directly to the new behaviors, so we take the best approximation.
+ * TODO remove this once we no longer need to support clients older than v1.0.0
+ * @param opts
+ */
+function upconvertLegacySyncOption(opts: Record<string, any> | undefined) {
+  if (typeof opts?.sync == "boolean") {
+    if (opts.sync) {
+      opts.sync = SyncOptions.SYNC_ALWAYS
+    } else {
+      opts.sync = SyncOptions.PREFER_CACHE
+    }
+  }
+}
+
+/**
  * Ceramic daemon implementation
  */
-class CeramicDaemon {
-  private server: any
-  private maxHealthyCpu: number
-  private maxHealthyMemory: number
-  private readonly logger: DiagnosticsLogger
+export class CeramicDaemon {
+  private server?: Server;
+  private readonly app: ExpressWithAsync;
+  private readonly diagnosticsLogger: DiagnosticsLogger;
 
-  constructor (public ceramic: Ceramic, opts: CreateOpts) {
-    this.maxHealthyCpu = opts.maxHealthyCpu
-    this.maxHealthyMemory = opts.maxHealthyMemory
-    this.logger = ceramic.context.loggerProvider.getDiagnosticsLogger()
+  constructor (public ceramic: Ceramic, private readonly opts: CreateOpts) {
+    this.diagnosticsLogger = ceramic.loggerProvider.getDiagnosticsLogger()
+    this.app = addAsync(express());
+    this.app.set('trust proxy', true)
+    this.app.use(express.json({limit: '1mb'}))
+    this.app.use(cors({ origin: opts.corsAllowedOrigins }))
 
-    const app: core.Express = express()
-    app.set('trust proxy', true)
-    app.use(express.json())
-    app.use(cors({ origin: opts.corsAllowedOrigins }))
+    this.app.use(logRequests(ceramic.loggerProvider))
 
-    const expressMiddleware = makeExpressMiddleware(ceramic.context.loggerProvider)
-    app.use(expressMiddleware)
+    this.registerAPIPaths(this.app, opts.gateway)
 
-    this.registerAPIPaths(app, opts.gateway)
+    this.app.use(errorHandler(this.diagnosticsLogger))
+  }
 
-    const loggerOld = RootLogger.getLogger(CeramicDaemon.name)
-    if (opts.loggerConfig?.logLevel <= LogLevel.debug) {
-      app.use((req: Request, res: Response, next: NextFunction): void => {
-        const requestStart = Date.now()
-
-        let requestError: string = null;
-        let body: string | any = [];
-        req.on("data", chunk => {
-          body.push(chunk)
-        })
-        req.on("end", () => {
-          body = Buffer.concat(body)
-          body = body.toString()
-        });
-        req.on("error", error => {
-          requestError = error.message
-        });
-
-        res.on("finish", () => {
-          const httpLog = this._buildHttpLog(requestStart, req, res, {requestError, body})
-          const logString = JSON.stringify(httpLog)
-          loggerOld.debug(logString)
-        })
-        next()
+  async listen(): Promise<void> {
+    return new Promise<void>((resolve) => {
+      const port = this.opts.port || DEFAULT_PORT
+      const hostname = this.opts.hostname || DEFAULT_HOSTNAME
+      this.server = this.app.listen(port, hostname, () => {
+        this.diagnosticsLogger.imp(`Ceramic API running on ${hostname}:${port}'`)
+        resolve()
       })
-    }
-
-    // next is required in function signature
-    app.use((err: Error, req: Request, res: Response, next: NextFunction): void => {
-      loggerOld.error(err)
-      if (res.statusCode < 300) { // 2xx indicates error has not yet been handled
-        res.status(500)
-      }
-      res.send({error: err.message})
-      // TODO: Get real request start
-      loggerOld.error(JSON.stringify(this._buildHttpLog(Date.now(), req, res)))
+      this.server.keepAliveTimeout = 60 * 1000
     })
-
-    const port = opts.port || DEFAULT_PORT
-    this.server = app.listen(port, () => {
-      this.logger.imp('Ceramic API running on port ' + port)
-    })
-    this.server.keepAliveTimeout = 60 * 1000
   }
 
   /**
@@ -203,92 +168,98 @@ class CeramicDaemon {
     const ceramic = new Ceramic(modules, params)
     await ceramic._init(true, true)
 
-    return new CeramicDaemon(ceramic, opts)
+    const did = new DID({ resolver: {
+      ...KeyDidResolver.getResolver(),
+      ...ThreeIdResolver.getResolver(ceramic)
+    }})
+    await ceramic.setDID(did)
+
+    const daemon = new CeramicDaemon(ceramic, opts)
+    await daemon.listen()
+    return daemon
   }
 
-  registerAPIPaths (app: core.Express, gateway: boolean): void {
-    app.get(toApiPath('/commits/:docid'), this.commits.bind(this))
-    app.get(toApiPath('/records/:docid'), this.commits.bind(this))
-    app.post(toApiPath('/multiqueries'), this.multiQuery.bind(this))
-    app.get(toApiPath('/documents/:docid'), this.state.bind(this))
-    app.get(toApiPath('/pins/:docid'), this.listPinned.bind(this))
-    app.get(toApiPath('/pins'), this.listPinned.bind(this))
-    app.get(toApiPath('/node/chains'), this.getSupportedChains.bind(this))
-    app.get(toApiPath('/node/healthcheck'), this.healthcheck.bind(this))
+  registerAPIPaths (app: ExpressWithAsync, gateway: boolean): void {
+    app.getAsync(toApiPath('/commits/:streamid'), this.commits.bind(this))
+    app.postAsync(toApiPath('/multiqueries'), this.multiQuery.bind(this))
+    app.getAsync(toApiPath('/streams/:streamid'), this.state.bind(this))
+    app.getAsync(toApiPath('/pins/:streamid'), this.listPinned.bind(this))
+    app.getAsync(toApiPath('/pins'), this.listPinned.bind(this))
+    app.getAsync(toApiPath('/node/chains'), this.getSupportedChains.bind(this))
+    app.getAsync(toApiPath('/node/healthcheck'), this.healthcheck.bind(this))
+
+    app.getAsync(toApiPath('/documents/:docid'), this.stateOld.bind(this)) // Deprecated
+    app.getAsync(toApiPath('/records/:streamid'), this.commits.bind(this)) // Deprecated
 
     if (!gateway) {
-      app.post(toApiPath('/documents'), this.createDocFromGenesis.bind(this))
-      app.post(toApiPath('/commits'), this.applyCommit.bind(this))
-      app.post(toApiPath('/records'), this.applyCommit.bind(this))
-      app.post(toApiPath('/pins/:docid'), this.pinDocument.bind(this))
-      app.delete(toApiPath('/pins/:docid'), this.unpinDocument.bind(this))
+      app.postAsync(toApiPath('/streams'), this.createStreamFromGenesis.bind(this))
+      app.postAsync(toApiPath('/commits'), this.applyCommit.bind(this))
+      app.postAsync(toApiPath('/pins/:streamid'), this.pinStream.bind(this))
+      app.deleteAsync(toApiPath('/pins/:streamid'), this.unpinStream.bind(this))
+
+      app.postAsync(toApiPath('/documents'), this.createDocFromGenesis.bind(this)) // Deprecated
+      app.postAsync(toApiPath('/records'), this.applyCommit.bind(this)) // Deprecated
     } else {
-      app.post(toApiPath('/documents'), this.createReadOnlyDocFromGenesis.bind(this))
-      app.post(toApiPath('/commits'),  this._notSupported.bind(this))
-      app.post(toApiPath('/records'),  this._notSupported.bind(this))
-      app.post(toApiPath('/pins/:docid'),  this._notSupported.bind(this))
-      app.delete(toApiPath('/pins/:docid'),  this._notSupported.bind(this))
+      app.postAsync(toApiPath('/streams'), this.createReadOnlyStreamFromGenesis.bind(this))
+      app.postAsync(toApiPath('/commits'),  this._notSupported.bind(this))
+      app.postAsync(toApiPath('/pins/:streamid'),  this._notSupported.bind(this))
+      app.deleteAsync(toApiPath('/pins/:streamid'),  this._notSupported.bind(this))
+
+      app.postAsync(toApiPath('/documents'), this.createReadOnlyDocFromGenesis.bind(this)) // Deprecated
+      app.postAsync(toApiPath('/records'),  this._notSupported.bind(this)) // Deprecated
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-  _buildHttpLog (requestStart: number, req: Request, res: Response, extra?: any): HttpLog {
-    const { headers, httpVersion, method, socket, url } = req;
-    const { remoteAddress, remoteFamily } = socket;
-    const httpLog: HttpLog = {
-      request:{
-        timestamp: Date.now(),
-        headers,
-        httpVersion,
-        method,
-        remoteAddress,
-        remoteFamily,
-        url
-      }
-    }
-    const now = Date.now()
-    httpLog.response = {
-      timestamp: now,
-      processingTime: now - requestStart,
-      body: extra && extra.body || null,
-      statusCode: res.statusCode,
-      statusMessage: res.statusMessage,
-      requestError: extra && extra.requestError || null
-    }
-    return httpLog
-  }
-
-  async healthcheck (req: Request, res: Response, next: NextFunction): Promise<void> {
-    const freeCpu: any = await new Promise((resolve) => cpuFree(resolve))
-    const cpuUsage: number = 1 - freeCpu
-
-    const freeMemory = freememPercentage()
-    const memUsage: number = 1 - freeMemory
-
-    const stats = `maxHealthyCpu=${this.maxHealthyCpu} cpuUsage=${cpuUsage} freeCpu=${freeCpu} maxHealthyMemory=${this.maxHealthyMemory} memoryUsage=${memUsage} freeMemory=${freeMemory}`
-
-    if (cpuUsage > this.maxHealthyCpu || memUsage > this.maxHealthyMemory) {
-      this.logger.debug(stats)
-      res.status(503)
-      return next(new Error('Ceramic failed a healthcheck. Insufficient resources.'))
-    } else {
-      res.status(200).send('Alive!')
-    }
+  healthcheck (req: Request, res: Response): void {
+    res.status(200).send('Alive!')
   }
 
   /**
    * Create document from genesis commit
-   * @dev Useful when the docId is unknown, but you have the genesis contents
+   * @dev Useful when the streamId is unknown, but you have the genesis contents
+   * @deprecated
    */
-  async createDocFromGenesis (req: Request, res: Response, next: NextFunction): Promise<void> {
+  async createDocFromGenesis (req: Request, res: Response): Promise<void> {
     const { doctype, genesis, docOpts } = req.body
-    try {
-      const doc = await this.ceramic.createDocumentFromGenesis(doctype, DoctypeUtils.deserializeCommit(genesis), docOpts)
-      res.json({ docId: doc.id.toString(), state: DoctypeUtils.serializeState(doc.state) })
-    } catch (e) {
-      return next(e)
-    }
-    next()
+    upconvertLegacySyncOption(docOpts)
+    const type = StreamType.codeByName(doctype)
+    const doc = await this.ceramic.createStreamFromGenesis(type, StreamUtils.deserializeCommit(genesis), docOpts)
+    res.json({
+      streamId: doc.id.toString(),
+      docId: doc.id.toString(),
+      state: StreamUtils.serializeState(doc.state)
+    })
+  }
+
+  /**
+   * Create document from genesis commit
+   * @dev Useful when the streamId is unknown, but you have the genesis contents
+   */
+  async createStreamFromGenesis (req: Request, res: Response): Promise<void> {
+    const { type, genesis, opts } = req.body
+    const stream = await this.ceramic.createStreamFromGenesis(type, StreamUtils.deserializeCommit(genesis), opts)
+    res.json({ streamId: stream.id.toString(), state: StreamUtils.serializeState(stream.state) })
+  }
+
+  /**
+   * Create read-only document from genesis commit
+   * @dev Useful when the streamId is unknown, but you have the genesis contents
+   * @TODO Should return null if document does not already exist instead of
+   * current behavior, publishing to IPFS. With that change it will make sense
+   * to rename this, e.g. `loadStreamFromGenesis`
+   * @deprecated
+   */
+  async createReadOnlyDocFromGenesis (req: Request, res: Response): Promise<void> {
+    const { doctype, genesis, docOpts } = req.body
+    upconvertLegacySyncOption(docOpts)
+    const type = StreamType.codeByName(doctype)
+    const readOnlyDocOpts = { ...docOpts, anchor: false, publish: false }
+    const doc = await this.ceramic.createStreamFromGenesis(type, StreamUtils.deserializeCommit(genesis), readOnlyDocOpts)
+    res.json({
+      streamId: doc.id.toString(),
+      docId: doc.id.toString(),
+      state: StreamUtils.serializeState(doc.state)
+    })
   }
 
   /**
@@ -296,164 +267,169 @@ class CeramicDaemon {
    * @dev Useful when the docId is unknown, but you have the genesis contents
    * @TODO Should return null if document does not already exist instead of
    * current behavior, publishing to IPFS. With that change it will make sense
-   * to rename this, e.g. `loadDocFromGenesis`
+   * to rename this, e.g. `loadStreamFromGenesis`
    */
-  async createReadOnlyDocFromGenesis (req: Request, res: Response, next: NextFunction): Promise<void> {
-    const { doctype, genesis, docOpts } = req.body
-    const readOnlyDocOpts = { ...docOpts, anchor: false, publish: false }
-    try {
-      const doc = await this.ceramic.createDocumentFromGenesis(doctype, DoctypeUtils.deserializeCommit(genesis), readOnlyDocOpts)
-      res.json({ docId: doc.id.toString(), state: DoctypeUtils.serializeState(doc.state) })
-    } catch (e) {
-      return next(e)
-    }
-    next()
+  async createReadOnlyStreamFromGenesis (req: Request, res: Response): Promise<void> {
+    const { type, genesis, opts } = req.body
+    const readOnlyOpts = { ...opts, anchor: false, publish: false }
+    const stream = await this.ceramic.createStreamFromGenesis(type, StreamUtils.deserializeCommit(genesis), readOnlyOpts)
+    res.json({ streamId: stream.id.toString(), state: StreamUtils.serializeState(stream.state) })
+  }
+
+  /**
+   * Get stream state
+   */
+  async state (req: Request, res: Response): Promise<void> {
+    const opts = parseQueryObject(req.query)
+    const stream = await this.ceramic.loadStream(req.params.streamid, opts)
+    res.json({ streamId: stream.id.toString(), state: StreamUtils.serializeState(stream.state) })
   }
 
   /**
    * Get document state
+   * @deprecated
+   * // todo remove when 'documents' endpoint is removed
    */
-  async state (req: Request, res: Response, next: NextFunction): Promise<void> {
-    try {
-      const doc = await this.ceramic.loadDocument(req.params.docid)
-
-      res.json({ docId: doc.id.toString(), state: DoctypeUtils.serializeState(doc.state) })
-    } catch (e) {
-      return next(e)
-    }
-    next()
+  async stateOld (req: Request, res: Response): Promise<void> {
+    const opts = parseQueryObject(req.query)
+    upconvertLegacySyncOption(opts)
+    const doc = await this.ceramic.loadStream(req.params.docid, opts)
+    res.json({ docId: doc.id.toString(), state: StreamUtils.serializeState(doc.state) })
   }
 
   /**
    * Get all document commits
    */
-  async commits (req: Request, res: Response, next: NextFunction): Promise<void> {
-    const docId = DocID.fromString(req.params.docid)
-    try {
-      const commits = await this.ceramic.loadDocumentCommits(docId)
-      const serializedCommits = commits.map((r: any) => {
-        return {
-          cid: r.cid,
-          value: DoctypeUtils.serializeCommit(r.value)
-        }
-      })
+  async commits (req: Request, res: Response): Promise<void> {
+    const streamId = StreamID.fromString(req.params.streamid || req.params.docid)
+    const commits = await this.ceramic.loadStreamCommits(streamId)
+    const serializedCommits = commits.map((r: any) => {
+      return {
+        cid: r.cid,
+        value: StreamUtils.serializeCommit(r.value)
+      }
+    })
 
-      res.json({ docId: docId.toString(), commits: serializedCommits })
-    } catch (e) {
-      return next(e)
-    }
-    next()
+    // TODO remove docId from output when we are no longer supporting clients older than v1.0.0
+    res.json({
+      streamId: streamId.toString(),
+      docId: streamId.toString(),
+      commits: serializedCommits
+    })
   }
 
   /**
    * Apply one commit to the existing document
    */
-  async applyCommit (req: Request, res: Response, next: NextFunction): Promise<void> {
+  async applyCommit (req: Request, res: Response): Promise<void> {
     const { docId, commit, docOpts } = req.body
-    if (!(docId && commit)) {
-      res.json({ error: 'docId and commit are required in order to apply commit' })
-      next()
-      return
+    const opts = req.body.opts || docOpts
+    upconvertLegacySyncOption(opts)
+    const streamId = req.body.streamId || docId
+    if (!(streamId && commit)) {
+      throw new Error('streamId and commit are required in order to apply commit')
     }
 
-    try {
-      const doctype = await this.ceramic.applyCommit(docId, DoctypeUtils.deserializeCommit(commit), docOpts)
-      res.json({ docId: doctype.id.toString(), state: DoctypeUtils.serializeState(doctype.state) })
-    } catch (e) {
-      return next(e)
-    }
-    next()
+    const stream = await this.ceramic.applyCommit(streamId, StreamUtils.deserializeCommit(commit), opts)
+    res.json({
+      streamId: stream.id.toString(),
+      docId: stream.id.toString(),
+      state: StreamUtils.serializeState(stream.state)
+    })
   }
 
   /**
    * Load multiple documents and paths using an array of multiqueries
    */
-  async multiQuery (req: Request, res: Response, next: NextFunction): Promise<void> {
-    const { queries } = <MultiQueries> req.body
-    try {
-      const results = await this.ceramic.multiQuery(queries)
-      const response = Object.entries(results).reduce((acc, e) => {
-        const [k, v] = e
-        acc[k] = DoctypeUtils.serializeState(v.state)
-        return acc
-      }, {})
-      res.json(response)
-    } catch (e) {
-      return next(e)
-    }
-    next()
-  }
-
-  /**
-   * Pin document
-   */
-  async pinDocument (req: Request, res: Response, next: NextFunction): Promise<void> {
-    const docId = DocID.fromString(req.params.docid)
-    try {
-      await this.ceramic.pin.add(docId)
-      res.json({ docId: docId.toString(), isPinned: true })
-    } catch (e) {
-      return next(e)
-    }
-    next()
-  }
-
-  /**
-   * Unpin document
-   */
-  async unpinDocument (req: Request, res: Response, next: NextFunction): Promise<void> {
-    const docId = DocID.fromString(req.params.docid)
-    try {
-      await this.ceramic.pin.rm(docId)
-      res.json({ docId: docId.toString(), isPinned: false })
-    } catch (e) {
-      return next(e)
-    }
-    next()
-  }
-
-  /**
-   * List pinned documents
-   */
-  async listPinned (req: Request, res: Response, next: NextFunction): Promise<void> {
-    let docId: DocID;
-    if (req.params.docid) {
-      docId = DocID.fromString(req.params.docid)
-    }
-    try {
-      const pinnedDocIds = []
-      const iterator = await this.ceramic.pin.ls(docId)
-      for await (const id of iterator) {
-        pinnedDocIds.push(id)
+  async multiQuery (req: Request, res: Response): Promise<void> {
+    let { queries } = <MultiQueries>req.body
+    // Handle queries from old clients by replacing the `docId` arguments with `streamId`.
+    // TODO: Remove this once we no longer need to support http clients older than version 1.0.0
+    queries = queries.map((q: MultiQueryWithDocId): MultiQuery => {
+      if (q.docId) {
+        q.streamId = q.docId
+        delete q.docId
       }
-      res.json({ pinnedDocIds: pinnedDocIds })
-    } catch (e) {
-      return next(e)
-    }
-    next()
+      return q
+    })
+
+    const results = await this.ceramic.multiQuery(queries)
+    const response = Object.entries(results).reduce((acc, e) => {
+      const [k, v] = e
+      acc[k] = StreamUtils.serializeState(v.state)
+      return acc
+    }, {})
+    res.json(response)
   }
 
-  async _notSupported (req: Request, res: Response, next: NextFunction): Promise<void> {
-    res.status(400).json({ status: 'error', message: 'Method not supported by read only Ceramic Gateway' })
-    next()
+  /**
+   * Pin stream
+   */
+  async pinStream (req: Request, res: Response): Promise<void> {
+    const streamId = StreamID.fromString(req.params.streamid || req.params.docid)
+    await this.ceramic.pin.add(streamId)
+    res.json({
+      streamId: streamId.toString(),
+      docId: streamId.toString(),
+      isPinned: true
+    })
   }
 
-  async getSupportedChains (req: Request, res: Response, next: NextFunction): Promise<void> {
-    try {
-      const supportedChains = await this.ceramic.getSupportedChains()
-      res.json({ supportedChains })
-    } catch (e) {
-      return next(e)
+  /**
+   * Unpin stream
+   */
+  async unpinStream (req: Request, res: Response): Promise<void> {
+    const streamId = StreamID.fromString(req.params.streamid || req.params.docid)
+    await this.ceramic.pin.rm(streamId)
+    res.json({
+      streamId: streamId.toString(),
+      docId: streamId.toString(),
+      isPinned: false
+    })
+  }
+
+  /**
+   * List pinned streams
+   */
+  async listPinned (req: Request, res: Response): Promise<void> {
+    let streamId: StreamID;
+    if (req.params.streamid || req.params.docid) {
+      streamId = StreamID.fromString(req.params.streamid || req.params.docid)
     }
-    next()
+    const pinnedStreamIds = []
+    const iterator = await this.ceramic.pin.ls(streamId)
+    for await (const id of iterator) {
+      pinnedStreamIds.push(id)
+    }
+
+    // Return the same data in two formats: 'pinnedStreamids' and 'pinnedDocIds', to support old clients
+    // TODO: Remove 'pinnedDocIds' once we are okay with no longer supporting applications using a
+    // version of '@ceramicnetwork/http-client' older than v1.0.0
+    res.json({ pinnedStreamIds, pinnedDocIds: pinnedStreamIds })
+  }
+
+  async _notSupported (req: Request, res: Response): Promise<void> {
+    res.status(400).json({ error: 'Method not supported by read only Ceramic Gateway' })
+  }
+
+  async getSupportedChains (req: Request, res: Response): Promise<void> {
+    const supportedChains = await this.ceramic.getSupportedChains()
+    res.json({ supportedChains })
   }
 
   /**
    * Close Ceramic daemon
    */
   async close (): Promise<void> {
-    return this.server.close()
+    return new Promise<void>((resolve, reject) => {
+      if (!this.server) resolve();
+      this.server.close(err => {
+        if (err) {
+          reject(err)
+        } else {
+          resolve()
+        }
+      })
+    })
   }
 }
-
-export default CeramicDaemon

@@ -1,10 +1,10 @@
 import { StateStore } from "./state-store";
-import { LogEntry, DocState, PinningBackend, DocStateHolder } from '@ceramicnetwork/common';
+import { LogEntry, StreamState, PinningBackend, StreamStateHolder } from '@ceramicnetwork/common';
 import CID from "cids"
-import DocID from '@ceramicnetwork/docid'
+import StreamID from '@ceramicnetwork/streamid'
 
 /**
- * Encapsulates logic for pinning documents
+ * Encapsulates logic for pinning streams
  */
 export class PinStore {
     constructor(
@@ -24,28 +24,28 @@ export class PinStore {
         await this.pinning.close()
     }
 
-    async add(docStateHolder: DocStateHolder): Promise<void> {
-        await this.stateStore.save(docStateHolder)
-        const points = await this.pointsOfInterest(docStateHolder.state)
+    async add(streamStateHolder: StreamStateHolder): Promise<void> {
+        await this.stateStore.save(streamStateHolder)
+        const points = await this.pointsOfInterest(streamStateHolder.state)
         await Promise.all(points.map(point => this.pinning.pin(point)))
     }
 
-    async rm(docId: DocID): Promise<void> {
-        const state = await this.stateStore.load(docId)
+    async rm(streamId: StreamID): Promise<void> {
+        const state = await this.stateStore.load(streamId)
         if (state) {
             const points = await this.pointsOfInterest(state)
             Promise.all(points.map(point => this.pinning.unpin(point))).catch(() => {
                 // Do Nothing
             })
-            await this.stateStore.remove(docId)
+            await this.stateStore.remove(streamId)
         }
     }
 
-    async ls(docId?: DocID): Promise<string[]> {
-        return this.stateStore.list(docId)
+    async ls(streamId?: StreamID): Promise<string[]> {
+        return this.stateStore.list(streamId)
     }
 
-    protected async pointsOfInterest(state: DocState): Promise<Array<CID>> {
+    protected async pointsOfInterest(state: StreamState): Promise<Array<CID>> {
         const log = state.log as Array<LogEntry>
 
         const points: CID[] = []

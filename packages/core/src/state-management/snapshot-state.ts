@@ -1,22 +1,25 @@
 import { Observable, of } from 'rxjs';
-import { RunningStateLike } from './running-state';
-import { DocState } from '@ceramicnetwork/common';
-import { DocID } from '@ceramicnetwork/docid';
+import { StreamState, RunningStateLike } from '@ceramicnetwork/common';
+import { StreamID } from '@ceramicnetwork/streamid';
 
 /**
- * Snapshot of a document state at some commit. Unlike `RunningState` this can not be updated.
+ * Snapshot of a stream state at some commit. Unlike `RunningState` this can not be updated.
  * Only a subset of operations could be performed with an instance of SnapshotState, like
  * `StateManager#rewind` or `StateManager#atTime`.
  */
-export class SnapshotState extends Observable<DocState> implements RunningStateLike {
-  readonly id: DocID;
-  readonly state: DocState;
+export class SnapshotState extends Observable<StreamState> implements RunningStateLike {
+  readonly id: StreamID;
+  readonly state: StreamState;
 
-  constructor(readonly value: DocState) {
+  constructor(readonly value: StreamState) {
     super((subscriber) => {
       of(value).subscribe(subscriber);
     });
     this.state = value;
-    this.id = new DocID(this.state.doctype, this.state.log[0].cid);
+    this.id = new StreamID(this.state.type, this.state.log[0].cid);
+  }
+
+  next(value: StreamState): void {
+    throw new Error('Snapshot can not be updated');
   }
 }

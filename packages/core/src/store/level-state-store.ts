@@ -1,12 +1,12 @@
 import Level from "level-ts";
-import { DocState, DocStateHolder, DoctypeUtils } from '@ceramicnetwork/common';
+import { StreamState, StreamStateHolder, StreamUtils } from '@ceramicnetwork/common';
 import { StateStore } from "./state-store"
-import DocID from '@ceramicnetwork/docid'
+import StreamID from '@ceramicnetwork/streamid'
 import * as fs from 'fs'
 import path from "path";
 
 /**
- * Ceramic store for saving document state to a local leveldb instance
+ * Ceramic store for saving stream state to a local leveldb instance
  */
 export class LevelStateStore implements StateStore {
     #store: Level
@@ -27,27 +27,29 @@ export class LevelStateStore implements StateStore {
     open(networkName: string): void {
         // Always store the pinning state in a network-specific directory
         const storePath = path.join(this.storeRoot, networkName)
-        fs.mkdirSync(storePath, { recursive: true }) // create dir if it doesn't exist
+        if (fs) {
+            fs.mkdirSync(storePath, { recursive: true }) // create dir if it doesn't exist
+        }
         this.#store = new Level(storePath);
     }
 
     /**
-     * Pin document
-     * @param docStateHolder - Document instance
+     * Pin stream
+     * @param streamStateHolder - Stream instance
      */
-    async save(docStateHolder: DocStateHolder): Promise<void> {
-        await this.#store.put(docStateHolder.id.toString(), DoctypeUtils.serializeState(docStateHolder.state))
+    async save(streamStateHolder: StreamStateHolder): Promise<void> {
+        await this.#store.put(streamStateHolder.id.toString(), StreamUtils.serializeState(streamStateHolder.state))
     }
 
     /**
-     * Load document state
-     * @param docId - Document ID
+     * Load stream state
+     * @param streamId - Stream ID
      */
-    async load(docId: DocID): Promise<DocState> {
+    async load(streamId: StreamID): Promise<StreamState> {
         try {
-            const state = await this.#store.get(docId.baseID.toString())
+            const state = await this.#store.get(streamId.baseID.toString())
             if (state) {
-                return DoctypeUtils.deserializeState(state);
+                return StreamUtils.deserializeState(state);
             } else {
                 return null;
             }
@@ -60,26 +62,26 @@ export class LevelStateStore implements StateStore {
     }
 
     /**
-     * Unpin document
-     * @param docId - Document ID
+     * Unpin stream
+     * @param streamId - Stream ID
      */
-    async remove(docId: DocID): Promise<void> {
-        await this.#store.del(docId.baseID.toString())
+    async remove(streamId: StreamID): Promise<void> {
+        await this.#store.del(streamId.baseID.toString())
     }
 
     /**
-     * List pinned document
-     * @param docId - Document ID
+     * List pinned stream
+     * @param streamId - Stream ID
      */
-    async list(docId?: DocID): Promise<string[]> {
-        let docIds: string[]
-        if (docId == null) {
+    async list(streamId?: StreamID): Promise<string[]> {
+        let streamIds: string[]
+        if (streamId == null) {
             return this.#store.stream({ keys: true, values: false })
         } else {
-            const exists = Boolean(await this.load(docId.baseID))
-            docIds = exists ? [docId.toString()] : []
+            const exists = Boolean(await this.load(streamId.baseID))
+            streamIds = exists ? [streamId.toString()] : []
         }
-        return docIds
+        return streamIds
     }
 
     /**

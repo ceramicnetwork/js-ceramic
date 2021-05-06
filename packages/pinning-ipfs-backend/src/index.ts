@@ -1,5 +1,5 @@
 import type {
-    CidList, PinningBackend, PinningInfo, Context, IpfsApi,
+    CidList, PinningBackend, PinningInfo, IpfsApi,
 } from "@ceramicnetwork/common";
 import type CID from "cids";
 import * as sha256 from "@stablelib/sha256";
@@ -17,7 +17,7 @@ export class NoIpfsInstanceError extends Error {
 const textEncoder = new TextEncoder();
 
 /**
- * Pin document to a IPFS node.
+ * Pin stream to a IPFS node.
  *
  * +connectionString+ indicates what node to connect to. It has a form of URL starting with `ipfs` protocol,
  * for example: `ipfs://3.3.3.3:5001`. It would translate into `http://3.3.3.3:5001` IPFS endpoint connection.

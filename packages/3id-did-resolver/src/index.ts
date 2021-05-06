@@ -8,10 +8,11 @@ import type {
   ResolverRegistry,
   VerificationMethod
 } from 'did-resolver'
-import type { DocState, MultiQuery, CeramicApi } from "@ceramicnetwork/common"
+import type { StreamState, MultiQuery, CeramicApi } from "@ceramicnetwork/common"
+import { TileDocument } from "@ceramicnetwork/stream-tile"
 import LegacyResolver from './legacyResolver'
 import * as u8a from 'uint8arrays'
-import { DocID } from '@ceramicnetwork/docid'
+import { StreamID } from '@ceramicnetwork/streamid'
 import CID from 'cids'
 //import dagCBOR from 'ipld-dag-cbor'
 
@@ -25,6 +26,13 @@ const isLegacyDid = (didId: string): boolean => {
   } catch(e) {
     return false
   }
+}
+
+/**
+ * Converts unix timestamp to ISO string without ms.
+ */
+const formatTime = (timestamp: number): string => {
+  return (new Date(timestamp * 1000)).toISOString().split('.')[0] + 'Z'
 }
 
 /**
@@ -42,7 +50,6 @@ export function wrapDocument(content: any, did: string): DIDDocument | null {
     verificationMethod: [],
     authentication: [],
     keyAgreement: [],
-    publicKey: []
   }
   return Object.entries(content.publicKeys as string[]).reduce((diddoc, [keyName, keyValue]) => {
     const keyBuf = u8a.fromString(keyValue.slice(1), 'base58btc')
@@ -52,17 +59,17 @@ export function wrapDocument(content: any, did: string): DIDDocument | null {
       controller: did,
       // remove multicodec varint
       publicKeyBase58: u8a.toString(keyBuf.slice(2), 'base58btc')
+      // We might want to use 'publicKeyMultibase' here if it
+      // ends up in the did-core spec.
     }
     if (keyBuf[0] === 0xe7) { // it's secp256k1
       entry.type = 'EcdsaSecp256k1Signature2019'
       diddoc.verificationMethod.push(entry)
       diddoc.authentication.push(entry)
-      diddoc.publicKey.push(entry)
     } else if (keyBuf[0] === 0xec) { // it's x25519
       entry.type = 'X25519KeyAgreementKey2019'
       diddoc.verificationMethod.push(entry)
       diddoc.keyAgreement.push(entry)
-      diddoc.publicKey.push(entry)
     }
     return diddoc
   }, startDoc)
@@ -73,10 +80,10 @@ export function wrapDocument(content: any, did: string): DIDDocument | null {
  * Requires the latest version of the 3ID ceramic document state as
  * well as the state of the version we are resolving
  *
- * @param requestedVersionState - the DocState of the version of the 3ID we are resolving
- * @param latestVersionState - the DocState of the latest version of the 3ID we are resolving
+ * @param requestedVersionState - the StreamState of the version of the 3ID we are resolving
+ * @param latestVersionState - the StreamState of the latest version of the 3ID we are resolving
  */
-function extractMetadata(requestedVersionState: DocState, latestVersionState: DocState): DIDDocumentMetadata {
+function extractMetadata(requestedVersionState: StreamState, latestVersionState: StreamState): DIDDocumentMetadata {
   const metadata: DIDDocumentMetadata = {}
   const { timestamp: updated, cid: versionId } = requestedVersionState.log.pop() || {}
 
@@ -87,13 +94,13 @@ function extractMetadata(requestedVersionState: DocState, latestVersionState: Do
   const created = latestVersionState.log.find(({ timestamp }) => Boolean(timestamp))?.timestamp
 
   if (created) {
-    metadata.created = (new Date(created * 1000)).toISOString()
+    metadata.created = formatTime(created)
   }
   if (updated) {
-    metadata.updated = (new Date(updated * 1000)).toISOString()
+    metadata.updated = formatTime(updated)
   }
   if (nextUpdate) {
-    metadata.nextUpdate = (new Date(nextUpdate * 1000)).toISOString()
+    metadata.nextUpdate = formatTime(nextUpdate)
   }
   if (versionId) {
     metadata.versionId = requestedVersionState.log.length === 0 ? '0' : versionId?.toString()
@@ -127,13 +134,13 @@ function getVersionInfo(query = ''): VersionInfo {
 const legacyResolve = async (ceramic: CeramicApi, didId: string, verNfo: VersionInfo): Promise<DIDResolutionResult> => {
   const legacyPublicKeys = await LegacyResolver(didId) // can add opt to pass ceramic ipfs to resolve
 
-  // TODO - calculate docid using a CID, annoyingly not working because of dependency issues.
+  // TODO - calculate streamid using a CID, annoyingly not working because of dependency issues.
   // This would remove one request to ceramic.
   //const genesisCommit = { header: { family: '3id', controllers: [legacyPublicKeys.keyDid] }, unique: '0' }
-  //const docid = new DocID('tile', await dagCBOR.util.cid(new Uint8Array(dagCBOR.util.serialize(genesisCommit))))
-  const docParams =  { deterministic: true, metadata: { controllers: [legacyPublicKeys.keyDid], family: '3id' } }
-  const docid = (await ceramic.createDocument('tile', docParams, { anchor: false, publish: false })).id
-  const didResult = await resolve(ceramic, docid.toString(), verNfo, didId)
+  //const streamid = new StreamID('tile', await dagCBOR.util.cid(new Uint8Array(dagCBOR.util.serialize(genesisCommit))))
+  const metadata =  { controllers: [legacyPublicKeys.keyDid], family: '3id', deterministic: true }
+  const streamid = (await TileDocument.create(ceramic, null, metadata, { anchor: false, publish: false })).id
+  const didResult = await resolve(ceramic, streamid.toString(), verNfo, didId)
   if (didResult.didDocument === null) {
     didResult.didDocument = wrapDocument(legacyPublicKeys, `did:3:${didId}`)
   }
@@ -141,15 +148,15 @@ const legacyResolve = async (ceramic: CeramicApi, didId: string, verNfo: Version
 }
 
 const resolve = async (ceramic: CeramicApi, didId: string, verNfo: VersionInfo, v03ID?: string): Promise<DIDResolutionResult> =>  {
-  const docId = DocID.fromString(didId)
+  const streamId = StreamID.fromString(didId)
   let commitId
-  const query: Array<MultiQuery> = [{ docId }]
+  const query: Array<MultiQuery> = [{ streamId }]
   if (verNfo.commit) {
-    commitId = docId.atCommit(verNfo.commit)
-    query.push({ docId: commitId })
+    commitId = streamId.atCommit(verNfo.commit)
+    query.push({ streamId: commitId })
   } else if (verNfo.timestamp) {
     query.push({
-      docId,
+      streamId,
       atTime: verNfo.timestamp
     })
   }
@@ -160,7 +167,7 @@ const resolve = async (ceramic: CeramicApi, didId: string, verNfo: VersionInfo, 
   const requestedVersionState = resp[commitIdStr]?.state || latestVersionState
   const metadata = extractMetadata(requestedVersionState, latestVersionState)
 
-  const content = resp[commitIdStr || didId].content
+  const content = (resp[commitIdStr || didId] as TileDocument).content
   const document = wrapDocument(content, `did:3:${v03ID || didId}`)
 
   return {
@@ -179,7 +186,7 @@ export default {
         const didResult = await (isLegacyDid(parsed.id) ? legacyResolve(ceramic, parsed.id, verNfo) : resolve(ceramic, parsed.id, verNfo))
 
         if (contentType === DID_LD_JSON) {
-          didResult.didDocument['@context'] = 'https://w3id.org/did/v1'
+          didResult.didDocument['@context'] = 'https://www.w3.org/ns/did/v1'
           didResult.didResolutionMetadata.contentType = DID_LD_JSON
         } else if (contentType !== DID_JSON) {
           didResult.didDocument = null

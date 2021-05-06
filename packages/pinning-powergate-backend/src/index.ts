@@ -1,4 +1,4 @@
-import CID from "cids";
+import type CID from "cids";
 import type {
     CidList,
     PinningBackend,

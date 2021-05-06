@@ -1,9 +1,5 @@
 import fetch from "cross-fetch";
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-import type { IPFSAPI as IpfsApi } from "ipfs-core/dist/src/components";
-import { DiagnosticsLogger  } from "@ceramicnetwork/common";
-export type IpfsApi = typeof IpfsApi;
+import type { DiagnosticsLogger, IpfsApi  } from "@ceramicnetwork/common";
 
 const PEER_FILE_URLS = {
   "testnet-clay":
@@ -18,12 +14,6 @@ const BASE_BOOTSTRAP_LIST = {
     "/dns4/ipfs-clay.ceramic.network/tcp/4012/wss/p2p/QmSqeKpCYW89XrHHxtEQEWXmznp6o336jzwvdodbrGeLTk",
     "/dns4/ipfs-clay-internal.3boxlabs.com/tcp/4012/wss/p2p/QmQotCKxiMWt935TyCBFTN23jaivxwrZ3uD58wNxeg5npi",
     "/dns4/ipfs-clay-cas.3boxlabs.com/tcp/4012/wss/p2p/QmbeBTzSccH8xYottaYeyVX8QsKyox1ExfRx7T1iBqRyCd",
-  ],
-  "dev-unstable": [
-    "/dns4/ipfs-dev.3boxlabs.com/tcp/4012/wss/p2p/Qmc4BVsZbVkuvax6SKgwq5BrcKjzBdwx5dW45cWfLVHabx",
-    "/dns4/ipfs-dev.ceramic.network/tcp/4012/wss/p2p/QmStNqcAjwh6s2sxUWr2ZXT3MhRZmqpJ9Dj6fp3gPdHr6E",
-    "/dns4/ipfs-dev-internal.3boxlabs.com/tcp/4012/wss/p2p/QmYkpxusRem2iup8ZAfVGYv7iq1ks1yyq2XxQh3z2a8xXq",
-    "/dns4/ipfs-dev-cas.3boxlabs.com/tcp/4012/wss/p2p/QmPHLQoWhK4CMPPgxGQxjNYEp1fMB8NPpoLaaR2VDMNbcr",
   ],
 };
 

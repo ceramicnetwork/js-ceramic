@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/pinning-aggregation",
-  "version": "0.2.2",
+  "version": "1.0.0-rc.6",
   "description": "Aggregated pinning",
   "keywords": [
     "ceramic",
@@ -18,7 +18,7 @@
     "build": "../../node_modules/.bin/tsc -p tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
-    "lint": "./node_modules/.bin/eslint ./src --ext .js,.jsx,.ts,.tsx",
+    "lint": "../../node_modules/.bin/eslint ./src --ext .js,.jsx,.ts,.tsx",
     "clean": "rm -rf ./lib"
   },
   "author": "Sergey Ukustov <sergey@ukstv.me>",
@@ -27,13 +27,13 @@
     "lib": "lib"
   },
   "dependencies": {
-    "@ceramicnetwork/pinning-ipfs-backend": "^0.2.2",
     "@stablelib/base64": "^1.0.0",
     "@stablelib/sha256": "^1.0.0"
   },
   "devDependencies": {
-    "@ceramicnetwork/common": "^0.17.1",
-    "@ceramicnetwork/pinning-powergate-backend": "^0.2.2",
+    "@ceramicnetwork/common": "^1.0.0-rc.6",
+    "@ceramicnetwork/pinning-ipfs-backend": "^1.0.0-rc.6",
+    "@ceramicnetwork/pinning-powergate-backend": "^1.0.0-rc.6",
     "cids": "~1.1.6"
   },
   "publishConfig": {
