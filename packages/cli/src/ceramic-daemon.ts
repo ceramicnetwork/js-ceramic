@@ -117,7 +117,7 @@ function upconvertLegacySyncOption(opts: Record<string, any> | undefined) {
 /**
  * Ceramic daemon implementation
  */
-class CeramicDaemon {
+export class CeramicDaemon {
   private server?: Server;
   private readonly app: ExpressWithAsync;
   private readonly diagnosticsLogger: DiagnosticsLogger;
@@ -433,5 +433,3 @@ class CeramicDaemon {
     })
   }
 }
-
-export default CeramicDaemon
