@@ -2,26 +2,26 @@ import fetch from "cross-fetch";
 import type { DiagnosticsLogger, IpfsApi  } from "@ceramicnetwork/common";
 
 const PEER_FILE_URLS = {
-  "testnet-clay":
-    "https://raw.githubusercontent.com/ceramicnetwork/peerlist/main/testnet-clay.json",
   "mainnet":
     "https://raw.githubusercontent.com/ceramicnetwork/peerlist/main/mainnet.json",
+  "testnet-clay":
+    "https://raw.githubusercontent.com/ceramicnetwork/peerlist/main/testnet-clay.json",
   "dev-unstable":
     "https://raw.githubusercontent.com/ceramicnetwork/peerlist/main/dev-unstable.json",
 };
 
 const BASE_BOOTSTRAP_LIST = {
+  "mainnet": [
+    "/dns4/ipfs-ceramic-public-mainnet-external.ceramic.network/tcp/4012/wss/p2p/QmS2hvoNEfQTwqJC4v6xTvK8FpNR2s6AgDVsTL3unK11Ng",
+    "/dns4/ipfs-ceramic-private-mainnet-external.3boxlabs.com/tcp/4012/wss/p2p/QmXALVsXZwPWTUbsT8G6VVzzgTJaAWRUD7FWL5f7d5ubAL",
+    "/dns4/ipfs-cas-mainnet-external.3boxlabs.com/tcp/4012/wss/p2p/QmUvEKXuorR7YksrVgA7yKGbfjWHuCRisw2cH9iqRVM9P8"
+  ],
   "testnet-clay": [
     "/dns4/ipfs-ceramic-public-clay-external.3boxlabs.com/tcp/4012/wss/p2p/QmWiY3CbNawZjWnHXx3p3DXsg21pZYTj4CRY1iwMkhP8r3",
     "/dns4/ipfs-ceramic-public-clay-external.ceramic.network/tcp/4012/wss/p2p/QmSqeKpCYW89XrHHxtEQEWXmznp6o336jzwvdodbrGeLTk",
     "/dns4/ipfs-ceramic-private-clay-external.3boxlabs.com/tcp/4012/wss/p2p/QmQotCKxiMWt935TyCBFTN23jaivxwrZ3uD58wNxeg5npi",
     "/dns4/ipfs-cas-clay-external.3boxlabs.com/tcp/4012/wss/p2p/QmbeBTzSccH8xYottaYeyVX8QsKyox1ExfRx7T1iBqRyCd",
   ],
-  "mainnet": [
-    "/dns4/ipfs-ceramic-public-mainnet-external.ceramic.network/tcp/4012/wss/p2p/QmS2hvoNEfQTwqJC4v6xTvK8FpNR2s6AgDVsTL3unK11Ng",
-    "/dns4/ipfs-ceramic-private-mainnet-external.3boxlabs.com/tcp/4012/wss/p2p/QmXALVsXZwPWTUbsT8G6VVzzgTJaAWRUD7FWL5f7d5ubAL",
-    "/dns4/ipfs-cas-mainnet-external.3boxlabs.com/tcp/4012/wss/p2p/QmUvEKXuorR7YksrVgA7yKGbfjWHuCRisw2cH9iqRVM9P8"
-  ]
 };
 
 async function fetchJson(url: string): Promise<any> {
