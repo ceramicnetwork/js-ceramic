@@ -51,7 +51,7 @@
     "dids": "^2.1.0",
     "express": "^4.17.1",
     "flat": "^5.0.2",
-    "ipfs-http-client": "next",
+    "ipfs-http-client": "^50.0.0",
     "key-did-provider-ed25519": "^1.1.0",
     "key-did-resolver": "^1.2.0-rc.0",
     "levelup": "^5.0.0",
@@ -68,7 +68,7 @@
     "@types/node": "^13.13.15",
     "@types/stream-to-array": "^2.3.0",
     "get-port": "^5.1.1",
-    "ipfs-core": "next",
+    "ipfs-core": "^0.6.0",
     "rxjs": "^6.6.7",
     "tmp-promise": "^2.0.2"
   },
