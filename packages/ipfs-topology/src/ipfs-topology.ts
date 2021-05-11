@@ -4,6 +4,8 @@ import type { DiagnosticsLogger, IpfsApi  } from "@ceramicnetwork/common";
 const PEER_FILE_URLS = {
   "testnet-clay":
     "https://raw.githubusercontent.com/ceramicnetwork/peerlist/main/testnet-clay.json",
+  "mainnet":
+    "https://raw.githubusercontent.com/ceramicnetwork/peerlist/main/mainnet.json",
   "dev-unstable":
     "https://raw.githubusercontent.com/ceramicnetwork/peerlist/main/dev-unstable.json",
 };
