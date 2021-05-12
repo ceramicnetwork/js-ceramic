@@ -1,27 +1,51 @@
 import fetch from "cross-fetch";
-import type { DiagnosticsLogger, IpfsApi  } from "@ceramicnetwork/common";
+import { Networks } from "@ceramicnetwork/common";
+import type { DiagnosticsLogger, IpfsApi } from "@ceramicnetwork/common";
 
-const PEER_FILE_URLS = {
-  "mainnet":
-    "https://raw.githubusercontent.com/ceramicnetwork/peerlist/main/mainnet.json",
-  "testnet-clay":
-    "https://raw.githubusercontent.com/ceramicnetwork/peerlist/main/testnet-clay.json",
-  "dev-unstable":
-    "https://raw.githubusercontent.com/ceramicnetwork/peerlist/main/dev-unstable.json",
+const PEER_FILE_URLS = (ceramicNetwork: Networks): string | null => {
+  switch (ceramicNetwork) {
+    case Networks.MAINNET:
+    case Networks.ELP:
+      return "https://raw.githubusercontent.com/ceramicnetwork/peerlist/main/mainnet.json";
+    case Networks.TESTNET_CLAY:
+      return "https://raw.githubusercontent.com/ceramicnetwork/peerlist/main/testnet-clay.json";
+    case Networks.DEV_UNSTABLE:
+      return "https://raw.githubusercontent.com/ceramicnetwork/peerlist/main/dev-unstable.json";
+    case Networks.LOCAL:
+    case Networks.INMEMORY:
+      return null;
+    default: {
+      const unhandledCase: never = ceramicNetwork;
+      throw new Error(`Unhandled case: ${unhandledCase}`);
+    }
+  }
 };
 
-const BASE_BOOTSTRAP_LIST = {
-  "mainnet": [
-    "/dns4/ipfs-ceramic-public-mainnet-external.ceramic.network/tcp/4012/wss/p2p/QmS2hvoNEfQTwqJC4v6xTvK8FpNR2s6AgDVsTL3unK11Ng",
-    "/dns4/ipfs-ceramic-private-mainnet-external.3boxlabs.com/tcp/4012/wss/p2p/QmXALVsXZwPWTUbsT8G6VVzzgTJaAWRUD7FWL5f7d5ubAL",
-    "/dns4/ipfs-cas-mainnet-external.3boxlabs.com/tcp/4012/wss/p2p/QmUvEKXuorR7YksrVgA7yKGbfjWHuCRisw2cH9iqRVM9P8"
-  ],
-  "testnet-clay": [
-    "/dns4/ipfs-ceramic-public-clay-external.3boxlabs.com/tcp/4012/wss/p2p/QmWiY3CbNawZjWnHXx3p3DXsg21pZYTj4CRY1iwMkhP8r3",
-    "/dns4/ipfs-ceramic-public-clay-external.ceramic.network/tcp/4012/wss/p2p/QmSqeKpCYW89XrHHxtEQEWXmznp6o336jzwvdodbrGeLTk",
-    "/dns4/ipfs-ceramic-private-clay-external.3boxlabs.com/tcp/4012/wss/p2p/QmQotCKxiMWt935TyCBFTN23jaivxwrZ3uD58wNxeg5npi",
-    "/dns4/ipfs-cas-clay-external.3boxlabs.com/tcp/4012/wss/p2p/QmbeBTzSccH8xYottaYeyVX8QsKyox1ExfRx7T1iBqRyCd",
-  ],
+const BASE_BOOTSTRAP_LIST = (ceramicNetwork: Networks): Array<string> | null => {
+  switch (ceramicNetwork) {
+    case Networks.MAINNET:
+    case Networks.ELP:
+      return [
+        "/dns4/ipfs-ceramic-public-mainnet-external.ceramic.network/tcp/4012/wss/p2p/QmS2hvoNEfQTwqJC4v6xTvK8FpNR2s6AgDVsTL3unK11Ng",
+        "/dns4/ipfs-ceramic-private-mainnet-external.3boxlabs.com/tcp/4012/wss/p2p/QmXALVsXZwPWTUbsT8G6VVzzgTJaAWRUD7FWL5f7d5ubAL",
+        "/dns4/ipfs-cas-mainnet-external.3boxlabs.com/tcp/4012/wss/p2p/QmUvEKXuorR7YksrVgA7yKGbfjWHuCRisw2cH9iqRVM9P8",
+      ];
+    case Networks.TESTNET_CLAY:
+      return [
+        "/dns4/ipfs-ceramic-public-clay-external.3boxlabs.com/tcp/4012/wss/p2p/QmWiY3CbNawZjWnHXx3p3DXsg21pZYTj4CRY1iwMkhP8r3",
+        "/dns4/ipfs-ceramic-public-clay-external.ceramic.network/tcp/4012/wss/p2p/QmSqeKpCYW89XrHHxtEQEWXmznp6o336jzwvdodbrGeLTk",
+        "/dns4/ipfs-ceramic-private-clay-external.3boxlabs.com/tcp/4012/wss/p2p/QmQotCKxiMWt935TyCBFTN23jaivxwrZ3uD58wNxeg5npi",
+        "/dns4/ipfs-cas-clay-external.3boxlabs.com/tcp/4012/wss/p2p/QmbeBTzSccH8xYottaYeyVX8QsKyox1ExfRx7T1iBqRyCd",
+      ];
+    case Networks.DEV_UNSTABLE:
+    case Networks.LOCAL:
+    case Networks.INMEMORY:
+      return null;
+    default: {
+      const unhandledCase: never = ceramicNetwork;
+      throw new Error(`Unhandled case: ${unhandledCase}`);
+    }
+  }
 };
 
 async function fetchJson(url: string): Promise<any> {
@@ -49,7 +73,7 @@ export class IpfsTopology {
   ) {}
 
   async forceConnection(): Promise<void> {
-    const base: string[] = BASE_BOOTSTRAP_LIST[this.ceramicNetwork] || [];
+    const base: string[] = BASE_BOOTSTRAP_LIST(this.ceramicNetwork as Networks) || [];
     const dynamic = await this._dynamicBoostrapList(this.ceramicNetwork);
     const bootstrapList = base.concat(dynamic);
     await this._forceBootstrapConnection(this.ipfs, bootstrapList);
@@ -69,10 +93,10 @@ export class IpfsTopology {
   }
 
   private async _dynamicBoostrapList(network: string): Promise<string[]> {
-    const url = PEER_FILE_URLS[network];
+    const url = PEER_FILE_URLS(network as Networks);
     if (!url) {
       this.logger.warn(
-        `Peer discovery is not supported for ceramic network ${network}. This node may fail to load documents from other nodes on the network`
+        `Peer discovery is not supported for ceramic network: ${network}. This node may fail to load documents from other nodes on the network.`
       );
       return [];
     }
