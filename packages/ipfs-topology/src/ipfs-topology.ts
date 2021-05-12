@@ -2,7 +2,7 @@ import fetch from "cross-fetch";
 import { Networks } from "@ceramicnetwork/common";
 import type { DiagnosticsLogger, IpfsApi } from "@ceramicnetwork/common";
 
-const PEER_FILE_URLS = (ceramicNetwork: string): string | null => {
+const PEER_FILE_URLS = (ceramicNetwork: Networks): string | null => {
   switch (ceramicNetwork) {
     case Networks.MAINNET:
     case Networks.ELP:
@@ -11,12 +11,13 @@ const PEER_FILE_URLS = (ceramicNetwork: string): string | null => {
       return "https://raw.githubusercontent.com/ceramicnetwork/peerlist/main/testnet-clay.json";
     case Networks.DEV_UNSTABLE:
       return "https://raw.githubusercontent.com/ceramicnetwork/peerlist/main/dev-unstable.json";
-    default:
-      return;
+    case Networks.LOCAL:
+    case Networks.INMEMORY:
+      return null;
   }
 };
 
-const BASE_BOOTSTRAP_LIST = (ceramicNetwork: string): Array<string> | null => {
+const BASE_BOOTSTRAP_LIST = (ceramicNetwork: Networks): Array<string> | null => {
   switch (ceramicNetwork) {
     case Networks.MAINNET:
     case Networks.ELP:
@@ -32,8 +33,9 @@ const BASE_BOOTSTRAP_LIST = (ceramicNetwork: string): Array<string> | null => {
         "/dns4/ipfs-ceramic-private-clay-external.3boxlabs.com/tcp/4012/wss/p2p/QmQotCKxiMWt935TyCBFTN23jaivxwrZ3uD58wNxeg5npi",
         "/dns4/ipfs-cas-clay-external.3boxlabs.com/tcp/4012/wss/p2p/QmbeBTzSccH8xYottaYeyVX8QsKyox1ExfRx7T1iBqRyCd",
       ];
-    default:
-      return;
+    case Networks.LOCAL:
+    case Networks.INMEMORY:
+      return null;
   }
 };
 
@@ -62,7 +64,7 @@ export class IpfsTopology {
   ) {}
 
   async forceConnection(): Promise<void> {
-    const base: string[] = BASE_BOOTSTRAP_LIST(this.ceramicNetwork) || [];
+    const base: string[] = BASE_BOOTSTRAP_LIST(this.ceramicNetwork as Networks) || [];
     const dynamic = await this._dynamicBoostrapList(this.ceramicNetwork);
     const bootstrapList = base.concat(dynamic);
     await this._forceBootstrapConnection(this.ipfs, bootstrapList);
@@ -82,7 +84,7 @@ export class IpfsTopology {
   }
 
   private async _dynamicBoostrapList(network: string): Promise<string[]> {
-    const url = PEER_FILE_URLS(network);
+    const url = PEER_FILE_URLS(network as Networks);
     if (!url) {
       this.logger.warn(
         `Peer discovery is not supported for ceramic network: ${network}. This node may fail to load documents from other nodes on the network.`
