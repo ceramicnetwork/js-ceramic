@@ -15,8 +15,9 @@ const PEER_FILE_URLS = (ceramicNetwork: Networks): string | null => {
     case Networks.INMEMORY:
       return null;
     default: {
-      const unhandledCase: never = ceramicNetwork;
-      throw new Error(`Unhandled case: ${unhandledCase}`);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const preventCompilingUnhandledCase: never = ceramicNetwork;
+      return null;
     }
   }
 };
@@ -42,8 +43,9 @@ const BASE_BOOTSTRAP_LIST = (ceramicNetwork: Networks): Array<string> | null => 
     case Networks.INMEMORY:
       return null;
     default: {
-      const unhandledCase: never = ceramicNetwork;
-      throw new Error(`Unhandled case: ${unhandledCase}`);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const preventCompilingUnhandledCase: never = ceramicNetwork;
+      return null;
     }
   }
 };
