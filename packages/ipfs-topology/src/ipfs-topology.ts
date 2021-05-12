@@ -14,9 +14,10 @@ const PEER_FILE_URLS = (ceramicNetwork: Networks): string | null => {
     case Networks.LOCAL:
     case Networks.INMEMORY:
       return null;
-    default:
+    default: {
       const unhandledCase: never = ceramicNetwork;
       throw new Error(`Unhandled case: ${unhandledCase}`);
+    }
   }
 };
 
@@ -40,9 +41,10 @@ const BASE_BOOTSTRAP_LIST = (ceramicNetwork: Networks): Array<string> | null => 
     case Networks.LOCAL:
     case Networks.INMEMORY:
       return null;
-    default:
+    default: {
       const unhandledCase: never = ceramicNetwork;
       throw new Error(`Unhandled case: ${unhandledCase}`);
+    }
   }
 };
 
