@@ -3,6 +3,25 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.0.0](/compare/@ceramicnetwork/ipfs-topology@1.0.0-rc.8...@ceramicnetwork/ipfs-topology@1.0.0) (2021-05-06)
+
+**Note:** Version bump only for package @ceramicnetwork/ipfs-topology
+
+
+
+
+
+# [1.0.0-rc.8](/compare/@ceramicnetwork/ipfs-topology@1.0.0-rc.7...@ceramicnetwork/ipfs-topology@1.0.0-rc.8) (2021-05-03)
+
+
+### Bug Fixes
+
+* accept multiple pubsub responses (#1348) fa2d72a, closes #1348
+
+
+
+
+
 # [1.0.0-rc.7](/compare/@ceramicnetwork/ipfs-topology@1.0.0-rc.6...@ceramicnetwork/ipfs-topology@1.0.0-rc.7) (2021-04-29)
 
 

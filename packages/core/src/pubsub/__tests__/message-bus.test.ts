@@ -1,10 +1,10 @@
 import { buildQueryMessage, MsgType, ResponseMessage } from '../pubsub-message';
 import { asIpfsMessage } from './as-ipfs-message';
 import { StreamID } from '@ceramicnetwork/streamid';
-import { from, Subscription, of } from 'rxjs';
-import { MessageBus } from '../message-bus';
+import { from, Subscription, Observable } from 'rxjs';
+import { MAX_RESPONSE_INTERVAL, MessageBus } from '../message-bus';
 import { Pubsub } from '../pubsub';
-import { bufferCount, delay, first, timeoutWith } from 'rxjs/operators';
+import { bufferCount, concatMap, delay, first } from 'rxjs/operators';
 import * as random from '@stablelib/random';
 import CID from 'cids';
 
@@ -58,7 +58,7 @@ test('not publish to pubsub if closed', async () => {
   };
   messageBus.unsubscribe();
   messageBus.next(message);
-  await new Promise(resolve => setTimeout(resolve, 100))
+  await new Promise((resolve) => setTimeout(resolve, 100));
   expect(pubsub.next).toBeCalledTimes(0);
 });
 
@@ -74,30 +74,69 @@ test('unsubscribe', async () => {
 });
 
 describe('queryNetwork', () => {
-  const FAKE_CID = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu');
+  const FAKE_CID1 = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu');
+  const FAKE_CID2 = new CID('bafybeig6xv5nwphfmvcnektpnojts44jqcuam7bmye2pb54adnrtccjlsu');
   const queryMessage = buildQueryMessage(FAKE_STREAM_ID);
-  const responseMessage: ResponseMessage = {
+  const responseMessage1: ResponseMessage = {
     typ: MsgType.RESPONSE,
     id: queryMessage.id,
-    tips: new Map().set(FAKE_STREAM_ID.toString(), FAKE_CID),
+    tips: new Map().set(FAKE_STREAM_ID.toString(), FAKE_CID1),
   };
-  const pubsub = (from([responseMessage]).pipe(delay(300)) as unknown) as Pubsub;
+  const responseMessage2: ResponseMessage = {
+    typ: MsgType.RESPONSE,
+    id: queryMessage.id,
+    tips: new Map().set(FAKE_STREAM_ID.toString(), FAKE_CID2),
+  };
+  const pubsub = (from([responseMessage1, responseMessage2]).pipe(delay(200)) as unknown) as Pubsub;
   pubsub.next = jest.fn();
 
-  test('return tip', async () => {
+  test('return tips', async () => {
     const messageBus = new MessageBus(pubsub);
-    const response = await messageBus.queryNetwork(FAKE_STREAM_ID).toPromise();
+    const responses = [];
+    const subscription = messageBus.queryNetwork(FAKE_STREAM_ID).subscribe((r) => {
+      responses.push(r);
+    });
+    await new Promise<void>((resolve) => subscription.add(resolve));
     expect(pubsub.next).toBeCalledWith(queryMessage);
-    expect(response).toEqual(FAKE_CID);
+    expect(responses).toEqual([FAKE_CID1, FAKE_CID2]);
   });
 
-  test('timeout: return undefined', async () => {
+  test('delayed message', async () => {
+    const pubsub = (from([responseMessage1, responseMessage2]).pipe(
+      concatMap(async (r) => {
+        await new Promise((resolve) => setTimeout(resolve, MAX_RESPONSE_INTERVAL * 2));
+        return r;
+      }),
+    ) as unknown) as Pubsub;
+    pubsub.next = jest.fn();
     const messageBus = new MessageBus(pubsub);
-    const response = await messageBus
-      .queryNetwork(FAKE_STREAM_ID)
-      .pipe(timeoutWith(200, of(undefined)))
-      .toPromise();
+    const responses = [];
+    const subscription = messageBus.queryNetwork(FAKE_STREAM_ID).subscribe((r) => {
+      responses.push(r);
+    });
+    await new Promise<void>((resolve) => subscription.add(resolve));
     expect(pubsub.next).toBeCalledWith(queryMessage);
-    expect(response).toEqual(undefined);
+    expect(responses).toEqual([FAKE_CID1]);
+  });
+
+  test('late first message', async () => {
+    const pubsub = (new Observable<ResponseMessage>((subscriber) => {
+      setTimeout(() => {
+        subscriber.next(responseMessage1);
+        setTimeout(() => {
+          subscriber.next(responseMessage2);
+          subscriber.complete();
+        }, MAX_RESPONSE_INTERVAL * 2);
+      }, MAX_RESPONSE_INTERVAL * 3);
+    }) as unknown) as Pubsub;
+    (pubsub as any).next = jest.fn();
+    const messageBus = new MessageBus(pubsub);
+    const responses = [];
+    const subscription = messageBus.queryNetwork(FAKE_STREAM_ID).subscribe((r) => {
+      responses.push(r);
+    });
+    await new Promise<void>((resolve) => subscription.add(resolve));
+    expect(pubsub.next).toBeCalledWith(queryMessage);
+    expect(responses).toEqual([FAKE_CID1]);
   });
 });

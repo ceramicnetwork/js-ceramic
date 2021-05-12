@@ -20,7 +20,7 @@ describe('connection', () => {
 
   beforeEach(async () => {
     ipfs = await createIPFS();
-  });
+  }, 10000);
 
   afterEach(async () => {
     await ipfs.stop();

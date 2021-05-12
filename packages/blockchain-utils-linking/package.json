@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/blockchain-utils-linking",
-  "version": "1.0.0-rc.2",
+  "version": "1.0.0",
   "description": "Blockchain utils for linking blockchain accounts to DID",
   "keywords": [
     "ceramic",
@@ -40,7 +40,7 @@
     "@polkadot/util-crypto": "^6.2.1",
     "@smontero/eosio-local-provider": "^0.0.3",
     "@tendermint/sig": "^0.6.0",
-    "@zondax/filecoin-signing-tools": "^0.14.0",
+    "@zondax/filecoin-signing-tools": "^0.15.0",
     "eth-sig-util": "^3.0.0",
     "ganache-core": "^2.13.1",
     "near-api-js": "^0.36.3"
