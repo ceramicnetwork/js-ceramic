@@ -14,6 +14,9 @@ const PEER_FILE_URLS = (ceramicNetwork: Networks): string | null => {
     case Networks.LOCAL:
     case Networks.INMEMORY:
       return null;
+    default:
+      const unhandledCase: never = ceramicNetwork;
+      throw new Error(`Unhandled case: ${unhandledCase}`);
   }
 };
 
@@ -33,9 +36,13 @@ const BASE_BOOTSTRAP_LIST = (ceramicNetwork: Networks): Array<string> | null => 
         "/dns4/ipfs-ceramic-private-clay-external.3boxlabs.com/tcp/4012/wss/p2p/QmQotCKxiMWt935TyCBFTN23jaivxwrZ3uD58wNxeg5npi",
         "/dns4/ipfs-cas-clay-external.3boxlabs.com/tcp/4012/wss/p2p/QmbeBTzSccH8xYottaYeyVX8QsKyox1ExfRx7T1iBqRyCd",
       ];
+    case Networks.DEV_UNSTABLE:
     case Networks.LOCAL:
     case Networks.INMEMORY:
       return null;
+    default:
+      const unhandledCase: never = ceramicNetwork;
+      throw new Error(`Unhandled case: ${unhandledCase}`);
   }
 };
 
