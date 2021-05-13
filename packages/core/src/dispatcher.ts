@@ -39,7 +39,7 @@ export class Dispatcher {
   readonly messageBus: MessageBus
   // Set of IDs for QUERY messages we have sent to the pub/sub topic but not yet heard a
   // corresponding RESPONSE message for. Maps the query ID to the primary StreamID we were querying for.
-  constructor (readonly _ipfs: IpfsApi, private readonly topic: string, readonly repository: Repository, private readonly _logger: DiagnosticsLogger, private readonly _pubsubLogger: ServiceLogger) {
+  constructor (readonly _ipfs: IpfsApi, private readonly topic: string, readonly repository: Repository, private readonly _logger: DiagnosticsLogger, private readonly _pubsubLogger: ServiceLogger, private readonly _dispatcherLogger: ServiceLogger) {
     const pubsub = new Pubsub(_ipfs, topic, IPFS_RESUBSCRIBE_INTERVAL_DELAY, _pubsubLogger, _logger)
     this.messageBus = new MessageBus(pubsub)
     this.messageBus.subscribe(this.handleMessage.bind(this))
@@ -51,6 +51,7 @@ export class Dispatcher {
    * @param data - Ceramic commit data
    */
   async storeCommit (data: any): Promise<CID> {
+    const before = Date.now()
     if (StreamUtils.isSignedCommitContainer(data)) {
       const { jws, linkedBlock } = data
       // put the JWS into the ipfs dag
@@ -59,10 +60,22 @@ export class Dispatcher {
       await this._ipfs.block.put(linkedBlock, { cid: jws.link.toString() })
       await this._restrictRecordSize(jws.link.toString())
       await this._restrictRecordSize(cid)
+      const after = Date.now()
+      this._dispatcherLogger.log({
+        operation: 'storeCommit',
+        streamId: cid.toString(),
+        duration: after - before
+      })
       return cid
     }
     const cid = await this._ipfs.dag.put(data)
     await this._restrictRecordSize(cid)
+    const after = Date.now()
+    this._dispatcherLogger.log({
+      operation: 'storeCommit',
+      streamId: cid.toString(),
+      duration: after - before
+    })
     return cid
   }
 
@@ -74,10 +87,18 @@ export class Dispatcher {
    * @param cid - Commit CID
    */
   async retrieveCommit (cid: CID | string): Promise<any> {
+    const before = Date.now()
     try {
       const record = await this._ipfs.dag.get(cid, {timeout: IPFS_GET_TIMEOUT})
       await this._restrictRecordSize(cid)
-      return cloneDeep(record.value)
+      const result = cloneDeep(record.value)
+      const after = Date.now()
+      this._dispatcherLogger.log({
+        operation: 'retrieveCommit',
+        streamId: cid.toString(),
+        duration: after - before
+      })
+      return result
     } catch (e) {
       this._logger.err(`Error while loading commit CID ${cid.toString()} from IPFS: ${e}`)
       throw e
@@ -91,8 +112,16 @@ export class Dispatcher {
    */
   async retrieveFromIPFS (cid: CID | string, path?: string): Promise<any> {
     try {
+      const before = Date.now()
       const record = await this._ipfs.dag.get(cid, {timeout: IPFS_GET_TIMEOUT, path})
-      return cloneDeep(record.value)
+      const result = cloneDeep(record.value)
+      const after = Date.now()
+      this._dispatcherLogger.log({
+        operation: 'retrieveFromIPFS',
+        streamId: cid.toString(),
+        duration: after - before
+      })
+      return result
     } catch (e) {
       this._logger.err(`Error while loading CID ${cid.toString()} from IPFS: ${e}`)
       throw e

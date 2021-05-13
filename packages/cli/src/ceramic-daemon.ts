@@ -160,7 +160,8 @@ export class CeramicDaemon {
     const [modules, params] = await Ceramic._processConfig(ipfs, ceramicConfig)
 
     if (opts.s3StateStoreBucket) {
-      const s3StateStore = new S3StateStore(opts.s3StateStoreBucket)
+      const s3StateLogger = ceramicConfig.loggerProvider.makeServiceLogger('s3-state-store')
+      const s3StateStore = new S3StateStore(opts.s3StateStoreBucket, s3StateLogger)
       modules.pinStoreFactory.setStateStore(s3StateStore)
     }
 
