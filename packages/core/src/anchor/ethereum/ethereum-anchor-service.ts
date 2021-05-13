@@ -25,8 +25,8 @@ interface CidAndStream {
     readonly streamId: StreamID
 }
 
-const DEFAULT_POLL_TIME = 60000 // 60 seconds
-const DEFAULT_MAX_POLL_TIME = 7200000 // 2 hours
+const POLL_INTERVAL = 60000 // 60 seconds
+const MAX_POLL_TIME = 86400000 // 24 hours
 
 const HTTP_STATUS_NOT_FOUND = 404
 
@@ -181,22 +181,18 @@ export default class EthereumAnchorService implements AnchorService {
   /**
    * Start polling for CidAndStream mapping
    * @param cidStream - CID to Stream mapping
-   * @param pollTime - Single poll timeout
-   * @param maxPollingTime - Global timeout for max polling in milliseconds
    * @private
    */
   private _poll(
     cidStream: CidAndStream,
-    pollTime?: number,
-    maxPollingTime?: number
   ): Observable<AnchorServiceResponse> {
     const started = new Date().getTime();
-    const maxTime = started + (maxPollingTime | DEFAULT_MAX_POLL_TIME);
+    const maxTime = started + MAX_POLL_TIME;
     const requestUrl = [this.requestsApiEndpoint, cidStream.cid.toString()].join(
       "/"
     );
 
-    return interval(DEFAULT_POLL_TIME).pipe(
+    return interval(POLL_INTERVAL).pipe(
       concatMap(async () => {
         const now = new Date().getTime();
         if (now > maxTime) {
