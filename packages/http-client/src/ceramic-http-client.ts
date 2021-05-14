@@ -1,4 +1,4 @@
-import { combineURLs, fetchJson, typeStreamID } from "./utils"
+import { combineURLs, typeStreamID } from "./utils"
 import { Document } from './document'
 
 import type { DID } from 'dids'
@@ -7,6 +7,7 @@ import {
   CeramicApi,
   CeramicCommit,
   Context,
+  fetchJson,
   Stream,
   StreamConstructor,
   StreamHandler,

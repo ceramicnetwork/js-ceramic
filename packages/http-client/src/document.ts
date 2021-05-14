@@ -3,6 +3,7 @@ import { throttle } from 'rxjs/operators'
 import {
   CeramicCommit,
   CreateOpts,
+  fetchJson,
   StreamState,
   StreamUtils,
   SyncOptions,
@@ -12,7 +13,6 @@ import {
   UpdateOpts,
 } from '@ceramicnetwork/common';
 import { StreamID, CommitID } from '@ceramicnetwork/streamid';
-import { fetchJson } from './utils'
 import QueryString from 'query-string'
 
 export class Document extends Observable<StreamState> implements RunningStateLike {
