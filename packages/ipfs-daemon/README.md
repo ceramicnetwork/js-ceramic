@@ -39,7 +39,7 @@ await ipfsDaemon.stop()
 Public builds of the image [Dockerfile.ipfs-daemon](../../Dockerfile.ipfs-daemon) are hosted here: [ceramicnetwork/ipfs-daemon on Docker Hub](https://hub.docker.com/repository/docker/ceramicnetwork/ipfs-daemon)
 ```
 docker pull ceramicnetwork/ipfs-daemon
-docker run -p 5011:5011 ceramicnetwork/ipfs-daemon
+docker run -p 5011:5011 -e CERAMIC_NETWORK=testnet-clay ceramicnetwork/ipfs-daemon
 ```
 
 ## Contributing
