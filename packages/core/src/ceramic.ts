@@ -223,6 +223,15 @@ class Ceramic implements CeramicApi {
     return this.context.did
   }
 
+  /**
+   * Sets the DID instance that will be used to author commits to streams. The DID instance
+   * also includes the DID Resolver that will be used to verify commits from others.
+   * @param did
+   */
+  set did(did: DID) {
+    this.context.did = did
+  }
+
   private _buildPinApi(): PinApi {
     const boundStreamLoader = this._loadStream.bind(this)
     const loaderWithSyncSet = (streamid) => { return boundStreamLoader(streamid, { sync: SyncOptions.PREFER_CACHE })}
@@ -432,9 +441,7 @@ class Ceramic implements CeramicApi {
   }
 
   /**
-   * Sets the DID instance that will be used to author commits to streams. The DID instance
-   * also includes the DID Resolver that will be used to verify commits from others.
-   * @param did
+   * @deprecated - use the Ceramic.did setter instead
    */
   async setDID(did: DID): Promise<void> {
     this.context.did = did

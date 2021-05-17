@@ -88,6 +88,14 @@ export default class CeramicClient implements CeramicApi {
     return this.context.did
   }
 
+  /**
+   * Sets the DID instance that will be used to author commits to streams.
+   * @param did
+   */
+  set did(did: DID) {
+    this.context.did = did
+  }
+
   _initPinApi(): PinApi {
     return {
       add: async (streamId: StreamID): Promise<void> => {
