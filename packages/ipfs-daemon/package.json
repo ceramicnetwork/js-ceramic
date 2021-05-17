@@ -40,7 +40,7 @@
     "express": "^4.17.1",
     "ipfs": "~0.54.2",
     "ipfs-http-gateway": "~0.3.2",
-    "ipfs-http-server": "~0.3.3",
+    "ipfs-http-server": "~0.4.0",
     "multiformats": "~4.6.1"
   },
   "devDependencies": {
