@@ -39,7 +39,9 @@ const createCeramic = async (ipfs: IpfsApi, anchorOnRequest = false, streamCache
     restoreStreams: false,
     pubsubTopic: "/ceramic/inmemory/test" // necessary so Ceramic instances can talk to each other
   })
-  await ceramic.setDID(makeDID(seed, ceramic))
+  const did = makeDID(seed, ceramic)
+  await ceramic.setDID(did)
+  await did.authenticate();
 
   return ceramic
 }
@@ -153,8 +155,11 @@ describe('Ceramic integration', () => {
     const ceramic2 = await createCeramic(ipfs2)
     const ceramic3 = await createCeramic(ipfs3)
 
+    const metadata = { deterministic: true, controllers: [ceramic1.did.id], family: "family", tags: ["x", "y"] }
+
     // ceramic node 2 shouldn't need to have the stream open in order to forward the message
-    const stream1 = await TileDocument.create(ceramic1, {test: 321}, {deterministic: true})
+    const stream1 = await TileDocument.create(ceramic1, null, metadata)
+    await stream1.update({ test: 'edcba' })
 
     await anchorUpdate(ceramic1, stream1)
 
@@ -162,7 +167,8 @@ describe('Ceramic integration', () => {
     // therefore resolve to the same genesis record and thus the same streamId.  Make sure the new
     // Document object can see the updates made to the first Document object since they represent
     // the same Document in the network.
-    const stream3 = await TileDocument.create(ceramic3, {test: 321}, {deterministic: true})
+    const stream3 = await TileDocument.create(ceramic3, null, metadata)
+    await stream3.update({ test: 'edcba' })
 
     expect(stream3.content).toEqual(stream1.content)
 
