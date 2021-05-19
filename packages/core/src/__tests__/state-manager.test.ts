@@ -44,6 +44,18 @@ afterAll(async () => {
 });
 
 describe('anchor', () => {
+
+  let realHandleTip;
+
+  beforeEach(() => {
+    realHandleTip = (ceramic.repository.stateManager as any)._handleTip;
+  });
+
+  afterEach(() => {
+    // Restore the _handleTip function in case any of the tests modified it
+    (ceramic.repository.stateManager as any)._handleTip = realHandleTip
+  });
+
   test('anchor call', async () => {
     const stream = await TileDocument.create(ceramic, INITIAL_CONTENT, null, { anchor: false });
     const stream$ = await ceramic.repository.load(stream.id, {});
@@ -59,7 +71,6 @@ describe('anchor', () => {
     const stream = await TileDocument.create(ceramic, INITIAL_CONTENT, null, { anchor: false });
     const stream$ = await ceramic.repository.load(stream.id, {});
 
-    const realHandleTip = (stateManager as any)._handleTip;
     const fakeHandleTip = jest.fn();
     (stateManager as any)._handleTip = fakeHandleTip;
     fakeHandleTip.mockRejectedValueOnce(new Error("Handle tip failed"))
@@ -77,7 +88,6 @@ describe('anchor', () => {
     const stream = await TileDocument.create(ceramic, INITIAL_CONTENT, null, { anchor: false });
     const stream$ = await ceramic.repository.load(stream.id, {});
 
-    const realHandleTip = (stateManager as any)._handleTip;
     const fakeHandleTip = jest.fn();
     (stateManager as any)._handleTip = fakeHandleTip;
     fakeHandleTip.mockRejectedValueOnce(new Error("Handle tip failed"))
