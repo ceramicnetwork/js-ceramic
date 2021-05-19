@@ -45,12 +45,50 @@ afterAll(async () => {
 
 describe('anchor', () => {
   test('anchor call', async () => {
-    const stream = await TileDocument.create(ceramic, INITIAL_CONTENT);
+    const stream = await TileDocument.create(ceramic, INITIAL_CONTENT, null, { anchor: false });
     const stream$ = await ceramic.repository.load(stream.id, {});
+
     await new Promise((resolve) => {
       ceramic.repository.stateManager.anchor(stream$).add(resolve);
     });
     expect(stream$.value.anchorStatus).toEqual(AnchorStatus.ANCHORED);
+  });
+
+  test('anchor retries successfully', async () => {
+    const stateManager = ceramic.repository.stateManager;
+    const stream = await TileDocument.create(ceramic, INITIAL_CONTENT, null, { anchor: false });
+    const stream$ = await ceramic.repository.load(stream.id, {});
+
+    const realHandleTip = (stateManager as any)._handleTip;
+    const fakeHandleTip = jest.fn();
+    (stateManager as any)._handleTip = fakeHandleTip;
+    fakeHandleTip.mockRejectedValueOnce(new Error("Handle tip failed"))
+    fakeHandleTip.mockRejectedValueOnce(new Error("Handle tip failed"))
+    fakeHandleTip.mockImplementationOnce(realHandleTip)
+
+    await new Promise((resolve) => {
+      ceramic.repository.stateManager.anchor(stream$).add(resolve);
+    });
+    expect(stream$.value.anchorStatus).toEqual(AnchorStatus.ANCHORED);
+  });
+
+  test('anchor too many retries', async () => {
+    const stateManager = ceramic.repository.stateManager;
+    const stream = await TileDocument.create(ceramic, INITIAL_CONTENT, null, { anchor: false });
+    const stream$ = await ceramic.repository.load(stream.id, {});
+
+    const realHandleTip = (stateManager as any)._handleTip;
+    const fakeHandleTip = jest.fn();
+    (stateManager as any)._handleTip = fakeHandleTip;
+    fakeHandleTip.mockRejectedValueOnce(new Error("Handle tip failed"))
+    fakeHandleTip.mockRejectedValueOnce(new Error("Handle tip failed"))
+    fakeHandleTip.mockRejectedValueOnce(new Error("Handle tip failed"))
+    fakeHandleTip.mockImplementationOnce(realHandleTip)
+
+    await new Promise((resolve) => {
+      ceramic.repository.stateManager.anchor(stream$).add(resolve);
+    });
+    expect(stream$.value.anchorStatus).not.toEqual(AnchorStatus.ANCHORED);
   });
 });
 
@@ -167,7 +205,7 @@ test('commit history and rewind', async () => {
 
 describe('rewind', () => {
   test('non-existing commit', async () => {
-    const stream = await TileDocument.create(ceramic, INITIAL_CONTENT);
+    const stream = await TileDocument.create(ceramic, INITIAL_CONTENT, null, { anchor: false });
     const streamState = await ceramic.repository.load(stream.id, {});
     // Emulate loading a non-existing commit
     const nonExistentCommitID = stream.id.atCommit(FAKE_CID);
@@ -191,7 +229,7 @@ describe('rewind', () => {
     await anchorUpdate(ceramic, stream1);
 
     const ceramic2 = await createCeramic(ipfs, { anchorOnRequest: false });
-    const stream2 = await TileDocument.create(ceramic, INITIAL_CONTENT, { deterministic: true }, { syncTimeoutSeconds: 0 });
+    const stream2 = await TileDocument.create(ceramic, INITIAL_CONTENT, { deterministic: true }, { anchor: false, syncTimeoutSeconds: 0 });
     const streamState2 = await ceramic2.repository.load(stream2.id, { syncTimeoutSeconds: 0 });
     const snapshot = await ceramic2.repository.stateManager.rewind(streamState2, stream1.commitId);
 
@@ -269,7 +307,7 @@ test('enforces schema in update that assigns schema', async () => {
   const streamState = await ceramic.repository.load(stream.id, {});
   await anchorUpdate(ceramic, stream);
   const updateRec = await stream.makeCommit(ceramic, null, { schema: schemaDoc.commitId });
-  await expect(ceramic.repository.stateManager.applyCommit(streamState.id, updateRec, {})).rejects.toThrow(
+  await expect(ceramic.repository.stateManager.applyCommit(streamState.id, updateRec, { anchor: false })).rejects.toThrow(
     "Validation Error: data/stuff must be string",
   );
 });
@@ -292,7 +330,7 @@ test('enforce previously assigned schema during future update', async () => {
 
 test('should announce change to network', async () => {
   const publishTip = jest.spyOn(ceramic.dispatcher, 'publishTip');
-  const stream1 = await TileDocument.create<any>(ceramic, INITIAL_CONTENT);
+  const stream1 = await TileDocument.create<any>(ceramic, INITIAL_CONTENT, null, { anchor: false });
   stream1.subscribe();
   const streamState1 = await ceramic.repository.load(stream1.id, {});
   expect(publishTip).toHaveBeenCalledTimes(1);
