@@ -19,6 +19,8 @@ import { empty, Subscription, timer } from 'rxjs';
 import { SnapshotState } from './snapshot-state';
 import { CommitID, StreamID } from '@ceramicnetwork/streamid';
 
+const APPLY_ANCHOR_COMMIT_ATTEMPTS = 3
+
 export class StateManager {
 
   /**
@@ -156,6 +158,34 @@ export class StateManager {
   }
 
   /**
+   * Takes the CID of an anchor commit received from an anchor service and applies it. Runs the
+   * work of loading and applying the commit on the execution queue so it gets serialized alongside
+   * any other updates to the same stream. Includes logic to retry up to a total of 3 attempts to
+   * handle transient failures of loading the anchor commit from IPFS.
+   * @param state$ - state of the stream being anchored
+   * @param commit - cid of the anchor commit
+   * @private
+   */
+  private async _handleAnchorCommit(state$: RunningState, commit: CID): Promise<void> {
+    for (let remainingRetries = APPLY_ANCHOR_COMMIT_ATTEMPTS - 1; remainingRetries >= 0; remainingRetries--) {
+      try {
+        await this.executionQ.forStream(state$.id).run(async () => {
+          await this._handleTip(state$, commit);
+          if (state$.tip == commit) { // The anchor commit was applied successfully
+            this.publishTip(state$);
+          }
+        })
+        return
+      } catch (error) {
+        this.logger.err(`Error while anchoring stream ${state$.id.toString()}, ${remainingRetries} retries remain. ${error}`)
+        if (remainingRetries == 0) {
+          throw error
+        }
+      }
+    }
+  }
+
+  /**
    * Request anchor for the latest stream state
    */
   anchor(state$: RunningState): Subscription {
@@ -180,8 +210,7 @@ export class StateManager {
               return;
             }
             case AnchorStatus.ANCHORED: {
-              await this._handleTip(state$, asr.anchorRecord);
-              this.publishTip(state$);
+              await this._handleAnchorCommit(state$, asr.anchorRecord)
               subscription.unsubscribe();
               return;
             }
