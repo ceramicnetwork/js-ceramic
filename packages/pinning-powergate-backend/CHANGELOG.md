@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.2](/compare/@ceramicnetwork/pinning-powergate-backend@1.0.1...@ceramicnetwork/pinning-powergate-backend@1.0.2) (2021-05-20)
+
+**Note:** Version bump only for package @ceramicnetwork/pinning-powergate-backend
+
+
+
+
+
 ## [1.0.1](/compare/@ceramicnetwork/pinning-powergate-backend@1.0.0...@ceramicnetwork/pinning-powergate-backend@1.0.1) (2021-05-13)
 
 **Note:** Version bump only for package @ceramicnetwork/pinning-powergate-backend

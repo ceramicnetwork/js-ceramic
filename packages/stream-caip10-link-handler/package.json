@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/stream-caip10-link-handler",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Ceramic AccountLink stream handler",
   "keywords": [
     "ceramic",
@@ -28,8 +28,8 @@
   },
   "dependencies": {
     "@ceramicnetwork/blockchain-utils-validation": "^1.0.1",
-    "@ceramicnetwork/common": "^1.0.1",
-    "@ceramicnetwork/stream-caip10-link": "^1.0.1"
+    "@ceramicnetwork/common": "^1.0.2",
+    "@ceramicnetwork/stream-caip10-link": "^1.0.2"
   },
   "devDependencies": {
     "@stablelib/sha256": "^1.0.0",
