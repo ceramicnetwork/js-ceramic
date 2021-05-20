@@ -290,6 +290,27 @@ describe('Ceramic interop: core <> http-client', () => {
         expect(StreamUtils.serializeState(docV5Core.state)).toEqual(StreamUtils.serializeState(docV5Client.state))
     })
 
+    it('can get stream contents from /raw_data', async () => {
+      const content1 = {test: 123}
+      const content2 = {test: 456, test2: 'abc'}
+      const content3 = {test2: 'def'}
+      const doc = await TileDocument.create(core, content1)
+
+      await anchorDoc(doc)
+      await doc.update(content2)
+      await anchorDoc(doc)
+      await doc.update(content3)
+      await anchorDoc(doc)
+
+      let returnValue
+      await daemon.rawData(
+        { query: {}, params: { streamid: doc.id } },
+        { json: (val) => returnValue = val },
+      )
+
+      expect(returnValue).toEqual(content3)
+    })
+
     describe('multiqueries', () => {
         let docA, docB, docC, docD
         beforeEach(async () => {
@@ -325,7 +346,6 @@ describe('Ceramic interop: core <> http-client', () => {
     })
 
     describe('pin api', () => {
-
         let docA, docB
 
         beforeEach(async () => {

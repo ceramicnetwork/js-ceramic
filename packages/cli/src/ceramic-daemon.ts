@@ -187,10 +187,12 @@ export class CeramicDaemon {
     const pinsRouter = Router()
     const recordsRouter = Router()
     const streamsRouter = Router()
+    const dataRouter = Router()
 
     commitsRouter.getAsync('/:streamid', this.commits.bind(this))
     multiqueriesRouter.postAsync('/', this.multiQuery.bind(this))
     streamsRouter.getAsync('/:streamid', this.state.bind(this))
+    dataRouter.getAsync('/:streamid', this.rawData.bind(this))
     pinsRouter.getAsync('/:streamid', this.listPinned.bind(this))
     pinsRouter.getAsync('/', this.listPinned.bind(this))
     nodeRouter.getAsync('/chains', this.getSupportedChains.bind(this))
@@ -223,6 +225,7 @@ export class CeramicDaemon {
     pinsRouter.use(errorHandler(this.diagnosticsLogger))
     recordsRouter.use(errorHandler(this.diagnosticsLogger))
     streamsRouter.use(errorHandler(this.diagnosticsLogger))
+    dataRouter.use(errorHandler(this.diagnosticsLogger))
 
     baseRouter.use('/commits', commitsRouter)
     baseRouter.use('/documents', documentsRouter)
@@ -231,6 +234,7 @@ export class CeramicDaemon {
     baseRouter.use('/pins', pinsRouter)
     baseRouter.use('/records', recordsRouter)
     baseRouter.use('/streams', streamsRouter)
+    baseRouter.use('/raw_data', dataRouter)
     baseRouter.use(errorHandler(this.diagnosticsLogger))
 
     app.use('/api/v0', baseRouter)
@@ -386,6 +390,20 @@ export class CeramicDaemon {
       return acc
     }, {})
     res.json(response)
+  }
+
+  /**
+   * Render the most recent version of a stream's contents
+   */
+  async rawData (req: Request, res: Response): Promise<void> {
+    const opts = parseQueryObject(req.query)
+    const stream = await this.ceramic.loadStream(req.params.streamid, opts)
+    const state = StreamUtils.serializeState(stream.state)
+    if (state.content) {
+      res.json(state.content)
+    } else {
+      res.status(501).json({ error: 'Stream serialization lacks content.' })
+    }
   }
 
   /**
