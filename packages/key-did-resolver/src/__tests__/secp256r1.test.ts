@@ -40,18 +40,6 @@ describe('Secp256r1 mapper', () => {
 
 })
 
-// this test fails
-/*
-test('convert a public key x,y as nulls', () => {
-   const ecpoint = {
-          x: null,
-          y: null
-   };
-
-   const u8aPoint = mapper.publicKeyIntToUint8ArrayPointPair(ecpoint);
-});
-*/
-
 test('empty key string to should not evaluate to null, or should it??', () => {
    const inputPublicKeyHex = '';
    const u8aPoint = mapper.publicKeyHexToUint8ArrayPointPair(inputPublicKeyHex);
@@ -66,16 +54,6 @@ test('public key as empty string', () => {
   const base64urlPoint = mapper.publicKeyToXY(inputPublicKeyHex);
   expect(base64urlPoint).toEqual(output);
   });
-
-
-// this test fails
-/*
-test('public key as null', () => {
-  const inputPublicKeyHex = null;
-  const base64urlPoint = mapper.publicKeyToXY(inputPublicKeyHex);
-  //  expect(base64urlPoint).toEqual(output);
- });
- */
 
 test('test a null string', () => {
    const inputPublicKeyHex = null;
@@ -348,16 +326,6 @@ function ECPointCompress( x: Uint8Array, y: Uint8Array )
     return out;
 }
 
-/*
-function pubKeyHexToUint8Array(publicKeyHex: string) {
-    let publicKey_u8a = null;
-    if(publicKeyHex.length % 2 == 0) {
-        publicKey_u8a = u8a.fromString(publicKeyHex,'base16');
-    }
-    return publicKey_u8a;
-}
-*/
-
 function pubKeyHexToUint8Array(publicKeyHex: string) {
 let publicKey_u8a = null;
    if(publicKeyHex !== null) {
@@ -369,30 +337,6 @@ let publicKey_u8a = null;
    }
     return publicKey_u8a;
 }
-
-/*
-function pubKeyHexToUint8Array(publicKeyHex: string) {
-    let publicKey_u8a = [];
-    if(publicKeyHex !== null) {
-       if(publicKeyHex.length % 2 == 0) {
-          publicKey_u8a = u8a.fromString(publicKeyHex,'base16');
-        } else {
-          publicKey_u8a = u8a.fromString(('0'+publicKeyHex),'base16');
-	  }
-     }
-     if(publicKeyHex !== null) {
-        publicKey_u8a = null;
-     }
-    return publicKey_u8a;
-}
-*/
-
-/*
-function pubKeyHexToUint8Array(publicKeyHex: string) {
-     const publicKey_u8a = u8a.fromString(publicKeyHex,'base16');
-     return publicKey_u8a;
-}
-*/
 
 function compresedKeyInHex(publicKeyHex: string) {
   const xHex = publicKeyHex.slice(0,publicKeyHex.length/2);
