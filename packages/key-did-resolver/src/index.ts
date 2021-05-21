@@ -10,6 +10,7 @@ import type {
 
 import * as secp256k1 from './secp256k1'
 import * as ed25519 from './ed25519'
+import * as secp256r1 from './secp256r1'
 
 const DID_LD_JSON = 'application/did+ld+json'
 const DID_JSON = 'application/did+json'
@@ -17,6 +18,7 @@ const DID_JSON = 'application/did+json'
 const prefixToDriverMap: any = {
   0xE7: secp256k1,
   0xED: ed25519,
+  0x1200: secp256r1,  
 }
 
 export default {
@@ -30,7 +32,7 @@ export default {
       }
       try {
         const multicodecPubKey: any = multibase.decode(parsed.id)
-        const keyType = varint.decode(multicodecPubKey)
+      	const keyType = varint.decode(multicodecPubKey)
         const pubKeyBytes = multicodecPubKey.slice(varint.decode.bytes)
         const doc = await prefixToDriverMap[keyType].keyToDidDoc(pubKeyBytes, parsed.id)
         if (contentType === DID_LD_JSON) {
