@@ -23,7 +23,7 @@
     "./lib/loggers.js": "./lib/loggers-browser.js"
   },
   "scripts": {
-    "test": "../../node_modules/.bin/jest --coverage --passWithNoTests --env=node",
+    "test": "../../node_modules/.bin/jest --silent --coverage --passWithNoTests --env=node",
     "build": "../../node_modules/.bin/tsc -p tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
