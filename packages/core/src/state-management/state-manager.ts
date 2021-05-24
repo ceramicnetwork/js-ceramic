@@ -110,11 +110,11 @@ export class StateManager {
     if (next) {
       state$.next(next);
       this.logger.verbose(`Stream ${state$.id.toString()} successfully updated to tip ${cid.toString()}`);
-      await this.updateStateIfPinned(state$);
+      await this._updateStateIfPinned(state$);
     }
   }
 
-  private async updateStateIfPinned(state$: RunningState): Promise<void> {
+  private async _updateStateIfPinned(state$: RunningState): Promise<void> {
     const isPinned = Boolean(await this.pinStore.stateStore.load(state$.id));
     if (isPinned) {
       await this.pinStore.add(state$);
@@ -201,12 +201,12 @@ export class StateManager {
               };
               if (asr.anchorScheduledFor) next.anchorScheduledFor = asr.anchorScheduledFor;
               state$.next(next);
-              await this.updateStateIfPinned(state$);
+              await this._updateStateIfPinned(state$);
               return;
             }
             case AnchorStatus.PROCESSING: {
               state$.next({ ...state$.value, anchorStatus: AnchorStatus.PROCESSING });
-              await this.updateStateIfPinned(state$);
+              await this._updateStateIfPinned(state$);
               return;
             }
             case AnchorStatus.ANCHORED: {
@@ -227,12 +227,15 @@ export class StateManager {
               throw new UnreachableCaseError(asr, 'Unknown anchoring state');
           }
         }),
-        catchError((error) => {
+        catchError((error, original) => {
           // TODO: Combine these two log statements into one line so that they can't get split up in the
           // log output.
-          this.logger.err(`Error while anchoring stream ${state$.id.toString()}:${error}`)
-          this.logger.err(error)  // Log stack trace
-          return empty();
+          this.logger.warn(`Error while anchoring stream ${state$.id.toString()}:${error}`)
+          this.logger.warn(error)  // Log stack trace
+
+          // After logging error continue polling anchor service under the assumption that the
+          // error is temporary.
+          return original
         }),
       )
       .subscribe();
