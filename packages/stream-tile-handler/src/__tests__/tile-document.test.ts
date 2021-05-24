@@ -251,12 +251,7 @@ describe('TileDocumentHandler', () => {
     })
 
     it('creates genesis records deterministically if deterministic:true is specified', async () => {
-        const metadata = {
-            deterministic: true,
-            controllers: ["a"],
-            family: "family",
-            tags: ["x", "y"]
-        }
+        const metadata = { deterministic: true, controllers: ["a"], family: "family", tags: ["x", "y"] }
         const record1 = await TileDocument.makeGenesis(context.api, null, metadata)
         const record2 = await TileDocument.makeGenesis(context.api, null, metadata)
 

@@ -7,12 +7,11 @@ import { delay } from '../../pubsub/__tests__/delay';
 
 let ipfs: IpfsApi;
 let ceramic: Ceramic;
-let metadata = {}
+let metadata: any;
 
 beforeAll(async () => {
   ipfs = await createIPFS();
   ceramic = await createCeramic(ipfs, { streamCacheLimit: 1, anchorOnRequest: false });
-
   metadata = { deterministic: true, controllers: [ceramic.did.id], family: "family", tags: ["x", "y"] }
 });
 
