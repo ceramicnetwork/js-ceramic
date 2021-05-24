@@ -177,9 +177,11 @@ export class StateManager {
         })
         return
       } catch (error) {
-        this.logger.err(`Error while anchoring stream ${state$.id.toString()}, ${remainingRetries} retries remain. ${error}`)
+        this.logger.warn(`Error while anchoring stream ${state$.id.toString()}, ${remainingRetries} retries remain. ${error}`)
+
         if (remainingRetries == 0) {
-          throw error
+          this.logger.err(`Anchor failed for commit ${commit.toString()} of stream ${state$.id.toString()}: ${error}`)
+          state$.next({ ...state$.value, anchorStatus: AnchorStatus.FAILED });
         }
       }
     }
