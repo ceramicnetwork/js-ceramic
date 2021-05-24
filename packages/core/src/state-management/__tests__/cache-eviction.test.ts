@@ -126,9 +126,6 @@ test('StateLink receives updates', async () => {
   expect(runningState1.isStopped).toBeTruthy(); // RunningState is stopped after eviction
 
   const stream2 = await TileDocument.load(ceramic, stream1.id);
-  await stream2.update(INITIAL);
-  expect(stream2.id).toEqual(stream1.id); // Same ID
-
   const changedConcurrently = { stage: 'changed-concurrently' };
   stream1.subscribe();
   await stream2.update(changedConcurrently);
