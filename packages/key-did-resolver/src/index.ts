@@ -32,7 +32,7 @@ export default {
       }
       try {
         const multicodecPubKey: any = multibase.decode(parsed.id)
-      	const keyType = varint.decode(multicodecPubKey)
+        const keyType = varint.decode(multicodecPubKey)
         const pubKeyBytes = multicodecPubKey.slice(varint.decode.bytes)
         const doc = await prefixToDriverMap[keyType].keyToDidDoc(pubKeyBytes, parsed.id)
         if (contentType === DID_LD_JSON) {

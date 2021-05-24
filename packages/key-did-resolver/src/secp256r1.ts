@@ -1,11 +1,20 @@
 import * as u8a from 'uint8arrays'
-import multicodec from 'multicodec'
 import  multibase from'multibase'
 import * as bigintModArith from 'bigint-mod-arith'
 
 interface BigIntPoint {
    x: BigInt,
    y : BigInt
+}
+
+interface base64urlPoint {
+   xm: string,
+   ym: string
+}
+
+interface octetPoint {
+  xOctet: Uint8Array,
+  yOctet: Uint8Array
 }
 
 /**
@@ -23,10 +32,10 @@ export function keyToDidDoc (pubKeyBytes: Uint8Array, fingerprint: string): any 
       controller: did,
        publicKeyJwk: {
          kty: "EC",
-	       crv: "P-256",
-	       x: key.xm,
-	       y: key.ym,
-      }, 
+               crv: "P-256",
+               x: key.xm,
+               y: key.ym,
+       }, 
     }],
     authentication: [keyId],
     assertionMethod: [keyId],
@@ -42,7 +51,7 @@ function pubKeyBytesToHex(pubKeyBytes: Uint8Array) {
 
 // source: https://stackoverflow.com/questions/17171542/algorithm-for-elliptic-curve-point-compression/30431547#30431547
 // accessed: May 11, 2021
-export function ECPointDecompress( comp : Uint8Array ) {
+export function ECPointDecompress( comp : Uint8Array ) : BigIntPoint {
   const two = BigInt(2);
   const prime = (two ** 256n) - (two ** 224n) + (two ** 192n) + (two ** 96n) - 1n;
   const b = 41058363725152142129326129780047268409114441015993725554835256314039467401291n;
@@ -58,7 +67,7 @@ export function ECPointDecompress( comp : Uint8Array ) {
   if( yBig % 2n !== signY)
     {
          // y = prime - y
-	       yBig = prime - yBig;
+         yBig = prime - yBig;
     }
 
     return {
@@ -68,14 +77,14 @@ export function ECPointDecompress( comp : Uint8Array ) {
 
 }
 
-export function publicKeyToXY(publicKeyHex: string) {
+export function publicKeyToXY(publicKeyHex: string) : base64urlPoint  {
  const u8aOctetPoint = publicKeyHexToUint8ArrayPointPair(publicKeyHex);
  const xm = u8a.toString(multibase.encode('base64url',u8aOctetPoint.xOctet));
  const ym = u8a.toString(multibase.encode('base64url',u8aOctetPoint.yOctet));
  return { xm, ym };
 }
 
-export function publicKeyHexToUint8ArrayPointPair(publicKeyHex: string) {
+export function publicKeyHexToUint8ArrayPointPair(publicKeyHex: string) : octetPoint {
     const xHex = publicKeyHex.slice(0,publicKeyHex.length/2);
     const yHex = publicKeyHex.slice(publicKeyHex.length/2,publicKeyHex.length);
     const xOctet = u8a.fromString(xHex,'base16');
@@ -83,14 +92,14 @@ export function publicKeyHexToUint8ArrayPointPair(publicKeyHex: string) {
     return { xOctet, yOctet };
 }
 
-export function publicKeyIntToXY(ecpoint: BigIntPoint) {
+export function publicKeyIntToXY(ecpoint: BigIntPoint): base64urlPoint  {
   const u8aOctetPoint = publicKeyIntToUint8ArrayPointPair(ecpoint);
   const xm = u8a.toString(multibase.encode('base64url',u8aOctetPoint.xOctet));
   const ym = u8a.toString(multibase.encode('base64url',u8aOctetPoint.yOctet));
   return { xm, ym };
 }
 
-export function publicKeyIntToUint8ArrayPointPair(ecpoint: BigIntPoint) {
+export function publicKeyIntToUint8ArrayPointPair(ecpoint: BigIntPoint) : octetPoint {
   const xHex = (ecpoint.x).toString();
   const yHex = (ecpoint.y).toString();
   const xOctet = u8a.fromString(xHex,'base10');
@@ -98,25 +107,24 @@ export function publicKeyIntToUint8ArrayPointPair(ecpoint: BigIntPoint) {
   return { xOctet, yOctet };
 }
 
-export function pubKeyBytesToXY(pubKeyBytes: Uint8Array) {
+export function pubKeyBytesToXY(pubKeyBytes: Uint8Array) : base64urlPoint  {
  
   if(pubKeyBytes === null || pubKeyBytes === undefined) {
     throw new TypeError('input cannot be null or undefined.');
   }
   const publicKeyHex = pubKeyBytesToHex(pubKeyBytes);
   const bytesCount = publicKeyHex.length / 2;
-  let XYpairObject = null;
 
   // raw p-256 key
   if(bytesCount == 64) {
-    XYpairObject = publicKeyToXY(publicKeyHex);
-  }
+     return publicKeyToXY(publicKeyHex); 
+   }
 
   // uncompressed p-256 key, SEC format
   if(bytesCount == 65) {
    if(publicKeyHex.slice(0,2) == '04') {
      const publicKey = publicKeyHex.slice(2);
-     XYpairObject = publicKeyToXY(publicKey);
+     return publicKeyToXY(publicKey);
    }
   }
 
@@ -125,9 +133,9 @@ export function pubKeyBytesToXY(pubKeyBytes: Uint8Array) {
    if(publicKeyHex.slice(0,2) == '03' || publicKeyHex.slice(0,2) == '02') {
      const publicKey = u8a.fromString(publicKeyHex,'base16')
      const point = ECPointDecompress(publicKey);
-     XYpairObject = publicKeyIntToXY(point);
+      return publicKeyIntToXY(point);
     }
   }
 
-  return XYpairObject;
+     throw new Error('Unexpected pubKeyBytes');
 }

@@ -40,78 +40,77 @@ describe('Secp256r1 mapper', () => {
 
 })
 
- test('expect publicKeyIntToXY to throw an error for incorrect type', () => {
+test('expect publicKeyIntToXY to throw an error for incorrect type', () => {
       expect(() => {
       mapper.publicKeyIntToXY(5);
       }).toThrow();
-  });
+});
 
-  test('expect publicKeyIntToXY to throw an error for {x: null, y: null}', () => {
+test('expect publicKeyIntToXY to throw an error for {x: null, y: null}', () => {
       expect(() => {
       mapper.publicKeyIntToXY({x: null, y: null});
       }).toThrow();
-  });
+});
 
-  test('expect publicKeyIntToXY to throw an error for {x: undefined, y: undefined}', () => {
+test('expect publicKeyIntToXY to throw an error for {x: undefined, y: undefined}', () => {
       expect(() => {
       mapper.publicKeyIntToXY({x: undefined, y: undefined});
       }).toThrow();
-  });
+});
 
-  test('expect publicKeyIntToUint8ArrayPointPair to throw an error for incorrect type', () => {
+test('expect publicKeyIntToUint8ArrayPointPair to throw an error for incorrect type', () => {
       expect(() => {
       mapper.publicKeyHexToUint8ArrayPointPair(5);
       }).toThrow();
-  });
+});
 
-  test('expect publicKeyIntToUint8ArrayPointPair to throw an error for {x: null, y: null}', () => {
+test('expect publicKeyIntToUint8ArrayPointPair to throw an error for {x: null, y: null}', () => {
       expect(() => {
       mapper.publicKeyHexToUint8ArrayPointPair({x: null, y: null});
       }).toThrow();
-  });
+});
 
-  test('expect publicKeyIntToUint8ArrayPointPair to throw an error for {x: undefined, y: undefined}', () => {
+test('expect publicKeyIntToUint8ArrayPointPair to throw an error for {x: undefined, y: undefined}', () => {
       expect(() => {
       mapper.publicKeyHexToUint8ArrayPointPair({x: undefined, y: undefined});
       }).toThrow();
-  });
+});
 
-  test('expect publicKeyHexToUint8ArrayPointPair to throw an error for null', () => {
+test('expect publicKeyHexToUint8ArrayPointPair to throw an error for null', () => {
       expect(() => {
       mapper.publicKeyHexToUint8ArrayPointPair(null);
       }).toThrow();
-  });
+});
 
-  test('expect publicKeyHexToUint8ArrayPointPair to throw an error for undefined', () => {
+test('expect publicKeyHexToUint8ArrayPointPair to throw an error for undefined', () => {
       expect(() => {
       mapper.publicKeyHexToUint8ArrayPointPair(undefined);
       }).toThrow();
-  });
+});
 
-  test('expect publicKeyToXY to throw an error for null', () => {
+test('expect publicKeyToXY to throw an error for null', () => {
       expect(() => {
       mapper.publicKeyToXY(null);
       }).toThrow();
-  });
+});
 
-  test('expect publicKeyToXY to throw an error for undefined', () => {
+test('expect publicKeyToXY to throw an error for undefined', () => {
       expect(() => {
       mapper.publicKeyToXY(undefined);
       }).toThrow();
-  });
+});
 
  // this should throw an error... modify the code so this passes
 
+ // part of Functions internal to test file
+ // ECPointCompress, pubKeyHexToUint8Array, compresedKeyInHex
 /*
 test('test an undefined string', () => {
    const inputPublicKeyHex = undefined;
    const publicKey_u8a = pubKeyHexToUint8Array(inputPublicKeyHex);
    expect(publicKey_u8a).toEqual(null);
    });
-   */
-
-   /// Functions internal to test
-   // ECPointCompress, pubKeyHexToUint8Array, compresedKeyInHex
+*/
 
 test('expect publicKeyBytesToXY to throw an error for undefined', () => {
       expect(() => {
@@ -130,7 +129,7 @@ test('empty key string to should not evaluate to null, or should it??', () => {
    const u8aPoint = mapper.publicKeyHexToUint8ArrayPointPair(inputPublicKeyHex);
    expect(u8aPoint.xOctet).not.toEqual(null);
    expect(u8aPoint.yOctet).not.toEqual(null);
-   });
+ });
 
 
 test('public key as empty string', () => {
@@ -138,17 +137,22 @@ test('public key as empty string', () => {
   const output = { xm: 'u', ym: 'u' };
   const base64urlPoint = mapper.publicKeyToXY(inputPublicKeyHex);
   expect(base64urlPoint).toEqual(output);
-  });
+});
+
+ // part of Functions internal to test file
+ // ECPointCompress, pubKeyHexToUint8Array, compresedKeyInHex
 
 test('test a null string', () => {
    const inputPublicKeyHex = null;
    const publicKey_u8a = pubKeyHexToUint8Array(inputPublicKeyHex);
    expect(publicKey_u8a).toEqual(null);
-   });
+});
+
+ // part of Functions internal to test file
+ // ECPointCompress, pubKeyHexToUint8Array, compresedKeyInHex
 
 test('test an empty string', () => {
    const inputPublicKeyHex = ''
-   const output = [];
    const publicKey_u8a = pubKeyHexToUint8Array(inputPublicKeyHex);
    expect(publicKey_u8a).toBeDefined();
    expect(publicKey_u8a).not.toBeNull();
@@ -172,29 +176,33 @@ test('test a compressed public key in hex with an odd number of characters', () 
 test('test a uncompressed public key in hex to an x,y point with x, and y url encoded with an unsupported prefix', () => {
    const inputPublicKeyHex = '03f9c36f8964623378bdc068d4bce07ed17c8fa486f9ac0c2613ca3c8c306d7bb61cd36717b8ac5e4fea8ad23dc8d0783c2318ee4ad7a80db6e0026ad0b072a24f'
    const publicKey_u8a = pubKeyHexToUint8Array(inputPublicKeyHex);
-   const pubKeyBytesToXY = mapper.pubKeyBytesToXY(publicKey_u8a);
-   expect(pubKeyBytesToXY).toEqual(null);
+   expect(() => {
+      mapper.pubKeyBytesToXY(publicKey_u8a);
+   }).toThrowError('Unexpected pubKeyBytes');
 });
 
 test('test a compressed public key in hex to an x,y point with x, and y url encoded with an unsupported prefixi: try2', () => {
    const inputPublicKeyHex = '05f9c36f8964623378bdc068d4bce07ed17c8fa486f9ac0c2613ca3c8c306d7bb6'
    const publicKey_u8a = pubKeyHexToUint8Array(inputPublicKeyHex);
-   const pubKeyBytesToXY = mapper.pubKeyBytesToXY(publicKey_u8a);
-   expect(pubKeyBytesToXY).toEqual(null);
-});
+   expect(() => {
+      mapper.pubKeyBytesToXY(publicKey_u8a);
+    }).toThrowError('Unexpected pubKeyBytes');  
+ });
 
 test('test a compressed public key in hex to an x,y point with x, and y url encoded with an unsupported prefix', () => {
    const inputPublicKeyHex = '04f9c36f8964623378bdc068d4bce07ed17c8fa486f9ac0c2613ca3c8c306d7bb6'
    const publicKey_u8a = pubKeyHexToUint8Array(inputPublicKeyHex);
-   const pubKeyBytesToXY = mapper.pubKeyBytesToXY(publicKey_u8a);
-   expect(pubKeyBytesToXY).toEqual(null);
+   expect(() => {
+      mapper.pubKeyBytesToXY(publicKey_u8a);
+   }).toThrowError('Unexpected pubKeyBytes');
 });
 
 test('test a hex string longer than 65 bytes', () => {
    const inputPublicKeyHex = '0704f9c36f8964623378bdc068d4bce07ed17c8fa486f9ac0c2613ca3c8c306d7bb61cd36717b8ac5e4fea8ad23dc8d0783c2318ee4ad7a80db6e0026ad0b072a24f'
    const publicKey_u8a = pubKeyHexToUint8Array(inputPublicKeyHex);
-   const pubKeyBytesToXY = mapper.pubKeyBytesToXY(publicKey_u8a);
-   expect(pubKeyBytesToXY).toEqual(null);
+   expect(() => {
+      mapper.pubKeyBytesToXY(publicKey_u8a);
+   }).toThrowError('Unexpected pubKeyBytes');
 });
 
 test('test a compressed public key in hex to an x,y point with x, and y url encoded', () => {
@@ -272,8 +280,8 @@ test('convert a public key x,y where x and y are integers to a pair of Uint8Arra
                                28, 211, 103,  23, 184, 172,  94,  79,
                                234, 138, 210, 61, 200, 208, 120,  60,
                                35,  24, 238,  74, 215, 168,  13, 182,
-			       224,  2, 106, 208, 176, 114, 162,  79
-			       ] )
+                               224,  2, 106, 208, 176, 114, 162,  79
+                               ] )
                   };
 
    const u8aPoint = mapper.publicKeyIntToUint8ArrayPointPair(ecpoint);
@@ -374,12 +382,12 @@ test('raw public key as hex string to x,y point with x and y as uint8Arrays', ()
                               48, 109, 123, 182
                                ] ) , 
                     yOctet : Uint8Array.from([
-			       28, 211, 103,  23, 184, 172,  94,  79,
+                               28, 211, 103,  23, 184, 172,  94,  79,
                                234, 138, 210, 61, 200, 208, 120,  60,
                                35,  24, 238,  74, 215, 168,  13, 182,
                                224,  2, 106, 208, 176, 114, 162,  79
-			       ] ) 
-		  };
+                               ] ) 
+                  };
 
      const u8aPoint = mapper.publicKeyHexToUint8ArrayPointPair(inputPublicKeyHex);
      expect(u8aPoint).toEqual(output);
