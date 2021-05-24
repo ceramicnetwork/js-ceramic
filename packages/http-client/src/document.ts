@@ -1,4 +1,4 @@
-import { Observable, timer } from 'rxjs'
+import { Observable, Subscription, timer } from 'rxjs'
 import { throttle } from 'rxjs/operators'
 import {
   CeramicCommit,
@@ -17,12 +17,21 @@ import QueryString from 'query-string'
 
 export class Document extends Observable<StreamState> implements RunningStateLike {
   private readonly state$: StreamStateSubject;
+  private periodicSubscription: Subscription | undefined;
 
   constructor (initial: StreamState, private _apiUrl: string, syncInterval: number) {
     super(subscriber => {
-      const periodicUpdates = timer(0, syncInterval).pipe(throttle(() => this._syncState(this.id, { sync: SyncOptions.PREFER_CACHE }))).subscribe();
+      // Set up periodic updates only when the first observer subscribes
+      const isFirstObserver = this.state$.observers.length === 0
+      if (isFirstObserver) {
+        this.periodicSubscription = timer(0, syncInterval).pipe(throttle(() => this._syncState(this.id, { sync: SyncOptions.PREFER_CACHE }))).subscribe();
+      }
       this.state$.subscribe(subscriber).add(() => {
-        periodicUpdates.unsubscribe();
+        // Shut down periodic updates when the last observer unsubscribes
+        const isNoObserversLeft = this.state$.observers.length === 0
+        if (isNoObserversLeft) {
+          this.periodicSubscription?.unsubscribe();
+        }
       })
     })
     this.state$ = new StreamStateSubject(initial);
