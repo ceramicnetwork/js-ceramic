@@ -163,25 +163,31 @@ export class StateManager {
    * any other updates to the same stream. Includes logic to retry up to a total of 3 attempts to
    * handle transient failures of loading the anchor commit from IPFS.
    * @param state$ - state of the stream being anchored
-   * @param commit - cid of the anchor commit
+   * @param tip - The tip that anchorCommit is anchoring
+   * @param anchorCommit - cid of the anchor commit
    * @private
    */
-  private async _handleAnchorCommit(state$: RunningState, commit: CID): Promise<void> {
+  private async _handleAnchorCommit(state$: RunningState, tip: CID, anchorCommit: CID): Promise<void> {
     for (let remainingRetries = APPLY_ANCHOR_COMMIT_ATTEMPTS - 1; remainingRetries >= 0; remainingRetries--) {
       try {
         await this.executionQ.forStream(state$.id).run(async () => {
-          await this._handleTip(state$, commit);
-          if (state$.tip == commit) { // The anchor commit was applied successfully
+          await this._handleTip(state$, anchorCommit);
+          if (state$.tip == anchorCommit) { // The anchor commit was applied successfully
             this.publishTip(state$);
           }
         })
         return
       } catch (error) {
-        this.logger.warn(`Error while anchoring stream ${state$.id.toString()}, ${remainingRetries} retries remain. ${error}`)
+        this.logger.warn(`Error while applying anchor commit ${anchorCommit.toString()} for stream ${state$.id.toString()}, ${remainingRetries} retries remain. ${error}`)
 
         if (remainingRetries == 0) {
-          this.logger.err(`Anchor failed for commit ${commit.toString()} of stream ${state$.id.toString()}: ${error}`)
-          state$.next({ ...state$.value, anchorStatus: AnchorStatus.FAILED });
+          this.logger.err(`Anchor failed for commit ${tip.toString()} of stream ${state$.id.toString()}: ${error}`)
+
+          // Don't update stream's state if the commit that failed to be anchored is no longer the
+          // tip of that stream.
+          if (tip.equals(state$.tip)) {
+            state$.next({...state$.value, anchorStatus: AnchorStatus.FAILED});
+          }
         }
       }
     }
@@ -195,6 +201,17 @@ export class StateManager {
     const subscription = anchorStatus$
       .pipe(
         concatMap(async (asr) => {
+          if (!asr.cid.equals(state$.tip) && asr.status != AnchorStatus.ANCHORED) {
+            // We don't want to change a stream's state due to changes to the anchor
+            // status of a commit that is no longer the tip of the stream, so we early return
+            // in most cases when receiving a response to an old anchor request.
+            // The one exception is if the AnchorServiceResponse indicates that the old commit
+            // is now anchored, in which case we still want to try to process the anchor commit
+            // and let the stream's conflict resolution mechanism decide whether or not to update
+            // the stream's state.
+            return;
+          }
+
           switch (asr.status) {
             case AnchorStatus.PENDING: {
               const next = {
@@ -212,14 +229,11 @@ export class StateManager {
               return;
             }
             case AnchorStatus.ANCHORED: {
-              await this._handleAnchorCommit(state$, asr.anchorRecord)
+              await this._handleAnchorCommit(state$, asr.cid, asr.anchorRecord)
               subscription.unsubscribe();
               return;
             }
             case AnchorStatus.FAILED: {
-              if (!asr.cid.equals(state$.tip)) {
-                return;
-              }
               this.logger.warn(`Anchor failed for commit ${asr.cid.toString()} of stream ${asr.streamId}: ${asr.message}`)
               state$.next({ ...state$.value, anchorStatus: AnchorStatus.FAILED });
               subscription.unsubscribe();
