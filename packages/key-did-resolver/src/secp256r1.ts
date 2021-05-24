@@ -99,9 +99,7 @@ export function publicKeyIntToUint8ArrayPointPair(ecpoint: BigIntPoint) {
 }
 
 export function pubKeyBytesToXY(pubKeyBytes: Uint8Array) {
-
- try {
-  
+ 
   if(pubKeyBytes === null || pubKeyBytes === undefined) {
     throw new TypeError('input cannot be null or undefined.');
   }
@@ -132,7 +130,4 @@ export function pubKeyBytesToXY(pubKeyBytes: Uint8Array) {
   }
 
   return XYpairObject;
- } finally {
-
- } 
 }
