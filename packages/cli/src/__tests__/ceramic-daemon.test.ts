@@ -294,13 +294,10 @@ describe('Ceramic interop: core <> http-client', () => {
       const content1 = {test: 123}
       const content2 = {test: 456, test2: 'abc'}
       const content3 = {test2: 'def'}
-      const doc = await TileDocument.create(core, content1)
 
-      await anchorDoc(doc)
-      await doc.update(content2)
-      await anchorDoc(doc)
-      await doc.update(content3)
-      await anchorDoc(doc)
+      const doc = await TileDocument.create(core, content1, null, { anchor: false })
+      await doc.update(content2, null, { anchor: false })
+      await doc.update(content3, null, { anchor: false })
 
       let returnValue
       await daemon.rawData(

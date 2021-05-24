@@ -147,6 +147,10 @@ export abstract class Stream extends Observable<StreamState> implements StreamSt
         return cloneDeep(next?.metadata ?? metadata)
     }
 
+    get rawData(): any {
+      return this._getContent()
+    }
+
     get controllers(): Array<string> {
         return this.metadata.controllers
     }
