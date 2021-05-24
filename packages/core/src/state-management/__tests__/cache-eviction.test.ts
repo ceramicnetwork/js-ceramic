@@ -175,7 +175,7 @@ describe('evicted then subscribed', () => {
   });
 
   test('pinned', async () => {
-    const stream1 = await TileDocument.create(ceramic, { foo: Math.random().toString() }, null, { syncTimeoutSeconds: 0 });
+    const stream1 = await TileDocument.create(ceramic, { foo: 'bar' });
     await ceramic.pin.add(stream1.id);
 
     const stream2 = await TileDocument.load(ceramic, stream1.id);
