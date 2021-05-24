@@ -99,31 +99,40 @@ export function publicKeyIntToUint8ArrayPointPair(ecpoint: BigIntPoint) {
 }
 
 export function pubKeyBytesToXY(pubKeyBytes: Uint8Array) {
- const publicKeyHex = pubKeyBytesToHex(pubKeyBytes);
- const bytesCount = publicKeyHex.length / 2;
- let XYpairObject = null;
 
- // raw p-256 key
- if(bytesCount == 64) {
-   XYpairObject = publicKeyToXY(publicKeyHex);
- }
-
- // uncompressed p-256 key, SEC format
- if(bytesCount == 65) {
-  if(publicKeyHex.slice(0,2) == '04') {
-    const publicKey = publicKeyHex.slice(2);
-    XYpairObject = publicKeyToXY(publicKey);
+ try {
+  
+  if(pubKeyBytes === null || pubKeyBytes === undefined) {
+    throw new TypeError('input cannot be null or undefined.');
   }
- }
+  const publicKeyHex = pubKeyBytesToHex(pubKeyBytes);
+  const bytesCount = publicKeyHex.length / 2;
+  let XYpairObject = null;
 
- // compressed p-256 key, SEC format
- if(bytesCount == 33) {
-  if(publicKeyHex.slice(0,2) == '03' || publicKeyHex.slice(0,2) == '02') {
-    const publicKey = u8a.fromString(publicKeyHex,'base16')
-    const point = ECPointDecompress(publicKey);
-    XYpairObject = publicKeyIntToXY(point);
+  // raw p-256 key
+  if(bytesCount == 64) {
+    XYpairObject = publicKeyToXY(publicKeyHex);
+  }
+
+  // uncompressed p-256 key, SEC format
+  if(bytesCount == 65) {
+   if(publicKeyHex.slice(0,2) == '04') {
+     const publicKey = publicKeyHex.slice(2);
+     XYpairObject = publicKeyToXY(publicKey);
    }
- }
+  }
 
- return XYpairObject;
+  // compressed p-256 key, SEC format
+  if(bytesCount == 33) {
+   if(publicKeyHex.slice(0,2) == '03' || publicKeyHex.slice(0,2) == '02') {
+     const publicKey = u8a.fromString(publicKeyHex,'base16')
+     const point = ECPointDecompress(publicKey);
+     XYpairObject = publicKeyIntToXY(point);
+    }
+  }
+
+  return XYpairObject;
+ } finally {
+
+ } 
 }

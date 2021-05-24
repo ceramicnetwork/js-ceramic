@@ -40,6 +40,91 @@ describe('Secp256r1 mapper', () => {
 
 })
 
+ test('expect publicKeyIntToXY to throw an error for incorrect type', () => {
+      expect(() => {
+      mapper.publicKeyIntToXY(5);
+      }).toThrow();
+  });
+
+  test('expect publicKeyIntToXY to throw an error for {x: null, y: null}', () => {
+      expect(() => {
+      mapper.publicKeyIntToXY({x: null, y: null});
+      }).toThrow();
+  });
+
+  test('expect publicKeyIntToXY to throw an error for {x: undefined, y: undefined}', () => {
+      expect(() => {
+      mapper.publicKeyIntToXY({x: undefined, y: undefined});
+      }).toThrow();
+  });
+
+  test('expect publicKeyIntToUint8ArrayPointPair to throw an error for incorrect type', () => {
+      expect(() => {
+      mapper.publicKeyHexToUint8ArrayPointPair(5);
+      }).toThrow();
+  });
+
+  test('expect publicKeyIntToUint8ArrayPointPair to throw an error for {x: null, y: null}', () => {
+      expect(() => {
+      mapper.publicKeyHexToUint8ArrayPointPair({x: null, y: null});
+      }).toThrow();
+  });
+
+  test('expect publicKeyIntToUint8ArrayPointPair to throw an error for {x: undefined, y: undefined}', () => {
+      expect(() => {
+      mapper.publicKeyHexToUint8ArrayPointPair({x: undefined, y: undefined});
+      }).toThrow();
+  });
+
+  test('expect publicKeyHexToUint8ArrayPointPair to throw an error for null', () => {
+      expect(() => {
+      mapper.publicKeyHexToUint8ArrayPointPair(null);
+      }).toThrow();
+  });
+
+  test('expect publicKeyHexToUint8ArrayPointPair to throw an error for undefined', () => {
+      expect(() => {
+      mapper.publicKeyHexToUint8ArrayPointPair(undefined);
+      }).toThrow();
+  });
+
+  test('expect publicKeyToXY to throw an error for null', () => {
+      expect(() => {
+      mapper.publicKeyToXY(null);
+      }).toThrow();
+  });
+
+  test('expect publicKeyToXY to throw an error for undefined', () => {
+      expect(() => {
+      mapper.publicKeyToXY(undefined);
+      }).toThrow();
+  });
+
+ // this should throw an error... modify the code so this passes
+
+/*
+test('test an undefined string', () => {
+   const inputPublicKeyHex = undefined;
+   const publicKey_u8a = pubKeyHexToUint8Array(inputPublicKeyHex);
+   expect(publicKey_u8a).toEqual(null);
+   });
+   */
+
+   /// Functions internal to test
+   // ECPointCompress, pubKeyHexToUint8Array, compresedKeyInHex
+
+test('expect publicKeyBytesToXY to throw an error for undefined', () => {
+      expect(() => {
+      mapper.pubKeyBytesToXY(undefined);
+      }).toThrow();
+});
+
+test('expect publicKeyBytesToXY to throw an error for null', () => {
+      expect(() => {
+      mapper.pubKeyBytesToXY(null);
+      }).toThrow();
+});
+
 test('empty key string to should not evaluate to null, or should it??', () => {
    const inputPublicKeyHex = '';
    const u8aPoint = mapper.publicKeyHexToUint8ArrayPointPair(inputPublicKeyHex);
