@@ -111,8 +111,16 @@ export class IpfsTopology {
     ipfs: IpfsApi,
     bootstrapList: string[]
   ): Promise<void> {
+    // Don't want to swarm connect to ourself
+    const myPeerId = (await ipfs.id()).id
+    const filteredBootstrapList = bootstrapList.filter((addr) => {
+      const arr = addr.split('/')
+      const peerId = arr[arr.length - 1]
+      return myPeerId != peerId
+    })
+
     await Promise.all(
-      bootstrapList.map(async (node) => {
+      filteredBootstrapList.map(async (node) => {
         try {
           // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-ignore
