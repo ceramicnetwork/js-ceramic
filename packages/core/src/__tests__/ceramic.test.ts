@@ -168,7 +168,6 @@ describe('Ceramic integration', () => {
     // Document object can see the updates made to the first Document object since they represent
     // the same Document in the network.
     const stream3 = await TileDocument.create(ceramic3, null, metadata)
-    await stream3.update({ test: 321 })
 
     expect(stream3.content).toEqual(stream1.content)
 

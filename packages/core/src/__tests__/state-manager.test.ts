@@ -233,13 +233,12 @@ describe('rewind', () => {
   });
 
   test('return read-only snapshot', async () => {
-    const metadata = { deterministic: true, family: "family", tags: ["x", "y"], controllers: controllers}
-    const stream1 = await TileDocument.create<any>(ceramic, null, metadata, { syncTimeoutSeconds: 0 });
+    const stream1 = await TileDocument.create<any>(ceramic, INITIAL_CONTENT, null, { anchor: false, syncTimeoutSeconds: 0 });
     await stream1.update({ abc: 321, def: 456, gh: 987 });
     await anchorUpdate(ceramic, stream1);
 
     const ceramic2 = await createCeramic(ipfs, { anchorOnRequest: false });
-    const stream2 = await TileDocument.create(ceramic, null, metadata, { anchor: false, syncTimeoutSeconds: 0 });
+    const stream2 = await TileDocument.load(ceramic, stream1.id);
     const streamState2 = await ceramic2.repository.load(stream2.id, { syncTimeoutSeconds: 0 });
     const snapshot = await ceramic2.repository.stateManager.rewind(streamState2, stream1.commitId);
 
