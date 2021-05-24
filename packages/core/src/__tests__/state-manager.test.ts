@@ -98,7 +98,7 @@ describe('anchor', () => {
     await new Promise((resolve) => {
       ceramic.repository.stateManager.anchor(stream$).add(resolve);
     });
-    expect(stream$.value.anchorStatus).not.toEqual(AnchorStatus.ANCHORED);
+    expect(stream$.value.anchorStatus).toEqual(AnchorStatus.FAILED);
   });
 
   test('anchor polling continues after error', async () => {
