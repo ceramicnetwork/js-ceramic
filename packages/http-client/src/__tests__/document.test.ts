@@ -2,8 +2,7 @@ import CID from 'cids';
 import { CommitType, StreamState } from '@ceramicnetwork/common';
 import { Document } from '../document';
 import { BehaviorSubject } from 'rxjs';
-import { filter } from 'rxjs/operators';
-import { first } from 'rxjs/operators';
+import { filter, first } from 'rxjs/operators';
 
 const FAKE_CID_1 = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu');
 const FAKE_CID2 = new CID('bafybeig6xv5nwphfmvcnektpnojts44jqcuam7bmye2pb54adnrtccjlsu');
