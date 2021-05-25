@@ -65,7 +65,7 @@
     "key-did-provider-ed25519": "^1.1.0",
     "key-did-resolver": "^1.2.1",
     "mockdate": "^3.0.5",
-    "multiformats": "~4.6.1",
+    "multiformats": "~8.0.6",
     "tmp-promise": "^2.0.2"
   },
   "jest": {
