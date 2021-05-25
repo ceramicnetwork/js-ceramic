@@ -2,16 +2,27 @@ import * as u8a from 'uint8arrays'
 import  multibase from'multibase'
 import * as bigintModArith from 'bigint-mod-arith'
 
+/**
+  * x,y point as a BigInt (requires at least ES2020)
+  */
 interface BigIntPoint {
    x: BigInt,
    y : BigInt
 }
 
+/**
+  * xm,ym point as base64url utilizing multiformats
+  *
+  * {@link Expressed in Multibase Table: https://github.com/multiformats/multibase/blob/master/multibase.csv}
+  */
 interface base64urlPoint {
    xm: string,
    ym: string
 }
 
+/**
+  * Elliptic Curve Points with compoents expressed as byte arrays
+  */
 interface octetPoint {
   xOctet: Uint8Array,
   yOctet: Uint8Array
@@ -19,6 +30,8 @@ interface octetPoint {
 
 /**
  * Constructs the document based on the method key
+ *
+ * @example
  */
 export function keyToDidDoc (pubKeyBytes: Uint8Array, fingerprint: string): any {
   const did = `did:key:${fingerprint}`
@@ -44,14 +57,29 @@ export function keyToDidDoc (pubKeyBytes: Uint8Array, fingerprint: string): any 
   }
   }
 
+/**
+  * Converts a byte array into a Hex String.
+  *
+  * @param pubKeyBytes - cannot be null or undefined
+  * 
+  * @internal
+  */
 function pubKeyBytesToHex(pubKeyBytes: Uint8Array) {
  const bbf = u8a.toString(pubKeyBytes,'base16')
  return bbf;
 }
 
-// source: https://stackoverflow.com/questions/17171542/algorithm-for-elliptic-curve-point-compression/30431547#30431547
-// accessed: May 11, 2021
-export function ECPointDecompress( comp : Uint8Array ) : BigIntPoint {
+/**
+ * Decompress a compressed public key in SEC format.
+ * See: Section 2.3.3 in {@link SEC 1 v2 | https://www.secg.org/sec1-v2.pdf}. 
+ *
+ * {@link https://stackoverflow.com/questions/17171542/algorithm-for-elliptic-curve-point-compression/30431547#30431547}
+ *
+ * @param - 33 byte compressed public key. 1st byte: 0x02 for even or 0x03 for odd. Following 32 bytes: x coordinate as big-endian.
+ *
+ * @internal
+ */
+ export function ECPointDecompress( comp : Uint8Array ) : BigIntPoint {
   // two, prime, b, and pIdent are constants for the P-256 curve
   const two = BigInt(2);
   const prime = (two ** 256n) - (two ** 224n) + (two ** 192n) + (two ** 96n) - 1n;
