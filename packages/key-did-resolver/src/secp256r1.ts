@@ -30,8 +30,6 @@ interface octetPoint {
 
 /**
  * Constructs the document based on the method key
- *
- * @example
  */
 export function keyToDidDoc (pubKeyBytes: Uint8Array, fingerprint: string): any {
   const did = `did:key:${fingerprint}`
@@ -62,7 +60,6 @@ export function keyToDidDoc (pubKeyBytes: Uint8Array, fingerprint: string): any 
   *
   * @param pubKeyBytes - cannot be null or undefined
   * 
-  * @internal
   */
 function pubKeyBytesToHex(pubKeyBytes: Uint8Array) {
  const bbf = u8a.toString(pubKeyBytes,'base16')
@@ -77,7 +74,6 @@ function pubKeyBytesToHex(pubKeyBytes: Uint8Array) {
  *
  * @param - 33 byte compressed public key. 1st byte: 0x02 for even or 0x03 for odd. Following 32 bytes: x coordinate as big-endian.
  *
- * @internal
  */
  export function ECPointDecompress( comp : Uint8Array ) : BigIntPoint {
   // two, prime, b, and pIdent are constants for the P-256 curve
@@ -106,7 +102,11 @@ function pubKeyBytesToHex(pubKeyBytes: Uint8Array) {
     };
 
 }
-
+/**
+ * 
+ * @param publicKeyHex - public key as hex string. Cannot be null or undefined
+ * @returns point xm, ym with coordinates expressed as multibase base64url
+ */
 export function publicKeyToXY(publicKeyHex: string) : base64urlPoint  {
  const u8aOctetPoint = publicKeyHexToUint8ArrayPointPair(publicKeyHex);
  const xm = u8a.toString(multibase.encode('base64url',u8aOctetPoint.xOctet));
@@ -114,6 +114,11 @@ export function publicKeyToXY(publicKeyHex: string) : base64urlPoint  {
  return { xm, ym };
 }
 
+/**
+ * 
+ * @param publicKeyHex - public key as hex string. Cannot be null or undefined.
+ * @returns - point xOctet, yOctet with coordinates expressed as u8array bytes with base16
+ */
 export function publicKeyHexToUint8ArrayPointPair(publicKeyHex: string) : octetPoint {
     const xHex = publicKeyHex.slice(0,publicKeyHex.length/2);
     const yHex = publicKeyHex.slice(publicKeyHex.length/2,publicKeyHex.length);
@@ -122,6 +127,11 @@ export function publicKeyHexToUint8ArrayPointPair(publicKeyHex: string) : octetP
     return { xOctet, yOctet };
 }
 
+/**
+ * 
+ * @param ecpoint - public key as BigInt point {x: BigInt, y: BigInt}. Cannot be null or undefined.
+ * @returns byte array as u8array with bytes base16
+ */
 export function publicKeyIntToXY(ecpoint: BigIntPoint): base64urlPoint  {
   const u8aOctetPoint = publicKeyIntToUint8ArrayPointPair(ecpoint);
   const xm = u8a.toString(multibase.encode('base64url',u8aOctetPoint.xOctet));
@@ -129,6 +139,11 @@ export function publicKeyIntToXY(ecpoint: BigIntPoint): base64urlPoint  {
   return { xm, ym };
 }
 
+/**
+ * 
+ * @param ecpoint - public key as BigInt point {x: BigInt, y: BigInt}. Cannot be null or undefined.
+ * @returns byte array as u8array with bytes base10
+ */
 export function publicKeyIntToUint8ArrayPointPair(ecpoint: BigIntPoint) : octetPoint {
   const xHex = (ecpoint.x).toString();
   const yHex = (ecpoint.y).toString();
@@ -137,6 +152,15 @@ export function publicKeyIntToUint8ArrayPointPair(ecpoint: BigIntPoint) : octetP
   return { xOctet, yOctet };
 }
 
+/**
+ * 
+ * @param pubKeyBytes - public key as uncompressed byte array with no prefix (raw key), 
+ *  uncompressed with 0x04 prefix, or compressed with 0x02 prefix if even and 0x03 prefix if odd.
+ * @returns point x,y with coordinates as multibase encoded base64urls
+ * 
+ * See the {@link did:key spec | https://w3c-ccg.github.io/did-method-key/#p-256}. At present only, raw p-256 keys
+ * are covered in the specification.
+ */
 export function pubKeyBytesToXY(pubKeyBytes: Uint8Array) : base64urlPoint  {
  
   if(pubKeyBytes == null) {
