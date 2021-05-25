@@ -187,10 +187,26 @@ test('test a compressed public key in hex to an x,y point with x, and y url enco
    expect(() => {
       mapper.pubKeyBytesToXY(publicKey_u8a);
     }).toThrowError('Unexpected pubKeyBytes');  
- });
+});
+
+test('test a compressed public key in hex to an x,y point with x, and y url encoded with an unsupported prefixi: try3', () => {
+   const inputPublicKeyHex = '04f9c36f8964623378bdc068d4bce07ed17c8fa486f9ac0c2613ca3c8c306d7bb6';
+   const publicKey_u8a = pubKeyHexToUint8Array(inputPublicKeyHex);
+   expect(() => {
+      mapper.pubKeyBytesToXY(publicKey_u8a);
+    }).toThrowError('Unexpected pubKeyBytes');
+});
 
 test('test a compressed public key in hex to an x,y point with x, and y url encoded with an unsupported prefix', () => {
    const inputPublicKeyHex = '04f9c36f8964623378bdc068d4bce07ed17c8fa486f9ac0c2613ca3c8c306d7bb6'
+   const publicKey_u8a = pubKeyHexToUint8Array(inputPublicKeyHex);
+   expect(() => {
+      mapper.pubKeyBytesToXY(publicKey_u8a);
+   }).toThrowError('Unexpected pubKeyBytes');
+});
+
+test('test a compressed public key in hex to an x,y point with x, and y url encoded with an unexpected length', () => {
+   const inputPublicKeyHex = '0239c3dd74131729446dc1b3da67d49fc046fcbf072fcc5b9fa51c05b974307f9642';
    const publicKey_u8a = pubKeyHexToUint8Array(inputPublicKeyHex);
    expect(() => {
       mapper.pubKeyBytesToXY(publicKey_u8a);
@@ -204,6 +220,14 @@ test('test a hex string longer than 65 bytes', () => {
       mapper.pubKeyBytesToXY(publicKey_u8a);
    }).toThrowError('Unexpected pubKeyBytes');
 });
+
+test('test a hex string longer than 65 bytes: try2', () => {
+   const inputPublicKeyHex = '04f9c36f8964623378bdc068d4bce07ed17c8fa486f9ac0c2613ca3c8c306d7bb61cd36717b8ac5e4fea8ad23dc8d0783c2318ee4ad7a80db6e0026ad0b072a24f07';
+   const publicKey_u8a = pubKeyHexToUint8Array(inputPublicKeyHex);
+   expect(() => {
+      mapper.pubKeyBytesToXY(publicKey_u8a);
+   }).toThrowError('Unexpected pubKeyBytes');
+})
 
 test('test a compressed public key in hex to an x,y point with x, and y url encoded', () => {
    const inputPublicKeyHex = '03f9c36f8964623378bdc068d4bce07ed17c8fa486f9ac0c2613ca3c8c306d7bb6'

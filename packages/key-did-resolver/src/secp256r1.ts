@@ -52,6 +52,7 @@ function pubKeyBytesToHex(pubKeyBytes: Uint8Array) {
 // source: https://stackoverflow.com/questions/17171542/algorithm-for-elliptic-curve-point-compression/30431547#30431547
 // accessed: May 11, 2021
 export function ECPointDecompress( comp : Uint8Array ) : BigIntPoint {
+  // two, prime, b, and pIdent are constants for the P-256 curve
   const two = BigInt(2);
   const prime = (two ** 256n) - (two ** 224n) + (two ** 192n) + (two ** 96n) - 1n;
   const b = 41058363725152142129326129780047268409114441015993725554835256314039467401291n;
@@ -64,6 +65,7 @@ export function ECPointDecompress( comp : Uint8Array ) : BigIntPoint {
   const a = xBig**3n - xBig*3n + b;
   let yBig = bigintModArith.modPow(a,pIdent,prime);
 
+  // "// If the parity doesn't match it's the *other* root"
   if( yBig % 2n !== signY)
     {
          // y = prime - y
