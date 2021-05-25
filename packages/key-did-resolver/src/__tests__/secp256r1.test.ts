@@ -416,9 +416,17 @@ test('show how to convert a raw public key in hex and return an uncompressed key
  */
 
 
-test('test a null string to ECPointCompress', () => {
+test('test a null coordinates in ECPointCompress', () => {
    const x = null;
    const y = null;
+   expect(() => {
+      ECPointCompress(x,y);
+   }).toThrowError('input cannot be null or undefined.');
+});
+
+test('test a undefined coordinates in ECPointCompress', () => {
+   const x = undefined;
+   const y = undefined;
    expect(() => {
       ECPointCompress(x,y);
    }).toThrowError('input cannot be null or undefined.');
@@ -429,6 +437,13 @@ test('test null in pubKeyHexToUint8Array', () => {
    expect(() => {
       pubKeyHexToUint8Array(inputPublicKeyHex);
    }).toThrowError('input cannot be null or undefined.');   
+});
+
+test('test undefined in pubKeyHexToUint8Array', () => {
+   const inputPublicKeyHex = undefined;
+   expect(() => {
+      pubKeyHexToUint8Array(inputPublicKeyHex);
+   }).toThrowError('input cannot be null or undefined.');
 });
 
 test('test an empty string in pubKeyHexToUint8Array', () => {
@@ -452,7 +467,13 @@ test('test compresedKeyInHex with null', () => {
    expect(() => {
       compresedKeyInHex(inputPublicKeyHex);
    }).toThrowError('input cannot be null or undefined.');
+});
 
+test('test compresedKeyInHex with undefined', () => {
+   const inputPublicKeyHex = undefined;
+   expect(() => {
+      compresedKeyInHex(inputPublicKeyHex);
+   }).toThrowError('input cannot be null or undefined.');
 });
 
 //**** end of tests for functions withing the test file
@@ -475,18 +496,20 @@ function ECPointCompress( x: Uint8Array, y: Uint8Array )
 }
 
 function pubKeyHexToUint8Array(publicKeyHex: string) {
-   if(publicKeyHex !== null) {
+  if(publicKeyHex == null) {
+   throw new TypeError('input cannot be null or undefined.');
+  }
     if(publicKeyHex.length % 2 == 0) {
           return u8a.fromString(publicKeyHex,'base16');          	 
       } else {
           return u8a.fromString(('0'+publicKeyHex),'base16');
     }
-   }
-   throw new TypeError('input cannot be null or undefined.');
 }
 
 function compresedKeyInHex(publicKeyHex: string) {
- if(publicKeyHex !== null) {
+  if(publicKeyHex == null) {
+    throw new TypeError('input cannot be null or undefined.');
+  }
   const xHex = publicKeyHex.slice(0,publicKeyHex.length/2);
   const yHex = publicKeyHex.slice(publicKeyHex.length/2,publicKeyHex.length);
 
@@ -496,6 +519,4 @@ function compresedKeyInHex(publicKeyHex: string) {
   const compressedPoint = ECPointCompress( xOctet , yOctet );
   const compressedPointHex = u8a.toString(compressedPoint,'base16');
   return compressedPointHex;
-  }
-  throw new TypeError('input cannot be null or undefined.');
 }
