@@ -14,6 +14,7 @@ export * from './pinning'
 export * from './unreachable-case-error'
 export * from './running-state-like'
 export * from './stream-state-subject'
+export * from './subscription-set'
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
