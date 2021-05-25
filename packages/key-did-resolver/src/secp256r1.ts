@@ -109,7 +109,7 @@ export function publicKeyIntToUint8ArrayPointPair(ecpoint: BigIntPoint) : octetP
 
 export function pubKeyBytesToXY(pubKeyBytes: Uint8Array) : base64urlPoint  {
  
-  if(pubKeyBytes === null || pubKeyBytes === undefined) {
+  if(pubKeyBytes == null) {
     throw new TypeError('input cannot be null or undefined.');
   }
   const publicKeyHex = pubKeyBytesToHex(pubKeyBytes);
