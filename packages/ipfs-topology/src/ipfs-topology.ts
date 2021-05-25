@@ -114,9 +114,7 @@ export class IpfsTopology {
     // Don't want to swarm connect to ourself
     const myPeerId = (await ipfs.id()).id
     const filteredBootstrapList = bootstrapList.filter((addr) => {
-      const arr = addr.split('/')
-      const peerId = arr[arr.length - 1]
-      return myPeerId != peerId
+      return !addr.endsWith(myPeerId)
     })
 
     await Promise.all(
