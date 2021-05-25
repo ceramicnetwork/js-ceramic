@@ -13,6 +13,7 @@
    "experimentalDecorators": true,
    "sourceMap": true,
    "baseUrl": "./packages",
+   "target": "ES2020",
    "typeRoots": [
      "./types", "node_modules/@types"
    ],
