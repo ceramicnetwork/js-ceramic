@@ -40,6 +40,18 @@ describe('Secp256r1 mapper', () => {
 
 })
 
+test('expect ECPointDecompress to throw an error for undefined', () => {
+      expect(() => {
+      mapper.ECPointDecompress(undefined);
+      }).toThrow();
+});
+
+test('expect ECPointDecompress to throw an error for null', () => {
+      expect(() => {
+      mapper.ECPointDecompress(null);
+      }).toThrow();
+});
+
 test('expect publicKeyIntToXY to throw an error for incorrect type', () => {
       expect(() => {
       mapper.publicKeyIntToXY(5);
@@ -100,18 +112,6 @@ test('expect publicKeyToXY to throw an error for undefined', () => {
       }).toThrow();
 });
 
- // this should throw an error... modify the code so this passes
-
- // part of Functions internal to test file
- // ECPointCompress, pubKeyHexToUint8Array, compresedKeyInHex
-/*
-test('test an undefined string', () => {
-   const inputPublicKeyHex = undefined;
-   const publicKey_u8a = pubKeyHexToUint8Array(inputPublicKeyHex);
-   expect(publicKey_u8a).toEqual(null);
-   });
-*/
-
 test('expect publicKeyBytesToXY to throw an error for undefined', () => {
       expect(() => {
       mapper.pubKeyBytesToXY(undefined);
@@ -137,27 +137,6 @@ test('public key as empty string', () => {
   const output = { xm: 'u', ym: 'u' };
   const base64urlPoint = mapper.publicKeyToXY(inputPublicKeyHex);
   expect(base64urlPoint).toEqual(output);
-});
-
- // part of Functions internal to test file
- // ECPointCompress, pubKeyHexToUint8Array, compresedKeyInHex
-
-test('test a null string', () => {
-   const inputPublicKeyHex = null;
-   const publicKey_u8a = pubKeyHexToUint8Array(inputPublicKeyHex);
-   expect(publicKey_u8a).toEqual(null);
-});
-
- // part of Functions internal to test file
- // ECPointCompress, pubKeyHexToUint8Array, compresedKeyInHex
-
-test('test an empty string', () => {
-   const inputPublicKeyHex = ''
-   const publicKey_u8a = pubKeyHexToUint8Array(inputPublicKeyHex);
-   expect(publicKey_u8a).toBeDefined();
-   expect(publicKey_u8a).not.toBeNull();
-   // removed because jest gives::: Received: serializes to the same string
-   // expect(publicKey_u8a).toEqual([])   
 });
 
 test('test a hex string shorter than 33 bytes', () => {
@@ -431,11 +410,63 @@ test('show how to convert a raw public key in hex and return an uncompressed key
   expect(uncompressedKey).toEqual(output);
 });
 
+/*
+ * tests for functions declared within the test file
+ *
+ */
+
+
+test('test a null string to ECPointCompress', () => {
+   const x = null;
+   const y = null;
+   expect(() => {
+      ECPointCompress(x,y);
+   }).toThrowError('input cannot be null or undefined.');
+});
+
+test('test null in pubKeyHexToUint8Array', () => {
+   const inputPublicKeyHex = null;
+   expect(() => {
+      pubKeyHexToUint8Array(inputPublicKeyHex);
+   }).toThrowError('input cannot be null or undefined.');   
+});
+
+test('test an empty string in pubKeyHexToUint8Array', () => {
+   const inputPublicKeyHex = ''
+   const publicKey_u8a = pubKeyHexToUint8Array(inputPublicKeyHex);
+   expect(publicKey_u8a).toBeDefined();
+   expect(publicKey_u8a).not.toBeNull();
+   // removed because jest gives::: Received: serializes to the same string
+   // expect(publicKey_u8a).toEqual([])
+});
+
+test('test compresedKeyInHex with an empty string', () => {
+   const inputPublicKeyHex = '';
+   const compressedKey = compresedKeyInHex(inputPublicKeyHex);   
+   expect(compressedKey).toBeDefined();
+   expect(compressedKey).not.toBeNull();   
+});
+
+test('test compresedKeyInHex with null', () => {
+   const inputPublicKeyHex = null;
+   expect(() => {
+      compresedKeyInHex(inputPublicKeyHex);
+   }).toThrowError('input cannot be null or undefined.');
+
+});
+
+//**** end of tests for functions withing the test file
+
 // write a separate test for this function...
 // source: https://stackoverflow.com/questions/17171542/algorithm-for-elliptic-curve-point-compression
 function ECPointCompress( x: Uint8Array, y: Uint8Array )
 {
-    const out = new Uint8Array( x.length + 1 );
+ 
+   if(x == null || y == null) {
+     throw new TypeError('input cannot be null or undefined.');
+    }
+  
+   const out = new Uint8Array( x.length + 1 );
 
     out[0] = 2 + ( y[ y.length-1 ] & 1 );
     out.set( x, 1 );
@@ -444,18 +475,18 @@ function ECPointCompress( x: Uint8Array, y: Uint8Array )
 }
 
 function pubKeyHexToUint8Array(publicKeyHex: string) {
-let publicKey_u8a = null;
    if(publicKeyHex !== null) {
     if(publicKeyHex.length % 2 == 0) {
-          publicKey_u8a = u8a.fromString(publicKeyHex,'base16');
-    } else {
-          publicKey_u8a = u8a.fromString(('0'+publicKeyHex),'base16');
+          return u8a.fromString(publicKeyHex,'base16');          	 
+      } else {
+          return u8a.fromString(('0'+publicKeyHex),'base16');
     }
    }
-    return publicKey_u8a;
+   throw new TypeError('input cannot be null or undefined.');
 }
 
 function compresedKeyInHex(publicKeyHex: string) {
+ if(publicKeyHex !== null) {
   const xHex = publicKeyHex.slice(0,publicKeyHex.length/2);
   const yHex = publicKeyHex.slice(publicKeyHex.length/2,publicKeyHex.length);
 
@@ -465,4 +496,6 @@ function compresedKeyInHex(publicKeyHex: string) {
   const compressedPoint = ECPointCompress( xOctet , yOctet );
   const compressedPointHex = u8a.toString(compressedPoint,'base16');
   return compressedPointHex;
+  }
+  throw new TypeError('input cannot be null or undefined.');
 }
