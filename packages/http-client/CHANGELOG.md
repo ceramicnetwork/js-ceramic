@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.3](/compare/@ceramicnetwork/http-client@1.0.2...@ceramicnetwork/http-client@1.0.3) (2021-05-25)
+
+
+### Bug Fixes
+
+* **http-client:** Allow just one stream of sync http calls (#1406) f089c41, closes #1406
+
+
+
+
+
 ## [1.0.2](/compare/@ceramicnetwork/http-client@1.0.1...@ceramicnetwork/http-client@1.0.2) (2021-05-20)
 
 

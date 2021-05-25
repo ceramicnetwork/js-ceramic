@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.3](/compare/@ceramicnetwork/core@1.0.2...@ceramicnetwork/core@1.0.3) (2021-05-25)
+
+
+### Bug Fixes
+
+* **core:** Actively fail anchor if applying anchor commit fails 3 times in a row 35dae9d
+* **core:** Continue polling anchor service even after error 10719e7
+* **core:** Don't update stream state for changes to anchor status of commits that are no longer the tip 94ac4a7
+
+
+
+
+
 ## [1.0.2](/compare/@ceramicnetwork/core@1.0.1...@ceramicnetwork/core@1.0.2) (2021-05-20)
 
 
