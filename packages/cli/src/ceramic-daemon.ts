@@ -120,6 +120,8 @@ export class CeramicDaemon {
   private server?: Server;
   private readonly app: ExpressWithAsync;
   private readonly diagnosticsLogger: DiagnosticsLogger;
+  public hostname: string;
+  public port: number;
 
   constructor (public ceramic: Ceramic, private readonly opts: CreateOpts) {
     this.diagnosticsLogger = ceramic.loggerProvider.getDiagnosticsLogger()
@@ -137,10 +139,10 @@ export class CeramicDaemon {
 
   async listen(): Promise<void> {
     return new Promise<void>((resolve) => {
-      const port = this.opts.port || DEFAULT_PORT
-      const hostname = this.opts.hostname || DEFAULT_HOSTNAME
-      this.server = this.app.listen(port, hostname, () => {
-        this.diagnosticsLogger.imp(`Ceramic API running on ${hostname}:${port}'`)
+      this.port = this.opts.port || DEFAULT_PORT
+      this.hostname = this.opts.hostname || DEFAULT_HOSTNAME
+      this.server = this.app.listen(this.port, this.hostname, () => {
+        this.diagnosticsLogger.imp(`Ceramic API running on ${this.hostname}:${this.port}'`)
         resolve()
       })
       this.server.keepAliveTimeout = 60 * 1000
