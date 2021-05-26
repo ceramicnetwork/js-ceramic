@@ -300,14 +300,6 @@ describe('Ceramic interop: core <> http-client', () => {
       await doc.update(content2, null, { anchor: false })
       await doc.update(content3, null, { anchor: false })
 
-      // let returnValue
-      // await daemon.rawData(
-      //   { query: {}, params: { streamid: doc.id } },
-      //   { json: (val) => returnValue = val },
-      // )
-
-      // expect(returnValue).toEqual(content3)
-
       const json = await fetchJson(
         `http://localhost:${daemon.port}/api/v0/raw_data/${doc.id}`
       )
