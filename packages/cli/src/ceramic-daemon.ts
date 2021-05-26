@@ -398,11 +398,10 @@ export class CeramicDaemon {
   async rawData (req: Request, res: Response): Promise<void> {
     const opts = parseQueryObject(req.query)
     const stream = await this.ceramic.loadStream(req.params.streamid, opts)
-    const state = StreamUtils.serializeState(stream.state)
-    if (state.content) {
-      res.json(state.content)
+    if (stream.rawData) {
+      res.json(stream.rawData)
     } else {
-      res.status(501).json({ error: 'Stream serialization lacks content.' })
+      res.status(501).json({ error: 'Stream serialization lacks raw data.' })
     }
   }
 

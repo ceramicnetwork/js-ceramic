@@ -8,6 +8,7 @@ import { TileDocument } from "@ceramicnetwork/stream-tile";
 import { filter, take } from "rxjs/operators"
 
 import StreamID from "@ceramicnetwork/streamid";
+import { fetchJson } from '@ceramicnetwork/http-client/src/utils'
 import getPort from "get-port";
 import { createIPFS } from './create-ipfs';
 import { makeDID } from './make-did';
@@ -306,6 +307,12 @@ describe('Ceramic interop: core <> http-client', () => {
       )
 
       expect(returnValue).toEqual(content3)
+
+      // const json = await fetchJson(
+      //   `http://${daemon.hostname}:${daemon.port}/api/v0/raw_data/${doc.id}`
+      // )
+
+      // expect(JSON.parse(json)).toEqual(content3)
     })
 
     describe('multiqueries', () => {
