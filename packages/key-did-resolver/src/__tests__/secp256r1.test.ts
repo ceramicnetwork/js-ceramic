@@ -1,3 +1,5 @@
+// Brent Shambaugh <brent.shambaugh@gmail.com>. 2021.
+
 import varint from "varint"
 import multibase from "multibase"
 import * as mapper from "../secp256r1"
@@ -70,11 +72,19 @@ test('expect publicKeyIntToXY to throw an error for {x: undefined, y: undefined}
       }).toThrow();
 });
 
+test('expect publicKeyIntToUint8ArrayPointPair to throw an error for {x: undefined, y: undefined}', () => {
+      expect(() => {
+      mapper.publicKeyHexToUint8ArrayPointPair({x: undefined, y: undefined});
+      }).toThrowError('input cannot be null or undefined.');
+});
+
+
 test('expect publicKeyIntToUint8ArrayPointPair to throw an error for incorrect type', () => {
       expect(() => {
       mapper.publicKeyHexToUint8ArrayPointPair(5);
       }).toThrow();
 });
+
 
 test('expect publicKeyIntToUint8ArrayPointPair to throw an error for {x: null, y: null}', () => {
       expect(() => {
@@ -123,6 +133,12 @@ test('expect publicKeyBytesToXY to throw an error for null', () => {
       mapper.pubKeyBytesToXY(null);
       }).toThrow();
 });
+
+/*
+   expect(() => {
+      mapper.pubKeyBytesToXY(publicKey_u8a);
+      }).toThrowError(''input cannot be null or undefined.');
+*/
 
 test('empty key string to should not evaluate to null, or should it??', () => {
    const inputPublicKeyHex = '';

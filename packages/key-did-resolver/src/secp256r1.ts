@@ -1,9 +1,12 @@
+// Brent Shambaugh <brent.shambaugh@gmail.com>. 2021.
+
 import * as u8a from 'uint8arrays'
 import  multibase from'multibase'
 import * as bigintModArith from 'bigint-mod-arith'
 
 /**
   * x,y point as a BigInt (requires at least ES2020)
+  * For BigInt see: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt
   */
 interface BigIntPoint {
    x: BigInt,
@@ -11,9 +14,9 @@ interface BigIntPoint {
 }
 
 /**
-  * xm,ym point as base64url utilizing multiformats
+  * xm,ym point with components expresse with base64url utilizing multiformats
   *
-  * {@link Expressed in Multibase Table: https://github.com/multiformats/multibase/blob/master/multibase.csv}
+  * base64url is expressed in the Multibase Table: https://github.com/multiformats/multibase/blob/master/multibase.csv
   */
 interface base64urlPoint {
    xm: string,
@@ -21,7 +24,7 @@ interface base64urlPoint {
 }
 
 /**
-  * Elliptic Curve Points with compoents expressed as byte arrays
+  * Elliptic curve point with coordinates expressed as byte arrays (Uint8Array)
   */
 interface octetPoint {
   xOctet: Uint8Array,
@@ -58,24 +61,31 @@ export function keyToDidDoc (pubKeyBytes: Uint8Array, fingerprint: string): any 
 /**
   * Converts a byte array into a Hex String.
   *
-  * @param pubKeyBytes - cannot be null or undefined
-  * 
+  * @param pubKeyBytes - public key
+  * @returns hex string
+  * @throws TypeError: input cannot be null or undefined.
   */
-function pubKeyBytesToHex(pubKeyBytes: Uint8Array) {
+export function pubKeyBytesToHex(pubKeyBytes: Uint8Array) {
+  if(pubKeyBytes == null) {
+    throw new TypeError('input cannot be null or undefined.');
+  }
  const bbf = u8a.toString(pubKeyBytes,'base16')
  return bbf;
 }
 
 /**
  * Decompress a compressed public key in SEC format.
- * See: Section 2.3.3 in {@link SEC 1 v2 | https://www.secg.org/sec1-v2.pdf}. 
+ * See section 2.3.3 in SEC 1 v2 : https://www.secg.org/sec1-v2.pdf. 
  *
- * {@link https://stackoverflow.com/questions/17171542/algorithm-for-elliptic-curve-point-compression/30431547#30431547}
+ * Code based on: https://stackoverflow.com/questions/17171542/algorithm-for-elliptic-curve-point-compression/30431547#30431547
  *
- * @param - 33 byte compressed public key. 1st byte: 0x02 for even or 0x03 for odd. Following 32 bytes: x coordinate as big-endian.
- *
+ * @param - 33 byte compressed public key. 1st byte: 0x02 for even or 0x03 for odd. Following 32 bytes: x coordinate expressed as big-endian.
+ * @throws TypeError: input cannot be null or undefined.
  */
  export function ECPointDecompress( comp : Uint8Array ) : BigIntPoint {
+  if(comp == null) {
+    throw new TypeError('input cannot be null or undefined.');
+  }
   // two, prime, b, and pIdent are constants for the P-256 curve
   const two = BigInt(2);
   const prime = (two ** 256n) - (two ** 224n) + (two ** 192n) + (two ** 96n) - 1n;
@@ -104,10 +114,14 @@ function pubKeyBytesToHex(pubKeyBytes: Uint8Array) {
 }
 /**
  * 
- * @param publicKeyHex - public key as hex string. Cannot be null or undefined
- * @returns point xm, ym with coordinates expressed as multibase base64url
+ * @param publicKeyHex - public key as hex string.
+ * @returns
+ * @throws TypeError: input cannot be null or undefined.
  */
 export function publicKeyToXY(publicKeyHex: string) : base64urlPoint  {
+  if(publicKeyHex == null) {
+    throw new TypeError('input cannot be null or undefined.');
+  }
  const u8aOctetPoint = publicKeyHexToUint8ArrayPointPair(publicKeyHex);
  const xm = u8a.toString(multibase.encode('base64url',u8aOctetPoint.xOctet));
  const ym = u8a.toString(multibase.encode('base64url',u8aOctetPoint.yOctet));
@@ -116,10 +130,14 @@ export function publicKeyToXY(publicKeyHex: string) : base64urlPoint  {
 
 /**
  * 
- * @param publicKeyHex - public key as hex string. Cannot be null or undefined.
- * @returns - point xOctet, yOctet with coordinates expressed as u8array bytes with base16
+ * @param publicKeyHex - public key as hex string. 
+ * @returns - point with Uint8Array bytes using base16
+ * @throws TypeError: input cannot be null or undefined.
  */
 export function publicKeyHexToUint8ArrayPointPair(publicKeyHex: string) : octetPoint {
+    if(publicKeyHex == null) {
+      throw new TypeError('input cannot be null or undefined.');
+    }
     const xHex = publicKeyHex.slice(0,publicKeyHex.length/2);
     const yHex = publicKeyHex.slice(publicKeyHex.length/2,publicKeyHex.length);
     const xOctet = u8a.fromString(xHex,'base16');
@@ -129,10 +147,14 @@ export function publicKeyHexToUint8ArrayPointPair(publicKeyHex: string) : octetP
 
 /**
  * 
- * @param ecpoint - public key as BigInt point {x: BigInt, y: BigInt}. Cannot be null or undefined.
- * @returns byte array as u8array with bytes base16
+ * @param ecpoint - public key. Cannot be null or undefined.
+ * @returns Uint8Array with bytes as base16
+ * @throws TypeError: input cannot be null or undefined.
  */
 export function publicKeyIntToXY(ecpoint: BigIntPoint): base64urlPoint  {
+  if(ecpoint.x == null || ecpoint.y == null) {
+     throw new TypeError('input cannot be null or undefined.');
+   }
   const u8aOctetPoint = publicKeyIntToUint8ArrayPointPair(ecpoint);
   const xm = u8a.toString(multibase.encode('base64url',u8aOctetPoint.xOctet));
   const ym = u8a.toString(multibase.encode('base64url',u8aOctetPoint.yOctet));
@@ -141,10 +163,15 @@ export function publicKeyIntToXY(ecpoint: BigIntPoint): base64urlPoint  {
 
 /**
  * 
- * @param ecpoint - public key as BigInt point {x: BigInt, y: BigInt}. Cannot be null or undefined.
- * @returns byte array as u8array with bytes base10
+ * @param ecpoint -  public key.  Cannot be null or undefined.
+ * @returns Uint8Array with bytes as base10
+ * @throws TypeError: input cannot be null or undefined.
  */
 export function publicKeyIntToUint8ArrayPointPair(ecpoint: BigIntPoint) : octetPoint {
+  console.log(ecpoint.x + ' , ' +  ecpoint.y);
+  if(ecpoint.x === null || ecpoint.y === null || ecpoint.x === undefined || ecpoint.y === undefined) {
+     throw new TypeError('input cannot be null or undefined.');
+   }
   const xHex = (ecpoint.x).toString();
   const yHex = (ecpoint.y).toString();
   const xOctet = u8a.fromString(xHex,'base10');
@@ -158,8 +185,11 @@ export function publicKeyIntToUint8ArrayPointPair(ecpoint: BigIntPoint) : octetP
  *  uncompressed with 0x04 prefix, or compressed with 0x02 prefix if even and 0x03 prefix if odd.
  * @returns point x,y with coordinates as multibase encoded base64urls
  * 
- * See the {@link did:key spec | https://w3c-ccg.github.io/did-method-key/#p-256}. At present only, raw p-256 keys
- * are covered in the specification.
+ * See the the did:key specification: https://w3c-ccg.github.io/did-method-key/#p-256. 
+ * At present only raw p-256 keys are covered in the specification.
+ * @throws TypeError: input cannot be null or undefined.
+ * @throws Error: Unexpected pubKeyBytes
+ * @internal
  */
 export function pubKeyBytesToXY(pubKeyBytes: Uint8Array) : base64urlPoint  {
  
