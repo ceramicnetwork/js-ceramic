@@ -42,40 +42,53 @@ describe('Secp256r1 mapper', () => {
 
 })
 
+test('expect pubKeyBytesToHex to throw an error for null', () => {
+      expect(() => {
+      mapper.pubKeyBytesToHex(null);
+      }).toThrowError('input cannot be null or undefined.');
+});
+
+test('expect pubKeyBytesToHex to throw an error for undefined', () => {
+      expect(() => {
+      mapper.pubKeyBytesToHex();
+      }).toThrowError('input cannot be null or undefined.');
+});
+
 test('expect ECPointDecompress to throw an error for undefined', () => {
       expect(() => {
-      mapper.ECPointDecompress(undefined);
-      }).toThrow();
+      mapper.ECPointDecompress();
+      }).toThrowError('input cannot be null or undefined.');
 });
 
 test('expect ECPointDecompress to throw an error for null', () => {
       expect(() => {
       mapper.ECPointDecompress(null);
-      }).toThrow();
+      }).toThrowError('input cannot be null or undefined.');
 });
 
 test('expect publicKeyIntToXY to throw an error for incorrect type', () => {
       expect(() => {
       mapper.publicKeyIntToXY(5);
-      }).toThrow();
+      }).toThrowError('input cannot be null or undefined.');
 });
 
 test('expect publicKeyIntToXY to throw an error for {x: null, y: null}', () => {
       expect(() => {
       mapper.publicKeyIntToXY({x: null, y: null});
-      }).toThrow();
+      }).toThrowError('input cannot be null or undefined.');
 });
 
 test('expect publicKeyIntToXY to throw an error for {x: undefined, y: undefined}', () => {
       expect(() => {
-      mapper.publicKeyIntToXY({x: undefined, y: undefined});
+      mapper.publicKeyIntToXY();
       }).toThrow();
 });
 
+
 test('expect publicKeyIntToUint8ArrayPointPair to throw an error for {x: undefined, y: undefined}', () => {
       expect(() => {
-      mapper.publicKeyHexToUint8ArrayPointPair({x: undefined, y: undefined});
-      }).toThrowError('input cannot be null or undefined.');
+      mapper.publicKeyHexToUint8ArrayPointPair();
+      }).toThrow();
 });
 
 
@@ -101,44 +114,32 @@ test('expect publicKeyIntToUint8ArrayPointPair to throw an error for {x: undefin
 test('expect publicKeyHexToUint8ArrayPointPair to throw an error for null', () => {
       expect(() => {
       mapper.publicKeyHexToUint8ArrayPointPair(null);
-      }).toThrow();
-});
-
-test('expect publicKeyHexToUint8ArrayPointPair to throw an error for undefined', () => {
-      expect(() => {
-      mapper.publicKeyHexToUint8ArrayPointPair(undefined);
-      }).toThrow();
+      }).toThrowError('input cannot be null or undefined.');
 });
 
 test('expect publicKeyToXY to throw an error for null', () => {
       expect(() => {
       mapper.publicKeyToXY(null);
-      }).toThrow();
+      }).toThrowError('input cannot be null or undefined.');
 });
 
 test('expect publicKeyToXY to throw an error for undefined', () => {
       expect(() => {
-      mapper.publicKeyToXY(undefined);
-      }).toThrow();
+      mapper.publicKeyToXY();
+      }).toThrowError('input cannot be null or undefined.');
 });
 
 test('expect publicKeyBytesToXY to throw an error for undefined', () => {
       expect(() => {
-      mapper.pubKeyBytesToXY(undefined);
-      }).toThrow();
+      mapper.pubKeyBytesToXY();
+      }).toThrowError('input cannot be null or undefined.');
 });
 
 test('expect publicKeyBytesToXY to throw an error for null', () => {
       expect(() => {
       mapper.pubKeyBytesToXY(null);
-      }).toThrow();
+      }).toThrowError('input cannot be null or undefined.');
 });
-
-/*
-   expect(() => {
-      mapper.pubKeyBytesToXY(publicKey_u8a);
-      }).toThrowError(''input cannot be null or undefined.');
-*/
 
 test('empty key string to should not evaluate to null, or should it??', () => {
    const inputPublicKeyHex = '';

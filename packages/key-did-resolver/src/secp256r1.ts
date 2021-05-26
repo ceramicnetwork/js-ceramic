@@ -65,7 +65,7 @@ export function keyToDidDoc (pubKeyBytes: Uint8Array, fingerprint: string): any 
   * @returns hex string
   * @throws TypeError: input cannot be null or undefined.
   */
-export function pubKeyBytesToHex(pubKeyBytes: Uint8Array) {
+export function pubKeyBytesToHex(pubKeyBytes: Uint8Array) : string {
   if(pubKeyBytes == null) {
     throw new TypeError('input cannot be null or undefined.');
   }
@@ -168,8 +168,7 @@ export function publicKeyIntToXY(ecpoint: BigIntPoint): base64urlPoint  {
  * @throws TypeError: input cannot be null or undefined.
  */
 export function publicKeyIntToUint8ArrayPointPair(ecpoint: BigIntPoint) : octetPoint {
-  console.log(ecpoint.x + ' , ' +  ecpoint.y);
-  if(ecpoint.x === null || ecpoint.y === null || ecpoint.x === undefined || ecpoint.y === undefined) {
+  if(ecpoint.x == null || ecpoint.y == null || ecpoint === null || ecpoint === undefined) {
      throw new TypeError('input cannot be null or undefined.');
    }
   const xHex = (ecpoint.x).toString();
