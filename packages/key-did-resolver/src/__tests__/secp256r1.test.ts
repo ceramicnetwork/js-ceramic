@@ -42,6 +42,25 @@ describe('Secp256r1 mapper', () => {
 
 })
 
+
+test('test testUint8Array with correct input', () => {
+   const inputCompressedPoint = Uint8Array.from([3,127,35,88,48,221,61,239,167,34,239,26,162,73,214,160,221,187,164,249,144,176,129,117,56,147,63,87,54,64,101,53,66]);
+   const publicKey_u8a = mapper.testUint8Array(inputCompressedPoint);
+   expect(publicKey_u8a).toEqual(true);
+});
+
+test('test testUint8Array with number', () => {
+   const inputCompressedPoint = 5;
+   const publicKey_u8a = mapper.testUint8Array(inputCompressedPoint);
+   expect(publicKey_u8a).toEqual(false);
+});
+
+test('test testUint8Array with number', () => {
+   const inputCompressedPoint = 'donkey';
+   const publicKey_u8a = mapper.testUint8Array(inputCompressedPoint);
+   expect(publicKey_u8a).toEqual(false);
+});
+
 test('expect pubKeyBytesToHex to throw an error for null', () => {
       expect(() => {
       mapper.pubKeyBytesToHex(null);

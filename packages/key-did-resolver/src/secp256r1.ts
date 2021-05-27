@@ -146,6 +146,20 @@ export function publicKeyHexToUint8ArrayPointPair(publicKeyHex: string) : octetP
 }
 
 /**
+ * Test to see if the argument is the Uint8Array
+ * @param param
+ * @returns boolean
+ */
+export function testUint8Array(param: any) {
+  if(param.constructor === Uint8Array) {
+     return true;
+  } else {
+     return false;
+  }
+}
+
+
+/**
  * 
  * @param ecpoint - Public key.
  * @returns Uint8Array with bytes as base16
