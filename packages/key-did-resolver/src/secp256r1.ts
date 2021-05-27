@@ -147,7 +147,7 @@ export function publicKeyHexToUint8ArrayPointPair(publicKeyHex: string) : octetP
 
 /**
  * 
- * @param ecpoint - public key. Cannot be null or undefined.
+ * @param ecpoint - Public key.
  * @returns Uint8Array with bytes as base16
  * @throws TypeError: input cannot be null or undefined.
  * @throws Error: Input coordinates must be BigInt
@@ -178,7 +178,7 @@ export function publicKeyIntToXY(ecpoint: BigIntPoint): base64urlPoint  {
 
 /**
  * 
- * @param ecpoint -  public key.  Cannot be null or undefined.
+ * @param ecpoint -  Public key.
  * @returns Uint8Array with bytes as base10
  * @throws TypeError: input cannot be null or undefined.
  * @throws Error: Input coordinates must be BigInt
