@@ -83,9 +83,9 @@ export function pubKeyBytesToHex(pubKeyBytes: Uint8Array) : string {
  * @throws TypeError: input cannot be null or undefined.
  */
  export function ECPointDecompress( comp : Uint8Array ) : BigIntPoint {
-  if(comp == null) {
-    throw new TypeError('input cannot be null or undefined.');
-  }
+  if(!testUint8Array(comp)) {
+    throw new TypeError('input must be a Uint8Array');
+   }
   // two, prime, b, and pIdent are constants for the P-256 curve
   const two = BigInt(2);
   const prime = (two ** 256n) - (two ** 224n) + (two ** 192n) + (two ** 96n) - 1n;

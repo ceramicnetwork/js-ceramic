@@ -106,13 +106,19 @@ test('expect pubKeyBytesToHex to throw an error for an unexpected object', () =>
 test('expect ECPointDecompress to throw an error for undefined', () => {
       expect(() => {
       mapper.ECPointDecompress();
-      }).toThrowError('input cannot be null or undefined.');
+      }).toThrowError('input must be a Uint8Array');
 });
 
 test('expect ECPointDecompress to throw an error for null', () => {
       expect(() => {
       mapper.ECPointDecompress(null);
-      }).toThrowError('input cannot be null or undefined.');
+      }).toThrowError('input must be a Uint8Array');
+});
+
+test('expect ECPointDecompress to throw an error for unexpected input', () => {
+      expect(() => {
+      mapper.ECPointDecompress(5);
+      }).toThrowError('input must be a Uint8Array');
 });
 
 test('expect publicKeyIntToXY to throw an error for incorrect type', () => {
