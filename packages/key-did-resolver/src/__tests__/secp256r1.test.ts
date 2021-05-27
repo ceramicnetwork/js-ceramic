@@ -156,13 +156,25 @@ test('expect publicKeyHexToUint8ArrayPointPair to throw an error for null', () =
 test('expect publicKeyToXY to throw an error for null', () => {
       expect(() => {
       mapper.publicKeyToXY(null);
-      }).toThrowError('input cannot be null or undefined.');
+      }).toThrowError('input must be string with characters 0-9,A-F,a-f');
 });
 
 test('expect publicKeyToXY to throw an error for undefined', () => {
       expect(() => {
       mapper.publicKeyToXY();
-      }).toThrowError('input cannot be null or undefined.');
+      }).toThrowError('input must be string with characters 0-9,A-F,a-f');
+});
+
+test('expect publicKeyToXY to throw an error for a non string', () => {
+      expect(() => {
+      mapper.publicKeyToXY(5);
+      }).toThrowError('input must be string with characters 0-9,A-F,a-f');
+});
+
+test('expect publicKeyToXY to throw an error for an invalid hex string', () => {
+      expect(() => {
+      mapper.publicKeyToXY('095ty');
+      }).toThrowError('input must be string with characters 0-9,A-F,a-f');
 });
 
 test('expect publicKeyBytesToXY to throw an error for undefined', () => {

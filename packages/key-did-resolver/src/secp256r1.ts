@@ -112,6 +112,7 @@ export function pubKeyBytesToHex(pubKeyBytes: Uint8Array) : string {
     };
 
 }
+
 /**
  * 
  * @param publicKeyHex - public key as hex string.
@@ -119,9 +120,9 @@ export function pubKeyBytesToHex(pubKeyBytes: Uint8Array) : string {
  * @throws TypeError: input cannot be null or undefined.
  */
 export function publicKeyToXY(publicKeyHex: string) : base64urlPoint  {
-  if(publicKeyHex == null) {
-    throw new TypeError('input cannot be null or undefined.');
-  }
+  if(!testHexString(publicKeyHex)) {
+    throw new TypeError('input must be string with characters 0-9,A-F,a-f'); 
+   }
  const u8aOctetPoint = publicKeyHexToUint8ArrayPointPair(publicKeyHex);
  const xm = u8a.toString(multibase.encode('base64url',u8aOctetPoint.xOctet));
  const ym = u8a.toString(multibase.encode('base64url',u8aOctetPoint.yOctet));
