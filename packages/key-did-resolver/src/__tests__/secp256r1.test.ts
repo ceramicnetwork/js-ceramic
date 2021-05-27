@@ -284,6 +284,36 @@ test('convert raw public key as a hex string into an x,y point with x and y base
   expect(base64urlPoint).toEqual(output);
 });  
 
+test('expect publicKeyIntToUint8ArrayPointPair to throw an error for {x: undefined, y: undefined}', () => {
+      expect(() => {
+      mapper.publicKeyHexToUint8ArrayPointPair();
+      }).toThrowError('input cannot be null or undefined.');
+});
+
+test('expect publicKeyIntToUint8ArrayPointPair to throw an error for {x: 5, y: 9}', () => {
+      expect(() => {
+      mapper.publicKeyIntToUint8ArrayPointPair({x: 5,y: 9});
+      }).toThrowError('Input coordinates must be BigInt');
+});
+
+test('expect publicKeyIntToUint8ArrayPointPair to throw an error for null', () => {
+      expect(() => {
+      mapper.publicKeyIntToUint8ArrayPointPair(null);
+      }).toThrowError('input cannot be null or undefined.');
+});
+
+test('expect publicKeyIntToUint8ArrayPointPair to throw an error for mislabled coordinate properties', () => {
+      expect(() => {
+      mapper.publicKeyIntToUint8ArrayPointPair({x: 5n, z: 7n});
+      }).toThrowError('Input must have properties x and y');
+});
+
+test('expect publicKeyIntToUint8ArrayPointPair to throw an error for a non object', () => {
+      expect(() => {
+      mapper.publicKeyIntToUint8ArrayPointPair(6);
+      }).toThrowError('Input must be an object with properties x and y');
+});
+
 test('convert a public key x,y where x and y are integers to a pair of Uint8Arrays', () => {
    const ecpoint = {
           x: 112971204272793929541699765384018665134067875121047561926148644683187420494774n,
