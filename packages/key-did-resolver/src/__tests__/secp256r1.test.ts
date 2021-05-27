@@ -199,13 +199,19 @@ test('expect publicKeyToXY to throw an error for an invalid hex string', () => {
 test('expect publicKeyBytesToXY to throw an error for undefined', () => {
       expect(() => {
       mapper.pubKeyBytesToXY();
-      }).toThrowError('input cannot be null or undefined.');
+      }).toThrowError('input must be a Uint8Array');
 });
 
 test('expect publicKeyBytesToXY to throw an error for null', () => {
       expect(() => {
       mapper.pubKeyBytesToXY(null);
-      }).toThrowError('input cannot be null or undefined.');
+      }).toThrowError('input must be a Uint8Array');
+});
+
+test('expect publicKeyBytesToXY to throw an error for and integer input', () => {
+      expect(() => {
+      mapper.pubKeyBytesToXY(5);
+      }).toThrowError('input must be a Uint8Array');
 });
 
 test('empty key string to should not evaluate to null, or should it??', () => {
