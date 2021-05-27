@@ -402,7 +402,7 @@ describe('sync', () => {
     const fakeHandleTip = jest.fn(() => Promise.resolve());
     (stateManager as any)._handleTip = fakeHandleTip;
     const state$ = ({ id: FAKE_STREAM_ID } as unknown) as RunningState;
-    await stateManager.sync(state$, 1000);
+    await stateManager.sync(state$, 1000, false);
     expect(fakeHandleTip).toHaveBeenCalledWith(state$, response[0]);
   });
   test('handle all received', async () => {
@@ -413,7 +413,7 @@ describe('sync', () => {
     const fakeHandleTip = jest.fn(() => Promise.resolve());
     (stateManager as any)._handleTip = fakeHandleTip;
     const state$ = ({ id: FAKE_STREAM_ID } as unknown) as RunningState;
-    await stateManager.sync(state$, 1000);
+    await stateManager.sync(state$, 1000, false);
     response.forEach((r) => {
       expect(fakeHandleTip).toHaveBeenCalledWith(state$, r);
     });
@@ -432,7 +432,7 @@ describe('sync', () => {
     const fakeHandleTip = jest.fn(() => Promise.resolve());
     (stateManager as any)._handleTip = fakeHandleTip;
     const state$ = ({ id: FAKE_STREAM_ID } as unknown) as RunningState;
-    await stateManager.sync(state$, 1000);
+    await stateManager.sync(state$, 1000, false);
     expect(fakeHandleTip).toBeCalledTimes(5)
     response.slice(0, 5).forEach((r) => {
       expect(fakeHandleTip).toHaveBeenCalledWith(state$, r);
@@ -447,7 +447,7 @@ describe('sync', () => {
     const fakeHandleTip = jest.fn(() => Promise.resolve());
     (stateManager as any)._handleTip = fakeHandleTip;
     const state$ = ({ id: FAKE_STREAM_ID } as unknown) as RunningState;
-    await stateManager.sync(state$, MAX_RESPONSE_INTERVAL * 10);
+    await stateManager.sync(state$, MAX_RESPONSE_INTERVAL * 10, false);
     expect(fakeHandleTip).toBeCalledTimes(20)
   });
 });

@@ -94,6 +94,7 @@ export class Repository {
   }
 
   private async fromStateStore(streamId: StreamID): Promise<RunningState | undefined> {
+    console.trace('loading from state store')
     const streamState = await this.#deps.pinStore.stateStore.load(streamId);
     if (streamState) {
       const runningState = new RunningState(streamState);
@@ -134,19 +135,30 @@ export class Repository {
     opts = { ...DEFAULT_LOAD_OPTS, ...opts }
 
     return this.loadingQ.run(streamId.toString(), async () => {
+      let fromStateStore = false
       let stream = this.fromMemory(streamId);
       if (!stream) {
         stream = await this.fromStateStore(streamId);
+        if (stream) {
+          fromStateStore = true
+        }
       }
 
       if (stream && opts.sync == SyncOptions.PREFER_CACHE) {
-        return stream
+        if (!fromStateStore || this.stateManager.wasPinnedStreamSynced(streamId)) {
+          // If the stream was from the in-memory cache we know it's up to date, so no need to sync.
+          // If the stream from the state store then we check if we've already synced the stream at
+          // least once in the lifetime of this process: if so we know the state is up to date, so
+          // no need to sync. If not, then it could be out of date due to updates made while the
+          // node was offline, in which case we fall through to calling `stateManager.sync()` below.
+          return stream
+        }
       }
 
       if (!stream) {
         stream = await this.fromNetwork(streamId, opts);
       }
-      await this.stateManager.sync(stream, opts.syncTimeoutSeconds * 1000);
+      await this.stateManager.sync(stream, opts.syncTimeoutSeconds * 1000, fromStateStore);
       return stream
     });
   }
