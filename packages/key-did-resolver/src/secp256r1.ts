@@ -146,9 +146,24 @@ export function publicKeyHexToUint8ArrayPointPair(publicKeyHex: string) : octetP
 }
 
 /**
+ * Tests to see if the argument is a Hex String.
+ * @param str
+ * @returns
+ */
+export function testHexString(str : string) : boolean {
+ const regex = new RegExp(/^[A-Fa-f0-9]+/i);
+ if(regex.test(str)) {
+     if(str.length == regex.exec(str)[0].length) {
+         return true;
+     }
+  }
+  return false;
+}
+
+/**
  * Test to see if the argument is the Uint8Array
  * @param param
- * @returns boolean
+ * @returns
  */
 export function testUint8Array(param: string) : boolean {
   if(param.constructor === Uint8Array) {

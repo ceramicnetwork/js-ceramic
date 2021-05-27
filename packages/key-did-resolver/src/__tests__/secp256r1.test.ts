@@ -42,6 +42,23 @@ describe('Secp256r1 mapper', () => {
 
 })
 
+test('test a hex string with unexpected input', () => {
+   const inputPublicKeyHex = '';
+   const publicKey_u8a = mapper.testHexString(inputPublicKeyHex);
+   expect(publicKey_u8a).toEqual(false);
+});
+
+test('test a hex string with unexpected input : try 2', () => {
+   const inputPublicKeyHex = 99;
+   const publicKey_u8a = mapper.testHexString(inputPublicKeyHex);
+   expect(publicKey_u8a).toEqual(false);
+});
+
+test('test a hex string shorter than 33 bytes', () => {
+   const inputPublicKeyHex = 'abc09';
+   const publicKey_u8a = mapper.testHexString(inputPublicKeyHex);
+   expect(publicKey_u8a).toEqual(true);
+});
 
 test('test testUint8Array with correct input', () => {
    const inputCompressedPoint = Uint8Array.from([3,127,35,88,48,221,61,239,167,34,239,26,162,73,214,160,221,187,164,249,144,176,129,117,56,147,63,87,54,64,101,53,66]);
