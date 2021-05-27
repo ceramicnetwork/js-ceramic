@@ -135,8 +135,8 @@ export function publicKeyToXY(publicKeyHex: string) : base64urlPoint  {
  * @throws TypeError: input cannot be null or undefined.
  */
 export function publicKeyHexToUint8ArrayPointPair(publicKeyHex: string) : octetPoint {
-    if(publicKeyHex == null) {
-      throw new TypeError('input cannot be null or undefined.');
+   if(!testHexString(publicKeyHex)) {
+      throw new TypeError('input must be string with characters 0-9,A-F,a-f');
     }
     const xHex = publicKeyHex.slice(0,publicKeyHex.length/2);
     const yHex = publicKeyHex.slice(publicKeyHex.length/2,publicKeyHex.length);

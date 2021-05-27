@@ -121,36 +121,36 @@ test('expect publicKeyIntToXY to throw an error for {x: undefined, y: undefined}
 });
 
 
-test('expect publicKeyIntToUint8ArrayPointPair to throw an error for {x: undefined, y: undefined}', () => {
+test('expect publicKeyHextToUint8ArrayPointPair to throw an error for {x: undefined, y: undefined}', () => {
       expect(() => {
       mapper.publicKeyHexToUint8ArrayPointPair();
-      }).toThrow();
+      }).toThrowError('input must be string with characters 0-9,A-F,a-f');
 });
 
 
-test('expect publicKeyIntToUint8ArrayPointPair to throw an error for incorrect type', () => {
+test('expect publicKeyHexToUint8ArrayPointPair to throw an error for incorrect type', () => {
       expect(() => {
       mapper.publicKeyHexToUint8ArrayPointPair(5);
-      }).toThrow();
+      }).toThrowError('input must be string with characters 0-9,A-F,a-f');
 });
 
 
-test('expect publicKeyIntToUint8ArrayPointPair to throw an error for {x: null, y: null}', () => {
+test('expect publicKeyHexToUint8ArrayPointPair to throw an error for {x: null, y: null}', () => {
       expect(() => {
       mapper.publicKeyHexToUint8ArrayPointPair({x: null, y: null});
-      }).toThrow();
+      }).toThrowError('input must be string with characters 0-9,A-F,a-f');
 });
 
-test('expect publicKeyIntToUint8ArrayPointPair to throw an error for {x: undefined, y: undefined}', () => {
+test('expect publicKeyHexToUint8ArrayPointPair to throw an error for {x: undefined, y: undefined}', () => {
       expect(() => {
       mapper.publicKeyHexToUint8ArrayPointPair({x: undefined, y: undefined});
-      }).toThrow();
+      }).toThrowError('input must be string with characters 0-9,A-F,a-f');
 });
 
 test('expect publicKeyHexToUint8ArrayPointPair to throw an error for null', () => {
       expect(() => {
       mapper.publicKeyHexToUint8ArrayPointPair(null);
-      }).toThrowError('input cannot be null or undefined.');
+      }).toThrowError('input must be string with characters 0-9,A-F,a-f');
 });
 
 test('expect publicKeyToXY to throw an error for null', () => {
@@ -179,18 +179,10 @@ test('expect publicKeyBytesToXY to throw an error for null', () => {
 
 test('empty key string to should not evaluate to null, or should it??', () => {
    const inputPublicKeyHex = '';
-   const u8aPoint = mapper.publicKeyHexToUint8ArrayPointPair(inputPublicKeyHex);
-   expect(u8aPoint.xOctet).not.toEqual(null);
-   expect(u8aPoint.yOctet).not.toEqual(null);
+   expect(() => {
+      mapper.publicKeyHexToUint8ArrayPointPair(inputPublicKeyHex);
+   }).toThrowError('input must be string with characters 0-9,A-F,a-f');
  });
-
-
-test('public key as empty string', () => {
-  const inputPublicKeyHex = '';
-  const output = { xm: 'u', ym: 'u' };
-  const base64urlPoint = mapper.publicKeyToXY(inputPublicKeyHex);
-  expect(base64urlPoint).toEqual(output);
-});
 
 test('test a hex string shorter than 33 bytes', () => {
    const inputPublicKeyHex = '36f8964623378bdc068d4bce07ed17c8fa486f9ac0c2613ca3c8c306d7bb6'
@@ -347,7 +339,7 @@ test('expect publicKeyIntToXY to throw an error for {x: undefined, y: undefined}
 test('expect publicKeyIntToUint8ArrayPointPair to throw an error for {x: undefined, y: undefined}', () => {
       expect(() => {
       mapper.publicKeyHexToUint8ArrayPointPair();
-      }).toThrowError('input cannot be null or undefined.');
+      }).toThrowError('input must be string with characters 0-9,A-F,a-f');
 });
 
 test('expect publicKeyIntToUint8ArrayPointPair to throw an error for {x: 5, y: 9}', () => {
