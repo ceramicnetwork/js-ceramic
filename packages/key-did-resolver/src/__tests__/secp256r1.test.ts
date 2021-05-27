@@ -81,14 +81,27 @@ test('test testUint8Array with number', () => {
 test('expect pubKeyBytesToHex to throw an error for null', () => {
       expect(() => {
       mapper.pubKeyBytesToHex(null);
-      }).toThrowError('input cannot be null or undefined.');
+      }).toThrowError('input must be a Uint8Array');
 });
 
 test('expect pubKeyBytesToHex to throw an error for undefined', () => {
       expect(() => {
       mapper.pubKeyBytesToHex();
-      }).toThrowError('input cannot be null or undefined.');
+      }).toThrowError('input must be a Uint8Array');
 });
+
+test('expect pubKeyBytesToHex to throw an error for an unexpected integer', () => {
+      expect(() => {
+      mapper.pubKeyBytesToHex(5);
+      }).toThrowError('input must be a Uint8Array');
+});
+
+test('expect pubKeyBytesToHex to throw an error for an unexpected object', () => {
+      expect(() => {
+      mapper.pubKeyBytesToHex({x: 6n, y: 5n});
+      }).toThrowError('input must be a Uint8Array');
+});
+
 
 test('expect ECPointDecompress to throw an error for undefined', () => {
       expect(() => {

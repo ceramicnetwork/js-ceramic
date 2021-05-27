@@ -66,8 +66,8 @@ export function keyToDidDoc (pubKeyBytes: Uint8Array, fingerprint: string): any 
   * @throws TypeError: input cannot be null or undefined.
   */
 export function pubKeyBytesToHex(pubKeyBytes: Uint8Array) : string {
-  if(pubKeyBytes == null) {
-    throw new TypeError('input cannot be null or undefined.');
+  if(!testUint8Array(pubKeyBytes)) {
+    throw new TypeError('input must be a Uint8Array');
   }
  const bbf = u8a.toString(pubKeyBytes,'base16')
  return bbf;
@@ -166,7 +166,10 @@ export function testHexString(str : string) : boolean {
  * @param param
  * @returns
  */
-export function testUint8Array(param: string) : boolean {
+export function testUint8Array(param: Uint8Array) : boolean {
+  if(param == null) {
+     return false;
+  }
   if(param.constructor === Uint8Array) {
      return true;
   } else {
