@@ -158,6 +158,11 @@ export class Repository {
       if (!stream) {
         stream = await this.fromNetwork(streamId, opts);
       }
+
+      if (opts.sync == SyncOptions.NEVER_SYNC) {
+        return stream
+      }
+
       await this.stateManager.sync(stream, opts.syncTimeoutSeconds * 1000, fromStateStore);
       return stream
     });
