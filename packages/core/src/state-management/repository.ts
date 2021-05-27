@@ -94,7 +94,6 @@ export class Repository {
   }
 
   private async fromStateStore(streamId: StreamID): Promise<RunningState | undefined> {
-    console.trace('loading from state store')
     const streamState = await this.#deps.pinStore.stateStore.load(streamId);
     if (streamState) {
       const runningState = new RunningState(streamState);
