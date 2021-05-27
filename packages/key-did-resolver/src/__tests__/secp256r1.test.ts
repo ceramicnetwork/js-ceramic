@@ -69,13 +69,13 @@ test('expect ECPointDecompress to throw an error for null', () => {
 test('expect publicKeyIntToXY to throw an error for incorrect type', () => {
       expect(() => {
       mapper.publicKeyIntToXY(5);
-      }).toThrowError('input cannot be null or undefined.');
+      }).toThrowError('Input must be an object with properties x and y');
 });
 
 test('expect publicKeyIntToXY to throw an error for {x: null, y: null}', () => {
       expect(() => {
       mapper.publicKeyIntToXY({x: null, y: null});
-      }).toThrowError('input cannot be null or undefined.');
+      }).toThrowError('Input coordinates must be BigInt');
 });
 
 test('expect publicKeyIntToXY to throw an error for {x: undefined, y: undefined}', () => {
@@ -283,6 +283,30 @@ test('convert raw public key as a hex string into an x,y point with x and y base
   const base64urlPoint = mapper.publicKeyToXY(inputPublicKeyHex);
   expect(base64urlPoint).toEqual(output);
 });  
+
+test('expect publicKeyIntToXY to throw an error for incorrect type', () => {
+      expect(() => {
+      mapper.publicKeyIntToXY(5);
+      }).toThrowError('Input must be an object with properties x and y');
+});
+
+test('expect publicKeyIntToXY to throw an error for {x: null, y: null}', () => {
+      expect(() => {
+      mapper.publicKeyIntToXY({x: null, y: null});
+      }).toThrowError('Input coordinates must be BigInt');
+});
+
+test('expect publicKeyIntToXY to have properties x and y', () => {
+      expect(() => {
+      mapper.publicKeyIntToXY({x: 5n, z: 8n});
+      }).toThrowError('Input must have properties x and y');
+});
+
+test('expect publicKeyIntToXY to throw an error for {x: undefined, y: undefined}', () => {
+      expect(() => {
+      mapper.publicKeyIntToXY();
+      }).toThrowError('input cannot be null or undefined.');
+});
 
 test('expect publicKeyIntToUint8ArrayPointPair to throw an error for {x: undefined, y: undefined}', () => {
       expect(() => {

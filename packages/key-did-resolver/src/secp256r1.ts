@@ -150,15 +150,30 @@ export function publicKeyHexToUint8ArrayPointPair(publicKeyHex: string) : octetP
  * @param ecpoint - public key. Cannot be null or undefined.
  * @returns Uint8Array with bytes as base16
  * @throws TypeError: input cannot be null or undefined.
- */
+ * @throws Error: Input coordinates must be BigInt
+ * @throws Error: Input must have properties x and y
+ * @throws TypeError: Input must be an object with properties x and y
+*/
 export function publicKeyIntToXY(ecpoint: BigIntPoint): base64urlPoint  {
-  if(ecpoint.x == null || ecpoint.y == null) {
-     throw new TypeError('input cannot be null or undefined.');
-   }
-  const u8aOctetPoint = publicKeyIntToUint8ArrayPointPair(ecpoint);
-  const xm = u8a.toString(multibase.encode('base64url',u8aOctetPoint.xOctet));
-  const ym = u8a.toString(multibase.encode('base64url',u8aOctetPoint.yOctet));
-  return { xm, ym };
+  if(ecpoint == null) {
+      throw new TypeError('input cannot be null or undefined.');
+  }
+  if(typeof ecpoint === "object") {
+    if(Object.prototype.hasOwnProperty.call(ecpoint, "x") &&  Object.prototype.hasOwnProperty.call(ecpoint, "y")) {
+       if(typeof ecpoint.x === "bigint" &&  typeof ecpoint.y === "bigint") {
+         const u8aOctetPoint = publicKeyIntToUint8ArrayPointPair(ecpoint);
+         const xm = u8a.toString(multibase.encode('base64url',u8aOctetPoint.xOctet));
+         const ym = u8a.toString(multibase.encode('base64url',u8aOctetPoint.yOctet));
+         return { xm, ym };
+       } else {
+         throw new Error("Input coordinates must be BigInt");
+       }
+    } else {
+       throw new Error("Input must have properties x and y");
+    }
+  } else {
+     throw new TypeError("Input must be an object with properties x and y")
+  }
 }
 
 /**
