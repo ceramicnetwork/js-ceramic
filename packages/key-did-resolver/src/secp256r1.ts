@@ -150,7 +150,7 @@ export function publicKeyHexToUint8ArrayPointPair(publicKeyHex: string) : octetP
  * @param param
  * @returns boolean
  */
-export function testUint8Array(param: any) {
+export function testUint8Array(param: string) : boolean {
   if(param.constructor === Uint8Array) {
      return true;
   } else {
