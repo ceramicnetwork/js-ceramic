@@ -192,7 +192,7 @@ export function publicKeyIntToXY(ecpoint: BigIntPoint): base64urlPoint  {
 
   if(typeof ecpoint !== "object") { throw new TypeError("Input must be an object with properties x and y"); }
 
-  if(!(Object.prototype.hasOwnProperty.call(ecpoint, "x") &&  Object.prototype.hasOwnProperty.call(ecpoint, "y"))) { throw new Error("Input must have properties x and y"); }
+  if(!Object.prototype.hasOwnProperty.call(ecpoint, "x") ||  !Object.prototype.hasOwnProperty.call(ecpoint, "y")) { throw new Error("Input must have properties x and y"); }
 
   if(typeof ecpoint.x !== "bigint" &&  typeof ecpoint.y !== "bigint") { throw new Error("Input coordinates must be BigInt");  }
 
@@ -216,7 +216,7 @@ export function publicKeyIntToUint8ArrayPointPair(ecpoint: BigIntPoint) : octetP
 
      if(typeof ecpoint !== "object") { throw new TypeError("Input must be an object with properties x and y"); }
 
-     if(!(Object.prototype.hasOwnProperty.call(ecpoint, "x") &&  Object.prototype.hasOwnProperty.call(ecpoint, "y"))) { throw new Error("Input must have properties x and y"); }
+     if(!Object.prototype.hasOwnProperty.call(ecpoint, "x") ||  !Object.prototype.hasOwnProperty.call(ecpoint, "y")) { throw new Error("Input must have properties x and y"); }
 
      if(typeof ecpoint.x !== "bigint" &&  typeof ecpoint.y !== "bigint") { throw new Error("Input coordinates must be BigInt");  }
 
