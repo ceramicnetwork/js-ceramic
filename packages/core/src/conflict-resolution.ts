@@ -145,12 +145,19 @@ export class HistoryLog {
    * @param cid - CID value
    */
   async findIndex(cid: CID): Promise<number> {
-    for (let index = this.items.length - 1; index >= 0; index--) {
+    // First pass with no i/o, only considering commits in our log
+    for (let index = 0; index < this.items.length; index++) {
       const current = this.items[index];
       if (current.equals(cid)) {
         return index;
       }
-      const commit = await this.dispatcher.retrieveCommit(current);
+    }
+
+    // If we don't find it in any of the top-level commits in our log, do a second pass that
+    // loads the inner `link` records for the signed commits to see if one of those is the CID we
+    // are looking for
+    for (let index = 0; index < this.items.length; index++) {
+      const commit = await this.dispatcher.retrieveCommit(this.items[index]);
       if (commit && StreamUtils.isSignedCommit(commit) && commit.link && commit.link.equals(cid)) {
         return index;
       }
