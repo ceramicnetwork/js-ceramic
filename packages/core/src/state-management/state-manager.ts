@@ -29,7 +29,7 @@ export class StateManager {
    * only grows over time, in line with how many pinned streams get queried.
    * @private
    */
-  private readonly syncedPinnedStreams: Set<string>
+  private readonly syncedPinnedStreams: Set<string> = new Set()
 
   /**
    * @param dispatcher - currently used instance of Dispatcher
@@ -50,9 +50,7 @@ export class StateManager {
     private readonly logger: DiagnosticsLogger,
     private readonly fromMemoryOrStore: (streamId: StreamID) => Promise<RunningState | undefined>,
     private readonly load: (streamId: StreamID, opts?: LoadOpts | CreateOpts) => Promise<RunningState>,
-  ) {
-    this.syncedPinnedStreams = new Set<string>()
-  }
+  ) {}
 
   /**
    * Returns whether the given StreamID corresponds to a pinned stream that has been synced at least
