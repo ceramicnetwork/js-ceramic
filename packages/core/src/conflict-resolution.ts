@@ -145,7 +145,7 @@ export class HistoryLog {
    * @param cid - CID value
    */
   async findIndex(cid: CID): Promise<number> {
-    for (let index = 0; index < this.items.length; index++) {
+    for (let index = this.items.length - 1; index >= 0; index--) {
       const current = this.items[index];
       if (current.equals(cid)) {
         return index;
