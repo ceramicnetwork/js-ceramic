@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.4-rc.0](/compare/@ceramicnetwork/core@1.0.3...@ceramicnetwork/core@1.0.4-rc.0) (2021-05-28)
+
+
+### Bug Fixes
+
+* **core:** only sync pinned streams the first time they are loaded (#1417) 76be682, closes #1417
+
+
+
+
+
 ## [1.0.3](/compare/@ceramicnetwork/core@1.0.2...@ceramicnetwork/core@1.0.3) (2021-05-25)
 
 
