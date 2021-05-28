@@ -15,13 +15,21 @@ import {
 import { RunningState } from './running-state';
 import CID from 'cids';
 import { catchError, concatMap, takeUntil } from 'rxjs/operators';
-import { empty, Subscription, timer } from 'rxjs';
+import { Subscription, timer } from 'rxjs';
 import { SnapshotState } from './snapshot-state';
 import { CommitID, StreamID } from '@ceramicnetwork/streamid';
 
 const APPLY_ANCHOR_COMMIT_ATTEMPTS = 3
 
 export class StateManager {
+
+  /**
+   * Keeps track of every pinned StreamID that has had its state 'synced' (i.e. a query was sent to
+   * pubsub requesting the current tip for that stream) since the start of this process. This set
+   * only grows over time, in line with how many pinned streams get queried.
+   * @private
+   */
+  private readonly syncedPinnedStreams: Set<string> = new Set()
 
   /**
    * @param dispatcher - currently used instance of Dispatcher
@@ -45,19 +53,36 @@ export class StateManager {
   ) {}
 
   /**
+   * Returns whether the given StreamID corresponds to a pinned stream that has been synced at least
+   * once during the lifetime of this process. As long as it's been synced once, it's guaranteed to
+   * be up to date since we keep streams in the state store up to date when we hear pubsub messages
+   * about updates to them.
+   * @param streamId
+   */
+  wasPinnedStreamSynced(streamId: StreamID): boolean {
+    return this.syncedPinnedStreams.has(streamId.toString())
+  }
+
+  /**
    * Takes a stream state that might not contain the complete log (and might in fact contain only the
    * genesis commit) and kicks off the process to load and apply the most recent Tip to it.
    * @param state$
    * @param timeoutMillis
+   * @param pinned - True if the stream was loaded from the state store, indicating that the stream
+   *   is pinned. Pinned streams get added to the `syncedPinnedStreams` set when they are synced.
    */
-  async sync(state$: RunningState, timeoutMillis: number): Promise<void> {
+  async sync(state$: RunningState, timeoutMillis: number, pinned: boolean): Promise<void> {
     const tip$ = this.dispatcher.messageBus.queryNetwork(state$.id);
     await tip$
       .pipe(
         takeUntil(timer(timeoutMillis)),
         concatMap((tip) => this._handleTip(state$, tip)),
       )
-      .toPromise();
+      .toPromise().then(() => {
+        if (pinned) {
+          this.syncedPinnedStreams.add(state$.id.toString())
+        }
+      });
   }
 
   /**

@@ -43,10 +43,44 @@ describe('load', () => {
     const fromStateStoreSpy = jest.spyOn(repository, 'fromStateStore');
     const fromNetwork = jest.spyOn(repository, 'fromNetwork');
     const stream2 = await repository.load(stream1.id, { syncTimeoutSeconds: 0 });
-    expect(StreamUtils.statesEqual(stream1.state, stream2.state)).toBeTruthy();
+    expect(StreamUtils.serializeState(stream1.state)).toEqual(StreamUtils.serializeState(stream2.state))
     expect(fromMemorySpy).toBeCalledTimes(1);
     expect(fromStateStoreSpy).toBeCalledTimes(0);
     expect(fromNetwork).toBeCalledTimes(0);
+  });
+
+  test('from state store', async () => {
+    jest.setTimeout(10000000) // todo remove
+    const fromMemorySpy = jest.spyOn(repository, 'fromMemory');
+    const fromStateStoreSpy = jest.spyOn(repository, 'fromStateStore');
+    const fromNetworkSpy = jest.spyOn(repository, 'fromNetwork');
+    const syncSpy = jest.spyOn(repository.stateManager, 'sync')
+
+    const stream1 = await TileDocument.create(ceramic, { foo: 'bar' }, null, { anchor: false });
+    await ceramic.pin.add(stream1.id)
+
+    fromMemorySpy.mockClear()
+    fromStateStoreSpy.mockClear()
+    fromNetworkSpy.mockClear()
+    syncSpy.mockClear()
+    fromMemorySpy.mockReturnValueOnce(null)
+    fromMemorySpy.mockReturnValueOnce(null)
+
+    const stream2 = await repository.load(stream1.id, { syncTimeoutSeconds: 0 });
+    expect(StreamUtils.serializeState(stream2.state)).toEqual(StreamUtils.serializeState(stream1.state))
+    expect(fromMemorySpy).toBeCalledTimes(1);
+    expect(fromStateStoreSpy).toBeCalledTimes(1);
+    expect(fromNetworkSpy).toBeCalledTimes(0);
+    // First time loading from state store it needs to be synced
+    expect(syncSpy).toBeCalledTimes(1);
+
+    const stream3 = await repository.load(stream1.id, { syncTimeoutSeconds: 0 });
+    expect(StreamUtils.serializeState(stream3.state)).toEqual(StreamUtils.serializeState(stream1.state))
+    expect(fromMemorySpy).toBeCalledTimes(2);
+    expect(fromStateStoreSpy).toBeCalledTimes(2);
+    expect(fromNetworkSpy).toBeCalledTimes(0);
+    // Second time loading from state store it does not need to be synced again
+    expect(syncSpy).toBeCalledTimes(1);
   });
 });
 

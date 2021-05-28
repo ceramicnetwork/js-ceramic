@@ -13,6 +13,12 @@ export enum SyncOptions {
      *   for the response, regardless of whether or not the stream is found in the node's cache
      */
     SYNC_ALWAYS,
+
+    /**
+     * Do not query pubsub for the new tip in any circumstance. This means that if the stream
+     * is not in cache or the pin store, then only the genesis commit for the stream will be returned
+     */
+    NEVER_SYNC,
 }
 
 interface BasicLoadOpts {

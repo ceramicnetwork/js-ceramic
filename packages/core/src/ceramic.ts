@@ -600,7 +600,7 @@ class Ceramic implements CeramicApi {
     this.repository.listPinned().then(async list => {
       let n = 0
       await Promise.all(list.map(async streamId => {
-        await this._loadStream(StreamID.fromString(streamId), { sync: SyncOptions.SYNC_ALWAYS })
+        await this._loadStream(StreamID.fromString(streamId), { sync: SyncOptions.NEVER_SYNC })
         n++;
       }))
       this._logger.verbose(`Successfully restored ${n} pinned streams`)
