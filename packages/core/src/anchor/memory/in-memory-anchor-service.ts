@@ -53,6 +53,9 @@ class InMemoryAnchorService implements AnchorService {
   readonly #verifySignatures: boolean;
   readonly #feed: Subject<AnchorServiceResponse> = new Subject();
 
+  // Maps CID of a specific anchor request to the current status of that request
+  readonly #anchors: Map<string, AnchorServiceResponse> = new Map()
+
   #queue: Candidate[] = [];
 
   constructor(_config: InMemoryAnchorConfig) {
@@ -166,7 +169,7 @@ class InMemoryAnchorService implements AnchorService {
     if (!message) {
       message = `Rejecting request to anchor CID ${candidate.cid.toString()} for stream ${candidate.streamId.toString()} because there is a better CID to anchor for the same stream`;
     }
-    this.#feed.next({
+    this._emitResponse({
       status: AnchorStatus.FAILED,
       streamId: candidate.streamId,
       cid: candidate.cid,
@@ -227,18 +230,27 @@ class InMemoryAnchorService implements AnchorService {
   }
 
   /**
+   * Stores the given AnchorServiceResponse as the current state of the anchor request to handle
+   * any future requests for the current status of the anchor, and then emits the response to
+   * the global event feed so that any currently polling subscriptions can receive it.
+   * @param asr
+   * @private
+   */
+  private _emitResponse(asr: AnchorServiceResponse) {
+    this.#anchors.set(asr.cid.toString(), asr)
+    this.#feed.next(asr)
+  }
+
+  /**
    * Send request to the anchoring service
    * @param streamId - Stream ID
    * @param tip - Commit CID
    */
   requestAnchor(streamId: StreamID, tip: CID): Observable<AnchorServiceResponse> {
     const candidate = new Candidate(tip, streamId);
-    const feed$ = this.#feed.pipe(
-      filter((asr) => asr.streamId.equals(streamId) && asr.cid.equals(tip))
-    );
     if (this.#anchorOnRequest) {
       this._process(candidate).catch((error) => {
-        this.#feed.next({
+        this._emitResponse({
           status: AnchorStatus.FAILED,
           streamId: candidate.streamId,
           cid: candidate.cid,
@@ -248,16 +260,43 @@ class InMemoryAnchorService implements AnchorService {
     } else {
       this.#queue.push(candidate);
     }
-    return concat(
-      of<AnchorServiceResponse>({
-        status: AnchorStatus.PENDING,
-        streamId: streamId,
-        cid: tip,
-        message: "Sending anchoring request",
-        anchorScheduledFor: null,
-      }),
-      feed$
+    this._emitResponse({
+      status: AnchorStatus.PENDING,
+      streamId: streamId,
+      cid: tip,
+      message: "Sending anchoring request",
+      anchorScheduledFor: null,
+    })
+    return this.pollForAnchorResponse(streamId, tip)
+  }
+
+  /**
+   * Start polling the anchor service to learn of the results of an existing anchor request for the
+   * given tip for the given stream.
+   * @param streamId - Stream ID
+   * @param tip - Tip CID of the stream
+   */
+  pollForAnchorResponse(streamId: StreamID, tip: CID): Observable<AnchorServiceResponse> {
+    const anchorResponse = this.#anchors.get(tip.toString())
+    const feed$ = this.#feed.pipe(
+      filter((asr) => asr.streamId.equals(streamId) && asr.cid.equals(tip))
     );
+
+    if (anchorResponse) {
+      return concat(
+        of<AnchorServiceResponse>(anchorResponse),
+        feed$
+      );
+    } else {
+      return concat(
+        of<AnchorServiceResponse>({
+          status: AnchorStatus.FAILED,
+          streamId,
+          cid: tip,
+          message: "Request not found",
+        }),
+        feed$);
+    }
   }
 
   /**
@@ -278,16 +317,17 @@ class InMemoryAnchorService implements AnchorService {
     const commit = { proof, path: "", prev: leaf.cid };
     const cid = await this.#dispatcher.storeCommit(commit);
 
+    const anchorResponse: AnchorServiceResponse = {
+      status: AnchorStatus.ANCHORED,
+      streamId: leaf.streamId,
+      cid: leaf.cid,
+      message: "CID successfully anchored",
+      anchorRecord: cid,
+    }
+
     // add a delay
     const handle = setTimeout(() => {
-      this.#feed.next({
-        status: AnchorStatus.ANCHORED,
-        streamId: leaf.streamId,
-        cid: leaf.cid,
-        message: "CID successfully anchored",
-        anchorRecord: cid,
-      });
-      clearTimeout(handle);
+      this._emitResponse(anchorResponse);
     }, this.#anchorDelay);
   }
 

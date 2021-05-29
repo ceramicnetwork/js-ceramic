@@ -72,6 +72,14 @@ export interface AnchorService {
   requestAnchor(streamId: StreamID, tip: CID): Observable<AnchorServiceResponse>;
 
   /**
+   * Start polling the anchor service to learn of the results of an existing anchor request for the
+   * given tip for the given stream.
+   * @param streamId - Stream ID
+   * @param tip - Tip CID of the stream
+   */
+  pollForAnchorResponse(streamId: StreamID, tip: CID): Observable<AnchorServiceResponse>;
+
+  /**
    * Validate anchor proof commit
    * @param anchorProof - Proof of blockchain inclusion
    */

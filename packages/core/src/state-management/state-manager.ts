@@ -4,6 +4,7 @@ import { ExecutionQueue } from './execution-queue';
 import { commitAtTime, ConflictResolution } from '../conflict-resolution';
 import {
   AnchorService,
+  AnchorServiceResponse,
   AnchorStatus,
   CreateOpts,
   LoadOpts,
@@ -15,7 +16,7 @@ import {
 import { RunningState } from './running-state';
 import CID from 'cids';
 import { catchError, concatMap, takeUntil } from 'rxjs/operators';
-import { empty, Subscription, timer } from 'rxjs';
+import { empty, Observable, Subscription, timer } from 'rxjs';
 import { SnapshotState } from './snapshot-state';
 import { CommitID, StreamID } from '@ceramicnetwork/streamid';
 
@@ -223,6 +224,19 @@ export class StateManager {
    */
   anchor(state$: RunningState): Subscription {
     const anchorStatus$ = this.anchorService.requestAnchor(state$.id, state$.tip);
+    return this._processAnchorResponse(state$, anchorStatus$)
+  }
+
+  /**
+   * Restart polling and handle response for a previously submitted anchor request
+   */
+  confirmAnchorResponse(state$: RunningState): Subscription {
+    const anchorStatus$ = this.anchorService.pollForAnchorResponse(state$.id, state$.tip);
+    return this._processAnchorResponse(state$, anchorStatus$)
+  }
+
+  private _processAnchorResponse(
+      state$: RunningState, anchorStatus$: Observable<AnchorServiceResponse>): Subscription {
     const subscription = anchorStatus$
       .pipe(
         concatMap(async (asr) => {
