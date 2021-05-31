@@ -30,8 +30,8 @@ jobs:
           ECR_REPOSITORY: "ceramic-debug"
         run: |
           SHA_TAG=$(git rev-parse --short=12 "${{ github.sha }}")
-          echo "::set-output name=CERAMIC_IMAGE::$ECR_REGISTRY/$ECR_REPOSITORY/js-ceramic"
-          echo "::set-output name=IPFS_IMAGE::$ECR_REGISTRY/$ECR_REPOSITORY/ipfs-daemon"
+          echo "::set-output name=CERAMIC_IMAGE::$ECR_REPOSITORY/js-ceramic"
+          echo "::set-output name=IPFS_IMAGE::$ECR_REPOSITORY/ipfs-daemon"
           echo "::set-output name=CERAMIC_SVC::ceramic-dev-ex-node"
           echo "::set-output name=IPFS_SVC::ceramic-dev-ex-ipfs-nd"
           echo "::set-output name=SHA_TAG::$SHA_TAG"
