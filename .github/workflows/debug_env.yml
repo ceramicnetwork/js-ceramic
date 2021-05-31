@@ -97,9 +97,9 @@ jobs:
       #     timeout: "360"
       #     use_latest_task_def: "--use-latest-task-def"
       #     verbose: "--verbose"
-            # . ./github/workflows/stopTasks.sh ${{ steps.set-vars.outputs.CLUSTER }} ${{ steps.set-vars.outputs.CERAMIC_SVC }}
-            # . ./github/workflows/stopTasks.sh ${{ steps.set-vars.outputs.CLUSTER }} ${{ steps.set-vars.outputs.IPFS_SVC }}
+            # ./stopTasks.sh ${{ steps.set-vars.outputs.CLUSTER }} ${{ steps.set-vars.outputs.CERAMIC_SVC }}
+            # ./stopTasks.sh ${{ steps.set-vars.outputs.CLUSTER }} ${{ steps.set-vars.outputs.IPFS_SVC }}
       - name: Stop/restart running tasks
         run: |
-            cd ./github/workflows
+            cd .github/workflows
             ls -la
