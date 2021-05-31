@@ -42,64 +42,65 @@ jobs:
           echo "::set-output name=IPFS_SVC::$ECS_CLUSTER-ipfs-nd"
           echo "::set-output name=SHA_TAG::$SHA_TAG"
 
-      # - name: Build and push Ceramic image to ECR
-      #   uses: whoan/docker-build-with-cache-action@v5
-      #   with:
-      #     registry: ${{ steps.login-ecr.outputs.registry }}
-      #     image_name: ${{ steps.set-vars.outputs.CERAMIC_IMAGE }}
-      #     image_tag: ${{ steps.set-vars.outputs.SHA_TAG }},debug
-      #     dockerfile: Dockerfile.daemon
+      - name: Build and push Ceramic image to ECR
+        uses: whoan/docker-build-with-cache-action@v5
+        with:
+          registry: ${{ steps.login-ecr.outputs.registry }}
+          image_name: ${{ steps.set-vars.outputs.CERAMIC_IMAGE }}
+          image_tag: ${{ steps.set-vars.outputs.SHA_TAG }},debug
+          dockerfile: Dockerfile.daemon
 
-      # - name: Build and push IPFS image to ECR
-      #   uses: whoan/docker-build-with-cache-action@v5
-      #   with:
-      #     registry: ${{ steps.login-ecr.outputs.registry }}
-      #     image_name: ${{ steps.set-vars.outputs.IPFS_IMAGE }}
-      #     image_tag: ${{ steps.set-vars.outputs.SHA_TAG }},debug
-      #     dockerfile: Dockerfile.ipfs-daemon
+      - name: Build and push IPFS image to ECR
+        uses: whoan/docker-build-with-cache-action@v5
+        with:
+          registry: ${{ steps.login-ecr.outputs.registry }}
+          image_name: ${{ steps.set-vars.outputs.IPFS_IMAGE }}
+          image_tag: ${{ steps.set-vars.outputs.SHA_TAG }},debug
+          dockerfile: Dockerfile.ipfs-daemon
 
-      # - name: Update Ceramic
-      #   uses: silinternational/ecs-deploy@master
-      #   with:
-      #     aws_access_key_cmd: "--aws-access-key"
-      #     aws_access_key: ${{ secrets.DEBUG_AWS_ACCESS_KEY_ID }}
-      #     aws_secret_key_cmd: "--aws-secret-key"
-      #     aws_secret_key: ${{ secrets.DEBUG_AWS_SECRET_ACCESS_KEY }}
-      #     cluster_cmd: "--cluster"
-      #     cluster: ${{ steps.set-vars.outputs.CLUSTER }}
-      #     image_cmd: "--image"
-      #     image: ${{ steps.set-vars.outputs.CERAMIC_IMAGE }}:${{ steps.set-vars.outputs.SHA_TAG }}
-      #     region_cmd: "--region"
-      #     region: ${{ secrets.DEBUG_AWS_REGION }}
-      #     service_name_cmd: "--service-name"
-      #     service_name: ${{ steps.set-vars.outputs.CERAMIC_SVC }}
-      #     timeout_cmd: "--timeout"
-      #     timeout: "360"
-      #     use_latest_task_def: "--use-latest-task-def"
-      #     verbose: "--verbose"
+      - name: Update Ceramic
+        uses: silinternational/ecs-deploy@master
+        with:
+          aws_access_key_cmd: "--aws-access-key"
+          aws_access_key: ${{ secrets.DEBUG_AWS_ACCESS_KEY_ID }}
+          aws_secret_key_cmd: "--aws-secret-key"
+          aws_secret_key: ${{ secrets.DEBUG_AWS_SECRET_ACCESS_KEY }}
+          cluster_cmd: "--cluster"
+          cluster: ${{ steps.set-vars.outputs.CLUSTER }}
+          image_cmd: "--image"
+          image: ${{ steps.login-ecr.outputs.registry }}/${{ steps.set-vars.outputs.CERAMIC_IMAGE }}:${{ steps.set-vars.outputs.SHA_TAG }}
+          region_cmd: "--region"
+          region: ${{ secrets.DEBUG_AWS_REGION }}
+          service_name_cmd: "--service-name"
+          service_name: ${{ steps.set-vars.outputs.CERAMIC_SVC }}
+          timeout_cmd: "--timeout"
+          timeout: "360"
+          use_latest_task_def: "--use-latest-task-def"
+          verbose: "--verbose"
 
-      # - name: Update IPFS
-      #   uses: silinternational/ecs-deploy@master
-      #   with:
-      #     aws_access_key_cmd: "--aws-access-key"
-      #     aws_access_key: ${{ secrets.DEBUG_AWS_ACCESS_KEY_ID }}
-      #     aws_secret_key_cmd: "--aws-secret-key"
-      #     aws_secret_key: ${{ secrets.DEBUG_AWS_SECRET_ACCESS_KEY }}
-      #     cluster_cmd: "--cluster"
-      #     cluster: ${{ steps.set-vars.outputs.CLUSTER }}
-      #     image_cmd: "--image"
-      #     image: ${{ steps.set-vars.outputs.IPFS_IMAGE }}:${{ steps.set-vars.outputs.SHA_TAG }}
-      #     region_cmd: "--region"
-      #     region: ${{ secrets.DEBUG_AWS_REGION }}
-      #     service_name_cmd: "--service-name"
-      #     service_name: ${{ steps.set-vars.outputs.IPFS_SVC }}
-      #     timeout_cmd: "--timeout"
-      #     timeout: "360"
-      #     use_latest_task_def: "--use-latest-task-def"
-      #     verbose: "--verbose"
-            # ./stopTasks.sh ${{ steps.set-vars.outputs.CLUSTER }} ${{ steps.set-vars.outputs.CERAMIC_SVC }}
-            # ./stopTasks.sh ${{ steps.set-vars.outputs.CLUSTER }} ${{ steps.set-vars.outputs.IPFS_SVC }}
-      - name: Stop/restart running tasks
-        run: |
-            cd .github/workflows
-            ls -la
+      - name: Update IPFS
+        uses: silinternational/ecs-deploy@master
+        with:
+          aws_access_key_cmd: "--aws-access-key"
+          aws_access_key: ${{ secrets.DEBUG_AWS_ACCESS_KEY_ID }}
+          aws_secret_key_cmd: "--aws-secret-key"
+          aws_secret_key: ${{ secrets.DEBUG_AWS_SECRET_ACCESS_KEY }}
+          cluster_cmd: "--cluster"
+          cluster: ${{ steps.set-vars.outputs.CLUSTER }}
+          image_cmd: "--image"
+          image: ${{ steps.login-ecr.outputs.registry }}/${{ steps.set-vars.outputs.IPFS_IMAGE }}:${{ steps.set-vars.outputs.SHA_TAG }}
+          region_cmd: "--region"
+          region: ${{ secrets.DEBUG_AWS_REGION }}
+          service_name_cmd: "--service-name"
+          service_name: ${{ steps.set-vars.outputs.IPFS_SVC }}
+          timeout_cmd: "--timeout"
+          timeout: "360"
+          use_latest_task_def: "--use-latest-task-def"
+          verbose: "--verbose"
+
+      # - name: Stop/restart running tasks
+      #   run: |
+      #       cd .github/workflows
+      #       chmod +x stopTasks.sh
+      #       ./stopTasks.sh ${{ steps.set-vars.outputs.CLUSTER }} ${{ steps.set-vars.outputs.CERAMIC_SVC }}
+      #       ./stopTasks.sh ${{ steps.set-vars.outputs.CLUSTER }} ${{ steps.set-vars.outputs.IPFS_SVC }}
