@@ -5,8 +5,7 @@ on:
     branches: [ debug_* ]
 
 jobs:
-  build_and_push_images:
-    name: Build and push
+  build_and_deploy_images:
     runs-on: ubuntu-latest
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.DEBUG_AWS_ACCESS_KEY_ID }}
@@ -30,32 +29,32 @@ jobs:
       - name: Set Variables
         id: set-vars
         env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: "ceramic-debug"
           ECS_CLUSTER: "ceramic-dev-ex"
         run: |
           SHA_TAG=$(git rev-parse --short=12 "${{ github.sha }}")
-          echo "::set-output name=CERAMIC_IMAGE::$ECR_REPOSITORY/js-ceramic"
-          echo "::set-output name=IPFS_IMAGE::$ECR_REPOSITORY/ipfs-daemon"
-          echo "::set-output name=CLUSTER::$ECS_CLUSTER"
+          echo "::set-output name=ECR_REPOSITORY::$ECR_REPOSITORY"
+          echo "::set-output name=ECS_CLUSTER::$ECS_CLUSTER"
           echo "::set-output name=CERAMIC_SVC::$ECS_CLUSTER-node"
           echo "::set-output name=IPFS_SVC::$ECS_CLUSTER-ipfs-nd"
           echo "::set-output name=SHA_TAG::$SHA_TAG"
 
       - name: Build and push Ceramic image to ECR
+        id: build-ceramic
         uses: whoan/docker-build-with-cache-action@v5
         with:
           registry: ${{ steps.login-ecr.outputs.registry }}
-          image_name: ${{ steps.set-vars.outputs.CERAMIC_IMAGE }}
-          image_tag: ${{ steps.set-vars.outputs.SHA_TAG }},debug
+          image_name: ${{ steps.set-vars.outputs.ECR_REPOSITORY }}/js-ceramic
+          image_tag: ${{ steps.set-vars.outputs.SHA_TAG }}
           dockerfile: Dockerfile.daemon
 
       - name: Build and push IPFS image to ECR
+        id: build-ipfs
         uses: whoan/docker-build-with-cache-action@v5
         with:
           registry: ${{ steps.login-ecr.outputs.registry }}
-          image_name: ${{ steps.set-vars.outputs.IPFS_IMAGE }}
-          image_tag: ${{ steps.set-vars.outputs.SHA_TAG }},debug
+          image_name: ${{ steps.set-vars.outputs.ECR_REPOSITORY }}/ipfs-daemon
+          image_tag: ${{ steps.set-vars.outputs.SHA_TAG }}
           dockerfile: Dockerfile.ipfs-daemon
 
       - name: Update Ceramic
@@ -66,9 +65,9 @@ jobs:
           aws_secret_key_cmd: "--aws-secret-key"
           aws_secret_key: ${{ secrets.DEBUG_AWS_SECRET_ACCESS_KEY }}
           cluster_cmd: "--cluster"
-          cluster: ${{ steps.set-vars.outputs.CLUSTER }}
+          cluster: ${{ steps.set-vars.outputs.ECS_CLUSTER }}
           image_cmd: "--image"
-          image: ${{ steps.login-ecr.outputs.registry }}/${{ steps.set-vars.outputs.CERAMIC_IMAGE }}:${{ steps.set-vars.outputs.SHA_TAG }}
+          image: ${{ steps.build-ceramic.outputs.FULL_IMAGE_NAME }}
           region_cmd: "--region"
           region: ${{ secrets.DEBUG_AWS_REGION }}
           service_name_cmd: "--service-name"
@@ -86,9 +85,9 @@ jobs:
           aws_secret_key_cmd: "--aws-secret-key"
           aws_secret_key: ${{ secrets.DEBUG_AWS_SECRET_ACCESS_KEY }}
           cluster_cmd: "--cluster"
-          cluster: ${{ steps.set-vars.outputs.CLUSTER }}
+          cluster: ${{ steps.set-vars.outputs.ECS_CLUSTER }}
           image_cmd: "--image"
-          image: ${{ steps.login-ecr.outputs.registry }}/${{ steps.set-vars.outputs.IPFS_IMAGE }}:${{ steps.set-vars.outputs.SHA_TAG }}
+          image: ${{ steps.build-ipfs.outputs.FULL_IMAGE_NAME }}
           region_cmd: "--region"
           region: ${{ secrets.DEBUG_AWS_REGION }}
           service_name_cmd: "--service-name"
@@ -102,5 +101,5 @@ jobs:
       #   run: |
       #       cd .github/workflows
       #       chmod +x stopTasks.sh
-      #       ./stopTasks.sh ${{ steps.set-vars.outputs.CLUSTER }} ${{ steps.set-vars.outputs.CERAMIC_SVC }}
-      #       ./stopTasks.sh ${{ steps.set-vars.outputs.CLUSTER }} ${{ steps.set-vars.outputs.IPFS_SVC }}
+      #       ./stopTasks.sh ${{ steps.set-vars.outputs.ECS_CLUSTER }} ${{ steps.set-vars.outputs.CERAMIC_SVC }}
+      #       ./stopTasks.sh ${{ steps.set-vars.outputs.ECS_CLUSTER }} ${{ steps.set-vars.outputs.IPFS_SVC }}
