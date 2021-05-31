@@ -58,7 +58,7 @@ jobs:
           dockerfile: Dockerfile.ipfs-daemon
 
       - name: Update Ceramic
-        uses: silinternational/ecs-deploy@master
+        uses: silinternational/ecs-deploy@develop
         with:
           aws_access_key_cmd: "--aws-access-key"
           aws_access_key: ${{ secrets.DEBUG_AWS_ACCESS_KEY_ID }}
@@ -78,7 +78,7 @@ jobs:
           verbose: "--verbose"
 
       - name: Update IPFS
-        uses: silinternational/ecs-deploy@master
+        uses: silinternational/ecs-deploy@develop
         with:
           aws_access_key_cmd: "--aws-access-key"
           aws_access_key: ${{ secrets.DEBUG_AWS_ACCESS_KEY_ID }}
