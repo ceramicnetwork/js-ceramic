@@ -1,5 +1,5 @@
 import type { Observable, OperatorFunction, Subscribable } from "rxjs";
-import type { DocState, DocStateHolder } from './doctype';
+import type { StreamState, StreamStateHolder } from './stream';
 
 /**
  * `pipe` aspect of rxjs Observable.
@@ -18,7 +18,7 @@ export interface Pipeable<T> {
   pipe<A, B, C, D, E, F, G, H, I>(op1: OperatorFunction<T, A>, op2: OperatorFunction<A, B>, op3: OperatorFunction<B, C>, op4: OperatorFunction<C, D>, op5: OperatorFunction<D, E>, op6: OperatorFunction<E, F>, op7: OperatorFunction<F, G>, op8: OperatorFunction<G, H>, op9: OperatorFunction<H, I>, ...operations: OperatorFunction<any, any>[]): Observable<any>;
 }
 
-export interface RunningStateLike extends DocStateHolder, Subscribable<DocState>, Pipeable<DocState> {
-  value: DocState;
-  next(value: DocState): void;
+export interface RunningStateLike extends StreamStateHolder, Subscribable<StreamState>, Pipeable<StreamState> {
+  value: StreamState;
+  next(value: StreamState): void;
 }

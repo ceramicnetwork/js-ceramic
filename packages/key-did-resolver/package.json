@@ -1,6 +1,6 @@
 {
   "name": "key-did-resolver",
-  "version": "1.1.1",
+  "version": "1.2.1",
   "description": "Ceramic did:key method resolver",
   "keywords": [
     "ceramic",
@@ -19,11 +19,11 @@
     "lib"
   ],
   "scripts": {
-    "test": "./node_modules/.bin/jest --coverage --env=node",
+    "test": "../../node_modules/.bin/jest --silent --coverage --env=node",
     "build": "../../node_modules/.bin/tsc -p tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
-    "lint": "./node_modules/.bin/eslint ./src --ext .js,.jsx,.ts,.tsx",
+    "lint": "../../node_modules/.bin/eslint ./src --ext .js,.jsx,.ts,.tsx",
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
@@ -34,24 +34,10 @@
     "bigint-mod-arith": "^3.0.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.9.0",
-    "@babel/preset-env": "^7.8.4",
-    "@babel/preset-typescript": "^7.9.0",
     "@types/multibase": "~3.1.0",
     "@types/node": "^13.13.15",
     "@types/varint": "^5.0.0",
-    "@typescript-eslint/eslint-plugin": "^4.6.0",
-    "@typescript-eslint/parser": "^4.6.0",
-    "babel-jest": "^26.6.3",
-    "did-resolver": "^3.0.1",
-    "eslint": "^6.8.0",
-    "eslint-plugin-jest": "^23.8.2",
-    "jest": "^26.6.3"
-  },
-  "jest": {
-    "transformIgnorePatterns": [
-      "/node_modules(?!/did-jwt)/"
-    ]
+    "did-resolver": "^3.1.0"
   },
   "gitHead": "c58eb9659f5fdd976aca2db6465619c20ba30ff9"
 }

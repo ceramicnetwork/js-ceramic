@@ -1,0 +1,47 @@
+{
+  "name": "@ceramicnetwork/stream-tile-handler",
+  "version": "1.0.4",
+  "description": "Ceramic Tile Document stream handler",
+  "keywords": [
+    "ceramic",
+    "tile",
+    "handler"
+  ],
+  "homepage": "https://ceramic.network",
+  "license": "(Apache-2.0 OR MIT)",
+  "directories": {
+    "lib": "lib"
+  },
+  "main": "lib/index.js",
+  "files": [
+    "lib"
+  ],
+  "scripts": {
+    "test": "../../node_modules/.bin/jest --silent --coverage --env=node",
+    "build": "../../node_modules/.bin/tsc -p tsconfig.json",
+    "prepublishOnly": "npm run build",
+    "prebuild": "npm run clean",
+    "lint": "../../node_modules/.bin/eslint ./src --ext .js,.jsx,.ts,.tsx",
+    "clean": "rm -rf ./lib"
+  },
+  "dependencies": {
+    "@ceramicnetwork/common": "^1.0.4",
+    "@ceramicnetwork/stream-tile": "^1.0.4",
+    "fast-json-patch": "^2.2.1",
+    "lodash.clonedeep": "^4.5.0"
+  },
+  "devDependencies": {
+    "@ceramicnetwork/3id-did-resolver": "^1.2.4",
+    "@stablelib/sha256": "^1.0.0",
+    "@types/lodash.clonedeep": "^4.5.6",
+    "cids": "~1.1.6",
+    "did-resolver": "^3.1.0",
+    "dids": "^2.1.0",
+    "ipld-dag-cbor": "^0.17.0",
+    "key-did-resolver": "^1.2.1"
+  },
+  "jest": {
+    "testEnvironment": "jest-environment-uint8array"
+  },
+  "gitHead": "4f42c6ac204ad25e66efda4e24aed12c339b3c98"
+}

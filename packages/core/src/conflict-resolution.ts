@@ -1,4 +1,4 @@
-import CID from 'cids';
+import type CID from 'cids';
 import {
   AnchorCommit,
   AnchorProof,
@@ -6,15 +6,15 @@ import {
   AnchorStatus,
   CommitType,
   Context,
-  DocState,
-  DocStateHolder,
-  Doctype,
-  DoctypeHandler,
-  DoctypeUtils,
+  StreamState,
+  StreamStateHolder,
+  Stream,
+  StreamHandler,
+  StreamUtils,
 } from '@ceramicnetwork/common';
 import { Dispatcher } from './dispatcher';
 import cloneDeep from 'lodash.clonedeep';
-import { CommitID } from '@ceramicnetwork/docid';
+import { CommitID } from '@ceramicnetwork/streamid';
 import { StateValidation } from './state-management/state-validation';
 import { HandlersMap } from './handlers-map';
 
@@ -60,13 +60,13 @@ async function verifyAnchorCommit(
 }
 
 /**
- * Given two different DocStates representing two different conflicting histories of the same
- * document, pick which commit to accept, in accordance with our conflict resolution strategy
+ * Given two different StreamStates representing two different conflicting histories of the same
+ * stream, pick which commit to accept, in accordance with our conflict resolution strategy
  * @param state1 - first log's state
  * @param state2 - second log's state
- * @returns the DocState containing the log that is selected
+ * @returns the StreamState containing the log that is selected
  */
-export async function pickLogToAccept(state1: DocState, state2: DocState): Promise<DocState> {
+export async function pickLogToAccept(state1: StreamState, state2: StreamState): Promise<StreamState> {
   const isState1Anchored = state1.anchorStatus === AnchorStatus.ANCHORED;
   const isState2Anchored = state2.anchorStatus === AnchorStatus.ANCHORED;
 
@@ -83,7 +83,7 @@ export async function pickLogToAccept(state1: DocState, state2: DocState): Promi
     if (proof1.chainId != proof2.chainId) {
       // TODO: Add logic to handle conflicting updates anchored on different chains
       throw new Error(
-        'Conflicting logs on the same document are anchored on different chains. Chain1: ' +
+        'Conflicting logs on the same stream are anchored on different chains. Chain1: ' +
           proof1.chainId +
           ', chain2: ' +
           proof2.chainId,
@@ -115,7 +115,7 @@ export async function pickLogToAccept(state1: DocState, state2: DocState): Promi
 }
 
 export class HistoryLog {
-  static fromState(dispatcher: Dispatcher, state: DocState): HistoryLog {
+  static fromState(dispatcher: Dispatcher, state: StreamState): HistoryLog {
     return new HistoryLog(
       dispatcher,
       state.log.map((_) => _.cid),
@@ -145,13 +145,20 @@ export class HistoryLog {
    * @param cid - CID value
    */
   async findIndex(cid: CID): Promise<number> {
+    // First pass with no i/o, only considering commits in our log
     for (let index = 0; index < this.items.length; index++) {
       const current = this.items[index];
       if (current.equals(cid)) {
         return index;
       }
-      const commit = await this.dispatcher.retrieveCommit(current);
-      if (commit && DoctypeUtils.isSignedCommit(commit) && commit.link && commit.link.equals(cid)) {
+    }
+
+    // If we don't find it in any of the top-level commits in our log, do a second pass that
+    // loads the inner `link` records for the signed commits to see if one of those is the CID we
+    // are looking for
+    for (let index = 0; index < this.items.length; index++) {
+      const commit = await this.dispatcher.retrieveCommit(this.items[index]);
+      if (commit && StreamUtils.isSignedCommit(commit) && commit.link && commit.link.equals(cid)) {
         return index;
       }
     }
@@ -170,7 +177,7 @@ export class HistoryLog {
  *
  * @param dispatcher - Get commit from IPFS
  * @param cid - Commit CID
- * @param stateLog - Log from the current document state
+ * @param stateLog - Log from the current stream state
  * @param log - Found log so far
  * @private
  */
@@ -190,7 +197,7 @@ export async function fetchLog(
   }
 
   let payload = commit;
-  if (DoctypeUtils.isSignedCommit(commit)) {
+  if (StreamUtils.isSignedCommit(commit)) {
     payload = await dispatcher.retrieveCommit(commit.link);
     if (payload == null) {
       throw new Error(`No commit found for CID ${commit.link.toString()}`);
@@ -209,7 +216,7 @@ export async function fetchLog(
   return fetchLog(dispatcher, prevCid, stateLog, log);
 }
 
-export function commitAtTime(stateHolder: DocStateHolder, timestamp: number): CommitID {
+export function commitAtTime(stateHolder: StreamStateHolder, timestamp: number): CommitID {
   let commitCid: CID = stateHolder.state.log[0].cid;
   for (const entry of stateHolder.state.log) {
     if (entry.type === CommitType.ANCHOR) {
@@ -233,14 +240,14 @@ export class ConflictResolution {
   ) {}
 
   /**
-   * Applies the log to the document and updates the state.
+   * Applies the log to the stream and updates the state.
    */
-  private async applyLogToState<T extends Doctype>(
-    handler: DoctypeHandler<T>,
+  private async applyLogToState<T extends Stream>(
+    handler: StreamHandler<T>,
     log: Array<CID>,
-    state?: DocState,
+    state?: StreamState,
     breakOnAnchor?: boolean,
-  ): Promise<DocState> {
+  ): Promise<StreamState> {
     const itr = log.entries();
     let entry = itr.next();
     while (!entry.done) {
@@ -249,13 +256,13 @@ export class ConflictResolution {
       // TODO - should catch potential thrown error here
 
       let payload = commit;
-      if (DoctypeUtils.isSignedCommit(commit)) {
+      if (StreamUtils.isSignedCommit(commit)) {
         payload = await this.dispatcher.retrieveCommit(commit.link);
       }
 
       if (payload.proof) {
         // it's an anchor commit
-        // TODO: Anchor validation should be done by the doctype-handler as part of applying the anchor commit
+        // TODO: Anchor validation should be done by the StreamHandler as part of applying the anchor commit
         await verifyAnchorCommit(this.dispatcher, this.anchorService, commit);
         state = await handler.applyCommit(commit, cid, this.context, state);
       } else {
@@ -263,7 +270,7 @@ export class ConflictResolution {
         const tmpState = await handler.applyCommit(commit, cid, this.context, state);
         const isGenesis = !payload.prev;
         const effectiveState = isGenesis ? tmpState : tmpState.next;
-        // TODO: Schema validation should be done by the doctype-handler as part of applying the commit
+        // TODO: Schema validation should be done by the StreamHandler as part of applying the commit
         await this.stateValidation.validate(effectiveState, effectiveState.content);
         state = tmpState; // if validation is successful
       }
@@ -284,11 +291,11 @@ export class ConflictResolution {
    * @param log - commits to apply
    */
   private async applyLog(
-    initialState: DocState,
+    initialState: StreamState,
     initialStateLog: HistoryLog,
     log: Array<CID>,
-  ): Promise<DocState | null> {
-    const handler = this.handlers.get(initialState.doctype);
+  ): Promise<StreamState | null> {
+    const handler = this.handlers.get(initialState.type);
     const tip = initialStateLog.last;
     if (log[log.length - 1].equals(tip)) {
       // log already applied
@@ -297,7 +304,7 @@ export class ConflictResolution {
     const cid = log[0];
     const commit = await this.dispatcher.retrieveCommit(cid);
     let payload = commit;
-    if (DoctypeUtils.isSignedCommit(commit)) {
+    if (StreamUtils.isSignedCommit(commit)) {
       payload = await this.dispatcher.retrieveCommit(commit.link);
     }
     if (payload.prev.equals(tip)) {
@@ -311,7 +318,7 @@ export class ConflictResolution {
     const canonicalLog = initialStateLog.items;
     const localLog = canonicalLog.splice(conflictIdx);
     // Compute state up till conflictIdx
-    const state: DocState = await this.applyLogToState(handler, canonicalLog);
+    const state: StreamState = await this.applyLogToState(handler, canonicalLog);
     // Compute next transition in parallel
     const localState = await this.applyLogToState(handler, localLog, cloneDeep(state), true);
     const remoteState = await this.applyLogToState(handler, log, cloneDeep(state), true);
@@ -330,7 +337,7 @@ export class ConflictResolution {
    * @param initialState - State to start from
    * @param tip - Commit CID
    */
-  async applyTip(initialState: DocState, tip: CID): Promise<DocState | null> {
+  async applyTip(initialState: StreamState, tip: CID): Promise<StreamState | null> {
     const stateLog = HistoryLog.fromState(this.dispatcher, initialState);
     const log = await fetchLog(this.dispatcher, tip, stateLog);
     if (log.length) {
@@ -341,25 +348,25 @@ export class ConflictResolution {
   /**
    * Return state at `commitId` version.
    */
-  async rewind(initialState: DocState, commitId: CommitID): Promise<DocState> {
-    // If 'commit' is ahead of 'doc', sync doc up to 'commit'
+  async rewind(initialState: StreamState, commitId: CommitID): Promise<StreamState> {
+    // If 'commit' is ahead of 'initialState', sync state up to 'commit'
     const baseState = (await this.applyTip(initialState, commitId.commit)) || initialState;
 
     const baseStateLog = HistoryLog.fromState(this.dispatcher, baseState);
 
-    // If 'commit' is not included in doc's log at this point, that means that conflict resolution
+    // If 'commit' is not included in stream's log at this point, that means that conflict resolution
     // rejected it.
     const commitIndex = await baseStateLog.findIndex(commitId.commit);
     if (commitIndex < 0) {
       throw new Error(
-        `Requested commit CID ${commitId.commit.toString()} not found in the log for document ${commitId.baseID.toString()}`,
+        `Requested commit CID ${commitId.commit.toString()} not found in the log for stream ${commitId.baseID.toString()}`,
       );
     }
 
     // If the requested commit is included in the log, but isn't the most recent commit, we need
     // to reset the state to the state at the requested commit.
     const resetLog = baseStateLog.slice(0, commitIndex + 1).items;
-    const handler = this.handlers.get(initialState.doctype);
+    const handler = this.handlers.get(initialState.type);
     return this.applyLogToState(handler, resetLog);
   }
 }

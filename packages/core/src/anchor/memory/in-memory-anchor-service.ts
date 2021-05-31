@@ -5,13 +5,13 @@ import {
   AnchorProof,
   AnchorService,
   AnchorStatus,
-  DoctypeUtils,
+  StreamUtils,
   AnchorServiceResponse,
 } from "@ceramicnetwork/common";
 
 import type { Dispatcher } from "../../dispatcher";
 import Ceramic from "../../ceramic";
-import DocID from "@ceramicnetwork/docid";
+import StreamID from "@ceramicnetwork/streamid";
 import { DiagnosticsLogger } from "@ceramicnetwork/common";
 import type { DagJWS } from 'dids'
 
@@ -22,12 +22,12 @@ const CHAIN_ID = "inmemory:12345";
 class Candidate {
   constructor(
     readonly cid: CID,
-    readonly docId?: DocID,
+    readonly streamId?: StreamID,
     readonly log?: CID[]
   ) {}
 
   get key(): string {
-    return this.docId.toString();
+    return this.streamId.toString();
   }
 }
 
@@ -86,15 +86,15 @@ class InMemoryAnchorService implements AnchorService {
   }
 
   /**
-   * Filter candidates by document and DIDs
+   * Filter candidates by stream and DIDs
    * @private
    */
   async _findCandidates(): Promise<Candidate[]> {
-    const groupedCandidates = await this._groupCandidatesByDocId(this.#queue);
+    const groupedCandidates = await this._groupCandidatesByStreamId(this.#queue);
     return this._selectValidCandidates(groupedCandidates);
   }
 
-  async _groupCandidatesByDocId(
+  async _groupCandidatesByStreamId(
     candidates: Candidate[]
   ): Promise<Record<string, Candidate[]>> {
     const result: Record<string, Candidate[]> = {};
@@ -107,7 +107,7 @@ class InMemoryAnchorService implements AnchorService {
           }
 
           const log = await this._loadCommitHistory(req.cid);
-          const candidate = new Candidate(req.cid, req.docId, log);
+          const candidate = new Candidate(req.cid, req.streamId, log);
 
           if (!result[candidate.key]) {
             result[candidate.key] = [];
@@ -129,7 +129,7 @@ class InMemoryAnchorService implements AnchorService {
     for (const compositeKey of Object.keys(groupedCandidates)) {
       const candidates = groupedCandidates[compositeKey];
 
-      // When there are multiple valid candidate tips to anchor for the same docId, pick the one
+      // When there are multiple valid candidate tips to anchor for the same streamId, pick the one
       // with the largest log
       let selected: Candidate = null;
       for (const c of candidates) {
@@ -164,11 +164,11 @@ class InMemoryAnchorService implements AnchorService {
 
   _failCandidate(candidate: Candidate, message?: string): void {
     if (!message) {
-      message = `Rejecting request to anchor CID ${candidate.cid.toString()} for document ${candidate.docId.toString()} because there is a better CID to anchor for the same document`;
+      message = `Rejecting request to anchor CID ${candidate.cid.toString()} for stream ${candidate.streamId.toString()} because there is a better CID to anchor for the same stream`;
     }
     this.#feed.next({
       status: AnchorStatus.FAILED,
-      docId: candidate.docId,
+      streamId: candidate.streamId,
       cid: candidate.cid,
       message,
     });
@@ -188,12 +188,12 @@ class InMemoryAnchorService implements AnchorService {
       const currentCommit = await this.#dispatcher.retrieveCommit(
         currentCommitId
       );
-      if (DoctypeUtils.isAnchorCommit(currentCommit)) {
+      if (StreamUtils.isAnchorCommit(currentCommit)) {
         return history;
       }
 
       let prevCommitId: CID;
-      if (DoctypeUtils.isSignedCommit(currentCommit)) {
+      if (StreamUtils.isSignedCommit(currentCommit)) {
         const payload = await this.#dispatcher.retrieveCommit(
           currentCommit.link
         );
@@ -228,19 +228,19 @@ class InMemoryAnchorService implements AnchorService {
 
   /**
    * Send request to the anchoring service
-   * @param docId - Document ID
+   * @param streamId - Stream ID
    * @param tip - Commit CID
    */
-  requestAnchor(docId: DocID, tip: CID): Observable<AnchorServiceResponse> {
-    const candidate = new Candidate(tip, docId);
+  requestAnchor(streamId: StreamID, tip: CID): Observable<AnchorServiceResponse> {
+    const candidate = new Candidate(tip, streamId);
     const feed$ = this.#feed.pipe(
-      filter((asr) => asr.docId.equals(docId) && asr.cid.equals(tip))
+      filter((asr) => asr.streamId.equals(streamId) && asr.cid.equals(tip))
     );
     if (this.#anchorOnRequest) {
       this._process(candidate).catch((error) => {
         this.#feed.next({
           status: AnchorStatus.FAILED,
-          docId: candidate.docId,
+          streamId: candidate.streamId,
           cid: candidate.cid,
           message: error.message,
         });
@@ -251,7 +251,7 @@ class InMemoryAnchorService implements AnchorService {
     return concat(
       of<AnchorServiceResponse>({
         status: AnchorStatus.PENDING,
-        docId: docId,
+        streamId: streamId,
         cid: tip,
         message: "Sending anchoring request",
         anchorScheduledFor: null,
@@ -282,7 +282,7 @@ class InMemoryAnchorService implements AnchorService {
     const handle = setTimeout(() => {
       this.#feed.next({
         status: AnchorStatus.ANCHORED,
-        docId: leaf.docId,
+        streamId: leaf.streamId,
         cid: leaf.cid,
         message: "CID successfully anchored",
         anchorRecord: cid,

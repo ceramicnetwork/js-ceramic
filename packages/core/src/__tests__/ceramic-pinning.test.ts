@@ -4,7 +4,7 @@ import tmp from 'tmp-promise'
 import { IpfsApi, CeramicApi } from '@ceramicnetwork/common';
 import * as u8a from 'uint8arrays'
 import { createIPFS } from './ipfs-util';
-import { TileDoctype } from '@ceramicnetwork/doctype-tile';
+import { TileDocument } from '@ceramicnetwork/stream-tile';
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import KeyDidResolver from 'key-did-resolver'
 import { Resolver } from "did-resolver"
@@ -35,8 +35,8 @@ const createCeramic = async (ipfs: IpfsApi, stateStoreDirectory, anchorOnRequest
   return ceramic
 }
 
-async function createDoc (ceramic: CeramicApi, controller: string, family: string): Promise<TileDoctype> {
-  return TileDoctype.create(ceramic,
+async function createStream (ceramic: CeramicApi, controller: string, family: string): Promise<TileDocument> {
+  return TileDocument.create(ceramic,
       null,
       { deterministic: true, controllers: [controller], family },
       { anchor: false, publish: false }
@@ -44,7 +44,7 @@ async function createDoc (ceramic: CeramicApi, controller: string, family: strin
 }
 
 
-describe('Ceramic document pinning', () => {
+describe('Ceramic stream pinning', () => {
   jest.setTimeout(60000)
   let ipfs1: IpfsApi;
   let tmpFolder: any;
@@ -59,47 +59,47 @@ describe('Ceramic document pinning', () => {
     await tmpFolder.cleanup()
   })
 
-  it('Document not pinned will not retain data on restart', async () => {
+  it('Stream not pinned will not retain data on restart', async () => {
     let ceramic = await createCeramic(ipfs1, tmpFolder.path)
-    const doc1 = await createDoc(ceramic, ceramic.did.id, 'test')
+    const stream1 = await createStream(ceramic, ceramic.did.id, 'test')
     const content = { some: 'data' }
-    await doc1.update(content)
-    expect(doc1.content).toEqual(content)
+    await stream1.update(content)
+    expect(stream1.content).toEqual(content)
     await ceramic.close()
 
     ceramic = await createCeramic(ipfs1, tmpFolder.path)
-    const doc2 = await createDoc(ceramic, ceramic.did.id, 'test')
-    expect(doc2.content).not.toEqual(content)
+    const stream2 = await createStream(ceramic, ceramic.did.id, 'test')
+    expect(stream2.content).not.toEqual(content)
     await ceramic.close()
   })
 
-  it('Document pinned will retain data on restart', async () => {
+  it('Stream pinned will retain data on restart', async () => {
     let ceramic = await createCeramic(ipfs1, tmpFolder.path)
-    const doc1 = await createDoc(ceramic, ceramic.did.id, 'test')
-    await ceramic.pin.add(doc1.id)
+    const stream1 = await createStream(ceramic, ceramic.did.id, 'test')
+    await ceramic.pin.add(stream1.id)
     const content = { some: 'data' }
-    await doc1.update(content)
-    expect(doc1.content).toEqual(content)
+    await stream1.update(content)
+    expect(stream1.content).toEqual(content)
     await ceramic.close()
 
     ceramic = await createCeramic(ipfs1, tmpFolder.path)
-    const doc2 = await ceramic.loadDocument(doc1.id)
-    expect(doc2.content).toEqual(content)
+    const stream2 = await ceramic.loadStream(stream1.id)
+    expect(stream2.content).toEqual(content)
     await ceramic.close()
   })
 
-  it('Document pinned will retain data on restart, load though create', async () => {
+  it('Stream pinned will retain data on restart, load though create', async () => {
     let ceramic = await createCeramic(ipfs1, tmpFolder.path)
-    const doc1 = await createDoc(ceramic, ceramic.did.id, 'test')
-    await ceramic.pin.add(doc1.id)
+    const stream1 = await createStream(ceramic, ceramic.did.id, 'test')
+    await ceramic.pin.add(stream1.id)
     const content = { some: 'data' }
-    await doc1.update(content)
-    expect(doc1.content).toEqual(content)
+    await stream1.update(content)
+    expect(stream1.content).toEqual(content)
     await ceramic.close()
 
     ceramic = await createCeramic(ipfs1, tmpFolder.path)
-    const doc2 = await createDoc(ceramic, ceramic.did.id, 'test')
-    expect(doc2.content).toEqual(content)
+    const stream2 = await createStream(ceramic, ceramic.did.id, 'test')
+    expect(stream2.content).toEqual(content)
     await ceramic.close()
   })
 })

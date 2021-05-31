@@ -12,10 +12,11 @@
 const Ceramic = require('@ceramicnetwork/http-client').default
 const ThreeIdProvider = require('3id-did-provider').default
 const ThreeIdResolver = require('@ceramicnetwork/3id-did-resolver').default
+const { SyncOptions } = require('@ceramicnetwork/common')
 const KeyDidResolver = require('key-did-resolver').default
 const { Resolver } = require('did-resolver')
 const { DID } = require('dids')
-const TileDoctype = require('@ceramicnetwork/doctype-tile').default
+const TileDocument = require('@ceramicnetwork/doctype-tile').default
 const u8a = require('uint8arrays')
 const { randomBytes } = require('@stablelib/random')
 const dagCBOR = require('ipld-dag-cbor')
@@ -69,7 +70,7 @@ const legacyDoc = {
 const waitForAnchor = doc => new Promise(resolve => {
   console.log('waiting for anchor')
   let iid = setInterval(async () => {
-    await doc._syncState()
+    await doc._syncState(doc.id, { sync: SyncOptions.PREFER_CACHE})
   }, 40000)
   doc.on('change', () => {
     console.log(new Date(doc.state.anchorScheduledFor))
@@ -138,7 +139,7 @@ const legacyDid = async (threeId, threeIdGenesisCopy, ceramic) => {
   // sorry for the magic here -.-
   await ceramic.setDID(makeDID(threeIdGenesisCopy.getDidProvider(), ceramic))
   const metadata = { controllers: [firstKeyDid], family: '3id', deterministic: true }
-  const doc = await TileDoctype.create(
+  const doc = await TileDocument.create(
       ceramic, null, metadata, { anchor:false, publish: false })
 
   await setLegacyDoc(ceramic, doc, keysets[1])

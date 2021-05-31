@@ -1,22 +1,26 @@
-import { combineURLs, fetchJson, typeDocID } from "./utils"
+import { combineURLs, typeStreamID } from "./utils"
 import { Document } from './document'
 
-import { DID } from 'dids'
+import type { DID } from 'dids'
 import {
+  CreateOpts,
   CeramicApi,
   CeramicCommit,
   Context,
-  DocOpts,
-  Doctype,
-  DoctypeConstructor,
-  DoctypeHandler,
-  DoctypeUtils,
+  fetchJson,
+  Stream,
+  StreamConstructor,
+  StreamHandler,
+  StreamUtils,
+  LoadOpts,
   MultiQuery,
   PinApi,
+  UpdateOpts,
+  SyncOptions,
 } from '@ceramicnetwork/common';
-import { TileDoctype } from "@ceramicnetwork/doctype-tile"
-import { Caip10LinkDoctype } from "@ceramicnetwork/doctype-caip10-link"
-import { DocID, CommitID, DocRef } from '@ceramicnetwork/docid';
+import { TileDocument } from "@ceramicnetwork/stream-tile"
+import { Caip10Link } from "@ceramicnetwork/stream-caip10-link"
+import { StreamID, CommitID, StreamRef } from '@ceramicnetwork/streamid';
 
 const API_PATH = '/api/v0'
 const CERAMIC_HOST = 'http://localhost:7007'
@@ -25,17 +29,21 @@ const CERAMIC_HOST = 'http://localhost:7007'
  * Default Ceramic client configuration
  */
 export const DEFAULT_CLIENT_CONFIG: CeramicClientConfig = {
-  docSyncInterval: 5000,
+  syncInterval: 5000,
 }
+
+const DEFAULT_APPLY_COMMIT_OPTS = { anchor: true, publish: true, sync: SyncOptions.PREFER_CACHE }
+const DEFAULT_CREATE_FROM_GENESIS_OPTS = { anchor: true, publish: true, sync: SyncOptions.PREFER_CACHE }
+const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE }
 
 /**
  * Ceramic client configuration
  */
 export interface CeramicClientConfig {
   /**
-   * Period of synchronisation, in milliseconds. Active when subscribing document.
+   * How frequently the http-client polls the daemon for updates to subscribed-to streams, in milliseconds.
    */
-  docSyncInterval: number
+  syncInterval: number
 }
 
 /**
@@ -44,35 +52,35 @@ export interface CeramicClientConfig {
 export default class CeramicClient implements CeramicApi {
   private readonly _apiUrl: string
   /**
-   * _docCache stores handles to Documents that been handed out. This allows us
+   * _streamCache stores handles to Documents that been handed out. This allows us
    * to update the state within the Document object when we learn about changes
-   * to the document. This means that client code with Document references
+   * to the stream. This means that client code with Document references
    * always have access to the most recent known-about version, without needing
-   * to explicitly re-load the document.
+   * to explicitly re-load the stream.
    */
-  private readonly _docCache: Map<string, Document>
+  private readonly _streamCache: Map<string, Document>
   private _supportedChains: Array<string>
 
   public readonly pin: PinApi
   public readonly context: Context
 
   private readonly _config: CeramicClientConfig
-  public readonly _doctypeConstructors: Record<string, DoctypeConstructor<Doctype>>
+  public readonly _streamConstructors: Record<number, StreamConstructor<Stream>>
 
   constructor (apiHost: string = CERAMIC_HOST, config: Partial<CeramicClientConfig> = {}) {
     this._config = { ...DEFAULT_CLIENT_CONFIG, ...config }
 
     this._apiUrl = combineURLs(apiHost, API_PATH)
-    // this._docCache = new LRUMap(config.docCacheLimit) Not now. We do not know what to do when document is evicted on HTTP client.
-    this._docCache = new Map()
+    // this._streamCache = new LRUMap(config.streamCacheLimit) Not now. We do not know what to do when stream is evicted on HTTP client.
+    this._streamCache = new Map()
 
     this.context = { api: this }
 
     this.pin = this._initPinApi()
 
-    this._doctypeConstructors = {
-      'tile': TileDoctype,
-      'caip10-link': Caip10LinkDoctype
+    this._streamConstructors = {
+      [TileDocument.STREAM_TYPE_ID]: TileDocument,
+      [Caip10Link.STREAM_TYPE_ID]: Caip10Link
     }
   }
 
@@ -80,30 +88,38 @@ export default class CeramicClient implements CeramicApi {
     return this.context.did
   }
 
+  /**
+   * Sets the DID instance that will be used to author commits to streams.
+   * @param did
+   */
+  set did(did: DID) {
+    this.context.did = did
+  }
+
   _initPinApi(): PinApi {
     return {
-      add: async (docId: DocID): Promise<void> => {
-        await fetchJson(this._apiUrl + '/pins' + `/${docId.toString()}`, { method: 'post' })
+      add: async (streamId: StreamID): Promise<void> => {
+        await fetchJson(this._apiUrl + '/pins' + `/${streamId.toString()}`, { method: 'post' })
       },
-      rm: async (docId: DocID): Promise<void> => {
-        await fetchJson(this._apiUrl + '/pins' + `/${docId.toString()}`, { method: 'delete' })
+      rm: async (streamId: StreamID): Promise<void> => {
+        await fetchJson(this._apiUrl + '/pins' + `/${streamId.toString()}`, { method: 'delete' })
       },
-      ls: async (docId?: DocID): Promise<AsyncIterable<string>> => {
+      ls: async (streamId?: StreamID): Promise<AsyncIterable<string>> => {
         let url = this._apiUrl + '/pins'
-        if (docId) {
-          url += `/${docId.toString()}`
+        if (streamId) {
+          url += `/${streamId.toString()}`
         }
         const result = await fetchJson(url)
-        const { pinnedDocIds } = result
+        const { pinnedStreamIds } = result
         return {
           [Symbol.asyncIterator](): AsyncIterator<string, any, undefined> {
             let index = 0
             return {
               next(): Promise<IteratorResult<string>> {
-                if (index === pinnedDocIds.length) {
+                if (index === pinnedStreamIds.length) {
                   return Promise.resolve({ value: null, done: true });
                 }
-                return Promise.resolve({ value: pinnedDocIds[index++], done: false });
+                return Promise.resolve({ value: pinnedStreamIds[index++], done: false });
               }
             }
           }
@@ -112,35 +128,37 @@ export default class CeramicClient implements CeramicApi {
     }
   }
 
-  async createDocumentFromGenesis<T extends Doctype>(doctype: string, genesis: any, opts?: DocOpts): Promise<T> {
-    const doc = await Document.createFromGenesis(this._apiUrl, doctype, genesis, opts, this._config.docSyncInterval)
+  async createStreamFromGenesis<T extends Stream>(type: number, genesis: any, opts: CreateOpts = {}): Promise<T> {
+    opts = { ...DEFAULT_CREATE_FROM_GENESIS_OPTS, ...opts };
+    const stream = await Document.createFromGenesis(this._apiUrl, type, genesis, opts, this._config.syncInterval)
 
-    const found = this._docCache.get(doc.id.toString())
+    const found = this._streamCache.get(stream.id.toString())
     if (found) {
-      if (!DoctypeUtils.statesEqual(doc.state, found.state)) found.next(doc.state);
-      return this.buildDoctype<T>(found);
+      if (!StreamUtils.statesEqual(stream.state, found.state)) found.next(stream.state);
+      return this.buildStream<T>(found);
     } else {
-      this._docCache.set(doc.id.toString(), doc);
-      return this.buildDoctype<T>(doc);
+      this._streamCache.set(stream.id.toString(), stream);
+      return this.buildStream<T>(stream);
     }
   }
 
-  async loadDocument<T extends Doctype>(docId: DocID | CommitID | string): Promise<T> {
-    const docRef = DocRef.from(docId)
-    let doc = this._docCache.get(docRef.baseID.toString())
-    if (doc) {
-      await doc._syncState(docRef)
+  async loadStream<T extends Stream>(streamId: StreamID | CommitID | string, opts: LoadOpts = {}): Promise<T> {
+    opts = { ...DEFAULT_LOAD_OPTS, ...opts };
+    const streamRef = StreamRef.from(streamId)
+    let stream = this._streamCache.get(streamRef.baseID.toString())
+    if (stream) {
+      await stream._syncState(streamRef, opts)
     } else {
-      doc = await Document.load(docRef, this._apiUrl, this._config.docSyncInterval)
-      this._docCache.set(doc.id.toString(), doc)
+      stream = await Document.load(streamRef, this._apiUrl, this._config.syncInterval, opts)
+      this._streamCache.set(stream.id.toString(), stream)
     }
-    return this.buildDoctype<T>(doc)
+    return this.buildStream<T>(stream)
   }
 
-  async multiQuery(queries: Array<MultiQuery>): Promise<Record<string, Doctype>> {
+  async multiQuery(queries: Array<MultiQuery>): Promise<Record<string, Stream>> {
     const queriesJSON = queries.map(q => {
       return {
-        docId: typeof q.docId === 'string' ? q.docId : q.docId.toString(),
+        streamId: typeof q.streamId === 'string' ? q.streamId : q.streamId.toString(),
         paths: q.paths,
         atTime: q.atTime
       }
@@ -155,40 +173,48 @@ export default class CeramicClient implements CeramicApi {
 
     return Object.entries(results).reduce((acc, e) => {
       const [k, v] = e
-      const state = DoctypeUtils.deserializeState(v)
-      const doc = new Document(state, this._apiUrl, this._config.docSyncInterval)
-      acc[k] = this.buildDoctype(doc)
+      const state = StreamUtils.deserializeState(v)
+      const stream = new Document(state, this._apiUrl, this._config.syncInterval)
+      acc[k] = this.buildStream(stream)
       return acc
     }, {})
   }
 
-  loadDocumentCommits(docId: string | DocID): Promise<Record<string, any>[]> {
-    const effectiveDocId = typeDocID(docId)
-    return Document.loadDocumentCommits(effectiveDocId, this._apiUrl)
+  loadStreamCommits(streamId: string | StreamID): Promise<Record<string, any>[]> {
+    const effectiveStreamId = typeStreamID(streamId)
+    return Document.loadStreamCommits(effectiveStreamId, this._apiUrl)
   }
 
-  async applyCommit<T extends Doctype>(docId: string | DocID, commit: CeramicCommit, opts?: DocOpts): Promise<T> {
-    const effectiveDocId = typeDocID(docId)
-    const document = await Document.applyCommit(this._apiUrl, effectiveDocId, commit, opts, this._config.docSyncInterval)
-    return this.buildDoctype<T>(document)
-  }
-
-  addDoctypeHandler<T extends Doctype>(doctypeHandler: DoctypeHandler<T>): void {
-    this._doctypeConstructors[doctypeHandler.name] = doctypeHandler.doctype
-  }
-
-  findDoctypeConstructor<T extends Doctype>(doctype: string) {
-    const constructor = this._doctypeConstructors[doctype]
-    if (constructor) {
-      return constructor as DoctypeConstructor<T>
+  async applyCommit<T extends Stream>(streamId: string | StreamID, commit: CeramicCommit, opts: CreateOpts | UpdateOpts = {}): Promise<T> {
+    opts = { ...DEFAULT_APPLY_COMMIT_OPTS, ...opts };
+    const effectiveStreamId: StreamID = typeStreamID(streamId);
+    const document = await Document.applyCommit(this._apiUrl, effectiveStreamId, commit, opts, this._config.syncInterval);
+    const fromCache = this._streamCache.get(effectiveStreamId.toString());
+    if (fromCache) {
+      fromCache.next(document.state);
+      return this.buildStream<T>(document);
     } else {
-      throw new Error(`Failed to find doctype constructor for doctype ${doctype}`)
+      this._streamCache.set(effectiveStreamId.toString(), document);
+      return this.buildStream<T>(document);
     }
   }
 
-  private buildDoctype<T extends Doctype = Doctype>(document: Document) {
-    const doctypeConstructor = this.findDoctypeConstructor<T>(document.state.doctype)
-    return new doctypeConstructor(document, this.context)
+  addStreamHandler<T extends Stream>(streamHandler: StreamHandler<T>): void {
+    this._streamConstructors[streamHandler.name] = streamHandler.stream_constructor
+  }
+
+  findStreamConstructor<T extends Stream>(type: number) {
+    const constructor = this._streamConstructors[type]
+    if (constructor) {
+      return constructor as StreamConstructor<T>
+    } else {
+      throw new Error(`Failed to find constructor for stream ${type}`)
+    }
+  }
+
+  private buildStream<T extends Stream = Stream>(stream: Document) {
+    const streamConstructor = this.findStreamConstructor<T>(stream.state.type)
+    return new streamConstructor(stream, this.context)
   }
 
   async setDID(did: DID): Promise<void> {
@@ -207,9 +233,9 @@ export default class CeramicClient implements CeramicApi {
   }
 
   async close (): Promise<void> {
-    Array.from(this._docCache).map(([, document]) => {
-      document.complete()
+    Array.from(this._streamCache).map(([, stream]) => {
+      stream.complete()
     })
-    this._docCache.clear()
+    this._streamCache.clear()
   }
 }

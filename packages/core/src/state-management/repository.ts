@@ -1,5 +1,13 @@
-import DocID from '@ceramicnetwork/docid';
-import { AnchorService, AnchorStatus, Context, DocOpts, DocState, DocStateHolder } from '@ceramicnetwork/common';
+import StreamID from '@ceramicnetwork/streamid';
+import {
+  AnchorService,
+  AnchorStatus,
+  Context, CreateOpts,
+  StreamState,
+  StreamStateHolder,
+  LoadOpts,
+  SyncOptions,
+} from '@ceramicnetwork/common';
 import { PinStore } from '../store/pin-store';
 import { NamedTaskQueue } from './named-task-queue';
 import { DiagnosticsLogger } from '@ceramicnetwork/common';
@@ -23,20 +31,22 @@ export type RepositoryDependencies = {
   stateValidation: StateValidation;
 };
 
+const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE, syncTimeoutSeconds: 3 }
+
 export class Repository {
   /**
-   * Serialize loading operations per docId.
+   * Serialize loading operations per streamId.
    */
   readonly loadingQ: NamedTaskQueue;
 
   /**
-   * Serialize operations on state per docId.
+   * Serialize operations on state per streamId.
    * Ensure that the task is run with a currently run state by abstracting over state loading.
    */
   readonly executionQ: ExecutionQueue;
 
   /**
-   * In-memory cache of the currently running documents.
+   * In-memory cache of the currently running streams.
    */
   readonly inmemory: StateCache<RunningState>;
 
@@ -46,16 +56,21 @@ export class Repository {
   #deps: RepositoryDependencies;
 
   /**
-   * Instance of StateManager for performing operations on document state.
+   * Instance of StateManager for performing operations on stream state.
    */
   stateManager: StateManager;
 
-  constructor(limit: number, private readonly logger: DiagnosticsLogger) {
+  /**
+   * @param cacheLimit - Maximum number of streams to store in memory cache.
+   * @param logger - Where we put diagnostics messages.
+   * @param concurrencyLimit - Maximum number of concurrently running tasks on the streams.
+   */
+  constructor(cacheLimit: number, concurrencyLimit: number, private readonly logger: DiagnosticsLogger) {
     this.loadingQ = new NamedTaskQueue((error) => {
       logger.err(error);
     });
-    this.executionQ = new ExecutionQueue(logger, (docId) => this.get(docId));
-    this.inmemory = new StateCache(limit, (state$) => state$.complete());
+    this.executionQ = new ExecutionQueue(concurrencyLimit, logger);
+    this.inmemory = new StateCache(cacheLimit, (state$) => state$.complete());
     this.updates$ = this.updates$.bind(this);
   }
 
@@ -69,17 +84,19 @@ export class Repository {
       deps.anchorService,
       deps.conflictResolution,
       this.logger,
+      (streamId) => this.get(streamId),
+      (streamId, opts) => this.load(streamId, opts),
     );
   }
 
-  private fromMemory(docId: DocID): RunningState | undefined {
-    return this.inmemory.get(docId.toString());
+  private fromMemory(streamId: StreamID): RunningState | undefined {
+    return this.inmemory.get(streamId.toString());
   }
 
-  private async fromStateStore(docId: DocID): Promise<RunningState | undefined> {
-    const docState = await this.#deps.pinStore.stateStore.load(docId);
-    if (docState) {
-      const runningState = new RunningState(docState);
+  private async fromStateStore(streamId: StreamID): Promise<RunningState | undefined> {
+    const streamState = await this.#deps.pinStore.stateStore.load(streamId);
+    if (streamState) {
+      const runningState = new RunningState(streamState);
       this.add(runningState);
       const toRecover =
         runningState.value.anchorStatus === AnchorStatus.PENDING ||
@@ -93,89 +110,128 @@ export class Repository {
     }
   }
 
-  private async fromNetwork(docId: DocID, opts: DocOpts = {}): Promise<RunningState> {
-    const handler = this.#deps.handlers.get(docId.typeName);
-    const genesisCid = docId.cid;
+  private async fromNetwork(streamId: StreamID, opts: LoadOpts): Promise<RunningState> {
+    const handler = this.#deps.handlers.get(streamId.typeName);
+    const genesisCid = streamId.cid;
     const commit = await this.#deps.dispatcher.retrieveCommit(genesisCid);
     if (commit == null) {
       throw new Error(`No genesis commit found with CID ${genesisCid.toString()}`);
     }
-    const state = await handler.applyCommit(commit, docId.cid, this.#deps.context);
+    const state = await handler.applyCommit(commit, streamId.cid, this.#deps.context);
     await this.#deps.stateValidation.validate(state, state.content);
     const state$ = new RunningState(state);
     this.add(state$);
-    await this.stateManager.syncGenesis(state$, opts);
-    this.logger.verbose(`Document ${docId.toString()} successfully loaded`);
+    this.logger.verbose(`Genesis commit for stream ${streamId.toString()} successfully loaded`);
     return state$;
   }
 
   /**
-   * Returns a document from wherever we can get information about it.
-   * Starts by checking if the document state is present in the in-memory cache, if not then then checks the state store, and finally loads the document from pubsub.
+   * Returns a stream from wherever we can get information about it.
+   * Starts by checking if the stream state is present in the in-memory cache, if not then
+   * checks the state store, and finally loads the stream from pubsub.
    */
-  async load(docId: DocID, opts: DocOpts = {}): Promise<RunningState> {
-    return this.loadingQ.run(docId.toString(), async () => {
-      const fromMemory = this.fromMemory(docId);
-      if (fromMemory) return fromMemory;
-      const fromStateStore = await this.fromStateStore(docId);
-      if (fromStateStore) return fromStateStore;
-      return this.fromNetwork(docId, opts);
+  async load(streamId: StreamID, opts: LoadOpts): Promise<RunningState> {
+    opts = { ...DEFAULT_LOAD_OPTS, ...opts }
+
+    return this.loadingQ.run(streamId.toString(), async () => {
+      let fromStateStore = false
+      let stream = this.fromMemory(streamId);
+      if (!stream) {
+        stream = await this.fromStateStore(streamId);
+        if (stream) {
+          fromStateStore = true
+        }
+      }
+
+      if (stream && opts.sync == SyncOptions.PREFER_CACHE) {
+        if (!fromStateStore || this.stateManager.wasPinnedStreamSynced(streamId)) {
+          // If the stream was from the in-memory cache we know it's up to date, so no need to sync.
+          // If the stream from the state store then we check if we've already synced the stream at
+          // least once in the lifetime of this process: if so we know the state is up to date, so
+          // no need to sync. If not, then it could be out of date due to updates made while the
+          // node was offline, in which case we fall through to calling `stateManager.sync()` below.
+          return stream
+        }
+      }
+
+      if (!stream) {
+        stream = await this.fromNetwork(streamId, opts);
+      }
+
+      if (opts.sync == SyncOptions.NEVER_SYNC) {
+        return stream
+      }
+
+      await this.stateManager.sync(stream, opts.syncTimeoutSeconds * 1000, fromStateStore);
+      return stream
     });
   }
 
   /**
-   * Return a document, either from cache or re-constructed from state store, but will not load from the network.
-   * Adds the document to cache.
+   * Handles new stream creation by loading genesis commit into memory and then handling the given
+   * CreateOpts for the genesis commit.
+   * @param streamId
+   * @param opts
    */
-  async get(docId: DocID): Promise<RunningState | undefined> {
-    return this.loadingQ.run(docId.toString(), async () => {
-      const fromMemory = this.fromMemory(docId);
+  async applyCreateOpts(streamId: StreamID, opts: CreateOpts): Promise<RunningState> {
+    const state = await this.load(streamId, opts)
+    this.stateManager.applyWriteOpts(state, opts)
+    return state
+  }
+
+  /**
+   * Return a stream, either from cache or re-constructed from state store, but will not load from the network.
+   * Adds the stream to cache.
+   */
+  async get(streamId: StreamID): Promise<RunningState | undefined> {
+    return this.loadingQ.run(streamId.toString(), async () => {
+      const fromMemory = this.fromMemory(streamId);
       if (fromMemory) return fromMemory;
-      return this.fromStateStore(docId);
+      return this.fromStateStore(streamId);
     });
   }
 
   /**
-   * Return a document state, either from cache or from state store.
+   * Return a stream state, either from cache or from state store.
    */
-  async docState(docId: DocID): Promise<DocState | undefined> {
-    const fromMemory = this.inmemory.get(docId.toString());
+  async streamState(streamId: StreamID): Promise<StreamState | undefined> {
+    const fromMemory = this.inmemory.get(streamId.toString());
     if (fromMemory) {
       return fromMemory.state;
     } else {
-      return this.#deps.pinStore.stateStore.load(docId);
+      return this.#deps.pinStore.stateStore.load(streamId);
     }
   }
 
   /**
-   * Adds the document's RunningState to the in-memory cache and subscribes the Repository's global feed$ to receive changes emitted by that RunningState
+   * Adds the stream's RunningState to the in-memory cache and subscribes the Repository's global feed$ to receive changes emitted by that RunningState
    */
   add(state$: RunningState): void {
     this.inmemory.set(state$.id.toString(), state$);
   }
 
-  pin(docStateHolder: DocStateHolder): Promise<void> {
-    return this.#deps.pinStore.add(docStateHolder);
+  pin(streamStateHolder: StreamStateHolder): Promise<void> {
+    return this.#deps.pinStore.add(streamStateHolder);
   }
 
-  unpin(docId: DocID): Promise<void> {
-    return this.#deps.pinStore.rm(docId);
+  unpin(streamId: StreamID): Promise<void> {
+    return this.#deps.pinStore.rm(streamId);
   }
 
   /**
-   * List pinned documents as array of DocID strings.
-   * If `docId` is passed, indicate if it is pinned.
+   * List pinned streams as array of StreamID strings.
+   * If `streamId` is passed, indicate if it is pinned.
    */
-  async listPinned(docId?: DocID): Promise<string[]> {
-    return this.#deps.pinStore.ls(docId);
+  async listPinned(streamId?: StreamID): Promise<string[]> {
+    return this.#deps.pinStore.ls(streamId);
   }
 
   /**
-   * Updates for the DocState, even if a (pinned or not pinned) document has already been evicted.
-   * Marks the document as durable, that is not subject to cache eviction.
+   * Updates for the StreamState, even if a (pinned or not pinned) stream has already been evicted.
+   * Marks the stream as durable, that is not subject to cache eviction.
    *
    * First, we try to get the running state from memory or state store. If found, it is used as a source
-   * of updates. If not found, we use DocState passed as `init` param as a future source of updates.
+   * of updates. If not found, we use StreamState passed as `init` param as a future source of updates.
    * Anyway, we mark it as unevictable.
    *
    * When a subscription to the observable stops, we check if there are other subscriptions to the same
@@ -184,9 +240,9 @@ export class Repository {
    *
    * @param init
    */
-  updates$(init: DocState): Observable<DocState> {
-    return new Observable<DocState>((subscriber) => {
-      const id = new DocID(init.doctype, init.log[0].cid);
+  updates$(init: StreamState): Observable<StreamState> {
+    return new Observable<StreamState>((subscriber) => {
+      const id = new StreamID(init.type, init.log[0].cid);
       this.get(id).then((found) => {
         const state$ = found || new RunningState(init);
         this.inmemory.endure(id.toString(), state$);
@@ -202,9 +258,9 @@ export class Repository {
   async close(): Promise<void> {
     await this.loadingQ.close();
     await this.executionQ.close();
-    Array.from(this.inmemory).forEach(([id, document]) => {
+    Array.from(this.inmemory).forEach(([id, stream]) => {
       this.inmemory.delete(id);
-      document.complete();
+      stream.complete();
     });
     await this.#deps.pinStore.close();
   }

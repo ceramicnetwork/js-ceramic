@@ -13,7 +13,7 @@ $ npm install @ceramicnetwork/http-client
 
 ```
 import CeramicClient from '@ceramicnetwork/http-client'
-import TileDocument from '@ceramicnetwork/doctype-tile'
+import TileDocument from '@ceramicnetwork/stream-tile'
 import IdentityWallet from 'identity-wallet'
 
 const API_URL = "http://localhost:7007"
@@ -21,7 +21,7 @@ const API_URL = "http://localhost:7007"
 const client = new CeramicClient(API_URL)
 
 // create document example
-const tileDocument = await TileDoctype.create(ceramic, { test: 123 })
+const tileDocument = await TileDocument.create(ceramic, { test: 123 })
 
 ```
 

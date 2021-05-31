@@ -1,17 +1,20 @@
 export * from './anchor-service'
 export * from './ceramic-api'
 export * from './context'
-export * from './doctype'
-export * from './utils/doctype-utils'
+export * from './docopts'
+export * from './stream'
+export * from './utils/http-utils'
+export * from './utils/stream-utils'
 export * from './utils/test-utils'
 export * from './logger-provider'
-export * from './logger-provider-old' // TODO remove this
 export * from './loggers'
 export * from './networks'
+export * from './logger-base'
 export * from './pinning'
 export * from './unreachable-case-error'
 export * from './running-state-like'
-export * from './doc-state-subject'
+export * from './stream-state-subject'
+export * from './subscription-set'
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore

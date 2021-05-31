@@ -1,0 +1,68 @@
+name: Publish images to Docker Hub
+
+on:
+  push:
+    branches: [ develop, release-candidate, master ]
+  workflow_dispatch: # manually triggered
+
+jobs:
+  push_js_ceramic:
+    name: Build and push
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Check out the repo
+        uses: actions/checkout@v2
+      -
+        name: Set branch name
+        run: echo "BRANCH=${GITHUB_REF##*/}" >> $GITHUB_ENV
+      -
+        name: Set sha tag
+        run: |
+          SHA_TAG=$(git rev-parse --short=12 "${{ github.sha }}")
+          echo "SHA_TAG=$SHA_TAG" >> $GITHUB_ENV
+      -
+        name: Set master branch tag
+        if: ${{ env.BRANCH == 'master' }}
+        run: echo "ENV_TAG=latest" >> $GITHUB_ENV
+      -
+        name: Set rc branch tag
+        if: ${{ env.BRANCH == 'release-candidate' }}
+        run: echo "ENV_TAG=tnet" >> $GITHUB_ENV
+      -
+        name: Set develop branch tag
+        if: ${{ env.BRANCH == 'develop' }}
+        run: echo "ENV_TAG=dev" >> $GITHUB_ENV
+      -
+        name: Set env tag (default)
+        if: ${{ env.ENV_TAG == '' }}
+        run: echo "ENV_TAG=dev" >> $GITHUB_ENV
+      - 
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      -
+        name: Login to DockerHub
+        uses: docker/login-action@v1 
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      -
+        name: Build js-ceramic image
+        env:
+          IMAGE_ID: "ceramicnetwork/js-ceramic"
+        run: |
+          docker buildx build . --file Dockerfile.daemon \
+            --output "type=image,push=true" \
+            --tag ${{ env.IMAGE_ID }}:${{ env.ENV_TAG }} \
+            --tag ${{ env.IMAGE_ID }}:${{ env.SHA_TAG }} \
+            --tag ${{ env.IMAGE_ID }}:${{ env.BRANCH }}
+      -
+        name: Build ipfs-daemon image
+        env:
+          IMAGE_ID: "ceramicnetwork/ipfs-daemon"
+        run: |
+          docker buildx build . --file Dockerfile.ipfs-daemon \
+            --output "type=image,push=true" \
+            --tag ${{ env.IMAGE_ID }}:${{ env.ENV_TAG }} \
+            --tag ${{ env.IMAGE_ID }}:${{ env.SHA_TAG }} \
+            --tag ${{ env.IMAGE_ID }}:${{ env.BRANCH }}

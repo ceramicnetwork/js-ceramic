@@ -7,11 +7,11 @@ import { promises as fs } from 'fs'
 
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import CeramicClient from '@ceramicnetwork/http-client'
-import { CeramicApi, DoctypeUtils, LoggerConfig, LogLevel, Networks } from '@ceramicnetwork/common'
-import DocID, {CommitID} from '@ceramicnetwork/docid'
+import { CeramicApi, StreamUtils, LoggerConfig, LogLevel, Networks } from '@ceramicnetwork/common'
+import StreamID, {CommitID} from '@ceramicnetwork/streamid'
 
-import CeramicDaemon, { CreateOpts } from './ceramic-daemon'
-import { TileDoctype } from "@ceramicnetwork/doctype-tile";
+import { CreateOpts, CeramicDaemon } from './ceramic-daemon'
+import { TileDocument, TileMetadataArgs } from "@ceramicnetwork/stream-tile";
 
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import KeyDidResolver from 'key-did-resolver'
@@ -42,10 +42,10 @@ export class CeramicCliUtils {
      * @param ipfsApi - IPFS api
      * @param ethereumRpc - Ethereum RPC URL
      * @param anchorServiceApi - Anchor service API URL
-     * @param validateDocs - Validate docs according to schemas or not
+     * @param validateStreams - Validate streams according to schemas or not
      * @param ipfsPinningEndpoints - Ipfs pinning endpoints
-     * @param stateStoreDirectory - Path to the directory that will be used for storing pinned document state
-     * @param stateStoreS3Bucket - S3 bucket name for storing pinned document state
+     * @param stateStoreDirectory - Path to the directory that will be used for storing pinned stream state
+     * @param stateStoreS3Bucket - S3 bucket name for storing pinned stream state
      * @param gateway - read only endpoints available. It is disabled by default
      * @param port - port daemon is availabe. Default is 7007
      * @param debug - Enable debug logging level
@@ -60,12 +60,13 @@ export class CeramicCliUtils {
         ipfsApi: string,
         ethereumRpc: string,
         anchorServiceApi: string,
-        validateDocs: boolean,
+        validateStreams: boolean,
         ipfsPinningEndpoints: string[],
         stateStoreDirectory: string,
         stateStoreS3Bucket: string,
         gateway: boolean,
         port: number,
+        hostname: string,
         debug: boolean,
         verbose: boolean,
         logToFiles: boolean,
@@ -90,10 +91,11 @@ export class CeramicCliUtils {
             anchorServiceUrl: anchorServiceApi,
             stateStoreDirectory,
             s3StateStoreBucket: stateStoreS3Bucket,
-            validateDocs,
+            validateStreams,
             ipfsPinningEndpoints,
             gateway,
             port,
+            hostname,
             loggerConfig,
             network,
             pubsubTopic,
@@ -105,20 +107,19 @@ export class CeramicCliUtils {
 
     /**
      * Internal helper for creating documents
-     * @param doctype - Document type
      * @param content - Document content
      * @param controllers - Document controllers
      * @param onlyGenesis - Create only a genesis commit (no publish or anchor)
      * @param deterministic - If true, documents will not be guaranteed to be unique. Documents with identical content will get de-duped.
-     * @param schemaDocId - Schema document ID
+     * @param schemaStreamId - Schema document ID
      */
-    static async _createDoc(doctype: string, content: string, controllers: string, onlyGenesis: boolean, deterministic: boolean, schemaDocId: string = null): Promise<void> {
+    static async _createDoc(content: string, controllers: string, onlyGenesis: boolean, deterministic: boolean, schemaStreamId: string = null): Promise<void> {
         await CeramicCliUtils._runWithCeramic(async (ceramic: CeramicClient) => {
             const parsedControllers = CeramicCliUtils._parseControllers(controllers)
             const parsedContent = CeramicCliUtils._parseContent(content)
-            const metadata = { controllers: parsedControllers, schema: schemaDocId, deterministic }
+            const metadata = { controllers: parsedControllers, schema: schemaStreamId, deterministic }
 
-            const doc = await TileDoctype.create(ceramic, parsedContent, metadata, {
+            const doc = await TileDocument.create(ceramic, parsedContent, metadata, {
                 anchor: !onlyGenesis,
                 publish: !onlyGenesis,
             })
@@ -130,23 +131,27 @@ export class CeramicCliUtils {
 
     /**
      * Update document
-     * @param docId - Document ID
+     * @param streamId - Document ID
      * @param content - Document content
      * @param controllers - Document controllers
      * @param schemaCommitId - Optional schema document CommitID
      */
-    static async update(docId: string, content: string, controllers: string, schemaCommitId?: string): Promise<void> {
-        const id = DocID.fromString(docId)
-        if (id.type != TileDoctype.DOCTYPE_ID) {
-            throw new Error(`CLI does not currently support updating doctypes other than 'tile'. DocID ${id.toString()} has doctype '${id.typeName}'`)
+    static async update(streamId: string, content: string, controllers: string, schemaCommitId?: string): Promise<void> {
+        const id = StreamID.fromString(streamId)
+        if (id.type != TileDocument.STREAM_TYPE_ID) {
+            throw new Error(`CLI does not currently support updating stream types other than 'tile'. StreamID ${id.toString()} has streamtype '${id.typeName}'`)
         }
-        const schemaId = CommitID.fromString(schemaCommitId)
         await CeramicCliUtils._runWithCeramic(async (ceramic: CeramicClient) => {
             const parsedControllers = CeramicCliUtils._parseControllers(controllers)
             const parsedContent = CeramicCliUtils._parseContent(content)
 
-            const doc = await TileDoctype.load(ceramic, id)
-            await doc.update(parsedContent, { controllers: parsedControllers, schema: schemaId })
+            const doc = await TileDocument.load(ceramic, id)
+            const metadata: TileMetadataArgs = { controllers: parsedControllers }
+            if (schemaCommitId) {
+                const schemaId = CommitID.fromString(schemaCommitId)
+                metadata.schema = schemaId
+            }
+            await doc.update(parsedContent, metadata)
 
             console.log(JSON.stringify(doc.content, null, 2))
         })
@@ -154,35 +159,35 @@ export class CeramicCliUtils {
 
     /**
      * Show document content
-     * @param docRef - Document ID
+     * @param streamRef - Stream ID
      */
-    static async show(docRef: string): Promise<void> {
+    static async show(streamRef: string): Promise<void> {
         await CeramicCliUtils._runWithCeramic(async (ceramic: CeramicApi) => {
-            const doc = await TileDoctype.load(ceramic, docRef)
-            console.log(JSON.stringify(doc.content, null, 2))
+            const stream = await TileDocument.load(ceramic, streamRef)
+            console.log(JSON.stringify(stream.content, null, 2))
         })
     }
 
     /**
-     * Show document state
-     * @param docRef - Document ID or Commit ID
+     * Show stream state
+     * @param streamRef - Stream ID or Commit ID
      */
-    static async state(docRef: string): Promise<void> {
+    static async state(streamRef: string): Promise<void> {
         await CeramicCliUtils._runWithCeramic(async (ceramic: CeramicApi) => {
-            const doc = await ceramic.loadDocument(docRef)
-            console.log(JSON.stringify(DoctypeUtils.serializeState(doc.state), null, 2))
+            const stream = await ceramic.loadStream(streamRef)
+            console.log(JSON.stringify(StreamUtils.serializeState(stream.state), null, 2))
         })
     }
 
     /**
      * Watch document state periodically
-     * @param docId - Document ID
+     * @param streamId - Stream ID
      */
-    static async watch(docId: string): Promise<void> {
-        const id = DocID.fromString(docId)
+    static async watch(streamId: string): Promise<void> {
+        const id = StreamID.fromString(streamId)
 
         await CeramicCliUtils._runWithCeramic(async (ceramic: CeramicApi) => {
-            const doc = await TileDoctype.load(ceramic, id)
+            const doc = await TileDocument.load(ceramic, id)
             console.log(JSON.stringify(doc.content, null, 2))
             doc.subscribe(() => {
               console.log('--- document changed ---')
@@ -192,30 +197,29 @@ export class CeramicCliUtils {
     }
 
     /**
-     * Get document commits
-     * @param docId - Document ID
+     * Get stream commits
+     * @param streamId - Stream ID
      */
-    static async commits(docId: string): Promise<void> {
-        const id = DocID.fromString(docId)
+    static async commits(streamId: string): Promise<void> {
+        const id = StreamID.fromString(streamId)
 
         await CeramicCliUtils._runWithCeramic(async (ceramic: CeramicApi) => {
-            const doc = await ceramic.loadDocument(id)
-            const commits = doc.allCommitIds.map(v => v.toString())
+            const stream = await ceramic.loadStream(id)
+            const commits = stream.allCommitIds.map(v => v.toString())
             console.log(JSON.stringify(commits, null, 2))
         })
     }
 
     /**
      * Create non-schema document
-     * @param doctype - Document type
      * @param content - Document content
      * @param controllers - Document controllers
      * @param onlyGenesis - Create only a genesis commit (no publish or anchor)
      * @param deterministic - If true, documents will not be guaranteed to be unique. Documents with identical content will get de-duped.
-     * @param schemaDocId - Schema document ID
+     * @param schemaStreamId - Schema document ID
      */
-    static async nonSchemaCreateDoc(doctype: string, content: string, controllers: string, onlyGenesis: boolean, deterministic: boolean, schemaDocId: string = null): Promise<void> {
-        return CeramicCliUtils._createDoc(doctype, content, controllers, onlyGenesis, deterministic, schemaDocId)
+    static async nonSchemaCreateDoc(content: string, controllers: string, onlyGenesis: boolean, deterministic: boolean, schemaStreamId: string = null): Promise<void> {
+        return CeramicCliUtils._createDoc(content, controllers, onlyGenesis, deterministic, schemaStreamId)
     }
 
     /**
@@ -227,27 +231,27 @@ export class CeramicCliUtils {
      */
     static async schemaCreateDoc(content: string, controllers: string, onlyGenesis: boolean, deterministic: boolean): Promise<void> {
         // TODO validate schema on the client side
-        return CeramicCliUtils._createDoc('tile', content, controllers, onlyGenesis, deterministic)
+        return CeramicCliUtils._createDoc(content, controllers, onlyGenesis, deterministic)
     }
 
     /**
      * Update schema document
-     * @param schemaDocId - Schema document ID
+     * @param schemaStreamId - Schema document ID
      * @param content - Schema document content
      * @param controllers - Schema document controllers
      */
-    static async schemaUpdateDoc(schemaDocId: string, content: string, controllers: string): Promise<void> {
-        DocID.fromString(schemaDocId)
+    static async schemaUpdateDoc(schemaStreamId: string, content: string, controllers: string): Promise<void> {
+        StreamID.fromString(schemaStreamId)
         // TODO validate schema on the client side
-        return CeramicCliUtils.update(schemaDocId, content, controllers, null)
+        return CeramicCliUtils.update(schemaStreamId, content, controllers, null)
     }
 
     /**
-     * Pin document
-     * @param docId - Document ID
+     * Pin stream
+     * @param streamId - Stream ID
      */
-    static async pinAdd(docId: string): Promise<void> {
-        const id = DocID.fromString(docId)
+    static async pinAdd(streamId: string): Promise<void> {
+        const id = StreamID.fromString(streamId)
 
         await CeramicCliUtils._runWithCeramic(async (ceramic: CeramicApi) => {
             const result = await ceramic.pin.add(id)
@@ -256,11 +260,11 @@ export class CeramicCliUtils {
     }
 
     /**
-     * Unpin document
-     * @param docId - Document ID
+     * Unpin stream
+     * @param streamId - Stream ID
      */
-    static async pinRm(docId: string): Promise<void> {
-        const id = DocID.fromString(docId)
+    static async pinRm(streamId: string): Promise<void> {
+        const id = StreamID.fromString(streamId)
 
         await CeramicCliUtils._runWithCeramic(async (ceramic: CeramicApi) => {
             const result = await ceramic.pin.rm(id)
@@ -269,19 +273,19 @@ export class CeramicCliUtils {
     }
 
     /**
-     * List pinned documents
-     * @param docId - optional document ID filter
+     * List pinned streams
+     * @param streamId - optional stream ID filter
      */
-    static async pinLs(docId?: string): Promise<void> {
-        const id = docId ? DocID.fromString(docId) : null
+    static async pinLs(streamId?: string): Promise<void> {
+        const id = streamId ? StreamID.fromString(streamId) : null
 
         await CeramicCliUtils._runWithCeramic(async (ceramic: CeramicApi) => {
-            const pinnedDocIds = []
+            const pinnedStreamIds = []
             const iterator = await ceramic.pin.ls(id)
             for await (const id of iterator) {
-                pinnedDocIds.push(id)
+                pinnedStreamIds.push(id)
             }
-            console.log(JSON.stringify(pinnedDocIds, null, 2))
+            console.log(JSON.stringify(pinnedStreamIds, null, 2))
         })
     }
 

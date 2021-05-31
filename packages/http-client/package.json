@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/http-client",
-  "version": "0.11.0-rc.1",
+  "version": "1.0.4",
   "description": "An http client for the ceramic network",
   "keywords": [
     "Ceramic",
@@ -22,34 +22,25 @@
     "build": "../../node_modules/.bin/tsc -p tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
-    "lint": "./node_modules/.bin/eslint ./src --ext .js,.jsx,.ts,.tsx",
+    "lint": "../../node_modules/.bin/eslint ./src --ext .js,.jsx,.ts,.tsx",
     "clean": "rm -rf ./lib",
-    "test": "./node_modules/.bin/jest --coverage --passWithNoTests --env=node"
+    "test": "../../node_modules/.bin/jest --silent --coverage --passWithNoTests"
   },
   "dependencies": {
-    "@ceramicnetwork/common": "^0.18.0-rc.0",
-    "@ceramicnetwork/docid": "^0.5.1",
-    "@ceramicnetwork/doctype-caip10-link": "^0.14.0-rc.1",
-    "@ceramicnetwork/doctype-tile": "^0.15.0-rc.1",
-    "cids": "~1.1.6",
-    "cross-fetch": "^3.0.6",
-    "dids": "^2.0.0",
-    "lru_map": "^0.4.1",
-    "rxjs": "^6.6.6"
+    "@ceramicnetwork/common": "^1.0.4",
+    "@ceramicnetwork/stream-caip10-link": "^1.0.4",
+    "@ceramicnetwork/stream-tile": "^1.0.4",
+    "@ceramicnetwork/streamid": "^1.0.1",
+    "query-string": "7.0.0",
+    "rxjs": "^7.0.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.9.0",
-    "@babel/preset-env": "^7.8.4",
-    "@babel/preset-typescript": "^7.9.0",
     "@types/node": "^13.13.15",
-    "@typescript-eslint/eslint-plugin": "^4.6.0",
-    "@typescript-eslint/parser": "^4.6.0",
-    "babel-jest": "^26.6.3",
-    "eslint": "^6.8.0",
-    "eslint-plugin-jest": "^23.8.2",
-    "jest": "^26.6.3"
+    "cids": "~1.1.6",
+    "dids": "^2.1.0"
   },
   "jest": {
+    "testEnvironment": "node",
     "testMatch": [
       "**/?(*.)+(spec|test).[jt]s?(x)"
     ]

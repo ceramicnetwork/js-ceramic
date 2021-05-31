@@ -27,7 +27,7 @@ export function getConsentMessage(
   addTimestamp = true
 ): ConsentMessage {
   const res: any = {
-    message: "Create a new account link to your identity." + "\n\n" + did,
+    message: "Link this account to your identity" + "\n\n" + did,
   };
   if (addTimestamp) {
     res.timestamp = Math.floor(Date.now() / 1000);

@@ -3,6 +3,149 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.4](/compare/@ceramicnetwork/common@1.0.4-rc.0...@ceramicnetwork/common@1.0.4) (2021-05-31)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+## [1.0.4-rc.0](/compare/@ceramicnetwork/common@1.0.3...@ceramicnetwork/common@1.0.4-rc.0) (2021-05-28)
+
+
+### Bug Fixes
+
+* **core:** only sync pinned streams the first time they are loaded (#1417) 76be682, closes #1417
+
+
+
+
+
+## [1.0.3](/compare/@ceramicnetwork/common@1.0.2...@ceramicnetwork/common@1.0.3) (2021-05-25)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+## [1.0.2](/compare/@ceramicnetwork/common@1.0.1...@ceramicnetwork/common@1.0.2) (2021-05-20)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+## [1.0.1](/compare/@ceramicnetwork/common@1.0.0...@ceramicnetwork/common@1.0.1) (2021-05-13)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+# [1.0.0](/compare/@ceramicnetwork/common@1.0.0-rc.6...@ceramicnetwork/common@1.0.0) (2021-05-06)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+# [1.0.0-rc.6](/compare/@ceramicnetwork/common@1.0.0-rc.5...@ceramicnetwork/common@1.0.0-rc.6) (2021-04-29)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+# [1.0.0-rc.5](/compare/@ceramicnetwork/common@1.0.0-rc.4...@ceramicnetwork/common@1.0.0-rc.5) (2021-04-28)
+
+
+### Bug Fixes
+
+* **common:** CeramicApi compatibility (#1326) 1837c0d, closes #1326
+
+
+### Features
+
+* Make optional custom file name for service log (#1325) f8b3c6d, closes #1325
+
+
+
+
+
+# [1.0.0-rc.4](/compare/@ceramicnetwork/common@1.0.0-rc.3...@ceramicnetwork/common@1.0.0-rc.4) (2021-04-23)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+# [1.0.0-rc.3](/compare/@ceramicnetwork/common@1.0.0-rc.2...@ceramicnetwork/common@1.0.0-rc.3) (2021-04-20)
+
+
+### Bug Fixes
+
+* **common:** Remove additional LF symbol introduced by Morgan logger (#1222) 838ce9c, closes #1222
+* Fix tests by using node environment for jest (#1212) 0f04006, closes #1212
+
+
+### Features
+
+* **cli,http-client:** Update HTTP API to use streams terminology (#1237) 6c0a142, closes #1237
+* **common:** Change 'sync' option to an enum and refine sync behaviors (#1269) 0b652fb, closes #1269
+* **common:** Miscellaneous renames from document-based to stream-based terminology (#1290) 2ca935e, closes #1290
+* **common:** Rename createDocumentFromGenesis to createStreamFromGenesis (#1285) 0dbfbf3, closes #1285
+* **common:** Update createStreamFromGenesis to take 'type' number instead of 'doctype' string (#1286) 967cf11, closes #1286
+* DocState contains type as number (#1250) 56501e2, closes #1250
+* **common:** Remove deprecated methods named with Records instead of Commits (#1217) 43fa46a, closes #1217
+* **common:** Rename Doctype to Stream (#1266) 4ebb6ac, closes #1266
+* **common,core:** Split DocOpts into CreateOpts, LoadOpts, and UpdateOpts (#1229) 85ccbb8, closes #1229
+* **core, http-client:** Remove default DID Resolver and make apps provide via CeramicAPI.setDID() (#1196) e9b3c18, closes #1196
+* **core, http-client, common:** Doctype accepts Running State (#1150) 0b708d4, closes #1150
+* **doctype-caip10-link:** Rename 'content' to 'did' for Caip10Link (#1216) f594ff0, closes #1216
+* **doctype-tile:** Log when DID is authenticated (#1199) 9d4a779, closes #1199
+* **http-client, cli:** Enable specifying DocOpts in CeramicClient.loadDocument (#1225) ce0694b, closes #1225
+* **streamid:** Rename DocID to StreamID (#1195) 65754d1, closes #1195
+* seperate node and browser loggers 0532bee
+* **tile-doctype:** Update Tile API (#1180) 90973ee, closes #1180
+
+
+
+
+
+# [1.0.0-rc.2](/compare/@ceramicnetwork/common@1.0.0-rc.1...@ceramicnetwork/common@1.0.0-rc.2) (2021-04-19)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+# [1.0.0-rc.1](/compare/@ceramicnetwork/common@0.18.0-rc.1...@ceramicnetwork/common@1.0.0-rc.1) (2021-04-19)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+# [0.18.0-rc.1](/compare/@ceramicnetwork/common@0.17.0...@ceramicnetwork/common@0.18.0-rc.1) (2021-04-19)
+
+
+### Bug Fixes
+
+* Fix tests by using node environment for jest (#1212) aff01c6, closes #1212
+
+
+
+
+
 # [0.18.0-rc.0](/compare/@ceramicnetwork/common@0.17.0...@ceramicnetwork/common@0.18.0-rc.0) (2021-04-02)
 
 

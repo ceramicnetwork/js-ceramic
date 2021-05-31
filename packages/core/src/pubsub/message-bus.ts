@@ -1,14 +1,35 @@
 import { buildQueryMessage, MsgType, PubsubMessage, ResponseMessage } from './pubsub-message';
-import { Observable, Subject, Subscription, SubscriptionLike } from 'rxjs';
-import { filter, map, take, tap } from 'rxjs/operators';
-import { DocID } from '@ceramicnetwork/docid';
+import { Observable, Subject, Subscription, SubscriptionLike, pipe, UnaryFunction } from 'rxjs';
+import { filter, map, takeUntil, tap } from 'rxjs/operators';
+import { StreamID } from '@ceramicnetwork/streamid';
 import CID from 'cids';
+
+export const MAX_RESPONSE_INTERVAL = 300; // milliseconds
+
+/**
+ * Stop emitting if +betweenMs+ passed since the last emitted value.
+ *
+ * @param betweenMs - max interval between the sequential values.
+ */
+function betweenTimeout<T>(betweenMs: number): UnaryFunction<Observable<T>, Observable<T>> {
+  const stop = new Subject<boolean>();
+  let trigger = undefined;
+  return pipe(
+    tap(() => {
+      if (trigger) clearTimeout(trigger);
+      trigger = setTimeout(() => {
+        stop.next(true);
+      }, betweenMs);
+    }),
+    takeUntil(stop),
+  );
+}
 
 /**
  * Multiplexing IPFS Pubsub.
  */
 export class MessageBus extends Observable<PubsubMessage> implements SubscriptionLike {
-  readonly outstandingQueries: Map<string, DocID> = new Map();
+  readonly outstandingQueries: Map<string, StreamID> = new Map();
   private readonly pubsubSubscription: Subscription;
   private readonly feed$: Subject<PubsubMessage> = new Subject<PubsubMessage>();
 
@@ -38,21 +59,22 @@ export class MessageBus extends Observable<PubsubMessage> implements Subscriptio
   }
 
   /**
-   * Query network for tips of document.
+   * Query network for tips of a stream.
    *
    * Sends query message to a network, adding the message id to outstandingQueries.
    * Returns CID of the tip based on response message.
    */
-  queryNetwork(docId: DocID): Observable<CID> {
-    const queryMessage = buildQueryMessage(docId);
+  queryNetwork(streamId: StreamID): Observable<CID> {
+    const queryMessage = buildQueryMessage(streamId);
     this.next(queryMessage);
-    this.outstandingQueries.set(queryMessage.id, docId);
+    this.outstandingQueries.set(queryMessage.id, streamId);
     return this.pipe(
       filter<PubsubMessage, ResponseMessage>(
         (message): message is ResponseMessage => message.typ === MsgType.RESPONSE && message.id === queryMessage.id,
       ),
-      map((message) => message.tips.get(docId.toString())),
-      take(1),
+      map((message) => message.tips.get(streamId.toString())),
+      filter((tip) => !!tip),
+      betweenTimeout(MAX_RESPONSE_INTERVAL),
     );
   }
 

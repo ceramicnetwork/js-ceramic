@@ -3,6 +3,219 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.4](/compare/@ceramicnetwork/cli@1.0.4-rc.0...@ceramicnetwork/cli@1.0.4) (2021-05-31)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+## [1.0.4-rc.0](/compare/@ceramicnetwork/cli@1.0.3...@ceramicnetwork/cli@1.0.4-rc.0) (2021-05-28)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+## [1.0.3](/compare/@ceramicnetwork/cli@1.0.2...@ceramicnetwork/cli@1.0.3) (2021-05-25)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+## [1.0.2](/compare/@ceramicnetwork/cli@1.0.1...@ceramicnetwork/cli@1.0.2) (2021-05-20)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+## [1.0.1](/compare/@ceramicnetwork/cli@1.0.0...@ceramicnetwork/cli@1.0.1) (2021-05-13)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [1.0.0](/compare/@ceramicnetwork/cli@1.0.0-rc.13...@ceramicnetwork/cli@1.0.0) (2021-05-06)
+
+
+### Bug Fixes
+
+* **cli:** Handle undefined docOpts in legacy http endpoints (#1353) a473ce5, closes #1353
+
+
+### Features
+
+* Expose CeramicDaemon from cli package (#1357) 28d0e65, closes #1357
+
+
+
+
+
+# [1.0.0-rc.13](/compare/@ceramicnetwork/cli@1.0.0-rc.12...@ceramicnetwork/cli@1.0.0-rc.13) (2021-05-03)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [1.0.0-rc.12](/compare/@ceramicnetwork/cli@1.0.0-rc.11...@ceramicnetwork/cli@1.0.0-rc.12) (2021-04-30)
+
+
+### Features
+
+* **cli:** use 0 address for default hostname (#1330) 50ea615, closes #1330
+
+
+
+
+
+# [1.0.0-rc.11](/compare/@ceramicnetwork/cli@1.0.0-rc.10...@ceramicnetwork/cli@1.0.0-rc.11) (2021-04-29)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [1.0.0-rc.10](/compare/@ceramicnetwork/cli@1.0.0-rc.9...@ceramicnetwork/cli@1.0.0-rc.10) (2021-04-29)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [1.0.0-rc.9](/compare/@ceramicnetwork/cli@1.0.0-rc.8...@ceramicnetwork/cli@1.0.0-rc.9) (2021-04-29)
+
+
+### Features
+
+* **cli:** allow daemon hostname to be configured (#1329) feba266, closes #1329
+
+
+
+
+
+# [1.0.0-rc.8](/compare/@ceramicnetwork/cli@1.0.0-rc.7...@ceramicnetwork/cli@1.0.0-rc.8) (2021-04-28)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [1.0.0-rc.7](/compare/@ceramicnetwork/cli@1.0.0-rc.6...@ceramicnetwork/cli@1.0.0-rc.7) (2021-04-28)
+
+
+### Bug Fixes
+
+* **cli:** Allow large requests to http API (#1324) 714922d, closes #1324
+
+
+
+
+
+# [1.0.0-rc.6](/compare/@ceramicnetwork/cli@1.0.0-rc.5...@ceramicnetwork/cli@1.0.0-rc.6) (2021-04-26)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [1.0.0-rc.5](/compare/@ceramicnetwork/cli@1.0.0-rc.4...@ceramicnetwork/cli@1.0.0-rc.5) (2021-04-23)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [1.0.0-rc.4](/compare/@ceramicnetwork/cli@1.0.0-rc.3...@ceramicnetwork/cli@1.0.0-rc.4) (2021-04-23)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [1.0.0-rc.3](/compare/@ceramicnetwork/cli@1.0.0-rc.2...@ceramicnetwork/cli@1.0.0-rc.3) (2021-04-20)
+
+
+### Bug Fixes
+
+* **cli:** Fix cli update function (#1238) b033038, closes #1238
+* Fix tests by using node environment for jest (#1212) 0f04006, closes #1212
+* **cli:** set a DID with resolvers in daemon (#1200) f3c9c2d, closes #1200
+
+
+### Features
+
+* **common:** Change 'sync' option to an enum and refine sync behaviors (#1269) 0b652fb, closes #1269
+* **common:** Miscellaneous renames from document-based to stream-based terminology (#1290) 2ca935e, closes #1290
+* **common:** Rename createDocumentFromGenesis to createStreamFromGenesis (#1285) 0dbfbf3, closes #1285
+* **common:** Update createStreamFromGenesis to take 'type' number instead of 'doctype' string (#1286) 967cf11, closes #1286
+* DocState contains type as number (#1250) 56501e2, closes #1250
+* **cli,http-client:** Update HTTP API to use streams terminology (#1237) 6c0a142, closes #1237
+* **common:** Remove deprecated methods named with Records instead of Commits (#1217) 43fa46a, closes #1217
+* **common:** Rename Doctype to Stream (#1266) 4ebb6ac, closes #1266
+* **core, http-client:** Remove default DID Resolver and make apps provide via CeramicAPI.setDID() (#1196) e9b3c18, closes #1196
+* **core, http-client, common:** Doctype accepts Running State (#1150) 0b708d4, closes #1150
+* **core,http-client,cli:** Update config options from document to stream-based terminology (#1249) 5ce0969, closes #1249
+* **doctype-caip10-link:** Rename 'content' to 'did' for Caip10Link (#1216) f594ff0, closes #1216
+* **doctype-tile,doctype-caip10-link:** Rename TileDoctype and Caip10LinkDoctype to TileDocument and Caip10Link (#1264) ed7ee3c, closes #1264
+* **http-client, cli:** Enable specifying DocOpts in CeramicClient.loadDocument (#1225) ce0694b, closes #1225
+* **streamid:** Rename DocID to StreamID (#1195) 65754d1, closes #1195
+* **tile-doctype:** Update Tile API (#1180) 90973ee, closes #1180
+
+
+
+
+
+# [1.0.0-rc.2](/compare/@ceramicnetwork/cli@1.0.0-rc.1...@ceramicnetwork/cli@1.0.0-rc.2) (2021-04-19)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [1.0.0-rc.1](/compare/@ceramicnetwork/cli@0.23.0-rc.2...@ceramicnetwork/cli@1.0.0-rc.1) (2021-04-19)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [0.23.0-rc.2](/compare/@ceramicnetwork/cli@0.23.0-rc.1...@ceramicnetwork/cli@0.23.0-rc.2) (2021-04-19)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [0.23.0-rc.1](/compare/@ceramicnetwork/cli@0.22.0...@ceramicnetwork/cli@0.23.0-rc.1) (2021-04-19)
+
+
+### Bug Fixes
+
+* Fix tests by using node environment for jest (#1212) aff01c6, closes #1212
+
+
+
+
+
 # [0.23.0-rc.0](/compare/@ceramicnetwork/cli@0.22.0...@ceramicnetwork/cli@0.23.0-rc.0) (2021-04-02)
 
 

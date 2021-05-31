@@ -67,7 +67,7 @@ export class PinningAggregation implements PinningBackend {
     }
 
     /**
-     * Pin document.
+     * Pin stream.
      * Async semantics: every call should succeed.
      */
     async pin(cid: CID): Promise<void> {

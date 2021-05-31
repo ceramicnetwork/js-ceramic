@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/pinning-powergate-backend",
-  "version": "0.2.2-rc.0",
+  "version": "1.0.4",
   "description": "Powergate Pinning backend",
   "keywords": [
     "ceramic",
@@ -14,11 +14,11 @@
     "lib"
   ],
   "scripts": {
-    "test": "../../node_modules/.bin/jest --coverage",
+    "test": "../../node_modules/.bin/jest --silent --coverage",
     "build": "../../node_modules/.bin/tsc -p tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
-    "lint": "./node_modules/.bin/eslint ./src --ext .js,.jsx,.ts,.tsx",
+    "lint": "../../node_modules/.bin/eslint ./src --ext .js,.jsx,.ts,.tsx",
     "clean": "rm -rf ./lib"
   },
   "author": "Sergey Ukustov <sergey@ukstv.me>",
@@ -29,10 +29,10 @@
   "dependencies": {
     "@stablelib/base64": "^1.0.0",
     "@stablelib/sha256": "^1.0.0",
-    "@textile/powergate-client": "^2.0.1"
+    "@textile/powergate-client": "^4.1.0"
   },
   "devDependencies": {
-    "@ceramicnetwork/common": "^0.18.0-rc.0",
+    "@ceramicnetwork/common": "^1.0.4",
     "cids": "~1.1.6"
   },
   "publishConfig": {

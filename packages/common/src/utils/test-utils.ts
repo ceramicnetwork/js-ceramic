@@ -1,52 +1,52 @@
-import {DocState, Doctype} from "../doctype";
+import {StreamState, Stream} from "../stream";
 import {take, filter} from 'rxjs/operators'
 import { BehaviorSubject } from "rxjs";
 import { RunningStateLike } from '../running-state-like';
-import { DocID } from '@ceramicnetwork/docid';
+import { StreamID } from '@ceramicnetwork/streamid';
 
-class FakeRunningState extends BehaviorSubject<DocState> implements RunningStateLike {
-  readonly id: DocID;
-  readonly state: DocState;
+class FakeRunningState extends BehaviorSubject<StreamState> implements RunningStateLike {
+  readonly id: StreamID;
+  readonly state: StreamState;
 
-  constructor(value: DocState) {
+  constructor(value: StreamState) {
     super(value);
     this.state = this.value;
-    this.id = new DocID(this.state.doctype, this.state.log[0].cid);
+    this.id = new StreamID(this.state.type, this.state.log[0].cid);
   }
 }
 
 export class TestUtils {
 
     /**
-     * Returns a Promise that resolves when there is an update to the given document's state.
-     * @param doc
+     * Returns a Promise that resolves when there is an update to the given stream's state.
+     * @param stream
      */
-    static registerChangeListener(doc: Doctype): Promise<DocState> {
-        return doc.pipe(take(1)).toPromise()
+    static registerChangeListener(stream: Stream): Promise<StreamState> {
+        return stream.pipe(take(1)).toPromise()
     }
 
     /**
-     * Given a document and a predicate that operates on the document state, continuously waits for
-     * changes to the document until the predicate returns true.
-     * @param doc
+     * Given a stream and a predicate that operates on the stream state, continuously waits for
+     * changes to the stream until the predicate returns true.
+     * @param stream
      * @param timeout - how long to wait for
-     * @param predicate - function that takes the document's DocState as input and returns true when this function can stop waiting
+     * @param predicate - function that takes the stream's StreamState as input and returns true when this function can stop waiting
      * @param onFailure - function called if we time out before the predicate becomes true
      */
-    static async waitForState(doc: Doctype,
+    static async waitForState(stream: Stream,
                               timeout: number,
-                              predicate: (state: DocState) => boolean,
+                              predicate: (state: StreamState) => boolean,
                               onFailure: () => void): Promise<void> {
-        if (predicate(doc.state)) return;
+        if (predicate(stream.state)) return;
         const timeoutPromise = new Promise(resolve => setTimeout(resolve, timeout))
-        const completionPromise = doc.pipe(filter(state => predicate(state))).toPromise()
+        const completionPromise = stream.pipe(filter(state => predicate(state))).toPromise()
         await Promise.race([timeoutPromise, completionPromise])
-        if (!predicate(doc.state)) {
+        if (!predicate(stream.state)) {
             onFailure()
         }
     }
 
-    static runningState(state: DocState): RunningStateLike {
+    static runningState(state: StreamState): RunningStateLike {
       return new FakeRunningState(state)
     }
 }

@@ -3,6 +3,150 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.4](/compare/@ceramicnetwork/http-client@1.0.4-rc.0...@ceramicnetwork/http-client@1.0.4) (2021-05-31)
+
+**Note:** Version bump only for package @ceramicnetwork/http-client
+
+
+
+
+
+## [1.0.4-rc.0](/compare/@ceramicnetwork/http-client@1.0.3...@ceramicnetwork/http-client@1.0.4-rc.0) (2021-05-28)
+
+**Note:** Version bump only for package @ceramicnetwork/http-client
+
+
+
+
+
+## [1.0.3](/compare/@ceramicnetwork/http-client@1.0.2...@ceramicnetwork/http-client@1.0.3) (2021-05-25)
+
+
+### Bug Fixes
+
+* **http-client:** Allow just one stream of sync http calls (#1406) f089c41, closes #1406
+
+
+
+
+
+## [1.0.2](/compare/@ceramicnetwork/http-client@1.0.1...@ceramicnetwork/http-client@1.0.2) (2021-05-20)
+
+
+### Bug Fixes
+
+* **core,http-client:** Add setter for 'did' property on CeramicApi implmentations (#1391) 700221e, closes #1391
+
+
+
+
+
+## [1.0.1](/compare/@ceramicnetwork/http-client@1.0.0...@ceramicnetwork/http-client@1.0.1) (2021-05-13)
+
+**Note:** Version bump only for package @ceramicnetwork/http-client
+
+
+
+
+
+# [1.0.0](/compare/@ceramicnetwork/http-client@1.0.0-rc.6...@ceramicnetwork/http-client@1.0.0) (2021-05-06)
+
+
+### Features
+
+* http client applyCommit respects cache (#1355) 4cb0fe7, closes #1355
+
+
+
+
+
+# [1.0.0-rc.6](/compare/@ceramicnetwork/http-client@1.0.0-rc.5...@ceramicnetwork/http-client@1.0.0-rc.6) (2021-04-29)
+
+**Note:** Version bump only for package @ceramicnetwork/http-client
+
+
+
+
+
+# [1.0.0-rc.5](/compare/@ceramicnetwork/http-client@1.0.0-rc.4...@ceramicnetwork/http-client@1.0.0-rc.5) (2021-04-28)
+
+**Note:** Version bump only for package @ceramicnetwork/http-client
+
+
+
+
+
+# [1.0.0-rc.4](/compare/@ceramicnetwork/http-client@1.0.0-rc.3...@ceramicnetwork/http-client@1.0.0-rc.4) (2021-04-23)
+
+**Note:** Version bump only for package @ceramicnetwork/http-client
+
+
+
+
+
+# [1.0.0-rc.3](/compare/@ceramicnetwork/http-client@1.0.0-rc.2...@ceramicnetwork/http-client@1.0.0-rc.3) (2021-04-20)
+
+
+### Bug Fixes
+
+* Fix tests by using node environment for jest (#1212) 0f04006, closes #1212
+
+
+### Features
+
+* **common:** Change 'sync' option to an enum and refine sync behaviors (#1269) 0b652fb, closes #1269
+* **common:** Miscellaneous renames from document-based to stream-based terminology (#1290) 2ca935e, closes #1290
+* **common:** Remove deprecated methods named with Records instead of Commits (#1217) 43fa46a, closes #1217
+* **common:** Rename createDocumentFromGenesis to createStreamFromGenesis (#1285) 0dbfbf3, closes #1285
+* **common:** Update createStreamFromGenesis to take 'type' number instead of 'doctype' string (#1286) 967cf11, closes #1286
+* DocState contains type as number (#1250) 56501e2, closes #1250
+* **cli,http-client:** Update HTTP API to use streams terminology (#1237) 6c0a142, closes #1237
+* **common:** Rename Doctype to Stream (#1266) 4ebb6ac, closes #1266
+* **common,core:** Split DocOpts into CreateOpts, LoadOpts, and UpdateOpts (#1229) 85ccbb8, closes #1229
+* **core, http-client:** Remove default DID Resolver and make apps provide via CeramicAPI.setDID() (#1196) e9b3c18, closes #1196
+* **core, http-client, common:** Doctype accepts Running State (#1150) 0b708d4, closes #1150
+* **core,http-client,cli:** Update config options from document to stream-based terminology (#1249) 5ce0969, closes #1249
+* **doctype-tile,doctype-caip10-link:** Rename TileDoctype and Caip10LinkDoctype to TileDocument and Caip10Link (#1264) ed7ee3c, closes #1264
+* **http-client, cli:** Enable specifying DocOpts in CeramicClient.loadDocument (#1225) ce0694b, closes #1225
+* **streamid:** Rename DocID to StreamID (#1195) 65754d1, closes #1195
+* **tile-doctype:** Update Tile API (#1180) 90973ee, closes #1180
+
+
+
+
+
+# [1.0.0-rc.2](/compare/@ceramicnetwork/http-client@1.0.0-rc.1...@ceramicnetwork/http-client@1.0.0-rc.2) (2021-04-19)
+
+**Note:** Version bump only for package @ceramicnetwork/http-client
+
+
+
+
+
+# [1.0.0-rc.1](/compare/@ceramicnetwork/http-client@0.11.0-rc.3...@ceramicnetwork/http-client@1.0.0-rc.1) (2021-04-19)
+
+**Note:** Version bump only for package @ceramicnetwork/http-client
+
+
+
+
+
+# [0.11.0-rc.3](/compare/@ceramicnetwork/http-client@0.11.0-rc.2...@ceramicnetwork/http-client@0.11.0-rc.3) (2021-04-19)
+
+**Note:** Version bump only for package @ceramicnetwork/http-client
+
+
+
+
+
+# [0.11.0-rc.2](/compare/@ceramicnetwork/http-client@0.10.1...@ceramicnetwork/http-client@0.11.0-rc.2) (2021-04-19)
+
+**Note:** Version bump only for package @ceramicnetwork/http-client
+
+
+
+
+
 # [0.11.0-rc.1](/compare/@ceramicnetwork/http-client@0.10.1...@ceramicnetwork/http-client@0.11.0-rc.1) (2021-04-02)
 
 

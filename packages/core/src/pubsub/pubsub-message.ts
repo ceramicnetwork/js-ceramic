@@ -1,4 +1,4 @@
-import DocID from '@ceramicnetwork/docid';
+import StreamID from '@ceramicnetwork/streamid';
 import CID from 'cids';
 import { UnreachableCaseError } from '@ceramicnetwork/common';
 import dagCBOR from 'ipld-dag-cbor';
@@ -18,14 +18,14 @@ export enum MsgType {
 
 export type UpdateMessage = {
   typ: MsgType.UPDATE;
-  doc: DocID;
+  stream: StreamID;
   tip: CID;
 };
 
 export type QueryMessage = {
   typ: MsgType.QUERY;
   id: string;
-  doc: DocID;
+  stream: StreamID;
 };
 
 export type ResponseMessage = {
@@ -47,12 +47,12 @@ function messageHash(message: any): string {
   return uint8arrays.toString(multihashes.encode(id, 'sha2-256'), 'base64url');
 }
 
-export function buildQueryMessage(docId: DocID): QueryMessage {
+export function buildQueryMessage(streamId: StreamID): QueryMessage {
   const payload = {
     typ: MsgType.QUERY as MsgType.QUERY,
-    doc: docId,
+    stream: streamId,
   };
-  const id = messageHash({...payload, doc: docId.toString()});
+  const id = messageHash({...payload, stream: streamId.toString()});
   return {
     ...payload,
     id: id,
@@ -64,7 +64,8 @@ export function serialize(message: PubsubMessage): string {
     case MsgType.QUERY: {
       return JSON.stringify({
         ...message,
-        doc: message.doc.toString(),
+        doc: message.stream.toString(), // todo remove once we no longer support interop with nodes older than v1.0.0
+        stream: message.stream.toString(),
       });
     }
     case MsgType.RESPONSE: {
@@ -77,7 +78,8 @@ export function serialize(message: PubsubMessage): string {
       return JSON.stringify(payload);
     }
     case MsgType.UPDATE: {
-      const payload = { typ: MsgType.UPDATE, doc: message.doc.toString(), tip: message.tip.toString() };
+      // todo remove 'doc' once we no longer support interop with nodes older than v1.0.0
+      const payload = { typ: MsgType.UPDATE, doc: message.stream.toString(), stream: message.stream.toString(), tip: message.tip.toString() };
       return JSON.stringify(payload);
     }
     default:
@@ -92,9 +94,11 @@ export function deserialize(message: any): PubsubMessage {
   const typ = parsed.typ as MsgType;
   switch (typ) {
     case MsgType.UPDATE: {
+      // TODO don't take streamid from 'doc' once we no longer interop with nodes older than v1.0.0
+      const stream = StreamID.fromString(parsed.stream || parsed.doc)
       return {
         typ: MsgType.UPDATE,
-        doc: DocID.fromString(parsed.doc),
+        stream,
         tip: new CID(parsed.tip),
       };
     }
@@ -107,12 +111,15 @@ export function deserialize(message: any): PubsubMessage {
         tips: tips,
       };
     }
-    case MsgType.QUERY:
+    case MsgType.QUERY: {
+      // TODO don't take streamid from 'doc' once we no longer interop with nodes older than v1.0.0
+      const stream = StreamID.fromString(parsed.stream || parsed.doc)
       return {
         typ: MsgType.QUERY,
         id: parsed.id,
-        doc: DocID.fromString(parsed.doc),
+        stream,
       };
+    }
     default:
       throw new UnreachableCaseError(typ, 'Unknown message type');
   }

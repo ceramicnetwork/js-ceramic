@@ -1,12 +1,13 @@
 import { mock } from 'jest-mock-extended'
 
 import Utils from '../../utils'
-import { CeramicApi, Doctype, DocState, TestUtils, CommitType } from '@ceramicnetwork/common';
+import { CeramicApi, Stream, StreamState, TestUtils, CommitType } from '@ceramicnetwork/common';
 import CID from 'cids'
+import { TileDocument } from '@ceramicnetwork/stream-tile';
 
 const FAKE_CID = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu');
 
-class BasicDoctypeWithContent extends Doctype {
+class BasicStreamWithContent extends TileDocument {
     makeReadOnly() {
         throw new Error('Not implemented')
     }
@@ -16,7 +17,7 @@ class BasicDoctypeWithContent extends Doctype {
     }
 }
 
-describe('Doctype', () => {
+describe('Stream', () => {
     let ceramic: any
     const schema = {
         "$schema": "http://json-schema.org/draft-07/schema#",
@@ -30,7 +31,7 @@ describe('Doctype', () => {
     beforeAll(() => {
         const docSchemaState = {
           content: schema,
-          doctype: 'tile',
+          type: 0,
           metadata: {
             controllers: [],
             schema: 'ceramic://1234567'
@@ -41,19 +42,19 @@ describe('Doctype', () => {
               cid: FAKE_CID
             }
           ]
-        } as unknown as DocState
+        } as unknown as StreamState
 
-        const schemaDoc = new BasicDoctypeWithContent(TestUtils.runningState(docSchemaState), null)
+        const schemaDoc = new BasicStreamWithContent(TestUtils.runningState(docSchemaState), null)
 
         ceramic = mock<CeramicApi>()
-        ceramic.loadDocument.mockReturnValue(new Promise<Doctype>((resolve) => {
+        ceramic.loadStream.mockReturnValue(new Promise<Stream>((resolve) => {
             resolve(schemaDoc);
         }));
     })
 
     it('should pass schema validation', async () => {
         const state = {
-          doctype: 'tile',
+          type: 0,
           metadata: {
             controllers: [],
             schema: 'ceramic://1234567'
@@ -67,15 +68,15 @@ describe('Doctype', () => {
               cid: FAKE_CID
             }
           ]
-        } as unknown as DocState
+        } as unknown as StreamState
 
-        const doc = new BasicDoctypeWithContent(TestUtils.runningState(state), { api: ceramic })
+        const doc = new BasicStreamWithContent(TestUtils.runningState(state), { api: ceramic })
         await Utils.validateSchema(doc)
     })
 
     it('should fail schema validation', async () => {
         const state = {
-          doctype: 'tile',
+          type: 0,
           metadata: {
             controllers: [],
             schema: 'ceramic://1234567'
@@ -89,14 +90,9 @@ describe('Doctype', () => {
               cid: FAKE_CID
             }
           ]
-        } as unknown as DocState;
+        } as unknown as StreamState;
 
-        const doc = new BasicDoctypeWithContent(TestUtils.runningState(state), { api: ceramic })
-        try {
-            await Utils.validateSchema(doc)
-            throw new Error('Should not be able to validate invalid data')
-        } catch (e) {
-            expect(e.message).toEqual('Validation Error: data[\'x\'] should be string')
-        }
+        const doc = new BasicStreamWithContent(TestUtils.runningState(state), { api: ceramic })
+        await expect(Utils.validateSchema(doc)).rejects.toThrow('Validation Error: data/x must be string')
     })
 })

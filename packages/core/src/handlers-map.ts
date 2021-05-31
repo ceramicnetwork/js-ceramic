@@ -1,40 +1,51 @@
-import { TileDoctypeHandler } from '@ceramicnetwork/doctype-tile-handler';
-import { Caip10LinkDoctypeHandler } from '@ceramicnetwork/doctype-caip10-link-handler';
-import { Doctype, DoctypeHandler } from '@ceramicnetwork/common';
+import { TileDocumentHandler } from '@ceramicnetwork/stream-tile-handler';
+import { Caip10LinkHandler } from '@ceramicnetwork/stream-caip10-link-handler';
+import { Stream, StreamHandler } from '@ceramicnetwork/common';
 import { DiagnosticsLogger } from '@ceramicnetwork/common';
+import { StreamType } from '@ceramicnetwork/streamid';
+
+type Registry = Map<number, StreamHandler<Stream>>
+
+function defaultHandlers(): Registry {
+  const tile = new TileDocumentHandler()
+  const caip10Link = new Caip10LinkHandler()
+  const handlers = new Map<number, StreamHandler<Stream>>()
+  handlers.set(tile.type, tile)
+  handlers.set(caip10Link.type, caip10Link)
+  return handlers
+}
 
 /**
- * Container for doctype handlers. Maps doctype name to the handler instance.
- * TODO: This should map from doctype id rather than doctype name.
+ * Container for stream handlers. Maps stream code to the handler instance.
  */
 export class HandlersMap {
-  private readonly handlers: Map<string, DoctypeHandler<Doctype>>;
+  private readonly handlers: Registry;
 
-  constructor(private readonly logger: DiagnosticsLogger, handlers?: Map<string, DoctypeHandler<Doctype>>) {
-    this.handlers =
-      handlers || new Map().set('tile', new TileDoctypeHandler()).set('caip10-link', new Caip10LinkDoctypeHandler());
+  constructor(private readonly logger: DiagnosticsLogger, handlers?: Registry) {
+    this.handlers = handlers || defaultHandlers()
   }
 
   /**
-   * Return doctype handler based on its name. Throw error if not found.
+   * Return stream handler based on its name or code. Throw error if not found.
    *
-   * @param doctypeName - name of the handler.
+   * @param type - name or id of the handler.
    */
-  get<T extends Doctype>(doctypeName: string): DoctypeHandler<T> {
-    const handler = this.handlers.get(doctypeName);
+  get<T extends Stream>(type: string | number): StreamHandler<T> {
+    const id = typeof type == 'string' ? StreamType.codeByName(type) : type
+    const handler = this.handlers.get(id);
     if (handler) {
-      return handler as DoctypeHandler<T>;
+      return handler as StreamHandler<T>;
     } else {
-      throw new Error(doctypeName + ' is not a valid doctype');
+      throw new Error(type + ' is not a valid stream type');
     }
   }
 
   /**
-   * Add doctype handler to the collection.
+   * Add stream handler to the collection.
    */
-  add<T extends Doctype>(doctypeHandler: DoctypeHandler<T>): HandlersMap {
-    this.logger.debug(`Registered handler for ${doctypeHandler.name} doctype`);
-    this.handlers.set(doctypeHandler.name, doctypeHandler);
+  add<T extends Stream>(streamHandler: StreamHandler<T>): HandlersMap {
+    this.logger.debug(`Registered handler for ${streamHandler.type} stream type`);
+    this.handlers.set(streamHandler.type, streamHandler);
     return this;
   }
 }
