@@ -100,26 +100,6 @@ describe('anchor', () => {
     });
     expect(stream$.value.anchorStatus).toEqual(AnchorStatus.FAILED);
   });
-
-  test('anchor polling continues after error', async () => {
-    const stateManager = ceramic.repository.stateManager;
-    const fakeUpdateStateIfPinned = jest.fn();
-    (stateManager as any)._updateStateIfPinned = fakeUpdateStateIfPinned;
-
-    // Even if there are multiple errors while polling the anchor service, we continue trying
-    // until success, or until we hear a definitive "anchor failed" response from the anchor service
-    fakeUpdateStateIfPinned.mockRejectedValueOnce(new Error('loading from ipfs failed!'))
-    fakeUpdateStateIfPinned.mockRejectedValueOnce(new Error('loading from ipfs failed!'))
-    fakeUpdateStateIfPinned.mockRejectedValueOnce(new Error('loading from ipfs failed!'))
-
-    const stream = await TileDocument.create(ceramic, INITIAL_CONTENT, null, { anchor: false });
-    const stream$ = await ceramic.repository.load(stream.id, {});
-
-    await new Promise((resolve) => {
-      ceramic.repository.stateManager.anchor(stream$).add(resolve);
-    });
-    expect(stream$.value.anchorStatus).toEqual(AnchorStatus.ANCHORED);
-  });
 });
 
 test('handleTip', async () => {
