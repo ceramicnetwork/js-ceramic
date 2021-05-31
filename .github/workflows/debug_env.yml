@@ -52,7 +52,7 @@ jobs:
         uses: whoan/docker-build-with-cache-action@v5
         with:
           registry: ${{ steps.login-ecr.outputs.registry }}
-          image_name: ${{ steps.set-vars.outputs.IFPS_IMAGE }}
+          image_name: ${{ steps.set-vars.outputs.IPFS_IMAGE }}
           image_tag: $SHA_TAG,debug
           dockerfile: Dockerfile.ipfs-daemon
 
