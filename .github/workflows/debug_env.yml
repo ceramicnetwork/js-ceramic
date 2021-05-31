@@ -76,7 +76,7 @@ jobs:
           use_latest_task_def: "--use-latest-task-def"
           verbose: "--verbose"
 
-      - name: Update Ceramic
+      - name: Update IPFS
         uses: silinternational/ecs-deploy@master
         with:
           aws_access_key_cmd: "--aws-access-key"
