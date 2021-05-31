@@ -65,6 +65,7 @@ describe('Dispatcher', () => {
       repository,
       loggerProvider.getDiagnosticsLogger(),
       loggerProvider.makeServiceLogger('pubsub'),
+      loggerProvider.makeServiceLogger('dispatcher'),
     );
   });
 

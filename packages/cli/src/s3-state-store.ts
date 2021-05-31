@@ -1,4 +1,4 @@
-import { StreamState, Stream, StreamUtils } from "@ceramicnetwork/common"
+import { StreamState, Stream, StreamUtils, ServiceLogger } from '@ceramicnetwork/common';
 import StreamID from '@ceramicnetwork/streamid'
 import { StateStore } from "@ceramicnetwork/core";
 import LevelUp from "levelup";
@@ -12,7 +12,7 @@ export class S3StateStore implements StateStore {
   readonly #bucketName: string
   #store
 
-  constructor(bucketName: string) {
+  constructor(bucketName: string, readonly logger: ServiceLogger) {
     this.#bucketName = bucketName
   }
 
@@ -29,7 +29,14 @@ export class S3StateStore implements StateStore {
    * @param stream - Stream instance
    */
   async save(stream: Stream): Promise<void> {
+    const before = Date.now()
     await this.#store.put(stream.id.baseID.toString(), JSON.stringify(StreamUtils.serializeState(stream.state)))
+    const after = Date.now()
+    this.logger.log({
+      operation: 'save',
+      streamId: stream.id.baseID.toString(),
+      duration: after - before
+    })
   }
 
   /**
@@ -38,7 +45,14 @@ export class S3StateStore implements StateStore {
    */
   async load(streamId: StreamID): Promise<StreamState> {
     try {
+      const before = Date.now()
       const state = await this.#store.get(streamId.baseID.toString())
+      const after = Date.now()
+      this.logger.log({
+        operation: 'load',
+        streamId: streamId.baseID.toString(),
+        duration: after - before
+      })
       if (state) {
         return StreamUtils.deserializeState(JSON.parse(state));
       } else {
@@ -57,7 +71,14 @@ export class S3StateStore implements StateStore {
    * @param streamId - Stream ID
    */
   async remove(streamId: StreamID): Promise<void> {
+    const before = Date.now()
     await this.#store.del(streamId.baseID.toString())
+    const after = Date.now()
+    this.logger.log({
+      operation: 'remove',
+      streamId: streamId.baseID.toString(),
+      duration: after - before
+    })
   }
 
   /**
