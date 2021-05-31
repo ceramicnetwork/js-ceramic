@@ -8,6 +8,10 @@ jobs:
   build_and_push_images:
     name: Build and push
     runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.DEBUG_AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.DEBUG_AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: ${{ secrets.DEBUG_AWS_REGION }}
     steps:
       - name: Check out the repo
         uses: actions/checkout@v2
@@ -15,8 +19,8 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-access-key-id: ${{ secrets.DEBUG_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.DEBUG_AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-2
 
       - name: Login to Amazon ECR
@@ -52,15 +56,15 @@ jobs:
         uses: silinternational/ecs-deploy@master
         with:
           aws_access_key_cmd: "--aws-access-key"
-          aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_access_key: ${{ secrets.DEBUG_AWS_ACCESS_KEY_ID }}
           aws_secret_key_cmd: "--aws-secret-key"
-          aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_secret_key: ${{ secrets.DEBUG_AWS_SECRET_ACCESS_KEY }}
           cluster_cmd: "--cluster"
           cluster: "ceramic-dev-ex"
           image_cmd: "--image"
           image: ${{ steps.set-vars.outputs.CERAMIC_IMAGE }}:${{ steps.set-vars.outputs.SHA_TAG }}
           region_cmd: "--region"
-          region: ${{ secrets.AWS_REGION }}
+          region: ${{ secrets.DEBUG_AWS_REGION }}
           service_name_cmd: "--service-name"
           service_name: ${{ steps.set-vars.outputs.CERAMIC_SVC }}
           timeout_cmd: "--timeout"
@@ -72,15 +76,15 @@ jobs:
         uses: silinternational/ecs-deploy@master
         with:
           aws_access_key_cmd: "--aws-access-key"
-          aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_access_key: ${{ secrets.DEBUG_AWS_ACCESS_KEY_ID }}
           aws_secret_key_cmd: "--aws-secret-key"
-          aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_secret_key: ${{ secrets.DEBUG_AWS_SECRET_ACCESS_KEY }}
           cluster_cmd: "--cluster"
           cluster: "ceramic-dev-ex"
           image_cmd: "--image"
           image: ${{ steps.set-vars.outputs.IPFS_IMAGE }}:${{ steps.set-vars.outputs.SHA_TAG }}
           region_cmd: "--region"
-          region: ${{ secrets.AWS_REGION }}
+          region: ${{ secrets.DEBUG_AWS_REGION }}
           service_name_cmd: "--service-name"
           service_name: ${{ steps.set-vars.outputs.IPFS_SVC }}
           timeout_cmd: "--timeout"
