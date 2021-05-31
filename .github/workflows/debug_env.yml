@@ -45,7 +45,7 @@ jobs:
         with:
           registry: ${{ steps.login-ecr.outputs.registry }}
           image_name: ${{ steps.set-vars.outputs.ECR_REPOSITORY }}/js-ceramic
-          image_tag: ${{ steps.set-vars.outputs.SHA_TAG }}
+          image_tag: ${{ steps.set-vars.outputs.SHA_TAG }},debug,latest
           dockerfile: Dockerfile.daemon
 
       - name: Build and push IPFS image to ECR
@@ -54,11 +54,11 @@ jobs:
         with:
           registry: ${{ steps.login-ecr.outputs.registry }}
           image_name: ${{ steps.set-vars.outputs.ECR_REPOSITORY }}/ipfs-daemon
-          image_tag: ${{ steps.set-vars.outputs.SHA_TAG }}
+          image_tag: ${{ steps.set-vars.outputs.SHA_TAG }},debug,latest
           dockerfile: Dockerfile.ipfs-daemon
 
       - name: Update Ceramic
-        uses: silinternational/ecs-deploy@develop
+        uses: silinternational/ecs-deploy@master
         with:
           aws_access_key_cmd: "--aws-access-key"
           aws_access_key: ${{ secrets.DEBUG_AWS_ACCESS_KEY_ID }}
@@ -78,7 +78,7 @@ jobs:
           verbose: "--verbose"
 
       - name: Update IPFS
-        uses: silinternational/ecs-deploy@develop
+        uses: silinternational/ecs-deploy@master
         with:
           aws_access_key_cmd: "--aws-access-key"
           aws_access_key: ${{ secrets.DEBUG_AWS_ACCESS_KEY_ID }}
