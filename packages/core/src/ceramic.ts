@@ -598,11 +598,13 @@ class Ceramic implements CeramicApi {
    */
   restoreStreams() {
     this.repository.listPinned().then(async list => {
+      let item = list.pop()
       let n = 0
-      await Promise.all(list.map(async streamId => {
-        await this._loadStream(StreamID.fromString(streamId), { sync: SyncOptions.NEVER_SYNC })
+      while (item) {
+        await this._loadStream(StreamID.fromString(item), { sync: SyncOptions.NEVER_SYNC })
         n++;
-      }))
+        item = list.pop()
+      }
       this._logger.verbose(`Successfully restored ${n} pinned streams`)
     }).catch(error => {
       this._logger.err(error)
