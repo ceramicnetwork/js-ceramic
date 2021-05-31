@@ -40,17 +40,21 @@ jobs:
           echo "::set-output name=IPFS_SVC::ceramic-dev-ex-ipfs-nd"
           echo "::set-output name=SHA_TAG::$SHA_TAG"
 
-      - name: Build, tag, and push image to Amazon ECR
-        id: build-image
-        env:
-          CERAMIC_IMAGE: ${{ steps.set-vars.outputs.CERAMIC_IMAGE }}
-          IPFS_IMAGE: ${{ steps.set-vars.outputs.IPFS_IMAGE }}
-          SHA_TAG: ${{ steps.set-vars.outputs.SHA_TAG }}
-        run: |
-          docker build -f Dockerfile.daemon -t $CERAMIC_IMAGE:$SHA_TAG .
-          docker build -f Dockerfile.ipfs-daemon -t $IPFS_IMAGE:$SHA_TAG .
-          docker push $CERAMIC_IMAGE --all-tags
-          docker push $IPFS_IMAGE --all-tags
+      - name: Build and push Ceramic image to ECR
+        uses: whoan/docker-build-with-cache-action@v5
+        with:
+          registry: ${{ steps.login-ecr.outputs.registry }}
+          image_name: ${{ steps.set-vars.outputs.CERAMIC_IMAGE }}
+          image_tag: $SHA_TAG,debug
+          dockerfile: Dockerfile.daemon
+
+      - name: Build and push IPFS image to ECR
+        uses: whoan/docker-build-with-cache-action@v5
+        with:
+          registry: ${{ steps.login-ecr.outputs.registry }}
+          image_name: ${{ steps.set-vars.outputs.IFPS_IMAGE }}
+          image_tag: $SHA_TAG,debug
+          dockerfile: Dockerfile.ipfs-daemon
 
       - name: Update Ceramic
         uses: silinternational/ecs-deploy@master
