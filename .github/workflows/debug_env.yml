@@ -67,7 +67,7 @@ jobs:
           cluster_cmd: "--cluster"
           cluster: ${{ steps.set-vars.outputs.ECS_CLUSTER }}
           image_cmd: "--image"
-          image: ${{ steps.build-ceramic.outputs.FULL_IMAGE_NAME }}
+          image: ${{ steps.build-ceramic.outputs.FULL_IMAGE_NAME }}:${{ steps.set-vars.outputs.SHA_TAG }}
           region_cmd: "--region"
           region: ${{ secrets.DEBUG_AWS_REGION }}
           service_name_cmd: "--service-name"
@@ -87,7 +87,7 @@ jobs:
           cluster_cmd: "--cluster"
           cluster: ${{ steps.set-vars.outputs.ECS_CLUSTER }}
           image_cmd: "--image"
-          image: ${{ steps.build-ipfs.outputs.FULL_IMAGE_NAME }}
+          image: ${{ steps.build-ipfs.outputs.FULL_IMAGE_NAME }}:${{ steps.set-vars.outputs.SHA_TAG }}
           region_cmd: "--region"
           region: ${{ secrets.DEBUG_AWS_REGION }}
           service_name_cmd: "--service-name"
@@ -97,9 +97,9 @@ jobs:
           use_latest_task_def: "--use-latest-task-def"
           verbose: "--verbose"
 
-      # - name: Stop/restart running tasks
-      #   run: |
-      #       cd .github/workflows
-      #       chmod +x stopTasks.sh
-      #       ./stopTasks.sh ${{ steps.set-vars.outputs.ECS_CLUSTER }} ${{ steps.set-vars.outputs.CERAMIC_SVC }}
-      #       ./stopTasks.sh ${{ steps.set-vars.outputs.ECS_CLUSTER }} ${{ steps.set-vars.outputs.IPFS_SVC }}
+      - name: Stop/restart running tasks
+        run: |
+            cd .github/workflows
+            chmod +x stopTasks.sh
+            ./stopTasks.sh ${{ steps.set-vars.outputs.ECS_CLUSTER }} ${{ steps.set-vars.outputs.CERAMIC_SVC }}
+            ./stopTasks.sh ${{ steps.set-vars.outputs.ECS_CLUSTER }} ${{ steps.set-vars.outputs.IPFS_SVC }}
