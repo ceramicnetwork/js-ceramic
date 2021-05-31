@@ -15,7 +15,7 @@ import {
 import { RunningState } from './running-state';
 import CID from 'cids';
 import { catchError, concatMap, takeUntil } from 'rxjs/operators';
-import { Subscription, timer } from 'rxjs';
+import { empty, Subscription, timer } from 'rxjs';
 import { SnapshotState } from './snapshot-state';
 import { CommitID, StreamID } from '@ceramicnetwork/streamid';
 
@@ -268,15 +268,16 @@ export class StateManager {
               throw new UnreachableCaseError(asr, 'Unknown anchoring state');
           }
         }),
-        catchError((error, original) => {
+        catchError((error) => {
           // TODO: Combine these two log statements into one line so that they can't get split up in the
           // log output.
           this.logger.warn(`Error while anchoring stream ${state$.id.toString()}:${error}`)
           this.logger.warn(error)  // Log stack trace
 
-          // After logging error continue polling anchor service under the assumption that the
-          // error is temporary.
-          return original
+          // TODO: This can leave a stream with AnchorStatus PENDING or PROCESSING indefinitely.
+          // We should distinguish whether the error is transient or permanent, and either transition
+          // to AnchorStatus FAILED or keep retrying.
+          return empty()
         }),
       )
       .subscribe();
