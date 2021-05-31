@@ -41,6 +41,7 @@ jobs:
         env:
           CERAMIC_IMAGE: ${{ steps.set-vars.outputs.CERAMIC_IMAGE }}
           IPFS_IMAGE: ${{ steps.set-vars.outputs.IPFS_IMAGE }}
+          SHA_TAG: ${{ steps.set-vars.outputs.SHA_TAG }}
         run: |
           docker build -f Dockerfile.daemon -t $CERAMIC_IMAGE:$SHA_TAG .
           docker build -f Dockerfile.ipfs-daemon -t $IPFS_IMAGE:$SHA_TAG .
