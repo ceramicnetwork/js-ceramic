@@ -79,11 +79,11 @@ describe('Level data store', () => {
 
     const pinSpy = jest.spyOn(realIpfs.pin, 'add');
     await ceramic.pin.add(stream.id);
-    expect(pinSpy).toBeCalledTimes(4);
+    expect(pinSpy).toBeCalledTimes(5);
 
     const unpinSpy = jest.spyOn(realIpfs.pin, 'rm');
     await ceramic.pin.rm(stream.id);
-    expect(unpinSpy).toBeCalledTimes(4);
+    expect(unpinSpy).toBeCalledTimes(5);
 
     await ceramic.close();
     await realIpfs.stop();

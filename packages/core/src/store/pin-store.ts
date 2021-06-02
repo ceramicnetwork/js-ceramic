@@ -1,5 +1,5 @@
 import { StateStore } from "./state-store";
-import { LogEntry, StreamState, PinningBackend, StreamStateHolder } from '@ceramicnetwork/common';
+import { LogEntry, StreamState, PinningBackend, StreamStateHolder, StreamUtils } from '@ceramicnetwork/common';
 import CID from "cids"
 import StreamID from '@ceramicnetwork/streamid'
 
@@ -53,7 +53,7 @@ export class PinStore {
             points.push(cid)
 
             const record = await this.retrieve(cid)
-            if (record && record.proof) {
+            if (StreamUtils.isAnchorCommit(record)) {
                 points.push(record.proof)
 
                 const path = record.path ? "root/" + record.path : "root"
@@ -65,6 +65,9 @@ export class PinStore {
                     const subPathResolved = await this.resolve(record.proof.toString() + currentPath)
                     points.push(subPathResolved)
                 }
+            }
+            if (StreamUtils.isSignedCommit(record)) {
+                points.push(record.link)
             }
         }
         return points
