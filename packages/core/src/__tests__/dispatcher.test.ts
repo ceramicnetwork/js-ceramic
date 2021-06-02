@@ -139,7 +139,7 @@ describe('Dispatcher', () => {
     // Store the query ID sent when the stream is registered so we can use it as the response ID later
     const publishArgs = ipfs.pubsub.publish.mock.calls[0];
     expect(publishArgs[0]).toEqual(TOPIC);
-    const queryMessageSent = JSON.parse(publishArgs[1]);
+    const queryMessageSent = JSON.parse(new TextDecoder().decode(publishArgs[1]));
     const queryID = queryMessageSent.id;
 
     // Handle UPDATE message

@@ -67,7 +67,7 @@ export class IpfsPinning implements PinningBackend {
                 throw new NoIpfsInstanceError();
             }
         } else {
-            this.#ipfs = ipfsClient({
+            this.#ipfs = ipfsClient.create({
                 url: this.ipfsAddress
             });
         }

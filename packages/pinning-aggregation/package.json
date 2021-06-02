@@ -34,7 +34,8 @@
     "@ceramicnetwork/common": "^1.0.4",
     "@ceramicnetwork/pinning-ipfs-backend": "^1.0.4",
     "@ceramicnetwork/pinning-powergate-backend": "^1.0.4",
-    "cids": "~1.1.6"
+    "cids": "~1.1.6",
+    "ipfs-core-types": "^0.5.0"
   },
   "publishConfig": {
     "access": "public"

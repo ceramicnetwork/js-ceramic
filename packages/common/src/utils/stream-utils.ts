@@ -155,10 +155,9 @@ export class StreamUtils {
     static async convertCommitToSignedCommitContainer(commit: CeramicCommit, ipfs: IpfsApi): Promise<CeramicCommit> {
         if (StreamUtils.isSignedCommit(commit)) {
             const block = await ipfs.block.get((commit as DagJWS).link)
-            const linkedBlock = block.data instanceof Uint8Array ? block.data : new Uint8Array(block.data.buffer)
             return {
                 jws: commit as DagJWS,
-                linkedBlock,
+                linkedBlock: block.data,
             }
         }
         return commit

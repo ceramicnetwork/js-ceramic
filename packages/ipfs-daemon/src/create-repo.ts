@@ -10,13 +10,14 @@ const notALock = {
   getLockfilePath: () => {
     // Do Nothing
   },
-  lock: () => notALock.getCloser(),
+  lock: () => Promise.resolve(notALock.getCloser()),
   getCloser: () => ({
     close: () => {
       // Do Nothing
+      return Promise.resolve()
     },
   }),
-  locked: () => false,
+  locked: () => Promise.resolve(false),
 };
 
 export enum StorageBackend {

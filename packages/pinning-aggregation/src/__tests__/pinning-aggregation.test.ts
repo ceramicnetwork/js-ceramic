@@ -11,12 +11,10 @@ import {
 } from "@ceramicnetwork/common";
 import { IpfsPinning } from "@ceramicnetwork/pinning-ipfs-backend";
 import { PowergatePinningBackend } from "@ceramicnetwork/pinning-powergate-backend";
+import type { IPFS } from "ipfs-core-types";
 
 const cid = new CID("QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D");
-
-const context = ({
-    ipfs: jest.fn(),
-} as unknown) as Context;
+const ipfs = (jest.fn() as unknown) as IPFS;
 
 const token = "p0W3R9473_70K3N";
 const doubleFakeConnectionStrings = ["fake://alpha.com", "fake://beta.com"];
@@ -66,7 +64,7 @@ class FakePinning implements PinningBackend {
 describe("constructor", () => {
     test("init pinning backends", async () => {
         const connectionStrings = ["ipfs+context", "ipfs+https://example.com", `powergate://localhost:5002?token=${token}`, `powergate+https://example.com?token=${token}`,];
-        const aggregation = PinningAggregation.build(context, connectionStrings, [IpfsPinning, PowergatePinningBackend,]);
+        const aggregation = PinningAggregation.build(ipfs, connectionStrings, [IpfsPinning, PowergatePinningBackend,]);
         expect(aggregation.backends.length).toEqual(4);
 
         expect(aggregation.backends[0]).toBeInstanceOf(IpfsPinning);
@@ -91,21 +89,21 @@ describe("constructor", () => {
     test("unknown designator", async () => {
         const connectionStrings = ["foo://localhost:5001"];
         expect(() => {
-            PinningAggregation.build(context, connectionStrings);
+            PinningAggregation.build(ipfs, connectionStrings);
         }).toThrow(UnknownPinningService);
     });
 
     test("mangled designator", async () => {
         const connectionStrings = ["foo+ipfs://example.com"];
         expect(() => {
-            PinningAggregation.build(context, connectionStrings);
+            PinningAggregation.build(ipfs, connectionStrings);
         }).toThrow(UnknownPinningService);
     });
 });
 
 describe("#open", () => {
     test("call all backends", async () => {
-        const aggregation = PinningAggregation.build(context, doubleFakeConnectionStrings, [FakePinning]);
+        const aggregation = PinningAggregation.build(ipfs, doubleFakeConnectionStrings, [FakePinning]);
         expect(aggregation.backends.length).toEqual(2);
         expect(aggregation.backends[0]).toBeInstanceOf(FakePinning);
         expect(aggregation.backends[1]).toBeInstanceOf(FakePinning);
@@ -117,7 +115,7 @@ describe("#open", () => {
     });
 
     test("throw if backend fails", async () => {
-        const aggregation = PinningAggregation.build(context, doubleFakeConnectionStrings, [FakePinning]);
+        const aggregation = PinningAggregation.build(ipfs, doubleFakeConnectionStrings, [FakePinning]);
         aggregation.backends[0].open = jest.fn(() => {
             throw new Error(`oops`);
         });
@@ -128,7 +126,7 @@ describe("#open", () => {
 
 describe("#close", () => {
     test("call all backends", async () => {
-        const aggregation = PinningAggregation.build(context, doubleFakeConnectionStrings, [FakePinning]);
+        const aggregation = PinningAggregation.build(ipfs, doubleFakeConnectionStrings, [FakePinning]);
         expect(aggregation.backends.length).toEqual(2);
         expect(aggregation.backends[0]).toBeInstanceOf(FakePinning);
         expect(aggregation.backends[1]).toBeInstanceOf(FakePinning);
@@ -140,7 +138,7 @@ describe("#close", () => {
     });
 
     test("throw if backend fails", async () => {
-        const aggregation = PinningAggregation.build(context, doubleFakeConnectionStrings, [FakePinning]);
+        const aggregation = PinningAggregation.build(ipfs, doubleFakeConnectionStrings, [FakePinning]);
         aggregation.backends[0].close = jest.fn(() => {
             throw new Error(`oops`);
         });
@@ -151,7 +149,7 @@ describe("#close", () => {
 
 describe("#pin", () => {
     test("call all backends", async () => {
-        const aggregation = PinningAggregation.build(context, doubleFakeConnectionStrings, [FakePinning]);
+        const aggregation = PinningAggregation.build(ipfs, doubleFakeConnectionStrings, [FakePinning]);
         expect(aggregation.backends.length).toEqual(2);
         expect(aggregation.backends[0]).toBeInstanceOf(FakePinning);
         expect(aggregation.backends[1]).toBeInstanceOf(FakePinning);
@@ -163,7 +161,7 @@ describe("#pin", () => {
     });
 
     test("throw if backend fails", async () => {
-        const aggregation = PinningAggregation.build(context, doubleFakeConnectionStrings, [FakePinning]);
+        const aggregation = PinningAggregation.build(ipfs, doubleFakeConnectionStrings, [FakePinning]);
         aggregation.backends[0].pin = jest.fn(() => {
             throw new Error(`oops`);
         });
@@ -174,7 +172,7 @@ describe("#pin", () => {
 
 describe("#unpin", () => {
     test("call all backends", async () => {
-        const aggregation = PinningAggregation.build(context, doubleFakeConnectionStrings, [FakePinning]);
+        const aggregation = PinningAggregation.build(ipfs, doubleFakeConnectionStrings, [FakePinning]);
         expect(aggregation.backends.length).toEqual(2);
         expect(aggregation.backends[0]).toBeInstanceOf(FakePinning);
         expect(aggregation.backends[1]).toBeInstanceOf(FakePinning);
@@ -186,7 +184,7 @@ describe("#unpin", () => {
     });
 
     test("resolve if backend fails", async () => {
-        const aggregation = PinningAggregation.build(context, doubleFakeConnectionStrings, [FakePinning]);
+        const aggregation = PinningAggregation.build(ipfs, doubleFakeConnectionStrings, [FakePinning]);
         aggregation.backends[0].unpin = jest.fn(() => {
             throw new Error(`oops`);
         });
@@ -197,7 +195,7 @@ describe("#unpin", () => {
 
 describe("#ls", () => {
     test("merge backend designators", async () => {
-        const aggregation = PinningAggregation.build(context, doubleFakeConnectionStrings, [FakePinning]);
+        const aggregation = PinningAggregation.build(ipfs, doubleFakeConnectionStrings, [FakePinning]);
         const result = await aggregation.ls();
         const ids = aggregation.backends.map((b) => b.id);
         expect(result[cid.toString()]).toEqual(ids);
@@ -205,13 +203,13 @@ describe("#ls", () => {
 });
 
 test("#id", async () => {
-    const aggregation = PinningAggregation.build(context, doubleFakeConnectionStrings, [FakePinning]);
+    const aggregation = PinningAggregation.build(ipfs, doubleFakeConnectionStrings, [FakePinning]);
     expect(aggregation.id).toEqual("pinning-aggregation@MrsSJQiu_jyU4eUHlnStwE1_xiyF7aEz8OljvySd4Tk=");
 });
 
 describe("#info", () => {
     test("return random info", async () => {
-        const aggregation = PinningAggregation.build(context, doubleFakeConnectionStrings, [FakePinning]);
+        const aggregation = PinningAggregation.build(ipfs, doubleFakeConnectionStrings, [FakePinning]);
         const info = await aggregation.info();
         expect(info).toEqual({
             [aggregation.backends[0].id]: {

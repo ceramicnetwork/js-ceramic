@@ -75,7 +75,8 @@ export class Dispatcher {
    */
   async retrieveCommit (cid: CID | string): Promise<any> {
     try {
-      const record = await this._ipfs.dag.get(cid, {timeout: IPFS_GET_TIMEOUT})
+      const asCid = typeof cid === 'string' ? new CID(cid) : cid
+      const record = await this._ipfs.dag.get(asCid, {timeout: IPFS_GET_TIMEOUT})
       await this._restrictRecordSize(cid)
       return cloneDeep(record.value)
     } catch (e) {
@@ -91,7 +92,8 @@ export class Dispatcher {
    */
   async retrieveFromIPFS (cid: CID | string, path?: string): Promise<any> {
     try {
-      const record = await this._ipfs.dag.get(cid, {timeout: IPFS_GET_TIMEOUT, path})
+      const asCid = typeof cid === 'string' ? new CID(cid) : cid
+      const record = await this._ipfs.dag.get(asCid, {timeout: IPFS_GET_TIMEOUT, path})
       return cloneDeep(record.value)
     } catch (e) {
       this._logger.err(`Error while loading CID ${cid.toString()} from IPFS: ${e}`)

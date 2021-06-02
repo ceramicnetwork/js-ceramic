@@ -29,6 +29,7 @@
   },
   "devDependencies": {
     "@ceramicnetwork/common": "^1.0.4",
-    "@types/node": "^13.13.15"
+    "@types/node": "^13.13.15",
+    "multiaddr": "^9.0.1"
   }
 }
