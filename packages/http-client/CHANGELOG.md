@@ -3,6 +3,52 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.4](/compare/@ceramicnetwork/http-client@1.0.4-rc.0...@ceramicnetwork/http-client@1.0.4) (2021-05-31)
+
+**Note:** Version bump only for package @ceramicnetwork/http-client
+
+
+
+
+
+## [1.0.4-rc.0](/compare/@ceramicnetwork/http-client@1.0.3...@ceramicnetwork/http-client@1.0.4-rc.0) (2021-05-28)
+
+**Note:** Version bump only for package @ceramicnetwork/http-client
+
+
+
+
+
+## [1.0.3](/compare/@ceramicnetwork/http-client@1.0.2...@ceramicnetwork/http-client@1.0.3) (2021-05-25)
+
+
+### Bug Fixes
+
+* **http-client:** Allow just one stream of sync http calls (#1406) f089c41, closes #1406
+
+
+
+
+
+## [1.0.2](/compare/@ceramicnetwork/http-client@1.0.1...@ceramicnetwork/http-client@1.0.2) (2021-05-20)
+
+
+### Bug Fixes
+
+* **core,http-client:** Add setter for 'did' property on CeramicApi implmentations (#1391) 700221e, closes #1391
+
+
+
+
+
+## [1.0.1](/compare/@ceramicnetwork/http-client@1.0.0...@ceramicnetwork/http-client@1.0.1) (2021-05-13)
+
+**Note:** Version bump only for package @ceramicnetwork/http-client
+
+
+
+
+
 # [1.0.0](/compare/@ceramicnetwork/http-client@1.0.0-rc.6...@ceramicnetwork/http-client@1.0.0) (2021-05-06)
 
 

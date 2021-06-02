@@ -265,6 +265,8 @@ export class TileDocument<T = Record<string, any>> extends Stream {
         const header = headerFromMetadata(metadata)
         if (!metadata?.deterministic) {
             header.unique = uint8arrays.toString(randomBytes(12), 'base64')
+        } else if (content) {
+            throw new Error('Initial content must be null when creating a deterministic Tile document')
         }
 
         if (content == null) {

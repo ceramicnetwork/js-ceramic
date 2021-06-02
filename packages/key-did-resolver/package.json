@@ -1,6 +1,6 @@
 {
   "name": "key-did-resolver",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Ceramic did:key method resolver",
   "keywords": [
     "ceramic",
@@ -19,7 +19,7 @@
     "lib"
   ],
   "scripts": {
-    "test": "../../node_modules/.bin/jest --coverage --env=node",
+    "test": "../../node_modules/.bin/jest --silent --coverage --env=node",
     "build": "../../node_modules/.bin/tsc -p tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",

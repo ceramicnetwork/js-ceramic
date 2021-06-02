@@ -1,0 +1,92 @@
+name: Publish and deploy debug image
+
+on:
+  push:
+    branches: [ debug_* ]
+
+jobs:
+  build_and_push_images:
+    name: Build and push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-2
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Set Variables
+        id: set-vars
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: "ceramic-debug"
+        run: |
+          echo "::set-output name=CERAMIC_IMAGE::$ECR_REGISTRY/$ECR_REPOSITORY/js-ceramic"
+          echo "::set-output name=IPFS_IMAGE::$ECR_REGISTRY/$ECR_REPOSITORY/ipfs-daemon"
+          echo "::set-output name=CERAMIC_SVC::ceramic-dev-ex-node"
+          echo "::set-output name=IPFS_SVC::ceramic-dev-ex-ipfs-nd"
+          echo "::set-output name=SHA_TAG::$(git rev-parse --short=12 "${{ github.sha }}""
+
+      - name: Build, tag, and push image to Amazon ECR
+        id: build-image
+        env:
+          CERAMIC_IMAGE: ${{ steps.set-vars.outputs.CERAMIC_IMAGE }}
+          IPFS_IMAGE: ${{ steps.set-vars.outputs.IPFS_IMAGE }}
+        run: |
+          docker build -f Dockerfile.daemon -t $CERAMIC_IMAGE:$SHA_TAG .
+          docker build -f Dockerfile.ipfs-daemon -t $IPFS_IMAGE:$SHA_TAG .
+          docker push $CERAMIC_IMAGE --all-tags
+          docker push $IPFS_IMAGE --all-tags
+
+      - name: Update Ceramic
+        uses: silinternational/ecs-deploy@master
+        with:
+          aws_access_key_cmd: "--aws-access-key"
+          aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_key_cmd: "--aws-secret-key"
+          aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          cluster_cmd: "--cluster"
+          cluster: "ceramic-dev-ex"
+          image_cmd: "--image"
+          image: ${{ steps.set-vars.outputs.CERAMIC_IMAGE }}:${{ steps.set-vars.outputs.SHA_TAG }}
+          region_cmd: "--region"
+          region: ${{ secrets.AWS_REGION }}
+          service_name_cmd: "--service-name"
+          service_name: ${{ steps.set-vars.outputs.CERAMIC_SVC }}
+          timeout_cmd: "--timeout"
+          timeout: "360"
+          use_latest_task_def: "--use-latest-task-def"
+          verbose: "--verbose"
+
+      - name: Update Ceramic
+        uses: silinternational/ecs-deploy@master
+        with:
+          aws_access_key_cmd: "--aws-access-key"
+          aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_key_cmd: "--aws-secret-key"
+          aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          cluster_cmd: "--cluster"
+          cluster: "ceramic-dev-ex"
+          image_cmd: "--image"
+          image: ${{ steps.set-vars.outputs.IPFS_IMAGE }}:${{ steps.set-vars.outputs.SHA_TAG }}
+          region_cmd: "--region"
+          region: ${{ secrets.AWS_REGION }}
+          service_name_cmd: "--service-name"
+          service_name: ${{ steps.set-vars.outputs.IPFS_SVC }}
+          timeout_cmd: "--timeout"
+          timeout: "360"
+          use_latest_task_def: "--use-latest-task-def"
+          verbose: "--verbose"
+
+      - name: Stop/restart running tasks
+        run: |
+            ./stopTasks.sh "ceramic-dev-ex" ${{ steps.set-vars.outputs.CERAMIC_SVC }}
+            ./stopTasks.sh "ceramic-dev-ex" ${{ steps.set-vars.outputs.IPFS_SVC }}

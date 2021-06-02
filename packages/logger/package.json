@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/logger",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Ceramic file logging utilities",
   "keywords": [
     "ceramic",
@@ -20,7 +20,7 @@
     "lib"
   ],
   "scripts": {
-    "test": "../../node_modules/.bin/jest --coverage --passWithNoTests",
+    "test": "../../node_modules/.bin/jest --silent --coverage --passWithNoTests",
     "build": "../../node_modules/.bin/tsc -p tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",

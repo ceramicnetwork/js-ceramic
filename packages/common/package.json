@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/common",
-  "version": "1.0.0",
+  "version": "1.0.4",
   "description": "Ceramic common types and utilities",
   "keywords": [
     "ceramic",
@@ -23,7 +23,7 @@
     "./lib/loggers.js": "./lib/loggers-browser.js"
   },
   "scripts": {
-    "test": "../../node_modules/.bin/jest --coverage --passWithNoTests --env=node",
+    "test": "../../node_modules/.bin/jest --silent --coverage --passWithNoTests --env=node",
     "build": "../../node_modules/.bin/tsc -p tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
@@ -31,9 +31,10 @@
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/streamid": "^1.0.0",
+    "@ceramicnetwork/streamid": "^1.0.1",
     "@overnightjs/logger": "^1.2.0",
     "cids": "~1.1.6",
+    "cross-fetch": "^3.1.4",
     "flat": "^5.0.2",
     "lodash.clonedeep": "^4.5.0",
     "logfmt": "^1.3.2",
@@ -45,8 +46,8 @@
     "@types/logfmt": "^1.2.1",
     "@types/node": "^13.13.15",
     "dids": "^2.1.0",
-    "ipfs-core": "^0.6.0",
-    "ipfs-core-types": "^0.4.0",
+    "ipfs-core": "^0.7.0",
+    "ipfs-core-types": "^0.5.0",
     "json-schema-to-typescript": "^9.1.1",
     "typescript-json-schema": "^0.42.0"
   },

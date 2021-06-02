@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/blockchain-utils-linking",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Blockchain utils for linking blockchain accounts to DID",
   "keywords": [
     "ceramic",
@@ -17,7 +17,7 @@
     "lib"
   ],
   "scripts": {
-    "test": "../../node_modules/.bin/jest --env=node",
+    "test": "../../node_modules/.bin/jest --silent --env=node",
     "build": "../../node_modules/.bin/tsc -p tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",

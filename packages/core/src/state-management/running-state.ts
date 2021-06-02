@@ -1,7 +1,6 @@
 import { Subscription } from 'rxjs';
-import { StreamState, RunningStateLike, StreamStateSubject } from '@ceramicnetwork/common';
+import { StreamState, RunningStateLike, StreamStateSubject, SubscriptionSet } from '@ceramicnetwork/common';
 import { StreamID } from '@ceramicnetwork/streamid';
-import { SubscriptionSet } from '../subscription-set';
 import CID from 'cids';
 
 export class RunningState extends StreamStateSubject implements RunningStateLike {

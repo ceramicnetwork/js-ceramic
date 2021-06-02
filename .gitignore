@@ -3,6 +3,7 @@ lerna-debug.log
 .idea
 .pinning.store
 .vscode
+*.iml
 docs/
 
 packages/*/lib/
