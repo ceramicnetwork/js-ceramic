@@ -105,7 +105,7 @@ export class IpfsTopology {
     }
     this.logger.imp(`Connecting to peers found in '${url}'`);
     const list = await fetchJson(url);
-    return list || [];
+    return list.map(peer => new Multiaddr(peer)) || [];
   }
 
   private async _forceBootstrapConnection(
