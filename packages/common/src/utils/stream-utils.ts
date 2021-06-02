@@ -30,11 +30,11 @@ export class StreamUtils {
             return cloned
         }
 
-        if (StreamUtils.isSignedCommit(cloned)) {
+        if (StreamUtils.isSignedCommit(commit)) {
             cloned.link = cloned.link.toString()
         }
 
-        if (StreamUtils.isAnchorCommit(cloned)) {
+        if (StreamUtils.isAnchorCommit(commit)) {
             cloned.proof = cloned.proof.toString()
         }
 
@@ -169,22 +169,22 @@ export class StreamUtils {
      * @param commit - Commit
      */
     static isSignedCommitContainer(commit: CeramicCommit): boolean {
-        return (commit as SignedCommitContainer).jws !== undefined
+        return commit && (commit as SignedCommitContainer).jws !== undefined
     }
 
     /**
      * Checks if commit is signed
      * @param commit - Commit
      */
-    static isSignedCommit(commit: CeramicCommit): boolean {
-        return (commit as SignedCommit).link !== undefined
+    static isSignedCommit(commit: CeramicCommit): commit is SignedCommit {
+        return commit && (commit as SignedCommit).link !== undefined
     }
 
     /**
      * Checks if commit is anchor commit
      * @param commit - Commit
      */
-    static isAnchorCommit(commit: CeramicCommit): boolean {
-        return (commit as AnchorCommit).proof !== undefined
+    static isAnchorCommit(commit: CeramicCommit): commit is AnchorCommit {
+        return commit && (commit as AnchorCommit).proof !== undefined
     }
 }
