@@ -18,9 +18,53 @@ describe('Secp256r1 mapper', () => {
         expect(doc).toMatchSnapshot()
     })
 
+    // testing the key from the did:key from the raw public key
+    it('successfully resolves the document from did #2', async () => {
+        const id = "zrusAFgBbf84b8mBz8Cmy8UoFWKV52EaeRnK86vnLo4Z5QoRypE6hXVPN2urevZMAMtcTaCDFLWBaE1Q3jmdb1FHgve"
+
+        const multicodecPubKey = multibase.decode(id)
+        varint.decode(multicodecPubKey) // decode is changing param multicodecPubKey as well
+        const pubKeyBytes = multicodecPubKey.slice(varint.decode.bytes)
+        const doc = await mapper.keyToDidDoc(pubKeyBytes, id)
+        expect(doc).toMatchSnapshot()
+    })
+ 
+    // testing the key from the did:key from the raw public key
+    it('successfully resolves the document from did #3', async () => {
+        const id = "zrurwcJZss4ruepVNu1H3xmSirvNbzgBk9qrCktB6kaewXnJAhYWwtP3bxACqBpzjZdN7TyHNzzGGSSH5qvZsSDir9z"
+
+        const multicodecPubKey = multibase.decode(id)
+        varint.decode(multicodecPubKey) // decode is changing param multicodecPubKey as well
+        const pubKeyBytes = multicodecPubKey.slice(varint.decode.bytes)
+        const doc = await mapper.keyToDidDoc(pubKeyBytes, id)
+        expect(doc).toMatchSnapshot()
+     })
+
     // testing the key from the did:key from the compressed public key
     it('successfully resolves the document from did', async () => {
         const id = "zDnaeUKTWUXc1HDpGfKbEK31nKLN19yX5aunFd7VK1CUMeyJu"
+
+        const multicodecPubKey = multibase.decode(id)
+        varint.decode(multicodecPubKey) // decode is changing param multicodecPubKey as well
+        const pubKeyBytes = multicodecPubKey.slice(varint.decode.bytes)
+        const doc = await mapper.keyToDidDoc(pubKeyBytes, id)
+        expect(doc).toMatchSnapshot()
+    })
+
+    // testing the key from the did:key from the compressed public key
+    it('successfully resolves the document from did #2', async () => {
+        const id = "zDnaerx9CtbPJ1q36T5Ln5wYt3MQYeGRG5ehnPAmxcf5mDZpv"
+
+        const multicodecPubKey = multibase.decode(id)
+        varint.decode(multicodecPubKey) // decode is changing param multicodecPubKey as well
+        const pubKeyBytes = multicodecPubKey.slice(varint.decode.bytes)
+        const doc = await mapper.keyToDidDoc(pubKeyBytes, id)
+        expect(doc).toMatchSnapshot()
+    })
+
+   // testing the key from the did:key from the compressed public key
+    it('successfully resolves the document from did #3', async () => {
+        const id = "zDnaerDaTF5BXEavCrfRZEk316dpbLsfPDZ3WJ5hRTPFU2169"
 
         const multicodecPubKey = multibase.decode(id)
         varint.decode(multicodecPubKey) // decode is changing param multicodecPubKey as well
