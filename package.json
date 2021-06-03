@@ -46,6 +46,6 @@
     "singleQuote": true
   },
   "dependencies": {
-    "node-fetch": "npm:@achingbrain/node-fetch@^2.6.5"
+    "node-fetch": "npm:@achingbrain/node-fetch@^2.6.6"
   }
 }
