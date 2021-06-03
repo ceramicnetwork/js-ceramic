@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.5](/compare/@ceramicnetwork/pinning-aggregation@1.0.4...@ceramicnetwork/pinning-aggregation@1.0.5) (2021-06-03)
+
+
+### Bug Fixes
+
+* **core:** ipfs subscribe, pin version (#1454) fc9c5e7, closes #1454
+
+
+
+
+
 ## [1.0.4](/compare/@ceramicnetwork/pinning-aggregation@1.0.4-rc.0...@ceramicnetwork/pinning-aggregation@1.0.4) (2021-05-31)
 
 **Note:** Version bump only for package @ceramicnetwork/pinning-aggregation
