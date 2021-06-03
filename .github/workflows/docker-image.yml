@@ -1,4 +1,4 @@
-name: Publish images to Docker Hub
+name: Push builds and restart services
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
   workflow_dispatch: # manually triggered
 
 jobs:
-  push_js_ceramic:
+  push_docker_images:
     name: Build and push
     runs-on: ubuntu-latest
     steps:
@@ -24,19 +24,27 @@ jobs:
       -
         name: Set master branch tag
         if: ${{ env.BRANCH == 'master' }}
-        run: echo "ENV_TAG=latest" >> $GITHUB_ENV
+        run: |
+          echo "ENV=prod" >> $GITHUB_ENV
+          echo "ENV_TAG=latest" >> $GITHUB_ENV
       -
         name: Set rc branch tag
         if: ${{ env.BRANCH == 'release-candidate' }}
-        run: echo "ENV_TAG=tnet" >> $GITHUB_ENV
+        run: |
+          echo "ENV=tnet" >> $GITHUB_ENV
+          echo "ENV_TAG=tnet" >> $GITHUB_ENV
       -
         name: Set develop branch tag
         if: ${{ env.BRANCH == 'develop' }}
-        run: echo "ENV_TAG=dev" >> $GITHUB_ENV
+        run: |
+          echo "ENV=dev" >> $GITHUB_ENV
+          echo "ENV_TAG=dev" >> $GITHUB_ENV
       -
         name: Set env tag (default)
         if: ${{ env.ENV_TAG == '' }}
-        run: echo "ENV_TAG=dev" >> $GITHUB_ENV
+        run: |
+          echo "ENV=dev" >> $GITHUB_ENV
+          echo "ENV_TAG=dev" >> $GITHUB_ENV
       - 
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
@@ -66,3 +74,50 @@ jobs:
             --tag ${{ env.IMAGE_ID }}:${{ env.ENV_TAG }} \
             --tag ${{ env.IMAGE_ID }}:${{ env.SHA_TAG }} \
             --tag ${{ env.IMAGE_ID }}:${{ env.BRANCH }}
+
+  update_services_by_restart:
+    needs: push_docker_images
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - instance: "IPFS Gateway"
+            cluster: "ceramic-${{ env.ENV }}-ex"
+            service: "ceramic-${{ env.ENV }}-ex-ipfs-gw"
+            image: "ipfs-daemon"
+          - instance: "IPFS Public node"
+            cluster: "ceramic-${{ env.ENV }}-ex"
+            service: "ceramic-${{ env.ENV }}-ex-ipfs-nd"
+            image: "ipfs-daemon"
+          - instance: "IPFS Private node"
+            cluster: "ceramic-${{ env.ENV }}"
+            service: "ceramic-${{ env.ENV }}-ipfs-nd"
+            image: "ipfs-daemon"
+          - instance: "Ceramic Gateway"
+            cluster: "ceramic-${{ env.ENV }}-ex"
+            service: "ceramic-${{ env.ENV }}-ex-gateway"
+            image: "js-ceramic"
+          - instance: "Ceramic Public node"
+            cluster: "ceramic-${{ env.ENV }}-ex"
+            service: "ceramic-${{ env.ENV }}-ex-node"
+            image: "js-ceramic"
+          - instance: "Ceramic Private node"
+            cluster: "ceramic-${{ env.ENV }}"
+            service: "ceramic-${{ env.ENV }}-node"
+            image: "js-ceramic"
+
+    steps:
+      -
+        name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      -
+        name: Stop running tasks
+        if: ${{ (github.event.inputs.environment != 'prod') || (matrix.instance != 'Ceramic Public node') }}
+        run: |
+            cd .github/workflows
+            chmod +x stopTasks.sh
+            ./stopTasks.sh ${{ matrix.cluster }} ${{ matrix.service }}
