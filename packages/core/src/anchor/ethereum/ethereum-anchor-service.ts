@@ -14,7 +14,7 @@ import {
 } from "@ceramicnetwork/common";
 import StreamID from "@ceramicnetwork/streamid";
 import { Observable, interval, from, concat, of } from "rxjs";
-import { concatMap, catchError } from "rxjs/operators";
+import { concatMap, catchError, map } from "rxjs/operators";
 import {Block, TransactionResponse } from "@ethersproject/providers"
 
 /**
@@ -159,7 +159,7 @@ export default class EthereumAnchorService implements AnchorService {
         },
       })
     ).pipe(
-      concatMap(async (response) => {
+      map((response) => {
         return this.parseResponse(cidStreamPair, response)
       })
     );
