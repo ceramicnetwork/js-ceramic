@@ -44,5 +44,8 @@
     "printWidth": 120,
     "trailingComma": "all",
     "singleQuote": true
+  },
+  "dependencies": {
+    "node-fetch": "npm:@achingbrain/node-fetch@^2.6.6"
   }
 }

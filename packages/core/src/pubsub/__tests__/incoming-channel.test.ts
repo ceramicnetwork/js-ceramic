@@ -37,7 +37,7 @@ describe('connection', () => {
     await incoming$.tasks.onIdle();
     expect(await ipfs.pubsub.ls()).toEqual([]);
     expect(subscribeSpy).toBeCalledTimes(1);
-    expect(unsubscribeSpy).toBeCalledTimes(2); // 1 on initial subscription attempt, +1 on final unsubscribe
+    expect(unsubscribeSpy).toBeCalledTimes(1);
   });
 
   test('resubscribe', async () => {
@@ -48,11 +48,11 @@ describe('connection', () => {
     const subscription = incoming$.subscribe();
     await incoming$.tasks.onIdle();
     expect(subscribeSpy).toBeCalledTimes(1); // Initial pubsub.subscribe
-    expect(unsubscribeSpy).toBeCalledTimes(1); // Resubscribe attempt: _unsubscribe_ then subscribe
-    await ipfs.pubsub.unsubscribe(TOPIC);
+    expect(unsubscribeSpy).toBeCalledTimes(0);
+    subscribeSpy.mock.calls[0][2].onError('fake error')
     await delay(resubscribePeriod * 3);
-    expect(unsubscribeSpy).toBeCalledTimes(3); // +1 on resubscribe, +1 on force-unsubscribe few lines above
     expect(subscribeSpy).toBeCalledTimes(2); // +1 on resubscribe
+    expect(unsubscribeSpy).toBeCalledTimes(0);
     expect(await ipfs.pubsub.ls()).toEqual([TOPIC]); // And now we subscribed
     subscription.unsubscribe();
   });

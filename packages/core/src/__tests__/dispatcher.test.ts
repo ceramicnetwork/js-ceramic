@@ -75,7 +75,7 @@ describe('Dispatcher', () => {
   it('is constructed correctly', async () => {
     expect((dispatcher as any).repository).toBeInstanceOf(Repository);
     await delay(100); // Wait for plumbing
-    expect(ipfs.pubsub.subscribe).toHaveBeenCalledWith(TOPIC, expect.anything());
+    expect(ipfs.pubsub.subscribe).toHaveBeenCalledWith(TOPIC, expect.anything(), { onError: expect.anything() });
   });
 
   it('closes correctly', async () => {

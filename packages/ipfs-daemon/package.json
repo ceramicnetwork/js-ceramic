@@ -39,9 +39,9 @@
     "datastore-level": "^5.0.1",
     "datastore-s3": "^5.0.0",
     "express": "^4.17.1",
-    "ipfs-core-types": "^0.5.0",
-    "ipfs-http-gateway": "^0.4.1",
-    "ipfs-http-server": "^0.5.0"
+    "ipfs-core-types": "next",
+    "ipfs-http-gateway": "next",
+    "ipfs-http-server": "next"
   },
   "devDependencies": {
     "@types/express": "^4.17.8",
