@@ -7,8 +7,7 @@ import * as u8a from 'uint8arrays'
 
 describe('Secp384r1 mapper', () => {
 
-    // testing the key from the did:key from the raw public key
-    it('successfully resolves the document from did', async () => {
+    it('Secp384r1 mapper successfully resolves the document from did:key from raw public key', async () => {
         const id = "zFwfeyrSyWdksRYykTGGtagWazFB5zS4CjQcxDMQSNmCTQB5QMqokx2VJz4vBB2hN1nUrYDTuYq3kd1BM5cUCfFD4awiNuzEBuoy6rZZTMCsZsdvWkDXY6832qcAnzE7YGw43KU"
 
         const multicodecPubKey = multibase.decode(id)
@@ -18,8 +17,7 @@ describe('Secp384r1 mapper', () => {
         expect(doc).toMatchSnapshot()
     })
 
-    // testing the key from the did:key from the raw public key
-    it('successfully resolves the document from did', async () => {
+    it('Secp384r1 mapper successfully resolves the document from did:key from raw public key #2', async () => {
         const id = "zFwepbBSaPFjt5T1zWptHaXugLNxHYABfJrDoAZRYxKjNkpdfrniF3pvYQAXwxVB7afhmsgzYtSCzTVZQ3F5SPHzP5PuHgtBGNYucZTSrnA7yTTDr7WGQZaTTkJWfiH47jW5ahU"
 
         const multicodecPubKey = multibase.decode(id)
@@ -29,8 +27,7 @@ describe('Secp384r1 mapper', () => {
         expect(doc).toMatchSnapshot()
     })
 
-    // testing the key from the did:key from the compressed public key
-    it('successfully resolves the document from did', async () => {
+    it('Secp384r1 mapper successfully resolves the document from did:key from compressed public key', async () => {
         const id = "z82Lm1MpAkeJcix9K8TMiLd5NMAhnwkjjCBeWHXyu3U4oT2MVJJKXkcVBgjGhnLBn2Kaau9"
 
         const multicodecPubKey = multibase.decode(id)
@@ -40,8 +37,7 @@ describe('Secp384r1 mapper', () => {
         expect(doc).toMatchSnapshot()
     })
 
-     // testing the key from the did:key from the compressed public key
-    it('successfully resolves the document from did', async () => {
+    it('Secp384r1 mapper successfully resolves the document from did:key from compressed public key #2', async () => {
         const id = "z82LkvCwHNreneWpsgPEbV3gu1C6NFJEBg4srfJ5gdxEsMGRJUz2sG9FE42shbn2xkZJh54"
 
         const multicodecPubKey = multibase.decode(id)
