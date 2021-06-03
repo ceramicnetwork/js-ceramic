@@ -97,7 +97,10 @@ const TAG = Symbol.for('@ceramicnetwork/streamid/CommitID');
 
 /**
  * Commit identifier, includes type, genesis CID, commit CID.
- * Encoded as '<multibase-prefix><multicodec-streamid><type><genesis-cid-bytes><commit-cid-bytes>'
+ *
+ * Encoded as `<multibase-prefix><multicodec-streamid><type><genesis-cid-bytes><commit-cid-bytes>`.
+ *
+ * String representation is base36-encoding of the bytes above.
  */
 export class CommitID implements StreamRef {
   protected readonly _tag = TAG;
