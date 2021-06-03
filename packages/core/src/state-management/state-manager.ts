@@ -16,7 +16,7 @@ import {
 import { RunningState } from './running-state';
 import CID from 'cids';
 import { catchError, concatMap, takeUntil } from 'rxjs/operators';
-import { empty, Observable, Subscription, timer } from 'rxjs';
+import { empty, Observable, Subject, Subscription, timer } from 'rxjs';
 import { SnapshotState } from './snapshot-state';
 import { CommitID, StreamID } from '@ceramicnetwork/streamid';
 
@@ -237,8 +237,10 @@ export class StateManager {
 
   private _processAnchorResponse(
       state$: RunningState, anchorStatus$: Observable<AnchorServiceResponse>): Subscription {
+    const stopSignal = new Subject<void>();
     const subscription = anchorStatus$
       .pipe(
+        takeUntil(stopSignal),
         concatMap(async (asr) => {
           if (!asr.cid.equals(state$.tip) && asr.status != AnchorStatus.ANCHORED) {
             // We don't want to change a stream's state due to changes to the anchor
@@ -269,13 +271,13 @@ export class StateManager {
             }
             case AnchorStatus.ANCHORED: {
               await this._handleAnchorCommit(state$, asr.cid, asr.anchorRecord)
-              subscription.unsubscribe();
+              stopSignal.next();
               return;
             }
             case AnchorStatus.FAILED: {
               this.logger.warn(`Anchor failed for commit ${asr.cid.toString()} of stream ${asr.streamId}: ${asr.message}`)
               state$.next({ ...state$.value, anchorStatus: AnchorStatus.FAILED });
-              subscription.unsubscribe();
+              stopSignal.next();
               return;
             }
             default:
