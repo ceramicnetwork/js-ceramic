@@ -90,7 +90,7 @@ export class IncomingChannel extends Observable<IPFSPubsubMessage> {
       } catch (error) {
         console.warn(`Can not reach ipfs node, resubscribing: ${error}`)
         // TODO - should probably have some sort of backoff mechanism here.
-        await new Promise(resolve => setTimeout(resolve, resubscribeEvery))
+        await new Promise(resolve => setTimeout(resolve, this.resubscribeEvery))
         this.tasks.add(() => this.subscribeToIpfs(handler, complete));
       }
     } else {
