@@ -174,7 +174,7 @@ export class StateManager {
   applyCommit(streamId: StreamID, commit: any, opts: CreateOpts | UpdateOpts): Promise<RunningState> {
     return this.executionQ.forStream(streamId).run(async () => {
       const state$ = await this.load(streamId, opts)
-      const cid = await this.dispatcher.storeCommit(commit);
+      const cid = await this.dispatcher.storeCommit(commit, streamId);
 
       await this._handleTip(state$, cid);
       await this.applyWriteOpts(state$, opts);

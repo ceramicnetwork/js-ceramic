@@ -101,7 +101,7 @@ class InMemoryAnchorService implements AnchorService {
     await Promise.all(
       candidates.map(async (req) => {
         try {
-          const record = await this.#dispatcher.retrieveCommit(req.cid);
+          const record = await this.#dispatcher.retrieveCommit(req.cid, req.streamId);
           if (this.#verifySignatures) {
             await this.verifySignedCommit(record);
           }
@@ -276,7 +276,7 @@ class InMemoryAnchorService implements AnchorService {
     };
     const proof = await this.#dispatcher.storeCommit(proofData);
     const commit = { proof, path: "", prev: leaf.cid };
-    const cid = await this.#dispatcher.storeCommit(commit);
+    const cid = await this.#dispatcher.storeCommit(commit, leaf.streamId);
 
     // add a delay
     const handle = setTimeout(() => {
