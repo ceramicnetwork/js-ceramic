@@ -38,7 +38,6 @@ const STRING_MAP_SCHEMA = {
 describe('load', () => {
   test('from memory', async () => {
     const stream1 = await TileDocument.create(ceramic, { foo: 'bar' });
-    stream1.subscribe();
     const fromMemorySpy = jest.spyOn(repository, 'fromMemory');
     const fromStateStoreSpy = jest.spyOn(repository, 'fromStateStore');
     const fromNetwork = jest.spyOn(repository, 'fromNetwork');
@@ -50,7 +49,6 @@ describe('load', () => {
   });
 
   test('from state store', async () => {
-    jest.setTimeout(10000000) // todo remove
     const fromMemorySpy = jest.spyOn(repository, 'fromMemory');
     const fromStateStoreSpy = jest.spyOn(repository, 'fromStateStore');
     const fromNetworkSpy = jest.spyOn(repository, 'fromNetwork');

@@ -37,11 +37,10 @@ export class Repository {
   /**
    * Serialize loading operations per streamId.
    */
-  readonly loadingQ: NamedTaskQueue;
+  readonly loadingQ: ExecutionQueue;
 
   /**
    * Serialize operations on state per streamId.
-   * Ensure that the task is run with a currently run state by abstracting over state loading.
    */
   readonly executionQ: ExecutionQueue;
 
@@ -66,9 +65,7 @@ export class Repository {
    * @param concurrencyLimit - Maximum number of concurrently running tasks on the streams.
    */
   constructor(cacheLimit: number, concurrencyLimit: number, private readonly logger: DiagnosticsLogger) {
-    this.loadingQ = new NamedTaskQueue((error) => {
-      logger.err(error);
-    });
+    this.loadingQ = new ExecutionQueue(concurrencyLimit, logger);
     this.executionQ = new ExecutionQueue(concurrencyLimit, logger);
     this.inmemory = new StateCache(cacheLimit, (state$) => state$.complete());
     this.updates$ = this.updates$.bind(this);
@@ -133,7 +130,7 @@ export class Repository {
   async load(streamId: StreamID, opts: LoadOpts): Promise<RunningState> {
     opts = { ...DEFAULT_LOAD_OPTS, ...opts }
 
-    return this.loadingQ.run(streamId.toString(), async () => {
+    return this.loadingQ.forStream(streamId).run(async () => {
       let fromStateStore = false
       let stream = this.fromMemory(streamId);
       if (!stream) {
@@ -184,7 +181,7 @@ export class Repository {
    * Adds the stream to cache.
    */
   async get(streamId: StreamID): Promise<RunningState | undefined> {
-    return this.loadingQ.run(streamId.toString(), async () => {
+    return this.loadingQ.forStream(streamId).run(async () => {
       const fromMemory = this.fromMemory(streamId);
       if (fromMemory) return fromMemory;
       return this.fromStateStore(streamId);
