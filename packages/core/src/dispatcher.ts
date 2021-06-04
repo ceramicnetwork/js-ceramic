@@ -49,21 +49,31 @@ export class Dispatcher {
    * Store Ceramic commit (genesis|signed|anchor).
    *
    * @param data - Ceramic commit data
+   * @param streamId - StreamID of the stream the commit belongs to, used for logging.
    */
-  async storeCommit (data: any): Promise<CID> {
-    if (StreamUtils.isSignedCommitContainer(data)) {
-      const { jws, linkedBlock } = data
-      // put the JWS into the ipfs dag
-      const cid = await this._ipfs.dag.put(jws, { format: 'dag-jose', hashAlg: 'sha2-256' })
-      // put the payload into the ipfs dag
-      await this._ipfs.block.put(linkedBlock, { cid: jws.link.toString() })
-      await this._restrictRecordSize(jws.link.toString())
+  async storeCommit (data: any, streamId?: StreamID): Promise<CID> {
+    try {
+      if (StreamUtils.isSignedCommitContainer(data)) {
+        const {jws, linkedBlock} = data
+        // put the JWS into the ipfs dag
+        const cid = await this._ipfs.dag.put(jws, {format: 'dag-jose', hashAlg: 'sha2-256'})
+        // put the payload into the ipfs dag
+        await this._ipfs.block.put(linkedBlock, {cid: jws.link.toString()})
+        await this._restrictRecordSize(jws.link.toString())
+        await this._restrictRecordSize(cid)
+        return cid
+      }
+      const cid = await this._ipfs.dag.put(data)
       await this._restrictRecordSize(cid)
       return cid
+    } catch (e) {
+      if (streamId) {
+        this._logger.err(`Error while storing commit to IPFS for stream ${streamId.toString()}: ${e}`)
+      } else {
+        this._logger.err(`Error while storing commit to IPFS: ${e}`)
+      }
+      throw e
     }
-    const cid = await this._ipfs.dag.put(data)
-    await this._restrictRecordSize(cid)
-    return cid
   }
 
   /**
@@ -72,15 +82,20 @@ export class Dispatcher {
    * use `retrieveFromIPFS`.
    *
    * @param cid - Commit CID
+   * @param streamId - StreamID of the stream the commit belongs to, used for logging.
    */
-  async retrieveCommit (cid: CID | string): Promise<any> {
+  async retrieveCommit (cid: CID | string, streamId?: StreamID): Promise<any> {
     try {
       const asCid = typeof cid === 'string' ? new CID(cid) : cid
       const record = await this._ipfs.dag.get(asCid, {timeout: IPFS_GET_TIMEOUT})
       await this._restrictRecordSize(cid)
       return cloneDeep(record.value)
     } catch (e) {
-      this._logger.err(`Error while loading commit CID ${cid.toString()} from IPFS: ${e}`)
+      if (streamId) {
+        this._logger.err(`Error while loading commit CID ${cid.toString()} from IPFS for stream ${streamId.toString()}: ${e}`)
+      } else {
+        this._logger.err(`Error while loading commit CID ${cid.toString()} from IPFS: ${e}`)
+      }
       throw e
     }
   }

@@ -110,7 +110,7 @@ export class Repository {
   private async fromNetwork(streamId: StreamID, opts: LoadOpts): Promise<RunningState> {
     const handler = this.#deps.handlers.get(streamId.typeName);
     const genesisCid = streamId.cid;
-    const commit = await this.#deps.dispatcher.retrieveCommit(genesisCid);
+    const commit = await this.#deps.dispatcher.retrieveCommit(genesisCid, streamId);
     if (commit == null) {
       throw new Error(`No genesis commit found with CID ${genesisCid.toString()}`);
     }
