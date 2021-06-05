@@ -1,8 +1,9 @@
-import S3 from 'aws-sdk/clients/s3';
+import AWS from 'aws-sdk'
 import IPFSRepo from 'ipfs-repo';
 import DatastoreLevel from 'datastore-level';
 import DatastoreFS from 'datastore-fs';
 import DatastoreS3 from 'datastore-s3';
+import { DiagnosticsLogger } from "@ceramicnetwork/common";
 import path from 'path';
 
 // A mock lock
@@ -45,6 +46,8 @@ type RepoOptions = {
   localPathPrefix: string | undefined;
   createIfMissing: boolean;
   backends: Record<string, StorageBackend>;
+  logger: DiagnosticsLogger,
+  S3Log: boolean
 };
 
 type S3Options = {
@@ -87,7 +90,7 @@ function LocalDatastoreLevel(pathPrefix: string | undefined) {
 /**
  * Add repository backend to IPFS configuration.
  */
-function setRepoBackend(config: any, name: string, repoOptions: RepoOptions, s3: () => S3, defaultBackend: any) {
+function setRepoBackend(config: any, name: string, repoOptions: RepoOptions, s3: () => AWS.S3, defaultBackend: any) {
   const backend = repoOptions.backends[name] as StorageBackend;
   switch (backend) {
     case StorageBackend.DEFAULT:
@@ -116,12 +119,13 @@ function setRepoBackend(config: any, name: string, repoOptions: RepoOptions, s3:
  * A convenience method for creating an S3 backed IPFS repo
  */
 export function createRepo(options: RepoOptions, s3Options: S3Options): IPFSRepo {
-  let _s3: S3 | undefined = undefined;
+  let _s3: AWS.S3 | undefined = undefined;
+  if (options.S3Log) AWS.config.logger = options.logger
   function s3() {
     const { bucket, region, accessKeyId, secretAccessKey } = s3Options;
     if (!(bucket && accessKeyId && secretAccessKey)) throw new Error(`Expect AWS credentials`);
     if (!_s3) {
-      _s3 = new S3({
+      _s3 = new AWS.S3({
         params: {
           Bucket: bucket,
         },
