@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/stream-tile",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Ceramic Tile Document stream type",
   "keywords": [
     "ceramic",
@@ -25,7 +25,7 @@
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/common": "^1.0.5",
+    "@ceramicnetwork/common": "^1.0.6",
     "@ceramicnetwork/streamid": "^1.0.2",
     "@stablelib/random": "^1.0.0",
     "fast-json-patch": "^2.2.1",
