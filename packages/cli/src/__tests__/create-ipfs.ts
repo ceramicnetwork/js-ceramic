@@ -1,7 +1,6 @@
 import { IpfsApi } from '@ceramicnetwork/common';
 import getPort from 'get-port';
-import { sha256 } from 'multiformats/hashes/sha2';
-import legacy from 'multiformats/legacy';
+import { convert } from 'blockcodec-to-ipld-format'
 import dagJose from 'dag-jose';
 import IPFS from 'ipfs-core';
 
@@ -10,9 +9,7 @@ import IPFS from 'ipfs-core';
  */
 export async function createIPFS(path: string): Promise<IpfsApi> {
   const port = await getPort();
-  const hasher = {};
-  hasher[sha256.code] = sha256;
-  const format = legacy(dagJose, { hashes: hasher });
+  const format = convert(dagJose);
 
   const config = {
     ipld: { formats: [format] },
@@ -24,6 +21,5 @@ export async function createIPFS(path: string): Promise<IpfsApi> {
     },
   };
 
-  // @ts-ignore
   return IPFS.create(config);
 }

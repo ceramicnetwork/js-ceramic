@@ -3,6 +3,77 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.1.0](/compare/@ceramicnetwork/core@1.0.5...@ceramicnetwork/core@1.1.0) (2021-06-06)
+
+
+### Features
+
+* **core:** Limit the number of concurrently loading streams (#1453) 7ec721a, closes #1453
+
+
+
+
+
+## [1.0.5](/compare/@ceramicnetwork/core@1.0.4...@ceramicnetwork/core@1.0.5) (2021-06-03)
+
+
+### Bug Fixes
+
+* **core:** ipfs subscribe, pin version (#1454) fc9c5e7, closes #1454
+* Pin dag-jose contents (#1451) a598c10, closes #1451
+
+
+
+
+
+## [1.0.4](/compare/@ceramicnetwork/core@1.0.4-rc.0...@ceramicnetwork/core@1.0.4) (2021-05-31)
+
+
+### Bug Fixes
+
+* **core:** Don't refetch CID from IPFS when re-applying commits already in the log (#1422) b8a941c, closes #1422
+* **core:** Don't retry anchors indefinitely on error (#1438) 69f4993, closes #1438
+
+
+
+
+
+## [1.0.4-rc.0](/compare/@ceramicnetwork/core@1.0.3...@ceramicnetwork/core@1.0.4-rc.0) (2021-05-28)
+
+
+### Bug Fixes
+
+* **core:** only sync pinned streams the first time they are loaded (#1417) 76be682, closes #1417
+
+
+
+
+
+## [1.0.3](/compare/@ceramicnetwork/core@1.0.2...@ceramicnetwork/core@1.0.3) (2021-05-25)
+
+
+### Bug Fixes
+
+* **core:** Actively fail anchor if applying anchor commit fails 3 times in a row 35dae9d
+* **core:** Continue polling anchor service even after error 10719e7
+* **core:** Don't update stream state for changes to anchor status of commits that are no longer the tip 94ac4a7
+
+
+
+
+
+## [1.0.2](/compare/@ceramicnetwork/core@1.0.1...@ceramicnetwork/core@1.0.2) (2021-05-20)
+
+
+### Bug Fixes
+
+* **core:** Add retry logic when applying anchor commits (#1393) 881d7f0, closes #1393
+* **core,http-client:** Add setter for 'did' property on CeramicApi implmentations (#1391) 700221e, closes #1391
+
+
+
+
+
 ## [1.0.1](/compare/@ceramicnetwork/core@1.0.0...@ceramicnetwork/core@1.0.1) (2021-05-13)
 
 

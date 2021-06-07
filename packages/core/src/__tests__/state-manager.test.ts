@@ -44,13 +44,61 @@ afterAll(async () => {
 });
 
 describe('anchor', () => {
+
+  let realHandleTip;
+
+  beforeEach(() => {
+    realHandleTip = (ceramic.repository.stateManager as any)._handleTip;
+  });
+
+  afterEach(() => {
+    // Restore the _handleTip function in case any of the tests modified it
+    (ceramic.repository.stateManager as any)._handleTip = realHandleTip
+  });
+
   test('anchor call', async () => {
-    const stream = await TileDocument.create(ceramic, INITIAL_CONTENT);
+    const stream = await TileDocument.create(ceramic, INITIAL_CONTENT, null, { anchor: false });
     const stream$ = await ceramic.repository.load(stream.id, {});
+
     await new Promise((resolve) => {
       ceramic.repository.stateManager.anchor(stream$).add(resolve);
     });
     expect(stream$.value.anchorStatus).toEqual(AnchorStatus.ANCHORED);
+  });
+
+  test('anchor retries successfully', async () => {
+    const stateManager = ceramic.repository.stateManager;
+    const stream = await TileDocument.create(ceramic, INITIAL_CONTENT, null, { anchor: false });
+    const stream$ = await ceramic.repository.load(stream.id, {});
+
+    const fakeHandleTip = jest.fn();
+    (stateManager as any)._handleTip = fakeHandleTip;
+    fakeHandleTip.mockRejectedValueOnce(new Error("Handle tip failed"))
+    fakeHandleTip.mockRejectedValueOnce(new Error("Handle tip failed"))
+    fakeHandleTip.mockImplementationOnce(realHandleTip)
+
+    await new Promise((resolve) => {
+      ceramic.repository.stateManager.anchor(stream$).add(resolve);
+    });
+    expect(stream$.value.anchorStatus).toEqual(AnchorStatus.ANCHORED);
+  });
+
+  test('anchor too many retries', async () => {
+    const stateManager = ceramic.repository.stateManager;
+    const stream = await TileDocument.create(ceramic, INITIAL_CONTENT, null, { anchor: false });
+    const stream$ = await ceramic.repository.load(stream.id, {});
+
+    const fakeHandleTip = jest.fn();
+    (stateManager as any)._handleTip = fakeHandleTip;
+    fakeHandleTip.mockRejectedValueOnce(new Error("Handle tip failed"))
+    fakeHandleTip.mockRejectedValueOnce(new Error("Handle tip failed"))
+    fakeHandleTip.mockRejectedValueOnce(new Error("Handle tip failed"))
+    fakeHandleTip.mockImplementationOnce(realHandleTip)
+
+    await new Promise((resolve) => {
+      ceramic.repository.stateManager.anchor(stream$).add(resolve);
+    });
+    expect(stream$.value.anchorStatus).toEqual(AnchorStatus.FAILED);
   });
 });
 
@@ -74,6 +122,32 @@ test('handleTip', async () => {
   await (ceramic2.repository.stateManager as any)._handleTip(streamState2, stream1.state.log[1].cid);
 
   expect(stream2.state).toEqual(stream1.state);
+  await ceramic2.close();
+});
+
+test('handleTip for commit already in log', async () => {
+  const newContent = {foo: 'bar'}
+  const stream1 = await TileDocument.create<any>(ceramic, INITIAL_CONTENT, null, { anchor:false });
+  await stream1.update(newContent, null, { anchor: false })
+
+  const ceramic2 = await createCeramic(ipfs);
+  const retrieveCommitSpy = jest.spyOn(ceramic2.dispatcher, 'retrieveCommit');
+
+  const stream2 = await ceramic2.loadStream<TileDocument>(stream1.id, { syncTimeoutSeconds:0 });
+  const streamState2 = await ceramic2.repository.load(stream2.id, {});
+
+
+  retrieveCommitSpy.mockClear()
+  await (ceramic2.repository.stateManager as any)._handleTip(streamState2, stream1.state.log[1].cid);
+
+  expect(streamState2.state).toEqual(stream1.state);
+  expect(retrieveCommitSpy).toBeCalledTimes(7) // TODO(1421): This should be 2!
+
+  // Now re-apply the same commit and don't expect any additional calls to IPFS
+  await (ceramic2.repository.stateManager as any)._handleTip(streamState2, stream1.state.log[1].cid);
+  await (ceramic2.repository.stateManager as any)._handleTip(streamState2, stream1.state.log[0].cid);
+  expect(retrieveCommitSpy).toBeCalledTimes(7)
+
   await ceramic2.close();
 });
 
@@ -167,7 +241,7 @@ test('commit history and rewind', async () => {
 
 describe('rewind', () => {
   test('non-existing commit', async () => {
-    const stream = await TileDocument.create(ceramic, INITIAL_CONTENT);
+    const stream = await TileDocument.create(ceramic, INITIAL_CONTENT, null, { anchor: false });
     const streamState = await ceramic.repository.load(stream.id, {});
     // Emulate loading a non-existing commit
     const nonExistentCommitID = stream.id.atCommit(FAKE_CID);
@@ -185,13 +259,12 @@ describe('rewind', () => {
   });
 
   test('return read-only snapshot', async () => {
-    const stream1 = await TileDocument.create<any>(ceramic, INITIAL_CONTENT, { deterministic: true }, { syncTimeoutSeconds: 0 });
-    await anchorUpdate(ceramic, stream1);
+    const stream1 = await TileDocument.create<any>(ceramic, INITIAL_CONTENT, null, { anchor: false, syncTimeoutSeconds: 0 });
     await stream1.update({ abc: 321, def: 456, gh: 987 });
     await anchorUpdate(ceramic, stream1);
 
     const ceramic2 = await createCeramic(ipfs, { anchorOnRequest: false });
-    const stream2 = await TileDocument.create(ceramic, INITIAL_CONTENT, { deterministic: true }, { syncTimeoutSeconds: 0 });
+    const stream2 = await TileDocument.load(ceramic, stream1.id);
     const streamState2 = await ceramic2.repository.load(stream2.id, { syncTimeoutSeconds: 0 });
     const snapshot = await ceramic2.repository.stateManager.rewind(streamState2, stream1.commitId);
 
@@ -269,7 +342,7 @@ test('enforces schema in update that assigns schema', async () => {
   const streamState = await ceramic.repository.load(stream.id, {});
   await anchorUpdate(ceramic, stream);
   const updateRec = await stream.makeCommit(ceramic, null, { schema: schemaDoc.commitId });
-  await expect(ceramic.repository.stateManager.applyCommit(streamState.id, updateRec, {})).rejects.toThrow(
+  await expect(ceramic.repository.stateManager.applyCommit(streamState.id, updateRec, { anchor: false })).rejects.toThrow(
     "Validation Error: data/stuff must be string",
   );
 });
@@ -292,7 +365,7 @@ test('enforce previously assigned schema during future update', async () => {
 
 test('should announce change to network', async () => {
   const publishTip = jest.spyOn(ceramic.dispatcher, 'publishTip');
-  const stream1 = await TileDocument.create<any>(ceramic, INITIAL_CONTENT);
+  const stream1 = await TileDocument.create<any>(ceramic, INITIAL_CONTENT, null, { anchor: false });
   stream1.subscribe();
   const streamState1 = await ceramic.repository.load(stream1.id, {});
   expect(publishTip).toHaveBeenCalledTimes(1);
@@ -335,7 +408,7 @@ describe('sync', () => {
     const fakeHandleTip = jest.fn(() => Promise.resolve());
     (stateManager as any)._handleTip = fakeHandleTip;
     const state$ = ({ id: FAKE_STREAM_ID } as unknown) as RunningState;
-    await stateManager.sync(state$, 1000);
+    await stateManager.sync(state$, 1000, false);
     expect(fakeHandleTip).toHaveBeenCalledWith(state$, response[0]);
   });
   test('handle all received', async () => {
@@ -346,7 +419,7 @@ describe('sync', () => {
     const fakeHandleTip = jest.fn(() => Promise.resolve());
     (stateManager as any)._handleTip = fakeHandleTip;
     const state$ = ({ id: FAKE_STREAM_ID } as unknown) as RunningState;
-    await stateManager.sync(state$, 1000);
+    await stateManager.sync(state$, 1000, false);
     response.forEach((r) => {
       expect(fakeHandleTip).toHaveBeenCalledWith(state$, r);
     });
@@ -365,7 +438,7 @@ describe('sync', () => {
     const fakeHandleTip = jest.fn(() => Promise.resolve());
     (stateManager as any)._handleTip = fakeHandleTip;
     const state$ = ({ id: FAKE_STREAM_ID } as unknown) as RunningState;
-    await stateManager.sync(state$, 1000);
+    await stateManager.sync(state$, 1000, false);
     expect(fakeHandleTip).toBeCalledTimes(5)
     response.slice(0, 5).forEach((r) => {
       expect(fakeHandleTip).toHaveBeenCalledWith(state$, r);
@@ -380,7 +453,7 @@ describe('sync', () => {
     const fakeHandleTip = jest.fn(() => Promise.resolve());
     (stateManager as any)._handleTip = fakeHandleTip;
     const state$ = ({ id: FAKE_STREAM_ID } as unknown) as RunningState;
-    await stateManager.sync(state$, MAX_RESPONSE_INTERVAL * 10);
+    await stateManager.sync(state$, MAX_RESPONSE_INTERVAL * 10, false);
     expect(fakeHandleTip).toBeCalledTimes(20)
   });
 });

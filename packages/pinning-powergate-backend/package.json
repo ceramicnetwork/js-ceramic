@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/pinning-powergate-backend",
-  "version": "1.0.1",
+  "version": "1.0.6",
   "description": "Powergate Pinning backend",
   "keywords": [
     "ceramic",
@@ -14,7 +14,7 @@
     "lib"
   ],
   "scripts": {
-    "test": "../../node_modules/.bin/jest --coverage",
+    "test": "../../node_modules/.bin/jest --silent --coverage",
     "build": "../../node_modules/.bin/tsc -p tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
@@ -32,7 +32,7 @@
     "@textile/powergate-client": "^4.1.0"
   },
   "devDependencies": {
-    "@ceramicnetwork/common": "^1.0.1",
+    "@ceramicnetwork/common": "^1.0.6",
     "cids": "~1.1.6"
   },
   "publishConfig": {

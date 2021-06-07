@@ -45,7 +45,12 @@ const TAG = Symbol.for('@ceramicnetwork/streamid/StreamID');
 
 /**
  * Stream identifier, no commit information included.
- * Encoded as '<multibase-prefix><multicodec-streamid><type><genesis-cid-bytes>'
+ *
+ * Contains stream type and CID of genesis commit.
+ *
+ * Encoded as `<multibase-prefix><multicodec-streamid><type><genesis-cid-bytes>`.
+ *
+ * String representation is base36-encoding of the bytes above.
  */
 export class StreamID implements StreamRef {
   protected readonly _tag = TAG;

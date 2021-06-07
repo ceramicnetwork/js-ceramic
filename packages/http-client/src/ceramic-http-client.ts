@@ -1,4 +1,4 @@
-import { combineURLs, fetchJson, typeStreamID } from "./utils"
+import { combineURLs, typeStreamID } from "./utils"
 import { Document } from './document'
 
 import type { DID } from 'dids'
@@ -7,6 +7,7 @@ import {
   CeramicApi,
   CeramicCommit,
   Context,
+  fetchJson,
   Stream,
   StreamConstructor,
   StreamHandler,
@@ -85,6 +86,14 @@ export default class CeramicClient implements CeramicApi {
 
   get did(): DID | undefined {
     return this.context.did
+  }
+
+  /**
+   * Sets the DID instance that will be used to author commits to streams.
+   * @param did
+   */
+  set did(did: DID) {
+    this.context.did = did
   }
 
   _initPinApi(): PinApi {

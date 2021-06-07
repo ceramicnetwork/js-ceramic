@@ -54,15 +54,9 @@ export class IncomingChannel extends Observable<IPFSPubsubMessage> {
       const handler = (message: IPFSPubsubMessage) => subscriber.next(message);
       const complete = () => subscriber.complete();
 
-      this.tasks.add(() => this.resubscribe(handler, complete, true));
-
-      const ensureSubscribed = interval(this.resubscribeEvery).subscribe(() => {
-        this.tasks.add(() => this.resubscribe(handler, complete));
-      });
+      this.tasks.add(() => this.subscribeToIpfs(handler, complete));
 
       return () => {
-        // Stop single source of subscription attempts
-        ensureSubscribed.unsubscribe();
         // Remove pending subscription attempts.
         this.tasks.clear();
         // Unsubscribe only after a currently running task is finished.
@@ -74,17 +68,30 @@ export class IncomingChannel extends Observable<IPFSPubsubMessage> {
     this.tasks = buildResubscribeQueue(logger);
   }
 
-  private async resubscribe(handler: (message: IPFSPubsubMessage) => void, complete: () => void, forceSubscribe = false): Promise<void> {
-    const isRunning = this.ipfs && this.ipfs.pubsub && this.ipfs.pubsub.ls;
+  private async subscribeToIpfs(handler: (message: IPFSPubsubMessage) => void, complete: () => void): Promise<void> {
+    const isRunning = this.ipfs && this.ipfs.pubsub;
     if (isRunning) {
-      const listeningTopics = await this.ipfs.pubsub.ls();
-      const isSubscribed = listeningTopics.includes(this.topic);
-      if (!isSubscribed || forceSubscribe) {
-        await this.ipfs.pubsub.unsubscribe(this.topic, handler);
-        await this.ipfs.pubsub.subscribe(this.topic, handler);
+      const onError = (error) => {
+        console.warn(`IPFS pubsub subscription error, resubscribing: ${error}`)
+        this.tasks.add(() => this.subscribeToIpfs(handler, complete));
+      }
+      try {
+        // For some reason ipfs.id() throws an error directly if the
+        // ipfs node can't be reached, while pubsub.subscribe stalls
+        // for an unknown amount of time. We therefor run ipfs.id()
+        // first to determine if the ipfs node is reachable.
         const ipfsId = await this.ipfs.id();
         const peerId = ipfsId.id;
+
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        await this.ipfs.pubsub.subscribe(this.topic, handler, { onError });
         this.pubsubLogger.log({ peer: peerId, event: 'subscribed', topic: this.topic });
+      } catch (error) {
+        console.warn(`Can not reach ipfs node, resubscribing: ${error}`)
+        // TODO - should probably have some sort of backoff mechanism here.
+        await new Promise(resolve => setTimeout(resolve, this.resubscribeEvery))
+        this.tasks.add(() => this.subscribeToIpfs(handler, complete));
       }
     } else {
       complete();

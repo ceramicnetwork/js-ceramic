@@ -37,11 +37,10 @@ export class Repository {
   /**
    * Serialize loading operations per streamId.
    */
-  readonly loadingQ: NamedTaskQueue;
+  readonly loadingQ: ExecutionQueue;
 
   /**
    * Serialize operations on state per streamId.
-   * Ensure that the task is run with a currently run state by abstracting over state loading.
    */
   readonly executionQ: ExecutionQueue;
 
@@ -66,9 +65,7 @@ export class Repository {
    * @param concurrencyLimit - Maximum number of concurrently running tasks on the streams.
    */
   constructor(cacheLimit: number, concurrencyLimit: number, private readonly logger: DiagnosticsLogger) {
-    this.loadingQ = new NamedTaskQueue((error) => {
-      logger.err(error);
-    });
+    this.loadingQ = new ExecutionQueue(concurrencyLimit, logger);
     this.executionQ = new ExecutionQueue(concurrencyLimit, logger);
     this.inmemory = new StateCache(cacheLimit, (state$) => state$.complete());
     this.updates$ = this.updates$.bind(this);
@@ -113,7 +110,7 @@ export class Repository {
   private async fromNetwork(streamId: StreamID, opts: LoadOpts): Promise<RunningState> {
     const handler = this.#deps.handlers.get(streamId.typeName);
     const genesisCid = streamId.cid;
-    const commit = await this.#deps.dispatcher.retrieveCommit(genesisCid);
+    const commit = await this.#deps.dispatcher.retrieveCommit(genesisCid, streamId);
     if (commit == null) {
       throw new Error(`No genesis commit found with CID ${genesisCid.toString()}`);
     }
@@ -133,20 +130,36 @@ export class Repository {
   async load(streamId: StreamID, opts: LoadOpts): Promise<RunningState> {
     opts = { ...DEFAULT_LOAD_OPTS, ...opts }
 
-    return this.loadingQ.run(streamId.toString(), async () => {
+    return this.loadingQ.forStream(streamId).run(async () => {
+      let fromStateStore = false
       let stream = this.fromMemory(streamId);
       if (!stream) {
         stream = await this.fromStateStore(streamId);
+        if (stream) {
+          fromStateStore = true
+        }
       }
 
       if (stream && opts.sync == SyncOptions.PREFER_CACHE) {
-        return stream
+        if (!fromStateStore || this.stateManager.wasPinnedStreamSynced(streamId)) {
+          // If the stream was from the in-memory cache we know it's up to date, so no need to sync.
+          // If the stream from the state store then we check if we've already synced the stream at
+          // least once in the lifetime of this process: if so we know the state is up to date, so
+          // no need to sync. If not, then it could be out of date due to updates made while the
+          // node was offline, in which case we fall through to calling `stateManager.sync()` below.
+          return stream
+        }
       }
 
       if (!stream) {
         stream = await this.fromNetwork(streamId, opts);
       }
-      await this.stateManager.sync(stream, opts.syncTimeoutSeconds * 1000);
+
+      if (opts.sync == SyncOptions.NEVER_SYNC) {
+        return stream
+      }
+
+      await this.stateManager.sync(stream, opts.syncTimeoutSeconds * 1000, fromStateStore);
       return stream
     });
   }
@@ -168,7 +181,7 @@ export class Repository {
    * Adds the stream to cache.
    */
   async get(streamId: StreamID): Promise<RunningState | undefined> {
-    return this.loadingQ.run(streamId.toString(), async () => {
+    return this.loadingQ.forStream(streamId).run(async () => {
       const fromMemory = this.fromMemory(streamId);
       if (fromMemory) return fromMemory;
       return this.fromStateStore(streamId);

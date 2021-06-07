@@ -1,5 +1,4 @@
 import CID from "cids"
-import fetch from "cross-fetch"
 import * as uint8arrays from 'uint8arrays'
 import { decode } from "multihashes"
 import * as providers from "@ethersproject/providers"
@@ -11,6 +10,7 @@ import {
   AnchorService,
   AnchorStatus,
   DiagnosticsLogger,
+  fetchJson,
 } from "@ceramicnetwork/common";
 import StreamID from "@ceramicnetwork/streamid";
 import { Observable, interval, from, concat, of } from "rxjs";
@@ -27,8 +27,6 @@ interface CidAndStream {
 
 const POLL_INTERVAL = 60000 // 60 seconds
 const MAX_POLL_TIME = 86400000 // 24 hours
-
-const HTTP_STATUS_NOT_FOUND = 404
 
 /**
  * Ethereum network configuration
@@ -89,12 +87,11 @@ export default class EthereumAnchorService implements AnchorService {
 
     async init(): Promise<void> {
         // Get the chainIds supported by our anchor service
-        const response = await fetch(this.chainIdApiEndpoint)
-        const json = await response.json()
-        if (json.supportedChains.length > 1) {
+        const response = await fetchJson(this.chainIdApiEndpoint)
+        if (response.supportedChains.length > 1) {
             throw new Error("Anchor service returned multiple supported chains, which isn't supported by js-ceramic yet")
         }
-        this._chainId = json.supportedChains[0]
+        this._chainId = response.supportedChains[0]
 
         // Confirm that we have an eth provider that works for the same chain that the anchor service supports
         const provider = this._getEthProvider(this._chainId)
@@ -153,27 +150,17 @@ export default class EthereumAnchorService implements AnchorService {
    */
   private _makeRequest(cidStreamPair: CidAndStream): Observable<AnchorServiceResponse> {
     return from(
-      fetch(this.requestsApiEndpoint, {
+      fetchJson(this.requestsApiEndpoint, {
         method: "POST",
-        body: JSON.stringify({
+        body: {
           streamId: cidStreamPair.streamId.toString(),
           docId: cidStreamPair.streamId.toString(),
           cid: cidStreamPair.cid.toString(),
-        }),
-        headers: {
-          "Content-Type": "application/json",
         },
       })
     ).pipe(
       concatMap(async (response) => {
-        if (response.ok) {
-          const json = await response.json();
-          return this.parseResponse(cidStreamPair, json);
-        } else {
-          throw new Error(
-            `Failed to send request. Status ${response.statusText}`
-          );
-        }
+        return this.parseResponse(cidStreamPair, response)
       })
     );
   }
@@ -198,13 +185,8 @@ export default class EthereumAnchorService implements AnchorService {
         if (now > maxTime) {
           throw new Error("Exceeded max timeout");
         } else {
-          const response = await fetch(requestUrl);
-          if (response.status === HTTP_STATUS_NOT_FOUND) {
-            throw new Error("Request not found");
-          } else {
-            const json = await response.json();
-            return this.parseResponse(cidStream, json);
-          }
+          const response = await fetchJson(requestUrl);
+          return this.parseResponse(cidStream, response)
         }
       })
     );

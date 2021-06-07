@@ -1,6 +1,7 @@
 import fetch from "cross-fetch";
 import { Networks } from "@ceramicnetwork/common";
 import type { DiagnosticsLogger, IpfsApi } from "@ceramicnetwork/common";
+import { Multiaddr } from 'multiaddr';
 
 const PEER_FILE_URLS = (ceramicNetwork: Networks): string | null => {
   switch (ceramicNetwork) {
@@ -22,21 +23,21 @@ const PEER_FILE_URLS = (ceramicNetwork: Networks): string | null => {
   }
 };
 
-const BASE_BOOTSTRAP_LIST = (ceramicNetwork: Networks): Array<string> | null => {
+const BASE_BOOTSTRAP_LIST = (ceramicNetwork: Networks): Array<Multiaddr> | null => {
   switch (ceramicNetwork) {
     case Networks.MAINNET:
     case Networks.ELP:
       return [
-        "/dns4/ipfs-ceramic-public-mainnet-external.ceramic.network/tcp/4012/wss/p2p/QmS2hvoNEfQTwqJC4v6xTvK8FpNR2s6AgDVsTL3unK11Ng",
-        "/dns4/ipfs-ceramic-private-mainnet-external.3boxlabs.com/tcp/4012/wss/p2p/QmXALVsXZwPWTUbsT8G6VVzzgTJaAWRUD7FWL5f7d5ubAL",
-        "/dns4/ipfs-cas-mainnet-external.3boxlabs.com/tcp/4012/wss/p2p/QmUvEKXuorR7YksrVgA7yKGbfjWHuCRisw2cH9iqRVM9P8",
+        new Multiaddr("/dns4/ipfs-ceramic-public-mainnet-external.ceramic.network/tcp/4012/wss/p2p/QmS2hvoNEfQTwqJC4v6xTvK8FpNR2s6AgDVsTL3unK11Ng"),
+        new Multiaddr("/dns4/ipfs-ceramic-private-mainnet-external.3boxlabs.com/tcp/4012/wss/p2p/QmXALVsXZwPWTUbsT8G6VVzzgTJaAWRUD7FWL5f7d5ubAL"),
+        new Multiaddr("/dns4/ipfs-cas-mainnet-external.3boxlabs.com/tcp/4012/wss/p2p/QmUvEKXuorR7YksrVgA7yKGbfjWHuCRisw2cH9iqRVM9P8"),
       ];
     case Networks.TESTNET_CLAY:
       return [
-        "/dns4/ipfs-ceramic-public-clay-external.3boxlabs.com/tcp/4012/wss/p2p/QmWiY3CbNawZjWnHXx3p3DXsg21pZYTj4CRY1iwMkhP8r3",
-        "/dns4/ipfs-ceramic-public-clay-external.ceramic.network/tcp/4012/wss/p2p/QmSqeKpCYW89XrHHxtEQEWXmznp6o336jzwvdodbrGeLTk",
-        "/dns4/ipfs-ceramic-private-clay-external.3boxlabs.com/tcp/4012/wss/p2p/QmQotCKxiMWt935TyCBFTN23jaivxwrZ3uD58wNxeg5npi",
-        "/dns4/ipfs-cas-clay-external.3boxlabs.com/tcp/4012/wss/p2p/QmbeBTzSccH8xYottaYeyVX8QsKyox1ExfRx7T1iBqRyCd",
+        new Multiaddr("/dns4/ipfs-ceramic-public-clay-external.3boxlabs.com/tcp/4012/wss/p2p/QmWiY3CbNawZjWnHXx3p3DXsg21pZYTj4CRY1iwMkhP8r3"),
+        new Multiaddr("/dns4/ipfs-ceramic-public-clay-external.ceramic.network/tcp/4012/wss/p2p/QmSqeKpCYW89XrHHxtEQEWXmznp6o336jzwvdodbrGeLTk"),
+        new Multiaddr("/dns4/ipfs-ceramic-private-clay-external.3boxlabs.com/tcp/4012/wss/p2p/QmQotCKxiMWt935TyCBFTN23jaivxwrZ3uD58wNxeg5npi"),
+        new Multiaddr("/dns4/ipfs-cas-clay-external.3boxlabs.com/tcp/4012/wss/p2p/QmbeBTzSccH8xYottaYeyVX8QsKyox1ExfRx7T1iBqRyCd"),
       ];
     case Networks.DEV_UNSTABLE:
     case Networks.LOCAL:
@@ -75,7 +76,7 @@ export class IpfsTopology {
   ) {}
 
   async forceConnection(): Promise<void> {
-    const base: string[] = BASE_BOOTSTRAP_LIST(this.ceramicNetwork as Networks) || [];
+    const base: Multiaddr[] = BASE_BOOTSTRAP_LIST(this.ceramicNetwork as Networks) || [];
     const dynamic = await this._dynamicBoostrapList(this.ceramicNetwork);
     const bootstrapList = base.concat(dynamic);
     await this._forceBootstrapConnection(this.ipfs, bootstrapList);
@@ -94,7 +95,7 @@ export class IpfsTopology {
     }
   }
 
-  private async _dynamicBoostrapList(network: string): Promise<string[]> {
+  private async _dynamicBoostrapList(network: string): Promise<Multiaddr[]> {
     const url = PEER_FILE_URLS(network as Networks);
     if (!url) {
       this.logger.warn(
@@ -104,18 +105,22 @@ export class IpfsTopology {
     }
     this.logger.imp(`Connecting to peers found in '${url}'`);
     const list = await fetchJson(url);
-    return list || [];
+    return list?.map(peer => new Multiaddr(peer)) || [];
   }
 
   private async _forceBootstrapConnection(
     ipfs: IpfsApi,
-    bootstrapList: string[]
+    bootstrapList: Multiaddr[]
   ): Promise<void> {
+    // Don't want to swarm connect to ourself
+    const myPeerId = (await ipfs.id()).id
+    const filteredBootstrapList = bootstrapList.filter((addr) => {
+      return !addr.getPeerId()?.endsWith(myPeerId)
+    })
+
     await Promise.all(
-      bootstrapList.map(async (node) => {
+      filteredBootstrapList.map(async (node) => {
         try {
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-ignore
           await ipfs.swarm.connect(node);
         } catch (error) {
           this.logger.warn(`Can not connect to ${node}`);

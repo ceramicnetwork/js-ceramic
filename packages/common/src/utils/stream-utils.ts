@@ -30,11 +30,11 @@ export class StreamUtils {
             return cloned
         }
 
-        if (StreamUtils.isSignedCommit(cloned)) {
+        if (StreamUtils.isSignedCommit(commit)) {
             cloned.link = cloned.link.toString()
         }
 
-        if (StreamUtils.isAnchorCommit(cloned)) {
+        if (StreamUtils.isAnchorCommit(commit)) {
             cloned.proof = cloned.proof.toString()
         }
 
@@ -155,10 +155,9 @@ export class StreamUtils {
     static async convertCommitToSignedCommitContainer(commit: CeramicCommit, ipfs: IpfsApi): Promise<CeramicCommit> {
         if (StreamUtils.isSignedCommit(commit)) {
             const block = await ipfs.block.get((commit as DagJWS).link)
-            const linkedBlock = block.data instanceof Uint8Array ? block.data : new Uint8Array(block.data.buffer)
             return {
                 jws: commit as DagJWS,
-                linkedBlock,
+                linkedBlock: block.data,
             }
         }
         return commit
@@ -169,22 +168,22 @@ export class StreamUtils {
      * @param commit - Commit
      */
     static isSignedCommitContainer(commit: CeramicCommit): boolean {
-        return (commit as SignedCommitContainer).jws !== undefined
+        return commit && (commit as SignedCommitContainer).jws !== undefined
     }
 
     /**
      * Checks if commit is signed
      * @param commit - Commit
      */
-    static isSignedCommit(commit: CeramicCommit): boolean {
-        return (commit as SignedCommit).link !== undefined
+    static isSignedCommit(commit: CeramicCommit): commit is SignedCommit {
+        return commit && (commit as SignedCommit).link !== undefined
     }
 
     /**
      * Checks if commit is anchor commit
      * @param commit - Commit
      */
-    static isAnchorCommit(commit: CeramicCommit): boolean {
-        return (commit as AnchorCommit).proof !== undefined
+    static isAnchorCommit(commit: CeramicCommit): commit is AnchorCommit {
+        return commit && (commit as AnchorCommit).proof !== undefined
     }
 }

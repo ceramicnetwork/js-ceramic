@@ -1,17 +1,14 @@
-import IPFS from 'ipfs'
+import IPFS from 'ipfs-core'
 import HttpApi from 'ipfs-http-server'
 import HttpGateway from 'ipfs-http-gateway'
 import dagJose from "dag-jose";
 import {IpfsTopology} from "@ceramicnetwork/ipfs-topology";
 import { DiagnosticsLogger, LogLevel, IpfsApi } from "@ceramicnetwork/common";
-import { sha256 } from 'multiformats/hashes/sha2'
-import legacy from 'multiformats/legacy'
+import { convert } from 'blockcodec-to-ipld-format'
 import { HealthcheckServer } from "./healthcheck-server";
 import { createRepo, StorageBackend } from './create-repo';
 
-const hasher = {}
-hasher[sha256.code] = sha256
-const format = legacy(dagJose, {hashes: hasher})
+const format = convert(dagJose)
 
 export interface Configuration {
     tcpHost: string
@@ -118,19 +115,16 @@ export class IpfsDaemon {
         const ipfs = await IPFS.create({
             start: false,
             repo,
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
             ipld: {formats: [format]},
             libp2p: {
                 config: {
                     dht: {
                         enabled: false,
-                        clientMode: !configuration.ipfsDhtServerMode,
-                        randomWalk: false,
+                        clientMode: !configuration.ipfsDhtServerMode
                     },
                     pubsub: {
                         enabled: configuration.ipfsEnablePubsub,
-                    },
+                    }
                 },
                 addresses: {
                     announce: configuration.announceAddressList,
@@ -148,9 +142,8 @@ export class IpfsDaemon {
                     ...configuration.ipfsEnableApi && {API: `/ip4/${configuration.tcpHost}/tcp/${configuration.ipfsApiPort}`},
                     ...configuration.ipfsEnableGateway && {Gateway: `/ip4/${configuration.tcpHost}/tcp/${configuration.ipfsGatewayPort}`}
                     ,
+                    Announce: configuration.announceAddressList,
                 },
-                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                // @ts-ignore
                 API: {
                     HTTPHeaders: {
                         "Access-Control-Allow-Origin": [
