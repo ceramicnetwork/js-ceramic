@@ -290,7 +290,7 @@ describe('Ceramic interop: core <> http-client', () => {
         expect(StreamUtils.serializeState(docV5Core.state)).toEqual(StreamUtils.serializeState(docV5Client.state))
     })
 
-    it('can get stream contents from /raw_data', async () => {
+    it('can get stream contents from /streams/contents', async () => {
       const content1 = {test: 123}
       const content2 = {test: 456, test2: 'abc'}
       const content3 = {test2: 'def'}
@@ -300,7 +300,7 @@ describe('Ceramic interop: core <> http-client', () => {
       await doc.update(content3, null, { anchor: false })
 
       const json = await fetchJson(
-        `http://localhost:${daemon.port}/api/v0/streams/raw_data/${doc.id}`
+        `http://localhost:${daemon.port}/api/v0/streams/contents/${doc.id}`
       )
 
       expect(json).toEqual(content3)

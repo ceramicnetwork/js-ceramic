@@ -147,8 +147,9 @@ export abstract class Stream extends Observable<StreamState> implements StreamSt
         return cloneDeep(next?.metadata ?? metadata)
     }
 
-    get rawData(): any {
-      return this._getContent()
+    get content(): any {
+        const { next, content } = this.state$.value
+        return cloneDeep(next?.content ?? content)
     }
 
     get controllers(): Array<string> {
@@ -187,11 +188,6 @@ export abstract class Stream extends Observable<StreamState> implements StreamSt
       opts = { sync: SyncOptions.PREFER_CACHE, ...opts }
       const stream = await this.api.loadStream(this.id, opts)
       this.state$.next(stream.state)
-    }
-
-    protected _getContent(): any {
-        const { next, content } = this.state$.value
-        return cloneDeep(next?.content ?? content)
     }
 
     /**
