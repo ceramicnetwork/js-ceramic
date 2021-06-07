@@ -191,6 +191,27 @@ export class CeramicDaemon {
     const streamsRouter = Router()
     const dataRouter = Router()
 
+    app.use('/api/v0', baseRouter)
+    baseRouter.use('/commits', commitsRouter)
+    baseRouter.use('/documents', documentsRouter)
+    baseRouter.use('/multiqueries', multiqueriesRouter)
+    baseRouter.use('/node', nodeRouter)
+    baseRouter.use('/pins', pinsRouter)
+    baseRouter.use('/records', recordsRouter)
+    baseRouter.use('/streams', streamsRouter)
+    streamsRouter.use('/raw_data', dataRouter) // sub-endpoint of 'streams'
+
+    baseRouter.use(errorHandler(this.diagnosticsLogger))
+    commitsRouter.use(errorHandler(this.diagnosticsLogger))
+    documentsRouter.use(errorHandler(this.diagnosticsLogger))
+    multiqueriesRouter.use(errorHandler(this.diagnosticsLogger))
+    nodeRouter.use(errorHandler(this.diagnosticsLogger))
+    pinsRouter.use(errorHandler(this.diagnosticsLogger))
+    recordsRouter.use(errorHandler(this.diagnosticsLogger))
+    streamsRouter.use(errorHandler(this.diagnosticsLogger))
+    dataRouter.use(errorHandler(this.diagnosticsLogger))
+
+
     commitsRouter.getAsync('/:streamid', this.commits.bind(this))
     multiqueriesRouter.postAsync('/', this.multiQuery.bind(this))
     streamsRouter.getAsync('/:streamid', this.state.bind(this))
@@ -219,27 +240,6 @@ export class CeramicDaemon {
       documentsRouter.postAsync('/', this.createReadOnlyDocFromGenesis.bind(this)) // Deprecated
       recordsRouter.postAsync('/',  this._notSupported.bind(this)) // Deprecated
     }
-
-    commitsRouter.use(errorHandler(this.diagnosticsLogger))
-    documentsRouter.use(errorHandler(this.diagnosticsLogger))
-    multiqueriesRouter.use(errorHandler(this.diagnosticsLogger))
-    nodeRouter.use(errorHandler(this.diagnosticsLogger))
-    pinsRouter.use(errorHandler(this.diagnosticsLogger))
-    recordsRouter.use(errorHandler(this.diagnosticsLogger))
-    streamsRouter.use(errorHandler(this.diagnosticsLogger))
-    dataRouter.use(errorHandler(this.diagnosticsLogger))
-
-    baseRouter.use('/commits', commitsRouter)
-    baseRouter.use('/documents', documentsRouter)
-    baseRouter.use('/multiqueries', multiqueriesRouter)
-    baseRouter.use('/node', nodeRouter)
-    baseRouter.use('/pins', pinsRouter)
-    baseRouter.use('/records', recordsRouter)
-    baseRouter.use('/streams', streamsRouter)
-    baseRouter.use('/raw_data', dataRouter)
-    baseRouter.use(errorHandler(this.diagnosticsLogger))
-
-    app.use('/api/v0', baseRouter)
   }
 
   healthcheck (req: Request, res: Response): void {

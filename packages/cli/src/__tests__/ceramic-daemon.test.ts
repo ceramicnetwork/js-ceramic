@@ -2,13 +2,12 @@ import Ceramic from '@ceramicnetwork/core'
 import CeramicClient from '@ceramicnetwork/http-client'
 import tmp from 'tmp-promise'
 import { CeramicDaemon } from '../ceramic-daemon'
-import { AnchorStatus, Stream, StreamUtils, IpfsApi } from '@ceramicnetwork/common';
+import { AnchorStatus, fetchJson, Stream, StreamUtils, IpfsApi } from '@ceramicnetwork/common';
 import { TileDocumentHandler } from "@ceramicnetwork/stream-tile-handler"
 import { TileDocument } from "@ceramicnetwork/stream-tile";
 import { filter, take } from "rxjs/operators"
 
 import StreamID from "@ceramicnetwork/streamid";
-import { fetchJson } from '@ceramicnetwork/http-client/src/utils'
 import getPort from "get-port";
 import { createIPFS } from './create-ipfs';
 import { makeDID } from './make-did';
@@ -301,7 +300,7 @@ describe('Ceramic interop: core <> http-client', () => {
       await doc.update(content3, null, { anchor: false })
 
       const json = await fetchJson(
-        `http://localhost:${daemon.port}/api/v0/raw_data/${doc.id}`
+        `http://localhost:${daemon.port}/api/v0/streams/raw_data/${doc.id}`
       )
 
       expect(json).toEqual(content3)
