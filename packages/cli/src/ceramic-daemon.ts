@@ -125,6 +125,9 @@ export class CeramicDaemon {
 
   constructor (public ceramic: Ceramic, private readonly opts: CreateOpts) {
     this.diagnosticsLogger = ceramic.loggerProvider.getDiagnosticsLogger()
+    this.port = this.opts.port || DEFAULT_PORT
+    this.hostname = this.opts.hostname || DEFAULT_HOSTNAME
+
     this.app = addAsync(express());
     this.app.set('trust proxy', true)
     this.app.use(express.json({limit: '1mb'}))
@@ -139,8 +142,6 @@ export class CeramicDaemon {
 
   async listen(): Promise<void> {
     return new Promise<void>((resolve) => {
-      this.port = this.opts.port || DEFAULT_PORT
-      this.hostname = this.opts.hostname || DEFAULT_HOSTNAME
       this.server = this.app.listen(this.port, this.hostname, () => {
         this.diagnosticsLogger.imp(`Ceramic API running on ${this.hostname}:${this.port}'`)
         resolve()
