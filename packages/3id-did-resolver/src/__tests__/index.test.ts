@@ -62,6 +62,20 @@ describe('3ID DID Resolver', () => {
       }
       expect(await resolver.resolve(did, { accept: DID_LD_JSON })).toEqual(toLdFormat(query.result))
     })
+
+    test('no commit found', async () => {
+      const threeIdResolver = ThreeIdResolver.getResolver(ceramic)
+      const resolver = new Resolver(threeIdResolver)
+      const did = 'did:3:kjzl6cwe1jw1490n1846tytf2fypoqb8aokqxl6n0lgyp1undfilllca3ztltho?version-id=0'
+      await expect(resolver.resolve(did)).resolves.toEqual({
+        didResolutionMetadata: {
+          error: 'invalidDid',
+          message: 'Error: No resolution for commit k3y52l7qbv1fry84jsppsl3l75diunv3uzyrjiun7o8omq55y7ic9ljrbweqj5pmo'
+        },
+        didDocument: null,
+        didDocumentMetadata: {}
+      })
+    })
   })
 
   describe('3IDv0', () => {

@@ -19,7 +19,7 @@
     "lib"
   ],
   "scripts": {
-    "test": "../../node_modules/.bin/jest --silent --coverage --env=node",
+    "test": "../../node_modules/.bin/jest --silent --coverage",
     "build": "../../node_modules/.bin/tsc -p tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
@@ -39,6 +39,10 @@
     "@ceramicnetwork/http-client": "^1.0.6",
     "@types/node": "^13.13.15",
     "did-resolver": "^3.1.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "resolver": "jest-resolver-enhanced"
   },
   "gitHead": "34eeee25597b0a60def72906c26d3afd6230aaf1"
 }
