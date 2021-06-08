@@ -11,7 +11,7 @@ export default class Utils {
 
     @Memoize()
     static get validator() {
-      const ajv = new Ajv({ allErrors: true });
+      const ajv = new Ajv({ allErrors: true, strictTypes: false, strictTuples: false });
       addFormats(ajv);
       return ajv;
     }
