@@ -1,7 +1,13 @@
 import Ceramic from "../ceramic";
 import { Ed25519Provider } from "key-did-provider-ed25519";
 import tmp from "tmp-promise";
-import { StreamUtils, StreamState, IpfsApi, AnchorStatus } from "@ceramicnetwork/common";
+import {
+    StreamUtils,
+    StreamState,
+    IpfsApi,
+    AnchorStatus,
+    AnchorService
+} from "@ceramicnetwork/common";
 import { TileDocument } from "@ceramicnetwork/stream-tile";
 import * as u8a from "uint8arrays";
 import { createIPFS } from './ipfs-util';
@@ -29,13 +35,23 @@ const makeDID = function(seed: Uint8Array, ceramic: Ceramic): DID {
     return new DID({ provider, resolver })
 }
 
-async function createCeramic(ipfs: IpfsApi, stateStoreDirectory: string) {
-    const ceramic = await Ceramic.create(ipfs, {
+async function createCeramic(ipfs: IpfsApi, stateStoreDirectory: string, anchorService?: AnchorService) {
+    const config = {
         stateStoreDirectory,
         anchorOnRequest: false,
         pubsubTopic: PUBSUB_TOPIC, // necessary so Ceramic instances can talk to each other
-    });
-    await ceramic.setDID(makeDID(SEED, ceramic))
+    };
+    const [modules, params] = await Ceramic._processConfig(ipfs, config)
+    if (anchorService) {
+        modules.anchorService = anchorService
+    }
+
+    const ceramic = new Ceramic(modules, params)
+    const doPeerDiscovery = false
+    const restoreStreams = true
+    await ceramic._init(doPeerDiscovery, restoreStreams)
+
+    ceramic.did = makeDID(SEED, ceramic)
     return ceramic;
 }
 
@@ -54,20 +70,21 @@ afterEach(async () => {
     await ipfs2.stop();
 });
 
-it("re-request anchors on #recoverStreams", async () => {
+it("restart anchor polling on #recoverStreams", async () => {
     const stateStoreDirectory = await tmp.tmpName();
 
     // Store
     const ceramic1 = await createCeramic(ipfs1, stateStoreDirectory);
-
     const stream1 = await TileDocument.create(ceramic1, { test: 456 });
     stream1.subscribe();
     await ceramic1.pin.add(stream1.id);
     expect(stream1.state.anchorStatus).toEqual(AnchorStatus.PENDING);
+    const anchorService = ceramic1.context.anchorService
     await ceramic1.close();
 
     // Retrieve after being closed
-    const ceramic2 = await createCeramic(ipfs2, stateStoreDirectory);
+    // Re-use the same anchor service so that the CAS state isn't lost
+    const ceramic2 = await createCeramic(ipfs2, stateStoreDirectory, anchorService);
 
     const stream2 = await ceramic2.loadStream(stream1.id);
     stream2.subscribe()
@@ -78,5 +95,23 @@ it("re-request anchors on #recoverStreams", async () => {
     await anchorUpdate(ceramic2, stream2);
     // And the stream is anchored
     expect(stream2.state.anchorStatus).toEqual(AnchorStatus.ANCHORED);
+    await ceramic2.close();
+});
+
+it("Don't create new anchor request on #recoverStreams", async () => {
+    const stateStoreDirectory = await tmp.tmpName();
+
+    const ceramic1 = await createCeramic(ipfs1, stateStoreDirectory);
+    const stream1 = await TileDocument.create(ceramic1, { test: 456 });
+    stream1.subscribe();
+    await ceramic1.pin.add(stream1.id);
+    expect(stream1.state.anchorStatus).toEqual(AnchorStatus.PENDING);
+    await ceramic1.close();
+
+    // New anchor service so CAS state is lost
+    const ceramic2 = await createCeramic(ipfs2, stateStoreDirectory);
+    const stream2 = await ceramic2.loadStream(stream1.id);
+    stream2.subscribe()
+    expect(stream2.state.anchorStatus).toEqual(AnchorStatus.FAILED);
     await ceramic2.close();
 });

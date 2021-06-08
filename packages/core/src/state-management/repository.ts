@@ -99,7 +99,7 @@ export class Repository {
         runningState.value.anchorStatus === AnchorStatus.PENDING ||
         runningState.value.anchorStatus === AnchorStatus.PROCESSING;
       if (toRecover) {
-        this.stateManager.anchor(runningState);
+        this.stateManager.confirmAnchorResponse(runningState);
       }
       return runningState;
     } else {
