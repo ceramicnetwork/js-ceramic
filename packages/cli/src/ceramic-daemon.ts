@@ -199,7 +199,7 @@ export class CeramicDaemon {
     baseRouter.use('/pins', pinsRouter)
     baseRouter.use('/records', recordsRouter)
     baseRouter.use('/streams', streamsRouter)
-    streamsRouter.use('/contents', contentsRouter) // sub-endpoint of 'streams'
+    streamsRouter.use('/content', contentsRouter) // sub-endpoint of 'streams'
 
     baseRouter.use(errorHandler(this.diagnosticsLogger))
     commitsRouter.use(errorHandler(this.diagnosticsLogger))
