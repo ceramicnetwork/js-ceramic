@@ -167,7 +167,13 @@ const resolve = async (ceramic: CeramicApi, didId: string, verNfo: VersionInfo, 
   const requestedVersionState = resp[commitIdStr]?.state || latestVersionState
   const metadata = extractMetadata(requestedVersionState, latestVersionState)
 
-  const content = (resp[commitIdStr || didId] as TileDocument).content
+  const tile = resp[commitIdStr || didId] as TileDocument | undefined
+
+  if (commitIdStr && !tile) {
+    throw new Error(`No resolution for commit ${commitIdStr}`)
+  }
+
+  const content = tile.content
   const document = wrapDocument(content, `did:3:${v03ID || didId}`)
 
   return {

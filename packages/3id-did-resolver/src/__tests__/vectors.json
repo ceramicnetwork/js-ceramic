@@ -276,6 +276,11 @@
       "response": {
         "k2t6wyfsu4pfxkwr4xlff0joqfejg1b42ujhzo4xcf0ujw2upuko0mf5b7834q":{"type":0,"content":{},"metadata":{"family":"3id","controllers":["did:key:zQ3shcMwX6vEZkhBgM38F4erHWNDfsHQhxtHrJdUDqh515pT2"]},"signature":0,"anchorStatus":"NOT_REQUESTED","log":[{"cid":"bafyreibd3imfprrpgsvm7qciu7pszyaevvy5acg74ksckbfpjkxhqnke3i","type":0}]}
       }
+    }, {
+      "expectedBody": {"queries":[{"streamId":"kjzl6cwe1jw1490n1846tytf2fypoqb8aokqxl6n0lgyp1undfilllca3ztltho"},{"streamId":"k3y52l7qbv1fry84jsppsl3l75diunv3uzyrjiun7o8omq55y7ic9ljrbweqj5pmo"}]},
+      "response": {
+        "kjzl6cwe1jw1490n1846tytf2fypoqb8aokqxl6n0lgyp1undfilllca3ztltho":{"type":0,"content":{},"metadata":{"family":"3id","controllers":["did:key:zQ3shcMwX6vEZkhBgM38F4erHWNDfsHQhxtHrJdUDqh515pT2"]},"signature":0,"anchorStatus":"NOT_REQUESTED","log":[{"cid":"bafyreibd3imfprrpgsvm7qciu7pszyaevvy5acg74ksckbfpjkxhqnke3i","type":0}]}
+      }
     }]
   }
 }
