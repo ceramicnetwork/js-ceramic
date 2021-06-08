@@ -53,12 +53,18 @@ class InMemoryAnchorService implements AnchorService {
   readonly #verifySignatures: boolean;
   readonly #feed: Subject<AnchorServiceResponse> = new Subject();
 
+  // Maps CID of a specific anchor request to the current status of that request
+  readonly #anchors: Map<string, AnchorServiceResponse> = new Map()
+
   #queue: Candidate[] = [];
 
   constructor(_config: InMemoryAnchorConfig) {
     this.#anchorDelay = _config?.anchorDelay ?? 0;
     this.#anchorOnRequest = _config?.anchorOnRequest ?? true;
     this.#verifySignatures = _config?.verifySignatures ?? true;
+
+    // Remember the most recent AnchorServiceResponse for each anchor request
+    this.#feed.subscribe(asr => this.#anchors.set(asr.cid.toString(), asr))
   }
 
   async init(): Promise<void> {
@@ -233,9 +239,6 @@ class InMemoryAnchorService implements AnchorService {
    */
   requestAnchor(streamId: StreamID, tip: CID): Observable<AnchorServiceResponse> {
     const candidate = new Candidate(tip, streamId);
-    const feed$ = this.#feed.pipe(
-      filter((asr) => asr.streamId.equals(streamId) && asr.cid.equals(tip))
-    );
     if (this.#anchorOnRequest) {
       this._process(candidate).catch((error) => {
         this.#feed.next({
@@ -248,16 +251,41 @@ class InMemoryAnchorService implements AnchorService {
     } else {
       this.#queue.push(candidate);
     }
-    return concat(
-      of<AnchorServiceResponse>({
-        status: AnchorStatus.PENDING,
-        streamId: streamId,
-        cid: tip,
-        message: "Sending anchoring request",
-        anchorScheduledFor: null,
-      }),
-      feed$
+    this.#feed.next({
+      status: AnchorStatus.PENDING,
+      streamId: streamId,
+      cid: tip,
+      message: "Sending anchoring request",
+      anchorScheduledFor: null,
+    })
+    return this.pollForAnchorResponse(streamId, tip)
+  }
+
+  /**
+   * Start polling the anchor service to learn of the results of an existing anchor request for the
+   * given tip for the given stream.
+   * @param streamId - Stream ID
+   * @param tip - Tip CID of the stream
+   */
+  pollForAnchorResponse(streamId: StreamID, tip: CID): Observable<AnchorServiceResponse> {
+    const anchorResponse = this.#anchors.get(tip.toString())
+    const feed$ = this.#feed.pipe(
+      filter((asr) => asr.streamId.equals(streamId) && asr.cid.equals(tip))
     );
+
+    if (anchorResponse) {
+      return concat(
+        of<AnchorServiceResponse>(anchorResponse),
+        feed$
+      );
+    } else {
+      return of<AnchorServiceResponse>({
+          status: AnchorStatus.FAILED,
+          streamId,
+          cid: tip,
+          message: "Request not found",
+        });
+    }
   }
 
   /**

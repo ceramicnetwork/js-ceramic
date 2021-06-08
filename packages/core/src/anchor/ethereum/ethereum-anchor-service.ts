@@ -14,7 +14,7 @@ import {
 } from "@ceramicnetwork/common";
 import StreamID from "@ceramicnetwork/streamid";
 import { Observable, interval, from, concat, of } from "rxjs";
-import { concatMap, catchError } from "rxjs/operators";
+import { concatMap, catchError, map } from "rxjs/operators";
 import {Block, TransactionResponse } from "@ethersproject/providers"
 
 /**
@@ -112,7 +112,7 @@ export default class EthereumAnchorService implements AnchorService {
     return concat(
       this._announcePending(cidStreamPair),
       this._makeRequest(cidStreamPair),
-      this._poll(cidStreamPair)
+      this.pollForAnchorResponse(streamId, tip)
     ).pipe(
       catchError((error) =>
         of<AnchorServiceResponse>({
@@ -159,25 +159,25 @@ export default class EthereumAnchorService implements AnchorService {
         },
       })
     ).pipe(
-      concatMap(async (response) => {
+      map((response) => {
         return this.parseResponse(cidStreamPair, response)
       })
     );
   }
 
   /**
-   * Start polling for CidAndStream mapping
-   * @param cidStream - CID to Stream mapping
-   * @private
+   * Start polling the anchor service to learn of the results of an existing anchor request for the
+   * given tip for the given stream.
+   * @param streamId - Stream ID
+   * @param tip - Tip CID of the stream
    */
-  private _poll(
-    cidStream: CidAndStream,
-  ): Observable<AnchorServiceResponse> {
+  pollForAnchorResponse(streamId: StreamID, tip: CID): Observable<AnchorServiceResponse> {
     const started = new Date().getTime();
     const maxTime = started + MAX_POLL_TIME;
-    const requestUrl = [this.requestsApiEndpoint, cidStream.cid.toString()].join(
+    const requestUrl = [this.requestsApiEndpoint, tip.toString()].join(
       "/"
     );
+    const cidStream = { cid: tip, streamId }
 
     return interval(POLL_INTERVAL).pipe(
       concatMap(async () => {
@@ -302,6 +302,15 @@ export default class EthereumAnchorService implements AnchorService {
    * Parse JSON that CAS returns.
    */
   private parseResponse(cidStream: CidAndStream, json: any): AnchorServiceResponse {
+    if (json.error) {
+      return {
+        status: AnchorStatus.FAILED,
+        streamId: cidStream.streamId,
+        cid: cidStream.cid,
+        message: json.error,
+      };
+    }
+
     switch (json.status) {
       case "PENDING":
         return {
@@ -319,7 +328,12 @@ export default class EthereumAnchorService implements AnchorService {
           message: json.message,
         };
       case "FAILED":
-        throw new Error(json.message);
+        return {
+          status: AnchorStatus.FAILED,
+          streamId: cidStream.streamId,
+          cid: cidStream.cid,
+          message: json.message,
+        };
       case "COMPLETED": {
         const { anchorRecord } = json;
         const anchorRecordCid = new CID(anchorRecord.cid.toString());
