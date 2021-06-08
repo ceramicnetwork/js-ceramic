@@ -300,7 +300,7 @@ describe('Ceramic interop: core <> http-client', () => {
       await doc.update(content3, null, { anchor: false })
 
       const json = await fetchJson(
-        `http://localhost:${daemon.port}/api/v0/streams/contents/${doc.id}`
+        `http://localhost:${daemon.port}/api/v0/streams/content/${doc.id}`
       )
 
       expect(json).toEqual(content3)
