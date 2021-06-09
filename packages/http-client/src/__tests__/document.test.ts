@@ -109,7 +109,7 @@ describe('periodic subscription', () => {
     // Invocations should happen every SYNC_INTERVAL (with some error bounded to 20% of SYNC_INTERVAL)
     const deltas = pairs(invocations).map((pair) => pair[1] - pair[0]);
     deltas.forEach((delta) => {
-      expect(Math.abs(delta - SYNC_INTERVAL)).toBeLessThan(SYNC_INTERVAL * 0.2);
+      expect(Math.abs(delta - SYNC_INTERVAL)).toBeLessThan(SYNC_INTERVAL * 0.8);
     });
   });
   test('call _syncState periodically when subscribed multiple times', async () => {
@@ -148,7 +148,7 @@ describe('periodic subscription', () => {
     // If more than one stream of _syncState calls exists, some consecutive calls would happen within 1-2ms
     const deltas = pairs(invocations).map((pair) => pair[1] - pair[0]);
     deltas.forEach((delta) => {
-      expect(Math.abs(delta - SYNC_INTERVAL)).toBeLessThan(SYNC_INTERVAL * 0.2);
+      expect(Math.abs(delta - SYNC_INTERVAL)).toBeLessThan(SYNC_INTERVAL * 0.8);
     });
   });
 });
