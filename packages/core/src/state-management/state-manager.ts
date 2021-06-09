@@ -229,7 +229,7 @@ export class StateManager {
    */
   anchor(state$: RunningState): Subscription {
     if (state$.value.anchorStatus == AnchorStatus.ANCHORED) {
-      return empty().subscribe()
+      return Subscription.EMPTY;
     }
     const anchorStatus$ = this.anchorService.requestAnchor(state$.id, state$.tip);
     return this._processAnchorResponse(state$, anchorStatus$)
