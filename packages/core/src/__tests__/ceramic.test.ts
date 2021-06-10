@@ -254,7 +254,7 @@ describe('Ceramic integration', () => {
   it('cannot utilize disabled stream commit cache', async () => {
     await swarmConnect(ipfs1, ipfs2)
     const ceramic1 = await createCeramic(ipfs1, false, 2)
-    const ceramic2 = await createCeramic(ipfs2, false, 1, false)
+    const ceramic2 = await createCeramic(ipfs2, false, 1)
 
     const repository1 = ceramic1.repository
     const addSpy1 = jest.spyOn(repository1, 'add');
@@ -287,6 +287,33 @@ describe('Ceramic integration', () => {
 
     expect(loadSpy2).toBeCalled()
     expect(addSpy2).toBeCalledTimes(1)
+
+    await ceramic1.close()
+    await ceramic2.close()
+  })
+
+  it("Loading stream at commit doesn't prevent loading current tip", async () => {
+    await swarmConnect(ipfs1, ipfs2)
+    const ceramic1 = await createCeramic(ipfs1, false)
+    const ceramic2 = await createCeramic(ipfs2, false)
+
+    const content0 = { foo: 0 }
+    const content1 = { foo: 1 }
+    const content2 = { foo: 2 }
+
+    const stream1 = await TileDocument.create(ceramic1, content0, null, { anchor: false })
+    await stream1.update(content1, null, { anchor: false })
+    await stream1.update(content2, null, { anchor: false })
+
+    const middleCommitId = stream1.id.atCommit(stream1.state.log[1].cid)
+
+    // Now load the stream into the cache on second node at a commit ID that is not the most recent.
+    const stream2AtCommit = await ceramic2.loadStream<TileDocument>(middleCommitId)
+    // Now load current version and make sure the fact that older version is in the cache doesn't
+    // prevent getting current version
+    const stream2Current = await ceramic2.loadStream<TileDocument>(stream1.id)
+    expect(stream2AtCommit.content).toEqual(content1)
+    expect(stream2Current.content).toEqual(content2)
 
     await ceramic1.close()
     await ceramic2.close()
