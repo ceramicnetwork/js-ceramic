@@ -1,7 +1,7 @@
 import Ceramic from '../ceramic'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import tmp from 'tmp-promise'
-import { StreamUtils, IpfsApi, TestUtils, StreamState } from '@ceramicnetwork/common';
+import { StreamUtils, IpfsApi, TestUtils, StreamState, SyncOptions } from '@ceramicnetwork/common';
 import { TileDocument } from "@ceramicnetwork/stream-tile"
 import * as u8a from 'uint8arrays'
 import { createIPFS, swarmConnect } from './ipfs-util';
@@ -292,6 +292,43 @@ describe('Ceramic integration', () => {
     await ceramic2.close()
   })
 
+  it("Won't sync if already in cache", async () => {
+    await swarmConnect(ipfs1, ipfs2)
+    const ceramic1 = await createCeramic(ipfs1, false)
+    const ceramic2 = await createCeramic(ipfs2, false)
+
+    const content0 = { foo: 0 }
+    const content1 = { foo: 1 }
+    const content2 = { foo: 2 }
+
+    const stream1 = await TileDocument.create(ceramic1, content0, null, { anchor: false })
+    await stream1.update(content1, null, { anchor: false })
+
+    // Now load the stream into the cache on second node.
+    const stream2 = await ceramic2.loadStream<TileDocument>(stream1.id)
+
+    // Now update the stream on node 1, but don't tell node 2 about it.
+    await stream1.update(content2, null, { anchor: false, publish: false })
+
+    // Now try loading the stream again on node 2. Loading with PREFER_CACHE should get old version,
+    // but using SYNC_ALWAYS should get current version.
+    const stream3 = await ceramic2.loadStream<TileDocument>(stream1.id, { sync: SyncOptions.NEVER_SYNC })
+    const stream4 = await ceramic2.loadStream<TileDocument>(stream1.id, { sync: SyncOptions.PREFER_CACHE })
+    const stream5 = await ceramic2.loadStream<TileDocument>(stream1.id, { sync: SyncOptions.SYNC_ALWAYS })
+
+    expect(stream2.content).toEqual(content1)
+    expect(stream3.content).toEqual(content1)
+    expect(stream4.content).toEqual(content1)
+    expect(stream5.content).toEqual(content2)
+
+    // Cache should be updated to newest version
+    const stream6 = await ceramic2.loadStream<TileDocument>(stream1.id, { sync: SyncOptions.PREFER_CACHE })
+    expect(stream6.content).toEqual(content2)
+
+    await ceramic1.close()
+    await ceramic2.close()
+  })
+
   it("Loading stream at commit doesn't prevent loading current tip", async () => {
     await swarmConnect(ipfs1, ipfs2)
     const ceramic1 = await createCeramic(ipfs1, false)
@@ -308,12 +345,12 @@ describe('Ceramic integration', () => {
     const middleCommitId = stream1.id.atCommit(stream1.state.log[1].cid)
 
     // Now load the stream into the cache on second node at a commit ID that is not the most recent.
-    const stream2AtCommit = await ceramic2.loadStream<TileDocument>(middleCommitId)
+    const stream2 = await ceramic2.loadStream<TileDocument>(middleCommitId)
     // Now load current version and make sure the fact that older version is in the cache doesn't
     // prevent getting current version
-    const stream2Current = await ceramic2.loadStream<TileDocument>(stream1.id)
-    expect(stream2AtCommit.content).toEqual(content1)
-    expect(stream2Current.content).toEqual(content2)
+    const stream3 = await ceramic2.loadStream<TileDocument>(stream1.id)
+    expect(stream2.content).toEqual(content1)
+    expect(stream3.content).toEqual(content2)
 
     await ceramic1.close()
     await ceramic2.close()
