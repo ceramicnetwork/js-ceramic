@@ -66,6 +66,23 @@ describe('anchor', () => {
     expect(stream$.value.anchorStatus).toEqual(AnchorStatus.ANCHORED);
   });
 
+  test('No double anchor', async () => {
+    const stream = await TileDocument.create(ceramic, INITIAL_CONTENT, null, { anchor: false });
+    const stream$ = await ceramic.repository.load(stream.id, {});
+
+    await new Promise((resolve) => {
+      ceramic.repository.stateManager.anchor(stream$).add(resolve);
+    });
+    expect(stream$.value.anchorStatus).toEqual(AnchorStatus.ANCHORED);
+    expect(stream$.value.log.length).toEqual(2)
+
+    // Now re-request an anchor when the stream is already anchored. Should be a no-op
+    await new Promise((resolve) => {
+      ceramic.repository.stateManager.anchor(stream$).add(resolve);
+    });
+    expect(stream$.value.log.length).toEqual(2)
+  });
+
   test('anchor retries successfully', async () => {
     const stateManager = ceramic.repository.stateManager;
     const stream = await TileDocument.create(ceramic, INITIAL_CONTENT, null, { anchor: false });
