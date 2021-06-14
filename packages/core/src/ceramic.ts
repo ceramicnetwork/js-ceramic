@@ -489,15 +489,14 @@ class Ceramic implements CeramicApi {
   async loadStream<T extends Stream>(streamId: StreamID | CommitID | string, opts: LoadOpts = {}): Promise<T> {
     opts = { ...DEFAULT_LOAD_OPTS, ...opts };
     const streamRef = StreamRef.from(streamId)
-    const base$ = await this.repository.load(streamRef.baseID, opts);
     if (CommitID.isInstance(streamRef)) {
-      // Here CommitID is requested, let's return stream at specific commit
-      const snapshot$ = await this.repository.stateManager.rewind(base$, streamRef)
+      const snapshot$ = await this.repository.loadAtCommit(streamId as CommitID, opts);
       return streamFromState<T>(this.context, this._streamHandlers, snapshot$.value)
     } else if (opts.atTime) {
-      const snapshot$ = await this.repository.stateManager.atTime(base$, opts.atTime)
+      const snapshot$ = await this.repository.loadAtTime(streamId as StreamID, opts);
       return streamFromState<T>(this.context, this._streamHandlers, snapshot$.value)
     } else {
+      const base$ = await this.repository.load(streamRef.baseID, opts);
       return streamFromState<T>(this.context, this._streamHandlers, base$.value, this.repository.updates$)
     }
   }

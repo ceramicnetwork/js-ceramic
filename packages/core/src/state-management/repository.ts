@@ -1,4 +1,4 @@
-import StreamID from '@ceramicnetwork/streamid';
+import StreamID, {CommitID} from '@ceramicnetwork/streamid';
 import {
   AnchorService,
   AnchorStatus,
@@ -20,6 +20,7 @@ import type { HandlersMap } from '../handlers-map';
 import type { StateValidation } from './state-validation';
 import { Observable } from 'rxjs';
 import { StateCache } from './state-cache';
+import {SnapshotState} from "./snapshot-state";
 
 export type RepositoryDependencies = {
   dispatcher: Dispatcher;
@@ -162,6 +163,31 @@ export class Repository {
       await this.stateManager.sync(stream, opts.syncTimeoutSeconds * 1000, fromStateStore);
       return stream
     });
+  }
+
+  /**
+   * Load the state for a stream at a specific CommitID.
+   * @param commitId
+   * @param opts
+   */
+  async loadAtCommit(commitId: CommitID, opts: LoadOpts): Promise<SnapshotState> {
+    // Start by loading the current state of the stream. This might cause us to load more commits
+    // for the stream than is ultimately necessary, but doing so increases the chances that we
+    // detect that the CommitID specified is rejected by the conflict resolution rules due to
+    // conflict with the stream's canonical branch of history.
+    const base$ = await this.load(commitId.baseID, opts);
+    return this.stateManager.rewind(base$, commitId)
+  }
+
+  /**
+   * Load the state for a stream as it was at a specified wall clock time, based on the anchor
+   * timestamps of AnchorCommits in the log.
+   * @param streamId
+   * @param opts - must contain an 'atTime' parameter
+   */
+  async loadAtTime(streamId: StreamID, opts: LoadOpts): Promise<SnapshotState> {
+    const base$ = await this.load(streamId.baseID, opts);
+    return this.stateManager.atTime(base$, opts.atTime);
   }
 
   /**

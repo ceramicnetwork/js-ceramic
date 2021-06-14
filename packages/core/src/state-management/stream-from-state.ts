@@ -9,7 +9,8 @@ import { StateLink } from './state-link';
  * @param context - Ceramic context
  * @param handlersMap - available stream handlers
  * @param state - current state of the stream
- * @param update$ - On-demand feed of updates for the stream
+ * @param update$ - On-demand feed of updates for the stream. If not provided then the returned
+ *   Stream object is marked read-only and cannot be used to update the stream.
  */
 export function streamFromState<T extends Stream>(
   context: Context,
