@@ -106,7 +106,7 @@ describe('periodic subscription', () => {
       .toPromise();
     subscription.unsubscribe();
 
-    // Invocations should happen every SYNC_INTERVAL (with some error bounded to 20% of SYNC_INTERVAL)
+    // Invocations should happen every SYNC_INTERVAL (with some error bounded to 80% of SYNC_INTERVAL)
     const deltas = pairs(invocations).map((pair) => pair[1] - pair[0]);
     deltas.forEach((delta) => {
       expect(Math.abs(delta - SYNC_INTERVAL)).toBeLessThan(SYNC_INTERVAL * 0.8);
@@ -144,7 +144,7 @@ describe('periodic subscription', () => {
     subscription1.unsubscribe();
     subscription2.unsubscribe();
 
-    // Invocations should happen every SYNC_INTERVAL (with some error bounded to 20% of SYNC_INTERVAL)
+    // Invocations should happen every SYNC_INTERVAL (with some error bounded to 80% of SYNC_INTERVAL)
     // If more than one stream of _syncState calls exists, some consecutive calls would happen within 1-2ms
     const deltas = pairs(invocations).map((pair) => pair[1] - pair[0]);
     deltas.forEach((delta) => {
