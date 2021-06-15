@@ -490,10 +490,10 @@ class Ceramic implements CeramicApi {
     opts = { ...DEFAULT_LOAD_OPTS, ...opts };
     const streamRef = StreamRef.from(streamId)
     if (CommitID.isInstance(streamRef)) {
-      const snapshot$ = await this.repository.loadAtCommit(streamId as CommitID, opts);
+      const snapshot$ = await this.repository.loadAtCommit(streamRef, opts);
       return streamFromState<T>(this.context, this._streamHandlers, snapshot$.value)
     } else if (opts.atTime) {
-      const snapshot$ = await this.repository.loadAtTime(streamId as StreamID, opts);
+      const snapshot$ = await this.repository.loadAtTime(streamRef, opts);
       return streamFromState<T>(this.context, this._streamHandlers, snapshot$.value)
     } else {
       const base$ = await this.repository.load(streamRef.baseID, opts);

@@ -379,11 +379,10 @@ describe('Ceramic integration', () => {
     const streamAtCommit = await ceramic2.loadStream<TileDocument>(stream1.commitId)
     expect(streamAtCommit.content).toEqual(content2)
 
-    // Now ensure that the stream cache has been updated to the newest commit that was learned
-    // about by loading at the CommitID
-    const streamCurrent = await ceramic2.loadStream<TileDocument>(stream1.id, { sync: SyncOptions.PREFER_CACHE, syncTimeoutSeconds: 0 })
+    // Now ensure that the stream cache has been updated to the newest commit.
+    const streamCurrent = await ceramic2.loadStream<TileDocument>(
+      stream1.id, { sync: SyncOptions.NEVER_SYNC, syncTimeoutSeconds: 0 })
     expect(streamCurrent.content).toEqual(content2)
-
 
     await ceramic1.close()
     await ceramic2.close()
