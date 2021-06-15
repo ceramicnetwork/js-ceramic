@@ -175,7 +175,7 @@ export class Repository {
     // detect that the CommitID specified is rejected by the conflict resolution rules due to
     // conflict with the stream's canonical branch of history.
     const base$ = await this.load(commitId.baseID, opts);
-    return this.stateManager.rewind(base$, commitId)
+    return this.stateManager.atCommit(base$, commitId)
   }
 
   /**

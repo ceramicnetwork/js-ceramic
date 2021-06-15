@@ -348,7 +348,7 @@ export class ConflictResolution {
   /**
    * Return state at `commitId` version.
    */
-  async rewind(initialState: StreamState, commitId: CommitID): Promise<StreamState> {
+  async snapshotAtCommit(initialState: StreamState, commitId: CommitID): Promise<StreamState> {
     // If 'commit' is ahead of 'initialState', sync state up to 'commit'
     const baseState = (await this.applyTip(initialState, commitId.commit)) || initialState;
 
