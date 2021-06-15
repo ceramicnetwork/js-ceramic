@@ -12,6 +12,7 @@ import {
   UnreachableCaseError,
   RunningStateLike,
   DiagnosticsLogger,
+  StreamUtils,
 } from '@ceramicnetwork/common';
 import { RunningState } from './running-state';
 import CID from 'cids';
@@ -95,8 +96,17 @@ export class StateManager {
    * @param commitId - Requested commit.
    */
   async rewind(state$: RunningStateLike, commitId: CommitID): Promise<SnapshotState> {
-    const snapshot = await this.conflictResolution.rewind(state$.value, commitId);
-    return new SnapshotState(snapshot);
+    return this.executionQ.forStream(commitId.baseID).run(async () => {
+      const snapshot = await this.conflictResolution.rewind(state$.value, commitId);
+
+      // If the provided CommitID is ahead of what we have in the cache, then we should update
+      // the cache to include it.
+      if (StreamUtils.isStateSupersetOf(snapshot, state$.value)) {
+        state$.next(snapshot)
+      }
+
+      return new SnapshotState(snapshot);
+    });
   }
 
   /**

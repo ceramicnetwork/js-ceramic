@@ -9,7 +9,6 @@ import {
   SyncOptions,
 } from '@ceramicnetwork/common';
 import { PinStore } from '../store/pin-store';
-import { NamedTaskQueue } from './named-task-queue';
 import { DiagnosticsLogger } from '@ceramicnetwork/common';
 import { ExecutionQueue } from './execution-queue';
 import { RunningState } from './running-state';
@@ -20,7 +19,7 @@ import type { HandlersMap } from '../handlers-map';
 import type { StateValidation } from './state-validation';
 import { Observable } from 'rxjs';
 import { StateCache } from './state-cache';
-import {SnapshotState} from "./snapshot-state";
+import { SnapshotState } from "./snapshot-state";
 
 export type RepositoryDependencies = {
   dispatcher: Dispatcher;
