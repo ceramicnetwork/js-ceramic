@@ -295,6 +295,23 @@ describe('atCommit', () => {
 
     await ceramic2.close();
   });
+
+  test('commit ahead of current state', async () => {
+    const stream = await TileDocument.create(ceramic, INITIAL_CONTENT, null, { anchor: false });
+    const streamState = await ceramic.repository.load(stream.id, {});
+    // Provide a new commit that the repository doesn't currently know about
+    const newContent = { abc: 321, def: 456, gh: 987 };
+    const updateCommit = await stream.makeCommit(ceramic, newContent)
+    const futureCommitCID = await ceramic.dispatcher.storeCommit(updateCommit)
+     const futureCommitID = stream.id.atCommit(futureCommitCID);
+
+    // Now load the stream at a commitID ahead of what is currently in the state in the repository.
+    // The existing RunningState from the repository should also get updated
+    const snapshot = await ceramic.repository.loadAtCommit(futureCommitID, {})
+    expect(snapshot.value.next.content).toEqual(newContent)
+    expect(snapshot.value.log.length).toEqual(2)
+    expect(StreamUtils.serializeState(streamState.state)).toEqual(StreamUtils.serializeState(snapshot.value))
+  });
 });
 
 test('handles basic conflict', async () => {
