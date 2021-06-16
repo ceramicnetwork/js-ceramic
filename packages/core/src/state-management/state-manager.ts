@@ -119,11 +119,11 @@ export class StateManager {
    * @param opts - Initialization options (request anchor, publish to pubsub, etc.)
    * @private
    */
-  applyWriteOpts(state$: RunningState, opts: CreateOpts | UpdateOpts) {
+  async applyWriteOpts(state$: RunningState, opts: CreateOpts | UpdateOpts) {
     const anchor = (opts as any).anchor
     const publish = (opts as any).publish
     if (anchor) {
-      this.anchor(state$);
+      await this.anchor(state$);
     }
     if (publish) {
       this.publishTip(state$);
@@ -227,11 +227,11 @@ export class StateManager {
   /**
    * Request anchor for the latest stream state
    */
-  anchor(state$: RunningState): Subscription {
+  async anchor(state$: RunningState): Promise<Subscription> {
     if (state$.value.anchorStatus == AnchorStatus.ANCHORED) {
       return Subscription.EMPTY;
     }
-    const anchorStatus$ = this.anchorService.requestAnchor(state$.id, state$.tip);
+    const anchorStatus$ = await this.anchorService.requestAnchor(state$.id, state$.tip);
     return this._processAnchorResponse(state$, anchorStatus$)
   }
 

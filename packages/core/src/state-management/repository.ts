@@ -172,7 +172,7 @@ export class Repository {
    */
   async applyCreateOpts(streamId: StreamID, opts: CreateOpts): Promise<RunningState> {
     const state = await this.load(streamId, opts)
-    this.stateManager.applyWriteOpts(state, opts)
+    await this.stateManager.applyWriteOpts(state, opts)
     return state
   }
 

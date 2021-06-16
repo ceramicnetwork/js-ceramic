@@ -69,7 +69,7 @@ export interface AnchorService {
    * @param streamId - Stream ID
    * @param tip - CID tip
    */
-  requestAnchor(streamId: StreamID, tip: CID): Observable<AnchorServiceResponse>;
+  requestAnchor(streamId: StreamID, tip: CID): Promise<Observable<AnchorServiceResponse>>;
 
   /**
    * Start polling the anchor service to learn of the results of an existing anchor request for the

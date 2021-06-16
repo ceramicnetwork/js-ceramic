@@ -237,7 +237,7 @@ class InMemoryAnchorService implements AnchorService {
    * @param streamId - Stream ID
    * @param tip - Commit CID
    */
-  requestAnchor(streamId: StreamID, tip: CID): Observable<AnchorServiceResponse> {
+  async requestAnchor(streamId: StreamID, tip: CID): Promise<Observable<AnchorServiceResponse>> {
     const candidate = new Candidate(tip, streamId);
     if (this.#anchorOnRequest) {
       this._process(candidate).catch((error) => {
