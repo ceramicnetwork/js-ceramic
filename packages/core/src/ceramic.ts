@@ -428,12 +428,7 @@ class Ceramic implements CeramicApi {
       await this._ipfsTopology.start()
     }
 
-    try {
-      await this.context.anchorService.init();
-      await this.getSupportedChains() // Will log if it successfully connects
-    } catch (e) {
-      this._logger.warn(`Error while initializing connection to anchor service '${this.context.anchorService.url}'. Will try again on demand.`)
-    }
+    await this.context.anchorService.init();
 
     if (restoreStreams) {
       this.restoreStreams()

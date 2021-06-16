@@ -86,23 +86,27 @@ export default class EthereumAnchorService implements AnchorService {
   }
 
   async init(): Promise<void> {
-    // Get the chainIds supported by our anchor service
-    const response = await fetchJson(this.chainIdApiEndpoint)
-    if (response.supportedChains.length > 1) {
+    try {
+      // Get the chainIds supported by our anchor service
+      const response = await fetchJson(this.chainIdApiEndpoint)
+      if (response.supportedChains.length > 1) {
         throw new Error("Anchor service returned multiple supported chains, which isn't supported by js-ceramic yet")
-    }
-    const chainId = response.supportedChains[0]
+      }
+      const chainId = response.supportedChains[0]
 
-    // Confirm that we have an eth provider that works for the same chain that the anchor service supports
-    const provider = this._getEthProvider(chainId)
-    const provider_chain_idnum = (await provider.getNetwork()).chainId
-    const provider_chain = BASE_CHAIN_ID + ':' + provider_chain_idnum
-    if (chainId != provider_chain) {
+      // Confirm that we have an eth provider that works for the same chain that the anchor service supports
+      const provider = this._getEthProvider(chainId)
+      const provider_chain_idnum = (await provider.getNetwork()).chainId
+      const provider_chain = BASE_CHAIN_ID + ':' + provider_chain_idnum
+      if (chainId != provider_chain) {
         throw new Error(`Configured eth provider is for chainId ${provider_chain}, but our anchor service uses chain ${this._chainId}`)
-    }
+      }
 
-    this._chainId = chainId
-    this._logger.imp(`Connected to anchor service '${this.url}' with supported anchor chain '${this._chainId}'`)
+      this._chainId = chainId
+      this._logger.imp(`Connected to anchor service '${this.url}' with supported anchor chain '${this._chainId}'`)
+    } catch (e) {
+      this._logger.warn(`Error while initializing connection to anchor service '${this.url}'. Will try again on demand.`)
+    }
   }
 
   private async _initIfNeeded(): Promise<void> {
@@ -118,6 +122,8 @@ export default class EthereumAnchorService implements AnchorService {
    * @param tip - Tip CID of the stream
    */
   async requestAnchor(streamId: StreamID, tip: CID): Promise<Observable<AnchorServiceResponse>> {
+    await this._initIfNeeded()
+
     const cidStreamPair: CidAndStream = { cid: tip, streamId };
     return concat(
       this._announcePending(cidStreamPair),
@@ -247,6 +253,8 @@ export default class EthereumAnchorService implements AnchorService {
    * @param anchorProof - Anchor proof instance
    */
   async validateChainInclusion(anchorProof: AnchorProof): Promise<void> {
+    await this._initIfNeeded()
+
     const decoded = decode(anchorProof.txHash.multihash);
     const txHash = "0x" + uint8arrays.toString(decoded.digest, "base16");
 
