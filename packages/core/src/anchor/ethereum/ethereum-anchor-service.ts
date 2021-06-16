@@ -91,15 +91,25 @@ export default class EthereumAnchorService implements AnchorService {
     if (response.supportedChains.length > 1) {
         throw new Error("Anchor service returned multiple supported chains, which isn't supported by js-ceramic yet")
     }
-    this._chainId = response.supportedChains[0]
+    const chainId = response.supportedChains[0]
 
     // Confirm that we have an eth provider that works for the same chain that the anchor service supports
-    const provider = this._getEthProvider(this._chainId)
+    const provider = this._getEthProvider(chainId)
     const provider_chain_idnum = (await provider.getNetwork()).chainId
     const provider_chain = BASE_CHAIN_ID + ':' + provider_chain_idnum
-    if (this._chainId != provider_chain) {
+    if (chainId != provider_chain) {
         throw new Error(`Configured eth provider is for chainId ${provider_chain}, but our anchor service uses chain ${this._chainId}`)
     }
+
+    this._chainId = chainId
+    this._logger.imp(`Connected to anchor service '${this.url}' with supported anchor chain '${this._chainId}'`)
+  }
+
+  private async _initIfNeeded(): Promise<void> {
+    if (this._chainId) {
+      return // already initialized
+    }
+    await this.init()
   }
 
   /**
@@ -130,6 +140,7 @@ export default class EthereumAnchorService implements AnchorService {
    * anchor service.
    */
   async getSupportedChains(): Promise<Array<string>> {
+    await this._initIfNeeded()
     return [this._chainId];
   }
 
@@ -276,7 +287,7 @@ export default class EthereumAnchorService implements AnchorService {
       );
     }
 
-    if (this._chainId != chain) {
+    if (this._chainId && this._chainId != chain) {
       throw new Error(
         `Unsupported chainId '${chain}'. Configured anchor service only supports '${this._chainId}'`
       );

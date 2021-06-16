@@ -117,7 +117,6 @@ export interface CeramicModules {
  */
 export interface CeramicParameters {
   networkOptions: CeramicNetworkOptions,
-  supportedChains: string[],
   validateStreams: boolean,
 }
 
@@ -167,7 +166,7 @@ class Ceramic implements CeramicApi {
   private readonly _ipfsTopology: IpfsTopology
   private readonly _logger: DiagnosticsLogger
   private readonly _networkOptions: CeramicNetworkOptions
-  private readonly _supportedChains: Array<string>
+  private _supportedChains: Array<string>
   private readonly _validateStreams: boolean
   private readonly stateValidation: StateValidation
 
@@ -181,7 +180,6 @@ class Ceramic implements CeramicApi {
 
     this._validateStreams = params.validateStreams
     this._networkOptions = params.networkOptions
-    this._supportedChains = params.supportedChains
 
     this.context = {
       api: this,
@@ -328,7 +326,7 @@ class Ceramic implements CeramicApi {
    * `CeramicModules` from it. This usually should not be called directly - most users will prefer
    * to call `Ceramic.create()` instead which calls this internally.
    */
-  static async _processConfig(ipfs: IpfsApi, config: CeramicConfig): Promise<[CeramicModules, CeramicParameters]> {
+  static _processConfig(ipfs: IpfsApi, config: CeramicConfig): [CeramicModules, CeramicParameters] {
     // Initialize ceramic loggers
     const loggerProvider = config.loggerProvider ?? new LoggerProvider()
     const logger = loggerProvider.getDiagnosticsLogger()
@@ -337,6 +335,7 @@ class Ceramic implements CeramicApi {
     logger.imp(`Starting Ceramic node at version ${packageJson.version} with config: \n${JSON.stringify(this._cleanupConfigForLogging(config), null, 2)}`)
 
     const networkOptions = Ceramic._generateNetworkOptions(config)
+    logger.imp(`Connecting to ceramic network '${networkOptions.name}' using pubsub topic '${networkOptions.pubsubTopic}'`)
 
     const anchorServiceUrl = config.anchorServiceUrl || DEFAULT_ANCHOR_SERVICE_URLS[networkOptions.name]
     let ethereumRpcUrl = config.ethereumRpcUrl
@@ -344,11 +343,6 @@ class Ceramic implements CeramicApi {
       ethereumRpcUrl = DEFAULT_LOCAL_ETHEREUM_RPC
     }
     const anchorService = networkOptions.name != Networks.INMEMORY ? new EthereumAnchorService(anchorServiceUrl, ethereumRpcUrl, logger) : new InMemoryAnchorService(config as any)
-    await anchorService.init()
-
-    const supportedChains = await Ceramic._loadSupportedChains(networkOptions.name, anchorService)
-
-    logger.imp(`Connecting to ceramic network '${networkOptions.name}' using pubsub topic '${networkOptions.pubsubTopic}' and connecting to anchor service '${anchorService.url}' with supported anchor chains ['${supportedChains.join("','")}']`)
 
     const pinStoreOptions = {
       networkName: networkOptions.name,
@@ -367,7 +361,6 @@ class Ceramic implements CeramicApi {
 
     const params: CeramicParameters = {
       networkOptions,
-      supportedChains,
       validateStreams: config.validateStreams ?? true,
     }
 
@@ -412,7 +405,7 @@ class Ceramic implements CeramicApi {
    * @param config - Ceramic configuration
    */
   static async create(ipfs: IpfsApi, config: CeramicConfig = {}): Promise<Ceramic> {
-    const [modules, params] = await Ceramic._processConfig(ipfs, config)
+    const [modules, params] = Ceramic._processConfig(ipfs, config)
 
     const ceramic = new Ceramic(modules, params)
 
@@ -433,6 +426,13 @@ class Ceramic implements CeramicApi {
   async _init(doPeerDiscovery: boolean, restoreStreams: boolean): Promise<void> {
     if (doPeerDiscovery) {
       await this._ipfsTopology.start()
+    }
+
+    try {
+      await this.context.anchorService.init();
+      await this.getSupportedChains() // Will log if it successfully connects
+    } catch (e) {
+      this._logger.warn(`Error while initializing connection to anchor service '${this.context.anchorService.url}'. Will try again on demand.`)
     }
 
     if (restoreStreams) {
@@ -587,9 +587,12 @@ class Ceramic implements CeramicApi {
 
   /**
    * @returns An array of the CAIP-2 chain IDs of the blockchains that are supported for anchoring
-   * streams.
+   * streams. Caches the result after the first time it is successfully loaded.
    */
   async getSupportedChains(): Promise<Array<string>> {
+    if (!this._supportedChains) {
+      this._supportedChains = await Ceramic._loadSupportedChains(this._networkOptions.name, this.context.anchorService)
+    }
     return this._supportedChains
   }
 

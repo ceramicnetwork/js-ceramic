@@ -157,7 +157,7 @@ export class CeramicDaemon {
     const ipfs = await buildIpfsConnection(
       opts.network, ceramicConfig.loggerProvider.getDiagnosticsLogger(), opts.ipfsHost)
 
-    const [modules, params] = await Ceramic._processConfig(ipfs, ceramicConfig)
+    const [modules, params] = Ceramic._processConfig(ipfs, ceramicConfig)
 
     if (opts.s3StateStoreBucket) {
       const s3StateStore = new S3StateStore(opts.s3StateStoreBucket)
