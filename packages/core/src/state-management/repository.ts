@@ -98,7 +98,7 @@ export class Repository {
       const toRecover =
         runningState.value.anchorStatus === AnchorStatus.PENDING ||
         runningState.value.anchorStatus === AnchorStatus.PROCESSING;
-      if (toRecover) {
+      if (toRecover && this.stateManager.anchorService) {
         this.stateManager.confirmAnchorResponse(runningState);
       }
       return runningState;

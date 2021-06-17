@@ -36,6 +36,7 @@ export interface CreateOpts {
 
   ethereumRpcUrl?: string;
   anchorServiceUrl?: string;
+  disableAnchors?: boolean;
   stateStoreDirectory?: string;
   s3StateStoreBucket?: string;
 
@@ -61,6 +62,7 @@ export function makeCeramicConfig (opts: CreateOpts): CeramicConfig {
     loggerProvider,
     gateway: opts.gateway || false,
     anchorServiceUrl: opts.anchorServiceUrl,
+    disableAnchors: opts.disableAnchors,
     ethereumRpcUrl: opts.ethereumRpcUrl,
     ipfsPinningEndpoints: opts.ipfsPinningEndpoints,
     networkName: opts.network,
@@ -157,7 +159,7 @@ export class CeramicDaemon {
     const ipfs = await buildIpfsConnection(
       opts.network, ceramicConfig.loggerProvider.getDiagnosticsLogger(), opts.ipfsHost)
 
-    const [modules, params] = await Ceramic._processConfig(ipfs, ceramicConfig)
+    const [modules, params] = Ceramic._processConfig(ipfs, ceramicConfig)
 
     if (opts.s3StateStoreBucket) {
       const s3StateStore = new S3StateStore(opts.s3StateStoreBucket)

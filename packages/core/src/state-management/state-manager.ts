@@ -228,6 +228,9 @@ export class StateManager {
    * Request anchor for the latest stream state
    */
   anchor(state$: RunningState): Subscription {
+    if (!this.anchorService) {
+      throw new Error(`Anchor requested for stream ${state$.id.toString()} but anchoring is disabled`)
+    }
     if (state$.value.anchorStatus == AnchorStatus.ANCHORED) {
       return Subscription.EMPTY;
     }

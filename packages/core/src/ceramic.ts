@@ -74,6 +74,7 @@ const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE }
 export interface CeramicConfig {
   ethereumRpcUrl?: string;
   anchorServiceUrl?: string;
+  disableAnchors?: boolean;
   stateStoreDirectory?: string;
 
   validateStreams?: boolean;
@@ -116,8 +117,8 @@ export interface CeramicModules {
  * `CeramicConfig` via `Ceramic.create()`.
  */
 export interface CeramicParameters {
+  disableAnchors: boolean,
   networkOptions: CeramicNetworkOptions,
-  supportedChains: string[],
   validateStreams: boolean,
 }
 
@@ -164,10 +165,11 @@ class Ceramic implements CeramicApi {
   readonly repository: Repository;
 
   readonly _streamHandlers: HandlersMap
+  private readonly _disableAnchors: boolean
   private readonly _ipfsTopology: IpfsTopology
   private readonly _logger: DiagnosticsLogger
   private readonly _networkOptions: CeramicNetworkOptions
-  private readonly _supportedChains: Array<string>
+  private _supportedChains: Array<string>
   private readonly _validateStreams: boolean
   private readonly stateValidation: StateValidation
 
@@ -179,9 +181,9 @@ class Ceramic implements CeramicApi {
     this.dispatcher = modules.dispatcher
     this.pin = this._buildPinApi()
 
-    this._validateStreams = params.validateStreams
+    this._disableAnchors = params.disableAnchors
     this._networkOptions = params.networkOptions
-    this._supportedChains = params.supportedChains
+    this._validateStreams = params.validateStreams
 
     this.context = {
       api: this,
@@ -189,7 +191,9 @@ class Ceramic implements CeramicApi {
       ipfs: modules.ipfs,
       loggerProvider: modules.loggerProvider,
     }
-    this.context.anchorService.ceramic = this
+    if (!this._disableAnchors) {
+      this.context.anchorService.ceramic = this
+    }
 
     this._streamHandlers = new HandlersMap(this._logger)
 
@@ -302,11 +306,11 @@ class Ceramic implements CeramicApi {
   /**
    * Given the ceramic network we are running on and the anchor service we are connected to, figure
    * out the set of caip2 chain IDs that are supported for stream anchoring
-   * @param networkName
-   * @param anchorService
    * @private
    */
-  private static async _loadSupportedChains(networkName: string, anchorService: AnchorService): Promise<Array<string>> {
+  private async _loadSupportedChains(): Promise<void> {
+    const networkName = this._networkOptions.name
+    const anchorService = this.context.anchorService
     const networkChains = SUPPORTED_CHAINS_BY_NETWORK[networkName]
 
     // Now that we know the set of supported chains for the specified network, get the actually
@@ -320,7 +324,7 @@ class Ceramic implements CeramicApi {
         + "' only supports the chains: ['" + anchorServiceChains.join("', '") + "']")
     }
 
-    return usableChains
+    this._supportedChains = usableChains
   }
 
   /**
@@ -328,7 +332,7 @@ class Ceramic implements CeramicApi {
    * `CeramicModules` from it. This usually should not be called directly - most users will prefer
    * to call `Ceramic.create()` instead which calls this internally.
    */
-  static async _processConfig(ipfs: IpfsApi, config: CeramicConfig): Promise<[CeramicModules, CeramicParameters]> {
+  static _processConfig(ipfs: IpfsApi, config: CeramicConfig): [CeramicModules, CeramicParameters] {
     // Initialize ceramic loggers
     const loggerProvider = config.loggerProvider ?? new LoggerProvider()
     const logger = loggerProvider.getDiagnosticsLogger()
@@ -337,18 +341,21 @@ class Ceramic implements CeramicApi {
     logger.imp(`Starting Ceramic node at version ${packageJson.version} with config: \n${JSON.stringify(this._cleanupConfigForLogging(config), null, 2)}`)
 
     const networkOptions = Ceramic._generateNetworkOptions(config)
+    logger.imp(`Connecting to ceramic network '${networkOptions.name}' using pubsub topic '${networkOptions.pubsubTopic}'`)
 
-    const anchorServiceUrl = config.anchorServiceUrl || DEFAULT_ANCHOR_SERVICE_URLS[networkOptions.name]
-    let ethereumRpcUrl = config.ethereumRpcUrl
-    if (!ethereumRpcUrl && networkOptions.name == Networks.LOCAL) {
-      ethereumRpcUrl = DEFAULT_LOCAL_ETHEREUM_RPC
+    let anchorService = null
+    if (config.disableAnchors) {
+      logger.warn(`Starting without a configured anchor service. All anchor requests will fail.`)
+    } else {
+      const anchorServiceUrl = config.anchorServiceUrl || DEFAULT_ANCHOR_SERVICE_URLS[networkOptions.name]
+      let ethereumRpcUrl = config.ethereumRpcUrl
+      if (!ethereumRpcUrl && networkOptions.name == Networks.LOCAL) {
+        ethereumRpcUrl = DEFAULT_LOCAL_ETHEREUM_RPC
+      }
+
+      anchorService = networkOptions.name != Networks.INMEMORY ? new EthereumAnchorService(anchorServiceUrl, ethereumRpcUrl, logger) : new InMemoryAnchorService(config as any)
     }
-    const anchorService = networkOptions.name != Networks.INMEMORY ? new EthereumAnchorService(anchorServiceUrl, ethereumRpcUrl, logger) : new InMemoryAnchorService(config as any)
-    await anchorService.init()
 
-    const supportedChains = await Ceramic._loadSupportedChains(networkOptions.name, anchorService)
-
-    logger.imp(`Connecting to ceramic network '${networkOptions.name}' using pubsub topic '${networkOptions.pubsubTopic}' and connecting to anchor service '${anchorService.url}' with supported anchor chains ['${supportedChains.join("','")}']`)
 
     const pinStoreOptions = {
       networkName: networkOptions.name,
@@ -366,8 +373,8 @@ class Ceramic implements CeramicApi {
     const dispatcher = new Dispatcher(ipfs, networkOptions.pubsubTopic, repository, logger, pubsubLogger)
 
     const params: CeramicParameters = {
+      disableAnchors: config.disableAnchors,
       networkOptions,
-      supportedChains,
       validateStreams: config.validateStreams ?? true,
     }
 
@@ -433,6 +440,13 @@ class Ceramic implements CeramicApi {
   async _init(doPeerDiscovery: boolean, restoreStreams: boolean): Promise<void> {
     if (doPeerDiscovery) {
       await this._ipfsTopology.start()
+    }
+
+    if (!this._disableAnchors) {
+      const anchorService = this.context.anchorService
+      await anchorService.init()
+      await this._loadSupportedChains()
+      this._logger.imp(`Connected to anchor service '${anchorService.url}' with supported anchor chains ['${this._supportedChains.join("','")}']`)
     }
 
     if (restoreStreams) {
