@@ -163,7 +163,7 @@ test('handleTip for commit already in log', async () => {
   // Now re-apply the same commit and don't expect any additional calls to IPFS
   await (ceramic2.repository.stateManager as any)._handleTip(streamState2, stream1.state.log[1].cid);
   await (ceramic2.repository.stateManager as any)._handleTip(streamState2, stream1.state.log[0].cid);
-  expect(retrieveCommitSpy).toBeCalledTimes(7)
+  expect(retrieveCommitSpy).toBeCalledTimes(6)
 
   await ceramic2.close();
 });
