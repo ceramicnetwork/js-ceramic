@@ -443,10 +443,9 @@ class Ceramic implements CeramicApi {
     }
 
     if (!this._disableAnchors) {
-      const anchorService = this.context.anchorService
-      await anchorService.init()
+      await this.context.anchorService.init()
       await this._loadSupportedChains()
-      this._logger.imp(`Connected to anchor service '${anchorService.url}' with supported anchor chains ['${this._supportedChains.join("','")}']`)
+      this._logger.imp(`Connected to anchor service '${this.context.anchorService.url}' with supported anchor chains ['${this._supportedChains.join("','")}']`)
     }
 
     if (restoreStreams) {
