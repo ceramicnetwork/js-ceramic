@@ -168,7 +168,7 @@ test('handleTip for commit already in log', async () => {
   await ceramic2.close();
 });
 
-test('commit history and rewind', async () => {
+test('commit history and atCommit', async () => {
   const stream = await TileDocument.create<any>(ceramic, INITIAL_CONTENT);
   stream.subscribe();
   const streamState = await ceramic.repository.load(stream.id, {});
@@ -220,35 +220,35 @@ test('commit history and rewind', async () => {
   expect(stream.state.log.length).toEqual(5);
 
   // Correctly check out a specific commit
-  const streamV0 = await ceramic.repository.stateManager.rewind(streamState, commit0);
+  const streamV0 = await ceramic.repository.stateManager.atCommit(streamState, commit0);
   expect(streamV0.id.equals(commit0.baseID)).toBeTruthy();
   expect(streamV0.value.log.length).toEqual(1);
   expect(streamV0.value.metadata.controllers).toEqual(controllers);
   expect(streamV0.value.content).toEqual(INITIAL_CONTENT);
   expect(streamV0.value.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED);
 
-  const streamV1 = await ceramic.repository.stateManager.rewind(streamState, commit1);
+  const streamV1 = await ceramic.repository.stateManager.atCommit(streamState, commit1);
   expect(streamV1.id.equals(commit1.baseID)).toBeTruthy();
   expect(streamV1.value.log.length).toEqual(2);
   expect(streamV1.value.metadata.controllers).toEqual(controllers);
   expect(streamV1.value.content).toEqual(INITIAL_CONTENT);
   expect(streamV1.value.anchorStatus).toEqual(AnchorStatus.ANCHORED);
 
-  const streamV2 = await ceramic.repository.stateManager.rewind(streamState, commit2);
+  const streamV2 = await ceramic.repository.stateManager.atCommit(streamState, commit2);
   expect(streamV2.id.equals(commit2.baseID)).toBeTruthy();
   expect(streamV2.value.log.length).toEqual(3);
   expect(streamV2.value.metadata.controllers).toEqual(controllers);
   expect(streamV2.value.next.content).toEqual(newContent);
   expect(streamV2.value.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED);
 
-  const streamV3 = await ceramic.repository.stateManager.rewind(streamState, commit3);
+  const streamV3 = await ceramic.repository.stateManager.atCommit(streamState, commit3);
   expect(streamV3.id.equals(commit3.baseID)).toBeTruthy();
   expect(streamV3.value.log.length).toEqual(4);
   expect(streamV3.value.metadata.controllers).toEqual(controllers);
   expect(streamV3.value.content).toEqual(newContent);
   expect(streamV3.value.anchorStatus).toEqual(AnchorStatus.ANCHORED);
 
-  const streamV4 = await ceramic.repository.stateManager.rewind(streamState, commit4);
+  const streamV4 = await ceramic.repository.stateManager.atCommit(streamState, commit4);
   expect(streamV4.id.equals(commit4.baseID)).toBeTruthy();
   expect(streamV4.value.log.length).toEqual(5);
   expect(streamV4.value.metadata.controllers).toEqual(controllers);
@@ -256,7 +256,7 @@ test('commit history and rewind', async () => {
   expect(streamV4.value.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED);
 });
 
-describe('rewind', () => {
+describe('atCommit', () => {
   test('non-existing commit', async () => {
     const stream = await TileDocument.create(ceramic, INITIAL_CONTENT, null, { anchor: false });
     const streamState = await ceramic.repository.load(stream.id, {});
@@ -270,7 +270,7 @@ describe('rewind', () => {
         return originalRetrieve(cid);
       }
     });
-    await expect(ceramic.repository.stateManager.rewind(streamState, nonExistentCommitID)).rejects.toThrow(
+    await expect(ceramic.repository.stateManager.atCommit(streamState, nonExistentCommitID)).rejects.toThrow(
       `No commit found for CID ${nonExistentCommitID.commit?.toString()}`,
     );
   });
@@ -283,7 +283,7 @@ describe('rewind', () => {
     const ceramic2 = await createCeramic(ipfs, { anchorOnRequest: false });
     const stream2 = await TileDocument.load(ceramic, stream1.id);
     const streamState2 = await ceramic2.repository.load(stream2.id, { syncTimeoutSeconds: 0 });
-    const snapshot = await ceramic2.repository.stateManager.rewind(streamState2, stream1.commitId);
+    const snapshot = await ceramic2.repository.stateManager.atCommit(streamState2, stream1.commitId);
 
     expect(StreamUtils.statesEqual(snapshot.state, stream1.state));
     const snapshotStream = streamFromState<TileDocument>(ceramic2.context, ceramic2._streamHandlers, snapshot.value);
@@ -294,6 +294,23 @@ describe('rewind', () => {
     );
 
     await ceramic2.close();
+  });
+
+  test('commit ahead of current state', async () => {
+    const stream = await TileDocument.create(ceramic, INITIAL_CONTENT, null, { anchor: false });
+    const streamState = await ceramic.repository.load(stream.id, {});
+    // Provide a new commit that the repository doesn't currently know about
+    const newContent = { abc: 321, def: 456, gh: 987 };
+    const updateCommit = await stream.makeCommit(ceramic, newContent)
+    const futureCommitCID = await ceramic.dispatcher.storeCommit(updateCommit)
+     const futureCommitID = stream.id.atCommit(futureCommitCID);
+
+    // Now load the stream at a commitID ahead of what is currently in the state in the repository.
+    // The existing RunningState from the repository should also get updated
+    const snapshot = await ceramic.repository.loadAtCommit(futureCommitID, {})
+    expect(snapshot.value.next.content).toEqual(newContent)
+    expect(snapshot.value.log.length).toEqual(2)
+    expect(StreamUtils.serializeState(streamState.state)).toEqual(StreamUtils.serializeState(snapshot.value))
   });
 });
 
@@ -315,7 +332,7 @@ test('handles basic conflict', async () => {
   // create invalid change that happened after main change
 
   const initialState = await ceramic.repository.stateManager
-    .rewind(streamState1, streamId.atCommit(streamId.cid))
+    .atCommit(streamState1, streamId.atCommit(streamId.cid))
     .then((stream) => stream.state);
   const state$ = new RunningState(initialState);
   ceramic.repository.add(state$);
@@ -342,11 +359,11 @@ test('handles basic conflict', async () => {
   expect(stream1.content).toEqual(newContent);
 
   // Loading valid commit works
-  const streamAtValidCommit = await ceramic.repository.stateManager.rewind(streamState1, streamId.atCommit(tipValidUpdate));
+  const streamAtValidCommit = await ceramic.repository.stateManager.atCommit(streamState1, streamId.atCommit(tipValidUpdate));
   expect(streamAtValidCommit.value.content).toEqual(newContent);
 
   // Loading invalid commit fails
-  await expect(ceramic.repository.stateManager.rewind(streamState1, streamId.atCommit(tipInvalidUpdate))).rejects.toThrow(
+  await expect(ceramic.repository.stateManager.atCommit(streamState1, streamId.atCommit(tipInvalidUpdate))).rejects.toThrow(
     `Requested commit CID ${tipInvalidUpdate.toString()} not found in the log for stream ${streamId.toString()}`,
   );
 }, 10000);

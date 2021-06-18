@@ -148,6 +148,26 @@ export class StreamUtils {
     }
 
     /**
+     * Returns true iff 'state' describes a state object containing all the same history as
+     * 'base', possibly with additional commits on top.
+     * @param state - the state that might be a superset of 'base'
+     * @param base - the baseline to be compared against
+     */
+    static isStateSupersetOf(state: StreamState, base: StreamState): boolean {
+        if (state.log.length < base.log.length) {
+            return false
+        }
+
+        for (const i in base.log) {
+            if (!state.log[i].cid.equals(base.log[i].cid)) {
+                return false
+            }
+        }
+
+        return true
+    }
+
+    /**
      * Converts commit to SignedCommitContainer. The only difference is with signed commit for now
      * @param commit - Commit value
      * @param ipfs - IPFS instance

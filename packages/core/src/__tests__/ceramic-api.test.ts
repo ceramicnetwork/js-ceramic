@@ -432,7 +432,7 @@ describe('Ceramic API', () => {
       expect(Object.keys(streams).length).toEqual(4)
       const states = Object.values(streams).map(stream => stream.state)
       // annoying thing, was pending when snapshotted but will
-      // obviously not be when rewinded
+      // obviously not be when loaded at a specific commit
       streamFStates[0].anchorStatus = 0
       expect(states[0]).toEqual(streamFStates[0])
       expect(states[1]).toEqual(streamFStates[1])

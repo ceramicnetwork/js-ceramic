@@ -233,7 +233,7 @@ class Ceramic implements CeramicApi {
   }
 
   private _buildPinApi(): PinApi {
-    const boundStreamLoader = this._loadStream.bind(this)
+    const boundStreamLoader = this.loadStream.bind(this)
     const loaderWithSyncSet = (streamid) => { return boundStreamLoader(streamid, { sync: SyncOptions.PREFER_CACHE })}
     return new LocalPinApi(this.repository, loaderWithSyncSet, this._logger)
   }
@@ -489,15 +489,14 @@ class Ceramic implements CeramicApi {
   async loadStream<T extends Stream>(streamId: StreamID | CommitID | string, opts: LoadOpts = {}): Promise<T> {
     opts = { ...DEFAULT_LOAD_OPTS, ...opts };
     const streamRef = StreamRef.from(streamId)
-    const base$ = await this._loadStream(streamRef.baseID, opts)
     if (CommitID.isInstance(streamRef)) {
-      // Here CommitID is requested, let's return stream at specific commit
-      const snapshot$ = await this.repository.stateManager.rewind(base$, streamRef)
+      const snapshot$ = await this.repository.loadAtCommit(streamRef, opts);
       return streamFromState<T>(this.context, this._streamHandlers, snapshot$.value)
     } else if (opts.atTime) {
-      const snapshot$ = await this.repository.stateManager.atTime(base$, opts.atTime)
+      const snapshot$ = await this.repository.loadAtTime(streamRef, opts);
       return streamFromState<T>(this.context, this._streamHandlers, snapshot$.value)
     } else {
+      const base$ = await this.repository.load(streamRef.baseID, opts);
       return streamFromState<T>(this.context, this._streamHandlers, base$.value, this.repository.updates$)
     }
   }
@@ -577,15 +576,6 @@ class Ceramic implements CeramicApi {
   }
 
   /**
-   * Load stream instance
-   * @param streamId - Stream ID
-   * @param opts - Initialization options
-   */
-  async _loadStream(streamId: StreamID, opts: LoadOpts): Promise<RunningState> {
-    return this.repository.load(streamId, opts)
-  }
-
-  /**
    * @returns An array of the CAIP-2 chain IDs of the blockchains that are supported for anchoring
    * streams.
    */
@@ -600,7 +590,7 @@ class Ceramic implements CeramicApi {
     this.repository.listPinned().then(async list => {
       let n = 0
       await Promise.all(list.map(async streamId => {
-        await this._loadStream(StreamID.fromString(streamId), { sync: SyncOptions.NEVER_SYNC })
+        await this.loadStream(StreamID.fromString(streamId), { sync: SyncOptions.NEVER_SYNC })
         n++;
       }))
       this._logger.verbose(`Successfully restored ${n} pinned streams`)

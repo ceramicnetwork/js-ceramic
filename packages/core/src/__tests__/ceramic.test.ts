@@ -356,6 +356,38 @@ describe('Ceramic integration', () => {
     await ceramic2.close()
   })
 
+  it("Loading at a CommitID that's ahead of the cache will update the cache", async () => {
+    await swarmConnect(ipfs1, ipfs2)
+    const ceramic1 = await createCeramic(ipfs1, false)
+    const ceramic2 = await createCeramic(ipfs2, false)
+
+    const content0 = { foo: 0 }
+    const content1 = { foo: 1 }
+    const content2 = { foo: 2 }
+
+    const stream1 = await TileDocument.create(ceramic1, content0, null, { anchor: false })
+    await stream1.update(content1, null, { anchor: false })
+
+    // Now load the stream into the cache on second node.
+    const stream2 = await ceramic2.loadStream<TileDocument>(stream1.id)
+    expect(stream2.content).toEqual(content1)
+
+    // Now update the stream on node 1, but don't tell node 2 about it.
+    await stream1.update(content2, null, { anchor: false, publish: false })
+
+    // Now load the CommitID of the newest update on node 2.
+    const streamAtCommit = await ceramic2.loadStream<TileDocument>(stream1.commitId)
+    expect(streamAtCommit.content).toEqual(content2)
+
+    // Now ensure that the stream cache has been updated to the newest commit.
+    const streamCurrent = await ceramic2.loadStream<TileDocument>(
+      stream1.id, { sync: SyncOptions.NEVER_SYNC, syncTimeoutSeconds: 0 })
+    expect(streamCurrent.content).toEqual(content2)
+
+    await ceramic1.close()
+    await ceramic2.close()
+  })
+
   it('validates schema on stream change', async () => {
     const ceramic = await createCeramic(ipfs1)
 

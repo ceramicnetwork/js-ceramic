@@ -12,6 +12,7 @@ import {
   UnreachableCaseError,
   RunningStateLike,
   DiagnosticsLogger,
+  StreamUtils,
 } from '@ceramicnetwork/common';
 import { RunningState } from './running-state';
 import CID from 'cids';
@@ -89,14 +90,24 @@ export class StateManager {
   /**
    * Take the version of a stream state and a specific commit and returns a snapshot of a state
    * at the requested commit. If the requested commit is for a branch of history that conflicts with the
-   * known commits, throw an error.
+   * known commits, throw an error. If the requested commit is ahead of the currently known state
+   * for this stream, emit the new state.
    *
-   * @param state$ - Stream state to rewind.
+   * @param state$ - Currently known state of the stream.
    * @param commitId - Requested commit.
    */
-  async rewind(state$: RunningStateLike, commitId: CommitID): Promise<SnapshotState> {
-    const snapshot = await this.conflictResolution.rewind(state$.value, commitId);
-    return new SnapshotState(snapshot);
+  async atCommit(state$: RunningStateLike, commitId: CommitID): Promise<SnapshotState> {
+    return this.executionQ.forStream(commitId.baseID).run(async () => {
+      const snapshot = await this.conflictResolution.snapshotAtCommit(state$.value, commitId);
+
+      // If the provided CommitID is ahead of what we have in the cache, then we should update
+      // the cache to include it.
+      if (StreamUtils.isStateSupersetOf(snapshot, state$.value)) {
+        state$.next(snapshot)
+      }
+
+      return new SnapshotState(snapshot);
+    });
   }
 
   /**
@@ -109,7 +120,7 @@ export class StateManager {
    */
   atTime(state$: RunningStateLike, timestamp: number): Promise<SnapshotState> {
     const commitId = commitAtTime(state$, timestamp);
-    return this.rewind(state$, commitId);
+    return this.atCommit(state$, commitId);
   }
 
   /**
