@@ -70,7 +70,7 @@ program
         ).catch((err) => {
           console.error('Ceramic daemon failed to start up:')
           console.error(err)
-          process.exit(-1)
+          process.exit(1)
         })
     })
 
