@@ -38,7 +38,8 @@ export interface Configuration {
     useCentralizedPeerDiscovery: boolean
     healthcheckEnabled: boolean
     healthcheckPort: number
-    logger: DiagnosticsLogger
+    logger: DiagnosticsLogger,
+    S3Log: boolean
 }
 
 function fromBooleanInput(input: string | undefined, byDefault?: boolean): boolean {
@@ -93,6 +94,7 @@ export class IpfsDaemon {
             healthcheckEnabled: props.healthcheckEnabled ?? fromBooleanInput(process.env.HEALTHCHECK_ENABLED, false),
             healthcheckPort: props.healthcheckPort || (process.env.HEALTHCHECK_PORT != null ? parseInt(process.env.HEALTHCHECK_PORT) : 8011),
             logger: props.logger ?? new DiagnosticsLogger(LogLevel.important, false),
+            S3Log:  props.S3Log ?? fromBooleanInput(process.env.IPFS_S3_LOG, false)
         }
 
         const repo = createRepo({
@@ -105,7 +107,9 @@ export class IpfsDaemon {
               keys: configuration.ipfsBackendKeys,
               pins: configuration.ipfsBackendPins,
               datastore: configuration.ipfsBackendDatastore
-            }
+            },
+            logger: configuration.logger,
+            S3Log: configuration.S3Log
         }, {
             bucket: configuration.awsBucketName,
             accessKeyId: configuration.awsAccessKeyId,
