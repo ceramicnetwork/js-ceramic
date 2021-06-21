@@ -41,7 +41,7 @@ async function createCeramic(ipfs: IpfsApi, stateStoreDirectory: string, anchorS
         anchorOnRequest: false,
         pubsubTopic: PUBSUB_TOPIC, // necessary so Ceramic instances can talk to each other
     };
-    const [modules, params] = await Ceramic._processConfig(ipfs, config)
+    const [modules, params] = Ceramic._processConfig(ipfs, config)
     if (anchorService) {
         modules.anchorService = anchorService
     }

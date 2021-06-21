@@ -47,7 +47,8 @@ export class CeramicCliUtils {
      * @param stateStoreDirectory - Path to the directory that will be used for storing pinned stream state
      * @param stateStoreS3Bucket - S3 bucket name for storing pinned stream state
      * @param gateway - read only endpoints available. It is disabled by default
-     * @param port - port daemon is availabe. Default is 7007
+     * @param port - port on which daemon is available. Default is 7007
+     * @param hostname - hostname to listen on.
      * @param debug - Enable debug logging level
      * @param verbose - Enable verbose logging
      * @param logToFiles - Enable writing logs to files
@@ -55,6 +56,7 @@ export class CeramicCliUtils {
      * @param network - The Ceramic network to connect to
      * @param pubsubTopic - Pub/sub topic to use for protocol messages.
      * @param corsAllowedOrigins - Origins for Access-Control-Allow-Origin header. Default is all
+     * @param disableAnchors - If true all anchors will fail. Allows the daemon to start up even if CAS is unavailable.
      */
     static async createDaemon(
         ipfsApi: string,
@@ -73,7 +75,8 @@ export class CeramicCliUtils {
         logDirectory: string,
         network = DEFAULT_NETWORK,
         pubsubTopic: string,
-        corsAllowedOrigins: string
+        corsAllowedOrigins: string,
+        disableAnchors: boolean,
     ): Promise<CeramicDaemon> {
         let _corsAllowedOrigins: string | RegExp[] = '*'
         if (corsAllowedOrigins != null && corsAllowedOrigins != '*') {
@@ -101,6 +104,7 @@ export class CeramicCliUtils {
             pubsubTopic,
             corsAllowedOrigins: _corsAllowedOrigins,
             ipfsHost: ipfsApi,
+            disableAnchors,
         }
         return CeramicDaemon.create(config)
     }
