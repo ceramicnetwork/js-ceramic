@@ -190,7 +190,6 @@ export class CeramicDaemon {
     const pinsRouter = Router()
     const recordsRouter = Router()
     const streamsRouter = Router()
-    const contentRouter = Router()
 
     app.use('/api/v0', baseRouter)
     baseRouter.use('/commits', commitsRouter)
@@ -200,7 +199,6 @@ export class CeramicDaemon {
     baseRouter.use('/pins', pinsRouter)
     baseRouter.use('/records', recordsRouter)
     baseRouter.use('/streams', streamsRouter)
-    streamsRouter.use('/content', contentRouter) // sub-endpoint of 'streams'
 
     baseRouter.use(errorHandler(this.diagnosticsLogger))
     commitsRouter.use(errorHandler(this.diagnosticsLogger))
@@ -210,13 +208,12 @@ export class CeramicDaemon {
     pinsRouter.use(errorHandler(this.diagnosticsLogger))
     recordsRouter.use(errorHandler(this.diagnosticsLogger))
     streamsRouter.use(errorHandler(this.diagnosticsLogger))
-    contentRouter.use(errorHandler(this.diagnosticsLogger))
 
 
     commitsRouter.getAsync('/:streamid', this.commits.bind(this))
     multiqueriesRouter.postAsync('/', this.multiQuery.bind(this))
     streamsRouter.getAsync('/:streamid', this.state.bind(this))
-    contentRouter.getAsync('/:streamid', this.content.bind(this))
+    streamsRouter.getAsync('/:streamid/content', this.content.bind(this))
     pinsRouter.getAsync('/:streamid', this.listPinned.bind(this))
     pinsRouter.getAsync('/', this.listPinned.bind(this))
     nodeRouter.getAsync('/chains', this.getSupportedChains.bind(this))
