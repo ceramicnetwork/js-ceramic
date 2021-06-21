@@ -3,6 +3,26 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.2.0-rc.0](/compare/@ceramicnetwork/core@1.1.0...@ceramicnetwork/core@1.2.0-rc.0) (2021-06-21)
+
+
+### Bug Fixes
+
+* **core:** Disable ajv strictTypes and strictTuples log warnings (#1471) d3c817d, closes #1471
+* **core:** Don't submit an anchor request for an AnchorCommit (#1474) 356775f, closes #1474
+* **core:** Only poll for anchors at startup, don't submit a new request (#1437) ec17446, closes #1437
+* **core:** Remove loading inner CID from SignedCommits in ConflictResolution.findIndex (#1491) d1b021c, closes #1491 #1434
+
+
+### Features
+
+* **core:** Loading a CommitID makes the node handle the commit CID as a potential new tip (#1484) 46e0f22, closes #1484
+* **core,cli:** Add --disable-anchors flag to allow ceramic to start up without a working CAS (#1490) 9dfc167, closes #1490
+
+
+
+
+
 # [1.1.0](/compare/@ceramicnetwork/core@1.0.5...@ceramicnetwork/core@1.1.0) (2021-06-06)
 
 

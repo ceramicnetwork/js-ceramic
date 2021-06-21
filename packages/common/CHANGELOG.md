@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.1.0-rc.0](/compare/@ceramicnetwork/common@1.0.6...@ceramicnetwork/common@1.1.0-rc.0) (2021-06-21)
+
+
+### Bug Fixes
+
+* **core:** Only poll for anchors at startup, don't submit a new request (#1437) ec17446, closes #1437
+
+
+### Features
+
+* **core:** Loading a CommitID makes the node handle the commit CID as a potential new tip (#1484) 46e0f22, closes #1484
+
+
+
+
+
 ## [1.0.6](/compare/@ceramicnetwork/common@1.0.5...@ceramicnetwork/common@1.0.6) (2021-06-06)
 
 **Note:** Version bump only for package @ceramicnetwork/common

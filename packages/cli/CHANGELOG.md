@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.1.0-rc.0](/compare/@ceramicnetwork/cli@1.0.6...@ceramicnetwork/cli@1.1.0-rc.0) (2021-06-21)
+
+
+### Features
+
+* **core,cli:** Add --disable-anchors flag to allow ceramic to start up without a working CAS (#1490) 9dfc167, closes #1490
+
+
+
+
+
 ## [1.0.6](/compare/@ceramicnetwork/cli@1.0.5...@ceramicnetwork/cli@1.0.6) (2021-06-06)
 
 **Note:** Version bump only for package @ceramicnetwork/cli
