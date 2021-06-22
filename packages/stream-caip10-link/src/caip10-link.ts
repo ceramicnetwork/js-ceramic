@@ -48,7 +48,7 @@ export class Caip10Link extends Stream {
      */
     static async fromAccount(ceramic: CeramicApi,
                              accountId: string | AccountID,
-                             opts: CreateOpts = {}): Promise<Caip10Link> {
+                             opts: CreateOpts | LoadOpts = {}): Promise<Caip10Link> {
         opts = { ...DEFAULT_CREATE_OPTS, ...opts };
         const normalizedAccountId = new AccountID(accountId)
         const genesisCommit = Caip10Link.makeGenesis(normalizedAccountId)
@@ -63,7 +63,7 @@ export class Caip10Link extends Stream {
      */
     static async fromGenesis(ceramic: CeramicApi,
                              genesisCommit: GenesisCommit,
-                             opts: CreateOpts = {}): Promise<Caip10Link> {
+                             opts: CreateOpts | LoadOpts = {}): Promise<Caip10Link> {
         opts = { ...DEFAULT_CREATE_OPTS, ...opts };
         return ceramic.createStreamFromGenesis<Caip10Link>(
             Caip10Link.STREAM_TYPE_ID, genesisCommit, opts)
