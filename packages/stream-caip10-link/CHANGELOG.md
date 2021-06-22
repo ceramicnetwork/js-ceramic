@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.7](/compare/@ceramicnetwork/stream-caip10-link@1.0.7-rc.0...@ceramicnetwork/stream-caip10-link@1.0.7) (2021-06-22)
+
+
+### Bug Fixes
+
+* **stream-caip10-link:** Allow Caip10Link.fromAccount to accept atTime param (#1495) e0503c5, closes #1495
+
+
+
+
+
 ## [1.0.7-rc.0](/compare/@ceramicnetwork/stream-caip10-link@1.0.6...@ceramicnetwork/stream-caip10-link@1.0.7-rc.0) (2021-06-21)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-caip10-link
