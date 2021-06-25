@@ -92,6 +92,7 @@ export interface CeramicConfig {
 
   useCentralizedPeerDiscovery?: boolean;
   restoreStreams?: boolean;
+  sync?: SyncOptions
 
   [index: string]: any; // allow arbitrary properties
 }
@@ -120,8 +121,15 @@ export interface CeramicParameters {
   disableAnchors: boolean,
   networkOptions: CeramicNetworkOptions,
   validateStreams: boolean,
+  syncOverride: SyncConfig
 }
 
+/**
+ * Global Sync Config Options
+ */
+export interface SyncConfig {
+  sync?: SyncOptions 
+}
 
 /**
  * Protocol options that are derived from the specified Ceramic network name (e.g. "mainnet", "testnet-clay", etc)
@@ -172,6 +180,7 @@ class Ceramic implements CeramicApi {
   private _supportedChains: Array<string>
   private readonly _validateStreams: boolean
   private readonly stateValidation: StateValidation
+  private readonly _syncOptions: SyncConfig
 
   constructor (modules: CeramicModules, params: CeramicParameters) {
     this._ipfsTopology = modules.ipfsTopology
@@ -184,6 +193,7 @@ class Ceramic implements CeramicApi {
     this._disableAnchors = params.disableAnchors
     this._networkOptions = params.networkOptions
     this._validateStreams = params.validateStreams
+    this._syncOptions = params.syncOverride
 
     this.context = {
       api: this,
@@ -356,13 +366,14 @@ class Ceramic implements CeramicApi {
       anchorService = networkOptions.name != Networks.INMEMORY ? new EthereumAnchorService(anchorServiceUrl, ethereumRpcUrl, logger) : new InMemoryAnchorService(config as any)
     }
 
-
     const pinStoreOptions = {
       networkName: networkOptions.name,
       stateStoreDirectory: config.stateStoreDirectory,
       pinningEndpoints: config.ipfsPinningEndpoints,
       pinningBackends: config.pinningBackends,
     }
+
+    const syncOverride = config.syncOverride ? { sync: config.syncOverride } : {}
 
     const streamCacheLimit = config.streamCacheLimit ?? DEFAULT_CACHE_LIMIT
     const concurrentRequestsLimit = config.concurrentRequestsLimit ?? streamCacheLimit
@@ -376,6 +387,7 @@ class Ceramic implements CeramicApi {
       disableAnchors: config.disableAnchors,
       networkOptions,
       validateStreams: config.validateStreams ?? true,
+      syncOverride
     }
 
     const modules = {
@@ -475,7 +487,7 @@ class Ceramic implements CeramicApi {
    * @param opts - Initialization options
    */
   async applyCommit<T extends Stream>(streamId: string | StreamID, commit: CeramicCommit, opts: CreateOpts | UpdateOpts = {}): Promise<T> {
-    opts = { ...DEFAULT_APPLY_COMMIT_OPTS, ...opts };
+    opts = { ...DEFAULT_APPLY_COMMIT_OPTS, ...opts, ...this._syncOptions};
     const state$ = await this.repository.stateManager.applyCommit(normalizeStreamID(streamId), commit, opts as CreateOpts)
     return streamFromState<T>(this.context, this._streamHandlers, state$.value, this.repository.updates$)
   }
@@ -487,7 +499,7 @@ class Ceramic implements CeramicApi {
    * @param opts - Initialization options
    */
   async createStreamFromGenesis<T extends Stream>(type: number, genesis: any, opts: CreateOpts = {}): Promise<T> {
-    opts = { ...DEFAULT_CREATE_FROM_GENESIS_OPTS, ...opts };
+    opts = { ...DEFAULT_CREATE_FROM_GENESIS_OPTS, ...opts, ...this._syncOptions};
     const genesisCid = await this.dispatcher.storeCommit(genesis);
     const streamId = new StreamID(type, genesisCid);
     const state$ = await this.repository.applyCreateOpts(streamId, opts);
@@ -500,7 +512,7 @@ class Ceramic implements CeramicApi {
    * @param opts - Initialization options
    */
   async loadStream<T extends Stream>(streamId: StreamID | CommitID | string, opts: LoadOpts = {}): Promise<T> {
-    opts = { ...DEFAULT_LOAD_OPTS, ...opts };
+    opts = { ...DEFAULT_LOAD_OPTS, ...opts, ...this._syncOptions};
     const streamRef = StreamRef.from(streamId)
     if (CommitID.isInstance(streamRef)) {
       const snapshot$ = await this.repository.loadAtCommit(streamRef, opts);

@@ -46,6 +46,7 @@ export interface CreateOpts {
   loggerConfig?: LoggerConfig,
   network?: string;
   pubsubTopic?: string;
+  syncOverride: SyncOptions
 }
 
 interface MultiQueryWithDocId extends MultiQuery {
@@ -69,6 +70,7 @@ export function makeCeramicConfig (opts: CreateOpts): CeramicConfig {
     pubsubTopic: opts.pubsubTopic,
     stateStoreDirectory: opts.stateStoreDirectory,
     validateStreams: opts.validateStreams,
+    syncOverride: opts.syncOverride
   }
 
   return ceramicConfig
