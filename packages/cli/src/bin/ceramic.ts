@@ -23,6 +23,7 @@ program
     .option('--max-healthy-cpu <decimal>', 'Fraction of total CPU usage considered healthy. Defaults to 0.7')
     .option('--max-healthy-memory <decimal>', 'Fraction of total memory usage considered healthy. Defaults to 0.7')
     .option('--cors-allowed-origins <list>', 'Space-separated list of strings and/or regex expressions to set for Access-Control-Allow-Origin . Defaults to all: "*"')
+    .option('--sync-override <string>', 'Global forced mode for syncing all streams. One of: "prefer-cache", "sync-always", or "never-sync". Defaults to "prefer-cache"')
     .description('Start the daemon')
     .action(async ({
         ipfsApi,
@@ -42,6 +43,7 @@ program
         network,
         pubsubTopic,
         corsAllowedOrigins,
+        syncOverride
     }) => {
         if (stateStoreDirectory && stateStoreS3Bucket) {
           throw new Error("Cannot specify both --state-store-directory and --state-store-s3-bucket. Only one state store - either on local storage or on S3 - can be used at a time")
@@ -64,6 +66,7 @@ program
             network,
             pubsubTopic,
             corsAllowedOrigins,
+            syncOverride
         ).catch((err) => {
           console.error('Ceramic daemon failed to start up:')
           console.error(err)
