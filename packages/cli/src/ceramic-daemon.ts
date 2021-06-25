@@ -46,6 +46,8 @@ export interface CreateOpts {
   loggerConfig?: LoggerConfig,
   network?: string;
   pubsubTopic?: string;
+  restoreStreams?: boolean;
+  sync: SyncOptions
 }
 
 interface MultiQueryWithDocId extends MultiQuery {
@@ -69,6 +71,7 @@ export function makeCeramicConfig (opts: CreateOpts): CeramicConfig {
     pubsubTopic: opts.pubsubTopic,
     stateStoreDirectory: opts.stateStoreDirectory,
     validateStreams: opts.validateStreams,
+    sync: opts.sync
   }
 
   return ceramicConfig
@@ -167,7 +170,7 @@ export class CeramicDaemon {
     }
 
     const ceramic = new Ceramic(modules, params)
-    await ceramic._init(true, true)
+    await ceramic._init(true, opts.restoreStreams ?? true)
 
     const did = new DID({ resolver: {
       ...KeyDidResolver.getResolver(),
