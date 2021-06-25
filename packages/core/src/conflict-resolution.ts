@@ -131,8 +131,9 @@ export class HistoryLog {
   /**
    * Determines if the HistoryLog includes a CID, returning true or false as appropriate.
    */
-  async includes(cid: CID): Promise<boolean> {
-    return this.findIndex(cid).then((index) => index !== -1);
+  includes(cid: CID): boolean {
+    const index = this.findIndex(cid);
+    return index !== -1;
   }
 
   get last(): CID {
@@ -144,14 +145,8 @@ export class HistoryLog {
    *
    * @param cid - CID value
    */
-  async findIndex(cid: CID): Promise<number> {
-    for (let index = 0; index < this.items.length; index++) {
-      const current = this.items[index];
-      if (current.equals(cid)) {
-        return index;
-      }
-    }
-    return -1;
+  findIndex(cid: CID): number {
+    return this.items.findIndex((entry) => entry.equals(cid));
   }
 
   slice(start?: number, end?: number): HistoryLog {
@@ -176,7 +171,7 @@ export async function fetchLog(
   stateLog: HistoryLog,
   log: CID[] = [],
 ): Promise<CID[]> {
-  if (await stateLog.includes(cid)) {
+  if (stateLog.includes(cid)) {
     // already processed
     return [];
   }
@@ -198,7 +193,7 @@ export async function fetchLog(
     return [];
   }
   log.push(cid); // Should be unshift [O(N)], but push [O(1)] + reverse [O(N)] seem better
-  if (await stateLog.includes(prevCid)) {
+  if (stateLog.includes(prevCid)) {
     // we found the connection to the canonical log
     return log.reverse();
   }
@@ -303,7 +298,7 @@ export class ConflictResolution {
 
     // we have a conflict since prev is in the log of the local state, but isn't the tip
     // BEGIN CONFLICT RESOLUTION
-    const conflictIdx = await initialStateLog.findIndex(payload.prev).then((i) => i + 1);
+    const conflictIdx = initialStateLog.findIndex(payload.prev) + 1;
     const canonicalLog = initialStateLog.items;
     const localLog = canonicalLog.splice(conflictIdx);
     // Compute state up till conflictIdx
