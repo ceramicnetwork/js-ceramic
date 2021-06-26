@@ -45,4 +45,10 @@ describe('commitTimestamp', () => {
     ];
     expect(StreamUtils.commitTimestamp(log, log[1].cid)).toEqual(log[3].timestamp * 1000);
   });
+
+  test('not in log', () => {
+    const log = [logEntry(CommitType.GENESIS), logEntry(CommitType.SIGNED)];
+    const orphan = logEntry(CommitType.SIGNED);
+    expect(StreamUtils.commitTimestamp(log, orphan.cid)).toBeUndefined();
+  });
 });

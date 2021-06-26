@@ -218,14 +218,14 @@ export class StreamUtils {
   static commitTimestamp(log: LogEntry[], commitCid: CID): number | undefined {
     const entryIndex = log.findIndex(entry => entry.cid.equals(commitCid))
     if (entryIndex < 0) {
-      throw new Error(`Commit does not belong to log`)
+      return undefined;
     }
     const tail = log.slice(entryIndex + 1)
     const tailAnchor = tail.find(entry => entry.type == CommitType.ANCHOR)
     if (tailAnchor) {
       return tailAnchor.timestamp * 1000
     } else {
-      return undefined
+      return undefined;
     }
   }
 }

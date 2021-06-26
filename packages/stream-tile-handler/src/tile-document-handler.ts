@@ -55,7 +55,7 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
             return this._applyAnchor(context, commit as AnchorCommit, meta.cid, state);
         }
 
-        return this._applySigned(commit, meta.cid, state, context)
+        return this._applySigned(commit, meta, state, context)
     }
 
     /**
@@ -92,12 +92,12 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
     /**
      * Applies signed commit
      * @param commit - Signed commit
-     * @param cid - Signed commit CID
+     * @param meta - Commit meta-information
      * @param state - Document state
      * @param context - Ceramic context
      * @private
      */
-    async _applySigned(commit: any, cid: CID, state: StreamState, context: Context): Promise<StreamState> {
+    async _applySigned(commit: any, meta: CommitMeta, state: StreamState, context: Context): Promise<StreamState> {
         // TODO: Assert that the 'prev' of the commit being applied is the end of the log in 'state'
         await this._verifySignature(commit, context, state.metadata.controllers[0])
 
@@ -115,7 +115,7 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
         nextState.signature = SignatureStatus.SIGNED
         nextState.anchorStatus = AnchorStatus.NOT_REQUESTED
 
-        nextState.log.push({ cid, type: CommitType.SIGNED })
+        nextState.log.push({ cid: meta.cid, type: CommitType.SIGNED })
 
         const content = state.next?.content ?? state.content
         const metadata = state.next?.metadata ?? state.metadata

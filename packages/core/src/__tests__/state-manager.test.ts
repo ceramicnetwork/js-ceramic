@@ -60,7 +60,7 @@ describe('anchor', () => {
     const stream = await TileDocument.create(ceramic, INITIAL_CONTENT, null, { anchor: false });
     const stream$ = await ceramic.repository.load(stream.id, {});
 
-    await new Promise((resolve) => {
+    await new Promise<void>((resolve) => {
       ceramic.repository.stateManager.anchor(stream$).add(resolve);
     });
     expect(stream$.value.anchorStatus).toEqual(AnchorStatus.ANCHORED);
@@ -70,14 +70,14 @@ describe('anchor', () => {
     const stream = await TileDocument.create(ceramic, INITIAL_CONTENT, null, { anchor: false });
     const stream$ = await ceramic.repository.load(stream.id, {});
 
-    await new Promise((resolve) => {
+    await new Promise<void>((resolve) => {
       ceramic.repository.stateManager.anchor(stream$).add(resolve);
     });
     expect(stream$.value.anchorStatus).toEqual(AnchorStatus.ANCHORED);
     expect(stream$.value.log.length).toEqual(2)
 
     // Now re-request an anchor when the stream is already anchored. Should be a no-op
-    await new Promise((resolve) => {
+    await new Promise<void>((resolve) => {
       ceramic.repository.stateManager.anchor(stream$).add(resolve);
     });
     expect(stream$.value.log.length).toEqual(2)
@@ -94,7 +94,7 @@ describe('anchor', () => {
     fakeHandleTip.mockRejectedValueOnce(new Error("Handle tip failed"))
     fakeHandleTip.mockImplementationOnce(realHandleTip)
 
-    await new Promise((resolve) => {
+    await new Promise<void>((resolve) => {
       ceramic.repository.stateManager.anchor(stream$).add(resolve);
     });
     expect(stream$.value.anchorStatus).toEqual(AnchorStatus.ANCHORED);
@@ -112,7 +112,7 @@ describe('anchor', () => {
     fakeHandleTip.mockRejectedValueOnce(new Error("Handle tip failed"))
     fakeHandleTip.mockImplementationOnce(realHandleTip)
 
-    await new Promise((resolve) => {
+    await new Promise<void>((resolve) => {
       ceramic.repository.stateManager.anchor(stream$).add(resolve);
     });
     expect(stream$.value.anchorStatus).toEqual(AnchorStatus.FAILED);
@@ -123,7 +123,7 @@ test('handleTip', async () => {
   const stream1 = await TileDocument.create(ceramic, INITIAL_CONTENT, null, { anchor:false });
   stream1.subscribe();
   const streamState1 = await ceramic.repository.load(stream1.id, {});
-  await new Promise((resolve) => {
+  await new Promise<void>((resolve) => {
     ceramic.repository.stateManager.anchor(streamState1).add(resolve);
   });
 
@@ -152,7 +152,6 @@ test('handleTip for commit already in log', async () => {
 
   const stream2 = await ceramic2.loadStream<TileDocument>(stream1.id, { syncTimeoutSeconds:0 });
   const streamState2 = await ceramic2.repository.load(stream2.id, {});
-
 
   retrieveCommitSpy.mockClear()
   await (ceramic2.repository.stateManager as any)._handleTip(streamState2, stream1.state.log[1].cid);

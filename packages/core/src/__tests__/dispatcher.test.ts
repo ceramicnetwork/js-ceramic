@@ -1,11 +1,9 @@
 import { Dispatcher } from '../dispatcher';
 import CID from 'cids';
-import { TileDocument } from '@ceramicnetwork/stream-tile';
 import StreamID from '@ceramicnetwork/streamid';
 import {
   CommitType,
   StreamState,
-  StreamHandler,
   LoggerProvider,
 } from '@ceramicnetwork/common';
 import { serialize, MsgType } from '../pubsub/pubsub-message';
