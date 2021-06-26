@@ -114,7 +114,7 @@ export class Repository {
     if (commit == null) {
       throw new Error(`No genesis commit found with CID ${genesisCid.toString()}`);
     }
-    const state = await handler.applyCommit(commit, streamId.cid, this.#deps.context);
+    const state = await handler.applyCommit(commit, {cid: streamId.cid}, this.#deps.context);
     await this.#deps.stateValidation.validate(state, state.content);
     const state$ = new RunningState(state);
     this.add(state$);

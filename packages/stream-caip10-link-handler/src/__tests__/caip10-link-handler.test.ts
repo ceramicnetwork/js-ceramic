@@ -100,28 +100,28 @@ describe('Caip10LinkHandler', () => {
 
     it('throws an error if genesis commit has data', async () => {
         const genesisWithData = { ...RECORDS.genesis, data: {} }
-        await expect(handler.applyCommit(genesisWithData, FAKE_CID_1, context)).rejects.toThrow(/cannot have data/)
+        await expect(handler.applyCommit(genesisWithData, {cid: FAKE_CID_1}, context)).rejects.toThrow(/cannot have data/)
     })
 
     it('throws an error if genesis commit has no controllers specified', async () => {
         const genesisWithoutControllers = cloneDeep(RECORDS.genesis)
         delete genesisWithoutControllers.header.controllers
-        await expect(handler.applyCommit(genesisWithoutControllers, FAKE_CID_1, context)).rejects.toThrow(/Exactly one controller must be specified/i)
+        await expect(handler.applyCommit(genesisWithoutControllers, {cid: FAKE_CID_1}, context)).rejects.toThrow(/Exactly one controller must be specified/i)
     })
 
     it('throws an error if genesis commit has more than one controller', async () => {
         const genesisWithMultipleControllers = cloneDeep(RECORDS.genesis)
         genesisWithMultipleControllers.header.controllers.push('0x25954ef14cebbc9af3d79876489a9cfe87043f20@eip155:1')
-        await expect(handler.applyCommit(genesisWithMultipleControllers, FAKE_CID_1, context)).rejects.toThrow(/Exactly one controller must be specified/i)
+        await expect(handler.applyCommit(genesisWithMultipleControllers, {cid: FAKE_CID_1}, context)).rejects.toThrow(/Exactly one controller must be specified/i)
     })
 
     it('applies genesis commit correctly', async () => {
-        const state = await handler.applyCommit(RECORDS.genesis, FAKE_CID_1, context)
+        const state = await handler.applyCommit(RECORDS.genesis, {cid: FAKE_CID_1}, context)
         expect(state).toMatchSnapshot()
     })
 
     it('makes update commit correctly', async () => {
-        const state = await handler.applyCommit(RECORDS.genesis, FAKE_CID_1, context)
+        const state = await handler.applyCommit(RECORDS.genesis, {cid: FAKE_CID_1}, context)
         const state$ = TestUtils.runningState(state)
         const stream = new Caip10Link(state$, context)
         const record = await stream.makeCommit(RECORDS.r1.desiredContent)
@@ -133,16 +133,16 @@ describe('Caip10LinkHandler', () => {
     })
 
     it('applies signed commit correctly', async () => {
-        let state = await handler.applyCommit(RECORDS.genesis, FAKE_CID_1, context)
-        state = await handler.applyCommit(RECORDS.r1.commit, FAKE_CID_2, context, state)
+        let state = await handler.applyCommit(RECORDS.genesis, {cid: FAKE_CID_1}, context)
+        state = await handler.applyCommit(RECORDS.r1.commit, {cid: FAKE_CID_2}, context, state)
         expect(state).toMatchSnapshot()
     })
 
     it('throws an error of the proof is invalid', async () => {
         const badRecord = cloneDeep(RECORDS.r1.commit)
         badRecord.data.signature = '0xc6a5f50945bc7b06320b66cfe144e2b571391c88827eed0490f7f8e5e8af769c4246e27e8302348762387462387648726346877884d9cb8a9303f5d92ea4df0d1c'
-        const state = await handler.applyCommit(RECORDS.genesis, FAKE_CID_1, context)
-        await expect(handler.applyCommit(badRecord, FAKE_CID_2, context, state)).rejects.toThrow(/Invalid proof/i)
+        const state = await handler.applyCommit(RECORDS.genesis, {cid: FAKE_CID_1}, context)
+        await expect(handler.applyCommit(badRecord, {cid: FAKE_CID_2}, context, state)).rejects.toThrow(/Invalid proof/i)
     })
 
     it('throws an error of the proof doesn\'t match the controller', async () => {
@@ -161,11 +161,11 @@ describe('Caip10LinkHandler', () => {
         await context.ipfs.dag.put(RECORDS.proof, FAKE_CID_4)
 
         // Apply genesis
-        let state = await handler.applyCommit(RECORDS.genesis, FAKE_CID_1, context)
+        let state = await handler.applyCommit(RECORDS.genesis, {cid: FAKE_CID_1}, context)
         // Apply signed record
-        state = await handler.applyCommit(RECORDS.r1.commit, FAKE_CID_2, context, state)
+        state = await handler.applyCommit(RECORDS.r1.commit, {cid: FAKE_CID_2}, context, state)
         // Apply anchor record
-        state = await handler.applyCommit(RECORDS.r2.commit as unknown as CeramicCommit, FAKE_CID_3, context, state)
+        state = await handler.applyCommit(RECORDS.r2.commit as unknown as CeramicCommit, {cid: FAKE_CID_3}, context, state)
         expect(state).toMatchSnapshot()
     })
 

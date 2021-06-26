@@ -7,17 +7,18 @@ import cloneDeep from 'lodash.clonedeep'
 
 import { TileDocument } from "@ceramicnetwork/stream-tile"
 import {
-    AnchorStatus,
-    Context,
-    StreamState,
-    CommitType,
-    StreamConstructor,
-    StreamHandler,
-    StreamUtils,
-    SignatureStatus,
-    CeramicCommit,
-    AnchorCommit,
-} from "@ceramicnetwork/common"
+  AnchorStatus,
+  Context,
+  StreamState,
+  CommitType,
+  StreamConstructor,
+  StreamHandler,
+  StreamUtils,
+  SignatureStatus,
+  CeramicCommit,
+  AnchorCommit,
+  CommitMeta,
+} from '@ceramicnetwork/common';
 
 const IPFS_GET_TIMEOUT = 60000 // 1 minute
 
@@ -40,21 +41,21 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
     /**
      * Applies commit (genesis|signed|anchor)
      * @param commit - Commit
-     * @param cid - Commit CID
+     * @param meta - Commit meta-information
      * @param context - Ceramic context
      * @param state - Document state
      */
-    async applyCommit(commit: CeramicCommit, cid: CID, context: Context, state?: StreamState): Promise<StreamState> {
+    async applyCommit(commit: CeramicCommit, meta: CommitMeta, context: Context, state?: StreamState): Promise<StreamState> {
         if (state == null) {
             // apply genesis
-            return this._applyGenesis(commit, cid, context)
+            return this._applyGenesis(commit, meta.cid, context)
         }
 
         if ((commit as AnchorCommit).proof) {
-            return this._applyAnchor(context, commit as AnchorCommit, cid, state);
+            return this._applyAnchor(context, commit as AnchorCommit, meta.cid, state);
         }
 
-        return this._applySigned(commit, cid, state, context)
+        return this._applySigned(commit, meta.cid, state, context)
     }
 
     /**

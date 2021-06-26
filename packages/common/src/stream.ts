@@ -69,6 +69,14 @@ export type SignedCommitContainer = DagJWSResult
 export type CeramicCommit = GenesisCommit | UnsignedCommit | AnchorCommit | SignedCommit | SignedCommitContainer
 
 /**
+ * Commit meta-information, like CID and timestamp.
+ */
+export type CommitMeta = {
+  cid: CID,
+  timestamp?: number;
+}
+
+/**
  * Stream metadata
  */
 export interface StreamMetadata {
@@ -240,9 +248,9 @@ export interface StreamHandler<T extends Stream> {
     /**
      * Applies commit to the stream (genesis|signed|anchored)
      * @param commit - Commit instance
-     * @param cid - Record CID
+     * @param meta - Record meta-inforamtion, like CID and timestamp
      * @param context - Ceramic context
      * @param state - Stream state
      */
-    applyCommit(commit: CeramicCommit, cid: CID, context: Context, state?: StreamState): Promise<StreamState>
+    applyCommit(commit: CeramicCommit, meta: CommitMeta, context: Context, state?: StreamState): Promise<StreamState>
 }

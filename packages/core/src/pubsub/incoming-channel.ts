@@ -1,4 +1,4 @@
-import { interval, Observable } from 'rxjs';
+import { Observable } from 'rxjs';
 import { IpfsApi } from '@ceramicnetwork/common';
 import { TaskQueue } from './task-queue';
 import { DiagnosticsLogger, ServiceLogger } from '@ceramicnetwork/common';

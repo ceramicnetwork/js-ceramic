@@ -248,10 +248,10 @@ export class ConflictResolution {
         // it's an anchor commit
         // TODO: Anchor validation should be done by the StreamHandler as part of applying the anchor commit
         await verifyAnchorCommit(this.dispatcher, this.anchorValidator, commit);
-        state = await handler.applyCommit(commit, cid, this.context, state);
+        state = await handler.applyCommit(commit, { cid: cid }, this.context, state);
       } else {
         // it's a signed commit
-        const tmpState = await handler.applyCommit(commit, cid, this.context, state);
+        const tmpState = await handler.applyCommit(commit, { cid: cid }, this.context, state);
         const isGenesis = !payload.prev;
         const effectiveState = isGenesis ? tmpState : tmpState.next;
         // TODO: Schema validation should be done by the StreamHandler as part of applying the commit
