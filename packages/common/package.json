@@ -23,7 +23,7 @@
     "./lib/loggers.js": "./lib/loggers-browser.js"
   },
   "scripts": {
-    "test": "../../node_modules/.bin/jest --silent --coverage --passWithNoTests --env=node",
+    "test": "../../node_modules/.bin/jest --silent --coverage --passWithNoTests",
     "build": "../../node_modules/.bin/tsc -p tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
@@ -53,7 +53,8 @@
   "jest": {
     "testMatch": [
       "**/?(*.)+(spec|test).[jt]s?(x)"
-    ]
+    ],
+    "testEnvironment": "node"
   },
   "gitHead": "34eeee25597b0a60def72906c26d3afd6230aaf1"
 }
