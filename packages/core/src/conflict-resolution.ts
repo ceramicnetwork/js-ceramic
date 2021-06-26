@@ -10,7 +10,9 @@ import {
   StreamStateHolder,
   Stream,
   StreamHandler,
-  StreamUtils, AnchorValidator,
+  StreamUtils,
+  LogEntry,
+  AnchorValidator,
 } from '@ceramicnetwork/common';
 import { Dispatcher } from './dispatcher';
 import cloneDeep from 'lodash.clonedeep';
@@ -116,13 +118,10 @@ export async function pickLogToAccept(state1: StreamState, state2: StreamState):
 
 export class HistoryLog {
   static fromState(dispatcher: Dispatcher, state: StreamState): HistoryLog {
-    return new HistoryLog(
-      dispatcher,
-      state.log.map((_) => _.cid),
-    );
+    return new HistoryLog(dispatcher, state.log);
   }
 
-  constructor(private readonly dispatcher: Dispatcher, readonly items: CID[]) {}
+  constructor(private readonly dispatcher: Dispatcher, readonly items: LogEntry[]) {}
 
   get length(): number {
     return this.items.length;
@@ -137,7 +136,7 @@ export class HistoryLog {
   }
 
   get last(): CID {
-    return this.items[this.items.length - 1];
+    return this.items[this.items.length - 1].cid;
   }
 
   /**
@@ -146,7 +145,7 @@ export class HistoryLog {
    * @param cid - CID value
    */
   findIndex(cid: CID): number {
-    return this.items.findIndex((entry) => entry.equals(cid));
+    return this.items.findIndex((entry) => entry.cid.equals(cid));
   }
 
   slice(start?: number, end?: number): HistoryLog {
@@ -169,30 +168,44 @@ export async function fetchLog(
   dispatcher: Dispatcher,
   cid: CID,
   stateLog: HistoryLog,
-  log: CID[] = [],
-): Promise<CID[]> {
+  log: LogEntry[] = [],
+): Promise<LogEntry[]> {
   if (stateLog.includes(cid)) {
     // already processed
     return [];
   }
   const commit = await dispatcher.retrieveCommit(cid);
-  if (commit == null) {
-    throw new Error(`No commit found for CID ${cid.toString()}`);
-  }
+  if (!commit) throw new Error(`No commit found for CID ${cid.toString()}`);
 
   let payload = commit;
-  if (StreamUtils.isSignedCommit(commit)) {
+  const isSignedCommit = StreamUtils.isSignedCommit(commit);
+  if (isSignedCommit) {
     payload = await dispatcher.retrieveCommit(commit.link);
-    if (payload == null) {
-      throw new Error(`No commit found for CID ${commit.link.toString()}`);
-    }
+    if (!payload) throw new Error(`No commit found for CID ${commit.link.toString()}`);
   }
   const prevCid: CID = payload.prev;
   if (!prevCid) {
     // this is a fake log
     return [];
   }
-  log.push(cid); // Should be unshift [O(N)], but push [O(1)] + reverse [O(N)] seem better
+  let nextEntry: LogEntry;
+  if (isSignedCommit) {
+    nextEntry = {
+      type: CommitType.SIGNED,
+      cid: cid,
+    };
+  } else {
+    // If not signed, then anchor commit
+    const proof = await dispatcher.retrieveFromIPFS(cid);
+    const timestamp = proof.blockTimestamp;
+    nextEntry = {
+      type: CommitType.ANCHOR,
+      cid: cid,
+      timestamp: timestamp,
+    };
+  }
+  // Should be unshift [O(N)], but push [O(1)] + reverse [O(N)] seem better
+  log.push(nextEntry);
   if (stateLog.includes(prevCid)) {
     // we found the connection to the canonical log
     return log.reverse();
@@ -228,14 +241,14 @@ export class ConflictResolution {
    */
   private async applyLogToState<T extends Stream>(
     handler: StreamHandler<T>,
-    log: Array<CID>,
+    log: LogEntry[],
     state?: StreamState,
     breakOnAnchor?: boolean,
   ): Promise<StreamState> {
     const itr = log.entries();
     let entry = itr.next();
     while (!entry.done) {
-      const cid = entry.value[1];
+      const cid = entry.value[1].cid;
       const commit = await this.dispatcher.retrieveCommit(cid);
       // TODO - should catch potential thrown error here
 
@@ -277,15 +290,15 @@ export class ConflictResolution {
   private async applyLog(
     initialState: StreamState,
     initialStateLog: HistoryLog,
-    log: Array<CID>,
+    log: LogEntry[],
   ): Promise<StreamState | null> {
     const handler = this.handlers.get(initialState.type);
     const tip = initialStateLog.last;
-    if (log[log.length - 1].equals(tip)) {
+    if (log[log.length - 1].cid.equals(tip)) {
       // log already applied
       return null;
     }
-    const cid = log[0];
+    const cid = log[0].cid;
     const commit = await this.dispatcher.retrieveCommit(cid);
     let payload = commit;
     if (StreamUtils.isSignedCommit(commit)) {
