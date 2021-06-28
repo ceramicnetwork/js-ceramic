@@ -76,10 +76,12 @@ export class IpfsTopology {
   ) {}
   
   /**
-   * Connect to custom peerList
+   * Connect to custom peer list
+   * @param peerList List of multiaddresses to swarm connect to
    */
-  async connect(peerList: Multiaddr[]): Promise<void> {
-    await this._forceBootstrapConnection(this.ipfs, peerList);
+  async connect(peerList: Array<string>) {
+    const addressList = peerList.map((peer) => { return new Multiaddr(peer) });
+    await this._forceBootstrapConnection(this.ipfs, addressList);
   }
 
   async forceConnection(): Promise<void> {
