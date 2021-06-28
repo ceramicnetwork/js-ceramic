@@ -53,13 +53,6 @@ export interface AnchorService {
   init(): Promise<void>;
 
   /**
-   * Set Ceramic API instance
-   *
-   * @param ceramic - Ceramic API used for various purposes
-   */
-  ceramic: CeramicApi;
-
-  /**
    * URL of the connected anchor service
    */
   url: string;

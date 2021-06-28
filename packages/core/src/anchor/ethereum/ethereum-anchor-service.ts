@@ -72,15 +72,6 @@ export default class EthereumAnchorService implements AnchorService {
     this._logger = logger
   }
 
-  /**
-   * Set Ceramic API instance
-   *
-   * @param ceramic - Ceramic API used for various purposes
-   */
-  set ceramic(ceramic: CeramicApi) {
-    // Do Nothing
-  }
-
   get url() {
     return this.anchorServiceUrl
   }

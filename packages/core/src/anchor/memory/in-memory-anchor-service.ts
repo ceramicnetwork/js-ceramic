@@ -58,10 +58,12 @@ class InMemoryAnchorService implements AnchorService {
 
   #queue: Candidate[] = [];
 
-  constructor(_config: InMemoryAnchorConfig) {
+  constructor(_config: InMemoryAnchorConfig, dispathcer: Dispatcher, logger: DiagnosticsLogger) {
     this.#anchorDelay = _config?.anchorDelay ?? 0;
     this.#anchorOnRequest = _config?.anchorOnRequest ?? true;
     this.#verifySignatures = _config?.verifySignatures ?? true;
+    this.#dispatcher = dispathcer
+    this.#logger = logger
 
     // Remember the most recent AnchorServiceResponse for each anchor request
     this.#feed.subscribe(asr => this.#anchors.set(asr.cid.toString(), asr))
@@ -215,17 +217,6 @@ class InMemoryAnchorService implements AnchorService {
       history.push(prevCommitId);
       currentCommitId = prevCommitId;
     }
-  }
-
-  /**
-   * Set Ceramic API instance
-   *
-   * @param ceramic - Ceramic API used for various purposes
-   */
-  set ceramic(ceramic: Ceramic) {
-    this.#ceramic = ceramic;
-    this.#dispatcher = this.#ceramic.dispatcher;
-    this.#logger = this.#ceramic?.context?.loggerProvider.getDiagnosticsLogger();
   }
 
   get url() {

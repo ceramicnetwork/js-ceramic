@@ -191,9 +191,6 @@ class Ceramic implements CeramicApi {
       ipfs: modules.ipfs,
       loggerProvider: modules.loggerProvider,
     }
-    if (!this._disableAnchors) {
-      this.context.anchorService.ceramic = this
-    }
 
     this._streamHandlers = new HandlersMap(this._logger)
 
@@ -343,19 +340,6 @@ class Ceramic implements CeramicApi {
     const networkOptions = Ceramic._generateNetworkOptions(config)
     logger.imp(`Connecting to ceramic network '${networkOptions.name}' using pubsub topic '${networkOptions.pubsubTopic}'`)
 
-    let anchorService = null
-    if (config.disableAnchors) {
-      logger.warn(`Starting without a configured anchor service. All anchor requests will fail.`)
-    } else {
-      const anchorServiceUrl = config.anchorServiceUrl || DEFAULT_ANCHOR_SERVICE_URLS[networkOptions.name]
-      let ethereumRpcUrl = config.ethereumRpcUrl
-      if (!ethereumRpcUrl && networkOptions.name == Networks.LOCAL) {
-        ethereumRpcUrl = DEFAULT_LOCAL_ETHEREUM_RPC
-      }
-
-      anchorService = networkOptions.name != Networks.INMEMORY ? new EthereumAnchorService(anchorServiceUrl, ethereumRpcUrl, logger) : new InMemoryAnchorService(config as any)
-    }
-
 
     const pinStoreOptions = {
       networkName: networkOptions.name,
@@ -371,6 +355,19 @@ class Ceramic implements CeramicApi {
     const pinStoreFactory = new PinStoreFactory(ipfs, pinStoreOptions)
     const repository = new Repository(streamCacheLimit, concurrentRequestsLimit, logger)
     const dispatcher = new Dispatcher(ipfs, networkOptions.pubsubTopic, repository, logger, pubsubLogger)
+
+    let anchorService = null
+    if (config.disableAnchors) {
+      logger.warn(`Starting without a configured anchor service. All anchor requests will fail.`)
+    } else {
+      const anchorServiceUrl = config.anchorServiceUrl || DEFAULT_ANCHOR_SERVICE_URLS[networkOptions.name]
+      let ethereumRpcUrl = config.ethereumRpcUrl
+      if (!ethereumRpcUrl && networkOptions.name == Networks.LOCAL) {
+        ethereumRpcUrl = DEFAULT_LOCAL_ETHEREUM_RPC
+      }
+
+      anchorService = networkOptions.name != Networks.INMEMORY ? new EthereumAnchorService(anchorServiceUrl, ethereumRpcUrl, logger) : new InMemoryAnchorService(config as any, dispatcher, logger)
+    }
 
     const params: CeramicParameters = {
       disableAnchors: config.disableAnchors,
