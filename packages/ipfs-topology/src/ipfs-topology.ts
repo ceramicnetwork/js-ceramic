@@ -74,6 +74,13 @@ export class IpfsTopology {
     readonly logger: DiagnosticsLogger,
     readonly period: number = DEFAULT_PEER_DISCOVERY_PERIOD
   ) {}
+  
+  /**
+   * Connect to custom peerList
+   */
+  async connect(peerList: Multiaddr[]): Promise<void> {
+    await this._forceBootstrapConnection(this.ipfs, peerList);
+  }
 
   async forceConnection(): Promise<void> {
     const base: Multiaddr[] = BASE_BOOTSTRAP_LIST(this.ceramicNetwork as Networks) || [];
