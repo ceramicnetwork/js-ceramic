@@ -10,7 +10,7 @@ import {
   StreamStateHolder,
   Stream,
   StreamHandler,
-  StreamUtils,
+  StreamUtils, AnchorValidator,
 } from '@ceramicnetwork/common';
 import { Dispatcher } from './dispatcher';
 import cloneDeep from 'lodash.clonedeep';
@@ -22,12 +22,12 @@ import { HandlersMap } from './handlers-map';
  * Verifies anchor commit structure
  *
  * @param dispatcher - To get raw blob from IPFS
- * @param anchorService - AnchorService to verify chain inclusion
+ * @param anchorValidator - AnchorValidator to verify chain inclusion
  * @param commit - Anchor commit
  */
 async function verifyAnchorCommit(
   dispatcher: Dispatcher,
-  anchorService: AnchorService,
+  anchorValidator: AnchorValidator,
   commit: AnchorCommit,
 ): Promise<AnchorProof> {
   const proofCID = commit.proof;
@@ -55,7 +55,7 @@ async function verifyAnchorCommit(
     );
   }
 
-  await anchorService.validateChainInclusion(proof);
+  await anchorValidator.validateChainInclusion(proof);
   return proof;
 }
 
@@ -221,7 +221,7 @@ export function commitAtTime(stateHolder: StreamStateHolder, timestamp: number):
 
 export class ConflictResolution {
   constructor(
-    public anchorService: AnchorService,
+    public anchorValidator: AnchorValidator,
     private readonly stateValidation: StateValidation,
     private readonly dispatcher: Dispatcher,
     private readonly context: Context,
@@ -252,7 +252,7 @@ export class ConflictResolution {
       if (payload.proof) {
         // it's an anchor commit
         // TODO: Anchor validation should be done by the StreamHandler as part of applying the anchor commit
-        await verifyAnchorCommit(this.dispatcher, this.anchorService, commit);
+        await verifyAnchorCommit(this.dispatcher, this.anchorValidator, commit);
         state = await handler.applyCommit(commit, cid, this.context, state);
       } else {
         // it's a signed commit

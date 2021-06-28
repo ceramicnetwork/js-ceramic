@@ -7,6 +7,7 @@ import {
   AnchorStatus,
   StreamUtils,
   AnchorServiceResponse,
+  AnchorValidator,
 } from "@ceramicnetwork/common";
 
 import type { Dispatcher } from "../../dispatcher";
@@ -43,7 +44,7 @@ const SAMPLE_ETH_TX_HASH =
 /**
  * In-memory anchor service - used locally, not meant to be used in production code
  */
-class InMemoryAnchorService implements AnchorService {
+class InMemoryAnchorService implements AnchorService, AnchorValidator {
   #ceramic: Ceramic;
   #dispatcher: Dispatcher;
   #logger: DiagnosticsLogger;
