@@ -80,14 +80,25 @@ export interface AnchorService {
   pollForAnchorResponse(streamId: StreamID, tip: CID): Observable<AnchorServiceResponse>;
 
   /**
-   * Validate anchor proof commit
-   * @param anchorProof - Proof of blockchain inclusion
-   */
-  validateChainInclusion(anchorProof: AnchorProof): Promise<void>;
-
-  /**
    * @returns An array of the CAIP-2 chain IDs of the blockchains that are supported by this
    * anchor service.
    */
   getSupportedChains(): Promise<Array<string>>;
+}
+
+/**
+ * Describes behavior for validation anchor commit inclusion on chain
+ */
+export interface AnchorValidator {
+  /**
+   * Performs whatever initialization work is required to validate commits anchored on the
+   * configured blockchain.
+   */
+  init(chainId: string | null): Promise<void>;
+
+  /**
+   * Validate anchor proof commit
+   * @param anchorProof - Proof of blockchain inclusion
+   */
+  validateChainInclusion(anchorProof: AnchorProof): Promise<void>;
 }

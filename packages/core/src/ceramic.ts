@@ -19,7 +19,7 @@ import {
   LoggerProvider,
   Networks,
   UpdateOpts,
-  SyncOptions,
+  SyncOptions, AnchorValidator,
 } from "@ceramicnetwork/common"
 
 import { DID } from 'dids'
@@ -37,6 +37,7 @@ import { FauxStateValidation, RealStateValidation, StateValidation } from './sta
 import { streamFromState } from './state-management/stream-from-state';
 import { ConflictResolution } from './conflict-resolution';
 import { RunningState } from './state-management/running-state';
+import EthereumAnchorValidator from "./anchor/ethereum/ethereum-anchor-validator";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const packageJson = require('../package.json')
@@ -102,7 +103,8 @@ export interface CeramicConfig {
  * `CeramicConfig` via `Ceramic.create()`.
  */
 export interface CeramicModules {
-  anchorService: AnchorService,
+  anchorService: AnchorService | null,
+  anchorValidator: AnchorValidator,
   dispatcher: Dispatcher,
   ipfs: IpfsApi,
   ipfsTopology: IpfsTopology,
@@ -165,6 +167,7 @@ class Ceramic implements CeramicApi {
   readonly repository: Repository;
 
   readonly _streamHandlers: HandlersMap
+  private readonly _anchorValidator: AnchorValidator
   private readonly _disableAnchors: boolean
   private readonly _ipfsTopology: IpfsTopology
   private readonly _logger: DiagnosticsLogger
@@ -180,6 +183,7 @@ class Ceramic implements CeramicApi {
     this.repository = modules.repository
     this.dispatcher = modules.dispatcher
     this.pin = this._buildPinApi()
+    this._anchorValidator = modules.anchorValidator
 
     this._disableAnchors = params.disableAnchors
     this._networkOptions = params.networkOptions
@@ -200,7 +204,7 @@ class Ceramic implements CeramicApi {
     // This initialization block below has to be redone.
     // Things below should be passed here as `modules` variable.
     this.stateValidation = this._validateStreams ? new RealStateValidation(this.loadStream.bind(this)) : new FauxStateValidation()
-    const conflictResolution = new ConflictResolution(modules.anchorService, this.stateValidation, this.dispatcher, this.context, this._streamHandlers)
+    const conflictResolution = new ConflictResolution(modules.anchorValidator, this.stateValidation, this.dispatcher, this.context, this._streamHandlers)
     const pinStore = modules.pinStoreFactory.createPinStore()
     this.repository.setDeps({
       dispatcher: this.dispatcher,
@@ -348,12 +352,20 @@ class Ceramic implements CeramicApi {
       logger.warn(`Starting without a configured anchor service. All anchor requests will fail.`)
     } else {
       const anchorServiceUrl = config.anchorServiceUrl || DEFAULT_ANCHOR_SERVICE_URLS[networkOptions.name]
-      let ethereumRpcUrl = config.ethereumRpcUrl
-      if (!ethereumRpcUrl && networkOptions.name == Networks.LOCAL) {
-        ethereumRpcUrl = DEFAULT_LOCAL_ETHEREUM_RPC
-      }
 
-      anchorService = networkOptions.name != Networks.INMEMORY ? new EthereumAnchorService(anchorServiceUrl, ethereumRpcUrl, logger) : new InMemoryAnchorService(config as any)
+      anchorService = networkOptions.name != Networks.INMEMORY ? new EthereumAnchorService(anchorServiceUrl, logger) : new InMemoryAnchorService(config as any)
+    }
+
+    let ethereumRpcUrl = config.ethereumRpcUrl
+    if (!ethereumRpcUrl && networkOptions.name == Networks.LOCAL) {
+      ethereumRpcUrl = DEFAULT_LOCAL_ETHEREUM_RPC
+    }
+    let anchorValidator
+    if (networkOptions.name == Networks.INMEMORY) {
+      // Just use the InMemoryAnchorService as the AnchorValidator
+      anchorValidator = anchorService
+    } else {
+      anchorValidator = new EthereumAnchorValidator(ethereumRpcUrl, logger)
     }
 
 
@@ -380,6 +392,7 @@ class Ceramic implements CeramicApi {
 
     const modules = {
       anchorService,
+      anchorValidator,
       dispatcher,
       ipfs,
       ipfsTopology,
@@ -447,6 +460,8 @@ class Ceramic implements CeramicApi {
       await this._loadSupportedChains()
       this._logger.imp(`Connected to anchor service '${this.context.anchorService.url}' with supported anchor chains ['${this._supportedChains.join("','")}']`)
     }
+
+    await this._anchorValidator.init(this._supportedChains ? this._supportedChains[0] : null)
 
     if (restoreStreams) {
       this.restoreStreams()
