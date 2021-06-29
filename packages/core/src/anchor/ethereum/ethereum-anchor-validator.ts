@@ -26,8 +26,9 @@ interface EthNetwork {
  * Maps some of Ethereum chain IDs to network configuration
  */
 const ETH_CHAIN_ID_MAPPINGS: Record<string, EthNetwork> = {
-    "eip155:1": { network: "mainnet", chain: "ETH", chainId: 1, networkId: 1, type: "Production" },
-    "eip155:3": { network: "ropsten", chain: "ETH", chainId: 3, networkId: 3, type: "Test" },
+  "eip155:1": { network: "mainnet", chain: "ETH", chainId: 1, networkId: 1, type: "Production" },
+  "eip155:3": { network: "ropsten", chain: "ETH", chainId: 3, networkId: 3, type: "Test" },
+  "eip155:4": { network: "rinkeby", chain: "ETH", chainId: 4, networkId: 4, type: "Test" },
 }
 
 const BASE_CHAIN_ID = "eip155"
