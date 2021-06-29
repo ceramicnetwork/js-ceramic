@@ -7,6 +7,8 @@ import { DiagnosticsLogger, LogLevel, IpfsApi } from "@ceramicnetwork/common";
 import { convert } from 'blockcodec-to-ipld-format'
 import { HealthcheckServer } from "./healthcheck-server";
 import { createRepo, StorageBackend } from './create-repo';
+import path from 'path';
+import os from 'os';
 
 const format = convert(dagJose)
 
@@ -60,7 +62,7 @@ export class IpfsDaemon {
         const ipfsCreateIfMissing = props.ipfsCreateIfMissing ?? fromBooleanInput(process.env.IPFS_CREATE_IF_MISSING, true);
         const configuration: Configuration = {
             tcpHost: props.tcpHost || process.env.TCP_HOST || '0.0.0.0',
-            ipfsPath: props.ipfsPath || process.env.IPFS_PATH || 'ipfs',
+            ipfsPath: props.ipfsPath || process.env.IPFS_PATH || path.join(os.homedir(), '.jsipfs'),
             ipfsLocalPathPrefix: props.ipfsLocalPathPrefix || process.env.IPFS_LOCAL_PREFIX,
             ipfsCreateIfMissing: ipfsCreateIfMissing,
             ipfsBackendRoot: props.ipfsBackendRoot ?? StorageBackend.fromEnv(process.env.IPFS_BACKEND_ROOT),
