@@ -36,7 +36,6 @@ export interface CreateOpts {
 
   ethereumRpcUrl?: string;
   anchorServiceUrl?: string;
-  disableAnchors?: boolean;
   stateStoreDirectory?: string;
   s3StateStoreBucket?: string;
 
@@ -62,7 +61,6 @@ export function makeCeramicConfig (opts: CreateOpts): CeramicConfig {
     loggerProvider,
     gateway: opts.gateway || false,
     anchorServiceUrl: opts.anchorServiceUrl,
-    disableAnchors: opts.disableAnchors,
     ethereumRpcUrl: opts.ethereumRpcUrl,
     ipfsPinningEndpoints: opts.ipfsPinningEndpoints,
     networkName: opts.network,

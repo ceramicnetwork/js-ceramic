@@ -75,7 +75,6 @@ const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE }
 export interface CeramicConfig {
   ethereumRpcUrl?: string;
   anchorServiceUrl?: string;
-  disableAnchors?: boolean;
   stateStoreDirectory?: string;
 
   validateStreams?: boolean;
@@ -119,7 +118,7 @@ export interface CeramicModules {
  * `CeramicConfig` via `Ceramic.create()`.
  */
 export interface CeramicParameters {
-  disableAnchors: boolean,
+  gateway: boolean,
   networkOptions: CeramicNetworkOptions,
   validateStreams: boolean,
 }
@@ -168,7 +167,7 @@ class Ceramic implements CeramicApi {
 
   readonly _streamHandlers: HandlersMap
   private readonly _anchorValidator: AnchorValidator
-  private readonly _disableAnchors: boolean
+  private readonly _gateway: boolean
   private readonly _ipfsTopology: IpfsTopology
   private readonly _logger: DiagnosticsLogger
   private readonly _networkOptions: CeramicNetworkOptions
@@ -185,7 +184,7 @@ class Ceramic implements CeramicApi {
     this.pin = this._buildPinApi()
     this._anchorValidator = modules.anchorValidator
 
-    this._disableAnchors = params.disableAnchors
+    this._gateway = params.gateway
     this._networkOptions = params.networkOptions
     this._validateStreams = params.validateStreams
 
@@ -195,7 +194,7 @@ class Ceramic implements CeramicApi {
       ipfs: modules.ipfs,
       loggerProvider: modules.loggerProvider,
     }
-    if (!this._disableAnchors) {
+    if (!this._gateway) {
       this.context.anchorService.ceramic = this
     }
 
@@ -348,8 +347,8 @@ class Ceramic implements CeramicApi {
     logger.imp(`Connecting to ceramic network '${networkOptions.name}' using pubsub topic '${networkOptions.pubsubTopic}'`)
 
     let anchorService = null
-    if (config.disableAnchors) {
-      logger.warn(`Starting without a configured anchor service. All anchor requests will fail.`)
+    if (config.gateway) {
+      logger.warn(`Starting in read-only gateway mode. All write operations will fail`)
     } else {
       const anchorServiceUrl = config.anchorServiceUrl || DEFAULT_ANCHOR_SERVICE_URLS[networkOptions.name]
 
@@ -385,7 +384,7 @@ class Ceramic implements CeramicApi {
     const dispatcher = new Dispatcher(ipfs, networkOptions.pubsubTopic, repository, logger, pubsubLogger)
 
     const params: CeramicParameters = {
-      disableAnchors: config.disableAnchors,
+      gateway: config.gateway,
       networkOptions,
       validateStreams: config.validateStreams ?? true,
     }
@@ -455,7 +454,7 @@ class Ceramic implements CeramicApi {
       await this._ipfsTopology.start()
     }
 
-    if (!this._disableAnchors) {
+    if (!this._gateway) {
       await this.context.anchorService.init()
       await this._loadSupportedChains()
       this._logger.imp(`Connected to anchor service '${this.context.anchorService.url}' with supported anchor chains ['${this._supportedChains.join("','")}']`)
@@ -490,6 +489,10 @@ class Ceramic implements CeramicApi {
    * @param opts - Initialization options
    */
   async applyCommit<T extends Stream>(streamId: string | StreamID, commit: CeramicCommit, opts: CreateOpts | UpdateOpts = {}): Promise<T> {
+    if (this._gateway) {
+      throw new Error("Writes to streams are not supported in gateway mode")
+    }
+
     opts = { ...DEFAULT_APPLY_COMMIT_OPTS, ...opts };
     const state$ = await this.repository.stateManager.applyCommit(normalizeStreamID(streamId), commit, opts as CreateOpts)
     return streamFromState<T>(this.context, this._streamHandlers, state$.value, this.repository.updates$)
