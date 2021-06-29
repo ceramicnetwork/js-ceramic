@@ -70,7 +70,7 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
         const isSigned = StreamUtils.isSignedCommit(commit)
         if (isSigned) {
             payload = (await context.ipfs.dag.get(commit.link, { timeout: IPFS_GET_TIMEOUT })).value
-            await this._verifySignature(commit, context, payload.header.controllers[0])
+            await this._verifySignature(commit, {cid: cid}, context, payload.header.controllers[0])
         } else if (payload.data) {
             throw Error('Genesis commit with contents should always be signed')
         }
@@ -99,7 +99,7 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
      */
     async _applySigned(commit: any, meta: CommitMeta, state: StreamState, context: Context): Promise<StreamState> {
         // TODO: Assert that the 'prev' of the commit being applied is the end of the log in 'state'
-        await this._verifySignature(commit, context, state.metadata.controllers[0])
+        await this._verifySignature(commit, meta, context, state.metadata.controllers[0])
 
         const payload = (await context.ipfs.dag.get(commit.link, { timeout: IPFS_GET_TIMEOUT })).value
         if (!payload.id.equals(state.log[0].cid)) {
@@ -163,14 +163,15 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
     /**
      * Verifies commit signature
      * @param commit - Commit to be verified
+     * @param meta - Commit metadata
      * @param context - Ceramic context
      * @param did - DID value
      * @private
      */
-    async _verifySignature(commit: any, context: Context, did: string): Promise<DIDResolutionResult> {
+    async _verifySignature(commit: any, meta: CommitMeta, context: Context, did: string): Promise<DIDResolutionResult> {
         let result
         try {
-            result = await context.did.verifyJWS(commit)
+            result = await context.did.verifyJWS(commit, {atTime: meta.timestamp})
         } catch (e) {
             throw new Error('Invalid signature for signed commit. ' + e)
         }
