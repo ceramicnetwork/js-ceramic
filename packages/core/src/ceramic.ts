@@ -461,7 +461,7 @@ class Ceramic implements CeramicApi {
       this._logger.imp(`Connected to anchor service '${this.context.anchorService.url}' with supported anchor chains ['${this._supportedChains.join("','")}']`)
     }
 
-    await this._anchorValidator.init(this._supportedChains[0])
+    await this._anchorValidator.init(this._supportedChains ? this._supportedChains[0] : null)
 
     if (restoreStreams) {
       this.restoreStreams()

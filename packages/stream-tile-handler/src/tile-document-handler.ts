@@ -137,13 +137,6 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
         // TODO: Assert that the 'prev' of the commit being applied is the end of the log in 'state'
         const proof = (await context.ipfs.dag.get(commit.proof, { timeout: IPFS_GET_TIMEOUT })).value;
 
-        const supportedChains = await context.api.getSupportedChains()
-        if (!supportedChains.includes(proof.chainId)) {
-            throw new Error("Anchor proof chainId '" + proof.chainId
-                + "' is not supported. Supported chains are: '"
-                + supportedChains.join("', '") + "'")
-        }
-
         state.log.push({ cid, type: CommitType.ANCHOR, timestamp: proof.blockTimestamp })
         let content = state.content
         let metadata = state.metadata

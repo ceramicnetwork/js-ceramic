@@ -57,11 +57,15 @@ export default class EthereumAnchorValidator implements AnchorValidator {
    *   which chain we are operating with.
    */
   async init(chainId: string | null): Promise<void> {
+    if (!chainId) {
+      return
+    }
+
     // Confirm that we have an eth provider that works for the same chain that the anchor service supports (if given)
     const provider = this._getEthProvider(this._chainId)
     const provider_chain_idnum = (await provider.getNetwork()).chainId
     const provider_chain = BASE_CHAIN_ID + ':' + provider_chain_idnum
-    if (this._chainId && this._chainId != provider_chain) {
+    if (this._chainId != provider_chain) {
         throw new Error(`Configured eth provider is for chainId ${provider_chain}, but our anchor service uses chain ${this._chainId}`)
     }
   }
@@ -144,18 +148,16 @@ export default class EthereumAnchorValidator implements AnchorValidator {
     const fromCache = this.providersCache.get(chain);
     if (fromCache) return fromCache;
 
-    if (chain) {
-      if (!chain.startsWith("eip155")) {
-        throw new Error(
-          `Unsupported chainId '${chain}' - must be eip155 namespace`
-        );
-      }
+    if (!chain.startsWith("eip155")) {
+      throw new Error(
+        `Unsupported chainId '${chain}' - must be eip155 namespace`
+      );
+    }
 
-      if (this._chainId && this._chainId != chain) {
-        throw new Error(
-          `Unsupported chainId '${chain}'. Configured anchor service only supports '${this._chainId}'`
-        );
-      }
+    if (this._chainId && this._chainId != chain) {
+      throw new Error(
+        `Unsupported chainId '${chain}'. Configured anchor service only supports '${this._chainId}'`
+      );
     }
 
     if (this.ethereumRpcEndpoint) {
