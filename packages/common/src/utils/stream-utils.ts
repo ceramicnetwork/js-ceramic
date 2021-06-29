@@ -206,26 +206,4 @@ export class StreamUtils {
     static isAnchorCommit(commit: CeramicCommit): commit is AnchorCommit {
         return commit && (commit as AnchorCommit).proof !== undefined
     }
-
-  /**
-   * Determine commit timestamp, based on the nearest anchor commit.
-   * The next anchor commit timestamp is used, if found.
-   * Returns JS timestamp of the anchor commit.
-   *
-   * @param log - state log
-   * @param commitCid - CID of the commit in question
-   */
-  static commitTimestamp(log: LogEntry[], commitCid: CID): number | undefined {
-    const entryIndex = log.findIndex(entry => entry.cid.equals(commitCid))
-    if (entryIndex < 0) {
-      return undefined;
-    }
-    const tail = log.slice(entryIndex + 1)
-    const tailAnchor = tail.find(entry => entry.type == CommitType.ANCHOR)
-    if (tailAnchor) {
-      return tailAnchor.timestamp * 1000
-    } else {
-      return undefined;
-    }
-  }
 }

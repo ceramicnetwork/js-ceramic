@@ -162,6 +162,7 @@ export class HistoryLog {
  * @param cid - Commit CID
  * @param stateLog - Log from the current stream state
  * @param log - Found log so far
+ * @param timestamp - Previously found timestamp
  * @private
  */
 export async function fetchLog(
@@ -169,6 +170,7 @@ export async function fetchLog(
   cid: CID,
   stateLog: HistoryLog,
   log: LogEntry[] = [],
+  timestamp: number | undefined = undefined,
 ): Promise<LogEntry[]> {
   if (stateLog.includes(cid)) {
     // already processed
@@ -189,28 +191,29 @@ export async function fetchLog(
     return [];
   }
   let nextEntry: LogEntry;
-  if (isSignedCommit) {
-    nextEntry = {
-      type: CommitType.SIGNED,
-      cid: cid,
-    };
-  } else {
-    // If not signed, then anchor commit
-    const proof = await dispatcher.retrieveFromIPFS(cid);
-    const timestamp = proof.blockTimestamp;
+  if (StreamUtils.isAnchorCommit(commit)) {
+    const proof = await dispatcher.retrieveFromIPFS(commit.proof);
+    timestamp = proof.blockTimestamp;
     nextEntry = {
       type: CommitType.ANCHOR,
       cid: cid,
       timestamp: timestamp,
     };
+  } else {
+    nextEntry = {
+      type: CommitType.SIGNED,
+      cid: cid,
+      timestamp: timestamp,
+    };
   }
+
   // Should be unshift [O(N)], but push [O(1)] + reverse [O(N)] seem better
   log.push(nextEntry);
   if (stateLog.includes(prevCid)) {
     // we found the connection to the canonical log
     return log.reverse();
   }
-  return fetchLog(dispatcher, prevCid, stateLog, log);
+  return fetchLog(dispatcher, prevCid, stateLog, log, timestamp);
 }
 
 export function commitAtTime(stateHolder: StreamStateHolder, timestamp: number): CommitID {
@@ -249,6 +252,7 @@ export class ConflictResolution {
     let entry = itr.next();
     while (!entry.done) {
       const cid = entry.value[1].cid;
+      const timestamp = entry.value[1].timestamp;
       const commit = await this.dispatcher.retrieveCommit(cid);
       // TODO - should catch potential thrown error here
 
@@ -264,7 +268,6 @@ export class ConflictResolution {
         state = await handler.applyCommit(commit, { cid: cid }, this.context, state);
       } else {
         // it's a signed commit
-        const timestamp = StreamUtils.commitTimestamp(log, commit)
         const tmpState = await handler.applyCommit(commit, { cid: cid, timestamp: timestamp }, this.context, state);
         const isGenesis = !payload.prev;
         const effectiveState = isGenesis ? tmpState : tmpState.next;
