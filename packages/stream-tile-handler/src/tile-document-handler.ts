@@ -48,7 +48,7 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
     async applyCommit(commit: CeramicCommit, meta: CommitMeta, context: Context, state?: StreamState): Promise<StreamState> {
         if (state == null) {
             // apply genesis
-            return this._applyGenesis(commit, meta.cid, context)
+            return this._applyGenesis(commit, meta, context)
         }
 
         if ((commit as AnchorCommit).proof) {
@@ -61,16 +61,16 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
     /**
      * Applies genesis commit
      * @param commit - Genesis commit
-     * @param cid - Genesis commit CID
+     * @param meta - Genesis commit meta-information
      * @param context - Ceramic context
      * @private
      */
-    async _applyGenesis(commit: any, cid: CID, context: Context): Promise<StreamState> {
+    async _applyGenesis(commit: any, meta: CommitMeta, context: Context): Promise<StreamState> {
         let payload = commit
         const isSigned = StreamUtils.isSignedCommit(commit)
         if (isSigned) {
             payload = (await context.ipfs.dag.get(commit.link, { timeout: IPFS_GET_TIMEOUT })).value
-            await this._verifySignature(commit, {cid: cid}, context, payload.header.controllers[0])
+            await this._verifySignature(commit, meta, context, payload.header.controllers[0])
         } else if (payload.data) {
             throw Error('Genesis commit with contents should always be signed')
         }
@@ -85,7 +85,7 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
             metadata: payload.header,
             signature: isSigned? SignatureStatus.SIGNED : SignatureStatus.GENESIS,
             anchorStatus: AnchorStatus.NOT_REQUESTED,
-            log: [{ cid, type: CommitType.GENESIS }]
+            log: [{ cid: meta.cid, type: CommitType.GENESIS }]
         }
     }
 
