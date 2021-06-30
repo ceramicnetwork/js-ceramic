@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.1.0-rc.0](/compare/@ceramicnetwork/ipfs-daemon@1.0.7...@ceramicnetwork/ipfs-daemon@1.1.0-rc.0) (2021-06-30)
+
+
+### Features
+
+* Use ~/.jsipfs as default ipfs repo path (#1503) 51d34a0, closes #1503
+
+
+
+
+
 ## [1.0.7](/compare/@ceramicnetwork/ipfs-daemon@1.0.7-rc.0...@ceramicnetwork/ipfs-daemon@1.0.7) (2021-06-22)
 
 **Note:** Version bump only for package @ceramicnetwork/ipfs-daemon

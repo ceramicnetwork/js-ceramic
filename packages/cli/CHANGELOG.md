@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.2.0-rc.0](/compare/@ceramicnetwork/cli@1.1.0...@ceramicnetwork/cli@1.2.0-rc.0) (2021-06-30)
+
+
+### Features
+
+* **core, cli:** Remove --disable-anchors flag and fold its functionality into --gateway (#1513) be397c8, closes #1513
+
+
+
+
+
 # [1.1.0](/compare/@ceramicnetwork/cli@1.1.0-rc.0...@ceramicnetwork/cli@1.1.0) (2021-06-22)
 
 **Note:** Version bump only for package @ceramicnetwork/cli

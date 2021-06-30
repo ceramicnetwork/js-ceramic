@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.8-rc.0](/compare/@ceramicnetwork/stream-tile@1.0.7...@ceramicnetwork/stream-tile@1.0.8-rc.0) (2021-06-30)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile
+
+
+
+
+
 ## [1.0.7](/compare/@ceramicnetwork/stream-tile@1.0.7-rc.0...@ceramicnetwork/stream-tile@1.0.7) (2021-06-22)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-tile

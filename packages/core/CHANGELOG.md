@@ -3,6 +3,24 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.3.0-rc.0](/compare/@ceramicnetwork/core@1.2.0...@ceramicnetwork/core@1.3.0-rc.0) (2021-06-30)
+
+
+### Bug Fixes
+
+* **core:** Add information for validating transactions on rinkeby (#1510) 9a4cd0b, closes #1510
+* **core:** Fix startup of EthereumAnchorValidator (#1512) e8b87fa, closes #1512
+
+
+### Features
+
+* **core:** Split AnchorService from AnchorValidator (#1505) b92add9, closes #1505
+* **core, cli:** Remove --disable-anchors flag and fold its functionality into --gateway (#1513) be397c8, closes #1513
+
+
+
+
+
 # [1.2.0](/compare/@ceramicnetwork/core@1.2.0-rc.0...@ceramicnetwork/core@1.2.0) (2021-06-22)
 
 **Note:** Version bump only for package @ceramicnetwork/core

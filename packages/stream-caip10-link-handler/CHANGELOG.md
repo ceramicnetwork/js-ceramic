@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.1.0-rc.0](/compare/@ceramicnetwork/stream-caip10-link-handler@1.0.7...@ceramicnetwork/stream-caip10-link-handler@1.1.0-rc.0) (2021-06-30)
+
+
+### Bug Fixes
+
+* **core:** Remove obsolete tests (#1511) 7d90309, closes #1511
+
+
+### Features
+
+* **core:** Split AnchorService from AnchorValidator (#1505) b92add9, closes #1505
+
+
+
+
+
 ## [1.0.7](/compare/@ceramicnetwork/stream-caip10-link-handler@1.0.7-rc.0...@ceramicnetwork/stream-caip10-link-handler@1.0.7) (2021-06-22)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-caip10-link-handler
