@@ -56,7 +56,6 @@ export class CeramicCliUtils {
      * @param network - The Ceramic network to connect to
      * @param pubsubTopic - Pub/sub topic to use for protocol messages.
      * @param corsAllowedOrigins - Origins for Access-Control-Allow-Origin header. Default is all
-     * @param disableAnchors - If true all anchors will fail. Allows the daemon to start up even if CAS is unavailable.
      */
     static async createDaemon(
         ipfsApi: string,
@@ -76,7 +75,6 @@ export class CeramicCliUtils {
         network = DEFAULT_NETWORK,
         pubsubTopic: string,
         corsAllowedOrigins: string,
-        disableAnchors: boolean,
     ): Promise<CeramicDaemon> {
         let _corsAllowedOrigins: string | RegExp[] = '*'
         if (corsAllowedOrigins != null && corsAllowedOrigins != '*') {
@@ -103,8 +101,7 @@ export class CeramicCliUtils {
             network,
             pubsubTopic,
             corsAllowedOrigins: _corsAllowedOrigins,
-            ipfsHost: ipfsApi,
-            disableAnchors,
+            ipfsHost: ipfsApi
         }
         return CeramicDaemon.create(config)
     }
