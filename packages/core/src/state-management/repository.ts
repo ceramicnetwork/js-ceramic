@@ -107,14 +107,15 @@ export class Repository {
     }
   }
 
-  private async fromNetwork(streamId: StreamID, opts: LoadOpts): Promise<RunningState> {
+  private async fromNetwork(streamId: StreamID): Promise<RunningState> {
     const handler = this.#deps.handlers.get(streamId.typeName);
     const genesisCid = streamId.cid;
     const commit = await this.#deps.dispatcher.retrieveCommit(genesisCid, streamId);
     if (commit == null) {
       throw new Error(`No genesis commit found with CID ${genesisCid.toString()}`);
     }
-    const state = await handler.applyCommit(commit, {cid: streamId.cid}, this.#deps.context);
+    // Do not check timestamp here
+    const state = await handler.applyCommit(commit, {cid: streamId.cid, timestamp: null}, this.#deps.context);
     await this.#deps.stateValidation.validate(state, state.content);
     const state$ = new RunningState(state);
     this.add(state$);
@@ -152,7 +153,7 @@ export class Repository {
       }
 
       if (!stream) {
-        stream = await this.fromNetwork(streamId, opts);
+        stream = await this.fromNetwork(streamId);
       }
 
       if (opts.sync == SyncOptions.NEVER_SYNC) {

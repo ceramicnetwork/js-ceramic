@@ -248,6 +248,15 @@ export class ConflictResolution {
     state?: StreamState,
     breakOnAnchor?: boolean,
   ): Promise<StreamState> {
+    // When we have genesis state only, and add some commits on top, we should check a signature at particular timestamp.
+    // Most probably there is a timestamp information there. If no timestamp found, we consider it to be _now_.
+    // `fetchLog` provides the timestamps.
+    if (state && state.log.length === 1) {
+      const timestamp = log[0].timestamp;
+      const genesisCid = state.log[0].cid;
+      const genesis = await this.dispatcher.retrieveCommit(genesisCid);
+      await handler.applyCommit(genesis, { cid: genesis, timestamp: timestamp }, this.context);
+    }
     const itr = log.entries();
     let entry = itr.next();
     while (!entry.done) {
