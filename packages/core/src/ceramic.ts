@@ -122,14 +122,7 @@ export interface CeramicParameters {
   gateway: boolean,
   networkOptions: CeramicNetworkOptions,
   validateStreams: boolean,
-  syncOverride: SyncConfig
-}
-
-/**
- * Global Sync Config Options
- */
-export interface SyncConfig {
-  sync?: SyncOptions 
+  loadOptsOverride: LoadOpts
 }
 
 /**
@@ -182,7 +175,7 @@ class Ceramic implements CeramicApi {
   private _supportedChains: Array<string>
   private readonly _validateStreams: boolean
   private readonly stateValidation: StateValidation
-  private readonly _syncOverride: SyncConfig
+  private readonly _loadOptsOverride: LoadOpts
 
   constructor (modules: CeramicModules, params: CeramicParameters) {
     this._ipfsTopology = modules.ipfsTopology
@@ -196,7 +189,7 @@ class Ceramic implements CeramicApi {
     this._gateway = params.gateway
     this._networkOptions = params.networkOptions
     this._validateStreams = params.validateStreams
-    this._syncOverride = params.syncOverride
+    this._loadOptsOverride = params.loadOptsOverride
 
     this.context = {
       api: this,
@@ -384,7 +377,7 @@ class Ceramic implements CeramicApi {
       pinningBackends: config.pinningBackends,
     }
 
-    const syncOverride = config.syncOverride ? { sync: config.syncOverride } : {}
+    const loadOptsOverride = config.syncOverride ? { sync: config.syncOverride } : {}
 
     const streamCacheLimit = config.streamCacheLimit ?? DEFAULT_CACHE_LIMIT
     const concurrentRequestsLimit = config.concurrentRequestsLimit ?? streamCacheLimit
@@ -398,7 +391,7 @@ class Ceramic implements CeramicApi {
       gateway: config.gateway,
       networkOptions,
       validateStreams: config.validateStreams ?? true,
-      syncOverride
+      loadOptsOverride
     }
 
     const modules = {
@@ -505,7 +498,7 @@ class Ceramic implements CeramicApi {
       throw new Error("Writes to streams are not supported in gateway mode")
     }
 
-    opts = { ...DEFAULT_APPLY_COMMIT_OPTS, ...opts, ...this._syncOverride};
+    opts = { ...DEFAULT_APPLY_COMMIT_OPTS, ...opts, ...this._loadOptsOverride};
     const state$ = await this.repository.stateManager.applyCommit(normalizeStreamID(streamId), commit, opts as CreateOpts)
     return streamFromState<T>(this.context, this._streamHandlers, state$.value, this.repository.updates$)
   }
@@ -517,7 +510,7 @@ class Ceramic implements CeramicApi {
    * @param opts - Initialization options
    */
   async createStreamFromGenesis<T extends Stream>(type: number, genesis: any, opts: CreateOpts = {}): Promise<T> {
-    opts = { ...DEFAULT_CREATE_FROM_GENESIS_OPTS, ...opts, ...this._syncOverride};
+    opts = { ...DEFAULT_CREATE_FROM_GENESIS_OPTS, ...opts, ...this._loadOptsOverride};
     const genesisCid = await this.dispatcher.storeCommit(genesis);
     const streamId = new StreamID(type, genesisCid);
     const state$ = await this.repository.applyCreateOpts(streamId, opts);
@@ -530,7 +523,7 @@ class Ceramic implements CeramicApi {
    * @param opts - Initialization options
    */
   async loadStream<T extends Stream>(streamId: StreamID | CommitID | string, opts: LoadOpts = {}): Promise<T> {
-    opts = { ...DEFAULT_LOAD_OPTS, ...opts, ...this._syncOverride};
+    opts = { ...DEFAULT_LOAD_OPTS, ...opts, ...this._loadOptsOverride};
     const streamRef = StreamRef.from(streamId)
     if (CommitID.isInstance(streamRef)) {
       const snapshot$ = await this.repository.loadAtCommit(streamRef, opts);
