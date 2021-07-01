@@ -260,9 +260,8 @@ export class ConflictResolution {
     const itr = log.entries();
     let entry = itr.next();
     while (!entry.done) {
-      const cid = entry.value[1].cid;
-      const timestamp = entry.value[1].timestamp;
-      const commit = await this.dispatcher.retrieveCommit(cid);
+      const logEntry = entry.value[1];
+      const commit = await this.dispatcher.retrieveCommit(logEntry.cid);
       // TODO - should catch potential thrown error here
 
       let payload = commit;
@@ -274,10 +273,10 @@ export class ConflictResolution {
         // it's an anchor commit
         // TODO: Anchor validation should be done by the StreamHandler as part of applying the anchor commit
         await verifyAnchorCommit(this.dispatcher, this.anchorValidator, commit);
-        state = await handler.applyCommit(commit, { cid: cid }, this.context, state);
+        state = await handler.applyCommit(commit, logEntry, this.context, state);
       } else {
         // it's a signed commit
-        const tmpState = await handler.applyCommit(commit, { cid: cid, timestamp: timestamp }, this.context, state);
+        const tmpState = await handler.applyCommit(commit, logEntry, this.context, state);
         const isGenesis = !payload.prev;
         const effectiveState = isGenesis ? tmpState : tmpState.next;
         // TODO: Schema validation should be done by the StreamHandler as part of applying the commit
