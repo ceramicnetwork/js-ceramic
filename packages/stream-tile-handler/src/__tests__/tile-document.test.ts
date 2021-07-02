@@ -274,7 +274,7 @@ describe('TileDocumentHandler', () => {
         const payload = dagCBOR.util.deserialize(record.linkedBlock)
         await context.ipfs.dag.put(payload, record.jws.link)
 
-        const streamState = await tileHandler.applyCommit(record.jws, FAKE_CID_1, context)
+        const streamState = await tileHandler.applyCommit(record.jws, {cid: FAKE_CID_1}, context)
         delete streamState.metadata.unique
         expect(streamState).toMatchSnapshot()
     })
@@ -286,7 +286,7 @@ describe('TileDocumentHandler', () => {
 
         await context.ipfs.dag.put(RECORDS.genesisGenerated.linkedBlock, RECORDS.genesisGenerated.jws.link)
 
-        const state = await tileDocumentHandler.applyCommit(RECORDS.genesisGenerated.jws, FAKE_CID_1, context)
+        const state = await tileDocumentHandler.applyCommit(RECORDS.genesisGenerated.jws, {cid: FAKE_CID_1}, context)
         const state$ = TestUtils.runningState(state)
         const doc = new TileDocument(state$, context)
 
@@ -308,7 +308,7 @@ describe('TileDocumentHandler', () => {
         await context.ipfs.dag.put(payload, genesisRecord.jws.link)
 
         // apply genesis
-        let state = await tileDocumentHandler.applyCommit(genesisRecord.jws, FAKE_CID_1, context)
+        let state = await tileDocumentHandler.applyCommit(genesisRecord.jws, {cid: FAKE_CID_1}, context)
 
         const state$ = TestUtils.runningState(state)
         const doc = new TileDocument(state$, context)
@@ -320,7 +320,7 @@ describe('TileDocumentHandler', () => {
         await context.ipfs.dag.put(sPayload, signedRecord.jws.link)
 
         // apply signed
-        state = await tileDocumentHandler.applyCommit(signedRecord.jws, FAKE_CID_2, context, state)
+        state = await tileDocumentHandler.applyCommit(signedRecord.jws, {cid: FAKE_CID_2}, context, state)
         delete state.metadata.unique
         delete state.next.metadata.unique
         expect(state).toMatchSnapshot()
@@ -335,7 +335,7 @@ describe('TileDocumentHandler', () => {
         const payload = dagCBOR.util.deserialize(genesisRecord.linkedBlock)
         await context.ipfs.dag.put(payload, genesisRecord.jws.link)
         // apply genesis
-        const genesisState = await tileDocumentHandler.applyCommit(genesisRecord.jws, FAKE_CID_1, context)
+        const genesisState = await tileDocumentHandler.applyCommit(genesisRecord.jws, {cid: FAKE_CID_1}, context)
 
         // make a first update
         const state$ = TestUtils.runningState(genesisState)
@@ -346,7 +346,7 @@ describe('TileDocumentHandler', () => {
         const sPayload1 = dagCBOR.util.deserialize(signedRecord1.linkedBlock)
         await context.ipfs.dag.put(sPayload1, signedRecord1.jws.link)
         // apply signed
-        const state1 = await tileDocumentHandler.applyCommit(signedRecord1.jws, FAKE_CID_2, context, deepCopy(genesisState))
+        const state1 = await tileDocumentHandler.applyCommit(signedRecord1.jws, {cid: FAKE_CID_2}, context, deepCopy(genesisState))
 
         // make a second update on top of the first
         const state1$ = TestUtils.runningState(state1)
@@ -358,7 +358,7 @@ describe('TileDocumentHandler', () => {
         await context.ipfs.dag.put(sPayload2, signedRecord2.jws.link)
 
         // apply signed
-        const state2 = await tileDocumentHandler.applyCommit(signedRecord2.jws, FAKE_CID_3, context, deepCopy(state1))
+        const state2 = await tileDocumentHandler.applyCommit(signedRecord2.jws, {cid: FAKE_CID_3}, context, deepCopy(state1))
         delete state2.metadata.unique
         delete state2.next.metadata.unique
         expect(state2).toMatchSnapshot()
@@ -373,7 +373,7 @@ describe('TileDocumentHandler', () => {
         const payload = dagCBOR.util.deserialize(genesisRecord.linkedBlock)
         await context.ipfs.dag.put(payload, genesisRecord.jws.link)
 
-        await expect(tileDocumentHandler.applyCommit(genesisRecord.jws, FAKE_CID_1, context)).rejects.toThrow(/wrong DID/)
+        await expect(tileDocumentHandler.applyCommit(genesisRecord.jws, {cid: FAKE_CID_1}, context)).rejects.toThrow(/wrong DID/)
     })
 
     it('throws error if changes to more than one controller', async () => {
@@ -401,7 +401,7 @@ describe('TileDocumentHandler', () => {
         await context.ipfs.dag.put(payload, genesisRecord.jws.link)
 
         // apply genesis
-        let state = await tileDocumentHandler.applyCommit(genesisRecord.jws, FAKE_CID_1, context)
+        let state = await tileDocumentHandler.applyCommit(genesisRecord.jws, {cid: FAKE_CID_1}, context)
 
         const state$ = TestUtils.runningState(state)
         const doc = new TileDocument(state$, context)
@@ -413,11 +413,11 @@ describe('TileDocumentHandler', () => {
         await context.ipfs.dag.put(sPayload, signedRecord.jws.link)
 
         // apply signed
-        state = await tileDocumentHandler.applyCommit(signedRecord.jws, FAKE_CID_2, context, state)
+        state = await tileDocumentHandler.applyCommit(signedRecord.jws, {cid: FAKE_CID_2}, context, state)
 
         await context.ipfs.dag.put(RECORDS.proof, FAKE_CID_4)
         // apply anchor
-        state = await tileDocumentHandler.applyCommit(RECORDS.r2.record as AnchorCommit, FAKE_CID_3, context, state)
+        state = await tileDocumentHandler.applyCommit(RECORDS.r2.record as AnchorCommit, {cid: FAKE_CID_3}, context, state)
         delete state.metadata.unique
         expect(state).toMatchSnapshot()
     })

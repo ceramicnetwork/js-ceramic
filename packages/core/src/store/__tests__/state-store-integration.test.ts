@@ -124,7 +124,7 @@ describe('Level data store', () => {
 
     await ceramic.close();
     await realIpfs.stop();
-  });
+  }, 10000);
 
   it('pins in different networks', async () => {
     const levelPath = (await tmp.dir({ unsafeCleanup: true })).path;

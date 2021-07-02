@@ -10,7 +10,9 @@ import {
   StreamStateHolder,
   Stream,
   StreamHandler,
-  StreamUtils, AnchorValidator,
+  StreamUtils,
+  LogEntry,
+  AnchorValidator,
 } from '@ceramicnetwork/common';
 import { Dispatcher } from './dispatcher';
 import cloneDeep from 'lodash.clonedeep';
@@ -116,13 +118,10 @@ export async function pickLogToAccept(state1: StreamState, state2: StreamState):
 
 export class HistoryLog {
   static fromState(dispatcher: Dispatcher, state: StreamState): HistoryLog {
-    return new HistoryLog(
-      dispatcher,
-      state.log.map((_) => _.cid),
-    );
+    return new HistoryLog(dispatcher, state.log);
   }
 
-  constructor(private readonly dispatcher: Dispatcher, readonly items: CID[]) {}
+  constructor(private readonly dispatcher: Dispatcher, readonly items: LogEntry[]) {}
 
   get length(): number {
     return this.items.length;
@@ -131,12 +130,13 @@ export class HistoryLog {
   /**
    * Determines if the HistoryLog includes a CID, returning true or false as appropriate.
    */
-  async includes(cid: CID): Promise<boolean> {
-    return this.findIndex(cid).then((index) => index !== -1);
+  includes(cid: CID): boolean {
+    const index = this.findIndex(cid);
+    return index !== -1;
   }
 
   get last(): CID {
-    return this.items[this.items.length - 1];
+    return this.items[this.items.length - 1].cid;
   }
 
   /**
@@ -144,14 +144,8 @@ export class HistoryLog {
    *
    * @param cid - CID value
    */
-  async findIndex(cid: CID): Promise<number> {
-    for (let index = 0; index < this.items.length; index++) {
-      const current = this.items[index];
-      if (current.equals(cid)) {
-        return index;
-      }
-    }
-    return -1;
+  findIndex(cid: CID): number {
+    return this.items.findIndex((entry) => entry.cid.equals(cid));
   }
 
   slice(start?: number, end?: number): HistoryLog {
@@ -168,41 +162,58 @@ export class HistoryLog {
  * @param cid - Commit CID
  * @param stateLog - Log from the current stream state
  * @param log - Found log so far
+ * @param timestamp - Previously found timestamp
  * @private
  */
 export async function fetchLog(
   dispatcher: Dispatcher,
   cid: CID,
   stateLog: HistoryLog,
-  log: CID[] = [],
-): Promise<CID[]> {
-  if (await stateLog.includes(cid)) {
+  log: LogEntry[] = [],
+  timestamp?: number,
+): Promise<LogEntry[]> {
+  if (stateLog.includes(cid)) {
     // already processed
     return [];
   }
   const commit = await dispatcher.retrieveCommit(cid);
-  if (commit == null) {
-    throw new Error(`No commit found for CID ${cid.toString()}`);
-  }
+  if (!commit) throw new Error(`No commit found for CID ${cid.toString()}`);
 
   let payload = commit;
-  if (StreamUtils.isSignedCommit(commit)) {
+  const isSignedCommit = StreamUtils.isSignedCommit(commit);
+  if (isSignedCommit) {
     payload = await dispatcher.retrieveCommit(commit.link);
-    if (payload == null) {
-      throw new Error(`No commit found for CID ${commit.link.toString()}`);
-    }
+    if (!payload) throw new Error(`No commit found for CID ${commit.link.toString()}`);
   }
   const prevCid: CID = payload.prev;
   if (!prevCid) {
     // this is a fake log
     return [];
   }
-  log.push(cid); // Should be unshift [O(N)], but push [O(1)] + reverse [O(N)] seem better
-  if (await stateLog.includes(prevCid)) {
+  let nextEntry: LogEntry;
+  if (StreamUtils.isAnchorCommit(commit)) {
+    const proof = await dispatcher.retrieveFromIPFS(commit.proof);
+    timestamp = proof.blockTimestamp;
+    nextEntry = {
+      type: CommitType.ANCHOR,
+      cid: cid,
+      timestamp: timestamp,
+    };
+  } else {
+    nextEntry = {
+      type: CommitType.SIGNED,
+      cid: cid,
+      timestamp: timestamp,
+    };
+  }
+
+  // Should be unshift [O(N)], but push [O(1)] + reverse [O(N)] seem better
+  log.push(nextEntry);
+  if (stateLog.includes(prevCid)) {
     // we found the connection to the canonical log
     return log.reverse();
   }
-  return fetchLog(dispatcher, prevCid, stateLog, log);
+  return fetchLog(dispatcher, prevCid, stateLog, log, timestamp);
 }
 
 export function commitAtTime(stateHolder: StreamStateHolder, timestamp: number): CommitID {
@@ -233,15 +244,24 @@ export class ConflictResolution {
    */
   private async applyLogToState<T extends Stream>(
     handler: StreamHandler<T>,
-    log: Array<CID>,
+    log: LogEntry[],
     state?: StreamState,
     breakOnAnchor?: boolean,
   ): Promise<StreamState> {
+    // When we have genesis state only, and add some commits on top, we should check a signature at particular timestamp.
+    // Most probably there is a timestamp information there. If no timestamp found, we consider it to be _now_.
+    // `fetchLog` provides the timestamps.
+    if (state && state.log.length === 1) {
+      const timestamp = log[0].timestamp;
+      const genesisCid = state.log[0].cid;
+      const genesis = await this.dispatcher.retrieveCommit(genesisCid);
+      await handler.applyCommit(genesis, { cid: genesisCid, timestamp: timestamp }, this.context);
+    }
     const itr = log.entries();
     let entry = itr.next();
     while (!entry.done) {
-      const cid = entry.value[1];
-      const commit = await this.dispatcher.retrieveCommit(cid);
+      const logEntry = entry.value[1];
+      const commit = await this.dispatcher.retrieveCommit(logEntry.cid);
       // TODO - should catch potential thrown error here
 
       let payload = commit;
@@ -253,10 +273,10 @@ export class ConflictResolution {
         // it's an anchor commit
         // TODO: Anchor validation should be done by the StreamHandler as part of applying the anchor commit
         await verifyAnchorCommit(this.dispatcher, this.anchorValidator, commit);
-        state = await handler.applyCommit(commit, cid, this.context, state);
+        state = await handler.applyCommit(commit, logEntry, this.context, state);
       } else {
         // it's a signed commit
-        const tmpState = await handler.applyCommit(commit, cid, this.context, state);
+        const tmpState = await handler.applyCommit(commit, logEntry, this.context, state);
         const isGenesis = !payload.prev;
         const effectiveState = isGenesis ? tmpState : tmpState.next;
         // TODO: Schema validation should be done by the StreamHandler as part of applying the commit
@@ -282,15 +302,15 @@ export class ConflictResolution {
   private async applyLog(
     initialState: StreamState,
     initialStateLog: HistoryLog,
-    log: Array<CID>,
+    log: LogEntry[],
   ): Promise<StreamState | null> {
     const handler = this.handlers.get(initialState.type);
     const tip = initialStateLog.last;
-    if (log[log.length - 1].equals(tip)) {
+    if (log[log.length - 1].cid.equals(tip)) {
       // log already applied
       return null;
     }
-    const cid = log[0];
+    const cid = log[0].cid;
     const commit = await this.dispatcher.retrieveCommit(cid);
     let payload = commit;
     if (StreamUtils.isSignedCommit(commit)) {
@@ -303,7 +323,7 @@ export class ConflictResolution {
 
     // we have a conflict since prev is in the log of the local state, but isn't the tip
     // BEGIN CONFLICT RESOLUTION
-    const conflictIdx = await initialStateLog.findIndex(payload.prev).then((i) => i + 1);
+    const conflictIdx = initialStateLog.findIndex(payload.prev) + 1;
     const canonicalLog = initialStateLog.items;
     const localLog = canonicalLog.splice(conflictIdx);
     // Compute state up till conflictIdx

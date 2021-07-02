@@ -3,11 +3,11 @@ import cloneDeep from "lodash.clonedeep"
 import * as u8a from 'uint8arrays'
 
 import {
-    AnchorCommit,
-    CeramicCommit,
-    IpfsApi,
-    SignedCommit, SignedCommitContainer
-} from "../index"
+  AnchorCommit,
+  CeramicCommit, CommitType,
+  IpfsApi,
+  SignedCommit, SignedCommitContainer,
+} from '../index';
 import { AnchorStatus, StreamState, LogEntry } from "../stream"
 import type { DagJWS } from "dids"
 import { StreamType } from '@ceramicnetwork/streamid';

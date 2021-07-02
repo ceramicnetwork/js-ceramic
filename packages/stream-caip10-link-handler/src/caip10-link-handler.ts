@@ -2,16 +2,17 @@ import type CID from 'cids'
 import { validateLink } from "@ceramicnetwork/blockchain-utils-validation"
 import { Caip10Link } from "@ceramicnetwork/stream-caip10-link"
 import {
-    AnchorStatus,
-    StreamState,
-    StreamConstructor,
-    StreamHandler,
-    SignatureStatus,
-    CommitType,
-    CeramicCommit,
-    AnchorCommit,
-    Context
-} from "@ceramicnetwork/common"
+  AnchorStatus,
+  StreamState,
+  StreamConstructor,
+  StreamHandler,
+  SignatureStatus,
+  CommitType,
+  CeramicCommit,
+  AnchorCommit,
+  Context,
+  CommitMeta,
+} from '@ceramicnetwork/common';
 
 const IPFS_GET_TIMEOUT = 60000 // 1 minute
 
@@ -31,20 +32,20 @@ export class Caip10LinkHandler implements StreamHandler<Caip10Link> {
     /**
      * Applies commit (genesis|signed|anchor)
      * @param commit - Commit to be applied
-     * @param cid - Commit CID
+     * @param meta - Commit meta-information
      * @param context - Ceramic context
      * @param state - Stream state
      */
-    async applyCommit(commit: CeramicCommit, cid: CID, context: Context, state?: StreamState): Promise<StreamState> {
+    async applyCommit(commit: CeramicCommit, meta: CommitMeta, context: Context, state?: StreamState): Promise<StreamState> {
         if (state == null) {
-            return this._applyGenesis(commit, cid)
+            return this._applyGenesis(commit, meta.cid)
         }
 
         if ((commit as AnchorCommit).proof) {
-            return this._applyAnchor(context, commit, cid, state);
+            return this._applyAnchor(context, commit, meta.cid, state);
         }
 
-        return this._applySigned(commit, cid, state);
+        return this._applySigned(commit, meta.cid, state);
     }
 
     /**
