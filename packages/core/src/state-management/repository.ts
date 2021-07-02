@@ -114,8 +114,8 @@ export class Repository {
     if (commit == null) {
       throw new Error(`No genesis commit found with CID ${genesisCid.toString()}`);
     }
-    // Do not check timestamp here
-    const state = await handler.applyCommit(commit, {cid: streamId.cid, timestamp: null}, this.#deps.context);
+    // Assume here genesis is always earlier than possible key revocation, so do not check a timestamp.
+    const state = await handler.applyCommit(commit, {cid: streamId.cid, timestamp: 1}, this.#deps.context);
     await this.#deps.stateValidation.validate(state, state.content);
     const state$ = new RunningState(state);
     this.add(state$);

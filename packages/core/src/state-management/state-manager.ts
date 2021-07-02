@@ -80,11 +80,14 @@ export class StateManager {
         takeUntil(timer(timeoutMillis)),
         concatMap((tip) => this._handleTip(state$, tip)),
       )
-      .toPromise().then(() => {
-        if (pinned) {
-          this.syncedPinnedStreams.add(state$.id.toString())
-        }
-      });
+      .toPromise()
+    if (pinned) {
+      this.syncedPinnedStreams.add(state$.id.toString())
+    }
+    // Still lone genesis, no time information in tips, so we do check the signature against _now_.
+    if (state$.value.log.length === 1) {
+      await this.conflictResolution.verifyLoneGenesis(state$.value)
+    }
   }
 
   /**
@@ -141,7 +144,7 @@ export class StateManager {
     }
   }
 
-  private async _handleTip(state$: RunningState, cid: CID): Promise<void> {
+  private async _handleTip(state$: RunningState, cid: CID): Promise<CID> {
     this.logger.verbose(`Learned of new tip ${cid.toString()} for stream ${state$.id.toString()}`);
     const next = await this.conflictResolution.applyTip(state$.value, cid);
     if (next) {
@@ -149,6 +152,7 @@ export class StateManager {
       this.logger.verbose(`Stream ${state$.id.toString()} successfully updated to tip ${cid.toString()}`);
       await this._updateStateIfPinned(state$);
     }
+    return cid
   }
 
   private async _updateStateIfPinned(state$: RunningState): Promise<void> {
