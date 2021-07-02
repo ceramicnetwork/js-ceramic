@@ -144,7 +144,7 @@ export class StateManager {
     }
   }
 
-  private async _handleTip(state$: RunningState, cid: CID): Promise<CID> {
+  private async _handleTip(state$: RunningState, cid: CID): Promise<void> {
     this.logger.verbose(`Learned of new tip ${cid.toString()} for stream ${state$.id.toString()}`);
     const next = await this.conflictResolution.applyTip(state$.value, cid);
     if (next) {
@@ -152,7 +152,6 @@ export class StateManager {
       this.logger.verbose(`Stream ${state$.id.toString()} successfully updated to tip ${cid.toString()}`);
       await this._updateStateIfPinned(state$);
     }
-    return cid
   }
 
   private async _updateStateIfPinned(state$: RunningState): Promise<void> {
