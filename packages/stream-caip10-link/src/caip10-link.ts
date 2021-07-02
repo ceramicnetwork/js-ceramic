@@ -122,7 +122,11 @@ export class Caip10Link extends Stream {
      * @param accountId
      */
     static makeGenesis(accountId: AccountID): GenesisCommit {
-        return { header: { controllers: [accountId.toString()],
+        // Ethereum addresses specifically are sometimes encoded with mixed case and
+        // sometimes all lower case. In order to deal with this and not have different
+        // links for different addresses.
+        const controller = accountId.toString().toLowerCase()
+        return { header: { controllers: [controller],
                            family: `caip10-${accountId.chainId.toString()}` } }
 
     }
