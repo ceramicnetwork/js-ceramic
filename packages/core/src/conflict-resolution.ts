@@ -255,7 +255,7 @@ export class ConflictResolution {
       const timestamp = log[0].timestamp;
       const genesisCid = state.log[0].cid;
       const genesis = await this.dispatcher.retrieveCommit(genesisCid);
-      await handler.applyCommit(genesis, { cid: genesis, timestamp: timestamp }, this.context);
+      await handler.applyCommit(genesis, { cid: genesisCid, timestamp: timestamp }, this.context);
     }
     const itr = log.entries();
     let entry = itr.next();
