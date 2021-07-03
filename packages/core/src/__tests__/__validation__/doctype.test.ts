@@ -11,10 +11,6 @@ class BasicStreamWithContent extends TileDocument {
     makeReadOnly() {
         throw new Error('Not implemented')
     }
-
-    get content(): Record<string, any> {
-        return this._getContent()
-    }
 }
 
 describe('Stream', () => {

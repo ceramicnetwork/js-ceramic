@@ -36,7 +36,7 @@ export class Caip10Link extends Stream {
      * Returns the DID linked to the CAIP10 address this object represents.
      */
     get did(): string | null {
-        return this._getContent()
+        return this.content
     }
 
     /**
