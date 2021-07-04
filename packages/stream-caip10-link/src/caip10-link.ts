@@ -125,7 +125,10 @@ export class Caip10Link extends Stream {
         // Ethereum addresses specifically are sometimes encoded with mixed case and
         // sometimes all lower case. In order to deal with this and not have different
         // links for different addresses.
-        const controller = accountId.toString().toLowerCase()
+        const controller = accountId.toString()
+        if (accountId.chainId.namespace === 'eip155') {
+          controller = controller.toLowerCase()
+        }
         return { header: { controllers: [controller],
                            family: `caip10-${accountId.chainId.toString()}` } }
 
