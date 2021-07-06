@@ -1,9 +1,9 @@
-import { StreamState, Stream, StreamUtils } from "@ceramicnetwork/common"
+import { StreamState, Stream, StreamUtils } from '@ceramicnetwork/common'
 import StreamID from '@ceramicnetwork/streamid'
-import { StateStore } from "@ceramicnetwork/core";
-import LevelUp from "levelup";
-import S3LevelDOWN from "s3leveldown"
-import toArray from "stream-to-array"
+import { StateStore } from '@ceramicnetwork/core'
+import LevelUp from 'levelup'
+import S3LevelDOWN from 's3leveldown'
+import toArray from 'stream-to-array'
 
 /**
  * Ceramic store for saving stream state to S3
@@ -21,7 +21,7 @@ export class S3StateStore implements StateStore {
    */
   open(networkName: string): void {
     const location = this.#bucketName + '/ceramic/' + networkName + '/state-store'
-    this.#store = new LevelUp(new S3LevelDOWN(location));
+    this.#store = new LevelUp(new S3LevelDOWN(location))
   }
 
   /**
@@ -29,7 +29,10 @@ export class S3StateStore implements StateStore {
    * @param stream - Stream instance
    */
   async save(stream: Stream): Promise<void> {
-    await this.#store.put(stream.id.baseID.toString(), JSON.stringify(StreamUtils.serializeState(stream.state)))
+    await this.#store.put(
+      stream.id.baseID.toString(),
+      JSON.stringify(StreamUtils.serializeState(stream.state))
+    )
   }
 
   /**
@@ -40,9 +43,9 @@ export class S3StateStore implements StateStore {
     try {
       const state = await this.#store.get(streamId.baseID.toString())
       if (state) {
-        return StreamUtils.deserializeState(JSON.parse(state));
+        return StreamUtils.deserializeState(JSON.parse(state))
       } else {
-        return null;
+        return null
       }
     } catch (err) {
       if (err.notFound) {
@@ -68,7 +71,7 @@ export class S3StateStore implements StateStore {
     if (streamId == null) {
       const bufArray = await toArray(this.#store.createKeyStream())
       return bufArray.map((buf) => buf.toString())
-    }  else {
+    } else {
       const exists = Boolean(await this.load(streamId.baseID))
       return exists ? [streamId.toString()] : []
     }

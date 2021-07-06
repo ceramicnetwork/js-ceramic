@@ -3,11 +3,11 @@ import * as u8a from 'uint8arrays'
 import { LRUMap } from 'lru_map'
 
 interface DAG {
-  get(cid: string): any;
+  get(cid: string): any
 }
 
 interface IPFS {
-  dag: DAG;
+  dag: DAG
 }
 
 // Legacy 3ids available from 3box, other v1 will always be resolved through ipfs and other services
@@ -15,7 +15,7 @@ const THREEBOX_API_URL = 'https://ipfs.3box.io'
 const LIMIT = 100
 const fetchCache = new LRUMap<string, any>(LIMIT)
 
-const fetchJson = async (url: string): Promise<any> =>  {
+const fetchJson = async (url: string): Promise<any> => {
   const cached = fetchCache.get(url)
   if (cached) return cached
   const r = await fetch(url)
@@ -28,13 +28,14 @@ const fetchJson = async (url: string): Promise<any> =>  {
   }
 }
 
-const didDocReq = (cid: string): string => `${THREEBOX_API_URL}/did-doc?cid=${encodeURIComponent(cid)}`
+const didDocReq = (cid: string): string =>
+  `${THREEBOX_API_URL}/did-doc?cid=${encodeURIComponent(cid)}`
 
 // Mocks ipfs obj for 3id resolve, to resolve through api, until ipfs instance is available
 const ipfsMock: IPFS = {
   dag: {
-    get: async cid => fetchJson(didDocReq(cid))
-  }
+    get: async (cid) => fetchJson(didDocReq(cid)),
+  },
 }
 
 // TODO, from idw, key utils in future
@@ -62,15 +63,14 @@ const compressKey = (key: string) => {
   return `${prefix}${xpoint}`
 }
 
-
 // Returns v0 3id public keys in ceramic 3id doc form
 const LegacyResolver = async (didId: string, ipfs = ipfsMock): Promise<any> => {
   const doc = (await ipfs.dag.get(didId)).value
   let signingKey, encryptionKey
 
   try {
-    const keyEntrySigning = doc.publicKey.findIndex(e => e.id.endsWith('signingKey'))
-    const keyEntryEncryption = doc.publicKey.findIndex(e => e.id.endsWith('encryptionKey'))
+    const keyEntrySigning = doc.publicKey.findIndex((e) => e.id.endsWith('signingKey'))
+    const keyEntryEncryption = doc.publicKey.findIndex((e) => e.id.endsWith('encryptionKey'))
     signingKey = doc.publicKey[keyEntrySigning].publicKeyHex
     encryptionKey = doc.publicKey[keyEntryEncryption].publicKeyBase64
   } catch (e) {
@@ -86,7 +86,7 @@ const LegacyResolver = async (didId: string, ipfs = ipfsMock): Promise<any> => {
     publicKeys: {
       [signing.slice(-15)]: signing,
       [encryption.slice(-15)]: encryption,
-    }
+    },
   }
 }
 
