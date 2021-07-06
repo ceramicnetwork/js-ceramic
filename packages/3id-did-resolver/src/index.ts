@@ -97,11 +97,7 @@ function extractMetadata(
     latestVersionState.log.find(
       ({ timestamp }) => timestamp > updated || (!updated && timestamp)
     ) || {}
-  const created = latestVersionState.log.find(({ timestamp }) => Boolean(timestamp))?.timestamp
 
-  if (created) {
-    metadata.created = formatTime(created)
-  }
   if (updated) {
     metadata.updated = formatTime(updated)
   }
