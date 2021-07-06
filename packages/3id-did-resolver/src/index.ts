@@ -203,16 +203,34 @@ const resolve = async (
   }
 }
 
+/**
+ * Report a thrown error as a DID resolution result.
+ */
+const withResolutionError = (
+  f: () => Promise<DIDResolutionResult>
+): Promise<DIDResolutionResult> => {
+  return f().catch((e) => {
+    return {
+      didResolutionMetadata: {
+        error: 'invalidDid',
+        message: e.toString(),
+      },
+      didDocument: null,
+      didDocumentMetadata: {},
+    }
+  })
+}
+
 export default {
   getResolver: (ceramic: CeramicApi): ResolverRegistry => ({
-    '3': async (
+    '3': (
       did: string,
       parsed: ParsedDID,
       resolver: Resolver,
       options: DIDResolutionOptions
     ): Promise<DIDResolutionResult> => {
-      const contentType = options.accept || DID_JSON
-      try {
+      return withResolutionError(async () => {
+        const contentType = options.accept || DID_JSON
         const verNfo = getVersionInfo(parsed.query)
         const didResult = await (isLegacyDid(parsed.id)
           ? legacyResolve(ceramic, parsed.id, verNfo)
@@ -228,16 +246,7 @@ export default {
           didResult.didResolutionMetadata.error = 'representationNotSupported'
         }
         return didResult
-      } catch (e) {
-        return {
-          didResolutionMetadata: {
-            error: 'invalidDid',
-            message: e.toString(),
-          },
-          didDocument: null,
-          didDocumentMetadata: {},
-        }
-      }
+      })
     },
   }),
 }
