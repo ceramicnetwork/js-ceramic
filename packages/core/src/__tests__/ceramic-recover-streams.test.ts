@@ -68,7 +68,7 @@ let ipfs1: IpfsApi
 let ipfs2: IpfsApi
 
 beforeEach(async () => {
-  ;[ipfs1, ipfs2] = await Promise.all(Array.from({ length: 2 }).map(() => createIPFS()))
+  [ipfs1, ipfs2] = await Promise.all(Array.from({ length: 2 }).map(() => createIPFS()))
 })
 
 afterEach(async () => {

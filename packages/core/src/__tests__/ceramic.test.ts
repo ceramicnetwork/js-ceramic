@@ -65,7 +65,7 @@ describe('Ceramic integration', () => {
   let ipfs3: IpfsApi
 
   beforeEach(async () => {
-    ;[ipfs1, ipfs2, ipfs3] = await Promise.all(Array.from({ length: 3 }).map(() => createIPFS()))
+    [ipfs1, ipfs2, ipfs3] = await Promise.all(Array.from({ length: 3 }).map(() => createIPFS()))
   })
 
   afterEach(async () => {

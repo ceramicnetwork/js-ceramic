@@ -52,7 +52,7 @@ describe('anchor', () => {
 
   afterEach(() => {
     // Restore the _handleTip function in case any of the tests modified it
-    ;(ceramic.repository.stateManager as any)._handleTip = realHandleTip
+    (ceramic.repository.stateManager as any)._handleTip = realHandleTip
   })
 
   test('anchor call', async () => {

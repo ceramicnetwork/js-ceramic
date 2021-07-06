@@ -39,7 +39,8 @@ export default {
         const pubKeyBytes = multicodecPubKey.slice(varint.decode.bytes)
         const doc = await prefixToDriverMap[keyType].keyToDidDoc(pubKeyBytes, parsed.id)
         if (contentType === DID_LD_JSON) {
-          ;(doc['@context'] = 'https://w3id.org/did/v1'), (response.didDocument = doc)
+          doc['@context'] = 'https://w3id.org/did/v1'
+          response.didDocument = doc
         } else if (contentType === DID_JSON) {
           response.didDocument = doc
         } else {

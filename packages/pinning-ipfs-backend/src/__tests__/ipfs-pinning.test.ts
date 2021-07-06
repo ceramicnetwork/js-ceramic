@@ -7,7 +7,7 @@ import type { IPFS } from 'ipfs-core-types'
 jest.mock('ipfs-http-client')
 
 beforeEach(() => {
-  ;(ipfsClient.create as any).mockClear()
+  (ipfsClient.create as any).mockClear()
 })
 
 describe('constructor', () => {
