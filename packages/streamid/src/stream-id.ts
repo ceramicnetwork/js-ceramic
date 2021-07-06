@@ -1,14 +1,14 @@
-import CID from 'cids';
-import multibase from 'multibase';
-import varint from 'varint';
-import uint8ArrayConcat from 'uint8arrays/concat';
-import uint8ArrayToString from 'uint8arrays/to-string';
-import { DEFAULT_BASE, STREAMID_CODEC } from './constants';
-import { readCid, readVarint } from './reading-bytes';
-import { Memoize } from 'typescript-memoize';
-import { CommitID } from './commit-id';
-import { StreamRef } from './stream-ref';
-import { StreamType } from './stream-type';
+import CID from 'cids'
+import multibase from 'multibase'
+import varint from 'varint'
+import uint8ArrayConcat from 'uint8arrays/concat'
+import uint8ArrayToString from 'uint8arrays/to-string'
+import { DEFAULT_BASE, STREAMID_CODEC } from './constants'
+import { readCid, readVarint } from './reading-bytes'
+import { Memoize } from 'typescript-memoize'
+import { CommitID } from './commit-id'
+import { StreamRef } from './stream-ref'
+import { StreamType } from './stream-type'
 
 /**
  * Parse StreamID from bytes representation.
@@ -17,14 +17,15 @@ import { StreamType } from './stream-type';
  * @see [[StreamID#bytes]]
  */
 function fromBytes(bytes: Uint8Array): StreamID {
-  const [streamCodec, streamCodecRemainder] = readVarint(bytes);
-  if (streamCodec !== STREAMID_CODEC) throw new Error('fromBytes: invalid streamid, does not include streamid codec');
-  const [type, streamTypeRemainder] = readVarint(streamCodecRemainder);
-  const [cid, cidRemainder] = readCid(streamTypeRemainder);
+  const [streamCodec, streamCodecRemainder] = readVarint(bytes)
+  if (streamCodec !== STREAMID_CODEC)
+    throw new Error('fromBytes: invalid streamid, does not include streamid codec')
+  const [type, streamTypeRemainder] = readVarint(streamCodecRemainder)
+  const [cid, cidRemainder] = readCid(streamTypeRemainder)
   if (cidRemainder.length > 0) {
-    throw new Error(`Invalid StreamID: contains commit`);
+    throw new Error(`Invalid StreamID: contains commit`)
   }
-  return new StreamID(type, cid);
+  return new StreamID(type, cid)
 }
 
 /**
@@ -35,13 +36,13 @@ function fromBytes(bytes: Uint8Array): StreamID {
  * @see [[StreamID#toUrl]]
  */
 function fromString(input: string): StreamID {
-  const protocolFree = input.replace('ceramic://', '').replace('/ceramic/', '');
-  const commitFree = protocolFree.includes('commit') ? protocolFree.split('?')[0] : protocolFree;
-  const bytes = multibase.decode(commitFree);
-  return fromBytes(bytes);
+  const protocolFree = input.replace('ceramic://', '').replace('/ceramic/', '')
+  const commitFree = protocolFree.includes('commit') ? protocolFree.split('?')[0] : protocolFree
+  const bytes = multibase.decode(commitFree)
+  return fromBytes(bytes)
 }
 
-const TAG = Symbol.for('@ceramicnetwork/streamid/StreamID');
+const TAG = Symbol.for('@ceramicnetwork/streamid/StreamID')
 
 /**
  * Stream identifier, no commit information included.
@@ -53,19 +54,19 @@ const TAG = Symbol.for('@ceramicnetwork/streamid/StreamID');
  * String representation is base36-encoding of the bytes above.
  */
 export class StreamID implements StreamRef {
-  protected readonly _tag = TAG;
+  protected readonly _tag = TAG
 
-  readonly #type: number;
-  readonly #cid: CID;
+  readonly #type: number
+  readonly #cid: CID
 
-  static fromBytes = fromBytes;
-  static fromString = fromString;
+  static fromBytes = fromBytes
+  static fromString = fromString
 
   // WORKARDOUND Weird replacement for Symbol.hasInstance due to
   // this old bug in Babel https://github.com/babel/babel/issues/4452
   // which is used by CRA, which is widely popular.
   static isInstance(instance: any): instance is StreamID {
-    return typeof instance === 'object' && '_tag' in instance && instance._tag === TAG;
+    return typeof instance === 'object' && '_tag' in instance && instance._tag === TAG
   }
 
   /**
@@ -82,17 +83,17 @@ export class StreamID implements StreamRef {
    * ```
    */
   constructor(type: string | number, cid: CID | string) {
-    if (!(type || type === 0)) throw new Error('constructor: type required');
-    if (!cid) throw new Error('constructor: cid required');
-    this.#type = typeof type === 'string' ? StreamType.codeByName(type) : type;
-    this.#cid = typeof cid === 'string' ? new CID(cid) : cid;
+    if (!(type || type === 0)) throw new Error('constructor: type required')
+    if (!cid) throw new Error('constructor: cid required')
+    this.#type = typeof type === 'string' ? StreamType.codeByName(type) : type
+    this.#cid = typeof cid === 'string' ? new CID(cid) : cid
   }
 
   /**
    * Stream type code
    */
   get type(): number {
-    return this.#type;
+    return this.#type
   }
 
   /**
@@ -100,14 +101,14 @@ export class StreamID implements StreamRef {
    */
   @Memoize()
   get typeName(): string {
-    return StreamType.nameByCode(this.#type);
+    return StreamType.nameByCode(this.#type)
   }
 
   /**
    * Genesis record CID
    */
   get cid(): CID {
-    return this.#cid;
+    return this.#cid
   }
 
   /**
@@ -115,10 +116,10 @@ export class StreamID implements StreamRef {
    */
   @Memoize()
   get bytes(): Uint8Array {
-    const codec = varint.encode(STREAMID_CODEC);
-    const type = varint.encode(this.type);
+    const codec = varint.encode(STREAMID_CODEC)
+    const type = varint.encode(this.type)
 
-    return uint8ArrayConcat([codec, type, this.cid.bytes]);
+    return uint8ArrayConcat([codec, type, this.cid.bytes])
   }
 
   /**
@@ -127,14 +128,14 @@ export class StreamID implements StreamRef {
    */
   @Memoize()
   get baseID(): StreamID {
-    return new StreamID(this.#type, this.#cid);
+    return new StreamID(this.#type, this.#cid)
   }
 
   /**
    * Construct new CommitID for the same stream, but a new `commit` CID.
    */
   atCommit(commit: CID | string | number): CommitID {
-    return new CommitID(this.#type, this.#cid, commit);
+    return new CommitID(this.#type, this.#cid, commit)
   }
 
   /**
@@ -142,9 +143,9 @@ export class StreamID implements StreamRef {
    */
   equals(other: StreamID): boolean {
     if (StreamID.isInstance(other)) {
-      return this.type === other.type && this.cid.equals(other.cid);
+      return this.type === other.type && this.cid.equals(other.cid)
     } else {
-      return false;
+      return false
     }
   }
 
@@ -153,7 +154,7 @@ export class StreamID implements StreamRef {
    */
   @Memoize()
   toString(): string {
-    return uint8ArrayToString(multibase.encode(DEFAULT_BASE, this.bytes));
+    return uint8ArrayToString(multibase.encode(DEFAULT_BASE, this.bytes))
   }
 
   /**
@@ -161,20 +162,20 @@ export class StreamID implements StreamRef {
    */
   @Memoize()
   toUrl(): string {
-    return `ceramic://${this.toString()}`;
+    return `ceramic://${this.toString()}`
   }
 
   /**
    * StreamId(k3y52l7mkcvtg023bt9txegccxe1bah8os3naw5asin3baf3l3t54atn0cuy98yws)
    */
   [Symbol.for('nodejs.util.inspect.custom')](): string {
-    return `StreamID(${this.toString()})`;
+    return `StreamID(${this.toString()})`
   }
 
   /**
    * String representation of StreamID.
    */
   [Symbol.toPrimitive](): string {
-    return this.toString();
+    return this.toString()
   }
 }

@@ -1,6 +1,6 @@
-import { Logger, LoggerModes } from '@overnightjs/logger';
-import * as logfmt from 'logfmt';
-import util from 'util';
+import { Logger, LoggerModes } from '@overnightjs/logger'
+import * as logfmt from 'logfmt'
+import util from 'util'
 import flatten from 'flat'
 import {
   ServiceLoggerBase,
@@ -8,25 +8,25 @@ import {
   LogStyle,
   LogLevel,
   ServiceLog,
-WriteableStream } from './logger-base'
+  WriteableStream,
+} from './logger-base'
 
 /**
  * Logs to the console based on log level
  */
 export class DiagnosticsLogger extends DiagnosticsLoggerBase {
-
   constructor(logLevel: LogLevel, logToFiles: boolean, fileLogger?: WriteableStream) {
     super(logLevel, logToFiles, fileLogger)
-    const removeTimestamp = true;
-    this.logger = new Logger(LoggerModes.Console, '', removeTimestamp);
+    const removeTimestamp = true
+    this.logger = new Logger(LoggerModes.Console, '', removeTimestamp)
   }
 
   public log(style: LogStyle, content: string | Record<string, unknown> | Error): void {
-    this.logger[style](content, this.includeStackTrace);
+    this.logger[style](content, this.includeStackTrace)
     if (this.logToFiles) {
-      const now = new Date();
-      const message = `[${now.toUTCString()}] ${content}\n`;
-      this.fileLogger.write(message);
+      const now = new Date()
+      const message = `[${now.toUTCString()}] ${content}\n`
+      this.fileLogger.write(message)
     }
   }
 }
@@ -43,10 +43,12 @@ export class ServiceLogger extends ServiceLoggerBase {
     super.write(message)
 
     if (this.logToFiles) {
-      const now = new Date();
+      const now = new Date()
       // RFC1123 timestamp
-      message = `[${now.toUTCString()}] service=${this.service} ${util.format(message, '\n').replace(/\n\s*\n$/, '\n')}`;
-      this.stream.write(message);
+      message = `[${now.toUTCString()}] service=${this.service} ${util
+        .format(message, '\n')
+        .replace(/\n\s*\n$/, '\n')}`
+      this.stream.write(message)
     }
   }
 
@@ -55,6 +57,6 @@ export class ServiceLogger extends ServiceLoggerBase {
    * @param serviceLog Service log object
    */
   public format(serviceLog: ServiceLog): string {
-    return logfmt.stringify(flatten(serviceLog));
+    return logfmt.stringify(flatten(serviceLog))
   }
 }

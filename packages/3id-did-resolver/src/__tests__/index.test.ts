@@ -2,20 +2,20 @@ jest.mock('cross-fetch', () => {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const mockedCalls = require('./vectors.json')['http-mock']
   return jest.fn(async (url, opts = {}) => ({
-      ok: true,
-      json: async () => {
-        const call = mockedCalls[url]
-        if (opts.method === 'post') {
-          const result = call.find(({ expectedBody }) => opts.body === JSON.stringify(expectedBody))
-          if (result?.response) {
-            return result.response
-          } else {
-            throw new Error('Could not find response for http body: ' + opts.body)
-          }
+    ok: true,
+    json: async () => {
+      const call = mockedCalls[url]
+      if (opts.method === 'post') {
+        const result = call.find(({ expectedBody }) => opts.body === JSON.stringify(expectedBody))
+        if (result?.response) {
+          return result.response
+        } else {
+          throw new Error('Could not find response for http body: ' + opts.body)
         }
-        return call.response
       }
-    }))
+      return call.response
+    },
+  }))
 })
 
 import ThreeIdResolver from '../index'
@@ -30,7 +30,7 @@ const v1 = '3IDv1'
 const v0 = '3IDv0'
 const v0NoUpdates = '3IDv0-no-updates'
 
-const toLdFormat = result => {
+const toLdFormat = (result) => {
   const newResult = { ...result }
   newResult.didResolutionMetadata.contentType = DID_LD_JSON
   newResult.didDocument['@context'] = 'https://www.w3.org/ns/did/v1'
@@ -66,14 +66,16 @@ describe('3ID DID Resolver', () => {
     test('no commit found', async () => {
       const threeIdResolver = ThreeIdResolver.getResolver(ceramic)
       const resolver = new Resolver(threeIdResolver)
-      const did = 'did:3:kjzl6cwe1jw1490n1846tytf2fypoqb8aokqxl6n0lgyp1undfilllca3ztltho?version-id=0'
+      const did =
+        'did:3:kjzl6cwe1jw1490n1846tytf2fypoqb8aokqxl6n0lgyp1undfilllca3ztltho?version-id=0'
       await expect(resolver.resolve(did)).resolves.toEqual({
         didResolutionMetadata: {
           error: 'invalidDid',
-          message: 'Error: No resolution for commit k3y52l7qbv1fry84jsppsl3l75diunv3uzyrjiun7o8omq55y7ic9ljrbweqj5pmo'
+          message:
+            'Error: No resolution for commit k3y52l7qbv1fry84jsppsl3l75diunv3uzyrjiun7o8omq55y7ic9ljrbweqj5pmo',
         },
         didDocument: null,
-        didDocumentMetadata: {}
+        didDocumentMetadata: {},
       })
     })
   })

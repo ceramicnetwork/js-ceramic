@@ -1,33 +1,41 @@
 import Ceramic from '../ceramic'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import tmp from 'tmp-promise'
-import { IpfsApi, CeramicApi } from '@ceramicnetwork/common';
+import { IpfsApi, CeramicApi } from '@ceramicnetwork/common'
 import * as u8a from 'uint8arrays'
-import { createIPFS } from './ipfs-util';
-import { TileDocument } from '@ceramicnetwork/stream-tile';
+import { createIPFS } from './ipfs-util'
+import { TileDocument } from '@ceramicnetwork/stream-tile'
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import KeyDidResolver from 'key-did-resolver'
-import { Resolver } from "did-resolver"
+import { Resolver } from 'did-resolver'
 import { DID } from 'dids'
 
-const seed = u8a.fromString('6e34b2e1a9624113d81ece8a8a22e6e97f0e145c25c1d4d2d0e62753b4060c83', 'base16')
+const seed = u8a.fromString(
+  '6e34b2e1a9624113d81ece8a8a22e6e97f0e145c25c1d4d2d0e62753b4060c83',
+  'base16'
+)
 
-const makeDID = function(seed: Uint8Array, ceramic: Ceramic): DID {
+const makeDID = function (seed: Uint8Array, ceramic: Ceramic): DID {
   const provider = new Ed25519Provider(seed)
 
   const keyDidResolver = KeyDidResolver.getResolver()
   const threeIdResolver = ThreeIdResolver.getResolver(ceramic)
   const resolver = new Resolver({
-    ...threeIdResolver, ...keyDidResolver,
+    ...threeIdResolver,
+    ...keyDidResolver,
   })
   return new DID({ provider, resolver })
 }
 
-const createCeramic = async (ipfs: IpfsApi, stateStoreDirectory, anchorOnRequest = false): Promise<Ceramic> => {
+const createCeramic = async (
+  ipfs: IpfsApi,
+  stateStoreDirectory,
+  anchorOnRequest = false
+): Promise<Ceramic> => {
   const ceramic = await Ceramic.create(ipfs, {
     stateStoreDirectory,
     anchorOnRequest,
-    pubsubTopic: "/ceramic/inmemory/test" // necessary so Ceramic instances can talk to each other
+    pubsubTopic: '/ceramic/inmemory/test', // necessary so Ceramic instances can talk to each other
   })
   await ceramic.setDID(makeDID(seed, ceramic))
   await ceramic.did.authenticate()
@@ -35,19 +43,23 @@ const createCeramic = async (ipfs: IpfsApi, stateStoreDirectory, anchorOnRequest
   return ceramic
 }
 
-async function createStream (ceramic: CeramicApi, controller: string, family: string): Promise<TileDocument> {
-  return TileDocument.create(ceramic,
-      null,
-      { deterministic: true, controllers: [controller], family },
-      { anchor: false, publish: false }
+async function createStream(
+  ceramic: CeramicApi,
+  controller: string,
+  family: string
+): Promise<TileDocument> {
+  return TileDocument.create(
+    ceramic,
+    null,
+    { deterministic: true, controllers: [controller], family },
+    { anchor: false, publish: false }
   )
 }
 
-
 describe('Ceramic stream pinning', () => {
   jest.setTimeout(60000)
-  let ipfs1: IpfsApi;
-  let tmpFolder: any;
+  let ipfs1: IpfsApi
+  let tmpFolder: any
 
   beforeEach(async () => {
     tmpFolder = await tmp.dir({ unsafeCleanup: true })
