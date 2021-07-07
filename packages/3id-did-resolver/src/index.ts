@@ -14,6 +14,7 @@ import LegacyResolver from './legacyResolver'
 import * as u8a from 'uint8arrays'
 import { StreamID } from '@ceramicnetwork/streamid'
 import CID from 'cids'
+import { errorRepresentation, withResolutionError } from './error-representation'
 //import dagCBOR from 'ipld-dag-cbor'
 
 const DID_LD_JSON = 'application/did+ld+json'
@@ -96,11 +97,7 @@ function extractMetadata(
     latestVersionState.log.find(
       ({ timestamp }) => timestamp > updated || (!updated && timestamp)
     ) || {}
-  const created = latestVersionState.log.find(({ timestamp }) => Boolean(timestamp))?.timestamp
 
-  if (created) {
-    metadata.created = formatTime(created)
-  }
   if (updated) {
     metadata.updated = formatTime(updated)
   }
@@ -205,39 +202,39 @@ const resolve = async (
 
 export default {
   getResolver: (ceramic: CeramicApi): ResolverRegistry => ({
-    '3': async (
+    '3': (
       did: string,
       parsed: ParsedDID,
       resolver: Resolver,
       options: DIDResolutionOptions
     ): Promise<DIDResolutionResult> => {
-      const contentType = options.accept || DID_JSON
-      try {
+      return withResolutionError(async () => {
+        const contentType = options.accept || DID_JSON
         const verNfo = getVersionInfo(parsed.query)
-        const didResult = await (isLegacyDid(parsed.id)
-          ? legacyResolve(ceramic, parsed.id, verNfo)
-          : resolve(ceramic, parsed.id, verNfo))
+        const id = parsed.id
 
-        if (contentType === DID_LD_JSON) {
-          didResult.didDocument['@context'] = 'https://www.w3.org/ns/did/v1'
-          didResult.didResolutionMetadata.contentType = DID_LD_JSON
-        } else if (contentType !== DID_JSON) {
-          didResult.didDocument = null
-          didResult.didDocumentMetadata = {}
-          delete didResult.didResolutionMetadata.contentType
-          didResult.didResolutionMetadata.error = 'representationNotSupported'
+        // application/did+json
+        const didResult = () => {
+          if (isLegacyDid(id)) {
+            return legacyResolve(ceramic, id, verNfo)
+          } else {
+            return resolve(ceramic, id, verNfo)
+          }
         }
-        return didResult
-      } catch (e) {
-        return {
-          didResolutionMetadata: {
-            error: 'invalidDid',
-            message: e.toString(),
-          },
-          didDocument: null,
-          didDocumentMetadata: {},
+
+        switch (contentType) {
+          case DID_JSON:
+            return didResult()
+          case DID_LD_JSON: {
+            const result = await didResult()
+            result.didDocument['@context'] = 'https://www.w3.org/ns/did/v1'
+            result.didResolutionMetadata.contentType = DID_LD_JSON
+            return result
+          }
+          default:
+            return errorRepresentation({ error: 'representationNotSupported' })
         }
-      }
+      })
     },
   }),
 }
