@@ -81,7 +81,6 @@ export function wrapDocument(content: any, did: string): DIDDocument | null {
 
 /**
  * Return last anchor log entry, or genesis if no anchors found
- * @param log
  */
 function lastAnchorOrGenesisEntry(log: LogEntry[]): LogEntry {
   // Genesis
