@@ -83,16 +83,15 @@ export function wrapDocument(content: any, did: string): DIDDocument | null {
  * Return last anchor log entry, or genesis if no anchors found
  */
 function lastAnchorOrGenesisEntry(log: LogEntry[]): LogEntry {
-  // Genesis
-  if (log.length === 1) {
-    return log[0]
+  // Look for last anchor
+  for (let index = log.length - 1; index >= 0; index--) {
+    const entry = log[index]
+    if (entry.type === CommitType.ANCHOR) {
+      return entry
+    }
   }
-  const last = log[log.length - 1]
-  if (last.type === CommitType.ANCHOR) {
-    return last
-  } else {
-    return lastAnchorOrGenesisEntry(log.slice(0, log.length - 1))
-  }
+  // Genesis, if no anchor present
+  return log[0]
 }
 
 /**
