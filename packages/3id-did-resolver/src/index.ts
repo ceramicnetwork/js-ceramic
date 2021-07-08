@@ -8,13 +8,14 @@ import type {
   ResolverRegistry,
   VerificationMethod,
 } from 'did-resolver'
-import type { StreamState, MultiQuery, CeramicApi } from '@ceramicnetwork/common'
+import type { StreamState, MultiQuery, CeramicApi, LogEntry } from '@ceramicnetwork/common'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import LegacyResolver from './legacyResolver'
 import * as u8a from 'uint8arrays'
 import { StreamID } from '@ceramicnetwork/streamid'
 import CID from 'cids'
 import { errorRepresentation, withResolutionError } from './error-representation'
+import { CommitType } from '@ceramicnetwork/common'
 //import dagCBOR from 'ipld-dag-cbor'
 
 const DID_LD_JSON = 'application/did+ld+json'
@@ -79,6 +80,23 @@ export function wrapDocument(content: any, did: string): DIDDocument | null {
 }
 
 /**
+ * Return last anchor log entry, or genesis if no anchors found
+ * @param log
+ */
+function lastAnchorOrGenesisEntry(log: LogEntry[]): LogEntry {
+  // Genesis
+  if (log.length === 1) {
+    return log[0]
+  }
+  const last = log[log.length - 1]
+  if (last.type === CommitType.ANCHOR) {
+    return last
+  } else {
+    return lastAnchorOrGenesisEntry(log.slice(0, log.length - 1))
+  }
+}
+
+/**
  * Extracts the DIDDocumentMetadata for the 3ID that we have resolved.
  * Requires the latest version of the 3ID ceramic document state as
  * well as the state of the version we are resolving
@@ -91,7 +109,7 @@ function extractMetadata(
   latestVersionState: StreamState
 ): DIDDocumentMetadata {
   const metadata: DIDDocumentMetadata = {}
-  const { timestamp: updated, cid: versionId } = requestedVersionState.log.pop() || {}
+  const { timestamp: updated, cid: versionId } = lastAnchorOrGenesisEntry(requestedVersionState.log)
 
   const { timestamp: nextUpdate, cid: nextVersionId } =
     latestVersionState.log.find(
@@ -105,7 +123,7 @@ function extractMetadata(
     metadata.nextUpdate = formatTime(nextUpdate)
   }
   if (versionId) {
-    metadata.versionId = requestedVersionState.log.length === 0 ? '0' : versionId?.toString()
+    metadata.versionId = requestedVersionState.log.length === 1 ? '0' : versionId?.toString()
   }
   if (nextVersionId) {
     metadata.nextVersionId = nextVersionId.toString()
@@ -190,7 +208,7 @@ const resolve = async (
     throw new Error(`No resolution for commit ${commitIdStr}`)
   }
 
-  const content = tile.content
+  const content = tile.state.content
   const document = wrapDocument(content, `did:3:${v03ID || didId}`)
 
   return {
