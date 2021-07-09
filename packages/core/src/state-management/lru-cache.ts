@@ -15,7 +15,7 @@ export class LruCache<K, V> {
     constructor(maxSize: number, evictionHandler?: (key: K, value: V) => any) {
         if (maxSize <= 0) throw new Error('Cache size must be a positive number')
         this.maxSize = maxSize
-        this.evictionHandler = evictionHandler;
+        this.evictionHandler = evictionHandler
         this.map = new Map()
     }
 
@@ -25,9 +25,9 @@ export class LruCache<K, V> {
      */
     public async set(key: K, value: V): Promise<this> {
         if (this.map.size === this.maxSize) {
-            let eldest = this.map.entries().next().value
+            const eldest = this.map.entries().next().value
             this.map.delete(eldest[0])
-            await this.evictionHandler?.(eldest[0], eldest[1]);
+            await this.evictionHandler?.(eldest[0], eldest[1])
         }
         this.map.set(key, value)
         return this
