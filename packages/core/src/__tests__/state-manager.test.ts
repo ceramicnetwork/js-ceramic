@@ -58,7 +58,9 @@ describe('anchor', () => {
 
   afterEach(() => {
     // Restore the _handleTip function in case any of the tests modified it
-    ;(ceramic.repository.stateManager as any)._handleTip = realHandleTip
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    ceramic.repository.stateManager._handleTip = realHandleTip
   })
 
   test('anchor call', async () => {
@@ -524,7 +526,9 @@ describe('sync', () => {
         })
       )
     const fakeHandleTip = jest.fn(() => Promise.resolve())
-    ;(stateManager as any)._handleTip = fakeHandleTip
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    stateManager._handleTip = fakeHandleTip
     const state$ = {
       id: FAKE_STREAM_ID,
       value: {
