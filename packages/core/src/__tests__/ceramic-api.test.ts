@@ -238,7 +238,7 @@ describe('Ceramic API', () => {
         })
       }
 
-      expect(logRecords).toEqual(expected)
+      expect(JSON.stringify(logRecords)).toEqual(JSON.stringify(expected))
     })
 
     it('can store commit if the size is lesser than the maximum size ~256KB', async () => {
