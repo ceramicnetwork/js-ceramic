@@ -120,7 +120,7 @@ describe('anchor', () => {
 
 test('handleTip', async () => {
   const stream1 = await TileDocument.create(ceramic, INITIAL_CONTENT, null, { anchor: false })
-  stream1.subscribe()
+  await stream1.subscribe()
   const streamState1 = await ceramic.repository.load(stream1.id, {})
   await new Promise<void>((resolve) => {
     ceramic.repository.stateManager.anchor(streamState1).add(resolve)
