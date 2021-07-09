@@ -43,6 +43,8 @@ import { streamFromState } from './state-management/stream-from-state'
 import { ConflictResolution } from './conflict-resolution'
 import { RunningState } from './state-management/running-state'
 import EthereumAnchorValidator from './anchor/ethereum/ethereum-anchor-validator'
+import { LRUMap } from 'lru_map'
+import CID from 'cids'
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const packageJson = require('../package.json')
@@ -50,6 +52,7 @@ const packageJson = require('../package.json')
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const IPFS_GET_TIMEOUT = 60000 // 1 minute
 const TESTING = process.env.NODE_ENV == 'test'
+const IPFS_CACHE_SIZE = 1024 // maximum cache size of 256MB
 
 const DEFAULT_ANCHOR_SERVICE_URLS = {
   [Networks.MAINNET]: 'https://cas.3boxlabs.com',
@@ -422,12 +425,14 @@ class Ceramic implements CeramicApi {
     const ipfsTopology = new IpfsTopology(ipfs, networkOptions.name, logger)
     const pinStoreFactory = new PinStoreFactory(ipfs, pinStoreOptions)
     const repository = new Repository(streamCacheLimit, concurrentRequestsLimit, logger)
+    const recordCache = new LRUMap<CID, any>(IPFS_CACHE_SIZE)
     const dispatcher = new Dispatcher(
       ipfs,
       networkOptions.pubsubTopic,
       repository,
       logger,
-      pubsubLogger
+      pubsubLogger,
+      recordCache
     )
 
     const params: CeramicParameters = {

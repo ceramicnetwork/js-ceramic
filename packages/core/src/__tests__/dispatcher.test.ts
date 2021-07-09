@@ -10,6 +10,7 @@ import { LevelStateStore } from '../store/level-state-store'
 import { PinStore } from '../store/pin-store'
 import { RunningState } from '../state-management/running-state'
 import { StateManager } from '../state-management/state-manager'
+import { LRUMap } from 'lru_map'
 
 const TOPIC = '/ceramic'
 const FAKE_CID = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
@@ -33,6 +34,11 @@ const ipfs = {
     stat: jest.fn(() => ({ size: 10 })),
   },
   id: async () => ({ id: 'ipfsid' }),
+}
+
+const recordCache = {
+  get: jest.fn(async (cid: CID, record: any) => Promise.resolve({})),
+  set: jest.fn(async (cid: CID) => Promise.resolve(new LRUMap<CID, any>(1)))
 }
 
 describe('Dispatcher', () => {

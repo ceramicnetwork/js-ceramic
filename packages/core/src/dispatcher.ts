@@ -19,7 +19,6 @@ import { LRUMap } from 'lru_map'
 const IPFS_GET_TIMEOUT = 60000 // 1 minute
 const IPFS_MAX_RECORD_SIZE = 256000 // 256 KB
 const IPFS_RESUBSCRIBE_INTERVAL_DELAY = 1000 * 15 // 15 sec
-const IPFS_CACHE_SIZE = 1000000 // 1 million records
 
 function messageTypeToString(type: MsgType): string {
   switch (type) {
@@ -47,12 +46,13 @@ export class Dispatcher {
     private readonly topic: string,
     readonly repository: Repository,
     private readonly _logger: DiagnosticsLogger,
-    private readonly _pubsubLogger: ServiceLogger
+    private readonly _pubsubLogger: ServiceLogger,
+    private readonly _recordCache: LRUMap<CID, any>
   ) {
     const pubsub = new Pubsub(_ipfs, topic, IPFS_RESUBSCRIBE_INTERVAL_DELAY, _pubsubLogger, _logger)
     this.messageBus = new MessageBus(pubsub)
     this.messageBus.subscribe(this.handleMessage.bind(this))
-    this.recordCache = new LRUMap(IPFS_CACHE_SIZE)
+    this.recordCache = _recordCache
   }
 
   /**
