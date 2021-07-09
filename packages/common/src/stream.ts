@@ -85,6 +85,10 @@ export type CeramicCommit =
 export type CommitMeta = {
   cid: CID
   timestamp?: number
+  /**
+   * Do not time-check a signature.
+   */
+  disableTimecheck?: boolean
 }
 
 /**
