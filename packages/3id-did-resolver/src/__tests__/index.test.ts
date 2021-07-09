@@ -27,6 +27,7 @@ const DID_LD_JSON = 'application/did+ld+json'
 import vectors from './vectors.json'
 
 const v1 = '3IDv1'
+const v1unanchored = '3IDv1-unanchored'
 const v0 = '3IDv0'
 const v0NoUpdates = '3IDv0-no-updates'
 
@@ -60,6 +61,14 @@ describe('3ID DID Resolver', () => {
         const didVTime = vectors[v1].did + query.params[1]
         expect(await resolver.resolve(didVTime)).toEqual(query.result)
       }
+      expect(await resolver.resolve(did, { accept: DID_LD_JSON })).toEqual(toLdFormat(query.result))
+    })
+
+    test.each(vectors[v1unanchored].queries)('resolves unanchored 3id documents correctly %#', async (query) => {
+      const threeIdResolver = ThreeIdResolver.getResolver(ceramic)
+      const resolver = new Resolver(threeIdResolver)
+      const did = vectors[v1unanchored].did + query.params[0]
+      expect(await resolver.resolve(did)).toEqual(query.result)
       expect(await resolver.resolve(did, { accept: DID_LD_JSON })).toEqual(toLdFormat(query.result))
     })
 
