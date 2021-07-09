@@ -119,10 +119,10 @@ export class Repository {
     if (commit == null) {
       throw new Error(`No genesis commit found with CID ${genesisCid.toString()}`)
     }
-    // Do not check timestamp here
+    // Do not check for possible key revocation here, as we will do so later after loading the tip (or learning that the genesis commit *is* the current tip), when we will have timestamp information for when the genesis commit was anchored. In order to disable this check for key rotation, set a timestamp that will be considered earlier than any other timestamp so it will always appear to have happened earlier than any possible key revocation.
     const state = await handler.applyCommit(
       commit,
-      { cid: streamId.cid, timestamp: null },
+      { cid: streamId.cid, timestamp: 1 },
       this.#deps.context
     )
     await this.#deps.stateValidation.validate(state, state.content)
@@ -166,11 +166,11 @@ export class Repository {
       }
 
       if (opts.sync == SyncOptions.NEVER_SYNC) {
-        return stream
+        return this.stateManager.verifyLoneGenesis(stream)
       }
 
       await this.stateManager.sync(stream, opts.syncTimeoutSeconds * 1000, fromStateStore)
-      return stream
+      return this.stateManager.verifyLoneGenesis(stream)
     })
   }
 
