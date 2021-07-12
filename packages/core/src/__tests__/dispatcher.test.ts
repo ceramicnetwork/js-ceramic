@@ -109,11 +109,13 @@ describe('Dispatcher', () => {
 
   it('retrieves uncached record correctly', async () => {
     const ipfsSpy = jest.spyOn(ipfs.dag, 'get')
-    const cacheSpy = jest.spyOn(recordCache, 'get')
+    const cacheGetSpy = jest.spyOn(recordCache, 'get')
+    const cacheSetSpy = jest.spyOn(recordCache, 'set')
     expect(await dispatcher.retrieveCommit(FAKE_CID2)).toEqual('data')
     expect(ipfsSpy).toBeCalledTimes(1)
-    // Record not found in cache so IPFS lookup was performed
-    expect(cacheSpy).toBeCalledTimes(1)
+    // Record not found in cache so IPFS lookup was performed and cache was updated
+    expect(cacheGetSpy).toBeCalledTimes(1)
+    expect(cacheSetSpy).toBeCalledTimes(1)
   })
 
   it('publishes tip correctly', async () => {
