@@ -14,6 +14,7 @@ import {
 import { Pubsub } from './pubsub/pubsub'
 import { Subscription } from 'rxjs'
 import { MessageBus } from './pubsub/message-bus'
+import { LRUMap } from 'lru_map'
 
 const IPFS_GET_TIMEOUT = 60000 // 1 minute
 const IPFS_MAX_RECORD_SIZE = 256000 // 256 KB
