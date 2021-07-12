@@ -118,12 +118,16 @@ export interface LogEntry {
   cid: CID
   type: CommitType
   timestamp?: number
+}
+
+export interface CommitData extends LogEntry {
   // Holding on to these fields when fetching and processing new commits significantly reduces the number of IPFS
   // lookups required. Use of these fields is currently limited to `conflict-resolution.ts` but further optimization of
   // the code is possible by relaying them to code that looks the fields up again.
   commit?: any
   envelope?: DagJWS
 }
+
 /**
  * Stream state
  */
