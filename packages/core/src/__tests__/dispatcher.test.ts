@@ -10,7 +10,6 @@ import { LevelStateStore } from '../store/level-state-store'
 import { PinStore } from '../store/pin-store'
 import { RunningState } from '../state-management/running-state'
 import { StateManager } from '../state-management/state-manager'
-import { LRUMap } from 'lru_map'
 
 const TOPIC = '/ceramic'
 const FAKE_CID = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
@@ -37,8 +36,13 @@ const ipfs = {
 }
 
 const recordCache = {
-  get: jest.fn(async (cid: CID, record: any) => Promise.resolve({})),
-  set: jest.fn(async (cid: CID) => Promise.resolve(new LRUMap<CID, any>(1)))
+  get: jest.fn(async (cid: CID, record: any) => {
+    // CID not found in cache
+    if (cid === FAKE_CID2) return null
+    // CID found in cache
+    return "data"
+  }),
+  set: jest.fn(async (cid: CID) => Promise.resolve())
 }
 
 describe('Dispatcher', () => {
@@ -52,7 +56,8 @@ describe('Dispatcher', () => {
     ipfs.pubsub.subscribe.mockClear()
     ipfs.pubsub.unsubscribe.mockClear()
     ipfs.pubsub.publish.mockClear()
-
+    recordCache.set.mockClear()
+    recordCache.get.mockClear()
     const levelPath = await tmp.tmpName()
     const stateStore = new LevelStateStore(levelPath)
     stateStore.open('test')
@@ -66,7 +71,8 @@ describe('Dispatcher', () => {
       TOPIC,
       repository,
       loggerProvider.getDiagnosticsLogger(),
-      loggerProvider.makeServiceLogger('pubsub')
+      loggerProvider.makeServiceLogger('pubsub'),
+      recordCache
     )
   })
 
@@ -92,8 +98,22 @@ describe('Dispatcher', () => {
     expect(await dispatcher.storeCommit('data')).toEqual(FAKE_CID)
   })
 
-  it('retrieves record correctly', async () => {
+  it('retrieves cached record correctly', async () => {
+    const ipfsSpy = jest.spyOn(ipfs.dag, 'get')
+    const cacheSpy = jest.spyOn(recordCache, 'get')
     expect(await dispatcher.retrieveCommit(FAKE_CID)).toEqual('data')
+    expect(cacheSpy).toBeCalledTimes(1)
+    // Record was found in cache so IPFS lookup was skipped
+    expect(ipfsSpy).toBeCalledTimes(0)
+  })
+
+  it('retrieves uncached record correctly', async () => {
+    const ipfsSpy = jest.spyOn(ipfs.dag, 'get')
+    const cacheSpy = jest.spyOn(recordCache, 'get')
+    expect(await dispatcher.retrieveCommit(FAKE_CID2)).toEqual('data')
+    expect(ipfsSpy).toBeCalledTimes(1)
+    // Record not found in cache so IPFS lookup was performed
+    expect(cacheSpy).toBeCalledTimes(1)
   })
 
   it('publishes tip correctly', async () => {
