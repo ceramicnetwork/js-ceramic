@@ -1,7 +1,7 @@
-import { PubsubMessage, serialize } from '../pubsub-message';
-import * as uint8arrays from 'uint8arrays';
-import { IPFSPubsubMessage } from '../incoming-channel';
-import * as random from '@stablelib/random';
+import { PubsubMessage, serialize } from '../pubsub-message'
+import * as uint8arrays from 'uint8arrays'
+import { IPFSPubsubMessage } from '../incoming-channel'
+import * as random from '@stablelib/random'
 
 /**
  * PubsubMessage as raw IPFS pubsub message.
@@ -17,5 +17,5 @@ export function asIpfsMessage(data: PubsubMessage, from?: string): IPFSPubsubMes
     seqno: random.randomBytes(10),
     signature: random.randomBytes(10),
     key: random.randomBytes(10),
-  };
+  }
 }
