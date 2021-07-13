@@ -34,7 +34,7 @@
   "devDependencies": {
     "@ceramicnetwork/blockchain-utils-linking": "^1.0.2",
     "@types/node": "^13.13.15",
-    "dids": "^2.3.0"
+    "dids": "^2.4.0"
   },
   "gitHead": "4f42c6ac204ad25e66efda4e24aed12c339b3c98"
 }

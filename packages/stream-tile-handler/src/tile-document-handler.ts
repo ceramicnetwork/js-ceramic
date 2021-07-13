@@ -197,17 +197,13 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
     try {
       result = await context.did.verifyJWS(commit, {
         atTime: meta.timestamp,
+        issuer: did,
         disableTimecheck: meta.disableTimecheck,
       })
     } catch (e) {
       throw new Error('Invalid signature for signed commit. ' + e)
     }
-    const { kid, didResolutionResult } = result
-    // TODO - this needs to be changed to support NFT dids
-    // and the did-core "controller" property in general.
-    if (!kid.startsWith(did)) {
-      throw new Error(`Signature was made with wrong DID. Expected: ${did}, got: ${kid}`)
-    }
+    const { didResolutionResult } = result
     return didResolutionResult
   }
 }

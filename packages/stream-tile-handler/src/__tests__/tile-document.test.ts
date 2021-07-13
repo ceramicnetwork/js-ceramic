@@ -159,11 +159,9 @@ describe('TileDocumentHandler', () => {
         didResolutionMetadata: { contentType: 'application/did+json' },
         didDocument: wrapDocument(
           {
-            content: {
-              publicKeys: {
-                signing: 'zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV',
-                encryption: 'z6LSfQabSbJzX8WAm1qdQcHCHTzVv8a2u6F7kmzdodfvUCo9',
-              },
+            publicKeys: {
+              signing: 'zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV',
+              encryption: 'z6LSfQabSbJzX8WAm1qdQcHCHTzVv8a2u6F7kmzdodfvUCo9',
             },
           },
           did
@@ -467,7 +465,7 @@ describe('TileDocumentHandler', () => {
 
     await expect(
       tileDocumentHandler.applyCommit(genesisRecord.jws, { cid: FAKE_CID_1 }, context)
-    ).rejects.toThrow(/wrong DID/)
+    ).rejects.toThrow(/Invalid signature for signed commit/)
   })
 
   it('throws error if changes to more than one controller', async () => {

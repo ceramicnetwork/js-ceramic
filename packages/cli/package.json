@@ -48,7 +48,7 @@
     "cors": "^2.8.5",
     "dag-jose": "^0.3.0",
     "did-resolver": "^3.1.0",
-    "dids": "^2.3.0",
+    "dids": "^2.4.0",
     "express": "^4.17.1",
     "flat": "^5.0.2",
     "ipfs-http-client": "~50.1.1",
