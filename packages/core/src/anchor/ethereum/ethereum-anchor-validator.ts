@@ -1,44 +1,38 @@
 import * as uint8arrays from 'uint8arrays'
-import { decode } from "multihashes"
-import * as providers from "@ethersproject/providers"
-import { LRUMap } from 'lru_map';
-import {
-  AnchorProof,
-  AnchorValidator,
-  DiagnosticsLogger,
-  fetchJson,
-} from "@ceramicnetwork/common";
-import {Block, TransactionResponse } from "@ethersproject/providers"
-
+import { decode } from 'multihashes'
+import * as providers from '@ethersproject/providers'
+import { LRUMap } from 'lru_map'
+import { AnchorProof, AnchorValidator, DiagnosticsLogger, fetchJson } from '@ceramicnetwork/common'
+import { Block, TransactionResponse } from '@ethersproject/providers'
 
 /**
  * Ethereum network configuration
  */
 interface EthNetwork {
-    network: string
-    chain: string
-    chainId: number
-    networkId: number
-    type: string
+  network: string
+  chain: string
+  chainId: number
+  networkId: number
+  type: string
 }
 
 /**
  * Maps some of Ethereum chain IDs to network configuration
  */
 const ETH_CHAIN_ID_MAPPINGS: Record<string, EthNetwork> = {
-  "eip155:1": { network: "mainnet", chain: "ETH", chainId: 1, networkId: 1, type: "Production" },
-  "eip155:3": { network: "ropsten", chain: "ETH", chainId: 3, networkId: 3, type: "Test" },
-  "eip155:4": { network: "rinkeby", chain: "ETH", chainId: 4, networkId: 4, type: "Test" },
+  'eip155:1': { network: 'mainnet', chain: 'ETH', chainId: 1, networkId: 1, type: 'Production' },
+  'eip155:3': { network: 'ropsten', chain: 'ETH', chainId: 3, networkId: 3, type: 'Test' },
+  'eip155:4': { network: 'rinkeby', chain: 'ETH', chainId: 4, networkId: 4, type: 'Test' },
 }
 
-const BASE_CHAIN_ID = "eip155"
+const BASE_CHAIN_ID = 'eip155'
 const MAX_PROVIDERS_COUNT = 100
 
 /**
  * Ethereum anchor service that stores root CIDs on Ethereum blockchain
  */
 export default class EthereumAnchorValidator implements AnchorValidator {
-  private _chainId: string | null;
+  private _chainId: string | null
   private readonly providersCache: LRUMap<string, providers.BaseProvider>
   private readonly _logger: DiagnosticsLogger
 
@@ -50,7 +44,6 @@ export default class EthereumAnchorValidator implements AnchorValidator {
     this.providersCache = new LRUMap(MAX_PROVIDERS_COUNT)
     this._logger = logger
   }
-
 
   /**
    * @param chainId - Chain ID for ethereum chain that we need to validate, or null. If null, then
@@ -67,7 +60,9 @@ export default class EthereumAnchorValidator implements AnchorValidator {
     const provider_chain_idnum = (await provider.getNetwork()).chainId
     const provider_chain = BASE_CHAIN_ID + ':' + provider_chain_idnum
     if (chainId != provider_chain) {
-        throw new Error(`Configured eth provider is for chainId ${provider_chain}, but our anchor service uses chain ${this._chainId}`)
+      throw new Error(
+        `Configured eth provider is for chainId ${provider_chain}, but our anchor service uses chain ${this._chainId}`
+      )
     }
     this._chainId = chainId
   }
@@ -83,30 +78,41 @@ export default class EthereumAnchorValidator implements AnchorValidator {
    * @param txHash
    * @private
    */
-  private async _getTransactionAndBlockInfo(chainId: string, txHash: string): Promise<[TransactionResponse, Block]> {
+  private async _getTransactionAndBlockInfo(
+    chainId: string,
+    txHash: string
+  ): Promise<[TransactionResponse, Block]> {
     try {
       // determine network based on a chain ID
-      const provider: providers.BaseProvider = this._getEthProvider(chainId);
-      const transaction = await provider.getTransaction(txHash);
+      const provider: providers.BaseProvider = this._getEthProvider(chainId)
+      const transaction = await provider.getTransaction(txHash)
 
       if (!transaction) {
         if (!this.ethereumRpcEndpoint) {
-          throw new Error(`Failed to load transaction data for transaction ${txHash}. Try providing an ethereum rpc endpoint`)
+          throw new Error(
+            `Failed to load transaction data for transaction ${txHash}. Try providing an ethereum rpc endpoint`
+          )
         } else {
           throw new Error(`Failed to load transaction data for transaction ${txHash}`)
         }
       }
-      const block = await provider.getBlock(transaction.blockHash);
+      const block = await provider.getBlock(transaction.blockHash)
       if (!block) {
         if (!this.ethereumRpcEndpoint) {
-          throw new Error(`Failed to load transaction data for block with block number ${transaction.blockNumber} and block hash ${transaction.blockHash}. Try providing an ethereum rpc endpoint`)
+          throw new Error(
+            `Failed to load transaction data for block with block number ${transaction.blockNumber} and block hash ${transaction.blockHash}. Try providing an ethereum rpc endpoint`
+          )
         } else {
-          throw new Error(`Failed to load transaction data for block with block number ${transaction.blockNumber} and block hash ${transaction.blockHash}`)
+          throw new Error(
+            `Failed to load transaction data for block with block number ${transaction.blockNumber} and block hash ${transaction.blockHash}`
+          )
         }
       }
       return [transaction, block]
     } catch (e) {
-      this._logger.err(`Error loading transaction info for transaction ${txHash} from Ethereum: ${e}`)
+      this._logger.err(
+        `Error loading transaction info for transaction ${txHash} from Ethereum: ${e}`
+      )
       throw e
     }
   }
@@ -116,28 +122,27 @@ export default class EthereumAnchorValidator implements AnchorValidator {
    * @param anchorProof - Anchor proof instance
    */
   async validateChainInclusion(anchorProof: AnchorProof): Promise<void> {
-    const decoded = decode(anchorProof.txHash.multihash);
-    const txHash = "0x" + uint8arrays.toString(decoded.digest, "base16");
+    const decoded = decode(anchorProof.txHash.multihash)
+    const txHash = '0x' + uint8arrays.toString(decoded.digest, 'base16')
 
     const [transaction, block] = await this._getTransactionAndBlockInfo(anchorProof.chainId, txHash)
-    const txValueHexNumber = parseInt(transaction.data, 16);
-    const rootValueHexNumber = parseInt(
-      "0x" + anchorProof.root.toBaseEncodedString("base16"),
-      16
-    );
+    const txValueHexNumber = parseInt(transaction.data, 16)
+    const rootValueHexNumber = parseInt('0x' + anchorProof.root.toBaseEncodedString('base16'), 16)
 
     if (txValueHexNumber !== rootValueHexNumber) {
-      throw new Error(
-        `The root CID ${anchorProof.root.toString()} is not in the transaction`
-      );
+      throw new Error(`The root CID ${anchorProof.root.toString()} is not in the transaction`)
     }
 
     if (anchorProof.blockNumber !== transaction.blockNumber) {
-      throw new Error(`Block numbers are not the same. AnchorProof blockNumber: ${anchorProof.blockNumber}, eth txn blockNumber: ${transaction.blockNumber}`);
+      throw new Error(
+        `Block numbers are not the same. AnchorProof blockNumber: ${anchorProof.blockNumber}, eth txn blockNumber: ${transaction.blockNumber}`
+      )
     }
 
     if (anchorProof.blockTimestamp !== block.timestamp) {
-      throw new Error(`Block timestamps are not the same. AnchorProof blockTimestamp: ${anchorProof.blockTimestamp}, eth txn blockTimestamp: ${block.timestamp}`);
+      throw new Error(
+        `Block timestamps are not the same. AnchorProof blockTimestamp: ${anchorProof.blockTimestamp}, eth txn blockTimestamp: ${block.timestamp}`
+      )
     }
   }
 
@@ -147,34 +152,32 @@ export default class EthereumAnchorValidator implements AnchorValidator {
    * @private
    */
   private _getEthProvider(chain: string): providers.BaseProvider {
-    const fromCache = this.providersCache.get(chain);
-    if (fromCache) return fromCache;
+    const fromCache = this.providersCache.get(chain)
+    if (fromCache) return fromCache
 
-    if (!chain.startsWith("eip155")) {
-      throw new Error(
-        `Unsupported chainId '${chain}' - must be eip155 namespace`
-      );
+    if (!chain.startsWith('eip155')) {
+      throw new Error(`Unsupported chainId '${chain}' - must be eip155 namespace`)
     }
 
     if (this._chainId && this._chainId != chain) {
       throw new Error(
         `Unsupported chainId '${chain}'. Configured anchor service only supports '${this._chainId}'`
-      );
+      )
     }
 
     if (this.ethereumRpcEndpoint) {
-      const provider = new providers.JsonRpcProvider(this.ethereumRpcEndpoint);
-      this.providersCache.set(chain, provider);
-      return provider;
+      const provider = new providers.JsonRpcProvider(this.ethereumRpcEndpoint)
+      this.providersCache.set(chain, provider)
+      return provider
     }
 
-    const ethNetwork: EthNetwork = ETH_CHAIN_ID_MAPPINGS[chain];
+    const ethNetwork: EthNetwork = ETH_CHAIN_ID_MAPPINGS[chain]
     if (ethNetwork == null) {
-      throw new Error(`No ethereum provider available for chainId ${chain}`);
+      throw new Error(`No ethereum provider available for chainId ${chain}`)
     }
 
-    const provider = providers.getDefaultProvider(ethNetwork.network);
-    this.providersCache.set(chain, provider);
-    return provider;
+    const provider = providers.getDefaultProvider(ethNetwork.network)
+    this.providersCache.set(chain, provider)
+    return provider
   }
 }
