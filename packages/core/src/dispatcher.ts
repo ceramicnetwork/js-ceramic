@@ -47,7 +47,7 @@ export class Dispatcher {
     private readonly topic: string,
     readonly repository: Repository,
     private readonly _logger: DiagnosticsLogger,
-    private readonly _pubsubLogger: ServiceLogger,
+    private readonly _pubsubLogger: ServiceLogger
   ) {
     const pubsub = new Pubsub(_ipfs, topic, IPFS_RESUBSCRIBE_INTERVAL_DELAY, _pubsubLogger, _logger)
     this.messageBus = new MessageBus(pubsub)
