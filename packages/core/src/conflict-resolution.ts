@@ -129,12 +129,7 @@ export async function pickLogToAccept(
 
 export class HistoryLog {
   static fromState(dispatcher: Dispatcher, state: StreamState): HistoryLog {
-    return new HistoryLog(
-        dispatcher,
-        state.log.map((logEntry) => {
-          // Do not expose fields added for optimizing transient processing (viz. `commit` and `envelope`).
-          return { cid: logEntry.cid, type: logEntry.type, timestamp: logEntry.timestamp }
-        }))
+    return new HistoryLog(dispatcher, state.log)
   }
 
   constructor(private readonly dispatcher: Dispatcher, readonly items: LogEntry[]) {}
@@ -195,13 +190,11 @@ export async function fetchLog(
   const commit = await dispatcher.retrieveCommit(cid)
   if (!commit) throw new Error(`No commit found for CID ${cid.toString()}`)
 
-  let prevCid: CID = commit.prev
   let nextCommitData: CommitData
   if (StreamUtils.isSignedCommit(commit)) {
     const linkedCommit = await dispatcher.retrieveCommit(commit.link)
     if (!linkedCommit) throw new Error(`No commit found for CID ${commit.link.toString()}`)
     nextCommitData = { cid: cid, type: CommitType.SIGNED, commit: linkedCommit, envelope: commit, timestamp: timestamp }
-    prevCid = linkedCommit.prev
   } else if (StreamUtils.isAnchorCommit(commit)) {
     const proof = await dispatcher.retrieveFromIPFS(commit.proof)
     timestamp = proof.blockTimestamp
@@ -210,6 +203,7 @@ export async function fetchLog(
     // For all cases not using DagJWS for signing (e.g. CAIP-10 links)
     nextCommitData = { cid: cid, type: CommitType.SIGNED, commit: commit, timestamp: timestamp }
   }
+  let prevCid: CID = nextCommitData.commit.prev
   if (!prevCid) {
     // Someone sent a tip that is a fake log, i.e. a log that at some point does not refer to a previous or genesis
     // commit.
@@ -383,7 +377,14 @@ export class ConflictResolution {
   /**
    * Return `CommitData` with commit and JWS envelope, if applicable and not already present.
    */
-  private async getCommitData(commitData: CommitData): Promise<CommitData> {
+  private async getCommitData(logEntry: LogEntry): Promise<CommitData> {
+    let commitData: CommitData = {
+      cid: logEntry.cid,
+      type: logEntry.type,
+      timestamp: logEntry.timestamp,
+      commit: (logEntry as CommitData).commit,
+      envelope: (logEntry as CommitData).envelope
+    }
     if (!commitData.commit) {
       const commit = await this.dispatcher.retrieveCommit(commitData.cid)
       commitData.commit = commit
