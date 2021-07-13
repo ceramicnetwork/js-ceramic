@@ -36,9 +36,10 @@ const ipfs = {
 }
 
 const recordCache = {
-  get: jest.fn(async (cid: CID, record: any) => {
+  get: jest.fn(async (cid: CID | string, record: any) => {
+    const asCid = typeof cid === 'string' ? new CID(cid) : cid
     // CID not found in cache
-    if (cid === FAKE_CID2) return null
+    if (asCid.equals(FAKE_CID2)) return null
     // CID found in cache
     return "data"
   }),
@@ -71,9 +72,9 @@ describe('Dispatcher', () => {
       TOPIC,
       repository,
       loggerProvider.getDiagnosticsLogger(),
-      loggerProvider.makeServiceLogger('pubsub'),
-      recordCache
+      loggerProvider.makeServiceLogger('pubsub')
     )
+    dispatcher.recordCache = recordCache
   })
 
   afterEach(async () => {

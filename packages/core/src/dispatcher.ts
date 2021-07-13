@@ -19,6 +19,7 @@ import { LRUMap } from 'lru_map'
 const IPFS_GET_TIMEOUT = 60000 // 1 minute
 const IPFS_MAX_RECORD_SIZE = 256000 // 256 KB
 const IPFS_RESUBSCRIBE_INTERVAL_DELAY = 1000 * 15 // 15 sec
+const IPFS_CACHE_SIZE = 1024 // maximum cache size of 256MB
 
 function messageTypeToString(type: MsgType): string {
   switch (type) {
@@ -38,7 +39,7 @@ function messageTypeToString(type: MsgType): string {
  */
 export class Dispatcher {
   readonly messageBus: MessageBus
-  readonly recordCache: LRUMap<CID, any>
+  readonly recordCache: LRUMap<string, any>
   // Set of IDs for QUERY messages we have sent to the pub/sub topic but not yet heard a
   // corresponding RESPONSE message for. Maps the query ID to the primary StreamID we were querying for.
   constructor(
@@ -47,12 +48,11 @@ export class Dispatcher {
     readonly repository: Repository,
     private readonly _logger: DiagnosticsLogger,
     private readonly _pubsubLogger: ServiceLogger,
-    private readonly _recordCache: LRUMap<CID, any>
   ) {
     const pubsub = new Pubsub(_ipfs, topic, IPFS_RESUBSCRIBE_INTERVAL_DELAY, _pubsubLogger, _logger)
     this.messageBus = new MessageBus(pubsub)
     this.messageBus.subscribe(this.handleMessage.bind(this))
-    this.recordCache = _recordCache
+    this.recordCache = new LRUMap<string, any>(IPFS_CACHE_SIZE)
   }
 
   /**
@@ -101,13 +101,13 @@ export class Dispatcher {
       const asCid = typeof cid === 'string' ? new CID(cid) : cid
 
       // Lookup CID in cache before looking it up IPFS
-      const cachedRec = await this.recordCache.get(asCid)
+      const cachedRec = await this.recordCache.get(asCid.toString())
       if (cachedRec) return cloneDeep(cachedRec)
 
       // Now lookup CID in IPFS and also store it in the cache
       const record = await this._ipfs.dag.get(asCid, { timeout: IPFS_GET_TIMEOUT })
       await this._restrictRecordSize(cid)
-      await this.recordCache.set(asCid, record.value)
+      await this.recordCache.set(asCid.toString(), record.value)
       return cloneDeep(record.value)
     } catch (e) {
       if (streamId) {
@@ -131,12 +131,12 @@ export class Dispatcher {
       const asCid = typeof cid === 'string' ? new CID(cid) : cid
 
       // Lookup CID in cache before looking it up IPFS
-      const cachedRec = await this.recordCache.get(asCid)
+      const cachedRec = await this.recordCache.get(asCid.toString())
       if (cachedRec) return cloneDeep(cachedRec)
 
       // Now lookup CID in IPFS and also store it in the cache
       const record = await this._ipfs.dag.get(asCid, { timeout: IPFS_GET_TIMEOUT, path })
-      await this.recordCache.set(asCid, record.value)
+      await this.recordCache.set(asCid.toString(), record.value)
       return cloneDeep(record.value)
     } catch (e) {
       this._logger.err(`Error while loading CID ${cid.toString()} from IPFS: ${e}`)
