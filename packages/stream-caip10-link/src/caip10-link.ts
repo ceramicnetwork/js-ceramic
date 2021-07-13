@@ -10,10 +10,11 @@ import {
     UnsignedCommit,
     GenesisCommit,
 } from '@ceramicnetwork/common';
-import type { AuthProvider, LinkProof } from "@ceramicnetwork/blockchain-utils-linking";
-import { CommitID, StreamID, StreamRef } from "@ceramicnetwork/streamid";
-import { AccountID } from "caip";
-import type { DID } from "dids";
+import type { AuthProvider, LinkProof } from '@ceramicnetwork/blockchain-utils-linking';
+import { CommitID, StreamID, StreamRef } from '@ceramicnetwork/streamid';
+import { AccountID } from 'caip';
+import { encode as encodeEip55 } from 'eip55';
+import type { DID } from 'dids';
 
 const throwReadOnlyError = (): Promise<void> => {
     throw new Error('Historical stream commits cannot be modified. Load the stream without specifying a commit to make updates.')
@@ -82,7 +83,7 @@ export class Caip10Link extends Stream {
      */
     async setDid(did: string | DID, authProvider: AuthProvider, opts: UpdateOpts = {}): Promise<void> {
         opts = { ...DEFAULT_UPDATE_OPTS, ...opts };
-        const didStr: string = typeof did == "string" ? did : did.id
+        const didStr: string = typeof did == 'string' ? did : did.id
         const linkProof = await authProvider.createLink(didStr)
         return this.setDidProof(linkProof, opts)
     }
@@ -124,12 +125,11 @@ export class Caip10Link extends Stream {
     static makeGenesis(accountId: AccountID): GenesisCommit {
         // Ethereum addresses specifically are sometimes encoded with mixed case and
         // sometimes all lower case. In order to deal with this and not have different
-        // links for different addresses.
-        let controller = accountId.toString()
+        // links for different addresses we encode the address using eip55.
         if (accountId.chainId.namespace === 'eip155') {
-          controller = controller.toLowerCase()
+          accountId.address = encodeEip55(accountId.address)
         }
-        return { header: { controllers: [controller],
+        return { header: { controllers: [accountId.toString()],
                            family: `caip10-${accountId.chainId.toString()}` } }
 
     }
