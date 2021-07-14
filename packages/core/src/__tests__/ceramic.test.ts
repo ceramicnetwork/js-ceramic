@@ -59,7 +59,7 @@ function expectEqualStates(a: StreamState, b: StreamState) {
 }
 
 describe('Ceramic integration', () => {
-  jest.setTimeout(120000)
+  jest.setTimeout(240000)
   let ipfs1: IpfsApi
   let ipfs2: IpfsApi
   let ipfs3: IpfsApi
