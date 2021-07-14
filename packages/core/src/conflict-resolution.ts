@@ -379,7 +379,13 @@ export class ConflictResolution {
    */
   private async getCommitData(logEntry: LogEntry): Promise<CommitData> {
     // Clone the `LogEntry` so that the Stream state is not affected when commit/JWS data is added to the structure
-    const commitData: CommitData = cloneDeep(logEntry as CommitData)
+    const commitData: CommitData = {
+      cid: logEntry.cid,
+      type: logEntry.type,
+      timestamp: logEntry.timestamp,
+      commit: (logEntry as CommitData).commit,
+      envelope: (logEntry as CommitData).envelope
+    }
     if (!commitData.commit) {
       const commit = await this.dispatcher.retrieveCommit(commitData.cid)
       commitData.commit = commit
