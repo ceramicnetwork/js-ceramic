@@ -8,12 +8,12 @@ jobs:
     steps:
       - checkout
       - node/install-packages
-#      - run: npm run lint
+      - run: npm run lint
       - run: npm run build
       - run:
           command: npm run test
           no_output_timeout: 30m
-#      - run: npm run docs
+      - run: npm run docs
 workflows:
   build-and-test:
     jobs:
