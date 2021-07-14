@@ -1,7 +1,7 @@
 import { IpfsApi, LoggerProvider } from '@ceramicnetwork/common'
 import { createIPFS } from '../../__tests__/ipfs-util'
 import { IncomingChannel, filterExternal } from '../incoming-channel'
-import { delay } from './delay'
+import { delay } from '../../__tests__/delay'
 import { asIpfsMessage } from './as-ipfs-message'
 import { MsgType } from '../pubsub-message'
 import { StreamID } from '@ceramicnetwork/streamid'
@@ -63,7 +63,7 @@ describe('connection', () => {
     expect(unsubscribeSpy).toBeCalledTimes(0)
     expect(await ipfs.pubsub.ls()).toEqual([TOPIC]) // And now we subscribed
     subscription.unsubscribe()
-  })
+  }, 10000)
 })
 
 test('pass incoming message', async () => {
