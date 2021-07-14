@@ -118,7 +118,7 @@ describe('Ceramic integration', () => {
       "Unrecognized Ceramic network name: 'fakenetwork'. Supported networks are: 'mainnet', 'testnet-clay', 'dev-unstable', 'local', 'inmemory'"
     )
     await delay(1000)
-  })
+  }, 10000)
 
   it('can propagate update across two connected nodes', async () => {
     await swarmConnect(ipfs2, ipfs1)
