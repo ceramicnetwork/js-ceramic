@@ -47,6 +47,7 @@ describe('Dispatcher', () => {
     ipfs.pubsub.subscribe.mockClear()
     ipfs.pubsub.unsubscribe.mockClear()
     ipfs.pubsub.publish.mockClear()
+
     const levelPath = await tmp.tmpName()
     const stateStore = new LevelStateStore(levelPath)
     stateStore.open('test')
