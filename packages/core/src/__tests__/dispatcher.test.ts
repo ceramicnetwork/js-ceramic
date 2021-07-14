@@ -10,6 +10,7 @@ import { LevelStateStore } from '../store/level-state-store'
 import { PinStore } from '../store/pin-store'
 import { RunningState } from '../state-management/running-state'
 import { StateManager } from '../state-management/state-manager'
+import cloneDeep from 'lodash.clonedeep'
 
 const TOPIC = '/ceramic'
 const FAKE_CID = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
@@ -35,17 +36,6 @@ const ipfs = {
   id: async () => ({ id: 'ipfsid' }),
 }
 
-const dagNodeCache  = {
-  get: jest.fn(async (cid: CID | string, record: any) => {
-    const asCid = typeof cid === 'string' ? new CID(cid) : cid
-    // CID not found in cache
-    if (asCid.equals(FAKE_CID2)) return null
-    // CID found in cache
-    return "data"
-  }),
-  set: jest.fn(async (cid: CID) => Promise.resolve())
-}
-
 describe('Dispatcher', () => {
   let dispatcher: Dispatcher
   let repository: Repository
@@ -57,8 +47,6 @@ describe('Dispatcher', () => {
     ipfs.pubsub.subscribe.mockClear()
     ipfs.pubsub.unsubscribe.mockClear()
     ipfs.pubsub.publish.mockClear()
-    dagNodeCache .set.mockClear()
-    dagNodeCache .get.mockClear()
     const levelPath = await tmp.tmpName()
     const stateStore = new LevelStateStore(levelPath)
     stateStore.open('test')
@@ -74,7 +62,6 @@ describe('Dispatcher', () => {
       loggerProvider.getDiagnosticsLogger(),
       loggerProvider.makeServiceLogger('pubsub')
     )
-    dispatcher.dagNodeCache  = dagNodeCache
   })
 
   afterEach(async () => {
@@ -99,24 +86,21 @@ describe('Dispatcher', () => {
     expect(await dispatcher.storeCommit('data')).toEqual(FAKE_CID)
   })
 
-  it('retrieves cached record correctly', async () => {
-    const ipfsSpy = jest.spyOn(ipfs.dag, 'get')
-    const cacheSpy = jest.spyOn(dagNodeCache , 'get')
+  it('retrieves record correctly', async () => {
     expect(await dispatcher.retrieveCommit(FAKE_CID)).toEqual('data')
-    expect(cacheSpy).toBeCalledTimes(1)
-    // Record was found in cache so IPFS lookup was skipped
-    expect(ipfsSpy).toBeCalledTimes(0)
   })
 
-  it('retrieves uncached record correctly', async () => {
+  it('caches and retrieves commit correctly', async () => {
     const ipfsSpy = jest.spyOn(ipfs.dag, 'get')
-    const cacheGetSpy = jest.spyOn(dagNodeCache , 'get')
-    const cacheSetSpy = jest.spyOn(dagNodeCache , 'set')
-    expect(await dispatcher.retrieveCommit(FAKE_CID2)).toEqual('data')
+    expect(await dispatcher.retrieveCommit(FAKE_CID)).toEqual('data')
+    // Commit not found in cache so IPFS lookup performed and cache updated
     expect(ipfsSpy).toBeCalledTimes(1)
-    // Record not found in cache so IPFS lookup was performed and cache was updated
-    expect(cacheGetSpy).toBeCalledTimes(1)
-    expect(cacheSetSpy).toBeCalledTimes(1)
+    expect(await dispatcher.retrieveCommit(FAKE_CID)).toEqual('data')
+    // Commit found in cache so IPFS lookup skipped (IPFS lookup count unchanged)
+    expect(ipfsSpy).toBeCalledTimes(1)
+    expect(await dispatcher.retrieveCommit(cloneDeep(FAKE_CID))).toEqual('data')
+    // Commit found in cache with different instance of same CID (IPFS lookup count unchanged)
+    expect(ipfsSpy).toBeCalledTimes(1)
   })
 
   it('publishes tip correctly', async () => {
