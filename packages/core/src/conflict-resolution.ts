@@ -203,7 +203,7 @@ export async function fetchLog(
     // For all cases not using DagJWS for signing (e.g. CAIP-10 links)
     nextCommitData = { cid: cid, type: CommitType.SIGNED, commit: commit, timestamp: timestamp }
   }
-  let prevCid: CID = nextCommitData.commit.prev
+  const prevCid: CID = nextCommitData.commit.prev
   if (!prevCid) {
     // Someone sent a tip that is a fake log, i.e. a log that at some point does not refer to a previous or genesis
     // commit.
@@ -379,7 +379,7 @@ export class ConflictResolution {
    */
   private async getCommitData(logEntry: LogEntry): Promise<CommitData> {
     // Clone the `LogEntry` so that the Stream state is not affected when commit/JWS data is added to the structure
-    let commitData: CommitData = cloneDeep(logEntry as CommitData)
+    const commitData: CommitData = cloneDeep(logEntry as CommitData)
     if (!commitData.commit) {
       const commit = await this.dispatcher.retrieveCommit(commitData.cid)
       commitData.commit = commit
