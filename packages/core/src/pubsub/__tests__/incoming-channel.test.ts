@@ -63,7 +63,7 @@ describe('connection', () => {
     expect(unsubscribeSpy).toBeCalledTimes(0)
     expect(await ipfs.pubsub.ls()).toEqual([TOPIC]) // And now we subscribed
     subscription.unsubscribe()
-  })
+  }, 10000)
 })
 
 test('pass incoming message', async () => {
