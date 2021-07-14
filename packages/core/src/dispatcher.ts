@@ -39,7 +39,7 @@ function messageTypeToString(type: MsgType): string {
  */
 export class Dispatcher {
   readonly messageBus: MessageBus
-  readonly recordCache: LRUMap<string, any>
+  readonly dagNodeCache : LRUMap<string, any>
   // Set of IDs for QUERY messages we have sent to the pub/sub topic but not yet heard a
   // corresponding RESPONSE message for. Maps the query ID to the primary StreamID we were querying for.
   constructor(
@@ -52,7 +52,7 @@ export class Dispatcher {
     const pubsub = new Pubsub(_ipfs, topic, IPFS_RESUBSCRIBE_INTERVAL_DELAY, _pubsubLogger, _logger)
     this.messageBus = new MessageBus(pubsub)
     this.messageBus.subscribe(this.handleMessage.bind(this))
-    this.recordCache = new LRUMap<string, any>(IPFS_CACHE_SIZE)
+    this.dagNodeCache  = new LRUMap<string, any>(IPFS_CACHE_SIZE)
   }
 
   /**
@@ -69,12 +69,12 @@ export class Dispatcher {
         const cid = await this._ipfs.dag.put(jws, { format: 'dag-jose', hashAlg: 'sha2-256' })
         // put the payload into the ipfs dag
         await this._ipfs.block.put(linkedBlock, { cid: jws.link.toString() })
-        await this._restrictRecordSize(jws.link.toString())
-        await this._restrictRecordSize(cid)
+        await this._restrictCommitSize(jws.link.toString())
+        await this._restrictCommitSize(cid)
         return cid
       }
       const cid = await this._ipfs.dag.put(data)
-      await this._restrictRecordSize(cid)
+      await this._restrictCommitSize(cid)
       return cid
     } catch (e) {
       if (streamId) {
@@ -101,14 +101,14 @@ export class Dispatcher {
       const asCid = typeof cid === 'string' ? new CID(cid) : cid
 
       // Lookup CID in cache before looking it up IPFS
-      const cachedRec = await this.recordCache.get(asCid.toString())
-      if (cachedRec) return cloneDeep(cachedRec)
+      const cachedDagNode = await this.dagNodeCache.get(asCid.toString())
+      if (cachedDagNode) return cloneDeep(cachedDagNode)
 
       // Now lookup CID in IPFS and also store it in the cache
-      const record = await this._ipfs.dag.get(asCid, { timeout: IPFS_GET_TIMEOUT })
-      await this._restrictRecordSize(cid)
-      await this.recordCache.set(asCid.toString(), record.value)
-      return cloneDeep(record.value)
+      const dagNode = await this._ipfs.dag.get(asCid, { timeout: IPFS_GET_TIMEOUT })
+      await this._restrictCommitSize(cid)
+      await this.dagNodeCache.set(asCid.toString(), dagNode.value)
+      return cloneDeep(dagNode.value)
     } catch (e) {
       if (streamId) {
         this._logger.err(
@@ -131,13 +131,13 @@ export class Dispatcher {
       const asCid = typeof cid === 'string' ? new CID(cid) : cid
 
       // Lookup CID in cache before looking it up IPFS
-      const cachedRec = await this.recordCache.get(asCid.toString())
-      if (cachedRec) return cloneDeep(cachedRec)
+      const cachedDagNode = await this.dagNodeCache.get(asCid.toString())
+      if (cachedDagNode) return cloneDeep(cachedDagNode)
 
       // Now lookup CID in IPFS and also store it in the cache
-      const record = await this._ipfs.dag.get(asCid, { timeout: IPFS_GET_TIMEOUT, path })
-      await this.recordCache.set(asCid.toString(), record.value)
-      return cloneDeep(record.value)
+      const dagNode = await this._ipfs.dag.get(asCid, { timeout: IPFS_GET_TIMEOUT, path })
+      await this.dagNodeCache.set(asCid.toString(), dagNode.value)
+      return cloneDeep(dagNode.value)
     } catch (e) {
       this._logger.err(`Error while loading CID ${cid.toString()} from IPFS: ${e}`)
       throw e
@@ -149,7 +149,7 @@ export class Dispatcher {
    * @param cid - Record CID
    * @private
    */
-  async _restrictRecordSize(cid: CID | string): Promise<void> {
+  async _restrictCommitSize(cid: CID | string): Promise<void> {
     const stat = await this._ipfs.block.stat(cid, { timeout: IPFS_GET_TIMEOUT })
     if (stat.size > IPFS_MAX_RECORD_SIZE) {
       throw new Error(

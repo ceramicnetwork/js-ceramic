@@ -35,7 +35,7 @@ const ipfs = {
   id: async () => ({ id: 'ipfsid' }),
 }
 
-const recordCache = {
+const dagNodeCache  = {
   get: jest.fn(async (cid: CID | string, record: any) => {
     const asCid = typeof cid === 'string' ? new CID(cid) : cid
     // CID not found in cache
@@ -57,8 +57,8 @@ describe('Dispatcher', () => {
     ipfs.pubsub.subscribe.mockClear()
     ipfs.pubsub.unsubscribe.mockClear()
     ipfs.pubsub.publish.mockClear()
-    recordCache.set.mockClear()
-    recordCache.get.mockClear()
+    dagNodeCache .set.mockClear()
+    dagNodeCache .get.mockClear()
     const levelPath = await tmp.tmpName()
     const stateStore = new LevelStateStore(levelPath)
     stateStore.open('test')
@@ -74,7 +74,7 @@ describe('Dispatcher', () => {
       loggerProvider.getDiagnosticsLogger(),
       loggerProvider.makeServiceLogger('pubsub')
     )
-    dispatcher.recordCache = recordCache
+    dispatcher.dagNodeCache  = dagNodeCache
   })
 
   afterEach(async () => {
@@ -101,7 +101,7 @@ describe('Dispatcher', () => {
 
   it('retrieves cached record correctly', async () => {
     const ipfsSpy = jest.spyOn(ipfs.dag, 'get')
-    const cacheSpy = jest.spyOn(recordCache, 'get')
+    const cacheSpy = jest.spyOn(dagNodeCache , 'get')
     expect(await dispatcher.retrieveCommit(FAKE_CID)).toEqual('data')
     expect(cacheSpy).toBeCalledTimes(1)
     // Record was found in cache so IPFS lookup was skipped
@@ -110,8 +110,8 @@ describe('Dispatcher', () => {
 
   it('retrieves uncached record correctly', async () => {
     const ipfsSpy = jest.spyOn(ipfs.dag, 'get')
-    const cacheGetSpy = jest.spyOn(recordCache, 'get')
-    const cacheSetSpy = jest.spyOn(recordCache, 'set')
+    const cacheGetSpy = jest.spyOn(dagNodeCache , 'get')
+    const cacheSetSpy = jest.spyOn(dagNodeCache , 'set')
     expect(await dispatcher.retrieveCommit(FAKE_CID2)).toEqual('data')
     expect(ipfsSpy).toBeCalledTimes(1)
     // Record not found in cache so IPFS lookup was performed and cache was updated
