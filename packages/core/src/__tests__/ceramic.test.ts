@@ -18,10 +18,6 @@ const seed = u8a.fromString(
   'base16'
 )
 
-async function delay(mills: number): Promise<void> {
-  await new Promise<void>((resolve) => setTimeout(() => resolve(), mills))
-}
-
 const makeDID = function (seed: Uint8Array, ceramic: Ceramic): DID {
   const provider = new Ed25519Provider(seed)
 
@@ -47,7 +43,7 @@ const createCeramic = async (
     pubsubTopic: '/ceramic/inmemory/test', // necessary so Ceramic instances can talk to each other
   })
   const did = makeDID(seed, ceramic)
-  await ceramic.setDID(did)
+  ceramic.did = did
   await did.authenticate()
 
   return ceramic
@@ -64,7 +60,7 @@ describe('Ceramic integration', () => {
   let ipfs3: IpfsApi
 
   beforeEach(async () => {
-    [ipfs1, ipfs2, ipfs3] = await Promise.all(Array.from({ length: 3 }).map(() => createIPFS()))
+    ;[ipfs1, ipfs2, ipfs3] = await Promise.all(Array.from({ length: 3 }).map(() => createIPFS()))
   })
 
   afterEach(async () => {
