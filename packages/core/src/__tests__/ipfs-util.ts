@@ -49,3 +49,12 @@ export async function swarmConnect(a: IpfsApi, b: IpfsApi) {
   const addressB = (await b.id()).addresses[0]
   await a.swarm.connect(addressB)
 }
+
+/**
+ * Instantiate a number of IPFS instances
+ * @param n - number of ipfs instances
+ * @param overrideConfig - IPFS config for override
+ */
+export function fleet(n: number, overrideConfig: Record<string, unknown> = {}) {
+  return Promise.all(Array.from({ length: n }).map(() => createIPFS(overrideConfig)))
+}
