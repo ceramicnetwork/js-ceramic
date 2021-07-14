@@ -8,10 +8,10 @@ jobs:
     steps:
       - checkout
       - node/install-packages
-      - run: npm run lint
+#      - run: npm run lint
       - run: npm run build
       - run: npm run test
-      - run: npm run docs
+#      - run: npm run docs
 workflows:
   build-and-test:
     jobs:
