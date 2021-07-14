@@ -5,7 +5,7 @@ import { createIPFS } from '../../__tests__/ipfs-util'
 import { Repository } from '../repository'
 import { anchorUpdate } from './anchor-update'
 import { createCeramic } from '../../__tests__/create-ceramic'
-import { delay } from '../../pubsub/__tests__/delay'
+import { delay } from '../../__tests__/delay'
 
 let ipfs: IpfsApi
 let ceramic: Ceramic

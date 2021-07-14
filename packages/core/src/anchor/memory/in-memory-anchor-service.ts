@@ -55,7 +55,7 @@ class InMemoryAnchorService implements AnchorService, AnchorValidator {
   #queue: Candidate[] = []
 
   constructor(_config: InMemoryAnchorConfig) {
-    this.#anchorDelay = _config?.anchorDelay ?? 100
+    this.#anchorDelay = _config?.anchorDelay ?? 0
     this.#anchorOnRequest = _config?.anchorOnRequest ?? true
     this.#verifySignatures = _config?.verifySignatures ?? true
 
