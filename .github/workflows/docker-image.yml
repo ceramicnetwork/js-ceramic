@@ -46,28 +46,32 @@ jobs:
       #   with:
       #     username: ${{ secrets.DOCKERHUB_USERNAME }}
       #     password: ${{ secrets.DOCKERHUB_TOKEN }}
-      # -
-      #   name: Build js-ceramic image
-      #   env:
-      #     IMAGE_ID: "ceramicnetwork/js-ceramic"
-      #   run: |
-      #     docker buildx build . --file Dockerfile.daemon \
-      #       --output "type=image,push=true" \
-      #       --tag ${{ env.IMAGE_ID }}:${{ env.ENV_TAG }} \
-      #       --tag ${{ env.IMAGE_ID }}:${{ env.SHA_TAG }} \
-      #       --tag ${{ env.IMAGE_ID }}:${{ env.BRANCH }}
-      # -
-      #   name: Build ipfs-daemon image
-      #   env:
-      #     IMAGE_ID: "ceramicnetwork/ipfs-daemon"
-      #   run: |
-      #     docker buildx build . --file Dockerfile.ipfs-daemon \
-      #       --output "type=image,push=true" \
-      #       --tag ${{ env.IMAGE_ID }}:${{ env.ENV_TAG }} \
-      #       --tag ${{ env.IMAGE_ID }}:${{ env.SHA_TAG }} \
-      #       --tag ${{ env.IMAGE_ID }}:${{ env.BRANCH }}
+      -
+        name: Build js-ceramic image
+        env:
+          IMAGE_ID: "ceramicnetwork/js-ceramic"
+        run: |
+          echo "IMAGE_ID_1=${{ env.IMAGE_ID }}" >> $GITHUB_ENV
+        # docker buildx build . --file Dockerfile.daemon \
+        #   --output "type=image,push=true" \
+        #   --tag ${{ env.IMAGE_ID }}:${{ env.ENV_TAG }} \
+        #   --tag ${{ env.IMAGE_ID }}:${{ env.SHA_TAG }} \
+        #   --tag ${{ env.IMAGE_ID }}:${{ env.BRANCH }}
+      -
+        name: Build ipfs-daemon image
+        env:
+          IMAGE_ID: "ceramicnetwork/ipfs-daemon"
+        run: |
+          echo "IMAGE_ID_2=${{ env.IMAGE_ID }}" >> $GITHUB_ENV
+        # docker buildx build . --file Dockerfile.ipfs-daemon \
+        #   --output "type=image,push=true" \
+        #   --tag ${{ env.IMAGE_ID }}:${{ env.ENV_TAG }} \
+        #   --tag ${{ env.IMAGE_ID }}:${{ env.SHA_TAG }} \
+        #   --tag ${{ env.IMAGE_ID }}:${{ env.BRANCH }}
       -
         name: Publish build event
         run: |
-          echo '{ "event_type": "new_image", "client_payload": {"image_id": ${{ env.IMAGE_ID }}, "image_tag": ${{ env.SHA_TAG }} } }'
-        # curl -X POST ${ secrets.WEBHOOK_URL } -d '{ "event_type": "new_image", "client_payload": {"image_id": ${{ env.IMAGE_ID }}, "image_tag": ${{ env.SHA_TAG }} } }'
+          echo '{ "event_type": "new_image", "client_payload": {"image_id": ${{ env.IMAGE_ID_1 }}, "image_tag": ${{ env.SHA_TAG }} } }'
+          echo '{ "event_type": "new_image", "client_payload": {"image_id": ${{ env.IMAGE_ID_2 }}, "image_tag": ${{ env.SHA_TAG }} } }'
+        # curl -X POST ${ secrets.EVENT_WEBHOOK_URL } -d '{ "event_type": "new_image", "client_payload": {"image_id": ${{ env.IMAGE_ID_1 }}, "image_tag": ${{ env.SHA_TAG }} } }'
+        # curl -X POST ${ secrets.EVENT_WEBHOOK_URL } -d '{ "event_type": "new_image", "client_payload": {"image_id": ${{ env.IMAGE_ID_2 }}, "image_tag": ${{ env.SHA_TAG }} } }'
