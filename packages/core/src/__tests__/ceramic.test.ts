@@ -4,7 +4,7 @@ import tmp from 'tmp-promise'
 import { StreamUtils, IpfsApi, TestUtils, StreamState, SyncOptions } from '@ceramicnetwork/common'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import * as u8a from 'uint8arrays'
-import { fleet, swarmConnect } from './ipfs-util'
+import { swarmConnect, withFleet } from './ipfs-util'
 import { anchorUpdate } from '../state-management/__tests__/anchor-update'
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import KeyDidResolver from 'key-did-resolver'
@@ -51,18 +51,6 @@ const createCeramic = async (
 
 function expectEqualStates(a: StreamState, b: StreamState) {
   expect(StreamUtils.serializeState(a)).toEqual(StreamUtils.serializeState(b))
-}
-
-async function withFleet(n: number, f: (instances: IpfsApi[]) => Promise<void>): Promise<void> {
-  const instances = await fleet(n)
-  try {
-    await f(instances)
-  } finally {
-    instances.map((instance) => {
-      console.log('stop')
-      instance.stop()
-    })
-  }
 }
 
 describe('Ceramic integration', () => {
