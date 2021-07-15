@@ -41,7 +41,6 @@ import {
 } from './state-management/state-validation'
 import { streamFromState } from './state-management/stream-from-state'
 import { ConflictResolution } from './conflict-resolution'
-import { RunningState } from './state-management/running-state'
 import EthereumAnchorValidator from './anchor/ethereum/ethereum-anchor-validator'
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -678,7 +677,7 @@ class Ceramic implements CeramicApi {
 
     const results = await Promise.all(
       state.log.map(async ({ cid }) => {
-        const record = (await this.ipfs.dag.get(cid, { timeout: IPFS_GET_TIMEOUT })).value
+        const record = await this.dispatcher.retrieveCommit(cid)
         return {
           cid: cid.toString(),
           value: await StreamUtils.convertCommitToSignedCommitContainer(record, this.ipfs),

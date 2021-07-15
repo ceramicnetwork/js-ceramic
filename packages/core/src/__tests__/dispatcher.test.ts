@@ -10,6 +10,7 @@ import { LevelStateStore } from '../store/level-state-store'
 import { PinStore } from '../store/pin-store'
 import { RunningState } from '../state-management/running-state'
 import { StateManager } from '../state-management/state-manager'
+import cloneDeep from 'lodash.clonedeep'
 
 const TOPIC = '/ceramic'
 const FAKE_CID = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
@@ -88,6 +89,19 @@ describe('Dispatcher', () => {
 
   it('retrieves record correctly', async () => {
     expect(await dispatcher.retrieveCommit(FAKE_CID)).toEqual('data')
+  })
+
+  it('caches and retrieves commit correctly', async () => {
+    const ipfsSpy = jest.spyOn(ipfs.dag, 'get')
+    expect(await dispatcher.retrieveCommit(FAKE_CID)).toEqual('data')
+    // Commit not found in cache so IPFS lookup performed and cache updated
+    expect(ipfsSpy).toBeCalledTimes(1)
+    expect(await dispatcher.retrieveCommit(FAKE_CID)).toEqual('data')
+    // Commit found in cache so IPFS lookup skipped (IPFS lookup count unchanged)
+    expect(ipfsSpy).toBeCalledTimes(1)
+    expect(await dispatcher.retrieveCommit(cloneDeep(FAKE_CID))).toEqual('data')
+    // Commit found in cache with different instance of same CID (IPFS lookup count unchanged)
+    expect(ipfsSpy).toBeCalledTimes(1)
   })
 
   it('publishes tip correctly', async () => {
