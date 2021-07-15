@@ -34,7 +34,7 @@
     "@ceramicnetwork/ipfs-topology": "^1.1.6",
     "aws-sdk": "^2.902.0",
     "blockcodec-to-ipld-format": "^1.0.0",
-    "dag-jose": "^0.3.0",
+    "dag-jose": "^1.0.0",
     "datastore-fs": "^4.0.0",
     "datastore-level": "^5.0.1",
     "datastore-s3": "^5.0.0",
