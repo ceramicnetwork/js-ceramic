@@ -68,7 +68,7 @@
     "@types/node": "^13.13.15",
     "@types/stream-to-array": "^2.3.0",
     "get-port": "^5.1.1",
-    "ipfs-core": "~0.7.1",
+    "ipfs-core": "~0.8.0",
     "rxjs": "^7.0.0",
     "tmp-promise": "^2.0.2"
   },
