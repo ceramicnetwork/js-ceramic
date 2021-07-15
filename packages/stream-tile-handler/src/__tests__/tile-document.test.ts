@@ -465,7 +465,7 @@ describe('TileDocumentHandler', () => {
 
     await expect(
       tileDocumentHandler.applyCommit(genesisRecord.jws, { cid: FAKE_CID_1 }, context)
-    ).rejects.toThrow(/Invalid signature for signed commit/)
+    ).rejects.toThrow(/invalid_jws: not a valid verificationMethod for issuer/)
   })
 
   it('throws error if changes to more than one controller', async () => {
