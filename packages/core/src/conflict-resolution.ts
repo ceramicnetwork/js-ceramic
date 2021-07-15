@@ -377,14 +377,14 @@ export class ConflictResolution {
   /**
    * Return `CommitData` with commit and JWS envelope, if applicable and not already present.
    */
-  private async getCommitData(logEntry: LogEntry): Promise<CommitData> {
-    // Clone the `LogEntry` so that the Stream state is not affected when commit/JWS data is added to the structure
+  private async getCommitData(_commitData: CommitData): Promise<CommitData> {
+    // Clone the `CommitData` so that the Stream state is not affected when commit/JWS data is added to the structure
     const commitData: CommitData = {
-      cid: logEntry.cid,
-      type: logEntry.type,
-      timestamp: logEntry.timestamp,
-      commit: (logEntry as CommitData).commit,
-      envelope: (logEntry as CommitData).envelope
+      cid: _commitData.cid,
+      type: _commitData.type,
+      timestamp: _commitData.timestamp,
+      commit: _commitData.commit,
+      envelope: _commitData.envelope
     }
     if (!commitData.commit) {
       const commit = await this.dispatcher.retrieveCommit(commitData.cid)
