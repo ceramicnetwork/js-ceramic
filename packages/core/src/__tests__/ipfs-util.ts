@@ -64,14 +64,14 @@ export function fleet(n: number, overrideConfig: Record<string, unknown> = {}): 
  * @param n - Number of IPFS instances to create.
  * @param task - Function that uses the IPFS instances.
  */
-export async function withFleet(n: number, task: (instances: IpfsApi[]) => Promise<void>): Promise<void> {
+export async function withFleet(
+  n: number,
+  task: (instances: IpfsApi[]) => Promise<void>
+): Promise<void> {
   const instances = await fleet(n)
   try {
     await task(instances)
   } finally {
-    instances.map((instance) => {
-      console.log('stop')
-      instance.stop()
-    })
+    instances.map((instance) => instance.stop())
   }
 }
