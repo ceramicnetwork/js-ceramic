@@ -13,6 +13,7 @@ import {
 import type { AuthProvider, LinkProof } from '@ceramicnetwork/blockchain-utils-linking'
 import { CommitID, StreamID, StreamRef } from '@ceramicnetwork/streamid'
 import { AccountID } from 'caip'
+import { encode as encodeEip55 } from 'eip55'
 import type { DID } from 'dids'
 
 const throwReadOnlyError = (): Promise<void> => {
@@ -133,7 +134,6 @@ export class Caip10Link extends Stream {
         }' stream, but to a ${streamRef.typeName}`
       )
     }
-
     return ceramic.loadStream<Caip10Link>(streamRef, opts)
   }
 
@@ -142,6 +142,12 @@ export class Caip10Link extends Stream {
    * @param accountId
    */
   static makeGenesis(accountId: AccountID): GenesisCommit {
+    // Ethereum addresses specifically are sometimes encoded with mixed case and
+    // sometimes all lower case. In order to deal with this and not have different
+    // links for different addresses we encode the address using eip55.
+    if (accountId.chainId.namespace === 'eip155') {
+      accountId.address = encodeEip55(accountId.address)
+    }
     return {
       header: {
         controllers: [accountId.toString()],
