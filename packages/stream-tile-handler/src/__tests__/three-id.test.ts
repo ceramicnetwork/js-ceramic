@@ -2,7 +2,7 @@ import CID from 'cids'
 import { Resolver } from 'did-resolver'
 import dagCBOR from 'ipld-dag-cbor'
 import KeyDidResolver from 'key-did-resolver'
-import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
+import { wrapDocument } from '@ceramicnetwork/3id-did-resolver'
 import { DID } from 'dids'
 import {
   AnchorCommit,
@@ -150,18 +150,21 @@ beforeAll(() => {
     },
   }
 
-  const threeIdResolver = ThreeIdResolver.getResolver({
-    loadStream: (): any => {
-      return Promise.resolve({
-        content: {
+  const threeIdResolver = {
+    '3': async (did) => ({
+      didResolutionMetadata: { contentType: 'application/did+json' },
+      didDocument: wrapDocument(
+        {
           publicKeys: {
             signing: 'zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV',
             encryption: 'z6LSfQabSbJzX8WAm1qdQcHCHTzVv8a2u6F7kmzdodfvUCo9',
           },
         },
-      })
-    },
-  } as any as CeramicApi)
+        did
+      ),
+      didDocumentMetadata: {},
+    }),
+  }
 
   const keyDidResolver = KeyDidResolver.getResolver()
   const resolver = new Resolver({
@@ -330,7 +333,7 @@ it('throws error if record signed by wrong DID', async () => {
 
   await expect(
     tileDocumentHandler.applyCommit(genesisRecord.jws, FAKE_CID_1, context)
-  ).rejects.toThrow(/wrong DID/)
+  ).rejects.toThrow(/invalid_jws: not a valid verificationMethod for issuer/)
 })
 
 it('applies anchor record correctly', async () => {
