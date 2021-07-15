@@ -1,0 +1,108 @@
+version: 2
+updates:
+- package-ecosystem: npm
+  directory: "/"
+  schedule:
+    interval: weekly
+  open-pull-requests-limit: 10
+  target-branch: develop
+  reviewers:
+  - stbrody
+  assignees:
+  - stbrody
+  allow:
+  - dependency-type: production
+  ignore:
+  - dependency-name: multiformats
+    versions:
+    - 4.5.0
+    - 4.5.1
+    - 4.5.2
+    - 4.5.3
+    - 4.6.1
+    - 6.0.1
+  - dependency-name: datastore-s3
+    versions:
+    - 5.0.0
+  - dependency-name: "@ethersproject/providers"
+    versions:
+    - 5.0.19
+    - 5.0.21
+    - 5.0.23
+    - 5.0.24
+    - 5.1.1
+  - dependency-name: "@polkadot/util-crypto"
+    versions:
+    - 6.0.5
+    - 6.1.1
+    - 6.2.1
+  - dependency-name: "@zondax/filecoin-signing-tools"
+    versions:
+    - 0.14.0
+  - dependency-name: did-resolver
+    versions:
+    - 3.0.2
+    - 3.1.0
+  - dependency-name: did-jwt
+    versions:
+    - 5.1.2
+  - dependency-name: rxjs
+    versions:
+    - 6.6.6
+    - 6.6.7
+  - dependency-name: cross-fetch
+    versions:
+    - 3.1.2
+    - 3.1.3
+    - 3.1.4
+  - dependency-name: ajv
+    versions:
+    - 7.0.3
+    - 7.0.4
+    - 7.1.1
+    - 7.2.1
+    - 7.2.3
+    - 8.0.1
+    - 8.0.5
+    - 8.1.0
+  - dependency-name: events
+    versions:
+    - 3.3.0
+  - dependency-name: uint8arrays
+    versions:
+    - 2.1.3
+  - dependency-name: cids
+    versions:
+    - 1.1.5
+    - 1.1.6
+  - dependency-name: key-did-provider-ed25519
+    versions:
+    - 1.0.1
+  - dependency-name: "@textile/powergate-client"
+    versions:
+    - 4.0.0
+  - dependency-name: ipfs-http-client
+    versions:
+    - 48.2.2
+    - 49.0.1
+    - 49.0.2
+    - 49.0.3
+    - 49.0.4
+  - dependency-name: ipfs-core
+    versions:
+    - 0.4.2
+    - 0.5.1
+  - dependency-name: ipfs
+    versions:
+    - 0.54.2
+    - 0.54.3
+    - 0.54.4
+  - dependency-name: multibase
+    versions:
+    - 3.1.1
+    - 4.0.1
+    - 4.0.2
+  - dependency-name: multicodec
+    versions:
+    - 2.1.0
+    - 3.0.1
