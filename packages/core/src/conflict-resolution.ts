@@ -2,7 +2,6 @@ import type CID from 'cids'
 import {
   AnchorCommit,
   AnchorProof,
-  AnchorService,
   AnchorStatus,
   CommitType,
   Context,
@@ -363,6 +362,16 @@ export class ConflictResolution {
     if (log.length) {
       return this.applyLog(initialState, stateLog, log)
     }
+  }
+
+  /**
+   * Verify signature of a lone genesis commit, using current time to check for revoked key.
+   */
+  async verifyLoneGenesis(state: StreamState) {
+    const handler = this.handlers.get(state.type)
+    const genesisCid = state.log[0].cid
+    const genesis = await this.dispatcher.retrieveCommit(genesisCid)
+    await handler.applyCommit(genesis, { cid: genesisCid }, this.context)
   }
 
   /**

@@ -83,11 +83,21 @@ export class StateManager {
         concatMap((tip) => this._handleTip(state$, tip))
       )
       .toPromise()
-      .then(() => {
-        if (pinned) {
-          this.syncedPinnedStreams.add(state$.id.toString())
-        }
-      })
+    if (pinned) {
+      this.syncedPinnedStreams.add(state$.id.toString())
+    }
+  }
+
+  /**
+   * If it is a lone genesis, verify the signature.
+   * @param state$
+   */
+  async verifyLoneGenesis(state$: RunningState): Promise<RunningState> {
+    if (state$.value.log.length > 1) {
+      return state$
+    }
+    await this.conflictResolution.verifyLoneGenesis(state$.value)
+    return state$
   }
 
   /**
