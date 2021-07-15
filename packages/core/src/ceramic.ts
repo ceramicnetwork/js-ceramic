@@ -440,7 +440,7 @@ class Ceramic implements CeramicApi {
       gateway: config.gateway,
       networkOptions,
       validateStreams: config.validateStreams ?? true,
-      loadOptsOverride
+      loadOptsOverride,
     }
 
     const modules = {
@@ -555,7 +555,7 @@ class Ceramic implements CeramicApi {
       throw new Error('Writes to streams are not supported in gateway mode')
     }
 
-    opts = { ...DEFAULT_APPLY_COMMIT_OPTS, ...opts, ...this._loadOptsOverride}
+    opts = { ...DEFAULT_APPLY_COMMIT_OPTS, ...opts, ...this._loadOptsOverride }
     const state$ = await this.repository.stateManager.applyCommit(
       normalizeStreamID(streamId),
       commit,
@@ -580,7 +580,7 @@ class Ceramic implements CeramicApi {
     genesis: any,
     opts: CreateOpts = {}
   ): Promise<T> {
-    opts = { ...DEFAULT_CREATE_FROM_GENESIS_OPTS, ...opts, ...this._loadOptsOverride}
+    opts = { ...DEFAULT_CREATE_FROM_GENESIS_OPTS, ...opts, ...this._loadOptsOverride }
     const genesisCid = await this.dispatcher.storeCommit(genesis)
     const streamId = new StreamID(type, genesisCid)
     const state$ = await this.repository.applyCreateOpts(streamId, opts)
@@ -601,7 +601,7 @@ class Ceramic implements CeramicApi {
     streamId: StreamID | CommitID | string,
     opts: LoadOpts = {}
   ): Promise<T> {
-    opts = { ...DEFAULT_LOAD_OPTS, ...opts, ...this._loadOptsOverride}
+    opts = { ...DEFAULT_LOAD_OPTS, ...opts, ...this._loadOptsOverride }
     const streamRef = StreamRef.from(streamId)
     if (CommitID.isInstance(streamRef)) {
       const snapshot$ = await this.repository.loadAtCommit(streamRef, opts)

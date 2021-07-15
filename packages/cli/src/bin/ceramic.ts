@@ -50,8 +50,11 @@ program
     '--cors-allowed-origins <list>',
     'Space-separated list of strings and/or regex expressions to set for Access-Control-Allow-Origin . Defaults to all: "*"'
   )
-  .option('--sync-override <string>', 'Global forced mode for syncing all streams. One of: "prefer-cache", "sync-always", or "never-sync". Defaults to "prefer-cache"')
-    .description('Start the daemon')
+  .option(
+    '--sync-override <string>',
+    'Global forced mode for syncing all streams. One of: "prefer-cache", "sync-always", or "never-sync". Defaults to "prefer-cache"'
+  )
+  .description('Start the daemon')
   .action(
     async ({
       ipfsApi,
@@ -71,7 +74,7 @@ program
       network,
       pubsubTopic,
       corsAllowedOrigins,
-        syncOverride
+      syncOverride,
     }) => {
       if (stateStoreDirectory && stateStoreS3Bucket) {
         throw new Error(
@@ -95,14 +98,15 @@ program
         logDirectory,
         network,
         pubsubTopic,
-        corsAllowedOrigins
-            syncOverride
-        ).catch((err) => {
-          console.error('Ceramic daemon failed to start up:')
-          console.error(err)
-          process.exit(1)
-        })
-    })
+        corsAllowedOrigins,
+        syncOverride
+      ).catch((err) => {
+        console.error('Ceramic daemon failed to start up:')
+        console.error(err)
+        process.exit(1)
+      })
+    }
+  )
 
 program
   .command('create <streamtype>')

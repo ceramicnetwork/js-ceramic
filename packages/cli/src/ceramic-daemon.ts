@@ -39,12 +39,12 @@ export interface CreateOpts {
   stateStoreDirectory?: string
   s3StateStoreBucket?: string
 
-  validateStreams?: boolean;
-  ipfsPinningEndpoints?: string[];
-  gateway?: boolean;
-  loggerConfig?: LoggerConfig,
-  network?: string;
-  pubsubTopic?: string;
+  validateStreams?: boolean
+  ipfsPinningEndpoints?: string[]
+  gateway?: boolean
+  loggerConfig?: LoggerConfig
+  network?: string
+  pubsubTopic?: string
   syncOverride: SyncOptions
 }
 
@@ -70,7 +70,7 @@ export function makeCeramicConfig(opts: CreateOpts): CeramicConfig {
     pubsubTopic: opts.pubsubTopic,
     stateStoreDirectory: opts.stateStoreDirectory,
     validateStreams: opts.validateStreams,
-    syncOverride: opts.syncOverride
+    syncOverride: opts.syncOverride,
   }
 
   return ceramicConfig

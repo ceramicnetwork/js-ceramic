@@ -7,7 +7,14 @@ import { promises as fs } from 'fs'
 
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import CeramicClient from '@ceramicnetwork/http-client'
-import { CeramicApi, StreamUtils, LoggerConfig, LogLevel, Networks, SyncOptions } from '@ceramicnetwork/common'
+import {
+  CeramicApi,
+  StreamUtils,
+  LoggerConfig,
+  LogLevel,
+  Networks,
+  SyncOptions,
+} from '@ceramicnetwork/common'
 import StreamID, { CommitID } from '@ceramicnetwork/streamid'
 
 import { CreateOpts, CeramicDaemon } from './ceramic-daemon'
@@ -23,9 +30,9 @@ const DEFAULT_CLI_CONFIG_PATH = path.join(os.homedir(), '.ceramic')
 const DEFAULT_NETWORK = Networks.TESTNET_CLAY
 
 const SYNC_OPTIONS_MAP = {
-    'prefer-cache': SyncOptions.PREFER_CACHE,
-    'sync-always': SyncOptions.SYNC_ALWAYS,
-    'never-sync': SyncOptions.NEVER_SYNC
+  'prefer-cache': SyncOptions.PREFER_CACHE,
+  'sync-always': SyncOptions.SYNC_ALWAYS,
+  'never-sync': SyncOptions.NEVER_SYNC,
 }
 
 /**
@@ -62,7 +69,7 @@ export class CeramicCliUtils {
    * @param pubsubTopic - Pub/sub topic to use for protocol messages.
    * @param corsAllowedOrigins - Origins for Access-Control-Allow-Origin header. Default is all
    * @param syncOverride - Global forced mode for syncing all streams. Defaults to "prefer-cache"
-     */
+   */
   static async createDaemon(
     ipfsApi: string,
     ethereumRpc: string,
@@ -81,7 +88,7 @@ export class CeramicCliUtils {
     network = DEFAULT_NETWORK,
     pubsubTopic: string,
     corsAllowedOrigins: string,
-        syncOverride: string
+    syncOverride: string
   ): Promise<CeramicDaemon> {
     let _corsAllowedOrigins: string | RegExp[] = '*'
     if (corsAllowedOrigins != null && corsAllowedOrigins != '*') {
@@ -94,27 +101,27 @@ export class CeramicCliUtils {
       logLevel,
     }
 
-        const _syncOverride = SYNC_OPTIONS_MAP[syncOverride]
+    const _syncOverride = SYNC_OPTIONS_MAP[syncOverride]
 
-        const config: CreateOpts = {
-            ethereumRpcUrl: ethereumRpc,
-            anchorServiceUrl: anchorServiceApi,
-            stateStoreDirectory,
-            s3StateStoreBucket: stateStoreS3Bucket,
-            validateStreams,
-            ipfsPinningEndpoints,
-            gateway,
-            port,
-            hostname,
-            loggerConfig,
-            network,
-            pubsubTopic,
-            corsAllowedOrigins: _corsAllowedOrigins,
-            ipfsHost: ipfsApi,
-            syncOverride: _syncOverride
-        }
-        return CeramicDaemon.create(config)
+    const config: CreateOpts = {
+      ethereumRpcUrl: ethereumRpc,
+      anchorServiceUrl: anchorServiceApi,
+      stateStoreDirectory,
+      s3StateStoreBucket: stateStoreS3Bucket,
+      validateStreams,
+      ipfsPinningEndpoints,
+      gateway,
+      port,
+      hostname,
+      loggerConfig,
+      network,
+      pubsubTopic,
+      corsAllowedOrigins: _corsAllowedOrigins,
+      ipfsHost: ipfsApi,
+      syncOverride: _syncOverride,
     }
+    return CeramicDaemon.create(config)
+  }
 
   /**
    * Internal helper for creating documents
