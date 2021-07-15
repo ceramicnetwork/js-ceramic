@@ -46,7 +46,7 @@ export type GenesisCommit = {
   data?: any
 }
 
-export interface UnsignedCommit {
+export interface RawCommit {
   id: CID
   header?: CommitHeader
   data: any
@@ -73,9 +73,9 @@ export type SignedCommit = DagJWS
 export type SignedCommitContainer = DagJWSResult
 
 export type CeramicCommit =
-  | GenesisCommit
-  | UnsignedCommit
   | AnchorCommit
+  | GenesisCommit
+  | RawCommit
   | SignedCommit
   | SignedCommitContainer
 
@@ -123,6 +123,15 @@ export interface LogEntry {
   type: CommitType
   timestamp?: number
 }
+
+export interface CommitData extends LogEntry {
+  // Holding on to these fields when fetching and processing new commits significantly reduces the number of IPFS
+  // lookups required. Use of these fields is currently limited to `conflict-resolution.ts` but further optimization of
+  // the code is possible by relaying them to code that looks the fields up again.
+  commit?: any
+  envelope?: DagJWS
+}
+
 /**
  * Stream state
  */

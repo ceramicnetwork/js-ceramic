@@ -7,7 +7,7 @@ import {
   SyncOptions,
   LoadOpts,
   UpdateOpts,
-  UnsignedCommit,
+  RawCommit,
   GenesisCommit,
 } from '@ceramicnetwork/common'
 import type { AuthProvider, LinkProof } from '@ceramicnetwork/blockchain-utils-linking'
@@ -160,7 +160,7 @@ export class Caip10Link extends Stream {
    * Makes the commit to update linked CAIP10 account from a given LinkProof
    * @param proof
    */
-  makeCommit(proof: LinkProof): UnsignedCommit {
+  makeCommit(proof: LinkProof): RawCommit {
     return { data: proof, prev: this.tip, id: this.state$.id.cid }
   }
 

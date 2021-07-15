@@ -15,7 +15,7 @@ import {
   CeramicCommit,
   CommitHeader,
   GenesisCommit,
-  UnsignedCommit,
+  RawCommit,
   CeramicApi,
   SignedCommitContainer,
   StreamMetadata,
@@ -238,13 +238,13 @@ export class TileDocument<T = Record<string, any>> extends Stream {
   async patch(jsonPatch: Operation[], opts: UpdateOpts = {}): Promise<void> {
     opts = { ...DEFAULT_UPDATE_OPTS, ...opts }
     const header = headerFromMetadata(this.metadata)
-    const unsignedCommit: UnsignedCommit = {
+    const rawCommit: RawCommit = {
       header,
       data: jsonPatch,
       prev: this.tip,
       id: this.state$.id.cid,
     }
-    const commit = await _signDagJWS(this.api, unsignedCommit, this.controllers[0])
+    const commit = await _signDagJWS(this.api, rawCommit, this.controllers[0])
     const updated = await this.api.applyCommit(this.id, commit, opts)
     this.state$.next(updated.state)
   }
@@ -280,7 +280,7 @@ export class TileDocument<T = Record<string, any>> extends Stream {
     }
 
     const patch = jsonpatch.compare(this.content, newContent)
-    const commit: UnsignedCommit = {
+    const commit: RawCommit = {
       header,
       data: patch,
       prev: this.tip,
