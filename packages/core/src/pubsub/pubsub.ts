@@ -5,6 +5,7 @@ import { map, catchError, mergeMap, withLatestFrom } from 'rxjs/operators'
 import { IncomingChannel, filterExternal, IPFSPubsubMessage } from './incoming-channel'
 import { DiagnosticsLogger, ServiceLogger } from '@ceramicnetwork/common'
 import { TextDecoder } from 'util'
+import uint8ArrayToString from 'uint8arrays/to-string'
 
 const textDecoder = new TextDecoder('utf-8')
 
@@ -29,6 +30,8 @@ function ipfsToPubsub(
           const message = deserialize(incoming)
           const serializedMessage = serialize(message)
           const logMessage = { ...incoming, ...JSON.parse(textDecoder.decode(serializedMessage)) }
+          logMessage.seqno = uint8ArrayToString(logMessage.seqno, 'base16')
+          delete logMessage.data // Already included in serialized message
           delete logMessage.key
           delete logMessage.signature
           pubsubLogger.log({ peer: peerId, event: 'received', topic: topic, message: logMessage })
