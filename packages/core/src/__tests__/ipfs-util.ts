@@ -49,3 +49,29 @@ export async function swarmConnect(a: IpfsApi, b: IpfsApi) {
   const addressB = (await b.id()).addresses[0]
   await a.swarm.connect(addressB)
 }
+
+/**
+ * Instantiate a number of IPFS instances
+ * @param n - number of ipfs instances
+ * @param overrideConfig - IPFS config for override
+ */
+export function fleet(n: number, overrideConfig: Record<string, unknown> = {}): Promise<IpfsApi[]> {
+  return Promise.all(Array.from({ length: n }).map(() => createIPFS(overrideConfig)))
+}
+
+/**
+ * Start `n` IPFS instances, and stop them after `task` is done.
+ * @param n - Number of IPFS instances to create.
+ * @param task - Function that uses the IPFS instances.
+ */
+export async function withFleet(
+  n: number,
+  task: (instances: IpfsApi[]) => Promise<void>
+): Promise<void> {
+  const instances = await fleet(n)
+  try {
+    await task(instances)
+  } finally {
+    instances.map((instance) => instance.stop())
+  }
+}
