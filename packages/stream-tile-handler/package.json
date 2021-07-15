@@ -17,7 +17,7 @@
     "lib"
   ],
   "scripts": {
-    "test": "../../node_modules/.bin/jest --silent --coverage --env=node",
+    "test": "../../node_modules/.bin/jest --silent --coverage",
     "build": "../../node_modules/.bin/tsc -p tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
@@ -41,7 +41,8 @@
     "key-did-resolver": "^1.2.1"
   },
   "jest": {
-    "testEnvironment": "jest-environment-uint8array"
+    "testEnvironment": "node",
+    "resolver": "jest-resolver-enhanced"
   },
   "gitHead": "4f42c6ac204ad25e66efda4e24aed12c339b3c98"
 }
