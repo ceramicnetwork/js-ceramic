@@ -677,7 +677,11 @@ class Ceramic implements CeramicApi {
     // node about a tip it had not previously heard about that turns out to be the best current tip.
     // This ensures the returned Streams always are as up-to-date as possible, and is behavior that
     // the anchor service relies upon.
-    await Promise.all(Object.values(results).map((stream) => { return stream.sync({sync: SyncOptions.NEVER_SYNC, syncTimeoutSeconds: 0})}))
+    await Promise.all(Object.values(results).map((stream) => {
+      // We swallow errors because if any of the queries used CommitIDs or the `atTime` arg calling
+      // sync() on them will throw.
+      return stream.sync({sync: SyncOptions.NEVER_SYNC, syncTimeoutSeconds: 0}).catch((err) => { /* do nothing*/ })
+    }))
     return results
   }
 

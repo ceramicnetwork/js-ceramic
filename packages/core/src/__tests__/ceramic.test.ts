@@ -426,7 +426,7 @@ describe('Ceramic integration', () => {
       // Now update the stream on node 1, but don't tell node 2 about it.
       await stream1.update(content2, null, { anchor: false, publish: false })
 
-      // Now both the CommitID of the newest update and the base StreamID on node 2. The
+      // Now load both the CommitID of the newest update and the base StreamID on node 2. The
       // base StreamID version of the stream returned should include the new commit.
       const res = await ceramic2.multiQuery([{streamId: stream1.commitId}, {streamId: stream1.id}]);
       const streamAtCommit = res[stream1.commitId.toString()] as TileDocument;
