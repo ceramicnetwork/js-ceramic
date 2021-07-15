@@ -31,7 +31,7 @@
     "@ceramicnetwork/stream-caip10-link": "^1.0.7",
     "@ceramicnetwork/stream-tile": "^1.0.7",
     "@ceramicnetwork/streamid": "^1.0.2",
-    "query-string": "7.0.0",
+    "query-string": "7.0.1",
     "rxjs": "^7.0.0"
   },
   "devDependencies": {
