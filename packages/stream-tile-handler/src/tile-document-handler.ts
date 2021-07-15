@@ -192,16 +192,11 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
     meta: CommitMeta,
     context: Context,
     did: string
-  ): Promise<DIDResolutionResult> {
-    try {
-      const verification = await context.did.verifyJWS(commit, {
-        atTime: meta.timestamp,
-        issuer: did,
-        disableTimecheck: meta.disableTimecheck,
-      })
-      return verification.didResolutionResult
-    } catch (e) {
-      throw new Error('Invalid signature for signed commit. ' + e)
-    }
+  ): Promise<void> {
+    await context.did.verifyJWS(commit, {
+      atTime: meta.timestamp,
+      issuer: did,
+      disableTimecheck: meta.disableTimecheck,
+    })
   }
 }
