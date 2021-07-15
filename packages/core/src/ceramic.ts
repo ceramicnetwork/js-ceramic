@@ -662,15 +662,23 @@ class Ceramic implements CeramicApi {
    * @param timeout - Timeout in milliseconds
    */
   async multiQuery(queries: Array<MultiQuery>, timeout?: number): Promise<Record<string, Stream>> {
-    const queryPromises = queries.map((query) => {
+    const queryResults = await Promise.all(queries.map((query) => {
       try {
         return this._loadLinkedStreams(query, timeout)
       } catch (e) {
         return Promise.resolve({})
       }
-    })
-    const results = await Promise.all(queryPromises)
-    return results.reduce((acc, res) => ({ ...acc, ...res }), {})
+    }))
+    // Flatten the result objects from each individual multi query into a single response object
+    const results = queryResults.reduce((acc, res) => ({ ...acc, ...res }), {})
+    // Before returning the results, sync each Stream to its current state in the cache.  This is
+    // necessary to handle the case where there are two MultiQueries in this batch for the same stream,
+    // one on a specific CommitID and one on a base StreamID, and loading the CommitID tells this
+    // node about a tip it had not previously heard about that turns out to be the best current tip.
+    // This ensures the returned Streams always are as up-to-date as possible, and is behavior that
+    // the anchor service relies upon.
+    await Promise.all(Object.values(results).map((stream) => { return stream.sync({sync: SyncOptions.NEVER_SYNC, syncTimeoutSeconds: 0})}))
+    return results
   }
 
   /**

@@ -406,6 +406,39 @@ describe('Ceramic integration', () => {
     })
   })
 
+  it("Loading a CommitID and StreamID via multiquery considers CommitID tip", async () => {
+    await withFleet(2, async ([ipfs1, ipfs2]) => {
+      await swarmConnect(ipfs1, ipfs2)
+      const ceramic1 = await createCeramic(ipfs1, false)
+      const ceramic2 = await createCeramic(ipfs2, false)
+
+      const content0 = { foo: 0 }
+      const content1 = { foo: 1 }
+      const content2 = { foo: 2 }
+
+      const stream1 = await TileDocument.create(ceramic1, content0, null, { anchor: false })
+      await stream1.update(content1, null, { anchor: false })
+
+      // Now load the stream into the cache on second node.
+      const stream2 = await ceramic2.loadStream<TileDocument>(stream1.id)
+      expect(stream2.content).toEqual(content1)
+
+      // Now update the stream on node 1, but don't tell node 2 about it.
+      await stream1.update(content2, null, { anchor: false, publish: false })
+
+      // Now both the CommitID of the newest update and the base StreamID on node 2. The
+      // base StreamID version of the stream returned should include the new commit.
+      const res = await ceramic2.multiQuery([{streamId: stream1.commitId}, {streamId: stream1.id}]);
+      const streamAtCommit = res[stream1.commitId.toString()] as TileDocument;
+      const streamCurrent = res[stream1.id.toString()] as TileDocument;
+      expect(streamAtCommit.content).toEqual(content2)
+      expect(streamCurrent.content).toEqual(content2)
+
+      await ceramic1.close()
+      await ceramic2.close()
+    })
+  })
+
   it('validates schema on stream change', async () => {
     await withFleet(1, async ([ipfs1]) => {
       const ceramic = await createCeramic(ipfs1)
