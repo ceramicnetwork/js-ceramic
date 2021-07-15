@@ -39,7 +39,7 @@
     "datastore-level": "^5.0.1",
     "datastore-s3": "^5.0.0",
     "express": "^4.17.1",
-    "ipfs-core": "~0.7.1",
+    "ipfs-core": "~0.8.0",
     "ipfs-core-types": "~0.5.1",
     "ipfs-http-gateway": "~0.4.2",
     "ipfs-http-server": "~0.5.1"
