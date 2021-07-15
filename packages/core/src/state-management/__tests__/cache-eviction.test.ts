@@ -124,7 +124,7 @@ test('RunningState stops updating after evicted', async () => {
 
   const stream3 = await ceramic.loadStream(stream2.id)
   expect(stream3.state).toEqual(stream2.state)
-})
+}, 10000)
 
 test('StateLink receives updates', async () => {
   const stream1 = await TileDocument.create(ceramic, INITIAL, null, { syncTimeoutSeconds: 0 })
@@ -144,7 +144,7 @@ test('StateLink receives updates', async () => {
   expect(stream2.content).toEqual(changedConcurrently)
   expect(runningState1.state.next.content).toEqual({ stage: 'changed-1' }) // Running state 1 did not get update
   expect(stream1.state).toEqual(stream2.state) // But thanks to subscription, streamtype still is aware of the update
-})
+}, 10000)
 
 test('free if no one subscribed', async () => {
   const durableStart = ceramic.repository.inmemory.durable.size
