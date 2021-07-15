@@ -256,6 +256,7 @@ export class TileDocument<T = Record<string, any>> extends Stream {
   makeReadOnly() {
     this.update = throwReadOnlyError
     this.patch = throwReadOnlyError
+    this.sync = throwReadOnlyError
   }
 
   /**

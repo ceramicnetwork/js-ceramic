@@ -127,7 +127,7 @@ export interface MultiQuery {
   /**
    * The StreamID of the stream to load
    */
-  streamId: StreamID | string
+  streamId: CommitID | StreamID | string
 
   /**
    * An array of paths used to look for linked stream

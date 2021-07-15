@@ -171,5 +171,6 @@ export class Caip10Link extends Stream {
   makeReadOnly() {
     this.setDidProof = throwReadOnlyError
     this.setDid = throwReadOnlyError
+    this.sync = throwReadOnlyError
   }
 }
