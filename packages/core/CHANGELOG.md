@@ -3,6 +3,181 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.2.0](/compare/@ceramicnetwork/core@1.2.0-rc.0...@ceramicnetwork/core@1.2.0) (2021-06-22)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+# [1.2.0-rc.0](/compare/@ceramicnetwork/core@1.1.0...@ceramicnetwork/core@1.2.0-rc.0) (2021-06-21)
+
+
+### Bug Fixes
+
+* **core:** Disable ajv strictTypes and strictTuples log warnings (#1471) d3c817d, closes #1471
+* **core:** Don't submit an anchor request for an AnchorCommit (#1474) 356775f, closes #1474
+* **core:** Only poll for anchors at startup, don't submit a new request (#1437) ec17446, closes #1437
+* **core:** Remove loading inner CID from SignedCommits in ConflictResolution.findIndex (#1491) d1b021c, closes #1491 #1434
+
+
+### Features
+
+* **core:** Loading a CommitID makes the node handle the commit CID as a potential new tip (#1484) 46e0f22, closes #1484
+* **core,cli:** Add --disable-anchors flag to allow ceramic to start up without a working CAS (#1490) 9dfc167, closes #1490
+
+
+
+
+
+# [1.1.0](/compare/@ceramicnetwork/core@1.0.5...@ceramicnetwork/core@1.1.0) (2021-06-06)
+
+
+### Features
+
+* **core:** Limit the number of concurrently loading streams (#1453) 7ec721a, closes #1453
+
+
+
+
+
+## [1.0.5](/compare/@ceramicnetwork/core@1.0.4...@ceramicnetwork/core@1.0.5) (2021-06-03)
+
+
+### Bug Fixes
+
+* **core:** ipfs subscribe, pin version (#1454) fc9c5e7, closes #1454
+* Pin dag-jose contents (#1451) a598c10, closes #1451
+
+
+
+
+
+## [1.0.4](/compare/@ceramicnetwork/core@1.0.4-rc.0...@ceramicnetwork/core@1.0.4) (2021-05-31)
+
+
+### Bug Fixes
+
+* **core:** Don't refetch CID from IPFS when re-applying commits already in the log (#1422) b8a941c, closes #1422
+* **core:** Don't retry anchors indefinitely on error (#1438) 69f4993, closes #1438
+
+
+
+
+
+## [1.0.4-rc.0](/compare/@ceramicnetwork/core@1.0.3...@ceramicnetwork/core@1.0.4-rc.0) (2021-05-28)
+
+
+### Bug Fixes
+
+* **core:** only sync pinned streams the first time they are loaded (#1417) 76be682, closes #1417
+
+
+
+
+
+## [1.0.3](/compare/@ceramicnetwork/core@1.0.2...@ceramicnetwork/core@1.0.3) (2021-05-25)
+
+
+### Bug Fixes
+
+* **core:** Actively fail anchor if applying anchor commit fails 3 times in a row 35dae9d
+* **core:** Continue polling anchor service even after error 10719e7
+* **core:** Don't update stream state for changes to anchor status of commits that are no longer the tip 94ac4a7
+
+
+
+
+
+## [1.0.2](/compare/@ceramicnetwork/core@1.0.1...@ceramicnetwork/core@1.0.2) (2021-05-20)
+
+
+### Bug Fixes
+
+* **core:** Add retry logic when applying anchor commits (#1393) 881d7f0, closes #1393
+* **core,http-client:** Add setter for 'did' property on CeramicApi implmentations (#1391) 700221e, closes #1391
+
+
+
+
+
+## [1.0.1](/compare/@ceramicnetwork/core@1.0.0...@ceramicnetwork/core@1.0.1) (2021-05-13)
+
+
+### Bug Fixes
+
+* **core:** Increase max anchor poll timeout (#1377) 37d6540, closes #1377
+
+
+
+
+
+# [1.0.0](/compare/@ceramicnetwork/core@1.0.0-rc.12...@ceramicnetwork/core@1.0.0) (2021-05-06)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+# [1.0.0-rc.12](/compare/@ceramicnetwork/core@1.0.0-rc.11...@ceramicnetwork/core@1.0.0-rc.12) (2021-05-03)
+
+
+### Bug Fixes
+
+* accept multiple pubsub responses (#1348) fa2d72a, closes #1348
+
+
+
+
+
+# [1.0.0-rc.11](/compare/@ceramicnetwork/core@1.0.0-rc.10...@ceramicnetwork/core@1.0.0-rc.11) (2021-04-30)
+
+
+### Bug Fixes
+
+* **core:** Always subscribe to pubsub once on startup (#1338) b46c0a0, closes #1338
+
+
+
+
+
+# [1.0.0-rc.10](/compare/@ceramicnetwork/core@1.0.0-rc.9...@ceramicnetwork/core@1.0.0-rc.10) (2021-04-29)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+# [1.0.0-rc.9](/compare/@ceramicnetwork/core@1.0.0-rc.8...@ceramicnetwork/core@1.0.0-rc.9) (2021-04-29)
+
+
+### Reverts
+
+* Revert "fix(core): Add 2 retries when loading CIDs from IPFS (#1334)" 6101b0b, closes #1334
+
+
+
+
+
+# [1.0.0-rc.8](/compare/@ceramicnetwork/core@1.0.0-rc.7...@ceramicnetwork/core@1.0.0-rc.8) (2021-04-29)
+
+
+### Bug Fixes
+
+* **core:** Add 2 retries when loading CIDs from IPFS (#1334) 279d729, closes #1334
+
+
+### Features
+
+* Get instance comparison by hand (#1332) 8dbdc1b, closes #1332
+
+
+
+
+
 # [1.0.0-rc.7](/compare/@ceramicnetwork/core@1.0.0-rc.6...@ceramicnetwork/core@1.0.0-rc.7) (2021-04-28)
 
 

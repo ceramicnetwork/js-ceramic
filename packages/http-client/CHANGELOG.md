@@ -3,6 +3,106 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.7](/compare/@ceramicnetwork/http-client@1.0.7-rc.0...@ceramicnetwork/http-client@1.0.7) (2021-06-22)
+
+**Note:** Version bump only for package @ceramicnetwork/http-client
+
+
+
+
+
+## [1.0.7-rc.0](/compare/@ceramicnetwork/http-client@1.0.6...@ceramicnetwork/http-client@1.0.7-rc.0) (2021-06-21)
+
+
+### Bug Fixes
+
+* Flaky doc test (#1475) 5fd9f8e, closes #1475
+
+
+
+
+
+## [1.0.6](/compare/@ceramicnetwork/http-client@1.0.5...@ceramicnetwork/http-client@1.0.6) (2021-06-06)
+
+**Note:** Version bump only for package @ceramicnetwork/http-client
+
+
+
+
+
+## [1.0.5](/compare/@ceramicnetwork/http-client@1.0.4...@ceramicnetwork/http-client@1.0.5) (2021-06-03)
+
+**Note:** Version bump only for package @ceramicnetwork/http-client
+
+
+
+
+
+## [1.0.4](/compare/@ceramicnetwork/http-client@1.0.4-rc.0...@ceramicnetwork/http-client@1.0.4) (2021-05-31)
+
+**Note:** Version bump only for package @ceramicnetwork/http-client
+
+
+
+
+
+## [1.0.4-rc.0](/compare/@ceramicnetwork/http-client@1.0.3...@ceramicnetwork/http-client@1.0.4-rc.0) (2021-05-28)
+
+**Note:** Version bump only for package @ceramicnetwork/http-client
+
+
+
+
+
+## [1.0.3](/compare/@ceramicnetwork/http-client@1.0.2...@ceramicnetwork/http-client@1.0.3) (2021-05-25)
+
+
+### Bug Fixes
+
+* **http-client:** Allow just one stream of sync http calls (#1406) f089c41, closes #1406
+
+
+
+
+
+## [1.0.2](/compare/@ceramicnetwork/http-client@1.0.1...@ceramicnetwork/http-client@1.0.2) (2021-05-20)
+
+
+### Bug Fixes
+
+* **core,http-client:** Add setter for 'did' property on CeramicApi implmentations (#1391) 700221e, closes #1391
+
+
+
+
+
+## [1.0.1](/compare/@ceramicnetwork/http-client@1.0.0...@ceramicnetwork/http-client@1.0.1) (2021-05-13)
+
+**Note:** Version bump only for package @ceramicnetwork/http-client
+
+
+
+
+
+# [1.0.0](/compare/@ceramicnetwork/http-client@1.0.0-rc.6...@ceramicnetwork/http-client@1.0.0) (2021-05-06)
+
+
+### Features
+
+* http client applyCommit respects cache (#1355) 4cb0fe7, closes #1355
+
+
+
+
+
+# [1.0.0-rc.6](/compare/@ceramicnetwork/http-client@1.0.0-rc.5...@ceramicnetwork/http-client@1.0.0-rc.6) (2021-04-29)
+
+**Note:** Version bump only for package @ceramicnetwork/http-client
+
+
+
+
+
 # [1.0.0-rc.5](/compare/@ceramicnetwork/http-client@1.0.0-rc.4...@ceramicnetwork/http-client@1.0.0-rc.5) (2021-04-28)
 
 **Note:** Version bump only for package @ceramicnetwork/http-client

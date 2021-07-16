@@ -3,6 +3,94 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.2.7](/compare/@ceramicnetwork/3id-did-resolver@1.2.7-rc.0...@ceramicnetwork/3id-did-resolver@1.2.7) (2021-06-22)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
+## [1.2.7-rc.0](/compare/@ceramicnetwork/3id-did-resolver@1.2.6...@ceramicnetwork/3id-did-resolver@1.2.7-rc.0) (2021-06-21)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
+## [1.2.6](/compare/@ceramicnetwork/3id-did-resolver@1.2.5...@ceramicnetwork/3id-did-resolver@1.2.6) (2021-06-06)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
+## [1.2.5](/compare/@ceramicnetwork/3id-did-resolver@1.2.4...@ceramicnetwork/3id-did-resolver@1.2.5) (2021-06-03)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
+## [1.2.4](/compare/@ceramicnetwork/3id-did-resolver@1.2.4-rc.0...@ceramicnetwork/3id-did-resolver@1.2.4) (2021-05-31)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
+## [1.2.4-rc.0](/compare/@ceramicnetwork/3id-did-resolver@1.2.3...@ceramicnetwork/3id-did-resolver@1.2.4-rc.0) (2021-05-28)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
+## [1.2.3](/compare/@ceramicnetwork/3id-did-resolver@1.2.2...@ceramicnetwork/3id-did-resolver@1.2.3) (2021-05-25)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
+## [1.2.2](/compare/@ceramicnetwork/3id-did-resolver@1.2.1...@ceramicnetwork/3id-did-resolver@1.2.2) (2021-05-20)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
+## [1.2.1](/compare/@ceramicnetwork/3id-did-resolver@1.2.0...@ceramicnetwork/3id-did-resolver@1.2.1) (2021-05-13)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
+# [1.2.0](/compare/@ceramicnetwork/3id-did-resolver@1.2.0-rc.9...@ceramicnetwork/3id-did-resolver@1.2.0) (2021-05-06)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
+# [1.2.0-rc.9](/compare/@ceramicnetwork/3id-did-resolver@1.2.0-rc.8...@ceramicnetwork/3id-did-resolver@1.2.0-rc.9) (2021-04-29)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
 # [1.2.0-rc.8](/compare/@ceramicnetwork/3id-did-resolver@1.2.0-rc.7...@ceramicnetwork/3id-did-resolver@1.2.0-rc.8) (2021-04-28)
 
 **Note:** Version bump only for package @ceramicnetwork/3id-did-resolver

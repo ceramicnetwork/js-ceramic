@@ -1,23 +1,24 @@
-import S3 from 'aws-sdk/clients/s3';
-import IPFSRepo from 'ipfs-repo';
-import DatastoreLevel from 'datastore-level';
-import DatastoreFS from 'datastore-fs';
-import DatastoreS3 from 'datastore-s3';
-import path from 'path';
+import S3 from 'aws-sdk/clients/s3'
+import IPFSRepo from 'ipfs-repo'
+import DatastoreLevel from 'datastore-level'
+import DatastoreFS from 'datastore-fs'
+import DatastoreS3 from 'datastore-s3'
+import path from 'path'
 
 // A mock lock
 const notALock = {
   getLockfilePath: () => {
     // Do Nothing
   },
-  lock: () => notALock.getCloser(),
+  lock: () => Promise.resolve(notALock.getCloser()),
   getCloser: () => ({
     close: () => {
       // Do Nothing
+      return Promise.resolve()
     },
   }),
-  locked: () => false,
-};
+  locked: () => Promise.resolve(false),
+}
 
 export enum StorageBackend {
   DEFAULT,
@@ -30,95 +31,101 @@ export namespace StorageBackend {
   export function fromEnv(input: string | undefined) {
     switch (String(input).toLowerCase()) {
       case 'default':
-        return StorageBackend.DEFAULT;
+        return StorageBackend.DEFAULT
       case 's3':
-        return StorageBackend.S3;
+        return StorageBackend.S3
       default:
-        return StorageBackend.DEFAULT;
+        return StorageBackend.DEFAULT
     }
   }
 }
 
 type RepoOptions = {
-  path: string;
-  localPathPrefix: string | undefined;
-  createIfMissing: boolean;
-  backends: Record<string, StorageBackend>;
-};
+  path: string
+  localPathPrefix: string | undefined
+  createIfMissing: boolean
+  backends: Record<string, StorageBackend>
+}
 
 type S3Options = {
-  bucket?: string;
-  region?: string;
-  accessKeyId?: string;
-  secretAccessKey?: string;
-};
+  bucket?: string
+  region?: string
+  accessKeyId?: string
+  secretAccessKey?: string
+}
 
 class NoBackendConfigError extends Error {
   constructor(backend: never) {
-    super(`Expect config for ${backend} config`);
+    super(`Expect config for ${backend} config`)
   }
 }
 
 function localPath(prefix: string | undefined, location: string) {
   if (prefix) {
-    return path.resolve(prefix, location.replace(/^\//, ''));
+    return path.resolve(prefix, location.replace(/^\//, ''))
   } else {
-    return location;
+    return location
   }
 }
 
 function LocalDatastoreFS(pathPrefix: string | undefined) {
   return class LocalDatastoreFS extends DatastoreFS {
     constructor(repoPath: string, options: any) {
-      super(localPath(pathPrefix, repoPath), options);
+      super(localPath(pathPrefix, repoPath), options)
     }
-  };
+  }
 }
 
 function LocalDatastoreLevel(pathPrefix: string | undefined) {
   return class LocalDatastoreLevel extends DatastoreLevel {
     constructor(repoPath: string, options: any) {
-      super(localPath(pathPrefix, repoPath), options);
+      super(localPath(pathPrefix, repoPath), options)
     }
-  };
+  }
 }
 
 /**
  * Add repository backend to IPFS configuration.
  */
-function setRepoBackend(config: any, name: string, repoOptions: RepoOptions, s3: () => S3, defaultBackend: any) {
-  const backend = repoOptions.backends[name] as StorageBackend;
+function setRepoBackend(
+  config: any,
+  name: string,
+  repoOptions: RepoOptions,
+  s3: () => S3,
+  defaultBackend: any
+) {
+  const backend = repoOptions.backends[name] as StorageBackend
   switch (backend) {
     case StorageBackend.DEFAULT:
-      config.storageBackendOptions ||= {};
+      config.storageBackendOptions ||= {}
       config.storageBackendOptions[name] = {
         createIfMissing: repoOptions.createIfMissing,
-      };
-      config.storageBackends ||= {};
-      config.storageBackends[name] = defaultBackend(repoOptions.localPathPrefix);
-      return;
+      }
+      config.storageBackends ||= {}
+      config.storageBackends[name] = defaultBackend(repoOptions.localPathPrefix)
+      return
     case StorageBackend.S3:
-      if (!s3) throw new Error(`Expect s3 configuration for backend ${name}`);
-      config.storageBackendOptions ||= {};
+      if (!s3) throw new Error(`Expect s3 configuration for backend ${name}`)
+      config.storageBackendOptions ||= {}
       config.storageBackendOptions[name] = {
         s3: s3(),
         createIfMissing: repoOptions.createIfMissing,
-      };
-      config.storageBackends ||= {};
-      config.storageBackends[name] = DatastoreS3;
-      return;
+      }
+      config.storageBackends ||= {}
+      config.storageBackends[name] = DatastoreS3
+      return
     default:
-      throw new NoBackendConfigError(backend);
+      throw new NoBackendConfigError(backend)
   }
 }
 /**
  * A convenience method for creating an S3 backed IPFS repo
  */
 export function createRepo(options: RepoOptions, s3Options: S3Options): IPFSRepo {
-  let _s3: S3 | undefined = undefined;
+  let _s3: S3 | undefined = undefined
   function s3() {
-    const { bucket, region, accessKeyId, secretAccessKey } = s3Options;
-    if (!(bucket && accessKeyId && secretAccessKey)) throw new Error(`Expect AWS credentials`);
+    const { bucket, region, accessKeyId, secretAccessKey } = s3Options
+    if (!(bucket && accessKeyId && secretAccessKey)) throw new Error(`Expect AWS credentials`)
     if (!_s3) {
       _s3 = new S3({
         params: {
@@ -127,19 +134,19 @@ export function createRepo(options: RepoOptions, s3Options: S3Options): IPFSRepo
         region,
         accessKeyId,
         secretAccessKey,
-      });
+      })
     }
-    return _s3;
+    return _s3
   }
 
   const config = {
     lock: notALock,
-  };
-  setRepoBackend(config, 'root', options, s3, LocalDatastoreFS);
-  setRepoBackend(config, 'blocks', options, s3, LocalDatastoreFS);
-  setRepoBackend(config, 'keys', options, s3, LocalDatastoreFS);
-  setRepoBackend(config, 'datastore', options, s3, LocalDatastoreLevel);
-  setRepoBackend(config, 'pins', options, s3, LocalDatastoreLevel);
+  }
+  setRepoBackend(config, 'root', options, s3, LocalDatastoreFS)
+  setRepoBackend(config, 'blocks', options, s3, LocalDatastoreFS)
+  setRepoBackend(config, 'keys', options, s3, LocalDatastoreFS)
+  setRepoBackend(config, 'datastore', options, s3, LocalDatastoreLevel)
+  setRepoBackend(config, 'pins', options, s3, LocalDatastoreLevel)
 
-  return new IPFSRepo(options.path, config);
+  return new IPFSRepo(options.path, config)
 }

@@ -4,13 +4,20 @@
 
 ## Getting started
 
-### Installation
-```
-$ npm install @ceramicnetwork/ipfs-daemon
+The daemon can be run with Node.js or Docker.
+
+### Using Node.js
+You can install this package globally and run the binary from your shell
+```shell
+npm install -g @ceramicnetwork/ipfs-daemon
+export CERAMIC_NETWORK=testnet-clay # or another Ceramic network
+ipfs-daemon
 ```
 
-### Usage
-
+or use it in a Node.js application
+```shell
+npm install @ceramicnetwork/ipfs-daemon
+```
 ```typescript
 import {IpfsDaemon} from "@ceramicnetwork/ipfs-daemon";
 
@@ -26,6 +33,13 @@ const ipfsDaemon = await IpfsDaemon.create({
 await ipfsDaemon.start()
 const ipfs = ipfsDaemon.ipfs
 await ipfsDaemon.stop()
+```
+
+### Using Docker
+Public builds of the image [Dockerfile.ipfs-daemon](../../Dockerfile.ipfs-daemon) are hosted here: [ceramicnetwork/ipfs-daemon on Docker Hub](https://hub.docker.com/repository/docker/ceramicnetwork/ipfs-daemon)
+```
+docker pull ceramicnetwork/ipfs-daemon
+docker run -p 5011:5011 -e CERAMIC_NETWORK=testnet-clay ceramicnetwork/ipfs-daemon
 ```
 
 ## Contributing

@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/stream-caip10-link",
-  "version": "1.0.0-rc.5",
+  "version": "1.0.7",
   "description": "Ceramic AccountLink stream type",
   "keywords": [
     "ceramic",
@@ -27,14 +27,15 @@
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/common": "^1.0.0-rc.5",
-    "@ceramicnetwork/streamid": "^1.0.0-rc.2",
+    "@ceramicnetwork/common": "^1.1.0",
+    "@ceramicnetwork/streamid": "^1.0.2",
+    "eip55": "^2.1.0",
     "caip": "~0.9.2"
   },
   "devDependencies": {
-    "@ceramicnetwork/blockchain-utils-linking": "^1.0.0-rc.2",
+    "@ceramicnetwork/blockchain-utils-linking": "^1.0.2",
     "@types/node": "^13.13.15",
-    "dids": "^2.1.0"
+    "dids": "^2.4.0"
   },
   "gitHead": "4f42c6ac204ad25e66efda4e24aed12c339b3c98"
 }

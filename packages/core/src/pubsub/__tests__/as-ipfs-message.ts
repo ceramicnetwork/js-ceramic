@@ -1,7 +1,7 @@
-import { PubsubMessage, serialize } from '../pubsub-message';
-import * as uint8arrays from 'uint8arrays';
-import { IPFSPubsubMessage } from '../incoming-channel';
-import * as random from '@stablelib/random';
+import { PubsubMessage, serialize } from '../pubsub-message'
+import * as uint8arrays from 'uint8arrays'
+import { IPFSPubsubMessage } from '../incoming-channel'
+import * as random from '@stablelib/random'
 
 /**
  * PubsubMessage as raw IPFS pubsub message.
@@ -10,13 +10,12 @@ import * as random from '@stablelib/random';
  * @param from - Peer ID that ostensibly sent the message.
  */
 export function asIpfsMessage(data: PubsubMessage, from?: string): IPFSPubsubMessage {
-  const asBytes = uint8arrays.fromString(serialize(data));
   return {
     from: from || 'outer-space',
-    data: asBytes,
+    data: serialize(data),
     topicIDs: ['topic'],
     seqno: random.randomBytes(10),
     signature: random.randomBytes(10),
     key: random.randomBytes(10),
-  };
+  }
 }

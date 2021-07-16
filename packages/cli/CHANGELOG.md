@@ -3,6 +3,146 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.1.0](/compare/@ceramicnetwork/cli@1.1.0-rc.0...@ceramicnetwork/cli@1.1.0) (2021-06-22)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [1.1.0-rc.0](/compare/@ceramicnetwork/cli@1.0.6...@ceramicnetwork/cli@1.1.0-rc.0) (2021-06-21)
+
+
+### Features
+
+* **core,cli:** Add --disable-anchors flag to allow ceramic to start up without a working CAS (#1490) 9dfc167, closes #1490
+
+
+
+
+
+## [1.0.6](/compare/@ceramicnetwork/cli@1.0.5...@ceramicnetwork/cli@1.0.6) (2021-06-06)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+## [1.0.5](/compare/@ceramicnetwork/cli@1.0.4...@ceramicnetwork/cli@1.0.5) (2021-06-03)
+
+
+### Bug Fixes
+
+* **core:** ipfs subscribe, pin version (#1454) fc9c5e7, closes #1454
+
+
+
+
+
+## [1.0.4](/compare/@ceramicnetwork/cli@1.0.4-rc.0...@ceramicnetwork/cli@1.0.4) (2021-05-31)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+## [1.0.4-rc.0](/compare/@ceramicnetwork/cli@1.0.3...@ceramicnetwork/cli@1.0.4-rc.0) (2021-05-28)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+## [1.0.3](/compare/@ceramicnetwork/cli@1.0.2...@ceramicnetwork/cli@1.0.3) (2021-05-25)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+## [1.0.2](/compare/@ceramicnetwork/cli@1.0.1...@ceramicnetwork/cli@1.0.2) (2021-05-20)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+## [1.0.1](/compare/@ceramicnetwork/cli@1.0.0...@ceramicnetwork/cli@1.0.1) (2021-05-13)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [1.0.0](/compare/@ceramicnetwork/cli@1.0.0-rc.13...@ceramicnetwork/cli@1.0.0) (2021-05-06)
+
+
+### Bug Fixes
+
+* **cli:** Handle undefined docOpts in legacy http endpoints (#1353) a473ce5, closes #1353
+
+
+### Features
+
+* Expose CeramicDaemon from cli package (#1357) 28d0e65, closes #1357
+
+
+
+
+
+# [1.0.0-rc.13](/compare/@ceramicnetwork/cli@1.0.0-rc.12...@ceramicnetwork/cli@1.0.0-rc.13) (2021-05-03)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [1.0.0-rc.12](/compare/@ceramicnetwork/cli@1.0.0-rc.11...@ceramicnetwork/cli@1.0.0-rc.12) (2021-04-30)
+
+
+### Features
+
+* **cli:** use 0 address for default hostname (#1330) 50ea615, closes #1330
+
+
+
+
+
+# [1.0.0-rc.11](/compare/@ceramicnetwork/cli@1.0.0-rc.10...@ceramicnetwork/cli@1.0.0-rc.11) (2021-04-29)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [1.0.0-rc.10](/compare/@ceramicnetwork/cli@1.0.0-rc.9...@ceramicnetwork/cli@1.0.0-rc.10) (2021-04-29)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [1.0.0-rc.9](/compare/@ceramicnetwork/cli@1.0.0-rc.8...@ceramicnetwork/cli@1.0.0-rc.9) (2021-04-29)
+
+
+### Features
+
+* **cli:** allow daemon hostname to be configured (#1329) feba266, closes #1329
+
+
+
+
+
 # [1.0.0-rc.8](/compare/@ceramicnetwork/cli@1.0.0-rc.7...@ceramicnetwork/cli@1.0.0-rc.8) (2021-04-28)
 
 **Note:** Version bump only for package @ceramicnetwork/cli

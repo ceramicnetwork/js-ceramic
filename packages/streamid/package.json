@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/streamid",
-  "version": "1.0.0-rc.2",
+  "version": "1.0.2",
   "description": "Ceramic Stream Ids",
   "keywords": [
     "ceramic",
@@ -12,7 +12,7 @@
     "lib"
   ],
   "scripts": {
-    "test": "../../node_modules/.bin/jest --coverage --env=node",
+    "test": "../../node_modules/.bin/jest --silent --coverage",
     "build": "../../node_modules/.bin/tsc -p tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
@@ -33,6 +33,10 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "resolver": "jest-resolver-enhanced"
   },
   "gitHead": "34eeee25597b0a60def72906c26d3afd6230aaf1"
 }

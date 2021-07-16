@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/3id-did-resolver",
-  "version": "1.2.0-rc.8",
+  "version": "1.2.7",
   "description": "DID Resolver for the 3ID method",
   "keywords": [
     "Ceramic",
@@ -12,6 +12,7 @@
   "homepage": "",
   "license": "(Apache-2.0 OR MIT)",
   "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "directories": {
     "lib": "lib"
   },
@@ -19,7 +20,7 @@
     "lib"
   ],
   "scripts": {
-    "test": "../../node_modules/.bin/jest --coverage --env=node",
+    "test": "../../node_modules/.bin/jest --silent --coverage",
     "build": "../../node_modules/.bin/tsc -p tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
@@ -27,18 +28,22 @@
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/common": "^1.0.0-rc.5",
-    "@ceramicnetwork/stream-tile": "^1.0.0-rc.5",
-    "@ceramicnetwork/streamid": "^1.0.0-rc.2",
+    "@ceramicnetwork/common": "^1.1.0",
+    "@ceramicnetwork/stream-tile": "^1.0.7",
+    "@ceramicnetwork/streamid": "^1.0.2",
     "cids": "~1.1.6",
     "cross-fetch": "^3.1.4",
     "lru_map": "^0.4.1",
     "uint8arrays": "^2.0.5"
   },
   "devDependencies": {
-    "@ceramicnetwork/http-client": "^1.0.0-rc.5",
+    "@ceramicnetwork/http-client": "^1.0.7",
     "@types/node": "^13.13.15",
     "did-resolver": "^3.1.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "resolver": "jest-resolver-enhanced"
   },
   "gitHead": "34eeee25597b0a60def72906c26d3afd6230aaf1"
 }

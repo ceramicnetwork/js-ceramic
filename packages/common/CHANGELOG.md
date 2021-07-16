@@ -3,6 +3,109 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.1.0](/compare/@ceramicnetwork/common@1.1.0-rc.0...@ceramicnetwork/common@1.1.0) (2021-06-22)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+# [1.1.0-rc.0](/compare/@ceramicnetwork/common@1.0.6...@ceramicnetwork/common@1.1.0-rc.0) (2021-06-21)
+
+
+### Bug Fixes
+
+* **core:** Only poll for anchors at startup, don't submit a new request (#1437) ec17446, closes #1437
+
+
+### Features
+
+* **core:** Loading a CommitID makes the node handle the commit CID as a potential new tip (#1484) 46e0f22, closes #1484
+
+
+
+
+
+## [1.0.6](/compare/@ceramicnetwork/common@1.0.5...@ceramicnetwork/common@1.0.6) (2021-06-06)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+## [1.0.5](/compare/@ceramicnetwork/common@1.0.4...@ceramicnetwork/common@1.0.5) (2021-06-03)
+
+
+### Bug Fixes
+
+* **core:** ipfs subscribe, pin version (#1454) fc9c5e7, closes #1454
+* Pin dag-jose contents (#1451) a598c10, closes #1451
+
+
+
+
+
+## [1.0.4](/compare/@ceramicnetwork/common@1.0.4-rc.0...@ceramicnetwork/common@1.0.4) (2021-05-31)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+## [1.0.4-rc.0](/compare/@ceramicnetwork/common@1.0.3...@ceramicnetwork/common@1.0.4-rc.0) (2021-05-28)
+
+
+### Bug Fixes
+
+* **core:** only sync pinned streams the first time they are loaded (#1417) 76be682, closes #1417
+
+
+
+
+
+## [1.0.3](/compare/@ceramicnetwork/common@1.0.2...@ceramicnetwork/common@1.0.3) (2021-05-25)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+## [1.0.2](/compare/@ceramicnetwork/common@1.0.1...@ceramicnetwork/common@1.0.2) (2021-05-20)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+## [1.0.1](/compare/@ceramicnetwork/common@1.0.0...@ceramicnetwork/common@1.0.1) (2021-05-13)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+# [1.0.0](/compare/@ceramicnetwork/common@1.0.0-rc.6...@ceramicnetwork/common@1.0.0) (2021-05-06)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+# [1.0.0-rc.6](/compare/@ceramicnetwork/common@1.0.0-rc.5...@ceramicnetwork/common@1.0.0-rc.6) (2021-04-29)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
 # [1.0.0-rc.5](/compare/@ceramicnetwork/common@1.0.0-rc.4...@ceramicnetwork/common@1.0.0-rc.5) (2021-04-28)
 
 

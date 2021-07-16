@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/pinning-aggregation",
-  "version": "1.0.0-rc.5",
+  "version": "1.0.7",
   "description": "Aggregated pinning",
   "keywords": [
     "ceramic",
@@ -14,7 +14,7 @@
     "lib"
   ],
   "scripts": {
-    "test": "../../node_modules/.bin/jest --coverage",
+    "test": "../../node_modules/.bin/jest --silent --coverage",
     "build": "../../node_modules/.bin/tsc -p tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
@@ -31,10 +31,11 @@
     "@stablelib/sha256": "^1.0.0"
   },
   "devDependencies": {
-    "@ceramicnetwork/common": "^1.0.0-rc.5",
-    "@ceramicnetwork/pinning-ipfs-backend": "^1.0.0-rc.5",
-    "@ceramicnetwork/pinning-powergate-backend": "^1.0.0-rc.5",
-    "cids": "~1.1.6"
+    "@ceramicnetwork/common": "^1.1.0",
+    "@ceramicnetwork/pinning-ipfs-backend": "^1.0.7",
+    "@ceramicnetwork/pinning-powergate-backend": "^1.0.7",
+    "cids": "~1.1.6",
+    "ipfs-core-types": "~0.5.1"
   },
   "publishConfig": {
     "access": "public"
@@ -49,7 +50,8 @@
     "transform": {
       "^.+\\.ts$": "ts-jest"
     },
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "resolver": "jest-resolver-enhanced"
   },
   "gitHead": "34eeee25597b0a60def72906c26d3afd6230aaf1"
 }

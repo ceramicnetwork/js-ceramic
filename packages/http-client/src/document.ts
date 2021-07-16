@@ -1,8 +1,9 @@
-import { Observable, timer } from 'rxjs'
+import { Observable, Subscription, timer } from 'rxjs'
 import { throttle } from 'rxjs/operators'
 import {
   CeramicCommit,
   CreateOpts,
+  fetchJson,
   StreamState,
   StreamUtils,
   SyncOptions,
@@ -10,22 +11,32 @@ import {
   StreamStateSubject,
   LoadOpts,
   UpdateOpts,
-} from '@ceramicnetwork/common';
-import { StreamID, CommitID } from '@ceramicnetwork/streamid';
-import { fetchJson } from './utils'
+} from '@ceramicnetwork/common'
+import { StreamID, CommitID } from '@ceramicnetwork/streamid'
 import QueryString from 'query-string'
 
 export class Document extends Observable<StreamState> implements RunningStateLike {
-  private readonly state$: StreamStateSubject;
+  private readonly state$: StreamStateSubject
+  private periodicSubscription: Subscription | undefined
 
-  constructor (initial: StreamState, private _apiUrl: string, syncInterval: number) {
-    super(subscriber => {
-      const periodicUpdates = timer(0, syncInterval).pipe(throttle(() => this._syncState(this.id, { sync: SyncOptions.PREFER_CACHE }))).subscribe();
+  constructor(initial: StreamState, private _apiUrl: string, syncInterval: number) {
+    super((subscriber) => {
+      // Set up periodic updates only when the first observer subscribes
+      const isFirstObserver = this.state$.observers.length === 0
+      if (isFirstObserver) {
+        this.periodicSubscription = timer(0, syncInterval)
+          .pipe(throttle(() => this._syncState(this.id, { sync: SyncOptions.PREFER_CACHE })))
+          .subscribe()
+      }
       this.state$.subscribe(subscriber).add(() => {
-        periodicUpdates.unsubscribe();
+        // Shut down periodic updates when the last observer unsubscribes
+        const isNoObserversLeft = this.state$.observers.length === 0
+        if (isNoObserversLeft) {
+          this.periodicSubscription?.unsubscribe()
+        }
       })
     })
-    this.state$ = new StreamStateSubject(initial);
+    this.state$ = new StreamStateSubject(initial)
   }
 
   get value(): StreamState {
@@ -53,47 +64,72 @@ export class Document extends Observable<StreamState> implements RunningStateLik
     return new StreamID(this.state$.value.type, this.state$.value.log[0].cid)
   }
 
-  static async createFromGenesis (apiUrl: string, type: number, genesis: any, opts: CreateOpts, syncInterval: number): Promise<Document> {
+  static async createFromGenesis(
+    apiUrl: string,
+    type: number,
+    genesis: any,
+    opts: CreateOpts,
+    syncInterval: number
+  ): Promise<Document> {
     const { state } = await fetchJson(apiUrl + '/streams', {
       method: 'post',
       body: {
         type,
         genesis: StreamUtils.serializeCommit(genesis),
         opts,
-      }
+      },
     })
     return new Document(StreamUtils.deserializeState(state), apiUrl, syncInterval)
   }
 
-  static async applyCommit(apiUrl: string, streamId: StreamID | string, commit: CeramicCommit, opts: UpdateOpts, syncInterval: number): Promise<Document> {
+  static async applyCommit(
+    apiUrl: string,
+    streamId: StreamID | string,
+    commit: CeramicCommit,
+    opts: UpdateOpts,
+    syncInterval: number
+  ): Promise<Document> {
     const { state } = await fetchJson(apiUrl + '/commits', {
       method: 'post',
       body: {
         streamId: streamId.toString(),
         commit: StreamUtils.serializeCommit(commit),
         opts,
-      }
+      },
     })
     return new Document(StreamUtils.deserializeState(state), apiUrl, syncInterval)
   }
 
-  private static async _load(streamId: StreamID | CommitID, apiUrl: string, opts: LoadOpts): Promise<StreamState> {
+  private static async _load(
+    streamId: StreamID | CommitID,
+    apiUrl: string,
+    opts: LoadOpts
+  ): Promise<StreamState> {
     const url = apiUrl + '/streams/' + streamId.toString() + '?' + QueryString.stringify(opts)
     const { state } = await fetchJson(url)
     return state
   }
 
-  static async load (streamId: StreamID | CommitID, apiUrl: string, syncInterval: number, opts: LoadOpts): Promise<Document> {
+  static async load(
+    streamId: StreamID | CommitID,
+    apiUrl: string,
+    syncInterval: number,
+    opts: LoadOpts
+  ): Promise<Document> {
     const state = await Document._load(streamId, apiUrl, opts)
     return new Document(StreamUtils.deserializeState(state), apiUrl, syncInterval)
   }
 
-  static async loadStreamCommits (streamId: StreamID, apiUrl: string): Promise<Array<Record<string, CeramicCommit>>> {
+  static async loadStreamCommits(
+    streamId: StreamID,
+    apiUrl: string
+  ): Promise<Array<Record<string, CeramicCommit>>> {
     const { commits } = await fetchJson(`${apiUrl}/commits/${streamId}`)
 
     return commits.map((r: any) => {
       return {
-        cid: r.cid, value: StreamUtils.deserializeCommit(r.value)
+        cid: r.cid,
+        value: StreamUtils.deserializeCommit(r.value),
       }
     })
   }
