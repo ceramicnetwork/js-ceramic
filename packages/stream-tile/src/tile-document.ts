@@ -262,7 +262,7 @@ export class TileDocument<T = Record<string, any>> extends Stream {
     this._isReadOnly = true
   }
 
-  isReadOnly(): boolean {
+  get isReadOnly(): boolean {
     return this._isReadOnly
   }
 

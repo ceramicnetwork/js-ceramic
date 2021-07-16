@@ -231,9 +231,9 @@ export abstract class Stream extends Observable<StreamState> implements StreamSt
   abstract makeReadOnly(): void
 
   /**
-   * Returns true if 'makeReadOnly()' has been called previously.
+   * True if 'makeReadOnly()' has been called previously.
    */
-  abstract isReadOnly(): boolean
+  abstract isReadOnly: boolean
 }
 
 /**

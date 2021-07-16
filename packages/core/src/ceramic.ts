@@ -678,7 +678,7 @@ class Ceramic implements CeramicApi {
     // This ensures the returned Streams always are as up-to-date as possible, and is behavior that
     // the anchor service relies upon.
     await Promise.all(Object.values(results).map((stream) => {
-      if (!stream.isReadOnly()) {
+      if (!stream.isReadOnly) {
         return stream.sync({sync: SyncOptions.NEVER_SYNC, syncTimeoutSeconds: 0})
       }
     }))

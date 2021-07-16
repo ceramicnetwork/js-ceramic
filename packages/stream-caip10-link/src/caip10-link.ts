@@ -177,7 +177,7 @@ export class Caip10Link extends Stream {
     this._isReadOnly = true
   }
 
-  isReadOnly(): boolean {
+  get isReadOnly(): boolean {
     return this._isReadOnly
   }
 }
