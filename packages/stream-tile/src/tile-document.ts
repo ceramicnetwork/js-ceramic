@@ -127,6 +127,8 @@ export class TileDocument<T = Record<string, any>> extends Stream {
   static STREAM_TYPE_NAME = 'tile'
   static STREAM_TYPE_ID = 0
 
+  private _isReadOnly = false;
+
   /**
    * Returns the contents of this document
    */
@@ -257,6 +259,11 @@ export class TileDocument<T = Record<string, any>> extends Stream {
     this.update = throwReadOnlyError
     this.patch = throwReadOnlyError
     this.sync = throwReadOnlyError
+    this._isReadOnly = true
+  }
+
+  isReadOnly(): boolean {
+    return this._isReadOnly
   }
 
   /**

@@ -228,7 +228,12 @@ export abstract class Stream extends Observable<StreamState> implements StreamSt
    * Makes this stream read-only. After this has been called any future attempts to call
    * mutation methods on the instance will throw.
    */
-  abstract makeReadOnly()
+  abstract makeReadOnly(): void
+
+  /**
+   * Returns true if 'makeReadOnly()' has been called previously.
+   */
+  abstract isReadOnly(): boolean
 }
 
 /**
