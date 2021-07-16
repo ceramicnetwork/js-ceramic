@@ -1,10 +1,10 @@
-import PQueue from 'p-queue';
+import PQueue from 'p-queue'
 
 export const noop = () => {
   // Do Nothing
-};
+}
 
-export type Task<TaskResultType> = () => Promise<TaskResultType>;
+export type Task<TaskResultType> = () => Promise<TaskResultType>
 
 /**
  * TaskQueue aspect.
@@ -16,21 +16,21 @@ export interface TaskQueueLike {
    * @param task - task to run
    * @param onFinally - function to call when the task is finished, optional
    */
-  add(task: Task<void>, onFinally?: () => void | Promise<void>): void;
+  add(task: Task<void>, onFinally?: () => void | Promise<void>): void
 
   /**
    * Add task to the queue. Return its result in Promise.
    * The point of `run` (as opposed to `add`) is to pass an error to the caller if it is throw inside a task.
    * Note "fire-and-forget" comment for the `add` method.
    */
-  run<T>(task: Task<T>): Promise<T>;
+  run<T>(task: Task<T>): Promise<T>
 }
 
 /**
  * PQueue with synchronous `add` and a common error-handler.
  */
 export class TaskQueue implements TaskQueueLike {
-  #pq = new PQueue({ concurrency: 1 });
+  #pq = new PQueue({ concurrency: 1 })
 
   /**
    * Construct the queue. `onError` is a common error-handler for all the tasks.
@@ -47,17 +47,20 @@ export class TaskQueue implements TaskQueueLike {
    * Size of the queue. Counts both deferred and currently running tasks.
    */
   get size(): number {
-    return this.#pq.size + this.#pq.pending;
+    return this.#pq.size + this.#pq.pending
   }
 
   /**
    * Add task to queue. Fire-and-forget semantics.
    */
   add(task, onFinally?): void {
-    this.#pq.add(task).catch((error) => {
-      const retry = () => this.add(task, onFinally);
-      this.onError(error, retry);
-    }).finally(() => onFinally?.())
+    this.#pq
+      .add(task)
+      .catch((error) => {
+        const retry = () => this.add(task, onFinally)
+        this.onError(error, retry)
+      })
+      .finally(() => onFinally?.())
   }
 
   /**
@@ -66,21 +69,21 @@ export class TaskQueue implements TaskQueueLike {
    * Note "fire-and-forget" comment for the `add` method.
    */
   run<T>(task: Task<T>): Promise<T> {
-    return this.#pq.add(task);
+    return this.#pq.add(task)
   }
 
   /**
    * Wait till all the tasks are completed.
    */
   onIdle(): Promise<void> {
-    return this.#pq.onIdle();
+    return this.#pq.onIdle()
   }
 
   /**
    * Clear the queue.
    */
   clear() {
-    this.#pq.clear();
+    this.#pq.clear()
   }
 
   pause() {

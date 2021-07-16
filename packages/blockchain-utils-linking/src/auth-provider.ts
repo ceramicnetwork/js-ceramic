@@ -1,5 +1,5 @@
-import { LinkProof } from "./util";
-import { AccountID } from "caip";
+import { LinkProof } from './util'
+import { AccountID } from 'caip'
 
 /**
  *  AuthProvider defines the interface your custom authProvider must
@@ -9,7 +9,7 @@ import { AccountID } from "caip";
  *  One could use `#withAddress` to instantiate AuthProvider with another address.
  */
 export interface AuthProvider {
-  readonly isAuthProvider: true;
+  readonly isAuthProvider: true
 
   /**
    *  (Required) Authenticate function consumes both a message (human readable string) and
@@ -33,7 +33,7 @@ export interface AuthProvider {
    * @param message   A human readable string
    * @return          A 32-64 bytes hex string
    */
-  authenticate(message: string): Promise<string>;
+  authenticate(message: string): Promise<string>
 
   /**
    *  (Required) createLink will publish a public verifiable link between account
@@ -46,16 +46,16 @@ export interface AuthProvider {
    * @param did       A human readable string
    * @return          Returns on success
    */
-  createLink(did: string): Promise<LinkProof>;
+  createLink(did: string): Promise<LinkProof>
 
   /**
    * Return currently used address as CAIP AccountID.
    */
-  accountId(): Promise<AccountID>;
+  accountId(): Promise<AccountID>
 
   /**
    * Instantiate a new AuthProvider using a new address.
    * @param address
    */
-  withAddress(address: string): AuthProvider;
+  withAddress(address: string): AuthProvider
 }

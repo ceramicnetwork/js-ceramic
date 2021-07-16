@@ -12,6 +12,7 @@
   "homepage": "",
   "license": "(Apache-2.0 OR MIT)",
   "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "directories": {
     "lib": "lib"
   },

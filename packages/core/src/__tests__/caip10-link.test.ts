@@ -1,29 +1,33 @@
 import Ceramic, { CeramicConfig } from '../ceramic'
-import { Caip10Link } from "@ceramicnetwork/stream-caip10-link"
-import { AnchorStatus, StreamUtils, IpfsApi } from "@ceramicnetwork/common"
-import { validateLink } from "@ceramicnetwork/blockchain-utils-validation"
+import { Caip10Link } from '@ceramicnetwork/stream-caip10-link'
+import { AnchorStatus, StreamUtils, IpfsApi } from '@ceramicnetwork/common'
+import { validateLink } from '@ceramicnetwork/blockchain-utils-validation'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import KeyDidResolver from 'key-did-resolver'
-import { Resolver } from "did-resolver"
+import { Resolver } from 'did-resolver'
 import { DID } from 'dids'
 import * as u8a from 'uint8arrays'
-import { createIPFS } from './ipfs-util';
-import { anchorUpdate } from '../state-management/__tests__/anchor-update';
+import { createIPFS } from './ipfs-util'
+import { anchorUpdate } from '../state-management/__tests__/anchor-update'
 import MockDate from 'mockdate'
 
 jest.mock('../store/level-state-store')
 
 jest.mock('@ceramicnetwork/blockchain-utils-validation')
-validateLink.mockImplementation(async (proof) => { return proof })
+validateLink.mockImplementation(async (proof) => {
+  return proof
+})
 
-
-const seed = u8a.fromString('6e34b2e1a9624113d81ece8a8a22e6e97f0e145c25c1d4d2d0e62753b4060c83', 'base16')
+const seed = u8a.fromString(
+  '6e34b2e1a9624113d81ece8a8a22e6e97f0e145c25c1d4d2d0e62753b4060c83',
+  'base16'
+)
 
 describe('Ceramic API', () => {
   jest.setTimeout(60000)
-  let ipfs: IpfsApi;
+  let ipfs: IpfsApi
 
-  const makeDID = function(seed: Uint8Array): DID {
+  const makeDID = function (seed: Uint8Array): DID {
     const provider = new Ed25519Provider(seed)
 
     const keyDidResolver = KeyDidResolver.getResolver()
@@ -66,7 +70,7 @@ describe('Ceramic API', () => {
     })
 
     it('Create from valid account id', async () => {
-      const account = '0x0123456789abcdefghijklmnopqrstuvwxyz0000@eip155:1'
+      const account = '0x0544DcF4fcE959C6C4F3b7530190cB5E1BD67Cb8@eip155:1'
       const link = await Caip10Link.fromAccount(ceramic, account)
       expect(link.metadata.controllers).toHaveLength(1)
       expect(link.metadata.controllers[0]).toEqual(account)
@@ -76,16 +80,22 @@ describe('Ceramic API', () => {
     })
 
     it('invalid account id', async () => {
-      const invalid1 = '0x0123456789abcdefghijklmnopqrstuvwxyz0000'
-      const invalid2 = '0x0123456789abcdefghijklmnopqrstuvwxyz0000@eip155'
+      const invalid1 = '0x0544DcF4fcE959C6C4F3b7530190cB5E1BD67Cb8'
+      const invalid2 = '0x0544DcF4fcE959C6C4F3b7530190cB5E1BD67Cb8@eip155'
       const invalid3 = '@eip155:1'
-      await expect(Caip10Link.fromAccount(ceramic, invalid1)).rejects.toThrow(/Invalid accountId provided/)
-      await expect(Caip10Link.fromAccount(ceramic, invalid2)).rejects.toThrow(/Invalid chainId provided/)
-      await expect(Caip10Link.fromAccount(ceramic, invalid3)).rejects.toThrow(/Invalid accountId provided/)
+      await expect(Caip10Link.fromAccount(ceramic, invalid1)).rejects.toThrow(
+        /Invalid accountId provided/
+      )
+      await expect(Caip10Link.fromAccount(ceramic, invalid2)).rejects.toThrow(
+        /Invalid chainId provided/
+      )
+      await expect(Caip10Link.fromAccount(ceramic, invalid3)).rejects.toThrow(
+        /Invalid accountId provided/
+      )
     })
 
     it('Create and link DID', async () => {
-      const account = '0x0123456789abcdefghijklmnopqrstuvwxyz0001@eip155:1'
+      const account = '0x0544DcF4fcE959C6C4F3b7530190cB5E1BD67Cb7@eip155:1'
       const linkProof = { account, did: ceramic.did.id }
       authProvider.createLink.mockReturnValueOnce(linkProof)
 
@@ -100,7 +110,7 @@ describe('Ceramic API', () => {
     })
 
     it('Created with same address loads same doc', async () => {
-      const account = '0x0123456789abcdefghijklmnopqrstuvwxyz0002@eip155:1'
+      const account = '0x0544DcF4fcE959C6C4F3b7530190cB5E1BD67Cb3@eip155:1'
       const linkProof = { account, did: ceramic.did.id }
       authProvider.createLink.mockReturnValueOnce(linkProof)
 
@@ -111,11 +121,13 @@ describe('Ceramic API', () => {
       expect(link1.id).toEqual(link2.id)
       expect(link1.did).toEqual(ceramic.did.id)
       expect(link2.did).toEqual(link1.did)
-      expect(StreamUtils.serializeState(link2.state)).toEqual(StreamUtils.serializeState(link1.state))
+      expect(StreamUtils.serializeState(link2.state)).toEqual(
+        StreamUtils.serializeState(link1.state)
+      )
     })
 
     it('Load works', async () => {
-      const account = '0x0123456789abcdefghijklmnopqrstuvwxyz0003@eip155:1'
+      const account = '0x0544DcF4fcE959C6C4F3b7530190cB5E1BD67Cb4@eip155:1'
       const linkProof = { account, did: ceramic.did.id }
       authProvider.createLink.mockReturnValueOnce(linkProof)
 
@@ -126,11 +138,13 @@ describe('Ceramic API', () => {
       expect(link1.id).toEqual(link2.id)
       expect(link1.did).toEqual(ceramic.did.id)
       expect(link2.did).toEqual(link1.did)
-      expect(StreamUtils.serializeState(link2.state)).toEqual(StreamUtils.serializeState(link1.state))
+      expect(StreamUtils.serializeState(link2.state)).toEqual(
+        StreamUtils.serializeState(link1.state)
+      )
     })
 
     it('Anchoring works', async () => {
-      const account = '0x0123456789abcdefghijklmnopqrstuvwxyz0004@eip155:1'
+      const account = '0x0544DcF4fcE959C6C4F3b7530190cB5E1BD67Cb1@eip155:1'
       const linkProof = { account, did: ceramic.did.id }
       authProvider.createLink.mockReturnValueOnce(linkProof)
 
@@ -148,6 +162,5 @@ describe('Ceramic API', () => {
       expect(link.state.log).toHaveLength(4)
       expect(link.state).toMatchSnapshot()
     })
-
   })
 })

@@ -1,32 +1,34 @@
 import CID from 'cids'
 import cloneDeep from 'lodash.clonedeep'
-import { StreamUtils, IpfsApi, UnreachableCaseError } from '@ceramicnetwork/common';
-import StreamID from "@ceramicnetwork/streamid";
-import { DiagnosticsLogger, ServiceLogger } from "@ceramicnetwork/common";
-import { Repository } from './state-management/repository';
+import { StreamUtils, IpfsApi, UnreachableCaseError } from '@ceramicnetwork/common'
+import StreamID from '@ceramicnetwork/streamid'
+import { DiagnosticsLogger, ServiceLogger } from '@ceramicnetwork/common'
+import { Repository } from './state-management/repository'
 import {
   MsgType,
   PubsubMessage,
   QueryMessage,
   ResponseMessage,
   UpdateMessage,
-} from './pubsub/pubsub-message';
-import { Pubsub } from './pubsub/pubsub';
-import { Subscription } from 'rxjs';
-import { MessageBus } from './pubsub/message-bus';
+} from './pubsub/pubsub-message'
+import { Pubsub } from './pubsub/pubsub'
+import { Subscription } from 'rxjs'
+import { MessageBus } from './pubsub/message-bus'
+import { LRUMap } from 'lru_map'
 
 const IPFS_GET_TIMEOUT = 60000 // 1 minute
 const IPFS_MAX_RECORD_SIZE = 256000 // 256 KB
 const IPFS_RESUBSCRIBE_INTERVAL_DELAY = 1000 * 15 // 15 sec
+const IPFS_CACHE_SIZE = 1024 // maximum cache size of 256MB
 
 function messageTypeToString(type: MsgType): string {
   switch (type) {
     case MsgType.UPDATE:
-      return "Update"
+      return 'Update'
     case MsgType.QUERY:
-      return "Query"
+      return 'Query'
     case MsgType.RESPONSE:
-      return "Response"
+      return 'Response'
     default:
       throw new UnreachableCaseError(type, `Unsupported message type`)
   }
@@ -37,12 +39,20 @@ function messageTypeToString(type: MsgType): string {
  */
 export class Dispatcher {
   readonly messageBus: MessageBus
+  readonly dagNodeCache : LRUMap<string, any>
   // Set of IDs for QUERY messages we have sent to the pub/sub topic but not yet heard a
   // corresponding RESPONSE message for. Maps the query ID to the primary StreamID we were querying for.
-  constructor (readonly _ipfs: IpfsApi, private readonly topic: string, readonly repository: Repository, private readonly _logger: DiagnosticsLogger, private readonly _pubsubLogger: ServiceLogger) {
+  constructor(
+    readonly _ipfs: IpfsApi,
+    private readonly topic: string,
+    readonly repository: Repository,
+    private readonly _logger: DiagnosticsLogger,
+    private readonly _pubsubLogger: ServiceLogger
+  ) {
     const pubsub = new Pubsub(_ipfs, topic, IPFS_RESUBSCRIBE_INTERVAL_DELAY, _pubsubLogger, _logger)
     this.messageBus = new MessageBus(pubsub)
     this.messageBus.subscribe(this.handleMessage.bind(this))
+    this.dagNodeCache  = new LRUMap<string, any>(IPFS_CACHE_SIZE)
   }
 
   /**
@@ -51,24 +61,26 @@ export class Dispatcher {
    * @param data - Ceramic commit data
    * @param streamId - StreamID of the stream the commit belongs to, used for logging.
    */
-  async storeCommit (data: any, streamId?: StreamID): Promise<CID> {
+  async storeCommit(data: any, streamId?: StreamID): Promise<CID> {
     try {
       if (StreamUtils.isSignedCommitContainer(data)) {
-        const {jws, linkedBlock} = data
+        const { jws, linkedBlock } = data
         // put the JWS into the ipfs dag
-        const cid = await this._ipfs.dag.put(jws, {format: 'dag-jose', hashAlg: 'sha2-256'})
+        const cid = await this._ipfs.dag.put(jws, { format: 'dag-jose', hashAlg: 'sha2-256' })
         // put the payload into the ipfs dag
-        await this._ipfs.block.put(linkedBlock, {cid: jws.link.toString()})
-        await this._restrictRecordSize(jws.link.toString())
-        await this._restrictRecordSize(cid)
+        await this._ipfs.block.put(linkedBlock, { cid: jws.link.toString() })
+        await this._restrictCommitSize(jws.link.toString())
+        await this._restrictCommitSize(cid)
         return cid
       }
       const cid = await this._ipfs.dag.put(data)
-      await this._restrictRecordSize(cid)
+      await this._restrictCommitSize(cid)
       return cid
     } catch (e) {
       if (streamId) {
-        this._logger.err(`Error while storing commit to IPFS for stream ${streamId.toString()}: ${e}`)
+        this._logger.err(
+          `Error while storing commit to IPFS for stream ${streamId.toString()}: ${e}`
+        )
       } else {
         this._logger.err(`Error while storing commit to IPFS: ${e}`)
       }
@@ -84,15 +96,24 @@ export class Dispatcher {
    * @param cid - Commit CID
    * @param streamId - StreamID of the stream the commit belongs to, used for logging.
    */
-  async retrieveCommit (cid: CID | string, streamId?: StreamID): Promise<any> {
+  async retrieveCommit(cid: CID | string, streamId?: StreamID): Promise<any> {
     try {
       const asCid = typeof cid === 'string' ? new CID(cid) : cid
-      const record = await this._ipfs.dag.get(asCid, {timeout: IPFS_GET_TIMEOUT})
-      await this._restrictRecordSize(cid)
-      return cloneDeep(record.value)
+
+      // Lookup CID in cache before looking it up IPFS
+      const cachedDagNode = await this.dagNodeCache.get(asCid.toString())
+      if (cachedDagNode) return cloneDeep(cachedDagNode)
+
+      // Now lookup CID in IPFS and also store it in the cache
+      const dagNode = await this._ipfs.dag.get(asCid, { timeout: IPFS_GET_TIMEOUT })
+      await this._restrictCommitSize(cid)
+      await this.dagNodeCache.set(asCid.toString(), dagNode.value)
+      return cloneDeep(dagNode.value)
     } catch (e) {
       if (streamId) {
-        this._logger.err(`Error while loading commit CID ${cid.toString()} from IPFS for stream ${streamId.toString()}: ${e}`)
+        this._logger.err(
+          `Error while loading commit CID ${cid.toString()} from IPFS for stream ${streamId.toString()}: ${e}`
+        )
       } else {
         this._logger.err(`Error while loading commit CID ${cid.toString()} from IPFS: ${e}`)
       }
@@ -105,11 +126,18 @@ export class Dispatcher {
    * @param cid
    * @param path - optional IPLD path to load, starting from the object represented by `cid`
    */
-  async retrieveFromIPFS (cid: CID | string, path?: string): Promise<any> {
+  async retrieveFromIPFS(cid: CID | string, path?: string): Promise<any> {
     try {
       const asCid = typeof cid === 'string' ? new CID(cid) : cid
-      const record = await this._ipfs.dag.get(asCid, {timeout: IPFS_GET_TIMEOUT, path})
-      return cloneDeep(record.value)
+
+      // Lookup CID in cache before looking it up IPFS
+      const cachedDagNode = await this.dagNodeCache.get(asCid.toString())
+      if (cachedDagNode) return cloneDeep(cachedDagNode)
+
+      // Now lookup CID in IPFS and also store it in the cache
+      const dagNode = await this._ipfs.dag.get(asCid, { timeout: IPFS_GET_TIMEOUT, path })
+      await this.dagNodeCache.set(asCid.toString(), dagNode.value)
+      return cloneDeep(dagNode.value)
     } catch (e) {
       this._logger.err(`Error while loading CID ${cid.toString()} from IPFS: ${e}`)
       throw e
@@ -121,10 +149,14 @@ export class Dispatcher {
    * @param cid - Record CID
    * @private
    */
-  async _restrictRecordSize(cid: CID | string): Promise<void> {
+  async _restrictCommitSize(cid: CID | string): Promise<void> {
     const stat = await this._ipfs.block.stat(cid, { timeout: IPFS_GET_TIMEOUT })
     if (stat.size > IPFS_MAX_RECORD_SIZE) {
-      throw new Error(`${cid.toString()} record size ${stat.size} exceeds the maximum block size of ${IPFS_MAX_RECORD_SIZE}`)
+      throw new Error(
+        `${cid.toString()} record size ${
+          stat.size
+        } exceeds the maximum block size of ${IPFS_MAX_RECORD_SIZE}`
+      )
     }
   }
 
@@ -134,7 +166,7 @@ export class Dispatcher {
    * @param streamId  - Stream ID
    * @param tip - Commit CID
    */
-  publishTip (streamId: StreamID, tip: CID): Subscription {
+  publishTip(streamId: StreamID, tip: CID): Subscription {
     return this.publish({ typ: MsgType.UPDATE, stream: streamId, tip: tip })
   }
 
@@ -159,8 +191,10 @@ export class Dispatcher {
     } catch (e) {
       // TODO: Combine these two log statements into one line so that they can't get split up in the
       // log output.
-      this._logger.err(`Error while processing ${messageTypeToString(message.typ)} message from pubsub: ${e}`)
-      this._logger.err(e)  // Log stack trace
+      this._logger.err(
+        `Error while processing ${messageTypeToString(message.typ)} message from pubsub: ${e}`
+      )
+      this._logger.err(e) // Log stack trace
     }
   }
 
@@ -196,7 +230,7 @@ export class Dispatcher {
       // Build RESPONSE message and send it out on the pub/sub topic
       // TODO: Handle 'paths' for multiquery support
       const tipMap = new Map().set(streamId.toString(), tip)
-      this.publish({ typ: MsgType.RESPONSE, id, tips: tipMap})
+      this.publish({ typ: MsgType.RESPONSE, id, tips: tipMap })
     }
   }
 
@@ -211,8 +245,13 @@ export class Dispatcher {
     if (expectedStreamID) {
       const newTip = tips.get(expectedStreamID.toString())
       if (!newTip) {
-        throw new Error("Response to query with ID '" + queryId + "' is missing expected new tip for StreamID '" +
-          expectedStreamID + "'")
+        throw new Error(
+          "Response to query with ID '" +
+            queryId +
+            "' is missing expected new tip for StreamID '" +
+            expectedStreamID +
+            "'"
+        )
       }
       this.repository.stateManager.update(expectedStreamID, newTip)
       this.messageBus.outstandingQueries.delete(queryId)
