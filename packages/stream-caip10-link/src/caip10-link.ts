@@ -34,6 +34,8 @@ export class Caip10Link extends Stream {
   static STREAM_TYPE_NAME = 'caip10-link'
   static STREAM_TYPE_ID = 1
 
+  private _isReadOnly = false;
+
   /**
    * Returns the DID linked to the CAIP10 address this object represents.
    */
@@ -171,5 +173,11 @@ export class Caip10Link extends Stream {
   makeReadOnly() {
     this.setDidProof = throwReadOnlyError
     this.setDid = throwReadOnlyError
+    this.sync = throwReadOnlyError
+    this._isReadOnly = true
+  }
+
+  get isReadOnly(): boolean {
+    return this._isReadOnly
   }
 }
