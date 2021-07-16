@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.1.0-rc.0](/compare/@ceramicnetwork/http-client@1.0.8-rc.0...@ceramicnetwork/http-client@1.1.0-rc.0) (2021-07-16)
+
+
+### Features
+
+* Check signature of a lone genesis (#1529) b55e225, closes #1529
+* Pass issuer to verifyJWS (#1542) 3c60b0c, closes #1542
+* Pass time-information when checking a signature (#1502) 913e091, closes #1502
+
+
+
+
+
 ## [1.0.8-rc.0](/compare/@ceramicnetwork/http-client@1.0.7...@ceramicnetwork/http-client@1.0.8-rc.0) (2021-06-30)
 
 **Note:** Version bump only for package @ceramicnetwork/http-client

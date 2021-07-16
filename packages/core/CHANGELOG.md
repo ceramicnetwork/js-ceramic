@@ -3,6 +3,29 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.3.0-rc.1](/compare/@ceramicnetwork/core@1.3.0-rc.0...@ceramicnetwork/core@1.3.0-rc.1) (2021-07-16)
+
+
+### Bug Fixes
+
+* **core:** convert pubsub seqno to string (#1543) a96d932, closes #1543
+* **core:** Optimize commit application to minimize calls to IPFS (#1528) 75ee50e, closes #1528
+* **stream-caip10-link:** better genesis determinism (#1519) 8b8adce, closes #1519
+
+
+### Features
+
+* **cli:** add global sync override option (#1541) 4806e92, closes #1541
+* **core:** Cache IPFS commit data (#1531) 2e44e14, closes #1531
+* **core:** Sync Streams with cache before returning from multiQuery (#1548) b78637d, closes #1548
+* Check signature of a lone genesis (#1529) b55e225, closes #1529
+* Pass issuer to verifyJWS (#1542) 3c60b0c, closes #1542
+* Pass time-information when checking a signature (#1502) 913e091, closes #1502
+
+
+
+
+
 # [1.3.0-rc.0](/compare/@ceramicnetwork/core@1.2.0...@ceramicnetwork/core@1.3.0-rc.0) (2021-06-30)
 
 

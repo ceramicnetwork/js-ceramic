@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.1.0-rc.0](/compare/@ceramicnetwork/streamid@1.0.2...@ceramicnetwork/streamid@1.1.0-rc.0) (2021-07-16)
+
+
+### Features
+
+* Pass issuer to verifyJWS (#1542) 3c60b0c, closes #1542
+
+
+
+
+
 ## [1.0.2](/compare/@ceramicnetwork/streamid@1.0.1...@ceramicnetwork/streamid@1.0.2) (2021-06-03)
 
 **Note:** Version bump only for package @ceramicnetwork/streamid
