@@ -45,7 +45,7 @@ export interface CreateOpts {
   loggerConfig?: LoggerConfig
   network?: string
   pubsubTopic?: string
-  syncOverride: SyncOptions
+  syncOverride?: SyncOptions
 }
 
 interface MultiQueryWithDocId extends MultiQuery {
