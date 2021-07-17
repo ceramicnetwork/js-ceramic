@@ -1,0 +1,20 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Blockchain: Tezos authenticate create proof for NetXdQprcVkpaWU 1`] = `"0x15e26348cde1c94a5e0ec29fbea24d06a4c4bc1e2944d34c6ccf6b78cdcfc56d"`;
+
+exports[`Blockchain: Tezos authenticate entropy replication for NetXdQprcVkpaWU 1`] = `"0x26adbdccdc12f976fc4fb8d7315f6e12c6a74720a3a6827e1fb42181aeb095a1"`;
+
+exports[`Blockchain: Tezos authenticate entropy replication for NetXdQprcVkpaWU 2`] = `"0x26adbdccdc12f976fc4fb8d7315f6e12c6a74720a3a6827e1fb42181aeb095a1"`;
+
+exports[`Blockchain: Tezos createLink create proof for NetXdQprcVkpaWU 1`] = `
+Object {
+  "account": "tz3Lfm6CyfSTZ7EgMckptZZGiPxzs9GK59At@tezos:NetXdQprcVkpaWU",
+  "message": "Link this account to your identity
+
+did:3:bafysdfwefwe 
+Timestamp: 666",
+  "signature": "p2sigeBMBpSKhYJwMM2ZbZKLKHn4rTrNWyJQgLzWLNsAWj3Ktk5zrscHVaLsJYCvHFDeyX3LUouxvrMDABqRkcNKvrLJFFyzwW",
+  "timestamp": 666,
+  "version": 1,
+}
+`;
