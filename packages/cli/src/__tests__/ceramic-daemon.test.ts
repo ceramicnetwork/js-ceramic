@@ -2,7 +2,7 @@ import Ceramic from '@ceramicnetwork/core'
 import CeramicClient from '@ceramicnetwork/http-client'
 import tmp from 'tmp-promise'
 import { CeramicDaemon } from '../ceramic-daemon'
-import { AnchorStatus, Stream, StreamUtils, IpfsApi } from '@ceramicnetwork/common'
+import { AnchorStatus, fetchJson, Stream, StreamUtils, IpfsApi } from '@ceramicnetwork/common'
 import { TileDocumentHandler } from '@ceramicnetwork/stream-tile-handler'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { filter, take } from 'rxjs/operators'
@@ -325,6 +325,22 @@ describe('Ceramic interop: core <> http-client', () => {
     expect(StreamUtils.serializeState(docV5Core.state)).toEqual(
       StreamUtils.serializeState(docV5Client.state)
     )
+  })
+
+  it('can get stream contents from /streams/contents', async () => {
+    const content1 = {test: 123}
+    const content2 = {test: 456, test2: 'abc'}
+    const content3 = {test2: 'def'}
+
+    const doc = await TileDocument.create(core, content1, null, { anchor: false })
+    await doc.update(content2, null, { anchor: false })
+    await doc.update(content3, null, { anchor: false })
+
+    const json = await fetchJson(
+      `http://localhost:${daemon.port}/api/v0/streams/${doc.id}/content`
+    )
+
+    expect(json).toEqual(content3)
   })
 
   describe('multiqueries', () => {

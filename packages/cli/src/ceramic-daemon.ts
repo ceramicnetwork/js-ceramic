@@ -124,9 +124,14 @@ export class CeramicDaemon {
   private server?: Server
   private readonly app: ExpressWithAsync
   private readonly diagnosticsLogger: DiagnosticsLogger
+  public hostname: string
+  public port: number
 
   constructor(public ceramic: Ceramic, private readonly opts: CreateOpts) {
     this.diagnosticsLogger = ceramic.loggerProvider.getDiagnosticsLogger()
+    this.port = this.opts.port || DEFAULT_PORT
+    this.hostname = this.opts.hostname || DEFAULT_HOSTNAME
+
     this.app = addAsync(express())
     this.app.set('trust proxy', true)
     this.app.use(express.json({ limit: '1mb' }))
@@ -141,10 +146,8 @@ export class CeramicDaemon {
 
   async listen(): Promise<void> {
     return new Promise<void>((resolve) => {
-      const port = this.opts.port || DEFAULT_PORT
-      const hostname = this.opts.hostname || DEFAULT_HOSTNAME
-      this.server = this.app.listen(port, hostname, () => {
-        this.diagnosticsLogger.imp(`Ceramic API running on ${hostname}:${port}'`)
+      this.server = this.app.listen(this.port, this.hostname, () => {
+        this.diagnosticsLogger.imp(`Ceramic API running on ${this.hostname}:${this.port}'`)
         resolve()
       })
       this.server.keepAliveTimeout = 60 * 1000
@@ -197,9 +200,29 @@ export class CeramicDaemon {
     const recordsRouter = Router()
     const streamsRouter = Router()
 
+    app.use('/api/v0', baseRouter)
+    baseRouter.use('/commits', commitsRouter)
+    baseRouter.use('/documents', documentsRouter)
+    baseRouter.use('/multiqueries', multiqueriesRouter)
+    baseRouter.use('/node', nodeRouter)
+    baseRouter.use('/pins', pinsRouter)
+    baseRouter.use('/records', recordsRouter)
+    baseRouter.use('/streams', streamsRouter)
+
+    baseRouter.use(errorHandler(this.diagnosticsLogger))
+    commitsRouter.use(errorHandler(this.diagnosticsLogger))
+    documentsRouter.use(errorHandler(this.diagnosticsLogger))
+    multiqueriesRouter.use(errorHandler(this.diagnosticsLogger))
+    nodeRouter.use(errorHandler(this.diagnosticsLogger))
+    pinsRouter.use(errorHandler(this.diagnosticsLogger))
+    recordsRouter.use(errorHandler(this.diagnosticsLogger))
+    streamsRouter.use(errorHandler(this.diagnosticsLogger))
+
+
     commitsRouter.getAsync('/:streamid', this.commits.bind(this))
     multiqueriesRouter.postAsync('/', this.multiQuery.bind(this))
     streamsRouter.getAsync('/:streamid', this.state.bind(this))
+    streamsRouter.getAsync('/:streamid/content', this.content.bind(this))
     pinsRouter.getAsync('/:streamid', this.listPinned.bind(this))
     pinsRouter.getAsync('/', this.listPinned.bind(this))
     nodeRouter.getAsync('/chains', this.getSupportedChains.bind(this))
@@ -224,25 +247,6 @@ export class CeramicDaemon {
       documentsRouter.postAsync('/', this.createReadOnlyDocFromGenesis.bind(this)) // Deprecated
       recordsRouter.postAsync('/', this._notSupported.bind(this)) // Deprecated
     }
-
-    commitsRouter.use(errorHandler(this.diagnosticsLogger))
-    documentsRouter.use(errorHandler(this.diagnosticsLogger))
-    multiqueriesRouter.use(errorHandler(this.diagnosticsLogger))
-    nodeRouter.use(errorHandler(this.diagnosticsLogger))
-    pinsRouter.use(errorHandler(this.diagnosticsLogger))
-    recordsRouter.use(errorHandler(this.diagnosticsLogger))
-    streamsRouter.use(errorHandler(this.diagnosticsLogger))
-
-    baseRouter.use('/commits', commitsRouter)
-    baseRouter.use('/documents', documentsRouter)
-    baseRouter.use('/multiqueries', multiqueriesRouter)
-    baseRouter.use('/node', nodeRouter)
-    baseRouter.use('/pins', pinsRouter)
-    baseRouter.use('/records', recordsRouter)
-    baseRouter.use('/streams', streamsRouter)
-    baseRouter.use(errorHandler(this.diagnosticsLogger))
-
-    app.use('/api/v0', baseRouter)
   }
 
   healthcheck(req: Request, res: Response): void {
@@ -415,6 +419,15 @@ export class CeramicDaemon {
       return acc
     }, {})
     res.json(response)
+  }
+
+  /**
+   * Render the most recent version of a stream's contents
+   */
+  async content(req: Request, res: Response): Promise<void> {
+    const opts = parseQueryObject(req.query)
+    const stream = await this.ceramic.loadStream(req.params.streamid, opts)
+    res.json(stream.content)
   }
 
   /**

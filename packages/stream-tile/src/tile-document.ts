@@ -130,13 +130,6 @@ export class TileDocument<T = Record<string, any>> extends Stream {
   private _isReadOnly = false;
 
   /**
-   * Returns the contents of this document
-   */
-  get content(): T {
-    return this._getContent()
-  }
-
-  /**
    * Creates a Tile document.
    * @param ceramic - Instance of CeramicAPI used to communicate with the Ceramic network
    * @param content - Genesis contents. If 'null', then no signature is required to make the genesis commit
