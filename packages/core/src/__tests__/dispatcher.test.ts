@@ -27,8 +27,8 @@ const ipfs = {
     publish: jest.fn(),
   },
   dag: {
-    put: jest.fn(() => FAKE_CID),
-    get: jest.fn(() => ({ value: 'data' })),
+    put: jest.fn(),
+    get: jest.fn(),
   },
   block: {
     stat: jest.fn(() => ({ size: 10 })),
@@ -84,15 +84,24 @@ describe('Dispatcher', () => {
   })
 
   it('store record correctly', async () => {
+    ipfs.dag.put.mockReturnValueOnce(FAKE_CID)
     expect(await dispatcher.storeCommit('data')).toEqual(FAKE_CID)
+
+    expect(ipfs.dag.put.mock.calls.length).toEqual(1)
+    expect(ipfs.dag.put.mock.calls[0][0]).toEqual('data')
   })
 
   it('retrieves record correctly', async () => {
+    ipfs.dag.get.mockReturnValueOnce({value: 'data'})
     expect(await dispatcher.retrieveCommit(FAKE_CID)).toEqual('data')
+
+    expect(ipfs.dag.get.mock.calls.length).toEqual(1)
+    expect(ipfs.dag.get.mock.calls[0][0]).toEqual(FAKE_CID)
   })
 
   it('caches and retrieves commit correctly', async () => {
-    const ipfsSpy = jest.spyOn(ipfs.dag, 'get')
+    const ipfsSpy = ipfs.dag.get
+    ipfsSpy.mockReturnValueOnce({value: 'data'})
     expect(await dispatcher.retrieveCommit(FAKE_CID)).toEqual('data')
     // Commit not found in cache so IPFS lookup performed and cache updated
     expect(ipfsSpy).toBeCalledTimes(1)
@@ -102,6 +111,36 @@ describe('Dispatcher', () => {
     expect(await dispatcher.retrieveCommit(cloneDeep(FAKE_CID))).toEqual('data')
     // Commit found in cache with different instance of same CID (IPFS lookup count unchanged)
     expect(ipfsSpy).toBeCalledTimes(1)
+    expect(ipfsSpy.mock.calls[0][0]).toEqual(FAKE_CID)
+  })
+
+  it('caches and retrieves with path correctly', async () => {
+    const ipfsSpy = ipfs.dag.get
+    ipfsSpy.mockImplementation(function(cid, opts) {
+      if (opts.path == '/foo') {
+        return {value: 'foo'}
+      } else if (opts.path == '/bar') {
+        return {value: 'bar'}
+      } else {
+        return null
+      }
+    })
+
+    expect(await dispatcher.retrieveFromIPFS(FAKE_CID, '/foo')).toEqual('foo')
+    // CID+path not found in cache so IPFS lookup performed and cache updated
+    expect(ipfsSpy).toBeCalledTimes(1)
+    expect(await dispatcher.retrieveFromIPFS(FAKE_CID, '/foo')).toEqual('foo')
+    // CID+path found in cache so IPFS lookup skipped (IPFS lookup count unchanged)
+    expect(ipfsSpy).toBeCalledTimes(1)
+
+    expect(await dispatcher.retrieveFromIPFS(FAKE_CID, '/bar')).toEqual('bar')
+    // Same CID with different path needs to skip cache and go to IPFS
+    expect(ipfsSpy).toBeCalledTimes(2)
+
+    expect(ipfsSpy.mock.calls[0][0]).toEqual(FAKE_CID)
+    expect(ipfsSpy.mock.calls[0][1].path).toEqual('/foo')
+    expect(ipfsSpy.mock.calls[1][0]).toEqual(FAKE_CID)
+    expect(ipfsSpy.mock.calls[1][1].path).toEqual('/bar')
   })
 
   it('publishes tip correctly', async () => {
