@@ -131,12 +131,13 @@ export class Dispatcher {
       const asCid = typeof cid === 'string' ? new CID(cid) : cid
 
       // Lookup CID in cache before looking it up IPFS
-      const cachedDagNode = await this.dagNodeCache.get(asCid.toString())
+      const cidAndPath = path ? asCid.toString() + path : asCid.toString()
+      const cachedDagNode = await this.dagNodeCache.get(cidAndPath)
       if (cachedDagNode) return cloneDeep(cachedDagNode)
 
       // Now lookup CID in IPFS and also store it in the cache
       const dagNode = await this._ipfs.dag.get(asCid, { timeout: IPFS_GET_TIMEOUT, path })
-      await this.dagNodeCache.set(asCid.toString(), dagNode.value)
+      await this.dagNodeCache.set(cidAndPath, dagNode.value)
       return cloneDeep(dagNode.value)
     } catch (e) {
       this._logger.err(`Error while loading CID ${cid.toString()} from IPFS: ${e}`)
