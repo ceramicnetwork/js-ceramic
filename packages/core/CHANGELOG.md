@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.3.0-rc.2](/compare/@ceramicnetwork/core@1.3.0-rc.1...@ceramicnetwork/core@1.3.0-rc.2) (2021-07-19)
+
+
+### Bug Fixes
+
+* **core:** Properly cache IPFS lookups with paths (#1560) ef9956d, closes #1560
+
+
+
+
+
 # [1.3.0-rc.1](/compare/@ceramicnetwork/core@1.3.0-rc.0...@ceramicnetwork/core@1.3.0-rc.1) (2021-07-16)
 
 
