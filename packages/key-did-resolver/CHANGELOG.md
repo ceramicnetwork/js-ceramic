@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.3.0-rc.0](/compare/key-did-resolver@1.2.1...key-did-resolver@1.3.0-rc.0) (2021-07-16)
+
+
+### Features
+
+* Pass issuer to verifyJWS (#1542) 3c60b0c, closes #1542
+
+
+### Reverts
+
+* Revert "Merge secp256r1 key-did-method with npm run docs working (#1418)" (#1440) 8f45f82, closes #1418 #1440
+
+
+
+
+
 ## [1.2.1](/compare/key-did-resolver@1.2.0...key-did-resolver@1.2.1) (2021-05-25)
 
 **Note:** Version bump only for package key-did-resolver

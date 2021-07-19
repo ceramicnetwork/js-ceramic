@@ -3,6 +3,47 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.1.0-rc.0](/compare/@ceramicnetwork/stream-tile@1.0.8-rc.0...@ceramicnetwork/stream-tile@1.1.0-rc.0) (2021-07-16)
+
+
+### Bug Fixes
+
+* **core:** Optimize commit application to minimize calls to IPFS (#1528) 75ee50e, closes #1528
+
+
+### Features
+
+* **core:** Sync Streams with cache before returning from multiQuery (#1548) b78637d, closes #1548
+* Pass issuer to verifyJWS (#1542) 3c60b0c, closes #1542
+
+
+
+
+
+## [1.0.8-rc.0](/compare/@ceramicnetwork/stream-tile@1.0.7...@ceramicnetwork/stream-tile@1.0.8-rc.0) (2021-06-30)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile
+
+
+
+
+
+## [1.0.7](/compare/@ceramicnetwork/stream-tile@1.0.7-rc.0...@ceramicnetwork/stream-tile@1.0.7) (2021-06-22)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile
+
+
+
+
+
+## [1.0.7-rc.0](/compare/@ceramicnetwork/stream-tile@1.0.6...@ceramicnetwork/stream-tile@1.0.7-rc.0) (2021-06-21)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile
+
+
+
+
+
 ## [1.0.6](/compare/@ceramicnetwork/stream-tile@1.0.5...@ceramicnetwork/stream-tile@1.0.6) (2021-06-06)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-tile

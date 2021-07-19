@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/common",
-  "version": "1.0.6",
+  "version": "1.2.0-rc.1",
   "description": "Ceramic common types and utilities",
   "keywords": [
     "ceramic",
@@ -23,7 +23,7 @@
     "./lib/loggers.js": "./lib/loggers-browser.js"
   },
   "scripts": {
-    "test": "../../node_modules/.bin/jest --silent --coverage --passWithNoTests --env=node",
+    "test": "../../node_modules/.bin/jest --silent --coverage --passWithNoTests",
     "build": "../../node_modules/.bin/tsc -p tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
@@ -31,7 +31,7 @@
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/streamid": "^1.0.2",
+    "@ceramicnetwork/streamid": "^1.1.0-rc.0",
     "@overnightjs/logger": "^1.2.0",
     "cids": "~1.1.6",
     "cross-fetch": "^3.1.4",
@@ -45,7 +45,7 @@
     "@types/lodash.clonedeep": "^4.5.6",
     "@types/logfmt": "^1.2.1",
     "@types/node": "^13.13.15",
-    "dids": "^2.1.0",
+    "dids": "^2.4.0",
     "ipfs-core-types": "~0.5.1",
     "json-schema-to-typescript": "^9.1.1",
     "typescript-json-schema": "^0.42.0"
@@ -53,7 +53,9 @@
   "jest": {
     "testMatch": [
       "**/?(*.)+(spec|test).[jt]s?(x)"
-    ]
+    ],
+    "testEnvironment": "node",
+    "resolver": "jest-resolver-enhanced"
   },
   "gitHead": "34eeee25597b0a60def72906c26d3afd6230aaf1"
 }

@@ -3,6 +3,61 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.2.0-rc.2](/compare/@ceramicnetwork/cli@1.2.0-rc.1...@ceramicnetwork/cli@1.2.0-rc.2) (2021-07-16)
+
+
+### Bug Fixes
+
+* **cli:** Make syncOverride option to CeramicDaemon optional (#1554) 967b17d, closes #1554
+
+
+
+
+
+# [1.2.0-rc.1](/compare/@ceramicnetwork/cli@1.2.0-rc.0...@ceramicnetwork/cli@1.2.0-rc.1) (2021-07-16)
+
+
+### Features
+
+* **cli:** add global sync override option (#1541) 4806e92, closes #1541
+* Check signature of a lone genesis (#1529) b55e225, closes #1529
+* Pass issuer to verifyJWS (#1542) 3c60b0c, closes #1542
+* Pass time-information when checking a signature (#1502) 913e091, closes #1502
+
+
+
+
+
+# [1.2.0-rc.0](/compare/@ceramicnetwork/cli@1.1.0...@ceramicnetwork/cli@1.2.0-rc.0) (2021-06-30)
+
+
+### Features
+
+* **core, cli:** Remove --disable-anchors flag and fold its functionality into --gateway (#1513) be397c8, closes #1513
+
+
+
+
+
+# [1.1.0](/compare/@ceramicnetwork/cli@1.1.0-rc.0...@ceramicnetwork/cli@1.1.0) (2021-06-22)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [1.1.0-rc.0](/compare/@ceramicnetwork/cli@1.0.6...@ceramicnetwork/cli@1.1.0-rc.0) (2021-06-21)
+
+
+### Features
+
+* **core,cli:** Add --disable-anchors flag to allow ceramic to start up without a working CAS (#1490) 9dfc167, closes #1490
+
+
+
+
+
 ## [1.0.6](/compare/@ceramicnetwork/cli@1.0.5...@ceramicnetwork/cli@1.0.6) (2021-06-06)
 
 **Note:** Version bump only for package @ceramicnetwork/cli

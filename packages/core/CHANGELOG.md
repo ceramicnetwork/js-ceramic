@@ -3,6 +3,75 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.3.0-rc.1](/compare/@ceramicnetwork/core@1.3.0-rc.0...@ceramicnetwork/core@1.3.0-rc.1) (2021-07-16)
+
+
+### Bug Fixes
+
+* **core:** convert pubsub seqno to string (#1543) a96d932, closes #1543
+* **core:** Optimize commit application to minimize calls to IPFS (#1528) 75ee50e, closes #1528
+* **stream-caip10-link:** better genesis determinism (#1519) 8b8adce, closes #1519
+
+
+### Features
+
+* **cli:** add global sync override option (#1541) 4806e92, closes #1541
+* **core:** Cache IPFS commit data (#1531) 2e44e14, closes #1531
+* **core:** Sync Streams with cache before returning from multiQuery (#1548) b78637d, closes #1548
+* Check signature of a lone genesis (#1529) b55e225, closes #1529
+* Pass issuer to verifyJWS (#1542) 3c60b0c, closes #1542
+* Pass time-information when checking a signature (#1502) 913e091, closes #1502
+
+
+
+
+
+# [1.3.0-rc.0](/compare/@ceramicnetwork/core@1.2.0...@ceramicnetwork/core@1.3.0-rc.0) (2021-06-30)
+
+
+### Bug Fixes
+
+* **core:** Add information for validating transactions on rinkeby (#1510) 9a4cd0b, closes #1510
+* **core:** Fix startup of EthereumAnchorValidator (#1512) e8b87fa, closes #1512
+
+
+### Features
+
+* **core:** Split AnchorService from AnchorValidator (#1505) b92add9, closes #1505
+* **core, cli:** Remove --disable-anchors flag and fold its functionality into --gateway (#1513) be397c8, closes #1513
+
+
+
+
+
+# [1.2.0](/compare/@ceramicnetwork/core@1.2.0-rc.0...@ceramicnetwork/core@1.2.0) (2021-06-22)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+# [1.2.0-rc.0](/compare/@ceramicnetwork/core@1.1.0...@ceramicnetwork/core@1.2.0-rc.0) (2021-06-21)
+
+
+### Bug Fixes
+
+* **core:** Disable ajv strictTypes and strictTuples log warnings (#1471) d3c817d, closes #1471
+* **core:** Don't submit an anchor request for an AnchorCommit (#1474) 356775f, closes #1474
+* **core:** Only poll for anchors at startup, don't submit a new request (#1437) ec17446, closes #1437
+* **core:** Remove loading inner CID from SignedCommits in ConflictResolution.findIndex (#1491) d1b021c, closes #1491 #1434
+
+
+### Features
+
+* **core:** Loading a CommitID makes the node handle the commit CID as a potential new tip (#1484) 46e0f22, closes #1484
+* **core,cli:** Add --disable-anchors flag to allow ceramic to start up without a working CAS (#1490) 9dfc167, closes #1490
+
+
+
+
+
 # [1.1.0](/compare/@ceramicnetwork/core@1.0.5...@ceramicnetwork/core@1.1.0) (2021-06-06)
 
 

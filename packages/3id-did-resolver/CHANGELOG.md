@@ -3,6 +3,42 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.3.0-rc.0](/compare/@ceramicnetwork/3id-did-resolver@1.2.8-rc.0...@ceramicnetwork/3id-did-resolver@1.3.0-rc.0) (2021-07-16)
+
+
+### Features
+
+* Drop "created" metadata property from 3id did resolution result (#1524) 2dacc7b, closes #1524
+* Return last anchored state (#1527) bca939c, closes #1527
+
+
+
+
+
+## [1.2.8-rc.0](/compare/@ceramicnetwork/3id-did-resolver@1.2.7...@ceramicnetwork/3id-did-resolver@1.2.8-rc.0) (2021-06-30)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
+## [1.2.7](/compare/@ceramicnetwork/3id-did-resolver@1.2.7-rc.0...@ceramicnetwork/3id-did-resolver@1.2.7) (2021-06-22)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
+## [1.2.7-rc.0](/compare/@ceramicnetwork/3id-did-resolver@1.2.6...@ceramicnetwork/3id-did-resolver@1.2.7-rc.0) (2021-06-21)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
 ## [1.2.6](/compare/@ceramicnetwork/3id-did-resolver@1.2.5...@ceramicnetwork/3id-did-resolver@1.2.6) (2021-06-06)
 
 **Note:** Version bump only for package @ceramicnetwork/3id-did-resolver

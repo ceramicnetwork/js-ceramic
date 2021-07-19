@@ -3,6 +3,60 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.2.0-rc.1](/compare/@ceramicnetwork/common@1.2.0-rc.0...@ceramicnetwork/common@1.2.0-rc.1) (2021-07-16)
+
+
+### Bug Fixes
+
+* **core:** Optimize commit application to minimize calls to IPFS (#1528) 75ee50e, closes #1528
+
+
+### Features
+
+* **core:** Sync Streams with cache before returning from multiQuery (#1548) b78637d, closes #1548
+* Check signature of a lone genesis (#1529) b55e225, closes #1529
+* Pass issuer to verifyJWS (#1542) 3c60b0c, closes #1542
+* Pass time-information when checking a signature (#1502) 913e091, closes #1502
+
+
+
+
+
+# [1.2.0-rc.0](/compare/@ceramicnetwork/common@1.1.0...@ceramicnetwork/common@1.2.0-rc.0) (2021-06-30)
+
+
+### Features
+
+* **core:** Split AnchorService from AnchorValidator (#1505) b92add9, closes #1505
+
+
+
+
+
+# [1.1.0](/compare/@ceramicnetwork/common@1.1.0-rc.0...@ceramicnetwork/common@1.1.0) (2021-06-22)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+# [1.1.0-rc.0](/compare/@ceramicnetwork/common@1.0.6...@ceramicnetwork/common@1.1.0-rc.0) (2021-06-21)
+
+
+### Bug Fixes
+
+* **core:** Only poll for anchors at startup, don't submit a new request (#1437) ec17446, closes #1437
+
+
+### Features
+
+* **core:** Loading a CommitID makes the node handle the commit CID as a potential new tip (#1484) 46e0f22, closes #1484
+
+
+
+
+
 ## [1.0.6](/compare/@ceramicnetwork/common@1.0.5...@ceramicnetwork/common@1.0.6) (2021-06-06)
 
 **Note:** Version bump only for package @ceramicnetwork/common

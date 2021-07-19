@@ -1,37 +1,42 @@
-import { Subscription } from 'rxjs';
-import { StreamState, RunningStateLike, StreamStateSubject, SubscriptionSet } from '@ceramicnetwork/common';
-import { StreamID } from '@ceramicnetwork/streamid';
-import CID from 'cids';
+import { Subscription } from 'rxjs'
+import {
+  StreamState,
+  RunningStateLike,
+  StreamStateSubject,
+  SubscriptionSet,
+} from '@ceramicnetwork/common'
+import { StreamID } from '@ceramicnetwork/streamid'
+import CID from 'cids'
 
 export class RunningState extends StreamStateSubject implements RunningStateLike {
-  readonly id: StreamID;
-  readonly subscriptionSet: SubscriptionSet = new SubscriptionSet();
+  readonly id: StreamID
+  readonly subscriptionSet: SubscriptionSet = new SubscriptionSet()
 
   constructor(initial: StreamState) {
-    super(initial);
-    this.id = new StreamID(initial.type, initial.log[0].cid);
+    super(initial)
+    this.id = new StreamID(initial.type, initial.log[0].cid)
   }
 
   get tip(): CID {
-    return this.value.log[this.value.log.length - 1].cid;
+    return this.value.log[this.value.log.length - 1].cid
   }
 
   get state(): StreamState {
-    return this.value;
+    return this.value
   }
 
   /**
    * Track related subscription.
    */
   add(subscription: Subscription) {
-    this.subscriptionSet.add(subscription);
+    this.subscriptionSet.add(subscription)
   }
 
   /**
    * Mark the RunningState complete, closed, and unsubscribe from related subscriptions in subscriptionSet.
    */
   complete() {
-    this.subscriptionSet.unsubscribe();
-    super.complete();
+    this.subscriptionSet.unsubscribe()
+    super.complete()
   }
 }

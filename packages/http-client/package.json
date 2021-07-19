@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/http-client",
-  "version": "1.0.6",
+  "version": "1.1.0-rc.0",
   "description": "An http client for the ceramic network",
   "keywords": [
     "Ceramic",
@@ -27,23 +27,24 @@
     "test": "../../node_modules/.bin/jest --silent --coverage --passWithNoTests"
   },
   "dependencies": {
-    "@ceramicnetwork/common": "^1.0.6",
-    "@ceramicnetwork/stream-caip10-link": "^1.0.6",
-    "@ceramicnetwork/stream-tile": "^1.0.6",
-    "@ceramicnetwork/streamid": "^1.0.2",
+    "@ceramicnetwork/common": "^1.2.0-rc.1",
+    "@ceramicnetwork/stream-caip10-link": "^1.1.0-rc.0",
+    "@ceramicnetwork/stream-tile": "^1.1.0-rc.0",
+    "@ceramicnetwork/streamid": "^1.1.0-rc.0",
     "query-string": "7.0.0",
     "rxjs": "^7.0.0"
   },
   "devDependencies": {
     "@types/node": "^13.13.15",
     "cids": "~1.1.6",
-    "dids": "^2.1.0"
+    "dids": "^2.4.0"
   },
   "jest": {
     "testEnvironment": "node",
     "testMatch": [
       "**/?(*.)+(spec|test).[jt]s?(x)"
-    ]
+    ],
+    "resolver": "jest-resolver-enhanced"
   },
   "gitHead": "34eeee25597b0a60def72906c26d3afd6230aaf1"
 }
