@@ -5,15 +5,18 @@ import {
   WalletOriginateParams,
   WalletTransferParams,
   WalletProvider,
+  TezosToolkit,
 } from '@taquito/taquito'
-import { validateLink } from '../tezos'
-import mockAxios from 'jest-mock-axios'
+import { char2Bytes, validateLink } from '../tezos'
+import mockFetch from 'jest-fetch-mock'
 import { LinkProof } from '../../../../blockchain-utils-linking/src/util'
-import { HttpResponse } from 'jest-mock-axios/dist/lib/mock-axios-types'
+import utils from '@taquito/utils'
 
 const did = 'did:3:bafysdfwefwe'
 const privateKey = 'p2sk2obfVMEuPUnadAConLWk7Tf4Dt3n4svSgJwrgpamRqJXvaYcg1'
 const chainRef = 'NetXdQprcVkpaWU' // Tezos mainnet
+
+type HttpResponse = string
 
 type IoTestCase = {
   testName?: string
@@ -65,10 +68,11 @@ beforeAll(async (done) => {
 
   // initialize mock tezos provider
   const signer = await InMemorySigner.fromSecretKey(privateKey)
-  provider = {
+  provider = new TezosToolkit('https://mainnet-tezos.giganode.io')
+  provider.setProvider({
     signer,
     wallet: new TezosMockWallet(signer),
-  }
+  })
 
   // create proof for did
   publicKeyHash = await provider.signer.publicKeyHash()
@@ -81,7 +85,7 @@ beforeAll(async (done) => {
 })
 
 afterEach(() => {
-  mockAxios.reset()
+  mockFetch.mockReset()
 })
 
 afterAll(() => {
@@ -108,11 +112,11 @@ describe('Blockchain: Tezos', () => {
       {
         testName: 'unable to validate when wallet address has not been published to the blockchain',
         pubkeyObject(): HttpResponse {
-          return {
+          return JSON.stringify({
             data: {
               pubkey: undefined,
             },
-          }
+          })
         },
       },
 
@@ -121,11 +125,11 @@ describe('Blockchain: Tezos', () => {
       // - the signature can be verified
       {
         pubkeyObject(publicKey?: string): HttpResponse {
-          return {
+          return JSON.stringify({
             data: {
               pubkey: publicKey,
             },
-          }
+          })
         },
       },
     ]
@@ -152,12 +156,12 @@ describe('Blockchain: Tezos', () => {
 
           // mock axios response or error
           if (pubkeyObject) {
-            mockAxios.mockResponse(pubkeyObject(publicKey))
+            mockFetch.mockResponse(pubkeyObject(publicKey))
           }
           if (error) {
-            mockAxios.mockError(error)
+            mockFetch.mockReject(error)
           }
-          expect(mockAxios.get).toHaveBeenCalledWith(
+          expect(mockFetch).toHaveBeenCalledWith(
             `https://api.tzstats.com/explorer/account/${publicKeyHash}`
           )
 
@@ -167,5 +171,13 @@ describe('Blockchain: Tezos', () => {
         })
       }
     }
+  })
+
+  describe('char2Bytes', () => {
+    test('should match the @taquito/utils char2Bytes() implementation', () => {
+      // get a random string of length 32
+      const s = 'some random string. this should be fine.'
+      expect(char2Bytes(s)).toBe(utils.char2Bytes(s))
+    })
   })
 })

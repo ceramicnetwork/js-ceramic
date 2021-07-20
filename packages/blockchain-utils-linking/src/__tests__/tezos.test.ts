@@ -1,11 +1,13 @@
-import { TezosAuthProvider, TezosProvider } from '../tezos'
+import { char2Bytes, TezosAuthProvider, TezosProvider } from '../tezos'
 import { InMemorySigner } from '@taquito/signer'
 import {
   WalletDelegateParams,
   WalletOriginateParams,
   WalletTransferParams,
   WalletProvider,
+  TezosToolkit,
 } from '@taquito/taquito'
+import utils from '@taquito/utils'
 
 const did = 'did:3:bafysdfwefwe'
 const privateKey = 'p2sk2obfVMEuPUnadAConLWk7Tf4Dt3n4svSgJwrgpamRqJXvaYcg1'
@@ -44,10 +46,11 @@ beforeAll(async (done) => {
   Date.now = () => 666000
 
   const signer = await InMemorySigner.fromSecretKey(privateKey)
-  provider = {
+  provider = new TezosToolkit('https://mainnet-tezos.giganode.io')
+  provider.setProvider({
     signer,
     wallet: new TezosMockWallet(signer),
-  }
+  })
   done()
 })
 
@@ -82,6 +85,14 @@ describe('Blockchain: Tezos', () => {
       const result2 = await authProvider.authenticate(msg)
       expect(result1).toMatchSnapshot()
       expect(result2).toMatchSnapshot()
+    })
+  })
+
+  describe('char2Bytes', () => {
+    test('should match the @taquito/utils char2Bytes() implementation', () => {
+      // get a random string of length 32
+      const s = 'some random string. this should be fine.'
+      expect(char2Bytes(s)).toBe(utils.char2Bytes(s))
     })
   })
 })

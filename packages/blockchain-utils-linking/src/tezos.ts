@@ -3,22 +3,24 @@ import { AuthProvider } from './auth-provider'
 import { getConsentMessage, LinkProof } from './util'
 import { hash } from '@stablelib/sha256'
 import * as uint8arrays from 'uint8arrays'
-import { SetProviderOptions, TezosToolkit } from '@taquito/taquito'
-import { char2Bytes } from '@taquito/utils'
+import type { Signer, TezosToolkit, Wallet } from '@taquito/taquito'
 
-export type TezosProvider = SetProviderOptions
+export type TezosProvider = TezosToolkit & {
+  // the below are requried for the TezosProvider interface
+  wallet: Wallet
+  signer: Signer
+}
 
+// should be the same as @taquito/utils char2Bytes()
+// exported for testing to ensure above
 /**
- * initializes the TezosToolkit with the given {TezosProvider} and returns the {TezosToolkit}
+ * converts a utf8 string to a hex string
  *
- * @param {TezosProvider} provider - the provider to use for initializing the TezosToolkit
- * @returns {TezosToolkit} the initialized TezosToolkit
+ * @param {string} input - the string to convert
+ * @returns {string} the converted hex string
  */
-function getTezosToolkit(provider: TezosProvider) {
-  // initialize the Tezos RPC client
-  const Tezos = new TezosToolkit('https://mainnet-tezos.giganode.io')
-  Tezos.setProvider(provider)
-  return Tezos
+export function char2Bytes(input: string): string {
+  return uint8arrays.toString(uint8arrays.fromString(input, 'utf8'), 'base16')
 }
 
 /**
@@ -29,7 +31,7 @@ function getTezosToolkit(provider: TezosProvider) {
  * @returns {Promise<string>} the signature prefixed with the signing method
  */
 async function sign(provider: TezosProvider, message: string): Promise<string> {
-  const Tezos = getTezosToolkit(provider)
+  const Tezos = provider
   // sign the message with the active address and get the signature with the type prefixed
   const { prefixSig: signature } = await Tezos.signer.sign(char2Bytes(message))
   return signature
@@ -41,8 +43,8 @@ async function sign(provider: TezosProvider, message: string): Promise<string> {
  * @param {TezosProvider} provider - the provider to use for getting the active account
  * @returns {Promise<string>} - a promise that resolves to the active account's address
  */
-async function getActiveAddress(provider: TezosProvider) {
-  const Tezos = getTezosToolkit(provider)
+async function getActiveAddress(provider: TezosProvider): Promise<string> {
+  const Tezos = provider
   const activeAddress = await Tezos.wallet.pkh({ forceRefetch: true })
   return activeAddress
 }
@@ -52,7 +54,7 @@ async function getActiveAddress(provider: TezosProvider) {
  * It uses the Tezos RPC client to get the active account's address and sign the
  * message with the active account's address.
  *
- * @param {TezosProvider} provider - the provider to use signing the link proof
+ * @param {TezosProvider} provider - the provider to use signing the link proof and getting the active account's address
  * @param {string} address - the address to sign the link proof with
  * @param {string} chainRef - the chain reference to link to
  */
