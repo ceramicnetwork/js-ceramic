@@ -38,7 +38,7 @@
     "@ceramicnetwork/stream-tile": "^1.1.0-rc.0",
     "@ceramicnetwork/stream-tile-handler": "^1.1.0-rc.1",
     "@ceramicnetwork/streamid": "^1.1.0-rc.0",
-    "@ethersproject/providers": "5.0.23",
+    "@ethersproject/providers": "5.4.1",
     "@stablelib/random": "^1.0.0",
     "@stablelib/sha256": "^1.0.0",
     "ajv": "^8.1.0",
