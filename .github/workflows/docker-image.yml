@@ -26,13 +26,13 @@ jobs:
         if: ${{ env.BRANCH == 'master' }}
         run: |
           echo "ENV_TAG=latest" >> $GITHUB_ENV
-          echo "EVENT_WEBHOOK_URL=${{ secrets.EVENT_WEBHOOK_PROD }}" >> $GITHUB_ENV
+          echo "EVENT_WEBHOOK_URL=${{ secrets.EVENT_WEBHOOK_FIRE }}" >> $GITHUB_ENV
       -
         name: Set rc branch tag
         if: ${{ env.BRANCH == 'release-candidate' }}
         run: |
           echo "ENV_TAG=tnet" >> $GITHUB_ENV
-          echo "EVENT_WEBHOOK_URL=${{ secrets.EVENT_WEBHOOK_TNET }}" >> $GITHUB_ENV
+          echo "EVENT_WEBHOOK_URL=${{ secrets.EVENT_WEBHOOK_CLAY }}" >> $GITHUB_ENV
       -
         name: Set develop branch tag
         if: ${{ env.BRANCH == 'develop' }}
