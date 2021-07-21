@@ -81,5 +81,3 @@ jobs:
         run: |
           curl -X POST ${ env.EVENT_WEBHOOK_URL } -d '{ "event_type": "new_image", "client_payload": {"environment": ${{ env.ENV_TAG }}, "image_id": ${{ env.IMAGE_ID_1 }}, "image_tag": ${{ env.SHA_TAG }} } }'
           curl -X POST ${ env.EVENT_WEBHOOK_URL } -d '{ "event_type": "new_image", "client_payload": {"environment": ${{ env.ENV_TAG }}, "image_id": ${{ env.IMAGE_ID_2 }}, "image_tag": ${{ env.SHA_TAG }} } }'
-        # echo '{ "event_type": "new_image", "client_payload": {"image_id": ${{ env.IMAGE_ID_1 }}, "image_tag": ${{ env.SHA_TAG }} } }'
-        # echo '{ "event_type": "new_image", "client_payload": {"image_id": ${{ env.IMAGE_ID_2 }}, "image_tag": ${{ env.SHA_TAG }} } }'
