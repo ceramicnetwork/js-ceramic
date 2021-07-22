@@ -2,7 +2,7 @@ name: Publish images to Docker Hub
 
 on:
   push:
-    branches: [ develop, release-candidate, master ]
+    branches: [ webhook_iam_auth, develop, release-candidate, master ]
   workflow_dispatch: # manually triggered
 
 jobs:
@@ -45,35 +45,35 @@ jobs:
         run: |
           echo "ENV_TAG=dev" >> $GITHUB_ENV
           echo "EVENT_WEBHOOK_URL=${{ secrets.EVENT_WEBHOOK_DEV }}" >> $GITHUB_ENV
-      -
-        name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-      -
-        name: Login to DockerHub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      -
-        name: Build js-ceramic image
-        env:
-          IMAGE_ID: "ceramicnetwork/js-ceramic"
-        run: |
-          docker buildx build . --file Dockerfile.daemon \
-            --output "type=image,push=true" \
-            --tag ${{ env.IMAGE_ID }}:${{ env.ENV_TAG }} \
-            --tag ${{ env.IMAGE_ID }}:${{ env.SHA_TAG }} \
-            --tag ${{ env.IMAGE_ID }}:${{ env.BRANCH }}
-      -
-        name: Build ipfs-daemon image
-        env:
-          IMAGE_ID: "ceramicnetwork/ipfs-daemon"
-        run: |
-          docker buildx build . --file Dockerfile.ipfs-daemon \
-            --output "type=image,push=true" \
-            --tag ${{ env.IMAGE_ID }}:${{ env.ENV_TAG }} \
-            --tag ${{ env.IMAGE_ID }}:${{ env.SHA_TAG }} \
-            --tag ${{ env.IMAGE_ID }}:${{ env.BRANCH }}
+#      -
+#        name: Set up Docker Buildx
+#        uses: docker/setup-buildx-action@v1
+#      -
+#        name: Login to DockerHub
+#        uses: docker/login-action@v1
+#        with:
+#          username: ${{ secrets.DOCKERHUB_USERNAME }}
+#          password: ${{ secrets.DOCKERHUB_TOKEN }}
+#      -
+#        name: Build js-ceramic image
+#        env:
+#          IMAGE_ID: "ceramicnetwork/js-ceramic"
+#        run: |
+#          docker buildx build . --file Dockerfile.daemon \
+#            --output "type=image,push=true" \
+#            --tag ${{ env.IMAGE_ID }}:${{ env.ENV_TAG }} \
+#            --tag ${{ env.IMAGE_ID }}:${{ env.SHA_TAG }} \
+#            --tag ${{ env.IMAGE_ID }}:${{ env.BRANCH }}
+#      -
+#        name: Build ipfs-daemon image
+#        env:
+#          IMAGE_ID: "ceramicnetwork/ipfs-daemon"
+#        run: |
+#          docker buildx build . --file Dockerfile.ipfs-daemon \
+#            --output "type=image,push=true" \
+#            --tag ${{ env.IMAGE_ID }}:${{ env.ENV_TAG }} \
+#            --tag ${{ env.IMAGE_ID }}:${{ env.SHA_TAG }} \
+#            --tag ${{ env.IMAGE_ID }}:${{ env.BRANCH }}
       -
         name: Publish build event
         run: |
