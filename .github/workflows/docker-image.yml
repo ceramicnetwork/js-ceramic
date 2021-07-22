@@ -48,11 +48,7 @@ jobs:
       -
         name: Update cURL
         run: |
-          apt remove curl && apt purge curl
-          wget https://curl.haxx.se/download/curl-7.78.0.zip
-          unzip curl-7.78.0.zip && cd curl-7.78.0
-          autoreconf -fi && ./configure --with-ssl
-          make && make install
+          apt update && apt upgrade && apt install -y curl
 
 #      -
 #        name: Set up Docker Buildx
