@@ -59,7 +59,6 @@ jobs:
         env:
           IMAGE_ID: "ceramicnetwork/js-ceramic"
         run: |
-          echo "IMAGE_ID_1=${{ env.IMAGE_ID }}" >> $GITHUB_ENV
           docker buildx build . --file Dockerfile.daemon \
             --output "type=image,push=true" \
             --tag ${{ env.IMAGE_ID }}:${{ env.ENV_TAG }} \
@@ -70,7 +69,6 @@ jobs:
         env:
           IMAGE_ID: "ceramicnetwork/ipfs-daemon"
         run: |
-          echo "IMAGE_ID_2=${{ env.IMAGE_ID }}" >> $GITHUB_ENV
           docker buildx build . --file Dockerfile.ipfs-daemon \
             --output "type=image,push=true" \
             --tag ${{ env.IMAGE_ID }}:${{ env.ENV_TAG }} \
@@ -79,5 +77,4 @@ jobs:
       -
         name: Publish build event
         run: |
-          curl -X POST ${{ env.EVENT_WEBHOOK_URL }} -d '{ "event_type": "new_image", "client_payload": {"branch": ${{ env.BRANCH }}, "image_id": ${{ env.IMAGE_ID_1 }}, "image_tag": ${{ env.SHA_TAG }} } }'
-          curl -X POST ${{ env.EVENT_WEBHOOK_URL }} -d '{ "event_type": "new_image", "client_payload": {"branch": ${{ env.BRANCH }}, "image_id": ${{ env.IMAGE_ID_2 }}, "image_tag": ${{ env.SHA_TAG }} } }'
+          curl -X POST ${{ env.EVENT_WEBHOOK_URL }} -d '{ "event_type": "new_image", "client_payload": {"env_tag": ${{ env.ENV_TAG }}, "sha_tag": ${{ env.SHA_TAG }} } }'
