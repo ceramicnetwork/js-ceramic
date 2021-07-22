@@ -77,4 +77,4 @@ jobs:
       -
         name: Publish build event
         run: |
-          curl -X POST ${{ env.EVENT_WEBHOOK_URL }} -d '{ "event_type": "new_image", "client_payload": {"env_tag": ${{ env.ENV_TAG }}, "sha_tag": ${{ env.SHA_TAG }} } }'
+          curl -X POST ${{ env.EVENT_WEBHOOK_URL }} -d '{ "event_type": "new_image", "client_payload": {"env_tag": "${{ env.ENV_TAG }}", "sha_tag": "${{ env.SHA_TAG }}" } }'
