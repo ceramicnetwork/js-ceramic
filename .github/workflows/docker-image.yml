@@ -48,8 +48,7 @@ jobs:
       -
         name: Update cURL
         run: |
-          apt update && apt upgrade && apt install -y curl
-
+          sudo apt update && sudo apt upgrade && sudo apt install -y curl
 #      -
 #        name: Set up Docker Buildx
 #        uses: docker/setup-buildx-action@v1
