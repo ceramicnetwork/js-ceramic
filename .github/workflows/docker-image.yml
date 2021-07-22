@@ -2,7 +2,7 @@ name: Publish images to Docker Hub
 
 on:
   push:
-    branches: [ webhook_iam_auth, develop, release-candidate, master ]
+    branches: [ develop, release-candidate, master ]
   workflow_dispatch: # manually triggered
 
 jobs:
