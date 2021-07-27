@@ -260,10 +260,9 @@ export class ConflictResolution {
       const genesis = await this.dispatcher.retrieveCommit(genesisCid)
       await handler.applyCommit(genesis, { cid: genesisCid, timestamp: timestamp }, this.context)
     }
-    const itr = unappliedCommits.entries()
-    let entry = itr.next()
-    while (!entry.done) {
-      const logEntry = await this.getCommitData(entry.value[1])
+
+    for (const entry of unappliedCommits) {
+      const logEntry = await this.getCommitData(entry)
       const commitMeta = { cid: logEntry.cid, timestamp: logEntry.timestamp }
       // TODO - should catch potential thrown error here
 
@@ -287,7 +286,6 @@ export class ConflictResolution {
       if (breakOnAnchor && AnchorStatus.ANCHORED === state.anchorStatus) {
         return state
       }
-      entry = itr.next()
     }
     return state
   }
