@@ -243,6 +243,38 @@ export class ConflictResolution {
   ) {}
 
   /**
+   * Helper function for applying a single commit to a StreamState.
+   * TODO: Most of this logic should be pushed down into the StreamHandler so it can be StreamType-specific.
+   * @param entry - the commit to apply
+   * @param state - the state to apply the commit to
+   * @param handler - the handler for the streamtype
+   * @private
+   */
+  private async applyLogEntryToState<T extends Stream>(
+    entry: CommitData, state: StreamState, handler: StreamHandler<T>): Promise<StreamState> {
+    const logEntry = await this.getCommitData(entry)
+    const commitMeta = { cid: logEntry.cid, timestamp: logEntry.timestamp }
+    // TODO - should catch potential thrown error here
+
+    if (StreamUtils.isAnchorCommit(logEntry.commit)) {
+      // It's an anchor commit
+      // TODO: Anchor validation should be done by the StreamHandler as part of applying the anchor commit
+      await verifyAnchorCommit(this.dispatcher, this.anchorValidator, logEntry.commit)
+      return await handler.applyCommit(logEntry.commit, commitMeta, this.context, state)
+    } else {
+      // It's a signed commit but may not be using DagJWS. If the JWS envelope is present, use that while applying the
+      // commit, otherwise use the commit itself (e.g. for CAIP-10 links).
+      const commitToApply = logEntry.envelope ? logEntry.envelope : logEntry.commit
+      const tmpState = await handler.applyCommit(commitToApply, commitMeta, this.context, state)
+      const isGenesis = !logEntry.commit.prev
+      const effectiveState = isGenesis ? tmpState : tmpState.next
+      // TODO: Schema validation should be done by the StreamHandler as part of applying the commit
+      await this.stateValidation.validate(effectiveState, effectiveState.content)
+      return tmpState // if validation is successful
+    }
+  }
+
+  /**
    * Applies the log to the stream and updates the state.
    */
   private async applyLogToState<T extends Stream>(
@@ -262,26 +294,7 @@ export class ConflictResolution {
     }
 
     for (const entry of unappliedCommits) {
-      const logEntry = await this.getCommitData(entry)
-      const commitMeta = { cid: logEntry.cid, timestamp: logEntry.timestamp }
-      // TODO - should catch potential thrown error here
-
-      if (StreamUtils.isAnchorCommit(logEntry.commit)) {
-        // It's an anchor commit
-        // TODO: Anchor validation should be done by the StreamHandler as part of applying the anchor commit
-        await verifyAnchorCommit(this.dispatcher, this.anchorValidator, logEntry.commit)
-        state = await handler.applyCommit(logEntry.commit, commitMeta, this.context, state)
-      } else {
-        // It's a signed commit but may not be using DagJWS. If the JWS envelope is present, use that while applying the
-        // commit, otherwise use the commit itself (e.g. for CAIP-10 links).
-        const commitToApply = logEntry.envelope ? logEntry.envelope : logEntry.commit
-        const tmpState = await handler.applyCommit(commitToApply, commitMeta, this.context, state)
-        const isGenesis = !logEntry.commit.prev
-        const effectiveState = isGenesis ? tmpState : tmpState.next
-        // TODO: Schema validation should be done by the StreamHandler as part of applying the commit
-        await this.stateValidation.validate(effectiveState, effectiveState.content)
-        state = tmpState // if validation is successful
-      }
+      state = await this.applyLogEntryToState(entry, state, handler)
 
       if (breakOnAnchor && AnchorStatus.ANCHORED === state.anchorStatus) {
         return state
