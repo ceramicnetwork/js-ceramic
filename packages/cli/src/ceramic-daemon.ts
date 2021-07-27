@@ -15,6 +15,7 @@ import {
 import StreamID, { StreamType } from '@ceramicnetwork/streamid'
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import KeyDidResolver from 'key-did-resolver'
+import EthrDidResolver from 'ethr-did-resolver'
 import { DID } from 'dids'
 import cors from 'cors'
 import { errorHandler } from './daemon/error-handler'
@@ -181,6 +182,15 @@ export class CeramicDaemon {
       resolver: {
         ...KeyDidResolver.getResolver(),
         ...ThreeIdResolver.getResolver(ceramic),
+        ...(ceramicConfig.ethereumRpcUrl &&
+          EthrDidResolver.getResolver({
+            networks: [
+              {
+                name: 'mainnet',
+                rpcUrl: ceramicConfig.ethereumRpcUrl,
+              },
+            ],
+          })),
       },
     })
     await ceramic.setDID(did)
