@@ -16,7 +16,8 @@ import { Subscription } from 'rxjs'
 import { MessageBus } from './pubsub/message-bus'
 import { LRUMap } from 'lru_map'
 
-const IPFS_GET_TIMEOUT = 60000 // 1 minute
+const IPFS_GET_RETRIES = 3
+const IPFS_GET_TIMEOUT = 30000 // 30 seconds per retry, 3 retries = 90 seconds total timeout
 const IPFS_MAX_RECORD_SIZE = 256000 // 256 KB
 const IPFS_RESUBSCRIBE_INTERVAL_DELAY = 1000 * 15 // 15 sec
 const IPFS_CACHE_SIZE = 1024 // maximum cache size of 256MB
@@ -98,17 +99,9 @@ export class Dispatcher {
    */
   async retrieveCommit(cid: CID | string, streamId?: StreamID): Promise<any> {
     try {
-      const asCid = typeof cid === 'string' ? new CID(cid) : cid
-
-      // Lookup CID in cache before looking it up IPFS
-      const cachedDagNode = await this.dagNodeCache.get(asCid.toString())
-      if (cachedDagNode) return cloneDeep(cachedDagNode)
-
-      // Now lookup CID in IPFS and also store it in the cache
-      const dagNode = await this._ipfs.dag.get(asCid, { timeout: IPFS_GET_TIMEOUT })
+      const result = await this._getFromIpfs(cid)
       await this._restrictCommitSize(cid)
-      await this.dagNodeCache.set(asCid.toString(), dagNode.value)
-      return cloneDeep(dagNode.value)
+      return result
     } catch (e) {
       if (streamId) {
         this._logger.err(
@@ -128,21 +121,47 @@ export class Dispatcher {
    */
   async retrieveFromIPFS(cid: CID | string, path?: string): Promise<any> {
     try {
-      const asCid = typeof cid === 'string' ? new CID(cid) : cid
-
-      // Lookup CID in cache before looking it up IPFS
-      const cidAndPath = path ? asCid.toString() + path : asCid.toString()
-      const cachedDagNode = await this.dagNodeCache.get(cidAndPath)
-      if (cachedDagNode) return cloneDeep(cachedDagNode)
-
-      // Now lookup CID in IPFS and also store it in the cache
-      const dagNode = await this._ipfs.dag.get(asCid, { timeout: IPFS_GET_TIMEOUT, path })
-      await this.dagNodeCache.set(cidAndPath, dagNode.value)
-      return cloneDeep(dagNode.value)
+      return this._getFromIpfs(cid, path)
     } catch (e) {
       this._logger.err(`Error while loading CID ${cid.toString()} from IPFS: ${e}`)
       throw e
     }
+  }
+
+  /**
+   * Helper function for loading a CID from IPFS
+   */
+  private async _getFromIpfs(cid: CID | string, path?: string): Promise<any> {
+    const asCid = typeof cid === 'string' ? new CID(cid) : cid
+
+    // Lookup CID in cache before looking it up IPFS
+    const cidAndPath = path ? asCid.toString() + path : asCid.toString()
+    const cachedDagNode = await this.dagNodeCache.get(cidAndPath)
+    if (cachedDagNode) return cloneDeep(cachedDagNode)
+
+    // Now lookup CID in IPFS, with retry logic
+    // Note, in theory retries shouldn't be necessary, as just increasing the timeout should
+    // allow IPFS to use the extra time to find the CID, doing internal retries if needed.
+    // Anecdotally, however, we've seen evidence that IPFS sometimes finds CIDs on retry that it
+    // doesn't on the first attempt, even when given plenty of time to load it.
+    let dagResult = null
+    for (let retries = IPFS_GET_RETRIES - 1; retries >= 0 && dagResult == null; retries--) {
+      try {
+        dagResult = await this._ipfs.dag.get(asCid, {timeout: IPFS_GET_TIMEOUT, path})
+      } catch (err) {
+        if (err.code == 'ERR_TIMEOUT') {
+          console.warn(`Timeout error while loading CID ${cid.toString()} from IPFS. ${retries} retries remain`)
+          if (retries > 0) {
+            continue
+          }
+        }
+
+        throw err
+      }
+    }
+    // CID loaded successfully, store in cache
+    await this.dagNodeCache.set(cidAndPath, dagResult.value)
+    return cloneDeep(dagResult.value)
   }
 
   /**
