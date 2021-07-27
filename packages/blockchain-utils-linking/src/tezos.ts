@@ -45,8 +45,7 @@ async function sign(provider: TezosProvider, message: string): Promise<string> {
  */
 async function getActiveAddress(provider: TezosProvider): Promise<string> {
   const Tezos = provider
-  const activeAddress = await Tezos.wallet.pkh({ forceRefetch: true })
-  return activeAddress
+return Tezos.wallet.pkh({ forceRefetch: true })
 }
 
 /**
