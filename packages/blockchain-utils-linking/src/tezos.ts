@@ -16,10 +16,12 @@ export type TezosProvider = TezosToolkit & {
 /**
  * converts a utf8 string to a hex string
  *
+ * @internal
+ *
  * @param {string} input - the string to convert
  * @returns {string} the converted hex string
  */
-export function char2Bytes(input: string): string {
+function char2Bytes(input: string): string {
   return uint8arrays.toString(uint8arrays.fromString(input, 'utf8'), 'base16')
 }
 
