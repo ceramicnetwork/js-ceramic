@@ -318,4 +318,36 @@ describe('Ceramic anchoring', () => {
     await ceramic2.close()
     await ceramic3.close()
   })
+
+  it('loading stream works when anchor is invalid', async () => {
+    const [ceramic1, ceramic2] = await Promise.all([
+      createCeramic(ipfs1, true),
+      createCeramic(ipfs2, false),
+    ])
+
+    const stream1 = await TileDocument.create(ceramic1, { x: 1 }, null, {
+      anchor: false,
+      publish: false,
+    })
+    await stream1.update({ x: stream1.content.x + 1 }, null, { anchor: false, publish: false })
+    await stream1.update({ x: stream1.content.x + 1 }, null, { anchor: true, publish: true })
+
+    await anchorUpdate(ceramic1, stream1)
+
+    expect(stream1.content).toEqual({ x: 3 })
+    expect(stream1.state.log.length).toEqual(4)
+
+    const validateChainInclusionSpy = jest.spyOn(ceramic2._anchorValidator, "validateChainInclusion")
+    validateChainInclusionSpy.mockRejectedValueOnce(new Error("blockNumbers don't match"))
+
+    // Even though validating the anchor commit fails, the stream should still be loaded successfully
+    // just with the anchor commit missing.
+    const stream2 = await ceramic2.loadStream(stream1.id)
+    expect(stream2.content).toEqual(stream1.content)
+    expect(stream2.state.log.length).toEqual(stream1.state.log.length - 1)
+    expect(stream2.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
+
+    await ceramic1.close()
+    await ceramic2.close()
+  })
 })

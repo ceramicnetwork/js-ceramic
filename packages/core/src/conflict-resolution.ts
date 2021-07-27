@@ -254,8 +254,6 @@ export class ConflictResolution {
     entry: CommitData, state: StreamState, handler: StreamHandler<T>): Promise<StreamState> {
     const logEntry = await this.getCommitData(entry)
     const commitMeta = { cid: logEntry.cid, timestamp: logEntry.timestamp }
-    // TODO - should catch potential thrown error here
-
     if (StreamUtils.isAnchorCommit(logEntry.commit)) {
       // It's an anchor commit
       // TODO: Anchor validation should be done by the StreamHandler as part of applying the anchor commit
@@ -276,6 +274,8 @@ export class ConflictResolution {
 
   /**
    * Applies the log to the stream and updates the state.
+   * If an error is encountered while applying a commit, commit application stops and the state
+   * that was built thus far is returned.
    */
   private async applyLogToState<T extends Stream>(
     handler: StreamHandler<T>,
@@ -294,7 +294,14 @@ export class ConflictResolution {
     }
 
     for (const entry of unappliedCommits) {
-      state = await this.applyLogEntryToState(entry, state, handler)
+      try {
+        state = await this.applyLogEntryToState(entry, state, handler)
+      } catch(err) {
+        // TODO(1586): include StreamID in log message
+        this.context.loggerProvider.getDiagnosticsLogger().warn(
+          `Error while applying commit ${entry.cid.toString()}: ${err}`)
+        return state
+      }
 
       if (breakOnAnchor && AnchorStatus.ANCHORED === state.anchorStatus) {
         return state
