@@ -1,4 +1,4 @@
-import { TezosAuthProvider, TezosProvider } from '../../../../blockchain-utils-linking/src/tezos' //'@ceramicnetwork/blockchain-utils-linking'
+import { TezosAuthProvider, TezosProvider } from '@ceramicnetwork/blockchain-utils-linking'
 import { InMemorySigner } from '@taquito/signer'
 import {
   WalletDelegateParams,
@@ -9,7 +9,7 @@ import {
 } from '@taquito/taquito'
 import { char2Bytes, validateLink } from '../tezos'
 import mockFetch from 'jest-fetch-mock'
-import { LinkProof } from '../../../../blockchain-utils-linking/src/util'
+import { LinkProof } from '@ceramicnetwork/blockchain-utils-linking'
 import utils from '@taquito/utils'
 
 const did = 'did:3:bafysdfwefwe'
