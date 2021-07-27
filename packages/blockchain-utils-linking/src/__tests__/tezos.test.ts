@@ -1,4 +1,4 @@
-import { char2Bytes, TezosAuthProvider, TezosProvider } from '../tezos'
+import { TezosAuthProvider, TezosProvider } from '../tezos'
 import { InMemorySigner } from '@taquito/signer'
 import {
   WalletDelegateParams,
@@ -7,7 +7,6 @@ import {
   WalletProvider,
   TezosToolkit,
 } from '@taquito/taquito'
-import utils from '@taquito/utils'
 
 const did = 'did:3:bafysdfwefwe'
 const privateKey = 'p2sk2obfVMEuPUnadAConLWk7Tf4Dt3n4svSgJwrgpamRqJXvaYcg1'
@@ -85,14 +84,6 @@ describe('Blockchain: Tezos', () => {
       const result2 = await authProvider.authenticate(msg)
       expect(result1).toMatchSnapshot()
       expect(result2).toMatchSnapshot()
-    })
-  })
-
-  describe('char2Bytes', () => {
-    test('should match the @taquito/utils char2Bytes() implementation', () => {
-      // get a random string of length 32
-      const s = 'some random string. this should be fine.'
-      expect(char2Bytes(s)).toBe(utils.char2Bytes(s))
     })
   })
 })
