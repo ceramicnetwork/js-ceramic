@@ -31,7 +31,7 @@
     "@polkadot/util-crypto": "^7.0.2",
     "@smontero/eosio-signing-tools": "^0.0.6",
     "@stablelib/ed25519": "^1.0.2",
-    "@taquito/remote-signer": "^9.2.0-stablelib.0",
+    "@taquito/remote-signer": "^10.0.0-beta-RC.0",
     "@tendermint/sig": "^0.6.0",
     "@zondax/filecoin-signing-tools": "^0.15.0",
     "caip": "~0.9.2",
