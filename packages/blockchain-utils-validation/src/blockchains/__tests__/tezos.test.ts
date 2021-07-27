@@ -7,10 +7,9 @@ import {
   WalletProvider,
   TezosToolkit,
 } from '@taquito/taquito'
-import { char2Bytes, validateLink } from '../tezos'
+import { validateLink } from '../tezos'
 import mockFetch from 'jest-fetch-mock'
 import { LinkProof } from '@ceramicnetwork/blockchain-utils-linking'
-import utils from '@taquito/utils'
 
 const did = 'did:3:bafysdfwefwe'
 const privateKey = 'p2sk2obfVMEuPUnadAConLWk7Tf4Dt3n4svSgJwrgpamRqJXvaYcg1'
@@ -171,13 +170,5 @@ describe('Blockchain: Tezos', () => {
         })
       }
     }
-  })
-
-  describe('char2Bytes', () => {
-    test('should match the @taquito/utils char2Bytes() implementation', () => {
-      // get a random string of length 32
-      const s = 'some random string. this should be fine.'
-      expect(char2Bytes(s)).toBe(utils.char2Bytes(s))
-    })
   })
 })
