@@ -5,7 +5,6 @@ import polkadot from './blockchains/polkadot'
 import eosio from './blockchains/eosio'
 import cosmos from './blockchains/cosmos'
 import near from './blockchains/near'
-import tezos from './blockchains/tezos'
 import { AccountID } from 'caip'
 
 const handlers = {
@@ -15,7 +14,6 @@ const handlers = {
   [eosio.namespace]: eosio,
   [cosmos.namespace]: cosmos,
   [near.namespace]: near,
-  [tezos.namespace]: tezos,
 }
 
 const findDID = (did: string): string | undefined =>
