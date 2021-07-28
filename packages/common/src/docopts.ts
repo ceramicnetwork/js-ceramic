@@ -21,6 +21,9 @@ export enum SyncOptions {
   NEVER_SYNC,
 }
 
+/**
+ * Options shared between LoadOpts and CreateOpts
+ */
 interface BasicLoadOpts {
   /**
    * Controls the behavior related to syncing a stream to the most recent tip.
@@ -31,6 +34,20 @@ interface BasicLoadOpts {
    * How long to wait for a response from pubsub when syncing a stream.
    */
   syncTimeoutSeconds?: number
+}
+
+/**
+ * Options that are used internally but aren't designed to be set by end users.
+ */
+export interface InternalOpts {
+  /**
+   * If true, when loading a stream log will throw an exception if any commit fails to apply.
+   * If false, the error will be logged, but the log application operation will return as much
+   * of the log as it was able to successfully apply.
+   * This option is used internally but is not designed to be set by user applications.
+   * @private
+   */
+  throwOnApplyCommitError?: boolean
 }
 
 /**
@@ -46,7 +63,7 @@ export interface LoadOpts extends BasicLoadOpts {
 /**
  * Extra options passed as part of operations that perform updates to streams
  */
-export interface UpdateOpts {
+interface BasicUpdateOpts {
   /**
    * Whether or not to request an anchor after performing the operation.
    */
@@ -58,6 +75,8 @@ export interface UpdateOpts {
    */
   publish?: boolean
 }
+
+export interface UpdateOpts extends BasicUpdateOpts, InternalOpts {}
 
 /**
  * Extra options passed as part of operations that create streams

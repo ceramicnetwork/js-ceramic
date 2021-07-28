@@ -7,6 +7,7 @@ import {
   CommitData,
   CommitType,
   Context,
+  InternalOpts,
   LogEntry,
   Stream,
   StreamHandler,
@@ -275,13 +276,14 @@ export class ConflictResolution {
   /**
    * Applies the log to the stream and updates the state.
    * If an error is encountered while applying a commit, commit application stops and the state
-   * that was built thus far is returned.
+   * that was built thus far is returned, unless 'opts.throwOnApplyCommitError' is true.
    */
   private async applyLogToState<T extends Stream>(
     handler: StreamHandler<T>,
     unappliedCommits: CommitData[],
-    state?: StreamState,
-    breakOnAnchor?: boolean
+    state: StreamState | null,
+    breakOnAnchor: boolean,
+    opts: InternalOpts,
   ): Promise<StreamState> {
     // When we have genesis state only, and add some commits on top, we should check a signature at particular timestamp.
     // Most probably there is a timestamp information there. If no timestamp found, we consider it to be _now_.
@@ -300,7 +302,11 @@ export class ConflictResolution {
         // TODO(1586): include StreamID in log message
         this.context.loggerProvider.getDiagnosticsLogger().warn(
           `Error while applying commit ${entry.cid.toString()}: ${err}`)
-        return state
+        if (opts.throwOnApplyCommitError) {
+          throw err
+        } else {
+          return state
+        }
       }
 
       if (breakOnAnchor && AnchorStatus.ANCHORED === state.anchorStatus) {
@@ -316,11 +322,13 @@ export class ConflictResolution {
    * @param initialState - State to apply log to.
    * @param initialStateLog - HistoryLog representation of the `initialState.log` with SignedCommits expanded out and CIDs for their `link` record included in the log.
    * @param unappliedCommits - commits to apply
+   * @param opts - options that control the behavior when applying the commit
    */
   private async applyLog(
     initialState: StreamState,
     initialStateLog: HistoryLog,
-    unappliedCommits: CommitData[]
+    unappliedCommits: CommitData[],
+    opts: InternalOpts,
   ): Promise<StreamState | null> {
     const handler = this.handlers.get(initialState.type)
     const tip = initialStateLog.last
@@ -331,7 +339,7 @@ export class ConflictResolution {
     const commitData = await this.getCommitData(unappliedCommits[0])
     if (commitData.commit.prev.equals(tip)) {
       // the new log starts where the previous one ended
-      return this.applyLogToState(handler, unappliedCommits, cloneDeep(initialState))
+      return this.applyLogToState(handler, unappliedCommits, cloneDeep(initialState), false, opts)
     }
 
     // we have a conflict since prev is in the log of the local state, but isn't the tip
@@ -340,17 +348,17 @@ export class ConflictResolution {
     const canonicalLog = initialStateLog.items
     const localLog = canonicalLog.splice(conflictIdx)
     // Compute state up till conflictIdx
-    const state: StreamState = await this.applyLogToState(handler, canonicalLog)
+    const state: StreamState = await this.applyLogToState(handler, canonicalLog, null, false, opts)
     // Compute next transition in parallel
-    const localState = await this.applyLogToState(handler, localLog, cloneDeep(state), true)
-    const remoteState = await this.applyLogToState(handler, unappliedCommits, cloneDeep(state), true)
+    const localState = await this.applyLogToState(handler, localLog, cloneDeep(state), true, opts)
+    const remoteState = await this.applyLogToState(handler, unappliedCommits, cloneDeep(state), true, opts)
 
     const selectedState = await pickLogToAccept(localState, remoteState)
     if (selectedState === localState) {
       return null
     }
 
-    return this.applyLogToState(handler, unappliedCommits, cloneDeep(state))
+    return this.applyLogToState(handler, unappliedCommits, cloneDeep(state), false, opts)
   }
 
   /**
@@ -358,12 +366,13 @@ export class ConflictResolution {
    *
    * @param initialState - State to start from
    * @param tip - Commit CID
+   * @param opts - options that control the behavior when applying the commit
    */
-  async applyTip(initialState: StreamState, tip: CID): Promise<StreamState | null> {
+  async applyTip(initialState: StreamState, tip: CID, opts: InternalOpts): Promise<StreamState | null> {
     const stateLog = HistoryLog.fromState(this.dispatcher, initialState)
     const log = await fetchLog(this.dispatcher, tip, stateLog)
     if (log.length) {
-      return this.applyLog(initialState, stateLog, log)
+      return this.applyLog(initialState, stateLog, log, opts)
     }
   }
 
@@ -381,8 +390,12 @@ export class ConflictResolution {
    * Return state at `commitId` version.
    */
   async snapshotAtCommit(initialState: StreamState, commitId: CommitID): Promise<StreamState> {
+    // Throw if any commit fails to apply as we are trying to load at a specific commit and want
+    // to error if we can't.
+    const opts = { throwOnApplyCommitError: true }
+
     // If 'commit' is ahead of 'initialState', sync state up to 'commit'
-    const baseState = (await this.applyTip(initialState, commitId.commit)) || initialState
+    const baseState = (await this.applyTip(initialState, commitId.commit, opts)) || initialState
 
     const baseStateLog = HistoryLog.fromState(this.dispatcher, baseState)
 
@@ -399,7 +412,7 @@ export class ConflictResolution {
     // to reset the state to the state at the requested commit.
     const resetLog = baseStateLog.slice(0, commitIndex + 1).items
     const handler = this.handlers.get(initialState.type)
-    return this.applyLogToState(handler, resetLog)
+    return this.applyLogToState(handler, resetLog, null, false, opts)
   }
 
   /**
