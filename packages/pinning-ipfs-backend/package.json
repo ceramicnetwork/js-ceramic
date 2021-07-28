@@ -32,7 +32,7 @@
   "devDependencies": {
     "@ceramicnetwork/common": "^1.2.0-rc.1",
     "cids": "~1.1.6",
-    "ipfs-core-types": "~0.5.1",
+    "ipfs-core-types": "~0.6.0",
     "ts-jest": "^26.4.4"
   },
   "publishConfig": {
