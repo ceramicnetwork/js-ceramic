@@ -1,4 +1,4 @@
-name: Publish and deploy debug image
+name: Deploy debug image to dev infra
 
 on:
   push:
