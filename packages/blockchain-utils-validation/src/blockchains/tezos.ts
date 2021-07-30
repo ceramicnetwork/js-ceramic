@@ -1,7 +1,7 @@
-import { AccountID } from 'caip'
+import { AccountID, ChainID } from 'caip'
 import { RemoteSigner } from '@taquito/remote-signer'
 import { BlockchainHandler } from '../blockchain-handler'
-import { LinkProof } from '@ceramicnetwork/blockchain-utils-linking'
+import { LinkProof, tezos } from '@ceramicnetwork/blockchain-utils-linking'
 import fetch from 'cross-fetch'
 import * as uint8arrays from 'uint8arrays'
 
@@ -10,7 +10,8 @@ export const PUBLIC_KEY_NOT_PUBLISHED_ERROR = new Error(
   `Public key not published to the Tezos blockchain`
 )
 
-const namespace = 'tezos'
+// @ts-ignore TS can't resolve these, but they are there and tests pass
+const { TEZOS_NAMESPACE, TEZOS_CHAIN_REF } = tezos
 
 const FAKE_API_ENDPOINT = 'https://fake-api.example.com' // this enpoint is never actually called
 
@@ -22,7 +23,7 @@ const FAKE_API_ENDPOINT = 'https://fake-api.example.com' // this enpoint is neve
  * @param {string} input - the string to convert
  * @returns {string} the converted hex string
  */
-export function char2Bytes(input: string): string {
+function char2Bytes(input: string): string {
   return uint8arrays.toString(uint8arrays.fromString(input, 'utf8'), 'base16')
 }
 
@@ -36,11 +37,13 @@ export function char2Bytes(input: string): string {
  */
 function publicKeyFinder(address: string): () => Promise<string> {
   // request the public key from the Tezos blockchain
-  const request = fetch(`https://api.tzstats.com/explorer/account/${address}`).catch(() => {
+  const request = fetch(`https://api.tzstats.com/explorer/account/${address}`).catch((e: any) => {
     throw ADDRESS_NOT_FOUND_ERROR
   })
   return async (): Promise<string> => {
-    const result = (await (await request).json())?.pubkey
+    const response = await request
+    const json = await response.json()
+    const result = json?.pubkey
     if (result) {
       return result
     } else {
@@ -54,6 +57,12 @@ function publicKeyFinder(address: string): () => Promise<string> {
 // - their public key published to the blockchain
 export async function validateLink(proof: LinkProof): Promise<LinkProof | null> {
   const account = AccountID.parse(proof.account)
+  const chainId = new ChainID(account.chainId)
+
+  // only support Tezos mainnet for now
+  if (chainId.reference !== TEZOS_CHAIN_REF) {
+    return null
+  }
   const msg = char2Bytes(proof.message)
 
   const verifier = new RemoteSigner(account.address, FAKE_API_ENDPOINT)
@@ -69,7 +78,7 @@ export async function validateLink(proof: LinkProof): Promise<LinkProof | null> 
 }
 
 const Handler: BlockchainHandler = {
-  namespace,
+  namespace: TEZOS_NAMESPACE,
   validateLink,
 }
 

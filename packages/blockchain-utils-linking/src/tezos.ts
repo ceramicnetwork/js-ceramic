@@ -5,6 +5,9 @@ import { hash } from '@stablelib/sha256'
 import * as uint8arrays from 'uint8arrays'
 import type { Signer, TezosToolkit, Wallet } from '@taquito/taquito'
 
+export const TEZOS_NAMESPACE = 'tezos'
+export const TEZOS_CHAIN_REF = 'NetXdQprcVkpaWU' // Tezos mainnet
+
 export type TezosProvider = TezosToolkit & {
   // the below are requried for the TezosProvider interface
   wallet: Wallet
@@ -47,7 +50,7 @@ async function sign(provider: TezosProvider, message: string): Promise<string> {
  */
 async function getActiveAddress(provider: TezosProvider): Promise<string> {
   const Tezos = provider
-return Tezos.wallet.pkh({ forceRefetch: true })
+  return Tezos.wallet.pkh({ forceRefetch: true })
 }
 
 /**
@@ -56,13 +59,11 @@ return Tezos.wallet.pkh({ forceRefetch: true })
  * message with the active account's address.
  *
  * @param {TezosProvider} provider - the provider to use signing the link proof and getting the active account's address
- * @param {string} address - the address to sign the link proof with
- * @param {string} chainRef - the chain reference to link to
  */
 export class TezosAuthProvider implements AuthProvider {
   readonly isAuthProvider = true
 
-  constructor(private readonly provider: TezosProvider, private readonly chainRef: string) {}
+  constructor(private readonly provider: TezosProvider) { }
 
   /**
    * @inheritdoc
@@ -85,11 +86,11 @@ export class TezosAuthProvider implements AuthProvider {
     // generate account ID
     const caipAccount = new AccountID({
       address,
-      chainId: `tezos:${this.chainRef}`,
+      chainId: `${TEZOS_NAMESPACE}:${TEZOS_CHAIN_REF}`,
     })
     // create link proof
     const proof: LinkProof = {
-      version: 1,
+      version: 2,
       message,
       signature,
       account: caipAccount.toString(),
@@ -105,7 +106,7 @@ export class TezosAuthProvider implements AuthProvider {
     const address = await getActiveAddress(this.provider)
     return new AccountID({
       address,
-      chainId: `tezos:${this.chainRef}`,
+      chainId: `${TEZOS_NAMESPACE}:${TEZOS_CHAIN_REF}`,
     })
   }
 

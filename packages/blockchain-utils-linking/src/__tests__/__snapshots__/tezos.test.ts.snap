@@ -15,6 +15,6 @@ did:3:bafysdfwefwe
 Timestamp: 666",
   "signature": "p2sigeBMBpSKhYJwMM2ZbZKLKHn4rTrNWyJQgLzWLNsAWj3Ktk5zrscHVaLsJYCvHFDeyX3LUouxvrMDABqRkcNKvrLJFFyzwW",
   "timestamp": 666,
-  "version": 1,
+  "version": 2,
 }
 `;

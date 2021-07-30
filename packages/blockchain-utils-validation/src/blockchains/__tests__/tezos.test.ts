@@ -7,15 +7,18 @@ import {
   WalletProvider,
   TezosToolkit,
 } from '@taquito/taquito'
-import { validateLink } from '../tezos'
-import mockFetch from 'jest-fetch-mock'
+import { validateLink } from '../../index'
 import { LinkProof } from '@ceramicnetwork/blockchain-utils-linking'
+import fetch from 'cross-fetch'
+import { AccountID, ChainID } from 'caip'
+jest.mock('cross-fetch', () => jest.fn()) // this gets hoisted to the top of the file
+const mockFetch = fetch as jest.Mock
+const { Response } = jest.requireActual('cross-fetch')
 
 const did = 'did:3:bafysdfwefwe'
 const privateKey = 'p2sk2obfVMEuPUnadAConLWk7Tf4Dt3n4svSgJwrgpamRqJXvaYcg1'
-const chainRef = 'NetXdQprcVkpaWU' // Tezos mainnet
 
-type HttpResponse = string
+type HttpResponse = Response
 
 type IoTestCase = {
   testName?: string
@@ -30,7 +33,7 @@ type ProofTestCase = {
 
 // Mock Taquito's WalletProvider
 class TezosMockWallet implements WalletProvider {
-  constructor(private readonly signer: InMemorySigner) {}
+  constructor(private readonly signer: InMemorySigner) { }
   async getPKH(): Promise<string> {
     return this.signer.publicKeyHash()
   }
@@ -57,6 +60,7 @@ let publicKeyHash: string
 let publicKey: string
 let validProof: LinkProof
 let invalidSignatureProof: LinkProof
+let invalidChainIdProof: LinkProof
 
 // cache Date.now() to restore it after all tests
 const dateNow = Date.now
@@ -76,20 +80,31 @@ beforeAll(async (done) => {
   // create proof for did
   publicKeyHash = await provider.signer.publicKeyHash()
   publicKey = await provider.signer.publicKey()
-  const authProvider = new TezosAuthProvider(provider, chainRef)
+  const authProvider = new TezosAuthProvider(provider)
   validProof = await authProvider.createLink(did)
+
   invalidSignatureProof = Object.assign({}, validProof)
   invalidSignatureProof.signature = 'invalid'
+
+  invalidChainIdProof = Object.assign({}, validProof)
+  const accountId = AccountID.parse(invalidChainIdProof.account)
+  const chainId = new ChainID(accountId.chainId)
+  invalidChainIdProof.account = new AccountID({
+    address: accountId.address,
+    chainId: {
+      namespace: chainId.namespace,
+      reference: 'some unsupported chain reference',
+    }
+  }).toString()
+
   done()
 })
 
-afterEach(() => {
-  mockFetch.mockReset()
-})
 
 afterAll(() => {
   // restore Date.now()
   Date.now = dateNow
+  jest.clearAllMocks()
 })
 
 describe('Blockchain: Tezos', () => {
@@ -102,7 +117,7 @@ describe('Blockchain: Tezos', () => {
       // - signature can't be verified
       {
         testName: 'unable to validate when wallet address has never interacted with the blockchain',
-        error: new Error('Axios 404 response status error'), // use axios 404 error
+        error: new Error('Fetch response error'),
       },
 
       // Validation not possible
@@ -111,11 +126,9 @@ describe('Blockchain: Tezos', () => {
       {
         testName: 'unable to validate when wallet address has not been published to the blockchain',
         pubkeyObject(): HttpResponse {
-          return JSON.stringify({
-            data: {
-              pubkey: undefined,
-            },
-          })
+          return new Response(JSON.stringify({
+            pubkey: undefined,
+          }))
         },
       },
 
@@ -124,11 +137,9 @@ describe('Blockchain: Tezos', () => {
       // - the signature can be verified
       {
         pubkeyObject(publicKey?: string): HttpResponse {
-          return JSON.stringify({
-            data: {
-              pubkey: publicKey,
-            },
-          })
+          return new Response(JSON.stringify({
+            pubkey: publicKey,
+          }))
         },
       },
     ]
@@ -144,28 +155,31 @@ describe('Blockchain: Tezos', () => {
         message: 'invalid proof',
         proof: () => invalidSignatureProof,
       },
+      // invalid chain reference
+      {
+        message: 'invalid chain reference',
+        proof: () => invalidChainIdProof,
+      }
     ]
 
     // run test cases
     for (const { testName, pubkeyObject, error } of ioTestCases) {
       for (const { message, proof } of proofTestCases) {
         test(testName || message, async (done) => {
-          // start test with the proof from the test case
-          const testPromise = expect(validateLink(proof())).resolves.toMatchSnapshot()
-
+          void testName
+          void message
+          mockFetch.mockReset()
           // mock axios response or error
           if (pubkeyObject) {
-            mockFetch.mockResponse(pubkeyObject(publicKey))
+            mockFetch.mockImplementationOnce(() => Promise.resolve(pubkeyObject(publicKey)))
           }
           if (error) {
-            mockFetch.mockReject(error)
+            mockFetch.mockImplementationOnce(() => Promise.reject(error))
           }
-          expect(mockFetch).toHaveBeenCalledWith(
-            `https://api.tzstats.com/explorer/account/${publicKeyHash}`
-          )
 
-          // wait for the test to finish
-          await testPromise
+          // wait for test with the proof from the test case
+          await expect(validateLink(proof())).resolves.toMatchSnapshot()
+
           done()
         })
       }

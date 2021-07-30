@@ -51,7 +51,6 @@
     "@taquito/taquito": "^9.2.0",
     "eth-sig-util": "^3.0.0",
     "ganache-core": "^2.13.1",
-    "jest-fetch-mock": "^3.0.3",
     "near-api-js": "^0.36.3"
   },
   "gitHead": "34eeee25597b0a60def72906c26d3afd6230aaf1"
