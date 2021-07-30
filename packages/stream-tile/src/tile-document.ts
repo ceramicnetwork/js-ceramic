@@ -58,7 +58,7 @@ export interface TileMetadataArgs {
 
 const DEFAULT_CREATE_OPTS = { anchor: true, publish: true, sync: SyncOptions.PREFER_CACHE }
 const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE }
-const DEFAULT_UPDATE_OPTS = { anchor: true, publish: true }
+const DEFAULT_UPDATE_OPTS = { anchor: true, publish: true, throwOnInvalidCommit: true }
 
 /**
  * Converts from metadata format into CommitHeader format to be put into a CeramicCommit
@@ -128,13 +128,6 @@ export class TileDocument<T = Record<string, any>> extends Stream {
   static STREAM_TYPE_ID = 0
 
   private _isReadOnly = false;
-
-  /**
-   * Returns the contents of this document
-   */
-  get content(): T {
-    return this._getContent()
-  }
 
   /**
    * Creates a Tile document.

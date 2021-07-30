@@ -24,25 +24,33 @@ jobs:
       -
         name: Set master branch tag
         if: ${{ env.BRANCH == 'master' }}
-        run: echo "ENV_TAG=latest" >> $GITHUB_ENV
+        run: |
+          echo "ENV_TAG=latest" >> $GITHUB_ENV
+          echo "EVENT_WEBHOOK_URL=${{ secrets.EVENT_WEBHOOK_FIRE }}" >> $GITHUB_ENV
       -
         name: Set rc branch tag
         if: ${{ env.BRANCH == 'release-candidate' }}
-        run: echo "ENV_TAG=tnet" >> $GITHUB_ENV
+        run: |
+          echo "ENV_TAG=tnet" >> $GITHUB_ENV
+          echo "EVENT_WEBHOOK_URL=${{ secrets.EVENT_WEBHOOK_CLAY }}" >> $GITHUB_ENV
       -
         name: Set develop branch tag
         if: ${{ env.BRANCH == 'develop' }}
-        run: echo "ENV_TAG=dev" >> $GITHUB_ENV
+        run: |
+          echo "ENV_TAG=dev" >> $GITHUB_ENV
+          echo "EVENT_WEBHOOK_URL=${{ secrets.EVENT_WEBHOOK_DEV }}" >> $GITHUB_ENV
       -
         name: Set env tag (default)
         if: ${{ env.ENV_TAG == '' }}
-        run: echo "ENV_TAG=dev" >> $GITHUB_ENV
-      - 
+        run: |
+          echo "ENV_TAG=dev" >> $GITHUB_ENV
+          echo "EVENT_WEBHOOK_URL=${{ secrets.EVENT_WEBHOOK_DEV }}" >> $GITHUB_ENV
+      -
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
       -
         name: Login to DockerHub
-        uses: docker/login-action@v1 
+        uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
@@ -66,3 +74,11 @@ jobs:
             --tag ${{ env.IMAGE_ID }}:${{ env.ENV_TAG }} \
             --tag ${{ env.IMAGE_ID }}:${{ env.SHA_TAG }} \
             --tag ${{ env.IMAGE_ID }}:${{ env.BRANCH }}
+      -
+        name: Publish build event
+        run: |
+          res=$(docker run --rm curlimages/curl curl -X POST ${{ env.EVENT_WEBHOOK_URL }} -H "Content-Type: application/json" --user ${{ secrets.AWS_ACCESS_KEY_ID }}:${{ secrets.AWS_SECRET_ACCESS_KEY }} --aws-sigv4 "aws:amz:${{ secrets.AWS_DEFAULT_REGION }}:execute-api" -d '{ "event_type": "new_image", "client_payload": {"env_tag": "${{ env.ENV_TAG }}", "sha_tag": "${{ env.SHA_TAG }}" } }') || exit 1
+          echo $res
+          if [[ $res != *"Forwarded event"* ]]; then
+            exit 1
+          fi

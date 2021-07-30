@@ -23,7 +23,7 @@ const throwReadOnlyError = (): Promise<void> => {
 }
 
 const DEFAULT_CREATE_OPTS = { anchor: false, publish: true, sync: SyncOptions.PREFER_CACHE }
-const DEFAULT_UPDATE_OPTS = { anchor: true, publish: true }
+const DEFAULT_UPDATE_OPTS = { anchor: true, publish: true, throwOnInvalidCommit: true }
 const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE }
 
 /**
@@ -40,7 +40,7 @@ export class Caip10Link extends Stream {
    * Returns the DID linked to the CAIP10 address this object represents.
    */
   get did(): string | null {
-    return this._getContent()
+    return this.content
   }
 
   /**

@@ -99,6 +99,16 @@ describe('Dispatcher', () => {
     expect(ipfs.dag.get.mock.calls[0][0]).toEqual(FAKE_CID)
   })
 
+  it('retries on timeout', async () => {
+    ipfs.dag.get.mockRejectedValueOnce({code: 'ERR_TIMEOUT'})
+    ipfs.dag.get.mockReturnValueOnce({value: 'data'})
+    expect(await dispatcher.retrieveCommit(FAKE_CID)).toEqual('data')
+
+    expect(ipfs.dag.get.mock.calls.length).toEqual(2)
+    expect(ipfs.dag.get.mock.calls[0][0]).toEqual(FAKE_CID)
+    expect(ipfs.dag.get.mock.calls[1][0]).toEqual(FAKE_CID)
+  })
+
   it('caches and retrieves commit correctly', async () => {
     const ipfsSpy = ipfs.dag.get
     ipfsSpy.mockReturnValueOnce({value: 'data'})
