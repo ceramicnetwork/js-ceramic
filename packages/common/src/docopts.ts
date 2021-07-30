@@ -47,7 +47,7 @@ export interface InternalOpts {
    * This option is used internally but is not designed to be set by user applications.
    * @private
    */
-  throwOnApplyCommitError?: boolean
+  throwOnInvalidCommit?: boolean
 }
 
 /**

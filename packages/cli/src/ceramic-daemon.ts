@@ -392,7 +392,7 @@ export class CeramicDaemon {
     upconvertLegacySyncOption(opts)
     // The HTTP client generally only calls applyCommit as part of an app-requested update to a
     // stream, so we want to throw an error if applying that commit fails for any reason.
-    opts.throwOnApplyCommitError = opts.throwOnApplyCommitError ?? true
+    opts.throwOnInvalidCommit = opts.throwOnInvalidCommit ?? true
 
     const streamId = req.body.streamId || docId
     if (!(streamId && commit)) {

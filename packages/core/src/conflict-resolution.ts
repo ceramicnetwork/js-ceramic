@@ -276,7 +276,7 @@ export class ConflictResolution {
   /**
    * Applies the log to the stream and updates the state.
    * If an error is encountered while applying a commit, commit application stops and the state
-   * that was built thus far is returned, unless 'opts.throwOnApplyCommitError' is true.
+   * that was built thus far is returned, unless 'opts.throwOnInvalidCommit' is true.
    */
   private async applyLogToState<T extends Stream>(
     handler: StreamHandler<T>,
@@ -302,7 +302,7 @@ export class ConflictResolution {
         // TODO(1586): include StreamID in log message
         this.context.loggerProvider.getDiagnosticsLogger().warn(
           `Error while applying commit ${entry.cid.toString()}: ${err}`)
-        if (opts.throwOnApplyCommitError) {
+        if (opts.throwOnInvalidCommit) {
           throw err
         } else {
           return state
@@ -392,7 +392,7 @@ export class ConflictResolution {
   async snapshotAtCommit(initialState: StreamState, commitId: CommitID): Promise<StreamState> {
     // Throw if any commit fails to apply as we are trying to load at a specific commit and want
     // to error if we can't.
-    const opts = { throwOnApplyCommitError: true }
+    const opts = { throwOnInvalidCommit: true }
 
     // If 'commit' is ahead of 'initialState', sync state up to 'commit'
     const baseState = (await this.applyTip(initialState, commitId.commit, opts)) || initialState

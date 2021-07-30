@@ -164,7 +164,7 @@ export class StateManager {
    */
   private async _handleTip(state$: RunningState, cid: CID, opts: InternalOpts = {}): Promise<void> {
     // by default swallow and log errors applying commits
-    opts.throwOnApplyCommitError = opts.throwOnApplyCommitError ?? false
+    opts.throwOnInvalidCommit = opts.throwOnInvalidCommit ?? false
     this.logger.verbose(`Learned of new tip ${cid.toString()} for stream ${state$.id.toString()}`)
     const next = await this.conflictResolution.applyTip(state$.value, cid, opts)
     if (next) {

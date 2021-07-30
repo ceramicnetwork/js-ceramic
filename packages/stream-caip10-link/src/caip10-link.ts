@@ -23,7 +23,7 @@ const throwReadOnlyError = (): Promise<void> => {
 }
 
 const DEFAULT_CREATE_OPTS = { anchor: false, publish: true, sync: SyncOptions.PREFER_CACHE }
-const DEFAULT_UPDATE_OPTS = { anchor: true, publish: true, throwOnApplyCommitError: true }
+const DEFAULT_UPDATE_OPTS = { anchor: true, publish: true, throwOnInvalidCommit: true }
 const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE }
 
 /**
