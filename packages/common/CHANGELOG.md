@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.2.0-rc.2](/compare/@ceramicnetwork/common@1.2.0-rc.1...@ceramicnetwork/common@1.2.0-rc.2) (2021-07-30)
+
+
+### Features
+
+* **core:** Invalid commits don't prevent loading a stream (#1597) fb1dea1, closes #1597
+* **daemon:** add raw_data endpoint (#1395) 41b6109, closes #1395 ceramicnetwork#1394
+
+
+
+
+
 # [1.2.0-rc.1](/compare/@ceramicnetwork/common@1.2.0-rc.0...@ceramicnetwork/common@1.2.0-rc.1) (2021-07-16)
 
 

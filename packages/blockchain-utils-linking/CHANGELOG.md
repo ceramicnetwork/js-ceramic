@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.1.0-rc.0](/compare/@ceramicnetwork/blockchain-utils-linking@1.0.3-rc.0...@ceramicnetwork/blockchain-utils-linking@1.1.0-rc.0) (2021-07-30)
+
+
+### Features
+
+* **tezos-blockchain-link:** initial support for linking and validating DIDs to Tezos wallets (#1555) baa6c35, closes #1555
+
+
+
+
+
 ## [1.0.3-rc.0](/compare/@ceramicnetwork/blockchain-utils-linking@1.0.2...@ceramicnetwork/blockchain-utils-linking@1.0.3-rc.0) (2021-07-16)
 
 **Note:** Version bump only for package @ceramicnetwork/blockchain-utils-linking

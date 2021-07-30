@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.2.0-rc.4](/compare/@ceramicnetwork/cli@1.2.0-rc.3...@ceramicnetwork/cli@1.2.0-rc.4) (2021-07-30)
+
+
+### Features
+
+* **cli:** ethr-did-resolver support for mainnet (#1561) 7e53190, closes #1561
+* **core:** Invalid commits don't prevent loading a stream (#1597) fb1dea1, closes #1597
+* **daemon:** add raw_data endpoint (#1395) 41b6109, closes #1395 ceramicnetwork#1394
+
+
+
+
+
 # [1.2.0-rc.3](/compare/@ceramicnetwork/cli@1.2.0-rc.2...@ceramicnetwork/cli@1.2.0-rc.3) (2021-07-19)
 
 **Note:** Version bump only for package @ceramicnetwork/cli
