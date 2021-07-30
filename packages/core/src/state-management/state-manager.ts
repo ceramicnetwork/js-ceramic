@@ -8,6 +8,7 @@ import {
   AnchorStatus,
   CreateOpts,
   LoadOpts,
+  InternalOpts,
   UpdateOpts,
   UnreachableCaseError,
   RunningStateLike,
@@ -154,9 +155,18 @@ export class StateManager {
     }
   }
 
-  private async _handleTip(state$: RunningState, cid: CID): Promise<void> {
+  /**
+   * Applies the given tip CID as a new commit to the given running state.
+   * @param state$ - State to apply tip to
+   * @param cid - tip CID
+   * @param opts - options that control the behavior when applying the commit
+   * @private
+   */
+  private async _handleTip(state$: RunningState, cid: CID, opts: InternalOpts = {}): Promise<void> {
+    // by default swallow and log errors applying commits
+    opts.throwOnInvalidCommit = opts.throwOnInvalidCommit ?? false
     this.logger.verbose(`Learned of new tip ${cid.toString()} for stream ${state$.id.toString()}`)
-    const next = await this.conflictResolution.applyTip(state$.value, cid)
+    const next = await this.conflictResolution.applyTip(state$.value, cid, opts)
     if (next) {
       state$.next(next)
       this.logger.verbose(
@@ -201,13 +211,13 @@ export class StateManager {
   applyCommit(
     streamId: StreamID,
     commit: any,
-    opts: CreateOpts | UpdateOpts
+    opts: CreateOpts | UpdateOpts,
   ): Promise<RunningState> {
     return this.executionQ.forStream(streamId).run(async () => {
       const state$ = await this.load(streamId, opts)
       const cid = await this.dispatcher.storeCommit(commit, streamId)
 
-      await this._handleTip(state$, cid)
+      await this._handleTip(state$, cid, opts)
       await this.applyWriteOpts(state$, opts)
       return state$
     })
