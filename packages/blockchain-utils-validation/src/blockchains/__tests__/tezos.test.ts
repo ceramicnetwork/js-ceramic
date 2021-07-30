@@ -31,30 +31,6 @@ type ProofTestCase = {
   proof: () => LinkProof
 }
 
-// Mock Taquito's WalletProvider
-class TezosMockWallet implements WalletProvider {
-  constructor(private readonly signer: InMemorySigner) { }
-  async getPKH(): Promise<string> {
-    return this.signer.publicKeyHash()
-  }
-
-  async mapTransferParamsToWalletParams(_params: WalletTransferParams) {
-    throw new Error('Should not be called')
-  }
-
-  async mapOriginateParamsToWalletParams(_params: WalletOriginateParams) {
-    throw new Error('Should not be called')
-  }
-
-  async mapDelegateParamsToWalletParams(_params: WalletDelegateParams) {
-    throw new Error('Should not be called')
-  }
-
-  async sendOperations(_params: any[]): Promise<string> {
-    throw new Error('Should not be called')
-  }
-}
-
 let provider: TezosProvider
 let publicKeyHash: string
 let publicKey: string
@@ -71,11 +47,9 @@ beforeAll(async (done) => {
 
   // initialize mock tezos provider
   const signer = await InMemorySigner.fromSecretKey(privateKey)
-  provider = new TezosToolkit('https://mainnet-tezos.giganode.io')
-  provider.setProvider({
+  provider = {
     signer,
-    wallet: new TezosMockWallet(signer),
-  })
+  }
 
   // create proof for did
   publicKeyHash = await provider.signer.publicKeyHash()

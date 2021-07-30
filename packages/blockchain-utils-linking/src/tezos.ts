@@ -3,14 +3,13 @@ import { AuthProvider } from './auth-provider'
 import { getConsentMessage, LinkProof } from './util'
 import { hash } from '@stablelib/sha256'
 import * as uint8arrays from 'uint8arrays'
-import type { Signer, TezosToolkit, Wallet } from '@taquito/taquito'
+import type { Signer } from '@taquito/taquito'
 
 export const TEZOS_NAMESPACE = 'tezos'
 export const TEZOS_CHAIN_REF = 'NetXdQprcVkpaWU' // Tezos mainnet
 
-export type TezosProvider = TezosToolkit & {
-  // the below are requried for the TezosProvider interface
-  wallet: Wallet
+export interface TezosProvider {
+  // the below is requried from TezosToolkit
   signer: Signer
 }
 
@@ -36,9 +35,8 @@ function char2Bytes(input: string): string {
  * @returns {Promise<string>} the signature prefixed with the signing method
  */
 async function sign(provider: TezosProvider, message: string): Promise<string> {
-  const Tezos = provider
   // sign the message with the active address and get the signature with the type prefixed
-  const { prefixSig: signature } = await Tezos.signer.sign(char2Bytes(message))
+  const { prefixSig: signature } = await provider.signer.sign(char2Bytes(message))
   return signature
 }
 
@@ -49,8 +47,7 @@ async function sign(provider: TezosProvider, message: string): Promise<string> {
  * @returns {Promise<string>} - a promise that resolves to the active account's address
  */
 async function getActiveAddress(provider: TezosProvider): Promise<string> {
-  const Tezos = provider
-  return Tezos.wallet.pkh({ forceRefetch: true })
+  return provider.signer.publicKeyHash()
 }
 
 /**
@@ -63,7 +60,11 @@ async function getActiveAddress(provider: TezosProvider): Promise<string> {
 export class TezosAuthProvider implements AuthProvider {
   readonly isAuthProvider = true
 
-  constructor(private readonly provider: TezosProvider) { }
+  constructor(private readonly provider: TezosProvider) {
+    if (provider.signer === undefined) {
+      throw new Error('a `Signer` is required to use the `TezosAuthProvider`')
+    }
+  }
 
   /**
    * @inheritdoc
