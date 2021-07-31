@@ -1,7 +1,4 @@
 import type CID from 'cids'
-
-import type { DIDResolutionResult } from 'did-resolver'
-
 import jsonpatch from 'fast-json-patch'
 import cloneDeep from 'lodash.clonedeep'
 
