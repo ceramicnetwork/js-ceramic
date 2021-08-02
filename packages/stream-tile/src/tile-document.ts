@@ -96,7 +96,7 @@ async function _ensureAuthenticated(signer: CeramicSigner) {
 }
 
 /**
- * Sign Tile commit
+ * Sign a Tile commit with the currently authenticated DID.
  * @param signer - Object containing the DID to use to sign the commit
  * @param commit - Commit to be signed
  * @private
