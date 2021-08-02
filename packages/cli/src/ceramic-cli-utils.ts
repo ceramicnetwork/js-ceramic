@@ -25,7 +25,8 @@ import KeyDidResolver from 'key-did-resolver'
 import { Resolver } from 'did-resolver'
 import { DID } from 'dids'
 
-const DEFAULT_CLI_CONFIG_FILE = 'config.json'
+const DEFAULT_CLI_CONFIG_FILE = 'client.config.json'
+const LEGACY_CLI_CONFIG_FILE = 'config.json' // todo(1615): Remove this backwards compatibily support
 const DEFAULT_CLI_CONFIG_PATH = path.join(os.homedir(), '.ceramic')
 const DEFAULT_NETWORK = Networks.TESTNET_CLAY
 
@@ -454,6 +455,26 @@ export class CeramicCliUtils {
     } catch (e) {
       // TODO handle invalid configuration
     }
+
+    // If nothing found in default config file path, check legacy path too
+    // TODO(1615): Remove this backwards compatibility code
+    const legacyCliConfigPath = path.join(DEFAULT_CLI_CONFIG_PATH, LEGACY_CLI_CONFIG_FILE)
+    try {
+      await fs.access(legacyCliConfigPath)
+      const config = await JSON.parse(await fs.readFile(legacyCliConfigPath, { encoding: 'utf8' }))
+
+      console.warn(`Legacy client config file detected at '${legacyCliConfigPath}', renaming to ${fullCliConfigPath}`)
+      try {
+        await fs.rename(legacyCliConfigPath, fullCliConfigPath)
+      } catch(err) {
+        console.error(`Rename failed: ${err}`)
+        throw err
+      }
+      return config
+    } catch (e) {
+      // TODO handle invalid configuration
+    }
+
     return await this._saveCliConfig({})
   }
 
