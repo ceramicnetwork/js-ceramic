@@ -44,7 +44,7 @@
     "@polkadot/api": "^4.6.2",
     "@polkadot/keyring": "^6.2.1",
     "@polkadot/types": "^4.6.2",
-    "@polkadot/util": "^6.2.1",
+    "@polkadot/util": "^7.1.1",
     "@polkadot/util-crypto": "^7.0.2",
     "@smontero/eosio-local-provider": "^0.0.3",
     "@taquito/signer": "^9.2.0",
