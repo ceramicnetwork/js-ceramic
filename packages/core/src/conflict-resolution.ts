@@ -299,9 +299,9 @@ export class ConflictResolution {
       try {
         state = await this.applyLogEntryToState(entry, state, handler)
       } catch(err) {
-        // TODO(1586): include StreamID in log message
+        const streamId = state ? StreamUtils.streamIdFromState(state).toString() : null
         this.context.loggerProvider.getDiagnosticsLogger().warn(
-          `Error while applying commit ${entry.cid.toString()}: ${err}`)
+          `Error while applying commit ${entry.cid.toString()} to stream ${streamId}: ${err}`)
         if (opts.throwOnInvalidCommit) {
           throw err
         } else {

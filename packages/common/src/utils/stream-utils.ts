@@ -12,12 +12,21 @@ import {
 } from '../index'
 import { AnchorStatus, StreamState, LogEntry } from '../stream'
 import type { DagJWS } from 'dids'
-import { StreamType } from '@ceramicnetwork/streamid'
+import {StreamID, StreamType} from '@ceramicnetwork/streamid'
 
 /**
  * Stream related utils
  */
 export class StreamUtils {
+
+  /**
+   * Gets StreamID from the given StreamState object.
+   * @param state
+   */
+  static streamIdFromState(state: StreamState): StreamID {
+    return new StreamID(state.type, state.log[0].cid)
+  }
+
   /**
    * Serializes commit
    * @param commit - Commit instance
