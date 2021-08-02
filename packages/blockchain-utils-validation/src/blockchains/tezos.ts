@@ -10,6 +10,7 @@ export const PUBLIC_KEY_NOT_PUBLISHED_ERROR = new Error(
   `Public key not published to the Tezos blockchain`
 )
 
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore TS can't resolve these, but they are there and tests pass
 const { TEZOS_NAMESPACE, TEZOS_CHAIN_REF } = tezos
 
