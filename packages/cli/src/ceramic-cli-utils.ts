@@ -461,12 +461,14 @@ export class CeramicCliUtils {
     const legacyCliConfigPath = path.join(DEFAULT_CLI_CONFIG_PATH, LEGACY_CLI_CONFIG_FILE)
     try {
       await fs.access(legacyCliConfigPath)
-      const config = await JSON.parse(await fs.readFile(legacyCliConfigPath, { encoding: 'utf8' }))
+      const config = JSON.parse(await fs.readFile(legacyCliConfigPath, { encoding: 'utf8' }))
 
-      console.warn(`Legacy client config file detected at '${legacyCliConfigPath}', renaming to ${fullCliConfigPath}`)
+      console.warn(
+        `Legacy client config file detected at '${legacyCliConfigPath}', renaming to ${fullCliConfigPath}`
+      )
       try {
         await fs.rename(legacyCliConfigPath, fullCliConfigPath)
-      } catch(err) {
+      } catch (err) {
         console.error(`Rename failed: ${err}`)
         throw err
       }
