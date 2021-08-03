@@ -12,13 +12,12 @@ import {
 } from '../index'
 import { AnchorStatus, StreamState, LogEntry } from '../stream'
 import type { DagJWS } from 'dids'
-import {StreamID, StreamType} from '@ceramicnetwork/streamid'
+import { StreamID, StreamType } from '@ceramicnetwork/streamid'
 
 /**
  * Stream related utils
  */
 export class StreamUtils {
-
   /**
    * Gets StreamID from the given StreamState object.
    * @param state
