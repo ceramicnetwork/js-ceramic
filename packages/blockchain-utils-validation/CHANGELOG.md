@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.1.0-rc.1](/compare/@ceramicnetwork/blockchain-utils-validation@1.1.0-rc.0...@ceramicnetwork/blockchain-utils-validation@1.1.0-rc.1) (2021-08-03)
+
+
+### Bug Fixes
+
+* add eslint-disable line (#1611) 3c81e0d, closes #1611
+
+
+### Features
+
+* **tezos-blockchain-link:** linking and validating DIDs to Tezos wallets (#1601) b40709e, closes #1601
+
+
+
+
+
 # [1.1.0-rc.0](/compare/@ceramicnetwork/blockchain-utils-validation@1.0.3-rc.0...@ceramicnetwork/blockchain-utils-validation@1.1.0-rc.0) (2021-07-30)
 
 
