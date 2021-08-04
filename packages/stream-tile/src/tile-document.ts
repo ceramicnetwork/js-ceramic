@@ -1,9 +1,7 @@
 import jsonpatch from 'fast-json-patch'
 import type { Operation } from 'fast-json-patch'
-
 import * as uint8arrays from 'uint8arrays'
 import { randomBytes } from '@stablelib/random'
-
 import {
   CreateOpts,
   LoadOpts,
@@ -98,19 +96,17 @@ async function _ensureAuthenticated(signer: CeramicSigner) {
 }
 
 /**
- * Sign Tile commit
+ * Sign a Tile commit with the currently authenticated DID.
  * @param signer - Object containing the DID to use to sign the commit
  * @param commit - Commit to be signed
- * @param controller - Controller
  * @private
  */
 async function _signDagJWS(
   signer: CeramicSigner,
-  commit: CeramicCommit,
-  controller: string
+  commit: CeramicCommit
 ): Promise<SignedCommitContainer> {
   await _ensureAuthenticated(signer)
-  return signer.did.createDagJWS(commit, { did: controller })
+  return signer.did.createDagJWS(commit)
 }
 
 async function throwReadOnlyError(): Promise<void> {
@@ -127,7 +123,7 @@ export class TileDocument<T = Record<string, any>> extends Stream {
   static STREAM_TYPE_NAME = 'tile'
   static STREAM_TYPE_ID = 0
 
-  private _isReadOnly = false;
+  private _isReadOnly = false
 
   /**
    * Creates a Tile document.
@@ -173,9 +169,7 @@ export class TileDocument<T = Record<string, any>> extends Stream {
       // document as there shouldn't be any existing state for this doc on the network.
       opts.syncTimeoutSeconds = 0
     }
-    const commit = genesisCommit.data
-      ? await _signDagJWS(ceramic, genesisCommit, genesisCommit.header.controllers[0])
-      : genesisCommit
+    const commit = genesisCommit.data ? await _signDagJWS(ceramic, genesisCommit) : genesisCommit
     return ceramic.createStreamFromGenesis<TileDocument<T>>(
       TileDocument.STREAM_TYPE_ID,
       commit,
@@ -239,7 +233,7 @@ export class TileDocument<T = Record<string, any>> extends Stream {
       prev: this.tip,
       id: this.state$.id.cid,
     }
-    const commit = await _signDagJWS(this.api, rawCommit, this.controllers[0])
+    const commit = await _signDagJWS(this.api, rawCommit)
     const updated = await this.api.applyCommit(this.id, commit, opts)
     this.state$.next(updated.state)
   }
@@ -287,7 +281,7 @@ export class TileDocument<T = Record<string, any>> extends Stream {
       prev: this.tip,
       id: this.state.log[0].cid,
     }
-    return _signDagJWS(signer, commit, this.controllers[0])
+    return _signDagJWS(signer, commit)
   }
 
   /**
@@ -329,6 +323,6 @@ export class TileDocument<T = Record<string, any>> extends Stream {
       return { header }
     }
     const commit: GenesisCommit = { data: content, header }
-    return await _signDagJWS(signer, commit, metadata.controllers[0])
+    return await _signDagJWS(signer, commit)
   }
 }
