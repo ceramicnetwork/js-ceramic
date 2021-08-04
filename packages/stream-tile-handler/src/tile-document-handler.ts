@@ -106,7 +106,8 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
     context: Context
   ): Promise<StreamState> {
     // TODO: Assert that the 'prev' of the commit being applied is the end of the log in 'state'
-    await this._verifySignature(commit, meta, context, state.metadata.controllers[0])
+    const controller = state.next?.metadata?.controllers?.[0] || state.metadata.controllers[0]
+    await this._verifySignature(commit, meta, context, controller)
 
     const payload = (await context.ipfs.dag.get(commit.link, { timeout: IPFS_GET_TIMEOUT })).value
     if (!payload.id.equals(state.log[0].cid)) {
