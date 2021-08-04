@@ -16,6 +16,7 @@ import StreamID, { StreamType } from '@ceramicnetwork/streamid'
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import KeyDidResolver from 'key-did-resolver'
 import EthrDidResolver from 'ethr-did-resolver'
+import NftDidResolver from 'nft-did-resolver'
 import { DID } from 'dids'
 import cors from 'cors'
 import { errorHandler } from './daemon/error-handler'
@@ -182,6 +183,15 @@ export class CeramicDaemon {
       resolver: {
         ...KeyDidResolver.getResolver(),
         ...ThreeIdResolver.getResolver(ceramic),
+        ...NftDidResolver.getResolver({
+          ceramic: ceramic,
+          subGraphUrls: {
+            'eip155:4': {
+              erc721: 'https://api.thegraph.com/subgraphs/name/sunguru98/erc721-rinkeby-subgraph',
+              erc1155: 'https://api.thegraph.com/subgraphs/name/sunguru98/erc1155-rinkeby-subgraph',
+            },
+          },
+        }),
         ...(ceramicConfig.ethereumRpcUrl &&
           EthrDidResolver.getResolver({
             networks: [
@@ -227,7 +237,6 @@ export class CeramicDaemon {
     pinsRouter.use(errorHandler(this.diagnosticsLogger))
     recordsRouter.use(errorHandler(this.diagnosticsLogger))
     streamsRouter.use(errorHandler(this.diagnosticsLogger))
-
 
     commitsRouter.getAsync('/:streamid', this.commits.bind(this))
     multiqueriesRouter.postAsync('/', this.multiQuery.bind(this))
