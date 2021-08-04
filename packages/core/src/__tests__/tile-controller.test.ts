@@ -61,3 +61,13 @@ describe('throw if controller is different from signer', () => {
     await expect(tile.update({ foo: 'bar' })).rejects.toThrow(/invalid_jws/)
   })
 })
+
+test('change after controller changed', async () => {
+  ceramic.did = alice
+  const tile = await TileDocument.create(ceramic, { foo: 'blah' })
+  await tile.update(tile.content, { controllers: [bob.id] })
+  ceramic.did = bob
+  await tile.update({ foo: 'bar' }) // works all right
+  ceramic.did = alice
+  await expect(tile.update({ foo: 'baz' })).rejects.toThrow(/invalid_jws/)
+})
