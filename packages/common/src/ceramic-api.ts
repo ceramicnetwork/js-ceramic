@@ -1,5 +1,5 @@
 import type { DID } from 'dids'
-import { Stream, StreamHandler, CeramicCommit } from './stream'
+import { Stream, StreamHandler, CeramicCommit, AnchorStatus } from './stream'
 import { CreateOpts, LoadOpts, UpdateOpts } from './docopts'
 import { StreamID, CommitID } from '@ceramicnetwork/streamid'
 import { LoggerProvider } from './logger-provider'
@@ -103,6 +103,14 @@ export interface CeramicApi extends CeramicSigner {
     commit: CeramicCommit,
     opts?: CreateOpts | UpdateOpts
   ): Promise<T>
+
+  /**
+   * Requests an anchor for the given StreamID if the Stream isn't already anchored.
+   * Returns the new AnchorStatus for the Stream.
+   * @param streamId
+   * @param opts used to load the current Stream state
+   */
+  requestAnchor(streamId: StreamID | string, opts?: LoadOpts): Promise<AnchorStatus>
 
   /**
    * Sets the DID instance that will be used to author commits to stream. The DID instance

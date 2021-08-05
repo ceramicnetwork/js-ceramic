@@ -224,6 +224,10 @@ export abstract class Stream extends Observable<StreamState> implements StreamSt
     this.state$.next(stream.state)
   }
 
+  async requestAnchor(): Promise<AnchorStatus> {
+    return this.api.requestAnchor(this.id)
+  }
+
   /**
    * Makes this stream read-only. After this has been called any future attempts to call
    * mutation methods on the instance will throw.
