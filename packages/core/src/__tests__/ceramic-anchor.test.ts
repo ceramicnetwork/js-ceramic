@@ -50,7 +50,7 @@ describe('Ceramic anchoring', () => {
   let ipfs3: IpfsApi
 
   beforeAll(async () => {
-    ;[ipfs1, ipfs2, ipfs3] = await Promise.all(Array.from({ length: 3 }).map(() => createIPFS()))
+    [ipfs1, ipfs2, ipfs3] = await Promise.all(Array.from({ length: 3 }).map(() => createIPFS()))
     await swarmConnect(ipfs1, ipfs2)
     await swarmConnect(ipfs2, ipfs3)
     await swarmConnect(ipfs1, ipfs3)
