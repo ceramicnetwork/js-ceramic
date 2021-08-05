@@ -57,6 +57,7 @@
     "key-did-resolver": "^1.3.0-rc.0",
     "levelup": "^4.4.0",
     "morgan": "^1.10.0",
+    "nft-did-resolver": "^0.2.0-alpha.1",
     "s3leveldown": "^2.2.1",
     "stream-to-array": "^2.3.0",
     "uint8arrays": "^2.0.5"
