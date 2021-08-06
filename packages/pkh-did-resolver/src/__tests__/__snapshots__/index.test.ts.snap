@@ -1,0 +1,41 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`PKH DID Resolver successfully resolves DIDs 1`] = `
+Object {
+  "didDocument": null,
+  "didDocumentMetadata": Object {},
+  "didResolutionMetadata": Object {
+    "error": "invalidDid",
+  },
+}
+`;
+
+exports[`PKH DID Resolver successfully resolves DIDs 2`] = `
+Object {
+  "didDocument": null,
+  "didDocumentMetadata": Object {},
+  "didResolutionMetadata": Object {
+    "error": "invalidDid",
+  },
+}
+`;
+
+exports[`PKH DID Resolver successfully resolves DIDs 3`] = `
+Object {
+  "didDocument": null,
+  "didDocumentMetadata": Object {},
+  "didResolutionMetadata": Object {
+    "error": "invalidDid",
+  },
+}
+`;
+
+exports[`PKH DID Resolver successfully resolves DIDs 4`] = `
+Object {
+  "didDocument": null,
+  "didDocumentMetadata": Object {},
+  "didResolutionMetadata": Object {
+    "error": "invalidDid",
+  },
+}
+`;
