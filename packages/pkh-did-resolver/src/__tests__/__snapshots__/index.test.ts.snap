@@ -2,40 +2,118 @@
 
 exports[`PKH DID Resolver successfully resolves DIDs 1`] = `
 Object {
-  "didDocument": null,
+  "didDocument": Object {
+    "assertionMethod": Array [
+      "did:pkh:eip155:1:0xab16a96d359ec26a11e2c2b3d8f8b8942d5bfcdb#blockchainAccountId",
+    ],
+    "authentication": Array [
+      "did:pkh:eip155:1:0xab16a96d359ec26a11e2c2b3d8f8b8942d5bfcdb#blockchainAccountId",
+    ],
+    "id": "did:pkh:eip155:1:0xab16a96d359ec26a11e2c2b3d8f8b8942d5bfcdb",
+    "verificationMethod": Array [
+      Object {
+        "blockchainAccountId": "eip155:1:0xab16a96d359ec26a11e2c2b3d8f8b8942d5bfcdb",
+        "controller": "did:pkh:eip155:1:0xab16a96d359ec26a11e2c2b3d8f8b8942d5bfcdb",
+        "id": "did:pkh:eip155:1:0xab16a96d359ec26a11e2c2b3d8f8b8942d5bfcdb#blockchainAccountId",
+        "type": "EcdsaSecp256k1RecoveryMethod2020",
+      },
+    ],
+  },
   "didDocumentMetadata": Object {},
   "didResolutionMetadata": Object {
-    "error": "invalidDid",
+    "contentType": "application/did+json",
   },
 }
 `;
 
 exports[`PKH DID Resolver successfully resolves DIDs 2`] = `
 Object {
-  "didDocument": null,
+  "didDocument": Object {
+    "assertionMethod": Array [
+      "did:pkh:eip155:1:0xab16a96d359ec26a11e2c2b3d8f8b8942d5bfcdb#blockchainAccountId",
+    ],
+    "authentication": Array [
+      "did:pkh:eip155:1:0xab16a96d359ec26a11e2c2b3d8f8b8942d5bfcdb#blockchainAccountId",
+    ],
+    "id": "did:pkh:eip155:1:0xab16a96d359ec26a11e2c2b3d8f8b8942d5bfcdb",
+    "verificationMethod": Array [
+      Object {
+        "blockchainAccountId": "eip155:1:0xab16a96d359ec26a11e2c2b3d8f8b8942d5bfcdb",
+        "controller": "did:pkh:eip155:1:0xab16a96d359ec26a11e2c2b3d8f8b8942d5bfcdb",
+        "id": "did:pkh:eip155:1:0xab16a96d359ec26a11e2c2b3d8f8b8942d5bfcdb#blockchainAccountId",
+        "type": "EcdsaSecp256k1RecoveryMethod2020",
+      },
+    ],
+  },
   "didDocumentMetadata": Object {},
   "didResolutionMetadata": Object {
-    "error": "invalidDid",
+    "contentType": "application/did+json",
   },
 }
 `;
 
 exports[`PKH DID Resolver successfully resolves DIDs 3`] = `
 Object {
-  "didDocument": null,
+  "didDocument": Object {
+    "@context": Array [
+      "https://www.w3.org/ns/did/v1",
+      Object {
+        "EcdsaSecp256k1RecoveryMethod2020": "https://identity.foundation/EcdsaSecp256k1RecoverySignature2020#EcdsaSecp256k1RecoveryMethod2020",
+        "blockchainAccountId": "https://w3id.org/security#blockchainAccountId",
+      },
+    ],
+    "assertionMethod": Array [
+      "did:pkh:eip155:1:0xab16a96d359ec26a11e2c2b3d8f8b8942d5bfcdb#blockchainAccountId",
+    ],
+    "authentication": Array [
+      "did:pkh:eip155:1:0xab16a96d359ec26a11e2c2b3d8f8b8942d5bfcdb#blockchainAccountId",
+    ],
+    "id": "did:pkh:eip155:1:0xab16a96d359ec26a11e2c2b3d8f8b8942d5bfcdb",
+    "verificationMethod": Array [
+      Object {
+        "blockchainAccountId": "eip155:1:0xab16a96d359ec26a11e2c2b3d8f8b8942d5bfcdb",
+        "controller": "did:pkh:eip155:1:0xab16a96d359ec26a11e2c2b3d8f8b8942d5bfcdb",
+        "id": "did:pkh:eip155:1:0xab16a96d359ec26a11e2c2b3d8f8b8942d5bfcdb#blockchainAccountId",
+        "type": "EcdsaSecp256k1RecoveryMethod2020",
+      },
+    ],
+  },
   "didDocumentMetadata": Object {},
   "didResolutionMetadata": Object {
-    "error": "invalidDid",
+    "contentType": "application/did+ld+json",
   },
 }
 `;
 
 exports[`PKH DID Resolver successfully resolves DIDs 4`] = `
 Object {
-  "didDocument": null,
+  "didDocument": Object {
+    "@context": Array [
+      "https://www.w3.org/ns/did/v1",
+      Object {
+        "EcdsaSecp256k1RecoveryMethod2020": "https://identity.foundation/EcdsaSecp256k1RecoverySignature2020#EcdsaSecp256k1RecoveryMethod2020",
+        "blockchainAccountId": "https://w3id.org/security#blockchainAccountId",
+      },
+    ],
+    "assertionMethod": Array [
+      "did:pkh:eip155:1:0xab16a96d359ec26a11e2c2b3d8f8b8942d5bfcdb#blockchainAccountId",
+    ],
+    "authentication": Array [
+      "did:pkh:eip155:1:0xab16a96d359ec26a11e2c2b3d8f8b8942d5bfcdb#blockchainAccountId",
+    ],
+    "id": "did:pkh:eip155:1:0xab16a96d359ec26a11e2c2b3d8f8b8942d5bfcdb",
+    "verificationMethod": Array [
+      Object {
+        "blockchainAccountId": "eip155:1:0xab16a96d359ec26a11e2c2b3d8f8b8942d5bfcdb",
+        "controller": "did:pkh:eip155:1:0xab16a96d359ec26a11e2c2b3d8f8b8942d5bfcdb",
+        "id": "did:pkh:eip155:1:0xab16a96d359ec26a11e2c2b3d8f8b8942d5bfcdb#blockchainAccountId",
+        "type": "EcdsaSecp256k1RecoveryMethod2020",
+      },
+    ],
+  },
   "didDocumentMetadata": Object {},
   "didResolutionMetadata": Object {
-    "error": "invalidDid",
+    "contentType": "application/did+ld+json",
   },
 }
 `;
