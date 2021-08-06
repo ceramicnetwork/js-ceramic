@@ -1,4 +1,4 @@
-import { AccountId } from 'caip'
+import { AccountId, ChainIdParams } from 'caip'
 import type {
   DIDResolutionResult,
   DIDResolutionOptions,
@@ -12,7 +12,7 @@ const DID_JSON = 'application/did+json'
 const SUPPORTED_NAMESPACES = ['eip155', 'bip122']
 
 function toDidDoc (did: string, accountId: string): any {
-  const { chainId: { namespace } } = AccountId.parse(accountId)
+  const { namespace } = AccountId.parse(accountId).chainId as ChainIdParams
   if (!SUPPORTED_NAMESPACES.includes(namespace)) {
     throw new Error(`chain namespace not supported ${namespace}`)
   }
