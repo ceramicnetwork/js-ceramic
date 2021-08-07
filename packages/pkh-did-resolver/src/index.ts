@@ -9,20 +9,18 @@ import type {
 
 const DID_LD_JSON = 'application/did+ld+json'
 const DID_JSON = 'application/did+json'
-const SUPPORTED_NAMESPACES = ['eip155', 'bip122']
+const SECPK1_NAMESPACES = ['eip155', 'bip122']
+const TZ_NAMESPACE = 'tezos'
 
 function toDidDoc (did: string, accountId: string): any {
   const { namespace } = AccountId.parse(accountId).chainId as ChainIdParams
-  if (!SUPPORTED_NAMESPACES.includes(namespace)) {
-    throw new Error(`chain namespace not supported ${namespace}`)
-  }
   const vmId = did + '#blockchainAccountId'
-  return {
+  const doc = {
     '@context': [
-      "https://www.w3.org/ns/did/v1",
+      'https://www.w3.org/ns/did/v1',
       {
-        "blockchainAccountId": "https://w3id.org/security#blockchainAccountId",
-        "EcdsaSecp256k1RecoveryMethod2020": "https://identity.foundation/EcdsaSecp256k1RecoverySignature2020#EcdsaSecp256k1RecoveryMethod2020"
+        blockchainAccountId: 'https://w3id.org/security#blockchainAccountId',
+        EcdsaSecp256k1RecoveryMethod2020: 'https://identity.foundation/EcdsaSecp256k1RecoverySignature2020#EcdsaSecp256k1RecoveryMethod2020'
       }
     ],
     id: did,
@@ -35,6 +33,23 @@ function toDidDoc (did: string, accountId: string): any {
     authentication: [ vmId ],
     assertionMethod: [ vmId ]
   }
+  if (SECPK1_NAMESPACES.includes(namespace)) {
+    // nothing to do here
+  } else if (namespace === TZ_NAMESPACE) {
+    (doc['@context'][1] as any).TezosMethod2021 = 'https://w3id.org/security#TezosMethod2021'
+    const tzId = did + '#TezosMethod2021'
+    doc.verificationMethod.push({
+      id: tzId,
+      type: 'TezosMethod2021',
+      controller: did,
+      blockchainAccountId: accountId
+    })
+    doc.authentication.push(tzId)
+    doc.assertionMethod.push(tzId)
+  } else {
+    throw new Error(`chain namespace not supported ${namespace}`)
+  }
+  return doc
 }
 
 export default {
