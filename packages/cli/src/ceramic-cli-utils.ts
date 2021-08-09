@@ -465,13 +465,26 @@ export class CeramicCliUtils {
    * Load configuration file for CLI client.
    * @private
    */
-  static async _loadCliConfig(): Promise<CliConfig> {
+  private static async _loadCliConfig(): Promise<CliConfig> {
+    const configFileContents = await CeramicCliUtils._loadCliConfigFileContents()
+    if (configFileContents == '') {
+      await this._saveConfig({}, DEFAULT_CLI_CONFIG_FILE)
+      return {}
+    }
+    return JSON.parse(configFileContents)
+  }
+
+  /**
+   * Helper function for _loadCliConfig()
+   * @private
+   */
+  private static async _loadCliConfigFileContents(): Promise<string> {
     const fullCliConfigPath = path.join(DEFAULT_CONFIG_PATH, DEFAULT_CLI_CONFIG_FILE)
     try {
       await fs.access(fullCliConfigPath)
-      return JSON.parse(await fs.readFile(fullCliConfigPath, { encoding: 'utf8' }))
+      return await fs.readFile(fullCliConfigPath, { encoding: 'utf8' })
     } catch (e) {
-      // TODO handle invalid configuration
+      // Swallow error
     }
 
     // If nothing found in default config file path, check legacy path too
@@ -479,7 +492,7 @@ export class CeramicCliUtils {
     const legacyCliConfigPath = path.join(DEFAULT_CONFIG_PATH, LEGACY_CLI_CONFIG_FILE)
     try {
       await fs.access(legacyCliConfigPath)
-      const config = JSON.parse(await fs.readFile(legacyCliConfigPath, { encoding: 'utf8' }))
+      const fileContents = await fs.readFile(legacyCliConfigPath, { encoding: 'utf8' })
 
       console.warn(
         `Legacy client config file detected at '${legacyCliConfigPath}', renaming to ${fullCliConfigPath}`
@@ -490,13 +503,11 @@ export class CeramicCliUtils {
         console.error(`Rename failed: ${err}`)
         throw err
       }
-      return config
+      return fileContents
     } catch (e) {
-      // TODO handle invalid configuration
+      // Swallow error
     }
-
-    await this._saveConfig({}, DEFAULT_CLI_CONFIG_FILE)
-    return {}
+    return ''
   }
 
   /**
