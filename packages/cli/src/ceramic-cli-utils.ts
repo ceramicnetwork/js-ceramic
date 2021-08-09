@@ -25,10 +25,14 @@ import KeyDidResolver from 'key-did-resolver'
 import { Resolver } from 'did-resolver'
 import { DID } from 'dids'
 
+const DEFAULT_DAEMON_CONFIG_FILE = 'daemon.config.json'
 const DEFAULT_CLI_CONFIG_FILE = 'client.config.json'
-const LEGACY_CLI_CONFIG_FILE = 'config.json' // todo(1615): Remove this backwards compatibily support
-const DEFAULT_CLI_CONFIG_PATH = path.join(os.homedir(), '.ceramic')
-const DEFAULT_NETWORK = Networks.TESTNET_CLAY
+const LEGACY_CLI_CONFIG_FILE = 'config.json' // todo(1615): Remove this backwards compatibility support
+const DEFAULT_CONFIG_PATH = path.join(os.homedir(), '.ceramic')
+
+const DEFAULT_DAEMON_CONFIG: DaemonConfig = {
+  network: Networks.TESTNET_CLAY,
+}
 
 const SYNC_OPTIONS_MAP = {
   'prefer-cache': SyncOptions.PREFER_CACHE,
@@ -52,6 +56,7 @@ interface CliConfig {
 export class CeramicCliUtils {
   /**
    * Create CeramicDaemon instance
+   * @param configFilePath - Path to daemon config file
    * @param ipfsApi - IPFS api
    * @param ethereumRpc - Ethereum RPC URL
    * @param anchorServiceApi - Anchor service API URL
@@ -72,6 +77,7 @@ export class CeramicCliUtils {
    * @param syncOverride - Global forced mode for syncing all streams. Defaults to "prefer-cache"
    */
   static async createDaemon(
+    configFilePath: string,
     ipfsApi: string,
     ethereumRpc: string,
     anchorServiceApi: string,
@@ -86,41 +92,53 @@ export class CeramicCliUtils {
     verbose: boolean,
     logToFiles: boolean,
     logDirectory: string,
-    network = DEFAULT_NETWORK,
+    network: string,
     pubsubTopic: string,
     corsAllowedOrigins: string,
     syncOverride: string
   ): Promise<CeramicDaemon> {
-    let _corsAllowedOrigins: string | RegExp[] = '*'
-    if (corsAllowedOrigins != null && corsAllowedOrigins != '*') {
-      _corsAllowedOrigins = corsAllowedOrigins.split(' ').map((origin) => new RegExp(origin))
-    }
-    const logLevel = verbose ? LogLevel.verbose : debug ? LogLevel.debug : LogLevel.important
-    const loggerConfig: LoggerConfig = {
-      logToFiles,
-      logDirectory,
-      logLevel,
+    const configFromFile = await this._loadDaemonConfig()
+
+    let configFromCli: DaemonConfig
+    {
+      let _corsAllowedOrigins: string | RegExp[] = '*'
+      if (corsAllowedOrigins != null && corsAllowedOrigins != '*') {
+        _corsAllowedOrigins = corsAllowedOrigins.split(' ').map((origin) => new RegExp(origin))
+      }
+      const logLevel = verbose ? LogLevel.verbose : debug ? LogLevel.debug : LogLevel.important
+      const loggerConfig: LoggerConfig = {
+        logToFiles,
+        logDirectory,
+        logLevel,
+      }
+
+      const _syncOverride = SYNC_OPTIONS_MAP[syncOverride]
+
+      configFromCli = {
+        ethereumRpcUrl: ethereumRpc,
+        anchorServiceUrl: anchorServiceApi,
+        stateStoreDirectory,
+        s3StateStoreBucket: stateStoreS3Bucket,
+        validateStreams,
+        ipfsPinningEndpoints,
+        gateway,
+        port,
+        hostname,
+        loggerConfig,
+        network,
+        pubsubTopic,
+        corsAllowedOrigins: _corsAllowedOrigins,
+        ipfsHost: ipfsApi,
+        syncOverride: _syncOverride,
+      }
+
+      // Filter out undefined flags
+      configFromCli = Object.fromEntries(
+        Object.entries(configFromCli).filter(([k, v]) => v !== undefined)
+      )
     }
 
-    const _syncOverride = SYNC_OPTIONS_MAP[syncOverride]
-
-    const config: DaemonConfig = {
-      ethereumRpcUrl: ethereumRpc,
-      anchorServiceUrl: anchorServiceApi,
-      stateStoreDirectory,
-      s3StateStoreBucket: stateStoreS3Bucket,
-      validateStreams,
-      ipfsPinningEndpoints,
-      gateway,
-      port,
-      hostname,
-      loggerConfig,
-      network,
-      pubsubTopic,
-      corsAllowedOrigins: _corsAllowedOrigins,
-      ipfsHost: ipfsApi,
-      syncOverride: _syncOverride,
-    }
+    const config = Object.assign(configFromFile, configFromCli)
     return CeramicDaemon.create(config)
   }
 
@@ -374,7 +392,7 @@ export class CeramicCliUtils {
     if (!cliConfig.seed) {
       cliConfig.seed = u8a.toString(randomBytes(32), 'base16')
       console.log('Identity wallet seed generated')
-      await CeramicCliUtils._saveCliConfig(cliConfig)
+      await CeramicCliUtils._saveConfig(cliConfig, DEFAULT_CLI_CONFIG_FILE)
     }
 
     let ceramic
@@ -423,7 +441,7 @@ export class CeramicCliUtils {
     Object.assign(cliConfig, {
       [variable]: value,
     })
-    await this._saveCliConfig(cliConfig)
+    await this._saveConfig(cliConfig, DEFAULT_CLI_CONFIG_FILE)
 
     console.log(`Ceramic CLI configuration ${variable} set to ${value}`)
     console.log(JSON.stringify(cliConfig))
@@ -437,7 +455,7 @@ export class CeramicCliUtils {
     const cliConfig = await this._loadCliConfig()
 
     delete cliConfig[variable]
-    await this._saveCliConfig(cliConfig)
+    await this._saveConfig(cliConfig, DEFAULT_CLI_CONFIG_FILE)
 
     console.log(`Ceramic CLI configuration ${variable} unset`)
     console.log(JSON.stringify(cliConfig, null, 2))
@@ -448,7 +466,7 @@ export class CeramicCliUtils {
    * @private
    */
   static async _loadCliConfig(): Promise<CliConfig> {
-    const fullCliConfigPath = path.join(DEFAULT_CLI_CONFIG_PATH, DEFAULT_CLI_CONFIG_FILE)
+    const fullCliConfigPath = path.join(DEFAULT_CONFIG_PATH, DEFAULT_CLI_CONFIG_FILE)
     try {
       await fs.access(fullCliConfigPath)
       return JSON.parse(await fs.readFile(fullCliConfigPath, { encoding: 'utf8' }))
@@ -458,7 +476,7 @@ export class CeramicCliUtils {
 
     // If nothing found in default config file path, check legacy path too
     // TODO(1615): Remove this backwards compatibility code
-    const legacyCliConfigPath = path.join(DEFAULT_CLI_CONFIG_PATH, LEGACY_CLI_CONFIG_FILE)
+    const legacyCliConfigPath = path.join(DEFAULT_CONFIG_PATH, LEGACY_CLI_CONFIG_FILE)
     try {
       await fs.access(legacyCliConfigPath)
       const config = JSON.parse(await fs.readFile(legacyCliConfigPath, { encoding: 'utf8' }))
@@ -477,20 +495,37 @@ export class CeramicCliUtils {
       // TODO handle invalid configuration
     }
 
-    return await this._saveCliConfig({})
+    await this._saveConfig({}, DEFAULT_CLI_CONFIG_FILE)
+    return {}
   }
 
   /**
-   * Save CLI configuration file
-   * @param cliConfig - CLI configuration
+   * Load configuration file for the Ceramic Daemon.
    * @private
    */
-  static async _saveCliConfig(cliConfig: CliConfig): Promise<CliConfig> {
-    await fs.mkdir(DEFAULT_CLI_CONFIG_PATH, { recursive: true }) // create dirs if there are no
-    const fullCliConfigPath = path.join(DEFAULT_CLI_CONFIG_PATH, DEFAULT_CLI_CONFIG_FILE)
+  static async _loadDaemonConfig(): Promise<DaemonConfig> {
+    const fullDaemonConfigPath = path.join(DEFAULT_CONFIG_PATH, DEFAULT_DAEMON_CONFIG_FILE)
+    try {
+      await fs.access(fullDaemonConfigPath)
+    } catch (err) {
+      await this._saveConfig(DEFAULT_DAEMON_CONFIG, DEFAULT_DAEMON_CONFIG_FILE)
+      return DEFAULT_DAEMON_CONFIG
+    }
 
-    await fs.writeFile(fullCliConfigPath, JSON.stringify(cliConfig, null, 2))
-    return cliConfig
+    return JSON.parse(await fs.readFile(fullDaemonConfigPath, { encoding: 'utf8' }))
+  }
+
+  /**
+   * Save configuration file
+   * @param config - CLI configuration
+   * @param filename - name of the config file
+   * @private
+   */
+  static async _saveConfig(config: Record<string, any>, filename: string): Promise<void> {
+    await fs.mkdir(DEFAULT_CONFIG_PATH, { recursive: true }) // create dirs if there are no
+    const fullCliConfigPath = path.join(DEFAULT_CONFIG_PATH, filename)
+
+    await fs.writeFile(fullCliConfigPath, JSON.stringify(config, null, 2))
   }
 
   /**
