@@ -139,7 +139,7 @@ export class CeramicCliUtils {
     deterministic: boolean,
     schemaStreamId: string = null
   ): Promise<void> {
-    await CeramicCliUtils._runWithCeramic(async (ceramic: CeramicClient) => {
+    await CeramicCliUtils._runWithCeramicClient(async (ceramic: CeramicClient) => {
       const parsedControllers = CeramicCliUtils._parseControllers(controllers)
       const parsedContent = CeramicCliUtils._parseContent(content)
       const metadata = { controllers: parsedControllers, schema: schemaStreamId, deterministic }
@@ -175,7 +175,7 @@ export class CeramicCliUtils {
         }'`
       )
     }
-    await CeramicCliUtils._runWithCeramic(async (ceramic: CeramicClient) => {
+    await CeramicCliUtils._runWithCeramicClient(async (ceramic: CeramicClient) => {
       const parsedControllers = CeramicCliUtils._parseControllers(controllers)
       const parsedContent = CeramicCliUtils._parseContent(content)
 
@@ -196,7 +196,7 @@ export class CeramicCliUtils {
    * @param streamRef - Stream ID
    */
   static async show(streamRef: string): Promise<void> {
-    await CeramicCliUtils._runWithCeramic(async (ceramic: CeramicApi) => {
+    await CeramicCliUtils._runWithCeramicClient(async (ceramic: CeramicApi) => {
       const stream = await TileDocument.load(ceramic, streamRef)
       console.log(JSON.stringify(stream.content, null, 2))
     })
@@ -207,7 +207,7 @@ export class CeramicCliUtils {
    * @param streamRef - Stream ID or Commit ID
    */
   static async state(streamRef: string): Promise<void> {
-    await CeramicCliUtils._runWithCeramic(async (ceramic: CeramicApi) => {
+    await CeramicCliUtils._runWithCeramicClient(async (ceramic: CeramicApi) => {
       const stream = await ceramic.loadStream(streamRef)
       console.log(JSON.stringify(StreamUtils.serializeState(stream.state), null, 2))
     })
@@ -220,7 +220,7 @@ export class CeramicCliUtils {
   static async watch(streamId: string): Promise<void> {
     const id = StreamID.fromString(streamId)
 
-    await CeramicCliUtils._runWithCeramic(async (ceramic: CeramicApi) => {
+    await CeramicCliUtils._runWithCeramicClient(async (ceramic: CeramicApi) => {
       const doc = await TileDocument.load(ceramic, id)
       console.log(JSON.stringify(doc.content, null, 2))
       doc.subscribe(() => {
@@ -237,7 +237,7 @@ export class CeramicCliUtils {
   static async commits(streamId: string): Promise<void> {
     const id = StreamID.fromString(streamId)
 
-    await CeramicCliUtils._runWithCeramic(async (ceramic: CeramicApi) => {
+    await CeramicCliUtils._runWithCeramicClient(async (ceramic: CeramicApi) => {
       const stream = await ceramic.loadStream(id)
       const commits = stream.allCommitIds.map((v) => v.toString())
       console.log(JSON.stringify(commits, null, 2))
@@ -308,7 +308,7 @@ export class CeramicCliUtils {
   static async pinAdd(streamId: string): Promise<void> {
     const id = StreamID.fromString(streamId)
 
-    await CeramicCliUtils._runWithCeramic(async (ceramic: CeramicApi) => {
+    await CeramicCliUtils._runWithCeramicClient(async (ceramic: CeramicApi) => {
       const result = await ceramic.pin.add(id)
       console.log(JSON.stringify(result, null, 2))
     })
@@ -321,7 +321,7 @@ export class CeramicCliUtils {
   static async pinRm(streamId: string): Promise<void> {
     const id = StreamID.fromString(streamId)
 
-    await CeramicCliUtils._runWithCeramic(async (ceramic: CeramicApi) => {
+    await CeramicCliUtils._runWithCeramicClient(async (ceramic: CeramicApi) => {
       const result = await ceramic.pin.rm(id)
       console.log(JSON.stringify(result, null, 2))
     })
@@ -334,7 +334,7 @@ export class CeramicCliUtils {
   static async pinLs(streamId?: string): Promise<void> {
     const id = streamId ? StreamID.fromString(streamId) : null
 
-    await CeramicCliUtils._runWithCeramic(async (ceramic: CeramicApi) => {
+    await CeramicCliUtils._runWithCeramicClient(async (ceramic: CeramicApi) => {
       const pinnedStreamIds = []
       const iterator = await ceramic.pin.ls(id)
       for await (const id of iterator) {
@@ -364,11 +364,11 @@ export class CeramicCliUtils {
   }
 
   /**
-   * Open Ceramic and execute function
+   * Open Ceramic http client and execute function
    * @param fn - Function to be executed
    * @private
    */
-  static async _runWithCeramic(fn: (ceramic: CeramicClient) => Promise<void>): Promise<void> {
+  static async _runWithCeramicClient(fn: (ceramic: CeramicClient) => Promise<void>): Promise<void> {
     const cliConfig = await CeramicCliUtils._loadCliConfig()
 
     if (!cliConfig.seed) {
@@ -399,21 +399,21 @@ export class CeramicCliUtils {
   }
 
   /**
-   * Set Ceramic Daemon host
+   * Show config used by CLI client.
    */
-  static async showConfig(): Promise<void> {
+  static async showCliConfig(): Promise<void> {
     const cliConfig = await this._loadCliConfig()
 
     console.log(JSON.stringify(cliConfig, null, 2))
   }
 
   /**
-   * Set Ceramic Daemon host
+   * Set field in CLI client config.
    * @param variable - CLI config variable
    * @param value - CLI config variable value
    */
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-  static async setConfig(variable: string, value: any): Promise<void> {
+  static async setCliConfig(variable: string, value: any): Promise<void> {
     let cliConfig = await this._loadCliConfig()
 
     if (cliConfig == null) {
@@ -430,10 +430,10 @@ export class CeramicCliUtils {
   }
 
   /**
-   * Set Ceramic Daemon host
+   * Unset field in CLI client config.
    * @param variable - Name of the configuration variable
    */
-  static async unsetConfig(variable: string): Promise<void> {
+  static async unsetCliConfig(variable: string): Promise<void> {
     const cliConfig = await this._loadCliConfig()
 
     delete cliConfig[variable]
@@ -444,7 +444,7 @@ export class CeramicCliUtils {
   }
 
   /**
-   * Load CLI configuration file
+   * Load configuration file for CLI client.
    * @private
    */
   static async _loadCliConfig(): Promise<CliConfig> {
