@@ -88,6 +88,18 @@ class InMemoryAnchorService implements AnchorService, AnchorValidator {
   }
 
   /**
+   * Fails all pending anchors. Useful for testing.
+   */
+  async failPendingAnchors(): Promise<void> {
+    const candidates = await this._findCandidates()
+    for (const candidate of candidates) {
+      this._failCandidate(candidate, 'anchor failed')
+    }
+
+    this.#queue = [] // reset
+  }
+
+  /**
    * Filter candidates by stream and DIDs
    * @private
    */

@@ -251,6 +251,7 @@ export class CeramicDaemon {
 
     if (!gateway) {
       streamsRouter.postAsync('/', this.createStreamFromGenesis.bind(this))
+      streamsRouter.postAsync('/:streamid/anchor', this.requestAnchor.bind(this))
       commitsRouter.postAsync('/', this.applyCommit.bind(this))
       pinsRouter.postAsync('/:streamid', this.pinStream.bind(this))
       pinsRouter.deleteAsync('/:streamid', this.unpinStream.bind(this))
@@ -305,6 +306,17 @@ export class CeramicDaemon {
       opts
     )
     res.json({ streamId: stream.id.toString(), state: StreamUtils.serializeState(stream.state) })
+  }
+
+  /**
+   * Create document from genesis commit
+   * @dev Useful when the streamId is unknown, but you have the genesis contents
+   */
+  async requestAnchor(req: Request, res: Response): Promise<void> {
+    const streamId = StreamID.fromString(req.params.streamid)
+    const opts = req.body.opts
+    const anchorStatus = await this.ceramic.requestAnchor(streamId, opts)
+    res.json({ streamId: streamId.toString(), anchorStatus })
   }
 
   /**

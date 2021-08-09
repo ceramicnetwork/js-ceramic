@@ -17,6 +17,7 @@ import {
   PinApi,
   UpdateOpts,
   SyncOptions,
+  AnchorStatus,
 } from '@ceramicnetwork/common'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { Caip10Link } from '@ceramicnetwork/stream-caip10-link'
@@ -224,6 +225,21 @@ export default class CeramicClient implements CeramicApi {
       this._streamCache.set(effectiveStreamId.toString(), document)
       return this.buildStream<T>(document)
     }
+  }
+
+  async requestAnchor(streamId: string | StreamID, opts: LoadOpts = {}): Promise<AnchorStatus> {
+    opts = { ...DEFAULT_LOAD_OPTS, ...opts }
+    const { anchorStatus } = await fetchJson(
+      `${this._apiUrl}/streams/${streamId.toString()}/anchor`,
+      {
+        method: 'post',
+        body: {
+          opts,
+        },
+      }
+    )
+
+    return anchorStatus
   }
 
   addStreamHandler<T extends Stream>(streamHandler: StreamHandler<T>): void {

@@ -21,6 +21,7 @@ import {
   UpdateOpts,
   SyncOptions,
   AnchorValidator,
+  AnchorStatus,
 } from '@ceramicnetwork/common'
 
 import { DID } from 'dids'
@@ -569,6 +570,20 @@ class Ceramic implements CeramicApi {
   }
 
   /**
+   * Requests an anchor for the given StreamID if the Stream isn't already anchored.
+   * Returns the new AnchorStatus for the Stream.
+   * @param streamId
+   * @param opts used to load the current Stream state
+   */
+  async requestAnchor(streamId: string | StreamID, opts: LoadOpts = {}): Promise<AnchorStatus> {
+    opts = { ...DEFAULT_LOAD_OPTS, ...opts, ...this._loadOptsOverride }
+    const effectiveStreamId = normalizeStreamID(streamId)
+    const state = await this.repository.load(effectiveStreamId, opts)
+    await this.repository.stateManager.anchor(state)
+    return state.state.anchorStatus
+  }
+
+  /**
    * Creates stream from genesis record
    * @param type - Stream type
    * @param genesis - Genesis CID
@@ -662,13 +677,15 @@ class Ceramic implements CeramicApi {
    * @param timeout - Timeout in milliseconds
    */
   async multiQuery(queries: Array<MultiQuery>, timeout?: number): Promise<Record<string, Stream>> {
-    const queryResults = await Promise.all(queries.map((query) => {
-      try {
-        return this._loadLinkedStreams(query, timeout)
-      } catch (e) {
-        return Promise.resolve({})
-      }
-    }))
+    const queryResults = await Promise.all(
+      queries.map((query) => {
+        try {
+          return this._loadLinkedStreams(query, timeout)
+        } catch (e) {
+          return Promise.resolve({})
+        }
+      })
+    )
     // Flatten the result objects from each individual multi query into a single response object
     const results = queryResults.reduce((acc, res) => ({ ...acc, ...res }), {})
     // Before returning the results, sync each Stream to its current state in the cache.  This is
@@ -677,11 +694,13 @@ class Ceramic implements CeramicApi {
     // node about a tip it had not previously heard about that turns out to be the best current tip.
     // This ensures the returned Streams always are as up-to-date as possible, and is behavior that
     // the anchor service relies upon.
-    await Promise.all(Object.values(results).map((stream) => {
-      if (!stream.isReadOnly) {
-        return stream.sync({sync: SyncOptions.NEVER_SYNC, syncTimeoutSeconds: 0})
-      }
-    }))
+    await Promise.all(
+      Object.values(results).map((stream) => {
+        if (!stream.isReadOnly) {
+          return stream.sync({ sync: SyncOptions.NEVER_SYNC, syncTimeoutSeconds: 0 })
+        }
+      })
+    )
     return results
   }
 
