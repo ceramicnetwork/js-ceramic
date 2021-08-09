@@ -17,7 +17,7 @@ import {
 } from '@ceramicnetwork/common'
 import StreamID, { CommitID } from '@ceramicnetwork/streamid'
 
-import { CreateOpts, CeramicDaemon } from './ceramic-daemon'
+import { DaemonConfig, CeramicDaemon } from './ceramic-daemon'
 import { TileDocument, TileMetadataArgs } from '@ceramicnetwork/stream-tile'
 
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
@@ -104,7 +104,7 @@ export class CeramicCliUtils {
 
     const _syncOverride = SYNC_OPTIONS_MAP[syncOverride]
 
-    const config: CreateOpts = {
+    const config: DaemonConfig = {
       ethereumRpcUrl: ethereumRpc,
       anchorServiceUrl: anchorServiceApi,
       stateStoreDirectory,
