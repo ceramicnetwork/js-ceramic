@@ -39,7 +39,7 @@ beforeAll(async () => {
       stateStoreDirectory,
       // @ts-ignore
       anchorOnRequest: false,
-      loggerConfig: {
+      logger: {
         logToFiles: true,
         logDirectory: `${stateStoreDirectory}`,
         logLevel: LogLevel.debug,
@@ -50,7 +50,7 @@ beforeAll(async () => {
   daemon = new CeramicDaemon(core, {
     port: daemonPort,
     corsAllowedOrigins: [/.*/],
-    loggerConfig: {
+    logger: {
       logToFiles: true,
       logDirectory: `${stateStoreDirectory}`,
       logLevel: LogLevel.debug,

@@ -17,7 +17,8 @@ import {
 } from '@ceramicnetwork/common'
 import StreamID, { CommitID } from '@ceramicnetwork/streamid'
 
-import { DaemonConfig, CeramicDaemon } from './ceramic-daemon'
+import { CeramicDaemon } from './ceramic-daemon'
+import { DaemonConfig } from './daemon-config'
 import { TileDocument, TileMetadataArgs } from '@ceramicnetwork/stream-tile'
 
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
@@ -31,7 +32,7 @@ const LEGACY_CLI_CONFIG_FILE = 'config.json' // todo(1615): Remove this backward
 const DEFAULT_CONFIG_PATH = path.join(os.homedir(), '.ceramic')
 
 const DEFAULT_DAEMON_CONFIG: DaemonConfig = {
-  network: Networks.TESTNET_CLAY,
+  network: { name: Networks.TESTNET_CLAY },
 }
 
 const SYNC_OPTIONS_MAP = {
@@ -106,33 +107,43 @@ export class CeramicCliUtils {
         _corsAllowedOrigins = corsAllowedOrigins.split(' ').map((origin) => new RegExp(origin))
       }
       const logLevel = verbose ? LogLevel.verbose : debug ? LogLevel.debug : LogLevel.important
-      const loggerConfig: LoggerConfig = {
-        logToFiles,
-        logDirectory,
-        logLevel,
-      }
-
       const _syncOverride = SYNC_OPTIONS_MAP[syncOverride]
 
       configFromCli = {
-        ethereumRpcUrl: ethereumRpc,
-        anchorServiceUrl: anchorServiceApi,
-        stateStoreDirectory,
-        s3StateStoreBucket: stateStoreS3Bucket,
-        validateStreams,
-        ipfsPinningEndpoints,
-        gateway,
-        port,
-        hostname,
-        loggerConfig,
-        network,
-        pubsubTopic,
-        corsAllowedOrigins: _corsAllowedOrigins,
-        ipfsHost: ipfsApi,
-        syncOverride: _syncOverride,
+        anchor: {
+          anchorServiceUrl: anchorServiceApi,
+          ethereumRpcUrl: ethereumRpc,
+        },
+        httpApi: {
+          corsAllowedOrigins: _corsAllowedOrigins,
+          hostname,
+          port,
+        },
+        ipfs: {
+          host: ipfsApi,
+          pinningEndpoints: ipfsPinningEndpoints,
+        },
+        logger: {
+          logDirectory,
+          logLevel,
+          logToFiles,
+        },
+        network: {
+          name: network,
+          pubsubTopic,
+        },
+        node: {
+          gateway,
+          syncOverride: _syncOverride,
+          validateStreams,
+        },
+        stateStore: {
+          localDirectory: stateStoreDirectory,
+          s3Bucket: stateStoreS3Bucket,
+        },
       }
 
-      // Filter out undefined flags
+      // Filter out undefined flags TODO: make recursive
       configFromCli = Object.fromEntries(
         Object.entries(configFromCli).filter(([k, v]) => v !== undefined)
       )
