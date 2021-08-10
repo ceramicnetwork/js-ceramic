@@ -4,6 +4,7 @@ import { CeramicCliUtils } from '../ceramic-cli-utils'
 
 program
   .command('daemon')
+  .option('--config <path>', 'Path to the Ceramic Daemon config file')
   .option('--ipfs-api <url>', 'The ipfs http api to use')
   .option(
     '--ethereum-rpc <url>',
@@ -57,6 +58,7 @@ program
   .description('Start the daemon')
   .action(
     async ({
+      config,
       ipfsApi,
       ethereumRpc,
       anchorServiceApi,
@@ -82,6 +84,7 @@ program
         )
       }
       await CeramicCliUtils.createDaemon(
+        config,
         ipfsApi,
         ethereumRpc,
         anchorServiceApi,
