@@ -30,7 +30,7 @@ const DEFAULT_PORT = 7007
 /**
  * Daemon create options
  */
-export interface CreateOpts {
+export interface DaemonConfig {
   ipfsHost?: string
   port?: number
   hostname?: string
@@ -58,7 +58,7 @@ interface MultiQueries {
   queries: Array<MultiQueryWithDocId>
 }
 
-export function makeCeramicConfig(opts: CreateOpts): CeramicConfig {
+export function makeCeramicConfig(opts: DaemonConfig): CeramicConfig {
   const loggerProvider = new LoggerProvider(opts.loggerConfig, (logPath: string) => {
     return new RotatingFileStream(logPath, true)
   })
@@ -129,7 +129,7 @@ export class CeramicDaemon {
   public hostname: string
   public port: number
 
-  constructor(public ceramic: Ceramic, private readonly opts: CreateOpts) {
+  constructor(public ceramic: Ceramic, private readonly opts: DaemonConfig) {
     this.diagnosticsLogger = ceramic.loggerProvider.getDiagnosticsLogger()
     this.port = this.opts.port || DEFAULT_PORT
     this.hostname = this.opts.hostname || DEFAULT_HOSTNAME
@@ -160,7 +160,7 @@ export class CeramicDaemon {
    * Create Ceramic daemon
    * @param opts - Ceramic daemon options
    */
-  static async create(opts: CreateOpts): Promise<CeramicDaemon> {
+  static async create(opts: DaemonConfig): Promise<CeramicDaemon> {
     const ceramicConfig = makeCeramicConfig(opts)
 
     const ipfs = await buildIpfsConnection(

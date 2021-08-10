@@ -235,21 +235,21 @@ config
   .command('show')
   .description('Show CLI Ceramic configuration')
   .action(async () => {
-    await CeramicCliUtils.showConfig()
+    await CeramicCliUtils.showCliConfig()
   })
 
 config
   .command('set <variable> <value>')
   .description('Set variable value')
   .action(async (variable, value) => {
-    await CeramicCliUtils.setConfig(variable, value)
+    await CeramicCliUtils.setCliConfig(variable, value)
   })
 
 config
   .command('unset <variable>')
   .description('Unset configuration variable')
   .action(async (variable) => {
-    await CeramicCliUtils.unsetConfig(variable)
+    await CeramicCliUtils.unsetCliConfig(variable)
   })
 
 program.parse(process.argv)
