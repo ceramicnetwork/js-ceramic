@@ -143,14 +143,26 @@ export class CeramicCliUtils {
         },
       }
 
-      // Filter out undefined flags TODO: make recursive
-      configFromCli = Object.fromEntries(
-        Object.entries(configFromCli).filter(([k, v]) => v !== undefined)
-      )
+      // Filter out undefined flags
+      configFromCli = this.removeUndefinedFields(configFromCli)
     }
 
     const config = Object.assign(configFromFile, configFromCli)
     return CeramicDaemon.create(config)
+  }
+
+  static removeUndefinedFields(obj: Record<string, any>): Record<string, any> {
+    return Object.fromEntries(
+      Object.entries(obj)
+        .map(([k, v]) => {
+          if (typeof v === 'object' && v !== null && !Array.isArray(v)) {
+            return [k, this.removeUndefinedFields(v)]
+          } else {
+            return [k, v]
+          }
+        })
+        .filter(([k, v]) => v !== undefined)
+    )
   }
 
   /**
