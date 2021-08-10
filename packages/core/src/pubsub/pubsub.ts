@@ -1,5 +1,5 @@
 import { Observable, EMPTY, pipe, of, from, Subscription, UnaryFunction } from 'rxjs'
-import { deserialize, PubsubMessage, serialize } from './pubsub-message'
+import { deserialize, KeepaliveMessage, MsgType, PubsubMessage, serialize } from './pubsub-message'
 import { IpfsApi } from '@ceramicnetwork/common'
 import { map, catchError, mergeMap, withLatestFrom } from 'rxjs/operators'
 import { IncomingChannel, filterExternal, IPFSPubsubMessage } from './incoming-channel'
@@ -8,6 +8,7 @@ import { TextDecoder } from 'util'
 import uint8ArrayToString from 'uint8arrays/to-string'
 
 const textDecoder = new TextDecoder('utf-8')
+const MAX_PUBSUB_PUBLISH_INTERVAL = 60 * 1000 // one minute
 
 /**
  * Deserialize incoming message in an internal observable that does not emit if error happens.
@@ -48,6 +49,8 @@ function ipfsToPubsub(
  */
 export class Pubsub extends Observable<PubsubMessage> {
   private readonly peerId$: Observable<string>
+  private readonly pubsubKeepaliveInterval
+  private lastPublishedMessageDate: number = Date.now() - MAX_PUBSUB_PUBLISH_INTERVAL
 
   constructor(
     private readonly ipfs: IpfsApi,
@@ -66,6 +69,14 @@ export class Pubsub extends Observable<PubsubMessage> {
     // Textually, `this.peerId$` appears after it is called.
     // Really, subscription is lazy, so `this.peerId$` is populated before the actual subscription act.
     this.peerId$ = from<Promise<string>>(this.ipfs.id().then((_) => _.id))
+    this.pubsubKeepaliveInterval = setInterval(
+      this.publishPubsubKeepaliveIfNeeded.bind(this),
+      MAX_PUBSUB_PUBLISH_INTERVAL / 2
+    )
+  }
+
+  shutdown(): void {
+    clearInterval(this.pubsubKeepaliveInterval)
   }
 
   /**
@@ -75,6 +86,7 @@ export class Pubsub extends Observable<PubsubMessage> {
    * Feel free to disregard it though.
    */
   next(message: PubsubMessage): Subscription {
+    this.lastPublishedMessageDate = Date.now()
     return this.peerId$
       .pipe(
         mergeMap(async (peerId) => {
@@ -97,5 +109,22 @@ export class Pubsub extends Observable<PubsubMessage> {
           this.logger.err(error)
         },
       })
+  }
+
+  /**
+   * Called periodically and ensures that if we haven't published a pubsub message in too long,
+   * we'll publish one so that we never go longer than MAX_PUBSUB_PUBLISH_INTERVAL without
+   * publishing a pubsub message.  This is to work around a bug in IPFS where peer connections
+   * get dropped if they haven't had traffic in too long.
+   */
+  publishPubsubKeepaliveIfNeeded(): void {
+    const now = Date.now()
+    if (now - this.lastPublishedMessageDate < MAX_PUBSUB_PUBLISH_INTERVAL / 2) {
+      // We've published a message recently enough, no need to publish another
+      return
+    }
+
+    const message: KeepaliveMessage = { typ: MsgType.KEEPALIVE, ts: now }
+    this.next(message)
   }
 }

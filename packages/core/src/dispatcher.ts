@@ -1,8 +1,13 @@
 import CID from 'cids'
 import cloneDeep from 'lodash.clonedeep'
-import { StreamUtils, IpfsApi, UnreachableCaseError } from '@ceramicnetwork/common'
+import {
+  DiagnosticsLogger,
+  IpfsApi,
+  ServiceLogger,
+  StreamUtils,
+  UnreachableCaseError,
+} from '@ceramicnetwork/common'
 import StreamID from '@ceramicnetwork/streamid'
-import { DiagnosticsLogger, ServiceLogger } from '@ceramicnetwork/common'
 import { Repository } from './state-management/repository'
 import {
   MsgType,
@@ -30,6 +35,8 @@ function messageTypeToString(type: MsgType): string {
       return 'Query'
     case MsgType.RESPONSE:
       return 'Response'
+    case MsgType.KEEPALIVE:
+      return 'Keepalive'
     default:
       throw new UnreachableCaseError(type, `Unsupported message type`)
   }
@@ -40,7 +47,8 @@ function messageTypeToString(type: MsgType): string {
  */
 export class Dispatcher {
   readonly messageBus: MessageBus
-  readonly dagNodeCache : LRUMap<string, any>
+  readonly pubsub: Pubsub
+  readonly dagNodeCache: LRUMap<string, any>
   // Set of IDs for QUERY messages we have sent to the pub/sub topic but not yet heard a
   // corresponding RESPONSE message for. Maps the query ID to the primary StreamID we were querying for.
   constructor(
@@ -50,10 +58,10 @@ export class Dispatcher {
     private readonly _logger: DiagnosticsLogger,
     private readonly _pubsubLogger: ServiceLogger
   ) {
-    const pubsub = new Pubsub(_ipfs, topic, IPFS_RESUBSCRIBE_INTERVAL_DELAY, _pubsubLogger, _logger)
-    this.messageBus = new MessageBus(pubsub)
+    this.pubsub = new Pubsub(_ipfs, topic, IPFS_RESUBSCRIBE_INTERVAL_DELAY, _pubsubLogger, _logger)
+    this.messageBus = new MessageBus(this.pubsub)
     this.messageBus.subscribe(this.handleMessage.bind(this))
-    this.dagNodeCache  = new LRUMap<string, any>(IPFS_CACHE_SIZE)
+    this.dagNodeCache = new LRUMap<string, any>(IPFS_CACHE_SIZE)
   }
 
   /**
@@ -147,10 +155,12 @@ export class Dispatcher {
     let dagResult = null
     for (let retries = IPFS_GET_RETRIES - 1; retries >= 0 && dagResult == null; retries--) {
       try {
-        dagResult = await this._ipfs.dag.get(asCid, {timeout: IPFS_GET_TIMEOUT, path})
+        dagResult = await this._ipfs.dag.get(asCid, { timeout: IPFS_GET_TIMEOUT, path })
       } catch (err) {
         if (err.code == 'ERR_TIMEOUT') {
-          console.warn(`Timeout error while loading CID ${cid.toString()} from IPFS. ${retries} retries remain`)
+          console.warn(
+            `Timeout error while loading CID ${cid.toString()} from IPFS. ${retries} retries remain`
+          )
           if (retries > 0) {
             continue
           }
@@ -204,6 +214,8 @@ export class Dispatcher {
           break
         case MsgType.RESPONSE:
           await this._handleResponseMessage(message)
+          break
+        case MsgType.KEEPALIVE:
           break
         default:
           throw new UnreachableCaseError(message, `Unsupported message type`)
@@ -284,6 +296,7 @@ export class Dispatcher {
    */
   async close(): Promise<void> {
     this.messageBus.unsubscribe()
+    this.pubsub.shutdown()
   }
 
   /**
