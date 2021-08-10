@@ -8,7 +8,6 @@ import { TextDecoder } from 'util'
 import uint8ArrayToString from 'uint8arrays/to-string'
 
 const textDecoder = new TextDecoder('utf-8')
-const MAX_PUBSUB_PUBLISH_INTERVAL = 60 * 1000 // one minute
 
 /**
  * Deserialize incoming message in an internal observable that does not emit if error happens.
@@ -50,12 +49,13 @@ function ipfsToPubsub(
 export class Pubsub extends Observable<PubsubMessage> {
   private readonly peerId$: Observable<string>
   private readonly pubsubKeepaliveInterval
-  private lastPublishedMessageDate: number = Date.now() - MAX_PUBSUB_PUBLISH_INTERVAL
+  private lastPublishedMessageDate: number = Date.now() - this.maxPubsubPublishInterval
 
   constructor(
     private readonly ipfs: IpfsApi,
     private readonly topic: string,
     private readonly resubscribeEvery: number,
+    private readonly maxPubsubPublishInterval: number,
     private readonly pubsubLogger: ServiceLogger,
     private readonly logger: DiagnosticsLogger
   ) {
@@ -71,7 +71,7 @@ export class Pubsub extends Observable<PubsubMessage> {
     this.peerId$ = from<Promise<string>>(this.ipfs.id().then((_) => _.id))
     this.pubsubKeepaliveInterval = setInterval(
       this.publishPubsubKeepaliveIfNeeded.bind(this),
-      MAX_PUBSUB_PUBLISH_INTERVAL / 2
+      this.maxPubsubPublishInterval / 2
     )
   }
 
@@ -119,7 +119,7 @@ export class Pubsub extends Observable<PubsubMessage> {
    */
   publishPubsubKeepaliveIfNeeded(): void {
     const now = Date.now()
-    if (now - this.lastPublishedMessageDate < MAX_PUBSUB_PUBLISH_INTERVAL / 2) {
+    if (now - this.lastPublishedMessageDate < this.maxPubsubPublishInterval / 2) {
       // We've published a message recently enough, no need to publish another
       return
     }

@@ -25,6 +25,7 @@ const IPFS_GET_RETRIES = 3
 const IPFS_GET_TIMEOUT = 30000 // 30 seconds per retry, 3 retries = 90 seconds total timeout
 const IPFS_MAX_RECORD_SIZE = 256000 // 256 KB
 const IPFS_RESUBSCRIBE_INTERVAL_DELAY = 1000 * 15 // 15 sec
+const MAX_PUBSUB_PUBLISH_INTERVAL = 60 * 1000 // one minute
 const IPFS_CACHE_SIZE = 1024 // maximum cache size of 256MB
 
 function messageTypeToString(type: MsgType): string {
@@ -58,7 +59,14 @@ export class Dispatcher {
     private readonly _logger: DiagnosticsLogger,
     private readonly _pubsubLogger: ServiceLogger
   ) {
-    this.pubsub = new Pubsub(_ipfs, topic, IPFS_RESUBSCRIBE_INTERVAL_DELAY, _pubsubLogger, _logger)
+    this.pubsub = new Pubsub(
+      _ipfs,
+      topic,
+      IPFS_RESUBSCRIBE_INTERVAL_DELAY,
+      MAX_PUBSUB_PUBLISH_INTERVAL,
+      _pubsubLogger,
+      _logger
+    )
     this.messageBus = new MessageBus(this.pubsub)
     this.messageBus.subscribe(this.handleMessage.bind(this))
     this.dagNodeCache = new LRUMap<string, any>(IPFS_CACHE_SIZE)

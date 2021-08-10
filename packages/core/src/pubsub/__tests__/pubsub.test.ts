@@ -1,11 +1,12 @@
 import { LoggerProvider } from '@ceramicnetwork/common'
 import { Pubsub } from '../pubsub'
-import { MsgType, serialize } from '../pubsub-message'
+import { deserialize, MsgType, serialize } from '../pubsub-message'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { bufferCount, first } from 'rxjs/operators'
 import * as random from '@stablelib/random'
 import { asIpfsMessage } from './as-ipfs-message'
 import { from } from 'rxjs'
+import { delay } from '../../__tests__/delay'
 
 const TOPIC = 'test'
 const loggerProvider = new LoggerProvider()
@@ -47,11 +48,12 @@ test('pass incoming messages, omit garbage', async () => {
     },
     id: jest.fn(async () => ({ id: PEER_ID })),
   }
-  const pubsub = new Pubsub(ipfs, TOPIC, 3000, pubsubLogger, diagnosticsLogger)
+  const pubsub = new Pubsub(ipfs, TOPIC, 3000, 60000, pubsubLogger, diagnosticsLogger)
   // Even if garbage is first, we only receive well-formed messages
   const received = pubsub.pipe(bufferCount(LENGTH), first()).toPromise()
   expect(await received).toEqual(MESSAGES)
   expect(ipfs.id).toBeCalledTimes(2) // One in Pubsub, another in IncomingChannel resubscribe
+  pubsub.shutdown()
 })
 
 test('publish', async () => {
@@ -64,7 +66,7 @@ test('publish', async () => {
     },
     id: jest.fn(async () => ({ id: PEER_ID })),
   }
-  const pubsub = new Pubsub(ipfs, TOPIC, 3000, pubsubLogger, diagnosticsLogger)
+  const pubsub = new Pubsub(ipfs, TOPIC, 3000, 60000, pubsubLogger, diagnosticsLogger)
   const message = {
     typ: MsgType.QUERY as MsgType.QUERY,
     id: random.randomString(32),
@@ -76,4 +78,30 @@ test('publish', async () => {
     expect(ipfs.pubsub.publish).toBeCalledWith(TOPIC, serialize(message))
   })
   expect(ipfs.id).toBeCalledTimes(1)
+  pubsub.shutdown()
+})
+
+test('publish keepalive', async () => {
+  const ipfs = {
+    pubsub: {
+      subscribe: jest.fn(),
+      unsubscribe: jest.fn(),
+      ls: jest.fn(() => []),
+      publish: jest.fn(),
+    },
+    id: jest.fn(async () => ({ id: PEER_ID })),
+  }
+  const keepaliveInterval = 100
+  const pubsub = new Pubsub(ipfs, TOPIC, 3000, keepaliveInterval, pubsubLogger, diagnosticsLogger)
+
+  await delay(keepaliveInterval * 5)
+
+  expect(ipfs.pubsub.publish.mock.calls.length).toBeGreaterThan(4)
+  for (const call of ipfs.pubsub.publish.mock.calls) {
+    expect(call[0]).toEqual(TOPIC)
+    const message = deserialize({ data: call[1] })
+    expect(message.typ).toEqual(MsgType.KEEPALIVE)
+  }
+
+  pubsub.shutdown()
 })
