@@ -1,15 +1,14 @@
 import express, { Request, Response } from 'express'
-import Ceramic from '@ceramicnetwork/core'
 import type { CeramicConfig } from '@ceramicnetwork/core'
+import Ceramic from '@ceramicnetwork/core'
 import { RotatingFileStream } from '@ceramicnetwork/logger'
 import { buildIpfsConnection } from './build-ipfs-connection.util'
 import { S3StateStore } from './s3-state-store'
 import {
-  StreamUtils,
-  MultiQuery,
-  LoggerConfig,
-  LoggerProvider,
   DiagnosticsLogger,
+  LoggerProvider,
+  MultiQuery,
+  StreamUtils,
   SyncOptions,
 } from '@ceramicnetwork/common'
 import StreamID, { StreamType } from '@ceramicnetwork/streamid'
@@ -23,7 +22,7 @@ import { errorHandler } from './daemon/error-handler'
 import { addAsync, ExpressWithAsync, Router } from '@awaitjs/express'
 import { logRequests } from './daemon/log-requests'
 import type { Server } from 'http'
-import { DaemonConfig } from './daemon-config'
+import { DaemonConfig, StateStoreMode } from './daemon-config'
 
 const DEFAULT_HOSTNAME = '0.0.0.0'
 const DEFAULT_PORT = 7007
@@ -48,9 +47,11 @@ export function makeCeramicConfig(opts: DaemonConfig): CeramicConfig {
     ipfsPinningEndpoints: opts.ipfs?.pinningEndpoints,
     networkName: opts.network?.name,
     pubsubTopic: opts.network?.pubsubTopic,
-    stateStoreDirectory: opts.stateStore?.localDirectory,
     validateStreams: opts.node?.validateStreams,
     syncOverride: opts.node?.syncOverride,
+  }
+  if (opts.stateStore?.mode == StateStoreMode.FS) {
+    ceramicConfig.stateStoreDirectory = opts.stateStore.localDirectory
   }
 
   return ceramicConfig
@@ -149,7 +150,7 @@ export class CeramicDaemon {
 
     const [modules, params] = Ceramic._processConfig(ipfs, ceramicConfig)
 
-    if (opts.stateStore?.s3Bucket) {
+    if (opts.stateStore?.mode == StateStoreMode.S3) {
       const s3StateStore = new S3StateStore(opts.stateStore?.s3Bucket)
       modules.pinStoreFactory.setStateStore(s3StateStore)
     }

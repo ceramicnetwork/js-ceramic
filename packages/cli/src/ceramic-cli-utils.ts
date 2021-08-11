@@ -7,18 +7,11 @@ import { promises as fs } from 'fs'
 
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import CeramicClient from '@ceramicnetwork/http-client'
-import {
-  CeramicApi,
-  StreamUtils,
-  LoggerConfig,
-  LogLevel,
-  Networks,
-  SyncOptions,
-} from '@ceramicnetwork/common'
+import { CeramicApi, LogLevel, Networks, StreamUtils, SyncOptions } from '@ceramicnetwork/common'
 import StreamID, { CommitID } from '@ceramicnetwork/streamid'
 
 import { CeramicDaemon } from './ceramic-daemon'
-import { DaemonConfig } from './daemon-config'
+import { DaemonConfig, StateStoreMode } from './daemon-config'
 import { TileDocument, TileMetadataArgs } from '@ceramicnetwork/stream-tile'
 
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
@@ -109,6 +102,13 @@ export class CeramicCliUtils {
       const logLevel = verbose ? LogLevel.verbose : debug ? LogLevel.debug : LogLevel.important
       const _syncOverride = SYNC_OPTIONS_MAP[syncOverride]
 
+      if (stateStoreDirectory && stateStoreS3Bucket) {
+        throw new Error(
+          'Cannot specify both --state-store-directory and --state-store-s3-bucket. Only one state store - either on local storage or on S3 - can be used at a time'
+        )
+      }
+      const stateStoreMode = stateStoreS3Bucket ? StateStoreMode.S3 : StateStoreMode.FS
+
       configFromCli = {
         anchor: {
           anchorServiceUrl: anchorServiceApi,
@@ -138,6 +138,7 @@ export class CeramicCliUtils {
           validateStreams,
         },
         stateStore: {
+          mode: stateStoreMode,
           localDirectory: stateStoreDirectory,
           s3Bucket: stateStoreS3Bucket,
         },

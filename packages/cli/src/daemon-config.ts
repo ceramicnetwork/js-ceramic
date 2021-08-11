@@ -5,7 +5,13 @@ export interface DaemonIpfsConfig {
   pinningEndpoints?: string[]
 }
 
+export enum StateStoreMode {
+  S3 = 's3',
+  FS = 'fs',
+}
+
 export interface DaemonStateStoreConfig {
+  mode?: StateStoreMode
   localDirectory?: string
   s3Bucket?: string
 }
