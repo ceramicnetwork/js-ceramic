@@ -48,7 +48,6 @@ function ipfsToPubsub(
  */
 export class Pubsub extends Observable<PubsubMessage> {
   private readonly peerId$: Observable<string>
-  private readonly pubsubKeepaliveInterval
   private lastPublishedMessageDate: number = Date.now() - this.maxPubsubPublishInterval
 
   constructor(
@@ -62,21 +61,23 @@ export class Pubsub extends Observable<PubsubMessage> {
     super((subscriber) => {
       const incoming$ = new IncomingChannel(ipfs, topic, resubscribeEvery, pubsubLogger, logger)
 
+      // Start background job to periodically send pubsub messages if no other messages have been
+      // sent recently.
+      const pubsubKeepaliveInterval = setInterval(
+        this.publishPubsubKeepaliveIfNeeded.bind(this),
+        this.maxPubsubPublishInterval / 2
+      )
+
       incoming$
         .pipe(filterExternal(this.peerId$), ipfsToPubsub(this.peerId$, pubsubLogger, topic))
         .subscribe(subscriber)
+        .add(() => {
+          clearInterval(pubsubKeepaliveInterval)
+        })
     })
     // Textually, `this.peerId$` appears after it is called.
     // Really, subscription is lazy, so `this.peerId$` is populated before the actual subscription act.
     this.peerId$ = from<Promise<string>>(this.ipfs.id().then((_) => _.id))
-    this.pubsubKeepaliveInterval = setInterval(
-      this.publishPubsubKeepaliveIfNeeded.bind(this),
-      this.maxPubsubPublishInterval / 2
-    )
-  }
-
-  shutdown(): void {
-    clearInterval(this.pubsubKeepaliveInterval)
   }
 
   /**

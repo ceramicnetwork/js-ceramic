@@ -304,7 +304,6 @@ export class Dispatcher {
    */
   async close(): Promise<void> {
     this.messageBus.unsubscribe()
-    this.pubsub.shutdown()
   }
 
   /**

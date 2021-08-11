@@ -53,7 +53,6 @@ test('pass incoming messages, omit garbage', async () => {
   const received = pubsub.pipe(bufferCount(LENGTH), first()).toPromise()
   expect(await received).toEqual(MESSAGES)
   expect(ipfs.id).toBeCalledTimes(2) // One in Pubsub, another in IncomingChannel resubscribe
-  pubsub.shutdown()
 })
 
 test('publish', async () => {
@@ -78,7 +77,6 @@ test('publish', async () => {
     expect(ipfs.pubsub.publish).toBeCalledWith(TOPIC, serialize(message))
   })
   expect(ipfs.id).toBeCalledTimes(1)
-  pubsub.shutdown()
 })
 
 test('publish keepalive', async () => {
@@ -93,6 +91,7 @@ test('publish keepalive', async () => {
   }
   const keepaliveInterval = 100
   const pubsub = new Pubsub(ipfs, TOPIC, 3000, keepaliveInterval, pubsubLogger, diagnosticsLogger)
+  const subscription = pubsub.subscribe()
 
   await delay(keepaliveInterval * 5)
 
@@ -103,5 +102,5 @@ test('publish keepalive', async () => {
     expect(message.typ).toEqual(MsgType.KEEPALIVE)
   }
 
-  pubsub.shutdown()
+  subscription.unsubscribe()
 })
