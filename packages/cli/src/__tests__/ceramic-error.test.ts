@@ -48,8 +48,7 @@ beforeAll(async () => {
   )
   const daemonPort = await getPort()
   daemon = new CeramicDaemon(core, {
-    port: daemonPort,
-    corsAllowedOrigins: [/.*/],
+    httpApi: { port: daemonPort, corsAllowedOrigins: [/.*/] },
     logger: {
       logToFiles: true,
       logDirectory: `${stateStoreDirectory}`,
