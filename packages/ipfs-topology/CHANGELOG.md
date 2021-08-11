@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.1.8](/compare/@ceramicnetwork/ipfs-topology@1.1.7-rc.2...@ceramicnetwork/ipfs-topology@1.1.8) (2021-08-11)
+
+**Note:** Version bump only for package @ceramicnetwork/ipfs-topology
+
+
+
+
+
 ## [1.1.7](/compare/@ceramicnetwork/ipfs-topology@1.1.7-rc.2...@ceramicnetwork/ipfs-topology@1.1.7) (2021-08-11)
 
 **Note:** Version bump only for package @ceramicnetwork/ipfs-topology
