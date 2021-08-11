@@ -4,12 +4,13 @@ import * as tmp from 'tmp-promise'
 import { createIPFS } from './create-ipfs'
 import Ceramic from '@ceramicnetwork/core'
 import * as random from '@stablelib/random'
-import { makeCeramicConfig, CeramicDaemon } from '../ceramic-daemon'
+import { CeramicDaemon, makeCeramicConfig } from '../ceramic-daemon'
 import CeramicClient from '@ceramicnetwork/http-client'
 import { makeDID } from './make-did'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import * as path from 'path'
 import * as fs from 'fs'
+import { StateStoreMode } from '../daemon-config'
 
 const TOPIC = `/${random.randomString(10)}`
 const SEED = 'Hello, crypto!'
@@ -35,10 +36,8 @@ beforeAll(async () => {
   core = await Ceramic.create(
     ipfs,
     makeCeramicConfig({
-      pubsubTopic: TOPIC,
-      stateStoreDirectory,
-      // @ts-ignore
-      anchorOnRequest: false,
+      network: { 'pubsub-topic': TOPIC },
+      'state-store': { mode: StateStoreMode.FS, 'local-directory': stateStoreDirectory },
       logger: {
         logToFiles: true,
         logDirectory: `${stateStoreDirectory}`,
