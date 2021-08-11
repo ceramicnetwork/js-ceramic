@@ -185,12 +185,6 @@ export class CeramicDaemon {
         ...ThreeIdResolver.getResolver(ceramic),
         ...NftDidResolver.getResolver({
           ceramic: ceramic,
-          subGraphUrls: {
-            'eip155:1': {
-              erc1155: 'https://api.thegraph.com/subgraphs/name/sunguru98/mainnet-erc1155-subgraph',
-              erc721: 'https://api.thegraph.com/subgraphs/name/sunguru98/mainnet-erc721-subgraph',
-            },
-          },
         }),
         ...(ceramicConfig.ethereumRpcUrl &&
           EthrDidResolver.getResolver({
