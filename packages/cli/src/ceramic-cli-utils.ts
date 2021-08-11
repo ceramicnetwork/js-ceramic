@@ -11,7 +11,7 @@ import { CeramicApi, LogLevel, Networks, StreamUtils, SyncOptions } from '@ceram
 import StreamID, { CommitID } from '@ceramicnetwork/streamid'
 
 import { CeramicDaemon } from './ceramic-daemon'
-import { DaemonConfig, StateStoreMode } from './daemon-config'
+import { DaemonConfig, IpfsMode, StateStoreMode } from './daemon-config'
 import { TileDocument, TileMetadataArgs } from '@ceramicnetwork/stream-tile'
 
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
@@ -108,6 +108,7 @@ export class CeramicCliUtils {
         )
       }
       const stateStoreMode = stateStoreS3Bucket ? StateStoreMode.S3 : StateStoreMode.FS
+      const ipfsMode = ipfsApi ? IpfsMode.REMOTE : IpfsMode.BUNDLED
 
       configFromCli = {
         anchor: {
@@ -120,6 +121,7 @@ export class CeramicCliUtils {
           port,
         },
         ipfs: {
+          mode: ipfsMode,
           host: ipfsApi,
           pinningEndpoints: ipfsPinningEndpoints,
         },

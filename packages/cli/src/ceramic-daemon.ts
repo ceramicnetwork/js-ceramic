@@ -143,6 +143,7 @@ export class CeramicDaemon {
     const ceramicConfig = makeCeramicConfig(opts)
 
     const ipfs = await buildIpfsConnection(
+      opts.ipfs.mode,
       opts.network?.name,
       ceramicConfig.loggerProvider.getDiagnosticsLogger(),
       opts.ipfs?.host

@@ -1,6 +1,12 @@
 import { LoggerConfig, SyncOptions } from '@ceramicnetwork/common'
 
+export enum IpfsMode {
+  BUNDLED = 'bundled',
+  REMOTE = 'remote',
+}
+
 export interface DaemonIpfsConfig {
+  mode?: IpfsMode
   host?: string
   pinningEndpoints?: string[]
 }
