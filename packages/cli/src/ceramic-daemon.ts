@@ -36,22 +36,27 @@ interface MultiQueries {
 }
 
 export function makeCeramicConfig(opts: DaemonConfig): CeramicConfig {
-  const loggerProvider = new LoggerProvider(opts.logger, (logPath: string) => {
+  const loggerConfig = {
+    logDirectory: opts.logger?.['log-directory'],
+    logLevel: opts.logger?.['log-level'],
+    logToFiles: opts.logger?.['log-to-files'],
+  }
+  const loggerProvider = new LoggerProvider(loggerConfig, (logPath: string) => {
     return new RotatingFileStream(logPath, true)
   })
   const ceramicConfig: CeramicConfig = {
     loggerProvider,
     gateway: opts.node?.gateway || false,
-    anchorServiceUrl: opts.anchor?.anchorServiceUrl,
-    ethereumRpcUrl: opts.anchor?.ethereumRpcUrl,
-    ipfsPinningEndpoints: opts.ipfs?.pinningEndpoints,
+    anchorServiceUrl: opts.anchor?.['anchor-service-url'],
+    ethereumRpcUrl: opts.anchor?.['ethereum-rpc-url'],
+    ipfsPinningEndpoints: opts.ipfs?.['pinningEndpoints'],
     networkName: opts.network?.name,
-    pubsubTopic: opts.network?.pubsubTopic,
-    validateStreams: opts.node?.validateStreams,
-    syncOverride: opts.node?.syncOverride,
+    pubsubTopic: opts.network?.['pubsub-topic'],
+    validateStreams: opts.node?.['validate-streams'],
+    syncOverride: opts.node?.['sync-override'],
   }
-  if (opts.stateStore?.mode == StateStoreMode.FS) {
-    ceramicConfig.stateStoreDirectory = opts.stateStore.localDirectory
+  if (opts['state-store']?.mode == StateStoreMode.FS) {
+    ceramicConfig.stateStoreDirectory = opts['state-store']['local-directory']
   }
 
   return ceramicConfig
@@ -110,13 +115,13 @@ export class CeramicDaemon {
 
   constructor(public ceramic: Ceramic, private readonly opts: DaemonConfig) {
     this.diagnosticsLogger = ceramic.loggerProvider.getDiagnosticsLogger()
-    this.port = this.opts.httpApi?.port || DEFAULT_PORT
-    this.hostname = this.opts.httpApi?.hostname || DEFAULT_HOSTNAME
+    this.port = this.opts['http-api']?.port || DEFAULT_PORT
+    this.hostname = this.opts['http-api']?.hostname || DEFAULT_HOSTNAME
 
     this.app = addAsync(express())
     this.app.set('trust proxy', true)
     this.app.use(express.json({ limit: '1mb' }))
-    this.app.use(cors({ origin: opts.httpApi?.corsAllowedOrigins }))
+    this.app.use(cors({ origin: opts['http-api']?.['cors-allowed-origins'] }))
 
     this.app.use(logRequests(ceramic.loggerProvider))
 
@@ -151,8 +156,8 @@ export class CeramicDaemon {
 
     const [modules, params] = Ceramic._processConfig(ipfs, ceramicConfig)
 
-    if (opts.stateStore?.mode == StateStoreMode.S3) {
-      const s3StateStore = new S3StateStore(opts.stateStore?.s3Bucket)
+    if (opts['state-store']?.mode == StateStoreMode.S3) {
+      const s3StateStore = new S3StateStore(opts['state-store']?.['s3-bucket'])
       modules.pinStoreFactory.setStateStore(s3StateStore)
     }
 

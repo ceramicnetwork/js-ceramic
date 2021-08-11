@@ -39,19 +39,19 @@ beforeAll(async () => {
       network: { 'pubsub-topic': TOPIC },
       'state-store': { mode: StateStoreMode.FS, 'local-directory': stateStoreDirectory },
       logger: {
-        logToFiles: true,
-        logDirectory: `${stateStoreDirectory}`,
-        logLevel: LogLevel.debug,
+        'log-to-files': true,
+        'log-directory': `${stateStoreDirectory}`,
+        'log-level': LogLevel.debug,
       },
     })
   )
   const daemonPort = await getPort()
   daemon = new CeramicDaemon(core, {
-    httpApi: { port: daemonPort, corsAllowedOrigins: [/.*/] },
+    'http-api': { port: daemonPort, 'cors-allowed-origins': [/.*/] },
     logger: {
-      logToFiles: true,
-      logDirectory: `${stateStoreDirectory}`,
-      logLevel: LogLevel.debug,
+      'log-to-files': true,
+      'log-directory': `${stateStoreDirectory}`,
+      'log-level': LogLevel.debug,
     },
   })
   await daemon.listen()

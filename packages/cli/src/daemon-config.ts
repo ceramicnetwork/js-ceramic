@@ -1,4 +1,4 @@
-import { LoggerConfig, SyncOptions } from '@ceramicnetwork/common'
+import { SyncOptions } from '@ceramicnetwork/common'
 
 /**
  * Whether the daemon should start its own bundled in-process ipfs node, or if it should connect
@@ -27,7 +27,7 @@ export interface DaemonIpfsConfig {
   /**
    * Endpoints for pinning IPFS data.
    */
-  pinningEndpoints?: string[]
+  'pinning-endpoints'?: string[]
 }
 
 /**
@@ -50,12 +50,12 @@ export interface DaemonStateStoreConfig {
   /**
    * If mode is 'fs', this controls where on the local file system to put the state store data.
    */
-  localDirectory?: string
+  'local-directory'?: string
 
   /**
    * If mode is 's3', this is the S3 bucket name where the state store is written.
    */
-  s3Bucket?: string
+  's3-bucket'?: string
 }
 
 /**
@@ -76,7 +76,7 @@ export interface DaemonHTTPApiConfig {
    * Origins to restrict access to the HTTP api to, using CORS. Leaving this unset means the api
    * is open to all origins.
    */
-  corsAllowedOrigins?: string | RegExp[]
+  'cors-allowed-origins'?: string | RegExp[]
 }
 
 /**
@@ -92,7 +92,7 @@ export interface DaemonCeramicNetworkConfig {
    * Name of the ipfs pubsub topic to use for protocol messages. Most users should never have to
    * set this.
    */
-  pubsubTopic?: string
+  'pubsub-topic'?: string
 }
 
 /**
@@ -102,12 +102,12 @@ export interface DaemonAnchorConfig {
   /**
    * URL of the Ceramic Anchor Service to send anchor requests to.
    */
-  anchorServiceUrl?: string
+  'anchor-service-url'?: string
 
   /**
    * Ethereum RPC URL that can be used to create or query ethereum transactions.
    */
-  ethereumRpcUrl?: string
+  'ethereum-rpc-url'?: string
 }
 
 /**
@@ -123,12 +123,33 @@ export interface DaemonCeramicNodeConfig {
    * If set, overrides the 'sync' flag for all stream load operations.  Most users should never have
    * to set this.
    */
-  syncOverride?: SyncOptions
+  'sync-override'?: SyncOptions
 
   /**
    * If set to false, disables stream validation. Most users should never set this.
    */
-  validateStreams?: boolean
+  'validate-streams'?: boolean
+}
+
+/**
+ * Ceramic Daemon options for configuring behavior related to logging.
+ */
+export interface DaemonLoggerConfig {
+  /**
+   * If 'log-to-files' is true, this contains the path on the local filesystem where log files will
+   * be written.
+   */
+  'log-directory'?: string
+
+  /**
+   * Log level. Defaults to 0. Higher numbers are more verbose.
+   */
+  'log-level'?: number
+
+  /**
+   * Controls whether logs get persisted to the file system.
+   */
+  'log-to-files'?: boolean
 }
 
 /**
@@ -143,7 +164,7 @@ export interface DaemonConfig {
   /**
    * Options related to the HTTP API server.
    */
-  httpApi?: DaemonHTTPApiConfig
+  'http-api'?: DaemonHTTPApiConfig
 
   /**
    * Options related to IPFS.
@@ -153,7 +174,7 @@ export interface DaemonConfig {
   /**
    * Options related to logging.
    */
-  logger?: LoggerConfig
+  logger?: DaemonLoggerConfig
 
   /**
    * Options related to the Ceramic network to connect to.
@@ -168,5 +189,5 @@ export interface DaemonConfig {
   /**
    * Options related to the state store.
    */
-  stateStore?: DaemonStateStoreConfig
+  'state-store'?: DaemonStateStoreConfig
 }

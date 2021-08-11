@@ -112,37 +112,37 @@ export class CeramicCliUtils {
 
       configFromCli = {
         anchor: {
-          anchorServiceUrl: anchorServiceApi,
-          ethereumRpcUrl: ethereumRpc,
+          'anchor-service-url': anchorServiceApi,
+          'ethereum-rpc-url': ethereumRpc,
         },
-        httpApi: {
-          corsAllowedOrigins: _corsAllowedOrigins,
+        'http-api': {
+          'cors-allowed-origins': _corsAllowedOrigins,
           hostname,
           port,
         },
         ipfs: {
           mode: ipfsMode,
           host: ipfsApi,
-          pinningEndpoints: ipfsPinningEndpoints,
+          'pinning-endpoints': ipfsPinningEndpoints,
         },
         logger: {
-          logDirectory,
-          logLevel,
-          logToFiles,
+          'log-directory': logDirectory,
+          'log-level': logLevel,
+          'log-to-files': logToFiles,
         },
         network: {
           name: network,
-          pubsubTopic,
+          'pubsub-topic': pubsubTopic,
         },
         node: {
           gateway,
-          syncOverride: _syncOverride,
-          validateStreams,
+          'sync-override': _syncOverride,
+          'validate-streams': validateStreams,
         },
-        stateStore: {
+        'state-store': {
           mode: stateStoreMode,
-          localDirectory: stateStoreDirectory,
-          s3Bucket: stateStoreS3Bucket,
+          'local-directory': stateStoreDirectory,
+          's3-bucket': stateStoreS3Bucket,
         },
       }
 
