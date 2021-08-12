@@ -146,7 +146,7 @@ export interface LoggerConfig {
   logDirectory?: string
 
   /**
-   * Log level.
+   * Log level. Defaults to 0. Higher numbers are more verbose.
    */
   logLevel?: LogLevel
 

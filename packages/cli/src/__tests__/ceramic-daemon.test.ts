@@ -68,7 +68,7 @@ describe('Ceramic interop: core <> http-client', () => {
     core = await makeCeramicCore(ipfs, tmpFolder.path)
     const port = await getPort()
     const apiUrl = 'http://localhost:' + port
-    daemon = new CeramicDaemon(core, { 'http-api': { port } })
+    daemon = new CeramicDaemon(core, { httpApi: { port } })
     await daemon.listen()
     client = new CeramicClient(apiUrl, { syncInterval: 500 })
 
