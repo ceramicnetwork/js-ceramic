@@ -1,4 +1,4 @@
-import { Observable, Subscription } from 'rxjs'
+import { Observable, Subscription, interval } from 'rxjs'
 import { KeepaliveMessage, MsgType, PubsubMessage } from './pubsub-message'
 import { Pubsub } from './pubsub'
 
@@ -9,20 +9,29 @@ import { Pubsub } from './pubsub'
 export class PubsubKeepalive extends Observable<PubsubMessage> {
   private lastPublishedMessageDate: number = Date.now() - this.maxPubsubPublishInterval
 
+  /**
+   * Given a 'maxPubsubPublishInterval' specifying the max amount of time between pubsub messages,
+   *   starts a background job that runs every maxPubsubPublishInterval/2 and publishes a keepalive
+   *   message if no other pubsub messages have been sent within maxPubsubPublishInterval/2. Running
+   *   the check in an interval half as long as the max limit, and publishing a message if we have
+   *   less than half the max limit interval remaining, guarantees that even in the worst case we
+   *   never pass 'maxPubsubPublishInterval' without publishing a message.
+   * @param pubsub - Pubsub instances used to publish messages to the underlying libp2p pubsub topic.
+   * @param maxPubsubPublishInterval - the max amount of time that is allowed to pass without
+   *   generating a pubsub message.
+   */
   constructor(private readonly pubsub: Pubsub, private readonly maxPubsubPublishInterval: number) {
     super((subscriber) => {
       pubsub.subscribe(subscriber)
 
       // Start background job to periodically send pubsub messages if no other messages have been
       // sent recently.
-      const pubsubKeepaliveInterval = setInterval(
-        this.publishPubsubKeepaliveIfNeeded.bind(this),
-        this.maxPubsubPublishInterval / 2
-      )
+      const pubsubKeepaliveInterval = interval(this.maxPubsubPublishInterval / 2).subscribe(() => {
+        this.publishPubsubKeepaliveIfNeeded()
+      })
 
-      // todo use rxjs interval
       return () => {
-        clearInterval(pubsubKeepaliveInterval)
+        pubsubKeepaliveInterval.unsubscribe()
       }
     })
   }
