@@ -20,6 +20,7 @@ import { Pubsub } from './pubsub/pubsub'
 import { Subscription } from 'rxjs'
 import { MessageBus } from './pubsub/message-bus'
 import { LRUMap } from 'lru_map'
+import { PubsubKeepalive } from './pubsub/pubsub-keepalive'
 
 const IPFS_GET_RETRIES = 3
 const IPFS_GET_TIMEOUT = 30000 // 30 seconds per retry, 3 retries = 90 seconds total timeout
@@ -59,15 +60,8 @@ export class Dispatcher {
     private readonly _logger: DiagnosticsLogger,
     private readonly _pubsubLogger: ServiceLogger
   ) {
-    this.pubsub = new Pubsub(
-      _ipfs,
-      topic,
-      IPFS_RESUBSCRIBE_INTERVAL_DELAY,
-      MAX_PUBSUB_PUBLISH_INTERVAL,
-      _pubsubLogger,
-      _logger
-    )
-    this.messageBus = new MessageBus(this.pubsub)
+    this.pubsub = new Pubsub(_ipfs, topic, IPFS_RESUBSCRIBE_INTERVAL_DELAY, _pubsubLogger, _logger)
+    this.messageBus = new MessageBus(new PubsubKeepalive(this.pubsub, MAX_PUBSUB_PUBLISH_INTERVAL))
     this.messageBus.subscribe(this.handleMessage.bind(this))
     this.dagNodeCache = new LRUMap<string, any>(IPFS_CACHE_SIZE)
   }

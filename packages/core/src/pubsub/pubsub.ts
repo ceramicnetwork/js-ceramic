@@ -48,32 +48,20 @@ function ipfsToPubsub(
  */
 export class Pubsub extends Observable<PubsubMessage> {
   private readonly peerId$: Observable<string>
-  private lastPublishedMessageDate: number = Date.now() - this.maxPubsubPublishInterval
 
   constructor(
     private readonly ipfs: IpfsApi,
     private readonly topic: string,
     private readonly resubscribeEvery: number,
-    private readonly maxPubsubPublishInterval: number,
     private readonly pubsubLogger: ServiceLogger,
     private readonly logger: DiagnosticsLogger
   ) {
     super((subscriber) => {
       const incoming$ = new IncomingChannel(ipfs, topic, resubscribeEvery, pubsubLogger, logger)
 
-      // Start background job to periodically send pubsub messages if no other messages have been
-      // sent recently.
-      const pubsubKeepaliveInterval = setInterval(
-        this.publishPubsubKeepaliveIfNeeded.bind(this),
-        this.maxPubsubPublishInterval / 2
-      )
-
       incoming$
         .pipe(filterExternal(this.peerId$), ipfsToPubsub(this.peerId$, pubsubLogger, topic))
         .subscribe(subscriber)
-        .add(() => {
-          clearInterval(pubsubKeepaliveInterval)
-        })
     })
     // Textually, `this.peerId$` appears after it is called.
     // Really, subscription is lazy, so `this.peerId$` is populated before the actual subscription act.
@@ -87,7 +75,6 @@ export class Pubsub extends Observable<PubsubMessage> {
    * Feel free to disregard it though.
    */
   next(message: PubsubMessage): Subscription {
-    this.lastPublishedMessageDate = Date.now()
     return this.peerId$
       .pipe(
         mergeMap(async (peerId) => {
@@ -110,22 +97,5 @@ export class Pubsub extends Observable<PubsubMessage> {
           this.logger.err(error)
         },
       })
-  }
-
-  /**
-   * Called periodically and ensures that if we haven't published a pubsub message in too long,
-   * we'll publish one so that we never go longer than MAX_PUBSUB_PUBLISH_INTERVAL without
-   * publishing a pubsub message.  This is to work around a bug in IPFS where peer connections
-   * get dropped if they haven't had traffic in too long.
-   */
-  publishPubsubKeepaliveIfNeeded(): void {
-    const now = Date.now()
-    if (now - this.lastPublishedMessageDate < this.maxPubsubPublishInterval / 2) {
-      // We've published a message recently enough, no need to publish another
-      return
-    }
-
-    const message: KeepaliveMessage = { typ: MsgType.KEEPALIVE, ts: now }
-    this.next(message)
   }
 }
