@@ -1,4 +1,4 @@
-import { LoggerConfig, SyncOptions } from '@ceramicnetwork/common'
+import { SyncOptions } from '@ceramicnetwork/common'
 
 /**
  * Whether the daemon should start its own bundled in-process ipfs node, or if it should connect
@@ -132,6 +132,27 @@ export interface DaemonCeramicNodeConfig {
 }
 
 /**
+ * Ceramic Daemon options for configuring behavior related to logging.
+ */
+export interface DaemonLoggerConfig {
+  /**
+   * If 'logToFiles' is true, this contains the path on the local filesystem where log files will
+   * be written.
+   */
+  logDirectory?: string
+
+  /**
+   * Log level. Defaults to 0. Higher numbers are more verbose.
+   */
+  logLevel?: number
+
+  /**
+   * Controls whether logs get persisted to the file system.
+   */
+  logToFiles?: boolean
+}
+
+/**
  * Daemon create options
  */
 export interface DaemonConfig {
@@ -153,7 +174,7 @@ export interface DaemonConfig {
   /**
    * Options related to logging.
    */
-  logger?: LoggerConfig
+  logger?: DaemonLoggerConfig
 
   /**
    * Options related to the Ceramic network to connect to.
