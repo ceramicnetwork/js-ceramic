@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.4.0-rc.0](/compare/@ceramicnetwork/core@1.3.1...@ceramicnetwork/core@1.4.0-rc.0) (2021-08-13)
+
+
+### Features
+
+* **core:** Add API to request an anchor (#1622) 8473c6a, closes #1622
+* Allow stream controller to differ from signer (#1609) b1c4711, closes #1609
+* Allow updating tile immediately after controller change (#1619) 4e63e2f, closes #1619
+
+
+
+
+
 ## [1.3.1](/compare/@ceramicnetwork/core@1.3.0-rc.4...@ceramicnetwork/core@1.3.1) (2021-08-11)
 
 **Note:** Version bump only for package @ceramicnetwork/core
