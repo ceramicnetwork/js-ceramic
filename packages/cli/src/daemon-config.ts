@@ -12,7 +12,7 @@ export enum IpfsMode {
 /**
  * Ceramic Daemon options for configuring behavior related to IPFS.
  */
-export interface DaemonIpfsConfig {
+export class DaemonIpfsConfig {
   /**
    * Whether the daemon should start its own bundled in-process ipfs node, or if it should connect
    * over HTTP to an existing remote IPFS node.
@@ -41,7 +41,7 @@ export enum StateStoreMode {
 /**
  * Ceramic Daemon options for configuring behavior related to the state store.
  */
-export interface DaemonStateStoreConfig {
+export class DaemonStateStoreConfig {
   /**
    * Controls whether the state store stores data in the local filesystem or in Amazon S3
    */
@@ -61,7 +61,7 @@ export interface DaemonStateStoreConfig {
 /**
  * Ceramic Daemon options for configuring behavior related to the HTTP API.
  */
-export interface DaemonHTTPApiConfig {
+export class DaemonHTTPApiConfig {
   /**
    * Hostname to bind to and listen on.
    */
@@ -82,7 +82,7 @@ export interface DaemonHTTPApiConfig {
 /**
  * Ceramic Daemon options for configuring behavior related to the Ceramic network to connect to.
  */
-export interface DaemonCeramicNetworkConfig {
+export class DaemonCeramicNetworkConfig {
   /**
    * Name of the ceramic network to connect to. For example 'testnet-clay' or 'mainnet'.
    */
@@ -98,7 +98,7 @@ export interface DaemonCeramicNetworkConfig {
 /**
  * Ceramic Daemon options for configuring behavior related to performing or validating anchors.
  */
-export interface DaemonAnchorConfig {
+export class DaemonAnchorConfig {
   /**
    * URL of the Ceramic Anchor Service to send anchor requests to.
    */
@@ -113,7 +113,7 @@ export interface DaemonAnchorConfig {
 /**
  * Ceramic Daemon options for configuring miscellaneous behaviors of the underlying Ceramic node.
  */
-export interface DaemonCeramicNodeConfig {
+export class DaemonCeramicNodeConfig {
   /**
    * Whether to run the Ceramic node in read-only gateway mode.
    */
@@ -134,7 +134,7 @@ export interface DaemonCeramicNodeConfig {
 /**
  * Ceramic Daemon options for configuring behavior related to logging.
  */
-export interface DaemonLoggerConfig {
+export class DaemonLoggerConfig {
   /**
    * If 'logToFiles' is true, this contains the path on the local filesystem where log files will
    * be written.
@@ -155,7 +155,7 @@ export interface DaemonLoggerConfig {
 /**
  * Daemon create options
  */
-export interface DaemonConfig {
+export class DaemonConfig {
   /**
    * Options related to anchoring
    */
