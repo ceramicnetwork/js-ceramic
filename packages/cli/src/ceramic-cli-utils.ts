@@ -24,9 +24,9 @@ const DEFAULT_CLI_CONFIG_FILE = 'client.config.json'
 const LEGACY_CLI_CONFIG_FILE = 'config.json' // todo(1615): Remove this backwards compatibility support
 const DEFAULT_CONFIG_PATH = path.join(os.homedir(), '.ceramic')
 
-const DEFAULT_DAEMON_CONFIG: DaemonConfig = {
+const DEFAULT_DAEMON_CONFIG = DaemonConfig.parseConfigFromObject({
   network: { name: Networks.TESTNET_CLAY },
-}
+})
 
 const SYNC_OPTIONS_MAP = {
   'prefer-cache': SyncOptions.PREFER_CACHE,
@@ -93,7 +93,7 @@ export class CeramicCliUtils {
   ): Promise<CeramicDaemon> {
     const configFromFile = await this._loadDaemonConfig()
 
-    let configFromCli: DaemonConfig
+    let configFromCli
     {
       let _corsAllowedOrigins: string | RegExp[] = '*'
       if (corsAllowedOrigins != null && corsAllowedOrigins != '*') {
@@ -150,7 +150,8 @@ export class CeramicCliUtils {
       configFromCli = this.removeUndefinedFields(configFromCli)
     }
 
-    const config = Object.assign(configFromFile, configFromCli)
+    // CLI flags override values from config file
+    const config = DaemonConfig.parseConfigFromObject(Object.assign(configFromFile, configFromCli))
     return CeramicDaemon.create(config)
   }
 
@@ -549,7 +550,8 @@ export class CeramicCliUtils {
       return DEFAULT_DAEMON_CONFIG
     }
 
-    return JSON.parse(await fs.readFile(fullDaemonConfigPath, { encoding: 'utf8' }))
+    const fileContents = await fs.readFile(fullDaemonConfigPath, { encoding: 'utf8' })
+    return DaemonConfig.parseConfigFromString(fileContents)
   }
 
   /**

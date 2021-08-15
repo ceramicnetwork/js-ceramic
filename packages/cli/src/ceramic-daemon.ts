@@ -150,6 +150,10 @@ export class CeramicDaemon {
     )
 
     const [modules, params] = Ceramic._processConfig(ipfs, ceramicConfig)
+    // TODO: Dedupe with inner Ceramic config log.
+    modules.loggerProvider
+      .getDiagnosticsLogger()
+      .imp(`Starting Ceramic Daemon with config: \n${opts.stringify()}`)
 
     if (opts.stateStore?.mode == StateStoreMode.S3) {
       const s3StateStore = new S3StateStore(opts.stateStore?.s3Bucket)
