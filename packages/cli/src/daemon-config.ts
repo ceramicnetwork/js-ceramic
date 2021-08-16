@@ -1,6 +1,5 @@
 import 'reflect-metadata'
 import { jsonObject, jsonMember, jsonArrayMember, TypedJSON, toJson } from 'typedjson'
-import { SyncOptions } from '@ceramicnetwork/common'
 
 /**
  * Whether the daemon should start its own bundled in-process ipfs node, or if it should connect
@@ -152,7 +151,7 @@ export class DaemonCeramicNodeConfig {
    * to set this.
    */
   @jsonMember
-  syncOverride?: SyncOptions // todo make string, lookup from table later
+  syncOverride?: string
 
   /**
    * If set to false, disables stream validation. Most users should never set this.

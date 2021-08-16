@@ -35,10 +35,17 @@ interface MultiQueries {
   queries: Array<MultiQueryWithDocId>
 }
 
+const SYNC_OPTIONS_MAP = {
+  'prefer-cache': SyncOptions.PREFER_CACHE,
+  'sync-always': SyncOptions.SYNC_ALWAYS,
+  'never-sync': SyncOptions.NEVER_SYNC,
+}
+
 export function makeCeramicConfig(opts: DaemonConfig): CeramicConfig {
   const loggerProvider = new LoggerProvider(opts.logger, (logPath: string) => {
     return new RotatingFileStream(logPath, true)
   })
+
   const ceramicConfig: CeramicConfig = {
     loggerProvider,
     gateway: opts.node?.gateway || false,
@@ -48,7 +55,7 @@ export function makeCeramicConfig(opts: DaemonConfig): CeramicConfig {
     networkName: opts.network?.name,
     pubsubTopic: opts.network?.pubsubTopic,
     validateStreams: opts.node?.validateStreams,
-    syncOverride: opts.node?.syncOverride,
+    syncOverride: SYNC_OPTIONS_MAP[opts.node.syncOverride],
   }
   if (opts.stateStore?.mode == StateStoreMode.FS) {
     ceramicConfig.stateStoreDirectory = opts.stateStore.localDirectory

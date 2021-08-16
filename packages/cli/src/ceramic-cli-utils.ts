@@ -38,12 +38,6 @@ const DEFAULT_DAEMON_CONFIG = DaemonConfig.parseConfigFromObject({
   },
 })
 
-const SYNC_OPTIONS_MAP = {
-  'prefer-cache': SyncOptions.PREFER_CACHE,
-  'sync-always': SyncOptions.SYNC_ALWAYS,
-  'never-sync': SyncOptions.NEVER_SYNC,
-}
-
 /**
  * CLI configuration
  */
@@ -105,7 +99,8 @@ export class CeramicCliUtils {
 
     {
       // CLI flags override values from config file
-      // todo: separate cli flag validation from override, make helpers
+      // todo: Make interface for CLI flags, separate flag validation into helper function, separate
+      // overriding DaemonConfig with CLI flags into another helper function.
       if (stateStoreDirectory && stateStoreS3Bucket) {
         throw new Error(
           'Cannot specify both --state-store-directory and --state-store-s3-bucket. Only one state store - either on local storage or on S3 - can be used at a time'
@@ -156,7 +151,7 @@ export class CeramicCliUtils {
         config.node.gateway = gateway
       }
       if (syncOverride) {
-        config.node.syncOverride = SYNC_OPTIONS_MAP[syncOverride] // todo
+        config.node.syncOverride = syncOverride
       }
       if (stateStoreDirectory) {
         config.stateStore.mode = StateStoreMode.FS
