@@ -3,6 +3,20 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.3.0-rc.0](/compare/@ceramicnetwork/cli@1.2.1...@ceramicnetwork/cli@1.3.0-rc.0) (2021-08-13)
+
+
+### Features
+
+* Rely on default nft-did-resolver subgraphs (#1635) 949aba1, closes #1635
+* **cli:** Add daemon config file (#1629) 642f071, closes #1629
+* **core:** Add API to request an anchor (#1622) 8473c6a, closes #1622
+* Include nft-did-resolver (#1620) 0615c62, closes #1620
+
+
+
+
+
 ## [1.2.1](/compare/@ceramicnetwork/cli@1.2.0-rc.5...@ceramicnetwork/cli@1.2.1) (2021-08-11)
 
 **Note:** Version bump only for package @ceramicnetwork/cli
