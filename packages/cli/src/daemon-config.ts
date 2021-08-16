@@ -194,7 +194,7 @@ export class DaemonLoggerConfig {
  * Daemon create options
  */
 @jsonObject
-@toJson // todo is this necessary?
+@toJson
 export class DaemonConfig {
   /**
    * Options related to anchoring
