@@ -101,9 +101,9 @@ export class CeramicCliUtils {
 
     let configFromCli: DaemonConfig
     {
-      let _corsAllowedOrigins: string[] = ['*']
+      let _corsAllowedOrigins: RegExp[] = [new RegExp('.*')]
       if (corsAllowedOrigins != null) {
-        _corsAllowedOrigins = corsAllowedOrigins.split(' ')
+        _corsAllowedOrigins = corsAllowedOrigins.split(' ').map((origin) => new RegExp(origin))
       }
       const logLevel = verbose ? LogLevel.verbose : debug ? LogLevel.debug : LogLevel.important
       const loggerConfig: LoggerConfig = {
