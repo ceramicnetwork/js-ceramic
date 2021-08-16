@@ -152,7 +152,7 @@ export class DaemonCeramicNodeConfig {
    * to set this.
    */
   @jsonMember
-  syncOverride?: SyncOptions
+  syncOverride?: SyncOptions // todo make string, lookup from table later
 
   /**
    * If set to false, disables stream validation. Most users should never set this.
@@ -197,43 +197,43 @@ export class DaemonConfig {
    * Options related to anchoring
    */
   @jsonMember
-  anchor?: DaemonAnchorConfig
+  anchor: DaemonAnchorConfig
 
   /**
    * Options related to the HTTP API server.
    */
   @jsonMember
-  httpApi?: DaemonHTTPApiConfig
+  httpApi: DaemonHTTPApiConfig
 
   /**
    * Options related to IPFS.
    */
   @jsonMember
-  ipfs?: DaemonIpfsConfig
+  ipfs: DaemonIpfsConfig
 
   /**
    * Options related to logging.
    */
   @jsonMember
-  logger?: DaemonLoggerConfig
+  logger: DaemonLoggerConfig
 
   /**
    * Options related to the Ceramic network to connect to.
    */
   @jsonMember
-  network?: DaemonCeramicNetworkConfig
+  network: DaemonCeramicNetworkConfig
 
   /**
    * Miscellaneous options for behaviors of the underlying Ceramic node.
    */
   @jsonMember
-  node?: DaemonCeramicNodeConfig
+  node: DaemonCeramicNodeConfig
 
   /**
    * Options related to the state store.
    */
   @jsonMember
-  stateStore?: DaemonStateStoreConfig
+  stateStore: DaemonStateStoreConfig
 
   /**
    * Parses the given json string containing the contents of the config file and returns
