@@ -157,7 +157,6 @@ export class CeramicDaemon {
     )
 
     const [modules, params] = Ceramic._processConfig(ipfs, ceramicConfig)
-    // TODO: Dedupe with inner Ceramic config log.
     modules.loggerProvider
       .getDiagnosticsLogger()
       .imp(`Starting Ceramic Daemon with config: \n${JSON.stringify(opts, null, 2)}`)
