@@ -92,8 +92,8 @@ export class DaemonHTTPApiConfig {
    * Origins to restrict access to the HTTP api to, using CORS. Leaving this unset means the api
    * is open to all origins.
    */
-  @jsonArrayMember(RegExp)
-  corsAllowedOrigins?: string | RegExp[] // todo
+  @jsonArrayMember(RegExp, { deserializer: (arr) => arr.map((value) => new RegExp(value)) })
+  corsAllowedOrigins?: RegExp[]
 }
 
 /**
@@ -259,6 +259,7 @@ export class DaemonConfig {
   // todo remove this if it isn't necessary
   stringify(): string {
     // TODO ensure this converts field names back to config file format
+    // TODO ensure this outputs corsAllowedOrigins RegExps correctly
     return JSON.stringify(this, null, 2)
   }
 }
