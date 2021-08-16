@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`applies anchor record correctly 1`] = `
+exports[`applies anchor commit correctly 1`] = `
 Object {
   "anchorProof": Object {
     "blockNumber": 123456,
@@ -159,7 +159,7 @@ Object {
 }
 `;
 
-exports[`applies genesis record correctly 1`] = `
+exports[`applies genesis commit correctly 1`] = `
 Object {
   "anchorStatus": 0,
   "content": Object {
@@ -225,7 +225,7 @@ Object {
 }
 `;
 
-exports[`applies signed record correctly 1`] = `
+exports[`applies signed commit correctly 1`] = `
 Object {
   "anchorStatus": 0,
   "content": Object {

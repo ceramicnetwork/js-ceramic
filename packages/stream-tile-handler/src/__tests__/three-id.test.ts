@@ -36,7 +36,7 @@ const FAKE_CID_2 = new CID('bafybeig6xv5nwphfmvcnektpnojts44jqcuam7bmye2pb54adnr
 const FAKE_CID_3 = new CID('bafybeig6xv5nwphfmvcnektpnojts55jqcuam7bmye2pb54adnrtccjlsu')
 const FAKE_CID_4 = new CID('bafybeig6xv5nwphfmvcnektpnojts66jqcuam7bmye2pb54adnrtccjlsu')
 
-const RECORDS = {
+const COMMITS = {
   genesis: {
     header: {
       tags: ['3id'],
@@ -211,8 +211,8 @@ it('is constructed correctly', async () => {
 })
 
 it('makes genesis record correctly', async () => {
-  const record = (await TileDocument.makeGenesis(context.api, RECORDS.genesis.data, {
-    ...RECORDS.genesis.header,
+  const record = (await TileDocument.makeGenesis(context.api, COMMITS.genesis.data, {
+    ...COMMITS.genesis.header,
   })) as SignedCommitContainer
   const { jws, linkedBlock } = record
 
@@ -220,7 +220,7 @@ it('makes genesis record correctly', async () => {
   const generated = { jws: serialize(jws), linkedBlock: serialize(payload) }
 
   // Add the 'unique' header field to the data used to generate the expected genesis record
-  const genesis = cloneDeep(RECORDS.genesis)
+  const genesis = cloneDeep(COMMITS.genesis)
   genesis.header['unique'] = generated.linkedBlock.header.unique
 
   const expected = await did.createDagJWS(genesis)
@@ -236,7 +236,7 @@ it('makes genesis record correctly', async () => {
 it('applies genesis record correctly', async () => {
   const tileHandler = new TileDocumentHandler()
 
-  const record = (await TileDocument.makeGenesis(context.api, RECORDS.genesis.data, {
+  const record = (await TileDocument.makeGenesis(context.api, COMMITS.genesis.data, {
     controllers: [did.id],
     tags: ['3id'],
   })) as SignedCommitContainer
@@ -253,63 +253,63 @@ it('applies genesis record correctly', async () => {
 it('makes signed record correctly', async () => {
   const tileDocumentHandler = new TileDocumentHandler()
 
-  await context.ipfs.dag.put(RECORDS.genesisGenerated.jws, FAKE_CID_1)
+  await context.ipfs.dag.put(COMMITS.genesisGenerated.jws, FAKE_CID_1)
   await context.ipfs.dag.put(
-    RECORDS.genesisGenerated.linkedBlock,
-    RECORDS.genesisGenerated.jws.link
+    COMMITS.genesisGenerated.linkedBlock,
+    COMMITS.genesisGenerated.jws.link
   )
 
   const state = await tileDocumentHandler.applyCommit(
-    RECORDS.genesisGenerated.jws,
+    COMMITS.genesisGenerated.jws,
     { cid: FAKE_CID_1 },
     context
   )
   const state$ = TestUtils.runningState(state)
   const doc = new TileDocument(state$, context)
 
-  await expect(doc.makeCommit({} as CeramicApi, RECORDS.r1.desiredContent)).rejects.toThrow(
+  await expect(doc.makeCommit({} as CeramicApi, COMMITS.r1.desiredContent)).rejects.toThrow(
     /No DID/
   )
 
   const record = (await doc.makeCommit(
     context.api,
-    RECORDS.r1.desiredContent
+    COMMITS.r1.desiredContent
   )) as SignedCommitContainer
   const { jws: rJws, linkedBlock: rLinkedBlock } = record
   const rPayload = dagCBOR.util.deserialize(rLinkedBlock)
-  expect({ jws: serialize(rJws), payload: serialize(rPayload) }).toEqual(RECORDS.r1.record)
+  expect({ jws: serialize(rJws), payload: serialize(rPayload) }).toEqual(COMMITS.r1.record)
 })
 
 it('applies signed record correctly', async () => {
   const tileDocumentHandler = new TileDocumentHandler()
 
-  const genesisRecord = (await TileDocument.makeGenesis(context.api, RECORDS.genesis.data, {
+  const genesisCommit = (await TileDocument.makeGenesis(context.api, COMMITS.genesis.data, {
     controllers: [did.id],
     tags: ['3id'],
   })) as SignedCommitContainer
-  await context.ipfs.dag.put(genesisRecord, FAKE_CID_1)
+  await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
 
-  const payload = dagCBOR.util.deserialize(genesisRecord.linkedBlock)
-  await context.ipfs.dag.put(payload, genesisRecord.jws.link)
+  const payload = dagCBOR.util.deserialize(genesisCommit.linkedBlock)
+  await context.ipfs.dag.put(payload, genesisCommit.jws.link)
 
   // apply genesis
-  let state = await tileDocumentHandler.applyCommit(genesisRecord.jws, { cid: FAKE_CID_1 }, context)
+  let state = await tileDocumentHandler.applyCommit(genesisCommit.jws, { cid: FAKE_CID_1 }, context)
 
   const state$ = TestUtils.runningState(state)
   const doc = new TileDocument(state$, context)
-  const signedRecord = (await doc.makeCommit(
+  const signedCommit = (await doc.makeCommit(
     context.api,
-    RECORDS.r1.desiredContent
+    COMMITS.r1.desiredContent
   )) as SignedCommitContainer
 
-  await context.ipfs.dag.put(signedRecord, FAKE_CID_2)
+  await context.ipfs.dag.put(signedCommit, FAKE_CID_2)
 
-  const sPayload = dagCBOR.util.deserialize(signedRecord.linkedBlock)
-  await context.ipfs.dag.put(sPayload, signedRecord.jws.link)
+  const sPayload = dagCBOR.util.deserialize(signedCommit.linkedBlock)
+  await context.ipfs.dag.put(sPayload, signedCommit.jws.link)
 
   // apply signed
   state = await tileDocumentHandler.applyCommit(
-    signedRecord.jws,
+    signedCommit.jws,
     { cid: FAKE_CID_2 },
     context,
     state
@@ -322,59 +322,59 @@ it('applies signed record correctly', async () => {
 it('throws error if record signed by wrong DID', async () => {
   const tileDocumentHandler = new TileDocumentHandler()
 
-  const genesisRecord = (await TileDocument.makeGenesis(context.api, RECORDS.genesis.data, {
+  const genesisCommit = (await TileDocument.makeGenesis(context.api, COMMITS.genesis.data, {
     controllers: ['did:3:fake'],
     tags: ['3id'],
   })) as SignedCommitContainer
-  await context.ipfs.dag.put(genesisRecord, FAKE_CID_1)
+  await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
 
-  const payload = dagCBOR.util.deserialize(genesisRecord.linkedBlock)
-  await context.ipfs.dag.put(payload, genesisRecord.jws.link)
+  const payload = dagCBOR.util.deserialize(genesisCommit.linkedBlock)
+  await context.ipfs.dag.put(payload, genesisCommit.jws.link)
 
   await expect(
-    tileDocumentHandler.applyCommit(genesisRecord.jws, FAKE_CID_1, context)
+    tileDocumentHandler.applyCommit(genesisCommit.jws, FAKE_CID_1, context)
   ).rejects.toThrow(/invalid_jws: not a valid verificationMethod for issuer/)
 })
 
 it('applies anchor record correctly', async () => {
   const tileDocumentHandler = new TileDocumentHandler()
 
-  const genesisRecord = (await TileDocument.makeGenesis(context.api, RECORDS.genesis.data, {
+  const genesisCommit = (await TileDocument.makeGenesis(context.api, COMMITS.genesis.data, {
     controllers: [did.id],
     tags: ['3id'],
   })) as SignedCommitContainer
-  await context.ipfs.dag.put(genesisRecord, FAKE_CID_1)
+  await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
 
-  const payload = dagCBOR.util.deserialize(genesisRecord.linkedBlock)
-  await context.ipfs.dag.put(payload, genesisRecord.jws.link)
+  const payload = dagCBOR.util.deserialize(genesisCommit.linkedBlock)
+  await context.ipfs.dag.put(payload, genesisCommit.jws.link)
 
   // apply genesis
-  let state = await tileDocumentHandler.applyCommit(genesisRecord.jws, { cid: FAKE_CID_1 }, context)
+  let state = await tileDocumentHandler.applyCommit(genesisCommit.jws, { cid: FAKE_CID_1 }, context)
 
   const state$ = TestUtils.runningState(state)
   const doc = new TileDocument(state$, context)
-  const signedRecord = (await doc.makeCommit(
+  const signedCommit = (await doc.makeCommit(
     context.api,
-    RECORDS.r1.desiredContent
+    COMMITS.r1.desiredContent
   )) as SignedCommitContainer
 
-  await context.ipfs.dag.put(signedRecord, FAKE_CID_2)
+  await context.ipfs.dag.put(signedCommit, FAKE_CID_2)
 
-  const sPayload = dagCBOR.util.deserialize(signedRecord.linkedBlock)
-  await context.ipfs.dag.put(sPayload, signedRecord.jws.link)
+  const sPayload = dagCBOR.util.deserialize(signedCommit.linkedBlock)
+  await context.ipfs.dag.put(sPayload, signedCommit.jws.link)
 
   // apply signed
   state = await tileDocumentHandler.applyCommit(
-    signedRecord.jws,
+    signedCommit.jws,
     { cid: FAKE_CID_2 },
     context,
     state
   )
 
-  await context.ipfs.dag.put(RECORDS.proof, FAKE_CID_4)
+  await context.ipfs.dag.put(COMMITS.proof, FAKE_CID_4)
   // apply anchor
   state = await tileDocumentHandler.applyCommit(
-    RECORDS.r2.record as AnchorCommit,
+    COMMITS.r2.record as AnchorCommit,
     { cid: FAKE_CID_3 },
     context,
     state

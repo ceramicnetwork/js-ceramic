@@ -42,15 +42,15 @@ async function verifyAnchorCommit(
     if (commit.path.length === 0) {
       prevCIDViaMerkleTree = proof.root
     } else {
-      const merkleTreeParentRecordPath =
+      const merkleTreeParentCommitPath =
         '/root/' + commit.path.substr(0, commit.path.lastIndexOf('/'))
       const last: string = commit.path.substr(commit.path.lastIndexOf('/') + 1)
 
-      const merkleTreeParentRecord = await dispatcher.retrieveFromIPFS(
+      const merkleTreeParentCommit = await dispatcher.retrieveFromIPFS(
         proofCID,
-        merkleTreeParentRecordPath
+        merkleTreeParentCommitPath
       )
-      prevCIDViaMerkleTree = merkleTreeParentRecord[last]
+      prevCIDViaMerkleTree = merkleTreeParentCommit[last]
     }
   } catch (e) {
     throw new Error(`The anchor commit couldn't be verified. Reason ${e.message}`)
@@ -168,7 +168,7 @@ export class HistoryLog {
 
 /**
  * Fetch log to find a connection for the given CID.
- * Expands SignedCommits and adds a CID into the log for their inner `link` records
+ * Expands SignedCommits and adds a CID into the log for their inner `link` commits
  *
  * @param dispatcher - Get commit from IPFS
  * @param cid - Commit CID
@@ -320,7 +320,7 @@ export class ConflictResolution {
    * Applies the log to the state.
    *
    * @param initialState - State to apply log to.
-   * @param initialStateLog - HistoryLog representation of the `initialState.log` with SignedCommits expanded out and CIDs for their `link` record included in the log.
+   * @param initialStateLog - HistoryLog representation of the `initialState.log` with SignedCommits expanded out and CIDs for their `link` commit included in the log.
    * @param unappliedCommits - commits to apply
    * @param opts - options that control the behavior when applying the commit
    */

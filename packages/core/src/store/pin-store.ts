@@ -58,22 +58,22 @@ export class PinStore {
     for (const { cid } of log) {
       points.push(cid)
 
-      const record = await this.retrieve(cid)
-      if (StreamUtils.isAnchorCommit(record)) {
-        points.push(record.proof)
+      const commit = await this.retrieve(cid)
+      if (StreamUtils.isAnchorCommit(commit)) {
+        points.push(commit.proof)
 
-        const path = record.path ? 'root/' + record.path : 'root'
+        const path = commit.path ? 'root/' + commit.path : 'root'
         const subPaths = path.split('/').filter((p) => !!p)
 
         let currentPath = ''
         for (const subPath of subPaths) {
           currentPath += '/' + subPath
-          const subPathResolved = await this.resolve(record.proof.toString() + currentPath)
+          const subPathResolved = await this.resolve(commit.proof.toString() + currentPath)
           points.push(subPathResolved)
         }
       }
-      if (StreamUtils.isSignedCommit(record)) {
-        points.push(record.link)
+      if (StreamUtils.isSignedCommit(commit)) {
+        points.push(commit.link)
       }
     }
     return points

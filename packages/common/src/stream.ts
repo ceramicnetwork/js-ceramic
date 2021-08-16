@@ -284,7 +284,7 @@ export interface StreamHandler<T extends Stream> {
   /**
    * Applies commit to the stream (genesis|signed|anchored)
    * @param commit - Commit instance
-   * @param meta - Record meta-inforamtion, like CID and timestamp
+   * @param meta - Commit meta-inforamtion, like CID and timestamp
    * @param context - Ceramic context
    * @param state - Stream state
    */

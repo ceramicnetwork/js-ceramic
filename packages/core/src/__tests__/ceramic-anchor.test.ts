@@ -62,7 +62,7 @@ describe('Ceramic anchoring', () => {
     await ipfs3.stop()
   })
 
-  it('test all records anchored', async () => {
+  it('test all commits anchored', async () => {
     const [ceramic1, ceramic2] = await Promise.all([
       createCeramic(ipfs1, true),
       createCeramic(ipfs2, false),
@@ -86,7 +86,7 @@ describe('Ceramic anchoring', () => {
     await ceramic2.close()
   })
 
-  it('test no records anchored', async () => {
+  it('test no commits anchored', async () => {
     const [ceramic1, ceramic2] = await Promise.all([
       createCeramic(ipfs1, true),
       createCeramic(ipfs2, false),
