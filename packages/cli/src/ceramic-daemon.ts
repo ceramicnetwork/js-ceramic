@@ -160,7 +160,7 @@ export class CeramicDaemon {
     // TODO: Dedupe with inner Ceramic config log.
     modules.loggerProvider
       .getDiagnosticsLogger()
-      .imp(`Starting Ceramic Daemon with config: \n${opts.stringify()}`)
+      .imp(`Starting Ceramic Daemon with config: \n${JSON.stringify(opts, null, 2)}`)
 
     if (opts.stateStore?.mode == StateStoreMode.S3) {
       const s3StateStore = new S3StateStore(opts.stateStore?.s3Bucket)

@@ -32,7 +32,7 @@ export class DaemonIpfsConfig {
   /**
    * Endpoints for pinning IPFS data.
    */
-  @jsonArrayMember(String)
+  @jsonArrayMember(String, { name: 'pinning-endpoints' })
   pinningEndpoints?: string[]
 }
 
@@ -59,13 +59,13 @@ export class DaemonStateStoreConfig {
   /**
    * If mode is 'fs', this controls where on the local file system to put the state store data.
    */
-  @jsonMember
+  @jsonMember({ name: 'local-directory' })
   localDirectory?: string
 
   /**
    * If mode is 's3', this is the S3 bucket name where the state store is written.
    */
-  @jsonMember
+  @jsonMember({ name: 's3-bucket' })
   s3Bucket?: string
 }
 
@@ -92,6 +92,7 @@ export class DaemonHTTPApiConfig {
    * is open to all origins.
    */
   @jsonArrayMember(RegExp, {
+    name: 'cors-allowed-origins',
     deserializer: (arr) => arr.map((value) => new RegExp(value)),
     serializer: (arr) => arr.map((value) => value.toString()),
   })
@@ -114,7 +115,7 @@ export class DaemonCeramicNetworkConfig {
    * Name of the ipfs pubsub topic to use for protocol messages. Most users should never have to
    * set this.
    */
-  @jsonMember
+  @jsonMember({ name: 'pubsub-topic' })
   pubsubTopic?: string
 }
 
@@ -127,13 +128,13 @@ export class DaemonAnchorConfig {
   /**
    * URL of the Ceramic Anchor Service to send anchor requests to.
    */
-  @jsonMember
+  @jsonMember({ name: 'anchor-service-url' })
   anchorServiceUrl?: string
 
   /**
    * Ethereum RPC URL that can be used to create or query ethereum transactions.
    */
-  @jsonMember
+  @jsonMember({ name: 'ethereum-rpc-url' })
   ethereumRpcUrl?: string
 }
 
@@ -153,13 +154,13 @@ export class DaemonCeramicNodeConfig {
    * If set, overrides the 'sync' flag for all stream load operations.  Most users should never have
    * to set this.
    */
-  @jsonMember
+  @jsonMember({ name: 'sync-override' })
   syncOverride?: string
 
   /**
    * If set to false, disables stream validation. Most users should never set this.
    */
-  @jsonMember
+  @jsonMember({ name: 'validate-streams' })
   validateStreams?: boolean
 }
 
@@ -173,19 +174,19 @@ export class DaemonLoggerConfig {
    * If 'logToFiles' is true, this contains the path on the local filesystem where log files will
    * be written.
    */
-  @jsonMember
+  @jsonMember({ name: 'log-directory' })
   logDirectory?: string
 
   /**
    * Log level. Defaults to 2. Lower numbers are more verbose.
    */
-  @jsonMember
+  @jsonMember({ name: 'log-level' })
   logLevel?: number
 
   /**
    * Controls whether logs get persisted to the file system.
    */
-  @jsonMember
+  @jsonMember({ name: 'log-to-files' })
   logToFiles?: boolean
 }
 
@@ -204,7 +205,7 @@ export class DaemonConfig {
   /**
    * Options related to the HTTP API server.
    */
-  @jsonMember
+  @jsonMember({ name: 'http-api' })
   httpApi: DaemonHTTPApiConfig
 
   /**
@@ -234,7 +235,7 @@ export class DaemonConfig {
   /**
    * Options related to the state store.
    */
-  @jsonMember
+  @jsonMember({ name: 'state-store' })
   stateStore: DaemonStateStoreConfig
 
   /**
@@ -256,11 +257,5 @@ export class DaemonConfig {
     })
 
     return serializer.parse(json)
-  }
-
-  // todo remove this if it isn't necessary
-  stringify(): string {
-    // TODO ensure this converts field names back to config file format
-    return JSON.stringify(this, null, 2)
   }
 }

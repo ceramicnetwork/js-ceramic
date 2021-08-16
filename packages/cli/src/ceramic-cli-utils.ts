@@ -27,14 +27,14 @@ const DEFAULT_CONFIG_PATH = path.join(os.homedir(), '.ceramic')
 
 const DEFAULT_DAEMON_CONFIG = DaemonConfig.parseConfigFromObject({
   anchor: {},
-  httpApi: { corsAllowedOrigins: [new RegExp('.*')] },
+  'http-api': { 'cors-allowed-origins': [new RegExp('.*')] },
   ipfs: { mode: IpfsMode.BUNDLED },
-  logger: { logLevel: LogLevel.important, logToFiles: false },
+  logger: { 'log-level': LogLevel.important, 'log-to-files': false },
   network: { name: Networks.TESTNET_CLAY },
   node: {},
-  stateStore: {
+  'state-store': {
     mode: StateStoreMode.FS,
-    localDirectory: DEFAULT_STATE_STORE_DIRECTORY,
+    'local-directory': DEFAULT_STATE_STORE_DIRECTORY,
   },
 })
 
