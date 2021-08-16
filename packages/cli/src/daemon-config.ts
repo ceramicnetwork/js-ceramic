@@ -175,7 +175,7 @@ export class DaemonLoggerConfig {
   logDirectory?: string
 
   /**
-   * Log level. Defaults to 0. Higher numbers are more verbose.
+   * Log level. Defaults to 2. Lower numbers are more verbose.
    */
   @jsonMember
   logLevel?: number
