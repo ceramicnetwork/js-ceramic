@@ -93,8 +93,8 @@ export class DaemonHTTPApiConfig {
    */
   @jsonArrayMember(RegExp, {
     name: 'cors-allowed-origins',
-    deserializer: (arr) => arr.map((value) => new RegExp(value)),
-    serializer: (arr) => arr.map((value) => value.toString()),
+    deserializer: (arr) => arr.map((value: string) => new RegExp(value)),
+    serializer: (arr) => arr.map((value: RegExp) => value.source),
   })
   corsAllowedOrigins?: RegExp[]
 }
