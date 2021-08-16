@@ -44,9 +44,6 @@ import { streamFromState } from './state-management/stream-from-state'
 import { ConflictResolution } from './conflict-resolution'
 import EthereumAnchorValidator from './anchor/ethereum/ethereum-anchor-validator'
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const packageJson = require('../package.json')
-
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const IPFS_GET_TIMEOUT = 60000 // 1 minute
 const TESTING = process.env.NODE_ENV == 'test'

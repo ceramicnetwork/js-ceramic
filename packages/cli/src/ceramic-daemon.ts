@@ -23,6 +23,8 @@ import { addAsync, ExpressWithAsync, Router } from '@awaitjs/express'
 import { logRequests } from './daemon/log-requests'
 import type { Server } from 'http'
 import { DaemonConfig, StateStoreMode } from './daemon-config'
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const packageJson = require('../package.json')
 
 const DEFAULT_HOSTNAME = '0.0.0.0'
 const DEFAULT_PORT = 7007
@@ -159,7 +161,13 @@ export class CeramicDaemon {
     const [modules, params] = Ceramic._processConfig(ipfs, ceramicConfig)
     modules.loggerProvider
       .getDiagnosticsLogger()
-      .imp(`Starting Ceramic Daemon with config: \n${JSON.stringify(opts, null, 2)}`)
+      .imp(
+        `Starting Ceramic Daemon at version ${packageJson.version} with config: \n${JSON.stringify(
+          opts,
+          null,
+          2
+        )}`
+      )
 
     if (opts.stateStore?.mode == StateStoreMode.S3) {
       const s3StateStore = new S3StateStore(opts.stateStore?.s3Bucket)
