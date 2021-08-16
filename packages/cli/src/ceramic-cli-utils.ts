@@ -166,20 +166,6 @@ export class CeramicCliUtils {
     return CeramicDaemon.create(config)
   }
 
-  static removeUndefinedFields(obj: Record<string, any>): Record<string, any> {
-    return Object.fromEntries(
-      Object.entries(obj)
-        .map(([k, v]) => {
-          if (typeof v === 'object' && v !== null && !Array.isArray(v)) {
-            return [k, this.removeUndefinedFields(v)]
-          } else {
-            return [k, v]
-          }
-        })
-        .filter(([k, v]) => v !== undefined)
-    )
-  }
-
   /**
    * Internal helper for creating documents
    * @param content - Document content
