@@ -31,6 +31,7 @@ export class DaemonIpfsConfig {
 
   /**
    * Endpoints for pinning IPFS data.
+   * When specifying in a config file, use the name 'pinning-endpoints'.
    */
   @jsonArrayMember(String, { name: 'pinning-endpoints' })
   pinningEndpoints?: string[]
@@ -58,12 +59,14 @@ export class DaemonStateStoreConfig {
 
   /**
    * If mode is 'fs', this controls where on the local file system to put the state store data.
+   * When specifying in a config file, use the name 'local-directory'.
    */
   @jsonMember({ name: 'local-directory' })
   localDirectory?: string
 
   /**
    * If mode is 's3', this is the S3 bucket name where the state store is written.
+   * When specifying in a config file, use the name 's3-bucket'.
    */
   @jsonMember({ name: 's3-bucket' })
   s3Bucket?: string
@@ -90,6 +93,7 @@ export class DaemonHTTPApiConfig {
   /**
    * Origins to restrict access to the HTTP api to, using CORS. Leaving this unset means the api
    * is open to all origins.
+   * When specifying in a config file, use the name 'cors-allowed-origins'.
    */
   @jsonArrayMember(RegExp, {
     name: 'cors-allowed-origins',
@@ -114,6 +118,7 @@ export class DaemonCeramicNetworkConfig {
   /**
    * Name of the ipfs pubsub topic to use for protocol messages. Most users should never have to
    * set this.
+   * When specifying in a config file, use the name 'pubsub-topic'.
    */
   @jsonMember({ name: 'pubsub-topic' })
   pubsubTopic?: string
@@ -127,12 +132,14 @@ export class DaemonCeramicNetworkConfig {
 export class DaemonAnchorConfig {
   /**
    * URL of the Ceramic Anchor Service to send anchor requests to.
+   * When specifying in a config file, use the name 'anchor-service-url'.
    */
   @jsonMember({ name: 'anchor-service-url' })
   anchorServiceUrl?: string
 
   /**
    * Ethereum RPC URL that can be used to create or query ethereum transactions.
+   * When specifying in a config file, use the name 'ethereum-rpc-url'.
    */
   @jsonMember({ name: 'ethereum-rpc-url' })
   ethereumRpcUrl?: string
@@ -153,12 +160,14 @@ export class DaemonCeramicNodeConfig {
   /**
    * If set, overrides the 'sync' flag for all stream load operations.  Most users should never have
    * to set this.
+   * When specifying in a config file, use the name 'sync-override'.
    */
   @jsonMember({ name: 'sync-override' })
   syncOverride?: string
 
   /**
    * If set to false, disables stream validation. Most users should never set this.
+   * When specifying in a config file, use the name 'validate-streams'.
    */
   @jsonMember({ name: 'validate-streams' })
   validateStreams?: boolean
@@ -173,18 +182,21 @@ export class DaemonLoggerConfig {
   /**
    * If 'logToFiles' is true, this contains the path on the local filesystem where log files will
    * be written.
+   * When specifying in a config file, use the name 'log-directory'.
    */
   @jsonMember({ name: 'log-directory' })
   logDirectory?: string
 
   /**
    * Log level. Defaults to 2. Lower numbers are more verbose.
+   * When specifying in a config file, use the name 'log-level'.
    */
   @jsonMember({ name: 'log-level' })
   logLevel?: number
 
   /**
    * Controls whether logs get persisted to the file system.
+   * When specifying in a config file, use the name 'log-to-files'.
    */
   @jsonMember({ name: 'log-to-files' })
   logToFiles?: boolean
@@ -204,6 +216,7 @@ export class DaemonConfig {
 
   /**
    * Options related to the HTTP API server.
+   * When specifying in a config file, use the name 'http-api'.
    */
   @jsonMember({ name: 'http-api' })
   httpApi: DaemonHTTPApiConfig
@@ -234,6 +247,7 @@ export class DaemonConfig {
 
   /**
    * Options related to the state store.
+   * When specifying in a config file, use the name 'state-store'.
    */
   @jsonMember({ name: 'state-store' })
   stateStore: DaemonStateStoreConfig
