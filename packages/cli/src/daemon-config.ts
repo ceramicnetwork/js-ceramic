@@ -20,13 +20,13 @@ export class DaemonIpfsConfig {
    * Whether the daemon should start its own bundled in-process ipfs node, or if it should connect
    * over HTTP to an existing remote IPFS node.
    */
-  @jsonMember
+  @jsonMember(String)
   mode?: IpfsMode
 
   /**
    * If mode is 'remote', this controls what URL Ceramic uses to connect to the external IPFS node.
    */
-  @jsonMember
+  @jsonMember(String)
   host?: string
 
   /**
@@ -54,21 +54,21 @@ export class DaemonStateStoreConfig {
   /**
    * Controls whether the state store stores data in the local filesystem or in Amazon S3
    */
-  @jsonMember
+  @jsonMember(String)
   mode?: StateStoreMode
 
   /**
    * If mode is 'fs', this controls where on the local file system to put the state store data.
    * When specifying in a config file, use the name 'local-directory'.
    */
-  @jsonMember({ name: 'local-directory' })
+  @jsonMember(String, { name: 'local-directory' })
   localDirectory?: string
 
   /**
    * If mode is 's3', this is the S3 bucket name where the state store is written.
    * When specifying in a config file, use the name 's3-bucket'.
    */
-  @jsonMember({ name: 's3-bucket' })
+  @jsonMember(String, { name: 's3-bucket' })
   s3Bucket?: string
 }
 
@@ -81,13 +81,13 @@ export class DaemonHTTPApiConfig {
   /**
    * Hostname to bind to and listen on.
    */
-  @jsonMember
+  @jsonMember(String)
   hostname?: string
 
   /**
    * Port to listen on.
    */
-  @jsonMember
+  @jsonMember(Number)
   port?: number
 
   /**
@@ -97,8 +97,18 @@ export class DaemonHTTPApiConfig {
    */
   @jsonArrayMember(RegExp, {
     name: 'cors-allowed-origins',
-    deserializer: (arr) => arr.map((value: string) => new RegExp(value)),
-    serializer: (arr) => arr.map((value: RegExp) => value.source),
+    deserializer: (arr) => {
+      if (!arr) {
+        return arr
+      }
+      return arr.map((value: string) => new RegExp(value))
+    },
+    serializer: (arr) => {
+      if (!arr) {
+        return arr
+      }
+      return arr.map((value: RegExp) => value.source)
+    },
   })
   corsAllowedOrigins?: RegExp[]
 }
@@ -112,7 +122,7 @@ export class DaemonCeramicNetworkConfig {
   /**
    * Name of the ceramic network to connect to. For example 'testnet-clay' or 'mainnet'.
    */
-  @jsonMember
+  @jsonMember(String)
   name?: string
 
   /**
@@ -120,7 +130,7 @@ export class DaemonCeramicNetworkConfig {
    * set this.
    * When specifying in a config file, use the name 'pubsub-topic'.
    */
-  @jsonMember({ name: 'pubsub-topic' })
+  @jsonMember(String, { name: 'pubsub-topic' })
   pubsubTopic?: string
 }
 
@@ -134,14 +144,14 @@ export class DaemonAnchorConfig {
    * URL of the Ceramic Anchor Service to send anchor requests to.
    * When specifying in a config file, use the name 'anchor-service-url'.
    */
-  @jsonMember({ name: 'anchor-service-url' })
+  @jsonMember(String, { name: 'anchor-service-url' })
   anchorServiceUrl?: string
 
   /**
    * Ethereum RPC URL that can be used to create or query ethereum transactions.
    * When specifying in a config file, use the name 'ethereum-rpc-url'.
    */
-  @jsonMember({ name: 'ethereum-rpc-url' })
+  @jsonMember(String, { name: 'ethereum-rpc-url' })
   ethereumRpcUrl?: string
 }
 
@@ -154,7 +164,7 @@ export class DaemonCeramicNodeConfig {
   /**
    * Whether to run the Ceramic node in read-only gateway mode.
    */
-  @jsonMember
+  @jsonMember(Boolean)
   gateway?: boolean
 
   /**
@@ -162,14 +172,14 @@ export class DaemonCeramicNodeConfig {
    * to set this.
    * When specifying in a config file, use the name 'sync-override'.
    */
-  @jsonMember({ name: 'sync-override' })
+  @jsonMember(String, { name: 'sync-override' })
   syncOverride?: string
 
   /**
    * If set to false, disables stream validation. Most users should never set this.
    * When specifying in a config file, use the name 'validate-streams'.
    */
-  @jsonMember({ name: 'validate-streams' })
+  @jsonMember(Boolean, { name: 'validate-streams' })
   validateStreams?: boolean
 }
 
@@ -184,21 +194,21 @@ export class DaemonLoggerConfig {
    * be written.
    * When specifying in a config file, use the name 'log-directory'.
    */
-  @jsonMember({ name: 'log-directory' })
+  @jsonMember(String, { name: 'log-directory' })
   logDirectory?: string
 
   /**
    * Log level. Defaults to 2. Lower numbers are more verbose.
    * When specifying in a config file, use the name 'log-level'.
    */
-  @jsonMember({ name: 'log-level' })
+  @jsonMember(Number, { name: 'log-level' })
   logLevel?: number
 
   /**
    * Controls whether logs get persisted to the file system.
    * When specifying in a config file, use the name 'log-to-files'.
    */
-  @jsonMember({ name: 'log-to-files' })
+  @jsonMember(Boolean, { name: 'log-to-files' })
   logToFiles?: boolean
 }
 
@@ -211,45 +221,45 @@ export class DaemonConfig {
   /**
    * Options related to anchoring
    */
-  @jsonMember
+  @jsonMember(DaemonAnchorConfig)
   anchor: DaemonAnchorConfig
 
   /**
    * Options related to the HTTP API server.
    * When specifying in a config file, use the name 'http-api'.
    */
-  @jsonMember({ name: 'http-api' })
+  @jsonMember(DaemonHTTPApiConfig, { name: 'http-api' })
   httpApi: DaemonHTTPApiConfig
 
   /**
    * Options related to IPFS.
    */
-  @jsonMember
+  @jsonMember(DaemonIpfsConfig)
   ipfs: DaemonIpfsConfig
 
   /**
    * Options related to logging.
    */
-  @jsonMember
+  @jsonMember(DaemonLoggerConfig)
   logger: DaemonLoggerConfig
 
   /**
    * Options related to the Ceramic network to connect to.
    */
-  @jsonMember
+  @jsonMember(DaemonCeramicNetworkConfig)
   network: DaemonCeramicNetworkConfig
 
   /**
    * Miscellaneous options for behaviors of the underlying Ceramic node.
    */
-  @jsonMember
+  @jsonMember(DaemonCeramicNodeConfig)
   node: DaemonCeramicNodeConfig
 
   /**
    * Options related to the state store.
    * When specifying in a config file, use the name 'state-store'.
    */
-  @jsonMember({ name: 'state-store' })
+  @jsonMember(DaemonStateStoreConfig, { name: 'state-store' })
   stateStore: DaemonStateStoreConfig
 
   /**
@@ -257,13 +267,13 @@ export class DaemonConfig {
    * a parsed DaemonConfig object.  Throws on any parsing error.
    * @param jsonString
    */
-  static parseConfigFromString(jsonString: string): DaemonConfig {
+  static fromString(jsonString: string): DaemonConfig {
     const jsonObject = JSON.parse(jsonString)
 
-    return this.parseConfigFromObject(jsonObject)
+    return this.fromObject(jsonObject)
   }
 
-  static parseConfigFromObject(json: Record<string, any>): DaemonConfig {
+  static fromObject(json: Record<string, any>): DaemonConfig {
     const serializer = new TypedJSON(DaemonConfig, {
       errorHandler: (err) => {
         throw err

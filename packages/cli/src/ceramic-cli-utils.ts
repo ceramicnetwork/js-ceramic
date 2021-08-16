@@ -25,7 +25,7 @@ const DEFAULT_CLI_CONFIG_FILENAME = 'client.config.json'
 const LEGACY_CLI_CONFIG_FILENAME = 'config.json' // todo(1615): Remove this backwards compatibility support
 const DEFAULT_CONFIG_PATH = path.join(os.homedir(), '.ceramic')
 
-const DEFAULT_DAEMON_CONFIG = DaemonConfig.parseConfigFromObject({
+const DEFAULT_DAEMON_CONFIG = DaemonConfig.fromObject({
   anchor: {},
   'http-api': { 'cors-allowed-origins': [new RegExp('.*')] },
   ipfs: { mode: IpfsMode.BUNDLED },
@@ -562,7 +562,7 @@ export class CeramicCliUtils {
     }
 
     const fileContents = await fs.readFile(fullDaemonConfigPath, { encoding: 'utf8' })
-    return DaemonConfig.parseConfigFromString(fileContents)
+    return DaemonConfig.fromString(fileContents)
   }
 
   /**
