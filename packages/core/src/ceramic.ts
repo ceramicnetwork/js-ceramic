@@ -504,24 +504,29 @@ class Ceramic implements CeramicApi {
    * @param restoreStreams - Controls whether we attempt to load pinned stream state into memory at startup
    */
   async _init(doPeerDiscovery: boolean, restoreStreams: boolean): Promise<void> {
-    if (doPeerDiscovery) {
-      await this._ipfsTopology.start()
-    }
+    try {
+      if (doPeerDiscovery) {
+        await this._ipfsTopology.start()
+      }
 
-    if (!this._gateway) {
-      await this.context.anchorService.init()
-      await this._loadSupportedChains()
-      this._logger.imp(
-        `Connected to anchor service '${
-          this.context.anchorService.url
-        }' with supported anchor chains ['${this._supportedChains.join("','")}']`
-      )
-    }
+      if (!this._gateway) {
+        await this.context.anchorService.init()
+        await this._loadSupportedChains()
+        this._logger.imp(
+          `Connected to anchor service '${
+            this.context.anchorService.url
+          }' with supported anchor chains ['${this._supportedChains.join("','")}']`
+        )
+      }
 
-    await this._anchorValidator.init(this._supportedChains ? this._supportedChains[0] : null)
+      await this._anchorValidator.init(this._supportedChains ? this._supportedChains[0] : null)
 
-    if (restoreStreams) {
-      this.restoreStreams()
+      if (restoreStreams) {
+        this.restoreStreams()
+      }
+    } catch (err) {
+      await this.close()
+      throw err
     }
   }
 
