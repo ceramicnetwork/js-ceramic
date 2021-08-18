@@ -34,7 +34,7 @@ export interface DaemonConfig {
   ipfsHost?: string
   port?: number
   hostname?: string
-  corsAllowedOrigins?: string | RegExp[]
+  corsAllowedOrigins?: RegExp[]
 
   ethereumRpcUrl?: string
   anchorServiceUrl?: string
