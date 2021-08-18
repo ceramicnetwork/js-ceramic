@@ -4,12 +4,13 @@ import * as tmp from 'tmp-promise'
 import { createIPFS } from './create-ipfs'
 import Ceramic from '@ceramicnetwork/core'
 import * as random from '@stablelib/random'
-import { makeCeramicConfig, CeramicDaemon } from '../ceramic-daemon'
+import { CeramicDaemon, makeCeramicConfig } from '../ceramic-daemon'
 import CeramicClient from '@ceramicnetwork/http-client'
 import { makeDID } from './make-did'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import * as path from 'path'
 import * as fs from 'fs'
+import { DaemonConfig, StateStoreMode } from '../daemon-config'
 
 const TOPIC = `/${random.randomString(10)}`
 const SEED = 'Hello, crypto!'
@@ -32,30 +33,25 @@ beforeAll(async () => {
   tmpFolder = await tmp.dir({ unsafeCleanup: true })
   ipfs = await createIPFS(tmpFolder.path)
   const stateStoreDirectory = tmpFolder.path
-  core = await Ceramic.create(
-    ipfs,
-    makeCeramicConfig({
-      pubsubTopic: TOPIC,
-      stateStoreDirectory,
-      // @ts-ignore
-      anchorOnRequest: false,
-      loggerConfig: {
-        logToFiles: true,
-        logDirectory: `${stateStoreDirectory}`,
-        logLevel: LogLevel.debug,
-      },
-    })
-  )
   const daemonPort = await getPort()
-  daemon = new CeramicDaemon(core, {
-    port: daemonPort,
-    corsAllowedOrigins: [/.*/],
-    loggerConfig: {
-      logToFiles: true,
-      logDirectory: `${stateStoreDirectory}`,
-      logLevel: LogLevel.debug,
+
+  const daemonConfig = DaemonConfig.fromObject({
+    anchor: {},
+    ipfs: {},
+    network: { 'pubsub-topic': TOPIC },
+    'state-store': { mode: StateStoreMode.FS, 'local-directory': stateStoreDirectory },
+    'http-api': { port: daemonPort, corsAllowedOrigins: ['.*'] },
+    node: {},
+    logger: {
+      'log-to-files': true,
+      'log-directory': `${stateStoreDirectory}`,
+      'log-level': LogLevel.debug,
     },
   })
+
+  const ceramicConfig = makeCeramicConfig(daemonConfig)
+  core = await Ceramic.create(ipfs, ceramicConfig)
+  daemon = new CeramicDaemon(core, daemonConfig)
   await daemon.listen()
   const apiUrl = `http://localhost:${daemonPort}`
   client = new CeramicClient(apiUrl, { syncInterval: 500 })

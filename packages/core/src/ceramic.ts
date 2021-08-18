@@ -44,9 +44,6 @@ import { streamFromState } from './state-management/stream-from-state'
 import { ConflictResolution } from './conflict-resolution'
 import EthereumAnchorValidator from './anchor/ethereum/ethereum-anchor-validator'
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const packageJson = require('../package.json')
-
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const IPFS_GET_TIMEOUT = 60000 // 1 minute
 const TESTING = process.env.NODE_ENV == 'test'
@@ -375,23 +372,10 @@ class Ceramic implements CeramicApi {
     const logger = loggerProvider.getDiagnosticsLogger()
     const pubsubLogger = loggerProvider.makeServiceLogger('pubsub')
 
-    logger.imp(
-      `Starting Ceramic node at version ${packageJson.version} with config: \n${JSON.stringify(
-        this._cleanupConfigForLogging(config),
-        null,
-        2
-      )}`
-    )
-
     const networkOptions = Ceramic._generateNetworkOptions(config)
-    logger.imp(
-      `Connecting to ceramic network '${networkOptions.name}' using pubsub topic '${networkOptions.pubsubTopic}'`
-    )
 
     let anchorService = null
-    if (config.gateway) {
-      logger.warn(`Starting in read-only gateway mode. All write operations will fail`)
-    } else {
+    if (!config.gateway) {
       const anchorServiceUrl =
         config.anchorServiceUrl || DEFAULT_ANCHOR_SERVICE_URLS[networkOptions.name]
 
@@ -458,28 +442,6 @@ class Ceramic implements CeramicApi {
   }
 
   /**
-   * Takes a CeramicConfig and returns an object that can be logged containing the relevant
-   * properties of the config, but with complex objects removed or replaced with strings or
-   * simple objects containing their relevant pieces.
-   *
-   * @param config
-   */
-  static _cleanupConfigForLogging(config: CeramicConfig): Record<string, any> {
-    const configCopy = { ...config }
-
-    const loggerConfig = config.loggerProvider?.config
-
-    delete configCopy.pinningBackends
-    delete configCopy.loggerProvider
-
-    if (loggerConfig) {
-      configCopy.loggerConfig = loggerConfig
-    }
-
-    return configCopy
-  }
-
-  /**
    * Create Ceramic instance
    * @param ipfs - IPFS instance
    * @param config - Ceramic configuration
@@ -505,6 +467,14 @@ class Ceramic implements CeramicApi {
    */
   async _init(doPeerDiscovery: boolean, restoreStreams: boolean): Promise<void> {
     try {
+      this._logger.imp(
+        `Connecting to ceramic network '${this._networkOptions.name}' using pubsub topic '${this._networkOptions.pubsubTopic}'`
+      )
+
+      if (this._gateway) {
+        this._logger.warn(`Starting in read-only gateway mode. All write operations will fail`)
+      }
+
       if (doPeerDiscovery) {
         await this._ipfsTopology.start()
       }

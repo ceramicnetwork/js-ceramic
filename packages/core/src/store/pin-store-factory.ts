@@ -8,7 +8,7 @@ import path from 'path'
 import os from 'os'
 import { IpfsPinning } from '@ceramicnetwork/pinning-ipfs-backend'
 
-const DEFAULT_STATE_STORE_DIRECTORY = path.join(os.homedir(), '.ceramic', 'statestore')
+export const DEFAULT_STATE_STORE_DIRECTORY = path.join(os.homedir(), '.ceramic', 'statestore')
 const IPFS_GET_TIMEOUT = 60000 // 1 minute
 
 export type Props = {

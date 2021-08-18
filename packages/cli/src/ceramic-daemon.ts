@@ -1,15 +1,14 @@
 import express, { Request, Response } from 'express'
-import Ceramic from '@ceramicnetwork/core'
 import type { CeramicConfig } from '@ceramicnetwork/core'
+import Ceramic from '@ceramicnetwork/core'
 import { RotatingFileStream } from '@ceramicnetwork/logger'
 import { buildIpfsConnection } from './build-ipfs-connection.util'
 import { S3StateStore } from './s3-state-store'
 import {
-  StreamUtils,
-  MultiQuery,
-  LoggerConfig,
-  LoggerProvider,
   DiagnosticsLogger,
+  LoggerProvider,
+  MultiQuery,
+  StreamUtils,
   SyncOptions,
 } from '@ceramicnetwork/common'
 import StreamID, { StreamType } from '@ceramicnetwork/streamid'
@@ -23,32 +22,12 @@ import { errorHandler } from './daemon/error-handler'
 import { addAsync, ExpressWithAsync, Router } from '@awaitjs/express'
 import { logRequests } from './daemon/log-requests'
 import type { Server } from 'http'
+import { DaemonConfig, StateStoreMode } from './daemon-config'
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const packageJson = require('../package.json')
 
 const DEFAULT_HOSTNAME = '0.0.0.0'
 const DEFAULT_PORT = 7007
-
-/**
- * Daemon create options
- */
-export interface DaemonConfig {
-  ipfsHost?: string
-  port?: number
-  hostname?: string
-  corsAllowedOrigins?: RegExp[]
-
-  ethereumRpcUrl?: string
-  anchorServiceUrl?: string
-  stateStoreDirectory?: string
-  s3StateStoreBucket?: string
-
-  validateStreams?: boolean
-  ipfsPinningEndpoints?: string[]
-  gateway?: boolean
-  loggerConfig?: LoggerConfig
-  network?: string
-  pubsubTopic?: string
-  syncOverride?: SyncOptions
-}
 
 interface MultiQueryWithDocId extends MultiQuery {
   docId?: string
@@ -58,21 +37,30 @@ interface MultiQueries {
   queries: Array<MultiQueryWithDocId>
 }
 
+const SYNC_OPTIONS_MAP = {
+  'prefer-cache': SyncOptions.PREFER_CACHE,
+  'sync-always': SyncOptions.SYNC_ALWAYS,
+  'never-sync': SyncOptions.NEVER_SYNC,
+}
+
 export function makeCeramicConfig(opts: DaemonConfig): CeramicConfig {
-  const loggerProvider = new LoggerProvider(opts.loggerConfig, (logPath: string) => {
+  const loggerProvider = new LoggerProvider(opts.logger, (logPath: string) => {
     return new RotatingFileStream(logPath, true)
   })
+
   const ceramicConfig: CeramicConfig = {
     loggerProvider,
-    gateway: opts.gateway || false,
-    anchorServiceUrl: opts.anchorServiceUrl,
-    ethereumRpcUrl: opts.ethereumRpcUrl,
-    ipfsPinningEndpoints: opts.ipfsPinningEndpoints,
-    networkName: opts.network,
-    pubsubTopic: opts.pubsubTopic,
-    stateStoreDirectory: opts.stateStoreDirectory,
-    validateStreams: opts.validateStreams,
-    syncOverride: opts.syncOverride,
+    gateway: opts.node.gateway || false,
+    anchorServiceUrl: opts.anchor.anchorServiceUrl,
+    ethereumRpcUrl: opts.anchor.ethereumRpcUrl,
+    ipfsPinningEndpoints: opts.ipfs.pinningEndpoints,
+    networkName: opts.network.name,
+    pubsubTopic: opts.network.pubsubTopic,
+    validateStreams: opts.node.validateStreams,
+    syncOverride: SYNC_OPTIONS_MAP[opts.node.syncOverride],
+  }
+  if (opts.stateStore?.mode == StateStoreMode.FS) {
+    ceramicConfig.stateStoreDirectory = opts.stateStore.localDirectory
   }
 
   return ceramicConfig
@@ -131,17 +119,17 @@ export class CeramicDaemon {
 
   constructor(public ceramic: Ceramic, private readonly opts: DaemonConfig) {
     this.diagnosticsLogger = ceramic.loggerProvider.getDiagnosticsLogger()
-    this.port = this.opts.port || DEFAULT_PORT
-    this.hostname = this.opts.hostname || DEFAULT_HOSTNAME
+    this.port = this.opts.httpApi?.port || DEFAULT_PORT
+    this.hostname = this.opts.httpApi?.hostname || DEFAULT_HOSTNAME
 
     this.app = addAsync(express())
     this.app.set('trust proxy', true)
     this.app.use(express.json({ limit: '1mb' }))
-    this.app.use(cors({ origin: opts.corsAllowedOrigins }))
+    this.app.use(cors({ origin: opts.httpApi?.corsAllowedOrigins }))
 
     this.app.use(logRequests(ceramic.loggerProvider))
 
-    this.registerAPIPaths(this.app, opts.gateway)
+    this.registerAPIPaths(this.app, opts.node?.gateway)
 
     this.app.use(errorHandler(this.diagnosticsLogger))
   }
@@ -164,15 +152,25 @@ export class CeramicDaemon {
     const ceramicConfig = makeCeramicConfig(opts)
 
     const ipfs = await buildIpfsConnection(
-      opts.network,
+      opts.ipfs.mode,
+      opts.network?.name,
       ceramicConfig.loggerProvider.getDiagnosticsLogger(),
-      opts.ipfsHost
+      opts.ipfs?.host
     )
 
     const [modules, params] = Ceramic._processConfig(ipfs, ceramicConfig)
+    modules.loggerProvider
+      .getDiagnosticsLogger()
+      .imp(
+        `Starting Ceramic Daemon at version ${packageJson.version} with config: \n${JSON.stringify(
+          opts,
+          null,
+          2
+        )}`
+      )
 
-    if (opts.s3StateStoreBucket) {
-      const s3StateStore = new S3StateStore(opts.s3StateStoreBucket)
+    if (opts.stateStore?.mode == StateStoreMode.S3) {
+      const s3StateStore = new S3StateStore(opts.stateStore?.s3Bucket)
       modules.pinStoreFactory.setStateStore(s3StateStore)
     }
 

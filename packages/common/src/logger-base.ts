@@ -135,9 +135,24 @@ export interface FileLoggerFactory {
   (logPath: string): WriteableStream
 }
 
+/**
+ * Configuration options related to logging.
+ */
 export interface LoggerConfig {
+  /**
+   * If 'logToFiles' is true, this contains the path on the local filesystem where log files will
+   * be written.
+   */
   logDirectory?: string
+
+  /**
+   * Log level. Defaults to 2. Lower numbers are more verbose.
+   */
   logLevel?: LogLevel
+
+  /**
+   * Controls whether logs get persisted to the file system.
+   */
   logToFiles?: boolean
 }
 

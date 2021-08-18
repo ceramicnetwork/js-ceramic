@@ -11,6 +11,7 @@ import StreamID from '@ceramicnetwork/streamid'
 import getPort from 'get-port'
 import { createIPFS } from './create-ipfs'
 import { makeDID } from './make-did'
+import { DaemonConfig } from '../daemon-config'
 
 const seed = 'SEED'
 const TOPIC = '/ceramic'
@@ -68,7 +69,7 @@ describe('Ceramic interop: core <> http-client', () => {
     core = await makeCeramicCore(ipfs, tmpFolder.path)
     const port = await getPort()
     const apiUrl = 'http://localhost:' + port
-    daemon = new CeramicDaemon(core, { port })
+    daemon = new CeramicDaemon(core, DaemonConfig.fromObject({ 'http-api': { port } }))
     await daemon.listen()
     client = new CeramicClient(apiUrl, { syncInterval: 500 })
 

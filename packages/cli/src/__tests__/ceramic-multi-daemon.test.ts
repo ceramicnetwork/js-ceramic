@@ -8,6 +8,7 @@ import { TileDocument } from '@ceramicnetwork/stream-tile'
 import getPort from 'get-port'
 import { createIPFS } from './create-ipfs'
 import { makeDID } from './make-did'
+import { DaemonConfig } from '../daemon-config'
 
 const seed = 'SEED'
 const TOPIC = '/ceramic'
@@ -50,7 +51,6 @@ describe('Ceramic interop between multiple daemons and http clients', () => {
   beforeAll(async () => {
     tmpFolder1 = await tmp.dir({ unsafeCleanup: true })
     tmpFolder2 = await tmp.dir({ unsafeCleanup: true })
-
     ;[ipfs1, ipfs2] = await Promise.all(
       [tmpFolder1, tmpFolder2].map((tmpFolder) => createIPFS(tmpFolder.path))
     )
@@ -69,9 +69,9 @@ describe('Ceramic interop between multiple daemons and http clients', () => {
     core2 = await makeCeramicCore(ipfs2, tmpFolder1.path)
     const port1 = await getPort()
     const port2 = await getPort()
-    daemon1 = new CeramicDaemon(core1, { port: port1 })
+    daemon1 = new CeramicDaemon(core1, DaemonConfig.fromObject({ 'http-api': { port: port1 } }))
     await daemon1.listen()
-    daemon2 = new CeramicDaemon(core2, { port: port2 })
+    daemon2 = new CeramicDaemon(core2, DaemonConfig.fromObject({ 'http-api': { port: port2 } }))
     await daemon2.listen()
     client1 = new CeramicClient('http://localhost:' + port1, { syncInterval: 500 })
     client2 = new CeramicClient('http://localhost:' + port2, { syncInterval: 500 })

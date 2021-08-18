@@ -78,11 +78,6 @@ program
       corsAllowedOrigins,
       syncOverride,
     }) => {
-      if (stateStoreDirectory && stateStoreS3Bucket) {
-        throw new Error(
-          'Cannot specify both --state-store-directory and --state-store-s3-bucket. Only one state store - either on local storage or on S3 - can be used at a time'
-        )
-      }
       await CeramicCliUtils.createDaemon(
         config,
         ipfsApi,
