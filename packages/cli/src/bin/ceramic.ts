@@ -49,7 +49,7 @@ program
   )
   .option(
     '--cors-allowed-origins <list>',
-    'Space-separated list of strings and/or regex expressions to set for Access-Control-Allow-Origin . Defaults to all: "*"'
+    'Space-separated list of strings and/or regex expressions to set for Access-Control-Allow-Origin . Defaults to all: ".*"'
   )
   .option(
     '--sync-override <string>',

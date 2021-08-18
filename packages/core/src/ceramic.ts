@@ -478,20 +478,24 @@ class Ceramic implements CeramicApi {
       await this._ipfsTopology.start()
     }
 
-    if (!this._gateway) {
-      await this.context.anchorService.init()
-      await this._loadSupportedChains()
-      this._logger.imp(
-        `Connected to anchor service '${
-          this.context.anchorService.url
-        }' with supported anchor chains ['${this._supportedChains.join("','")}']`
-      )
-    }
+      if (!this._gateway) {
+        await this.context.anchorService.init()
+        await this._loadSupportedChains()
+        this._logger.imp(
+          `Connected to anchor service '${
+            this.context.anchorService.url
+          }' with supported anchor chains ['${this._supportedChains.join("','")}']`
+        )
+      }
 
-    await this._anchorValidator.init(this._supportedChains ? this._supportedChains[0] : null)
+      await this._anchorValidator.init(this._supportedChains ? this._supportedChains[0] : null)
 
-    if (restoreStreams) {
-      this.restoreStreams()
+      if (restoreStreams) {
+        this.restoreStreams()
+      }
+    } catch (err) {
+      await this.close()
+      throw err
     }
   }
 
