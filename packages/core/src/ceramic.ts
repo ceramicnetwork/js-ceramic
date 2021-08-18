@@ -466,17 +466,18 @@ class Ceramic implements CeramicApi {
    * @param restoreStreams - Controls whether we attempt to load pinned stream state into memory at startup
    */
   async _init(doPeerDiscovery: boolean, restoreStreams: boolean): Promise<void> {
-    this._logger.imp(
-      `Connecting to ceramic network '${this._networkOptions.name}' using pubsub topic '${this._networkOptions.pubsubTopic}'`
-    )
+    try {
+      this._logger.imp(
+        `Connecting to ceramic network '${this._networkOptions.name}' using pubsub topic '${this._networkOptions.pubsubTopic}'`
+      )
 
-    if (this._gateway) {
-      this._logger.warn(`Starting in read-only gateway mode. All write operations will fail`)
-    }
+      if (this._gateway) {
+        this._logger.warn(`Starting in read-only gateway mode. All write operations will fail`)
+      }
 
-    if (doPeerDiscovery) {
-      await this._ipfsTopology.start()
-    }
+      if (doPeerDiscovery) {
+        await this._ipfsTopology.start()
+      }
 
       if (!this._gateway) {
         await this.context.anchorService.init()
