@@ -158,9 +158,15 @@ export class DaemonAnchorConfig {
 @jsonObject
 @toJson
 export class DaemonCeramicResolversConfig {
+  /**
+   * Configuration for nft-did-resolver. Its README contains appropriate documentation.
+   */
   @jsonMember(AnyT, { name: 'nft-did-resolver' })
   nftDidResolver?: any
 
+  /**
+   * Configuration for ethr-did-resolver. Its README contains appropriate documentation.
+   */
   @jsonMember(AnyT, { name: 'ethr-did-resolver' })
   ethrDidResolver?: any
 }
@@ -272,6 +278,9 @@ export class DaemonConfig {
   @jsonMember(DaemonStateStoreConfig, { name: 'state-store' })
   stateStore: DaemonStateStoreConfig
 
+  /**
+   * Options related to DID-resolvers.
+   */
   @jsonMember(DaemonCeramicResolversConfig, { name: 'did-resolvers' })
   didResolvers?: DaemonCeramicResolversConfig
 
