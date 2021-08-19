@@ -11,10 +11,6 @@ program
     'The Ethereum RPC URL used for communicating with Ethereum blockchain'
   )
   .option('--anchor-service-api <url>', 'The anchor service URL to use')
-  .option(
-    '--validate-streams',
-    'Validate streams according to their schemas. It is enabled by default'
-  )
   .option('--ipfs-pinning-endpoint <url...>', 'Ipfs pinning endpoints')
   .option(
     '--state-store-directory <string>',
@@ -40,14 +36,6 @@ program
   )
   .option('--pubsubTopic <string>', 'Pub/sub topic to use for protocol messages')
   .option(
-    '--max-healthy-cpu <decimal>',
-    'Fraction of total CPU usage considered healthy. Defaults to 0.7'
-  )
-  .option(
-    '--max-healthy-memory <decimal>',
-    'Fraction of total memory usage considered healthy. Defaults to 0.7'
-  )
-  .option(
     '--cors-allowed-origins <list>',
     'Space-separated list of strings and/or regex expressions to set for Access-Control-Allow-Origin . Defaults to all: ".*"'
   )
@@ -62,7 +50,6 @@ program
       ipfsApi,
       ethereumRpc,
       anchorServiceApi,
-      validateStreams,
       ipfsPinningEndpoint,
       stateStoreDirectory,
       stateStoreS3Bucket,
@@ -83,7 +70,6 @@ program
         ipfsApi,
         ethereumRpc,
         anchorServiceApi,
-        validateStreams,
         ipfsPinningEndpoint,
         stateStoreDirectory,
         stateStoreS3Bucket,

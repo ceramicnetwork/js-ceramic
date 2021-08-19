@@ -58,7 +58,6 @@ export class CeramicCliUtils {
    * @param ipfsApi - IPFS api
    * @param ethereumRpc - Ethereum RPC URL
    * @param anchorServiceApi - Anchor service API URL
-   * @param validateStreams - Validate streams according to schemas or not
    * @param ipfsPinningEndpoints - Ipfs pinning endpoints
    * @param stateStoreDirectory - Path to the directory that will be used for storing pinned stream state
    * @param stateStoreS3Bucket - S3 bucket name for storing pinned stream state
@@ -79,7 +78,6 @@ export class CeramicCliUtils {
     ipfsApi: string,
     ethereumRpc: string,
     anchorServiceApi: string,
-    validateStreams: boolean,
     ipfsPinningEndpoints: string[],
     stateStoreDirectory: string,
     stateStoreS3Bucket: string,
