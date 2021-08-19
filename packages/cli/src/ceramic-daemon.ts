@@ -182,17 +182,11 @@ export class CeramicDaemon {
         ...ThreeIdResolver.getResolver(ceramic),
         ...NftDidResolver.getResolver({
           ceramic: ceramic,
-          ...opts.resolvers?.nftDidResolver
+          ...opts.didResolvers?.nftDidResolver,
         }),
-        ...(ceramicConfig.ethereumRpcUrl &&
-          EthrDidResolver.getResolver({
-            networks: [
-              {
-                name: 'mainnet',
-                rpcUrl: ceramicConfig.ethereumRpcUrl,
-              },
-            ],
-          })),
+        ...(opts.didResolvers?.ethrDidResolver?.networks &&
+          opts.didResolvers?.ethrDidResolver?.networks.length > 0 &&
+          EthrDidResolver.getResolver(opts.didResolvers.ethrDidResolver)),
       },
     })
     await ceramic.setDID(did)

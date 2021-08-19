@@ -158,8 +158,11 @@ export class DaemonAnchorConfig {
 @jsonObject
 @toJson
 export class DaemonCeramicResolversConfig {
-  @jsonMember(AnyT, {name: 'nft-did-resolver'})
+  @jsonMember(AnyT, { name: 'nft-did-resolver' })
   nftDidResolver?: any
+
+  @jsonMember(AnyT, { name: 'ethr-did-resolver' })
+  ethrDidResolver?: any
 }
 
 /**
@@ -269,8 +272,8 @@ export class DaemonConfig {
   @jsonMember(DaemonStateStoreConfig, { name: 'state-store' })
   stateStore: DaemonStateStoreConfig
 
-  @jsonMember(DaemonCeramicResolversConfig)
-  resolvers?: DaemonCeramicResolversConfig;
+  @jsonMember(DaemonCeramicResolversConfig, { name: 'did-resolvers' })
+  didResolvers?: DaemonCeramicResolversConfig
 
   /**
    * Parses the given json string containing the contents of the config file and returns
