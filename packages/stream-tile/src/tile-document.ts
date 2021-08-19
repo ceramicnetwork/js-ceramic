@@ -125,6 +125,10 @@ export class TileDocument<T = Record<string, any>> extends Stream {
 
   private _isReadOnly = false
 
+  get content(): T {
+    return super.content
+  }
+
   /**
    * Creates a Tile document.
    * @param ceramic - Instance of CeramicAPI used to communicate with the Ceramic network
