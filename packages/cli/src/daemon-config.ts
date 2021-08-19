@@ -263,7 +263,7 @@ export class DaemonConfig {
   stateStore: DaemonStateStoreConfig
 
   @jsonMember(AnyT)
-  resolvers: any;
+  resolvers?: any;
 
   /**
    * Parses the given json string containing the contents of the config file and returns
