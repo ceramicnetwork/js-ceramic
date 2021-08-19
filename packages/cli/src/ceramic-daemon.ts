@@ -176,13 +176,13 @@ export class CeramicDaemon {
 
     const ceramic = new Ceramic(modules, params)
     await ceramic._init(true, true)
-
     const did = new DID({
       resolver: {
         ...KeyDidResolver.getResolver(),
         ...ThreeIdResolver.getResolver(ceramic),
         ...NftDidResolver.getResolver({
           ceramic: ceramic,
+          ...opts.resolvers['nft-did-resolver']
         }),
         ...(ceramicConfig.ethereumRpcUrl &&
           EthrDidResolver.getResolver({
