@@ -23,6 +23,7 @@ import { addAsync, ExpressWithAsync, Router } from '@awaitjs/express'
 import { logRequests } from './daemon/log-requests'
 import type { Server } from 'http'
 import { DaemonConfig, StateStoreMode } from './daemon-config'
+import type { ResolverRegistry } from 'did-resolver'
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const packageJson = require('../package.json')
 
@@ -108,6 +109,44 @@ function upconvertLegacySyncOption(opts: Record<string, any> | undefined) {
 }
 
 /**
+ * Prepare DID resolvers to use in the daemon.
+ */
+function makeResolvers(
+  ceramic: Ceramic,
+  ceramicConfig: CeramicConfig,
+  opts: DaemonConfig
+): ResolverRegistry {
+  let result = {
+    ...KeyDidResolver.getResolver(),
+    ...ThreeIdResolver.getResolver(ceramic),
+    ...NftDidResolver.getResolver({
+      ceramic: ceramic,
+      ...opts.didResolvers?.nftDidResolver,
+    }),
+  }
+  if (
+    opts.didResolvers?.ethrDidResolver?.networks &&
+    opts.didResolvers?.ethrDidResolver?.networks.length > 0
+  ) {
+    // Custom ethr-did-resolver configuration passed
+    result = { ...result, ...EthrDidResolver.getResolver(opts.didResolvers.ethrDidResolver) }
+  } else if (ceramicConfig.ethereumRpcUrl) {
+    // Use default network from ceramic config's ethereumRpcUrl
+    result = {
+      ...result,
+      ...EthrDidResolver.getResolver({
+        networks: [
+          {
+            rpcUrl: ceramicConfig.ethereumRpcUrl,
+          },
+        ],
+      }),
+    }
+  }
+  return result
+}
+
+/**
  * Ceramic daemon implementation
  */
 export class CeramicDaemon {
@@ -176,19 +215,7 @@ export class CeramicDaemon {
 
     const ceramic = new Ceramic(modules, params)
     await ceramic._init(true, true)
-    const did = new DID({
-      resolver: {
-        ...KeyDidResolver.getResolver(),
-        ...ThreeIdResolver.getResolver(ceramic),
-        ...NftDidResolver.getResolver({
-          ceramic: ceramic,
-          ...opts.didResolvers?.nftDidResolver,
-        }),
-        ...(opts.didResolvers?.ethrDidResolver?.networks &&
-          opts.didResolvers?.ethrDidResolver?.networks.length > 0 &&
-          EthrDidResolver.getResolver(opts.didResolvers.ethrDidResolver)),
-      },
-    })
+    const did = new DID({ resolver: makeResolvers(ceramic, ceramicConfig, opts) })
     await ceramic.setDID(did)
 
     const daemon = new CeramicDaemon(ceramic, opts)
