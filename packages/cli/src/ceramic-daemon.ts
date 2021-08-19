@@ -182,7 +182,7 @@ export class CeramicDaemon {
         ...ThreeIdResolver.getResolver(ceramic),
         ...NftDidResolver.getResolver({
           ceramic: ceramic,
-          ...opts.resolvers?.['nft-did-resolver']
+          ...opts.resolvers?.nftDidResolver
         }),
         ...(ceramicConfig.ethereumRpcUrl &&
           EthrDidResolver.getResolver({

@@ -155,6 +155,13 @@ export class DaemonAnchorConfig {
   ethereumRpcUrl?: string
 }
 
+@jsonObject
+@toJson
+export class DaemonCeramicResolversConfig {
+  @jsonMember(AnyT, {name: 'nft-did-resolver'})
+  nftDidResolver?: any
+}
+
 /**
  * Ceramic Daemon options for configuring miscellaneous behaviors of the underlying Ceramic node.
  */
@@ -262,8 +269,8 @@ export class DaemonConfig {
   @jsonMember(DaemonStateStoreConfig, { name: 'state-store' })
   stateStore: DaemonStateStoreConfig
 
-  @jsonMember(AnyT)
-  resolvers?: any;
+  @jsonMember(DaemonCeramicResolversConfig)
+  resolvers?: DaemonCeramicResolversConfig;
 
   /**
    * Parses the given json string containing the contents of the config file and returns
