@@ -157,15 +157,19 @@ export class DaemonAnchorConfig {
 
 @jsonObject
 @toJson
-export class DaemonCeramicResolversConfig {
+export class DaemonDidResolversConfig {
   /**
    * Configuration for nft-did-resolver. Its README contains appropriate documentation.
+   *
+   * Note: When specifying in a config file, use the name 'nft-did-resolver'.
    */
   @jsonMember(AnyT, { name: 'nft-did-resolver' })
   nftDidResolver?: any
 
   /**
    * Configuration for ethr-did-resolver. Its README contains appropriate documentation.
+   *
+   * Note: When specifying in a config file, use the name 'ethr-did-resolver'.
    */
   @jsonMember(AnyT, { name: 'ethr-did-resolver' })
   ethrDidResolver?: any
@@ -281,8 +285,8 @@ export class DaemonConfig {
   /**
    * Options related to DID-resolvers.
    */
-  @jsonMember(DaemonCeramicResolversConfig, { name: 'did-resolvers' })
-  didResolvers?: DaemonCeramicResolversConfig
+  @jsonMember(DaemonDidResolversConfig, { name: 'did-resolvers' })
+  didResolvers?: DaemonDidResolversConfig
 
   /**
    * Parses the given json string containing the contents of the config file and returns
