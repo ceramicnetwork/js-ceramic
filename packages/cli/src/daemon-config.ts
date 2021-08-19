@@ -161,7 +161,7 @@ export class DaemonDidResolversConfig {
   /**
    * Configuration for nft-did-resolver. Its README contains appropriate documentation.
    *
-   * Note: When specifying in a config file, use the name 'nft-did-resolver'.
+   * When specifying in a config file, use the name 'nft-did-resolver'.
    */
   @jsonMember(AnyT, { name: 'nft-did-resolver' })
   nftDidResolver?: any
@@ -169,7 +169,7 @@ export class DaemonDidResolversConfig {
   /**
    * Configuration for ethr-did-resolver. Its README contains appropriate documentation.
    *
-   * Note: When specifying in a config file, use the name 'ethr-did-resolver'.
+   * When specifying in a config file, use the name 'ethr-did-resolver'.
    */
   @jsonMember(AnyT, { name: 'ethr-did-resolver' })
   ethrDidResolver?: any
