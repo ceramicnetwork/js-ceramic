@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.4.0-rc.1](/compare/@ceramicnetwork/core@1.4.0-rc.0...@ceramicnetwork/core@1.4.0-rc.1) (2021-08-19)
+
+
+### Bug Fixes
+
+* **core:** Periodically publish keepalive pubsub message (#1634) 79803ef, closes #1634
+
+
+### Features
+
+* **cli:** Add hierarchy to daemon config (#1633) 138b49d, closes #1633
+
+
+
+
+
 # [1.4.0-rc.0](/compare/@ceramicnetwork/core@1.3.1...@ceramicnetwork/core@1.4.0-rc.0) (2021-08-13)
 
 

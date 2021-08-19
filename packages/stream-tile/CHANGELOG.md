@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.2.0-rc.1](/compare/@ceramicnetwork/stream-tile@1.2.0-rc.0...@ceramicnetwork/stream-tile@1.2.0-rc.1) (2021-08-19)
+
+
+### Bug Fixes
+
+* **stream-tile:** Add override for getting content with type specifier to TileDocument (#1658) 7b4ff52, closes #1658
+
+
+
+
+
 # [1.2.0-rc.0](/compare/@ceramicnetwork/stream-tile@1.1.1...@ceramicnetwork/stream-tile@1.2.0-rc.0) (2021-08-13)
 
 

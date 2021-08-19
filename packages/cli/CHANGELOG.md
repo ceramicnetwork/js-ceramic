@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.3.0-rc.1](/compare/@ceramicnetwork/cli@1.3.0-rc.0...@ceramicnetwork/cli@1.3.0-rc.1) (2021-08-19)
+
+
+### Features
+
+* configure nft-did-resolver via config file (#1656) 78baf4d, closes #1656
+* **cli:** Add hierarchy to daemon config (#1633) 138b49d, closes #1633
+
+
+
+
+
 # [1.3.0-rc.0](/compare/@ceramicnetwork/cli@1.2.1...@ceramicnetwork/cli@1.3.0-rc.0) (2021-08-13)
 
 
