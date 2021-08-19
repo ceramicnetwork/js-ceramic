@@ -33,15 +33,19 @@ export class TaskQueue implements TaskQueueLike {
   #pq = new PQueue({ concurrency: 1 })
 
   /**
-   * Construct the queue. `onError` is a common error-handler for all the tasks.
-   * It is called when a task errors.
-   * The first parameter is an error object.
-   * The second parameter, if called, would re-add the task to the queue again.
-   * Useful if you know an error indicates another attempt to execute the task is necessary.
+   * Construct the queue.
    *
-   * @param onError - Common error handler.
+   * @param onError - Common error handler for all the tasks, it is called whenever a task errors.
+   *   The first parameter is an error object.
+   *   The second parameter, if called, would re-add the task to the queue again.
+   *   Useful if you know an error indicates another attempt to execute the task is necessary.
+   * @param maxSize - the maximum number of tasks that can be in the queue at the same time.
+   *   If another task is added that would push the queue over the max, an exception is thrown.
    */
-  constructor(private readonly onError: (error: Error, retry: () => void) => void = noop) {}
+  constructor(
+    private readonly onError: (error: Error, retry: () => void) => void = noop,
+    private readonly maxSize: number | undefined = undefined
+  ) {}
 
   /**
    * Size of the queue. Counts both deferred and currently running tasks.
@@ -54,8 +58,7 @@ export class TaskQueue implements TaskQueueLike {
    * Add task to queue. Fire-and-forget semantics.
    */
   add(task, onFinally?): void {
-    this.#pq
-      .add(task)
+    this.run(task)
       .catch((error) => {
         const retry = () => this.add(task, onFinally)
         this.onError(error, retry)
@@ -69,6 +72,9 @@ export class TaskQueue implements TaskQueueLike {
    * Note "fire-and-forget" comment for the `add` method.
    */
   run<T>(task: Task<T>): Promise<T> {
+    if (this.maxSize && this.size >= this.maxSize) {
+      throw new Error(`Cannot add task, max task queue size of ${this.maxSize} exceeded`)
+    }
     return this.#pq.add(task)
   }
 

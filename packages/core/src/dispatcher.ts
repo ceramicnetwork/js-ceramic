@@ -21,12 +21,15 @@ import { Subscription } from 'rxjs'
 import { MessageBus } from './pubsub/message-bus'
 import { LRUMap } from 'lru_map'
 import { PubsubKeepalive } from './pubsub/pubsub-keepalive'
+import { PubsubRateLimit } from './pubsub/pubsub-ratelimit'
 
 const IPFS_GET_RETRIES = 3
 const IPFS_GET_TIMEOUT = 30000 // 30 seconds per retry, 3 retries = 90 seconds total timeout
 const IPFS_MAX_RECORD_SIZE = 256000 // 256 KB
 const IPFS_RESUBSCRIBE_INTERVAL_DELAY = 1000 * 15 // 15 sec
 const MAX_PUBSUB_PUBLISH_INTERVAL = 60 * 1000 // one minute
+const MAX_QUERIES_PER_SECOND = 10
+const MAX_QUEUED_QUERIES = 100
 const IPFS_CACHE_SIZE = 1024 // maximum cache size of 256MB
 
 function messageTypeToString(type: MsgType): string {
@@ -49,7 +52,6 @@ function messageTypeToString(type: MsgType): string {
  */
 export class Dispatcher {
   readonly messageBus: MessageBus
-  readonly pubsub: Pubsub
   readonly dagNodeCache: LRUMap<string, any>
   // Set of IDs for QUERY messages we have sent to the pub/sub topic but not yet heard a
   // corresponding RESPONSE message for. Maps the query ID to the primary StreamID we were querying for.
@@ -60,8 +62,15 @@ export class Dispatcher {
     private readonly _logger: DiagnosticsLogger,
     private readonly _pubsubLogger: ServiceLogger
   ) {
-    this.pubsub = new Pubsub(_ipfs, topic, IPFS_RESUBSCRIBE_INTERVAL_DELAY, _pubsubLogger, _logger)
-    this.messageBus = new MessageBus(new PubsubKeepalive(this.pubsub, MAX_PUBSUB_PUBLISH_INTERVAL))
+    const pubsub = new Pubsub(_ipfs, topic, IPFS_RESUBSCRIBE_INTERVAL_DELAY, _pubsubLogger, _logger)
+    this.messageBus = new MessageBus(
+      new PubsubRateLimit(
+        new PubsubKeepalive(pubsub, MAX_PUBSUB_PUBLISH_INTERVAL),
+        _logger,
+        MAX_QUERIES_PER_SECOND,
+        MAX_QUEUED_QUERIES
+      )
+    )
     this.messageBus.subscribe(this.handleMessage.bind(this))
     this.dagNodeCache = new LRUMap<string, any>(IPFS_CACHE_SIZE)
   }

@@ -1,12 +1,16 @@
 import { Observable, Subscription, interval } from 'rxjs'
 import { KeepaliveMessage, MsgType, PubsubMessage } from './pubsub-message'
 import { Pubsub } from './pubsub'
+import { ObservableWithNext } from './observable-with-next'
 
 /**
  * Wraps an instance of Pubsub and ensures that a pubsub message is generated with some minimum
  * frequency.
  */
-export class PubsubKeepalive extends Observable<PubsubMessage> {
+export class PubsubKeepalive
+  extends Observable<PubsubMessage>
+  implements ObservableWithNext<PubsubMessage>
+{
   private lastPublishedMessageDate: number = Date.now() - this.maxPubsubPublishInterval
 
   /**
@@ -20,7 +24,10 @@ export class PubsubKeepalive extends Observable<PubsubMessage> {
    * @param maxPubsubPublishInterval - the max amount of time that is allowed to pass without
    *   generating a pubsub message.
    */
-  constructor(private readonly pubsub: Pubsub, private readonly maxPubsubPublishInterval: number) {
+  constructor(
+    private readonly pubsub: ObservableWithNext<PubsubMessage>,
+    private readonly maxPubsubPublishInterval: number
+  ) {
     super((subscriber) => {
       pubsub.subscribe(subscriber)
 

@@ -3,6 +3,7 @@ import { Observable, Subject, Subscription, SubscriptionLike, pipe, UnaryFunctio
 import { filter, map, takeUntil, tap } from 'rxjs/operators'
 import { StreamID } from '@ceramicnetwork/streamid'
 import CID from 'cids'
+import { ObservableWithNext } from './observable-with-next'
 
 export const MAX_RESPONSE_INTERVAL = 300 // milliseconds
 
@@ -33,9 +34,7 @@ export class MessageBus extends Observable<PubsubMessage> implements Subscriptio
   private readonly pubsubSubscription: Subscription
   private readonly feed$: Subject<PubsubMessage> = new Subject<PubsubMessage>()
 
-  constructor(
-    readonly pubsub: Observable<PubsubMessage> & { next: (m: PubsubMessage) => Subscription }
-  ) {
+  constructor(readonly pubsub: ObservableWithNext<PubsubMessage>) {
     super((subscriber) => {
       this.feed$.subscribe(subscriber)
     })
