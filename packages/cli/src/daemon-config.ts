@@ -1,5 +1,5 @@
 import 'reflect-metadata'
-import { jsonObject, jsonMember, jsonArrayMember, TypedJSON, toJson } from 'typedjson'
+import { jsonObject, jsonMember, jsonArrayMember, TypedJSON, toJson, AnyT } from 'typedjson'
 
 /**
  * Whether the daemon should start its own bundled in-process ipfs node, or if it should connect
@@ -155,6 +155,26 @@ export class DaemonAnchorConfig {
   ethereumRpcUrl?: string
 }
 
+@jsonObject
+@toJson
+export class DaemonDidResolversConfig {
+  /**
+   * Configuration for nft-did-resolver. Its README contains appropriate documentation.
+   *
+   * When specifying in a config file, use the name 'nft-did-resolver'.
+   */
+  @jsonMember(AnyT, { name: 'nft-did-resolver' })
+  nftDidResolver?: any
+
+  /**
+   * Configuration for ethr-did-resolver. Its README contains appropriate documentation.
+   *
+   * When specifying in a config file, use the name 'ethr-did-resolver'.
+   */
+  @jsonMember(AnyT, { name: 'ethr-did-resolver' })
+  ethrDidResolver?: any
+}
+
 /**
  * Ceramic Daemon options for configuring miscellaneous behaviors of the underlying Ceramic node.
  */
@@ -261,6 +281,12 @@ export class DaemonConfig {
    */
   @jsonMember(DaemonStateStoreConfig, { name: 'state-store' })
   stateStore: DaemonStateStoreConfig
+
+  /**
+   * Options related to DID-resolvers.
+   */
+  @jsonMember(DaemonDidResolversConfig, { name: 'did-resolvers' })
+  didResolvers?: DaemonDidResolversConfig
 
   /**
    * Parses the given json string containing the contents of the config file and returns
