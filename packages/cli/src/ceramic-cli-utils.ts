@@ -56,22 +56,22 @@ export class CeramicCliUtils {
    * Create CeramicDaemon instance
    * @param configFilePath - Path to daemon config file
    * @param ipfsApi - IPFS api
-   * @param ethereumRpc - Ethereum RPC URL
-   * @param anchorServiceApi - Anchor service API URL
-   * @param ipfsPinningEndpoints - Ipfs pinning endpoints
-   * @param stateStoreDirectory - Path to the directory that will be used for storing pinned stream state
-   * @param stateStoreS3Bucket - S3 bucket name for storing pinned stream state
+   * @param ethereumRpc - Ethereum RPC URL. Deprecated, use config file if you want to configure this.
+   * @param anchorServiceApi - Anchor service API URL. Deprecated, use config file if you want to configure this.
+   * @param ipfsPinningEndpoints - Ipfs pinning endpoints. Deprecated, use config file if you want to configure this.
+   * @param stateStoreDirectory - Path to the directory that will be used for storing pinned stream state. Deprecated, use config file if you want to configure this.
+   * @param stateStoreS3Bucket - S3 bucket name for storing pinned stream state. Deprecated, use config file if you want to configure this.
    * @param gateway - read only endpoints available. It is disabled by default
    * @param port - port on which daemon is available. Default is 7007
    * @param hostname - hostname to listen on.
    * @param debug - Enable debug logging level
    * @param verbose - Enable verbose logging
-   * @param logToFiles - Enable writing logs to files
-   * @param logDirectory - Store log files in this directory
+   * @param logToFiles - Enable writing logs to files. Deprecated, use config file if you want to configure this.
+   * @param logDirectory - Store log files in this directory. Deprecated, use config file if you want to configure this.
    * @param network - The Ceramic network to connect to
    * @param pubsubTopic - Pub/sub topic to use for protocol messages.
-   * @param corsAllowedOrigins - Origins for Access-Control-Allow-Origin header. Default is all
-   * @param syncOverride - Global forced mode for syncing all streams. Defaults to "prefer-cache"
+   * @param corsAllowedOrigins - Origins for Access-Control-Allow-Origin header. Default is all. Deprecated, use config file if you want to configure this.
+   * @param syncOverride - Global forced mode for syncing all streams. Defaults to "prefer-cache". Deprecated, use config file if you want to configure this.
    */
   static async createDaemon(
     configFilePath: string,
