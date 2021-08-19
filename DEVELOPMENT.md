@@ -65,6 +65,8 @@ $ git push origin develop
 ```
 The main step that creates the release is `npm run publish:release-candidate`. This creates the release on NPM, as well as making a git commit bumping the version and a git tag and release on github. Make sure to set the [GH_TOKEN](https://github.com/lerna/lerna/tree/master/commands/version#--create-release-type) environment variable and log into npm before you run this command.
 
+After the release, don't forget to make a post in the #releases channel of the Ceramic discord to notify the community about the new release!
+
 ### Regular release
 ```
 export GH_TOKEN=<your github token>       # You need a valid github api token set to create the release on github
@@ -82,3 +84,4 @@ $ git push origin develop
 ```
 The main step that creates the release is `npm run publish:latest`. This creates the release on NPM, as well as making a git commit bumping the version and a git tag and release on github. Make sure to set the [GH_TOKEN](https://github.com/lerna/lerna/tree/master/commands/version#--create-release-type) environment variable and log into npm before you run this command.
 
+After the release, don't forget to make a post in the #releases channel of the Ceramic discord to notify the community about the new release!
