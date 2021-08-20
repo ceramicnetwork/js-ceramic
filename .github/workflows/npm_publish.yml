@@ -57,7 +57,7 @@ jobs:
             DRY_RUN_CMD="--dry-run"
           fi
           npm config set //registry.npmjs.org/:_authToken ${NPM_TOKEN}
-          npm publish:${{ $TAG }} --ignore-scripts $DRY_RUN_CMD
+          npm publish:$TAG --ignore-scripts $DRY_RUN_CMD
       -
         name: Update and push code
         if: ${{ steps.set-vars.outputs.dry-run == 'false' }}
