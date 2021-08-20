@@ -54,7 +54,7 @@ export interface CeramicClientConfig {
 /**
  * Ceramic client implementation
  */
-export default class CeramicClient implements CeramicApi {
+export class CeramicClient implements CeramicApi {
   private readonly _apiUrl: string
   /**
    * _streamCache stores handles to Documents that been handed out. This allows us
@@ -282,3 +282,5 @@ export default class CeramicClient implements CeramicApi {
     this._streamCache.clear()
   }
 }
+
+export default CeramicClient
