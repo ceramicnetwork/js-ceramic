@@ -20,10 +20,10 @@ jobs:
         name: Setup environment
         id: set-vars
         run: |
-          if [[ "${{ github.event.inputs.type }}" == "rc"]]; then
+          if [[ "${{ github.event.inputs.type }}" == "rc" ]]; then
             echo "::set-output name=source-branch::release-candidate"
             echo "::set-output name=tag::release-candidate"
-          elif [[ "${{ github.event.inputs.type }}" == "full"]]; then
+          elif [[ "${{ github.event.inputs.type }}" == "full" ]]; then
             echo "::set-output name=source-branch::master"
             echo "::set-output name=merge-branch::release-candidate"
             echo "::set-output name=tag::latest"
