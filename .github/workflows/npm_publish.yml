@@ -1,0 +1,80 @@
+name: Publish npm packages
+
+on:
+  workflow_dispatch:
+    inputs:
+      type:
+        description: 'Type of publish (one of: rc, full)'
+        required: true
+        default: 'rc'
+      dryrun:
+        description: 'Dry run or actual publish (one of: true, false)'
+        required: true
+        default: 'true'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Setup environment
+        id: set-vars
+        run: |
+          if [[ "${{ github.event.inputs.type }}" == "rc"]]; then
+            echo "::set-output name=source-branch::release-candidate"
+            echo "::set-output name=tag::release-candidate"
+          elif [[ "${{ github.event.inputs.type }}" == "full"]]; then
+            echo "::set-output name=source-branch::master"
+            echo "::set-output name=merge-branch::release-candidate"
+            echo "::set-output name=tag::latest"
+          fi
+          echo "::set-output name=dry-run::${{ github.event.inputs.dryrun }}"
+      -
+        name: Checkout
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ steps.set-vars.outputs.source-branch }}
+      -
+        name: Setup Node
+        uses: actions/setup-node@v1
+        with:
+          node-version: 14
+      -
+        name: Initialize and build code
+        run: npm ci --ignore-scripts # Ignore scripts in dependencies
+      -
+        name: Publish
+        run: npm run build --if-present
+      -
+        name: Publish
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          TAG: ${{ steps.set-vars.outputs.tag }}
+          DRY_RUN: ${{ steps.set-vars.outputs.dry-run }}
+        run: |
+          DRY_RUN_CMD=""
+          if [[ "$DRY_RUN" == "true"]]; then
+            DRY_RUN_CMD="--dry-run"
+          fi
+          npm config set //registry.npmjs.org/:_authToken ${NPM_TOKEN}
+          npm publish:${{ $TAG }} --ignore-scripts $DRY_RUN_CMD
+      -
+        name: Update and push code
+        if: ${{ steps.set-vars.outputs.dry-run == 'false' }}
+        env:
+          SOURCE_BRANCH: ${{ steps.set-vars.outputs.source-branch }}
+          MERGE_BRANCH: ${{ steps.set-vars.outputs.merge-branch }}
+        run: |
+          git config --global user.email "${{ github.actor }@users.noreply.github.com"
+          git config --global user.name "${{ github.actor }"
+
+          if [[ -z "$MERGE_BRANCH" ]]; then
+            git checkout $MERGE_BRANCH
+            git merge origin master
+            git push origin $MERGE_BRANCH
+          fi
+
+          # Always merge and push to `develop`
+          git checkout develop
+          git merge origin $BRANCH
+          git push origin develop
