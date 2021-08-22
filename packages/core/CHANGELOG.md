@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# 1.4.0-rc.2 (2021-08-22)
+
+
+### Bug Fixes
+
+* **ci:** remove flag from npm ci cmd ([b8ca310](https://github.com/ceramicnetwork/js-ceramic/commit/b8ca3102963096626a46a3c78c705da26e977021))
+
+
+
+
+
 # [1.4.0-rc.1](/compare/@ceramicnetwork/core@1.4.0-rc.0...@ceramicnetwork/core@1.4.0-rc.1) (2021-08-19)
 
 

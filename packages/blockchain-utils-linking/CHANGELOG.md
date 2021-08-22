@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## 1.1.2-rc.1 (2021-08-22)
+
+
+### Bug Fixes
+
+* **ci:** remove flag from npm ci cmd ([b8ca310](https://github.com/ceramicnetwork/js-ceramic/commit/b8ca3102963096626a46a3c78c705da26e977021))
+
+
+
+
+
 ## [1.1.2-rc.0](/compare/@ceramicnetwork/blockchain-utils-linking@1.1.1...@ceramicnetwork/blockchain-utils-linking@1.1.2-rc.0) (2021-08-13)
 
 **Note:** Version bump only for package @ceramicnetwork/blockchain-utils-linking
