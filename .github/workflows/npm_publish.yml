@@ -55,7 +55,10 @@ jobs:
       -
         name: Initialize and build code
         run: |
-          npm install && npm run build
+          ls
+          pwd
+          cd js-ceramic
+          npm ci && npm run build
       -
         name: Publish packages to NPM
         env:
@@ -63,12 +66,14 @@ jobs:
           TAG: ${{ steps.set-vars.outputs.tag }}
           DRY_RUN: ${{ steps.set-vars.outputs.dry-run }}
         run: |
+          echo $TAG
+          echo $DRY_RUN
           DRY_RUN_CMD=""
           if [[ "$DRY_RUN" == "true"]]; then
             DRY_RUN_CMD="--dry-run"
           fi
-          npm config set //registry.npmjs.org/:_authToken ${NPM_TOKEN}
-          npm publish:$TAG --ignore-scripts $DRY_RUN_CMD
+          npm config set //registry.npmjs.org/:_authToken "${NPM_TOKEN}"
+          npm publish:$TAG --ignore-scripts "$DRY_RUN_CMD"
       -
         name: Update and push code to ${{ steps.set-vars.outputs.source-branch }}
         env:
