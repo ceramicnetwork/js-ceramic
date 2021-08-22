@@ -35,18 +35,16 @@ jobs:
           # If it's not explicitly `true`, it's `false`
           echo "::set-output name=dry-run::${{ github.event.inputs.dryrun }} == 'true')"
       -
-        name: Checkout code
+        name: Merge ${{ steps.set-vars.outputs.source-branch }} -> ${{ steps.set-vars.outputs.target-branch }}
         uses: actions/checkout@v2
         with:
           ref: ${{ steps.set-vars.outputs.target-branch }}
-      -
-        name: Merge ${{ steps.set-vars.outputs.source-branch }} -> ${{ steps.set-vars.outputs.target-branch }}
-        uses: devmasx/merge-branch@v1.3.1
-        with:
-          type: now
-          from_branch: ${{ steps.set-vars.outputs.source-branch }}
-          target_branch: ${{ steps.set-vars.outputs.target-branch }}
-#          github_token: ${{ github.token }}
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git fetch origin ${{ steps.set-vars.outputs.source-branch }}
+          git merge origin/${{ steps.set-vars.outputs.source-branch }}
+#          git push
       -
         name: Setup Node
         uses: actions/setup-node@v1
@@ -70,20 +68,24 @@ jobs:
           npm publish:$TAG --ignore-scripts $DRY_RUN_CMD
       -
         name: Update and push code to ${{ steps.set-vars.outputs.source-branch }}
-        if: ${{ steps.set-vars.outputs.dry-run == 'false' }}
-        uses: devmasx/merge-branch@v1.3.1
+        uses: actions/checkout@v2
         with:
-          type: now
-          from_branch: ${{ steps.set-vars.outputs.target-branch }}
-          target_branch: ${{ steps.set-vars.outputs.source-branch }}
-          github_token: ${{ github.token }}
+          ref: ${{ steps.set-vars.outputs.source-branch }}
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git fetch origin ${{ steps.set-vars.outputs.target-branch }}
+          git merge origin/${{ steps.set-vars.outputs.target-branch }}
+#          git push
       -
         # Always merge and push to `develop` - if it's already been merged to above, this action will have no effect
         name: Update and push code to ${{ steps.set-vars.outputs.source-branch }}
-        if: ${{ steps.set-vars.outputs.dry-run == 'false' }}
-        uses: devmasx/merge-branch@v1.3.1
+        uses: actions/checkout@v2
         with:
-          type: now
-          from_branch: ${{ steps.set-vars.outputs.target-branch }}
-          target_branch: develop
-          github_token: ${{ github.token }}
+          ref: develop
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git fetch origin ${{ steps.set-vars.outputs.target-branch }}
+          git merge origin/${{ steps.set-vars.outputs.target-branch }}
+#          git push
