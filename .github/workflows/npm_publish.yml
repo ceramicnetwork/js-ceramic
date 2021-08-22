@@ -1,6 +1,8 @@
 name: Publish npm packages
 
 on:
+  push:
+    branches: [ feat/npm_publish ]
   workflow_dispatch:
     inputs:
       type:
@@ -14,18 +16,19 @@ on:
 
 jobs:
   publish:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       -
         name: Setup environment
         id: set-vars
         run: |
           if [[ "${{ github.event.inputs.type }}" == "rc" ]]; then
-            echo "::set-output name=source-branch::release-candidate"
+            echo "::set-output name=target-branch::release-candidate"
+            echo "::set-output name=source-branch::develop"
             echo "::set-output name=tag::release-candidate"
           elif [[ "${{ github.event.inputs.type }}" == "full" ]]; then
-            echo "::set-output name=source-branch::master"
-            echo "::set-output name=merge-branch::release-candidate"
+            echo "::set-output name=target-branch::master"
+            echo "::set-output name=source-branch::release-candidate"
             echo "::set-output name=tag::latest"
           fi
           echo "::set-output name=dry-run::${{ github.event.inputs.dryrun }}"
@@ -33,7 +36,12 @@ jobs:
         name: Checkout code
         uses: actions/checkout@v2
         with:
-          ref: ${{ steps.set-vars.outputs.source-branch }}
+          ref: ${{ steps.set-vars.outputs.target-branch }}
+      -
+        name: Merge source branch
+        env:
+          SOURCE_BRANCH: ${{ steps.set-vars.outputs.source-branch }}
+        run: git merge origin $SOURCE_BRANCH
       -
         name: Setup Node
         uses: actions/setup-node@v1
@@ -59,19 +67,19 @@ jobs:
         name: Update and push code
         if: ${{ steps.set-vars.outputs.dry-run == 'false' }}
         env:
+          TARGET_BRANCH: ${{ steps.set-vars.outputs.target-branch }}
           SOURCE_BRANCH: ${{ steps.set-vars.outputs.source-branch }}
-          MERGE_BRANCH: ${{ steps.set-vars.outputs.merge-branch }}
         run: |
           git config --global user.email "${{ github.actor }}@users.noreply.github.com"
           git config --global user.name "${{ github.actor }}"
 
-          if [[ -z "$MERGE_BRANCH" ]]; then
-            git checkout $MERGE_BRANCH
+          if [[ -z "$SOURCE_BRANCH" ]]; then
+            git checkout $SOURCE_BRANCH
             git merge origin master
-            git push origin $MERGE_BRANCH
+            git push origin $SOURCE_BRANCH
           fi
 
           # Always merge and push to `develop`
           git checkout develop
-          git merge origin $BRANCH
+          git merge origin $TARGET_BRANCH
           git push origin develop
