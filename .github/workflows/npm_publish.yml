@@ -27,21 +27,26 @@ jobs:
             echo "::set-output name=source-branch::release-candidate"
             echo "::set-output name=tag::latest"
           else
+            # Default to `release-candidate`
             echo "::set-output name=target-branch::release-candidate"
             echo "::set-output name=source-branch::develop"
             echo "::set-output name=tag::release-candidate"
           fi
-          echo "::set-output name=dry-run::(${{ github.event.inputs.dryrun }} == 'true')"
+          # If it's not explicitly `true`, it's `false`
+          echo "::set-output name=dry-run::${{ github.event.inputs.dryrun }} == 'true')"
       -
         name: Checkout code
         uses: actions/checkout@v2
         with:
           ref: ${{ steps.set-vars.outputs.target-branch }}
       -
-        name: Merge source branch
-        env:
-          SOURCE_BRANCH: ${{ steps.set-vars.outputs.source-branch }}
-        run: git merge $SOURCE_BRANCH
+        name: Merge ${{ steps.set-vars.outputs.source-branch }} -> ${{ steps.set-vars.outputs.target-branch }}
+        uses: devmasx/merge-branch@v1.3.1
+        with:
+          type: now
+          from_branch: ${{ steps.set-vars.outputs.source-branch }}
+          target_branch: ${{ steps.set-vars.outputs.target-branch }}
+#          github_token: ${{ github.token }}
       -
         name: Setup Node
         uses: actions/setup-node@v1
@@ -64,22 +69,21 @@ jobs:
           npm config set //registry.npmjs.org/:_authToken ${NPM_TOKEN}
           npm publish:$TAG --ignore-scripts $DRY_RUN_CMD
       -
-        name: Update and push code
+        name: Update and push code to ${{ steps.set-vars.outputs.source-branch }}
         if: ${{ steps.set-vars.outputs.dry-run == 'false' }}
-        env:
-          TARGET_BRANCH: ${{ steps.set-vars.outputs.target-branch }}
-          SOURCE_BRANCH: ${{ steps.set-vars.outputs.source-branch }}
-        run: |
-          git config --global user.email "${{ github.actor }}@users.noreply.github.com"
-          git config --global user.name "${{ github.actor }}"
-
-          if [[ -n "$SOURCE_BRANCH" ]]; then
-            git checkout $SOURCE_BRANCH
-            git merge $TARGET_BRANCH
-            git push $SOURCE_BRANCH
-          fi
-
-          # Always merge and push to `develop` - if it's already been merged to above, this action will have no effect
-          git checkout develop
-          git merge $TARGET_BRANCH
-          git push develop
+        uses: devmasx/merge-branch@v1.3.1
+        with:
+          type: now
+          from_branch: ${{ steps.set-vars.outputs.target-branch }}
+          target_branch: ${{ steps.set-vars.outputs.source-branch }}
+          github_token: ${{ github.token }}
+      -
+        # Always merge and push to `develop` - if it's already been merged to above, this action will have no effect
+        name: Update and push code to ${{ steps.set-vars.outputs.source-branch }}
+        if: ${{ steps.set-vars.outputs.dry-run == 'false' }}
+        uses: devmasx/merge-branch@v1.3.1
+        with:
+          type: now
+          from_branch: ${{ steps.set-vars.outputs.target-branch }}
+          target_branch: develop
+          github_token: ${{ github.token }}
