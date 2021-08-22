@@ -31,7 +31,7 @@ jobs:
             echo "::set-output name=source-branch::develop"
             echo "::set-output name=tag::release-candidate"
           fi
-          echo "::set-output name=dry-run::(${{ github.event.inputs.dryrun }} == 'true'"
+          echo "::set-output name=dry-run::(${{ github.event.inputs.dryrun }} == 'true')"
       -
         name: Checkout code
         uses: actions/checkout@v2
