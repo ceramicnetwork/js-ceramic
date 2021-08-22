@@ -9,7 +9,7 @@ on:
         description: 'Type of publish (one of: rc, full)'
         required: true
         default: 'rc'
-      dryrun:
+      dry-run:
         description: 'Dry run or actual publish (one of: true, false)'
         required: true
         default: 'true'
@@ -32,8 +32,10 @@ jobs:
             echo "::set-output name=source-branch::develop"
             echo "::set-output name=tag::release-candidate"
           fi
-          # If it's not explicitly `true`, it's `false`
-          echo "::set-output name=dry-run::${{ github.event.inputs.dryrun }} == 'true')"
+          # If it's not explicitly `false`, it's `true`
+          if [[ "${{ github.event.inputs.dry-run }}" != "false" ]]; then
+            echo "::set-output name=dry-run-cmd::--dry-run"
+          fi
       -
         name: Checkout ${{ steps.set-vars.outputs.target-branch }}
         uses: actions/checkout@v2
@@ -62,14 +64,8 @@ jobs:
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           TAG: ${{ steps.set-vars.outputs.tag }}
-          DRY_RUN: ${{ steps.set-vars.outputs.dry-run }}
+          DRY_RUN_CMD: ${{ steps.set-vars.outputs.dry-run-cmd }}
         run: |
-          echo $TAG
-          echo $DRY_RUN
-          DRY_RUN_CMD=""
-          if [[ "$DRY_RUN" == "true"]]; then
-            DRY_RUN_CMD="--dry-run"
-          fi
           npm config set //registry.npmjs.org/:_authToken "${NPM_TOKEN}"
           npm run publish:$TAG --ignore-scripts "$DRY_RUN_CMD"
       -
@@ -78,7 +74,7 @@ jobs:
           SOURCE_BRANCH: ${{ steps.set-vars.outputs.source-branch }}
           TARGET_BRANCH: ${{ steps.set-vars.outputs.target-branch }}
         run: |
-          git checkout -B $SOURCE_BRANCH refs/remotes/origin/$SOURCE_BRANCH
+          git checkout -B "$SOURCE_BRANCH" refs/remotes/origin/$SOURCE_BRANCH
           git merge origin/$TARGET_BRANCH
           # git push
           # Always merge and push to `develop` - if it's already been merged to above, this action will have no effect
