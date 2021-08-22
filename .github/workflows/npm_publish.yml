@@ -45,7 +45,7 @@ jobs:
           git config user.email github-actions@github.com
           git fetch origin ${{ steps.set-vars.outputs.source-branch }}
           git merge origin/${{ steps.set-vars.outputs.source-branch }}
-#          git push
+          # git push
       -
         name: Setup Node
         uses: actions/setup-node@v1
@@ -72,9 +72,8 @@ jobs:
         run: |
           git fetch origin ${{ steps.set-vars.outputs.target-branch }}
           git merge origin/${{ steps.set-vars.outputs.target-branch }}
-#          git push
-
+          # git push
           # Always merge and push to `develop` - if it's already been merged to above, this action will have no effect
           git checkout -B develop refs/remotes/origin/develop
           git merge origin/${{ steps.set-vars.outputs.target-branch }}
-#          git push
+          # git push
