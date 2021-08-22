@@ -55,9 +55,7 @@ jobs:
       -
         name: Initialize and build code
         run: |
-          ls
-          pwd
-          cd js-ceramic
+          npm i lerna
           npm ci && npm run build
       -
         name: Publish packages to NPM
@@ -73,7 +71,7 @@ jobs:
             DRY_RUN_CMD="--dry-run"
           fi
           npm config set //registry.npmjs.org/:_authToken "${NPM_TOKEN}"
-          npm publish:$TAG --ignore-scripts "$DRY_RUN_CMD"
+          npm run publish:$TAG --ignore-scripts "$DRY_RUN_CMD"
       -
         name: Update and push code to ${{ steps.set-vars.outputs.source-branch }}
         env:
