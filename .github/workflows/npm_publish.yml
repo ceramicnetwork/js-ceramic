@@ -57,7 +57,7 @@ jobs:
       -
         name: Initialize and build code
         run: |
-          npm i lerna
+          npm i -g lerna
           npm ci && npm run build
       -
         name: Publish packages to NPM
