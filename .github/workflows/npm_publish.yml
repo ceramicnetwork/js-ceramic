@@ -7,10 +7,6 @@ on:
         description: 'Type of publish (one of: rc, full)'
         required: true
         default: 'rc'
-      dry-run:
-        description: 'Dry run or actual publish (one of: true, false)'
-        required: true
-        default: 'true'
 
 jobs:
   publish:
@@ -29,10 +25,6 @@ jobs:
             echo "::set-output name=target-branch::release-candidate"
             echo "::set-output name=source-branch::develop"
             echo "::set-output name=tag::release-candidate"
-          fi
-          # If `dry-run` is not explicitly `false`, set it to `true`
-          if [[ "${{ github.event.inputs.dry-run }}" != "false" ]]; then
-            echo "::set-output name=dry-run-cmd::--dry-run"
           fi
       -
         name: Checkout ${{ steps.set-vars.outputs.target-branch }}
@@ -61,11 +53,11 @@ jobs:
         name: Publish packages to NPM
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
           TAG: ${{ steps.set-vars.outputs.tag }}
-          DRY_RUN_CMD: ${{ steps.set-vars.outputs.dry-run-cmd }}
         run: |
           npm config set //registry.npmjs.org/:_authToken "${NPM_TOKEN}"
-          npm run publish:$TAG --ignore-scripts "$DRY_RUN_CMD"
+          npm run publish:$TAG
           git push
       -
         name: Update and push code to ${{ steps.set-vars.outputs.source-branch }}
