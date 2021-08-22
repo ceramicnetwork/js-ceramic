@@ -39,6 +39,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           ref: ${{ steps.set-vars.outputs.target-branch }}
+      -
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
@@ -68,24 +69,12 @@ jobs:
           npm publish:$TAG --ignore-scripts $DRY_RUN_CMD
       -
         name: Update and push code to ${{ steps.set-vars.outputs.source-branch }}
-        uses: actions/checkout@v2
-        with:
-          ref: ${{ steps.set-vars.outputs.source-branch }}
         run: |
-          git config user.name github-actions
-          git config user.email github-actions@github.com
           git fetch origin ${{ steps.set-vars.outputs.target-branch }}
           git merge origin/${{ steps.set-vars.outputs.target-branch }}
 #          git push
-      -
-        # Always merge and push to `develop` - if it's already been merged to above, this action will have no effect
-        name: Update and push code to ${{ steps.set-vars.outputs.source-branch }}
-        uses: actions/checkout@v2
-        with:
-          ref: develop
-        run: |
-          git config user.name github-actions
-          git config user.email github-actions@github.com
-          git fetch origin ${{ steps.set-vars.outputs.target-branch }}
+
+          # Always merge and push to `develop` - if it's already been merged to above, this action will have no effect
+          git checkout -B develop refs/remotes/origin/develop
           git merge origin/${{ steps.set-vars.outputs.target-branch }}
 #          git push
