@@ -43,7 +43,7 @@ jobs:
           SOURCE_BRANCH: ${{ steps.set-vars.outputs.source-branch }}
         run: |
           echo $SOURCE_BRANCH
-          git merge origin $SOURCE_BRANCH
+          git merge $SOURCE_BRANCH
       -
         name: Setup Node
         uses: actions/setup-node@v1
@@ -77,11 +77,11 @@ jobs:
 
           if [[ -z "$SOURCE_BRANCH" ]]; then
             git checkout $SOURCE_BRANCH
-            git merge origin master
-            git push origin $SOURCE_BRANCH
+            git merge master
+            git push $SOURCE_BRANCH
           fi
 
           # Always merge and push to `develop`
           git checkout develop
-          git merge origin $TARGET_BRANCH
-          git push origin develop
+          git merge $TARGET_BRANCH
+          git push develop
