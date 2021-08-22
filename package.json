@@ -1,6 +1,5 @@
 {
   "name": "root",
-  "private": true,
   "scripts": {
     "postinstall": "lerna bootstrap --hoist --ci",
     "test": "lerna exec npm t",
