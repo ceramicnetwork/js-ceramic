@@ -57,7 +57,6 @@ jobs:
           TAG: ${{ steps.set-vars.outputs.tag }}
         run: |
           npm config set //registry.npmjs.org/:_authToken "${NPM_TOKEN}"
-          npm set unsafe-perm true
           npm run publish:$TAG
           git push
       -
