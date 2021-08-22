@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.1.2-rc.4](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/pinning-powergate-backend@1.1.2-rc.3...@ceramicnetwork/pinning-powergate-backend@1.1.2-rc.4) (2021-08-22)
+
+**Note:** Version bump only for package @ceramicnetwork/pinning-powergate-backend
+
+
+
+
+
 ## [1.1.2-rc.3](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/pinning-powergate-backend@1.1.2-rc.2...@ceramicnetwork/pinning-powergate-backend@1.1.2-rc.3) (2021-08-22)
 
 **Note:** Version bump only for package @ceramicnetwork/pinning-powergate-backend
