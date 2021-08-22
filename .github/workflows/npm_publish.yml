@@ -56,7 +56,7 @@ jobs:
         run: |
           npm i -g lerna
           npm set unsafe-perm true
-          npm ci --ignore-scripts && npm run build
+          npm ci && npm run build
       -
         name: Publish packages to NPM
         env:
