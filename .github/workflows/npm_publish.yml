@@ -22,16 +22,16 @@ jobs:
         name: Setup environment
         id: set-vars
         run: |
-          if [[ "${{ github.event.inputs.type }}" == "rc" ]]; then
-            echo "::set-output name=target-branch::release-candidate"
-            echo "::set-output name=source-branch::develop"
-            echo "::set-output name=tag::release-candidate"
-          elif [[ "${{ github.event.inputs.type }}" == "full" ]]; then
+          if [[ "${{ github.event.inputs.type }}" == "full" ]]; then
             echo "::set-output name=target-branch::master"
             echo "::set-output name=source-branch::release-candidate"
             echo "::set-output name=tag::latest"
+          else
+            echo "::set-output name=target-branch::release-candidate"
+            echo "::set-output name=source-branch::develop"
+            echo "::set-output name=tag::release-candidate"
           fi
-          echo "::set-output name=dry-run::${{ github.event.inputs.dryrun }}"
+          echo "::set-output name=dry-run::(${{ github.event.inputs.dryrun }} == 'true'"
       -
         name: Checkout code
         uses: actions/checkout@v2
@@ -41,7 +41,9 @@ jobs:
         name: Merge source branch
         env:
           SOURCE_BRANCH: ${{ steps.set-vars.outputs.source-branch }}
-        run: git merge origin $SOURCE_BRANCH
+        run: |
+          echo $SOURCE_BRANCH
+          git merge origin $SOURCE_BRANCH
       -
         name: Setup Node
         uses: actions/setup-node@v1
