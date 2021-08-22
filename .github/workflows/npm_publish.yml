@@ -7,7 +7,7 @@ on:
         description: 'Type of publish (one of: rc, full)'
         required: true
         default: 'rc'
-      dryrun:
+      dry-run:
         description: 'Dry run or actual publish (one of: true, false)'
         required: true
         default: 'true'
@@ -20,20 +20,32 @@ jobs:
         name: Setup environment
         id: set-vars
         run: |
-          if [[ "${{ github.event.inputs.type }}" == "rc" ]]; then
+          if [[ "${{ github.event.inputs.type }}" == "full" ]]; then
+            echo "::set-output name=target-branch::master"
             echo "::set-output name=source-branch::release-candidate"
-            echo "::set-output name=tag::release-candidate"
-          elif [[ "${{ github.event.inputs.type }}" == "full" ]]; then
-            echo "::set-output name=source-branch::master"
-            echo "::set-output name=merge-branch::release-candidate"
             echo "::set-output name=tag::latest"
+          else
+            # Default to `release-candidate`
+            echo "::set-output name=target-branch::release-candidate"
+            echo "::set-output name=source-branch::develop"
+            echo "::set-output name=tag::release-candidate"
           fi
-          echo "::set-output name=dry-run::${{ github.event.inputs.dryrun }}"
+          # If `dry-run` is not explicitly `false`, set it to `true`
+          if [[ "${{ github.event.inputs.dry-run }}" != "false" ]]; then
+            echo "::set-output name=dry-run-cmd::--dry-run"
+          fi
       -
-        name: Checkout code
+        name: Checkout ${{ steps.set-vars.outputs.target-branch }}
         uses: actions/checkout@v2
         with:
-          ref: ${{ steps.set-vars.outputs.source-branch }}
+          ref: ${{ steps.set-vars.outputs.target-branch }}
+      -
+        name: Merge ${{ steps.set-vars.outputs.source-branch }} -> ${{ steps.set-vars.outputs.target-branch }}
+        env:
+          SOURCE_BRANCH: ${{ steps.set-vars.outputs.source-branch }}
+        run: |
+          git fetch origin $SOURCE_BRANCH
+          git merge origin/$SOURCE_BRANCH
       -
         name: Setup Node
         uses: actions/setup-node@v1
@@ -41,37 +53,32 @@ jobs:
           node-version: 14
       -
         name: Initialize and build code
-        run: npm ci --ignore-scripts && npm run build --if-present
+        run: |
+          npm i -g lerna
+          npm set unsafe-perm true
+          npm ci --ignore-scripts && npm run build --if-present
       -
         name: Publish packages to NPM
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           TAG: ${{ steps.set-vars.outputs.tag }}
-          DRY_RUN: ${{ steps.set-vars.outputs.dry-run }}
+          DRY_RUN_CMD: ${{ steps.set-vars.outputs.dry-run-cmd }}
         run: |
-          DRY_RUN_CMD=""
-          if [[ "$DRY_RUN" == "true"]]; then
-            DRY_RUN_CMD="--dry-run"
-          fi
-          npm config set //registry.npmjs.org/:_authToken ${NPM_TOKEN}
-          npm publish:$TAG --ignore-scripts $DRY_RUN_CMD
+          npm config set //registry.npmjs.org/:_authToken "${NPM_TOKEN}"
+          npm run publish:$TAG --ignore-scripts "$DRY_RUN_CMD"
+          git push
       -
-        name: Update and push code
-        if: ${{ steps.set-vars.outputs.dry-run == 'false' }}
+        name: Update and push code to ${{ steps.set-vars.outputs.source-branch }}
         env:
           SOURCE_BRANCH: ${{ steps.set-vars.outputs.source-branch }}
-          MERGE_BRANCH: ${{ steps.set-vars.outputs.merge-branch }}
+          TARGET_BRANCH: ${{ steps.set-vars.outputs.target-branch }}
         run: |
-          git config --global user.email "${{ github.actor }}@users.noreply.github.com"
-          git config --global user.name "${{ github.actor }}"
+          # Merge the target branch back to the source branch
+          git checkout -B "$SOURCE_BRANCH" refs/remotes/origin/$SOURCE_BRANCH
+          git merge origin/$TARGET_BRANCH
+          git push
 
-          if [[ -z "$MERGE_BRANCH" ]]; then
-            git checkout $MERGE_BRANCH
-            git merge origin master
-            git push origin $MERGE_BRANCH
-          fi
-
-          # Always merge and push to `develop`
-          git checkout develop
-          git merge origin $BRANCH
-          git push origin develop
+          # Always merge and push to `develop` - if it's already been merged to above, this action will have no effect
+          git checkout -B develop refs/remotes/origin/develop
+          git merge origin/$TARGET_BRANCH
+          git push
