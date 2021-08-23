@@ -30,6 +30,7 @@ jobs:
         name: Checkout ${{ steps.set-vars.outputs.target-branch }}
         uses: actions/checkout@v2
         with:
+          token: ${{ secrets.GH_TOKEN }}
           ref: ${{ steps.set-vars.outputs.target-branch }}
       -
         name: Merge ${{ steps.set-vars.outputs.source-branch }} -> ${{ steps.set-vars.outputs.target-branch }}
