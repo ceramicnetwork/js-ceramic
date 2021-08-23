@@ -216,7 +216,7 @@ const resolve = async (
   }
 }
 
-export default {
+export const threeId =  {
   getResolver: (ceramic: CeramicApi): ResolverRegistry => ({
     '3': (
       did: string,
@@ -254,3 +254,5 @@ export default {
     },
   }),
 }
+
+export default threeId
