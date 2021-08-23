@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## 1.1.2-rc.4 (2021-08-23)
+
+
+### Bug Fixes
+
+* **ci:** remove private flag ([9974009](https://github.com/ceramicnetwork/js-ceramic/commit/9974009be69382f2a2caf59f4ff72bf6aa12491b))
+
+
+
+
+
 ## [1.1.2-rc.3](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/blockchain-utils-validation@1.1.2-rc.2...@ceramicnetwork/blockchain-utils-validation@1.1.2-rc.3) (2021-08-22)
 
 **Note:** Version bump only for package @ceramicnetwork/blockchain-utils-validation
