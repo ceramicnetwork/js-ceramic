@@ -50,7 +50,7 @@ describe('Ceramic anchoring', () => {
   let ipfs3: IpfsApi
 
   beforeAll(async () => {
-    [ipfs1, ipfs2, ipfs3] = await Promise.all(Array.from({ length: 3 }).map(() => createIPFS()))
+    ;[ipfs1, ipfs2, ipfs3] = await Promise.all(Array.from({ length: 3 }).map(() => createIPFS()))
     await swarmConnect(ipfs1, ipfs2)
     await swarmConnect(ipfs2, ipfs3)
     await swarmConnect(ipfs1, ipfs3)
@@ -287,7 +287,7 @@ describe('Ceramic anchoring', () => {
     await anchorService.anchor()
     await TestUtils.waitForState(
       stream2,
-      2000,
+      4000,
       (state) => state.anchorStatus === AnchorStatus.ANCHORED,
       () => {
         throw new Error(`stream2 not anchored still`)
@@ -295,7 +295,7 @@ describe('Ceramic anchoring', () => {
     )
     await TestUtils.waitForState(
       stream1,
-      2000,
+      4000,
       (state) => state.anchorStatus === AnchorStatus.ANCHORED,
       () => {
         throw new Error(`stream1 not anchored still`)
