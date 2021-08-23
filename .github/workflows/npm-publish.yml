@@ -66,9 +66,6 @@ jobs:
           SOURCE_BRANCH: ${{ steps.set-vars.outputs.source-branch }}
           TARGET_BRANCH: ${{ steps.set-vars.outputs.target-branch }}
         run: |
-          # Push the target branch (already checked out)
-          git push
-
           # Merge the target branch back to the source branch
           git checkout -B $SOURCE_BRANCH refs/remotes/origin/$SOURCE_BRANCH
           git merge origin/$TARGET_BRANCH
