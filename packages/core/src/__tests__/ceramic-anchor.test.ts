@@ -11,7 +11,6 @@ import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import KeyDidResolver from 'key-did-resolver'
 import { Resolver } from 'did-resolver'
 import { DID } from 'dids'
-import { delay } from './delay'
 
 jest.mock('../store/level-state-store')
 
@@ -51,7 +50,7 @@ describe('Ceramic anchoring', () => {
   let ipfs3: IpfsApi
 
   beforeAll(async () => {
-    ;[ipfs1, ipfs2, ipfs3] = await Promise.all(Array.from({ length: 3 }).map(() => createIPFS()))
+    [ipfs1, ipfs2, ipfs3] = await Promise.all(Array.from({ length: 3 }).map(() => createIPFS()))
     await swarmConnect(ipfs1, ipfs2)
     await swarmConnect(ipfs2, ipfs3)
     await swarmConnect(ipfs1, ipfs3)
@@ -263,15 +262,15 @@ describe('Ceramic anchoring', () => {
     const anchorService = ceramic3.context.anchorService as InMemoryAnchorService
     // use ceramic3 in-memory anchor service, ugly as hell
     ceramic1.repository.stateManager.anchorService = anchorService
-    ceramic1.context.anchorService = anchorService
     ceramic2.repository.stateManager.anchorService = anchorService
-    ceramic2.context.anchorService = anchorService
 
     const stream1 = await TileDocument.create(ceramic1, { x: 1 }, null, {
       anchor: false,
       publish: true,
     })
+    stream1.subscribe()
     const stream2 = await TileDocument.load(ceramic2, stream1.id)
+    stream2.subscribe()
 
     // Create two conflicting updates, each on a different ceramic instance
     const newContent1 = { x: 7 }
@@ -285,13 +284,23 @@ describe('Ceramic anchoring', () => {
       stream2.state.log[stream2.state.log.length - 1].cid.bytes
     const winningContent = update1ShouldWin ? newContent1 : newContent2
 
-    await anchorUpdate(ceramic1, stream1)
-    await anchorUpdate(ceramic2, stream2)
-
-    await delay(2000)
-
-    await stream1.sync()
-    await stream2.sync()
+    await anchorService.anchor()
+    await TestUtils.waitForState(
+      stream2,
+      2000,
+      (state) => state.anchorStatus === AnchorStatus.ANCHORED,
+      () => {
+        throw new Error(`stream2 not anchored still`)
+      }
+    )
+    await TestUtils.waitForState(
+      stream1,
+      2000,
+      (state) => state.anchorStatus === AnchorStatus.ANCHORED,
+      () => {
+        throw new Error(`stream1 not anchored still`)
+      }
+    )
 
     // Only one of the updates should have won
     expect(stream1.state.log.length).toEqual(3)
