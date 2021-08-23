@@ -58,6 +58,7 @@ jobs:
         run: |
           git config user.email "${{ github.actor }}@users.noreply.github.com"
           git config user.name ${{ github.actor }}
+          npm config set //registry.npmjs.org/:_authToken $NODE_AUTH_TOKEN
           npm run publish:$TAG
       -
         name: Update and push code to ${{ steps.set-vars.outputs.source-branch }}
