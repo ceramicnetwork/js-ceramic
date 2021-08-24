@@ -90,7 +90,24 @@ export class StreamID implements StreamRef {
     this.#cid = typeof cid === 'string' ? new CID(cid) : cid
   }
 
-  static async fromGenesis(type: string | number, genesis: Record<string, any>): StreamID {
+  /**
+   * Create a streamId from a genesis commit.
+   *
+   * @param
+   * @param {string|number}         type       the stream type
+   * @param {Record<string, any>}   genesis    a genesis commit
+   *
+   * @example
+   * ```typescript
+   * const streamId = StreamID.fromGenesis('tile', {
+   *   header: {
+   *     controllers:['did:3:kjz...'],
+   *     family: 'IDX'
+   *   }
+   * });
+   * ```
+   */
+  static async fromGenesis(type: string | number, genesis: Record<string, any>): Promise<StreamID> {
     const cid = await dagCBOR.util.cid(new Uint8Array(dagCBOR.util.serialize(genesis)))
     return new StreamID(type, cid)
   }
