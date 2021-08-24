@@ -19,8 +19,8 @@ const prefixToDriverMap: any = {
   0xed: ed25519,
 }
 
-export const key = {
-  getResolver: (): ResolverRegistry => ({
+export function getResolver(): ResolverRegistry {
+  return {
     key: async (
       did: string,
       parsed: ParsedDID,
@@ -53,7 +53,7 @@ export const key = {
       }
       return response
     },
-  }),
+  }
 }
 
-export default key
+export default { getResolver }
