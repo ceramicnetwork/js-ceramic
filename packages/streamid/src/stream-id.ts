@@ -90,7 +90,7 @@ export class StreamID implements StreamRef {
     this.#cid = typeof cid === 'string' ? new CID(cid) : cid
   }
 
-  static async fromGenesis(type: string | number, genesis: Record<string: any>): StreamID {
+  static async fromGenesis(type: string | number, genesis: Record<string, any>): StreamID {
     const cid = await dagCBOR.util.cid(new Uint8Array(dagCBOR.util.serialize(genesis)))
     return new StreamID(type, cid)
   }
