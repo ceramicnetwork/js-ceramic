@@ -164,7 +164,7 @@ const tryStreamId = (id: string): StreamID | null => {
  * To install this library:<br/>
  * `$ npm install --save @ceramicnetwork/core`
  */
-class Ceramic implements CeramicApi {
+export class Ceramic implements CeramicApi {
   public readonly context: Context
   public readonly dispatcher: Dispatcher
   public readonly loggerProvider: LoggerProvider

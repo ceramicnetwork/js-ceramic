@@ -216,8 +216,8 @@ const resolve = async (
   }
 }
 
-export default {
-  getResolver: (ceramic: CeramicApi): ResolverRegistry => ({
+export function getResolver(ceramic: CeramicApi): ResolverRegistry {
+  return {
     '3': (
       did: string,
       parsed: ParsedDID,
@@ -252,5 +252,7 @@ export default {
         }
       })
     },
-  }),
+  }
 }
+
+export default { getResolver }
