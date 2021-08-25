@@ -4,7 +4,7 @@ import * as sigUtils from 'eth-sig-util'
 import { ContractFactory, Contract } from '@ethersproject/contracts'
 import * as providers from '@ethersproject/providers'
 import { CeramicApi, IpfsApi } from '@ceramicnetwork/common'
-import { createIPFS } from '../../create-ipsf'
+import { createIPFS } from '../../create-ipfs'
 import { createCeramic } from '../../create-ceramic'
 import { Caip10Link } from '@ceramicnetwork/stream-caip10-link'
 
