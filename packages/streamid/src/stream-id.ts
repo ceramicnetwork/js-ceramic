@@ -1,6 +1,7 @@
 import CID from 'cids'
 import multibase from 'multibase'
 import varint from 'varint'
+import dagCBOR from 'ipld-dag-cbor'
 import uint8ArrayConcat from 'uint8arrays/concat'
 import uint8ArrayToString from 'uint8arrays/to-string'
 import { DEFAULT_BASE, STREAMID_CODEC } from './constants'
@@ -87,6 +88,28 @@ export class StreamID implements StreamRef {
     if (!cid) throw new Error('constructor: cid required')
     this.#type = typeof type === 'string' ? StreamType.codeByName(type) : type
     this.#cid = typeof cid === 'string' ? new CID(cid) : cid
+  }
+
+  /**
+   * Create a streamId from a genesis commit.
+   *
+   * @param
+   * @param {string|number}         type       the stream type
+   * @param {Record<string, any>}   genesis    a genesis commit
+   *
+   * @example
+   * ```typescript
+   * const streamId = StreamID.fromGenesis('tile', {
+   *   header: {
+   *     controllers:['did:3:kjz...'],
+   *     family: 'IDX'
+   *   }
+   * });
+   * ```
+   */
+  static async fromGenesis(type: string | number, genesis: Record<string, any>): Promise<StreamID> {
+    const cid = await dagCBOR.util.cid(new Uint8Array(dagCBOR.util.serialize(genesis)))
+    return new StreamID(type, cid)
   }
 
   /**
