@@ -33,7 +33,7 @@ export class EosioAuthProvider implements AuthProvider {
     const accountID = await this.accountId()
     const signedPayload = await toSignedPayload(consentMessage.message, accountID, this.provider)
     return {
-      version: 1,
+      version: 2,
       type: 'eosio',
       message: consentMessage.message,
       signature: signedPayload,

@@ -43,7 +43,6 @@ const CONTRACT_WALLET_BYTECODE = {
 const GANACHE_CONF = {
   seed: '0xd30553e27ba2954e3736dae1342f5495798d4f54012787172048582566938f6f',
 }
-const GANACHE_CHAIN_ID = 1337
 const send = (provider: any, data: any): Promise<any> =>
   new Promise((resolve, reject) =>
     provider.send(data, (err: any, res: any) => {
