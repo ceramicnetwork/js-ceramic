@@ -24,7 +24,7 @@ Timestamp: 666",
   "signature": "SIG_K1_K2m5Nf8ed5v5tzKAEbmaEgZrBVqZe9rkt1ufpPDKepA32BRMKwnJP5Snj2VgZEnumRkQCYN2AGWB86Tw5SAUHnRVPKhYqp",
   "timestamp": 666,
   "type": "eosio",
-  "version": 1,
+  "version": 2,
 }
 `;
 
@@ -38,6 +38,6 @@ Timestamp: 666",
   "signature": "SIG_K1_KWpXoKssJJtpdBYsbjG48VrYjpbMpePWMeviwrneNNgCQwdd7DmsSrAYEKBAXmaqgnTTDFdE9JyPTwUxyDEBQi2SboS39A",
   "timestamp": 666,
   "type": "eosio",
-  "version": 1,
+  "version": 2,
 }
 `;
