@@ -20,6 +20,7 @@ import {
   CeramicSigner,
 } from '@ceramicnetwork/common'
 import { CommitID, StreamID, StreamRef } from '@ceramicnetwork/streamid'
+import { Observable, map } from 'rxjs'
 
 /**
  * Arguments used to generate the metadata for Tile documents
@@ -113,6 +114,11 @@ async function throwReadOnlyError(): Promise<void> {
   throw new Error(
     'Historical stream commits cannot be modified. Load the stream without specifying a commit to make updates.'
   )
+}
+
+interface TileSnapshot<T> {
+  content: T
+  metadata: StreamMetadata
 }
 
 /**
@@ -328,5 +334,16 @@ export class TileDocument<T = Record<string, any>> extends Stream {
     }
     const commit: GenesisCommit = { data: content, header }
     return await _signDagJWS(signer, commit)
+  }
+
+  feed(): Observable<TileSnapshot<T>> {
+    return this.state$.pipe(
+      map((streamState) => {
+        const content = streamState.next ? streamState.next.content : streamState.content
+        const metadata = streamState.next ? streamState.next.metadata : streamState.metadata
+
+        return { content, metadata }
+      })
+    )
   }
 }

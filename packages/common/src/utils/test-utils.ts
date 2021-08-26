@@ -21,7 +21,10 @@ export class TestUtils {
    * @param stream
    */
   static registerChangeListener(stream: Stream): Promise<StreamState> {
-    return stream.pipe(take(1)).toPromise()
+    // TODO update this to only use public apis
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    return stream.state$.pipe(take(1)).toPromise()
   }
 
   /**
@@ -40,7 +43,10 @@ export class TestUtils {
   ): Promise<void> {
     if (predicate(stream.state)) return
     const timeoutPromise = new Promise((resolve) => setTimeout(resolve, timeout))
-    const completionPromise = stream.pipe(filter((state) => predicate(state))).toPromise()
+    // TODO update this to only use public apis
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const completionPromise = stream.state$.pipe(filter((state) => predicate(state))).toPromise()
     await Promise.race([timeoutPromise, completionPromise])
     if (!predicate(stream.state)) {
       onFailure()

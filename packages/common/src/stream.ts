@@ -161,11 +161,17 @@ export interface StreamStateHolder {
 /**
  * Describes common stream attributes
  */
-export abstract class Stream extends Observable<StreamState> implements StreamStateHolder {
-  constructor(protected readonly state$: RunningStateLike, private _context: Context) {
-    super((subscriber) => {
-      state$.subscribe(subscriber)
-    })
+export abstract class Stream implements StreamStateHolder {
+  constructor(protected readonly state$: RunningStateLike, private _context: Context) {}
+
+  /**
+   * Makes this Stream instance automatically update its internal state whenever a new update
+   * to the underlying Stream is learned about by the Ceramic node, either via pubsub or by
+   * another client making an update directly to the Ceramic node.
+   */
+  subscribeToUpdates(): void {
+    // TODO IMPLEMENT THIS
+    //this.state$.subscribe()
   }
 
   get id(): StreamID {

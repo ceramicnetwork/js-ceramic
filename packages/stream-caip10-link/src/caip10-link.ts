@@ -9,17 +9,24 @@ import {
   UpdateOpts,
   RawCommit,
   GenesisCommit,
+  StreamMetadata,
 } from '@ceramicnetwork/common'
 import type { AuthProvider, LinkProof } from '@ceramicnetwork/blockchain-utils-linking'
 import { CommitID, StreamID, StreamRef } from '@ceramicnetwork/streamid'
 import { AccountID } from 'caip'
 import { encode as encodeEip55 } from 'eip55'
 import type { DID } from 'dids'
+import { Observable, map } from 'rxjs'
 
 const throwReadOnlyError = (): Promise<void> => {
   throw new Error(
     'Historical stream commits cannot be modified. Load the stream without specifying a commit to make updates.'
   )
+}
+
+interface Caip10LinkSnapshot {
+  did: string | null
+  metadata: StreamMetadata
 }
 
 const DEFAULT_CREATE_OPTS = { anchor: false, publish: true, sync: SyncOptions.PREFER_CACHE }
@@ -34,7 +41,7 @@ export class Caip10Link extends Stream {
   static STREAM_TYPE_NAME = 'caip10-link'
   static STREAM_TYPE_ID = 1
 
-  private _isReadOnly = false;
+  private _isReadOnly = false
 
   /**
    * Returns the DID linked to the CAIP10 address this object represents.
@@ -179,5 +186,16 @@ export class Caip10Link extends Stream {
 
   get isReadOnly(): boolean {
     return this._isReadOnly
+  }
+
+  feed(): Observable<Caip10LinkSnapshot> {
+    return this.state$.pipe(
+      map((streamState) => {
+        const did = streamState.next ? streamState.next.content : streamState.content
+        const metadata = streamState.next ? streamState.next.metadata : streamState.metadata
+
+        return { did, metadata }
+      })
+    )
   }
 }
