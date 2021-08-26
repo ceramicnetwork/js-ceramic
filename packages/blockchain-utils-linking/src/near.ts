@@ -33,14 +33,13 @@ export class NearAuthProvider implements AuthProvider {
       address: account,
       chainId: `near:${this.chainRef}`,
     })
-    const proof: LinkProof = {
-      version: 1,
+    return {
+      version: 2,
       message,
       signature,
       account: caipAccount.toString(),
       timestamp,
     }
-    return proof
   }
 
   async accountId(): Promise<AccountID> {

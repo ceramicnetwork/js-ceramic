@@ -6,7 +6,7 @@ import * as uint8arrays from 'uint8arrays'
 const did = 'did:3:bafysdfwefwe'
 const privateKey =
   'ed25519:9hB3onqC56qBSHpHJaE6EyxKPyFxCxzRBkmjuVx6UqXwygvAmFbwnsLuZ2YHsYJqkPTCygVBwXpNzssvWvUySbd'
-const local_provider = KeyPair.fromString(privateKey)
+const localProvider = KeyPair.fromString(privateKey)
 const chainRef = 'near-mainnet'
 
 class NearMockSigner {
@@ -16,7 +16,7 @@ class NearMockSigner {
     this.provider = local_provider
   }
 
-  public async sign(message: String): Promise<{ signature: String; account: String }> {
+  public async sign(message: string): Promise<{ signature: string; account: string }> {
     const { signature, publicKey } = await this.provider.sign(uint8arrays.fromString(message))
     return {
       signature: uint8arrays.toString(signature, 'base64pad'),
@@ -28,12 +28,9 @@ class NearMockSigner {
 describe('Blockchain: NEAR', () => {
   describe('validateLink', () => {
     test(`validate proof for ${chainRef}`, async () => {
-      const provider = new NearMockSigner(local_provider)
-      const authProvider = new linking.NearAuthProvider(
-        provider,
-        local_provider.getPublicKey().toString(),
-        chainRef
-      )
+      const provider = new NearMockSigner(localProvider)
+      const address = uint8arrays.toString(localProvider.getPublicKey().data, 'base64pad')
+      const authProvider = new linking.NearAuthProvider(provider, address, chainRef)
       const proof = await authProvider.createLink(did)
       await expect(validateLink(proof)).resolves.toEqual(proof)
     })
