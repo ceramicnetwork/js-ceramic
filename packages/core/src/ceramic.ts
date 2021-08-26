@@ -323,10 +323,6 @@ export class Ceramic implements CeramicApi {
       }
     }
 
-    if (networkName == Networks.MAINNET) {
-      throw new Error('Ceramic mainnet is not yet supported')
-    }
-
     return { name: networkName, pubsubTopic }
   }
 
