@@ -1,4 +1,4 @@
-import { noop, TaskQueue } from '../task-queue'
+import { TaskQueue } from '../task-queue'
 
 async function delay(ms: number) {
   return new Promise<void>((resolve) => {
@@ -88,41 +88,4 @@ test('retry', async () => {
   queue.add(task)
   await queue.onIdle()
   expect(n).toEqual(2) // Retried 3 times
-})
-
-test('max size', async () => {
-  const tasks = new TaskQueue(noop, 2)
-  let n = 0
-
-  // Add 1 task
-  const firstTaskDone = new Promise<void>((resolve, _) => {
-    tasks.add(async () => {
-      await delay(200)
-      n++
-    }, resolve)
-  })
-
-  // Add second task
-  tasks.add(async () => {
-    await delay(200)
-    n++
-  })
-
-  expect(function () {
-    tasks.add(async () => {
-      await delay(200)
-      n++
-    })
-  }).toThrow(/max task queue size/)
-
-  // After a task has finished and the number of current tasks has dipped back below the max, then
-  // adding new tasks should become possible again.
-  await firstTaskDone
-  tasks.add(async () => {
-    await delay(200)
-    n++
-  })
-
-  await tasks.onIdle()
-  expect(n).toEqual(3)
 })

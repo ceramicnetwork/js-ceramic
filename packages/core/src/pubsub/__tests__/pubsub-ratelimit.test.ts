@@ -172,7 +172,7 @@ describe('pubsub with queries rate limited', () => {
               resolve()
             }
             pubsub.next(message)
-          }).toThrow(/max task queue size/)
+          }).toThrow(/exceeded the maximum allowed rate/)
         }
       })
     })

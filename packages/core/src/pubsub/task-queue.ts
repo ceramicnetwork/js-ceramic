@@ -39,13 +39,8 @@ export class TaskQueue implements TaskQueueLike {
    *   The first parameter is an error object.
    *   The second parameter, if called, would re-add the task to the queue again.
    *   Useful if you know an error indicates another attempt to execute the task is necessary.
-   * @param maxSize - the maximum number of tasks that can be in the queue at the same time.
-   *   If another task is added that would push the queue over the max, an exception is thrown.
    */
-  constructor(
-    private readonly onError: (error: Error, retry: () => void) => void = noop,
-    private readonly maxSize: number | undefined = undefined
-  ) {}
+  constructor(private readonly onError: (error: Error, retry: () => void) => void = noop) {}
 
   /**
    * Size of the queue. Counts both deferred and currently running tasks.
@@ -72,9 +67,6 @@ export class TaskQueue implements TaskQueueLike {
    * Note "fire-and-forget" comment for the `add` method.
    */
   run<T>(task: Task<T>): Promise<T> {
-    if (this.maxSize && this.size >= this.maxSize) {
-      throw new Error(`Cannot add task, max task queue size of ${this.maxSize} exceeded`)
-    }
     return this.#pq.add(task)
   }
 

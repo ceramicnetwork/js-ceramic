@@ -62,7 +62,7 @@ export class PubsubRateLimit
 
     this._queryQueue = new TaskQueue((err) => {
       this.logger.err(`Error while publishing pubsub QUERY message: ${err}`)
-    }, maxQueuedQueries)
+    })
   }
 
   /**
@@ -72,14 +72,12 @@ export class PubsubRateLimit
    */
   next(message: PubsubMessage): Subscription {
     if (message.typ === MsgType.QUERY) {
-      try {
-        return from(this._queryQueue.run(this._publishQuery.bind(this, message))).subscribe()
-      } catch (err) {
-        // Convert error message to something more descriptive
+      if (this._queryQueue.size >= this.maxQueuedQueries) {
         throw new Error(
-          `Cannot publish query message to pubsub because we have exceeded the maximum allowed rate: ${err}`
+          `Cannot publish query message to pubsub because we have exceeded the maximum allowed rate. Cannot have more than ${this.maxQueuedQueries} queued queries.`
         )
       }
+      return from(this._queryQueue.run(this._publishQuery.bind(this, message))).subscribe()
     } else {
       return this.pubsub.next(message)
     }
