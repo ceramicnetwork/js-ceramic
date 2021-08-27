@@ -165,12 +165,14 @@ test('handleTip for commit already in log', async () => {
   await (ceramic2.repository.stateManager as any)._handleTip(streamState2, stream1.state.log[1].cid)
 
   expect(streamState2.state).toEqual(stream1.state)
-  expect(retrieveCommitSpy).toBeCalledTimes(3) // TODO(1421): This should be 2!
+  // 4 IPFS retrievals - 2 each (signed commit and linked commit) for CID of commit to be applied and  CID of genesis
+  // commit already in the stream state.
+  expect(retrieveCommitSpy).toBeCalledTimes(4)
 
   // Now re-apply the same commit and don't expect any additional calls to IPFS
   await (ceramic2.repository.stateManager as any)._handleTip(streamState2, stream1.state.log[1].cid)
   await (ceramic2.repository.stateManager as any)._handleTip(streamState2, stream1.state.log[0].cid)
-  expect(retrieveCommitSpy).toBeCalledTimes(3)
+  expect(retrieveCommitSpy).toBeCalledTimes(4)
 
   await ceramic2.close()
 })

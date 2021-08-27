@@ -50,6 +50,8 @@
     "ipld-dag-cbor": "^1.0.0",
     "level-ts": "^2.0.5",
     "lodash.clonedeep": "^4.5.0",
+    "lodash.isnil": "^4.0.0",
+    "lodash.mergewith": "^4.6.2",
     "lru_map": "^0.4.1",
     "multihashes": "^4.0.2",
     "p-queue": "^6.6.1",

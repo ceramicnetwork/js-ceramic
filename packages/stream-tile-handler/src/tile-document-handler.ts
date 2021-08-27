@@ -4,17 +4,18 @@ import cloneDeep from 'lodash.clonedeep'
 
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import {
+  AnchorCommit,
   AnchorStatus,
-  Context,
-  StreamState,
+  CeramicCommit,
+  CommitData,
+  CommitMeta,
   CommitType,
+  Context,
+  SignatureStatus,
   StreamConstructor,
   StreamHandler,
+  StreamState,
   StreamUtils,
-  SignatureStatus,
-  CeramicCommit,
-  AnchorCommit,
-  CommitMeta,
 } from '@ceramicnetwork/common'
 
 const IPFS_GET_TIMEOUT = 60000 // 1 minute
@@ -37,13 +38,13 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
 
   /**
    * Applies commit (genesis|signed|anchor)
-   * @param commit - Commit
+   * @param commit - Commit (with JWS envelope or anchor proof, if available and extracted before application)
    * @param meta - Commit meta-information
    * @param context - Ceramic context
    * @param state - Document state
    */
   async applyCommit(
-    commit: CeramicCommit,
+    commit: CeramicCommit | CommitData,
     meta: CommitMeta,
     context: Context,
     state?: StreamState
@@ -53,8 +54,8 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
       return this._applyGenesis(commit, meta, context)
     }
 
-    if ((commit as AnchorCommit).proof) {
-      return this._applyAnchor(context, commit as AnchorCommit, meta.cid, state)
+    if ((commit as AnchorCommit).proof || (commit as CommitData).proof) {
+      return this._applyAnchor(context, commit, meta.cid, state)
     }
 
     return this._applySigned(commit, meta, state, context)
@@ -69,10 +70,16 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
    */
   async _applyGenesis(commit: any, meta: CommitMeta, context: Context): Promise<StreamState> {
     let payload = commit
-    const isSigned = StreamUtils.isSignedCommit(commit)
+    const isSigned = StreamUtils.isSignedCommit(commit) || (commit as CommitData).envelope
     if (isSigned) {
-      payload = (await context.ipfs.dag.get(commit.link, { timeout: IPFS_GET_TIMEOUT })).value
-      await this._verifySignature(commit, meta, context, payload.header.controllers[0])
+      let envelope = commit
+      if (StreamUtils.isExpandedCommit(commit)) {
+        envelope = commit.envelope
+        payload = commit.commit
+      } else {
+        payload = (await context.ipfs.dag.get(commit.link, { timeout: IPFS_GET_TIMEOUT })).value
+      }
+      await this._verifySignature(envelope, meta, context, payload.header.controllers[0])
     } else if (payload.data) {
       throw Error('Genesis commit with contents should always be signed')
     }
@@ -107,9 +114,13 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
   ): Promise<StreamState> {
     // TODO: Assert that the 'prev' of the commit being applied is the end of the log in 'state'
     const controller = state.next?.metadata?.controllers?.[0] || state.metadata.controllers[0]
-    await this._verifySignature(commit, meta, context, controller)
+    const envelope = StreamUtils.isExpandedCommit(commit) ? commit.envelope : commit
+    await this._verifySignature(envelope, meta, context, controller)
 
-    const payload = (await context.ipfs.dag.get(commit.link, { timeout: IPFS_GET_TIMEOUT })).value
+    const payload = StreamUtils.isExpandedCommit(commit)
+      ? commit.commit
+      : (await context.ipfs.dag.get(commit.link, { timeout: IPFS_GET_TIMEOUT })).value
+
     if (!payload.id.equals(state.log[0].cid)) {
       throw new Error(`Invalid streamId ${payload.id}, expected ${state.log[0].cid}`)
     }
@@ -144,12 +155,15 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
    */
   async _applyAnchor(
     context: Context,
-    commit: AnchorCommit,
+    commit: any,
     cid: CID,
     state: StreamState
   ): Promise<StreamState> {
     // TODO: Assert that the 'prev' of the commit being applied is the end of the log in 'state'
-    const proof = (await context.ipfs.dag.get(commit.proof, { timeout: IPFS_GET_TIMEOUT })).value
+    const proof = StreamUtils.isExpandedCommit(commit)
+      ? commit.proof
+      : (await context.ipfs.dag.get(commit.proof, { timeout: IPFS_GET_TIMEOUT }))
+          .value
 
     state.log.push({ cid, type: CommitType.ANCHOR, timestamp: proof.blockTimestamp })
     let content = state.content

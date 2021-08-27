@@ -130,6 +130,7 @@ export interface CommitData extends LogEntry {
   // the code is possible by relaying them to code that looks the fields up again.
   commit?: any
   envelope?: DagJWS
+  proof?: AnchorProof
 }
 
 /**
@@ -289,7 +290,7 @@ export interface StreamHandler<T extends Stream> {
    * @param state - Stream state
    */
   applyCommit(
-    commit: CeramicCommit,
+    commit: CeramicCommit | CommitData,
     meta: CommitMeta,
     context: Context,
     state?: StreamState
