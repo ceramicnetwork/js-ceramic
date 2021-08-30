@@ -100,7 +100,7 @@ export interface StreamMetadata {
   family?: string
   schema?: string
   tags?: Array<string>
-  forbidControllerChange: boolean
+  forbidControllerChange?: boolean
 
   [index: string]: any // allow arbitrary properties
 }

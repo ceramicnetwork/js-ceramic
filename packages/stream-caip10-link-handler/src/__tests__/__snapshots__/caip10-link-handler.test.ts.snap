@@ -144,6 +144,7 @@ Object {
       "0x0544DcF4fcE959C6C4F3b7530190cB5E1BD67Cb8@eip155:1",
     ],
     "family": "caip10-eip155:1",
+    "forbidControllerChange": true,
   },
   "signature": 2,
   "type": 1,
@@ -204,6 +205,7 @@ Object {
       "0x0544DcF4fcE959C6C4F3b7530190cB5E1BD67Cb8@eip155:1",
     ],
     "family": "caip10-eip155:1",
+    "forbidControllerChange": true,
   },
   "next": Object {
     "content": null,
@@ -310,6 +312,7 @@ Object {
       "0x0544DcF4fcE959C6C4F3b7530190cB5E1BD67Cb8@eip155:1",
     ],
     "family": "caip10-eip155:1",
+    "forbidControllerChange": true,
   },
   "next": Object {
     "content": "did:3:testdid1",
@@ -318,6 +321,7 @@ Object {
         "0x0544DcF4fcE959C6C4F3b7530190cB5E1BD67Cb8@eip155:1",
       ],
       "family": "caip10-eip155:1",
+      "forbidControllerChange": true,
       "lastUpdate": 1608116721,
     },
   },
