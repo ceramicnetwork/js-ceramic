@@ -359,10 +359,6 @@ class Document extends EventEmitter {
       if (c.equals(cid)) {
         return index
       }
-      const commit = await this.dispatcher.retrieveCommit(c)
-      if (DoctypeUtils.isSignedCommit(commit) && commit.link.equals(cid)) {
-        return index
-      }
     }
     return -1
   }
@@ -392,18 +388,14 @@ class Document extends EventEmitter {
     }
     const cid = log[0]
     const commit = await this.dispatcher.retrieveCommit(cid)
-    let payload = commit
-    if (DoctypeUtils.isSignedCommit(commit)) {
-      payload = await this.dispatcher.retrieveCommit(commit.link)
-    }
-    if (payload.prev.equals(this.tip)) {
+    if (commit.prev.equals(this.tip)) {
       // the new log starts where the previous one ended
       this._doctype.state = await this._applyLogToState(log, cloneDeep(this._doctype.state))
       modified = true
     } else {
       // we have a conflict since prev is in the log of the
       // local state, but isn't the tip
-      const conflictIdx = await this._findIndex(payload.prev, this._doctype.state.log) + 1
+      const conflictIdx = await this._findIndex(commit.prev, this._doctype.state.log) + 1
       const canonicalLog = this._doctype.state.log.map(({ cid }) => cid) // copy log
       const localLog = canonicalLog.splice(conflictIdx)
       // Compute state up till conflictIdx
@@ -462,23 +454,18 @@ class Document extends EventEmitter {
       const commit = await this.dispatcher.retrieveCommit(cid)
       // TODO - should catch potential thrown error here
 
-      let payload = commit
-      if (DoctypeUtils.isSignedCommit(commit)) {
-        payload = await this.dispatcher.retrieveCommit(commit.link)
-      }
-
-      if (payload.proof) {
+      if (commit.proof) {
         // it's an anchor commit
         await this._verifyAnchorCommit(commit)
         state = await this._doctypeHandler.applyCommit(commit, cid, this._context, state)
-      } else if (!payload.prev) {
+      } else if (!commit.prev) {
         // it's a genesis commit
         if (this.validate) {
-          const schemaId = payload.header?.schema
+          const schemaId = commit.header?.schema
           if (schemaId) {
             const schema = await Document.loadSchemaById(this._context.api, schemaId)
             if (schema) {
-              Utils.validate(payload.content, schema)
+              Utils.validate(commit.content, schema)
             }
           }
         }
@@ -487,7 +474,7 @@ class Document extends EventEmitter {
         // it's a signed commit
         const tmpState = await this._doctypeHandler.applyCommit(commit, cid, this._context, state)
         if (this.validate) {
-          const schemaId = payload.header?.schema
+          const schemaId = commit.header?.schema
           if (schemaId) {
             const schema = await Document.loadSchemaById(this._context.api, schemaId)
             if (schema) {
