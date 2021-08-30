@@ -89,13 +89,14 @@ describe('Ceramic interop: core <> http-client', () => {
    * got anchored.
    * @param doc
    */
-  const anchorDoc = async (doc: Stream): Promise<void> => {
-    const changeHandle = doc
+  const anchorDoc = async (doc: Stream<any>): Promise<void> => {
+    // TODO update this to only use public apis
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const changeHandle = doc.state$
       .pipe(
-        filter(
-          (state) =>
-            state.anchorStatus === AnchorStatus.ANCHORED ||
-            state.anchorStatus === AnchorStatus.FAILED
+        filter((state) =>
+          [AnchorStatus.ANCHORED, AnchorStatus.FAILED].includes(state.anchorStatus)
         ),
         take(1)
       )
