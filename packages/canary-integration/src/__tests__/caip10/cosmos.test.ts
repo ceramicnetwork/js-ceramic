@@ -3,7 +3,7 @@ import { createIPFS } from '../../create-ipfs'
 import { CeramicApi, IpfsApi } from '@ceramicnetwork/common'
 import { signTx, Tx, SignMeta, createWalletFromMnemonic, Wallet, StdTx } from '@tendermint/sig'
 import * as linking from '@ceramicnetwork/blockchain-utils-linking'
-import { Caip10Link } from '@ceramicnetwork/stream-caip10-link'
+import { happyPath, wrongProof } from './caip-flows'
 
 const mnemonic = 'test salon husband push melody usage fine ensure blade deal miss twin'
 const localProvider = createWalletFromMnemonic(mnemonic)
@@ -43,11 +43,7 @@ test('happy path', async () => {
     localProvider.address,
     chainRef
   )
-  const accountId = await authProvider.accountId()
-  const caip = await Caip10Link.fromAccount(ceramic, accountId)
-  await caip.setDid(ceramic.did, authProvider)
-  expect(caip.state.log.length).toEqual(2)
-  expect(caip.did).toEqual(ceramic.did.id)
+  await happyPath(ceramic, authProvider)
 }, 20000)
 
 test('wrong proof', async () => {
@@ -57,10 +53,5 @@ test('wrong proof', async () => {
     localProvider.address,
     chainRef
   )
-  const accountId = await authProvider.accountId()
-  accountId.address = 'cosmos1foo'
-  const caip = await Caip10Link.fromAccount(ceramic, accountId)
-  await expect(caip.setDid(ceramic.did, authProvider)).rejects.toThrow(
-    /Address doesn't match stream controller/
-  )
+  await wrongProof(ceramic, authProvider)
 }, 20000)
