@@ -190,15 +190,6 @@ export abstract class Stream<SnapshotType extends StreamSnapshot>
   protected _getSnapshot(state: StreamState): StreamSnapshot {
     return new StreamSnapshot(state)
   }
-  /**
-   * Makes this Stream instance automatically update its internal state whenever a new update
-   * to the underlying Stream is learned about by the Ceramic node, either via pubsub or by
-   * another client making an update directly to the Ceramic node.
-   */
-  subscribeToUpdates(): void {
-    // TODO IMPLEMENT THIS
-    //this.state$.subscribe()
-  }
 
   get id(): StreamID {
     return new StreamID(this.state$.value.type, this.state$.value.log[0].cid)
