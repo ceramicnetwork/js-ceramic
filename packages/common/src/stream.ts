@@ -39,6 +39,7 @@ export interface CommitHeader {
 
 export interface GenesisHeader extends CommitHeader {
   unique?: string
+  forbidControllerChange?: boolean
 }
 
 export type GenesisCommit = {
@@ -99,6 +100,7 @@ export interface StreamMetadata {
   family?: string
   schema?: string
   tags?: Array<string>
+  forbidControllerChange: boolean
 
   [index: string]: any // allow arbitrary properties
 }

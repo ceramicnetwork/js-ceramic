@@ -18,6 +18,7 @@ import {
   SignedCommitContainer,
   StreamMetadata,
   CeramicSigner,
+  GenesisHeader,
 } from '@ceramicnetwork/common'
 import { CommitID, StreamID, StreamRef } from '@ceramicnetwork/streamid'
 
@@ -52,6 +53,16 @@ export interface TileMetadataArgs {
    * identical documents will generate unique StreamIDs and be able to be updated independently.
    */
   deterministic?: boolean
+
+  /**
+   * If true, all changes to the 'controllers' array are disallowed.  This guarantees that the
+   * Stream will always have the same controller. Especially useful for Streams controlled by
+   * DIDs that can have ownership changes within the DID itself, such as did:nft, as setting this
+   * would prevent the current holder of the NFT from changing the Stream's controller to that
+   * user's personal DID, which would prevent the ownership of the Stream from changing the next
+   * time the NFT is traded.
+   */
+  forbidControllerChange?: boolean
 }
 
 const DEFAULT_CREATE_OPTS = { anchor: true, publish: true, sync: SyncOptions.PREFER_CACHE }
@@ -61,8 +72,12 @@ const DEFAULT_UPDATE_OPTS = { anchor: true, publish: true, throwOnInvalidCommit:
 /**
  * Converts from metadata format into CommitHeader format to be put into a CeramicCommit
  * @param metadata
+ * @param genesis - True if this is for a genesis header, false if it's for a signed commit header
  */
-function headerFromMetadata(metadata?: TileMetadataArgs | StreamMetadata): CommitHeader {
+function headerFromMetadata(
+  metadata: TileMetadataArgs | StreamMetadata | undefined,
+  genesis: boolean
+): CommitHeader {
   if (typeof metadata?.schema === 'string') {
     try {
       CommitID.fromString(metadata.schema)
@@ -76,6 +91,27 @@ function headerFromMetadata(metadata?: TileMetadataArgs | StreamMetadata): Commi
     family: metadata?.family,
     schema: metadata?.schema?.toString(),
     tags: metadata?.tags,
+  }
+
+  // Handle properties that can only be set on the genesis commit.
+  if (genesis) {
+    if (!metadata?.deterministic) {
+      header.unique = uint8arrays.toString(randomBytes(12), 'base64')
+    }
+    if (metadata?.forbidControllerChange) {
+      header.forbidControllerChange = true
+    }
+  } else {
+    // These throws aren't strictly necessary as we can just leave these fields out of the header
+    // object we return, but throwing here gives more useful feedback to users.
+
+    if (metadata?.deterministic !== undefined || (metadata as any)?.unique !== undefined) {
+      throw new Error("Cannot change 'deterministic' or 'unique' properties on existing Streams")
+    }
+
+    if (metadata?.forbidControllerChange !== undefined) {
+      throw new Error("Cannot change 'forbidControllerChange' property on existing Streams")
+    }
   }
 
   // Delete undefined keys from header
@@ -230,7 +266,7 @@ export class TileDocument<T = Record<string, any>> extends Stream {
    */
   async patch(jsonPatch: Operation[], opts: UpdateOpts = {}): Promise<void> {
     opts = { ...DEFAULT_UPDATE_OPTS, ...opts }
-    const header = headerFromMetadata(this.metadata)
+    const header = headerFromMetadata(this.metadata, false)
     const rawCommit: RawCommit = {
       header,
       data: jsonPatch,
@@ -268,9 +304,9 @@ export class TileDocument<T = Record<string, any>> extends Stream {
     newContent: T | null | undefined,
     newMetadata?: TileMetadataArgs
   ): Promise<CeramicCommit> {
-    const header = headerFromMetadata(newMetadata)
+    const header = headerFromMetadata(newMetadata, false)
 
-    if (newContent == null) {
+    if (newContent === undefined) {
       newContent = this.content
     }
 
@@ -315,10 +351,8 @@ export class TileDocument<T = Record<string, any>> extends Stream {
       throw new Error('Exactly one controller must be specified')
     }
 
-    const header = headerFromMetadata(metadata)
-    if (!metadata?.deterministic) {
-      header.unique = uint8arrays.toString(randomBytes(12), 'base64')
-    } else if (content) {
+    const header: GenesisHeader = headerFromMetadata(metadata, true)
+    if (metadata?.deterministic && content) {
       throw new Error('Initial content must be null when creating a deterministic Tile document')
     }
 

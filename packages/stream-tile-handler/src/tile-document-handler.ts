@@ -16,8 +16,21 @@ import {
   AnchorCommit,
   CommitMeta,
 } from '@ceramicnetwork/common'
+import { StreamID } from '@ceramicnetwork/streamid'
 
 const IPFS_GET_TIMEOUT = 60000 // 1 minute
+
+function stringArraysEqual(arr1: Array<string>, arr2: Array<string>) {
+  if (arr1.length != arr2.length) {
+    return false
+  }
+  for (let i = 0; i < arr1.length; i++) {
+    if (arr1[i] !== arr2[i]) {
+      return false
+    }
+  }
+  return true
+}
 
 /**
  * TileDocument stream handler implementation
@@ -116,6 +129,26 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
 
     if (payload.header.controllers && payload.header.controllers.length !== 1) {
       throw new Error('Exactly one controller must be specified')
+    }
+
+    if (
+      state.metadata.forbidControllerChange &&
+      payload.header.controllers &&
+      !stringArraysEqual(payload.header.controllers, state.metadata.controllers)
+    ) {
+      const streamId = new StreamID(TileDocument.STREAM_TYPE_ID, state.log[0].cid)
+      throw new Error(
+        `Cannot change controllers since 'forbidControllerChange' is set. Tried to change controllers for Stream ${streamId} from ${JSON.stringify(
+          state.metadata.controllers
+        )} to ${payload.header.controllers}`
+      )
+    }
+
+    if (
+      payload.header.forbidControllerChange !== undefined &&
+      payload.header.forbidControllerChange !== state.metadata.forbidControllerChange
+    ) {
+      throw new Error("Changing 'forbidControllerChange' metadata property is not allowed")
     }
 
     const nextState = cloneDeep(state)

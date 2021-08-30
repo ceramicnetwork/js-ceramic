@@ -154,6 +154,7 @@ export class Caip10Link extends Stream {
       header: {
         controllers: [accountId.toString()],
         family: `caip10-${accountId.chainId.toString()}`,
+        forbidControllerChange: true,
       },
     }
   }

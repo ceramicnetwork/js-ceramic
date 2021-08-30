@@ -71,3 +71,18 @@ test('change after controller changed', async () => {
   ceramic.did = alice
   await expect(tile.update({ foo: 'baz' })).rejects.toThrow(/invalid_jws/)
 })
+
+test("cannot change controller if 'forbidControllerChange' is set", async () => {
+  ceramic.did = alice
+  const tile = await TileDocument.create(ceramic, { foo: 'blah' }, { forbidControllerChange: true })
+  await expect(tile.update(tile.content, { controllers: [bob.id] })).rejects.toThrow(
+    /Cannot change controllers since 'forbidControllerChange' is set/
+  )
+})
+
+test("cannot update 'forbidControllerChange' metadata property", async () => {
+  const tile = await TileDocument.create(ceramic, { foo: 'blah' }, { forbidControllerChange: true })
+  await expect(tile.update(tile.content, { forbidControllerChange: false })).rejects.toThrow(
+    /Cannot change 'forbidControllerChange' property on existing Streams/
+  )
+})
