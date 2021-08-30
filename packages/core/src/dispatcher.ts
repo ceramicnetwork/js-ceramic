@@ -84,8 +84,8 @@ export default class Dispatcher extends EventEmitter {
    *
    * @param data - Ceramic record data
    */
-  async storeRecord (data: any): Promise<CID> {
-    if (DoctypeUtils.isSignedRecordDTO(data)) {
+  async storeCommit (data: any): Promise<CID> {
+    if (DoctypeUtils.isSignedCommitDTO(data)) {
       const { jws, linkedBlock } = data
       // put the JWS into the ipfs dag
       const cid = await this._ipfs.dag.put(jws, { format: 'dag-jose', hashAlg: 'sha2-256' })
@@ -101,7 +101,7 @@ export default class Dispatcher extends EventEmitter {
    *
    * @param cid - Record CID
    */
-  async retrieveRecord (cid: CID | string): Promise<any> {
+  async retrieveCommit (cid: CID | string): Promise<any> {
     return cloneDeep((await this._ipfs.dag.get(cid)).value)
   }
 

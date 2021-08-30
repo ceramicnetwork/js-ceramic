@@ -249,11 +249,11 @@ describe('Ceramic integration', () => {
     await anchor(ceramic1)
     await syncDoc(doctype1)
 
-    const logRecords = await ceramic1.loadDocumentRecords(doctype1.id)
+    const logCommits = await ceramic1.loadDocumentCommits(doctype1.id)
 
-    let doctype2 = await ceramic2.createDocumentFromGenesis(DOCTYPE_TILE, logRecords[0].value, { applyOnly: true })
-    for (let i = 1; i < logRecords.length; i++) {
-      doctype2 = await ceramic2.applyRecord(doctype2.id, logRecords[i].value, { applyOnly: true })
+    let doctype2 = await ceramic2.createDocumentFromGenesis(DOCTYPE_TILE, logCommits[0].value, { applyOnly: true })
+    for (let i = 1; i < logCommits.length; i++) {
+      doctype2 = await ceramic2.applyCommit(doctype2.id, logCommits[i].value, { applyOnly: true })
     }
 
     expect(doctype1.content).toEqual(doctype2.content)

@@ -84,7 +84,7 @@ class InMemoryAnchorService extends AnchorService {
       try {
         req = this._queue[index]
         const record = (await this._ceramic.ipfs.dag.get(req.cid)).value
-        const did = await this.verifySignedRecord(record)
+        const did = await this.verifySignedCommit(record)
 
         const candidate = new Candidate(new CID(req.cid), req.docId, did)
         if (!validCandidates[candidate.key]) {
@@ -106,7 +106,7 @@ class InMemoryAnchorService extends AnchorService {
         const record = (await this._ceramic.ipfs.dag.get(candidate.cid)).value
 
         let currentNonce
-        if (DoctypeUtils.isSignedRecord(record)) {
+        if (DoctypeUtils.isSignedCommit(record)) {
           const payload = (await this._ceramic.ipfs.dag.get(record.link)).value
           currentNonce = payload.header?.nonce || 0
         } else {
@@ -160,13 +160,13 @@ class InMemoryAnchorService extends AnchorService {
       txHash: new CID(this.SAMPLE_ETH_TX_HASH),
       root: leaf.cid,
     }
-    const proof = await this._dispatcher.storeRecord(proofData)
+    const proof = await this._dispatcher.storeCommit(proofData)
     const record = { proof, path: '', prev: leaf.cid }
-    const cid = await this._dispatcher.storeRecord(record)
+    const cid = await this._dispatcher.storeCommit(record)
 
     // add a delay
     const handle = setTimeout(() => {
-      this.emit(leaf.docId, { status: 'COMPLETED', message: 'CID successfully anchored.', anchorRecord: cid })
+      this.emit(leaf.docId, { status: 'COMPLETED', message: 'CID successfully anchored.', anchorCommit: cid })
       clearTimeout(handle)
     }, this._anchorDelay)
   }
@@ -177,7 +177,7 @@ class InMemoryAnchorService extends AnchorService {
    * @return DID
    * @private
    */
-  async verifySignedRecord(record: Record<string, unknown>): Promise<string> {
+  async verifySignedCommit(record: Record<string, unknown>): Promise<string> {
     const { payload, signatures } = record
     const { signature, protected: _protected } = signatures[0]
 

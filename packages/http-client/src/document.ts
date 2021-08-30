@@ -58,7 +58,7 @@ class Document extends Doctype {
       method: 'post',
       body: {
         doctype,
-        genesis: DoctypeUtils.serializeRecord(genesis),
+        genesis: DoctypeUtils.serializeCommit(genesis),
         docOpts: {
           applyOnly: opts.applyOnly,
         }
@@ -67,13 +67,13 @@ class Document extends Doctype {
     return new Document(DoctypeUtils.deserializeState(state), context, apiUrl, config)
   }
 
-  static async applyRecord(apiUrl: string, docId: DocID | string, record: any, context: Context, opts: DocOpts = {}): Promise<Document> {
+  static async applyCommit(apiUrl: string, docId: DocID | string, record: any, context: Context, opts: DocOpts = {}): Promise<Document> {
     docId = typeDocID(docId)
     const { state } = await fetchJson(apiUrl + '/records', {
       method: 'post',
       body: {
         docId: docId.toString(),
-        record: DoctypeUtils.serializeRecord(record),
+        record: DoctypeUtils.serializeCommit(record),
         docOpts: {
           applyOnly: opts.applyOnly,
         }
@@ -88,13 +88,13 @@ class Document extends Doctype {
     return new Document(DoctypeUtils.deserializeState(state), context, apiUrl, config)
   }
 
-  static async loadDocumentRecords (docId: DocID | string, apiUrl: string): Promise<Array<Record<string, any>>> {
+  static async loadDocumentCommits (docId: DocID | string, apiUrl: string): Promise<Array<Commit<string, any>>> {
     docId = typeDocID(docId)
     const { records } = await fetchJson(apiUrl + '/records/' + docId.toString())
 
     return records.map((r: any) => {
       return {
-        cid: r.cid, value: DoctypeUtils.deserializeRecord(r.value)
+        cid: r.cid, value: DoctypeUtils.deserializeCommit(r.value)
       }
     })
   }

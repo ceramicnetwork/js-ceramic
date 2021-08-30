@@ -27,8 +27,8 @@ export class Caip10LinkDoctype extends Doctype {
             throw new Error("Updating chainId is not currently supported. Current chainId: " + this.metadata.chainId + ", requested chainId: " + params.chainId)
         }
 
-        const updateRecord = await Caip10LinkDoctype._makeRecord(this, content, metadata?.schema)
-        const updated = await this.context.api.applyRecord(this.id.toString(), updateRecord, opts)
+        const updateCommit = await Caip10LinkDoctype._makeCommit(this, content, metadata?.schema)
+        const updated = await this.context.api.applyCommit(this.id.toString(), updateCommit, opts)
         this.state = updated.state
     }
 
@@ -49,7 +49,7 @@ export class Caip10LinkDoctype extends Doctype {
      * Creates genesis record
      * @param params - Create parameters
      */
-    static async makeGenesis(params: Record<string, any>, context: Context): Promise<Record<string, any>> {
+    static async makeGenesis(params: Record<string, any>, context: Context): Promise<Commit<string, any>> {
         const { content, metadata } = params
 
         if (content) {
@@ -85,7 +85,7 @@ export class Caip10LinkDoctype extends Doctype {
      * @param newSchema - Change schema
      * @private
      */
-    static async _makeRecord (doctype: Caip10LinkDoctype, newContent: any, newSchema: string = null): Promise<any> {
+    static async _makeCommit (doctype: Caip10LinkDoctype, newContent: any, newSchema: string = null): Promise<any> {
         const { metadata } = doctype
         if (newSchema) {
             metadata.schema = newSchema

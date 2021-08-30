@@ -76,7 +76,7 @@ export interface CeramicApi {
      * Load all document records by document ID
      * @param docId - Document ID
      */
-    loadDocumentRecords(docId: DocID | string): Promise<Array<Record<string, any>>>;
+    loadDocumentCommits(docId: DocID | string): Promise<Array<Commit<string, any>>>;
 
     /**
      * Applies record on the existing document
@@ -84,7 +84,7 @@ export interface CeramicApi {
      * @param record - Record to be applied
      * @param opts - Initialization options
      */
-    applyRecord<T extends Doctype>(docId: DocID | string, record: Record<string, unknown>, opts?: DocOpts): Promise<T>;
+    applyCommit<T extends Doctype>(docId: DocID | string, record: Record<string, unknown>, opts?: DocOpts): Promise<T>;
 
     /**
      * Set DID provider

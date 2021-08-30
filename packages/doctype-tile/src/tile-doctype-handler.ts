@@ -10,7 +10,7 @@ import cloneDeep from 'lodash.clonedeep'
 import { TileDoctype, TileParams } from "./tile-doctype"
 import {
     AnchorProof,
-    AnchorRecord,
+    AnchorCommit,
     AnchorStatus,
     Context,
     DocOpts,
@@ -59,7 +59,7 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
      * @param context - Ceramic context
      * @param state - Document state
      */
-    async applyRecord(record: any, cid: CID, context: Context, state?: DocState): Promise<DocState> {
+    async applyCommit(record: any, cid: CID, context: Context, state?: DocState): Promise<DocState> {
         if (state == null) {
             // apply genesis
             return this._applyGenesis(record, cid, context)
@@ -81,7 +81,7 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
      */
     async _applyGenesis(record: any, cid: CID, context: Context): Promise<DocState> {
         let payload = record
-        const isSigned = DoctypeUtils.isSignedRecord(record)
+        const isSigned = DoctypeUtils.isSignedCommit(record)
         if (isSigned) {
             payload = (await context.ipfs.dag.get(record.link)).value
             await this._verifySignature(record, context, payload.header.controllers[0])
@@ -152,7 +152,7 @@ export class TileDoctypeHandler implements DoctypeHandler<TileDoctype> {
      * @param state - Document state
      * @private
      */
-    async _applyAnchor(context: Context, record: AnchorRecord, cid: CID, state: DocState): Promise<DocState> {
+    async _applyAnchor(context: Context, record: AnchorCommit, cid: CID, state: DocState): Promise<DocState> {
         // TODO: Assert that the 'prev' of the record being applied is the end of the log in 'state'
         const proof = (await context.ipfs.dag.get(record.proof)).value;
         if (proof.chainId != state.metadata.chainId) {

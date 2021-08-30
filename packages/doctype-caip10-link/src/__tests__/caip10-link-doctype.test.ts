@@ -62,7 +62,7 @@ describe('Caip10LinkHandler', () => {
 
   beforeEach(() => {
     handler = new Caip10LinkDoctypeHandler()
-    validateLink.mockImplementation(async (proof: Record<string, unknown>): Promise<Record<string, unknown>> => proof)
+    validateLink.mockImplementation(async (proof: Record<string, unknown>): Promise<Commit<string, unknown>> => proof)
 
     const recs: Record<string, any> = {}
     const ipfs = {
@@ -130,34 +130,34 @@ describe('Caip10LinkHandler', () => {
   })
 
   it('applies genesis record correctly', async () => {
-    const state = await handler.applyRecord(RECORDS.genesis, FAKE_CID_1, context)
+    const state = await handler.applyCommit(RECORDS.genesis, FAKE_CID_1, context)
     expect(state).toMatchSnapshot()
   })
 
   it('makes signed record correctly', async () => {
-    const state = await handler.applyRecord(RECORDS.genesis, FAKE_CID_1, context)
+    const state = await handler.applyCommit(RECORDS.genesis, FAKE_CID_1, context)
     const doctype = new Caip10LinkDoctype(state, context)
-    const record = await Caip10LinkDoctype._makeRecord(doctype, RECORDS.r1.desiredContent)
+    const record = await Caip10LinkDoctype._makeCommit(doctype, RECORDS.r1.desiredContent)
     expect(record).toEqual(RECORDS.r1.record)
   })
 
   it('applies signed record correctly', async () => {
-    let state = await handler.applyRecord(RECORDS.genesis, FAKE_CID_1, context)
-    state = await handler.applyRecord(RECORDS.r1.record, FAKE_CID_2, context, state)
+    let state = await handler.applyCommit(RECORDS.genesis, FAKE_CID_1, context)
+    state = await handler.applyCommit(RECORDS.r1.record, FAKE_CID_2, context, state)
     expect(state).toMatchSnapshot()
   })
 
   it('throws an error of the proof is invalid', async () => {
     validateLink.mockResolvedValue(undefined)
-    const state = await handler.applyRecord(RECORDS.genesis, FAKE_CID_1, context)
-    await expect(handler.applyRecord(RECORDS.r1.record, FAKE_CID_2, context, state)).rejects.toThrow(/Invalid proof/i)
+    const state = await handler.applyCommit(RECORDS.genesis, FAKE_CID_1, context)
+    await expect(handler.applyCommit(RECORDS.r1.record, FAKE_CID_2, context, state)).rejects.toThrow(/Invalid proof/i)
   })
 
   it('throws an error of the proof doesn\'t match the controller', async () => {
-    const badAddressRecord = cloneDeep(RECORDS.r1.record)
-    badAddressRecord.data.address = '0xffffffffffffffffffffffffffffffffffffffff'
-    const state = await handler.applyRecord(RECORDS.genesis, FAKE_CID_1, context)
-    await expect(handler.applyRecord(badAddressRecord, FAKE_CID_2, context, state)).rejects.toThrow(/Address doesn't match/i)
+    const badAddressCommit = cloneDeep(RECORDS.r1.record)
+    badAddressCommit.data.address = '0xffffffffffffffffffffffffffffffffffffffff'
+    const state = await handler.applyCommit(RECORDS.genesis, FAKE_CID_1, context)
+    await expect(handler.applyCommit(badAddressCommit, FAKE_CID_2, context, state)).rejects.toThrow(/Address doesn't match/i)
   })
 
   it('applies anchor record correctly', async () => {
@@ -169,11 +169,11 @@ describe('Caip10LinkHandler', () => {
     await context.ipfs.dag.put(RECORDS.proof, FAKE_CID_4)
 
     // Apply genesis
-    let state = await handler.applyRecord(RECORDS.genesis, FAKE_CID_1, context)
+    let state = await handler.applyCommit(RECORDS.genesis, FAKE_CID_1, context)
     // Apply signed record
-    state = await handler.applyRecord(RECORDS.r1.record, FAKE_CID_2, context, state)
+    state = await handler.applyCommit(RECORDS.r1.record, FAKE_CID_2, context, state)
     // Apply anchor record
-    state = await handler.applyRecord(RECORDS.r2.record, FAKE_CID_3, context, state)
+    state = await handler.applyCommit(RECORDS.r2.record, FAKE_CID_3, context, state)
     expect(state).toMatchSnapshot()
   })
 
@@ -186,11 +186,11 @@ describe('Caip10LinkHandler', () => {
     await context.ipfs.dag.put({value: { blockNumber: 123456, chainId: 'thewrongchain'}}, FAKE_CID_4)
 
     // Apply genesis
-    let state = await handler.applyRecord(RECORDS.genesis, FAKE_CID_1, context)
+    let state = await handler.applyCommit(RECORDS.genesis, FAKE_CID_1, context)
     // Apply signed record
-    state = await handler.applyRecord(RECORDS.r1.record, FAKE_CID_2, context, state)
+    state = await handler.applyCommit(RECORDS.r1.record, FAKE_CID_2, context, state)
     // Apply anchor record
-    await expect(handler.applyRecord(RECORDS.r2.record, FAKE_CID_3, context, state))
+    await expect(handler.applyCommit(RECORDS.r2.record, FAKE_CID_3, context, state))
         .rejects.toThrow("Anchor record with cid '" + FAKE_CID_3 + "' on caip10-link document with DocID '" +
             FAKE_CID_1 + "' is on chain 'thewrongchain' but this document is configured to be anchored on chain 'fakechain:123'")
   })

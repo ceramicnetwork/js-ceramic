@@ -21,7 +21,7 @@ export enum AnchorStatus {
 /**
  * Describes anchor record
  */
-export interface AnchorRecord {
+export interface AnchorCommit {
     prev: CID; // should be CID type
     proof: CID; // should be CID type
     path: string;
@@ -200,7 +200,7 @@ export interface DoctypeConstructor<T extends Doctype> {
      * @param context - Ceramic context
      * @param opts - Initialization options
      */
-    makeGenesis(params: DocParams, context?: Context, opts?: DocOpts): Promise<Record<string, any>>;
+    makeGenesis(params: DocParams, context?: Context, opts?: DocOpts): Promise<Commit<string, any>>;
 }
 
 /**
@@ -224,6 +224,6 @@ export interface DoctypeHandler<T extends Doctype> {
      * @param context - Ceramic context
      * @param state - Document state
      */
-    applyRecord(record: any, cid: CID, context: Context, state?: DocState): Promise<DocState>;
+    applyCommit(record: any, cid: CID, context: Context, state?: DocState): Promise<DocState>;
 
 }

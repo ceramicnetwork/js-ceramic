@@ -54,13 +54,13 @@ describe('Dispatcher', () => {
   it('store record correctly', async () => {
     const disp = new Dispatcher(ipfs)
     await disp.init()
-    expect(await disp.storeRecord('data')).toEqual(FAKE_CID)
+    expect(await disp.storeCommit('data')).toEqual(FAKE_CID)
   })
 
   it('retrieves record correctly', async () => {
     const disp = new Dispatcher(ipfs)
     await disp.init()
-    expect(await disp.retrieveRecord(FAKE_CID)).toEqual('data')
+    expect(await disp.retrieveCommit(FAKE_CID)).toEqual('data')
   })
 
   it('publishes tip correctly', async () => {

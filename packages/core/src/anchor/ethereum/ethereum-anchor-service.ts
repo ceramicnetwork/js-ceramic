@@ -163,11 +163,11 @@ export default class EthereumAnchorService extends AnchorService {
                         break;
                     }
                     case "COMPLETED": {
-                        const { anchorRecord } = json;
-                        const anchorRecordCid = new CID(anchorRecord.cid.toString());
+                        const { anchorCommit } = json;
+                        const anchorCommitCid = new CID(anchorCommit.cid.toString());
 
                         this.emit(cidDoc.docId, {
-                            status: json.status, message: json.message, anchorRecord: anchorRecordCid
+                            status: json.status, message: json.message, anchorCommit: anchorCommitCid
                         });
                         poll = false;
                         break;

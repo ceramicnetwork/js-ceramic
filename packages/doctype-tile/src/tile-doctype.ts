@@ -42,8 +42,8 @@ export class TileDoctype extends Doctype {
             throw new Error("Updating chainId is not currently supported. Current chainId: " + this.metadata.chainId + ", requested chainId: " + params.chainId)
         }
 
-        const updateRecord = await TileDoctype._makeRecord(this, this.context.did, params.content, params.metadata?.controllers, params.metadata?.schema)
-        const updated = await this.context.api.applyRecord(this.id.toString(), updateRecord, opts)
+        const updateCommit = await TileDoctype._makeCommit(this, this.context.did, params.content, params.metadata?.controllers, params.metadata?.schema)
+        const updated = await this.context.api.applyCommit(this.id.toString(), updateCommit, opts)
         this.state = updated.state
     }
 
@@ -68,7 +68,7 @@ export class TileDoctype extends Doctype {
      * @param params - Create parameters
      * @param context - Ceramic context
      */
-    static async makeGenesis(params: DocParams, context: Context): Promise<Record<string, any>> {
+    static async makeGenesis(params: DocParams, context: Context): Promise<Commit<string, any>> {
         const metadata = params.metadata? params.metadata : { controllers: [] }
 
         // check for DID and authentication
@@ -109,7 +109,7 @@ export class TileDoctype extends Doctype {
      * @param schema - New schema ID
      * @private
      */
-    static async _makeRecord(doctype: Doctype, did: DID, newContent: any, newControllers?: string[], schema?: string): Promise<any> {
+    static async _makeCommit(doctype: Doctype, did: DID, newContent: any, newControllers?: string[], schema?: string): Promise<any> {
         if (did == null || !did.authenticated) {
             throw new Error('No DID authenticated')
         }

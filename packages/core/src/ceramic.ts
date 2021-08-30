@@ -218,7 +218,7 @@ class Ceramic implements CeramicApi {
    * @param record - Record to be applied
    * @param opts - Initialization options
    */
-  async applyRecord<T extends Doctype>(docId: DocID | string, record: Record<string, unknown>, opts?: DocOpts): Promise<T> {
+  async applyCommit<T extends Doctype>(docId: DocID | string, record: Record<string, unknown>, opts?: DocOpts): Promise<T> {
     docId = normalizeDocID(docId)
     if (docId.version != null) {
       throw new Error('Historical document versions cannot be modified. Load the document without specifying a version to make updates.')
@@ -226,7 +226,7 @@ class Ceramic implements CeramicApi {
 
     const doc = await this._loadDoc(docId, opts)
 
-    await doc.applyRecord(record, opts)
+    await doc.applyCommit(record, opts)
     return doc.doctype as T
   }
 
@@ -260,7 +260,7 @@ class Ceramic implements CeramicApi {
     const doctypeHandler = this._doctypeHandlers[doctype]
 
     const genesis = await doctypeHandler.doctype.makeGenesis(params, this.context, opts)
-    const genesisCid = await this.dispatcher.storeRecord(genesis)
+    const genesisCid = await this.dispatcher.storeCommit(genesis)
     const docId = new DocID(doctype, genesisCid)
 
     let doc = this.getDocFromMap(docId)
@@ -292,7 +292,7 @@ class Ceramic implements CeramicApi {
    * @private
    */
   async _createDocFromGenesis(doctype: string, genesis: any, opts: DocOpts = {}): Promise<Document> {
-    const genesisCid = await this.dispatcher.storeRecord(genesis)
+    const genesisCid = await this.dispatcher.storeCommit(genesis)
     const doctypeHandler = this._doctypeHandlers[doctype]
     if (!doctypeHandler) {
       throw new Error(doctype + " is not a valid doctype")
@@ -325,7 +325,7 @@ class Ceramic implements CeramicApi {
    * Load all document records by document ID
    * @param docId - Document ID
    */
-  async loadDocumentRecords(docId: DocID | string): Promise<Array<Record<string, any>>> {
+  async loadDocumentCommits(docId: DocID | string): Promise<Array<Commit<string, any>>> {
     docId = normalizeDocID(docId)
     const doc = await this.loadDocument(docId)
     const { state } = doc
@@ -334,7 +334,7 @@ class Ceramic implements CeramicApi {
       const record = (await this.ipfs.dag.get(cid)).value
       return {
         cid: cid.toString(),
-        value: await DoctypeUtils.convertRecordToDTO(record, this.ipfs)
+        value: await DoctypeUtils.convertCommitToDTO(record, this.ipfs)
       }
     }))
   }

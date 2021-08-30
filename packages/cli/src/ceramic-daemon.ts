@@ -151,7 +151,7 @@ class CeramicDaemon {
     app.get(toApiPath('/node/chains'), this.getSupportedChains.bind(this))
 
     if (!gateway) {
-      app.post(toApiPath('/records'), this.applyRecord.bind(this))
+      app.post(toApiPath('/records'), this.applyCommit.bind(this))
       app.post(toApiPath('/pins/:docid'), this.pinDocument.bind(this))
       app.delete(toApiPath('/pins/:docid'), this.unpinDocument.bind(this))
     } else {
@@ -194,7 +194,7 @@ class CeramicDaemon {
   async createDocFromGenesis (req: Request, res: Response, next: NextFunction): Promise<void> {
     const { doctype, genesis, docOpts } = req.body
     try {
-      const doc = await this.ceramic.createDocumentFromGenesis(doctype, DoctypeUtils.deserializeRecord(genesis), docOpts)
+      const doc = await this.ceramic.createDocumentFromGenesis(doctype, DoctypeUtils.deserializeCommit(genesis), docOpts)
       res.json({ docId: doc.id.toString(), state: DoctypeUtils.serializeState(doc.state) })
     } catch (e) {
       return next(e)
@@ -223,15 +223,15 @@ class CeramicDaemon {
   async records (req: Request, res: Response, next: NextFunction): Promise<void> {
     const docId = DocID.fromString(req.params.docid)
     try {
-      const records = await this.ceramic.loadDocumentRecords(docId)
-      const serializedRecords = records.map((r: any) => {
+      const records = await this.ceramic.loadDocumentCommits(docId)
+      const serializedCommits = records.map((r: any) => {
         return {
           cid: r.cid,
-          value: DoctypeUtils.serializeRecord(r.value)
+          value: DoctypeUtils.serializeCommit(r.value)
         }
       })
 
-      res.json({ docId: docId.toString(), records: serializedRecords })
+      res.json({ docId: docId.toString(), records: serializedCommits })
     } catch (e) {
       return next(e)
     }
@@ -241,7 +241,7 @@ class CeramicDaemon {
   /**
    * Apply one record to the existing document
    */
-  async applyRecord (req: Request, res: Response, next: NextFunction): Promise<void> {
+  async applyCommit (req: Request, res: Response, next: NextFunction): Promise<void> {
     const { docId, record, opts } = req.body
     if (!docId && !record) {
       res.json({ error: 'docId and record are required in order to apply record' })
@@ -250,7 +250,7 @@ class CeramicDaemon {
     }
 
     try {
-      const doctype = await this.ceramic.applyRecord(docId, DoctypeUtils.deserializeRecord(record), opts)
+      const doctype = await this.ceramic.applyCommit(docId, DoctypeUtils.deserializeCommit(record), opts)
       res.json({ docId: doctype.id.toString(), state: DoctypeUtils.serializeState(doctype.state) })
     } catch (e) {
       return next(e)

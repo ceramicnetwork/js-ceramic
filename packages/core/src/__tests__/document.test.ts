@@ -49,8 +49,8 @@ jest.mock('../dispatcher', () => {
       register: jest.fn((doc) => {
         docs[doc.id] = doc
       }),
-      storeRecord: jest.fn(async (rec) => {
-        if (DoctypeUtils.isSignedRecordDTO(rec)) {
+      storeCommit: jest.fn(async (rec) => {
+        if (DoctypeUtils.isSignedCommitDTO(rec)) {
           const { jws, linkedBlock } = rec
           const block = dagCBOR.util.deserialize(linkedBlock)
 
@@ -80,10 +80,10 @@ jest.mock('../dispatcher', () => {
           docs[id]._publishTip()
         }
       },
-      retrieveRecord: jest.fn(cid => {
+      retrieveCommit: jest.fn(cid => {
         return recs[cid.toString()]
       }),
-      retrieveRecordByPath: jest.fn((cid) => {
+      retrieveCommitByPath: jest.fn((cid) => {
         const rootCid = recs[cid.toString()].root
         return recs[rootCid.toString()]
       })
@@ -256,12 +256,12 @@ describe('Document', () => {
       expect(version1).not.toEqual(version0)
       expect(version1).toEqual(versions[1])
 
-      const updateRec = await TileDoctype._makeRecord(doc.doctype, user, newContent, doc.controllers)
+      const updateRec = await TileDoctype._makeCommit(doc.doctype, user, newContent, doc.controllers)
 
       versions = doc.allVersionIds
       expect(versions.length).toEqual(2)
 
-      await doc.applyRecord(updateRec)
+      await doc.applyCommit(updateRec)
 
       versions = doc.allVersionIds
       expect(versions.length).toEqual(2)
@@ -314,8 +314,8 @@ describe('Document', () => {
       const doc = await create({ content: initialContent, metadata: { controllers, tags: ['3id'] } }, ceramic, context)
       await anchorUpdate(doc)
 
-      const updateRec = await TileDoctype._makeRecord(doc.doctype, user, newContent, doc.controllers)
-      await doc.applyRecord(updateRec)
+      const updateRec = await TileDoctype._makeCommit(doc.doctype, user, newContent, doc.controllers)
+      await doc.applyCommit(updateRec)
 
       await anchorUpdate(doc)
       expect(doc.content).toEqual(newContent)
@@ -330,8 +330,8 @@ describe('Document', () => {
       await anchorUpdate(doc1)
       const tipPreUpdate = doc1.tip
 
-      let updateRec = await TileDoctype._makeRecord(doc1.doctype, user, newContent, doc1.controllers)
-      await doc1.applyRecord(updateRec)
+      let updateRec = await TileDoctype._makeCommit(doc1.doctype, user, newContent, doc1.controllers)
+      await doc1.applyCommit(updateRec)
 
       await anchorUpdate(doc1)
       expect(doc1.content).toEqual(newContent)
@@ -344,8 +344,8 @@ describe('Document', () => {
       await new Promise(resolve => setTimeout(resolve, 1))
       // TODO - better mock for anchors
 
-      updateRec = await TileDoctype._makeRecord(doc2.doctype, user, fakeState, doc2.controllers)
-      await doc2.applyRecord(updateRec)
+      updateRec = await TileDoctype._makeCommit(doc2.doctype, user, fakeState, doc2.controllers)
+      await doc2.applyCommit(updateRec)
 
       await anchorUpdate(doc2)
       const tipInvalidUpdate = doc2.tip
@@ -389,8 +389,8 @@ describe('Document', () => {
       await anchorUpdate(doc)
 
       try {
-        const updateRec = await TileDoctype._makeRecord(doc.doctype, user, null, doc.controllers, schemaDoc.versionId.toString())
-        await doc.applyRecord(updateRec)
+        const updateRec = await TileDoctype._makeCommit(doc.doctype, user, null, doc.controllers, schemaDoc.versionId.toString())
+        await doc.applyCommit(updateRec)
         throw new Error('Should not be able to assign a schema to a document that does not conform')
       } catch (e) {
         expect(e.message).toEqual('Validation Error: data[\'stuff\'] should be string')
@@ -489,8 +489,8 @@ describe('Document', () => {
       expect(dispatcher.publishTip).toHaveBeenCalledWith(doc1.id.toString(), doc1.tip, 'tile')
       await anchorUpdate(doc1)
 
-      const updateRec = await TileDoctype._makeRecord(doc1.doctype, user, newContent, doc1.controllers)
-      await doc1.applyRecord(updateRec)
+      const updateRec = await TileDoctype._makeCommit(doc1.doctype, user, newContent, doc1.controllers)
+      await doc1.applyCommit(updateRec)
 
       expect(doc1.content).toEqual(newContent)
 
@@ -507,8 +507,8 @@ describe('Document', () => {
         doc2.doctype.on('change', resolve)
       })
 
-      const updateRec = await TileDoctype._makeRecord(doc1.doctype, user, newContent, doc1.controllers)
-      await doc1.applyRecord(updateRec)
+      const updateRec = await TileDoctype._makeCommit(doc1.doctype, user, newContent, doc1.controllers)
+      await doc1.applyCommit(updateRec)
 
       expect(doc1.content).toEqual(newContent)
 

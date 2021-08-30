@@ -40,7 +40,7 @@ export class Caip10LinkDoctypeHandler implements DoctypeHandler<Caip10LinkDoctyp
      * @param context - Ceramic context
      * @param state - Document state
      */
-    async applyRecord(record: any, cid: CID, context: Context, state?: DocState): Promise<DocState> {
+    async applyCommit(record: any, cid: CID, context: Context, state?: DocState): Promise<DocState> {
         if (state == null) {
             return this._applyGenesis(record, cid)
         }

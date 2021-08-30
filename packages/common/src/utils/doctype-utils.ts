@@ -14,20 +14,20 @@ export class DoctypeUtils {
      * Serializes record
      * @param record - Record instance
      */
-    static serializeRecord(record: any): any {
+    static serializeCommit(record: any): any {
         const cloned = cloneDeep(record)
 
-        if (DoctypeUtils.isSignedRecordDTO(cloned)) {
+        if (DoctypeUtils.isSignedCommitDTO(cloned)) {
             cloned.jws.link = cloned.jws.link.toString()
             cloned.linkedBlock = u8a.toString(cloned.linkedBlock, 'base64')
             return cloned
         }
 
-        if (DoctypeUtils.isSignedRecord(cloned)) {
+        if (DoctypeUtils.isSignedCommit(cloned)) {
             cloned.link = cloned.link.toString()
         }
 
-        if (DoctypeUtils.isAnchorRecord(cloned)) {
+        if (DoctypeUtils.isAnchorCommit(cloned)) {
             cloned.proof = cloned.proof.toString()
         }
 
@@ -45,20 +45,20 @@ export class DoctypeUtils {
      * Deserializes record
      * @param record - Record instance
      */
-    static deserializeRecord(record: any): any {
+    static deserializeCommit(record: any): any {
         const cloned = cloneDeep(record)
 
-        if (DoctypeUtils.isSignedRecordDTO(cloned)) {
+        if (DoctypeUtils.isSignedCommitDTO(cloned)) {
             cloned.jws.link = new CID(cloned.jws.link)
             cloned.linkedBlock = u8a.fromString(cloned.linkedBlock, 'base64')
             return cloned
         }
 
-        if (DoctypeUtils.isSignedRecord(cloned)) {
+        if (DoctypeUtils.isSignedCommit(cloned)) {
             cloned.link = new CID(cloned.link)
         }
 
-        if (DoctypeUtils.isAnchorRecord(cloned)) {
+        if (DoctypeUtils.isAnchorCommit(cloned)) {
             cloned.proof = new CID(cloned.proof)
         }
 
@@ -143,8 +143,8 @@ export class DoctypeUtils {
      * @param record - Record value
      * @param ipfs - IPFS instance
      */
-    static async convertRecordToDTO(record: any, ipfs: IPFSApi): Promise<any> {
-        if (DoctypeUtils.isSignedRecord(record)) {
+    static async convertCommitToDTO(record: any, ipfs: IPFSApi): Promise<any> {
+        if (DoctypeUtils.isSignedCommit(record)) {
             const block = await ipfs.block.get(record.link)
             const linkedBlock = block.data instanceof Uint8Array ? block.data : new Uint8Array(block.data.buffer)
             return {
@@ -159,7 +159,7 @@ export class DoctypeUtils {
      * Checks if record is signed DTO ({jws: {}, linkedBlock: {}})
      * @param record - Record
      */
-    static isSignedRecordDTO(record: any): boolean {
+    static isSignedCommitDTO(record: any): boolean {
         return typeof record === 'object' && 'jws' in record && 'linkedBlock' in record
     }
 
@@ -167,7 +167,7 @@ export class DoctypeUtils {
      * Checks if record is signed
      * @param record - Record
      */
-    static isSignedRecord(record: any): boolean {
+    static isSignedCommit(record: any): boolean {
         return typeof record === 'object' && 'link' in record && 'payload' in record && 'signatures' in record
     }
 
@@ -175,7 +175,7 @@ export class DoctypeUtils {
      * Checks if record is anchor record
      * @param record - Record
      */
-    static isAnchorRecord(record: any): boolean {
+    static isAnchorCommit(record: any): boolean {
         return typeof record === 'object' && 'proof' in record && 'path' in record
     }
 }

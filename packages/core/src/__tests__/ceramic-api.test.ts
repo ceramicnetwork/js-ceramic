@@ -147,8 +147,8 @@ describe('Ceramic API', () => {
 
       // // try to call Ceramic API directly
       try {
-        const updateRecord = await TileDoctype._makeRecord(docV0, ceramic.context.did, { content: { test: 'fghj' } })
-        await ceramic.context.api.applyRecord(docV0Id, updateRecord)
+        const updateCommit = await TileDoctype._makeCommit(docV0, ceramic.context.did, { content: { test: 'fghj' } })
+        await ceramic.context.api.applyCommit(docV0Id, updateCommit)
         throw new Error('Should not be able to update version')
       } catch (e) {
         expect(e.message).toEqual('Historical document versions cannot be modified. Load the document without specifying a version to make updates.')
@@ -421,19 +421,19 @@ describe('Ceramic API', () => {
       }
 
       const doctype = await ceramic.createDocument<TileDoctype>(DOCTYPE_TILE, tileDocParams)
-      const logRecords = await ceramic.loadDocumentRecords(doctype.id)
-      expect(logRecords).toBeDefined()
+      const logCommits = await ceramic.loadDocumentCommits(doctype.id)
+      expect(logCommits).toBeDefined()
 
       const expected = []
       for (const { cid } of doctype.state.log) {
         const record = (await ceramic.ipfs.dag.get(cid)).value
         expected.push({
           cid: cid.toString(),
-          value: await DoctypeUtils.convertRecordToDTO(record, ipfs)
+          value: await DoctypeUtils.convertCommitToDTO(record, ipfs)
         })
       }
 
-      expect(logRecords).toEqual(expected)
+      expect(logCommits).toEqual(expected)
       await ceramic.close()
     })
   })
