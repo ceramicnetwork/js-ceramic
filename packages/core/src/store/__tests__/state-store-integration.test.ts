@@ -29,8 +29,8 @@ jest.mock('../../dispatcher', () => {
     const docs: Record<string, Document> = {}
     const deepResolve = (cid: CID, remaining: string[]): CID => {
       if (remaining.length > 0) {
-        const record = recs[cid.toString()]
-        const next = record[remaining[0]] as CID
+        const commit = recs[cid.toString()]
+        const next = commit[remaining[0]] as CID
         return deepResolve(next, remaining.slice(1))
       } else {
         return cid

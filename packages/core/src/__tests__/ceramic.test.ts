@@ -233,7 +233,7 @@ describe('Ceramic integration', () => {
     await ceramic3.close()
   })
 
-  it('can apply existing records successfully', async () => {
+  it('can apply existing commits successfully', async () => {
     const ceramic1 = await createCeramic(ipfs1, topic)
     const ceramic2 = await createCeramic(ipfs2, 'test')
 

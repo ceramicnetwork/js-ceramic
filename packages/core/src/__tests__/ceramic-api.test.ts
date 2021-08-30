@@ -160,7 +160,7 @@ describe('Ceramic API', () => {
         await ceramic.loadDocument<TileDoctype>(docV0Id)
         throw new Error('Should not be able to fetch not anchored version')
       } catch (e) {
-        expect(e.message).toContain('No anchor record for version')
+        expect(e.message).toContain('No anchor commit for version')
       }
 
       await ceramic.close()
@@ -409,7 +409,7 @@ describe('Ceramic API', () => {
       await ceramic.close()
     })
 
-    it('can list log records', async () => {
+    it('can list log commits', async () => {
       ceramic = await createCeramic()
 
       const controller = ceramic.context.did.id
@@ -426,10 +426,10 @@ describe('Ceramic API', () => {
 
       const expected = []
       for (const { cid } of doctype.state.log) {
-        const record = (await ceramic.ipfs.dag.get(cid)).value
+        const commit = (await ceramic.ipfs.dag.get(cid)).value
         expected.push({
           cid: cid.toString(),
-          value: await DoctypeUtils.convertCommitToDTO(record, ipfs)
+          value: await DoctypeUtils.convertCommitToDTO(commit, ipfs)
         })
       }
 

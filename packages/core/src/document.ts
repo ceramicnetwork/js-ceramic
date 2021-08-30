@@ -124,13 +124,13 @@ class Document extends EventEmitter {
       opts.applyOnly = true
     }
 
-    const record = await dispatcher.retrieveCommit(doc._genesisCid)
+    const commit = await dispatcher.retrieveCommit(doc._genesisCid)
 
     let payload
-    if (DoctypeUtils.isSignedCommit(record)) {
-      payload = await dispatcher.retrieveCommit(record.link)
+    if (DoctypeUtils.isSignedCommit(commit)) {
+      payload = await dispatcher.retrieveCommit(commit.link)
     } else {
-      payload = record
+      payload = commit
     }
 
     doc._doctypeHandler = handler
@@ -142,8 +142,8 @@ class Document extends EventEmitter {
     }
 
     if (doc._doctype.state == null) {
-      // apply genesis record if there's no state preserved
-      doc._doctype.state = await doc._doctypeHandler.applyCommit(record, doc._genesisCid, context)
+      // apply genesis commit if there's no state preserved
+      doc._doctype.state = await doc._doctypeHandler.applyCommit(commit, doc._genesisCid, context)
     }
 
     if (validate) {
@@ -196,12 +196,12 @@ class Document extends EventEmitter {
     if (!isGenesis) {
       const versionCommit = await dispatcher.retrieveCommit(version)
       if (versionCommit == null) {
-        throw new Error(`No record found for version ${version.toString()}`)
+        throw new Error(`No commit found for version ${version.toString()}`)
       }
 
-      // check if it's not an anchor record
+      // check if it's not an anchor commit
       if (versionCommit.proof == null) {
-        throw new Error(`No anchor record for version ${version.toString()}`)
+        throw new Error(`No anchor commit for version ${version.toString()}`)
       }
     }
 
@@ -223,13 +223,13 @@ class Document extends EventEmitter {
   }
 
   /**
-   * Applies record to the existing Doctype
+   * Applies commit to the existing Doctype
    *
-   * @param record - Record data
+   * @param commit - Record data
    * @param opts - Document initialization options (request anchor, wait, etc.)
    */
-  async applyCommit (record: any, opts: DocOpts = {}): Promise<void> {
-    const cid = await this.dispatcher.storeCommit(record)
+  async applyCommit (commit: any, opts: DocOpts = {}): Promise<void> {
+    const cid = await this.dispatcher.storeCommit(commit)
 
     await this._handleTip(cid)
     await this._updateStateIfPinned()
@@ -328,10 +328,10 @@ class Document extends EventEmitter {
     if (await this._isCidIncluded(cid, this._doctype.state.log)) { // already processed
       return []
     }
-    const record = await this.dispatcher.retrieveCommit(cid)
-    let payload = record
-    if (DoctypeUtils.isSignedCommit(record)) {
-      payload = await this.dispatcher.retrieveCommit(record.link)
+    const commit = await this.dispatcher.retrieveCommit(cid)
+    let payload = commit
+    if (DoctypeUtils.isSignedCommit(commit)) {
+      payload = await this.dispatcher.retrieveCommit(commit.link)
     }
     const prevCid: CID = payload.prev
     if (!prevCid) { // this is a fake log
@@ -346,21 +346,21 @@ class Document extends EventEmitter {
   }
 
   /**
-   * Find index of the record in the array. If the record is signed, fetch the payload
+   * Find index of the commit in the array. If the commit is signed, fetch the payload
    *
    * @param cid - CID value
    * @param log - Log array
    * @private
    */
   async _findIndex(cid: CID, log: Array<LogEntry>): Promise<number> {
-    // const conflictIdx = this._doctype.state.log.findIndex(x => x.equals(record.prev)) + 1
+    // const conflictIdx = this._doctype.state.log.findIndex(x => x.equals(commit.prev)) + 1
     for (let index = 0; index < log.length; index++) {
       const c = log[index].cid
       if (c.equals(cid)) {
         return index
       }
-      const record = await this.dispatcher.retrieveCommit(c)
-      if (DoctypeUtils.isSignedCommit(record) && record.link.equals(cid)) {
+      const commit = await this.dispatcher.retrieveCommit(c)
+      if (DoctypeUtils.isSignedCommit(commit) && commit.link.equals(cid)) {
         return index
       }
     }
@@ -368,7 +368,7 @@ class Document extends EventEmitter {
   }
 
   /**
-   * Is CID included in the log. If the record is signed, fetch the payload
+   * Is CID included in the log. If the commit is signed, fetch the payload
    *
    * @param cid - CID value
    * @param log - Log array
@@ -381,7 +381,7 @@ class Document extends EventEmitter {
   /**
    * Applies the log to the document
    *
-   * @param log - Log of record CIDs
+   * @param log - Log of commit CIDs
    * @private
    */
   async _applyLog (log: Array<CID>): Promise<boolean> {
@@ -391,10 +391,10 @@ class Document extends EventEmitter {
       return
     }
     const cid = log[0]
-    const record = await this.dispatcher.retrieveCommit(cid)
-    let payload = record
-    if (DoctypeUtils.isSignedCommit(record)) {
-      payload = await this.dispatcher.retrieveCommit(record.link)
+    const commit = await this.dispatcher.retrieveCommit(cid)
+    let payload = commit
+    if (DoctypeUtils.isSignedCommit(commit)) {
+      payload = await this.dispatcher.retrieveCommit(commit.link)
     }
     if (payload.prev.equals(this.tip)) {
       // the new log starts where the previous one ended
@@ -449,9 +449,9 @@ class Document extends EventEmitter {
   /**
    * Applies the log to the document and updates the state
    *
-   * @param log - Log of record CIDs
+   * @param log - Log of commit CIDs
    * @param state - Document state
-   * @param breakOnAnchor - Should break apply on anchor record?
+   * @param breakOnAnchor - Should break apply on anchor commit?
    * @private
    */
   async _applyLogToState (log: Array<CID>, state?: DocState, breakOnAnchor?: boolean): Promise<DocState> {
@@ -459,20 +459,20 @@ class Document extends EventEmitter {
     let entry = itr.next()
     while(!entry.done) {
       const cid = entry.value[1]
-      const record = await this.dispatcher.retrieveCommit(cid)
+      const commit = await this.dispatcher.retrieveCommit(cid)
       // TODO - should catch potential thrown error here
 
-      let payload = record
-      if (DoctypeUtils.isSignedCommit(record)) {
-        payload = await this.dispatcher.retrieveCommit(record.link)
+      let payload = commit
+      if (DoctypeUtils.isSignedCommit(commit)) {
+        payload = await this.dispatcher.retrieveCommit(commit.link)
       }
 
       if (payload.proof) {
-        // it's an anchor record
-        await this._verifyAnchorCommit(record)
-        state = await this._doctypeHandler.applyCommit(record, cid, this._context, state)
+        // it's an anchor commit
+        await this._verifyAnchorCommit(commit)
+        state = await this._doctypeHandler.applyCommit(commit, cid, this._context, state)
       } else if (!payload.prev) {
-        // it's a genesis record
+        // it's a genesis commit
         if (this.validate) {
           const schemaId = payload.header?.schema
           if (schemaId) {
@@ -482,10 +482,10 @@ class Document extends EventEmitter {
             }
           }
         }
-        state = await this._doctypeHandler.applyCommit(record, cid, this._context)
+        state = await this._doctypeHandler.applyCommit(commit, cid, this._context)
       } else {
-        // it's a signed record
-        const tmpState = await this._doctypeHandler.applyCommit(record, cid, this._context, state)
+        // it's a signed commit
+        const tmpState = await this._doctypeHandler.applyCommit(commit, cid, this._context, state)
         if (this.validate) {
           const schemaId = payload.header?.schema
           if (schemaId) {
@@ -507,41 +507,41 @@ class Document extends EventEmitter {
   }
 
   /**
-   * Verifies anchor record structure
+   * Verifies anchor commit structure
    *
-   * @param record - Anchor record
+   * @param commit - Anchor commit
    * @private
    */
-  async _verifyAnchorCommit (record: AnchorCommit): Promise<AnchorProof> {
-    const proofCommit =  await this.dispatcher.retrieveCommit(record.proof)
+  async _verifyAnchorCommit (commit: AnchorCommit): Promise<AnchorProof> {
+    const proofCommit =  await this.dispatcher.retrieveCommit(commit.proof)
 
     let prevRootPathCommit
     try {
       // optimize verification by using ipfs.dag.tree for fetching the nested CID
-      if (record.path.length === 0) {
+      if (commit.path.length === 0) {
         prevRootPathCommit = proofCommit.root
       } else {
-        const subPath: string = '/root/' + record.path.substr(0, record.path.lastIndexOf('/'))
-        const last: string = record.path.substr(record.path.lastIndexOf('/') + 1)
+        const subPath: string = '/root/' + commit.path.substr(0, commit.path.lastIndexOf('/'))
+        const last: string = commit.path.substr(commit.path.lastIndexOf('/') + 1)
 
-        prevRootPathCommit = await this.dispatcher.retrieveCommit(record.proof.toString() + subPath)
+        prevRootPathCommit = await this.dispatcher.retrieveCommit(commit.proof.toString() + subPath)
         prevRootPathCommit = prevRootPathCommit[last]
       }
     } catch (e) {
-      throw new Error(`The anchor record couldn't be verified. Reason ${e.message}`)
+      throw new Error(`The anchor commit couldn't be verified. Reason ${e.message}`)
     }
 
-    if (record.prev.toString() !== prevRootPathCommit.toString()) {
-      throw new Error(`The anchor record proof ${record.proof.toString()} with path ${record.path} points to invalid 'prev' record`)
+    if (commit.prev.toString() !== prevRootPathCommit.toString()) {
+      throw new Error(`The anchor commit proof ${commit.proof.toString()} with path ${commit.path} points to invalid 'prev' commit`)
     }
 
-    const proof: AnchorProof = await this.dispatcher.retrieveCommit(record.proof)
+    const proof: AnchorProof = await this.dispatcher.retrieveCommit(commit.proof)
     await this._context.anchorService.validateChainInclusion(proof)
     return proof
   }
 
   /**
-   * Publishes Tip record to the pub/sub
+   * Publishes Tip commit to the pub/sub
    *
    * @private
    */
@@ -646,7 +646,7 @@ class Document extends EventEmitter {
   }
 
   /**
-   * Gets document Tip record CID
+   * Gets document Tip commit CID
    */
   get tip (): CID {
     return this._doctype.tip

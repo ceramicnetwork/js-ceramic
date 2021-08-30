@@ -86,7 +86,7 @@ test("#open", async () => {
 });
 
 describe("#pin", () => {
-  test("pin record", async () => {
+  test("pin commit", async () => {
     const pinning = new PowergatePinningBackend(connectionString);
     await pinning.open();
     const cid = new CID("QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D");

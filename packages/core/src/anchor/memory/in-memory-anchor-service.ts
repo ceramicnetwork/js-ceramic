@@ -83,8 +83,8 @@ class InMemoryAnchorService extends AnchorService {
     for (let index = 0; index < this._queue.length; index++) {
       try {
         req = this._queue[index]
-        const record = (await this._ceramic.ipfs.dag.get(req.cid)).value
-        const did = await this.verifySignedCommit(record)
+        const commit = (await this._ceramic.ipfs.dag.get(req.cid)).value
+        const did = await this.verifySignedCommit(commit)
 
         const candidate = new Candidate(new CID(req.cid), req.docId, did)
         if (!validCandidates[candidate.key]) {
@@ -103,14 +103,14 @@ class InMemoryAnchorService extends AnchorService {
       let selected: Candidate = null
 
       for (const candidate of candidates) {
-        const record = (await this._ceramic.ipfs.dag.get(candidate.cid)).value
+        const commit = (await this._ceramic.ipfs.dag.get(candidate.cid)).value
 
         let currentNonce
-        if (DoctypeUtils.isSignedCommit(record)) {
-          const payload = (await this._ceramic.ipfs.dag.get(record.link)).value
+        if (DoctypeUtils.isSignedCommit(commit)) {
+          const payload = (await this._ceramic.ipfs.dag.get(commit.link)).value
           currentNonce = payload.header?.nonce || 0
         } else {
-          currentNonce = record.header?.nonce || 0
+          currentNonce = commit.header?.nonce || 0
         }
         if (selected == null || currentNonce > nonce) {
           selected = candidate
@@ -152,7 +152,7 @@ class InMemoryAnchorService extends AnchorService {
    * @private
    */
   async _process(leaf: Candidate): Promise<void> {
-    // creates fake anchor record
+    // creates fake anchor commit
     const proofData: AnchorProof = {
       chainId: CHAIN_ID,
       blockNumber: Date.now(),
@@ -161,8 +161,8 @@ class InMemoryAnchorService extends AnchorService {
       root: leaf.cid,
     }
     const proof = await this._dispatcher.storeCommit(proofData)
-    const record = { proof, path: '', prev: leaf.cid }
-    const cid = await this._dispatcher.storeCommit(record)
+    const commit = { proof, path: '', prev: leaf.cid }
+    const cid = await this._dispatcher.storeCommit(commit)
 
     // add a delay
     const handle = setTimeout(() => {
@@ -172,13 +172,13 @@ class InMemoryAnchorService extends AnchorService {
   }
 
   /**
-   * Verifies record signature
-   * @param record - Record data
+   * Verifies commit signature
+   * @param commit - Record data
    * @return DID
    * @private
    */
-  async verifySignedCommit(record: Record<string, unknown>): Promise<string> {
-    const { payload, signatures } = record
+  async verifySignedCommit(commit: Record<string, unknown>): Promise<string> {
+    const { payload, signatures } = commit
     const { signature, protected: _protected } = signatures[0]
 
     const decodedHeader = JSON.parse(base64url.decode(_protected))

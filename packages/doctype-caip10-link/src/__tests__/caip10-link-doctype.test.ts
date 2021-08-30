@@ -29,7 +29,7 @@ const RECORDS = {
       address: '0x25954ef14cebbc9af3d71132489a9cfe87043f20@eip155:1',
       timestamp: 1585919920
     },
-    record: {
+    commit: {
       data: {
         version: 1,
         type: 'ethereum-eoa',
@@ -47,7 +47,7 @@ const RECORDS = {
       prev: FAKE_CID_1
     }
   },
-  r2: { record: { proof: FAKE_CID_4 } },
+  r2: { commit: { proof: FAKE_CID_4 } },
   proof: {
     value: {
       blockNumber: 123456,
@@ -96,102 +96,102 @@ describe('Caip10LinkHandler', () => {
     expect(handler.name).toEqual('caip10-link')
   })
 
-  it('makes genesis record correctly', async () => {
-    const record = await Caip10LinkDoctype.makeGenesis({ content: undefined, metadata: RECORDS.genesis.header }, context)
-    expect(record).toEqual(RECORDS.genesis)
+  it('makes genesis commit correctly', async () => {
+    const commit = await Caip10LinkDoctype.makeGenesis({ content: undefined, metadata: RECORDS.genesis.header }, context)
+    expect(commit).toEqual(RECORDS.genesis)
   })
 
-  it('throws an error if genesis record has content', async () => {
+  it('throws an error if genesis commit has content', async () => {
     const content = {}
     await expect(Caip10LinkDoctype.makeGenesis({ content }, context)).rejects.toThrow(/Cannot have content/i)
   })
 
-  it('throws an error if genesis record has no metadata specified', async () => {
+  it('throws an error if genesis commit has no metadata specified', async () => {
     const content: any = undefined
     const controllers: any = undefined
     await expect(Caip10LinkDoctype.makeGenesis({ content, controllers }, context)).rejects.toThrow(/Metadata must be specified/i)
   })
 
-  it('throws an error if genesis record has no controllers specified', async () => {
+  it('throws an error if genesis commit has no controllers specified', async () => {
     const content: any = undefined
     await expect(Caip10LinkDoctype.makeGenesis({ content, metadata: {} }, context)).rejects.toThrow(/Controller must be specified/i)
   })
 
-  it('throws an error if genesis record has more than one controller', async () => {
+  it('throws an error if genesis commit has more than one controller', async () => {
     const content: any = undefined
     const controllers = [...RECORDS.genesis.header.controllers, '0x25954ef14cebbc9af3d79876489a9cfe87043f20@eip155:1']
     await expect(Caip10LinkDoctype.makeGenesis({ content, metadata: { controllers } }, context)).rejects.toThrow(/Exactly one controller/i)
   })
 
-  it('throws an error if genesis record has controller not in CAIP-10 format', async () => {
+  it('throws an error if genesis commit has controller not in CAIP-10 format', async () => {
     const content: any = undefined
     const controllers = RECORDS.genesis.header.controllers.map(address => address.split('@')[0])
     await expect(Caip10LinkDoctype.makeGenesis({ content, metadata: { controllers } }, context)).rejects.toThrow(/According to CAIP-10/i)
   })
 
-  it('applies genesis record correctly', async () => {
+  it('applies genesis commit correctly', async () => {
     const state = await handler.applyCommit(RECORDS.genesis, FAKE_CID_1, context)
     expect(state).toMatchSnapshot()
   })
 
-  it('makes signed record correctly', async () => {
+  it('makes signed commit correctly', async () => {
     const state = await handler.applyCommit(RECORDS.genesis, FAKE_CID_1, context)
     const doctype = new Caip10LinkDoctype(state, context)
-    const record = await Caip10LinkDoctype._makeCommit(doctype, RECORDS.r1.desiredContent)
-    expect(record).toEqual(RECORDS.r1.record)
+    const commit = await Caip10LinkDoctype._makeCommit(doctype, RECORDS.r1.desiredContent)
+    expect(commit).toEqual(RECORDS.r1.commit)
   })
 
-  it('applies signed record correctly', async () => {
+  it('applies signed commit correctly', async () => {
     let state = await handler.applyCommit(RECORDS.genesis, FAKE_CID_1, context)
-    state = await handler.applyCommit(RECORDS.r1.record, FAKE_CID_2, context, state)
+    state = await handler.applyCommit(RECORDS.r1.commit, FAKE_CID_2, context, state)
     expect(state).toMatchSnapshot()
   })
 
   it('throws an error of the proof is invalid', async () => {
     validateLink.mockResolvedValue(undefined)
     const state = await handler.applyCommit(RECORDS.genesis, FAKE_CID_1, context)
-    await expect(handler.applyCommit(RECORDS.r1.record, FAKE_CID_2, context, state)).rejects.toThrow(/Invalid proof/i)
+    await expect(handler.applyCommit(RECORDS.r1.commit, FAKE_CID_2, context, state)).rejects.toThrow(/Invalid proof/i)
   })
 
   it('throws an error of the proof doesn\'t match the controller', async () => {
-    const badAddressCommit = cloneDeep(RECORDS.r1.record)
+    const badAddressCommit = cloneDeep(RECORDS.r1.commit)
     badAddressCommit.data.address = '0xffffffffffffffffffffffffffffffffffffffff'
     const state = await handler.applyCommit(RECORDS.genesis, FAKE_CID_1, context)
     await expect(handler.applyCommit(badAddressCommit, FAKE_CID_2, context, state)).rejects.toThrow(/Address doesn't match/i)
   })
 
-  it('applies anchor record correctly', async () => {
-    // create signed record
-    await context.ipfs.dag.put(RECORDS.r1.record, FAKE_CID_2)
-    // create anchor record
-    await context.ipfs.dag.put(RECORDS.r2.record, FAKE_CID_3)
+  it('applies anchor commit correctly', async () => {
+    // create signed commit
+    await context.ipfs.dag.put(RECORDS.r1.commit, FAKE_CID_2)
+    // create anchor commit
+    await context.ipfs.dag.put(RECORDS.r2.commit, FAKE_CID_3)
     // create anchor proof
     await context.ipfs.dag.put(RECORDS.proof, FAKE_CID_4)
 
     // Apply genesis
     let state = await handler.applyCommit(RECORDS.genesis, FAKE_CID_1, context)
-    // Apply signed record
-    state = await handler.applyCommit(RECORDS.r1.record, FAKE_CID_2, context, state)
-    // Apply anchor record
-    state = await handler.applyCommit(RECORDS.r2.record, FAKE_CID_3, context, state)
+    // Apply signed commit
+    state = await handler.applyCommit(RECORDS.r1.commit, FAKE_CID_2, context, state)
+    // Apply anchor commit
+    state = await handler.applyCommit(RECORDS.r2.commit, FAKE_CID_3, context, state)
     expect(state).toMatchSnapshot()
   })
 
-  it('Does not apply anchor record on wrong chain', async () => {
-    // create signed record
-    await context.ipfs.dag.put(RECORDS.r1.record, FAKE_CID_2)
-    // create anchor record
-    await context.ipfs.dag.put(RECORDS.r2.record, FAKE_CID_3)
-    // create anchor proof with a different chainId than what's in the genesis record
+  it('Does not apply anchor commit on wrong chain', async () => {
+    // create signed commit
+    await context.ipfs.dag.put(RECORDS.r1.commit, FAKE_CID_2)
+    // create anchor commit
+    await context.ipfs.dag.put(RECORDS.r2.commit, FAKE_CID_3)
+    // create anchor proof with a different chainId than what's in the genesis commit
     await context.ipfs.dag.put({value: { blockNumber: 123456, chainId: 'thewrongchain'}}, FAKE_CID_4)
 
     // Apply genesis
     let state = await handler.applyCommit(RECORDS.genesis, FAKE_CID_1, context)
-    // Apply signed record
-    state = await handler.applyCommit(RECORDS.r1.record, FAKE_CID_2, context, state)
-    // Apply anchor record
-    await expect(handler.applyCommit(RECORDS.r2.record, FAKE_CID_3, context, state))
-        .rejects.toThrow("Anchor record with cid '" + FAKE_CID_3 + "' on caip10-link document with DocID '" +
+    // Apply signed commit
+    state = await handler.applyCommit(RECORDS.r1.commit, FAKE_CID_2, context, state)
+    // Apply anchor commit
+    await expect(handler.applyCommit(RECORDS.r2.commit, FAKE_CID_3, context, state))
+        .rejects.toThrow("Anchor commit with cid '" + FAKE_CID_3 + "' on caip10-link document with DocID '" +
             FAKE_CID_1 + "' is on chain 'thewrongchain' but this document is configured to be anchored on chain 'fakechain:123'")
   })
 })

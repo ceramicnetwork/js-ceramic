@@ -213,12 +213,12 @@ class Ceramic implements CeramicApi {
   }
 
   /**
-   * Applies record on a given document
+   * Applies commit on a given document
    * @param docId - Document ID
-   * @param record - Record to be applied
+   * @param commit - Record to be applied
    * @param opts - Initialization options
    */
-  async applyCommit<T extends Doctype>(docId: DocID | string, record: Record<string, unknown>, opts?: DocOpts): Promise<T> {
+  async applyCommit<T extends Doctype>(docId: DocID | string, commit: Record<string, unknown>, opts?: DocOpts): Promise<T> {
     docId = normalizeDocID(docId)
     if (docId.version != null) {
       throw new Error('Historical document versions cannot be modified. Load the document without specifying a version to make updates.')
@@ -226,7 +226,7 @@ class Ceramic implements CeramicApi {
 
     const doc = await this._loadDoc(docId, opts)
 
-    await doc.applyCommit(record, opts)
+    await doc.applyCommit(commit, opts)
     return doc.doctype as T
   }
 
@@ -274,7 +274,7 @@ class Ceramic implements CeramicApi {
   }
 
   /**
-   * Creates doctype from genesis record
+   * Creates doctype from genesis commit
    * @param doctype - Document type
    * @param genesis - Genesis CID
    * @param opts - Initialization options
@@ -285,9 +285,9 @@ class Ceramic implements CeramicApi {
   }
 
   /**
-   * Creates document from genesis record
+   * Creates document from genesis commit
    * @param doctype - Document type
-   * @param genesis - Genesis record
+   * @param genesis - Genesis commit
    * @param opts - Initialization options
    * @private
    */
@@ -322,7 +322,7 @@ class Ceramic implements CeramicApi {
   }
 
   /**
-   * Load all document records by document ID
+   * Load all document commits by document ID
    * @param docId - Document ID
    */
   async loadDocumentCommits(docId: DocID | string): Promise<Array<Commit<string, any>>> {
@@ -331,10 +331,10 @@ class Ceramic implements CeramicApi {
     const { state } = doc
 
     return Promise.all(state.log.map(async ({ cid }) => {
-      const record = (await this.ipfs.dag.get(cid)).value
+      const commit = (await this.ipfs.dag.get(cid)).value
       return {
         cid: cid.toString(),
-        value: await DoctypeUtils.convertCommitToDTO(record, this.ipfs)
+        value: await DoctypeUtils.convertCommitToDTO(commit, this.ipfs)
       }
     }))
   }

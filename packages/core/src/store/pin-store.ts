@@ -52,17 +52,17 @@ export class PinStore {
         for (const { cid } of log) {
             points.push(cid)
 
-            const record = await this.retrieve(cid)
-            if (record && record.proof) {
-                points.push(record.proof)
+            const commit = await this.retrieve(cid)
+            if (commit && commit.proof) {
+                points.push(commit.proof)
 
-                const path = record.path ? "root/" + record.path : "root"
+                const path = commit.path ? "root/" + commit.path : "root"
                 const subPaths = path.split('/').filter(p => !!p)
 
                 let currentPath = ""
                 for (const subPath of subPaths) {
                     currentPath += "/" + subPath
-                    const subPathResolved = await this.resolve(record.proof.toString() + currentPath)
+                    const subPathResolved = await this.resolve(commit.proof.toString() + currentPath)
                     points.push(subPathResolved)
                 }
             }

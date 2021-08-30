@@ -19,7 +19,7 @@ export enum AnchorStatus {
 }
 
 /**
- * Describes anchor record
+ * Describes anchor commit
  */
 export interface AnchorCommit {
     prev: CID; // should be CID type
@@ -195,7 +195,7 @@ export interface DoctypeConstructor<T extends Doctype> {
     new(state: DocState, context: Context): T;
 
     /**
-     * Makes genesis record
+     * Makes genesis commit
      * @param params - Create parameters
      * @param context - Ceramic context
      * @param opts - Initialization options
@@ -218,12 +218,12 @@ export interface DoctypeHandler<T extends Doctype> {
     doctype: DoctypeConstructor<T>;
 
     /**
-     * Applies record to the document (genesis|signed|anchored)
-     * @param record - Record instance
+     * Applies commit to the document (genesis|signed|anchored)
+     * @param commit - Record instance
      * @param cid - Record CID
      * @param context - Ceramic context
      * @param state - Document state
      */
-    applyCommit(record: any, cid: CID, context: Context, state?: DocState): Promise<DocState>;
+    applyCommit(commit: any, cid: CID, context: Context, state?: DocState): Promise<DocState>;
 
 }

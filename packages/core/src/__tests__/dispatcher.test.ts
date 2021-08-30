@@ -51,13 +51,13 @@ describe('Dispatcher', () => {
     expect(ipfs.pubsub.publish).toHaveBeenCalledWith(TOPIC, JSON.stringify({ typ: MsgType.REQUEST, id, doctype: 'tile' }))
   })
 
-  it('store record correctly', async () => {
+  it('store commit correctly', async () => {
     const disp = new Dispatcher(ipfs)
     await disp.init()
     expect(await disp.storeCommit('data')).toEqual(FAKE_CID)
   })
 
-  it('retrieves record correctly', async () => {
+  it('retrieves commit correctly', async () => {
     const disp = new Dispatcher(ipfs)
     await disp.init()
     expect(await disp.retrieveCommit(FAKE_CID)).toEqual('data')

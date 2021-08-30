@@ -117,7 +117,7 @@ describe('Ceramic anchoring', () => {
     await tmpFolder.cleanup()
   })
 
-  it('test all records anchored', async () => {
+  it('test all commits anchored', async () => {
     await ipfs2.swarm.connect(multaddr1)
 
     const [ceramic1, ceramic2] = await Promise.all([
@@ -145,7 +145,7 @@ describe('Ceramic anchoring', () => {
     await ceramic2.close()
   })
 
-  it('test no records anchored', async () => {
+  it('test no commits anchored', async () => {
     await ipfs2.swarm.connect(multaddr1)
 
     const [ceramic1, ceramic2] = await Promise.all([

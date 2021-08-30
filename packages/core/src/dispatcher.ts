@@ -80,9 +80,9 @@ export default class Dispatcher extends EventEmitter {
   }
 
   /**
-   * Store Ceramic record (genesis|signed|anchor).
+   * Store Ceramic commit (genesis|signed|anchor).
    *
-   * @param data - Ceramic record data
+   * @param data - Ceramic commit data
    */
   async storeCommit (data: any): Promise<CID> {
     if (DoctypeUtils.isSignedCommitDTO(data)) {
@@ -97,7 +97,7 @@ export default class Dispatcher extends EventEmitter {
   }
 
   /**
-   * Retrieves one Ceramic record by CID or path.
+   * Retrieves one Ceramic commit by CID or path.
    *
    * @param cid - Record CID
    */
@@ -106,7 +106,7 @@ export default class Dispatcher extends EventEmitter {
   }
 
   /**
-   * Publishes Tip record to pub/sub topic.
+   * Publishes Tip commit to pub/sub topic.
    *
    * @param id  - Document ID
    * @param tip - Record CID

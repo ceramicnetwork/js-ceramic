@@ -123,9 +123,9 @@ export default class CeramicClient implements CeramicApi {
     return Document.loadDocumentCommits(docId, this._apiUrl)
   }
 
-  async applyCommit<T extends Doctype>(docId: DocID | string, record: Record<string, unknown>, opts?: DocOpts): Promise<T> {
+  async applyCommit<T extends Doctype>(docId: DocID | string, commit: Record<string, unknown>, opts?: DocOpts): Promise<T> {
     docId = typeDocID(docId)
-    return await Document.applyCommit(this._apiUrl, docId, record, this.context, opts) as unknown as T
+    return await Document.applyCommit(this._apiUrl, docId, commit, this.context, opts) as unknown as T
   }
 
   addDoctypeHandler<T extends Doctype>(doctypeHandler: DoctypeHandler<T>): void {

@@ -11,11 +11,11 @@ import { IPFSApi } from "../declarations"
 export class DoctypeUtils {
 
     /**
-     * Serializes record
-     * @param record - Record instance
+     * Serializes commit
+     * @param commit - Record instance
      */
-    static serializeCommit(record: any): any {
-        const cloned = cloneDeep(record)
+    static serializeCommit(commit: any): any {
+        const cloned = cloneDeep(commit)
 
         if (DoctypeUtils.isSignedCommitDTO(cloned)) {
             cloned.jws.link = cloned.jws.link.toString()
@@ -42,11 +42,11 @@ export class DoctypeUtils {
     }
 
     /**
-     * Deserializes record
-     * @param record - Record instance
+     * Deserializes commit
+     * @param commit - Record instance
      */
-    static deserializeCommit(record: any): any {
-        const cloned = cloneDeep(record)
+    static deserializeCommit(commit: any): any {
+        const cloned = cloneDeep(commit)
 
         if (DoctypeUtils.isSignedCommitDTO(cloned)) {
             cloned.jws.link = new CID(cloned.jws.link)
@@ -139,43 +139,43 @@ export class DoctypeUtils {
     }
 
     /**
-     * Converts record to DTO. The only difference is with signed record for now
-     * @param record - Record value
+     * Converts commit to DTO. The only difference is with signed commit for now
+     * @param commit - Record value
      * @param ipfs - IPFS instance
      */
-    static async convertCommitToDTO(record: any, ipfs: IPFSApi): Promise<any> {
-        if (DoctypeUtils.isSignedCommit(record)) {
-            const block = await ipfs.block.get(record.link)
+    static async convertCommitToDTO(commit: any, ipfs: IPFSApi): Promise<any> {
+        if (DoctypeUtils.isSignedCommit(commit)) {
+            const block = await ipfs.block.get(commit.link)
             const linkedBlock = block.data instanceof Uint8Array ? block.data : new Uint8Array(block.data.buffer)
             return {
-                jws: record,
+                jws: commit,
                 linkedBlock,
             }
         }
-        return record
+        return commit
     }
 
     /**
-     * Checks if record is signed DTO ({jws: {}, linkedBlock: {}})
-     * @param record - Record
+     * Checks if commit is signed DTO ({jws: {}, linkedBlock: {}})
+     * @param commit - Record
      */
-    static isSignedCommitDTO(record: any): boolean {
-        return typeof record === 'object' && 'jws' in record && 'linkedBlock' in record
+    static isSignedCommitDTO(commit: any): boolean {
+        return typeof commit === 'object' && 'jws' in commit && 'linkedBlock' in commit
     }
 
     /**
-     * Checks if record is signed
-     * @param record - Record
+     * Checks if commit is signed
+     * @param commit - Record
      */
-    static isSignedCommit(record: any): boolean {
-        return typeof record === 'object' && 'link' in record && 'payload' in record && 'signatures' in record
+    static isSignedCommit(commit: any): boolean {
+        return typeof commit === 'object' && 'link' in commit && 'payload' in commit && 'signatures' in commit
     }
 
     /**
-     * Checks if record is anchor record
-     * @param record - Record
+     * Checks if commit is anchor commit
+     * @param commit - Record
      */
-    static isAnchorCommit(record: any): boolean {
-        return typeof record === 'object' && 'proof' in record && 'path' in record
+    static isAnchorCommit(commit: any): boolean {
+        return typeof commit === 'object' && 'proof' in commit && 'path' in commit
     }
 }

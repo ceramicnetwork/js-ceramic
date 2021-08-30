@@ -58,9 +58,9 @@ export interface CeramicApi {
     createDocument<T extends Doctype>(doctype: string, params: DocParams, opts?: DocOpts): Promise<T>;
 
     /**
-     * Create Doctype from genesis record
+     * Create Doctype from genesis commit
      * @param doctype - Document type
-     * @param genesis - Genesis record
+     * @param genesis - Genesis commit
      * @param opts - Initialization options
      */
     createDocumentFromGenesis<T extends Doctype>(doctype: string, genesis: any, opts?: DocOpts): Promise<T>;
@@ -73,18 +73,18 @@ export interface CeramicApi {
     loadDocument<T extends Doctype>(docId: DocID | string, opts?: DocOpts): Promise<T>;
 
     /**
-     * Load all document records by document ID
+     * Load all document commits by document ID
      * @param docId - Document ID
      */
     loadDocumentCommits(docId: DocID | string): Promise<Array<Commit<string, any>>>;
 
     /**
-     * Applies record on the existing document
+     * Applies commit on the existing document
      * @param docId - Document ID
-     * @param record - Record to be applied
+     * @param commit - Record to be applied
      * @param opts - Initialization options
      */
-    applyCommit<T extends Doctype>(docId: DocID | string, record: Record<string, unknown>, opts?: DocOpts): Promise<T>;
+    applyCommit<T extends Doctype>(docId: DocID | string, commit: Record<string, unknown>, opts?: DocOpts): Promise<T>;
 
     /**
      * Set DID provider

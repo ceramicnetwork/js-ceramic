@@ -59,7 +59,7 @@ const RECORDS = {
   },
   r1: {
     desiredContent: { publicKeys: { test: '0xabc' }, other: 'data' },
-    record: {
+    commit: {
       jws: {
         "payload": "bbbb",
         "signatures": [
@@ -84,7 +84,7 @@ const RECORDS = {
       }
     }
   },
-  r2: { record: { proof: FAKE_CID_4 } },
+  r2: { commit: { proof: FAKE_CID_4 } },
   proof: {
     blockNumber: 123456,
     chainId: 'fakechain:123',
@@ -179,29 +179,29 @@ describe('ThreeIdHandler', () => {
     expect(tileDoctypeHandler.name).toEqual('tile')
   })
 
-  it('makes genesis record correctly', async () => {
-    const record = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: RECORDS.genesis.header, deterministic:true }, context)
-    const { jws, linkedBlock } = record
+  it('makes genesis commit correctly', async () => {
+    const commit = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: RECORDS.genesis.header, deterministic:true }, context)
+    const { jws, linkedBlock } = commit
 
     const payload = dagCBOR.util.deserialize(linkedBlock)
     const generated = { jws: serialize(jws), linkedBlock: serialize(payload)}
     expect(generated).toEqual(RECORDS.genesisGenerated)
   })
 
-  it('applies genesis record correctly', async () => {
+  it('applies genesis commit correctly', async () => {
     const tileHandler = new TileDoctypeHandler()
 
-    const record = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id], tags: ['3id'] } }, context)
-    await context.ipfs.dag.put(record, FAKE_CID_1)
+    const commit = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id], tags: ['3id'] } }, context)
+    await context.ipfs.dag.put(commit, FAKE_CID_1)
 
-    const payload = dagCBOR.util.deserialize(record.linkedBlock)
-    await context.ipfs.dag.put(payload, record.jws.link)
+    const payload = dagCBOR.util.deserialize(commit.linkedBlock)
+    await context.ipfs.dag.put(payload, commit.jws.link)
 
-    const docState = await tileHandler.applyCommit(record.jws, FAKE_CID_1, context)
+    const docState = await tileHandler.applyCommit(commit.jws, FAKE_CID_1, context)
     expect(docState).toMatchSnapshot()
   })
 
-  it('makes signed record correctly', async () => {
+  it('makes signed commit correctly', async () => {
     const tileDoctypeHandler = new TileDoctypeHandler()
 
     await context.ipfs.dag.put(RECORDS.genesisGenerated.jws, FAKE_CID_1)
@@ -212,13 +212,13 @@ describe('ThreeIdHandler', () => {
 
     await expect(TileDoctype._makeCommit(doctype, null, RECORDS.r1.desiredContent)).rejects.toThrow(/No DID/)
 
-    const record = await TileDoctype._makeCommit(doctype, did, RECORDS.r1.desiredContent)
-    const { jws: rJws, linkedBlock: rLinkedBlock} = record
+    const commit = await TileDoctype._makeCommit(doctype, did, RECORDS.r1.desiredContent)
+    const { jws: rJws, linkedBlock: rLinkedBlock} = commit
     const rPayload = dagCBOR.util.deserialize(rLinkedBlock)
-    expect({ jws: serialize(rJws), payload: serialize(rPayload)}).toEqual(RECORDS.r1.record)
+    expect({ jws: serialize(rJws), payload: serialize(rPayload)}).toEqual(RECORDS.r1.commit)
   })
 
-  it('applies signed record correctly', async () => {
+  it('applies signed commit correctly', async () => {
     const tileDoctypeHandler = new TileDoctypeHandler()
 
     const genesisCommit = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id], tags: ['3id'] } }, context)
@@ -243,7 +243,7 @@ describe('ThreeIdHandler', () => {
     expect(state).toMatchSnapshot()
   })
 
-  it('throws error if record signed by wrong DID', async () => {
+  it('throws error if commit signed by wrong DID', async () => {
     const tileDoctypeHandler = new TileDoctypeHandler()
 
     const genesisCommit = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: ['did:3:fake'], tags: ['3id'] } }, context)
@@ -255,7 +255,7 @@ describe('ThreeIdHandler', () => {
     await expect(tileDoctypeHandler.applyCommit(genesisCommit.jws, FAKE_CID_1, context)).rejects.toThrow(/wrong DID/)
   })
 
-  it('applies anchor record correctly', async () => {
+  it('applies anchor commit correctly', async () => {
     const tileDoctypeHandler = new TileDoctypeHandler()
 
     const genesisCommit = await TileDoctype.makeGenesis({ content: RECORDS.genesis.data, metadata: { controllers: [did.id], tags: ['3id'] } }, context)
@@ -280,7 +280,7 @@ describe('ThreeIdHandler', () => {
 
     await context.ipfs.dag.put(RECORDS.proof, FAKE_CID_4)
     // apply anchor
-    state = await tileDoctypeHandler.applyCommit(RECORDS.r2.record, FAKE_CID_3, context, state)
+    state = await tileDoctypeHandler.applyCommit(RECORDS.r2.commit, FAKE_CID_3, context, state)
     expect(state).toMatchSnapshot()
   })
 })

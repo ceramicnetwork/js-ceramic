@@ -41,12 +41,12 @@ export class Caip10LinkDoctype extends Doctype {
     static async create(params: Caip10LinkParams, context: Context, opts?: DocOpts): Promise<Caip10LinkDoctype> {
         const { content, metadata } = params
 
-        const record = await Caip10LinkDoctype.makeGenesis({ content, metadata }, context)
-        return context.api.createDocumentFromGenesis(DOCTYPE, record, opts)
+        const commit = await Caip10LinkDoctype.makeGenesis({ content, metadata }, context)
+        return context.api.createDocumentFromGenesis(DOCTYPE, commit, opts)
     }
 
     /**
-     * Creates genesis record
+     * Creates genesis commit
      * @param params - Create parameters
      */
     static async makeGenesis(params: Record<string, any>, context: Context): Promise<Commit<string, any>> {
@@ -79,7 +79,7 @@ export class Caip10LinkDoctype extends Doctype {
     }
 
     /**
-     * Creates change record
+     * Creates change commit
      * @param doctype - Caip10Link doctype instance
      * @param newContent - Change content
      * @param newSchema - Change schema

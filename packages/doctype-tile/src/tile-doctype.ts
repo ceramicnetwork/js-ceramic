@@ -59,12 +59,12 @@ export class TileDoctype extends Doctype {
         }
 
         const { content, metadata } = params
-        const record = await TileDoctype.makeGenesis({ content, metadata }, context)
-        return context.api.createDocumentFromGenesis<TileDoctype>(DOCTYPE, record, opts)
+        const commit = await TileDoctype.makeGenesis({ content, metadata }, context)
+        return context.api.createDocumentFromGenesis<TileDoctype>(DOCTYPE, commit, opts)
     }
 
     /**
-     * Creates genesis record
+     * Creates genesis commit
      * @param params - Create parameters
      * @param context - Ceramic context
      */
@@ -96,12 +96,12 @@ export class TileDoctype extends Doctype {
         }
 
         const { content } = params
-        const record = { data: content, header: metadata, unique }
-        return content ? TileDoctype._signDagJWS(record, context.did, metadata.controllers[0]) : record
+        const commit = { data: content, header: metadata, unique }
+        return content ? TileDoctype._signDagJWS(commit, context.did, metadata.controllers[0]) : commit
     }
 
     /**
-     * Make change record
+     * Make change commit
      * @param doctype - Tile doctype instance
      * @param did - DID instance
      * @param newContent - New context
@@ -137,8 +137,8 @@ export class TileDoctype extends Doctype {
         const willSquash = header.nonce && header.nonce > 0
         const prev = doctype.state.log[doctype.state.log.length - 1 - (willSquash ? 1 : 0)].cid
 
-        const record = { header, data: patch, prev, id: doctype.state.log[0].cid }
-        return TileDoctype._signDagJWS(record, did, doctype.controllers[0])
+        const commit = { header, data: patch, prev, id: doctype.state.log[0].cid }
+        return TileDoctype._signDagJWS(commit, did, doctype.controllers[0])
     }
 
     /**
@@ -154,17 +154,17 @@ export class TileDoctype extends Doctype {
     }
 
     /**
-     * Sign Tile record
+     * Sign Tile commit
      * @param did - DID instance
-     * @param record - Record to be signed
+     * @param commit - Record to be signed
      * @param controller - Controller
      * @private
      */
-    static async _signDagJWS(record: any, did: DID, controller: string): Promise<any> {
+    static async _signDagJWS(commit: any, did: DID, controller: string): Promise<any> {
         if (did == null || !did.authenticated) {
             throw new Error('No user authenticated')
         }
-        return did.createDagJWS(record, { did: controller })
+        return did.createDagJWS(commit, { did: controller })
     }
 
 }

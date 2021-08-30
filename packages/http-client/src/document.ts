@@ -67,13 +67,13 @@ class Document extends Doctype {
     return new Document(DoctypeUtils.deserializeState(state), context, apiUrl, config)
   }
 
-  static async applyCommit(apiUrl: string, docId: DocID | string, record: any, context: Context, opts: DocOpts = {}): Promise<Document> {
+  static async applyCommit(apiUrl: string, docId: DocID | string, commit: any, context: Context, opts: DocOpts = {}): Promise<Document> {
     docId = typeDocID(docId)
-    const { state } = await fetchJson(apiUrl + '/records', {
+    const { state } = await fetchJson(apiUrl + '/commits', {
       method: 'post',
       body: {
         docId: docId.toString(),
-        record: DoctypeUtils.serializeCommit(record),
+        commit: DoctypeUtils.serializeCommit(commit),
         docOpts: {
           applyOnly: opts.applyOnly,
         }
@@ -90,9 +90,9 @@ class Document extends Doctype {
 
   static async loadDocumentCommits (docId: DocID | string, apiUrl: string): Promise<Array<Commit<string, any>>> {
     docId = typeDocID(docId)
-    const { records } = await fetchJson(apiUrl + '/records/' + docId.toString())
+    const { commits } = await fetchJson(apiUrl + '/commits/' + docId.toString())
 
-    return records.map((r: any) => {
+    return commits.map((r: any) => {
       return {
         cid: r.cid, value: DoctypeUtils.deserializeCommit(r.value)
       }

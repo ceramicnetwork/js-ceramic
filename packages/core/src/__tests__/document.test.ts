@@ -99,8 +99,8 @@ const create = async (params: TileParams, ceramic: Ceramic, context: Context, op
     throw new Error('The controller of the 3ID needs to be specified')
   }
 
-  const record = await TileDoctype.makeGenesis({ content, metadata }, context)
-  return await ceramic._createDocFromGenesis("tile", record, opts)
+  const commit = await TileDoctype.makeGenesis({ content, metadata }, context)
+  return await ceramic._createDocFromGenesis("tile", commit, opts)
 }
 
 const stringMapSchema = {
@@ -284,7 +284,7 @@ describe('Document', () => {
         await Document.loadVersion(doc, new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu'))
         throw new Error('Should not be able to fetch non-existing version')
       } catch (e) {
-        expect(e.message).toContain('No record found for version')
+        expect(e.message).toContain('No commit found for version')
       }
 
       // try to checkout not anchored version
@@ -292,7 +292,7 @@ describe('Document', () => {
         await Document.loadVersion(doc, doc.doctype.state.log[2].cid)
         throw new Error('Should not be able to fetch not anchored version')
       } catch (e) {
-        expect(e.message).toContain('No anchor record for version')
+        expect(e.message).toContain('No anchor commit for version')
       }
 
       const docV1 = await Document.loadVersion(doc, doc.doctype.state.log[1].cid)
@@ -397,7 +397,7 @@ describe('Document', () => {
       }
     })
 
-    it('Enforces schema when loading genesis record', async () => {
+    it('Enforces schema when loading genesis commit', async () => {
       const schemaDoc = await create({ content: stringMapSchema, metadata: { controllers } }, ceramic, context)
       await anchorUpdate(schemaDoc)
 
