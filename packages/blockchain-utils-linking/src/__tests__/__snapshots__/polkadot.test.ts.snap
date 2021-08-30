@@ -13,7 +13,6 @@ AccountID {
 exports[`createLink create proof with ed25519 1`] = `
 Object {
   "account": "5EEvMbuaJQxxPorGtzY2qUYqM3akRrnD36bZD4PomfpLdrtx@polkadot:b0a8d493285c2df73290dfb7e61f870f",
-  "did": "did:3:bafysdfwefwe",
   "message": "Link this account to your identity
 
 did:3:bafysdfwefwe 
@@ -28,7 +27,6 @@ Timestamp: 666",
 exports[`createLink create proof with secp256k 1`] = `
 Object {
   "account": "5GuAnwx9uKSQxKZB8moxoaX4ceehoCYu4XYMjJkKtm2QDgqC@polkadot:b0a8d493285c2df73290dfb7e61f870f",
-  "did": "did:3:bafysdfwefwe",
   "message": "Link this account to your identity
 
 did:3:bafysdfwefwe 
