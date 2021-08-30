@@ -263,7 +263,7 @@ export class CeramicCliUtils {
     await CeramicCliUtils._runWithCeramicClient(async (ceramic: CeramicApi) => {
       const doc = await TileDocument.load(ceramic, id)
       console.log(JSON.stringify(doc.content, null, 2))
-      doc.feed().subscribe((tileSnapshot) => {
+      doc.subscribe((tileSnapshot) => {
         console.log('--- document changed ---')
         console.log(JSON.stringify(tileSnapshot.content, null, 2))
       })

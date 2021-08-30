@@ -3,7 +3,7 @@ import cloneDeep from 'lodash.clonedeep'
 import type { Context } from './context'
 import { CommitID, StreamID } from '@ceramicnetwork/streamid'
 import type { DagJWS, DagJWSResult } from 'dids'
-import { Observable } from 'rxjs'
+import { map, Observable } from 'rxjs'
 import { RunningStateLike } from './running-state-like'
 import { CeramicApi } from './ceramic-api'
 import { LoadOpts, SyncOptions } from './docopts'
@@ -147,6 +147,16 @@ export interface StreamState {
   log: Array<LogEntry>
 }
 
+export class StreamSnapshot {
+  readonly content: any
+  readonly metadata: StreamMetadata
+
+  constructor(state: StreamState) {
+    this.content = state.next ? state.next.content : state.content
+    this.metadata = state.next ? state.next.metadata : state.metadata
+  }
+}
+
 /**
  * Describes object which stores StreamState.
  *
@@ -161,9 +171,25 @@ export interface StreamStateHolder {
 /**
  * Describes common stream attributes
  */
-export abstract class Stream implements StreamStateHolder {
-  constructor(protected readonly state$: RunningStateLike, private _context: Context) {}
+export abstract class Stream<SnapshotType extends StreamSnapshot>
+  extends Observable<SnapshotType>
+  implements StreamStateHolder
+{
+  constructor(protected readonly state$: RunningStateLike, private _context: Context) {
+    super((subscriber) => {
+      state$
+        .pipe(
+          map((streamState) => {
+            return this._getSnapshot(streamState)
+          })
+        )
+        .subscribe(subscriber)
+    })
+  }
 
+  protected _getSnapshot(state: StreamState): StreamSnapshot {
+    return new StreamSnapshot(state)
+  }
   /**
    * Makes this Stream instance automatically update its internal state whenever a new update
    * to the underlying Stream is learned about by the Ceramic node, either via pubsub or by
@@ -259,7 +285,7 @@ export function StreamStatic<T>() {
 /**
  * Stream static signatures
  */
-export interface StreamConstructor<T extends Stream> {
+export interface StreamConstructor<T extends Stream<any>> {
   /**
    * Constructor signature
    * @param state$ - Stream state
@@ -271,7 +297,7 @@ export interface StreamConstructor<T extends Stream> {
 /**
  * Describes stream type handler functionality
  */
-export interface StreamHandler<T extends Stream> {
+export interface StreamHandler<T extends Stream<any>> {
   /**
    * The ID number of the streamtype. This is specified by the table within CIP-59.
    */

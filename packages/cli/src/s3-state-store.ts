@@ -28,7 +28,7 @@ export class S3StateStore implements StateStore {
    * Pin stream
    * @param stream - Stream instance
    */
-  async save(stream: Stream): Promise<void> {
+  async save(stream: Stream<any>): Promise<void> {
     await this.#store.put(
       stream.id.baseID.toString(),
       JSON.stringify(StreamUtils.serializeState(stream.state))

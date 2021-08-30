@@ -18,6 +18,7 @@ import {
   UpdateOpts,
   SyncOptions,
   AnchorStatus,
+  StreamSnapshot,
 } from '@ceramicnetwork/common'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { Caip10Link } from '@ceramicnetwork/stream-caip10-link'
@@ -70,7 +71,7 @@ export class CeramicClient implements CeramicApi {
   public readonly context: Context
 
   private readonly _config: CeramicClientConfig
-  public readonly _streamConstructors: Record<number, StreamConstructor<Stream>>
+  public readonly _streamConstructors: Record<number, StreamConstructor<Stream<any>>>
 
   constructor(apiHost: string = CERAMIC_HOST, config: Partial<CeramicClientConfig> = {}) {
     this._config = { ...DEFAULT_CLIENT_CONFIG, ...config }
@@ -133,7 +134,7 @@ export class CeramicClient implements CeramicApi {
     }
   }
 
-  async createStreamFromGenesis<T extends Stream>(
+  async createStreamFromGenesis<T extends Stream<any>>(
     type: number,
     genesis: any,
     opts: CreateOpts = {}
@@ -157,7 +158,7 @@ export class CeramicClient implements CeramicApi {
     }
   }
 
-  async loadStream<T extends Stream>(
+  async loadStream<T extends Stream<any>>(
     streamId: StreamID | CommitID | string,
     opts: LoadOpts = {}
   ): Promise<T> {
@@ -173,7 +174,7 @@ export class CeramicClient implements CeramicApi {
     return this.buildStream<T>(stream)
   }
 
-  async multiQuery(queries: Array<MultiQuery>): Promise<Record<string, Stream>> {
+  async multiQuery(queries: Array<MultiQuery>): Promise<Record<string, Stream<any>>> {
     const queriesJSON = queries.map((q) => {
       return {
         streamId: typeof q.streamId === 'string' ? q.streamId : q.streamId.toString(),
@@ -203,7 +204,7 @@ export class CeramicClient implements CeramicApi {
     return Document.loadStreamCommits(effectiveStreamId, this._apiUrl)
   }
 
-  async applyCommit<T extends Stream>(
+  async applyCommit<T extends Stream<any>>(
     streamId: string | StreamID,
     commit: CeramicCommit,
     opts: CreateOpts | UpdateOpts = {}
@@ -242,11 +243,11 @@ export class CeramicClient implements CeramicApi {
     return anchorStatus
   }
 
-  addStreamHandler<T extends Stream>(streamHandler: StreamHandler<T>): void {
+  addStreamHandler<T extends Stream<any>>(streamHandler: StreamHandler<T>): void {
     this._streamConstructors[streamHandler.name] = streamHandler.stream_constructor
   }
 
-  findStreamConstructor<T extends Stream>(type: number) {
+  findStreamConstructor<T extends Stream<any>>(type: number) {
     const constructor = this._streamConstructors[type]
     if (constructor) {
       return constructor as StreamConstructor<T>
@@ -255,7 +256,7 @@ export class CeramicClient implements CeramicApi {
     }
   }
 
-  private buildStream<T extends Stream = Stream>(stream: Document) {
+  private buildStream<T extends Stream<any> = Stream<StreamSnapshot>>(stream: Document) {
     const streamConstructor = this.findStreamConstructor<T>(stream.state.type)
     return new streamConstructor(stream, this.context)
   }

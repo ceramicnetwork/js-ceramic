@@ -58,7 +58,7 @@ export interface CeramicApi extends CeramicSigner {
    * Register Stream handler
    * @param streamHandler - StreamHandler instance
    */
-  addStreamHandler<T extends Stream>(streamHandler: StreamHandler<T>): void
+  addStreamHandler<T extends Stream<any>>(streamHandler: StreamHandler<T>): void
 
   /**
    * Create Stream from genesis commit
@@ -66,7 +66,7 @@ export interface CeramicApi extends CeramicSigner {
    * @param genesis - Genesis commit
    * @param opts - Initialization options
    */
-  createStreamFromGenesis<T extends Stream>(
+  createStreamFromGenesis<T extends Stream<any>>(
     type: number,
     genesis: any,
     opts?: CreateOpts
@@ -77,7 +77,10 @@ export interface CeramicApi extends CeramicSigner {
    * @param streamId - Stream ID
    * @param opts - Initialization options
    */
-  loadStream<T extends Stream>(streamId: StreamID | CommitID | string, opts?: LoadOpts): Promise<T>
+  loadStream<T extends Stream<any>>(
+    streamId: StreamID | CommitID | string,
+    opts?: LoadOpts
+  ): Promise<T>
 
   /**
    * Load all stream commits by stream ID
@@ -90,7 +93,7 @@ export interface CeramicApi extends CeramicSigner {
    * @param queries - Array of MultiQueries
    * @param timeout - Timeout in milliseconds
    */
-  multiQuery(queries: Array<MultiQuery>, timeout?: number): Promise<Record<string, Stream>>
+  multiQuery(queries: Array<MultiQuery>, timeout?: number): Promise<Record<string, Stream<any>>>
 
   /**
    * Applies commit on the existing stream
@@ -98,7 +101,7 @@ export interface CeramicApi extends CeramicSigner {
    * @param commit - Commit to be applied
    * @param opts - Initialization options
    */
-  applyCommit<T extends Stream>(
+  applyCommit<T extends Stream<any>>(
     streamId: StreamID | string,
     commit: CeramicCommit,
     opts?: CreateOpts | UpdateOpts

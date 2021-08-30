@@ -17,7 +17,9 @@ import {
   CeramicApi,
   SignedCommitContainer,
   StreamMetadata,
+  StreamSnapshot,
   CeramicSigner,
+  StreamState,
 } from '@ceramicnetwork/common'
 import { CommitID, StreamID, StreamRef } from '@ceramicnetwork/streamid'
 import { Observable, map } from 'rxjs'
@@ -116,16 +118,19 @@ async function throwReadOnlyError(): Promise<void> {
   )
 }
 
-interface TileSnapshot<T> {
-  content: T
-  metadata: StreamMetadata
+class TileSnapshot<T> extends StreamSnapshot {
+  readonly content: T
+
+  constructor(state: StreamState) {
+    super(state)
+  }
 }
 
 /**
  * TileDocument stream implementation
  */
 @StreamStatic<StreamConstructor<TileDocument>>()
-export class TileDocument<T = Record<string, any>> extends Stream {
+export class TileDocument<T = Record<string, any>> extends Stream<TileSnapshot<T>> {
   static STREAM_TYPE_NAME = 'tile'
   static STREAM_TYPE_ID = 0
 
@@ -133,6 +138,10 @@ export class TileDocument<T = Record<string, any>> extends Stream {
 
   get content(): T {
     return super.content
+  }
+
+  _getSnapshot(state: StreamState): TileSnapshot<T> {
+    return new TileSnapshot<T>(state)
   }
 
   /**
@@ -334,16 +343,5 @@ export class TileDocument<T = Record<string, any>> extends Stream {
     }
     const commit: GenesisCommit = { data: content, header }
     return await _signDagJWS(signer, commit)
-  }
-
-  feed(): Observable<TileSnapshot<T>> {
-    return this.state$.pipe(
-      map((streamState) => {
-        const content = streamState.next ? streamState.next.content : streamState.content
-        const metadata = streamState.next ? streamState.next.metadata : streamState.metadata
-
-        return { content, metadata }
-      })
-    )
   }
 }

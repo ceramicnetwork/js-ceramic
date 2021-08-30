@@ -10,6 +10,8 @@ import {
   RawCommit,
   GenesisCommit,
   StreamMetadata,
+  StreamSnapshot,
+  StreamState,
 } from '@ceramicnetwork/common'
 import type { AuthProvider, LinkProof } from '@ceramicnetwork/blockchain-utils-linking'
 import { CommitID, StreamID, StreamRef } from '@ceramicnetwork/streamid'
@@ -24,9 +26,13 @@ const throwReadOnlyError = (): Promise<void> => {
   )
 }
 
-interface Caip10LinkSnapshot {
-  did: string | null
-  metadata: StreamMetadata
+class Caip10LinkSnapshot extends StreamSnapshot {
+  readonly did: string | null
+
+  constructor(state: StreamState) {
+    super(state)
+    this.did = this.content
+  }
 }
 
 const DEFAULT_CREATE_OPTS = { anchor: false, publish: true, sync: SyncOptions.PREFER_CACHE }
@@ -37,7 +43,7 @@ const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE }
  * Caip10Link stream implementation
  */
 @StreamStatic<StreamConstructor<Caip10Link>>()
-export class Caip10Link extends Stream {
+export class Caip10Link extends Stream<Caip10LinkSnapshot> {
   static STREAM_TYPE_NAME = 'caip10-link'
   static STREAM_TYPE_ID = 1
 
@@ -48,6 +54,10 @@ export class Caip10Link extends Stream {
    */
   get did(): string | null {
     return this.content
+  }
+
+  _getSnapshot(state: StreamState): Caip10LinkSnapshot {
+    return new Caip10LinkSnapshot(state)
   }
 
   /**
@@ -186,16 +196,5 @@ export class Caip10Link extends Stream {
 
   get isReadOnly(): boolean {
     return this._isReadOnly
-  }
-
-  feed(): Observable<Caip10LinkSnapshot> {
-    return this.state$.pipe(
-      map((streamState) => {
-        const did = streamState.next ? streamState.next.content : streamState.content
-        const metadata = streamState.next ? streamState.next.metadata : streamState.metadata
-
-        return { did, metadata }
-      })
-    )
   }
 }
