@@ -306,7 +306,7 @@ export class TileDocument<T = Record<string, any>> extends Stream {
   ): Promise<CeramicCommit> {
     const header = headerFromMetadata(newMetadata, false)
 
-    if (newContent === undefined) {
+    if (newContent == null) {
       newContent = this.content
     }
 
