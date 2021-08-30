@@ -54,4 +54,4 @@ test('wrong proof', async () => {
   const address = uint8arrays.toString(localProvider.getPublicKey().data, 'base64pad')
   const authProvider = new linking.NearAuthProvider(provider, address, chainRef)
   await wrongProof(ceramic, authProvider)
-})
+}, 20000)

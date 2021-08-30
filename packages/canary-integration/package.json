@@ -26,6 +26,7 @@
   "jest": {
     "testEnvironment": "node",
     "resolver": "jest-resolver-enhanced",
+    "testRegex": ".(spec|test).ts$",
     "transform": {
       "^.+\\.ts$": "ts-jest"
     }
