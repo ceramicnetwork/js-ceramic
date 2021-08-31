@@ -1,4 +1,4 @@
-import { IpfsApi } from '@ceramicnetwork/common'
+import { IpfsApi, SyncOptions } from '@ceramicnetwork/common'
 import { createIPFS } from './ipfs-util'
 import Ceramic from '../ceramic'
 import { createCeramic } from './create-ceramic'
@@ -78,6 +78,37 @@ test("cannot change controller if 'forbidControllerChange' is set", async () => 
   await expect(tile.update(tile.content, { controllers: [bob.id] })).rejects.toThrow(
     /Cannot change controllers since 'forbidControllerChange' is set/
   )
+})
+
+test("Explicitly setting 'forbidControllerChange' to false doesn't change genesis commit", async () => {
+  const tile1 = await TileDocument.create(
+    ceramic,
+    null,
+    { deterministic: true, family: 'test123' },
+    { sync: SyncOptions.NEVER_SYNC }
+  )
+  const tile2 = await TileDocument.create(
+    ceramic,
+    null,
+    {
+      deterministic: true,
+      family: 'test123',
+      forbidControllerChange: false,
+    },
+    { sync: SyncOptions.NEVER_SYNC }
+  )
+  const tile3 = await TileDocument.create(
+    ceramic,
+    null,
+    {
+      deterministic: true,
+      family: 'test123',
+      forbidControllerChange: true,
+    },
+    { sync: SyncOptions.NEVER_SYNC }
+  )
+  expect(tile2.id.toString()).toEqual(tile1.id.toString())
+  expect(tile3.id.toString()).not.toEqual(tile2.id.toString())
 })
 
 test("cannot update 'forbidControllerChange' metadata property", async () => {
