@@ -17,8 +17,6 @@ import {
 } from '@ceramicnetwork/common'
 import { Dispatcher } from './dispatcher'
 import cloneDeep from 'lodash.clonedeep'
-import mergeWith from 'lodash.mergewith'
-import isNil from 'lodash.isnil'
 import { CommitID } from '@ceramicnetwork/streamid'
 import { StateValidation } from './state-management/state-validation'
 import { HandlersMap } from './handlers-map'
@@ -251,7 +249,7 @@ async function getCommitData(commitData, dispatcher: Dispatcher): Promise<Commit
   return {
     ...cloneDeep(commitData),
     ...updates,
-    type: isGenesis ? CommitType.GENESIS : commitData.type
+    type: isGenesis ? CommitType.GENESIS : (commitData.type ?? updates.type)
   }
 }
 
