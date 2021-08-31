@@ -69,7 +69,7 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
    * @private
    */
   async _applyGenesis(commit: any, meta: CommitMeta, context: Context): Promise<StreamState> {
-    let payload = commit
+    let payload = StreamUtils.isExpandedCommit(commit) ? commit.commit : commit
     const isSigned = StreamUtils.isSignedCommit(commit) || (commit as CommitData).envelope
     if (isSigned) {
       let envelope = commit

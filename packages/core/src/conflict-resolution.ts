@@ -245,10 +245,10 @@ async function getCommitData(commitData, dispatcher: Dispatcher): Promise<Commit
       updates = { type: CommitType.SIGNED, commit: commit }
     }
   }
-  // Clone the `CommitData` so that the Stream state is not affected when commit/JWS data is added to the structure.
-  // Merge updates retrieved above with the cloned original data in a way that fields that were already present
-  // are not overwritten.
-  return mergeWith(cloneDeep(commitData), updates, (left, right) => isNil(left) ? right : left)
+  // Clone `commitData` so that the stream state is not affected when commit/JWS data is added to the structure. Merge
+  // updates retrieved above with the cloned original data in a way that fields that were already present in the passed
+  // structure are not overwritten (e.g. `cid`, `type`, or `timestamp`).
+  return mergeWith(cloneDeep(commitData), updates, (dst, src) => isNil(dst) ? src : dst)
 }
 
 export class ConflictResolution {
@@ -304,7 +304,7 @@ export class ConflictResolution {
     // `fetchLog` provides the timestamps.
     if (state && state.log.length === 1) {
       const timestamp = unappliedCommits[0].timestamp
-      const genesis = await getCommitData(state.log[0], this.dispatcher)
+      const genesis = await getCommitData({ ...state.log[0], type: CommitType.GENESIS }, this.dispatcher)
       await handler.applyCommit(genesis, { cid: genesis.cid, timestamp: timestamp }, this.context)
     }
 
@@ -394,9 +394,8 @@ export class ConflictResolution {
    */
   async verifyLoneGenesis(state: StreamState) {
     const handler = this.handlers.get(state.type)
-    const genesisCid = state.log[0].cid
-    const genesis = await this.dispatcher.retrieveCommit(genesisCid)
-    await handler.applyCommit(genesis, { cid: genesisCid }, this.context)
+    const genesis = await getCommitData({ ...state.log[0], type: CommitType.GENESIS }, this.dispatcher)
+    await handler.applyCommit(genesis, { cid: genesis.cid }, this.context)
   }
 
   /**
