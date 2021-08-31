@@ -164,8 +164,7 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
     // TODO: Assert that the 'prev' of the commit being applied is the end of the log in 'state'
     const proof = StreamUtils.isExpandedCommit(commit)
       ? commit.proof
-      : (await context.ipfs.dag.get(commit.proof, { timeout: IPFS_GET_TIMEOUT }))
-          .value
+      : (await context.ipfs.dag.get(commit.proof, { timeout: IPFS_GET_TIMEOUT })).value
 
     state.log.push({ cid, type: CommitType.ANCHOR, timestamp: proof.blockTimestamp })
     let content = state.content

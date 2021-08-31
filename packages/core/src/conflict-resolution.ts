@@ -229,7 +229,7 @@ export function commitAtTime(stateHolder: StreamStateHolder, timestamp: number):
  * present
  */
 async function getCommitData(commitData, dispatcher: Dispatcher): Promise<CommitData> {
-  let updates = {}
+  let updates: any = {}
   if (!commitData.commit) {
     const commit = await dispatcher.retrieveCommit(commitData.cid)
     if (!commit) throw new Error(`No commit found for CID ${commitData.cid.toString()}`)
@@ -245,10 +245,14 @@ async function getCommitData(commitData, dispatcher: Dispatcher): Promise<Commit
       updates = { type: CommitType.SIGNED, commit: commit }
     }
   }
-  // Clone `commitData` so that the stream state is not affected when commit/JWS data is added to the structure. Merge
-  // updates retrieved above with the cloned original data in a way that fields that were already present in the passed
-  // structure are not overwritten (e.g. `cid`, `type`, or `timestamp`).
-  return mergeWith(cloneDeep(commitData), updates, (dst, src) => isNil(dst) ? src : dst)
+  const isGenesis = (commitData.type === CommitType.GENESIS) || !(commitData.commit ?? updates.commit).prev
+  // Merge updates retrieved above with a clone of the original `CommitData` so that the stream state is not affected
+  // when commit/JWS data is added to the structure.
+  return {
+    ...cloneDeep(commitData),
+    ...updates,
+    type: isGenesis ? CommitType.GENESIS : commitData.type
+  }
 }
 
 export class ConflictResolution {
@@ -304,7 +308,7 @@ export class ConflictResolution {
     // `fetchLog` provides the timestamps.
     if (state && state.log.length === 1) {
       const timestamp = unappliedCommits[0].timestamp
-      const genesis = await getCommitData({ ...state.log[0], type: CommitType.GENESIS }, this.dispatcher)
+      const genesis = await getCommitData(state.log[0], this.dispatcher)
       await handler.applyCommit(genesis, { cid: genesis.cid, timestamp: timestamp }, this.context)
     }
 
@@ -394,7 +398,7 @@ export class ConflictResolution {
    */
   async verifyLoneGenesis(state: StreamState) {
     const handler = this.handlers.get(state.type)
-    const genesis = await getCommitData({ ...state.log[0], type: CommitType.GENESIS }, this.dispatcher)
+    const genesis = await getCommitData(state.log[0], this.dispatcher)
     await handler.applyCommit(genesis, { cid: genesis.cid }, this.context)
   }
 
