@@ -25,9 +25,7 @@ const FAKE_CID_8 = new CID('bafybeig6xv5nwphfmvcnektpnojts66jqcuam6bmye2pb54adnr
 const ACCOUNT = '0x0544DcF4fcE959C6C4F3b7530190cB5E1BD67Cb8@eip155:1'
 
 const RECORDS = {
-  genesis: {
-    header: { controllers: [ACCOUNT], family: 'caip10-eip155:1', forbidControllerChange: true },
-  },
+  genesis: { header: { controllers: [ACCOUNT], family: 'caip10-eip155:1' } },
   r1: {
     desiredContent: {
       version: 2,
