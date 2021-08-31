@@ -69,17 +69,17 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
    * @private
    */
   async _applyGenesis(commit: any, meta: CommitMeta, context: Context): Promise<StreamState> {
-    let payload = StreamUtils.isExpandedCommit(commit) ? commit.commit : commit
+    let payload = commit
     const isSigned = StreamUtils.isSignedCommit(commit) || (commit as CommitData).envelope
     if (isSigned) {
-      let envelope = commit
-      if (StreamUtils.isExpandedCommit(commit)) {
-        envelope = commit.envelope
-        payload = commit.commit
-      } else {
-        payload = (await context.ipfs.dag.get(commit.link, { timeout: IPFS_GET_TIMEOUT })).value
-      }
+      // Verify the JWS before performing any additional IPFS lookups
+      const envelope = StreamUtils.isExpandedCommit(commit) ? commit.envelope : commit
       await this._verifySignature(envelope, meta, context, payload.header.controllers[0])
+
+      // Retrieve the payload
+      payload = StreamUtils.isExpandedCommit(commit)
+          ? commit.commit
+          : (await context.ipfs.dag.get(commit.link, { timeout: IPFS_GET_TIMEOUT })).value
     } else if (payload.data) {
       throw Error('Genesis commit with contents should always be signed')
     }
@@ -114,9 +114,12 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
   ): Promise<StreamState> {
     // TODO: Assert that the 'prev' of the commit being applied is the end of the log in 'state'
     const controller = state.next?.metadata?.controllers?.[0] || state.metadata.controllers[0]
+
+    // Verify the JWS before performing any additional IPFS lookups
     const envelope = StreamUtils.isExpandedCommit(commit) ? commit.envelope : commit
     await this._verifySignature(envelope, meta, context, controller)
 
+    // Retrieve the payload
     const payload = StreamUtils.isExpandedCommit(commit)
       ? commit.commit
       : (await context.ipfs.dag.get(commit.link, { timeout: IPFS_GET_TIMEOUT })).value
