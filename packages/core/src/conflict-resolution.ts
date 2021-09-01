@@ -257,7 +257,7 @@ export class ConflictResolution {
    * @param handler - the handler for the streamtype
    * @private
    */
-  private async applyLogEntryToState<T extends Stream<any>>(
+  private async applyLogEntryToState<T extends Stream>(
     entry: CommitData,
     state: StreamState,
     handler: StreamHandler<T>
@@ -287,7 +287,7 @@ export class ConflictResolution {
    * If an error is encountered while applying a commit, commit application stops and the state
    * that was built thus far is returned, unless 'opts.throwOnInvalidCommit' is true.
    */
-  private async applyLogToState<T extends Stream<any>>(
+  private async applyLogToState<T extends Stream>(
     handler: StreamHandler<T>,
     unappliedCommits: CommitData[],
     state: StreamState | null,

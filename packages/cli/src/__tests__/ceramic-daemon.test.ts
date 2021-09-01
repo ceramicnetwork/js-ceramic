@@ -89,7 +89,7 @@ describe('Ceramic interop: core <> http-client', () => {
    * got anchored.
    * @param doc
    */
-  const anchorDoc = async (doc: Stream<any>): Promise<void> => {
+  const anchorDoc = async (doc: Stream): Promise<void> => {
     // TODO update this to only use public apis
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore

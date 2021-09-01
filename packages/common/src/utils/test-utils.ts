@@ -20,7 +20,7 @@ export class TestUtils {
    * Returns a Promise that resolves when there is an update to the given stream's state.
    * @param stream
    */
-  static registerChangeListener(stream: Stream<any>): Promise<StreamState> {
+  static registerChangeListener(stream: Stream): Promise<StreamState> {
     // TODO update this to only use public apis
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
@@ -36,7 +36,7 @@ export class TestUtils {
    * @param onFailure - function called if we time out before the predicate becomes true
    */
   static async waitForState(
-    stream: Stream<any>,
+    stream: Stream,
     timeout: number,
     predicate: (state: StreamState) => boolean,
     onFailure: () => void

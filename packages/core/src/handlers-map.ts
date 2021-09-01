@@ -4,12 +4,12 @@ import { Stream, StreamHandler } from '@ceramicnetwork/common'
 import { DiagnosticsLogger } from '@ceramicnetwork/common'
 import { StreamType } from '@ceramicnetwork/streamid'
 
-type Registry = Map<number, StreamHandler<Stream<any>>>
+type Registry = Map<number, StreamHandler<Stream>>
 
 function defaultHandlers(): Registry {
   const tile = new TileDocumentHandler()
   const caip10Link = new Caip10LinkHandler()
-  const handlers = new Map<number, StreamHandler<Stream<any>>>()
+  const handlers = new Map<number, StreamHandler<Stream>>()
   handlers.set(tile.type, tile)
   handlers.set(caip10Link.type, caip10Link)
   return handlers
@@ -30,7 +30,7 @@ export class HandlersMap {
    *
    * @param type - name or id of the handler.
    */
-  get<T extends Stream<any>>(type: string | number): StreamHandler<T> {
+  get<T extends Stream>(type: string | number): StreamHandler<T> {
     const id = typeof type == 'string' ? StreamType.codeByName(type) : type
     const handler = this.handlers.get(id)
     if (handler) {
@@ -43,7 +43,7 @@ export class HandlersMap {
   /**
    * Add stream handler to the collection.
    */
-  add<T extends Stream<any>>(streamHandler: StreamHandler<T>): HandlersMap {
+  add<T extends Stream>(streamHandler: StreamHandler<T>): HandlersMap {
     this.logger.debug(`Registered handler for ${streamHandler.type} stream type`)
     this.handlers.set(streamHandler.type, streamHandler)
     return this

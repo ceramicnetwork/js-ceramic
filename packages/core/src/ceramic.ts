@@ -511,7 +511,7 @@ export class Ceramic implements CeramicApi {
    * Register new stream handler
    * @param streamHandler - Stream type handler
    */
-  addStreamHandler<T extends Stream<any>>(streamHandler: StreamHandler<T>): void {
+  addStreamHandler<T extends Stream>(streamHandler: StreamHandler<T>): void {
     this._streamHandlers.add(streamHandler)
   }
 
@@ -521,7 +521,7 @@ export class Ceramic implements CeramicApi {
    * @param commit - Commit to be applied
    * @param opts - Initialization options
    */
-  async applyCommit<T extends Stream<any>>(
+  async applyCommit<T extends Stream>(
     streamId: string | StreamID,
     commit: CeramicCommit,
     opts: CreateOpts | UpdateOpts = {}
@@ -564,7 +564,7 @@ export class Ceramic implements CeramicApi {
    * @param genesis - Genesis CID
    * @param opts - Initialization options
    */
-  async createStreamFromGenesis<T extends Stream<any>>(
+  async createStreamFromGenesis<T extends Stream>(
     type: number,
     genesis: any,
     opts: CreateOpts = {}
@@ -586,7 +586,7 @@ export class Ceramic implements CeramicApi {
    * @param streamId - Stream ID
    * @param opts - Initialization options
    */
-  async loadStream<T extends Stream<any>>(
+  async loadStream<T extends Stream>(
     streamId: StreamID | CommitID | string,
     opts: LoadOpts = {}
   ): Promise<T> {
@@ -615,10 +615,7 @@ export class Ceramic implements CeramicApi {
    * @param timeout - Timeout in milliseconds
    * @private
    */
-  async _loadLinkedStreams(
-    query: MultiQuery,
-    timeout = 7000
-  ): Promise<Record<string, Stream<any>>> {
+  async _loadLinkedStreams(query: MultiQuery, timeout = 7000): Promise<Record<string, Stream>> {
     const id = StreamRef.from(query.streamId)
     const pathTrie = new PathTrie()
     query.paths?.forEach((path) => pathTrie.add(path))
@@ -654,10 +651,7 @@ export class Ceramic implements CeramicApi {
    * @param queries - Array of MultiQueries
    * @param timeout - Timeout in milliseconds
    */
-  async multiQuery(
-    queries: Array<MultiQuery>,
-    timeout?: number
-  ): Promise<Record<string, Stream<any>>> {
+  async multiQuery(queries: Array<MultiQuery>, timeout?: number): Promise<Record<string, Stream>> {
     const queryResults = await Promise.all(
       queries.map((query) => {
         try {

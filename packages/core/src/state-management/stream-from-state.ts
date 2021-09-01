@@ -12,7 +12,7 @@ import { StateLink } from './state-link'
  * @param update$ - On-demand feed of updates for the stream. If not provided then the returned
  *   Stream object is marked read-only and cannot be used to update the stream.
  */
-export function streamFromState<T extends Stream<any>>(
+export function streamFromState<T extends Stream>(
   context: Context,
   handlersMap: HandlersMap,
   state: StreamState,

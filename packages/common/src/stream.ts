@@ -171,7 +171,7 @@ export interface StreamStateHolder {
 /**
  * Describes common stream attributes
  */
-export abstract class Stream<SnapshotType extends StreamSnapshot>
+export abstract class Stream<SnapshotType extends StreamSnapshot = StreamSnapshot>
   extends Observable<SnapshotType>
   implements StreamStateHolder
 {
@@ -276,7 +276,7 @@ export function StreamStatic<T>() {
 /**
  * Stream static signatures
  */
-export interface StreamConstructor<T extends Stream<any>> {
+export interface StreamConstructor<T extends Stream> {
   /**
    * Constructor signature
    * @param state$ - Stream state
@@ -288,7 +288,7 @@ export interface StreamConstructor<T extends Stream<any>> {
 /**
  * Describes stream type handler functionality
  */
-export interface StreamHandler<T extends Stream<any>> {
+export interface StreamHandler<T extends Stream> {
   /**
    * The ID number of the streamtype. This is specified by the table within CIP-59.
    */
