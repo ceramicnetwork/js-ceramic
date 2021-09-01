@@ -2,6 +2,7 @@ import StreamID, { CommitID } from '@ceramicnetwork/streamid'
 import {
   AnchorService,
   AnchorStatus,
+  CommonOpts,
   Context,
   CreateOpts,
   StreamState,
@@ -9,6 +10,7 @@ import {
   LoadOpts,
   SyncOptions,
   UpdateOpts,
+  StreamUtils,
 } from '@ceramicnetwork/common'
 import { PinStore } from '../store/pin-store'
 import { DiagnosticsLogger } from '@ceramicnetwork/common'
@@ -141,7 +143,7 @@ export class Repository {
   async load(streamId: StreamID, opts: LoadOpts): Promise<RunningState> {
     opts = { ...DEFAULT_LOAD_OPTS, ...opts }
 
-    return this.loadingQ.forStream(streamId).run(async () => {
+    const state$ = await this.loadingQ.forStream(streamId).run(async () => {
       let fromStateStore = false
       let stream = this.fromMemory(streamId)
       if (!stream) {
@@ -173,6 +175,9 @@ export class Repository {
       await this.stateManager.sync(stream, opts.syncTimeoutSeconds * 1000, fromStateStore)
       return this.stateManager.verifyLoneGenesis(stream)
     })
+    await this.handlePinOpts(state$, opts)
+
+    return state$
   }
 
   /**
@@ -226,6 +231,16 @@ export class Repository {
    */
   async applyWriteOpts(state$: RunningState, opts: CreateOpts | UpdateOpts) {
     this.stateManager.applyWriteOpts(state$, opts)
+
+    await this.handlePinOpts(state$, opts)
+  }
+
+  async handlePinOpts(state$: RunningState, opts: CommonOpts) {
+    if (opts.pin) {
+      await this.pin(state$)
+    } else if (opts.pin === false) {
+      await this.unpin(StreamUtils.streamIdFromState(state$.value))
+    }
   }
 
   /**
