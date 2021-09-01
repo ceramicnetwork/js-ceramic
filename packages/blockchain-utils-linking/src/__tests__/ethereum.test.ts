@@ -2,7 +2,6 @@ import { AccountID } from 'caip'
 import ganache from 'ganache-core'
 import * as sigUtils from 'eth-sig-util'
 import { ContractFactory, Contract } from '@ethersproject/contracts'
-import * as providers from '@ethersproject/providers'
 import { encodeRpcMessage } from '../util'
 import * as ethereum from '../ethereum'
 
@@ -78,14 +77,6 @@ beforeAll(async () => {
   })
   await send(provider, encodeRpcMessage('eth_sendTransaction', [unsignedTx]))
   contractAddress = Contract.getContractAddress(unsignedTx)
-  // mock ethers providers
-  ;(providers as any).getNetwork = (): any => {
-    return {
-      _defaultProvider: (): any => {
-        return new providers.Web3Provider(provider)
-      },
-    }
-  }
   global.Date.now = jest.fn().mockImplementation(() => 666)
 })
 
