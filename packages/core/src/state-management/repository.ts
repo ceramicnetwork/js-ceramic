@@ -8,6 +8,7 @@ import {
   StreamStateHolder,
   LoadOpts,
   SyncOptions,
+  UpdateOpts,
 } from '@ceramicnetwork/common'
 import { PinStore } from '../store/pin-store'
 import { DiagnosticsLogger } from '@ceramicnetwork/common'
@@ -200,6 +201,34 @@ export class Repository {
   }
 
   /**
+   * Applies commit to the existing state
+   *
+   * @param streamId - Stream ID to update
+   * @param commit - Commit data
+   * @param opts - Stream initialization options (request anchor, wait, etc.)
+   */
+  async applyCommit(
+    streamId: StreamID,
+    commit: any,
+    opts: CreateOpts | UpdateOpts
+  ): Promise<RunningState> {
+    const state$ = await this.stateManager.applyCommit(streamId, commit, opts)
+    await this.applyWriteOpts(state$, opts)
+    return state$
+  }
+
+  /**
+   * Apply options relating to authoring a new commit
+   *
+   * @param state$ - Running State
+   * @param opts - Initialization options (request anchor, publish to pubsub, etc.)
+   * @private
+   */
+  async applyWriteOpts(state$: RunningState, opts: CreateOpts | UpdateOpts) {
+    this.stateManager.applyWriteOpts(state$, opts)
+  }
+
+  /**
    * Handles new stream creation by loading genesis commit into memory and then handling the given
    * CreateOpts for the genesis commit.
    * @param streamId
@@ -207,7 +236,7 @@ export class Repository {
    */
   async applyCreateOpts(streamId: StreamID, opts: CreateOpts): Promise<RunningState> {
     const state = await this.load(streamId, opts)
-    this.stateManager.applyWriteOpts(state, opts)
+    await this.applyWriteOpts(state, opts)
     return state
   }
 

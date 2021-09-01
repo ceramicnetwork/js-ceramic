@@ -537,7 +537,7 @@ export class Ceramic implements CeramicApi {
     }
 
     opts = { ...DEFAULT_APPLY_COMMIT_OPTS, ...opts, ...this._loadOptsOverride }
-    const state$ = await this.repository.stateManager.applyCommit(
+    const state$ = await this.repository.applyCommit(
       normalizeStreamID(streamId),
       commit,
       opts as CreateOpts
