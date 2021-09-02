@@ -3,6 +3,23 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.5.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@1.4.0...@ceramicnetwork/core@1.5.0-rc.0) (2021-09-02)
+
+
+### Bug Fixes
+
+* **core:** Increase timeout to stabilize test ([#1665](https://github.com/ceramicnetwork/js-ceramic/issues/1665)) ([cd36378](https://github.com/ceramicnetwork/js-ceramic/commit/cd3637810e646ef5ab3d66e36a7e67679a1f3947))
+
+
+### Features
+
+* **common,stream-tile,stream-tile-handler:** Add metadata option to forbid controller changes ([#1688](https://github.com/ceramicnetwork/js-ceramic/issues/1688)) ([85d6c97](https://github.com/ceramicnetwork/js-ceramic/commit/85d6c9789d28bb507abb9226be02e803cdc275ed))
+* **core:** Rate limit how frequently pubsub query messages can be published ([#1667](https://github.com/ceramicnetwork/js-ceramic/issues/1667)) ([e77b0b8](https://github.com/ceramicnetwork/js-ceramic/commit/e77b0b822bc8bf97c674b53a697e1d64128c5561))
+
+
+
+
+
 # [1.4.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@1.4.0-rc.7...@ceramicnetwork/core@1.4.0) (2021-08-25)
 
 **Note:** Version bump only for package @ceramicnetwork/core

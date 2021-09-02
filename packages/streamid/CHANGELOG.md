@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.2.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/streamid@1.1.2...@ceramicnetwork/streamid@1.2.0-rc.0) (2021-09-02)
+
+
+### Features
+
+* **streamid:** Add fromGenesis function ([#1666](https://github.com/ceramicnetwork/js-ceramic/issues/1666)) ([9e17b8e](https://github.com/ceramicnetwork/js-ceramic/commit/9e17b8e487eed3a6586b8a70a2b984586119c7ea))
+
+
+
+
+
 ## [1.1.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/streamid@1.1.2-rc.6...@ceramicnetwork/streamid@1.1.2) (2021-08-25)
 
 **Note:** Version bump only for package @ceramicnetwork/streamid
