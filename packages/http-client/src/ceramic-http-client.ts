@@ -22,6 +22,7 @@ import {
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { Caip10Link } from '@ceramicnetwork/stream-caip10-link'
 import { StreamID, CommitID, StreamRef } from '@ceramicnetwork/streamid'
+import { RemotePinApi } from './remote-pin-api'
 
 const API_PATH = '/api/v0'
 const CERAMIC_HOST = 'http://localhost:7007'
@@ -81,7 +82,7 @@ export class CeramicClient implements CeramicApi {
 
     this.context = { api: this }
 
-    this.pin = this._initPinApi()
+    this.pin = new RemotePinApi(this._apiUrl)
 
     this._streamConstructors = {
       [TileDocument.STREAM_TYPE_ID]: TileDocument,
@@ -99,38 +100,6 @@ export class CeramicClient implements CeramicApi {
    */
   set did(did: DID) {
     this.context.did = did
-  }
-
-  _initPinApi(): PinApi {
-    return {
-      add: async (streamId: StreamID): Promise<void> => {
-        await fetchJson(this._apiUrl + '/pins' + `/${streamId.toString()}`, { method: 'post' })
-      },
-      rm: async (streamId: StreamID): Promise<void> => {
-        await fetchJson(this._apiUrl + '/pins' + `/${streamId.toString()}`, { method: 'delete' })
-      },
-      ls: async (streamId?: StreamID): Promise<AsyncIterable<string>> => {
-        let url = this._apiUrl + '/pins'
-        if (streamId) {
-          url += `/${streamId.toString()}`
-        }
-        const result = await fetchJson(url)
-        const { pinnedStreamIds } = result
-        return {
-          [Symbol.asyncIterator](): AsyncIterator<string, any, undefined> {
-            let index = 0
-            return {
-              next(): Promise<IteratorResult<string>> {
-                if (index === pinnedStreamIds.length) {
-                  return Promise.resolve({ value: null, done: true })
-                }
-                return Promise.resolve({ value: pinnedStreamIds[index++], done: false })
-              },
-            }
-          },
-        }
-      },
-    }
   }
 
   async createStreamFromGenesis<T extends Stream>(
