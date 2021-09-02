@@ -10,6 +10,7 @@ import KeyDidResolver from 'key-did-resolver'
 import { Resolver } from 'did-resolver'
 import { DID } from 'dids'
 import { StreamID } from '@ceramicnetwork/streamid'
+import first from 'it-first'
 
 const seed = u8a.fromString(
   '6e34b2e1a9624113d81ece8a8a22e6e97f0e145c25c1d4d2d0e62753b4060c83',
@@ -59,11 +60,7 @@ async function createStream(
 
 async function isPinned(ceramic: CeramicApi, streamId: StreamID): Promise<boolean> {
   const iterator = await ceramic.pin.ls(streamId)
-  const arr = []
-  for await (const id of iterator) {
-    arr.push(id)
-  }
-  return arr.length == 1 && arr[0] == streamId.toString()
+  return (await first(iterator)) == streamId.toString()
 }
 
 describe('Ceramic stream pinning', () => {

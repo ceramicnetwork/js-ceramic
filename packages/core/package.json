@@ -48,6 +48,7 @@
     "cids": "~1.1.6",
     "dids": "^2.4.0",
     "ipld-dag-cbor": "^1.0.0",
+    "it-first": "^1.0.6",
     "level-ts": "^2.0.5",
     "lodash.clonedeep": "^4.5.0",
     "lru_map": "^0.4.1",
