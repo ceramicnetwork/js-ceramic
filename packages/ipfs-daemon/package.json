@@ -42,7 +42,7 @@
     "ipfs-core": "~0.7.1",
     "ipfs-core-types": "~0.5.1",
     "ipfs-http-gateway": "~0.4.2",
-    "ipfs-http-server": "~0.5.1"
+    "ipfs-http-server": "~0.7.3"
   },
   "devDependencies": {
     "@types/express": "^4.17.8",
