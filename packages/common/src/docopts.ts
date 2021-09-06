@@ -1,4 +1,14 @@
 /**
+ * Options that are common to create, update, and load operations
+ */
+export interface CommonOpts {
+  /**
+   * Whether the stream should be pinned or not.
+   */
+  pin?: boolean
+}
+
+/**
  * Enum describing different modes for syncing a stream.
  */
 export enum SyncOptions {
@@ -53,7 +63,7 @@ export interface InternalOpts {
 /**
  * Extra options passed as part of operations that load a stream
  */
-export interface LoadOpts extends BasicLoadOpts {
+export interface LoadOpts extends BasicLoadOpts, CommonOpts {
   /**
    * Load a previous version of the stream based on unix timestamp
    */
@@ -76,9 +86,9 @@ interface BasicUpdateOpts {
   publish?: boolean
 }
 
-export interface UpdateOpts extends BasicUpdateOpts, InternalOpts {}
+export interface UpdateOpts extends BasicUpdateOpts, InternalOpts, CommonOpts {}
 
 /**
  * Extra options passed as part of operations that create streams
  */
-export interface CreateOpts extends UpdateOpts, BasicLoadOpts {}
+export interface CreateOpts extends UpdateOpts, BasicLoadOpts, CommonOpts {}
