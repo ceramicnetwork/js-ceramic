@@ -6,7 +6,7 @@ import type { DagJWS, DagJWSResult } from 'dids'
 import { Observable } from 'rxjs'
 import { RunningStateLike } from './running-state-like'
 import { CeramicApi } from './ceramic-api'
-import { LoadOpts, SyncOptions } from './docopts'
+import { LoadOpts, SyncOptions } from './streamopts'
 
 /**
  * Describes signature status

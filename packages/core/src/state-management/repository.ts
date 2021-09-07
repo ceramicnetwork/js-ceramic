@@ -2,15 +2,15 @@ import StreamID, { CommitID } from '@ceramicnetwork/streamid'
 import {
   AnchorService,
   AnchorStatus,
-  CommonOpts,
   Context,
   CreateOpts,
+  LoadOpts,
+  PinningOpts,
   StreamState,
   StreamStateHolder,
-  LoadOpts,
+  StreamUtils,
   SyncOptions,
   UpdateOpts,
-  StreamUtils,
 } from '@ceramicnetwork/common'
 import { PinStore } from '../store/pin-store'
 import { DiagnosticsLogger } from '@ceramicnetwork/common'
@@ -235,7 +235,7 @@ export class Repository {
     await this.handlePinOpts(state$, opts)
   }
 
-  async handlePinOpts(state$: RunningState, opts: CommonOpts) {
+  async handlePinOpts(state$: RunningState, opts: PinningOpts) {
     if (opts.pin) {
       await this.pin(state$)
     } else if (opts.pin === false) {
