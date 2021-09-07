@@ -164,4 +164,40 @@ describe('Ceramic stream pinning', () => {
 
     await ceramic.close()
   })
+
+  it('Unpin command does not publish tip by default', async () => {
+    const ceramic = await createCeramic(ipfs1, tmpFolder.path)
+    const publishTipSpy = jest.spyOn(ceramic.dispatcher, 'publishTip')
+    const stream = await TileDocument.create(ceramic, { foo: 'bar' }, null, {
+      anchor: false,
+      publish: false,
+    })
+    ceramic.pin.add(stream.id)
+    stream.update({ foo: 'baz' }, null, { anchor: false, publish: false })
+
+    expect(publishTipSpy).toBeCalledTimes(0)
+    await ceramic.pin.rm(stream.id)
+    expect(publishTipSpy).toBeCalledTimes(0)
+
+    await ceramic.close()
+  })
+
+  it('Unpin command can be made to publish tip', async () => {
+    const ceramic = await createCeramic(ipfs1, tmpFolder.path)
+    const publishTipSpy = jest.spyOn(ceramic.dispatcher, 'publishTip')
+    const stream = await TileDocument.create(ceramic, { foo: 'bar' }, null, {
+      anchor: false,
+      publish: false,
+    })
+    ceramic.pin.add(stream.id)
+    stream.update({ foo: 'baz' }, null, { anchor: false, publish: false })
+
+    expect(publishTipSpy).toBeCalledTimes(0)
+
+    await ceramic.pin.rm(stream.id, { publish: true })
+
+    expect(publishTipSpy).toBeCalledTimes(1)
+
+    await ceramic.close()
+  })
 })

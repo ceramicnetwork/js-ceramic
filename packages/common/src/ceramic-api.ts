@@ -1,6 +1,6 @@
 import type { DID } from 'dids'
 import { Stream, StreamHandler, CeramicCommit, AnchorStatus } from './stream'
-import { CreateOpts, LoadOpts, UpdateOpts } from './streamopts'
+import { CreateOpts, LoadOpts, PublishOpts, UpdateOpts } from './streamopts'
 import { StreamID, CommitID } from '@ceramicnetwork/streamid'
 import { LoggerProvider } from './logger-provider'
 
@@ -17,8 +17,11 @@ export interface PinApi {
   /**
    * Unpin stream
    * @param streamId - Stream ID
+   * @param opts - can be set to make the node publish the stream's current tip before unpinning it,
+   *   giving other nodes on the network one last chance to capture the stream's current state before
+   *   this node forgets about it.
    */
-  rm(streamId: StreamID): Promise<void>
+  rm(streamId: StreamID, opts?: PublishOpts): Promise<void>
 
   /**
    * List pinned streams

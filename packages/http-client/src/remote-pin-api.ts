@@ -1,5 +1,6 @@
 import { fetchJson, PinApi } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
+import { PublishOpts } from '@ceramicnetwork/common'
 
 /**
  * PinApi for Ceramic HTTP client
@@ -11,8 +12,11 @@ export class RemotePinApi implements PinApi {
     await fetchJson(this._apiUrl + '/pins' + `/${streamId.toString()}`, { method: 'post' })
   }
 
-  async rm(streamId: StreamID): Promise<void> {
-    await fetchJson(this._apiUrl + '/pins' + `/${streamId.toString()}`, { method: 'delete' })
+  async rm(streamId: StreamID, opts?: PublishOpts): Promise<void> {
+    await fetchJson(this._apiUrl + '/pins' + `/${streamId.toString()}`, {
+      method: 'delete',
+      body: { opts },
+    })
   }
 
   async ls(streamId?: StreamID): Promise<AsyncIterable<string>> {

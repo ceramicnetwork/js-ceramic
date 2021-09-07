@@ -6,6 +6,7 @@ import {
   CreateOpts,
   LoadOpts,
   PinningOpts,
+  PublishOpts,
   StreamState,
   StreamStateHolder,
   StreamUtils,
@@ -290,7 +291,12 @@ export class Repository {
     return this.#deps.pinStore.add(streamStateHolder)
   }
 
-  unpin(streamId: StreamID): Promise<void> {
+  async unpin(streamId: StreamID, opts?: PublishOpts): Promise<void> {
+    if (opts?.publish) {
+      // load the stream's current state from cache or the pin store and publish it to pubsub
+      const state$ = await this.load(streamId, { sync: SyncOptions.NEVER_SYNC })
+      this.stateManager.publishTip(state$)
+    }
     return this.#deps.pinStore.rm(streamId)
   }
 
