@@ -1,4 +1,5 @@
 import S3 from 'aws-sdk/clients/s3'
+import AWS from 'aws-sdk'
 import IPFSRepo from 'ipfs-repo'
 import DatastoreLevel from 'datastore-level'
 import DatastoreFS from 'datastore-fs'
@@ -125,15 +126,34 @@ export function createRepo(options: RepoOptions, s3Options: S3Options): IPFSRepo
   let _s3: S3 | undefined = undefined
   function s3() {
     const { bucket, region, accessKeyId, secretAccessKey } = s3Options
-    if (!(bucket && accessKeyId && secretAccessKey)) throw new Error(`Expect AWS credentials`)
+
+    // manually set credentials
+    if (region && accessKeyId && secretAccessKey) {
+      const config: { [type: string]: any } = { 
+          region,
+          accessKeyId,
+          secretAccessKey
+      }
+      AWS.config.update(config)
+    }
+
+    // retrieve credentials: this will obtain them from  
+    // an assigned resource role if not manually passed in
+    // NOTE: async?
+    try {
+      AWS.config.getCredentials()
+    } catch(err) {
+      throw new Error(`Expect AWS credentials`)
+    }
+
     if (!_s3) {
-      _s3 = new S3({
+      _s3 = new AWS.S3({
         params: {
           Bucket: bucket,
         },
-        region,
-        accessKeyId,
-        secretAccessKey,
+        // region,
+        // accessKeyId,
+        // secretAccessKey,
       })
     }
     return _s3
