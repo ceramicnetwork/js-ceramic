@@ -7,6 +7,7 @@ import { CeramicApi, IpfsApi } from '@ceramicnetwork/common'
 import { createIPFS } from '../../create-ipfs'
 import { createCeramic } from '../../create-ceramic'
 import { Caip10Link } from '@ceramicnetwork/stream-caip10-link'
+import { happyPath } from './caip-flows'
 
 const CONTRACT_WALLET_ABI = [
   {
@@ -104,11 +105,7 @@ afterAll(async () => {
 describe('externally-owned account', () => {
   test('happy scenario', async () => {
     const authProvider = new EthereumAuthProvider(provider, addresses[0])
-    const accountId = await authProvider.accountId()
-    const caip = await Caip10Link.fromAccount(ceramic, accountId)
-    await caip.setDid(ceramic.did, authProvider)
-    expect(caip.state.log.length).toEqual(2)
-    expect(caip.did).toEqual(ceramic.did.id)
+    await happyPath(ceramic, authProvider)
   }, 10000)
   test('invalid proof', async () => {
     const authProvider = new EthereumAuthProvider(provider, addresses[0])
@@ -136,11 +133,7 @@ describe('contract account', () => {
     })
     await send(provider, encodeRpcMessage('eth_sendTransaction', [tx]))
     const authProvider = new EthereumAuthProvider(provider, contractAddress)
-    const accountId = await authProvider.accountId()
-    const caip = await Caip10Link.fromAccount(ceramic, accountId)
-    await caip.setDid(ceramic.did, authProvider)
-    expect(caip.state.log.length).toEqual(2)
-    expect(caip.did).toEqual(ceramic.did.id)
+    await happyPath(ceramic, authProvider)
   }, 10000)
 
   test('wrong proof', async () => {

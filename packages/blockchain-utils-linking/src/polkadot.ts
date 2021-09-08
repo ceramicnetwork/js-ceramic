@@ -29,7 +29,7 @@ export class PolkadotAuthProvider implements AuthProvider {
     return {
       version: 2,
       type: 'eoa',
-      message: linkMessageHex,
+      message: message,
       signature: res.signature,
       account: account.toString(),
       timestamp: timestamp,
