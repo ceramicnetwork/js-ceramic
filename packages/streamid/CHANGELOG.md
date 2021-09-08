@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.2.1-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/streamid@1.2.0...@ceramicnetwork/streamid@1.2.1-rc.0) (2021-09-08)
+
+**Note:** Version bump only for package @ceramicnetwork/streamid
+
+
+
+
+
 # [1.2.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/streamid@1.2.0-rc.0...@ceramicnetwork/streamid@1.2.0) (2021-09-08)
 
 **Note:** Version bump only for package @ceramicnetwork/streamid
