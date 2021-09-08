@@ -36,7 +36,7 @@ test('add', async () => {
 
 test('rm', async () => {
   await pinApi.rm(STREAM_ID)
-  expect(repository.unpin).toBeCalledWith(STREAM_ID)
+  expect(repository.unpin).toBeCalledWith(STREAM_ID, undefined)
 })
 
 describe('ls', () => {

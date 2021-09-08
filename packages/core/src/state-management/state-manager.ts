@@ -183,7 +183,7 @@ export class StateManager {
     }
   }
 
-  private publishTip(state$: RunningState): void {
+  publishTip(state$: RunningState): void {
     this.dispatcher.publishTip(state$.id, state$.tip)
   }
 
