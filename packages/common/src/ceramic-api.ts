@@ -1,6 +1,6 @@
 import type { DID } from 'dids'
 import { Stream, StreamHandler, CeramicCommit, AnchorStatus } from './stream'
-import { CreateOpts, LoadOpts, UpdateOpts } from './docopts'
+import { CreateOpts, LoadOpts, UpdateOpts } from './streamopts'
 import { StreamID, CommitID } from '@ceramicnetwork/streamid'
 import { LoggerProvider } from './logger-provider'
 
