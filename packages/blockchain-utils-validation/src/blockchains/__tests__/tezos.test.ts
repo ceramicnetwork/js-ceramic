@@ -34,7 +34,7 @@ let invalidChainIdProof: LinkProof
 // cache Date.now() to restore it after all tests
 const dateNow = Date.now
 
-beforeAll(async (done) => {
+beforeAll(async () => {
   // Mock Date.now() to return a constant value
   Date.now = () => 666000
 
@@ -63,8 +63,6 @@ beforeAll(async (done) => {
       reference: 'some unsupported chain reference',
     }
   }).toString()
-
-  done()
 })
 
 
@@ -132,7 +130,7 @@ describe('Blockchain: Tezos', () => {
     // run test cases
     for (const { testName, pubkeyObject, error } of ioTestCases) {
       for (const { message, proof } of proofTestCases) {
-        test(testName || message, async (done) => {
+        test(testName || message, async () => {
           void testName
           void message
           mockFetch.mockReset()
@@ -146,8 +144,6 @@ describe('Blockchain: Tezos', () => {
 
           // wait for test with the proof from the test case
           await expect(validateLink(proof())).resolves.toMatchSnapshot()
-
-          done()
         })
       }
     }
