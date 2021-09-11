@@ -1,98 +1,95 @@
-import Level from "level-ts";
-import { DocState, Doctype, DoctypeUtils } from "@ceramicnetwork/common"
-import { StateStore } from "./state-store"
-import DocID from '@ceramicnetwork/docid'
+import Level from 'level-ts'
+import { StreamState, StreamStateHolder, StreamUtils } from '@ceramicnetwork/common'
+import { StateStore } from './state-store'
+import StreamID from '@ceramicnetwork/streamid'
+import * as fs from 'fs'
+import path from 'path'
 
 /**
- * Ceramic store for saving documents locally
+ * Ceramic store for saving stream state to a local leveldb instance
  */
 export class LevelStateStore implements StateStore {
-    #store: Level
+  #store: Level
 
-    constructor(private storePath: string) {
-    }
+  constructor(private storeRoot: string) {}
 
-    /**
-     * Gets internal db
-     */
-    get store(): Level {
-        return this.#store
-    }
+  /**
+   * Gets internal db
+   */
+  get store(): Level {
+    return this.#store
+  }
 
-    /**
-     * Open pinning service
-     */
-    async open(): Promise<void> {
-        this.#store = new Level(this.storePath);
+  /**
+   * Open pinning service
+   */
+  open(networkName: string): void {
+    // Always store the pinning state in a network-specific directory
+    const storePath = path.join(this.storeRoot, networkName)
+    if (fs) {
+      fs.mkdirSync(storePath, { recursive: true }) // create dir if it doesn't exist
     }
+    this.#store = new Level(storePath)
+  }
 
-    /**
-     * Pin document
-     * @param document - Document instance
-     */
-    async save(document: Doctype): Promise<void> {
-        await this.#store.put(document.id.baseID.toString(), DoctypeUtils.serializeState(document.state))
-    }
+  /**
+   * Pin stream
+   * @param streamStateHolder - Stream instance
+   */
+  async save(streamStateHolder: StreamStateHolder): Promise<void> {
+    await this.#store.put(
+      streamStateHolder.id.toString(),
+      StreamUtils.serializeState(streamStateHolder.state)
+    )
+  }
 
-    /**
-     * Load document
-     * @param docId - Document ID
-     */
-    async load(docId: DocID): Promise<DocState> {
-        try {
-            const state = await this.#store.get(docId.baseID.toString())
-            if (state) {
-                return DoctypeUtils.deserializeState(state);
-            } else {
-                return null;
-            }
-        } catch (err) {
-            if (err.notFound) {
-                return null; // return null for non-existent entry
-            }
-            throw err;
-        }
+  /**
+   * Load stream state
+   * @param streamId - Stream ID
+   */
+  async load(streamId: StreamID): Promise<StreamState> {
+    try {
+      const state = await this.#store.get(streamId.baseID.toString())
+      if (state) {
+        return StreamUtils.deserializeState(state)
+      } else {
+        return null
+      }
+    } catch (err) {
+      if (err.notFound) {
+        return null // return null for non-existent entry
+      }
+      throw err
     }
+  }
 
-    /**
-     * Is document pinned locally?
-     * @param docId - Document ID
-     */
-    async exists(docId: DocID): Promise<boolean> {
-        const state = await this.load(docId.baseID);
-        return Boolean(state)
-    }
+  /**
+   * Unpin stream
+   * @param streamId - Stream ID
+   */
+  async remove(streamId: StreamID): Promise<void> {
+    await this.#store.del(streamId.baseID.toString())
+  }
 
-    /**
-     * Unpin document
-     * @param docId - Document ID
-     */
-    async remove(docId: DocID): Promise<void> {
-        const isPresent = await this.exists(docId.baseID)
-        if (isPresent) {
-            await this.#store.del(docId.baseID.toString())
-        }
+  /**
+   * List pinned stream
+   * @param streamId - Stream ID
+   */
+  async list(streamId?: StreamID): Promise<string[]> {
+    let streamIds: string[]
+    if (streamId == null) {
+      return this.#store.stream({ keys: true, values: false })
+    } else {
+      const exists = Boolean(await this.load(streamId.baseID))
+      streamIds = exists ? [streamId.toString()] : []
     }
+    return streamIds
+  }
 
-    /**
-     * List pinned document
-     * @param docId - Document ID
-     */
-    async list(docId?: DocID): Promise<string[]> {
-        let docIds: string[]
-        if (docId == null) {
-            return this.#store.stream({ keys: true, values: false })
-        } else {
-            const exists = await this.exists(docId.baseID)
-            docIds = exists ? [docId.toString()] : []
-        }
-        return docIds
-    }
-
-    /**
-     * Close pinning service
-     */
-    async close(): Promise<void> {
-        // Do Nothing
-    }
+  /**
+   * Close pinning service
+   */
+  async close(): Promise<void> {
+    // Do Nothing
+  }
 }

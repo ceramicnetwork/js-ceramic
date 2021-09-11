@@ -3,6 +3,523 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.4.2-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/3id-did-resolver@1.4.1...@ceramicnetwork/3id-did-resolver@1.4.2-rc.0) (2021-09-08)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
+## [1.4.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/3id-did-resolver@1.4.1-rc.0...@ceramicnetwork/3id-did-resolver@1.4.1) (2021-09-08)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
+## [1.4.1-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/3id-did-resolver@1.4.0...@ceramicnetwork/3id-did-resolver@1.4.1-rc.0) (2021-09-02)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
+# [1.4.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/3id-did-resolver@1.4.0-rc.0...@ceramicnetwork/3id-did-resolver@1.4.0) (2021-08-25)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
+# [1.4.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/3id-did-resolver@1.3.2-rc.6...@ceramicnetwork/3id-did-resolver@1.4.0-rc.0) (2021-08-24)
+
+
+### Features
+
+* named exports ([884a6d8](https://github.com/ceramicnetwork/js-ceramic/commit/884a6d8e490f1c2c99ed99a17e9fd8c3dfb132d2))
+
+
+
+
+
+## [1.3.2-rc.6](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/3id-did-resolver@1.3.2-rc.5...@ceramicnetwork/3id-did-resolver@1.3.2-rc.6) (2021-08-23)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
+## 1.3.2-rc.5 (2021-08-23)
+
+
+### Bug Fixes
+
+* **ci:** remove private flag ([9974009](https://github.com/ceramicnetwork/js-ceramic/commit/9974009be69382f2a2caf59f4ff72bf6aa12491b))
+
+
+
+
+
+## [1.3.2-rc.4](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/3id-did-resolver@1.3.2-rc.3...@ceramicnetwork/3id-did-resolver@1.3.2-rc.4) (2021-08-22)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
+## [1.3.2-rc.3](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/3id-did-resolver@1.3.2-rc.2...@ceramicnetwork/3id-did-resolver@1.3.2-rc.3) (2021-08-22)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
+## 1.3.2-rc.2 (2021-08-22)
+
+
+### Bug Fixes
+
+* **ci:** remove flag from npm ci cmd ([b8ca310](https://github.com/ceramicnetwork/js-ceramic/commit/b8ca3102963096626a46a3c78c705da26e977021))
+
+
+
+
+
+## [1.3.2-rc.1](/compare/@ceramicnetwork/3id-did-resolver@1.3.2-rc.0...@ceramicnetwork/3id-did-resolver@1.3.2-rc.1) (2021-08-19)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
+## [1.3.2-rc.0](/compare/@ceramicnetwork/3id-did-resolver@1.3.1...@ceramicnetwork/3id-did-resolver@1.3.2-rc.0) (2021-08-13)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
+## [1.3.1](/compare/@ceramicnetwork/3id-did-resolver@1.3.0-rc.2...@ceramicnetwork/3id-did-resolver@1.3.1) (2021-08-11)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
+# [1.3.0](/compare/@ceramicnetwork/3id-did-resolver@1.3.0-rc.2...@ceramicnetwork/3id-did-resolver@1.3.0) (2021-08-11)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
+# [1.3.0-rc.2](/compare/@ceramicnetwork/3id-did-resolver@1.3.0-rc.1...@ceramicnetwork/3id-did-resolver@1.3.0-rc.2) (2021-08-03)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
+# [1.3.0-rc.1](/compare/@ceramicnetwork/3id-did-resolver@1.3.0-rc.0...@ceramicnetwork/3id-did-resolver@1.3.0-rc.1) (2021-07-30)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
+# [1.3.0-rc.0](/compare/@ceramicnetwork/3id-did-resolver@1.2.8-rc.0...@ceramicnetwork/3id-did-resolver@1.3.0-rc.0) (2021-07-16)
+
+
+### Features
+
+* Drop "created" metadata property from 3id did resolution result (#1524) 2dacc7b, closes #1524
+* Return last anchored state (#1527) bca939c, closes #1527
+
+
+
+
+
+## [1.2.8-rc.0](/compare/@ceramicnetwork/3id-did-resolver@1.2.7...@ceramicnetwork/3id-did-resolver@1.2.8-rc.0) (2021-06-30)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
+## [1.2.7](/compare/@ceramicnetwork/3id-did-resolver@1.2.7-rc.0...@ceramicnetwork/3id-did-resolver@1.2.7) (2021-06-22)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
+## [1.2.7-rc.0](/compare/@ceramicnetwork/3id-did-resolver@1.2.6...@ceramicnetwork/3id-did-resolver@1.2.7-rc.0) (2021-06-21)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
+## [1.2.6](/compare/@ceramicnetwork/3id-did-resolver@1.2.5...@ceramicnetwork/3id-did-resolver@1.2.6) (2021-06-06)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
+## [1.2.5](/compare/@ceramicnetwork/3id-did-resolver@1.2.4...@ceramicnetwork/3id-did-resolver@1.2.5) (2021-06-03)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
+## [1.2.4](/compare/@ceramicnetwork/3id-did-resolver@1.2.4-rc.0...@ceramicnetwork/3id-did-resolver@1.2.4) (2021-05-31)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
+## [1.2.4-rc.0](/compare/@ceramicnetwork/3id-did-resolver@1.2.3...@ceramicnetwork/3id-did-resolver@1.2.4-rc.0) (2021-05-28)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
+## [1.2.3](/compare/@ceramicnetwork/3id-did-resolver@1.2.2...@ceramicnetwork/3id-did-resolver@1.2.3) (2021-05-25)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
+## [1.2.2](/compare/@ceramicnetwork/3id-did-resolver@1.2.1...@ceramicnetwork/3id-did-resolver@1.2.2) (2021-05-20)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
+## [1.2.1](/compare/@ceramicnetwork/3id-did-resolver@1.2.0...@ceramicnetwork/3id-did-resolver@1.2.1) (2021-05-13)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
+# [1.2.0](/compare/@ceramicnetwork/3id-did-resolver@1.2.0-rc.9...@ceramicnetwork/3id-did-resolver@1.2.0) (2021-05-06)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
+# [1.2.0-rc.9](/compare/@ceramicnetwork/3id-did-resolver@1.2.0-rc.8...@ceramicnetwork/3id-did-resolver@1.2.0-rc.9) (2021-04-29)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
+# [1.2.0-rc.8](/compare/@ceramicnetwork/3id-did-resolver@1.2.0-rc.7...@ceramicnetwork/3id-did-resolver@1.2.0-rc.8) (2021-04-28)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
+# [1.2.0-rc.7](/compare/@ceramicnetwork/3id-did-resolver@1.2.0-rc.6...@ceramicnetwork/3id-did-resolver@1.2.0-rc.7) (2021-04-23)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
+# [1.2.0-rc.6](/compare/@ceramicnetwork/3id-did-resolver@1.2.0-rc.5...@ceramicnetwork/3id-did-resolver@1.2.0-rc.6) (2021-04-20)
+
+
+### Bug Fixes
+
+* **3id-did-resolver:** Don't include ms in timestmaps (#1287) 12aa2f1, closes #1287
+* **3id-did-resolver:** Remove publicKey property (#1288) dcc07c2, closes #1288
+* **3id-did-resolver:** Use the correct url for json-ld context (#1252) c6734b0, closes #1252
+* Fix tests by using node environment for jest (#1212) 0f04006, closes #1212
+
+
+### Features
+
+* **cli,http-client:** Update HTTP API to use streams terminology (#1237) 6c0a142, closes #1237
+* **common:** Change 'sync' option to an enum and refine sync behaviors (#1269) 0b652fb, closes #1269
+* **common:** Update createStreamFromGenesis to take 'type' number instead of 'doctype' string (#1286) 967cf11, closes #1286
+* **common,core:** Split DocOpts into CreateOpts, LoadOpts, and UpdateOpts (#1229) 85ccbb8, closes #1229
+* **core, http-client:** Remove default DID Resolver and make apps provide via CeramicAPI.setDID() (#1196) e9b3c18, closes #1196
+* **doctype-caip10-link:** Rename 'content' to 'did' for Caip10Link (#1216) f594ff0, closes #1216
+* **doctype-tile,doctype-caip10-link:** Rename TileDoctype and Caip10LinkDoctype to TileDocument and Caip10Link (#1264) ed7ee3c, closes #1264
+* **streamid:** Rename DocID to StreamID (#1195) 65754d1, closes #1195
+* **tile-doctype:** Update Tile API (#1180) 90973ee, closes #1180
+
+
+
+
+
+# [1.2.0-rc.5](/compare/@ceramicnetwork/3id-did-resolver@1.2.0-rc.4...@ceramicnetwork/3id-did-resolver@1.2.0-rc.5) (2021-04-19)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
+# [1.2.0-rc.4](/compare/@ceramicnetwork/3id-did-resolver@1.2.0-rc.3...@ceramicnetwork/3id-did-resolver@1.2.0-rc.4) (2021-04-19)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
+# [1.2.0-rc.3](/compare/@ceramicnetwork/3id-did-resolver@1.2.0-rc.2...@ceramicnetwork/3id-did-resolver@1.2.0-rc.3) (2021-04-19)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
+# [1.2.0-rc.2](/compare/@ceramicnetwork/3id-did-resolver@1.1.1...@ceramicnetwork/3id-did-resolver@1.2.0-rc.2) (2021-04-19)
+
+
+### Bug Fixes
+
+* Fix tests by using node environment for jest (#1212) aff01c6, closes #1212
+
+
+
+
+
+# [1.2.0-rc.1](/compare/@ceramicnetwork/3id-did-resolver@1.1.1...@ceramicnetwork/3id-did-resolver@1.2.0-rc.1) (2021-04-02)
+
+
+### Features
+
+* **tile-doctype:** Update Tile API 48f30e1
+
+
+
+
+
+## [1.1.1](/compare/@ceramicnetwork/3id-did-resolver@1.1.0...@ceramicnetwork/3id-did-resolver@1.1.1) (2021-04-02)
+
+
+### Bug Fixes
+
+* **common, logger:** Clean up dependencies (#1164) 191ad31, closes #1164
+
+
+### Features
+
+* **tile-doctype:** Update Tile API 7d694f7
+
+
+
+## [1.1.1-rc.4](/compare/@ceramicnetwork/3id-did-resolver@1.1.0...@ceramicnetwork/3id-did-resolver@1.1.1-rc.4) (2021-03-26)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
+## [1.1.1-rc.3](/compare/@ceramicnetwork/3id-did-resolver@1.1.0...@ceramicnetwork/3id-did-resolver@1.1.1-rc.3) (2021-03-26)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
+## [1.1.1-rc.2](/compare/@ceramicnetwork/3id-did-resolver@1.1.0...@ceramicnetwork/3id-did-resolver@1.1.1-rc.2) (2021-03-26)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
+## [1.1.1-rc.1](/compare/@ceramicnetwork/3id-did-resolver@1.1.1-rc.0...@ceramicnetwork/3id-did-resolver@1.1.1-rc.1) (2021-03-25)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
+## [1.1.1-rc.0](/compare/@ceramicnetwork/3id-did-resolver@1.1.0...@ceramicnetwork/3id-did-resolver@1.1.1-rc.0) (2021-03-25)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
+# [1.1.0](/compare/@ceramicnetwork/3id-did-resolver@1.1.0-rc.1...@ceramicnetwork/3id-did-resolver@1.1.0) (2021-03-22)
+
+
+### Features
+
+* **3id-did-resolver:** did metadata resolution (#1139) 818bde1, closes #1139
+
+
+
+
+
+# [1.1.0-rc.1](/compare/@ceramicnetwork/3id-did-resolver@1.1.0-rc.0...@ceramicnetwork/3id-did-resolver@1.1.0-rc.1) (2021-03-15)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
+# [1.1.0-rc.0](/compare/@ceramicnetwork/3id-did-resolver@0.7.0-rc.9...@ceramicnetwork/3id-did-resolver@1.1.0-rc.0) (2021-03-12)
+
+
+### Features
+
+* upgrade 3id did resolver (#1108) 24ef6d4, closes #1108
+
+
+
+
+
+# [0.7.0-rc.9](/compare/@ceramicnetwork/3id-did-resolver@0.7.0-rc.8...@ceramicnetwork/3id-did-resolver@0.7.0-rc.9) (2021-03-10)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
+# [0.7.0-rc.8](/compare/@ceramicnetwork/3id-did-resolver@0.7.0-rc.6...@ceramicnetwork/3id-did-resolver@0.7.0-rc.8) (2021-03-09)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
+# [0.7.0-rc.7](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/3id-did-resolver@0.6.10...@ceramicnetwork/3id-did-resolver@0.7.0-rc.7) (2021-02-25)
+
+
+### Bug Fixes
+
+* **3id-did-resovler:** support new versionId query param ([#933](https://github.com/ceramicnetwork/js-ceramic/issues/933)) ([7b6974f](https://github.com/ceramicnetwork/js-ceramic/commit/7b6974f108747b8a67d7014d91bb3dd98fee673c))
+
+
+### Features
+
+* Unbundle DocID into DocID and CommitID ([#1009](https://github.com/ceramicnetwork/js-ceramic/issues/1009)) ([c2707f2](https://github.com/ceramicnetwork/js-ceramic/commit/c2707f212a9d23c88525b667944d24210e192f80))
+
+
+
+
+
+# [0.7.0-rc.6](/compare/@ceramicnetwork/3id-did-resolver@0.7.0-rc.5...@ceramicnetwork/3id-did-resolver@0.7.0-rc.6) (2021-02-24)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
+# [0.7.0-rc.5](/compare/@ceramicnetwork/3id-did-resolver@0.7.0-rc.3...@ceramicnetwork/3id-did-resolver@0.7.0-rc.5) (2021-02-23)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
+# [0.7.0-rc.4](/compare/@ceramicnetwork/3id-did-resolver@0.7.0-rc.3...@ceramicnetwork/3id-did-resolver@0.7.0-rc.4) (2021-02-23)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
+# [0.7.0-rc.3](/compare/@ceramicnetwork/3id-did-resolver@0.7.0-rc.2...@ceramicnetwork/3id-did-resolver@0.7.0-rc.3) (2021-02-23)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
+# [0.7.0-rc.2](/compare/@ceramicnetwork/3id-did-resolver@0.7.0-rc.0...@ceramicnetwork/3id-did-resolver@0.7.0-rc.2) (2021-02-22)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
+# [0.7.0-rc.0](/compare/@ceramicnetwork/3id-did-resolver@0.6.10...@ceramicnetwork/3id-did-resolver@0.7.0-rc.0) (2021-02-22)
+
+
+### Bug Fixes
+
+* **3id-did-resovler:** support new versionId query param (#933) 7b6974f, closes #933
+
+
+### Features
+
+* Unbundle DocID into DocID and CommitID (#1009) c2707f2, closes #1009
+
+
+
+
+
+## [0.6.10](/compare/@ceramicnetwork/3id-did-resolver@0.6.10-rc.0...@ceramicnetwork/3id-did-resolver@0.6.10) (2021-02-04)
+
+
+### Bug Fixes
+
+* **3id-did-resolver:** compress legacy did key (#876) 7116cc9, closes #876
+
+
+
+
+
 ## [0.6.10-rc.0](/compare/@ceramicnetwork/3id-did-resolver@0.6.9...@ceramicnetwork/3id-did-resolver@0.6.10-rc.0) (2021-01-29)
 
 **Note:** Version bump only for package @ceramicnetwork/3id-did-resolver

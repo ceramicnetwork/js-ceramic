@@ -1,8 +1,9 @@
 {
   "moduleFileExtensions": ["js", "json", "ts"],
   "testRegex": ".(spec|test).ts$",
-  "testEnvironment": "jest-environment-uint8array",
+  "testEnvironment": "node",
   "moduleNameMapper": {
-    "^@zondax/filecoin-signing-tools$": "@zondax/filecoin-signing-tools/nodejs"
-  }
+    "^@zondax/filecoin-signing-tools/nodejs$": "@zondax/filecoin-signing-tools"
+  },
+  "resolver": "jest-resolver-enhanced"
 }

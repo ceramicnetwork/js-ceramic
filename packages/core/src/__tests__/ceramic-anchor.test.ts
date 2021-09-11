@@ -1,375 +1,432 @@
 import Ceramic from '../ceramic'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
-import { AnchorStatus, Doctype, IpfsApi } from "@ceramicnetwork/common"
+import { AnchorStatus, IpfsApi, TestUtils } from '@ceramicnetwork/common'
 import tmp from 'tmp-promise'
-import IPFS from 'ipfs-core'
 import * as u8a from 'uint8arrays'
-
-import getPort from 'get-port'
-
-import dagJose from 'dag-jose'
-import basicsImport from 'multiformats/cjs/src/basics-import.js'
-import legacy from 'multiformats/cjs/src/legacy.js'
+import { createIPFS, swarmConnect } from './ipfs-util'
+import { TileDocument } from '@ceramicnetwork/stream-tile'
+import InMemoryAnchorService from '../anchor/memory/in-memory-anchor-service'
+import { anchorUpdate } from '../state-management/__tests__/anchor-update'
+import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
+import KeyDidResolver from 'key-did-resolver'
+import { Resolver } from 'did-resolver'
+import { DID } from 'dids'
 
 jest.mock('../store/level-state-store')
 
-const seed = u8a.fromString('6e34b2e1a9624113d81ece8a8a22e6e97f0e145c25c1d4d2d0e62753b4060c83', 'base16')
+const seed = u8a.fromString(
+  '6e34b2e1a9624113d81ece8a8a22e6e97f0e145c25c1d4d2d0e62753b4060c83',
+  'base16'
+)
 
-/**
- * Create an IPFS instance
- * @param overrideConfig - IFPS config for override
- */
-const createIPFS =(overrideConfig: Record<string, unknown> = {}): Promise<IpfsApi> => {
-  basicsImport.multicodec.add(dagJose)
-  const format = legacy(basicsImport, dagJose.name)
+const makeDID = function (seed: Uint8Array, ceramic: Ceramic): DID {
+  const provider = new Ed25519Provider(seed)
 
-  const config = {
-    ipld: { formats: [format] },
-  }
-
-  Object.assign(config, overrideConfig)
-  return IPFS.create(config)
+  const keyDidResolver = KeyDidResolver.getResolver()
+  const threeIdResolver = ThreeIdResolver.getResolver(ceramic)
+  const resolver = new Resolver({
+    ...threeIdResolver,
+    ...keyDidResolver,
+  })
+  return new DID({ provider, resolver })
 }
 
 const createCeramic = async (ipfs: IpfsApi, anchorManual: boolean): Promise<Ceramic> => {
   const ceramic = await Ceramic.create(ipfs, {
-    pinsetDirectory: await tmp.tmpName(),
+    stateStoreDirectory: await tmp.tmpName(),
     anchorOnRequest: !anchorManual,
-    pubsubTopic: "/ceramic/inmemory/test" // necessary so Ceramic instances can talk to each other
+    restoreStreams: false,
+    pubsubTopic: '/ceramic/inmemory/test', // necessary so Ceramic instances can talk to each other
   })
-  const provider = new Ed25519Provider(seed)
-  await ceramic.setDIDProvider(provider)
+  await ceramic.setDID(makeDID(seed, ceramic))
 
   return ceramic
 }
 
-const registerChangeListener = function (doc: Doctype): Promise<void> {
-  return new Promise(resolve => {
-    doc.on('change', () => {
-      resolve()
-    })
-  })
-}
-
-/**
- * Registers a listener for change notifications on a document, instructs the anchor service to
- * perform an anchor, then waits for the change listener to resolve, indicating that the document
- * got anchored.
- * @param ceramic
- * @param doc
- */
-const anchorDoc = async (ceramic: Ceramic, doc: any): Promise<void> => {
-  const changeHandle = registerChangeListener(doc)
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  await ceramic.context.anchorService.anchor()
-  await changeHandle
-}
-
 describe('Ceramic anchoring', () => {
   jest.setTimeout(60000)
-  let ipfs1: IpfsApi;
-  let ipfs2: IpfsApi;
-  let ipfs3: IpfsApi;
-  let multaddr1: string;
-  let multaddr2: string;
-  let tmpFolder: any;
+  let ipfs1: IpfsApi
+  let ipfs2: IpfsApi
+  let ipfs3: IpfsApi
 
-  const DOCTYPE_TILE = 'tile'
-
-  let p1Start = 4000
-  let p2Start = 4100
-  let p3Start = 4200
-
-  const pOffset = 100
-
-  let port1: number;
-  let port2: number;
-  let port3: number;
-
-  beforeEach(async () => {
-    tmpFolder = await tmp.dir({ unsafeCleanup: true })
-
-    const buildConfig = (path: string, port: number): Record<string, unknown> => {
-      return {
-        repo: `${path}/ipfs${port}/`, config: {
-          Addresses: { Swarm: [`/ip4/127.0.0.1/tcp/${port}`] }, Bootstrap: []
-        }
-      }
-    }
-
-    const findPort = async (start: number, offset: number): Promise<number> => {
-      return await getPort({port: getPort.makeRange(start + 1, start + offset)})
-    }
-
-    ([port1, port2, port3] = await Promise.all([p1Start, p2Start, p3Start].map(start => findPort(start, pOffset))));
-    ([ipfs1, ipfs2, ipfs3] = await Promise.all([port1, port2, port3].map(port => createIPFS(buildConfig(tmpFolder.path, port)))));
-    ([p1Start, p2Start, p3Start] = [p1Start, p2Start, p3Start].map(start => start + pOffset))
-
-    multaddr1 = (await ipfs1.id()).addresses[0].toString()
-    multaddr2 = (await ipfs2.id()).addresses[0].toString()
+  beforeAll(async () => {
+    const instances = await Promise.all(Array.from({ length: 3 }).map(() => createIPFS()))
+    ipfs1 = instances[0]
+    ipfs2 = instances[1]
+    ipfs3 = instances[2]
+    await swarmConnect(ipfs1, ipfs2)
+    await swarmConnect(ipfs2, ipfs3)
+    await swarmConnect(ipfs1, ipfs3)
   })
 
-  afterEach(async () => {
-    await ipfs1.stop(() => console.log('IPFS1 stopped'))
-    await ipfs2.stop(() => console.log('IPFS2 stopped'))
-    await ipfs3.stop(() => console.log('IPFS3 stopped'))
-
-    await tmpFolder.cleanup()
+  afterAll(async () => {
+    await ipfs1.stop()
+    await ipfs2.stop()
+    await ipfs3.stop()
   })
 
   it('test all records anchored', async () => {
-    await ipfs2.swarm.connect(multaddr1)
-
     const [ceramic1, ceramic2] = await Promise.all([
       createCeramic(ipfs1, true),
-      createCeramic(ipfs2, false)
+      createCeramic(ipfs2, false),
     ])
 
-    const controller = ceramic1.context.did.id
+    const stream1 = await TileDocument.create(ceramic1, { a: 1 })
+    await stream1.update({ a: 2 })
+    await stream1.update({ a: 3 })
 
-    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { a: 1 } }, {})
-    await doctype1.change({ content: { a: 2 }, metadata: { controllers: [controller] } }, {})
-    await doctype1.change({ content: { a: 3 }, metadata: { controllers: [controller] } }, {})
+    await anchorUpdate(ceramic1, stream1)
 
-    await anchorDoc(ceramic1, doctype1)
+    expect(stream1.content).toEqual({ a: 3 })
+    expect(stream1.state.log.length).toEqual(4)
+    expect(stream1.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
-    expect(doctype1.content).toEqual({ a: 3 })
-    expect(doctype1.state.log.length).toEqual(4)
-    expect(doctype1.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
-
-    const doctype2 = await ceramic2.loadDocument(doctype1.id)
-    expect(doctype1.content).toEqual(doctype2.content)
-    expect(doctype1.state.log.length).toEqual(doctype2.state.log.length)
+    const stream2 = await ceramic2.loadStream(stream1.id)
+    expect(stream1.content).toEqual(stream2.content)
+    expect(stream1.state.log.length).toEqual(stream2.state.log.length)
 
     await ceramic1.close()
     await ceramic2.close()
   })
 
   it('test no records anchored', async () => {
-    await ipfs2.swarm.connect(multaddr1)
-
     const [ceramic1, ceramic2] = await Promise.all([
       createCeramic(ipfs1, true),
-      createCeramic(ipfs2, false)
+      createCeramic(ipfs2, false),
     ])
 
-    const controller = ceramic1.context.did.id
+    const stream1 = await TileDocument.create(ceramic1, { a: 1 }, null, {
+      anchor: false,
+      publish: false,
+    })
+    await stream1.update({ a: 2 }, null, { anchor: false, publish: false })
+    await stream1.update({ a: 3 }, null, { anchor: false, publish: false })
 
-    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { a: 1 } }, { anchor: false, publish: false })
-    await doctype1.change({ content: { a: 2 }, metadata: { controllers: [controller] } }, { anchor: false, publish: false })
-    await doctype1.change({ content: { a: 3 }, metadata: { controllers: [controller] } }, { anchor: false, publish: false })
+    expect(stream1.content).toEqual({ a: 3 })
+    expect(stream1.state.log.length).toEqual(3)
 
-    expect(doctype1.content).toEqual({ a: 3 })
-    expect(doctype1.state.log.length).toEqual(3)
-
-    const doctype2 = await ceramic2.loadDocument(doctype1.id)
-    expect(doctype1.content).toEqual(doctype2.content)
-    expect(doctype1.state.log.length).toEqual(doctype2.state.log.length)
+    const stream2 = await ceramic2.loadStream(stream1.id)
+    expect(stream1.content).toEqual(stream2.content)
+    expect(stream1.state.log.length).toEqual(stream2.state.log.length)
 
     await ceramic1.close()
     await ceramic2.close()
   })
 
   it('test genesis anchored and others not', async () => {
-    await ipfs2.swarm.connect(multaddr1)
-
     const [ceramic1, ceramic2] = await Promise.all([
       createCeramic(ipfs1, true),
-      createCeramic(ipfs2, false)
+      createCeramic(ipfs2, false),
     ])
-    const controller = ceramic1.context.did.id
 
-    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { a: 123, b: 4567 } }, {})
-    await doctype1.change({ content: { a: 4567 }, metadata: { controllers: [controller] } }, { anchor: false, publish: false })
-    await doctype1.change({ content: { b: 123 }, metadata: { controllers: [controller] } }, { anchor: false, publish: false })
+    const stream1 = await TileDocument.create(ceramic1, { a: 123, b: 4567 })
+    await stream1.update({ a: 4567 }, null, { anchor: false, publish: false })
+    await stream1.update({ b: 123 }, null, { anchor: false, publish: false })
 
-    expect(doctype1.state.log.length).toEqual(3)
+    expect(stream1.state.log.length).toEqual(3)
 
-    await anchorDoc(ceramic1, doctype1)
+    await anchorUpdate(ceramic1, stream1)
 
-    expect(doctype1.content).toEqual({ a: 123, b: 4567 })
-    expect(doctype1.state.log.length).toEqual(2)
+    expect(stream1.content).toEqual({ a: 123, b: 4567 })
+    expect(stream1.state.log.length).toEqual(2)
 
-    const doctype2 = await ceramic2.loadDocument(doctype1.id)
-    expect(doctype1.content).toEqual(doctype2.content)
-    expect(doctype1.state.log.length).toEqual(doctype2.state.log.length)
+    const stream2 = await ceramic2.loadStream(stream1.id)
+    expect(stream1.content).toEqual(stream2.content)
+    expect(stream1.state.log.length).toEqual(stream2.state.log.length)
 
     await ceramic1.close()
     await ceramic2.close()
   })
 
   it('test genesis and the following anchored', async () => {
-    await ipfs2.swarm.connect(multaddr1)
-
     const [ceramic1, ceramic2] = await Promise.all([
       createCeramic(ipfs1, true),
-      createCeramic(ipfs2, false)
+      createCeramic(ipfs2, false),
     ])
-    const controller = ceramic1.context.did.id
 
-    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { a: 123 } })
-    await doctype1.change({ content: { a: 4567 }, metadata: { controllers: [controller] } })
+    const stream1 = await TileDocument.create(ceramic1, { a: 123 })
+    await stream1.update({ a: 4567 })
 
-    expect(doctype1.state.log.length).toEqual(2)
+    expect(stream1.state.log.length).toEqual(2)
 
-    await anchorDoc(ceramic1, doctype1)
+    await anchorUpdate(ceramic1, stream1)
 
-    expect(doctype1.content).toEqual({ a: 4567 })
-    expect(doctype1.state.log.length).toEqual(3)
+    expect(stream1.content).toEqual({ a: 4567 })
+    expect(stream1.state.log.length).toEqual(3)
 
-    const doctype2 = await ceramic2.loadDocument(doctype1.id)
-    expect(doctype1.content).toEqual(doctype2.content)
-    expect(doctype1.state.log.length).toEqual(doctype2.state.log.length)
+    const stream2 = await ceramic2.loadStream(stream1.id)
+    expect(stream1.content).toEqual(stream2.content)
+    expect(stream1.state.log.length).toEqual(stream2.state.log.length)
 
     await ceramic1.close()
     await ceramic2.close()
   })
 
   it('test genesis anchored, the middle not, last one anchored', async () => {
-    await ipfs2.swarm.connect(multaddr1)
-
     const [ceramic1, ceramic2] = await Promise.all([
       createCeramic(ipfs1, true),
-      createCeramic(ipfs2, false)
+      createCeramic(ipfs2, false),
     ])
-    const controller = ceramic1.context.did.id
 
-    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { x: 1 } }, {})
+    const stream1 = await TileDocument.create(ceramic1, { x: 1 })
+    await stream1.update({ x: stream1.content.x + 1 }, null, { anchor: false, publish: false })
+    await stream1.update({ x: stream1.content.x + 1 }, null, { anchor: true, publish: true })
 
-    await doctype1.change({ content: { x: doctype1.content.x + 1 }, metadata: { controllers: [controller] } }, { anchor: false, publish: false })
-    await doctype1.change({ content: { x: doctype1.content.x + 1 }, metadata: { controllers: [controller] } }, { anchor: true, publish: true })
+    await anchorUpdate(ceramic1, stream1)
 
-    await anchorDoc(ceramic1, doctype1)
+    expect(stream1.content).toEqual({ x: 3 })
+    expect(stream1.state.log.length).toEqual(4)
 
-    expect(doctype1.content).toEqual({ x: 3 })
-    expect(doctype1.state.log.length).toEqual(4)
-
-    const doctype2 = await ceramic2.loadDocument(doctype1.id)
-    expect(doctype1.content).toEqual(doctype2.content)
-    expect(doctype1.state.log.length).toEqual(doctype2.state.log.length)
+    const stream2 = await ceramic2.loadStream(stream1.id)
+    expect(stream1.content).toEqual(stream2.content)
+    expect(stream1.state.log.length).toEqual(stream2.state.log.length)
 
     await ceramic1.close()
     await ceramic2.close()
   })
 
   it('test last one anchored', async () => {
-    await ipfs2.swarm.connect(multaddr1)
-
     const [ceramic1, ceramic2] = await Promise.all([
       createCeramic(ipfs1, true),
-      createCeramic(ipfs2, false)
+      createCeramic(ipfs2, false),
     ])
-    const controller = ceramic1.context.did.id
 
-    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { x: 1 } }, { anchor: false, publish: false })
-    await doctype1.change({ content: { x: doctype1.content.x + 1 }, metadata: { controllers: [controller] } }, { anchor: false, publish: false })
-    await doctype1.change({ content: { x: doctype1.content.x + 1 }, metadata: { controllers: [controller] } }, { anchor: true, publish: true })
+    const stream1 = await TileDocument.create(ceramic1, { x: 1 }, null, {
+      anchor: false,
+      publish: false,
+    })
+    await stream1.update({ x: stream1.content.x + 1 }, null, { anchor: false, publish: false })
+    await stream1.update({ x: stream1.content.x + 1 }, null, { anchor: true, publish: true })
 
-    await anchorDoc(ceramic1, doctype1)
+    await anchorUpdate(ceramic1, stream1)
 
-    expect(doctype1.content).toEqual({ x: 3 })
-    expect(doctype1.state.log.length).toEqual(4)
+    expect(stream1.content).toEqual({ x: 3 })
+    expect(stream1.state.log.length).toEqual(4)
 
-    const doctype2 = await ceramic2.loadDocument(doctype1.id)
-    expect(doctype1.content).toEqual(doctype2.content)
-    expect(doctype1.state.log.length).toEqual(doctype2.state.log.length)
+    const stream2 = await ceramic2.loadStream(stream1.id)
+    expect(stream1.content).toEqual(stream2.content)
+    expect(stream1.state.log.length).toEqual(stream2.state.log.length)
 
     await ceramic1.close()
     await ceramic2.close()
   })
 
   it('in the middle anchored', async () => {
-    await ipfs2.swarm.connect(multaddr1)
-
     const [ceramic1, ceramic2] = await Promise.all([
       createCeramic(ipfs1, true),
-      createCeramic(ipfs2, false)
+      createCeramic(ipfs2, false),
     ])
-    const controller = ceramic1.context.did.id
 
-    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { x: 1 } }, { anchor: false, publish: false })
-    await doctype1.change({ content: { x: doctype1.content.x + 1 }, metadata: { controllers: [controller] } }, { anchor: false, publish: false })
+    const stream1 = await TileDocument.create(ceramic1, { x: 1 }, null, {
+      anchor: false,
+      publish: false,
+    })
+    await stream1.update({ x: stream1.content.x + 1 }, null, { anchor: false, publish: false })
 
-    expect(doctype1.content).toEqual({ x: 2 })
-    expect(doctype1.state.log.length).toEqual(2)
+    expect(stream1.content).toEqual({ x: 2 })
+    expect(stream1.state.log.length).toEqual(2)
 
-    await doctype1.change({ content: { x: doctype1.content.x + 1 }, metadata: { controllers: [controller] } }, { anchor: true, publish: true })
+    await stream1.update({ x: stream1.content.x + 1 }, null, { anchor: true, publish: true })
 
-    await anchorDoc(ceramic1, doctype1)
+    await anchorUpdate(ceramic1, stream1)
 
-    expect(doctype1.content).toEqual({ x: 3 })
-    expect(doctype1.state.log.length).toEqual(4)
+    expect(stream1.content).toEqual({ x: 3 })
+    expect(stream1.state.log.length).toEqual(4)
 
-    await doctype1.change({ content: { x: doctype1.content.x + 1 }, metadata: { controllers: [controller] } }, { anchor: false, publish: false })
-    await doctype1.change({ content: { x: doctype1.content.x + 1 }, metadata: { controllers: [controller] } }, { anchor: false, publish: false })
-    await doctype1.change({ content: { x: doctype1.content.x + 1 }, metadata: { controllers: [controller] } }, { anchor: true, publish: true })
+    await stream1.update({ x: stream1.content.x + 1 }, null, { anchor: false, publish: false })
+    await stream1.update({ x: stream1.content.x + 1 }, null, { anchor: false, publish: false })
+    await stream1.update({ x: stream1.content.x + 1 }, null, { anchor: true, publish: true })
 
-    await anchorDoc(ceramic1, doctype1)
+    await anchorUpdate(ceramic1, stream1)
 
-    expect(doctype1.content).toEqual({ x: 6 })
-    expect(doctype1.state.log.length).toEqual(8)
+    expect(stream1.content).toEqual({ x: 6 })
+    expect(stream1.state.log.length).toEqual(8)
 
-    const doctype2 = await ceramic2.loadDocument(doctype1.id)
-    expect(doctype1.content).toEqual(doctype2.content)
-    expect(doctype1.state.log.length).toEqual(doctype2.state.log.length)
+    const stream2 = await ceramic2.loadStream<TileDocument>(stream1.id)
+    await TestUtils.waitForState(
+      stream2,
+      5000, // 5 second timeout
+      (state) => state.content == stream1.content,
+      () => expect(stream1.content).toEqual(stream2.content)
+    )
+    expect(stream1.state.log.length).toEqual(stream2.state.log.length)
 
     await ceramic1.close()
     await ceramic2.close()
   })
 
   it('test the same doc anchored twice (different Ceramic instances), first one wins)', async () => {
-    await ipfs3.swarm.connect(multaddr1)
-    await ipfs3.swarm.connect(multaddr2)
-
     const [ceramic1, ceramic2, ceramic3] = await Promise.all([
       createCeramic(ipfs1, true),
       createCeramic(ipfs2, true),
       createCeramic(ipfs3, true),
     ])
-    const controller = ceramic1.context.did.id
 
-    ceramic1.context.anchorService = ceramic3.context.anchorService // use ceramic3 in-memory anchor service
-    ceramic2.context.anchorService = ceramic3.context.anchorService // use ceramic3 in-memory anchor service
+    const anchorService = ceramic3.context.anchorService as InMemoryAnchorService
+    // use ceramic3 in-memory anchor service, ugly as hell
+    ceramic1.repository.stateManager.anchorService = anchorService
+    ceramic2.repository.stateManager.anchorService = anchorService
 
-    const doctype1 = await ceramic1.createDocument(DOCTYPE_TILE, { content: { x: 1 } }, { anchor: false, publish: true })
-    const doctype2 = await ceramic2.loadDocument(doctype1.id)
+    const stream1 = await TileDocument.create(ceramic1, { x: 1 }, null, {
+      anchor: false,
+      publish: true,
+    })
+    stream1.subscribe()
+    const stream2 = await TileDocument.load(ceramic2, stream1.id)
+    stream2.subscribe()
 
     // Create two conflicting updates, each on a different ceramic instance
     const newContent1 = { x: 7 }
     const newContent2 = { x: 5 }
-    await doctype1.change({ content: newContent1, metadata: { controllers: [controller] } }, { anchor: true, publish: false })
-    await doctype2.change({ content: newContent2, metadata: { controllers: [controller] } }, { anchor: true, publish: false })
+    await stream1.update(newContent1, null, { anchor: true, publish: false })
+    await stream2.update(newContent2, null, { anchor: true, publish: false })
 
     // Which update wins depends on which update got assigned the lower CID
-    const update1ShouldWin = doctype1.state.log[doctype1.state.log.length - 1].cid.bytes < doctype2.state.log[doctype2.state.log.length - 1].cid.bytes
+    const update1ShouldWin =
+      stream1.state.log[stream1.state.log.length - 1].cid.bytes <
+      stream2.state.log[stream2.state.log.length - 1].cid.bytes
     const winningContent = update1ShouldWin ? newContent1 : newContent2
 
-    const handle1 = registerChangeListener(doctype1)
-    const handle2 = registerChangeListener(doctype2)
-
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    await ceramic3.context.anchorService.anchor()
-
-    await handle1
-    await handle2
+    await anchorService.anchor()
+    await TestUtils.waitForState(
+      stream2,
+      4000,
+      (state) => state.anchorStatus === AnchorStatus.ANCHORED,
+      () => {
+        throw new Error(`stream2 not anchored still`)
+      }
+    )
+    await TestUtils.waitForState(
+      stream1,
+      4000,
+      (state) => state.anchorStatus === AnchorStatus.ANCHORED,
+      () => {
+        throw new Error(`stream1 not anchored still`)
+      }
+    )
 
     // Only one of the updates should have won
-    expect(doctype1.state.log.length).toEqual(3)
-    expect(doctype2.state.log.length).toEqual(3)
-    expect(doctype1.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
-    expect(doctype2.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
-    expect(doctype1.content).toEqual(winningContent)
-    expect(doctype2.content).toEqual(winningContent)
+    expect(stream1.state.log.length).toEqual(3)
+    expect(stream2.state.log.length).toEqual(3)
+    expect(stream1.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+    expect(stream2.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+    expect(stream1.content).toEqual(winningContent)
+    expect(stream2.content).toEqual(winningContent)
 
-
-    const doctype3 = await ceramic3.loadDocument(doctype1.id)
-    expect(doctype3.content).toEqual(winningContent)
-    expect(doctype3.state.log.length).toEqual(3)
+    const stream3 = await ceramic3.loadStream<TileDocument>(stream1.id)
+    expect(stream3.content).toEqual(winningContent)
+    expect(stream3.state.log.length).toEqual(3)
 
     await ceramic1.close()
     await ceramic2.close()
     await ceramic3.close()
+  })
+
+  it('loading stream works when anchor is invalid', async () => {
+    const [ceramic1, ceramic2] = await Promise.all([
+      createCeramic(ipfs1, true),
+      createCeramic(ipfs2, false),
+    ])
+
+    const stream1 = await TileDocument.create(ceramic1, { x: 1 }, null, {
+      anchor: false,
+      publish: false,
+    })
+    await stream1.update({ x: stream1.content.x + 1 }, null, { anchor: false, publish: false })
+    await stream1.update({ x: stream1.content.x + 1 }, null, { anchor: true, publish: true })
+
+    await anchorUpdate(ceramic1, stream1)
+
+    expect(stream1.content).toEqual({ x: 3 })
+    expect(stream1.state.log.length).toEqual(4)
+
+    const validateChainInclusionSpy = jest.spyOn(
+      ceramic2._anchorValidator,
+      'validateChainInclusion'
+    )
+    validateChainInclusionSpy.mockRejectedValueOnce(new Error("blockNumbers don't match"))
+
+    // Even though validating the anchor commit fails, the stream should still be loaded successfully
+    // just with the anchor commit missing.
+    const stream2 = await ceramic2.loadStream(stream1.id)
+    expect(stream2.content).toEqual(stream1.content)
+    expect(stream2.state.log.length).toEqual(stream1.state.log.length - 1)
+    expect(stream2.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
+
+    await ceramic1.close()
+    await ceramic2.close()
+  })
+
+  describe('Request anchor', () => {
+    it('Can request missing anchor', async () => {
+      const ceramic = await createCeramic(ipfs1, true)
+
+      // create stream without requesting anchor
+      const stream = await TileDocument.create(ceramic, { x: 1 }, null, { anchor: false })
+      expect(stream.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
+
+      // request anchor
+      const anchorStatus = await stream.requestAnchor()
+      expect(anchorStatus).toEqual(AnchorStatus.PENDING)
+      expect(stream.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
+      await stream.sync()
+      expect(stream.state.anchorStatus).toEqual(AnchorStatus.PENDING)
+
+      // fulfill anchor
+      await anchorUpdate(ceramic, stream)
+      expect(stream.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+
+      await ceramic.close()
+    })
+
+    it('Can request new anchor after failed anchor', async () => {
+      const ceramic = await createCeramic(ipfs1, true)
+
+      // create stream without requesting anchor
+      const stream = await TileDocument.create(ceramic, { x: 1 }, null, { anchor: true })
+      expect(stream.state.anchorStatus).toEqual(AnchorStatus.PENDING)
+
+      // fail anchor
+      const anchorService = ceramic.context.anchorService as any as InMemoryAnchorService
+      await anchorService.failPendingAnchors()
+      await stream.sync()
+      expect(stream.state.anchorStatus).toEqual(AnchorStatus.FAILED)
+      expect(stream.state.log.length).toEqual(1)
+
+      // re-request anchor, should be successful
+      const anchorStatus = await stream.requestAnchor()
+      expect(anchorStatus).toEqual(AnchorStatus.PENDING)
+      await stream.sync()
+      expect(stream.state.anchorStatus).toEqual(AnchorStatus.PENDING)
+
+      // fulfill anchor
+      await anchorUpdate(ceramic, stream)
+      expect(stream.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+      expect(stream.state.log.length).toEqual(2)
+
+      await ceramic.close()
+    })
+
+    it('Requesting anchor is noop for already anchored stream', async () => {
+      const ceramic = await createCeramic(ipfs1, true)
+
+      // create stream without requesting anchor
+      const stream = await TileDocument.create(ceramic, { x: 1 }, null, { anchor: true })
+      expect(stream.state.anchorStatus).toEqual(AnchorStatus.PENDING)
+
+      // fulfill anchor
+      await anchorUpdate(ceramic, stream)
+      expect(stream.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+      expect(stream.state.log.length).toEqual(2)
+
+      // request anchor, should be a no-op
+      const anchorStatus = await stream.requestAnchor()
+      expect(anchorStatus).toEqual(AnchorStatus.ANCHORED)
+      await stream.sync()
+      expect(stream.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+      expect(stream.state.log.length).toEqual(2)
+
+      await ceramic.close()
+    })
   })
 })

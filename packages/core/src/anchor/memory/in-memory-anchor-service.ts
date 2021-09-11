@@ -1,61 +1,66 @@
 import CID from 'cids'
+import { Observable, Subject, concat, of } from 'rxjs'
+import { filter } from 'rxjs/operators'
+import {
+  AnchorProof,
+  AnchorService,
+  AnchorStatus,
+  StreamUtils,
+  AnchorServiceResponse,
+  AnchorValidator,
+} from '@ceramicnetwork/common'
 
-import * as didJwt from 'did-jwt'
-import { AnchorProof, AnchorService, CeramicApi, DoctypeUtils } from "@ceramicnetwork/common"
+import type { Dispatcher } from '../../dispatcher'
+import Ceramic from '../../ceramic'
+import StreamID from '@ceramicnetwork/streamid'
+import { DiagnosticsLogger } from '@ceramicnetwork/common'
+import type { DagJWS } from 'dids'
 
-import type Dispatcher from '../../dispatcher'
-import Ceramic from "../../ceramic"
-import * as uint8arrays from "uint8arrays";
-
-const DID_MATCHER = '^(did:([a-zA-Z0-9_]+):([a-zA-Z0-9_.-]+(:[a-zA-Z0-9_.-]+)*)((;[a-zA-Z0-9_.:%-]+=[a-zA-Z0-9_.:%-]*)*)(/[^#?]*)?)([?][^#]*)?(#.*)?';
+const DID_MATCHER =
+  '^(did:([a-zA-Z0-9_]+):([a-zA-Z0-9_.-]+(:[a-zA-Z0-9_.-]+)*)((;[a-zA-Z0-9_.:%-]+=[a-zA-Z0-9_.:%-]*)*)(/[^#?]*)?)([?][^#]*)?(#.*)?'
 const CHAIN_ID = 'inmemory:12345'
 
 class Candidate {
-  public cid: CID
-  public did?: string
-  public docId: string
-
-  public readonly log: CID[]
-
-  constructor(cid: CID, docId?: string, log?: CID[]) {
-    this.cid = cid
-    this.docId = docId
-    this.log = log
-  }
+  constructor(readonly cid: CID, readonly streamId?: StreamID, readonly log?: CID[]) {}
 
   get key(): string {
-    return this.docId + this.did
+    return this.streamId.toString()
   }
-
 }
 
 interface InMemoryAnchorConfig {
-  anchorDelay?: number;
-  anchorOnRequest?: boolean;
-  verifySignatures?: boolean;
+  anchorDelay?: number
+  anchorOnRequest?: boolean
+  verifySignatures?: boolean
 }
+
+const SAMPLE_ETH_TX_HASH = 'bagjqcgzaday6dzalvmy5ady2m5a5legq5zrbsnlxfc2bfxej532ds7htpova'
 
 /**
  * In-memory anchor service - used locally, not meant to be used in production code
  */
-class InMemoryAnchorService extends AnchorService {
-  private _ceramic: Ceramic
-  private _dispatcher: Dispatcher
+class InMemoryAnchorService implements AnchorService, AnchorValidator {
+  #ceramic: Ceramic
+  #dispatcher: Dispatcher
+  #logger: DiagnosticsLogger
 
-  private readonly _anchorDelay: number
-  private readonly _anchorOnRequest: boolean
-  private readonly _verifySignatures: boolean
+  readonly #anchorDelay: number
+  readonly #anchorOnRequest: boolean
+  readonly #verifySignatures: boolean
+  readonly #feed: Subject<AnchorServiceResponse> = new Subject()
 
-  private _queue: Candidate[] = []
+  // Maps CID of a specific anchor request to the current status of that request
+  readonly #anchors: Map<string, AnchorServiceResponse> = new Map()
 
-  private SAMPLE_ETH_TX_HASH = 'bagjqcgzaday6dzalvmy5ady2m5a5legq5zrbsnlxfc2bfxej532ds7htpova'
+  #queue: Candidate[] = []
 
-  constructor (private _config: InMemoryAnchorConfig) {
-    super()
+  constructor(_config: InMemoryAnchorConfig) {
+    this.#anchorDelay = _config?.anchorDelay ?? 0
+    this.#anchorOnRequest = _config?.anchorOnRequest ?? true
+    this.#verifySignatures = _config?.verifySignatures ?? true
 
-    this._anchorDelay = _config?.anchorDelay ?? 0
-    this._anchorOnRequest = _config?.anchorOnRequest ?? true
-    this._verifySignatures = _config?.verifySignatures ?? true
+    // Remember the most recent AnchorServiceResponse for each anchor request
+    this.#feed.subscribe((asr) => this.#anchors.set(asr.cid.toString(), asr))
   }
 
   async init(): Promise<void> {
@@ -79,53 +84,62 @@ class InMemoryAnchorService extends AnchorService {
       await this._process(candidate)
     }
 
-    this._queue = [] // reset
+    this.#queue = [] // reset
   }
 
+  /**
+   * Fails all pending anchors. Useful for testing.
+   */
+  async failPendingAnchors(): Promise<void> {
+    const candidates = await this._findCandidates()
+    for (const candidate of candidates) {
+      this._failCandidate(candidate, 'anchor failed')
+    }
 
-    /**
-   * Filter candidates by document and DIDs
+    this.#queue = [] // reset
+  }
+
+  /**
+   * Filter candidates by stream and DIDs
    * @private
    */
   async _findCandidates(): Promise<Candidate[]> {
-    const groupedCandidates = await this._groupCandidatesByDocId(this._queue)
-    return await this._selectValidCandidates(groupedCandidates)
+    const groupedCandidates = await this._groupCandidatesByStreamId(this.#queue)
+    return this._selectValidCandidates(groupedCandidates)
   }
 
-  async _groupCandidatesByDocId(candidates: Candidate[]): Promise<Record<string, Candidate[]>> {
-    const result: Record<string, Candidate[]> = {};
+  async _groupCandidatesByStreamId(candidates: Candidate[]): Promise<Record<string, Candidate[]>> {
+    const result: Record<string, Candidate[]> = {}
+    await Promise.all(
+      candidates.map(async (req) => {
+        try {
+          const record = await this.#dispatcher.retrieveCommit(req.cid, req.streamId)
+          if (this.#verifySignatures) {
+            await this.verifySignedCommit(record)
+          }
 
-    let req: Candidate = null
-    for (let index = 0; index < this._queue.length; index++) {
-      try {
-        req = this._queue[index]
-        const record = (await this._ceramic.ipfs.dag.get(req.cid)).value
-        if (this._verifySignatures) {
-          await this.verifySignedCommit(record)
+          const log = await this._loadCommitHistory(req.cid)
+          const candidate = new Candidate(req.cid, req.streamId, log)
+
+          if (!result[candidate.key]) {
+            result[candidate.key] = []
+          }
+          result[candidate.key].push(candidate)
+        } catch (e) {
+          this.#logger.err(e)
+          this._failCandidate(req, e.message)
         }
-
-        const log = await this._loadCommitHistory(req.cid)
-        const candidate = new Candidate(new CID(req.cid), req.docId, log)
-
-        if (!result[candidate.key]) {
-          result[candidate.key] = []
-        }
-        result[candidate.key].push(candidate)
-      } catch (e) {
-        console.error(e.message)
-        await this._failCandidate(req, e.message)
-      }
-    }
-
+      })
+    )
     return result
   }
 
-  async _selectValidCandidates(groupedCandidates: Record<string, Candidate[]>): Promise<Candidate[]> {
+  _selectValidCandidates(groupedCandidates: Record<string, Candidate[]>): Candidate[] {
     const result: Candidate[] = []
     for (const compositeKey of Object.keys(groupedCandidates)) {
-      const candidates: Candidate[] = groupedCandidates[compositeKey]
+      const candidates = groupedCandidates[compositeKey]
 
-      // When there are multiple valid candidate tips to anchor for the same docId, pick the one
+      // When there are multiple valid candidate tips to anchor for the same streamId, pick the one
       // with the largest log
       let selected: Candidate = null
       for (const c of candidates) {
@@ -135,19 +149,19 @@ class InMemoryAnchorService extends AnchorService {
         }
 
         if (c.log.length < selected.log.length) {
-          await this._failCandidate(c)
+          this._failCandidate(c)
         } else if (c.log.length > selected.log.length) {
-          await this._failCandidate(selected)
+          this._failCandidate(selected)
           selected = c
         } else {
           // If there are two conflicting candidates with the same log length, we must choose
           // which to anchor deterministically. We use the same arbitrary but deterministic strategy
           // that js-ceramic conflict resolution does: choosing the record whose CID is smaller
           if (c.cid.bytes < selected.cid.bytes) {
-            await this._failCandidate(selected)
+            this._failCandidate(selected)
             selected = c
           } else {
-            await this._failCandidate(c)
+            this._failCandidate(c)
           }
         }
       }
@@ -158,11 +172,16 @@ class InMemoryAnchorService extends AnchorService {
     return result
   }
 
-  async _failCandidate(candidate: Candidate, message?: string): Promise<void> {
+  _failCandidate(candidate: Candidate, message?: string): void {
     if (!message) {
-      message = `Rejecting request to anchor CID ${candidate.cid.toString()} for document ${candidate.docId.toString()} because there is a better CID to anchor for the same document`
+      message = `Rejecting request to anchor CID ${candidate.cid.toString()} for stream ${candidate.streamId.toString()} because there is a better CID to anchor for the same stream`
     }
-    this.emit(candidate.docId, { cid: candidate.cid, status: 'FAILED', message: message })
+    this.#feed.next({
+      status: AnchorStatus.FAILED,
+      streamId: candidate.streamId,
+      cid: candidate.cid,
+      message,
+    })
   }
 
   /**
@@ -175,15 +194,15 @@ class InMemoryAnchorService extends AnchorService {
     const history: CID[] = []
 
     let currentCommitId = commitId
-    for (; ;) {
-      const currentCommit = (await this._ceramic.ipfs.dag.get(currentCommitId)).value
-      if (DoctypeUtils.isAnchorCommit(currentCommit)) {
+    for (;;) {
+      const currentCommit = await this.#dispatcher.retrieveCommit(currentCommitId)
+      if (StreamUtils.isAnchorCommit(currentCommit)) {
         return history
       }
 
       let prevCommitId: CID
-      if (DoctypeUtils.isSignedCommit(currentCommit)) {
-        const payload = (await this._ceramic.ipfs.dag.get(currentCommit.link)).value
+      if (StreamUtils.isSignedCommit(currentCommit)) {
+        const payload = await this.#dispatcher.retrieveCommit(currentCommit.link)
         prevCommitId = payload.prev
       } else {
         prevCommitId = currentCommit.prev
@@ -203,23 +222,66 @@ class InMemoryAnchorService extends AnchorService {
    *
    * @param ceramic - Ceramic API used for various purposes
    */
-  set ceramic(ceramic: CeramicApi) {
-    this._ceramic = ceramic as unknown as Ceramic
-    this._dispatcher = this._ceramic.dispatcher
+  set ceramic(ceramic: Ceramic) {
+    this.#ceramic = ceramic
+    this.#dispatcher = this.#ceramic.dispatcher
+    this.#logger = this.#ceramic?.context?.loggerProvider.getDiagnosticsLogger()
+  }
+
+  get url() {
+    return '<inmemory>'
   }
 
   /**
    * Send request to the anchoring service
-   * @param docId - Document ID
-   * @param cid - Commit CID
+   * @param streamId - Stream ID
+   * @param tip - Commit CID
    */
-  async requestAnchor(docId: string, cid: CID): Promise<void> {
-    const candidate: Candidate = new Candidate(cid, docId)
-
-    if (this._anchorOnRequest) {
-      await this._process(candidate)
+  requestAnchor(streamId: StreamID, tip: CID): Observable<AnchorServiceResponse> {
+    const candidate = new Candidate(tip, streamId)
+    if (this.#anchorOnRequest) {
+      this._process(candidate).catch((error) => {
+        this.#feed.next({
+          status: AnchorStatus.FAILED,
+          streamId: candidate.streamId,
+          cid: candidate.cid,
+          message: error.message,
+        })
+      })
     } else {
-      this._queue.push(candidate)
+      this.#queue.push(candidate)
+    }
+    this.#feed.next({
+      status: AnchorStatus.PENDING,
+      streamId: streamId,
+      cid: tip,
+      message: 'Sending anchoring request',
+      anchorScheduledFor: null,
+    })
+    return this.pollForAnchorResponse(streamId, tip)
+  }
+
+  /**
+   * Start polling the anchor service to learn of the results of an existing anchor request for the
+   * given tip for the given stream.
+   * @param streamId - Stream ID
+   * @param tip - Tip CID of the stream
+   */
+  pollForAnchorResponse(streamId: StreamID, tip: CID): Observable<AnchorServiceResponse> {
+    const anchorResponse = this.#anchors.get(tip.toString())
+    const feed$ = this.#feed.pipe(
+      filter((asr) => asr.streamId.equals(streamId) && asr.cid.equals(tip))
+    )
+
+    if (anchorResponse) {
+      return concat(of<AnchorServiceResponse>(anchorResponse), feed$)
+    } else {
+      return of<AnchorServiceResponse>({
+        status: AnchorStatus.FAILED,
+        streamId,
+        cid: tip,
+        message: 'Request not found',
+      })
     }
   }
 
@@ -229,22 +291,29 @@ class InMemoryAnchorService extends AnchorService {
    */
   async _process(leaf: Candidate): Promise<void> {
     // creates fake anchor commit
+    const timestamp = Math.floor(Date.now() / 1000)
     const proofData: AnchorProof = {
       chainId: CHAIN_ID,
-      blockNumber: Date.now(),
-      blockTimestamp: Date.now(),
-      txHash: new CID(this.SAMPLE_ETH_TX_HASH),
+      blockNumber: timestamp,
+      blockTimestamp: timestamp,
+      txHash: new CID(SAMPLE_ETH_TX_HASH),
       root: leaf.cid,
     }
-    const proof = await this._dispatcher.storeCommit(proofData)
+    const proof = await this.#dispatcher.storeCommit(proofData)
     const commit = { proof, path: '', prev: leaf.cid }
-    const cid = await this._dispatcher.storeCommit(commit)
+    const cid = await this.#dispatcher.storeCommit(commit, leaf.streamId)
 
     // add a delay
     const handle = setTimeout(() => {
-      this.emit(leaf.docId, { cid: leaf.cid, status: 'COMPLETED', message: 'CID successfully anchored.', anchorRecord: cid })
+      this.#feed.next({
+        status: AnchorStatus.ANCHORED,
+        streamId: leaf.streamId,
+        cid: leaf.cid,
+        message: 'CID successfully anchored',
+        anchorRecord: cid,
+      })
       clearTimeout(handle)
-    }, this._anchorDelay)
+    }, this.#anchorDelay)
   }
 
   /**
@@ -253,25 +322,19 @@ class InMemoryAnchorService extends AnchorService {
    * @return DID
    * @private
    */
-  async verifySignedCommit(commit: Record<string, unknown>): Promise<string> {
-    const { payload, signatures } = commit
-    const { signature, protected: _protected } = signatures[0]
-
-    const decodedJsonString = uint8arrays.toString(uint8arrays.fromString(_protected, 'base64url'))
-    const decodedHeader = JSON.parse(decodedJsonString)
-    const { kid } = decodedHeader
-
-    const didDoc = await this._ceramic.context.resolver.resolve(kid)
-    const jws = [_protected, payload, signature].join(".")
-    await didJwt.verifyJWS(jws, didDoc.publicKey)
-    return kid.match(RegExp(DID_MATCHER))[1]
+  async verifySignedCommit(commit: DagJWS): Promise<string> {
+    try {
+      const { kid } = await this.#ceramic.did.verifyJWS(commit)
+      return kid.match(RegExp(DID_MATCHER))[1]
+    } catch (e) {
+      throw new Error('Invalid signature for signed commit. ' + e)
+    }
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async validateChainInclusion (proof: AnchorProof): Promise<void> {
+  async validateChainInclusion(proof: AnchorProof): Promise<void> {
     // always valid
   }
-
 }
 
 export default InMemoryAnchorService

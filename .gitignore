@@ -3,9 +3,11 @@ lerna-debug.log
 .idea
 .pinning.store
 .vscode
+*.iml
 docs/
 
 packages/*/lib/
 packages/*/node_modules/
 packages/*/coverage/
 packages/*/logs/
+packages/*/package-lock.json

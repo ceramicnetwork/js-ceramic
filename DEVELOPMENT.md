@@ -9,7 +9,7 @@ $ cd js-ceramic
 ```
 This project uses npm and lerna to manage packages and dependencies. To install dependencies for all packages in this repo:
 ```
-$ npm run bootstrap
+$ npm install
 ```
 Then build all packages:
 ```
@@ -53,14 +53,35 @@ This repo uses lerna to make releases of all packages which have been changed. T
 
 ### Release candidate
 ```
-$ npm run publish:release-candidate
+export GH_TOKEN=<your github token>       # You need a valid github api token set to create the release on github
+$ git checkout release-candidate
+$ git merge origin develop                # merge in recent changes from develop branch
+$ npm install && npm run build            # Make sure to build Ceramic and install current dependencies before releasing
+$ npm adduser                             # login to npm accunt
+$ npm run publish:release-candidate       # create and publish the release
+$ git checkout develop
+$ git merge origin release-candidate      # Merge the new release commit back into the develop branch
+$ git push origin develop
 ```
-In any branch you can run the command above, this will create a release candidate with the version `x.x.x-rc.n`. It will also create a local commit for this release. This commit doesn't have to be pushed, and can be discarded.
+The main step that creates the release is `npm run publish:release-candidate`. This creates the release on NPM, as well as making a git commit bumping the version and a git tag and release on github. Make sure to set the [GH_TOKEN](https://github.com/lerna/lerna/tree/master/commands/version#--create-release-type) environment variable and log into npm before you run this command.
+
+After the release, don't forget to make a post in the #releases channel of the Ceramic discord to notify the community about the new release!
 
 ### Regular release
 ```
-$ npm run publish:latest
+export GH_TOKEN=<your github token>       # You need a valid github api token set to create the release on github
+$ git checkout master
+$ git merge origin release-candidate      # merge in most recent release candidate
+$ npm install && npm run build            # Make sure to build Ceramic and install current dependencies before releasing
+$ npm adduser                             # login to npm accunt
+$ npm run publish:latest                  # create and publish the release
+$ git checkout release-candidate
+$ git merge origin master                 # Merge the new release commit back into the release-candidate branch
+$ git push origin release-candidate
+$ git checkout develop
+$ git merge origin master                 # Merge the new release commit back into the develop branch
+$ git push origin develop
 ```
-This command can only be run on the master branch, it will create a release commit and push it to master. It will also tag this commit and create a release on github. Make sure to set the [GH_TOKEN](https://github.com/lerna/lerna/tree/master/commands/version#--create-release-type) environment variable before you run this command.
+The main step that creates the release is `npm run publish:latest`. This creates the release on NPM, as well as making a git commit bumping the version and a git tag and release on github. Make sure to set the [GH_TOKEN](https://github.com/lerna/lerna/tree/master/commands/version#--create-release-type) environment variable and log into npm before you run this command.
 
-
+After the release, don't forget to make a post in the #releases channel of the Ceramic discord to notify the community about the new release!

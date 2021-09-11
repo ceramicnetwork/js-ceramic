@@ -1,12 +1,11 @@
-import { DocState, Doctype } from "@ceramicnetwork/common"
-import DocID from '@ceramicnetwork/docid'
+import { StreamState, StreamStateHolder } from '@ceramicnetwork/common'
+import StreamID from '@ceramicnetwork/streamid'
 
 export interface StateStore {
-    open(): Promise<void>;
-    close(): Promise<void>;
-    save(document: Doctype): Promise<void>;
-    load(docId: DocID): Promise<DocState | null>;
-    exists(docId: DocID): Promise<boolean>;
-    list(docId?: DocID): Promise<string[]>;
-    remove(docId: DocID): Promise<void>;
+  open(networkName: string): void
+  close(): Promise<void>
+  save(streamStateHolder: StreamStateHolder): Promise<void>
+  load(streamId: StreamID): Promise<StreamState | null>
+  list(streamId?: StreamID): Promise<string[]>
+  remove(streamId: StreamID): Promise<void>
 }

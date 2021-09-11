@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/pinning-ipfs-backend",
-  "version": "0.1.14-rc.0",
+  "version": "1.1.4-rc.0",
   "description": "IPFS Pinning backend",
   "keywords": [
     "ceramic",
@@ -12,11 +12,11 @@
     "lib"
   ],
   "scripts": {
-    "test": "../../node_modules/.bin/jest --coverage",
+    "test": "../../node_modules/.bin/jest --silent --coverage",
     "build": "../../node_modules/.bin/tsc -p tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
-    "lint": "./node_modules/.bin/eslint ./src --ext .js,.jsx,.ts,.tsx",
+    "lint": "../../node_modules/.bin/eslint ./src --ext .js,.jsx,.ts,.tsx",
     "clean": "rm -rf ./lib"
   },
   "author": "Sergey Ukustov <sergey@ukstv.me>",
@@ -27,11 +27,12 @@
   "dependencies": {
     "@stablelib/base64": "^1.0.0",
     "@stablelib/sha256": "^1.0.0",
-    "ipfs-http-client": "48.1.1"
+    "ipfs-http-client": "~50.1.1"
   },
   "devDependencies": {
-    "@ceramicnetwork/common": "^0.15.9-rc.0",
-    "cids": "1.0.2",
+    "@ceramicnetwork/common": "^1.5.0-rc.0",
+    "cids": "~1.1.6",
+    "ipfs-core-types": "~0.5.1",
     "ts-jest": "^26.4.4"
   },
   "publishConfig": {
@@ -47,7 +48,8 @@
     "transform": {
       "^.+\\.ts$": "ts-jest"
     },
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "resolver": "jest-resolver-enhanced"
   },
   "gitHead": "34eeee25597b0a60def72906c26d3afd6230aaf1"
 }

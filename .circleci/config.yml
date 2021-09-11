@@ -1,20 +1,20 @@
 version: 2.1
 orbs:
-  node: circleci/node@1.1.6
+  node: circleci/node@4.5.1
 jobs:
   build-and-test:
     docker:
       - image: circleci/node:14
     steps:
       - checkout
-      - node/with-cache:
-          steps:
-            - run: npm run bootstrap
-            - run: npm run lint
-            - run: npm run build
-            - run: npm run test
-            - run: npm run docs
+      - node/install-packages
+      - run: npm run lint
+      - run: npm run build
+      - run:
+          command: npm run test
+          no_output_timeout: 30m
+      - run: npm run docs
 workflows:
-    build-and-test:
-      jobs:
-        - build-and-test
+  build-and-test:
+    jobs:
+      - build-and-test

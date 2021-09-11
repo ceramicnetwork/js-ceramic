@@ -1,94 +1,113 @@
-jest.mock('cross-fetch', () =>  {
-  return jest.fn(() => ({
+jest.mock('cross-fetch', () => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const mockedCalls = require('./vectors.json')['http-mock']
+  return jest.fn(async (url, opts = {}) => ({
     ok: true,
-    json: async () => JSON.parse('{"value":{"id":"did:3:GENESIS","@context":"https://w3id.org/did/v1","publicKey":[{"id":"did:3:GENESIS#signingKey","type":"Secp256k1VerificationKey2018","publicKeyHex":"0452fbcde75f7ddd7cff18767e2b5536211f500ad474c15da8e74577a573e7a346f2192ef49a5aa0552c41f181a7950af3afdb93cafcbff18156943e3ba312e5b2"},{"id":"did:3:GENESIS#encryptionKey","type":"Curve25519EncryptionPublicKey","publicKeyBase64":"DFxR24MNHVxEDAdL2f6pPEwNDJ2p0Ldyjoo7y/ItLDc="},{"id":"did:3:GENESIS#managementKey","type":"Secp256k1VerificationKey2018","ethereumAddress":"0x3f0bb6247d647a30f310025662b29e6fa382b61d"}],"authentication":[{"type":"Secp256k1SignatureAuthentication2018","publicKey":"did:3:GENESIS#signingKey"}]}}')
+    json: async () => {
+      const call = mockedCalls[url]
+      if (opts.method === 'post') {
+        const result = call.find(({ expectedBody }) => opts.body === JSON.stringify(expectedBody))
+        if (result?.response) {
+          return result.response
+        } else {
+          throw new Error('Could not find response for http body: ' + opts.body)
+        }
+      }
+      return call.response
+    },
   }))
 })
-import fetch from 'cross-fetch'
 
 import ThreeIdResolver from '../index'
 import { Resolver } from 'did-resolver'
-import DocID from '@ceramicnetwork/docid'
+import CeramicClient from '@ceramicnetwork/http-client'
 
-const ceramicMock = {
-  loadDocument: async (): Promise<any> => {
-    const signing = 'zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV'
-    const encryption = 'z6LSfQabSbJzX8WAm1qdQcHCHTzVv8a2u6F7kmzdodfvUCo9'
-    // mimic how IDW sets the 3ID DID document
-    return {
-      content: {
-        publicKeys: {
-          [signing.slice(-15)]: signing,
-          [encryption.slice(-15)]: encryption,
-        },
-      }
-    }
-  },
-  createDocument: async (): Promise<any> => ({
-    id: DocID.fromString('k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki')
-  })
+const DID_LD_JSON = 'application/did+ld+json'
+
+import vectors from './vectors.json'
+
+const v1 = '3IDv1'
+const v1unanchored = '3IDv1-unanchored'
+const v0 = '3IDv0'
+const v0NoUpdates = '3IDv0-no-updates'
+
+const toLdFormat = (result) => {
+  const newResult = { ...result }
+  newResult.didResolutionMetadata.contentType = DID_LD_JSON
+  newResult.didDocument['@context'] = 'https://www.w3.org/ns/did/v1'
+  return newResult
 }
-
-const ceramicMockWithIDX = {
-  loadDocument: async (): Promise<any> => {
-    const signing = 'zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV'
-    const encryption = 'z6LSfQabSbJzX8WAm1qdQcHCHTzVv8a2u6F7kmzdodfvUCo9'
-    // mimic how IDW sets the 3ID DID document
-    return {
-      content: {
-        publicKeys: {
-          [signing.slice(-15)]: signing,
-          [encryption.slice(-15)]: encryption,
-        },
-        idx: 'ceramic://rootId'
-      }
-    }
-  }
-}
-
-const ceramicMockNull = { // to be removed
-  loadDocument: async (): Promise<any> => { return { } },
-  createDocument: async (): Promise<any> => ({ id: 'k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki' })
-}
-
-const fake3ID = 'did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki'
-const fakeLegacy3ID = 'did:3:bafyreiffkeeq4wq2htejqla2is5ognligi4lvjhwrpqpl2kazjdoecmugi'
 
 describe('3ID DID Resolver', () => {
+  jest.setTimeout(20000)
+  let ceramic
 
-  it('getResolver works correctly', async () => {
-    const threeIdResolver = ThreeIdResolver.getResolver(ceramicMock)
-    expect(Object.keys(threeIdResolver)).toEqual(['3'])
+  beforeAll(async () => {
+    ceramic = new CeramicClient()
   })
 
-  it('resolves 3id document correctly', async () => {
-    const threeIdResolver = ThreeIdResolver.getResolver(ceramicMock)
-    const resolver = new Resolver(threeIdResolver)
-    expect(await resolver.resolve(fake3ID)).toMatchSnapshot()
+  describe('3IDv1', () => {
+    test('getResolver works correctly', async () => {
+      const threeIdResolver = ThreeIdResolver.getResolver(ceramic)
+      expect(Object.keys(threeIdResolver)).toEqual(['3'])
+    })
+
+    test.each(vectors[v1].queries)('resolves 3id documents correctly %#', async (query) => {
+      const threeIdResolver = ThreeIdResolver.getResolver(ceramic)
+      const resolver = new Resolver(threeIdResolver)
+      const did = vectors[v1].did + query.params[0]
+      expect(await resolver.resolve(did)).toEqual(query.result)
+      if (query.params[1]) {
+        const didVTime = vectors[v1].did + query.params[1]
+        expect(await resolver.resolve(didVTime)).toEqual(query.result)
+      }
+      expect(await resolver.resolve(did, { accept: DID_LD_JSON })).toEqual(toLdFormat(query.result))
+    })
+
+    test.each(vectors[v1unanchored].queries)('resolves unanchored 3id documents correctly %#', async (query) => {
+      const threeIdResolver = ThreeIdResolver.getResolver(ceramic)
+      const resolver = new Resolver(threeIdResolver)
+      const did = vectors[v1unanchored].did + query.params[0]
+      expect(await resolver.resolve(did)).toEqual(query.result)
+      expect(await resolver.resolve(did, { accept: DID_LD_JSON })).toEqual(toLdFormat(query.result))
+    })
+
+    test('no commit found', async () => {
+      const threeIdResolver = ThreeIdResolver.getResolver(ceramic)
+      const resolver = new Resolver(threeIdResolver)
+      const did =
+        'did:3:kjzl6cwe1jw1490n1846tytf2fypoqb8aokqxl6n0lgyp1undfilllca3ztltho?version-id=0'
+      await expect(resolver.resolve(did)).resolves.toEqual({
+        didResolutionMetadata: {
+          error: 'invalidDid',
+          message:
+            'Error: No resolution for commit k3y52l7qbv1fry84jsppsl3l75diunv3uzyrjiun7o8omq55y7ic9ljrbweqj5pmo',
+        },
+        didDocument: null,
+        didDocumentMetadata: {},
+      })
+    })
   })
 
-  it('adds IDX root as service', async () => {
-    const threeIdResolver = ThreeIdResolver.getResolver(ceramicMockWithIDX)
-    const resolver = new Resolver(threeIdResolver)
-    expect(await resolver.resolve(fake3ID)).toMatchSnapshot()
-  })
-})
+  describe('3IDv0', () => {
+    test('resolves 3id with no updates', async () => {
+      const threeIdResolver = ThreeIdResolver.getResolver(ceramic)
+      const resolver = new Resolver(threeIdResolver)
+      const query = vectors[v0NoUpdates].query
+      const did = vectors[v0NoUpdates].did + query.params[0]
+      expect(await resolver.resolve(did)).toEqual(query.result)
+    })
 
-describe('3ID DID Resolver Legacy (v0)', () => {
-  it('resolves 3id v0', async () => {
-    const threeIdResolver = ThreeIdResolver.getResolver(ceramicMockNull)
-    const resolver = new Resolver(threeIdResolver)
-    expect(fetch).toHaveBeenCalledTimes(0)
-    expect(await resolver.resolve(fakeLegacy3ID)).toMatchSnapshot()
-    expect(fetch).toHaveBeenCalledTimes(1)
-    // should only call fetch once
-    await resolver.resolve(fakeLegacy3ID)
-    expect(fetch).toHaveBeenCalledTimes(1)
-  })
-
-  it('resolves 3id v0 which includs ceramic updates', async () => {
-    const threeIdResolver = ThreeIdResolver.getResolver(ceramicMock)
-    const resolver = new Resolver(threeIdResolver)
-    expect(await resolver.resolve(fakeLegacy3ID)).toMatchSnapshot()
+    test.each(vectors[v0].queries)('resolves 3id documents correctly %#', async (query) => {
+      const threeIdResolver = ThreeIdResolver.getResolver(ceramic)
+      const resolver = new Resolver(threeIdResolver)
+      const did = vectors[v0].did + query.params[0]
+      expect(await resolver.resolve(did)).toEqual(query.result)
+      if (query.params[1]) {
+        const didVTime = vectors[v0].did + query.params[1]
+        expect(await resolver.resolve(didVTime)).toEqual(query.result)
+      }
+      expect(await resolver.resolve(did, { accept: DID_LD_JSON })).toEqual(toLdFormat(query.result))
+    })
   })
 })

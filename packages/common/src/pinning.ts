@@ -1,30 +1,30 @@
-import type CID from "cids";
-import type { Context } from "./context";
+import type CID from 'cids'
+import { IpfsApi } from './index'
 
 export interface PinningBackend {
-    id: string;
+  id: string
 
-    open(): Promise<void>;
+  open(): void
 
-    close(): Promise<void>;
+  close(): Promise<void>
 
-    pin(cid: CID): Promise<void>;
+  pin(cid: CID): Promise<void>
 
-    unpin(cid: CID): Promise<void>;
+  unpin(cid: CID): Promise<void>
 
-    ls(): Promise<CidList>;
+  ls(): Promise<CidList>
 
-    info(): Promise<PinningInfo>;
+  info(): Promise<PinningInfo>
 }
 
 export interface PinningBackendStatic {
-    designator: string;
+  designator: string
 
-    new(connectionString: string, context: Context): PinningBackend;
+  new (connectionString: string, ipfs: IpfsApi): PinningBackend
 }
 
-export type CidString = string;
-export type Designator = string;
-export type CidList = Record<CidString, Designator[]>;
+export type CidString = string
+export type Designator = string
+export type CidList = Record<CidString, Designator[]>
 
-export type PinningInfo = Record<string, any>;
+export type PinningInfo = Record<string, any>

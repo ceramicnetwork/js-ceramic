@@ -1,184 +1,111 @@
-import { EventEmitter } from 'events'
 import CID from 'cids'
 import cloneDeep from 'lodash.clonedeep'
-import dagCBOR from "ipld-dag-cbor"
-import * as multihashes from 'multihashes'
-import * as sha256 from "@stablelib/sha256"
+import {
+  DiagnosticsLogger,
+  IpfsApi,
+  ServiceLogger,
+  StreamUtils,
+  UnreachableCaseError,
+} from '@ceramicnetwork/common'
+import StreamID from '@ceramicnetwork/streamid'
+import { Repository } from './state-management/repository'
+import {
+  MsgType,
+  PubsubMessage,
+  QueryMessage,
+  ResponseMessage,
+  UpdateMessage,
+} from './pubsub/pubsub-message'
+import { Pubsub } from './pubsub/pubsub'
+import { Subscription } from 'rxjs'
+import { MessageBus } from './pubsub/message-bus'
+import { LRUMap } from 'lru_map'
+import { PubsubKeepalive } from './pubsub/pubsub-keepalive'
+import { PubsubRateLimit } from './pubsub/pubsub-ratelimit'
 
-import type Document from "./document"
-import { DoctypeUtils, RootLogger, Logger, IpfsApi } from "@ceramicnetwork/common"
-import { TextDecoder } from 'util'
-import DocID from "@ceramicnetwork/docid";
-
-const IPFS_GET_TIMEOUT = 30000 // 30 seconds
+const IPFS_GET_RETRIES = 3
+const IPFS_GET_TIMEOUT = 30000 // 30 seconds per retry, 3 retries = 90 seconds total timeout
 const IPFS_MAX_RECORD_SIZE = 256000 // 256 KB
 const IPFS_RESUBSCRIBE_INTERVAL_DELAY = 1000 * 15 // 15 sec
-const TESTING = process.env.NODE_ENV == 'test'
+const MAX_PUBSUB_PUBLISH_INTERVAL = 60 * 1000 // one minute
+const MAX_QUERIES_PER_SECOND = 10
+const MAX_QUEUED_QUERIES = 100
+const IPFS_CACHE_SIZE = 1024 // maximum cache size of 256MB
 
-/**
- * Ceramic Pub/Sub message type.
- */
-export enum MsgType {
-  UPDATE,
-  QUERY,
-  RESPONSE
-}
-
-/**
- * Describes one log message from the Dispatcher.
- */
-interface LogMessage {
-  peer: string;
-  event: string;
-  topic: string;
-  from?: string;
-  message?: Record<string, unknown>;
+function messageTypeToString(type: MsgType): string {
+  switch (type) {
+    case MsgType.UPDATE:
+      return 'Update'
+    case MsgType.QUERY:
+      return 'Query'
+    case MsgType.RESPONSE:
+      return 'Response'
+    case MsgType.KEEPALIVE:
+      return 'Keepalive'
+    default:
+      throw new UnreachableCaseError(type, `Unsupported message type`)
+  }
 }
 
 /**
  * Ceramic core Dispatcher used for handling messages from pub/sub topic.
  */
-export default class Dispatcher extends EventEmitter {
-  private _peerId: string
-  private readonly _documents: Record<string, Document>
+export class Dispatcher {
+  readonly messageBus: MessageBus
+  readonly dagNodeCache: LRUMap<string, any>
   // Set of IDs for QUERY messages we have sent to the pub/sub topic but not yet heard a
-  // corresponding RESPONSE message for. Maps the query ID to the primary DocID we were querying for.
-  private readonly _outstandingQueryIds: Record<string, DocID>
-
-  private logger: Logger
-  private _isRunning = true
-  private _resubscribeInterval: any
-
-  constructor (public _ipfs: IpfsApi, public topic: string) {
-    super()
-    this._documents = {}
-    this._outstandingQueryIds = {}
-    this.logger = RootLogger.getLogger(Dispatcher.name)
-  }
-
-  /**
-   * Initialize Dispatcher instance.
-   */
-  async init(): Promise<void> {
-    this._peerId = this._peerId || (await this._ipfs.id()).id
-    await this._subscribe(true)
-    // If ipfs.libp2p is defined we have an internal ipfs node, this means that
-    // we don't want to resubscribe since it will add multiple handlers.
-    if (!TESTING && !this._ipfs.libp2p) {
-      this._resubscribe()
-    }
-  }
-
-  /**
-   * Subscribes IPFS pubsub to `this.topic` and logs a `subscribe` event.
-   *
-   * Logs error if subscribe fails.
-   */
-  async _subscribe(force = false): Promise<void> {
-    try {
-      if (force || !(await this._ipfs.pubsub.ls()).includes(this.topic)) {
-        await this._ipfs.pubsub.unsubscribe(this.topic, this.handleMessage)
-        await this._ipfs.pubsub.subscribe(
-          this.topic,
-          this.handleMessage,
-          // {timeout: IPFS_GET_TIMEOUT} // ipfs-core bug causes timeout option to throw https://github.com/ipfs/js-ipfs/issues/3472
-        )
-        this._log({peer: this._peerId, event: 'subscribed', topic: this.topic })
-      }
-    } catch (error) {
-      // TODO: use logger
-      if (error.message.includes('Already subscribed')) {
-        this.logger.debug(error.message)
-      } else if (error.message.includes('The user aborted a request')) {
-        // for some reason the first call to pubsub.subscribe throws this error
-        this._subscribe(true)
-      } else {
-        console.error(error)
-      }
-    }
-  }
-
-  /**
-   * Periodically subscribes to IPFS pubsub topic.
-   */
-  _resubscribe(): void {
-    this._resubscribeInterval = setInterval(async () => {
-      await this._subscribe()
-    }, IPFS_RESUBSCRIBE_INTERVAL_DELAY)
-  }
-
-  /**
-   * Register one document.
-   *
-   * @param document - Document instance
-   */
-  async register (document: Document): Promise<void> {
-    // TODO assert that document.id is a base ID
-    this._documents[document.id.toString()] = document
-
-    // Build a QUERY message to send to the pub/sub topic to request the latest tip for this document
-    const payload = await this._buildQueryMessage(document)
-
-    // Store the query id so we'll process the corresponding RESPONSE message when it comes in
-    this._outstandingQueryIds[payload.id] = document.id.baseID
-
-    this._ipfs.pubsub.publish(this.topic, JSON.stringify(payload))
-    this._log({ peer: this._peerId, event: 'published', topic: this.topic, message: payload })
-  }
-
-  async _buildQueryMessage(document: Document): Promise<Record<string, any>> {
-    const message = { typ: MsgType.QUERY, doc: document.id.baseID.toString() }
-
-    // Add 'id' to message that is a hash of the message contents.
-    const id = await this._hashMessage(message)
-
-    return {...message, id: id.toString()}
-  }
-
-  /**
-   * Computes a sha-256 multihash of the input message canonicalized using dag-cbor
-   * @param message
-   */
-  async _hashMessage(message: any) : Promise<Uint8Array> {
-    // DAG-CBOR encoding
-    let id: Uint8Array = dagCBOR.util.serialize(message)
-
-    // SHA-256 hash
-    id = sha256.hash(id)
-
-    // Multihash encoding
-    const buf = Buffer.from(id)
-    return multihashes.encode(buf, 'sha2-256')
-  }
-
-  /**
-   * Unregister document by ID.
-   *
-   * @param id - Document ID
-   */
-  unregister (id: string): void {
-    delete this._documents[id]
+  // corresponding RESPONSE message for. Maps the query ID to the primary StreamID we were querying for.
+  constructor(
+    readonly _ipfs: IpfsApi,
+    private readonly topic: string,
+    readonly repository: Repository,
+    private readonly _logger: DiagnosticsLogger,
+    private readonly _pubsubLogger: ServiceLogger
+  ) {
+    const pubsub = new Pubsub(_ipfs, topic, IPFS_RESUBSCRIBE_INTERVAL_DELAY, _pubsubLogger, _logger)
+    this.messageBus = new MessageBus(
+      new PubsubRateLimit(
+        new PubsubKeepalive(pubsub, MAX_PUBSUB_PUBLISH_INTERVAL),
+        _logger,
+        MAX_QUERIES_PER_SECOND,
+        MAX_QUEUED_QUERIES
+      )
+    )
+    this.messageBus.subscribe(this.handleMessage.bind(this))
+    this.dagNodeCache = new LRUMap<string, any>(IPFS_CACHE_SIZE)
   }
 
   /**
    * Store Ceramic commit (genesis|signed|anchor).
    *
    * @param data - Ceramic commit data
+   * @param streamId - StreamID of the stream the commit belongs to, used for logging.
    */
-  async storeCommit (data: any): Promise<CID> {
-    if (DoctypeUtils.isSignedCommitContainer(data)) {
-      const { jws, linkedBlock } = data
-      // put the JWS into the ipfs dag
-      const cid = await this._ipfs.dag.put(jws, { format: 'dag-jose', hashAlg: 'sha2-256' })
-      // put the payload into the ipfs dag
-      await this._ipfs.block.put(linkedBlock, { cid: jws.link.toString() })
-      await this._restrictRecordSize(jws.link.toString())
-      await this._restrictRecordSize(cid)
+  async storeCommit(data: any, streamId?: StreamID): Promise<CID> {
+    try {
+      if (StreamUtils.isSignedCommitContainer(data)) {
+        const { jws, linkedBlock } = data
+        // put the JWS into the ipfs dag
+        const cid = await this._ipfs.dag.put(jws, { format: 'dag-jose', hashAlg: 'sha2-256' })
+        // put the payload into the ipfs dag
+        await this._ipfs.block.put(linkedBlock, { cid: jws.link.toString() })
+        await this._restrictCommitSize(jws.link.toString())
+        await this._restrictCommitSize(cid)
+        return cid
+      }
+      const cid = await this._ipfs.dag.put(data)
+      await this._restrictCommitSize(cid)
       return cid
+    } catch (e) {
+      if (streamId) {
+        this._logger.err(
+          `Error while storing commit to IPFS for stream ${streamId.toString()}: ${e}`
+        )
+      } else {
+        this._logger.err(`Error while storing commit to IPFS: ${e}`)
+      }
+      throw e
     }
-    const cid = await this._ipfs.dag.put(data)
-    await this._restrictRecordSize(cid)
-    return cid
   }
 
   /**
@@ -187,11 +114,23 @@ export default class Dispatcher extends EventEmitter {
    * use `retrieveFromIPFS`.
    *
    * @param cid - Commit CID
+   * @param streamId - StreamID of the stream the commit belongs to, used for logging.
    */
-  async retrieveCommit (cid: CID | string): Promise<any> {
-    const record = await this._ipfs.dag.get(cid, { timeout: IPFS_GET_TIMEOUT })
-    await this._restrictRecordSize(cid)
-    return cloneDeep(record.value)
+  async retrieveCommit(cid: CID | string, streamId?: StreamID): Promise<any> {
+    try {
+      const result = await this._getFromIpfs(cid)
+      await this._restrictCommitSize(cid)
+      return result
+    } catch (e) {
+      if (streamId) {
+        this._logger.err(
+          `Error while loading commit CID ${cid.toString()} from IPFS for stream ${streamId.toString()}: ${e}`
+        )
+      } else {
+        this._logger.err(`Error while loading commit CID ${cid.toString()} from IPFS: ${e}`)
+      }
+      throw e
+    }
   }
 
   /**
@@ -199,9 +138,51 @@ export default class Dispatcher extends EventEmitter {
    * @param cid
    * @param path - optional IPLD path to load, starting from the object represented by `cid`
    */
-  async retrieveFromIPFS (cid: CID | string, path?: string): Promise<any> {
-    const record = await this._ipfs.dag.get(cid, { timeout: IPFS_GET_TIMEOUT, path })
-    return cloneDeep(record.value)
+  async retrieveFromIPFS(cid: CID | string, path?: string): Promise<any> {
+    try {
+      return this._getFromIpfs(cid, path)
+    } catch (e) {
+      this._logger.err(`Error while loading CID ${cid.toString()} from IPFS: ${e}`)
+      throw e
+    }
+  }
+
+  /**
+   * Helper function for loading a CID from IPFS
+   */
+  private async _getFromIpfs(cid: CID | string, path?: string): Promise<any> {
+    const asCid = typeof cid === 'string' ? new CID(cid) : cid
+
+    // Lookup CID in cache before looking it up IPFS
+    const cidAndPath = path ? asCid.toString() + path : asCid.toString()
+    const cachedDagNode = await this.dagNodeCache.get(cidAndPath)
+    if (cachedDagNode) return cloneDeep(cachedDagNode)
+
+    // Now lookup CID in IPFS, with retry logic
+    // Note, in theory retries shouldn't be necessary, as just increasing the timeout should
+    // allow IPFS to use the extra time to find the CID, doing internal retries if needed.
+    // Anecdotally, however, we've seen evidence that IPFS sometimes finds CIDs on retry that it
+    // doesn't on the first attempt, even when given plenty of time to load it.
+    let dagResult = null
+    for (let retries = IPFS_GET_RETRIES - 1; retries >= 0 && dagResult == null; retries--) {
+      try {
+        dagResult = await this._ipfs.dag.get(asCid, { timeout: IPFS_GET_TIMEOUT, path })
+      } catch (err) {
+        if (err.code == 'ERR_TIMEOUT') {
+          console.warn(
+            `Timeout error while loading CID ${cid.toString()} from IPFS. ${retries} retries remain`
+          )
+          if (retries > 0) {
+            continue
+          }
+        }
+
+        throw err
+      }
+    }
+    // CID loaded successfully, store in cache
+    await this.dagNodeCache.set(cidAndPath, dagResult.value)
+    return cloneDeep(dagResult.value)
   }
 
   /**
@@ -209,76 +190,55 @@ export default class Dispatcher extends EventEmitter {
    * @param cid - Record CID
    * @private
    */
-  async _restrictRecordSize(cid: CID | string): Promise<void> {
+  async _restrictCommitSize(cid: CID | string): Promise<void> {
     const stat = await this._ipfs.block.stat(cid, { timeout: IPFS_GET_TIMEOUT })
     if (stat.size > IPFS_MAX_RECORD_SIZE) {
-      throw new Error(`${cid.toString()} record size ${stat.size} exceeds the maximum block size of ${IPFS_MAX_RECORD_SIZE}`)
+      throw new Error(
+        `${cid.toString()} record size ${
+          stat.size
+        } exceeds the maximum block size of ${IPFS_MAX_RECORD_SIZE}`
+      )
     }
   }
 
   /**
    * Publishes Tip commit to pub/sub topic.
    *
-   * @param docId  - Document ID
+   * @param streamId  - Stream ID
    * @param tip - Commit CID
    */
-  async publishTip (docId: DocID, tip: CID): Promise<void> {
-    if (!this._isRunning) {
-      this.logger.error('Dispatcher has been closed')
-      return
-    }
-
-    const payload = { typ: MsgType.UPDATE, doc: docId.baseID.toString(), tip: tip.toString() }
-    await this._ipfs.pubsub.publish(this.topic, JSON.stringify(payload))
-    this._log({ peer: this._peerId, event: 'published', topic: this.topic, message: payload })
+  publishTip(streamId: StreamID, tip: CID): Subscription {
+    return this.publish({ typ: MsgType.UPDATE, stream: streamId, tip: tip })
   }
 
   /**
-   * Handles one message from the pub/sub topic.
-   *
-   * @param message - Message data
+   * Handles one message from the pubsub topic.
    */
-  handleMessage = async (message: any): Promise<void> => {
-    if (!this._isRunning) {
-      this.logger.error('Dispatcher has been closed')
-      return
+  async handleMessage(message: PubsubMessage): Promise<void> {
+    try {
+      switch (message.typ) {
+        case MsgType.UPDATE:
+          await this._handleUpdateMessage(message)
+          break
+        case MsgType.QUERY:
+          await this._handleQueryMessage(message)
+          break
+        case MsgType.RESPONSE:
+          await this._handleResponseMessage(message)
+          break
+        case MsgType.KEEPALIVE:
+          break
+        default:
+          throw new UnreachableCaseError(message, `Unsupported message type`)
+      }
+    } catch (e) {
+      // TODO: Combine these two log statements into one line so that they can't get split up in the
+      // log output.
+      this._logger.err(
+        `Error while processing ${messageTypeToString(message.typ)} message from pubsub: ${e}`
+      )
+      this._logger.err(e) // Log stack trace
     }
-
-    if (message.from === this._peerId) {
-      return
-    }
-
-    // TODO: This is not a great way to handle the message because we don't
-    // don't know its type/contents. Ideally we can make this method generic
-    // against specific interfaces and follow IPFS specs for
-    // types (e.g. message data should be a buffer)
-    let parsedMessageData
-    if (typeof message.data === 'string') {
-      parsedMessageData = JSON.parse(message.data)
-    } else {
-      parsedMessageData = JSON.parse(new TextDecoder('utf-8').decode(message.data))
-    }
-    // TODO: handle signature and key buffers in message data
-    const logMessage = { ...message, data: parsedMessageData }
-    delete logMessage.key
-    delete logMessage.signature
-    this._log({ peer: this._peerId, event: 'received', topic: this.topic, message: logMessage })
-
-    const { typ } = parsedMessageData
-    switch (typ) {
-      case MsgType.UPDATE:
-        await this._handleUpdateMessage(parsedMessageData)
-        break
-      case MsgType.QUERY:
-        await this._handleQueryMessage(parsedMessageData)
-        break
-      case MsgType.RESPONSE:
-        await this._handleResponseMessage(parsedMessageData)
-        break
-      default:
-        throw new Error("Unsupported message type: " + typ)
-    }
-
   }
 
   /**
@@ -286,18 +246,13 @@ export default class Dispatcher extends EventEmitter {
    * @param message
    * @private
    */
-  async _handleUpdateMessage(message: any): Promise<void> {
+  async _handleUpdateMessage(message: UpdateMessage): Promise<void> {
     // TODO Add validation the message adheres to the proper format.
 
-    const { doc, tip } = message
-    if (!this._documents[doc]) {
-      return
-    }
-
+    const { stream: streamId, tip } = message
     // TODO: add cache of cids here so that we don't emit event
-    // multiple times if we get the message more than once.
-    this._documents[doc].emit('update', new CID(tip))
-
+    // multiple times if we get the message from more than one peer.
+    this.repository.stateManager.update(streamId, tip)
     // TODO: Handle 'anchorService' if present in message
   }
 
@@ -306,23 +261,20 @@ export default class Dispatcher extends EventEmitter {
    * @param message
    * @private
    */
-  async _handleQueryMessage(message: any): Promise<void> {
+  async _handleQueryMessage(message: QueryMessage): Promise<void> {
     // TODO Add validation the message adheres to the proper format.
 
-    const { doc: docId, id } = message
-    if (!this._documents[docId]) {
-      return
+    const { stream: streamId, id } = message
+    const streamState = await this.repository.streamState(streamId)
+    if (streamState) {
+      // TODO: Should we validate that the 'id' field is the correct hash of the rest of the message?
+
+      const tip = streamState.log[streamState.log.length - 1].cid
+      // Build RESPONSE message and send it out on the pub/sub topic
+      // TODO: Handle 'paths' for multiquery support
+      const tipMap = new Map().set(streamId.toString(), tip)
+      this.publish({ typ: MsgType.RESPONSE, id, tips: tipMap })
     }
-
-    // TODO: Should we validate that the 'id' field is the correct hash of the rest of the message?
-
-    // Build RESPONSE message and send it out on the pub/sub topic
-    // TODO: Handle 'paths' for multiquery support
-    const tipMap = {}
-    tipMap[docId] = this._documents[docId].tip.toString()
-    const payload = { typ: MsgType.RESPONSE, id, tips: tipMap}
-    await this._ipfs.pubsub.publish(this.topic, JSON.stringify(payload))
-    this._log({ peer: this._peerId, event: 'published', topic: this.topic, message: payload })
   }
 
   /**
@@ -330,46 +282,40 @@ export default class Dispatcher extends EventEmitter {
    * @param message
    * @private
    */
-  async _handleResponseMessage(message: any): Promise<void> {
-    // TODO Add validation the message adheres to the proper format.
+  async _handleResponseMessage(message: ResponseMessage): Promise<void> {
     const { id: queryId, tips } = message
-
-    if (!this._outstandingQueryIds[queryId]) {
-      // We're not expecting this RESPONSE message
-      return
+    const expectedStreamID = this.messageBus.outstandingQueries.get(queryId)
+    if (expectedStreamID) {
+      const newTip = tips.get(expectedStreamID.toString())
+      if (!newTip) {
+        throw new Error(
+          "Response to query with ID '" +
+            queryId +
+            "' is missing expected new tip for StreamID '" +
+            expectedStreamID +
+            "'"
+        )
+      }
+      this.repository.stateManager.update(expectedStreamID, newTip)
+      this.messageBus.outstandingQueries.delete(queryId)
+      // TODO Iterate over all streams in 'tips' object and process the new tip for each
     }
-
-    const expectedDocID = this._outstandingQueryIds[queryId]
-    const newTip = tips[expectedDocID.toString()]
-    if (!newTip) {
-      throw new Error("Response to query with ID '" + queryId + "' is missing expected new tip for docID '" +
-          expectedDocID + "'")
-    }
-    this._documents[expectedDocID.toString()].emit('update', new CID(newTip))
-    // TODO Iterate over all documents in 'tips' object and process the new tip for each
-  }
-
-  /**
-   * Logs one message
-   *
-   * @param msg - Message data
-   * @private
-   */
-  _log(msg: LogMessage): void {
-    const timestampedMsg = {timestamp: Date.now(), ...msg}
-    this.logger.debug(JSON.stringify(timestampedMsg))
   }
 
   /**
    * Gracefully closes the Dispatcher.
    */
   async close(): Promise<void> {
-    this._isRunning = false
+    this.messageBus.unsubscribe()
+  }
 
-    clearInterval(this._resubscribeInterval)
-
-    await Promise.all(Object.values(this._documents).map(async (doc) => await doc.close()))
-
-    await this._ipfs.pubsub.unsubscribe(this.topic)
+  /**
+   * Publish a message to IPFS pubsub as a fire-and-forget operation.
+   *
+   * You could use returned Subscription to react when the operation is finished.
+   * Feel free to disregard it though.
+   */
+  private publish(message: PubsubMessage): Subscription {
+    return this.messageBus.next(message)
   }
 }

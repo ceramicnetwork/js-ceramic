@@ -12,14 +12,13 @@ $ npm install @ceramicnetwork/core
 ### Usage
 ```
 import Ceramic from '@ceramicnetwork/core'
+import TileDocument from '@ceramicnetwork/stream-tile'
 
-import IPFS from 'ipfs'
+import IPFS from 'ipfs-core'
 import dagJose from 'dag-jose'
-import basicsImport from 'multiformats/cjs/src/basics-import.js'
-import legacy from 'multiformats/cjs/src/legacy.js'
+import { convert } from 'blockcodec-to-ipld-format'
 
-basicsImport.multicodec.add(dagJose)
-const format = legacy(basicsImport, dagJose.name)
+const format = convert(dagJose)
 
 const ipfs = Ipfs.create({
     ipld: { formats: [format] },
@@ -29,7 +28,7 @@ const config: CeramicConfig = {}
 const ceramic = await Ceramic.create(ipfs, config)
 
 // create document example
-const doctype1 = await ceramic.createDocument('tile', { content: { test: 123 } })
+const tileDocument = await TileDocument.create(ceramic, { test: 123 })
 ```
 
 ### Ceramic API

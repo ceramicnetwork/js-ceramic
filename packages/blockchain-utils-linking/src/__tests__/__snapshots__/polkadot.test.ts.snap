@@ -13,8 +13,11 @@ AccountID {
 exports[`createLink create proof with ed25519 1`] = `
 Object {
   "account": "5EEvMbuaJQxxPorGtzY2qUYqM3akRrnD36bZD4PomfpLdrtx@polkadot:b0a8d493285c2df73290dfb7e61f870f",
-  "message": "0x4372656174652061206e6577206163636f756e74206c696e6b20746f20796f7572206964656e746974792e0a0a6469643a333a626166797364667765667765200a54696d657374616d703a20363636",
-  "signature": "0xe7c359daca1d1c2bc82116654ef8277b989624e833966969c556fc82b12875693cb850c64bbb3f145a7db46d9b1bcf04b606960be89d0daac07945791557db0a",
+  "message": "Link this account to your identity
+
+did:3:bafysdfwefwe 
+Timestamp: 666",
+  "signature": "0x96e635144efbab08a6118d54dc7477780e04a47c7eee636e27a3631617ed6ec7629447fe5cabbadfd57095fe453c9c3ab26a0831e70b7199994bcf707c453108",
   "timestamp": 666,
   "type": "eoa",
   "version": 2,
@@ -24,8 +27,11 @@ Object {
 exports[`createLink create proof with secp256k 1`] = `
 Object {
   "account": "5GuAnwx9uKSQxKZB8moxoaX4ceehoCYu4XYMjJkKtm2QDgqC@polkadot:b0a8d493285c2df73290dfb7e61f870f",
-  "message": "0x4372656174652061206e6577206163636f756e74206c696e6b20746f20796f7572206964656e746974792e0a0a6469643a333a626166797364667765667765200a54696d657374616d703a20363636",
-  "signature": "0x74685cde417eac26ee6d35667772abd9f1243b7c04973848f7b0332a8eca52af37c5d6ece58d73c72b0accbba65a0361fa4d3c2812b761200c87cfdd52c2f15000",
+  "message": "Link this account to your identity
+
+did:3:bafysdfwefwe 
+Timestamp: 666",
+  "signature": "0x4f3ad24e9d2842b5fb0fd8de9cc17191ba129780613d65268253d0657ba58626ee4511f6827c555b1fe15df74ef19e8c89cf3357f39b12086c3a73f467411ce200",
   "timestamp": 666,
   "type": "eoa",
   "version": 2,
@@ -34,6 +40,11 @@ Object {
 
 exports[`createLink create proof with sr25519 1`] = `"5CXU7u72Gz9Jqo6FdAwzSsxX5JhdRwMj2UZ4xrAEoo3AyySx@polkadot:b0a8d493285c2df73290dfb7e61f870f"`;
 
-exports[`createLink create proof with sr25519 2`] = `"0x4372656174652061206e6577206163636f756e74206c696e6b20746f20796f7572206964656e746974792e0a0a6469643a333a626166797364667765667765200a54696d657374616d703a20363636"`;
+exports[`createLink create proof with sr25519 2`] = `
+"Link this account to your identity
+
+did:3:bafysdfwefwe 
+Timestamp: 666"
+`;
 
 exports[`createLink create proof with sr25519 3`] = `"eoa"`;
