@@ -45,7 +45,8 @@
     "@polkadot/util-crypto": "^5.0.1",
     "@smontero/eosio-local-provider": "^0.0.3",
     "eth-sig-util": "^3.0.0",
-    "ganache-core": "^2.13.1"
+    "ganache-core": "^2.13.1",
+    "near-api-js": "^0.36.3"
   },
   "gitHead": "34eeee25597b0a60def72906c26d3afd6230aaf1"
 }
