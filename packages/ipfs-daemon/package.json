@@ -37,7 +37,7 @@
     "dag-jose": "^0.3.0",
     "datastore-fs": "^5.0.1",
     "datastore-level": "^6.0.1",
-    "datastore-s3": "^6.0.0",
+    "datastore-s3": "^8.0.0",
     "express": "^4.17.1",
     "ipfs-core": "~0.7.1",
     "ipfs-core-types": "~0.5.1",
