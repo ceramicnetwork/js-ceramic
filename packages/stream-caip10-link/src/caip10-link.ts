@@ -13,7 +13,6 @@ import {
 import type { AuthProvider, LinkProof } from '@ceramicnetwork/blockchain-utils-linking'
 import { CommitID, StreamID, StreamRef } from '@ceramicnetwork/streamid'
 import { AccountID } from 'caip'
-import { encode as encodeEip55 } from 'eip55'
 import type { DID } from 'dids'
 
 const throwReadOnlyError = (): Promise<void> => {
@@ -148,7 +147,7 @@ export class Caip10Link extends Stream {
     // sometimes all lower case. In order to deal with this and not have different
     // links for different addresses we encode the address using eip55.
     if (accountId.chainId.namespace === 'eip155') {
-      accountId.address = encodeEip55(accountId.address)
+      accountId.address = accountId.address.toLowerCase()
     }
     return {
       header: {
