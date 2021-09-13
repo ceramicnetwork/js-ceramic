@@ -145,7 +145,7 @@ export class Caip10Link extends Stream {
   static makeGenesis(accountId: AccountID): GenesisCommit {
     // Ethereum addresses specifically are sometimes encoded with mixed case and
     // sometimes all lower case. In order to deal with this and not have different
-    // links for different addresses we using the address using lowercase.
+    // links for different addresses we convert the address to lowercase.
     if (accountId.chainId.namespace === 'eip155') {
       accountId.address = accountId.address.toLowerCase()
     }
