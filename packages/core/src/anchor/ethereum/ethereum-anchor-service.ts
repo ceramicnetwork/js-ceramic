@@ -192,14 +192,14 @@ export default class EthereumAnchorService implements AnchorService {
           message: json.message,
         }
       case 'COMPLETED': {
-        const { anchorRecord } = json
-        const anchorRecordCid = new CID(anchorRecord.cid.toString())
+        const { anchorCommit } = json
+        const anchorCommitCid = new CID(anchorCommit.cid.toString())
         return {
           status: AnchorStatus.ANCHORED,
           streamId: cidStream.streamId,
           cid: cidStream.cid,
           message: json.message,
-          anchorRecord: anchorRecordCid,
+          anchorCommit: anchorCommitCid,
         }
       }
       default:

@@ -216,7 +216,7 @@ test('commit history and atCommit', async () => {
   expect(stream.state.anchorStatus).not.toEqual(AnchorStatus.NOT_REQUESTED)
   expect(stream.state.log.length).toEqual(4)
 
-  // Apply a final record that does not get anchored
+  // Apply a final commit that does not get anchored
   const finalContent = { foo: 'bar' }
   const updateRec2 = await stream.makeCommit(ceramic, finalContent)
   await ceramic.repository.applyCommit(streamState.id, updateRec2, {

@@ -125,10 +125,10 @@ describe('Ceramic API', () => {
       }
 
       await expect(async () => {
-        const updateRecord = await streamV1.makeCommit(ceramic, { test: 'fghj' })
+        const updateCommit = await streamV1.makeCommit(ceramic, { test: 'fghj' })
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
-        await ceramic.applyCommit(streamV1Id, updateRecord, { anchor: false, publish: false })
+        await ceramic.applyCommit(streamV1Id, updateCommit, { anchor: false, publish: false })
       }).rejects.toThrow(/Not StreamID/)
 
       // checkout not anchored commit
@@ -224,21 +224,21 @@ describe('Ceramic API', () => {
       expect(stream2.metadata).toEqual(stream.metadata)
     })
 
-    it('can list log records', async () => {
+    it('can list log commits', async () => {
       const stream = await TileDocument.create(ceramic, { a: 1 })
-      const logRecords = await ceramic.loadStreamCommits(stream.id)
-      expect(logRecords).toBeDefined()
+      const logCommits = await ceramic.loadStreamCommits(stream.id)
+      expect(logCommits).toBeDefined()
 
       const expected = []
       for (const { cid } of stream.state.log) {
-        const record = await ceramic.dispatcher.retrieveCommit(cid)
+        const commit = await ceramic.dispatcher.retrieveCommit(cid)
         expected.push({
           cid: cid.toString(),
-          value: await StreamUtils.convertCommitToSignedCommitContainer(record, ipfs),
+          value: await StreamUtils.convertCommitToSignedCommitContainer(commit, ipfs),
         })
       }
 
-      expect(logRecords).toEqual(expected)
+      expect(logCommits).toEqual(expected)
     })
 
     it('can store commit if the size is lesser than the maximum size ~256KB', async () => {

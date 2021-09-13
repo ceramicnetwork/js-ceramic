@@ -88,7 +88,7 @@ describe('periodic subscription', () => {
       ],
     } as unknown as StreamState
     const document = new Document(initial, '', SYNC_INTERVAL)
-    // Every Document#_syncState we record when it was called.
+    // Every Document#_syncState we commit when it was called.
     // Also we track how many invocations happened to stop after enough samples are acquired.
     const invocations = []
     const calledTimes = new BehaviorSubject<number>(0)
@@ -124,7 +124,7 @@ describe('periodic subscription', () => {
       ],
     } as unknown as StreamState
     const document = new Document(initial, '', SYNC_INTERVAL)
-    // Every Document#_syncState we record when it was called.
+    // Every Document#_syncState we commit when it was called.
     // Also we track how many invocations happened to stop after enough samples are acquired.
     const invocations = []
     const calledTimes = new BehaviorSubject<number>(0)
