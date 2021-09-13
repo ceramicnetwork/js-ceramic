@@ -379,6 +379,12 @@ export class Ceramic implements CeramicApi {
       const anchorServiceUrl =
         config.anchorServiceUrl || DEFAULT_ANCHOR_SERVICE_URLS[networkOptions.name]
 
+      if (
+        (networkOptions.name == Networks.MAINNET || networkOptions.name == Networks.ELP) &&
+        anchorServiceUrl != DEFAULT_ANCHOR_SERVICE_URLS[networkOptions.name]
+      ) {
+        throw new Error('Cannot use custom anchor service on Ceramic mainnet')
+      }
       anchorService =
         networkOptions.name != Networks.INMEMORY
           ? new EthereumAnchorService(anchorServiceUrl, logger)
@@ -531,7 +537,7 @@ export class Ceramic implements CeramicApi {
     }
 
     opts = { ...DEFAULT_APPLY_COMMIT_OPTS, ...opts, ...this._loadOptsOverride }
-    const state$ = await this.repository.stateManager.applyCommit(
+    const state$ = await this.repository.applyCommit(
       normalizeStreamID(streamId),
       commit,
       opts as CreateOpts

@@ -183,7 +183,7 @@ export class StateManager {
     }
   }
 
-  private publishTip(state$: RunningState): void {
+  publishTip(state$: RunningState): void {
     this.dispatcher.publishTip(state$.id, state$.tip)
   }
 
@@ -208,17 +208,16 @@ export class StateManager {
    * @param commit - Commit data
    * @param opts - Stream initialization options (request anchor, wait, etc.)
    */
-  applyCommit(
+  async applyCommit(
     streamId: StreamID,
     commit: any,
-    opts: CreateOpts | UpdateOpts,
+    opts: CreateOpts | UpdateOpts
   ): Promise<RunningState> {
     return this.executionQ.forStream(streamId).run(async () => {
       const state$ = await this.load(streamId, opts)
       const cid = await this.dispatcher.storeCommit(commit, streamId)
 
       await this._handleTip(state$, cid, opts)
-      await this.applyWriteOpts(state$, opts)
       return state$
     })
   }

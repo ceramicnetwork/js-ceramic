@@ -496,7 +496,8 @@ export class CeramicDaemon {
    */
   async unpinStream(req: Request, res: Response): Promise<void> {
     const streamId = StreamID.fromString(req.params.streamid || req.params.docid)
-    await this.ceramic.pin.rm(streamId)
+    const { opts } = req.body
+    await this.ceramic.pin.rm(streamId, opts)
     res.json({
       streamId: streamId.toString(),
       docId: streamId.toString(),

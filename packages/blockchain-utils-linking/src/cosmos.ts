@@ -67,14 +67,13 @@ export class CosmosAuthProvider implements AuthProvider {
       getMetaData()
     )
     const signature = stringEncode(JSON.stringify(res.signatures[0]))
-    const proof: LinkProof = {
-      version: 1,
+    return {
+      version: 2,
       message,
       signature,
       account: accountID.toString(),
       timestamp,
     }
-    return proof
   }
 
   async accountId(): Promise<AccountID> {

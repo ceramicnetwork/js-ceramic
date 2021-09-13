@@ -3,6 +3,112 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.5.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@1.4.0...@ceramicnetwork/common@1.5.0-rc.0) (2021-09-08)
+
+
+### Bug Fixes
+
+* **cli,http-client:** Fix pin API in CLI and http client ([#752](https://github.com/ceramicnetwork/js-ceramic/issues/752)) ([20fcd75](https://github.com/ceramicnetwork/js-ceramic/commit/20fcd7598e589c088bcc778bafd1304efa64edb7))
+* **common:** CeramicApi compatibility ([#1326](https://github.com/ceramicnetwork/js-ceramic/issues/1326)) ([1837c0d](https://github.com/ceramicnetwork/js-ceramic/commit/1837c0d6589d82de8b69d487d48f253e50f98dd2))
+* **common:** Don't serialize null state fields ([#867](https://github.com/ceramicnetwork/js-ceramic/issues/867)) ([51b7375](https://github.com/ceramicnetwork/js-ceramic/commit/51b737542dc64cd3feac8af6c22fa32a81a48c8a))
+* **common:** Don't use node packages at runtime in the logger if we might be running in-browser ([#1165](https://github.com/ceramicnetwork/js-ceramic/issues/1165)) ([937c4f4](https://github.com/ceramicnetwork/js-ceramic/commit/937c4f4fb5c7b403733397e9d4f3c8e442beb3cc))
+* **common:** fix IpfsApi import ([#565](https://github.com/ceramicnetwork/js-ceramic/issues/565)) ([802c284](https://github.com/ceramicnetwork/js-ceramic/commit/802c284657c3d03df4268c1cf1f6d445e6b7218d))
+* **common:** Remove additional LF symbol introduced by Morgan logger ([#1222](https://github.com/ceramicnetwork/js-ceramic/issues/1222)) ([838ce9c](https://github.com/ceramicnetwork/js-ceramic/commit/838ce9ccd835fa5039937807f7770cc6538f3e15))
+* **common:** Show timezone with anchorScheduledFor property [#897](https://github.com/ceramicnetwork/js-ceramic/issues/897) ([#951](https://github.com/ceramicnetwork/js-ceramic/issues/951)) ([be2b472](https://github.com/ceramicnetwork/js-ceramic/commit/be2b472640d35165efeb61437b83a81f29e878be))
+* **common, logger:** Clean up dependencies ([#1164](https://github.com/ceramicnetwork/js-ceramic/issues/1164)) ([191ad31](https://github.com/ceramicnetwork/js-ceramic/commit/191ad310b87ac9aba97bb84b122908337f35aa11))
+* **core:** Don't display anchorScheduledFor at all when anchored ([#1101](https://github.com/ceramicnetwork/js-ceramic/issues/1101)) ([3be9e74](https://github.com/ceramicnetwork/js-ceramic/commit/3be9e741e6494040ad377d8714b407e4ba18a62b))
+* **core:** Honor ethereumRpcUrl config option ([#830](https://github.com/ceramicnetwork/js-ceramic/issues/830)) ([a440b59](https://github.com/ceramicnetwork/js-ceramic/commit/a440b59ec692313e72bf3f3e15abb5b90cdef5e9))
+* **core:** ipfs subscribe, pin version ([#1454](https://github.com/ceramicnetwork/js-ceramic/issues/1454)) ([fc9c5e7](https://github.com/ceramicnetwork/js-ceramic/commit/fc9c5e77ef84be448744b92fb35d5e3bf06f264d))
+* **core:** Only poll for anchors at startup, don't submit a new request ([#1437](https://github.com/ceramicnetwork/js-ceramic/issues/1437)) ([ec17446](https://github.com/ceramicnetwork/js-ceramic/commit/ec17446b0472942f4e4bcfeb8037aebe5ce63525))
+* **core:** only sync pinned streams the first time they are loaded ([#1417](https://github.com/ceramicnetwork/js-ceramic/issues/1417)) ([76be682](https://github.com/ceramicnetwork/js-ceramic/commit/76be6820fa2b5db49ede38b6cf20a9bee2702928))
+* **core:** Optimize commit application to minimize calls to IPFS ([#1528](https://github.com/ceramicnetwork/js-ceramic/issues/1528)) ([75ee50e](https://github.com/ceramicnetwork/js-ceramic/commit/75ee50eb7ec988afdab81aa23a9f792fb5c7602c))
+* CID version fix ([#638](https://github.com/ceramicnetwork/js-ceramic/issues/638)) ([a4f4390](https://github.com/ceramicnetwork/js-ceramic/commit/a4f4390ea561e991cae93dd26b9b122d10caef32))
+* Fix tests by using node environment for jest ([#1212](https://github.com/ceramicnetwork/js-ceramic/issues/1212)) ([0f04006](https://github.com/ceramicnetwork/js-ceramic/commit/0f04006098f9028c6750c9920c4b3af758b71235))
+* Pin dag-jose contents ([#1451](https://github.com/ceramicnetwork/js-ceramic/issues/1451)) ([a598c10](https://github.com/ceramicnetwork/js-ceramic/commit/a598c10d77eba29877c6513eb8567972f6db83cf))
+* **doctype-caip10-link:** solidify data structure ([#619](https://github.com/ceramicnetwork/js-ceramic/issues/619)) ([d1e3b98](https://github.com/ceramicnetwork/js-ceramic/commit/d1e3b98bda51ad3a7d2b7d31b253be3a181d91ae))
+* **http-client:** reload cached documents ([#719](https://github.com/ceramicnetwork/js-ceramic/issues/719)) ([6bc7dbf](https://github.com/ceramicnetwork/js-ceramic/commit/6bc7dbff31eaccfdbcb960effd850f069eb0d538))
+
+
+### Features
+
+* **cli:** Add hierarchy to daemon config ([#1633](https://github.com/ceramicnetwork/js-ceramic/issues/1633)) ([138b49d](https://github.com/ceramicnetwork/js-ceramic/commit/138b49dddd8bb0a4df383b731df8641a0451b1d9))
+* **cli:** Add S3StateStore ([#1041](https://github.com/ceramicnetwork/js-ceramic/issues/1041)) ([45e9d27](https://github.com/ceramicnetwork/js-ceramic/commit/45e9d27d50d3bddf3c32e331542839fda682675e))
+* **cli,http-client:** Update HTTP API to use streams terminology ([#1237](https://github.com/ceramicnetwork/js-ceramic/issues/1237)) ([6c0a142](https://github.com/ceramicnetwork/js-ceramic/commit/6c0a1421623d5e0dd0ab5bc83413fcad75b14d66))
+* **common:** Change 'sync' option to an enum and refine sync behaviors ([#1269](https://github.com/ceramicnetwork/js-ceramic/issues/1269)) ([0b652fb](https://github.com/ceramicnetwork/js-ceramic/commit/0b652fb7bc37585bd8715fcfe4bc53d1fcc709ee))
+* **common:** Miscellaneous renames from document-based to stream-based terminology ([#1290](https://github.com/ceramicnetwork/js-ceramic/issues/1290)) ([2ca935e](https://github.com/ceramicnetwork/js-ceramic/commit/2ca935ec22e7c7fb2f8b96180a4a791264ab57d3))
+* **common:** Remove deprecated methods named with Records instead of Commits ([#1217](https://github.com/ceramicnetwork/js-ceramic/issues/1217)) ([43fa46a](https://github.com/ceramicnetwork/js-ceramic/commit/43fa46af31f71967426aa7ed2d93eb6b213ce1d3))
+* **common:** Rename createDocumentFromGenesis to createStreamFromGenesis ([#1285](https://github.com/ceramicnetwork/js-ceramic/issues/1285)) ([0dbfbf3](https://github.com/ceramicnetwork/js-ceramic/commit/0dbfbf30621ae65be9ebb1f4d52b2ddb8a29fc4c))
+* **common:** Rename Doctype to Stream ([#1266](https://github.com/ceramicnetwork/js-ceramic/issues/1266)) ([4ebb6ac](https://github.com/ceramicnetwork/js-ceramic/commit/4ebb6ac50bc17e48c471cbd36c19586549736a8c))
+* **common:** Update createStreamFromGenesis to take 'type' number instead of 'doctype' string ([#1286](https://github.com/ceramicnetwork/js-ceramic/issues/1286)) ([967cf11](https://github.com/ceramicnetwork/js-ceramic/commit/967cf11ec95e5cd6650bfa49fa1efd9adab85d1b))
+* **common,core:** Split DocOpts into CreateOpts, LoadOpts, and UpdateOpts ([#1229](https://github.com/ceramicnetwork/js-ceramic/issues/1229)) ([85ccbb8](https://github.com/ceramicnetwork/js-ceramic/commit/85ccbb825f6ffca0ca2524f768b0019cd5379432))
+* **common,stream-tile,stream-tile-handler:** Add metadata option to forbid controller changes ([#1688](https://github.com/ceramicnetwork/js-ceramic/issues/1688)) ([85d6c97](https://github.com/ceramicnetwork/js-ceramic/commit/85d6c9789d28bb507abb9226be02e803cdc275ed))
+* **core:** Add API to request an anchor ([#1622](https://github.com/ceramicnetwork/js-ceramic/issues/1622)) ([8473c6a](https://github.com/ceramicnetwork/js-ceramic/commit/8473c6a0554147912d76e4ed6edf50597a22a39c))
+* **core:** Add chainId to genesis header ([#509](https://github.com/ceramicnetwork/js-ceramic/issues/509)) ([f916e63](https://github.com/ceramicnetwork/js-ceramic/commit/f916e633fcd61ad8fae8e1ac634f347b77302f06))
+* **core:** Add new logger package ([#878](https://github.com/ceramicnetwork/js-ceramic/issues/878)) ([9756868](https://github.com/ceramicnetwork/js-ceramic/commit/9756868697344515635ca7fd634bd214bf419948))
+* **core:** Allow loading signed records as document versions ([#617](https://github.com/ceramicnetwork/js-ceramic/issues/617)) ([ecf6943](https://github.com/ceramicnetwork/js-ceramic/commit/ecf6943c0e475b973bd1081b85f9cb1c9622cfe7))
+* **core:** Allow pinning/unpinning alongside CRUD operations in a single request ([#1693](https://github.com/ceramicnetwork/js-ceramic/issues/1693)) ([3727337](https://github.com/ceramicnetwork/js-ceramic/commit/3727337a355ce092851d169abf4fe510878137f3))
+* **core:** Break up and rename DocOpts args ([#527](https://github.com/ceramicnetwork/js-ceramic/issues/527)) ([13ed725](https://github.com/ceramicnetwork/js-ceramic/commit/13ed7254db0fe467165098b2f3e2825cb5baa6fb))
+* **core:** Clean up Ceramic.create() and accept LoggerProvider in CeramicConfig ([#1021](https://github.com/ceramicnetwork/js-ceramic/issues/1021)) ([a53c534](https://github.com/ceramicnetwork/js-ceramic/commit/a53c534f89baab0b2a31cc8cbe9694efcc5cfa3f))
+* **core:** enable the use of timestamps ([#1117](https://github.com/ceramicnetwork/js-ceramic/issues/1117)) ([f417e27](https://github.com/ceramicnetwork/js-ceramic/commit/f417e27ce34b56ed43a713ca6697c9f34b1b7ae7))
+* **core:** Invalid commits don't prevent loading a stream ([#1597](https://github.com/ceramicnetwork/js-ceramic/issues/1597)) ([fb1dea1](https://github.com/ceramicnetwork/js-ceramic/commit/fb1dea15fb2587839dcca69bad829276fa790268))
+* **core:** Loading a CommitID makes the node handle the commit CID as a potential new tip ([#1484](https://github.com/ceramicnetwork/js-ceramic/issues/1484)) ([46e0f22](https://github.com/ceramicnetwork/js-ceramic/commit/46e0f22f99d4ae47052083c4458de3d114cd6b59))
+* **core:** Make isUnique default to true ([#427](https://github.com/ceramicnetwork/js-ceramic/issues/427)) ([cbd9041](https://github.com/ceramicnetwork/js-ceramic/commit/cbd90410865c3a7be00b0b153f682150dfd1ac91))
+* **core:** Meat of State Refactor: final concurrency model ([#1130](https://github.com/ceramicnetwork/js-ceramic/issues/1130)) ([345d3d1](https://github.com/ceramicnetwork/js-ceramic/commit/345d3d1e16d4fe8f83e53a9c0d78228408f2b03c)), closes [#1141](https://github.com/ceramicnetwork/js-ceramic/issues/1141)
+* **core:** Remove chainId from document metadata and stop enforcing of chainId when applying records ([#574](https://github.com/ceramicnetwork/js-ceramic/issues/574)) ([955d3f6](https://github.com/ceramicnetwork/js-ceramic/commit/955d3f6bd7348676d096cab8f32d932993690a6e))
+* **core:** Rename document "versions" to document "commits" ([#618](https://github.com/ceramicnetwork/js-ceramic/issues/618)) ([03bc30a](https://github.com/ceramicnetwork/js-ceramic/commit/03bc30a017662f3001ba855d1b73e1c245d0bfef))
+* **core:** Split AnchorService from AnchorValidator ([#1505](https://github.com/ceramicnetwork/js-ceramic/issues/1505)) ([b92add9](https://github.com/ceramicnetwork/js-ceramic/commit/b92add945e5fc52943a836dfad856dc052cfbee3))
+* **core:** Sync Streams with cache before returning from multiQuery ([#1548](https://github.com/ceramicnetwork/js-ceramic/issues/1548)) ([b78637d](https://github.com/ceramicnetwork/js-ceramic/commit/b78637dbb48111d8e45dc285fcd05570ad031f2e))
+* **core,http-client:** Add 'publish' option to unpin command ([#1706](https://github.com/ceramicnetwork/js-ceramic/issues/1706)) ([0ad204e](https://github.com/ceramicnetwork/js-ceramic/commit/0ad204e26e9d097ce8647ed3fd9efaea5484eb03))
+* **daemon:** add raw_data endpoint ([#1395](https://github.com/ceramicnetwork/js-ceramic/issues/1395)) ([41b6109](https://github.com/ceramicnetwork/js-ceramic/commit/41b61091efc3c05ef7894ebb423fa5508cfcd689)), closes [ceramicnetwork#1394](https://github.com/ceramicnetwork/issues/1394)
+* Check signature of a lone genesis ([#1529](https://github.com/ceramicnetwork/js-ceramic/issues/1529)) ([b55e225](https://github.com/ceramicnetwork/js-ceramic/commit/b55e225682e57aace057fb9e5e8aec0d78d63b75))
+* DocState contains type as number ([#1250](https://github.com/ceramicnetwork/js-ceramic/issues/1250)) ([56501e2](https://github.com/ceramicnetwork/js-ceramic/commit/56501e264aebb4e9b01ea31422dfd6f7827b1382))
+* Make optional custom file name for service log ([#1325](https://github.com/ceramicnetwork/js-ceramic/issues/1325)) ([f8b3c6d](https://github.com/ceramicnetwork/js-ceramic/commit/f8b3c6db5b6e57b6a89e54e327be0641d95e8c35))
+* Pass issuer to verifyJWS ([#1542](https://github.com/ceramicnetwork/js-ceramic/issues/1542)) ([3c60b0c](https://github.com/ceramicnetwork/js-ceramic/commit/3c60b0c43267e29e17fd1f676f25bf11c2ab06d5))
+* Pass time-information when checking a signature ([#1502](https://github.com/ceramicnetwork/js-ceramic/issues/1502)) ([913e091](https://github.com/ceramicnetwork/js-ceramic/commit/913e091827691f37a3e02ffcef569a22fd6f007d))
+* **core:** Remove doctype from genesis record ([#486](https://github.com/ceramicnetwork/js-ceramic/issues/486)) ([fbd68df](https://github.com/ceramicnetwork/js-ceramic/commit/fbd68df4664981a46596feffa68f85da742fbad2))
+* **core:** Rename several packages to remove redundant "ceramic-" prefix ([#460](https://github.com/ceramicnetwork/js-ceramic/issues/460)) ([8a86fb6](https://github.com/ceramicnetwork/js-ceramic/commit/8a86fb68b5f895f64e79a2585a5f854dd6c42088))
+* **core, http-client:** Remove default DID Resolver and make apps provide via CeramicAPI.setDID() ([#1196](https://github.com/ceramicnetwork/js-ceramic/issues/1196)) ([e9b3c18](https://github.com/ceramicnetwork/js-ceramic/commit/e9b3c18d8786103589dafd268cba37694811d9b9))
+* **core, http-client, common:** Doctype accepts Running State ([#1150](https://github.com/ceramicnetwork/js-ceramic/issues/1150)) ([0b708d4](https://github.com/ceramicnetwork/js-ceramic/commit/0b708d44beaa86b7fa121ce0afb5a4a59344fce1))
+* **doctype-caip10-link:** Rename 'content' to 'did' for Caip10Link ([#1216](https://github.com/ceramicnetwork/js-ceramic/issues/1216)) ([f594ff0](https://github.com/ceramicnetwork/js-ceramic/commit/f594ff081048f0966c4dc8a57a3952e4235639f8))
+* **doctype-tile:** Log when DID is authenticated ([#1199](https://github.com/ceramicnetwork/js-ceramic/issues/1199)) ([9d4a779](https://github.com/ceramicnetwork/js-ceramic/commit/9d4a77957d94c375dbc127e4fb5a1f8dc4953844))
+* **http-client, cli:** Enable specifying DocOpts in CeramicClient.loadDocument ([#1225](https://github.com/ceramicnetwork/js-ceramic/issues/1225)) ([ce0694b](https://github.com/ceramicnetwork/js-ceramic/commit/ce0694b8405f29a6c54a2d214599d210e6f1e4de))
+* **streamid:** Rename DocID to StreamID ([#1195](https://github.com/ceramicnetwork/js-ceramic/issues/1195)) ([65754d1](https://github.com/ceramicnetwork/js-ceramic/commit/65754d17ecfbdae9f110c71de91120200a6b4ef2))
+* add networks enum and elp ([#1187](https://github.com/ceramicnetwork/js-ceramic/issues/1187)) ([7a60b30](https://github.com/ceramicnetwork/js-ceramic/commit/7a60b309067f428d904b0eb3723069fc90a05a4d))
+* seperate node and browser loggers ([0532bee](https://github.com/ceramicnetwork/js-ceramic/commit/0532bee4aec22e115c3660cc3a0946204f2bff44))
+* **tile-doctype:** Update Tile API ([#1180](https://github.com/ceramicnetwork/js-ceramic/issues/1180)) ([90973ee](https://github.com/ceramicnetwork/js-ceramic/commit/90973ee32352e260cb040e687720095b145b4702))
+* Feed of pubsub messages ([#1058](https://github.com/ceramicnetwork/js-ceramic/issues/1058)) ([2d2bb5c](https://github.com/ceramicnetwork/js-ceramic/commit/2d2bb5c11082bd76d495817482e8ac21af20f6e5))
+* Unbundle DocID into DocID and CommitID ([#1009](https://github.com/ceramicnetwork/js-ceramic/issues/1009)) ([c2707f2](https://github.com/ceramicnetwork/js-ceramic/commit/c2707f212a9d23c88525b667944d24210e192f80))
+* upgrade 3id did resolver ([#1108](https://github.com/ceramicnetwork/js-ceramic/issues/1108)) ([24ef6d4](https://github.com/ceramicnetwork/js-ceramic/commit/24ef6d45c6ce1dae828447ffdaa9e57f3f5e9b00))
+* **tile:** Enforce that schemas must always be assigned with a version ([#477](https://github.com/ceramicnetwork/js-ceramic/issues/477)) ([28d8212](https://github.com/ceramicnetwork/js-ceramic/commit/28d8212a7b8cab399a2e8af6ba525e908c4548ab))
+
+
+### Reverts
+
+* Revert "chore(release):" ([26ed474](https://github.com/ceramicnetwork/js-ceramic/commit/26ed474717edaf2a276d5ffba063054f5a12e5e2))
+
+
+
+
+
+# [1.4.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@1.4.0-rc.0...@ceramicnetwork/common@1.4.0) (2021-09-08)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+# [1.4.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@1.3.0...@ceramicnetwork/common@1.4.0-rc.0) (2021-09-02)
+
+
+### Features
+
+* **common,stream-tile,stream-tile-handler:** Add metadata option to forbid controller changes ([#1688](https://github.com/ceramicnetwork/js-ceramic/issues/1688)) ([85d6c97](https://github.com/ceramicnetwork/js-ceramic/commit/85d6c9789d28bb507abb9226be02e803cdc275ed))
+
+
+
+
+
 # [1.3.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@1.3.0-rc.7...@ceramicnetwork/common@1.3.0) (2021-08-25)
 
 **Note:** Version bump only for package @ceramicnetwork/common

@@ -27,7 +27,7 @@ export class EthereumAuthProvider implements AuthProvider {
     private readonly opts: EthProviderOpts = {}
   ) {}
 
-  async accountId() {
+  async accountId(): Promise<AccountID> {
     const payload = encodeRpcMessage('eth_chainId', [])
     const chainIdHex = await safeSend(payload, this.provider)
     const chainId = parseInt(chainIdHex, 16)

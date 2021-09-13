@@ -6,7 +6,7 @@ import type { DagJWS, DagJWSResult } from 'dids'
 import { Observable } from 'rxjs'
 import { RunningStateLike } from './running-state-like'
 import { CeramicApi } from './ceramic-api'
-import { LoadOpts, SyncOptions } from './docopts'
+import { LoadOpts, SyncOptions } from './streamopts'
 
 /**
  * Describes signature status
@@ -39,6 +39,7 @@ export interface CommitHeader {
 
 export interface GenesisHeader extends CommitHeader {
   unique?: string
+  forbidControllerChange?: boolean
 }
 
 export type GenesisCommit = {
@@ -87,6 +88,7 @@ export interface StreamMetadata {
   family?: string
   schema?: string
   tags?: Array<string>
+  forbidControllerChange?: boolean
 
   [index: string]: any // allow arbitrary properties
 }

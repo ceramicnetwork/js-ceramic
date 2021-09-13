@@ -196,7 +196,7 @@ test('commit history and atCommit', async () => {
 
   const newContent = { abc: 321, def: 456, gh: 987 }
   const updateRec = await stream.makeCommit(ceramic, newContent)
-  await ceramic.repository.stateManager.applyCommit(streamState.id, updateRec, {
+  await ceramic.repository.applyCommit(streamState.id, updateRec, {
     anchor: true,
     publish: false,
   })
@@ -221,7 +221,7 @@ test('commit history and atCommit', async () => {
   // Apply a final record that does not get anchored
   const finalContent = { foo: 'bar' }
   const updateRec2 = await stream.makeCommit(ceramic, finalContent)
-  await ceramic.repository.stateManager.applyCommit(streamState.id, updateRec2, {
+  await ceramic.repository.applyCommit(streamState.id, updateRec2, {
     anchor: true,
     publish: false,
   })
@@ -346,7 +346,7 @@ test('handles basic conflict', async () => {
 
   const newContent = { abc: 321, def: 456, gh: 987 }
   let updateRec = await stream1.makeCommit(ceramic, newContent)
-  await ceramic.repository.stateManager.applyCommit(streamState1.id, updateRec, {
+  await ceramic.repository.applyCommit(streamState1.id, updateRec, {
     anchor: true,
     publish: false,
   })
@@ -373,7 +373,7 @@ test('handles basic conflict', async () => {
   )
   stream2.subscribe()
   updateRec = await stream2.makeCommit(ceramic, conflictingNewContent)
-  await ceramic.repository.stateManager.applyCommit(state$.id, updateRec, {
+  await ceramic.repository.applyCommit(state$.id, updateRec, {
     anchor: true,
     publish: false,
   })
@@ -414,8 +414,11 @@ test('enforces schema in update that assigns schema', async () => {
   const streamState = await ceramic.repository.load(stream.id, {})
   await anchorUpdate(ceramic, stream)
   const updateRec = await stream.makeCommit(ceramic, null, { schema: schemaDoc.commitId })
-  await expect(ceramic.repository.stateManager.applyCommit(
-      streamState.id, updateRec, { anchor: false, throwOnInvalidCommit: true })
+  await expect(
+    ceramic.repository.stateManager.applyCommit(streamState.id, updateRec, {
+      anchor: false,
+      throwOnInvalidCommit: true,
+    })
   ).rejects.toThrow('Validation Error: data/stuff must be string')
 })
 
@@ -436,7 +439,7 @@ test('enforce previously assigned schema during future update', async () => {
     ceramic.repository.stateManager.applyCommit(streamState.id, updateRec, {
       anchor: false,
       publish: false,
-      throwOnInvalidCommit: true
+      throwOnInvalidCommit: true,
     })
   ).rejects.toThrow('Validation Error: data/stuff must be string')
 })
@@ -451,7 +454,7 @@ test('should announce change to network', async () => {
   await publishTip.mockClear()
 
   const updateRec = await stream1.makeCommit(ceramic, { foo: 34 })
-  await ceramic.repository.stateManager.applyCommit(streamState1.id, updateRec, {
+  await ceramic.repository.applyCommit(streamState1.id, updateRec, {
     anchor: false,
     publish: true,
   })
