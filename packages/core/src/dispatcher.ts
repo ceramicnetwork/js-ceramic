@@ -25,7 +25,7 @@ import { PubsubRateLimit } from './pubsub/pubsub-ratelimit'
 
 const IPFS_GET_RETRIES = 3
 const IPFS_GET_TIMEOUT = 30000 // 30 seconds per retry, 3 retries = 90 seconds total timeout
-const IPFS_MAX_RECORD_SIZE = 256000 // 256 KB
+const IPFS_MAX_COMMIT_SIZE = 256000 // 256 KB
 const IPFS_RESUBSCRIBE_INTERVAL_DELAY = 1000 * 15 // 15 sec
 const MAX_PUBSUB_PUBLISH_INTERVAL = 60 * 1000 // one minute
 const MAX_QUERIES_PER_SECOND = 10
@@ -186,17 +186,17 @@ export class Dispatcher {
   }
 
   /**
-   * Restricts record size to IPFS_MAX_RECORD_SIZE
-   * @param cid - Record CID
+   * Restricts commit size to IPFS_MAX_COMMIT_SIZE
+   * @param cid - Commit CID
    * @private
    */
   async _restrictCommitSize(cid: CID | string): Promise<void> {
     const stat = await this._ipfs.block.stat(cid, { timeout: IPFS_GET_TIMEOUT })
-    if (stat.size > IPFS_MAX_RECORD_SIZE) {
+    if (stat.size > IPFS_MAX_COMMIT_SIZE) {
       throw new Error(
-        `${cid.toString()} record size ${
+        `${cid.toString()} commit size ${
           stat.size
-        } exceeds the maximum block size of ${IPFS_MAX_RECORD_SIZE}`
+        } exceeds the maximum block size of ${IPFS_MAX_COMMIT_SIZE}`
       )
     }
   }

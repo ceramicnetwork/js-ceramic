@@ -565,7 +565,7 @@ export class Ceramic implements CeramicApi {
   }
 
   /**
-   * Creates stream from genesis record
+   * Creates stream from genesis commit
    * @param type - Stream type
    * @param genesis - Genesis CID
    * @param opts - Initialization options
@@ -696,10 +696,10 @@ export class Ceramic implements CeramicApi {
 
     const results = await Promise.all(
       state.log.map(async ({ cid }) => {
-        const record = await this.dispatcher.retrieveCommit(cid)
+        const commit = await this.dispatcher.retrieveCommit(cid)
         return {
           cid: cid.toString(),
-          value: await StreamUtils.convertCommitToSignedCommitContainer(record, this.ipfs),
+          value: await StreamUtils.convertCommitToSignedCommitContainer(commit, this.ipfs),
         }
       })
     )

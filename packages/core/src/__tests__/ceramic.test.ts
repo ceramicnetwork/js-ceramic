@@ -148,7 +148,7 @@ describe('Ceramic integration', () => {
       await anchorUpdate(ceramic1, stream1)
 
       // Through a different ceramic instance create a new stream with the same contents that will
-      // therefore resolve to the same genesis record and thus the same streamId.  Make sure the new
+      // therefore resolve to the same genesis commit and thus the same streamId.  Make sure the new
       // Document object can see the updates made to the first Document object since they represent
       // the same Document in the network.
       const stream3 = await TileDocument.create(ceramic3, null, metadata)
@@ -175,7 +175,7 @@ describe('Ceramic integration', () => {
     })
   })
 
-  it('can apply existing records successfully', async () => {
+  it('can apply existing commits successfully', async () => {
     await withFleet(2, async ([ipfs1, ipfs2]) => {
       const ceramic1 = await createCeramic(ipfs1)
       const ceramic2 = await createCeramic(ipfs2)

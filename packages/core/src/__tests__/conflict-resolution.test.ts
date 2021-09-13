@@ -193,13 +193,13 @@ describe('pickLogToAccept', () => {
 })
 
 describe('fetchLog', () => {
-  const cidRecords: Record<string, any> = {}
+  const cidCommits: Record<string, any> = {}
   const fauxDispatcher = {
     retrieveCommit: (cid: CID) => {
-      return cidRecords[cid.toString()]
+      return cidCommits[cid.toString()]
     },
     retrieveFromIPFS: (cid: CID) => {
-      return cidRecords[cid.toString()]
+      return cidCommits[cid.toString()]
     },
   } as unknown as Dispatcher
 
@@ -220,10 +220,10 @@ describe('fetchLog', () => {
     if (type == CommitType.ANCHOR) {
       const timestamp = Math.floor(Math.random() * 100000)
       const proofCID = randomCID()
-      cidRecords[proofCID.toString()] = {
+      cidCommits[proofCID.toString()] = {
         blockTimestamp: timestamp,
       }
-      cidRecords[cid.toString()] = {
+      cidCommits[cid.toString()] = {
         proof: proofCID,
         prev: prev,
       }
@@ -236,13 +236,13 @@ describe('fetchLog', () => {
       if (prev) {
         // signed
         const link = randomCID()
-        cidRecords[link.toString()] = { prev: prev }
-        cidRecords[cid.toString()] = {
+        cidCommits[link.toString()] = { prev: prev }
+        cidCommits[cid.toString()] = {
           link: link,
         }
       } else {
         // genesis
-        cidRecords[cid.toString()] = {}
+        cidCommits[cid.toString()] = {}
       }
       return {
         cid: cid,
@@ -284,7 +284,7 @@ describe('fetchLog', () => {
   test('not in log', async () => {
     const a = logEntry(CommitType.GENESIS)
     const b = randomCID()
-    cidRecords[b.toString()] = {}
+    cidCommits[b.toString()] = {}
     const history = new HistoryLog(fauxDispatcher, [a])
 
     const result = await fetchLog(fauxDispatcher, b, history)

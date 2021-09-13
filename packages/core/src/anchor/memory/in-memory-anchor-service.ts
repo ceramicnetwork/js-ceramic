@@ -157,7 +157,7 @@ class InMemoryAnchorService implements AnchorService, AnchorValidator {
         } else {
           // If there are two conflicting candidates with the same log length, we must choose
           // which to anchor deterministically. We use the same arbitrary but deterministic strategy
-          // that js-ceramic conflict resolution does: choosing the record whose CID is smaller
+          // that js-ceramic conflict resolution does: choosing the commit whose CID is smaller
           if (c.cid.bytes < selected.cid.bytes) {
             this._failCandidate(selected)
             selected = c
@@ -303,7 +303,7 @@ class InMemoryAnchorService implements AnchorService, AnchorValidator {
         streamId: leaf.streamId,
         cid: leaf.cid,
         message: 'CID successfully anchored',
-        anchorRecord: cid,
+        anchorCommit: cid,
       })
       clearTimeout(handle)
     }, this.#anchorDelay)

@@ -128,7 +128,7 @@ export class StreamID implements StreamRef {
   }
 
   /**
-   * Genesis record CID
+   * Genesis commits CID
    */
   get cid(): CID {
     return this.#cid
