@@ -1,14 +1,10 @@
-import type CID from 'cids'
 import jsonpatch from 'fast-json-patch'
 import cloneDeep from 'lodash.clonedeep'
 
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import {
-  AnchorCommit,
   AnchorStatus,
-  CeramicCommit,
   CommitData,
-  CommitMeta,
   CommitType,
   Context,
   SignatureStatus,
@@ -17,8 +13,6 @@ import {
   StreamState,
   StreamUtils,
 } from '@ceramicnetwork/common'
-
-const IPFS_GET_TIMEOUT = 60000 // 1 minute
 
 /**
  * TileDocument stream handler implementation
@@ -38,47 +32,38 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
 
   /**
    * Applies commit (genesis|signed|anchor)
-   * @param commit - Commit (with JWS envelope or anchor proof, if available and extracted before application)
-   * @param meta - Commit meta-information
+   * @param commitData - Commit (with JWS envelope or anchor proof, if available and extracted before application)
    * @param context - Ceramic context
    * @param state - Document state
    */
   async applyCommit(
-    commit: CeramicCommit | CommitData,
-    meta: CommitMeta,
+    commitData: CommitData,
     context: Context,
     state?: StreamState
   ): Promise<StreamState> {
     if (state == null) {
       // apply genesis
-      return this._applyGenesis(commit, meta, context)
+      return this._applyGenesis(commitData, context)
     }
 
-    if ((commit as AnchorCommit).proof || (commit as CommitData).proof) {
-      return this._applyAnchor(context, commit, meta.cid, state)
+    if (StreamUtils.isAnchorCommitData(commitData)) {
+      return this._applyAnchor(context, commitData, state)
     }
 
-    return this._applySigned(commit, meta, state, context)
+    return this._applySigned(commitData, state, context)
   }
 
   /**
    * Applies genesis commit
-   * @param commit - Genesis commit
-   * @param meta - Genesis commit meta-information
+   * @param commitData - Genesis commit
    * @param context - Ceramic context
    * @private
    */
-  async _applyGenesis(commit: any, meta: CommitMeta, context: Context): Promise<StreamState> {
-    let payload = StreamUtils.isExpandedCommit(commit) ? commit.commit : commit
-    const isSigned = StreamUtils.isSignedCommit(commit) || (commit as CommitData).envelope
+  async _applyGenesis(commitData: CommitData, context: Context): Promise<StreamState> {
+    let payload = commitData.commit
+    const isSigned = StreamUtils.isSignedCommitData(commitData)
     if (isSigned) {
-      let envelope = commit
-      if (StreamUtils.isExpandedCommit(commit)) {
-        envelope = commit.envelope
-      } else {
-        payload = (await context.ipfs.dag.get(commit.link, { timeout: IPFS_GET_TIMEOUT })).value
-      }
-      await this._verifySignature(envelope, meta, context, payload.header.controllers[0])
+      await this._verifySignature(commitData, context, payload.header.controllers[0])
     } else if (payload.data) {
       throw Error('Genesis commit with contents should always be signed')
     }
@@ -93,21 +78,19 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
       metadata: payload.header,
       signature: isSigned ? SignatureStatus.SIGNED : SignatureStatus.GENESIS,
       anchorStatus: AnchorStatus.NOT_REQUESTED,
-      log: [{ cid: meta.cid, type: CommitType.GENESIS }],
+      log: [{ cid: commitData.cid, type: CommitType.GENESIS }],
     }
   }
 
   /**
    * Applies signed commit
-   * @param commit - Signed commit
-   * @param meta - Commit meta-information
+   * @param commitData - Signed commit
    * @param state - Document state
    * @param context - Ceramic context
    * @private
    */
   async _applySigned(
-    commit: any,
-    meta: CommitMeta,
+    commitData: CommitData,
     state: StreamState,
     context: Context
   ): Promise<StreamState> {
@@ -115,13 +98,10 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
     const controller = state.next?.metadata?.controllers?.[0] || state.metadata.controllers[0]
 
     // Verify the JWS before performing any additional IPFS lookups
-    const envelope = StreamUtils.isExpandedCommit(commit) ? commit.envelope : commit
-    await this._verifySignature(envelope, meta, context, controller)
+    await this._verifySignature(commitData, context, controller)
 
     // Retrieve the payload
-    const payload = StreamUtils.isExpandedCommit(commit)
-      ? commit.commit
-      : (await context.ipfs.dag.get(commit.link, { timeout: IPFS_GET_TIMEOUT })).value
+    const payload = commitData.commit
 
     if (!payload.id.equals(state.log[0].cid)) {
       throw new Error(`Invalid streamId ${payload.id}, expected ${state.log[0].cid}`)
@@ -136,7 +116,7 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
     nextState.signature = SignatureStatus.SIGNED
     nextState.anchorStatus = AnchorStatus.NOT_REQUESTED
 
-    nextState.log.push({ cid: meta.cid, type: CommitType.SIGNED })
+    nextState.log.push({ cid: commitData.cid, type: CommitType.SIGNED })
 
     const content = state.next?.content ?? state.content
     const metadata = state.next?.metadata ?? state.metadata
@@ -150,23 +130,18 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
   /**
    * Applies anchor commit
    * @param context - Ceramic context
-   * @param commit - Anchor commit
-   * @param cid - Anchor commit CID
+   * @param commitData - Anchor commit
    * @param state - Document state
    * @private
    */
   async _applyAnchor(
     context: Context,
-    commit: any,
-    cid: CID,
+    commitData: CommitData,
     state: StreamState
   ): Promise<StreamState> {
     // TODO: Assert that the 'prev' of the commit being applied is the end of the log in 'state'
-    const proof = StreamUtils.isExpandedCommit(commit)
-      ? commit.proof
-      : (await context.ipfs.dag.get(commit.proof, { timeout: IPFS_GET_TIMEOUT })).value
-
-    state.log.push({ cid, type: CommitType.ANCHOR, timestamp: proof.blockTimestamp })
+    const proof = commitData.proof
+    state.log.push({ cid: commitData.cid, type: CommitType.ANCHOR, timestamp: proof.blockTimestamp })
     let content = state.content
     let metadata = state.metadata
 
@@ -194,22 +169,20 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
 
   /**
    * Verifies commit signature
-   * @param commit - Commit to be verified
-   * @param meta - Commit metadata
+   * @param commitData - Commit to be verified
    * @param context - Ceramic context
    * @param did - DID value
    * @private
    */
   async _verifySignature(
-    commit: any,
-    meta: CommitMeta,
+    commitData: CommitData,
     context: Context,
     did: string
   ): Promise<void> {
-    await context.did.verifyJWS(commit, {
-      atTime: meta.timestamp,
+    await context.did.verifyJWS(commitData.envelope, {
+      atTime: commitData.timestamp,
       issuer: did,
-      disableTimecheck: meta.disableTimecheck,
+      disableTimecheck: commitData.disableTimecheck,
     })
   }
 }

@@ -15,6 +15,7 @@ import Ceramic from '../../ceramic'
 import StreamID from '@ceramicnetwork/streamid'
 import { DiagnosticsLogger } from '@ceramicnetwork/common'
 import type { DagJWS } from 'dids'
+import Utils from '../../utils'
 
 const DID_MATCHER =
   '^(did:([a-zA-Z0-9_]+):([a-zA-Z0-9_.-]+(:[a-zA-Z0-9_.-]+)*)((;[a-zA-Z0-9_.:%-]+=[a-zA-Z0-9_.:%-]*)*)(/[^#?]*)?)([?][^#]*)?(#.*)?'
@@ -113,9 +114,9 @@ class InMemoryAnchorService implements AnchorService, AnchorValidator {
     await Promise.all(
       candidates.map(async (req) => {
         try {
-          const record = await this.#dispatcher.retrieveCommit(req.cid, req.streamId)
+          const commitData = await Utils.getCommitData({ cid: req.cid }, this.#dispatcher, req.streamId)
           if (this.#verifySignatures) {
-            await this.verifySignedCommit(record)
+            await this.verifySignedCommit(commitData.envelope)
           }
 
           const log = await this._loadCommitHistory(req.cid)
@@ -195,19 +196,11 @@ class InMemoryAnchorService implements AnchorService, AnchorValidator {
 
     let currentCommitId = commitId
     for (;;) {
-      const currentCommit = await this.#dispatcher.retrieveCommit(currentCommitId)
-      if (StreamUtils.isAnchorCommit(currentCommit)) {
+      const commitData = await Utils.getCommitData({ cid: currentCommitId }, this.#dispatcher)
+      if (StreamUtils.isAnchorCommitData(commitData)) {
         return history
       }
-
-      let prevCommitId: CID
-      if (StreamUtils.isSignedCommit(currentCommit)) {
-        const payload = await this.#dispatcher.retrieveCommit(currentCommit.link)
-        prevCommitId = payload.prev
-      } else {
-        prevCommitId = currentCommit.prev
-      }
-
+      const prevCommitId = commitData.commit.prev
       if (prevCommitId == null) {
         return history
       }
@@ -318,13 +311,13 @@ class InMemoryAnchorService implements AnchorService, AnchorValidator {
 
   /**
    * Verifies commit signature
-   * @param commit - Commit data
+   * @param envelope - JWS envelope
    * @return DID
    * @private
    */
-  async verifySignedCommit(commit: DagJWS): Promise<string> {
+  async verifySignedCommit(envelope: DagJWS): Promise<string> {
     try {
-      const { kid } = await this.#ceramic.did.verifyJWS(commit)
+      const { kid } = await this.#ceramic.did.verifyJWS(envelope)
       return kid.match(RegExp(DID_MATCHER))[1]
     } catch (e) {
       throw new Error('Invalid signature for signed commit. ' + e)

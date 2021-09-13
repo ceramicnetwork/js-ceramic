@@ -223,10 +223,18 @@ export class StreamUtils {
   }
 
   /**
-   * Checks if this is the expanded `CommitData` structure
-   * @param commit - Commit
+   * Checks if commit data is signed
+   * @param commitData - Commit data
    */
-  static isExpandedCommit(commit: any): commit is CommitData {
-    return commit && (commit as CommitData).commit !== undefined
+  static isSignedCommitData(commitData: CommitData): boolean {
+    return commitData && commitData.envelope !== undefined
+  }
+
+  /**
+   * Checks if commit data is anchor commit
+   * @param commitData - Commit data
+   */
+  static isAnchorCommitData(commitData: CommitData): boolean {
+    return commitData && commitData.proof !== undefined
   }
 }

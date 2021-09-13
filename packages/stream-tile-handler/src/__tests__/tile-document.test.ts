@@ -15,6 +15,7 @@ import { TileDocument } from '@ceramicnetwork/stream-tile'
 import {
   AnchorCommit,
   CeramicApi,
+  CommitType,
   Context,
   StreamUtils,
   SignedCommitContainer,
@@ -315,7 +316,8 @@ describe('TileDocumentHandler', () => {
     const payload = dagCBOR.util.deserialize(record.linkedBlock)
     await context.ipfs.dag.put(payload, record.jws.link)
 
-    const streamState = await tileHandler.applyCommit(record.jws, { cid: FAKE_CID_1 }, context)
+    const commitData = { cid: FAKE_CID_1, type: CommitType.GENESIS, commit: payload, envelope: record.jws }
+    const streamState = await tileHandler.applyCommit(commitData, context)
     delete streamState.metadata.unique
     expect(streamState).toMatchSnapshot()
   })
@@ -330,9 +332,14 @@ describe('TileDocumentHandler', () => {
       RECORDS.genesisGenerated.jws.link
     )
 
+    const commitData = {
+      cid: FAKE_CID_1,
+      type: CommitType.GENESIS,
+      commit: RECORDS.genesisGenerated.linkedBlock,
+      envelope: RECORDS.genesisGenerated.jws
+    }
     const state = await tileDocumentHandler.applyCommit(
-      RECORDS.genesisGenerated.jws,
-      { cid: FAKE_CID_1 },
+      commitData,
       context
     )
     const state$ = TestUtils.runningState(state)
@@ -364,9 +371,9 @@ describe('TileDocumentHandler', () => {
     await context.ipfs.dag.put(payload, genesisRecord.jws.link)
 
     // apply genesis
+    const genesisCommitData = { cid: FAKE_CID_1, type: CommitType.GENESIS, commit: payload, envelope: genesisRecord.jws }
     let state = await tileDocumentHandler.applyCommit(
-      genesisRecord.jws,
-      { cid: FAKE_CID_1 },
+      genesisCommitData,
       context
     )
 
@@ -383,9 +390,9 @@ describe('TileDocumentHandler', () => {
     await context.ipfs.dag.put(sPayload, signedRecord.jws.link)
 
     // apply signed
+    const signedCommitData = { cid: FAKE_CID_2, type: CommitType.SIGNED, commit: sPayload, envelope: signedRecord.jws }
     state = await tileDocumentHandler.applyCommit(
-      signedRecord.jws,
-      { cid: FAKE_CID_2 },
+      signedCommitData,
       context,
       state
     )
@@ -405,9 +412,9 @@ describe('TileDocumentHandler', () => {
     const payload = dagCBOR.util.deserialize(genesisRecord.linkedBlock)
     await context.ipfs.dag.put(payload, genesisRecord.jws.link)
     // apply genesis
+    const genesisCommitData = { cid: FAKE_CID_1, type: CommitType.GENESIS, commit: payload, envelope: genesisRecord.jws }
     const genesisState = await tileDocumentHandler.applyCommit(
-      genesisRecord.jws,
-      { cid: FAKE_CID_1 },
+      genesisCommitData,
       context
     )
 
@@ -422,9 +429,9 @@ describe('TileDocumentHandler', () => {
     const sPayload1 = dagCBOR.util.deserialize(signedRecord1.linkedBlock)
     await context.ipfs.dag.put(sPayload1, signedRecord1.jws.link)
     // apply signed
+    const signedCommitData_1 = { cid: FAKE_CID_2, type: CommitType.SIGNED, commit: sPayload1, envelope: signedRecord1.jws }
     const state1 = await tileDocumentHandler.applyCommit(
-      signedRecord1.jws,
-      { cid: FAKE_CID_2 },
+      signedCommitData_1,
       context,
       deepCopy(genesisState)
     )
@@ -441,9 +448,9 @@ describe('TileDocumentHandler', () => {
     await context.ipfs.dag.put(sPayload2, signedRecord2.jws.link)
 
     // apply signed
+    const signedCommitData_2 = { cid: FAKE_CID_3, type: CommitType.SIGNED, commit: sPayload2, envelope: signedRecord2.jws }
     const state2 = await tileDocumentHandler.applyCommit(
-      signedRecord2.jws,
-      { cid: FAKE_CID_3 },
+      signedCommitData_2,
       context,
       deepCopy(state1)
     )
@@ -463,8 +470,9 @@ describe('TileDocumentHandler', () => {
     const payload = dagCBOR.util.deserialize(genesisRecord.linkedBlock)
     await context.ipfs.dag.put(payload, genesisRecord.jws.link)
 
+    const genesisCommitData = { cid: FAKE_CID_1, type: CommitType.GENESIS, commit: payload, envelope: genesisRecord.jws }
     await expect(
-      tileDocumentHandler.applyCommit(genesisRecord.jws, { cid: FAKE_CID_1 }, context)
+      tileDocumentHandler.applyCommit(genesisCommitData, context)
     ).rejects.toThrow(/invalid_jws: not a valid verificationMethod for issuer/)
   })
 
@@ -479,7 +487,8 @@ describe('TileDocumentHandler', () => {
     const payload = dagCBOR.util.deserialize(genesisRecord.linkedBlock)
     await context.ipfs.dag.put(payload, genesisRecord.jws.link)
 
-    const state = await tileDocumentHandler.applyCommit(genesisRecord.jws, FAKE_CID_1, context)
+    const genesisCommitData = { cid: FAKE_CID_1, type: CommitType.GENESIS, commit: payload, envelope: genesisRecord.jws }
+    const state = await tileDocumentHandler.applyCommit(genesisCommitData, context)
     const doc = new TileDocument(state, context)
     const makeCommit = doc.makeCommit(context.api, RECORDS.r1.desiredContent, {
       controllers: [did.id, did.id],
@@ -500,9 +509,9 @@ describe('TileDocumentHandler', () => {
     await context.ipfs.dag.put(payload, genesisRecord.jws.link)
 
     // apply genesis
+    const genesisCommitData = { cid: FAKE_CID_1, type: CommitType.GENESIS, commit: payload, envelope: genesisRecord.jws }
     let state = await tileDocumentHandler.applyCommit(
-      genesisRecord.jws,
-      { cid: FAKE_CID_1 },
+      genesisCommitData,
       context
     )
 
@@ -519,18 +528,18 @@ describe('TileDocumentHandler', () => {
     await context.ipfs.dag.put(sPayload, signedRecord.jws.link)
 
     // apply signed
+    const signedCommitData = { cid: FAKE_CID_2, type: CommitType.SIGNED, commit: sPayload, envelope: signedRecord.jws }
     state = await tileDocumentHandler.applyCommit(
-      signedRecord.jws,
-      { cid: FAKE_CID_2 },
+      signedCommitData,
       context,
       state
     )
 
     await context.ipfs.dag.put(RECORDS.proof, FAKE_CID_4)
     // apply anchor
+    const anchorCommitData = { cid: FAKE_CID_3, type: CommitType.ANCHOR, commit: RECORDS.r2.record, proof: RECORDS.proof }
     state = await tileDocumentHandler.applyCommit(
-      RECORDS.r2.record as AnchorCommit,
-      { cid: FAKE_CID_3 },
+      anchorCommitData,
       context,
       state
     )

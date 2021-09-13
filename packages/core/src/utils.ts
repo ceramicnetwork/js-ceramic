@@ -2,7 +2,16 @@ import Ajv from 'ajv'
 import addFormats from 'ajv-formats'
 import { Memoize } from 'typescript-memoize'
 
+import {
+  CommitData,
+  CommitType,
+  StreamUtils,
+} from '@ceramicnetwork/common'
+
 import type { TileDocument } from '@ceramicnetwork/stream-tile'
+import { Dispatcher } from './dispatcher'
+import cloneDeep from 'lodash.clonedeep'
+import StreamID from "streamid";
 
 /**
  * Various utility functions
@@ -65,6 +74,37 @@ export default class Utils {
         throw new Error(`Schema not found for ${schemaStreamId}`)
       }
       Utils.validate(doc.content, schemaDoc.content)
+    }
+  }
+
+  /**
+   * Return expanded `CommitData` with commit and JWS envelope or anchor proof/timestamp, if applicable and not already
+   * present
+   */
+  static async getCommitData(commitData: CommitData, dispatcher: Dispatcher, streamId?: StreamID): Promise<CommitData> {
+    let updates: any = {}
+    if (!commitData.commit) {
+      const commit = await dispatcher.retrieveCommit(commitData.cid, streamId)
+      if (!commit) throw new Error(`No commit found for CID ${commitData.cid.toString()}`)
+      if (StreamUtils.isSignedCommit(commit)) {
+        const linkedCommit = await dispatcher.retrieveCommit(commit.link, streamId)
+        if (!linkedCommit) throw new Error(`No commit found for CID ${commit.link.toString()}`)
+        updates = { type: CommitType.SIGNED, commit: linkedCommit, envelope: commit }
+      } else if (StreamUtils.isAnchorCommit(commit)) {
+        const proof = await dispatcher.retrieveFromIPFS(commit.proof)
+        updates = { type: CommitType.ANCHOR, commit: commit, proof: proof, timestamp: proof.blockTimestamp }
+      } else {
+        // For all cases not using DagJWS for signing (e.g. CAIP-10 links)
+        updates = { type: CommitType.SIGNED, commit: commit }
+      }
+    }
+    const isGenesis = (commitData.type === CommitType.GENESIS) || !(commitData.commit ?? updates.commit).prev
+    // Merge updates retrieved above with a clone of the original `CommitData` so that the stream state is not affected
+    // when commit/JWS data is added to the structure.
+    return {
+      ...cloneDeep(commitData),
+      ...updates,
+      type: isGenesis ? CommitType.GENESIS : (commitData.type ?? updates.type)
     }
   }
 }

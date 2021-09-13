@@ -7,6 +7,7 @@ import { DID } from 'dids'
 import {
   AnchorCommit,
   CeramicApi,
+  CommitType,
   Context,
   SignedCommitContainer,
   TestUtils,
@@ -245,7 +246,8 @@ it('applies genesis record correctly', async () => {
   const payload = dagCBOR.util.deserialize(record.linkedBlock)
   await context.ipfs.dag.put(payload, record.jws.link)
 
-  const streamState = await tileHandler.applyCommit(record.jws, { cid: FAKE_CID_1 }, context)
+  const signedCommitData = { cid: FAKE_CID_1, type: CommitType.GENESIS, commit: payload, envelope: record.jws }
+  const streamState = await tileHandler.applyCommit(signedCommitData, context)
   delete streamState.metadata.unique
   expect(streamState).toMatchSnapshot()
 })
@@ -259,9 +261,9 @@ it('makes signed record correctly', async () => {
     RECORDS.genesisGenerated.jws.link
   )
 
+  const genesisCommitData = { cid: FAKE_CID_1, type: CommitType.GENESIS, commit: RECORDS.genesisGenerated.linkedBlock, envelope: RECORDS.genesisGenerated.jws }
   const state = await tileDocumentHandler.applyCommit(
-    RECORDS.genesisGenerated.jws,
-    { cid: FAKE_CID_1 },
+    genesisCommitData,
     context
   )
   const state$ = TestUtils.runningState(state)
@@ -293,7 +295,8 @@ it('applies signed record correctly', async () => {
   await context.ipfs.dag.put(payload, genesisRecord.jws.link)
 
   // apply genesis
-  let state = await tileDocumentHandler.applyCommit(genesisRecord.jws, { cid: FAKE_CID_1 }, context)
+  const genesisCommitData = { cid: FAKE_CID_1, type: CommitType.GENESIS, commit: payload, envelope: genesisRecord.jws }
+  let state = await tileDocumentHandler.applyCommit(genesisCommitData, context)
 
   const state$ = TestUtils.runningState(state)
   const doc = new TileDocument(state$, context)
@@ -308,9 +311,9 @@ it('applies signed record correctly', async () => {
   await context.ipfs.dag.put(sPayload, signedRecord.jws.link)
 
   // apply signed
+  const signedCommitData = { cid: FAKE_CID_2, type: CommitType.SIGNED, commit: sPayload, envelope: signedRecord.jws }
   state = await tileDocumentHandler.applyCommit(
-    signedRecord.jws,
-    { cid: FAKE_CID_2 },
+    signedCommitData,
     context,
     state
   )
@@ -331,8 +334,9 @@ it('throws error if record signed by wrong DID', async () => {
   const payload = dagCBOR.util.deserialize(genesisRecord.linkedBlock)
   await context.ipfs.dag.put(payload, genesisRecord.jws.link)
 
+  const genesisCommitData = { cid: FAKE_CID_1, type: CommitType.GENESIS, commit: payload, envelope: genesisRecord.jws }
   await expect(
-    tileDocumentHandler.applyCommit(genesisRecord.jws, FAKE_CID_1, context)
+    tileDocumentHandler.applyCommit(genesisCommitData, context)
   ).rejects.toThrow(/invalid_jws: not a valid verificationMethod for issuer/)
 })
 
@@ -349,7 +353,8 @@ it('applies anchor record correctly', async () => {
   await context.ipfs.dag.put(payload, genesisRecord.jws.link)
 
   // apply genesis
-  let state = await tileDocumentHandler.applyCommit(genesisRecord.jws, { cid: FAKE_CID_1 }, context)
+  const genesisCommitData = { cid: FAKE_CID_1, type: CommitType.GENESIS, commit: payload, envelope: genesisRecord.jws }
+  let state = await tileDocumentHandler.applyCommit(genesisCommitData, context)
 
   const state$ = TestUtils.runningState(state)
   const doc = new TileDocument(state$, context)
@@ -364,18 +369,18 @@ it('applies anchor record correctly', async () => {
   await context.ipfs.dag.put(sPayload, signedRecord.jws.link)
 
   // apply signed
+  const signedCommitData = { cid: FAKE_CID_2, type: CommitType.SIGNED, commit: sPayload, envelope: signedRecord.jws }
   state = await tileDocumentHandler.applyCommit(
-    signedRecord.jws,
-    { cid: FAKE_CID_2 },
+    signedCommitData,
     context,
     state
   )
 
   await context.ipfs.dag.put(RECORDS.proof, FAKE_CID_4)
   // apply anchor
+  const anchorCommitData = { cid: FAKE_CID_3, type: CommitType.ANCHOR, commit: RECORDS.r2.record, proof: RECORDS.proof }
   state = await tileDocumentHandler.applyCommit(
-    RECORDS.r2.record as AnchorCommit,
-    { cid: FAKE_CID_3 },
+    anchorCommitData,
     context,
     state
   )

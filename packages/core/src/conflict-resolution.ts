@@ -20,6 +20,7 @@ import cloneDeep from 'lodash.clonedeep'
 import { CommitID } from '@ceramicnetwork/streamid'
 import { StateValidation } from './state-management/state-validation'
 import { HandlersMap } from './handlers-map'
+import Utils from './utils'
 
 /**
  * Verifies anchor commit structure
@@ -189,7 +190,7 @@ export async function fetchLog(
     return []
   }
   // Fetch expanded `CommitData` using the CID and running timestamp
-  const nextCommitData = await getCommitData({ cid: cid, timestamp: timestamp }, dispatcher)
+  const nextCommitData = await Utils.getCommitData({ cid: cid, timestamp: timestamp }, dispatcher)
   // Update the running timestamp if it was updated via an anchor commit fetch
   timestamp = nextCommitData.timestamp;
   const prevCid: CID = nextCommitData.commit.prev
@@ -222,37 +223,6 @@ export function commitAtTime(stateHolder: StreamStateHolder, timestamp: number):
   return stateHolder.id.atCommit(commitCid)
 }
 
-/**
- * Return expanded `CommitData` with commit and JWS envelope or anchor proof/timestamp, if applicable and not already
- * present
- */
-async function getCommitData(commitData, dispatcher: Dispatcher): Promise<CommitData> {
-  let updates: any = {}
-  if (!commitData.commit) {
-    const commit = await dispatcher.retrieveCommit(commitData.cid)
-    if (!commit) throw new Error(`No commit found for CID ${commitData.cid.toString()}`)
-    if (StreamUtils.isSignedCommit(commit)) {
-      const linkedCommit = await dispatcher.retrieveCommit(commit.link)
-      if (!linkedCommit) throw new Error(`No commit found for CID ${commit.link.toString()}`)
-      updates = { type: CommitType.SIGNED, commit: linkedCommit, envelope: commit }
-    } else if (StreamUtils.isAnchorCommit(commit)) {
-      const proof = await dispatcher.retrieveFromIPFS(commit.proof)
-      updates = { type: CommitType.ANCHOR, commit: commit, proof: proof, timestamp: proof.blockTimestamp }
-    } else {
-      // For all cases not using DagJWS for signing (e.g. CAIP-10 links)
-      updates = { type: CommitType.SIGNED, commit: commit }
-    }
-  }
-  const isGenesis = (commitData.type === CommitType.GENESIS) || !(commitData.commit ?? updates.commit).prev
-  // Merge updates retrieved above with a clone of the original `CommitData` so that the stream state is not affected
-  // when commit/JWS data is added to the structure.
-  return {
-    ...cloneDeep(commitData),
-    ...updates,
-    type: isGenesis ? CommitType.GENESIS : (commitData.type ?? updates.type)
-  }
-}
-
 export class ConflictResolution {
   constructor(
     public anchorValidator: AnchorValidator,
@@ -272,15 +242,14 @@ export class ConflictResolution {
    */
   private async applyLogEntryToState<T extends Stream>(
     entry: CommitData, state: StreamState, handler: StreamHandler<T>): Promise<StreamState> {
-    const logEntry = await getCommitData(entry, this.dispatcher)
-    const commitMeta = { cid: logEntry.cid, timestamp: logEntry.timestamp }
-    if (StreamUtils.isAnchorCommit(logEntry.commit)) {
+    const logEntry = await Utils.getCommitData(entry, this.dispatcher)
+    if (StreamUtils.isAnchorCommitData(logEntry)) {
       // It's an anchor commit
       // TODO: Anchor validation should be done by the StreamHandler as part of applying the anchor commit
       await verifyAnchorCommit(this.dispatcher, this.anchorValidator, logEntry.commit)
-      return await handler.applyCommit(logEntry, commitMeta, this.context, state)
+      return await handler.applyCommit(logEntry, this.context, state)
     } else {
-      const tmpState = await handler.applyCommit(logEntry, commitMeta, this.context, state)
+      const tmpState = await handler.applyCommit(logEntry, this.context, state)
       const isGenesis = !logEntry.commit.prev
       const effectiveState = isGenesis ? tmpState : tmpState.next
       // TODO: Schema validation should be done by the StreamHandler as part of applying the commit
@@ -306,8 +275,11 @@ export class ConflictResolution {
     // `fetchLog` provides the timestamps.
     if (state && state.log.length === 1) {
       const timestamp = unappliedCommits[0].timestamp
-      const genesis = await getCommitData(state.log[0], this.dispatcher)
-      await handler.applyCommit(genesis, { cid: genesis.cid, timestamp: timestamp }, this.context)
+      const genesis = {
+        ...await Utils.getCommitData(state.log[0], this.dispatcher),
+        timestamp: timestamp
+      }
+      await handler.applyCommit(genesis, this.context)
     }
 
     for (const entry of unappliedCommits) {
@@ -351,7 +323,7 @@ export class ConflictResolution {
       // log already applied
       return null
     }
-    const commitData = await getCommitData(unappliedCommits[0], this.dispatcher)
+    const commitData = await Utils.getCommitData(unappliedCommits[0], this.dispatcher)
     if (commitData.commit.prev.equals(tip)) {
       // the new log starts where the previous one ended
       return this.applyLogToState(handler, unappliedCommits, cloneDeep(initialState), false, opts)
@@ -396,8 +368,8 @@ export class ConflictResolution {
    */
   async verifyLoneGenesis(state: StreamState) {
     const handler = this.handlers.get(state.type)
-    const genesis = await getCommitData(state.log[0], this.dispatcher)
-    await handler.applyCommit(genesis, { cid: genesis.cid }, this.context)
+    const genesis = await Utils.getCommitData(state.log[0], this.dispatcher)
+    await handler.applyCommit(genesis, this.context)
   }
 
   /**

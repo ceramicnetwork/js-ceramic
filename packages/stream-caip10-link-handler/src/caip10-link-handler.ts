@@ -1,12 +1,8 @@
-import type CID from 'cids'
 import { validateLink } from '@ceramicnetwork/blockchain-utils-validation'
 import { Caip10Link } from '@ceramicnetwork/stream-caip10-link'
 import {
-  AnchorCommit,
   AnchorStatus,
-  CeramicCommit,
   CommitData,
-  CommitMeta,
   CommitType,
   Context,
   SignatureStatus,
@@ -15,8 +11,6 @@ import {
   StreamState,
   StreamUtils,
 } from '@ceramicnetwork/common'
-
-const IPFS_GET_TIMEOUT = 60000 // 1 minute
 
 export class Caip10LinkHandler implements StreamHandler<Caip10Link> {
   get type(): number {
@@ -33,36 +27,33 @@ export class Caip10LinkHandler implements StreamHandler<Caip10Link> {
 
   /**
    * Applies commit (genesis|signed|anchor)
-   * @param commit - Commit (with JWS envelope or anchor proof, if available and extracted before application)
-   * @param meta - Commit meta-information
+   * @param commitData - Commit (with JWS envelope or anchor proof, if available and extracted before application)
    * @param context - Ceramic context
    * @param state - Stream state
    */
   async applyCommit(
-    commit: CeramicCommit | CommitData,
-    meta: CommitMeta,
+    commitData: CommitData,
     context: Context,
     state?: StreamState
   ): Promise<StreamState> {
     if (state == null) {
-      return this._applyGenesis(commit, meta.cid)
+      return this._applyGenesis(commitData)
     }
 
-    if ((commit as AnchorCommit).proof || (commit as CommitData).proof) {
-      return this._applyAnchor(context, commit, meta.cid, state)
+    if (StreamUtils.isAnchorCommitData(commitData)) {
+      return this._applyAnchor(context, commitData, state)
     }
 
-    return this._applySigned(commit, meta.cid, state)
+    return this._applySigned(commitData, state)
   }
 
   /**
    * Applies genesis commit
-   * @param commit - Genesis commit
-   * @param cid - Genesis commit CID
+   * @param commitData - Genesis commit
    * @private
    */
-  async _applyGenesis(commit: any, cid: CID): Promise<StreamState> {
-    if (StreamUtils.isExpandedCommit(commit)) commit = commit.commit
+  async _applyGenesis(commitData: CommitData): Promise<StreamState> {
+    const commit = commitData.commit
     if (commit.data) {
       throw new Error('Caip10Link genesis commit cannot have data')
     }
@@ -77,7 +68,7 @@ export class Caip10LinkHandler implements StreamHandler<Caip10Link> {
       metadata: commit.header,
       signature: SignatureStatus.GENESIS,
       anchorStatus: AnchorStatus.NOT_REQUESTED,
-      log: [{ cid, type: CommitType.GENESIS }],
+      log: [{ cid: commitData.cid, type: CommitType.GENESIS }],
     }
 
     if (!(state.metadata.controllers && state.metadata.controllers.length === 1)) {
@@ -89,13 +80,12 @@ export class Caip10LinkHandler implements StreamHandler<Caip10Link> {
 
   /**
    * Applies signed commit
-   * @param commit - Signed commit
-   * @param cid - Signed commit CID
+   * @param commitData - Signed commit
    * @param state - Stream state
    * @private
    */
-  async _applySigned(commit: any, cid: CID, state: StreamState): Promise<StreamState> {
-    if (StreamUtils.isExpandedCommit(commit)) commit = commit.commit
+  async _applySigned(commitData: CommitData, state: StreamState): Promise<StreamState> {
+    const commit = commitData.commit
     // TODO: Assert that the 'prev' of the commit being applied is the end of the log in 'state'
     let validProof = null
     try {
@@ -127,7 +117,7 @@ export class Caip10LinkHandler implements StreamHandler<Caip10Link> {
     if (addressCaip10.toLowerCase() !== state.metadata.controllers[0].toLowerCase()) {
       throw new Error("Address doesn't match stream controller")
     }
-    state.log.push({ cid, type: CommitType.SIGNED })
+    state.log.push({ cid: commitData.cid, type: CommitType.SIGNED })
     return {
       ...state,
       signature: SignatureStatus.SIGNED,
@@ -145,23 +135,16 @@ export class Caip10LinkHandler implements StreamHandler<Caip10Link> {
   /**
    * Applies anchor commit
    * @param context - Ceramic context
-   * @param commit - Anchor commit
-   * @param cid - Anchor commit CID
+   * @param commitData - Anchor commit
    * @param state - Stream state
    * @private
    */
   async _applyAnchor(
     context: Context,
-    commit: any,
-    cid: CID,
+    commitData: CommitData,
     state: StreamState
   ): Promise<StreamState> {
-    // TODO: Assert that the 'prev' of the commit being applied is the end of the log in 'state'
-    const proof = StreamUtils.isExpandedCommit(commit)
-      ? commit.proof
-      : (await context.ipfs.dag.get(commit.proof, { timeout: IPFS_GET_TIMEOUT })).value
-
-    state.log.push({ cid, type: CommitType.ANCHOR })
+    state.log.push({ cid: commitData.cid, type: CommitType.ANCHOR })
     let content = state.content
     if (state.next?.content) {
       content = state.next.content
@@ -174,7 +157,7 @@ export class Caip10LinkHandler implements StreamHandler<Caip10Link> {
       ...state,
       content,
       anchorStatus: AnchorStatus.ANCHORED,
-      anchorProof: proof,
+      anchorProof: commitData.proof,
     }
   }
 }

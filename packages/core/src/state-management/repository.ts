@@ -2,6 +2,7 @@ import StreamID, { CommitID } from '@ceramicnetwork/streamid'
 import {
   AnchorService,
   AnchorStatus,
+  CommitType,
   Context,
   CreateOpts,
   StreamState,
@@ -21,6 +22,7 @@ import type { StateValidation } from './state-validation'
 import { Observable } from 'rxjs'
 import { StateCache } from './state-cache'
 import { SnapshotState } from './snapshot-state'
+import Utils from '../utils'
 
 export type RepositoryDependencies = {
   dispatcher: Dispatcher
@@ -115,14 +117,16 @@ export class Repository {
   private async fromNetwork(streamId: StreamID): Promise<RunningState> {
     const handler = this.#deps.handlers.get(streamId.typeName)
     const genesisCid = streamId.cid
-    const commit = await this.#deps.dispatcher.retrieveCommit(genesisCid, streamId)
-    if (commit == null) {
+    const commitData = await Utils.getCommitData(
+        { cid: genesisCid, type: CommitType.GENESIS },
+        this.#deps.dispatcher
+    )
+    if (commitData == null) {
       throw new Error(`No genesis commit found with CID ${genesisCid.toString()}`)
     }
     // Do not check for possible key revocation here, as we will do so later after loading the tip (or learning that the genesis commit *is* the current tip), when we will have timestamp information for when the genesis commit was anchored.
     const state = await handler.applyCommit(
-      commit,
-      { cid: streamId.cid, disableTimecheck: true },
+        { ...commitData, disableTimecheck: true },
       this.#deps.context
     )
     await this.#deps.stateValidation.validate(state, state.content)
