@@ -27,28 +27,28 @@ import Utils from './utils'
  *
  * @param dispatcher - To get raw blob from IPFS
  * @param anchorValidator - AnchorValidator to verify chain inclusion
- * @param commit - Anchor commit
+ * @param commitData - Anchor commit data
  */
 async function verifyAnchorCommit(
   dispatcher: Dispatcher,
   anchorValidator: AnchorValidator,
-  commit: AnchorCommit
+  commitData: CommitData
 ): Promise<AnchorProof> {
-  const proofCID = commit.proof
-  const proof = await dispatcher.retrieveFromIPFS(proofCID)
+  const proof = commitData.proof
+  const commitPath = commitData.commit.path
 
   let prevCIDViaMerkleTree
   try {
     // optimize verification by using ipfs.dag.tree for fetching the nested CID
-    if (commit.path.length === 0) {
+    if (commitPath.length === 0) {
       prevCIDViaMerkleTree = proof.root
     } else {
       const merkleTreeParentCommitPath =
-        '/root/' + commit.path.substr(0, commit.path.lastIndexOf('/'))
-      const last: string = commit.path.substr(commit.path.lastIndexOf('/') + 1)
+        '/root/' + commitPath.substr(0, commitPath.lastIndexOf('/'))
+      const last: string = commitPath.substr(commitPath.lastIndexOf('/') + 1)
 
       const merkleTreeParentCommit = await dispatcher.retrieveFromIPFS(
-        proofCID,
+        commitData.cid,
         merkleTreeParentCommitPath
       )
       prevCIDViaMerkleTree = merkleTreeParentCommit[last]
@@ -57,11 +57,9 @@ async function verifyAnchorCommit(
     throw new Error(`The anchor commit couldn't be verified. Reason ${e.message}`)
   }
 
-  if (commit.prev.toString() !== prevCIDViaMerkleTree.toString()) {
+  if (commitData.commit.prev.toString() !== prevCIDViaMerkleTree.toString()) {
     throw new Error(
-      `The anchor commit proof ${commit.proof.toString()} with path ${
-        commit.path
-      } points to invalid 'prev' commit`
+      `The anchor commit proof ${proof.toString()} with path ${commitPath} points to invalid 'prev' commit`
     )
   }
 
@@ -246,7 +244,7 @@ export class ConflictResolution {
     if (StreamUtils.isAnchorCommitData(logEntry)) {
       // It's an anchor commit
       // TODO: Anchor validation should be done by the StreamHandler as part of applying the anchor commit
-      await verifyAnchorCommit(this.dispatcher, this.anchorValidator, logEntry.commit)
+      await verifyAnchorCommit(this.dispatcher, this.anchorValidator, logEntry)
       return await handler.applyCommit(logEntry, this.context, state)
     } else {
       const tmpState = await handler.applyCommit(logEntry, this.context, state)

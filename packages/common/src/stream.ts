@@ -110,7 +110,7 @@ export enum CommitType {
 
 export interface LogEntry {
   cid: CID
-  type?: CommitType
+  type?: CommitType // for the times when only the CID is available for the commit
   timestamp?: number
 }
 
