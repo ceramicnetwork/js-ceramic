@@ -86,7 +86,10 @@ beforeEach(async () => {
   }
   // deploy contract wallet
   const factory = new ContractFactory(CONTRACT_WALLET_ABI, CONTRACT_WALLET_BYTECODE)
-  const hexNonce = await send(provider, encodeRpcMessage('eth_getTransactionCount', [addresses[0], 'pending']))
+  const hexNonce = await send(
+    provider,
+    encodeRpcMessage('eth_getTransactionCount', [addresses[0], 'pending'])
+  )
   const nonce = parseInt(hexNonce.replace('0x', ''), 16)
   const unsignedTx = Object.assign(factory.getDeployTransaction(), {
     from: addresses[0],
@@ -97,25 +100,25 @@ beforeEach(async () => {
   await send(provider, encodeRpcMessage('eth_sendTransaction', [unsignedTx]))
   contractAddress = Contract.getContractAddress(unsignedTx)
   ceramic = await createCeramic(ipfs)
-}, 10000)
+}, 120000)
 
 afterEach(async () => {
   await ceramic.close()
-}, 10000)
+}, 120000)
 
 beforeAll(async () => {
   ipfs = await createIPFS()
-}, 10000)
+}, 120000)
 
 afterAll(async () => {
   await ipfs?.stop()
-}, 10000)
+}, 120000)
 
 describe('externally-owned account', () => {
   test('happy scenario', async () => {
     const authProvider = new EthereumAuthProvider(provider, addresses[0])
     await happyPath(ceramic, authProvider)
-  }, 10000)
+  }, 120000)
   test('invalid proof', async () => {
     const authProvider = new EthereumAuthProvider(provider, addresses[0])
     const accountId = await authProvider.accountId()
@@ -124,7 +127,7 @@ describe('externally-owned account', () => {
     await expect(caip.setDid(ceramic.did, authProvider)).rejects.toThrow(
       /Address doesn't match stream controller/
     )
-  })
+  }, 120000)
 })
 
 describe('contract account', () => {
@@ -143,7 +146,7 @@ describe('contract account', () => {
     await send(provider, encodeRpcMessage('eth_sendTransaction', [tx]))
     const authProvider = new EthereumAuthProvider(provider, contractAddress)
     await happyPath(ceramic, authProvider)
-  }, 10000)
+  }, 120000)
 
   test('wrong proof', async () => {
     const contract = new Contract(
@@ -165,5 +168,5 @@ describe('contract account', () => {
     await expect(caip.setDid(ceramic.did, authProvider)).rejects.toThrow(
       /Address doesn't match stream controller/
     )
-  }, 10000)
+  }, 120000)
 })
