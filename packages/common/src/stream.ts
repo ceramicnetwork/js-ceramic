@@ -278,12 +278,12 @@ export interface StreamHandler<T extends Stream> {
 
   /**
    * Applies commit to the stream (genesis|signed|anchored)
-   * @param commit - Commit instance
+   * @param commitData - Commit data
    * @param context - Ceramic context
    * @param state - Stream state
    */
   applyCommit(
-    commit: CeramicCommit | CommitData,
+    commitData: CommitData,
     context: Context,
     state?: StreamState
   ): Promise<StreamState>
