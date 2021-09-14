@@ -95,6 +95,7 @@ export class Caip10LinkHandler implements StreamHandler<Caip10Link> {
     // TODO: Assert that the 'prev' of the commit being applied is the end of the log in 'state'
     let validProof = null
     try {
+      console.log('caip10-validate-link', commit.data)
       validProof = await validateLink(commit.data)
     } catch (e) {
       throw new Error(
