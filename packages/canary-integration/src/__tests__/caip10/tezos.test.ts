@@ -24,7 +24,7 @@ beforeEach(async () => {
 
 afterEach(async () => {
   await ceramic.close()
-}, 10000)
+}, 120000)
 
 beforeAll(async () => {
   ipfs = await createIPFS()
@@ -41,19 +41,19 @@ beforeAll(async () => {
       })
     )
   })
-}, 10000)
+}, 120000)
 
 afterAll(async () => {
   await ipfs?.stop()
   jest.clearAllMocks()
-}, 10000)
+}, 120000)
 
 test('happy path', async () => {
   const authProvider = new TezosAuthProvider(provider)
   await happyPath(ceramic, authProvider)
-}, 20000)
+}, 120000)
 
 test('wrong proof', async () => {
   const authProvider = new TezosAuthProvider(provider)
   await wrongProof(ceramic, authProvider)
-})
+}, 120000)
