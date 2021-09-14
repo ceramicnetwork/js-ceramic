@@ -42,11 +42,11 @@ let ipfs: IpfsApi
 
 beforeEach(async () => {
   ceramic = await createCeramic(ipfs)
-}, 20000)
+}, 120000)
 
 afterEach(async () => {
   await ceramic.close()
-}, 20000)
+}, 120000)
 
 beforeAll(async () => {
   ipfs = await createIPFS()
@@ -54,11 +54,11 @@ beforeAll(async () => {
   keyPairSr25519 = keyringSr25519.addFromSeed(seed)
   keyPairEd25519 = keyringEd25519.addFromSeed(seed)
   keyPairSecp256k = keyringSecp256k.addFromSeed(seed)
-}, 30000)
+}, 120000)
 
 afterAll(async () => {
   await ipfs?.stop()
-}, 20000)
+}, 120000)
 
 test('happy path', async () => {
   await Promise.all(
@@ -68,7 +68,7 @@ test('happy path', async () => {
       await happyPath(ceramic, authProvider)
     })
   )
-})
+}, 120000)
 
 test('wrong proof', async () => {
   await Promise.all(
@@ -78,4 +78,4 @@ test('wrong proof', async () => {
       await wrongProof(ceramic, authProvider)
     })
   )
-})
+}, 120000)
