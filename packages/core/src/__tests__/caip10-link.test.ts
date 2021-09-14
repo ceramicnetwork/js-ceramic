@@ -73,7 +73,7 @@ describe('Ceramic API', () => {
       const account = '0x0544DcF4fcE959C6C4F3b7530190cB5E1BD67Cb8@eip155:1'
       const link = await Caip10Link.fromAccount(ceramic, account)
       expect(link.metadata.controllers).toHaveLength(1)
-      expect(link.metadata.controllers[0]).toEqual(account)
+      expect(link.metadata.controllers[0]).toEqual(account.toLowerCase())
       expect(link.did).toBeNull()
       expect(link.state.log).toHaveLength(1)
       expect(link.state).toMatchSnapshot()
