@@ -25,15 +25,15 @@ beforeEach(async () => {
 
 afterEach(async () => {
   await ceramic.close()
-}, 20000)
+}, 120000)
 
 beforeAll(async () => {
   ipfs = await createIPFS()
-}, 30000)
+}, 120000)
 
 afterAll(async () => {
   await ipfs?.stop()
-}, 20000)
+}, 120000)
 
 test('happy path', async () => {
   const providers = [testnetProvider, mainnetProvider, blsMainnetProvider]
@@ -44,7 +44,7 @@ test('happy path', async () => {
       await happyPath(ceramic, authProvider)
     })
   )
-})
+}, 120000)
 
 test('wrong proof', async () => {
   const providers = [testnetProvider, mainnetProvider, blsMainnetProvider]
@@ -55,4 +55,4 @@ test('wrong proof', async () => {
       await wrongProof(ceramic, authProvider)
     })
   )
-})
+}, 120000)

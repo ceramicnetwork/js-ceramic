@@ -21,19 +21,19 @@ let ipfs: IpfsApi
 
 beforeEach(async () => {
   ceramic = await createCeramic(ipfs)
-}, 20000)
+}, 120000)
 
 afterEach(async () => {
   await ceramic.close()
-}, 20000)
+}, 120000)
 
 beforeAll(async () => {
   ipfs = await createIPFS()
-}, 20000)
+}, 120000)
 
 afterAll(async () => {
   await ipfs?.stop()
-}, 20000)
+}, 120000)
 
 test('happy path', async () => {
   const authProvider = new linking.eosio.EosioAuthProvider(
@@ -41,7 +41,7 @@ test('happy path', async () => {
     telosTestnetAccount
   )
   await happyPath(ceramic, authProvider)
-}, 20000)
+}, 120000)
 
 test('wrong proof', async () => {
   const authProvider = new linking.eosio.EosioAuthProvider(
@@ -49,4 +49,4 @@ test('wrong proof', async () => {
     telosTestnetAccount
   )
   await wrongProof(ceramic, authProvider)
-}, 20000)
+}, 120000)

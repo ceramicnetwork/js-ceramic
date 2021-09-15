@@ -28,30 +28,30 @@ let ipfs: IpfsApi
 
 beforeEach(async () => {
   ceramic = await createCeramic(ipfs)
-}, 10000)
+}, 120000)
 
 afterEach(async () => {
   await ceramic.close()
-}, 10000)
+}, 120000)
 
 beforeAll(async () => {
   ipfs = await createIPFS()
-}, 10000)
+}, 120000)
 
 afterAll(async () => {
   await ipfs?.stop()
-}, 10000)
+}, 120000)
 
 test('happy path', async () => {
   const provider = new NearMockSigner(localProvider)
   const address = uint8arrays.toString(localProvider.getPublicKey().data, 'base64pad')
   const authProvider = new linking.NearAuthProvider(provider, address, chainRef)
   await happyPath(ceramic, authProvider)
-}, 20000)
+}, 120000)
 
 test('wrong proof', async () => {
   const provider = new NearMockSigner(localProvider)
   const address = uint8arrays.toString(localProvider.getPublicKey().data, 'base64pad')
   const authProvider = new linking.NearAuthProvider(provider, address, chainRef)
   await wrongProof(ceramic, authProvider)
-}, 20000)
+}, 120000)

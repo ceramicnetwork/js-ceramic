@@ -5,6 +5,8 @@ jobs:
   build-and-test:
     docker:
       - image: circleci/node:14
+    environment:
+      NODE_OPTIONS: "--max_old_space_size=4096"
     steps:
       - checkout
       - node/install-packages
