@@ -26,19 +26,13 @@ class NearMockSigner {
 let ceramic: CeramicApi
 let ipfs: IpfsApi
 
-beforeEach(async () => {
+beforeAll(async () => {
+  ipfs = await createIPFS()
   ceramic = await createCeramic(ipfs)
 }, 120000)
 
-afterEach(async () => {
-  await ceramic.close()
-}, 120000)
-
-beforeAll(async () => {
-  ipfs = await createIPFS()
-}, 120000)
-
 afterAll(async () => {
+  await ceramic.close()
   await ipfs?.stop()
 }, 120000)
 

@@ -19,19 +19,13 @@ const blsMainnetProvider = new LocalManagedProvider(blsPrivateKey, Network.MAIN)
 let ceramic: CeramicApi
 let ipfs: IpfsApi
 
-beforeEach(async () => {
-  ceramic = await createCeramic(ipfs)
-}, 20000)
-
-afterEach(async () => {
-  await ceramic.close()
-}, 120000)
-
 beforeAll(async () => {
   ipfs = await createIPFS()
+  ceramic = await createCeramic(ipfs)
 }, 120000)
 
 afterAll(async () => {
+  await ceramic.close()
   await ipfs?.stop()
 }, 120000)
 

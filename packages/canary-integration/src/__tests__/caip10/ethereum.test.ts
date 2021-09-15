@@ -99,18 +99,15 @@ beforeEach(async () => {
   })
   await send(provider, encodeRpcMessage('eth_sendTransaction', [unsignedTx]))
   contractAddress = Contract.getContractAddress(unsignedTx)
-  ceramic = await createCeramic(ipfs)
-}, 120000)
-
-afterEach(async () => {
-  await ceramic.close()
 }, 120000)
 
 beforeAll(async () => {
   ipfs = await createIPFS()
+  ceramic = await createCeramic(ipfs)
 }, 120000)
 
 afterAll(async () => {
+  await ceramic.close()
   await ipfs?.stop()
 }, 120000)
 
