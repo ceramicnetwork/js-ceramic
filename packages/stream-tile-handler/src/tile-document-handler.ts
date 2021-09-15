@@ -73,7 +73,7 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
    * @private
    */
   async _applyGenesis(commitData: CommitData, context: Context): Promise<StreamState> {
-    let payload = commitData.commit
+    const payload = commitData.commit
     const isSigned = StreamUtils.isSignedCommitData(commitData)
     if (isSigned) {
       await this._verifySignature(commitData, context, payload.header.controllers[0])

@@ -5,7 +5,6 @@ import KeyDidResolver from 'key-did-resolver'
 import { wrapDocument } from '@ceramicnetwork/3id-did-resolver'
 import { DID } from 'dids'
 import {
-  AnchorCommit,
   CeramicApi,
   CommitType,
   Context,
