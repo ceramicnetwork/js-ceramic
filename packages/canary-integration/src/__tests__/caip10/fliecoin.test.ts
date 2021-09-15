@@ -19,21 +19,15 @@ const blsMainnetProvider = new LocalManagedProvider(blsPrivateKey, Network.MAIN)
 let ceramic: CeramicApi
 let ipfs: IpfsApi
 
-beforeEach(async () => {
-  ceramic = await createCeramic(ipfs)
-}, 20000)
-
-afterEach(async () => {
-  await ceramic.close()
-}, 20000)
-
 beforeAll(async () => {
   ipfs = await createIPFS()
-}, 30000)
+  ceramic = await createCeramic(ipfs)
+}, 120000)
 
 afterAll(async () => {
+  await ceramic.close()
   await ipfs?.stop()
-}, 20000)
+}, 120000)
 
 test('happy path', async () => {
   const providers = [testnetProvider, mainnetProvider, blsMainnetProvider]
@@ -44,7 +38,7 @@ test('happy path', async () => {
       await happyPath(ceramic, authProvider)
     })
   )
-})
+}, 120000)
 
 test('wrong proof', async () => {
   const providers = [testnetProvider, mainnetProvider, blsMainnetProvider]
@@ -55,4 +49,4 @@ test('wrong proof', async () => {
       await wrongProof(ceramic, authProvider)
     })
   )
-})
+}, 120000)

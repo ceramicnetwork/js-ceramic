@@ -52,14 +52,29 @@ const send = (provider: any, data: any): Promise<any> =>
     })
   )
 
-let provider: any
+const provider: any = ganache.provider(GANACHE_CONF)
+
+const lazyProvider = () => provider // Required for the Jest mock below
+jest.mock('@ethersproject/providers', () => {
+  const originalModule = jest.requireActual('@ethersproject/providers')
+  const getNetwork = (): any => {
+    return {
+      _defaultProvider: (): any => {
+        return new originalModule.Web3Provider(lazyProvider())
+      },
+    }
+  }
+  return {
+    ...originalModule,
+    getNetwork,
+  }
+})
 let addresses: string[]
 let contractAddress: string
 let ceramic: CeramicApi
 let ipfs: IpfsApi
 
 beforeEach(async () => {
-  provider = ganache.provider(GANACHE_CONF)
   addresses = await send(provider, encodeRpcMessage('eth_accounts'))
   // ganache-core doesn't support personal_sign -.-
   provider.manager.personal_sign = (data: any, address: string, callback: any): void => {
@@ -71,42 +86,36 @@ beforeEach(async () => {
   }
   // deploy contract wallet
   const factory = new ContractFactory(CONTRACT_WALLET_ABI, CONTRACT_WALLET_BYTECODE)
+  const hexNonce = await send(
+    provider,
+    encodeRpcMessage('eth_getTransactionCount', [addresses[0], 'pending'])
+  )
+  const nonce = parseInt(hexNonce.replace('0x', ''), 16)
   const unsignedTx = Object.assign(factory.getDeployTransaction(), {
     from: addresses[0],
     gas: 4712388,
     gasPrice: 100000000000,
-    nonce: 0,
+    nonce: nonce,
   })
   await send(provider, encodeRpcMessage('eth_sendTransaction', [unsignedTx]))
   contractAddress = Contract.getContractAddress(unsignedTx)
-  // mock ethers providers
-  ;(providers as any).getNetwork = (): any => {
-    return {
-      _defaultProvider: (): any => {
-        return new providers.Web3Provider(provider)
-      },
-    }
-  }
-  ceramic = await createCeramic(ipfs)
-}, 10000)
-
-afterEach(async () => {
-  await ceramic.close()
-}, 10000)
+}, 120000)
 
 beforeAll(async () => {
   ipfs = await createIPFS()
-}, 10000)
+  ceramic = await createCeramic(ipfs)
+}, 120000)
 
 afterAll(async () => {
+  await ceramic.close()
   await ipfs?.stop()
-}, 10000)
+}, 120000)
 
 describe('externally-owned account', () => {
   test('happy scenario', async () => {
     const authProvider = new EthereumAuthProvider(provider, addresses[0])
     await happyPath(ceramic, authProvider)
-  }, 10000)
+  }, 120000)
   test('invalid proof', async () => {
     const authProvider = new EthereumAuthProvider(provider, addresses[0])
     const accountId = await authProvider.accountId()
@@ -115,7 +124,7 @@ describe('externally-owned account', () => {
     await expect(caip.setDid(ceramic.did, authProvider)).rejects.toThrow(
       /Address doesn't match stream controller/
     )
-  })
+  }, 120000)
 })
 
 describe('contract account', () => {
@@ -134,7 +143,7 @@ describe('contract account', () => {
     await send(provider, encodeRpcMessage('eth_sendTransaction', [tx]))
     const authProvider = new EthereumAuthProvider(provider, contractAddress)
     await happyPath(ceramic, authProvider)
-  }, 10000)
+  }, 120000)
 
   test('wrong proof', async () => {
     const contract = new Contract(
@@ -156,5 +165,5 @@ describe('contract account', () => {
     await expect(caip.setDid(ceramic.did, authProvider)).rejects.toThrow(
       /Address doesn't match stream controller/
     )
-  }, 10000)
+  }, 120000)
 })

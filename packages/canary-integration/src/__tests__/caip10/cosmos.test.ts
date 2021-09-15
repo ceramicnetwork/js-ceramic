@@ -20,21 +20,15 @@ class CosmosMockSigner {
 let ceramic: CeramicApi
 let ipfs: IpfsApi
 
-beforeEach(async () => {
-  ceramic = await createCeramic(ipfs)
-}, 20000)
-
-afterEach(async () => {
-  await ceramic.close()
-}, 20000)
-
 beforeAll(async () => {
   ipfs = await createIPFS()
-}, 20000)
+  ceramic = await createCeramic(ipfs)
+}, 120000)
 
 afterAll(async () => {
+  await ceramic.close()
   await ipfs?.stop()
-}, 20000)
+}, 120000)
 
 test('happy path', async () => {
   const provider = new CosmosMockSigner(localProvider)
@@ -44,7 +38,7 @@ test('happy path', async () => {
     chainRef
   )
   await happyPath(ceramic, authProvider)
-}, 20000)
+}, 120000)
 
 test('wrong proof', async () => {
   const provider = new CosmosMockSigner(localProvider)
@@ -54,4 +48,4 @@ test('wrong proof', async () => {
     chainRef
   )
   await wrongProof(ceramic, authProvider)
-}, 20000)
+}, 120000)

@@ -18,16 +18,9 @@ let publicKey: string
 let ceramic: CeramicApi
 let ipfs: IpfsApi
 
-beforeEach(async () => {
-  ceramic = await createCeramic(ipfs)
-}, 10000)
-
-afterEach(async () => {
-  await ceramic.close()
-}, 10000)
-
 beforeAll(async () => {
   ipfs = await createIPFS()
+  ceramic = await createCeramic(ipfs)
   const signer = await InMemorySigner.fromSecretKey(privateKey)
   provider = {
     signer,
@@ -41,19 +34,20 @@ beforeAll(async () => {
       })
     )
   })
-}, 10000)
+}, 120000)
 
 afterAll(async () => {
+  await ceramic.close()
   await ipfs?.stop()
   jest.clearAllMocks()
-}, 10000)
+}, 120000)
 
 test('happy path', async () => {
   const authProvider = new TezosAuthProvider(provider)
   await happyPath(ceramic, authProvider)
-}, 20000)
+}, 120000)
 
 test('wrong proof', async () => {
   const authProvider = new TezosAuthProvider(provider)
   await wrongProof(ceramic, authProvider)
-})
+}, 120000)
