@@ -119,7 +119,7 @@ export interface LogEntry {
  */
 export interface CommitData {
   cid: CID
-  type: CommitType
+  type?: CommitType // optional for the times when only the CID is available for the commit
   commit?: any
   envelope?: DagJWS
   timestamp?: number
