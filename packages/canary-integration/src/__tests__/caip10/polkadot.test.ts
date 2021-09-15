@@ -40,16 +40,9 @@ let keyPairSr25519: KeyringPair, keyPairEd25519: KeyringPair, keyPairSecp256k: K
 let ceramic: CeramicApi
 let ipfs: IpfsApi
 
-beforeEach(async () => {
-  ceramic = await createCeramic(ipfs)
-}, 120000)
-
-afterEach(async () => {
-  await ceramic.close()
-}, 120000)
-
 beforeAll(async () => {
   ipfs = await createIPFS()
+  ceramic = await createCeramic(ipfs)
   await cryptoWaitReady()
   keyPairSr25519 = keyringSr25519.addFromSeed(seed)
   keyPairEd25519 = keyringEd25519.addFromSeed(seed)
@@ -57,6 +50,7 @@ beforeAll(async () => {
 }, 120000)
 
 afterAll(async () => {
+  await ceramic.close()
   await ipfs?.stop()
 }, 120000)
 

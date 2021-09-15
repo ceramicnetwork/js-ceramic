@@ -18,16 +18,9 @@ let publicKey: string
 let ceramic: CeramicApi
 let ipfs: IpfsApi
 
-beforeEach(async () => {
-  ceramic = await createCeramic(ipfs)
-}, 10000)
-
-afterEach(async () => {
-  await ceramic.close()
-}, 120000)
-
 beforeAll(async () => {
   ipfs = await createIPFS()
+  ceramic = await createCeramic(ipfs)
   const signer = await InMemorySigner.fromSecretKey(privateKey)
   provider = {
     signer,
@@ -44,6 +37,7 @@ beforeAll(async () => {
 }, 120000)
 
 afterAll(async () => {
+  await ceramic.close()
   await ipfs?.stop()
   jest.clearAllMocks()
 }, 120000)
