@@ -110,16 +110,19 @@ export enum CommitType {
 
 export interface LogEntry {
   cid: CID
-  type?: CommitType // marked optional for the times when only the CID is available for the commit
+  type: CommitType
   timestamp?: number
 }
 
 /**
  * Includes additional fields that significantly reduce the number of IPFS lookups required while processing commits
  */
-export interface CommitData extends LogEntry {
+export interface CommitData {
+  cid: CID
+  type: CommitType
   commit?: any
   envelope?: DagJWS
+  timestamp?: number
   proof?: AnchorProof
   /**
    * Do not time-check a signature.

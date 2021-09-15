@@ -110,7 +110,7 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
     // TODO: Assert that the 'prev' of the commit being applied is the end of the log in 'state'
     const controller = state.next?.metadata?.controllers?.[0] || state.metadata.controllers[0]
 
-    // Verify the JWS before performing any additional IPFS lookups
+    // Verify the signature first
     await this._verifySignature(commitData, context, controller)
 
     // Retrieve the payload
