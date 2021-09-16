@@ -28,6 +28,7 @@ jobs:
           echo "ENV_TAG=latest" >> $GITHUB_ENV
           echo "EVENT_WEBHOOK_URL=${{ secrets.EVENT_WEBHOOK_FIRE }}" >> $GITHUB_ENV
           echo "ECR_REPOSITORY=ceramic-prod" >> $GITHUB_ENV
+          echo "ECR_REPOSITORY_2=ceramic-prod-ex" >> $GITHUB_ENV
       -
         name: Set rc branch tag
         if: ${{ env.BRANCH == 'release-candidate' }}
@@ -35,6 +36,7 @@ jobs:
           echo "ENV_TAG=tnet" >> $GITHUB_ENV
           echo "EVENT_WEBHOOK_URL=${{ secrets.EVENT_WEBHOOK_CLAY }}" >> $GITHUB_ENV
           echo "ECR_REPOSITORY=ceramic-tnet" >> $GITHUB_ENV
+          echo "ECR_REPOSITORY_2=ceramic-tnet-ex" >> $GITHUB_ENV
       -
         name: Set develop branch tag
         if: ${{ env.BRANCH == 'develop' || env.ENV_TAG == ''}}
@@ -42,6 +44,7 @@ jobs:
           echo "ENV_TAG=dev" >> $GITHUB_ENV
           echo "EVENT_WEBHOOK_URL=${{ secrets.EVENT_WEBHOOK_DEV }}" >> $GITHUB_ENV
           echo "ECR_REPOSITORY=ceramic-dev" >> $GITHUB_ENV
+          echo "ECR_REPOSITORY_2=ceramic-dev-ex" >> $GITHUB_ENV
       -
         name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -67,14 +70,18 @@ jobs:
         env:
           IMAGE_ID: "ceramicnetwork/js-ceramic"
           ECR_IMAGE_ID: "${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}"
+          ECR_IMAGE_ID_2: "${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY_2 }}"
         run: |
-          echo $ECR_IMAGE_ID
           docker buildx build . --file Dockerfile.daemon \
             --output "type=image,push=true,name=$ECR_IMAGE_ID" \
             --tag ${{ env.ECR_IMAGE_ID }}:${{ env.ENV_TAG }} \
             --tag ${{ env.ECR_IMAGE_ID }}:${{ env.SHA_TAG }} \
             --tag ${{ env.ECR_IMAGE_ID }}:${{ github.sha }} \
-            --tag ${{ env.ECR_IMAGE_ID }}:${{ env.BRANCH }}
+            --tag ${{ env.ECR_IMAGE_ID }}:${{ env.BRANCH }} \
+            --tag ${{ env.ECR_IMAGE_ID_2 }}:${{ env.ENV_TAG }} \
+            --tag ${{ env.ECR_IMAGE_ID_2 }}:${{ env.SHA_TAG }} \
+            --tag ${{ env.ECR_IMAGE_ID_2 }}:${{ github.sha }} \
+            --tag ${{ env.ECR_IMAGE_ID_2 }}:${{ env.BRANCH }}
 #      -
 #        name: Publish build event
 #        run: |
