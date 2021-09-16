@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/streamid",
-  "version": "1.2.1-rc.0",
+  "version": "1.2.1",
   "description": "Ceramic Stream Ids",
   "keywords": [
     "ceramic",

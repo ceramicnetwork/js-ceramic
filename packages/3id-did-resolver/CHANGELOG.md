@@ -3,7 +3,31 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-## [1.4.2-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/3id-did-resolver@1.4.1...@ceramicnetwork/3id-did-resolver@1.4.2-rc.0) (2021-09-08)
+## [1.4.3](/compare/@ceramicnetwork/3id-did-resolver@1.4.3-rc.2...@ceramicnetwork/3id-did-resolver@1.4.3) (2021-09-16)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
+## [1.4.3-rc.2](/compare/@ceramicnetwork/3id-did-resolver@1.4.2...@ceramicnetwork/3id-did-resolver@1.4.3-rc.2) (2021-09-16)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
+## [1.4.3-rc.0](/compare/@ceramicnetwork/3id-did-resolver@1.4.2...@ceramicnetwork/3id-did-resolver@1.4.3-rc.0) (2021-09-16)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
+## [1.4.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/3id-did-resolver@1.4.1...@ceramicnetwork/3id-did-resolver@1.4.2) (2021-09-14)
 
 **Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
 
