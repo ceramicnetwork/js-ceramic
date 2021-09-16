@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.1.5-rc.0](/compare/@ceramicnetwork/stream-caip10-link@1.1.4...@ceramicnetwork/stream-caip10-link@1.1.5-rc.0) (2021-09-16)
+
+
+### Bug Fixes
+
+* **stream-caip10-link:** use lowercase in caip10-link genesis (#1718) ff0e99f, closes #1718
+
+
+
+
+
 ## [1.1.4-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-caip10-link@1.1.4-rc.0...@ceramicnetwork/stream-caip10-link@1.1.4-rc.1) (2021-09-13)
 
 ### Bug Fixes

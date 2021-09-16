@@ -3,6 +3,25 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.6.0-rc.2](/compare/@ceramicnetwork/core@1.5.1...@ceramicnetwork/core@1.6.0-rc.2) (2021-09-16)
+
+
+### Bug Fixes
+
+* **core:** allow cas internal url (#1723) f5e38f1, closes #1723
+* **core:** check for cas url equality (#1725) d2ac5db, closes #1725
+* **stream-caip10-link:** use lowercase in caip10-link genesis (#1718) ff0e99f, closes #1718
+
+
+### Features
+
+* **core:** Allow pinning/unpinning alongside CRUD operations in a single request (#1693) 3727337, closes #1693
+* **core,http-client:** Add 'publish' option to unpin command (#1706) 0ad204e, closes #1706
+
+
+
+
+
 # [1.6.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@1.6.0-rc.0...@ceramicnetwork/core@1.6.0-rc.1) (2021-09-13)
 
 **Note:** Version bump only for package @ceramicnetwork/core
