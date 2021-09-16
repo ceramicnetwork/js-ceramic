@@ -77,8 +77,9 @@ jobs:
           IPFS_IMAGE_IDS=["ceramicnetwork/ipfs-daemon", "${{ steps.login-ecr.outputs.registry }}/js-ipfs-${{ env.ENV }}"]
           TAGS=["${{ env.ENV_TAG }}", "${{ env.SHA_TAG }}", "${{ github.sha }}", "${{ env.BRANCH }}"]
 
-          ./build Dockerfile.daemon $CERAMIC_IMAGE_IDS $TAGS
-          ./build Dockerfile.ipfs-daemon $IPFS_IMAGE_IDS $TAGS
+          chmod +x .github/workflows/build.sh
+          ./.github/workflows/build.sh Dockerfile.daemon $CERAMIC_IMAGE_IDS $TAGS
+          ./.github/workflows/build.sh Dockerfile.ipfs-daemon $IPFS_IMAGE_IDS $TAGS
 #      -
 #        name: Publish build event
 #        run: |
