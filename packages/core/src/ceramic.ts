@@ -377,7 +377,7 @@ export class Ceramic implements CeramicApi {
     let anchorService = null
     if (!config.gateway) {
       const anchorServiceUrl =
-        config.anchorServiceUrl || DEFAULT_ANCHOR_SERVICE_URLS[networkOptions.name]
+        config.anchorServiceUrl.replace(/\/$/, '') || DEFAULT_ANCHOR_SERVICE_URLS[networkOptions.name]
 
       if (
         (networkOptions.name == Networks.MAINNET || networkOptions.name == Networks.ELP) &&
