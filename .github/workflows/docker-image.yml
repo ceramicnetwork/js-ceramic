@@ -23,10 +23,25 @@ jobs:
           echo "SHA_TAG=$SHA_TAG" >> $GITHUB_ENV
       -
         name: Set master branch tag
+        if: ${{ env.BRANCH == 'master' }}
         run: |
           echo "ENV_TAG=latest" >> $GITHUB_ENV
           echo "EVENT_WEBHOOK_URL=${{ secrets.EVENT_WEBHOOK_FIRE }}" >> $GITHUB_ENV
           echo "ECR_REPOSITORY=ceramic-prod" >> $GITHUB_ENV
+      -
+        name: Set rc branch tag
+        if: ${{ env.BRANCH == 'release-candidate' }}
+        run: |
+          echo "ENV_TAG=tnet" >> $GITHUB_ENV
+          echo "EVENT_WEBHOOK_URL=${{ secrets.EVENT_WEBHOOK_CLAY }}" >> $GITHUB_ENV
+          echo "ECR_REPOSITORY=ceramic-tnet" >> $GITHUB_ENV
+      -
+        name: Set develop branch tag
+        if: ${{ env.BRANCH == 'develop' || env.ENV_TAG == ''}}
+        run: |
+          echo "ENV_TAG=dev" >> $GITHUB_ENV
+          echo "EVENT_WEBHOOK_URL=${{ secrets.EVENT_WEBHOOK_DEV }}" >> $GITHUB_ENV
+          echo "ECR_REPOSITORY=ceramic-dev" >> $GITHUB_ENV
       -
         name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -60,17 +75,6 @@ jobs:
             --tag ${{ env.ECR_IMAGE_ID }}:${{ env.SHA_TAG }} \
             --tag ${{ env.ECR_IMAGE_ID }}:${{ github.sha }} \
             --tag ${{ env.ECR_IMAGE_ID }}:${{ env.BRANCH }}
-      -
-        name: Build ipfs-daemon image
-        env:
-          IMAGE_ID: "ceramicnetwork/ipfs-daemon"
-        run: |
-          docker buildx build . --file Dockerfile.ipfs-daemon \
-            --output "type=image,push=true" \
-            --tag ${{ env.IMAGE_ID }}:${{ env.ENV_TAG }} \
-            --tag ${{ env.IMAGE_ID }}:${{ env.SHA_TAG }} \
-            --tag ${{ env.IMAGE_ID }}:${{ github.sha }} \
-            --tag ${{ env.IMAGE_ID }}:${{ env.BRANCH }}
 #      -
 #        name: Publish build event
 #        run: |
