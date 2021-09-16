@@ -65,6 +65,11 @@ jobs:
           IMAGE_ID_1: "ceramicnetwork/js-ceramic"
           IMAGE_ID_2: "${{ steps.login-ecr.outputs.registry }}/ceramic-${{ env.ENV_TAG }}"
         run: |
+          EXTRA_TAGS=""
+          if [[ "${{ env.ENV_TAG }}" == "prod" ]]; then
+            EXTRA_TAGS="--tag $IMAGE_ID_1:latest --tag $IMAGE_ID_2:latest"
+          fi
+
           docker buildx build . --file Dockerfile.daemon --output 'type=image,push=true' \
             --tag $IMAGE_ID_1:${{ env.ENV_TAG }} \
             --tag $IMAGE_ID_1:${{ env.SHA_TAG }} \
@@ -73,13 +78,19 @@ jobs:
             --tag $IMAGE_ID_2:${{ env.ENV_TAG }} \
             --tag $IMAGE_ID_2:${{ env.SHA_TAG }} \
             --tag $IMAGE_ID_2:${{ github.sha }}  \
-            --tag $IMAGE_ID_2:${{ env.BRANCH }}
+            --tag $IMAGE_ID_2:${{ env.BRANCH }}  \
+            "$EXTRA_TAGS"
       -
         name: Build and push ipfs-daemon image
         env:
           IMAGE_ID_1: "ceramicnetwork/ipfs-daemon"
           IMAGE_ID_2: "${{ steps.login-ecr.outputs.registry }}/js-ipfs-${{ env.ENV_TAG }}"
         run: |
+          EXTRA_TAGS=""
+          if [[ "${{ env.ENV_TAG }}" == "prod" ]]; then
+            EXTRA_TAGS="--tag $IMAGE_ID_1:latest --tag $IMAGE_ID_2:latest"
+          fi
+
           docker buildx build . --file Dockerfile.ipfs-daemon --output 'type=image,push=true' \
             --tag $IMAGE_ID_1:${{ env.ENV_TAG }} \
             --tag $IMAGE_ID_1:${{ env.SHA_TAG }} \
@@ -88,7 +99,8 @@ jobs:
             --tag $IMAGE_ID_2:${{ env.ENV_TAG }} \
             --tag $IMAGE_ID_2:${{ env.SHA_TAG }} \
             --tag $IMAGE_ID_2:${{ github.sha }}  \
-            --tag $IMAGE_ID_2:${{ env.BRANCH }}
+            --tag $IMAGE_ID_2:${{ env.BRANCH }}  \
+            "$EXTRA_TAGS"
       -
         name: Publish build event
         run: |
