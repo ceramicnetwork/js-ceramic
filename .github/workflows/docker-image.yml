@@ -72,9 +72,12 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       -
         name: Build and push js-ceramic image
+        env:
+          IMAGE_ID_1: "ceramicnetwork/js-ceramic"
+          IMAGE_ID_2: "${{ steps.login-ecr.outputs.registry }}/ceramic-${{ env.ENV }}"
         run: |
           TAGS=""
-          for IMAGE_ID in "ceramicnetwork/js-ceramic" "${{ steps.login-ecr.outputs.registry }}/ceramic-${{ env.ENV }}"; do
+          for IMAGE_ID in $IMAGE_ID_1 $IMAGE_ID_2; do
             for TAG in "${{ env.ENV_TAG }}" "${{ env.SHA_TAG }}" "${{ github.sha }}" "${{ env.BRANCH }}"]; do
               TAGS="$TAGS --tag $IMAGE_ID:$TAG"
             done
@@ -82,9 +85,12 @@ jobs:
           docker buildx build . --file Dockerfile.daemon --output 'type=image,push=true' "$TAGS"
       -
         name: Build and push ipfs-daemon image
+        env:
+          IMAGE_ID_1: "ceramicnetwork/ipfs-daemon"
+          IMAGE_ID_2: "${{ steps.login-ecr.outputs.registry }}/js-ipfs-${{ env.ENV }}"
         run: |
           TAGS=""
-          for IMAGE_ID in "ceramicnetwork/ipfs-daemon" "${{ steps.login-ecr.outputs.registry }}/js-ipfs-${{ env.ENV }}"; do
+          for IMAGE_ID in $IMAGE_ID_1 $IMAGE_ID_2; do
             for TAG in "${{ env.ENV_TAG }}" "${{ env.SHA_TAG }}" "${{ github.sha }}" "${{ env.BRANCH }}"]; do
               TAGS="$TAGS --tag $IMAGE_ID:$TAG"
             done
