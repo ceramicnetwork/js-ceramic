@@ -69,12 +69,12 @@ jobs:
           ECR_IMAGE_ID: "${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}"
         run: |
           echo $ECR_IMAGE_ID
-          docker buildx build . --file Dockerfile.daemon \
-            --output "type=image,push=true" \
-            --tag ${{ env.IMAGE_ID }}:${{ env.ENV_TAG }} \
-            --tag ${{ env.IMAGE_ID }}:${{ env.SHA_TAG }} \
-            --tag ${{ env.IMAGE_ID }}:${{ github.sha }} \
-            --tag ${{ env.IMAGE_ID }}:${{ env.BRANCH }}
+#          docker buildx build . --file Dockerfile.daemon \
+#            --output "type=image,push=true" \
+#            --tag ${{ env.IMAGE_ID }}:${{ env.ENV_TAG }} \
+#            --tag ${{ env.IMAGE_ID }}:${{ env.SHA_TAG }} \
+#            --tag ${{ env.IMAGE_ID }}:${{ github.sha }} \
+#            --tag ${{ env.IMAGE_ID }}:${{ env.BRANCH }}
           docker buildx build . --file Dockerfile.daemon \
             --output "type=image,push=true,name=$ECR_IMAGE_ID" \
             --tag ${{ env.ECR_IMAGE_ID }}:${{ env.ENV_TAG }} \
