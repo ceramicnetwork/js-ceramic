@@ -25,26 +25,31 @@ jobs:
         name: Set master branch tag
         if: ${{ env.BRANCH == 'master' }}
         run: |
+          # TODO: change ENV_TAG to 'prod' (and update all other places using 'latest') and use ENV_TAG in place of ENV
           echo "ENV_TAG=latest" >> $GITHUB_ENV
           echo "EVENT_WEBHOOK_URL=${{ secrets.EVENT_WEBHOOK_FIRE }}" >> $GITHUB_ENV
-          echo "ECR_REPOSITORY=ceramic-prod" >> $GITHUB_ENV
-          echo "ECR_REPOSITORY_2=ceramic-prod-ex" >> $GITHUB_ENV
+          echo "ENV=prod" >> $GITHUB_ENV
       -
         name: Set rc branch tag
         if: ${{ env.BRANCH == 'release-candidate' }}
         run: |
           echo "ENV_TAG=tnet" >> $GITHUB_ENV
           echo "EVENT_WEBHOOK_URL=${{ secrets.EVENT_WEBHOOK_CLAY }}" >> $GITHUB_ENV
-          echo "ECR_REPOSITORY=ceramic-tnet" >> $GITHUB_ENV
-          echo "ECR_REPOSITORY_2=ceramic-tnet-ex" >> $GITHUB_ENV
+          echo "ENV=tnet" >> $GITHUB_ENV
       -
         name: Set develop branch tag
-        if: ${{ env.BRANCH == 'develop' || env.ENV_TAG == ''}}
+        if: ${{ env.BRANCH == 'develop' }}
         run: |
           echo "ENV_TAG=dev" >> $GITHUB_ENV
           echo "EVENT_WEBHOOK_URL=${{ secrets.EVENT_WEBHOOK_DEV }}" >> $GITHUB_ENV
-          echo "ECR_REPOSITORY=ceramic-dev" >> $GITHUB_ENV
-          echo "ECR_REPOSITORY_2=ceramic-dev-ex" >> $GITHUB_ENV
+          echo "ENV=dev" >> $GITHUB_ENV
+      -
+        name: Set env tag (default)
+        if: ${{ env.ENV_TAG == '' }}
+        run: |
+          echo "ENV_TAG=dev" >> $GITHUB_ENV
+          echo "EVENT_WEBHOOK_URL=${{ secrets.EVENT_WEBHOOK_DEV }}" >> $GITHUB_ENV
+          echo "ENV=dev" >> $GITHUB_ENV
       -
         name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -66,22 +71,46 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       -
+        name: Setup image IDs
+        id: image-ids
+        env:
+          CERAMIC_DH_IMAGE_ID: "ceramicnetwork/js-ceramic"
+          IPFS_DH_IMAGE_ID: "ceramicnetwork/ipfs-daemon"
+          CERAMIC_ECR_IMAGE_ID: "${{ steps.login-ecr.outputs.registry }}/ceramic-${{ env.ENV }}"
+          IPFS_ECR_IMAGE_ID: "${{ steps.login-ecr.outputs.registry }}/ipfs-${{ env.ENV }}"
+        run: |
+          echo "::set-output name=CERAMIC_IMAGE_IDS::[$CERAMIC_DH_IMAGE_ID,$CERAMIC_ECR_IMAGE_ID,$CERAMIC_ECR_IMAGE_ID-ex']"
+          echo "::set-output name=IPFS_IMAGE_IDS::[$IPFS_DH_IMAGE_ID,$IPFS_ECR_IMAGE_ID]"
+      -
         name: Build and push js-ceramic image
         env:
-          IMAGE_ID: "ceramicnetwork/js-ceramic"
-          ECR_IMAGE_ID: "${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}"
-          ECR_IMAGE_ID_2: "${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY_2 }}"
+          CERAMIC_IMAGE_IDS: ${{ steps.image-ids.outputs.CERAMIC_IMAGE_IDS }}
         run: |
-          docker buildx build . --file Dockerfile.daemon \
-            --output "type=image,push=true,name=$ECR_IMAGE_ID" \
-            --tag ${{ env.ECR_IMAGE_ID }}:${{ env.ENV_TAG }} \
-            --tag ${{ env.ECR_IMAGE_ID }}:${{ env.SHA_TAG }} \
-            --tag ${{ env.ECR_IMAGE_ID }}:${{ github.sha }} \
-            --tag ${{ env.ECR_IMAGE_ID }}:${{ env.BRANCH }} \
-            --tag ${{ env.ECR_IMAGE_ID_2 }}:${{ env.ENV_TAG }} \
-            --tag ${{ env.ECR_IMAGE_ID_2 }}:${{ env.SHA_TAG }} \
-            --tag ${{ env.ECR_IMAGE_ID_2 }}:${{ github.sha }} \
-            --tag ${{ env.ECR_IMAGE_ID_2 }}:${{ env.BRANCH }}
+          for IMAGE_ID in $CERAMIC_IMAGE_IDS
+          do
+            echo $IMAGE_ID
+            # docker buildx build . --file Dockerfile.daemon \
+            #   --output "type=image,push=true,name=$IMAGE_ID" \
+            #   --tag $IMAGE_ID:${{ env.ENV_TAG }} \
+            #   --tag $IMAGE_ID:${{ env.SHA_TAG }} \
+            #   --tag $IMAGE_ID:${{ github.sha }} \
+            #   --tag $IMAGE_ID:${{ env.BRANCH }}
+          done
+      -
+        name: Build and push ipfs-daemon image
+        env:
+          IPFS_IMAGE_IDS: ${{ steps.image-ids.outputs.IPFS_IMAGE_IDS }}
+        run: |
+          for IMAGE_ID in $IPFS_IMAGE_IDS
+          do
+            echo $IMAGE_ID
+            # docker buildx build . --file Dockerfile.ipfs-daemon \
+            #   --output "type=image,push=true" \
+            #   --tag ${{ env.IMAGE_ID }}:${{ env.ENV_TAG }} \
+            #   --tag ${{ env.IMAGE_ID }}:${{ env.SHA_TAG }} \
+            #   --tag ${{ env.IMAGE_ID }}:${{ github.sha }} \
+            #   --tag ${{ env.IMAGE_ID }}:${{ env.BRANCH }}
+          done
 #      -
 #        name: Publish build event
 #        run: |
