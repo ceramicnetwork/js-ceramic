@@ -102,7 +102,8 @@ jobs:
                 "client_payload":
                 {
                   "env_tag": "${{ env.ENV_TAG }}",
-                  "sha_tag": "${{ github.sha }}"
+                  "sha_tag": "${{ github.sha }}",
+                  "ecr_repo": "${{ steps.login-ecr.outputs.registry }}"
                 }
               }
             ') || exit 1
