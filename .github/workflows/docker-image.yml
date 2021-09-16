@@ -68,6 +68,7 @@ jobs:
           IMAGE_ID: "ceramicnetwork/js-ceramic"
           ECR_IMAGE_ID: "${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}"
         run: |
+          echo $ECR_IMAGE_ID
           docker buildx build . --file Dockerfile.daemon \
             --output "type=image,push=true" \
             --tag ${{ env.IMAGE_ID }}:${{ env.ENV_TAG }} \
