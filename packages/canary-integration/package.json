@@ -14,7 +14,7 @@
     "lib": "lib"
   },
   "devDependencies": {
-    "@ceramicnetwork/3id-did-resolver": "^1.4.2-rc.1",
+    "@ceramicnetwork/3id-did-resolver": "^1.4.3-rc.2",
     "@ceramicnetwork/blockchain-utils-linking": "^1.2.0-rc.0",
     "@ceramicnetwork/blockchain-utils-validation": "^1.2.0-rc.0",
     "@ceramicnetwork/core": "^1.6.0-rc.1",
