@@ -79,7 +79,7 @@ jobs:
             --tag $IMAGE_ID_2:${{ env.SHA_TAG }} \
             --tag $IMAGE_ID_2:${{ github.sha }}  \
             --tag $IMAGE_ID_2:${{ env.BRANCH }}  \
-            "$EXTRA_TAGS"
+            $EXTRA_TAGS
       -
         name: Build and push ipfs-daemon image
         env:
@@ -100,7 +100,7 @@ jobs:
             --tag $IMAGE_ID_2:${{ env.SHA_TAG }} \
             --tag $IMAGE_ID_2:${{ github.sha }}  \
             --tag $IMAGE_ID_2:${{ env.BRANCH }}  \
-            "$EXTRA_TAGS"
+            $EXTRA_TAGS
       -
         name: Publish build event
         run: |
