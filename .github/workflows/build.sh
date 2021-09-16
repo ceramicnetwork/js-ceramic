@@ -9,4 +9,8 @@ do
   done
 done
 
+echo "$1"
+echo "$2"
+echo "$TAGS"
+
 docker buildx build . --file "$1" --output 'type=image,push=true' "$TAGS"
