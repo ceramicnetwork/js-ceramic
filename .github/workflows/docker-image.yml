@@ -25,31 +25,20 @@ jobs:
         name: Set master branch tag
         if: ${{ env.BRANCH == 'master' }}
         run: |
-          # TODO: change ENV_TAG to 'prod' (and update all other places using 'latest') and use ENV_TAG in place of ENV
-          echo "ENV_TAG=latest" >> $GITHUB_ENV
+          echo "ENV_TAG=prod" >> $GITHUB_ENV
           echo "EVENT_WEBHOOK_URL=${{ secrets.EVENT_WEBHOOK_FIRE }}" >> $GITHUB_ENV
-          echo "ENV=prod" >> $GITHUB_ENV
       -
         name: Set rc branch tag
         if: ${{ env.BRANCH == 'release-candidate' }}
         run: |
           echo "ENV_TAG=tnet" >> $GITHUB_ENV
           echo "EVENT_WEBHOOK_URL=${{ secrets.EVENT_WEBHOOK_CLAY }}" >> $GITHUB_ENV
-          echo "ENV=tnet" >> $GITHUB_ENV
       -
         name: Set develop branch tag
-        if: ${{ env.BRANCH == 'develop' }}
+        if: ${{ env.BRANCH == 'develop' || env.ENV_TAG == '' }}
         run: |
           echo "ENV_TAG=dev" >> $GITHUB_ENV
           echo "EVENT_WEBHOOK_URL=${{ secrets.EVENT_WEBHOOK_DEV }}" >> $GITHUB_ENV
-          echo "ENV=dev" >> $GITHUB_ENV
-      -
-        name: Set env tag (default)
-        if: ${{ env.ENV_TAG == '' }}
-        run: |
-          echo "ENV_TAG=dev" >> $GITHUB_ENV
-          echo "EVENT_WEBHOOK_URL=${{ secrets.EVENT_WEBHOOK_DEV }}" >> $GITHUB_ENV
-          echo "ENV=dev" >> $GITHUB_ENV
       -
         name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -74,7 +63,7 @@ jobs:
         name: Build and push js-ceramic image
         env:
           IMAGE_ID_1: "ceramicnetwork/js-ceramic"
-          IMAGE_ID_2: "${{ steps.login-ecr.outputs.registry }}/ceramic-${{ env.ENV }}"
+          IMAGE_ID_2: "${{ steps.login-ecr.outputs.registry }}/ceramic-${{ env.ENV_TAG }}"
         run: |
           docker buildx build . --file Dockerfile.daemon --output 'type=image,push=true' \
             --tag $IMAGE_ID_1:${{ env.ENV_TAG }} \
@@ -89,7 +78,7 @@ jobs:
         name: Build and push ipfs-daemon image
         env:
           IMAGE_ID_1: "ceramicnetwork/ipfs-daemon"
-          IMAGE_ID_2: "${{ steps.login-ecr.outputs.registry }}/js-ipfs-${{ env.ENV }}"
+          IMAGE_ID_2: "${{ steps.login-ecr.outputs.registry }}/js-ipfs-${{ env.ENV_TAG }}"
         run: |
           docker buildx build . --file Dockerfile.ipfs-daemon --output 'type=image,push=true' \
             --tag $IMAGE_ID_1:${{ env.ENV_TAG }} \
