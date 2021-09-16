@@ -38,19 +38,13 @@ jobs:
           echo "ECR_REPOSITORY=ceramic-tnet" >> $GITHUB_ENV
           echo "ECR_REPOSITORY_2=ceramic-tnet-ex" >> $GITHUB_ENV
       -
-        name: Set develop branch tag
-        if: ${{ env.BRANCH == 'develop' }}
+        name: Set develop (and default) branch tag
+        if: ${{ env.BRANCH == 'develop' || env.ENV_TAG == '' }}
         run: |
           echo "ENV_TAG=dev" >> $GITHUB_ENV
           echo "EVENT_WEBHOOK_URL=${{ secrets.EVENT_WEBHOOK_DEV }}" >> $GITHUB_ENV
           echo "ECR_REPOSITORY=ceramic-dev" >> $GITHUB_ENV
           echo "ECR_REPOSITORY_2=ceramic-dev-ex" >> $GITHUB_ENV
-      -
-        name: Set env tag (default)
-        if: ${{ env.ENV_TAG == '' }}
-        run: |
-          echo "ENV_TAG=dev" >> $GITHUB_ENV
-          echo "EVENT_WEBHOOK_URL=${{ secrets.EVENT_WEBHOOK_DEV }}" >> $GITHUB_ENV
       -
         name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -74,7 +68,6 @@ jobs:
       -
         name: Build js-ceramic image
         env:
-          IMAGE_ID: "ceramicnetwork/js-ceramic"
           ECR_IMAGE_ID: "${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}"
           ECR_IMAGE_ID_2: "${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY_2 }}"
         run: |
