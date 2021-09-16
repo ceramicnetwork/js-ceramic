@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.3.0-rc.2](/compare/@ceramicnetwork/http-client@1.2.2...@ceramicnetwork/http-client@1.3.0-rc.2) (2021-09-16)
+
+
+### Features
+
+* **core,http-client:** Add 'publish' option to unpin command (#1706) 0ad204e, closes #1706
+
+
+
+
+
 ## [1.2.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/http-client@1.2.1...@ceramicnetwork/http-client@1.2.2) (2021-09-14)
 
 **Note:** Version bump only for package @ceramicnetwork/http-client

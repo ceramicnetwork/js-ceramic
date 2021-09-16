@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.4.0-rc.2](/compare/@ceramicnetwork/cli@1.3.2...@ceramicnetwork/cli@1.4.0-rc.2) (2021-09-16)
+
+
+### Features
+
+* **core,http-client:** Add 'publish' option to unpin command (#1706) 0ad204e, closes #1706
+
+
+
+
+
 ## [1.3.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@1.3.1...@ceramicnetwork/cli@1.3.2) (2021-09-14)
 
 **Note:** Version bump only for package @ceramicnetwork/cli
