@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.1.5-rc.2](/compare/@ceramicnetwork/stream-caip10-link-handler@1.1.4...@ceramicnetwork/stream-caip10-link-handler@1.1.5-rc.2) (2021-09-16)
+
+
+### Bug Fixes
+
+* **stream-caip10-link:** use lowercase in caip10-link genesis (#1718) ff0e99f, closes #1718
+
+
+
+
+
 ## [1.1.5-rc.0](/compare/@ceramicnetwork/stream-caip10-link-handler@1.1.4...@ceramicnetwork/stream-caip10-link-handler@1.1.5-rc.0) (2021-09-16)
 
 
