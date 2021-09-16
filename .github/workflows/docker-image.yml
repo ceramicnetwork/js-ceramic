@@ -71,46 +71,14 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       -
-        name: Setup image IDs
-        id: image-ids
-        env:
-          CERAMIC_DH_IMAGE_ID: "ceramicnetwork/js-ceramic"
-          IPFS_DH_IMAGE_ID: "ceramicnetwork/ipfs-daemon"
-          CERAMIC_ECR_IMAGE_ID: "${{ steps.login-ecr.outputs.registry }}/ceramic-${{ env.ENV }}"
-          IPFS_ECR_IMAGE_ID: "${{ steps.login-ecr.outputs.registry }}/ipfs-${{ env.ENV }}"
+        name: Build and push images
         run: |
-          echo "::set-output name=CERAMIC_IMAGE_IDS::[$CERAMIC_DH_IMAGE_ID,$CERAMIC_ECR_IMAGE_ID,$CERAMIC_ECR_IMAGE_ID-ex']"
-          echo "::set-output name=IPFS_IMAGE_IDS::[$IPFS_DH_IMAGE_ID,$IPFS_ECR_IMAGE_ID]"
-      -
-        name: Build and push js-ceramic image
-        env:
-          CERAMIC_IMAGE_IDS: ${{ steps.image-ids.outputs.CERAMIC_IMAGE_IDS }}
-        run: |
-          for IMAGE_ID in $CERAMIC_IMAGE_IDS
-          do
-            echo $IMAGE_ID
-            # docker buildx build . --file Dockerfile.daemon \
-            #   --output "type=image,push=true,name=$IMAGE_ID" \
-            #   --tag $IMAGE_ID:${{ env.ENV_TAG }} \
-            #   --tag $IMAGE_ID:${{ env.SHA_TAG }} \
-            #   --tag $IMAGE_ID:${{ github.sha }} \
-            #   --tag $IMAGE_ID:${{ env.BRANCH }}
-          done
-      -
-        name: Build and push ipfs-daemon image
-        env:
-          IPFS_IMAGE_IDS: ${{ steps.image-ids.outputs.IPFS_IMAGE_IDS }}
-        run: |
-          for IMAGE_ID in $IPFS_IMAGE_IDS
-          do
-            echo $IMAGE_ID
-            # docker buildx build . --file Dockerfile.ipfs-daemon \
-            #   --output "type=image,push=true" \
-            #   --tag ${{ env.IMAGE_ID }}:${{ env.ENV_TAG }} \
-            #   --tag ${{ env.IMAGE_ID }}:${{ env.SHA_TAG }} \
-            #   --tag ${{ env.IMAGE_ID }}:${{ github.sha }} \
-            #   --tag ${{ env.IMAGE_ID }}:${{ env.BRANCH }}
-          done
+          CERAMIC_IMAGE_IDS=["ceramicnetwork/js-ceramic", "${{ steps.login-ecr.outputs.registry }}/ceramic-${{ env.ENV }}"]
+          IPFS_IMAGE_IDS=["ceramicnetwork/ipfs-daemon", "${{ steps.login-ecr.outputs.registry }}/js-ipfs-${{ env.ENV }}"]
+          TAGS=["${{ env.ENV_TAG }}", "${{ env.SHA_TAG }}", "{{ github.sha }}", "${{ env.BRANCH }}"]
+
+          ./build Dockerfile.daemon $CERAMIC_IMAGE_IDS $TAGS
+          ./build Dockerfile.ipfs-daemon $IPFS_IMAGE_IDS $TAGS
 #      -
 #        name: Publish build event
 #        run: |
