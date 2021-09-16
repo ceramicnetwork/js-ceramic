@@ -25,7 +25,7 @@ jobs:
         name: Set master branch tag
         if: ${{ env.BRANCH == 'master' }}
         run: |
-          echo "ENV_TAG=latest" >> $GITHUB_ENV
+          echo "ENV_TAG=prod" >> $GITHUB_ENV
           echo "EVENT_WEBHOOK_URL=${{ secrets.EVENT_WEBHOOK_FIRE }}" >> $GITHUB_ENV
       -
         name: Set rc branch tag
@@ -35,16 +35,21 @@ jobs:
           echo "EVENT_WEBHOOK_URL=${{ secrets.EVENT_WEBHOOK_CLAY }}" >> $GITHUB_ENV
       -
         name: Set develop branch tag
-        if: ${{ env.BRANCH == 'develop' }}
+        if: ${{ env.BRANCH == 'develop' || env.ENV_TAG == '' }}
         run: |
           echo "ENV_TAG=dev" >> $GITHUB_ENV
           echo "EVENT_WEBHOOK_URL=${{ secrets.EVENT_WEBHOOK_DEV }}" >> $GITHUB_ENV
       -
-        name: Set env tag (default)
-        if: ${{ env.ENV_TAG == '' }}
-        run: |
-          echo "ENV_TAG=dev" >> $GITHUB_ENV
-          echo "EVENT_WEBHOOK_URL=${{ secrets.EVENT_WEBHOOK_DEV }}" >> $GITHUB_ENV
+        name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+      -
+        name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
       -
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
@@ -55,27 +60,35 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       -
-        name: Build js-ceramic image
+        name: Build and push js-ceramic image
         env:
-          IMAGE_ID: "ceramicnetwork/js-ceramic"
+          IMAGE_ID_1: "ceramicnetwork/js-ceramic"
+          IMAGE_ID_2: "${{ steps.login-ecr.outputs.registry }}/ceramic-${{ env.ENV_TAG }}"
         run: |
-          docker buildx build . --file Dockerfile.daemon \
-            --output "type=image,push=true" \
-            --tag ${{ env.IMAGE_ID }}:${{ env.ENV_TAG }} \
-            --tag ${{ env.IMAGE_ID }}:${{ env.SHA_TAG }} \
-            --tag ${{ env.IMAGE_ID }}:${{ github.sha }} \
-            --tag ${{ env.IMAGE_ID }}:${{ env.BRANCH }}
+          docker buildx build . --file Dockerfile.daemon --output 'type=image,push=true' \
+            --tag $IMAGE_ID_1:${{ env.ENV_TAG }} \
+            --tag $IMAGE_ID_1:${{ env.SHA_TAG }} \
+            --tag $IMAGE_ID_1:${{ github.sha }}  \
+            --tag $IMAGE_ID_1:${{ env.BRANCH }}  \
+            --tag $IMAGE_ID_2:${{ env.ENV_TAG }} \
+            --tag $IMAGE_ID_2:${{ env.SHA_TAG }} \
+            --tag $IMAGE_ID_2:${{ github.sha }}  \
+            --tag $IMAGE_ID_2:${{ env.BRANCH }}
       -
-        name: Build ipfs-daemon image
+        name: Build and push ipfs-daemon image
         env:
-          IMAGE_ID: "ceramicnetwork/ipfs-daemon"
+          IMAGE_ID_1: "ceramicnetwork/ipfs-daemon"
+          IMAGE_ID_2: "${{ steps.login-ecr.outputs.registry }}/js-ipfs-${{ env.ENV_TAG }}"
         run: |
-          docker buildx build . --file Dockerfile.ipfs-daemon \
-            --output "type=image,push=true" \
-            --tag ${{ env.IMAGE_ID }}:${{ env.ENV_TAG }} \
-            --tag ${{ env.IMAGE_ID }}:${{ env.SHA_TAG }} \
-            --tag ${{ env.IMAGE_ID }}:${{ github.sha }} \
-            --tag ${{ env.IMAGE_ID }}:${{ env.BRANCH }}
+          docker buildx build . --file Dockerfile.ipfs-daemon --output 'type=image,push=true' \
+            --tag $IMAGE_ID_1:${{ env.ENV_TAG }} \
+            --tag $IMAGE_ID_1:${{ env.SHA_TAG }} \
+            --tag $IMAGE_ID_1:${{ github.sha }}  \
+            --tag $IMAGE_ID_1:${{ env.BRANCH }}  \
+            --tag $IMAGE_ID_2:${{ env.ENV_TAG }} \
+            --tag $IMAGE_ID_2:${{ env.SHA_TAG }} \
+            --tag $IMAGE_ID_2:${{ github.sha }}  \
+            --tag $IMAGE_ID_2:${{ env.BRANCH }}
       -
         name: Publish build event
         run: |
@@ -89,7 +102,8 @@ jobs:
                 "client_payload":
                 {
                   "env_tag": "${{ env.ENV_TAG }}",
-                  "sha_tag": "${{ github.sha }}"
+                  "sha_tag": "${{ github.sha }}",
+                  "ecr_repo": "${{ steps.login-ecr.outputs.registry }}"
                 }
               }
             ') || exit 1
