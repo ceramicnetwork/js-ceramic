@@ -74,8 +74,8 @@ jobs:
         name: Build and push js-ceramic image
         run: |
           TAGS=""
-          for IMAGE_ID in ["ceramicnetwork/js-ceramic","${{ steps.login-ecr.outputs.registry }}/ceramic-${{ env.ENV }}"]; do
-            for TAG in ["${{ env.ENV_TAG }}","${{ env.SHA_TAG }}","${{ github.sha }}","${{ env.BRANCH }}"]; do
+          for IMAGE_ID in "ceramicnetwork/js-ceramic" "${{ steps.login-ecr.outputs.registry }}/ceramic-${{ env.ENV }}"; do
+            for TAG in "${{ env.ENV_TAG }}" "${{ env.SHA_TAG }}" "${{ github.sha }}" "${{ env.BRANCH }}"]; do
               TAGS="$TAGS --tag $IMAGE_ID:$TAG"
             done
           done
