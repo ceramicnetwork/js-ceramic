@@ -120,7 +120,7 @@ jobs:
           npm run publish:release-candidate
 
           # Fetch release commit message
-          echo "RELEASE_MESSAGE=$(git log -1 --pretty=%B)
+          echo "RELEASE_MESSAGE=$(git log -1 --pretty=%B)"
           echo "RELEASE_MESSAGE=$RELEASE_MESSAGE" >> $GITHUB_ENV
       -
         name: Update and push code to `develop`
