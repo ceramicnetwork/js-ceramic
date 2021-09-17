@@ -3,6 +3,27 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.2.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-caip10-link-handler@1.1.5...@ceramicnetwork/stream-caip10-link-handler@1.2.0-rc.0) (2021-09-17)
+
+
+### Bug Fixes
+
+* **core:** Remove obsolete tests ([#1511](https://github.com/ceramicnetwork/js-ceramic/issues/1511)) ([7d90309](https://github.com/ceramicnetwork/js-ceramic/commit/7d903091008859ce2c32bfb7133f0a9e324badb3))
+* **stream-caip10-link:** use lowercase in caip10-link genesis ([#1718](https://github.com/ceramicnetwork/js-ceramic/issues/1718)) ([c38098a](https://github.com/ceramicnetwork/js-ceramic/commit/c38098af66220912d01214e965392996d308c14f))
+* **stream-caip10-link:** use lowercase in caip10-link genesis ([#1718](https://github.com/ceramicnetwork/js-ceramic/issues/1718)) ([ff0e99f](https://github.com/ceramicnetwork/js-ceramic/commit/ff0e99fcf6167e8ca3e36217935bfd673abdf198))
+* **stream-caip10-link:** use lowercase in caip10-link genesis ([#1718](https://github.com/ceramicnetwork/js-ceramic/issues/1718)) ([04f977f](https://github.com/ceramicnetwork/js-ceramic/commit/04f977f315592b4b0f7590c9abcb67409c212adf))
+
+
+### Features
+
+* Pass issuer to verifyJWS ([#1542](https://github.com/ceramicnetwork/js-ceramic/issues/1542)) ([3c60b0c](https://github.com/ceramicnetwork/js-ceramic/commit/3c60b0c43267e29e17fd1f676f25bf11c2ab06d5))
+* Pass time-information when checking a signature ([#1502](https://github.com/ceramicnetwork/js-ceramic/issues/1502)) ([913e091](https://github.com/ceramicnetwork/js-ceramic/commit/913e091827691f37a3e02ffcef569a22fd6f007d))
+* **core:** Split AnchorService from AnchorValidator ([#1505](https://github.com/ceramicnetwork/js-ceramic/issues/1505)) ([b92add9](https://github.com/ceramicnetwork/js-ceramic/commit/b92add945e5fc52943a836dfad856dc052cfbee3))
+
+
+
+
+
 ## [1.1.5](/compare/@ceramicnetwork/stream-caip10-link-handler@1.1.5-rc.2...@ceramicnetwork/stream-caip10-link-handler@1.1.5) (2021-09-16)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-caip10-link-handler
