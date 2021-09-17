@@ -1,24 +1,57 @@
 import { AccountID } from 'caip'
-import { verify } from '@stablelib/ed25519'
+import * as nearAPI from 'near-api-js'
 import { BlockchainHandler } from '../blockchain-handler'
 import { LinkProof } from '@ceramicnetwork/blockchain-utils-linking'
 import * as uint8arrays from 'uint8arrays'
+import crypto from 'crypto'
+import nacl from 'tweetnacl'
 
-const stringEncode = (str: string): string =>
-  uint8arrays.toString(uint8arrays.fromString(str), 'base64pad')
+const stringEncode = (str: string): Uint8Array =>
+  uint8arrays.fromString(str, 'base64pad')
 
 const namespace = 'near'
+const networkId = 'testnet'
+const nodeUrl = 'https://rpc.testnet.near.org'
+const walletUrl = 'https://wallet.testnet.near.org'
+
+const makeUint8 = (str: string): Uint8Array => {
+  const utf8Encode = new TextEncoder()
+  return utf8Encode.encode(str)
+}
+
+const verifySignature = async (accountId, data, signature, contractName = '') => {
+  
+  const near: any = await nearAPI.connect({
+    networkId, nodeUrl, walletUrl, deps: { keyStore: new nearAPI.keyStores.BrowserLocalStorageKeyStore() },
+  })
+
+  const nearAccount = await near.account(accountId)
+
+  try {
+    const hash = crypto.createHash('sha256').update(data).digest();
+    let accessKeys = await nearAccount.getAccessKeys();
+    if (contractName.length) {
+      accessKeys = accessKeys.filter(({ access_key: { permission }}) => permission && permission.FunctionCall && permission.FunctionCall.receiver_id === contractName);
+    } else {
+      accessKeys = accessKeys.filter(({ access_key: { permission }}) => permission === 'FullAccess');
+    }
+    return accessKeys.some(({ public_key }) => {
+      const publicKey = public_key.replace('ed25519:', '');
+      const decodedPublicKey = uint8arrays.fromString(publicKey, 'base58btc')
+      return nacl.sign.detached.verify(hash, Buffer.from(signature, 'base64'), decodedPublicKey);
+    })
+  } catch (e) {
+    console.error(e);
+    return false;
+  }
+};
 
 export async function validateLink(proof: LinkProof): Promise<LinkProof | null> {
-  const account = AccountID.parse(proof.account)
-  const msg = uint8arrays.fromString(stringEncode(proof.message))
-  const sig = uint8arrays.fromString(proof.signature, 'base64pad')
-  const acct = uint8arrays.fromString(account.address, 'base64pad')
-
-  // REF: https://github.com/StableLib/stablelib/blob/master/packages/ed25519/ed25519.ts#L825
-  const is_sig_valid: boolean = verify(acct, msg, sig)
-
-  return is_sig_valid ? proof : null
+  const address = new AccountID(proof.account).address
+  const msg = makeUint8(proof.message)
+  const sig = stringEncode(proof.signature)
+  const is_sig_valid = verifySignature(address, msg, sig);
+  return is_sig_valid ? proof : null;
 }
 
 const Handler: BlockchainHandler = {
