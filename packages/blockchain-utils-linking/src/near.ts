@@ -43,7 +43,6 @@ export class NearAuthProvider implements AuthProvider {
             message,
             signature: sig,
             account: account.toString(),
-     //       provider: this.keyPair,
             timestamp,
         }
         return proof
