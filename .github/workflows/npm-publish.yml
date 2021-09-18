@@ -97,7 +97,7 @@ jobs:
       -
         name: Send Discord notification
         run: |
-          res=$(docker run --rm curlimages/curl curl -X POST ${{ env.DISCORD_RELEASE_WEBHOOK }} \
+          res=$(docker run --rm curlimages/curl curl -X POST ${{ secrets.DISCORD_RELEASE_WEBHOOK }} \
             -H "Content-Type: application/json" \
             -d '
               {
