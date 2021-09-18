@@ -416,7 +416,7 @@ export class ConflictResolution {
   }
 
   /**
-   * Return `CommitData` with commit and JWS envelope, if applicable and not already present.
+   * Return `CommitData` with commit and JWS envelope, if applicable and not already present
    */
   private async getCommitData(_commitData: CommitData): Promise<CommitData> {
     // Clone the `CommitData` so that the Stream state is not affected when commit/JWS data is added to the structure

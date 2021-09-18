@@ -63,7 +63,7 @@ jobs:
         name: Update and push code to `release-candidate` and `develop`
         if: ${{ steps.set-vars.outputs.full == 'true' }}
         run: |
-          git checkout -B release-candidate refs/remotes/origin/master
+          git checkout -B release-candidate refs/remotes/origin/release-candidate
           git merge origin/master
           git push
           git checkout -B develop refs/remotes/origin/develop
