@@ -108,6 +108,7 @@ jobs:
           #if [[ $res != *"204"* ]]; then
           exit 1
           #fi
+
       -
         name: Merge `develop` -> `release-candidate`
         if: ${{ steps.set-vars.outputs.rc == 'true' }}
