@@ -77,6 +77,7 @@ jobs:
           git log -1 --pretty=%B >> embed.json
           echo '```","color":3581519}]}' >> embed.json
           sed -i 's/\ -/\\n\ -/' embed.json
+          sed -i '2d;3d' embed.json
           cat embed.json
 
           # Send notification
@@ -145,6 +146,7 @@ jobs:
           git log -1 --pretty=%B >> embed.json
           echo '```","color":3581519}]}' >> embed.json
           sed -i 's/\ -/\\n\ -/' embed.json
+          sed -i '2d;3d' embed.json
           cat embed.json
 
           # Send notification
