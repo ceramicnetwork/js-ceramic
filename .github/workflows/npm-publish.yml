@@ -102,9 +102,10 @@ jobs:
           git log -1 --pretty=%B >> embed.json
           echo '```","color":3581519}]}' >> embed.json
           sed -i 's/\ -/\\n\ -/' embed.json
+          cat embed.json
 
           # Send notification
-          res=$(docker run --rm curlimages/curl curl -X POST ${{ secrets.DISCORD_RELEASE_WEBHOOK }} -H "Content-Type: application/json" -d @embed.json) || exit 1
+          res=$(curl -X POST ${{ secrets.DISCORD_RELEASE_WEBHOOK }} -H "Content-Type: application/json" -d @embed.json) || exit 1
           echo $res
           if [[ $res != *"204"* ]]; then
             exit 1
