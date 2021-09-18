@@ -101,7 +101,7 @@ jobs:
           cat message
           res=$(docker run --rm curlimages/curl curl -X POST ${{ secrets.DISCORD_RELEASE_WEBHOOK }} \
             -H "Content-Type: application/json" \
-            --data-urlencode "{\"embeds\":[{\"title\":\"**Release Candidate Published**\",\"description\":\"```@message```\",\"color\":3581519}]}" \
+            --data-urlencode "{\"embeds\":[{\"title\":\"**Release Candidate Published**\",\"description\":\"```$(git log -1 --pretty=%B)```\",\"color\":3581519}]}" \
           ) || exit 1
           echo $res
           #if [[ $res != *"204"* ]]; then
