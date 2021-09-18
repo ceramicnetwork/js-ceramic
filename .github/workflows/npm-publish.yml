@@ -95,6 +95,25 @@ jobs:
           token: ${{ secrets.GH_TOKEN }}
           ref: release-candidate
       -
+        name: Send Discord notification
+        run: |
+          res=$(docker run --rm curlimages/curl curl -X POST ${{ env.DISCORD_RELEASE_WEBHOOK }} \
+            -H "Content-Type: application/json" \
+            -d '
+              {
+                "content":
+                {
+                  "title": "**Release Candidate Published",
+                  "description": "```$(git log -1 --pretty=%B)```",
+                  "color": 3581519
+                }
+              }
+            ') || exit 1
+          echo $res
+          #if [[ $res != *"204"* ]]; then
+          exit 1
+          #fi
+      -
         name: Merge `develop` -> `release-candidate`
         if: ${{ steps.set-vars.outputs.rc == 'true' }}
         run: |
@@ -118,11 +137,6 @@ jobs:
           git config user.name ${{ github.actor }}
           npm config set //registry.npmjs.org/:_authToken $NODE_AUTH_TOKEN
           npm run publish:release-candidate
-
-          # Fetch release commit message
-          RELEASE_MESSAGE=$(git log -1 --pretty=%B)
-          echo $RELEASE_MESSAGE
-          echo "RELEASE_MESSAGE=$RELEASE_MESSAGE" >> $GITHUB_ENV
       -
         name: Update and push code to `develop`
         if: ${{ steps.set-vars.outputs.rc == 'true' }}
@@ -130,10 +144,3 @@ jobs:
           git checkout -B develop refs/remotes/origin/develop
           git merge origin/release-candidate
           git push
-      -
-        name: Discord notification
-        env:
-          DISCORD_WEBHOOK: ${{ secrets.DISCORD_RELEASE_WEBHOOK }}
-        uses: Ilshidur/action-discord@0.3.2
-        with:
-          args: '**Successfully published:**\n```{{ env.RELEASE_MESSAGE }}```'
