@@ -144,6 +144,7 @@ export class Caip10LinkHandler implements StreamHandler<Caip10Link> {
     commitData: CommitData,
     state: StreamState
   ): Promise<StreamState> {
+    // TODO: Assert that the 'prev' of the commit being applied is the end of the log in 'state'
     state.log.push({ cid: commitData.cid, type: CommitType.ANCHOR })
     let content = state.content
     if (state.next?.content) {

@@ -82,30 +82,33 @@ export default class Utils {
    * present
    */
   static async getCommitData(commitData: CommitData, dispatcher: Dispatcher, streamId?: StreamID): Promise<CommitData> {
-    let updates: any = {}
-    if (!commitData.commit) {
+    // Merge updates retrieved below with a clone of the original `CommitData` so that the stream state is not affected
+    // when additional data is added to the structure.
+    const updatedCommitData = cloneDeep(commitData)
+    if (!updatedCommitData.commit) {
       const commit = await dispatcher.retrieveCommit(commitData.cid, streamId)
       if (!commit) throw new Error(`No commit found for CID ${commitData.cid.toString()}`)
       if (StreamUtils.isSignedCommit(commit)) {
         const linkedCommit = await dispatcher.retrieveCommit(commit.link, streamId)
         if (!linkedCommit) throw new Error(`No commit found for CID ${commit.link.toString()}`)
-        updates = { type: CommitType.SIGNED, commit: linkedCommit, envelope: commit }
+        updatedCommitData.type = CommitType.SIGNED
+        updatedCommitData.commit = linkedCommit
+        updatedCommitData.envelope = commit
       } else if (StreamUtils.isAnchorCommit(commit)) {
-        const proof = await dispatcher.retrieveFromIPFS(commit.proof)
-        updates = { type: CommitType.ANCHOR, commit: commit, proof: proof, timestamp: proof.blockTimestamp }
+        updatedCommitData.type = CommitType.ANCHOR
+        updatedCommitData.commit = commit
+        updatedCommitData.proof = await dispatcher.retrieveFromIPFS(commit.proof)
+        updatedCommitData.timestamp = updatedCommitData.proof.blockTimestamp
       } else {
         // For all cases not using DagJWS for signing (e.g. CAIP-10 links)
-        updates = { type: CommitType.SIGNED, commit: commit }
+        updatedCommitData.type = CommitType.SIGNED
+        updatedCommitData.commit = commit
       }
     }
-    const isGenesis = (commitData.type === CommitType.GENESIS) || !(commitData.commit ?? updates.commit).prev
-    // Merge updates retrieved above with a clone of the original `CommitData` so that the stream state is not affected
-    // when commit/JWS data is added to the structure.
-    return {
-      ...cloneDeep(commitData),
-      ...updates,
-      type: isGenesis ? CommitType.GENESIS : (commitData.type ?? updates.type)
+    if ((commitData.type === CommitType.GENESIS) || !updatedCommitData.commit.prev) {
+      updatedCommitData.type = CommitType.GENESIS
     }
+    return updatedCommitData
   }
 }
 

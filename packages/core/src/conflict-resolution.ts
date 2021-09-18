@@ -240,15 +240,15 @@ export class ConflictResolution {
    */
   private async applyLogEntryToState<T extends Stream>(
     entry: CommitData, state: StreamState, handler: StreamHandler<T>): Promise<StreamState> {
-    const logEntry = await Utils.getCommitData(entry, this.dispatcher)
-    if (StreamUtils.isAnchorCommitData(logEntry)) {
+    const commitData = await Utils.getCommitData(entry, this.dispatcher)
+    if (StreamUtils.isAnchorCommitData(commitData)) {
       // It's an anchor commit
       // TODO: Anchor validation should be done by the StreamHandler as part of applying the anchor commit
-      await verifyAnchorCommit(this.dispatcher, this.anchorValidator, logEntry)
-      return await handler.applyCommit(logEntry, this.context, state)
+      await verifyAnchorCommit(this.dispatcher, this.anchorValidator, commitData)
+      return await handler.applyCommit(commitData, this.context, state)
     } else {
-      const tmpState = await handler.applyCommit(logEntry, this.context, state)
-      const isGenesis = !logEntry.commit.prev
+      const tmpState = await handler.applyCommit(commitData, this.context, state)
+      const isGenesis = !commitData.commit.prev
       const effectiveState = isGenesis ? tmpState : tmpState.next
       // TODO: Schema validation should be done by the StreamHandler as part of applying the commit
       await this.stateValidation.validate(effectiveState, effectiveState.content)
@@ -273,10 +273,8 @@ export class ConflictResolution {
     // `fetchLog` provides the timestamps.
     if (state && state.log.length === 1) {
       const timestamp = unappliedCommits[0].timestamp
-      const genesis = {
-        ...await Utils.getCommitData(state.log[0], this.dispatcher),
-        timestamp: timestamp
-      }
+      const genesis = await Utils.getCommitData(state.log[0], this.dispatcher)
+      genesis.timestamp = timestamp
       await handler.applyCommit(genesis, this.context)
     }
 
@@ -398,30 +396,4 @@ export class ConflictResolution {
     const handler = this.handlers.get(initialState.type)
     return this.applyLogToState(handler, resetLog, null, false, opts)
   }
-<<<<<<< HEAD
-=======
-
-  /**
-   * Return `CommitData` with commit and JWS envelope, if applicable and not already present
-   */
-  private async getCommitData(_commitData: CommitData): Promise<CommitData> {
-    // Clone the `CommitData` so that the Stream state is not affected when commit/JWS data is added to the structure
-    const commitData: CommitData = {
-      cid: _commitData.cid,
-      type: _commitData.type,
-      timestamp: _commitData.timestamp,
-      commit: _commitData.commit,
-      envelope: _commitData.envelope
-    }
-    if (!commitData.commit) {
-      const commit = await this.dispatcher.retrieveCommit(commitData.cid)
-      commitData.commit = commit
-      if (StreamUtils.isSignedCommit(commit)) {
-        commitData.commit = await this.dispatcher.retrieveCommit(commit.link)
-        commitData.envelope = commit
-      }
-    }
-    return commitData
-  }
->>>>>>> develop
 }
