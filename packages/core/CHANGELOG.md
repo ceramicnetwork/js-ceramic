@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.7.0-rc.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@1.7.0-rc.1...@ceramicnetwork/core@1.7.0-rc.2) (2021-09-18)
+
+
+### Bug Fixes
+
+* **ci:** minor fix for npm publish action along with dummy update in core to cause lerna to cause fresh RC to be published ([6bc4870](https://github.com/ceramicnetwork/js-ceramic/commit/6bc4870dac1dafb24ac0765f1142f8bcad5f00af))
+
+
+
+
+
 # [1.7.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@1.7.0-rc.0...@ceramicnetwork/core@1.7.0-rc.1) (2021-09-18)
 
 **Note:** Version bump only for package @ceramicnetwork/core

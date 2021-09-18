@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/cli",
-  "version": "1.4.1-rc.1",
+  "version": "1.4.1-rc.2",
   "description": "Typescript implementation of the Ceramic CLI",
   "keywords": [
     "Ceramic",
@@ -35,7 +35,7 @@
     "@awaitjs/express": "^0.8.0",
     "@ceramicnetwork/3id-did-resolver": "^1.4.4-rc.1",
     "@ceramicnetwork/common": "^1.6.0-rc.1",
-    "@ceramicnetwork/core": "^1.7.0-rc.1",
+    "@ceramicnetwork/core": "^1.7.0-rc.2",
     "@ceramicnetwork/http-client": "^1.4.0-rc.1",
     "@ceramicnetwork/ipfs-daemon": "^1.1.5-rc.1",
     "@ceramicnetwork/logger": "^1.0.4",
