@@ -99,7 +99,7 @@ jobs:
         run: |
           res=$(docker run --rm curlimages/curl curl -X POST ${{ secrets.DISCORD_RELEASE_WEBHOOK }} \
             -H "Content-Type: application/json" \
-            -d '
+            -d "
               {
                 "embeds": [
                   {
@@ -109,7 +109,7 @@ jobs:
                   }
                 ]
               }
-            ') || exit 1
+            ") || exit 1
           echo $res
           #if [[ $res != *"204"* ]]; then
           exit 1
