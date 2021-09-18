@@ -110,35 +110,34 @@ jobs:
           if [[ $res != *"204"* ]]; then
             exit 1
           fi
-          exit 1
-      -
-        name: Merge `develop` -> `release-candidate`
-        if: ${{ steps.set-vars.outputs.rc == 'true' }}
-        run: |
-          git fetch origin develop
-          git merge origin/develop
-      -
-        name: Initialize and build code
-        if: ${{ steps.set-vars.outputs.rc == 'true' }}
-        run: |
-          npm set unsafe-perm true
-          npm ci && npm run build
-      -
-        name: Publish packages to NPM
-        if: ${{ steps.set-vars.outputs.rc == 'true' }}
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
-          TAG: ${{ matrix.tag }}
-        run: |
-          git config user.email "${{ github.actor }}@users.noreply.github.com"
-          git config user.name ${{ github.actor }}
-          npm config set //registry.npmjs.org/:_authToken $NODE_AUTH_TOKEN
-          npm run publish:release-candidate
-      -
-        name: Update and push code to `develop`
-        if: ${{ steps.set-vars.outputs.rc == 'true' }}
-        run: |
-          git checkout -B develop refs/remotes/origin/develop
-          git merge origin/release-candidate
-          git push
+#      -
+#        name: Merge `develop` -> `release-candidate`
+#        if: ${{ steps.set-vars.outputs.rc == 'true' }}
+#        run: |
+#          git fetch origin develop
+#          git merge origin/develop
+#      -
+#        name: Initialize and build code
+#        if: ${{ steps.set-vars.outputs.rc == 'true' }}
+#        run: |
+#          npm set unsafe-perm true
+#          npm ci && npm run build
+#      -
+#        name: Publish packages to NPM
+#        if: ${{ steps.set-vars.outputs.rc == 'true' }}
+#        env:
+#          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+#          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+#          TAG: ${{ matrix.tag }}
+#        run: |
+#          git config user.email "${{ github.actor }}@users.noreply.github.com"
+#          git config user.name ${{ github.actor }}
+#          npm config set //registry.npmjs.org/:_authToken $NODE_AUTH_TOKEN
+#          npm run publish:release-candidate
+#      -
+#        name: Update and push code to `develop`
+#        if: ${{ steps.set-vars.outputs.rc == 'true' }}
+#        run: |
+#          git checkout -B develop refs/remotes/origin/develop
+#          git merge origin/release-candidate
+#          git push
