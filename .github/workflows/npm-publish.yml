@@ -97,9 +97,10 @@ jobs:
       -
         name: Send Discord notification
         run: |
+          RELEASE_MSG=$(git log -1 --pretty=%B)
           res=$(docker run --rm curlimages/curl curl -X POST ${{ secrets.DISCORD_RELEASE_WEBHOOK }} \
             -H "Content-Type: application/json" \
-            -d "{\"embeds\":[{\"title\":\"**Release Candidate Published**\",\"description\":\"```$(git log -1 --pretty=%B)```\",\"color\":3581519}]}" \
+            -d "{\"embeds\":[{\"title\":\"**Release Candidate Published**\",\"description\":\"```$RELEASE_MSG```\",\"color\":3581519}]}" \
           ) || exit 1
           echo $res
           #if [[ $res != *"204"* ]]; then
