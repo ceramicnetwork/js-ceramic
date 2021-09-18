@@ -71,6 +71,7 @@ jobs:
           git push
       -
         name: Send Discord notification
+        if: ${{ steps.set-vars.outputs.full == 'true' }}
         run: |
           # Prepare notification body
           echo '{"embeds":[{"title":"**Release Published**","description":"```' > embed.json
@@ -140,6 +141,7 @@ jobs:
           git push
       -
         name: Send Discord notification
+        if: ${{ steps.set-vars.outputs.rc == 'true' }}
         run: |
           # Prepare notification body
           echo '{"embeds":[{"title":"**Release Candidate Published**","description":"```' > embed.json
