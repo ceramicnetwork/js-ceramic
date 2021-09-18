@@ -4,74 +4,152 @@ on:
   workflow_dispatch:
     inputs:
       type:
-        description: 'Type of publish (one of: rc, full)'
+        description: 'Type of publish (one of: rc, full, both, hotfix)'
         required: true
         default: 'rc'
 
 jobs:
-  publish:
+  publish_full:
     runs-on: ubuntu-latest
     steps:
       -
         name: Setup environment
         id: set-vars
         run: |
-          if [[ "${{ github.event.inputs.type }}" == "full" ]]; then
-            echo "::set-output name=target-branch::master"
-            echo "::set-output name=source-branch::release-candidate"
-            echo "::set-output name=tag::latest"
-          else
-            # Default to `release-candidate`
-            echo "::set-output name=target-branch::release-candidate"
-            echo "::set-output name=source-branch::develop"
-            echo "::set-output name=tag::release-candidate"
+          if [[ "${{ github.event.inputs.type }}" == "both" || "${{ github.event.inputs.type }}" == "full" ]]; then
+            echo "::set-output name=full::true"
+          elif [[ "${{ github.event.inputs.type }}" == "hotfix" ]]; then
+            echo "::set-output name=full::true"
+            echo "::set-output name=hotfix::true"
           fi
       -
-        name: Checkout ${{ steps.set-vars.outputs.target-branch }}
-        uses: actions/checkout@v2
-        with:
-          token: ${{ secrets.GH_TOKEN }}
-          ref: ${{ steps.set-vars.outputs.target-branch }}
-      -
-        name: Merge ${{ steps.set-vars.outputs.source-branch }} -> ${{ steps.set-vars.outputs.target-branch }}
-        env:
-          SOURCE_BRANCH: ${{ steps.set-vars.outputs.source-branch }}
-        run: |
-          git fetch origin $SOURCE_BRANCH
-          git merge origin/$SOURCE_BRANCH
-      -
         name: Setup Node
+        if: ${{ steps.set-vars.outputs.full == 'true' }}
         uses: actions/setup-node@v1
         with:
           node-version: 14
       -
+        name: Checkout `master` branch
+        if: ${{ steps.set-vars.outputs.full == 'true' }}
+        uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.GH_TOKEN }}
+          ref: master
+      -
+        name: Merge `release-candidate` -> `master`
+        if: ${{ steps.set-vars.outputs.full == 'true' && steps.set-vars.outputs.hotfix != 'true' }}
+        run: |
+          git fetch origin release-candidate
+          git merge origin/release-candidate
+      -
         name: Initialize and build code
+        if: ${{ steps.set-vars.outputs.full == 'true' }}
         run: |
           npm set unsafe-perm true
           npm ci && npm run build
       -
         name: Publish packages to NPM
+        if: ${{ steps.set-vars.outputs.full == 'true' }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
-          TAG: ${{ steps.set-vars.outputs.tag }}
+          TAG: ${{ matrix.tag }}
         run: |
           git config user.email "${{ github.actor }}@users.noreply.github.com"
           git config user.name ${{ github.actor }}
           npm config set //registry.npmjs.org/:_authToken $NODE_AUTH_TOKEN
-          npm run publish:$TAG
+          npm run publish:latest
       -
-        name: Update and push code to ${{ steps.set-vars.outputs.source-branch }}
-        env:
-          SOURCE_BRANCH: ${{ steps.set-vars.outputs.source-branch }}
-          TARGET_BRANCH: ${{ steps.set-vars.outputs.target-branch }}
+        name: Update and push code to `release-candidate` and `develop`
+        if: ${{ steps.set-vars.outputs.full == 'true' }}
         run: |
-          # Merge the target branch back to the source branch
-          git checkout -B $SOURCE_BRANCH refs/remotes/origin/$SOURCE_BRANCH
-          git merge origin/$TARGET_BRANCH
+          git checkout -B release-candidate refs/remotes/origin/release-candidate
+          git merge origin/master
           git push
-
-          # Always merge and push to `develop` - if it's already been merged to above, this action will have no effect
           git checkout -B develop refs/remotes/origin/develop
-          git merge origin/$TARGET_BRANCH
+          git merge origin/master
           git push
+      -
+        name: Send Discord notification
+        if: ${{ steps.set-vars.outputs.full == 'true' }}
+        run: |
+          # Prepare notification body
+          echo '{"embeds":[{"title":"**Release Published**","description":"```' > embed.json
+          git log -1 --pretty=%B >> embed.json
+          echo '```","color":3581519}]}' >> embed.json
+          sed -i 's/\ -/\\n\ -/' embed.json
+          sed -i '2d;3d' embed.json
+          cat embed.json
+
+          # Send notification
+          res=$(curl -X POST ${{ secrets.DISCORD_RELEASE_WEBHOOK }} -H "Content-Type: application/json" -d @embed.json) || exit 1
+
+  publish_rc:
+    runs-on: ubuntu-latest
+    needs: publish_full
+    steps:
+      -
+        name: Setup environment
+        id: set-vars
+        run: |
+          if [[ "${{ github.event.inputs.type }}" == "both" || "${{ github.event.inputs.type }}" == "rc" ]]; then
+            echo "::set-output name=rc::true"
+          fi
+      -
+        name: Setup Node
+        if: ${{ steps.set-vars.outputs.rc == 'true' }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: 14
+      -
+        name: Checkout `release-candidate` branch
+        if: ${{ steps.set-vars.outputs.rc == 'true' }}
+        uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.GH_TOKEN }}
+          ref: release-candidate
+      -
+        name: Merge `develop` -> `release-candidate`
+        if: ${{ steps.set-vars.outputs.rc == 'true' }}
+        run: |
+          git fetch origin develop
+          git merge origin/develop
+      -
+        name: Initialize and build code
+        if: ${{ steps.set-vars.outputs.rc == 'true' }}
+        run: |
+          npm set unsafe-perm true
+          npm ci && npm run build
+      -
+        name: Publish packages to NPM
+        if: ${{ steps.set-vars.outputs.rc == 'true' }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          TAG: ${{ matrix.tag }}
+        run: |
+          git config user.email "${{ github.actor }}@users.noreply.github.com"
+          git config user.name ${{ github.actor }}
+          npm config set //registry.npmjs.org/:_authToken $NODE_AUTH_TOKEN
+          npm run publish:release-candidate
+      -
+        name: Update and push code to `develop`
+        if: ${{ steps.set-vars.outputs.rc == 'true' }}
+        run: |
+          git checkout -B develop refs/remotes/origin/develop
+          git merge origin/release-candidate
+          git push
+      -
+        name: Send Discord notification
+        if: ${{ steps.set-vars.outputs.rc == 'true' }}
+        run: |
+          # Prepare notification body
+          echo '{"embeds":[{"title":"**Release Candidate Published**","description":"```' > embed.json
+          git log -1 --pretty=%B >> embed.json
+          echo '```","color":3581519}]}' >> embed.json
+          sed -i 's/\ -/\\n\ -/' embed.json
+          sed -i '2d;3d' embed.json
+          cat embed.json
+
+          # Send notification
+          res=$(curl -X POST ${{ secrets.DISCORD_RELEASE_WEBHOOK }} -H "Content-Type: application/json" -d @embed.json) || exit 1

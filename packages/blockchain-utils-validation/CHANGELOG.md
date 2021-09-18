@@ -3,6 +3,49 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.3.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/blockchain-utils-validation@1.3.0-rc.0...@ceramicnetwork/blockchain-utils-validation@1.3.0-rc.1) (2021-09-18)
+
+**Note:** Version bump only for package @ceramicnetwork/blockchain-utils-validation
+
+
+
+
+
+# [1.3.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/blockchain-utils-validation@1.2.0...@ceramicnetwork/blockchain-utils-validation@1.3.0-rc.0) (2021-09-17)
+
+
+### Bug Fixes
+
+* add eslint-disable line ([#1611](https://github.com/ceramicnetwork/js-ceramic/issues/1611)) ([3c81e0d](https://github.com/ceramicnetwork/js-ceramic/commit/3c81e0dcd9ee082eb45f467353566d5000721a92))
+* Fix tests by using node environment for jest ([#1212](https://github.com/ceramicnetwork/js-ceramic/issues/1212)) ([aff01c6](https://github.com/ceramicnetwork/js-ceramic/commit/aff01c6e3a8476825dd8b27201579b38943e7fca))
+* Fix tests by using node environment for jest ([#1212](https://github.com/ceramicnetwork/js-ceramic/issues/1212)) ([0f04006](https://github.com/ceramicnetwork/js-ceramic/commit/0f04006098f9028c6750c9920c4b3af758b71235))
+* **blockchain-utils-linking:** Pin @ethersproject/providers to previous version ([#1094](https://github.com/ceramicnetwork/js-ceramic/issues/1094)) ([89fcebe](https://github.com/ceramicnetwork/js-ceramic/commit/89fcebe17f72dd7362fb8cad9c88040c177991f6))
+* **blockchain-utils-linking:** Pin version of @glif/local-managed-provider to unbreak test ([#1183](https://github.com/ceramicnetwork/js-ceramic/issues/1183)) ([b5ae20f](https://github.com/ceramicnetwork/js-ceramic/commit/b5ae20f6e1641ae767a7720c448133f22f4a7f0a))
+* **blockchain-utils-validation:** add missing dep ([6e6af5d](https://github.com/ceramicnetwork/js-ceramic/commit/6e6af5d86341d93cc305b5908c7ecd0c52455126))
+* **common, logger:** Clean up dependencies ([#1164](https://github.com/ceramicnetwork/js-ceramic/issues/1164)) ([191ad31](https://github.com/ceramicnetwork/js-ceramic/commit/191ad310b87ac9aba97bb84b122908337f35aa11))
+
+
+### Features
+
+* caip10 ethereum+eos integration test ([#1668](https://github.com/ceramicnetwork/js-ceramic/issues/1668)) ([4267d8b](https://github.com/ceramicnetwork/js-ceramic/commit/4267d8b31fca38a163bb009198a49e1de22b2a58)), closes [#1678](https://github.com/ceramicnetwork/js-ceramic/issues/1678)
+* **tezos-blockchain-link:** initial support for linking and validating DIDs to Tezos wallets ([#1555](https://github.com/ceramicnetwork/js-ceramic/issues/1555)) ([baa6c35](https://github.com/ceramicnetwork/js-ceramic/commit/baa6c35a6a72f69380597cd260f14bc227c4fd66))
+* **tezos-blockchain-link:** linking and validating DIDs to Tezos wallets ([#1601](https://github.com/ceramicnetwork/js-ceramic/issues/1601)) ([b40709e](https://github.com/ceramicnetwork/js-ceramic/commit/b40709e465bdbf0c934ff5d51921fb7e5eb8cb18))
+* **tile-doctype:** Update Tile API ([#1180](https://github.com/ceramicnetwork/js-ceramic/issues/1180)) ([90973ee](https://github.com/ceramicnetwork/js-ceramic/commit/90973ee32352e260cb040e687720095b145b4702))
+* support near protocol ([#881](https://github.com/ceramicnetwork/js-ceramic/issues/881)) ([d50f36e](https://github.com/ceramicnetwork/js-ceramic/commit/d50f36e0ecc24d26ae90a7ee4bedbe1ee006f0f7)), closes [#880](https://github.com/ceramicnetwork/js-ceramic/issues/880)
+* upgrade 3id did resolver ([#1108](https://github.com/ceramicnetwork/js-ceramic/issues/1108)) ([24ef6d4](https://github.com/ceramicnetwork/js-ceramic/commit/24ef6d45c6ce1dae828447ffdaa9e57f3f5e9b00))
+
+
+
+
+
+# [1.2.0](/compare/@ceramicnetwork/blockchain-utils-validation@1.2.0-rc.0...@ceramicnetwork/blockchain-utils-validation@1.2.0) (2021-09-16)
+
+**Note:** Version bump only for package @ceramicnetwork/blockchain-utils-validation
+
+
+
+
+
 # [1.2.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/blockchain-utils-validation@1.1.4-rc.0...@ceramicnetwork/blockchain-utils-validation@1.2.0-rc.0) (2021-09-13)
 
 

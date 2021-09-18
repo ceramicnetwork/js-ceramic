@@ -3,7 +3,7 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-# [1.3.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/http-client@1.3.0-rc.0...@ceramicnetwork/http-client@1.3.0-rc.1) (2021-09-13)
+# [1.4.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/http-client@1.4.0-rc.0...@ceramicnetwork/http-client@1.4.0-rc.1) (2021-09-18)
 
 **Note:** Version bump only for package @ceramicnetwork/http-client
 
@@ -11,7 +11,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 
 
-# [1.3.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/http-client@1.2.1...@ceramicnetwork/http-client@1.3.0-rc.0) (2021-09-08)
+# [1.4.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/http-client@1.3.0...@ceramicnetwork/http-client@1.4.0-rc.0) (2021-09-17)
 
 
 ### Bug Fixes
@@ -70,6 +70,42 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * Revert "chore(release):" ([26ed474](https://github.com/ceramicnetwork/js-ceramic/commit/26ed474717edaf2a276d5ffba063054f5a12e5e2))
 
 
+
+
+
+# [1.3.0](/compare/@ceramicnetwork/http-client@1.3.0-rc.4...@ceramicnetwork/http-client@1.3.0) (2021-09-16)
+
+**Note:** Version bump only for package @ceramicnetwork/http-client
+
+
+
+
+
+# [1.3.0-rc.4](/compare/@ceramicnetwork/http-client@1.2.2...@ceramicnetwork/http-client@1.3.0-rc.4) (2021-09-16)
+
+
+### Features
+
+* **core,http-client:** Add 'publish' option to unpin command (#1706) 0ad204e, closes #1706
+
+
+
+
+
+# [1.3.0-rc.2](/compare/@ceramicnetwork/http-client@1.2.2...@ceramicnetwork/http-client@1.3.0-rc.2) (2021-09-16)
+
+
+### Features
+
+* **core,http-client:** Add 'publish' option to unpin command (#1706) 0ad204e, closes #1706
+
+
+
+
+
+## [1.2.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/http-client@1.2.1...@ceramicnetwork/http-client@1.2.2) (2021-09-14)
+
+**Note:** Version bump only for package @ceramicnetwork/http-client
 
 
 

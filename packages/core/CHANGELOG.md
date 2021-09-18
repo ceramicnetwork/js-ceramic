@@ -3,7 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-# [1.6.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@1.6.0-rc.0...@ceramicnetwork/core@1.6.0-rc.1) (2021-09-13)
+# [1.7.0-rc.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@1.7.0-rc.1...@ceramicnetwork/core@1.7.0-rc.2) (2021-09-18)
+
+
+### Bug Fixes
+
+* **ci:** minor fix for npm publish action along with dummy update in core to cause lerna to cause fresh RC to be published ([6bc4870](https://github.com/ceramicnetwork/js-ceramic/commit/6bc4870dac1dafb24ac0765f1142f8bcad5f00af))
+
+
+
+
+
+# [1.7.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@1.7.0-rc.0...@ceramicnetwork/core@1.7.0-rc.1) (2021-09-18)
 
 **Note:** Version bump only for package @ceramicnetwork/core
 
@@ -11,70 +22,77 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 
 
-# [1.6.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@1.5.0...@ceramicnetwork/core@1.6.0-rc.0) (2021-09-08)
+# [1.7.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@1.6.0...@ceramicnetwork/core@1.7.0-rc.0) (2021-09-17)
 
 
 ### Bug Fixes
 
-* **cli:** Add the peerlist for dev-unstable network ([#853](https://github.com/ceramicnetwork/js-ceramic/issues/853)) ([69ccb00](https://github.com/ceramicnetwork/js-ceramic/commit/69ccb002d2a5f8d11491194801ecdcaaba021847))
 * **cli:** Allow large requests to http API ([#1324](https://github.com/ceramicnetwork/js-ceramic/issues/1324)) ([714922d](https://github.com/ceramicnetwork/js-ceramic/commit/714922dfb9ea40097f71b71fa3f57d2895f775fa))
-* **common:** Don't serialize null state fields ([#867](https://github.com/ceramicnetwork/js-ceramic/issues/867)) ([51b7375](https://github.com/ceramicnetwork/js-ceramic/commit/51b737542dc64cd3feac8af6c22fa32a81a48c8a))
-* **common, logger:** Clean up dependencies ([#1164](https://github.com/ceramicnetwork/js-ceramic/issues/1164)) ([191ad31](https://github.com/ceramicnetwork/js-ceramic/commit/191ad310b87ac9aba97bb84b122908337f35aa11))
 * **core:** Actively fail anchor if applying anchor commit fails 3 times in a row ([35dae9d](https://github.com/ceramicnetwork/js-ceramic/commit/35dae9da8adbf11fdce9ee2327ffab49f75189bd))
 * **core:** Add information for validating transactions on rinkeby ([#1510](https://github.com/ceramicnetwork/js-ceramic/issues/1510)) ([9a4cd0b](https://github.com/ceramicnetwork/js-ceramic/commit/9a4cd0bceea6e8acf9af3622f472259025481f26))
-* **core:** Add ipfs timeout everywhere we get from the dag ([#886](https://github.com/ceramicnetwork/js-ceramic/issues/886)) ([e6d5e1b](https://github.com/ceramicnetwork/js-ceramic/commit/e6d5e1b20b82c9a59b67ce0f7cec3800fa71d3a9))
 * **core:** Add retry logic when applying anchor commits ([#1393](https://github.com/ceramicnetwork/js-ceramic/issues/1393)) ([881d7f0](https://github.com/ceramicnetwork/js-ceramic/commit/881d7f0f17de820290ba6b5b7f4b19e00d2eed6c))
+* **core:** allow cas internal url ([#1723](https://github.com/ceramicnetwork/js-ceramic/issues/1723)) ([f5e38f1](https://github.com/ceramicnetwork/js-ceramic/commit/f5e38f19f20a4b9aa1b29bafc9eff4d01e326e9c))
+* **core:** allow cas internal url ([#1723](https://github.com/ceramicnetwork/js-ceramic/issues/1723)) ([fb4c43d](https://github.com/ceramicnetwork/js-ceramic/commit/fb4c43d9918197cd697cea3101780f5f8871d420))
 * **core:** Always subscribe to pubsub once on startup ([#1338](https://github.com/ceramicnetwork/js-ceramic/issues/1338)) ([b46c0a0](https://github.com/ceramicnetwork/js-ceramic/commit/b46c0a0cee01cb1076a7a271ff63426e357a446f))
-* **core:** Cache providers per network ([#1262](https://github.com/ceramicnetwork/js-ceramic/issues/1262)) ([05aba6f](https://github.com/ceramicnetwork/js-ceramic/commit/05aba6ff8638c6a1045505c57c072610566c4b1e))
-* **core:** Cannot call ipfs.block.stat on an IPLD path ([#728](https://github.com/ceramicnetwork/js-ceramic/issues/728)) ([c756134](https://github.com/ceramicnetwork/js-ceramic/commit/c7561344c619f72a243d1f27978393830bf49f56))
+* **core:** check for cas url equality ([#1725](https://github.com/ceramicnetwork/js-ceramic/issues/1725)) ([d2ac5db](https://github.com/ceramicnetwork/js-ceramic/commit/d2ac5dbbf7fb1f336b0bee4a4a5ce15fbc7db7d2))
+* **core:** check for cas url equality ([#1725](https://github.com/ceramicnetwork/js-ceramic/issues/1725)) ([67db99e](https://github.com/ceramicnetwork/js-ceramic/commit/67db99e2b70a01d5dbf5dd61286b54f0eeb0acad))
 * **core:** Continue polling anchor service even after error ([10719e7](https://github.com/ceramicnetwork/js-ceramic/commit/10719e7c6298cc7d36bea35e3f134c2b494e3e09))
 * **core:** convert pubsub seqno to string ([#1543](https://github.com/ceramicnetwork/js-ceramic/issues/1543)) ([a96d932](https://github.com/ceramicnetwork/js-ceramic/commit/a96d932219367e3d546c217f01d7c3b22ac4402e))
-* **core:** Dedupe pubsub messages in dispatcher ([#846](https://github.com/ceramicnetwork/js-ceramic/issues/846)) ([fbb0f37](https://github.com/ceramicnetwork/js-ceramic/commit/fbb0f3700ed89a1d398268011c084d1ca88662cb))
 * **core:** Disable ajv strictTypes and strictTuples log warnings ([#1471](https://github.com/ceramicnetwork/js-ceramic/issues/1471)) ([d3c817d](https://github.com/ceramicnetwork/js-ceramic/commit/d3c817d667874bbe08b78ae5e07dbda404750906))
-* **core:** Don't delete message key from pubsub system object ([#855](https://github.com/ceramicnetwork/js-ceramic/issues/855)) ([3b77db1](https://github.com/ceramicnetwork/js-ceramic/commit/3b77db12f02f03ab8cff87ec04f9442a0bd0cc01))
-* **core:** Don't erroneously set anchorStatus to FAILED when a later CID is anchored instead of an earlier one ([#839](https://github.com/ceramicnetwork/js-ceramic/issues/839)) ([aa961f0](https://github.com/ceramicnetwork/js-ceramic/commit/aa961f035617f4082288dd32edc241fb400cd04a))
 * **core:** Don't refetch CID from IPFS when re-applying commits already in the log ([#1422](https://github.com/ceramicnetwork/js-ceramic/issues/1422)) ([b8a941c](https://github.com/ceramicnetwork/js-ceramic/commit/b8a941c9941b1c70473f3fd9f1497aaaff0d248d))
-* **core:** Don't resubscribe to pubsub if using internal ipfs ([#854](https://github.com/ceramicnetwork/js-ceramic/issues/854)) ([24af0c2](https://github.com/ceramicnetwork/js-ceramic/commit/24af0c29d29d4a45cf4580fdee3938495a6475d9))
 * **core:** Don't retry anchors indefinitely on error ([#1438](https://github.com/ceramicnetwork/js-ceramic/issues/1438)) ([69f4993](https://github.com/ceramicnetwork/js-ceramic/commit/69f499325157983ca14539f4f34c4497c4e47f07))
 * **core:** Don't submit an anchor request for an AnchorCommit ([#1474](https://github.com/ceramicnetwork/js-ceramic/issues/1474)) ([356775f](https://github.com/ceramicnetwork/js-ceramic/commit/356775f9295a3130e7aa99783eb990ef19e02e02))
-* **core:** Don't update document state before applying anchor record ([#714](https://github.com/ceramicnetwork/js-ceramic/issues/714)) ([294ed7c](https://github.com/ceramicnetwork/js-ceramic/commit/294ed7c1d065d2514d59f8f6116d17204ef64572))
 * **core:** Don't update stream state for changes to anchor status of commits that are no longer the tip ([94ac4a7](https://github.com/ceramicnetwork/js-ceramic/commit/94ac4a703b0593c8ecfcc10c02ff55de003dc1a8))
-* **core:** Encode network name into pin store directory name ([#775](https://github.com/ceramicnetwork/js-ceramic/issues/775)) ([2572f28](https://github.com/ceramicnetwork/js-ceramic/commit/2572f286baeb8ba41f7349b93d1399f432b420c8))
-* **core:** Fail loading document at a commit if it is rejected by conflict resolution with known state of the document ([#634](https://github.com/ceramicnetwork/js-ceramic/issues/634)) ([5da5ac5](https://github.com/ceramicnetwork/js-ceramic/commit/5da5ac5251d9348699038f42857ff6bc4632fa41))
-* **core:** Fix error handling for failed anchors ([#1221](https://github.com/ceramicnetwork/js-ceramic/issues/1221)) ([6ecf04c](https://github.com/ceramicnetwork/js-ceramic/commit/6ecf04c8993dfb7a92879ab0b202750b24f6a712))
-* **core:** Fix flaky test ([#852](https://github.com/ceramicnetwork/js-ceramic/issues/852)) ([d1b6a64](https://github.com/ceramicnetwork/js-ceramic/commit/d1b6a64fcb2cfc30bd0083afc077d85ea1986570))
 * **core:** Fix startup of EthereumAnchorValidator ([#1512](https://github.com/ceramicnetwork/js-ceramic/issues/1512)) ([e8b87fa](https://github.com/ceramicnetwork/js-ceramic/commit/e8b87fa7c3b774d2116b6946041a5e37280ed51f))
-* **core:** Fix test by waiting long enough for new anchor timestamp ([#1136](https://github.com/ceramicnetwork/js-ceramic/issues/1136)) ([82fef5d](https://github.com/ceramicnetwork/js-ceramic/commit/82fef5d4245b27e4534682a8a16f40158211d2b3))
-* **core:** Fully process incoming tips on first document load ([#862](https://github.com/ceramicnetwork/js-ceramic/issues/862)) ([5ba33ca](https://github.com/ceramicnetwork/js-ceramic/commit/5ba33ca381f296c6876a0ccd3a0f100bbf307177))
-* **core:** Generate Query id differently ([#1063](https://github.com/ceramicnetwork/js-ceramic/issues/1063)) ([c58f114](https://github.com/ceramicnetwork/js-ceramic/commit/c58f114253d50464c784e909c40dd43f89be72fb))
-* **core:** Honor ethereumRpcUrl config option ([#830](https://github.com/ceramicnetwork/js-ceramic/issues/830)) ([a440b59](https://github.com/ceramicnetwork/js-ceramic/commit/a440b59ec692313e72bf3f3e15abb5b90cdef5e9))
-* **core:** Improve pubsub resubscribe logic ([#857](https://github.com/ceramicnetwork/js-ceramic/issues/857)) ([999cf6d](https://github.com/ceramicnetwork/js-ceramic/commit/999cf6d91b5016e5f9f636a0497c37b15e675f9f))
 * **core:** Increase max anchor poll timeout ([#1377](https://github.com/ceramicnetwork/js-ceramic/issues/1377)) ([37d6540](https://github.com/ceramicnetwork/js-ceramic/commit/37d65403461d8edbeacaff498bd1a09dee750290))
 * **core:** Increase timeout to stabilize test ([#1665](https://github.com/ceramicnetwork/js-ceramic/issues/1665)) ([cd36378](https://github.com/ceramicnetwork/js-ceramic/commit/cd3637810e646ef5ab3d66e36a7e67679a1f3947))
-* **core:** Init TaskQueue differently in IncomingChannel ([#1065](https://github.com/ceramicnetwork/js-ceramic/issues/1065)) ([d0e9af0](https://github.com/ceramicnetwork/js-ceramic/commit/d0e9af036838930ee8713697bf6c319662d9f23d))
 * **core:** ipfs subscribe, pin version ([#1454](https://github.com/ceramicnetwork/js-ceramic/issues/1454)) ([fc9c5e7](https://github.com/ceramicnetwork/js-ceramic/commit/fc9c5e77ef84be448744b92fb35d5e3bf06f264d))
 * **core:** Only poll for anchors at startup, don't submit a new request ([#1437](https://github.com/ceramicnetwork/js-ceramic/issues/1437)) ([ec17446](https://github.com/ceramicnetwork/js-ceramic/commit/ec17446b0472942f4e4bcfeb8037aebe5ce63525))
 * **core:** only sync pinned streams the first time they are loaded ([#1417](https://github.com/ceramicnetwork/js-ceramic/issues/1417)) ([76be682](https://github.com/ceramicnetwork/js-ceramic/commit/76be6820fa2b5db49ede38b6cf20a9bee2702928))
 * **core:** Optimize commit application to minimize calls to IPFS ([#1528](https://github.com/ceramicnetwork/js-ceramic/issues/1528)) ([75ee50e](https://github.com/ceramicnetwork/js-ceramic/commit/75ee50eb7ec988afdab81aa23a9f792fb5c7602c))
 * **core:** Periodically publish keepalive pubsub message ([#1634](https://github.com/ceramicnetwork/js-ceramic/issues/1634)) ([79803ef](https://github.com/ceramicnetwork/js-ceramic/commit/79803ef46b4c5d8f296cb72b6a256a2ee3f297a5))
 * **core:** Properly cache IPFS lookups with paths ([#1560](https://github.com/ceramicnetwork/js-ceramic/issues/1560)) ([ef9956d](https://github.com/ceramicnetwork/js-ceramic/commit/ef9956d9c88a2d28245c0c6709892383954ab20e))
-* **core:** Properly ignore old FAILED anchor responses ([#844](https://github.com/ceramicnetwork/js-ceramic/issues/844)) ([9e4b5d6](https://github.com/ceramicnetwork/js-ceramic/commit/9e4b5d6fb2e710011e930d75f00d2e786d66dde6))
 * **core:** Remove loading inner CID from SignedCommits in ConflictResolution.findIndex ([#1491](https://github.com/ceramicnetwork/js-ceramic/issues/1491)) ([d1b021c](https://github.com/ceramicnetwork/js-ceramic/commit/d1b021ce7d6d776cfa820bf693d7767dc966f9be)), closes [#1434](https://github.com/ceramicnetwork/js-ceramic/issues/1434)
+* **core,http-client:** Add setter for 'did' property on CeramicApi implmentations ([#1391](https://github.com/ceramicnetwork/js-ceramic/issues/1391)) ([700221e](https://github.com/ceramicnetwork/js-ceramic/commit/700221e61ee3a1f3deb03766fffde49da12f8053))
+* **store:** web browsers don't have access to fs ([#1273](https://github.com/ceramicnetwork/js-ceramic/issues/1273)) ([2301e79](https://github.com/ceramicnetwork/js-ceramic/commit/2301e79248234c1e3dc60af9730473c3b02e7b88))
+* **stream-caip10-link:** better genesis determinism ([#1519](https://github.com/ceramicnetwork/js-ceramic/issues/1519)) ([8b8adce](https://github.com/ceramicnetwork/js-ceramic/commit/8b8adcea0a5852dc032ec10455c84ad406bce748))
+* **stream-caip10-link:** use lowercase in caip10-link genesis ([#1718](https://github.com/ceramicnetwork/js-ceramic/issues/1718)) ([c38098a](https://github.com/ceramicnetwork/js-ceramic/commit/c38098af66220912d01214e965392996d308c14f))
+* **stream-caip10-link:** use lowercase in caip10-link genesis ([#1718](https://github.com/ceramicnetwork/js-ceramic/issues/1718)) ([ff0e99f](https://github.com/ceramicnetwork/js-ceramic/commit/ff0e99fcf6167e8ca3e36217935bfd673abdf198))
+* **stream-caip10-link:** use lowercase in caip10-link genesis ([#1718](https://github.com/ceramicnetwork/js-ceramic/issues/1718)) ([04f977f](https://github.com/ceramicnetwork/js-ceramic/commit/04f977f315592b4b0f7590c9abcb67409c212adf))
+* accept multiple pubsub responses ([#1348](https://github.com/ceramicnetwork/js-ceramic/issues/1348)) ([fa2d72a](https://github.com/ceramicnetwork/js-ceramic/commit/fa2d72a5790d5994b82aeedd131fccf1b7641320))
+* **cli:** Add the peerlist for dev-unstable network ([#853](https://github.com/ceramicnetwork/js-ceramic/issues/853)) ([69ccb00](https://github.com/ceramicnetwork/js-ceramic/commit/69ccb002d2a5f8d11491194801ecdcaaba021847))
+* **core:** Cache providers per network ([#1262](https://github.com/ceramicnetwork/js-ceramic/issues/1262)) ([05aba6f](https://github.com/ceramicnetwork/js-ceramic/commit/05aba6ff8638c6a1045505c57c072610566c4b1e))
+* **core:** Fix error handling for failed anchors ([#1221](https://github.com/ceramicnetwork/js-ceramic/issues/1221)) ([6ecf04c](https://github.com/ceramicnetwork/js-ceramic/commit/6ecf04c8993dfb7a92879ab0b202750b24f6a712))
+* Fix tests by using node environment for jest ([#1212](https://github.com/ceramicnetwork/js-ceramic/issues/1212)) ([0f04006](https://github.com/ceramicnetwork/js-ceramic/commit/0f04006098f9028c6750c9920c4b3af758b71235))
+* **common:** Don't serialize null state fields ([#867](https://github.com/ceramicnetwork/js-ceramic/issues/867)) ([51b7375](https://github.com/ceramicnetwork/js-ceramic/commit/51b737542dc64cd3feac8af6c22fa32a81a48c8a))
+* **common, logger:** Clean up dependencies ([#1164](https://github.com/ceramicnetwork/js-ceramic/issues/1164)) ([191ad31](https://github.com/ceramicnetwork/js-ceramic/commit/191ad310b87ac9aba97bb84b122908337f35aa11))
+* **core:** Add ipfs timeout everywhere we get from the dag ([#886](https://github.com/ceramicnetwork/js-ceramic/issues/886)) ([e6d5e1b](https://github.com/ceramicnetwork/js-ceramic/commit/e6d5e1b20b82c9a59b67ce0f7cec3800fa71d3a9))
+* **core:** Cannot call ipfs.block.stat on an IPLD path ([#728](https://github.com/ceramicnetwork/js-ceramic/issues/728)) ([c756134](https://github.com/ceramicnetwork/js-ceramic/commit/c7561344c619f72a243d1f27978393830bf49f56))
+* **core:** Dedupe pubsub messages in dispatcher ([#846](https://github.com/ceramicnetwork/js-ceramic/issues/846)) ([fbb0f37](https://github.com/ceramicnetwork/js-ceramic/commit/fbb0f3700ed89a1d398268011c084d1ca88662cb))
+* **core:** Don't delete message key from pubsub system object ([#855](https://github.com/ceramicnetwork/js-ceramic/issues/855)) ([3b77db1](https://github.com/ceramicnetwork/js-ceramic/commit/3b77db12f02f03ab8cff87ec04f9442a0bd0cc01))
+* **core:** Don't erroneously set anchorStatus to FAILED when a later CID is anchored instead of an earlier one ([#839](https://github.com/ceramicnetwork/js-ceramic/issues/839)) ([aa961f0](https://github.com/ceramicnetwork/js-ceramic/commit/aa961f035617f4082288dd32edc241fb400cd04a))
+* **core:** Don't resubscribe to pubsub if using internal ipfs ([#854](https://github.com/ceramicnetwork/js-ceramic/issues/854)) ([24af0c2](https://github.com/ceramicnetwork/js-ceramic/commit/24af0c29d29d4a45cf4580fdee3938495a6475d9))
+* **core:** Don't update document state before applying anchor record ([#714](https://github.com/ceramicnetwork/js-ceramic/issues/714)) ([294ed7c](https://github.com/ceramicnetwork/js-ceramic/commit/294ed7c1d065d2514d59f8f6116d17204ef64572))
+* **core:** Encode network name into pin store directory name ([#775](https://github.com/ceramicnetwork/js-ceramic/issues/775)) ([2572f28](https://github.com/ceramicnetwork/js-ceramic/commit/2572f286baeb8ba41f7349b93d1399f432b420c8))
+* **core:** Fail loading document at a commit if it is rejected by conflict resolution with known state of the document ([#634](https://github.com/ceramicnetwork/js-ceramic/issues/634)) ([5da5ac5](https://github.com/ceramicnetwork/js-ceramic/commit/5da5ac5251d9348699038f42857ff6bc4632fa41))
+* **core:** Fix flaky test ([#852](https://github.com/ceramicnetwork/js-ceramic/issues/852)) ([d1b6a64](https://github.com/ceramicnetwork/js-ceramic/commit/d1b6a64fcb2cfc30bd0083afc077d85ea1986570))
+* **core:** Fix test by waiting long enough for new anchor timestamp ([#1136](https://github.com/ceramicnetwork/js-ceramic/issues/1136)) ([82fef5d](https://github.com/ceramicnetwork/js-ceramic/commit/82fef5d4245b27e4534682a8a16f40158211d2b3))
+* **core:** Fully process incoming tips on first document load ([#862](https://github.com/ceramicnetwork/js-ceramic/issues/862)) ([5ba33ca](https://github.com/ceramicnetwork/js-ceramic/commit/5ba33ca381f296c6876a0ccd3a0f100bbf307177))
+* **core:** Generate Query id differently ([#1063](https://github.com/ceramicnetwork/js-ceramic/issues/1063)) ([c58f114](https://github.com/ceramicnetwork/js-ceramic/commit/c58f114253d50464c784e909c40dd43f89be72fb))
+* **core:** Honor ethereumRpcUrl config option ([#830](https://github.com/ceramicnetwork/js-ceramic/issues/830)) ([a440b59](https://github.com/ceramicnetwork/js-ceramic/commit/a440b59ec692313e72bf3f3e15abb5b90cdef5e9))
+* **core:** Improve pubsub resubscribe logic ([#857](https://github.com/ceramicnetwork/js-ceramic/issues/857)) ([999cf6d](https://github.com/ceramicnetwork/js-ceramic/commit/999cf6d91b5016e5f9f636a0497c37b15e675f9f))
+* **core:** Init TaskQueue differently in IncomingChannel ([#1065](https://github.com/ceramicnetwork/js-ceramic/issues/1065)) ([d0e9af0](https://github.com/ceramicnetwork/js-ceramic/commit/d0e9af036838930ee8713697bf6c319662d9f23d))
+* **core:** Properly ignore old FAILED anchor responses ([#844](https://github.com/ceramicnetwork/js-ceramic/issues/844)) ([9e4b5d6](https://github.com/ceramicnetwork/js-ceramic/commit/9e4b5d6fb2e710011e930d75f00d2e786d66dde6))
 * **core:** respect pinned status on createDocument call ([#741](https://github.com/ceramicnetwork/js-ceramic/issues/741)) ([1361390](https://github.com/ceramicnetwork/js-ceramic/commit/1361390e26c4f8a7dfc052ad90078dfc9990fe4d))
 * **core:** Schema validation not enforced during update ([#817](https://github.com/ceramicnetwork/js-ceramic/issues/817)) ([7431fce](https://github.com/ceramicnetwork/js-ceramic/commit/7431fcea1a426f4bd68e461e4d2fdb27060bf509))
 * **core:** stablize the test for the atTime feature ([#1132](https://github.com/ceramicnetwork/js-ceramic/issues/1132)) ([e625a27](https://github.com/ceramicnetwork/js-ceramic/commit/e625a271e69bbbad564c679c425fd53439e6d516))
 * **core:** Use seconds for unix timstamp for inmemory anchors ([#1131](https://github.com/ceramicnetwork/js-ceramic/issues/1131)) ([3d4a98a](https://github.com/ceramicnetwork/js-ceramic/commit/3d4a98a60ad6c9bced3f191555f3e2d31a33c76a))
-* **core,http-client:** Add setter for 'did' property on CeramicApi implmentations ([#1391](https://github.com/ceramicnetwork/js-ceramic/issues/1391)) ([700221e](https://github.com/ceramicnetwork/js-ceramic/commit/700221e61ee3a1f3deb03766fffde49da12f8053))
-* **document:** Enforce schema when loading genesis record ([#472](https://github.com/ceramicnetwork/js-ceramic/issues/472)) ([37fc1e6](https://github.com/ceramicnetwork/js-ceramic/commit/37fc1e6c18feccbaf16ce60b711c611e5ba7aeb4))
-* **http-client:** reload cached documents ([#719](https://github.com/ceramicnetwork/js-ceramic/issues/719)) ([6bc7dbf](https://github.com/ceramicnetwork/js-ceramic/commit/6bc7dbff31eaccfdbcb960effd850f069eb0d538))
-* **store:** web browsers don't have access to fs ([#1273](https://github.com/ceramicnetwork/js-ceramic/issues/1273)) ([2301e79](https://github.com/ceramicnetwork/js-ceramic/commit/2301e79248234c1e3dc60af9730473c3b02e7b88))
-* **stream-caip10-link:** better genesis determinism ([#1519](https://github.com/ceramicnetwork/js-ceramic/issues/1519)) ([8b8adce](https://github.com/ceramicnetwork/js-ceramic/commit/8b8adcea0a5852dc032ec10455c84ad406bce748))
-* accept multiple pubsub responses ([#1348](https://github.com/ceramicnetwork/js-ceramic/issues/1348)) ([fa2d72a](https://github.com/ceramicnetwork/js-ceramic/commit/fa2d72a5790d5994b82aeedd131fccf1b7641320))
-* CID version fix ([#638](https://github.com/ceramicnetwork/js-ceramic/issues/638)) ([a4f4390](https://github.com/ceramicnetwork/js-ceramic/commit/a4f4390ea561e991cae93dd26b9b122d10caef32))
 * Decrease pubsub resubscribe timeout ([#858](https://github.com/ceramicnetwork/js-ceramic/issues/858)) ([10bc991](https://github.com/ceramicnetwork/js-ceramic/commit/10bc9911ee3356370f5e1603b85e32ebe86ac5c6))
+* **http-client:** reload cached documents ([#719](https://github.com/ceramicnetwork/js-ceramic/issues/719)) ([6bc7dbf](https://github.com/ceramicnetwork/js-ceramic/commit/6bc7dbff31eaccfdbcb960effd850f069eb0d538))
+* CID version fix ([#638](https://github.com/ceramicnetwork/js-ceramic/issues/638)) ([a4f4390](https://github.com/ceramicnetwork/js-ceramic/commit/a4f4390ea561e991cae93dd26b9b122d10caef32))
 * fix merged conflicts ([ca20353](https://github.com/ceramicnetwork/js-ceramic/commit/ca20353da20038fdf6aab710f1a518bd0bd21e4d))
-* Fix tests by using node environment for jest ([#1212](https://github.com/ceramicnetwork/js-ceramic/issues/1212)) ([0f04006](https://github.com/ceramicnetwork/js-ceramic/commit/0f04006098f9028c6750c9920c4b3af758b71235))
 * Pin dag-jose contents ([#1451](https://github.com/ceramicnetwork/js-ceramic/issues/1451)) ([a598c10](https://github.com/ceramicnetwork/js-ceramic/commit/a598c10d77eba29877c6513eb8567972f6db83cf))
+* **document:** Enforce schema when loading genesis record ([#472](https://github.com/ceramicnetwork/js-ceramic/issues/472)) ([37fc1e6](https://github.com/ceramicnetwork/js-ceramic/commit/37fc1e6c18feccbaf16ce60b711c611e5ba7aeb4))
 * **test:** Increase stability of schema validation tests ([#469](https://github.com/ceramicnetwork/js-ceramic/issues/469)) ([28da783](https://github.com/ceramicnetwork/js-ceramic/commit/28da783f6c6ca29dc925152ce4c3c5fc6e3c0bdd))
 
 
@@ -178,6 +196,62 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * Revert "fix(core): Add 2 retries when loading CIDs from IPFS (#1334)" ([6101b0b](https://github.com/ceramicnetwork/js-ceramic/commit/6101b0b0bd341d7c8d13d0d77569c900e3401ba0)), closes [#1334](https://github.com/ceramicnetwork/js-ceramic/issues/1334)
 * Revert "chore(release):" ([26ed474](https://github.com/ceramicnetwork/js-ceramic/commit/26ed474717edaf2a276d5ffba063054f5a12e5e2))
 
+
+
+
+
+# [1.6.0](/compare/@ceramicnetwork/core@1.6.0-rc.4...@ceramicnetwork/core@1.6.0) (2021-09-16)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
+# [1.6.0-rc.4](/compare/@ceramicnetwork/core@1.5.1...@ceramicnetwork/core@1.6.0-rc.4) (2021-09-16)
+
+
+### Bug Fixes
+
+* **core:** allow cas internal url (#1723) f5e38f1, closes #1723
+* **core:** check for cas url equality (#1725) d2ac5db, closes #1725
+* **stream-caip10-link:** use lowercase in caip10-link genesis (#1718) ff0e99f, closes #1718
+
+
+### Features
+
+* **core:** Allow pinning/unpinning alongside CRUD operations in a single request (#1693) 3727337, closes #1693
+* **core,http-client:** Add 'publish' option to unpin command (#1706) 0ad204e, closes #1706
+
+
+
+
+
+# [1.6.0-rc.2](/compare/@ceramicnetwork/core@1.5.1...@ceramicnetwork/core@1.6.0-rc.2) (2021-09-16)
+
+
+### Bug Fixes
+
+* **core:** allow cas internal url (#1723) f5e38f1, closes #1723
+* **core:** check for cas url equality (#1725) d2ac5db, closes #1725
+* **stream-caip10-link:** use lowercase in caip10-link genesis (#1718) ff0e99f, closes #1718
+
+
+### Features
+
+* **core:** Allow pinning/unpinning alongside CRUD operations in a single request (#1693) 3727337, closes #1693
+* **core,http-client:** Add 'publish' option to unpin command (#1706) 0ad204e, closes #1706
+
+
+
+
+
+## [1.5.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@1.5.0...@ceramicnetwork/core@1.5.1) (2021-09-14)
+
+
+### Bug Fixes
+
+* **stream-caip10-link:** use lowercase in caip10-link genesis ([#1718](https://github.com/ceramicnetwork/js-ceramic/issues/1718)) ([04f977f](https://github.com/ceramicnetwork/js-ceramic/commit/04f977f315592b4b0f7590c9abcb67409c212adf))
 
 
 
