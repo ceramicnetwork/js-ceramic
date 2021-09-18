@@ -101,12 +101,13 @@ jobs:
             -H "Content-Type: application/json" \
             -d '
               {
-                "content":
-                {
-                  "title": "**Release Candidate Published",
-                  "description": "```$(git log -1 --pretty=%B)```",
-                  "color": 3581519
-                }
+                "embeds": [
+                  {
+                    "title": "**Release Candidate Published**",
+                    "description": "```$(git log -1 --pretty=%B)```",
+                    "color": 3581519
+                  }
+                ]
               }
             ') || exit 1
           echo $res
