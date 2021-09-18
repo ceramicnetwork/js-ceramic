@@ -99,11 +99,11 @@ jobs:
         run: |
           TITLE='**Release Candidate Published**'
           MESSAGE=$(git log -1 --pretty=%B)
-          echo TITLE
-          echo MESSAGE
+          echo $TITLE
+          echo $MESSAGE
           res=$(docker run --rm curlimages/curl curl -X POST ${{ secrets.DISCORD_RELEASE_WEBHOOK }} \
             -H "Content-Type: application/json" \
-            -d "{\"embeds\":[{\"title\":$TITLE,\"description\":\"\`\`\`$MESSAGE\`\`\`\",\"color\":3581519}]}" \
+            -d "{\"embeds\":[{\"title\":$TITLE,\"description\":\"```$MESSAGE```\",\"color\":3581519}]}" \
           ) || exit 1
           echo $res
           #if [[ $res != *"204"* ]]; then
