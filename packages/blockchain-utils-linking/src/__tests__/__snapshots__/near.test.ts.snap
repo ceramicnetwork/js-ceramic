@@ -1,54 +1,15 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Blockchain: NEAR authenticate create proof for mainnet 1`] = `"0x600a50df4927a4a232b7efab3551914a1f5321c4b1c87237716c9bee7c2430ba"`;
-
-exports[`Blockchain: NEAR authenticate create proof for near-mainnet 1`] = `"0xa232a2a0bd58dc11b9c377ed0fd64309419ba245459833a006e45ba4159d8ac6"`;
-
-exports[`Blockchain: NEAR authenticate create proof for testnet 1`] = `"0xbe16c8698eb116de32f2e366ae9e4c77a86635310f7037ef73fd205e68b62a6e"`;
-
-exports[`Blockchain: NEAR authenticate entropy replication for mainnet 1`] = `"0xab365bdcdc650846b80827432ba4e91824310184f93fb2212ff004a1fe3d34b3"`;
-
-exports[`Blockchain: NEAR authenticate entropy replication for mainnet 2`] = `"0xab365bdcdc650846b80827432ba4e91824310184f93fb2212ff004a1fe3d34b3"`;
-
-exports[`Blockchain: NEAR authenticate entropy replication for near-mainnet 1`] = `"0x694092aec5edc7aaa96b55bdb285af014976fcf21912d6e96b35aaac2b997889"`;
-
-exports[`Blockchain: NEAR authenticate entropy replication for near-mainnet 2`] = `"0x694092aec5edc7aaa96b55bdb285af014976fcf21912d6e96b35aaac2b997889"`;
-
-exports[`Blockchain: NEAR createLink create proof for mainnet 1`] = `
-Object {
-  "account": "did.near@near:mainnet",
-  "message": "Link this account to your identity
-
-did:3:bafysdfwefwe 
-Timestamp: 666",
-  "signature": "zl/jAJxcMKMtHp+kBeQ6C/JW7OhPODR8LwToTLjXfcEYN3/0EoouhxuimPZ4ZBX26sp64cFQG3wpdJdx7BiCAQ==",
-  "timestamp": 666,
-  "type": "near",
-  "version": 2,
-}
-`;
-
-exports[`Blockchain: NEAR createLink create proof for near-mainnet 1`] = `
-Object {
-  "account": "YgaDUT7OqomE95jEp0ECZe6NYiEPyzexFI2+Op8gR6w=@near:near-mainnet",
-  "message": "Link this account to your identity
-
-did:3:bafysdfwefwe 
-Timestamp: 666",
-  "signature": "aYlkldpe/zuhtzQxLq+lgZmpLfYGfEVoBTBecFxqvBti4/oEOnpinvC9o5oi75FB73lWAiTZBRgDmD5bxKYnBA==",
-  "timestamp": 666,
-  "version": 2,
-}
-`;
+exports[`Blockchain: NEAR authenticate create proof for testnet 1`] = `"885b8f016c6360641ac9ad47d24e21a7d9db3d6d04febe433bfa67c0c0ef7d67a709254235b7476d45aac11c41ecbcf89e5c407c5fa7d91c37fd597fff436107"`;
 
 exports[`Blockchain: NEAR createLink create proof for testnet 1`] = `
 Object {
-  "account": "crustykitty.testnet@near:testnet",
+  "account": "7beiSVU32rh5uqUcGqY3JfkB3y9p6Pc2Q1GFgcrtK65q@near:testnet",
   "message": "Link this account to your identity
 
 did:3:bafysdfwefwe 
 Timestamp: 666",
-  "signature": "zl/jAJxcMKMtHp+kBeQ6C/JW7OhPODR8LwToTLjXfcEYN3/0EoouhxuimPZ4ZBX26sp64cFQG3wpdJdx7BiCAQ==",
+  "signature": "XJFze3Uz3o/AkljTe1vubjsBsFMKq6vQMd8gUegO8W3oN7MbcapNUpjuGhanShsvSSy2tCl6Itp/ESjn9DlvAg",
   "timestamp": 666,
   "type": "near",
   "version": 2,

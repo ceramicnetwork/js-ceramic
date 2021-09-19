@@ -1,47 +1,44 @@
 import { AccountID } from 'caip'
 import { AuthProvider } from './auth-provider'
 import { getConsentMessage, LinkProof } from './util'
-import { hash } from '@stablelib/sha256'
 import * as uint8arrays from 'uint8arrays'
+import * as nearApiJs from 'near-api-js'
+import crypto from 'crypto'
 
-const stringEncode = (str: string): Uint8Array => {
-  return uint8arrays.fromString((str), 'base64pad')
-}
-
-const makeUint8 = (str: string): Uint8Array => {
-    const utf8Encode = new TextEncoder()
-    return utf8Encode.encode(str)
+const getSignature = async (signer: nearApiJs.Signer, accountId: string, message: any, networkId: string): Promise<string> => {
+    const signed = await signer.signMessage(message, accountId, networkId);
+    const messageSignature = uint8arrays.toString(signed.signature, 'base64');
+    return messageSignature    
 }
 
 export class NearAuthProvider implements AuthProvider {
   readonly isAuthProvider = true
 
     constructor(
-      private readonly keyPair: any,
-      private readonly address: string,
+      private readonly near: any,
+      private readonly accountName: string,
       private readonly chainRef: string) 
       {}
 
     async authenticate(message: string): Promise<string>  {
-        const encodedMsg = stringEncode(message)
-        const { signature } = await this.keyPair.sign(encodedMsg)
-        const digest = hash(signature)
-        return `0x${uint8arrays.toString(digest, 'base16')}`
+        const key = await this.near.connection.signer.keyStore.getKey(this.chainRef, this.accountName);
+        const signer = await nearApiJs.InMemorySigner.fromKeyPair(this.chainRef, this.accountName, key);
+        const hash = crypto.createHash('sha256').update(message).digest();
+        const { signature } = await signer.signMessage(hash, this.accountName, this.chainRef);
+        return uint8arrays.toString(signature, 'base16');
     }
 
     async createLink(did: string): Promise<LinkProof> {
-       
-        const { message, timestamp } = getConsentMessage(did, true)
-        const altered = makeUint8(message)
-        const { signature } = await this.keyPair.sign(altered)
-        const sig = uint8arrays.toString(signature, 'base64pad')
-        const account = await this.accountId()
-
+        const key = await this.near.connection.signer.keyStore.getKey(this.chainRef, this.accountName);
+        const signer = await nearApiJs.InMemorySigner.fromKeyPair(this.chainRef, this.accountName, key);        
+        const { message, timestamp } = getConsentMessage(did, true);
+        const signature = await getSignature(signer, this.accountName, message, this.chainRef);
+        const account = await this.accountId();
         const proof = {
             version: 2,
             type: 'near',
             message,
-            signature: sig,
+            signature,
             account: account.toString(),
             timestamp,
         }
@@ -49,13 +46,17 @@ export class NearAuthProvider implements AuthProvider {
     }
 
     async accountId(): Promise<AccountID> {
+        const key = await this.near.connection.signer.keyStore.getKey(this.chainRef, this.accountName);
+        const signer = await nearApiJs.InMemorySigner.fromKeyPair(this.chainRef, this.accountName, key);
+        const publicKey = await signer.getPublicKey(this.accountName, this.chainRef)
+        const address = uint8arrays.toString(publicKey.data, 'base58btc')
         return new AccountID({
-            address: this.address,
+            address: address,
             chainId: `near:${this.chainRef}`,
         })
     }
 
     withAddress(address: string): AuthProvider {
-        return new NearAuthProvider(this.keyPair, address, this.chainRef)
+        return new NearAuthProvider(this.near, address, this.chainRef)
     }
 }
