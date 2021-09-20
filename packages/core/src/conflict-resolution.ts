@@ -1,6 +1,5 @@
 import type CID from 'cids'
 import {
-  AnchorCommit,
   AnchorProof,
   AnchorStatus,
   AnchorValidator,
@@ -163,6 +162,14 @@ export class HistoryLog {
     const next = this.items.slice(start, end)
     return new HistoryLog(this.dispatcher, next)
   }
+
+  toCommitData(): Promise<CommitData[]> {
+    return Promise.all(
+        this.items.map(
+            async (logEntry) => await Utils.getCommitData(this.dispatcher, logEntry.cid, logEntry.timestamp)
+        )
+    )
+  }
 }
 
 /**
@@ -188,7 +195,7 @@ export async function fetchLog(
     return []
   }
   // Fetch expanded `CommitData` using the CID and running timestamp
-  const nextCommitData = await Utils.getCommitData({ cid: cid, timestamp: timestamp }, dispatcher)
+  const nextCommitData = await Utils.getCommitData(dispatcher, cid, timestamp)
   // Update the running timestamp if it was updated via an anchor commit fetch
   timestamp = nextCommitData.timestamp;
   const prevCid: CID = nextCommitData.commit.prev
@@ -233,14 +240,13 @@ export class ConflictResolution {
   /**
    * Helper function for applying a single commit to a StreamState.
    * TODO: Most of this logic should be pushed down into the StreamHandler so it can be StreamType-specific.
-   * @param entry - the commit to apply
+   * @param commitData - the commit to apply
    * @param state - the state to apply the commit to
    * @param handler - the handler for the streamtype
    * @private
    */
-  private async applyLogEntryToState<T extends Stream>(
-    entry: CommitData, state: StreamState, handler: StreamHandler<T>): Promise<StreamState> {
-    const commitData = await Utils.getCommitData(entry, this.dispatcher)
+  private async applyCommitDataToState<T extends Stream>(
+    commitData: CommitData, state: StreamState, handler: StreamHandler<T>): Promise<StreamState> {
     if (StreamUtils.isAnchorCommitData(commitData)) {
       // It's an anchor commit
       // TODO: Anchor validation should be done by the StreamHandler as part of applying the anchor commit
@@ -273,14 +279,13 @@ export class ConflictResolution {
     // `fetchLog` provides the timestamps.
     if (state && state.log.length === 1) {
       const timestamp = unappliedCommits[0].timestamp
-      const genesis = await Utils.getCommitData(state.log[0], this.dispatcher)
-      genesis.timestamp = timestamp
+      const genesis = await Utils.getCommitData(this.dispatcher, state.log[0].cid, timestamp)
       await handler.applyCommit(genesis, this.context)
     }
 
     for (const entry of unappliedCommits) {
       try {
-        state = await this.applyLogEntryToState(entry, state, handler)
+        state = await this.applyCommitDataToState(entry, state, handler)
       } catch(err) {
         const streamId = state ? StreamUtils.streamIdFromState(state).toString() : null
         this.context.loggerProvider.getDiagnosticsLogger().warn(
@@ -319,7 +324,7 @@ export class ConflictResolution {
       // log already applied
       return null
     }
-    const commitData = await Utils.getCommitData(unappliedCommits[0], this.dispatcher)
+    const commitData = unappliedCommits[0]
     if (commitData.commit.prev.equals(tip)) {
       // the new log starts where the previous one ended
       return this.applyLogToState(handler, unappliedCommits, cloneDeep(initialState), false, opts)
@@ -328,7 +333,8 @@ export class ConflictResolution {
     // we have a conflict since prev is in the log of the local state, but isn't the tip
     // BEGIN CONFLICT RESOLUTION
     const conflictIdx = initialStateLog.findIndex(commitData.commit.prev) + 1
-    const canonicalLog = initialStateLog.items
+    const canonicalLog = await initialStateLog.toCommitData()
+    // The conflict index applies equivalently to the CommitData array derived from the canonical state log
     const localLog = canonicalLog.splice(conflictIdx)
     // Compute state up till conflictIdx
     const state: StreamState = await this.applyLogToState(handler, canonicalLog, null, false, opts)
@@ -364,7 +370,7 @@ export class ConflictResolution {
    */
   async verifyLoneGenesis(state: StreamState) {
     const handler = this.handlers.get(state.type)
-    const genesis = await Utils.getCommitData(state.log[0], this.dispatcher)
+    const genesis = await Utils.getCommitData(this.dispatcher, state.log[0].cid, state.log[0].timestamp)
     await handler.applyCommit(genesis, this.context)
   }
 
@@ -392,7 +398,8 @@ export class ConflictResolution {
 
     // If the requested commit is included in the log, but isn't the most recent commit, we need
     // to reset the state to the state at the requested commit.
-    const resetLog = baseStateLog.slice(0, commitIndex + 1).items
+    // The calculated commit index applies equivalently to the CommitData array derived from the base state log
+    const resetLog = await baseStateLog.slice(0, commitIndex + 1).toCommitData()
     const handler = this.handlers.get(initialState.type)
     return this.applyLogToState(handler, resetLog, null, false, opts)
   }

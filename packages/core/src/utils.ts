@@ -1,17 +1,13 @@
 import Ajv from 'ajv'
 import addFormats from 'ajv-formats'
-import { Memoize } from 'typescript-memoize'
+import {Memoize} from 'typescript-memoize'
 
-import {
-  CommitData,
-  CommitType,
-  StreamUtils,
-} from '@ceramicnetwork/common'
+import {CommitData, CommitType, StreamUtils,} from '@ceramicnetwork/common'
 
-import type { TileDocument } from '@ceramicnetwork/stream-tile'
-import { Dispatcher } from './dispatcher'
-import cloneDeep from 'lodash.clonedeep'
+import type {TileDocument} from '@ceramicnetwork/stream-tile'
+import {Dispatcher} from './dispatcher'
 import StreamID from "streamid";
+import type CID from 'cids'
 
 /**
  * Various utility functions
@@ -81,34 +77,30 @@ export default class Utils {
    * Return expanded `CommitData` with commit and JWS envelope or anchor proof/timestamp, if applicable and not already
    * present
    */
-  static async getCommitData(commitData: CommitData, dispatcher: Dispatcher, streamId?: StreamID): Promise<CommitData> {
-    // Merge updates retrieved below with a clone of the original `CommitData` so that the stream state is not affected
-    // when additional data is added to the structure.
-    const updatedCommitData = cloneDeep(commitData)
-    if (!updatedCommitData.commit) {
-      const commit = await dispatcher.retrieveCommit(commitData.cid, streamId)
-      if (!commit) throw new Error(`No commit found for CID ${commitData.cid.toString()}`)
-      if (StreamUtils.isSignedCommit(commit)) {
-        const linkedCommit = await dispatcher.retrieveCommit(commit.link, streamId)
-        if (!linkedCommit) throw new Error(`No commit found for CID ${commit.link.toString()}`)
-        updatedCommitData.type = CommitType.SIGNED
-        updatedCommitData.commit = linkedCommit
-        updatedCommitData.envelope = commit
-      } else if (StreamUtils.isAnchorCommit(commit)) {
-        updatedCommitData.type = CommitType.ANCHOR
-        updatedCommitData.commit = commit
-        updatedCommitData.proof = await dispatcher.retrieveFromIPFS(commit.proof)
-        updatedCommitData.timestamp = updatedCommitData.proof.blockTimestamp
-      } else {
-        // For all cases not using DagJWS for signing (e.g. CAIP-10 links)
-        updatedCommitData.type = CommitType.SIGNED
-        updatedCommitData.commit = commit
-      }
+  static async getCommitData(dispatcher: Dispatcher, cid: CID, timestamp?: number, streamId?: StreamID): Promise<CommitData> {
+    const commit = await dispatcher.retrieveCommit(cid, streamId)
+    if (!commit) throw new Error(`No commit found for CID ${cid.toString()}`)
+    const commitData: CommitData = { cid }
+    if (StreamUtils.isSignedCommit(commit)) {
+      const linkedCommit = await dispatcher.retrieveCommit(commit.link, streamId)
+      if (!linkedCommit) throw new Error(`No commit found for CID ${commit.link.toString()}`)
+      commitData.type = CommitType.SIGNED
+      commitData.commit = linkedCommit
+      commitData.envelope = commit
+    } else if (StreamUtils.isAnchorCommit(commit)) {
+      commitData.type = CommitType.ANCHOR
+      commitData.commit = commit
+      commitData.proof = await dispatcher.retrieveFromIPFS(commit.proof)
+      commitData.timestamp = commitData.proof.blockTimestamp
+    } else {
+      // For all cases not using DagJWS for signing (e.g. CAIP-10 links)
+      commitData.type = CommitType.SIGNED
+      commitData.commit = commit
     }
-    if ((commitData.type === CommitType.GENESIS) || !updatedCommitData.commit.prev) {
-      updatedCommitData.type = CommitType.GENESIS
+    if (!commitData.commit.prev) {
+      commitData.type = CommitType.GENESIS
     }
-    return updatedCommitData
+    return commitData
   }
 }
 
