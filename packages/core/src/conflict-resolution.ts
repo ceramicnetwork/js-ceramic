@@ -242,7 +242,7 @@ export class ConflictResolution {
    * TODO: Most of this logic should be pushed down into the StreamHandler so it can be StreamType-specific.
    * @param commitData - the commit to apply
    * @param state - the state to apply the commit to
-   * @param handler - the handler for the streamtype
+   * @param handler - the handler for the StreamType
    * @private
    */
   private async applyCommitDataToState<T extends Stream>(
@@ -389,7 +389,7 @@ export class ConflictResolution {
 
     // If 'commit' is not included in stream's log at this point, that means that conflict resolution
     // rejected it.
-    const commitIndex = await baseStateLog.findIndex(commitId.commit)
+    const commitIndex = baseStateLog.findIndex(commitId.commit)
     if (commitIndex < 0) {
       throw new Error(
         `Requested commit CID ${commitId.commit.toString()} not found in the log for stream ${commitId.baseID.toString()}`

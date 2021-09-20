@@ -1,11 +1,15 @@
 import Ajv from 'ajv'
 import addFormats from 'ajv-formats'
-import {Memoize} from 'typescript-memoize'
+import { Memoize } from 'typescript-memoize'
 
-import {CommitData, CommitType, StreamUtils,} from '@ceramicnetwork/common'
+import {
+  CommitData,
+  CommitType,
+  StreamUtils,
+} from '@ceramicnetwork/common'
 
-import type {TileDocument} from '@ceramicnetwork/stream-tile'
-import {Dispatcher} from './dispatcher'
+import type { TileDocument } from '@ceramicnetwork/stream-tile'
+import { Dispatcher } from './dispatcher'
 import StreamID from "streamid";
 import type CID from 'cids'
 
