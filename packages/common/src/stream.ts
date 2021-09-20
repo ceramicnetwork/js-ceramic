@@ -118,12 +118,9 @@ export interface LogEntry {
  * Includes additional fields that significantly reduce the number of IPFS lookups required while processing commits.
  * All fields besides the `cid` are optional because, in some cases, the CID is all that is available.
  */
-export interface CommitData {
-  cid: CID
-  type?: CommitType
-  commit?: any
+export interface CommitData extends LogEntry {
+  commit: any
   envelope?: DagJWS
-  timestamp?: number
   proof?: AnchorProof
   /**
    * Do not time-check a signature.
