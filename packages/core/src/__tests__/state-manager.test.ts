@@ -151,11 +151,9 @@ test('handleTip', async () => {
 })
 
 test('handleTip for commit already in log', async () => {
-  const newContent_1 = { foo: 'bar' }
-  const newContent_2 = { bar: 'baz' }
+  const newContent = { foo: 'bar' }
   const stream1 = await TileDocument.create<any>(ceramic, INITIAL_CONTENT, null, { anchor: false })
-  await stream1.update(newContent_1, null, { anchor: false })
-  await stream1.update(newContent_2, null, { anchor: false })
+  await stream1.update(newContent, null, { anchor: false })
 
   const ceramic2 = await createCeramic(ipfs)
   const retrieveCommitSpy = jest.spyOn(ceramic2.dispatcher, 'retrieveCommit')
