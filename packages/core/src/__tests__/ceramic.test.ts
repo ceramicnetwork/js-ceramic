@@ -163,10 +163,14 @@ describe('Ceramic integration', () => {
       await TestUtils.waitForState(
         stream3,
         2000,
-        (state) => StreamUtils.statesEqual(state, stream1.state),
+        (snapshot) => JSON.stringify(snapshot.content) == JSON.stringify(stream1.content),
         () => {
-          throw new Error(`streamtype3.state should equal streamtype1.state`)
+          throw new Error(`streamtype3.content should equal streamtype1.content`)
         }
+      )
+
+      expect(StreamUtils.serializeState(stream3.state)).toEqual(
+        StreamUtils.serializeState(stream1.state)
       )
 
       await ceramic1.close()
@@ -406,7 +410,7 @@ describe('Ceramic integration', () => {
     })
   })
 
-  it("Loading a CommitID and StreamID via multiquery considers CommitID tip", async () => {
+  it('Loading a CommitID and StreamID via multiquery considers CommitID tip', async () => {
     await withFleet(2, async ([ipfs1, ipfs2]) => {
       await swarmConnect(ipfs1, ipfs2)
       const ceramic1 = await createCeramic(ipfs1, false)
@@ -428,9 +432,12 @@ describe('Ceramic integration', () => {
 
       // Now load both the CommitID of the newest update and the base StreamID on node 2. The
       // base StreamID version of the stream returned should include the new commit.
-      const res = await ceramic2.multiQuery([{streamId: stream1.commitId}, {streamId: stream1.id}]);
-      const streamAtCommit = res[stream1.commitId.toString()] as TileDocument;
-      const streamCurrent = res[stream1.id.toString()] as TileDocument;
+      const res = await ceramic2.multiQuery([
+        { streamId: stream1.commitId },
+        { streamId: stream1.id },
+      ])
+      const streamAtCommit = res[stream1.commitId.toString()] as TileDocument
+      const streamCurrent = res[stream1.id.toString()] as TileDocument
       expect(streamAtCommit.content).toEqual(content2)
       expect(streamCurrent.content).toEqual(content2)
 

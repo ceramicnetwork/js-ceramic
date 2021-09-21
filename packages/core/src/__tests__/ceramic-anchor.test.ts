@@ -243,7 +243,7 @@ describe('Ceramic anchoring', () => {
     await TestUtils.waitForState(
       stream2,
       5000, // 5 second timeout
-      (state) => state.content == stream1.content,
+      (snapshot) => snapshot.content == stream1.content,
       () => expect(stream1.content).toEqual(stream2.content)
     )
     expect(stream1.state.log.length).toEqual(stream2.state.log.length)
@@ -285,22 +285,8 @@ describe('Ceramic anchoring', () => {
     const winningContent = update1ShouldWin ? newContent1 : newContent2
 
     await anchorService.anchor()
-    await TestUtils.waitForState(
-      stream2,
-      2000,
-      (state) => state.anchorStatus === AnchorStatus.ANCHORED,
-      () => {
-        throw new Error(`stream2 not anchored still`)
-      }
-    )
-    await TestUtils.waitForState(
-      stream1,
-      2000,
-      (state) => state.anchorStatus === AnchorStatus.ANCHORED,
-      () => {
-        throw new Error(`stream1 not anchored still`)
-      }
-    )
+    await stream2.waitForAnchor(2000)
+    await stream1.waitForAnchor(2000)
 
     // Only one of the updates should have won
     expect(stream1.state.log.length).toEqual(3)

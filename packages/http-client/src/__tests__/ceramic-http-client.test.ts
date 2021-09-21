@@ -22,6 +22,7 @@ const initial = {
       cid: FAKE_CID_1,
     },
   ],
+  content: { foo: 0 },
 } as unknown as StreamState
 const second = {
   ...initial,
@@ -32,6 +33,7 @@ const second = {
       cid: FAKE_CID_2,
     },
   ],
+  content: { foo: 1 },
 } as unknown as StreamState
 const streamId = new StreamID(0, FAKE_CID_1)
 
@@ -89,11 +91,12 @@ describe('applyCommit', () => {
       await TestUtils.waitForState(
         tile,
         1000,
-        (state) => StreamUtils.statesEqual(state, second),
+        (snapshot) => JSON.stringify(snapshot.content) == JSON.stringify(second.content),
         () => {
           throw new Error('Expect stream state to be updated')
         }
       )
+      expect(StreamUtils.serializeState(tile.state)).toEqual(StreamUtils.serializeState(second))
     })
   })
 })

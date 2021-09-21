@@ -148,20 +148,14 @@ class InMemoryAnchorService implements AnchorService, AnchorValidator {
           continue
         }
 
-        if (c.log.length < selected.log.length) {
-          this._failCandidate(c)
-        } else if (c.log.length > selected.log.length) {
-          this._failCandidate(selected)
+        if (c.log.length > selected.log.length) {
           selected = c
         } else {
           // If there are two conflicting candidates with the same log length, we must choose
           // which to anchor deterministically. We use the same arbitrary but deterministic strategy
           // that js-ceramic conflict resolution does: choosing the record whose CID is smaller
           if (c.cid.bytes < selected.cid.bytes) {
-            this._failCandidate(selected)
             selected = c
-          } else {
-            this._failCandidate(c)
           }
         }
       }

@@ -12,6 +12,7 @@ import getPort from 'get-port'
 import { createIPFS } from './create-ipfs'
 import { makeDID } from './make-did'
 import { DaemonConfig } from '../daemon-config'
+import InMemoryAnchorService from '@ceramicnetwork/core/lib/anchor/memory/in-memory-anchor-service'
 
 const seed = 'SEED'
 const TOPIC = '/ceramic'
@@ -90,20 +91,8 @@ describe('Ceramic interop: core <> http-client', () => {
    * @param doc
    */
   const anchorDoc = async (doc: Stream): Promise<void> => {
-    // TODO update this to only use public apis
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    const changeHandle = doc.state$
-      .pipe(
-        filter((state) =>
-          [AnchorStatus.ANCHORED, AnchorStatus.FAILED].includes(state.anchorStatus)
-        ),
-        take(1)
-      )
-      .toPromise()
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    await daemon.ceramic.context.anchorService.anchor()
+    const changeHandle = doc.waitForAnchor()
+    await (daemon.ceramic.context.anchorService as InMemoryAnchorService).anchor()
     await changeHandle
   }
 

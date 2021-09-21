@@ -243,7 +243,7 @@ export abstract class Stream implements StreamStateHolder {
     return this.api.requestAnchor(this.id)
   }
 
-  async waitForAnchor(): Promise<void> {
+  async waitForAnchor(timeout?: number): Promise<void> {
     const tillAnchored = this.state$
       .pipe(
         filter((state) =>
@@ -256,7 +256,13 @@ export abstract class Stream implements StreamStateHolder {
       this.state.anchorStatus != AnchorStatus.ANCHORED &&
       this.state.anchorStatus != AnchorStatus.FAILED
     ) {
-      await tillAnchored
+      if (timeout) {
+        // TODO test error message when timeout fires
+        const timeoutPromise = new Promise((resolve) => setTimeout(resolve, timeout))
+        await Promise.race([tillAnchored, timeoutPromise])
+      } else {
+        await tillAnchored
+      }
     }
     if (this.state.anchorStatus == AnchorStatus.FAILED) {
       throw new Error(`Anchor failed while waiting for stream ${this.id.toString()} to be anchored`)
