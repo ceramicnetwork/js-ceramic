@@ -126,10 +126,8 @@ export class Repository {
       throw new Error(`No genesis commit found with CID ${genesisCid.toString()}`)
     }
     // Do not check for possible key revocation here, as we will do so later after loading the tip (or learning that the genesis commit *is* the current tip), when we will have timestamp information for when the genesis commit was anchored.
-    const state = await handler.applyCommit(
-        { ...commitData, disableTimecheck: true },
-      this.#deps.context
-    )
+    commitData.disableTimecheck = true
+    const state = await handler.applyCommit(commitData, this.#deps.context)
     await this.#deps.stateValidation.validate(state, state.content)
     const state$ = new RunningState(state)
     this.add(state$)

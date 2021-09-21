@@ -84,7 +84,7 @@ export default class Utils {
   static async getCommitData(dispatcher: Dispatcher, cid: CID, timestamp?: number, streamId?: StreamID): Promise<CommitData> {
     const commit = await dispatcher.retrieveCommit(cid, streamId)
     if (!commit) throw new Error(`No commit found for CID ${cid.toString()}`)
-    // Start with a default that works for all cases that do not use DagJWS for signing (e.g. CAIP-10 links)
+    // The default applies to all cases that do not use DagJWS for signing (e.g. CAIP-10 links)
     const commitData: CommitData = { cid, type: CommitType.SIGNED, commit, timestamp }
     if (StreamUtils.isSignedCommit(commit)) {
       const linkedCommit = await dispatcher.retrieveCommit(commit.link, streamId)
@@ -96,9 +96,7 @@ export default class Utils {
       commitData.proof = await dispatcher.retrieveFromIPFS(commit.proof)
       commitData.timestamp = commitData.proof.blockTimestamp
     }
-    if (!commitData.commit.prev) {
-      commitData.type = CommitType.GENESIS
-    }
+    if (!commitData.commit.prev) commitData.type = CommitType.GENESIS
     return commitData
   }
 }

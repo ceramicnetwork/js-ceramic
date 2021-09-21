@@ -163,8 +163,8 @@ export class HistoryLog {
     return new HistoryLog(this.dispatcher, next)
   }
 
-  toCommitData(): Promise<CommitData[]> {
-    return Promise.all(
+  async toCommitData(): Promise<CommitData[]> {
+    return await Promise.all(
         this.items.map(
             async (logEntry) => await Utils.getCommitData(this.dispatcher, logEntry.cid, logEntry.timestamp)
         )
