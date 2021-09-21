@@ -78,8 +78,7 @@ export default class Utils {
   }
 
   /**
-   * Return expanded `CommitData` with commit and JWS envelope or anchor proof/timestamp, if applicable and not already
-   * present
+   * Return `CommitData` (with commit, JWS envelope, and/or anchor proof/timestamp, as applicable) for the specified CID
    */
   static async getCommitData(dispatcher: Dispatcher, cid: CID, timestamp?: number, streamId?: StreamID): Promise<CommitData> {
     const commit = await dispatcher.retrieveCommit(cid, streamId)
