@@ -81,18 +81,6 @@ export type CeramicCommit =
   | SignedCommitContainer
 
 /**
- * Commit meta-information, like CID and timestamp.
- */
-export type CommitMeta = {
-  cid: CID
-  timestamp?: number
-  /**
-   * Do not time-check a signature.
-   */
-  disableTimecheck?: boolean
-}
-
-/**
  * Stream metadata
  */
 export interface StreamMetadata {
@@ -126,12 +114,17 @@ export interface LogEntry {
   timestamp?: number
 }
 
+/**
+ * Includes additional fields that significantly reduce the number of IPFS lookups required while processing commits.
+ */
 export interface CommitData extends LogEntry {
-  // Holding on to these fields when fetching and processing new commits significantly reduces the number of IPFS
-  // lookups required. Use of these fields is currently limited to `conflict-resolution.ts` but further optimization of
-  // the code is possible by relaying them to code that looks the fields up again.
-  commit?: any
+  commit: any
   envelope?: DagJWS
+  proof?: AnchorProof
+  /**
+   * Do not time-check a signature.
+   */
+  disableTimecheck?: boolean
 }
 
 /**
@@ -285,14 +278,12 @@ export interface StreamHandler<T extends Stream> {
 
   /**
    * Applies commit to the stream (genesis|signed|anchored)
-   * @param commit - Commit instance
-   * @param meta - Commit meta-inforamtion, like CID and timestamp
+   * @param commitData - Commit data
    * @param context - Ceramic context
    * @param state - Stream state
    */
   applyCommit(
-    commit: CeramicCommit,
-    meta: CommitMeta,
+    commitData: CommitData,
     context: Context,
     state?: StreamState
   ): Promise<StreamState>

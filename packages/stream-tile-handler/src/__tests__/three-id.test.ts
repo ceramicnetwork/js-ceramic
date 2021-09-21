@@ -5,8 +5,8 @@ import KeyDidResolver from 'key-did-resolver'
 import { wrapDocument } from '@ceramicnetwork/3id-did-resolver'
 import { DID } from 'dids'
 import {
-  AnchorCommit,
   CeramicApi,
+  CommitType,
   Context,
   SignedCommitContainer,
   TestUtils,
@@ -245,7 +245,8 @@ it('applies genesis commit correctly', async () => {
   const payload = dagCBOR.util.deserialize(commit.linkedBlock)
   await context.ipfs.dag.put(payload, commit.jws.link)
 
-  const streamState = await tileHandler.applyCommit(commit.jws, { cid: FAKE_CID_1 }, context)
+  const signedCommitData = { cid: FAKE_CID_1, type: CommitType.GENESIS, commit: payload, envelope: commit.jws }
+  const streamState = await tileHandler.applyCommit(signedCommitData, context)
   delete streamState.metadata.unique
   expect(streamState).toMatchSnapshot()
 })
@@ -259,9 +260,9 @@ it('makes signed commit correctly', async () => {
     COMMITS.genesisGenerated.jws.link
   )
 
+  const genesisCommitData = { cid: FAKE_CID_1, type: CommitType.GENESIS, commit: COMMITS.genesisGenerated.linkedBlock, envelope: COMMITS.genesisGenerated.jws }
   const state = await tileDocumentHandler.applyCommit(
-    COMMITS.genesisGenerated.jws,
-    { cid: FAKE_CID_1 },
+    genesisCommitData,
     context
   )
   const state$ = TestUtils.runningState(state)
@@ -293,7 +294,8 @@ it('applies signed commit correctly', async () => {
   await context.ipfs.dag.put(payload, genesisCommit.jws.link)
 
   // apply genesis
-  let state = await tileDocumentHandler.applyCommit(genesisCommit.jws, { cid: FAKE_CID_1 }, context)
+  const genesisCommitData = { cid: FAKE_CID_1, type: CommitType.GENESIS, commit: payload, envelope: genesisCommit.jws }
+  let state = await tileDocumentHandler.applyCommit(genesisCommitData, context)
 
   const state$ = TestUtils.runningState(state)
   const doc = new TileDocument(state$, context)
@@ -308,9 +310,9 @@ it('applies signed commit correctly', async () => {
   await context.ipfs.dag.put(sPayload, signedCommit.jws.link)
 
   // apply signed
+  const signedCommitData = { cid: FAKE_CID_2, type: CommitType.SIGNED, commit: sPayload, envelope: signedCommit.jws }
   state = await tileDocumentHandler.applyCommit(
-    signedCommit.jws,
-    { cid: FAKE_CID_2 },
+    signedCommitData,
     context,
     state
   )
@@ -331,8 +333,9 @@ it('throws error if commit signed by wrong DID', async () => {
   const payload = dagCBOR.util.deserialize(genesisCommit.linkedBlock)
   await context.ipfs.dag.put(payload, genesisCommit.jws.link)
 
+  const genesisCommitData = { cid: FAKE_CID_1, type: CommitType.GENESIS, commit: payload, envelope: genesisCommit.jws }
   await expect(
-    tileDocumentHandler.applyCommit(genesisCommit.jws, FAKE_CID_1, context)
+    tileDocumentHandler.applyCommit(genesisCommitData, context)
   ).rejects.toThrow(/invalid_jws: not a valid verificationMethod for issuer/)
 })
 
@@ -349,7 +352,8 @@ it('applies anchor commit correctly', async () => {
   await context.ipfs.dag.put(payload, genesisCommit.jws.link)
 
   // apply genesis
-  let state = await tileDocumentHandler.applyCommit(genesisCommit.jws, { cid: FAKE_CID_1 }, context)
+  const genesisCommitData = { cid: FAKE_CID_1, type: CommitType.GENESIS, commit: payload, envelope: genesisCommit.jws }
+  let state = await tileDocumentHandler.applyCommit(genesisCommitData, context)
 
   const state$ = TestUtils.runningState(state)
   const doc = new TileDocument(state$, context)
@@ -364,18 +368,18 @@ it('applies anchor commit correctly', async () => {
   await context.ipfs.dag.put(sPayload, signedCommit.jws.link)
 
   // apply signed
+  const signedCommitData = { cid: FAKE_CID_2, type: CommitType.SIGNED, commit: sPayload, envelope: signedCommit.jws }
   state = await tileDocumentHandler.applyCommit(
-    signedCommit.jws,
-    { cid: FAKE_CID_2 },
+    signedCommitData,
     context,
     state
   )
 
   await context.ipfs.dag.put(COMMITS.proof, FAKE_CID_4)
   // apply anchor
+  const anchorCommitData = { cid: FAKE_CID_3, type: CommitType.ANCHOR, commit: COMMITS.r2.commit, proof: COMMITS.proof }
   state = await tileDocumentHandler.applyCommit(
-    COMMITS.r2.commit as AnchorCommit,
-    { cid: FAKE_CID_3 },
+    anchorCommitData,
     context,
     state
   )
