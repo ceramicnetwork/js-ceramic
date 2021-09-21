@@ -130,7 +130,7 @@ class TileSnapshot<T> extends StreamSnapshot {
  * TileDocument stream implementation
  */
 @StreamStatic<StreamConstructor<TileDocument>>()
-export class TileDocument<T = Record<string, any>> extends Stream<TileSnapshot<T>> {
+export class TileDocument<T = Record<string, any>> extends Stream {
   static STREAM_TYPE_NAME = 'tile'
   static STREAM_TYPE_ID = 0
 
@@ -140,8 +140,12 @@ export class TileDocument<T = Record<string, any>> extends Stream<TileSnapshot<T
     return super.content
   }
 
-  _getSnapshot(state: StreamState): TileSnapshot<T> {
-    return new TileSnapshot<T>(state)
+  get updates$(): Observable<TileSnapshot<T>> {
+    return this.state$.pipe(
+      map((streamState) => {
+        return new StreamSnapshot(streamState)
+      })
+    )
   }
 
   /**

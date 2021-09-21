@@ -66,7 +66,7 @@ test('Stream not subscribed, RunningState evicted', async () => {
 
 test('Stream subscribed, RunningState in cache', async () => {
   const stream = await TileDocument.create(ceramic, INITIAL)
-  stream.subscribe()
+  stream.updates$.subscribe()
   const state$ = await ceramic.repository.load(stream.id, {})
   const updateRecord = await stream.makeCommit(ceramic, UPDATED)
   await ceramic.repository.stateManager.applyCommit(state$.id, updateRecord, {
@@ -83,7 +83,7 @@ test('Stream subscribed, RunningState in cache', async () => {
 
 test('Stream subscribed, RunningState not evicted', async () => {
   const stream = await TileDocument.create(ceramic, INITIAL)
-  stream.subscribe()
+  stream.updates$.subscribe()
   const state$ = await ceramic.repository.load(stream.id, {})
   await TileDocument.create(ceramic, { evict: true })
 
@@ -139,7 +139,7 @@ test('StateLink receives updates', async () => {
 
   const stream2 = await TileDocument.load(ceramic, stream1.id)
   const changedConcurrently = { stage: 'changed-concurrently' }
-  stream1.subscribe()
+  stream1.updates$.subscribe()
   await stream2.update(changedConcurrently)
   expect(stream2.content).toEqual(changedConcurrently)
   expect(runningState1.state.next.content).toEqual({ stage: 'changed-1' }) // Running state 1 did not get update
@@ -152,12 +152,12 @@ test('free if no one subscribed', async () => {
   const stream1 = await TileDocument.create(ceramic, INITIAL)
   expect(ceramic.repository.inmemory.volatile.size).toEqual(volatileStart + 1)
   expect(ceramic.repository.inmemory.durable.size).toEqual(durableStart)
-  const subscription1 = stream1.subscribe()
+  const subscription1 = stream1.updates$.subscribe()
   await delay(100) // Wait for plumbing
   expect(ceramic.repository.inmemory.volatile.size).toEqual(volatileStart)
   expect(ceramic.repository.inmemory.durable.size).toEqual(durableStart + 1)
   const stream2 = await ceramic.loadStream(stream1.id)
-  const subscription2 = stream2.subscribe()
+  const subscription2 = stream2.updates$.subscribe()
   await delay(100) // Wait for plumbing
   expect(ceramic.repository.inmemory.volatile.size).toEqual(volatileStart)
   expect(ceramic.repository.inmemory.durable.size).toEqual(durableStart + 1)
@@ -178,7 +178,7 @@ describe('evicted then subscribed', () => {
     await TileDocument.create(ceramic, { evict: true })
     // No more stream1 in memory, and it is not pinned!
     expect(ceramic.repository.inmemory.get(stream1.id.toString())).toBeUndefined()
-    stream1.subscribe()
+    stream1.updates$.subscribe()
     await delay(100) // Wait for plumbing
     const inmemory = ceramic.repository.inmemory.get(stream1.id.toString())
     // We set to memory the latest known state, i.e. from streamtype.state
@@ -203,7 +203,7 @@ describe('evicted then subscribed', () => {
       StreamUtils.serializeState(stream2.state)
     )
 
-    stream2.subscribe()
+    stream2.updates$.subscribe()
     await delay(100) // Wait for plumbing
     const inmemory = ceramic.repository.inmemory.get(stream2.id.toString())
     // We set to memory the pinned state, instead of the one from streamtype.state

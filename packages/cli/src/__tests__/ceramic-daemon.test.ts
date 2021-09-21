@@ -204,8 +204,8 @@ describe('Ceramic interop: core <> http-client', () => {
     const doc1 = await TileDocument.create(core, initialContent)
     await anchorDoc(doc1)
     const doc2 = await client.loadStream<TileDocument>(doc1.id)
-    doc1.subscribe()
-    doc2.subscribe()
+    doc1.updates$.subscribe()
+    doc2.updates$.subscribe()
     // change from core viewable in client
     await doc1.update(middleContent)
     await anchorDoc(doc1)

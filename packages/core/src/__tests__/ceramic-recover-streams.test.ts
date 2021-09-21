@@ -68,7 +68,7 @@ let ipfs1: IpfsApi
 let ipfs2: IpfsApi
 
 beforeEach(async () => {
-  [ipfs1, ipfs2] = await Promise.all(Array.from({ length: 2 }).map(() => createIPFS()))
+  ;[ipfs1, ipfs2] = await Promise.all(Array.from({ length: 2 }).map(() => createIPFS()))
 })
 
 afterEach(async () => {
@@ -82,7 +82,7 @@ it('restart anchor polling on #recoverStreams', async () => {
   // Store
   const ceramic1 = await createCeramic(ipfs1, stateStoreDirectory)
   const stream1 = await TileDocument.create(ceramic1, { test: 456 })
-  stream1.subscribe()
+  stream1.updates$.subscribe()
   await ceramic1.pin.add(stream1.id)
   expect(stream1.state.anchorStatus).toEqual(AnchorStatus.PENDING)
   const anchorService = ceramic1.context.anchorService
@@ -93,7 +93,7 @@ it('restart anchor polling on #recoverStreams', async () => {
   const ceramic2 = await createCeramic(ipfs2, stateStoreDirectory, anchorService)
 
   const stream2 = await ceramic2.loadStream(stream1.id)
-  stream2.subscribe()
+  stream2.updates$.subscribe()
   expect(stream2.state.anchorStatus).toEqual(AnchorStatus.PENDING)
   // stream2 is exact replica of stream1
   expectEqualStates(stream1.state, stream2.state)
@@ -109,7 +109,7 @@ it("Don't create new anchor request on #recoverStreams", async () => {
 
   const ceramic1 = await createCeramic(ipfs1, stateStoreDirectory)
   const stream1 = await TileDocument.create(ceramic1, { test: 456 })
-  stream1.subscribe()
+  stream1.updates$.subscribe()
   await ceramic1.pin.add(stream1.id)
   expect(stream1.state.anchorStatus).toEqual(AnchorStatus.PENDING)
   await ceramic1.close()
@@ -117,7 +117,7 @@ it("Don't create new anchor request on #recoverStreams", async () => {
   // New anchor service so CAS state is lost
   const ceramic2 = await createCeramic(ipfs2, stateStoreDirectory)
   const stream2 = await ceramic2.loadStream(stream1.id)
-  stream2.subscribe()
+  stream2.updates$.subscribe()
   expect(stream2.state.anchorStatus).toEqual(AnchorStatus.FAILED)
   await ceramic2.close()
 })

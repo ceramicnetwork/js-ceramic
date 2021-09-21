@@ -171,24 +171,15 @@ export interface StreamStateHolder {
 /**
  * Describes common stream attributes
  */
-export abstract class Stream<SnapshotType extends StreamSnapshot = StreamSnapshot>
-  extends Observable<SnapshotType>
-  implements StreamStateHolder
-{
-  constructor(protected readonly state$: RunningStateLike, private _context: Context) {
-    super((subscriber) => {
-      state$
-        .pipe(
-          map((streamState) => {
-            return this._getSnapshot(streamState)
-          })
-        )
-        .subscribe(subscriber)
-    })
-  }
+export abstract class Stream implements StreamStateHolder {
+  constructor(protected readonly state$: RunningStateLike, private _context: Context) {}
 
-  protected _getSnapshot(state: StreamState): StreamSnapshot {
-    return new StreamSnapshot(state)
+  get updates$(): Observable<StreamSnapshot> {
+    return this.state$.pipe(
+      map((streamState) => {
+        return new StreamSnapshot(streamState)
+      })
+    )
   }
 
   get id(): StreamID {

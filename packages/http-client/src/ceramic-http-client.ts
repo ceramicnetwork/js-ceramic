@@ -256,7 +256,7 @@ export class CeramicClient implements CeramicApi {
     }
   }
 
-  private buildStream<T extends Stream = Stream<StreamSnapshot>>(stream: Document) {
+  private buildStream<T extends Stream = Stream>(stream: Document) {
     const streamConstructor = this.findStreamConstructor<T>(stream.state.type)
     return new streamConstructor(stream, this.context)
   }

@@ -128,7 +128,7 @@ describe('anchor', () => {
 
 test('handleTip', async () => {
   const stream1 = await TileDocument.create(ceramic, INITIAL_CONTENT, null, { anchor: false })
-  await stream1.subscribe()
+  await stream1.updates$.subscribe()
   const streamState1 = await ceramic.repository.load(stream1.id, {})
   await new Promise<void>((resolve) => {
     ceramic.repository.stateManager.anchor(streamState1).add(resolve)
@@ -136,7 +136,7 @@ test('handleTip', async () => {
 
   const ceramic2 = await createCeramic(ipfs)
   const stream2 = await ceramic2.loadStream<TileDocument>(stream1.id, { syncTimeoutSeconds: 0 })
-  stream2.subscribe()
+  stream2.updates$.subscribe()
   const streamState2 = await ceramic2.repository.load(stream2.id, {})
 
   expect(stream2.content).toEqual(stream1.content)
@@ -177,7 +177,7 @@ test('handleTip for commit already in log', async () => {
 
 test('commit history and atCommit', async () => {
   const stream = await TileDocument.create<any>(ceramic, INITIAL_CONTENT)
-  stream.subscribe()
+  stream.updates$.subscribe()
   const streamState = await ceramic.repository.load(stream.id, {})
 
   const commit0 = stream.allCommitIds[0]
@@ -336,7 +336,7 @@ describe('atCommit', () => {
 
 test('handles basic conflict', async () => {
   const stream1 = await TileDocument.create(ceramic, INITIAL_CONTENT)
-  stream1.subscribe()
+  stream1.updates$.subscribe()
   const streamState1 = await ceramic.repository.load(stream1.id, {})
   const streamId = stream1.id
   await anchorUpdate(ceramic, stream1)
@@ -369,7 +369,7 @@ test('handles basic conflict', async () => {
     state$.value,
     ceramic.repository.updates$
   )
-  stream2.subscribe()
+  stream2.updates$.subscribe()
   updateRec = await stream2.makeCommit(ceramic, conflictingNewContent)
   await ceramic.repository.stateManager.applyCommit(state$.id, updateRec, {
     anchor: true,
@@ -412,8 +412,11 @@ test('enforces schema in update that assigns schema', async () => {
   const streamState = await ceramic.repository.load(stream.id, {})
   await anchorUpdate(ceramic, stream)
   const updateRec = await stream.makeCommit(ceramic, null, { schema: schemaDoc.commitId })
-  await expect(ceramic.repository.stateManager.applyCommit(
-      streamState.id, updateRec, { anchor: false, throwOnInvalidCommit: true })
+  await expect(
+    ceramic.repository.stateManager.applyCommit(streamState.id, updateRec, {
+      anchor: false,
+      throwOnInvalidCommit: true,
+    })
   ).rejects.toThrow('Validation Error: data/stuff must be string')
 })
 
@@ -434,7 +437,7 @@ test('enforce previously assigned schema during future update', async () => {
     ceramic.repository.stateManager.applyCommit(streamState.id, updateRec, {
       anchor: false,
       publish: false,
-      throwOnInvalidCommit: true
+      throwOnInvalidCommit: true,
     })
   ).rejects.toThrow('Validation Error: data/stuff must be string')
 })
@@ -442,7 +445,7 @@ test('enforce previously assigned schema during future update', async () => {
 test('should announce change to network', async () => {
   const publishTip = jest.spyOn(ceramic.dispatcher, 'publishTip')
   const stream1 = await TileDocument.create<any>(ceramic, INITIAL_CONTENT, null, { anchor: false })
-  stream1.subscribe()
+  stream1.updates$.subscribe()
   const streamState1 = await ceramic.repository.load(stream1.id, {})
   expect(publishTip).toHaveBeenCalledTimes(1)
   expect(publishTip).toHaveBeenCalledWith(stream1.id, stream1.tip)

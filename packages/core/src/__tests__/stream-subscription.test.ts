@@ -62,7 +62,7 @@ describe('Stream subscription', () => {
       })
 
       let receivedContent
-      stream.subscribe((tileSnapshot) => {
+      stream.updates$.subscribe((tileSnapshot) => {
         receivedContent = tileSnapshot.content
       })
 
@@ -89,7 +89,7 @@ describe('Stream subscription', () => {
       expect(stream1.content).toEqual(stream2.content)
 
       let receivedContent
-      stream1.subscribe((tileSnapshot) => {
+      stream1.updates$.subscribe((tileSnapshot) => {
         receivedContent = tileSnapshot.content
       })
 

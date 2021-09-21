@@ -43,7 +43,7 @@ const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE }
  * Caip10Link stream implementation
  */
 @StreamStatic<StreamConstructor<Caip10Link>>()
-export class Caip10Link extends Stream<Caip10LinkSnapshot> {
+export class Caip10Link extends Stream {
   static STREAM_TYPE_NAME = 'caip10-link'
   static STREAM_TYPE_ID = 1
 
@@ -56,8 +56,12 @@ export class Caip10Link extends Stream<Caip10LinkSnapshot> {
     return this.content
   }
 
-  _getSnapshot(state: StreamState): Caip10LinkSnapshot {
-    return new Caip10LinkSnapshot(state)
+  get updates$(): Observable<Caip10LinkSnapshot> {
+    return this.state$.pipe(
+      map((streamState) => {
+        return new Caip10LinkSnapshot(streamState)
+      })
+    )
   }
 
   /**

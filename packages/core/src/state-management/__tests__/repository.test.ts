@@ -116,7 +116,7 @@ test('subscribe makes state endured', async () => {
   const stream1 = await TileDocument.create(ceramic, { foo: 'bar' })
   expect(ceramic.repository.inmemory.durable.size).toEqual(durableStart)
   expect(ceramic.repository.inmemory.volatile.size).toEqual(volatileStart + 1)
-  stream1.subscribe()
+  stream1.updates$.subscribe()
   await delay(200) // Wait for rxjs plumbing
   expect(ceramic.repository.inmemory.durable.size).toEqual(durableStart + 1)
   expect(ceramic.repository.inmemory.volatile.size).toEqual(volatileStart)
