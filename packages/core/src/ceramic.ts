@@ -381,8 +381,8 @@ export class Ceramic implements CeramicApi {
 
       if (
         (networkOptions.name == Networks.MAINNET || networkOptions.name == Networks.ELP) &&
-        (anchorServiceUrl !== "https://cas-internal.3boxlabs.com") &&
-        (anchorServiceUrl !== DEFAULT_ANCHOR_SERVICE_URLS[networkOptions.name])
+        anchorServiceUrl !== 'https://cas-internal.3boxlabs.com' &&
+        anchorServiceUrl !== DEFAULT_ANCHOR_SERVICE_URLS[networkOptions.name]
       ) {
         throw new Error('Cannot use custom anchor service on Ceramic mainnet')
       }
@@ -599,6 +599,22 @@ export class Ceramic implements CeramicApi {
   ): Promise<T> {
     opts = { ...DEFAULT_LOAD_OPTS, ...opts, ...this._loadOptsOverride }
     const streamRef = StreamRef.from(streamId)
+    if (opts.genesis) {
+      opts.streamFromGenesis = await this.createStreamFromGenesis(
+        streamRef.type,
+        opts.genesis,
+        opts
+      )
+      // Is using streamRef.baseID the correct comparison?
+      if (!opts.streamFromGenesis.id.equals(streamRef.baseID)) {
+        throw new Error(
+          `Created StreamID ${opts.streamFromGenesis.id.toString()} does not equal provided StreamID ${
+            streamRef.baseID
+          }`
+        )
+      }
+    }
+
     if (CommitID.isInstance(streamRef)) {
       const snapshot$ = await this.repository.loadAtCommit(streamRef, opts)
       return streamFromState<T>(this.context, this._streamHandlers, snapshot$.value)
@@ -632,7 +648,10 @@ export class Ceramic implements CeramicApi {
     const walkNext = async (node: TrieNode, streamId: StreamID | CommitID) => {
       let stream
       try {
-        stream = await promiseTimeout(timeout, this.loadStream(streamId, { atTime: query.atTime }))
+        stream = await promiseTimeout(
+          timeout,
+          this.loadStream(streamId, { atTime: query.atTime, genesis: query.genesis })
+        )
       } catch (e) {
         return Promise.resolve()
       }

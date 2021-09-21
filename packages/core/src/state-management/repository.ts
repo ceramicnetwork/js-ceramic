@@ -165,6 +165,12 @@ export class Repository {
         }
       }
 
+      if (!stream && opts.genesis && opts.streamFromGenesis) {
+        stream = new RunningState(opts.streamFromGenesis.state)
+        await this.stateManager.sync(stream, opts.syncTimeoutSeconds * 1000, fromStateStore)
+        return this.stateManager.verifyLoneGenesis(stream)
+      }
+
       if (!stream) {
         stream = await this.fromNetwork(streamId)
       }

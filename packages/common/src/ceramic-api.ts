@@ -136,6 +136,10 @@ export interface CeramicApi extends CeramicSigner {
 
 export interface MultiQuery {
   /**
+   * The genesis content for the queried stream
+   */
+  genesis?: Record<string, any>
+  /**
    * The StreamID of the stream to load
    */
   streamId: CommitID | StreamID | string
