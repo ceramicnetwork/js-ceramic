@@ -4,6 +4,7 @@ import type { Context } from './context'
 import { CommitID, StreamID } from '@ceramicnetwork/streamid'
 import type { DagJWS, DagJWSResult } from 'dids'
 import { map, Observable } from 'rxjs'
+import { filter, take } from 'rxjs/operators'
 import { RunningStateLike } from './running-state-like'
 import { CeramicApi } from './ceramic-api'
 import { LoadOpts, SyncOptions } from './docopts'
@@ -240,6 +241,26 @@ export abstract class Stream implements StreamStateHolder {
 
   async requestAnchor(): Promise<AnchorStatus> {
     return this.api.requestAnchor(this.id)
+  }
+
+  async waitForAnchor(): Promise<void> {
+    const tillAnchored = this.state$
+      .pipe(
+        filter((state) =>
+          [AnchorStatus.ANCHORED, AnchorStatus.FAILED].includes(state.anchorStatus)
+        ),
+        take(1)
+      )
+      .toPromise()
+    if (
+      this.state.anchorStatus != AnchorStatus.ANCHORED &&
+      this.state.anchorStatus != AnchorStatus.FAILED
+    ) {
+      await tillAnchored
+    }
+    if (this.state.anchorStatus == AnchorStatus.FAILED) {
+      throw new Error(`Anchor failed while waiting for stream ${this.id.toString()} to be anchored`)
+    }
   }
 
   /**
