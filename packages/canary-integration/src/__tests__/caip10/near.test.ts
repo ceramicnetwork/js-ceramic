@@ -16,9 +16,6 @@ const config = {
   keyStore, // instance of InMemoryKeyStore
   networkId: 'testnet',
   nodeUrl: 'fake-address.org',
-  walletUrl: 'fake-address.org',
-  helperUrl: 'fake-address.org',
-  explorerUrl: 'fake-address.org',
 }
 
 let ceramic: CeramicApi

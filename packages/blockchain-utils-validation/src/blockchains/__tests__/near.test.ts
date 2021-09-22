@@ -14,10 +14,7 @@ keyStore.setKey(chainRef, accountName, keyPair)
 const config = {
   keyStore, // instance of InMemoryKeyStore
   networkId: 'testnet',
-  nodeUrl: 'fake-address.org',
-  walletUrl: 'fake-address.org',
-  helperUrl: 'fake-address.org',
-  explorerUrl: 'fake-address.org',
+  nodeUrl: 'fake-address.org'
 }
 
 describe('Blockchain: NEAR', () => {
