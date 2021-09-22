@@ -45,7 +45,7 @@
     "@zondax/filecoin-signing-tools": "^0.15.0",
     "eth-sig-util": "^3.0.0",
     "ganache-core": "^2.13.1",
-    "near-api-js": "^0.36.3"
+    "near-api-js": "^0.42.0"
   },
   "jest": {
     "testEnvironment": "node",
