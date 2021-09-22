@@ -1,23 +1,32 @@
-import { AccountID } from 'caip'
-import { verify } from '@stablelib/ed25519'
 import { BlockchainHandler } from '../blockchain-handler'
 import { LinkProof } from '@ceramicnetwork/blockchain-utils-linking'
 import * as uint8arrays from 'uint8arrays'
+import crypto from 'crypto'
+import nacl from 'tweetnacl'
+import { AccountID } from 'caip'
 
-const stringEncode = (str: string): string =>
-  uint8arrays.toString(uint8arrays.fromString(str), 'base64pad')
+const verifySignature = async (
+  pubKey: Uint8Array,
+  message: string,
+  signature: Uint8Array
+): Promise<Boolean> => {
+  const hash = crypto.createHash('sha256').update(message).digest()
+  const hashString = uint8arrays.toString(hash, 'base64')
+  const verified = nacl.sign.detached.verify(
+    uint8arrays.fromString(hashString, 'base64'),
+    signature,
+    pubKey
+  )
+  return verified
+}
 
 const namespace = 'near'
 
 export async function validateLink(proof: LinkProof): Promise<LinkProof | null> {
-  const account = AccountID.parse(proof.account)
-  const msg = uint8arrays.fromString(stringEncode(proof.message))
-  const sig = uint8arrays.fromString(proof.signature, 'base64pad')
-  const acct = uint8arrays.fromString(account.address, 'base64pad')
-
-  // REF: https://github.com/StableLib/stablelib/blob/master/packages/ed25519/ed25519.ts#L825
-  const is_sig_valid: boolean = verify(acct, msg, sig)
-
+  const pubKey = uint8arrays.fromString(new AccountID(proof.account).address, 'base58btc')
+  const msg = proof.message
+  const sig = uint8arrays.fromString(proof.signature, 'base64')
+  const is_sig_valid = await verifySignature(pubKey, msg, sig)
   return is_sig_valid ? proof : null
 }
 
