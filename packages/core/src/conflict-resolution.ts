@@ -47,7 +47,7 @@ async function verifyAnchorCommit(
       const last: string = commitPath.substr(commitPath.lastIndexOf('/') + 1)
 
       const merkleTreeParentCommit = await dispatcher.retrieveFromIPFS(
-        commitData.cid,
+        commitData.commit.proof,
         merkleTreeParentCommitPath
       )
       prevCIDViaMerkleTree = merkleTreeParentCommit[last]
