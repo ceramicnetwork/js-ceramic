@@ -406,7 +406,7 @@ describe('Ceramic integration', () => {
     })
   })
 
-  it("Loading a CommitID and StreamID via multiquery considers CommitID tip", async () => {
+  it('Loading a CommitID and StreamID via multiquery considers CommitID tip', async () => {
     await withFleet(2, async ([ipfs1, ipfs2]) => {
       await swarmConnect(ipfs1, ipfs2)
       const ceramic1 = await createCeramic(ipfs1, false)
@@ -428,11 +428,102 @@ describe('Ceramic integration', () => {
 
       // Now load both the CommitID of the newest update and the base StreamID on node 2. The
       // base StreamID version of the stream returned should include the new commit.
-      const res = await ceramic2.multiQuery([{streamId: stream1.commitId}, {streamId: stream1.id}]);
-      const streamAtCommit = res[stream1.commitId.toString()] as TileDocument;
-      const streamCurrent = res[stream1.id.toString()] as TileDocument;
+      const res = await ceramic2.multiQuery([
+        { streamId: stream1.commitId },
+        { streamId: stream1.id },
+      ])
+      const streamAtCommit = res[stream1.commitId.toString()] as TileDocument
+      const streamCurrent = res[stream1.id.toString()] as TileDocument
       expect(streamAtCommit.content).toEqual(content2)
       expect(streamCurrent.content).toEqual(content2)
+
+      await ceramic1.close()
+      await ceramic2.close()
+    })
+  })
+
+  it('Multiquery with genesis content provided', async () => {
+    await withFleet(2, async ([ipfs1, ipfs2]) => {
+      await swarmConnect(ipfs1, ipfs2)
+      const ceramic1 = await createCeramic(ipfs1, false)
+      const ceramic2 = await createCeramic(ipfs2, false)
+
+      const content = null
+      const metadata = {
+        controllers: [ceramic1.did.id],
+        family: 'family',
+        tags: ['x', 'y'],
+      }
+
+      // Create a deterministic TileDocument
+      const stream1 = await TileDocument.create(
+        ceramic1,
+        content,
+        { ...metadata, deterministic: true },
+        { anchor: false, publish: false }
+      )
+
+      // Create (off-chain) the deterministic TileDocument genesis commit
+      const genesisCommit = await TileDocument.makeGenesis(ceramic1, content, {
+        ...metadata,
+        deterministic: true,
+      })
+
+      // Try loading the stream on node 2 and provide the genesis commit
+      const res = await ceramic2.multiQuery([
+        {
+          streamId: stream1.id,
+          genesis: genesisCommit,
+        },
+      ])
+
+      const resolvedStream = res[stream1.id.toString()]
+      expect(resolvedStream.content).toEqual({})
+      expect(resolvedStream.metadata).toEqual(metadata)
+
+      await ceramic1.close()
+      await ceramic2.close()
+    })
+  })
+
+  it('should throw in multiquery if provided genesis commit is different from given streamId', async () => {
+    await withFleet(2, async ([ipfs1, ipfs2]) => {
+      await swarmConnect(ipfs1, ipfs2)
+      const ceramic1 = await createCeramic(ipfs1, false)
+      const ceramic2 = await createCeramic(ipfs2, false)
+
+      const contentA = null
+
+      const contentB = {
+        foo: 'baz',
+      }
+
+      const metadata = {
+        controllers: [ceramic1.did.id],
+        family: 'family',
+        tags: ['x', 'y'],
+      }
+
+      // Create a deterministic TileDocument with contentA
+      const stream1 = await TileDocument.create(
+        ceramic1,
+        contentA,
+        { ...metadata, deterministic: true },
+        { anchor: false, publish: false }
+      )
+
+      // Create (off-chain) deterministic TileDocument genesis commit with contentB
+      const genesisCommit = await TileDocument.makeGenesis(ceramic2, contentB, metadata)
+
+      // Try loading the stream on node2 and provide genesisCommit
+      expect(
+        ceramic2.multiQuery([
+          {
+            streamId: stream1.id,
+            genesis: genesisCommit,
+          },
+        ])
+      ).rejects.toEqual('Given StreamID CID does not match given genesis content')
 
       await ceramic1.close()
       await ceramic2.close()

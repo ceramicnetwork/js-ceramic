@@ -635,8 +635,8 @@ export class Ceramic implements CeramicApi {
       try {
         if (query.genesis) {
           const genesisCID = await this.ipfs.dag.put(query.genesis)
-          if (!id.cid.equals(genesisCID)) {
-            throw new Error('Given StreamID CID does not match given genesis content')
+          if (!streamId.cid.equals(genesisCID)) {
+            return Promise.reject('Given StreamID CID does not match given genesis content')
           }
         }
         stream = await promiseTimeout(timeout, this.loadStream(streamId, { atTime: query.atTime }))
