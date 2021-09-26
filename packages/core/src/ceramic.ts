@@ -599,21 +599,6 @@ export class Ceramic implements CeramicApi {
   ): Promise<T> {
     opts = { ...DEFAULT_LOAD_OPTS, ...opts, ...this._loadOptsOverride }
     const streamRef = StreamRef.from(streamId)
-    if (opts.genesis) {
-      opts.streamFromGenesis = await this.createStreamFromGenesis(
-        streamRef.type,
-        opts.genesis,
-        opts
-      )
-      // Is using streamRef.baseID the correct comparison?
-      if (!opts.streamFromGenesis.id.equals(streamRef.baseID)) {
-        throw new Error(
-          `Created StreamID ${opts.streamFromGenesis.id.toString()} does not equal provided StreamID ${
-            streamRef.baseID
-          }`
-        )
-      }
-    }
 
     if (CommitID.isInstance(streamRef)) {
       const snapshot$ = await this.repository.loadAtCommit(streamRef, opts)
@@ -648,10 +633,13 @@ export class Ceramic implements CeramicApi {
     const walkNext = async (node: TrieNode, streamId: StreamID | CommitID) => {
       let stream
       try {
-        stream = await promiseTimeout(
-          timeout,
-          this.loadStream(streamId, { atTime: query.atTime, genesis: query.genesis })
-        )
+        if (query.genesis) {
+          const genesisCID = await this.ipfs.dag.put(query.genesis)
+          if (!id.cid.equals(genesisCID)) {
+            throw new Error('Given StreamID CID does not match given genesis content')
+          }
+        }
+        stream = await promiseTimeout(timeout, this.loadStream(streamId, { atTime: query.atTime }))
       } catch (e) {
         return Promise.resolve()
       }

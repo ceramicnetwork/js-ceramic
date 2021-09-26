@@ -69,14 +69,6 @@ export interface LoadOpts extends SyncOpts, PinningOpts {
    * Load a previous version of the stream based on unix timestamp
    */
   atTime?: number
-  /**
-   * Provide the genesis content so it does not need to fetched from IPFS daemon
-   */
-  genesis?: Record<string, any>
-  /**
-   * The created stream from the genesis content. Only present is genesis is present.
-   */
-  streamFromGenesis?: Stream
 }
 
 /**
