@@ -52,7 +52,7 @@
     "ethr-did-resolver": "4.3.4",
     "express": "^4.17.1",
     "flat": "^5.0.2",
-    "ipfs-http-client": "~50.1.1",
+    "ipfs-http-client": "~53.0.0",
     "key-did-provider-ed25519": "^1.1.0",
     "key-did-resolver": "^1.4.0",
     "levelup": "^4.4.0",
