@@ -52,6 +52,9 @@ export function wrapDocument(content: any, did: string): DIDDocument | null {
     verificationMethod: [],
     authentication: [],
     keyAgreement: [],
+    assertionMethod: [],
+    capabilityInvocation: [],
+    capabilityDelegation: [],
   }
   return Object.entries(content.publicKeys as string[]).reduce((diddoc, [keyName, keyValue]) => {
     const keyBuf = u8a.fromString(keyValue.slice(1), 'base58btc')
