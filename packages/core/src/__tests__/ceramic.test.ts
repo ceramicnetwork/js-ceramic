@@ -10,6 +10,7 @@ import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import KeyDidResolver from 'key-did-resolver'
 import { Resolver } from 'did-resolver'
 import { DID } from 'dids'
+import StreamID from '@ceramicnetwork/streamid'
 
 jest.mock('../store/level-state-store')
 
@@ -442,7 +443,7 @@ describe('Ceramic integration', () => {
     })
   })
 
-  it('Multiquery with genesis content provided', async () => {
+  it('Multiquery with genesis commit provided', async () => {
     await withFleet(2, async ([ipfs1, ipfs2]) => {
       await swarmConnect(ipfs1, ipfs2)
       const ceramic1 = await createCeramic(ipfs1, false)
@@ -478,6 +479,45 @@ describe('Ceramic integration', () => {
       ])
 
       const resolvedStream = res[stream1.id.toString()]
+      expect(resolvedStream.content).toEqual({})
+      expect(resolvedStream.metadata).toEqual(metadata)
+
+      await ceramic1.close()
+      await ceramic2.close()
+    })
+  })
+
+  it.only('Multiquery with genesis commit provided but no document created', async () => {
+    await withFleet(2, async ([ipfs1, ipfs2]) => {
+      await swarmConnect(ipfs1, ipfs2)
+      const ceramic1 = await createCeramic(ipfs1, false)
+      const ceramic2 = await createCeramic(ipfs2, false)
+
+      const content = null
+      const metadata = {
+        controllers: [ceramic1.did.id],
+        family: 'family',
+        tags: ['x', 'y'],
+      }
+
+      // Create (off-chain) the deterministic TileDocument genesis commit
+      const genesisCommit = await TileDocument.makeGenesis(ceramic1, content, {
+        ...metadata,
+        deterministic: true,
+      })
+
+      // Get stream ID for the genesis commit
+      const streamID = await StreamID.fromGenesis('tile', genesisCommit)
+
+      // Try loading the stream on node 2 and provide the genesis commit
+      const res = await ceramic2.multiQuery([
+        {
+          streamId: streamID,
+          genesis: genesisCommit,
+        },
+      ])
+
+      const resolvedStream = res[streamID.toString()]
       expect(resolvedStream.content).toEqual({})
       expect(resolvedStream.metadata).toEqual(metadata)
 
@@ -524,6 +564,46 @@ describe('Ceramic integration', () => {
           },
         ])
       ).rejects.toEqual('Given StreamID CID does not match given genesis content')
+
+      await ceramic1.close()
+      await ceramic2.close()
+    })
+  })
+
+  it('Should throw in multiquery if genesis commit is not deterministic', async () => {
+    await withFleet(2, async ([ipfs1, ipfs2]) => {
+      await swarmConnect(ipfs1, ipfs2)
+      const ceramic1 = await createCeramic(ipfs1, false)
+      const ceramic2 = await createCeramic(ipfs2, false)
+
+      const content = {
+        foo: 'bar',
+      }
+
+      const metadata = {
+        controllers: [ceramic1.did.id],
+        family: 'family',
+        tags: ['x', 'y'],
+      }
+
+      // Random streamID
+      const streamID = new StreamID(
+        'tile',
+        'bagcqcerakszw2vsovxznyp5gfnpdj4cqm2xiv76yd24wkjewhhykovorwo6a'
+      )
+
+      // Create (off-chain) non-deterministic TileDocument genesis commit with content
+      const genesisCommit = await TileDocument.makeGenesis(ceramic2, content, metadata)
+
+      // Try loading the stream on node2 and provide genesisCommit
+      expect(
+        ceramic2.multiQuery([
+          {
+            streamId: streamID,
+            genesis: genesisCommit,
+          },
+        ])
+      ).rejects.toEqual('Given genesis commit is not deterministic')
 
       await ceramic1.close()
       await ceramic2.close()

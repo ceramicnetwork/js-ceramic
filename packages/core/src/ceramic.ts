@@ -634,6 +634,13 @@ export class Ceramic implements CeramicApi {
       let stream
       try {
         if (query.genesis) {
+          if (
+            StreamUtils.isSignedCommitContainer(query.genesis) ||
+            StreamUtils.isSignedCommit(query.genesis)
+          ) {
+            return Promise.reject('Given genesis commit is not deterministic')
+          }
+
           const genesisCID = await this.ipfs.dag.put(query.genesis)
           if (!streamId.cid.equals(genesisCID)) {
             return Promise.reject('Given StreamID CID does not match given genesis content')

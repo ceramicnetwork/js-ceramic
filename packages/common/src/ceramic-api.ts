@@ -138,7 +138,7 @@ export interface MultiQuery {
   /**
    * The genesis content for the queried stream
    */
-  genesis?: Record<string, any>
+  genesis?: CeramicCommit
   /**
    * The StreamID of the stream to load
    */
