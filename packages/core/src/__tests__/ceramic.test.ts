@@ -605,7 +605,7 @@ describe('Ceramic integration', () => {
             genesis: genesisCommit,
           },
         ])
-      ).rejects.toThrowError('Given genesis commit is not deterministic')
+      ).rejects.toEqual('Given genesis commit is not deterministic')
 
       await ceramic1.close()
       await ceramic2.close()
