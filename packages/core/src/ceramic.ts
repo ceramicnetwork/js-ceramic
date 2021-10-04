@@ -48,6 +48,8 @@ const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const IPFS_GET_TIMEOUT = 60000 // 1 minute
 const TESTING = process.env.NODE_ENV == 'test'
 
+const TRAILING_SLASH = /\/$/ // slash at the end of the string
+
 const DEFAULT_ANCHOR_SERVICE_URLS = {
   [Networks.MAINNET]: 'https://cas.3boxlabs.com',
   [Networks.ELP]: 'https://cas.3boxlabs.com',
@@ -377,7 +379,8 @@ export class Ceramic implements CeramicApi {
     let anchorService = null
     if (!config.gateway) {
       const anchorServiceUrl =
-        config.anchorServiceUrl || DEFAULT_ANCHOR_SERVICE_URLS[networkOptions.name]
+        config.anchorServiceUrl?.replace(TRAILING_SLASH, '') ||
+        DEFAULT_ANCHOR_SERVICE_URLS[networkOptions.name]
 
       if (
         (networkOptions.name == Networks.MAINNET || networkOptions.name == Networks.ELP) &&

@@ -1,6 +1,5 @@
 import type CID from 'cids'
 import {
-  AnchorCommit,
   AnchorProof,
   AnchorStatus,
   AnchorValidator,
@@ -20,34 +19,35 @@ import cloneDeep from 'lodash.clonedeep'
 import { CommitID } from '@ceramicnetwork/streamid'
 import { StateValidation } from './state-management/state-validation'
 import { HandlersMap } from './handlers-map'
+import Utils from './utils'
 
 /**
  * Verifies anchor commit structure
  *
  * @param dispatcher - To get raw blob from IPFS
  * @param anchorValidator - AnchorValidator to verify chain inclusion
- * @param commit - Anchor commit
+ * @param commitData - Anchor commit data
  */
 async function verifyAnchorCommit(
   dispatcher: Dispatcher,
   anchorValidator: AnchorValidator,
-  commit: AnchorCommit
+  commitData: CommitData
 ): Promise<AnchorProof> {
-  const proofCID = commit.proof
-  const proof = await dispatcher.retrieveFromIPFS(proofCID)
+  const proof = commitData.proof
+  const commitPath = commitData.commit.path
 
   let prevCIDViaMerkleTree
   try {
     // optimize verification by using ipfs.dag.tree for fetching the nested CID
-    if (commit.path.length === 0) {
+    if (commitPath.length === 0) {
       prevCIDViaMerkleTree = proof.root
     } else {
       const merkleTreeParentCommitPath =
-        '/root/' + commit.path.substr(0, commit.path.lastIndexOf('/'))
-      const last: string = commit.path.substr(commit.path.lastIndexOf('/') + 1)
+        '/root/' + commitPath.substr(0, commitPath.lastIndexOf('/'))
+      const last: string = commitPath.substr(commitPath.lastIndexOf('/') + 1)
 
       const merkleTreeParentCommit = await dispatcher.retrieveFromIPFS(
-        proofCID,
+        commitData.commit.proof,
         merkleTreeParentCommitPath
       )
       prevCIDViaMerkleTree = merkleTreeParentCommit[last]
@@ -56,11 +56,9 @@ async function verifyAnchorCommit(
     throw new Error(`The anchor commit couldn't be verified. Reason ${e.message}`)
   }
 
-  if (commit.prev.toString() !== prevCIDViaMerkleTree.toString()) {
+  if (commitData.commit.prev.toString() !== prevCIDViaMerkleTree.toString()) {
     throw new Error(
-      `The anchor commit proof ${commit.proof.toString()} with path ${
-        commit.path
-      } points to invalid 'prev' commit`
+      `The anchor commit proof ${proof.toString()} with path ${commitPath} points to invalid 'prev' commit`
     )
   }
 
@@ -164,6 +162,14 @@ export class HistoryLog {
     const next = this.items.slice(start, end)
     return new HistoryLog(this.dispatcher, next)
   }
+
+  async toCommitData(): Promise<CommitData[]> {
+    return await Promise.all(
+        this.items.map(
+            async (logEntry) => await Utils.getCommitData(this.dispatcher, logEntry.cid, logEntry.timestamp)
+        )
+    )
+  }
 }
 
 /**
@@ -188,22 +194,10 @@ export async function fetchLog(
     // already processed
     return []
   }
-  const commit = await dispatcher.retrieveCommit(cid)
-  if (!commit) throw new Error(`No commit found for CID ${cid.toString()}`)
-
-  let nextCommitData: CommitData
-  if (StreamUtils.isSignedCommit(commit)) {
-    const linkedCommit = await dispatcher.retrieveCommit(commit.link)
-    if (!linkedCommit) throw new Error(`No commit found for CID ${commit.link.toString()}`)
-    nextCommitData = { cid: cid, type: CommitType.SIGNED, commit: linkedCommit, envelope: commit, timestamp: timestamp }
-  } else if (StreamUtils.isAnchorCommit(commit)) {
-    const proof = await dispatcher.retrieveFromIPFS(commit.proof)
-    timestamp = proof.blockTimestamp
-    nextCommitData = { cid: cid, type: CommitType.ANCHOR, commit: commit, timestamp: timestamp }
-  } else {
-    // For all cases not using DagJWS for signing (e.g. CAIP-10 links)
-    nextCommitData = { cid: cid, type: CommitType.SIGNED, commit: commit, timestamp: timestamp }
-  }
+  // Fetch expanded `CommitData` using the CID and running timestamp
+  const nextCommitData = await Utils.getCommitData(dispatcher, cid, timestamp)
+  // Update the running timestamp if it was updated via an anchor commit fetch
+  timestamp = nextCommitData.timestamp;
   const prevCid: CID = nextCommitData.commit.prev
   if (!prevCid) {
     // Someone sent a tip that is a fake log, i.e. a log that at some point does not refer to a previous or genesis
@@ -246,26 +240,21 @@ export class ConflictResolution {
   /**
    * Helper function for applying a single commit to a StreamState.
    * TODO: Most of this logic should be pushed down into the StreamHandler so it can be StreamType-specific.
-   * @param entry - the commit to apply
+   * @param commitData - the commit to apply
    * @param state - the state to apply the commit to
-   * @param handler - the handler for the streamtype
+   * @param handler - the handler for the StreamType
    * @private
    */
-  private async applyLogEntryToState<T extends Stream>(
-    entry: CommitData, state: StreamState, handler: StreamHandler<T>): Promise<StreamState> {
-    const logEntry = await this.getCommitData(entry)
-    const commitMeta = { cid: logEntry.cid, timestamp: logEntry.timestamp }
-    if (StreamUtils.isAnchorCommit(logEntry.commit)) {
+  private async applyCommitDataToState<T extends Stream>(
+    commitData: CommitData, state: StreamState, handler: StreamHandler<T>): Promise<StreamState> {
+    if (StreamUtils.isAnchorCommitData(commitData)) {
       // It's an anchor commit
       // TODO: Anchor validation should be done by the StreamHandler as part of applying the anchor commit
-      await verifyAnchorCommit(this.dispatcher, this.anchorValidator, logEntry.commit)
-      return await handler.applyCommit(logEntry.commit, commitMeta, this.context, state)
+      await verifyAnchorCommit(this.dispatcher, this.anchorValidator, commitData)
+      return await handler.applyCommit(commitData, this.context, state)
     } else {
-      // It's a signed commit but may not be using DagJWS. If the JWS envelope is present, use that while applying the
-      // commit, otherwise use the commit itself (e.g. for CAIP-10 links).
-      const commitToApply = logEntry.envelope ? logEntry.envelope : logEntry.commit
-      const tmpState = await handler.applyCommit(commitToApply, commitMeta, this.context, state)
-      const isGenesis = !logEntry.commit.prev
+      const tmpState = await handler.applyCommit(commitData, this.context, state)
+      const isGenesis = !commitData.commit.prev
       const effectiveState = isGenesis ? tmpState : tmpState.next
       // TODO: Schema validation should be done by the StreamHandler as part of applying the commit
       await this.stateValidation.validate(effectiveState, effectiveState.content)
@@ -290,14 +279,13 @@ export class ConflictResolution {
     // `fetchLog` provides the timestamps.
     if (state && state.log.length === 1) {
       const timestamp = unappliedCommits[0].timestamp
-      const genesisCid = state.log[0].cid
-      const genesis = await this.dispatcher.retrieveCommit(genesisCid)
-      await handler.applyCommit(genesis, { cid: genesisCid, timestamp: timestamp }, this.context)
+      const genesis = await Utils.getCommitData(this.dispatcher, state.log[0].cid, timestamp)
+      await handler.applyCommit(genesis, this.context)
     }
 
     for (const entry of unappliedCommits) {
       try {
-        state = await this.applyLogEntryToState(entry, state, handler)
+        state = await this.applyCommitDataToState(entry, state, handler)
       } catch(err) {
         const streamId = state ? StreamUtils.streamIdFromState(state).toString() : null
         this.context.loggerProvider.getDiagnosticsLogger().warn(
@@ -336,7 +324,7 @@ export class ConflictResolution {
       // log already applied
       return null
     }
-    const commitData = await this.getCommitData(unappliedCommits[0])
+    const commitData = unappliedCommits[0]
     if (commitData.commit.prev.equals(tip)) {
       // the new log starts where the previous one ended
       return this.applyLogToState(handler, unappliedCommits, cloneDeep(initialState), false, opts)
@@ -345,7 +333,8 @@ export class ConflictResolution {
     // we have a conflict since prev is in the log of the local state, but isn't the tip
     // BEGIN CONFLICT RESOLUTION
     const conflictIdx = initialStateLog.findIndex(commitData.commit.prev) + 1
-    const canonicalLog = initialStateLog.items
+    const canonicalLog = await initialStateLog.toCommitData()
+    // The conflict index applies equivalently to the CommitData array derived from the canonical state log
     const localLog = canonicalLog.splice(conflictIdx)
     // Compute state up till conflictIdx
     const state: StreamState = await this.applyLogToState(handler, canonicalLog, null, false, opts)
@@ -381,9 +370,8 @@ export class ConflictResolution {
    */
   async verifyLoneGenesis(state: StreamState) {
     const handler = this.handlers.get(state.type)
-    const genesisCid = state.log[0].cid
-    const genesis = await this.dispatcher.retrieveCommit(genesisCid)
-    await handler.applyCommit(genesis, { cid: genesisCid }, this.context)
+    const genesis = await Utils.getCommitData(this.dispatcher, state.log[0].cid, state.log[0].timestamp)
+    await handler.applyCommit(genesis, this.context)
   }
 
   /**
@@ -401,7 +389,7 @@ export class ConflictResolution {
 
     // If 'commit' is not included in stream's log at this point, that means that conflict resolution
     // rejected it.
-    const commitIndex = await baseStateLog.findIndex(commitId.commit)
+    const commitIndex = baseStateLog.findIndex(commitId.commit)
     if (commitIndex < 0) {
       throw new Error(
         `Requested commit CID ${commitId.commit.toString()} not found in the log for stream ${commitId.baseID.toString()}`
@@ -410,31 +398,9 @@ export class ConflictResolution {
 
     // If the requested commit is included in the log, but isn't the most recent commit, we need
     // to reset the state to the state at the requested commit.
-    const resetLog = baseStateLog.slice(0, commitIndex + 1).items
+    // The calculated commit index applies equivalently to the CommitData array derived from the base state log
+    const resetLog = await baseStateLog.slice(0, commitIndex + 1).toCommitData()
     const handler = this.handlers.get(initialState.type)
     return this.applyLogToState(handler, resetLog, null, false, opts)
-  }
-
-  /**
-   * Return `CommitData` with commit and JWS envelope, if applicable and not already present
-   */
-  private async getCommitData(_commitData: CommitData): Promise<CommitData> {
-    // Clone the `CommitData` so that the Stream state is not affected when commit/JWS data is added to the structure
-    const commitData: CommitData = {
-      cid: _commitData.cid,
-      type: _commitData.type,
-      timestamp: _commitData.timestamp,
-      commit: _commitData.commit,
-      envelope: _commitData.envelope
-    }
-    if (!commitData.commit) {
-      const commit = await this.dispatcher.retrieveCommit(commitData.cid)
-      commitData.commit = commit
-      if (StreamUtils.isSignedCommit(commit)) {
-        commitData.commit = await this.dispatcher.retrieveCommit(commit.link)
-        commitData.envelope = commit
-      }
-    }
-    return commitData
   }
 }

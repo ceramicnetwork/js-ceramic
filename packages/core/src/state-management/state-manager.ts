@@ -245,7 +245,7 @@ export class StateManager {
       try {
         await this.executionQ.forStream(state$.id).run(async () => {
           await this._handleTip(state$, anchorCommit)
-          if (state$.tip == anchorCommit) {
+          if (state$.tip.equals(anchorCommit)) {
             // The anchor commit was applied successfully
             if (remainingRetries < APPLY_ANCHOR_COMMIT_ATTEMPTS - 1) {
               // If we failed to apply the commit at least once, then it's worth logging when
