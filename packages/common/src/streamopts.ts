@@ -1,4 +1,3 @@
-import { Stream } from './stream'
 /**
  * Options that are related to pinning streams.
  */

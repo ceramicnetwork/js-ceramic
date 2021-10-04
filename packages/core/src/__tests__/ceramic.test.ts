@@ -487,7 +487,7 @@ describe('Ceramic integration', () => {
     })
   })
 
-  it.only('Multiquery with genesis commit provided but no document created', async () => {
+  it('Multiquery with genesis commit provided but no document created', async () => {
     await withFleet(2, async ([ipfs1, ipfs2]) => {
       await swarmConnect(ipfs1, ipfs2)
       const ceramic1 = await createCeramic(ipfs1, false)
@@ -534,14 +534,16 @@ describe('Ceramic integration', () => {
 
       const contentA = null
 
-      const contentB = {
-        foo: 'baz',
-      }
-
       const metadata = {
         controllers: [ceramic1.did.id],
         family: 'family',
         tags: ['x', 'y'],
+      }
+
+      const metadata2 = {
+        controllers: [ceramic1.did.id],
+        family: 'family',
+        tags: ['x', 'y', 'z'],
       }
 
       // Create a deterministic TileDocument with contentA
@@ -553,7 +555,7 @@ describe('Ceramic integration', () => {
       )
 
       // Create (off-chain) deterministic TileDocument genesis commit with contentB
-      const genesisCommit = await TileDocument.makeGenesis(ceramic2, contentB, metadata)
+      const genesisCommit = await TileDocument.makeGenesis(ceramic2, contentA, metadata2)
 
       // Try loading the stream on node2 and provide genesisCommit
       expect(
@@ -603,7 +605,7 @@ describe('Ceramic integration', () => {
             genesis: genesisCommit,
           },
         ])
-      ).rejects.toEqual('Given genesis commit is not deterministic')
+      ).rejects.toThrowError('Given genesis commit is not deterministic')
 
       await ceramic1.close()
       await ceramic2.close()
