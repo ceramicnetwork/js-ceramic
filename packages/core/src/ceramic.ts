@@ -635,20 +635,20 @@ export class Ceramic implements CeramicApi {
 
     const walkNext = async (node: TrieNode, streamId: StreamID | CommitID) => {
       let stream
-      try {
-        if (query.genesis) {
-          if (
-            StreamUtils.isSignedCommitContainer(query.genesis) ||
-            StreamUtils.isSignedCommit(query.genesis)
-          ) {
-            return Promise.reject('Given genesis commit is not deterministic')
-          }
-
-          const genesisCID = await this.ipfs.dag.put(query.genesis)
-          if (!streamId.cid.equals(genesisCID)) {
-            return Promise.reject('Given StreamID CID does not match given genesis content')
-          }
+      if (query.genesis) {
+        if (
+          StreamUtils.isSignedCommitContainer(query.genesis) ||
+          StreamUtils.isSignedCommit(query.genesis)
+        ) {
+          throw new Error('Given genesis commit is not deterministic')
         }
+
+        const genesisCID = await this.ipfs.dag.put(query.genesis)
+        if (!streamId.cid.equals(genesisCID)) {
+          throw new Error('Given StreamID CID does not match given genesis content')
+        }
+      }
+      try {
         stream = await promiseTimeout(timeout, this.loadStream(streamId, { atTime: query.atTime }))
       } catch (e) {
         return Promise.resolve()
