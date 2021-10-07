@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.5.0-rc.0](/compare/@ceramicnetwork/cli@1.4.1-rc.2...@ceramicnetwork/cli@1.5.0-rc.0) (2021-10-07)
+
+
+### Features
+
+* Include safe-did resolver (#1756) 033b4c9, closes #1756
+
+
+
+
+
 ## [1.4.1-rc.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@1.4.1-rc.1...@ceramicnetwork/cli@1.4.1-rc.2) (2021-09-18)
 
 **Note:** Version bump only for package @ceramicnetwork/cli
