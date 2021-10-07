@@ -16,6 +16,7 @@ import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import KeyDidResolver from 'key-did-resolver'
 import EthrDidResolver from 'ethr-did-resolver'
 import NftDidResolver from 'nft-did-resolver'
+import SafeDidResolver from 'did-safe-resolver'
 import { DID } from 'dids'
 import cors from 'cors'
 import { errorHandler } from './daemon/error-handler'
@@ -122,6 +123,10 @@ function makeResolvers(
     ...NftDidResolver.getResolver({
       ceramic: ceramic,
       ...opts.didResolvers?.nftDidResolver,
+    }),
+    ...SafeDidResolver.getResolver({
+      ceramic: ceramic,
+      ...opts.didResolvers?.safeDidResolver,
     }),
   }
   if (

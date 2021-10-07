@@ -167,6 +167,14 @@ export class DaemonDidResolversConfig {
   nftDidResolver?: any
 
   /**
+   * Configuration for did-safe-resolver. Its README contains appropriate documentation.
+   *
+   * When specifying in a config file, use the name 'safe-did-resolver'.
+   */
+  @jsonMember(AnyT, { name: 'safe-did-resolver' })
+  safeDidResolver?: any
+
+  /**
    * Configuration for ethr-did-resolver. Its README contains appropriate documentation.
    *
    * When specifying in a config file, use the name 'ethr-did-resolver'.
