@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/cli",
-  "version": "1.4.1-rc.2",
+  "version": "1.5.0-rc.0",
   "description": "Typescript implementation of the Ceramic CLI",
   "keywords": [
     "Ceramic",
