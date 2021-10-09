@@ -15,7 +15,7 @@ We want to:
 
 ### Functions
 
-Ceramic node supports storing state of a document and pinning it. While storing state, full state of the document is serialised and stored into a local database. While pinning, all of the document records, as well as dependent ones, like proofs, are pinned.
+Ceramic node supports storing state of a document and pinning it. While storing state, full state of the document is serialised and stored into a local database. While pinning, all of the document commits, as well as dependent ones, like proofs, are pinned.
 
 Storing state is internal operation, i.e. called inside `Document` methods. Pinning a document is requested externally via `PinApi`. When a document is pinned, it has to also be stored in the state store.
 
@@ -23,13 +23,13 @@ If treated as a black box the pinning and state store block exposes following fu
 
 1. save a document, based on `docId`
    - store latest document state in the state store,
-   - pin all the document records.
+   - pin all the document commits.
 2. remove a document, based on `docId`
-   - unpin the document records,
+   - unpin the document commits,
    - remove stored state in the state store
 3. list all pinned documents
    - return list of all the _documents_ pinned based on what is stored in state store
-   - _Consideration:_ Both vanilla IPFS and Powergate list all pinned entities, that could represent document records or something else if used on a shared IPFS node
+   - _Consideration:_ Both vanilla IPFS and Powergate list all pinned entities, that could represent document commits or something else if used on a shared IPFS node
    - based on consideration above, we could not rely on what is reported by IPFS or Powergate
 4. indicate if document is pinned
    - return a list of one, if the document is found in state store
@@ -52,9 +52,9 @@ Thus, instead of distributed transactions, we can use light-weight Promises.
 Based on the semantics, it makes sense to have:
 
 1. pure state store - responsible for storing state in a local database,
-2. pure pinning backends - responsible for pinning records,
-3. pinning backends aggregator - responsible for pinning records using multiple pinning backends simultaneously,
-4. pin store aggregator - responsible for storing state and pinning dependent records.
+2. pure pinning backends - responsible for pinning commits,
+3. pinning backends aggregator - responsible for pinning commits using multiple pinning backends simultaneously,
+4. pin store aggregator - responsible for storing state and pinning dependent commits.
 
 ![Pinning Design](media://pinning-design.png)
 

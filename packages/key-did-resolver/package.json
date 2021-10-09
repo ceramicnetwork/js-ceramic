@@ -1,6 +1,6 @@
 {
   "name": "key-did-resolver",
-  "version": "1.3.0-rc.0",
+  "version": "1.4.0",
   "description": "Ceramic did:key method resolver",
   "keywords": [
     "ceramic",

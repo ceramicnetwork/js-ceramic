@@ -5,7 +5,7 @@ import * as u8a from 'uint8arrays'
 import {
   AnchorCommit,
   CeramicCommit,
-  CommitType,
+  CommitData,
   IpfsApi,
   SignedCommit,
   SignedCommitContainer,
@@ -220,5 +220,21 @@ export class StreamUtils {
    */
   static isAnchorCommit(commit: CeramicCommit): commit is AnchorCommit {
     return commit && (commit as AnchorCommit).proof !== undefined
+  }
+
+  /**
+   * Checks if commit data is signed
+   * @param commitData - Commit data
+   */
+  static isSignedCommitData(commitData: CommitData): boolean {
+    return commitData && commitData.envelope !== undefined
+  }
+
+  /**
+   * Checks if commit data is anchor commit
+   * @param commitData - Commit data
+   */
+  static isAnchorCommitData(commitData: CommitData): boolean {
+    return commitData && commitData.proof !== undefined
   }
 }

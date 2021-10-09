@@ -50,7 +50,10 @@ describe('Ceramic anchoring', () => {
   let ipfs3: IpfsApi
 
   beforeAll(async () => {
-    [ipfs1, ipfs2, ipfs3] = await Promise.all(Array.from({ length: 3 }).map(() => createIPFS()))
+    const instances = await Promise.all(Array.from({ length: 3 }).map(() => createIPFS()))
+    ipfs1 = instances[0]
+    ipfs2 = instances[1]
+    ipfs3 = instances[2]
     await swarmConnect(ipfs1, ipfs2)
     await swarmConnect(ipfs2, ipfs3)
     await swarmConnect(ipfs1, ipfs3)
@@ -62,7 +65,7 @@ describe('Ceramic anchoring', () => {
     await ipfs3.stop()
   })
 
-  it('test all records anchored', async () => {
+  it('test all commits anchored', async () => {
     const [ceramic1, ceramic2] = await Promise.all([
       createCeramic(ipfs1, true),
       createCeramic(ipfs2, false),
@@ -86,7 +89,7 @@ describe('Ceramic anchoring', () => {
     await ceramic2.close()
   })
 
-  it('test no records anchored', async () => {
+  it('test no commits anchored', async () => {
     const [ceramic1, ceramic2] = await Promise.all([
       createCeramic(ipfs1, true),
       createCeramic(ipfs2, false),
@@ -287,7 +290,7 @@ describe('Ceramic anchoring', () => {
     await anchorService.anchor()
     await TestUtils.waitForState(
       stream2,
-      2000,
+      4000,
       (state) => state.anchorStatus === AnchorStatus.ANCHORED,
       () => {
         throw new Error(`stream2 not anchored still`)
@@ -295,7 +298,7 @@ describe('Ceramic anchoring', () => {
     )
     await TestUtils.waitForState(
       stream1,
-      2000,
+      4000,
       (state) => state.anchorStatus === AnchorStatus.ANCHORED,
       () => {
         throw new Error(`stream1 not anchored still`)
@@ -337,7 +340,10 @@ describe('Ceramic anchoring', () => {
     expect(stream1.content).toEqual({ x: 3 })
     expect(stream1.state.log.length).toEqual(4)
 
-    const validateChainInclusionSpy = jest.spyOn(ceramic2._anchorValidator, "validateChainInclusion")
+    const validateChainInclusionSpy = jest.spyOn(
+      ceramic2._anchorValidator,
+      'validateChainInclusion'
+    )
     validateChainInclusionSpy.mockRejectedValueOnce(new Error("blockNumbers don't match"))
 
     // Even though validating the anchor commit fails, the stream should still be loaded successfully
@@ -349,5 +355,78 @@ describe('Ceramic anchoring', () => {
 
     await ceramic1.close()
     await ceramic2.close()
+  })
+
+  describe('Request anchor', () => {
+    it('Can request missing anchor', async () => {
+      const ceramic = await createCeramic(ipfs1, true)
+
+      // create stream without requesting anchor
+      const stream = await TileDocument.create(ceramic, { x: 1 }, null, { anchor: false })
+      expect(stream.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
+
+      // request anchor
+      const anchorStatus = await stream.requestAnchor()
+      expect(anchorStatus).toEqual(AnchorStatus.PENDING)
+      expect(stream.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
+      await stream.sync()
+      expect(stream.state.anchorStatus).toEqual(AnchorStatus.PENDING)
+
+      // fulfill anchor
+      await anchorUpdate(ceramic, stream)
+      expect(stream.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+
+      await ceramic.close()
+    })
+
+    it('Can request new anchor after failed anchor', async () => {
+      const ceramic = await createCeramic(ipfs1, true)
+
+      // create stream without requesting anchor
+      const stream = await TileDocument.create(ceramic, { x: 1 }, null, { anchor: true })
+      expect(stream.state.anchorStatus).toEqual(AnchorStatus.PENDING)
+
+      // fail anchor
+      const anchorService = ceramic.context.anchorService as any as InMemoryAnchorService
+      await anchorService.failPendingAnchors()
+      await stream.sync()
+      expect(stream.state.anchorStatus).toEqual(AnchorStatus.FAILED)
+      expect(stream.state.log.length).toEqual(1)
+
+      // re-request anchor, should be successful
+      const anchorStatus = await stream.requestAnchor()
+      expect(anchorStatus).toEqual(AnchorStatus.PENDING)
+      await stream.sync()
+      expect(stream.state.anchorStatus).toEqual(AnchorStatus.PENDING)
+
+      // fulfill anchor
+      await anchorUpdate(ceramic, stream)
+      expect(stream.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+      expect(stream.state.log.length).toEqual(2)
+
+      await ceramic.close()
+    })
+
+    it('Requesting anchor is noop for already anchored stream', async () => {
+      const ceramic = await createCeramic(ipfs1, true)
+
+      // create stream without requesting anchor
+      const stream = await TileDocument.create(ceramic, { x: 1 }, null, { anchor: true })
+      expect(stream.state.anchorStatus).toEqual(AnchorStatus.PENDING)
+
+      // fulfill anchor
+      await anchorUpdate(ceramic, stream)
+      expect(stream.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+      expect(stream.state.log.length).toEqual(2)
+
+      // request anchor, should be a no-op
+      const anchorStatus = await stream.requestAnchor()
+      expect(anchorStatus).toEqual(AnchorStatus.ANCHORED)
+      await stream.sync()
+      expect(stream.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+      expect(stream.state.log.length).toEqual(2)
+
+      await ceramic.close()
+    })
   })
 })

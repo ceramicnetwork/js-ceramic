@@ -52,13 +52,29 @@ const send = (provider: any, data: any): Promise<any> =>
       else resolve(res.result)
     })
   )
+const provider: any = ganache.provider(GANACHE_CONF)
 
-let provider: any, addresses: string[], contractAddress: string
+const lazyProvider = () => provider // Required for the Jest mock below
+jest.mock('@ethersproject/providers', () => {
+  const originalModule = jest.requireActual('@ethersproject/providers')
+  const getNetwork = (): any => {
+    return {
+      _defaultProvider: (): any => {
+        return new originalModule.Web3Provider(lazyProvider())
+      },
+    }
+  }
+  return {
+    ...originalModule,
+    getNetwork,
+  }
+})
+
+let addresses: string[], contractAddress: string
 
 const testDid = 'did:3:bafysdfwefwe'
 
 beforeAll(async () => {
-  provider = ganache.provider(GANACHE_CONF)
   addresses = await send(provider, linking.encodeRpcMessage('eth_accounts'))
   // ganache-core doesn't support personal_sign -.-
   provider.manager.personal_sign = (data: any, address: string, callback: any): void => {
@@ -78,14 +94,6 @@ beforeAll(async () => {
   })
   await send(provider, linking.encodeRpcMessage('eth_sendTransaction', [unsignedTx]))
   contractAddress = Contract.getContractAddress(unsignedTx)
-  // mock ethers providers
-  ;(providers as any).getNetwork = (): any => {
-    return {
-      _defaultProvider: (): any => {
-        return new providers.Web3Provider(provider)
-      },
-    }
-  }
 })
 
 test('invalid ethereumEOA proof should return null', async () => {

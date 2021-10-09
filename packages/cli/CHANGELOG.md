@@ -3,6 +3,205 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.5.0-rc.0](/compare/@ceramicnetwork/cli@1.4.1-rc.2...@ceramicnetwork/cli@1.5.0-rc.0) (2021-10-07)
+
+
+### Features
+
+* Include safe-did resolver (#1756) 033b4c9, closes #1756
+
+
+
+
+
+## [1.4.1-rc.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@1.4.1-rc.1...@ceramicnetwork/cli@1.4.1-rc.2) (2021-09-18)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+## [1.4.1-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@1.4.1-rc.0...@ceramicnetwork/cli@1.4.1-rc.1) (2021-09-18)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+## [1.4.1-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@1.4.0...@ceramicnetwork/cli@1.4.1-rc.0) (2021-09-17)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [1.4.0](/compare/@ceramicnetwork/cli@1.4.0-rc.4...@ceramicnetwork/cli@1.4.0) (2021-09-16)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [1.4.0-rc.4](/compare/@ceramicnetwork/cli@1.3.2...@ceramicnetwork/cli@1.4.0-rc.4) (2021-09-16)
+
+
+### Features
+
+* **core,http-client:** Add 'publish' option to unpin command (#1706) 0ad204e, closes #1706
+
+
+
+
+
+# [1.4.0-rc.2](/compare/@ceramicnetwork/cli@1.3.2...@ceramicnetwork/cli@1.4.0-rc.2) (2021-09-16)
+
+
+### Features
+
+* **core,http-client:** Add 'publish' option to unpin command (#1706) 0ad204e, closes #1706
+
+
+
+
+
+## [1.3.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@1.3.1...@ceramicnetwork/cli@1.3.2) (2021-09-14)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+## [1.3.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@1.3.1-rc.1...@ceramicnetwork/cli@1.3.1) (2021-09-08)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+## [1.3.1-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@1.3.1-rc.0...@ceramicnetwork/cli@1.3.1-rc.1) (2021-09-06)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+## [1.3.1-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@1.3.0...@ceramicnetwork/cli@1.3.1-rc.0) (2021-09-02)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [1.3.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@1.3.0-rc.7...@ceramicnetwork/cli@1.3.0) (2021-08-25)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [1.3.0-rc.7](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@1.3.0-rc.6...@ceramicnetwork/cli@1.3.0-rc.7) (2021-08-24)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [1.3.0-rc.6](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@1.3.0-rc.5...@ceramicnetwork/cli@1.3.0-rc.6) (2021-08-23)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# 1.3.0-rc.5 (2021-08-23)
+
+
+### Bug Fixes
+
+* **ci:** remove private flag ([9974009](https://github.com/ceramicnetwork/js-ceramic/commit/9974009be69382f2a2caf59f4ff72bf6aa12491b))
+
+
+
+
+
+# [1.3.0-rc.4](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@1.3.0-rc.3...@ceramicnetwork/cli@1.3.0-rc.4) (2021-08-22)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [1.3.0-rc.3](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@1.3.0-rc.2...@ceramicnetwork/cli@1.3.0-rc.3) (2021-08-22)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# 1.3.0-rc.2 (2021-08-22)
+
+
+### Bug Fixes
+
+* **ci:** remove flag from npm ci cmd ([b8ca310](https://github.com/ceramicnetwork/js-ceramic/commit/b8ca3102963096626a46a3c78c705da26e977021))
+
+
+
+
+
+# [1.3.0-rc.1](/compare/@ceramicnetwork/cli@1.3.0-rc.0...@ceramicnetwork/cli@1.3.0-rc.1) (2021-08-19)
+
+
+### Features
+
+* configure nft-did-resolver via config file (#1656) 78baf4d, closes #1656
+* **cli:** Add hierarchy to daemon config (#1633) 138b49d, closes #1633
+
+
+
+
+
+# [1.3.0-rc.0](/compare/@ceramicnetwork/cli@1.2.1...@ceramicnetwork/cli@1.3.0-rc.0) (2021-08-13)
+
+
+### Features
+
+* Rely on default nft-did-resolver subgraphs (#1635) 949aba1, closes #1635
+* **cli:** Add daemon config file (#1629) 642f071, closes #1629
+* **core:** Add API to request an anchor (#1622) 8473c6a, closes #1622
+* Include nft-did-resolver (#1620) 0615c62, closes #1620
+
+
+
+
+
+## [1.2.1](/compare/@ceramicnetwork/cli@1.2.0-rc.5...@ceramicnetwork/cli@1.2.1) (2021-08-11)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
+# [1.2.0](/compare/@ceramicnetwork/cli@1.2.0-rc.5...@ceramicnetwork/cli@1.2.0) (2021-08-11)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
 # [1.2.0-rc.5](/compare/@ceramicnetwork/cli@1.2.0-rc.4...@ceramicnetwork/cli@1.2.0-rc.5) (2021-08-03)
 
 **Note:** Version bump only for package @ceramicnetwork/cli

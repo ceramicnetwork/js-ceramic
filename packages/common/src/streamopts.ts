@@ -1,4 +1,14 @@
 /**
+ * Options that are related to pinning streams.
+ */
+export interface PinningOpts {
+  /**
+   * Whether the stream should be pinned or not.
+   */
+  pin?: boolean
+}
+
+/**
  * Enum describing different modes for syncing a stream.
  */
 export enum SyncOptions {
@@ -22,9 +32,9 @@ export enum SyncOptions {
 }
 
 /**
- * Options shared between LoadOpts and CreateOpts
+ * Options related to syncing a stream.
  */
-interface BasicLoadOpts {
+interface SyncOpts {
   /**
    * Controls the behavior related to syncing a stream to the most recent tip.
    */
@@ -51,9 +61,9 @@ export interface InternalOpts {
 }
 
 /**
- * Extra options passed as part of operations that load a stream
+ * Extra options passed as part of operations that load a stream.
  */
-export interface LoadOpts extends BasicLoadOpts {
+export interface LoadOpts extends SyncOpts, PinningOpts {
   /**
    * Load a previous version of the stream based on unix timestamp
    */
@@ -61,14 +71,9 @@ export interface LoadOpts extends BasicLoadOpts {
 }
 
 /**
- * Extra options passed as part of operations that perform updates to streams
+ * Extra options related to publishing updates to a stream.
  */
-interface BasicUpdateOpts {
-  /**
-   * Whether or not to request an anchor after performing the operation.
-   */
-  anchor?: boolean
-
+export interface PublishOpts {
   /**
    * Whether or not to publish the current tip commit to the pubsub channel after performing
    * the operation.
@@ -76,9 +81,22 @@ interface BasicUpdateOpts {
   publish?: boolean
 }
 
-export interface UpdateOpts extends BasicUpdateOpts, InternalOpts {}
+/**
+ * Extra options related to anchoring.
+ */
+export interface AnchorOpts {
+  /**
+   * Whether or not to request an anchor after performing the operation.
+   */
+  anchor?: boolean
+}
+
+/**
+ * Extra options passed as part of operations that update streams.
+ */
+export interface UpdateOpts extends PublishOpts, AnchorOpts, InternalOpts, PinningOpts {}
 
 /**
  * Extra options passed as part of operations that create streams
  */
-export interface CreateOpts extends UpdateOpts, BasicLoadOpts {}
+export interface CreateOpts extends UpdateOpts, SyncOpts, PinningOpts {}

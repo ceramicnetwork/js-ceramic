@@ -2,12 +2,17 @@ import StreamID, { CommitID } from '@ceramicnetwork/streamid'
 import {
   AnchorService,
   AnchorStatus,
+  CommitType,
   Context,
   CreateOpts,
+  LoadOpts,
+  PinningOpts,
+  PublishOpts,
   StreamState,
   StreamStateHolder,
-  LoadOpts,
+  StreamUtils,
   SyncOptions,
+  UpdateOpts,
 } from '@ceramicnetwork/common'
 import { PinStore } from '../store/pin-store'
 import { DiagnosticsLogger } from '@ceramicnetwork/common'
@@ -21,6 +26,7 @@ import type { StateValidation } from './state-validation'
 import { Observable } from 'rxjs'
 import { StateCache } from './state-cache'
 import { SnapshotState } from './snapshot-state'
+import Utils from '../utils'
 
 export type RepositoryDependencies = {
   dispatcher: Dispatcher
@@ -115,16 +121,13 @@ export class Repository {
   private async fromNetwork(streamId: StreamID): Promise<RunningState> {
     const handler = this.#deps.handlers.get(streamId.typeName)
     const genesisCid = streamId.cid
-    const commit = await this.#deps.dispatcher.retrieveCommit(genesisCid, streamId)
-    if (commit == null) {
+    const commitData = await Utils.getCommitData(this.#deps.dispatcher, genesisCid)
+    if (commitData == null) {
       throw new Error(`No genesis commit found with CID ${genesisCid.toString()}`)
     }
     // Do not check for possible key revocation here, as we will do so later after loading the tip (or learning that the genesis commit *is* the current tip), when we will have timestamp information for when the genesis commit was anchored.
-    const state = await handler.applyCommit(
-      commit,
-      { cid: streamId.cid, disableTimecheck: true },
-      this.#deps.context
-    )
+    commitData.disableTimecheck = true
+    const state = await handler.applyCommit(commitData, this.#deps.context)
     await this.#deps.stateValidation.validate(state, state.content)
     const state$ = new RunningState(state)
     this.add(state$)
@@ -140,7 +143,7 @@ export class Repository {
   async load(streamId: StreamID, opts: LoadOpts): Promise<RunningState> {
     opts = { ...DEFAULT_LOAD_OPTS, ...opts }
 
-    return this.loadingQ.forStream(streamId).run(async () => {
+    const state$ = await this.loadingQ.forStream(streamId).run(async () => {
       let fromStateStore = false
       let stream = this.fromMemory(streamId)
       if (!stream) {
@@ -172,6 +175,9 @@ export class Repository {
       await this.stateManager.sync(stream, opts.syncTimeoutSeconds * 1000, fromStateStore)
       return this.stateManager.verifyLoneGenesis(stream)
     })
+    await this.handlePinOpts(state$, opts)
+
+    return state$
   }
 
   /**
@@ -200,6 +206,44 @@ export class Repository {
   }
 
   /**
+   * Applies commit to the existing state
+   *
+   * @param streamId - Stream ID to update
+   * @param commit - Commit data
+   * @param opts - Stream initialization options (request anchor, wait, etc.)
+   */
+  async applyCommit(
+    streamId: StreamID,
+    commit: any,
+    opts: CreateOpts | UpdateOpts
+  ): Promise<RunningState> {
+    const state$ = await this.stateManager.applyCommit(streamId, commit, opts)
+    await this.applyWriteOpts(state$, opts)
+    return state$
+  }
+
+  /**
+   * Apply options relating to authoring a new commit
+   *
+   * @param state$ - Running State
+   * @param opts - Initialization options (request anchor, publish to pubsub, etc.)
+   * @private
+   */
+  async applyWriteOpts(state$: RunningState, opts: CreateOpts | UpdateOpts) {
+    this.stateManager.applyWriteOpts(state$, opts)
+
+    await this.handlePinOpts(state$, opts)
+  }
+
+  async handlePinOpts(state$: RunningState, opts: PinningOpts) {
+    if (opts.pin) {
+      await this.pin(state$)
+    } else if (opts.pin === false) {
+      await this.unpin(StreamUtils.streamIdFromState(state$.value))
+    }
+  }
+
+  /**
    * Handles new stream creation by loading genesis commit into memory and then handling the given
    * CreateOpts for the genesis commit.
    * @param streamId
@@ -207,7 +251,7 @@ export class Repository {
    */
   async applyCreateOpts(streamId: StreamID, opts: CreateOpts): Promise<RunningState> {
     const state = await this.load(streamId, opts)
-    this.stateManager.applyWriteOpts(state, opts)
+    await this.applyWriteOpts(state, opts)
     return state
   }
 
@@ -246,7 +290,12 @@ export class Repository {
     return this.#deps.pinStore.add(streamStateHolder)
   }
 
-  unpin(streamId: StreamID): Promise<void> {
+  async unpin(streamId: StreamID, opts?: PublishOpts): Promise<void> {
+    if (opts?.publish) {
+      // load the stream's current state from cache or the pin store and publish it to pubsub
+      const state$ = await this.load(streamId, { sync: SyncOptions.NEVER_SYNC })
+      this.stateManager.publishTip(state$)
+    }
     return this.#deps.pinStore.rm(streamId)
   }
 

@@ -2,12 +2,13 @@ import Ceramic from '@ceramicnetwork/core'
 import CeramicClient from '@ceramicnetwork/http-client'
 import * as tmp from 'tmp-promise'
 import { CeramicDaemon } from '../ceramic-daemon'
-import { IpfsApi, SyncOptions } from '@ceramicnetwork/common'
+import { IpfsApi, StreamState, SyncOptions } from '@ceramicnetwork/common'
 import { TileDocumentHandler } from '@ceramicnetwork/stream-tile-handler'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import getPort from 'get-port'
 import { createIPFS } from './create-ipfs'
 import { makeDID } from './make-did'
+import { DaemonConfig } from '../daemon-config'
 
 const seed = 'SEED'
 const TOPIC = '/ceramic'
@@ -50,7 +51,6 @@ describe('Ceramic interop between multiple daemons and http clients', () => {
   beforeAll(async () => {
     tmpFolder1 = await tmp.dir({ unsafeCleanup: true })
     tmpFolder2 = await tmp.dir({ unsafeCleanup: true })
-
     ;[ipfs1, ipfs2] = await Promise.all(
       [tmpFolder1, tmpFolder2].map((tmpFolder) => createIPFS(tmpFolder.path))
     )
@@ -69,9 +69,9 @@ describe('Ceramic interop between multiple daemons and http clients', () => {
     core2 = await makeCeramicCore(ipfs2, tmpFolder1.path)
     const port1 = await getPort()
     const port2 = await getPort()
-    daemon1 = new CeramicDaemon(core1, { port: port1 })
+    daemon1 = new CeramicDaemon(core1, DaemonConfig.fromObject({ 'http-api': { port: port1 } }))
     await daemon1.listen()
-    daemon2 = new CeramicDaemon(core2, { port: port2 })
+    daemon2 = new CeramicDaemon(core2, DaemonConfig.fromObject({ 'http-api': { port: port2 } }))
     await daemon2.listen()
     client1 = new CeramicClient('http://localhost:' + port1, { syncInterval: 500 })
     client2 = new CeramicClient('http://localhost:' + port2, { syncInterval: 500 })
@@ -115,6 +115,42 @@ describe('Ceramic interop between multiple daemons and http clients', () => {
 
     // Loading the doc with default sync behavior should get current contents
     const doc2 = await TileDocument.load(client2, doc1.id)
+    expect(doc2.content).toEqual(updatedContent)
+  })
+
+  it('unpin publishes tip', async () => {
+    const initialContent = { test: 123 }
+    const updatedContent = { test: 456 }
+
+    // Create a stream, pin and load it against both nodes via the http client.
+    const doc1 = await TileDocument.create(client1, initialContent, null, { anchor: false })
+    const doc2 = await TileDocument.load(client2, doc1.id)
+    await client1.pin.add(doc1.id)
+    await client2.pin.add(doc2.id)
+
+    // Do an update on node 1, but don't publish it so node 2 still doesn't know about it.
+    await doc1.update(updatedContent, null, { publish: false, anchor: false })
+
+    // node 2 still doesn't know about it
+    await doc2.sync({ sync: SyncOptions.PREFER_CACHE })
+    expect(doc2.content).toEqual(initialContent)
+    expect(doc1.content).toEqual(updatedContent)
+
+    // Unpin from node 1 and publish tip at the same time
+    await client1.pin.rm(doc1.id, { publish: true })
+
+    // wait for doc2 to learn about the new state
+    const receivedUpdatePromise = new Promise((resolve) => {
+      doc2.subscribe((state) => {
+        if (state.log.length > 1) {
+          resolve(state)
+        }
+      })
+    })
+    const stateUpdate = await receivedUpdatePromise
+    expect((stateUpdate as StreamState).next.content).toEqual(updatedContent)
+
+    await doc2.sync({ sync: SyncOptions.PREFER_CACHE })
     expect(doc2.content).toEqual(updatedContent)
   })
 })

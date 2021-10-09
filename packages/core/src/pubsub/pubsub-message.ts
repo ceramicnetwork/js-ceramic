@@ -14,6 +14,7 @@ export enum MsgType {
   UPDATE,
   QUERY,
   RESPONSE,
+  KEEPALIVE,
 }
 
 export type UpdateMessage = {
@@ -34,7 +35,13 @@ export type ResponseMessage = {
   tips: Map<string, CID>
 }
 
-export type PubsubMessage = UpdateMessage | QueryMessage | ResponseMessage
+// All nodes will always ignore this message
+export type KeepaliveMessage = {
+  typ: MsgType.KEEPALIVE
+  ts: number // current time
+}
+
+export type PubsubMessage = UpdateMessage | QueryMessage | ResponseMessage | KeepaliveMessage
 
 const textEncoder = new TextEncoder()
 const textDecoder = new TextDecoder('utf-8')
@@ -92,6 +99,13 @@ export function serialize(message: PubsubMessage): Uint8Array {
       }
       return textEncoder.encode(JSON.stringify(payload))
     }
+    case MsgType.KEEPALIVE: {
+      const payload = {
+        typ: MsgType.KEEPALIVE,
+        ts: message.ts,
+      }
+      return textEncoder.encode(JSON.stringify(payload))
+    }
     default:
       throw new UnreachableCaseError(message, 'Unknown message type')
   }
@@ -128,6 +142,12 @@ export function deserialize(message: any): PubsubMessage {
         typ: MsgType.QUERY,
         id: parsed.id,
         stream,
+      }
+    }
+    case MsgType.KEEPALIVE: {
+      return {
+        typ: MsgType.KEEPALIVE,
+        ts: parsed.ts,
       }
     }
     default:

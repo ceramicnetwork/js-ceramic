@@ -4,34 +4,31 @@ import { CeramicCliUtils } from '../ceramic-cli-utils'
 
 program
   .command('daemon')
+  .option('--config <path>', 'Path to the Ceramic Daemon config file')
   .option('--ipfs-api <url>', 'The ipfs http api to use')
   .option(
     '--ethereum-rpc <url>',
-    'The Ethereum RPC URL used for communicating with Ethereum blockchain'
+    'The Ethereum RPC URL used for communicating with Ethereum blockchain. Deprecated.'
   )
-  .option('--anchor-service-api <url>', 'The anchor service URL to use')
-  .option(
-    '--validate-streams',
-    'Validate streams according to their schemas. It is enabled by default'
-  )
-  .option('--ipfs-pinning-endpoint <url...>', 'Ipfs pinning endpoints')
+  .option('--anchor-service-api <url>', 'The anchor service URL to use. Deprecated.')
+  .option('--ipfs-pinning-endpoint <url...>', 'Ipfs pinning endpoints. Deprecated')
   .option(
     '--state-store-directory <string>',
-    `The directory path used for storing pinned stream state. Defaults to HOME_DIR/.ceramic/statestore`
+    `The directory path used for storing pinned stream state. Defaults to HOME_DIR/.ceramic/statestore. Deprecated.`
   )
   .option(
     '--state-store-s3-bucket <string>',
-    `The S3 bucket name to use for storing pinned stream state. If not provided pinned stream state will only be saved locally but not to S3.`
+    `The S3 bucket name to use for storing pinned stream state. If not provided pinned stream state will only be saved locally but not to S3. Deprecated.`
   )
   .option('--gateway', 'Makes read only endpoints available. It is disabled by default')
   .option('--port <int>', 'Port daemon is available on. Default is 7007')
   .option('--hostname <string>', 'Host daemon is available on. Default is 0.0.0.0')
   .option('--debug', 'Enable debug logging level. Default is false')
   .option('--verbose', 'Enable verbose logging level. Default is false')
-  .option('--log-to-files', 'If debug is true, write logs to files. Default is false')
+  .option('--log-to-files', 'If debug is true, write logs to files. Default is false. Deprecated')
   .option(
     '--log-directory <dir>',
-    'Store logs in this directory. Defaults to HOME_DIR/.ceramic/logs'
+    'Store logs in this directory. Defaults to HOME_DIR/.ceramic/logs. Deprecated'
   )
   .option(
     '--network <name>',
@@ -39,28 +36,20 @@ program
   )
   .option('--pubsubTopic <string>', 'Pub/sub topic to use for protocol messages')
   .option(
-    '--max-healthy-cpu <decimal>',
-    'Fraction of total CPU usage considered healthy. Defaults to 0.7'
-  )
-  .option(
-    '--max-healthy-memory <decimal>',
-    'Fraction of total memory usage considered healthy. Defaults to 0.7'
-  )
-  .option(
     '--cors-allowed-origins <list>',
-    'Space-separated list of strings and/or regex expressions to set for Access-Control-Allow-Origin . Defaults to all: "*"'
+    'Space-separated list of strings and/or regex expressions to set for Access-Control-Allow-Origin . Defaults to all: ".*". Deprecated.'
   )
   .option(
     '--sync-override <string>',
-    'Global forced mode for syncing all streams. One of: "prefer-cache", "sync-always", or "never-sync". Defaults to "prefer-cache"'
+    'Global forced mode for syncing all streams. One of: "prefer-cache", "sync-always", or "never-sync". Defaults to "prefer-cache". Deprecated.'
   )
   .description('Start the daemon')
   .action(
     async ({
+      config,
       ipfsApi,
       ethereumRpc,
       anchorServiceApi,
-      validateStreams,
       ipfsPinningEndpoint,
       stateStoreDirectory,
       stateStoreS3Bucket,
@@ -76,16 +65,11 @@ program
       corsAllowedOrigins,
       syncOverride,
     }) => {
-      if (stateStoreDirectory && stateStoreS3Bucket) {
-        throw new Error(
-          'Cannot specify both --state-store-directory and --state-store-s3-bucket. Only one state store - either on local storage or on S3 - can be used at a time'
-        )
-      }
       await CeramicCliUtils.createDaemon(
+        config,
         ipfsApi,
         ethereumRpc,
         anchorServiceApi,
-        validateStreams,
         ipfsPinningEndpoint,
         stateStoreDirectory,
         stateStoreS3Bucket,
@@ -235,21 +219,21 @@ config
   .command('show')
   .description('Show CLI Ceramic configuration')
   .action(async () => {
-    await CeramicCliUtils.showConfig()
+    await CeramicCliUtils.showCliConfig()
   })
 
 config
   .command('set <variable> <value>')
   .description('Set variable value')
   .action(async (variable, value) => {
-    await CeramicCliUtils.setConfig(variable, value)
+    await CeramicCliUtils.setCliConfig(variable, value)
   })
 
 config
   .command('unset <variable>')
   .description('Unset configuration variable')
   .action(async (variable) => {
-    await CeramicCliUtils.unsetConfig(variable)
+    await CeramicCliUtils.unsetCliConfig(variable)
   })
 
 program.parse(process.argv)

@@ -2,7 +2,16 @@ import Ajv from 'ajv'
 import addFormats from 'ajv-formats'
 import { Memoize } from 'typescript-memoize'
 
+import {
+  CommitData,
+  CommitType,
+  StreamUtils,
+} from '@ceramicnetwork/common'
+
 import type { TileDocument } from '@ceramicnetwork/stream-tile'
+import { Dispatcher } from './dispatcher'
+import StreamID from "streamid";
+import type CID from 'cids'
 
 /**
  * Various utility functions
@@ -66,6 +75,28 @@ export default class Utils {
       }
       Utils.validate(doc.content, schemaDoc.content)
     }
+  }
+
+  /**
+   * Return `CommitData` (with commit, JWS envelope, and/or anchor proof/timestamp, as applicable) for the specified CID
+   */
+  static async getCommitData(dispatcher: Dispatcher, cid: CID, timestamp?: number, streamId?: StreamID): Promise<CommitData> {
+    const commit = await dispatcher.retrieveCommit(cid, streamId)
+    if (!commit) throw new Error(`No commit found for CID ${cid.toString()}`)
+    // The default applies to all cases that do not use DagJWS for signing (e.g. CAIP-10 links)
+    const commitData: CommitData = { cid, type: CommitType.SIGNED, commit, timestamp }
+    if (StreamUtils.isSignedCommit(commit)) {
+      const linkedCommit = await dispatcher.retrieveCommit(commit.link, streamId)
+      if (!linkedCommit) throw new Error(`No commit found for CID ${commit.link.toString()}`)
+      commitData.commit = linkedCommit
+      commitData.envelope = commit
+    } else if (StreamUtils.isAnchorCommit(commit)) {
+      commitData.type = CommitType.ANCHOR
+      commitData.proof = await dispatcher.retrieveFromIPFS(commit.proof)
+      commitData.timestamp = commitData.proof.blockTimestamp
+    }
+    if (!commitData.commit.prev) commitData.type = CommitType.GENESIS
+    return commitData
   }
 }
 

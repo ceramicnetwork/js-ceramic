@@ -183,7 +183,7 @@ export class StateManager {
     }
   }
 
-  private publishTip(state$: RunningState): void {
+  publishTip(state$: RunningState): void {
     this.dispatcher.publishTip(state$.id, state$.tip)
   }
 
@@ -208,17 +208,16 @@ export class StateManager {
    * @param commit - Commit data
    * @param opts - Stream initialization options (request anchor, wait, etc.)
    */
-  applyCommit(
+  async applyCommit(
     streamId: StreamID,
     commit: any,
-    opts: CreateOpts | UpdateOpts,
+    opts: CreateOpts | UpdateOpts
   ): Promise<RunningState> {
     return this.executionQ.forStream(streamId).run(async () => {
       const state$ = await this.load(streamId, opts)
       const cid = await this.dispatcher.storeCommit(commit, streamId)
 
       await this._handleTip(state$, cid, opts)
-      await this.applyWriteOpts(state$, opts)
       return state$
     })
   }
@@ -246,7 +245,7 @@ export class StateManager {
       try {
         await this.executionQ.forStream(state$.id).run(async () => {
           await this._handleTip(state$, anchorCommit)
-          if (state$.tip == anchorCommit) {
+          if (state$.tip.equals(anchorCommit)) {
             // The anchor commit was applied successfully
             if (remainingRetries < APPLY_ANCHOR_COMMIT_ATTEMPTS - 1) {
               // If we failed to apply the commit at least once, then it's worth logging when
@@ -340,7 +339,7 @@ export class StateManager {
               return
             }
             case AnchorStatus.ANCHORED: {
-              await this._handleAnchorCommit(state$, asr.cid, asr.anchorRecord)
+              await this._handleAnchorCommit(state$, asr.cid, asr.anchorCommit)
               stopSignal.next()
               return
             }

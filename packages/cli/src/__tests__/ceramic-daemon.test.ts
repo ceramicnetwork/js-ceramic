@@ -11,6 +11,7 @@ import StreamID from '@ceramicnetwork/streamid'
 import getPort from 'get-port'
 import { createIPFS } from './create-ipfs'
 import { makeDID } from './make-did'
+import { DaemonConfig } from '../daemon-config'
 
 const seed = 'SEED'
 const TOPIC = '/ceramic'
@@ -68,7 +69,7 @@ describe('Ceramic interop: core <> http-client', () => {
     core = await makeCeramicCore(ipfs, tmpFolder.path)
     const port = await getPort()
     const apiUrl = 'http://localhost:' + port
-    daemon = new CeramicDaemon(core, { port })
+    daemon = new CeramicDaemon(core, DaemonConfig.fromObject({ 'http-api': { port } }))
     await daemon.listen()
     client = new CeramicClient(apiUrl, { syncInterval: 500 })
 
@@ -328,19 +329,28 @@ describe('Ceramic interop: core <> http-client', () => {
   })
 
   it('can get stream contents from /streams/contents', async () => {
-    const content1 = {test: 123}
-    const content2 = {test: 456, test2: 'abc'}
-    const content3 = {test2: 'def'}
+    const content1 = { test: 123 }
+    const content2 = { test: 456, test2: 'abc' }
+    const content3 = { test2: 'def' }
 
     const doc = await TileDocument.create(core, content1, null, { anchor: false })
     await doc.update(content2, null, { anchor: false })
     await doc.update(content3, null, { anchor: false })
 
-    const json = await fetchJson(
-      `http://localhost:${daemon.port}/api/v0/streams/${doc.id}/content`
-    )
+    const json = await fetchJson(`http://localhost:${daemon.port}/api/v0/streams/${doc.id}/content`)
 
     expect(json).toEqual(content3)
+  })
+
+  it('requestAnchor works via http api', async () => {
+    const content1 = { test: 123 }
+
+    const doc = await TileDocument.create(client, content1, null, { anchor: false })
+    expect(doc.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
+
+    await doc.requestAnchor()
+    await anchorDoc(doc)
+    expect(doc.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
   })
 
   describe('multiqueries', () => {

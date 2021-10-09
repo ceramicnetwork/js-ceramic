@@ -3,6 +3,95 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.4.0](https://github.com/ceramicnetwork/js-ceramic/compare/key-did-resolver@1.4.0-rc.0...key-did-resolver@1.4.0) (2021-08-25)
+
+**Note:** Version bump only for package key-did-resolver
+
+
+
+
+
+# [1.4.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/key-did-resolver@1.3.2-rc.5...key-did-resolver@1.4.0-rc.0) (2021-08-24)
+
+
+### Features
+
+* named exports ([884a6d8](https://github.com/ceramicnetwork/js-ceramic/commit/884a6d8e490f1c2c99ed99a17e9fd8c3dfb132d2))
+
+
+
+
+
+## [1.3.2-rc.5](https://github.com/ceramicnetwork/js-ceramic/compare/key-did-resolver@1.3.2-rc.4...key-did-resolver@1.3.2-rc.5) (2021-08-23)
+
+**Note:** Version bump only for package key-did-resolver
+
+
+
+
+
+## 1.3.2-rc.4 (2021-08-23)
+
+
+### Bug Fixes
+
+* **ci:** remove private flag ([9974009](https://github.com/ceramicnetwork/js-ceramic/commit/9974009be69382f2a2caf59f4ff72bf6aa12491b))
+
+
+
+
+
+## [1.3.2-rc.3](https://github.com/ceramicnetwork/js-ceramic/compare/key-did-resolver@1.3.2-rc.2...key-did-resolver@1.3.2-rc.3) (2021-08-22)
+
+**Note:** Version bump only for package key-did-resolver
+
+
+
+
+
+## [1.3.2-rc.2](https://github.com/ceramicnetwork/js-ceramic/compare/key-did-resolver@1.3.2-rc.1...key-did-resolver@1.3.2-rc.2) (2021-08-22)
+
+**Note:** Version bump only for package key-did-resolver
+
+
+
+
+
+## 1.3.2-rc.1 (2021-08-22)
+
+
+### Bug Fixes
+
+* **ci:** remove flag from npm ci cmd ([b8ca310](https://github.com/ceramicnetwork/js-ceramic/commit/b8ca3102963096626a46a3c78c705da26e977021))
+
+
+
+
+
+## [1.3.2-rc.0](/compare/key-did-resolver@1.3.1...key-did-resolver@1.3.2-rc.0) (2021-08-13)
+
+**Note:** Version bump only for package key-did-resolver
+
+
+
+
+
+## [1.3.1](/compare/key-did-resolver@1.3.0-rc.0...key-did-resolver@1.3.1) (2021-08-11)
+
+**Note:** Version bump only for package key-did-resolver
+
+
+
+
+
+# [1.3.0](/compare/key-did-resolver@1.3.0-rc.0...key-did-resolver@1.3.0) (2021-08-11)
+
+**Note:** Version bump only for package key-did-resolver
+
+
+
+
+
 # [1.3.0-rc.0](/compare/key-did-resolver@1.2.1...key-did-resolver@1.3.0-rc.0) (2021-07-16)
 
 

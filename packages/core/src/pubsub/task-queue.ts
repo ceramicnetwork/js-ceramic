@@ -33,13 +33,12 @@ export class TaskQueue implements TaskQueueLike {
   #pq = new PQueue({ concurrency: 1 })
 
   /**
-   * Construct the queue. `onError` is a common error-handler for all the tasks.
-   * It is called when a task errors.
-   * The first parameter is an error object.
-   * The second parameter, if called, would re-add the task to the queue again.
-   * Useful if you know an error indicates another attempt to execute the task is necessary.
+   * Construct the queue.
    *
-   * @param onError - Common error handler.
+   * @param onError - Common error handler for all the tasks, it is called whenever a task errors.
+   *   The first parameter is an error object.
+   *   The second parameter, if called, would re-add the task to the queue again.
+   *   Useful if you know an error indicates another attempt to execute the task is necessary.
    */
   constructor(private readonly onError: (error: Error, retry: () => void) => void = noop) {}
 
@@ -54,8 +53,7 @@ export class TaskQueue implements TaskQueueLike {
    * Add task to queue. Fire-and-forget semantics.
    */
   add(task, onFinally?): void {
-    this.#pq
-      .add(task)
+    this.run(task)
       .catch((error) => {
         const retry = () => this.add(task, onFinally)
         this.onError(error, retry)

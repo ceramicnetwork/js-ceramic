@@ -24,7 +24,7 @@ export interface AnchorServiceAnchored {
   readonly streamId: StreamID
   readonly cid: CID
   readonly message: string
-  readonly anchorRecord: CID
+  readonly anchorCommit: CID
 }
 
 export interface AnchorServiceFailed {

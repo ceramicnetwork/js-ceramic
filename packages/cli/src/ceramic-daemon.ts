@@ -1,15 +1,14 @@
 import express, { Request, Response } from 'express'
-import Ceramic from '@ceramicnetwork/core'
 import type { CeramicConfig } from '@ceramicnetwork/core'
+import Ceramic from '@ceramicnetwork/core'
 import { RotatingFileStream } from '@ceramicnetwork/logger'
 import { buildIpfsConnection } from './build-ipfs-connection.util'
 import { S3StateStore } from './s3-state-store'
 import {
-  StreamUtils,
-  MultiQuery,
-  LoggerConfig,
-  LoggerProvider,
   DiagnosticsLogger,
+  LoggerProvider,
+  MultiQuery,
+  StreamUtils,
   SyncOptions,
 } from '@ceramicnetwork/common'
 import StreamID, { StreamType } from '@ceramicnetwork/streamid'
@@ -17,38 +16,20 @@ import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import KeyDidResolver from 'key-did-resolver'
 import EthrDidResolver from 'ethr-did-resolver'
 import NftDidResolver from 'nft-did-resolver'
+import SafeDidResolver from 'did-safe-resolver'
 import { DID } from 'dids'
 import cors from 'cors'
 import { errorHandler } from './daemon/error-handler'
 import { addAsync, ExpressWithAsync, Router } from '@awaitjs/express'
 import { logRequests } from './daemon/log-requests'
 import type { Server } from 'http'
+import { DaemonConfig, StateStoreMode } from './daemon-config'
+import type { ResolverRegistry } from 'did-resolver'
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const packageJson = require('../package.json')
 
 const DEFAULT_HOSTNAME = '0.0.0.0'
 const DEFAULT_PORT = 7007
-
-/**
- * Daemon create options
- */
-export interface CreateOpts {
-  ipfsHost?: string
-  port?: number
-  hostname?: string
-  corsAllowedOrigins?: string | RegExp[]
-
-  ethereumRpcUrl?: string
-  anchorServiceUrl?: string
-  stateStoreDirectory?: string
-  s3StateStoreBucket?: string
-
-  validateStreams?: boolean
-  ipfsPinningEndpoints?: string[]
-  gateway?: boolean
-  loggerConfig?: LoggerConfig
-  network?: string
-  pubsubTopic?: string
-  syncOverride?: SyncOptions
-}
 
 interface MultiQueryWithDocId extends MultiQuery {
   docId?: string
@@ -58,21 +39,30 @@ interface MultiQueries {
   queries: Array<MultiQueryWithDocId>
 }
 
-export function makeCeramicConfig(opts: CreateOpts): CeramicConfig {
-  const loggerProvider = new LoggerProvider(opts.loggerConfig, (logPath: string) => {
+const SYNC_OPTIONS_MAP = {
+  'prefer-cache': SyncOptions.PREFER_CACHE,
+  'sync-always': SyncOptions.SYNC_ALWAYS,
+  'never-sync': SyncOptions.NEVER_SYNC,
+}
+
+export function makeCeramicConfig(opts: DaemonConfig): CeramicConfig {
+  const loggerProvider = new LoggerProvider(opts.logger, (logPath: string) => {
     return new RotatingFileStream(logPath, true)
   })
+
   const ceramicConfig: CeramicConfig = {
     loggerProvider,
-    gateway: opts.gateway || false,
-    anchorServiceUrl: opts.anchorServiceUrl,
-    ethereumRpcUrl: opts.ethereumRpcUrl,
-    ipfsPinningEndpoints: opts.ipfsPinningEndpoints,
-    networkName: opts.network,
-    pubsubTopic: opts.pubsubTopic,
-    stateStoreDirectory: opts.stateStoreDirectory,
-    validateStreams: opts.validateStreams,
-    syncOverride: opts.syncOverride,
+    gateway: opts.node.gateway || false,
+    anchorServiceUrl: opts.anchor.anchorServiceUrl,
+    ethereumRpcUrl: opts.anchor.ethereumRpcUrl,
+    ipfsPinningEndpoints: opts.ipfs.pinningEndpoints,
+    networkName: opts.network.name,
+    pubsubTopic: opts.network.pubsubTopic,
+    validateStreams: opts.node.validateStreams,
+    syncOverride: SYNC_OPTIONS_MAP[opts.node.syncOverride],
+  }
+  if (opts.stateStore?.mode == StateStoreMode.FS) {
+    ceramicConfig.stateStoreDirectory = opts.stateStore.localDirectory
   }
 
   return ceramicConfig
@@ -120,6 +110,48 @@ function upconvertLegacySyncOption(opts: Record<string, any> | undefined) {
 }
 
 /**
+ * Prepare DID resolvers to use in the daemon.
+ */
+function makeResolvers(
+  ceramic: Ceramic,
+  ceramicConfig: CeramicConfig,
+  opts: DaemonConfig
+): ResolverRegistry {
+  let result = {
+    ...KeyDidResolver.getResolver(),
+    ...ThreeIdResolver.getResolver(ceramic),
+    ...NftDidResolver.getResolver({
+      ceramic: ceramic,
+      ...opts.didResolvers?.nftDidResolver,
+    }),
+    ...SafeDidResolver.getResolver({
+      ceramic: ceramic,
+      ...opts.didResolvers?.safeDidResolver,
+    }),
+  }
+  if (
+    opts.didResolvers?.ethrDidResolver?.networks &&
+    opts.didResolvers?.ethrDidResolver?.networks.length > 0
+  ) {
+    // Custom ethr-did-resolver configuration passed
+    result = { ...result, ...EthrDidResolver.getResolver(opts.didResolvers.ethrDidResolver) }
+  } else if (ceramicConfig.ethereumRpcUrl) {
+    // Use default network from ceramic config's ethereumRpcUrl
+    result = {
+      ...result,
+      ...EthrDidResolver.getResolver({
+        networks: [
+          {
+            rpcUrl: ceramicConfig.ethereumRpcUrl,
+          },
+        ],
+      }),
+    }
+  }
+  return result
+}
+
+/**
  * Ceramic daemon implementation
  */
 export class CeramicDaemon {
@@ -129,19 +161,19 @@ export class CeramicDaemon {
   public hostname: string
   public port: number
 
-  constructor(public ceramic: Ceramic, private readonly opts: CreateOpts) {
+  constructor(public ceramic: Ceramic, private readonly opts: DaemonConfig) {
     this.diagnosticsLogger = ceramic.loggerProvider.getDiagnosticsLogger()
-    this.port = this.opts.port || DEFAULT_PORT
-    this.hostname = this.opts.hostname || DEFAULT_HOSTNAME
+    this.port = this.opts.httpApi?.port || DEFAULT_PORT
+    this.hostname = this.opts.httpApi?.hostname || DEFAULT_HOSTNAME
 
     this.app = addAsync(express())
     this.app.set('trust proxy', true)
     this.app.use(express.json({ limit: '1mb' }))
-    this.app.use(cors({ origin: opts.corsAllowedOrigins }))
+    this.app.use(cors({ origin: opts.httpApi?.corsAllowedOrigins }))
 
     this.app.use(logRequests(ceramic.loggerProvider))
 
-    this.registerAPIPaths(this.app, opts.gateway)
+    this.registerAPIPaths(this.app, opts.node?.gateway)
 
     this.app.use(errorHandler(this.diagnosticsLogger))
   }
@@ -160,49 +192,35 @@ export class CeramicDaemon {
    * Create Ceramic daemon
    * @param opts - Ceramic daemon options
    */
-  static async create(opts: CreateOpts): Promise<CeramicDaemon> {
+  static async create(opts: DaemonConfig): Promise<CeramicDaemon> {
     const ceramicConfig = makeCeramicConfig(opts)
 
     const ipfs = await buildIpfsConnection(
-      opts.network,
+      opts.ipfs.mode,
+      opts.network?.name,
       ceramicConfig.loggerProvider.getDiagnosticsLogger(),
-      opts.ipfsHost
+      opts.ipfs?.host
     )
 
     const [modules, params] = Ceramic._processConfig(ipfs, ceramicConfig)
+    modules.loggerProvider
+      .getDiagnosticsLogger()
+      .imp(
+        `Starting Ceramic Daemon at version ${packageJson.version} with config: \n${JSON.stringify(
+          opts,
+          null,
+          2
+        )}`
+      )
 
-    if (opts.s3StateStoreBucket) {
-      const s3StateStore = new S3StateStore(opts.s3StateStoreBucket)
+    if (opts.stateStore?.mode == StateStoreMode.S3) {
+      const s3StateStore = new S3StateStore(opts.stateStore?.s3Bucket)
       modules.pinStoreFactory.setStateStore(s3StateStore)
     }
 
     const ceramic = new Ceramic(modules, params)
     await ceramic._init(true, true)
-
-    const did = new DID({
-      resolver: {
-        ...KeyDidResolver.getResolver(),
-        ...ThreeIdResolver.getResolver(ceramic),
-        ...NftDidResolver.getResolver({
-          ceramic: ceramic,
-          subGraphUrls: {
-            'eip155:1': {
-              erc1155: 'https://api.thegraph.com/subgraphs/name/sunguru98/mainnet-erc1155-subgraph',
-              erc721: 'https://api.thegraph.com/subgraphs/name/sunguru98/mainnet-erc721-subgraph',
-            },
-          },
-        }),
-        ...(ceramicConfig.ethereumRpcUrl &&
-          EthrDidResolver.getResolver({
-            networks: [
-              {
-                name: 'mainnet',
-                rpcUrl: ceramicConfig.ethereumRpcUrl,
-              },
-            ],
-          })),
-      },
-    })
+    const did = new DID({ resolver: makeResolvers(ceramic, ceramicConfig, opts) })
     await ceramic.setDID(did)
 
     const daemon = new CeramicDaemon(ceramic, opts)
@@ -251,6 +269,7 @@ export class CeramicDaemon {
 
     if (!gateway) {
       streamsRouter.postAsync('/', this.createStreamFromGenesis.bind(this))
+      streamsRouter.postAsync('/:streamid/anchor', this.requestAnchor.bind(this))
       commitsRouter.postAsync('/', this.applyCommit.bind(this))
       pinsRouter.postAsync('/:streamid', this.pinStream.bind(this))
       pinsRouter.deleteAsync('/:streamid', this.unpinStream.bind(this))
@@ -305,6 +324,17 @@ export class CeramicDaemon {
       opts
     )
     res.json({ streamId: stream.id.toString(), state: StreamUtils.serializeState(stream.state) })
+  }
+
+  /**
+   * Create document from genesis commit
+   * @dev Useful when the streamId is unknown, but you have the genesis contents
+   */
+  async requestAnchor(req: Request, res: Response): Promise<void> {
+    const streamId = StreamID.fromString(req.params.streamid)
+    const opts = req.body.opts
+    const anchorStatus = await this.ceramic.requestAnchor(streamId, opts)
+    res.json({ streamId: streamId.toString(), anchorStatus })
   }
 
   /**
@@ -471,7 +501,8 @@ export class CeramicDaemon {
    */
   async unpinStream(req: Request, res: Response): Promise<void> {
     const streamId = StreamID.fromString(req.params.streamid || req.params.docid)
-    await this.ceramic.pin.rm(streamId)
+    const { opts } = req.body
+    await this.ceramic.pin.rm(streamId, opts)
     res.json({
       streamId: streamId.toString(),
       docId: streamId.toString(),

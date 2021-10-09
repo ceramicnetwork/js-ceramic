@@ -3,6 +3,185 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.4.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile-handler@1.4.0-rc.0...@ceramicnetwork/stream-tile-handler@1.4.0-rc.1) (2021-09-18)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
+
+
+
+
+
+# [1.4.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile-handler@1.3.2...@ceramicnetwork/stream-tile-handler@1.4.0-rc.0) (2021-09-17)
+
+
+### Bug Fixes
+
+* **core:** Remove obsolete tests ([#1511](https://github.com/ceramicnetwork/js-ceramic/issues/1511)) ([7d90309](https://github.com/ceramicnetwork/js-ceramic/commit/7d903091008859ce2c32bfb7133f0a9e324badb3))
+
+
+### Features
+
+* **common,stream-tile,stream-tile-handler:** Add metadata option to forbid controller changes ([#1688](https://github.com/ceramicnetwork/js-ceramic/issues/1688)) ([85d6c97](https://github.com/ceramicnetwork/js-ceramic/commit/85d6c9789d28bb507abb9226be02e803cdc275ed))
+* Allow stream controller to differ from signer ([#1609](https://github.com/ceramicnetwork/js-ceramic/issues/1609)) ([b1c4711](https://github.com/ceramicnetwork/js-ceramic/commit/b1c4711b88ae9a3cc422cd8a8ea6b2fd8ff9286b))
+* Allow updating tile immediately after controller change ([#1619](https://github.com/ceramicnetwork/js-ceramic/issues/1619)) ([4e63e2f](https://github.com/ceramicnetwork/js-ceramic/commit/4e63e2f36dd1bd21ca52ebf988c4a54929ee5be3))
+* Check signature of a lone genesis ([#1529](https://github.com/ceramicnetwork/js-ceramic/issues/1529)) ([b55e225](https://github.com/ceramicnetwork/js-ceramic/commit/b55e225682e57aace057fb9e5e8aec0d78d63b75))
+* Pass issuer to verifyJWS ([#1542](https://github.com/ceramicnetwork/js-ceramic/issues/1542)) ([3c60b0c](https://github.com/ceramicnetwork/js-ceramic/commit/3c60b0c43267e29e17fd1f676f25bf11c2ab06d5))
+* Pass time-information when checking a signature ([#1502](https://github.com/ceramicnetwork/js-ceramic/issues/1502)) ([913e091](https://github.com/ceramicnetwork/js-ceramic/commit/913e091827691f37a3e02ffcef569a22fd6f007d))
+* **core:** Split AnchorService from AnchorValidator ([#1505](https://github.com/ceramicnetwork/js-ceramic/issues/1505)) ([b92add9](https://github.com/ceramicnetwork/js-ceramic/commit/b92add945e5fc52943a836dfad856dc052cfbee3))
+
+
+
+
+
+## [1.3.2](/compare/@ceramicnetwork/stream-tile-handler@1.3.2-rc.2...@ceramicnetwork/stream-tile-handler@1.3.2) (2021-09-16)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
+
+
+
+
+
+## [1.3.2-rc.2](/compare/@ceramicnetwork/stream-tile-handler@1.3.1...@ceramicnetwork/stream-tile-handler@1.3.2-rc.2) (2021-09-16)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
+
+
+
+
+
+## [1.3.2-rc.0](/compare/@ceramicnetwork/stream-tile-handler@1.3.1...@ceramicnetwork/stream-tile-handler@1.3.2-rc.0) (2021-09-16)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
+
+
+
+
+
+## [1.3.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile-handler@1.3.0...@ceramicnetwork/stream-tile-handler@1.3.1) (2021-09-14)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
+
+
+
+
+
+# [1.3.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile-handler@1.3.0-rc.0...@ceramicnetwork/stream-tile-handler@1.3.0) (2021-09-08)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
+
+
+
+
+
+# [1.3.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile-handler@1.2.0...@ceramicnetwork/stream-tile-handler@1.3.0-rc.0) (2021-09-02)
+
+
+### Features
+
+* **common,stream-tile,stream-tile-handler:** Add metadata option to forbid controller changes ([#1688](https://github.com/ceramicnetwork/js-ceramic/issues/1688)) ([85d6c97](https://github.com/ceramicnetwork/js-ceramic/commit/85d6c9789d28bb507abb9226be02e803cdc275ed))
+
+
+
+
+
+# [1.2.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile-handler@1.2.0-rc.7...@ceramicnetwork/stream-tile-handler@1.2.0) (2021-08-25)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
+
+
+
+
+
+# [1.2.0-rc.7](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile-handler@1.2.0-rc.6...@ceramicnetwork/stream-tile-handler@1.2.0-rc.7) (2021-08-24)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
+
+
+
+
+
+# [1.2.0-rc.6](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile-handler@1.2.0-rc.5...@ceramicnetwork/stream-tile-handler@1.2.0-rc.6) (2021-08-23)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
+
+
+
+
+
+# 1.2.0-rc.5 (2021-08-23)
+
+
+### Bug Fixes
+
+* **ci:** remove private flag ([9974009](https://github.com/ceramicnetwork/js-ceramic/commit/9974009be69382f2a2caf59f4ff72bf6aa12491b))
+
+
+
+
+
+# [1.2.0-rc.4](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile-handler@1.2.0-rc.3...@ceramicnetwork/stream-tile-handler@1.2.0-rc.4) (2021-08-22)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
+
+
+
+
+
+# [1.2.0-rc.3](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile-handler@1.2.0-rc.2...@ceramicnetwork/stream-tile-handler@1.2.0-rc.3) (2021-08-22)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
+
+
+
+
+
+# 1.2.0-rc.2 (2021-08-22)
+
+
+### Bug Fixes
+
+* **ci:** remove flag from npm ci cmd ([b8ca310](https://github.com/ceramicnetwork/js-ceramic/commit/b8ca3102963096626a46a3c78c705da26e977021))
+
+
+
+
+
+# [1.2.0-rc.1](/compare/@ceramicnetwork/stream-tile-handler@1.2.0-rc.0...@ceramicnetwork/stream-tile-handler@1.2.0-rc.1) (2021-08-19)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
+
+
+
+
+
+# [1.2.0-rc.0](/compare/@ceramicnetwork/stream-tile-handler@1.1.1...@ceramicnetwork/stream-tile-handler@1.2.0-rc.0) (2021-08-13)
+
+
+### Features
+
+* Allow stream controller to differ from signer (#1609) b1c4711, closes #1609
+* Allow updating tile immediately after controller change (#1619) 4e63e2f, closes #1619
+
+
+
+
+
+## [1.1.1](/compare/@ceramicnetwork/stream-tile-handler@1.1.0-rc.3...@ceramicnetwork/stream-tile-handler@1.1.1) (2021-08-11)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
+
+
+
+
+
+# [1.1.0](/compare/@ceramicnetwork/stream-tile-handler@1.1.0-rc.3...@ceramicnetwork/stream-tile-handler@1.1.0) (2021-08-11)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
+
+
+
+
+
 # [1.1.0-rc.3](/compare/@ceramicnetwork/stream-tile-handler@1.1.0-rc.2...@ceramicnetwork/stream-tile-handler@1.1.0-rc.3) (2021-08-03)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-tile-handler

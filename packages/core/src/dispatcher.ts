@@ -1,8 +1,13 @@
 import CID from 'cids'
 import cloneDeep from 'lodash.clonedeep'
-import { StreamUtils, IpfsApi, UnreachableCaseError } from '@ceramicnetwork/common'
+import {
+  DiagnosticsLogger,
+  IpfsApi,
+  ServiceLogger,
+  StreamUtils,
+  UnreachableCaseError,
+} from '@ceramicnetwork/common'
 import StreamID from '@ceramicnetwork/streamid'
-import { DiagnosticsLogger, ServiceLogger } from '@ceramicnetwork/common'
 import { Repository } from './state-management/repository'
 import {
   MsgType,
@@ -15,11 +20,16 @@ import { Pubsub } from './pubsub/pubsub'
 import { Subscription } from 'rxjs'
 import { MessageBus } from './pubsub/message-bus'
 import { LRUMap } from 'lru_map'
+import { PubsubKeepalive } from './pubsub/pubsub-keepalive'
+import { PubsubRateLimit } from './pubsub/pubsub-ratelimit'
 
 const IPFS_GET_RETRIES = 3
 const IPFS_GET_TIMEOUT = 30000 // 30 seconds per retry, 3 retries = 90 seconds total timeout
-const IPFS_MAX_RECORD_SIZE = 256000 // 256 KB
+const IPFS_MAX_COMMIT_SIZE = 256000 // 256 KB
 const IPFS_RESUBSCRIBE_INTERVAL_DELAY = 1000 * 15 // 15 sec
+const MAX_PUBSUB_PUBLISH_INTERVAL = 60 * 1000 // one minute
+const MAX_QUERIES_PER_SECOND = 10
+const MAX_QUEUED_QUERIES = 100
 const IPFS_CACHE_SIZE = 1024 // maximum cache size of 256MB
 
 function messageTypeToString(type: MsgType): string {
@@ -30,6 +40,8 @@ function messageTypeToString(type: MsgType): string {
       return 'Query'
     case MsgType.RESPONSE:
       return 'Response'
+    case MsgType.KEEPALIVE:
+      return 'Keepalive'
     default:
       throw new UnreachableCaseError(type, `Unsupported message type`)
   }
@@ -40,7 +52,7 @@ function messageTypeToString(type: MsgType): string {
  */
 export class Dispatcher {
   readonly messageBus: MessageBus
-  readonly dagNodeCache : LRUMap<string, any>
+  readonly dagNodeCache: LRUMap<string, any>
   // Set of IDs for QUERY messages we have sent to the pub/sub topic but not yet heard a
   // corresponding RESPONSE message for. Maps the query ID to the primary StreamID we were querying for.
   constructor(
@@ -51,9 +63,16 @@ export class Dispatcher {
     private readonly _pubsubLogger: ServiceLogger
   ) {
     const pubsub = new Pubsub(_ipfs, topic, IPFS_RESUBSCRIBE_INTERVAL_DELAY, _pubsubLogger, _logger)
-    this.messageBus = new MessageBus(pubsub)
+    this.messageBus = new MessageBus(
+      new PubsubRateLimit(
+        new PubsubKeepalive(pubsub, MAX_PUBSUB_PUBLISH_INTERVAL),
+        _logger,
+        MAX_QUERIES_PER_SECOND,
+        MAX_QUEUED_QUERIES
+      )
+    )
     this.messageBus.subscribe(this.handleMessage.bind(this))
-    this.dagNodeCache  = new LRUMap<string, any>(IPFS_CACHE_SIZE)
+    this.dagNodeCache = new LRUMap<string, any>(IPFS_CACHE_SIZE)
   }
 
   /**
@@ -147,10 +166,12 @@ export class Dispatcher {
     let dagResult = null
     for (let retries = IPFS_GET_RETRIES - 1; retries >= 0 && dagResult == null; retries--) {
       try {
-        dagResult = await this._ipfs.dag.get(asCid, {timeout: IPFS_GET_TIMEOUT, path})
+        dagResult = await this._ipfs.dag.get(asCid, { timeout: IPFS_GET_TIMEOUT, path })
       } catch (err) {
         if (err.code == 'ERR_TIMEOUT') {
-          console.warn(`Timeout error while loading CID ${cid.toString()} from IPFS. ${retries} retries remain`)
+          console.warn(
+            `Timeout error while loading CID ${cid.toString()} from IPFS. ${retries} retries remain`
+          )
           if (retries > 0) {
             continue
           }
@@ -165,17 +186,17 @@ export class Dispatcher {
   }
 
   /**
-   * Restricts record size to IPFS_MAX_RECORD_SIZE
-   * @param cid - Record CID
+   * Restricts commit size to IPFS_MAX_COMMIT_SIZE
+   * @param cid - Commit CID
    * @private
    */
   async _restrictCommitSize(cid: CID | string): Promise<void> {
     const stat = await this._ipfs.block.stat(cid, { timeout: IPFS_GET_TIMEOUT })
-    if (stat.size > IPFS_MAX_RECORD_SIZE) {
+    if (stat.size > IPFS_MAX_COMMIT_SIZE) {
       throw new Error(
-        `${cid.toString()} record size ${
+        `${cid.toString()} commit size ${
           stat.size
-        } exceeds the maximum block size of ${IPFS_MAX_RECORD_SIZE}`
+        } exceeds the maximum block size of ${IPFS_MAX_COMMIT_SIZE}`
       )
     }
   }
@@ -204,6 +225,8 @@ export class Dispatcher {
           break
         case MsgType.RESPONSE:
           await this._handleResponseMessage(message)
+          break
+        case MsgType.KEEPALIVE:
           break
         default:
           throw new UnreachableCaseError(message, `Unsupported message type`)

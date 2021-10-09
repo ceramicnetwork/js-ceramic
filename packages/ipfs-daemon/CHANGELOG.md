@@ -3,6 +3,148 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.1.5-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ipfs-daemon@1.1.5-rc.0...@ceramicnetwork/ipfs-daemon@1.1.5-rc.1) (2021-09-18)
+
+**Note:** Version bump only for package @ceramicnetwork/ipfs-daemon
+
+
+
+
+
+## [1.1.5-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ipfs-daemon@1.1.4...@ceramicnetwork/ipfs-daemon@1.1.5-rc.0) (2021-09-17)
+
+**Note:** Version bump only for package @ceramicnetwork/ipfs-daemon
+
+
+
+
+
+## [1.1.4](/compare/@ceramicnetwork/ipfs-daemon@1.1.4-rc.0...@ceramicnetwork/ipfs-daemon@1.1.4) (2021-09-16)
+
+**Note:** Version bump only for package @ceramicnetwork/ipfs-daemon
+
+
+
+
+
+## [1.1.4-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ipfs-daemon@1.1.3...@ceramicnetwork/ipfs-daemon@1.1.4-rc.0) (2021-09-08)
+
+**Note:** Version bump only for package @ceramicnetwork/ipfs-daemon
+
+
+
+
+
+## [1.1.3](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ipfs-daemon@1.1.3-rc.0...@ceramicnetwork/ipfs-daemon@1.1.3) (2021-09-08)
+
+**Note:** Version bump only for package @ceramicnetwork/ipfs-daemon
+
+
+
+
+
+## [1.1.3-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ipfs-daemon@1.1.2...@ceramicnetwork/ipfs-daemon@1.1.3-rc.0) (2021-09-02)
+
+**Note:** Version bump only for package @ceramicnetwork/ipfs-daemon
+
+
+
+
+
+## [1.1.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ipfs-daemon@1.1.2-rc.7...@ceramicnetwork/ipfs-daemon@1.1.2) (2021-08-25)
+
+**Note:** Version bump only for package @ceramicnetwork/ipfs-daemon
+
+
+
+
+
+## [1.1.2-rc.7](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ipfs-daemon@1.1.2-rc.6...@ceramicnetwork/ipfs-daemon@1.1.2-rc.7) (2021-08-24)
+
+**Note:** Version bump only for package @ceramicnetwork/ipfs-daemon
+
+
+
+
+
+## [1.1.2-rc.6](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ipfs-daemon@1.1.2-rc.5...@ceramicnetwork/ipfs-daemon@1.1.2-rc.6) (2021-08-23)
+
+**Note:** Version bump only for package @ceramicnetwork/ipfs-daemon
+
+
+
+
+
+## 1.1.2-rc.5 (2021-08-23)
+
+
+### Bug Fixes
+
+* **ci:** remove private flag ([9974009](https://github.com/ceramicnetwork/js-ceramic/commit/9974009be69382f2a2caf59f4ff72bf6aa12491b))
+
+
+
+
+
+## [1.1.2-rc.4](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ipfs-daemon@1.1.2-rc.3...@ceramicnetwork/ipfs-daemon@1.1.2-rc.4) (2021-08-22)
+
+**Note:** Version bump only for package @ceramicnetwork/ipfs-daemon
+
+
+
+
+
+## [1.1.2-rc.3](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ipfs-daemon@1.1.2-rc.2...@ceramicnetwork/ipfs-daemon@1.1.2-rc.3) (2021-08-22)
+
+**Note:** Version bump only for package @ceramicnetwork/ipfs-daemon
+
+
+
+
+
+## 1.1.2-rc.2 (2021-08-22)
+
+
+### Bug Fixes
+
+* **ci:** remove flag from npm ci cmd ([b8ca310](https://github.com/ceramicnetwork/js-ceramic/commit/b8ca3102963096626a46a3c78c705da26e977021))
+
+
+
+
+
+## [1.1.2-rc.1](/compare/@ceramicnetwork/ipfs-daemon@1.1.2-rc.0...@ceramicnetwork/ipfs-daemon@1.1.2-rc.1) (2021-08-19)
+
+**Note:** Version bump only for package @ceramicnetwork/ipfs-daemon
+
+
+
+
+
+## [1.1.2-rc.0](/compare/@ceramicnetwork/ipfs-daemon@1.1.1...@ceramicnetwork/ipfs-daemon@1.1.2-rc.0) (2021-08-13)
+
+**Note:** Version bump only for package @ceramicnetwork/ipfs-daemon
+
+
+
+
+
+## [1.1.1](/compare/@ceramicnetwork/ipfs-daemon@1.1.0-rc.2...@ceramicnetwork/ipfs-daemon@1.1.1) (2021-08-11)
+
+**Note:** Version bump only for package @ceramicnetwork/ipfs-daemon
+
+
+
+
+
+# [1.1.0](/compare/@ceramicnetwork/ipfs-daemon@1.1.0-rc.2...@ceramicnetwork/ipfs-daemon@1.1.0) (2021-08-11)
+
+**Note:** Version bump only for package @ceramicnetwork/ipfs-daemon
+
+
+
+
+
 # [1.1.0-rc.2](/compare/@ceramicnetwork/ipfs-daemon@1.1.0-rc.1...@ceramicnetwork/ipfs-daemon@1.1.0-rc.2) (2021-07-30)
 
 **Note:** Version bump only for package @ceramicnetwork/ipfs-daemon

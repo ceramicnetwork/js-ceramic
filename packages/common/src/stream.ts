@@ -6,7 +6,7 @@ import type { DagJWS, DagJWSResult } from 'dids'
 import { Observable } from 'rxjs'
 import { RunningStateLike } from './running-state-like'
 import { CeramicApi } from './ceramic-api'
-import { LoadOpts, SyncOptions } from './docopts'
+import { LoadOpts, SyncOptions } from './streamopts'
 
 /**
  * Describes signature status
@@ -39,6 +39,7 @@ export interface CommitHeader {
 
 export interface GenesisHeader extends CommitHeader {
   unique?: string
+  forbidControllerChange?: boolean
 }
 
 export type GenesisCommit = {
@@ -80,18 +81,6 @@ export type CeramicCommit =
   | SignedCommitContainer
 
 /**
- * Commit meta-information, like CID and timestamp.
- */
-export type CommitMeta = {
-  cid: CID
-  timestamp?: number
-  /**
-   * Do not time-check a signature.
-   */
-  disableTimecheck?: boolean
-}
-
-/**
  * Stream metadata
  */
 export interface StreamMetadata {
@@ -99,6 +88,7 @@ export interface StreamMetadata {
   family?: string
   schema?: string
   tags?: Array<string>
+  forbidControllerChange?: boolean
 
   [index: string]: any // allow arbitrary properties
 }
@@ -124,12 +114,17 @@ export interface LogEntry {
   timestamp?: number
 }
 
+/**
+ * Includes additional fields that significantly reduce the number of IPFS lookups required while processing commits.
+ */
 export interface CommitData extends LogEntry {
-  // Holding on to these fields when fetching and processing new commits significantly reduces the number of IPFS
-  // lookups required. Use of these fields is currently limited to `conflict-resolution.ts` but further optimization of
-  // the code is possible by relaying them to code that looks the fields up again.
-  commit?: any
+  commit: any
   envelope?: DagJWS
+  proof?: AnchorProof
+  /**
+   * Do not time-check a signature.
+   */
+  disableTimecheck?: boolean
 }
 
 /**
@@ -224,6 +219,10 @@ export abstract class Stream extends Observable<StreamState> implements StreamSt
     this.state$.next(stream.state)
   }
 
+  async requestAnchor(): Promise<AnchorStatus> {
+    return this.api.requestAnchor(this.id)
+  }
+
   /**
    * Makes this stream read-only. After this has been called any future attempts to call
    * mutation methods on the instance will throw.
@@ -279,14 +278,12 @@ export interface StreamHandler<T extends Stream> {
 
   /**
    * Applies commit to the stream (genesis|signed|anchored)
-   * @param commit - Commit instance
-   * @param meta - Record meta-inforamtion, like CID and timestamp
+   * @param commitData - Commit data
    * @param context - Ceramic context
    * @param state - Stream state
    */
   applyCommit(
-    commit: CeramicCommit,
-    meta: CommitMeta,
+    commitData: CommitData,
     context: Context,
     state?: StreamState
   ): Promise<StreamState>

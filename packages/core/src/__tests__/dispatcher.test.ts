@@ -83,7 +83,7 @@ describe('Dispatcher', () => {
     expect(ipfs.pubsub.unsubscribe).toHaveBeenCalledWith(TOPIC, expect.anything())
   })
 
-  it('store record correctly', async () => {
+  it('store commit correctly', async () => {
     ipfs.dag.put.mockReturnValueOnce(FAKE_CID)
     expect(await dispatcher.storeCommit('data')).toEqual(FAKE_CID)
 
@@ -91,7 +91,7 @@ describe('Dispatcher', () => {
     expect(ipfs.dag.put.mock.calls[0][0]).toEqual('data')
   })
 
-  it('retrieves record correctly', async () => {
+  it('retrieves commit correctly', async () => {
     ipfs.dag.get.mockReturnValueOnce({value: 'data'})
     expect(await dispatcher.retrieveCommit(FAKE_CID)).toEqual('data')
 

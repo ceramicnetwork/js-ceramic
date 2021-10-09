@@ -25,7 +25,7 @@ jobs:
         name: Set master branch tag
         if: ${{ env.BRANCH == 'master' }}
         run: |
-          echo "ENV_TAG=latest" >> $GITHUB_ENV
+          echo "ENV_TAG=prod" >> $GITHUB_ENV
           echo "EVENT_WEBHOOK_URL=${{ secrets.EVENT_WEBHOOK_FIRE }}" >> $GITHUB_ENV
       -
         name: Set rc branch tag
@@ -35,16 +35,21 @@ jobs:
           echo "EVENT_WEBHOOK_URL=${{ secrets.EVENT_WEBHOOK_CLAY }}" >> $GITHUB_ENV
       -
         name: Set develop branch tag
-        if: ${{ env.BRANCH == 'develop' }}
+        if: ${{ env.BRANCH == 'develop' || env.ENV_TAG == '' }}
         run: |
           echo "ENV_TAG=dev" >> $GITHUB_ENV
           echo "EVENT_WEBHOOK_URL=${{ secrets.EVENT_WEBHOOK_DEV }}" >> $GITHUB_ENV
       -
-        name: Set env tag (default)
-        if: ${{ env.ENV_TAG == '' }}
-        run: |
-          echo "ENV_TAG=dev" >> $GITHUB_ENV
-          echo "EVENT_WEBHOOK_URL=${{ secrets.EVENT_WEBHOOK_DEV }}" >> $GITHUB_ENV
+        name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+      -
+        name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
       -
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
@@ -55,29 +60,65 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       -
-        name: Build js-ceramic image
+        name: Build and push js-ceramic image
         env:
-          IMAGE_ID: "ceramicnetwork/js-ceramic"
+          IMAGE_ID_1: "ceramicnetwork/js-ceramic"
+          IMAGE_ID_2: "${{ steps.login-ecr.outputs.registry }}/ceramic-${{ env.ENV_TAG }}"
         run: |
-          docker buildx build . --file Dockerfile.daemon \
-            --output "type=image,push=true" \
-            --tag ${{ env.IMAGE_ID }}:${{ env.ENV_TAG }} \
-            --tag ${{ env.IMAGE_ID }}:${{ env.SHA_TAG }} \
-            --tag ${{ env.IMAGE_ID }}:${{ env.BRANCH }}
+          EXTRA_TAGS=""
+          if [[ "${{ env.ENV_TAG }}" == "prod" ]]; then
+            EXTRA_TAGS="--tag $IMAGE_ID_1:latest --tag $IMAGE_ID_2:latest"
+          fi
+
+          docker buildx build . --file Dockerfile.daemon --output 'type=image,push=true' \
+            --tag $IMAGE_ID_1:${{ env.ENV_TAG }} \
+            --tag $IMAGE_ID_1:${{ env.SHA_TAG }} \
+            --tag $IMAGE_ID_1:${{ github.sha }}  \
+            --tag $IMAGE_ID_1:${{ env.BRANCH }}  \
+            --tag $IMAGE_ID_2:${{ env.ENV_TAG }} \
+            --tag $IMAGE_ID_2:${{ env.SHA_TAG }} \
+            --tag $IMAGE_ID_2:${{ github.sha }}  \
+            --tag $IMAGE_ID_2:${{ env.BRANCH }}  \
+            $EXTRA_TAGS
       -
-        name: Build ipfs-daemon image
+        name: Build and push ipfs-daemon image
         env:
-          IMAGE_ID: "ceramicnetwork/ipfs-daemon"
+          IMAGE_ID_1: "ceramicnetwork/ipfs-daemon"
+          IMAGE_ID_2: "${{ steps.login-ecr.outputs.registry }}/js-ipfs-${{ env.ENV_TAG }}"
         run: |
-          docker buildx build . --file Dockerfile.ipfs-daemon \
-            --output "type=image,push=true" \
-            --tag ${{ env.IMAGE_ID }}:${{ env.ENV_TAG }} \
-            --tag ${{ env.IMAGE_ID }}:${{ env.SHA_TAG }} \
-            --tag ${{ env.IMAGE_ID }}:${{ env.BRANCH }}
+          EXTRA_TAGS=""
+          if [[ "${{ env.ENV_TAG }}" == "prod" ]]; then
+            EXTRA_TAGS="--tag $IMAGE_ID_1:latest --tag $IMAGE_ID_2:latest"
+          fi
+
+          docker buildx build . --file Dockerfile.ipfs-daemon --output 'type=image,push=true' \
+            --tag $IMAGE_ID_1:${{ env.ENV_TAG }} \
+            --tag $IMAGE_ID_1:${{ env.SHA_TAG }} \
+            --tag $IMAGE_ID_1:${{ github.sha }}  \
+            --tag $IMAGE_ID_1:${{ env.BRANCH }}  \
+            --tag $IMAGE_ID_2:${{ env.ENV_TAG }} \
+            --tag $IMAGE_ID_2:${{ env.SHA_TAG }} \
+            --tag $IMAGE_ID_2:${{ github.sha }}  \
+            --tag $IMAGE_ID_2:${{ env.BRANCH }}  \
+            $EXTRA_TAGS
       -
         name: Publish build event
         run: |
-          res=$(docker run --rm curlimages/curl curl -X POST ${{ env.EVENT_WEBHOOK_URL }} -H "Content-Type: application/json" --user ${{ secrets.AWS_ACCESS_KEY_ID }}:${{ secrets.AWS_SECRET_ACCESS_KEY }} --aws-sigv4 "aws:amz:${{ secrets.AWS_DEFAULT_REGION }}:execute-api" -d '{ "event_type": "new_image", "client_payload": {"env_tag": "${{ env.ENV_TAG }}", "sha_tag": "${{ env.SHA_TAG }}" } }') || exit 1
+          res=$(docker run --rm curlimages/curl curl -X POST ${{ env.EVENT_WEBHOOK_URL }} \
+            -H "Content-Type: application/json" \
+            --user ${{ secrets.AWS_ACCESS_KEY_ID }}:${{ secrets.AWS_SECRET_ACCESS_KEY }} \
+            --aws-sigv4 "aws:amz:${{ secrets.AWS_DEFAULT_REGION }}:execute-api" \
+            -d '
+              {
+                "event_type": "new_ceramic_image",
+                "client_payload":
+                {
+                  "env_tag": "${{ env.ENV_TAG }}",
+                  "sha_tag": "${{ github.sha }}",
+                  "ecr_repo": "${{ steps.login-ecr.outputs.registry }}"
+                }
+              }
+            ') || exit 1
           echo $res
           if [[ $res != *"Forwarded event"* ]]; then
             exit 1

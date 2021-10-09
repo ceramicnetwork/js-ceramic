@@ -26,7 +26,7 @@ The method `change` is more or less sugar coding for the developer since all the
 
 # StreamHandler
 
-The [[StreamHandler]] interface is used for determining the next **state** of the document. The method worth noting is `applyRecord` which is used for that *state transition*. For example the [[TileDocumentHandler]] is included in the Ceramic node out-of-the-box as well.
+The [[StreamHandler]] interface is used for determining the next **state** of the document. The method worth noting is `applyCommit` which is used for that *state transition*. For example the [[TileDocumentHandler]] is included in the Ceramic node out-of-the-box as well.
 
 The [[StreamHandler]] uses [[CeramicApi]] which is included in the [[Context]] instance.
 

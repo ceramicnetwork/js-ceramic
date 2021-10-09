@@ -1,4 +1,4 @@
-import { PinApi, RunningStateLike } from '@ceramicnetwork/common'
+import { PinApi, PublishOpts, RunningStateLike } from '@ceramicnetwork/common'
 import StreamID from '@ceramicnetwork/streamid'
 import { DiagnosticsLogger } from '@ceramicnetwork/common'
 import { Repository } from './state-management/repository'
@@ -19,8 +19,8 @@ export class LocalPinApi implements PinApi {
     this.logger.verbose(`Pinned stream ${streamId.toString()}`)
   }
 
-  async rm(streamId: StreamID): Promise<void> {
-    await this.repository.unpin(streamId)
+  async rm(streamId: StreamID, opts?: PublishOpts): Promise<void> {
+    await this.repository.unpin(streamId, opts)
     this.logger.verbose(`Unpinned stream ${streamId.toString()}`)
   }
 

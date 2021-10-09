@@ -1,12 +1,16 @@
 version: 2.1
 orbs:
-  node: circleci/node@4.5.1
+  node: circleci/node@4.7.0
 jobs:
   build-and-test:
-    docker:
-      - image: circleci/node:14
+    machine:
+      image: ubuntu-2004:202107-02
+    environment:
+      NODE_OPTIONS: "--max_old_space_size=4096"
     steps:
       - checkout
+      - node/install-npm:
+          version: "6"
       - node/install-packages
       - run: npm run lint
       - run: npm run build

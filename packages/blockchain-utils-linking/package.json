@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/blockchain-utils-linking",
-  "version": "1.1.0-rc.1",
+  "version": "1.2.1-rc.1",
   "description": "Blockchain utils for linking blockchain accounts to DID",
   "keywords": [
     "ceramic",
@@ -30,7 +30,7 @@
     "uint8arrays": "^2.0.5"
   },
   "devDependencies": {
-    "@ethersproject/providers": "5.0.23",
+    "@ethersproject/providers": "^5.4.5",
     "@glif/filecoin-address": "1.1.0",
     "@glif/local-managed-provider": "1.1.0",
     "@polkadot/api": "^4.6.2",
@@ -45,7 +45,7 @@
     "@zondax/filecoin-signing-tools": "^0.15.0",
     "eth-sig-util": "^3.0.0",
     "ganache-core": "^2.13.1",
-    "near-api-js": "^0.36.3"
+    "near-api-js": "^0.42.0"
   },
   "jest": {
     "testEnvironment": "node",
