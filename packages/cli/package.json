@@ -59,6 +59,7 @@
     "levelup": "^4.4.0",
     "morgan": "^1.10.0",
     "nft-did-resolver": "^0.2.0",
+    "pkh-did-resolver": "^0.2.0",
     "reflect-metadata": "^0.1.13",
     "s3leveldown": "^2.2.1",
     "stream-to-array": "^2.3.0",
