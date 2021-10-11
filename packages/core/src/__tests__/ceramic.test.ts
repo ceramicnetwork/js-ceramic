@@ -565,7 +565,7 @@ describe('Ceramic integration', () => {
             genesis: genesisCommit,
           },
         ])
-      ).rejects.toEqual('Given StreamID CID does not match given genesis content')
+      ).rejects.toThrowError('Given StreamID CID does not match given genesis content')
 
       await ceramic1.close()
       await ceramic2.close()
@@ -605,7 +605,7 @@ describe('Ceramic integration', () => {
             genesis: genesisCommit,
           },
         ])
-      ).rejects.toEqual('Given genesis commit is not deterministic')
+      ).rejects.toThrowError('Given genesis commit is not deterministic')
 
       await ceramic1.close()
       await ceramic2.close()
