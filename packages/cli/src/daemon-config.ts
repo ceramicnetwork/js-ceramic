@@ -167,7 +167,7 @@ export class DaemonDidResolversConfig {
   nftDidResolver?: any
 
   /**
-   * Configuration for did-safe-resolver. Its README contains appropriate documentation.
+   * Configuration for safe-did-resolver. Its README contains appropriate documentation.
    *
    * When specifying in a config file, use the name 'safe-did-resolver'.
    */
