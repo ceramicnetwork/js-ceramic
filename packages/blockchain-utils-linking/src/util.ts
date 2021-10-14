@@ -94,7 +94,7 @@ export function getOcapRequestMessage(opts: OcapRequestParams): string {
 
   res += 'Resources: \n'
 
-  for (let streamId of opts.streams) {
+  for (const streamId of opts.streams) {
     res += `- ${streamId.toString()} \n`
   }
 
