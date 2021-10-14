@@ -16,6 +16,25 @@ Timestamp: 0",
 }
 `;
 
+exports[`Ocap requestCapability 1`] = `
+Object {
+  "message": "self.id wants you to sign in with your Ethereum account: 
+0x8fe2c4516e920425e177658aaac451ca0463ed69
+
+Give this app access to your streams
+
+URI: did:pkh:eip155:1:0x8fe2c4516e920425e177658aaac451ca0463ed69 
+Version: 1 
+Chain ID: eip155:1337 
+Nonce: 12345678 
+Issued At: 2021-10-14T07:18:41.444Z 
+Resources: 
+- kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s 
+",
+  "signature": "0xcc58209b2b5e8046bdf1e07377f73dc4496cf89fd857ae02e74c3130ee2e7dd9113d3d3c7e952513485acf8c5ad3ba8a7ed93ca59abbd823e298a1c5390325c01c",
+}
+`;
+
 exports[`authenticate correctly sign auth message 1`] = `"0xcf54e7560501fa53e3f7092672a920c346034ba93d001919f0cb5445851b5685"`;
 
 exports[`createLink create erc1271 proof correctly 1`] = `

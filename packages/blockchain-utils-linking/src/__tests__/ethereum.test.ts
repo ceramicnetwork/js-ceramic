@@ -4,6 +4,8 @@ import * as sigUtils from 'eth-sig-util'
 import { ContractFactory, Contract } from '@ethersproject/contracts'
 import { encodeRpcMessage } from '../util'
 import * as ethereum from '../ethereum'
+import { OcapParams } from '..'
+import StreamID from '@ceramicnetwork/streamid'
 
 const CONTRACT_WALLET_ABI = [
   {
@@ -161,5 +163,26 @@ describe('EthereumAuthProvider', () => {
     const address = addresses[0]
     const auth = new ethereum.EthereumAuthProvider(provider, address)
     await expect(auth.withAddress(address).createLink(testDid)).resolves.toMatchSnapshot()
+  })
+})
+
+describe('Ocap', () => {
+  test('requestCapability', async () => {
+    const address = addresses[0]
+    const auth = new ethereum.EthereumAuthProvider(provider, address)
+    const streamId = new StreamID(
+      'tile',
+      'bagcqcerakszw2vsovxznyp5gfnpdj4cqm2xiv76yd24wkjewhhykovorwo6a'
+    )
+    const fixedDate = new Date('2021-10-14T07:18:41.444Z')
+    const ocapParams: OcapParams = {
+      did: `did:pkh:eip155:1:${address}`,
+      streams: [streamId],
+      domain: 'self.id',
+      statement: 'Give this app access to your streams',
+      nonce: '12345678',
+      issuedAt: fixedDate.toISOString(),
+    }
+    await expect(auth.requestCapability(ocapParams)).resolves.toMatchSnapshot()
   })
 })
