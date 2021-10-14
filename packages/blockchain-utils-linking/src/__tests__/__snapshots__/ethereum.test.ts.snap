@@ -29,9 +29,9 @@ Chain ID: eip155:1337
 Nonce: 12345678 
 Issued At: 2021-10-14T07:18:41.444Z 
 Resources: 
-- kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s 
+- ceramic://kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s 
 ",
-  "signature": "0xcc58209b2b5e8046bdf1e07377f73dc4496cf89fd857ae02e74c3130ee2e7dd9113d3d3c7e952513485acf8c5ad3ba8a7ed93ca59abbd823e298a1c5390325c01c",
+  "signature": "0xc7dc3a45da0ba8c6c82f22839273d7412a4049340682782c257395689563c8e86ad3b151a999f4d729e9dab58a3f6622559e0546eb6ee8a967520bc73231c83d1b",
 }
 `;
 

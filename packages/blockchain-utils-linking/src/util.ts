@@ -1,4 +1,4 @@
-import StreamID from '@ceramicnetwork/streamid'
+import type StreamID from '@ceramicnetwork/streamid'
 
 export interface LinkProof {
   version: number
@@ -24,6 +24,10 @@ export interface ConsentMessage {
   timestamp?: number
 }
 
+export enum OcapTypes {
+  EIP4361 = 'EIP-4361',
+}
+
 export interface OcapParams {
   did: string
   streams: Array<StreamID>
@@ -34,6 +38,7 @@ export interface OcapParams {
   expiresAt?: string
   notBefore?: string
   requestId?: string
+  type: OcapTypes
 }
 
 export interface Ocap {
@@ -58,6 +63,10 @@ export function getConsentMessage(did: string, addTimestamp = true): ConsentMess
 }
 
 export function getOcapRequestMessage(opts: OcapRequestParams): string {
+  if (opts.type !== OcapTypes.EIP4361) {
+    throw new Error('Unsupported type')
+  }
+
   let res = ''
 
   res += `${opts.domain} wants you to sign in with your Ethereum account: \n`
@@ -95,7 +104,7 @@ export function getOcapRequestMessage(opts: OcapRequestParams): string {
   res += 'Resources: \n'
 
   for (const streamId of opts.streams) {
-    res += `- ${streamId.toString()} \n`
+    res += `- ${streamId.toUrl()} \n`
   }
 
   return res

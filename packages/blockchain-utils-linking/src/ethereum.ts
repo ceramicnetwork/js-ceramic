@@ -11,6 +11,7 @@ import {
 } from './util'
 import * as uint8arrays from 'uint8arrays'
 import * as sha256 from '@stablelib/sha256'
+import { OcapTypes } from '.'
 
 const ADDRESS_TYPES = {
   ethereumEOA: 'ethereum-eoa',
@@ -61,6 +62,7 @@ export class EthereumAuthProvider implements AuthProvider {
       ...params,
       address: this.address,
       chainId: account.chainId.toString(),
+      type: OcapTypes.EIP4361,
     })
     const payload = encodeRpcMessage('personal_sign', [requestMessage, account.address])
     const signature = await safeSend(payload, this.provider)
