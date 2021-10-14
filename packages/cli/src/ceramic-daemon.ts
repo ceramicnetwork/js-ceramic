@@ -14,6 +14,7 @@ import {
 import StreamID, { StreamType } from '@ceramicnetwork/streamid'
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import KeyDidResolver from 'key-did-resolver'
+import PkhDidResolver from 'pkh-did-resolver'
 import EthrDidResolver from 'ethr-did-resolver'
 import NftDidResolver from 'nft-did-resolver'
 import SafeDidResolver from 'safe-did-resolver'
@@ -119,6 +120,7 @@ function makeResolvers(
 ): ResolverRegistry {
   let result = {
     ...KeyDidResolver.getResolver(),
+    ...PkhDidResolver.getResolver(),
     ...ThreeIdResolver.getResolver(ceramic),
     ...NftDidResolver.getResolver({
       ceramic: ceramic,

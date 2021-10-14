@@ -1,0 +1,39 @@
+{
+  "name": "pkh-did-resolver",
+  "version": "0.2.0",
+  "description": "did:pkh method resolver",
+  "keywords": [
+    "ceramic",
+    "did:pkh",
+    "did",
+    "pkh"
+  ],
+  "author": "Joel Thorstensson <oed@3box.io>",
+  "homepage": "https://3boxlabs.com",
+  "license": "(Apache-2.0 OR MIT)",
+  "directories": {
+    "lib": "lib"
+  },
+  "main": "lib/index.js",
+  "files": [
+    "lib"
+  ],
+  "scripts": {
+    "test": "../../node_modules/.bin/jest --silent --coverage",
+    "build": "../../node_modules/.bin/tsc -p tsconfig.json",
+    "prepublishOnly": "npm run build",
+    "prebuild": "npm run clean",
+    "lint": "../../node_modules/.bin/eslint ./src --ext .js,.jsx,.ts,.tsx",
+    "clean": "rm -rf ./lib"
+  },
+  "dependencies": {
+    "caip": "^1.0.0-beta.0"
+  },
+  "devDependencies": {
+    "did-resolver": "^3.1.0"
+  },
+  "jest": {
+    "testEnvironment": "node"
+  },
+  "gitHead": "c58eb9659f5fdd976aca2db6465619c20ba30ff9"
+}
