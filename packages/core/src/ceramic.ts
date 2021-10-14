@@ -602,6 +602,7 @@ export class Ceramic implements CeramicApi {
   ): Promise<T> {
     opts = { ...DEFAULT_LOAD_OPTS, ...opts, ...this._loadOptsOverride }
     const streamRef = StreamRef.from(streamId)
+
     if (CommitID.isInstance(streamRef)) {
       const snapshot$ = await this.repository.loadAtCommit(streamRef, opts)
       return streamFromState<T>(this.context, this._streamHandlers, snapshot$.value)
@@ -634,6 +635,19 @@ export class Ceramic implements CeramicApi {
 
     const walkNext = async (node: TrieNode, streamId: StreamID | CommitID) => {
       let stream
+      if (query.genesis) {
+        if (
+          StreamUtils.isSignedCommitContainer(query.genesis) ||
+          StreamUtils.isSignedCommit(query.genesis)
+        ) {
+          throw new Error('Given genesis commit is not deterministic')
+        }
+
+        const genesisCID = await this.ipfs.dag.put(query.genesis)
+        if (!streamId.cid.equals(genesisCID)) {
+          throw new Error('Given StreamID CID does not match given genesis content')
+        }
+      }
       try {
         stream = await promiseTimeout(timeout, this.loadStream(streamId, { atTime: query.atTime }))
       } catch (e) {

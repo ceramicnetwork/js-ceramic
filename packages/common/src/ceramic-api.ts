@@ -3,6 +3,7 @@ import { Stream, StreamHandler, CeramicCommit, AnchorStatus } from './stream'
 import { CreateOpts, LoadOpts, PublishOpts, UpdateOpts } from './streamopts'
 import { StreamID, CommitID } from '@ceramicnetwork/streamid'
 import { LoggerProvider } from './logger-provider'
+import { GenesisCommit } from '.'
 
 /**
  * Describes Ceramic pinning functionality
@@ -135,6 +136,10 @@ export interface CeramicApi extends CeramicSigner {
 }
 
 export interface MultiQuery {
+  /**
+   * The genesis content for the queried stream. Useful in cases where the stream might not exist and you want to avoid timing out trying to load the genesis commit from IPFS.
+   */
+  genesis?: GenesisCommit
   /**
    * The StreamID of the stream to load
    */

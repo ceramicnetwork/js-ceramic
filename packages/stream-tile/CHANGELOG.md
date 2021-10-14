@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.3.3-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile@1.3.2...@ceramicnetwork/stream-tile@1.3.3-rc.0) (2021-10-14)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile
+
+
+
+
+
+## [1.3.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile@1.3.2-rc.1...@ceramicnetwork/stream-tile@1.3.2) (2021-10-14)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile
+
+
+
+
+
 ## [1.3.2-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile@1.3.2-rc.0...@ceramicnetwork/stream-tile@1.3.2-rc.1) (2021-09-18)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-tile
