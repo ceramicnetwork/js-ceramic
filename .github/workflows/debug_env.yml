@@ -1,105 +1,124 @@
-name: Deploy debug image to dev infra
+name: Deploy debug image to dev-unstable
 
 on:
-  push:
-    branches: [ debug_* ]
+  workflow_dispatch:
 
 jobs:
-  build_and_deploy_images:
+  build_debug_images:
+    name: Build and push debug images
     runs-on: ubuntu-latest
-    env:
-      AWS_ACCESS_KEY_ID: ${{ secrets.DEBUG_AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.DEBUG_AWS_SECRET_ACCESS_KEY }}
-      AWS_DEFAULT_REGION: ${{ secrets.DEBUG_AWS_REGION }}
     steps:
-      - name: Check out the repo
+      -
+        name: Check out the repo
         uses: actions/checkout@v2
-
-      - name: Configure AWS credentials
+      -
+        name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.DEBUG_AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.DEBUG_AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.DEBUG_AWS_REGION }}
-
-      - name: Login to Amazon ECR
+      -
+        name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
-
-      - name: Set Variables
-        id: set-vars
-        env:
-          ECR_REPOSITORY: "ceramic-debug"
-          ECS_CLUSTER: "ceramic-dev-ex"
-        run: |
-          SHA_TAG=$(git rev-parse --short=12 "${{ github.sha }}")
-          echo "::set-output name=ECR_REPOSITORY::$ECR_REPOSITORY"
-          echo "::set-output name=ECS_CLUSTER::$ECS_CLUSTER"
-          echo "::set-output name=CERAMIC_SVC::$ECS_CLUSTER-node"
-          echo "::set-output name=IPFS_SVC::$ECS_CLUSTER-ipfs-nd"
-          echo "::set-output name=SHA_TAG::$SHA_TAG"
-
-      - name: Build and push Ceramic image to ECR
-        id: build-ceramic
+      -
+        name: Build and push Ceramic image to ECR
         uses: whoan/docker-build-with-cache-action@v5
         with:
           registry: ${{ steps.login-ecr.outputs.registry }}
-          image_name: ${{ steps.set-vars.outputs.ECR_REPOSITORY }}/js-ceramic
-          image_tag: ${{ steps.set-vars.outputs.SHA_TAG }},debug,latest
+          image_name: ceramic-debug/js-ceramic
+          image_tag: debug
           dockerfile: Dockerfile.daemon
-
-      - name: Build and push IPFS image to ECR
+      -
+        name: Build and push IPFS image to ECR
         id: build-ipfs
         uses: whoan/docker-build-with-cache-action@v5
         with:
           registry: ${{ steps.login-ecr.outputs.registry }}
-          image_name: ${{ steps.set-vars.outputs.ECR_REPOSITORY }}/ipfs-daemon
-          image_tag: ${{ steps.set-vars.outputs.SHA_TAG }},debug,latest
+          image_name: ceramic-debug/js-ipfs
+          image_tag: debug
           dockerfile: Dockerfile.ipfs-daemon
 
-      - name: Update Ceramic
-        uses: silinternational/ecs-deploy@master
+  deploy_to_infra:
+    name: Deploy debug images to dev-unstable
+    runs-on: ubuntu-latest
+    needs: build_debug_images
+    strategy:
+      matrix:
+        include:
+          -
+            instance: gateway
+            image_id: "ceramic-debug/js-ipfs"
+            cluster_suffix: "-ex"
+            service_suffix: "-ex-ipfs-gw"
+          -
+            instance: gateway
+            image_id: "ceramic-debug/js-ceramic"
+            cluster_suffix: "-ex"
+            service_suffix: "-ex-gateway"
+          -
+            instance: public-node
+            image_id: "ceramic-debug/js-ipfs"
+            cluster_suffix: "-ex"
+            service_suffix: "-ex-ipfs-nd"
+          -
+            instance: public-node
+            image_id: "ceramic-debug/js-ceramic"
+            cluster_suffix: "-ex"
+            service_suffix: "-ex-node"
+          -
+            instance: private-node
+            image_id: "ceramic-debug/js-ipfs"
+            cluster_suffix: ""
+            service_suffix: "-ipfs-nd"
+          -
+            instance: private-node
+            image_id: "ceramic-debug/js-ceramic"
+            cluster_suffix: ""
+            service_suffix: "-node"
+    steps:
+      -
+        name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws_access_key_cmd: "--aws-access-key"
-          aws_access_key: ${{ secrets.DEBUG_AWS_ACCESS_KEY_ID }}
-          aws_secret_key_cmd: "--aws-secret-key"
-          aws_secret_key: ${{ secrets.DEBUG_AWS_SECRET_ACCESS_KEY }}
-          cluster_cmd: "--cluster"
-          cluster: ${{ steps.set-vars.outputs.ECS_CLUSTER }}
-          image_cmd: "--image"
-          image: ${{ steps.build-ceramic.outputs.FULL_IMAGE_NAME }}:${{ steps.set-vars.outputs.SHA_TAG }}
-          region_cmd: "--region"
-          region: ${{ secrets.DEBUG_AWS_REGION }}
-          service_name_cmd: "--service-name"
-          service_name: ${{ steps.set-vars.outputs.CERAMIC_SVC }}
-          timeout_cmd: "--timeout"
-          timeout: "360"
-          use_latest_task_def: "--use-latest-task-def"
-          verbose: "--verbose"
-
-      - name: Update IPFS
-        uses: silinternational/ecs-deploy@master
-        with:
-          aws_access_key_cmd: "--aws-access-key"
-          aws_access_key: ${{ secrets.DEBUG_AWS_ACCESS_KEY_ID }}
-          aws_secret_key_cmd: "--aws-secret-key"
-          aws_secret_key: ${{ secrets.DEBUG_AWS_SECRET_ACCESS_KEY }}
-          cluster_cmd: "--cluster"
-          cluster: ${{ steps.set-vars.outputs.ECS_CLUSTER }}
-          image_cmd: "--image"
-          image: ${{ steps.build-ipfs.outputs.FULL_IMAGE_NAME }}:${{ steps.set-vars.outputs.SHA_TAG }}
-          region_cmd: "--region"
-          region: ${{ secrets.DEBUG_AWS_REGION }}
-          service_name_cmd: "--service-name"
-          service_name: ${{ steps.set-vars.outputs.IPFS_SVC }}
-          timeout_cmd: "--timeout"
-          timeout: "360"
-          use_latest_task_def: "--use-latest-task-def"
-          verbose: "--verbose"
-
-      - name: Stop/restart running tasks
+          aws-access-key-id: ${{ secrets.DEBUG_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.DEBUG_AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.DEBUG_AWS_REGION }}
+      -
+        name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+      -
+        name: Set ECS task vars
         run: |
-            cd .github/workflows
-            chmod +x stopTasks.sh
-            ./stopTasks.sh ${{ steps.set-vars.outputs.ECS_CLUSTER }} ${{ steps.set-vars.outputs.CERAMIC_SVC }}
-            ./stopTasks.sh ${{ steps.set-vars.outputs.ECS_CLUSTER }} ${{ steps.set-vars.outputs.IPFS_SVC }}
+          echo "ECS_CLUSTER=ceramic-dev${{ matrix.cluster_suffix }}" >> $GITHUB_ENV
+          echo "ECS_SERVICE=ceramic-dev${{ matrix.service_suffix }}" >> $GITHUB_ENV
+      -
+        name: Update ECS task
+        uses: silinternational/ecs-deploy@master
+        with:
+          aws_access_key_cmd: "--aws-access-key"
+          aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_key_cmd: "--aws-secret-key"
+          aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          cluster_cmd: "--cluster"
+          cluster: ${{ env.ECS_CLUSTER }}
+          image_cmd: "--image"
+          image: "${{ steps.login-ecr.outputs.registry }}/${{ matrix.image_id }}:debug"
+          region_cmd: "--region"
+          region: ${{ secrets.AWS_REGION }}
+          service_name_cmd: "--service-name"
+          service_name: ${{ env.ECS_SERVICE }}
+          timeout_cmd: "--timeout"
+          timeout: "360"
+          verbose: "--verbose"
+      -
+        name: Checkout
+        uses: actions/checkout@v2
+      -
+        name: Stop (i.e. restart) running tasks
+        run: |
+          cd .github/workflows/scripts
+          chmod +x stopTasks.sh
+          ./stopTasks.sh ${{ env.ECS_CLUSTER }} ${{ env.ECS_SERVICE }}
