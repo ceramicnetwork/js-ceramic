@@ -1,4 +1,4 @@
-name: Deploy debug image to dev-unstable
+name: Deploy debug image to dev
 
 on:
   workflow_dispatch:
@@ -15,29 +15,34 @@ jobs:
         name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-access-key-id: ${{ secrets.DEBUG_AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.DEBUG_AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.DEBUG_AWS_REGION }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
       -
         name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
+      -
+        name: Set environment variables
+        id: set-vars
+        run: |
+          SHA_TAG=$(git rev-parse --short=12 "${{ github.sha }}")
+          echo "::set-output name=SHA_TAG::$SHA_TAG"
       -
         name: Build and push Ceramic image to ECR
         uses: whoan/docker-build-with-cache-action@v5
         with:
           registry: ${{ steps.login-ecr.outputs.registry }}
           image_name: ceramic-debug/js-ceramic
-          image_tag: debug
+          image_tag: ${{ steps.set-vars.outputs.SHA_TAG }},debug,latest
           dockerfile: Dockerfile.daemon
       -
         name: Build and push IPFS image to ECR
-        id: build-ipfs
         uses: whoan/docker-build-with-cache-action@v5
         with:
           registry: ${{ steps.login-ecr.outputs.registry }}
           image_name: ceramic-debug/js-ipfs
-          image_tag: debug
+          image_tag: ${{ steps.set-vars.outputs.SHA_TAG }},debug,latest
           dockerfile: Dockerfile.ipfs-daemon
 
   deploy_to_infra:
@@ -82,18 +87,19 @@ jobs:
         name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-access-key-id: ${{ secrets.DEBUG_AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.DEBUG_AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.DEBUG_AWS_REGION }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
       -
         name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
       -
         name: Set ECS task vars
+        id: ecs-vars
         run: |
-          echo "ECS_CLUSTER=ceramic-dev${{ matrix.cluster_suffix }}" >> $GITHUB_ENV
-          echo "ECS_SERVICE=ceramic-dev${{ matrix.service_suffix }}" >> $GITHUB_ENV
+          echo "::set-output name=ECS_CLUSTER::ceramic-dev${{ matrix.cluster_suffix }}"
+          echo "::set-output name=ECS_SERVICE::ceramic-dev${{ matrix.service_suffix }}"
       -
         name: Update ECS task
         uses: silinternational/ecs-deploy@master
@@ -103,13 +109,13 @@ jobs:
           aws_secret_key_cmd: "--aws-secret-key"
           aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           cluster_cmd: "--cluster"
-          cluster: ${{ env.ECS_CLUSTER }}
+          cluster: ${{ steps.ecs-vars.outputs.ECS_CLUSTER }}
           image_cmd: "--image"
-          image: "${{ steps.login-ecr.outputs.registry }}/${{ matrix.image_id }}:debug"
+          image: "${{ steps.login-ecr.outputs.registry }}/${{ matrix.image_id }}"
           region_cmd: "--region"
           region: ${{ secrets.AWS_REGION }}
           service_name_cmd: "--service-name"
-          service_name: ${{ env.ECS_SERVICE }}
+          service_name: ${{ steps.ecs-vars.outputs.ECS_SERVICE }}
           timeout_cmd: "--timeout"
           timeout: "360"
           verbose: "--verbose"
@@ -117,8 +123,8 @@ jobs:
         name: Checkout
         uses: actions/checkout@v2
       -
-        name: Stop (i.e. restart) running tasks
+        name: Restart running tasks
         run: |
           cd .github/workflows/scripts
           chmod +x stopTasks.sh
-          ./stopTasks.sh ${{ env.ECS_CLUSTER }} ${{ env.ECS_SERVICE }}
+          ./stopTasks.sh ${{ steps.ecs-vars.outputs.ECS_CLUSTER }} ${{ steps.ecs-vars.outputs.ECS_SERVICE }}
