@@ -113,7 +113,7 @@ jobs:
           image_cmd: "--image"
           image: "${{ steps.login-ecr.outputs.registry }}/${{ matrix.image_id }}"
           region_cmd: "--region"
-          region: ${{ secrets.AWS_REGION }}
+          region: ${{ secrets.AWS_DEFAULT_REGION }}
           service_name_cmd: "--service-name"
           service_name: ${{ steps.ecs-vars.outputs.ECS_SERVICE }}
           timeout_cmd: "--timeout"
