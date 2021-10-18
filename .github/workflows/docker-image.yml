@@ -115,7 +115,8 @@ jobs:
                 {
                   "env_tag": "${{ env.ENV_TAG }}",
                   "sha_tag": "${{ github.sha }}",
-                  "ecr_repo": "${{ steps.login-ecr.outputs.registry }}"
+                  "ecr_repo": "${{ steps.login-ecr.outputs.registry }}",
+                  "attempt": "${{ github.run_attempt }}"
                 }
               }
             ') || exit 1
