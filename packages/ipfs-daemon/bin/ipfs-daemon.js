@@ -1,3 +1,3 @@
-#!/usr/bin/env -S node --inspect
+#!/usr/bin/env node
 
 require('../lib/bin/ipfs-daemon')

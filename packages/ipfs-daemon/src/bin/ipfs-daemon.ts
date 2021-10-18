@@ -1,4 +1,4 @@
-#!/usr/bin/env -S node --inspect
+#!/usr/bin/env node
 
 import { IpfsDaemon } from '../ipfs-daemon'
 

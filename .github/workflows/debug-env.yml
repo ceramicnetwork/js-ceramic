@@ -1,16 +1,32 @@
-name: Deploy debug image to dev
+name: Deploy debug image to infra
 
 on:
   workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment name (one of: dev, tnet)'
+        required: true
+        default: 'dev'
 
 jobs:
   build_debug_images:
     name: Build and push debug images
     runs-on: ubuntu-latest
+    env:
+      ENV: ${{ github.event.inputs.environment }}
     steps:
       -
         name: Check out the repo
         uses: actions/checkout@v2
+      -
+        name: Add `--inspect` flag
+        run: |
+          daemonFiles=("ipfs-daemon/src/bin/ipfs-daemon.ts" "ipfs-daemon/bin/ipfs-daemon.js" "cli/bin/ceramic.js")
+          for f in ${daemonFiles[@]}; do
+            cat packages/$f
+            sed -i '1 s/node/-S\ node\ --inspect/' packages/f
+            cat packages/$f
+          done
       -
         name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -33,7 +49,7 @@ jobs:
         uses: whoan/docker-build-with-cache-action@v5
         with:
           registry: ${{ steps.login-ecr.outputs.registry }}
-          image_name: ceramic-debug/js-ceramic
+          image_name: ceramic-debug/${{ env.ENV }}/js-ceramic
           image_tag: ${{ steps.set-vars.outputs.SHA_TAG }},debug,latest
           dockerfile: Dockerfile.daemon
       -
@@ -41,7 +57,7 @@ jobs:
         uses: whoan/docker-build-with-cache-action@v5
         with:
           registry: ${{ steps.login-ecr.outputs.registry }}
-          image_name: ceramic-debug/js-ipfs
+          image_name: ceramic-debug/${{ env.ENV }}/js-ipfs
           image_tag: ${{ steps.set-vars.outputs.SHA_TAG }},debug,latest
           dockerfile: Dockerfile.ipfs-daemon
 
@@ -49,37 +65,39 @@ jobs:
     name: Deploy debug images to dev-unstable
     runs-on: ubuntu-latest
     needs: build_debug_images
+    env:
+      ENV: ${{ github.event.inputs.environment }}
     strategy:
       matrix:
         include:
           -
             instance: gateway
-            image_id: "ceramic-debug/js-ipfs"
+            image_id: "ceramic-debug/${{ env.ENV }}/js-ipfs"
             cluster_suffix: "-ex"
             service_suffix: "-ex-ipfs-gw"
           -
             instance: gateway
-            image_id: "ceramic-debug/js-ceramic"
+            image_id: "ceramic-debug/${{ env.ENV }}/js-ceramic"
             cluster_suffix: "-ex"
             service_suffix: "-ex-gateway"
           -
             instance: public-node
-            image_id: "ceramic-debug/js-ipfs"
+            image_id: "ceramic-debug/${{ env.ENV }}/js-ipfs"
             cluster_suffix: "-ex"
             service_suffix: "-ex-ipfs-nd"
           -
             instance: public-node
-            image_id: "ceramic-debug/js-ceramic"
+            image_id: "ceramic-debug/${{ env.ENV }}/js-ceramic"
             cluster_suffix: "-ex"
             service_suffix: "-ex-node"
           -
             instance: private-node
-            image_id: "ceramic-debug/js-ipfs"
+            image_id: "ceramic-debug/${{ env.ENV }}/js-ipfs"
             cluster_suffix: ""
             service_suffix: "-ipfs-nd"
           -
             instance: private-node
-            image_id: "ceramic-debug/js-ceramic"
+            image_id: "ceramic-debug/${{ env.ENV }}/js-ceramic"
             cluster_suffix: ""
             service_suffix: "-node"
     steps:
@@ -98,8 +116,8 @@ jobs:
         name: Set ECS task vars
         id: ecs-vars
         run: |
-          echo "::set-output name=ECS_CLUSTER::ceramic-dev${{ matrix.cluster_suffix }}"
-          echo "::set-output name=ECS_SERVICE::ceramic-dev${{ matrix.service_suffix }}"
+          echo "::set-output name=ECS_CLUSTER::ceramic-${{ env.ENV }}${{ matrix.cluster_suffix }}"
+          echo "::set-output name=ECS_SERVICE::ceramic-${{ env.ENV }}${{ matrix.service_suffix }}"
       -
         name: Update ECS task
         uses: silinternational/ecs-deploy@master
