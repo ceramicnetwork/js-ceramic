@@ -19,10 +19,11 @@ jobs:
         name: Check out the repo
         uses: actions/checkout@v2
       -
-        name: Add `--inspect` flag
+        name: Enable NodeJS inspection
         run: |
           dockerfiles=("Dockerfile.daemon" "Dockerfile.ipfs-daemon")
           for f in ${dockerfiles[@]}; do
+            sed -i '/netcat/ s/$/ net-tools\nRUN npm install --unsafe-perm -g ngrok\nARG NGROK_TOKEN\nENV NGROK_TOKEN=$NGROK_TOKEN\nRUN ngrok authtoken $NGROK_TOKEN/' $f
             sed -i '$ i\ENV NODE_OPTIONS --inspect' $f
           done
       -
@@ -49,6 +50,7 @@ jobs:
           registry: ${{ steps.login-ecr.outputs.registry }}
           image_name: ceramic-debug/${{ env.ENV }}/js-ceramic
           image_tag: ${{ steps.set-vars.outputs.SHA_TAG }},debug,latest
+          build_extra_args: "--build-arg=NGROK_TOKEN=${{ secrets.NGROK_TOKEN }}"
           dockerfile: Dockerfile.daemon
       -
         name: Build and push IPFS image to ECR
