@@ -23,8 +23,7 @@ jobs:
         run: |
           daemonFiles=("ipfs-daemon/src/bin/ipfs-daemon.ts" "ipfs-daemon/bin/ipfs-daemon.js" "cli/bin/ceramic.js")
           for f in ${daemonFiles[@]}; do
-            cat packages/$f
-            sed -i '1 s/node/-S\ node\ --inspect/' packages/f
+            sed -i '1 s/node/-S\ node\ --inspect/' packages/$f
             cat packages/$f
           done
       -
