@@ -118,7 +118,7 @@ jobs:
           echo "::set-output name=ECS_SERVICE::ceramic-${{ env.ENV }}${{ matrix.service_suffix }}"
       -
         name: Update ECS task
-        uses: silinternational/ecs-deploy@02dbd06348e3
+        uses: silinternational/ecs-deploy@02dbd06348e3317becd4462fb5d136802dbda6b3
         with:
           aws_access_key_cmd: "--aws-access-key"
           aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
