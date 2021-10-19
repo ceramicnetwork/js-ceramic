@@ -19,7 +19,7 @@ jobs:
         name: Check out the repo
         uses: actions/checkout@v2
       -
-        name: Enable NodeJS inspection
+        name: Enable debugging
         run: |
           dockerfiles=("Dockerfile.daemon" "Dockerfile.ipfs-daemon")
           for f in ${dockerfiles[@]}; do
