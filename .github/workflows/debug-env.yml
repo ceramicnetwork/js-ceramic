@@ -24,7 +24,6 @@ jobs:
           daemonFiles=("ipfs-daemon/src/bin/ipfs-daemon.ts" "ipfs-daemon/bin/ipfs-daemon.js" "cli/bin/ceramic.js")
           for f in ${daemonFiles[@]}; do
             sed -i '1 s/node/-S\ node\ --inspect/' packages/$f
-            cat packages/$f
           done
       -
         name: Configure AWS credentials
