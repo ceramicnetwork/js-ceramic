@@ -72,32 +72,32 @@ jobs:
         include:
           -
             instance: gateway
-            image_id: "ceramic-debug/${{ env.ENV }}/js-ipfs"
+            image_id: ceramic-debug/${{ env.ENV }}/js-ipfs
             cluster_suffix: "-ex"
             service_suffix: "-ex-ipfs-gw"
           -
             instance: gateway
-            image_id: "ceramic-debug/${{ env.ENV }}/js-ceramic"
+            image_id: ceramic-debug/${{ env.ENV }}/js-ceramic
             cluster_suffix: "-ex"
             service_suffix: "-ex-gateway"
           -
             instance: public-node
-            image_id: "ceramic-debug/${{ env.ENV }}/js-ipfs"
+            image_id: ceramic-debug/${{ env.ENV }}/js-ipfs
             cluster_suffix: "-ex"
             service_suffix: "-ex-ipfs-nd"
           -
             instance: public-node
-            image_id: "ceramic-debug/${{ env.ENV }}/js-ceramic"
+            image_id: ceramic-debug/${{ env.ENV }}/js-ceramic
             cluster_suffix: "-ex"
             service_suffix: "-ex-node"
           -
             instance: private-node
-            image_id: "ceramic-debug/${{ env.ENV }}/js-ipfs"
+            image_id: ceramic-debug/${{ env.ENV }}/js-ipfs
             cluster_suffix: ""
             service_suffix: "-ipfs-nd"
           -
             instance: private-node
-            image_id: "ceramic-debug/${{ env.ENV }}/js-ceramic"
+            image_id: ceramic-debug/${{ env.ENV }}/js-ceramic
             cluster_suffix: ""
             service_suffix: "-node"
     steps:
