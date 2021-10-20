@@ -3,6 +3,27 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.2.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ipfs-daemon@1.1.6...@ceramicnetwork/ipfs-daemon@1.2.0-rc.0) (2021-10-20)
+
+
+### Bug Fixes
+
+* **core:** ipfs subscribe, pin version ([#1454](https://github.com/ceramicnetwork/js-ceramic/issues/1454)) ([fc9c5e7](https://github.com/ceramicnetwork/js-ceramic/commit/fc9c5e77ef84be448744b92fb35d5e3bf06f264d))
+* accept multiple pubsub responses ([#1348](https://github.com/ceramicnetwork/js-ceramic/issues/1348)) ([fa2d72a](https://github.com/ceramicnetwork/js-ceramic/commit/fa2d72a5790d5994b82aeedd131fccf1b7641320))
+* remove cpu and memory from healthcheck ([#1182](https://github.com/ceramicnetwork/js-ceramic/issues/1182)) ([b818689](https://github.com/ceramicnetwork/js-ceramic/commit/b8186897cdde33545730fe334714a612048a172f))
+* **common, logger:** Clean up dependencies ([#1164](https://github.com/ceramicnetwork/js-ceramic/issues/1164)) ([191ad31](https://github.com/ceramicnetwork/js-ceramic/commit/191ad310b87ac9aba97bb84b122908337f35aa11))
+* use npm package for ipfs-daemon in docker ([2264d2d](https://github.com/ceramicnetwork/js-ceramic/commit/2264d2d28c86e1a75134bd14a6b549f60a2c7c8d))
+
+
+### Features
+
+* **debug:** start node processes with inspect flag ([#1762](https://github.com/ceramicnetwork/js-ceramic/issues/1762)) ([6882fed](https://github.com/ceramicnetwork/js-ceramic/commit/6882fed4d182a671c0b28e9fe5864f4285782aba))
+* Use ~/.jsipfs as default ipfs repo path ([#1503](https://github.com/ceramicnetwork/js-ceramic/issues/1503)) ([51d34a0](https://github.com/ceramicnetwork/js-ceramic/commit/51d34a053f6a79ee29f2672881d2d9c36a410705))
+
+
+
+
+
 ## [1.1.6](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ipfs-daemon@1.1.6-rc.0...@ceramicnetwork/ipfs-daemon@1.1.6) (2021-10-20)
 
 **Note:** Version bump only for package @ceramicnetwork/ipfs-daemon
