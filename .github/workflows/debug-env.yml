@@ -23,7 +23,7 @@ jobs:
         run: |
           dockerfiles=("Dockerfile.daemon" "Dockerfile.ipfs-daemon")
           for f in ${dockerfiles[@]}; do
-            sed -i '/netcat/ s/$/ net-tools\nRUN npm install --unsafe-perm -g ngrok\nARG NGROK_TOKEN\nENV NGROK_TOKEN=$NGROK_TOKEN\nRUN ngrok authtoken $NGROK_TOKEN/' $f
+            sed -i '/netcat/ s/$/ net-tools tshark\nRUN npm install --unsafe-perm -g ngrok\nARG NGROK_TOKEN\nENV NGROK_TOKEN=$NGROK_TOKEN\nRUN ngrok authtoken $NGROK_TOKEN/' $f
             sed -i '$ i\ENV NODE_OPTIONS --inspect' $f
           done
       -
