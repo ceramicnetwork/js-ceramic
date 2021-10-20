@@ -19,13 +19,12 @@ jobs:
         name: Check out the repo
         uses: actions/checkout@v2
       -
-        name: Add `--inspect` flag
+        name: Enable debugging
         run: |
-          daemonFiles=("ipfs-daemon/src/bin/ipfs-daemon.ts" "ipfs-daemon/bin/ipfs-daemon.js" "cli/bin/ceramic.js")
-          for f in ${daemonFiles[@]}; do
-            cat packages/$f
-            sed -i '1 s/node/-S\ node\ --inspect/' packages/f
-            cat packages/$f
+          dockerfiles=("Dockerfile.daemon" "Dockerfile.ipfs-daemon")
+          for f in ${dockerfiles[@]}; do
+            sed -i '/netcat/ s/$/ net-tools tshark\nRUN npm install --unsafe-perm -g ngrok\nARG NGROK_TOKEN\nENV NGROK_TOKEN=$NGROK_TOKEN\nRUN ngrok authtoken $NGROK_TOKEN/' $f
+            sed -i '$ i\ENV NODE_OPTIONS --inspect' $f
           done
       -
         name: Configure AWS credentials
@@ -51,6 +50,7 @@ jobs:
           registry: ${{ steps.login-ecr.outputs.registry }}
           image_name: ceramic-debug/${{ env.ENV }}/js-ceramic
           image_tag: ${{ steps.set-vars.outputs.SHA_TAG }},debug,latest
+          build_extra_args: "--build-arg=NGROK_TOKEN=${{ secrets.NGROK_TOKEN }}"
           dockerfile: Dockerfile.daemon
       -
         name: Build and push IPFS image to ECR
@@ -59,6 +59,7 @@ jobs:
           registry: ${{ steps.login-ecr.outputs.registry }}
           image_name: ceramic-debug/${{ env.ENV }}/js-ipfs
           image_tag: ${{ steps.set-vars.outputs.SHA_TAG }},debug,latest
+          build_extra_args: "--build-arg=NGROK_TOKEN=${{ secrets.NGROK_TOKEN }}"
           dockerfile: Dockerfile.ipfs-daemon
 
   deploy_to_infra:
@@ -72,32 +73,32 @@ jobs:
         include:
           -
             instance: gateway
-            image_id: "ceramic-debug/${{ env.ENV }}/js-ipfs"
+            image_id: "ceramic-debug/${{ github.event.inputs.environment }}/js-ipfs"
             cluster_suffix: "-ex"
             service_suffix: "-ex-ipfs-gw"
           -
             instance: gateway
-            image_id: "ceramic-debug/${{ env.ENV }}/js-ceramic"
+            image_id: "ceramic-debug/${{ github.event.inputs.environment }}/js-ceramic"
             cluster_suffix: "-ex"
             service_suffix: "-ex-gateway"
           -
             instance: public-node
-            image_id: "ceramic-debug/${{ env.ENV }}/js-ipfs"
+            image_id: "ceramic-debug/${{ github.event.inputs.environment }}/js-ipfs"
             cluster_suffix: "-ex"
             service_suffix: "-ex-ipfs-nd"
           -
             instance: public-node
-            image_id: "ceramic-debug/${{ env.ENV }}/js-ceramic"
+            image_id: "ceramic-debug/${{ github.event.inputs.environment }}/js-ceramic"
             cluster_suffix: "-ex"
             service_suffix: "-ex-node"
           -
             instance: private-node
-            image_id: "ceramic-debug/${{ env.ENV }}/js-ipfs"
+            image_id: "ceramic-debug/${{ github.event.inputs.environment }}/js-ipfs"
             cluster_suffix: ""
             service_suffix: "-ipfs-nd"
           -
             instance: private-node
-            image_id: "ceramic-debug/${{ env.ENV }}/js-ceramic"
+            image_id: "ceramic-debug/${{ github.event.inputs.environment }}/js-ceramic"
             cluster_suffix: ""
             service_suffix: "-node"
     steps:
@@ -120,7 +121,7 @@ jobs:
           echo "::set-output name=ECS_SERVICE::ceramic-${{ env.ENV }}${{ matrix.service_suffix }}"
       -
         name: Update ECS task
-        uses: silinternational/ecs-deploy@master
+        uses: silinternational/ecs-deploy@02dbd06348e3317becd4462fb5d136802dbda6b3
         with:
           aws_access_key_cmd: "--aws-access-key"
           aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
