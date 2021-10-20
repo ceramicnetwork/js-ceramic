@@ -19,6 +19,7 @@
     "@ceramicnetwork/blockchain-utils-validation": "^1.4.1-rc.2",
     "@ceramicnetwork/core": "^1.8.1-rc.2",
     "@ceramicnetwork/stream-caip10-link": "^1.1.8-rc.2",
+    "@ceramicnetwork/stream-tile": "^1.3.4-rc.2",
     "@truffle/hdwallet-provider": "^1.5.0",
     "ganache-core": "^2.13.1",
     "key-did-resolver": "^1.4.0"
