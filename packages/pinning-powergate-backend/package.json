@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/pinning-powergate-backend",
-  "version": "1.2.2-rc.0",
+  "version": "1.2.2-rc.1",
   "description": "Powergate Pinning backend",
   "keywords": [
     "ceramic",

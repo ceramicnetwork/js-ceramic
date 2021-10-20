@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/stream-tile",
-  "version": "1.3.4-rc.0",
+  "version": "1.3.4-rc.1",
   "description": "Ceramic Tile Document stream type",
   "keywords": [
     "ceramic",
