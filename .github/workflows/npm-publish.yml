@@ -4,9 +4,16 @@ on:
   workflow_dispatch:
     inputs:
       type:
-        description: 'Type of publish (one of: rc, full, both, hotfix)'
+        description: 'Type of publish (one of: rc, full, both, hotfix, rc-hotfix)'
         required: true
         default: 'rc'
+      force:
+        description: 'Force publish'
+        required: true
+        default: 'false'
+      desc:
+        description: 'Release description'
+        required: true
 
 jobs:
   publish_full:
@@ -16,11 +23,19 @@ jobs:
         name: Setup environment
         id: set-vars
         run: |
+          PUBLISH_ARGS=""
           if [[ "${{ github.event.inputs.type }}" == "both" || "${{ github.event.inputs.type }}" == "full" ]]; then
             echo "::set-output name=full::true"
+            PUBLISH_ARGS="$PUBLISH_ARGS --conventional-graduate"
           elif [[ "${{ github.event.inputs.type }}" == "hotfix" ]]; then
             echo "::set-output name=full::true"
             echo "::set-output name=hotfix::true"
+          fi
+          if [[ "${{ github.event.inputs.force }}" == "true" ]]; then
+            PUBLISH_ARGS="$PUBLISH_ARGS --force-publish"
+          fi
+          if [[ -n $PUBLISH_ARGS ]]; then
+            echo "::set-output name=publishArgs::-- $PUBLISH_ARGS"
           fi
       -
         name: Setup Node
@@ -53,12 +68,12 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
-          TAG: ${{ matrix.tag }}
+          PUBLISH_ARGS: ${{ steps.set-vars.outputs.publishArgs }}
         run: |
           git config user.email "${{ github.actor }}@users.noreply.github.com"
           git config user.name ${{ github.actor }}
           npm config set //registry.npmjs.org/:_authToken $NODE_AUTH_TOKEN
-          npm run publish:latest
+          npm run publish:latest $PUBLISH_ARGS
       -
         name: Update and push code to `release-candidate` and `develop`
         if: ${{ steps.set-vars.outputs.full == 'true' }}
@@ -80,6 +95,11 @@ jobs:
           sed -i '2,5d' embed.json
           sed -i '2 s/\ -/-/' embed.json
           sed -i '3,$ s/\-/\\n-/' embed.json
+          DESC=$(jq 'github.event.inputs.desc')
+          if [[ -n $DESC ]]; then
+            echo $DESC
+            sed -i '2i$DESC' embed.json
+          fi
 
           # Send notification
           res=$(curl -X POST ${{ secrets.DISCORD_RELEASE_WEBHOOK }} -H "Content-Type: application/json" -d @embed.json) || exit 1
@@ -92,8 +112,19 @@ jobs:
         name: Setup environment
         id: set-vars
         run: |
+          PUBLISH_ARGS=""
           if [[ "${{ github.event.inputs.type }}" == "both" || "${{ github.event.inputs.type }}" == "rc" ]]; then
             echo "::set-output name=rc::true"
+            PUBLISH_ARGS="$PUBLISH_ARGS --conventional-prerelease"
+          elif [[ "${{ github.event.inputs.type }}" == "rc-hotfix" ]]; then
+            echo "::set-output name=rc::true"
+            echo "::set-output name=hotfix::true"
+          fi
+          if [[ "${{ github.event.inputs.force }}" == "true" ]]; then
+            PUBLISH_ARGS="$PUBLISH_ARGS --force-publish"
+          fi
+          if [[ -n $PUBLISH_ARGS ]]; then
+            echo "::set-output name=publishArgs::-- $PUBLISH_ARGS"
           fi
       -
         name: Setup Node
@@ -108,37 +139,37 @@ jobs:
         with:
           token: ${{ secrets.GH_TOKEN }}
           ref: release-candidate
-      -
-        name: Merge `develop` -> `release-candidate`
-        if: ${{ steps.set-vars.outputs.rc == 'true' }}
-        run: |
-          git fetch origin develop
-          git merge origin/develop
-      -
-        name: Initialize and build code
-        if: ${{ steps.set-vars.outputs.rc == 'true' }}
-        run: |
-          npm set unsafe-perm true
-          npm ci && npm run build
-      -
-        name: Publish packages to NPM
-        if: ${{ steps.set-vars.outputs.rc == 'true' }}
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
-          TAG: ${{ matrix.tag }}
-        run: |
-          git config user.email "${{ github.actor }}@users.noreply.github.com"
-          git config user.name ${{ github.actor }}
-          npm config set //registry.npmjs.org/:_authToken $NODE_AUTH_TOKEN
-          npm run publish:release-candidate
-      -
-        name: Update and push code to `develop`
-        if: ${{ steps.set-vars.outputs.rc == 'true' }}
-        run: |
-          git checkout -B develop refs/remotes/origin/develop
-          git merge origin/release-candidate
-          git push
+#      -
+#        name: Merge `develop` -> `release-candidate`
+#        if: ${{ steps.set-vars.outputs.rc == 'true' && steps.set-vars.outputs.hotfix != 'true' }}
+#        run: |
+#          git fetch origin develop
+#          git merge origin/develop
+#      -
+#        name: Initialize and build code
+#        if: ${{ steps.set-vars.outputs.rc == 'true' }}
+#        run: |
+#          npm set unsafe-perm true
+#          npm ci && npm run build
+#      -
+#        name: Publish packages to NPM
+#        if: ${{ steps.set-vars.outputs.rc == 'true' }}
+#        env:
+#          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+#          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+#          PUBLISH_ARGS: ${{ steps.set-vars.outputs.publishArgs }}
+#        run: |
+#          git config user.email "${{ github.actor }}@users.noreply.github.com"
+#          git config user.name ${{ github.actor }}
+#          npm config set //registry.npmjs.org/:_authToken $NODE_AUTH_TOKEN
+#          npm run publish:release-candidate $PUBLISH_ARGS
+#      -
+#        name: Update and push code to `develop`
+#        if: ${{ steps.set-vars.outputs.rc == 'true' }}
+#        run: |
+#          git checkout -B develop refs/remotes/origin/develop
+#          git merge origin/release-candidate
+#          git push
       -
         name: Send Discord notification
         if: ${{ steps.set-vars.outputs.rc == 'true' }}
@@ -150,6 +181,11 @@ jobs:
           sed -i '2,3d' embed.json
           sed -i '2 s/\ -/-/' embed.json
           sed -i '3,$ s/\-/\\n-/' embed.json
+          DESC=$(jq 'github.event.inputs.desc')
+          if [[ -n $DESC ]]; then
+            echo $DESC
+            sed -i '2i$DESC' embed.json
+          fi
 
           # Send notification
-          res=$(curl -X POST ${{ secrets.DISCORD_RELEASE_WEBHOOK }} -H "Content-Type: application/json" -d @embed.json) || exit 1
+          res=$(curl -X POST ${{ secrets.MO_DISCORD_WEBHOOK }} -H "Content-Type: application/json" -d @embed.json) || exit 1
