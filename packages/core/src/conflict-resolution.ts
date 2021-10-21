@@ -375,7 +375,7 @@ export class ConflictResolution {
   ): Promise<StreamState | null> {
     if (initialState.log.find((logEntry) => logEntry.cid.equals(tip))) {
       // Tip is already included in the log, nothing to do
-      return initialState
+      return null
     }
 
     const stateLog = HistoryLog.fromState(this.dispatcher, initialState)
