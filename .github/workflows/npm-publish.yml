@@ -66,34 +66,35 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           PUBLISH_ARGS: ${{ steps.set-vars.outputs.publishArgs }}
         run: |
-          git config user.email "${{ github.actor }}@users.noreply.github.com"
-          git config user.name ${{ github.actor }}
-          npm config set //registry.npmjs.org/:_authToken $NODE_AUTH_TOKEN
-          npm run publish:latest $PUBLISH_ARGS
-      -
-        name: Update and push code to `release-candidate` and `develop`
-        if: ${{ steps.set-vars.outputs.full == 'true' }}
-        run: |
-          git checkout -B release-candidate refs/remotes/origin/release-candidate
-          git merge origin/master
-          git push
-          git checkout -B develop refs/remotes/origin/develop
-          git merge origin/master
-          git push
-      -
-        name: Send Discord notification
-        if: ${{ steps.set-vars.outputs.full == 'true' }}
-        run: |
-          # Prepare notification body
-          echo '{"embeds":[{"title":"**Release Published**","description":"```' > embed.json
-          git log -2 --pretty=%B >> embed.json
-          echo '```","color":3581519}]}' >> embed.json
-          sed -i '2,5d' embed.json
-          sed -i '2 s/\ -/-/' embed.json
-          sed -i '3,$ s/\-/\\n-/' embed.json
-
-          # Send notification
-          res=$(curl -X POST ${{ secrets.DISCORD_RELEASE_WEBHOOK }} -H "Content-Type: application/json" -d @embed.json) || exit 1
+          echo $PUBLISH_ARGS
+#          git config user.email "${{ github.actor }}@users.noreply.github.com"
+#          git config user.name ${{ github.actor }}
+#          npm config set //registry.npmjs.org/:_authToken $NODE_AUTH_TOKEN
+#          npm run publish:latest $PUBLISH_ARGS
+#      -
+#        name: Update and push code to `release-candidate` and `develop`
+#        if: ${{ steps.set-vars.outputs.full == 'true' }}
+#        run: |
+#          git checkout -B release-candidate refs/remotes/origin/release-candidate
+#          git merge origin/master
+#          git push
+#          git checkout -B develop refs/remotes/origin/develop
+#          git merge origin/master
+#          git push
+#      -
+#        name: Send Discord notification
+#        if: ${{ steps.set-vars.outputs.full == 'true' }}
+#        run: |
+#          # Prepare notification body
+#          echo '{"embeds":[{"title":"**Release Published**","description":"```' > embed.json
+#          git log -2 --pretty=%B >> embed.json
+#          echo '```","color":3581519}]}' >> embed.json
+#          sed -i '2,5d' embed.json
+#          sed -i '2 s/\ -/-/' embed.json
+#          sed -i '3,$ s/\-/\\n-/' embed.json
+#
+#          # Send notification
+#          res=$(curl -X POST ${{ secrets.DISCORD_RELEASE_WEBHOOK }} -H "Content-Type: application/json" -d @embed.json) || exit 1
 
   publish_rc:
     runs-on: ubuntu-latest
@@ -146,28 +147,29 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           PUBLISH_ARGS: ${{ steps.set-vars.outputs.publishArgs }}
         run: |
-          git config user.email "${{ github.actor }}@users.noreply.github.com"
-          git config user.name ${{ github.actor }}
-          npm config set //registry.npmjs.org/:_authToken $NODE_AUTH_TOKEN
-          npm run publish:release-candidate $PUBLISH_ARGS
-      -
-        name: Update and push code to `develop`
-        if: ${{ steps.set-vars.outputs.rc == 'true' }}
-        run: |
-          git checkout -B develop refs/remotes/origin/develop
-          git merge origin/release-candidate
-          git push
-      -
-        name: Send Discord notification
-        if: ${{ steps.set-vars.outputs.rc == 'true' }}
-        run: |
-          # Prepare notification body
-          echo '{"embeds":[{"title":"**Release Candidate Published**","description":"```' > embed.json
-          git log -1 --pretty=%B >> embed.json
-          echo '```","color":3581519}]}' >> embed.json
-          sed -i '2,3d' embed.json
-          sed -i '2 s/\ -/-/' embed.json
-          sed -i '3,$ s/\-/\\n-/' embed.json
-
-          # Send notification
-          res=$(curl -X POST ${{ secrets.DISCORD_RELEASE_WEBHOOK }} -H "Content-Type: application/json" -d @embed.json) || exit 1
+          echo $PUBLISH_ARGS
+#          git config user.email "${{ github.actor }}@users.noreply.github.com"
+#          git config user.name ${{ github.actor }}
+#          npm config set //registry.npmjs.org/:_authToken $NODE_AUTH_TOKEN
+#          npm run publish:release-candidate $PUBLISH_ARGS
+#      -
+#        name: Update and push code to `develop`
+#        if: ${{ steps.set-vars.outputs.rc == 'true' }}
+#        run: |
+#          git checkout -B develop refs/remotes/origin/develop
+#          git merge origin/release-candidate
+#          git push
+#      -
+#        name: Send Discord notification
+#        if: ${{ steps.set-vars.outputs.rc == 'true' }}
+#        run: |
+#          # Prepare notification body
+#          echo '{"embeds":[{"title":"**Release Candidate Published**","description":"```' > embed.json
+#          git log -1 --pretty=%B >> embed.json
+#          echo '```","color":3581519}]}' >> embed.json
+#          sed -i '2,3d' embed.json
+#          sed -i '2 s/\ -/-/' embed.json
+#          sed -i '3,$ s/\-/\\n-/' embed.json
+#
+#          # Send notification
+#          res=$(curl -X POST ${{ secrets.DISCORD_RELEASE_WEBHOOK }} -H "Content-Type: application/json" -d @embed.json) || exit 1
