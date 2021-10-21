@@ -165,9 +165,10 @@ export class HistoryLog {
 
   async toCommitData(): Promise<CommitData[]> {
     return await Promise.all(
-        this.items.map(
-            async (logEntry) => await Utils.getCommitData(this.dispatcher, logEntry.cid, logEntry.timestamp)
-        )
+      this.items.map(
+        async (logEntry) =>
+          await Utils.getCommitData(this.dispatcher, logEntry.cid, logEntry.timestamp)
+      )
     )
   }
 }
@@ -197,7 +198,7 @@ export async function fetchLog(
   // Fetch expanded `CommitData` using the CID and running timestamp
   const nextCommitData = await Utils.getCommitData(dispatcher, cid, timestamp)
   // Update the running timestamp if it was updated via an anchor commit fetch
-  timestamp = nextCommitData.timestamp;
+  timestamp = nextCommitData.timestamp
   const prevCid: CID = nextCommitData.commit.prev
   if (!prevCid) {
     // Someone sent a tip that is a fake log, i.e. a log that at some point does not refer to a previous or genesis
@@ -246,7 +247,10 @@ export class ConflictResolution {
    * @private
    */
   private async applyCommitDataToState<T extends Stream>(
-    commitData: CommitData, state: StreamState, handler: StreamHandler<T>): Promise<StreamState> {
+    commitData: CommitData,
+    state: StreamState,
+    handler: StreamHandler<T>
+  ): Promise<StreamState> {
     if (StreamUtils.isAnchorCommitData(commitData)) {
       // It's an anchor commit
       // TODO: Anchor validation should be done by the StreamHandler as part of applying the anchor commit
@@ -272,7 +276,7 @@ export class ConflictResolution {
     unappliedCommits: CommitData[],
     state: StreamState | null,
     breakOnAnchor: boolean,
-    opts: InternalOpts,
+    opts: InternalOpts
   ): Promise<StreamState> {
     // When we have genesis state only, and add some commits on top, we should check a signature at particular timestamp.
     // Most probably there is a timestamp information there. If no timestamp found, we consider it to be _now_.
@@ -286,10 +290,11 @@ export class ConflictResolution {
     for (const entry of unappliedCommits) {
       try {
         state = await this.applyCommitDataToState(entry, state, handler)
-      } catch(err) {
+      } catch (err) {
         const streamId = state ? StreamUtils.streamIdFromState(state).toString() : null
-        this.context.loggerProvider.getDiagnosticsLogger().warn(
-          `Error while applying commit ${entry.cid.toString()} to stream ${streamId}: ${err}`)
+        this.context.loggerProvider
+          .getDiagnosticsLogger()
+          .warn(`Error while applying commit ${entry.cid.toString()} to stream ${streamId}: ${err}`)
         if (opts.throwOnInvalidCommit) {
           throw err
         } else {
@@ -316,7 +321,7 @@ export class ConflictResolution {
     initialState: StreamState,
     initialStateLog: HistoryLog,
     unappliedCommits: CommitData[],
-    opts: InternalOpts,
+    opts: InternalOpts
   ): Promise<StreamState | null> {
     const handler = this.handlers.get(initialState.type)
     const tip = initialStateLog.last
@@ -340,7 +345,13 @@ export class ConflictResolution {
     const state: StreamState = await this.applyLogToState(handler, canonicalLog, null, false, opts)
     // Compute next transition in parallel
     const localState = await this.applyLogToState(handler, localLog, cloneDeep(state), true, opts)
-    const remoteState = await this.applyLogToState(handler, unappliedCommits, cloneDeep(state), true, opts)
+    const remoteState = await this.applyLogToState(
+      handler,
+      unappliedCommits,
+      cloneDeep(state),
+      true,
+      opts
+    )
 
     const selectedState = await pickLogToAccept(localState, remoteState)
     if (selectedState === localState) {
@@ -357,7 +368,16 @@ export class ConflictResolution {
    * @param tip - Commit CID
    * @param opts - options that control the behavior when applying the commit
    */
-  async applyTip(initialState: StreamState, tip: CID, opts: InternalOpts): Promise<StreamState | null> {
+  async applyTip(
+    initialState: StreamState,
+    tip: CID,
+    opts: InternalOpts
+  ): Promise<StreamState | null> {
+    if (initialState.log.find((logEntry) => logEntry.cid.equals(tip))) {
+      // Tip is already included in the log, nothing to do
+      return initialState
+    }
+
     const stateLog = HistoryLog.fromState(this.dispatcher, initialState)
     const log = await fetchLog(this.dispatcher, tip, stateLog)
     if (log.length) {
@@ -370,7 +390,11 @@ export class ConflictResolution {
    */
   async verifyLoneGenesis(state: StreamState) {
     const handler = this.handlers.get(state.type)
-    const genesis = await Utils.getCommitData(this.dispatcher, state.log[0].cid, state.log[0].timestamp)
+    const genesis = await Utils.getCommitData(
+      this.dispatcher,
+      state.log[0].cid,
+      state.log[0].timestamp
+    )
     await handler.applyCommit(genesis, this.context)
   }
 
