@@ -51,6 +51,7 @@ export interface TileMetadataArgs {
    * If true, then two calls to TileDocument.create() with the same content and the same metadata
    * will only create a single document with the same StreamID. If false, then otherwise
    * identical documents will generate unique StreamIDs and be able to be updated independently.
+   * @deprecated use deterministic function instead
    */
   deterministic?: boolean
 
@@ -210,6 +211,31 @@ export class TileDocument<T = Record<string, any>> extends Stream {
       opts.syncTimeoutSeconds = 0
     }
     const commit = genesisCommit.data ? await _signDagJWS(ceramic, genesisCommit) : genesisCommit
+    return ceramic.createStreamFromGenesis<TileDocument<T>>(
+      TileDocument.STREAM_TYPE_ID,
+      commit,
+      opts
+    )
+  }
+
+  /**
+   * Creates a deterministic Tile document.
+   * @param ceramic - Instance of CeramicAPI used to communicate with the Ceramic network
+   * @param metadata - Genesis metadata
+   * @param opts - Additional options
+   */
+   static async deterministic<T>(
+    ceramic: CeramicApi,
+    metadata?: TileMetadataArgs,
+    opts: CreateOpts = {}
+  ): Promise<TileDocument<T>> {
+    opts = { ...DEFAULT_CREATE_OPTS, ...opts }
+    metadata = {...metadata, deterministic: true}
+
+    if (metadata.family == null && metadata.tags == null) {
+      throw new Error('Family and/or tags are required when creating a deterministic tile document')
+    }
+    const commit = await TileDocument.makeGenesis(ceramic, null, metadata)
     return ceramic.createStreamFromGenesis<TileDocument<T>>(
       TileDocument.STREAM_TYPE_ID,
       commit,
