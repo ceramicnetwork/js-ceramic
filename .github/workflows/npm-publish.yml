@@ -7,6 +7,10 @@ on:
         description: 'Type of publish (one of: rc, full, both, hotfix)'
         required: true
         default: 'rc'
+      force:
+        description: 'Force publish'
+        required: true
+        default: 'false'
 
 jobs:
   publish_full:
@@ -16,11 +20,18 @@ jobs:
         name: Setup environment
         id: set-vars
         run: |
+          PUBLISH_ARGS=""
           if [[ "${{ github.event.inputs.type }}" == "both" || "${{ github.event.inputs.type }}" == "full" ]]; then
             echo "::set-output name=full::true"
           elif [[ "${{ github.event.inputs.type }}" == "hotfix" ]]; then
             echo "::set-output name=full::true"
             echo "::set-output name=hotfix::true"
+          fi
+          if [[ "${{ github.event.inputs.force }}" == "true" ]]; then
+            PUBLISH_ARGS=$PUBLISH_ARGS --force-publish
+          fi
+          if [[ -n $PUBLISH_ARGS ]]; then
+            echo "::set-output name=publishArgs::-- $PUBLISH_ARGS"
           fi
       -
         name: Setup Node
@@ -53,12 +64,12 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
-          TAG: ${{ matrix.tag }}
+          PUBLISH_ARGS: ${{ steps.set-vars.outputs.publishArgs }}
         run: |
           git config user.email "${{ github.actor }}@users.noreply.github.com"
           git config user.name ${{ github.actor }}
           npm config set //registry.npmjs.org/:_authToken $NODE_AUTH_TOKEN
-          npm run publish:latest
+          npm run publish:latest $PUBLISH_ARGS
       -
         name: Update and push code to `release-candidate` and `develop`
         if: ${{ steps.set-vars.outputs.full == 'true' }}
@@ -92,8 +103,15 @@ jobs:
         name: Setup environment
         id: set-vars
         run: |
+          PUBLISH_ARGS=""
           if [[ "${{ github.event.inputs.type }}" == "both" || "${{ github.event.inputs.type }}" == "rc" ]]; then
             echo "::set-output name=rc::true"
+          fi
+          if [[ "${{ github.event.inputs.force }}" == "true" ]]; then
+            PUBLISH_ARGS=$PUBLISH_ARGS --force-publish
+          fi
+          if [[ -n $PUBLISH_ARGS ]]; then
+            echo "::set-output name=publishArgs::-- $PUBLISH_ARGS"
           fi
       -
         name: Setup Node
@@ -126,12 +144,12 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
-          TAG: ${{ matrix.tag }}
+          PUBLISH_ARGS: ${{ steps.set-vars.outputs.publishArgs }}
         run: |
           git config user.email "${{ github.actor }}@users.noreply.github.com"
           git config user.name ${{ github.actor }}
           npm config set //registry.npmjs.org/:_authToken $NODE_AUTH_TOKEN
-          npm run publish:release-candidate
+          npm run publish:release-candidate $PUBLISH_ARGS
       -
         name: Update and push code to `develop`
         if: ${{ steps.set-vars.outputs.rc == 'true' }}
