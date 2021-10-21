@@ -17,7 +17,6 @@ export async function createCeramic(
     stateStoreDirectory: await tmp.tmpName(),
     anchorOnRequest: false,
     streamCacheLimit: 100,
-    restoreStreams: false,
     pubsubTopic: '/ceramic/inmemory/test', // necessary so Ceramic instances can talk to each other
     ...config,
   }

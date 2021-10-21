@@ -40,7 +40,6 @@ const createCeramic = async (
     stateStoreDirectory: await tmp.tmpName(),
     anchorOnRequest,
     streamCacheLimit,
-    restoreStreams: false,
     pubsubTopic: '/ceramic/inmemory/test', // necessary so Ceramic instances can talk to each other
   })
   const did = makeDID(seed, ceramic)

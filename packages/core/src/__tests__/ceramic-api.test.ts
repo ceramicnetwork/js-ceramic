@@ -61,7 +61,6 @@ describe('Ceramic API', () => {
 
   const createCeramic = async (c: CeramicConfig = {}): Promise<Ceramic> => {
     c.anchorOnRequest = false
-    c.restoreStreams = false
     const ceramic = await Ceramic.create(ipfs, c)
 
     await ceramic.setDID(makeDID(seed, ceramic))
