@@ -235,6 +235,12 @@ export class StateManager {
    * work of loading and applying the commit on the execution queue so it gets serialized alongside
    * any other updates to the same stream. Includes logic to retry up to a total of 3 attempts to
    * handle transient failures of loading the anchor commit from IPFS.
+   *
+   * Note that most of the time this will be a no-op because we'll have already heard about the
+   * AnchorCommit via a pubsub message from the Ceramic node used by the CAS.  Since we have to poll
+   * the CAS anyway in order to learn if our anchor request failed, it seems prudent not to throw
+   * away information if we do wind up learning of the AnchorCommit via polling and haven't
+   * heard about it already via pubsub (given that pubsub is an unreliable channel).
    * @param state$ - state of the stream being anchored
    * @param tip - The tip that anchorCommit is anchoring
    * @param anchorCommit - cid of the anchor commit
@@ -254,7 +260,8 @@ export class StateManager {
         await this.executionQ.forStream(state$.id).run(async () => {
           const applied = await this._handleTip(state$, anchorCommit)
           if (applied) {
-            // The anchor commit was applied successfully
+            // We hadn't already heard about the AnchorCommit via pubsub, so it's possible
+            // other nodes didn't hear about it via pubsub either, so we rebroadcast it to pubsub now.
             this.publishTip(state$)
 
             if (remainingRetries < APPLY_ANCHOR_COMMIT_ATTEMPTS - 1) {
