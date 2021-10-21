@@ -28,7 +28,7 @@ jobs:
             echo "::set-output name=hotfix::true"
           fi
           if [[ "${{ github.event.inputs.force }}" == "true" ]]; then
-            PUBLISH_ARGS=$PUBLISH_ARGS --force-publish
+            PUBLISH_ARGS="$PUBLISH_ARGS --force-publish"
           fi
           if [[ -n $PUBLISH_ARGS ]]; then
             echo "::set-output name=publishArgs::-- $PUBLISH_ARGS"
@@ -108,7 +108,7 @@ jobs:
             echo "::set-output name=rc::true"
           fi
           if [[ "${{ github.event.inputs.force }}" == "true" ]]; then
-            PUBLISH_ARGS=$PUBLISH_ARGS --force-publish
+            PUBLISH_ARGS="$PUBLISH_ARGS --force-publish"
           fi
           if [[ -n $PUBLISH_ARGS ]]; then
             echo "::set-output name=publishArgs::-- $PUBLISH_ARGS"
