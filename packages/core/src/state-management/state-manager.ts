@@ -160,9 +160,14 @@ export class StateManager {
    * @param state$ - State to apply tip to
    * @param cid - tip CID
    * @param opts - options that control the behavior when applying the commit
+   * @returns boolean - whether or not the tip was actually applied
    * @private
    */
-  private async _handleTip(state$: RunningState, cid: CID, opts: InternalOpts = {}): Promise<void> {
+  private async _handleTip(
+    state$: RunningState,
+    cid: CID,
+    opts: InternalOpts = {}
+  ): Promise<boolean> {
     // by default swallow and log errors applying commits
     opts.throwOnInvalidCommit = opts.throwOnInvalidCommit ?? false
     this.logger.verbose(`Learned of new tip ${cid.toString()} for stream ${state$.id.toString()}`)
@@ -173,6 +178,9 @@ export class StateManager {
         `Stream ${state$.id.toString()} successfully updated to tip ${cid.toString()}`
       )
       await this._updateStateIfPinned(state$)
+      return true
+    } else {
+      return false
     }
   }
 
@@ -244,9 +252,11 @@ export class StateManager {
     ) {
       try {
         await this.executionQ.forStream(state$.id).run(async () => {
-          await this._handleTip(state$, anchorCommit)
-          if (state$.tip.equals(anchorCommit)) {
+          const applied = await this._handleTip(state$, anchorCommit)
+          if (applied) {
             // The anchor commit was applied successfully
+            this.publishTip(state$)
+
             if (remainingRetries < APPLY_ANCHOR_COMMIT_ATTEMPTS - 1) {
               // If we failed to apply the commit at least once, then it's worth logging when
               // we are able to do so successfully on the retry.
