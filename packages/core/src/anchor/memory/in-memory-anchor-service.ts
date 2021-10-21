@@ -18,7 +18,6 @@ import { DiagnosticsLogger } from '@ceramicnetwork/common'
 import type { DagJWS } from 'dids'
 import Utils from '../../utils'
 import dagCBOR from 'ipld-dag-cbor'
-import exp from 'constants'
 
 const DID_MATCHER =
   '^(did:([a-zA-Z0-9_]+):([a-zA-Z0-9_.-]+(:[a-zA-Z0-9_.-]+)*)((;[a-zA-Z0-9_.:%-]+=[a-zA-Z0-9_.:%-]*)*)(/[^#?]*)?)([?][^#]*)?(#.*)?'
