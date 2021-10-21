@@ -254,7 +254,6 @@ export class StateManager {
                 `Successfully applied anchor commit ${anchorCommit.toString()} for stream ${state$.id.toString()}`
               )
             }
-            this.publishTip(state$)
           }
         })
         return
