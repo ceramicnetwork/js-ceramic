@@ -3,7 +3,7 @@ import { createIPFS } from '../../create-ipfs'
 import { CeramicApi, IpfsApi } from '@ceramicnetwork/common'
 import { signTx, Tx, SignMeta, createWalletFromMnemonic, Wallet, StdTx } from '@tendermint/sig'
 import * as linking from '@ceramicnetwork/blockchain-utils-linking'
-import { happyPath, wrongProof } from './caip-flows'
+import { clearDid, happyPath, wrongProof } from './caip-flows'
 
 const mnemonic = 'test salon husband push melody usage fine ensure blade deal miss twin'
 const localProvider = createWalletFromMnemonic(mnemonic)
@@ -48,4 +48,14 @@ test('wrong proof', async () => {
     chainRef
   )
   await wrongProof(ceramic, authProvider)
+}, 120000)
+
+test('clear did', async () => {
+  const provider = new CosmosMockSigner(localProvider)
+  const authProvider = new linking.cosmos.CosmosAuthProvider(
+    provider,
+    localProvider.address,
+    chainRef
+  )
+  await clearDid(ceramic, authProvider)
 }, 120000)

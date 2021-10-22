@@ -9,7 +9,7 @@ import { SignerPayloadRaw } from '@polkadot/types/types'
 import { assert, hexToU8a, u8aToHex } from '@polkadot/util'
 import { cryptoWaitReady } from '@polkadot/util-crypto'
 import { createTestKeyring } from '@polkadot/keyring/testing'
-import { happyPath, wrongProof } from './caip-flows'
+import { clearDid, happyPath, wrongProof } from './caip-flows'
 
 class SingleAccountSigner implements Signer {
   readonly #keyringPair: KeyringPair
@@ -70,6 +70,16 @@ test('wrong proof', async () => {
       const provider = new SingleAccountSigner(registry, keyPair)
       const authProvider = new linking.PolkadotAuthProvider(provider, keyPair.address)
       await wrongProof(ceramic, authProvider)
+    })
+  )
+}, 120000)
+
+test('clear did', async () => {
+  await Promise.all(
+    [keyPairSr25519, keyPairEd25519, keyPairSecp256k].map(async (keyPair) => {
+      const provider = new SingleAccountSigner(registry, keyPair)
+      const authProvider = new linking.PolkadotAuthProvider(provider, keyPair.address)
+      await clearDid(ceramic, authProvider)
     })
   )
 }, 120000)

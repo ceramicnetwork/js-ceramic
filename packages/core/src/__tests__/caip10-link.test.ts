@@ -189,7 +189,6 @@ describe('Ceramic API', () => {
       const linkProof2 = { account, did:null}
       authProvider.createLink.mockReturnValueOnce(linkProof2)
       await link.clearDid(authProvider)
-      console.log(link.did)
       await expect(link.did).toBeNull()
     })
   })

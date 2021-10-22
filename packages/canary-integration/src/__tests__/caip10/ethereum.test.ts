@@ -7,7 +7,7 @@ import { CeramicApi, IpfsApi } from '@ceramicnetwork/common'
 import { createIPFS } from '../../create-ipfs'
 import { createCeramic } from '../../create-ceramic'
 import { Caip10Link } from '@ceramicnetwork/stream-caip10-link'
-import { happyPath } from './caip-flows'
+import { happyPath, clearDid } from './caip-flows'
 
 const CONTRACT_WALLET_ABI = [
   {
@@ -124,6 +124,10 @@ describe('externally-owned account', () => {
     await expect(caip.setDid(ceramic.did, authProvider)).rejects.toThrow(
       /Address doesn't match stream controller/
     )
+  }, 120000)
+  test('clear did', async () => {
+    const authProvider = new EthereumAuthProvider(provider, addresses[0])
+    await clearDid(ceramic, authProvider)
   }, 120000)
 })
 

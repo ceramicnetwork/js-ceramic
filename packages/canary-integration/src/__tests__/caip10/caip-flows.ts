@@ -19,3 +19,15 @@ export async function wrongProof(ceramic: CeramicApi, authProvider: AuthProvider
     /Address doesn't match stream controller/
   )
 }
+
+export async function clearDid(ceramic: CeramicApi, authProvider: AuthProvider) {
+  const accountId = await authProvider.accountId()
+  const caip = await Caip10Link.fromAccount(ceramic, accountId)
+
+  const didStr = 'did:test::%122323:awe.23-1_a:23'
+  await caip.setDid(didStr, authProvider)
+  await expect(caip.did).toEqual(didStr)
+
+  await caip.clearDid(authProvider)
+  await expect(caip.did).toBeNull()
+}
