@@ -85,7 +85,7 @@ export class Caip10Link extends Stream {
    * create a verifiable link from the CAIP10 address to the DID.
    * @param did - The DID being linked to the CAIP10 address that this Caip10Link object represents.
    *   If the 'did' provided is an instance of the DID type, the DID must already be authenticated
-   *   so that the did string it represents is avapilable.
+   *   so that the did string it represents is available.
    * @param authProvider - AuthProvider instance from the "@ceramicnetwork/blockchain-utils-linking" package.
    *   Must include support for the blockchain that the CAIP10 address associated with this Caip10Link lives on.
    * @param opts - Additional options
@@ -96,7 +96,14 @@ export class Caip10Link extends Stream {
     opts: UpdateOpts = {}
   ): Promise<void> {
     opts = { ...DEFAULT_UPDATE_OPTS, ...opts }
-    const didStr: string = typeof did == 'string' ? did : did.id
+    const didStr: string = typeof did == 'string' ? did.trim() : did.id
+
+    if (!/^did:[a-z0-9]+:*(:((%[0-9a-fA-F]{2})|[a-zA-Z0-9._-])+)+$/.test(didStr)) {
+      throw new Error(
+        `DID is not valid`
+      )
+    }
+
     const linkProof = await authProvider.createLink(didStr)
     return this.setDidProof(linkProof, opts)
   }
@@ -113,6 +120,22 @@ export class Caip10Link extends Stream {
     const commit = this.makeCommit(proof)
     const updated = await this.api.applyCommit(this.id, commit, opts)
     this.state$.next(updated.state)
+  }
+
+  /**
+   * Given an AuthProvider that supports the CAIP2 chainid of the CAIP10 address that the Caip10Link object represents, 
+   * clears the link from the CAIP10 address to its current DID if it exists. 
+   * @param authProvider - AuthProvider instance from the "@ceramicnetwork/blockchain-utils-linking" package.
+   *   Must include support for the blockchain that the CAIP10 address associated with this Caip10Link lives on.
+   * @param opts - Additional options
+   */
+   async clearDid(
+    authProvider: AuthProvider,
+    opts: UpdateOpts = {}
+  ): Promise<void> {
+    opts = { ...DEFAULT_UPDATE_OPTS, ...opts }
+    const linkProof = await authProvider.createLink('')
+    return this.setDidProof(linkProof, opts)
   }
 
   /**

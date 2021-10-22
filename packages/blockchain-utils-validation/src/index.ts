@@ -19,14 +19,14 @@ const handlers = {
 }
 
 const findDID = (did: string): string | undefined =>
-  did.match(/(did:[a-zA-Z0-9]+:[a-zA-Z0-9]+)/)?.[0]
+  did.match(/did:[a-z0-9]+:*(:((%[0-9a-fA-F]{2})|[a-zA-Z0-9._-])+)+/)?.[0]
 
 export async function validateLink(proof: LinkProof): Promise<LinkProof | null> {
   // version < 2 are always eip155 namespace
   let namespace = ethereum.namespace
   if (proof.version >= 2) {
     namespace = new AccountID(proof.account).chainId.namespace
-  }
+  } 
   const handler = handlers[namespace]
   if (!handler) throw new Error(`proof with namespace '${namespace}' not supported`)
   const validProof = await handler.validateLink(proof)
