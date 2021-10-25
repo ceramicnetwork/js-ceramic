@@ -21,7 +21,7 @@ describe('Ceramic integration', () => {
 
   it('can create Ceramic instance on default network', async () => {
     const stateStoreDirectory = await tmp.tmpName()
-    const ceramic = await Ceramic.create(ipfs1, { stateStoreDirectory, restoreStreams: false })
+    const ceramic = await Ceramic.create(ipfs1, { stateStoreDirectory })
     await delay(1000)
     const supportedChains = await ceramic.getSupportedChains()
     expect(supportedChains).toEqual(['inmemory:12345'])
@@ -33,7 +33,6 @@ describe('Ceramic integration', () => {
     const ceramic = await Ceramic.create(ipfs1, {
       networkName: 'inmemory',
       stateStoreDirectory,
-      restoreStreams: false,
     })
     await delay(1000)
     const supportedChains = await ceramic.getSupportedChains()
@@ -57,7 +56,6 @@ describe('Ceramic integration', () => {
       Ceramic.create(ipfs1, {
         networkName: 'fakenetwork',
         stateStoreDirectory,
-        restoreStreams: false,
       })
     ).rejects.toThrow(
       "Unrecognized Ceramic network name: 'fakenetwork'. Supported networks are: 'mainnet', 'testnet-clay', 'dev-unstable', 'local', 'inmemory'"

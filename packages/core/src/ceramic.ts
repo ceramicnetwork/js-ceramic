@@ -99,7 +99,6 @@ export interface CeramicConfig {
   concurrentRequestsLimit?: number
 
   useCentralizedPeerDiscovery?: boolean
-  restoreStreams?: boolean
   syncOverride?: SyncOptions
 
   [index: string]: any // allow arbitrary properties
@@ -462,9 +461,8 @@ export class Ceramic implements CeramicApi {
     const ceramic = new Ceramic(modules, params)
 
     const doPeerDiscovery = config.useCentralizedPeerDiscovery ?? !TESTING
-    const restoreStreams = config.restoreStreams ?? true
 
-    await ceramic._init(doPeerDiscovery, restoreStreams)
+    await ceramic._init(doPeerDiscovery)
 
     return ceramic
   }
@@ -473,9 +471,8 @@ export class Ceramic implements CeramicApi {
    * Finishes initialization and startup of a Ceramic instance. This usually should not be called
    * directly - most users will prefer to call `Ceramic.create()` instead which calls this internally.
    * @param doPeerDiscovery - Controls whether we connect to the "peerlist" to manually perform IPFS peer discovery
-   * @param restoreStreams - Controls whether we attempt to load pinned stream state into memory at startup
    */
-  async _init(doPeerDiscovery: boolean, restoreStreams: boolean): Promise<void> {
+  async _init(doPeerDiscovery: boolean): Promise<void> {
     try {
       this._logger.imp(
         `Connecting to ceramic network '${this._networkOptions.name}' using pubsub topic '${this._networkOptions.pubsubTopic}'`
@@ -500,10 +497,6 @@ export class Ceramic implements CeramicApi {
       }
 
       await this._anchorValidator.init(this._supportedChains ? this._supportedChains[0] : null)
-
-      if (restoreStreams) {
-        this.restoreStreams()
-      }
     } catch (err) {
       await this.close()
       throw err
@@ -733,27 +726,6 @@ export class Ceramic implements CeramicApi {
    */
   async getSupportedChains(): Promise<Array<string>> {
     return this._supportedChains
-  }
-
-  /**
-   * Load all the pinned streams, re-request PENDING or PROCESSING anchors.
-   */
-  restoreStreams() {
-    this.repository
-      .listPinned()
-      .then(async (list) => {
-        let n = 0
-        await Promise.all(
-          list.map(async (streamId) => {
-            await this.loadStream(StreamID.fromString(streamId), { sync: SyncOptions.NEVER_SYNC })
-            n++
-          })
-        )
-        this._logger.verbose(`Successfully restored ${n} pinned streams`)
-      })
-      .catch((error) => {
-        this._logger.err(error)
-      })
   }
 
   /**

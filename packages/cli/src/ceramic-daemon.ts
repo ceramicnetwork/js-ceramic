@@ -221,7 +221,7 @@ export class CeramicDaemon {
     }
 
     const ceramic = new Ceramic(modules, params)
-    await ceramic._init(true, true)
+    await ceramic._init(true)
     const did = new DID({ resolver: makeResolvers(ceramic, ceramicConfig, opts) })
     await ceramic.setDID(did)
 
