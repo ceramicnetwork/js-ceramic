@@ -171,14 +171,16 @@ jobs:
         if: ${{ steps.set-vars.outputs.rc == 'true' }}
         run: |
           # Prepare notification body
-          echo '{"embeds":[{"title":"**Release Candidate Published**","description":"${{ github.event.inputs.desc }}```' > embed.json
+          echo '{"embeds":[{"title":"**Release Candidate Published**","description":"' > embed.json
+          echo '```' >> embed.json
           git log -1 --pretty=%B >> embed.json
           echo '```","color":3581519}]}' >> embed.json
           cat embed.json
           sed -i '4,5d' embed.json
           sed -i '4 s/\ -/-/' embed.json
           sed -i '5,$ s/\-/\\n-/' embed.json
+          sed -i $'2i ${{ github.event.inputs.desc }}' embed.json
           cat embed.json
 
           # Send notification
-          res=$(curl -X POST ${{ secrets.DISCORD_RELEASE_WEBHOOK }} -H "Content-Type: application/json" -d @embed.json) || exit 1
+          res=$(curl -X POST ${{ secrets.MO_DISCORD_WEBHOOK }} -H "Content-Type: application/json" -d @embed.json) || exit 1
