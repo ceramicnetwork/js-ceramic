@@ -97,6 +97,8 @@ describe('anchor', () => {
 
     const fakeHandleTip = jest.fn()
     ;(stateManager as any)._handleTip = fakeHandleTip
+    // Handle tip needs to work once to create the commit when the CAS calls applyCommit with it
+    fakeHandleTip.mockImplementationOnce(realHandleTip)
     fakeHandleTip.mockRejectedValueOnce(new Error('Handle tip failed'))
     fakeHandleTip.mockRejectedValueOnce(new Error('Handle tip failed'))
     fakeHandleTip.mockImplementationOnce(realHandleTip)
@@ -105,6 +107,7 @@ describe('anchor', () => {
       ceramic.repository.stateManager.anchor(stream$).add(resolve)
     })
     expect(stream$.value.anchorStatus).toEqual(AnchorStatus.ANCHORED)
+    expect(fakeHandleTip).toHaveBeenCalledTimes(4)
   })
 
   test('anchor too many retries', async () => {

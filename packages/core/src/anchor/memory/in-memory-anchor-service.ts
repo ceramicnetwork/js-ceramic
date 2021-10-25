@@ -8,6 +8,7 @@ import {
   StreamUtils,
   AnchorServiceResponse,
   AnchorValidator,
+  AnchorCommit,
 } from '@ceramicnetwork/common'
 
 import type { Dispatcher } from '../../dispatcher'
@@ -16,6 +17,7 @@ import StreamID from '@ceramicnetwork/streamid'
 import { DiagnosticsLogger } from '@ceramicnetwork/common'
 import type { DagJWS } from 'dids'
 import Utils from '../../utils'
+import dagCBOR from 'ipld-dag-cbor'
 
 const DID_MATCHER =
   '^(did:([a-zA-Z0-9_]+):([a-zA-Z0-9_.-]+(:[a-zA-Z0-9_.-]+)*)((;[a-zA-Z0-9_.:%-]+=[a-zA-Z0-9_.:%-]*)*)(/[^#?]*)?)([?][^#]*)?(#.*)?'
@@ -114,7 +116,12 @@ class InMemoryAnchorService implements AnchorService, AnchorValidator {
     await Promise.all(
       candidates.map(async (req) => {
         try {
-          const commitData = await Utils.getCommitData(this.#dispatcher, req.cid, null, req.streamId)
+          const commitData = await Utils.getCommitData(
+            this.#dispatcher,
+            req.cid,
+            null,
+            req.streamId
+          )
           if (this.#verifySignatures && StreamUtils.isSignedCommitData(commitData)) {
             await this.verifySignedCommit(commitData.envelope)
           }
@@ -279,6 +286,28 @@ class InMemoryAnchorService implements AnchorService, AnchorValidator {
   }
 
   /**
+   * Sends anchor commit to Ceramic node and instructs it to publish the commit to pubsub
+   * @param streamId
+   * @param commit
+   */
+  async _publishAnchorCommit(streamId: StreamID, commit: AnchorCommit): Promise<CID> {
+    const expectedCID = await dagCBOR.util.cid(new Uint8Array(dagCBOR.util.serialize(commit)))
+    const stream = await this.#ceramic.applyCommit(streamId, commit, {
+      publish: true,
+      anchor: false,
+    })
+    const commitFound: boolean =
+      null != stream.state.log.find((logEntry) => logEntry.cid.equals(expectedCID))
+    if (!commitFound) {
+      throw new Error(
+        `Anchor commit not found in stream log after being applied to Ceramic node. This most likely means the commit was rejected by Ceramic's conflict resolution. StreamID: ${streamId.toString()}, found tip: ${stream.tip.toString()}`
+      )
+    }
+
+    return expectedCID
+  }
+
+  /**
    * Process single candidate
    * @private
    */
@@ -293,8 +322,8 @@ class InMemoryAnchorService implements AnchorService, AnchorValidator {
       root: leaf.cid,
     }
     const proof = await this.#dispatcher.storeCommit(proofData)
-    const commit = { proof, path: '', prev: leaf.cid }
-    const cid = await this.#dispatcher.storeCommit(commit, leaf.streamId)
+    const commit = { proof, path: '', prev: leaf.cid, id: leaf.streamId.cid }
+    const cid = await this._publishAnchorCommit(leaf.streamId, commit)
 
     // add a delay
     const handle = setTimeout(() => {

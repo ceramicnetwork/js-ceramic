@@ -160,9 +160,14 @@ export class StateManager {
    * @param state$ - State to apply tip to
    * @param cid - tip CID
    * @param opts - options that control the behavior when applying the commit
+   * @returns boolean - whether or not the tip was actually applied
    * @private
    */
-  private async _handleTip(state$: RunningState, cid: CID, opts: InternalOpts = {}): Promise<void> {
+  private async _handleTip(
+    state$: RunningState,
+    cid: CID,
+    opts: InternalOpts = {}
+  ): Promise<boolean> {
     // by default swallow and log errors applying commits
     opts.throwOnInvalidCommit = opts.throwOnInvalidCommit ?? false
     this.logger.verbose(`Learned of new tip ${cid.toString()} for stream ${state$.id.toString()}`)
@@ -173,6 +178,9 @@ export class StateManager {
         `Stream ${state$.id.toString()} successfully updated to tip ${cid.toString()}`
       )
       await this._updateStateIfPinned(state$)
+      return true
+    } else {
+      return false
     }
   }
 
@@ -227,6 +235,12 @@ export class StateManager {
    * work of loading and applying the commit on the execution queue so it gets serialized alongside
    * any other updates to the same stream. Includes logic to retry up to a total of 3 attempts to
    * handle transient failures of loading the anchor commit from IPFS.
+   *
+   * Note that most of the time this will be a no-op because we'll have already heard about the
+   * AnchorCommit via a pubsub message from the Ceramic node used by the CAS.  Since we have to poll
+   * the CAS anyway in order to learn if our anchor request failed, it seems prudent not to throw
+   * away information if we do wind up learning of the AnchorCommit via polling and haven't
+   * heard about it already via pubsub (given that pubsub is an unreliable channel).
    * @param state$ - state of the stream being anchored
    * @param tip - The tip that anchorCommit is anchoring
    * @param anchorCommit - cid of the anchor commit
@@ -244,9 +258,12 @@ export class StateManager {
     ) {
       try {
         await this.executionQ.forStream(state$.id).run(async () => {
-          await this._handleTip(state$, anchorCommit)
-          if (state$.tip.equals(anchorCommit)) {
-            // The anchor commit was applied successfully
+          const applied = await this._handleTip(state$, anchorCommit)
+          if (applied) {
+            // We hadn't already heard about the AnchorCommit via pubsub, so it's possible
+            // other nodes didn't hear about it via pubsub either, so we rebroadcast it to pubsub now.
+            this.publishTip(state$)
+
             if (remainingRetries < APPLY_ANCHOR_COMMIT_ATTEMPTS - 1) {
               // If we failed to apply the commit at least once, then it's worth logging when
               // we are able to do so successfully on the retry.
@@ -254,7 +271,6 @@ export class StateManager {
                 `Successfully applied anchor commit ${anchorCommit.toString()} for stream ${state$.id.toString()}`
               )
             }
-            this.publishTip(state$)
           }
         })
         return

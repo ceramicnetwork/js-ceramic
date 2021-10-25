@@ -230,7 +230,7 @@ describe('Ceramic integration', () => {
       await anchorUpdate(ceramic1, stream1)
 
       expect(addSpy1).toBeCalledTimes(1)
-      expect(loadSpy1).toBeCalledTimes(1)
+      expect(loadSpy1).toBeCalledTimes(2) // once from create, once from applyCommit as part of anchor
 
       addSpy1.mockClear()
       loadSpy1.mockClear()
