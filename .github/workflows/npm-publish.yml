@@ -179,7 +179,7 @@ jobs:
           sed -i '4,5d' embed.json
           sed -i '4 s/\ -/-/' embed.json
           sed -i '5,$ s/\-/\\n-/' embed.json
-          sed -i '2i $(${{ github.event.inputs.desc }})' embed.json
+          sed -i '2i "${{ github.event.inputs.desc }}"' embed.json
           cat embed.json
 
           # Send notification
