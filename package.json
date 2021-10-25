@@ -5,7 +5,7 @@
     "test": "lerna exec npm t",
     "build": "lerna run build",
     "docs": "./node_modules/.bin/typedoc",
-    "publish:release-candidate": "lerna publish --allow-branch release-candidate --conventional-prerelease --dist-tag next --preid rc --no-verify-access --yes",
+    "publish:release-candidate": "lerna publish --allow-branch release-candidate --dist-tag next --preid rc --no-verify-access --yes",
     "publish:latest": "lerna publish --allow-branch master --create-release github --no-verify-access --yes",
     "lint": "lerna run lint",
     "clean": "npm run clean:deps && npm run clean:coverage && npm run clean:build-artifacts",
