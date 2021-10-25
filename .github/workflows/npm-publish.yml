@@ -27,6 +27,7 @@ jobs:
           PUBLISH_ARGS=""
           if [[ "${{ github.event.inputs.type }}" == "both" || "${{ github.event.inputs.type }}" == "full" ]]; then
             echo "::set-output name=full::true"
+            PUBLISH_ARGS="$PUBLISH_ARGS --conventional-graduate"
           elif [[ "${{ github.event.inputs.type }}" == "hotfix" ]]; then
             echo "::set-output name=full::true"
             echo "::set-output name=hotfix::true"

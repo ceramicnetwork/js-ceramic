@@ -6,7 +6,7 @@
     "build": "lerna run build",
     "docs": "./node_modules/.bin/typedoc",
     "publish:release-candidate": "lerna publish --allow-branch release-candidate --conventional-prerelease --dist-tag next --preid rc --no-verify-access --yes",
-    "publish:latest": "lerna publish --allow-branch master --conventional-graduate --create-release github --no-verify-access --yes",
+    "publish:latest": "lerna publish --allow-branch master --create-release github --no-verify-access --yes",
     "lint": "lerna run lint",
     "clean": "npm run clean:deps && npm run clean:coverage && npm run clean:build-artifacts",
     "clean:deps": "rm -rf ./node_modules && rm -rf ./packages/*/node_modules",
