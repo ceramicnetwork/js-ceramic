@@ -181,7 +181,7 @@ jobs:
           sed -i '2,3d' embed.json
           sed -i '2 s/\ -/-/' embed.json
           sed -i '3,$ s/\-/\\n-/' embed.json
-          DESC=$(jq '.workflow_dispatch.github.event.inputs.desc')
+          cat $GITHUB_EVENT_PATH
           if [[ -n $DESC ]]; then
             echo $DESC
             sed -i '2i$DESC' embed.json
