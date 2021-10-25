@@ -3,7 +3,7 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-## [1.3.1-rc.3](/compare/@ceramicnetwork/canary-integration@1.3.1-rc.2...@ceramicnetwork/canary-integration@1.3.1-rc.3) (2021-10-25)
+## [1.3.2-rc.0](/compare/@ceramicnetwork/canary-integration@1.3.1...@ceramicnetwork/canary-integration@1.3.2-rc.0) (2021-10-25)
 
 **Note:** Version bump only for package @ceramicnetwork/canary-integration
 
@@ -11,15 +11,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 
 
-## [1.3.1-rc.2](/compare/@ceramicnetwork/canary-integration@1.3.1-rc.0...@ceramicnetwork/canary-integration@1.3.1-rc.2) (2021-10-20)
-
-**Note:** Version bump only for package @ceramicnetwork/canary-integration
-
-
-
-
-
-## [1.3.1-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/canary-integration@1.3.0...@ceramicnetwork/canary-integration@1.3.1-rc.0) (2021-10-20)
+## [1.3.1](/compare/@ceramicnetwork/canary-integration@1.3.0...@ceramicnetwork/canary-integration@1.3.1) (2021-10-25)
 
 **Note:** Version bump only for package @ceramicnetwork/canary-integration
 
