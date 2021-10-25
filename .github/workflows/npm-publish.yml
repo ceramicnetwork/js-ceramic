@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       type:
-        description: 'Type of publish (one of: rc, full, both, hotfix)'
+        description: 'Type of publish (one of: rc, full, both, hotfix, rc-hotfix)'
         required: true
         default: 'rc'
       force:
@@ -14,6 +14,7 @@ on:
       desc:
         description: 'Release description'
         required: true
+        default: ''
 
 jobs:
   publish_full:
@@ -110,6 +111,9 @@ jobs:
           PUBLISH_ARGS=""
           if [[ "${{ github.event.inputs.type }}" == "both" || "${{ github.event.inputs.type }}" == "rc" ]]; then
             echo "::set-output name=rc::true"
+          elif [[ "${{ github.event.inputs.type }}" == "rc-hotfix" ]]; then
+            echo "::set-output name=rc::true"
+            echo "::set-output name=hotfix::true"
           fi
           if [[ "${{ github.event.inputs.force }}" == "true" ]]; then
             PUBLISH_ARGS="$PUBLISH_ARGS --force-publish"
@@ -132,7 +136,7 @@ jobs:
           ref: release-candidate
       -
         name: Merge `develop` -> `release-candidate`
-        if: ${{ steps.set-vars.outputs.rc == 'true' }}
+        if: ${{ steps.set-vars.outputs.rc == 'true' && steps.set-vars.outputs.hotfix != 'true' }}
         run: |
           git fetch origin develop
           git merge origin/develop
