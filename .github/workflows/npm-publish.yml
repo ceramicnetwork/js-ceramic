@@ -181,11 +181,12 @@ jobs:
           sed -i '2,3d' embed.json
           sed -i '2 s/\ -/-/' embed.json
           sed -i '3,$ s/\-/\\n-/' embed.json
-          DESC=$(jq 'github.event.inputs.desc')
+          DESC=$(jq '.workflow_dispatch.github.event.inputs.desc')
           if [[ -n $DESC ]]; then
             echo $DESC
             sed -i '2i$DESC' embed.json
           fi
+          cat embed.json
 
           # Send notification
           res=$(curl -X POST ${{ secrets.MO_DISCORD_WEBHOOK }} -H "Content-Type: application/json" -d @embed.json) || exit 1
