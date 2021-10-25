@@ -25,6 +25,14 @@ const DEFAULT_CREATE_OPTS = { anchor: false, publish: true, sync: SyncOptions.PR
 const DEFAULT_UPDATE_OPTS = { anchor: true, publish: true, throwOnInvalidCommit: true }
 const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE }
 
+// TODO: remove and use did-resolver parse instead
+// https://github.com/decentralized-identity/did-resolver/blob/master/src/resolver.ts#L167
+const PCT_ENCODED = '(?:%[0-9a-fA-F]{2})'
+const ID_CHAR = `(?:[a-zA-Z0-9._-]|${PCT_ENCODED})`
+const METHOD = '([a-z0-9]+)'
+const METHOD_ID = `((?:${ID_CHAR}*:)*(${ID_CHAR}+))`
+const DID_REGEX = new RegExp(`^did:${METHOD}:${METHOD_ID}$`)
+
 /**
  * Caip10Link stream implementation
  */
@@ -33,7 +41,7 @@ export class Caip10Link extends Stream {
   static STREAM_TYPE_NAME = 'caip10-link'
   static STREAM_TYPE_ID = 1
 
-  private _isReadOnly = false;
+  private _isReadOnly = false
 
   /**
    * Returns the DID linked to the CAIP10 address this object represents.
@@ -98,10 +106,8 @@ export class Caip10Link extends Stream {
     opts = { ...DEFAULT_UPDATE_OPTS, ...opts }
     const didStr: string = typeof did == 'string' ? did.trim() : did.id
 
-    if (!/^did:[a-z0-9]+:*(:((%[0-9a-fA-F]{2})|[a-zA-Z0-9._-])+)+$/.test(didStr)) {
-      throw new Error(
-        `DID is not valid`
-      )
+    if (!DID_REGEX.test(didStr)) {
+      throw new Error(`DID is not valid: '${didStr}'`)
     }
 
     const linkProof = await authProvider.createLink(didStr)
@@ -123,16 +129,13 @@ export class Caip10Link extends Stream {
   }
 
   /**
-   * Given an AuthProvider that supports the CAIP2 chainid of the CAIP10 address that the Caip10Link object represents, 
-   * clears the link from the CAIP10 address to its current DID if it exists. 
+   * Given an AuthProvider that supports the CAIP2 chainid of the CAIP10 address that the Caip10Link object represents,
+   * clears the link from the CAIP10 address to its current DID if it exists.
    * @param authProvider - AuthProvider instance from the "@ceramicnetwork/blockchain-utils-linking" package.
    *   Must include support for the blockchain that the CAIP10 address associated with this Caip10Link lives on.
    * @param opts - Additional options
    */
-   async clearDid(
-    authProvider: AuthProvider,
-    opts: UpdateOpts = {}
-  ): Promise<void> {
+  async clearDid(authProvider: AuthProvider, opts: UpdateOpts = {}): Promise<void> {
     opts = { ...DEFAULT_UPDATE_OPTS, ...opts }
     const linkProof = await authProvider.createLink('')
     return this.setDidProof(linkProof, opts)

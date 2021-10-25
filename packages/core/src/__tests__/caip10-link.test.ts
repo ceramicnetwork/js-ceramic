@@ -167,26 +167,33 @@ describe('Ceramic API', () => {
       const account = '0x0544DcF4fcE959C6C4F3b7530190cB5E1BD67Cb7@eip155:1'
       const link = await Caip10Link.fromAccount(ceramic, account)
 
-      const invalidDids = ['did:incomplete', '  oddPrefixdid:stuff:stuff', 'did:CAPITALS:stuff', 'did:&&specialChar:stuff', 'did:test:%1maw']
-    
-      await Promise.all(invalidDids.map(async did => {
-        await expect(link.setDid(did, authProvider)).rejects.toThrow(/DID is not valid/)
-      }))
+      const invalidDids = [
+        'did:incomplete',
+        '  oddPrefixdid:stuff:stuff',
+        'did:CAPITALS:stuff',
+        'did:&&specialChar:stuff',
+        'did:test:%1maw',
+      ]
+
+      await Promise.all(
+        invalidDids.map(async (did) => {
+          await expect(link.setDid(did, authProvider)).rejects.toThrow(/DID is not valid/)
+        })
+      )
     })
 
     it('Clear did works', async () => {
       const account = '0x0544DcF4fcE959C6C4F3b7530190cB5E1BD67Cb7@eip155:1'
       const link = await Caip10Link.fromAccount(ceramic, account)
-      await expect(link.did ).toBeNull()
+      await expect(link.did).toBeNull()
 
-      
       const didStr = 'did:test::%122323:awe.23-1_a:23'
-      const linkProof = { account, did: didStr}
+      const linkProof = { account, did: didStr }
       authProvider.createLink.mockReturnValueOnce(linkProof)
       await link.setDid(didStr, authProvider)
       await expect(link.did).toEqual(didStr)
-      
-      const linkProof2 = { account, did:null}
+
+      const linkProof2 = { account, did: null }
       authProvider.createLink.mockReturnValueOnce(linkProof2)
       await link.clearDid(authProvider)
       await expect(link.did).toBeNull()

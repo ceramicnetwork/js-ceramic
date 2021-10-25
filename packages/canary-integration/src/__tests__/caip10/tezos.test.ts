@@ -52,7 +52,7 @@ test('wrong proof', async () => {
   await wrongProof(ceramic, authProvider)
 }, 120000)
 
-test('wrong proof', async () => {
+test('clear did', async () => {
   const authProvider = new TezosAuthProvider(provider)
   await clearDid(ceramic, authProvider)
 }, 120000)
