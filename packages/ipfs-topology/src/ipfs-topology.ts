@@ -143,7 +143,9 @@ export class IpfsTopology {
 
     if (filteredBootstrapList.length === bootstrapList.length) {
       this.logger.warn(
-        'This node is not included in the peer list. It will not be discoverable by other nodes in the network.'
+        `This node with peerId ${myPeerId.toString()} is not included in the peer list for Ceramic network ${
+          this.ceramicNetwork
+        }. It will not be discoverable by other nodes in the network, and so data created against this node will not be available to the rest of the network.`
       )
     }
 
