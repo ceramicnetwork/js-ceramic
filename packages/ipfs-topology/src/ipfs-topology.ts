@@ -141,6 +141,14 @@ export class IpfsTopology {
       return !addr.getPeerId()?.endsWith(myPeerId)
     })
 
+    if (filteredBootstrapList.length === bootstrapList.length) {
+      this.logger.warn(
+        `This node with peerId ${myPeerId.toString()} is not included in the peer list for Ceramic network ${
+          this.ceramicNetwork
+        }. It will not be discoverable by other nodes in the network, and so data created against this node will not be available to the rest of the network.`
+      )
+    }
+
     await Promise.all(
       filteredBootstrapList.map(async (node) => {
         try {
