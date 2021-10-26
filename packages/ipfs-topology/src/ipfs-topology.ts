@@ -141,6 +141,12 @@ export class IpfsTopology {
       return !addr.getPeerId()?.endsWith(myPeerId)
     })
 
+    if (filteredBootstrapList.length === bootstrapList.length) {
+      this.logger.warn(
+        'This node is not included in the peer list. It will not be discoverable by other nodes in the network.'
+      )
+    }
+
     await Promise.all(
       filteredBootstrapList.map(async (node) => {
         try {
