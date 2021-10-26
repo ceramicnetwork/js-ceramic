@@ -14,6 +14,7 @@ import type { AuthProvider, LinkProof } from '@ceramicnetwork/blockchain-utils-l
 import { CommitID, StreamID, StreamRef } from '@ceramicnetwork/streamid'
 import { AccountID } from 'caip'
 import type { DID } from 'dids'
+import { parse } from 'did-resolver'
 
 const throwReadOnlyError = (): Promise<void> => {
   throw new Error(
@@ -24,14 +25,6 @@ const throwReadOnlyError = (): Promise<void> => {
 const DEFAULT_CREATE_OPTS = { anchor: false, publish: true, sync: SyncOptions.PREFER_CACHE }
 const DEFAULT_UPDATE_OPTS = { anchor: true, publish: true, throwOnInvalidCommit: true }
 const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE }
-
-// TODO: remove and use did-resolver parse instead
-// https://github.com/decentralized-identity/did-resolver/blob/master/src/resolver.ts#L167
-const PCT_ENCODED = '(?:%[0-9a-fA-F]{2})'
-const ID_CHAR = `(?:[a-zA-Z0-9._-]|${PCT_ENCODED})`
-const METHOD = '([a-z0-9]+)'
-const METHOD_ID = `((?:${ID_CHAR}*:)*(${ID_CHAR}+))`
-const DID_REGEX = new RegExp(`^did:${METHOD}:${METHOD_ID}$`)
 
 /**
  * Caip10Link stream implementation
@@ -106,7 +99,8 @@ export class Caip10Link extends Stream {
     opts = { ...DEFAULT_UPDATE_OPTS, ...opts }
     const didStr: string = typeof did == 'string' ? did.trim() : did.id
 
-    if (!DID_REGEX.test(didStr)) {
+    const parsedDid = parse(didStr)
+    if (parsedDid?.did !== didStr) {
       throw new Error(`DID is not valid: '${didStr}'`)
     }
 
