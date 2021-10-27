@@ -3,7 +3,7 @@ import * as linking from '@ceramicnetwork/blockchain-utils-linking'
 import { createIPFS } from '../../create-ipfs'
 import { IpfsApi, CeramicApi } from '@ceramicnetwork/common'
 import { createCeramic } from '../../create-ceramic'
-import { happyPath, wrongProof } from './caip-flows'
+import { clearDid, happyPath, wrongProof } from './caip-flows'
 
 const telosTestnetChainId = '1eaa0824707c8c16bd25145493bf062aecddfeb56c736f6ba6397f3195f33c9f'
 const telosTestnetAccount = 'testuser1111'
@@ -43,4 +43,12 @@ test('wrong proof', async () => {
     telosTestnetAccount
   )
   await wrongProof(ceramic, authProvider)
+}, 120000)
+
+test('clear did', async () => {
+  const authProvider = new linking.eosio.EosioAuthProvider(
+    telosTestnetProvider,
+    telosTestnetAccount
+  )
+  await clearDid(ceramic, authProvider)
 }, 120000)

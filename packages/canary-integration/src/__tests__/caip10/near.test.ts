@@ -2,7 +2,7 @@ import { createCeramic } from '../../create-ceramic'
 import { createIPFS } from '../../create-ipfs'
 import { CeramicApi, IpfsApi } from '@ceramicnetwork/common'
 import * as linking from '@ceramicnetwork/blockchain-utils-linking'
-import { happyPath, wrongProof } from './caip-flows'
+import { happyPath, wrongProof, clearDid } from './caip-flows'
 import * as nearApiJs from 'near-api-js'
 
 const privateKey =
@@ -47,4 +47,10 @@ test('wrong proof', async () => {
   const near = await nearApiJs.connect(config)
   const authProvider = new linking.NearAuthProvider(near, accountName, chainRef)
   await wrongProof(ceramic, authProvider)
+}, 20000)
+
+test('clear Did', async () => {
+  const near = await nearApiJs.connect(config)
+  const authProvider = new linking.NearAuthProvider(near, accountName, chainRef)
+  await clearDid(ceramic, authProvider)
 }, 20000)

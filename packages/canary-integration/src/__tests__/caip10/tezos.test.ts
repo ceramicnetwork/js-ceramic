@@ -6,7 +6,7 @@ const { Response } = jest.requireActual('cross-fetch')
 import { createCeramic } from '../../create-ceramic'
 import { createIPFS } from '../../create-ipfs'
 import { CeramicApi, IpfsApi } from '@ceramicnetwork/common'
-import { happyPath, wrongProof } from './caip-flows'
+import { clearDid, happyPath, wrongProof } from './caip-flows'
 import { TezosAuthProvider, TezosProvider } from '@ceramicnetwork/blockchain-utils-linking'
 import { InMemorySigner } from '@taquito/signer'
 
@@ -50,4 +50,9 @@ test('happy path', async () => {
 test('wrong proof', async () => {
   const authProvider = new TezosAuthProvider(provider)
   await wrongProof(ceramic, authProvider)
+}, 120000)
+
+test('clear did', async () => {
+  const authProvider = new TezosAuthProvider(provider)
+  await clearDid(ceramic, authProvider)
 }, 120000)

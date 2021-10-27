@@ -18,8 +18,7 @@ const handlers = {
   [tezos.namespace]: tezos,
 }
 
-const findDID = (did: string): string | undefined =>
-  did.match(/(did:[a-zA-Z0-9]+:[a-zA-Z0-9]+)/)?.[0]
+const findDID = (did: string): string | undefined => did.match(/(did:\S+:\S+)/)?.[0]
 
 export async function validateLink(proof: LinkProof): Promise<LinkProof | null> {
   // version < 2 are always eip155 namespace

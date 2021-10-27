@@ -2,7 +2,7 @@ import { createCeramic } from '../../create-ceramic'
 import { createIPFS } from '../../create-ipfs'
 import { CeramicApi, IpfsApi } from '@ceramicnetwork/common'
 import * as linking from '@ceramicnetwork/blockchain-utils-linking'
-import { happyPath, wrongProof } from './caip-flows'
+import { clearDid, happyPath, wrongProof } from './caip-flows'
 import { LocalManagedProvider } from '@glif/local-managed-provider'
 import { Network } from '@glif/filecoin-address'
 
@@ -47,6 +47,17 @@ test('wrong proof', async () => {
       const addresses = await provider.getAccounts()
       const authProvider = new linking.filecoin.FilecoinAuthProvider(provider, addresses[0])
       await wrongProof(ceramic, authProvider)
+    })
+  )
+}, 120000)
+
+test('clear Did', async () => {
+  const providers = [testnetProvider, mainnetProvider, blsMainnetProvider]
+  await Promise.all(
+    providers.map(async (provider) => {
+      const addresses = await provider.getAccounts()
+      const authProvider = new linking.filecoin.FilecoinAuthProvider(provider, addresses[0])
+      await clearDid(ceramic, authProvider)
     })
   )
 }, 120000)
