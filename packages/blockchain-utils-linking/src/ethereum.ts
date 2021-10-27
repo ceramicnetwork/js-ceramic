@@ -57,6 +57,9 @@ export class EthereumAuthProvider implements AuthProvider {
   }
 
   async requestCapability(params: OcapParams): Promise<Ocap> {
+    console.warn(
+      'WARN: requestCapability os an experimental API, that is subject to change any time.'
+    )
     const account = await this.accountId()
     const requestMessage = getOcapRequestMessage({
       ...params,

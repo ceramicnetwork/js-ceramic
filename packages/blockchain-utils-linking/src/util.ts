@@ -87,14 +87,14 @@ export function getOcapRequestMessage(opts: OcapRequestParams): string {
   }
 
   res += `Nonce: ${opts.nonce} \n`
-  res += `Issued At: ${opts.issuedAt} \n`
+  res += `Issued At: ${w3cDate(opts.issuedAt)} \n`
 
   if (opts.expiresAt) {
-    res += `Expiration Time: ${opts.expiresAt} \n`
+    res += `Expiration Time: ${w3cDate(opts.expiresAt)} \n`
   }
 
   if (opts.notBefore) {
-    res += `Not Before: ${opts.notBefore} \n`
+    res += `Not Before: ${w3cDate(opts.notBefore)} \n`
   }
 
   if (opts.requestId) {
@@ -117,4 +117,13 @@ export function encodeRpcMessage(method: string, params?: any): any {
     method,
     params,
   }
+}
+
+export function w3cDate(date?: number | string): string {
+  let result = new Date()
+  if (typeof date === 'number' || typeof date === 'string') {
+    result = new Date(date)
+  }
+  const str = result.toISOString()
+  return str.substr(0, str.length - 5) + 'Z'
 }
