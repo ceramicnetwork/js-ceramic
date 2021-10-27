@@ -557,7 +557,7 @@ describe('Ceramic integration', () => {
       const genesisCommit = await TileDocument.makeGenesis(ceramic2, contentA, metadata2)
 
       // Try loading the stream on node2 and provide genesisCommit
-      expect(
+      await expect(
         ceramic2.multiQuery([
           {
             streamId: stream1.id,
@@ -597,7 +597,7 @@ describe('Ceramic integration', () => {
       const genesisCommit = await TileDocument.makeGenesis(ceramic2, content, metadata)
 
       // Try loading the stream on node2 and provide genesisCommit
-      expect(
+      await expect(
         ceramic2.multiQuery([
           {
             streamId: streamID,
