@@ -30,10 +30,25 @@ export class PinStore {
     await this.pinning.close()
   }
 
-  async add(stateHolder: StreamStateHolder): Promise<void> {
+  /**
+   * Takes a StreamState and finds all the IPFS CIDs that are in any way needed to load data
+   * from the stream, pins them against the configured pinning backend, and also writes the
+   * StreamState itself into the state store.
+   *
+   * If 'pinnedCommits' is provided, it is assumed that
+   * @param stateHolder - object holding the current StreamState for the stream being pinned
+   * @param pinnedCommits - If the stream was previously pinned, then this will contain a set
+   *  of CIDs (in string representation) of the commits that were pinned previously. This means
+   *  we only need to pin CIDs corresponding to the commits contained in the log of the given
+   *  StreamState that aren't contained within `pinnedCommits`
+   */
+  async add(stateHolder: StreamStateHolder, pinnedCommits?: Set<string>): Promise<void> {
     const commitLog = stateHolder.state.log.map((logEntry) => logEntry.cid)
+    const newCommits = pinnedCommits
+      ? commitLog.filter((cid) => !pinnedCommits.has(cid.toString()))
+      : commitLog
 
-    const points = await this.pointsOfInterest(commitLog)
+    const points = await this.pointsOfInterest(newCommits)
     await Promise.all(points.map((point) => this.pinning.pin(point)))
     await this.stateStore.save(stateHolder)
   }

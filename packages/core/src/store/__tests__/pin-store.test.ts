@@ -150,6 +150,25 @@ describe('#add', () => {
     expect(pinning.pin.mock.calls[4][0].toString()).toEqual(leftCID.toString())
     expect(pinning.pin.mock.calls[5][0].toString()).toEqual(rightCID.toString())
   })
+
+  test('save and pin only new commits', async () => {
+    const stateWithMultipleCommits = Object.assign(state, {
+      log: [
+        { cid: new CID('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D') },
+        { cid: new CID('QmdmQXB2mzChmMeKY47C43LxUdg1NDJ5MWcKMKxDu7RgQm') },
+        { cid: new CID('QmbQDovX7wRe9ek7u6QXe9zgCXkTzoUSsTFJEkrYV1HrVR') },
+      ],
+    })
+    const previousCommits = new Set(['QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D'])
+
+    const pinStore = new PinStore(stateStore, pinning, jest.fn(), jest.fn())
+    const stream = new FakeType(TestUtils.runningState(stateWithMultipleCommits), {})
+    await pinStore.add(stream, previousCommits)
+    expect(stateStore.save).toBeCalledWith(stream)
+    expect(pinning.pin).toBeCalledTimes(2)
+    expect(pinning.pin.mock.calls[0][0].toString()).toEqual(state.log[1].cid.toString())
+    expect(pinning.pin.mock.calls[1][0].toString()).toEqual(state.log[2].cid.toString())
+  })
 })
 
 test('#rm', async () => {
