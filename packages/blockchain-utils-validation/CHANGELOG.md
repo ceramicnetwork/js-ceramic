@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.5.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/blockchain-utils-validation@1.4.2-rc.0...@ceramicnetwork/blockchain-utils-validation@1.5.0-rc.0) (2021-10-28)
+
+
+### Features
+
+* **blockchain-utils-validation, stream-caip10-link:** add clearDid fn, add DID validation to setDid, update DID regex ([#1783](https://github.com/ceramicnetwork/js-ceramic/issues/1783)) ([f233f86](https://github.com/ceramicnetwork/js-ceramic/commit/f233f862f257bae24eb2fd1ae2a36c8f10f8a51d))
+
+
+
+
+
 ## [1.4.2-rc.0](/compare/@ceramicnetwork/blockchain-utils-validation@1.4.1...@ceramicnetwork/blockchain-utils-validation@1.4.2-rc.0) (2021-10-25)
 
 **Note:** Version bump only for package @ceramicnetwork/blockchain-utils-validation
