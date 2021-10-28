@@ -3,7 +3,7 @@ import { AuthProvider } from './auth-provider'
 import { getConsentMessage, LinkProof } from './util'
 import * as uint8arrays from 'uint8arrays'
 import * as nearApiJs from 'near-api-js'
-import crypto from 'crypto'
+import * as sha256 from '@stablelib/sha256'
 
 const getSignature = async (
   signer: nearApiJs.Signer,
@@ -27,8 +27,8 @@ export class NearAuthProvider implements AuthProvider {
   async authenticate(message: string): Promise<string> {
     const key = await this.near.connection.signer.keyStore.getKey(this.chainRef, this.accountName)
     const signer = await nearApiJs.InMemorySigner.fromKeyPair(this.chainRef, this.accountName, key)
-    const hash = crypto.createHash('sha256').update(message).digest()
-    const { signature } = await signer.signMessage(hash, this.accountName, this.chainRef)
+    const digest = sha256.hash(uint8arrays.fromString(message))
+    const { signature } = await signer.signMessage(digest, this.accountName, this.chainRef)
     return uint8arrays.toString(signature, 'base16')
   }
 
