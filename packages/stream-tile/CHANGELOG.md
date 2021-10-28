@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.4.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile@1.3.4-rc.2...@ceramicnetwork/stream-tile@1.4.0-rc.0) (2021-10-28)
+
+
+### Features
+
+* deprecate deterministic tile metadata arg, add deterministic function ([#1771](https://github.com/ceramicnetwork/js-ceramic/issues/1771)) ([1307ceb](https://github.com/ceramicnetwork/js-ceramic/commit/1307ceb3963465b973a13be82b1229b59f563544))
+
+
+
+
+
 ## [1.3.4-rc.2](/compare/@ceramicnetwork/stream-tile@1.3.4-rc.0...@ceramicnetwork/stream-tile@1.3.4-rc.2) (2021-10-20)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-tile

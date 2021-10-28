@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.2.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-caip10-link@1.1.9-rc.0...@ceramicnetwork/stream-caip10-link@1.2.0-rc.0) (2021-10-28)
+
+
+### Features
+
+* **blockchain-utils-validation, stream-caip10-link:** add clearDid fn, add DID validation to setDid, update DID regex ([#1783](https://github.com/ceramicnetwork/js-ceramic/issues/1783)) ([f233f86](https://github.com/ceramicnetwork/js-ceramic/commit/f233f862f257bae24eb2fd1ae2a36c8f10f8a51d))
+
+
+
+
+
 ## [1.1.9-rc.0](/compare/@ceramicnetwork/stream-caip10-link@1.1.8...@ceramicnetwork/stream-caip10-link@1.1.9-rc.0) (2021-10-25)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-caip10-link
