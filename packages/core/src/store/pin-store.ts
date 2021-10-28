@@ -76,12 +76,12 @@ export class PinStore {
    * IPFS CIDs that that commit depends on (for example AnchorCommits depend on the CID of the
    * AnchorProof, and of all the CIDs in the path from the merkle root to the leaf of the merkle tree
    * for that commit).
-   * @param log
+   * @param commits - CIDs of Ceramic commits to expand
    * @protected
    */
-  protected async pointsOfInterest(log: Array<CID>): Promise<Array<CID>> {
+  protected async pointsOfInterest(commits: Array<CID>): Promise<Array<CID>> {
     const points: CID[] = []
-    for (const cid of log) {
+    for (const cid of commits) {
       points.push(cid)
 
       const commit = await this.retrieve(cid)
