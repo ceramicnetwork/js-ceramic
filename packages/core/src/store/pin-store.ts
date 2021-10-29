@@ -48,7 +48,7 @@ export class PinStore {
       ? commitLog.filter((cid) => !pinnedCommits.has(cid.toString()))
       : commitLog
 
-    const points = await this.pointsOfInterest(newCommits)
+    const points = await this.getComponentCIDsOfCommits(newCommits)
     await Promise.all(points.map((point) => this.pinning.pin(point)))
     await this.stateStore.save(stateHolder)
   }
@@ -57,7 +57,7 @@ export class PinStore {
     const state = await this.stateStore.load(streamId)
     if (state) {
       const commitLog = state.log.map((logEntry) => logEntry.cid)
-      const points = await this.pointsOfInterest(commitLog)
+      const points = await this.getComponentCIDsOfCommits(commitLog)
       Promise.all(points.map((point) => this.pinning.unpin(point))).catch(() => {
         // Do Nothing
       })
@@ -79,7 +79,7 @@ export class PinStore {
    * @param commits - CIDs of Ceramic commits to expand
    * @protected
    */
-  protected async pointsOfInterest(commits: Array<CID>): Promise<Array<CID>> {
+  protected async getComponentCIDsOfCommits(commits: Array<CID>): Promise<Array<CID>> {
     const points: CID[] = []
     for (const cid of commits) {
       points.push(cid)
