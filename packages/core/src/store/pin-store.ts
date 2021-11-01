@@ -30,16 +30,34 @@ export class PinStore {
     await this.pinning.close()
   }
 
-  async add(streamStateHolder: StreamStateHolder): Promise<void> {
-    await this.stateStore.save(streamStateHolder)
-    const points = await this.pointsOfInterest(streamStateHolder.state)
+  /**
+   * Takes a StreamState and finds all the IPFS CIDs that are in any way needed to load data
+   * from the stream, pins them against the configured pinning backend, and also writes the
+   * StreamState itself into the state store.
+   *
+   * If 'pinnedCommits' is provided, it is assumed that
+   * @param stateHolder - object holding the current StreamState for the stream being pinned
+   * @param pinnedCommits - If the stream was previously pinned, then this will contain a set
+   *  of CIDs (in string representation) of the commits that were pinned previously. This means
+   *  we only need to pin CIDs corresponding to the commits contained in the log of the given
+   *  StreamState that aren't contained within `pinnedCommits`
+   */
+  async add(stateHolder: StreamStateHolder, pinnedCommits?: Set<string>): Promise<void> {
+    const commitLog = stateHolder.state.log.map((logEntry) => logEntry.cid)
+    const newCommits = pinnedCommits
+      ? commitLog.filter((cid) => !pinnedCommits.has(cid.toString()))
+      : commitLog
+
+    const points = await this.getComponentCIDsOfCommits(newCommits)
     await Promise.all(points.map((point) => this.pinning.pin(point)))
+    await this.stateStore.save(stateHolder)
   }
 
   async rm(streamId: StreamID): Promise<void> {
     const state = await this.stateStore.load(streamId)
     if (state) {
-      const points = await this.pointsOfInterest(state)
+      const commitLog = state.log.map((logEntry) => logEntry.cid)
+      const points = await this.getComponentCIDsOfCommits(commitLog)
       Promise.all(points.map((point) => this.pinning.unpin(point))).catch(() => {
         // Do Nothing
       })
@@ -51,11 +69,19 @@ export class PinStore {
     return this.stateStore.list(streamId)
   }
 
-  protected async pointsOfInterest(state: StreamState): Promise<Array<CID>> {
-    const log = state.log as Array<LogEntry>
-
+  /**
+   * Takes an array of CIDs, corresponding to commits in a stream log, and returns all CIDs that
+   * would need to be pinned in order to pin all data necessary to keep the corresponding Stream
+   * alive and available to the network.  This entails expanding each commit out to all the other
+   * IPFS CIDs that that commit depends on (for example AnchorCommits depend on the CID of the
+   * AnchorProof, and of all the CIDs in the path from the merkle root to the leaf of the merkle tree
+   * for that commit).
+   * @param commits - CIDs of Ceramic commits to expand
+   * @protected
+   */
+  protected async getComponentCIDsOfCommits(commits: Array<CID>): Promise<Array<CID>> {
     const points: CID[] = []
-    for (const { cid } of log) {
+    for (const cid of commits) {
       points.push(cid)
 
       const commit = await this.retrieve(cid)
