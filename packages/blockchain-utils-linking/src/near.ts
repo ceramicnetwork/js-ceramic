@@ -1,4 +1,4 @@
-import { AccountID } from 'caip'
+import { AccountId } from 'caip'
 import { AuthProvider } from './auth-provider'
 import { getConsentMessage, LinkProof } from './util'
 import * as uint8arrays from 'uint8arrays'
@@ -48,12 +48,12 @@ export class NearAuthProvider implements AuthProvider {
     }
   }
 
-  async accountId(): Promise<AccountID> {
+  async accountId(): Promise<AccountId> {
     const key = await this.near.connection.signer.keyStore.getKey(this.chainRef, this.accountName)
     const signer = await nearApiJs.InMemorySigner.fromKeyPair(this.chainRef, this.accountName, key)
     const publicKey = await signer.getPublicKey(this.accountName, this.chainRef)
     const address = uint8arrays.toString(publicKey.data, 'base58btc')
-    return new AccountID({
+    return new AccountId({
       address: address,
       chainId: `near:${this.chainRef}`,
     })

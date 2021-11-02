@@ -1,5 +1,5 @@
 import { AuthProvider } from './auth-provider'
-import { AccountID } from 'caip'
+import { AccountId } from 'caip'
 import { encodeRpcMessage, getConsentMessage, LinkProof, RpcMessage } from './util'
 import * as uint8arrays from 'uint8arrays'
 import * as sha256 from '@stablelib/sha256'
@@ -27,11 +27,11 @@ export class EthereumAuthProvider implements AuthProvider {
     private readonly opts: EthProviderOpts = {}
   ) {}
 
-  async accountId(): Promise<AccountID> {
+  async accountId(): Promise<AccountId> {
     const payload = encodeRpcMessage('eth_chainId', [])
     const chainIdHex = await safeSend(payload, this.provider)
     const chainId = parseInt(chainIdHex, 16)
-    return new AccountID({
+    return new AccountId({
       address: this.address,
       chainId: `${CHAIN_NAMESPACE}:${chainId}`,
     })
@@ -72,12 +72,12 @@ async function safeSend(data: RpcMessage, provider: any): Promise<any> {
   })
 }
 
-export async function isERC1271(account: AccountID, provider: any): Promise<boolean> {
+export async function isERC1271(account: AccountId, provider: any): Promise<boolean> {
   const bytecode = await getCode(account.address, provider).catch(() => null)
   return Boolean(bytecode && bytecode !== '0x' && bytecode !== '0x0' && bytecode !== '0x00')
 }
 
-export function normalizeAccountId(account: AccountID): AccountID {
+export function normalizeAccountId(account: AccountId): AccountId {
   account.address = account.address.toLowerCase()
   return account
 }
@@ -90,7 +90,7 @@ function utf8toHex(message: string): string {
 
 async function createEthLink(
   did: string,
-  account: AccountID,
+  account: AccountId,
   provider: any,
   opts: any = {}
 ): Promise<LinkProof> {
@@ -109,20 +109,20 @@ async function createEthLink(
   return proof
 }
 
-async function validateChainId(account: AccountID, provider: any): Promise<void> {
+async function validateChainId(account: AccountId, provider: any): Promise<void> {
   const payload = encodeRpcMessage('eth_chainId', [])
   const chainIdHex = await safeSend(payload, provider)
   const chainId = parseInt(chainIdHex, 16)
   if (chainId !== parseInt(account.chainId.reference)) {
     throw new Error(
-      `ChainId in provider (${chainId}) is different from AccountID (${account.chainId.reference})`
+      `ChainId in provider (${chainId}) is different from AccountId (${account.chainId.reference})`
     )
   }
 }
 
 async function createErc1271Link(
   did: string,
-  account: AccountID,
+  account: AccountId,
   provider: any,
   opts: any
 ): Promise<LinkProof> {
@@ -137,7 +137,7 @@ async function createErc1271Link(
 
 export async function createLink(
   did: string,
-  account: AccountID,
+  account: AccountId,
   provider: any,
   opts: any
 ): Promise<LinkProof> {
@@ -151,7 +151,7 @@ export async function createLink(
 
 export async function authenticate(
   message: string,
-  account: AccountID,
+  account: AccountId,
   provider: any
 ): Promise<string> {
   if (account) account = normalizeAccountId(account)

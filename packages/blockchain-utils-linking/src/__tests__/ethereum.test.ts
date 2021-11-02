@@ -1,4 +1,4 @@
-import { AccountID } from 'caip'
+import { AccountId } from 'caip'
 import ganache from 'ganache-core'
 import * as sigUtils from 'eth-sig-util'
 import { ContractFactory, Contract } from '@ethersproject/contracts'
@@ -94,9 +94,9 @@ describe('isEthAddress', () => {
 
 describe('isERC1271', () => {
   test('detect erc1271 address', async () => {
-    const acc1 = new AccountID({ address: addresses[0], chainId: 'eip155:1' })
+    const acc1 = new AccountId({ address: addresses[0], chainId: 'eip155:1' })
     expect(await ethereum.isERC1271(acc1, provider)).toEqual(false)
-    const acc2 = new AccountID({
+    const acc2 = new AccountId({
       address: contractAddress,
       chainId: 'eip155:1',
     })
@@ -106,7 +106,7 @@ describe('isERC1271', () => {
 
 describe('createLink', () => {
   test('create ethereumEOA proof correctly', async () => {
-    const acc = new AccountID({ address: addresses[0], chainId: 'eip155:1' })
+    const acc = new AccountId({ address: addresses[0], chainId: 'eip155:1' })
     // skip timestamp because it's a pain to test
     const eoaProof = await ethereum.createLink(testDid, acc, provider, {
       skipTimestamp: true,
@@ -118,7 +118,7 @@ describe('createLink', () => {
     // In reality personal_sign is implemented differently by each contract wallet.
     // However the correct signature should still be returned. Here we simply test
     // that the proof is constructed correctly.
-    const acc = new AccountID({
+    const acc = new AccountId({
       address: contractAddress,
       chainId: 'eip155:' + GANACHE_CHAIN_ID,
     })
@@ -131,7 +131,7 @@ describe('createLink', () => {
     // In reality personal_sign is implemented differently by each contract wallet.
     // However the correct signature should still be returned. Here we simply test
     // that the proof is constructed correctly.
-    const acc = new AccountID({
+    const acc = new AccountId({
       address: contractAddress,
       chainId: 'eip155:123',
     })
@@ -143,7 +143,7 @@ describe('createLink', () => {
 
 describe('authenticate', () => {
   test('correctly sign auth message', async () => {
-    const account = new AccountID({
+    const account = new AccountId({
       address: addresses[1],
       chainId: 'eip155:1',
     })
