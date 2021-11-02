@@ -57,15 +57,29 @@ test('emit on distinct changes', async () => {
   expect(updates[1]).toBe(second)
 })
 
-test('set pinned state', async () => {
-  const state$ = new RunningState(initial, StateSource.NETWORK)
-  console.log(state$.pinnedCommits)
-  expect(state$.pinnedCommits).toBe(undefined)
-  expect(state$.stateSource).toBe(StateSource.NETWORK)
+describe('set pinned state', () => {
+  test('set in constructor then set in call to setPinnedState', async () => {
+    const state$ = new RunningState(initial, StateSource.STATESTORE)
+    expect(state$.pinnedCommits.size).toBe(1)
+    expect(state$.stateSource).toBe(StateSource.STATESTORE)
+    expect(state$.pinnedCommits.has(FAKE_CID1.toString())).toBe(true)
 
-  state$.setPinnedState(second)
-  expect(state$.pinnedCommits.size).toBe(2)
-  expect(state$.stateSource).toBe(StateSource.STATESTORE)
-  expect(state$.pinnedCommits.has(FAKE_CID1.toString())).toBe(true)
-  expect(state$.pinnedCommits.has(FAKE_CID2.toString())).toBe(true)
+    state$.setPinnedState(second)
+    expect(state$.pinnedCommits.size).toBe(2)
+    expect(state$.stateSource).toBe(StateSource.STATESTORE)
+    expect(state$.pinnedCommits.has(FAKE_CID1.toString())).toBe(true)
+    expect(state$.pinnedCommits.has(FAKE_CID2.toString())).toBe(true)
+  })
+
+  test('not set in constructor but set in call to setPinnedStae', async () => {
+    const state$ = new RunningState(initial, StateSource.NETWORK)
+    expect(state$.pinnedCommits).toBe(undefined)
+    expect(state$.stateSource).toBe(StateSource.NETWORK)
+
+    state$.setPinnedState(second)
+    expect(state$.pinnedCommits.size).toBe(2)
+    expect(state$.stateSource).toBe(StateSource.STATESTORE)
+    expect(state$.pinnedCommits.has(FAKE_CID1.toString())).toBe(true)
+    expect(state$.pinnedCommits.has(FAKE_CID2.toString())).toBe(true)
+  })
 })

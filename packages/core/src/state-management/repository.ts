@@ -129,7 +129,7 @@ export class Repository {
     commitData.disableTimecheck = true
     const state = await handler.applyCommit(commitData, this.#deps.context)
     await this.#deps.stateValidation.validate(state, state.content)
-    const state$ = new RunningState(state, StateSource.STATESTORE)
+    const state$ = new RunningState(state, StateSource.NETWORK)
     this.add(state$)
     this.logger.verbose(`Genesis commit for stream ${streamId.toString()} successfully loaded`)
     return state$
@@ -325,7 +325,7 @@ export class Repository {
     return new Observable<StreamState>((subscriber) => {
       const id = new StreamID(init.type, init.log[0].cid)
       this.get(id).then((found) => {
-        const state$ = found || new RunningState(init, StateSource.STATESTORE)
+        const state$ = found || new RunningState(init, StateSource.NETWORK)
         this.inmemory.endure(id.toString(), state$)
         state$.subscribe(subscriber).add(() => {
           if (state$.observers.length === 0) {
