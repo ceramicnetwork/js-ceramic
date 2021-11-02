@@ -110,11 +110,32 @@ export class Caip10LinkHandler implements StreamHandler<Caip10Link> {
     }
 
     // TODO: handle CAIP-10 addresses in proof generation of 3id-blockchain-utils
-    const account = validProof.account || validProof.address
-    let [address, chainId] = account.split('@') // eslint-disable-line prefer-const
+    const account: string = validProof.account || validProof.address
+    let address: string
+    let chainId: string
 
-    const addressCaip10 = [address, chainId].join('@')
-    if (addressCaip10.toLowerCase() !== state.metadata.controllers[0].toLowerCase()) {
+    if (account.includes('@')) {
+      ;[address, chainId] = account.split('@') // eslint-disable-line prefer-const
+    } else {
+      const _accountSplit = account.split(':')
+      address = _accountSplit.pop()
+      chainId = _accountSplit.join(':')
+    }
+
+    let controllerAddress: string
+    let controllerChainId: string
+
+    if (state.metadata.controllers[0].includes('@')) {
+      ;[controllerAddress, controllerChainId] = state.metadata.controllers[0].split('@')
+    } else {
+      const _controllerAccountSplit = state.metadata.controllers[0].split(':')
+      controllerAddress = _controllerAccountSplit.pop()
+      controllerChainId = _controllerAccountSplit.join(':')
+    }
+
+    const addressCaip10 = [chainId, address].join(':')
+    const controllerCaip10 = [controllerChainId, controllerAddress].join(':')
+    if (addressCaip10.toLowerCase() !== controllerCaip10.toLowerCase()) {
       throw new Error("Address doesn't match stream controller")
     }
     state.log.push({ cid: commitData.cid, type: CommitType.SIGNED })

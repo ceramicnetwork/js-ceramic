@@ -23,9 +23,17 @@ const findDID = (did: string): string | undefined => did.match(/(did:\S+:\S+)/)?
 export async function validateLink(proof: LinkProof): Promise<LinkProof | null> {
   // version < 2 are always eip155 namespace
   let namespace = ethereum.namespace
+
+  // Handle legacy CAIP links
+  if (proof.account.includes('@')) {
+    const [address, chainId] = proof.account.split('@')
+    proof.account = new AccountId({ address, chainId }).toString()
+  }
+
   if (proof.version >= 2) {
     namespace = new AccountId(proof.account).chainId.namespace
   }
+
   const handler = handlers[namespace]
   if (!handler) throw new Error(`proof with namespace '${namespace}' not supported`)
   const validProof = await handler.validateLink(proof)

@@ -12,7 +12,7 @@ import {
 } from '@ceramicnetwork/common'
 import type { AuthProvider, LinkProof } from '@ceramicnetwork/blockchain-utils-linking'
 import { CommitID, StreamID, StreamRef } from '@ceramicnetwork/streamid'
-import { AccountID } from 'caip'
+import { AccountId } from 'caip'
 import type { DID } from 'dids'
 import { parse } from 'did-resolver'
 
@@ -52,11 +52,20 @@ export class Caip10Link extends Stream {
    */
   static async fromAccount(
     ceramic: CeramicApi,
-    accountId: string | AccountID,
+    accountId: string | AccountId,
     opts: CreateOpts | LoadOpts = {}
   ): Promise<Caip10Link> {
     opts = { ...DEFAULT_CREATE_OPTS, ...opts }
-    const normalizedAccountId = new AccountID(accountId)
+
+    if (typeof accountId === 'string' && accountId.includes('@')) {
+      const accountIdSplit = accountId.split('@')
+      const address = accountIdSplit[0]
+      const chainId = accountIdSplit[1]
+
+      accountId = new AccountId({ address, chainId })
+    }
+
+    const normalizedAccountId = new AccountId(accountId)
     const genesisCommit = Caip10Link.makeGenesis(normalizedAccountId)
     return Caip10Link.fromGenesis(ceramic, genesisCommit, opts)
   }
@@ -159,10 +168,10 @@ export class Caip10Link extends Stream {
   }
 
   /**
-   * Makes the genesis commit from a given CAIP-10 AccountID
+   * Makes the genesis commit from a given CAIP-10 AccountId
    * @param accountId
    */
-  static makeGenesis(accountId: AccountID): GenesisCommit {
+  static makeGenesis(accountId: AccountId): GenesisCommit {
     // Ethereum addresses specifically are sometimes encoded with mixed case and
     // sometimes all lower case. In order to deal with this and not have different
     // links for different addresses we convert the address to lowercase.
