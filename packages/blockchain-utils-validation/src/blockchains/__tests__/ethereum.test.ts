@@ -1,4 +1,4 @@
-import { AccountID } from 'caip'
+import { AccountId } from 'caip'
 import ganache from 'ganache-core'
 import ethereum from '../ethereum'
 import * as sigUtils from 'eth-sig-util'
@@ -98,7 +98,7 @@ beforeAll(async () => {
 
 test('invalid ethereumEOA proof should return null', async () => {
   // wrong address
-  const account = new AccountID({ address: addresses[1], chainId: 'eip155:1' })
+  const account = new AccountId({ address: addresses[1], chainId: 'eip155:1' })
   const invalidProof = { account } as unknown as LinkProof
   await expect(ethereum.validateLink(invalidProof)).rejects.toThrow()
   // invalid signature
@@ -130,7 +130,7 @@ test('validate v0 and v1 proofs', async () => {
 test('invalid erc1271 proof should return null', async () => {
   // the contract wallet we deployed should just return false by default
   // when trying to validate signature
-  const account = new AccountID({
+  const account = new AccountId({
     address: contractAddress,
     chainId: 'eip155:' + GANACHE_CHAIN_ID,
   })

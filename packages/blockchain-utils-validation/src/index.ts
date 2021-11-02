@@ -6,7 +6,7 @@ import eosio from './blockchains/eosio'
 import cosmos from './blockchains/cosmos'
 import near from './blockchains/near'
 import tezos from './blockchains/tezos'
-import { AccountID } from 'caip'
+import { AccountId } from 'caip'
 
 const handlers = {
   [ethereum.namespace]: ethereum,
@@ -24,7 +24,7 @@ export async function validateLink(proof: LinkProof): Promise<LinkProof | null> 
   // version < 2 are always eip155 namespace
   let namespace = ethereum.namespace
   if (proof.version >= 2) {
-    namespace = new AccountID(proof.account).chainId.namespace
+    namespace = new AccountId(proof.account).chainId.namespace
   }
   const handler = handlers[namespace]
   if (!handler) throw new Error(`proof with namespace '${namespace}' not supported`)
