@@ -13,7 +13,7 @@ import CID from 'cids'
  */
 export enum StateSource {
   /**
-   * Source of the state is form a state store. This will cause runningState to keep track of the stored commit CIDs.
+   * Source of the state is from a state store. This will cause runningState to keep track of the stored commit CIDs.
    * The stored commit CIDs can be used to prevent commits from being stored again.
    */
   STATESTORE,
