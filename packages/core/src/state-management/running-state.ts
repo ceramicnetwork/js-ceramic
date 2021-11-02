@@ -9,16 +9,16 @@ import { StreamID } from '@ceramicnetwork/streamid'
 import CID from 'cids'
 
 /**
- * Describes the source of the state
+ * Describes the source from which this RunningState was initialized with its StreamState
  */
 export enum StateSource {
   /**
-   * Source of the state is from a state store. This will cause runningState to keep track of the stored commit CIDs.
+   * Indicates that the stream was pinned and its state was loaded from the StateStore. This will cause runningState to keep track of the stored commit CIDs.
    * The stored commit CIDs can be used to prevent commits from being stored again.
    */
   STATESTORE,
   /**
-   * Source of the state is the network.
+   * Indicates that the Stream was loaded from the network.
    * runningState does not keep track of the commit CID's of the state as they may not have been stored.
    */
   NETWORK,
