@@ -8,7 +8,7 @@ import { delay } from './delay'
 import tmp from 'tmp-promise'
 import { LevelStateStore } from '../store/level-state-store'
 import { PinStore } from '../store/pin-store'
-import { RunningState } from '../state-management/running-state'
+import { RunningState, StateSource } from '../state-management/running-state'
 import { StateManager } from '../state-management/state-manager'
 import cloneDeep from 'lodash.clonedeep'
 
@@ -183,7 +183,7 @@ describe('Dispatcher', () => {
     dispatcher.repository.stateManager = {} as unknown as StateManager
 
     async function register(state: StreamState) {
-      const runningState = new RunningState(state)
+      const runningState = new RunningState(state, StateSource.STATESTORE)
       repository.add(runningState)
       dispatcher.messageBus.queryNetwork(runningState.id).subscribe()
       return runningState
