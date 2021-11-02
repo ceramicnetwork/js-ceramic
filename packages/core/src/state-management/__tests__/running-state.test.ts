@@ -1,32 +1,32 @@
 import CID from 'cids'
 import { CommitType, StreamState } from '@ceramicnetwork/common'
-import { RunningState } from '../running-state'
+import { RunningState, StateSource } from '../running-state'
 
-const FAKE_CID_1 = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
+const FAKE_CID1 = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
 const FAKE_CID2 = new CID('bafybeig6xv5nwphfmvcnektpnojts44jqcuam7bmye2pb54adnrtccjlsu')
 
-test('emit on distinct changes', async () => {
-  const initial = {
-    type: 0,
-    log: [
-      {
-        type: CommitType.GENESIS,
-        cid: FAKE_CID_1,
-      },
-    ],
-  } as unknown as StreamState
-  const second = {
-    ...initial,
-    log: [
-      ...initial.log,
-      {
-        type: CommitType.SIGNED,
-        cid: FAKE_CID2,
-      },
-    ],
-  } as unknown as StreamState
+const initial = {
+  type: 0,
+  log: [
+    {
+      type: CommitType.GENESIS,
+      cid: FAKE_CID1,
+    },
+  ],
+} as unknown as StreamState
+const second = {
+  ...initial,
+  log: [
+    ...initial.log,
+    {
+      type: CommitType.SIGNED,
+      cid: FAKE_CID2,
+    },
+  ],
+} as unknown as StreamState
 
-  const state$ = new RunningState(initial)
+test('emit on distinct changes', async () => {
+  const state$ = new RunningState(initial, StateSource.STATESTORE)
   const updates: StreamState[] = []
   state$.subscribe((state) => {
     updates.push(state)
@@ -55,4 +55,31 @@ test('emit on distinct changes', async () => {
   expect(updates.length).toEqual(2)
   expect(updates[0]).toBe(initial)
   expect(updates[1]).toBe(second)
+})
+
+describe('set pinned state', () => {
+  test('set in constructor then set in call to setPinnedState', async () => {
+    const state$ = new RunningState(initial, StateSource.STATESTORE)
+    expect(state$.pinnedCommits.size).toBe(1)
+    expect(state$.stateSource).toBe(StateSource.STATESTORE)
+    expect(state$.pinnedCommits.has(FAKE_CID1.toString())).toBe(true)
+
+    state$.setPinnedState(second)
+    expect(state$.pinnedCommits.size).toBe(2)
+    expect(state$.stateSource).toBe(StateSource.STATESTORE)
+    expect(state$.pinnedCommits.has(FAKE_CID1.toString())).toBe(true)
+    expect(state$.pinnedCommits.has(FAKE_CID2.toString())).toBe(true)
+  })
+
+  test('not set in constructor but set in call to setPinnedStae', async () => {
+    const state$ = new RunningState(initial, StateSource.NETWORK)
+    expect(state$.pinnedCommits).toBe(undefined)
+    expect(state$.stateSource).toBe(StateSource.NETWORK)
+
+    state$.setPinnedState(second)
+    expect(state$.pinnedCommits.size).toBe(2)
+    expect(state$.stateSource).toBe(StateSource.STATESTORE)
+    expect(state$.pinnedCommits.has(FAKE_CID1.toString())).toBe(true)
+    expect(state$.pinnedCommits.has(FAKE_CID2.toString())).toBe(true)
+  })
 })
