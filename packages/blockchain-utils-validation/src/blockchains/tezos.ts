@@ -16,16 +16,23 @@ const { TEZOS_NAMESPACE, TEZOS_CHAIN_REF } = tezos
 
 const FAKE_API_ENDPOINT = 'https://fake-api.example.com' // this enpoint is never actually called
 
-// should be the same as @taquito/utils char2Bytes()
-// exported for testing to ensure above
 /**
- * converts a utf8 string to a hex string
+ * Encodes a message to its Micheline string representation
  *
- * @param {string} input - the string to convert
- * @returns {string} the converted hex string
+ * @param {string} text - the message to Encode
+ * @returns {string} the message encoded to the micheline format
+ *
+ * References:
+ * - https://github.com/Cryptonomic/ConseilJS/blob/fb718632d6ce47718dad5aa77c67fc514afaa0b9/src/chain/tezos/lexer/Micheline.ts#L62L71
+ * - https://tezos.gitlab.io/shell/micheline.html
  */
-function char2Bytes(input: string): string {
-  return uint8arrays.toString(uint8arrays.fromString(input, 'utf8'), 'base16')
+function encodeMessage(text: string): string {
+  const michelinePrefix = '05'
+  const stringPrefix = '01'
+  const len = ('0000000' + text.length.toString(16)).slice(-8)
+
+  text = uint8arrays.toString(uint8arrays.fromString(text, 'utf-8'), 'hex')
+  return michelinePrefix + stringPrefix + len + text
 }
 
 /**
@@ -64,7 +71,7 @@ export async function validateLink(proof: LinkProof): Promise<LinkProof | null> 
   if (chainId.reference !== TEZOS_CHAIN_REF) {
     return null
   }
-  const msg = char2Bytes(proof.message)
+  const msg = encodeMessage(proof.message)
 
   const verifier = new RemoteSigner(account.address, FAKE_API_ENDPOINT)
   verifier.publicKey = publicKeyFinder(account.address)
