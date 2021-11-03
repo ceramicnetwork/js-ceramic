@@ -2,7 +2,7 @@ name: Publish images to Docker Hub
 
 on:
   push:
-    branches: [ develop, release-candidate, master ]
+    branches: [ develop, release-candidate, main ]
   workflow_dispatch: # manually triggered
 
 jobs:
@@ -22,8 +22,8 @@ jobs:
           SHA_TAG=$(git rev-parse --short=12 "${{ github.sha }}")
           echo "SHA_TAG=$SHA_TAG" >> $GITHUB_ENV
       -
-        name: Set master branch tag
-        if: ${{ env.BRANCH == 'master' }}
+        name: Set main branch tag
+        if: ${{ env.BRANCH == 'main' }}
         run: |
           echo "ENV_TAG=prod" >> $GITHUB_ENV
           echo "EVENT_WEBHOOK_URL=${{ secrets.EVENT_WEBHOOK_FIRE }}" >> $GITHUB_ENV
