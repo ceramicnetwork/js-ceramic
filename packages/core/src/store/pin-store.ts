@@ -1,13 +1,8 @@
 import { StateStore } from './state-store'
-import {
-  LogEntry,
-  StreamState,
-  PinningBackend,
-  StreamStateHolder,
-  StreamUtils,
-} from '@ceramicnetwork/common'
+import { PinningBackend, StreamUtils } from '@ceramicnetwork/common'
 import CID from 'cids'
 import StreamID from '@ceramicnetwork/streamid'
+import { RunningState } from '../state-management/running-state'
 
 /**
  * Encapsulates logic for pinning streams
@@ -32,25 +27,28 @@ export class PinStore {
 
   /**
    * Takes a StreamState and finds all the IPFS CIDs that are in any way needed to load data
-   * from the stream, pins them against the configured pinning backend, and also writes the
-   * StreamState itself into the state store.
-   *
-   * If 'pinnedCommits' is provided, it is assumed that
-   * @param stateHolder - object holding the current StreamState for the stream being pinned
-   * @param pinnedCommits - If the stream was previously pinned, then this will contain a set
-   *  of CIDs (in string representation) of the commits that were pinned previously. This means
+   * from the stream, pins them against the configured pinning backend, writes the
+   * StreamState itself into the state store, and updates the RunningState's pinned commits which
+   * prevents the StreamState's commits from being stored again.
+   * @param runningState - object holding the current StreamState for the stream being pinned
+   *  If the stream was previously pinned, then this will also contain a set of CIDs
+   *  (in string representation) of the commits that were pinned previously. This means
    *  we only need to pin CIDs corresponding to the commits contained in the log of the given
    *  StreamState that aren't contained within `pinnedCommits`
+   * @param force - optional boolean that if set to true forces all commits in the stream to pinned,
+   * regardless of whether they have been previously pinned
    */
-  async add(stateHolder: StreamStateHolder, pinnedCommits?: Set<string>): Promise<void> {
-    const commitLog = stateHolder.state.log.map((logEntry) => logEntry.cid)
-    const newCommits = pinnedCommits
-      ? commitLog.filter((cid) => !pinnedCommits.has(cid.toString()))
-      : commitLog
+  async add(runningState: RunningState, force?: boolean): Promise<void> {
+    const commitLog = runningState.state.log.map((logEntry) => logEntry.cid)
+    const newCommits =
+      runningState.pinnedCommits && !force
+        ? commitLog.filter((cid) => !runningState.pinnedCommits.has(cid.toString()))
+        : commitLog
 
     const points = await this.getComponentCIDsOfCommits(newCommits)
     await Promise.all(points.map((point) => this.pinning.pin(point)))
-    await this.stateStore.save(stateHolder)
+    await this.stateStore.save(runningState)
+    runningState.setPinnedState(runningState.state)
   }
 
   async rm(streamId: StreamID): Promise<void> {

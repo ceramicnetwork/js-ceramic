@@ -10,6 +10,7 @@ import {
   CommitType,
   TestUtils,
 } from '@ceramicnetwork/common'
+import { RunningState, StateSource } from '../../state-management/running-state'
 
 let stateStore: StateStore
 let pinning: PinningBackend
@@ -71,15 +72,18 @@ test('#close', async () => {
 describe('#add', () => {
   test('save and pin', async () => {
     const pinStore = new PinStore(stateStore, pinning, jest.fn(), jest.fn())
-    const stream = new FakeType(TestUtils.runningState(state), {})
-    await pinStore.add(stream)
-    expect(stateStore.save).toBeCalledWith(stream)
+    const runningState = new RunningState(state, StateSource.NETWORK)
+    const runningStateSpy = jest.spyOn(runningState, 'setPinnedState')
+    await pinStore.add(runningState)
+    expect(stateStore.save).toBeCalledWith(runningState)
     expect(pinning.pin).toBeCalledTimes(1)
     expect(pinning.pin.mock.calls[0][0].toString()).toEqual(state.log[0].cid.toString())
+    expect(runningStateSpy).toBeCalledTimes(1)
+    expect(runningState.pinnedCommits).toEqual(new Set(state.log.map(({ cid }) => cid.toString())))
   })
 
   test('save and pin proof without path', async () => {
-    const stateWithProof = Object.assign(state, {
+    const stateWithProof = Object.assign({}, state, {
       log: [
         { cid: new CID('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D') },
         { cid: new CID('QmdmQXB2mzChmMeKY47C43LxUdg1NDJ5MWcKMKxDu7RgQm') },
@@ -100,18 +104,23 @@ describe('#add', () => {
       }
     })
     const pinStore = new PinStore(stateStore, pinning, retrieve, resolve)
-    const stream = new FakeType(TestUtils.runningState(state), {})
-    await pinStore.add(stream)
-    expect(stateStore.save).toBeCalledWith(stream)
+    const runningState = new RunningState(stateWithProof, StateSource.NETWORK)
+    const runningStateSpy = jest.spyOn(runningState, 'setPinnedState')
+    await pinStore.add(runningState)
+    expect(stateStore.save).toBeCalledWith(runningState)
     expect(pinning.pin).toBeCalledTimes(4)
     expect(pinning.pin.mock.calls[0][0].toString()).toEqual(stateWithProof.log[0].cid.toString())
     expect(pinning.pin.mock.calls[1][0].toString()).toEqual(stateWithProof.log[1].cid.toString())
     expect(pinning.pin.mock.calls[2][0].toString()).toEqual(proofCID.toString())
     expect(pinning.pin.mock.calls[3][0].toString()).toEqual(proofRootCID.toString())
+    expect(runningStateSpy).toBeCalledTimes(1)
+    expect(runningState.pinnedCommits).toEqual(
+      new Set(stateWithProof.log.map(({ cid }) => cid.toString()))
+    )
   })
 
   test('save and pin proof with path', async () => {
-    const stateWithProof = Object.assign(state, {
+    const stateWithProof = Object.assign({}, state, {
       log: [
         { cid: new CID('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D') },
         { cid: new CID('QmdmQXB2mzChmMeKY47C43LxUdg1NDJ5MWcKMKxDu7RgQm') },
@@ -139,9 +148,10 @@ describe('#add', () => {
       }
     })
     const pinStore = new PinStore(stateStore, pinning, retrieve, resolve)
-    const stream = new FakeType(TestUtils.runningState(state), {})
-    await pinStore.add(stream)
-    expect(stateStore.save).toBeCalledWith(stream)
+    const runningState = new RunningState(stateWithProof, StateSource.NETWORK)
+    const runningStateSpy = jest.spyOn(runningState, 'setPinnedState')
+    await pinStore.add(runningState)
+    expect(stateStore.save).toBeCalledWith(runningState)
     expect(pinning.pin).toBeCalledTimes(6)
     expect(pinning.pin.mock.calls[0][0].toString()).toEqual(stateWithProof.log[0].cid.toString())
     expect(pinning.pin.mock.calls[1][0].toString()).toEqual(stateWithProof.log[1].cid.toString())
@@ -149,25 +159,57 @@ describe('#add', () => {
     expect(pinning.pin.mock.calls[3][0].toString()).toEqual(proofRootCID.toString())
     expect(pinning.pin.mock.calls[4][0].toString()).toEqual(leftCID.toString())
     expect(pinning.pin.mock.calls[5][0].toString()).toEqual(rightCID.toString())
+    expect(runningStateSpy).toBeCalledTimes(1)
+    expect(runningState.pinnedCommits).toEqual(
+      new Set(stateWithProof.log.map(({ cid }) => cid.toString()))
+    )
   })
 
   test('save and pin only new commits', async () => {
-    const stateWithMultipleCommits = Object.assign(state, {
+    const pinStore = new PinStore(stateStore, pinning, jest.fn(), jest.fn())
+    const toBeUpdatedState = Object.assign({}, state)
+    const runningState = new RunningState(toBeUpdatedState, StateSource.STATESTORE)
+    const runningStateSpy = jest.spyOn(runningState, 'setPinnedState')
+    Object.assign(toBeUpdatedState, {
       log: [
         { cid: new CID('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D') },
         { cid: new CID('QmdmQXB2mzChmMeKY47C43LxUdg1NDJ5MWcKMKxDu7RgQm') },
         { cid: new CID('QmbQDovX7wRe9ek7u6QXe9zgCXkTzoUSsTFJEkrYV1HrVR') },
       ],
     })
-    const previousCommits = new Set(['QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D'])
-
-    const pinStore = new PinStore(stateStore, pinning, jest.fn(), jest.fn())
-    const stream = new FakeType(TestUtils.runningState(stateWithMultipleCommits), {})
-    await pinStore.add(stream, previousCommits)
-    expect(stateStore.save).toBeCalledWith(stream)
+    await pinStore.add(runningState)
+    expect(stateStore.save).toBeCalledWith(runningState)
     expect(pinning.pin).toBeCalledTimes(2)
-    expect(pinning.pin.mock.calls[0][0].toString()).toEqual(state.log[1].cid.toString())
-    expect(pinning.pin.mock.calls[1][0].toString()).toEqual(state.log[2].cid.toString())
+    expect(pinning.pin.mock.calls[0][0].toString()).toEqual(toBeUpdatedState.log[1].cid.toString())
+    expect(pinning.pin.mock.calls[1][0].toString()).toEqual(toBeUpdatedState.log[2].cid.toString())
+    expect(runningStateSpy).toBeCalledTimes(1)
+    expect(runningState.pinnedCommits).toEqual(
+      new Set(toBeUpdatedState.log.map(({ cid }) => cid.toString()))
+    )
+  })
+
+  test('save and pin all commits using force', async () => {
+    const pinStore = new PinStore(stateStore, pinning, jest.fn(), jest.fn())
+    const toBeUpdatedState = Object.assign({}, state)
+    const runningState = new RunningState(toBeUpdatedState, StateSource.STATESTORE)
+    const runningStateSpy = jest.spyOn(runningState, 'setPinnedState')
+    Object.assign(toBeUpdatedState, {
+      log: [
+        { cid: new CID('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D') },
+        { cid: new CID('QmdmQXB2mzChmMeKY47C43LxUdg1NDJ5MWcKMKxDu7RgQm') },
+        { cid: new CID('QmbQDovX7wRe9ek7u6QXe9zgCXkTzoUSsTFJEkrYV1HrVR') },
+      ],
+    })
+    await pinStore.add(runningState, true)
+    expect(stateStore.save).toBeCalledWith(runningState)
+    expect(pinning.pin).toBeCalledTimes(3)
+    expect(pinning.pin.mock.calls[0][0].toString()).toEqual(toBeUpdatedState.log[0].cid.toString())
+    expect(pinning.pin.mock.calls[1][0].toString()).toEqual(toBeUpdatedState.log[1].cid.toString())
+    expect(pinning.pin.mock.calls[2][0].toString()).toEqual(toBeUpdatedState.log[2].cid.toString())
+    expect(runningStateSpy).toBeCalledTimes(1)
+    expect(runningState.pinnedCommits).toEqual(
+      new Set(toBeUpdatedState.log.map(({ cid }) => cid.toString()))
+    )
   })
 })
 

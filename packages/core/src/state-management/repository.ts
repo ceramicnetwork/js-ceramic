@@ -287,7 +287,7 @@ export class Repository {
   }
 
   pin(streamStateHolder: StreamStateHolder): Promise<void> {
-    return this.#deps.pinStore.add(streamStateHolder)
+    return this.#deps.pinStore.add(new RunningState(streamStateHolder.state, StateSource.NETWORK))
   }
 
   async unpin(streamId: StreamID, opts?: PublishOpts): Promise<void> {
