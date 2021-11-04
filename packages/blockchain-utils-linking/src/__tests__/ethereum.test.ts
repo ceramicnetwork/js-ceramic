@@ -162,4 +162,37 @@ describe('EthereumAuthProvider', () => {
     const auth = new ethereum.EthereumAuthProvider(provider, address)
     await expect(auth.withAddress(address).createLink(testDid)).resolves.toMatchSnapshot()
   })
+
+  describe('various providers', () => {
+    test('sendAsync', async () => {
+      const auth = new ethereum.EthereumAuthProvider(provider, addresses[0])
+      const spy = jest.spyOn(provider, 'sendAsync')
+      const accountId = await auth.accountId()
+      expect(accountId.address).toBe(addresses[0])
+      expect(spy).toHaveBeenCalledTimes(1)
+    })
+
+    test('request', async () => {
+      const requestProvider: any = ganache.provider(GANACHE_CONF)
+      requestProvider.request = (requestParams: { method: string; params?: Array<any> }) =>
+        send(requestProvider, encodeRpcMessage(requestParams.method, requestParams.params))
+
+      const spy = jest.spyOn(requestProvider, 'request')
+      const auth = new ethereum.EthereumAuthProvider(requestProvider, addresses[0])
+      const accountId = await auth.accountId()
+      expect(accountId.address).toBe(addresses[0])
+      expect(spy).toHaveBeenCalledTimes(1)
+    })
+
+    test('send', async () => {
+      const sendProvider: any = ganache.provider(GANACHE_CONF)
+      sendProvider.sendAsync = null
+
+      const spy = jest.spyOn(sendProvider, 'send')
+      const auth = new ethereum.EthereumAuthProvider(sendProvider, addresses[0])
+      const accountId = await auth.accountId()
+      expect(accountId.address).toBe(addresses[0])
+      expect(spy).toHaveBeenCalledTimes(1)
+    })
+  })
 })

@@ -28,8 +28,7 @@ export class EthereumAuthProvider implements AuthProvider {
   ) {}
 
   async accountId(): Promise<AccountId> {
-    const payload = encodeRpcMessage('eth_chainId', [])
-    const chainIdHex = await safeSend(payload, this.provider)
+    const chainIdHex = await safeSend(this.provider, 'eth_chainId', [])
     const chainId = parseInt(chainIdHex, 16)
     return new AccountId({
       address: this.address,
@@ -57,19 +56,43 @@ export function isEthAddress(address: string): boolean {
 }
 
 async function getCode(address: string, provider: any): Promise<string> {
-  const payload = encodeRpcMessage('eth_getCode', [address, 'latest'])
-  return safeSend(payload, provider)
+  return safeSend(provider, 'eth_getCode', [address, 'latest'])
 }
 
-async function safeSend(data: RpcMessage, provider: any): Promise<any> {
-  const send = (provider.sendAsync ? provider.sendAsync : provider.send).bind(provider)
-  return new Promise((resolve, reject) => {
-    send(data, function (err: any, result: any) {
-      if (err) reject(err)
-      else if (result.error) reject(result.error)
-      else resolve(result.result)
+function safeSend(provider: any, method: string, params?: Array<any>): Promise<any> {
+  if (params == null) {
+    params = []
+  }
+
+  if (provider.request) {
+    return provider.request({ method, params }).then(
+      (response) => response,
+      (error) => {
+        throw error
+      }
+    )
+  } else if (provider.sendAsync || provider.send) {
+    const sendFunc = (provider.sendAsync ? provider.sendAsync : provider.send).bind(provider)
+    const request = encodeRpcMessage(method, params)
+    return new Promise((resolve, reject) => {
+      sendFunc(request, (error, response) => {
+        if (error) reject(error)
+
+        if (response.error) {
+          const error = new Error(response.error.message)
+          ;(<any>error).code = response.error.code
+          ;(<any>error).data = response.error.data
+          reject(error)
+        }
+
+        resolve(response.result)
+      })
     })
-  })
+  } else {
+    throw new Error(
+      `Unsupported provider; provider must implement one of the following methods: send, sendAsync, request`
+    )
+  }
 }
 
 export async function isERC1271(account: AccountId, provider: any): Promise<boolean> {
@@ -96,8 +119,8 @@ async function createEthLink(
 ): Promise<LinkProof> {
   const { message, timestamp } = getConsentMessage(did, !opts.skipTimestamp)
   const hexMessage = utf8toHex(message)
-  const payload = encodeRpcMessage('personal_sign', [hexMessage, account.address])
-  const signature = await safeSend(payload, provider)
+  const signature = await safeSend(provider, 'personal_sign', [hexMessage, account.address])
+
   const proof: LinkProof = {
     version: 2,
     type: ADDRESS_TYPES.ethereumEOA,
@@ -110,8 +133,7 @@ async function createEthLink(
 }
 
 async function validateChainId(account: AccountId, provider: any): Promise<void> {
-  const payload = encodeRpcMessage('eth_chainId', [])
-  const chainIdHex = await safeSend(payload, provider)
+  const chainIdHex = await safeSend(provider, 'eth_chainId', [])
   const chainId = parseInt(chainIdHex, 16)
   if (chainId !== parseInt(account.chainId.reference)) {
     throw new Error(
@@ -157,8 +179,7 @@ export async function authenticate(
   if (account) account = normalizeAccountId(account)
   if (provider.isAuthereum) return provider.signMessageWithSigningKey(message)
   const hexMessage = utf8toHex(message)
-  const payload = encodeRpcMessage('personal_sign', [hexMessage, account.address])
-  const signature = await safeSend(payload, provider)
+  const signature = await safeSend(provider, 'personal_sign', [hexMessage, account.address])
   const signatureBytes = uint8arrays.fromString(signature.slice(2))
   const digest = sha256.hash(signatureBytes)
   return `0x${uint8arrays.toString(digest, 'base16')}`

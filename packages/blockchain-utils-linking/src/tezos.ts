@@ -13,18 +13,23 @@ export interface TezosProvider {
   signer: Signer
 }
 
-// should be the same as @taquito/utils char2Bytes()
-// exported for testing to ensure above
 /**
- * converts a utf8 string to a hex string
+ * Encodes a message to its Micheline string representation
  *
- * @internal
+ * @param {string} text - the message to Encode
+ * @returns {string} the message encoded to the micheline format
  *
- * @param {string} input - the string to convert
- * @returns {string} the converted hex string
+ * References:
+ * - https://github.com/Cryptonomic/ConseilJS/blob/fb718632d6ce47718dad5aa77c67fc514afaa0b9/src/chain/tezos/lexer/Micheline.ts#L62L71
+ * - https://tezos.gitlab.io/shell/micheline.html
  */
-function char2Bytes(input: string): string {
-  return uint8arrays.toString(uint8arrays.fromString(input, 'utf8'), 'base16')
+function encodeMessage(text: string): string {
+  const michelinePrefix = '05'
+  const stringPrefix = '01'
+  const len = ('0000000' + text.length.toString(16)).slice(-8)
+
+  text = uint8arrays.toString(uint8arrays.fromString(text, 'utf-8'), 'hex')
+  return michelinePrefix + stringPrefix + len + text
 }
 
 /**
@@ -36,7 +41,8 @@ function char2Bytes(input: string): string {
  */
 async function sign(provider: TezosProvider, message: string): Promise<string> {
   // sign the message with the active address and get the signature with the type prefixed
-  const { prefixSig: signature } = await provider.signer.sign(char2Bytes(message))
+  message = encodeMessage(message)
+  const { prefixSig: signature } = await provider.signer.sign(message)
   return signature
 }
 
