@@ -389,6 +389,30 @@ describe('Ceramic interop: core <> http-client', () => {
       expect(resCore[docC.id.toString()].content).toEqual(resClient[docC.id.toString()].content)
       expect(resCore[docD.id.toString()].content).toEqual(resClient[docD.id.toString()].content)
     })
+
+    it('returns stream when using multiquery with genesis and no updates', async () => {
+      const metadata = {
+        controllers: ['did:test'],
+        family: 'test',
+      }
+      const genesis = await TileDocument.makeGenesis(
+        {
+          did: core.did,
+        },
+        null,
+        {
+          ...metadata,
+          deterministic: true,
+        }
+      )
+
+      const streamId = await StreamID.fromGenesis('tile', genesis)
+      const resCore = await core.multiQuery([{ genesis, streamId }])
+      const resClient = await client.multiQuery([{ genesis, streamId }])
+
+      expect(resCore[streamId.toString()].metadata).toEqual(metadata)
+      expect(resClient[streamId.toString()].metadata).toEqual(metadata)
+    })
   })
 
   describe('pin api', () => {
