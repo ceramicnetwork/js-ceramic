@@ -62,7 +62,6 @@ export class RunningState extends StreamStateSubject implements RunningStateLike
 
   /**
    * Sets the pinned state to the current state by storing the CIDs
-   * @param newState state of the stream to be pinned
    */
   markAsPinned() {
     this.stateSource = StateSource.STATESTORE
