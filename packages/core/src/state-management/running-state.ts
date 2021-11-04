@@ -33,7 +33,7 @@ export class RunningState extends StreamStateSubject implements RunningStateLike
     this.id = new StreamID(initial.type, initial.log[0].cid)
 
     if (stateSource === StateSource.STATESTORE) {
-      this.setPinnedState(initial)
+      this.markAsPinned()
     }
   }
 
@@ -61,11 +61,11 @@ export class RunningState extends StreamStateSubject implements RunningStateLike
   }
 
   /**
-   * Sets the pinned state to the given state by storing the CIDs
+   * Sets the pinned state to the current state by storing the CIDs
    * @param newState state of the stream to be pinned
    */
-  setPinnedState(newState: StreamState) {
+  markAsPinned() {
     this.stateSource = StateSource.STATESTORE
-    this.pinnedCommits = new Set(newState.log.map(({ cid }) => cid.toString()))
+    this.pinnedCommits = new Set(this.state.log.map(({ cid }) => cid.toString()))
   }
 }

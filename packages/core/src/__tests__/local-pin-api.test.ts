@@ -11,16 +11,18 @@ const STREAM_ID = StreamID.fromString(
 )
 const FAKE_CID = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
 
-const repository = { pin: jest.fn(), unpin: jest.fn(), list: jest.fn() } as unknown as Repository
-
 const streamState = {
   type: 0,
   log: [{ cid: FAKE_CID, type: CommitType.GENESIS }],
 } as unknown as StreamState
 const state$ = new RunningState(streamState, StateSource.STATESTORE)
-const loadStream = jest.fn(async () => state$)
-
-const pinApi = new LocalPinApi(repository, loadStream, new LoggerProvider().getDiagnosticsLogger())
+const repository = {
+  load: jest.fn(() => Promise.resolve(state$)),
+  pin: jest.fn(),
+  unpin: jest.fn(),
+  list: jest.fn(),
+} as unknown as Repository
+const pinApi = new LocalPinApi(repository, new LoggerProvider().getDiagnosticsLogger())
 
 async function toArray<A>(iterable: AsyncIterable<A>): Promise<A[]> {
   const result: A[] = []
@@ -30,7 +32,7 @@ async function toArray<A>(iterable: AsyncIterable<A>): Promise<A[]> {
 
 test('add', async () => {
   await pinApi.add(STREAM_ID)
-  expect(loadStream).toBeCalledWith(STREAM_ID)
+  expect(repository.load).toBeCalledWith(STREAM_ID, {})
   expect(repository.pin).toBeCalledWith(state$)
 })
 

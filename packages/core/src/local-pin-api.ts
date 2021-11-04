@@ -9,12 +9,11 @@ import { Repository } from './state-management/repository'
 export class LocalPinApi implements PinApi {
   constructor(
     private readonly repository: Repository,
-    private readonly loadStream: (streamId: StreamID) => Promise<RunningStateLike>,
     private readonly logger: DiagnosticsLogger
   ) {}
 
   async add(streamId: StreamID): Promise<void> {
-    const state$ = await this.loadStream(streamId)
+    const state$ = await this.repository.load(streamId, {})
     await this.repository.pin(state$)
     this.logger.verbose(`Pinned stream ${streamId.toString()}`)
   }

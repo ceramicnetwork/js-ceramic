@@ -73,7 +73,7 @@ describe('#add', () => {
   test('save and pin', async () => {
     const pinStore = new PinStore(stateStore, pinning, jest.fn(), jest.fn())
     const runningState = new RunningState(state, StateSource.NETWORK)
-    const runningStateSpy = jest.spyOn(runningState, 'setPinnedState')
+    const runningStateSpy = jest.spyOn(runningState, 'markAsPinned')
     await pinStore.add(runningState)
     expect(stateStore.save).toBeCalledWith(runningState)
     expect(pinning.pin).toBeCalledTimes(1)
@@ -105,7 +105,7 @@ describe('#add', () => {
     })
     const pinStore = new PinStore(stateStore, pinning, retrieve, resolve)
     const runningState = new RunningState(stateWithProof, StateSource.NETWORK)
-    const runningStateSpy = jest.spyOn(runningState, 'setPinnedState')
+    const runningStateSpy = jest.spyOn(runningState, 'markAsPinned')
     await pinStore.add(runningState)
     expect(stateStore.save).toBeCalledWith(runningState)
     expect(pinning.pin).toBeCalledTimes(4)
@@ -149,7 +149,7 @@ describe('#add', () => {
     })
     const pinStore = new PinStore(stateStore, pinning, retrieve, resolve)
     const runningState = new RunningState(stateWithProof, StateSource.NETWORK)
-    const runningStateSpy = jest.spyOn(runningState, 'setPinnedState')
+    const runningStateSpy = jest.spyOn(runningState, 'markAsPinned')
     await pinStore.add(runningState)
     expect(stateStore.save).toBeCalledWith(runningState)
     expect(pinning.pin).toBeCalledTimes(6)
@@ -169,7 +169,7 @@ describe('#add', () => {
     const pinStore = new PinStore(stateStore, pinning, jest.fn(), jest.fn())
     const toBeUpdatedState = Object.assign({}, state)
     const runningState = new RunningState(toBeUpdatedState, StateSource.STATESTORE)
-    const runningStateSpy = jest.spyOn(runningState, 'setPinnedState')
+    const runningStateSpy = jest.spyOn(runningState, 'markAsPinned')
     Object.assign(toBeUpdatedState, {
       log: [
         { cid: new CID('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D') },
@@ -192,7 +192,7 @@ describe('#add', () => {
     const pinStore = new PinStore(stateStore, pinning, jest.fn(), jest.fn())
     const toBeUpdatedState = Object.assign({}, state)
     const runningState = new RunningState(toBeUpdatedState, StateSource.STATESTORE)
-    const runningStateSpy = jest.spyOn(runningState, 'setPinnedState')
+    const runningStateSpy = jest.spyOn(runningState, 'markAsPinned')
     Object.assign(toBeUpdatedState, {
       log: [
         { cid: new CID('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D') },
