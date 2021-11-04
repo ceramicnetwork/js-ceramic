@@ -62,8 +62,14 @@ export class Caip10Link extends Stream {
       const address = accountIdSplit[0]
       const chainId = accountIdSplit[1]
 
+      if (!address || !chainId) {
+        throw new Error(`Invalid accountId provided`)
+      }
+
       accountId = new AccountId({ address, chainId })
     }
+
+    console.log(accountId.toString())
 
     const normalizedAccountId = new AccountId(accountId)
     const genesisCommit = Caip10Link.makeGenesis(normalizedAccountId)
@@ -178,9 +184,11 @@ export class Caip10Link extends Stream {
     if (accountId.chainId.namespace === 'eip155') {
       accountId.address = accountId.address.toLowerCase()
     }
+
+    const legacyAccountId = `${accountId.address}@${accountId.chainId.toString()}`
     return {
       header: {
-        controllers: [accountId.toString()],
+        controllers: [legacyAccountId],
         family: `caip10-${accountId.chainId.toString()}`,
       },
     }

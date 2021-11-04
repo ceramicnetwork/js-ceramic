@@ -141,7 +141,7 @@ Object {
   ],
   "metadata": Object {
     "controllers": Array [
-      "eip155:1:0x0544dcf4fce959c6c4f3b7530190cb5e1bd67cb8",
+      "0x0544dcf4fce959c6c4f3b7530190cb5e1bd67cb8@eip155:1",
     ],
     "family": "caip10-eip155:1",
   },
@@ -201,7 +201,7 @@ Object {
   ],
   "metadata": Object {
     "controllers": Array [
-      "eip155:1:0x0544dcf4fce959c6c4f3b7530190cb5e1bd67cb8",
+      "0x0544dcf4fce959c6c4f3b7530190cb5e1bd67cb8@eip155:1",
     ],
     "family": "caip10-eip155:1",
   },
@@ -307,7 +307,7 @@ Object {
   ],
   "metadata": Object {
     "controllers": Array [
-      "eip155:1:0x0544dcf4fce959c6c4f3b7530190cb5e1bd67cb8",
+      "0x0544dcf4fce959c6c4f3b7530190cb5e1bd67cb8@eip155:1",
     ],
     "family": "caip10-eip155:1",
   },
@@ -315,7 +315,7 @@ Object {
     "content": "did:3:testdid1",
     "metadata": Object {
       "controllers": Array [
-        "eip155:1:0x0544dcf4fce959c6c4f3b7530190cb5e1bd67cb8",
+        "0x0544dcf4fce959c6c4f3b7530190cb5e1bd67cb8@eip155:1",
       ],
       "family": "caip10-eip155:1",
       "lastUpdate": 1608116721,

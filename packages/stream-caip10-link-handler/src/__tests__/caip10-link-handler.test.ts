@@ -22,7 +22,7 @@ const FAKE_CID_6 = new CID('bafybeig6xv5nwphfmvcnektpnojts55jqcuam7bmye2pb54adnr
 const FAKE_CID_7 = new CID('bafybeig6xv5nwphfmvcnektpnojts66jqcuam7bmye2pb54adnrtccjlwu')
 const FAKE_CID_8 = new CID('bafybeig6xv5nwphfmvcnektpnojts66jqcuam6bmye2pb54adnrtccjlwu')
 
-const ACCOUNT = 'eip155:1:0x0544DcF4fcE959C6C4F3b7530190cB5E1BD67Cb8'
+const ACCOUNT = '0x0544DcF4fcE959C6C4F3b7530190cB5E1BD67Cb8@eip155:1'
 
 const COMMITS = {
   genesis: { header: { controllers: [ACCOUNT.toLowerCase()], family: 'caip10-eip155:1' } },
@@ -110,7 +110,9 @@ describe('Caip10LinkHandler', () => {
   })
 
   it('makes genesis commit correctly', async () => {
-    const commit = Caip10Link.makeGenesis(new AccountId(ACCOUNT))
+    const commit = Caip10Link.makeGenesis(
+      new AccountId({ address: '0x0544DcF4fcE959C6C4F3b7530190cB5E1BD67Cb8', chainId: 'eip155:1' })
+    )
     expect(commit).toEqual(COMMITS.genesis)
   })
 

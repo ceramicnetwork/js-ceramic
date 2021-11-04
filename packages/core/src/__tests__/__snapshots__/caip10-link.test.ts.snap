@@ -393,6 +393,69 @@ Object {
 }
 `;
 
+exports[`Ceramic API Caip10Link test Create from legacy account id 1`] = `
+Object {
+  "anchorStatus": 0,
+  "content": null,
+  "log": Array [
+    Object {
+      "cid": Object {
+        "codec": "dag-cbor",
+        "hash": Uint8Array [
+          18,
+          32,
+          130,
+          3,
+          32,
+          143,
+          0,
+          52,
+          193,
+          45,
+          193,
+          25,
+          148,
+          145,
+          225,
+          243,
+          88,
+          235,
+          94,
+          168,
+          43,
+          163,
+          157,
+          35,
+          169,
+          45,
+          16,
+          159,
+          71,
+          243,
+          118,
+          128,
+          218,
+          167,
+        ],
+        "version": 1,
+      },
+      "type": 0,
+    },
+  ],
+  "metadata": Object {
+    "controllers": Array [
+      "eip155:1:0x0544dcf4fce959c6c4f3b7530190cb5e1bd67cb8",
+    ],
+    "family": "caip10-eip155:1",
+  },
+  "next": Object {
+    "content": null,
+  },
+  "signature": 0,
+  "type": 1,
+}
+`;
+
 exports[`Ceramic API Caip10Link test Create from valid account id 1`] = `
 Object {
   "anchorStatus": 0,
