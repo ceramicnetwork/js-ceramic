@@ -58,25 +58,29 @@ test('emit on distinct changes', async () => {
 })
 
 describe('set pinned state', () => {
-  test('set in constructor then set in call to setPinnedState', async () => {
-    const state$ = new RunningState(initial, StateSource.STATESTORE)
+  test('set in constructor then set in call to markAsPinned', async () => {
+    const streamState = Object.assign({}, initial)
+    const state$ = new RunningState(streamState, StateSource.STATESTORE)
     expect(state$.pinnedCommits.size).toBe(1)
     expect(state$.stateSource).toBe(StateSource.STATESTORE)
     expect(state$.pinnedCommits.has(FAKE_CID1.toString())).toBe(true)
 
-    state$.setPinnedState(second)
+    Object.assign(streamState, second)
+    state$.markAsPinned()
     expect(state$.pinnedCommits.size).toBe(2)
     expect(state$.stateSource).toBe(StateSource.STATESTORE)
     expect(state$.pinnedCommits.has(FAKE_CID1.toString())).toBe(true)
     expect(state$.pinnedCommits.has(FAKE_CID2.toString())).toBe(true)
   })
 
-  test('not set in constructor but set in call to setPinnedStae', async () => {
-    const state$ = new RunningState(initial, StateSource.NETWORK)
+  test('not set in constructor but set in call to markAsPinned', async () => {
+    const streamState = Object.assign({}, initial)
+    const state$ = new RunningState(streamState, StateSource.NETWORK)
     expect(state$.pinnedCommits).toBe(undefined)
     expect(state$.stateSource).toBe(StateSource.NETWORK)
 
-    state$.setPinnedState(second)
+    Object.assign(streamState, second)
+    state$.markAsPinned()
     expect(state$.pinnedCommits.size).toBe(2)
     expect(state$.stateSource).toBe(StateSource.STATESTORE)
     expect(state$.pinnedCommits.has(FAKE_CID1.toString())).toBe(true)

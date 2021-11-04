@@ -2,14 +2,12 @@ import StreamID, { CommitID } from '@ceramicnetwork/streamid'
 import {
   AnchorService,
   AnchorStatus,
-  CommitType,
   Context,
   CreateOpts,
   LoadOpts,
   PinningOpts,
   PublishOpts,
   StreamState,
-  StreamStateHolder,
   StreamUtils,
   SyncOptions,
   UpdateOpts,
@@ -286,8 +284,8 @@ export class Repository {
     this.inmemory.set(state$.id.toString(), state$)
   }
 
-  pin(streamStateHolder: StreamStateHolder): Promise<void> {
-    return this.#deps.pinStore.add(streamStateHolder)
+  pin(state$: RunningState): Promise<void> {
+    return this.#deps.pinStore.add(state$)
   }
 
   async unpin(streamId: StreamID, opts?: PublishOpts): Promise<void> {
