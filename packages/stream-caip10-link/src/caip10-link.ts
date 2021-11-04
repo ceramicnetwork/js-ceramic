@@ -69,8 +69,6 @@ export class Caip10Link extends Stream {
       accountId = new AccountId({ address, chainId })
     }
 
-    console.log(accountId.toString())
-
     const normalizedAccountId = new AccountId(accountId)
     const genesisCommit = Caip10Link.makeGenesis(normalizedAccountId)
     return Caip10Link.fromGenesis(ceramic, genesisCommit, opts)
