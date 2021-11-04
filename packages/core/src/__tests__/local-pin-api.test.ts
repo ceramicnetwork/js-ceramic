@@ -1,7 +1,7 @@
 import { LocalPinApi } from '../local-pin-api'
 import StreamID from '@ceramicnetwork/streamid'
 import * as random from '@stablelib/random'
-import { CommitType, StreamState, LoggerProvider } from '@ceramicnetwork/common'
+import { CommitType, StreamState, LoggerProvider, SyncOptions } from '@ceramicnetwork/common'
 import { Repository } from '../state-management/repository'
 import CID from 'cids'
 import { RunningState, StateSource } from '../state-management/running-state'
@@ -32,7 +32,7 @@ async function toArray<A>(iterable: AsyncIterable<A>): Promise<A[]> {
 
 test('add', async () => {
   await pinApi.add(STREAM_ID)
-  expect(repository.load).toBeCalledWith(STREAM_ID, {})
+  expect(repository.load).toBeCalledWith(STREAM_ID, { sync: SyncOptions.PREFER_CACHE })
   expect(repository.pin).toBeCalledWith(state$)
 })
 
