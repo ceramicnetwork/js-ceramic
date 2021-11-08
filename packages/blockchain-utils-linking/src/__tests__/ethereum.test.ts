@@ -4,7 +4,7 @@ import * as sigUtils from 'eth-sig-util'
 import { ContractFactory, Contract } from '@ethersproject/contracts'
 import { encodeRpcMessage } from '../util'
 import * as ethereum from '../ethereum'
-import { OcapParams, OcapTypes } from '..'
+import { OcapParams, OcapTypes } from '../ocap-util'
 import StreamID from '@ceramicnetwork/streamid'
 
 const CONTRACT_WALLET_ABI = [

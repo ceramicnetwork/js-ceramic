@@ -1,17 +1,9 @@
 import { AuthProvider } from './auth-provider'
 import { AccountID } from 'caip'
-import {
-  encodeRpcMessage,
-  getConsentMessage,
-  LinkProof,
-  RpcMessage,
-  getOcapRequestMessage,
-  Ocap,
-  OcapParams,
-} from './util'
+import { encodeRpcMessage, getConsentMessage, LinkProof, RpcMessage } from './util'
 import * as uint8arrays from 'uint8arrays'
 import * as sha256 from '@stablelib/sha256'
-import { OcapTypes } from '.'
+import { Ocap, OcapParams, OcapTypes, buildOcapRequestMessage } from './ocap-util'
 
 const ADDRESS_TYPES = {
   ethereumEOA: 'ethereum-eoa',
@@ -61,7 +53,7 @@ export class EthereumAuthProvider implements AuthProvider {
       'WARN: requestCapability os an experimental API, that is subject to change any time.'
     )
     const account = await this.accountId()
-    const requestMessage = getOcapRequestMessage({
+    const requestMessage = buildOcapRequestMessage({
       ...params,
       address: this.address,
       chainId: account.chainId.toString(),
