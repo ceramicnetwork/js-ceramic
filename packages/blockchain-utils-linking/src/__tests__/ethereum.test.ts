@@ -1,11 +1,11 @@
+import StreamID from '@ceramicnetwork/streamid'
+import { Contract, ContractFactory } from '@ethersproject/contracts'
 import { AccountID } from 'caip'
-import ganache from 'ganache-core'
 import * as sigUtils from 'eth-sig-util'
-import { ContractFactory, Contract } from '@ethersproject/contracts'
-import { encodeRpcMessage } from '../util'
+import ganache from 'ganache-core'
 import * as ethereum from '../ethereum'
 import { OcapParams, OcapTypes } from '../ocap-util'
-import StreamID from '@ceramicnetwork/streamid'
+import { encodeRpcMessage } from '../util'
 
 const CONTRACT_WALLET_ABI = [
   {
@@ -203,6 +203,7 @@ describe('Ocap', () => {
   test('requestCapability', async () => {
     const address = addresses[0]
     const auth = new ethereum.EthereumAuthProvider(provider, address)
+
     const streamId = new StreamID(
       'tile',
       'bagcqcerakszw2vsovxznyp5gfnpdj4cqm2xiv76yd24wkjewhhykovorwo6a'
@@ -217,6 +218,7 @@ describe('Ocap', () => {
       nonce: '12345678',
       issuedAt: fixedDate.toISOString(),
     }
+
     await expect(auth.requestCapability(ocapParams)).resolves.toMatchSnapshot()
   })
 })
