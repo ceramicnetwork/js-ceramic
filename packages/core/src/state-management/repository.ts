@@ -8,14 +8,13 @@ import {
   PinningOpts,
   PublishOpts,
   StreamState,
-  StreamUtils,
   SyncOptions,
   UpdateOpts,
 } from '@ceramicnetwork/common'
 import { PinStore } from '../store/pin-store'
 import { DiagnosticsLogger } from '@ceramicnetwork/common'
 import { ExecutionQueue } from './execution-queue'
-import { RunningState, StateSource } from './running-state'
+import { RunningState } from './running-state'
 import { StateManager } from './state-manager'
 import type { Dispatcher } from '../dispatcher'
 import type { ConflictResolution } from '../conflict-resolution'
@@ -106,7 +105,7 @@ export class Repository {
   private async fromStateStore(streamId: StreamID): Promise<RunningState | undefined> {
     const streamState = await this.#deps.pinStore.stateStore.load(streamId)
     if (streamState) {
-      const runningState = new RunningState(streamState, StateSource.STATESTORE)
+      const runningState = new RunningState(streamState, true)
       this.add(runningState)
       const toRecover =
         runningState.value.anchorStatus === AnchorStatus.PENDING ||
@@ -131,7 +130,7 @@ export class Repository {
     commitData.disableTimecheck = true
     const state = await handler.applyCommit(commitData, this.#deps.context)
     await this.#deps.stateValidation.validate(state, state.content)
-    const state$ = new RunningState(state, StateSource.NETWORK)
+    const state$ = new RunningState(state, false)
     this.add(state$)
     this.logger.verbose(`Genesis commit for stream ${streamId.toString()} successfully loaded`)
     return state$
@@ -325,7 +324,7 @@ export class Repository {
     return new Observable<StreamState>((subscriber) => {
       const id = new StreamID(init.type, init.log[0].cid)
       this.get(id).then((found) => {
-        const state$ = found || new RunningState(init, StateSource.NETWORK)
+        const state$ = found || new RunningState(init, false)
         this.inmemory.endure(id.toString(), state$)
         state$.subscribe(subscriber).add(() => {
           if (state$.observers.length === 0) {

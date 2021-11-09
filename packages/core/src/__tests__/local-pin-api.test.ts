@@ -4,7 +4,7 @@ import * as random from '@stablelib/random'
 import { CommitType, StreamState, LoggerProvider, SyncOptions } from '@ceramicnetwork/common'
 import { Repository } from '../state-management/repository'
 import CID from 'cids'
-import { RunningState, StateSource } from '../state-management/running-state'
+import { RunningState } from '../state-management/running-state'
 
 const STREAM_ID = StreamID.fromString(
   'k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki'
@@ -15,7 +15,7 @@ const streamState = {
   type: 0,
   log: [{ cid: FAKE_CID, type: CommitType.GENESIS }],
 } as unknown as StreamState
-const state$ = new RunningState(streamState, StateSource.STATESTORE)
+const state$ = new RunningState(streamState, true)
 const repository = {
   load: jest.fn(() => Promise.resolve(state$)),
   get: jest.fn(() => Promise.resolve(state$)),
