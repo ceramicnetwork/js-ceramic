@@ -3,6 +3,7 @@ import { AccountID } from 'caip'
 import { encodeRpcMessage, getConsentMessage, LinkProof, RpcMessage } from './util'
 import * as uint8arrays from 'uint8arrays'
 import * as sha256 from '@stablelib/sha256'
+import { Ocap, OcapParams, OcapTypes, buildOcapRequestMessage } from './ocap-util'
 
 const ADDRESS_TYPES = {
   ethereumEOA: 'ethereum-eoa',
@@ -44,6 +45,25 @@ export class EthereumAuthProvider implements AuthProvider {
   async createLink(did: string): Promise<LinkProof> {
     const accountId = await this.accountId()
     return createLink(did, accountId, this.provider, this.opts)
+  }
+
+  async requestCapability(params: OcapParams): Promise<Ocap> {
+    console.warn(
+      'WARN: requestCapability os an experimental API, that is subject to change any time.'
+    )
+    const account = await this.accountId()
+    const requestMessage = buildOcapRequestMessage({
+      ...params,
+      address: this.address,
+      chainId: account.chainId.toString(),
+      type: OcapTypes.EIP4361,
+    })
+    const payload = encodeRpcMessage('personal_sign', [requestMessage, account.address])
+    const signature = await safeSend(payload, this.provider)
+    return {
+      message: requestMessage,
+      signature: signature,
+    }
   }
 
   withAddress(address: string): AuthProvider {

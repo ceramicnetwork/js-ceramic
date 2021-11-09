@@ -31,6 +31,7 @@
     "uint8arrays": "^2.0.5"
   },
   "devDependencies": {
+    "@ceramicnetwork/streamid": "^1.2.1",
     "@ethersproject/providers": "^5.4.5",
     "@glif/filecoin-address": "1.1.0",
     "@glif/local-managed-provider": "1.1.0",
