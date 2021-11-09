@@ -288,8 +288,8 @@ export class Repository {
     this.inmemory.set(state$.id.toString(), state$)
   }
 
-  pin(state$: RunningState): Promise<void> {
-    return this.#deps.pinStore.add(state$)
+  pin(state$: RunningState, force?: boolean): Promise<void> {
+    return this.#deps.pinStore.add(state$, force)
   }
 
   async unpin(streamId: StreamID, opts?: PublishOpts): Promise<void> {
