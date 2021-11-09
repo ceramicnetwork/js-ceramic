@@ -145,9 +145,8 @@ export class CeramicClient implements CeramicApi {
   async multiQuery(queries: Array<MultiQuery>): Promise<Record<string, Stream>> {
     const queriesJSON = queries.map((q) => {
       return {
+        ...q,
         streamId: typeof q.streamId === 'string' ? q.streamId : q.streamId.toString(),
-        paths: q.paths,
-        atTime: q.atTime,
       }
     })
 
