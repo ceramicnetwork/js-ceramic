@@ -172,8 +172,8 @@ describe('Ceramic stream pinning', () => {
       anchor: false,
       publish: false,
     })
-    ceramic.pin.add(stream.id)
-    stream.update({ foo: 'baz' }, null, { anchor: false, publish: false })
+    await ceramic.pin.add(stream.id)
+    await stream.update({ foo: 'baz' }, null, { anchor: false, publish: false })
 
     expect(publishTipSpy).toBeCalledTimes(0)
     await ceramic.pin.rm(stream.id)
@@ -250,8 +250,7 @@ describe('Ceramic stream pinning', () => {
     await ceramic.close()
   })
 
-  /** TODO(1817)
-   * it('re-pin after unpin', async () => {
+  it('re-pin after unpin', async () => {
     const ceramic = await createCeramic(ipfs1, tmpFolder.path)
     const stream = await TileDocument.create(ceramic, { foo: 'bar' }, null, {
       anchor: false,
@@ -278,5 +277,5 @@ describe('Ceramic stream pinning', () => {
     expect(saveStateSpy).toBeCalledTimes(2)
 
     await ceramic.close()
-  })*/
+  })
 })

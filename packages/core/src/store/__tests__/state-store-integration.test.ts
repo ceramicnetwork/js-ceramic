@@ -90,13 +90,6 @@ describe('Level data store', () => {
     await realIpfs.stop()
   }, 20000)
 
-  it('skips removing unpinned stream', async () => {
-    await expect(store.stateStore.load(streamId)).resolves.toBeNull()
-    const unpinSpy = jest.spyOn(store.pinning, 'unpin')
-    await store.rm(streamId)
-    expect(unpinSpy).toBeCalledTimes(0)
-  })
-
   test('list pinned streams', async () => {
     const realIpfs = await createIPFS()
     const ceramic = await createCeramic(realIpfs)

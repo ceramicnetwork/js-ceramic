@@ -216,8 +216,8 @@ describe('#add', () => {
 test('#rm', async () => {
   const pinStore = new PinStore(stateStore, pinning, jest.fn(), jest.fn())
   const stream = new FakeType(TestUtils.runningState(state), {})
-  stateStore.load = jest.fn(async () => state)
-  await pinStore.rm(stream.id)
+  const runningState = new RunningState(state, StateSource.STATESTORE)
+  await pinStore.rm(runningState)
   expect(stateStore.remove).toBeCalledWith(stream.id)
   expect(pinning.unpin).toBeCalledWith(state.log[0].cid)
 })
