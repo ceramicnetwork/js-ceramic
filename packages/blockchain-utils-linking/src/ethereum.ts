@@ -58,8 +58,10 @@ export class EthereumAuthProvider implements AuthProvider {
       chainId: account.chainId.toString(),
       type: OcapTypes.EIP4361,
     })
-    const payload = encodeRpcMessage('personal_sign', [requestMessage, account.address])
-    const signature = await safeSend(payload, this.provider)
+    const signature = await safeSend(this.provider, 'personal_sign', [
+      requestMessage,
+      account.address,
+    ])
     return {
       message: requestMessage,
       signature: signature,

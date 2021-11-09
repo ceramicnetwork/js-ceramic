@@ -1,11 +1,11 @@
-import { AccountID } from 'caip'
-import ganache from 'ganache-core'
-import * as sigUtils from 'eth-sig-util'
-import { ContractFactory, Contract } from '@ethersproject/contracts'
-import { encodeRpcMessage } from '../util'
-import * as ethereum from '../ethereum'
-import { buildOcapRequestMessage, OcapParams, OcapRequestParams, OcapTypes } from '../ocap-util'
 import StreamID from '@ceramicnetwork/streamid'
+import { Contract, ContractFactory } from '@ethersproject/contracts'
+import { AccountID } from 'caip'
+import * as sigUtils from 'eth-sig-util'
+import ganache from 'ganache-core'
+import * as ethereum from '../ethereum'
+import { OcapParams, OcapTypes } from '../ocap-util'
+import { encodeRpcMessage } from '../util'
 
 const CONTRACT_WALLET_ABI = [
   {
@@ -200,33 +200,9 @@ describe('EthereumAuthProvider', () => {
 })
 
 describe('Ocap', () => {
-  test('buildOcapRequestMessage', () => {
-    const account = new AccountID({ address: addresses[0], chainId: 'eip155:1' })
-    const streamId = new StreamID(
-      'tile',
-      'bagcqcerakszw2vsovxznyp5gfnpdj4cqm2xiv76yd24wkjewhhykovorwo6a'
-    )
-    const fixedDate = new Date('2021-10-14T07:18:41Z')
-    const ocapParams: OcapRequestParams = {
-      type: OcapTypes.EIP4361,
-      did: `did:pkh:eip155:1:${account.address}`,
-      streams: [streamId],
-      domain: 'self.id',
-      statement: 'Give this app access to your streams',
-      nonce: '12345678',
-      issuedAt: fixedDate.toISOString(),
-      address: account.address,
-      chainId: account.chainId.toString(),
-    }
-
-    expect(buildOcapRequestMessage(ocapParams)).toMatchSnapshot()
-  })
   test('requestCapability', async () => {
     const address = addresses[0]
-    const sendProvider: any = ganache.provider(GANACHE_CONF)
-    sendProvider.sendAsync = null
-    const spy = jest.spyOn(sendProvider, 'send')
-    const auth = new ethereum.EthereumAuthProvider(sendProvider, address)
+    const auth = new ethereum.EthereumAuthProvider(provider, address)
 
     const streamId = new StreamID(
       'tile',
@@ -243,9 +219,6 @@ describe('Ocap', () => {
       issuedAt: fixedDate.toISOString(),
     }
 
-    await expect(auth.requestCapability(ocapParams)).rejects.toThrowError(
-      'Unsupported provider; provider must implement one of the following methods: send, sendAsync, request'
-    )
-    expect(spy).toHaveBeenCalledTimes(1)
+    await expect(auth.requestCapability(ocapParams)).resolves.toMatchSnapshot()
   })
 })
