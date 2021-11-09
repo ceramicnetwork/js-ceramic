@@ -200,4 +200,103 @@ describe('Ceramic stream pinning', () => {
 
     await ceramic.close()
   })
+
+  it('Double pin is noop', async () => {
+    const ceramic = await createCeramic(ipfs1, tmpFolder.path)
+    const stream = await TileDocument.create(ceramic, { foo: 'bar' }, null, {
+      anchor: false,
+      publish: false,
+    })
+    const pinSpy = jest.spyOn(ipfs1.pin, 'add')
+    const saveStateSpy = jest.spyOn(ceramic.repository._deps.pinStore.stateStore, 'save')
+    await ceramic.pin.add(stream.id)
+
+    // 2 CIDs pinned for the one genesis commit (signed envelope + payload)
+    expect(pinSpy).toBeCalledTimes(2)
+    expect(saveStateSpy).toBeCalledTimes(1)
+
+    // Pin a second time, shouldn't cause any more calls to ipfs.pin.add
+    await ceramic.pin.add(stream.id)
+    expect(pinSpy).toBeCalledTimes(2)
+    expect(saveStateSpy).toBeCalledTimes(1)
+
+    await ceramic.close()
+  })
+
+  it('only pin new commits', async () => {
+    const ceramic = await createCeramic(ipfs1, tmpFolder.path)
+    const stream = await TileDocument.create(ceramic, { foo: 'bar' }, null, {
+      anchor: false,
+      publish: false,
+    })
+    const pinSpy = jest.spyOn(ipfs1.pin, 'add')
+    const saveStateSpy = jest.spyOn(ceramic.repository._deps.pinStore.stateStore, 'save')
+    await ceramic.pin.add(stream.id)
+
+    // 2 CIDs pinned for the one genesis commit (signed envelope + payload)
+    expect(pinSpy).toBeCalledTimes(2)
+    expect(saveStateSpy).toBeCalledTimes(1)
+
+    // Doing an update to a pinned stream automatically re-pins it, but only pins the new CIDs
+    await stream.update({ foo: 'baz' })
+    expect(pinSpy).toBeCalledTimes(4)
+    expect(saveStateSpy).toBeCalledTimes(2)
+
+    await ceramic.close()
+  })
+
+  /**
+   * TODO(1818)
+  it('Force re-pinning', async () => {
+    const ceramic = await createCeramic(ipfs1, tmpFolder.path)
+    const stream = await TileDocument.create(ceramic, { foo: 'bar' }, null, {
+      anchor: false,
+      publish: false,
+    })
+    const pinSpy = jest.spyOn(ipfs1.pin, 'add')
+    const saveStateSpy = jest.spyOn(ceramic.repository._deps.pinStore.stateStore, 'save')
+    await ceramic.pin.add(stream.id)
+
+    // 2 CIDs pinned for the one genesis commit (signed envelope + payload)
+    expect(pinSpy).toBeCalledTimes(2)
+    expect(saveStateSpy).toBeCalledTimes(1)
+
+    // Pin a second time, shouldn't cause any more calls to ipfs.pin.add
+    await ceramic.pin.add(stream.id) // todo force
+    expect(pinSpy).toBeCalledTimes(4)
+    expect(saveStateSpy).toBeCalledTimes(2)
+
+    await ceramic.close()
+  })
+  */
+
+  /** TODO(1817)
+   * it('re-pin after unpin', async () => {
+    const ceramic = await createCeramic(ipfs1, tmpFolder.path)
+    const stream = await TileDocument.create(ceramic, { foo: 'bar' }, null, {
+      anchor: false,
+      publish: false,
+    })
+    const pinSpy = jest.spyOn(ipfs1.pin, 'add')
+    const unpinSpy = jest.spyOn(ipfs1.pin, 'rm')
+    const saveStateSpy = jest.spyOn(ceramic.repository._deps.pinStore.stateStore, 'save')
+    const removeStateSpy = jest.spyOn(ceramic.repository._deps.pinStore.stateStore, 'remove')
+
+    // Pin stream
+    await ceramic.pin.add(stream.id)
+    expect(pinSpy).toBeCalledTimes(2)
+    expect(saveStateSpy).toBeCalledTimes(1)
+
+    // Unpin
+    await ceramic.pin.rm(stream.id)
+    expect(unpinSpy).toBeCalledTimes(2)
+    expect(removeStateSpy).toBeCalledTimes(1)
+
+    // re-pin
+    await ceramic.pin.add(stream.id)
+    expect(pinSpy).toBeCalledTimes(4)
+    expect(saveStateSpy).toBeCalledTimes(2)
+
+    await ceramic.close()
+  })*/
 })
