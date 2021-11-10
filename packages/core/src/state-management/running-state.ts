@@ -11,9 +11,9 @@ import CID from 'cids'
 export class RunningState extends StreamStateSubject implements RunningStateLike {
   readonly id: StreamID
   readonly subscriptionSet: SubscriptionSet = new SubscriptionSet()
-  private _pinnedCommits?: Set<string>
+  private _pinnedCommits?: Set<string> | null
 
-  constructor(initial: StreamState, private pinned: boolean) {
+  constructor(initial: StreamState, pinned: boolean) {
     super(initial)
     this.id = new StreamID(initial.type, initial.log[0].cid)
 
@@ -30,7 +30,7 @@ export class RunningState extends StreamStateSubject implements RunningStateLike
     return this.value
   }
 
-  get pinnedCommits(): Set<string> {
+  get pinnedCommits(): Set<string> | null {
     return this._pinnedCommits
   }
 
@@ -53,7 +53,6 @@ export class RunningState extends StreamStateSubject implements RunningStateLike
    * Sets the pinned state to the current state by storing the CIDs
    */
   markAsPinned() {
-    this.pinned = true
     this._pinnedCommits = new Set(this.state.log.map(({ cid }) => cid.toString()))
   }
 
@@ -61,7 +60,6 @@ export class RunningState extends StreamStateSubject implements RunningStateLike
    * Clears the pinned state.
    */
   markAsUnpinned() {
-    this.pinned = false
     this._pinnedCommits = null
   }
 }
