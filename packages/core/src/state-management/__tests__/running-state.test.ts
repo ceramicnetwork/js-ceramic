@@ -62,13 +62,11 @@ describe('set pinned state', () => {
     const streamState = Object.assign({}, initial)
     const state$ = new RunningState(streamState, true)
     expect(state$.pinnedCommits.size).toBe(1)
-    expect(state$.pinned).toBe(true)
     expect(state$.pinnedCommits.has(FAKE_CID1.toString())).toBe(true)
 
     Object.assign(streamState, second)
     state$.markAsPinned()
     expect(state$.pinnedCommits.size).toBe(2)
-    expect(state$.pinned).toBe(true)
     expect(state$.pinnedCommits.has(FAKE_CID1.toString())).toBe(true)
     expect(state$.pinnedCommits.has(FAKE_CID2.toString())).toBe(true)
   })
@@ -76,13 +74,11 @@ describe('set pinned state', () => {
   test('not set in constructor but set in call to markAsPinned', async () => {
     const streamState = Object.assign({}, initial)
     const state$ = new RunningState(streamState, false)
-    expect(state$.pinnedCommits).toBe(undefined)
-    expect(state$.pinned).toBe(false)
+    expect(state$.pinnedCommits).toBe(null)
 
     Object.assign(streamState, second)
     state$.markAsPinned()
     expect(state$.pinnedCommits.size).toBe(2)
-    expect(state$.pinned).toBe(true)
     expect(state$.pinnedCommits.has(FAKE_CID1.toString())).toBe(true)
     expect(state$.pinnedCommits.has(FAKE_CID2.toString())).toBe(true)
   })

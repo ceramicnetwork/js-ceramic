@@ -11,7 +11,7 @@ import CID from 'cids'
 export class RunningState extends StreamStateSubject implements RunningStateLike {
   readonly id: StreamID
   readonly subscriptionSet: SubscriptionSet = new SubscriptionSet()
-  private _pinnedCommits?: Set<string> | null
+  private _pinnedCommits?: Set<string> | null = null
 
   constructor(initial: StreamState, pinned: boolean) {
     super(initial)
