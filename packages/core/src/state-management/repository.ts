@@ -130,7 +130,7 @@ export class Repository {
     // Do not check for possible key revocation here, as we will do so later after loading the tip (or learning that the genesis commit *is* the current tip), when we will have timestamp information for when the genesis commit was anchored.
     commitData.disableTimecheck = true
     const state = await handler.applyCommit(commitData, this.#deps.context)
-    await this._deps.stateValidation.validate(state, state.content)
+    await this.#deps.stateValidation.validate(state, state.content)
     const state$ = new RunningState(state, StateSource.NETWORK)
     this.add(state$)
     this.logger.verbose(`Genesis commit for stream ${streamId.toString()} successfully loaded`)
