@@ -208,7 +208,7 @@ describe('Ceramic stream pinning', () => {
       publish: false,
     })
     const pinSpy = jest.spyOn(ipfs1.pin, 'add')
-    const saveStateSpy = jest.spyOn(ceramic.repository._deps.pinStore.stateStore, 'save')
+    const saveStateSpy = jest.spyOn(ceramic.repository.pinStore.stateStore, 'save')
     await ceramic.pin.add(stream.id)
 
     // 2 CIDs pinned for the one genesis commit (signed envelope + payload)
@@ -230,7 +230,7 @@ describe('Ceramic stream pinning', () => {
       publish: false,
     })
     const pinSpy = jest.spyOn(ipfs1.pin, 'add')
-    const saveStateSpy = jest.spyOn(ceramic.repository._deps.pinStore.stateStore, 'save')
+    const saveStateSpy = jest.spyOn(ceramic.repository.pinStore.stateStore, 'save')
     await ceramic.pin.add(stream.id)
 
     // 2 CIDs pinned for the one genesis commit (signed envelope + payload)
@@ -279,8 +279,8 @@ describe('Ceramic stream pinning', () => {
     })
     const pinSpy = jest.spyOn(ipfs1.pin, 'add')
     const unpinSpy = jest.spyOn(ipfs1.pin, 'rm')
-    const saveStateSpy = jest.spyOn(ceramic.repository._deps.pinStore.stateStore, 'save')
-    const removeStateSpy = jest.spyOn(ceramic.repository._deps.pinStore.stateStore, 'remove')
+    const saveStateSpy = jest.spyOn(ceramic.repository.pinStore.stateStore, 'save')
+    const removeStateSpy = jest.spyOn(ceramic.repository.pinStore.stateStore, 'remove')
 
     // Pin stream
     await ceramic.pin.add(stream.id)

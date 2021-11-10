@@ -57,7 +57,7 @@ export class Repository {
   /**
    * Various dependencies.
    */
-  private _deps: RepositoryDependencies
+  #deps: RepositoryDependencies
 
   /**
    * Instance of StateManager for performing operations on stream state.
@@ -80,9 +80,13 @@ export class Repository {
     this.updates$ = this.updates$.bind(this)
   }
 
+  get pinStore(): PinStore {
+    return this.#deps.pinStore
+  }
+
   // Ideally this would be provided in the constructor, but circular dependencies in our initialization process make this necessary for now
   setDeps(deps: RepositoryDependencies): void {
-    this._deps = deps
+    this.#deps = deps
     this.stateManager = new StateManager(
       deps.dispatcher,
       deps.pinStore,
@@ -100,7 +104,7 @@ export class Repository {
   }
 
   private async fromStateStore(streamId: StreamID): Promise<RunningState | undefined> {
-    const streamState = await this._deps.pinStore.stateStore.load(streamId)
+    const streamState = await this.#deps.pinStore.stateStore.load(streamId)
     if (streamState) {
       const runningState = new RunningState(streamState, StateSource.STATESTORE)
       this.add(runningState)
@@ -117,15 +121,15 @@ export class Repository {
   }
 
   private async fromNetwork(streamId: StreamID): Promise<RunningState> {
-    const handler = this._deps.handlers.get(streamId.typeName)
+    const handler = this.#deps.handlers.get(streamId.typeName)
     const genesisCid = streamId.cid
-    const commitData = await Utils.getCommitData(this._deps.dispatcher, genesisCid)
+    const commitData = await Utils.getCommitData(this.#deps.dispatcher, genesisCid)
     if (commitData == null) {
       throw new Error(`No genesis commit found with CID ${genesisCid.toString()}`)
     }
     // Do not check for possible key revocation here, as we will do so later after loading the tip (or learning that the genesis commit *is* the current tip), when we will have timestamp information for when the genesis commit was anchored.
     commitData.disableTimecheck = true
-    const state = await handler.applyCommit(commitData, this._deps.context)
+    const state = await handler.applyCommit(commitData, this.#deps.context)
     await this._deps.stateValidation.validate(state, state.content)
     const state$ = new RunningState(state, StateSource.NETWORK)
     this.add(state$)
@@ -273,7 +277,7 @@ export class Repository {
     if (fromMemory) {
       return fromMemory.state
     } else {
-      return this._deps.pinStore.stateStore.load(streamId)
+      return this.#deps.pinStore.stateStore.load(streamId)
     }
   }
 
@@ -285,7 +289,7 @@ export class Repository {
   }
 
   pin(state$: RunningState): Promise<void> {
-    return this._deps.pinStore.add(state$)
+    return this.#deps.pinStore.add(state$)
   }
 
   async unpin(streamId: StreamID, opts?: PublishOpts): Promise<void> {
@@ -294,7 +298,7 @@ export class Repository {
       const state$ = await this.load(streamId, { sync: SyncOptions.NEVER_SYNC })
       this.stateManager.publishTip(state$)
     }
-    return this._deps.pinStore.rm(streamId)
+    return this.#deps.pinStore.rm(streamId)
   }
 
   /**
@@ -302,7 +306,7 @@ export class Repository {
    * If `streamId` is passed, indicate if it is pinned.
    */
   async listPinned(streamId?: StreamID): Promise<string[]> {
-    return this._deps.pinStore.ls(streamId)
+    return this.#deps.pinStore.ls(streamId)
   }
 
   /**
@@ -341,6 +345,6 @@ export class Repository {
       this.inmemory.delete(id)
       stream.complete()
     })
-    await this._deps.pinStore.close()
+    await this.#deps.pinStore.close()
   }
 }
