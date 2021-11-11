@@ -480,5 +480,21 @@ describe('Ceramic interop: core <> http-client', () => {
       pinnedDocs = await pinLs(docA.id)
       expect(pinnedDocs).toHaveLength(0)
     })
+
+    it('force pin', async () => {
+      const pinSpy = jest.spyOn(ipfs.pin, 'add')
+      await client.pin.add(docA.id)
+
+      // 2 CIDs pinned for the one genesis commit (signed envelope + payload)
+      expect(pinSpy).toBeCalledTimes(2)
+
+      // Pin a second time, shouldn't cause any more calls to ipfs.pin.add
+      await client.pin.add(docA.id)
+      expect(pinSpy).toBeCalledTimes(2)
+
+      // Now force re-pin and make sure underlying state and ipfs records get re-pinned
+      await client.pin.add(docA.id, true)
+      expect(pinSpy).toBeCalledTimes(4)
+    })
   })
 })

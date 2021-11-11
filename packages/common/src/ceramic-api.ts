@@ -12,8 +12,10 @@ export interface PinApi {
   /**
    * Pin stream
    * @param streamId - Stream ID
+   * @param force - If true, re-pins all stream content even if the node already believes the stream
+   +  to be pinned.
    */
-  add(streamId: StreamID): Promise<void>
+  add(streamId: StreamID, force?: boolean): Promise<void>
 
   /**
    * Unpin stream

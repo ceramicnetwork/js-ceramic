@@ -12,9 +12,9 @@ export class LocalPinApi implements PinApi {
     private readonly logger: DiagnosticsLogger
   ) {}
 
-  async add(streamId: StreamID): Promise<void> {
+  async add(streamId: StreamID, force?: boolean): Promise<void> {
     const state$ = await this.repository.load(streamId, { sync: SyncOptions.PREFER_CACHE })
-    await this.repository.pin(state$)
+    await this.repository.pin(state$, force)
     this.logger.verbose(`Pinned stream ${streamId.toString()}`)
   }
 
