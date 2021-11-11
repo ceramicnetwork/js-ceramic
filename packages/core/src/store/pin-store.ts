@@ -54,16 +54,14 @@ export class PinStore {
     runningState.markAsPinned()
   }
 
-  async rm(streamId: StreamID): Promise<void> {
-    const state = await this.stateStore.load(streamId)
-    if (state) {
-      const commitLog = state.log.map((logEntry) => logEntry.cid)
-      const points = await this.getComponentCIDsOfCommits(commitLog)
-      Promise.all(points.map((point) => this.pinning.unpin(point))).catch(() => {
-        // Do Nothing
-      })
-      await this.stateStore.remove(streamId)
-    }
+  async rm(runningState: RunningState): Promise<void> {
+    const commitLog = runningState.state.log.map((logEntry) => logEntry.cid)
+    const points = await this.getComponentCIDsOfCommits(commitLog)
+    Promise.all(points.map((point) => this.pinning.unpin(point))).catch(() => {
+      // Do Nothing
+    })
+    await this.stateStore.remove(runningState.id)
+    runningState.markAsUnpinned()
   }
 
   async ls(streamId?: StreamID): Promise<string[]> {

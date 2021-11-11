@@ -18,6 +18,7 @@ const streamState = {
 const state$ = new RunningState(streamState, StateSource.STATESTORE)
 const repository = {
   load: jest.fn(() => Promise.resolve(state$)),
+  get: jest.fn(() => Promise.resolve(state$)),
   pin: jest.fn(),
   unpin: jest.fn(),
   list: jest.fn(),
@@ -38,7 +39,7 @@ test('add', async () => {
 
 test('rm', async () => {
   await pinApi.rm(STREAM_ID)
-  expect(repository.unpin).toBeCalledWith(STREAM_ID, undefined)
+  expect(repository.unpin).toBeCalledWith(state$, undefined)
 })
 
 describe('ls', () => {

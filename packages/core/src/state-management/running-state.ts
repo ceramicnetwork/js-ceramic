@@ -67,4 +67,12 @@ export class RunningState extends StreamStateSubject implements RunningStateLike
     this.stateSource = StateSource.STATESTORE
     this.pinnedCommits = new Set(this.state.log.map(({ cid }) => cid.toString()))
   }
+
+  /**
+   * Clears the pinned state.
+   */
+  markAsUnpinned() {
+    this.stateSource = StateSource.NETWORK // todo rename this to be more accurate
+    this.pinnedCommits = null
+  }
 }

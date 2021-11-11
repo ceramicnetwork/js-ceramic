@@ -241,7 +241,7 @@ export class Repository {
     if (opts.pin) {
       await this.pin(state$)
     } else if (opts.pin === false) {
-      await this.unpin(StreamUtils.streamIdFromState(state$.value))
+      await this.unpin(state$)
     }
   }
 
@@ -292,13 +292,11 @@ export class Repository {
     return this.#deps.pinStore.add(state$, force)
   }
 
-  async unpin(streamId: StreamID, opts?: PublishOpts): Promise<void> {
+  async unpin(state$: RunningState, opts?: PublishOpts): Promise<void> {
     if (opts?.publish) {
-      // load the stream's current state from cache or the pin store and publish it to pubsub
-      const state$ = await this.load(streamId, { sync: SyncOptions.NEVER_SYNC })
       this.stateManager.publishTip(state$)
     }
-    return this.#deps.pinStore.rm(streamId)
+    return this.#deps.pinStore.rm(state$)
   }
 
   /**
