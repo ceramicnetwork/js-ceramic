@@ -10,7 +10,7 @@ import {
   CommitType,
   TestUtils,
 } from '@ceramicnetwork/common'
-import { RunningState, StateSource } from '../../state-management/running-state'
+import { RunningState } from '../../state-management/running-state'
 
 let stateStore: StateStore
 let pinning: PinningBackend
@@ -72,7 +72,7 @@ test('#close', async () => {
 describe('#add', () => {
   test('save and pin', async () => {
     const pinStore = new PinStore(stateStore, pinning, jest.fn(), jest.fn())
-    const runningState = new RunningState(state, StateSource.NETWORK)
+    const runningState = new RunningState(state, false)
     const runningStateSpy = jest.spyOn(runningState, 'markAsPinned')
     await pinStore.add(runningState)
     expect(stateStore.save).toBeCalledWith(runningState)
@@ -104,7 +104,7 @@ describe('#add', () => {
       }
     })
     const pinStore = new PinStore(stateStore, pinning, retrieve, resolve)
-    const runningState = new RunningState(stateWithProof, StateSource.NETWORK)
+    const runningState = new RunningState(stateWithProof, false)
     const runningStateSpy = jest.spyOn(runningState, 'markAsPinned')
     await pinStore.add(runningState)
     expect(stateStore.save).toBeCalledWith(runningState)
@@ -148,7 +148,7 @@ describe('#add', () => {
       }
     })
     const pinStore = new PinStore(stateStore, pinning, retrieve, resolve)
-    const runningState = new RunningState(stateWithProof, StateSource.NETWORK)
+    const runningState = new RunningState(stateWithProof, false)
     const runningStateSpy = jest.spyOn(runningState, 'markAsPinned')
     await pinStore.add(runningState)
     expect(stateStore.save).toBeCalledWith(runningState)
@@ -168,7 +168,7 @@ describe('#add', () => {
   test('save and pin only new commits', async () => {
     const pinStore = new PinStore(stateStore, pinning, jest.fn(), jest.fn())
     const toBeUpdatedState = Object.assign({}, state)
-    const runningState = new RunningState(toBeUpdatedState, StateSource.STATESTORE)
+    const runningState = new RunningState(toBeUpdatedState, true)
     const runningStateSpy = jest.spyOn(runningState, 'markAsPinned')
     Object.assign(toBeUpdatedState, {
       log: [
@@ -191,7 +191,7 @@ describe('#add', () => {
   test('save and pin all commits using force', async () => {
     const pinStore = new PinStore(stateStore, pinning, jest.fn(), jest.fn())
     const toBeUpdatedState = Object.assign({}, state)
-    const runningState = new RunningState(toBeUpdatedState, StateSource.STATESTORE)
+    const runningState = new RunningState(toBeUpdatedState, true)
     const runningStateSpy = jest.spyOn(runningState, 'markAsPinned')
     Object.assign(toBeUpdatedState, {
       log: [
@@ -216,7 +216,7 @@ describe('#add', () => {
 test('#rm', async () => {
   const pinStore = new PinStore(stateStore, pinning, jest.fn(), jest.fn())
   const stream = new FakeType(TestUtils.runningState(state), {})
-  const runningState = new RunningState(state, StateSource.STATESTORE)
+  const runningState = new RunningState(state, true)
   await pinStore.rm(runningState)
   expect(stateStore.remove).toBeCalledWith(stream.id)
   expect(pinning.unpin).toBeCalledWith(state.log[0].cid)

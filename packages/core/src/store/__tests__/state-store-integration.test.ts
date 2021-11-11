@@ -14,7 +14,7 @@ import CID from 'cids'
 import { createIPFS } from '../../__tests__/ipfs-util'
 import { createCeramic } from '../../__tests__/create-ceramic'
 import { anchorUpdate } from '../../state-management/__tests__/anchor-update'
-import { RunningState, StateSource } from '../../state-management/running-state'
+import { RunningState } from '../../state-management/running-state'
 
 const FAKE_CID = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
 
@@ -65,7 +65,7 @@ describe('Level data store', () => {
     }
     await expect(store.stateStore.load(streamId)).resolves.toBeNull()
     const pinSpy = jest.spyOn(store.pinning, 'pin')
-    await store.add(new RunningState(state, StateSource.NETWORK))
+    await store.add(new RunningState(state, false))
     expect(pinSpy).toBeCalledWith(FAKE_CID)
     expect(pinSpy).toBeCalledTimes(1)
     await expect(store.stateStore.load(streamId)).resolves.toEqual(state)

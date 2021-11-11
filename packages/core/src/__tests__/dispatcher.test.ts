@@ -8,7 +8,7 @@ import { delay } from './delay'
 import tmp from 'tmp-promise'
 import { LevelStateStore } from '../store/level-state-store'
 import { PinStore } from '../store/pin-store'
-import { RunningState, StateSource } from '../state-management/running-state'
+import { RunningState } from '../state-management/running-state'
 import { StateManager } from '../state-management/state-manager'
 import cloneDeep from 'lodash.clonedeep'
 
@@ -92,7 +92,7 @@ describe('Dispatcher', () => {
   })
 
   it('retrieves commit correctly', async () => {
-    ipfs.dag.get.mockReturnValueOnce({value: 'data'})
+    ipfs.dag.get.mockReturnValueOnce({ value: 'data' })
     expect(await dispatcher.retrieveCommit(FAKE_CID)).toEqual('data')
 
     expect(ipfs.dag.get.mock.calls.length).toEqual(1)
@@ -100,8 +100,8 @@ describe('Dispatcher', () => {
   })
 
   it('retries on timeout', async () => {
-    ipfs.dag.get.mockRejectedValueOnce({code: 'ERR_TIMEOUT'})
-    ipfs.dag.get.mockReturnValueOnce({value: 'data'})
+    ipfs.dag.get.mockRejectedValueOnce({ code: 'ERR_TIMEOUT' })
+    ipfs.dag.get.mockReturnValueOnce({ value: 'data' })
     expect(await dispatcher.retrieveCommit(FAKE_CID)).toEqual('data')
 
     expect(ipfs.dag.get.mock.calls.length).toEqual(2)
@@ -111,7 +111,7 @@ describe('Dispatcher', () => {
 
   it('caches and retrieves commit correctly', async () => {
     const ipfsSpy = ipfs.dag.get
-    ipfsSpy.mockReturnValueOnce({value: 'data'})
+    ipfsSpy.mockReturnValueOnce({ value: 'data' })
     expect(await dispatcher.retrieveCommit(FAKE_CID)).toEqual('data')
     // Commit not found in cache so IPFS lookup performed and cache updated
     expect(ipfsSpy).toBeCalledTimes(1)
@@ -126,11 +126,11 @@ describe('Dispatcher', () => {
 
   it('caches and retrieves with path correctly', async () => {
     const ipfsSpy = ipfs.dag.get
-    ipfsSpy.mockImplementation(function(cid, opts) {
+    ipfsSpy.mockImplementation(function (cid, opts) {
       if (opts.path == '/foo') {
-        return {value: 'foo'}
+        return { value: 'foo' }
       } else if (opts.path == '/bar') {
-        return {value: 'bar'}
+        return { value: 'bar' }
       } else {
         return null
       }
@@ -183,7 +183,7 @@ describe('Dispatcher', () => {
     dispatcher.repository.stateManager = {} as unknown as StateManager
 
     async function register(state: StreamState) {
-      const runningState = new RunningState(state, StateSource.STATESTORE)
+      const runningState = new RunningState(state, false)
       repository.add(runningState)
       dispatcher.messageBus.queryNetwork(runningState.id).subscribe()
       return runningState
