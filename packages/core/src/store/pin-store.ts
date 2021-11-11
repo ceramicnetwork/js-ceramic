@@ -44,6 +44,9 @@ export class PinStore {
       runningState.pinnedCommits && !force
         ? commitLog.filter((cid) => !runningState.pinnedCommits.has(cid.toString()))
         : commitLog
+    if (newCommits.length == 0) {
+      return
+    }
 
     const points = await this.getComponentCIDsOfCommits(newCommits)
     await Promise.all(points.map((point) => this.pinning.pin(point)))

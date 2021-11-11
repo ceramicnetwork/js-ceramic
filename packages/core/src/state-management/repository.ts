@@ -80,6 +80,10 @@ export class Repository {
     this.updates$ = this.updates$.bind(this)
   }
 
+  get pinStore(): PinStore {
+    return this.#deps.pinStore
+  }
+
   // Ideally this would be provided in the constructor, but circular dependencies in our initialization process make this necessary for now
   setDeps(deps: RepositoryDependencies): void {
     this.#deps = deps
