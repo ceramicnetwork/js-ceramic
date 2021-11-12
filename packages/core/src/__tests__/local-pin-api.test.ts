@@ -1,26 +1,29 @@
 import { LocalPinApi } from '../local-pin-api'
 import StreamID from '@ceramicnetwork/streamid'
 import * as random from '@stablelib/random'
-import { CommitType, StreamState, LoggerProvider } from '@ceramicnetwork/common'
+import { CommitType, StreamState, LoggerProvider, SyncOptions } from '@ceramicnetwork/common'
 import { Repository } from '../state-management/repository'
 import CID from 'cids'
-import { RunningState, StateSource } from '../state-management/running-state'
+import { RunningState } from '../state-management/running-state'
 
 const STREAM_ID = StreamID.fromString(
   'k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki'
 )
 const FAKE_CID = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
 
-const repository = { pin: jest.fn(), unpin: jest.fn(), list: jest.fn() } as unknown as Repository
-
 const streamState = {
   type: 0,
   log: [{ cid: FAKE_CID, type: CommitType.GENESIS }],
 } as unknown as StreamState
-const state$ = new RunningState(streamState, StateSource.STATESTORE)
-const loadStream = jest.fn(async () => state$)
-
-const pinApi = new LocalPinApi(repository, loadStream, new LoggerProvider().getDiagnosticsLogger())
+const state$ = new RunningState(streamState, true)
+const repository = {
+  load: jest.fn(() => Promise.resolve(state$)),
+  get: jest.fn(() => Promise.resolve(state$)),
+  pin: jest.fn(),
+  unpin: jest.fn(),
+  list: jest.fn(),
+} as unknown as Repository
+const pinApi = new LocalPinApi(repository, new LoggerProvider().getDiagnosticsLogger())
 
 async function toArray<A>(iterable: AsyncIterable<A>): Promise<A[]> {
   const result: A[] = []
@@ -30,13 +33,13 @@ async function toArray<A>(iterable: AsyncIterable<A>): Promise<A[]> {
 
 test('add', async () => {
   await pinApi.add(STREAM_ID)
-  expect(loadStream).toBeCalledWith(STREAM_ID)
-  expect(repository.pin).toBeCalledWith(state$)
+  expect(repository.load).toBeCalledWith(STREAM_ID, { sync: SyncOptions.PREFER_CACHE })
+  expect(repository.pin).toBeCalledWith(state$, undefined)
 })
 
 test('rm', async () => {
   await pinApi.rm(STREAM_ID)
-  expect(repository.unpin).toBeCalledWith(STREAM_ID, undefined)
+  expect(repository.unpin).toBeCalledWith(state$, undefined)
 })
 
 describe('ls', () => {

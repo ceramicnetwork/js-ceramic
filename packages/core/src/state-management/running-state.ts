@@ -8,32 +8,17 @@ import {
 import { StreamID } from '@ceramicnetwork/streamid'
 import CID from 'cids'
 
-/**
- * Describes the source from which this RunningState was initialized with its StreamState
- */
-export enum StateSource {
-  /**
-   * Indicates that the stream was pinned and its state was loaded from the StateStore. This will cause runningState to keep track of the stored commit CIDs.
-   * The stored commit CIDs can be used to prevent commits from being stored again.
-   */
-  STATESTORE,
-  /**
-   * Indicates that the Stream was loaded from the network.
-   * runningState does not keep track of the commit CID's of the state as they may not have been stored.
-   */
-  NETWORK,
-}
 export class RunningState extends StreamStateSubject implements RunningStateLike {
   readonly id: StreamID
   readonly subscriptionSet: SubscriptionSet = new SubscriptionSet()
-  pinnedCommits?: Set<string>
+  private _pinnedCommits?: Set<string> | null = null
 
-  constructor(initial: StreamState, public stateSource: StateSource) {
+  constructor(initial: StreamState, pinned: boolean) {
     super(initial)
     this.id = new StreamID(initial.type, initial.log[0].cid)
 
-    if (stateSource === StateSource.STATESTORE) {
-      this.setPinnedState(initial)
+    if (pinned) {
+      this.markAsPinned()
     }
   }
 
@@ -43,6 +28,10 @@ export class RunningState extends StreamStateSubject implements RunningStateLike
 
   get state(): StreamState {
     return this.value
+  }
+
+  get pinnedCommits(): Set<string> | null {
+    return this._pinnedCommits
   }
 
   /**
@@ -61,11 +50,16 @@ export class RunningState extends StreamStateSubject implements RunningStateLike
   }
 
   /**
-   * Sets the pinned state to the given state by storing the CIDs
-   * @param newState state of the stream to be pinned
+   * Sets the pinned state to the current state by storing the CIDs
    */
-  setPinnedState(newState: StreamState) {
-    this.stateSource = StateSource.STATESTORE
-    this.pinnedCommits = new Set(newState.log.map(({ cid }) => cid.toString()))
+  markAsPinned() {
+    this._pinnedCommits = new Set(this.state.log.map(({ cid }) => cid.toString()))
+  }
+
+  /**
+   * Clears the pinned state.
+   */
+  markAsUnpinned() {
+    this._pinnedCommits = null
   }
 }

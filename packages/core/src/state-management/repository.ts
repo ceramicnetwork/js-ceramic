@@ -2,22 +2,19 @@ import StreamID, { CommitID } from '@ceramicnetwork/streamid'
 import {
   AnchorService,
   AnchorStatus,
-  CommitType,
   Context,
   CreateOpts,
   LoadOpts,
   PinningOpts,
   PublishOpts,
   StreamState,
-  StreamStateHolder,
-  StreamUtils,
   SyncOptions,
   UpdateOpts,
 } from '@ceramicnetwork/common'
 import { PinStore } from '../store/pin-store'
 import { DiagnosticsLogger } from '@ceramicnetwork/common'
 import { ExecutionQueue } from './execution-queue'
-import { RunningState, StateSource } from './running-state'
+import { RunningState } from './running-state'
 import { StateManager } from './state-manager'
 import type { Dispatcher } from '../dispatcher'
 import type { ConflictResolution } from '../conflict-resolution'
@@ -82,6 +79,10 @@ export class Repository {
     this.updates$ = this.updates$.bind(this)
   }
 
+  get pinStore(): PinStore {
+    return this.#deps.pinStore
+  }
+
   // Ideally this would be provided in the constructor, but circular dependencies in our initialization process make this necessary for now
   setDeps(deps: RepositoryDependencies): void {
     this.#deps = deps
@@ -104,7 +105,7 @@ export class Repository {
   private async fromStateStore(streamId: StreamID): Promise<RunningState | undefined> {
     const streamState = await this.#deps.pinStore.stateStore.load(streamId)
     if (streamState) {
-      const runningState = new RunningState(streamState, StateSource.STATESTORE)
+      const runningState = new RunningState(streamState, true)
       this.add(runningState)
       const toRecover =
         runningState.value.anchorStatus === AnchorStatus.PENDING ||
@@ -129,7 +130,7 @@ export class Repository {
     commitData.disableTimecheck = true
     const state = await handler.applyCommit(commitData, this.#deps.context)
     await this.#deps.stateValidation.validate(state, state.content)
-    const state$ = new RunningState(state, StateSource.NETWORK)
+    const state$ = new RunningState(state, false)
     this.add(state$)
     this.logger.verbose(`Genesis commit for stream ${streamId.toString()} successfully loaded`)
     return state$
@@ -239,7 +240,7 @@ export class Repository {
     if (opts.pin) {
       await this.pin(state$)
     } else if (opts.pin === false) {
-      await this.unpin(StreamUtils.streamIdFromState(state$.value))
+      await this.unpin(state$)
     }
   }
 
@@ -286,17 +287,15 @@ export class Repository {
     this.inmemory.set(state$.id.toString(), state$)
   }
 
-  pin(streamStateHolder: StreamStateHolder): Promise<void> {
-    return this.#deps.pinStore.add(streamStateHolder)
+  pin(state$: RunningState, force?: boolean): Promise<void> {
+    return this.#deps.pinStore.add(state$, force)
   }
 
-  async unpin(streamId: StreamID, opts?: PublishOpts): Promise<void> {
+  async unpin(state$: RunningState, opts?: PublishOpts): Promise<void> {
     if (opts?.publish) {
-      // load the stream's current state from cache or the pin store and publish it to pubsub
-      const state$ = await this.load(streamId, { sync: SyncOptions.NEVER_SYNC })
       this.stateManager.publishTip(state$)
     }
-    return this.#deps.pinStore.rm(streamId)
+    return this.#deps.pinStore.rm(state$)
   }
 
   /**
@@ -325,7 +324,7 @@ export class Repository {
     return new Observable<StreamState>((subscriber) => {
       const id = new StreamID(init.type, init.log[0].cid)
       this.get(id).then((found) => {
-        const state$ = found || new RunningState(init, StateSource.NETWORK)
+        const state$ = found || new RunningState(init, false)
         this.inmemory.endure(id.toString(), state$)
         state$.subscribe(subscriber).add(() => {
           if (state$.observers.length === 0) {

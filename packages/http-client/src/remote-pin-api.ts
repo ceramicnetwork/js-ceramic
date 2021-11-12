@@ -8,8 +8,15 @@ import { PublishOpts } from '@ceramicnetwork/common'
 export class RemotePinApi implements PinApi {
   constructor(private readonly _apiUrl: string) {}
 
-  async add(streamId: StreamID): Promise<void> {
-    await fetchJson(this._apiUrl + '/pins' + `/${streamId.toString()}`, { method: 'post' })
+  async add(streamId: StreamID, force?: boolean): Promise<void> {
+    const args: any = {}
+    if (force) {
+      args.force = true
+    }
+    await fetchJson(this._apiUrl + '/pins' + `/${streamId.toString()}`, {
+      method: 'post',
+      body: args,
+    })
   }
 
   async rm(streamId: StreamID, opts?: PublishOpts): Promise<void> {

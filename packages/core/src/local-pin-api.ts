@@ -1,4 +1,4 @@
-import { PinApi, PublishOpts, RunningStateLike } from '@ceramicnetwork/common'
+import { PinApi, PublishOpts, SyncOptions } from '@ceramicnetwork/common'
 import StreamID from '@ceramicnetwork/streamid'
 import { DiagnosticsLogger } from '@ceramicnetwork/common'
 import { Repository } from './state-management/repository'
@@ -9,18 +9,22 @@ import { Repository } from './state-management/repository'
 export class LocalPinApi implements PinApi {
   constructor(
     private readonly repository: Repository,
-    private readonly loadStream: (streamId: StreamID) => Promise<RunningStateLike>,
     private readonly logger: DiagnosticsLogger
   ) {}
 
-  async add(streamId: StreamID): Promise<void> {
-    const state$ = await this.loadStream(streamId)
-    await this.repository.pin(state$)
+  async add(streamId: StreamID, force?: boolean): Promise<void> {
+    const state$ = await this.repository.load(streamId, { sync: SyncOptions.PREFER_CACHE })
+    await this.repository.pin(state$, force)
     this.logger.verbose(`Pinned stream ${streamId.toString()}`)
   }
 
   async rm(streamId: StreamID, opts?: PublishOpts): Promise<void> {
-    await this.repository.unpin(streamId, opts)
+    const state$ = await this.repository.get(streamId)
+    if (!state$) {
+      this.logger.verbose(`Cannot unpin stream ${streamId.toString()} as it isn't pinned`)
+      return
+    }
+    await this.repository.unpin(state$, opts)
     this.logger.verbose(`Unpinned stream ${streamId.toString()}`)
   }
 

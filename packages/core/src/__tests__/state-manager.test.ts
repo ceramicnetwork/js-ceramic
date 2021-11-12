@@ -6,7 +6,7 @@ import {
   StreamUtils,
 } from '@ceramicnetwork/common'
 import CID from 'cids'
-import { RunningState, StateSource } from '../state-management/running-state'
+import { RunningState } from '../state-management/running-state'
 import { createIPFS } from './ipfs-util'
 import { createCeramic } from './create-ceramic'
 import Ceramic from '../ceramic'
@@ -379,7 +379,7 @@ test('handles basic conflict', async () => {
   const initialState = await ceramic.repository.stateManager
     .atCommit(streamState1, streamId.atCommit(streamId.cid))
     .then((stream) => stream.state)
-  const state$ = new RunningState(initialState, StateSource.STATESTORE)
+  const state$ = new RunningState(initialState, true)
   ceramic.repository.add(state$)
   await (ceramic.repository.stateManager as any)._handleTip(state$, tipPreUpdate)
   await new Promise((resolve) => setTimeout(resolve, 1000))

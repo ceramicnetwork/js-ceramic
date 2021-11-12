@@ -1,9 +1,11 @@
+import StreamID from '@ceramicnetwork/streamid'
+import { Contract, ContractFactory } from '@ethersproject/contracts'
 import { AccountID } from 'caip'
-import ganache from 'ganache-core'
 import * as sigUtils from 'eth-sig-util'
-import { ContractFactory, Contract } from '@ethersproject/contracts'
-import { encodeRpcMessage } from '../util'
+import ganache from 'ganache-core'
 import * as ethereum from '../ethereum'
+import { OcapParams, OcapTypes } from '../ocap-util'
+import { encodeRpcMessage } from '../util'
 
 const CONTRACT_WALLET_ABI = [
   {
@@ -194,5 +196,29 @@ describe('EthereumAuthProvider', () => {
       expect(accountId.address).toBe(addresses[0])
       expect(spy).toHaveBeenCalledTimes(1)
     })
+  })
+})
+
+describe('Ocap', () => {
+  test('requestCapability', async () => {
+    const address = addresses[0]
+    const auth = new ethereum.EthereumAuthProvider(provider, address)
+
+    const streamId = new StreamID(
+      'tile',
+      'bagcqcerakszw2vsovxznyp5gfnpdj4cqm2xiv76yd24wkjewhhykovorwo6a'
+    )
+    const fixedDate = new Date('2021-10-14T07:18:41Z')
+    const ocapParams: OcapParams = {
+      type: OcapTypes.EIP4361,
+      did: `did:pkh:eip155:1:${address}`,
+      streams: [streamId],
+      domain: 'self.id',
+      statement: 'Give this app access to your streams',
+      nonce: '12345678',
+      issuedAt: fixedDate.toISOString(),
+    }
+
+    await expect(auth.requestCapability(ocapParams)).resolves.toMatchSnapshot()
   })
 })
