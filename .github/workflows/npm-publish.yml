@@ -51,6 +51,7 @@ jobs:
         with:
           token: ${{ secrets.GH_TOKEN }}
           ref: main
+          fetch-depth: 0
       -
         name: Merge `release-candidate` -> `main`
         if: ${{ steps.set-vars.outputs.main == 'true' && steps.set-vars.outputs.hotfix != 'true' }}
