@@ -56,6 +56,8 @@ jobs:
         name: Merge `release-candidate` -> `main`
         if: ${{ steps.set-vars.outputs.main == 'true' && steps.set-vars.outputs.hotfix != 'true' }}
         run: |
+          git config user.email "${{ github.actor }}@users.noreply.github.com"
+          git config user.name ${{ github.actor }}
           git fetch origin release-candidate
           git merge origin/release-candidate
       -
