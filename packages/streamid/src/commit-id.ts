@@ -14,16 +14,36 @@ import { StreamRef } from './stream-ref'
  * Parse CommitID from bytes representation.
  *
  * @param bytes - bytes representation of CommitID.
+ * @throws error on invalid input
  * @see [[CommitID#bytes]]
  */
 function fromBytes(bytes: Uint8Array): CommitID {
+  const result = fromBytesNoThrow(bytes)
+  if (result instanceof Error) {
+    throw result
+  }
+  return result
+}
+
+/**
+ * Same as fromBytes, but returns an Error instance rather than throwing if there is a problem
+ * with the input.
+ * Note that some exceptions can still be thrown in certain cases, if they come from lower-level
+ * libraries like multibase, for example.
+ * @param bytes
+ */
+function fromBytesNoThrow(bytes: Uint8Array): CommitID | Error {
   const [streamCodec, streamCodecRemainder] = readVarint(bytes)
   if (streamCodec !== STREAMID_CODEC)
-    throw new Error('fromBytes: invalid streamid, does not include streamid codec')
+    return new Error('fromBytes: invalid streamid, does not include streamid codec')
   const [type, streamtypeRemainder] = readVarint(streamCodecRemainder)
-  const [base, baseRemainder] = readCid(streamtypeRemainder)
+  const cidResult = readCid(streamtypeRemainder)
+  if (cidResult instanceof Error) {
+    return cidResult
+  }
+  const [base, baseRemainder] = cidResult
   if (baseRemainder.length === 0) {
-    throw new Error(`No commit information provided`)
+    return new Error(`No commit information provided`)
   } else if (baseRemainder.length === 1) {
     // Zero commit
     return new CommitID(type, base, baseRemainder[0])
@@ -86,13 +106,28 @@ function parseCommit(genesis: CID, commit: CID | string | number = null): CID | 
  * @see [[CommitID#toUrl]]
  */
 function fromString(input: string): CommitID {
+  const result = fromStringNoThrow(input)
+  if (result instanceof Error) {
+    throw result
+  }
+  return result
+}
+
+/**
+ * Same as fromString, but returns an Error instance rather than throwing if there is a problem
+ * with the input.
+ * Note that some exceptions can still be thrown in certain cases, if they come from lower-level
+ * libraries like multibase, for example.
+ * @param input
+ */
+function fromStringNoThrow(input: string): CommitID | Error {
   const protocolFree = input.replace('ceramic://', '').replace('/ceramic/', '')
   if (protocolFree.includes('commit')) {
     const commit = protocolFree.split('?')[1].split('=')[1]
     const base = protocolFree.split('?')[0]
     return StreamID.fromString(base).atCommit(commit)
   } else {
-    return fromBytes(multibase.decode(protocolFree))
+    return fromBytesNoThrow(multibase.decode(protocolFree))
   }
 }
 
@@ -113,7 +148,9 @@ export class CommitID implements StreamRef {
   readonly #commit: CID | null // null ≝ genesis commit
 
   static fromBytes = fromBytes
+  static fromBytesNoThrow = fromBytesNoThrow
   static fromString = fromString
+  static fromStringNoThrow = fromStringNoThrow
 
   // WORKAROUND. Weird replacement for Symbol.hasInstance due to
   // this old bug in Babel https://github.com/babel/babel/issues/4452

@@ -5,7 +5,7 @@ import dagCBOR from 'ipld-dag-cbor'
 import uint8ArrayConcat from 'uint8arrays/concat'
 import uint8ArrayToString from 'uint8arrays/to-string'
 import { DEFAULT_BASE, STREAMID_CODEC } from './constants'
-import { readCid, readVarint } from './reading-bytes'
+import { readCid, readCidNoThrow, readVarint } from './reading-bytes'
 import { Memoize } from 'typescript-memoize'
 import { CommitID } from './commit-id'
 import { StreamRef } from './stream-ref'
@@ -15,16 +15,36 @@ import { StreamType } from './stream-type'
  * Parse StreamID from bytes representation.
  *
  * @param bytes - bytes representation of StreamID.
+ * @throws error on invalid input
  * @see [[StreamID#bytes]]
  */
 function fromBytes(bytes: Uint8Array): StreamID {
+  const result = fromBytesNoThrow(bytes)
+  if (result instanceof Error) {
+    throw result
+  }
+  return result
+}
+
+/**
+ * Same as fromBytes, but returns an Error instance rather than throwing if there is a problem
+ * with the input.
+ * Note that some exceptions can still be thrown in certain cases, if they come from lower-level
+ * libraries like multibase, for example.
+ * @param bytes
+ */
+function fromBytesNoThrow(bytes: Uint8Array): StreamID | Error {
   const [streamCodec, streamCodecRemainder] = readVarint(bytes)
   if (streamCodec !== STREAMID_CODEC)
-    throw new Error('fromBytes: invalid streamid, does not include streamid codec')
+    return new Error('fromBytes: invalid streamid, does not include streamid codec')
   const [type, streamTypeRemainder] = readVarint(streamCodecRemainder)
-  const [cid, cidRemainder] = readCid(streamTypeRemainder)
+  const cidResult = readCidNoThrow(streamTypeRemainder)
+  if (cidResult instanceof Error) {
+    return cidResult
+  }
+  const [cid, cidRemainder] = cidResult
   if (cidRemainder.length > 0) {
-    throw new Error(`Invalid StreamID: contains commit`)
+    return new Error(`Invalid StreamID: contains commit`)
   }
   return new StreamID(type, cid)
 }
@@ -37,10 +57,25 @@ function fromBytes(bytes: Uint8Array): StreamID {
  * @see [[StreamID#toUrl]]
  */
 function fromString(input: string): StreamID {
+  const result = fromStringNoThrow(input)
+  if (result instanceof Error) {
+    throw result
+  }
+  return result
+}
+
+/**
+ * Same as fromString but returns an Error instance rather than throwing if there is a problem
+ * with the input.
+ * Note that some exceptions can still be thrown in certain cases, if they come from lower-level
+ * libraries like multibase, for example.
+ * @param input
+ */
+function fromStringNoThrow(input: string): StreamID | Error {
   const protocolFree = input.replace('ceramic://', '').replace('/ceramic/', '')
   const commitFree = protocolFree.includes('commit') ? protocolFree.split('?')[0] : protocolFree
   const bytes = multibase.decode(commitFree)
-  return fromBytes(bytes)
+  return fromBytesNoThrow(bytes)
 }
 
 const TAG = Symbol.for('@ceramicnetwork/streamid/StreamID')
@@ -61,7 +96,9 @@ export class StreamID implements StreamRef {
   readonly #cid: CID
 
   static fromBytes = fromBytes
+  static fromBytesNoThrow = fromBytesNoThrow
   static fromString = fromString
+  static fromStringNoThrow = fromStringNoThrow
 
   // WORKARDOUND Weird replacement for Symbol.hasInstance due to
   // this old bug in Babel https://github.com/babel/babel/issues/4452
