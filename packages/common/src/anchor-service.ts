@@ -1,8 +1,8 @@
-import CID from 'cids'
+import type CID from 'cids'
 import type { Observable } from 'rxjs'
-import { AnchorProof, AnchorStatus } from './stream'
-import { CeramicApi } from './ceramic-api'
-import StreamID from '@ceramicnetwork/streamid'
+import type { AnchorProof, AnchorStatus } from './stream'
+import type { CeramicApi } from './ceramic-api'
+import type { StreamID } from '@ceramicnetwork/streamid'
 
 export interface AnchorServicePending {
   readonly status: AnchorStatus.PENDING
