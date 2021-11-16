@@ -1,6 +1,6 @@
 import { AccountId } from 'caip'
 
-// Converts a legacy CAIP10 accountId repr to the stable CAIP10 repr
+// Converts a legacy CAIP10 accountId representation to the stable CAIP10 representation
 export function normalizeAccountId(accountId: string | AccountId): AccountId {
   // Handle legacy CAIP-10 representation
   if (typeof accountId === 'string' && accountId.includes('@')) {
@@ -14,8 +14,8 @@ export function normalizeAccountId(accountId: string | AccountId): AccountId {
   return new AccountId(accountId)
 }
 
-// Converts a CAIP10 repr to the legacy CAIP10 repr for accountId
-export function legacizeAccountId(accountId: string): string {
+// Converts a CAIP10 representation to the legacy CAIP10 representation for accountId
+export function toLegacyAccountId(accountId: string): string {
   if (!accountId.includes('@')) {
     const _accountSplit = accountId.split(':')
     const address = _accountSplit.pop()

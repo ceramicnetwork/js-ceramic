@@ -120,8 +120,8 @@ test('validateLink: valid ethereumEOA proof should return proof', async () => {
 
 test('validateLink: valid ethereumEOA proof with legacy account should return proof', async () => {
   const authProvider = new linking.ethereum.EthereumAuthProvider(provider, addresses[0])
-  let proof = await authProvider.createLink(testDid)
-  let proofCopy = { ...proof }
+  const proof = await authProvider.createLink(testDid)
+  const proofCopy = { ...proof }
   const accountId = new AccountId(proof.account)
   proofCopy.account = `${accountId.address}@${accountId.chainId}`
   await expect(ethereum.validateLink(proofCopy)).resolves.toEqual(proof)

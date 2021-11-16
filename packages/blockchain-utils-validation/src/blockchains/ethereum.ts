@@ -66,14 +66,15 @@ async function validateErc1271Link(proof: LinkProof): Promise<LinkProof | null> 
 
 async function validateLink(proof: LinkProof): Promise<LinkProof | null> {
   // Handle legacy CAIP links
-  if (proof.account) {
-    proof.account = normalizeAccountId(proof.account).toString()
+  const proofCopy = { ...proof }
+  if (proofCopy.account) {
+    proofCopy.account = normalizeAccountId(proofCopy.account).toString()
   }
 
-  if (proof.type === ADDRESS_TYPES.erc1271) {
-    return await validateErc1271Link(proof)
+  if (proofCopy.type === ADDRESS_TYPES.erc1271) {
+    return await validateErc1271Link(proofCopy)
   } else {
-    return await validateEoaLink(proof)
+    return await validateEoaLink(proofCopy)
   }
 }
 

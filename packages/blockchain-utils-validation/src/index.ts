@@ -25,16 +25,18 @@ export async function validateLink(proof: LinkProof): Promise<LinkProof | null> 
   // version < 2 are always eip155 namespace
   let namespace = ethereum.namespace
 
-  // Handle legacy CAIP links
-  proof.account = normalizeAccountId(proof.account).toString()
+  const proofCopy = { ...proof }
 
-  if (proof.version >= 2) {
-    namespace = new AccountId(proof.account).chainId.namespace
+  // Handle legacy CAIP links
+  proofCopy.account = normalizeAccountId(proofCopy.account).toString()
+
+  if (proofCopy.version >= 2) {
+    namespace = new AccountId(proofCopy.account).chainId.namespace
   }
 
   const handler = handlers[namespace]
   if (!handler) throw new Error(`proof with namespace '${namespace}' not supported`)
-  const validProof = await handler.validateLink(proof)
+  const validProof = await handler.validateLink(proofCopy)
   if (validProof) {
     validProof.did = findDID(validProof.message)
     return validProof
