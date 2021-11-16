@@ -1,4 +1,4 @@
-import { StreamState, Stream } from '../stream'
+import type { StreamState, Stream } from '../stream'
 import { take, filter } from 'rxjs/operators'
 import { BehaviorSubject } from 'rxjs'
 import { RunningStateLike } from '../running-state-like'
