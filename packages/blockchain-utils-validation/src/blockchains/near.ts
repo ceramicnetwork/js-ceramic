@@ -3,8 +3,7 @@ import { LinkProof } from '@ceramicnetwork/blockchain-utils-linking'
 import * as uint8arrays from 'uint8arrays'
 import crypto from 'crypto'
 import nacl from 'tweetnacl'
-import { AccountId } from 'caip'
-import { normalizeAccountId } from '../util'
+import { normalizeAccountId } from '@ceramicnetwork/common'
 
 const verifySignature = async (
   pubKey: Uint8Array,

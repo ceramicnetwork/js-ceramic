@@ -5,7 +5,7 @@ import { AccountId } from 'caip'
 import * as uint8arrays from 'uint8arrays'
 import { LinkProof } from '@ceramicnetwork/blockchain-utils-linking'
 import { BlockchainHandler } from '../blockchain-handler'
-import { normalizeAccountId } from '../util'
+import { normalizeAccountId } from '@ceramicnetwork/common'
 
 const ADDRESS_TYPES = {
   ethereumEOA: 'ethereum-eoa',

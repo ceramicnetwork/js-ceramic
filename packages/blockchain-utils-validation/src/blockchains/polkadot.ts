@@ -1,9 +1,8 @@
 import { BlockchainHandler } from '../blockchain-handler'
-import { AccountId } from 'caip'
 import { signatureVerify } from '@polkadot/util-crypto'
 import { LinkProof } from '@ceramicnetwork/blockchain-utils-linking'
 import uint8arrays from 'uint8arrays'
-import { normalizeAccountId } from '../util'
+import { normalizeAccountId } from '@ceramicnetwork/common'
 
 const namespace = 'polkadot'
 

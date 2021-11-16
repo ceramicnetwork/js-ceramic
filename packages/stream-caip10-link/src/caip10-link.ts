@@ -15,7 +15,7 @@ import { CommitID, StreamID, StreamRef } from '@ceramicnetwork/streamid'
 import { AccountId } from 'caip'
 import type { DID } from 'dids'
 import { parse } from 'did-resolver'
-import { normalizeAccountId } from './util'
+import { normalizeAccountId } from '@ceramicnetwork/common'
 
 const throwReadOnlyError = (): Promise<void> => {
   throw new Error(

@@ -1,8 +1,7 @@
 import { BlockchainHandler } from '../blockchain-handler'
-import { AccountId } from 'caip'
 import * as linking from '@ceramicnetwork/blockchain-utils-linking'
 import * as signingTools from '@zondax/filecoin-signing-tools'
-import { normalizeAccountId } from '../util'
+import { normalizeAccountId } from '@ceramicnetwork/common'
 
 const namespace = 'fil'
 

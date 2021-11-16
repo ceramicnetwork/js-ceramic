@@ -7,7 +7,7 @@ import cosmos from './blockchains/cosmos'
 import near from './blockchains/near'
 import tezos from './blockchains/tezos'
 import { AccountId } from 'caip'
-import { normalizeAccountId } from './util'
+import { normalizeAccountId } from '@ceramicnetwork/common'
 
 const handlers = {
   [ethereum.namespace]: ethereum,

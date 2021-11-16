@@ -1,9 +1,8 @@
-import { AccountId } from 'caip'
 import { verifyTx } from '@tendermint/sig'
 import { BlockchainHandler } from '../blockchain-handler'
 import { LinkProof, cosmos } from '@ceramicnetwork/blockchain-utils-linking'
 import * as uint8arrays from 'uint8arrays'
-import { normalizeAccountId } from '../util'
+import { normalizeAccountId } from '@ceramicnetwork/common'
 
 const namespace = 'cosmos'
 
