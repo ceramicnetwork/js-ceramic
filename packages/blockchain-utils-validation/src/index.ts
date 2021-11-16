@@ -7,6 +7,7 @@ import cosmos from './blockchains/cosmos'
 import near from './blockchains/near'
 import tezos from './blockchains/tezos'
 import { AccountId } from 'caip'
+import { normalizeAccountId } from './util'
 
 const handlers = {
   [ethereum.namespace]: ethereum,
@@ -25,10 +26,7 @@ export async function validateLink(proof: LinkProof): Promise<LinkProof | null> 
   let namespace = ethereum.namespace
 
   // Handle legacy CAIP links
-  if (proof.account.includes('@')) {
-    const [address, chainId] = proof.account.split('@')
-    proof.account = new AccountId({ address, chainId }).toString()
-  }
+  proof.account = normalizeAccountId(proof.account).toString()
 
   if (proof.version >= 2) {
     namespace = new AccountId(proof.account).chainId.namespace

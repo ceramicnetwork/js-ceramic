@@ -11,6 +11,7 @@ import {
   StreamState,
   StreamUtils,
 } from '@ceramicnetwork/common'
+import { normalizeAccountId } from './util'
 
 export class Caip10LinkHandler implements StreamHandler<Caip10Link> {
   get type(): number {
@@ -112,21 +113,12 @@ export class Caip10LinkHandler implements StreamHandler<Caip10Link> {
     // TODO: handle CAIP-10 addresses in proof generation of 3id-blockchain-utils
     const account: string = validProof.account || validProof.address
 
-    let legacyAccountCaip10 = account
+    let legacyAccountCaip10 = normalizeAccountId(account)
 
-    if (!account.includes('@')) {
-      const _accountSplit = account.split(':')
-      const address = _accountSplit.pop()
-      const chainId = _accountSplit.join(':')
-      legacyAccountCaip10 = `${address}@${chainId}`
-    }
-
+    // We can assume that controllers will always follow the legacy CAIP-10 Link format
     let legacyControllerCaip10 = state.metadata.controllers[0]
-    if (!state.metadata.controllers[0].includes('@')) {
-      const _controllerAccountSplit = state.metadata.controllers[0].split(':')
-      const address = _controllerAccountSplit.pop()
-      const chainId = _controllerAccountSplit.join(':')
-      legacyControllerCaip10 = `${address}@${chainId}`
+    if (!legacyControllerCaip10.includes('@')) {
+      throw new Error('Controller is not following the legacy CAIP10 format. Unexpected error.')
     }
 
     if (legacyAccountCaip10.toLowerCase() !== legacyControllerCaip10.toLowerCase()) {

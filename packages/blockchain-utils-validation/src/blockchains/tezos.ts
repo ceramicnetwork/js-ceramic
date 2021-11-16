@@ -4,6 +4,7 @@ import { BlockchainHandler } from '../blockchain-handler'
 import { LinkProof, tezos } from '@ceramicnetwork/blockchain-utils-linking'
 import fetch from 'cross-fetch'
 import * as uint8arrays from 'uint8arrays'
+import { normalizeAccountId } from '../util'
 
 export const ADDRESS_NOT_FOUND_ERROR = new Error(`Address not found on the Tezos blockchain`)
 export const PUBLIC_KEY_NOT_PUBLISHED_ERROR = new Error(
@@ -64,7 +65,7 @@ function publicKeyFinder(address: string): () => Promise<string> {
 // - at least one transaction on the blockchain
 // - their public key published to the blockchain
 export async function validateLink(proof: LinkProof): Promise<LinkProof | null> {
-  const account = AccountId.parse(proof.account)
+  const account = normalizeAccountId(proof.account)
   const chainId = new ChainId(account.chainId)
 
   // only support Tezos mainnet for now

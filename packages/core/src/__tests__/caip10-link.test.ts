@@ -122,6 +122,23 @@ describe('Ceramic API', () => {
       expect(link.state).toMatchSnapshot()
     })
 
+    it('Create and link DID with legacy CAIP format', async () => {
+      const account = '0x0544DcF4fcE959C6C4F3b7530190cB5E1BD67Cb7@eip155:1'
+      const linkProof = { account, did: ceramic.did.id }
+      authProvider.createLink.mockReturnValueOnce(linkProof)
+
+      const link = await Caip10Link.fromAccount(ceramic, account)
+      await link.setDid(ceramic.did, authProvider, { anchor: false })
+
+      expect(link.did).toEqual(ceramic.did.id)
+      expect(link.state.log).toHaveLength(2)
+      expect(authProvider.createLink).toHaveBeenCalledTimes(1)
+      // toHaveBeenCalledTimes aggregates values over multiple tests
+      // Since it is defined globally, it will have been called 2 times total
+      expect(validateLink).toHaveBeenCalledTimes(2)
+      expect(link.state).toMatchSnapshot()
+    })
+
     it('Created with same address loads same doc', async () => {
       const account = 'eip155:1:0x0544DcF4fcE959C6C4F3b7530190cB5E1BD67Cb3'
       const linkProof = { account, did: ceramic.did.id }

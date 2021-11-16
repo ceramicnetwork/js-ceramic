@@ -5,6 +5,7 @@ import { AccountId } from 'caip'
 import * as uint8arrays from 'uint8arrays'
 import { LinkProof } from '@ceramicnetwork/blockchain-utils-linking'
 import { BlockchainHandler } from '../blockchain-handler'
+import { normalizeAccountId } from '../util'
 
 const ADDRESS_TYPES = {
   ethereumEOA: 'ethereum-eoa',
@@ -64,6 +65,11 @@ async function validateErc1271Link(proof: LinkProof): Promise<LinkProof | null> 
 }
 
 async function validateLink(proof: LinkProof): Promise<LinkProof | null> {
+  // Handle legacy CAIP links
+  if (proof.account) {
+    proof.account = normalizeAccountId(proof.account).toString()
+  }
+
   if (proof.type === ADDRESS_TYPES.erc1271) {
     return await validateErc1271Link(proof)
   } else {

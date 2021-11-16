@@ -2,11 +2,13 @@ import { BlockchainHandler } from '../blockchain-handler'
 import { AccountId } from 'caip'
 import * as linking from '@ceramicnetwork/blockchain-utils-linking'
 import * as signingTools from '@zondax/filecoin-signing-tools'
+import { normalizeAccountId } from '../util'
 
 const namespace = 'fil'
 
 export async function validateLink(proof: linking.LinkProof): Promise<linking.LinkProof | null> {
-  const account = new AccountId(proof.account)
+  // Handle legacy CAIP links
+  const account = normalizeAccountId(proof.account)
   const payload = linking.filecoin.asTransaction(account.address, proof.message)
   const transaction = signingTools.transactionSerialize(payload)
   const recover = signingTools.verifySignature(proof.signature, transaction)

@@ -118,6 +118,15 @@ test('validateLink: valid ethereumEOA proof should return proof', async () => {
   await expect(ethereum.validateLink(proof)).resolves.toEqual(proof)
 })
 
+test('validateLink: valid ethereumEOA proof with legacy account should return proof', async () => {
+  const authProvider = new linking.ethereum.EthereumAuthProvider(provider, addresses[0])
+  let proof = await authProvider.createLink(testDid)
+  let proofCopy = { ...proof }
+  const accountId = new AccountId(proof.account)
+  proofCopy.account = `${accountId.address}@${accountId.chainId}`
+  await expect(ethereum.validateLink(proofCopy)).resolves.toEqual(proof)
+})
+
 test('validate v0 and v1 proofs', async () => {
   expect(await ethereum.validateLink(proofs.v0.valid as unknown as LinkProof)).toMatchSnapshot()
   await expect(ethereum.validateLink(proofs.v0.invalid as unknown as LinkProof)).rejects.toThrow(

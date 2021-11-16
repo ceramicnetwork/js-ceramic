@@ -15,6 +15,7 @@ import { CommitID, StreamID, StreamRef } from '@ceramicnetwork/streamid'
 import { AccountId } from 'caip'
 import type { DID } from 'dids'
 import { parse } from 'did-resolver'
+import { normalizeAccountId } from './util'
 
 const throwReadOnlyError = (): Promise<void> => {
   throw new Error(
@@ -57,19 +58,7 @@ export class Caip10Link extends Stream {
   ): Promise<Caip10Link> {
     opts = { ...DEFAULT_CREATE_OPTS, ...opts }
 
-    if (typeof accountId === 'string' && accountId.includes('@')) {
-      const accountIdSplit = accountId.split('@')
-      const address = accountIdSplit[0]
-      const chainId = accountIdSplit[1]
-
-      if (!address || !chainId) {
-        throw new Error(`Invalid accountId provided`)
-      }
-
-      accountId = new AccountId({ address, chainId })
-    }
-
-    const normalizedAccountId = new AccountId(accountId)
+    const normalizedAccountId = normalizeAccountId(accountId)
     const genesisCommit = Caip10Link.makeGenesis(normalizedAccountId)
     return Caip10Link.fromGenesis(ceramic, genesisCommit, opts)
   }
@@ -183,6 +172,7 @@ export class Caip10Link extends Stream {
       accountId.address = accountId.address.toLowerCase()
     }
 
+    // We are continuing to represent Caip10Links using the legacy Caip10 format to maintain backwards compatibility with existing links
     const legacyAccountId = `${accountId.address}@${accountId.chainId.toString()}`
     return {
       header: {
