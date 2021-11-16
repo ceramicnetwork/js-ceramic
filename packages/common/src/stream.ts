@@ -1,11 +1,12 @@
-import CID from 'cids'
+import type CID from 'cids'
 import cloneDeep from 'lodash.clonedeep'
 import type { Context } from './context'
-import { CommitID, StreamID } from '@ceramicnetwork/streamid'
+import { StreamID } from '@ceramicnetwork/streamid'
+import type { CommitID } from '@ceramicnetwork/streamid'
 import type { DagJWS, DagJWSResult } from 'dids'
 import { Observable } from 'rxjs'
-import { RunningStateLike } from './running-state-like'
-import { CeramicApi } from './ceramic-api'
+import type { RunningStateLike } from './running-state-like'
+import type { CeramicApi } from './ceramic-api'
 import { LoadOpts, SyncOptions } from './streamopts'
 
 /**
@@ -282,9 +283,5 @@ export interface StreamHandler<T extends Stream> {
    * @param context - Ceramic context
    * @param state - Stream state
    */
-  applyCommit(
-    commitData: CommitData,
-    context: Context,
-    state?: StreamState
-  ): Promise<StreamState>
+  applyCommit(commitData: CommitData, context: Context, state?: StreamState): Promise<StreamState>
 }

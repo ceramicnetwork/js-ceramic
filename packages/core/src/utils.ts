@@ -10,7 +10,7 @@ import {
 
 import type { TileDocument } from '@ceramicnetwork/stream-tile'
 import { Dispatcher } from './dispatcher'
-import StreamID from "streamid";
+import type { StreamID } from "@ceramicnetwork/streamid";
 import type CID from 'cids'
 
 /**

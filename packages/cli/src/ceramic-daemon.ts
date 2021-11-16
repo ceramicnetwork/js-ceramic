@@ -490,7 +490,8 @@ export class CeramicDaemon {
    */
   async pinStream(req: Request, res: Response): Promise<void> {
     const streamId = StreamID.fromString(req.params.streamid || req.params.docid)
-    await this.ceramic.pin.add(streamId)
+    const { force } = req.body
+    await this.ceramic.pin.add(streamId, force)
     res.json({
       streamId: streamId.toString(),
       docId: streamId.toString(),

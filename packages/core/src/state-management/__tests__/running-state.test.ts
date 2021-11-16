@@ -1,6 +1,6 @@
 import CID from 'cids'
 import { CommitType, StreamState } from '@ceramicnetwork/common'
-import { RunningState, StateSource } from '../running-state'
+import { RunningState } from '../running-state'
 
 const FAKE_CID1 = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
 const FAKE_CID2 = new CID('bafybeig6xv5nwphfmvcnektpnojts44jqcuam7bmye2pb54adnrtccjlsu')
@@ -26,7 +26,7 @@ const second = {
 } as unknown as StreamState
 
 test('emit on distinct changes', async () => {
-  const state$ = new RunningState(initial, StateSource.STATESTORE)
+  const state$ = new RunningState(initial, true)
   const updates: StreamState[] = []
   state$.subscribe((state) => {
     updates.push(state)
@@ -58,27 +58,27 @@ test('emit on distinct changes', async () => {
 })
 
 describe('set pinned state', () => {
-  test('set in constructor then set in call to setPinnedState', async () => {
-    const state$ = new RunningState(initial, StateSource.STATESTORE)
+  test('set in constructor then set in call to markAsPinned', async () => {
+    const streamState = Object.assign({}, initial)
+    const state$ = new RunningState(streamState, true)
     expect(state$.pinnedCommits.size).toBe(1)
-    expect(state$.stateSource).toBe(StateSource.STATESTORE)
     expect(state$.pinnedCommits.has(FAKE_CID1.toString())).toBe(true)
 
-    state$.setPinnedState(second)
+    Object.assign(streamState, second)
+    state$.markAsPinned()
     expect(state$.pinnedCommits.size).toBe(2)
-    expect(state$.stateSource).toBe(StateSource.STATESTORE)
     expect(state$.pinnedCommits.has(FAKE_CID1.toString())).toBe(true)
     expect(state$.pinnedCommits.has(FAKE_CID2.toString())).toBe(true)
   })
 
-  test('not set in constructor but set in call to setPinnedStae', async () => {
-    const state$ = new RunningState(initial, StateSource.NETWORK)
-    expect(state$.pinnedCommits).toBe(undefined)
-    expect(state$.stateSource).toBe(StateSource.NETWORK)
+  test('not set in constructor but set in call to markAsPinned', async () => {
+    const streamState = Object.assign({}, initial)
+    const state$ = new RunningState(streamState, false)
+    expect(state$.pinnedCommits).toBe(null)
 
-    state$.setPinnedState(second)
+    Object.assign(streamState, second)
+    state$.markAsPinned()
     expect(state$.pinnedCommits.size).toBe(2)
-    expect(state$.stateSource).toBe(StateSource.STATESTORE)
     expect(state$.pinnedCommits.has(FAKE_CID1.toString())).toBe(true)
     expect(state$.pinnedCommits.has(FAKE_CID2.toString())).toBe(true)
   })

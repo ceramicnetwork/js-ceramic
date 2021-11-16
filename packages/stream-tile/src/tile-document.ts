@@ -224,13 +224,13 @@ export class TileDocument<T = Record<string, any>> extends Stream {
    * @param metadata - Genesis metadata
    * @param opts - Additional options
    */
-   static async deterministic<T>(
+  static async deterministic<T>(
     ceramic: CeramicApi,
-    metadata?: TileMetadataArgs,
+    metadata: TileMetadataArgs,
     opts: CreateOpts = {}
   ): Promise<TileDocument<T>> {
     opts = { ...DEFAULT_CREATE_OPTS, ...opts }
-    metadata = {...metadata, deterministic: true}
+    metadata = { ...metadata, deterministic: true }
 
     if (metadata.family == null && metadata.tags == null) {
       throw new Error('Family and/or tags are required when creating a deterministic tile document')

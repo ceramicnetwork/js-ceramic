@@ -257,11 +257,7 @@ export class Ceramic implements CeramicApi {
   }
 
   private _buildPinApi(): PinApi {
-    const boundStreamLoader = this.loadStream.bind(this)
-    const loaderWithSyncSet = (streamid) => {
-      return boundStreamLoader(streamid, { sync: SyncOptions.PREFER_CACHE })
-    }
-    return new LocalPinApi(this.repository, loaderWithSyncSet, this._logger)
+    return new LocalPinApi(this.repository, this._logger)
   }
 
   private static _generateNetworkOptions(config: CeramicConfig): CeramicNetworkOptions {

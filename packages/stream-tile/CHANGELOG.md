@@ -3,6 +3,38 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.5.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile@1.4.1...@ceramicnetwork/stream-tile@1.5.0-rc.0) (2021-11-12)
+
+
+### Bug Fixes
+
+* **core:** Optimize commit application to minimize calls to IPFS ([#1528](https://github.com/ceramicnetwork/js-ceramic/issues/1528)) ([75ee50e](https://github.com/ceramicnetwork/js-ceramic/commit/75ee50eb7ec988afdab81aa23a9f792fb5c7602c))
+* **stream-tile:** Add override for getting content with type specifier to TileDocument ([#1658](https://github.com/ceramicnetwork/js-ceramic/issues/1658)) ([7b4ff52](https://github.com/ceramicnetwork/js-ceramic/commit/7b4ff521f04122a4d4e965cc030aca3c27bd5ed6))
+* **stream-tile:** TileDocument content can always be null or undefined ([#1352](https://github.com/ceramicnetwork/js-ceramic/issues/1352)) ([983ba3e](https://github.com/ceramicnetwork/js-ceramic/commit/983ba3e8f8acabbdc4e522445ece1ae9de6c77de))
+
+
+### Features
+
+* deprecate deterministic tile metadata arg, add deterministic function ([#1771](https://github.com/ceramicnetwork/js-ceramic/issues/1771)) ([1307ceb](https://github.com/ceramicnetwork/js-ceramic/commit/1307ceb3963465b973a13be82b1229b59f563544))
+* **common,stream-tile,stream-tile-handler:** Add metadata option to forbid controller changes ([#1688](https://github.com/ceramicnetwork/js-ceramic/issues/1688)) ([85d6c97](https://github.com/ceramicnetwork/js-ceramic/commit/85d6c9789d28bb507abb9226be02e803cdc275ed))
+* Allow stream controller to differ from signer ([#1609](https://github.com/ceramicnetwork/js-ceramic/issues/1609)) ([b1c4711](https://github.com/ceramicnetwork/js-ceramic/commit/b1c4711b88ae9a3cc422cd8a8ea6b2fd8ff9286b))
+* **core:** Invalid commits don't prevent loading a stream ([#1597](https://github.com/ceramicnetwork/js-ceramic/issues/1597)) ([fb1dea1](https://github.com/ceramicnetwork/js-ceramic/commit/fb1dea15fb2587839dcca69bad829276fa790268))
+* **core:** Sync Streams with cache before returning from multiQuery ([#1548](https://github.com/ceramicnetwork/js-ceramic/issues/1548)) ([b78637d](https://github.com/ceramicnetwork/js-ceramic/commit/b78637dbb48111d8e45dc285fcd05570ad031f2e))
+* **daemon:** add raw_data endpoint ([#1395](https://github.com/ceramicnetwork/js-ceramic/issues/1395)) ([41b6109](https://github.com/ceramicnetwork/js-ceramic/commit/41b61091efc3c05ef7894ebb423fa5508cfcd689)), closes [ceramicnetwork#1394](https://github.com/ceramicnetwork/issues/1394)
+* Pass issuer to verifyJWS ([#1542](https://github.com/ceramicnetwork/js-ceramic/issues/1542)) ([3c60b0c](https://github.com/ceramicnetwork/js-ceramic/commit/3c60b0c43267e29e17fd1f676f25bf11c2ab06d5))
+
+
+
+
+
+## [1.4.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile@1.4.1-rc.0...@ceramicnetwork/stream-tile@1.4.1) (2021-11-12)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile
+
+
+
+
+
 ## [1.4.1-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile@1.4.0...@ceramicnetwork/stream-tile@1.4.1-rc.0) (2021-11-03)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-tile
