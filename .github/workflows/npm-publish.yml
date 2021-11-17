@@ -167,7 +167,9 @@ jobs:
       -
         name: Merge `develop` -> `release-candidate`
         if: ${{ steps.set-env.outputs.rc == 'true' && steps.set-env.outputs.hotfix != 'true' }}
-        run: git merge develop
+        run: |
+          git checkout -B develop refs/remotes/origin/develop
+          git merge develop
       -
         name: Initialize and build code
         if: ${{ steps.set-env.outputs.rc == 'true' }}
