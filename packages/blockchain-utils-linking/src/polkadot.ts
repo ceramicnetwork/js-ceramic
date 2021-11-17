@@ -1,4 +1,4 @@
-import { AccountID } from 'caip'
+import { AccountId } from 'caip'
 import { AuthProvider } from './auth-provider'
 import { getConsentMessage, LinkProof } from './util'
 import * as uint8arrays from 'uint8arrays'
@@ -36,8 +36,8 @@ export class PolkadotAuthProvider implements AuthProvider {
     }
   }
 
-  async accountId(): Promise<AccountID> {
-    return new AccountID({ address: this.address, chainId: CHAIN_ID })
+  async accountId(): Promise<AccountId> {
+    return new AccountId({ address: this.address, chainId: CHAIN_ID })
   }
 
   withAddress(address: string): AuthProvider {

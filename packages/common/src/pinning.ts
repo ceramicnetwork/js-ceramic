@@ -1,5 +1,5 @@
 import type CID from 'cids'
-import { IpfsApi } from './index'
+import type { IpfsApi } from './index'
 
 export interface PinningBackend {
   id: string
