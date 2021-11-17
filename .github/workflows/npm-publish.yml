@@ -58,11 +58,18 @@ jobs:
           git config user.email "${{ github.actor }}@users.noreply.github.com"
           git config user.name ${{ github.actor }}
       -
+        name: Merge down from `main` -> `rc` -> `develop`
+        if: ${{ steps.set-env.outputs.main == 'true' }}
+        run: |
+          git checkout -B release-candidate refs/remotes/origin/release-candidate
+          git merge main
+          git checkout -B develop refs/remotes/origin/develop
+          git merge release-candidate
+          git checkout main
+      -
         name: Merge `release-candidate` -> `main`
         if: ${{ steps.set-env.outputs.main == 'true' && steps.set-env.outputs.hotfix != 'true' }}
-        run: |
-          git fetch origin release-candidate
-          git merge origin/release-candidate
+        run: git merge release-candidate
       -
         name: Initialize and build code
         if: ${{ steps.set-env.outputs.main == 'true' }}
@@ -83,11 +90,11 @@ jobs:
         name: Update and push code to `release-candidate` and `develop`
         if: ${{ steps.set-env.outputs.main == 'true' }}
         run: |
-          git checkout -B release-candidate refs/remotes/origin/release-candidate
-          git merge origin/main
+          git checkout release-candidate
+          git merge main
           git push
-          git checkout -B develop refs/remotes/origin/develop
-          git merge origin/main
+          git checkout develop
+          git merge main
           git push
       -
         name: Send Discord notification
@@ -148,11 +155,16 @@ jobs:
           git config user.email "${{ github.actor }}@users.noreply.github.com"
           git config user.name ${{ github.actor }}
       -
+        name: Merge down from `rc` -> `develop`
+        if: ${{ steps.set-env.outputs.rc == 'true' }}
+        run: |
+          git checkout -B develop refs/remotes/origin/develop
+          git merge release-candidate
+          git checkout release-candidate
+      -
         name: Merge `develop` -> `release-candidate`
         if: ${{ steps.set-env.outputs.rc == 'true' && steps.set-env.outputs.hotfix != 'true' }}
-        run: |
-          git fetch origin develop
-          git merge origin/develop
+        run: git merge develop
       -
         name: Initialize and build code
         if: ${{ steps.set-env.outputs.rc == 'true' }}
@@ -173,8 +185,8 @@ jobs:
         name: Update and push code to `develop`
         if: ${{ steps.set-env.outputs.rc == 'true' }}
         run: |
-          git checkout -B develop refs/remotes/origin/develop
-          git merge origin/release-candidate
+          git checkout develop
+          git merge release-candidate
           git push
       -
         name: Send Discord notification
