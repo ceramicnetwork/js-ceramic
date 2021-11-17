@@ -157,19 +157,17 @@ jobs:
           git config user.email "${{ github.actor }}@users.noreply.github.com"
           git config user.name ${{ github.actor }}
           git fetch --all
-#      -
-#        name: Merge down from `rc` -> `develop`
-#        if: ${{ steps.set-env.outputs.rc == 'true' }}
-#        run: |
-#          git checkout -B develop refs/remotes/origin/develop
-#          git merge release-candidate
-#          git checkout release-candidate
+      -
+        name: Merge down from `rc` -> `develop`
+        if: ${{ steps.set-env.outputs.rc == 'true' }}
+        run: |
+          git checkout -B develop refs/remotes/origin/develop
+          git merge release-candidate
+          git checkout release-candidate
       -
         name: Merge `develop` -> `release-candidate`
         if: ${{ steps.set-env.outputs.rc == 'true' && steps.set-env.outputs.hotfix != 'true' }}
-        run: |
-          git checkout -B develop refs/remotes/origin/develop
-          git merge develop
+        run: git merge develop
       -
         name: Initialize and build code
         if: ${{ steps.set-env.outputs.rc == 'true' }}
