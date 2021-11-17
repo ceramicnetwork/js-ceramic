@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.1.17-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ipfs-topology@1.1.16...@ceramicnetwork/ipfs-topology@1.1.17-rc.0) (2021-11-17)
+
+
+### Bug Fixes
+
+* resolve merge conflicts during merge from `main` ([#1848](https://github.com/ceramicnetwork/js-ceramic/issues/1848)) ([6772fc6](https://github.com/ceramicnetwork/js-ceramic/commit/6772fc6c61bc9daadfd3f6d6ecf3de2bb100450d))
+
+
+
+
+
 ## [1.1.16](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ipfs-topology@1.1.16-rc.0...@ceramicnetwork/ipfs-topology@1.1.16) (2021-11-17)
 
 **Note:** Version bump only for package @ceramicnetwork/ipfs-topology

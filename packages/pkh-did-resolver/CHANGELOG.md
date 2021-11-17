@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.3.3-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/pkh-did-resolver@0.3.2...pkh-did-resolver@0.3.3-rc.0) (2021-11-17)
+
+
+### Bug Fixes
+
+* resolve merge conflicts during merge from `main` ([#1848](https://github.com/ceramicnetwork/js-ceramic/issues/1848)) ([6772fc6](https://github.com/ceramicnetwork/js-ceramic/commit/6772fc6c61bc9daadfd3f6d6ecf3de2bb100450d))
+
+
+
+
+
 ## [0.3.2](https://github.com/ceramicnetwork/js-ceramic/compare/pkh-did-resolver@0.3.2-rc.0...pkh-did-resolver@0.3.2) (2021-11-17)
 
 **Note:** Version bump only for package pkh-did-resolver
