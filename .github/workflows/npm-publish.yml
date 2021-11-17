@@ -149,7 +149,7 @@ jobs:
         with:
           token: ${{ secrets.GH_TOKEN }}
           ref: release-candidate
-          fetch: 0
+          fetch-depth: 0
       -
         name: Configure git
         if: ${{ steps.set-env.outputs.rc == 'true' }}
