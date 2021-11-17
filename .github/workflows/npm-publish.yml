@@ -38,9 +38,6 @@ jobs:
           if [[ -n $PUBLISH_ARGS ]]; then
             echo "::set-output name=publishArgs::-- $PUBLISH_ARGS"
           fi
-
-          git config user.email "${{ github.actor }}@users.noreply.github.com"
-          git config user.name ${{ github.actor }}
       -
         name: Setup Node
         if: ${{ steps.set-env.outputs.main == 'true' }}
@@ -54,6 +51,12 @@ jobs:
         with:
           token: ${{ secrets.GH_TOKEN }}
           ref: main
+      -
+        name: Configure git
+        if: ${{ steps.set-env.outputs.main == 'true' }}
+        run: |
+          git config user.email "${{ github.actor }}@users.noreply.github.com"
+          git config user.name ${{ github.actor }}
       -
         name: Merge `release-candidate` -> `main`
         if: ${{ steps.set-env.outputs.main == 'true' && steps.set-env.outputs.hotfix != 'true' }}
@@ -125,9 +128,6 @@ jobs:
           if [[ -n $PUBLISH_ARGS ]]; then
             echo "::set-output name=publishArgs::-- $PUBLISH_ARGS"
           fi
-
-          git config user.email "${{ github.actor }}@users.noreply.github.com"
-          git config user.name ${{ github.actor }}
       -
         name: Setup Node
         if: ${{ steps.set-env.outputs.rc == 'true' }}
@@ -141,6 +141,12 @@ jobs:
         with:
           token: ${{ secrets.GH_TOKEN }}
           ref: release-candidate
+      -
+        name: Configure git
+        if: ${{ steps.set-env.outputs.rc == 'true' }}
+        run: |
+          git config user.email "${{ github.actor }}@users.noreply.github.com"
+          git config user.name ${{ github.actor }}
       -
         name: Merge `develop` -> `release-candidate`
         if: ${{ steps.set-env.outputs.rc == 'true' && steps.set-env.outputs.hotfix != 'true' }}
