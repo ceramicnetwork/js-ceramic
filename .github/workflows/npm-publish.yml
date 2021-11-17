@@ -13,7 +13,7 @@ on:
         default: 'false'
       desc:
         description: 'Release description'
-        required: true
+        required: false
         default: ''
 
 jobs:
@@ -22,7 +22,7 @@ jobs:
     steps:
       -
         name: Setup environment
-        id: set-vars
+        id: set-env
         run: |
           PUBLISH_ARGS=""
           if [[ "${{ github.event.inputs.release_type }}" == "both" || "${{ github.event.inputs.release_type }}" == "main" ]]; then
@@ -38,49 +38,47 @@ jobs:
           if [[ -n $PUBLISH_ARGS ]]; then
             echo "::set-output name=publishArgs::-- $PUBLISH_ARGS"
           fi
+
+          git config user.email "${{ github.actor }}@users.noreply.github.com"
+          git config user.name ${{ github.actor }}
       -
         name: Setup Node
-        if: ${{ steps.set-vars.outputs.main == 'true' }}
+        if: ${{ steps.set-env.outputs.main == 'true' }}
         uses: actions/setup-node@v1
         with:
           node-version: 14
       -
         name: Checkout `main` branch
-        if: ${{ steps.set-vars.outputs.main == 'true' }}
+        if: ${{ steps.set-env.outputs.main == 'true' }}
         uses: actions/checkout@v2
         with:
           token: ${{ secrets.GH_TOKEN }}
           ref: main
-          fetch-depth: 0
       -
         name: Merge `release-candidate` -> `main`
-        if: ${{ steps.set-vars.outputs.main == 'true' && steps.set-vars.outputs.hotfix != 'true' }}
+        if: ${{ steps.set-env.outputs.main == 'true' && steps.set-env.outputs.hotfix != 'true' }}
         run: |
-          git config user.email "${{ github.actor }}@users.noreply.github.com"
-          git config user.name ${{ github.actor }}
           git fetch origin release-candidate
           git merge origin/release-candidate
       -
         name: Initialize and build code
-        if: ${{ steps.set-vars.outputs.main == 'true' }}
+        if: ${{ steps.set-env.outputs.main == 'true' }}
         run: |
           npm set unsafe-perm true
           npm ci && npm run build
       -
         name: Publish packages to NPM
-        if: ${{ steps.set-vars.outputs.main == 'true' }}
+        if: ${{ steps.set-env.outputs.main == 'true' }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
-          PUBLISH_ARGS: ${{ steps.set-vars.outputs.publishArgs }}
+          PUBLISH_ARGS: ${{ steps.set-env.outputs.publishArgs }}
         run: |
-          git config user.email "${{ github.actor }}@users.noreply.github.com"
-          git config user.name ${{ github.actor }}
           npm config set //registry.npmjs.org/:_authToken $NODE_AUTH_TOKEN
           npm run publish:latest $PUBLISH_ARGS
       -
         name: Update and push code to `release-candidate` and `develop`
-        if: ${{ steps.set-vars.outputs.main == 'true' }}
+        if: ${{ steps.set-env.outputs.main == 'true' }}
         run: |
           git checkout -B release-candidate refs/remotes/origin/release-candidate
           git merge origin/main
@@ -90,7 +88,7 @@ jobs:
           git push
       -
         name: Send Discord notification
-        if: ${{ steps.set-vars.outputs.main == 'true' }}
+        if: ${{ steps.set-env.outputs.main == 'true' }}
         run: |
           # Prepare notification body
           echo '{"embeds":[{"title":"**Release Published**","description":"' > embed.json
@@ -111,7 +109,7 @@ jobs:
     steps:
       -
         name: Setup environment
-        id: set-vars
+        id: set-env
         run: |
           PUBLISH_ARGS=""
           if [[ "${{ github.event.inputs.release_type }}" == "both" || "${{ github.event.inputs.release_type }}" == "rc" ]]; then
@@ -127,53 +125,54 @@ jobs:
           if [[ -n $PUBLISH_ARGS ]]; then
             echo "::set-output name=publishArgs::-- $PUBLISH_ARGS"
           fi
+
+          git config user.email "${{ github.actor }}@users.noreply.github.com"
+          git config user.name ${{ github.actor }}
       -
         name: Setup Node
-        if: ${{ steps.set-vars.outputs.rc == 'true' }}
+        if: ${{ steps.set-env.outputs.rc == 'true' }}
         uses: actions/setup-node@v1
         with:
           node-version: 14
       -
         name: Checkout `release-candidate` branch
-        if: ${{ steps.set-vars.outputs.rc == 'true' }}
+        if: ${{ steps.set-env.outputs.rc == 'true' }}
         uses: actions/checkout@v2
         with:
           token: ${{ secrets.GH_TOKEN }}
           ref: release-candidate
       -
         name: Merge `develop` -> `release-candidate`
-        if: ${{ steps.set-vars.outputs.rc == 'true' && steps.set-vars.outputs.hotfix != 'true' }}
+        if: ${{ steps.set-env.outputs.rc == 'true' && steps.set-env.outputs.hotfix != 'true' }}
         run: |
           git fetch origin develop
           git merge origin/develop
       -
         name: Initialize and build code
-        if: ${{ steps.set-vars.outputs.rc == 'true' }}
+        if: ${{ steps.set-env.outputs.rc == 'true' }}
         run: |
           npm set unsafe-perm true
           npm ci && npm run build
       -
         name: Publish packages to NPM
-        if: ${{ steps.set-vars.outputs.rc == 'true' }}
+        if: ${{ steps.set-env.outputs.rc == 'true' }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
-          PUBLISH_ARGS: ${{ steps.set-vars.outputs.publishArgs }}
+          PUBLISH_ARGS: ${{ steps.set-env.outputs.publishArgs }}
         run: |
-          git config user.email "${{ github.actor }}@users.noreply.github.com"
-          git config user.name ${{ github.actor }}
           npm config set //registry.npmjs.org/:_authToken $NODE_AUTH_TOKEN
           npm run publish:release-candidate $PUBLISH_ARGS
       -
         name: Update and push code to `develop`
-        if: ${{ steps.set-vars.outputs.rc == 'true' }}
+        if: ${{ steps.set-env.outputs.rc == 'true' }}
         run: |
           git checkout -B develop refs/remotes/origin/develop
           git merge origin/release-candidate
           git push
       -
         name: Send Discord notification
-        if: ${{ steps.set-vars.outputs.rc == 'true' }}
+        if: ${{ steps.set-env.outputs.rc == 'true' }}
         run: |
           # Prepare notification body
           echo '{"embeds":[{"title":"**Release Candidate Published**","description":"' > embed.json
