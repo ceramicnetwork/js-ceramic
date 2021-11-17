@@ -3,6 +3,8 @@ name: Publish images to Docker Hub
 on:
   push:
     branches: [ develop, release-candidate, main ]
+    paths-ignore:
+      - '.github/**'
   workflow_dispatch: # manually triggered
 
 jobs:
