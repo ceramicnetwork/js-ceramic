@@ -109,7 +109,7 @@ jobs:
           sed -i '3,6d' embed.json
           sed -i '3 s/\ -/-/' embed.json
           sed -i '4,$ s/\-/\\n-/' embed.json
-          sed -i '2i ${{ github.event.inputs.desc }}' embed.json
+          sed -i '2i \ ${{ github.event.inputs.desc }}' embed.json
 
           # Send notification
           res=$(curl -X POST ${{ secrets.DISCORD_RELEASE_WEBHOOK }} -H "Content-Type: application/json" -d @embed.json) || exit 1
@@ -149,7 +149,6 @@ jobs:
         with:
           token: ${{ secrets.GH_TOKEN }}
           ref: release-candidate
-          fetch-depth: 0
       -
         name: Configure git
         if: ${{ steps.set-env.outputs.rc == 'true' }}
@@ -203,7 +202,7 @@ jobs:
           sed -i '3,4d' embed.json
           sed -i '3 s/\ -/-/' embed.json
           sed -i '4,$ s/\-/\\n-/' embed.json
-          sed -i '2i ${{ github.event.inputs.desc }}' embed.json
+          sed -i '2i \ ${{ github.event.inputs.desc }}' embed.json
 
           # Send notification
           res=$(curl -X POST ${{ secrets.DISCORD_RELEASE_WEBHOOK }} -H "Content-Type: application/json" -d @embed.json) || exit 1
