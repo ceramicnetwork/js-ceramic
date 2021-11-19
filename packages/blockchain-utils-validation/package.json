@@ -47,6 +47,7 @@
     "@polkadot/util": "^7.1.1",
     "@polkadot/util-crypto": "^7.0.2",
     "@smontero/eosio-local-provider": "^0.0.3",
+    "@solana/wallet-adapter-base": "^0.6.0",
     "@taquito/signer": "^9.2.0",
     "eth-sig-util": "^3.0.0",
     "ganache-core": "^2.13.1",
