@@ -1,4 +1,5 @@
-import { Logger, LoggerModes } from '@overnightjs/logger'
+import { LoggerModes } from 'jet-logger'
+import Logger from 'jet-logger'
 import * as logfmt from 'logfmt'
 import util from 'util'
 import flatten from 'flat'
