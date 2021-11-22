@@ -1,8 +1,8 @@
 import type { CidList, PinningBackend, PinningInfo, IpfsApi } from '@ceramicnetwork/common'
-import type CID from 'cids'
+import { CID } from 'multiformats/cid'
 import * as sha256 from '@stablelib/sha256'
 import * as base64 from '@stablelib/base64'
-import ipfsClient from 'ipfs-http-client'
+import { create as createIpfsClient } from 'ipfs-http-client'
 
 const FROM_CONTEXT_HOST = 'ipfs+context'
 
@@ -65,7 +65,7 @@ export class IpfsPinning implements PinningBackend {
         throw new NoIpfsInstanceError()
       }
     } else {
-      this.#ipfs = ipfsClient.create({
+      this.#ipfs = createIpfsClient({
         url: this.ipfsAddress,
       })
     }

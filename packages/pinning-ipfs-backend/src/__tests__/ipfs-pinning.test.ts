@@ -1,5 +1,5 @@
-import ipfsClient from 'ipfs-http-client'
-import CID from 'cids'
+import { create } from 'ipfs-http-client'
+import { CID } from 'multiformats/cid'
 import { IpfsPinning, NoIpfsInstanceError } from '../index'
 import { asyncIterableFromArray } from './async-iterable-from-array.util'
 import type { IPFS } from 'ipfs-core-types'
@@ -7,7 +7,7 @@ import type { IPFS } from 'ipfs-core-types'
 jest.mock('ipfs-http-client')
 
 beforeEach(() => {
-  (ipfsClient.create as any).mockClear()
+  (create as any).mockClear()
 })
 
 describe('constructor', () => {
@@ -43,7 +43,7 @@ describe('#open', () => {
     const ipfs = {} as unknown as IPFS
     const pinning = new IpfsPinning('ipfs+https://example.com', ipfs)
     pinning.open()
-    expect(ipfsClient.create).toBeCalledWith({ url: 'https://example.com:5001' })
+    expect(create).toBeCalledWith({ url: 'https://example.com:5001' })
   })
 })
 
@@ -58,7 +58,7 @@ describe('#pin', () => {
 
     const pinning = new IpfsPinning('ipfs+context', ipfs)
     pinning.open()
-    const cid = new CID('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D')
+    const cid = CID.parse('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D')
     await pinning.pin(cid)
     expect(add).toBeCalledWith(cid, { recursive: false })
   })
@@ -66,7 +66,7 @@ describe('#pin', () => {
   test('silently pass if no IPFS instance', async () => {
     const ipfs = null
     const pinning = new IpfsPinning('ipfs+context', ipfs)
-    const cid = new CID('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D')
+    const cid = CID.parse('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D')
     await expect(pinning.pin(cid)).resolves.toBeUndefined()
   })
 })
@@ -82,7 +82,7 @@ describe('#unpin', () => {
 
     const pinning = new IpfsPinning('ipfs+context', ipfs)
     pinning.open()
-    const cid = new CID('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D')
+    const cid = CID.parse('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D')
     await pinning.unpin(cid)
     expect(rm).toBeCalledWith(cid)
   })
@@ -90,7 +90,7 @@ describe('#unpin', () => {
   test('silently pass if no IPFS instance', async () => {
     const ipfs = null
     const pinning = new IpfsPinning('ipfs+context', ipfs)
-    const cid = new CID('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D')
+    const cid = CID.parse('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D')
     await expect(pinning.unpin(cid)).resolves.toBeUndefined()
   })
 })
@@ -98,8 +98,8 @@ describe('#unpin', () => {
 describe('#ls', () => {
   test('return list of cids pinned', async () => {
     const cids = [
-      new CID('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D'),
-      new CID('QmWXShtJXt6Mw3FH7hVCQvR56xPcaEtSj4YFSGjp2QxA4v'),
+      CID.parse('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D'),
+      CID.parse('QmWXShtJXt6Mw3FH7hVCQvR56xPcaEtSj4YFSGjp2QxA4v'),
     ]
     const lsResult = cids.map((cid) => ({ cid: cid, type: 'direct' }))
     const ls = jest.fn(() => asyncIterableFromArray(lsResult))
