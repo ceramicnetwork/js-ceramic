@@ -13,7 +13,7 @@ import { TileDocument } from '@ceramicnetwork/stream-tile'
 import LegacyResolver from './legacyResolver'
 import * as u8a from 'uint8arrays'
 import { StreamID } from '@ceramicnetwork/streamid'
-import CID from 'cids'
+import { CID } from 'multiformats/cid'
 import { errorRepresentation, withResolutionError } from './error-representation'
 import { CommitType } from '@ceramicnetwork/common'
 //import dagCBOR from 'ipld-dag-cbor'
@@ -23,7 +23,7 @@ const DID_JSON = 'application/did+json'
 
 const isLegacyDid = (didId: string): boolean => {
   try {
-    new CID(didId)
+    CID.parse(didId)
     return true
   } catch (e) {
     return false
