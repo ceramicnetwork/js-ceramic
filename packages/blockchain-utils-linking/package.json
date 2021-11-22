@@ -25,27 +25,27 @@
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
-    "@stablelib/sha256": "^1.0.0",
+    "@stablelib/sha256": "^1.0.1",
     "caip": "~1.0.0",
-    "near-api-js": "^0.42.0",
-    "uint8arrays": "^2.0.5"
+    "near-api-js": "^0.43.1",
+    "uint8arrays": "^3.0.0"
   },
   "devDependencies": {
     "@ceramicnetwork/streamid": "^1.3.5-rc.0",
-    "@ethersproject/providers": "^5.4.5",
+    "@ethersproject/providers": "^5.5.0",
     "@glif/filecoin-address": "1.1.0",
-    "@glif/local-managed-provider": "1.1.0",
+    "@glif/local-managed-provider": "1.1.1",
     "@polkadot/api": "^4.6.2",
     "@polkadot/keyring": "^6.2.1",
     "@polkadot/types": "^4.6.2",
     "@polkadot/util": "^7.1.1",
     "@polkadot/util-crypto": "^7.0.2",
     "@smontero/eosio-local-provider": "^0.0.3",
-    "@taquito/signer": "^9.2.0",
-    "@taquito/taquito": "^9.2.0",
+    "@taquito/signer": "^11.0.1",
+    "@taquito/taquito": "^11.0.1",
     "@tendermint/sig": "^0.6.0",
-    "@zondax/filecoin-signing-tools": "^0.15.0",
-    "eth-sig-util": "^3.0.0",
+    "@zondax/filecoin-signing-tools": "^0.18.1",
+    "eth-sig-util": "^3.0.1",
     "ganache-core": "^2.13.1"
   },
   "jest": {
