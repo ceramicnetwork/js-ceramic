@@ -1,4 +1,4 @@
-import type CID from 'cids'
+import { CID } from 'multiformats/cid'
 import type {
   CidList,
   PinningBackend,
