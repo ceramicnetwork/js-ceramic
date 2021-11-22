@@ -1,6 +1,7 @@
 import { Caip10LinkHandler } from '../caip10-link-handler'
 import cloneDeep from 'lodash.clonedeep'
-import CID from 'cids'
+import { CID } from 'multiformats/cid'
+import { decode as decodeMultiHash } from 'multiformats/hashes/digest'
 import { Caip10Link } from '@ceramicnetwork/stream-caip10-link'
 import { CeramicApi, CommitType, Context, TestUtils } from '@ceramicnetwork/common'
 import sha256 from '@stablelib/sha256'
@@ -10,16 +11,16 @@ import { AccountId } from 'caip'
 const digest = (input: string) =>
   uint8arrays.toString(sha256.hash(uint8arrays.fromString(input)), 'base16')
 const hash = (data: string): CID =>
-  new CID(1, 'sha2-256', Buffer.from('1220' + digest(data), 'hex'))
+  CID.create(1, 0x12, decodeMultiHash(Buffer.from('1220' + digest(data), 'hex')))
 
-const FAKE_CID_1 = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
-const FAKE_CID_2 = new CID('bafybeig6xv5nwphfmvcnektpnojts44jqcuam7bmye2pb54adnrtccjlsu')
-const FAKE_CID_3 = new CID('bafybeig6xv5nwphfmvcnektpnojts55jqcuam7bmye2pb54adnrtccjlsu')
-const FAKE_CID_4 = new CID('bafybeig6xv5nwphfmvcnektpnojts66jqcuam7bmye2pb54adnrtccjlsu')
-const FAKE_CID_5 = new CID('bafybeig6xv5nwphfmvcnektpnojts44jqcuam7bmye2pb54adnrtccjlse')
-const FAKE_CID_6 = new CID('bafybeig6xv5nwphfmvcnektpnojts55jqcuam7bmye2pb54adnrtccjleu')
-const FAKE_CID_7 = new CID('bafybeig6xv5nwphfmvcnektpnojts66jqcuam7bmye2pb54adnrtccjlwu')
-const FAKE_CID_8 = new CID('bafybeig6xv5nwphfmvcnektpnojts66jqcuam6bmye2pb54adnrtccjlwu')
+const FAKE_CID_1 = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
+const FAKE_CID_2 = CID.parse('bafybeig6xv5nwphfmvcnektpnojts44jqcuam7bmye2pb54adnrtccjlsu')
+const FAKE_CID_3 = CID.parse('bafybeig6xv5nwphfmvcnektpnojts55jqcuam7bmye2pb54adnrtccjlsu')
+const FAKE_CID_4 = CID.parse('bafybeig6xv5nwphfmvcnektpnojts66jqcuam7bmye2pb54adnrtccjlsu')
+const FAKE_CID_5 = CID.parse('bafybeig6xv5nwphfmvcnektpnojts44jqcuam7bmye2pb54adnrtccjlse')
+const FAKE_CID_6 = CID.parse('bafybeig6xv5nwphfmvcnektpnojts55jqcuam7bmye2pb54adnrtccjleu')
+const FAKE_CID_7 = CID.parse('bafybeig6xv5nwphfmvcnektpnojts66jqcuam7bmye2pb54adnrtccjlwu')
+const FAKE_CID_8 = CID.parse('bafybeig6xv5nwphfmvcnektpnojts66jqcuam6bmye2pb54adnrtccjlwu')
 
 const ACCOUNT = '0x0544DcF4fcE959C6C4F3b7530190cB5E1BD67Cb8@eip155:1'
 
