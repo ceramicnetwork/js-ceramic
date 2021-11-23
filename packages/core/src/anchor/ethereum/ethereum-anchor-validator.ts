@@ -4,6 +4,7 @@ import * as providers from '@ethersproject/providers'
 import { LRUMap } from 'lru_map'
 import { AnchorProof, AnchorValidator, DiagnosticsLogger, fetchJson } from '@ceramicnetwork/common'
 import { Block, TransactionResponse } from '@ethersproject/providers'
+import { base16 } from 'multiformats/bases/base16'
 
 /**
  * Ethereum network configuration
@@ -122,12 +123,12 @@ export default class EthereumAnchorValidator implements AnchorValidator {
    * @param anchorProof - Anchor proof instance
    */
   async validateChainInclusion(anchorProof: AnchorProof): Promise<void> {
-    const decoded = decode(anchorProof.txHash.multihash)
+    const decoded = decode(anchorProof.txHash.multihash.bytes)
     const txHash = '0x' + uint8arrays.toString(decoded.digest, 'base16')
 
     const [transaction, block] = await this._getTransactionAndBlockInfo(anchorProof.chainId, txHash)
     const txValueHexNumber = parseInt(transaction.data, 16)
-    const rootValueHexNumber = parseInt('0x' + anchorProof.root.toBaseEncodedString('base16'), 16)
+    const rootValueHexNumber = parseInt('0x' + anchorProof.root.toString(base16), 16)
 
     if (txValueHexNumber !== rootValueHexNumber) {
       throw new Error(`The root CID ${anchorProof.root.toString()} is not in the transaction`)

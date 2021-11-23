@@ -1,4 +1,4 @@
-import CID from 'cids'
+import { CID } from 'multiformats/cid'
 import * as providers from '@ethersproject/providers'
 import { LRUMap } from 'lru_map'
 import {
@@ -193,7 +193,7 @@ export default class EthereumAnchorService implements AnchorService {
         }
       case 'COMPLETED': {
         const { anchorCommit } = json
-        const anchorCommitCid = new CID(anchorCommit.cid.toString())
+        const anchorCommitCid = CID.parse(anchorCommit.cid.toString())
         return {
           status: AnchorStatus.ANCHORED,
           streamId: cidStream.streamId,

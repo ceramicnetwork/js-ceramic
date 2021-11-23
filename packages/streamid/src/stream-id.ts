@@ -1,7 +1,9 @@
 import { CID } from 'multiformats/cid'
+import * as Block from 'multiformats/block'
 import { base36 } from 'multiformats/bases/base36'
+import { sha256 as hasher } from 'multiformats/hashes/sha2'
 import varint from 'varint'
-import * as dagCBOR from '@ipld/dag-cbor'
+import * as codec from '@ipld/dag-cbor'
 import { concat as uint8ArrayConcat } from 'uint8arrays'
 import { STREAMID_CODEC } from './constants'
 import { readCidNoThrow, readVarint } from './reading-bytes'
@@ -144,8 +146,8 @@ export class StreamID implements StreamRef {
    * ```
    */
   static async fromGenesis(type: string | number, genesis: Record<string, any>): Promise<StreamID> {
-    const cid = CID.decode(new Uint8Array(dagCBOR.encode(genesis)))
-    return new StreamID(type, cid)
+    const block = await Block.encode({ value: genesis, codec, hasher })
+    return new StreamID(type, block.cid)
   }
 
   /**

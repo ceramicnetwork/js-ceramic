@@ -1,7 +1,7 @@
 import StreamID from '@ceramicnetwork/streamid'
-import CID from 'cids'
-import { UnreachableCaseError } from '@ceramicnetwork/common'
-import dagCBOR from 'ipld-dag-cbor'
+import { CID } from 'multiformats/cid'
+import { UnreachableCaseError, toCID } from '@ceramicnetwork/common'
+import * as dagCBOR from '@ipld/dag-cbor'
 import * as multihashes from 'multihashes'
 import * as sha256 from '@stablelib/sha256'
 import { TextDecoder, TextEncoder } from 'util'
@@ -48,7 +48,7 @@ const textDecoder = new TextDecoder('utf-8')
 
 function messageHash(message: any): string {
   // DAG-CBOR encoding
-  const encoded = dagCBOR.util.serialize(message)
+  const encoded = dagCBOR.encode(message)
 
   // SHA-256 hash
   const id = sha256.hash(encoded)
@@ -123,12 +123,12 @@ export function deserialize(message: any): PubsubMessage {
       return {
         typ: MsgType.UPDATE,
         stream,
-        tip: new CID(parsed.tip),
+        tip: toCID(parsed.tip),
       }
     }
     case MsgType.RESPONSE: {
       const tips: Map<string, CID> = new Map()
-      Object.entries<string>(parsed.tips).forEach(([key, value]) => tips.set(key, new CID(value)))
+      Object.entries<string>(parsed.tips).forEach(([key, value]) => tips.set(key, toCID(value)))
       return {
         typ: MsgType.RESPONSE,
         id: parsed.id,
