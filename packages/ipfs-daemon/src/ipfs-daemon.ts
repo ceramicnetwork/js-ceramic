@@ -1,7 +1,7 @@
-import IPFS from 'ipfs-core'
+import { create as createIPFS } from 'ipfs-core'
 import { HttpApi } from 'ipfs-http-server'
 import { HttpGateway } from 'ipfs-http-gateway'
-import dagJose from 'dag-jose'
+import * as dagJose from 'dag-jose'
 import { IpfsTopology } from '@ceramicnetwork/ipfs-topology'
 import { DiagnosticsLogger, LogLevel, IpfsApi } from '@ceramicnetwork/common'
 import { HealthcheckServer } from './healthcheck-server'
@@ -138,7 +138,7 @@ export class IpfsDaemon {
       }
     )
 
-    const ipfs = await IPFS.create({
+    const ipfs = await createIPFS({
       start: false,
       repo,
       ipld: { codecs: [dagJose] },

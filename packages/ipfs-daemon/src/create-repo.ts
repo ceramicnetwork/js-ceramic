@@ -98,7 +98,7 @@ function createBackend(
   createDefault: (pathPrefix, repoPath, options) => Datastore
 ): Datastore {
   const backend = repoOptions.backends[name] as StorageBackend
-  const repoPath = path.join(repoOptions.path, name === 'root' ? '' : 'datastore')
+  const repoPath = path.join(repoOptions.path, name === 'root' ? '' : name)
 
   switch (backend) {
     case StorageBackend.DEFAULT: {
@@ -160,6 +160,7 @@ export function createRepo(options: RepoOptions, s3Options: S3Options): IPFSRepo
 
       return Promise.resolve(codecLookup[codeOrName])
     },
-    createBackends(options, s3)
+    createBackends(options, s3),
+    { repoLock: notALock }
   )
 }
