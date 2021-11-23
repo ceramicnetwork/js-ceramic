@@ -11,14 +11,12 @@ let ipfs: IpfsApi
 let ceramic: Ceramic
 
 let repository: Repository
-let controllers: string[]
 
 beforeAll(async () => {
   ipfs = await createIPFS()
   ceramic = await createCeramic(ipfs)
 
   repository = ceramic.repository
-  controllers = [ceramic.did.id]
 })
 
 afterAll(async () => {

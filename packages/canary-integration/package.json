@@ -20,7 +20,7 @@
     "@ceramicnetwork/core": "^1.11.1-rc.0",
     "@ceramicnetwork/stream-caip10-link": "^1.2.3-rc.0",
     "@ceramicnetwork/stream-tile": "^1.5.1-rc.0",
-    "@truffle/hdwallet-provider": "^1.5.0",
+    "@truffle/hdwallet-provider": "^1.7.0",
     "ganache-core": "^2.13.1",
     "key-did-resolver": "^1.4.0"
   },

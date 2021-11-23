@@ -1,11 +1,6 @@
 import { LoggerProvider } from '@ceramicnetwork/common'
 import { Pubsub } from '../pubsub'
-import { deserialize, MsgType, serialize } from '../pubsub-message'
-import { StreamID } from '@ceramicnetwork/streamid'
-import { bufferCount, first } from 'rxjs/operators'
-import * as random from '@stablelib/random'
-import { asIpfsMessage } from './as-ipfs-message'
-import { from } from 'rxjs'
+import { deserialize, MsgType } from '../pubsub-message'
 import { delay } from '../../__tests__/delay'
 import { PubsubKeepalive } from '../pubsub-keepalive'
 
@@ -13,29 +8,8 @@ const TOPIC = 'test'
 const loggerProvider = new LoggerProvider()
 const pubsubLogger = loggerProvider.makeServiceLogger('pubsub')
 const diagnosticsLogger = loggerProvider.getDiagnosticsLogger()
-const FAKE_STREAM_ID = StreamID.fromString(
-  'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
-)
-const OUTER_PEER_ID = 'OUTER_PEER_ID'
-const PEER_ID = 'PEER_ID'
 
-const LENGTH = 2
-const MESSAGES = Array.from({ length: LENGTH }).map((_, index) => {
-  return {
-    typ: MsgType.QUERY as MsgType.QUERY,
-    id: index.toString(),
-    stream: FAKE_STREAM_ID,
-  }
-})
-const OUTER_MESSAGES = MESSAGES.map((message) => asIpfsMessage(message, OUTER_PEER_ID))
-const OUTER_GARBAGE = Array.from({ length: LENGTH }).map(() => {
-  return {
-    from: OUTER_PEER_ID,
-    data: random.randomBytes(32),
-    topicIDs: [TOPIC],
-    seqno: random.randomBytes(10),
-  }
-})
+const PEER_ID = 'PEER_ID'
 
 test('publish keepalive', async () => {
   const ipfs = {

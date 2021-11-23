@@ -1,6 +1,6 @@
 import { AuthProvider } from './auth-provider'
 import { AccountId } from 'caip'
-import { encodeRpcMessage, getConsentMessage, LinkProof, RpcMessage } from './util'
+import { encodeRpcMessage, getConsentMessage, LinkProof } from './util'
 import * as uint8arrays from 'uint8arrays'
 import * as sha256 from '@stablelib/sha256'
 import { Ocap, OcapParams, OcapTypes, buildOcapRequestMessage } from './ocap-util'

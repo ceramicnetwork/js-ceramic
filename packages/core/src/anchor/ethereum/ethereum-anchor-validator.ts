@@ -2,7 +2,7 @@ import * as uint8arrays from 'uint8arrays'
 import { decode } from 'multihashes'
 import * as providers from '@ethersproject/providers'
 import { LRUMap } from 'lru_map'
-import { AnchorProof, AnchorValidator, DiagnosticsLogger, fetchJson } from '@ceramicnetwork/common'
+import { AnchorProof, AnchorValidator, DiagnosticsLogger } from '@ceramicnetwork/common'
 import { Block, TransactionResponse } from '@ethersproject/providers'
 import { base16 } from 'multiformats/bases/base16'
 

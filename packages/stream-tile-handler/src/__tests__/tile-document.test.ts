@@ -113,14 +113,15 @@ const serialize = (data: any): any => {
     }
     return serialized
   }
-  if (!CID.isCID(data) && typeof data === 'object') {
+  const cid = CID.asCID(data)
+  if (!cid && typeof data === 'object') {
     const serialized: Record<string, any> = {}
     for (const prop in data) {
       serialized[prop] = serialize(data[prop])
     }
     return serialized
   }
-  if (CID.isCID(data)) {
+  if (cid) {
     return data.toString()
   }
   return data

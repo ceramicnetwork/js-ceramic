@@ -1,6 +1,6 @@
 import { CID } from 'multiformats/cid'
 import { PinningAggregation, UnknownPinningService } from '../index'
-import { CidList, PinningBackend, PinningInfo, Context } from '@ceramicnetwork/common'
+import { CidList, PinningBackend, PinningInfo } from '@ceramicnetwork/common'
 import { IpfsPinning } from '@ceramicnetwork/pinning-ipfs-backend'
 import { PowergatePinningBackend } from '@ceramicnetwork/pinning-powergate-backend'
 import type { IPFS } from 'ipfs-core-types'

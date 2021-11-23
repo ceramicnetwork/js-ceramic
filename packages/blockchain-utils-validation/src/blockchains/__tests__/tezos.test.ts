@@ -25,7 +25,6 @@ type ProofTestCase = {
 }
 
 let provider: TezosProvider
-let publicKeyHash: string
 let publicKey: string
 let validProof: LinkProof
 let invalidSignatureProof: LinkProof
@@ -45,7 +44,6 @@ beforeAll(async () => {
   }
 
   // create proof for did
-  publicKeyHash = await provider.signer.publicKeyHash()
   publicKey = await provider.signer.publicKey()
   const authProvider = new TezosAuthProvider(provider)
   validProof = await authProvider.createLink(did)

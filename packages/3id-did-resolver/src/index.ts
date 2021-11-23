@@ -16,7 +16,6 @@ import { StreamID } from '@ceramicnetwork/streamid'
 import { CID } from 'multiformats/cid'
 import { errorRepresentation, withResolutionError } from './error-representation'
 import { CommitType } from '@ceramicnetwork/common'
-//import dagCBOR from 'ipld-dag-cbor'
 
 const DID_LD_JSON = 'application/did+ld+json'
 const DID_JSON = 'application/did+json'
