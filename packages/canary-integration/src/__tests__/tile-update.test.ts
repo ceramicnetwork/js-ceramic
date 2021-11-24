@@ -6,7 +6,7 @@ import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { DID } from 'dids'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import KeyResolver from 'key-did-resolver'
-import crypto from 'crypto'
+import { randomBytes } from '@stablelib/random'
 
 let ipfs: IpfsApi
 let ceramic: CeramicApi
@@ -33,7 +33,7 @@ test('can update a tile document with valid asDID', async () => {
 test('cannot update a tile document with invalid asDID', async () => {
   const newTile = await TileDocument.create(ceramic, { foo: 'bar' })
 
-  const provider = new Ed25519Provider(crypto.randomBytes(32))
+  const provider = new Ed25519Provider(randomBytes(32))
   const did = new DID({ provider, resolver: KeyResolver.getResolver() })
 
   await did.authenticate()
