@@ -1,19 +1,18 @@
 import { BlockchainHandler } from '../blockchain-handler'
 import { LinkProof } from '@ceramicnetwork/blockchain-utils-linking'
-import * as uint8arrays from 'uint8arrays'
-import crypto from 'crypto'
-import nacl from 'tweetnacl'
 import { AccountID } from 'caip'
+import * as uint8arrays from 'uint8arrays'
+import { verify } from '@stablelib/ed25519'
 
 const verifySignature = async (
   pubKey: Uint8Array,
   message: string,
   signature: Uint8Array
 ): Promise<Boolean> => {
-  const verified = nacl.sign.detached.verify(
+  const verified = verify(
+    pubKey,
     uint8arrays.fromString(message),
     signature,
-    pubKey
   )
   return verified
 }

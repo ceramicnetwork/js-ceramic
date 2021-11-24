@@ -49,7 +49,7 @@
     "@zondax/filecoin-signing-tools": "^0.15.0",
     "eth-sig-util": "^3.0.0",
     "ganache-core": "^2.13.1",
-    "tweetnacl": "^1.0.3"
+    "@stablelib/ed25519": "^1.0.2"
   },
   "jest": {
     "testEnvironment": "node",

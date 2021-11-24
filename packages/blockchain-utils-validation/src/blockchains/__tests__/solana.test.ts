@@ -2,7 +2,7 @@ import { validateLink } from '../solana'
 import { Keypair } from '@solana/web3.js';
 import { MessageSignerWalletAdapterProps } from '@solana/wallet-adapter-base';
 import { SolanaAuthProvider } from '@ceramicnetwork/blockchain-utils-linking'
-import nacl from 'tweetnacl'
+import { sign } from '@stablelib/ed25519'
 
 const did = 'did:3:bafysdfwefwe'
 const privKey = 'mdqVWeFekT7pqy5T49+tV12jO0m+ESW7ki4zSU9JiCgbL0kJbj5dvQ/PqcDAzZLZqzshVEs01d1KZdmLh4uZIg=='
@@ -17,7 +17,7 @@ class MyWalletAdapter implements MessageSignerWalletAdapterProps {
   }
 
   async signMessage(message: Uint8Array): Promise<Uint8Array> {
-    return nacl.sign.detached(message, this._keyPair.secretKey)
+    return sign(this._keyPair.secretKey, message)
   }
 }
 

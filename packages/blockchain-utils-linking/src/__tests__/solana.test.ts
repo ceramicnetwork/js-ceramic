@@ -1,8 +1,7 @@
 import { MessageSignerWalletAdapterProps } from '@solana/wallet-adapter-base';
 import { SOLANA_MAINNET_CHAIN_REF, SolanaAuthProvider } from '../solana'
 import { Keypair } from '@solana/web3.js';
-import { Buffer } from 'buffer';
-import * as nacl from 'tweetnacl';
+import { sign } from '@stablelib/ed25519'
 import * as uint8arrays from 'uint8arrays'
 
 const did = 'did:3:bafysdfwefwe'
@@ -18,14 +17,14 @@ class MyWalletAdapter implements MessageSignerWalletAdapterProps {
   }
 
   async signMessage(message: Uint8Array): Promise<Uint8Array> {
-    return nacl.sign.detached(message, this._keyPair.secretKey)
+    return sign(this._keyPair.secretKey, message)
   }
 }
 
 let keyPairEd25519: Keypair
 
 beforeAll(() => {
-  keyPairEd25519 = Keypair.fromSecretKey(Buffer.from(privKey, 'base64'))
+  keyPairEd25519 = Keypair.fromSecretKey(uint8arrays.fromString(privKey, 'base64'))
   global.Date.now = jest.fn().mockImplementation(() => 666000)
 })
 
