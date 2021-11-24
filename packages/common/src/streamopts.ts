@@ -1,3 +1,5 @@
+import { DID } from 'dids'
+
 /**
  * Options that are related to pinning streams.
  */
@@ -94,7 +96,9 @@ export interface AnchorOpts {
 /**
  * Extra options passed as part of operations that update streams.
  */
-export interface UpdateOpts extends PublishOpts, AnchorOpts, InternalOpts, PinningOpts {}
+export interface UpdateOpts extends PublishOpts, AnchorOpts, InternalOpts, PinningOpts {
+  asDID?: DID
+}
 
 /**
  * Extra options passed as part of operations that create streams
