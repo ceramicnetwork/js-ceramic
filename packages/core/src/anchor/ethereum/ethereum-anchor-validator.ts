@@ -1,5 +1,5 @@
 import * as uint8arrays from 'uint8arrays'
-import { decode } from 'multihashes'
+import { decode } from 'multiformats/hashes/digest'
 import * as providers from '@ethersproject/providers'
 import { LRUMap } from 'lru_map'
 import { AnchorProof, AnchorValidator, DiagnosticsLogger } from '@ceramicnetwork/common'

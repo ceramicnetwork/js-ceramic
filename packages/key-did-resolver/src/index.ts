@@ -1,5 +1,5 @@
 import varint from 'varint'
-import multibase from 'multibase'
+import { base58btc } from 'multiformats/bases/base58'
 import type {
   DIDResolutionResult,
   DIDResolutionOptions,
@@ -34,7 +34,7 @@ export function getResolver(): ResolverRegistry {
         didDocumentMetadata: {},
       }
       try {
-        const multicodecPubKey: any = multibase.decode(parsed.id)
+        const multicodecPubKey: any = base58btc.decode(parsed.id)
         const keyType = varint.decode(multicodecPubKey)
         const pubKeyBytes = multicodecPubKey.slice(varint.decode.bytes)
         const doc = await prefixToDriverMap[keyType].keyToDidDoc(pubKeyBytes, parsed.id)

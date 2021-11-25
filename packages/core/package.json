@@ -51,7 +51,6 @@
     "lodash.clonedeep": "^4.5.0",
     "lru_map": "^0.4.1",
     "multiformats": "^9.4.10",
-    "multihashes": "^4.0.2",
     "p-queue": "^6.6.1",
     "rxjs": "^7.4.0",
     "uint8arrays": "^3.0.0"

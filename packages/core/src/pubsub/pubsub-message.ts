@@ -2,7 +2,7 @@ import StreamID from '@ceramicnetwork/streamid'
 import { CID } from 'multiformats/cid'
 import { UnreachableCaseError, toCID } from '@ceramicnetwork/common'
 import * as dagCBOR from '@ipld/dag-cbor'
-import * as multihashes from 'multihashes'
+import { create as createDigest } from 'multiformats/hashes/digest'
 import * as sha256 from '@stablelib/sha256'
 import { TextDecoder, TextEncoder } from 'util'
 import * as uint8arrays from 'uint8arrays'
@@ -54,7 +54,7 @@ function messageHash(message: any): string {
   const id = sha256.hash(encoded)
 
   // Multihash encoding
-  return uint8arrays.toString(multihashes.encode(id, 'sha2-256'), 'base64url')
+  return uint8arrays.toString(createDigest(0x12, id).bytes, 'base64url')
 }
 
 export function buildQueryMessage(streamId: StreamID): QueryMessage {
