@@ -16,7 +16,7 @@ import {
   StreamUtils,
 } from '@ceramicnetwork/common'
 import { RunningState } from './running-state'
-import { CID } from 'multiformats/cid'
+import type { CID } from 'multiformats/cid'
 import { catchError, concatMap, takeUntil } from 'rxjs/operators'
 import { empty, Observable, Subject, Subscription, timer } from 'rxjs'
 import { SnapshotState } from './snapshot-state'

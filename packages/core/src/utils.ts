@@ -7,7 +7,7 @@ import { CommitData, CommitType, StreamUtils } from '@ceramicnetwork/common'
 import type { TileDocument } from '@ceramicnetwork/stream-tile'
 import { Dispatcher } from './dispatcher'
 import type { StreamID } from '@ceramicnetwork/streamid'
-import { CID } from 'multiformats/cid'
+import type { CID } from 'multiformats/cid'
 
 /**
  * Various utility functions

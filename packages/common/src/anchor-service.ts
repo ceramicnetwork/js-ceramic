@@ -1,4 +1,4 @@
-import { CID } from 'multiformats/cid'
+import type { CID } from 'multiformats/cid'
 import type { Observable } from 'rxjs'
 import type { AnchorProof, AnchorStatus } from './stream'
 import type { CeramicApi } from './ceramic-api'

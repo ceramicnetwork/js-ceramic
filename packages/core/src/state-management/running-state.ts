@@ -6,7 +6,7 @@ import {
   SubscriptionSet,
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
-import { CID } from 'multiformats/cid'
+import type { CID } from 'multiformats/cid'
 
 export class RunningState extends StreamStateSubject implements RunningStateLike {
   readonly id: StreamID

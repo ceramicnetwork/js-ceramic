@@ -1,4 +1,4 @@
-import { CID } from 'multiformats/cid'
+import type { CID } from 'multiformats/cid'
 import cloneDeep from 'lodash.clonedeep'
 import type { Context } from './context'
 import { StreamID } from '@ceramicnetwork/streamid'

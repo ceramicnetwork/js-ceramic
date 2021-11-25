@@ -1,5 +1,5 @@
 import type { CidList, PinningBackend, PinningInfo, IpfsApi } from '@ceramicnetwork/common'
-import { CID } from 'multiformats/cid'
+import type { CID } from 'multiformats/cid'
 import * as sha256 from '@stablelib/sha256'
 import * as base64 from '@stablelib/base64'
 import { create as createIpfsClient } from 'ipfs-http-client'

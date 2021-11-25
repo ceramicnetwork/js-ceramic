@@ -1,4 +1,4 @@
-import { CID } from 'multiformats/cid'
+import type { CID } from 'multiformats/cid'
 import type { CidList, PinningBackend, PinningInfo } from '@ceramicnetwork/common'
 import { createPow, Pow } from '@textile/powergate-client'
 import * as sha256 from '@stablelib/sha256'
