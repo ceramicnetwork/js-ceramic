@@ -7,31 +7,9 @@ import * as u8a from 'uint8arrays'
 
 describe('Secp521r1 mapper', () => {
 
-    // testing the key from the did:key from the raw public key
-    it('successfully resolves the document from did', async () => {
-        const id = "zWGhj2NTyCiehTPioanYSuSrfB7RJKwZj6bBUDNojfGEA21nr5NcBsHme7hcVSbptpWKarJpTcw814J3X8gVU9gZmeKM27JpGA5wNMzt8JZwjDyf8EzCJg5ve5GR2Xfm7d9Djp73V7s35KPeKe7VHMzmL8aPw4XBniNej5sXapPFoBs5R8m195HK"
-
-        const multicodecPubKey = multibase.decode(id)
-        varint.decode(multicodecPubKey) // decode is changing param multicodecPubKey as well
-        const pubKeyBytes = multicodecPubKey.slice(varint.decode.bytes)
-        const doc = await mapper.keyToDidDoc(pubKeyBytes, id)
-        expect(doc).toMatchSnapshot()
-    })
-
-    // testing the key from the did:key from the raw public key
-    it('successfully resolves the document from did', async () => {
-        const id = "zWGhiwzmESrRykvUMCSNCadMyhzgAMVXST3KLSxY5unckUdYaGBZs59WMkMggeenMFAr938YxbEesbQ7myxmqDYo3m7xgFu8ppYDx2waz2Lw6eD9aADLn6Cw6Q6gTrH6sry211Z16nvVW25dsY6bZKhGKt4DeB1gGfvBk8bxwKuxTUtZrgwrMm1S"
-
-        const multicodecPubKey = multibase.decode(id)
-        varint.decode(multicodecPubKey) // decode is changing param multicodecPubKey as well
-        const pubKeyBytes = multicodecPubKey.slice(varint.decode.bytes)
-        const doc = await mapper.keyToDidDoc(pubKeyBytes, id)
-        expect(doc).toMatchSnapshot()
-    })
-   
      // testing the key from the did:key from the compressed public key
     it('successfully resolves the document from did', async () => {
-        const id = "z2J9gaYxrKVpdoG9A4gRnmpnRCcxU6agDtFVVBVdn1JedouoZN7SzcyREXXzWgt3gGiwpoHq7K68X4m32D8HgzG8wv3sY5j7"
+        const id = "z2J9gaYYsyxoBFetnNbSfcYnnq8TxqCMdniwCMHhANy3VjTCdEskGw5Yy9XPGFzNsV6DavGDHuaAsXDnFDiod48seQYx1hpv"
 
         const multicodecPubKey = multibase.decode(id)
         varint.decode(multicodecPubKey) // decode is changing param multicodecPubKey as well
@@ -51,19 +29,18 @@ describe('Secp521r1 mapper', () => {
         expect(doc).toMatchSnapshot()
      })
 
-  
-/**
-    // testing the key from the did:key from the uncompressed public key
+
+          // testing the key from the did:key from the compressed public key
     it('successfully resolves the document from did', async () => {
-        const id = ""
+        const id = "z2J9gaYxrKVpdoG9A4gRnmpnRCcxU6agDtFVVBVdn1JedouoZN7SzcyREXXzWgt3gGiwpoHq7K68X4m32D8HgzG8wv3sY5j7"
 
         const multicodecPubKey = multibase.decode(id)
         varint.decode(multicodecPubKey) // decode is changing param multicodecPubKey as well
         const pubKeyBytes = multicodecPubKey.slice(varint.decode.bytes)
         const doc = await mapper.keyToDidDoc(pubKeyBytes, id)
         expect(doc).toMatchSnapshot()
-    })
-  **/
+     })
+  
 })
 
 test('expect ECPointDecompress to throw an error for undefined', () => {
@@ -102,6 +79,7 @@ test('expect publicKeyBytesToXY to throw an error for and integer input', () => 
       }).toThrowError('input must be a Uint8Array');
 });
 
+/*
 test('test a uncompressed public key in hex to an x,y point with x, and y url encoded with an unsupported prefix', () => {
    const inputPublicKeyHex = '03f9c36f8964623378bdc068d4bce07ed17c8fa486f9ac0c2613ca3c8c306d7bb61cd36717b8ac5e4fea8ad23dc8d0783c2318ee4ad7a80db6e0026ad0b072a24f'
    const publicKey_u8a = pubKeyHexToUint8Array(inputPublicKeyHex);
@@ -227,6 +205,8 @@ test('key decompression (y-coordinate odd)', () => {
 
    expect(point).toEqual(output);
 });
+
+**/
 
 //**** end of tests
 

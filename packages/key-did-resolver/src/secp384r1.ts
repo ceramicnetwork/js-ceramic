@@ -106,8 +106,8 @@ export function keyToDidDoc (pubKeyBytes: Uint8Array, fingerprint: string): any 
  *  uncompressed with 0x04 prefix, or compressed with 0x02 prefix if even and 0x03 prefix if odd.
  * @returns point x,y with coordinates as multibase encoded base64urls
  * 
- * See the the did:key specification: https://w3c-ccg.github.io/did-method-key/#p-256. 
- * At present only raw p-256 keys are covered in the specification.
+ * See the the did:key specification: https://w3c-ccg.github.io/did-method-key/#p-384. 
+ * At present only raw p-384 keys are covered in the specification.
  * @throws TypeError: input cannot be null or undefined.
  * @throws Error: Unexpected pubKeyBytes
  * @internal

@@ -101,13 +101,12 @@ export function keyToDidDoc (pubKeyBytes: Uint8Array, fingerprint: string): any 
 }
 
 /**
- * 
- * @param pubKeyBytes - public key as uncompressed byte array with no prefix (raw key), 
- *  uncompressed with 0x04 prefix, or compressed with 0x02 prefix if even and 0x03 prefix if odd.
+ *
+ * @param pubKeyBytes - public key as compressed with 0x02 prefix if even and 0x03 prefix if odd.
  * @returns point x,y with coordinates as multibase encoded base64urls
- * 
- * See the the did:key specification: https://w3c-ccg.github.io/did-method-key/#p-256. 
- * At present only raw p-256 keys are covered in the specification.
+ *
+ * See the the did:key specification: https://w3c-ccg.github.io/did-method-key/#p-521.
+ * For compression see: https://tools.ietf.org/id/draft-jivsov-ecc-compact-05.html#rfc.section.3
  * @throws TypeError: input cannot be null or undefined.
  * @throws Error: Unexpected pubKeyBytes
  * @internal
@@ -117,23 +116,9 @@ export function pubKeyBytesToXY(pubKeyBytes: Uint8Array) : base64urlPoint  {
     throw new TypeError('input must be a Uint8Array');
   }
   const publicKeyHex = nist_p_common.pubKeyBytesToHex(pubKeyBytes);
-  const bytesCount = publicKeyHex.length / 2;
-
-  // raw p-521 key
-  if(bytesCount == 132) {
-     return nist_p_common.publicKeyToXY(publicKeyHex); 
-   }
-
-  // uncompressed p-521 key, SEC format
-  if(bytesCount == 133) {
-   if(publicKeyHex.slice(0,2) == '04') {
-     const publicKey = publicKeyHex.slice(2);
-     return nist_p_common.publicKeyToXY(publicKey);
-   }
-  }
 
   // compressed p-521 key, SEC format
-  if(bytesCount == 67) {
+  if(130 <= publicKeyHex.length <= 131) {
    if(publicKeyHex.slice(0,2) == '03' || publicKeyHex.slice(0,2) == '02') {
      const publicKey = u8a.fromString(publicKeyHex,'base16')
      const point = ECPointDecompress(publicKey);
@@ -141,5 +126,5 @@ export function pubKeyBytesToXY(pubKeyBytes: Uint8Array) : base64urlPoint  {
     }
   }
 
-     throw new Error('Unexpected pubKeyBytes');
+    throw new Error('Unexpected pubKeyBytes');
 }

@@ -31,6 +31,37 @@ Object {
 }
 `;
 
+exports[`Secp384r1 mapper Secp384r1 mapper successfully resolves the document from did:key from compressed public key #3 1`] = `
+Object {
+  "assertionMethod": Array [
+    "did:key:z82Lm2BuneDPATu4BSWzhZwuandHAwY4DJrv3gAbo8RvG6yBTLJx6AhgoSmKy8XSK4HaPvA#z82Lm2BuneDPATu4BSWzhZwuandHAwY4DJrv3gAbo8RvG6yBTLJx6AhgoSmKy8XSK4HaPvA",
+  ],
+  "authentication": Array [
+    "did:key:z82Lm2BuneDPATu4BSWzhZwuandHAwY4DJrv3gAbo8RvG6yBTLJx6AhgoSmKy8XSK4HaPvA#z82Lm2BuneDPATu4BSWzhZwuandHAwY4DJrv3gAbo8RvG6yBTLJx6AhgoSmKy8XSK4HaPvA",
+  ],
+  "capabilityDelegation": Array [
+    "did:key:z82Lm2BuneDPATu4BSWzhZwuandHAwY4DJrv3gAbo8RvG6yBTLJx6AhgoSmKy8XSK4HaPvA#z82Lm2BuneDPATu4BSWzhZwuandHAwY4DJrv3gAbo8RvG6yBTLJx6AhgoSmKy8XSK4HaPvA",
+  ],
+  "capabilityInvocation": Array [
+    "did:key:z82Lm2BuneDPATu4BSWzhZwuandHAwY4DJrv3gAbo8RvG6yBTLJx6AhgoSmKy8XSK4HaPvA#z82Lm2BuneDPATu4BSWzhZwuandHAwY4DJrv3gAbo8RvG6yBTLJx6AhgoSmKy8XSK4HaPvA",
+  ],
+  "id": "did:key:z82Lm2BuneDPATu4BSWzhZwuandHAwY4DJrv3gAbo8RvG6yBTLJx6AhgoSmKy8XSK4HaPvA",
+  "verificationMethod": Array [
+    Object {
+      "controller": "did:key:z82Lm2BuneDPATu4BSWzhZwuandHAwY4DJrv3gAbo8RvG6yBTLJx6AhgoSmKy8XSK4HaPvA",
+      "id": "did:key:z82Lm2BuneDPATu4BSWzhZwuandHAwY4DJrv3gAbo8RvG6yBTLJx6AhgoSmKy8XSK4HaPvA#z82Lm2BuneDPATu4BSWzhZwuandHAwY4DJrv3gAbo8RvG6yBTLJx6AhgoSmKy8XSK4HaPvA",
+      "publicKeyJwk": Object {
+        "crv": "P-384",
+        "kty": "EC",
+        "x": "uqyUMSOYczyVlnIxFi-nVGRpjs1BY7BIxVCOeq3WAopZN0OVZxG7WKe0kCbZ2zHkr",
+        "y": "u7B9EM5quaUrqZ75_RzkAgS13NBDRBNRaSjK5jq1XP4OvNiBu2s1oMnOawysGikBP",
+      },
+      "type": "JsonWebKey2020",
+    },
+  ],
+}
+`;
+
 exports[`Secp384r1 mapper Secp384r1 mapper successfully resolves the document from did:key from compressed public key 1`] = `
 Object {
   "assertionMethod": Array [
@@ -93,6 +124,37 @@ Object {
 }
 `;
 
+exports[`Secp384r1 mapper Secp384r1 mapper successfully resolves the document from did:key from raw public key #3 1`] = `
+Object {
+  "assertionMethod": Array [
+    "did:key:zFwfwzpxzCAUjJK6X7cLDFjxbp6G3iJy6AcntWLBu5SxJeGBjge7jVkmARyUqkJideMFofkhGF94wLopAmuqCH1JQ3fbzxmrBwKK52qF5w429kUJk5NdR8BJwDxpeWryV4oAH27#zFwfwzpxzCAUjJK6X7cLDFjxbp6G3iJy6AcntWLBu5SxJeGBjge7jVkmARyUqkJideMFofkhGF94wLopAmuqCH1JQ3fbzxmrBwKK52qF5w429kUJk5NdR8BJwDxpeWryV4oAH27",
+  ],
+  "authentication": Array [
+    "did:key:zFwfwzpxzCAUjJK6X7cLDFjxbp6G3iJy6AcntWLBu5SxJeGBjge7jVkmARyUqkJideMFofkhGF94wLopAmuqCH1JQ3fbzxmrBwKK52qF5w429kUJk5NdR8BJwDxpeWryV4oAH27#zFwfwzpxzCAUjJK6X7cLDFjxbp6G3iJy6AcntWLBu5SxJeGBjge7jVkmARyUqkJideMFofkhGF94wLopAmuqCH1JQ3fbzxmrBwKK52qF5w429kUJk5NdR8BJwDxpeWryV4oAH27",
+  ],
+  "capabilityDelegation": Array [
+    "did:key:zFwfwzpxzCAUjJK6X7cLDFjxbp6G3iJy6AcntWLBu5SxJeGBjge7jVkmARyUqkJideMFofkhGF94wLopAmuqCH1JQ3fbzxmrBwKK52qF5w429kUJk5NdR8BJwDxpeWryV4oAH27#zFwfwzpxzCAUjJK6X7cLDFjxbp6G3iJy6AcntWLBu5SxJeGBjge7jVkmARyUqkJideMFofkhGF94wLopAmuqCH1JQ3fbzxmrBwKK52qF5w429kUJk5NdR8BJwDxpeWryV4oAH27",
+  ],
+  "capabilityInvocation": Array [
+    "did:key:zFwfwzpxzCAUjJK6X7cLDFjxbp6G3iJy6AcntWLBu5SxJeGBjge7jVkmARyUqkJideMFofkhGF94wLopAmuqCH1JQ3fbzxmrBwKK52qF5w429kUJk5NdR8BJwDxpeWryV4oAH27#zFwfwzpxzCAUjJK6X7cLDFjxbp6G3iJy6AcntWLBu5SxJeGBjge7jVkmARyUqkJideMFofkhGF94wLopAmuqCH1JQ3fbzxmrBwKK52qF5w429kUJk5NdR8BJwDxpeWryV4oAH27",
+  ],
+  "id": "did:key:zFwfwzpxzCAUjJK6X7cLDFjxbp6G3iJy6AcntWLBu5SxJeGBjge7jVkmARyUqkJideMFofkhGF94wLopAmuqCH1JQ3fbzxmrBwKK52qF5w429kUJk5NdR8BJwDxpeWryV4oAH27",
+  "verificationMethod": Array [
+    Object {
+      "controller": "did:key:zFwfwzpxzCAUjJK6X7cLDFjxbp6G3iJy6AcntWLBu5SxJeGBjge7jVkmARyUqkJideMFofkhGF94wLopAmuqCH1JQ3fbzxmrBwKK52qF5w429kUJk5NdR8BJwDxpeWryV4oAH27",
+      "id": "did:key:zFwfwzpxzCAUjJK6X7cLDFjxbp6G3iJy6AcntWLBu5SxJeGBjge7jVkmARyUqkJideMFofkhGF94wLopAmuqCH1JQ3fbzxmrBwKK52qF5w429kUJk5NdR8BJwDxpeWryV4oAH27#zFwfwzpxzCAUjJK6X7cLDFjxbp6G3iJy6AcntWLBu5SxJeGBjge7jVkmARyUqkJideMFofkhGF94wLopAmuqCH1JQ3fbzxmrBwKK52qF5w429kUJk5NdR8BJwDxpeWryV4oAH27",
+      "publicKeyJwk": Object {
+        "crv": "P-384",
+        "kty": "EC",
+        "x": "uxfAJIinIc0VwGlTcYxkkG6yts9HJcyrYJDHBm6TtWtXpci8sXFMU0xpYpzT96WVb",
+        "y": "uYgiq_i1DUlA8H0cBDwB-HafHEofMt6s6LR5-WZTPh1zj2VLz2MU4QV4FOPhEi3Go",
+      },
+      "type": "JsonWebKey2020",
+    },
+  ],
+}
+`;
+
 exports[`Secp384r1 mapper Secp384r1 mapper successfully resolves the document from did:key from raw public key 1`] = `
 Object {
   "assertionMethod": Array [
@@ -117,6 +179,68 @@ Object {
         "kty": "EC",
         "x": "ulInTxl8fjLKp_UCrxI0WDklahi-7-_6JbtiHjiRvMvhedhKVdHBfi2HCY8t_QJyc",
         "y": "uy6N1IC-2mXxHreETBW7K3mBcw0qGr3CWHCs-yl09yCQRLcyfGv7XhqAngHOu51Zv",
+      },
+      "type": "JsonWebKey2020",
+    },
+  ],
+}
+`;
+
+exports[`Secp384r1 mapper successfully resolves the document from did 1`] = `
+Object {
+  "assertionMethod": Array [
+    "did:key:z28xDr9xiQCrXbooH2aC3eMVv74QKvxBgP1DHCMBWz6CvTHmdt4rtsH9JSHGsyPzdQpfMBJSSAHFh1zTjiyLhKchrMnNfBVEtCziwX2yy3YiQY9t6WcVUpSdVHaxeRz5x6JYoGGPJ#z28xDr9xiQCrXbooH2aC3eMVv74QKvxBgP1DHCMBWz6CvTHmdt4rtsH9JSHGsyPzdQpfMBJSSAHFh1zTjiyLhKchrMnNfBVEtCziwX2yy3YiQY9t6WcVUpSdVHaxeRz5x6JYoGGPJ",
+  ],
+  "authentication": Array [
+    "did:key:z28xDr9xiQCrXbooH2aC3eMVv74QKvxBgP1DHCMBWz6CvTHmdt4rtsH9JSHGsyPzdQpfMBJSSAHFh1zTjiyLhKchrMnNfBVEtCziwX2yy3YiQY9t6WcVUpSdVHaxeRz5x6JYoGGPJ#z28xDr9xiQCrXbooH2aC3eMVv74QKvxBgP1DHCMBWz6CvTHmdt4rtsH9JSHGsyPzdQpfMBJSSAHFh1zTjiyLhKchrMnNfBVEtCziwX2yy3YiQY9t6WcVUpSdVHaxeRz5x6JYoGGPJ",
+  ],
+  "capabilityDelegation": Array [
+    "did:key:z28xDr9xiQCrXbooH2aC3eMVv74QKvxBgP1DHCMBWz6CvTHmdt4rtsH9JSHGsyPzdQpfMBJSSAHFh1zTjiyLhKchrMnNfBVEtCziwX2yy3YiQY9t6WcVUpSdVHaxeRz5x6JYoGGPJ#z28xDr9xiQCrXbooH2aC3eMVv74QKvxBgP1DHCMBWz6CvTHmdt4rtsH9JSHGsyPzdQpfMBJSSAHFh1zTjiyLhKchrMnNfBVEtCziwX2yy3YiQY9t6WcVUpSdVHaxeRz5x6JYoGGPJ",
+  ],
+  "capabilityInvocation": Array [
+    "did:key:z28xDr9xiQCrXbooH2aC3eMVv74QKvxBgP1DHCMBWz6CvTHmdt4rtsH9JSHGsyPzdQpfMBJSSAHFh1zTjiyLhKchrMnNfBVEtCziwX2yy3YiQY9t6WcVUpSdVHaxeRz5x6JYoGGPJ#z28xDr9xiQCrXbooH2aC3eMVv74QKvxBgP1DHCMBWz6CvTHmdt4rtsH9JSHGsyPzdQpfMBJSSAHFh1zTjiyLhKchrMnNfBVEtCziwX2yy3YiQY9t6WcVUpSdVHaxeRz5x6JYoGGPJ",
+  ],
+  "id": "did:key:z28xDr9xiQCrXbooH2aC3eMVv74QKvxBgP1DHCMBWz6CvTHmdt4rtsH9JSHGsyPzdQpfMBJSSAHFh1zTjiyLhKchrMnNfBVEtCziwX2yy3YiQY9t6WcVUpSdVHaxeRz5x6JYoGGPJ",
+  "verificationMethod": Array [
+    Object {
+      "controller": "did:key:z28xDr9xiQCrXbooH2aC3eMVv74QKvxBgP1DHCMBWz6CvTHmdt4rtsH9JSHGsyPzdQpfMBJSSAHFh1zTjiyLhKchrMnNfBVEtCziwX2yy3YiQY9t6WcVUpSdVHaxeRz5x6JYoGGPJ",
+      "id": "did:key:z28xDr9xiQCrXbooH2aC3eMVv74QKvxBgP1DHCMBWz6CvTHmdt4rtsH9JSHGsyPzdQpfMBJSSAHFh1zTjiyLhKchrMnNfBVEtCziwX2yy3YiQY9t6WcVUpSdVHaxeRz5x6JYoGGPJ#z28xDr9xiQCrXbooH2aC3eMVv74QKvxBgP1DHCMBWz6CvTHmdt4rtsH9JSHGsyPzdQpfMBJSSAHFh1zTjiyLhKchrMnNfBVEtCziwX2yy3YiQY9t6WcVUpSdVHaxeRz5x6JYoGGPJ",
+      "publicKeyJwk": Object {
+        "crv": "P-384",
+        "kty": "EC",
+        "x": "u13jbi1YTx-7wOHlnZb2Ij6ynya1Je1_HNGBDsTabfqQTXZJkj4gG08np89c5ohnc",
+        "y": "ucyFSEmvuLWzhsgRptQNEt-zdEo0DpQTFmSPpv6MR6D_J2dC_pK8MDEBqw1DjLpuB",
+      },
+      "type": "JsonWebKey2020",
+    },
+  ],
+}
+`;
+
+exports[`Secp384r1 mapper successfully resolves the document from did 2`] = `
+Object {
+  "assertionMethod": Array [
+    "did:key:z28xDrNf4RYwmuLQmfFBWWwiaxZtqyfME8BGUHemrsKUn6ShdzCLZWq2ZhmmSpVK2rtSLoeA1CJjrwGjZ64yCjJ9odVTYDdAMSu2LsTL1c5ehyQdkatFonfv3d7VNCByDrqntBoVz#z28xDrNf4RYwmuLQmfFBWWwiaxZtqyfME8BGUHemrsKUn6ShdzCLZWq2ZhmmSpVK2rtSLoeA1CJjrwGjZ64yCjJ9odVTYDdAMSu2LsTL1c5ehyQdkatFonfv3d7VNCByDrqntBoVz",
+  ],
+  "authentication": Array [
+    "did:key:z28xDrNf4RYwmuLQmfFBWWwiaxZtqyfME8BGUHemrsKUn6ShdzCLZWq2ZhmmSpVK2rtSLoeA1CJjrwGjZ64yCjJ9odVTYDdAMSu2LsTL1c5ehyQdkatFonfv3d7VNCByDrqntBoVz#z28xDrNf4RYwmuLQmfFBWWwiaxZtqyfME8BGUHemrsKUn6ShdzCLZWq2ZhmmSpVK2rtSLoeA1CJjrwGjZ64yCjJ9odVTYDdAMSu2LsTL1c5ehyQdkatFonfv3d7VNCByDrqntBoVz",
+  ],
+  "capabilityDelegation": Array [
+    "did:key:z28xDrNf4RYwmuLQmfFBWWwiaxZtqyfME8BGUHemrsKUn6ShdzCLZWq2ZhmmSpVK2rtSLoeA1CJjrwGjZ64yCjJ9odVTYDdAMSu2LsTL1c5ehyQdkatFonfv3d7VNCByDrqntBoVz#z28xDrNf4RYwmuLQmfFBWWwiaxZtqyfME8BGUHemrsKUn6ShdzCLZWq2ZhmmSpVK2rtSLoeA1CJjrwGjZ64yCjJ9odVTYDdAMSu2LsTL1c5ehyQdkatFonfv3d7VNCByDrqntBoVz",
+  ],
+  "capabilityInvocation": Array [
+    "did:key:z28xDrNf4RYwmuLQmfFBWWwiaxZtqyfME8BGUHemrsKUn6ShdzCLZWq2ZhmmSpVK2rtSLoeA1CJjrwGjZ64yCjJ9odVTYDdAMSu2LsTL1c5ehyQdkatFonfv3d7VNCByDrqntBoVz#z28xDrNf4RYwmuLQmfFBWWwiaxZtqyfME8BGUHemrsKUn6ShdzCLZWq2ZhmmSpVK2rtSLoeA1CJjrwGjZ64yCjJ9odVTYDdAMSu2LsTL1c5ehyQdkatFonfv3d7VNCByDrqntBoVz",
+  ],
+  "id": "did:key:z28xDrNf4RYwmuLQmfFBWWwiaxZtqyfME8BGUHemrsKUn6ShdzCLZWq2ZhmmSpVK2rtSLoeA1CJjrwGjZ64yCjJ9odVTYDdAMSu2LsTL1c5ehyQdkatFonfv3d7VNCByDrqntBoVz",
+  "verificationMethod": Array [
+    Object {
+      "controller": "did:key:z28xDrNf4RYwmuLQmfFBWWwiaxZtqyfME8BGUHemrsKUn6ShdzCLZWq2ZhmmSpVK2rtSLoeA1CJjrwGjZ64yCjJ9odVTYDdAMSu2LsTL1c5ehyQdkatFonfv3d7VNCByDrqntBoVz",
+      "id": "did:key:z28xDrNf4RYwmuLQmfFBWWwiaxZtqyfME8BGUHemrsKUn6ShdzCLZWq2ZhmmSpVK2rtSLoeA1CJjrwGjZ64yCjJ9odVTYDdAMSu2LsTL1c5ehyQdkatFonfv3d7VNCByDrqntBoVz#z28xDrNf4RYwmuLQmfFBWWwiaxZtqyfME8BGUHemrsKUn6ShdzCLZWq2ZhmmSpVK2rtSLoeA1CJjrwGjZ64yCjJ9odVTYDdAMSu2LsTL1c5ehyQdkatFonfv3d7VNCByDrqntBoVz",
+      "publicKeyJwk": Object {
+        "crv": "P-384",
+        "kty": "EC",
+        "x": "u_FO6MCqEmTY2UV0ParU1tRp4UMtWnzJBGE10QA_M9oLA0rAgLlo6sSnR3hXI-Coa",
+        "y": "ug7GFwNFlpQJ4W1pUrnYJQwQVbozZ0NjpNfAvGNlgkQui0VAFNe-0R8kUM2_wjYpp",
       },
       "type": "JsonWebKey2020",
     },
