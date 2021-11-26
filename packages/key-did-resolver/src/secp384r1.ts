@@ -48,7 +48,7 @@ export function keyToDidDoc (pubKeyBytes: Uint8Array, fingerprint: string): any 
       controller: did,
        publicKeyJwk: {
          kty: "EC",
-               crv: "P-256",
+               crv: "P-384",
                x: key.xm,
                y: key.ym,
        }, 
@@ -66,7 +66,7 @@ export function keyToDidDoc (pubKeyBytes: Uint8Array, fingerprint: string): any 
  *
  * Code based on: https://stackoverflow.com/questions/17171542/algorithm-for-elliptic-curve-point-compression/30431547#30431547
  *
- * @param - 33 byte compressed public key. 1st byte: 0x02 for even or 0x03 for odd. Following 32 bytes: x coordinate expressed as big-endian.
+ * @param - 49 byte compressed public key. 1st byte: 0x02 for even or 0x03 for odd. Following 32 bytes: x coordinate expressed as big-endian.
  * @throws TypeError: input cannot be null or undefined.
  */
  export function ECPointDecompress( comp : Uint8Array ) : BigIntPoint {
@@ -75,8 +75,8 @@ export function keyToDidDoc (pubKeyBytes: Uint8Array, fingerprint: string): any 
    }
   // two, prime, b, and pIdent are constants for the P-256 curve
   const two = BigInt(2);
-  const prime = (two ** 256n) - (two ** 224n) + (two ** 192n) + (two ** 96n) - 1n;
-  const b = 41058363725152142129326129780047268409114441015993725554835256314039467401291n;
+  const prime = (two ** 384n) - (two ** 128n) - (two ** 96n) + (two ** 32n ) - 1n;
+  const b = 27580193559959705877849011840389048093056905856361568521428707301988689241309860865136260764883745107765439761230575n;
   const pIdent = (prime + 1n) / 4n;
 
   const signY = BigInt(comp[0] - 2);
@@ -106,8 +106,8 @@ export function keyToDidDoc (pubKeyBytes: Uint8Array, fingerprint: string): any 
  *  uncompressed with 0x04 prefix, or compressed with 0x02 prefix if even and 0x03 prefix if odd.
  * @returns point x,y with coordinates as multibase encoded base64urls
  * 
- * See the the did:key specification: https://w3c-ccg.github.io/did-method-key/#p-256. 
- * At present only raw p-256 keys are covered in the specification.
+ * See the the did:key specification: https://w3c-ccg.github.io/did-method-key/#p-384. 
+ * At present only raw p-384 keys are covered in the specification.
  * @throws TypeError: input cannot be null or undefined.
  * @throws Error: Unexpected pubKeyBytes
  * @internal
@@ -119,21 +119,21 @@ export function pubKeyBytesToXY(pubKeyBytes: Uint8Array) : base64urlPoint  {
   const publicKeyHex = nist_p_common.pubKeyBytesToHex(pubKeyBytes);
   const bytesCount = publicKeyHex.length / 2;
 
-  // raw p-256 key
-  if(bytesCount == 64) {
+  // raw p-384 key
+  if(bytesCount == 96) {
      return nist_p_common.publicKeyToXY(publicKeyHex); 
    }
 
-  // uncompressed p-256 key, SEC format
-  if(bytesCount == 65) {
+  // uncompressed p-384 key, SEC format
+  if(bytesCount == 97) {
    if(publicKeyHex.slice(0,2) == '04') {
      const publicKey = publicKeyHex.slice(2);
      return nist_p_common.publicKeyToXY(publicKey);
    }
   }
 
-  // compressed p-256 key, SEC format
-  if(bytesCount == 33) {
+  // compressed p-384 key, SEC format
+  if(bytesCount == 49) {
    if(publicKeyHex.slice(0,2) == '03' || publicKeyHex.slice(0,2) == '02') {
      const publicKey = u8a.fromString(publicKeyHex,'base16')
      const point = ECPointDecompress(publicKey);
