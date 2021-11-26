@@ -219,21 +219,8 @@ export class Repository {
     opts: CreateOpts | UpdateOpts
   ): Promise<RunningState> {
     const state$ = await this.stateManager.applyCommit(streamId, commit, opts)
-    await this.applyWriteOpts(state$, opts)
-    return state$
-  }
-
-  /**
-   * Apply options relating to authoring a new commit
-   *
-   * @param state$ - Running State
-   * @param opts - Initialization options (request anchor, publish to pubsub, etc.)
-   * @private
-   */
-  async applyWriteOpts(state$: RunningState, opts: CreateOpts | UpdateOpts) {
     this.stateManager.applyWriteOpts(state$, opts)
-
-    await this.handlePinOpts(state$, opts)
+    return state$
   }
 
   async handlePinOpts(state$: RunningState, opts: PinningOpts) {
@@ -251,9 +238,9 @@ export class Repository {
    * @param opts
    */
   async applyCreateOpts(streamId: StreamID, opts: CreateOpts): Promise<RunningState> {
-    const state = await this.load(streamId, opts)
-    await this.applyWriteOpts(state, opts)
-    return state
+    const state$ = await this.load(streamId, opts)
+    this.stateManager.applyWriteOpts(state$, opts)
+    return state$
   }
 
   /**
