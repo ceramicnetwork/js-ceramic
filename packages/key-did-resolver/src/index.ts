@@ -12,7 +12,6 @@ import * as secp256k1 from './secp256k1'
 import * as ed25519 from './ed25519'
 import * as secp256r1 from './secp256r1'
 import * as secp384r1 from './secp384r1'
-import * as secp521r1 from './secp521r1'
 
 const DID_LD_JSON = 'application/did+ld+json'
 const DID_JSON = 'application/did+json'
@@ -21,8 +20,7 @@ const prefixToDriverMap: any = {
   0xE7: secp256k1,
   0xED: ed25519,
   0x1200: secp256r1,  
-  0x1201: secp384r1,
-  0x1202: secp521r1
+  0x1201: secp384r1
 }
 
 export default {
