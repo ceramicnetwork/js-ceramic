@@ -1,7 +1,5 @@
 // Brent Shambaugh <brent.shambaugh@gmail.com>. 2021.
 
-import varint from "varint"
-import multibase from "multibase"
 import * as mapper from "../nist_p_common"
 import * as u8a from 'uint8arrays'
 
