@@ -173,7 +173,7 @@ export class CeramicDaemon {
     this.app.use(express.json({ limit: '1mb' }))
     this.app.use(cors({
       origin: opts.httpApi?.corsAllowedOrigins,
-      maxAge: 600 // 10 minutes
+      maxAge: 7200 // 2 hours
     }))
 
     this.app.use(logRequests(ceramic.loggerProvider))
