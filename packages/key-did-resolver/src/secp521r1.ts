@@ -1,7 +1,6 @@
 // Brent Shambaugh <brent.shambaugh@gmail.com>. 2021.
 
 import * as u8a from 'uint8arrays'
-import  multibase from'multibase'
 import * as bigintModArith from 'bigint-mod-arith'
 
 import * as nist_weierstrass_common from './nist_weierstrass_common'
@@ -23,14 +22,6 @@ interface BigIntPoint {
 interface base64urlPoint {
    xm: string,
    ym: string
-}
-
-/**
-  * Elliptic curve point with coordinates expressed as byte arrays (Uint8Array)
-  */
-interface octetPoint {
-  xOctet: Uint8Array,
-  yOctet: Uint8Array
 }
 
 /**
