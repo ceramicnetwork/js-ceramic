@@ -64,7 +64,7 @@ export function keyToDidDoc (pubKeyBytes: Uint8Array, fingerprint: string): any 
   if(!nist_weierstrass_common.testUint8Array(comp)) {
     throw new TypeError('input must be a Uint8Array');
    }
-  // two, prime, b, and pIdent are constants for the P-256 curve
+  // two, prime, b, and pIdent are constants for the P-384 curve
   const two = BigInt(2);
   const prime = (two ** 384n) - (two ** 128n) - (two ** 96n) + (two ** 32n ) - 1n;
   const b = 27580193559959705877849011840389048093056905856361568521428707301988689241309860865136260764883745107765439761230575n;

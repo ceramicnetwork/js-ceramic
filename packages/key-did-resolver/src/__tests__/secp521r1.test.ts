@@ -132,8 +132,8 @@ test('test a hex string longer than 67 bytes: try2', () => {
 test('test a compressed public key in hex to an x,y point with x, and y url encoded', () => {
    const inputPublicKeyHex = '0300978fcb87684ebbfb723e695fa6e46640e05624f3e3be9e01c23f713088aa542a8006c259b6a8152f5991bf3713eada06b9eb30c0fcc5c9f877143e51d0c960f8e4';
    const output = {
-        xm: 'ul4_Lh2hOu_tyPmlfpuRmQOBWJPPjvp4Bwj9xMIiqVCqABsJZtqgVL1mRvzcT6toGueswwPzFyfh3FD5R0Mlg-OQ',
-        ym: 'uiV1Wy8VO05NKYylHjeXy7RL5zM2gG5pP8PIqBjbFXdo9MPZ3MsyyIF54Ykz76jFp55cD3CrynsUTD41JCQyFrJs'
+        xm: 'l4_Lh2hOu_tyPmlfpuRmQOBWJPPjvp4Bwj9xMIiqVCqABsJZtqgVL1mRvzcT6toGueswwPzFyfh3FD5R0Mlg-OQ',
+        ym: 'iV1Wy8VO05NKYylHjeXy7RL5zM2gG5pP8PIqBjbFXdo9MPZ3MsyyIF54Ykz76jFp55cD3CrynsUTD41JCQyFrJs'
    };
    const publicKey_u8a = pubKeyHexToUint8Array(inputPublicKeyHex);
    const pubKeyBytesToXY = mapper.pubKeyBytesToXY(publicKey_u8a);

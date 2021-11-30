@@ -178,8 +178,8 @@ test('convert a public key x,y where x and y are integers to an x,y point with x
           y: 13038276010400560657327464707708345466200402936352359974176190171319880557135n
    };
   const output = {
-    xm: 'u-cNviWRiM3i9wGjUvOB-0XyPpIb5rAwmE8o8jDBte7Y',
-    ym: 'uHNNnF7isXk_qitI9yNB4PCMY7krXqA224AJq0LByok8'
+    xm: '-cNviWRiM3i9wGjUvOB-0XyPpIb5rAwmE8o8jDBte7Y',
+    ym: 'HNNnF7isXk_qitI9yNB4PCMY7krXqA224AJq0LByok8'
   };
 
   const base64urlPoint = mapper.publicKeyIntToXY(ecpoint);
@@ -191,8 +191,8 @@ test('convert a public key x,y where x and y are integers to an x,y point with x
 test('convert raw public key as a hex string into an x,y point with x and y base64url encoded', () => {
   const inputPublicKeyHex = 'f9c36f8964623378bdc068d4bce07ed17c8fa486f9ac0c2613ca3c8c306d7bb61cd36717b8ac5e4fea8ad23dc8d0783c2318ee4ad7a80db6e0026ad0b072a24f'
   const output = {
-    xm: 'u-cNviWRiM3i9wGjUvOB-0XyPpIb5rAwmE8o8jDBte7Y',
-    ym: 'uHNNnF7isXk_qitI9yNB4PCMY7krXqA224AJq0LByok8'
+    xm: '-cNviWRiM3i9wGjUvOB-0XyPpIb5rAwmE8o8jDBte7Y',
+    ym: 'HNNnF7isXk_qitI9yNB4PCMY7krXqA224AJq0LByok8'
   };
   const base64urlPoint = mapper.publicKeyToXY(inputPublicKeyHex);
   expect(base64urlPoint).toEqual(output);

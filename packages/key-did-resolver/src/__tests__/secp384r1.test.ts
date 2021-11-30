@@ -196,8 +196,8 @@ test('test a hex string longer than 97 bytes: try2', () => {
 test('test a compressed public key in hex to an x,y point with x, and y url encoded', () => {
    const inputPublicKeyHex = '020e167184c0436f5940e63d89f3827bb90978cbd3b26ef66d52da7638ce0f83492fe3f27794d8dd75a8b9553161b8613a';
    const output = {
-     xm: 'uDhZxhMBDb1lA5j2J84J7uQl4y9OybvZtUtp2OM4Pg0kv4_J3lNjddai5VTFhuGE6',
-     ym: 'uQAzuG_cfV32pd8adVMpKYk5x9a9ZA5DMntSKQjl46SaLEkRPs2_gWoIu0cCuY8cy'
+     xm: 'DhZxhMBDb1lA5j2J84J7uQl4y9OybvZtUtp2OM4Pg0kv4_J3lNjddai5VTFhuGE6',
+     ym: 'QAzuG_cfV32pd8adVMpKYk5x9a9ZA5DMntSKQjl46SaLEkRPs2_gWoIu0cCuY8cy'
    };
    const publicKey_u8a = pubKeyHexToUint8Array(inputPublicKeyHex);
    const pubKeyBytesToXY = mapper.pubKeyBytesToXY(publicKey_u8a);
@@ -207,8 +207,8 @@ test('test a compressed public key in hex to an x,y point with x, and y url enco
 test('test a uncompressed public key in hex to an x,y point with x, and y url encoded', () => {
    const inputPublicKeyHex = '04041d73367caac24ba6ef7a2cc6b32cb525ef806dbf4a9044507863fbc2e441ad9425f17021104e76637f844db9aec27168d967d6543947d9fbdb82021b9942a0a9f0e48cfd6075e69ae3674f6724368e42561bf73dbf107a0ed17e92858aa36f';
    const output = {
-     xm: 'uBB1zNnyqwkum73osxrMstSXvgG2_SpBEUHhj-8LkQa2UJfFwIRBOdmN_hE25rsJx',
-     ym: 'uaNln1lQ5R9n724ICG5lCoKnw5Iz9YHXmmuNnT2ckNo5CVhv3Pb8Qeg7RfpKFiqNv'
+     xm: 'BB1zNnyqwkum73osxrMstSXvgG2_SpBEUHhj-8LkQa2UJfFwIRBOdmN_hE25rsJx',
+     ym: 'aNln1lQ5R9n724ICG5lCoKnw5Iz9YHXmmuNnT2ckNo5CVhv3Pb8Qeg7RfpKFiqNv'
    };
    const publicKey_u8a = pubKeyHexToUint8Array(inputPublicKeyHex);
    const pubKeyBytesToXY = mapper.pubKeyBytesToXY(publicKey_u8a);
@@ -218,8 +218,8 @@ test('test a uncompressed public key in hex to an x,y point with x, and y url en
 test('test a raw public key in hex to an x,y point with x, and y url encoded', () => {
    const inputPublicKeyHex = '041d73367caac24ba6ef7a2cc6b32cb525ef806dbf4a9044507863fbc2e441ad9425f17021104e76637f844db9aec27168d967d6543947d9fbdb82021b9942a0a9f0e48cfd6075e69ae3674f6724368e42561bf73dbf107a0ed17e92858aa36f';
    const output = {
-      xm: 'uBB1zNnyqwkum73osxrMstSXvgG2_SpBEUHhj-8LkQa2UJfFwIRBOdmN_hE25rsJx',
-      ym: 'uaNln1lQ5R9n724ICG5lCoKnw5Iz9YHXmmuNnT2ckNo5CVhv3Pb8Qeg7RfpKFiqNv'
+      xm: 'BB1zNnyqwkum73osxrMstSXvgG2_SpBEUHhj-8LkQa2UJfFwIRBOdmN_hE25rsJx',
+      ym: 'aNln1lQ5R9n724ICG5lCoKnw5Iz9YHXmmuNnT2ckNo5CVhv3Pb8Qeg7RfpKFiqNv'
     };
    const publicKey_u8a = pubKeyHexToUint8Array(inputPublicKeyHex);
    const pubKeyBytesToXY = mapper.pubKeyBytesToXY(publicKey_u8a);

@@ -174,8 +174,8 @@ test('test a hex string longer than 65 bytes: try2', () => {
 test('test a compressed public key in hex to an x,y point with x, and y url encoded', () => {
    const inputPublicKeyHex = '03f9c36f8964623378bdc068d4bce07ed17c8fa486f9ac0c2613ca3c8c306d7bb6'
    const output = {
-      xm: 'u-cNviWRiM3i9wGjUvOB-0XyPpIb5rAwmE8o8jDBte7Y',
-      ym: 'uHNNnF7isXk_qitI9yNB4PCMY7krXqA224AJq0LByok8'
+      xm: '-cNviWRiM3i9wGjUvOB-0XyPpIb5rAwmE8o8jDBte7Y',
+      ym: 'HNNnF7isXk_qitI9yNB4PCMY7krXqA224AJq0LByok8'
       };
    const publicKey_u8a = pubKeyHexToUint8Array(inputPublicKeyHex);
    const pubKeyBytesToXY = mapper.pubKeyBytesToXY(publicKey_u8a);
@@ -185,8 +185,8 @@ test('test a compressed public key in hex to an x,y point with x, and y url enco
 test('test a uncompressed public key in hex to an x,y point with x, and y url encoded', () => {
    const inputPublicKeyHex = '04f9c36f8964623378bdc068d4bce07ed17c8fa486f9ac0c2613ca3c8c306d7bb61cd36717b8ac5e4fea8ad23dc8d0783c2318ee4ad7a80db6e0026ad0b072a24f'
    const output = {
-      xm: 'u-cNviWRiM3i9wGjUvOB-0XyPpIb5rAwmE8o8jDBte7Y',
-      ym: 'uHNNnF7isXk_qitI9yNB4PCMY7krXqA224AJq0LByok8'
+      xm: '-cNviWRiM3i9wGjUvOB-0XyPpIb5rAwmE8o8jDBte7Y',
+      ym: 'HNNnF7isXk_qitI9yNB4PCMY7krXqA224AJq0LByok8'
    };
    const publicKey_u8a = pubKeyHexToUint8Array(inputPublicKeyHex);
    const pubKeyBytesToXY = mapper.pubKeyBytesToXY(publicKey_u8a);
@@ -196,8 +196,8 @@ test('test a uncompressed public key in hex to an x,y point with x, and y url en
 test('test a raw public key in hex to an x,y point with x, and y url encoded', () => {
    const inputPublicKeyHex = 'f9c36f8964623378bdc068d4bce07ed17c8fa486f9ac0c2613ca3c8c306d7bb61cd36717b8ac5e4fea8ad23dc8d0783c2318ee4ad7a80db6e0026ad0b072a24f'
    const output = {
-      xm: 'u-cNviWRiM3i9wGjUvOB-0XyPpIb5rAwmE8o8jDBte7Y',
-      ym: 'uHNNnF7isXk_qitI9yNB4PCMY7krXqA224AJq0LByok8'
+      xm: '-cNviWRiM3i9wGjUvOB-0XyPpIb5rAwmE8o8jDBte7Y',
+      ym: 'HNNnF7isXk_qitI9yNB4PCMY7krXqA224AJq0LByok8'
    };
    const publicKey_u8a = pubKeyHexToUint8Array(inputPublicKeyHex);
    const pubKeyBytesToXY = mapper.pubKeyBytesToXY(publicKey_u8a);

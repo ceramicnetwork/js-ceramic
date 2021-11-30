@@ -65,7 +65,7 @@ export function keyToDidDoc (pubKeyBytes: Uint8Array, fingerprint: string): any 
  * See section 2.3.3 in SEC 1 v2 : https://www.secg.org/sec1-v2.pdf. 
  *
  * Code based on: https://stackoverflow.com/questions/17171542/algorithm-for-elliptic-curve-point-compression/30431547#30431547
- *
+ * b on page 15 of https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-186-draft.pdf
  * @param - 67 byte compressed public key. 1st byte: 0x02 for even or 0x03 for odd. Following 32 bytes: x coordinate expressed as big-endian.
  * @throws TypeError: input cannot be null or undefined.
  */
@@ -73,10 +73,9 @@ export function keyToDidDoc (pubKeyBytes: Uint8Array, fingerprint: string): any 
   if(!nist_weierstrass_common.testUint8Array(comp)) {
     throw new TypeError('input must be a Uint8Array');
    }
-  // two, prime, b, and pIdent are constants for the P-256 curve
+  // two, prime, b, and pIdent are constants for the P-521 curve
   const two = BigInt(2);
   const prime = (two ** 521n) - 1n;
-  // b on page 15 of https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-186-draft.pdf
   const b = 1093849038073734274511112390766805569936207598951683748994586394495953116150735016013708737573759623248592132296706313309438452531591012912142327488478985984n;
   const pIdent = (prime + 1n) / 4n;
 

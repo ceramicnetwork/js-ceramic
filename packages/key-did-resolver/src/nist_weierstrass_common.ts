@@ -57,8 +57,8 @@ export function publicKeyToXY(publicKeyHex: string) : base64urlPoint  {
     throw new TypeError('input must be string with characters 0-9,A-F,a-f'); 
    }
  const u8aOctetPoint = publicKeyHexToUint8ArrayPointPair(publicKeyHex);
- const xm = u8a.toString(multibase.encode('base64url',u8aOctetPoint.xOctet));
- const ym = u8a.toString(multibase.encode('base64url',u8aOctetPoint.yOctet));
+ const xm = (u8a.toString(multibase.encode('base64url',u8aOctetPoint.xOctet))).slice(1);
+ const ym = (u8a.toString(multibase.encode('base64url',u8aOctetPoint.yOctet))).slice(1);
  return { xm, ym };
 }
 
@@ -119,6 +119,7 @@ export function testUint8Array(param: Uint8Array) : boolean {
  * @throws Error: Input coordinates must be BigInt
  * @throws Error: Input must have properties x and y
  * @throws TypeError: Input must be an object with properties x and y
+ * Points xm and ym follow the base64url format in JSON Web Key (JWK) in RFC 7517: https://datatracker.ietf.org/doc/html/rfc7517
 */
 export function publicKeyIntToXY(ecpoint: BigIntPoint): base64urlPoint  {
   if(ecpoint == null) { throw new TypeError('input cannot be null or undefined.'); }
@@ -130,8 +131,8 @@ export function publicKeyIntToXY(ecpoint: BigIntPoint): base64urlPoint  {
   if(typeof ecpoint.x !== "bigint" &&  typeof ecpoint.y !== "bigint") { throw new Error("Input coordinates must be BigInt");  }
 
     const u8aOctetPoint = publicKeyIntToUint8ArrayPointPair(ecpoint);
-    const xm = u8a.toString(multibase.encode('base64url',u8aOctetPoint.xOctet));
-    const ym = u8a.toString(multibase.encode('base64url',u8aOctetPoint.yOctet));
+    const xm = (u8a.toString(multibase.encode('base64url',u8aOctetPoint.xOctet))).slice(1);
+    const ym = (u8a.toString(multibase.encode('base64url',u8aOctetPoint.yOctet))).slice(1);
     return { xm, ym };
 }
 
