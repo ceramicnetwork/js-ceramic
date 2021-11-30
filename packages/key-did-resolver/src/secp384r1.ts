@@ -3,7 +3,7 @@
 import * as u8a from 'uint8arrays'
 import * as bigintModArith from 'bigint-mod-arith'
 
-import * as nist_p_common from './nist_p_common'
+import * as nist_weierstrass_common from './nist_weierstrass_common'
 
 /**
   * x,y point as a BigInt (requires at least ES2020)
@@ -61,7 +61,7 @@ export function keyToDidDoc (pubKeyBytes: Uint8Array, fingerprint: string): any 
  * @throws TypeError: input cannot be null or undefined.
  */
  export function ECPointDecompress( comp : Uint8Array ) : BigIntPoint {
-  if(!nist_p_common.testUint8Array(comp)) {
+  if(!nist_weierstrass_common.testUint8Array(comp)) {
     throw new TypeError('input must be a Uint8Array');
    }
   // two, prime, b, and pIdent are constants for the P-256 curve
@@ -104,22 +104,22 @@ export function keyToDidDoc (pubKeyBytes: Uint8Array, fingerprint: string): any 
  * @internal
  */
 export function pubKeyBytesToXY(pubKeyBytes: Uint8Array) : base64urlPoint  {
-  if(!nist_p_common.testUint8Array(pubKeyBytes)) {
+  if(!nist_weierstrass_common.testUint8Array(pubKeyBytes)) {
     throw new TypeError('input must be a Uint8Array');
   }
-  const publicKeyHex = nist_p_common.pubKeyBytesToHex(pubKeyBytes);
+  const publicKeyHex = nist_weierstrass_common.pubKeyBytesToHex(pubKeyBytes);
   const bytesCount = publicKeyHex.length / 2;
 
   // raw p-384 key
   if(bytesCount == 96) {
-     return nist_p_common.publicKeyToXY(publicKeyHex); 
+     return nist_weierstrass_common.publicKeyToXY(publicKeyHex); 
    }
 
   // uncompressed p-384 key, SEC format
   if(bytesCount == 97) {
    if(publicKeyHex.slice(0,2) == '04') {
      const publicKey = publicKeyHex.slice(2);
-     return nist_p_common.publicKeyToXY(publicKey);
+     return nist_weierstrass_common.publicKeyToXY(publicKey);
    }
   }
 
@@ -128,7 +128,7 @@ export function pubKeyBytesToXY(pubKeyBytes: Uint8Array) : base64urlPoint  {
    if(publicKeyHex.slice(0,2) == '03' || publicKeyHex.slice(0,2) == '02') {
      const publicKey = u8a.fromString(publicKeyHex,'base16')
      const point = ECPointDecompress(publicKey);
-      return nist_p_common.publicKeyIntToXY(point);
+      return nist_weierstrass_common.publicKeyIntToXY(point);
     }
   }
 

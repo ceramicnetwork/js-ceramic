@@ -1,6 +1,7 @@
 // Brent Shambaugh <brent.shambaugh@gmail.com>. 2021.
 
 import * as u8a from 'uint8arrays'
+import  multibase from'multibase'
 import * as bigintModArith from 'bigint-mod-arith'
 
 import * as nist_weierstrass_common from './nist_weierstrass_common'
@@ -25,6 +26,14 @@ interface base64urlPoint {
 }
 
 /**
+  * Elliptic curve point with coordinates expressed as byte arrays (Uint8Array)
+  */
+interface octetPoint {
+  xOctet: Uint8Array,
+  yOctet: Uint8Array
+}
+
+/**
  * Constructs the document based on the method key
  */
 export function keyToDidDoc (pubKeyBytes: Uint8Array, fingerprint: string): any {
@@ -39,7 +48,7 @@ export function keyToDidDoc (pubKeyBytes: Uint8Array, fingerprint: string): any 
       controller: did,
        publicKeyJwk: {
          kty: "EC",
-               crv: "P-256",
+               crv: "P-521",
                x: key.xm,
                y: key.ym,
        }, 
@@ -57,7 +66,7 @@ export function keyToDidDoc (pubKeyBytes: Uint8Array, fingerprint: string): any 
  *
  * Code based on: https://stackoverflow.com/questions/17171542/algorithm-for-elliptic-curve-point-compression/30431547#30431547
  *
- * @param - 33 byte compressed public key. 1st byte: 0x02 for even or 0x03 for odd. Following 32 bytes: x coordinate expressed as big-endian.
+ * @param - 67 byte compressed public key. 1st byte: 0x02 for even or 0x03 for odd. Following 32 bytes: x coordinate expressed as big-endian.
  * @throws TypeError: input cannot be null or undefined.
  */
  export function ECPointDecompress( comp : Uint8Array ) : BigIntPoint {
@@ -66,8 +75,9 @@ export function keyToDidDoc (pubKeyBytes: Uint8Array, fingerprint: string): any 
    }
   // two, prime, b, and pIdent are constants for the P-256 curve
   const two = BigInt(2);
-  const prime = (two ** 256n) - (two ** 224n) + (two ** 192n) + (two ** 96n) - 1n;
-  const b = 41058363725152142129326129780047268409114441015993725554835256314039467401291n;
+  const prime = (two ** 521n) - 1n;
+  // b on page 15 of https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-186-draft.pdf
+  const b = 1093849038073734274511112390766805569936207598951683748994586394495953116150735016013708737573759623248592132296706313309438452531591012912142327488478985984n;
   const pIdent = (prime + 1n) / 4n;
 
   const signY = BigInt(comp[0] - 2);
@@ -92,13 +102,12 @@ export function keyToDidDoc (pubKeyBytes: Uint8Array, fingerprint: string): any 
 }
 
 /**
- * 
- * @param pubKeyBytes - public key as uncompressed byte array with no prefix (raw key), 
- *  uncompressed with 0x04 prefix, or compressed with 0x02 prefix if even and 0x03 prefix if odd.
+ *
+ * @param pubKeyBytes - public key as compressed with 0x02 prefix if even and 0x03 prefix if odd.
  * @returns point x,y with coordinates as multibase encoded base64urls
- * 
- * See the the did:key specification: https://w3c-ccg.github.io/did-method-key/#p-256. 
- * At present only raw p-256 keys are covered in the specification.
+ *
+ * See the the did:key specification: https://w3c-ccg.github.io/did-method-key/#p-521.
+ * For compression see: https://tools.ietf.org/id/draft-jivsov-ecc-compact-05.html#rfc.section.3
  * @throws TypeError: input cannot be null or undefined.
  * @throws Error: Unexpected pubKeyBytes
  * @internal
@@ -108,29 +117,16 @@ export function pubKeyBytesToXY(pubKeyBytes: Uint8Array) : base64urlPoint  {
     throw new TypeError('input must be a Uint8Array');
   }
   const publicKeyHex = nist_weierstrass_common.pubKeyBytesToHex(pubKeyBytes);
-  const bytesCount = publicKeyHex.length / 2;
 
-  // raw p-256 key
-  if(bytesCount == 64) {
-     return nist_weierstrass_common.publicKeyToXY(publicKeyHex); 
-   }
-
-  // uncompressed p-256 key, SEC format
-  if(bytesCount == 65) {
-   if(publicKeyHex.slice(0,2) == '04') {
-     const publicKey = publicKeyHex.slice(2);
-     return nist_weierstrass_common.publicKeyToXY(publicKey);
-   }
-  }
-
-  // compressed p-256 key, SEC format
-  if(bytesCount == 33) {
-   if(publicKeyHex.slice(0,2) == '03' || publicKeyHex.slice(0,2) == '02') {
+  // compressed p-521 key, SEC format
+  // publicKeyHex.length / 2.0 = 67.0 bytes
+ if((132 <= publicKeyHex.length) && (publicKeyHex.length <= 134)) {
+  if(publicKeyHex.slice(0,2) == '03' || publicKeyHex.slice(0,2) == '02') {
      const publicKey = u8a.fromString(publicKeyHex,'base16')
      const point = ECPointDecompress(publicKey);
       return nist_weierstrass_common.publicKeyIntToXY(point);
     }
-  }
+ }
 
-     throw new Error('Unexpected pubKeyBytes');
+    throw new Error('Unexpected pubKeyBytes');
 }
