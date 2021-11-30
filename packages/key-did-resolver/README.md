@@ -13,9 +13,6 @@ This code supports compressed did:keys in concordance with https://github.com/w3
 Compressed keys have a '03' or '02' prefix depending on the sign of the Y curve coordinate. More information is here:
 https://tools.ietf.org/id/draft-jivsov-ecc-compact-05.html .
 
-During development there was not yet consensus on using all compressed keys. Support for uncompressed keys with the '04' prefix and
-raw keys (just the x,y bytes with no prefix) was kept for the P-256 and P-384 curves. 
-
 ## Code
 ```
 // Usage from cloned GitHub Repository:
@@ -294,6 +291,10 @@ did document metadata:
 ]
 
 ```
+
+## Comments
+During development there was not yet consensus on using all compressed keys. Support for uncompressed keys with the '04' prefix and
+raw keys (just the x,y bytes with no prefix) was kept for the P-256 and P-384 curves.
 
 ## Contributing
 We are happy to accept small and large contributions. Make sure to check out the [Ceramic specifications](https://github.com/ceramicnetwork/specs) for details of how the protocol works.
