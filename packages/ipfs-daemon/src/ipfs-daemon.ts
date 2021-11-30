@@ -63,8 +63,12 @@ export class IpfsDaemon {
 
   static async create(props: Partial<Configuration> = {}): Promise<IpfsDaemon> {
     const ceramicNetwork = props.ceramicNetwork || process.env.CERAMIC_NETWORK
-    const useCentralizedPeerDiscovery =
+    let useCentralizedPeerDiscovery =
       props.useCentralizedPeerDiscovery ?? process.env.NODE_ENV != 'test'
+    if (process.env.DISABLE_PEER_DISCOVERY) {
+      console.log('DISABLING PEER DISCOVERY in ipfs daemon')
+      useCentralizedPeerDiscovery = false
+    }
     const ipfsBootstrap =
       props.ipfsBootstrap ||
       (process.env.IPFS_BOOTSTRAP ? process.env.IPFS_BOOTSTRAP.split(' ') : [])

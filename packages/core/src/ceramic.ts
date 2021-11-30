@@ -456,7 +456,11 @@ export class Ceramic implements CeramicApi {
 
     const ceramic = new Ceramic(modules, params)
 
-    const doPeerDiscovery = config.useCentralizedPeerDiscovery ?? !TESTING
+    let doPeerDiscovery = config.useCentralizedPeerDiscovery ?? !TESTING
+    if (process.env.DISABLE_PEER_DISCOVERY) {
+      console.log('DISABLING PEER DISCOVERY from ceramic')
+      doPeerDiscovery = false
+    }
 
     await ceramic._init(doPeerDiscovery)
 
