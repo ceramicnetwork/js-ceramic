@@ -27,7 +27,7 @@ const ipfsDaemon = await IpfsDaemon.create({
     ipfsDhtServerMode: IPFS_DHT_SERVER_MODE, // DHT Server
     ipfsEnableApi: true, // Enable IPFS API
     ipfsEnableGateway: true, // Enable IPFS Gateway
-    useCentralizedPeerDiscovery: true, // Connect to bootstrap nodes
+    useCentralizedPeerDiscovery: IPFS_USE_CENTRALIZED_PEER_DISCOVERY, // Connect to bootstrap nodes
     ceramicNetwork: 'testnet-clay' // Bootstrap nodes are selected per network
 })
 await ipfsDaemon.start()

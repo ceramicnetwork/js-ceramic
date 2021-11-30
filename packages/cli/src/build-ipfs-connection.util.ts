@@ -10,6 +10,7 @@ const dagJoseFormat = convert(dagJose)
 
 const IPFS_DHT_SERVER_MODE = process.env.IPFS_DHT_SERVER_MODE === 'true'
 const IPFS_GET_TIMEOUT = 60000 // 1 minute
+const IPFS_USE_CENTRALIZED_PEER_DISCOVERY = process.env.IPFS_USE_CENTRALIZED_PEER_DISCOVERY === 'true'
 
 export async function buildIpfsConnection(
   mode: IpfsMode,
@@ -30,7 +31,7 @@ export async function buildIpfsConnection(
       ipfsEnableGateway: true,
       // Do not setup peer connections in IPFS daemon.
       // We do it in Ceramic instance itself.
-      useCentralizedPeerDiscovery: false,
+      useCentralizedPeerDiscovery: IPFS_USE_CENTRALIZED_PEER_DISCOVERY,
       logger,
     }).then((daemon) => daemon.start())
     return ipfsDaemon.ipfs
