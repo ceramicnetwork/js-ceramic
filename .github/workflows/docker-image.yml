@@ -60,7 +60,7 @@ jobs:
         run: |
           EXTRA_TAGS=""
           if [[ "${{ env.ENV_TAG }}" == "prod" ]]; then
-            EXTRA_TAGS="--tag $IMAGE_ID_1:latest --tag $IMAGE_ID_2:latest"
+            EXTRA_TAGS=" --tag $IMAGE_ID_2:latest"
           fi
 
           docker buildx build . --file Dockerfile.daemon --output 'type=image,push=true' \
@@ -76,7 +76,7 @@ jobs:
         run: |
           EXTRA_TAGS=""
           if [[ "${{ env.ENV_TAG }}" == "prod" ]]; then
-            EXTRA_TAGS="--tag $IMAGE_ID_1:latest --tag $IMAGE_ID_2:latest"
+            EXTRA_TAGS=" --tag $IMAGE_ID_2:latest"
           fi
 
           docker buildx build . --file Dockerfile.ipfs-daemon --output 'type=image,push=true' \
