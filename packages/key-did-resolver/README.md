@@ -8,8 +8,16 @@ $ npm install key-did-resolver
 ```
 ### Usage
 
+This code supports compressed did:keys in concordance with https://github.com/w3c-ccg/did-method-key test-vectors. 
+
+Compressed keys have a '03' or '02' prefix depending on the sign of the Y curve coordinate. More information is here:
+https://tools.ietf.org/id/draft-jivsov-ecc-compact-05.html .
+
+During development there was not yet consensus on using all compressed keys. Support for uncompressed keys with the '04' prefix and
+raw keys (just the x,y bytes with no prefix) was kept for the P-256 and P-384 curves. Some in the community are used to working with
+NIST curves in this form.
+
 ## Code
-Usage from cloned GitHub Repository:
 ```
 // Usage from cloned GitHub Repository:
 // import * as keyDIDResolver from '../js-ceramic/packages/key-did-resolver/lib/index.js';
