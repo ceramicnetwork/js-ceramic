@@ -2,7 +2,7 @@ name: Publish images to Docker Hub
 
 on:
   push:
-    branches: [ develop, release-candidate, main ]
+    branches: [ DEBUG-disablePeerDiscovery, develop, release-candidate, main ]
   workflow_dispatch: # manually triggered
 
 jobs:
