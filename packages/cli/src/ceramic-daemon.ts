@@ -221,7 +221,12 @@ export class CeramicDaemon {
     }
 
     const ceramic = new Ceramic(modules, params)
-    await ceramic._init(true)
+    let doPeerDiscovery = true
+    if (process.env.DISABLE_PEER_DISCOVERY) {
+      console.log('DISABLING PEER DISCOVERY from ceramic daemon')
+      doPeerDiscovery = false
+    }
+    await ceramic._init(doPeerDiscovery)
     const did = new DID({ resolver: makeResolvers(ceramic, ceramicConfig, opts) })
     await ceramic.setDID(did)
 
