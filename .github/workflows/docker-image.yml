@@ -56,7 +56,7 @@ jobs:
       -
         name: Build and push js-ceramic image
         env:
-          IMAGE_ID_2: "${{ steps.login-ecr.outputs.registry }}/ceramic-${{ env.ENV_TAG }}"
+          IMAGE_ID_2: "${{ steps.login-ecr.outputs.registry }}/ceramic-debug/js-ceramic"
         run: |
           EXTRA_TAGS=""
           if [[ "${{ env.ENV_TAG }}" == "prod" ]]; then
@@ -72,7 +72,7 @@ jobs:
       -
         name: Build and push ipfs-daemon image
         env:
-          IMAGE_ID_2: "${{ steps.login-ecr.outputs.registry }}/js-ipfs-${{ env.ENV_TAG }}"
+          IMAGE_ID_2: "${{ steps.login-ecr.outputs.registry }}/ceramic-debug/ipfs-daemon"
         run: |
           EXTRA_TAGS=""
           if [[ "${{ env.ENV_TAG }}" == "prod" ]]; then
