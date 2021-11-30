@@ -11,11 +11,50 @@ $ npm install key-did-resolver
 ## Code
 Usage from cloned GitHub Repository:
 ```
-import * as keyDIDResolver from '../js-ceramic/packages/key-did-resolver/lib/index.js';
+// Usage from cloned GitHub Repository:
+// import * as keyDIDResolver from '../js-ceramic/packages/key-did-resolver/lib/index.js';
+
+import keyDIDResolver from 'key-did-resolver'
 
 const resolverRegistry = keyDIDResolver.getResolver();
 
 const resolve = resolverRegistry.key;
+
+let parsedDided25519 = {
+      id: "z6MktvqCyLxTsXUH1tUZncNdVeEZ7hNh7npPRbUU27GTrYb8",
+      did: 'did:key:z6MktvqCyLxTsXUH1tUZncNdVeEZ7hNh7npPRbUU27GTrYb8',
+      method: "key",
+      didUrl: 'did:key:z6MktvqCyLxTsXUH1tUZncNdVeEZ7hNh7npPRbUU27GTrYb8/some/path',
+      path: '/some/path'
+}
+
+let doced25519 = await resolve('did:key:z6MktvqCyLxTsXUH1tUZncNdVeEZ7hNh7npPRbUU27GTrYb8', parsedDided25519, {}, { accept: 'application/did+ld+json' })
+
+console.log();
+console.log('did document for ed25519:');
+console.log(doced25519);
+console.log();
+
+console.log('did document metatdata:');
+console.log(doced25519.didDocument.verificationMethod);
+
+let parsedDid256k1 = {
+      id: "zQ3shbgnTGcgBpXPdBjDur3ATMDWhS7aPs6FRFkWR19Lb9Zwz",
+      did: 'did:key:zQ3shbgnTGcgBpXPdBjDur3ATMDWhS7aPs6FRFkWR19Lb9Zwz',
+      method: "key",
+      didUrl: 'did:key:zQ3shbgnTGcgBpXPdBjDur3ATMDWhS7aPs6FRFkWR19Lb9Zwz/some/path',
+      path: '/some/path'
+}
+
+let doc256k1 = await resolve('did:key:zQ3shbgnTGcgBpXPdBjDur3ATMDWhS7aPs6FRFkWR19Lb9Zwz', parsedDid256k1, {}, { accept: 'application/did+ld+json' })
+
+console.log();
+console.log('did document for secp256k1:');
+console.log(doc256k1);
+console.log();
+
+console.log('did document metatdata:');
+console.log(doc256k1.didDocument.verificationMethod);
 
 let parsedDid256 = {
       id: "zDnaeUKTWUXc1HDpGfKbEK31nKLN19yX5aunFd7VK1CUMeyJu",
@@ -75,6 +114,64 @@ console.log(doc521.didDocument.verificationMethod);
 
 ## Output
 ```
+
+did document for ed25519:
+{
+  didResolutionMetadata: { contentType: 'application/did+ld+json' },
+  didDocument: {
+    id: 'did:key:z6MktvqCyLxTsXUH1tUZncNdVeEZ7hNh7npPRbUU27GTrYb8',
+    verificationMethod: [ [Object] ],
+    authentication: [
+      'did:key:z6MktvqCyLxTsXUH1tUZncNdVeEZ7hNh7npPRbUU27GTrYb8#z6MktvqCyLxTsXUH1tUZncNdVeEZ7hNh7npPRbUU27GTrYb8'
+    ],
+    assertionMethod: [
+      'did:key:z6MktvqCyLxTsXUH1tUZncNdVeEZ7hNh7npPRbUU27GTrYb8#z6MktvqCyLxTsXUH1tUZncNdVeEZ7hNh7npPRbUU27GTrYb8'
+    ],
+    capabilityDelegation: [
+      'did:key:z6MktvqCyLxTsXUH1tUZncNdVeEZ7hNh7npPRbUU27GTrYb8#z6MktvqCyLxTsXUH1tUZncNdVeEZ7hNh7npPRbUU27GTrYb8'
+    ],
+    capabilityInvocation: [
+      'did:key:z6MktvqCyLxTsXUH1tUZncNdVeEZ7hNh7npPRbUU27GTrYb8#z6MktvqCyLxTsXUH1tUZncNdVeEZ7hNh7npPRbUU27GTrYb8'
+    ],
+    keyAgreement: [ [Object] ],
+    '@context': 'https://w3id.org/did/v1'
+  },
+  didDocumentMetadata: {}
+}
+
+did document for secp256k1:
+{
+  didResolutionMetadata: { contentType: 'application/did+ld+json' },
+  didDocument: {
+    id: 'did:key:zQ3shbgnTGcgBpXPdBjDur3ATMDWhS7aPs6FRFkWR19Lb9Zwz',
+    verificationMethod: [ [Object] ],
+    authentication: [
+      'did:key:zQ3shbgnTGcgBpXPdBjDur3ATMDWhS7aPs6FRFkWR19Lb9Zwz#zQ3shbgnTGcgBpXPdBjDur3ATMDWhS7aPs6FRFkWR19Lb9Zwz'
+    ],
+    assertionMethod: [
+      'did:key:zQ3shbgnTGcgBpXPdBjDur3ATMDWhS7aPs6FRFkWR19Lb9Zwz#zQ3shbgnTGcgBpXPdBjDur3ATMDWhS7aPs6FRFkWR19Lb9Zwz'
+    ],
+    capabilityDelegation: [
+      'did:key:zQ3shbgnTGcgBpXPdBjDur3ATMDWhS7aPs6FRFkWR19Lb9Zwz#zQ3shbgnTGcgBpXPdBjDur3ATMDWhS7aPs6FRFkWR19Lb9Zwz'
+    ],
+    capabilityInvocation: [
+      'did:key:zQ3shbgnTGcgBpXPdBjDur3ATMDWhS7aPs6FRFkWR19Lb9Zwz#zQ3shbgnTGcgBpXPdBjDur3ATMDWhS7aPs6FRFkWR19Lb9Zwz'
+    ],
+    '@context': 'https://w3id.org/did/v1'
+  },
+  didDocumentMetadata: {}
+}
+
+did document metatdata:
+[
+  {
+    id: 'did:key:zQ3shbgnTGcgBpXPdBjDur3ATMDWhS7aPs6FRFkWR19Lb9Zwz#zQ3shbgnTGcgBpXPdBjDur3ATMDWhS7aPs6FRFkWR19Lb9Zwz',
+    type: 'Secp256k1VerificationKey2018',
+    controller: 'did:key:zQ3shbgnTGcgBpXPdBjDur3ATMDWhS7aPs6FRFkWR19Lb9Zwz',
+    publicKeyBase58: 'qjdSRUCiVtAjwdYVTxHQXd9FnMPRaYCtKpkchofTw66G'
+  }
+]
+
 did document for P-256:
 {
   didResolutionMetadata: { contentType: 'application/did+ld+json' },
