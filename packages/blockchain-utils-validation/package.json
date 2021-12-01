@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/blockchain-utils-validation",
-  "version": "1.6.2-rc.3",
+  "version": "1.6.2-rc.4",
   "description": "Blockchain utils for validation of linked blockchain accounts",
   "keywords": [
     "ceramic",
