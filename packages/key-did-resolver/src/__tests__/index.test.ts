@@ -84,3 +84,34 @@ describe('Index mapper', () => {
 
 })
 
+/*
+test('expect index.js to throw an error for an unsupported media type', () => {
+     expect(() => {
+        let parsedDided25519 = {
+           id: "z6MktvqCyLxTsXUH1tUZncNdVeEZ7hNh7npPRbUU27GTrYb8",
+           did: 'did:key:z6MktvqCyLxTsXUH1tUZncNdVeEZ7hNh7npPRbUU27GTrYb8',
+           method: "key",
+           didUrl: 'did:key:z6MktvqCyLxTsXUH1tUZncNdVeEZ7hNh7npPRbUU27GTrYb8/some/path',
+           path: '/some/path'
+        }
+
+        let doced25519 = await resolve('did:key:z6MktvqCyLxTsXUH1tUZncNdVeEZ7hNh7npPRbUU27GTrYb8', parsedDided25519, {}, { accept: 'application/rdf+xml' })
+     }).toThrowError('representationNotSupported');
+});
+
+test('expect index.js to throw an error for an unsupported decentralized indentifier', () => {
+      expect(() => {
+         let parsedDided25519 = {
+            id: "z6LSeu9HkTHSfLLeUs2nnzUSNedgDUevfNQgQjQC23ZCit6F",
+            did: 'did:key:z6LSeu9HkTHSfLLeUs2nnzUSNedgDUevfNQgQjQC23ZCit6F',
+            method: "key",
+            didUrl: 'did:key:z6LSeu9HkTHSfLLeUs2nnzUSNedgDUevfNQgQjQC23ZCit6F/some/path',
+            path: '/some/path'
+         }
+
+        let doced25519 = await resolve('did:key:z6LSeu9HkTHSfLLeUs2nnzUSNedgDUevfNQgQjQC23ZCit6F', parsedDided25519, {}, { accept: 'application/did+ld+json' })
+
+      }).toThrowError('invalidDid');
+});
+*/
+
