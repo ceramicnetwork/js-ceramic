@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/cli",
-  "version": "1.9.1-rc.8",
+  "version": "1.9.1-rc.9",
   "description": "Typescript implementation of the Ceramic CLI",
   "keywords": [
     "Ceramic",
@@ -33,10 +33,10 @@
   },
   "dependencies": {
     "@awaitjs/express": "^0.8.0",
-    "@ceramicnetwork/3id-did-resolver": "^1.4.10-rc.9",
+    "@ceramicnetwork/3id-did-resolver": "^1.4.10-rc.10",
     "@ceramicnetwork/common": "^1.9.0-rc.1",
-    "@ceramicnetwork/core": "^1.11.1-rc.8",
-    "@ceramicnetwork/http-client": "^1.5.1-rc.1",
+    "@ceramicnetwork/core": "^1.11.1-rc.9",
+    "@ceramicnetwork/http-client": "^1.5.1-rc.3",
     "@ceramicnetwork/ipfs-daemon": "^1.2.3-rc.1",
     "@ceramicnetwork/logger": "^1.0.4",
     "@ceramicnetwork/stream-tile": "^1.5.1-rc.1",
@@ -67,7 +67,7 @@
     "uint8arrays": "^2.0.5"
   },
   "devDependencies": {
-    "@ceramicnetwork/stream-tile-handler": "^1.5.5-rc.8",
+    "@ceramicnetwork/stream-tile-handler": "^1.5.5-rc.9",
     "@stablelib/sha256": "^1.0.0",
     "@types/express": "^4.17.8",
     "@types/levelup": "^4.3.0",

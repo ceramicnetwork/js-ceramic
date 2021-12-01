@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.5.5-rc.9](/compare/@ceramicnetwork/stream-tile-handler@1.5.5-rc.8...@ceramicnetwork/stream-tile-handler@1.5.5-rc.9) (2021-12-01)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
+
+
+
+
+
 ## [1.5.5-rc.8](/compare/@ceramicnetwork/stream-tile-handler@1.5.5-rc.6...@ceramicnetwork/stream-tile-handler@1.5.5-rc.8) (2021-12-01)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
