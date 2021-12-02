@@ -25,8 +25,6 @@ https://github.com/bshambaugh/did-key-creator
 
 Compressed keys are the X coordinate of the public key with a prefix that depends on the sign of the Y curve coordinate. The prefix is '02' if even and '03' if odd.  
 
-More information is here: https://tools.ietf.org/id/draft-jivsov-ecc-compact-05.html .
-
 ## Code
 ```
 // Usage from cloned GitHub Repository:
@@ -324,6 +322,9 @@ Version 2.0 ], http://www.secg.org/sec2-v2.pdf
 
 [FIPS PUB 186-4 ,FEDERAL INFORMATION PROCESSING STANDARDS
 PUBLICATION, Digital Signature Standard (DSS)], https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.186-4.pdf
+
+[Compact representation of an elliptic curve point, Network Working Group, A.J. Jivsov, March 15, 2014],
+https://tools.ietf.org/id/draft-jivsov-ecc-compact-05.html
 
 ## Contributing
 We are happy to accept small and large contributions. Make sure to check out the [Ceramic specifications](https://github.com/ceramicnetwork/specs) for details of how the protocol works.
