@@ -18,7 +18,7 @@ https://github.com/ceramicnetwork/key-did-provider-secp256k1
 This code supports compressed forms of P-256, P-384, and P-521 did:keys in concordance with https://github.com/w3c-ccg/did-method-key test-vectors.
 
 The did:key id is the multicodec name + the compressed public key expressed as a Uint8Array (byte array) then encoded with base58btc and expressed as a string.
-The syntax is did:key:id.
+The syntax of a did:key is did:key:id.
 
 Example code for creating a did:key for P-256, P-384, and P-521 is here:
 https://github.com/bshambaugh/did-key-creator 
