@@ -167,4 +167,24 @@ describe('Exception mapper', () => {
       
    })
 
+    it('expect index.js to throw an error for an unsupported media type', async () => {
+       const resolverRegistry = index.getResolver()
+       expect(resolverRegistry).not.toBeUndefined()
+
+       const resolve = resolverRegistry.key
+       expect(resolve).not.toBeUndefined()
+
+       const parsedDided25519 = {
+           id: "z6MktvqCyLxTsXUH1tUZncNdVeEZ7hNh7npPRbUU27GTrYb8",
+           did: 'did:key:z6MktvqCyLxTsXUH1tUZncNdVeEZ7hNh7npPRbUU27GTrYb8',
+           method: "key",
+           didUrl: 'did:key:z6MktvqCyLxTsXUH1tUZncNdVeEZ7hNh7npPRbUU27GTrYb8/some/path',
+           path: '/some/path'
+        }
+
+	await expect(resolve('did:key:z6MktvqCyLxTsXUH1tUZncNdVeEZ7hNh7npPRbUU27GTrYb8', parsedDided25519, {}, { accept: null })).resolves.toEqual(expect.objectContaining({"didResolutionMetadata": {"contentType": "application/did+json"}}))
+
+
+   })
+
 })
