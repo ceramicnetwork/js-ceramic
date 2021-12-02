@@ -20,10 +20,10 @@ This code supports compressed forms of P-256, P-384, and P-521 did:keys in conco
 The did:key id is the multicodec name + the compressed public key expressed as a Uint8Array (byte array) then encoded with base58btc and expressed as a string.
 The syntax of a did:key is did:key:id.
 
+Compressed keys are the X coordinate of the public key with a prefix that depends on the sign of the Y curve coordinate. The prefix is '02' if even and '03' if odd.
+
 Example code for creating a did:key for P-256, P-384, and P-521 is here:
 https://github.com/bshambaugh/did-key-creator 
-
-Compressed keys are the X coordinate of the public key with a prefix that depends on the sign of the Y curve coordinate. The prefix is '02' if even and '03' if odd.  
 
 ## Code
 ```
