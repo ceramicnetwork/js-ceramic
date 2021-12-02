@@ -302,6 +302,8 @@ did document metadata:
 ]
 
 ```
+## Testing
+Due to conflicts with parsing JSON with BigInt, tests need to be run with Jest in Serial mode. Use *npm run test -- --runInBand* .
 
 ## Comments
 During development there was not yet consensus on using all compressed keys. Support for uncompressed keys with the '04' prefix and
