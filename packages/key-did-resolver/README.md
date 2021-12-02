@@ -7,10 +7,7 @@
 $ npm install key-did-resolver
 ```
 ### Usage
-
-This code supports compressed did:keys in concordance with https://github.com/w3c-ccg/did-method-key test-vectors. 
-
-The did:key id is the multicodec name + the compressed public key expressed as a Uint8Array (byte array) then encoded with base58btc and expressed as a string.
+This code includes support for Ed25519 and Secp256k1 did:keys described in https://github.com/w3c-ccg/did-method-key .
 
 Example code for creating a did:key for Ed25519 is here:
 https://github.com/ceramicnetwork/key-did-provider-ed25519
@@ -18,10 +15,16 @@ https://github.com/ceramicnetwork/key-did-provider-ed25519
 Example code for creating a did:key for Secp256k1 is here:
 https://github.com/ceramicnetwork/key-did-provider-secp256k1
 
+This code supports compressed forms of P-256, P-384, and P-521 did:keys in concordance with https://github.com/w3c-ccg/did-method-key test-vectors.
+
+The did:key id is the multicodec name + the compressed public key expressed as a Uint8Array (byte array) then encoded with base58btc and expressed as a string.
+The syntax is did:key:id.
+
 Example code for creating a did:key for P-256, P-384, and P-521 is here:
 https://github.com/bshambaugh/did-key-creator 
 
 Compressed keys are the X coordinate of the public key with a prefix that depends on the sign of the Y curve coordinate. The prefix is '02' if even and '03' if odd.  
+
 More information is here: https://tools.ietf.org/id/draft-jivsov-ecc-compact-05.html .
 
 ## Code
