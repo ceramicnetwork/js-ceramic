@@ -312,6 +312,19 @@ Due to problems with parsing JSON with BigInt, tests need to be run with Jest in
 During development there was not yet consensus on using all compressed keys. Support for uncompressed keys with the '04' prefix and
 raw keys (just the x,y bytes with no prefix) was kept for the P-256 and P-384 curves.
 
+## References
+
+[Standards for Efficient Cryptography
+SEC 2: Recommended Elliptic Curve Domain Parameters
+Certicom Research
+Contact: Daniel R. L. Brown (dbrown@certicom.com)
+January 27, 2010
+Version 2.0 ], http://www.secg.org/sec2-v2.pdf 
+
+
+[FIPS PUB 186-4 ,FEDERAL INFORMATION PROCESSING STANDARDS
+PUBLICATION, Digital Signature Standard (DSS)], https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.186-4.pdf
+
 ## Contributing
 We are happy to accept small and large contributions. Make sure to check out the [Ceramic specifications](https://github.com/ceramicnetwork/specs) for details of how the protocol works.
 
