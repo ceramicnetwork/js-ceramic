@@ -170,8 +170,8 @@ Object {
         "publicKeyJwk": Object {
           "crv": "P-256",
           "kty": "EC",
-          "x": "u-cNviWRiM3i9wGjUvOB-0XyPpIb5rAwmE8o8jDBte7Y",
-          "y": "uHNNnF7isXk_qitI9yNB4PCMY7krXqA224AJq0LByok8",
+          "x": "-cNviWRiM3i9wGjUvOB-0XyPpIb5rAwmE8o8jDBte7Y",
+          "y": "HNNnF7isXk_qitI9yNB4PCMY7krXqA224AJq0LByok8",
         },
         "type": "JsonWebKey2020",
       },
@@ -207,8 +207,8 @@ Object {
         "publicKeyJwk": Object {
           "crv": "P-256",
           "kty": "EC",
-          "x": "u-cNviWRiM3i9wGjUvOB-0XyPpIb5rAwmE8o8jDBte7Y",
-          "y": "uHNNnF7isXk_qitI9yNB4PCMY7krXqA224AJq0LByok8",
+          "x": "-cNviWRiM3i9wGjUvOB-0XyPpIb5rAwmE8o8jDBte7Y",
+          "y": "HNNnF7isXk_qitI9yNB4PCMY7krXqA224AJq0LByok8",
         },
         "type": "JsonWebKey2020",
       },
@@ -245,8 +245,8 @@ Object {
         "publicKeyJwk": Object {
           "crv": "P-256",
           "kty": "EC",
-          "x": "uOcPddBMXKURtwbPaZ9SfwEb8vwcvzFufpRwFuXQwf5Y",
-          "y": "unEA7FjXwRJ8CvUInUeMxIaRDTxUvKysqP2dSGcXZJfY",
+          "x": "OcPddBMXKURtwbPaZ9SfwEb8vwcvzFufpRwFuXQwf5Y",
+          "y": "nEA7FjXwRJ8CvUInUeMxIaRDTxUvKysqP2dSGcXZJfY",
         },
         "type": "JsonWebKey2020",
       },
@@ -282,8 +282,8 @@ Object {
         "publicKeyJwk": Object {
           "crv": "P-256",
           "kty": "EC",
-          "x": "uOcPddBMXKURtwbPaZ9SfwEb8vwcvzFufpRwFuXQwf5Y",
-          "y": "unEA7FjXwRJ8CvUInUeMxIaRDTxUvKysqP2dSGcXZJfY",
+          "x": "OcPddBMXKURtwbPaZ9SfwEb8vwcvzFufpRwFuXQwf5Y",
+          "y": "nEA7FjXwRJ8CvUInUeMxIaRDTxUvKysqP2dSGcXZJfY",
         },
         "type": "JsonWebKey2020",
       },
@@ -320,8 +320,8 @@ Object {
         "publicKeyJwk": Object {
           "crv": "P-256",
           "kty": "EC",
-          "x": "u-cNviWRiM3i9wGjUvOB-0XyPpIb5rAwmE8o8jDBte7Y",
-          "y": "uHNNnF7isXk_qitI9yNB4PCMY7krXqA224AJq0LByok8",
+          "x": "-cNviWRiM3i9wGjUvOB-0XyPpIb5rAwmE8o8jDBte7Y",
+          "y": "HNNnF7isXk_qitI9yNB4PCMY7krXqA224AJq0LByok8",
         },
         "type": "JsonWebKey2020",
       },
@@ -357,8 +357,158 @@ Object {
         "publicKeyJwk": Object {
           "crv": "P-256",
           "kty": "EC",
-          "x": "u-cNviWRiM3i9wGjUvOB-0XyPpIb5rAwmE8o8jDBte7Y",
-          "y": "uHNNnF7isXk_qitI9yNB4PCMY7krXqA224AJq0LByok8",
+          "x": "-cNviWRiM3i9wGjUvOB-0XyPpIb5rAwmE8o8jDBte7Y",
+          "y": "HNNnF7isXk_qitI9yNB4PCMY7krXqA224AJq0LByok8",
+        },
+        "type": "JsonWebKey2020",
+      },
+    ],
+  },
+  "didDocumentMetadata": Object {},
+  "didResolutionMetadata": Object {
+    "contentType": "application/did+json",
+  },
+}
+`;
+
+exports[`Index mapper successfully resolves the document from did 11`] = `
+Object {
+  "didDocument": Object {
+    "@context": "https://w3id.org/did/v1",
+    "assertionMethod": Array [
+      "did:key:z4oJ8emo5e6mGPCUS5wncFZXAyuVzGRyJZvoduwq7FrdZYPd1LZQbDKsp1YAMX8x14zBwy3yHMSpfecJCMDeRFUgFqYsY#z4oJ8emo5e6mGPCUS5wncFZXAyuVzGRyJZvoduwq7FrdZYPd1LZQbDKsp1YAMX8x14zBwy3yHMSpfecJCMDeRFUgFqYsY",
+    ],
+    "authentication": Array [
+      "did:key:z4oJ8emo5e6mGPCUS5wncFZXAyuVzGRyJZvoduwq7FrdZYPd1LZQbDKsp1YAMX8x14zBwy3yHMSpfecJCMDeRFUgFqYsY#z4oJ8emo5e6mGPCUS5wncFZXAyuVzGRyJZvoduwq7FrdZYPd1LZQbDKsp1YAMX8x14zBwy3yHMSpfecJCMDeRFUgFqYsY",
+    ],
+    "capabilityDelegation": Array [
+      "did:key:z4oJ8emo5e6mGPCUS5wncFZXAyuVzGRyJZvoduwq7FrdZYPd1LZQbDKsp1YAMX8x14zBwy3yHMSpfecJCMDeRFUgFqYsY#z4oJ8emo5e6mGPCUS5wncFZXAyuVzGRyJZvoduwq7FrdZYPd1LZQbDKsp1YAMX8x14zBwy3yHMSpfecJCMDeRFUgFqYsY",
+    ],
+    "capabilityInvocation": Array [
+      "did:key:z4oJ8emo5e6mGPCUS5wncFZXAyuVzGRyJZvoduwq7FrdZYPd1LZQbDKsp1YAMX8x14zBwy3yHMSpfecJCMDeRFUgFqYsY#z4oJ8emo5e6mGPCUS5wncFZXAyuVzGRyJZvoduwq7FrdZYPd1LZQbDKsp1YAMX8x14zBwy3yHMSpfecJCMDeRFUgFqYsY",
+    ],
+    "id": "did:key:z4oJ8emo5e6mGPCUS5wncFZXAyuVzGRyJZvoduwq7FrdZYPd1LZQbDKsp1YAMX8x14zBwy3yHMSpfecJCMDeRFUgFqYsY",
+    "verificationMethod": Array [
+      Object {
+        "controller": "did:key:z4oJ8emo5e6mGPCUS5wncFZXAyuVzGRyJZvoduwq7FrdZYPd1LZQbDKsp1YAMX8x14zBwy3yHMSpfecJCMDeRFUgFqYsY",
+        "id": "did:key:z4oJ8emo5e6mGPCUS5wncFZXAyuVzGRyJZvoduwq7FrdZYPd1LZQbDKsp1YAMX8x14zBwy3yHMSpfecJCMDeRFUgFqYsY#z4oJ8emo5e6mGPCUS5wncFZXAyuVzGRyJZvoduwq7FrdZYPd1LZQbDKsp1YAMX8x14zBwy3yHMSpfecJCMDeRFUgFqYsY",
+        "publicKeyJwk": Object {
+          "crv": "P-256",
+          "kty": "EC",
+          "x": "-cNviWRiM3i9wGjUvOB-0XyPpIb5rAwmE8o8jDBte7Y",
+          "y": "HNNnF7isXk_qitI9yNB4PCMY7krXqA224AJq0LByok8",
+        },
+        "type": "JsonWebKey2020",
+      },
+    ],
+  },
+  "didDocumentMetadata": Object {},
+  "didResolutionMetadata": Object {
+    "contentType": "application/did+ld+json",
+  },
+}
+`;
+
+exports[`Index mapper successfully resolves the document from did 12`] = `
+Object {
+  "didDocument": Object {
+    "assertionMethod": Array [
+      "did:key:z4oJ8emo5e6mGPCUS5wncFZXAyuVzGRyJZvoduwq7FrdZYPd1LZQbDKsp1YAMX8x14zBwy3yHMSpfecJCMDeRFUgFqYsY#z4oJ8emo5e6mGPCUS5wncFZXAyuVzGRyJZvoduwq7FrdZYPd1LZQbDKsp1YAMX8x14zBwy3yHMSpfecJCMDeRFUgFqYsY",
+    ],
+    "authentication": Array [
+      "did:key:z4oJ8emo5e6mGPCUS5wncFZXAyuVzGRyJZvoduwq7FrdZYPd1LZQbDKsp1YAMX8x14zBwy3yHMSpfecJCMDeRFUgFqYsY#z4oJ8emo5e6mGPCUS5wncFZXAyuVzGRyJZvoduwq7FrdZYPd1LZQbDKsp1YAMX8x14zBwy3yHMSpfecJCMDeRFUgFqYsY",
+    ],
+    "capabilityDelegation": Array [
+      "did:key:z4oJ8emo5e6mGPCUS5wncFZXAyuVzGRyJZvoduwq7FrdZYPd1LZQbDKsp1YAMX8x14zBwy3yHMSpfecJCMDeRFUgFqYsY#z4oJ8emo5e6mGPCUS5wncFZXAyuVzGRyJZvoduwq7FrdZYPd1LZQbDKsp1YAMX8x14zBwy3yHMSpfecJCMDeRFUgFqYsY",
+    ],
+    "capabilityInvocation": Array [
+      "did:key:z4oJ8emo5e6mGPCUS5wncFZXAyuVzGRyJZvoduwq7FrdZYPd1LZQbDKsp1YAMX8x14zBwy3yHMSpfecJCMDeRFUgFqYsY#z4oJ8emo5e6mGPCUS5wncFZXAyuVzGRyJZvoduwq7FrdZYPd1LZQbDKsp1YAMX8x14zBwy3yHMSpfecJCMDeRFUgFqYsY",
+    ],
+    "id": "did:key:z4oJ8emo5e6mGPCUS5wncFZXAyuVzGRyJZvoduwq7FrdZYPd1LZQbDKsp1YAMX8x14zBwy3yHMSpfecJCMDeRFUgFqYsY",
+    "verificationMethod": Array [
+      Object {
+        "controller": "did:key:z4oJ8emo5e6mGPCUS5wncFZXAyuVzGRyJZvoduwq7FrdZYPd1LZQbDKsp1YAMX8x14zBwy3yHMSpfecJCMDeRFUgFqYsY",
+        "id": "did:key:z4oJ8emo5e6mGPCUS5wncFZXAyuVzGRyJZvoduwq7FrdZYPd1LZQbDKsp1YAMX8x14zBwy3yHMSpfecJCMDeRFUgFqYsY#z4oJ8emo5e6mGPCUS5wncFZXAyuVzGRyJZvoduwq7FrdZYPd1LZQbDKsp1YAMX8x14zBwy3yHMSpfecJCMDeRFUgFqYsY",
+        "publicKeyJwk": Object {
+          "crv": "P-256",
+          "kty": "EC",
+          "x": "-cNviWRiM3i9wGjUvOB-0XyPpIb5rAwmE8o8jDBte7Y",
+          "y": "HNNnF7isXk_qitI9yNB4PCMY7krXqA224AJq0LByok8",
+        },
+        "type": "JsonWebKey2020",
+      },
+    ],
+  },
+  "didDocumentMetadata": Object {},
+  "didResolutionMetadata": Object {
+    "contentType": "application/did+json",
+  },
+}
+`;
+
+exports[`Index mapper successfully resolves the document from did 13`] = `
+Object {
+  "didDocument": Object {
+    "@context": "https://w3id.org/did/v1",
+    "assertionMethod": Array [
+      "did:key:z82LkvCwHNreneWpsgPEbV3gu1C6NFJEBg4srfJ5gdxEsMGRJUz2sG9FE42shbn2xkZJh54#z82LkvCwHNreneWpsgPEbV3gu1C6NFJEBg4srfJ5gdxEsMGRJUz2sG9FE42shbn2xkZJh54",
+    ],
+    "authentication": Array [
+      "did:key:z82LkvCwHNreneWpsgPEbV3gu1C6NFJEBg4srfJ5gdxEsMGRJUz2sG9FE42shbn2xkZJh54#z82LkvCwHNreneWpsgPEbV3gu1C6NFJEBg4srfJ5gdxEsMGRJUz2sG9FE42shbn2xkZJh54",
+    ],
+    "capabilityDelegation": Array [
+      "did:key:z82LkvCwHNreneWpsgPEbV3gu1C6NFJEBg4srfJ5gdxEsMGRJUz2sG9FE42shbn2xkZJh54#z82LkvCwHNreneWpsgPEbV3gu1C6NFJEBg4srfJ5gdxEsMGRJUz2sG9FE42shbn2xkZJh54",
+    ],
+    "capabilityInvocation": Array [
+      "did:key:z82LkvCwHNreneWpsgPEbV3gu1C6NFJEBg4srfJ5gdxEsMGRJUz2sG9FE42shbn2xkZJh54#z82LkvCwHNreneWpsgPEbV3gu1C6NFJEBg4srfJ5gdxEsMGRJUz2sG9FE42shbn2xkZJh54",
+    ],
+    "id": "did:key:z82LkvCwHNreneWpsgPEbV3gu1C6NFJEBg4srfJ5gdxEsMGRJUz2sG9FE42shbn2xkZJh54",
+    "verificationMethod": Array [
+      Object {
+        "controller": "did:key:z82LkvCwHNreneWpsgPEbV3gu1C6NFJEBg4srfJ5gdxEsMGRJUz2sG9FE42shbn2xkZJh54",
+        "id": "did:key:z82LkvCwHNreneWpsgPEbV3gu1C6NFJEBg4srfJ5gdxEsMGRJUz2sG9FE42shbn2xkZJh54#z82LkvCwHNreneWpsgPEbV3gu1C6NFJEBg4srfJ5gdxEsMGRJUz2sG9FE42shbn2xkZJh54",
+        "publicKeyJwk": Object {
+          "crv": "P-384",
+          "kty": "EC",
+          "x": "CA-iNoHDg1lL8pvX3d1uvExzVfCz7Rn6tW781Ub8K5MrDf2IMPyL0RTDiaLHC1JT",
+          "y": "Kpnrn8DkXUD3ge4mFxi-DKr0DYO2KuJdwNBrhzLRtfMa3WFMZBiPKUPfJj8dYNl_",
+        },
+        "type": "JsonWebKey2020",
+      },
+    ],
+  },
+  "didDocumentMetadata": Object {},
+  "didResolutionMetadata": Object {
+    "contentType": "application/did+ld+json",
+  },
+}
+`;
+
+exports[`Index mapper successfully resolves the document from did 14`] = `
+Object {
+  "didDocument": Object {
+    "assertionMethod": Array [
+      "did:key:z82LkvCwHNreneWpsgPEbV3gu1C6NFJEBg4srfJ5gdxEsMGRJUz2sG9FE42shbn2xkZJh54#z82LkvCwHNreneWpsgPEbV3gu1C6NFJEBg4srfJ5gdxEsMGRJUz2sG9FE42shbn2xkZJh54",
+    ],
+    "authentication": Array [
+      "did:key:z82LkvCwHNreneWpsgPEbV3gu1C6NFJEBg4srfJ5gdxEsMGRJUz2sG9FE42shbn2xkZJh54#z82LkvCwHNreneWpsgPEbV3gu1C6NFJEBg4srfJ5gdxEsMGRJUz2sG9FE42shbn2xkZJh54",
+    ],
+    "capabilityDelegation": Array [
+      "did:key:z82LkvCwHNreneWpsgPEbV3gu1C6NFJEBg4srfJ5gdxEsMGRJUz2sG9FE42shbn2xkZJh54#z82LkvCwHNreneWpsgPEbV3gu1C6NFJEBg4srfJ5gdxEsMGRJUz2sG9FE42shbn2xkZJh54",
+    ],
+    "capabilityInvocation": Array [
+      "did:key:z82LkvCwHNreneWpsgPEbV3gu1C6NFJEBg4srfJ5gdxEsMGRJUz2sG9FE42shbn2xkZJh54#z82LkvCwHNreneWpsgPEbV3gu1C6NFJEBg4srfJ5gdxEsMGRJUz2sG9FE42shbn2xkZJh54",
+    ],
+    "id": "did:key:z82LkvCwHNreneWpsgPEbV3gu1C6NFJEBg4srfJ5gdxEsMGRJUz2sG9FE42shbn2xkZJh54",
+    "verificationMethod": Array [
+      Object {
+        "controller": "did:key:z82LkvCwHNreneWpsgPEbV3gu1C6NFJEBg4srfJ5gdxEsMGRJUz2sG9FE42shbn2xkZJh54",
+        "id": "did:key:z82LkvCwHNreneWpsgPEbV3gu1C6NFJEBg4srfJ5gdxEsMGRJUz2sG9FE42shbn2xkZJh54#z82LkvCwHNreneWpsgPEbV3gu1C6NFJEBg4srfJ5gdxEsMGRJUz2sG9FE42shbn2xkZJh54",
+        "publicKeyJwk": Object {
+          "crv": "P-384",
+          "kty": "EC",
+          "x": "CA-iNoHDg1lL8pvX3d1uvExzVfCz7Rn6tW781Ub8K5MrDf2IMPyL0RTDiaLHC1JT",
+          "y": "Kpnrn8DkXUD3ge4mFxi-DKr0DYO2KuJdwNBrhzLRtfMa3WFMZBiPKUPfJj8dYNl_",
         },
         "type": "JsonWebKey2020",
       },

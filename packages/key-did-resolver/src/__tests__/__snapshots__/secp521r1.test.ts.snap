@@ -1,0 +1,94 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Secp521r1 mapper successfully resolves the document from did 1`] = `
+Object {
+  "assertionMethod": Array [
+    "did:key:z2J9gaYhkf4Ax2QA65KkcrSxr8JDSxUBwzFq3jmq5iBroY2tE7s1uohXVqEvALPxbvdzbWWQTtHvTprUdbNFha3HawyPcD9P#z2J9gaYhkf4Ax2QA65KkcrSxr8JDSxUBwzFq3jmq5iBroY2tE7s1uohXVqEvALPxbvdzbWWQTtHvTprUdbNFha3HawyPcD9P",
+  ],
+  "authentication": Array [
+    "did:key:z2J9gaYhkf4Ax2QA65KkcrSxr8JDSxUBwzFq3jmq5iBroY2tE7s1uohXVqEvALPxbvdzbWWQTtHvTprUdbNFha3HawyPcD9P#z2J9gaYhkf4Ax2QA65KkcrSxr8JDSxUBwzFq3jmq5iBroY2tE7s1uohXVqEvALPxbvdzbWWQTtHvTprUdbNFha3HawyPcD9P",
+  ],
+  "capabilityDelegation": Array [
+    "did:key:z2J9gaYhkf4Ax2QA65KkcrSxr8JDSxUBwzFq3jmq5iBroY2tE7s1uohXVqEvALPxbvdzbWWQTtHvTprUdbNFha3HawyPcD9P#z2J9gaYhkf4Ax2QA65KkcrSxr8JDSxUBwzFq3jmq5iBroY2tE7s1uohXVqEvALPxbvdzbWWQTtHvTprUdbNFha3HawyPcD9P",
+  ],
+  "capabilityInvocation": Array [
+    "did:key:z2J9gaYhkf4Ax2QA65KkcrSxr8JDSxUBwzFq3jmq5iBroY2tE7s1uohXVqEvALPxbvdzbWWQTtHvTprUdbNFha3HawyPcD9P#z2J9gaYhkf4Ax2QA65KkcrSxr8JDSxUBwzFq3jmq5iBroY2tE7s1uohXVqEvALPxbvdzbWWQTtHvTprUdbNFha3HawyPcD9P",
+  ],
+  "id": "did:key:z2J9gaYhkf4Ax2QA65KkcrSxr8JDSxUBwzFq3jmq5iBroY2tE7s1uohXVqEvALPxbvdzbWWQTtHvTprUdbNFha3HawyPcD9P",
+  "verificationMethod": Array [
+    Object {
+      "controller": "did:key:z2J9gaYhkf4Ax2QA65KkcrSxr8JDSxUBwzFq3jmq5iBroY2tE7s1uohXVqEvALPxbvdzbWWQTtHvTprUdbNFha3HawyPcD9P",
+      "id": "did:key:z2J9gaYhkf4Ax2QA65KkcrSxr8JDSxUBwzFq3jmq5iBroY2tE7s1uohXVqEvALPxbvdzbWWQTtHvTprUdbNFha3HawyPcD9P#z2J9gaYhkf4Ax2QA65KkcrSxr8JDSxUBwzFq3jmq5iBroY2tE7s1uohXVqEvALPxbvdzbWWQTtHvTprUdbNFha3HawyPcD9P",
+      "publicKeyJwk": Object {
+        "crv": "P-521",
+        "kty": "EC",
+        "x": "efE2eR719GHSoSzmtzVlBmaFD6wTYVg4r661VhHrxlqsatRDJr4628mgVowOitFEQMbz_osNgBn9tiIHW1YfYW4",
+        "y": "AcXkiFup65KvqBXF2r52zMTS-yjyOrQYFIDIPp870eRQEfo7tiID4EbosLY62BKmR74lG5pjnvTbA258IIUA3zO-",
+      },
+      "type": "JsonWebKey2020",
+    },
+  ],
+}
+`;
+
+exports[`Secp521r1 mapper successfully resolves the document from did 2`] = `
+Object {
+  "assertionMethod": Array [
+    "did:key:z2J9gcGdbo8riFqfRzgo3gjJyFcbNJm75hrnpDrZTNqQQxgNVBTtKndBiKxzGXrAbyw5W88VDbR1B1FvRQNTnSezghqnJ7p6#z2J9gcGdbo8riFqfRzgo3gjJyFcbNJm75hrnpDrZTNqQQxgNVBTtKndBiKxzGXrAbyw5W88VDbR1B1FvRQNTnSezghqnJ7p6",
+  ],
+  "authentication": Array [
+    "did:key:z2J9gcGdbo8riFqfRzgo3gjJyFcbNJm75hrnpDrZTNqQQxgNVBTtKndBiKxzGXrAbyw5W88VDbR1B1FvRQNTnSezghqnJ7p6#z2J9gcGdbo8riFqfRzgo3gjJyFcbNJm75hrnpDrZTNqQQxgNVBTtKndBiKxzGXrAbyw5W88VDbR1B1FvRQNTnSezghqnJ7p6",
+  ],
+  "capabilityDelegation": Array [
+    "did:key:z2J9gcGdbo8riFqfRzgo3gjJyFcbNJm75hrnpDrZTNqQQxgNVBTtKndBiKxzGXrAbyw5W88VDbR1B1FvRQNTnSezghqnJ7p6#z2J9gcGdbo8riFqfRzgo3gjJyFcbNJm75hrnpDrZTNqQQxgNVBTtKndBiKxzGXrAbyw5W88VDbR1B1FvRQNTnSezghqnJ7p6",
+  ],
+  "capabilityInvocation": Array [
+    "did:key:z2J9gcGdbo8riFqfRzgo3gjJyFcbNJm75hrnpDrZTNqQQxgNVBTtKndBiKxzGXrAbyw5W88VDbR1B1FvRQNTnSezghqnJ7p6#z2J9gcGdbo8riFqfRzgo3gjJyFcbNJm75hrnpDrZTNqQQxgNVBTtKndBiKxzGXrAbyw5W88VDbR1B1FvRQNTnSezghqnJ7p6",
+  ],
+  "id": "did:key:z2J9gcGdbo8riFqfRzgo3gjJyFcbNJm75hrnpDrZTNqQQxgNVBTtKndBiKxzGXrAbyw5W88VDbR1B1FvRQNTnSezghqnJ7p6",
+  "verificationMethod": Array [
+    Object {
+      "controller": "did:key:z2J9gcGdbo8riFqfRzgo3gjJyFcbNJm75hrnpDrZTNqQQxgNVBTtKndBiKxzGXrAbyw5W88VDbR1B1FvRQNTnSezghqnJ7p6",
+      "id": "did:key:z2J9gcGdbo8riFqfRzgo3gjJyFcbNJm75hrnpDrZTNqQQxgNVBTtKndBiKxzGXrAbyw5W88VDbR1B1FvRQNTnSezghqnJ7p6#z2J9gcGdbo8riFqfRzgo3gjJyFcbNJm75hrnpDrZTNqQQxgNVBTtKndBiKxzGXrAbyw5W88VDbR1B1FvRQNTnSezghqnJ7p6",
+      "publicKeyJwk": Object {
+        "crv": "P-521",
+        "kty": "EC",
+        "x": "AQhYV0yHhVL9n7sjCIxMjeQjQiy2F4lv3Qd7diAVP4xJW3kl1Na4aKIeEzYP3Un6ThoCxC-KFhHePvjM5QNk9mp7",
+        "y": "Aewp6gi7EiTP1tVqLCefC6gQ7BTxsY2t0D_qMXJPUoXqlihkyBMKA9CRFAXq16sfXhWFMckcnk-MLRjNC6XB4Pmj",
+      },
+      "type": "JsonWebKey2020",
+    },
+  ],
+}
+`;
+
+exports[`Secp521r1 mapper successfully resolves the document from did 3`] = `
+Object {
+  "assertionMethod": Array [
+    "did:key:z2J9gcGTjd3NaNifwmaNZN27xioMAzHHCDBmkuQ552hm9kWrzhUepDCSAhiuRYBj1sSXR1LBxgqh6vasYzc8JhC12FpaNDhT#z2J9gcGTjd3NaNifwmaNZN27xioMAzHHCDBmkuQ552hm9kWrzhUepDCSAhiuRYBj1sSXR1LBxgqh6vasYzc8JhC12FpaNDhT",
+  ],
+  "authentication": Array [
+    "did:key:z2J9gcGTjd3NaNifwmaNZN27xioMAzHHCDBmkuQ552hm9kWrzhUepDCSAhiuRYBj1sSXR1LBxgqh6vasYzc8JhC12FpaNDhT#z2J9gcGTjd3NaNifwmaNZN27xioMAzHHCDBmkuQ552hm9kWrzhUepDCSAhiuRYBj1sSXR1LBxgqh6vasYzc8JhC12FpaNDhT",
+  ],
+  "capabilityDelegation": Array [
+    "did:key:z2J9gcGTjd3NaNifwmaNZN27xioMAzHHCDBmkuQ552hm9kWrzhUepDCSAhiuRYBj1sSXR1LBxgqh6vasYzc8JhC12FpaNDhT#z2J9gcGTjd3NaNifwmaNZN27xioMAzHHCDBmkuQ552hm9kWrzhUepDCSAhiuRYBj1sSXR1LBxgqh6vasYzc8JhC12FpaNDhT",
+  ],
+  "capabilityInvocation": Array [
+    "did:key:z2J9gcGTjd3NaNifwmaNZN27xioMAzHHCDBmkuQ552hm9kWrzhUepDCSAhiuRYBj1sSXR1LBxgqh6vasYzc8JhC12FpaNDhT#z2J9gcGTjd3NaNifwmaNZN27xioMAzHHCDBmkuQ552hm9kWrzhUepDCSAhiuRYBj1sSXR1LBxgqh6vasYzc8JhC12FpaNDhT",
+  ],
+  "id": "did:key:z2J9gcGTjd3NaNifwmaNZN27xioMAzHHCDBmkuQ552hm9kWrzhUepDCSAhiuRYBj1sSXR1LBxgqh6vasYzc8JhC12FpaNDhT",
+  "verificationMethod": Array [
+    Object {
+      "controller": "did:key:z2J9gcGTjd3NaNifwmaNZN27xioMAzHHCDBmkuQ552hm9kWrzhUepDCSAhiuRYBj1sSXR1LBxgqh6vasYzc8JhC12FpaNDhT",
+      "id": "did:key:z2J9gcGTjd3NaNifwmaNZN27xioMAzHHCDBmkuQ552hm9kWrzhUepDCSAhiuRYBj1sSXR1LBxgqh6vasYzc8JhC12FpaNDhT#z2J9gcGTjd3NaNifwmaNZN27xioMAzHHCDBmkuQ552hm9kWrzhUepDCSAhiuRYBj1sSXR1LBxgqh6vasYzc8JhC12FpaNDhT",
+      "publicKeyJwk": Object {
+        "crv": "P-521",
+        "kty": "EC",
+        "x": "mI3pqrt5mbpgyopw74-q4WX6M2FkUPgroJHo3l9eG6pVXesQm4K51-M2yoxjt_ap6MtsaP78F-gzcn_lh5t_q5I",
+        "y": "AQpsaMuiW3OjliI8bINPPmtK95KBXr7wOaPsFTh-J7pm-sMV83VrVJWCqGXaMbQNUIv3my2n34gk057_ZwFlkRSD",
+      },
+      "type": "JsonWebKey2020",
+    },
+  ],
+}
+`;
