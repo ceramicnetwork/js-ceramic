@@ -112,7 +112,7 @@ describe('Index mapper', () => {
 
 })
 
-describe('Exception mapper', () => {
+describe('Exception mapper + default fpr options.accept', () => {
   it('expect index.js to throw an error for an unsupported decentralized identifier', async () => {
        const resolverRegistry = index.getResolver()
        expect(resolverRegistry).not.toBeUndefined()
@@ -148,26 +148,7 @@ describe('Exception mapper', () => {
 	await expect(resolve('did:key:z6MktvqCyLxTsXUH1tUZncNdVeEZ7hNh7npPRbUU27GTrYb8', parsedDided25519, {}, { accept: 'application/rdf+xml' })).resolves.toEqual({"didDocument": null, "didDocumentMetadata": {}, "didResolutionMetadata": {"error": "representationNotSupported"}})
    })
 
-     it('expect index.js to throw an error for an unsupported media type', async () => {
-       const resolverRegistry = index.getResolver()
-       expect(resolverRegistry).not.toBeUndefined()
-
-       const resolve = resolverRegistry.key
-       expect(resolve).not.toBeUndefined()
-
-       const parsedDided25519 = {
-           id: "z6MktvqCyLxTsXUH1tUZncNdVeEZ7hNh7npPRbUU27GTrYb8",
-           did: 'did:key:z6MktvqCyLxTsXUH1tUZncNdVeEZ7hNh7npPRbUU27GTrYb8',
-           method: "key",
-           didUrl: 'did:key:z6MktvqCyLxTsXUH1tUZncNdVeEZ7hNh7npPRbUU27GTrYb8/some/path',
-           path: '/some/path'
-        }
-
-        await expect(resolve('did:key:z6MktvqCyLxTsXUH1tUZncNdVeEZ7hNh7npPRbUU27GTrYb8', parsedDided25519, {}, { accept: 'application/did+json' })).resolves.toEqual(expect.anything())
-      
-   })
-
-    it('expect index.js to throw an error for an unsupported media type', async () => {
+    it('expect index.js to default to DID_JSON for options.accept when there is an unspecified return media type', async () => {
        const resolverRegistry = index.getResolver()
        expect(resolverRegistry).not.toBeUndefined()
 
