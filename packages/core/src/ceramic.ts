@@ -647,7 +647,11 @@ export class Ceramic implements CeramicApi {
     const walkNext = async (node: TrieNode, streamId: StreamID | CommitID) => {
       let stream
       try {
-        stream = await promiseTimeout(timeout, this.loadStream(streamId, { atTime: query.atTime }))
+        stream = await promiseTimeout(
+          this.loadStream(streamId, { atTime: query.atTime }),
+          timeout,
+          `Timeout after ${timeout}ms`
+        )
       } catch (e) {
         this._logger.warn(
           `Error loading stream ${streamId.toString()} at time ${

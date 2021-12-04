@@ -2,15 +2,11 @@ import Ajv from 'ajv'
 import addFormats from 'ajv-formats'
 import { Memoize } from 'typescript-memoize'
 
-import {
-  CommitData,
-  CommitType,
-  StreamUtils,
-} from '@ceramicnetwork/common'
+import { CommitData, CommitType, StreamUtils } from '@ceramicnetwork/common'
 
 import type { TileDocument } from '@ceramicnetwork/stream-tile'
 import { Dispatcher } from './dispatcher'
-import type { StreamID } from "@ceramicnetwork/streamid";
+import type { StreamID } from '@ceramicnetwork/streamid'
 import type CID from 'cids'
 
 /**
@@ -80,7 +76,12 @@ export default class Utils {
   /**
    * Return `CommitData` (with commit, JWS envelope, and/or anchor proof/timestamp, as applicable) for the specified CID
    */
-  static async getCommitData(dispatcher: Dispatcher, cid: CID, timestamp?: number, streamId?: StreamID): Promise<CommitData> {
+  static async getCommitData(
+    dispatcher: Dispatcher,
+    cid: CID,
+    timestamp?: number,
+    streamId?: StreamID
+  ): Promise<CommitData> {
     const commit = await dispatcher.retrieveCommit(cid, streamId)
     if (!commit) throw new Error(`No commit found for CID ${cid.toString()}`)
     // The default applies to all cases that do not use DagJWS for signing (e.g. CAIP-10 links)
@@ -127,9 +128,13 @@ export class PathTrie {
   }
 }
 
-export const promiseTimeout = (ms: number, promise: Promise<any>): Promise<any> => {
+export const promiseTimeout = (
+  promise: Promise<any>,
+  ms: number,
+  timeoutErrorMsg: string
+): Promise<any> => {
   const timeout = new Promise((resolve, reject) => {
-    setTimeout(() => reject(), ms)
+    setTimeout(() => reject(new Error(timeoutErrorMsg)), ms)
   })
   return Promise.race([timeout, promise])
 }
