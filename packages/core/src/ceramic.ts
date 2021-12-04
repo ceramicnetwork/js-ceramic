@@ -610,6 +610,25 @@ export class Ceramic implements CeramicApi {
   }
 
   /**
+   * Used to ensure that the given genesis commit contents already exist on IPFS so we don't time
+   * out trying to load it.
+   * @param genesis
+   * @param streamRef
+   */
+  async _ensureGenesis(genesis: CeramicCommit, streamRef: StreamRef) {
+    if (StreamUtils.isSignedCommitContainer(genesis) || StreamUtils.isSignedCommit(genesis)) {
+      throw new Error('Given genesis commit is not deterministic')
+    }
+
+    const genesisCID = await this.ipfs.dag.put(genesis)
+    if (!streamRef.cid.equals(genesisCID)) {
+      throw new Error(
+        `Given StreamID CID ${streamRef.cid.toString()} does not match given genesis content`
+      )
+    }
+  }
+
+  /**
    * Load all stream type instance for given paths
    * @param query
    * @param timeout - Timeout in milliseconds
@@ -620,26 +639,21 @@ export class Ceramic implements CeramicApi {
     const pathTrie = new PathTrie()
     query.paths?.forEach((path) => pathTrie.add(path))
 
-    const index = {}
+    if (query.genesis) {
+      await this._ensureGenesis(query.genesis, id)
+    }
 
+    const index = {}
     const walkNext = async (node: TrieNode, streamId: StreamID | CommitID) => {
       let stream
-      if (query.genesis) {
-        if (
-          StreamUtils.isSignedCommitContainer(query.genesis) ||
-          StreamUtils.isSignedCommit(query.genesis)
-        ) {
-          throw new Error('Given genesis commit is not deterministic')
-        }
-
-        const genesisCID = await this.ipfs.dag.put(query.genesis)
-        if (!streamId.cid.equals(genesisCID)) {
-          throw new Error('Given StreamID CID does not match given genesis content')
-        }
-      }
       try {
         stream = await promiseTimeout(timeout, this.loadStream(streamId, { atTime: query.atTime }))
       } catch (e) {
+        this._logger.warn(
+          `Error loading stream ${streamId.toString()} at time ${
+            query.atTime
+          } as part of a multiQuery request: ${e.toString()}`
+        )
         return Promise.resolve()
       }
       const streamRef = query.atTime ? streamId.atCommit(stream.tip) : streamId
@@ -670,6 +684,7 @@ export class Ceramic implements CeramicApi {
         try {
           return this._loadLinkedStreams(query, timeout)
         } catch (e) {
+          this._logger.warn(`Error during multiQuery: ${e.toString()}`)
           return Promise.resolve({})
         }
       })
