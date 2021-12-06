@@ -265,6 +265,7 @@ describe('Ceramic API', () => {
     )
     const streamFTimestamps = []
     const streamFStates = []
+    const MULTIQUERY_TIMEOUT = 7000
 
     beforeAll(async () => {
       ceramic = await createCeramic()
@@ -291,7 +292,10 @@ describe('Ceramic API', () => {
     })
 
     it('can load linked stream path, returns expected form', async () => {
-      const streams = await ceramic._loadLinkedStreams({ streamId: streamA.id, paths: ['/b/e'] })
+      const streams = await ceramic._loadLinkedStreams(
+        { streamId: streamA.id, paths: ['/b/e'] },
+        MULTIQUERY_TIMEOUT
+      )
       // inlcudes all linked streams in path, including root, key by streamid string
       expect(streams[streamA.id.toString()]).toBeTruthy()
       expect(streams[streamB.id.toString()]).toBeTruthy()
@@ -303,10 +307,13 @@ describe('Ceramic API', () => {
     })
 
     it('can load multiple paths', async () => {
-      const streams = await ceramic._loadLinkedStreams({
-        streamId: streamA.id,
-        paths: ['/b/e/f', '/c', '/b/d'],
-      })
+      const streams = await ceramic._loadLinkedStreams(
+        {
+          streamId: streamA.id,
+          paths: ['/b/e/f', '/c', '/b/d'],
+        },
+        MULTIQUERY_TIMEOUT
+      )
       expect(Object.keys(streams).length).toEqual(6)
       expect(streams[streamA.id.toString()]).toBeTruthy()
       expect(streams[streamB.id.toString()]).toBeTruthy()
@@ -317,10 +324,13 @@ describe('Ceramic API', () => {
     })
 
     it('can load multiple paths, including redundant subpaths and paths', async () => {
-      const streams = await ceramic._loadLinkedStreams({
-        streamId: streamA.id,
-        paths: ['/b/e/f', '/c', '/b/d', '/b', 'b/e'],
-      })
+      const streams = await ceramic._loadLinkedStreams(
+        {
+          streamId: streamA.id,
+          paths: ['/b/e/f', '/c', '/b/d', '/b', 'b/e'],
+        },
+        MULTIQUERY_TIMEOUT
+      )
       expect(Object.keys(streams).length).toEqual(6)
       expect(streams[streamA.id.toString()]).toBeTruthy()
       expect(streams[streamB.id.toString()]).toBeTruthy()
@@ -331,10 +341,13 @@ describe('Ceramic API', () => {
     })
 
     it('can load multiple paths and ignore paths that dont exist', async () => {
-      const streams = await ceramic._loadLinkedStreams({
-        streamId: streamA.id,
-        paths: ['/b', '/c/g/h', 'c/g/j', '/c/k'],
-      })
+      const streams = await ceramic._loadLinkedStreams(
+        {
+          streamId: streamA.id,
+          paths: ['/b', '/c/g/h', 'c/g/j', '/c/k'],
+        },
+        MULTIQUERY_TIMEOUT
+      )
       expect(Object.keys(streams).length).toEqual(3)
       expect(streams[streamA.id.toString()]).toBeTruthy()
       expect(streams[streamB.id.toString()]).toBeTruthy()
@@ -342,10 +355,13 @@ describe('Ceramic API', () => {
     })
 
     it('can load multiple paths and ignore invalid paths (ie not streams)', async () => {
-      const streams = await ceramic._loadLinkedStreams({
-        streamId: streamA.id,
-        paths: ['/b', '/b/notDoc', '/notDoc'],
-      })
+      const streams = await ceramic._loadLinkedStreams(
+        {
+          streamId: streamA.id,
+          paths: ['/b', '/b/notDoc', '/notDoc'],
+        },
+        MULTIQUERY_TIMEOUT
+      )
       expect(Object.keys(streams).length).toEqual(2)
       expect(streams[streamA.id.toString()]).toBeTruthy()
       expect(streams[streamB.id.toString()]).toBeTruthy()

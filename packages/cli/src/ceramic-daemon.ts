@@ -38,6 +38,7 @@ interface MultiQueryWithDocId extends MultiQuery {
 
 interface MultiQueries {
   queries: Array<MultiQueryWithDocId>
+  timeout?: number
 }
 
 const SYNC_OPTIONS_MAP = {
@@ -171,10 +172,12 @@ export class CeramicDaemon {
     this.app = addAsync(express())
     this.app.set('trust proxy', true)
     this.app.use(express.json({ limit: '1mb' }))
-    this.app.use(cors({
-      origin: opts.httpApi?.corsAllowedOrigins,
-      maxAge: 7200 // 2 hours
-    }))
+    this.app.use(
+      cors({
+        origin: opts.httpApi?.corsAllowedOrigins,
+        maxAge: 7200, // 2 hours
+      })
+    )
 
     this.app.use(logRequests(ceramic.loggerProvider))
 
@@ -460,6 +463,8 @@ export class CeramicDaemon {
    */
   async multiQuery(req: Request, res: Response): Promise<void> {
     let { queries } = <MultiQueries>req.body
+    const { timeout } = <MultiQueries>req.body
+
     // Handle queries from old clients by replacing the `docId` arguments with `streamId`.
     // TODO: Remove this once we no longer need to support http clients older than version 1.0.0
     queries = queries.map((q: MultiQueryWithDocId): MultiQuery => {
@@ -470,7 +475,7 @@ export class CeramicDaemon {
       return q
     })
 
-    const results = await this.ceramic.multiQuery(queries)
+    const results = await this.ceramic.multiQuery(queries, timeout)
     const response = Object.entries(results).reduce((acc, e) => {
       const [k, v] = e
       acc[k] = StreamUtils.serializeState(v.state)
