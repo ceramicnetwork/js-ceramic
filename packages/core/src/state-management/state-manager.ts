@@ -21,6 +21,7 @@ import { catchError, concatMap, takeUntil } from 'rxjs/operators'
 import { empty, Observable, Subject, Subscription, timer } from 'rxjs'
 import { SnapshotState } from './snapshot-state'
 import { CommitID, StreamID } from '@ceramicnetwork/streamid'
+import { FromQueue } from '../pubsub/task-queue'
 
 const APPLY_ANCHOR_COMMIT_ATTEMPTS = 3
 

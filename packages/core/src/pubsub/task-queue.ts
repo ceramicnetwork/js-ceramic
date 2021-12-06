@@ -4,7 +4,9 @@ export const noop = () => {
   // Do Nothing
 }
 
-export type Task<TaskResultType> = () => Promise<TaskResultType>
+export class FromQueue {}
+
+export type Task<TaskResultType> = (handle: FromQueue) => Promise<TaskResultType>
 
 /**
  * TaskQueue aspect.
@@ -52,7 +54,7 @@ export class TaskQueue implements TaskQueueLike {
   /**
    * Add task to queue. Fire-and-forget semantics.
    */
-  add(task, onFinally?): void {
+  add(task: Task<void>, onFinally?): void {
     this.run(task)
       .catch((error) => {
         const retry = () => this.add(task, onFinally)
@@ -67,7 +69,7 @@ export class TaskQueue implements TaskQueueLike {
    * Note "fire-and-forget" comment for the `add` method.
    */
   run<T>(task: Task<T>): Promise<T> {
-    return this.#pq.add(task)
+    return this.#pq.add(() => task(new FromQueue()))
   }
 
   /**

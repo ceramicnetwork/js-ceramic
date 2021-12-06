@@ -1,4 +1,4 @@
-import { noop, TaskQueue } from '../pubsub/task-queue'
+import { noop, TaskQueue, Task } from '../pubsub/task-queue'
 
 /**
  * Set of named PQueues.
@@ -47,7 +47,7 @@ export class NamedTaskQueue {
    *
    * Returns result of the task execution.
    */
-  run<A>(name: string, task: () => Promise<A>): Promise<A> {
+  run<A>(name: string, task: Task<A>): Promise<A> {
     const queue = this.queue(name)
     return queue.run(task).finally(() => {
       this.remove(name)
@@ -60,10 +60,10 @@ export class NamedTaskQueue {
    * All the tasks added under the same name are executed sequentially.
    * Tasks with different names are executed in parallel.
    */
-  add(name: string, task: () => Promise<void>): void {
+  add(name: string, task: Task<void>): void {
     const queue = this.queue(name)
     queue.add(
-      () => task(),
+      (handle) => task(handle),
       () => this.remove(name)
     )
   }

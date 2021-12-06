@@ -2,7 +2,7 @@ import { NamedTaskQueue } from './named-task-queue'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { DiagnosticsLogger } from '@ceramicnetwork/common'
 import { Semaphore } from 'await-semaphore'
-import { TaskQueueLike } from '../pubsub/task-queue'
+import { Task, FromQueue, TaskQueue, TaskQueueLike } from '../pubsub/task-queue'
 
 /**
  * Serialize tasks running on the same stream.
@@ -25,14 +25,14 @@ export class ExecutionQueue {
    */
   forStream(streamId: StreamID): TaskQueueLike {
     return {
-      add: (task) => {
-        return this.tasks.add(streamId.toString(), () => {
-          return this.semaphore.use(() => task())
+      add: (task: Task<void>) => {
+        return this.tasks.add(streamId.toString(), (handle) => {
+          return this.semaphore.use(() => task(handle))
         })
       },
       run: (task) => {
         return this.tasks.run(streamId.toString(), () => {
-          return this.semaphore.use(() => task())
+          return this.semaphore.use(() => task(new FromQueue()))
         })
       },
     }
