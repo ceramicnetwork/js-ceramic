@@ -47,7 +47,7 @@
     "@taquito/signer": "^9.2.0",
     "@taquito/taquito": "^9.2.0",
     "@tendermint/sig": "^0.6.0",
-    "@zondax/filecoin-signing-tools": "^0.15.0",
+    "@zondax/filecoin-signing-tools": "^0.18.2",
     "eth-sig-util": "^3.0.0",
     "ganache-core": "^2.13.1"
   },
