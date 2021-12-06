@@ -142,7 +142,7 @@ export class CeramicClient implements CeramicApi {
     return this.buildStream<T>(stream)
   }
 
-  async multiQuery(queries: Array<MultiQuery>): Promise<Record<string, Stream>> {
+  async multiQuery(queries: Array<MultiQuery>, timeout?: number): Promise<Record<string, Stream>> {
     const queriesJSON = queries.map((q) => {
       return {
         ...q,
@@ -154,6 +154,7 @@ export class CeramicClient implements CeramicApi {
       method: 'post',
       body: {
         queries: queriesJSON,
+        ...{ timeout },
       },
     })
 

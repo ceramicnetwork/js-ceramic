@@ -390,6 +390,23 @@ describe('Ceramic interop: core <> http-client', () => {
       expect(resCore[docD.id.toString()].content).toEqual(resClient[docD.id.toString()].content)
     })
 
+    it('passes timeout', async () => {
+      const queries = [{ streamId: docA.id }]
+      const loadLinkedStreamsSpy = jest.spyOn(core, '_loadLinkedStreams')
+
+      // explicit timeout
+      await client.multiQuery(queries, 10000)
+      expect(loadLinkedStreamsSpy).toBeCalledTimes(1)
+      expect(loadLinkedStreamsSpy.mock.calls[0][1]).toEqual(10000)
+
+      // default timeout
+      await client.multiQuery(queries)
+      expect(loadLinkedStreamsSpy).toBeCalledTimes(2)
+      expect(loadLinkedStreamsSpy.mock.calls[1][1]).toEqual(7000) // default timeout
+
+      loadLinkedStreamsSpy.mockRestore()
+    })
+
     it('returns stream when using multiquery with genesis and no updates', async () => {
       const metadata = {
         controllers: ['did:test'],
