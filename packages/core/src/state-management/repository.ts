@@ -176,7 +176,6 @@ export class Repository {
       await this.stateManager.sync(stream, opts.syncTimeoutSeconds * 1000, fromStateStore)
       return this.stateManager.verifyLoneGenesis(stream)
     })
-    await this.handlePinOpts(state$, opts)
 
     return state$
   }
