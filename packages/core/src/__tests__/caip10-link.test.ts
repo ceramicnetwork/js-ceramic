@@ -69,10 +69,24 @@ describe('Ceramic API', () => {
     })
 
     it('Create from valid account id', async () => {
+      const account = 'eip155:1:0x0544DcF4fcE959C6C4F3b7530190cB5E1BD67Cb8'
+      const link = await Caip10Link.fromAccount(ceramic, account)
+      expect(link.metadata.controllers).toHaveLength(1)
+      expect(link.metadata.controllers[0]).toEqual(
+        '0x0544dcf4fce959c6c4f3b7530190cb5e1bd67cb8@eip155:1'
+      )
+      expect(link.did).toBeNull()
+      expect(link.state.log).toHaveLength(1)
+      expect(link.state).toMatchSnapshot()
+    })
+
+    it('Create from legacy account id', async () => {
       const account = '0x0544DcF4fcE959C6C4F3b7530190cB5E1BD67Cb8@eip155:1'
       const link = await Caip10Link.fromAccount(ceramic, account)
       expect(link.metadata.controllers).toHaveLength(1)
-      expect(link.metadata.controllers[0]).toEqual(account.toLowerCase())
+      expect(link.metadata.controllers[0]).toEqual(
+        '0x0544DcF4fcE959C6C4F3b7530190cB5E1BD67Cb8@eip155:1'.toLowerCase()
+      )
       expect(link.did).toBeNull()
       expect(link.state.log).toHaveLength(1)
       expect(link.state).toMatchSnapshot()
@@ -94,6 +108,23 @@ describe('Ceramic API', () => {
     })
 
     it('Create and link DID', async () => {
+      const account = 'eip155:1:0x0544DcF4fcE959C6C4F3b7530190cB5E1BD67Cb7'
+      const linkProof = { account, did: ceramic.did.id }
+      authProvider.createLink.mockReturnValueOnce(linkProof)
+
+      const link = await Caip10Link.fromAccount(ceramic, account)
+      await link.setDid(ceramic.did, authProvider, { anchor: false })
+
+      expect(link.did).toEqual(ceramic.did.id)
+      expect(link.state.log).toHaveLength(2)
+      expect(authProvider.createLink).toHaveBeenCalledTimes(1)
+      expect(validateLink).toHaveBeenCalledTimes(1)
+      expect(link.state).toMatchSnapshot()
+    })
+
+    it('Create and link DID with legacy CAIP format', async () => {
+      validateLink.mockClear()
+
       const account = '0x0544DcF4fcE959C6C4F3b7530190cB5E1BD67Cb7@eip155:1'
       const linkProof = { account, did: ceramic.did.id }
       authProvider.createLink.mockReturnValueOnce(linkProof)
@@ -109,7 +140,7 @@ describe('Ceramic API', () => {
     })
 
     it('Created with same address loads same doc', async () => {
-      const account = '0x0544DcF4fcE959C6C4F3b7530190cB5E1BD67Cb3@eip155:1'
+      const account = 'eip155:1:0x0544DcF4fcE959C6C4F3b7530190cB5E1BD67Cb3'
       const linkProof = { account, did: ceramic.did.id }
       authProvider.createLink.mockReturnValueOnce(linkProof)
 
@@ -120,13 +151,14 @@ describe('Ceramic API', () => {
       expect(link1.id).toEqual(link2.id)
       expect(link1.did).toEqual(ceramic.did.id)
       expect(link2.did).toEqual(link1.did)
+
       expect(StreamUtils.serializeState(link2.state)).toEqual(
         StreamUtils.serializeState(link1.state)
       )
     })
 
     it('Load works', async () => {
-      const account = '0x0544DcF4fcE959C6C4F3b7530190cB5E1BD67Cb4@eip155:1'
+      const account = 'eip155:1:0x0544DcF4fcE959C6C4F3b7530190cB5E1BD67Cb4'
       const linkProof = { account, did: ceramic.did.id }
       authProvider.createLink.mockReturnValueOnce(linkProof)
 
@@ -143,7 +175,7 @@ describe('Ceramic API', () => {
     })
 
     it('Anchoring works', async () => {
-      const account = '0x0544DcF4fcE959C6C4F3b7530190cB5E1BD67Cb1@eip155:1'
+      const account = 'eip155:1:0x0544DcF4fcE959C6C4F3b7530190cB5E1BD67Cb1'
       const linkProof = { account, did: ceramic.did.id }
       authProvider.createLink.mockReturnValueOnce(linkProof)
 
@@ -163,7 +195,7 @@ describe('Ceramic API', () => {
     })
 
     it('Throws when linking to invalid DID ', async () => {
-      const account = '0x0544DcF4fcE959C6C4F3b7530190cB5E1BD67Cb7@eip155:1'
+      const account = 'eip155:1:0x0544DcF4fcE959C6C4F3b7530190cB5E1BD67Cb7'
       const link = await Caip10Link.fromAccount(ceramic, account)
 
       const invalidDids = [
@@ -182,7 +214,7 @@ describe('Ceramic API', () => {
     })
 
     it('Clear did works', async () => {
-      const account = '0x0544DcF4fcE959C6C4F3b7530190cB5E1BD67Cb7@eip155:1'
+      const account = 'eip155:1:0x0544DcF4fcE959C6C4F3b7530190cB5E1BD67Cb7'
       const link = await Caip10Link.fromAccount(ceramic, account)
       await expect(link.did).toBeNull()
 
