@@ -1,5 +1,5 @@
 import { AuthProvider } from './auth-provider'
-import { AccountId } from 'caip'
+import { AccountID } from 'caip'
 import { getConsentMessage, LinkProof } from './util'
 import { normalizeAccountId } from './ethereum'
 import * as sha256Stable from '@stablelib/sha256'
@@ -12,9 +12,9 @@ export class EosioAuthProvider implements AuthProvider {
 
   constructor(private readonly provider: any, private readonly address: string) {}
 
-  async accountId(): Promise<AccountId> {
+  async accountId(): Promise<AccountID> {
     const chainId = toCAIPChainId(await this.provider.getChainId())
-    return new AccountId({
+    return new AccountID({
       address: this.address,
       chainId: `eosio:${chainId}`,
     })
@@ -55,7 +55,7 @@ function sanitize(str: string, size: number): string {
   return str.replace(/\s/g, ' ').replace(new RegExp(`(\\S{${size}})`, 'g'), '$1 ')
 }
 
-export function toPayload(message: string, accountID: AccountId): string {
+export function toPayload(message: string, accountID: AccountID): string {
   const { address, chainId } = accountID
   const payload = `${message} [For: ${address} on chain: ${chainId}]`
   return sanitize(payload, maxWordLength)
@@ -63,7 +63,7 @@ export function toPayload(message: string, accountID: AccountId): string {
 
 export async function toSignedPayload(
   message: string,
-  accountID: AccountId,
+  accountID: AccountID,
   provider: any
 ): Promise<string> {
   accountID = normalizeAccountId(accountID)

@@ -3,7 +3,7 @@ import { InMemorySigner } from '@taquito/signer'
 import { validateLink } from '../../index'
 import { LinkProof } from '@ceramicnetwork/blockchain-utils-linking'
 import fetch from 'cross-fetch'
-import { AccountId, ChainId } from 'caip'
+import { AccountID, ChainID } from 'caip'
 jest.mock('cross-fetch', () => jest.fn()) // this gets hoisted to the top of the file
 const mockFetch = fetch as jest.Mock
 const { Response } = jest.requireActual('cross-fetch')
@@ -54,16 +54,17 @@ beforeAll(async () => {
   invalidSignatureProof.signature = 'invalid'
 
   invalidChainIdProof = Object.assign({}, validProof)
-  const accountId = AccountId.parse(invalidChainIdProof.account)
-  const chainId = new ChainId(accountId.chainId)
-  invalidChainIdProof.account = new AccountId({
+  const accountId = AccountID.parse(invalidChainIdProof.account)
+  const chainId = new ChainID(accountId.chainId)
+  invalidChainIdProof.account = new AccountID({
     address: accountId.address,
     chainId: {
       namespace: chainId.namespace,
       reference: 'some unsupported chain reference',
-    },
+    }
   }).toString()
 })
+
 
 afterAll(() => {
   // restore Date.now()
@@ -90,11 +91,9 @@ describe('Blockchain: Tezos', () => {
       {
         testName: 'unable to validate when wallet address has not been published to the blockchain',
         pubkeyObject(): HttpResponse {
-          return new Response(
-            JSON.stringify({
-              pubkey: undefined,
-            })
-          )
+          return new Response(JSON.stringify({
+            pubkey: undefined,
+          }))
         },
       },
 
@@ -103,11 +102,9 @@ describe('Blockchain: Tezos', () => {
       // - the signature can be verified
       {
         pubkeyObject(publicKey?: string): HttpResponse {
-          return new Response(
-            JSON.stringify({
-              pubkey: publicKey,
-            })
-          )
+          return new Response(JSON.stringify({
+            pubkey: publicKey,
+          }))
         },
       },
     ]
@@ -127,7 +124,7 @@ describe('Blockchain: Tezos', () => {
       {
         message: 'invalid chain reference',
         proof: () => invalidChainIdProof,
-      },
+      }
     ]
 
     // run test cases

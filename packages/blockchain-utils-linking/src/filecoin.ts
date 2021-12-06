@@ -1,5 +1,5 @@
 import { AuthProvider } from './auth-provider'
-import { AccountId } from 'caip'
+import { AccountID } from 'caip'
 import { getConsentMessage, LinkProof } from './util'
 import type { MessageParams } from '@zondax/filecoin-signing-tools'
 import * as uint8arrays from 'uint8arrays'
@@ -9,10 +9,10 @@ export class FilecoinAuthProvider implements AuthProvider {
 
   constructor(private readonly provider: any, private readonly address: string) {}
 
-  async accountId(): Promise<AccountId> {
+  async accountId(): Promise<AccountID> {
     const prefix = this.address[0]
     const chainId = `fil:${prefix}`
-    return new AccountId({ address: this.address, chainId })
+    return new AccountID({ address: this.address, chainId })
   }
 
   async authenticate(message: string): Promise<string> {

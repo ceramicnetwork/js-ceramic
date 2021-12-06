@@ -1,9 +1,9 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`accountId 1`] = `
-AccountId {
+AccountID {
   "address": "testuser1111",
-  "chainId": ChainId {
+  "chainId": ChainID {
     "namespace": "eosio",
     "reference": "1eaa0824707c8c16bd25145493bf062a",
   },
@@ -16,7 +16,7 @@ exports[`authenticate Telos Testnet 1`] = `"0x521674ea7031af056c7fcf69e2c3ff6f4b
 
 exports[`createLink generate proof on jungle testnet 1`] = `
 Object {
-  "account": "eosio:2a02a0053e5a8cf73a56ba0fda11e4d9:idx3idctest1",
+  "account": "idx3idctest1@eosio:2a02a0053e5a8cf73a56ba0fda11e4d9",
   "message": "Link this account to your identity
 
 did:3:bafysdfwefwe 
@@ -30,7 +30,7 @@ Timestamp: 666",
 
 exports[`createLink generate proof on telos testnet 1`] = `
 Object {
-  "account": "eosio:1eaa0824707c8c16bd25145493bf062a:testuser1111",
+  "account": "testuser1111@eosio:1eaa0824707c8c16bd25145493bf062a",
   "message": "Link this account to your identity
 
 did:3:bafysdfwefwe 

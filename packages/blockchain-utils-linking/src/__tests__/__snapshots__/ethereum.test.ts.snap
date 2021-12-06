@@ -4,7 +4,7 @@ exports[`EthereumAuthProvider authenticate 1`] = `"0x92d414fa574ea420dae28a58454
 
 exports[`EthereumAuthProvider createLink 1`] = `
 Object {
-  "account": "eip155:1337:0x8fe2c4516e920425e177658aaac451ca0463ed69",
+  "account": "0x8fe2c4516e920425e177658aaac451ca0463ed69@eip155:1337",
   "message": "Link this account to your identity
 
 did:3:bafysdfwefwe 
@@ -39,7 +39,7 @@ exports[`authenticate correctly sign auth message 1`] = `"0xcf54e7560501fa53e3f7
 
 exports[`createLink create erc1271 proof correctly 1`] = `
 Object {
-  "account": "eip155:1337:0xbe6c27620b271dd76f1787cdef1f4375cff3fa1f",
+  "account": "0xbe6c27620b271dd76f1787cdef1f4375cff3fa1f@eip155:1337",
   "message": "Link this account to your identity
 
 did:3:bafysdfwefwe",
@@ -51,7 +51,7 @@ did:3:bafysdfwefwe",
 
 exports[`createLink create ethereumEOA proof correctly 1`] = `
 Object {
-  "account": "eip155:1:0x8fe2c4516e920425e177658aaac451ca0463ed69",
+  "account": "0x8fe2c4516e920425e177658aaac451ca0463ed69@eip155:1",
   "message": "Link this account to your identity
 
 did:3:bafysdfwefwe",
@@ -61,4 +61,4 @@ did:3:bafysdfwefwe",
 }
 `;
 
-exports[`createLink throw if erc1271 is on wrong chain 1`] = `[Error: ChainId in provider (1337) is different from AccountId (123)]`;
+exports[`createLink throw if erc1271 is on wrong chain 1`] = `[Error: ChainId in provider (1337) is different from AccountID (123)]`;
