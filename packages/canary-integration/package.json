@@ -26,13 +26,5 @@
     "key-did-provider-ed25519": "^1.1.0",
     "key-did-resolver": "^1.4.0"
   },
-  "jest": {
-    "testEnvironment": "node",
-    "resolver": "jest-resolver-enhanced",
-    "testRegex": ".(spec|test).ts$",
-    "transform": {
-      "^.+\\.ts$": "ts-jest"
-    }
-  },
   "gitHead": "34eeee25597b0a60def72906c26d3afd6230aaf1"
 }
