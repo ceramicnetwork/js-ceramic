@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.11.2-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@1.11.1...@ceramicnetwork/core@1.11.2-rc.0) (2021-12-06)
+
+
+### Bug Fixes
+
+* **cli,http-client:** Properly serialize timeout for multiquery requests through the http client ([#1899](https://github.com/ceramicnetwork/js-ceramic/issues/1899)) ([cb968a5](https://github.com/ceramicnetwork/js-ceramic/commit/cb968a53b9cbad825c8c01828fac52eb52752323))
+
+
+
+
+
 ## [1.11.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@1.11.1-rc.10...@ceramicnetwork/core@1.11.1) (2021-12-06)
 
 **Note:** Version bump only for package @ceramicnetwork/core
