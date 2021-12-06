@@ -1,4 +1,4 @@
-import { AccountId } from 'caip'
+import { AccountID } from 'caip'
 import { AuthProvider } from './auth-provider'
 import { getConsentMessage, LinkProof } from './util'
 import * as uint8arrays from 'uint8arrays'
@@ -19,8 +19,8 @@ export class SolanaAuthProvider implements AuthProvider {
     private readonly chainRef: string
   ) { }
 
-  async accountId(): Promise<AccountId> {
-    return new AccountId({
+  async accountId(): Promise<AccountID> {
+    return new AccountID({
       address: this.address,
       chainId: `solana:${this.chainRef}`,
     })
