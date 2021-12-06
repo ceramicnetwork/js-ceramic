@@ -128,9 +128,13 @@ export class PathTrie {
   }
 }
 
-export const promiseTimeout = (ms: number, promise: Promise<any>): Promise<any> => {
+export const promiseTimeout = (
+  promise: Promise<any>,
+  ms: number,
+  timeoutErrorMsg: string
+): Promise<any> => {
   const timeout = new Promise((resolve, reject) => {
-    setTimeout(() => reject(), ms)
+    setTimeout(() => reject(new Error(timeoutErrorMsg)), ms)
   })
   return Promise.race([timeout, promise])
 }

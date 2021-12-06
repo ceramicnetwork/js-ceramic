@@ -171,7 +171,10 @@ export class CeramicDaemon {
     this.app = addAsync(express())
     this.app.set('trust proxy', true)
     this.app.use(express.json({ limit: '1mb' }))
-    this.app.use(cors({ origin: opts.httpApi?.corsAllowedOrigins }))
+    this.app.use(cors({
+      origin: opts.httpApi?.corsAllowedOrigins,
+      maxAge: 7200 // 2 hours
+    }))
 
     this.app.use(logRequests(ceramic.loggerProvider))
 

@@ -204,17 +204,17 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
    * Verifies commit signature
    * @param commitData - Commit to be verified
    * @param context - Ceramic context
-   * @param did - DID value
+   * @param controller - DID value
    * @private
    */
   async _verifySignature(
     commitData: CommitData,
     context: Context,
-    did: string
+    controller: string
   ): Promise<void> {
     await context.did.verifyJWS(commitData.envelope, {
       atTime: commitData.timestamp,
-      issuer: did,
+      issuer: controller,
       disableTimecheck: commitData.disableTimecheck,
     })
   }

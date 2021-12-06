@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/cli",
-  "version": "1.9.1-rc.0",
+  "version": "1.9.1-rc.10",
   "description": "Typescript implementation of the Ceramic CLI",
   "keywords": [
     "Ceramic",
@@ -33,13 +33,13 @@
   },
   "dependencies": {
     "@awaitjs/express": "^0.9.0",
-    "@ceramicnetwork/3id-did-resolver": "^1.4.10-rc.0",
-    "@ceramicnetwork/common": "^1.9.0-rc.0",
-    "@ceramicnetwork/core": "^1.11.1-rc.0",
-    "@ceramicnetwork/http-client": "^1.5.1-rc.0",
-    "@ceramicnetwork/ipfs-daemon": "^1.2.3-rc.0",
+    "@ceramicnetwork/3id-did-resolver": "^1.4.10-rc.11",
+    "@ceramicnetwork/common": "^1.9.0-rc.2",
+    "@ceramicnetwork/core": "^1.11.1-rc.10",
+    "@ceramicnetwork/http-client": "^1.5.1-rc.4",
+    "@ceramicnetwork/ipfs-daemon": "^1.2.3-rc.2",
     "@ceramicnetwork/logger": "^1.0.4",
-    "@ceramicnetwork/stream-tile": "^1.5.1-rc.0",
+    "@ceramicnetwork/stream-tile": "^1.5.1-rc.2",
     "@ceramicnetwork/streamid": "^1.3.5-rc.0",
     "@stablelib/random": "^1.0.1",
     "aws-sdk": "^2.1034.0",
@@ -47,7 +47,7 @@
     "cors": "^2.8.5",
     "dag-jose": "^1.0.0",
     "did-resolver": "^3.1.3",
-    "dids": "^3.0.0-alpha.0",
+    "dids": "3.0.0-alpha.0",
     "ethr-did-resolver": "5.0.2",
     "express": "^4.17.1",
     "flat": "^5.0.2",
@@ -66,7 +66,7 @@
     "uint8arrays": "^3.0.0"
   },
   "devDependencies": {
-    "@ceramicnetwork/stream-tile-handler": "^1.5.5-rc.0",
+    "@ceramicnetwork/stream-tile-handler": "^1.5.5-rc.10",
     "@stablelib/sha256": "^1.0.1",
     "@types/express": "^4.17.13",
     "@types/levelup": "^4.3.3",

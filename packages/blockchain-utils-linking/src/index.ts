@@ -6,6 +6,7 @@ export * as polkadot from './polkadot'
 export * as eosio from './eosio'
 export * as cosmos from './cosmos'
 export * as tezos from './tezos'
+export * as solana from './solana'
 
 export { EthereumAuthProvider } from './ethereum'
 export { EthereumAuthProvider as AvalancheAuthProvider } from './ethereum'
@@ -15,3 +16,5 @@ export { PolkadotAuthProvider } from './polkadot'
 export { CosmosAuthProvider } from './cosmos'
 export { NearAuthProvider } from './near'
 export { TezosAuthProvider, TezosProvider } from './tezos'
+export { SolanaAuthProvider } from './solana'
+

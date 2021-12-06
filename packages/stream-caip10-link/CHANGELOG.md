@@ -3,6 +3,25 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## 1.2.3-rc.2 (2021-12-06)
+
+
+### Bug Fixes
+
+* Revert Caip10 upgrade ([#1895](https://github.com/ceramicnetwork/js-ceramic/issues/1895)) ([1c376ef](https://github.com/ceramicnetwork/js-ceramic/commit/1c376ef92f4e93b6da819616cef4e5c7582c97e5))
+
+
+
+
+
+## [1.2.3-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-caip10-link@1.2.3-rc.0...@ceramicnetwork/stream-caip10-link@1.2.3-rc.1) (2021-12-01)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-caip10-link
+
+
+
+
+
 ## [1.2.3-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-caip10-link@1.2.2...@ceramicnetwork/stream-caip10-link@1.2.3-rc.0) (2021-11-17)
 
 

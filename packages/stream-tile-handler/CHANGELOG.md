@@ -3,6 +3,62 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.5.5-rc.10](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile-handler@1.5.5-rc.9...@ceramicnetwork/stream-tile-handler@1.5.5-rc.10) (2021-12-06)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
+
+
+
+
+
+## [1.5.5-rc.9](/compare/@ceramicnetwork/stream-tile-handler@1.5.5-rc.8...@ceramicnetwork/stream-tile-handler@1.5.5-rc.9) (2021-12-01)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
+
+
+
+
+
+## [1.5.5-rc.8](/compare/@ceramicnetwork/stream-tile-handler@1.5.5-rc.6...@ceramicnetwork/stream-tile-handler@1.5.5-rc.8) (2021-12-01)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
+
+
+
+
+
+## [1.5.5-rc.6](/compare/@ceramicnetwork/stream-tile-handler@1.5.5-rc.4...@ceramicnetwork/stream-tile-handler@1.5.5-rc.6) (2021-12-01)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
+
+
+
+
+
+## [1.5.5-rc.4](/compare/@ceramicnetwork/stream-tile-handler@1.5.5-rc.2...@ceramicnetwork/stream-tile-handler@1.5.5-rc.4) (2021-12-01)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
+
+
+
+
+
+## [1.5.5-rc.2](/compare/@ceramicnetwork/stream-tile-handler@1.5.5-rc.1...@ceramicnetwork/stream-tile-handler@1.5.5-rc.2) (2021-12-01)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
+
+
+
+
+
+## [1.5.5-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile-handler@1.5.5-rc.0...@ceramicnetwork/stream-tile-handler@1.5.5-rc.1) (2021-12-01)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
+
+
+
+
+
 ## [1.5.5-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile-handler@1.5.4...@ceramicnetwork/stream-tile-handler@1.5.5-rc.0) (2021-11-17)
 
 

@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/blockchain-utils-linking",
-  "version": "1.5.1-rc.0",
+  "version": "1.5.1-rc.2",
   "description": "Blockchain utils for linking blockchain accounts to DID",
   "keywords": [
     "ceramic",
@@ -41,6 +41,9 @@
     "@polkadot/util": "^7.1.1",
     "@polkadot/util-crypto": "^7.0.2",
     "@smontero/eosio-local-provider": "^0.0.3",
+    "@solana/wallet-adapter-base": "^0.6.0",
+    "@solana/web3.js": "^1.20.0",
+    "@stablelib/ed25519": "^1.0.2",
     "@taquito/signer": "^11.0.1",
     "@taquito/taquito": "^11.0.1",
     "@tendermint/sig": "^0.6.0",

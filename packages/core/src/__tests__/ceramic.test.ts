@@ -564,7 +564,9 @@ describe('Ceramic integration', () => {
             genesis: genesisCommit,
           },
         ])
-      ).rejects.toThrowError('Given StreamID CID does not match given genesis content')
+      ).rejects.toThrowError(
+        `Given StreamID CID ${stream1.id.cid.toString()} does not match given genesis content`
+      )
 
       await ceramic1.close()
       await ceramic2.close()

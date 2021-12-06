@@ -3,6 +3,25 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## 1.2.3-rc.2 (2021-12-06)
+
+**Note:** Version bump only for package @ceramicnetwork/ipfs-daemon
+
+
+
+
+
+## [1.2.3-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ipfs-daemon@1.2.3-rc.0...@ceramicnetwork/ipfs-daemon@1.2.3-rc.1) (2021-12-01)
+
+
+### Reverts
+
+* Revert "DEBUG DO NOT PUBLISH: add env var to disable peer discovery (#1878)" (#1879) ([1274a3d](https://github.com/ceramicnetwork/js-ceramic/commit/1274a3dbe48875514f9223c71a1038281a632961)), closes [#1878](https://github.com/ceramicnetwork/js-ceramic/issues/1878) [#1879](https://github.com/ceramicnetwork/js-ceramic/issues/1879)
+
+
+
+
+
 ## [1.2.3-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ipfs-daemon@1.2.2...@ceramicnetwork/ipfs-daemon@1.2.3-rc.0) (2021-11-17)
 
 

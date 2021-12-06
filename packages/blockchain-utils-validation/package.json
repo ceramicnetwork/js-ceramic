@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/blockchain-utils-validation",
-  "version": "1.6.2-rc.0",
+  "version": "1.6.2-rc.10",
   "description": "Blockchain utils for validation of linked blockchain accounts",
   "keywords": [
     "ceramic",
@@ -24,7 +24,7 @@
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/blockchain-utils-linking": "^1.5.1-rc.0",
+    "@ceramicnetwork/blockchain-utils-linking": "^1.5.1-rc.2",
     "@ceramicnetwork/common": "^1.9.0-rc.0",
     "@ethersproject/contracts": "^5.5.0",
     "@ethersproject/providers": "^5.5.0",
@@ -48,6 +48,7 @@
     "@polkadot/util": "^7.1.1",
     "@polkadot/util-crypto": "^7.0.2",
     "@smontero/eosio-local-provider": "^0.0.3",
+    "@solana/wallet-adapter-base": "^0.6.0",
     "@taquito/signer": "^11.0.1",
     "eth-sig-util": "^3.0.1",
     "ganache-core": "^2.13.1",
