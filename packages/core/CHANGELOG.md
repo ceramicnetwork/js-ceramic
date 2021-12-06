@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.11.1-rc.10](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@1.11.1-rc.9...@ceramicnetwork/core@1.11.1-rc.10) (2021-12-06)
+
+
+### Bug Fixes
+
+* Revert Caip10 upgrade ([#1895](https://github.com/ceramicnetwork/js-ceramic/issues/1895)) ([1c376ef](https://github.com/ceramicnetwork/js-ceramic/commit/1c376ef92f4e93b6da819616cef4e5c7582c97e5))
+
+
+
+
+
 ## [1.11.1-rc.9](/compare/@ceramicnetwork/core@1.11.1-rc.8...@ceramicnetwork/core@1.11.1-rc.9) (2021-12-01)
 
 **Note:** Version bump only for package @ceramicnetwork/core

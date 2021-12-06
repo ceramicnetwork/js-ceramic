@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.9.1-rc.10](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@1.9.1-rc.9...@ceramicnetwork/cli@1.9.1-rc.10) (2021-12-06)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
 ## [1.9.1-rc.9](/compare/@ceramicnetwork/cli@1.9.1-rc.8...@ceramicnetwork/cli@1.9.1-rc.9) (2021-12-01)
 
 **Note:** Version bump only for package @ceramicnetwork/cli
