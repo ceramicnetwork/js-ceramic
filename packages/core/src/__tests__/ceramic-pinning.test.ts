@@ -141,11 +141,11 @@ describe('Ceramic stream pinning', () => {
       anchor: false,
       publish: false,
     })
-    expect(isPinned(ceramic, stream.id)).resolves.toBeFalsy()
+    await expect(isPinned(ceramic, stream.id)).resolves.toBeFalsy()
     await stream.update({ foo: 'baz' }, null, { anchor: false, publish: false, pin: true })
-    expect(isPinned(ceramic, stream.id)).resolves.toBeTruthy()
+    await expect(isPinned(ceramic, stream.id)).resolves.toBeTruthy()
     await stream.update({ foo: 'foobarbaz' }, null, { anchor: false, publish: false, pin: false })
-    expect(isPinned(ceramic, stream.id)).resolves.toBeFalsy()
+    await expect(isPinned(ceramic, stream.id)).resolves.toBeFalsy()
     await ceramic.close()
   })
 

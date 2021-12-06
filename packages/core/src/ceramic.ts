@@ -599,6 +599,7 @@ export class Ceramic implements CeramicApi {
       return streamFromState<T>(this.context, this._streamHandlers, snapshot$.value)
     } else {
       const base$ = await this.repository.load(streamRef.baseID, opts)
+      await this.repository.handlePinOpts(base$, opts)
       return streamFromState<T>(
         this.context,
         this._streamHandlers,
