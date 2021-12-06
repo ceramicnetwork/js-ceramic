@@ -1,7 +1,14 @@
 import Ceramic from '../ceramic'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import tmp from 'tmp-promise'
-import { StreamUtils, IpfsApi, TestUtils, StreamState, SyncOptions } from '@ceramicnetwork/common'
+import {
+  StreamUtils,
+  IpfsApi,
+  TestUtils,
+  StreamState,
+  SyncOptions,
+  MultiQuery,
+} from '@ceramicnetwork/common'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import * as u8a from 'uint8arrays'
 import { swarmConnect, withFleet } from './ipfs-util'
@@ -436,6 +443,38 @@ describe('Ceramic integration', () => {
       const streamCurrent = res[stream1.id.toString()] as TileDocument
       expect(streamAtCommit.content).toEqual(content2)
       expect(streamCurrent.content).toEqual(content2)
+
+      await ceramic1.close()
+      await ceramic2.close()
+    })
+  })
+
+  it('Loading many commits of same stream via multiquery works', async () => {
+    await withFleet(2, async ([ipfs1, ipfs2]) => {
+      await swarmConnect(ipfs1, ipfs2)
+      const ceramic1 = await createCeramic(ipfs1, false)
+      const ceramic2 = await createCeramic(ipfs2, false)
+
+      const NUM_UPDATES = 20
+      const stream = await TileDocument.create(ceramic1, { counter: 0 }, null, { anchor: false })
+      for (let i = 1; i < NUM_UPDATES; i++) {
+        await stream.update({ counter: i }, null, { anchor: false, publish: false })
+      }
+
+      const queries: Array<MultiQuery> = [{ streamId: stream.id }]
+      for (const commitId of stream.allCommitIds) {
+        queries.push({ streamId: commitId })
+      }
+
+      const result = await ceramic2.multiQuery(queries, 10000)
+      expect(Object.keys(result).length).toEqual(stream.allCommitIds.length + 1) // +1 for base streamid
+      expect(result[stream.id.toString()].content).toEqual({ counter: NUM_UPDATES - 1 })
+
+      let i = 0
+      for (const commitId of stream.allCommitIds) {
+        const docAtCommit = result[commitId.toString()]
+        expect(docAtCommit.content).toEqual({ counter: i++ })
+      }
 
       await ceramic1.close()
       await ceramic2.close()
