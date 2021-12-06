@@ -1,6 +1,7 @@
 import { AuthProvider } from '@ceramicnetwork/blockchain-utils-linking'
 import { CeramicApi } from '@ceramicnetwork/common'
 import { Caip10Link } from '@ceramicnetwork/stream-caip10-link'
+import type { AccountID } from 'caip'
 
 export async function happyPath(ceramic: CeramicApi, authProvider: AuthProvider) {
   const accountId = await authProvider.accountId()

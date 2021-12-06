@@ -1,6 +1,6 @@
 import { EOSIOProvider } from '@smontero/eosio-local-provider'
 import { validateLink } from '../eosio'
-import { AccountId } from 'caip'
+import { AccountID } from 'caip'
 import * as linking from '@ceramicnetwork/blockchain-utils-linking'
 
 jest.setTimeout(120000)
@@ -39,15 +39,15 @@ describe('validateLink', () => {
     const proof = await authProvider.createLink(did)
     await expect(validateLink(proof)).resolves.toEqual(proof)
 
-    let testAccount = new AccountId(`eosio:${jungleCAIPChainId}:${jungleAccount}`)
+    let testAccount = new AccountID(`${jungleAccount}@eosio:${jungleCAIPChainId}`)
     proof.account = testAccount.toString()
     await expect(validateLink(proof)).resolves.toEqual(null)
 
-    testAccount = new AccountId(`eosio:${telosTestnetCAIPChainId}:${jungleAccount}`)
+    testAccount = new AccountID(`${jungleAccount}@eosio:${telosTestnetCAIPChainId}`)
     proof.account = testAccount.toString()
     await expect(validateLink(proof)).resolves.toEqual(null)
 
-    testAccount = new AccountId(`eosio:${invalidCAIPChainId}:${jungleAccount}`)
+    testAccount = new AccountID(`${jungleAccount}@eosio:${invalidCAIPChainId}`)
     proof.account = testAccount.toString()
     await expect(validateLink(proof)).rejects.toThrow(
       `No node found for chainId: ${invalidCAIPChainId}`
@@ -59,15 +59,15 @@ describe('validateLink', () => {
     const proof = await authProvider.createLink(did)
     await expect(validateLink(proof)).resolves.toEqual(proof)
 
-    let testAccount = new AccountId(`eosio:${telosTestnetCAIPChainId}:${telosTestnetAccount}`)
+    let testAccount = new AccountID(`${telosTestnetAccount}@eosio:${telosTestnetCAIPChainId}`)
     proof.account = testAccount.toString()
     await expect(validateLink(proof)).resolves.toEqual(null)
 
-    testAccount = new AccountId(`eosio:${jungleCAIPChainId}:${telosTestnetAccount}`)
+    testAccount = new AccountID(`${telosTestnetAccount}@eosio:${jungleCAIPChainId}`)
     proof.account = testAccount.toString()
     await expect(validateLink(proof)).resolves.toEqual(null)
 
-    testAccount = new AccountId(`eosio:${invalidCAIPChainId}:${telosTestnetAccount}`)
+    testAccount = new AccountID(`${telosTestnetAccount}@eosio:${invalidCAIPChainId}`)
     proof.account = testAccount.toString()
     await expect(validateLink(proof)).rejects.toThrow(
       `No node found for chainId: ${invalidCAIPChainId}`

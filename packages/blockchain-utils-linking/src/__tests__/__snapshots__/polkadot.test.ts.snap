@@ -1,9 +1,9 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`accountId 1`] = `
-AccountId {
+AccountID {
   "address": "5CXU7u72Gz9Jqo6FdAwzSsxX5JhdRwMj2UZ4xrAEoo3AyySx",
-  "chainId": ChainId {
+  "chainId": ChainID {
     "namespace": "polkadot",
     "reference": "b0a8d493285c2df73290dfb7e61f870f",
   },
@@ -12,7 +12,7 @@ AccountId {
 
 exports[`createLink create proof with ed25519 1`] = `
 Object {
-  "account": "polkadot:b0a8d493285c2df73290dfb7e61f870f:5EEvMbuaJQxxPorGtzY2qUYqM3akRrnD36bZD4PomfpLdrtx",
+  "account": "5EEvMbuaJQxxPorGtzY2qUYqM3akRrnD36bZD4PomfpLdrtx@polkadot:b0a8d493285c2df73290dfb7e61f870f",
   "message": "Link this account to your identity
 
 did:3:bafysdfwefwe 
@@ -26,7 +26,7 @@ Timestamp: 666",
 
 exports[`createLink create proof with secp256k 1`] = `
 Object {
-  "account": "polkadot:b0a8d493285c2df73290dfb7e61f870f:5GuAnwx9uKSQxKZB8moxoaX4ceehoCYu4XYMjJkKtm2QDgqC",
+  "account": "5GuAnwx9uKSQxKZB8moxoaX4ceehoCYu4XYMjJkKtm2QDgqC@polkadot:b0a8d493285c2df73290dfb7e61f870f",
   "message": "Link this account to your identity
 
 did:3:bafysdfwefwe 
@@ -38,7 +38,7 @@ Timestamp: 666",
 }
 `;
 
-exports[`createLink create proof with sr25519 1`] = `"polkadot:b0a8d493285c2df73290dfb7e61f870f:5CXU7u72Gz9Jqo6FdAwzSsxX5JhdRwMj2UZ4xrAEoo3AyySx"`;
+exports[`createLink create proof with sr25519 1`] = `"5CXU7u72Gz9Jqo6FdAwzSsxX5JhdRwMj2UZ4xrAEoo3AyySx@polkadot:b0a8d493285c2df73290dfb7e61f870f"`;
 
 exports[`createLink create proof with sr25519 2`] = `
 "Link this account to your identity

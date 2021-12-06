@@ -18,7 +18,7 @@ exports[`Blockchain: Tezos validateLink unable to validate when wallet address h
 
 exports[`Blockchain: Tezos validateLink valid proof 1`] = `
 Object {
-  "account": "tezos:NetXdQprcVkpaWU:tz3Lfm6CyfSTZ7EgMckptZZGiPxzs9GK59At",
+  "account": "tz3Lfm6CyfSTZ7EgMckptZZGiPxzs9GK59At@tezos:NetXdQprcVkpaWU",
   "did": "did:3:bafysdfwefwe",
   "message": "Link this account to your identity
 
