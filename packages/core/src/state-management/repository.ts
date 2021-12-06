@@ -137,6 +137,29 @@ export class Repository {
   }
 
   /**
+   * Helper function for loading at least the genesis commit state for a stream.
+   * WARNING: This should only be called from within a thread in the loadingQ!!!
+   *
+   * @param streamId
+   * @returns a tuple whose first element is the state that was loaded, and whose second element
+   *   is a boolean representing whether we believe that state should be the most update-to-date
+   *   state for that stream, or whether it could be behind the current tip and needs to be synced.
+   */
+  async _loadGenesis(streamId: StreamID): Promise<[RunningState, boolean]> {
+    let stream = this.fromMemory(streamId)
+    if (stream) {
+      return [stream, true]
+    }
+
+    stream = await this.fromStateStore(streamId)
+    if (stream) {
+      return [stream, this.stateManager.wasPinnedStreamSynced(streamId)]
+    }
+
+    stream = await this.fromNetwork(streamId)
+    return [stream, false]
+  }
+  /**
    * Returns a stream from wherever we can get information about it.
    * Starts by checking if the stream state is present in the in-memory cache, if not then
    * checks the state store, and finally loads the stream from pubsub.
@@ -145,35 +168,16 @@ export class Repository {
     opts = { ...DEFAULT_LOAD_OPTS, ...opts }
 
     const state$ = await this.loadingQ.forStream(streamId).run(async () => {
-      let fromStateStore = false
-      let stream = this.fromMemory(streamId)
-      if (!stream) {
-        stream = await this.fromStateStore(streamId)
-        if (stream) {
-          fromStateStore = true
-        }
-      }
-
-      if (stream && opts.sync == SyncOptions.PREFER_CACHE) {
-        if (!fromStateStore || this.stateManager.wasPinnedStreamSynced(streamId)) {
-          // If the stream was from the in-memory cache we know it's up to date, so no need to sync.
-          // If the stream from the state store then we check if we've already synced the stream at
-          // least once in the lifetime of this process: if so we know the state is up to date, so
-          // no need to sync. If not, then it could be out of date due to updates made while the
-          // node was offline, in which case we fall through to calling `stateManager.sync()` below.
-          return stream
-        }
-      }
-
-      if (!stream) {
-        stream = await this.fromNetwork(streamId)
+      const [stream, synced] = await this._loadGenesis(streamId)
+      if (opts.sync == SyncOptions.PREFER_CACHE && synced) {
+        return stream
       }
 
       if (opts.sync == SyncOptions.NEVER_SYNC) {
         return this.stateManager.verifyLoneGenesis(stream)
       }
 
-      await this.stateManager.sync(stream, opts.syncTimeoutSeconds * 1000, fromStateStore)
+      await this.stateManager.sync(stream, opts.syncTimeoutSeconds * 1000)
       return this.stateManager.verifyLoneGenesis(stream)
     })
     await this.handlePinOpts(state$, opts)

@@ -73,10 +73,8 @@ export class StateManager {
    * genesis commit) and kicks off the process to load and apply the most recent Tip to it.
    * @param state$
    * @param timeoutMillis
-   * @param pinned - True if the stream was loaded from the state store, indicating that the stream
-   *   is pinned. Pinned streams get added to the `syncedPinnedStreams` set when they are synced.
    */
-  async sync(state$: RunningState, timeoutMillis: number, pinned: boolean): Promise<void> {
+  async sync(state$: RunningState, timeoutMillis: number): Promise<void> {
     const tip$ = this.dispatcher.messageBus.queryNetwork(state$.id)
     await tip$
       .pipe(
@@ -84,7 +82,7 @@ export class StateManager {
         concatMap((tip) => this._handleTip(state$, tip))
       )
       .toPromise()
-    if (pinned) {
+    if (state$.isPinned) {
       this.syncedPinnedStreams.add(state$.id.toString())
     }
   }
