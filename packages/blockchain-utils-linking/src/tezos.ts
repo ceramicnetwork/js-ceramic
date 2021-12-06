@@ -1,4 +1,4 @@
-import { AccountID } from 'caip'
+import { AccountId } from 'caip'
 import { AuthProvider } from './auth-provider'
 import { getConsentMessage, LinkProof } from './util'
 import { hash } from '@stablelib/sha256'
@@ -91,7 +91,7 @@ export class TezosAuthProvider implements AuthProvider {
     const signature = await sign(this.provider, message)
     const address = await getActiveAddress(this.provider)
     // generate account ID
-    const caipAccount = new AccountID({
+    const caipAccount = new AccountId({
       address,
       chainId: `${TEZOS_NAMESPACE}:${TEZOS_CHAIN_REF}`,
     })
@@ -109,9 +109,9 @@ export class TezosAuthProvider implements AuthProvider {
   /**
    * @inheritdoc
    */
-  async accountId(): Promise<AccountID> {
+  async accountId(): Promise<AccountId> {
     const address = await getActiveAddress(this.provider)
-    return new AccountID({
+    return new AccountId({
       address,
       chainId: `${TEZOS_NAMESPACE}:${TEZOS_CHAIN_REF}`,
     })

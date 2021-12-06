@@ -1,7 +1,7 @@
 import { LocalManagedProvider } from '@glif/local-managed-provider'
 import { Network } from '@glif/filecoin-address'
 import { validateLink } from '../filecoin'
-import { AccountID } from 'caip'
+import { AccountId } from 'caip'
 import * as linking from '@ceramicnetwork/blockchain-utils-linking'
 
 const did = 'did:3:bafysdfwefwe'
@@ -30,7 +30,7 @@ describe('validateLink', () => {
     await expect(validateLink(proof)).resolves.toEqual(proof)
 
     const testAddr = await testnetProvider.getAccounts()
-    const testAcc = new AccountID(`${testAddr[0]}@fil:t`)
+    const testAcc = new AccountId(`fil:t:${testAddr[0]}`)
     proof.account = testAcc.toString()
     await expect(validateLink(proof)).resolves.toEqual(null)
   })
@@ -42,7 +42,7 @@ describe('validateLink', () => {
     await expect(validateLink(proof)).resolves.toEqual(proof)
 
     const testAddr = await testnetProvider.getAccounts()
-    const testAcc = new AccountID(`${testAddr[0]}@fil:t`)
+    const testAcc = new AccountId(`fil:t:${testAddr[0]}`)
     proof.account = testAcc.toString()
     await expect(validateLink(proof)).rejects.toEqual(
       'Error verifying signature: BLS error | Size mismatch'

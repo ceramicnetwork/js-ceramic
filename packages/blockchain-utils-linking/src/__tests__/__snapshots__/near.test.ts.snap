@@ -4,7 +4,7 @@ exports[`Blockchain: NEAR authenticate create proof for testnet 1`] = `"885b8f01
 
 exports[`Blockchain: NEAR createLink create proof for testnet 1`] = `
 Object {
-  "account": "7beiSVU32rh5uqUcGqY3JfkB3y9p6Pc2Q1GFgcrtK65q@near:testnet",
+  "account": "near:testnet:7beiSVU32rh5uqUcGqY3JfkB3y9p6Pc2Q1GFgcrtK65q",
   "message": "Link this account to your identity
 
 did:3:bafysdfwefwe 

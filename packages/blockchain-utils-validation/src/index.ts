@@ -6,7 +6,8 @@ import eosio from './blockchains/eosio'
 import cosmos from './blockchains/cosmos'
 import near from './blockchains/near'
 import tezos from './blockchains/tezos'
-import { AccountID } from 'caip'
+import { AccountId } from 'caip'
+import { normalizeAccountId } from '@ceramicnetwork/common'
 
 const handlers = {
   [ethereum.namespace]: ethereum,
@@ -23,12 +24,19 @@ const findDID = (did: string): string | undefined => did.match(/(did:\S+:\S+)/)?
 export async function validateLink(proof: LinkProof): Promise<LinkProof | null> {
   // version < 2 are always eip155 namespace
   let namespace = ethereum.namespace
-  if (proof.version >= 2) {
-    namespace = new AccountID(proof.account).chainId.namespace
+
+  const proofCopy = { ...proof }
+
+  // Handle legacy CAIP links
+  proofCopy.account = normalizeAccountId(proofCopy.account).toString()
+
+  if (proofCopy.version >= 2) {
+    namespace = new AccountId(proofCopy.account).chainId.namespace
   }
+
   const handler = handlers[namespace]
   if (!handler) throw new Error(`proof with namespace '${namespace}' not supported`)
-  const validProof = await handler.validateLink(proof)
+  const validProof = await handler.validateLink(proofCopy)
   if (validProof) {
     validProof.did = findDID(validProof.message)
     return validProof
