@@ -466,7 +466,7 @@ describe('Ceramic integration', () => {
         queries.push({ streamId: commitId })
       }
 
-      const result = await ceramic2.multiQuery(queries, 10000)
+      const result = await ceramic2.multiQuery(queries, 30000)
       expect(Object.keys(result).length).toEqual(stream.allCommitIds.length + 1) // +1 for base streamid
       expect(result[stream.id.toString()].content).toEqual({ counter: NUM_UPDATES - 1 })
 
