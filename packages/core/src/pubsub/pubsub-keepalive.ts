@@ -1,6 +1,5 @@
 import { Observable, Subscription, interval } from 'rxjs'
 import { KeepaliveMessage, MsgType, PubsubMessage } from './pubsub-message'
-import { Pubsub } from './pubsub'
 import { ObservableWithNext } from './observable-with-next'
 
 /**

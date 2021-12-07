@@ -5,7 +5,8 @@ import {
   SignatureStatus,
   StreamUtils,
 } from '@ceramicnetwork/common'
-import CID from 'cids'
+import { CID } from 'multiformats/cid'
+import { decode as decodeMultiHash } from 'multiformats/hashes/digest'
 import { RunningState } from '../state-management/running-state'
 import { createIPFS } from './ipfs-util'
 import { createCeramic } from './create-ceramic'
@@ -20,7 +21,7 @@ import { from, timer } from 'rxjs'
 import { concatMap, map } from 'rxjs/operators'
 import { MAX_RESPONSE_INTERVAL } from '../pubsub/message-bus'
 
-const FAKE_CID = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
+const FAKE_CID = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
 const INITIAL_CONTENT = { abc: 123, def: 456 }
 const STRING_MAP_SCHEMA = {
   $schema: 'http://json-schema.org/draft-07/schema#',
@@ -499,7 +500,7 @@ describe('sync', () => {
     return uint8arrays.toString(sha256.hash(uint8arrays.fromString(input)), 'base16')
   }
   function hash(data: string): CID {
-    return new CID(1, 'sha2-256', Buffer.from('1220' + digest(data), 'hex'))
+    return CID.create(1, 0x12, decodeMultiHash(Buffer.from('1220' + digest(data), 'hex')))
   }
 
   function responseTips(amount: number) {

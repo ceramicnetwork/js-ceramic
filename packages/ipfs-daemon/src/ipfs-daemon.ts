@@ -1,16 +1,13 @@
-import IPFS from 'ipfs-core'
-import HttpApi from 'ipfs-http-server'
-import HttpGateway from 'ipfs-http-gateway'
-import dagJose from 'dag-jose'
+import { create as createIPFS } from 'ipfs-core'
+import { HttpApi } from 'ipfs-http-server'
+import { HttpGateway } from 'ipfs-http-gateway'
+import * as dagJose from 'dag-jose'
 import { IpfsTopology } from '@ceramicnetwork/ipfs-topology'
 import { DiagnosticsLogger, LogLevel, IpfsApi } from '@ceramicnetwork/common'
-import { convert } from 'blockcodec-to-ipld-format'
 import { HealthcheckServer } from './healthcheck-server'
 import { createRepo, StorageBackend } from './create-repo'
 import path from 'path'
 import os from 'os'
-
-const format = convert(dagJose)
 
 export interface Configuration {
   tcpHost: string
@@ -141,10 +138,10 @@ export class IpfsDaemon {
       }
     )
 
-    const ipfs = await IPFS.create({
+    const ipfs = await createIPFS({
       start: false,
       repo,
-      ipld: { formats: [format] },
+      ipld: { codecs: [dagJose] },
       libp2p: {
         config: {
           dht: {

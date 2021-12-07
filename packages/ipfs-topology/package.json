@@ -30,6 +30,6 @@
   "devDependencies": {
     "@ceramicnetwork/common": "^1.9.0-rc.2",
     "@types/node": "^13.13.15",
-    "multiaddr": "^9.0.1"
+    "multiaddr": "^10.0.1"
   }
 }

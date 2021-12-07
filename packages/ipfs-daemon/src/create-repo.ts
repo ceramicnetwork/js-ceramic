@@ -1,9 +1,16 @@
 import S3 from 'aws-sdk/clients/s3'
-import IPFSRepo from 'ipfs-repo'
-import DatastoreLevel from 'datastore-level'
-import DatastoreFS from 'datastore-fs'
-import DatastoreS3 from 'datastore-s3'
+import { createRepo as createIPFSRepo, IPFSRepo, Backends, Datastore } from 'ipfs-repo'
+import { LevelDatastore } from 'datastore-level'
+import { FsDatastore } from 'datastore-fs'
+import { S3Datastore } from 'datastore-s3'
 import path from 'path'
+import * as dagCBOR from '@ipld/dag-cbor'
+import { BlockstoreDatastoreAdapter } from 'blockstore-datastore-adapter'
+
+const codecLookup = {
+  [dagCBOR.code]: dagCBOR,
+  [dagCBOR.name]: dagCBOR,
+}
 
 // A mock lock
 const notALock = {
@@ -68,56 +75,61 @@ function localPath(prefix: string | undefined, location: string) {
   }
 }
 
-function LocalDatastoreFS(pathPrefix: string | undefined) {
-  return class LocalDatastoreFS extends DatastoreFS {
-    constructor(repoPath: string, options: any) {
-      super(localPath(pathPrefix, repoPath), options)
-    }
-  }
+function createLocalDatastoreFS(
+  pathPrefix: string | undefined,
+  repoPath: string,
+  options: any
+): FsDatastore {
+  return new FsDatastore(localPath(pathPrefix, repoPath), options)
 }
 
-function LocalDatastoreLevel(pathPrefix: string | undefined) {
-  return class LocalDatastoreLevel extends DatastoreLevel {
-    constructor(repoPath: string, options: any) {
-      super(localPath(pathPrefix, repoPath), options)
-    }
-  }
+function createLocalDatastoreLevel(
+  pathPrefix: string | undefined,
+  repoPath: string,
+  options: any
+): LevelDatastore {
+  return new LevelDatastore(localPath(pathPrefix, repoPath), options)
 }
 
-/**
- * Add repository backend to IPFS configuration.
- */
-function setRepoBackend(
-  config: any,
+function createBackend(
   name: string,
   repoOptions: RepoOptions,
-  s3: () => S3,
-  defaultBackend: any
-) {
+  createS3: () => S3,
+  createDefault: (pathPrefix, repoPath, options) => Datastore
+): Datastore {
   const backend = repoOptions.backends[name] as StorageBackend
+  const repoPath = path.join(repoOptions.path, name === 'root' ? '' : name)
+
   switch (backend) {
-    case StorageBackend.DEFAULT:
-      config.storageBackendOptions ||= {}
-      config.storageBackendOptions[name] = {
+    case StorageBackend.DEFAULT: {
+      const options = { createIfMissing: repoOptions.createIfMissing }
+      return createDefault(repoOptions.localPathPrefix, repoPath, options)
+    }
+    case StorageBackend.S3: {
+      if (!createS3) throw new Error(`Expect s3 configuration for backend ${name}`)
+      const options = {
+        s3: createS3(),
         createIfMissing: repoOptions.createIfMissing,
       }
-      config.storageBackends ||= {}
-      config.storageBackends[name] = defaultBackend(repoOptions.localPathPrefix)
-      return
-    case StorageBackend.S3:
-      if (!s3) throw new Error(`Expect s3 configuration for backend ${name}`)
-      config.storageBackendOptions ||= {}
-      config.storageBackendOptions[name] = {
-        s3: s3(),
-        createIfMissing: repoOptions.createIfMissing,
-      }
-      config.storageBackends ||= {}
-      config.storageBackends[name] = DatastoreS3
-      return
+      return new S3Datastore(repoPath, options)
+    }
     default:
       throw new NoBackendConfigError(backend)
   }
 }
+
+function createBackends(repoOptions: RepoOptions, createS3: () => S3): Backends {
+  return {
+    root: createBackend('root', repoOptions, createS3, createLocalDatastoreFS),
+    blocks: new BlockstoreDatastoreAdapter(
+      createBackend('blocks', repoOptions, createS3, createLocalDatastoreFS)
+    ),
+    keys: createBackend('keys', repoOptions, createS3, createLocalDatastoreFS),
+    datastore: createBackend('datastore', repoOptions, createS3, createLocalDatastoreLevel),
+    pins: createBackend('pins', repoOptions, createS3, createLocalDatastoreLevel),
+  }
+}
+
 /**
  * A convenience method for creating an S3 backed IPFS repo
  */
@@ -139,14 +151,16 @@ export function createRepo(options: RepoOptions, s3Options: S3Options): IPFSRepo
     return _s3
   }
 
-  const config = {
-    lock: notALock,
-  }
-  setRepoBackend(config, 'root', options, s3, LocalDatastoreFS)
-  setRepoBackend(config, 'blocks', options, s3, LocalDatastoreFS)
-  setRepoBackend(config, 'keys', options, s3, LocalDatastoreFS)
-  setRepoBackend(config, 'datastore', options, s3, LocalDatastoreLevel)
-  setRepoBackend(config, 'pins', options, s3, LocalDatastoreLevel)
+  return createIPFSRepo(
+    options.path,
+    (codeOrName) => {
+      if (codecLookup[codeOrName] == null) {
+        return Promise.reject(new Error(`No codec found for "${codeOrName}"`))
+      }
 
-  return new IPFSRepo(options.path, config)
+      return Promise.resolve(codecLookup[codeOrName])
+    },
+    createBackends(options, s3),
+    { repoLock: notALock }
+  )
 }

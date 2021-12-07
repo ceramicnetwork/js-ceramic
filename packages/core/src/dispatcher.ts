@@ -1,4 +1,4 @@
-import CID from 'cids'
+import { CID } from 'multiformats/cid'
 import cloneDeep from 'lodash.clonedeep'
 import {
   DiagnosticsLogger,
@@ -88,7 +88,7 @@ export class Dispatcher {
         // put the JWS into the ipfs dag
         const cid = await this._ipfs.dag.put(jws, { format: 'dag-jose', hashAlg: 'sha2-256' })
         // put the payload into the ipfs dag
-        await this._ipfs.block.put(linkedBlock, { cid: jws.link.toString() })
+        await this._ipfs.block.put(linkedBlock, jws.link)
         await this._restrictCommitSize(jws.link.toString())
         await this._restrictCommitSize(cid)
         return cid
@@ -151,7 +151,7 @@ export class Dispatcher {
    * Helper function for loading a CID from IPFS
    */
   private async _getFromIpfs(cid: CID | string, path?: string): Promise<any> {
-    const asCid = typeof cid === 'string' ? new CID(cid) : cid
+    const asCid = typeof cid === 'string' ? CID.parse(cid) : cid
 
     // Lookup CID in cache before looking it up IPFS
     const cidAndPath = path ? asCid.toString() + path : asCid.toString()
@@ -170,7 +170,7 @@ export class Dispatcher {
       } catch (err) {
         if (err.code == 'ERR_TIMEOUT') {
           console.warn(
-            `Timeout error while loading CID ${cid.toString()} from IPFS. ${retries} retries remain`
+            `Timeout error while loading CID ${asCid.toString()} from IPFS. ${retries} retries remain`
           )
           if (retries > 0) {
             continue
@@ -191,7 +191,8 @@ export class Dispatcher {
    * @private
    */
   async _restrictCommitSize(cid: CID | string): Promise<void> {
-    const stat = await this._ipfs.block.stat(cid, { timeout: IPFS_GET_TIMEOUT })
+    const asCid = typeof cid === 'string' ? CID.parse(cid) : cid
+    const stat = await this._ipfs.block.stat(asCid, { timeout: IPFS_GET_TIMEOUT })
     if (stat.size > IPFS_MAX_COMMIT_SIZE) {
       throw new Error(
         `${cid.toString()} commit size ${

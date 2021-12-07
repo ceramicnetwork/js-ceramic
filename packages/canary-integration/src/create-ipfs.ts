@@ -1,6 +1,5 @@
-import dagJose from 'dag-jose'
-import { convert } from 'blockcodec-to-ipld-format'
-import IPFS from 'ipfs-core'
+import * as dagJose from 'dag-jose'
+import { create } from 'ipfs-core'
 import { IpfsApi } from '@ceramicnetwork/common'
 import tmp from 'tmp-promise'
 import getPort from 'get-port'
@@ -10,12 +9,11 @@ import getPort from 'get-port'
  * @param overrideConfig - IFPS config for override
  */
 export async function createIPFS(overrideConfig: Record<string, unknown> = {}): Promise<IpfsApi> {
-  const format = convert(dagJose)
   const tmpFolder = await tmp.dir({ unsafeCleanup: true })
 
   const port = await getPort()
   const defaultConfig = {
-    ipld: { formats: [format] },
+    ipld: { codecs: [dagJose] },
     repo: `${tmpFolder.path}/ipfs${port}/`,
     config: {
       Addresses: { Swarm: [`/ip4/127.0.0.1/tcp/${port}`] },
@@ -24,7 +22,7 @@ export async function createIPFS(overrideConfig: Record<string, unknown> = {}): 
   }
 
   const config = { ...defaultConfig, ...overrideConfig }
-  const instance = await IPFS.create(config)
+  const instance = await create(config)
 
   // IPFS does not notify you when it stops.
   // Here we intercept a call to `ipfs.stop` to clean up IPFS repository folder.

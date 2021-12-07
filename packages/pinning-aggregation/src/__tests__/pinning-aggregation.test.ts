@@ -1,11 +1,11 @@
-import CID from 'cids'
+import { CID } from 'multiformats/cid'
 import { PinningAggregation, UnknownPinningService } from '../index'
-import { CidList, PinningBackend, PinningInfo, Context } from '@ceramicnetwork/common'
+import { CidList, PinningBackend, PinningInfo } from '@ceramicnetwork/common'
 import { IpfsPinning } from '@ceramicnetwork/pinning-ipfs-backend'
 import { PowergatePinningBackend } from '@ceramicnetwork/pinning-powergate-backend'
 import type { IPFS } from 'ipfs-core-types'
 
-const cid = new CID('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D')
+const cid = CID.parse('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D')
 const ipfs = jest.fn() as unknown as IPFS
 
 const token = 'p0W3R9473_70K3N'

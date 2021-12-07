@@ -17,8 +17,8 @@ beforeAll(async () => {
 }, 12000)
 
 afterAll(async () => {
-  await ipfs.stop()
   await ceramic.close()
+  await ipfs.stop()
 })
 
 test('can update a tile document with valid asDID', async () => {
@@ -28,7 +28,7 @@ test('can update a tile document with valid asDID', async () => {
   expect(newTile.content).toMatchObject({
     foo: 'baz',
   })
-})
+}, 10000)
 
 test('cannot update a tile document with invalid asDID', async () => {
   const newTile = await TileDocument.create(ceramic, { foo: 'bar' })
@@ -41,4 +41,4 @@ test('cannot update a tile document with invalid asDID', async () => {
   await expect(newTile.update({ foo: 'baz' }, null, { asDID: did })).rejects.toThrow()
 
   expect(newTile.content).toMatchObject({ foo: 'bar' })
-})
+}, 10000)

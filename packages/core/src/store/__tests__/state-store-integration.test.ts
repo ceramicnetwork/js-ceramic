@@ -10,13 +10,13 @@ import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { PinStore } from '../pin-store'
 import { PinStoreFactory } from '../pin-store-factory'
 import StreamID from '@ceramicnetwork/streamid'
-import CID from 'cids'
+import { CID } from 'multiformats/cid'
 import { createIPFS } from '../../__tests__/ipfs-util'
 import { createCeramic } from '../../__tests__/create-ceramic'
 import { anchorUpdate } from '../../state-management/__tests__/anchor-update'
 import { RunningState } from '../../state-management/running-state'
 
-const FAKE_CID = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
+const FAKE_CID = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
 
 const ipfs = {
   dag: {

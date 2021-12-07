@@ -1,7 +1,6 @@
-import CID from 'cids'
+import type { CID } from 'multiformats/cid'
 import { StreamID } from './stream-id'
 import { CommitID } from './commit-id'
-import * as uint8arrays from 'uint8arrays'
 
 /**
  * Ensure there is some resemblance in CommitID and StreamID APIs.

@@ -25,14 +25,14 @@
     "lib": "lib"
   },
   "dependencies": {
-    "@stablelib/base64": "^1.0.0",
-    "@stablelib/sha256": "^1.0.0",
-    "ipfs-http-client": "~50.1.1"
+    "@stablelib/base64": "^1.0.1",
+    "@stablelib/sha256": "^1.0.1",
+    "ipfs-http-client": "~54.0.1"
   },
   "devDependencies": {
     "@ceramicnetwork/common": "^1.9.0-rc.2",
-    "cids": "~1.1.6",
-    "ipfs-core-types": "~0.5.1",
+    "ipfs-core-types": "~0.8.3",
+    "multiformats": "^9.4.10",
     "ts-jest": "^26.4.4"
   },
   "publishConfig": {

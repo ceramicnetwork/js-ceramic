@@ -25,23 +25,23 @@
   },
   "dependencies": {
     "@ceramicnetwork/blockchain-utils-linking": "^1.5.1-rc.2",
-    "@ceramicnetwork/common": "^1.9.0-rc.2",
-    "@ethersproject/contracts": "^5.4.1",
-    "@ethersproject/providers": "^5.4.5",
-    "@ethersproject/wallet": "^5.4.0",
+    "@ceramicnetwork/common": "^1.9.0-rc.0",
+    "@ethersproject/contracts": "^5.5.0",
+    "@ethersproject/providers": "^5.5.0",
+    "@ethersproject/wallet": "^5.5.0",
     "@polkadot/util-crypto": "^7.0.2",
     "@smontero/eosio-signing-tools": "^0.0.6",
     "@stablelib/ed25519": "^1.0.2",
     "@taquito/remote-signer": "^9.2.0-stablelib.0",
     "@tendermint/sig": "^0.6.0",
-    "@zondax/filecoin-signing-tools": "^0.15.0",
+    "@zondax/filecoin-signing-tools": "^0.18.1",
     "caip": "~1.0.0",
     "cross-fetch": "^3.1.4",
-    "uint8arrays": "^2.0.5"
+    "uint8arrays": "^3.0.0"
   },
   "devDependencies": {
     "@glif/filecoin-address": "1.1.0",
-    "@glif/local-managed-provider": "1.1.0",
+    "@glif/local-managed-provider": "1.1.1",
     "@polkadot/api": "^4.6.2",
     "@polkadot/keyring": "^6.2.1",
     "@polkadot/types": "^4.6.2",
@@ -49,10 +49,10 @@
     "@polkadot/util-crypto": "^7.0.2",
     "@smontero/eosio-local-provider": "^0.0.3",
     "@solana/wallet-adapter-base": "^0.6.0",
-    "@taquito/signer": "^9.2.0",
-    "eth-sig-util": "^3.0.0",
+    "@taquito/signer": "^11.0.1",
+    "eth-sig-util": "^3.0.1",
     "ganache-core": "^2.13.1",
-    "near-api-js": "^0.42.0"
+    "near-api-js": "^0.43.1"
   },
   "gitHead": "34eeee25597b0a60def72906c26d3afd6230aaf1"
 }

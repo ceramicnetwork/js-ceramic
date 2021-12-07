@@ -45,7 +45,6 @@ import { ConflictResolution } from './conflict-resolution'
 import EthereumAnchorValidator from './anchor/ethereum/ethereum-anchor-validator'
 
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
-const IPFS_GET_TIMEOUT = 60000 // 1 minute
 const TESTING = process.env.NODE_ENV == 'test'
 
 const TRAILING_SLASH = /\/$/ // slash at the end of the string
@@ -600,6 +599,7 @@ export class Ceramic implements CeramicApi {
       return streamFromState<T>(this.context, this._streamHandlers, snapshot$.value)
     } else {
       const base$ = await this.repository.load(streamRef.baseID, opts)
+      await this.repository.handlePinOpts(base$, opts)
       return streamFromState<T>(
         this.context,
         this._streamHandlers,

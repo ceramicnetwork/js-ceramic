@@ -74,7 +74,7 @@ describe('Ceramic stream pinning', () => {
   })
 
   afterEach(async () => {
-    await ipfs1.stop(() => console.log('IPFS1 stopped'))
+    await ipfs1.stop().then(() => console.log('IPFS1 Stopped'))
     await tmpFolder.cleanup()
   })
 
@@ -146,7 +146,6 @@ describe('Ceramic stream pinning', () => {
     await expect(isPinned(ceramic, stream.id)).resolves.toBeTruthy()
     await stream.update({ foo: 'foobarbaz' }, null, { anchor: false, publish: false, pin: false })
     await expect(isPinned(ceramic, stream.id)).resolves.toBeFalsy()
-
     await ceramic.close()
   })
 

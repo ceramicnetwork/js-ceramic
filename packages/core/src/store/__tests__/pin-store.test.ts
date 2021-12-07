@@ -1,6 +1,6 @@
 import { PinStore } from '../pin-store'
 import { StateStore } from '../state-store'
-import CID from 'cids'
+import { CID } from 'multiformats/cid'
 import {
   AnchorStatus,
   SignatureStatus,
@@ -45,7 +45,7 @@ const state: StreamState = {
   signature: SignatureStatus.GENESIS,
   anchorStatus: AnchorStatus.NOT_REQUESTED,
   log: [
-    { cid: new CID('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D'), type: CommitType.GENESIS },
+    { cid: CID.parse('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D'), type: CommitType.GENESIS },
   ],
 }
 
@@ -85,12 +85,12 @@ describe('#add', () => {
   test('save and pin proof without path', async () => {
     const stateWithProof = Object.assign({}, state, {
       log: [
-        { cid: new CID('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D') },
-        { cid: new CID('QmdmQXB2mzChmMeKY47C43LxUdg1NDJ5MWcKMKxDu7RgQm') },
+        { cid: CID.parse('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D') },
+        { cid: CID.parse('QmdmQXB2mzChmMeKY47C43LxUdg1NDJ5MWcKMKxDu7RgQm') },
       ],
     })
-    const proofCID = new CID('QmbQDovX7wRe9ek7u6QXe9zgCXkTzoUSsTFJEkrYV1HrVR')
-    const proofRootCID = new CID('QmNPqfxJDLPJFMhkUexLv431HNTfQBqh45unLg8ByBfa7h')
+    const proofCID = CID.parse('QmbQDovX7wRe9ek7u6QXe9zgCXkTzoUSsTFJEkrYV1HrVR')
+    const proofRootCID = CID.parse('QmNPqfxJDLPJFMhkUexLv431HNTfQBqh45unLg8ByBfa7h')
     const retrieve = jest.fn(async (cid) => {
       if (cid.equals(stateWithProof.log[1].cid)) {
         return {
@@ -122,14 +122,14 @@ describe('#add', () => {
   test('save and pin proof with path', async () => {
     const stateWithProof = Object.assign({}, state, {
       log: [
-        { cid: new CID('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D') },
-        { cid: new CID('QmdmQXB2mzChmMeKY47C43LxUdg1NDJ5MWcKMKxDu7RgQm') },
+        { cid: CID.parse('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D') },
+        { cid: CID.parse('QmdmQXB2mzChmMeKY47C43LxUdg1NDJ5MWcKMKxDu7RgQm') },
       ],
     })
-    const proofCID = new CID('QmbQDovX7wRe9ek7u6QXe9zgCXkTzoUSsTFJEkrYV1HrVR')
-    const leftCID = new CID('QmdC5Hav9zdn2iS75reafXBq1PH4EnqUmoxwoxkS5QtuME')
-    const rightCID = new CID('QmcyyLvDzCrduuvGVUQEh1DzFvM7UWGfc9sUg87PjjYCw7')
-    const proofRootCID = new CID('QmNPqfxJDLPJFMhkUexLv431HNTfQBqh45unLg8ByBfa7h')
+    const proofCID = CID.parse('QmbQDovX7wRe9ek7u6QXe9zgCXkTzoUSsTFJEkrYV1HrVR')
+    const leftCID = CID.parse('QmdC5Hav9zdn2iS75reafXBq1PH4EnqUmoxwoxkS5QtuME')
+    const rightCID = CID.parse('QmcyyLvDzCrduuvGVUQEh1DzFvM7UWGfc9sUg87PjjYCw7')
+    const proofRootCID = CID.parse('QmNPqfxJDLPJFMhkUexLv431HNTfQBqh45unLg8ByBfa7h')
     const retrieve = jest.fn(async (cid) => {
       if (cid.equals(stateWithProof.log[1].cid)) {
         return {
@@ -172,9 +172,9 @@ describe('#add', () => {
     const runningStateSpy = jest.spyOn(runningState, 'markAsPinned')
     Object.assign(toBeUpdatedState, {
       log: [
-        { cid: new CID('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D') },
-        { cid: new CID('QmdmQXB2mzChmMeKY47C43LxUdg1NDJ5MWcKMKxDu7RgQm') },
-        { cid: new CID('QmbQDovX7wRe9ek7u6QXe9zgCXkTzoUSsTFJEkrYV1HrVR') },
+        { cid: CID.parse('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D') },
+        { cid: CID.parse('QmdmQXB2mzChmMeKY47C43LxUdg1NDJ5MWcKMKxDu7RgQm') },
+        { cid: CID.parse('QmbQDovX7wRe9ek7u6QXe9zgCXkTzoUSsTFJEkrYV1HrVR') },
       ],
     })
     await pinStore.add(runningState)
@@ -195,9 +195,9 @@ describe('#add', () => {
     const runningStateSpy = jest.spyOn(runningState, 'markAsPinned')
     Object.assign(toBeUpdatedState, {
       log: [
-        { cid: new CID('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D') },
-        { cid: new CID('QmdmQXB2mzChmMeKY47C43LxUdg1NDJ5MWcKMKxDu7RgQm') },
-        { cid: new CID('QmbQDovX7wRe9ek7u6QXe9zgCXkTzoUSsTFJEkrYV1HrVR') },
+        { cid: CID.parse('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D') },
+        { cid: CID.parse('QmdmQXB2mzChmMeKY47C43LxUdg1NDJ5MWcKMKxDu7RgQm') },
+        { cid: CID.parse('QmbQDovX7wRe9ek7u6QXe9zgCXkTzoUSsTFJEkrYV1HrVR') },
       ],
     })
     await pinStore.add(runningState, true)

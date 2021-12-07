@@ -46,7 +46,7 @@ function encodeMessage(text: string): string {
  */
 function publicKeyFinder(address: string): () => Promise<string> {
   // request the public key from the Tezos blockchain
-  const request = fetch(`https://api.tzstats.com/explorer/account/${address}`).catch((e: any) => {
+  const request = fetch(`https://api.tzstats.com/explorer/account/${address}`).catch(() => {
     throw ADDRESS_NOT_FOUND_ERROR
   })
   return async (): Promise<string> => {

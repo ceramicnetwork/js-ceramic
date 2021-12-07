@@ -1,6 +1,6 @@
 import { StateStore } from './state-store'
 import { PinningBackend, StreamUtils } from '@ceramicnetwork/common'
-import CID from 'cids'
+import type { CID } from 'multiformats/cid'
 import StreamID from '@ceramicnetwork/streamid'
 import { RunningState } from '../state-management/running-state'
 

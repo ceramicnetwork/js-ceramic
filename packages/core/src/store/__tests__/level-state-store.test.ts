@@ -9,7 +9,7 @@ import {
   StreamUtils,
   TestUtils,
 } from '@ceramicnetwork/common'
-import CID from 'cids'
+import { CID } from 'multiformats/cid'
 import StreamID from '@ceramicnetwork/streamid'
 
 let mockStorage: Map<string, any>
@@ -58,7 +58,7 @@ const state = {
   signature: SignatureStatus.GENESIS,
   anchorStatus: AnchorStatus.NOT_REQUESTED,
   log: [
-    { type: CommitType.GENESIS, cid: new CID('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D') },
+    { type: CommitType.GENESIS, cid: CID.parse('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D') },
   ],
 }
 

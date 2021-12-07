@@ -1,6 +1,5 @@
 import { from, Observable, Subscription } from 'rxjs'
 import { MsgType, PubsubMessage } from './pubsub-message'
-import { Pubsub } from './pubsub'
 import { TaskQueue } from './task-queue'
 import { DiagnosticsLogger } from '@ceramicnetwork/common'
 import { ClockSource } from '../clock-source'

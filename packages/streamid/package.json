@@ -25,11 +25,10 @@
     "lib": "lib"
   },
   "dependencies": {
-    "cids": "~1.1.6",
-    "ipld-dag-cbor": "^0.17.0",
-    "multibase": "~4.0.2",
-    "typescript-memoize": "^1.0.0-alpha.4",
-    "uint8arrays": "^2.0.5",
+    "@ipld/dag-cbor": "^6.0.13",
+    "multiformats": "^9.4.10",
+    "typescript-memoize": "^1.1.0",
+    "uint8arrays": "^3.0.0",
     "varint": "^6.0.0"
   },
   "publishConfig": {

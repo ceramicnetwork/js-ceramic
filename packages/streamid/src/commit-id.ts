@@ -1,11 +1,10 @@
-import CID from 'cids'
-import multibase from 'multibase'
+import { CID } from 'multiformats/cid'
+import { base36 } from 'multiformats/bases/base36'
 import { StreamType } from './stream-type'
 import varint from 'varint'
-import uint8ArrayConcat from 'uint8arrays/concat'
-import uint8ArrayToString from 'uint8arrays/to-string'
+import { concat as uint8ArrayConcat } from 'uint8arrays'
 import { Memoize } from 'typescript-memoize'
-import { DEFAULT_BASE, STREAMID_CODEC } from './constants'
+import { STREAMID_CODEC } from './constants'
 import { readCid, readVarint } from './reading-bytes'
 import { StreamID } from './stream-id'
 import { StreamRef } from './stream-ref'
@@ -62,7 +61,7 @@ function fromBytesNoThrow(bytes: Uint8Array): CommitID | Error {
  */
 function parseCID(input: any): CID | undefined {
   try {
-    return new CID(input)
+    return typeof input === 'string' ? CID.parse(input) : CID.asCID(input)
   } catch {
     return undefined
   }
@@ -127,7 +126,7 @@ function fromStringNoThrow(input: string): CommitID | Error {
     const base = protocolFree.split('?')[0]
     return StreamID.fromString(base).atCommit(commit)
   } else {
-    return fromBytesNoThrow(multibase.decode(protocolFree))
+    return fromBytesNoThrow(base36.decode(protocolFree))
   }
 }
 
@@ -174,7 +173,7 @@ export class CommitID implements StreamRef {
     if (!type && type !== 0) throw new Error('constructor: type required')
     if (!cid) throw new Error('constructor: cid required')
     this.#type = typeof type === 'string' ? StreamType.codeByName(type) : type
-    this.#cid = typeof cid === 'string' ? new CID(cid) : cid
+    this.#cid = typeof cid === 'string' ? CID.parse(cid) : cid
     this.#commit = parseCommit(this.#cid, commit)
   }
 
@@ -249,7 +248,7 @@ export class CommitID implements StreamRef {
    */
   @Memoize()
   toString(): string {
-    return uint8ArrayToString(multibase.encode(DEFAULT_BASE, this.bytes))
+    return base36.encode(this.bytes)
   }
 
   /**

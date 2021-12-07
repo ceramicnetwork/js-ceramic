@@ -3,13 +3,13 @@ import StreamID from '@ceramicnetwork/streamid'
 import * as random from '@stablelib/random'
 import { CommitType, StreamState, LoggerProvider, SyncOptions } from '@ceramicnetwork/common'
 import { Repository } from '../state-management/repository'
-import CID from 'cids'
+import { CID } from 'multiformats/cid'
 import { RunningState } from '../state-management/running-state'
 
 const STREAM_ID = StreamID.fromString(
   'k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki'
 )
-const FAKE_CID = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
+const FAKE_CID = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
 
 const streamState = {
   type: 0,
