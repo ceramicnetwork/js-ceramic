@@ -34,6 +34,10 @@ export class RunningState extends StreamStateSubject implements RunningStateLike
     return this._pinnedCommits
   }
 
+  get isPinned(): boolean {
+    return this.pinnedCommits != null
+  }
+
   /**
    * Track related subscription.
    */
