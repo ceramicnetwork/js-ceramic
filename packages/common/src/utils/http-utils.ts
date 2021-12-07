@@ -2,6 +2,7 @@ import fetch from 'cross-fetch'
 // TODO: remove with esm upgrade
 import AbortController from 'abort-controller'
 
+const DEFAULT_FETCH_TIMEOUT = 60000
 interface FetchOpts {
   body?: any
   method?: string
@@ -17,7 +18,7 @@ export async function fetchJson(url: string, opts: FetchOpts = {}): Promise<any>
     })
   }
 
-  const timeoutLength = opts.timeout || 60000
+  const timeoutLength = opts.timeout || DEFAULT_FETCH_TIMEOUT
   const controller = new AbortController()
   const timeout = setTimeout(() => {
     controller.abort()
