@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.0.0-alpha.0](https://github.com/ceramicnetwork/js-ceramic/compare/pkh-did-resolver@0.3.3-rc.0...pkh-did-resolver@1.0.0-alpha.0) (2021-12-07)
+
+**Note:** Version bump only for package pkh-did-resolver
+
+
+
+
+
 ## [0.3.3-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/pkh-did-resolver@0.3.2...pkh-did-resolver@0.3.3-rc.0) (2021-11-17)
 
 
