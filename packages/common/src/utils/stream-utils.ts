@@ -176,6 +176,12 @@ export class StreamUtils {
       }
     }
 
+    if (state.anchorStatus != base.anchorStatus) {
+      // Re-creating a state object from the exact same set of commits can still lose information,
+      // such as whether or not an anchor has been requested.
+      return false
+    }
+
     return true
   }
 

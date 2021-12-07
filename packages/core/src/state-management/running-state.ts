@@ -35,7 +35,7 @@ export class RunningState extends StreamStateSubject implements RunningStateLike
   }
 
   get isPinned(): boolean {
-    return this.pinnedCommits != null
+    return this.pinnedCommits && this.pinnedCommits.size > 0
   }
 
   /**
