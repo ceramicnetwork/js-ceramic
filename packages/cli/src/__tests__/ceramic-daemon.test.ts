@@ -342,6 +342,29 @@ describe('Ceramic interop: core <> http-client', () => {
     expect(json).toEqual(content3)
   })
 
+  it('times out if fetch is taking too long', async () => {
+    const content1 = { test: 123 }
+    const doc = await TileDocument.create(core, content1, null, { anchor: false })
+
+    const loadStreamMock = jest.spyOn(core, 'loadStream')
+    let id = null
+    loadStreamMock.mockImplementation(() => {
+      return new Promise((resolve) => {
+        id = setTimeout(() => {
+          resolve(doc)
+        }, 2000)
+      })
+    })
+
+    await expect(
+      fetchJson(`http://localhost:${daemon.port}/api/v0/streams/${doc.id}/content`, {
+        timeout: 1000,
+      })
+    ).rejects.toThrow(`Http request timed out after 1000 ms`)
+
+    clearTimeout(id)
+  })
+
   it('requestAnchor works via http api', async () => {
     const content1 = { test: 123 }
 
