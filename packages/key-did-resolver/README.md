@@ -143,7 +143,90 @@ Connected to anchor service '<inmemory>' with supported anchor chains ['inmemory
 ]
 
 ```
+// code snippet for ed25519
+```
+const doc = await didResolver.resolve('did:key:z6MktvqCyLxTsXUH1tUZncNdVeEZ7hNh7npPRbUU27GTrYb8')
+```
 
+// code snippet for P-256 
+```
+const doc = await didResolver.resolve('did:key:zDnaeUKTWUXc1HDpGfKbEK31nKLN19yX5aunFd7VK1CUMeyJu')
+```
+
+// code snippet for P-384 
+```
+const doc = await didResolver.resolve('did:key:z82LkvCwHNreneWpsgPEbV3gu1C6NFJEBg4srfJ5gdxEsMGRJUz2sG9FE42shbn2xkZJh54')
+```
+
+// code snippet for P-521 
+```
+const doc = await didResolver.resolve('did:key:z2J9gcGhudjgwsDLv4qJVM6DysnsjWRS6ggtCsSYpV9TGxd9WGoE1EkPxdvPcqEs7eLsQA985AGXPuqttPP7WJ5Qdiz27U3t')
+```
+
+// Note: All P-*** curves are compressed
+
+// did document verificationMethod for ed25519: 
+```
+[
+  {
+    id: 'did:key:z6MktvqCyLxTsXUH1tUZncNdVeEZ7hNh7npPRbUU27GTrYb8#z6MktvqCyLxTsXUH1tUZncNdVeEZ7hNh7npPRbUU27GTrYb8',
+    type: 'Ed25519VerificationKey2018',
+    controller: 'did:key:z6MktvqCyLxTsXUH1tUZncNdVeEZ7hNh7npPRbUU27GTrYb8',
+    publicKeyBase58: 'FUaAP6i2XyyouPds73QneYgZJ86qhua2jaZYBqJSwKok'
+  }
+]
+```
+
+// did document verificationMethod for P-256: 
+```
+[
+  {
+    id: 'did:key:zDnaeUKTWUXc1HDpGfKbEK31nKLN19yX5aunFd7VK1CUMeyJu',
+    type: 'JsonWebKey2020',
+    controller: 'did:key:zDnaeUKTWUXc1HDpGfKbEK31nKLN19yX5aunFd7VK1CUMeyJu',
+    publicKeyJwk: {
+      kty: 'EC',
+      crv: 'P-256',
+      x: 'OcPddBMXKURtwbPaZ9SfwEb8vwcvzFufpRwFuXQwf5Y',
+      y: 'nEA7FjXwRJ8CvUInUeMxIaRDTxUvKysqP2dSGcXZJfY'
+    }
+  }
+]
+```
+
+// did document verificationMethod for P-384:
+```
+[
+  {
+    id: 'did:key:z82LkvCwHNreneWpsgPEbV3gu1C6NFJEBg4srfJ5gdxEsMGRJUz2sG9FE42shbn2xkZJh54',
+    type: 'JsonWebKey2020',
+    controller: 'did:key:z82LkvCwHNreneWpsgPEbV3gu1C6NFJEBg4srfJ5gdxEsMGRJUz2sG9FE42shbn2xkZJh54',
+    publicKeyJwk: {
+      kty: 'EC',
+      crv: 'P-384',
+      x: 'CA-iNoHDg1lL8pvX3d1uvExzVfCz7Rn6tW781Ub8K5MrDf2IMPyL0RTDiaLHC1JT',
+      y: 'Kpnrn8DkXUD3ge4mFxi-DKr0DYO2KuJdwNBrhzLRtfMa3WFMZBiPKUPfJj8dYNl_'
+    }
+  }
+]
+```
+
+// did document verificationMethod for P-521:
+```
+[
+  {
+    id: 'did:key:z2J9gcGhudjgwsDLv4qJVM6DysnsjWRS6ggtCsSYpV9TGxd9WGoE1EkPxdvPcqEs7eLsQA985AGXPuqttPP7WJ5Qdiz27U3t',
+    type: 'JsonWebKey2020',
+    controller: 'did:key:z2J9gcGhudjgwsDLv4qJVM6DysnsjWRS6ggtCsSYpV9TGxd9WGoE1EkPxdvPcqEs7eLsQA985AGXPuqttPP7WJ5Qdiz27U3t',
+    publicKeyJwk: {
+      kty: 'EC',
+      crv: 'P-521',
+      x: 'ATkofCC8_KAAJ3XSRayyPk8WqF9qahhoQVjbHtzbe5MSaaFiMKBZr-CurF9IcpJD-YYEukPmarSKFpXLtwAdiONT',
+      y: 'AWuYkJ7iaFhfz_dzFemaBnuq1WFnoZeIha7KpE9benPTX9FQhAoyHY-2qO4IyqGe1XGGtx8eJXvp57xMtUXm2rAH'
+    }
+ }
+]
+```
 ```
 // Usage from cloned GitHub Repository:
 // import * as keyDIDResolver from '../js-ceramic/packages/key-did-resolver/lib/index.js';
