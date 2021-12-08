@@ -259,7 +259,9 @@ describe('Ceramic API', () => {
       streamC: TileDocument,
       streamD: TileDocument,
       streamE: TileDocument,
-      streamF: TileDocument
+      streamF: TileDocument,
+      streamWithArray: TileDocument,
+      streamWithNestedDoc: TileDocument
     const notExistStreamId = StreamID.fromString(
       'kjzl6cwe1jw1495fyn7770ujykvl1f8sskbzsevlux062ajragz9hp3akdqbmdg'
     )
@@ -285,10 +287,44 @@ describe('Ceramic API', () => {
         notExistStreamId: notExistStreamId.toUrl(),
         notDoc: '123',
       })
+      streamWithArray = await TileDocument.create(ceramic, {
+        links: [{ e: streamE.id.toUrl() }, { d: streamD.id.toUrl() }],
+      })
+      streamWithNestedDoc = await TileDocument.create(ceramic, {
+        doc: { e: streamE.id.toUrl(), d: streamD.id.toUrl() },
+      })
     })
 
     afterAll(async () => {
       await ceramic.close()
+    })
+
+    it('can load through arrays', async () => {
+      const streams = await ceramic._loadLinkedStreams(
+        {
+          streamId: streamWithArray.id,
+          paths: ['/links/0/e', '/links/1/f'],
+        },
+        MULTIQUERY_TIMEOUT
+      )
+      expect(Object.keys(streams).length).toEqual(3)
+      expect(streams[streamWithArray.id.toString()]).toBeTruthy()
+      expect(streams[streamE.id.toString()]).toBeTruthy()
+      expect(streams[streamF.id.toString()]).toBeTruthy()
+    })
+
+    it('can load through documents', async () => {
+      const streams = await ceramic._loadLinkedStreams(
+        {
+          streamId: streamWithNestedDoc.id,
+          paths: ['/doc/e', '/doc/f'],
+        },
+        MULTIQUERY_TIMEOUT
+      )
+      expect(Object.keys(streams).length).toEqual(3)
+      expect(streams[streamWithNestedDoc.id.toString()]).toBeTruthy()
+      expect(streams[streamE.id.toString()]).toBeTruthy()
+      expect(streams[streamF.id.toString()]).toBeTruthy()
     })
 
     it('can load linked stream path, returns expected form', async () => {
