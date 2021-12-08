@@ -19,23 +19,12 @@ This code has been tested with the following did providers:
 | Secp256k1           | https://github.com/ceramicnetwork/key-did-provider-secp256k1   |
 | P-256, P-384, P-521 | https://github.com/bshambaugh/did-key-creator                  |
 
-This code includes support for Ed25519 and Secp256k1 did:keys described in https://github.com/w3c-ccg/did-method-key .
-
-Example code for creating a did:key for Ed25519 is here:
-https://github.com/ceramicnetwork/key-did-provider-ed25519
-
-Example code for creating a did:key for Secp256k1 is here:
-https://github.com/ceramicnetwork/key-did-provider-secp256k1
-
 This code supports compressed forms of P-256, P-384, and P-521 did:keys in concordance with https://github.com/w3c-ccg/did-method-key test-vectors.
 
 The did:key id is the multicodec name + the compressed public key expressed as a Uint8Array (byte array) then encoded with base58btc and expressed as a string.
 The syntax of a did:key is did:key:id.
 
 Compressed keys are the X coordinate of the public key with a prefix that depends on the sign of the Y curve coordinate. The prefix is '02' if even and '03' if odd.
-
-Example code for creating a did:key for P-256, P-384, and P-521 is here:
-https://github.com/bshambaugh/did-key-creator 
 
 ### Code
 Using [@ceramicnetwork/core](https://developers.ceramic.network/reference/typescript/modules/_ceramicnetwork_core.html) with secp256k1 did-key:
