@@ -7,7 +7,7 @@
 $ npm install key-did-resolver
 ```
 ### Usage
-This code includes support for the curves Ed25519, Secp256k1, Secp256r1 (P-256), Secp384r1 (P-384), and Secp521r1 (P-521)
+This code includes support for the curves Ed25519, Secp256k1, Secp256r1 (P-256), Secp384r1 (P-384), and Secp521r1 (P-521) .
 
 This code follows the test vectors at:
 [https://github.com/w3c-ccg/did-method-key/tree/main/test-vectors](https://github.com/w3c-ccg/did-method-key/tree/main/test-vectors)
@@ -19,7 +19,7 @@ This code has been tested with the following did providers:
 | Secp256k1           | https://github.com/ceramicnetwork/key-did-provider-secp256k1   |
 | P-256, P-384, P-521 | https://github.com/bshambaugh/did-key-creator                  |
 
-This code supports compressed forms of P-256, P-384, and P-521 did:keys in concordance with https://github.com/w3c-ccg/did-method-key test-vectors.
+Compressed forms of P-256, P-384, and P-521 are preferred. [^1]
 
 The did:key id is the multicodec name + the compressed public key expressed as a Uint8Array (byte array) then encoded with base58btc and expressed as a string.
 The syntax of a did:key is did:key:id.
@@ -239,7 +239,7 @@ The verification method results are slightly different. Here is a sampling:
 Due to problems with parsing JSON with BigInt, tests need to be run with Jest in Serial mode. Use **_npm run test -- --runInBand_** .
 
 ### Comments
-During development there was not yet consensus on using all compressed keys. Support for uncompressed keys with the '04' prefix and
+[^1]: During development there was not yet consensus on using all compressed keys. Support for uncompressed keys with the '04' prefix and
 raw keys (just the x,y bytes with no prefix) was kept for the P-256 and P-384 curves.
 
 ### References
