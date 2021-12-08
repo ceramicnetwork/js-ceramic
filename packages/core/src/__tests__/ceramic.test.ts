@@ -455,7 +455,7 @@ describe('Ceramic integration', () => {
       const ceramic1 = await createCeramic(ipfs1, false)
       const ceramic2 = await createCeramic(ipfs2, false)
 
-      const NUM_UPDATES = 20
+      const NUM_UPDATES = 15
       const stream = await TileDocument.create(ceramic1, { counter: 0 }, null, { anchor: false })
       for (let i = 1; i < NUM_UPDATES; i++) {
         await stream.update({ counter: i }, null, { anchor: false, publish: false })
@@ -466,7 +466,7 @@ describe('Ceramic integration', () => {
         queries.push({ streamId: commitId })
       }
 
-      const result = await ceramic2.multiQuery(queries, 10000)
+      const result = await ceramic2.multiQuery(queries, 30000)
       expect(Object.keys(result).length).toEqual(stream.allCommitIds.length + 1) // +1 for base streamid
       expect(result[stream.id.toString()].content).toEqual({ counter: NUM_UPDATES - 1 })
 
