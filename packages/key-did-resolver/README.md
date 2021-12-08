@@ -19,8 +19,7 @@ This code has been tested with the following did providers:
 
 Compressed[^1] forms of P-256, P-384, and P-521 are preferred. [^2]
 
-[^1]: The did:key id is the multicodec name + the compressed public key expressed as a Uint8Array (byte array) then encoded with base58btc and expressed as a string.
-      The syntax of a did:key is `did:key:id`.
+[^1]: The syntax of a did:key is `did:key:id`. The did:key `id` is the `base58btc string` representation of the `Uint8Array (byte array)` consisting of the `the multicodec name` followed by `the public key {raw,uncompressed,compressed}`.
 
       Compressed keys are the X coordinate of the public key with a prefix that depends on the sign of the Y curve coordinate. The prefix is '02' if even and '03' if odd.
 
