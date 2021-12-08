@@ -7,6 +7,18 @@
 $ npm install key-did-resolver
 ```
 ### Usage
+This code includes support for the curves Ed25519, Secp256k1, Secp256r1 (P-256), Secp384r1 (P-384), and Secp521r1 (P-521)
+
+This code follows the test vectors at:
+[https://github.com/w3c-ccg/did-method-key/tree/main/test-vectors](https://github.com/w3c-ccg/did-method-key/tree/main/test-vectors)
+
+This code has been tested with the following did providers:
+|  Curve              | Repositry                                                      |
+| ------------------- | -------------------------------------------------------------- |
+| Ed25519             | https://github.com/ceramicnetwork/key-did-provider-ed25519     |
+| Secp256k1           | https://github.com/ceramicnetwork/key-did-provider-secp256k1   |
+| P-256, P-384, P-521 | https://github.com/bshambaugh/did-key-creator                  |
+
 This code includes support for Ed25519 and Secp256k1 did:keys described in https://github.com/w3c-ccg/did-method-key .
 
 Example code for creating a did:key for Ed25519 is here:
