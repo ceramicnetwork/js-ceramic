@@ -109,7 +109,7 @@ export class StateManager {
    * @param commitId - Requested commit.
    */
   async atCommit(state$: RunningStateLike, commitId: CommitID): Promise<SnapshotState> {
-    return this.executionQ.forStream(commitId).run(async () => {
+    return this.executionQ.forStream(commitId.baseID).run(async () => {
       const snapshot = await this.conflictResolution.snapshotAtCommit(state$.value, commitId)
 
       // If the provided CommitID is ahead of what we have in the cache, then we should update
