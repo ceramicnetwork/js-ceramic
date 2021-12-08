@@ -69,6 +69,81 @@ console.log(doc)
 console.log(doc.didDocument.verificationMethod)
 ```
 
+### Output
+Using [@ceramicnetwork/core](https://developers.ceramic.network/reference/typescript/modules/_ceramicnetwork_core.html) with secp256k1 did-key:
+```
+{
+  didResolutionMetadata: { contentType: 'application/did+json' },
+  didDocument: {
+    id: 'did:key:zQ3shokFTS3brHcDQrn82RUDfCZESWL1ZdCEJwekUDPQiYBme',
+    verificationMethod: [ [Object] ],
+    authentication: [
+      'did:key:zQ3shokFTS3brHcDQrn82RUDfCZESWL1ZdCEJwekUDPQiYBme#zQ3shokFTS3brHcDQrn82RUDfCZESWL1ZdCEJwekUDPQiYBme'
+    ],
+    assertionMethod: [
+      'did:key:zQ3shokFTS3brHcDQrn82RUDfCZESWL1ZdCEJwekUDPQiYBme#zQ3shokFTS3brHcDQrn82RUDfCZESWL1ZdCEJwekUDPQiYBme'
+    ],
+    capabilityDelegation: [
+      'did:key:zQ3shokFTS3brHcDQrn82RUDfCZESWL1ZdCEJwekUDPQiYBme#zQ3shokFTS3brHcDQrn82RUDfCZESWL1ZdCEJwekUDPQiYBme'
+    ],
+    capabilityInvocation: [
+      'did:key:zQ3shokFTS3brHcDQrn82RUDfCZESWL1ZdCEJwekUDPQiYBme#zQ3shokFTS3brHcDQrn82RUDfCZESWL1ZdCEJwekUDPQiYBme'
+    ]
+  },
+  didDocumentMetadata: {}
+}
+[
+  {
+    id: 'did:key:zQ3shokFTS3brHcDQrn82RUDfCZESWL1ZdCEJwekUDPQiYBme#zQ3shokFTS3brHcDQrn82RUDfCZESWL1ZdCEJwekUDPQiYBme',
+    type: 'Secp256k1VerificationKey2018',
+    controller: 'did:key:zQ3shokFTS3brHcDQrn82RUDfCZESWL1ZdCEJwekUDPQiYBme',
+    publicKeyBase58: '23o6Sau8NxxzXcgSc3PLcNxrzrZpbLeBn1izfv3jbKhuv'
+  }
+]
+
+```
+Using [@ceramicnetwork/http-client](https://developers.ceramic.network/reference/typescript/modules/_ceramicnetwork_http_client.html) with secp256k1 did-key:
+```
+Swarm listening on /ip4/127.0.0.1/tcp/4011/p2p/QmYGmd8VoQ1sZ82diHEzhbPxfrjrxryLMnJem4UaNnEf8K
+Swarm listening on /ip4/10.0.0.5/tcp/4011/p2p/QmYGmd8VoQ1sZ82diHEzhbPxfrjrxryLMnJem4UaNnEf8K
+Swarm listening on /ip4/127.0.0.1/tcp/4012/ws/p2p/QmYGmd8VoQ1sZ82diHEzhbPxfrjrxryLMnJem4UaNnEf8K
+Swarm listening on /ip4/10.0.0.5/tcp/4012/ws/p2p/QmYGmd8VoQ1sZ82diHEzhbPxfrjrxryLMnJem4UaNnEf8K
+Connecting to ceramic network 'inmemory' using pubsub topic '/ceramic/inmemory-2974851949'
+Peer discovery is not supported for ceramic network: inmemory. This node may fail to load documents from other nodes on the network.
+This node with peerId QmYGmd8VoQ1sZ82diHEzhbPxfrjrxryLMnJem4UaNnEf8K is not included in the peer list for Ceramic network inmemory. It will not be discoverable by other nodes in the network, and so data created against this node will not be available to the rest of the network.
+Connected to anchor service '<inmemory>' with supported anchor chains ['inmemory:12345']
+{ key: [AsyncFunction: key] }
+{
+  didResolutionMetadata: { contentType: 'application/did+json' },
+  didDocument: {
+    id: 'did:key:zQ3shokFTS3brHcDQrn82RUDfCZESWL1ZdCEJwekUDPQiYBme',
+    verificationMethod: [ [Object] ],
+    authentication: [
+      'did:key:zQ3shokFTS3brHcDQrn82RUDfCZESWL1ZdCEJwekUDPQiYBme#zQ3shokFTS3brHcDQrn82RUDfCZESWL1ZdCEJwekUDPQiYBme'
+    ],
+    assertionMethod: [
+      'did:key:zQ3shokFTS3brHcDQrn82RUDfCZESWL1ZdCEJwekUDPQiYBme#zQ3shokFTS3brHcDQrn82RUDfCZESWL1ZdCEJwekUDPQiYBme'
+    ],
+    capabilityDelegation: [
+      'did:key:zQ3shokFTS3brHcDQrn82RUDfCZESWL1ZdCEJwekUDPQiYBme#zQ3shokFTS3brHcDQrn82RUDfCZESWL1ZdCEJwekUDPQiYBme'
+    ],
+    capabilityInvocation: [
+      'did:key:zQ3shokFTS3brHcDQrn82RUDfCZESWL1ZdCEJwekUDPQiYBme#zQ3shokFTS3brHcDQrn82RUDfCZESWL1ZdCEJwekUDPQiYBme'
+    ]
+  },
+  didDocumentMetadata: {}
+}
+[
+  {
+    id: 'did:key:zQ3shokFTS3brHcDQrn82RUDfCZESWL1ZdCEJwekUDPQiYBme#zQ3shokFTS3brHcDQrn82RUDfCZESWL1ZdCEJwekUDPQiYBme',
+    type: 'Secp256k1VerificationKey2018',
+    controller: 'did:key:zQ3shokFTS3brHcDQrn82RUDfCZESWL1ZdCEJwekUDPQiYBme',
+    publicKeyBase58: '23o6Sau8NxxzXcgSc3PLcNxrzrZpbLeBn1izfv3jbKhuv'
+  }
+]
+
+```
+
 ```
 // Usage from cloned GitHub Repository:
 // import * as keyDIDResolver from '../js-ceramic/packages/key-did-resolver/lib/index.js';
@@ -171,7 +246,7 @@ console.log(doc521.didDocument.verificationMethod);
 
 ```
 
-##$ Output
+### Output
 ```
 {
   didResolutionMetadata: { contentType: 'application/did+json' },
