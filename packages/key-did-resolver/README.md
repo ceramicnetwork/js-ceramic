@@ -25,7 +25,50 @@ Compressed keys are the X coordinate of the public key with a prefix that depend
 Example code for creating a did:key for P-256, P-384, and P-521 is here:
 https://github.com/bshambaugh/did-key-creator 
 
-## Code
+### Code
+Using @ceramicnetwork/core with secp256k1 did-key:
+```
+import KeyDIDResolver from 'key-did-resolver'
+import {Resolver} from 'did-resolver'
+import {Ceramic} from '@ceramicnetwork/core'
+import * as IPFS from 'ipfs-core'
+import dagJose from 'dag-jose'
+import {convert} from 'blockcodec-to-ipld-format'
+
+const format = convert(dagJose)
+
+const ipfs = await IPFS.create({
+    ipld: { formats: [format] },
+})
+
+const config = {}
+const ceramic = await Ceramic.create(ipfs, config)
+const keyDidResolver = KeyDIDResolver.getResolver(ceramic)
+console.log(keyDidResolver)
+const didResolver = new Resolver(keyDidResolver)
+const doc = await didResolver.resolve('did:key:z6MktvqCyLxTsXUH1tUZncNdVeEZ7hNh7npPRbUU27GTrYb8')
+
+console.log(doc)
+console.log(doc.didDocument.verificationMethod)
+```
+
+Using @ceramicnetwork/http-client with secp256k1 did-key:
+```
+import KeyDIDResolver from 'key-did-resolver'
+import {Resolver} from 'did-resolver'
+
+import { CeramicClient } from '@ceramicnetwork/http-client'
+const API_URL = "https://ceramic-clay.3boxlabs.com" // or your ceramic endpoint
+const ceramic = new CeramicClient(API_URL)
+
+const keyDidResolver = KeyDIDResolver.getResolver(ceramic)
+const didResolver = new Resolver(keyDidResolver)
+const doc = await didResolver.resolve('did:key:zQ3shokFTS3brHcDQrn82RUDfCZESWL1ZdCEJwekUDPQiYBme')
+
+console.log(doc)
+console.log(doc.didDocument.verificationMethod)
+```
+
 ```
 // Usage from cloned GitHub Repository:
 // import * as keyDIDResolver from '../js-ceramic/packages/key-did-resolver/lib/index.js';
