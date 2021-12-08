@@ -7,9 +7,7 @@
 $ npm install key-did-resolver
 ```
 ### Usage
-This code includes support for the curves Ed25519, Secp256k1, Secp256r1 (P-256), Secp384r1 (P-384), and Secp521r1 (P-521) .
-
-This code follows the test vectors at:
+This code includes support for the curves Ed25519, Secp256k1, Secp256r1 (P-256), Secp384r1 (P-384), and Secp521r1 (P-521) which follow the test vectors at:
 [https://github.com/w3c-ccg/did-method-key/tree/main/test-vectors](https://github.com/w3c-ccg/did-method-key/tree/main/test-vectors)
 
 This code has been tested with the following did providers:
@@ -19,15 +17,15 @@ This code has been tested with the following did providers:
 | Secp256k1           | https://github.com/ceramicnetwork/key-did-provider-secp256k1   |
 | P-256, P-384, P-521 | https://github.com/bshambaugh/did-key-creator                  |
 
-Compressed forms of P-256, P-384, and P-521 are preferred. [^1]
+Compressed[^1] forms of P-256, P-384, and P-521 are preferred. [^2]
 
-[^1]: During development there was not yet consensus on using all compressed keys. Support for uncompressed keys with the '04' prefix and
+[^1]: The did:key id is the multicodec name + the compressed public key expressed as a Uint8Array (byte array) then encoded with base58btc and expressed as a string.
+      The syntax of a did:key is did:key:id.
+
+      Compressed keys are the X coordinate of the public key with a prefix that depends on the sign of the Y curve coordinate. The prefix is '02' if even and '03' if odd.
+
+[^2]: During development there was not yet consensus on using all compressed keys. Support for uncompressed keys with the '04' prefix and
 raw keys (just the x,y bytes with no prefix) was kept for the P-256 and P-384 curves.
-
-The did:key id is the multicodec name + the compressed public key expressed as a Uint8Array (byte array) then encoded with base58btc and expressed as a string.
-The syntax of a did:key is did:key:id.
-
-Compressed keys are the X coordinate of the public key with a prefix that depends on the sign of the Y curve coordinate. The prefix is '02' if even and '03' if odd.
 
 ### Code
 Using [@ceramicnetwork/core](https://developers.ceramic.network/reference/typescript/modules/_ceramicnetwork_core.html) with secp256k1 did-key:
