@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.11.2-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@1.11.2-rc.0...@ceramicnetwork/core@1.11.2-rc.1) (2021-12-08)
+
+
+### Bug Fixes
+
+* **core:** Allow loading multiple CommitIDs for the same stream in parallel ([#1901](https://github.com/ceramicnetwork/js-ceramic/issues/1901)) ([3290a66](https://github.com/ceramicnetwork/js-ceramic/commit/3290a66db7f4063aac1df3781bef2962442740e2))
+
+
+
+
+
 ## [1.11.2-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@1.11.1...@ceramicnetwork/core@1.11.2-rc.0) (2021-12-06)
 
 

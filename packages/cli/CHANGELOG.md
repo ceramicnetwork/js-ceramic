@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.10.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@1.9.2-rc.0...@ceramicnetwork/cli@1.10.0-rc.0) (2021-12-08)
+
+
+### Features
+
+* add client side timeout to http-requests ([a33356c](https://github.com/ceramicnetwork/js-ceramic/commit/a33356c8a518252af9d81d1136411725c429cc3b))
+
+
+
+
+
 ## [1.9.2-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@1.9.1...@ceramicnetwork/cli@1.9.2-rc.0) (2021-12-06)
 
 
