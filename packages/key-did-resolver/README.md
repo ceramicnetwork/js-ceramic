@@ -146,7 +146,7 @@ Connected to anchor service '<inmemory>' with supported anchor chains ['inmemory
 
 ```
 
-The code for other curves is similar:
+The code for other curves is similar. Changing the did:key string is sufficient.
 
 #### code snippet for ed25519
 ```
@@ -168,6 +168,8 @@ const doc = await didResolver.resolve('did:key:z82LkvCwHNreneWpsgPEbV3gu1C6NFJEB
 const doc = await didResolver.resolve('did:key:z2J9gcGhudjgwsDLv4qJVM6DysnsjWRS6ggtCsSYpV9TGxd9WGoE1EkPxdvPcqEs7eLsQA985AGXPuqttPP7WJ5Qdiz27U3t')
 ```
 Note: All P-*** curves are compressed
+
+The verification method results are slightly different. Here is a sampling:
 
 #### did document verificationMethod for ed25519: 
 ```
