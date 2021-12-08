@@ -26,7 +26,7 @@ Example code for creating a did:key for P-256, P-384, and P-521 is here:
 https://github.com/bshambaugh/did-key-creator 
 
 ### Code
-Using @ceramicnetwork/core with secp256k1 did-key:
+Using [@ceramicnetwork/core](https://developers.ceramic.network/reference/typescript/modules/_ceramicnetwork_core.html) with secp256k1 did-key:
 ```
 import KeyDIDResolver from 'key-did-resolver'
 import {Resolver} from 'did-resolver'
