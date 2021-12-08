@@ -21,6 +21,9 @@ This code has been tested with the following did providers:
 
 Compressed forms of P-256, P-384, and P-521 are preferred. [^1]
 
+[^1]: During development there was not yet consensus on using all compressed keys. Support for uncompressed keys with the '04' prefix and
+raw keys (just the x,y bytes with no prefix) was kept for the P-256 and P-384 curves.
+
 The did:key id is the multicodec name + the compressed public key expressed as a Uint8Array (byte array) then encoded with base58btc and expressed as a string.
 The syntax of a did:key is did:key:id.
 
@@ -237,10 +240,6 @@ The verification method results are slightly different. Here is a sampling:
 
 ### Testing
 Due to problems with parsing JSON with BigInt, tests need to be run with Jest in Serial mode. Use **_npm run test -- --runInBand_** .
-
-### Comments
-[^1]: During development there was not yet consensus on using all compressed keys. Support for uncompressed keys with the '04' prefix and
-raw keys (just the x,y bytes with no prefix) was kept for the P-256 and P-384 curves.
 
 ### References
 
