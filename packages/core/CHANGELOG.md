@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.11.2-rc.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@1.11.2-rc.1...@ceramicnetwork/core@1.11.2-rc.2) (2021-12-08)
+
+
+### Bug Fixes
+
+* **core:** Load commits serially again ([#1920](https://github.com/ceramicnetwork/js-ceramic/issues/1920)) ([8c73805](https://github.com/ceramicnetwork/js-ceramic/commit/8c73805991e1f3d960f5451af8fa795fb260fef2))
+
+
+
+
+
 ## [1.11.2-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@1.11.2-rc.0...@ceramicnetwork/core@1.11.2-rc.1) (2021-12-08)
 
 
