@@ -38,7 +38,7 @@
     "jet-logger": "^1.0.6",
     "lodash.clonedeep": "^4.5.0",
     "logfmt": "^1.3.2",
-    "multiformats": "^9.4.10",
+    "multiformats": "^9.5.4",
     "rxjs": "^7.4.0",
     "uint8arrays": "^3.0.0"
   },
@@ -47,7 +47,7 @@
     "@types/logfmt": "^1.2.2",
     "@types/node": "^13.13.15",
     "dids": "3.0.0-alpha.0",
-    "ipfs-core-types": "~0.8.3",
+    "ipfs-core-types": "~0.8.4",
     "json-schema-to-typescript": "^10.1.5",
     "typescript-json-schema": "^0.52.0"
   },
