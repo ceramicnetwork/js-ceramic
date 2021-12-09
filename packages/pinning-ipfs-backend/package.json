@@ -27,12 +27,12 @@
   "dependencies": {
     "@stablelib/base64": "^1.0.1",
     "@stablelib/sha256": "^1.0.1",
-    "ipfs-http-client": "~54.0.1"
+    "ipfs-http-client": "~54.0.2"
   },
   "devDependencies": {
     "@ceramicnetwork/common": "^2.0.0-alpha.0",
-    "ipfs-core-types": "~0.8.3",
-    "multiformats": "^9.4.10",
+    "ipfs-core-types": "~0.8.4",
+    "multiformats": "^9.5.4",
     "ts-jest": "^26.4.4"
   },
   "publishConfig": {

@@ -33,13 +33,13 @@
     "@ceramicnetwork/streamid": "^2.0.0-alpha.0",
     "cross-fetch": "^3.1.4",
     "lru_map": "^0.4.1",
-    "multiformats": "^9.4.10",
+    "multiformats": "^9.5.4",
     "uint8arrays": "^3.0.0"
   },
   "devDependencies": {
     "@ceramicnetwork/http-client": "^2.0.0-alpha.0",
     "@types/node": "^13.13.15",
-    "did-resolver": "^3.1.3"
+    "did-resolver": "^3.1.5"
   },
   "jest": {
     "testEnvironment": "node",

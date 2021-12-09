@@ -37,7 +37,7 @@
   "devDependencies": {
     "@types/node": "^13.13.15",
     "dids": "3.0.0-alpha.0",
-    "multiformats": "^9.4.10"
+    "multiformats": "^9.5.4"
   },
   "jest": {
     "testEnvironment": "node",

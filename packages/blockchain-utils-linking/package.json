@@ -27,12 +27,12 @@
   "dependencies": {
     "@stablelib/sha256": "^1.0.1",
     "caip": "~1.0.0",
-    "near-api-js": "^0.43.1",
+    "near-api-js": "^0.44.1",
     "uint8arrays": "^3.0.0"
   },
   "devDependencies": {
     "@ceramicnetwork/streamid": "^2.0.0-alpha.0",
-    "@ethersproject/providers": "^5.5.0",
+    "@ethersproject/providers": "^5.5.1",
     "@glif/filecoin-address": "1.1.0",
     "@glif/local-managed-provider": "1.1.1",
     "@polkadot/api": "^4.6.2",
@@ -41,15 +41,15 @@
     "@polkadot/util": "^7.1.1",
     "@polkadot/util-crypto": "^7.0.2",
     "@smontero/eosio-local-provider": "^0.0.3",
-    "@solana/wallet-adapter-base": "^0.6.0",
-    "@solana/web3.js": "^1.20.0",
+    "@solana/wallet-adapter-base": "^0.7.1",
+    "@solana/web3.js": "^1.31.0",
     "@stablelib/ed25519": "^1.0.2",
-    "@taquito/signer": "^11.0.1",
-    "@taquito/taquito": "^11.0.1",
+    "@taquito/signer": "^11.0.2",
+    "@taquito/taquito": "^11.0.2",
     "@tendermint/sig": "^0.6.0",
-    "@zondax/filecoin-signing-tools": "^0.18.1",
+    "@zondax/filecoin-signing-tools": "^0.18.2",
     "eth-sig-util": "^3.0.1",
-    "ganache-core": "^2.13.1"
+    "ganache-core": "^2.13.2"
   },
   "jest": {
     "testEnvironment": "node",

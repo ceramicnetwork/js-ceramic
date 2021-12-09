@@ -32,16 +32,16 @@
   "dependencies": {
     "@ceramicnetwork/common": "^2.0.0-alpha.0",
     "@ceramicnetwork/ipfs-topology": "^2.0.0-alpha.0",
-    "aws-sdk": "^2.1034.0",
+    "aws-sdk": "^2.1045.0",
     "dag-jose": "^1.0.0",
     "datastore-fs": "^6.0.1",
     "datastore-level": "^7.0.1",
     "datastore-s3": "^8.0.0",
     "express": "^4.17.1",
-    "ipfs-core": "~0.12.1",
-    "ipfs-core-types": "~0.8.3",
-    "ipfs-http-gateway": "~0.7.3",
-    "ipfs-http-server": "~0.9.1"
+    "ipfs-core": "~0.12.2",
+    "ipfs-core-types": "~0.8.4",
+    "ipfs-http-gateway": "~0.7.4",
+    "ipfs-http-server": "~0.9.2"
   },
   "devDependencies": {
     "@types/express": "^4.17.13",
