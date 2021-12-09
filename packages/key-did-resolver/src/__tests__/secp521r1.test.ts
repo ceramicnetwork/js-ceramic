@@ -1,7 +1,7 @@
 // Brent Shambaugh <brent.shambaugh@gmail.com>. 2021.
 
 import varint from "varint"
-import multibase from "multibase"
+import { base58btc } from 'multiformats/bases/base58'
 import * as mapper from "../secp521r1"
 import * as u8a from 'uint8arrays'
 
@@ -11,9 +11,9 @@ describe('Secp521r1 mapper', () => {
     it('successfully resolves the document from did', async () => {
         const id = "z2J9gaYhkf4Ax2QA65KkcrSxr8JDSxUBwzFq3jmq5iBroY2tE7s1uohXVqEvALPxbvdzbWWQTtHvTprUdbNFha3HawyPcD9P"
 
-        const multicodecPubKey = multibase.decode(id)
-        varint.decode(multicodecPubKey) // decode is changing param multicodecPubKey as well
-        const pubKeyBytes = multicodecPubKey.slice(varint.decode.bytes)
+	const multiformatPubKey = base58btc.decode(id);
+        varint.decode(multiformatPubKey) // decode is changing param multiformatPubKey as well
+        const pubKeyBytes = multiformatPubKey.slice(varint.decode.bytes)
         const doc = await mapper.keyToDidDoc(pubKeyBytes, id)
         expect(doc).toMatchSnapshot()
      })
@@ -22,9 +22,9 @@ describe('Secp521r1 mapper', () => {
     it('successfully resolves the document from did', async () => {
         const id = "z2J9gcGdbo8riFqfRzgo3gjJyFcbNJm75hrnpDrZTNqQQxgNVBTtKndBiKxzGXrAbyw5W88VDbR1B1FvRQNTnSezghqnJ7p6"
 
-        const multicodecPubKey = multibase.decode(id)
-        varint.decode(multicodecPubKey) // decode is changing param multicodecPubKey as well
-        const pubKeyBytes = multicodecPubKey.slice(varint.decode.bytes)
+	const multiformatPubKey = base58btc.decode(id);
+        varint.decode(multiformatPubKey) // decode is changing param multiformatPubKey as well
+        const pubKeyBytes = multiformatPubKey.slice(varint.decode.bytes)
         const doc = await mapper.keyToDidDoc(pubKeyBytes, id)
         expect(doc).toMatchSnapshot()
      })
@@ -34,9 +34,9 @@ describe('Secp521r1 mapper', () => {
     it('successfully resolves the document from did', async () => {
         const id = "z2J9gcGTjd3NaNifwmaNZN27xioMAzHHCDBmkuQ552hm9kWrzhUepDCSAhiuRYBj1sSXR1LBxgqh6vasYzc8JhC12FpaNDhT"
 
-        const multicodecPubKey = multibase.decode(id)
-        varint.decode(multicodecPubKey) // decode is changing param multicodecPubKey as well
-        const pubKeyBytes = multicodecPubKey.slice(varint.decode.bytes)
+	const multiformatPubKey = base58btc.decode(id);
+        varint.decode(multiformatPubKey) // decode is changing param multiformatPubKey as well
+        const pubKeyBytes = multiformatPubKey.slice(varint.decode.bytes)
         const doc = await mapper.keyToDidDoc(pubKeyBytes, id)
         expect(doc).toMatchSnapshot()
      })
