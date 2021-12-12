@@ -1,4 +1,5 @@
 import jsonpatch from 'fast-json-patch'
+import * as dagCbor from '@ipld/dag-cbor'
 import type { Operation } from 'fast-json-patch'
 import * as uint8arrays from 'uint8arrays'
 import { randomBytes } from '@stablelib/random'
@@ -384,8 +385,11 @@ export class TileDocument<T = Record<string, any>> extends Stream {
     }
 
     if (content == null) {
+      const result = { header }
+      // Check if we can encode it in cbor. Should throw an error when invalid payload.
+      dagCbor.encode(result)
       // No signature needed if no genesis content
-      return { header }
+      return result
     }
     const commit: GenesisCommit = { data: content, header }
     return await _signDagJWS(signer, commit)
