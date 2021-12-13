@@ -9,6 +9,26 @@ describe('Secp521r1 mapper', () => {
 
     // testing the key from the did:key from the compressed public key
     it('successfully resolves the document from did', async () => {
+        const id = "z2J9gcGdb2nEyMDmzQYv2QZQcM1vXktvy1Pw4MduSWxGabLZ9XESSWLQgbuPhwnXN7zP7HpTzWqrMTzaY5zWe6hpzJ2jnw4f"
+	const multiformatPubKey = base58btc.decode(id);
+        varint.decode(multiformatPubKey) // decode is changing param multiformatPubKey as well
+        const pubKeyBytes = multiformatPubKey.slice(varint.decode.bytes)
+        const doc = await mapper.keyToDidDoc(pubKeyBytes, id)
+        expect(doc).toMatchSnapshot()
+    })
+
+    // testing the key from the did:key from the compressed public key
+    it('successfully resolves the document from did', async () => {
+        const id = "z2J9gaYxrKVpdoG9A4gRnmpnRCcxU6agDtFVVBVdn1JedouoZN7SzcyREXXzWgt3gGiwpoHq7K68X4m32D8HgzG8wv3sY5j7"   
+ 	const multiformatPubKey = base58btc.decode(id);
+        varint.decode(multiformatPubKey) // decode is changing param multiformatPubKey as well
+        const pubKeyBytes = multiformatPubKey.slice(varint.decode.bytes)
+        const doc = await mapper.keyToDidDoc(pubKeyBytes, id)
+        expect(doc).toMatchSnapshot()
+    })
+
+    // testing the key from the did:key from the compressed public key
+    it('successfully resolves the document from did', async () => {
         const id = "z2J9gaYaTUV4Ps5GYNNMm4nAyj4pGxd3Nh2zyeFjpEy631ZJ3dYfTDZ68GAhYbNuTn2eMAhKd6hhbzfxLn66vrQ6992jCSxX"
 	const multiformatPubKey = base58btc.decode(id);
         varint.decode(multiformatPubKey) // decode is changing param multiformatPubKey as well
