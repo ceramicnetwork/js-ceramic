@@ -27,7 +27,7 @@
   "dependencies": {
     "@stablelib/sha256": "^1.0.0",
     "caip": "~0.9.2",
-    "near-api-js": "^0.42.0",
+    "near-api-js": "^0.44.1",
     "uint8arrays": "^2.0.5"
   },
   "devDependencies": {
