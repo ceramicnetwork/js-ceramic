@@ -20,7 +20,7 @@ describe('Secp521r1 mapper', () => {
     // testing the key from the did:key from the compressed public key
     it('successfully resolves the document from did', async () => {
         const id = "z2J9gcGTLNfNooB4Mvx7qeEBccSWARJ3y1xjwbMH9A7ra6oq71rD1daVSVm2YmjUZRWJms18QTZXTnhaH5ihiKiVaG52cuAs"   
- 	const multiformatPubKey = base58btc.decode(id);
+        const multiformatPubKey = base58btc.decode(id);
         varint.decode(multiformatPubKey) // decode is changing param multiformatPubKey as well
         const pubKeyBytes = multiformatPubKey.slice(varint.decode.bytes)
         const doc = await mapper.keyToDidDoc(pubKeyBytes, id)
