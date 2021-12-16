@@ -525,7 +525,7 @@ describe('Ceramic integration', () => {
     })
   })
 
-  it('should throw in multiquery if provided genesis commit is different from given streamId', async () => {
+  it('should return empty entry multiquery if provided genesis commit is different from given streamId', async () => {
     await withFleet(2, async ([ipfs1, ipfs2]) => {
       await swarmConnect(ipfs1, ipfs2)
       const ceramic1 = await createCeramic(ipfs1, false)
@@ -571,7 +571,7 @@ describe('Ceramic integration', () => {
     })
   })
 
-  it('Should throw in multiquery if genesis commit is not deterministic', async () => {
+  it('Should return empty entry multiquery if genesis commit is not deterministic', async () => {
     await withFleet(2, async ([ipfs1, ipfs2]) => {
       await swarmConnect(ipfs1, ipfs2)
       const ceramic1 = await createCeramic(ipfs1, false)
