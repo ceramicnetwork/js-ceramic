@@ -576,3 +576,16 @@ describe('TileDocumentHandler', () => {
     expect(state).toMatchSnapshot()
   })
 })
+
+describe('TileHandler', () => {
+  test('can not create invalid deterministic tile document', async () => {
+    const fauxCeramic = {} as unknown as CeramicApi
+    await expect(
+      TileDocument.makeGenesis(fauxCeramic, undefined, {
+        controllers: ['did:foo:blah'],
+        family: 'test123',
+        tags: ['foo', undefined, 'blah'],
+      })
+    ).rejects.toThrow(/`undefined` is not supported by the IPLD Data Model and cannot be encoded/)
+  })
+})

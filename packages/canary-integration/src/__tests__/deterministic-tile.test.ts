@@ -21,7 +21,7 @@ afterAll(async () => {
 test("can create and retreive deterministic tile document", async () => {
   const createdTile = await TileDocument.deterministic(ceramic, {family: 'test123'})
   await createdTile.update({ foo: 'bar' })
-  
+
   const retrievedTile = await TileDocument.deterministic(ceramic, {family: 'test123'}, { anchor: false, publish: false })
 
   expect(createdTile.id.toString()).toEqual(retrievedTile.id.toString())
