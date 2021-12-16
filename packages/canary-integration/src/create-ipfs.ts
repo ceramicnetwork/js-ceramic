@@ -1,40 +1,49 @@
 import * as dagJose from 'dag-jose'
-import { create } from 'ipfs-core'
-import { IpfsApi } from '@ceramicnetwork/common'
-import tmp from 'tmp-promise'
+import { path } from 'go-ipfs'
+import * as Ctl from 'ipfsd-ctl'
+import * as ipfsHttp from 'ipfs-http-client'
+import type { IPFS, Options } from 'ipfs-core'
 import getPort from 'get-port'
+import mergeOpts from 'merge-options'
+
+const mergeOptions = mergeOpts.bind({ ignoreUndefined: true })
 
 /**
  * Create an IPFS instance
  * @param overrideConfig - IFPS config for override
  */
-export async function createIPFS(overrideConfig: Record<string, unknown> = {}): Promise<IpfsApi> {
-  const tmpFolder = await tmp.dir({ unsafeCleanup: true })
-
-  const port = await getPort()
+/**
+ * Create an IPFS instance
+ * @param overrideConfig - IFPS config for override
+ */
+export async function createIPFS(overrideConfig: Partial<Options> = {}): Promise<IPFS> {
+  const swarmPort = await getPort()
+  const apiPort = await getPort()
+  const gatewayPort = await getPort()
   const defaultConfig = {
     ipld: { codecs: [dagJose] },
-    repo: `${tmpFolder.path}/ipfs${port}/`,
     config: {
-      Addresses: { Swarm: [`/ip4/127.0.0.1/tcp/${port}`] },
+      Pubsub: {
+        Enabled: true,
+      },
+      Addresses: {
+        Swarm: [`/ip4/127.0.0.1/tcp/${swarmPort}`],
+        Gateway: `/ip4/127.0.0.1/tcp/${gatewayPort}`,
+        API: `/ip4/127.0.0.1/tcp/${apiPort}`,
+      },
       Bootstrap: [],
     },
   }
 
-  const config = { ...defaultConfig, ...overrideConfig }
-  const instance = await create(config)
+  const appliedConfig = mergeOptions(defaultConfig, overrideConfig)
 
-  // IPFS does not notify you when it stops.
-  // Here we intercept a call to `ipfs.stop` to clean up IPFS repository folder.
-  // Poor man's hook.
-  return new Proxy(instance, {
-    get(target: any, p: PropertyKey): any {
-      if (p === 'stop') {
-        tmpFolder.cleanup()
-      }
-      return target[p]
-    },
+  const ipfsd = await Ctl.createController({
+    ipfsHttpModule: ipfsHttp,
+    ipfsBin: path(),
+    ipfsOptions: appliedConfig,
+    disposable: true,
   })
+  return ipfsd.api
 }
 
 /**
@@ -43,7 +52,7 @@ export async function createIPFS(overrideConfig: Record<string, unknown> = {}): 
  * @param a - Initiates connection
  * @param b - Receives connection
  */
-export async function swarmConnect(a: IpfsApi, b: IpfsApi) {
+export async function swarmConnect(a: IPFS, b: IPFS) {
   const addressB = (await b.id()).addresses[0]
   await a.swarm.connect(addressB)
 }
@@ -53,7 +62,7 @@ export async function swarmConnect(a: IpfsApi, b: IpfsApi) {
  * @param n - number of ipfs instances
  * @param overrideConfig - IPFS config for override
  */
-export function fleet(n: number, overrideConfig: Record<string, unknown> = {}): Promise<IpfsApi[]> {
+export function fleet(n: number, overrideConfig: Record<string, unknown> = {}): Promise<IPFS[]> {
   return Promise.all(Array.from({ length: n }).map(() => createIPFS(overrideConfig)))
 }
 
@@ -64,7 +73,7 @@ export function fleet(n: number, overrideConfig: Record<string, unknown> = {}): 
  */
 export async function withFleet(
   n: number,
-  task: (instances: IpfsApi[]) => Promise<void>
+  task: (instances: IPFS[]) => Promise<void>
 ): Promise<void> {
   const instances = await fleet(n)
   try {

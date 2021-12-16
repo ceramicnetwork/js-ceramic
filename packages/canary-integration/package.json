@@ -21,10 +21,15 @@
     "@ceramicnetwork/stream-caip10-link": "^2.0.0-alpha.0",
     "@ceramicnetwork/stream-tile": "^2.0.0-alpha.0",
     "@truffle/hdwallet-provider": "^2.0.0",
-    "dids": "3.0.0-alpha.0",
+    "dids": "^3.0.0-alpha.1",
     "ganache-core": "^2.13.2",
     "key-did-provider-ed25519": "^1.1.0",
-    "key-did-resolver": "^2.0.0-alpha.0"
+    "key-did-resolver": "^2.0.0-alpha.0",
+    "get-port": "^5.1.1",
+    "go-ipfs": "^0.11.0",
+    "ipfs-http-client": "^54.0.3-rc.12",
+    "ipfsd-ctl": "^10.0.5",
+    "merge-options": "^3.0.4"
   },
   "gitHead": "34eeee25597b0a60def72906c26d3afd6230aaf1"
 }
