@@ -685,12 +685,10 @@ export class Ceramic implements CeramicApi {
   async multiQuery(queries: Array<MultiQuery>, timeout?: number): Promise<Record<string, Stream>> {
     const queryResults = await Promise.all(
       queries.map((query) => {
-        try {
-          return this._loadLinkedStreams(query, timeout)
-        } catch (e) {
+        return this._loadLinkedStreams(query, timeout).catch(e => {
           this._logger.warn(`Error during multiQuery: ${e.toString()}`)
-          return Promise.resolve({})
-        }
+          return {}
+        })
       })
     )
     // Flatten the result objects from each individual multi query into a single response object
