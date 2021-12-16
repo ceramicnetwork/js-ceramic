@@ -57,10 +57,10 @@ describe('connection', () => {
     await incoming$.tasks.onIdle()
     expect(subscribeSpy).toBeCalledTimes(1) // Initial pubsub.subscribe
     expect(unsubscribeSpy).toBeCalledTimes(0)
-    subscribeSpy.mock.calls[0][2].onError('fake error')
+    subscribeSpy.mock.calls[0][2].onError(new Error('fake error'))
     await delay(resubscribePeriod * 3)
     expect(subscribeSpy).toBeCalledTimes(2) // +1 on resubscribe
-    expect(unsubscribeSpy).toBeCalledTimes(0)
+    expect(unsubscribeSpy).toBeCalledTimes(1)
     expect(await ipfs.pubsub.ls()).toEqual([TOPIC]) // And now we subscribed
     subscription.unsubscribe()
   }, 10000)
@@ -85,7 +85,7 @@ test('pass incoming message', async () => {
       ls: jest.fn(() => []),
     },
     id: async () => ({ id: PEER_ID }),
-  }
+  } as unknown as IpfsApi
   const incoming$ = new IncomingChannel(ipfs, TOPIC, 30000, pubsubLogger, diagnosticsLogger)
   const result: any[] = []
   const subscription = incoming$.subscribe((message) => {
@@ -132,7 +132,7 @@ describe('filterOuter', () => {
         ls: jest.fn(() => []),
       },
       id: async () => ({ id: PEER_ID }),
-    }
+    } as unknown as IpfsApi
     const incoming$ = new IncomingChannel(ipfs, TOPIC, 30000, pubsubLogger, diagnosticsLogger)
     const result: any[] = []
     const peerId$ = from(ipfs.id().then((_) => _.id))

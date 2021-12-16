@@ -72,32 +72,27 @@ export class IncomingChannel extends Observable<IPFSPubsubMessage> {
     handler: (message: IPFSPubsubMessage) => void,
     complete: () => void
   ): Promise<void> {
-    const isRunning = this.ipfs && this.ipfs.pubsub
-    if (isRunning) {
-      const onError = (error) => {
-        console.warn(`IPFS pubsub subscription error, resubscribing: ${error}`)
-        this.tasks.add(() => this.subscribeToIpfs(handler, complete))
+    const onError = (error: Error) => {
+      if (error.message.includes('ECONNRESET') || error.message.includes('ECONNREFUSED')) {
+        complete()
+      } else {
+        this.tasks.add(async () => {
+          await new Promise((resolve) => setTimeout(resolve, this.resubscribeEvery))
+          await this.ipfs.pubsub?.unsubscribe(this.topic, handler)
+          await this.subscribeToIpfs(handler, complete)
+        })
       }
-      try {
-        // For some reason ipfs.id() throws an error directly if the
-        // ipfs node can't be reached, while pubsub.subscribe stalls
-        // for an unknown amount of time. We therefor run ipfs.id()
-        // first to determine if the ipfs node is reachable.
-        const ipfsId = await this.ipfs.id()
-        const peerId = ipfsId.id
+    }
+    try {
+      const ipfsId = await this.ipfs.id()
+      const peerId = ipfsId.id
 
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        await this.ipfs.pubsub.subscribe(this.topic, handler, { onError })
-        this.pubsubLogger.log({ peer: peerId, event: 'subscribed', topic: this.topic })
-      } catch (error) {
-        console.warn(`Can not reach ipfs node, resubscribing: ${error}`)
-        // TODO - should probably have some sort of backoff mechanism here.
-        await new Promise((resolve) => setTimeout(resolve, this.resubscribeEvery))
-        this.tasks.add(() => this.subscribeToIpfs(handler, complete))
-      }
-    } else {
-      complete()
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      await this.ipfs.pubsub.subscribe(this.topic, handler, { onError })
+      this.pubsubLogger.log({ peer: peerId, event: 'subscribed', topic: this.topic })
+    } catch (e) {
+      onError(e)
     }
   }
 }
