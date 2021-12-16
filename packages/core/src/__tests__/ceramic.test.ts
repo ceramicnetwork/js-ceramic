@@ -564,9 +564,7 @@ describe('Ceramic integration', () => {
             genesis: genesisCommit,
           },
         ])
-      ).rejects.toThrowError(
-        `Given StreamID CID ${stream1.id.cid.toString()} does not match given genesis content`
-      )
+      ).resolves.toEqual({})
 
       await ceramic1.close()
       await ceramic2.close()
@@ -599,14 +597,13 @@ describe('Ceramic integration', () => {
       const genesisCommit = await TileDocument.makeGenesis(ceramic2, content, metadata)
 
       // Try loading the stream on node2 and provide genesisCommit
-      await expect(
-        ceramic2.multiQuery([
-          {
-            streamId: streamID,
-            genesis: genesisCommit,
-          },
-        ])
-      ).rejects.toThrowError('Given genesis commit is not deterministic')
+      const result = await ceramic2.multiQuery([
+        {
+          streamId: streamID,
+          genesis: genesisCommit,
+        },
+      ])
+      expect(result).toEqual({})
 
       await ceramic1.close()
       await ceramic2.close()
