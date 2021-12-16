@@ -28,12 +28,6 @@ test("can create and retreive deterministic tile document", async () => {
   expect(createdTile.content).toMatchObject(retrievedTile.content)
 })
 
-test("can not create invalid deterministic tile document", async () => {
-  await expect(
-    TileDocument.deterministic(ceramic, { family: 'test123', tags: ['foo', undefined, 'blah'] })
-  ).rejects.toThrow(/`undefined` is not supported by the IPLD Data Model and cannot be encoded/)
-})
-
 test("cannot create or retreive deterministic tile document if family or tag not set", async () => {
   await expect(TileDocument.deterministic(ceramic, { forbidControllerChange: false })).rejects.toThrow(
     /Family and\/or tags are required/
