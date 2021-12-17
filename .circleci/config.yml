@@ -15,8 +15,17 @@ jobs:
       - run: npm run lint
       - run: npm run build
       - run:
+          name: Test with go-ipfs
           command: npm run test
           no_output_timeout: 30m
+          environment:
+            IPFS_FLAVOR: go
+      - run:
+          name: Test with js-ipfs
+          command: npm run test
+          no_output_timeout: 30m
+          environment:
+            IPFS_FLAVOR: js
       - run: npm run docs
 workflows:
   build-and-test:
