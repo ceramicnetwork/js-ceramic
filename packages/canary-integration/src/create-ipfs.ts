@@ -2,7 +2,7 @@ import * as dagJose from 'dag-jose'
 import { path } from 'go-ipfs'
 import * as Ctl from 'ipfsd-ctl'
 import * as ipfsHttp from 'ipfs-http-client'
-import type { IPFS, Options } from 'ipfs-core'
+import type { Options } from 'ipfs-core'
 import { create } from 'ipfs-core'
 import getPort from 'get-port'
 import mergeOpts from 'merge-options'
@@ -15,20 +15,20 @@ const mergeOptions = mergeOpts.bind({ ignoreUndefined: true })
  * Create an IPFS instance
  * @param overrideConfig - IFPS config for override
  */
-export async function createIPFS(overrideConfig: Partial<Options> = {}): Promise<IPFS> {
+export async function createIPFS(overrideConfig: Partial<Options> = {}): Promise<IpfsApi> {
   const flavor = process.env.IPFS_FLAVOR
   if (flavor && flavor.toLowerCase() == 'js') {
-    return createJSIPFS(overrideConfig)
+    return createJsIPFS(overrideConfig)
   } else {
     return createGoIPFS(overrideConfig)
   }
 }
 
 /**
- * Create an IPFS instance
+ * Create go-ipfs instance
  * @param overrideConfig - IFPS config for override
  */
-export async function createGoIPFS(overrideConfig: Partial<Options> = {}): Promise<IPFS> {
+async function createGoIPFS(overrideConfig: Partial<Options> = {}): Promise<IpfsApi> {
   const swarmPort = await getPort()
   const apiPort = await getPort()
   const gatewayPort = await getPort()
@@ -59,10 +59,10 @@ export async function createGoIPFS(overrideConfig: Partial<Options> = {}): Promi
 }
 
 /**
- * Create an IPFS instance
+ * Create js-ipfs instance
  * @param overrideConfig - IFPS config for override
  */
-export async function createJSIPFS(overrideConfig: Record<string, unknown> = {}): Promise<IpfsApi> {
+async function createJsIPFS(overrideConfig: Record<string, unknown> = {}): Promise<IpfsApi> {
   const tmpFolder = await tmp.dir({ unsafeCleanup: true })
 
   const port = await getPort()
