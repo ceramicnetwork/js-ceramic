@@ -1,10 +1,17 @@
 # Ceramic IPFS Daemon
+![ceramicnetwork](https://circleci.com/gh/ceramicnetwork/js-ceramic.svg?style=shield)
+[![MIT license](https://img.shields.io/badge/License-MIT-blue.svg)](https://lbesson.mit-license.org/)
+[![](https://img.shields.io/badge/Chat%20on-Discord-orange.svg?style=flat)](https://discord.gg/6VRZpGP)
+[![Twitter](https://img.shields.io/twitter/follow/ceramicnetwork?label=Follow&style=social)](https://twitter.com/ceramicnetwork)
 
 > Wraps js-ipfs instance with dag-jose codec enabled.
 
 ## Getting started
 
 The daemon can be run with Node.js or Docker.
+
+See the [ceramic developer site](https://developers.ceramic.network/) for more details about how to use this package.
+
 
 ### Using Node.js
 You can install this package globally and run the binary from your shell
