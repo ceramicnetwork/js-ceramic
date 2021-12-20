@@ -39,7 +39,7 @@
     "@polkadot/keyring": "^6.2.1",
     "@polkadot/types": "^4.6.2",
     "@polkadot/util": "^7.1.1",
-    "@polkadot/util-crypto": "^7.0.2",
+    "@polkadot/util-crypto": "^8.2.2",
     "@smontero/eosio-local-provider": "^0.0.3",
     "@solana/wallet-adapter-base": "^0.6.0",
     "@solana/web3.js": "^1.20.0",
