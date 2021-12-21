@@ -61,6 +61,10 @@ export class PubsubRateLimit
     this._queryQueue = new TaskQueue((err) => {
       this.logger.err(`Error while publishing pubsub QUERY message: ${err}`)
     })
+
+    this.logger.debug(
+      `Configuring pubsub to rate limit query messages to ${queriesPerSecond} per second`
+    )
   }
 
   /**
