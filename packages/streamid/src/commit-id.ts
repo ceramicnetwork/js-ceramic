@@ -1,13 +1,13 @@
 import { CID } from 'multiformats/cid'
 import { base36 } from 'multiformats/bases/base36'
-import { StreamType } from './stream-type'
+import { StreamType } from './stream-type.js'
 import varint from 'varint'
 import { concat as uint8ArrayConcat } from 'uint8arrays'
 import { Memoize } from 'typescript-memoize'
-import { STREAMID_CODEC } from './constants'
-import { readCid, readVarint } from './reading-bytes'
-import { StreamID } from './stream-id'
-import { StreamRef } from './stream-ref'
+import { STREAMID_CODEC } from './constants.js'
+import { readCid, readVarint } from './reading-bytes.js'
+import { StreamID } from './stream-id.js'
+import { StreamRef } from './stream-ref.js'
 
 /**
  * Parse CommitID from bytes representation.
@@ -124,13 +124,20 @@ function fromStringNoThrow(input: string): CommitID | Error {
   if (protocolFree.includes('commit')) {
     const commit = protocolFree.split('?')[1].split('=')[1]
     const base = protocolFree.split('?')[0]
-    return StreamID.fromString(base).atCommit(commit)
+    return make(StreamID.fromString(base), commit)
   } else {
     return fromBytesNoThrow(base36.decode(protocolFree))
   }
 }
 
 const TAG = Symbol.for('@ceramicnetwork/streamid/CommitID')
+
+/**
+ * Construct new CommitID for a given stream and commit
+ */
+function make(stream: StreamID, commit: CID | string | number): CommitID {
+  return new CommitID(stream.type, stream.cid, commit)
+}
 
 /**
  * Commit identifier, includes type, genesis CID, commit CID.
@@ -150,6 +157,7 @@ export class CommitID implements StreamRef {
   static fromBytesNoThrow = fromBytesNoThrow
   static fromString = fromString
   static fromStringNoThrow = fromStringNoThrow
+  static make = make
 
   // WORKAROUND. Weird replacement for Symbol.hasInstance due to
   // this old bug in Babel https://github.com/babel/babel/issues/4452
@@ -225,13 +233,6 @@ export class CommitID implements StreamRef {
 
     const commitBytes = this.#commit?.bytes || new Uint8Array([0])
     return uint8ArrayConcat([codec, type, this.cid.bytes, commitBytes])
-  }
-
-  /**
-   * Construct new CommitID for the same stream, but a new `commit` CID.
-   */
-  atCommit(commit: CID | string | number): CommitID {
-    return new CommitID(this.#type, this.#cid, commit)
   }
 
   /**

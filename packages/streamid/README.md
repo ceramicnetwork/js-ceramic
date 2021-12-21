@@ -32,8 +32,7 @@ $ npm install @ceramicnetwork/streamid
 To reference a stream as a whole, use `StreamID`. You can create an instance from the parts. stream type string or integer and CID instance or string are required.
 
 ```typescript
-import StreamID from '@ceramicnetwork/streamid';
-// alternatively: import { StreamID } from '@ceramicnetwork/streamid'
+import { StreamID } from '@ceramicnetwork/streamid';
 
 const streamid = new StreamID('tile', 'bagcqcerakszw2vsov...');
 

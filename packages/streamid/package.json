@@ -6,11 +6,19 @@
     "ceramic",
     "StreamId"
   ],
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
+  "type": "module",
   "files": [
     "lib"
   ],
+  "directories": {
+    "lib": "./lib"
+  },
+  "sideEffects": false,
+  "exports": {
+    ".": "./lib/index.js"
+  },
   "scripts": {
     "test": "../../node_modules/.bin/jest --silent --coverage",
     "build": "../../node_modules/.bin/tsc -p tsconfig.json",
@@ -21,9 +29,6 @@
   },
   "author": "Zach Ferland <zachferland@gmail.com>",
   "license": "(Apache-2.0 OR MIT)",
-  "directories": {
-    "lib": "lib"
-  },
   "dependencies": {
     "@ipld/dag-cbor": "^7.0.0",
     "multiformats": "^9.5.4",
@@ -33,10 +38,6 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "jest": {
-    "testEnvironment": "node",
-    "resolver": "jest-resolver-enhanced"
   },
   "gitHead": "34eeee25597b0a60def72906c26d3afd6230aaf1"
 }

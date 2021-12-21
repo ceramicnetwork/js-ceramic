@@ -1,6 +1,6 @@
 import type { CID } from 'multiformats/cid'
-import { StreamID } from './stream-id'
-import { CommitID } from './commit-id'
+import { StreamID } from './stream-id.js'
+import { CommitID } from './commit-id.js'
 
 /**
  * Ensure there is some resemblance in CommitID and StreamID APIs.
@@ -11,7 +11,6 @@ export interface StreamRef {
   readonly cid: CID
   readonly bytes: Uint8Array
   readonly baseID: StreamID
-  atCommit(commit: CID | string | number): CommitID
   equals(other: this): boolean
   toString(): string
   toUrl(): string
