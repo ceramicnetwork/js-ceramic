@@ -14,9 +14,11 @@ const FAKE_STREAM_ID = StreamID.fromString(
 )
 const PEER_ID = 'PEER_ID'
 const QUERIES_PER_SECOND = 5
-const MAX_QUEUED_QUERIES = 10
+const MAX_QUEUED_QUERIES = QUERIES_PER_SECOND * 10
 
 describe('pubsub with queries rate limited', () => {
+  jest.setTimeout(1000 * 30)
+
   let ipfs
   let pubsub
 
@@ -34,8 +36,7 @@ describe('pubsub with queries rate limited', () => {
     pubsub = new PubsubRateLimit(
       raw_pubsub,
       new LoggerProvider().getDiagnosticsLogger(),
-      QUERIES_PER_SECOND,
-      MAX_QUEUED_QUERIES
+      QUERIES_PER_SECOND
     )
   })
 
