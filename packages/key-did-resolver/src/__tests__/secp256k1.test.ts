@@ -1,6 +1,6 @@
 import varint from 'varint'
 import { base58btc } from 'multiformats/bases/base58'
-import * as mapper from '../secp256k1'
+import * as mapper from '../secp256k1.js'
 
 describe('Secp256k1 mapper', () => {
   it('successfully resolves the document from did', async () => {

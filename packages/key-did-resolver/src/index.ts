@@ -8,8 +8,8 @@ import type {
   Resolver,
 } from 'did-resolver'
 
-import * as secp256k1 from './secp256k1'
-import * as ed25519 from './ed25519'
+import * as secp256k1 from './secp256k1.js'
+import * as ed25519 from './ed25519.js'
 
 const DID_LD_JSON = 'application/did+ld+json'
 const DID_JSON = 'application/did+json'
@@ -55,5 +55,3 @@ export function getResolver(): ResolverRegistry {
     },
   }
 }
-
-export default { getResolver }
