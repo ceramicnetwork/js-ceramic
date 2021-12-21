@@ -25,7 +25,7 @@
     "lib": "lib"
   },
   "dependencies": {
-    "@ipld/dag-cbor": "^6.0.15",
+    "@ipld/dag-cbor": "^7.0.0",
     "multiformats": "^9.5.4",
     "typescript-memoize": "^1.1.0",
     "uint8arrays": "^3.0.0",

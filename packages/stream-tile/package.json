@@ -27,7 +27,7 @@
   "dependencies": {
     "@ceramicnetwork/common": "^2.0.0-alpha.0",
     "@ceramicnetwork/streamid": "^2.0.0-alpha.0",
-    "@ipld/dag-cbor": "^6.0.13",
+    "@ipld/dag-cbor": "^7.0.0",
     "@stablelib/random": "^1.0.1",
     "fast-json-patch": "^3.1.0",
     "uint8arrays": "^3.0.0"
