@@ -1,7 +1,7 @@
 import { Dispatcher } from '../dispatcher'
 import CID from 'cids'
 import StreamID from '@ceramicnetwork/streamid'
-import { CommitType, StreamState, LoggerProvider } from '@ceramicnetwork/common'
+import { CommitType, StreamState, LoggerProvider, IpfsApi } from '@ceramicnetwork/common'
 import { serialize, MsgType } from '../pubsub/pubsub-message'
 import { Repository, RepositoryDependencies } from '../state-management/repository'
 import { delay } from './delay'
@@ -57,11 +57,12 @@ describe('Dispatcher', () => {
     } as unknown as PinStore
     repository.setDeps({ pinStore } as unknown as RepositoryDependencies)
     dispatcher = new Dispatcher(
-      ipfs,
+      ipfs as any as IpfsApi,
       TOPIC,
       repository,
       loggerProvider.getDiagnosticsLogger(),
-      loggerProvider.makeServiceLogger('pubsub')
+      loggerProvider.makeServiceLogger('pubsub'),
+      10
     )
   })
 
