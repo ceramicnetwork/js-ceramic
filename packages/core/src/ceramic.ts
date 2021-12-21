@@ -653,6 +653,13 @@ export class Ceramic implements CeramicApi {
           `Timeout after ${timeout}ms`
         )
       } catch (e) {
+        if (CommitID.isInstance(streamId)) {
+          this._logger.warn(
+            `Error loading stream ${streamId.baseID.toString()} at commit ${streamId.commit.toString()} at time ${
+              query.atTime
+            } as part of a multiQuery request: ${e.toString()}`
+          )
+        } else{
         this._logger.warn(
           `Error loading stream ${streamId.toString()} at time ${
             query.atTime
