@@ -1,5 +1,5 @@
 import { signTx, Tx, SignMeta, createWalletFromMnemonic, Wallet, StdTx } from '@tendermint/sig'
-import { validateLink } from '../cosmos'
+import { validateLink } from '../cosmos.js'
 import * as linking from '@ceramicnetwork/blockchain-utils-linking'
 
 const did = 'did:3:bafysdfwefwe'

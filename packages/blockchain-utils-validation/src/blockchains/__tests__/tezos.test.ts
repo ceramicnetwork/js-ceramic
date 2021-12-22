@@ -1,6 +1,6 @@
 import { TezosAuthProvider, TezosProvider } from '@ceramicnetwork/blockchain-utils-linking'
 import { InMemorySigner } from '@taquito/signer'
-import { validateLink } from '../../index'
+import { validateLink } from '../../index.js'
 import { LinkProof } from '@ceramicnetwork/blockchain-utils-linking'
 import fetch from 'cross-fetch'
 import { AccountId, ChainId } from 'caip'

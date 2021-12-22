@@ -1,4 +1,4 @@
-import { BlockchainHandler } from '../blockchain-handler'
+import { BlockchainHandler } from '../blockchain-handler.js'
 import { LinkProof } from '@ceramicnetwork/blockchain-utils-linking'
 import * as uint8arrays from 'uint8arrays'
 import crypto from 'crypto'
@@ -30,9 +30,7 @@ export async function validateLink(proof: LinkProof): Promise<LinkProof | null> 
   return is_sig_valid ? proof : null
 }
 
-const Handler: BlockchainHandler = {
+export const handler: BlockchainHandler = {
   namespace,
   validateLink,
 }
-
-export default Handler

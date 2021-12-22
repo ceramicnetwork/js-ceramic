@@ -1,5 +1,5 @@
 import { SigningTools } from '@smontero/eosio-signing-tools'
-import { BlockchainHandler } from '../blockchain-handler'
+import { BlockchainHandler } from '../blockchain-handler.js'
 import * as linking from '@ceramicnetwork/blockchain-utils-linking'
 import { normalizeAccountId } from '@ceramicnetwork/common'
 
@@ -18,9 +18,7 @@ export async function validateLink(proof: linking.LinkProof): Promise<linking.Li
   return success ? proof : null
 }
 
-const Handler: BlockchainHandler = {
+export const handler: BlockchainHandler = {
   namespace,
   validateLink,
 }
-
-export default Handler

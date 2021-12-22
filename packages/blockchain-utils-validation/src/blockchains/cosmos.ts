@@ -1,5 +1,5 @@
 import { verifyTx } from '@tendermint/sig'
-import { BlockchainHandler } from '../blockchain-handler'
+import { BlockchainHandler } from '../blockchain-handler.js'
 import { LinkProof, cosmos } from '@ceramicnetwork/blockchain-utils-linking'
 import * as uint8arrays from 'uint8arrays'
 import { normalizeAccountId } from '@ceramicnetwork/common'
@@ -22,9 +22,7 @@ export async function validateLink(proof: LinkProof): Promise<LinkProof | null> 
   return is_sig_valid ? proof : null
 }
 
-const Handler: BlockchainHandler = {
+export const handler: BlockchainHandler = {
   namespace,
   validateLink,
 }
-
-export default Handler

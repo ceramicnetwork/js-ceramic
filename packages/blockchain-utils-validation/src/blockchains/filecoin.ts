@@ -1,4 +1,4 @@
-import { BlockchainHandler } from '../blockchain-handler'
+import { BlockchainHandler } from '../blockchain-handler.js'
 import * as linking from '@ceramicnetwork/blockchain-utils-linking'
 import * as signingTools from '@zondax/filecoin-signing-tools'
 import { normalizeAccountId } from '@ceramicnetwork/common'
@@ -18,9 +18,7 @@ export async function validateLink(proof: linking.LinkProof): Promise<linking.Li
   }
 }
 
-const Handler: BlockchainHandler = {
+export const handler: BlockchainHandler = {
   namespace,
   validateLink,
 }
-
-export default Handler

@@ -1,11 +1,11 @@
 import { AccountId } from 'caip'
 import ganache from 'ganache-core'
-import ethereum from '../ethereum'
+import { handler as ethereum } from '../ethereum.js'
 import * as sigUtils from 'eth-sig-util'
 import { ContractFactory, Contract } from '@ethersproject/contracts'
 import * as providers from '@ethersproject/providers'
 import * as linking from '@ceramicnetwork/blockchain-utils-linking'
-import { proofs } from './fixtures'
+import { proofs } from './fixtures.js'
 import { LinkProof } from '@ceramicnetwork/blockchain-utils-linking'
 
 const CONTRACT_WALLET_ABI = [

@@ -3,7 +3,14 @@
   "testRegex": ".(spec|test).ts$",
   "testEnvironment": "node",
   "moduleNameMapper": {
-    "^@zondax/filecoin-signing-tools/nodejs$": "@zondax/filecoin-signing-tools"
+    "^@zondax/filecoin-signing-tools/nodejs$": "@zondax/filecoin-signing-tools",
+    "^(\\.{1,2}/.*)\\.js$": "$1"
   },
-  "resolver": "jest-resolver-enhanced"
+  "resolver": "jest-resolver-enhanced",
+  "extensionsToTreatAsEsm": [".ts"],
+  "globals": {
+    "ts-jest": {
+      "useESM": true
+    }
+  }
 }

@@ -1,6 +1,6 @@
 import { LocalManagedProvider } from '@glif/local-managed-provider'
 import { Network } from '@glif/filecoin-address'
-import { validateLink } from '../filecoin'
+import { validateLink } from '../filecoin.js'
 import { AccountId } from 'caip'
 import * as linking from '@ceramicnetwork/blockchain-utils-linking'
 

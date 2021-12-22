@@ -1,5 +1,5 @@
 import { EOSIOProvider } from '@smontero/eosio-local-provider'
-import { validateLink } from '../eosio'
+import { validateLink } from '../eosio.js'
 import { AccountId } from 'caip'
 import * as linking from '@ceramicnetwork/blockchain-utils-linking'
 

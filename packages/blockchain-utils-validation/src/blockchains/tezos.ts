@@ -1,6 +1,6 @@
 import { ChainId } from 'caip'
 import { RemoteSigner } from '@taquito/remote-signer'
-import { BlockchainHandler } from '../blockchain-handler'
+import { BlockchainHandler } from '../blockchain-handler.js'
 import { LinkProof, tezos } from '@ceramicnetwork/blockchain-utils-linking'
 import fetch from 'cross-fetch'
 import * as uint8arrays from 'uint8arrays'
@@ -86,9 +86,7 @@ export async function validateLink(proof: LinkProof): Promise<LinkProof | null> 
   }
 }
 
-const Handler: BlockchainHandler = {
+export const handler: BlockchainHandler = {
   namespace: TEZOS_NAMESPACE,
   validateLink,
 }
-
-export default Handler
