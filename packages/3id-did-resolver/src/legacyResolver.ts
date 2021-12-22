@@ -90,4 +90,4 @@ const LegacyResolver = async (didId: string, ipfs = ipfsMock): Promise<any> => {
   }
 }
 
-export default LegacyResolver
+export { LegacyResolver }
