@@ -10,15 +10,21 @@
   "homepage": "https://ceramic.network",
   "license": "(Apache-2.0 OR MIT)",
   "directories": {
-    "lib": "lib"
+    "lib": "./lib"
   },
-  "main": "lib/index.js",
+  "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
+  "type": "module",
   "files": [
     "lib"
   ],
+  "sideEffects": false,
+  "exports": {
+    ".": "./lib/index.js"
+  },
   "scripts": {
     "test": "../../node_modules/.bin/jest --silent --coverage",
-    "build": "../../node_modules/.bin/tsc -p tsconfig.json",
+    "build": "../../node_modules/.bin/tsc --project tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
     "lint": "../../node_modules/.bin/eslint ./src --ext .js,.jsx,.ts,.tsx",
@@ -39,13 +45,6 @@
     "dids": "^3.0.0-alpha.1",
     "key-did-resolver": "^2.0.0-alpha.0",
     "multiformats": "^9.5.4"
-  },
-  "jest": {
-    "testEnvironment": "node",
-    "resolver": "jest-resolver-enhanced",
-    "transformIgnorePatterns": [
-      "node_modules/(?!(dids)/)"
-    ]
   },
   "gitHead": "4f42c6ac204ad25e66efda4e24aed12c339b3c98"
 }
