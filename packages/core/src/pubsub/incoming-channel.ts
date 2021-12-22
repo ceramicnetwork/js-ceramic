@@ -84,6 +84,10 @@ export class IncomingChannel extends Observable<IPFSPubsubMessage> {
       }
     }
     try {
+      // For some reason ipfs.id() throws an error directly if the
+      // ipfs node can't be reached, while pubsub.subscribe stalls
+      // for an unknown amount of time. We therefor run ipfs.id()
+      // first to determine if the ipfs node is reachable.
       const ipfsId = await this.ipfs.id()
       const peerId = ipfsId.id
 
