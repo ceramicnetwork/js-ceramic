@@ -27,6 +27,8 @@ const ETH_CHAIN_ID_MAPPINGS: Record<string, EthNetwork> = {
 
 const BASE_CHAIN_ID = 'eip155'
 const MAX_PROVIDERS_COUNT = 100
+const TRANSACTION_CACHE_SIZE = 50
+const BLOCK_CACHE_SIZE = 50
 
 /**
  * Ethereum anchor service that stores root CIDs on Ethereum blockchain
@@ -34,6 +36,8 @@ const MAX_PROVIDERS_COUNT = 100
 export default class EthereumAnchorValidator implements AnchorValidator {
   private _chainId: string | null
   private readonly providersCache: LRUMap<string, providers.BaseProvider>
+  private readonly _transactionCache: LRUMap<string, TransactionResponse>
+  private readonly _blockCache: LRUMap<string, Block>
   private readonly _logger: DiagnosticsLogger
 
   /**
@@ -42,6 +46,8 @@ export default class EthereumAnchorValidator implements AnchorValidator {
    */
   constructor(readonly ethereumRpcEndpoint: string, logger: DiagnosticsLogger) {
     this.providersCache = new LRUMap(MAX_PROVIDERS_COUNT)
+    this._transactionCache = new LRUMap(TRANSACTION_CACHE_SIZE)
+    this._blockCache = new LRUMap(BLOCK_CACHE_SIZE)
     this._logger = logger
   }
 
@@ -85,7 +91,12 @@ export default class EthereumAnchorValidator implements AnchorValidator {
     try {
       // determine network based on a chain ID
       const provider: providers.BaseProvider = this._getEthProvider(chainId)
-      const transaction = await provider.getTransaction(txHash)
+      let transaction = this._transactionCache.get(txHash)
+
+      if (!transaction) {
+        transaction = await provider.getTransaction(txHash)
+        this._transactionCache.set(txHash, transaction)
+      }
 
       if (!transaction) {
         if (!this.ethereumRpcEndpoint) {
@@ -96,7 +107,12 @@ export default class EthereumAnchorValidator implements AnchorValidator {
           throw new Error(`Failed to load transaction data for transaction ${txHash}`)
         }
       }
-      const block = await provider.getBlock(transaction.blockHash)
+
+      let block = this._blockCache.get(transaction.blockHash)
+      if (!block) {
+        block = await provider.getBlock(transaction.blockHash)
+        this._blockCache.set(transaction.blockHash, block)
+      }
       if (!block) {
         if (!this.ethereumRpcEndpoint) {
           throw new Error(
