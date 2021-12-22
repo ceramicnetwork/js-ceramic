@@ -10,17 +10,22 @@
   "author": "Janko Simonovic <simonovic86@gmail.com>",
   "homepage": "https://ceramic.network",
   "license": "(Apache-2.0 OR MIT)",
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
+  "type": "module",
   "directories": {
-    "lib": "lib"
+    "lib": "./lib"
   },
   "files": [
     "lib"
   ],
+  "sideEffects": false,
+  "exports": {
+    ".": "./lib/index.js"
+  },
   "scripts": {
     "test": "../../node_modules/.bin/jest --coverage",
-    "build": "../../node_modules/.bin/tsc -p tsconfig.json",
+    "build": "../../node_modules/.bin/tsc --project tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
     "lint": "../../node_modules/.bin/eslint ./src --ext .js,.jsx,.ts,.tsx",
@@ -37,10 +42,6 @@
     "lodash.clonedeep": "^4.5.0",
     "multiformats": "^9.5.4",
     "uint8arrays": "^3.0.0"
-  },
-  "jest": {
-    "testEnvironment": "node",
-    "resolver": "jest-resolver-enhanced"
   },
   "gitHead": "4f42c6ac204ad25e66efda4e24aed12c339b3c98"
 }
