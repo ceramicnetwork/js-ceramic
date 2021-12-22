@@ -45,7 +45,7 @@ import { ConflictResolution } from './conflict-resolution'
 import EthereumAnchorValidator from './anchor/ethereum/ethereum-anchor-validator'
 
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
-const IPFS_GET_TIMEOUT = 60000 // 1 minute
+const DEFAULT_QPS_LIMIT = 10 // Max number of pubsub query messages that can be published per second without rate limiting
 const TESTING = process.env.NODE_ENV == 'test'
 
 const TRAILING_SLASH = /\/$/ // slash at the end of the string
@@ -413,6 +413,9 @@ export class Ceramic implements CeramicApi {
 
     const streamCacheLimit = config.streamCacheLimit ?? DEFAULT_CACHE_LIMIT
     const concurrentRequestsLimit = config.concurrentRequestsLimit ?? streamCacheLimit
+    const maxQueriesPerSecond = process.env.CERAMIC_PUBSUB_QPS_LIMIT
+      ? parseInt(process.env.CERAMIC_PUBSUB_QPS_LIMIT)
+      : DEFAULT_QPS_LIMIT
 
     const ipfsTopology = new IpfsTopology(ipfs, networkOptions.name, logger)
     const pinStoreFactory = new PinStoreFactory(ipfs, pinStoreOptions)
@@ -422,7 +425,8 @@ export class Ceramic implements CeramicApi {
       networkOptions.pubsubTopic,
       repository,
       logger,
-      pubsubLogger
+      pubsubLogger,
+      maxQueriesPerSecond
     )
 
     const params: CeramicParameters = {

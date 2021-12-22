@@ -28,8 +28,6 @@ const IPFS_GET_TIMEOUT = 30000 // 30 seconds per retry, 3 retries = 90 seconds t
 const IPFS_MAX_COMMIT_SIZE = 256000 // 256 KB
 const IPFS_RESUBSCRIBE_INTERVAL_DELAY = 1000 * 15 // 15 sec
 const MAX_PUBSUB_PUBLISH_INTERVAL = 60 * 1000 // one minute
-const MAX_QUERIES_PER_SECOND = 10
-const MAX_QUEUED_QUERIES = 100
 const IPFS_CACHE_SIZE = 1024 // maximum cache size of 256MB
 
 function messageTypeToString(type: MsgType): string {
@@ -60,15 +58,15 @@ export class Dispatcher {
     private readonly topic: string,
     readonly repository: Repository,
     private readonly _logger: DiagnosticsLogger,
-    private readonly _pubsubLogger: ServiceLogger
+    private readonly _pubsubLogger: ServiceLogger,
+    maxQueriesPerSecond: number
   ) {
     const pubsub = new Pubsub(_ipfs, topic, IPFS_RESUBSCRIBE_INTERVAL_DELAY, _pubsubLogger, _logger)
     this.messageBus = new MessageBus(
       new PubsubRateLimit(
         new PubsubKeepalive(pubsub, MAX_PUBSUB_PUBLISH_INTERVAL),
         _logger,
-        MAX_QUERIES_PER_SECOND,
-        MAX_QUEUED_QUERIES
+        maxQueriesPerSecond
       )
     )
     this.messageBus.subscribe(this.handleMessage.bind(this))

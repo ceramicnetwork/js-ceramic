@@ -48,13 +48,11 @@ export class PubsubRateLimit
    * @param logger
    * @param queriesPerSecond - Max number of query messages that can be published per second
    *   before they start to queue up.
-   * @param maxQueuedQueries - Max number of messages that are allowed in the queue.
    */
   constructor(
     private readonly pubsub: ObservableWithNext<PubsubMessage>,
     private readonly logger: DiagnosticsLogger,
-    private readonly queriesPerSecond: number,
-    private readonly maxQueuedQueries: number
+    private readonly queriesPerSecond: number
   ) {
     super((subscriber) => {
       pubsub.subscribe(subscriber)
@@ -63,6 +61,10 @@ export class PubsubRateLimit
     this._queryQueue = new TaskQueue((err) => {
       this.logger.err(`Error while publishing pubsub QUERY message: ${err}`)
     })
+
+    this.logger.debug(
+      `Configuring pubsub to rate limit query messages to ${queriesPerSecond} per second`
+    )
   }
 
   /**
@@ -71,10 +73,11 @@ export class PubsubRateLimit
    * @param message
    */
   next(message: PubsubMessage): Subscription {
+    const maxQueuedQueries = this.queriesPerSecond * 10
     if (message.typ === MsgType.QUERY) {
-      if (this._queryQueue.size >= this.maxQueuedQueries) {
+      if (this._queryQueue.size >= maxQueuedQueries) {
         throw new Error(
-          `Cannot publish query message to pubsub because we have exceeded the maximum allowed rate. Cannot have more than ${this.maxQueuedQueries} queued queries.`
+          `Cannot publish query message to pubsub because we have exceeded the maximum allowed rate. Cannot have more than ${maxQueuedQueries} queued queries.`
         )
       }
       return from(this._queryQueue.run(this._publishQuery.bind(this, message))).subscribe()
