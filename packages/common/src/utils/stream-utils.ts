@@ -1,6 +1,6 @@
 import cloneDeep from 'lodash.clonedeep'
 import * as u8a from 'uint8arrays'
-import { toCID } from './cid-utils'
+import { toCID } from './cid-utils.js'
 
 import {
   AnchorCommit,
@@ -9,8 +9,8 @@ import {
   IpfsApi,
   SignedCommit,
   SignedCommitContainer,
-} from '../index'
-import { AnchorStatus, StreamState, LogEntry } from '../stream'
+} from '../index.js'
+import { AnchorStatus, StreamState, LogEntry } from '../stream.js'
 import type { DagJWS } from 'dids'
 import { StreamID, StreamType } from '@ceramicnetwork/streamid'
 

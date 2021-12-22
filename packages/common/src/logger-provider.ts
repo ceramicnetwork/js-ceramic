@@ -1,5 +1,5 @@
-import { DiagnosticsLogger, ServiceLogger } from './loggers'
-import { LoggerProviderBase } from './logger-base'
+import { DiagnosticsLogger, ServiceLogger } from './loggers.js'
+import { LoggerProviderBase } from './logger-base.js'
 import path from 'path'
 import os from 'os'
 
