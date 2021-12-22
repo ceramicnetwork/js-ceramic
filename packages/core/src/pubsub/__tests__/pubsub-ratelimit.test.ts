@@ -156,28 +156,20 @@ describe('pubsub with queries rate limited', () => {
       }
     })
 
+    // All messages should be *submitted* without error
     const allQueriesPublished = new Promise<void>((resolve, _) => {
       let i = 0
-      messages.map((message, index) => {
-        if (index < MAX_QUEUED_QUERIES) {
-          pubsub.next(message).add(() => {
-            i++
-            if (i >= numMessages) {
-              resolve()
-            }
-          })
-        } else {
-          expect(function () {
-            i++
-            if (i >= numMessages) {
-              resolve()
-            }
-            pubsub.next(message)
-          }).toThrow(/exceeded the maximum allowed rate/)
-        }
+      messages.map((message) => {
+        pubsub.next(message).add(() => {
+          i++
+          if (i >= numMessages) {
+            resolve()
+          }
+        })
       })
     })
 
+    // Only up to MAX_QUEUED_QUERIES should actually make it to the underlying pubsub network.
     await allQueriesPublished
     expect(ipfs.pubsub.publish).toBeCalledTimes(MAX_QUEUED_QUERIES)
   })
