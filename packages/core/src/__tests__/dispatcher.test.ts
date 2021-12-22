@@ -245,8 +245,6 @@ describe('Dispatcher with real ipfs over http', () => {
   jest.setTimeout(1000 * 60 * 2) // 2 minutes. Need at least 1 min 30 for 3 30 second timeouts with retries
 
   let dispatcher: Dispatcher
-  let repository: Repository
-  const loggerProvider = new LoggerProvider()
   let ipfsNode: IpfsApi
   let ipfsApi: HttpApi
   let ipfsClient: IpfsApi
@@ -265,10 +263,11 @@ describe('Dispatcher with real ipfs over http', () => {
 
     ipfsClient = await IpfsHttpClient.create({ url: ipfsUrl })
 
+    const loggerProvider = new LoggerProvider()
     const levelPath = await tmp.tmpName()
     const stateStore = new LevelStateStore(levelPath)
     stateStore.open('test')
-    repository = new Repository(100, 100, loggerProvider.getDiagnosticsLogger())
+    const repository = new Repository(100, 100, loggerProvider.getDiagnosticsLogger())
     const pinStore = {
       stateStore,
     } as unknown as PinStore
@@ -286,6 +285,7 @@ describe('Dispatcher with real ipfs over http', () => {
     await dispatcher.close()
     await ipfsApi.stop()
     await ipfsNode.stop()
+    await TestUtils.delay(2000) // sleep 2 seconds for ipfs to finish shutting down
   })
 
   it('basic ipfs http client functionality', async () => {
