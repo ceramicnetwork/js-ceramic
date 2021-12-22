@@ -1,2 +1,2 @@
-export * from './ipfs-daemon'
-export * from './healthcheck-server'
+export * from './ipfs-daemon.js'
+export * from './healthcheck-server.js'
