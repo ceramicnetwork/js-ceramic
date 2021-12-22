@@ -272,17 +272,17 @@ describe('Dispatcher with real ipfs over http', () => {
       stateStore,
     } as unknown as PinStore
     repository.setDeps({ pinStore } as unknown as RepositoryDependencies)
-    dispatcher = new Dispatcher(
-      ipfsNode,
-      TOPIC,
-      repository,
-      loggerProvider.getDiagnosticsLogger(),
-      loggerProvider.makeServiceLogger('pubsub')
-    )
+    // dispatcher = new Dispatcher(
+    //   ipfsNode,
+    //   TOPIC,
+    //   repository,
+    //   loggerProvider.getDiagnosticsLogger(),
+    //   loggerProvider.makeServiceLogger('pubsub')
+    // )
   })
 
   afterAll(async () => {
-    await dispatcher.close()
+    //await dispatcher.close()
     //await ipfsApi.stop()
     await ipfsNode.stop()
     await TestUtils.delay(2000) // sleep 2 seconds for ipfs to finish shutting down
