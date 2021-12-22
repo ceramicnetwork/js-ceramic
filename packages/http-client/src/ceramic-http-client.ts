@@ -1,5 +1,5 @@
-import { combineURLs, typeStreamID } from './utils'
-import { Document } from './document'
+import { combineURLs, typeStreamID } from './utils.js'
+import { Document } from './document.js'
 
 import type { DID } from 'dids'
 import {
@@ -22,7 +22,7 @@ import {
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { Caip10Link } from '@ceramicnetwork/stream-caip10-link'
 import { StreamID, CommitID, StreamRef } from '@ceramicnetwork/streamid'
-import { RemotePinApi } from './remote-pin-api'
+import { RemotePinApi } from './remote-pin-api.js'
 
 const API_PATH = '/api/v0'
 const CERAMIC_HOST = 'http://localhost:7007'
@@ -250,5 +250,3 @@ export class CeramicClient implements CeramicApi {
     this._streamCache.clear()
   }
 }
-
-export default CeramicClient
