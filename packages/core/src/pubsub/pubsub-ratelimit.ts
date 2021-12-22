@@ -1,6 +1,5 @@
-import { from, Observable, Subscription } from 'rxjs'
+import { empty, from, Observable, Subscription } from 'rxjs'
 import { MsgType, PubsubMessage } from './pubsub-message'
-import { Pubsub } from './pubsub'
 import { TaskQueue } from './task-queue'
 import { DiagnosticsLogger } from '@ceramicnetwork/common'
 import { ClockSource } from '../clock-source'
@@ -76,9 +75,10 @@ export class PubsubRateLimit
     const maxQueuedQueries = this.queriesPerSecond * 10
     if (message.typ === MsgType.QUERY) {
       if (this._queryQueue.size >= maxQueuedQueries) {
-        throw new Error(
+        this.logger.err(
           `Cannot publish query message to pubsub because we have exceeded the maximum allowed rate. Cannot have more than ${maxQueuedQueries} queued queries.`
         )
+        return empty().subscribe()
       }
       return from(this._queryQueue.run(this._publishQuery.bind(this, message))).subscribe()
     } else {
