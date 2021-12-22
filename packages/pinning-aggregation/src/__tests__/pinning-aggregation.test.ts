@@ -1,5 +1,5 @@
 import { CID } from 'multiformats/cid'
-import { PinningAggregation, UnknownPinningService } from '../index'
+import { PinningAggregation, UnknownPinningService } from '../index.js'
 import { CidList, PinningBackend, PinningInfo } from '@ceramicnetwork/common'
 import { IpfsPinning } from '@ceramicnetwork/pinning-ipfs-backend'
 import { PowergatePinningBackend } from '@ceramicnetwork/pinning-powergate-backend'
@@ -14,13 +14,15 @@ const doubleFakeConnectionStrings = ['fake://alpha.com', 'fake://beta.com']
 class FakePinning implements PinningBackend {
   static designator = 'fake'
 
-  readonly id = `fake@${this.connectionString}`
+  readonly id
 
   static async build(connectionString: string): Promise<FakePinning> {
     return new FakePinning(connectionString)
   }
 
-  constructor(readonly connectionString: string) {}
+  constructor(readonly connectionString: string) {
+    this.id = `fake@${this.connectionString}`
+  }
 
   async close(): Promise<void> {
     // Do Nothing
