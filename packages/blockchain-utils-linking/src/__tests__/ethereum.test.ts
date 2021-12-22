@@ -1,11 +1,11 @@
 import { AccountId } from 'caip'
 import ganache from 'ganache-core'
-import StreamID from '@ceramicnetwork/streamid'
+import { StreamID } from '@ceramicnetwork/streamid'
 import { Contract, ContractFactory } from '@ethersproject/contracts'
 import * as sigUtils from 'eth-sig-util'
-import * as ethereum from '../ethereum'
-import { OcapParams, OcapTypes } from '../ocap-util'
-import { encodeRpcMessage } from '../util'
+import * as ethereum from '../ethereum.js'
+import { OcapParams, OcapTypes } from '../ocap-util.js'
+import { encodeRpcMessage } from '../util.js'
 
 const CONTRACT_WALLET_ABI = [
   {

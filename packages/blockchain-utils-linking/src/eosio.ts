@@ -1,7 +1,7 @@
-import { AuthProvider } from './auth-provider'
+import { AuthProvider } from './auth-provider.js'
 import { AccountId } from 'caip'
-import { getConsentMessage, LinkProof } from './util'
-import { normalizeAccountId } from './ethereum'
+import { getConsentMessage, LinkProof } from './util.js'
+import { normalizeAccountId } from './ethereum.js'
 import * as sha256Stable from '@stablelib/sha256'
 import * as uint8arrays from 'uint8arrays'
 

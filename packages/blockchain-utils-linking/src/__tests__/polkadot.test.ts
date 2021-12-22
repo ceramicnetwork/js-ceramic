@@ -4,7 +4,7 @@ import { SignerPayloadRaw } from '@polkadot/types/types'
 import { TypeRegistry } from '@polkadot/types/create'
 import { createTestKeyring } from '@polkadot/keyring/testing'
 import { assert, hexToU8a, u8aToHex } from '@polkadot/util'
-import { PolkadotAuthProvider } from '../polkadot'
+import { PolkadotAuthProvider } from '../polkadot.js'
 import { cryptoWaitReady } from '@polkadot/util-crypto'
 
 const did = 'did:3:bafysdfwefwe'

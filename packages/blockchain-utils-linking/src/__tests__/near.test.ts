@@ -1,4 +1,4 @@
-import { NearAuthProvider } from '../near'
+import { NearAuthProvider } from '../near.js'
 import * as nearApiJs from 'near-api-js'
 
 const did = 'did:3:bafysdfwefwe'

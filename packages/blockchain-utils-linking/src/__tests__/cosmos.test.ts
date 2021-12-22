@@ -1,5 +1,5 @@
 import { signTx, Tx, SignMeta, createWalletFromMnemonic, Wallet, StdTx } from '@tendermint/sig'
-import { CosmosAuthProvider } from '../cosmos'
+import { CosmosAuthProvider } from '../cosmos.js'
 
 const did = 'did:3:bafysdfwefwe'
 const mnemonic = 'test salon husband push melody usage fine ensure blade deal miss twin'

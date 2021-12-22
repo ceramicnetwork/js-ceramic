@@ -9,16 +9,21 @@
   "homepage": "https://ceramic.network",
   "license": "(Apache-2.0 OR MIT)",
   "directories": {
-    "lib": "lib"
+    "lib": "./lib"
   },
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
+  "type": "module",
   "files": [
     "lib"
   ],
+  "exports": {
+    ".": "./lib/index.js"
+  },
+  "sideEffects": false,
   "scripts": {
     "test": "../../node_modules/.bin/jest --silent --env=node",
-    "build": "../../node_modules/.bin/tsc -p tsconfig.json",
+    "build": "../../node_modules/.bin/tsc --project tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
     "lint": "../../node_modules/.bin/eslint ./src --ext .js,.jsx,.ts,.tsx",
@@ -27,12 +32,11 @@
   "dependencies": {
     "@stablelib/sha256": "^1.0.1",
     "caip": "~1.0.0",
-    "near-api-js": "^0.44.1",
+    "near-api-js": "^0.44.2",
     "uint8arrays": "^3.0.0"
   },
   "devDependencies": {
     "@ceramicnetwork/streamid": "^2.0.0-alpha.0",
-    "@ethersproject/providers": "^5.5.1",
     "@glif/filecoin-address": "1.1.0",
     "@glif/local-managed-provider": "1.1.1",
     "@polkadot/api": "^4.6.2",
@@ -50,10 +54,6 @@
     "@zondax/filecoin-signing-tools": "^0.18.2",
     "eth-sig-util": "^3.0.1",
     "ganache-core": "^2.13.2"
-  },
-  "jest": {
-    "testEnvironment": "node",
-    "resolver": "jest-resolver-enhanced"
   },
   "gitHead": "34eeee25597b0a60def72906c26d3afd6230aaf1"
 }
