@@ -91,8 +91,6 @@ export class IncomingChannel extends Observable<IPFSPubsubMessage> {
       const ipfsId = await this.ipfs.id()
       const peerId = ipfsId.id
 
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
       await this.ipfs.pubsub.subscribe(this.topic, handler, { onError })
       this.pubsubLogger.log({ peer: peerId, event: 'subscribed', topic: this.topic })
     } catch (e) {
