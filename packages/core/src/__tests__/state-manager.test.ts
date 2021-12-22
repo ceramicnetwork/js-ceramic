@@ -19,6 +19,7 @@ import { StreamID } from '@ceramicnetwork/streamid'
 import { from, timer } from 'rxjs'
 import { concatMap, map } from 'rxjs/operators'
 import { MAX_RESPONSE_INTERVAL } from '../pubsub/message-bus'
+import cloneDeep from 'lodash.clonedeep'
 
 const FAKE_CID = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
 const INITIAL_CONTENT = { abc: 123, def: 456 }
@@ -255,6 +256,7 @@ test('commit history and atCommit', async () => {
   expect(stream.state.log.length).toEqual(5)
 
   // Correctly check out a specific commit
+  const streamStateOriginal = cloneDeep(streamState.state)
   const streamV0 = await ceramic.repository.stateManager.atCommit(streamState, commit0)
   expect(streamV0.id.equals(commit0.baseID)).toBeTruthy()
   expect(streamV0.value.log.length).toEqual(1)
@@ -289,6 +291,9 @@ test('commit history and atCommit', async () => {
   expect(streamV4.value.metadata.controllers).toEqual(controllers)
   expect(streamV4.value.next.content).toEqual(finalContent)
   expect(streamV4.value.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
+
+  // Ensure that stateManager.atCommit does not mutate the passed in state object
+  expect(JSON.stringify(streamState.state)).toEqual(JSON.stringify(streamStateOriginal))
 })
 
 describe('atCommit', () => {
@@ -321,6 +326,7 @@ describe('atCommit', () => {
     const ceramic2 = await createCeramic(ipfs, { anchorOnRequest: false })
     const stream2 = await TileDocument.load(ceramic, stream1.id)
     const streamState2 = await ceramic2.repository.load(stream2.id, { syncTimeoutSeconds: 0 })
+    const streamState2Original = cloneDeep(streamState2.state)
     const snapshot = await ceramic2.repository.stateManager.atCommit(streamState2, stream1.commitId)
 
     expect(StreamUtils.statesEqual(snapshot.state, stream1.state))
@@ -332,6 +338,9 @@ describe('atCommit', () => {
     await expect(snapshotStream.update({ abc: 1010 })).rejects.toThrow(
       'Historical stream commits cannot be modified. Load the stream without specifying a commit to make updates.'
     )
+
+    // Ensure that stateManager.atCommit does not mutate the passed in state object
+    expect(streamState2.state).toEqual(streamState2Original)
 
     await ceramic2.close()
   })
@@ -347,7 +356,8 @@ describe('atCommit', () => {
 
     // Now load the stream at a commitID ahead of what is currently in the state in the repository.
     // The existing RunningState from the repository should also get updated
-    const snapshot = await ceramic.repository.loadAtCommit(futureCommitID, {})
+    const state$ = await ceramic.repository.load(futureCommitID.baseID, {})
+    const snapshot = await ceramic.repository.stateManager.atCommit(state$, futureCommitID)
     expect(snapshot.value.next.content).toEqual(newContent)
     expect(snapshot.value.log.length).toEqual(2)
     expect(StreamUtils.serializeState(streamState.state)).toEqual(
@@ -412,6 +422,7 @@ test('handles basic conflict', async () => {
   expect(stream1.content).toEqual(newContent)
 
   // Loading valid commit works
+  const streamState1Original = cloneDeep(streamState1.state)
   const streamAtValidCommit = await ceramic.repository.stateManager.atCommit(
     streamState1,
     streamId.atCommit(tipValidUpdate)
@@ -424,6 +435,9 @@ test('handles basic conflict', async () => {
   ).rejects.toThrow(
     `Requested commit CID ${tipInvalidUpdate.toString()} not found in the log for stream ${streamId.toString()}`
   )
+
+  // Ensure that stateManager.atCommit does not mutate the passed in state object
+  expect(JSON.stringify(streamState1.state)).toEqual(JSON.stringify(streamState1Original))
 }, 10000)
 
 test('enforces schema in update that assigns schema', async () => {
