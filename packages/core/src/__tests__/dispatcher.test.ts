@@ -54,6 +54,7 @@ describe('Dispatcher with mock ipfs', () => {
     ipfs.pubsub.publish.mockClear()
 
     const levelPath = await tmp.tmpName()
+    console.log(`starting level state store at path ${levelPath.toString()}`)
     const stateStore = new LevelStateStore(levelPath)
     stateStore.open('test')
     repository = new Repository(100, 100, loggerProvider.getDiagnosticsLogger())
@@ -265,6 +266,7 @@ describe('Dispatcher with real ipfs over http', () => {
 
     const loggerProvider = new LoggerProvider()
     const levelPath = await tmp.tmpName()
+    console.log(`starting level state store at path ${levelPath.toString()}`)
     const stateStore = new LevelStateStore(levelPath)
     stateStore.open('test')
     const repository = new Repository(100, 100, loggerProvider.getDiagnosticsLogger())
