@@ -52,7 +52,7 @@ describe('Dispatcher with real ipfs over http', () => {
     } as unknown as PinStore
     repository.setDeps({ pinStore } as unknown as RepositoryDependencies)
     dispatcher = new Dispatcher(
-      ipfsClient,
+      ipfsNode,
       TOPIC,
       repository,
       loggerProvider.getDiagnosticsLogger(),
