@@ -455,7 +455,7 @@ describe('Ceramic integration', () => {
       const ceramic1 = await createCeramic(ipfs1, false)
       const ceramic2 = await createCeramic(ipfs2, false)
 
-      const NUM_UPDATES = 15
+      const NUM_UPDATES = 20
       const stream = await TileDocument.create(ceramic1, { counter: 0 }, null, { anchor: false })
       for (let i = 1; i < NUM_UPDATES; i++) {
         await stream.update({ counter: i }, null, { anchor: false, publish: false })

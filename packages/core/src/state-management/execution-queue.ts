@@ -1,5 +1,5 @@
 import { NamedTaskQueue } from './named-task-queue'
-import { StreamID } from '@ceramicnetwork/streamid'
+import { CommitID, StreamID } from '@ceramicnetwork/streamid'
 import { DiagnosticsLogger } from '@ceramicnetwork/common'
 import { Semaphore } from 'await-semaphore'
 import { TaskQueueLike } from '../pubsub/task-queue'
@@ -23,7 +23,7 @@ export class ExecutionQueue {
   /**
    * Return execution lane for a stream.
    */
-  forStream(streamId: StreamID): TaskQueueLike {
+  forStream(streamId: StreamID | CommitID): TaskQueueLike {
     return {
       add: (task) => {
         return this.tasks.add(streamId.toString(), () => {
