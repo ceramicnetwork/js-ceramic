@@ -31,8 +31,8 @@ describe('Dispatcher with real ipfs over http', () => {
     const overrideConfig = { config: { Addresses: { API: [ipfsApiAddress] } } }
     console.log(`creatings ipfs with api port ${ipfsPort}`)
     ipfsNode = await createIPFS(overrideConfig)
-    //ipfsApi = new HttpApi(ipfsNode)
-    //await ipfsApi.start()
+    ipfsApi = new HttpApi(ipfsNode)
+    await ipfsApi.start()
 
     //await TestUtils.delay(1000 * 5) // sleep 5 seconds for ipfs to stabilize
 
@@ -59,7 +59,7 @@ describe('Dispatcher with real ipfs over http', () => {
 
   afterEach(async () => {
     //await dispatcher.close()
-    //await ipfsApi.stop()
+    await ipfsApi.stop()
     await ipfsNode.stop()
     //await TestUtils.delay(2000) // sleep 2 seconds for ipfs to finish shutting down
   })
