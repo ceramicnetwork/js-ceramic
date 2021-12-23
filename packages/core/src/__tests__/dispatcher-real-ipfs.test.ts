@@ -39,7 +39,7 @@ describe('Dispatcher with real ipfs over http', () => {
 
     //await TestUtils.delay(1000 * 5) // sleep 5 seconds for ipfs to stabilize
 
-    ipfsClient = await IpfsHttpClient.create({ url: ipfsUrl })
+    //ipfsClient = await IpfsHttpClient.create({ url: ipfsUrl })
 
     const loggerProvider = new LoggerProvider()
     const levelPath = await tmp.tmpName()
