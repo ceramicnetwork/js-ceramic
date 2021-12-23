@@ -250,7 +250,7 @@ describe('Dispatcher with real ipfs over http', () => {
   let ipfsApi: HttpApi
   let ipfsClient: IpfsApi
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     const ipfsPort = await getPort()
     const ipfsUrl = `http://127.0.0.1:${ipfsPort}`
     const ipfsApiAddress = `/ip4/127.0.0.1/tcp/${ipfsPort}`
@@ -283,7 +283,7 @@ describe('Dispatcher with real ipfs over http', () => {
     // )
   })
 
-  afterAll(async () => {
+  afterEach(async () => {
     //await dispatcher.close()
     //await ipfsApi.stop()
     //await ipfsNode.stop()
