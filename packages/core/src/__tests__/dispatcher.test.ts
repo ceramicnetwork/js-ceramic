@@ -268,7 +268,7 @@ describe('Dispatcher with real ipfs over http', () => {
     const levelPath = await tmp.tmpName()
     console.log(`starting level state store at path ${levelPath.toString()}`)
     const stateStore = new LevelStateStore(levelPath)
-    stateStore.open('test')
+    //stateStore.open('test')
     const repository = new Repository(100, 100, loggerProvider.getDiagnosticsLogger())
     const pinStore = {
       stateStore,
