@@ -3,6 +3,23 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.12.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@1.11.2...@ceramicnetwork/core@1.12.0-rc.0) (2021-12-23)
+
+
+### Bug Fixes
+
+* **core:** Allow loading multiple CommitIDs for the same stream in parallel ([#1956](https://github.com/ceramicnetwork/js-ceramic/issues/1956)) ([28cfd62](https://github.com/ceramicnetwork/js-ceramic/commit/28cfd622e684b3b7209884024e684be6e6a1fa88))
+
+
+### Features
+
+* **core:** Add env var to configure pubsub qps limit ([#1947](https://github.com/ceramicnetwork/js-ceramic/issues/1947)) ([05e5f1c](https://github.com/ceramicnetwork/js-ceramic/commit/05e5f1cf51611cbdc651c37f10bad39ea833365f))
+* **core:** Don't fail queries when query pubsub queue is full ([#1955](https://github.com/ceramicnetwork/js-ceramic/issues/1955)) ([bdd9127](https://github.com/ceramicnetwork/js-ceramic/commit/bdd91273b0e46cec7804473a36d8bf5d5ef1e5e9))
+
+
+
+
+
 ## [1.11.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@1.11.2-rc.2...@ceramicnetwork/core@1.11.2) (2021-12-08)
 
 **Note:** Version bump only for package @ceramicnetwork/core
