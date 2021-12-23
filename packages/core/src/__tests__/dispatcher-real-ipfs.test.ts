@@ -39,7 +39,7 @@ describe('Dispatcher with real ipfs over http', () => {
 
     //await TestUtils.delay(1000 * 5) // sleep 5 seconds for ipfs to stabilize
 
-    //ipfsClient = await IpfsHttpClient.create({ url: ipfsUrl })
+    ipfsClient = await IpfsHttpClient.create({ url: ipfsUrl })
 
     const loggerProvider = new LoggerProvider()
     const levelPath = await tmp.tmpName()
@@ -52,7 +52,7 @@ describe('Dispatcher with real ipfs over http', () => {
     } as unknown as PinStore
     repository.setDeps({ pinStore } as unknown as RepositoryDependencies)
     dispatcher = new Dispatcher(
-      ipfsNode,
+      ipfsClient,
       TOPIC,
       repository,
       loggerProvider.getDiagnosticsLogger(),
@@ -62,8 +62,11 @@ describe('Dispatcher with real ipfs over http', () => {
 
   afterEach(async () => {
     await dispatcher.close()
+    //await ipfsClient.stop()
+    ipfsClient = null
     await ipfsApi.stop()
     await ipfsNode.stop()
+
     //await TestUtils.delay(2000) // sleep 2 seconds for ipfs to finish shutting down
   })
 
