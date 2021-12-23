@@ -16,6 +16,8 @@ import IpfsHttpClient from 'ipfs-http-client'
 import HttpApi from 'ipfs-http-server'
 import getPort from 'get-port'
 
+const TOPIC = '/ceramic'
+
 describe('Dispatcher with real ipfs over http', () => {
   jest.setTimeout(1000 * 60 * 2) // 2 minutes. Need at least 1 min 30 for 3 30 second timeouts with retries
 
@@ -48,17 +50,17 @@ describe('Dispatcher with real ipfs over http', () => {
       stateStore,
     } as unknown as PinStore
     repository.setDeps({ pinStore } as unknown as RepositoryDependencies)
-    // dispatcher = new Dispatcher(
-    //   ipfsNode,
-    //   TOPIC,
-    //   repository,
-    //   loggerProvider.getDiagnosticsLogger(),
-    //   loggerProvider.makeServiceLogger('pubsub')
-    // )
+    dispatcher = new Dispatcher(
+      ipfsNode,
+      TOPIC,
+      repository,
+      loggerProvider.getDiagnosticsLogger(),
+      loggerProvider.makeServiceLogger('pubsub')
+    )
   })
 
   afterEach(async () => {
-    //await dispatcher.close()
+    await dispatcher.close()
     await ipfsApi.stop()
     await ipfsNode.stop()
     //await TestUtils.delay(2000) // sleep 2 seconds for ipfs to finish shutting down
