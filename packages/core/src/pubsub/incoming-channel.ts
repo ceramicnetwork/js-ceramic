@@ -16,30 +16,6 @@ export type IPFSPubsubMessage = {
   key: Uint8Array
 }
 
-export function pubsubIncoming(ipfs: IpfsApi, topic: string, pubsubLogger: ServiceLogger) {
-  return new Observable<IPFSPubsubMessage>((subscriber) => {
-    const onMessage = (message: IPFSPubsubMessage) => subscriber.next(message)
-    const onError = (error: Error) => subscriber.error(error)
-
-    // For some reason ipfs.id() throws an error directly if the
-    // ipfs node can't be reached, while pubsub.subscribe stalls
-    // for an unknown amount of time. We therefor run ipfs.id()
-    // first to determine if the ipfs node is reachable.
-    ipfs
-      .id()
-      .then(async (ipfsId) => {
-        const peerId = ipfsId.id
-        await ipfs.pubsub.subscribe(topic, onMessage, { onError })
-        pubsubLogger.log({ peer: peerId, event: 'subscribed', topic: topic })
-      })
-      .catch(onError)
-
-    return () => {
-      ipfs.pubsub?.unsubscribe(topic, onMessage)?.catch(() => void {})
-    }
-  })
-}
-
 /**
  * Subscription attempts must be sequential, in FIFO order.
  * Last call to unsubscribe must execute after all the attempts are done,
@@ -56,6 +32,10 @@ export class PubsubIncoming extends Observable<IPFSPubsubMessage> {
       const onMessage = (message: IPFSPubsubMessage) => subscriber.next(message)
       const onError = (error: Error) => subscriber.error(error)
 
+      // For some reason ipfs.id() throws an error directly if the
+      // ipfs node can't be reached, while pubsub.subscribe stalls
+      // for an unknown amount of time. We therefor run ipfs.id()
+      // first to determine if the ipfs node is reachable.
       this.tasks
         .run(async () => {
           const ipfsId = await this.ipfs.id()
