@@ -259,7 +259,7 @@ describe('Dispatcher with real ipfs over http', () => {
     //ipfsApi = new HttpApi(ipfsNode)
     //await ipfsApi.start()
 
-    await TestUtils.delay(1000 * 5) // sleep 5 seconds for ipfs to stabilize
+    //await TestUtils.delay(1000 * 5) // sleep 5 seconds for ipfs to stabilize
 
     //ipfsClient = await IpfsHttpClient.create({ url: ipfsUrl })
 
@@ -285,7 +285,7 @@ describe('Dispatcher with real ipfs over http', () => {
     //await dispatcher.close()
     //await ipfsApi.stop()
     //await ipfsNode.stop()
-    await TestUtils.delay(2000) // sleep 2 seconds for ipfs to finish shutting down
+    //await TestUtils.delay(2000) // sleep 2 seconds for ipfs to finish shutting down
   })
 
   it('foo', async () => {
