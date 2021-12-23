@@ -20,6 +20,11 @@ export function pubsubIncoming(ipfs: IpfsApi, topic: string, pubsubLogger: Servi
   return new Observable<IPFSPubsubMessage>((subscriber) => {
     const onMessage = (message: IPFSPubsubMessage) => subscriber.next(message)
     const onError = (error: Error) => subscriber.error(error)
+
+    // For some reason ipfs.id() throws an error directly if the
+    // ipfs node can't be reached, while pubsub.subscribe stalls
+    // for an unknown amount of time. We therefor run ipfs.id()
+    // first to determine if the ipfs node is reachable.
     ipfs
       .id()
       .then(async (ipfsId) => {
