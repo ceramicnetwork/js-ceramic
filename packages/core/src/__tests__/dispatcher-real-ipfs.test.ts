@@ -17,6 +17,7 @@ import HttpApi from 'ipfs-http-server'
 import getPort from 'get-port'
 
 const TOPIC = '/ceramic'
+const FAKE_CID = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
 
 describe('Dispatcher with real ipfs over http', () => {
   jest.setTimeout(1000 * 60 * 2) // 2 minutes. Need at least 1 min 30 for 3 30 second timeouts with retries
@@ -38,7 +39,7 @@ describe('Dispatcher with real ipfs over http', () => {
 
     //await TestUtils.delay(1000 * 5) // sleep 5 seconds for ipfs to stabilize
 
-    //ipfsClient = await IpfsHttpClient.create({ url: ipfsUrl })
+    ipfsClient = await IpfsHttpClient.create({ url: ipfsUrl })
 
     const loggerProvider = new LoggerProvider()
     const levelPath = await tmp.tmpName()
@@ -51,7 +52,7 @@ describe('Dispatcher with real ipfs over http', () => {
     } as unknown as PinStore
     repository.setDeps({ pinStore } as unknown as RepositoryDependencies)
     dispatcher = new Dispatcher(
-      ipfsNode,
+      ipfsClient,
       TOPIC,
       repository,
       loggerProvider.getDiagnosticsLogger(),
@@ -70,22 +71,22 @@ describe('Dispatcher with real ipfs over http', () => {
     expect(true).toEqual(1 == 1)
   })
 
-  // it('basic ipfs http client functionality', async () => {
-  //   const cid = await dispatcher.storeCommit({ foo: 'bar' })
-  //
-  //   const data = await dispatcher.retrieveCommit(cid)
-  //   expect(data.foo).toEqual('bar')
-  // })
+  it('basic ipfs http client functionality', async () => {
+    const cid = await dispatcher.storeCommit({ foo: 'bar' })
 
-  // it('retries on timeout', async () => {
-  //   const ipfsGetSpy = jest.spyOn(ipfsClient.dag, 'get')
-  //
-  //   // try to load a CID that ipfs doesn't know about.  It will timeout
-  //   await expect(dispatcher.retrieveCommit(FAKE_CID)).rejects.toThrow(/Request timed out/)
-  //
-  //   // Make sure we tried 3 times to get the cid from ipfs, not just once
-  //   expect(ipfsGetSpy).toBeCalledTimes(3)
-  //
-  //   ipfsGetSpy.mockRestore()
-  // })
+    const data = await dispatcher.retrieveCommit(cid)
+    expect(data.foo).toEqual('bar')
+  })
+
+  it('retries on timeout', async () => {
+    const ipfsGetSpy = jest.spyOn(ipfsClient.dag, 'get')
+
+    // try to load a CID that ipfs doesn't know about.  It will timeout
+    await expect(dispatcher.retrieveCommit(FAKE_CID)).rejects.toThrow(/Request timed out/)
+
+    // Make sure we tried 3 times to get the cid from ipfs, not just once
+    expect(ipfsGetSpy).toBeCalledTimes(3)
+
+    ipfsGetSpy.mockRestore()
+  })
 })
