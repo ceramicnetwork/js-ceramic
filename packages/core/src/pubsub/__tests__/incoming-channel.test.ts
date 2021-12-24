@@ -1,11 +1,11 @@
 import { IpfsApi, LoggerProvider } from '@ceramicnetwork/common'
 import { createIPFS } from '../../__tests__/ipfs-util'
-import { IncomingChannel, filterExternal } from '../incoming-channel'
+import { IncomingChannel, filterExternal, PubsubIncoming } from '../incoming-channel'
 import { delay } from '../../__tests__/delay'
 import { asIpfsMessage } from './as-ipfs-message'
 import { MsgType } from '../pubsub-message'
 import { StreamID } from '@ceramicnetwork/streamid'
-import { from } from 'rxjs'
+import { from, firstValueFrom, lastValueFrom } from 'rxjs'
 
 const FAKE_STREAM_ID = StreamID.fromString(
   'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
@@ -33,10 +33,11 @@ describe('connection', () => {
     const subscribeSpy = jest.spyOn(ipfs.pubsub, 'subscribe')
     const unsubscribeSpy = jest.spyOn(ipfs.pubsub, 'unsubscribe')
     const subscription = incoming$.subscribe()
-    await incoming$.tasks.onIdle()
+    await delay(200)
+    // await incoming$.tasks.onIdle()
     expect(await ipfs.pubsub.ls()).toEqual([TOPIC])
     subscription.unsubscribe()
-    await incoming$.tasks.onIdle()
+    await delay(200)
     expect(await ipfs.pubsub.ls()).toEqual([])
     expect(subscribeSpy).toBeCalledTimes(1)
     expect(unsubscribeSpy).toBeCalledTimes(1)
@@ -54,7 +55,7 @@ describe('connection', () => {
     const subscribeSpy = jest.spyOn(ipfs.pubsub, 'subscribe')
     const unsubscribeSpy = jest.spyOn(ipfs.pubsub, 'unsubscribe')
     const subscription = incoming$.subscribe()
-    await incoming$.tasks.onIdle()
+    await delay(200) // Wait till rxjs machinery is done
     expect(subscribeSpy).toBeCalledTimes(1) // Initial pubsub.subscribe
     expect(unsubscribeSpy).toBeCalledTimes(0)
     subscribeSpy.mock.calls[0][2].onError(new Error('fake error'))
@@ -91,7 +92,7 @@ test('pass incoming message', async () => {
   const subscription = incoming$.subscribe((message) => {
     result.push(message)
   })
-  await incoming$.tasks.onIdle() // Wait till fully subscribed
+  await delay(200) // Wait till rxjs machinery is done
   expect(result).toEqual(messages)
   subscription.unsubscribe()
 })
@@ -139,8 +140,62 @@ describe('filterOuter', () => {
     const subscription = incoming$.pipe(filterExternal(peerId$)).subscribe((message) => {
       result.push(message)
     })
-    await incoming$.tasks.onIdle() // Wait till fully subscribed
+    await delay(200) // Wait till rxjs machinery is done
     expect(result).toEqual(outerMessages)
     subscription.unsubscribe()
+  })
+})
+
+describe('PubsubIncoming', () => {
+  test('subscribe and unsubscribe', async () => {
+    const fauxIpfs = {
+      id: jest.fn(async () => ({ id: 'peer-id' })),
+      pubsub: {
+        subscribe: jest.fn(async () => void {}),
+        unsubscribe: jest.fn(async () => void {}),
+      },
+    }
+    const incoming$ = new PubsubIncoming(fauxIpfs as unknown as IpfsApi, TOPIC, pubsubLogger)
+    const subscription = incoming$.subscribe()
+    await delay(200) // Wait till rxjs machinery is done
+    expect(fauxIpfs.pubsub.subscribe).toBeCalledTimes(1)
+    expect(fauxIpfs.pubsub.unsubscribe).toBeCalledTimes(0)
+    subscription.unsubscribe()
+    await delay(200) // Wait till rxjs machinery is done
+    expect(fauxIpfs.pubsub.subscribe).toBeCalledTimes(1)
+    expect(fauxIpfs.pubsub.unsubscribe).toBeCalledTimes(1)
+  })
+
+  test('when error during subscribe', async () => {
+    const error = new Error(`During Subscription`)
+    const fauxIpfs = {
+      id: jest.fn(async () => ({ id: 'peer-id' })),
+      pubsub: {
+        subscribe: jest.fn(async () => {
+          throw error
+        }),
+        unsubscribe: jest.fn(async () => void {}),
+      },
+    }
+    const incoming$ = new PubsubIncoming(fauxIpfs as unknown as IpfsApi, TOPIC, pubsubLogger)
+    await expect(firstValueFrom(incoming$)).rejects.toEqual(error)
+  })
+
+  test('when error during usual work', async () => {
+    const error = new Error(`During Subscription`)
+    const fauxIpfs = {
+      id: jest.fn(async () => ({ id: 'peer-id' })),
+      pubsub: {
+        subscribe: jest.fn(async () => void {}),
+        unsubscribe: jest.fn(async () => void {}),
+      },
+    }
+    const incoming$ = new PubsubIncoming(fauxIpfs as unknown as IpfsApi, TOPIC, pubsubLogger)
+    const lastValue = lastValueFrom(incoming$)
+    await delay(200) // Wait till rxjs machinery is done
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    fauxIpfs.pubsub.subscribe.mock.calls[0][2].onError(error)
+    await expect(lastValue).rejects.toEqual(error)
   })
 })

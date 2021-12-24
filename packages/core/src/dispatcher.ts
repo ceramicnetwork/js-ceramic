@@ -7,7 +7,7 @@ import {
   StreamUtils,
   UnreachableCaseError,
 } from '@ceramicnetwork/common'
-import StreamID from '@ceramicnetwork/streamid'
+import { StreamID } from '@ceramicnetwork/streamid'
 import { Repository } from './state-management/repository'
 import {
   MsgType,
