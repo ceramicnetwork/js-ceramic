@@ -88,7 +88,10 @@ export class Dispatcher {
         // put the JWS into the ipfs dag
         const cid = await this._ipfs.dag.put(jws, { format: 'dag-jose', hashAlg: 'sha2-256' })
         // put the payload into the ipfs dag
-        await this._ipfs.block.put(linkedBlock, jws.link)
+        const linkCid = jws.link
+        const format = await this._ipfs.codecs.getCodec(linkCid.code).then(f => f.name);
+        const mhtype = await this._ipfs.hashers.getHasher(linkCid.multihash.code).then(mh => mh.name)
+        await this._ipfs.block.put(linkedBlock, {format, mhtype, version: linkCid.version})
         await this._restrictCommitSize(jws.link.toString())
         await this._restrictCommitSize(cid)
         return cid

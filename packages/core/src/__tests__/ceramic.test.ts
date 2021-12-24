@@ -525,7 +525,7 @@ describe('Ceramic integration', () => {
     })
   })
 
-  it('should throw in multiquery if provided genesis commit is different from given streamId', async () => {
+  it('should return empty entry multiquery if provided genesis commit is different from given streamId', async () => {
     await withFleet(2, async ([ipfs1, ipfs2]) => {
       await swarmConnect(ipfs1, ipfs2)
       const ceramic1 = await createCeramic(ipfs1, false)
@@ -564,16 +564,14 @@ describe('Ceramic integration', () => {
             genesis: genesisCommit,
           },
         ])
-      ).rejects.toThrowError(
-        `Given StreamID CID ${stream1.id.cid.toString()} does not match given genesis content`
-      )
+      ).resolves.toEqual({})
 
       await ceramic1.close()
       await ceramic2.close()
     })
   })
 
-  it('Should throw in multiquery if genesis commit is not deterministic', async () => {
+  it('Should return empty entry multiquery if genesis commit is not deterministic', async () => {
     await withFleet(2, async ([ipfs1, ipfs2]) => {
       await swarmConnect(ipfs1, ipfs2)
       const ceramic1 = await createCeramic(ipfs1, false)
@@ -599,14 +597,13 @@ describe('Ceramic integration', () => {
       const genesisCommit = await TileDocument.makeGenesis(ceramic2, content, metadata)
 
       // Try loading the stream on node2 and provide genesisCommit
-      await expect(
-        ceramic2.multiQuery([
-          {
-            streamId: streamID,
-            genesis: genesisCommit,
-          },
-        ])
-      ).rejects.toThrowError('Given genesis commit is not deterministic')
+      const result = await ceramic2.multiQuery([
+        {
+          streamId: streamID,
+          genesis: genesisCommit,
+        },
+      ])
+      expect(result).toEqual({})
 
       await ceramic1.close()
       await ceramic2.close()
