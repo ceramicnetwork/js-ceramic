@@ -57,7 +57,7 @@ export class PubsubIncoming extends Observable<IPFSPubsubMessage> {
 }
 
 /**
- * Incoming IPFS PubSub message stream as Observable.
+ * Incoming IPFS PubSub message stream as Observable.  Adds retry logic on top of base PubsubIncoming.
  */
 export class IncomingChannel extends Observable<IPFSPubsubMessage> {
   constructor(
