@@ -1,10 +1,10 @@
 import { LoggerProvider } from '@ceramicnetwork/common'
-import { Pubsub } from '../pubsub'
-import { MsgType, serialize } from '../pubsub-message'
+import { Pubsub } from '../pubsub.js'
+import { MsgType, serialize } from '../pubsub-message.js'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { bufferCount, first } from 'rxjs/operators'
 import * as random from '@stablelib/random'
-import { asIpfsMessage } from './as-ipfs-message'
+import { asIpfsMessage } from './as-ipfs-message.js'
 import { from } from 'rxjs'
 
 const TOPIC = 'test'

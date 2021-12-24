@@ -1,10 +1,10 @@
-import { LocalPinApi } from '../local-pin-api'
-import StreamID from '@ceramicnetwork/streamid'
+import { LocalPinApi } from '../local-pin-api.js'
+import { StreamID } from '@ceramicnetwork/streamid'
 import * as random from '@stablelib/random'
 import { CommitType, StreamState, LoggerProvider, SyncOptions } from '@ceramicnetwork/common'
-import { Repository } from '../state-management/repository'
+import { Repository } from '../state-management/repository.js'
 import { CID } from 'multiformats/cid'
-import { RunningState } from '../state-management/running-state'
+import { RunningState } from '../state-management/running-state.js'
 
 const STREAM_ID = StreamID.fromString(
   'k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki'

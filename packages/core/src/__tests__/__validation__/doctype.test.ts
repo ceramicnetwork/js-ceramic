@@ -1,6 +1,6 @@
 import { mock } from 'jest-mock-extended'
 
-import Utils from '../../utils'
+import { Utils } from '../../utils.js'
 import { CeramicApi, Stream, StreamState, TestUtils, CommitType } from '@ceramicnetwork/common'
 import { CID } from 'multiformats/cid'
 import { TileDocument } from '@ceramicnetwork/stream-tile'

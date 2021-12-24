@@ -1,8 +1,8 @@
 import { LoggerProvider } from '@ceramicnetwork/common'
-import { Pubsub } from '../pubsub'
-import { deserialize, MsgType } from '../pubsub-message'
-import { delay } from '../../__tests__/delay'
-import { PubsubKeepalive } from '../pubsub-keepalive'
+import { Pubsub } from '../pubsub.js'
+import { deserialize, MsgType } from '../pubsub-message.js'
+import { delay } from '../../__tests__/delay.js'
+import { PubsubKeepalive } from '../pubsub-keepalive.js'
 
 const TOPIC = 'test'
 const loggerProvider = new LoggerProvider()

@@ -1,17 +1,17 @@
-import Ceramic, { CeramicConfig } from '../ceramic'
+import { Ceramic, CeramicConfig } from '../ceramic.js'
 import { Caip10Link } from '@ceramicnetwork/stream-caip10-link'
 import { AnchorStatus, StreamUtils, IpfsApi } from '@ceramicnetwork/common'
 import { validateLink } from '@ceramicnetwork/blockchain-utils-validation'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
-import KeyDidResolver from 'key-did-resolver'
+import * as KeyDidResolver from 'key-did-resolver'
 import { Resolver } from 'did-resolver'
 import { DID } from 'dids'
 import * as u8a from 'uint8arrays'
-import { createIPFS } from './ipfs-util'
-import { anchorUpdate } from '../state-management/__tests__/anchor-update'
+import { createIPFS } from './ipfs-util.js'
+import { anchorUpdate } from '../state-management/__tests__/anchor-update.js'
 import MockDate from 'mockdate'
 
-jest.mock('../store/level-state-store')
+jest.mock('../store/level-state-store.js')
 
 jest.mock('@ceramicnetwork/blockchain-utils-validation')
 validateLink.mockImplementation(async (proof) => {

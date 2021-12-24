@@ -32,7 +32,7 @@ const MAX_PROVIDERS_COUNT = 100
 /**
  * Ethereum anchor service that stores root CIDs on Ethereum blockchain
  */
-export default class EthereumAnchorValidator implements AnchorValidator {
+export class EthereumAnchorValidator implements AnchorValidator {
   private _chainId: string | null
   private readonly providersCache: LRUMap<string, providers.BaseProvider>
   private readonly _logger: DiagnosticsLogger

@@ -1,5 +1,5 @@
-import { PubsubMessage, serialize } from '../pubsub-message'
-import { IPFSPubsubMessage } from '../incoming-channel'
+import { PubsubMessage, serialize } from '../pubsub-message.js'
+import { IPFSPubsubMessage } from '../incoming-channel.js'
 import * as random from '@stablelib/random'
 
 /**

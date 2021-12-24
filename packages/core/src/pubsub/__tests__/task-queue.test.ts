@@ -1,4 +1,4 @@
-import { TaskQueue } from '../task-queue'
+import { TaskQueue } from '../task-queue.js'
 
 async function delay(ms: number) {
   return new Promise<void>((resolve) => {

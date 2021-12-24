@@ -1,11 +1,11 @@
 import { StreamUtils, IpfsApi } from '@ceramicnetwork/common'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
-import Ceramic from '../../ceramic'
-import { createIPFS } from '../../__tests__/ipfs-util'
-import { Repository } from '../repository'
-import { anchorUpdate } from './anchor-update'
-import { createCeramic } from '../../__tests__/create-ceramic'
-import { delay } from '../../__tests__/delay'
+import { Ceramic } from '../../ceramic.js'
+import { createIPFS } from '../../__tests__/ipfs-util.js'
+import { Repository } from '../repository.js'
+import { anchorUpdate } from './anchor-update.js'
+import { createCeramic } from '../../__tests__/create-ceramic.js'
+import { delay } from '../../__tests__/delay.js'
 
 let ipfs: IpfsApi
 let ceramic: Ceramic

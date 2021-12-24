@@ -1,10 +1,10 @@
 import * as path from 'path'
 import fs from 'fs'
-import Utils from '../../utils'
+import { Utils } from '../../utils.js'
 
 describe('Utils schema validation', () => {
-  const schemaDefDirPath = path.join(__dirname, '__schemas__')
-  const testDirsPath = path.join(__dirname, '__data__')
+  const schemaDefDirPath = path.join(import.meta.url, '__schemas__')
+  const testDirsPath = path.join(import.meta.url, '__data__')
   const testDirs = fs.readdirSync(testDirsPath)
 
   testDirs.forEach((testDir) => {

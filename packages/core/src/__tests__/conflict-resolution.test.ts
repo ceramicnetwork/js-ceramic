@@ -3,9 +3,9 @@ import { decode as decodeMultiHash } from 'multiformats/hashes/digest'
 import * as uint8arrays from 'uint8arrays'
 import * as sha256 from '@stablelib/sha256'
 import { AnchorStatus, CommitType, LogEntry, StreamState } from '@ceramicnetwork/common'
-import { fetchLog, HistoryLog, pickLogToAccept } from '../conflict-resolution'
+import { fetchLog, HistoryLog, pickLogToAccept } from '../conflict-resolution.js'
 import * as random from '@stablelib/random'
-import { Dispatcher } from '../dispatcher'
+import { Dispatcher } from '../dispatcher.js'
 
 const SHA256_CODE = 0x12
 

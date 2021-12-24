@@ -1,5 +1,5 @@
 import tmp from 'tmp-promise'
-import { LevelStateStore } from '../level-state-store'
+import { LevelStateStore } from '../level-state-store.js'
 import Level from 'level-ts'
 import {
   AnchorStatus,
@@ -10,7 +10,7 @@ import {
   TestUtils,
 } from '@ceramicnetwork/common'
 import { CID } from 'multiformats/cid'
-import StreamID from '@ceramicnetwork/streamid'
+import { StreamID } from '@ceramicnetwork/streamid'
 
 let mockStorage: Map<string, any>
 const mockPut = jest.fn((id: string, state: any) => mockStorage.set(id, state))

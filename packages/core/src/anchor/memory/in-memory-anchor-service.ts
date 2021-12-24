@@ -12,12 +12,12 @@ import {
   AnchorCommit,
 } from '@ceramicnetwork/common'
 
-import type { Dispatcher } from '../../dispatcher'
-import Ceramic from '../../ceramic'
-import StreamID from '@ceramicnetwork/streamid'
+import type { Dispatcher } from '../../dispatcher.js'
+import { Ceramic } from '../../ceramic.js'
+import { StreamID } from '@ceramicnetwork/streamid'
 import { DiagnosticsLogger } from '@ceramicnetwork/common'
 import type { DagJWS } from 'dids'
-import Utils from '../../utils'
+import { Utils } from '../../utils.js'
 import * as codec from '@ipld/dag-cbor'
 import { sha256 as hasher } from 'multiformats/hashes/sha2'
 
@@ -44,7 +44,7 @@ const SAMPLE_ETH_TX_HASH = 'bagjqcgzaday6dzalvmy5ady2m5a5legq5zrbsnlxfc2bfxej532
 /**
  * In-memory anchor service - used locally, not meant to be used in production code
  */
-class InMemoryAnchorService implements AnchorService, AnchorValidator {
+export class InMemoryAnchorService implements AnchorService, AnchorValidator {
   #ceramic: Ceramic
   #dispatcher: Dispatcher
   #logger: DiagnosticsLogger
@@ -361,5 +361,3 @@ class InMemoryAnchorService implements AnchorService, AnchorValidator {
     // always valid
   }
 }
-
-export default InMemoryAnchorService

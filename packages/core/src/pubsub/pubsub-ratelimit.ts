@@ -1,9 +1,9 @@
 import { from, Observable, Subscription } from 'rxjs'
-import { MsgType, PubsubMessage } from './pubsub-message'
-import { TaskQueue } from './task-queue'
+import { MsgType, PubsubMessage } from './pubsub-message.js'
+import { TaskQueue } from './task-queue.js'
 import { DiagnosticsLogger } from '@ceramicnetwork/common'
-import { ClockSource } from '../clock-source'
-import { ObservableWithNext } from './observable-with-next'
+import { ClockSource } from '../clock-source.js'
+import { ObservableWithNext } from './observable-with-next.js'
 
 /**
  * Wraps an instance of Pubsub and rate limits how often QUERY messages can be sent.  There are two

@@ -1,6 +1,6 @@
 import { CID } from 'multiformats/cid'
 import { CommitType, StreamState } from '@ceramicnetwork/common'
-import { StateLink } from '../state-link'
+import { StateLink } from '../state-link.js'
 import { Observable } from 'rxjs'
 
 const FAKE_CID_1 = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')

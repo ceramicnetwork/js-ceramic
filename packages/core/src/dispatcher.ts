@@ -8,20 +8,20 @@ import {
   UnreachableCaseError,
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
-import { Repository } from './state-management/repository'
+import { Repository } from './state-management/repository.js'
 import {
   MsgType,
   PubsubMessage,
   QueryMessage,
   ResponseMessage,
   UpdateMessage,
-} from './pubsub/pubsub-message'
-import { Pubsub } from './pubsub/pubsub'
+} from './pubsub/pubsub-message.js'
+import { Pubsub } from './pubsub/pubsub.js'
 import { Subscription } from 'rxjs'
-import { MessageBus } from './pubsub/message-bus'
+import { MessageBus } from './pubsub/message-bus.js'
 import { LRUMap } from 'lru_map'
-import { PubsubKeepalive } from './pubsub/pubsub-keepalive'
-import { PubsubRateLimit } from './pubsub/pubsub-ratelimit'
+import { PubsubKeepalive } from './pubsub/pubsub-keepalive.js'
+import { PubsubRateLimit } from './pubsub/pubsub-ratelimit.js'
 
 const IPFS_GET_RETRIES = 3
 const IPFS_GET_TIMEOUT = 30000 // 30 seconds per retry, 3 retries = 90 seconds total timeout

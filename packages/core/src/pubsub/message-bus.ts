@@ -1,9 +1,9 @@
-import { buildQueryMessage, MsgType, PubsubMessage, ResponseMessage } from './pubsub-message'
+import { buildQueryMessage, MsgType, PubsubMessage, ResponseMessage } from './pubsub-message.js'
 import { Observable, Subject, Subscription, SubscriptionLike, pipe, UnaryFunction } from 'rxjs'
 import { filter, map, takeUntil, tap } from 'rxjs/operators'
 import { StreamID } from '@ceramicnetwork/streamid'
 import type { CID } from 'multiformats/cid'
-import { ObservableWithNext } from './observable-with-next'
+import { ObservableWithNext } from './observable-with-next.js'
 
 export const MAX_RESPONSE_INTERVAL = 300 // milliseconds
 

@@ -1,18 +1,18 @@
-import Ceramic from '../ceramic'
+import { Ceramic } from '../ceramic.js'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import tmp from 'tmp-promise'
 import { StreamUtils, IpfsApi, TestUtils, StreamState, SyncOptions } from '@ceramicnetwork/common'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import * as u8a from 'uint8arrays'
-import { swarmConnect, withFleet } from './ipfs-util'
-import { anchorUpdate } from '../state-management/__tests__/anchor-update'
-import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
-import KeyDidResolver from 'key-did-resolver'
+import { swarmConnect, withFleet } from './ipfs-util.js'
+import { anchorUpdate } from '../state-management/__tests__/anchor-update.js'
+import * as ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
+import * as KeyDidResolver from 'key-did-resolver'
 import { Resolver } from 'did-resolver'
 import { DID } from 'dids'
-import StreamID from '@ceramicnetwork/streamid'
+import { StreamID, CommitID } from '@ceramicnetwork/streamid'
 
-jest.mock('../store/level-state-store')
+jest.mock('../store/level-state-store.js')
 
 const seed = u8a.fromString(
   '6e34b2e1a9624113d81ece8a8a22e6e97f0e145c25c1d4d2d0e62753b4060c83',
@@ -238,7 +238,7 @@ describe('Ceramic integration', () => {
 
       await anchorUpdate(ceramic1, stream1)
 
-      const prevCommitStreamId1 = stream1.id.atCommit(stream1.state.log[3].cid)
+      const prevCommitStreamId1 = CommitID.make(stream1.id, stream1.state.log[3].cid)
       expect(addSpy2).not.toBeCalled()
       const loadedDoc1 = await ceramic2.loadStream(prevCommitStreamId1)
       expect(loadedDoc1).toBeDefined()
@@ -281,7 +281,7 @@ describe('Ceramic integration', () => {
 
       await anchorUpdate(ceramic1, stream1)
 
-      const prevCommitStreamId1 = stream1.id.atCommit(stream1.state.log[3].cid)
+      const prevCommitStreamId1 = CommitID.make(stream1.id, stream1.state.log[3].cid)
       expect(addSpy2).not.toBeCalled()
       const stream2 = await ceramic2.loadStream(prevCommitStreamId1)
       expect(stream2).toBeDefined()
@@ -355,7 +355,7 @@ describe('Ceramic integration', () => {
       await stream1.update(content1, null, { anchor: false })
       await stream1.update(content2, null, { anchor: false })
 
-      const middleCommitId = stream1.id.atCommit(stream1.state.log[1].cid)
+      const middleCommitId = CommitID.make(stream1.id, stream1.state.log[1].cid)
 
       // Now load the stream into the cache on second node at a commit ID that is not the most recent.
       const stream2 = await ceramic2.loadStream<TileDocument>(middleCommitId)

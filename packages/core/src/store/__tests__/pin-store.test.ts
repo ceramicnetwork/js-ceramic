@@ -1,5 +1,5 @@
-import { PinStore } from '../pin-store'
-import { StateStore } from '../state-store'
+import { PinStore } from '../pin-store.js'
+import { StateStore } from '../state-store.js'
 import { CID } from 'multiformats/cid'
 import {
   AnchorStatus,
@@ -10,7 +10,7 @@ import {
   CommitType,
   TestUtils,
 } from '@ceramicnetwork/common'
-import { RunningState } from '../../state-management/running-state'
+import { RunningState } from '../../state-management/running-state.js'
 
 let stateStore: StateStore
 let pinning: PinningBackend

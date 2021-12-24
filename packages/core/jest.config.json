@@ -1,0 +1,16 @@
+{
+  "moduleFileExtensions": ["js", "json", "ts"],
+  "testEnvironment": "./environment-with-abortsignal.ts",
+  "resolver": "jest-resolver-enhanced",
+  "extensionsToTreatAsEsm": [".ts"],
+  "testMatch": ["**/?(*.)+(spec|test).[jt]s?(x)"],
+  "globals": {
+    "ts-jest": {
+      "useESM": true
+    }
+  },
+  "moduleNameMapper": {
+    "^(\\.{1,2}/.*)\\.js$": "$1"
+  },
+  "transformIgnorePatterns": ["/node_modules/(?!dids)"]
+}

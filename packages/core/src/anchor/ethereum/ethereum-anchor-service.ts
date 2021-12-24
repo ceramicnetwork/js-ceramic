@@ -9,7 +9,7 @@ import {
   DiagnosticsLogger,
   fetchJson,
 } from '@ceramicnetwork/common'
-import StreamID from '@ceramicnetwork/streamid'
+import { StreamID } from '@ceramicnetwork/streamid'
 import { Observable, interval, from, concat, of } from 'rxjs'
 import { concatMap, catchError, map } from 'rxjs/operators'
 
@@ -27,7 +27,7 @@ const MAX_POLL_TIME = 86400000 // 24 hours
 /**
  * Ethereum anchor service that stores root CIDs on Ethereum blockchain
  */
-export default class EthereumAnchorService implements AnchorService {
+export class EthereumAnchorService implements AnchorService {
   private readonly requestsApiEndpoint: string
   private readonly chainIdApiEndpoint: string
   private _chainId: string

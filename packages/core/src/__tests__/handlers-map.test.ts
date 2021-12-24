@@ -1,4 +1,4 @@
-import { HandlersMap } from '../handlers-map'
+import { HandlersMap } from '../handlers-map.js'
 import { Stream, StreamHandler, LoggerProvider } from '@ceramicnetwork/common'
 import { TileDocumentHandler } from '@ceramicnetwork/stream-tile-handler'
 import { Caip10LinkHandler } from '@ceramicnetwork/stream-caip10-link-handler'

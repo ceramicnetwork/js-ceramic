@@ -1,9 +1,9 @@
 import { LoggerProvider } from '@ceramicnetwork/common'
-import { Pubsub } from '../pubsub'
-import { MsgType, serialize } from '../pubsub-message'
+import { Pubsub } from '../pubsub.js'
+import { MsgType, serialize } from '../pubsub-message.js'
 import { StreamID } from '@ceramicnetwork/streamid'
 import * as random from '@stablelib/random'
-import { PubsubRateLimit } from '../pubsub-ratelimit'
+import { PubsubRateLimit } from '../pubsub-ratelimit.js'
 
 const TOPIC = 'test'
 const loggerProvider = new LoggerProvider()
