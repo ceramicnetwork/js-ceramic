@@ -276,7 +276,8 @@ describe('Dispatcher with real ipfs over http', () => {
       TOPIC,
       repository,
       loggerProvider.getDiagnosticsLogger(),
-      loggerProvider.makeServiceLogger('pubsub')
+      loggerProvider.makeServiceLogger('pubsub'),
+      10
     )
   })
 
