@@ -62,12 +62,14 @@ describe('Dispatcher with real ipfs over http', () => {
 
   afterEach(async () => {
     await dispatcher.close()
+
+    // Wait for pubsub unsubscribe to process
+    await TestUtils.delay(2000)
+
     //await ipfsClient.stop()
     ipfsClient = null
     await ipfsApi.stop()
     await ipfsNode.stop()
-
-    //await TestUtils.delay(2000) // sleep 2 seconds for ipfs to finish shutting down
   })
 
   it('foo', async () => {
