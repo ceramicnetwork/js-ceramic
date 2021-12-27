@@ -1,7 +1,7 @@
 import { Dispatcher } from '../dispatcher'
 import CID from 'cids'
 import StreamID from '@ceramicnetwork/streamid'
-import { CommitType, StreamState, LoggerProvider, IpfsApi } from '@ceramicnetwork/common'
+import { CommitType, StreamState, LoggerProvider, IpfsApi, TestUtils } from '@ceramicnetwork/common'
 import { serialize, MsgType } from '../pubsub/pubsub-message'
 import { Repository, RepositoryDependencies } from '../state-management/repository'
 import { delay } from './delay'
@@ -283,6 +283,8 @@ describe('Dispatcher with real ipfs over http', () => {
 
   afterAll(async () => {
     await dispatcher.close()
+    await TestUtils.delay(2000) // Wait for pubsub unsubscribe to be processed
+
     await ipfsApi.stop()
     await ipfsNode.stop()
   })
