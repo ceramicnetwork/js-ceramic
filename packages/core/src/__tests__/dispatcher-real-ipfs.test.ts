@@ -57,7 +57,7 @@ describe('Dispatcher with real ipfs over http', () => {
     // Wait for pubsub unsubscribe to be processed
     // TODO(1963): Remove this once dispatcher.close() won't resolve until the pubsub unsubscribe
     // has been processed
-    await TestUtils.delay(2000)
+    await TestUtils.delay(5000)
 
     await ipfsApi.stop()
     await ipfsNode.stop()
