@@ -1,10 +1,9 @@
 import { Dispatcher } from '../dispatcher'
 import CID from 'cids'
 import StreamID from '@ceramicnetwork/streamid'
-import { CommitType, StreamState, LoggerProvider, IpfsApi } from '@ceramicnetwork/common'
+import { CommitType, StreamState, LoggerProvider, IpfsApi, TestUtils } from '@ceramicnetwork/common'
 import { serialize, MsgType } from '../pubsub/pubsub-message'
 import { Repository, RepositoryDependencies } from '../state-management/repository'
-import { delay } from './delay'
 import tmp from 'tmp-promise'
 import { LevelStateStore } from '../store/level-state-store'
 import { PinStore } from '../store/pin-store'
@@ -19,7 +18,7 @@ const FAKE_STREAM_ID = StreamID.fromString(
   'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
 )
 
-const ipfs = {
+const mock_ipfs = {
   pubsub: {
     ls: jest.fn(async () => Promise.resolve([])),
     subscribe: jest.fn(),
@@ -36,10 +35,11 @@ const ipfs = {
   id: async () => ({ id: 'ipfsid' }),
 }
 
-describe('Dispatcher', () => {
+describe('Dispatcher with mock ipfs', () => {
   let dispatcher: Dispatcher
   let repository: Repository
   const loggerProvider = new LoggerProvider()
+  const ipfs = mock_ipfs
 
   beforeEach(async () => {
     ipfs.dag.put.mockClear()
@@ -72,7 +72,7 @@ describe('Dispatcher', () => {
 
   it('is constructed correctly', async () => {
     expect((dispatcher as any).repository).toBeInstanceOf(Repository)
-    await delay(100) // Wait for plumbing
+    await TestUtils.delay(100) // Wait for plumbing
     expect(ipfs.pubsub.subscribe).toHaveBeenCalledWith(TOPIC, expect.anything(), {
       onError: expect.anything(),
     })
