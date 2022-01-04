@@ -11,6 +11,7 @@ import * as ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import * as KeyDidResolver from 'key-did-resolver'
 import { Resolver } from 'did-resolver'
 import { DID } from 'dids'
+import { jest } from '@jest/globals'
 
 jest.mock('../store/level-state-store.js')
 
