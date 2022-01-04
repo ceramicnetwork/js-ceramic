@@ -1,17 +1,17 @@
 import { Ceramic } from '@ceramicnetwork/core'
 import { CeramicClient } from '@ceramicnetwork/http-client'
 import tmp from 'tmp-promise'
-import { CeramicDaemon } from '../ceramic-daemon'
+import { CeramicDaemon } from '../ceramic-daemon.js'
 import { AnchorStatus, fetchJson, Stream, StreamUtils, IpfsApi } from '@ceramicnetwork/common'
 import { TileDocumentHandler } from '@ceramicnetwork/stream-tile-handler'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { filter, take } from 'rxjs/operators'
 
-import { StreamID } from '@ceramicnetwork/streamid'
+import { CommitID, StreamID } from '@ceramicnetwork/streamid';
 import getPort from 'get-port'
-import { createIPFS } from './create-ipfs'
-import { makeDID } from './make-did'
-import { DaemonConfig } from '../daemon-config'
+import { createIPFS } from './create-ipfs.js'
+import { makeDID } from './make-did.js'
+import { DaemonConfig } from '../daemon-config.js'
 
 const seed = 'SEED'
 const TOPIC = '/ceramic'
@@ -56,8 +56,11 @@ describe('Ceramic interop: core <> http-client', () => {
   let client: CeramicClient
 
   beforeAll(async () => {
+    console.log('foo.0')
     tmpFolder = await tmp.dir({ unsafeCleanup: true })
-    ipfs = await createIPFS(tmpFolder.path)
+    console.log('foo.1')
+    ipfs = await createIPFS()
+    console.log('foo.2')
   })
 
   afterAll(async () => {
@@ -268,7 +271,7 @@ describe('Ceramic interop: core <> http-client', () => {
     expect(doc.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
 
     // Load genesis commit
-    const v0Id = doc.id.atCommit(doc.id.cid)
+    const v0Id = new CommitID(doc.id.type, doc.id.cid)
     const docV0Core = await core.loadStream(v0Id)
     const docV0Client = await client.loadStream(v0Id)
     expect(docV0Core.content).toEqual(content1)
@@ -278,7 +281,7 @@ describe('Ceramic interop: core <> http-client', () => {
     )
 
     // Load v1 (anchor on top of genesis commit)
-    const v1Id = doc.id.atCommit(doc.state.log[1].cid)
+    const v1Id = new CommitID(doc.id.type, doc.id.cid, doc.state.log[1].cid)
     const docV1Core = await core.loadStream(v1Id)
     const docV1Client = await client.loadStream(v1Id)
     expect(docV1Core.content).toEqual(content1)
@@ -288,7 +291,7 @@ describe('Ceramic interop: core <> http-client', () => {
     )
 
     // Load v2
-    const v2Id = doc.id.atCommit(doc.state.log[2].cid)
+    const v2Id = new CommitID(doc.id.type, doc.id.cid, doc.state.log[2].cid)
     const docV2Core = await core.loadStream(v2Id)
     const docV2Client = await client.loadStream(v2Id)
     expect(docV2Core.content).toEqual(content2)
@@ -298,7 +301,7 @@ describe('Ceramic interop: core <> http-client', () => {
     )
 
     // Load v3 (anchor on top of v2)
-    const v3Id = doc.id.atCommit(doc.state.log[3].cid)
+    const v3Id = new CommitID(doc.id.type, doc.id.cid, doc.state.log[3].cid)
     const docV3Core = await core.loadStream(v3Id)
     const docV3Client = await client.loadStream(v3Id)
     expect(docV3Core.content).toEqual(content2)
@@ -308,7 +311,7 @@ describe('Ceramic interop: core <> http-client', () => {
     )
 
     // Load v4
-    const v4Id = doc.id.atCommit(doc.state.log[4].cid)
+    const v4Id = new CommitID(doc.id.type, doc.id.cid, doc.state.log[4].cid)
     const docV4Core = await core.loadStream(v4Id)
     const docV4Client = await client.loadStream(v4Id)
     expect(docV4Core.content).toEqual(content3)
@@ -318,7 +321,7 @@ describe('Ceramic interop: core <> http-client', () => {
     )
 
     // Load v5
-    const v5Id = doc.id.atCommit(doc.state.log[5].cid)
+    const v5Id = new CommitID(doc.id.type, doc.id.cid, doc.state.log[5].cid)
     const docV5Core = await core.loadStream(v5Id)
     const docV5Client = await client.loadStream(v5Id)
     expect(docV5Core.content).toEqual(content3)

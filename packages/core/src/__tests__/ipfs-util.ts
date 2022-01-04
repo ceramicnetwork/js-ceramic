@@ -11,6 +11,15 @@ import { create } from 'ipfs-core'
 
 const mergeOptions = mergeOpts.bind({ ignoreUndefined: true })
 
+const ipfsHttpModule = {
+  create: (ipfsEndpoint: string) => {
+    return ipfsHttp.create({
+      url: ipfsEndpoint,
+      ipld: { codecs: [dagJose] },
+    })
+  },
+}
+
 async function goIpfsConfig(override: Partial<Options> = {}): Promise<Options> {
   const swarmPort = await getPort()
   const apiPort = await getPort()
@@ -54,7 +63,7 @@ async function createGoIPFS(overrideConfig: Partial<Options> = {}): Promise<Ipfs
   const ipfsOptions = await goIpfsConfig(overrideConfig)
 
   const ipfsd = await Ctl.createController({
-    ipfsHttpModule: ipfsHttp,
+    ipfsHttpModule: ipfsHttpModule,
     ipfsBin: path(),
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore ipfsd-ctl uses own type, that is _very_ similar to Options from ipfs-core
@@ -141,7 +150,7 @@ async function withGoFleet(
 ): Promise<void> {
   // const instances = await fleet(n)
   const factory = Ctl.createFactory({
-    ipfsHttpModule: ipfsHttp,
+    ipfsHttpModule: ipfsHttpModule,
     ipfsBin: path(),
     disposable: true,
   })

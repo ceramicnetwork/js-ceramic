@@ -118,7 +118,7 @@ describe('Ceramic anchoring', () => {
       createCeramic(ipfs2, false),
     ])
 
-    const stream1 = await TileDocument.create(ceramic1, { a: 123, b: 4567 })
+    const stream1 = await TileDocument.create<any>(ceramic1, { a: 123, b: 4567 })
     await stream1.update({ a: 4567 }, null, { anchor: false, publish: false })
     await stream1.update({ b: 123 }, null, { anchor: false, publish: false })
 
@@ -339,10 +339,10 @@ describe('Ceramic anchoring', () => {
     expect(stream1.content).toEqual({ x: 3 })
     expect(stream1.state.log.length).toEqual(4)
 
-    const validateChainInclusionSpy = jest.spyOn(
-      ceramic2._anchorValidator,
-      'validateChainInclusion'
-    )
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const c2anchorValidator = ceramic2._anchorValidator
+    const validateChainInclusionSpy = jest.spyOn(c2anchorValidator, 'validateChainInclusion')
     validateChainInclusionSpy.mockRejectedValueOnce(new Error("blockNumbers don't match"))
 
     // Even though validating the anchor commit fails, the stream should still be loaded successfully

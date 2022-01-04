@@ -5,6 +5,7 @@
     "resolveJsonModule": false,
     "moduleResolution": "Node",
     "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
     "declaration": true,
     "declarationMap": true,
     "skipLibCheck": true,

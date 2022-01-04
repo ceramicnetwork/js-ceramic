@@ -31,7 +31,7 @@ function safeRead(filepath: string): string {
 
 beforeAll(async () => {
   tmpFolder = await tmp.dir({ unsafeCleanup: true })
-  ipfs = await createIPFS(tmpFolder.path)
+  ipfs = await createIPFS()
   const stateStoreDirectory = tmpFolder.path
   const daemonPort = await getPort()
 

@@ -323,12 +323,17 @@ export class CeramicDaemon {
    */
   async createStreamFromGenesis(req: Request, res: Response): Promise<void> {
     const { type, genesis, opts } = req.body
-    const stream = await this.ceramic.createStreamFromGenesis(
-      type,
-      StreamUtils.deserializeCommit(genesis),
-      opts
-    )
-    res.json({ streamId: stream.id.toString(), state: StreamUtils.serializeState(stream.state) })
+    try {
+      const stream = await this.ceramic.createStreamFromGenesis(
+        type,
+        StreamUtils.deserializeCommit(genesis),
+        opts
+      )
+      res.json({ streamId: stream.id.toString(), state: StreamUtils.serializeState(stream.state) })
+    } catch (e) {
+      console.error(e)
+      throw e
+    }
   }
 
   /**

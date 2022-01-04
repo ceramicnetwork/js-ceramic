@@ -19,7 +19,7 @@ import {
 import { Pubsub } from './pubsub/pubsub.js'
 import { Subscription } from 'rxjs'
 import { MessageBus } from './pubsub/message-bus.js'
-import { LRUMap } from 'lru_map'
+import lru from 'lru_map'
 import { PubsubKeepalive } from './pubsub/pubsub-keepalive.js'
 import { PubsubRateLimit } from './pubsub/pubsub-ratelimit.js'
 
@@ -52,7 +52,7 @@ function messageTypeToString(type: MsgType): string {
  */
 export class Dispatcher {
   readonly messageBus: MessageBus
-  readonly dagNodeCache: LRUMap<string, any>
+  readonly dagNodeCache: lru.LRUMap<string, any>
   // Set of IDs for QUERY messages we have sent to the pub/sub topic but not yet heard a
   // corresponding RESPONSE message for. Maps the query ID to the primary StreamID we were querying for.
   constructor(
@@ -72,7 +72,7 @@ export class Dispatcher {
       )
     )
     this.messageBus.subscribe(this.handleMessage.bind(this))
-    this.dagNodeCache = new LRUMap<string, any>(IPFS_CACHE_SIZE)
+    this.dagNodeCache = new lru.LRUMap<string, any>(IPFS_CACHE_SIZE)
   }
 
   /**

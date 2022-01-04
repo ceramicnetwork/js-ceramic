@@ -37,7 +37,7 @@
   "dependencies": {
     "@ceramicnetwork/common": "^2.0.0-alpha.0",
     "@ceramicnetwork/ipfs-topology": "^2.0.0-alpha.0",
-    "aws-sdk": "^2.1048.0",
+    "aws-sdk": "^2.1049.0",
     "dag-jose": "^1.0.0",
     "datastore-fs": "^6.0.1",
     "datastore-level": "^7.0.1",

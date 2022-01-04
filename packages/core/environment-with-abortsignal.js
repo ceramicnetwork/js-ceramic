@@ -8,6 +8,7 @@ export default class EnvironmentWithAbortSignal extends NodeEnvironment {
 
   async setup() {
     await super.setup()
+    // eslint-disable-next-line no-undef
     this.global.AbortSignal = AbortSignal
   }
 

@@ -1,6 +1,6 @@
 import { CID } from 'multiformats/cid'
 import * as providers from '@ethersproject/providers'
-import { LRUMap } from 'lru_map'
+import lru from 'lru_map'
 import {
   CeramicApi,
   AnchorServiceResponse,
@@ -31,7 +31,7 @@ export class EthereumAnchorService implements AnchorService {
   private readonly requestsApiEndpoint: string
   private readonly chainIdApiEndpoint: string
   private _chainId: string
-  private readonly providersCache: LRUMap<string, providers.BaseProvider>
+  private readonly providersCache: lru.LRUMap<string, providers.BaseProvider>
   private readonly _logger: DiagnosticsLogger
 
   /**

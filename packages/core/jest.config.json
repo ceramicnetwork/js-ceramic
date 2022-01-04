@@ -1,8 +1,9 @@
 {
   "moduleFileExtensions": ["js", "json", "ts"],
-  "testEnvironment": "./environment-with-abortsignal.ts",
+  "testEnvironment": "./environment-with-abortsignal.js",
   "resolver": "jest-resolver-enhanced",
   "extensionsToTreatAsEsm": [".ts"],
+  "preset": "ts-jest/presets/default-esm",
   "testMatch": ["**/?(*.)+(spec|test).[jt]s?(x)"],
   "globals": {
     "ts-jest": {
