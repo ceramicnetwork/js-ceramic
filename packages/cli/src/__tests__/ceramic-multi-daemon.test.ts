@@ -1,5 +1,5 @@
-import Ceramic from '@ceramicnetwork/core'
-import CeramicClient from '@ceramicnetwork/http-client'
+import { Ceramic } from '@ceramicnetwork/core'
+import { CeramicClient } from '@ceramicnetwork/http-client'
 import * as tmp from 'tmp-promise'
 import { CeramicDaemon } from '../ceramic-daemon'
 import { IpfsApi, StreamState, SyncOptions } from '@ceramicnetwork/common'

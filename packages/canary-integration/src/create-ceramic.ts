@@ -1,4 +1,4 @@
-import Ceramic, { CeramicConfig } from '@ceramicnetwork/core'
+import { CeramicConfig, Ceramic } from '@ceramicnetwork/core'
 import { IpfsApi } from '@ceramicnetwork/common'
 import * as uint8arrays from 'uint8arrays'
 import * as sha256 from '@stablelib/sha256'

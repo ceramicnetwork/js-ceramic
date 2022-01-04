@@ -1,6 +1,6 @@
 import express, { Request, Response } from 'express'
 import type { CeramicConfig } from '@ceramicnetwork/core'
-import Ceramic from '@ceramicnetwork/core'
+import { Ceramic } from '@ceramicnetwork/core'
 import { RotatingFileStream } from '@ceramicnetwork/logger'
 import { buildIpfsConnection } from './build-ipfs-connection.util'
 import { S3StateStore } from './s3-state-store'
@@ -11,7 +11,7 @@ import {
   StreamUtils,
   SyncOptions,
 } from '@ceramicnetwork/common'
-import StreamID, { StreamType } from '@ceramicnetwork/streamid'
+import { StreamID, StreamType } from '@ceramicnetwork/streamid'
 import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import KeyDidResolver from 'key-did-resolver'
 import PkhDidResolver from 'pkh-did-resolver'

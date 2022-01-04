@@ -6,9 +6,9 @@ import * as u8a from 'uint8arrays'
 import { promises as fs } from 'fs'
 
 import { Ed25519Provider } from 'key-did-provider-ed25519'
-import CeramicClient from '@ceramicnetwork/http-client'
+import { CeramicClient } from '@ceramicnetwork/http-client'
 import { CeramicApi, LogLevel, Networks, StreamUtils } from '@ceramicnetwork/common'
-import StreamID, { CommitID } from '@ceramicnetwork/streamid'
+import { StreamID, CommitID } from '@ceramicnetwork/streamid'
 
 import { CeramicDaemon } from './ceramic-daemon'
 import { DaemonConfig, IpfsMode, StateStoreMode } from './daemon-config'
