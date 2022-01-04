@@ -296,7 +296,7 @@ export class CeramicDaemon {
   }
 
   // Mark Ceramic unhealthy if associated IPFS is not 'online'
-  async healthcheck(req: Request, res: Response): void {
+  async healthcheck(req: Request, res: Response): Promise<void> {
     try {
       if (await this.ceramic.ipfs.isOnline()) {
         res.status(200).send('Alive!')
