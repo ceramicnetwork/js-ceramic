@@ -295,8 +295,13 @@ export class CeramicDaemon {
     }
   }
 
+  // Mark Ceramic unhealthy if associated IPFS is not 'online'
   healthcheck(req: Request, res: Response): void {
-    res.status(200).send('Alive!')
+    if (this.ceramic.ipfs.isOnline()) {
+      res.status(200).send('Alive!')
+    } else {
+      res.status(503).send('IPFS offline')
+    }
   }
 
   /**
