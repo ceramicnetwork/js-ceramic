@@ -42,6 +42,7 @@
     "@ceramicnetwork/stream-tile": "^1.5.3",
     "@ceramicnetwork/streamid": "^1.3.5",
     "@stablelib/random": "^1.0.0",
+    "@types/abstract-leveldown": "~5.0.2",
     "aws-sdk": "^2.902.0",
     "blockcodec-to-ipld-format": "^1.0.0",
     "commander": "^7.0.0",
