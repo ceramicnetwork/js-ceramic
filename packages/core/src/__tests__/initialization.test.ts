@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals'
 import { Ceramic } from '../ceramic.js'
 import tmp from 'tmp-promise'
 import { IpfsApi } from '@ceramicnetwork/common'

@@ -26,7 +26,7 @@
     ".": "./lib/index.js"
   },
   "scripts": {
-    "test": "node --experimental-vm-modules ../../node_modules/jest/bin/jest.js --silent --coverage --runInBand --env=node",
+    "test": "node --experimental-vm-modules ../../node_modules/jest/bin/jest.js --verbose --coverage --runInBand --env=node",
     "build": "../../node_modules/.bin/tsc --project tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
@@ -56,7 +56,7 @@
     "lodash.clonedeep": "^4.5.0",
     "lru_map": "^0.4.1",
     "multiformats": "^9.5.4",
-    "p-queue": "^6.6.1",
+    "p-queue": "^7.1.0",
     "rxjs": "^7.4.0",
     "uint8arrays": "^3.0.0"
   },

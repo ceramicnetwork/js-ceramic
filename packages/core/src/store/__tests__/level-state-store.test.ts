@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals'
 import tmp from 'tmp-promise'
 import { LevelStateStore } from '../level-state-store.js'
 import Level from 'level-ts'
@@ -14,7 +15,7 @@ import { StreamID } from '@ceramicnetwork/streamid'
 
 let mockStorage: Map<string, any>
 const mockPut = jest.fn((id: string, state: any) => mockStorage.set(id, state))
-let mockGet = jest.fn((id: string) => mockStorage.get(id))
+let mockGet: any = jest.fn((id: string) => mockStorage.get(id))
 const mockDel = jest.fn(() => Promise.resolve())
 const mockStreamResult = ['1', '2', '3']
 const mockStream = jest.fn(async () => mockStreamResult)
@@ -33,6 +34,7 @@ jest.mock('level-ts', () => {
 })
 
 class FakeType extends Stream {
+  isReadOnly = true
   makeReadOnly() {
     throw new Error('Method not implemented.')
   }

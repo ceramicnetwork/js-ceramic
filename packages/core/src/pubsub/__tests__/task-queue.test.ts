@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals'
 import { TaskQueue } from '../task-queue.js'
 
 async function delay(ms: number) {

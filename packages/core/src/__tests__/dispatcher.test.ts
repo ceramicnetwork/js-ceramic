@@ -1,7 +1,8 @@
+import { jest } from '@jest/globals'
 import { Dispatcher } from '../dispatcher.js'
 import { CID } from 'multiformats/cid'
 import { StreamID } from '@ceramicnetwork/streamid'
-import { CommitType, StreamState, LoggerProvider } from '@ceramicnetwork/common'
+import { CommitType, StreamState, LoggerProvider, IpfsApi } from '@ceramicnetwork/common';
 import { serialize, MsgType } from '../pubsub/pubsub-message.js'
 import { Repository, RepositoryDependencies } from '../state-management/repository.js'
 import { delay } from './delay.js'
@@ -56,7 +57,7 @@ describe('Dispatcher', () => {
     } as unknown as PinStore
     repository.setDeps({ pinStore } as unknown as RepositoryDependencies)
     dispatcher = new Dispatcher(
-      ipfs,
+      ipfs as unknown as IpfsApi,
       TOPIC,
       repository,
       loggerProvider.getDiagnosticsLogger(),
@@ -127,7 +128,7 @@ describe('Dispatcher', () => {
 
   it('caches and retrieves with path correctly', async () => {
     const ipfsSpy = ipfs.dag.get
-    ipfsSpy.mockImplementation(function (cid, opts) {
+    ipfsSpy.mockImplementation(function (cid: CID, opts: any) {
       if (opts.path == '/foo') {
         return { value: 'foo' }
       } else if (opts.path == '/bar') {
@@ -149,8 +150,12 @@ describe('Dispatcher', () => {
     expect(ipfsSpy).toBeCalledTimes(2)
 
     expect(ipfsSpy.mock.calls[0][0]).toEqual(FAKE_CID)
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     expect(ipfsSpy.mock.calls[0][1].path).toEqual('/foo')
     expect(ipfsSpy.mock.calls[1][0]).toEqual(FAKE_CID)
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     expect(ipfsSpy.mock.calls[1][1].path).toEqual('/bar')
   })
 
@@ -204,7 +209,7 @@ describe('Dispatcher', () => {
     // Store the query ID sent when the stream is registered so we can use it as the response ID later
     const publishArgs = ipfs.pubsub.publish.mock.calls[0]
     expect(publishArgs[0]).toEqual(TOPIC)
-    const queryMessageSent = JSON.parse(new TextDecoder().decode(publishArgs[1]))
+    const queryMessageSent = JSON.parse(new TextDecoder().decode(publishArgs[1] as unknown as Uint8Array))
     const queryID = queryMessageSent.id
 
     // Handle UPDATE message

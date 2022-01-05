@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals'
 import { LocalPinApi } from '../local-pin-api.js'
 import { StreamID } from '@ceramicnetwork/streamid'
 import * as random from '@stablelib/random'

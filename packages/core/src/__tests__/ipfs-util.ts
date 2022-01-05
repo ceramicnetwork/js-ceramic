@@ -7,7 +7,7 @@ import type { Options } from 'ipfs-core'
 import getPort from 'get-port'
 import mergeOpts from 'merge-options'
 import tmp from 'tmp-promise'
-import { create } from 'ipfs-core'
+// import { create } from 'ipfs-core'
 
 const mergeOptions = mergeOpts.bind({ ignoreUndefined: true })
 
@@ -49,7 +49,8 @@ async function goIpfsConfig(override: Partial<Options> = {}): Promise<Options> {
 export async function createIPFS(overrideConfig: Partial<Options> = {}): Promise<IpfsApi> {
   const flavor = process.env.IPFS_FLAVOR
   if (flavor && flavor.toLowerCase() == 'js') {
-    return createJsIPFS(overrideConfig)
+    throw new Error(`NOT JS IPFS`)
+    // return createJsIPFS(overrideConfig)
   } else {
     return createGoIPFS(overrideConfig)
   }
@@ -77,37 +78,37 @@ async function createGoIPFS(overrideConfig: Partial<Options> = {}): Promise<Ipfs
  * Create js-ipfs instance
  * @param overrideConfig - IFPS config for override
  */
-async function createJsIPFS(overrideConfig: Record<string, unknown> = {}): Promise<IpfsApi> {
-  const tmpFolder = await tmp.dir({ unsafeCleanup: true })
-
-  const port = await getPort()
-  const defaultConfig = {
-    ipld: { codecs: [dagJose] },
-    repo: `${tmpFolder.path}/ipfs${port}/`,
-    config: {
-      Addresses: { Swarm: [`/ip4/127.0.0.1/tcp/${port}`] },
-      Bootstrap: [],
-    },
-  }
-
-  const config = { ...defaultConfig, ...overrideConfig }
-  const instance = await create(config)
-
-  // IPFS does not notify you when it stops.
-  // Here we intercept a call to `ipfs.stop` to clean up IPFS repository folder.
-  // Poor man's hook.
-  return new Proxy(instance, {
-    get(target: any, p: PropertyKey): any {
-      if (p === 'stop') {
-        return () => {
-          const vanilla = target[p]
-          return vanilla().finally(() => tmpFolder.cleanup())
-        }
-      }
-      return target[p]
-    },
-  })
-}
+// async function createJsIPFS(overrideConfig: Record<string, unknown> = {}): Promise<IpfsApi> {
+//   const tmpFolder = await tmp.dir({ unsafeCleanup: true })
+//
+//   const port = await getPort()
+//   const defaultConfig = {
+//     ipld: { codecs: [dagJose] },
+//     repo: `${tmpFolder.path}/ipfs${port}/`,
+//     config: {
+//       Addresses: { Swarm: [`/ip4/127.0.0.1/tcp/${port}`] },
+//       Bootstrap: [],
+//     },
+//   }
+//
+//   const config = { ...defaultConfig, ...overrideConfig }
+//   const instance = await create(config)
+//
+//   // IPFS does not notify you when it stops.
+//   // Here we intercept a call to `ipfs.stop` to clean up IPFS repository folder.
+//   // Poor man's hook.
+//   return new Proxy(instance, {
+//     get(target: any, p: PropertyKey): any {
+//       if (p === 'stop') {
+//         return () => {
+//           const vanilla = target[p]
+//           return vanilla().finally(() => tmpFolder.cleanup())
+//         }
+//       }
+//       return target[p]
+//     },
+//   })
+// }
 
 /**
  * Connect two IPFS instances via `swarm.connect`
@@ -133,7 +134,8 @@ export async function withFleet(
 ): Promise<void> {
   const flavor = process.env.IPFS_FLAVOR
   if (flavor && flavor.toLowerCase() == 'js') {
-    return withJsFleet(n, task)
+    throw new Error(`NOT JS IPFS`)
+    // return withJsFleet(n, task)
   } else {
     return withGoFleet(n, task)
   }
@@ -168,6 +170,9 @@ async function withGoFleet(
   const instances = controllers.map((c) => c.api)
   try {
     await task(instances)
+  } catch (e) {
+    console.error(e)
+    throw e
   } finally {
     await factory.clean()
   }
@@ -178,23 +183,23 @@ async function withGoFleet(
  * @param n - number of js-ipfs instances
  * @param overrideConfig - IPFS config for override
  */
-function fleet(n: number, overrideConfig: Record<string, unknown> = {}): Promise<IpfsApi[]> {
-  return Promise.all(Array.from({ length: n }).map(() => createJsIPFS(overrideConfig)))
-}
+// function fleet(n: number, overrideConfig: Record<string, unknown> = {}): Promise<IpfsApi[]> {
+//   return Promise.all(Array.from({ length: n }).map(() => createJsIPFS(overrideConfig)))
+// }
 
 /**
  * Start `n` js-ipfs instances, and stop them after `task` is done.
  * @param n - Number of js-ipfs instances to create.
  * @param task - Function that uses the IPFS instances.
  */
-async function withJsFleet(
-  n: number,
-  task: (instances: IpfsApi[]) => Promise<void>
-): Promise<void> {
-  const instances = await fleet(n)
-  try {
-    await task(instances)
-  } finally {
-    instances.map((instance) => instance.stop())
-  }
-}
+// async function withJsFleet(
+//   n: number,
+//   task: (instances: IpfsApi[]) => Promise<void>
+// ): Promise<void> {
+//   const instances = await fleet(n)
+//   try {
+//     await task(instances)
+//   } finally {
+//     instances.map((instance) => instance.stop())
+//   }
+// }

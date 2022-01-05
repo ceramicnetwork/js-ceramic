@@ -6,6 +6,7 @@ import { IncomingChannel, filterExternal, IPFSPubsubMessage } from './incoming-c
 import { DiagnosticsLogger, ServiceLogger } from '@ceramicnetwork/common'
 import { TextDecoder } from 'util'
 import { toString as uint8ArrayToString } from 'uint8arrays'
+import { TaskQueue } from './task-queue';
 
 const textDecoder = new TextDecoder('utf-8')
 
@@ -54,10 +55,11 @@ export class Pubsub extends Observable<PubsubMessage> {
     private readonly topic: string,
     private readonly resubscribeEvery: number,
     private readonly pubsubLogger: ServiceLogger,
-    private readonly logger: DiagnosticsLogger
+    private readonly logger: DiagnosticsLogger,
+    readonly tasks: TaskQueue = new TaskQueue()
   ) {
     super((subscriber) => {
-      const incoming$ = new IncomingChannel(ipfs, topic, resubscribeEvery, pubsubLogger, logger)
+      const incoming$ = new IncomingChannel(ipfs, topic, resubscribeEvery, pubsubLogger, logger, tasks)
 
       incoming$
         .pipe(filterExternal(this.peerId$), ipfsToPubsub(this.peerId$, pubsubLogger, topic))

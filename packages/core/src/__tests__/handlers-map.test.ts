@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals'
 import { HandlersMap } from '../handlers-map.js'
 import { Stream, StreamHandler, LoggerProvider } from '@ceramicnetwork/common'
 import { TileDocumentHandler } from '@ceramicnetwork/stream-tile-handler'

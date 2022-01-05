@@ -1,16 +1,24 @@
-import { Ceramic } from '../ceramic.js'
+import { jest } from '@jest/globals'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import tmp from 'tmp-promise'
-import { StreamUtils, IpfsApi, TestUtils, StreamState, SyncOptions } from '@ceramicnetwork/common'
+import {
+  StreamUtils,
+  IpfsApi,
+  TestUtils,
+  StreamState,
+  SyncOptions,
+  GenesisCommit,
+} from '@ceramicnetwork/common'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import * as u8a from 'uint8arrays'
-import { swarmConnect, withFleet } from './ipfs-util.js'
-import { anchorUpdate } from '../state-management/__tests__/anchor-update.js'
 import * as ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import * as KeyDidResolver from 'key-did-resolver'
 import { Resolver } from 'did-resolver'
 import { DID } from 'dids'
 import { StreamID, CommitID } from '@ceramicnetwork/streamid'
+import { anchorUpdate } from '../state-management/__tests__/anchor-update.js'
+import { swarmConnect, withFleet } from './ipfs-util.js'
+import { Ceramic } from '../ceramic.js'
 
 jest.mock('../store/level-state-store.js')
 
@@ -180,7 +188,7 @@ describe('Ceramic integration', () => {
       const ceramic1 = await createCeramic(ipfs1)
       const ceramic2 = await createCeramic(ipfs2)
 
-      const stream1 = await TileDocument.create(ceramic1, { test: 456 })
+      const stream1 = await TileDocument.create<any>(ceramic1, { test: 456 })
 
       await anchorUpdate(ceramic1, stream1)
 
@@ -223,7 +231,9 @@ describe('Ceramic integration', () => {
       const addSpy2 = jest.spyOn(repository2, 'add')
       const loadSpy2 = jest.spyOn(repository2, 'load')
 
-      const stream1 = await TileDocument.create(ceramic1, { test: 456 }, null, { publish: false })
+      const stream1 = await TileDocument.create<any>(ceramic1, { test: 456 }, null, {
+        publish: false,
+      })
       expect(stream1).toBeDefined()
 
       await anchorUpdate(ceramic1, stream1)
@@ -265,7 +275,7 @@ describe('Ceramic integration', () => {
       const addSpy2 = jest.spyOn(repository2, 'add')
       const loadSpy2 = jest.spyOn(repository2, 'load')
 
-      const stream1 = await TileDocument.create(ceramic1, { test: 456 })
+      const stream1 = await TileDocument.create<any>(ceramic1, { test: 456 })
       expect(loadSpy1).toBeCalledTimes(1)
       expect(addSpy1).toBeCalledTimes(1)
       expect(stream1).toBeDefined()
@@ -464,10 +474,10 @@ describe('Ceramic integration', () => {
       )
 
       // Create (off-chain) the deterministic TileDocument genesis commit
-      const genesisCommit = await TileDocument.makeGenesis(ceramic1, content, {
+      const genesisCommit = (await TileDocument.makeGenesis(ceramic1, content, {
         ...metadata,
         deterministic: true,
-      })
+      })) as GenesisCommit
 
       // Try loading the stream on node 2 and provide the genesis commit
       const res = await ceramic2.multiQuery([
@@ -500,10 +510,10 @@ describe('Ceramic integration', () => {
       }
 
       // Create (off-chain) the deterministic TileDocument genesis commit
-      const genesisCommit = await TileDocument.makeGenesis(ceramic1, content, {
+      const genesisCommit = (await TileDocument.makeGenesis(ceramic1, content, {
         ...metadata,
         deterministic: true,
-      })
+      })) as GenesisCommit
 
       // Get stream ID for the genesis commit
       const streamID = await StreamID.fromGenesis('tile', genesisCommit)
@@ -554,7 +564,11 @@ describe('Ceramic integration', () => {
       )
 
       // Create (off-chain) deterministic TileDocument genesis commit with contentB
-      const genesisCommit = await TileDocument.makeGenesis(ceramic2, contentA, metadata2)
+      const genesisCommit = (await TileDocument.makeGenesis(
+        ceramic2,
+        contentA,
+        metadata2
+      )) as GenesisCommit
 
       // Try loading the stream on node2 and provide genesisCommit
       await expect(
@@ -594,7 +608,11 @@ describe('Ceramic integration', () => {
       )
 
       // Create (off-chain) non-deterministic TileDocument genesis commit with content
-      const genesisCommit = await TileDocument.makeGenesis(ceramic2, content, metadata)
+      const genesisCommit = (await TileDocument.makeGenesis(
+        ceramic2,
+        content,
+        metadata
+      )) as GenesisCommit
 
       // Try loading the stream on node2 and provide genesisCommit
       const result = await ceramic2.multiQuery([
@@ -633,7 +651,7 @@ describe('Ceramic integration', () => {
       }
       const noteSchema = await TileDocument.create(ceramic, NoteSchema)
 
-      const stream = await TileDocument.create(
+      const stream = await TileDocument.create<any>(
         ceramic,
         { date: '2021-01-06T14:28:00.000Z', text: 'hello first' },
         { schema: noteSchema.commitId.toUrl() }

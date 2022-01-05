@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals'
 import { Ceramic } from '../ceramic.js'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import tmp from 'tmp-promise'

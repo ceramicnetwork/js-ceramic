@@ -22,6 +22,7 @@ import { MessageBus } from './pubsub/message-bus.js'
 import lru from 'lru_map'
 import { PubsubKeepalive } from './pubsub/pubsub-keepalive.js'
 import { PubsubRateLimit } from './pubsub/pubsub-ratelimit.js'
+import { TaskQueue } from './pubsub/task-queue'
 
 const IPFS_GET_RETRIES = 3
 const IPFS_GET_TIMEOUT = 30000 // 30 seconds per retry, 3 retries = 90 seconds total timeout
@@ -60,9 +61,17 @@ export class Dispatcher {
     private readonly topic: string,
     readonly repository: Repository,
     private readonly _logger: DiagnosticsLogger,
-    private readonly _pubsubLogger: ServiceLogger
+    private readonly _pubsubLogger: ServiceLogger,
+    readonly tasks: TaskQueue = new TaskQueue()
   ) {
-    const pubsub = new Pubsub(_ipfs, topic, IPFS_RESUBSCRIBE_INTERVAL_DELAY, _pubsubLogger, _logger)
+    const pubsub = new Pubsub(
+      _ipfs,
+      topic,
+      IPFS_RESUBSCRIBE_INTERVAL_DELAY,
+      _pubsubLogger,
+      _logger,
+      tasks
+    )
     this.messageBus = new MessageBus(
       new PubsubRateLimit(
         new PubsubKeepalive(pubsub, MAX_PUBSUB_PUBLISH_INTERVAL),
@@ -173,6 +182,7 @@ export class Dispatcher {
       try {
         dagResult = await this._ipfs.dag.get(asCid, { timeout: IPFS_GET_TIMEOUT, path })
       } catch (err) {
+        console.log('_getFromIpfs:error', err)
         if (err.code == 'ERR_TIMEOUT') {
           console.warn(
             `Timeout error while loading CID ${asCid.toString()} from IPFS. ${retries} retries remain`
@@ -313,6 +323,7 @@ export class Dispatcher {
    */
   async close(): Promise<void> {
     this.messageBus.unsubscribe()
+    await this.tasks.onIdle()
   }
 
   /**

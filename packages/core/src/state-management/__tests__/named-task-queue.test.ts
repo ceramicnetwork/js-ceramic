@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals'
 import { NamedTaskQueue } from '../named-task-queue.js'
 import { noop, TaskQueue } from '../../pubsub/task-queue.js'
 

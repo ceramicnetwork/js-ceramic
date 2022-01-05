@@ -16,6 +16,8 @@ export type IPFSPubsubMessage = {
   key: Uint8Array
 }
 
+let n = 0
+
 /**
  * Subscription attempts must be sequential, in FIFO order.
  * Last call to unsubscribe must execute after all the attempts are done,
@@ -29,6 +31,7 @@ export class PubsubIncoming extends Observable<IPFSPubsubMessage> {
     readonly tasks: TaskQueue = new TaskQueue()
   ) {
     super((subscriber) => {
+      n = n + 1;
       const onMessage = (message: IPFSPubsubMessage) => subscriber.next(message)
       const onError = (error: Error) => subscriber.error(error)
 
@@ -46,9 +49,12 @@ export class PubsubIncoming extends Observable<IPFSPubsubMessage> {
         .catch(onError)
 
       return () => {
+        console.log('incoming:unsubscribe', n)
         this.tasks.clear()
         this.tasks.add(async () => {
-          await ipfs.pubsub?.unsubscribe(topic, onMessage)
+          await ipfs.pubsub?.unsubscribe(topic, onMessage).catch(() => {
+            // Do Nothing
+          })
         })
       }
     })
@@ -65,14 +71,19 @@ export class IncomingChannel extends Observable<IPFSPubsubMessage> {
     readonly topic: string,
     readonly resubscribeEvery: number,
     readonly pubsubLogger: ServiceLogger,
-    readonly logger: DiagnosticsLogger
+    readonly logger: DiagnosticsLogger,
+    readonly tasks: TaskQueue = new TaskQueue()
   ) {
     super((subscriber) => {
-      new PubsubIncoming(ipfs, topic, pubsubLogger)
+      new PubsubIncoming(ipfs, topic, pubsubLogger, this.tasks)
         .pipe(
           retryWhen((errors) =>
             errors.pipe(
-              tap((e) => logger.err(e)),
+              tap((e) => {
+                console.error('pubsub-er', e)
+                console.error(e)
+                logger.err(e)
+              }),
               delay(resubscribeEvery)
             )
           )

@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals'
 import { Ceramic, CeramicConfig } from '../ceramic.js'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
@@ -87,7 +88,7 @@ describe('Ceramic API', () => {
     })
 
     it('can load the previous stream commit', async () => {
-      const streamOg = await TileDocument.create(ceramic, { test: 321 })
+      const streamOg = await TileDocument.create<any>(ceramic, { test: 321 })
 
       // wait for anchor (new commit)
       await anchorUpdate(ceramic, streamOg)
@@ -182,7 +183,7 @@ describe('Ceramic API', () => {
     })
 
     it('can update valid content and assign schema at the same time', async () => {
-      const stream = await TileDocument.create(ceramic, { a: 1 })
+      const stream = await TileDocument.create<any>(ceramic, { a: 1 })
       const schemaDoc = await TileDocument.create(ceramic, stringMapSchema)
 
       await stream.update({ a: 'x' }, { schema: schemaDoc.commitId })
@@ -395,7 +396,6 @@ describe('Ceramic API', () => {
       ]
       const streams = await ceramic.multiQuery(queries, 1000)
       expect(Object.keys(streams).length).toEqual(3)
-      console.log('YAYYYY')
     })
 
     it('can load streams for array of multiqueries including paths that dont exist', async () => {

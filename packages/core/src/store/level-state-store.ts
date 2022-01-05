@@ -1,9 +1,12 @@
-import Level from 'level-ts'
+import levelTs from 'level-ts'
+import type Level from 'level-ts'
 import { StreamState, StreamStateHolder, StreamUtils } from '@ceramicnetwork/common'
 import { StateStore } from './state-store.js'
 import { StreamID } from '@ceramicnetwork/streamid'
-import * as fs from 'fs'
+import * as fs from 'node:fs'
 import path from 'path'
+
+const LevelC = (levelTs as any).default as unknown as typeof Level
 
 /**
  * Ceramic store for saving stream state to a local leveldb instance
@@ -29,7 +32,7 @@ export class LevelStateStore implements StateStore {
     if (fs) {
       fs.mkdirSync(storePath, { recursive: true }) // create dir if it doesn't exist
     }
-    this.#store = new Level(storePath)
+    this.#store = new LevelC(storePath)
   }
 
   /**

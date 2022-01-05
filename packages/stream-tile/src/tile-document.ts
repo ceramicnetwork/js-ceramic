@@ -392,6 +392,6 @@ export class TileDocument<T = Record<string, any>> extends Stream {
       return result
     }
     const commit: GenesisCommit = { data: content, header }
-    return await _signDagJWS(signer, commit)
+    return _signDagJWS(signer, commit)
   }
 }

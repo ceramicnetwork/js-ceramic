@@ -1,4 +1,4 @@
-import { mock } from 'jest-mock-extended'
+import jestMock from 'jest-mock-extended'
 
 import { Utils } from '../../utils.js'
 import { CeramicApi, Stream, StreamState, TestUtils, CommitType } from '@ceramicnetwork/common'
@@ -42,7 +42,7 @@ describe('Stream', () => {
 
     const schemaDoc = new BasicStreamWithContent(TestUtils.runningState(docSchemaState), null)
 
-    ceramic = mock<CeramicApi>()
+    ceramic = jestMock.mock<CeramicApi>()
     ceramic.loadStream.mockReturnValue(
       new Promise<Stream>((resolve) => {
         resolve(schemaDoc)

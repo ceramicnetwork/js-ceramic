@@ -1,4 +1,5 @@
-import { LoggerProvider } from '@ceramicnetwork/common'
+import { jest } from '@jest/globals'
+import { IpfsApi, LoggerProvider } from '@ceramicnetwork/common'
 import { Pubsub } from '../pubsub.js'
 import { deserialize, MsgType } from '../pubsub-message.js'
 import { delay } from '../../__tests__/delay.js'
@@ -22,7 +23,13 @@ test('publish keepalive', async () => {
     id: jest.fn(async () => ({ id: PEER_ID })),
   }
   const keepaliveInterval = 100
-  const pubsub = new Pubsub(ipfs, TOPIC, 3000, pubsubLogger, diagnosticsLogger)
+  const pubsub = new Pubsub(
+    ipfs as unknown as IpfsApi,
+    TOPIC,
+    3000,
+    pubsubLogger,
+    diagnosticsLogger
+  )
   const pubsubWithKeepalive = new PubsubKeepalive(pubsub, keepaliveInterval)
   const subscription = pubsubWithKeepalive.subscribe()
 

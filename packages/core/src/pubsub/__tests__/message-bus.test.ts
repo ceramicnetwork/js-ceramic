@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals'
 import { buildQueryMessage, MsgType, ResponseMessage } from '../pubsub-message.js'
 import { asIpfsMessage } from './as-ipfs-message.js'
 import { StreamID } from '@ceramicnetwork/streamid'

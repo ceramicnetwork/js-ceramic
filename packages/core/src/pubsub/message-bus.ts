@@ -84,7 +84,7 @@ export class MessageBus extends Observable<PubsubMessage> implements Subscriptio
    * Stop the message feed.
    */
   unsubscribe(): void {
-    if (!this.pubsubSubscription.closed) this.pubsubSubscription.unsubscribe()
+    this.pubsubSubscription.unsubscribe()
     this.feed$.complete()
   }
 }
