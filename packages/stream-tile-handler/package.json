@@ -17,7 +17,7 @@
     "lib"
   ],
   "scripts": {
-    "test": "../../node_modules/.bin/jest --silent --coverage",
+    "test": "../../node_modules/.bin/jest --coverage",
     "build": "../../node_modules/.bin/tsc -p tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
@@ -28,7 +28,9 @@
     "@ceramicnetwork/common": "^2.0.0-alpha.0",
     "@ceramicnetwork/stream-tile": "^2.0.0-alpha.0",
     "fast-json-patch": "^3.1.0",
-    "lodash.clonedeep": "^4.5.0"
+    "lodash.clonedeep": "^4.5.0",
+    "multiformats": "^9.5.6",
+    "uint8arrays": "^3.0.0"
   },
   "devDependencies": {
     "@ceramicnetwork/3id-did-resolver": "^2.0.0-alpha.0",

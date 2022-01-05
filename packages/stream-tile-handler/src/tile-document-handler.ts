@@ -14,6 +14,8 @@ import {
   StreamUtils,
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
+import { base64urlToJSON } from './utils'
+import { CID } from 'multiformats/cid'
 
 function stringArraysEqual(arr1: Array<string>, arr2: Array<string>) {
   if (arr1.length != arr2.length) {
@@ -63,7 +65,8 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
       return this._applyAnchor(context, commitData, state)
     }
 
-    return this._applySigned(commitData, state, context)
+    const streamId = StreamUtils.streamIdFromState(state)
+    return this._applySigned(commitData, state, context, streamId)
   }
 
   /**
@@ -105,13 +108,14 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
   async _applySigned(
     commitData: CommitData,
     state: StreamState,
-    context: Context
+    context: Context,
+    streamId: StreamID
   ): Promise<StreamState> {
     // TODO: Assert that the 'prev' of the commit being applied is the end of the log in 'state'
     const controller = state.next?.metadata?.controllers?.[0] || state.metadata.controllers[0]
 
     // Verify the signature first
-    await this._verifySignature(commitData, context, controller)
+    await this._verifySignature(commitData, context, controller, streamId)
 
     // Retrieve the payload
     const payload = commitData.commit
@@ -174,7 +178,11 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
   ): Promise<StreamState> {
     // TODO: Assert that the 'prev' of the commit being applied is the end of the log in 'state'
     const proof = commitData.proof
-    state.log.push({ cid: commitData.cid, type: CommitType.ANCHOR, timestamp: proof.blockTimestamp })
+    state.log.push({
+      cid: commitData.cid,
+      type: CommitType.ANCHOR,
+      timestamp: proof.blockTimestamp,
+    })
     let content = state.content
     let metadata = state.metadata
 
@@ -210,8 +218,31 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
   async _verifySignature(
     commitData: CommitData,
     context: Context,
-    controller: string
+    controller: string,
+    streamId?: StreamID
   ): Promise<void> {
+    if (streamId) {
+      const protectedHeaders = commitData.envelope.signatures.map((s) => s.protected)
+      const decodedProtectedHeaders = protectedHeaders.map((pH) => base64urlToJSON(pH))
+      const capHeaderIndex = decodedProtectedHeaders.findIndex((dph) => !!dph.cap)
+      if (capHeaderIndex > -1) {
+        const capHeader = decodedProtectedHeaders[capHeaderIndex]
+        const capIPFSUri = capHeader.cap
+        const capCID = CID.parse(capIPFSUri.replace('ipfs://', ''))
+        const cacaoBlock = (await context.ipfs.dag.get(capCID)).value
+        const cacao = cacaoBlock.value
+
+        // TODO: Verify resources here
+
+        await context.did.verifyJWS(commitData.envelope, {
+          atTime: commitData.timestamp,
+          issuer: controller,
+          disableTimecheck: commitData.disableTimecheck,
+          capability: cacao,
+        })
+      }
+    }
+
     await context.did.verifyJWS(commitData.envelope, {
       atTime: commitData.timestamp,
       issuer: controller,
