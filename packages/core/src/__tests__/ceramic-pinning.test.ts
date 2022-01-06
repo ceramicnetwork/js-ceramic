@@ -75,7 +75,7 @@ describe('Ceramic stream pinning', () => {
   })
 
   afterEach(async () => {
-    await ipfs1.stop().then(() => console.log('IPFS1 Stopped'))
+    await ipfs1.stop()
     await tmpFolder.cleanup()
   })
 

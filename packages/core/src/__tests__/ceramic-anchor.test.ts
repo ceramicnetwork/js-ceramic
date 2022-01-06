@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals'
 import { Ceramic } from '../ceramic.js'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import { AnchorStatus, IpfsApi, TestUtils } from '@ceramicnetwork/common'
@@ -11,9 +12,6 @@ import * as ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import * as KeyDidResolver from 'key-did-resolver'
 import { Resolver } from 'did-resolver'
 import { DID } from 'dids'
-import { jest } from '@jest/globals'
-
-jest.mock('../store/level-state-store.js')
 
 const seed = u8a.fromString(
   '6e34b2e1a9624113d81ece8a8a22e6e97f0e145c25c1d4d2d0e62753b4060c83',

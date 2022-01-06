@@ -20,8 +20,6 @@ import { anchorUpdate } from '../state-management/__tests__/anchor-update.js'
 import { swarmConnect, withFleet } from './ipfs-util.js'
 import { Ceramic } from '../ceramic.js'
 
-jest.mock('../store/level-state-store.js')
-
 const seed = u8a.fromString(
   '6e34b2e1a9624113d81ece8a8a22e6e97f0e145c25c1d4d2d0e62753b4060c83',
   'base16'

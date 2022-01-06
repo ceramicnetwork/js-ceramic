@@ -1,4 +1,5 @@
 import { jest } from '@jest/globals'
+import tmp from 'tmp-promise'
 import { Ceramic, CeramicConfig } from '../ceramic.js'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
@@ -12,8 +13,6 @@ import * as ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import * as KeyDidResolver from 'key-did-resolver'
 import { Resolver } from 'did-resolver'
 import { DID } from 'dids'
-
-jest.mock('../store/level-state-store.js')
 
 const seed = u8a.fromString(
   '6e34b2e1a9624113d81ece8a8a22e6e97f0e145c25c1d4d2d0e62753b4060c83',
@@ -73,18 +72,23 @@ describe('Ceramic API', () => {
   })
 
   afterAll(async () => {
-    await ipfs.stop().then(() => console.log('IPFS stopped'))
+    await ipfs.stop()
   })
 
   describe('API', () => {
     let ceramic: Ceramic
+    let tmpFolder: tmp.DirectoryResult
 
     beforeEach(async () => {
-      ceramic = await createCeramic()
+      tmpFolder = await tmp.dir({ unsafeCleanup: true })
+      ceramic = await createCeramic({
+        stateStoreDirectory: tmpFolder.path,
+      })
     })
 
     afterEach(async () => {
       await ceramic.close()
+      tmpFolder.cleanup()
     })
 
     it('can load the previous stream commit', async () => {
@@ -255,6 +259,7 @@ describe('Ceramic API', () => {
 
   describe('API MultiQueries', () => {
     let ceramic: Ceramic
+    let tmpFolder: tmp.DirectoryResult
     let streamA: TileDocument,
       streamB: TileDocument,
       streamC: TileDocument,
@@ -268,7 +273,10 @@ describe('Ceramic API', () => {
     const streamFStates = []
 
     beforeAll(async () => {
-      ceramic = await createCeramic()
+      tmpFolder = await tmp.dir({ unsafeCleanup: true })
+      ceramic = await createCeramic({
+        stateStoreDirectory: tmpFolder.path,
+      })
 
       streamF = await TileDocument.create(ceramic, { test: '321f' })
       streamE = await TileDocument.create(ceramic, { f: streamF.id.toUrl() })
@@ -289,6 +297,7 @@ describe('Ceramic API', () => {
 
     afterAll(async () => {
       await ceramic.close()
+      await tmpFolder.cleanup()
     })
 
     it('can load linked stream path, returns expected form', async () => {
@@ -387,7 +396,7 @@ describe('Ceramic API', () => {
       expect(Object.keys(streams).length).toEqual(6)
     })
 
-    it.only('can load streams for array of multiqueries even if streamid or path throws error', async () => {
+    it('can load streams for array of multiqueries even if streamid or path throws error', async () => {
       const queries = [
         {
           streamId: streamA.id,

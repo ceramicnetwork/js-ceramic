@@ -6,8 +6,6 @@ import { createIPFS } from './ipfs-util.js'
 import { InMemoryAnchorService } from '../anchor/memory/in-memory-anchor-service.js'
 import { delay } from './delay.js'
 
-jest.mock('../store/level-state-store.js')
-
 describe('Ceramic integration', () => {
   jest.setTimeout(60000)
   let ipfs1: IpfsApi
