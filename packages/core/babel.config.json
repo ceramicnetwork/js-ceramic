@@ -4,11 +4,14 @@
       "@babel/preset-env",
       {
         "targets": {
-          "node": "current"
+          "node": "16"
         }
       }
     ],
     "@babel/preset-typescript"
   ],
-  "plugins": [["@babel/plugin-proposal-decorators", { "legacy": true }]]
+  "plugins": [
+    ["@babel/plugin-proposal-decorators", { "legacy": true }],
+    ["@babel/plugin-proposal-class-properties", { "legacy": true }]
+  ]
 }

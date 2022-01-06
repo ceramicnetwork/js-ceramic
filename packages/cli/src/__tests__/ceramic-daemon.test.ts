@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals'
 import { Ceramic } from '@ceramicnetwork/core'
 import { CeramicClient } from '@ceramicnetwork/http-client'
 import tmp from 'tmp-promise'
@@ -56,11 +57,8 @@ describe('Ceramic interop: core <> http-client', () => {
   let client: CeramicClient
 
   beforeAll(async () => {
-    console.log('foo.0')
     tmpFolder = await tmp.dir({ unsafeCleanup: true })
-    console.log('foo.1')
     ipfs = await createIPFS()
-    console.log('foo.2')
   })
 
   afterAll(async () => {

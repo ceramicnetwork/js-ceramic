@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals'
 import { Ceramic } from '@ceramicnetwork/core'
 import { CeramicClient } from '@ceramicnetwork/http-client'
 import * as tmp from 'tmp-promise'

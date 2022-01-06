@@ -5,20 +5,13 @@
       {
         "targets": {
           "node": "16"
-        },
-        "useBuiltIns": false,
-        "debug": false
+        }
       }
     ],
     "@babel/preset-typescript"
   ],
   "plugins": [
-    [
-      "@babel/plugin-transform-modules-commonjs",
-      {
-        "allowTopLevelThis": true
-      }
-    ],
-    ["@babel/plugin-proposal-decorators", { "legacy": true }]
+    ["@babel/plugin-proposal-decorators", { "legacy": true }],
+    ["@babel/plugin-proposal-class-properties", { "legacy": true }]
   ]
 }
