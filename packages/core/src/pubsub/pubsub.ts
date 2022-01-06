@@ -3,7 +3,7 @@ import { map, catchError, mergeMap, withLatestFrom } from 'rxjs/operators'
 import { IpfsApi } from '@ceramicnetwork/common'
 import { deserialize, PubsubMessage, serialize } from './pubsub-message.js'
 import { DiagnosticsLogger, ServiceLogger } from '@ceramicnetwork/common'
-import { TextDecoder } from 'node:util'
+import { TextDecoder } from 'util'
 import { toString as uint8ArrayToString } from 'uint8arrays'
 import { IncomingChannel, filterExternal, IPFSPubsubMessage } from './incoming-channel.js'
 import { TaskQueue } from './task-queue.js';

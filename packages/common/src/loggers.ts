@@ -1,7 +1,7 @@
 import { LoggerModes } from 'jet-logger'
 import jet from 'jet-logger'
 import logfmt from 'logfmt'
-import * as util from 'node:util'
+import * as util from 'util'
 import flatten from 'flat'
 import {
   ServiceLoggerBase,
