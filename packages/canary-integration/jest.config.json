@@ -1,13 +1,12 @@
 {
   "testEnvironment": "node",
   "resolver": "jest-resolver-enhanced",
-  "preset": "ts-jest",
+  "testMatch": ["**/?(*.)+(spec|test).[jt]s?(x)"],
+  "extensionsToTreatAsEsm": [".ts"],
   "moduleNameMapper": {
     "^(\\.{1,2}/.*)\\.js$": "$1"
   },
-  "testRegex": "(/__tests__/.*(\\.|/)(test|spec))\\.tsx?$",
-  "transformIgnorePatterns": ["node_modules/(?!(dids)/)"],
   "transform": {
-    "^.+\\.(js|jsx|ts|tsx|mjs)$": "babel-jest"
+    "^.+\\.tsx?$": "babel-jest"
   }
 }
