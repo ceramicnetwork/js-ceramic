@@ -7,14 +7,14 @@ import * as fs from 'node:fs'
 import path from 'path'
 
 const LevelC = (levelTs as any).default as unknown as typeof Level
-
+const defaultLevelFactory = (path: string) => new LevelC(path)
 /**
  * Ceramic store for saving stream state to a local leveldb instance
  */
 export class LevelStateStore implements StateStore {
   #store: Level
 
-  constructor(private storeRoot: string) {}
+  constructor(private storeRoot: string, private readonly levelFactory = defaultLevelFactory) {}
 
   /**
    * Gets internal db
@@ -32,7 +32,7 @@ export class LevelStateStore implements StateStore {
     if (fs) {
       fs.mkdirSync(storePath, { recursive: true }) // create dir if it doesn't exist
     }
-    this.#store = new LevelC(storePath)
+    this.#store = this.levelFactory(storePath)
   }
 
   /**
