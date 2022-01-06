@@ -26,7 +26,7 @@
     "ipfs-daemon": "./bin/ipfs-daemon.js"
   },
   "scripts": {
-    "build": "../../node_modules/.bin/tsc --project tsconfig.json",
+    "build": "exit 0",
     "start": "../../node_modules/.bin/ts-node src/bin/ipfs-daemon.ts",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
@@ -38,6 +38,7 @@
     "@ceramicnetwork/common": "^2.0.0-alpha.0",
     "@ceramicnetwork/ipfs-topology": "^2.0.0-alpha.0",
     "aws-sdk": "^2.1049.0",
+    "blockstore-datastore-adapter": "^2.0.3",
     "dag-jose": "^1.0.0",
     "datastore-fs": "^6.0.1",
     "datastore-level": "^7.0.1",
