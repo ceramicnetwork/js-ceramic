@@ -65,8 +65,7 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
       return this._applyAnchor(context, commitData, state)
     }
 
-    const streamId = StreamUtils.streamIdFromState(state)
-    return this._applySigned(commitData, state, context, streamId)
+    return this._applySigned(commitData, state, context)
   }
 
   /**
@@ -108,13 +107,13 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
   async _applySigned(
     commitData: CommitData,
     state: StreamState,
-    context: Context,
-    streamId: StreamID
+    context: Context
   ): Promise<StreamState> {
     // TODO: Assert that the 'prev' of the commit being applied is the end of the log in 'state'
     const controller = state.next?.metadata?.controllers?.[0] || state.metadata.controllers[0]
 
     // Verify the signature first
+    const streamId = StreamUtils.streamIdFromState(state)
     await this._verifySignature(commitData, context, controller, streamId)
 
     // Retrieve the payload
@@ -221,18 +220,27 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
     controller: string,
     streamId?: StreamID
   ): Promise<void> {
-    if (streamId) {
+    if (StreamUtils.isSignedCommitData(commitData)) {
       const protectedHeaders = commitData.envelope.signatures.map((s) => s.protected)
       const decodedProtectedHeaders = protectedHeaders.map((pH) => base64urlToJSON(pH))
       const capHeaderIndex = decodedProtectedHeaders.findIndex((dph) => !!dph.cap)
+
       if (capHeaderIndex > -1) {
         const capHeader = decodedProtectedHeaders[capHeaderIndex]
         const capIPFSUri = capHeader.cap
         const capCID = CID.parse(capIPFSUri.replace('ipfs://', ''))
-        const cacaoBlock = (await context.ipfs.dag.get(capCID)).value
-        const cacao = cacaoBlock.value
+        const cacao = (await context.ipfs.dag.get(capCID)).value
+        const resources = cacao.p.resources as string[]
+        const payloadCID = commitData.cid.toString() // TODO: does this need to be a specific codec?
 
-        // TODO: Verify resources here
+        if (
+          !resources.includes(`ceramic://${streamId.toString()}`) &&
+          !resources.includes(`ceramic://${streamId.toString()}?payload=${payloadCID}`)
+        ) {
+          throw new Error(
+            `Capability does not have appropriate permissions to update this TileDocument`
+          )
+        }
 
         await context.did.verifyJWS(commitData.envelope, {
           atTime: commitData.timestamp,
@@ -240,6 +248,7 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
           disableTimecheck: commitData.disableTimecheck,
           capability: cacao,
         })
+        return
       }
     }
 
