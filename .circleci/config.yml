@@ -6,8 +6,6 @@ commands:
   build-and-test:
     steps:
       - checkout
-      - node/install-npm:
-          version: '8'
       - node/install-packages
       - run: npm run lint
       - run: npm run build
