@@ -1,17 +1,12 @@
 {
-  "moduleFileExtensions": ["js", "json", "ts"],
-  "testEnvironment": "./environment-with-abortsignal.js",
+  "testEnvironment": "node",
   "resolver": "jest-resolver-enhanced",
-  "extensionsToTreatAsEsm": [".ts"],
-  "preset": "ts-jest/presets/default-esm",
   "testMatch": ["**/?(*.)+(spec|test).[jt]s?(x)"],
-  "globals": {
-    "ts-jest": {
-      "useESM": true
-    }
-  },
+  "extensionsToTreatAsEsm": [".ts"],
   "moduleNameMapper": {
     "^(\\.{1,2}/.*)\\.js$": "$1"
   },
-  "transformIgnorePatterns": ["/node_modules/(?!dids)"]
+  "transform": {
+    "^.+\\.tsx?$": "babel-jest"
+  }
 }
