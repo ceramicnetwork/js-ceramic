@@ -5,23 +5,10 @@
       {
         "targets": {
           "node": "current"
-        },
-        "modules": "auto",
-        "useBuiltIns": false,
-        "debug": false
+        }
       }
     ],
     "@babel/preset-typescript"
   ],
-  "plugins": [
-    "@babel/plugin-syntax-import-meta",
-    [
-      "@babel/plugin-transform-modules-commonjs",
-      {
-        "allowTopLevelThis": true
-      }
-    ],
-    ["@babel/plugin-proposal-decorators", { "legacy": true }],
-    ["@babel/plugin-proposal-class-properties", { "loose": false }]
-  ]
+  "plugins": [["@babel/plugin-proposal-decorators", { "legacy": true }]]
 }
