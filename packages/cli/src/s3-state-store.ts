@@ -1,7 +1,7 @@
 import { StreamState, Stream, StreamUtils } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { StateStore } from '@ceramicnetwork/core'
-import LevelUp from 'levelup'
+import { LevelUp } from 'levelup'
 import S3LevelDOWN from 's3leveldown'
 import toArray from 'stream-to-array'
 

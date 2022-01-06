@@ -43,6 +43,7 @@
     "@ceramicnetwork/stream-tile": "^2.0.0-alpha.0",
     "@ceramicnetwork/streamid": "^2.0.0-alpha.0",
     "@stablelib/random": "^1.0.1",
+    "@types/abstract-leveldown": "~5.0.2",
     "aws-sdk": "^2.1049.0",
     "commander": "^8.3.0",
     "cors": "^2.8.5",
@@ -52,7 +53,10 @@
     "ethr-did-resolver": "5.0.2",
     "express": "^4.17.2",
     "flat": "^5.0.2",
+    "get-port": "^5.1.1",
+    "go-ipfs": "^0.11.0",
     "ipfs-http-client": "^55.0.0",
+    "ipfsd-ctl": "^10.0.5",
     "key-did-provider-ed25519": "^1.1.0",
     "key-did-resolver": "^2.0.0-alpha.0",
     "levelup": "^5.1.1",
@@ -64,10 +68,7 @@
     "safe-did-resolver": "^0.0.5",
     "stream-to-array": "^2.3.0",
     "typedjson": "^1.8.0",
-    "uint8arrays": "^3.0.0",
-    "get-port": "^5.1.1",
-    "go-ipfs": "^0.11.0",
-    "ipfsd-ctl": "^10.0.5"
+    "uint8arrays": "^3.0.0"
   },
   "devDependencies": {
     "@ceramicnetwork/canary-integration": "^2.0.0-alpha.0",
