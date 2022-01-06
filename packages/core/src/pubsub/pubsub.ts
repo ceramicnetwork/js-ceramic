@@ -1,12 +1,12 @@
 import { Observable, EMPTY, pipe, of, from, Subscription, UnaryFunction } from 'rxjs'
-import { deserialize, PubsubMessage, serialize } from './pubsub-message.js'
-import { IpfsApi } from '@ceramicnetwork/common'
 import { map, catchError, mergeMap, withLatestFrom } from 'rxjs/operators'
-import { IncomingChannel, filterExternal, IPFSPubsubMessage } from './incoming-channel.js'
+import { IpfsApi } from '@ceramicnetwork/common'
+import { deserialize, PubsubMessage, serialize } from './pubsub-message.js'
 import { DiagnosticsLogger, ServiceLogger } from '@ceramicnetwork/common'
-import { TextDecoder } from 'util'
+import { TextDecoder } from 'node:util'
 import { toString as uint8ArrayToString } from 'uint8arrays'
-import { TaskQueue } from './task-queue';
+import { IncomingChannel, filterExternal, IPFSPubsubMessage } from './incoming-channel.js'
+import { TaskQueue } from './task-queue.js';
 
 const textDecoder = new TextDecoder('utf-8')
 

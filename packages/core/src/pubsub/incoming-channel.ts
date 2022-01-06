@@ -1,9 +1,9 @@
 import { Observable } from 'rxjs'
 import type { IpfsApi } from '@ceramicnetwork/common'
-import { TaskQueue } from './task-queue'
 import { DiagnosticsLogger, ServiceLogger } from '@ceramicnetwork/common'
 import { pipe, MonoTypeOperatorFunction } from 'rxjs'
 import { map, filter, concatMap, retryWhen, tap, delay } from 'rxjs/operators'
+import { TaskQueue } from './task-queue.js'
 
 // Typestub for pubsub message.
 // At some future time this type definition should be provided by IPFS.
@@ -15,8 +15,6 @@ export type IPFSPubsubMessage = {
   signature: Uint8Array
   key: Uint8Array
 }
-
-let n = 0
 
 /**
  * Subscription attempts must be sequential, in FIFO order.
@@ -31,7 +29,6 @@ export class PubsubIncoming extends Observable<IPFSPubsubMessage> {
     readonly tasks: TaskQueue = new TaskQueue()
   ) {
     super((subscriber) => {
-      n = n + 1;
       const onMessage = (message: IPFSPubsubMessage) => subscriber.next(message)
       const onError = (error: Error) => subscriber.error(error)
 
@@ -49,7 +46,6 @@ export class PubsubIncoming extends Observable<IPFSPubsubMessage> {
         .catch(onError)
 
       return () => {
-        console.log('incoming:unsubscribe', n)
         this.tasks.clear()
         this.tasks.add(async () => {
           await ipfs.pubsub?.unsubscribe(topic, onMessage).catch(() => {
@@ -79,11 +75,7 @@ export class IncomingChannel extends Observable<IPFSPubsubMessage> {
         .pipe(
           retryWhen((errors) =>
             errors.pipe(
-              tap((e) => {
-                console.error('pubsub-er', e)
-                console.error(e)
-                logger.err(e)
-              }),
+              tap((e) => logger.err(e)),
               delay(resubscribeEvery)
             )
           )
