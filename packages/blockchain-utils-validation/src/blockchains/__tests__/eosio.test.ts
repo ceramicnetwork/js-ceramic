@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals'
 import { EOSIOProvider } from '@smontero/eosio-local-provider'
 import { validateLink } from '../eosio.js'
 import { AccountId } from 'caip'

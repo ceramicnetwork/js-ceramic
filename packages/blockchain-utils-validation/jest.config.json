@@ -1,16 +1,12 @@
 {
-  "moduleFileExtensions": ["js", "json", "ts"],
-  "testRegex": ".(spec|test).ts$",
   "testEnvironment": "node",
+  "resolver": "jest-resolver-enhanced",
+  "testMatch": ["**/?(*.)+(spec|test).[jt]s?(x)"],
+  "extensionsToTreatAsEsm": [".ts"],
   "moduleNameMapper": {
-    "^@zondax/filecoin-signing-tools/nodejs$": "@zondax/filecoin-signing-tools",
     "^(\\.{1,2}/.*)\\.js$": "$1"
   },
-  "resolver": "jest-resolver-enhanced",
-  "extensionsToTreatAsEsm": [".ts"],
-  "globals": {
-    "ts-jest": {
-      "useESM": true
-    }
+  "transform": {
+    "^.+\\.tsx?$": "babel-jest"
   }
 }
