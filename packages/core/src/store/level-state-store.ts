@@ -3,7 +3,7 @@ import type Level from 'level-ts'
 import { StreamState, StreamStateHolder, StreamUtils } from '@ceramicnetwork/common'
 import { StateStore } from './state-store.js'
 import { StreamID } from '@ceramicnetwork/streamid'
-import * as fs from 'node:fs'
+import * as fs from 'fs'
 import path from 'path'
 
 const LevelC = (levelTs as any).default as unknown as typeof Level

@@ -1,4 +1,4 @@
-import * as fs from 'node:fs'
+import * as fs from 'fs'
 import express, { Request, Response } from 'express'
 import type { CeramicConfig } from '@ceramicnetwork/core'
 import { Ceramic } from '@ceramicnetwork/core'
