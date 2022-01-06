@@ -1,4 +1,6 @@
-import * as tendermint from '@tendermint/sig'
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import tendermint from '@tendermint/sig'
 import { BlockchainHandler } from '../blockchain-handler.js'
 import { LinkProof, cosmos } from '@ceramicnetwork/blockchain-utils-linking'
 import * as uint8arrays from 'uint8arrays'
