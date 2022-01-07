@@ -21,7 +21,7 @@ jobs:
       IPFS_FLAVOR: go
     steps:
       - build-and-test
-      - run: npm run docs
+#      - run: npm run docs
   with-js-ipfs:
     machine:
       image: ubuntu-2004:202107-02
