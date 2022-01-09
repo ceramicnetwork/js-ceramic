@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/stream-tile-handler",
-  "version": "1.5.8",
+  "version": "1.5.9",
   "description": "Ceramic Tile Document stream handler",
   "keywords": [
     "ceramic",
@@ -25,20 +25,20 @@
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/common": "^1.10.2",
-    "@ceramicnetwork/stream-tile": "^1.5.4",
+    "@ceramicnetwork/common": "^1.10.3",
+    "@ceramicnetwork/stream-tile": "^1.5.5",
     "fast-json-patch": "^2.2.1",
     "lodash.clonedeep": "^4.5.0"
   },
   "devDependencies": {
-    "@ceramicnetwork/3id-did-resolver": "^1.4.13",
+    "@ceramicnetwork/3id-did-resolver": "^1.4.14",
     "@stablelib/sha256": "^1.0.0",
     "@types/lodash.clonedeep": "^4.5.6",
     "cids": "~1.1.6",
     "did-resolver": "^3.1.0",
     "dids": "^2.4.0",
     "ipld-dag-cbor": "^1.0.0",
-    "key-did-resolver": "^1.4.1"
+    "key-did-resolver": "^1.4.2"
   },
   "jest": {
     "testEnvironment": "node",

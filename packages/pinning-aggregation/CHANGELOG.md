@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.2.9](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/pinning-aggregation@1.2.7...@ceramicnetwork/pinning-aggregation@1.2.9) (2022-01-09)
+
+**Note:** Version bump only for package @ceramicnetwork/pinning-aggregation
+
+
+
+
+
 ## [1.2.8](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/pinning-aggregation@1.2.7...@ceramicnetwork/pinning-aggregation@1.2.8) (2022-01-09)
 
 **Note:** Version bump only for package @ceramicnetwork/pinning-aggregation
