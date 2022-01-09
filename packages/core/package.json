@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/core",
-  "version": "1.12.0",
+  "version": "1.12.1",
   "description": "Typescript implementation of the Ceramic protocol",
   "keywords": [
     "Ceramic",
@@ -29,15 +29,15 @@
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/common": "^1.10.1",
-    "@ceramicnetwork/ipfs-topology": "^1.1.19",
-    "@ceramicnetwork/pinning-aggregation": "^1.2.7",
-    "@ceramicnetwork/pinning-ipfs-backend": "^1.2.7",
-    "@ceramicnetwork/stream-caip10-link": "^1.2.5",
-    "@ceramicnetwork/stream-caip10-link-handler": "^1.3.7",
-    "@ceramicnetwork/stream-tile": "^1.5.3",
-    "@ceramicnetwork/stream-tile-handler": "^1.5.7",
-    "@ceramicnetwork/streamid": "^1.3.5",
+    "@ceramicnetwork/common": "^1.10.2",
+    "@ceramicnetwork/ipfs-topology": "^1.1.20",
+    "@ceramicnetwork/pinning-aggregation": "^1.2.8",
+    "@ceramicnetwork/pinning-ipfs-backend": "^1.2.8",
+    "@ceramicnetwork/stream-caip10-link": "^1.2.6",
+    "@ceramicnetwork/stream-caip10-link-handler": "^1.3.8",
+    "@ceramicnetwork/stream-tile": "^1.5.4",
+    "@ceramicnetwork/stream-tile-handler": "^1.5.8",
+    "@ceramicnetwork/streamid": "^1.3.6",
     "@ethersproject/providers": "^5.4.5",
     "@stablelib/random": "^1.0.0",
     "@stablelib/sha256": "^1.0.0",
@@ -58,15 +58,15 @@
     "uint8arrays": "^2.0.5"
   },
   "devDependencies": {
-    "@ceramicnetwork/3id-did-resolver": "^1.4.12",
-    "@ceramicnetwork/blockchain-utils-validation": "^1.6.4",
+    "@ceramicnetwork/3id-did-resolver": "^1.4.13",
+    "@ceramicnetwork/blockchain-utils-validation": "^1.6.5",
     "@types/node": "^13.13.15",
     "dag-jose": "^0.3.0",
     "did-resolver": "^3.1.0",
     "get-port": "^5.1.1",
     "ipfs-core": "~0.7.1",
     "key-did-provider-ed25519": "^1.1.0",
-    "key-did-resolver": "^1.4.0",
+    "key-did-resolver": "^1.4.1",
     "mockdate": "^3.0.5",
     "tmp-promise": "^2.0.2"
   },

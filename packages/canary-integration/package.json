@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/canary-integration",
-  "version": "1.4.5",
+  "version": "1.4.6",
   "private": true,
   "description": "Canary integration test for Ceramic components",
   "scripts": {
@@ -14,17 +14,17 @@
     "lib": "lib"
   },
   "devDependencies": {
-    "@ceramicnetwork/3id-did-resolver": "^1.4.12",
-    "@ceramicnetwork/blockchain-utils-linking": "^1.5.1",
-    "@ceramicnetwork/blockchain-utils-validation": "^1.6.4",
-    "@ceramicnetwork/core": "^1.12.0",
-    "@ceramicnetwork/stream-caip10-link": "^1.2.5",
-    "@ceramicnetwork/stream-tile": "^1.5.3",
+    "@ceramicnetwork/3id-did-resolver": "^1.4.13",
+    "@ceramicnetwork/blockchain-utils-linking": "^1.5.2",
+    "@ceramicnetwork/blockchain-utils-validation": "^1.6.5",
+    "@ceramicnetwork/core": "^1.12.1",
+    "@ceramicnetwork/stream-caip10-link": "^1.2.6",
+    "@ceramicnetwork/stream-tile": "^1.5.4",
     "@truffle/hdwallet-provider": "^1.5.0",
     "dids": "^2.4.0",
     "ganache-core": "^2.13.1",
     "key-did-provider-ed25519": "^1.1.0",
-    "key-did-resolver": "^1.4.0"
+    "key-did-resolver": "^1.4.1"
   },
   "jest": {
     "testEnvironment": "node",
