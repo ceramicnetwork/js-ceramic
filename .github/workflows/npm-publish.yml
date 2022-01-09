@@ -87,6 +87,7 @@ jobs:
         run: |
           npm config set //registry.npmjs.org/:_authToken $NODE_AUTH_TOKEN
           npm run publish:latest $PUBLISH_ARGS
+          git push
       -
         name: Update and push code to `release-candidate` and `develop`
         if: ${{ steps.set-env.outputs.main == 'true' && steps.set-env.outputs.hotfix != 'true' }}
@@ -183,6 +184,7 @@ jobs:
         run: |
           npm config set //registry.npmjs.org/:_authToken $NODE_AUTH_TOKEN
           npm run publish:release-candidate $PUBLISH_ARGS
+          git push
       -
         name: Update and push code to `develop`
         if: ${{ steps.set-env.outputs.rc == 'true' && steps.set-env.outputs.hotfix != 'true' }}
