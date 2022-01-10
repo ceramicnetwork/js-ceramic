@@ -18,6 +18,7 @@
     "@ceramicnetwork/blockchain-utils-linking": "^2.0.0-alpha.1",
     "@ceramicnetwork/blockchain-utils-validation": "^2.0.0-alpha.1",
     "@ceramicnetwork/core": "^2.0.0-alpha.1",
+    "@ceramicnetwork/ipfs-daemon": "^2.0.0-alpha.0",
     "@ceramicnetwork/stream-caip10-link": "^2.0.0-alpha.1",
     "@ceramicnetwork/stream-tile": "^2.0.0-alpha.1",
     "@truffle/hdwallet-provider": "^2.0.0",

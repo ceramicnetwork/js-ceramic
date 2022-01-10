@@ -10,7 +10,7 @@ import {
 import { CID } from 'multiformats/cid'
 import { decode as decodeMultiHash } from 'multiformats/hashes/digest'
 import { RunningState } from '../state-management/running-state.js'
-import { createIPFS } from './ipfs-util.js'
+import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { createCeramic } from './create-ceramic.js'
 import { Ceramic } from '../ceramic.js'
 import { anchorUpdate } from '../state-management/__tests__/anchor-update.js'

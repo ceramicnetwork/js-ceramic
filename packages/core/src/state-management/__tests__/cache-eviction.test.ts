@@ -1,5 +1,5 @@
 import { StreamUtils, IpfsApi } from '@ceramicnetwork/common'
-import { createIPFS } from '../../__tests__/ipfs-util.js'
+import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { createCeramic } from '../../__tests__/create-ceramic.js'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { Ceramic } from '../../ceramic.js'

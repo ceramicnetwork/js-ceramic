@@ -1,5 +1,5 @@
 import { createCeramic } from '../../create-ceramic.js'
-import { createIPFS } from '../../create-ipfs.js'
+import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { CeramicApi, IpfsApi } from '@ceramicnetwork/common'
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore CJS-ESM Interop

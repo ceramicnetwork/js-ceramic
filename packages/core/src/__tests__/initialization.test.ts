@@ -2,7 +2,7 @@ import { jest } from '@jest/globals'
 import { Ceramic } from '../ceramic.js'
 import tmp from 'tmp-promise'
 import { IpfsApi } from '@ceramicnetwork/common'
-import { createIPFS } from './ipfs-util.js'
+import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { InMemoryAnchorService } from '../anchor/memory/in-memory-anchor-service.js'
 import { delay } from './delay.js'
 

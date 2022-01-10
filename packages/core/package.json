@@ -63,8 +63,8 @@
   "devDependencies": {
     "@ceramicnetwork/3id-did-resolver": "^2.0.0-alpha.1",
     "@ceramicnetwork/blockchain-utils-validation": "^2.0.0-alpha.1",
+    "@ceramicnetwork/ipfs-daemon": "^2.0.0-alpha.0",
     "@types/node": "^17.0.5",
-    "dag-jose": "^1.0.0",
     "did-resolver": "^3.1.5",
     "get-port": "^6.0.0",
     "go-ipfs": "^0.11.0",
