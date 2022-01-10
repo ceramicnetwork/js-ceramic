@@ -6,6 +6,7 @@ import eosio from './blockchains/eosio'
 import cosmos from './blockchains/cosmos'
 import near from './blockchains/near'
 import tezos from './blockchains/tezos'
+import solana from './blockchains/solana'
 import { AccountID } from 'caip'
 
 const handlers = {
@@ -16,6 +17,7 @@ const handlers = {
   [cosmos.namespace]: cosmos,
   [near.namespace]: near,
   [tezos.namespace]: tezos,
+  [solana.namespace]: solana,
 }
 
 const findDID = (did: string): string | undefined => did.match(/(did:\S+:\S+)/)?.[0]
