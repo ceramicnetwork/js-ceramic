@@ -1,5 +1,5 @@
 import { IpfsApi, SyncOptions } from '@ceramicnetwork/common'
-import { createIPFS } from './ipfs-util'
+import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import Ceramic from '../ceramic'
 import { createCeramic } from './create-ceramic'
 import { Ed25519Provider } from 'key-did-provider-ed25519'

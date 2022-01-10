@@ -1,5 +1,5 @@
 import { createCeramic } from '../../create-ceramic'
-import { createIPFS } from '../../create-ipfs'
+import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { CeramicApi, IpfsApi } from '@ceramicnetwork/common'
 import { Signer, SignerResult } from '@polkadot/api/types'
 import * as linking from '@ceramicnetwork/blockchain-utils-linking'

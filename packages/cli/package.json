@@ -42,6 +42,7 @@
     "@ceramicnetwork/stream-tile": "^2.0.0-alpha.0",
     "@ceramicnetwork/streamid": "^2.0.0-alpha.0",
     "@stablelib/random": "^1.0.1",
+    "@types/abstract-leveldown": "~5.0.2",
     "aws-sdk": "^2.1045.0",
     "commander": "^8.3.0",
     "cors": "^2.8.5",

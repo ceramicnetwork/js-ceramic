@@ -8,7 +8,7 @@ import {
 import { CID } from 'multiformats/cid'
 import { decode as decodeMultiHash } from 'multiformats/hashes/digest'
 import { RunningState } from '../state-management/running-state'
-import { createIPFS } from './ipfs-util'
+import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { createCeramic } from './create-ceramic'
 import Ceramic from '../ceramic'
 import { anchorUpdate } from '../state-management/__tests__/anchor-update'

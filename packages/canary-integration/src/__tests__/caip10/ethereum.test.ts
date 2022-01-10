@@ -4,7 +4,7 @@ import * as sigUtils from 'eth-sig-util'
 import { ContractFactory, Contract } from '@ethersproject/contracts'
 import * as providers from '@ethersproject/providers'
 import { CeramicApi, IpfsApi } from '@ceramicnetwork/common'
-import { createIPFS } from '../../create-ipfs'
+import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { createCeramic } from '../../create-ceramic'
 import { Caip10Link } from '@ceramicnetwork/stream-caip10-link'
 import { happyPath, clearDid } from './caip-flows'
@@ -107,8 +107,8 @@ beforeAll(async () => {
 }, 120000)
 
 afterAll(async () => {
-  await ceramic.close()
   await ipfs?.stop()
+  await ceramic.close()
 }, 120000)
 
 describe('externally-owned account', () => {

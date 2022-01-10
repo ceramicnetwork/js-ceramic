@@ -1,6 +1,6 @@
 import { EOSIOProvider } from '@smontero/eosio-local-provider'
 import * as linking from '@ceramicnetwork/blockchain-utils-linking'
-import { createIPFS } from '../../create-ipfs'
+import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { IpfsApi, CeramicApi } from '@ceramicnetwork/common'
 import { createCeramic } from '../../create-ceramic'
 import { clearDid, happyPath, wrongProof } from './caip-flows'

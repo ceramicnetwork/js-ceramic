@@ -1,5 +1,5 @@
 import { IpfsApi, LoggerProvider } from '@ceramicnetwork/common'
-import { createIPFS } from '../../__tests__/ipfs-util'
+import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { IncomingChannel, filterExternal, PubsubIncoming } from '../incoming-channel'
 import { delay } from '../../__tests__/delay'
 import { asIpfsMessage } from './as-ipfs-message'

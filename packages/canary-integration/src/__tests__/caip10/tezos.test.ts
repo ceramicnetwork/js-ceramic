@@ -4,7 +4,7 @@ const mockFetch = fetch as jest.Mock
 const { Response } = jest.requireActual('cross-fetch')
 
 import { createCeramic } from '../../create-ceramic'
-import { createIPFS } from '../../create-ipfs'
+import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { CeramicApi, IpfsApi } from '@ceramicnetwork/common'
 import { clearDid, happyPath, wrongProof } from './caip-flows'
 import { TezosAuthProvider, TezosProvider } from '@ceramicnetwork/blockchain-utils-linking'

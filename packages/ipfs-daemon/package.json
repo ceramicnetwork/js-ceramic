@@ -38,10 +38,16 @@
     "datastore-level": "^7.0.1",
     "datastore-s3": "^8.0.0",
     "express": "^4.17.1",
+    "get-port": "^5.1.1",
+    "go-ipfs": "file:../npm-go-ipfs",
     "ipfs-core": "~0.12.2",
     "ipfs-core-types": "~0.8.4",
+    "ipfs-http-client": "^55.0.0",
+    "ipfsd-ctl": "^10.0.5",
     "ipfs-http-gateway": "~0.7.4",
-    "ipfs-http-server": "~0.9.2"
+    "ipfs-http-server": "~0.9.2",
+    "merge-options": "^3.0.4",
+    "tmp-promise": "^3.0.3"
   },
   "devDependencies": {
     "@types/express": "^4.17.13",

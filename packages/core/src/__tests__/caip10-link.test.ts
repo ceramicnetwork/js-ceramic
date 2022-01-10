@@ -7,7 +7,7 @@ import KeyDidResolver from 'key-did-resolver'
 import { Resolver } from 'did-resolver'
 import { DID } from 'dids'
 import * as u8a from 'uint8arrays'
-import { createIPFS } from './ipfs-util'
+import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { anchorUpdate } from '../state-management/__tests__/anchor-update'
 import MockDate from 'mockdate'
 

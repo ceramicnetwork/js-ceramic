@@ -1,5 +1,5 @@
 import { IpfsApi } from '@ceramicnetwork/common'
-import { createIPFS } from '../create-ipfs'
+import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { CeramicApi } from '@ceramicnetwork/common'
 import { createCeramic } from '../create-ceramic'
 import { TileDocument } from '@ceramicnetwork/stream-tile'

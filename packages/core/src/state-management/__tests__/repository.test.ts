@@ -1,7 +1,7 @@
 import { StreamUtils, IpfsApi } from '@ceramicnetwork/common'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import Ceramic from '../../ceramic'
-import { createIPFS } from '../../__tests__/ipfs-util'
+import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { Repository } from '../repository'
 import { anchorUpdate } from './anchor-update'
 import { createCeramic } from '../../__tests__/create-ceramic'

@@ -1,7 +1,7 @@
 import Ceramic from '../ceramic'
 import tmp from 'tmp-promise'
 import { IpfsApi } from '@ceramicnetwork/common'
-import { createIPFS } from './ipfs-util'
+import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import InMemoryAnchorService from '../anchor/memory/in-memory-anchor-service'
 import { delay } from './delay'
 
