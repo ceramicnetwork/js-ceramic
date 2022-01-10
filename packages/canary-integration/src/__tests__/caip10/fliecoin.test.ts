@@ -1,5 +1,5 @@
 import { createCeramic } from '../../create-ceramic.js'
-import { createIPFS } from '../../create-ipfs.js'
+import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { CeramicApi, IpfsApi } from '@ceramicnetwork/common'
 import * as linking from '@ceramicnetwork/blockchain-utils-linking'
 import { clearDid, happyPath, wrongProof } from './caip-flows.js'
