@@ -6,7 +6,7 @@ import { IpfsApi, StreamState, SyncOptions } from '@ceramicnetwork/common'
 import { TileDocumentHandler } from '@ceramicnetwork/stream-tile-handler'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import getPort from 'get-port'
-import { createIPFS } from './create-ipfs'
+import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { makeDID } from './make-did'
 import { DaemonConfig } from '../daemon-config'
 
@@ -51,9 +51,7 @@ describe('Ceramic interop between multiple daemons and http clients', () => {
   beforeAll(async () => {
     tmpFolder1 = await tmp.dir({ unsafeCleanup: true })
     tmpFolder2 = await tmp.dir({ unsafeCleanup: true })
-    ;[ipfs1, ipfs2] = await Promise.all(
-      [tmpFolder1, tmpFolder2].map((tmpFolder) => createIPFS(tmpFolder.path))
-    )
+    ;[ipfs1, ipfs2] = await Promise.all([createIPFS(), createIPFS()])
 
     // Make sure the nodes can talk to each other
     await swarmConnect(ipfs1, ipfs2)

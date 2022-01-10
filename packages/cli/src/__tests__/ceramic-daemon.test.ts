@@ -9,7 +9,7 @@ import { filter, take } from 'rxjs/operators'
 
 import StreamID from '@ceramicnetwork/streamid'
 import getPort from 'get-port'
-import { createIPFS } from './create-ipfs'
+import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { makeDID } from './make-did'
 import { DaemonConfig } from '../daemon-config'
 
@@ -57,7 +57,7 @@ describe('Ceramic interop: core <> http-client', () => {
 
   beforeAll(async () => {
     tmpFolder = await tmp.dir({ unsafeCleanup: true })
-    ipfs = await createIPFS(tmpFolder.path)
+    ipfs = await createIPFS()
   })
 
   afterAll(async () => {
