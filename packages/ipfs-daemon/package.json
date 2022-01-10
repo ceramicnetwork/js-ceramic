@@ -39,7 +39,7 @@
     "datastore-s3": "^8.0.0",
     "express": "^4.17.1",
     "get-port": "^5.1.1",
-    "go-ipfs": "file:../npm-go-ipfs",
+    "go-ipfs": "^0.11.0",
     "ipfs-core": "~0.12.2",
     "ipfs-http-client": "^55.0.0",
     "ipfsd-ctl": "^10.0.5",
