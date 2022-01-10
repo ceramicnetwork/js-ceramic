@@ -26,7 +26,7 @@
     "ipfs-daemon": "./bin/ipfs-daemon.js"
   },
   "scripts": {
-    "build": "exit 0",
+    "build": "../../node_modules/.bin/tsc -p tsconfig.json",
     "start": "../../node_modules/.bin/ts-node src/bin/ipfs-daemon.ts",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
