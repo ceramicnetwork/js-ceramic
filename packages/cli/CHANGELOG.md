@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.10.2-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@1.10.1...@ceramicnetwork/cli@1.10.2-rc.0) (2022-01-06)
+
+
+### Bug Fixes
+
+* **cli:** Pin version of '@types/abstract-leveldown' package ([#1974](https://github.com/ceramicnetwork/js-ceramic/issues/1974)) ([f69b71f](https://github.com/ceramicnetwork/js-ceramic/commit/f69b71fcf45e8b0c7bbed6c37c66387fa6393361))
+
+
+
+
+
 ## [1.10.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@1.10.1-rc.0...@ceramicnetwork/cli@1.10.1) (2021-12-23)
 
 **Note:** Version bump only for package @ceramicnetwork/cli
