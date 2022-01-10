@@ -272,6 +272,7 @@ export class CeramicDaemon {
     pinsRouter.getAsync('/', this.listPinned.bind(this))
     nodeRouter.getAsync('/chains', this.getSupportedChains.bind(this))
     nodeRouter.getAsync('/healthcheck', this.healthcheck.bind(this))
+    nodeRouter.getAsync('/isOnline', this.isOnline.bind(this))
     documentsRouter.getAsync('/:docid', this.stateOld.bind(this)) // Deprecated
     recordsRouter.getAsync('/:streamid', this.commits.bind(this)) // Deprecated
 
@@ -295,18 +296,22 @@ export class CeramicDaemon {
     }
   }
 
-  // Mark Ceramic unhealthy if associated IPFS is not 'online'
-  async healthcheck(req: Request, res: Response): Promise<void> {
+  healthcheck(req: Request, res: Response): void {
+    res.status(200).send('Alive!')
+  }
+
+  /**
+   * Checks for availability of subsystems that Ceramic depends on (e.g. IPFS)
+   * @dev Only checking for IPFS right now but checks for other subsystems can go here in the future
+   */
+  async isOnline(req: Request, res: Response): Promise<void> {
+    let status = false
     try {
-      if (await this.ceramic.ipfs.isOnline()) {
-        res.status(200).send('Alive!')
-        return
-      }
-    }
-    catch (e) {
+      status = await this.ceramic.ipfs.isOnline()
+    } catch (e) {
       this.diagnosticsLogger.err(`Error checking IPFS status: ${e}`)
     }
-    res.status(503).send('IPFS unreachable')
+    res.status(200).send(status)
   }
 
   /**
