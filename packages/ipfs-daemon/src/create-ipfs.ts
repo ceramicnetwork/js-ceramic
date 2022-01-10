@@ -1,7 +1,6 @@
 import * as dagJose from 'dag-jose'
 import { path } from 'go-ipfs'
 import * as Ctl from 'ipfsd-ctl'
-import type { ControllerOptions } from 'ipfsd-ctl'
 import * as ipfsClient from 'ipfs-http-client'
 import type { Options } from 'ipfs-core'
 import { create } from 'ipfs-core'
@@ -47,12 +46,15 @@ const createFactory = () => {
 }
 
 async function createGoIpfsOptions(override: Partial<Options> = {}): Promise<Options> {
+  const tmpFolder = await tmp.dir({ unsafeCleanup: true })
+  const port = await getPort()
   const swarmPort = await getPort()
   const apiPort = await getPort()
   const gatewayPort = await getPort()
 
   return mergeOptions(
     {
+      repo: `${tmpFolder.path}/ipfs${port}/`,
       config: {
         Addresses: {
           Swarm: [`/ip4/127.0.0.1/tcp/${swarmPort}`],

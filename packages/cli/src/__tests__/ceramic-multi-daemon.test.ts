@@ -7,7 +7,7 @@ import { IpfsApi, StreamState, SyncOptions } from '@ceramicnetwork/common'
 import { TileDocumentHandler } from '@ceramicnetwork/stream-tile-handler'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import getPort from 'get-port'
-import { createIPFS, swarmConnect } from './create-ipfs'
+import { createIPFS, swarmConnect } from '@ceramicnetwork/ipfs-daemon'
 import { makeDID } from './make-did'
 import { DaemonConfig } from '../daemon-config'
 

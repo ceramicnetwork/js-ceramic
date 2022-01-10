@@ -1,4 +1,3 @@
-import { create as createIPFS } from 'ipfs-core'
 import { HttpApi } from 'ipfs-http-server'
 import { HttpGateway } from 'ipfs-http-gateway'
 import * as dagJose from 'dag-jose'
@@ -6,6 +5,7 @@ import { IpfsTopology } from '@ceramicnetwork/ipfs-topology'
 import { DiagnosticsLogger, LogLevel, IpfsApi } from '@ceramicnetwork/common'
 import { HealthcheckServer } from './healthcheck-server.js'
 import { createRepo, StorageBackend } from './create-repo.js'
+import { createIPFS } from './create-ipfs.js'
 import path from 'path'
 import os from 'os'
 
@@ -138,7 +138,7 @@ export class IpfsDaemon {
       }
     )
 
-    const ipfs = await createIPFS({
+    const ipfsOptions = {
       start: false,
       repo,
       ipld: { codecs: [dagJose] },
@@ -187,7 +187,9 @@ export class IpfsDaemon {
         },
         Bootstrap: configuration.ipfsBootstrap,
       },
-    })
+    }
+
+    const ipfs = await createIPFS(ipfsOptions)
 
     const api = configuration.ipfsEnableApi ? new HttpApi(ipfs) : undefined
     const gateway = configuration.ipfsEnableGateway ? new HttpGateway(ipfs) : undefined
