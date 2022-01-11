@@ -3,7 +3,7 @@ import { path } from 'go-ipfs'
 import * as Ctl from 'ipfsd-ctl'
 import * as ipfsClient from 'ipfs-http-client'
 import type { Options } from 'ipfs-core'
-import { create } from 'ipfs-core'
+import { create as createJsIpfs } from 'ipfs-core'
 import getPort from 'get-port'
 import mergeOpts from 'merge-options'
 import type { IpfsApi } from '@ceramicnetwork/common'
@@ -20,22 +20,11 @@ const ipfsHttpModule = {
   },
 }
 
-const ipfsOptions = {
-  ipld: { codecs: [dagJose] },
-  config: {
-    Pubsub: {
-      Enabled: true,
-    },
-    Bootstrap: [],
-  },
-}
-
 const createFactory = () => {
   return Ctl.createFactory(
     {
       ipfsHttpModule,
       disposable: true,
-      ipfsOptions,
     },
     {
       go: {
@@ -45,65 +34,50 @@ const createFactory = () => {
   )
 }
 
-async function createGoIpfsOptions(override: Partial<Options> = {}): Promise<Options> {
-  const tmpFolder = await tmp.dir({ unsafeCleanup: true })
-  const port = await getPort()
+/**
+ * Create the default IPFS Options
+ * @param override IFPS config for override
+ * @param repoPath The file path at which to store the IPFS node’s data
+ * @returns
+ */
+
+async function createIpfsOptions(
+  override: Partial<Options> = {},
+  repoPath?: string
+): Promise<Options> {
   const swarmPort = await getPort()
   const apiPort = await getPort()
   const gatewayPort = await getPort()
 
   return mergeOptions(
     {
-      repo: `${tmpFolder.path}/ipfs${port}/`,
+      ipld: { codecs: [dagJose] },
       config: {
         Addresses: {
           Swarm: [`/ip4/127.0.0.1/tcp/${swarmPort}`],
           Gateway: `/ip4/127.0.0.1/tcp/${gatewayPort}`,
           API: `/ip4/127.0.0.1/tcp/${apiPort}`,
         },
+        Pubsub: {
+          Enabled: true,
+        },
+        Bootstrap: [],
       },
     },
+    repoPath ? { repo: `${repoPath}/ipfs${swarmPort}/` } : {},
     override
   )
 }
 
-/**
- * Create js-ipfs instance
- * @param overrideConfig - IFPS config for override
- */
-async function createJsIpfs(overrideConfig: Record<string, unknown> = {}): Promise<IpfsApi> {
-  const tmpFolder = await tmp.dir({ unsafeCleanup: true })
-  const port = await getPort()
-
-  const config = mergeOptions(
-    ipfsOptions,
-    {
-      repo: `${tmpFolder.path}/ipfs${port}/`,
-      config: {
-        Addresses: { Swarm: [`/ip4/127.0.0.1/tcp/${port}`] },
-      },
-    },
-    overrideConfig
-  )
-
-  const instance = await create(config)
-
-  // IPFS does not notify you when it stops.
-  // Here we intercept a call to `ipfs.stop` to clean up IPFS repository folder.
-  // Poor man's hook.
-  return new Proxy(instance, {
-    get(target: any, p: PropertyKey): any {
-      if (p === 'stop') {
-        return () => {
-          const vanilla = target[p]
-          return vanilla().finally(() => tmpFolder.cleanup())
-        }
-      }
-      return target[p]
-    },
-  })
+const createInstanceByType = {
+  js: createJsIpfs,
+  go: async (ipfsOptions: Options): Promise<IpfsApi> => {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore ipfsd-ctl uses own type, that is _very_ similar to Options from ipfs-core
+    const ipfsd = await createFactory().spawn({ type: 'go', ipfsOptions })
+    return ipfsd.api
+  },
 }
-
 /**
  * Create an IPFS instance
  * @param overrideConfig - IFPS config for override
@@ -111,15 +85,32 @@ async function createJsIpfs(overrideConfig: Record<string, unknown> = {}): Promi
 export async function createIPFS(overrideConfig: Partial<Options> = {}): Promise<IpfsApi> {
   const flavor = process.env.IPFS_FLAVOR || 'go'
 
-  if (flavor && flavor.toLowerCase() == 'js') {
-    return createJsIpfs(overrideConfig)
-  } else {
-    const goIpfsOptions = await createGoIpfsOptions(overrideConfig)
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore ipfsd-ctl uses own type, that is _very_ similar to Options from ipfs-core
-    const ipfsd = await createFactory().spawn({ type: 'go', ipfsOptions: goIpfsOptions })
-    return ipfsd.api
+  if (!overrideConfig.repo || flavor == 'js') {
+    const tmpFolder = await tmp.dir({ unsafeCleanup: true })
+
+    const ipfsOptions = await createIpfsOptions(overrideConfig, tmpFolder.path)
+
+    const instance = await createInstanceByType[flavor](ipfsOptions)
+
+    // IPFS does not notify you when it stops.
+    // Here we intercept a call to `ipfs.stop` to clean up IPFS repository folder.
+    // Poor man's hook.
+    return new Proxy(instance, {
+      get(target: any, p: PropertyKey): any {
+        if (p === 'stop') {
+          return () => {
+            const vanilla = target[p]
+            return vanilla().finally(() => tmpFolder.cleanup())
+          }
+        }
+        return target[p]
+      },
+    })
   }
+
+  const ipfsOptions = await createIpfsOptions(overrideConfig)
+
+  return createInstanceByType[flavor](ipfsOptions)
 }
 
 /**
@@ -146,7 +137,7 @@ export async function withFleet(
 ): Promise<void> {
   const flavor = process.env.IPFS_FLAVOR || 'go'
 
-  if (flavor && flavor.toLowerCase() == 'js') {
+  if (flavor.toLowerCase() == 'js') {
     return withJsFleet(n, task)
   } else {
     return withGoFleet(n, task)
@@ -167,12 +158,11 @@ async function withGoFleet(
 
   const controllers = await Promise.all(
     Array.from({ length: n }).map(async () => {
-      const goIpfsOptions = await createGoIpfsOptions(overrideConfig)
-
+      const ipfsOptions = await createIpfsOptions(overrideConfig)
       return factory.spawn({
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore ipfsd-ctl uses own type, that is _very_ similar to Options from ipfs-core
-        ipfsOptions: goIpfsOptions,
+        ipfsOptions,
       })
     })
   )
@@ -195,7 +185,7 @@ async function withJsFleet(
   overrideConfig: Record<string, unknown> = {}
 ): Promise<void> {
   const instances = await Promise.all(
-    Array.from({ length: n }).map(() => createJsIpfs(overrideConfig))
+    Array.from({ length: n }).map(() => createIPFS(overrideConfig))
   )
   try {
     await task(instances)
