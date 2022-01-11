@@ -22,17 +22,17 @@ jobs:
     steps:
       - build-and-test
 #      - run: npm run docs
-#  with-js-ipfs:
-#    machine:
-#      image: ubuntu-2004:202107-02
-#    environment:
-#      NODE_OPTIONS: '--max_old_space_size=4096'
-#      IPFS_FLAVOR: js
-#    steps:
-#      - build-and-test
+  with-js-ipfs:
+    machine:
+      image: ubuntu-2004:202107-02
+    environment:
+      NODE_OPTIONS: '--max_old_space_size=4096'
+      IPFS_FLAVOR: js
+    steps:
+      - build-and-test
 
 workflows:
   build-and-test:
     jobs:
       - with-go-ipfs
-      - with-js-ipfs
+#      - with-js-ipfs
