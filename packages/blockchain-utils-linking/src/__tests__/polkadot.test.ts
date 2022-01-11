@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals'
 import { Signer, SignerResult } from '@polkadot/api/types'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { SignerPayloadRaw } from '@polkadot/types/types'

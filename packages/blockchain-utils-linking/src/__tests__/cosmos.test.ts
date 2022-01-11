@@ -1,21 +1,24 @@
-import { signTx, Tx, SignMeta, createWalletFromMnemonic, Wallet, StdTx } from '@tendermint/sig'
+import { jest } from '@jest/globals'
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import tendermint from '@tendermint/sig'
 import { CosmosAuthProvider } from '../cosmos.js'
 
 const did = 'did:3:bafysdfwefwe'
 const mnemonic = 'test salon husband push melody usage fine ensure blade deal miss twin'
-const local_provider = createWalletFromMnemonic(mnemonic)
+const local_provider = tendermint.createWalletFromMnemonic(mnemonic)
 const chainRef = 'cosmoshub-3'
 
 class CosmosMockSigner {
-  readonly provider: Wallet
+  readonly provider: tendermint.Wallet
 
-  constructor(local_provider: Wallet) {
+  constructor(local_provider: tendermint.Wallet) {
     this.provider = local_provider
   }
 
-  public async sign(msg: Tx, metadata: SignMeta): Promise<StdTx> {
+  public async sign(msg: tendermint.Tx, metadata: tendermint.SignMeta): Promise<tendermint.StdTx> {
     return new Promise((resolve): void => {
-      const signature = signTx(msg, metadata, this.provider)
+      const signature = tendermint.signTx(msg, metadata, this.provider)
       resolve(signature)
     })
   }

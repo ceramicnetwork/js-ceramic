@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals'
 import { MessageSignerWalletAdapterProps } from '@solana/wallet-adapter-base'
 import { SOLANA_MAINNET_CHAIN_REF, SolanaAuthProvider } from '../solana.js'
 import { Keypair } from '@solana/web3.js'

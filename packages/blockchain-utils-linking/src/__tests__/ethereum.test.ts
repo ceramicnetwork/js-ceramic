@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals'
 import { AccountId } from 'caip'
 import ganache from 'ganache-core'
 import { StreamID } from '@ceramicnetwork/streamid'

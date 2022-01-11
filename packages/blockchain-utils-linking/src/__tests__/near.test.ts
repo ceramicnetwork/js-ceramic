@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals'
 import { NearAuthProvider } from '../near.js'
 import * as nearApiJs from 'near-api-js'
 

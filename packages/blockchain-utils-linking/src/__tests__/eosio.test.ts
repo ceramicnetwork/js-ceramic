@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals'
 import { EOSIOProvider } from '@smontero/eosio-local-provider'
 import { EosioAuthProvider } from '../eosio.js'
 
