@@ -116,9 +116,9 @@ function upconvertLegacySyncOption(opts: Record<string, any> | undefined) {
  * Prepare DID resolvers to use in the daemon.
  */
 function makeResolvers(
-    ceramic: Ceramic,
-    ceramicConfig: CeramicConfig,
-    opts: DaemonConfig
+  ceramic: Ceramic,
+  ceramicConfig: CeramicConfig,
+  opts: DaemonConfig
 ): ResolverRegistry {
   let result = {
     ...KeyDidResolver.getResolver(),
@@ -134,8 +134,8 @@ function makeResolvers(
     }),
   }
   if (
-      opts.didResolvers?.ethrDidResolver?.networks &&
-      opts.didResolvers?.ethrDidResolver?.networks.length > 0
+    opts.didResolvers?.ethrDidResolver?.networks &&
+    opts.didResolvers?.ethrDidResolver?.networks.length > 0
   ) {
     // Custom ethr-did-resolver configuration passed
     result = { ...result, ...EthrDidResolver.getResolver(opts.didResolvers.ethrDidResolver) }
@@ -174,10 +174,10 @@ export class CeramicDaemon {
     this.app.set('trust proxy', true)
     this.app.use(express.json({ limit: '1mb' }))
     this.app.use(
-        cors({
-          origin: opts.httpApi?.corsAllowedOrigins,
-          maxAge: 7200, // 2 hours
-        })
+      cors({
+        origin: opts.httpApi?.corsAllowedOrigins,
+        maxAge: 7200, // 2 hours
+      })
     )
 
     this.app.use(logRequests(ceramic.loggerProvider))
@@ -205,22 +205,22 @@ export class CeramicDaemon {
     const ceramicConfig = makeCeramicConfig(opts)
 
     const ipfs = await buildIpfsConnection(
-        opts.ipfs.mode,
-        opts.network?.name,
-        ceramicConfig.loggerProvider.getDiagnosticsLogger(),
-        opts.ipfs?.host
+      opts.ipfs.mode,
+      opts.network?.name,
+      ceramicConfig.loggerProvider.getDiagnosticsLogger(),
+      opts.ipfs?.host
     )
 
     const [modules, params] = Ceramic._processConfig(ipfs, ceramicConfig)
     modules.loggerProvider
-        .getDiagnosticsLogger()
-        .imp(
-            `Starting Ceramic Daemon at version ${packageJson.version} with config: \n${JSON.stringify(
-                opts,
-                null,
-                2
-            )}`
-        )
+      .getDiagnosticsLogger()
+      .imp(
+        `Starting Ceramic Daemon at version ${packageJson.version} with config: \n${JSON.stringify(
+          opts,
+          null,
+          2
+        )}`
+      )
 
     if (opts.stateStore?.mode == StateStoreMode.S3) {
       const s3StateStore = new S3StateStore(opts.stateStore?.s3Bucket)
@@ -302,14 +302,14 @@ export class CeramicDaemon {
    */
   async healthcheck(req: Request, res: Response): Promise<void> {
     for (let i = 0; i < HEALTHCHECK_RETRIES; i++) {
-        try {
-          if (await this.ceramic.ipfs.isOnline()) {
-            res.status(200).send('Alive!')
-            return
-          }
-        } catch (e) {
-          this.diagnosticsLogger.err(`Error checking IPFS status: ${e}`)
+      try {
+        if (await this.ceramic.ipfs.isOnline()) {
+          res.status(200).send('Alive!')
+          return
         }
+      } catch (e) {
+        this.diagnosticsLogger.err(`Error checking IPFS status: ${e}`)
+      }
     }
     res.status(503).send('IPFS unreachable')
   }
@@ -324,9 +324,9 @@ export class CeramicDaemon {
     upconvertLegacySyncOption(docOpts)
     const type = StreamType.codeByName(doctype)
     const doc = await this.ceramic.createStreamFromGenesis(
-        type,
-        StreamUtils.deserializeCommit(genesis),
-        docOpts
+      type,
+      StreamUtils.deserializeCommit(genesis),
+      docOpts
     )
     res.json({
       streamId: doc.id.toString(),
@@ -342,9 +342,9 @@ export class CeramicDaemon {
   async createStreamFromGenesis(req: Request, res: Response): Promise<void> {
     const { type, genesis, opts } = req.body
     const stream = await this.ceramic.createStreamFromGenesis(
-        type,
-        StreamUtils.deserializeCommit(genesis),
-        opts
+      type,
+      StreamUtils.deserializeCommit(genesis),
+      opts
     )
     res.json({ streamId: stream.id.toString(), state: StreamUtils.serializeState(stream.state) })
   }
@@ -374,9 +374,9 @@ export class CeramicDaemon {
     const type = StreamType.codeByName(doctype)
     const readOnlyDocOpts = { ...docOpts, anchor: false, publish: false }
     const doc = await this.ceramic.createStreamFromGenesis(
-        type,
-        StreamUtils.deserializeCommit(genesis),
-        readOnlyDocOpts
+      type,
+      StreamUtils.deserializeCommit(genesis),
+      readOnlyDocOpts
     )
     res.json({
       streamId: doc.id.toString(),
@@ -396,9 +396,9 @@ export class CeramicDaemon {
     const { type, genesis, opts } = req.body
     const readOnlyOpts = { ...opts, anchor: false, publish: false }
     const stream = await this.ceramic.createStreamFromGenesis(
-        type,
-        StreamUtils.deserializeCommit(genesis),
-        readOnlyOpts
+      type,
+      StreamUtils.deserializeCommit(genesis),
+      readOnlyOpts
     )
     res.json({ streamId: stream.id.toString(), state: StreamUtils.serializeState(stream.state) })
   }
@@ -462,9 +462,9 @@ export class CeramicDaemon {
     }
 
     const stream = await this.ceramic.applyCommit(
-        streamId,
-        StreamUtils.deserializeCommit(commit),
-        opts
+      streamId,
+      StreamUtils.deserializeCommit(commit),
+      opts
     )
     res.json({
       streamId: stream.id.toString(),
