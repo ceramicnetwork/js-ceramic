@@ -60,7 +60,7 @@ jobs:
           git fetch --all
       -
         name: Merge down from `main` -> `rc` -> `develop`
-        if: ${{ steps.set-env.outputs.main == 'true' && steps.set-env.outputs.hotfix != 'true' }}
+        if: ${{ steps.set-env.outputs.main == 'true' }}
         run: |
           git checkout -B release-candidate refs/remotes/origin/release-candidate
           git merge main
@@ -87,10 +87,9 @@ jobs:
         run: |
           npm config set //registry.npmjs.org/:_authToken $NODE_AUTH_TOKEN
           npm run publish:latest $PUBLISH_ARGS
-          git push
       -
         name: Update and push code to `release-candidate` and `develop`
-        if: ${{ steps.set-env.outputs.main == 'true' && steps.set-env.outputs.hotfix != 'true' }}
+        if: ${{ steps.set-env.outputs.main == 'true' }}
         run: |
           git checkout release-candidate
           git merge main
@@ -159,7 +158,7 @@ jobs:
           git fetch --all
       -
         name: Merge down from `rc` -> `develop`
-        if: ${{ steps.set-env.outputs.rc == 'true' && steps.set-env.outputs.hotfix != 'true' }}
+        if: ${{ steps.set-env.outputs.rc == 'true' }}
         run: |
           git checkout -B develop refs/remotes/origin/develop
           git merge release-candidate
@@ -184,10 +183,9 @@ jobs:
         run: |
           npm config set //registry.npmjs.org/:_authToken $NODE_AUTH_TOKEN
           npm run publish:release-candidate $PUBLISH_ARGS
-          git push
       -
         name: Update and push code to `develop`
-        if: ${{ steps.set-env.outputs.rc == 'true' && steps.set-env.outputs.hotfix != 'true' }}
+        if: ${{ steps.set-env.outputs.rc == 'true' }}
         run: |
           git checkout develop
           git merge release-candidate
