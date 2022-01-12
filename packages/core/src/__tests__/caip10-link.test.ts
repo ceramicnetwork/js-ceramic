@@ -7,6 +7,9 @@ import { Ceramic, CeramicConfig } from '../ceramic.js'
 import { createIPFS } from './ipfs-util.js'
 import { anchorUpdate } from '../state-management/__tests__/anchor-update.js'
 
+const DID_USED = 'did:3:bafysdfwefwe'
+const LEGACY_ACCOUNT = '0x8fe2c4516e920425e177658aaac451ca0463ed69@eip155:1337'
+const ACCOUNT = 'eip155:1337:0x8fe2c4516e920425e177658aaac451ca0463ed69'
 const PROOF = {
   version: 2,
   type: 'ethereum-eoa',
@@ -20,6 +23,10 @@ const PROOF = {
   account: 'eip155:1337:0x8fe2c4516e920425e177658aaac451ca0463ed69',
   timestamp: 1641461695,
 }
+const LEGACY_PROOF = {
+  ...PROOF,
+  account: LEGACY_ACCOUNT
+}
 const EMPTY_DID_PROOF = {
   version: 2,
   type: 'ethereum-eoa',
@@ -29,8 +36,7 @@ const EMPTY_DID_PROOF = {
   account: 'eip155:1337:0x8fe2c4516e920425e177658aaac451ca0463ed69',
   timestamp: 1641462800,
 }
-const DID_USED = 'did:3:bafysdfwefwe'
-const BLOCKCHAIN_ACCOUNT = '0x8fe2c4516e920425e177658aaac451ca0463ed69@eip155:1337'
+
 
 describe('Ceramic API', () => {
   jest.setTimeout(60000)
@@ -69,10 +75,18 @@ describe('Ceramic API', () => {
     })
 
     it('Create from valid account id', async () => {
-      const account = '0x0544DcF4fcE959C6C4F3b7530190cB5E1BD67Cb8@eip155:1'
-      const link = await Caip10Link.fromAccount(ceramic, account)
+      const link = await Caip10Link.fromAccount(ceramic, ACCOUNT)
       expect(link.metadata.controllers).toHaveLength(1)
-      expect(link.metadata.controllers[0]).toEqual(account.toLowerCase())
+      expect(link.metadata.controllers[0]).toEqual(LEGACY_ACCOUNT.toLowerCase())
+      expect(link.did).toBeNull()
+      expect(link.state.log).toHaveLength(1)
+      expect(link.state).toMatchSnapshot()
+    })
+
+    it('Create from legacy account id', async () => {
+      const link = await Caip10Link.fromAccount(ceramic, LEGACY_ACCOUNT)
+      expect(link.metadata.controllers).toHaveLength(1)
+      expect(link.metadata.controllers[0]).toEqual(LEGACY_ACCOUNT.toLowerCase())
       expect(link.did).toBeNull()
       expect(link.state.log).toHaveLength(1)
       expect(link.state).toMatchSnapshot()
@@ -96,7 +110,19 @@ describe('Ceramic API', () => {
     it('Create and link DID', async () => {
       authProvider.createLink.mockReturnValueOnce(PROOF)
 
-      const link = await Caip10Link.fromAccount(ceramic, BLOCKCHAIN_ACCOUNT)
+      const link = await Caip10Link.fromAccount(ceramic, LEGACY_ACCOUNT)
+      await link.setDid(DID_USED, authProvider, { anchor: false })
+
+      expect(link.did).toEqual(DID_USED)
+      expect(link.state.log).toHaveLength(2)
+      expect(authProvider.createLink).toHaveBeenCalledTimes(1)
+      expect(link.state).toMatchSnapshot()
+    })
+
+    it('Create and link DID with legacy CAIP proof', async () => {
+      authProvider.createLink.mockReturnValueOnce(LEGACY_PROOF)
+
+      const link = await Caip10Link.fromAccount(ceramic, ACCOUNT)
       await link.setDid(DID_USED, authProvider, { anchor: false })
 
       expect(link.did).toEqual(DID_USED)
@@ -108,10 +134,10 @@ describe('Ceramic API', () => {
     it('Created with same address loads same doc', async () => {
       authProvider.createLink.mockReturnValueOnce(PROOF)
 
-      const link1 = await Caip10Link.fromAccount(ceramic, BLOCKCHAIN_ACCOUNT)
+      const link1 = await Caip10Link.fromAccount(ceramic, LEGACY_ACCOUNT)
       await link1.setDid(DID_USED, authProvider, { anchor: false })
 
-      const link2 = await Caip10Link.fromAccount(ceramic, BLOCKCHAIN_ACCOUNT)
+      const link2 = await Caip10Link.fromAccount(ceramic, LEGACY_ACCOUNT)
       expect(link1.id).toEqual(link2.id)
       expect(link1.did).toEqual(DID_USED)
       expect(link2.did).toEqual(link1.did)
@@ -123,7 +149,7 @@ describe('Ceramic API', () => {
     it('Load works', async () => {
       authProvider.createLink.mockReturnValueOnce(PROOF)
 
-      const link1 = await Caip10Link.fromAccount(ceramic, BLOCKCHAIN_ACCOUNT)
+      const link1 = await Caip10Link.fromAccount(ceramic, LEGACY_ACCOUNT)
       await link1.setDid(DID_USED, authProvider, { anchor: false })
 
       const link2 = await Caip10Link.load(ceramic, link1.id)
@@ -138,7 +164,7 @@ describe('Ceramic API', () => {
     it('Anchoring works', async () => {
       authProvider.createLink.mockReturnValueOnce(PROOF)
 
-      const link = await Caip10Link.fromAccount(ceramic, BLOCKCHAIN_ACCOUNT, { anchor: true })
+      const link = await Caip10Link.fromAccount(ceramic, LEGACY_ACCOUNT, { anchor: true })
       expect(link.state.anchorStatus).toEqual(AnchorStatus.PENDING)
       await anchorUpdate(ceramic, link)
       expect(link.state.anchorStatus).toEqual(AnchorStatus.ANCHORED)
@@ -154,8 +180,7 @@ describe('Ceramic API', () => {
     })
 
     it('Throws when linking to invalid DID ', async () => {
-      const account = '0x0544DcF4fcE959C6C4F3b7530190cB5E1BD67Cb7@eip155:1'
-      const link = await Caip10Link.fromAccount(ceramic, account)
+      const link = await Caip10Link.fromAccount(ceramic, ACCOUNT)
 
       const invalidDids = [
         'did:incomplete',
@@ -173,7 +198,7 @@ describe('Ceramic API', () => {
     })
 
     it('Clear did works', async () => {
-      const link = await Caip10Link.fromAccount(ceramic, BLOCKCHAIN_ACCOUNT)
+      const link = await Caip10Link.fromAccount(ceramic, LEGACY_ACCOUNT)
       await expect(link.did).toBeNull()
 
       authProvider.createLink.mockReturnValueOnce(PROOF)
