@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.2.12-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/pinning-ipfs-backend@1.2.11...@ceramicnetwork/pinning-ipfs-backend@1.2.12-rc.0) (2022-01-12)
+
+**Note:** Version bump only for package @ceramicnetwork/pinning-ipfs-backend
+
+
+
+
+
 ## [1.2.11](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/pinning-ipfs-backend@1.2.10...@ceramicnetwork/pinning-ipfs-backend@1.2.11) (2022-01-12)
 
 **Note:** Version bump only for package @ceramicnetwork/pinning-ipfs-backend
