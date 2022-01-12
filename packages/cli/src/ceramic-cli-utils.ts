@@ -594,7 +594,7 @@ export class CeramicCliUtils {
 
 const depreciationNotice = () => {
   console.log(
-    `\n\x1b[31;1;mThis command has been depreciated.
+    `\n\x1b[31;1;mThis command has been deprecated.
 \x1b[0mPlease use the upgraded Glaze CLI instead. 
 Please test with the new CLI before reporting any problems. 
 \x1b[32;1;mnpm i -g @glazed/cli`
