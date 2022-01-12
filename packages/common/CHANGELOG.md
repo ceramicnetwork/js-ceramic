@@ -3,12 +3,26 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-## [1.10.2-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@1.10.1...@ceramicnetwork/common@1.10.2-rc.0) (2022-01-06)
+## [1.10.4](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@1.10.3...@ceramicnetwork/common@1.10.4) (2022-01-09)
+
+**Note:** Version bump only for package @ceramicnetwork/common
 
 
-### Bug Fixes
 
-* **core:** Fix ipfs retries when using ipfs http client ([#1949](https://github.com/ceramicnetwork/js-ceramic/issues/1949)) ([953df1e](https://github.com/ceramicnetwork/js-ceramic/commit/953df1e45a16285d234a9db5c0fd9e023a47e998))
+
+
+## [1.10.3](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@1.10.2...@ceramicnetwork/common@1.10.3) (2022-01-09)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
+
+
+
+
+## [1.10.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@1.10.1...@ceramicnetwork/common@1.10.2) (2022-01-09)
+
+**Note:** Version bump only for package @ceramicnetwork/common
+
 
 
 
