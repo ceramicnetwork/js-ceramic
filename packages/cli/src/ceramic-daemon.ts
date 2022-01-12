@@ -209,8 +209,6 @@ export class CeramicDaemon {
       opts.ipfs?.host
     )
 
-    console.log('ipfs', ipfs)
-
     const [modules, params] = Ceramic._processConfig(ipfs, ceramicConfig)
     modules.loggerProvider
       .getDiagnosticsLogger()
