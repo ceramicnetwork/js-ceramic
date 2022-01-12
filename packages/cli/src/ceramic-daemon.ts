@@ -18,7 +18,7 @@ import * as KeyDidResolver from 'key-did-resolver'
 import * as PkhDidResolver from 'pkh-did-resolver'
 import EthrDidResolver from 'ethr-did-resolver'
 import * as NftDidResolver from 'nft-did-resolver'
-// import SafeDidResolver from 'safe-did-resolver'
+import * as SafeDidResolver from 'safe-did-resolver'
 
 import { DID } from 'dids'
 import cors from 'cors'
@@ -128,10 +128,10 @@ function makeResolvers(
       ceramic: ceramic,
       ...opts.didResolvers?.nftDidResolver,
     }),
-    // ...SafeDidResolver.getResolver({
-    //   ceramic: ceramic,
-    //   ...opts.didResolvers?.safeDidResolver,
-    // }),
+    ...SafeDidResolver.getResolver({
+      ceramic: ceramic,
+      ...opts.didResolvers?.safeDidResolver,
+    }),
   }
   if (
     opts.didResolvers?.ethrDidResolver?.networks &&

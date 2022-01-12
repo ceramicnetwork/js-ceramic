@@ -65,7 +65,7 @@
     "pkh-did-resolver": "^1.0.0-alpha.0",
     "reflect-metadata": "^0.1.13",
     "s3leveldown": "^2.2.2",
-    "safe-did-resolver": "^0.0.5",
+    "safe-did-resolver": "^1.0.0-alpha.0",
     "stream-to-array": "^2.3.0",
     "typedjson": "^1.8.0",
     "uint8arrays": "^3.0.0"
