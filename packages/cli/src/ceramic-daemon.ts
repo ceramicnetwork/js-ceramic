@@ -31,6 +31,7 @@ const packageJson = require('../package.json')
 
 const DEFAULT_HOSTNAME = '0.0.0.0'
 const DEFAULT_PORT = 7007
+const HEALTHCHECK_RETRIES = 3
 
 interface MultiQueryWithDocId extends MultiQuery {
   docId?: string
@@ -295,8 +296,22 @@ export class CeramicDaemon {
     }
   }
 
-  healthcheck(req: Request, res: Response): void {
-    res.status(200).send('Alive!')
+  /**
+   * Checks for availability of subsystems that Ceramic depends on (e.g. IPFS)
+   * @dev Only checking for IPFS right now but checks for other subsystems can go here in the future
+   */
+  async healthcheck(req: Request, res: Response): Promise<void> {
+    for (let i = 0; i < HEALTHCHECK_RETRIES; i++) {
+      try {
+        if (await this.ceramic.ipfs.isOnline()) {
+          res.status(200).send('Alive!')
+          return
+        }
+      } catch (e) {
+        this.diagnosticsLogger.err(`Error checking IPFS status: ${e}`)
+      }
+    }
+    res.status(503).send('IPFS unreachable')
   }
 
   /**
