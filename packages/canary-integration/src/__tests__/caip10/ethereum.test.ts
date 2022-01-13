@@ -54,7 +54,7 @@ const send = (provider: any, data: any): Promise<any> =>
 
 const provider: any = ganache.provider(GANACHE_CONF)
 
-// TODO ESM Mocking
+// TODO(NET-1107) ESM Mocking
 // const lazyProvider = () => provider // Required for the Jest mock below
 // jest.mock('@ethersproject/providers', () => {
 //   const originalModule = jest.requireActual('@ethersproject/providers')
@@ -133,7 +133,7 @@ describe('externally-owned account', () => {
 })
 
 describe('contract account', () => {
-  // TODO ESM Mocking
+  // TODO(NET-1107) ESM Mocking
   test.skip('happy scenario', async () => {
     const contract = new Contract(
       contractAddress,
@@ -151,7 +151,7 @@ describe('contract account', () => {
     await happyPath(ceramic, authProvider)
   }, 120000)
 
-  // TODO ESM Mocking
+  // TODO(NET-1107) ESM Mocking
   test.skip('wrong proof', async () => {
     const contract = new Contract(
       contractAddress,

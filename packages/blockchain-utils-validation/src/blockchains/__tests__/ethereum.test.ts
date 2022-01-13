@@ -54,7 +54,7 @@ const send = (provider: any, data: any): Promise<any> =>
   )
 const provider: any = ganache.provider(GANACHE_CONF)
 
-// TODO ESM Mocking
+// TODO(NET-1107) ESM Mocking
 // const lazyProvider = () => provider // Required for the Jest mock below
 // jest.mock('@ethersproject/providers', () => {
 //   const originalModule = jest.requireActual('@ethersproject/providers')
@@ -137,7 +137,7 @@ test('validate v0 and v1 proofs', async () => {
   expect(await ethereum.validateLink(proofs.v1.invalid as unknown as LinkProof)).toEqual(null)
 })
 
-// TODO ESM Mocking
+// TODO(NET-1107) ESM Mocking
 test.skip('invalid erc1271 proof should return null', async () => {
   // the contract wallet we deployed should just return false by default
   // when trying to validate signature
@@ -149,7 +149,7 @@ test.skip('invalid erc1271 proof should return null', async () => {
   await expect(ethereum.validateLink(erc1271Proof)).rejects.toThrow()
 })
 
-// TODO ESM Mocking
+// TODO(NET-1107) ESM Mocking
 test.skip('validateLink: valid erc1271 proof should return proof', async () => {
   // tell the contract wallet contract to return valid signature instead
   const contract = new Contract(
