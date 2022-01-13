@@ -42,7 +42,7 @@
     "@stablelib/sha256": "^1.0.1",
     "@types/lodash.clonedeep": "^4.5.6",
     "did-resolver": "^3.1.5",
-    "dids": "^3.0.0-alpha.1",
+    "dids": "^3.0.0-alpha.4",
     "key-did-resolver": "^2.0.0-alpha.0",
     "multiformats": "^9.5.4"
   },

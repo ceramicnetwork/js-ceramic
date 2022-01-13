@@ -42,7 +42,7 @@
   },
   "devDependencies": {
     "@types/node": "^17.0.5",
-    "dids": "^3.0.0-alpha.1",
+    "dids": "^3.0.0-alpha.4",
     "multiformats": "^9.5.4"
   },
   "gitHead": "34eeee25597b0a60def72906c26d3afd6230aaf1"

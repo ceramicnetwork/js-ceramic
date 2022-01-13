@@ -50,7 +50,7 @@
     "ajv": "^8.8.2",
     "ajv-formats": "^2.1.1",
     "await-semaphore": "^0.1.3",
-    "dids": "^3.0.0-alpha.1",
+    "dids": "^3.0.0-alpha.4",
     "it-first": "^1.0.7",
     "level-ts": "^2.1.0",
     "lodash.clonedeep": "^4.5.0",
