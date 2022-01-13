@@ -71,7 +71,6 @@
     "uint8arrays": "^3.0.0"
   },
   "devDependencies": {
-    "@ceramicnetwork/canary-integration": "^2.0.0-alpha.0",
     "@ceramicnetwork/stream-tile-handler": "^2.0.0-alpha.0",
     "@stablelib/sha256": "^1.0.1",
     "@types/express": "^4.17.13",
