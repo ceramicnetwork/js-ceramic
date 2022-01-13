@@ -1,5 +1,6 @@
 import os from 'os'
 import path from 'path'
+import pc from 'picocolors'
 import { randomBytes } from '@stablelib/random'
 import * as u8a from 'uint8arrays'
 
@@ -453,6 +454,7 @@ export class CeramicCliUtils {
     const cliConfig = await this._loadCliConfig()
 
     console.log(JSON.stringify(cliConfig, null, 2))
+    depreciationNotice()
   }
 
   /**
@@ -475,6 +477,7 @@ export class CeramicCliUtils {
 
     console.log(`Ceramic CLI configuration ${variable} set to ${value}`)
     console.log(JSON.stringify(cliConfig))
+    depreciationNotice()
   }
 
   /**
@@ -489,6 +492,7 @@ export class CeramicCliUtils {
 
     console.log(`Ceramic CLI configuration ${variable} unset`)
     console.log(JSON.stringify(cliConfig, null, 2))
+    depreciationNotice()
   }
 
   /**
@@ -594,9 +598,9 @@ export class CeramicCliUtils {
 
 const depreciationNotice = () => {
   console.log(
-    `\n\x1b[31;1;mThis command has been deprecated.
-\x1b[0mPlease use the upgraded Glaze CLI instead. 
+    `${pc.red(pc.bold('This command has been deprecated.'))}
+Please use the upgraded Glaze CLI instead. 
 Please test with the new CLI before reporting any problems. 
-\x1b[32;1;mnpm i -g @glazed/cli`
+${pc.green('npm i -g @glazed/cli')}`
   )
 }
