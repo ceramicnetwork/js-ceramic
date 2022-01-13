@@ -108,8 +108,8 @@ beforeAll(async () => {
 }, 120000)
 
 afterAll(async () => {
-  await ipfs?.stop()
   await ceramic.close()
+  await ipfs?.stop()
 }, 120000)
 
 describe('externally-owned account', () => {
