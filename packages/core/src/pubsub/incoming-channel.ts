@@ -26,7 +26,8 @@ export class PubsubIncoming extends Observable<IPFSPubsubMessage> {
     readonly ipfs: IpfsApi,
     readonly topic: string,
     readonly pubsubLogger: ServiceLogger,
-    readonly tasks: TaskQueue = new TaskQueue()
+    readonly logger: DiagnosticsLogger,
+    readonly tasks: TaskQueue
   ) {
     super((subscriber) => {
       const onMessage = (message: IPFSPubsubMessage) => subscriber.next(message)
@@ -48,8 +49,8 @@ export class PubsubIncoming extends Observable<IPFSPubsubMessage> {
       return () => {
         this.tasks.clear()
         this.tasks.add(async () => {
-          await ipfs.pubsub?.unsubscribe(topic, onMessage).catch(() => {
-            // Do Nothing
+          await ipfs.pubsub?.unsubscribe(topic, onMessage).catch((err) => {
+            this.logger.warn(err)
           })
         })
       }
@@ -71,7 +72,7 @@ export class IncomingChannel extends Observable<IPFSPubsubMessage> {
     readonly tasks: TaskQueue = new TaskQueue()
   ) {
     super((subscriber) => {
-      new PubsubIncoming(ipfs, topic, pubsubLogger, this.tasks)
+      new PubsubIncoming(ipfs, topic, pubsubLogger, logger, this.tasks)
         .pipe(
           retryWhen((errors) =>
             errors.pipe(

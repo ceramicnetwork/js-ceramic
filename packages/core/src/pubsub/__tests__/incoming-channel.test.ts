@@ -7,6 +7,7 @@ import { IncomingChannel, filterExternal, PubsubIncoming } from '../incoming-cha
 import { delay } from '../../__tests__/delay.js'
 import { asIpfsMessage } from './as-ipfs-message.js'
 import { MsgType } from '../pubsub-message.js'
+import { TaskQueue } from '../task-queue.js'
 
 const FAKE_STREAM_ID = StreamID.fromString(
   'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
@@ -156,7 +157,13 @@ describe('PubsubIncoming', () => {
         unsubscribe: jest.fn(async () => void {}),
       },
     }
-    const incoming$ = new PubsubIncoming(fauxIpfs as unknown as IpfsApi, TOPIC, pubsubLogger)
+    const incoming$ = new PubsubIncoming(
+      fauxIpfs as unknown as IpfsApi,
+      TOPIC,
+      pubsubLogger,
+      diagnosticsLogger,
+      new TaskQueue()
+    )
     const subscription = incoming$.subscribe()
     await delay(200) // Wait till rxjs machinery is done
     expect(fauxIpfs.pubsub.subscribe).toBeCalledTimes(1)
@@ -178,7 +185,13 @@ describe('PubsubIncoming', () => {
         unsubscribe: jest.fn(async () => void {}),
       },
     }
-    const incoming$ = new PubsubIncoming(fauxIpfs as unknown as IpfsApi, TOPIC, pubsubLogger)
+    const incoming$ = new PubsubIncoming(
+      fauxIpfs as unknown as IpfsApi,
+      TOPIC,
+      pubsubLogger,
+      diagnosticsLogger,
+      new TaskQueue()
+    )
     await expect(firstValueFrom(incoming$)).rejects.toEqual(error)
   })
 
@@ -191,7 +204,13 @@ describe('PubsubIncoming', () => {
         unsubscribe: jest.fn(async () => void {}),
       },
     }
-    const incoming$ = new PubsubIncoming(fauxIpfs as unknown as IpfsApi, TOPIC, pubsubLogger)
+    const incoming$ = new PubsubIncoming(
+      fauxIpfs as unknown as IpfsApi,
+      TOPIC,
+      pubsubLogger,
+      diagnosticsLogger,
+      new TaskQueue()
+    )
     const lastValue = lastValueFrom(incoming$)
     await delay(200) // Wait till rxjs machinery is done
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
