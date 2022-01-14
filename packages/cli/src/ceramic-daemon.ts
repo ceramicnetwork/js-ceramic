@@ -173,10 +173,12 @@ export class CeramicDaemon {
     this.app = addAsync(express())
     this.app.set('trust proxy', true)
     this.app.use(express.json({ limit: '1mb' }))
-    this.app.use(cors({
-      origin: opts.httpApi?.corsAllowedOrigins,
-      maxAge: 7200 // 2 hours
-    }))
+    this.app.use(
+      cors({
+        origin: opts.httpApi?.corsAllowedOrigins,
+        maxAge: 7200, // 2 hours
+      })
+    )
 
     this.app.use(logRequests(ceramic.loggerProvider))
 
@@ -325,17 +327,12 @@ export class CeramicDaemon {
    */
   async createStreamFromGenesis(req: Request, res: Response): Promise<void> {
     const { type, genesis, opts } = req.body
-    try {
-      const stream = await this.ceramic.createStreamFromGenesis(
-        type,
-        StreamUtils.deserializeCommit(genesis),
-        opts
-      )
-      res.json({ streamId: stream.id.toString(), state: StreamUtils.serializeState(stream.state) })
-    } catch (e) {
-      console.error(e)
-      throw e
-    }
+    const stream = await this.ceramic.createStreamFromGenesis(
+      type,
+      StreamUtils.deserializeCommit(genesis),
+      opts
+    )
+    res.json({ streamId: stream.id.toString(), state: StreamUtils.serializeState(stream.state) })
   }
 
   /**

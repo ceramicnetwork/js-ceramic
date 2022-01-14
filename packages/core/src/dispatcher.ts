@@ -182,7 +182,6 @@ export class Dispatcher {
       try {
         dagResult = await this._ipfs.dag.get(asCid, { timeout: IPFS_GET_TIMEOUT, path })
       } catch (err) {
-        console.log('_getFromIpfs:error', err)
         if (err.code == 'ERR_TIMEOUT') {
           console.warn(
             `Timeout error while loading CID ${asCid.toString()} from IPFS. ${retries} retries remain`
