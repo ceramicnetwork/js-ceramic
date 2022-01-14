@@ -396,6 +396,7 @@ describe('Ceramic API', () => {
       expect(Object.keys(streams).length).toEqual(6)
     })
 
+    // TODO(NET-1117) It hangs.
     it.skip('can load streams for array of multiqueries even if streamid or path throws error', async () => {
       const queries = [
         {
