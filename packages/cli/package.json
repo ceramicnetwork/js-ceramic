@@ -39,7 +39,7 @@
     "@ceramicnetwork/core": "^2.0.0-alpha.0",
     "@ceramicnetwork/http-client": "^2.0.0-alpha.0",
     "@ceramicnetwork/ipfs-daemon": "^2.0.0-alpha.0",
-    "@ceramicnetwork/logger": "^1.0.4",
+    "@ceramicnetwork/logger": "^2.0.0-alpha.0",
     "@ceramicnetwork/stream-tile": "^2.0.0-alpha.0",
     "@ceramicnetwork/streamid": "^2.0.0-alpha.0",
     "@stablelib/random": "^1.0.1",
