@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/stream-tile-handler",
-  "version": "2.0.0-alpha.0",
+  "version": "2.0.0-alpha.1",
   "description": "Ceramic Tile Document stream handler",
   "keywords": [
     "ceramic",
@@ -31,19 +31,19 @@
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/common": "^2.0.0-alpha.0",
-    "@ceramicnetwork/stream-tile": "^2.0.0-alpha.0",
+    "@ceramicnetwork/common": "^2.0.0-alpha.1",
+    "@ceramicnetwork/stream-tile": "^2.0.0-alpha.1",
     "fast-json-patch": "^3.1.0",
     "lodash.clonedeep": "^4.5.0"
   },
   "devDependencies": {
-    "@ceramicnetwork/3id-did-resolver": "^2.0.0-alpha.0",
+    "@ceramicnetwork/3id-did-resolver": "^2.0.0-alpha.1",
     "@ipld/dag-cbor": "^7.0.0",
     "@stablelib/sha256": "^1.0.1",
     "@types/lodash.clonedeep": "^4.5.6",
     "did-resolver": "^3.1.5",
     "dids": "^3.0.0-alpha.4",
-    "key-did-resolver": "^2.0.0-alpha.0",
+    "key-did-resolver": "^2.0.0-alpha.1",
     "multiformats": "^9.5.4"
   },
   "gitHead": "4f42c6ac204ad25e66efda4e24aed12c339b3c98"

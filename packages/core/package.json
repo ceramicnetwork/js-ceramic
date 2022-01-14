@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/core",
-  "version": "2.0.0-alpha.0",
+  "version": "2.0.0-alpha.1",
   "description": "Typescript implementation of the Ceramic protocol",
   "keywords": [
     "Ceramic",
@@ -34,15 +34,15 @@
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/common": "^2.0.0-alpha.0",
-    "@ceramicnetwork/ipfs-topology": "^2.0.0-alpha.0",
-    "@ceramicnetwork/pinning-aggregation": "^2.0.0-alpha.0",
-    "@ceramicnetwork/pinning-ipfs-backend": "^2.0.0-alpha.0",
-    "@ceramicnetwork/stream-caip10-link": "^2.0.0-alpha.0",
-    "@ceramicnetwork/stream-caip10-link-handler": "^2.0.0-alpha.0",
-    "@ceramicnetwork/stream-tile": "^2.0.0-alpha.0",
-    "@ceramicnetwork/stream-tile-handler": "^2.0.0-alpha.0",
-    "@ceramicnetwork/streamid": "^2.0.0-alpha.0",
+    "@ceramicnetwork/common": "^2.0.0-alpha.1",
+    "@ceramicnetwork/ipfs-topology": "^2.0.0-alpha.1",
+    "@ceramicnetwork/pinning-aggregation": "^2.0.0-alpha.1",
+    "@ceramicnetwork/pinning-ipfs-backend": "^2.0.0-alpha.1",
+    "@ceramicnetwork/stream-caip10-link": "^2.0.0-alpha.1",
+    "@ceramicnetwork/stream-caip10-link-handler": "^2.0.0-alpha.1",
+    "@ceramicnetwork/stream-tile": "^2.0.0-alpha.1",
+    "@ceramicnetwork/stream-tile-handler": "^2.0.0-alpha.1",
+    "@ceramicnetwork/streamid": "^2.0.0-alpha.1",
     "@ethersproject/providers": "^5.5.1",
     "@ipld/dag-cbor": "^7.0.0",
     "@stablelib/random": "^1.0.1",
@@ -61,8 +61,8 @@
     "uint8arrays": "^3.0.0"
   },
   "devDependencies": {
-    "@ceramicnetwork/3id-did-resolver": "^2.0.0-alpha.0",
-    "@ceramicnetwork/blockchain-utils-validation": "^2.0.0-alpha.0",
+    "@ceramicnetwork/3id-did-resolver": "^2.0.0-alpha.1",
+    "@ceramicnetwork/blockchain-utils-validation": "^2.0.0-alpha.1",
     "@types/node": "^17.0.5",
     "dag-jose": "^1.0.0",
     "did-resolver": "^3.1.5",
@@ -73,7 +73,7 @@
     "ipfsd-ctl": "^10.0.5",
     "jest-environment-node": "^27.4.4",
     "key-did-provider-ed25519": "^1.1.0",
-    "key-did-resolver": "^2.0.0-alpha.0",
+    "key-did-resolver": "^2.0.0-alpha.1",
     "merge-options": "^3.0.4",
     "mockdate": "^3.0.5",
     "tmp-promise": "^3.0.3"

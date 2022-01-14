@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/common",
-  "version": "2.0.0-alpha.0",
+  "version": "2.0.0-alpha.1",
   "description": "Ceramic common types and utilities",
   "keywords": [
     "ceramic",
@@ -36,7 +36,7 @@
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/streamid": "^2.0.0-alpha.0",
+    "@ceramicnetwork/streamid": "^2.0.0-alpha.1",
     "caip": "~1.0.0",
     "cross-fetch": "^3.1.4",
     "flat": "^5.0.2",
