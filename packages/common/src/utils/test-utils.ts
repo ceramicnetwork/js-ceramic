@@ -1,7 +1,7 @@
-import type { StreamState, Stream } from '../stream'
+import type { StreamState, Stream } from '../stream.js'
 import { take, filter } from 'rxjs/operators'
 import { BehaviorSubject } from 'rxjs'
-import { RunningStateLike } from '../running-state-like'
+import { RunningStateLike } from '../running-state-like.js'
 import { StreamID } from '@ceramicnetwork/streamid'
 
 class FakeRunningState extends BehaviorSubject<StreamState> implements RunningStateLike {

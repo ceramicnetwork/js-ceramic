@@ -1,4 +1,4 @@
-import { StreamID } from '../stream-id'
+import { StreamID } from '../stream-id.js'
 import { CID } from 'multiformats/cid'
 import * as util from 'util'
 import { base36 } from 'multiformats/bases/base36'
@@ -167,33 +167,6 @@ test('to primitive', () => {
   expect(`${streamid}`).toEqual(streamid.toString())
   expect(+streamid).toBeNaN()
   expect(streamid + '').toEqual(streamid.toString())
-})
-
-describe('#atCommit', () => {
-  const BASE_CID = CID.parse(CID_STRING)
-  const COMMIT_CID_STRING = 'bagjqcgzaday6dzalvmy5ady2m5a5legq5zrbsnlxfc2bfxej532ds7htpova'
-  const COMMIT_CID = CID.parse(COMMIT_CID_STRING)
-
-  const streamId = new StreamID('tile', BASE_CID)
-
-  test('to number 0', () => {
-    const commitId = streamId.atCommit(0)
-    expect(commitId.commit).toEqual(BASE_CID)
-  })
-  test('to number 1', () => {
-    expect(() => streamId.atCommit(1)).toThrowErrorMatchingSnapshot()
-  })
-  test('to commit CID', () => {
-    const commitId = streamId.atCommit(COMMIT_CID)
-    expect(commitId.commit).toEqual(COMMIT_CID)
-  })
-  test('to commit CID as string', () => {
-    const commitId = streamId.atCommit(COMMIT_CID_STRING)
-    expect(commitId.commit).toEqual(COMMIT_CID)
-  })
-  test('to garbage string', () => {
-    expect(() => streamId.atCommit('garbage')).toThrow()
-  })
 })
 
 test('instanceof', () => {

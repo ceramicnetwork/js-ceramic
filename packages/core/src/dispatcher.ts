@@ -7,21 +7,22 @@ import {
   StreamUtils,
   UnreachableCaseError,
 } from '@ceramicnetwork/common'
-import StreamID from '@ceramicnetwork/streamid'
-import { Repository } from './state-management/repository'
+import { StreamID } from '@ceramicnetwork/streamid'
+import { Repository } from './state-management/repository.js'
 import {
   MsgType,
   PubsubMessage,
   QueryMessage,
   ResponseMessage,
   UpdateMessage,
-} from './pubsub/pubsub-message'
-import { Pubsub } from './pubsub/pubsub'
+} from './pubsub/pubsub-message.js'
+import { Pubsub } from './pubsub/pubsub.js'
 import { Subscription } from 'rxjs'
-import { MessageBus } from './pubsub/message-bus'
-import { LRUMap } from 'lru_map'
-import { PubsubKeepalive } from './pubsub/pubsub-keepalive'
-import { PubsubRateLimit } from './pubsub/pubsub-ratelimit'
+import { MessageBus } from './pubsub/message-bus.js'
+import lru from 'lru_map'
+import { PubsubKeepalive } from './pubsub/pubsub-keepalive.js'
+import { PubsubRateLimit } from './pubsub/pubsub-ratelimit.js'
+import { TaskQueue } from './pubsub/task-queue.js'
 
 const IPFS_GET_RETRIES = 3
 const IPFS_GET_TIMEOUT = 30000 // 30 seconds per retry, 3 retries = 90 seconds total timeout
@@ -52,7 +53,7 @@ function messageTypeToString(type: MsgType): string {
  */
 export class Dispatcher {
   readonly messageBus: MessageBus
-  readonly dagNodeCache: LRUMap<string, any>
+  readonly dagNodeCache: lru.LRUMap<string, any>
   // Set of IDs for QUERY messages we have sent to the pub/sub topic but not yet heard a
   // corresponding RESPONSE message for. Maps the query ID to the primary StreamID we were querying for.
   constructor(
@@ -60,9 +61,17 @@ export class Dispatcher {
     private readonly topic: string,
     readonly repository: Repository,
     private readonly _logger: DiagnosticsLogger,
-    private readonly _pubsubLogger: ServiceLogger
+    private readonly _pubsubLogger: ServiceLogger,
+    readonly tasks: TaskQueue = new TaskQueue()
   ) {
-    const pubsub = new Pubsub(_ipfs, topic, IPFS_RESUBSCRIBE_INTERVAL_DELAY, _pubsubLogger, _logger)
+    const pubsub = new Pubsub(
+      _ipfs,
+      topic,
+      IPFS_RESUBSCRIBE_INTERVAL_DELAY,
+      _pubsubLogger,
+      _logger,
+      tasks
+    )
     this.messageBus = new MessageBus(
       new PubsubRateLimit(
         new PubsubKeepalive(pubsub, MAX_PUBSUB_PUBLISH_INTERVAL),
@@ -72,7 +81,7 @@ export class Dispatcher {
       )
     )
     this.messageBus.subscribe(this.handleMessage.bind(this))
-    this.dagNodeCache = new LRUMap<string, any>(IPFS_CACHE_SIZE)
+    this.dagNodeCache = new lru.LRUMap<string, any>(IPFS_CACHE_SIZE)
   }
 
   /**
@@ -86,12 +95,14 @@ export class Dispatcher {
       if (StreamUtils.isSignedCommitContainer(data)) {
         const { jws, linkedBlock } = data
         // put the JWS into the ipfs dag
-        const cid = await this._ipfs.dag.put(jws, { format: 'dag-jose', hashAlg: 'sha2-256' })
+        const cid = await this._ipfs.dag.put(jws, { storeCodec: 'dag-jose', hashAlg: 'sha2-256' })
         // put the payload into the ipfs dag
         const linkCid = jws.link
-        const format = await this._ipfs.codecs.getCodec(linkCid.code).then(f => f.name);
-        const mhtype = await this._ipfs.hashers.getHasher(linkCid.multihash.code).then(mh => mh.name)
-        await this._ipfs.block.put(linkedBlock, {format, mhtype, version: linkCid.version})
+        const format = await this._ipfs.codecs.getCodec(linkCid.code).then((f) => f.name)
+        const mhtype = await this._ipfs.hashers
+          .getHasher(linkCid.multihash.code)
+          .then((mh) => mh.name)
+        await this._ipfs.block.put(linkedBlock, { format, mhtype, version: linkCid.version })
         await this._restrictCommitSize(jws.link.toString())
         await this._restrictCommitSize(cid)
         return cid
@@ -311,6 +322,7 @@ export class Dispatcher {
    */
   async close(): Promise<void> {
     this.messageBus.unsubscribe()
+    await this.tasks.onIdle()
   }
 
   /**

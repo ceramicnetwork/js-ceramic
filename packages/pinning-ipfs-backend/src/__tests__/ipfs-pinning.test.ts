@@ -1,7 +1,7 @@
 import { create } from 'ipfs-http-client'
 import { CID } from 'multiformats/cid'
-import { IpfsPinning, NoIpfsInstanceError } from '../index'
-import { asyncIterableFromArray } from './async-iterable-from-array.util'
+import { IpfsPinning, NoIpfsInstanceError } from '../index.js'
+import { asyncIterableFromArray } from './async-iterable-from-array.util.js'
 import type { IPFS } from 'ipfs-core-types'
 
 jest.mock('ipfs-http-client')

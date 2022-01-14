@@ -5,12 +5,11 @@ import { sha256 as hasher } from 'multiformats/hashes/sha2'
 import varint from 'varint'
 import * as codec from '@ipld/dag-cbor'
 import { concat as uint8ArrayConcat } from 'uint8arrays'
-import { STREAMID_CODEC } from './constants'
-import { readCidNoThrow, readVarint } from './reading-bytes'
+import { STREAMID_CODEC } from './constants.js'
+import { readCidNoThrow, readVarint } from './reading-bytes.js'
 import { Memoize } from 'typescript-memoize'
-import { CommitID } from './commit-id'
-import { StreamRef } from './stream-ref'
-import { StreamType } from './stream-type'
+import { StreamRef } from './stream-ref.js'
+import { StreamType } from './stream-type.js'
 
 /**
  * Parse StreamID from bytes representation.
@@ -190,13 +189,6 @@ export class StreamID implements StreamRef {
   @Memoize()
   get baseID(): StreamID {
     return new StreamID(this.#type, this.#cid)
-  }
-
-  /**
-   * Construct new CommitID for the same stream, but a new `commit` CID.
-   */
-  atCommit(commit: CID | string | number): CommitID {
-    return new CommitID(this.#type, this.#cid, commit)
   }
 
   /**

@@ -1,4 +1,4 @@
-import { LinkProof } from './util'
+import { LinkProof } from './util.js'
 import { AccountId } from 'caip'
 
 /**

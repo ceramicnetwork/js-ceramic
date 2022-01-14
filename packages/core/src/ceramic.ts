@@ -1,5 +1,5 @@
-import { Dispatcher } from './dispatcher'
-import StreamID, { CommitID, StreamRef } from '@ceramicnetwork/streamid'
+import { Dispatcher } from './dispatcher.js'
+import { StreamID, CommitID, StreamRef } from '@ceramicnetwork/streamid'
 import { IpfsTopology } from '@ceramicnetwork/ipfs-topology'
 import {
   CreateOpts,
@@ -25,24 +25,24 @@ import {
 } from '@ceramicnetwork/common'
 
 import { DID } from 'dids'
-import { PinStoreFactory } from './store/pin-store-factory'
-import { PathTrie, TrieNode, promiseTimeout } from './utils'
+import { PinStoreFactory } from './store/pin-store-factory.js'
+import { PathTrie, TrieNode, promiseTimeout } from './utils.js'
 
-import EthereumAnchorService from './anchor/ethereum/ethereum-anchor-service'
-import InMemoryAnchorService from './anchor/memory/in-memory-anchor-service'
+import { EthereumAnchorService } from './anchor/ethereum/ethereum-anchor-service.js'
+import { InMemoryAnchorService } from './anchor/memory/in-memory-anchor-service.js'
 
 import { randomUint32 } from '@stablelib/random'
-import { LocalPinApi } from './local-pin-api'
-import { Repository } from './state-management/repository'
-import { HandlersMap } from './handlers-map'
+import { LocalPinApi } from './local-pin-api.js'
+import { Repository } from './state-management/repository.js'
+import { HandlersMap } from './handlers-map.js'
 import {
   FauxStateValidation,
   RealStateValidation,
   StateValidation,
-} from './state-management/state-validation'
-import { streamFromState } from './state-management/stream-from-state'
-import { ConflictResolution } from './conflict-resolution'
-import EthereumAnchorValidator from './anchor/ethereum/ethereum-anchor-validator'
+} from './state-management/state-validation.js'
+import { streamFromState } from './state-management/stream-from-state.js'
+import { ConflictResolution } from './conflict-resolution.js'
+import { EthereumAnchorValidator } from './anchor/ethereum/ethereum-anchor-validator.js'
 
 const DEFAULT_CACHE_LIMIT = 500 // number of streams stored in the cache
 const TESTING = process.env.NODE_ENV == 'test'
@@ -660,7 +660,7 @@ export class Ceramic implements CeramicApi {
         )
         return Promise.resolve()
       }
-      const streamRef = query.atTime ? streamId.atCommit(stream.tip) : streamId
+      const streamRef = query.atTime ? CommitID.make(streamId.baseID, stream.tip) : streamId
       index[streamRef.toString()] = stream
 
       const promiseList = Object.keys(node.children).map((key) => {
@@ -685,7 +685,7 @@ export class Ceramic implements CeramicApi {
   async multiQuery(queries: Array<MultiQuery>, timeout?: number): Promise<Record<string, Stream>> {
     const queryResults = await Promise.all(
       queries.map((query) => {
-        return this._loadLinkedStreams(query, timeout).catch(e => {
+        return this._loadLinkedStreams(query, timeout).catch((e) => {
           this._logger.warn(`Error during multiQuery: ${e.toString()}`)
           return {}
         })
@@ -752,5 +752,3 @@ export class Ceramic implements CeramicApi {
     this._logger.imp('Ceramic instance closed successfully')
   }
 }
-
-export default Ceramic

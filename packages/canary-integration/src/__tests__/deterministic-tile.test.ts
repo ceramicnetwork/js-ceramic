@@ -1,7 +1,7 @@
 import { IpfsApi } from '@ceramicnetwork/common'
-import { createIPFS } from '../create-ipfs'
+import { createIPFS } from '../create-ipfs.js'
 import { CeramicApi } from '@ceramicnetwork/common'
-import { createCeramic } from '../create-ceramic'
+import { createCeramic } from '../create-ceramic.js'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 
 let ipfs: IpfsApi

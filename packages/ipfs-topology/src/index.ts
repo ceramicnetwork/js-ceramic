@@ -1,1 +1,1 @@
-export * from './ipfs-topology'
+export * from './ipfs-topology.js'

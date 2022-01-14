@@ -9,15 +9,21 @@
   "homepage": "https://ceramic.network",
   "license": "(Apache-2.0 OR MIT)",
   "directories": {
-    "lib": "lib"
+    "lib": "./lib"
   },
-  "main": "lib/index.js",
+  "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
+  "type": "module",
   "files": [
     "lib"
   ],
+  "sideEffects": false,
+  "exports": {
+    ".": "./lib/index.js"
+  },
   "scripts": {
-    "test": "../../node_modules/.bin/jest --silent --env=node",
-    "build": "../../node_modules/.bin/tsc -p tsconfig.json",
+    "test": "node --experimental-vm-modules ../../node_modules/jest/bin/jest.js --silent --coverage --runInBand",
+    "build": "../../node_modules/.bin/tsc --project tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
     "lint": "../../node_modules/.bin/eslint ./src --ext .js,.jsx,.ts,.tsx",
@@ -52,7 +58,7 @@
     "@taquito/signer": "^11.0.2",
     "eth-sig-util": "^3.0.1",
     "ganache-core": "^2.13.2",
-    "near-api-js": "^0.44.1"
+    "near-api-js": "^0.44.2"
   },
   "gitHead": "34eeee25597b0a60def72906c26d3afd6230aaf1"
 }

@@ -1,6 +1,6 @@
 import { AccountId } from 'caip'
-import { AuthProvider } from './auth-provider'
-import { getConsentMessage, LinkProof } from './util'
+import { AuthProvider } from './auth-provider.js'
+import { getConsentMessage, LinkProof } from './util.js'
 import * as uint8arrays from 'uint8arrays'
 import * as nearApiJs from 'near-api-js'
 import * as sha256 from '@stablelib/sha256'

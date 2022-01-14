@@ -1,6 +1,6 @@
 import { program } from 'commander'
 
-import { CeramicCliUtils } from '../ceramic-cli-utils'
+import { CeramicCliUtils } from '../ceramic-cli-utils.js'
 
 program
   .command('daemon')

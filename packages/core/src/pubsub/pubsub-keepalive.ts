@@ -1,6 +1,6 @@
 import { Observable, Subscription, interval } from 'rxjs'
-import { KeepaliveMessage, MsgType, PubsubMessage } from './pubsub-message'
-import { ObservableWithNext } from './observable-with-next'
+import { KeepaliveMessage, MsgType, PubsubMessage } from './pubsub-message.js'
+import { ObservableWithNext } from './observable-with-next.js'
 
 /**
  * Wraps an instance of Pubsub and ensures that a pubsub message is generated with some minimum

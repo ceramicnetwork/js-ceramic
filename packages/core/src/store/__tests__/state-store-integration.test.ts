@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals'
 import tmp from 'tmp-promise'
 import {
   AnchorStatus,
@@ -7,14 +8,14 @@ import {
   SignatureStatus,
 } from '@ceramicnetwork/common'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
-import { PinStore } from '../pin-store'
-import { PinStoreFactory } from '../pin-store-factory'
-import StreamID from '@ceramicnetwork/streamid'
+import { PinStore } from '../pin-store.js'
+import { PinStoreFactory } from '../pin-store-factory.js'
+import { StreamID } from '@ceramicnetwork/streamid'
 import { CID } from 'multiformats/cid'
-import { createIPFS } from '../../__tests__/ipfs-util'
-import { createCeramic } from '../../__tests__/create-ceramic'
-import { anchorUpdate } from '../../state-management/__tests__/anchor-update'
-import { RunningState } from '../../state-management/running-state'
+import { createIPFS } from '../../__tests__/ipfs-util.js'
+import { createCeramic } from '../../__tests__/create-ceramic.js'
+import { anchorUpdate } from '../../state-management/__tests__/anchor-update.js'
+import { RunningState } from '../../state-management/running-state.js'
 
 const FAKE_CID = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
 

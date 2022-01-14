@@ -1,6 +1,6 @@
 import varint from 'varint'
 import { base58btc } from 'multiformats/bases/base58'
-import * as mapper from '../ed25519'
+import * as mapper from '../ed25519.js'
 
 describe('Ed25519 mapper', () => {
   it('successfully resolves the document from did', async () => {

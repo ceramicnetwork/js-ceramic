@@ -1,8 +1,8 @@
-import { NamedTaskQueue } from './named-task-queue'
+import { NamedTaskQueue } from './named-task-queue.js'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { DiagnosticsLogger } from '@ceramicnetwork/common'
 import { Semaphore } from 'await-semaphore'
-import { TaskQueueLike } from '../pubsub/task-queue'
+import { TaskQueueLike } from '../pubsub/task-queue.js'
 
 /**
  * Serialize tasks running on the same stream.

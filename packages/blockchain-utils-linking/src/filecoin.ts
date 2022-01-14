@@ -1,6 +1,6 @@
-import { AuthProvider } from './auth-provider'
+import { AuthProvider } from './auth-provider.js'
 import { AccountId } from 'caip'
-import { getConsentMessage, LinkProof } from './util'
+import { getConsentMessage, LinkProof } from './util.js'
 import type { MessageParams } from '@zondax/filecoin-signing-tools'
 import * as uint8arrays from 'uint8arrays'
 

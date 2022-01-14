@@ -6,8 +6,8 @@ import {
   StreamUtils,
   TestUtils,
 } from '@ceramicnetwork/common'
-import { Document } from '../document'
-import CeramicClient from '../ceramic-http-client'
+import { Document } from '../document.js'
+import { CeramicClient } from '../ceramic-http-client.js'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 

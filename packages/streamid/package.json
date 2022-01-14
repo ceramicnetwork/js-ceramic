@@ -6,14 +6,22 @@
     "ceramic",
     "StreamId"
   ],
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
+  "type": "module",
   "files": [
     "lib"
   ],
+  "directories": {
+    "lib": "./lib"
+  },
+  "sideEffects": false,
+  "exports": {
+    ".": "./lib/index.js"
+  },
   "scripts": {
     "test": "../../node_modules/.bin/jest --silent --coverage",
-    "build": "../../node_modules/.bin/tsc -p tsconfig.json",
+    "build": "../../node_modules/.bin/tsc --project tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
     "lint": "../../node_modules/.bin/eslint ./src --ext .js,.jsx,.ts,.tsx",
@@ -21,11 +29,8 @@
   },
   "author": "Zach Ferland <zachferland@gmail.com>",
   "license": "(Apache-2.0 OR MIT)",
-  "directories": {
-    "lib": "lib"
-  },
   "dependencies": {
-    "@ipld/dag-cbor": "^6.0.15",
+    "@ipld/dag-cbor": "^7.0.0",
     "multiformats": "^9.5.4",
     "typescript-memoize": "^1.1.0",
     "uint8arrays": "^3.0.0",
@@ -33,10 +38,6 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "jest": {
-    "testEnvironment": "node",
-    "resolver": "jest-resolver-enhanced"
   },
   "gitHead": "34eeee25597b0a60def72906c26d3afd6230aaf1"
 }

@@ -18,9 +18,9 @@ jest.mock('cross-fetch', () => {
   }))
 })
 
-import ThreeIdResolver from '../index'
+import * as ThreeIdResolver from '../index.js'
 import { Resolver } from 'did-resolver'
-import CeramicClient from '@ceramicnetwork/http-client'
+import { CeramicClient } from '@ceramicnetwork/http-client'
 
 const DID_LD_JSON = 'application/did+ld+json'
 

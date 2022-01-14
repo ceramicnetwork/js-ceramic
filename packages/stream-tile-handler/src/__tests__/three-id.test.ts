@@ -2,7 +2,7 @@ import { CID } from 'multiformats/cid'
 import { decode as decodeMultiHash } from 'multiformats/hashes/digest'
 import { Resolver } from 'did-resolver'
 import * as dagCBOR from '@ipld/dag-cbor'
-import KeyDidResolver from 'key-did-resolver'
+import * as KeyDidResolver from 'key-did-resolver'
 import { wrapDocument } from '@ceramicnetwork/3id-did-resolver'
 import { DID } from 'dids'
 import {
@@ -12,7 +12,7 @@ import {
   SignedCommitContainer,
   TestUtils,
 } from '@ceramicnetwork/common'
-import { TileDocumentHandler } from '../tile-document-handler'
+import { TileDocumentHandler } from '../tile-document-handler.js'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import cloneDeep from 'lodash.clonedeep'
 import * as sha256 from '@stablelib/sha256'

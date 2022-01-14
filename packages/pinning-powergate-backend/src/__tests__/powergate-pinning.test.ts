@@ -1,4 +1,4 @@
-import { EmptyTokenError, PowergatePinningBackend } from '../index'
+import { EmptyTokenError, PowergatePinningBackend } from '../index.js'
 import * as pow from '@textile/powergate-client'
 import { CID } from 'multiformats/cid'
 

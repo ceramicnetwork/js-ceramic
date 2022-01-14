@@ -1,8 +1,8 @@
-import { StateStore } from './state-store'
+import { StateStore } from './state-store.js'
 import { PinningBackend, StreamUtils } from '@ceramicnetwork/common'
 import type { CID } from 'multiformats/cid'
-import StreamID from '@ceramicnetwork/streamid'
-import { RunningState } from '../state-management/running-state'
+import { StreamID } from '@ceramicnetwork/streamid'
+import { RunningState } from '../state-management/running-state.js'
 
 /**
  * Encapsulates logic for pinning streams

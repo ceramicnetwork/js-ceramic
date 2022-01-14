@@ -1,13 +1,13 @@
 version: 2.1
 orbs:
-  node: circleci/node@4.7.0
+  node: circleci/node@5.0.0
 
 commands:
   build-and-test:
     steps:
       - checkout
-      - node/install-npm:
-          version: '6'
+      - node/install:
+          node-version: '16.13'
       - node/install-packages
       - run: npm run lint
       - run: npm run build
@@ -23,7 +23,7 @@ jobs:
       IPFS_FLAVOR: go
     steps:
       - build-and-test
-      - run: npm run docs
+#      - run: npm run docs TODO(NET-911)
   with-js-ipfs:
     machine:
       image: ubuntu-2004:202107-02
@@ -37,4 +37,4 @@ workflows:
   build-and-test:
     jobs:
       - with-go-ipfs
-      - with-js-ipfs
+#      - with-js-ipfs TODO(NET-1106)

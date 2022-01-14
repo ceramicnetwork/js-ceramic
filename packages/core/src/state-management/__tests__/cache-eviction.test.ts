@@ -1,9 +1,9 @@
 import { StreamUtils, IpfsApi } from '@ceramicnetwork/common'
-import { createIPFS } from '../../__tests__/ipfs-util'
-import { createCeramic } from '../../__tests__/create-ceramic'
+import { createIPFS } from '../../__tests__/ipfs-util.js'
+import { createCeramic } from '../../__tests__/create-ceramic.js'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
-import Ceramic from '../../ceramic'
-import { delay } from '../../__tests__/delay'
+import { Ceramic } from '../../ceramic.js'
+import { delay } from '../../__tests__/delay.js'
 
 let ipfs: IpfsApi
 let ceramic: Ceramic
@@ -189,7 +189,7 @@ describe('evicted then subscribed', () => {
   })
 
   test('pinned', async () => {
-    const stream1 = await TileDocument.create(ceramic, { foo: 'bar' })
+    const stream1 = await TileDocument.create<any>(ceramic, { foo: 'bar' })
     await ceramic.pin.add(stream1.id)
 
     const stream2 = await TileDocument.load(ceramic, stream1.id)

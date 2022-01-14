@@ -1,6 +1,6 @@
 import { CID } from 'multiformats/cid'
-import { StreamStateSubject } from '../stream-state-subject'
-import { CommitType, StreamState } from '../stream'
+import { StreamStateSubject } from '../stream-state-subject.js'
+import { CommitType, StreamState } from '../stream.js'
 
 const FAKE_CID_1 = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
 const FAKE_CID2 = CID.parse('bafybeig6xv5nwphfmvcnektpnojts44jqcuam7bmye2pb54adnrtccjlsu')

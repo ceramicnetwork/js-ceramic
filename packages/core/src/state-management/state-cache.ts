@@ -1,11 +1,11 @@
-import { LRUMap } from 'lru_map'
+import lru from 'lru_map'
 
 /**
  * Cache for RunningStates. Two buckets here: volatile and durable. Volatile is a LRUMap with a definite limit.
  * Durable bucket is just a simple map. One is expected to free a durable value when it is no longer needed.
  */
 export class StateCache<T> implements Iterable<[string, T]> {
-  readonly volatile: LRUMap<string, T>
+  readonly volatile: lru.LRUMap<string, T>
   readonly durable: Map<string, T>
 
   /**
@@ -13,9 +13,9 @@ export class StateCache<T> implements Iterable<[string, T]> {
    * @param onEvicted - what to do when an item is evicted from volatile cache.
    */
   constructor(limit: number, private readonly onEvicted?: (item: T) => void) {
-    this.volatile = new LRUMap(limit)
+    this.volatile = new lru.LRUMap(limit)
     this.volatile.shift = function () {
-      const entry = LRUMap.prototype.shift.call(this)
+      const entry = lru.LRUMap.prototype.shift.call(this)
       onEvicted?.(entry[1])
       return entry
     }

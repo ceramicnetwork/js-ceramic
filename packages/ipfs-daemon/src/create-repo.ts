@@ -5,7 +5,7 @@ import { FsDatastore } from 'datastore-fs'
 import { S3Datastore } from 'datastore-s3'
 import path from 'path'
 import * as dagCBOR from '@ipld/dag-cbor'
-import { BlockstoreDatastoreAdapter } from 'blockstore-datastore-adapter'
+import { BlockstoreDatastoreAdapter, Blockstore } from 'blockstore-datastore-adapter'
 
 const codecLookup = {
   [dagCBOR.code]: dagCBOR,
@@ -123,7 +123,7 @@ function createBackends(repoOptions: RepoOptions, createS3: () => S3): Backends 
     root: createBackend('root', repoOptions, createS3, createLocalDatastoreFS),
     blocks: new BlockstoreDatastoreAdapter(
       createBackend('blocks', repoOptions, createS3, createLocalDatastoreFS)
-    ),
+    ) as any as Blockstore,
     keys: createBackend('keys', repoOptions, createS3, createLocalDatastoreFS),
     datastore: createBackend('datastore', repoOptions, createS3, createLocalDatastoreLevel),
     pins: createBackend('pins', repoOptions, createS3, createLocalDatastoreLevel),

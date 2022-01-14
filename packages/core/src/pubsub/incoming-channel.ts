@@ -1,9 +1,9 @@
 import { Observable } from 'rxjs'
 import type { IpfsApi } from '@ceramicnetwork/common'
-import { TaskQueue } from './task-queue'
 import { DiagnosticsLogger, ServiceLogger } from '@ceramicnetwork/common'
 import { pipe, MonoTypeOperatorFunction } from 'rxjs'
 import { map, filter, concatMap, retryWhen, tap, delay } from 'rxjs/operators'
+import { TaskQueue } from './task-queue.js'
 
 // Typestub for pubsub message.
 // At some future time this type definition should be provided by IPFS.
@@ -26,7 +26,8 @@ export class PubsubIncoming extends Observable<IPFSPubsubMessage> {
     readonly ipfs: IpfsApi,
     readonly topic: string,
     readonly pubsubLogger: ServiceLogger,
-    readonly tasks: TaskQueue = new TaskQueue()
+    readonly logger: DiagnosticsLogger,
+    readonly tasks: TaskQueue
   ) {
     super((subscriber) => {
       const onMessage = (message: IPFSPubsubMessage) => subscriber.next(message)
@@ -48,7 +49,9 @@ export class PubsubIncoming extends Observable<IPFSPubsubMessage> {
       return () => {
         this.tasks.clear()
         this.tasks.add(async () => {
-          await ipfs.pubsub?.unsubscribe(topic, onMessage)
+          await ipfs.pubsub?.unsubscribe(topic, onMessage).catch((err) => {
+            this.logger.warn(err)
+          })
         })
       }
     })
@@ -65,10 +68,11 @@ export class IncomingChannel extends Observable<IPFSPubsubMessage> {
     readonly topic: string,
     readonly resubscribeEvery: number,
     readonly pubsubLogger: ServiceLogger,
-    readonly logger: DiagnosticsLogger
+    readonly logger: DiagnosticsLogger,
+    readonly tasks: TaskQueue = new TaskQueue()
   ) {
     super((subscriber) => {
-      new PubsubIncoming(ipfs, topic, pubsubLogger)
+      new PubsubIncoming(ipfs, topic, pubsubLogger, logger, this.tasks)
         .pipe(
           retryWhen((errors) =>
             errors.pipe(

@@ -1,6 +1,6 @@
+import { jest } from '@jest/globals'
 import tmp from 'tmp-promise'
-import { LevelStateStore } from '../level-state-store'
-import Level from 'level-ts'
+import { LevelStateStore } from '../level-state-store.js'
 import {
   AnchorStatus,
   Stream,
@@ -10,29 +10,28 @@ import {
   TestUtils,
 } from '@ceramicnetwork/common'
 import { CID } from 'multiformats/cid'
-import StreamID from '@ceramicnetwork/streamid'
+import { StreamID } from '@ceramicnetwork/streamid'
 
 let mockStorage: Map<string, any>
 const mockPut = jest.fn((id: string, state: any) => mockStorage.set(id, state))
-let mockGet = jest.fn((id: string) => mockStorage.get(id))
+let mockGet: any = jest.fn((id: string) => mockStorage.get(id))
 const mockDel = jest.fn(() => Promise.resolve())
 const mockStreamResult = ['1', '2', '3']
 const mockStream = jest.fn(async () => mockStreamResult)
 
 const streamIdTest = 'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
 
-jest.mock('level-ts', () => {
-  return jest.fn().mockImplementation(() => {
-    return {
-      put: mockPut,
-      get: mockGet,
-      del: mockDel,
-      stream: mockStream,
-    }
-  })
+const levelFactory = jest.fn().mockImplementation(() => {
+  return {
+    put: mockPut,
+    get: mockGet,
+    del: mockDel,
+    stream: mockStream,
+  }
 })
 
 class FakeType extends Stream {
+  isReadOnly = true
   makeReadOnly() {
     throw new Error('Method not implemented.')
   }
@@ -45,7 +44,9 @@ const NETWORK = 'fakeNetwork'
 beforeEach(async () => {
   mockStorage = new Map()
   levelPath = await tmp.tmpName()
-  stateStore = new LevelStateStore(levelPath)
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  stateStore = new LevelStateStore(levelPath, levelFactory)
   mockGet = jest.fn((id: string) => mockStorage.get(id))
 })
 
@@ -63,11 +64,11 @@ const state = {
 }
 
 test('#open', async () => {
-  expect(Level).not.toBeCalled()
+  expect(levelFactory).not.toBeCalled()
   expect(stateStore.store).toBeUndefined()
   stateStore.open(NETWORK)
   const expectedPath = levelPath + '/' + NETWORK
-  expect(Level).toBeCalledWith(expectedPath)
+  expect(levelFactory).toBeCalledWith(expectedPath)
 })
 
 test('#save and #load', async () => {

@@ -3,7 +3,7 @@ import type { CID } from 'multiformats/cid'
 /**
  * Describes anchor service response
  */
-export default interface AnchorServiceResponse {
+export interface AnchorServiceResponse {
   readonly cid: CID
   readonly status: string
   readonly message: string

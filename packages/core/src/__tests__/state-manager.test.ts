@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals'
 import {
   AnchorStatus,
   IpfsApi,
@@ -7,19 +8,19 @@ import {
 } from '@ceramicnetwork/common'
 import { CID } from 'multiformats/cid'
 import { decode as decodeMultiHash } from 'multiformats/hashes/digest'
-import { RunningState } from '../state-management/running-state'
-import { createIPFS } from './ipfs-util'
-import { createCeramic } from './create-ceramic'
-import Ceramic from '../ceramic'
-import { anchorUpdate } from '../state-management/__tests__/anchor-update'
+import { RunningState } from '../state-management/running-state.js'
+import { createIPFS } from './ipfs-util.js'
+import { createCeramic } from './create-ceramic.js'
+import { Ceramic } from '../ceramic.js'
+import { anchorUpdate } from '../state-management/__tests__/anchor-update.js'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
-import { streamFromState } from '../state-management/stream-from-state'
+import { streamFromState } from '../state-management/stream-from-state.js'
 import * as uint8arrays from 'uint8arrays'
 import * as sha256 from '@stablelib/sha256'
-import { StreamID } from '@ceramicnetwork/streamid'
+import { StreamID, CommitID } from '@ceramicnetwork/streamid'
 import { from, timer } from 'rxjs'
 import { concatMap, map } from 'rxjs/operators'
-import { MAX_RESPONSE_INTERVAL } from '../pubsub/message-bus'
+import { MAX_RESPONSE_INTERVAL } from '../pubsub/message-bus.js'
 
 const FAKE_CID = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
 const INITIAL_CONTENT = { abc: 123, def: 456 }
@@ -205,7 +206,7 @@ test('commit history and atCommit', async () => {
 
   const commit0 = stream.allCommitIds[0]
   expect(stream.commitId).toEqual(commit0)
-  expect(commit0.equals(streamState.id.atCommit(streamState.id.cid))).toBeTruthy()
+  expect(commit0.equals(CommitID.make(streamState.id, streamState.id.cid))).toBeTruthy()
 
   await anchorUpdate(ceramic, stream)
   expect(stream.allCommitIds.length).toEqual(2)
@@ -297,7 +298,7 @@ describe('atCommit', () => {
     const stream = await TileDocument.create(ceramic, INITIAL_CONTENT, null, { anchor: false })
     const streamState = await ceramic.repository.load(stream.id, {})
     // Emulate loading a non-existing commit
-    const nonExistentCommitID = stream.id.atCommit(FAKE_CID)
+    const nonExistentCommitID = CommitID.make(stream.id, FAKE_CID)
     const originalRetrieve = ceramic.dispatcher.retrieveCommit.bind(ceramic.dispatcher)
     ceramic.dispatcher.retrieveCommit = jest.fn(async (cid: CID) => {
       if (cid.equals(FAKE_CID)) {
@@ -344,7 +345,7 @@ describe('atCommit', () => {
     const newContent = { abc: 321, def: 456, gh: 987 }
     const updateCommit = await stream.makeCommit(ceramic, newContent)
     const futureCommitCID = await ceramic.dispatcher.storeCommit(updateCommit)
-    const futureCommitID = stream.id.atCommit(futureCommitCID)
+    const futureCommitID = CommitID.make(stream.id, futureCommitCID)
 
     // Now load the stream at a commitID ahead of what is currently in the state in the repository.
     // The existing RunningState from the repository should also get updated
@@ -378,7 +379,7 @@ test('handles basic conflict', async () => {
   // create invalid change that happened after main change
 
   const initialState = await ceramic.repository.stateManager
-    .atCommit(streamState1, streamId.atCommit(streamId.cid))
+    .atCommit(streamState1, CommitID.make(streamId, streamId.cid))
     .then((stream) => stream.state)
   const state$ = new RunningState(initialState, true)
   ceramic.repository.add(state$)
@@ -415,13 +416,16 @@ test('handles basic conflict', async () => {
   // Loading valid commit works
   const streamAtValidCommit = await ceramic.repository.stateManager.atCommit(
     streamState1,
-    streamId.atCommit(tipValidUpdate)
+    CommitID.make(streamId, tipValidUpdate)
   )
   expect(streamAtValidCommit.value.content).toEqual(newContent)
 
   // Loading invalid commit fails
   await expect(
-    ceramic.repository.stateManager.atCommit(streamState1, streamId.atCommit(tipInvalidUpdate))
+    ceramic.repository.stateManager.atCommit(
+      streamState1,
+      CommitID.make(streamId, tipInvalidUpdate)
+    )
   ).rejects.toThrow(
     `Requested commit CID ${tipInvalidUpdate.toString()} not found in the log for stream ${streamId.toString()}`
   )

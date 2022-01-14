@@ -1,7 +1,7 @@
 import * as uint8arrays from 'uint8arrays'
 import { decode } from 'multiformats/hashes/digest'
 import * as providers from '@ethersproject/providers'
-import { LRUMap } from 'lru_map'
+import lru from 'lru_map'
 import { AnchorProof, AnchorValidator, DiagnosticsLogger } from '@ceramicnetwork/common'
 import { Block, TransactionResponse } from '@ethersproject/providers'
 import { base16 } from 'multiformats/bases/base16'
@@ -32,9 +32,9 @@ const MAX_PROVIDERS_COUNT = 100
 /**
  * Ethereum anchor service that stores root CIDs on Ethereum blockchain
  */
-export default class EthereumAnchorValidator implements AnchorValidator {
+export class EthereumAnchorValidator implements AnchorValidator {
   private _chainId: string | null
-  private readonly providersCache: LRUMap<string, providers.BaseProvider>
+  private readonly providersCache: lru.LRUMap<string, providers.BaseProvider>
   private readonly _logger: DiagnosticsLogger
 
   /**
@@ -42,7 +42,7 @@ export default class EthereumAnchorValidator implements AnchorValidator {
    * @param logger
    */
   constructor(readonly ethereumRpcEndpoint: string, logger: DiagnosticsLogger) {
-    this.providersCache = new LRUMap(MAX_PROVIDERS_COUNT)
+    this.providersCache = new lru.LRUMap(MAX_PROVIDERS_COUNT)
     this._logger = logger
   }
 

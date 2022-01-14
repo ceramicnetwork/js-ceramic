@@ -1,9 +1,9 @@
-import { AuthProvider } from './auth-provider'
+import { AuthProvider } from './auth-provider.js'
 import { AccountId } from 'caip'
-import { encodeRpcMessage, getConsentMessage, LinkProof } from './util'
+import { encodeRpcMessage, getConsentMessage, LinkProof } from './util.js'
 import * as uint8arrays from 'uint8arrays'
 import * as sha256 from '@stablelib/sha256'
-import { Ocap, OcapParams, OcapTypes, buildOcapRequestMessage } from './ocap-util'
+import { Ocap, OcapParams, OcapTypes, buildOcapRequestMessage } from './ocap-util.js'
 
 const ADDRESS_TYPES = {
   ethereumEOA: 'ethereum-eoa',

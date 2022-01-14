@@ -1,9 +1,10 @@
+import * as fs from 'fs'
 import express, { Request, Response } from 'express'
 import type { CeramicConfig } from '@ceramicnetwork/core'
-import Ceramic from '@ceramicnetwork/core'
+import { Ceramic } from '@ceramicnetwork/core'
 import { RotatingFileStream } from '@ceramicnetwork/logger'
-import { buildIpfsConnection } from './build-ipfs-connection.util'
-import { S3StateStore } from './s3-state-store'
+import { buildIpfsConnection } from './build-ipfs-connection.util.js'
+import { S3StateStore } from './s3-state-store.js'
 import {
   DiagnosticsLogger,
   LoggerProvider,
@@ -11,23 +12,24 @@ import {
   StreamUtils,
   SyncOptions,
 } from '@ceramicnetwork/common'
-import StreamID, { StreamType } from '@ceramicnetwork/streamid'
-import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
-import KeyDidResolver from 'key-did-resolver'
-import PkhDidResolver from 'pkh-did-resolver'
+import { StreamID, StreamType } from '@ceramicnetwork/streamid'
+import * as ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
+import * as KeyDidResolver from 'key-did-resolver'
+import * as PkhDidResolver from 'pkh-did-resolver'
 import EthrDidResolver from 'ethr-did-resolver'
-import NftDidResolver from 'nft-did-resolver'
-import SafeDidResolver from 'safe-did-resolver'
+import * as NftDidResolver from 'nft-did-resolver'
+import * as SafeDidResolver from 'safe-did-resolver'
+
 import { DID } from 'dids'
 import cors from 'cors'
-import { errorHandler } from './daemon/error-handler'
+import { errorHandler } from './daemon/error-handler.js'
 import { addAsync, ExpressWithAsync, Router } from '@awaitjs/express'
-import { logRequests } from './daemon/log-requests'
+import { logRequests } from './daemon/log-requests.js'
 import type { Server } from 'http'
-import { DaemonConfig, StateStoreMode } from './daemon-config'
+import { DaemonConfig, StateStoreMode } from './daemon-config.js'
 import type { ResolverRegistry } from 'did-resolver'
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const packageJson = require('../package.json')
+const packageJson = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8'))
 
 const DEFAULT_HOSTNAME = '0.0.0.0'
 const DEFAULT_PORT = 7007
@@ -171,10 +173,12 @@ export class CeramicDaemon {
     this.app = addAsync(express())
     this.app.set('trust proxy', true)
     this.app.use(express.json({ limit: '1mb' }))
-    this.app.use(cors({
-      origin: opts.httpApi?.corsAllowedOrigins,
-      maxAge: 7200 // 2 hours
-    }))
+    this.app.use(
+      cors({
+        origin: opts.httpApi?.corsAllowedOrigins,
+        maxAge: 7200, // 2 hours
+      })
+    )
 
     this.app.use(logRequests(ceramic.loggerProvider))
 

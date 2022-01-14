@@ -1,6 +1,6 @@
 import { CID } from 'multiformats/cid'
 import { CommitType, StreamState } from '@ceramicnetwork/common'
-import { Document } from '../document'
+import { Document } from '../document.js'
 import { BehaviorSubject } from 'rxjs'
 import { filter, first } from 'rxjs/operators'
 

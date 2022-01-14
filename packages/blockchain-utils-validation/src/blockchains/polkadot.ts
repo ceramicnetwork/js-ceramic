@@ -1,4 +1,4 @@
-import { BlockchainHandler } from '../blockchain-handler'
+import { BlockchainHandler } from '../blockchain-handler.js'
 import { signatureVerify } from '@polkadot/util-crypto'
 import { LinkProof } from '@ceramicnetwork/blockchain-utils-linking'
 import * as uint8arrays from 'uint8arrays'
@@ -16,9 +16,7 @@ async function validateLink(proof: LinkProof): Promise<LinkProof | null> {
   return res.isValid ? proof : null
 }
 
-const Handler: BlockchainHandler = {
+export const handler: BlockchainHandler = {
   namespace,
   validateLink,
 }
-
-export default Handler

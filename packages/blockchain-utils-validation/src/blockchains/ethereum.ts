@@ -4,7 +4,7 @@ import * as providers from '@ethersproject/providers'
 import { AccountId } from 'caip'
 import * as uint8arrays from 'uint8arrays'
 import { LinkProof } from '@ceramicnetwork/blockchain-utils-linking'
-import { BlockchainHandler } from '../blockchain-handler'
+import { BlockchainHandler } from '../blockchain-handler.js'
 import { normalizeAccountId } from '@ceramicnetwork/common'
 
 const ADDRESS_TYPES = {
@@ -78,9 +78,7 @@ async function validateLink(proof: LinkProof): Promise<LinkProof | null> {
   }
 }
 
-const handler: BlockchainHandler = {
+export const handler: BlockchainHandler = {
   namespace,
   validateLink,
 }
-
-export default handler

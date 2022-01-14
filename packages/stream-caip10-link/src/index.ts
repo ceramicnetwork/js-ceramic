@@ -1,1 +1,1 @@
-export * from './caip10-link'
+export * from './caip10-link.js'

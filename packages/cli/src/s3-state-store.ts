@@ -1,5 +1,5 @@
 import { StreamState, Stream, StreamUtils } from '@ceramicnetwork/common'
-import StreamID from '@ceramicnetwork/streamid'
+import { StreamID } from '@ceramicnetwork/streamid'
 import { StateStore } from '@ceramicnetwork/core'
 import LevelUp from 'levelup'
 import S3LevelDOWN from 's3leveldown'
@@ -21,7 +21,8 @@ export class S3StateStore implements StateStore {
    */
   open(networkName: string): void {
     const location = this.#bucketName + '/ceramic/' + networkName + '/state-store'
-    this.#store = new LevelUp(new S3LevelDOWN(location))
+    // @ts-ignore
+    this.#store = new LevelUp.LevelUp(new S3LevelDOWN(location))
   }
 
   /**

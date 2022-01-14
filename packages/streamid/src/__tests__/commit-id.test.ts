@@ -1,5 +1,5 @@
 import * as util from 'util'
-import { CommitID } from '../commit-id'
+import { CommitID } from '../commit-id.js'
 import { CID } from 'multiformats/cid'
 import { base36 } from 'multiformats/bases/base36'
 
@@ -63,26 +63,27 @@ describe('constructor', () => {
 
 describe('#atCommit', () => {
   const commitId = new CommitID('tile', BASE_CID, COMMIT_CID)
+  const streamId = commitId.baseID
 
   test('to number 0', () => {
-    const traveller = commitId.atCommit(0)
+    const traveller = CommitID.make(streamId, 0)
     expect(traveller.commit).toEqual(BASE_CID)
   })
   test('to number 1', () => {
-    expect(() => commitId.atCommit(1)).toThrowErrorMatchingSnapshot()
+    expect(() => CommitID.make(streamId, 1)).toThrowErrorMatchingSnapshot()
   })
   test('to commit CID', () => {
     const commitId = new CommitID('tile', BASE_CID)
-    const traveller = commitId.atCommit(COMMIT_CID)
+    const traveller = CommitID.make(commitId.baseID, COMMIT_CID)
     expect(traveller.commit).toEqual(COMMIT_CID)
   })
   test('to commit CID as string', () => {
     const commitId = new CommitID('tile', BASE_CID)
-    const traveller = commitId.atCommit(COMMIT_CID_STRING)
+    const traveller = CommitID.make(commitId.baseID, COMMIT_CID_STRING)
     expect(traveller.commit).toEqual(COMMIT_CID)
   })
   test('to garbage string', () => {
-    expect(() => commitId.atCommit('garbage')).toThrow()
+    expect(() => CommitID.make(streamId, 'garbage')).toThrow()
   })
 })
 
