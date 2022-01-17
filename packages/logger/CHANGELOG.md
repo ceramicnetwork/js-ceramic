@@ -3,6 +3,55 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.0.0-alpha.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/logger@1.0.4...@ceramicnetwork/logger@2.0.0-alpha.1) (2022-01-14)
+
+**Note:** Version bump only for package @ceramicnetwork/logger
+
+
+
+
+
+## [1.0.9-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/logger@1.0.8...@ceramicnetwork/logger@1.0.9-rc.0) (2022-01-12)
+
+**Note:** Version bump only for package @ceramicnetwork/logger
+
+
+
+
+
+## [1.0.8](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/logger@1.0.7...@ceramicnetwork/logger@1.0.8) (2022-01-12)
+
+**Note:** Version bump only for package @ceramicnetwork/logger
+
+
+
+
+
+## [1.0.7](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/logger@1.0.4...@ceramicnetwork/logger@1.0.7) (2022-01-09)
+
+**Note:** Version bump only for package @ceramicnetwork/logger
+
+
+
+
+
+## [1.0.6](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/logger@1.0.4...@ceramicnetwork/logger@1.0.6) (2022-01-09)
+
+**Note:** Version bump only for package @ceramicnetwork/logger
+
+
+
+
+
+## [1.0.5](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/logger@1.0.4...@ceramicnetwork/logger@1.0.5) (2022-01-09)
+
+**Note:** Version bump only for package @ceramicnetwork/logger
+
+
+
+
+
+
 ## [1.0.4](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/logger@1.0.4-rc.6...@ceramicnetwork/logger@1.0.4) (2021-08-25)
 
 **Note:** Version bump only for package @ceramicnetwork/logger

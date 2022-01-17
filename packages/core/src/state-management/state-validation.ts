@@ -1,6 +1,6 @@
 import { StreamNext, StreamState, Stream } from '@ceramicnetwork/common'
 import { CommitID } from '@ceramicnetwork/streamid'
-import Utils from '../utils'
+import { Utils } from '../utils.js'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 
 type LoadDocumentFunc = <T extends Stream>(streamId: CommitID) => Promise<T>
@@ -29,7 +29,7 @@ export class RealStateValidation implements StateValidation {
    *
    * @param schemaStreamId - Schema document ID
    */
-  private loadSchemaById<T extends any>(schemaStreamId: string): Promise<T | null> {
+  private loadSchemaById<T>(schemaStreamId: string): Promise<T | null> {
     let commitId: CommitID
     try {
       commitId = CommitID.fromString(schemaStreamId)
@@ -42,7 +42,7 @@ export class RealStateValidation implements StateValidation {
   /**
    * Load schema for the Stream
    */
-  private async loadSchema<T extends any>(state: StreamState | StreamNext): Promise<T | null> {
+  private async loadSchema<T>(state: StreamState | StreamNext): Promise<T | null> {
     const schemaId = state.metadata?.schema
     if (schemaId) {
       return this.loadSchemaById(schemaId)

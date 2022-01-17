@@ -1,7 +1,7 @@
 import { filter, take } from 'rxjs/operators'
-import InMemoryAnchorService from '../../anchor/memory/in-memory-anchor-service'
+import { InMemoryAnchorService } from '../../anchor/memory/in-memory-anchor-service.js'
 import { AnchorStatus, Stream } from '@ceramicnetwork/common'
-import Ceramic from '../../ceramic'
+import { Ceramic } from '../../ceramic.js'
 
 export async function anchorUpdate(ceramic: Ceramic, stream: Stream): Promise<void> {
   const tillAnchored = stream

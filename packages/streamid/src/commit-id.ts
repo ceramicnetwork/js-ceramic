@@ -1,14 +1,13 @@
-import CID from 'cids'
-import multibase from 'multibase'
-import { StreamType } from './stream-type'
+import { CID } from 'multiformats/cid'
+import { base36 } from 'multiformats/bases/base36'
+import { StreamType } from './stream-type.js'
 import varint from 'varint'
-import uint8ArrayConcat from 'uint8arrays/concat'
-import uint8ArrayToString from 'uint8arrays/to-string'
+import { concat as uint8ArrayConcat } from 'uint8arrays'
 import { Memoize } from 'typescript-memoize'
-import { DEFAULT_BASE, STREAMID_CODEC } from './constants'
-import { readCid, readVarint } from './reading-bytes'
-import { StreamID } from './stream-id'
-import { StreamRef } from './stream-ref'
+import { STREAMID_CODEC } from './constants.js'
+import { readCid, readVarint } from './reading-bytes.js'
+import { StreamID } from './stream-id.js'
+import { StreamRef } from './stream-ref.js'
 
 /**
  * Parse CommitID from bytes representation.
@@ -62,7 +61,7 @@ function fromBytesNoThrow(bytes: Uint8Array): CommitID | Error {
  */
 function parseCID(input: any): CID | undefined {
   try {
-    return new CID(input)
+    return typeof input === 'string' ? CID.parse(input) : CID.asCID(input)
   } catch {
     return undefined
   }
@@ -125,13 +124,20 @@ function fromStringNoThrow(input: string): CommitID | Error {
   if (protocolFree.includes('commit')) {
     const commit = protocolFree.split('?')[1].split('=')[1]
     const base = protocolFree.split('?')[0]
-    return StreamID.fromString(base).atCommit(commit)
+    return make(StreamID.fromString(base), commit)
   } else {
-    return fromBytesNoThrow(multibase.decode(protocolFree))
+    return fromBytesNoThrow(base36.decode(protocolFree))
   }
 }
 
 const TAG = Symbol.for('@ceramicnetwork/streamid/CommitID')
+
+/**
+ * Construct new CommitID for a given stream and commit
+ */
+function make(stream: StreamID, commit: CID | string | number): CommitID {
+  return new CommitID(stream.type, stream.cid, commit)
+}
 
 /**
  * Commit identifier, includes type, genesis CID, commit CID.
@@ -151,6 +157,7 @@ export class CommitID implements StreamRef {
   static fromBytesNoThrow = fromBytesNoThrow
   static fromString = fromString
   static fromStringNoThrow = fromStringNoThrow
+  static make = make
 
   // WORKAROUND. Weird replacement for Symbol.hasInstance due to
   // this old bug in Babel https://github.com/babel/babel/issues/4452
@@ -174,7 +181,7 @@ export class CommitID implements StreamRef {
     if (!type && type !== 0) throw new Error('constructor: type required')
     if (!cid) throw new Error('constructor: cid required')
     this.#type = typeof type === 'string' ? StreamType.codeByName(type) : type
-    this.#cid = typeof cid === 'string' ? new CID(cid) : cid
+    this.#cid = typeof cid === 'string' ? CID.parse(cid) : cid
     this.#commit = parseCommit(this.#cid, commit)
   }
 
@@ -229,13 +236,6 @@ export class CommitID implements StreamRef {
   }
 
   /**
-   * Construct new CommitID for the same stream, but a new `commit` CID.
-   */
-  atCommit(commit: CID | string | number): CommitID {
-    return new CommitID(this.#type, this.#cid, commit)
-  }
-
-  /**
    * Compare equality with another CommitID.
    */
   equals(other: CommitID): boolean {
@@ -249,7 +249,7 @@ export class CommitID implements StreamRef {
    */
   @Memoize()
   toString(): string {
-    return uint8ArrayToString(multibase.encode(DEFAULT_BASE, this.bytes))
+    return base36.encode(this.bytes)
   }
 
   /**

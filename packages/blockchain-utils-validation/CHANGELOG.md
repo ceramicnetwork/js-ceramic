@@ -3,9 +3,64 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-## [1.6.5-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/blockchain-utils-validation@1.6.4...@ceramicnetwork/blockchain-utils-validation@1.6.5-rc.0) (2022-01-06)
+# [2.0.0-alpha.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/blockchain-utils-validation@1.6.2-rc.10...@ceramicnetwork/blockchain-utils-validation@2.0.0-alpha.1) (2022-01-14)
+
+
+### Features
+
+* Re-apply Caip version update and format change ([#1896](https://github.com/ceramicnetwork/js-ceramic/issues/1896)) ([be875de](https://github.com/ceramicnetwork/js-ceramic/commit/be875de3e9a5b54605c6d20b9610a52f8267e0ce))
+
+
+
+
+
+# [2.0.0-alpha.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/blockchain-utils-validation@1.6.2-rc.10...@ceramicnetwork/blockchain-utils-validation@2.0.0-alpha.0) (2021-12-07)
+
+
+### Features
+
+* Re-apply Caip version update and format change ([#1896](https://github.com/ceramicnetwork/js-ceramic/issues/1896)) ([be875de](https://github.com/ceramicnetwork/js-ceramic/commit/be875de3e9a5b54605c6d20b9610a52f8267e0ce))
+
+
+
+
+
+## [1.6.9-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/blockchain-utils-validation@1.6.8...@ceramicnetwork/blockchain-utils-validation@1.6.9-rc.0) (2022-01-12)
 
 **Note:** Version bump only for package @ceramicnetwork/blockchain-utils-validation
+
+
+
+
+
+## [1.6.8](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/blockchain-utils-validation@1.6.7...@ceramicnetwork/blockchain-utils-validation@1.6.8) (2022-01-12)
+
+**Note:** Version bump only for package @ceramicnetwork/blockchain-utils-validation
+
+
+
+
+
+## [1.6.7](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/blockchain-utils-validation@1.6.6...@ceramicnetwork/blockchain-utils-validation@1.6.7) (2022-01-09)
+
+**Note:** Version bump only for package @ceramicnetwork/blockchain-utils-validation
+
+
+
+
+
+## [1.6.6](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/blockchain-utils-validation@1.6.5...@ceramicnetwork/blockchain-utils-validation@1.6.6) (2022-01-09)
+
+**Note:** Version bump only for package @ceramicnetwork/blockchain-utils-validation
+
+
+
+
+
+## [1.6.5](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/blockchain-utils-validation@1.6.4...@ceramicnetwork/blockchain-utils-validation@1.6.5) (2022-01-09)
+
+**Note:** Version bump only for package @ceramicnetwork/blockchain-utils-validation
+
 
 
 

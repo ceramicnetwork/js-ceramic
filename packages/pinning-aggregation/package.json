@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/pinning-aggregation",
-  "version": "1.2.8-rc.0",
+  "version": "2.0.0-alpha.1",
   "description": "Aggregated pinning",
   "keywords": [
     "ceramic",
@@ -8,14 +8,19 @@
     "filecoin",
     "pinning"
   ],
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "type": "module",
+  "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
   "files": [
     "lib"
   ],
+  "sideEffects": false,
+  "exports": {
+    ".": "./lib/index.js"
+  },
   "scripts": {
     "test": "../../node_modules/.bin/jest --silent --coverage",
-    "build": "../../node_modules/.bin/tsc -p tsconfig.json",
+    "build": "../../node_modules/.bin/tsc --project tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
     "lint": "../../node_modules/.bin/eslint ./src --ext .js,.jsx,.ts,.tsx",
@@ -24,34 +29,21 @@
   "author": "Sergey Ukustov <sergey@ukstv.me>",
   "license": "(Apache-2.0 OR MIT)",
   "directories": {
-    "lib": "lib"
+    "lib": "./lib"
   },
   "dependencies": {
-    "@stablelib/base64": "^1.0.0",
-    "@stablelib/sha256": "^1.0.0"
+    "@stablelib/base64": "^1.0.1",
+    "@stablelib/sha256": "^1.0.1"
   },
   "devDependencies": {
-    "@ceramicnetwork/common": "^1.10.2-rc.0",
-    "@ceramicnetwork/pinning-ipfs-backend": "^1.2.8-rc.0",
-    "@ceramicnetwork/pinning-powergate-backend": "^1.2.8-rc.0",
-    "cids": "~1.1.6",
-    "ipfs-core-types": "~0.5.1"
+    "@ceramicnetwork/common": "^2.0.0-alpha.1",
+    "@ceramicnetwork/pinning-ipfs-backend": "^2.0.0-alpha.1",
+    "@ceramicnetwork/pinning-powergate-backend": "^2.0.0-alpha.1",
+    "ipfs-core-types": "~0.9.0",
+    "multiformats": "^9.5.4"
   },
   "publishConfig": {
     "access": "public"
-  },
-  "jest": {
-    "moduleFileExtensions": [
-      "js",
-      "json",
-      "ts"
-    ],
-    "testRegex": ".(spec|test).ts$",
-    "transform": {
-      "^.+\\.ts$": "ts-jest"
-    },
-    "testEnvironment": "node",
-    "resolver": "jest-resolver-enhanced"
   },
   "gitHead": "34eeee25597b0a60def72906c26d3afd6230aaf1"
 }

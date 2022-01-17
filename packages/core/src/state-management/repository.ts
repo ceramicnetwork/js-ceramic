@@ -1,4 +1,4 @@
-import StreamID, { CommitID } from '@ceramicnetwork/streamid'
+import { StreamID, CommitID } from '@ceramicnetwork/streamid'
 import {
   AnchorService,
   AnchorStatus,
@@ -11,19 +11,19 @@ import {
   SyncOptions,
   UpdateOpts,
 } from '@ceramicnetwork/common'
-import { PinStore } from '../store/pin-store'
+import { PinStore } from '../store/pin-store.js'
 import { DiagnosticsLogger } from '@ceramicnetwork/common'
-import { ExecutionQueue } from './execution-queue'
-import { RunningState } from './running-state'
-import { StateManager } from './state-manager'
-import type { Dispatcher } from '../dispatcher'
-import type { ConflictResolution } from '../conflict-resolution'
-import type { HandlersMap } from '../handlers-map'
-import type { StateValidation } from './state-validation'
+import { ExecutionQueue } from './execution-queue.js'
+import { RunningState } from './running-state.js'
+import { StateManager } from './state-manager.js'
+import type { Dispatcher } from '../dispatcher.js'
+import type { ConflictResolution } from '../conflict-resolution.js'
+import type { HandlersMap } from '../handlers-map.js'
+import type { StateValidation } from './state-validation.js'
 import { Observable } from 'rxjs'
-import { StateCache } from './state-cache'
-import { SnapshotState } from './snapshot-state'
-import Utils from '../utils'
+import { StateCache } from './state-cache.js'
+import { SnapshotState } from './snapshot-state.js'
+import { Utils } from '../utils.js'
 
 export type RepositoryDependencies = {
   dispatcher: Dispatcher
@@ -180,7 +180,6 @@ export class Repository {
       await this.stateManager.sync(stream, opts.syncTimeoutSeconds * 1000)
       return this.stateManager.verifyLoneGenesis(stream)
     })
-    await this.handlePinOpts(state$, opts)
 
     return state$
   }

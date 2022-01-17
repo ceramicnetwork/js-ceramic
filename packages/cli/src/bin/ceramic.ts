@@ -1,6 +1,7 @@
-import program from 'commander'
+import { program } from 'commander'
+import pc from 'picocolors'
 
-import { CeramicCliUtils } from '../ceramic-cli-utils'
+import { CeramicCliUtils } from '../ceramic-cli-utils.js'
 
 program
   .command('daemon')
@@ -107,6 +108,7 @@ program
   )
   .option('--schema <schema>', 'Schema document ID')
   .description(`Create a new document [Deprecated]`)
+
   .action(async (streamtype, { content, onlyGenesis, controllers, deterministic, schema }) => {
     if (streamtype != 'tile') {
       throw new Error("CLI does not currently support creating stream types other than 'tile'")
@@ -175,6 +177,7 @@ schemas
       'that creating a schema document with identical content to an existing schema document ' +
       'will be a no-op.'
   )
+
   .description(`Create a new schema [Deprecated]`)
   .action(async (content, { onlyGenesis, controllers, deterministic }) => {
     await CeramicCliUtils.schemaCreateDoc(content, controllers, onlyGenesis, deterministic)

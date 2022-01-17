@@ -3,9 +3,62 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-## [1.5.8-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile-handler@1.5.7...@ceramicnetwork/stream-tile-handler@1.5.8-rc.0) (2022-01-06)
+# [2.0.0-alpha.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile-handler@1.5.5-rc.10...@ceramicnetwork/stream-tile-handler@2.0.0-alpha.1) (2022-01-14)
+
+
+### Features
+
+* First stab at go-ipfs inclusion ([#1933](https://github.com/ceramicnetwork/js-ceramic/issues/1933)) ([9f29300](https://github.com/ceramicnetwork/js-ceramic/commit/9f29300a0b0f986dda476f99784e7bfcb62dcef4)), closes [#1935](https://github.com/ceramicnetwork/js-ceramic/issues/1935)
+* Only allow valid CBOR in deterministic streams ([#1925](https://github.com/ceramicnetwork/js-ceramic/issues/1925)) ([7031283](https://github.com/ceramicnetwork/js-ceramic/commit/7031283637f93192e0be258eaa00dc2be33a746f))
+
+
+
+
+
+# [2.0.0-alpha.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile-handler@1.5.5-rc.10...@ceramicnetwork/stream-tile-handler@2.0.0-alpha.0) (2021-12-07)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
+
+
+
+
+
+## [1.5.12-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile-handler@1.5.11...@ceramicnetwork/stream-tile-handler@1.5.12-rc.0) (2022-01-12)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
+
+
+
+
+
+## [1.5.11](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile-handler@1.5.10...@ceramicnetwork/stream-tile-handler@1.5.11) (2022-01-12)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
+
+
+
+
+
+## [1.5.10](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile-handler@1.5.9...@ceramicnetwork/stream-tile-handler@1.5.10) (2022-01-09)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
+
+
+
+
+
+## [1.5.9](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile-handler@1.5.7...@ceramicnetwork/stream-tile-handler@1.5.9) (2022-01-09)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
+
+
+
+
+
+## [1.5.8](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile-handler@1.5.7...@ceramicnetwork/stream-tile-handler@1.5.8) (2022-01-09)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile-handler
+
 
 
 

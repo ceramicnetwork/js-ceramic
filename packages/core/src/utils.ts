@@ -5,14 +5,14 @@ import { Memoize } from 'typescript-memoize'
 import { CommitData, CommitType, StreamUtils } from '@ceramicnetwork/common'
 
 import type { TileDocument } from '@ceramicnetwork/stream-tile'
-import { Dispatcher } from './dispatcher'
+import { Dispatcher } from './dispatcher.js'
 import type { StreamID } from '@ceramicnetwork/streamid'
-import type CID from 'cids'
+import type { CID } from 'multiformats/cid'
 
 /**
  * Various utility functions
  */
-export default class Utils {
+export class Utils {
   @Memoize()
   static get validator() {
     const ajv = new Ajv({ allErrors: true, strictTypes: false, strictTuples: false })

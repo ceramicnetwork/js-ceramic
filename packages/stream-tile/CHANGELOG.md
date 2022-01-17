@@ -3,9 +3,61 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-## [1.5.4-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile@1.5.3...@ceramicnetwork/stream-tile@1.5.4-rc.0) (2022-01-06)
+# [2.0.0-alpha.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile@1.5.1-rc.2...@ceramicnetwork/stream-tile@2.0.0-alpha.1) (2022-01-14)
+
+
+### Features
+
+* Only allow valid CBOR in deterministic streams ([#1925](https://github.com/ceramicnetwork/js-ceramic/issues/1925)) ([7031283](https://github.com/ceramicnetwork/js-ceramic/commit/7031283637f93192e0be258eaa00dc2be33a746f))
+
+
+
+
+
+# [2.0.0-alpha.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile@1.5.1-rc.2...@ceramicnetwork/stream-tile@2.0.0-alpha.0) (2021-12-07)
 
 **Note:** Version bump only for package @ceramicnetwork/stream-tile
+
+
+
+
+
+## [1.5.8-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile@1.5.7...@ceramicnetwork/stream-tile@1.5.8-rc.0) (2022-01-12)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile
+
+
+
+
+
+## [1.5.7](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile@1.5.6...@ceramicnetwork/stream-tile@1.5.7) (2022-01-12)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile
+
+
+
+
+
+## [1.5.6](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile@1.5.5...@ceramicnetwork/stream-tile@1.5.6) (2022-01-09)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile
+
+
+
+
+
+## [1.5.5](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile@1.5.3...@ceramicnetwork/stream-tile@1.5.5) (2022-01-09)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile
+
+
+
+
+
+## [1.5.4](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-tile@1.5.3...@ceramicnetwork/stream-tile@1.5.4) (2022-01-09)
+
+**Note:** Version bump only for package @ceramicnetwork/stream-tile
+
 
 
 

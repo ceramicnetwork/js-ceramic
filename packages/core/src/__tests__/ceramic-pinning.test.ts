@@ -1,12 +1,13 @@
-import Ceramic from '../ceramic'
+import { jest } from '@jest/globals'
+import { Ceramic } from '../ceramic.js'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import tmp from 'tmp-promise'
 import { IpfsApi, CeramicApi, SyncOptions } from '@ceramicnetwork/common'
 import * as u8a from 'uint8arrays'
-import { createIPFS } from './ipfs-util'
+import { createIPFS } from './ipfs-util.js'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
-import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
-import KeyDidResolver from 'key-did-resolver'
+import * as ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
+import * as KeyDidResolver from 'key-did-resolver'
 import { Resolver } from 'did-resolver'
 import { DID } from 'dids'
 import { StreamID } from '@ceramicnetwork/streamid'
@@ -74,7 +75,7 @@ describe('Ceramic stream pinning', () => {
   })
 
   afterEach(async () => {
-    await ipfs1.stop(() => console.log('IPFS1 stopped'))
+    await ipfs1.stop()
     await tmpFolder.cleanup()
   })
 
@@ -146,7 +147,6 @@ describe('Ceramic stream pinning', () => {
     await expect(isPinned(ceramic, stream.id)).resolves.toBeTruthy()
     await stream.update({ foo: 'foobarbaz' }, null, { anchor: false, publish: false, pin: false })
     await expect(isPinned(ceramic, stream.id)).resolves.toBeFalsy()
-
     await ceramic.close()
   })
 

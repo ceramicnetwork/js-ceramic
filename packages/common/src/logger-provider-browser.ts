@@ -1,5 +1,5 @@
-import { DiagnosticsLogger, ServiceLogger } from './loggers-browser'
-import { LoggerProviderBase } from './logger-base'
+import { DiagnosticsLogger, ServiceLogger } from './loggers-browser.js'
+import { LoggerProviderBase } from './logger-base.js'
 
 /**
  * Global Logger factory

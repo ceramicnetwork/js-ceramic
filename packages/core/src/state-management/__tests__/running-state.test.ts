@@ -1,9 +1,9 @@
-import CID from 'cids'
+import { CID } from 'multiformats/cid'
 import { CommitType, StreamState } from '@ceramicnetwork/common'
-import { RunningState } from '../running-state'
+import { RunningState } from '../running-state.js'
 
-const FAKE_CID1 = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
-const FAKE_CID2 = new CID('bafybeig6xv5nwphfmvcnektpnojts44jqcuam7bmye2pb54adnrtccjlsu')
+const FAKE_CID1 = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
+const FAKE_CID2 = CID.parse('bafybeig6xv5nwphfmvcnektpnojts44jqcuam7bmye2pb54adnrtccjlsu')
 
 const initial = {
   type: 0,

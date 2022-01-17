@@ -1,25 +1,26 @@
 import os from 'os'
 import path from 'path'
+import pc from 'picocolors'
 import { randomBytes } from '@stablelib/random'
 import * as u8a from 'uint8arrays'
 
 import { promises as fs } from 'fs'
 
 import { Ed25519Provider } from 'key-did-provider-ed25519'
-import CeramicClient from '@ceramicnetwork/http-client'
-import { CeramicApi, LogLevel, Networks, StreamUtils, SyncOptions } from '@ceramicnetwork/common'
-import StreamID, { CommitID } from '@ceramicnetwork/streamid'
+import { CeramicClient } from '@ceramicnetwork/http-client'
+import { CeramicApi, LogLevel, Networks, StreamUtils } from '@ceramicnetwork/common'
+import { StreamID, CommitID } from '@ceramicnetwork/streamid'
 
-import { CeramicDaemon } from './ceramic-daemon'
-import { DaemonConfig, IpfsMode, StateStoreMode } from './daemon-config'
+import { CeramicDaemon } from './ceramic-daemon.js'
+import { DaemonConfig, IpfsMode, StateStoreMode } from './daemon-config.js'
 import { TileDocument, TileMetadataArgs } from '@ceramicnetwork/stream-tile'
 
-import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
-import KeyDidResolver from 'key-did-resolver'
+import * as ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
+import * as KeyDidResolver from 'key-did-resolver'
 import { Resolver } from 'did-resolver'
 import { DID } from 'dids'
-import { DEFAULT_STATE_STORE_DIRECTORY } from '@ceramicnetwork/core/lib/store/pin-store-factory'
 
+const DEFAULT_STATE_STORE_DIRECTORY = path.join(os.homedir(), '.ceramic', 'statestore')
 const DEFAULT_DAEMON_CONFIG_FILENAME = 'daemon.config.json'
 const DEFAULT_CLI_CONFIG_FILENAME = 'client.config.json'
 const LEGACY_CLI_CONFIG_FILENAME = 'config.json' // todo(1615): Remove this backwards compatibility support

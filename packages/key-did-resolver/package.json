@@ -1,6 +1,6 @@
 {
   "name": "key-did-resolver",
-  "version": "1.4.0",
+  "version": "2.0.0-alpha.1",
   "description": "Ceramic did:key method resolver",
   "keywords": [
     "ceramic",
@@ -12,15 +12,21 @@
   "homepage": "",
   "license": "(Apache-2.0 OR MIT)",
   "directories": {
-    "lib": "lib"
+    "lib": "./lib"
   },
-  "main": "lib/index.js",
+  "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
+  "type": "module",
+  "exports": {
+    ".": "./lib/index.js"
+  },
   "files": [
     "lib"
   ],
+  "sideEffects": false,
   "scripts": {
     "test": "../../node_modules/.bin/jest --silent --coverage",
-    "build": "../../node_modules/.bin/tsc -p tsconfig.json",
+    "build": "../../node_modules/.bin/tsc --project tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
     "lint": "../../node_modules/.bin/eslint ./src --ext .js,.jsx,.ts,.tsx",
@@ -28,19 +34,13 @@
   },
   "dependencies": {
     "@stablelib/ed25519": "^1.0.2",
-    "multibase": "~4.0.2",
-    "uint8arrays": "^2.0.5",
+    "uint8arrays": "^3.0.0",
     "varint": "^6.0.0"
   },
   "devDependencies": {
-    "@types/multibase": "~3.1.0",
-    "@types/node": "^13.13.15",
-    "@types/varint": "^5.0.0",
-    "did-resolver": "^3.1.0"
-  },
-  "jest": {
-    "testEnvironment": "node",
-    "resolver": "jest-resolver-enhanced"
+    "@types/node": "^17.0.5",
+    "@types/varint": "^6.0.0",
+    "did-resolver": "^3.1.5"
   },
   "gitHead": "c58eb9659f5fdd976aca2db6465619c20ba30ff9"
 }

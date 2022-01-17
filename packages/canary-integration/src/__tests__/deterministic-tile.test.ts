@@ -1,7 +1,7 @@
 import { IpfsApi } from '@ceramicnetwork/common'
-import { createIPFS } from '../create-ipfs'
+import { createIPFS } from '../create-ipfs.js'
 import { CeramicApi } from '@ceramicnetwork/common'
-import { createCeramic } from '../create-ceramic'
+import { createCeramic } from '../create-ceramic.js'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 
 let ipfs: IpfsApi
@@ -21,7 +21,7 @@ afterAll(async () => {
 test("can create and retreive deterministic tile document", async () => {
   const createdTile = await TileDocument.deterministic(ceramic, {family: 'test123'})
   await createdTile.update({ foo: 'bar' })
-  
+
   const retrievedTile = await TileDocument.deterministic(ceramic, {family: 'test123'}, { anchor: false, publish: false })
 
   expect(createdTile.id.toString()).toEqual(retrievedTile.id.toString())

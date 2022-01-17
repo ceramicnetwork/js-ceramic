@@ -1,19 +1,20 @@
-import { Dispatcher } from '../dispatcher'
-import CID from 'cids'
-import StreamID from '@ceramicnetwork/streamid'
+import { jest } from '@jest/globals'
+import { Dispatcher } from '../dispatcher.js'
+import { CID } from 'multiformats/cid'
+import { StreamID } from '@ceramicnetwork/streamid'
 import { CommitType, StreamState, LoggerProvider, IpfsApi, TestUtils } from '@ceramicnetwork/common'
-import { serialize, MsgType } from '../pubsub/pubsub-message'
-import { Repository, RepositoryDependencies } from '../state-management/repository'
+import { serialize, MsgType } from '../pubsub/pubsub-message.js'
+import { Repository, RepositoryDependencies } from '../state-management/repository.js'
+import { delay } from './delay.js'
 import tmp from 'tmp-promise'
-import { LevelStateStore } from '../store/level-state-store'
-import { PinStore } from '../store/pin-store'
-import { RunningState } from '../state-management/running-state'
-import { StateManager } from '../state-management/state-manager'
-import cloneDeep from 'lodash.clonedeep'
+import { LevelStateStore } from '../store/level-state-store.js'
+import { PinStore } from '../store/pin-store.js'
+import { RunningState } from '../state-management/running-state.js'
+import { StateManager } from '../state-management/state-manager.js'
 
 const TOPIC = '/ceramic'
-const FAKE_CID = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
-const FAKE_CID2 = new CID('bafybeig6xv5nwphfmvcnektpnojts44jqcuam7bmye2pb54adnrtccjlsu')
+const FAKE_CID = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
+const FAKE_CID2 = CID.parse('bafybeig6xv5nwphfmvcnektpnojts44jqcuam7bmye2pb54adnrtccjlsu')
 const FAKE_STREAM_ID = StreamID.fromString(
   'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
 )
@@ -57,7 +58,7 @@ describe('Dispatcher with mock ipfs', () => {
     } as unknown as PinStore
     repository.setDeps({ pinStore } as unknown as RepositoryDependencies)
     dispatcher = new Dispatcher(
-      ipfs as any as IpfsApi,
+      ipfs as unknown as IpfsApi,
       TOPIC,
       repository,
       loggerProvider.getDiagnosticsLogger(),
@@ -118,8 +119,10 @@ describe('Dispatcher with mock ipfs', () => {
     expect(ipfsSpy).toBeCalledTimes(1)
     expect(await dispatcher.retrieveCommit(FAKE_CID)).toEqual('data')
     // Commit found in cache so IPFS lookup skipped (IPFS lookup count unchanged)
+    const clonedCID = CID.parse(FAKE_CID.toString())
+    expect(clonedCID !== FAKE_CID).toEqual(true)
     expect(ipfsSpy).toBeCalledTimes(1)
-    expect(await dispatcher.retrieveCommit(cloneDeep(FAKE_CID))).toEqual('data')
+    expect(await dispatcher.retrieveCommit(clonedCID)).toEqual('data')
     // Commit found in cache with different instance of same CID (IPFS lookup count unchanged)
     expect(ipfsSpy).toBeCalledTimes(1)
     expect(ipfsSpy.mock.calls[0][0]).toEqual(FAKE_CID)
@@ -127,7 +130,7 @@ describe('Dispatcher with mock ipfs', () => {
 
   it('caches and retrieves with path correctly', async () => {
     const ipfsSpy = ipfs.dag.get
-    ipfsSpy.mockImplementation(function (cid, opts) {
+    ipfsSpy.mockImplementation(function (cid: CID, opts: any) {
       if (opts.path == '/foo') {
         return { value: 'foo' }
       } else if (opts.path == '/bar') {
@@ -149,13 +152,17 @@ describe('Dispatcher with mock ipfs', () => {
     expect(ipfsSpy).toBeCalledTimes(2)
 
     expect(ipfsSpy.mock.calls[0][0]).toEqual(FAKE_CID)
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     expect(ipfsSpy.mock.calls[0][1].path).toEqual('/foo')
     expect(ipfsSpy.mock.calls[1][0]).toEqual(FAKE_CID)
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     expect(ipfsSpy.mock.calls[1][1].path).toEqual('/bar')
   })
 
   it('publishes tip correctly', async () => {
-    const tip = new CID('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D')
+    const tip = CID.parse('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D')
     // Test if subscription ends. It always will, but better be on the safe side.
     await new Promise<void>((resolve) => {
       const subscription = dispatcher.publishTip(FAKE_STREAM_ID, tip)
@@ -204,7 +211,7 @@ describe('Dispatcher with mock ipfs', () => {
     // Store the query ID sent when the stream is registered so we can use it as the response ID later
     const publishArgs = ipfs.pubsub.publish.mock.calls[0]
     expect(publishArgs[0]).toEqual(TOPIC)
-    const queryMessageSent = JSON.parse(new TextDecoder().decode(publishArgs[1]))
+    const queryMessageSent = JSON.parse(new TextDecoder().decode(publishArgs[1] as unknown as Uint8Array))
     const queryID = queryMessageSent.id
 
     // Handle UPDATE message

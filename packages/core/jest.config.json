@@ -1,0 +1,12 @@
+{
+  "testEnvironment": "./environment-with-abortsignal.js",
+  "resolver": "jest-resolver-enhanced",
+  "testMatch": ["**/?(*.)+(spec|test).[jt]s?(x)"],
+  "extensionsToTreatAsEsm": [".ts"],
+  "moduleNameMapper": {
+    "^(\\.{1,2}/.*)\\.js$": "$1"
+  },
+  "transform": {
+    "^.+\\.tsx?$": "babel-jest"
+  }
+}

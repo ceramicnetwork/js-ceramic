@@ -1,6 +1,6 @@
 {
   "name": "pkh-did-resolver",
-  "version": "0.3.3",
+  "version": "1.0.0-alpha.1",
   "description": "did:pkh method resolver",
   "keywords": [
     "ceramic",
@@ -12,28 +12,31 @@
   "homepage": "https://3boxlabs.com",
   "license": "(Apache-2.0 OR MIT)",
   "directories": {
-    "lib": "lib"
+    "lib": "./lib"
   },
-  "main": "lib/index.js",
+  "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
+  "type": "module",
   "files": [
     "lib"
   ],
+  "sideEffects": false,
+  "exports": {
+    ".": "./lib/index.js"
+  },
   "scripts": {
     "test": "../../node_modules/.bin/jest --silent --coverage",
-    "build": "../../node_modules/.bin/tsc -p tsconfig.json",
+    "build": "../../node_modules/.bin/tsc --project tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
     "lint": "../../node_modules/.bin/eslint ./src --ext .js,.jsx,.ts,.tsx",
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
-    "caip": "^1.0.0-beta.0"
+    "caip": "~1.0.0"
   },
   "devDependencies": {
-    "did-resolver": "^3.1.0"
-  },
-  "jest": {
-    "testEnvironment": "node"
+    "did-resolver": "^3.1.5"
   },
   "gitHead": "c58eb9659f5fdd976aca2db6465619c20ba30ff9"
 }

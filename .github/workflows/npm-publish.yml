@@ -20,8 +20,7 @@ jobs:
   publish_main:
     runs-on: ubuntu-latest
     steps:
-      -
-        name: Setup environment
+      - name: Setup environment
         id: set-env
         run: |
           PUBLISH_ARGS=""
@@ -38,47 +37,40 @@ jobs:
           if [[ -n $PUBLISH_ARGS ]]; then
             echo "::set-output name=publishArgs::-- $PUBLISH_ARGS"
           fi
-      -
-        name: Setup Node
+      - name: Setup Node
         if: ${{ steps.set-env.outputs.main == 'true' }}
         uses: actions/setup-node@v1
         with:
-          node-version: 14
-      -
-        name: Checkout `main` branch
+          node-version: 16
+      - name: Checkout `main` branch
         if: ${{ steps.set-env.outputs.main == 'true' }}
         uses: actions/checkout@v2
         with:
           token: ${{ secrets.GH_TOKEN }}
           ref: main
-      -
-        name: Configure git
+      - name: Configure git
         if: ${{ steps.set-env.outputs.main == 'true' }}
         run: |
           git config user.email "${{ github.actor }}@users.noreply.github.com"
           git config user.name ${{ github.actor }}
           git fetch --all
-      -
-        name: Merge down from `main` -> `rc` -> `develop`
-        if: ${{ steps.set-env.outputs.main == 'true' && steps.set-env.outputs.hotfix != 'true' }}
+      - name: Merge down from `main` -> `rc` -> `develop`
+        if: ${{ steps.set-env.outputs.main == 'true' }}
         run: |
           git checkout -B release-candidate refs/remotes/origin/release-candidate
           git merge main
           git checkout -B develop refs/remotes/origin/develop
           git merge release-candidate
           git checkout main
-      -
-        name: Merge `release-candidate` -> `main`
+      - name: Merge `release-candidate` -> `main`
         if: ${{ steps.set-env.outputs.main == 'true' && steps.set-env.outputs.hotfix != 'true' }}
         run: git merge release-candidate
-      -
-        name: Initialize and build code
+      - name: Initialize and build code
         if: ${{ steps.set-env.outputs.main == 'true' }}
         run: |
           npm set unsafe-perm true
           npm ci && npm run build
-      -
-        name: Publish packages to NPM
+      - name: Publish packages to NPM
         if: ${{ steps.set-env.outputs.main == 'true' }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -87,10 +79,8 @@ jobs:
         run: |
           npm config set //registry.npmjs.org/:_authToken $NODE_AUTH_TOKEN
           npm run publish:latest $PUBLISH_ARGS
-          git push
-      -
-        name: Update and push code to `release-candidate` and `develop`
-        if: ${{ steps.set-env.outputs.main == 'true' && steps.set-env.outputs.hotfix != 'true' }}
+      - name: Update and push code to `release-candidate` and `develop`
+        if: ${{ steps.set-env.outputs.main == 'true' }}
         run: |
           git checkout release-candidate
           git merge main
@@ -98,8 +88,7 @@ jobs:
           git checkout develop
           git merge main
           git push
-      -
-        name: Send Discord notification
+      - name: Send Discord notification
         if: ${{ steps.set-env.outputs.main == 'true' }}
         run: |
           # Prepare notification body
@@ -119,8 +108,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: publish_main
     steps:
-      -
-        name: Setup environment
+      - name: Setup environment
         id: set-env
         run: |
           PUBLISH_ARGS=""
@@ -137,45 +125,38 @@ jobs:
           if [[ -n $PUBLISH_ARGS ]]; then
             echo "::set-output name=publishArgs::-- $PUBLISH_ARGS"
           fi
-      -
-        name: Setup Node
+      - name: Setup Node
         if: ${{ steps.set-env.outputs.rc == 'true' }}
         uses: actions/setup-node@v1
         with:
-          node-version: 14
-      -
-        name: Checkout `release-candidate` branch
+          node-version: 16
+      - name: Checkout `release-candidate` branch
         if: ${{ steps.set-env.outputs.rc == 'true' }}
         uses: actions/checkout@v2
         with:
           token: ${{ secrets.GH_TOKEN }}
           ref: release-candidate
-      -
-        name: Configure git
+      - name: Configure git
         if: ${{ steps.set-env.outputs.rc == 'true' }}
         run: |
           git config user.email "${{ github.actor }}@users.noreply.github.com"
           git config user.name ${{ github.actor }}
           git fetch --all
-      -
-        name: Merge down from `rc` -> `develop`
-        if: ${{ steps.set-env.outputs.rc == 'true' && steps.set-env.outputs.hotfix != 'true' }}
+      - name: Merge down from `rc` -> `develop`
+        if: ${{ steps.set-env.outputs.rc == 'true' }}
         run: |
           git checkout -B develop refs/remotes/origin/develop
           git merge release-candidate
           git checkout release-candidate
-      -
-        name: Merge `develop` -> `release-candidate`
+      - name: Merge `develop` -> `release-candidate`
         if: ${{ steps.set-env.outputs.rc == 'true' && steps.set-env.outputs.hotfix != 'true' }}
         run: git merge develop
-      -
-        name: Initialize and build code
+      - name: Initialize and build code
         if: ${{ steps.set-env.outputs.rc == 'true' }}
         run: |
           npm set unsafe-perm true
           npm ci && npm run build
-      -
-        name: Publish packages to NPM
+      - name: Publish packages to NPM
         if: ${{ steps.set-env.outputs.rc == 'true' }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -184,16 +165,13 @@ jobs:
         run: |
           npm config set //registry.npmjs.org/:_authToken $NODE_AUTH_TOKEN
           npm run publish:release-candidate $PUBLISH_ARGS
-          git push
-      -
-        name: Update and push code to `develop`
-        if: ${{ steps.set-env.outputs.rc == 'true' && steps.set-env.outputs.hotfix != 'true' }}
+      - name: Update and push code to `develop`
+        if: ${{ steps.set-env.outputs.rc == 'true' }}
         run: |
           git checkout develop
           git merge release-candidate
           git push
-      -
-        name: Send Discord notification
+      - name: Send Discord notification
         if: ${{ steps.set-env.outputs.rc == 'true' }}
         run: |
           # Prepare notification body
