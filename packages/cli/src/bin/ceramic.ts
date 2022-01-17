@@ -106,7 +106,8 @@ program
       'that creating a document with identical content to an existing document will be a no-op.'
   )
   .option('--schema <schema>', 'Schema document ID')
-  .description('Create a new document')
+  .description(`Create a new document [Deprecated]`)
+
   .action(async (streamtype, { content, onlyGenesis, controllers, deterministic, schema }) => {
     if (streamtype != 'tile') {
       throw new Error("CLI does not currently support creating stream types other than 'tile'")
@@ -125,41 +126,41 @@ program
   .option('--content <content>', 'Update document content')
   .option('--controllers <controllers>', 'Change controllers of this document (only 3ID)')
   .option('--schema <schema>', 'Change the schema CommitID')
-  .description('Update the content of a document')
+  .description(`Update the content of a document [Deprecated]`)
   .action(async (streamId, { content, controllers, schema }) => {
     await CeramicCliUtils.update(streamId, content, controllers, schema)
   })
 
 program
   .command('show <streamId> [<anchor>]')
-  .description('Show the content of a stream')
+  .description(`Show the content of a stream [Deprecated]`)
   .action(async (streamId) => {
     await CeramicCliUtils.show(streamId)
   })
 
 program
   .command('state <streamId> [<anchor>]')
-  .description('Show the state of a stream')
+  .description(`Show the state of a stream [Deprecated]`)
   .action(async (streamId) => {
     await CeramicCliUtils.state(streamId)
   })
 
 program
   .command('watch <streamId>')
-  .description('Watch for updates in a stream')
+  .description(`Watch for updates in a stream [Deprecated]`)
   .action(async (streamId) => {
     await CeramicCliUtils.watch(streamId)
   })
 
 program
   .command('commits <streamId>')
-  .description('List stream commits')
+  .description(`List stream commits [Deprecated]`)
   .action(async (streamId) => {
     await CeramicCliUtils.commits(streamId)
   })
 
 const schemas = program.command('schema')
-schemas.description('Ceramic schemas')
+schemas.description(`('Ceramic schemas [Deprecated]`)
 
 schemas
   .command('create <new-content>')
@@ -175,7 +176,8 @@ schemas
       'that creating a schema document with identical content to an existing schema document ' +
       'will be a no-op.'
   )
-  .description('Create a new schema')
+
+  .description(`Create a new schema [Deprecated]`)
   .action(async (content, { onlyGenesis, controllers, deterministic }) => {
     await CeramicCliUtils.schemaCreateDoc(content, controllers, onlyGenesis, deterministic)
   })
@@ -183,31 +185,31 @@ schemas
 schemas
   .command('update <streamId> <new-content>')
   .option('--controllers <controllers>', 'Change controllers of this document (only 3ID)')
-  .description('Update the content of a schema')
+  .description(`Update the content of a schema [Deprecated]`)
   .action(async (streamId, content, { controllers }) => {
     await CeramicCliUtils.schemaUpdateDoc(streamId, content, controllers)
   })
 
 const pin = program.command('pin')
-pin.description('Ceramic local pinning API')
+pin.description(`('Ceramic local pinning API [Deprecated]`)
 
 pin
   .command('add <streamId>')
-  .description('Pin stream')
+  .description(`Pin stream [Deprecated]`)
   .action(async (streamId) => {
     await CeramicCliUtils.pinAdd(streamId)
   })
 
 pin
   .command('rm <streamId>')
-  .description('Unpin stream')
+  .description(`Unpin stream [Deprecated]`)
   .action(async (streamId) => {
     await CeramicCliUtils.pinRm(streamId)
   })
 
 pin
   .command('ls [<streamId>]')
-  .description('List pinned streams')
+  .description(`List pinned streams [Deprecated]`)
   .action(async (streamId) => {
     await CeramicCliUtils.pinLs(streamId)
   })
