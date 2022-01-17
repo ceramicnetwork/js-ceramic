@@ -27,6 +27,7 @@
     "lib": "lib"
   },
   "dependencies": {
+    "@crustio/type-definitions": "^1.2.0",
     "@stablelib/base64": "^1.0.0",
     "@stablelib/sha256": "^1.0.0"
   },

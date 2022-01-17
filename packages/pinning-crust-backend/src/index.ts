@@ -5,12 +5,26 @@ import { KeyringPair } from '@polkadot/keyring/types'
 import { ApiPromise, WsProvider } from '@polkadot/api';
 import { typesBundleForPolkadot } from '@crustio/type-definitions';
 
+// Errors
 export class EmptySeedError extends Error {
   constructor(address: string) {
-    super(`No seed provided for crust gateway at ${address}`)
+    super(`[Crust]: No seed provided at ${address}`)
   }
 }
 
+export class PlaceOrderError extends Error {
+  constructor(type: number) {
+    super(`[Crust]: Place storage order (${type}) failed.`)
+  }
+}
+
+export class AddPrepaidError extends Error {
+  constructor(type: number) {
+    super(`[Crust]: Add prepaid (${type}) failed.`)
+  }
+}
+
+// Pinning class
 export class CrustPinningBackend implements PinningBackend {
   static designator = 'crust'
 
@@ -20,9 +34,9 @@ export class CrustPinningBackend implements PinningBackend {
   readonly keyPair: KeyringPair
 
   api: ApiPromise
-  
+
   constructor(readonly connectionString: string) {
-    // 1.1 check input
+    // Check input
     const url = new URL(connectionString)
     const hostname = url.hostname
     const seed = url.searchParams.get('seed')
@@ -42,7 +56,7 @@ export class CrustPinningBackend implements PinningBackend {
       this.endpoint = `${protocol}://${hostname}`
     }
 
-    // 1.2 get a keypair
+    // Get a onchain keypair
     const keyring = new Keyring();
     this.keyPair = keyring.addFromUri(seed as string);
   }
@@ -55,13 +69,46 @@ export class CrustPinningBackend implements PinningBackend {
   }
 
   async close(): Promise<void> {
-    // Do Nothing
+    // Do nothing
   }
 
   async pin(cid: CID): Promise<void> {
+    // Check connnetion
+    await this.api.isReadyOrError
+
+    // Support for the storage of up to 32G
+    const tx = this.api.tx.market.placeStorageOrder(cid.toString(), 32 * 1024 * 1024 * 1024, 0, '')
+    await tx.signAndSend(this.keyPair, ({ events = [], status }) => {
+      if (status.isInBlock) {
+        events.forEach(({ event: { method, section } }) => {
+          if (section === 'system' && method === 'ExtrinsicFailed') {
+            throw new PlaceOrderError(tx.type)
+          }
+        });
+      }
+    }).catch(e => {
+      throw e
+    });
+
+    // Permanent storage
+    // Learn what's prepard for: https://wiki.crust.network/docs/en/DSM#3-file-order-assurance-settlement-and-discount
+    const prepard = 10000000; // in pCRU, 1 pCRU = 10^-12 CRU
+    const tx2 = this.api.tx.market.addPrepaid(cid.toString(), prepard);
+    tx2.signAndSend(this.keyPair, ({ events = [], status }) => {
+      if (status.isInBlock) {
+        events.forEach(({ event: { method, section } }) => {
+          if (section === 'system' && method === 'ExtrinsicFailed') {
+            throw new AddPrepaidError(tx2.type)
+          }
+        });
+      }
+    }).catch(e => {
+      throw e
+    })
   }
 
   async unpin(cid: CID): Promise<void> {
+    // do nothing
   }
 
   async ls(): Promise<CidList> {
