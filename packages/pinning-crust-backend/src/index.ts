@@ -4,6 +4,12 @@ import { Keyring } from '@polkadot/keyring'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { ApiPromise, WsProvider } from '@polkadot/api';
 import { typesBundleForPolkadot } from '@crustio/type-definitions';
+import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
+import * as sha256 from '@stablelib/sha256'
+import * as base64 from '@stablelib/base64'
+
+// Encoder
+const textEncoder = new TextEncoder()
 
 // Errors
 export class EmptySeedError extends Error {
@@ -59,6 +65,11 @@ export class CrustPinningBackend implements PinningBackend {
     // Get a onchain keypair
     const keyring = new Keyring();
     this.keyPair = keyring.addFromUri(seed as string);
+
+    // ID
+    const bytes = textEncoder.encode(this.connectionString)
+    const digest = base64.encodeURLSafe(sha256.hash(bytes))
+    this.id = `${CrustPinningBackend.designator}@${digest}`
   }
 
   open(): void {
@@ -93,7 +104,7 @@ export class CrustPinningBackend implements PinningBackend {
     // Permanent storage
     // Learn what's prepard for: https://wiki.crust.network/docs/en/DSM#3-file-order-assurance-settlement-and-discount
     const prepard = 10000000; // in pCRU, 1 pCRU = 10^-12 CRU
-    const tx2 = this.api.tx.market.addPrepaid(cid.toString(), prepard);
+    const tx2 = this.api.tx.market.addPrepaid(cid.toString(), prepard)
     tx2.signAndSend(this.keyPair, ({ events = [], status }) => {
       if (status.isInBlock) {
         events.forEach(({ event: { method, section } }) => {
@@ -108,10 +119,24 @@ export class CrustPinningBackend implements PinningBackend {
   }
 
   async unpin(cid: CID): Promise<void> {
-    // do nothing
+    // Do nothing
   }
 
   async ls(): Promise<CidList> {
+    // Configuration
+    const data = '{"query": "query MyQuery {\\n  substrate_extrinsic(where: {method: {_eq: \\"placeStorageOrder\\"}, blockNumber: {}, signer: {_eq: \\"' + this.keyPair.address + '\\"}}, order_by: {blockNumber: desc}) {\\n    args(path: \\".[0].value\\")\\n  }\\n}\\n"}';
+    const config: AxiosRequestConfig = {
+      method: 'post',
+      url: 'https://crust.indexer.gc.subsquid.io/v4/graphql/',
+      headers: {
+        'Content-Type': 'text/plain'
+      },
+      data: data
+    }
+
+    // Request
+    const res: AxiosResponse = await axios(config)
+    console.log(JSON.stringify(res.data))
     return {}
   }
 
