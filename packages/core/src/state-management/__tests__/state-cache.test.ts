@@ -1,4 +1,5 @@
-import { StateCache } from '../state-cache'
+import { jest } from '@jest/globals'
+import { StateCache } from '../state-cache.js'
 
 test('get and set', () => {
   const cache = new StateCache(10)

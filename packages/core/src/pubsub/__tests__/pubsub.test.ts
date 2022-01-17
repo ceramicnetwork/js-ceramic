@@ -1,10 +1,11 @@
-import { LoggerProvider } from '@ceramicnetwork/common'
-import { Pubsub } from '../pubsub'
-import { MsgType, serialize } from '../pubsub-message'
+import { jest } from '@jest/globals'
+import { IpfsApi, LoggerProvider } from '@ceramicnetwork/common';
+import { Pubsub } from '../pubsub.js'
+import { MsgType, serialize } from '../pubsub-message.js'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { bufferCount, first } from 'rxjs/operators'
 import * as random from '@stablelib/random'
-import { asIpfsMessage } from './as-ipfs-message'
+import { asIpfsMessage } from './as-ipfs-message.js'
 import { from } from 'rxjs'
 
 const TOPIC = 'test'
@@ -47,7 +48,7 @@ test('pass incoming messages, omit garbage', async () => {
     },
     id: jest.fn(async () => ({ id: PEER_ID })),
   }
-  const pubsub = new Pubsub(ipfs, TOPIC, 3000, pubsubLogger, diagnosticsLogger)
+  const pubsub = new Pubsub(ipfs as unknown as IpfsApi, TOPIC, 3000, pubsubLogger, diagnosticsLogger)
   // Even if garbage is first, we only receive well-formed messages
   const received = pubsub.pipe(bufferCount(LENGTH), first()).toPromise()
   expect(await received).toEqual(MESSAGES)
@@ -64,7 +65,7 @@ test('publish', async () => {
     },
     id: jest.fn(async () => ({ id: PEER_ID })),
   }
-  const pubsub = new Pubsub(ipfs, TOPIC, 3000, pubsubLogger, diagnosticsLogger)
+  const pubsub = new Pubsub(ipfs as unknown as IpfsApi, TOPIC, 3000, pubsubLogger, diagnosticsLogger)
   const message = {
     typ: MsgType.QUERY as MsgType.QUERY,
     id: random.randomString(32),

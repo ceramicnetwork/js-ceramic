@@ -1,4 +1,4 @@
-import type StreamID from '@ceramicnetwork/streamid'
+import type { StreamID } from '@ceramicnetwork/streamid'
 
 export enum OcapTypes {
   EIP4361 = 'EIP-4361',

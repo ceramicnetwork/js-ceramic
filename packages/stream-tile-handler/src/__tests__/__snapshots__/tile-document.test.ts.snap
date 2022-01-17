@@ -15,7 +15,7 @@ Object {
   "log": Array [
     Object {
       "cid": Object {
-        "codec": "dag-pb",
+        "code": 112,
         "hash": Uint8Array [
           18,
           32,
@@ -58,7 +58,7 @@ Object {
     },
     Object {
       "cid": Object {
-        "codec": "dag-pb",
+        "code": 112,
         "hash": Uint8Array [
           18,
           32,
@@ -101,7 +101,7 @@ Object {
     },
     Object {
       "cid": Object {
-        "codec": "dag-pb",
+        "code": 112,
         "hash": Uint8Array [
           18,
           32,
@@ -163,7 +163,7 @@ Object {
   "log": Array [
     Object {
       "cid": Object {
-        "codec": "dag-pb",
+        "code": 112,
         "hash": Uint8Array [
           18,
           32,
@@ -224,7 +224,7 @@ Object {
   "log": Array [
     Object {
       "cid": Object {
-        "codec": "dag-pb",
+        "code": 112,
         "hash": Uint8Array [
           18,
           32,
@@ -267,7 +267,7 @@ Object {
     },
     Object {
       "cid": Object {
-        "codec": "dag-pb",
+        "code": 112,
         "hash": Uint8Array [
           18,
           32,
@@ -339,7 +339,7 @@ Object {
   "log": Array [
     Object {
       "cid": Object {
-        "codec": "dag-pb",
+        "code": 112,
         "hash": Uint8Array [
           18,
           32,
@@ -382,7 +382,7 @@ Object {
     },
     Object {
       "cid": Object {
-        "codec": "dag-pb",
+        "code": 112,
         "hash": Uint8Array [
           18,
           32,
@@ -425,7 +425,7 @@ Object {
     },
     Object {
       "cid": Object {
-        "codec": "dag-pb",
+        "code": 112,
         "hash": Uint8Array [
           18,
           32,

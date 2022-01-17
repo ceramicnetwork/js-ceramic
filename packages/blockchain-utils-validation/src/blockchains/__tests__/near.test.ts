@@ -1,4 +1,4 @@
-import { validateLink } from '../near'
+import { validateLink } from '../near.js'
 import * as linking from '@ceramicnetwork/blockchain-utils-linking'
 import * as nearApiJs from 'near-api-js'
 
@@ -14,7 +14,7 @@ keyStore.setKey(chainRef, accountName, keyPair)
 const config = {
   keyStore, // instance of InMemoryKeyStore
   networkId: 'testnet',
-  nodeUrl: 'fake-address.org'
+  nodeUrl: 'fake-address.org',
 }
 
 describe('Blockchain: NEAR', () => {

@@ -1,4 +1,4 @@
-import type CID from 'cids'
+import type { CID } from 'multiformats/cid'
 import {
   AnchorProof,
   AnchorStatus,
@@ -14,12 +14,12 @@ import {
   StreamStateHolder,
   StreamUtils,
 } from '@ceramicnetwork/common'
-import { Dispatcher } from './dispatcher'
+import { Dispatcher } from './dispatcher.js'
 import cloneDeep from 'lodash.clonedeep'
 import { CommitID } from '@ceramicnetwork/streamid'
-import { StateValidation } from './state-management/state-validation'
-import { HandlersMap } from './handlers-map'
-import Utils from './utils'
+import { StateValidation } from './state-management/state-validation.js'
+import { HandlersMap } from './handlers-map.js'
+import { Utils } from './utils.js'
 
 /**
  * Verifies anchor commit structure
@@ -226,7 +226,7 @@ export function commitAtTime(stateHolder: StreamStateHolder, timestamp: number):
       }
     }
   }
-  return stateHolder.id.atCommit(commitCid)
+  return CommitID.make(stateHolder.id, commitCid)
 }
 
 export class ConflictResolution {

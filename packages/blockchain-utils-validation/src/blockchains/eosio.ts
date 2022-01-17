@@ -1,13 +1,13 @@
-import { AccountID } from 'caip'
 import { SigningTools } from '@smontero/eosio-signing-tools'
-import { BlockchainHandler } from '../blockchain-handler'
+import { BlockchainHandler } from '../blockchain-handler.js'
 import * as linking from '@ceramicnetwork/blockchain-utils-linking'
+import { normalizeAccountId } from '@ceramicnetwork/common'
 
 const namespace = 'eosio'
 
 export async function validateLink(proof: linking.LinkProof): Promise<linking.LinkProof | null> {
   const { message, signature, account } = proof
-  const accountID = new AccountID(account)
+  const accountID = normalizeAccountId(account)
   const { address, chainId } = accountID
   const success = await SigningTools.verifySignature({
     chainId: chainId.reference,
@@ -18,9 +18,7 @@ export async function validateLink(proof: linking.LinkProof): Promise<linking.Li
   return success ? proof : null
 }
 
-const Handler: BlockchainHandler = {
+export const handler: BlockchainHandler = {
   namespace,
   validateLink,
 }
-
-export default Handler

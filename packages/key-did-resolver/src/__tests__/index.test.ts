@@ -1,4 +1,4 @@
-import index from '../index'
+import * as index from '../index.js'
 
 describe('Index mapper', () => {
   it('successfully resolves the document from did', async () => {

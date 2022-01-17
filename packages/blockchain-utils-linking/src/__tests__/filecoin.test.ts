@@ -1,6 +1,7 @@
+import { jest } from '@jest/globals'
 import { LocalManagedProvider } from '@glif/local-managed-provider'
 import { Network } from '@glif/filecoin-address'
-import { FilecoinAuthProvider } from '../filecoin'
+import { FilecoinAuthProvider } from '../filecoin.js'
 
 const did = 'did:3:bafysdfwefwe'
 const testnetPrivateKey =

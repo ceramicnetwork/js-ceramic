@@ -92,6 +92,22 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 
 
+# [2.0.0-alpha.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/3id-did-resolver@1.4.10-rc.11...@ceramicnetwork/3id-did-resolver@2.0.0-alpha.1) (2022-01-14)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
+# [2.0.0-alpha.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/3id-did-resolver@1.4.10-rc.11...@ceramicnetwork/3id-did-resolver@2.0.0-alpha.0) (2021-12-07)
+
+**Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
+
+
+
+
+
 ## [1.4.10-rc.11](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/3id-did-resolver@1.4.10-rc.10...@ceramicnetwork/3id-did-resolver@1.4.10-rc.11) (2021-12-06)
 
 **Note:** Version bump only for package @ceramicnetwork/3id-did-resolver
