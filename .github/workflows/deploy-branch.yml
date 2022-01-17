@@ -54,8 +54,7 @@ jobs:
         with:
           registry: ${{ steps.login-ecr.outputs.registry }}
           image_name: ceramic-debug/${{ env.ENV }}/js-ceramic
-          image_tag: ${{ steps.set-vars.outputs.SHA_TAG }},debug,latest
-          build_extra_args: "--build-arg=NGROK_TOKEN=${{ secrets.NGROK_TOKEN }}"
+          image_tag: ${{ steps.set-vars.outputs.SHA_TAG }},${{ github.sha }},debug,latest
           dockerfile: Dockerfile.daemon
       -
         name: Build and push IPFS image to ECR
@@ -63,8 +62,7 @@ jobs:
         with:
           registry: ${{ steps.login-ecr.outputs.registry }}
           image_name: ceramic-debug/${{ env.ENV }}/js-ipfs
-          image_tag: ${{ steps.set-vars.outputs.SHA_TAG }},debug,latest
-          build_extra_args: "--build-arg=NGROK_TOKEN=${{ secrets.NGROK_TOKEN }}"
+          image_tag: ${{ steps.set-vars.outputs.SHA_TAG }},${{ github.sha }},debug,latest
           dockerfile: Dockerfile.ipfs-daemon
 
   deploy_to_infra:
