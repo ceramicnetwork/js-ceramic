@@ -1,6 +1,5 @@
 import os from 'os'
 import path from 'path'
-import pc from 'picocolors'
 import { randomBytes } from '@stablelib/random'
 import * as u8a from 'uint8arrays'
 
@@ -598,9 +597,9 @@ export class CeramicCliUtils {
 
 const depreciationNotice = () => {
   console.log(
-    `${pc.red(pc.bold('This command has been deprecated.'))}
+    `This command has been deprecated.}
 Please use the upgraded Glaze CLI instead. 
 Please test with the new CLI before reporting any problems. 
-${pc.green('npm i -g @glazed/cli')}`
+'npm i -g @glazed/cli'`
   )
 }
