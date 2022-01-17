@@ -60,8 +60,8 @@ export class Dispatcher {
     readonly repository: Repository,
     private readonly _logger: DiagnosticsLogger,
     private readonly _pubsubLogger: ServiceLogger,
-    maxQueriesPerSecond: number
-    readonly tasks: TaskQueue = new TaskQueue(),
+    maxQueriesPerSecond: number,
+    readonly tasks: TaskQueue = new TaskQueue()
   ) {
     const pubsub = new Pubsub(
       _ipfs,

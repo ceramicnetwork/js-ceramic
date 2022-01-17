@@ -5,6 +5,7 @@ import {
   CommitType,
   SignatureStatus,
   StreamUtils,
+  TestUtils,
 } from '@ceramicnetwork/common'
 import { CID } from 'multiformats/cid'
 import { decode as decodeMultiHash } from 'multiformats/hashes/digest'
@@ -257,6 +258,15 @@ test('commit history and atCommit', async () => {
   expect(commit4.equals(stream.anchorCommitIds[1])).toBeFalsy()
   expect(stream.state.log.length).toEqual(5)
 
+  await TestUtils.waitForState(
+    stream,
+    3000,
+    (s) => s.anchorStatus === AnchorStatus.ANCHORED,
+    () => {
+      throw new Error(`Expect anchored`)
+    }
+  )
+
   // Correctly check out a specific commit
   const streamStateOriginal = cloneDeep(streamState.state)
   const streamV0 = await ceramic.repository.stateManager.atCommit(streamState, commit0)
@@ -295,7 +305,9 @@ test('commit history and atCommit', async () => {
   expect(streamV4.value.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
 
   // Ensure that stateManager.atCommit does not mutate the passed in state object
-  expect(JSON.stringify(streamState.state)).toEqual(JSON.stringify(streamStateOriginal))
+  expect(StreamUtils.serializeState(streamState.state)).toEqual(
+    StreamUtils.serializeState(streamStateOriginal)
+  )
 })
 
 describe('atCommit', () => {
