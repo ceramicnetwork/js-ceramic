@@ -17,14 +17,6 @@ class FakeRunningState extends BehaviorSubject<StreamState> implements RunningSt
 
 export class TestUtils {
   /**
-   * Returns a Promise that resolves when there is an update to the given stream's state.
-   * @param stream
-   */
-  static registerChangeListener(stream: Stream): Promise<StreamState> {
-    return stream.pipe(take(1)).toPromise()
-  }
-
-  /**
    * Given a stream and a predicate that operates on the stream state, continuously waits for
    * changes to the stream until the predicate returns true.
    * @param stream
