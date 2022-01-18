@@ -1,6 +1,6 @@
 import jsonpatch from 'fast-json-patch'
 import cloneDeep from 'lodash.clonedeep'
-
+import type { Cacao } from 'ceramic-cacao'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import {
   AnchorStatus,
@@ -222,13 +222,13 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
     controller: string,
     streamId: StreamID
   ): Promise<void> {
-    const verifiedCap = await this._verifyCapability(commitData, context, controller, streamId)
-    if (verifiedCap) return
+    const cacao = await this._verifyCapability(commitData, context, streamId)
 
     await context.did.verifyJWS(commitData.envelope, {
       atTime: commitData.timestamp,
       issuer: controller,
       disableTimecheck: commitData.disableTimecheck,
+      capability: cacao,
     })
   }
 
@@ -236,23 +236,21 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
    * Verifies capability attached to a signed commit
    * @param commitData - Commit to be verified
    * @param context - Ceramic context
-   * @param controller - DID value
    * @param streamId - Stream ID for the commit
    * @returns true if capability was present and was verified, false otherwise
    */
   async _verifyCapability(
     commitData: CommitData,
     context: Context,
-    controller: string,
     streamId: StreamID
-  ): Promise<boolean> {
+  ): Promise<Cacao | undefined> {
     const protectedHeader = commitData.envelope.signatures[0].protected
     const decodedProtectedHeader = base64urlToJSON(protectedHeader)
 
     if (decodedProtectedHeader.cap) {
       const capIPFSUri = decodedProtectedHeader.cap
       const capCID = CID.parse(capIPFSUri.replace('ipfs://', ''))
-      const cacao = (await context.ipfs.dag.get(capCID)).value
+      const cacao = (await context.ipfs.dag.get(capCID)).value as Cacao
       const resources = cacao.p.resources as string[]
       const payloadCID = commitData.cid.toString() // TODO: does this need to be a specific codec?
 
@@ -269,15 +267,7 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
         )
       }
 
-      await context.did.verifyJWS(commitData.envelope, {
-        atTime: commitData.timestamp,
-        issuer: controller,
-        disableTimecheck: commitData.disableTimecheck,
-        capability: cacao,
-      })
-      return true
+      return cacao
     }
-
-    return false
   }
 }

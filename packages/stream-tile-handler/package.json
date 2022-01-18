@@ -33,6 +33,7 @@
   "dependencies": {
     "@ceramicnetwork/common": "^2.0.0-alpha.1",
     "@ceramicnetwork/stream-tile": "^2.0.0-alpha.1",
+    "ceramic-cacao": "^0.0.11",
     "fast-json-patch": "^3.1.0",
     "lodash.clonedeep": "^4.5.0",
     "uint8arrays": "^3.0.0"
