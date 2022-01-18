@@ -1,13 +1,9 @@
 FROM node:16
 
-RUN apt-get update && apt-get install -y netcat
-
 WORKDIR /js-ceramic
 
-COPY package.json package-lock.json ./
+COPY package.json package-lock.json lerna.json tsconfig.json ./
 RUN npm install
-
-COPY lerna.json tsconfig.json ./
 
 COPY packages ./packages
 
