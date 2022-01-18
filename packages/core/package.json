@@ -55,9 +55,9 @@
     "level-ts": "^2.1.0",
     "lodash.clonedeep": "^4.5.0",
     "lru_map": "^0.4.1",
-    "multiformats": "^9.5.4",
+    "multiformats": "^9.5.8",
     "p-queue": "^7.1.0",
-    "rxjs": "^7.4.0",
+    "rxjs": "^7.5.2",
     "uint8arrays": "^3.0.0"
   },
   "devDependencies": {
@@ -66,7 +66,7 @@
     "@types/node": "^17.0.5",
     "dag-jose": "^1.0.0",
     "did-resolver": "^3.1.5",
-    "get-port": "^5.1.1",
+    "get-port": "^6.0.0",
     "go-ipfs": "^0.11.0",
     "ipfs-core": "~0.13.0",
     "ipfs-http-client": "^55.0.0",

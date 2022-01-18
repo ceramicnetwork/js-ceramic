@@ -6,9 +6,10 @@ import { CeramicDaemon } from '../ceramic-daemon.js'
 import { AnchorStatus, fetchJson, Stream, StreamUtils, IpfsApi } from '@ceramicnetwork/common'
 import { TileDocumentHandler } from '@ceramicnetwork/stream-tile-handler'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
-import { filter, take } from 'rxjs/operators'
+import { firstValueFrom } from 'rxjs'
+import { filter } from 'rxjs/operators'
 
-import { CommitID, StreamID } from '@ceramicnetwork/streamid';
+import { CommitID, StreamID } from '@ceramicnetwork/streamid'
 import getPort from 'get-port'
 import { createIPFS } from './create-ipfs.js'
 import { makeDID } from './make-did.js'
@@ -91,16 +92,15 @@ describe('Ceramic interop: core <> http-client', () => {
    * @param doc
    */
   const anchorDoc = async (doc: Stream): Promise<void> => {
-    const changeHandle = doc
-      .pipe(
+    const changeHandle = firstValueFrom(
+      doc.pipe(
         filter(
           (state) =>
             state.anchorStatus === AnchorStatus.ANCHORED ||
             state.anchorStatus === AnchorStatus.FAILED
-        ),
-        take(1)
+        )
       )
-      .toPromise()
+    )
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     await daemon.ceramic.context.anchorService.anchor()
