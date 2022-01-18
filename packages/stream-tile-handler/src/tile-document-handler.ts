@@ -14,6 +14,8 @@ import {
   StreamUtils,
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
+import { base64urlToJSON } from './utils'
+import { CID } from 'multiformats/cid'
 
 function stringArraysEqual(arr1: Array<string>, arr2: Array<string>) {
   if (arr1.length != arr2.length) {
@@ -76,7 +78,8 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
     const payload = commitData.commit
     const isSigned = StreamUtils.isSignedCommitData(commitData)
     if (isSigned) {
-      await this._verifySignature(commitData, context, payload.header.controllers[0])
+      const streamId = await StreamID.fromGenesis('tile', commitData.commit)
+      await this._verifySignature(commitData, context, payload.header.controllers[0], streamId)
     } else if (payload.data) {
       throw Error('Genesis commit with contents should always be signed')
     }
@@ -111,7 +114,8 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
     const controller = state.next?.metadata?.controllers?.[0] || state.metadata.controllers[0]
 
     // Verify the signature first
-    await this._verifySignature(commitData, context, controller)
+    const streamId = StreamUtils.streamIdFromState(state)
+    await this._verifySignature(commitData, context, controller, streamId)
 
     // Retrieve the payload
     const payload = commitData.commit
@@ -174,7 +178,11 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
   ): Promise<StreamState> {
     // TODO: Assert that the 'prev' of the commit being applied is the end of the log in 'state'
     const proof = commitData.proof
-    state.log.push({ cid: commitData.cid, type: CommitType.ANCHOR, timestamp: proof.blockTimestamp })
+    state.log.push({
+      cid: commitData.cid,
+      type: CommitType.ANCHOR,
+      timestamp: proof.blockTimestamp,
+    })
     let content = state.content
     let metadata = state.metadata
 
@@ -210,8 +218,41 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
   async _verifySignature(
     commitData: CommitData,
     context: Context,
-    controller: string
+    controller: string,
+    streamId: StreamID
   ): Promise<void> {
+    if (StreamUtils.isSignedCommitData(commitData)) {
+      const protectedHeaders = commitData.envelope.signatures.map((s) => s.protected)
+      const decodedProtectedHeaders = protectedHeaders.map((pH) => base64urlToJSON(pH))
+      const capHeaderIndex = decodedProtectedHeaders.findIndex((dph) => !!dph.cap)
+
+      if (capHeaderIndex > -1) {
+        const capHeader = decodedProtectedHeaders[capHeaderIndex]
+        const capIPFSUri = capHeader.cap
+        const capCID = CID.parse(capIPFSUri.replace('ipfs://', ''))
+        const cacao = (await context.ipfs.dag.get(capCID)).value
+        const resources = cacao.p.resources as string[]
+        const payloadCID = commitData.cid.toString() // TODO: does this need to be a specific codec?
+
+        if (
+          !resources.includes(`ceramic://${streamId.toString()}`) &&
+          !resources.includes(`ceramic://${streamId.toString()}?payload=${payloadCID}`)
+        ) {
+          throw new Error(
+            `Capability does not have appropriate permissions to update this TileDocument`
+          )
+        }
+
+        await context.did.verifyJWS(commitData.envelope, {
+          atTime: commitData.timestamp,
+          issuer: controller,
+          disableTimecheck: commitData.disableTimecheck,
+          capability: cacao,
+        })
+        return
+      }
+    }
+
     await context.did.verifyJWS(commitData.envelope, {
       atTime: commitData.timestamp,
       issuer: controller,

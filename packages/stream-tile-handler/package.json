@@ -34,7 +34,9 @@
     "@ceramicnetwork/common": "^2.0.0-alpha.1",
     "@ceramicnetwork/stream-tile": "^2.0.0-alpha.1",
     "fast-json-patch": "^3.1.0",
-    "lodash.clonedeep": "^4.5.0"
+    "lodash.clonedeep": "^4.5.0",
+    "multiformats": "^9.5.8",
+    "uint8arrays": "^3.0.0"
   },
   "devDependencies": {
     "@ceramicnetwork/3id-did-resolver": "^2.0.0-alpha.1",
