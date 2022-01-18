@@ -29,7 +29,6 @@
     "eslint-plugin-jest": "^25.3.0",
     "eslint-config-3box": "^0.4.0",
     "jest": "^27.4.5",
-    "jest-environment-uint8array": "^1.0.0",
     "jest-mock-extended": "^2.0.4",
     "jest-resolver-enhanced": "^1.0.1",
     "lerna": "^4.0.0",
