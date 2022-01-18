@@ -11,7 +11,7 @@ import { filter } from 'rxjs/operators'
 
 import { CommitID, StreamID } from '@ceramicnetwork/streamid'
 import getPort from 'get-port'
-import { createIPFS } from './create-ipfs.js'
+import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { makeDID } from './make-did.js'
 import { DaemonConfig } from '../daemon-config.js'
 

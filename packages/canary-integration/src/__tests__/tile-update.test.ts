@@ -1,11 +1,11 @@
 import { IpfsApi } from '@ceramicnetwork/common'
+import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { CeramicApi } from '@ceramicnetwork/common'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { DID } from 'dids'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import * as KeyResolver from 'key-did-resolver'
 import { randomBytes } from '@stablelib/random'
-import { createIPFS } from '../create-ipfs.js'
 import { createCeramic } from '../create-ceramic.js'
 
 let ipfs: IpfsApi
