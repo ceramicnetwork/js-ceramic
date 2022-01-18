@@ -21,7 +21,6 @@
     "@ceramicnetwork/ipfs-daemon": "^2.0.0-alpha.1",
     "@ceramicnetwork/stream-caip10-link": "^2.0.0-alpha.1",
     "@ceramicnetwork/stream-tile": "^2.0.0-alpha.1",
-    "@truffle/hdwallet-provider": "^2.0.0",
     "dids": "^3.0.0-alpha.4",
     "ganache-core": "^2.13.2",
     "key-did-provider-ed25519": "^1.1.0",
