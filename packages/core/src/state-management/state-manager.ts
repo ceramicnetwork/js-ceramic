@@ -18,7 +18,7 @@ import {
 import { RunningState } from './running-state.js'
 import type { CID } from 'multiformats/cid'
 import { catchError, concatMap, takeUntil } from 'rxjs/operators'
-import { empty, Observable, Subject, Subscription, timer } from 'rxjs'
+import { empty, Observable, Subject, Subscription, timer, lastValueFrom } from 'rxjs'
 import { SnapshotState } from './snapshot-state.js'
 import { CommitID, StreamID } from '@ceramicnetwork/streamid'
 
@@ -76,12 +76,14 @@ export class StateManager {
    */
   async sync(state$: RunningState, timeoutMillis: number): Promise<void> {
     const tip$ = this.dispatcher.messageBus.queryNetwork(state$.id)
-    await tip$
-      .pipe(
+    // We do not expect this promise to return anything, so set `defaultValue` to `undefined`
+    await lastValueFrom(
+      tip$.pipe(
         takeUntil(timer(timeoutMillis)),
         concatMap((tip) => this._handleTip(state$, tip))
-      )
-      .toPromise()
+      ),
+      { defaultValue: undefined }
+    )
     if (state$.isPinned) {
       this.syncedPinnedStreams.add(state$.id.toString())
     }
