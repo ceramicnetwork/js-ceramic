@@ -66,7 +66,7 @@
     "@types/node": "^17.0.5",
     "dag-jose": "^1.0.0",
     "did-resolver": "^3.1.5",
-    "get-port": "^5.1.1",
+    "get-port": "^6.0.0",
     "go-ipfs": "^0.11.0",
     "ipfs-core": "~0.13.0",
     "ipfs-http-client": "^55.0.0",
