@@ -41,7 +41,6 @@
     "rxjs": "^7.4.0"
   },
   "devDependencies": {
-    "@types/node": "^17.0.5",
     "dids": "^3.0.0-alpha.4",
     "multiformats": "^9.5.8"
   },

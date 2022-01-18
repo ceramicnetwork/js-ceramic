@@ -38,8 +38,5 @@
     "fast-json-patch": "^3.1.0",
     "uint8arrays": "^3.0.0"
   },
-  "devDependencies": {
-    "@types/node": "^17.0.5"
-  },
   "gitHead": "4f42c6ac204ad25e66efda4e24aed12c339b3c98"
 }
