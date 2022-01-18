@@ -38,7 +38,7 @@
     "@ceramicnetwork/streamid": "^2.0.0-alpha.1",
     "cross-fetch": "^3.1.4",
     "lru_map": "^0.4.1",
-    "multiformats": "^9.5.4",
+    "multiformats": "^9.5.8",
     "uint8arrays": "^3.0.0"
   },
   "devDependencies": {

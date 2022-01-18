@@ -55,7 +55,7 @@
     "level-ts": "^2.1.0",
     "lodash.clonedeep": "^4.5.0",
     "lru_map": "^0.4.1",
-    "multiformats": "^9.5.4",
+    "multiformats": "^9.5.8",
     "p-queue": "^7.1.0",
     "rxjs": "^7.4.0",
     "uint8arrays": "^3.0.0"

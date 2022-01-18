@@ -38,7 +38,7 @@
   },
   "devDependencies": {
     "@ceramicnetwork/common": "^2.0.0-alpha.1",
-    "multiformats": "^9.5.4"
+    "multiformats": "^9.5.8"
   },
   "publishConfig": {
     "access": "public"

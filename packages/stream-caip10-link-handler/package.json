@@ -40,7 +40,7 @@
     "@stablelib/sha256": "^1.0.1",
     "@types/lodash.clonedeep": "^4.5.6",
     "lodash.clonedeep": "^4.5.0",
-    "multiformats": "^9.5.4",
+    "multiformats": "^9.5.8",
     "uint8arrays": "^3.0.0"
   },
   "gitHead": "4f42c6ac204ad25e66efda4e24aed12c339b3c98"
