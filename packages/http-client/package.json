@@ -38,7 +38,7 @@
     "@ceramicnetwork/stream-tile": "^2.0.0-alpha.1",
     "@ceramicnetwork/streamid": "^2.0.0-alpha.1",
     "query-string": "^7.1.0",
-    "rxjs": "^7.4.0"
+    "rxjs": "^7.5.2"
   },
   "devDependencies": {
     "dids": "^3.0.0-alpha.4",

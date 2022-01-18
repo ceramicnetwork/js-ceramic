@@ -57,7 +57,7 @@
     "lru_map": "^0.4.1",
     "multiformats": "^9.5.8",
     "p-queue": "^7.1.0",
-    "rxjs": "^7.4.0",
+    "rxjs": "^7.5.2",
     "uint8arrays": "^3.0.0"
   },
   "devDependencies": {
