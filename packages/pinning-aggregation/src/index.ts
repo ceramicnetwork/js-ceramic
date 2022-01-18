@@ -6,7 +6,7 @@ import type {
   PinningInfo,
   IpfsApi,
 } from '@ceramicnetwork/common'
-import * as base64 from '@stablelib/base64'
+import { toString } from 'uint8arrays/to-string'
 import * as sha256 from '@stablelib/sha256'
 
 export class UnknownPinningService extends Error {
@@ -53,7 +53,7 @@ export class PinningAggregation implements PinningBackend {
 
     const allIds = this.backends.map((b) => b.id).join('\n')
     const bytes = textEncoder.encode(allIds)
-    const digest = base64.encodeURLSafe(sha256.hash(bytes))
+    const digest = toString(sha256.hash(bytes), 'base64urlpad')
     this.id = `pinning-aggregation@${digest}`
   }
 
