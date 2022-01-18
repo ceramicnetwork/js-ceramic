@@ -78,7 +78,8 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
     const payload = commitData.commit
     const isSigned = StreamUtils.isSignedCommitData(commitData)
     if (isSigned) {
-      await this._verifySignature(commitData, context, payload.header.controllers[0])
+      const streamId = await StreamID.fromGenesis('tile', commitData.commit)
+      await this._verifySignature(commitData, context, payload.header.controllers[0], streamId)
     } else if (payload.data) {
       throw Error('Genesis commit with contents should always be signed')
     }
@@ -218,7 +219,7 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
     commitData: CommitData,
     context: Context,
     controller: string,
-    streamId?: StreamID
+    streamId: StreamID
   ): Promise<void> {
     if (StreamUtils.isSignedCommitData(commitData)) {
       const protectedHeaders = commitData.envelope.signatures.map((s) => s.protected)
