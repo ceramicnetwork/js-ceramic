@@ -213,6 +213,7 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
    * @param commitData - Commit to be verified
    * @param context - Ceramic context
    * @param controller - DID value
+   * @param streamId - Stream ID for the commit
    * @private
    */
   async _verifySignature(
@@ -221,42 +222,62 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
     controller: string,
     streamId: StreamID
   ): Promise<void> {
-    if (StreamUtils.isSignedCommitData(commitData)) {
-      const protectedHeaders = commitData.envelope.signatures.map((s) => s.protected)
-      const decodedProtectedHeaders = protectedHeaders.map((pH) => base64urlToJSON(pH))
-      const capHeaderIndex = decodedProtectedHeaders.findIndex((dph) => !!dph.cap)
-
-      if (capHeaderIndex > -1) {
-        const capHeader = decodedProtectedHeaders[capHeaderIndex]
-        const capIPFSUri = capHeader.cap
-        const capCID = CID.parse(capIPFSUri.replace('ipfs://', ''))
-        const cacao = (await context.ipfs.dag.get(capCID)).value
-        const resources = cacao.p.resources as string[]
-        const payloadCID = commitData.cid.toString() // TODO: does this need to be a specific codec?
-
-        if (
-          !resources.includes(`ceramic://${streamId.toString()}`) &&
-          !resources.includes(`ceramic://${streamId.toString()}?payload=${payloadCID}`)
-        ) {
-          throw new Error(
-            `Capability does not have appropriate permissions to update this TileDocument`
-          )
-        }
-
-        await context.did.verifyJWS(commitData.envelope, {
-          atTime: commitData.timestamp,
-          issuer: controller,
-          disableTimecheck: commitData.disableTimecheck,
-          capability: cacao,
-        })
-        return
-      }
-    }
+    const verifiedCap = await this._verifyCapability(commitData, context, controller, streamId)
+    if (verifiedCap) return
 
     await context.did.verifyJWS(commitData.envelope, {
       atTime: commitData.timestamp,
       issuer: controller,
       disableTimecheck: commitData.disableTimecheck,
     })
+  }
+
+  /**
+   * Verifies capability attached to a signed commit
+   * @param commitData - Commit to be verified
+   * @param context - Ceramic context
+   * @param controller - DID value
+   * @param streamId - Stream ID for the commit
+   * @returns true if capability was present and was verified, false otherwise
+   */
+  async _verifyCapability(
+    commitData: CommitData,
+    context: Context,
+    controller: string,
+    streamId: StreamID
+  ): Promise<boolean> {
+    const protectedHeader = commitData.envelope.signatures[0].protected
+    const decodedProtectedHeader = base64urlToJSON(protectedHeader)
+
+    if (decodedProtectedHeader.cap) {
+      const capIPFSUri = decodedProtectedHeader.cap
+      const capCID = CID.parse(capIPFSUri.replace('ipfs://', ''))
+      const cacao = (await context.ipfs.dag.get(capCID)).value
+      const resources = cacao.p.resources as string[]
+      const payloadCID = commitData.cid.toString() // TODO: does this need to be a specific codec?
+
+      if (resources.includes(`ceramic://*`)) {
+        throw new Error(`Capability resource is not allowed`)
+      }
+
+      if (
+        !resources.includes(`ceramic://${streamId.toString()}`) &&
+        !resources.includes(`ceramic://${streamId.toString()}?payload=${payloadCID}`)
+      ) {
+        throw new Error(
+          `Capability does not have appropriate permissions to update this TileDocument`
+        )
+      }
+
+      await context.did.verifyJWS(commitData.envelope, {
+        atTime: commitData.timestamp,
+        issuer: controller,
+        disableTimecheck: commitData.disableTimecheck,
+        capability: cacao,
+      })
+      return true
+    }
+
+    return false
   }
 }
