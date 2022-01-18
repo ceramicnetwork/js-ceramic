@@ -1,6 +1,6 @@
 import type { StreamState, Stream } from '../stream.js'
-import { take, filter } from 'rxjs/operators'
-import { BehaviorSubject } from 'rxjs'
+import { filter } from 'rxjs/operators'
+import { BehaviorSubject, lastValueFrom } from 'rxjs'
 import { RunningStateLike } from '../running-state-like.js'
 import { StreamID } from '@ceramicnetwork/streamid'
 
@@ -32,7 +32,10 @@ export class TestUtils {
   ): Promise<void> {
     if (predicate(stream.state)) return
     const timeoutPromise = new Promise((resolve) => setTimeout(resolve, timeout))
-    const completionPromise = stream.pipe(filter((state) => predicate(state))).toPromise()
+    // We do not expect this promise to return anything, so set `defaultValue` to `undefined`
+    const completionPromise = lastValueFrom(stream.pipe(filter((state) => predicate(state))), {
+      defaultValue: undefined,
+    })
     await Promise.race([timeoutPromise, completionPromise])
     if (!predicate(stream.state)) {
       onFailure()
