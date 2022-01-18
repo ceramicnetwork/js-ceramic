@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/core",
-  "version": "1.13.1-rc.0",
+  "version": "2.0.0-alpha.1",
   "description": "Typescript implementation of the Ceramic protocol",
   "keywords": [
     "Ceramic",
@@ -12,70 +12,71 @@
   "author": "Joel Torstensson <oed3933@gmail.com>",
   "homepage": "",
   "license": "(Apache-2.0 OR MIT)",
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
+  "type": "module",
   "directories": {
-    "lib": "lib"
+    "lib": "./lib"
   },
   "files": [
     "lib"
   ],
+  "sideEffects": false,
+  "exports": {
+    ".": "./lib/index.js"
+  },
   "scripts": {
-    "test": "../../node_modules/.bin/jest --silent --coverage --runInBand --env=node",
-    "build": "../../node_modules/.bin/tsc -p tsconfig.json",
+    "test": "node --experimental-vm-modules ../../node_modules/jest/bin/jest.js --silent --coverage --runInBand",
+    "build": "../../node_modules/.bin/tsc --project tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
     "lint": "../../node_modules/.bin/eslint ./src --ext .js,.jsx,.ts,.tsx",
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/common": "^1.11.1-rc.0",
-    "@ceramicnetwork/ipfs-topology": "^1.2.0-rc.0",
-    "@ceramicnetwork/pinning-aggregation": "^1.2.12-rc.0",
-    "@ceramicnetwork/pinning-ipfs-backend": "^1.2.12-rc.0",
-    "@ceramicnetwork/stream-caip10-link": "^1.2.10-rc.0",
-    "@ceramicnetwork/stream-caip10-link-handler": "^1.3.12-rc.0",
-    "@ceramicnetwork/stream-tile": "^1.5.8-rc.0",
-    "@ceramicnetwork/stream-tile-handler": "^1.5.12-rc.0",
-    "@ceramicnetwork/streamid": "^1.3.10-rc.0",
-    "@ethersproject/providers": "^5.4.5",
-    "@stablelib/random": "^1.0.0",
-    "@stablelib/sha256": "^1.0.0",
-    "ajv": "^8.1.0",
-    "ajv-formats": "^2.0.2",
+    "@ceramicnetwork/common": "^2.0.0-alpha.1",
+    "@ceramicnetwork/ipfs-topology": "^2.0.0-alpha.1",
+    "@ceramicnetwork/pinning-aggregation": "^2.0.0-alpha.1",
+    "@ceramicnetwork/pinning-ipfs-backend": "^2.0.0-alpha.1",
+    "@ceramicnetwork/stream-caip10-link": "^2.0.0-alpha.1",
+    "@ceramicnetwork/stream-caip10-link-handler": "^2.0.0-alpha.1",
+    "@ceramicnetwork/stream-tile": "^2.0.0-alpha.1",
+    "@ceramicnetwork/stream-tile-handler": "^2.0.0-alpha.1",
+    "@ceramicnetwork/streamid": "^2.0.0-alpha.1",
+    "@ethersproject/providers": "^5.5.1",
+    "@ipld/dag-cbor": "^7.0.0",
+    "@stablelib/random": "^1.0.1",
+    "@stablelib/sha256": "^1.0.1",
+    "ajv": "^8.8.2",
+    "ajv-formats": "^2.1.1",
     "await-semaphore": "^0.1.3",
-    "blockcodec-to-ipld-format": "^1.0.0",
-    "cids": "~1.1.6",
-    "dids": "^2.4.0",
-    "ipld-dag-cbor": "^1.0.0",
-    "it-first": "^1.0.6",
-    "level-ts": "^2.0.5",
+    "dids": "^3.0.0-alpha.4",
+    "it-first": "^1.0.7",
+    "level-ts": "^2.1.0",
     "lodash.clonedeep": "^4.5.0",
     "lru_map": "^0.4.1",
-    "multihashes": "^4.0.2",
-    "p-queue": "^6.6.1",
-    "rxjs": "^7.0.0",
-    "uint8arrays": "^2.0.5"
+    "multiformats": "^9.5.4",
+    "p-queue": "^7.1.0",
+    "rxjs": "^7.4.0",
+    "uint8arrays": "^3.0.0"
   },
   "devDependencies": {
-    "@ceramicnetwork/3id-did-resolver": "^1.4.17-rc.0",
-    "@ceramicnetwork/blockchain-utils-validation": "^1.6.9-rc.0",
-    "@types/node": "^13.13.15",
-    "dag-jose": "^0.3.0",
-    "did-resolver": "^3.1.0",
+    "@ceramicnetwork/3id-did-resolver": "^2.0.0-alpha.1",
+    "@ceramicnetwork/blockchain-utils-validation": "^2.0.0-alpha.1",
+    "@types/node": "^17.0.5",
+    "dag-jose": "^1.0.0",
+    "did-resolver": "^3.1.5",
     "get-port": "^5.1.1",
-    "ipfs-core": "~0.7.1",
+    "go-ipfs": "^0.11.0",
+    "ipfs-core": "~0.13.0",
+    "ipfs-http-client": "^55.0.0",
+    "ipfsd-ctl": "^10.0.5",
+    "jest-environment-node": "^27.4.4",
     "key-did-provider-ed25519": "^1.1.0",
-    "key-did-resolver": "^1.4.5-rc.0",
+    "key-did-resolver": "^2.0.0-alpha.1",
+    "merge-options": "^3.0.4",
     "mockdate": "^3.0.5",
-    "tmp-promise": "^2.0.2"
-  },
-  "jest": {
-    "testEnvironment": "node",
-    "testMatch": [
-      "**/?(*.)+(spec|test).[jt]s?(x)"
-    ],
-    "resolver": "jest-resolver-enhanced"
+    "tmp-promise": "^3.0.3"
   },
   "gitHead": "34eeee25597b0a60def72906c26d3afd6230aaf1"
 }

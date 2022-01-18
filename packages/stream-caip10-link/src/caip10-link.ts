@@ -12,9 +12,10 @@ import {
 } from '@ceramicnetwork/common'
 import type { AuthProvider, LinkProof } from '@ceramicnetwork/blockchain-utils-linking'
 import { CommitID, StreamID, StreamRef } from '@ceramicnetwork/streamid'
-import { AccountID } from 'caip'
+import { AccountId } from 'caip'
 import type { DID } from 'dids'
 import { parse } from 'did-resolver'
+import { normalizeAccountId } from '@ceramicnetwork/common'
 
 const throwReadOnlyError = (): Promise<void> => {
   throw new Error(
@@ -52,11 +53,12 @@ export class Caip10Link extends Stream {
    */
   static async fromAccount(
     ceramic: CeramicApi,
-    accountId: string | AccountID,
+    accountId: string | AccountId,
     opts: CreateOpts | LoadOpts = {}
   ): Promise<Caip10Link> {
     opts = { ...DEFAULT_CREATE_OPTS, ...opts }
-    const normalizedAccountId = new AccountID(accountId)
+
+    const normalizedAccountId = normalizeAccountId(accountId)
     const genesisCommit = Caip10Link.makeGenesis(normalizedAccountId)
     return Caip10Link.fromGenesis(ceramic, genesisCommit, opts)
   }
@@ -159,19 +161,22 @@ export class Caip10Link extends Stream {
   }
 
   /**
-   * Makes the genesis commit from a given CAIP-10 AccountID
+   * Makes the genesis commit from a given CAIP-10 AccountId
    * @param accountId
    */
-  static makeGenesis(accountId: AccountID): GenesisCommit {
+  static makeGenesis(accountId: AccountId): GenesisCommit {
     // Ethereum addresses specifically are sometimes encoded with mixed case and
     // sometimes all lower case. In order to deal with this and not have different
     // links for different addresses we convert the address to lowercase.
     if (accountId.chainId.namespace === 'eip155') {
       accountId.address = accountId.address.toLowerCase()
     }
+
+    // We are continuing to represent Caip10Links using the legacy Caip10 format to maintain backwards compatibility with existing links
+    const legacyAccountId = `${accountId.address}@${accountId.chainId.toString()}`
     return {
       header: {
-        controllers: [accountId.toString()],
+        controllers: [legacyAccountId],
         family: `caip10-${accountId.chainId.toString()}`,
       },
     }

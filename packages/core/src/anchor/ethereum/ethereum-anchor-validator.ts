@@ -1,9 +1,10 @@
 import * as uint8arrays from 'uint8arrays'
-import { decode } from 'multihashes'
+import { decode } from 'multiformats/hashes/digest'
 import * as providers from '@ethersproject/providers'
-import { LRUMap } from 'lru_map'
-import { AnchorProof, AnchorValidator, DiagnosticsLogger, fetchJson } from '@ceramicnetwork/common'
+import lru from 'lru_map'
+import { AnchorProof, AnchorValidator, DiagnosticsLogger } from '@ceramicnetwork/common'
 import { Block, TransactionResponse } from '@ethersproject/providers'
+import { base16 } from 'multiformats/bases/base16'
 
 /**
  * Ethereum network configuration
@@ -33,11 +34,11 @@ const BLOCK_CACHE_SIZE = 50
 /**
  * Ethereum anchor service that stores root CIDs on Ethereum blockchain
  */
-export default class EthereumAnchorValidator implements AnchorValidator {
+export class EthereumAnchorValidator implements AnchorValidator {
   private _chainId: string | null
-  private readonly providersCache: LRUMap<string, providers.BaseProvider>
-  private readonly _transactionCache: LRUMap<string, TransactionResponse>
-  private readonly _blockCache: LRUMap<string, Block>
+  private readonly providersCache: lru.LRUMap<string, providers.BaseProvider>
+  private readonly _transactionCache: lru.LRUMap<string, TransactionResponse>
+  private readonly _blockCache: lru.LRUMap<string, Block>
   private readonly _logger: DiagnosticsLogger
 
   /**
@@ -45,9 +46,9 @@ export default class EthereumAnchorValidator implements AnchorValidator {
    * @param logger
    */
   constructor(readonly ethereumRpcEndpoint: string, logger: DiagnosticsLogger) {
-    this.providersCache = new LRUMap(MAX_PROVIDERS_COUNT)
-    this._transactionCache = new LRUMap(TRANSACTION_CACHE_SIZE)
-    this._blockCache = new LRUMap(BLOCK_CACHE_SIZE)
+    this.providersCache = new lru.LRUMap(MAX_PROVIDERS_COUNT)
+    this._transactionCache = new lru.LRUMap(TRANSACTION_CACHE_SIZE)
+    this._blockCache = new lru.LRUMap(BLOCK_CACHE_SIZE)
     this._logger = logger
   }
 
@@ -138,12 +139,12 @@ export default class EthereumAnchorValidator implements AnchorValidator {
    * @param anchorProof - Anchor proof instance
    */
   async validateChainInclusion(anchorProof: AnchorProof): Promise<void> {
-    const decoded = decode(anchorProof.txHash.multihash)
+    const decoded = decode(anchorProof.txHash.multihash.bytes)
     const txHash = '0x' + uint8arrays.toString(decoded.digest, 'base16')
 
     const [transaction, block] = await this._getTransactionAndBlockInfo(anchorProof.chainId, txHash)
     const txValueHexNumber = parseInt(transaction.data, 16)
-    const rootValueHexNumber = parseInt('0x' + anchorProof.root.toBaseEncodedString('base16'), 16)
+    const rootValueHexNumber = parseInt('0x' + anchorProof.root.toString(base16), 16)
 
     if (txValueHexNumber !== rootValueHexNumber) {
       throw new Error(`The root CID ${anchorProof.root.toString()} is not in the transaction`)

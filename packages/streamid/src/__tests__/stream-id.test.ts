@@ -1,19 +1,19 @@
-import { StreamID } from '../stream-id'
-import CID from 'cids'
+import { StreamID } from '../stream-id.js'
+import { CID } from 'multiformats/cid'
 import * as util from 'util'
-import * as multibase from 'multibase'
+import { base36 } from 'multiformats/bases/base36'
 
 const CID_STRING = 'bagcqcerakszw2vsovxznyp5gfnpdj4cqm2xiv76yd24wkjewhhykovorwo6a'
 const STREAM_ID_STRING = 'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
 const STREAM_ID_URL = 'ceramic://kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
-const STREAM_ID_BYTES = multibase.decode(STREAM_ID_STRING)
+const STREAM_ID_BYTES = base36.decode(STREAM_ID_STRING)
 const STREAM_ID_LEGACY = '/ceramic/kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
 
 const STREAM_ID_WITH_COMMIT =
   'k1dpgaqe3i64kjqcp801r3sn7ysi5i0k7nxvs7j351s7kewfzr3l7mdxnj7szwo4kr9mn2qki5nnj0cv836ythy1t1gya9s25cn1nexst3jxi5o3h6qprfyju'
-const STREAM_ID_WITH_COMMIT_BYTES = multibase.decode(STREAM_ID_WITH_COMMIT)
+const STREAM_ID_WITH_COMMIT_BYTES = base36.decode(STREAM_ID_WITH_COMMIT)
 const STREAM_ID_WITH_0_COMMIT = 'k3y52l7qbv1frxwipl4hp7e6jlu4f6u8upm2xv0irmedfkm5cnutmezzi3u7mytj4'
-const STREAM_ID_WITH_0_COMMIT_BYTES = multibase.decode(STREAM_ID_WITH_0_COMMIT)
+const STREAM_ID_WITH_0_COMMIT_BYTES = base36.decode(STREAM_ID_WITH_0_COMMIT)
 const STREAM_ID_WITH_COMMIT_LEGACY =
   '/ceramic/kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s?commit=bagjqcgzaday6dzalvmy5ady2m5a5legq5zrbsnlxfc2bfxej532ds7htpova'
 const STREAM_ID_WITH_0_COMMIT_LEGACY =
@@ -22,7 +22,7 @@ const STREAM_ID_WITH_0_COMMIT_LEGACY =
 describe('constructor', () => {
   test('create by parts (type:int, cid:cid)', () => {
     const type = 0
-    const cid = new CID(CID_STRING)
+    const cid = CID.parse(CID_STRING)
     const streamid = new StreamID(type, cid)
 
     expect(streamid.type).toEqual(type)
@@ -43,7 +43,7 @@ describe('.fromBytes', () => {
   test('fail to create from garbage bytes', () => {
     expect(() =>
       StreamID.fromBytes(
-        new CID('bagcqcerakszw2vsovxznyp5gfnpdj4cqm2xiv76yd24wkjewhhykovorwo6a').bytes
+        CID.parse('bagcqcerakszw2vsovxznyp5gfnpdj4cqm2xiv76yd24wkjewhhykovorwo6a').bytes
       )
     ).toThrow()
   })
@@ -167,33 +167,6 @@ test('to primitive', () => {
   expect(`${streamid}`).toEqual(streamid.toString())
   expect(+streamid).toBeNaN()
   expect(streamid + '').toEqual(streamid.toString())
-})
-
-describe('#atCommit', () => {
-  const BASE_CID = new CID(CID_STRING)
-  const COMMIT_CID_STRING = 'bagjqcgzaday6dzalvmy5ady2m5a5legq5zrbsnlxfc2bfxej532ds7htpova'
-  const COMMIT_CID = new CID(COMMIT_CID_STRING)
-
-  const streamId = new StreamID('tile', BASE_CID)
-
-  test('to number 0', () => {
-    const commitId = streamId.atCommit(0)
-    expect(commitId.commit).toEqual(BASE_CID)
-  })
-  test('to number 1', () => {
-    expect(() => streamId.atCommit(1)).toThrowErrorMatchingSnapshot()
-  })
-  test('to commit CID', () => {
-    const commitId = streamId.atCommit(COMMIT_CID)
-    expect(commitId.commit).toEqual(COMMIT_CID)
-  })
-  test('to commit CID as string', () => {
-    const commitId = streamId.atCommit(COMMIT_CID_STRING)
-    expect(commitId.commit).toEqual(COMMIT_CID)
-  })
-  test('to garbage string', () => {
-    expect(() => streamId.atCommit('garbage')).toThrow()
-  })
 })
 
 test('instanceof', () => {

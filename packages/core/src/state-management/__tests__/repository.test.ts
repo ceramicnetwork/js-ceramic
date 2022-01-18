@@ -1,24 +1,23 @@
+import { jest } from '@jest/globals'
 import { StreamUtils, IpfsApi } from '@ceramicnetwork/common'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
-import Ceramic from '../../ceramic'
-import { createIPFS } from '../../__tests__/ipfs-util'
-import { Repository } from '../repository'
-import { anchorUpdate } from './anchor-update'
-import { createCeramic } from '../../__tests__/create-ceramic'
-import { delay } from '../../__tests__/delay'
+import { Ceramic } from '../../ceramic.js'
+import { createIPFS } from '../../__tests__/ipfs-util.js'
+import { Repository } from '../repository.js'
+import { anchorUpdate } from './anchor-update.js'
+import { createCeramic } from '../../__tests__/create-ceramic.js'
+import { delay } from '../../__tests__/delay.js'
 
 let ipfs: IpfsApi
 let ceramic: Ceramic
 
 let repository: Repository
-let controllers: string[]
 
 beforeAll(async () => {
   ipfs = await createIPFS()
   ceramic = await createCeramic(ipfs)
 
   repository = ceramic.repository
-  controllers = [ceramic.did.id]
 })
 
 afterAll(async () => {
@@ -38,9 +37,9 @@ const STRING_MAP_SCHEMA = {
 describe('load', () => {
   test('from memory', async () => {
     const stream1 = await TileDocument.create(ceramic, { foo: 'bar' })
-    const fromMemorySpy = jest.spyOn(repository, 'fromMemory')
-    const fromStateStoreSpy = jest.spyOn(repository, 'fromStateStore')
-    const fromNetwork = jest.spyOn(repository, 'fromNetwork')
+    const fromMemorySpy = jest.spyOn(repository as any, 'fromMemory')
+    const fromStateStoreSpy = jest.spyOn(repository as any, 'fromStateStore')
+    const fromNetwork = jest.spyOn(repository as any, 'fromNetwork')
     const stream2 = await repository.load(stream1.id, { syncTimeoutSeconds: 0 })
     expect(StreamUtils.serializeState(stream1.state)).toEqual(
       StreamUtils.serializeState(stream2.state)
@@ -51,9 +50,9 @@ describe('load', () => {
   })
 
   test('from state store', async () => {
-    const fromMemorySpy = jest.spyOn(repository, 'fromMemory')
-    const fromStateStoreSpy = jest.spyOn(repository, 'fromStateStore')
-    const fromNetworkSpy = jest.spyOn(repository, 'fromNetwork')
+    const fromMemorySpy = jest.spyOn(repository as any, 'fromMemory')
+    const fromStateStoreSpy = jest.spyOn(repository as any, 'fromStateStore')
+    const fromNetworkSpy = jest.spyOn(repository as any, 'fromNetwork')
     const syncSpy = jest.spyOn(repository.stateManager, 'sync')
 
     const stream1 = await TileDocument.create(ceramic, { foo: 'bar' }, null, { anchor: false })

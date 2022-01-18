@@ -3,6 +3,25 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.0.0-alpha.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/http-client@1.5.1-rc.4...@ceramicnetwork/http-client@2.0.0-alpha.1) (2022-01-14)
+
+
+### Features
+
+* First stab at go-ipfs inclusion ([#1933](https://github.com/ceramicnetwork/js-ceramic/issues/1933)) ([9f29300](https://github.com/ceramicnetwork/js-ceramic/commit/9f29300a0b0f986dda476f99784e7bfcb62dcef4)), closes [#1935](https://github.com/ceramicnetwork/js-ceramic/issues/1935)
+
+
+
+
+
+# [2.0.0-alpha.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/http-client@1.5.1-rc.4...@ceramicnetwork/http-client@2.0.0-alpha.0) (2021-12-07)
+
+**Note:** Version bump only for package @ceramicnetwork/http-client
+
+
+
+
+
 ## [1.5.8-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/http-client@1.5.7...@ceramicnetwork/http-client@1.5.8-rc.0) (2022-01-12)
 
 **Note:** Version bump only for package @ceramicnetwork/http-client

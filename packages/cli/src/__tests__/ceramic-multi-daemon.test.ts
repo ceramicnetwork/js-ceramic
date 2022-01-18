@@ -1,22 +1,18 @@
-import Ceramic from '@ceramicnetwork/core'
-import CeramicClient from '@ceramicnetwork/http-client'
+import { jest } from '@jest/globals'
+import { Ceramic } from '@ceramicnetwork/core'
+import { CeramicClient } from '@ceramicnetwork/http-client'
 import * as tmp from 'tmp-promise'
 import { CeramicDaemon } from '../ceramic-daemon'
 import { IpfsApi, StreamState, SyncOptions } from '@ceramicnetwork/common'
 import { TileDocumentHandler } from '@ceramicnetwork/stream-tile-handler'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import getPort from 'get-port'
-import { createIPFS } from './create-ipfs'
+import { createIPFS, swarmConnect } from './create-ipfs'
 import { makeDID } from './make-did'
 import { DaemonConfig } from '../daemon-config'
 
 const seed = 'SEED'
 const TOPIC = '/ceramic'
-
-async function swarmConnect(a: IpfsApi, b: IpfsApi) {
-  const addressB = (await b.id()).addresses[0].toString()
-  await a.swarm.connect(addressB)
-}
 
 const makeCeramicCore = async (ipfs: IpfsApi, stateStoreDirectory: string): Promise<Ceramic> => {
   const core = await Ceramic.create(ipfs, {
@@ -51,9 +47,8 @@ describe('Ceramic interop between multiple daemons and http clients', () => {
   beforeAll(async () => {
     tmpFolder1 = await tmp.dir({ unsafeCleanup: true })
     tmpFolder2 = await tmp.dir({ unsafeCleanup: true })
-    ;[ipfs1, ipfs2] = await Promise.all(
-      [tmpFolder1, tmpFolder2].map((tmpFolder) => createIPFS(tmpFolder.path))
-    )
+    ipfs1 = await createIPFS()
+    ipfs2 = await createIPFS()
 
     // Make sure the nodes can talk to each other
     await swarmConnect(ipfs1, ipfs2)

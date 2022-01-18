@@ -1,7 +1,7 @@
 import { Context, StreamState, Stream } from '@ceramicnetwork/common'
 import { Observable } from 'rxjs'
-import { HandlersMap } from '../handlers-map'
-import { StateLink } from './state-link'
+import { HandlersMap } from '../handlers-map.js'
+import { StateLink } from './state-link.js'
 
 /**
  * Build Stream from the current state and update feed.

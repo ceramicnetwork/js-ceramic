@@ -1,19 +1,16 @@
-import CID from 'cids'
-
-import dagCBOR from 'ipld-dag-cbor'
-
+import { CID } from 'multiformats/cid'
+import { decode as decodeMultiHash } from 'multiformats/hashes/digest'
+import * as dagCBOR from '@ipld/dag-cbor'
 import { DID } from 'dids'
 import { Resolver } from 'did-resolver'
 import { wrapDocument } from '@ceramicnetwork/3id-did-resolver'
-import KeyDidResolver from 'key-did-resolver'
-import { TileDocumentHandler } from '../tile-document-handler'
+import * as KeyDidResolver from 'key-did-resolver'
+import { TileDocumentHandler } from '../tile-document-handler.js'
 import * as uint8arrays from 'uint8arrays'
 import * as sha256 from '@stablelib/sha256'
 import cloneDeep from 'lodash.clonedeep'
-
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import {
-  AnchorCommit,
   CeramicApi,
   CommitType,
   Context,
@@ -34,13 +31,13 @@ const hash = (data: string): CID => {
     uint8arrays.fromString('1220', 'base16'),
     sha256.hash(uint8arrays.fromString(data)),
   ])
-  return new CID(1, 'sha2-256', body)
+  return CID.create(1, 0x12, decodeMultiHash(body))
 }
 
-const FAKE_CID_1 = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
-const FAKE_CID_2 = new CID('bafybeig6xv5nwphfmvcnektpnojts44jqcuam7bmye2pb54adnrtccjlsu')
-const FAKE_CID_3 = new CID('bafybeig6xv5nwphfmvcnektpnojts55jqcuam7bmye2pb54adnrtccjlsu')
-const FAKE_CID_4 = new CID('bafybeig6xv5nwphfmvcnektpnojts66jqcuam7bmye2pb54adnrtccjlsu')
+const FAKE_CID_1 = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
+const FAKE_CID_2 = CID.parse('bafybeig6xv5nwphfmvcnektpnojts44jqcuam7bmye2pb54adnrtccjlsu')
+const FAKE_CID_3 = CID.parse('bafybeig6xv5nwphfmvcnektpnojts55jqcuam7bmye2pb54adnrtccjlsu')
+const FAKE_CID_4 = CID.parse('bafybeig6xv5nwphfmvcnektpnojts66jqcuam7bmye2pb54adnrtccjlsu')
 
 // did:3:bafyasdfasdf
 
@@ -61,7 +58,7 @@ const COMMITS = {
           signature: 'cccc',
         },
       ],
-      link: new CID('bafyreiau5pqllna6pewhp3w2hbvohxxeqsmffnwf6o2fwoln4ubbc6fldq'),
+      link: CID.parse('bafyreiau5pqllna6pewhp3w2hbvohxxeqsmffnwf6o2fwoln4ubbc6fldq'),
     },
     linkedBlock: {
       data: {
@@ -116,14 +113,15 @@ const serialize = (data: any): any => {
     }
     return serialized
   }
-  if (!CID.isCID(data) && typeof data === 'object') {
+  const cid = CID.asCID(data)
+  if (!cid && typeof data === 'object') {
     const serialized: Record<string, any> = {}
     for (const prop in data) {
       serialized[prop] = serialize(data[prop])
     }
     return serialized
   }
-  if (CID.isCID(data)) {
+  if (cid) {
     return data.toString()
   }
   return data
@@ -223,7 +221,7 @@ describe('TileDocumentHandler', () => {
     expect(jws).toBeDefined()
     expect(linkedBlock).toBeDefined()
 
-    const payload = dagCBOR.util.deserialize(linkedBlock)
+    const payload = dagCBOR.decode(linkedBlock)
 
     const serialized = { jws: serialize(jws), linkedBlock: serialize(payload) }
 
@@ -235,7 +233,7 @@ describe('TileDocumentHandler', () => {
     expect(expected).toBeDefined()
 
     const { jws: eJws, linkedBlock: eLinkedBlock } = expected
-    const ePayload = dagCBOR.util.deserialize(eLinkedBlock)
+    const ePayload = dagCBOR.decode(eLinkedBlock)
     const signed = { jws: serialize(eJws), linkedBlock: serialize(ePayload) }
 
     expect(serialized).toEqual(signed)
@@ -261,7 +259,7 @@ describe('TileDocumentHandler', () => {
     expect(jws).toBeDefined()
     expect(linkedBlock).toBeDefined()
 
-    const payload = dagCBOR.util.deserialize(linkedBlock)
+    const payload = dagCBOR.decode(linkedBlock)
     expect(payload.data).toEqual(COMMITS.genesis.data)
     expect(payload.header.controllers[0]).toEqual(did.id)
 
@@ -313,10 +311,15 @@ describe('TileDocumentHandler', () => {
     )) as SignedCommitContainer
     await context.ipfs.dag.put(commit, FAKE_CID_1)
 
-    const payload = dagCBOR.util.deserialize(commit.linkedBlock)
+    const payload = dagCBOR.decode(commit.linkedBlock)
     await context.ipfs.dag.put(payload, commit.jws.link)
 
-    const commitData = { cid: FAKE_CID_1, type: CommitType.GENESIS, commit: payload, envelope: commit.jws }
+    const commitData = {
+      cid: FAKE_CID_1,
+      type: CommitType.GENESIS,
+      commit: payload,
+      envelope: commit.jws,
+    }
     const streamState = await tileHandler.applyCommit(commitData, context)
     delete streamState.metadata.unique
     expect(streamState).toMatchSnapshot()
@@ -336,12 +339,9 @@ describe('TileDocumentHandler', () => {
       cid: FAKE_CID_1,
       type: CommitType.GENESIS,
       commit: COMMITS.genesisGenerated.linkedBlock,
-      envelope: COMMITS.genesisGenerated.jws
+      envelope: COMMITS.genesisGenerated.jws,
     }
-    const state = await tileDocumentHandler.applyCommit(
-      commitData,
-      context
-    )
+    const state = await tileDocumentHandler.applyCommit(commitData, context)
     const state$ = TestUtils.runningState(state)
     const doc = new TileDocument(state$, context)
 
@@ -354,7 +354,7 @@ describe('TileDocumentHandler', () => {
       COMMITS.r1.desiredContent
     )) as SignedCommitContainer
     const { jws: rJws, linkedBlock: rLinkedBlock } = commit
-    const rPayload = dagCBOR.util.deserialize(rLinkedBlock)
+    const rPayload = dagCBOR.decode(rLinkedBlock)
     expect({ jws: serialize(rJws), linkedPayload: serialize(rPayload) }).toEqual(COMMITS.r1.commit)
   })
 
@@ -367,15 +367,17 @@ describe('TileDocumentHandler', () => {
     )) as SignedCommitContainer
     await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
 
-    const payload = dagCBOR.util.deserialize(genesisCommit.linkedBlock)
+    const payload = dagCBOR.decode(genesisCommit.linkedBlock)
     await context.ipfs.dag.put(payload, genesisCommit.jws.link)
 
     // apply genesis
-    const genesisCommitData = { cid: FAKE_CID_1, type: CommitType.GENESIS, commit: payload, envelope: genesisCommit.jws }
-    let state = await tileDocumentHandler.applyCommit(
-      genesisCommitData,
-      context
-    )
+    const genesisCommitData = {
+      cid: FAKE_CID_1,
+      type: CommitType.GENESIS,
+      commit: payload,
+      envelope: genesisCommit.jws,
+    }
+    let state = await tileDocumentHandler.applyCommit(genesisCommitData, context)
 
     const state$ = TestUtils.runningState(state)
     const doc = new TileDocument(state$, context)
@@ -386,16 +388,17 @@ describe('TileDocumentHandler', () => {
 
     await context.ipfs.dag.put(signedCommit, FAKE_CID_2)
 
-    const sPayload = dagCBOR.util.deserialize(signedCommit.linkedBlock)
+    const sPayload = dagCBOR.decode(signedCommit.linkedBlock)
     await context.ipfs.dag.put(sPayload, signedCommit.jws.link)
 
     // apply signed
-    const signedCommitData = { cid: FAKE_CID_2, type: CommitType.SIGNED, commit: sPayload, envelope: signedCommit.jws }
-    state = await tileDocumentHandler.applyCommit(
-      signedCommitData,
-      context,
-      state
-    )
+    const signedCommitData = {
+      cid: FAKE_CID_2,
+      type: CommitType.SIGNED,
+      commit: sPayload,
+      envelope: signedCommit.jws,
+    }
+    state = await tileDocumentHandler.applyCommit(signedCommitData, context, state)
     delete state.metadata.unique
     delete state.next.metadata.unique
     expect(state).toMatchSnapshot()
@@ -409,14 +412,16 @@ describe('TileDocumentHandler', () => {
       test: 'data',
     })) as SignedCommitContainer
     await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
-    const payload = dagCBOR.util.deserialize(genesisCommit.linkedBlock)
+    const payload = dagCBOR.decode(genesisCommit.linkedBlock)
     await context.ipfs.dag.put(payload, genesisCommit.jws.link)
     // apply genesis
-    const genesisCommitData = { cid: FAKE_CID_1, type: CommitType.GENESIS, commit: payload, envelope: genesisCommit.jws }
-    const genesisState = await tileDocumentHandler.applyCommit(
-      genesisCommitData,
-      context
-    )
+    const genesisCommitData = {
+      cid: FAKE_CID_1,
+      type: CommitType.GENESIS,
+      commit: payload,
+      envelope: genesisCommit.jws,
+    }
+    const genesisState = await tileDocumentHandler.applyCommit(genesisCommitData, context)
 
     // make a first update
     const state$ = TestUtils.runningState(genesisState)
@@ -426,10 +431,15 @@ describe('TileDocumentHandler', () => {
     })) as SignedCommitContainer
 
     await context.ipfs.dag.put(signedCommit1, FAKE_CID_2)
-    const sPayload1 = dagCBOR.util.deserialize(signedCommit1.linkedBlock)
+    const sPayload1 = dagCBOR.decode(signedCommit1.linkedBlock)
     await context.ipfs.dag.put(sPayload1, signedCommit1.jws.link)
     // apply signed
-    const signedCommitData_1 = { cid: FAKE_CID_2, type: CommitType.SIGNED, commit: sPayload1, envelope: signedCommit1.jws }
+    const signedCommitData_1 = {
+      cid: FAKE_CID_2,
+      type: CommitType.SIGNED,
+      commit: sPayload1,
+      envelope: signedCommit1.jws,
+    }
     const state1 = await tileDocumentHandler.applyCommit(
       signedCommitData_1,
       context,
@@ -444,11 +454,16 @@ describe('TileDocumentHandler', () => {
     })) as SignedCommitContainer
 
     await context.ipfs.dag.put(signedCommit2, FAKE_CID_3)
-    const sPayload2 = dagCBOR.util.deserialize(signedCommit2.linkedBlock)
+    const sPayload2 = dagCBOR.decode(signedCommit2.linkedBlock)
     await context.ipfs.dag.put(sPayload2, signedCommit2.jws.link)
 
     // apply signed
-    const signedCommitData_2 = { cid: FAKE_CID_3, type: CommitType.SIGNED, commit: sPayload2, envelope: signedCommit2.jws }
+    const signedCommitData_2 = {
+      cid: FAKE_CID_3,
+      type: CommitType.SIGNED,
+      commit: sPayload2,
+      envelope: signedCommit2.jws,
+    }
     const state2 = await tileDocumentHandler.applyCommit(
       signedCommitData_2,
       context,
@@ -467,13 +482,18 @@ describe('TileDocumentHandler', () => {
     })) as SignedCommitContainer
     await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
 
-    const payload = dagCBOR.util.deserialize(genesisCommit.linkedBlock)
+    const payload = dagCBOR.decode(genesisCommit.linkedBlock)
     await context.ipfs.dag.put(payload, genesisCommit.jws.link)
 
-    const genesisCommitData = { cid: FAKE_CID_1, type: CommitType.GENESIS, commit: payload, envelope: genesisCommit.jws }
-    await expect(
-      tileDocumentHandler.applyCommit(genesisCommitData, context)
-    ).rejects.toThrow(/invalid_jws: not a valid verificationMethod for issuer/)
+    const genesisCommitData = {
+      cid: FAKE_CID_1,
+      type: CommitType.GENESIS,
+      commit: payload,
+      envelope: genesisCommit.jws,
+    }
+    await expect(tileDocumentHandler.applyCommit(genesisCommitData, context)).rejects.toThrow(
+      /invalid_jws: not a valid verificationMethod for issuer/
+    )
   })
 
   it('throws error if changes to more than one controller', async () => {
@@ -484,10 +504,15 @@ describe('TileDocumentHandler', () => {
     })) as SignedCommitContainer
     await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
 
-    const payload = dagCBOR.util.deserialize(genesisCommit.linkedBlock)
+    const payload = dagCBOR.decode(genesisCommit.linkedBlock)
     await context.ipfs.dag.put(payload, genesisCommit.jws.link)
 
-    const genesisCommitData = { cid: FAKE_CID_1, type: CommitType.GENESIS, commit: payload, envelope: genesisCommit.jws }
+    const genesisCommitData = {
+      cid: FAKE_CID_1,
+      type: CommitType.GENESIS,
+      commit: payload,
+      envelope: genesisCommit.jws,
+    }
     const state = await tileDocumentHandler.applyCommit(genesisCommitData, context)
     const doc = new TileDocument(state, context)
     const makeCommit = doc.makeCommit(context.api, COMMITS.r1.desiredContent, {
@@ -505,15 +530,17 @@ describe('TileDocumentHandler', () => {
     )) as SignedCommitContainer
     await context.ipfs.dag.put(genesisCommit, FAKE_CID_1)
 
-    const payload = dagCBOR.util.deserialize(genesisCommit.linkedBlock)
+    const payload = dagCBOR.decode(genesisCommit.linkedBlock)
     await context.ipfs.dag.put(payload, genesisCommit.jws.link)
 
     // apply genesis
-    const genesisCommitData = { cid: FAKE_CID_1, type: CommitType.GENESIS, commit: payload, envelope: genesisCommit.jws }
-    let state = await tileDocumentHandler.applyCommit(
-      genesisCommitData,
-      context
-    )
+    const genesisCommitData = {
+      cid: FAKE_CID_1,
+      type: CommitType.GENESIS,
+      commit: payload,
+      envelope: genesisCommit.jws,
+    }
+    let state = await tileDocumentHandler.applyCommit(genesisCommitData, context)
 
     const state$ = TestUtils.runningState(state)
     const doc = new TileDocument(state$, context)
@@ -524,26 +551,41 @@ describe('TileDocumentHandler', () => {
 
     await context.ipfs.dag.put(signedCommit, FAKE_CID_2)
 
-    const sPayload = dagCBOR.util.deserialize(signedCommit.linkedBlock)
+    const sPayload = dagCBOR.decode(signedCommit.linkedBlock)
     await context.ipfs.dag.put(sPayload, signedCommit.jws.link)
 
     // apply signed
-    const signedCommitData = { cid: FAKE_CID_2, type: CommitType.SIGNED, commit: sPayload, envelope: signedCommit.jws }
-    state = await tileDocumentHandler.applyCommit(
-      signedCommitData,
-      context,
-      state
-    )
+    const signedCommitData = {
+      cid: FAKE_CID_2,
+      type: CommitType.SIGNED,
+      commit: sPayload,
+      envelope: signedCommit.jws,
+    }
+    state = await tileDocumentHandler.applyCommit(signedCommitData, context, state)
 
     await context.ipfs.dag.put(COMMITS.proof, FAKE_CID_4)
     // apply anchor
-    const anchorCommitData = { cid: FAKE_CID_3, type: CommitType.ANCHOR, commit: COMMITS.r2.commit, proof: COMMITS.proof }
-    state = await tileDocumentHandler.applyCommit(
-      anchorCommitData,
-      context,
-      state
-    )
+    const anchorCommitData = {
+      cid: FAKE_CID_3,
+      type: CommitType.ANCHOR,
+      commit: COMMITS.r2.commit,
+      proof: COMMITS.proof,
+    }
+    state = await tileDocumentHandler.applyCommit(anchorCommitData, context, state)
     delete state.metadata.unique
     expect(state).toMatchSnapshot()
+  })
+})
+
+describe('TileHandler', () => {
+  test('can not create invalid deterministic tile document', async () => {
+    const fauxCeramic = {} as unknown as CeramicApi
+    await expect(
+      TileDocument.makeGenesis(fauxCeramic, undefined, {
+        controllers: ['did:foo:blah'],
+        family: 'test123',
+        tags: ['foo', undefined, 'blah'],
+      })
+    ).rejects.toThrow(/`undefined` is not supported by the IPLD Data Model and cannot be encoded/)
   })
 })

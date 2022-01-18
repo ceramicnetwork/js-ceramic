@@ -1,10 +1,11 @@
 import { verifyMessage } from '@ethersproject/wallet'
 import { Contract } from '@ethersproject/contracts'
 import * as providers from '@ethersproject/providers'
-import { AccountID } from 'caip'
+import { AccountId } from 'caip'
 import * as uint8arrays from 'uint8arrays'
 import { LinkProof } from '@ceramicnetwork/blockchain-utils-linking'
-import { BlockchainHandler } from '../blockchain-handler'
+import { BlockchainHandler } from '../blockchain-handler.js'
+import { normalizeAccountId } from '@ceramicnetwork/common'
 
 const ADDRESS_TYPES = {
   ethereumEOA: 'ethereum-eoa',
@@ -29,7 +30,7 @@ function getEthersProvider(chainId: string): any {
 }
 
 function toV2Proof(proof: LinkProof, address?: string): LinkProof {
-  proof.account = new AccountID({
+  proof.account = new AccountId({
     address: (proof.version === 1 ? proof.address : address) || '',
     chainId: {
       namespace,
@@ -45,7 +46,7 @@ function toV2Proof(proof: LinkProof, address?: string): LinkProof {
 async function validateEoaLink(proof: LinkProof): Promise<LinkProof | null> {
   const recoveredAddr = verifyMessage(proof.message, proof.signature).toLowerCase()
   if (proof.version !== 2) proof = toV2Proof(proof, recoveredAddr)
-  const account = new AccountID(proof.account)
+  const account = new AccountId(proof.account)
   if (account.address !== recoveredAddr) {
     return null
   }
@@ -54,7 +55,7 @@ async function validateEoaLink(proof: LinkProof): Promise<LinkProof | null> {
 
 async function validateErc1271Link(proof: LinkProof): Promise<LinkProof | null> {
   if (proof.version === 1) proof = toV2Proof(proof)
-  const account = new AccountID(proof.account)
+  const account = new AccountId(proof.account)
   const provider = getEthersProvider(account.chainId.reference)
   const contract = new Contract(account.address, ERC1271_ABI, provider)
   const message = utf8toHex(proof.message)
@@ -64,16 +65,20 @@ async function validateErc1271Link(proof: LinkProof): Promise<LinkProof | null> 
 }
 
 async function validateLink(proof: LinkProof): Promise<LinkProof | null> {
-  if (proof.type === ADDRESS_TYPES.erc1271) {
-    return await validateErc1271Link(proof)
+  // Handle legacy CAIP links
+  const proofCopy = { ...proof }
+  if (proofCopy.account) {
+    proofCopy.account = normalizeAccountId(proofCopy.account).toString()
+  }
+
+  if (proofCopy.type === ADDRESS_TYPES.erc1271) {
+    return await validateErc1271Link(proofCopy)
   } else {
-    return await validateEoaLink(proof)
+    return await validateEoaLink(proofCopy)
   }
 }
 
-const handler: BlockchainHandler = {
+export const handler: BlockchainHandler = {
   namespace,
   validateLink,
 }
-
-export default handler

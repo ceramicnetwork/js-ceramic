@@ -1,7 +1,7 @@
-import { Dispatcher } from '../dispatcher'
-import { PinStore } from '../store/pin-store'
-import { ExecutionQueue } from './execution-queue'
-import { commitAtTime, ConflictResolution } from '../conflict-resolution'
+import { Dispatcher } from '../dispatcher.js'
+import { PinStore } from '../store/pin-store.js'
+import { ExecutionQueue } from './execution-queue.js'
+import { commitAtTime, ConflictResolution } from '../conflict-resolution.js'
 import {
   AnchorService,
   AnchorServiceResponse,
@@ -15,11 +15,11 @@ import {
   DiagnosticsLogger,
   StreamUtils,
 } from '@ceramicnetwork/common'
-import { RunningState } from './running-state'
-import CID from 'cids'
+import { RunningState } from './running-state.js'
+import type { CID } from 'multiformats/cid'
 import { catchError, concatMap, takeUntil } from 'rxjs/operators'
 import { empty, Observable, Subject, Subscription, timer } from 'rxjs'
-import { SnapshotState } from './snapshot-state'
+import { SnapshotState } from './snapshot-state.js'
 import { CommitID, StreamID } from '@ceramicnetwork/streamid'
 
 const APPLY_ANCHOR_COMMIT_ATTEMPTS = 3

@@ -1,15 +1,15 @@
-import CID from 'cids'
-import multibase from 'multibase'
+import { CID } from 'multiformats/cid'
+import * as Block from 'multiformats/block'
+import { base36 } from 'multiformats/bases/base36'
+import { sha256 as hasher } from 'multiformats/hashes/sha2'
 import varint from 'varint'
-import dagCBOR from 'ipld-dag-cbor'
-import uint8ArrayConcat from 'uint8arrays/concat'
-import uint8ArrayToString from 'uint8arrays/to-string'
-import { DEFAULT_BASE, STREAMID_CODEC } from './constants'
-import { readCid, readCidNoThrow, readVarint } from './reading-bytes'
+import * as codec from '@ipld/dag-cbor'
+import { concat as uint8ArrayConcat } from 'uint8arrays'
+import { STREAMID_CODEC } from './constants.js'
+import { readCidNoThrow, readVarint } from './reading-bytes.js'
 import { Memoize } from 'typescript-memoize'
-import { CommitID } from './commit-id'
-import { StreamRef } from './stream-ref'
-import { StreamType } from './stream-type'
+import { StreamRef } from './stream-ref.js'
+import { StreamType } from './stream-type.js'
 
 /**
  * Parse StreamID from bytes representation.
@@ -74,7 +74,7 @@ function fromString(input: string): StreamID {
 function fromStringNoThrow(input: string): StreamID | Error {
   const protocolFree = input.replace('ceramic://', '').replace('/ceramic/', '')
   const commitFree = protocolFree.includes('commit') ? protocolFree.split('?')[0] : protocolFree
-  const bytes = multibase.decode(commitFree)
+  const bytes = base36.decode(commitFree)
   return fromBytesNoThrow(bytes)
 }
 
@@ -124,7 +124,7 @@ export class StreamID implements StreamRef {
     if (!(type || type === 0)) throw new Error('constructor: type required')
     if (!cid) throw new Error('constructor: cid required')
     this.#type = typeof type === 'string' ? StreamType.codeByName(type) : type
-    this.#cid = typeof cid === 'string' ? new CID(cid) : cid
+    this.#cid = typeof cid === 'string' ? CID.parse(cid) : cid
   }
 
   /**
@@ -145,8 +145,8 @@ export class StreamID implements StreamRef {
    * ```
    */
   static async fromGenesis(type: string | number, genesis: Record<string, any>): Promise<StreamID> {
-    const cid = await dagCBOR.util.cid(new Uint8Array(dagCBOR.util.serialize(genesis)))
-    return new StreamID(type, cid)
+    const block = await Block.encode({ value: genesis, codec, hasher })
+    return new StreamID(type, block.cid)
   }
 
   /**
@@ -192,13 +192,6 @@ export class StreamID implements StreamRef {
   }
 
   /**
-   * Construct new CommitID for the same stream, but a new `commit` CID.
-   */
-  atCommit(commit: CID | string | number): CommitID {
-    return new CommitID(this.#type, this.#cid, commit)
-  }
-
-  /**
    * Compare equality with another StreamID.
    */
   equals(other: StreamID): boolean {
@@ -214,7 +207,7 @@ export class StreamID implements StreamRef {
    */
   @Memoize()
   toString(): string {
-    return uint8ArrayToString(multibase.encode(DEFAULT_BASE, this.bytes))
+    return base36.encode(this.bytes)
   }
 
   /**

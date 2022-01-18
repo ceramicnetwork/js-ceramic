@@ -1,11 +1,11 @@
-import { mock } from 'jest-mock-extended'
+import jestMock from 'jest-mock-extended'
 
-import Utils from '../../utils'
+import { Utils } from '../../utils.js'
 import { CeramicApi, Stream, StreamState, TestUtils, CommitType } from '@ceramicnetwork/common'
-import CID from 'cids'
+import { CID } from 'multiformats/cid'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 
-const FAKE_CID = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
+const FAKE_CID = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
 
 class BasicStreamWithContent extends TileDocument {
   makeReadOnly() {
@@ -42,7 +42,7 @@ describe('Stream', () => {
 
     const schemaDoc = new BasicStreamWithContent(TestUtils.runningState(docSchemaState), null)
 
-    ceramic = mock<CeramicApi>()
+    ceramic = jestMock.mock<CeramicApi>()
     ceramic.loadStream.mockReturnValue(
       new Promise<Stream>((resolve) => {
         resolve(schemaDoc)
