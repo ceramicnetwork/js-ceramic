@@ -15,12 +15,10 @@ import * as u8a from 'uint8arrays'
 import * as ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import * as KeyDidResolver from 'key-did-resolver'
 import { swarmConnect, withFleet } from '@ceramicnetwork/ipfs-daemon'
-import { anchorUpdate } from '../state-management/__tests__/anchor-update.js'
 import { Resolver } from 'did-resolver'
 import { DID } from 'dids'
 import { StreamID, CommitID } from '@ceramicnetwork/streamid'
 import { anchorUpdate } from '../state-management/__tests__/anchor-update.js'
-import { swarmConnect, withFleet } from './ipfs-util.js'
 import { Ceramic } from '../ceramic.js'
 
 const seed = u8a.fromString(
