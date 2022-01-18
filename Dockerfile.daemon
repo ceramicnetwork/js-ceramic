@@ -3,11 +3,12 @@ FROM node:16
 WORKDIR /js-ceramic
 
 COPY package.json package-lock.json lerna.json tsconfig.json ./
-RUN npm install
+
+RUN npm ci --ignore-scripts --production
 
 COPY packages ./packages
 
-RUN npx lerna bootstrap --hoist
+RUN npx lerna bootstrap --hoist --ci -- --production
 
 COPY types ./types
 
