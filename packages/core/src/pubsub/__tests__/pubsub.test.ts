@@ -3,10 +3,10 @@ import { IpfsApi, LoggerProvider } from '@ceramicnetwork/common';
 import { Pubsub } from '../pubsub.js'
 import { MsgType, serialize } from '../pubsub-message.js'
 import { StreamID } from '@ceramicnetwork/streamid'
-import { bufferCount, first } from 'rxjs/operators'
+import { bufferCount } from 'rxjs/operators'
 import * as random from '@stablelib/random'
 import { asIpfsMessage } from './as-ipfs-message.js'
-import { from } from 'rxjs'
+import { from, firstValueFrom } from 'rxjs'
 
 const TOPIC = 'test'
 const loggerProvider = new LoggerProvider()
@@ -50,7 +50,7 @@ test('pass incoming messages, omit garbage', async () => {
   }
   const pubsub = new Pubsub(ipfs as unknown as IpfsApi, TOPIC, 3000, pubsubLogger, diagnosticsLogger)
   // Even if garbage is first, we only receive well-formed messages
-  const received = pubsub.pipe(bufferCount(LENGTH), first()).toPromise()
+  const received = firstValueFrom(pubsub.pipe(bufferCount(LENGTH)))
   expect(await received).toEqual(MESSAGES)
   expect(ipfs.id).toBeCalledTimes(2) // One in Pubsub, another in IncomingChannel resubscribe
 })
