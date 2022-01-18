@@ -30,9 +30,9 @@
     "lib": "./lib"
   },
   "dependencies": {
-    "@stablelib/base64": "^1.0.1",
     "@stablelib/sha256": "^1.0.1",
-    "ipfs-http-client": "^55.0.0"
+    "ipfs-http-client": "^55.0.0",
+    "uint8arrays": "^3.0.0"
   },
   "devDependencies": {
     "@ceramicnetwork/common": "^2.0.0-alpha.1",
