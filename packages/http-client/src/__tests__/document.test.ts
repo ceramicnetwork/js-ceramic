@@ -1,8 +1,8 @@
 import { CID } from 'multiformats/cid'
 import { CommitType, StreamState } from '@ceramicnetwork/common'
 import { Document } from '../document.js'
-import { BehaviorSubject } from 'rxjs'
-import { filter, first } from 'rxjs/operators'
+import { BehaviorSubject, firstValueFrom } from 'rxjs'
+import { filter } from 'rxjs/operators'
 
 const FAKE_CID_1 = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
 const FAKE_CID2 = CID.parse('bafybeig6xv5nwphfmvcnektpnojts44jqcuam7bmye2pb54adnrtccjlsu')
@@ -98,12 +98,7 @@ describe('periodic subscription', () => {
     }
     const subscription = document.subscribe()
     // Wait for few samples
-    await calledTimes
-      .pipe(
-        filter((n) => n >= SAMPLES_AMOUNT),
-        first()
-      )
-      .toPromise()
+    await firstValueFrom(calledTimes.pipe(filter((n) => n >= SAMPLES_AMOUNT)))
     subscription.unsubscribe()
 
     // Invocations should happen every SYNC_INTERVAL (with some error bounded to 80% of SYNC_INTERVAL)
@@ -135,12 +130,7 @@ describe('periodic subscription', () => {
     const subscription1 = document.subscribe()
     const subscription2 = document.subscribe()
     // Wait for few samples
-    await calledTimes
-      .pipe(
-        filter((n) => n >= SAMPLES_AMOUNT),
-        first()
-      )
-      .toPromise()
+    await firstValueFrom(calledTimes.pipe(filter((n) => n >= SAMPLES_AMOUNT)))
     subscription1.unsubscribe()
     subscription2.unsubscribe()
 
