@@ -37,8 +37,7 @@
   "devDependencies": {
     "@ceramicnetwork/common": "^2.0.0-alpha.1",
     "ipfs-core-types": "~0.9.0",
-    "multiformats": "^9.5.8",
-    "ts-jest": "^27.1.2"
+    "multiformats": "^9.5.8"
   },
   "publishConfig": {
     "access": "public"

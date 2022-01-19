@@ -31,7 +31,6 @@
     "jest-resolver-enhanced": "^1.0.1",
     "lerna": "^4.0.0",
     "prettier": "^2.5.1",
-    "ts-jest": "^27.1.3",
     "ts-node": "^10.4.0",
     "typedoc": "^0.22.10",
     "typedoc-plugin-pages": "^1.1.0",
