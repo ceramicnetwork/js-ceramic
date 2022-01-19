@@ -237,37 +237,37 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
    * @param commitData - Commit to be verified
    * @param context - Ceramic context
    * @param streamId - Stream ID for the commit
-   * @returns true if capability was present and was verified, false otherwise
+   * @returns Cacao is capability was found and verified, null otherwise
    */
   async _verifyCapability(
     commitData: CommitData,
     context: Context,
     streamId: StreamID
-  ): Promise<Cacao | undefined> {
+  ): Promise<Cacao | null> {
     const protectedHeader = commitData.envelope.signatures[0].protected
     const decodedProtectedHeader = base64urlToJSON(protectedHeader)
 
-    if (decodedProtectedHeader.cap) {
-      const capIPFSUri = decodedProtectedHeader.cap
-      const capCID = CID.parse(capIPFSUri.replace('ipfs://', ''))
-      const cacao = (await context.ipfs.dag.get(capCID)).value as Cacao
-      const resources = cacao.p.resources as string[]
-      const payloadCID = commitData.cid.toString() // TODO: does this need to be a specific codec?
+    if (!decodedProtectedHeader.cap) return null
 
-      if (resources.includes(`ceramic://*`)) {
-        throw new Error(`Capability resource is not allowed`)
-      }
+    const capIPFSUri = decodedProtectedHeader.cap
+    const capCID = CID.parse(capIPFSUri.replace('ipfs://', ''))
+    const cacao = (await context.ipfs.dag.get(capCID)).value as Cacao
+    const resources = cacao.p.resources as string[]
+    const payloadCID = commitData.envelope.link.toString()
 
-      if (
-        !resources.includes(`ceramic://${streamId.toString()}`) &&
-        !resources.includes(`ceramic://${streamId.toString()}?payload=${payloadCID}`)
-      ) {
-        throw new Error(
-          `Capability does not have appropriate permissions to update this TileDocument`
-        )
-      }
-
-      return cacao
+    if (resources.includes(`ceramic://*`)) {
+      throw new Error(`Capability resource is not allowed`)
     }
+
+    if (
+      !resources.includes(`ceramic://${streamId.toString()}`) &&
+      !resources.includes(`ceramic://${streamId.toString()}?payload=${payloadCID}`)
+    ) {
+      throw new Error(
+        `Capability does not have appropriate permissions to update this TileDocument`
+      )
+    }
+
+    return cacao
   }
 }
