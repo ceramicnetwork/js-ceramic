@@ -60,7 +60,7 @@ let provider: any
 let addresses: string[]
 let contractAddress: string
 
-beforeAll(async () => {
+beforeEach(async () => {
   provider = ganache.provider(GANACHE_CONF)
   addresses = await send(provider, encodeRpcMessage('eth_accounts'))
   // ganache-core doesn't support personal_sign -.-
@@ -84,7 +84,7 @@ beforeAll(async () => {
   MockDate.set('2018-10-01') // So that the anchors happen at a predictable blockNumber/blockTimestamp
 })
 
-afterAll(() => {
+afterEach(() => {
   MockDate.reset()
   jest.clearAllMocks()
 })

@@ -16,6 +16,17 @@ type EthProviderOpts = {
 
 const CHAIN_NAMESPACE = 'eip155'
 
+const chainIdCache = new WeakMap<any, number>()
+export async function requestChainId(provider: any): Promise<number> {
+  let chainId = chainIdCache.get(provider)
+  if (!chainId) {
+    const chainIdHex = await safeSend(provider, 'eth_chainId', [])
+    chainId = parseInt(chainIdHex, 16)
+    chainIdCache.set(provider, chainId)
+  }
+  return chainId
+}
+
 /**
  *  AuthProvider which can be used for Ethereum providers with standard interface
  */
@@ -31,8 +42,7 @@ export class EthereumAuthProvider implements AuthProvider {
 
   async accountId(): Promise<AccountId> {
     if (!this._accountId) {
-      const chainIdHex = await safeSend(this.provider, 'eth_chainId', [])
-      const chainId = parseInt(chainIdHex, 16)
+      const chainId = await requestChainId(this.provider)
       this._accountId = new AccountId({
         address: this.address,
         chainId: `${CHAIN_NAMESPACE}:${chainId}`,
@@ -158,14 +168,8 @@ async function createEthLink(
   return proof
 }
 
-const chainIdCache = new WeakMap<any, number>()
 async function validateChainId(account: AccountId, provider: any): Promise<void> {
-  let chainId = chainIdCache.get(provider)
-  if (!chainId) {
-    const chainIdHex = await safeSend(provider, 'eth_chainId', [])
-    chainId = parseInt(chainIdHex, 16)
-    chainIdCache.set(provider, chainId)
-  }
+  const chainId = await requestChainId(provider)
   if (chainId !== parseInt(account.chainId.reference)) {
     throw new Error(
       `ChainId in provider (${chainId}) is different from AccountId (${account.chainId.reference})`
