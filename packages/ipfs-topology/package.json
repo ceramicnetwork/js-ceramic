@@ -30,10 +30,10 @@
     "test": "exit 0"
   },
   "dependencies": {
+    "@ceramicnetwork/common": "^2.0.0-alpha.1",
     "cross-fetch": "^3.1.4"
   },
   "devDependencies": {
-    "@ceramicnetwork/common": "^2.0.0-alpha.1",
     "multiaddr": "^10.0.1"
   }
 }

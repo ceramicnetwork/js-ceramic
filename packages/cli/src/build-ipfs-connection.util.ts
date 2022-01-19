@@ -1,4 +1,3 @@
-import type { Options } from 'ipfs-core'
 import mergeOpts from 'merge-options'
 import * as Ctl from 'ipfsd-ctl'
 import dagJose from 'dag-jose'
@@ -37,7 +36,7 @@ export async function buildIpfsConnection(
   }
 }
 
-async function createGoIPFS(overrideConfig: Partial<Options> = {}): Promise<IpfsApi> {
+async function createGoIPFS(overrideConfig: Partial<ipfsClient.Options> = {}): Promise<IpfsApi> {
   const swarmPort = 4011
   const apiPort = 5011
   const gatewayPort = 9011

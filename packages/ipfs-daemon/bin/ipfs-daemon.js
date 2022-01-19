@@ -1,3 +1,3 @@
 #!/usr/bin/env node
 
-require('../lib/bin/ipfs-daemon')
+await import('../lib/bin/ipfs-daemon.js')

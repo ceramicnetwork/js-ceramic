@@ -1,5 +1,4 @@
-import { LoggerModes } from 'jet-logger'
-import jet from 'jet-logger'
+import { LoggerModes, Logger } from 'overjet-logger'
 import logfmt from 'logfmt'
 import * as util from 'util'
 import flatten from 'flat'
@@ -11,10 +10,6 @@ import {
   ServiceLog,
   WriteableStream,
 } from './logger-base.js'
-
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore CJS-ESM interoperability sucks for default exports
-const Logger = jet.default
 
 /**
  * Logs to the console based on log level

@@ -1,15 +1,10 @@
 {
-    "moduleFileExtensions": ["js", "json", "ts"],
-    "testEnvironment": "node",
-    "resolver": "jest-resolver-enhanced",
-    "extensionsToTreatAsEsm": [".ts"],
-    "testRegex": "(/__tests__/.*(\\.|/)(test|spec))\\.tsx?$",
-    "globals": {
-        "ts-jest": {
-        "useESM": true
-        }
-    },
-    "moduleNameMapper": {
-        "^(\\.{1,2}/.*)\\.js$": "$1"
-    }
+  "moduleFileExtensions": ["js", "json", "ts"],
+  "testEnvironment": "node",
+  "resolver": "jest-resolver-enhanced",
+  "extensionsToTreatAsEsm": [".ts"],
+  "testRegex": "(/__tests__/.*(\\.|/)(test|spec))\\.tsx?$",
+  "moduleNameMapper": {
+    "^(\\.{1,2}/.*)\\.js$": "$1"
+  }
 }

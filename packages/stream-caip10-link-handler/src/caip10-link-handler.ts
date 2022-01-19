@@ -10,8 +10,8 @@ import {
   StreamHandler,
   StreamState,
   StreamUtils,
+  toLegacyAccountId,
 } from '@ceramicnetwork/common'
-import { toLegacyAccountId } from '@ceramicnetwork/common'
 
 export class Caip10LinkHandler implements StreamHandler<Caip10Link> {
   get type(): number {

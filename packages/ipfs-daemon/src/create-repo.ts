@@ -1,15 +1,18 @@
-import S3 from 'aws-sdk/clients/s3'
+import S3 from 'aws-sdk/clients/s3.js'
 import { createRepo as createIPFSRepo, IPFSRepo, Backends, Datastore } from 'ipfs-repo'
 import { LevelDatastore } from 'datastore-level'
 import { FsDatastore } from 'datastore-fs'
 import { S3Datastore } from 'datastore-s3'
 import path from 'path'
 import * as dagCBOR from '@ipld/dag-cbor'
+import * as dagJOSE from 'dag-jose'
 import { BlockstoreDatastoreAdapter, Blockstore } from 'blockstore-datastore-adapter'
 
 const codecLookup = {
   [dagCBOR.code]: dagCBOR,
   [dagCBOR.name]: dagCBOR,
+  [dagJOSE.name]: dagJOSE,
+  [dagJOSE.code]: dagJOSE
 }
 
 // A mock lock
