@@ -21,6 +21,7 @@ const CHAIN_NAMESPACE = 'eip155'
  */
 export class EthereumAuthProvider implements AuthProvider {
   readonly isAuthProvider = true
+  private _accountId: AccountId | undefined
 
   constructor(
     private readonly provider: any,
@@ -29,12 +30,15 @@ export class EthereumAuthProvider implements AuthProvider {
   ) {}
 
   async accountId(): Promise<AccountId> {
-    const chainIdHex = await safeSend(this.provider, 'eth_chainId', [])
-    const chainId = parseInt(chainIdHex, 16)
-    return new AccountId({
-      address: this.address,
-      chainId: `${CHAIN_NAMESPACE}:${chainId}`,
-    })
+    if (!this._accountId) {
+      const chainIdHex = await safeSend(this.provider, 'eth_chainId', [])
+      const chainId = parseInt(chainIdHex, 16)
+      this._accountId = new AccountId({
+        address: this.address,
+        chainId: `${CHAIN_NAMESPACE}:${chainId}`,
+      })
+    }
+    return this._accountId
   }
 
   async authenticate(message: string): Promise<string> {

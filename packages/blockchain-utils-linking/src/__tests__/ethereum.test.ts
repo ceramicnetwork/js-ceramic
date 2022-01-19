@@ -167,6 +167,28 @@ describe('EthereumAuthProvider', () => {
     const auth = new ethereum.EthereumAuthProvider(provider, address)
     await expect(auth.withAddress(address).createLink(testDid)).resolves.toMatchSnapshot()
   })
+  test('accountId', async () => {
+    const address = addresses[0]
+    const auth = new ethereum.EthereumAuthProvider(provider, address)
+    const providerSpy = jest.spyOn(provider, 'sendAsync')
+    const results = []
+    // No matter how many times `::accountId` is called
+    for (let m = 0; m <= Math.floor(Math.random() * 10) + 1; m++) {
+      const accountId = await auth.accountId()
+      results.push(accountId)
+    }
+    // Provider is asked just once
+    expect(providerSpy).toHaveBeenCalledTimes(1)
+    expect(providerSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ jsonrpc: '2.0', method: 'eth_chainId', params: [] }),
+      expect.anything()
+    )
+    // And returned value is returned from cache
+    const first = results[0]
+    results.forEach((r) => {
+      expect(r).toBe(first)
+    })
+  })
 
   describe('various providers', () => {
     test('sendAsync', async () => {
