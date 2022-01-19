@@ -24,7 +24,6 @@ const createFactory = () => {
   return Ctl.createFactory(
     {
       ipfsHttpModule,
-      disposable: true,
     },
     {
       go: {
@@ -70,11 +69,11 @@ async function createIpfsOptions(
 }
 
 const createInstanceByType = {
-  js: createJsIpfs,
-  go: async (ipfsOptions: Options): Promise<IpfsApi> => {
+  js: (ipfsOptions: Options) => createJsIpfs(ipfsOptions),
+  go: async (ipfsOptions: Options, disposable = true): Promise<IpfsApi> => {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore ipfsd-ctl uses own type, that is _very_ similar to Options from ipfs-core
-    const ipfsd = await createFactory().spawn({ type: 'go', ipfsOptions })
+    const ipfsd = await createFactory().spawn({ type: 'go', ipfsOptions, disposable })
     return ipfsd.api
   },
 }
@@ -82,7 +81,10 @@ const createInstanceByType = {
  * Create an IPFS instance
  * @param overrideConfig - IFPS config for override
  */
-export async function createIPFS(overrideConfig: Partial<Options> = {}): Promise<IpfsApi> {
+export async function createIPFS(
+  overrideConfig: Partial<Options> = {},
+  disposable = true
+): Promise<IpfsApi> {
   const flavor = process.env.IPFS_FLAVOR || 'go'
 
   if (!overrideConfig.repo || flavor == 'js') {
@@ -90,7 +92,7 @@ export async function createIPFS(overrideConfig: Partial<Options> = {}): Promise
 
     const ipfsOptions = await createIpfsOptions(overrideConfig, tmpFolder.path)
 
-    const instance = await createInstanceByType[flavor](ipfsOptions)
+    const instance = await createInstanceByType[flavor](ipfsOptions, disposable)
 
     // IPFS does not notify you when it stops.
     // Here we intercept a call to `ipfs.stop` to clean up IPFS repository folder.
@@ -110,7 +112,7 @@ export async function createIPFS(overrideConfig: Partial<Options> = {}): Promise
 
   const ipfsOptions = await createIpfsOptions(overrideConfig)
 
-  return createInstanceByType[flavor](ipfsOptions)
+  return createInstanceByType[flavor](ipfsOptions, disposable)
 }
 
 /**

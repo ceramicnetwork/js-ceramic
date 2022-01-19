@@ -1,4 +1,4 @@
-import { create as createIPFS } from 'ipfs-core'
+import { createIPFS } from './create-ipfs'
 import { HttpApi } from 'ipfs-http-server'
 import { HttpGateway } from 'ipfs-http-gateway'
 import * as dagJose from 'dag-jose'
@@ -138,56 +138,59 @@ export class IpfsDaemon {
       }
     )
 
-    const ipfs = await createIPFS({
-      start: false,
-      repo,
-      ipld: { codecs: [dagJose] },
-      libp2p: {
+    const ipfs = await createIPFS(
+      {
+        start: false,
+        repo,
+        ipld: { codecs: [dagJose] },
+        libp2p: {
+          config: {
+            dht: {
+              enabled: false,
+              clientMode: !configuration.ipfsDhtServerMode,
+            },
+            pubsub: {
+              enabled: configuration.ipfsEnablePubsub,
+            },
+          },
+          addresses: {
+            announce: configuration.announceAddressList,
+          },
+        },
+        preload: {
+          enabled: false,
+        },
         config: {
-          dht: {
-            enabled: false,
-            clientMode: !configuration.ipfsDhtServerMode,
+          Addresses: {
+            Swarm: [
+              `/ip4/${configuration.tcpHost}/tcp/${configuration.ipfsSwarmTcpPort}`,
+              `/ip4/${configuration.tcpHost}/tcp/${configuration.ipfsSwarmWsPort}/ws`,
+            ],
+            ...(configuration.ipfsEnableApi && {
+              API: `/ip4/${configuration.tcpHost}/tcp/${configuration.ipfsApiPort}`,
+            }),
+            ...(configuration.ipfsEnableGateway && {
+              Gateway: `/ip4/${configuration.tcpHost}/tcp/${configuration.ipfsGatewayPort}`,
+            }),
+            Announce: configuration.announceAddressList,
           },
-          pubsub: {
-            enabled: configuration.ipfsEnablePubsub,
+          API: {
+            HTTPHeaders: {
+              'Access-Control-Allow-Origin': ['*'],
+              'Access-Control-Allow-Methods': ['GET', 'POST'],
+              'Access-Control-Allow-Headers': ['Authorization'],
+              'Access-Control-Expose-Headers': ['Location'],
+              'Access-Control-Allow-Credentials': ['true'],
+            },
           },
-        },
-        addresses: {
-          announce: configuration.announceAddressList,
+          Routing: {
+            Type: configuration.ipfsDhtServerMode ? 'dhtserver' : 'dhtclient',
+          },
+          Bootstrap: configuration.ipfsBootstrap,
         },
       },
-      preload: {
-        enabled: false,
-      },
-      config: {
-        Addresses: {
-          Swarm: [
-            `/ip4/${configuration.tcpHost}/tcp/${configuration.ipfsSwarmTcpPort}`,
-            `/ip4/${configuration.tcpHost}/tcp/${configuration.ipfsSwarmWsPort}/ws`,
-          ],
-          ...(configuration.ipfsEnableApi && {
-            API: `/ip4/${configuration.tcpHost}/tcp/${configuration.ipfsApiPort}`,
-          }),
-          ...(configuration.ipfsEnableGateway && {
-            Gateway: `/ip4/${configuration.tcpHost}/tcp/${configuration.ipfsGatewayPort}`,
-          }),
-          Announce: configuration.announceAddressList,
-        },
-        API: {
-          HTTPHeaders: {
-            'Access-Control-Allow-Origin': ['*'],
-            'Access-Control-Allow-Methods': ['GET', 'POST'],
-            'Access-Control-Allow-Headers': ['Authorization'],
-            'Access-Control-Expose-Headers': ['Location'],
-            'Access-Control-Allow-Credentials': ['true'],
-          },
-        },
-        Routing: {
-          Type: configuration.ipfsDhtServerMode ? 'dhtserver' : 'dhtclient',
-        },
-        Bootstrap: configuration.ipfsBootstrap,
-      },
-    })
+      false
+    )
 
     const api = configuration.ipfsEnableApi ? new HttpApi(ipfs) : undefined
     const gateway = configuration.ipfsEnableGateway ? new HttpGateway(ipfs) : undefined
