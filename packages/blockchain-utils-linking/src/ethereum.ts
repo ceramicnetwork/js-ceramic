@@ -158,9 +158,14 @@ async function createEthLink(
   return proof
 }
 
+const chainIdCache = new WeakMap<any, number>()
 async function validateChainId(account: AccountId, provider: any): Promise<void> {
-  const chainIdHex = await safeSend(provider, 'eth_chainId', [])
-  const chainId = parseInt(chainIdHex, 16)
+  let chainId = chainIdCache.get(provider)
+  if (!chainId) {
+    const chainIdHex = await safeSend(provider, 'eth_chainId', [])
+    chainId = parseInt(chainIdHex, 16)
+    chainIdCache.set(provider, chainId)
+  }
   if (chainId !== parseInt(account.chainId.reference)) {
     throw new Error(
       `ChainId in provider (${chainId}) is different from AccountId (${account.chainId.reference})`
