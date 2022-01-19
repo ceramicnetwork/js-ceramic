@@ -27,7 +27,7 @@
   },
   "scripts": {
     "build": "../../node_modules/.bin/tsc -p tsconfig.json",
-    "start": "../../node_modules/.bin/ts-node src/bin/ipfs-daemon.ts",
+    "start": "./node_modules/.bin/tsm src/bin/ipfs-daemon.ts",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
     "lint": "../../node_modules/.bin/eslint ./src --ext .js,.jsx,.ts,.tsx",
@@ -41,7 +41,7 @@
     "blockstore-datastore-adapter": "^2.0.3",
     "dag-jose": "^1.0.0",
     "datastore-fs": "^6.0.1",
-    "datastore-level": "^7.0.1",
+    "datastore-level": "^8.0.0",
     "datastore-s3": "^8.0.0",
     "express": "^4.17.2",
     "get-port": "^6.0.0",
@@ -58,6 +58,7 @@
   "devDependencies": {
     "@types/express": "^4.17.13",
     "@types/jest": "^27.0.3",
-    "@types/node": "^17.0.5"
+    "@types/node": "^17.0.5",
+    "tsm": "^2.2.1"
   }
 }
