@@ -4,6 +4,7 @@ import ganache from 'ganache-core'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { Contract, ContractFactory } from '@ethersproject/contracts'
 import * as sigUtils from 'eth-sig-util'
+import MockDate from 'mockdate'
 import * as ethereum from '../ethereum.js'
 import { OcapParams, OcapTypes } from '../ocap-util.js'
 import { encodeRpcMessage } from '../util.js'
@@ -80,10 +81,11 @@ beforeAll(async () => {
   })
   await send(provider, encodeRpcMessage('eth_sendTransaction', [unsignedTx]))
   contractAddress = Contract.getContractAddress(unsignedTx)
-  global.Date.now = jest.fn().mockImplementation(() => 666)
+  MockDate.set('2018-10-01') // So that the anchors happen at a predictable blockNumber/blockTimestamp
 })
 
 afterAll(() => {
+  MockDate.reset()
   jest.clearAllMocks()
 })
 
