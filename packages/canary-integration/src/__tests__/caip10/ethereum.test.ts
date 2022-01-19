@@ -8,6 +8,7 @@ import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { createCeramic } from '../../create-ceramic'
 import { Caip10Link } from '@ceramicnetwork/stream-caip10-link'
 import { happyPath, clearDid } from './caip-flows'
+import { AccountId } from 'caip'
 
 const CONTRACT_WALLET_ABI = [
   {
@@ -120,8 +121,11 @@ describe('externally-owned account', () => {
   test('invalid proof', async () => {
     const authProvider = new EthereumAuthProvider(provider, addresses[0])
     const accountId = await authProvider.accountId()
-    accountId.address = addresses[1]
-    const caip = await Caip10Link.fromAccount(ceramic, accountId)
+    const wrongAccountId = new AccountId({
+      address: addresses[1],
+      chainId: accountId.chainId
+    })
+    const caip = await Caip10Link.fromAccount(ceramic, wrongAccountId)
     await expect(caip.setDid(ceramic.did, authProvider)).rejects.toThrow(
       /Address doesn't match stream controller/
     )

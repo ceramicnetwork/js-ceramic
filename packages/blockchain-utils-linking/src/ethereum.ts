@@ -136,9 +136,11 @@ export async function isERC1271(account: AccountId, provider: any): Promise<bool
   return Boolean(bytecode && bytecode !== '0x' && bytecode !== '0x0' && bytecode !== '0x00')
 }
 
-export function normalizeAccountId(account: AccountId): AccountId {
-  account.address = account.address.toLowerCase()
-  return account
+export function normalizeAccountId(input: AccountId): AccountId {
+  return new AccountId({
+    address: input.address.toLowerCase(),
+    chainId: input.chainId,
+  })
 }
 
 function utf8toHex(message: string): string {
