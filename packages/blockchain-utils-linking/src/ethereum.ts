@@ -17,7 +17,7 @@ type EthProviderOpts = {
 const CHAIN_NAMESPACE = 'eip155'
 
 const chainIdCache = new WeakMap<any, number>()
-export async function requestChainId(provider: any): Promise<number> {
+async function requestChainId(provider: any): Promise<number> {
   let chainId = chainIdCache.get(provider)
   if (!chainId) {
     const chainIdHex = await safeSend(provider, 'eth_chainId', [])
