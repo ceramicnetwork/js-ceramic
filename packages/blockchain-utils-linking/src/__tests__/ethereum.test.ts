@@ -92,20 +92,20 @@ afterAll(() => {
 describe('isEthAddress', () => {
   test('detect eth address correctly', async () => {
     const notEthAddr = '0xabc123'
-    expect(await ethereum.isEthAddress(notEthAddr)).toBeFalsy()
-    expect(await ethereum.isEthAddress(addresses[0])).toBeTruthy()
+    expect(ethereum.isEthAddress(notEthAddr)).toBeFalsy()
+    expect(ethereum.isEthAddress(addresses[0])).toBeTruthy()
   })
 })
 
 describe('isERC1271', () => {
   test('detect erc1271 address', async () => {
     const acc1 = new AccountId({ address: addresses[0], chainId: 'eip155:1' })
-    expect(await ethereum.isERC1271(acc1, provider)).toEqual(false)
+    await expect(ethereum.isERC1271(acc1, provider)).resolves.toEqual(false)
     const acc2 = new AccountId({
       address: contractAddress,
       chainId: 'eip155:1',
     })
-    expect(await ethereum.isERC1271(acc2, provider)).toEqual(true)
+    await expect(ethereum.isERC1271(acc2, provider)).resolves.toEqual(true)
   })
 })
 
@@ -127,9 +127,9 @@ describe('createLink', () => {
       address: contractAddress,
       chainId: 'eip155:' + GANACHE_CHAIN_ID,
     })
-    expect(
-      await ethereum.createLink(testDid, acc, provider, { skipTimestamp: true })
-    ).toMatchSnapshot()
+    await expect(
+      ethereum.createLink(testDid, acc, provider, { skipTimestamp: true })
+    ).resolves.toMatchSnapshot()
   })
 
   test('throw if erc1271 is on wrong chain', async () => {
@@ -183,6 +183,7 @@ describe('EthereumAuthProvider', () => {
       expect.objectContaining({ jsonrpc: '2.0', method: 'eth_chainId', params: [] }),
       expect.anything()
     )
+    providerSpy.mockClear()
     // And returned value is returned from cache
     const first = results[0]
     results.forEach((r) => {
@@ -197,6 +198,7 @@ describe('EthereumAuthProvider', () => {
       const accountId = await auth.accountId()
       expect(accountId.address).toBe(addresses[0])
       expect(spy).toHaveBeenCalledTimes(1)
+      spy.mockClear()
     })
 
     test('request', async () => {
@@ -209,6 +211,7 @@ describe('EthereumAuthProvider', () => {
       const accountId = await auth.accountId()
       expect(accountId.address).toBe(addresses[0])
       expect(spy).toHaveBeenCalledTimes(1)
+      spy.mockClear()
     })
 
     test('send', async () => {
@@ -220,6 +223,7 @@ describe('EthereumAuthProvider', () => {
       const accountId = await auth.accountId()
       expect(accountId.address).toBe(addresses[0])
       expect(spy).toHaveBeenCalledTimes(1)
+      spy.mockClear()
     })
   })
 })
