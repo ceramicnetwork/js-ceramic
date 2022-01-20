@@ -355,6 +355,12 @@ export class ConflictResolution {
 
     const selectedState = await pickLogToAccept(localState, remoteState)
     if (selectedState === localState) {
+      if (opts.throwOnInvalidCommit) {
+        const commit = unappliedCommits[unappliedCommits.length - 1]
+        throw new Error(
+          `Commit rejected by conflict resolution. Rejected commit CID: ${commit.cid.toString()} `
+        )
+      }
       return null
     }
 
