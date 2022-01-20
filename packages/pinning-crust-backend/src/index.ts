@@ -80,6 +80,7 @@ export class CrustPinningBackend implements PinningBackend {
   async close(): Promise<void> {
     if (this.api) {
       await this.api.disconnect()
+      this.api = undefined
     }
   }
 
@@ -97,14 +98,14 @@ export class CrustPinningBackend implements PinningBackend {
     // Storage order
     // Support for the storage of up to 30G
     const size = 30 * 1024 * 1024 * 1024
-    const tx = this.api.tx.market.placeStorageOrder(cid.toString(), size, 0, '');
+    const tx = this.api.tx.market.placeStorageOrder(cid.toString(), size, 0, '')
     await this.sendTx(tx, krp)
 
     // Permanent storage
     // Learn what's prepard for: https://wiki.crust.network/docs/en/DSM#3-file-order-assurance-settlement-and-discount
     // In pCRU, 1 pCRU = 10^-12 CRU
     const prepard = 1000000000 // in pCRU, 1 pCRU = 10^-12 CRU
-    const tx2 = this.api.tx.market.addPrepaid(cid.toString(), prepard);
+    const tx2 = this.api.tx.market.addPrepaid(cid.toString(), prepard)
     await this.sendTx(tx2, krp)
   }
 
@@ -122,38 +123,29 @@ export class CrustPinningBackend implements PinningBackend {
     // Get a onchain keypair
     const kr = new Keyring({ type: 'sr25519', ss58Format: 66 })
     const krp = kr.addFromUri(this.seed)
-
-    // Configuration
     const data = '{"query": "query MyQuery {\\n  substrate_extrinsic(where: {method: {_eq: \\"placeStorageOrder\\"}, blockNumber: {}, signer: {_eq: \\"' + krp.address + '\\"}}, order_by: {blockNumber: desc}) {\\n    args(path: \\".[0].value\\")\\n  }\\n}\\n"}';
-    const config: AxiosRequestConfig = {
-      method: 'post',
-      url: 'https://crust.indexer.gc.subsquid.io/v4/graphql/',
-      headers: {
-        'Content-Type': 'text/plain'
-      },
-      data: data
-    }
 
     // Request
     const result: CidList = {}
     const tryTimes = 3
     for (let i = 0; i < tryTimes; i++) {
       try {
-        const res: AxiosResponse = await axios(config)
+        const res: AxiosResponse = await axios.post('https://crust.indexer.gc.subsquid.io/v4/graphql/', data)
         if (res && res.status == 200) {
           const resobj: ListRes = JSON.parse(JSON.stringify(res.data))
           resobj.data.substrate_extrinsic.forEach(element => {
             result[this.hex2a(element.args)] = [this.id]
           })
+          break
         }
-        break
       } catch (error) {
         if (i == tryTimes - 1) {
           throw error
         }
       }
-    }
 
+      await this.delay(6000)
+    }
     return result
   }
 
@@ -168,6 +160,10 @@ export class CrustPinningBackend implements PinningBackend {
     for (var i = 2; i < hex.length; i += 2)
       str += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
     return str;
+  }
+
+  delay(ms: number) {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 
   async sendTx(tx: SubmittableExtrinsic, krp: KeyringPair) {
@@ -203,7 +199,7 @@ export class CrustPinningBackend implements PinningBackend {
         }
       }).catch(e => {
         reject(e);
-      });
+      })
     });
   }
 }
