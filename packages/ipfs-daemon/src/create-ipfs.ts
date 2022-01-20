@@ -43,7 +43,6 @@ export async function createController(
     // @ts-ignore ipfsd-ctl uses own type, that is _very_ similar to Options from ipfs-core
     ipfsOptions,
     disposable,
-    endpoint: `http://localhost:${5011}`,
   })
   if (disposable) {
     return ipfsd
