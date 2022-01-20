@@ -32,7 +32,6 @@ import {IpfsDaemon} from "@ceramicnetwork/ipfs-daemon";
 // If not set, they are given defaults or got read from process environment variables
 const ipfsDaemon = await IpfsDaemon.create({
     ipfsDhtServerMode: IPFS_DHT_SERVER_MODE, // DHT Server
-    ipfsEnableApi: true, // Enable IPFS API
     ipfsEnableGateway: true, // Enable IPFS Gateway
     useCentralizedPeerDiscovery: true, // Connect to bootstrap nodes
     ceramicNetwork: 'testnet-clay' // Bootstrap nodes are selected per network
