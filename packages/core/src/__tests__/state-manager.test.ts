@@ -432,9 +432,7 @@ test('handles basic conflict', async () => {
   // Loading invalid commit fails
   await expect(
     ceramic.repository.stateManager.atCommit(streamState1, streamId.atCommit(tipInvalidUpdate))
-  ).rejects.toThrow(
-    `Requested commit CID ${tipInvalidUpdate.toString()} not found in the log for stream ${streamId.toString()}`
-  )
+  ).rejects.toThrow(/Commit rejected by conflict resolution/)
 
   // Ensure that stateManager.atCommit does not mutate the passed in state object
   expect(JSON.stringify(streamState1.state)).toEqual(JSON.stringify(streamState1Original))
