@@ -22,7 +22,7 @@ export class S3StateStore implements StateStore {
   open(networkName: string): void {
     const location = this.#bucketName + '/ceramic/' + networkName + '/state-store'
     // @ts-ignore
-    this.#store = new LevelUp.LevelUp(new S3LevelDOWN(location))
+    this.#store = new LevelUp(new S3LevelDOWN(location))
   }
 
   /**
