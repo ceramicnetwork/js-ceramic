@@ -1,4 +1,4 @@
-name: Deploy branch to infra
+name: Deploy branch without publishing
 
 on:
   workflow_dispatch:
@@ -26,7 +26,7 @@ jobs:
         name: Enable debugging
         if: ${{ github.event.inputs.debug == 'true' }}
         run: |
-          dockerfiles=("Dockerfile.daemon" "Dockerfile.ipfs-daemon")
+          dockerfiles=("Dockerfile.daemon")
           for f in ${dockerfiles[@]}; do
             sed -i '/netcat/ s/$/ net-tools tshark\nRUN npm install --unsafe-perm -g ngrok\nARG NGROK_TOKEN\nENV NGROK_TOKEN=$NGROK_TOKEN\nRUN ngrok authtoken $NGROK_TOKEN/' $f
             sed -i '$ i\ENV NODE_OPTIONS --inspect' $f
@@ -56,14 +56,6 @@ jobs:
           image_name: ceramic-debug/${{ env.ENV }}/js-ceramic
           image_tag: ${{ steps.set-vars.outputs.SHA_TAG }},${{ github.sha }},debug,latest
           dockerfile: Dockerfile.daemon
-      -
-        name: Build and push IPFS image to ECR
-        uses: whoan/docker-build-with-cache-action@v5
-        with:
-          registry: ${{ steps.login-ecr.outputs.registry }}
-          image_name: ceramic-debug/${{ env.ENV }}/js-ipfs
-          image_tag: ${{ steps.set-vars.outputs.SHA_TAG }},${{ github.sha }},debug,latest
-          dockerfile: Dockerfile.ipfs-daemon
 
   deploy_to_infra:
     name: Deploy images to infra
@@ -76,29 +68,14 @@ jobs:
         include:
           -
             instance: gateway
-            image_id: "ceramic-debug/${{ github.event.inputs.environment }}/js-ipfs"
-            cluster_suffix: "-ex"
-            service_suffix: "-ex-ipfs-gw"
-          -
-            instance: gateway
             image_id: "ceramic-debug/${{ github.event.inputs.environment }}/js-ceramic"
             cluster_suffix: "-ex"
             service_suffix: "-ex-gateway"
           -
             instance: public-node
-            image_id: "ceramic-debug/${{ github.event.inputs.environment }}/js-ipfs"
-            cluster_suffix: "-ex"
-            service_suffix: "-ex-ipfs-nd"
-          -
-            instance: public-node
             image_id: "ceramic-debug/${{ github.event.inputs.environment }}/js-ceramic"
             cluster_suffix: "-ex"
             service_suffix: "-ex-node"
-          -
-            instance: private-node
-            image_id: "ceramic-debug/${{ github.event.inputs.environment }}/js-ipfs"
-            cluster_suffix: ""
-            service_suffix: "-ipfs-nd"
           -
             instance: private-node
             image_id: "ceramic-debug/${{ github.event.inputs.environment }}/js-ceramic"
