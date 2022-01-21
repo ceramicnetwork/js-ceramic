@@ -4,7 +4,7 @@
 [![](https://img.shields.io/badge/Chat%20on-Discord-orange.svg?style=flat)](https://discord.gg/6VRZpGP)
 [![Twitter](https://img.shields.io/twitter/follow/ceramicnetwork?label=Follow&style=social)](https://twitter.com/ceramicnetwork)
 
-> Bundled js-ipfs instance with dag-jose codec enabled.
+> Bundled go-ipfs instance.
 
 ## Contributing
 We are happy to accept small and large contributions. Make sure to check out the [Ceramic specifications](https://github.com/ceramicnetwork/specs) for details of how the protocol works.
