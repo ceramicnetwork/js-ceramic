@@ -142,6 +142,29 @@ describe('Ceramic API', () => {
       expect(streamV2.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
     })
 
+    it('Throw on rejected update', async () => {
+      const contentOg = { test: 123 }
+      const contentRejected = { test: 'rejected' }
+
+      const streamOg = await TileDocument.create<any>(ceramic, contentOg)
+
+      // Create an anchor commit that the original stream handle won't know about
+      const streamCopy = await TileDocument.load(ceramic, streamOg.id)
+      await anchorUpdate(ceramic, streamCopy)
+      expect(streamCopy.state.log.length).toEqual(2)
+
+      // Do an update via the stale stream handle.  Its view of the log is out of date so its update
+      // should be rejected by conflict resolution
+      expect(streamOg.state.log.length).toEqual(1)
+      await expect(streamOg.update(contentRejected)).rejects.toThrow(
+        /Commit rejected by conflict resolution/
+      )
+      expect(streamOg.state.log.length).toEqual(1)
+
+      await streamOg.sync()
+      expect(streamOg.state.log.length).toEqual(2)
+    })
+
     it('cannot create stream with invalid schema', async () => {
       const schemaDoc = await TileDocument.create(ceramic, stringMapSchema)
       await expect(
