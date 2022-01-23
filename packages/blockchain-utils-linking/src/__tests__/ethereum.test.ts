@@ -173,7 +173,7 @@ describe('EthereumAuthProvider', () => {
     const providerSpy = jest.spyOn(provider, 'sendAsync')
     const results = []
     // No matter how many times `::accountId` is called
-    for (let m = 0; m <= Math.floor(Math.random() * 10) + 1; m++) {
+    for (let m = 0; m <= 10; m++) {
       const accountId = await auth.accountId()
       results.push(accountId)
     }
