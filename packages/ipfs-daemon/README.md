@@ -1,4 +1,4 @@
-# Ceramic IPFS Daemon
+# Ceramic bundled IPFS Daemon
 ![ceramicnetwork](https://circleci.com/gh/ceramicnetwork/js-ceramic.svg?style=shield)
 [![MIT license](https://img.shields.io/badge/License-MIT-blue.svg)](https://lbesson.mit-license.org/)
 [![](https://img.shields.io/badge/Chat%20on-Discord-orange.svg?style=flat)](https://discord.gg/6VRZpGP)
@@ -46,7 +46,6 @@ Public builds of the image [Dockerfile.ipfs-daemon](../../Dockerfile.ipfs-daemon
 ```
 docker pull ceramicnetwork/ipfs-daemon
 docker run -p 5011:5011 -e CERAMIC_NETWORK=testnet-clay ceramicnetwork/ipfs-daemon
-```
 
 ## Contributing
 We are happy to accept small and large contributions. Make sure to check out the [Ceramic specifications](https://github.com/ceramicnetwork/specs) for details of how the protocol works.

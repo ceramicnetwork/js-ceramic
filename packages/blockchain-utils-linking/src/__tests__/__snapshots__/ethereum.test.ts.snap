@@ -8,9 +8,9 @@ Object {
   "message": "Link this account to your identity
 
 did:3:bafysdfwefwe 
-Timestamp: 0",
-  "signature": "0x4b71ddc9261244b86d19588c828b5867bf4cda399183190ecca86fbd1b3803c16b2158118a75f99cdf2a0e41bb61afde137c5e300c28301fc1db7c85349b49d31b",
-  "timestamp": 0,
+Timestamp: 1538352000",
+  "signature": "0x146cf11fa0472090d25b04d75c4159855c696549f2ae2ea47aea4aa89f8508a1234e3c2000622d9e3d02473bb77438d27d063024f82ec6326f1bcb6e5a3dc36b1b",
+  "timestamp": 1538352000,
   "type": "ethereum-eoa",
   "version": 2,
 }

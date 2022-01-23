@@ -16,11 +16,23 @@ type EthProviderOpts = {
 
 const CHAIN_NAMESPACE = 'eip155'
 
+const chainIdCache = new WeakMap<any, number>()
+async function requestChainId(provider: any): Promise<number> {
+  let chainId = chainIdCache.get(provider)
+  if (!chainId) {
+    const chainIdHex = await safeSend(provider, 'eth_chainId', [])
+    chainId = parseInt(chainIdHex, 16)
+    chainIdCache.set(provider, chainId)
+  }
+  return chainId
+}
+
 /**
  *  AuthProvider which can be used for Ethereum providers with standard interface
  */
 export class EthereumAuthProvider implements AuthProvider {
   readonly isAuthProvider = true
+  private _accountId: AccountId | undefined
 
   constructor(
     private readonly provider: any,
@@ -29,12 +41,14 @@ export class EthereumAuthProvider implements AuthProvider {
   ) {}
 
   async accountId(): Promise<AccountId> {
-    const chainIdHex = await safeSend(this.provider, 'eth_chainId', [])
-    const chainId = parseInt(chainIdHex, 16)
-    return new AccountId({
-      address: this.address,
-      chainId: `${CHAIN_NAMESPACE}:${chainId}`,
-    })
+    if (!this._accountId) {
+      const chainId = await requestChainId(this.provider)
+      this._accountId = new AccountId({
+        address: this.address,
+        chainId: `${CHAIN_NAMESPACE}:${chainId}`,
+      })
+    }
+    return this._accountId
   }
 
   async authenticate(message: string): Promise<string> {
@@ -122,9 +136,11 @@ export async function isERC1271(account: AccountId, provider: any): Promise<bool
   return Boolean(bytecode && bytecode !== '0x' && bytecode !== '0x0' && bytecode !== '0x00')
 }
 
-export function normalizeAccountId(account: AccountId): AccountId {
-  account.address = account.address.toLowerCase()
-  return account
+export function normalizeAccountId(input: AccountId): AccountId {
+  return new AccountId({
+    address: input.address.toLowerCase(),
+    chainId: input.chainId,
+  })
 }
 
 function utf8toHex(message: string): string {
@@ -155,8 +171,7 @@ async function createEthLink(
 }
 
 async function validateChainId(account: AccountId, provider: any): Promise<void> {
-  const chainIdHex = await safeSend(provider, 'eth_chainId', [])
-  const chainId = parseInt(chainIdHex, 16)
+  const chainId = await requestChainId(provider)
   if (chainId !== parseInt(account.chainId.reference)) {
     throw new Error(
       `ChainId in provider (${chainId}) is different from AccountId (${account.chainId.reference})`

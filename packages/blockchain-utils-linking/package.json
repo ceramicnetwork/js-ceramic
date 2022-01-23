@@ -53,7 +53,8 @@
     "@tendermint/sig": "^0.6.0",
     "@zondax/filecoin-signing-tools": "^0.18.2",
     "eth-sig-util": "^3.0.1",
-    "ganache-core": "^2.13.2"
+    "ganache-core": "^2.13.2",
+    "mockdate": "^3.0.5"
   },
   "gitHead": "34eeee25597b0a60def72906c26d3afd6230aaf1"
 }

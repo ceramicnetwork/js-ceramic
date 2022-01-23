@@ -1,21 +1,20 @@
 FROM node:16
 
-RUN apt-get update && apt-get install -y netcat
-
 WORKDIR /js-ceramic
 
-COPY package.json package-lock.json ./
-RUN npm install
+COPY package.json package-lock.json lerna.json tsconfig.json ./
 
-COPY lerna.json tsconfig.json ./
+RUN npm ci --ignore-scripts --production
+
+RUN npm install -g lerna
 
 COPY packages ./packages
 
-RUN npx lerna bootstrap --hoist
+RUN lerna bootstrap --hoist --ci -- --production
 
 COPY types ./types
 
-RUN npm run build
+RUN lerna run build
 
 EXPOSE 7007
 
