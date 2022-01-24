@@ -3,7 +3,7 @@ import type { CidList, PinningBackend, PinningInfo } from '@ceramicnetwork/commo
 import { Keyring } from '@polkadot/keyring'
 import { ApiPromise, WsProvider } from '@polkadot/api'
 import { typesBundleForPolkadot } from '@crustio/type-definitions'
-import axios, { AxiosRequestConfig, AxiosResponse } from 'axios'
+import axios, { AxiosResponse } from 'axios'
 import * as sha256 from '@stablelib/sha256'
 import * as base64 from '@stablelib/base64'
 import { KeyringPair } from '@polkadot/keyring/types';
@@ -109,7 +109,7 @@ export class CrustPinningBackend implements PinningBackend {
     await this.sendTx(tx2, krp)
   }
 
-  async unpin(cid: CID): Promise<void> {
+  async unpin(_cid: CID): Promise<void> {
     // Do nothing
   }
 
@@ -156,17 +156,17 @@ export class CrustPinningBackend implements PinningBackend {
   }
 
   hex2a(hex: string): string {
-    var str = '';
-    for (var i = 2; i < hex.length; i += 2)
+    let str = '';
+    for (let i = 2; i < hex.length; i += 2)
       str += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
     return str;
   }
 
-  delay(ms: number) {
+  delay(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
-  async sendTx(tx: SubmittableExtrinsic, krp: KeyringPair) {
+  async sendTx(tx: SubmittableExtrinsic, krp: KeyringPair): Promise<void> {
     return new Promise((resolve, reject) => {
       tx.signAndSend(krp, ({ events = [], status }) => {
         console.log(

@@ -142,8 +142,8 @@ test('#info', async () => {
 })
 
 function str2HexStr(str: string): string {
-  var hex = '';
-  for (var i = 0; i < str.length; i++) {
+  let hex = '';
+  for (let i = 0; i < str.length; i++) {
     hex += '' + str.charCodeAt(i).toString(16);
   }
   return "0x" + hex;
