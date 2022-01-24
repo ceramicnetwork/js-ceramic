@@ -127,7 +127,7 @@ describe('Exception mapper + default fpr options.accept', () => {
           didUrl: 'did:key:z6LSeu9HkTHSfLLeUs2nnzUSNedgDUevfNQgQjQC23ZCit6F/some/path',
           path: '/some/path'
        }
-       await expect(resolve('did:key:z6LSeu9HkTHSfLLeUs2nnzUSNedgDUevfNQgQjQC23ZCit6F', parsedDided25519, {}, { accept: 'application/did+ld+json' })).resolves.toEqual({"didDocument": null, "didDocumentMetadata": {}, "didResolutionMetadata": {"contentType": "application/did+ld+json", "error": "invalidDid", "message": "TypeError: Cannot read property 'keyToDidDoc' of undefined"}})
+       await expect(resolve('did:key:z6LSeu9HkTHSfLLeUs2nnzUSNedgDUevfNQgQjQC23ZCit6F', parsedDided25519, {}, { accept: 'application/did+ld+json' })).resolves.toEqual({"didDocument": null, "didDocumentMetadata": {}, "didResolutionMetadata": {"contentType": "application/did+ld+json", "error": "invalidDid", "message": "TypeError: Cannot read properties of undefined (reading 'keyToDidDoc')"}})
   })
    
   it('expect index.js to throw an error for an unsupported media type', async () => {
