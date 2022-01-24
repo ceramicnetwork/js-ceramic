@@ -5,6 +5,7 @@ import { ApiPromise, WsProvider } from '@polkadot/api'
 import { typesBundleForPolkadot } from '@crustio/type-definitions'
 import axios, { AxiosResponse } from 'axios'
 import * as sha256 from '@stablelib/sha256'
+import { toString } from 'uint8arrays/to-string'
 import { KeyringPair } from '@polkadot/keyring/types';
 import { DispatchError } from '@polkadot/types/interfaces';
 import { ITuple } from '@polkadot/types/types';
