@@ -1,19 +1,24 @@
 {
   "name": "@ceramicnetwork/pinning-ipfs-backend",
-  "version": "1.0.4-rc.0",
+  "version": "2.0.0-alpha.1",
   "description": "IPFS Pinning backend",
   "keywords": [
     "ceramic",
     "ipfs"
   ],
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
+  "type": "module",
   "files": [
     "lib"
   ],
+  "sideEffects": false,
+  "exports": {
+    ".": "./lib/index.js"
+  },
   "scripts": {
     "test": "../../node_modules/.bin/jest --silent --coverage",
-    "build": "../../node_modules/.bin/tsc -p tsconfig.json",
+    "build": "../../node_modules/.bin/tsc --project tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
     "lint": "../../node_modules/.bin/eslint ./src --ext .js,.jsx,.ts,.tsx",
@@ -22,32 +27,20 @@
   "author": "Sergey Ukustov <sergey@ukstv.me>",
   "license": "(Apache-2.0 OR MIT)",
   "directories": {
-    "lib": "lib"
+    "lib": "./lib"
   },
   "dependencies": {
-    "@stablelib/base64": "^1.0.0",
-    "@stablelib/sha256": "^1.0.0",
-    "ipfs-http-client": "~49.0.3"
+    "@stablelib/sha256": "^1.0.1",
+    "ipfs-http-client": "^55.0.0",
+    "uint8arrays": "^3.0.0"
   },
   "devDependencies": {
-    "@ceramicnetwork/common": "^1.0.4-rc.0",
-    "cids": "~1.1.6",
-    "ts-jest": "^26.4.4"
+    "@ceramicnetwork/common": "^2.0.0-alpha.1",
+    "ipfs-core-types": "~0.9.0",
+    "multiformats": "^9.5.8"
   },
   "publishConfig": {
     "access": "public"
-  },
-  "jest": {
-    "moduleFileExtensions": [
-      "js",
-      "json",
-      "ts"
-    ],
-    "testRegex": ".(spec|test).ts$",
-    "transform": {
-      "^.+\\.ts$": "ts-jest"
-    },
-    "testEnvironment": "node"
   },
   "gitHead": "34eeee25597b0a60def72906c26d3afd6230aaf1"
 }

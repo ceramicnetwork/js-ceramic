@@ -8,11 +8,11 @@ import type {
   Resolver,
 } from 'did-resolver'
 
-import * as secp256k1 from './secp256k1'
-import * as ed25519 from './ed25519'
-import * as secp256r1 from './secp256r1'
-import * as secp384r1 from './secp384r1'
-import * as secp521r1 from './secp521r1'
+import * as secp256k1 from './secp256k1.js'
+import * as ed25519 from './ed25519.js'
+import * as secp256r1 from './secp256r1.js'
+import * as secp384r1 from './secp384r1.js'
+import * as secp521r1 from './secp521r1.js'
 
 const DID_LD_JSON = 'application/did+ld+json'
 const DID_JSON = 'application/did+json'
@@ -40,8 +40,8 @@ export function getResolver(): ResolverRegistry {
         didDocumentMetadata: {},
       }
       try {
-        const multicodecPubKey: any = base58btc.decode(parsed.id)   
-	const keyType = varint.decode(multicodecPubKey)
+        const multicodecPubKey: any = base58btc.decode(parsed.id)
+        const keyType = varint.decode(multicodecPubKey)
         const pubKeyBytes = multicodecPubKey.slice(varint.decode.bytes)
         const doc = await prefixToDriverMap[keyType].keyToDidDoc(pubKeyBytes, parsed.id)
         if (contentType === DID_LD_JSON) {

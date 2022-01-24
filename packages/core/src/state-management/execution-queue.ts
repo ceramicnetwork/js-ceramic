@@ -1,8 +1,8 @@
-import { NamedTaskQueue } from './named-task-queue';
-import { StreamID } from '@ceramicnetwork/streamid';
-import { DiagnosticsLogger } from '@ceramicnetwork/common';
-import { Semaphore } from 'await-semaphore';
-import { TaskQueueLike } from '../pubsub/task-queue';
+import { NamedTaskQueue } from './named-task-queue.js'
+import { CommitID, StreamID } from '@ceramicnetwork/streamid'
+import { DiagnosticsLogger } from '@ceramicnetwork/common'
+import { Semaphore } from 'await-semaphore'
+import { TaskQueueLike } from '../pubsub/task-queue.js'
 
 /**
  * Serialize tasks running on the same stream.
@@ -10,53 +10,53 @@ import { TaskQueueLike } from '../pubsub/task-queue';
  * This makes a task code simpler.
  */
 export class ExecutionQueue {
-  readonly tasks: NamedTaskQueue;
-  readonly semaphore: Semaphore;
+  readonly tasks: NamedTaskQueue
+  readonly semaphore: Semaphore
 
   constructor(concurrencyLimit: number, logger: DiagnosticsLogger) {
     this.tasks = new NamedTaskQueue((error) => {
-      logger.err(error);
-    });
-    this.semaphore = new Semaphore(concurrencyLimit);
+      logger.err(error)
+    })
+    this.semaphore = new Semaphore(concurrencyLimit)
   }
 
   /**
    * Return execution lane for a stream.
    */
-  forStream(streamId: StreamID): TaskQueueLike {
+  forStream(streamId: StreamID | CommitID): TaskQueueLike {
     return {
       add: (task) => {
         return this.tasks.add(streamId.toString(), () => {
-          return this.semaphore.use(() => task());
-        });
+          return this.semaphore.use(() => task())
+        })
       },
       run: (task) => {
         return this.tasks.run(streamId.toString(), () => {
-          return this.semaphore.use(() => task());
-        });
+          return this.semaphore.use(() => task())
+        })
       },
-    };
+    }
   }
 
   /**
    * Wait till all the tasks in all the lanes are done.
    */
   onIdle(): Promise<void> {
-    return this.tasks.onIdle();
+    return this.tasks.onIdle()
   }
 
   /**
    * Stop executing the tasks.
    */
   pause(): void {
-    this.tasks.pause();
+    this.tasks.pause()
   }
 
   /**
    * Wait till the tasks are done, and prohibit adding more tasks.
    */
   async close() {
-    await this.onIdle();
-    this.pause();
+    await this.onIdle()
+    this.pause()
   }
 }

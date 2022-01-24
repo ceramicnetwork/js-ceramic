@@ -1,35 +1,55 @@
-import CID from 'cids';
-import multibase from 'multibase';
-import { StreamType } from './stream-type';
-import varint from 'varint';
-import uint8ArrayConcat from 'uint8arrays/concat';
-import uint8ArrayToString from 'uint8arrays/to-string';
-import { Memoize } from 'typescript-memoize';
-import { DEFAULT_BASE, STREAMID_CODEC } from './constants';
-import { readCid, readVarint } from './reading-bytes';
-import { StreamID } from './stream-id';
-import { StreamRef } from './stream-ref';
+import { CID } from 'multiformats/cid'
+import { base36 } from 'multiformats/bases/base36'
+import { StreamType } from './stream-type.js'
+import varint from 'varint'
+import { concat as uint8ArrayConcat } from 'uint8arrays'
+import { Memoize } from 'typescript-memoize'
+import { STREAMID_CODEC } from './constants.js'
+import { readCid, readVarint } from './reading-bytes.js'
+import { StreamID } from './stream-id.js'
+import { StreamRef } from './stream-ref.js'
 
 /**
  * Parse CommitID from bytes representation.
  *
  * @param bytes - bytes representation of CommitID.
+ * @throws error on invalid input
  * @see [[CommitID#bytes]]
  */
 function fromBytes(bytes: Uint8Array): CommitID {
-  const [streamCodec, streamCodecRemainder] = readVarint(bytes);
-  if (streamCodec !== STREAMID_CODEC) throw new Error('fromBytes: invalid streamid, does not include streamid codec');
-  const [type, streamtypeRemainder] = readVarint(streamCodecRemainder);
-  const [base, baseRemainder] = readCid(streamtypeRemainder);
+  const result = fromBytesNoThrow(bytes)
+  if (result instanceof Error) {
+    throw result
+  }
+  return result
+}
+
+/**
+ * Same as fromBytes, but returns an Error instance rather than throwing if there is a problem
+ * with the input.
+ * Note that some exceptions can still be thrown in certain cases, if they come from lower-level
+ * libraries like multibase, for example.
+ * @param bytes
+ */
+function fromBytesNoThrow(bytes: Uint8Array): CommitID | Error {
+  const [streamCodec, streamCodecRemainder] = readVarint(bytes)
+  if (streamCodec !== STREAMID_CODEC)
+    return new Error('fromBytes: invalid streamid, does not include streamid codec')
+  const [type, streamtypeRemainder] = readVarint(streamCodecRemainder)
+  const cidResult = readCid(streamtypeRemainder)
+  if (cidResult instanceof Error) {
+    return cidResult
+  }
+  const [base, baseRemainder] = cidResult
   if (baseRemainder.length === 0) {
-    throw new Error(`No commit information provided`);
+    return new Error(`No commit information provided`)
   } else if (baseRemainder.length === 1) {
     // Zero commit
-    return new CommitID(type, base, baseRemainder[0]);
+    return new CommitID(type, base, baseRemainder[0])
   } else {
     // Commit
-    const [commit] = readCid(baseRemainder);
-    return new CommitID(type, base, commit);
+    const [commit] = readCid(baseRemainder)
+    return new CommitID(type, base, commit)
   }
 }
 
@@ -41,9 +61,9 @@ function fromBytes(bytes: Uint8Array): CommitID {
  */
 function parseCID(input: any): CID | undefined {
   try {
-    return new CID(input);
+    return typeof input === 'string' ? CID.parse(input) : CID.asCID(input)
   } catch {
-    return undefined;
+    return undefined
   }
 }
 
@@ -57,21 +77,23 @@ function parseCID(input: any): CID | undefined {
  * @param commit - representation of commit, be it CID, 0, `'0'`, `null`
  */
 function parseCommit(genesis: CID, commit: CID | string | number = null): CID | null {
-  if (!commit) return null;
+  if (!commit) return null
 
-  const commitCID = parseCID(commit);
+  const commitCID = parseCID(commit)
   if (commitCID) {
     // CID-like
     if (genesis.equals(commitCID)) {
-      return null;
+      return null
     } else {
-      return commitCID;
+      return commitCID
     }
   } else if (String(commit) === '0') {
     // Zero as number or string
-    return null;
+    return null
   } else {
-    throw new Error('Cannot specify commit as a number except to request commit 0 (the genesis commit)');
+    throw new Error(
+      'Cannot specify commit as a number except to request commit 0 (the genesis commit)'
+    )
   }
 }
 
@@ -83,37 +105,65 @@ function parseCommit(genesis: CID, commit: CID | string | number = null): CID | 
  * @see [[CommitID#toUrl]]
  */
 function fromString(input: string): CommitID {
-  const protocolFree = input.replace('ceramic://', '').replace('/ceramic/', '');
+  const result = fromStringNoThrow(input)
+  if (result instanceof Error) {
+    throw result
+  }
+  return result
+}
+
+/**
+ * Same as fromString, but returns an Error instance rather than throwing if there is a problem
+ * with the input.
+ * Note that some exceptions can still be thrown in certain cases, if they come from lower-level
+ * libraries like multibase, for example.
+ * @param input
+ */
+function fromStringNoThrow(input: string): CommitID | Error {
+  const protocolFree = input.replace('ceramic://', '').replace('/ceramic/', '')
   if (protocolFree.includes('commit')) {
-    const commit = protocolFree.split('?')[1].split('=')[1];
-    const base = protocolFree.split('?')[0];
-    return StreamID.fromString(base).atCommit(commit);
+    const commit = protocolFree.split('?')[1].split('=')[1]
+    const base = protocolFree.split('?')[0]
+    return make(StreamID.fromString(base), commit)
   } else {
-    return fromBytes(multibase.decode(protocolFree));
+    return fromBytesNoThrow(base36.decode(protocolFree))
   }
 }
 
-const TAG = Symbol.for('@ceramicnetwork/streamid/CommitID');
+const TAG = Symbol.for('@ceramicnetwork/streamid/CommitID')
+
+/**
+ * Construct new CommitID for a given stream and commit
+ */
+function make(stream: StreamID, commit: CID | string | number): CommitID {
+  return new CommitID(stream.type, stream.cid, commit)
+}
 
 /**
  * Commit identifier, includes type, genesis CID, commit CID.
- * Encoded as '<multibase-prefix><multicodec-streamid><type><genesis-cid-bytes><commit-cid-bytes>'
+ *
+ * Encoded as `<multibase-prefix><multicodec-streamid><type><genesis-cid-bytes><commit-cid-bytes>`.
+ *
+ * String representation is base36-encoding of the bytes above.
  */
 export class CommitID implements StreamRef {
-  protected readonly _tag = TAG;
+  protected readonly _tag = TAG
 
-  readonly #type: number;
-  readonly #cid: CID;
-  readonly #commit: CID | null; // null ≝ genesis commit
+  readonly #type: number
+  readonly #cid: CID
+  readonly #commit: CID | null // null ≝ genesis commit
 
-  static fromBytes = fromBytes;
-  static fromString = fromString;
+  static fromBytes = fromBytes
+  static fromBytesNoThrow = fromBytesNoThrow
+  static fromString = fromString
+  static fromStringNoThrow = fromStringNoThrow
+  static make = make
 
   // WORKAROUND. Weird replacement for Symbol.hasInstance due to
   // this old bug in Babel https://github.com/babel/babel/issues/4452
   // which is used by CRA, which is widely popular.
   static isInstance(instance: any): instance is CommitID {
-    return typeof instance === 'object' && '_tag' in instance && instance._tag === TAG;
+    return typeof instance === 'object' && '_tag' in instance && instance._tag === TAG
   }
 
   /**
@@ -128,11 +178,11 @@ export class CommitID implements StreamRef {
    * new StreamID(<type>, <CID>|<cidStr>, <CommitCID>|<CommitCidStr>)
    */
   constructor(type: string | number, cid: CID | string, commit: CID | string | number = null) {
-    if (!type && type !== 0) throw new Error('constructor: type required');
-    if (!cid) throw new Error('constructor: cid required');
-    this.#type = typeof type === 'string' ? StreamType.codeByName(type) : type;
-    this.#cid = typeof cid === 'string' ? new CID(cid) : cid;
-    this.#commit = parseCommit(this.#cid, commit);
+    if (!type && type !== 0) throw new Error('constructor: type required')
+    if (!cid) throw new Error('constructor: cid required')
+    this.#type = typeof type === 'string' ? StreamType.codeByName(type) : type
+    this.#cid = typeof cid === 'string' ? CID.parse(cid) : cid
+    this.#commit = parseCommit(this.#cid, commit)
   }
 
   /**
@@ -140,14 +190,14 @@ export class CommitID implements StreamRef {
    */
   @Memoize()
   get baseID(): StreamID {
-    return new StreamID(this.#type, this.#cid);
+    return new StreamID(this.#type, this.#cid)
   }
 
   /**
    * Stream type code
    */
   get type(): number {
-    return this.#type;
+    return this.#type
   }
 
   /**
@@ -155,14 +205,14 @@ export class CommitID implements StreamRef {
    */
   @Memoize()
   get typeName(): string {
-    return StreamType.nameByCode(this.#type);
+    return StreamType.nameByCode(this.#type)
   }
 
   /**
    * Genesis CID
    */
   get cid(): CID {
-    return this.#cid;
+    return this.#cid
   }
 
   /**
@@ -170,7 +220,7 @@ export class CommitID implements StreamRef {
    */
   @Memoize()
   get commit(): CID {
-    return this.#commit || this.#cid;
+    return this.#commit || this.#cid
   }
 
   /**
@@ -178,25 +228,20 @@ export class CommitID implements StreamRef {
    */
   @Memoize()
   get bytes(): Uint8Array {
-    const codec = varint.encode(STREAMID_CODEC);
-    const type = varint.encode(this.type);
+    const codec = varint.encode(STREAMID_CODEC)
+    const type = varint.encode(this.type)
 
-    const commitBytes = this.#commit?.bytes || new Uint8Array([0]);
-    return uint8ArrayConcat([codec, type, this.cid.bytes, commitBytes]);
-  }
-
-  /**
-   * Construct new CommitID for the same stream, but a new `commit` CID.
-   */
-  atCommit(commit: CID | string | number): CommitID {
-    return new CommitID(this.#type, this.#cid, commit);
+    const commitBytes = this.#commit?.bytes || new Uint8Array([0])
+    return uint8ArrayConcat([codec, type, this.cid.bytes, commitBytes])
   }
 
   /**
    * Compare equality with another CommitID.
    */
   equals(other: CommitID): boolean {
-    return this.type === other.type && this.cid.equals(other.cid) && this.commit.equals(other.commit);
+    return (
+      this.type === other.type && this.cid.equals(other.cid) && this.commit.equals(other.commit)
+    )
   }
 
   /**
@@ -204,7 +249,7 @@ export class CommitID implements StreamRef {
    */
   @Memoize()
   toString(): string {
-    return uint8ArrayToString(multibase.encode(DEFAULT_BASE, this.bytes));
+    return base36.encode(this.bytes)
   }
 
   /**
@@ -212,7 +257,7 @@ export class CommitID implements StreamRef {
    */
   @Memoize()
   toUrl(): string {
-    return `ceramic://${this.toString()}`;
+    return `ceramic://${this.toString()}`
   }
 
   /**
@@ -225,13 +270,13 @@ export class CommitID implements StreamRef {
    * @returns {String}
    */
   [Symbol.for('nodejs.util.inspect.custom')](): string {
-    return `CommitID(${this.toString()})`;
+    return `CommitID(${this.toString()})`
   }
 
   /**
    * String representation of CommitID.
    */
   [Symbol.toPrimitive](): string | Uint8Array {
-    return this.toString();
+    return this.toString()
   }
 }

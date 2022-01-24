@@ -1,20 +1,40 @@
 version: 2.1
 orbs:
-  node: circleci/node@1.1.6
-jobs:
+  node: circleci/node@5.0.0
+
+commands:
   build-and-test:
-    docker:
-      - image: circleci/node:14
     steps:
       - checkout
-      - node/with-cache:
-          steps:
-            - run: npm ci
-            - run: npm run lint
-            - run: npm run build
-            - run: npm run test
-            - run: npm run docs
+      - node/install:
+          node-version: '16.13'
+      - node/install-packages
+      - run: npm run lint
+      - run: npm run build
+      - run:
+          name: Test
+          command: npm run test
+          no_output_timeout: 30m
+jobs:
+  with-go-ipfs:
+    machine:
+      image: ubuntu-2004:202107-02
+    environment:
+      IPFS_FLAVOR: go
+    steps:
+      - build-and-test
+#      - run: npm run docs TODO(NET-911)
+  with-js-ipfs:
+    machine:
+      image: ubuntu-2004:202107-02
+    environment:
+      NODE_OPTIONS: '--max_old_space_size=4096'
+      IPFS_FLAVOR: js
+    steps:
+      - build-and-test
+
 workflows:
-    build-and-test:
-      jobs:
-        - build-and-test
+  build-and-test:
+    jobs:
+      - with-go-ipfs
+#      - with-js-ipfs TODO(NET-1106)

@@ -1,4 +1,8 @@
 # Ceramic Core
+![ceramicnetwork](https://circleci.com/gh/ceramicnetwork/js-ceramic.svg?style=shield)
+[![MIT license](https://img.shields.io/badge/License-MIT-blue.svg)](https://lbesson.mit-license.org/)
+[![](https://img.shields.io/badge/Chat%20on-Discord-orange.svg?style=flat)](https://discord.gg/6VRZpGP)
+[![Twitter](https://img.shields.io/twitter/follow/ceramicnetwork?label=Follow&style=social)](https://twitter.com/ceramicnetwork)
 
 > This package contains the implementation of the core Ceramic protocol. It's exposed using a simple JavaScript API.
 
@@ -10,20 +14,18 @@ $ npm install @ceramicnetwork/core
 ```
 
 ### Usage
+
+See the [Ceramic developer site](https://developers.ceramic.network/) for more details about how to use this package.
+
 ```
 import Ceramic from '@ceramicnetwork/core'
 import TileDocument from '@ceramicnetwork/stream-tile'
 
-import IPFS from 'ipfs'
-import dagJose from 'dag-jose'
-import basicsImport from 'multiformats/cjs/src/basics-import.js'
-import legacy from 'multiformats/cjs/src/legacy.js'
+import { create as createIPFS } from 'ipfs-core'
+import * as dagJose from 'dag-jose'
 
-basicsImport.multicodec.add(dagJose)
-const format = legacy(basicsImport, dagJose.name)
-
-const ipfs = Ipfs.create({
-    ipld: { formats: [format] },
+const ipfs = createIPFS({
+    ipld: { codecs: [dagJose] },
 })
 
 const config: CeramicConfig = {}

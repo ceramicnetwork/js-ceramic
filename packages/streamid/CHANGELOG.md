@@ -3,6 +3,325 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.0.0-alpha.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/streamid@1.3.5-rc.0...@ceramicnetwork/streamid@2.0.0-alpha.1) (2022-01-14)
+
+**Note:** Version bump only for package @ceramicnetwork/streamid
+
+
+
+
+
+# [2.0.0-alpha.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/streamid@1.3.5-rc.0...@ceramicnetwork/streamid@2.0.0-alpha.0) (2021-12-07)
+
+**Note:** Version bump only for package @ceramicnetwork/streamid
+
+
+
+
+
+## [1.3.10-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/streamid@1.3.9...@ceramicnetwork/streamid@1.3.10-rc.0) (2022-01-12)
+
+**Note:** Version bump only for package @ceramicnetwork/streamid
+
+
+
+
+
+## [1.3.9](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/streamid@1.3.8...@ceramicnetwork/streamid@1.3.9) (2022-01-12)
+
+**Note:** Version bump only for package @ceramicnetwork/streamid
+
+
+
+
+
+## [1.3.8](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/streamid@1.3.5...@ceramicnetwork/streamid@1.3.8) (2022-01-09)
+
+**Note:** Version bump only for package @ceramicnetwork/streamid
+
+
+
+
+
+## [1.3.7](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/streamid@1.3.5...@ceramicnetwork/streamid@1.3.7) (2022-01-09)
+
+**Note:** Version bump only for package @ceramicnetwork/streamid
+
+
+
+
+
+## [1.3.6](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/streamid@1.3.5...@ceramicnetwork/streamid@1.3.6) (2022-01-09)
+
+**Note:** Version bump only for package @ceramicnetwork/streamid
+
+
+
+
+
+
+## [1.3.5](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/streamid@1.3.5-rc.0...@ceramicnetwork/streamid@1.3.5) (2021-12-06)
+
+**Note:** Version bump only for package @ceramicnetwork/streamid
+
+
+
+
+
+## [1.3.5-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/streamid@1.3.4...@ceramicnetwork/streamid@1.3.5-rc.0) (2021-11-17)
+
+
+### Bug Fixes
+
+* resolve merge conflicts during merge from `main` ([#1848](https://github.com/ceramicnetwork/js-ceramic/issues/1848)) ([6772fc6](https://github.com/ceramicnetwork/js-ceramic/commit/6772fc6c61bc9daadfd3f6d6ecf3de2bb100450d))
+
+
+
+
+
+## [1.3.4](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/streamid@1.3.4-rc.0...@ceramicnetwork/streamid@1.3.4) (2021-11-17)
+
+**Note:** Version bump only for package @ceramicnetwork/streamid
+
+
+
+
+
+## [1.3.4-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/streamid@1.3.3...@ceramicnetwork/streamid@1.3.4-rc.0) (2021-11-12)
+
+**Note:** Version bump only for package @ceramicnetwork/streamid
+
+
+
+
+
+## [1.3.3](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/streamid@1.3.3-rc.0...@ceramicnetwork/streamid@1.3.3) (2021-11-12)
+
+**Note:** Version bump only for package @ceramicnetwork/streamid
+
+
+
+
+
+## [1.3.3-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/streamid@1.3.2...@ceramicnetwork/streamid@1.3.3-rc.0) (2021-11-03)
+
+**Note:** Version bump only for package @ceramicnetwork/streamid
+
+
+
+
+
+## [1.3.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/streamid@1.3.2-rc.2...@ceramicnetwork/streamid@1.3.2) (2021-11-03)
+
+**Note:** Version bump only for package @ceramicnetwork/streamid
+
+
+
+
+
+## [1.3.2-rc.2](/compare/@ceramicnetwork/streamid@1.3.2-rc.0...@ceramicnetwork/streamid@1.3.2-rc.2) (2021-10-20)
+
+**Note:** Version bump only for package @ceramicnetwork/streamid
+
+
+
+
+
+## [1.3.2-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/streamid@1.3.1...@ceramicnetwork/streamid@1.3.2-rc.0) (2021-10-20)
+
+**Note:** Version bump only for package @ceramicnetwork/streamid
+
+
+
+
+
+## [1.3.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/streamid@1.3.1-rc.0...@ceramicnetwork/streamid@1.3.1) (2021-10-20)
+
+**Note:** Version bump only for package @ceramicnetwork/streamid
+
+
+
+
+
+## [1.3.1-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/streamid@1.3.0...@ceramicnetwork/streamid@1.3.1-rc.0) (2021-10-14)
+
+**Note:** Version bump only for package @ceramicnetwork/streamid
+
+
+
+
+
+# [1.3.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/streamid@1.3.0-rc.1...@ceramicnetwork/streamid@1.3.0) (2021-10-14)
+
+**Note:** Version bump only for package @ceramicnetwork/streamid
+
+
+
+
+
+# [1.3.0-rc.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/streamid@1.3.0-rc.0...@ceramicnetwork/streamid@1.3.0-rc.1) (2021-09-18)
+
+**Note:** Version bump only for package @ceramicnetwork/streamid
+
+
+
+
+
+# [1.3.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/streamid@1.2.1...@ceramicnetwork/streamid@1.3.0-rc.0) (2021-09-17)
+
+
+### Features
+
+* **streamid:** Add fromGenesis function ([#1666](https://github.com/ceramicnetwork/js-ceramic/issues/1666)) ([9e17b8e](https://github.com/ceramicnetwork/js-ceramic/commit/9e17b8e487eed3a6586b8a70a2b984586119c7ea))
+* DocState contains type as number ([#1250](https://github.com/ceramicnetwork/js-ceramic/issues/1250)) ([56501e2](https://github.com/ceramicnetwork/js-ceramic/commit/56501e264aebb4e9b01ea31422dfd6f7827b1382))
+* Get instance comparison by hand ([#1332](https://github.com/ceramicnetwork/js-ceramic/issues/1332)) ([8dbdc1b](https://github.com/ceramicnetwork/js-ceramic/commit/8dbdc1bafdd141f732492fd7b0ca038ed1a075a3))
+* Pass issuer to verifyJWS ([#1542](https://github.com/ceramicnetwork/js-ceramic/issues/1542)) ([3c60b0c](https://github.com/ceramicnetwork/js-ceramic/commit/3c60b0c43267e29e17fd1f676f25bf11c2ab06d5))
+* **streamid:** Rename DocID to StreamID ([#1195](https://github.com/ceramicnetwork/js-ceramic/issues/1195)) ([65754d1](https://github.com/ceramicnetwork/js-ceramic/commit/65754d17ecfbdae9f110c71de91120200a6b4ef2))
+
+
+
+
+
+## [1.2.1](/compare/@ceramicnetwork/streamid@1.2.1-rc.0...@ceramicnetwork/streamid@1.2.1) (2021-09-16)
+
+**Note:** Version bump only for package @ceramicnetwork/streamid
+
+
+
+
+
+## [1.2.1-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/streamid@1.2.0...@ceramicnetwork/streamid@1.2.1-rc.0) (2021-09-08)
+
+**Note:** Version bump only for package @ceramicnetwork/streamid
+
+
+
+
+
+# [1.2.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/streamid@1.2.0-rc.0...@ceramicnetwork/streamid@1.2.0) (2021-09-08)
+
+**Note:** Version bump only for package @ceramicnetwork/streamid
+
+
+
+
+
+# [1.2.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/streamid@1.1.2...@ceramicnetwork/streamid@1.2.0-rc.0) (2021-09-02)
+
+
+### Features
+
+* **streamid:** Add fromGenesis function ([#1666](https://github.com/ceramicnetwork/js-ceramic/issues/1666)) ([9e17b8e](https://github.com/ceramicnetwork/js-ceramic/commit/9e17b8e487eed3a6586b8a70a2b984586119c7ea))
+
+
+
+
+
+## [1.1.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/streamid@1.1.2-rc.6...@ceramicnetwork/streamid@1.1.2) (2021-08-25)
+
+**Note:** Version bump only for package @ceramicnetwork/streamid
+
+
+
+
+
+## [1.1.2-rc.6](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/streamid@1.1.2-rc.5...@ceramicnetwork/streamid@1.1.2-rc.6) (2021-08-24)
+
+**Note:** Version bump only for package @ceramicnetwork/streamid
+
+
+
+
+
+## [1.1.2-rc.5](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/streamid@1.1.2-rc.4...@ceramicnetwork/streamid@1.1.2-rc.5) (2021-08-23)
+
+**Note:** Version bump only for package @ceramicnetwork/streamid
+
+
+
+
+
+## 1.1.2-rc.4 (2021-08-23)
+
+
+### Bug Fixes
+
+* **ci:** remove private flag ([9974009](https://github.com/ceramicnetwork/js-ceramic/commit/9974009be69382f2a2caf59f4ff72bf6aa12491b))
+
+
+
+
+
+## [1.1.2-rc.3](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/streamid@1.1.2-rc.2...@ceramicnetwork/streamid@1.1.2-rc.3) (2021-08-22)
+
+**Note:** Version bump only for package @ceramicnetwork/streamid
+
+
+
+
+
+## [1.1.2-rc.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/streamid@1.1.2-rc.1...@ceramicnetwork/streamid@1.1.2-rc.2) (2021-08-22)
+
+**Note:** Version bump only for package @ceramicnetwork/streamid
+
+
+
+
+
+## 1.1.2-rc.1 (2021-08-22)
+
+
+### Bug Fixes
+
+* **ci:** remove flag from npm ci cmd ([b8ca310](https://github.com/ceramicnetwork/js-ceramic/commit/b8ca3102963096626a46a3c78c705da26e977021))
+
+
+
+
+
+## [1.1.2-rc.0](/compare/@ceramicnetwork/streamid@1.1.1...@ceramicnetwork/streamid@1.1.2-rc.0) (2021-08-13)
+
+**Note:** Version bump only for package @ceramicnetwork/streamid
+
+
+
+
+
+## [1.1.1](/compare/@ceramicnetwork/streamid@1.1.0-rc.0...@ceramicnetwork/streamid@1.1.1) (2021-08-11)
+
+**Note:** Version bump only for package @ceramicnetwork/streamid
+
+
+
+
+
+# [1.1.0](/compare/@ceramicnetwork/streamid@1.1.0-rc.0...@ceramicnetwork/streamid@1.1.0) (2021-08-11)
+
+**Note:** Version bump only for package @ceramicnetwork/streamid
+
+
+
+
+
+# [1.1.0-rc.0](/compare/@ceramicnetwork/streamid@1.0.2...@ceramicnetwork/streamid@1.1.0-rc.0) (2021-07-16)
+
+
+### Features
+
+* Pass issuer to verifyJWS (#1542) 3c60b0c, closes #1542
+
+
+
+
+
+## [1.0.2](/compare/@ceramicnetwork/streamid@1.0.1...@ceramicnetwork/streamid@1.0.2) (2021-06-03)
+
+**Note:** Version bump only for package @ceramicnetwork/streamid
+
+
+
+
+
 ## [1.0.1](/compare/@ceramicnetwork/streamid@1.0.0...@ceramicnetwork/streamid@1.0.1) (2021-05-25)
 
 **Note:** Version bump only for package @ceramicnetwork/streamid
