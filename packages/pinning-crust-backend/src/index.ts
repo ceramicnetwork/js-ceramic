@@ -1,11 +1,10 @@
-import type CID from 'cids'
+import type CID from 'multiformats/cid'
 import type { CidList, PinningBackend, PinningInfo } from '@ceramicnetwork/common'
 import { Keyring } from '@polkadot/keyring'
 import { ApiPromise, WsProvider } from '@polkadot/api'
 import { typesBundleForPolkadot } from '@crustio/type-definitions'
 import axios, { AxiosResponse } from 'axios'
 import * as sha256 from '@stablelib/sha256'
-import * as base64 from '@stablelib/base64'
 import { KeyringPair } from '@polkadot/keyring/types';
 import { DispatchError } from '@polkadot/types/interfaces';
 import { ITuple } from '@polkadot/types/types';
@@ -66,7 +65,7 @@ export class CrustPinningBackend implements PinningBackend {
 
     // ID
     const bytes = textEncoder.encode(this.connectionString)
-    const digest = base64.encodeURLSafe(sha256.hash(bytes))
+    const digest = toString(sha256.hash(bytes), 'base64urlpad')
     this.id = `${CrustPinningBackend.designator}@${digest}`
   }
 
@@ -191,7 +190,7 @@ export class CrustPinningBackend implements PinningBackend {
               console.log(
                 `  ↪ 💸 ✅ [tx]: Send transaction(${tx.type}) success.`
               );
-              resolve(tx.type)
+              resolve()
             }
           });
         } else {

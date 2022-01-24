@@ -1,7 +1,7 @@
 import { CrustPinningBackend, EmptySeedError } from '../index'
 import * as papi from '@polkadot/api'
 import * as pkr from '@polkadot/keyring'
-import CID from 'cids'
+import { CID } from 'multiformats/cid'
 import axios from "axios";
 
 jest.mock("axios");
@@ -95,9 +95,9 @@ describe('#pin', () => {
     await pinning.open()
     pinning.sendTx = jest.fn(() => new Promise(resolve => {
       tx.signAndSend()
-      resolve('')
+      resolve()
     }))
-    const cid = new CID('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D')
+    const cid = CID.parse('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D')
     await pinning.pin(cid)
     expect(pinning.api.tx.market.placeStorageOrder).toBeCalledWith(cid.toString(), expect.anything(), expect.anything(), expect.anything())
     expect(pinning.api.tx.market.addPrepaid).toBeCalledWith(cid.toString(), expect.anything())
@@ -107,8 +107,8 @@ describe('#pin', () => {
 
 describe('#ls', () => {
   const cids = [
-    new CID('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D'),
-    new CID('QmWXShtJXt6Mw3FH7hVCQvR56xPcaEtSj4YFSGjp2QxA4v'),
+    CID.parse('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D'),
+    CID.parse('QmWXShtJXt6Mw3FH7hVCQvR56xPcaEtSj4YFSGjp2QxA4v'),
   ]
   const cidsArray = []
   cids.forEach((cid) => {
