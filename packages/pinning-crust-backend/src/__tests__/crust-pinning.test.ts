@@ -1,8 +1,8 @@
 import { CrustPinningBackend, EmptySeedError } from '../index'
+import axios from "axios"
 import * as papi from '@polkadot/api'
 import * as pkr from '@polkadot/keyring'
 import { CID } from 'multiformats/cid'
-import axios from "axios";
 
 jest.mock("axios");
 jest.mock('@polkadot/api')
