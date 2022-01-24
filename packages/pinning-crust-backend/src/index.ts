@@ -1,4 +1,4 @@
-import type CID from 'multiformats/cid'
+import type { CID } from 'multiformats/cid'
 import type { CidList, PinningBackend, PinningInfo } from '@ceramicnetwork/common'
 import { Keyring } from '@polkadot/keyring'
 import { ApiPromise, WsProvider } from '@polkadot/api'
