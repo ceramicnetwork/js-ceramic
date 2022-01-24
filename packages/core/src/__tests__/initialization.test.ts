@@ -1,11 +1,10 @@
-import Ceramic from '../ceramic'
+import { jest } from '@jest/globals'
+import { Ceramic } from '../ceramic.js'
 import tmp from 'tmp-promise'
 import { IpfsApi } from '@ceramicnetwork/common'
-import { createIPFS } from './ipfs-util'
-import InMemoryAnchorService from '../anchor/memory/in-memory-anchor-service'
-import { delay } from './delay'
-
-jest.mock('../store/level-state-store')
+import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
+import { InMemoryAnchorService } from '../anchor/memory/in-memory-anchor-service.js'
+import { delay } from './delay.js'
 
 describe('Ceramic integration', () => {
   jest.setTimeout(60000)
@@ -44,7 +43,7 @@ describe('Ceramic integration', () => {
     const [modules, params] = await Ceramic._processConfig(ipfs1, { networkName: 'local' })
     modules.anchorService = new InMemoryAnchorService({})
     const ceramic = new Ceramic(modules, params)
-    await expect(ceramic._init(false, false)).rejects.toThrow(
+    await expect(ceramic._init(false)).rejects.toThrow(
       "No usable chainId for anchoring was found.  The ceramic network 'local' supports the chains: ['eip155:1337'], but the configured anchor service '<inmemory>' only supports the chains: ['inmemory:12345']"
     )
     await delay(1000)

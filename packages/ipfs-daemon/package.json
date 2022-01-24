@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/ipfs-daemon",
-  "version": "1.2.10-rc.0",
+  "version": "2.0.0-alpha.1",
   "description": "IPFS daemon wraps js-ipfs instance with dag-jose codec enabled",
   "keywords": [
     "ipfs",
@@ -8,21 +8,26 @@
   ],
   "homepage": "https://ceramic.network",
   "license": "(Apache-2.0 OR MIT)",
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
+  "type": "module",
   "directories": {
-    "lib": "lib"
+    "lib": "./lib"
   },
   "files": [
     "lib",
     "bin"
   ],
+  "sideEffects": false,
+  "exports": {
+    ".": "./lib/index.js"
+  },
   "bin": {
-    "ipfs-daemon": "bin/ipfs-daemon.js"
+    "ipfs-daemon": "./bin/ipfs-daemon.js"
   },
   "scripts": {
     "build": "../../node_modules/.bin/tsc -p tsconfig.json",
-    "start": "../../node_modules/.bin/ts-node src/bin/ipfs-daemon.ts",
+    "start": "./node_modules/.bin/tsm src/bin/ipfs-daemon.ts",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
     "lint": "../../node_modules/.bin/eslint ./src --ext .js,.jsx,.ts,.tsx",
@@ -30,23 +35,22 @@
     "test": "exit 0"
   },
   "dependencies": {
-    "@ceramicnetwork/common": "^1.11.1-rc.0",
-    "@ceramicnetwork/ipfs-topology": "^1.2.0-rc.0",
-    "aws-sdk": "^2.902.0",
-    "blockcodec-to-ipld-format": "^1.0.0",
-    "dag-jose": "^0.3.0",
-    "datastore-fs": "^5.0.1",
-    "datastore-level": "^6.0.1",
-    "datastore-s3": "^6.0.0",
-    "express": "^4.17.1",
-    "ipfs-core": "~0.7.1",
-    "ipfs-core-types": "~0.5.1",
-    "ipfs-http-gateway": "~0.4.2",
-    "ipfs-http-server": "~0.5.1"
+    "@ceramicnetwork/common": "^2.0.0-alpha.1",
+    "@ceramicnetwork/ipfs-topology": "^2.0.0-alpha.1",
+    "dag-jose": "^1.0.0",
+    "express": "^4.17.2",
+    "get-port": "^6.0.0",
+    "go-ipfs": "^0.11.0",
+    "ipfs-core": "~0.13.0",
+    "ipfs-http-client": "^55.0.0",
+    "ipfsd-ctl": "^10.0.5",
+    "merge-options": "^3.0.4",
+    "tmp-promise": "^3.0.3"
   },
   "devDependencies": {
-    "@types/express": "^4.17.8",
-    "@types/jest": "^26.0.23",
-    "@types/node": "^13.13.15"
+    "@types/express": "^4.17.13",
+    "@types/jest": "^27.0.3",
+    "@types/node": "^17.0.5",
+    "tsm": "^2.2.1"
   }
 }

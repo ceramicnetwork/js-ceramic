@@ -4,7 +4,7 @@ exports[`Blockchain: Solana authenticate create proof for 5eykt4UsFv8P8NJdTREpY1
 
 exports[`Blockchain: Solana createLink create proof for 5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp 1`] = `
 Object {
-  "account": "2q7pyhPwAwZ3QMfZrnAbDhnh9mDUqycszcpf86VgQxhF@solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
+  "account": "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp:2q7pyhPwAwZ3QMfZrnAbDhnh9mDUqycszcpf86VgQxhF",
   "message": "Link this account to your identity
 
 did:3:bafysdfwefwe 

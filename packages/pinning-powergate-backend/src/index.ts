@@ -1,8 +1,8 @@
-import type CID from 'cids'
+import type { CID } from 'multiformats/cid'
 import type { CidList, PinningBackend, PinningInfo } from '@ceramicnetwork/common'
 import { createPow, Pow } from '@textile/powergate-client'
 import * as sha256 from '@stablelib/sha256'
-import * as base64 from '@stablelib/base64'
+import { toString } from 'uint8arrays/to-string'
 
 export class EmptyTokenError extends Error {
   constructor(address: string) {
@@ -37,7 +37,7 @@ export class PowergatePinningBackend implements PinningBackend {
     this.token = token
 
     const bytes = textEncoder.encode(this.connectionString)
-    const digest = base64.encodeURLSafe(sha256.hash(bytes))
+    const digest = toString(sha256.hash(bytes), 'base64urlpad')
     this.id = `${PowergatePinningBackend.designator}@${digest}`
   }
 

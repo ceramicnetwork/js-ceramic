@@ -1,7 +1,7 @@
-import type { StreamState, Stream } from '../stream'
-import { take, filter } from 'rxjs/operators'
-import { BehaviorSubject } from 'rxjs'
-import { RunningStateLike } from '../running-state-like'
+import type { StreamState, Stream } from '../stream.js'
+import { filter } from 'rxjs/operators'
+import { BehaviorSubject, lastValueFrom } from 'rxjs'
+import { RunningStateLike } from '../running-state-like.js'
 import { StreamID } from '@ceramicnetwork/streamid'
 
 class FakeRunningState extends BehaviorSubject<StreamState> implements RunningStateLike {
@@ -16,14 +16,6 @@ class FakeRunningState extends BehaviorSubject<StreamState> implements RunningSt
 }
 
 export class TestUtils {
-  /**
-   * Returns a Promise that resolves when there is an update to the given stream's state.
-   * @param stream
-   */
-  static registerChangeListener(stream: Stream): Promise<StreamState> {
-    return stream.pipe(take(1)).toPromise()
-  }
-
   /**
    * Given a stream and a predicate that operates on the stream state, continuously waits for
    * changes to the stream until the predicate returns true.
@@ -40,7 +32,10 @@ export class TestUtils {
   ): Promise<void> {
     if (predicate(stream.state)) return
     const timeoutPromise = new Promise((resolve) => setTimeout(resolve, timeout))
-    const completionPromise = stream.pipe(filter((state) => predicate(state))).toPromise()
+    // We do not expect this promise to return anything, so set `defaultValue` to `undefined`
+    const completionPromise = lastValueFrom(stream.pipe(filter((state) => predicate(state))), {
+      defaultValue: undefined,
+    })
     await Promise.race([timeoutPromise, completionPromise])
     if (!predicate(stream.state)) {
       onFailure()

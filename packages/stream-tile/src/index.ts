@@ -1,1 +1,1 @@
-export * from './tile-document'
+export * from './tile-document.js'

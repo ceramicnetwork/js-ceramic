@@ -1,5 +1,5 @@
-import { StreamState, StreamStateHolder } from '@ceramicnetwork/common'
-import StreamID from '@ceramicnetwork/streamid'
+import type { StreamState, StreamStateHolder } from '@ceramicnetwork/common'
+import type { StreamID } from '@ceramicnetwork/streamid'
 
 export interface StateStore {
   open(networkName: string): void

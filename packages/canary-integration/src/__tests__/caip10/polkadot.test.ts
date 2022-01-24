@@ -1,5 +1,5 @@
-import { createCeramic } from '../../create-ceramic'
-import { createIPFS } from '../../create-ipfs'
+import { createCeramic } from '../../create-ceramic.js'
+import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { CeramicApi, IpfsApi } from '@ceramicnetwork/common'
 import { Signer, SignerResult } from '@polkadot/api/types'
 import * as linking from '@ceramicnetwork/blockchain-utils-linking'
@@ -9,7 +9,7 @@ import { SignerPayloadRaw } from '@polkadot/types/types'
 import { assert, hexToU8a, u8aToHex } from '@polkadot/util'
 import { cryptoWaitReady } from '@polkadot/util-crypto'
 import { createTestKeyring } from '@polkadot/keyring/testing'
-import { clearDid, happyPath, wrongProof } from './caip-flows'
+import { clearDid, happyPath, wrongProof } from './caip-flows.js'
 
 class SingleAccountSigner implements Signer {
   readonly #keyringPair: KeyringPair

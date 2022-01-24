@@ -1,18 +1,17 @@
-import Ceramic from '../ceramic'
+import { jest } from '@jest/globals'
+import { Ceramic } from '../ceramic.js'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import { AnchorStatus, IpfsApi, TestUtils } from '@ceramicnetwork/common'
 import tmp from 'tmp-promise'
 import * as u8a from 'uint8arrays'
-import { createIPFS, swarmConnect } from './ipfs-util'
+import { createIPFS, swarmConnect } from '@ceramicnetwork/ipfs-daemon'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
-import InMemoryAnchorService from '../anchor/memory/in-memory-anchor-service'
-import { anchorUpdate } from '../state-management/__tests__/anchor-update'
-import ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
-import KeyDidResolver from 'key-did-resolver'
+import { InMemoryAnchorService } from '../anchor/memory/in-memory-anchor-service.js'
+import { anchorUpdate } from '../state-management/__tests__/anchor-update.js'
+import * as ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
+import * as KeyDidResolver from 'key-did-resolver'
 import { Resolver } from 'did-resolver'
 import { DID } from 'dids'
-
-jest.mock('../store/level-state-store')
 
 const seed = u8a.fromString(
   '6e34b2e1a9624113d81ece8a8a22e6e97f0e145c25c1d4d2d0e62753b4060c83',
@@ -118,7 +117,7 @@ describe('Ceramic anchoring', () => {
       createCeramic(ipfs2, false),
     ])
 
-    const stream1 = await TileDocument.create(ceramic1, { a: 123, b: 4567 })
+    const stream1 = await TileDocument.create<any>(ceramic1, { a: 123, b: 4567 })
     await stream1.update({ a: 4567 }, null, { anchor: false, publish: false })
     await stream1.update({ b: 123 }, null, { anchor: false, publish: false })
 
@@ -339,10 +338,10 @@ describe('Ceramic anchoring', () => {
     expect(stream1.content).toEqual({ x: 3 })
     expect(stream1.state.log.length).toEqual(4)
 
-    const validateChainInclusionSpy = jest.spyOn(
-      ceramic2._anchorValidator,
-      'validateChainInclusion'
-    )
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const c2anchorValidator = ceramic2._anchorValidator
+    const validateChainInclusionSpy = jest.spyOn(c2anchorValidator, 'validateChainInclusion')
     validateChainInclusionSpy.mockRejectedValueOnce(new Error("blockNumbers don't match"))
 
     // Even though validating the anchor commit fails, the stream should still be loaded successfully

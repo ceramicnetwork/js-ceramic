@@ -1,12 +1,12 @@
 import { IpfsApi } from '@ceramicnetwork/common'
-import { createIPFS } from '../create-ipfs'
+import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { CeramicApi } from '@ceramicnetwork/common'
-import { createCeramic } from '../create-ceramic'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import { DID } from 'dids'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
-import KeyResolver from 'key-did-resolver'
+import * as KeyResolver from 'key-did-resolver'
 import { randomBytes } from '@stablelib/random'
+import { createCeramic } from '../create-ceramic.js'
 
 let ipfs: IpfsApi
 let ceramic: CeramicApi
@@ -17,8 +17,8 @@ beforeAll(async () => {
 }, 12000)
 
 afterAll(async () => {
-  await ipfs.stop()
   await ceramic.close()
+  await ipfs.stop()
 })
 
 test('can update a tile document with valid asDID', async () => {
@@ -28,7 +28,7 @@ test('can update a tile document with valid asDID', async () => {
   expect(newTile.content).toMatchObject({
     foo: 'baz',
   })
-})
+}, 10000)
 
 test('cannot update a tile document with invalid asDID', async () => {
   const newTile = await TileDocument.create(ceramic, { foo: 'bar' })
@@ -41,4 +41,4 @@ test('cannot update a tile document with invalid asDID', async () => {
   await expect(newTile.update({ foo: 'baz' }, null, { asDID: did })).rejects.toThrow()
 
   expect(newTile.content).toMatchObject({ foo: 'bar' })
-})
+}, 10000)

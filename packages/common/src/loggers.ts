@@ -1,6 +1,6 @@
-import { Logger, LoggerModes } from '@overnightjs/logger'
-import * as logfmt from 'logfmt'
-import util from 'util'
+import { LoggerModes, Logger } from 'overjet-logger'
+import logfmt from 'logfmt'
+import * as util from 'util'
 import flatten from 'flat'
 import {
   ServiceLoggerBase,
@@ -9,7 +9,7 @@ import {
   LogLevel,
   ServiceLog,
   WriteableStream,
-} from './logger-base'
+} from './logger-base.js'
 
 /**
  * Logs to the console based on log level

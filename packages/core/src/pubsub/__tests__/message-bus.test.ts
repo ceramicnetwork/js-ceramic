@@ -1,12 +1,13 @@
-import { buildQueryMessage, MsgType, ResponseMessage } from '../pubsub-message'
-import { asIpfsMessage } from './as-ipfs-message'
+import { jest } from '@jest/globals'
+import { buildQueryMessage, MsgType, ResponseMessage } from '../pubsub-message.js'
+import { asIpfsMessage } from './as-ipfs-message.js'
 import { StreamID } from '@ceramicnetwork/streamid'
-import { from, Subscription, Observable } from 'rxjs'
-import { MAX_RESPONSE_INTERVAL, MessageBus } from '../message-bus'
-import { Pubsub } from '../pubsub'
-import { bufferCount, concatMap, delay, first } from 'rxjs/operators'
+import { from, Subscription, Observable, firstValueFrom } from 'rxjs'
+import { MAX_RESPONSE_INTERVAL, MessageBus } from '../message-bus.js'
+import { Pubsub } from '../pubsub.js'
+import { bufferCount, concatMap, delay } from 'rxjs/operators'
 import * as random from '@stablelib/random'
-import CID from 'cids'
+import { CID } from 'multiformats/cid'
 
 const FAKE_STREAM_ID = StreamID.fromString(
   'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
@@ -28,7 +29,7 @@ test('subscribe to pubsub', async () => {
   const subscribeSpy = jest.spyOn(pubsub, 'subscribe')
   const messageBus = new MessageBus(pubsub)
   expect(subscribeSpy).toBeCalledTimes(1)
-  const received = await messageBus.pipe(bufferCount(LENGTH), first()).toPromise()
+  const received = await firstValueFrom(messageBus.pipe(bufferCount(LENGTH)))
   expect(received).toEqual(OUTER_MESSAGES)
 })
 
@@ -76,8 +77,8 @@ test('unsubscribe', async () => {
 })
 
 describe('queryNetwork', () => {
-  const FAKE_CID1 = new CID('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
-  const FAKE_CID2 = new CID('bafybeig6xv5nwphfmvcnektpnojts44jqcuam7bmye2pb54adnrtccjlsu')
+  const FAKE_CID1 = CID.parse('bafybeig6xv5nwphfmvcnektpnojts33jqcuam7bmye2pb54adnrtccjlsu')
+  const FAKE_CID2 = CID.parse('bafybeig6xv5nwphfmvcnektpnojts44jqcuam7bmye2pb54adnrtccjlsu')
   const queryMessage = buildQueryMessage(FAKE_STREAM_ID)
   const responseMessage1: ResponseMessage = {
     typ: MsgType.RESPONSE,

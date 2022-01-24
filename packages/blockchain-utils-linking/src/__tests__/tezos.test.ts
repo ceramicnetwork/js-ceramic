@@ -1,4 +1,4 @@
-import { TezosAuthProvider, TezosProvider } from '../tezos'
+import { TezosAuthProvider, TezosProvider } from '../tezos.js'
 import { InMemorySigner } from '@taquito/signer'
 
 const did = 'did:3:bafysdfwefwe'
@@ -9,7 +9,7 @@ let provider: TezosProvider
 // cache Date.now() to restore it after all tests
 const dateNow = Date.now
 
-beforeAll(async (done) => {
+beforeAll(async () => {
   // Mock Date.now() to return a constant value
   Date.now = () => 666000
 
@@ -17,7 +17,6 @@ beforeAll(async (done) => {
   provider = {
     signer,
   }
-  done()
 })
 
 afterAll(() => {

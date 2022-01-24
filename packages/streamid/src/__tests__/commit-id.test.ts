@@ -1,25 +1,25 @@
 import * as util from 'util'
-import { CommitID } from '../commit-id'
-import CID from 'cids'
-import * as multibase from 'multibase'
+import { CommitID } from '../commit-id.js'
+import { CID } from 'multiformats/cid'
+import { base36 } from 'multiformats/bases/base36'
 
 const BASE_CID_STRING = 'bagcqcerakszw2vsovxznyp5gfnpdj4cqm2xiv76yd24wkjewhhykovorwo6a'
-const BASE_CID = new CID(BASE_CID_STRING)
+const BASE_CID = CID.parse(BASE_CID_STRING)
 const COMMIT_CID_STRING = 'bagjqcgzaday6dzalvmy5ady2m5a5legq5zrbsnlxfc2bfxej532ds7htpova'
-const COMMIT_CID = new CID(COMMIT_CID_STRING)
+const COMMIT_CID = CID.parse(COMMIT_CID_STRING)
 
 const STREAM_ID_STRING = 'kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
-const STREAM_ID_BYTES = multibase.decode(STREAM_ID_STRING)
+const STREAM_ID_BYTES = base36.decode(STREAM_ID_STRING)
 const STREAM_ID_URL = 'ceramic://kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
 const STREAM_ID_URL_LEGACY =
   '/ceramic/kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s'
 
 const STREAM_ID_WITH_COMMIT =
   'k1dpgaqe3i64kjqcp801r3sn7ysi5i0k7nxvs7j351s7kewfzr3l7mdxnj7szwo4kr9mn2qki5nnj0cv836ythy1t1gya9s25cn1nexst3jxi5o3h6qprfyju'
-const STREAM_ID_WITH_COMMIT_BYTES = multibase.decode(STREAM_ID_WITH_COMMIT)
+const STREAM_ID_WITH_COMMIT_BYTES = base36.decode(STREAM_ID_WITH_COMMIT)
 
 const STREAM_ID_WITH_0_COMMIT = 'k3y52l7qbv1frxwipl4hp7e6jlu4f6u8upm2xv0irmedfkm5cnutmezzi3u7mytj4'
-const STREAM_ID_WITH_0_COMMIT_BYTES = multibase.decode(STREAM_ID_WITH_0_COMMIT)
+const STREAM_ID_WITH_0_COMMIT_BYTES = base36.decode(STREAM_ID_WITH_0_COMMIT)
 
 const STREAM_ID_WITH_COMMIT_LEGACY =
   '/ceramic/kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s?commit=bagjqcgzaday6dzalvmy5ady2m5a5legq5zrbsnlxfc2bfxej532ds7htpova'
@@ -63,26 +63,27 @@ describe('constructor', () => {
 
 describe('#atCommit', () => {
   const commitId = new CommitID('tile', BASE_CID, COMMIT_CID)
+  const streamId = commitId.baseID
 
   test('to number 0', () => {
-    const traveller = commitId.atCommit(0)
+    const traveller = CommitID.make(streamId, 0)
     expect(traveller.commit).toEqual(BASE_CID)
   })
   test('to number 1', () => {
-    expect(() => commitId.atCommit(1)).toThrowErrorMatchingSnapshot()
+    expect(() => CommitID.make(streamId, 1)).toThrowErrorMatchingSnapshot()
   })
   test('to commit CID', () => {
     const commitId = new CommitID('tile', BASE_CID)
-    const traveller = commitId.atCommit(COMMIT_CID)
+    const traveller = CommitID.make(commitId.baseID, COMMIT_CID)
     expect(traveller.commit).toEqual(COMMIT_CID)
   })
   test('to commit CID as string', () => {
     const commitId = new CommitID('tile', BASE_CID)
-    const traveller = commitId.atCommit(COMMIT_CID_STRING)
+    const traveller = CommitID.make(commitId.baseID, COMMIT_CID_STRING)
     expect(traveller.commit).toEqual(COMMIT_CID)
   })
   test('to garbage string', () => {
-    expect(() => commitId.atCommit('garbage')).toThrow()
+    expect(() => CommitID.make(streamId, 'garbage')).toThrow()
   })
 })
 

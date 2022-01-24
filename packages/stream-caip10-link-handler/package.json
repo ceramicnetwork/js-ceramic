@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/stream-caip10-link-handler",
-  "version": "1.3.12-rc.0",
+  "version": "2.0.0-alpha.1",
   "description": "Ceramic AccountLink stream handler",
   "keywords": [
     "ceramic",
@@ -10,37 +10,38 @@
   "author": "Janko Simonovic <simonovic86@gmail.com>",
   "homepage": "https://ceramic.network",
   "license": "(Apache-2.0 OR MIT)",
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
+  "type": "module",
   "directories": {
-    "lib": "lib"
+    "lib": "./lib"
   },
   "files": [
     "lib"
   ],
+  "sideEffects": false,
+  "exports": {
+    ".": "./lib/index.js"
+  },
   "scripts": {
-    "test": "../../node_modules/.bin/jest --silent --coverage",
-    "build": "../../node_modules/.bin/tsc -p tsconfig.json",
+    "test": "../../node_modules/.bin/jest --coverage",
+    "build": "../../node_modules/.bin/tsc --project tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
     "lint": "../../node_modules/.bin/eslint ./src --ext .js,.jsx,.ts,.tsx",
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/blockchain-utils-validation": "^1.6.9-rc.0",
-    "@ceramicnetwork/common": "^1.11.1-rc.0",
-    "@ceramicnetwork/stream-caip10-link": "^1.2.10-rc.0"
+    "@ceramicnetwork/blockchain-utils-validation": "^2.0.0-alpha.1",
+    "@ceramicnetwork/common": "^2.0.0-alpha.1",
+    "@ceramicnetwork/stream-caip10-link": "^2.0.0-alpha.1"
   },
   "devDependencies": {
-    "@stablelib/sha256": "^1.0.0",
+    "@stablelib/sha256": "^1.0.1",
     "@types/lodash.clonedeep": "^4.5.6",
-    "cids": "~1.1.6",
     "lodash.clonedeep": "^4.5.0",
-    "uint8arrays": "^2.0.5"
-  },
-  "jest": {
-    "testEnvironment": "node",
-    "resolver": "jest-resolver-enhanced"
+    "multiformats": "^9.5.8",
+    "uint8arrays": "^3.0.0"
   },
   "gitHead": "4f42c6ac204ad25e66efda4e24aed12c339b3c98"
 }

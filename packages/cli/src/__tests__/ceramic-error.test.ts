@@ -1,11 +1,11 @@
 import getPort from 'get-port'
 import { IpfsApi, LogLevel } from '@ceramicnetwork/common'
 import * as tmp from 'tmp-promise'
-import { createIPFS } from './create-ipfs'
-import Ceramic from '@ceramicnetwork/core'
+import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
+import { Ceramic } from '@ceramicnetwork/core'
 import * as random from '@stablelib/random'
 import { CeramicDaemon, makeCeramicConfig } from '../ceramic-daemon'
-import CeramicClient from '@ceramicnetwork/http-client'
+import { CeramicClient } from '@ceramicnetwork/http-client'
 import { makeDID } from './make-did'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import * as path from 'path'
@@ -30,8 +30,9 @@ function safeRead(filepath: string): string {
 }
 
 beforeAll(async () => {
+  ipfs = await createIPFS()
+
   tmpFolder = await tmp.dir({ unsafeCleanup: true })
-  ipfs = await createIPFS(tmpFolder.path)
   const stateStoreDirectory = tmpFolder.path
   const daemonPort = await getPort()
 

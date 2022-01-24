@@ -1,6 +1,6 @@
-import { AccountID } from 'caip'
-import { AuthProvider } from './auth-provider'
-import { getConsentMessage, LinkProof } from './util'
+import { AccountId } from 'caip'
+import { AuthProvider } from './auth-provider.js'
+import { getConsentMessage, LinkProof } from './util.js'
 import type { Tx, SignMeta } from '@tendermint/sig'
 import { hash } from '@stablelib/sha256'
 import * as uint8arrays from 'uint8arrays'
@@ -76,8 +76,8 @@ export class CosmosAuthProvider implements AuthProvider {
     }
   }
 
-  async accountId(): Promise<AccountID> {
-    return new AccountID({
+  async accountId(): Promise<AccountId> {
+    return new AccountId({
       address: this.address,
       chainId: `cosmos:${this.chainRef}`,
     })

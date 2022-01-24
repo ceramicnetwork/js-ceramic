@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/stream-tile",
-  "version": "1.5.8-rc.0",
+  "version": "2.0.0-alpha.1",
   "description": "Ceramic Tile Document stream type",
   "keywords": [
     "ceramic",
@@ -10,33 +10,33 @@
   "homepage": "",
   "license": "(Apache-2.0 OR MIT)",
   "directories": {
-    "lib": "lib"
+    "lib": "./lib"
   },
-  "main": "lib/index.js",
+  "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
+  "type": "module",
   "files": [
     "lib"
   ],
+  "exports": {
+    ".": "./lib/index.js"
+  },
+  "sideEffects": false,
   "scripts": {
     "test": "exit 0",
-    "build": "../../node_modules/.bin/tsc -p tsconfig.json",
+    "build": "../../node_modules/.bin/tsc --project tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
     "lint": "../../node_modules/.bin/eslint ./src --ext .js,.jsx,.ts,.tsx",
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/common": "^1.11.1-rc.0",
-    "@ceramicnetwork/streamid": "^1.3.10-rc.0",
-    "@stablelib/random": "^1.0.0",
-    "fast-json-patch": "^2.2.1",
-    "uint8arrays": "^2.0.5"
-  },
-  "devDependencies": {
-    "@types/node": "^13.13.15"
-  },
-  "jest": {
-    "testEnvironment": "node",
-    "resolver": "jest-resolver-enhanced"
+    "@ceramicnetwork/common": "^2.0.0-alpha.1",
+    "@ceramicnetwork/streamid": "^2.0.0-alpha.1",
+    "@ipld/dag-cbor": "^7.0.0",
+    "@stablelib/random": "^1.0.1",
+    "fast-json-patch": "^3.1.0",
+    "uint8arrays": "^3.0.0"
   },
   "gitHead": "4f42c6ac204ad25e66efda4e24aed12c339b3c98"
 }
