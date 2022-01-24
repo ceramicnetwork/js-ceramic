@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/common",
-  "version": "1.0.4-rc.0",
+  "version": "2.0.0-alpha.1",
   "description": "Ceramic common types and utilities",
   "keywords": [
     "ceramic",
@@ -11,49 +11,50 @@
   "homepage": "",
   "license": "(Apache-2.0 OR MIT)",
   "directories": {
-    "lib": "lib"
+    "lib": "./lib"
   },
   "main": "lib/index.js",
+  "type": "module",
+  "exports": {
+    ".": "./lib/index.js"
+  },
   "types": "lib/index.d.ts",
   "files": [
     "lib"
   ],
+  "sideEffects": false,
   "browser": {
     "./lib/logger-provider.js": "./lib/logger-provider-browser.js",
     "./lib/loggers.js": "./lib/loggers-browser.js"
   },
   "scripts": {
-    "test": "../../node_modules/.bin/jest --silent --coverage --passWithNoTests --env=node",
-    "build": "../../node_modules/.bin/tsc -p tsconfig.json",
+    "test": "../../node_modules/.bin/jest --silent --coverage --passWithNoTests",
+    "build": "../../node_modules/.bin/tsc --project tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
     "lint": "../../node_modules/.bin/eslint ./src --ext .js,.jsx,.ts,.tsx",
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/streamid": "^1.0.1",
-    "@overnightjs/logger": "^1.2.0",
-    "cids": "~1.1.6",
+    "@ceramicnetwork/streamid": "^2.0.0-alpha.1",
+    "caip": "~1.0.0",
     "cross-fetch": "^3.1.4",
     "flat": "^5.0.2",
+    "overjet-logger": "^1.0.6",
     "lodash.clonedeep": "^4.5.0",
     "logfmt": "^1.3.2",
-    "rxjs": "^7.0.0",
-    "uint8arrays": "^2.0.5"
+    "multiformats": "^9.5.8",
+    "rxjs": "^7.5.2",
+    "uint8arrays": "^3.0.0"
   },
   "devDependencies": {
     "@types/lodash.clonedeep": "^4.5.6",
-    "@types/logfmt": "^1.2.1",
-    "@types/node": "^13.13.15",
-    "dids": "^2.1.0",
-    "ipfs-core": "~0.5.2",
-    "json-schema-to-typescript": "^9.1.1",
-    "typescript-json-schema": "^0.42.0"
-  },
-  "jest": {
-    "testMatch": [
-      "**/?(*.)+(spec|test).[jt]s?(x)"
-    ]
+    "@types/logfmt": "^1.2.2",
+    "@types/node": "^17.0.5",
+    "dids": "^3.0.0-alpha.4",
+    "ipfs-core-types": "~0.9.0",
+    "json-schema-to-typescript": "^10.1.5",
+    "typescript-json-schema": "^0.52.0"
   },
   "gitHead": "34eeee25597b0a60def72906c26d3afd6230aaf1"
 }

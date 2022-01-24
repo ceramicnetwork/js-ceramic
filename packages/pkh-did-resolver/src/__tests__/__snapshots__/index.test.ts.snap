@@ -1,0 +1,195 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`PKH DID Resolver successfully resolves DIDs 1`] = `
+Object {
+  "didDocument": Object {
+    "assertionMethod": Array [
+      "did:pkh:eip155:1:0xab16a96d359ec26a11e2c2b3d8f8b8942d5bfcdb#blockchainAccountId",
+    ],
+    "authentication": Array [
+      "did:pkh:eip155:1:0xab16a96d359ec26a11e2c2b3d8f8b8942d5bfcdb#blockchainAccountId",
+    ],
+    "id": "did:pkh:eip155:1:0xab16a96d359ec26a11e2c2b3d8f8b8942d5bfcdb",
+    "verificationMethod": Array [
+      Object {
+        "blockchainAccountId": "eip155:1:0xab16a96d359ec26a11e2c2b3d8f8b8942d5bfcdb",
+        "controller": "did:pkh:eip155:1:0xab16a96d359ec26a11e2c2b3d8f8b8942d5bfcdb",
+        "id": "did:pkh:eip155:1:0xab16a96d359ec26a11e2c2b3d8f8b8942d5bfcdb#blockchainAccountId",
+        "type": "EcdsaSecp256k1RecoveryMethod2020",
+      },
+    ],
+  },
+  "didDocumentMetadata": Object {},
+  "didResolutionMetadata": Object {
+    "contentType": "application/did+json",
+  },
+}
+`;
+
+exports[`PKH DID Resolver successfully resolves DIDs 2`] = `
+Object {
+  "didDocument": Object {
+    "assertionMethod": Array [
+      "did:pkh:bip122:000000000019d6689c085ae165831e93:128Lkh3S7CkDTBZ8W7BbpsN3YYizJMp8p6#blockchainAccountId",
+    ],
+    "authentication": Array [
+      "did:pkh:bip122:000000000019d6689c085ae165831e93:128Lkh3S7CkDTBZ8W7BbpsN3YYizJMp8p6#blockchainAccountId",
+    ],
+    "id": "did:pkh:bip122:000000000019d6689c085ae165831e93:128Lkh3S7CkDTBZ8W7BbpsN3YYizJMp8p6",
+    "verificationMethod": Array [
+      Object {
+        "blockchainAccountId": "bip122:000000000019d6689c085ae165831e93:128Lkh3S7CkDTBZ8W7BbpsN3YYizJMp8p6",
+        "controller": "did:pkh:bip122:000000000019d6689c085ae165831e93:128Lkh3S7CkDTBZ8W7BbpsN3YYizJMp8p6",
+        "id": "did:pkh:bip122:000000000019d6689c085ae165831e93:128Lkh3S7CkDTBZ8W7BbpsN3YYizJMp8p6#blockchainAccountId",
+        "type": "EcdsaSecp256k1RecoveryMethod2020",
+      },
+    ],
+  },
+  "didDocumentMetadata": Object {},
+  "didResolutionMetadata": Object {
+    "contentType": "application/did+json",
+  },
+}
+`;
+
+exports[`PKH DID Resolver successfully resolves DIDs 3`] = `
+Object {
+  "didDocument": Object {
+    "assertionMethod": Array [
+      "did:pkh:tezos:NetXdQprcVkpaWU:tz2BFTyPeYRzxd5aiBchbXN3WCZhx7BqbMBq#blockchainAccountId",
+      "did:pkh:tezos:NetXdQprcVkpaWU:tz2BFTyPeYRzxd5aiBchbXN3WCZhx7BqbMBq#TezosMethod2021",
+    ],
+    "authentication": Array [
+      "did:pkh:tezos:NetXdQprcVkpaWU:tz2BFTyPeYRzxd5aiBchbXN3WCZhx7BqbMBq#blockchainAccountId",
+      "did:pkh:tezos:NetXdQprcVkpaWU:tz2BFTyPeYRzxd5aiBchbXN3WCZhx7BqbMBq#TezosMethod2021",
+    ],
+    "id": "did:pkh:tezos:NetXdQprcVkpaWU:tz2BFTyPeYRzxd5aiBchbXN3WCZhx7BqbMBq",
+    "verificationMethod": Array [
+      Object {
+        "blockchainAccountId": "tezos:NetXdQprcVkpaWU:tz2BFTyPeYRzxd5aiBchbXN3WCZhx7BqbMBq",
+        "controller": "did:pkh:tezos:NetXdQprcVkpaWU:tz2BFTyPeYRzxd5aiBchbXN3WCZhx7BqbMBq",
+        "id": "did:pkh:tezos:NetXdQprcVkpaWU:tz2BFTyPeYRzxd5aiBchbXN3WCZhx7BqbMBq#blockchainAccountId",
+        "type": "EcdsaSecp256k1RecoveryMethod2020",
+      },
+      Object {
+        "blockchainAccountId": "tezos:NetXdQprcVkpaWU:tz2BFTyPeYRzxd5aiBchbXN3WCZhx7BqbMBq",
+        "controller": "did:pkh:tezos:NetXdQprcVkpaWU:tz2BFTyPeYRzxd5aiBchbXN3WCZhx7BqbMBq",
+        "id": "did:pkh:tezos:NetXdQprcVkpaWU:tz2BFTyPeYRzxd5aiBchbXN3WCZhx7BqbMBq#TezosMethod2021",
+        "type": "TezosMethod2021",
+      },
+    ],
+  },
+  "didDocumentMetadata": Object {},
+  "didResolutionMetadata": Object {
+    "contentType": "application/did+json",
+  },
+}
+`;
+
+exports[`PKH DID Resolver successfully resolves DIDs 4`] = `
+Object {
+  "didDocument": Object {
+    "@context": Array [
+      "https://www.w3.org/ns/did/v1",
+      Object {
+        "EcdsaSecp256k1RecoveryMethod2020": "https://identity.foundation/EcdsaSecp256k1RecoverySignature2020#EcdsaSecp256k1RecoveryMethod2020",
+        "blockchainAccountId": "https://w3id.org/security#blockchainAccountId",
+      },
+    ],
+    "assertionMethod": Array [
+      "did:pkh:eip155:1:0xab16a96d359ec26a11e2c2b3d8f8b8942d5bfcdb#blockchainAccountId",
+    ],
+    "authentication": Array [
+      "did:pkh:eip155:1:0xab16a96d359ec26a11e2c2b3d8f8b8942d5bfcdb#blockchainAccountId",
+    ],
+    "id": "did:pkh:eip155:1:0xab16a96d359ec26a11e2c2b3d8f8b8942d5bfcdb",
+    "verificationMethod": Array [
+      Object {
+        "blockchainAccountId": "eip155:1:0xab16a96d359ec26a11e2c2b3d8f8b8942d5bfcdb",
+        "controller": "did:pkh:eip155:1:0xab16a96d359ec26a11e2c2b3d8f8b8942d5bfcdb",
+        "id": "did:pkh:eip155:1:0xab16a96d359ec26a11e2c2b3d8f8b8942d5bfcdb#blockchainAccountId",
+        "type": "EcdsaSecp256k1RecoveryMethod2020",
+      },
+    ],
+  },
+  "didDocumentMetadata": Object {},
+  "didResolutionMetadata": Object {
+    "contentType": "application/did+ld+json",
+  },
+}
+`;
+
+exports[`PKH DID Resolver successfully resolves DIDs 5`] = `
+Object {
+  "didDocument": Object {
+    "@context": Array [
+      "https://www.w3.org/ns/did/v1",
+      Object {
+        "EcdsaSecp256k1RecoveryMethod2020": "https://identity.foundation/EcdsaSecp256k1RecoverySignature2020#EcdsaSecp256k1RecoveryMethod2020",
+        "blockchainAccountId": "https://w3id.org/security#blockchainAccountId",
+      },
+    ],
+    "assertionMethod": Array [
+      "did:pkh:bip122:000000000019d6689c085ae165831e93:128Lkh3S7CkDTBZ8W7BbpsN3YYizJMp8p6#blockchainAccountId",
+    ],
+    "authentication": Array [
+      "did:pkh:bip122:000000000019d6689c085ae165831e93:128Lkh3S7CkDTBZ8W7BbpsN3YYizJMp8p6#blockchainAccountId",
+    ],
+    "id": "did:pkh:bip122:000000000019d6689c085ae165831e93:128Lkh3S7CkDTBZ8W7BbpsN3YYizJMp8p6",
+    "verificationMethod": Array [
+      Object {
+        "blockchainAccountId": "bip122:000000000019d6689c085ae165831e93:128Lkh3S7CkDTBZ8W7BbpsN3YYizJMp8p6",
+        "controller": "did:pkh:bip122:000000000019d6689c085ae165831e93:128Lkh3S7CkDTBZ8W7BbpsN3YYizJMp8p6",
+        "id": "did:pkh:bip122:000000000019d6689c085ae165831e93:128Lkh3S7CkDTBZ8W7BbpsN3YYizJMp8p6#blockchainAccountId",
+        "type": "EcdsaSecp256k1RecoveryMethod2020",
+      },
+    ],
+  },
+  "didDocumentMetadata": Object {},
+  "didResolutionMetadata": Object {
+    "contentType": "application/did+ld+json",
+  },
+}
+`;
+
+exports[`PKH DID Resolver successfully resolves DIDs 6`] = `
+Object {
+  "didDocument": Object {
+    "@context": Array [
+      "https://www.w3.org/ns/did/v1",
+      Object {
+        "EcdsaSecp256k1RecoveryMethod2020": "https://identity.foundation/EcdsaSecp256k1RecoverySignature2020#EcdsaSecp256k1RecoveryMethod2020",
+        "TezosMethod2021": "https://w3id.org/security#TezosMethod2021",
+        "blockchainAccountId": "https://w3id.org/security#blockchainAccountId",
+      },
+    ],
+    "assertionMethod": Array [
+      "did:pkh:tezos:NetXdQprcVkpaWU:tz2BFTyPeYRzxd5aiBchbXN3WCZhx7BqbMBq#blockchainAccountId",
+      "did:pkh:tezos:NetXdQprcVkpaWU:tz2BFTyPeYRzxd5aiBchbXN3WCZhx7BqbMBq#TezosMethod2021",
+    ],
+    "authentication": Array [
+      "did:pkh:tezos:NetXdQprcVkpaWU:tz2BFTyPeYRzxd5aiBchbXN3WCZhx7BqbMBq#blockchainAccountId",
+      "did:pkh:tezos:NetXdQprcVkpaWU:tz2BFTyPeYRzxd5aiBchbXN3WCZhx7BqbMBq#TezosMethod2021",
+    ],
+    "id": "did:pkh:tezos:NetXdQprcVkpaWU:tz2BFTyPeYRzxd5aiBchbXN3WCZhx7BqbMBq",
+    "verificationMethod": Array [
+      Object {
+        "blockchainAccountId": "tezos:NetXdQprcVkpaWU:tz2BFTyPeYRzxd5aiBchbXN3WCZhx7BqbMBq",
+        "controller": "did:pkh:tezos:NetXdQprcVkpaWU:tz2BFTyPeYRzxd5aiBchbXN3WCZhx7BqbMBq",
+        "id": "did:pkh:tezos:NetXdQprcVkpaWU:tz2BFTyPeYRzxd5aiBchbXN3WCZhx7BqbMBq#blockchainAccountId",
+        "type": "EcdsaSecp256k1RecoveryMethod2020",
+      },
+      Object {
+        "blockchainAccountId": "tezos:NetXdQprcVkpaWU:tz2BFTyPeYRzxd5aiBchbXN3WCZhx7BqbMBq",
+        "controller": "did:pkh:tezos:NetXdQprcVkpaWU:tz2BFTyPeYRzxd5aiBchbXN3WCZhx7BqbMBq",
+        "id": "did:pkh:tezos:NetXdQprcVkpaWU:tz2BFTyPeYRzxd5aiBchbXN3WCZhx7BqbMBq#TezosMethod2021",
+        "type": "TezosMethod2021",
+      },
+    ],
+  },
+  "didDocumentMetadata": Object {},
+  "didResolutionMetadata": Object {
+    "contentType": "application/did+ld+json",
+  },
+}
+`;

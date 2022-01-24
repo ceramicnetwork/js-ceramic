@@ -1,9 +1,9 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`accountId 1`] = `
-AccountID {
+AccountId {
   "address": "testuser1111",
-  "chainId": ChainID {
+  "chainId": ChainId {
     "namespace": "eosio",
     "reference": "1eaa0824707c8c16bd25145493bf062a",
   },
@@ -16,7 +16,7 @@ exports[`authenticate Telos Testnet 1`] = `"0x521674ea7031af056c7fcf69e2c3ff6f4b
 
 exports[`createLink generate proof on jungle testnet 1`] = `
 Object {
-  "account": "idx3idctest1@eosio:2a02a0053e5a8cf73a56ba0fda11e4d9",
+  "account": "eosio:2a02a0053e5a8cf73a56ba0fda11e4d9:idx3idctest1",
   "message": "Link this account to your identity
 
 did:3:bafysdfwefwe 
@@ -24,13 +24,13 @@ Timestamp: 666",
   "signature": "SIG_K1_K2m5Nf8ed5v5tzKAEbmaEgZrBVqZe9rkt1ufpPDKepA32BRMKwnJP5Snj2VgZEnumRkQCYN2AGWB86Tw5SAUHnRVPKhYqp",
   "timestamp": 666,
   "type": "eosio",
-  "version": 1,
+  "version": 2,
 }
 `;
 
 exports[`createLink generate proof on telos testnet 1`] = `
 Object {
-  "account": "testuser1111@eosio:1eaa0824707c8c16bd25145493bf062a",
+  "account": "eosio:1eaa0824707c8c16bd25145493bf062a:testuser1111",
   "message": "Link this account to your identity
 
 did:3:bafysdfwefwe 
@@ -38,6 +38,6 @@ Timestamp: 666",
   "signature": "SIG_K1_KWpXoKssJJtpdBYsbjG48VrYjpbMpePWMeviwrneNNgCQwdd7DmsSrAYEKBAXmaqgnTTDFdE9JyPTwUxyDEBQi2SboS39A",
   "timestamp": 666,
   "type": "eosio",
-  "version": 1,
+  "version": 2,
 }
 `;

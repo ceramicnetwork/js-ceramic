@@ -1,12 +1,12 @@
-import CID from 'cids'
+import type { CID } from 'multiformats/cid'
 
 /**
  * Describes anchor service response
  */
-export default interface AnchorServiceResponse {
-    readonly cid: CID;
-    readonly status: string;
-    readonly message: string;
-    readonly anchorScheduledFor?: number;
-    readonly anchorRecord?: CID;
+export interface AnchorServiceResponse {
+  readonly cid: CID
+  readonly status: string
+  readonly message: string
+  readonly anchorScheduledFor?: number
+  readonly anchorCommit?: CID
 }

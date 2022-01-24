@@ -1,38 +1,33 @@
-import { signTx, Tx, SignMeta, createWalletFromMnemonic, Wallet, StdTx } from '@tendermint/sig';
-import { validateLink } from '../cosmos';
-import * as linking from "@ceramicnetwork/blockchain-utils-linking";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import tendermint from '@tendermint/sig'
+import { validateLink } from '../cosmos.js'
+import * as linking from '@ceramicnetwork/blockchain-utils-linking'
 
-const did = 'did:3:bafysdfwefwe';
-const mnemonic = 'test salon husband push melody usage fine ensure blade deal miss twin';
-const local_provider = createWalletFromMnemonic(mnemonic);
-const chainRef = 'cosmoshub-3';
+const did = 'did:3:bafysdfwefwe'
+const mnemonic = 'test salon husband push melody usage fine ensure blade deal miss twin'
+const localProvider = tendermint.createWalletFromMnemonic(mnemonic)
+const chainRef = 'cosmoshub-3'
 
 class CosmosMockSigner {
-  readonly provider: Wallet;
+  constructor(readonly provider: tendermint.Wallet) {}
 
-  constructor(local_provider: Wallet) {
-    this.provider = local_provider;
-  }
-
-  public async sign(msg : Tx, metadata : SignMeta) : Promise<StdTx>{
-    return new Promise((resolve): void => {
-      const signature = signTx(msg, metadata, this.provider);
-      resolve(signature);
-    }); 
+  public async sign(msg: tendermint.Tx, metadata: tendermint.SignMeta): Promise<tendermint.StdTx> {
+    return tendermint.signTx(msg, metadata, this.provider)
   }
 }
 
 describe('Blockchain: Cosmos', () => {
   describe('validateLink', () => {
     test('validate proof for cosmoshub3', async () => {
-      const provider = new CosmosMockSigner(local_provider);
+      const provider = new CosmosMockSigner(localProvider)
       const authProvider = new linking.cosmos.CosmosAuthProvider(
         provider,
-        local_provider.address,
+        localProvider.address,
         chainRef
-      );
-      const proof = await authProvider.createLink(did);
-      await expect(validateLink(proof)).resolves.toEqual(proof);
-    });
-  });
-});
+      )
+      const proof = await authProvider.createLink(did)
+      await expect(validateLink(proof)).resolves.toEqual(proof)
+    })
+  })
+})

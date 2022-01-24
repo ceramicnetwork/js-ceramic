@@ -2,7 +2,7 @@
 
 exports[`validate v0 and v1 proofs 1`] = `
 Object {
-  "account": "0x8fe2c4516e920425e177658aaac451ca0463ed69@eip155:1",
+  "account": "eip155:1:0x8fe2c4516e920425e177658aaac451ca0463ed69",
   "message": "Create a new 3Box profile
 
 - 
@@ -15,7 +15,7 @@ Your unique profile ID is did:3:bafysdfwefwe",
 
 exports[`validate v0 and v1 proofs 2`] = `
 Object {
-  "account": "0x8fe2c4516e920425e177658aaac451ca0463ed69@eip155:1",
+  "account": "eip155:1:0x8fe2c4516e920425e177658aaac451ca0463ed69",
   "message": "Create a new 3Box profile
 
 - 

@@ -1,33 +1,67 @@
-import {IpfsDaemon} from "@ceramicnetwork/ipfs-daemon";
-
+import mergeOpts from 'merge-options'
+import * as Ctl from 'ipfsd-ctl'
 import dagJose from 'dag-jose'
-import legacy from 'multiformats/legacy'
-import ipfsClient from "ipfs-http-client"
-import { IpfsApi } from "@ceramicnetwork/common"
-import { DiagnosticsLogger } from "@ceramicnetwork/common";
-import { sha256 } from 'multiformats/hashes/sha2'
-
-const hasher = {}
-hasher[sha256.code] = sha256
-const dagJoseFormat = legacy(dagJose, {hashes: hasher})
-
+import * as ipfsClient from 'ipfs-http-client'
+import { DiagnosticsLogger, IpfsApi } from '@ceramicnetwork/common'
+import { IpfsMode } from './daemon-config.js'
+import { path } from 'go-ipfs'
 
 const IPFS_DHT_SERVER_MODE = process.env.IPFS_DHT_SERVER_MODE === 'true'
 const IPFS_GET_TIMEOUT = 60000 // 1 minute
 
-export async function buildIpfsConnection(network: string, logger: DiagnosticsLogger, ipfsEndpoint?: string): Promise<IpfsApi>{
-    if (ipfsEndpoint) {
-        return ipfsClient({ url: ipfsEndpoint, ipld: { formats: [dagJoseFormat] }, timeout: IPFS_GET_TIMEOUT })
-    } else {
-        const ipfsDaemon = await IpfsDaemon.create({
-            ipfsDhtServerMode: IPFS_DHT_SERVER_MODE,
-            ipfsEnableApi: true,
-            ipfsEnableGateway: true,
-            // Do not setup peer connections in IPFS daemon.
-            // We do it in Ceramic instance itself.
-            useCentralizedPeerDiscovery: false,
-            logger,
-        }).then(daemon => daemon.start())
-        return ipfsDaemon.ipfs
-    }
+const mergeOptions = mergeOpts.bind({ ignoreUndefined: true })
+
+const ipfsHttpModule = {
+  create: (ipfsEndpoint: string) => {
+    return ipfsClient.create({
+      url: ipfsEndpoint,
+      ipld: { codecs: [dagJose] },
+    })
+  },
+}
+export async function buildIpfsConnection(
+  mode: IpfsMode,
+  network: string,
+  logger: DiagnosticsLogger,
+  ipfsEndpoint?: string
+): Promise<IpfsApi> {
+  if (mode == IpfsMode.REMOTE) {
+    return ipfsClient.create({
+      url: ipfsEndpoint,
+      ipld: { codecs: [dagJose] },
+      timeout: IPFS_GET_TIMEOUT,
+    })
+  } else {
+    return createGoIPFS()
+  }
+}
+
+async function createGoIPFS(overrideConfig: Partial<ipfsClient.Options> = {}): Promise<IpfsApi> {
+  const swarmPort = 4011
+  const apiPort = 5011
+  const gatewayPort = 9011
+  const defaultConfig = {
+    ipld: { codecs: [dagJose] },
+    config: {
+      Pubsub: {
+        Enabled: true,
+      },
+      Addresses: {
+        Swarm: [`/ip4/127.0.0.1/tcp/${swarmPort}`],
+        Gateway: `/ip4/127.0.0.1/tcp/${gatewayPort}`,
+        API: `/ip4/127.0.0.1/tcp/${apiPort}`,
+      },
+      Bootstrap: [],
+    },
+  }
+
+  const appliedConfig = mergeOptions(defaultConfig, overrideConfig)
+
+  const ipfsd = await Ctl.createController({
+    ipfsHttpModule: ipfsHttpModule,
+    ipfsBin: path(),
+    ipfsOptions: appliedConfig,
+    disposable: true,
+  })
+  return ipfsd.api
 }

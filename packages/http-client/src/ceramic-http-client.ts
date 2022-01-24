@@ -1,5 +1,5 @@
-import { combineURLs, typeStreamID } from "./utils"
-import { Document } from './document'
+import { combineURLs, typeStreamID } from './utils.js'
+import { Document } from './document.js'
 
 import type { DID } from 'dids'
 import {
@@ -17,10 +17,12 @@ import {
   PinApi,
   UpdateOpts,
   SyncOptions,
-} from '@ceramicnetwork/common';
-import { TileDocument } from "@ceramicnetwork/stream-tile"
-import { Caip10Link } from "@ceramicnetwork/stream-caip10-link"
-import { StreamID, CommitID, StreamRef } from '@ceramicnetwork/streamid';
+  AnchorStatus,
+} from '@ceramicnetwork/common'
+import { TileDocument } from '@ceramicnetwork/stream-tile'
+import { Caip10Link } from '@ceramicnetwork/stream-caip10-link'
+import { StreamID, CommitID, StreamRef } from '@ceramicnetwork/streamid'
+import { RemotePinApi } from './remote-pin-api.js'
 
 const API_PATH = '/api/v0'
 const CERAMIC_HOST = 'http://localhost:7007'
@@ -33,7 +35,11 @@ export const DEFAULT_CLIENT_CONFIG: CeramicClientConfig = {
 }
 
 const DEFAULT_APPLY_COMMIT_OPTS = { anchor: true, publish: true, sync: SyncOptions.PREFER_CACHE }
-const DEFAULT_CREATE_FROM_GENESIS_OPTS = { anchor: true, publish: true, sync: SyncOptions.PREFER_CACHE }
+const DEFAULT_CREATE_FROM_GENESIS_OPTS = {
+  anchor: true,
+  publish: true,
+  sync: SyncOptions.PREFER_CACHE,
+}
 const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE }
 
 /**
@@ -49,7 +55,7 @@ export interface CeramicClientConfig {
 /**
  * Ceramic client implementation
  */
-export default class CeramicClient implements CeramicApi {
+export class CeramicClient implements CeramicApi {
   private readonly _apiUrl: string
   /**
    * _streamCache stores handles to Documents that been handed out. This allows us
@@ -67,7 +73,7 @@ export default class CeramicClient implements CeramicApi {
   private readonly _config: CeramicClientConfig
   public readonly _streamConstructors: Record<number, StreamConstructor<Stream>>
 
-  constructor (apiHost: string = CERAMIC_HOST, config: Partial<CeramicClientConfig> = {}) {
+  constructor(apiHost: string = CERAMIC_HOST, config: Partial<CeramicClientConfig> = {}) {
     this._config = { ...DEFAULT_CLIENT_CONFIG, ...config }
 
     this._apiUrl = combineURLs(apiHost, API_PATH)
@@ -76,11 +82,11 @@ export default class CeramicClient implements CeramicApi {
 
     this.context = { api: this }
 
-    this.pin = this._initPinApi()
+    this.pin = new RemotePinApi(this._apiUrl)
 
     this._streamConstructors = {
       [TileDocument.STREAM_TYPE_ID]: TileDocument,
-      [Caip10Link.STREAM_TYPE_ID]: Caip10Link
+      [Caip10Link.STREAM_TYPE_ID]: Caip10Link,
     }
   }
 
@@ -96,54 +102,35 @@ export default class CeramicClient implements CeramicApi {
     this.context.did = did
   }
 
-  _initPinApi(): PinApi {
-    return {
-      add: async (streamId: StreamID): Promise<void> => {
-        await fetchJson(this._apiUrl + '/pins' + `/${streamId.toString()}`, { method: 'post' })
-      },
-      rm: async (streamId: StreamID): Promise<void> => {
-        await fetchJson(this._apiUrl + '/pins' + `/${streamId.toString()}`, { method: 'delete' })
-      },
-      ls: async (streamId?: StreamID): Promise<AsyncIterable<string>> => {
-        let url = this._apiUrl + '/pins'
-        if (streamId) {
-          url += `/${streamId.toString()}`
-        }
-        const result = await fetchJson(url)
-        const { pinnedStreamIds } = result
-        return {
-          [Symbol.asyncIterator](): AsyncIterator<string, any, undefined> {
-            let index = 0
-            return {
-              next(): Promise<IteratorResult<string>> {
-                if (index === pinnedStreamIds.length) {
-                  return Promise.resolve({ value: null, done: true });
-                }
-                return Promise.resolve({ value: pinnedStreamIds[index++], done: false });
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-
-  async createStreamFromGenesis<T extends Stream>(type: number, genesis: any, opts: CreateOpts = {}): Promise<T> {
-    opts = { ...DEFAULT_CREATE_FROM_GENESIS_OPTS, ...opts };
-    const stream = await Document.createFromGenesis(this._apiUrl, type, genesis, opts, this._config.syncInterval)
+  async createStreamFromGenesis<T extends Stream>(
+    type: number,
+    genesis: any,
+    opts: CreateOpts = {}
+  ): Promise<T> {
+    opts = { ...DEFAULT_CREATE_FROM_GENESIS_OPTS, ...opts }
+    const stream = await Document.createFromGenesis(
+      this._apiUrl,
+      type,
+      genesis,
+      opts,
+      this._config.syncInterval
+    )
 
     const found = this._streamCache.get(stream.id.toString())
     if (found) {
-      if (!StreamUtils.statesEqual(stream.state, found.state)) found.next(stream.state);
-      return this.buildStream<T>(found);
+      if (!StreamUtils.statesEqual(stream.state, found.state)) found.next(stream.state)
+      return this.buildStream<T>(found)
     } else {
-      this._streamCache.set(stream.id.toString(), stream);
-      return this.buildStream<T>(stream);
+      this._streamCache.set(stream.id.toString(), stream)
+      return this.buildStream<T>(stream)
     }
   }
 
-  async loadStream<T extends Stream>(streamId: StreamID | CommitID | string, opts: LoadOpts = {}): Promise<T> {
-    opts = { ...DEFAULT_LOAD_OPTS, ...opts };
+  async loadStream<T extends Stream>(
+    streamId: StreamID | CommitID | string,
+    opts: LoadOpts = {}
+  ): Promise<T> {
+    opts = { ...DEFAULT_LOAD_OPTS, ...opts }
     const streamRef = StreamRef.from(streamId)
     let stream = this._streamCache.get(streamRef.baseID.toString())
     if (stream) {
@@ -155,20 +142,20 @@ export default class CeramicClient implements CeramicApi {
     return this.buildStream<T>(stream)
   }
 
-  async multiQuery(queries: Array<MultiQuery>): Promise<Record<string, Stream>> {
-    const queriesJSON = queries.map(q => {
+  async multiQuery(queries: Array<MultiQuery>, timeout?: number): Promise<Record<string, Stream>> {
+    const queriesJSON = queries.map((q) => {
       return {
+        ...q,
         streamId: typeof q.streamId === 'string' ? q.streamId : q.streamId.toString(),
-        paths: q.paths,
-        atTime: q.atTime
       }
     })
 
     const results = await fetchJson(this._apiUrl + '/multiqueries', {
       method: 'post',
       body: {
-       queries: queriesJSON
-      }
+        queries: queriesJSON,
+        ...{ timeout },
+      },
     })
 
     return Object.entries(results).reduce((acc, e) => {
@@ -185,18 +172,43 @@ export default class CeramicClient implements CeramicApi {
     return Document.loadStreamCommits(effectiveStreamId, this._apiUrl)
   }
 
-  async applyCommit<T extends Stream>(streamId: string | StreamID, commit: CeramicCommit, opts: CreateOpts | UpdateOpts = {}): Promise<T> {
-    opts = { ...DEFAULT_APPLY_COMMIT_OPTS, ...opts };
-    const effectiveStreamId: StreamID = typeStreamID(streamId);
-    const document = await Document.applyCommit(this._apiUrl, effectiveStreamId, commit, opts, this._config.syncInterval);
-    const fromCache = this._streamCache.get(effectiveStreamId.toString());
+  async applyCommit<T extends Stream>(
+    streamId: string | StreamID,
+    commit: CeramicCommit,
+    opts: CreateOpts | UpdateOpts = {}
+  ): Promise<T> {
+    opts = { ...DEFAULT_APPLY_COMMIT_OPTS, ...opts }
+    const effectiveStreamId: StreamID = typeStreamID(streamId)
+    const document = await Document.applyCommit(
+      this._apiUrl,
+      effectiveStreamId,
+      commit,
+      opts,
+      this._config.syncInterval
+    )
+    const fromCache = this._streamCache.get(effectiveStreamId.toString())
     if (fromCache) {
-      fromCache.next(document.state);
-      return this.buildStream<T>(document);
+      fromCache.next(document.state)
+      return this.buildStream<T>(document)
     } else {
-      this._streamCache.set(effectiveStreamId.toString(), document);
-      return this.buildStream<T>(document);
+      this._streamCache.set(effectiveStreamId.toString(), document)
+      return this.buildStream<T>(document)
     }
+  }
+
+  async requestAnchor(streamId: string | StreamID, opts: LoadOpts = {}): Promise<AnchorStatus> {
+    opts = { ...DEFAULT_LOAD_OPTS, ...opts }
+    const { anchorStatus } = await fetchJson(
+      `${this._apiUrl}/streams/${streamId.toString()}/anchor`,
+      {
+        method: 'post',
+        body: {
+          opts,
+        },
+      }
+    )
+
+    return anchorStatus
   }
 
   addStreamHandler<T extends Stream>(streamHandler: StreamHandler<T>): void {
@@ -227,12 +239,12 @@ export default class CeramicClient implements CeramicApi {
     }
 
     // Fetch the chainId from the daemon and cache the result
-    const {supportedChains} = await fetchJson(this._apiUrl + '/node/chains')
+    const { supportedChains } = await fetchJson(this._apiUrl + '/node/chains')
     this._supportedChains = supportedChains
     return supportedChains
   }
 
-  async close (): Promise<void> {
+  async close(): Promise<void> {
     Array.from(this._streamCache).map(([, stream]) => {
       stream.complete()
     })

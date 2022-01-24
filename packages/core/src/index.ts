@@ -1,5 +1,4 @@
-import Ceramic from "./ceramic";
+export { Ceramic } from './ceramic.js'
 
-export * from './store/state-store'
-export * from './ceramic'
-export default Ceramic
+export * from './store/state-store.js'
+export * from './ceramic.js'

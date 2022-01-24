@@ -1,1 +1,1 @@
-export * from "./stream-helpers"
+export * from './stream-helpers.js'
