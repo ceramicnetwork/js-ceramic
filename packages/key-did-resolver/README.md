@@ -40,10 +40,8 @@ import * as IPFS from 'ipfs-core'
 import dagJose from 'dag-jose'
 import {convert} from 'blockcodec-to-ipld-format'
 
-const format = convert(dagJose)
-
 const ipfs = await IPFS.create({
-    ipld: { formats: [format] },
+    ipld: { formats: [dagJose] },
 })
 
 const config = {}
