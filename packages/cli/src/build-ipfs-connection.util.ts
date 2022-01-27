@@ -47,7 +47,7 @@ async function createGoIPFS(overrideConfig: Partial<ipfsClient.Options> = {}): P
         Enabled: true,
       },
       Addresses: {
-        Swarm: [`/ip4/127.0.0.1/tcp/${swarmPort}`],
+        Swarm: [`/ip4/0.0.0.0/tcp/${swarmPort}`],
         Gateway: `/ip4/127.0.0.1/tcp/${gatewayPort}`,
         API: `/ip4/127.0.0.1/tcp/${apiPort}`,
       },
