@@ -11,6 +11,7 @@ import { createCeramic } from './create-ceramic.js'
 import * as dagCBOR from '@ipld/dag-cbor'
 import { CID } from 'multiformats/cid'
 import { Ceramic } from '../ceramic.js'
+import * as fs from 'node:fs/promises'
 
 let ipfs: IpfsApi
 let ceramic: Ceramic
@@ -173,4 +174,20 @@ test('update flow', async () => {
   await ceramic.dispatcher._ipfs.dag.put(content1) // we absolutely definitely need car file support. that's annoying
   await t.update(content1)
   expect(t.content).toEqual(content1)
+})
+
+test('execution flow', async () => {
+  // Upload streamcode
+  const scriptContent = await fs.readFile(new URL('../did-publish-script.js', import.meta.url))
+  const scriptCid = await ceramic.dispatcher._ipfs.dag.put({
+    name: 'fancy script',
+    code: scriptContent,
+  })
+  // Create tile
+  const content0 = { hello: 'world-0' }
+  await ceramic.dispatcher._ipfs.dag.put(content0) // we absolutely definitely need car file support. that's annoying
+  const t = await DidPublishDocument.create(ceramic, content0, { code: scriptCid })
+  const content1 = { hello: 'world-1' }
+  await ceramic.dispatcher._ipfs.dag.put(content1) // we absolutely definitely need car file support. that's annoying
+  await t.update(content1)
 })

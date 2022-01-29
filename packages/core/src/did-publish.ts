@@ -32,10 +32,16 @@ import { sha256 } from 'multiformats/hashes/sha2'
 import { randomString } from '@stablelib/random'
 import { CID } from 'multiformats/cid'
 import cloneDeep from 'lodash.clonedeep'
+import * as fs from 'node:fs/promises'
+import tmp from 'tmp-promise'
 
 const DEFAULT_CREATE_OPTS = { anchor: true, publish: true, sync: SyncOptions.PREFER_CACHE }
 const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE }
 const DEFAULT_UPDATE_OPTS = { anchor: true, publish: true, throwOnInvalidCommit: true }
+
+export interface DidPublishMetaArgs extends TileMetadataArgs {
+  code?: CID
+}
 
 async function _ensureAuthenticated(signer: CeramicSigner) {
   if (signer.did == null) {
@@ -74,7 +80,7 @@ function stringArraysEqual(arr1: Array<string>, arr2: Array<string>) {
 }
 
 function headerFromMetadata(
-  metadata: TileMetadataArgs | StreamMetadata | undefined,
+  metadata: DidPublishMetaArgs | StreamMetadata | undefined,
   genesis: boolean
 ): CommitHeader {
   if (typeof metadata?.schema === 'string') {
@@ -90,6 +96,7 @@ function headerFromMetadata(
     family: metadata?.family,
     schema: metadata?.schema?.toString(),
     tags: metadata?.tags,
+    code: metadata?.code,
   }
 
   // Handle properties that can only be set on the genesis commit.
@@ -118,6 +125,16 @@ function headerFromMetadata(
   return header
 }
 
+async function retrieveCode(context: Context, codeCid: CID): Promise<any> {
+  const record = await context.ipfs.dag.get(codeCid).then((r) => r.value)
+  const codeBytes = record.code
+  const dir = await tmp.dir({ unsafeCleanup: true })
+  const dirUrl = new URL(`file://${dir.path}/`)
+  const codeFile = new URL('./code.mjs', dirUrl)
+  await fs.writeFile(codeFile, codeBytes)
+  return import(codeFile.href)
+}
+
 @StreamStatic<StreamConstructor<DidPublishDocument>>()
 export class DidPublishDocument<T = any> extends Stream {
   static STREAM_TYPE_NAME = 'did-publish'
@@ -132,7 +149,7 @@ export class DidPublishDocument<T = any> extends Stream {
   static async create<T>(
     ceramic: CeramicApi,
     content: T | null | undefined,
-    metadata?: TileMetadataArgs,
+    metadata?: DidPublishMetaArgs,
     opts: CreateOpts = {}
   ): Promise<DidPublishDocument<T>> {
     opts = { ...DEFAULT_CREATE_OPTS, ...opts }
@@ -188,7 +205,7 @@ export class DidPublishDocument<T = any> extends Stream {
 
   async update(
     content: T | null | undefined,
-    metadata?: TileMetadataArgs,
+    metadata?: DidPublishMetaArgs,
     opts: UpdateOpts = {}
   ): Promise<void> {
     opts = { ...DEFAULT_UPDATE_OPTS, ...opts }
@@ -211,7 +228,7 @@ export class DidPublishDocument<T = any> extends Stream {
   async makeCommit(
     signer: CeramicSigner,
     newContent: T | null | undefined,
-    newMetadata?: TileMetadataArgs
+    newMetadata?: DidPublishMetaArgs
   ): Promise<CeramicCommit> {
     const header = headerFromMetadata(newMetadata, false)
 
@@ -238,7 +255,7 @@ export class DidPublishDocument<T = any> extends Stream {
   static async makeGenesis<T>(
     signer: CeramicSigner,
     content: T | null | undefined,
-    metadata?: TileMetadataArgs
+    metadata?: DidPublishMetaArgs
   ): Promise<CeramicCommit> {
     if (!metadata) {
       metadata = {}
@@ -315,7 +332,16 @@ export class DidPublishDocumentHandler implements StreamHandler<DidPublishDocume
     }
 
     const contentCid = payload.data as CID
-    const data = await context.ipfs.dag.get(contentCid).then((r) => r.value)
+    const codeCid = payload?.header?.code
+    let data: any
+    if (codeCid) {
+      // Retrieve code
+      const exec = await retrieveCode(context, codeCid)
+      // Execute
+      data = await exec.genesis(context, payload)
+    } else {
+      data = await context.ipfs.dag.get(contentCid).then((r) => r.value)
+    }
 
     return {
       type: DidPublishDocument.STREAM_TYPE_ID,
@@ -413,7 +439,17 @@ export class DidPublishDocumentHandler implements StreamHandler<DidPublishDocume
 
     nextState.log.push({ cid: commitData.cid, type: CommitType.SIGNED })
 
-    const data = await context.ipfs.dag.get(payload.data as CID).then((r) => r.value)
+    const contentCid = payload.data as CID
+    const codeCid = state.metadata?.code
+    let data: any
+    if (codeCid) {
+      // Retrieve code
+      const exec = await retrieveCode(context, codeCid)
+      // Execute
+      data = await exec.apply(context, state, payload)
+    } else {
+      data = await context.ipfs.dag.get(contentCid).then((r) => r.value)
+    }
 
     const metadata = state.next?.metadata ?? state.metadata
     nextState.next = {
