@@ -3,15 +3,18 @@ import { Caip10LinkHandler } from '@ceramicnetwork/stream-caip10-link-handler'
 import { Stream, StreamHandler } from '@ceramicnetwork/common'
 import { DiagnosticsLogger } from '@ceramicnetwork/common'
 import { StreamType } from '@ceramicnetwork/streamid'
+import { DidPublishDocumentHandler } from './did-publish.js'
 
 type Registry = Map<number, StreamHandler<Stream>>
 
 function defaultHandlers(): Registry {
   const tile = new TileDocumentHandler()
   const caip10Link = new Caip10LinkHandler()
+  const didPublish = new DidPublishDocumentHandler()
   const handlers = new Map<number, StreamHandler<Stream>>()
   handlers.set(tile.type, tile)
   handlers.set(caip10Link.type, caip10Link)
+  handlers.set(didPublish.type, didPublish)
   return handlers
 }
 

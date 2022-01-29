@@ -1,6 +1,7 @@
 const registry: Record<string, number | undefined> = {
   tile: 0,
   'caip10-link': 1,
+  'did-publish': 2
 }
 
 function codeByName(name: string): number {

@@ -30,7 +30,7 @@ export async function createCeramic(
     ...keyDidResolver,
   })
   const did = new DID({ provider, resolver })
-  await ceramic.setDID(did)
+  ceramic.did = did
   await did.authenticate()
 
   return ceramic

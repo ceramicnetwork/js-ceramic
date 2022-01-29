@@ -1,0 +1,107 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`anchor commit 1`] = `
+Object {
+  "anchorProof": Object {
+    "blockNumber": 123456,
+    "blockTimestamp": 1615799679,
+    "chainId": "fakechain:123",
+  },
+  "anchorStatus": 3,
+  "content": Object {
+    "james": "bond",
+  },
+  "metadata": Object {
+    "controllers": Array [
+      "did:key:z6Mki1TKbSB6JbRpaSoUfbdu1Xx8AxBtc5U8VcsGiEjsh7H9",
+    ],
+  },
+  "signature": 2,
+  "type": 2,
+}
+`;
+
+exports[`apply genesis commit 1`] = `
+Object {
+  "anchorStatus": 0,
+  "content": Object {
+    "hello": "world",
+  },
+  "metadata": Object {
+    "controllers": Array [
+      "did:key:z6Mki1TKbSB6JbRpaSoUfbdu1Xx8AxBtc5U8VcsGiEjsh7H9",
+    ],
+  },
+  "signature": 2,
+  "type": 2,
+}
+`;
+
+exports[`apply signed commit 1`] = `
+Object {
+  "anchorStatus": 0,
+  "content": Object {
+    "hello": "world",
+  },
+  "metadata": Object {
+    "controllers": Array [
+      "did:key:z6Mki1TKbSB6JbRpaSoUfbdu1Xx8AxBtc5U8VcsGiEjsh7H9",
+    ],
+  },
+  "next": Object {
+    "content": Object {
+      "james": "bond",
+    },
+    "metadata": Object {
+      "controllers": Array [
+        "did:key:z6Mki1TKbSB6JbRpaSoUfbdu1Xx8AxBtc5U8VcsGiEjsh7H9",
+      ],
+    },
+  },
+  "signature": 2,
+  "type": 2,
+}
+`;
+
+exports[`makeGenesis 1`] = `
+Object {
+  "code": 113,
+  "hash": Uint8Array [
+    18,
+    32,
+    120,
+    81,
+    151,
+    34,
+    157,
+    200,
+    187,
+    17,
+    82,
+    148,
+    93,
+    165,
+    142,
+    35,
+    72,
+    247,
+    226,
+    121,
+    238,
+    222,
+    208,
+    108,
+    194,
+    202,
+    115,
+    109,
+    14,
+    135,
+    152,
+    88,
+    181,
+    1,
+  ],
+  "version": 1,
+}
+`;
