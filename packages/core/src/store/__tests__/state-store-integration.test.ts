@@ -76,7 +76,7 @@ describe('Level data store', () => {
     const realIpfs = await createIPFS()
     const ceramic = await createCeramic(realIpfs)
 
-    const stream = await TileDocument.create(ceramic, { stuff: 1 })
+    const stream = await TileDocument.create(ceramic, { stuff: 1 }, null, { pin: false })
     await anchorUpdate(ceramic, stream)
 
     const pinSpy = jest.spyOn(realIpfs.pin, 'add')
