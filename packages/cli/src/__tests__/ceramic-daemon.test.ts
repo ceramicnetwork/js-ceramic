@@ -58,16 +58,15 @@ describe('Ceramic interop: core <> http-client', () => {
   let client: CeramicClient
 
   beforeAll(async () => {
-    tmpFolder = await tmp.dir({ unsafeCleanup: true })
     ipfs = await createIPFS()
   })
 
   afterAll(async () => {
     await ipfs.stop()
-    await tmpFolder.cleanup()
   })
 
   beforeEach(async () => {
+    tmpFolder = await tmp.dir({ unsafeCleanup: true })
     core = await makeCeramicCore(ipfs, tmpFolder.path)
     const port = await getPort()
     const apiUrl = 'http://localhost:' + port
@@ -83,6 +82,7 @@ describe('Ceramic interop: core <> http-client', () => {
     await client.close()
     await daemon.close()
     await core.close()
+    await tmpFolder.cleanup()
   })
 
   /**
@@ -483,8 +483,8 @@ describe('Ceramic interop: core <> http-client', () => {
     let docA, docB
 
     beforeEach(async () => {
-      docB = await TileDocument.create(core, { foo: 'bar' })
-      docA = await TileDocument.create(core, { foo: 'baz' })
+      docB = await TileDocument.create(core, { foo: 'bar' }, null, { pin: false })
+      docA = await TileDocument.create(core, { foo: 'baz' }, null, { pin: false })
     })
 
     const pinLs = async (streamId?: StreamID): Promise<Array<any>> => {
