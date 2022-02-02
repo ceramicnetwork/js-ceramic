@@ -27,7 +27,7 @@ const ioTestCases: IoTestCase[] = [
   // - signature can't be verified
   {
     testName: 'unable to validate when wallet address has never interacted with the blockchain',
-    error: new Error('Fetch response error'),
+    error: new Error('Fetch response erroraa'),
   },
 
   // Validation not possible
@@ -83,7 +83,7 @@ let publicKey: string
 let validProof: LinkProof
 let invalidSignatureProof: LinkProof
 let invalidChainIdProof: LinkProof
-let responseResult: any
+let responseResult: () => Promise<any>
 
 // cache Date.now() to restore it after all tests
 const dateNow = Date.now
@@ -92,7 +92,7 @@ jest.unstable_mockModule('cross-fetch', () => {
   const originalModule = jest.requireActual('cross-fetch') as any
   return {
     ...originalModule,
-    default: async () => responseResult,
+    default: () => responseResult(),
   }
 })
 
@@ -139,13 +139,12 @@ describe('Blockchain: Tezos', () => {
       for (const { message, proof } of proofTestCases) {
         test(testName || message, async () => {
           const { validateLink } = await import('../../index.js')
-          // mockFetch.mockReset()
-          // // mock axios response or error
+          // mock axios response or error
           if (pubkeyObject) {
-            responseResult = await pubkeyObject(publicKey)
+            responseResult = async () => pubkeyObject(publicKey)
           }
           if (error) {
-            responseResult = Promise.reject(error)
+            responseResult = async () => Promise.reject(error)
           }
           // wait for test with the proof from the test case
           await expect(validateLink(proof())).resolves.toMatchSnapshot()
