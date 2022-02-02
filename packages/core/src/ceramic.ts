@@ -73,6 +73,7 @@ const DEFAULT_APPLY_COMMIT_OPTS = { anchor: true, publish: true, sync: SyncOptio
 const DEFAULT_CREATE_FROM_GENESIS_OPTS = {
   anchor: true,
   publish: true,
+  pin: true,
   sync: SyncOptions.PREFER_CACHE,
 }
 const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE }

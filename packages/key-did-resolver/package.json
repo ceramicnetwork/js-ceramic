@@ -38,7 +38,6 @@
     "varint": "^6.0.0"
   },
   "devDependencies": {
-    "@types/node": "^17.0.5",
     "@types/varint": "^6.0.0",
     "did-resolver": "^3.1.5"
   },

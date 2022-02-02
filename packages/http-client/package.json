@@ -37,13 +37,12 @@
     "@ceramicnetwork/stream-caip10-link": "^2.0.0-alpha.1",
     "@ceramicnetwork/stream-tile": "^2.0.0-alpha.1",
     "@ceramicnetwork/streamid": "^2.0.0-alpha.1",
-    "query-string": "7.0.1",
-    "rxjs": "^7.4.0"
+    "query-string": "^7.1.0",
+    "rxjs": "^7.5.2"
   },
   "devDependencies": {
-    "@types/node": "^17.0.5",
     "dids": "^3.0.0-alpha.4",
-    "multiformats": "^9.5.4"
+    "multiformats": "^9.5.8"
   },
   "gitHead": "34eeee25597b0a60def72906c26d3afd6230aaf1"
 }

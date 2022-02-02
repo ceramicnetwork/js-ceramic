@@ -10,7 +10,7 @@ import {
 import { CID } from 'multiformats/cid'
 import { decode as decodeMultiHash } from 'multiformats/hashes/digest'
 import { RunningState } from '../state-management/running-state.js'
-import { createIPFS } from './ipfs-util.js'
+import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { createCeramic } from './create-ceramic.js'
 import { Ceramic } from '../ceramic.js'
 import { anchorUpdate } from '../state-management/__tests__/anchor-update.js'
@@ -449,9 +449,7 @@ test('handles basic conflict', async () => {
       streamState1,
       CommitID.make(streamId, tipInvalidUpdate)
     )
-  ).rejects.toThrow(
-    `Requested commit CID ${tipInvalidUpdate.toString()} not found in the log for stream ${streamId.toString()}`
-  )
+  ).rejects.toThrow(/Commit rejected by conflict resolution/)
 
   // Ensure that stateManager.atCommit does not mutate the passed in state object
   expect(JSON.stringify(streamState1.state)).toEqual(JSON.stringify(streamState1Original))

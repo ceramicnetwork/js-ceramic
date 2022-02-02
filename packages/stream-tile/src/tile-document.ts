@@ -67,7 +67,12 @@ export interface TileMetadataArgs {
   forbidControllerChange?: boolean
 }
 
-const DEFAULT_CREATE_OPTS = { anchor: true, publish: true, sync: SyncOptions.PREFER_CACHE }
+const DEFAULT_CREATE_OPTS = {
+  anchor: true,
+  publish: true,
+  pin: true,
+  sync: SyncOptions.PREFER_CACHE,
+}
 const DEFAULT_LOAD_OPTS = { sync: SyncOptions.PREFER_CACHE }
 const DEFAULT_UPDATE_OPTS = { anchor: true, publish: true, throwOnInvalidCommit: true }
 

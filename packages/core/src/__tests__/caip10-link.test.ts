@@ -4,7 +4,7 @@ import { Caip10Link } from '@ceramicnetwork/stream-caip10-link'
 import { AnchorStatus, StreamUtils, IpfsApi } from '@ceramicnetwork/common'
 import MockDate from 'mockdate'
 import { Ceramic, CeramicConfig } from '../ceramic.js'
-import { createIPFS } from './ipfs-util.js'
+import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { anchorUpdate } from '../state-management/__tests__/anchor-update.js'
 
 const DID_USED = 'did:3:bafysdfwefwe'

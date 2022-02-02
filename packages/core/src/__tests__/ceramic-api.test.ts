@@ -7,7 +7,7 @@ import { AnchorStatus, StreamUtils, IpfsApi } from '@ceramicnetwork/common'
 import { StreamID, CommitID } from '@ceramicnetwork/streamid'
 import * as u8a from 'uint8arrays'
 import cloneDeep from 'lodash.clonedeep'
-import { createIPFS } from './ipfs-util.js'
+import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { anchorUpdate } from '../state-management/__tests__/anchor-update.js'
 import * as ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import * as KeyDidResolver from 'key-did-resolver'
@@ -140,6 +140,29 @@ describe('Ceramic API', () => {
       const streamV2 = await TileDocument.load(ceramic, streamV2Id)
       expect(streamV2.content).toEqual({ test: 'abcde' })
       expect(streamV2.state.anchorStatus).toEqual(AnchorStatus.NOT_REQUESTED)
+    })
+
+    it('Throw on rejected update', async () => {
+      const contentOg = { test: 123 }
+      const contentRejected = { test: 'rejected' }
+
+      const streamOg = await TileDocument.create<any>(ceramic, contentOg)
+
+      // Create an anchor commit that the original stream handle won't know about
+      const streamCopy = await TileDocument.load(ceramic, streamOg.id)
+      await anchorUpdate(ceramic, streamCopy)
+      expect(streamCopy.state.log.length).toEqual(2)
+
+      // Do an update via the stale stream handle.  Its view of the log is out of date so its update
+      // should be rejected by conflict resolution
+      expect(streamOg.state.log.length).toEqual(1)
+      await expect(streamOg.update(contentRejected)).rejects.toThrow(
+        /Commit rejected by conflict resolution/
+      )
+      expect(streamOg.state.log.length).toEqual(1)
+
+      await streamOg.sync()
+      expect(streamOg.state.log.length).toEqual(2)
     })
 
     it('cannot create stream with invalid schema', async () => {

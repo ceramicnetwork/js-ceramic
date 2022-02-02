@@ -6,11 +6,12 @@ import { CeramicDaemon } from '../ceramic-daemon.js'
 import { AnchorStatus, fetchJson, Stream, StreamUtils, IpfsApi } from '@ceramicnetwork/common'
 import { TileDocumentHandler } from '@ceramicnetwork/stream-tile-handler'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
-import { filter, take } from 'rxjs/operators'
+import { firstValueFrom } from 'rxjs'
+import { filter } from 'rxjs/operators'
 
-import { CommitID, StreamID } from '@ceramicnetwork/streamid';
+import { CommitID, StreamID } from '@ceramicnetwork/streamid'
 import getPort from 'get-port'
-import { createIPFS } from './create-ipfs.js'
+import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { makeDID } from './make-did.js'
 import { DaemonConfig } from '../daemon-config.js'
 
@@ -57,16 +58,15 @@ describe('Ceramic interop: core <> http-client', () => {
   let client: CeramicClient
 
   beforeAll(async () => {
-    tmpFolder = await tmp.dir({ unsafeCleanup: true })
     ipfs = await createIPFS()
   })
 
   afterAll(async () => {
     await ipfs.stop()
-    await tmpFolder.cleanup()
   })
 
   beforeEach(async () => {
+    tmpFolder = await tmp.dir({ unsafeCleanup: true })
     core = await makeCeramicCore(ipfs, tmpFolder.path)
     const port = await getPort()
     const apiUrl = 'http://localhost:' + port
@@ -82,6 +82,7 @@ describe('Ceramic interop: core <> http-client', () => {
     await client.close()
     await daemon.close()
     await core.close()
+    await tmpFolder.cleanup()
   })
 
   /**
@@ -91,16 +92,15 @@ describe('Ceramic interop: core <> http-client', () => {
    * @param doc
    */
   const anchorDoc = async (doc: Stream): Promise<void> => {
-    const changeHandle = doc
-      .pipe(
+    const changeHandle = firstValueFrom(
+      doc.pipe(
         filter(
           (state) =>
             state.anchorStatus === AnchorStatus.ANCHORED ||
             state.anchorStatus === AnchorStatus.FAILED
-        ),
-        take(1)
+        )
       )
-      .toPromise()
+    )
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     await daemon.ceramic.context.anchorService.anchor()
@@ -248,6 +248,29 @@ describe('Ceramic interop: core <> http-client', () => {
     expect(doc1.content).toEqual(doc2.content)
     expect(doc1.content).toEqual(finalContent)
     expect(StreamUtils.serializeState(doc1.state)).toEqual(StreamUtils.serializeState(doc2.state))
+  })
+
+  it('Throw on rejected update', async () => {
+    const contentOg = { test: 123 }
+    const contentRejected = { test: 'rejected' }
+
+    const streamOg = await TileDocument.create<any>(client, contentOg)
+
+    // Create an anchor commit that the original stream handle won't know about
+    const streamCopy = await TileDocument.load(core, streamOg.id)
+    await anchorDoc(streamCopy)
+    expect(streamCopy.state.log.length).toEqual(2)
+
+    // Do an update via the stale stream handle.  Its view of the log is out of date so its update
+    // should be rejected by conflict resolution
+    expect(streamOg.state.log.length).toEqual(1)
+    await expect(streamOg.update(contentRejected)).rejects.toThrow(
+      /Commit rejected by conflict resolution/
+    )
+    expect(streamOg.state.log.length).toEqual(1)
+
+    await streamOg.sync()
+    expect(streamOg.state.log.length).toEqual(2)
   })
 
   it('loads commits correctly', async () => {
@@ -460,8 +483,8 @@ describe('Ceramic interop: core <> http-client', () => {
     let docA, docB
 
     beforeEach(async () => {
-      docB = await TileDocument.create(core, { foo: 'bar' })
-      docA = await TileDocument.create(core, { foo: 'baz' })
+      docB = await TileDocument.create(core, { foo: 'bar' }, null, { pin: false })
+      docA = await TileDocument.create(core, { foo: 'baz' }, null, { pin: false })
     })
 
     const pinLs = async (streamId?: StreamID): Promise<Array<any>> => {

@@ -12,7 +12,7 @@ import { PinStore } from '../pin-store.js'
 import { PinStoreFactory } from '../pin-store-factory.js'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { CID } from 'multiformats/cid'
-import { createIPFS } from '../../__tests__/ipfs-util.js'
+import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
 import { createCeramic } from '../../__tests__/create-ceramic.js'
 import { anchorUpdate } from '../../state-management/__tests__/anchor-update.js'
 import { RunningState } from '../../state-management/running-state.js'
@@ -76,7 +76,7 @@ describe('Level data store', () => {
     const realIpfs = await createIPFS()
     const ceramic = await createCeramic(realIpfs)
 
-    const stream = await TileDocument.create(ceramic, { stuff: 1 })
+    const stream = await TileDocument.create(ceramic, { stuff: 1 }, null, { pin: false })
     await anchorUpdate(ceramic, stream)
 
     const pinSpy = jest.spyOn(realIpfs.pin, 'add')

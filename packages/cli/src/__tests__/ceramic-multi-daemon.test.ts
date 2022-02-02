@@ -7,7 +7,7 @@ import { IpfsApi, StreamState, SyncOptions } from '@ceramicnetwork/common'
 import { TileDocumentHandler } from '@ceramicnetwork/stream-tile-handler'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import getPort from 'get-port'
-import { createIPFS, swarmConnect } from './create-ipfs'
+import { createIPFS, swarmConnect } from '@ceramicnetwork/ipfs-daemon'
 import { makeDID } from './make-did'
 import { DaemonConfig } from '../daemon-config'
 
@@ -61,7 +61,7 @@ describe('Ceramic interop between multiple daemons and http clients', () => {
 
   beforeEach(async () => {
     core1 = await makeCeramicCore(ipfs1, tmpFolder1.path)
-    core2 = await makeCeramicCore(ipfs2, tmpFolder1.path)
+    core2 = await makeCeramicCore(ipfs2, tmpFolder2.path)
     const port1 = await getPort()
     const port2 = await getPort()
     daemon1 = new CeramicDaemon(core1, DaemonConfig.fromObject({ 'http-api': { port: port1 } }))

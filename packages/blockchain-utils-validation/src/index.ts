@@ -6,6 +6,7 @@ import { handler as eosio } from './blockchains/eosio.js'
 import { handler as cosmos } from './blockchains/cosmos.js'
 import { handler as near } from './blockchains/near.js'
 import { handler as tezos } from './blockchains/tezos.js'
+import { handler as solana } from './blockchains/solana.js'
 import { AccountId } from 'caip'
 import { normalizeAccountId } from '@ceramicnetwork/common'
 
@@ -17,6 +18,7 @@ const handlers = {
   [cosmos.namespace]: cosmos,
   [near.namespace]: near,
   [tezos.namespace]: tezos,
+  [solana.namespace]: solana,
 }
 
 const findDID = (did: string): string | undefined => did.match(/(did:\S+:\S+)/)?.[0]

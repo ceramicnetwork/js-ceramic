@@ -26,8 +26,8 @@
     "ipfs-daemon": "./bin/ipfs-daemon.js"
   },
   "scripts": {
-    "build": "exit 0",
-    "start": "../../node_modules/.bin/ts-node src/bin/ipfs-daemon.ts",
+    "build": "../../node_modules/.bin/tsc -p tsconfig.json",
+    "start": "./node_modules/.bin/tsm src/bin/ipfs-daemon.ts",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
     "lint": "../../node_modules/.bin/eslint ./src --ext .js,.jsx,.ts,.tsx",
@@ -37,22 +37,20 @@
   "dependencies": {
     "@ceramicnetwork/common": "^2.0.0-alpha.1",
     "@ceramicnetwork/ipfs-topology": "^2.0.0-alpha.1",
-    "aws-sdk": "^2.1049.0",
-    "blockstore-datastore-adapter": "^2.0.3",
     "dag-jose": "^1.0.0",
-    "datastore-fs": "^6.0.1",
-    "datastore-level": "^7.0.1",
-    "datastore-s3": "^8.0.0",
     "express": "^4.17.2",
+    "get-port": "^6.0.0",
+    "go-ipfs": "^0.11.0",
     "ipfs-core": "~0.13.0",
-    "ipfs-core-types": "~0.9.0",
-    "ipfs-http-gateway": "~0.8.0",
-    "ipfs-http-server": "~0.10.0",
-    "ipfs-repo": "^13.0.7"
+    "ipfs-http-client": "^55.0.0",
+    "ipfsd-ctl": "^10.0.5",
+    "merge-options": "^3.0.4",
+    "tmp-promise": "^3.0.3"
   },
   "devDependencies": {
     "@types/express": "^4.17.13",
     "@types/jest": "^27.0.3",
-    "@types/node": "^17.0.5"
+    "@types/node": "^17.0.5",
+    "tsm": "^2.2.1"
   }
 }

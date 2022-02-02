@@ -1,5 +1,4 @@
 {
-  "testEnvironment": "./environment-with-abortsignal.js",
   "resolver": "jest-resolver-enhanced",
   "testMatch": ["**/?(*.)+(spec|test).[jt]s?(x)"],
   "extensionsToTreatAsEsm": [".ts"],

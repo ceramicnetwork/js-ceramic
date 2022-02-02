@@ -1,6 +1,4 @@
 import fetch from 'cross-fetch'
-// TODO: remove with esm upgrade
-import AbortController from 'abort-controller'
 
 const DEFAULT_FETCH_TIMEOUT = 60 * 1000 * 3 // 3 minutes
 interface FetchOpts {

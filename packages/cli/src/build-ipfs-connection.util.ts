@@ -1,4 +1,3 @@
-import type { Options } from 'ipfs-core'
 import mergeOpts from 'merge-options'
 import * as Ctl from 'ipfsd-ctl'
 import dagJose from 'dag-jose'
@@ -37,7 +36,7 @@ export async function buildIpfsConnection(
   }
 }
 
-async function createGoIPFS(overrideConfig: Partial<Options> = {}): Promise<IpfsApi> {
+async function createGoIPFS(overrideConfig: Partial<ipfsClient.Options> = {}): Promise<IpfsApi> {
   const swarmPort = 4011
   const apiPort = 5011
   const gatewayPort = 9011
@@ -48,11 +47,18 @@ async function createGoIPFS(overrideConfig: Partial<Options> = {}): Promise<Ipfs
         Enabled: true,
       },
       Addresses: {
-        Swarm: [`/ip4/127.0.0.1/tcp/${swarmPort}`],
+        Swarm: [`/ip4/0.0.0.0/tcp/${swarmPort}`],
         Gateway: `/ip4/127.0.0.1/tcp/${gatewayPort}`,
         API: `/ip4/127.0.0.1/tcp/${apiPort}`,
       },
-      Bootstrap: [],
+      Bootstrap: [
+        '/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN',
+        '/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa',
+        '/dnsaddr/bootstrap.libp2p.io/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb',
+        '/dnsaddr/bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt',
+        '/ip4/104.131.131.82/tcp/4001/p2p/QmaCpDMGvV2BGHeYERUEnRQAwe3N8SzbUtfsmvsqQLuvuJ',
+        '/ip4/104.131.131.82/udp/4001/quic/p2p/QmaCpDMGvV2BGHeYERUEnRQAwe3N8SzbUtfsmvsqQLuvuJ',
+      ],
     },
   }
 
