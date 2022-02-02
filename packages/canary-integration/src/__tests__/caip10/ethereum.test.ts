@@ -1,13 +1,13 @@
+import { jest } from '@jest/globals'
 import ganache from 'ganache-core'
 import { encodeRpcMessage, EthereumAuthProvider } from '@ceramicnetwork/blockchain-utils-linking'
 import * as sigUtils from 'eth-sig-util'
 import { ContractFactory, Contract } from '@ethersproject/contracts'
 import * as providers from '@ethersproject/providers'
-import { CeramicApi, IpfsApi } from '@ceramicnetwork/common'
+import type { CeramicApi, IpfsApi } from '@ceramicnetwork/common'
 import { createIPFS } from '@ceramicnetwork/ipfs-daemon'
-import { createCeramic } from '../../create-ceramic'
 import { Caip10Link } from '@ceramicnetwork/stream-caip10-link'
-import { happyPath, clearDid } from './caip-flows'
+import { happyPath, clearDid } from './caip-flows.js'
 import { AccountId } from 'caip'
 
 const CONTRACT_WALLET_ABI = [
@@ -55,22 +55,21 @@ const send = (provider: any, data: any): Promise<any> =>
 
 const provider: any = ganache.provider(GANACHE_CONF)
 
-// TODO(NET-1107) ESM Mocking
-// const lazyProvider = () => provider // Required for the Jest mock below
-// jest.mock('@ethersproject/providers', () => {
-//   const originalModule = jest.requireActual('@ethersproject/providers')
-//   const getNetwork = (): any => {
-//     return {
-//       _defaultProvider: (): any => {
-//         return new originalModule.Web3Provider(lazyProvider())
-//       },
-//     }
-//   }
-//   return {
-//     ...originalModule,
-//     getNetwork,
-//   }
-// })
+const lazyProvider = () => provider // Required for the Jest mock below
+jest.unstable_mockModule('@ethersproject/providers', () => {
+  const originalModule = jest.requireActual('@ethersproject/providers') as any
+  const getNetwork = (): any => {
+    return {
+      _defaultProvider: (): any => {
+        return new originalModule.Web3Provider(lazyProvider())
+      },
+    }
+  }
+  return {
+    ...originalModule,
+    getNetwork,
+  }
+})
 let addresses: string[]
 let contractAddress: string
 let ceramic: CeramicApi
@@ -105,6 +104,7 @@ beforeEach(async () => {
 
 beforeAll(async () => {
   ipfs = await createIPFS()
+  const { createCeramic } = await import('../../create-ceramic.js')
   ceramic = await createCeramic(ipfs)
 }, 120000)
 
@@ -123,7 +123,7 @@ describe('externally-owned account', () => {
     const accountId = await authProvider.accountId()
     const wrongAccountId = new AccountId({
       address: addresses[1],
-      chainId: accountId.chainId
+      chainId: accountId.chainId,
     })
     const caip = await Caip10Link.fromAccount(ceramic, wrongAccountId)
     await expect(caip.setDid(ceramic.did, authProvider)).rejects.toThrow(
@@ -137,8 +137,7 @@ describe('externally-owned account', () => {
 })
 
 describe('contract account', () => {
-  // TODO(NET-1107) ESM Mocking
-  test.skip('happy scenario', async () => {
+  test('happy scenario', async () => {
     const contract = new Contract(
       contractAddress,
       CONTRACT_WALLET_ABI,
@@ -155,8 +154,7 @@ describe('contract account', () => {
     await happyPath(ceramic, authProvider)
   }, 120000)
 
-  // TODO(NET-1107) ESM Mocking
-  test.skip('wrong proof', async () => {
+  test('wrong proof', async () => {
     const contract = new Contract(
       contractAddress,
       CONTRACT_WALLET_ABI,
@@ -171,8 +169,11 @@ describe('contract account', () => {
     await send(provider, encodeRpcMessage('eth_sendTransaction', [tx]))
     const authProvider = new EthereumAuthProvider(provider, contractAddress)
     const accountId = await authProvider.accountId()
-    accountId.address = addresses[1]
-    const caip = await Caip10Link.fromAccount(ceramic, accountId)
+    const wrongAccountId = new AccountId({
+      address: addresses[1],
+      chainId: accountId.chainId,
+    })
+    const caip = await Caip10Link.fromAccount(ceramic, wrongAccountId)
     await expect(caip.setDid(ceramic.did, authProvider)).rejects.toThrow(
       /Address doesn't match stream controller/
     )
