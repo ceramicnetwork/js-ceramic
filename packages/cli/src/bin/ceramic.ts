@@ -1,6 +1,8 @@
-import program from 'commander'
+import commander from 'commander'
 
 import { CeramicCliUtils } from '../ceramic-cli-utils.js'
+
+const program = commander.program
 
 program
   .command('daemon')
