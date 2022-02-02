@@ -1,6 +1,5 @@
 import os from 'os'
 import path from 'path'
-import pc from 'picocolors'
 import { randomBytes } from '@stablelib/random'
 import * as u8a from 'uint8arrays'
 
@@ -192,7 +191,6 @@ export class CeramicCliUtils {
 
       console.log(doc.id)
       console.log(JSON.stringify(doc.content, null, 2))
-      depreciationNotice()
     })
   }
 
@@ -230,7 +228,6 @@ export class CeramicCliUtils {
       await doc.update(parsedContent, metadata)
 
       console.log(JSON.stringify(doc.content, null, 2))
-      depreciationNotice()
     })
   }
 
@@ -242,7 +239,6 @@ export class CeramicCliUtils {
     await CeramicCliUtils._runWithCeramicClient(async (ceramic: CeramicApi) => {
       const stream = await TileDocument.load(ceramic, streamRef)
       console.log(JSON.stringify(stream.content, null, 2))
-      depreciationNotice()
     })
   }
 
@@ -254,7 +250,6 @@ export class CeramicCliUtils {
     await CeramicCliUtils._runWithCeramicClient(async (ceramic: CeramicApi) => {
       const stream = await ceramic.loadStream(streamRef)
       console.log(JSON.stringify(StreamUtils.serializeState(stream.state), null, 2))
-      depreciationNotice()
     })
   }
 
@@ -268,7 +263,6 @@ export class CeramicCliUtils {
     await CeramicCliUtils._runWithCeramicClient(async (ceramic: CeramicApi) => {
       const doc = await TileDocument.load(ceramic, id)
       console.log(JSON.stringify(doc.content, null, 2))
-      depreciationNotice()
       doc.subscribe(() => {
         console.log('--- document changed ---')
         console.log(JSON.stringify(doc.content, null, 2))
@@ -287,7 +281,6 @@ export class CeramicCliUtils {
       const stream = await ceramic.loadStream(id)
       const commits = stream.allCommitIds.map((v) => v.toString())
       console.log(JSON.stringify(commits, null, 2))
-      depreciationNotice()
     })
   }
 
@@ -358,7 +351,6 @@ export class CeramicCliUtils {
     await CeramicCliUtils._runWithCeramicClient(async (ceramic: CeramicApi) => {
       const result = await ceramic.pin.add(id)
       console.log(JSON.stringify(result, null, 2))
-      depreciationNotice()
     })
   }
 
@@ -372,7 +364,6 @@ export class CeramicCliUtils {
     await CeramicCliUtils._runWithCeramicClient(async (ceramic: CeramicApi) => {
       const result = await ceramic.pin.rm(id)
       console.log(JSON.stringify(result, null, 2))
-      depreciationNotice()
     })
   }
 
@@ -454,7 +445,6 @@ export class CeramicCliUtils {
     const cliConfig = await this._loadCliConfig()
 
     console.log(JSON.stringify(cliConfig, null, 2))
-    depreciationNotice()
   }
 
   /**
@@ -477,7 +467,6 @@ export class CeramicCliUtils {
 
     console.log(`Ceramic CLI configuration ${variable} set to ${value}`)
     console.log(JSON.stringify(cliConfig))
-    depreciationNotice()
   }
 
   /**
@@ -492,7 +481,6 @@ export class CeramicCliUtils {
 
     console.log(`Ceramic CLI configuration ${variable} unset`)
     console.log(JSON.stringify(cliConfig, null, 2))
-    depreciationNotice()
   }
 
   /**
@@ -594,13 +582,4 @@ export class CeramicCliUtils {
     }
     return controllers.includes(',') ? controllers.split(',') : [controllers]
   }
-}
-
-const depreciationNotice = () => {
-  console.log(
-    `${pc.red(pc.bold('This command has been deprecated.'))}
-Please use the upgraded Glaze CLI instead. 
-Please test with the new CLI before reporting any problems. 
-${pc.green('npm i -g @glazed/cli')}`
-  )
 }

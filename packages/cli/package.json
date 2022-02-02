@@ -59,7 +59,6 @@
     "levelup": "^5.1.1",
     "morgan": "^1.10.0",
     "nft-did-resolver": "^2.0.0-alpha.1",
-    "picocolors": "^1.0.0",
     "pkh-did-resolver": "^1.0.0-alpha.1",
     "reflect-metadata": "^0.1.13",
     "s3leveldown": "^2.2.2",
