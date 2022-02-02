@@ -1,0 +1,31 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Blockchain: Tezos validateLink invalid chain reference 1`] = `null`;
+
+exports[`Blockchain: Tezos validateLink invalid proof 1`] = `null`;
+
+exports[`Blockchain: Tezos validateLink unable to validate when wallet address has never interacted with the blockchain 1`] = `null`;
+
+exports[`Blockchain: Tezos validateLink unable to validate when wallet address has never interacted with the blockchain 2`] = `null`;
+
+exports[`Blockchain: Tezos validateLink unable to validate when wallet address has never interacted with the blockchain 3`] = `null`;
+
+exports[`Blockchain: Tezos validateLink unable to validate when wallet address has not been published to the blockchain 1`] = `null`;
+
+exports[`Blockchain: Tezos validateLink unable to validate when wallet address has not been published to the blockchain 2`] = `null`;
+
+exports[`Blockchain: Tezos validateLink unable to validate when wallet address has not been published to the blockchain 3`] = `null`;
+
+exports[`Blockchain: Tezos validateLink valid proof 1`] = `
+Object {
+  "account": "tezos:NetXdQprcVkpaWU:tz3Lfm6CyfSTZ7EgMckptZZGiPxzs9GK59At",
+  "did": "did:3:bafysdfwefwe",
+  "message": "Link this account to your identity
+
+did:3:bafysdfwefwe 
+Timestamp: 666",
+  "signature": "p2sigNYcqkNERyCnBb7PKwmuZqeXBZx4m2c8YKcR282iWN9iafSdcTrJ4VxQdANg1oo7nGteZ7uGEDiy1ZpAqCCb71xdy9MptM",
+  "timestamp": 666,
+  "version": 2,
+}
+`;
