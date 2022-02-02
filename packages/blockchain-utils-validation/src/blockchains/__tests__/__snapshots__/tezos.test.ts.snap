@@ -2,11 +2,7 @@
 
 exports[`Blockchain: Tezos validateLink invalid chain reference 1`] = `null`;
 
-exports[`Blockchain: Tezos validateLink invalid chain reference 2`] = `null`;
-
 exports[`Blockchain: Tezos validateLink invalid proof 1`] = `null`;
-
-exports[`Blockchain: Tezos validateLink invalid proof 2`] = `null`;
 
 exports[`Blockchain: Tezos validateLink unable to validate when wallet address has never interacted with the blockchain 1`] = `null`;
 
@@ -19,12 +15,6 @@ exports[`Blockchain: Tezos validateLink unable to validate when wallet address h
 exports[`Blockchain: Tezos validateLink unable to validate when wallet address has not been published to the blockchain 2`] = `null`;
 
 exports[`Blockchain: Tezos validateLink unable to validate when wallet address has not been published to the blockchain 3`] = `null`;
-
-exports[`Blockchain: Tezos validateLink unable to validate when wallet address has not been published to the blockchain 4`] = `null`;
-
-exports[`Blockchain: Tezos validateLink unable to validate when wallet address has not been published to the blockchain 5`] = `null`;
-
-exports[`Blockchain: Tezos validateLink unable to validate when wallet address has not been published to the blockchain 6`] = `null`;
 
 exports[`Blockchain: Tezos validateLink valid proof 1`] = `
 Object {
@@ -39,5 +29,3 @@ Timestamp: 666",
   "version": 2,
 }
 `;
-
-exports[`Blockchain: Tezos validateLink valid proof 2`] = `null`;
