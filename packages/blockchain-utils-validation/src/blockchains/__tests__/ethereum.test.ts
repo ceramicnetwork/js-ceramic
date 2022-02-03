@@ -1,12 +1,12 @@
+import { jest } from '@jest/globals'
 import { AccountId } from 'caip'
 import ganache from 'ganache-core'
-import { handler as ethereum } from '../ethereum.js'
 import * as sigUtils from 'eth-sig-util'
 import { ContractFactory, Contract } from '@ethersproject/contracts'
 import * as providers from '@ethersproject/providers'
 import * as linking from '@ceramicnetwork/blockchain-utils-linking'
 import { proofs } from './fixtures.js'
-import { LinkProof } from '@ceramicnetwork/blockchain-utils-linking'
+import type { LinkProof } from '@ceramicnetwork/blockchain-utils-linking'
 
 const CONTRACT_WALLET_ABI = [
   {
@@ -54,22 +54,21 @@ const send = (provider: any, data: any): Promise<any> =>
   )
 const provider: any = ganache.provider(GANACHE_CONF)
 
-// TODO(NET-1107) ESM Mocking
-// const lazyProvider = () => provider // Required for the Jest mock below
-// jest.mock('@ethersproject/providers', () => {
-//   const originalModule = jest.requireActual('@ethersproject/providers')
-//   const getNetwork = (): any => {
-//     return {
-//       _defaultProvider: (): any => {
-//         return new originalModule.Web3Provider(lazyProvider())
-//       },
-//     }
-//   }
-//   return {
-//     ...originalModule,
-//     getNetwork,
-//   }
-// })
+const lazyProvider = () => provider // Required for the Jest mock below
+jest.unstable_mockModule('@ethersproject/providers', () => {
+  const originalModule = jest.requireActual('@ethersproject/providers') as any
+  const getNetwork = (): any => {
+    return {
+      _defaultProvider: (): any => {
+        return new originalModule.Web3Provider(lazyProvider())
+      },
+    }
+  }
+  return {
+    ...originalModule,
+    getNetwork,
+  }
+})
 
 let addresses: string[], contractAddress: string
 
@@ -98,6 +97,7 @@ beforeAll(async () => {
 })
 
 test('invalid ethereumEOA proof should return null', async () => {
+  const { handler: ethereum } = await import('../ethereum.js')
   // wrong address
   const account = new AccountId({ address: addresses[1], chainId: 'eip155:1' })
   const invalidProof = { account } as unknown as LinkProof
@@ -114,12 +114,14 @@ test('invalid ethereumEOA proof should return null', async () => {
 })
 
 test('validateLink: valid ethereumEOA proof should return proof', async () => {
+  const { handler: ethereum } = await import('../ethereum.js')
   const authProvider = new linking.ethereum.EthereumAuthProvider(provider, addresses[0])
   const proof = await authProvider.createLink(testDid)
   await expect(ethereum.validateLink(proof)).resolves.toEqual(proof)
 })
 
 test('validateLink: valid ethereumEOA proof with legacy account should return proof', async () => {
+  const { handler: ethereum } = await import('../ethereum.js')
   const authProvider = new linking.ethereum.EthereumAuthProvider(provider, addresses[0])
   const proof = await authProvider.createLink(testDid)
   const proofCopy = { ...proof }
@@ -129,6 +131,7 @@ test('validateLink: valid ethereumEOA proof with legacy account should return pr
 })
 
 test('validate v0 and v1 proofs', async () => {
+  const { handler: ethereum } = await import('../ethereum.js')
   expect(await ethereum.validateLink(proofs.v0.valid as unknown as LinkProof)).toMatchSnapshot()
   await expect(ethereum.validateLink(proofs.v0.invalid as unknown as LinkProof)).rejects.toThrow(
     'invalid point'
@@ -137,8 +140,8 @@ test('validate v0 and v1 proofs', async () => {
   expect(await ethereum.validateLink(proofs.v1.invalid as unknown as LinkProof)).toEqual(null)
 })
 
-// TODO(NET-1107) ESM Mocking
-test.skip('invalid erc1271 proof should return null', async () => {
+test('invalid erc1271 proof should return null', async () => {
+  const { handler: ethereum } = await import('../ethereum.js')
   // the contract wallet we deployed should just return false by default
   // when trying to validate signature
   const account = new AccountId({
@@ -149,8 +152,8 @@ test.skip('invalid erc1271 proof should return null', async () => {
   await expect(ethereum.validateLink(erc1271Proof)).rejects.toThrow()
 })
 
-// TODO(NET-1107) ESM Mocking
-test.skip('validateLink: valid erc1271 proof should return proof', async () => {
+test('validateLink: valid erc1271 proof should return proof', async () => {
+  const { handler: ethereum } = await import('../ethereum.js')
   // tell the contract wallet contract to return valid signature instead
   const contract = new Contract(
     contractAddress,
