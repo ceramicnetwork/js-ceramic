@@ -153,7 +153,7 @@ test('invalid erc1271 proof should return null', async () => {
 })
 
 test('validateLink: valid erc1271 proof should return proof', async () => {
-  const ethereum = await import('../ethereum.js').then((m) => m.handler)
+  const { handler: ethereum } = await import('../ethereum.js')
   // tell the contract wallet contract to return valid signature instead
   const contract = new Contract(
     contractAddress,
