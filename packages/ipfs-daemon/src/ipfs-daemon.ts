@@ -213,6 +213,10 @@ export class IpfsDaemon {
 
   async start(): Promise<IpfsDaemon> {
     await this.ipfs.start()
+    // The following line replaces the Gossipsub `seenCache` created with the default 30 second timeout with one that
+    // uses a configurable (2 minute default) timeout.
+    // This *must* be done after the line above because the `libp2p` field is added to the IPFS object only after it has
+    // been started.
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     this.ipfs.libp2p.pubsub.seenCache = new TimeCache({validity: this.configuration.ipfsPubsubTtlSec})
