@@ -217,6 +217,7 @@ export class IpfsDaemon {
     // uses a configurable (2 minute default) timeout.
     // This *must* be done after the line above because the `libp2p` field is added to the IPFS object only after it has
     // been started.
+    // Ref: https://github.com/ipfs/js-ipfs/blob/master/packages/ipfs-core/src/components/index.js#L200
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     this.ipfs.libp2p.pubsub.seenCache = new TimeCache({validity: this.configuration.ipfsPubsubTtlSec})
