@@ -256,7 +256,7 @@ PUBLICATION, Digital Signature Standard (DSS)], https://nvlpubs.nist.gov/nistpub
 [Compact representation of an elliptic curve point, Network Working Group, A.J. Jivsov, March 15, 2014],
 https://tools.ietf.org/id/draft-jivsov-ecc-compact-05.html
 
-## Usage
+## Additional Usage Notes
 
 See the [ceramic developer site](https://developers.ceramic.network/) for more details about how to use this package.
 

@@ -35,6 +35,7 @@
   "dependencies": {
     "@stablelib/ed25519": "^1.0.2",
     "bigint-mod-arith": "^3.0.0",
+    "jest": "^27.4.0",
     "multiformats": "^9.5.2",
     "uint8arrays": "^3.0.0",
     "varint": "^6.0.0"
