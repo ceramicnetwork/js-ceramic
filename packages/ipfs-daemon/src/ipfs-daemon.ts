@@ -213,6 +213,7 @@ export class IpfsDaemon {
 
   async start(): Promise<IpfsDaemon> {
     await this.ipfs.start()
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     this.ipfs.libp2p.pubsub.seenCache = new TimeCache({validity: this.configuration.ipfsPubsubTtlSec})
 
