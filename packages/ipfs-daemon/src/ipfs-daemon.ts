@@ -110,9 +110,7 @@ export class IpfsDaemon {
         props.ipfsEnablePubsub ?? fromBooleanInput(process.env.IPFS_ENABLE_PUBSUB, true),
       // Set default gossipsub cache TTL to 2 minutes since the default 30 second TTL has been ineffective in preventing
       // pubsub floods
-      ipfsPubsubTtlSec:
-          props.ipfsPubsubTtlSec ||
-          (process.env.IPFS_PUBSUB_TTL_SEC != null ? parseInt(process.env.IPFS_PUBSUB_TTL_SEC) : 120),
+      ipfsPubsubTtlSec: props.ipfsPubsubTtlSec || Number(process.env.IPFS_PUBSUB_TTL_SEC) || 120,
       ipfsPubsubTopics:
         props.ipfsPubsubTopics ??
         (process.env.IPFS_PUBSUB_TOPICS ? process.env.IPFS_PUBSUB_TOPICS.split(' ') : []),
@@ -122,9 +120,7 @@ export class IpfsDaemon {
       useCentralizedPeerDiscovery: useCentralizedPeerDiscovery,
       healthcheckEnabled:
         props.healthcheckEnabled ?? fromBooleanInput(process.env.HEALTHCHECK_ENABLED, false),
-      healthcheckPort:
-        props.healthcheckPort ||
-        (process.env.HEALTHCHECK_PORT != null ? parseInt(process.env.HEALTHCHECK_PORT) : 8011),
+      healthcheckPort: props.healthcheckPort || Number(process.env.HEALTHCHECK_PORT) || 8011,
       logger: props.logger ?? new DiagnosticsLogger(LogLevel.important, false),
     }
 
