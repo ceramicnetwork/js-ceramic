@@ -7,8 +7,12 @@ import { DiagnosticsLogger, LogLevel, IpfsApi } from '@ceramicnetwork/common'
 import { convert } from 'blockcodec-to-ipld-format'
 import { HealthcheckServer } from './healthcheck-server'
 import { createRepo, StorageBackend } from './create-repo'
+import TimeCache from 'time-cache'
 import path from 'path'
 import os from 'os'
+
+// Set gossipsub cache TTL to 2 minutes since the current 30 second TTL has been ineffective in preventing pubsub floods
+const GOSSIPSUB_CACHE_TTL = 120
 
 const format = convert(dagJose)
 
@@ -210,6 +214,8 @@ export class IpfsDaemon {
 
   async start(): Promise<IpfsDaemon> {
     await this.ipfs.start()
+    // @ts-ignore
+    this.ipfs.libp2p.pubsub.seenCache = new TimeCache({validity: GOSSIPSUB_CACHE_TTL})
 
     if (this.api) {
       await this.api.start()
