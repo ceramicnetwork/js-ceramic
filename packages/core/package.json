@@ -67,6 +67,7 @@
     "ipfs-core": "~0.7.1",
     "key-did-provider-ed25519": "^1.1.0",
     "key-did-resolver": "^1.4.5-rc.0",
+    "libp2p-mplex": "0.10.6",
     "mockdate": "^3.0.5",
     "tmp-promise": "^2.0.2"
   },
