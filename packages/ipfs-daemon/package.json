@@ -42,7 +42,8 @@
     "ipfs-core": "~0.7.1",
     "ipfs-core-types": "~0.5.1",
     "ipfs-http-gateway": "~0.4.2",
-    "ipfs-http-server": "~0.5.1"
+    "ipfs-http-server": "~0.5.1",
+    "libp2p-mplex": "0.10.6"
   },
   "devDependencies": {
     "@types/express": "^4.17.8",
