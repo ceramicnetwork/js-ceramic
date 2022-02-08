@@ -8,6 +8,7 @@ import type { TileDocument } from '@ceramicnetwork/stream-tile'
 import { Dispatcher } from './dispatcher.js'
 import type { StreamID } from '@ceramicnetwork/streamid'
 import type { CID } from 'multiformats/cid'
+import { fromString, toString } from 'uint8arrays'
 
 /**
  * Various utility functions
@@ -137,4 +138,8 @@ export const promiseTimeout = (
     setTimeout(() => reject(new Error(timeoutErrorMsg)), ms)
   })
   return Promise.race([timeout, promise])
+}
+
+export function base64urlToJSON(s: string): Record<string, any> {
+  return JSON.parse(toString(fromString(s, 'base64url'))) as Record<string, any>
 }

@@ -1,8 +1,9 @@
 import { StateStore } from './state-store.js'
 import { PinningBackend, StreamUtils } from '@ceramicnetwork/common'
-import type { CID } from 'multiformats/cid'
+import { CID } from 'multiformats/cid'
 import { StreamID } from '@ceramicnetwork/streamid'
 import { RunningState } from '../state-management/running-state.js'
+import { base64urlToJSON } from '../utils.js'
 
 /**
  * Encapsulates logic for pinning streams
@@ -98,6 +99,12 @@ export class PinStore {
         }
       }
       if (StreamUtils.isSignedCommit(commit)) {
+        const decodedProtectedHeader = base64urlToJSON(commit.signatures[0].protected)
+        if (decodedProtectedHeader.cap) {
+          const capIPFSUri = decodedProtectedHeader.cap
+          const capCID = CID.parse(capIPFSUri.replace('ipfs://', ''))
+          points.push(capCID)
+        }
         points.push(commit.link)
       }
     }

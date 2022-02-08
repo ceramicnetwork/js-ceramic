@@ -23,6 +23,7 @@ import lru from 'lru_map'
 import { PubsubKeepalive } from './pubsub/pubsub-keepalive.js'
 import { PubsubRateLimit } from './pubsub/pubsub-ratelimit.js'
 import { TaskQueue } from './pubsub/task-queue.js'
+import { base64urlToJSON } from './utils.js'
 
 const IPFS_GET_RETRIES = 3
 const IPFS_GET_TIMEOUT = 30000 // 30 seconds per retry, 3 retries = 90 seconds total timeout
@@ -91,7 +92,23 @@ export class Dispatcher {
   async storeCommit(data: any, streamId?: StreamID): Promise<CID> {
     try {
       if (StreamUtils.isSignedCommitContainer(data)) {
-        const { jws, linkedBlock } = data
+        const { jws, linkedBlock, cacaoBlock } = data
+        // if cacao is present, put it into ipfs dag
+        if (cacaoBlock) {
+          const decodedProtectedHeader = base64urlToJSON(data.jws.signatures[0].protected)
+          const capIPFSUri = decodedProtectedHeader.cap
+          const capCID = CID.parse(capIPFSUri.replace('ipfs://', ''))
+          const capFormat = await this._ipfs.codecs.getCodec(capCID.code).then((f) => f.name)
+          const capMhType = await this._ipfs.hashers
+            .getHasher(capCID.multihash.code)
+            .then((mh) => mh.name)
+          await this._ipfs.block.put(cacaoBlock, {
+            format: capFormat,
+            mhtype: capMhType,
+            version: capCID.version,
+          })
+        }
+
         // put the JWS into the ipfs dag
         const cid = await this._ipfs.dag.put(jws, { storeCodec: 'dag-jose', hashAlg: 'sha2-256' })
         // put the payload into the ipfs dag

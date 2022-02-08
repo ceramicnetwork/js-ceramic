@@ -11,7 +11,8 @@
     "clean": "npm run clean:deps && npm run clean:coverage && npm run clean:build-artifacts",
     "clean:deps": "rm -rf ./node_modules && rm -rf ./packages/*/node_modules",
     "clean:coverage": "rm -rf ./packages/*/coverage",
-    "clean:build-artifacts": "rm -rf ./packages/*/lib"
+    "clean:build-artifacts": "rm -rf ./packages/*/lib",
+    "clean:install:build": "npm run clean && npm install && npm run build"
   },
   "devDependencies": {
     "@babel/core": "^7.16.7",
