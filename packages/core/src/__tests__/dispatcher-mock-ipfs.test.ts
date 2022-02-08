@@ -57,12 +57,14 @@ describe('Dispatcher with mock ipfs', () => {
       stateStore,
     } as unknown as PinStore
     repository.setDeps({ pinStore } as unknown as RepositoryDependencies)
+
     dispatcher = new Dispatcher(
       ipfs as unknown as IpfsApi,
       TOPIC,
       repository,
       loggerProvider.getDiagnosticsLogger(),
       loggerProvider.makeServiceLogger('pubsub'),
+      new AbortController().signal,
       10
     )
   })
@@ -211,7 +213,9 @@ describe('Dispatcher with mock ipfs', () => {
     // Store the query ID sent when the stream is registered so we can use it as the response ID later
     const publishArgs = ipfs.pubsub.publish.mock.calls[0]
     expect(publishArgs[0]).toEqual(TOPIC)
-    const queryMessageSent = JSON.parse(new TextDecoder().decode(publishArgs[1] as unknown as Uint8Array))
+    const queryMessageSent = JSON.parse(
+      new TextDecoder().decode(publishArgs[1] as unknown as Uint8Array)
+    )
     const queryID = queryMessageSent.id
 
     // Handle UPDATE message
