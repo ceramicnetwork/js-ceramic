@@ -35,7 +35,7 @@ const generateStringOfSize = (size): string => {
 }
 
 describe('Ceramic API', () => {
-  jest.setTimeout(60000)
+  jest.setTimeout(1000 * 60 * 2) // 2 minutes
   let ipfs: IpfsApi
 
   const stringMapSchema = {
