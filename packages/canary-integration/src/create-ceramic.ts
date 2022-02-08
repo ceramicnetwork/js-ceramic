@@ -6,7 +6,7 @@ import tmp from 'tmp-promise'
 import { Ed25519Provider } from 'key-did-provider-ed25519'
 import * as ThreeIdResolver from '@ceramicnetwork/3id-did-resolver'
 import * as KeyDidResolver from 'key-did-resolver'
-import PkhDidResolver from 'pkh-did-resolver'
+import * as PkhDidResolver from 'pkh-did-resolver'
 import { Resolver } from 'did-resolver'
 import { DID } from 'dids'
 
@@ -25,7 +25,7 @@ export async function createCeramic(
   const seed = sha256.hash(uint8arrays.fromString(appliedConfig.seed || 'SEED'))
   const provider = new Ed25519Provider(seed)
   const keyDidResolver = KeyDidResolver.getResolver()
-  const pkhDidResolver = PkhDidResolver.default.getResolver()
+  const pkhDidResolver = PkhDidResolver.getResolver()
   const threeIdResolver = ThreeIdResolver.getResolver(ceramic)
   const resolver = new Resolver({
     ...threeIdResolver,
