@@ -7,6 +7,7 @@ import { DiagnosticsLogger, LogLevel, IpfsApi } from '@ceramicnetwork/common'
 import { convert } from 'blockcodec-to-ipld-format'
 import { HealthcheckServer } from './healthcheck-server'
 import { createRepo, StorageBackend } from './create-repo'
+import TimeCache from 'time-cache'
 import path from 'path'
 import os from 'os'
 
@@ -34,6 +35,7 @@ export interface Configuration {
   ipfsEnableGateway: boolean
   ipfsDhtServerMode: boolean
   ipfsEnablePubsub: boolean
+  ipfsPubsubTtlSec: number
   ipfsPubsubTopics: string[]
   ipfsBootstrap: string[]
   ceramicNetwork: string
@@ -106,6 +108,9 @@ export class IpfsDaemon {
 
       ipfsEnablePubsub:
         props.ipfsEnablePubsub ?? fromBooleanInput(process.env.IPFS_ENABLE_PUBSUB, true),
+      // Set default gossipsub cache TTL to 2 minutes since the default 30 second TTL has been ineffective in preventing
+      // pubsub floods
+      ipfsPubsubTtlSec: props.ipfsPubsubTtlSec || Number(process.env.IPFS_PUBSUB_TTL_SEC) || 120,
       ipfsPubsubTopics:
         props.ipfsPubsubTopics ??
         (process.env.IPFS_PUBSUB_TOPICS ? process.env.IPFS_PUBSUB_TOPICS.split(' ') : []),
@@ -115,9 +120,7 @@ export class IpfsDaemon {
       useCentralizedPeerDiscovery: useCentralizedPeerDiscovery,
       healthcheckEnabled:
         props.healthcheckEnabled ?? fromBooleanInput(process.env.HEALTHCHECK_ENABLED, false),
-      healthcheckPort:
-        props.healthcheckPort ||
-        (process.env.HEALTHCHECK_PORT != null ? parseInt(process.env.HEALTHCHECK_PORT) : 8011),
+      healthcheckPort: props.healthcheckPort || Number(process.env.HEALTHCHECK_PORT) || 8011,
       logger: props.logger ?? new DiagnosticsLogger(LogLevel.important, false),
     }
 
@@ -210,6 +213,14 @@ export class IpfsDaemon {
 
   async start(): Promise<IpfsDaemon> {
     await this.ipfs.start()
+    // The following line replaces the Gossipsub `seenCache` created with the default 30 second timeout with one that
+    // uses a configurable (2 minute default) timeout.
+    // This *must* be done after the line above because the `libp2p` field is added to the IPFS object only after it has
+    // been started.
+    // Ref: https://github.com/ipfs/js-ipfs/blob/master/packages/ipfs-core/src/components/index.js#L200
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    this.ipfs.libp2p.pubsub.seenCache = new TimeCache({validity: this.configuration.ipfsPubsubTtlSec})
 
     if (this.api) {
       await this.api.start()
