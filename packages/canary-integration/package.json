@@ -22,7 +22,7 @@
     "@ceramicnetwork/stream-caip10-link": "^2.0.0-alpha.1",
     "@ceramicnetwork/stream-tile": "^2.0.0-alpha.1",
     "@truffle/hdwallet-provider": "^2.0.0",
-    "ceramic-cacao": "^0.0.12",
+    "ceramic-cacao": "^0.0.13",
     "dids": "^3.0.0-alpha.4",
     "ethers": "^5.5.4",
     "ganache-core": "^2.13.2",
