@@ -9,7 +9,7 @@
     "publish:latest": "./node_modules/.bin/lerna publish --allow-branch main --create-release github --no-verify-access --yes",
     "lint": "./node_modules/.bin/lerna run lint",
     "clean": "npm run clean:deps && npm run clean:coverage && npm run clean:build-artifacts",
-    "clean:deps": "rimraf ./packages/*/node_modules",
+    "clean:deps": "rimraf ./node_modules && rimraf ./packages/*/node_modules",
     "clean:coverage": "rimraf ./packages/*/coverage",
     "clean:build-artifacts": "rimraf ./packages/*/lib"
   },
