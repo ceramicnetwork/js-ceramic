@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.4.10-rc.3](/compare/@ceramicnetwork/canary-integration@1.4.10-rc.1...@ceramicnetwork/canary-integration@1.4.10-rc.3) (2022-02-09)
+
+**Note:** Version bump only for package @ceramicnetwork/canary-integration
+
+
+
+
+
 ## [1.4.10-rc.1](/compare/@ceramicnetwork/canary-integration@1.4.10-rc.0...@ceramicnetwork/canary-integration@1.4.10-rc.1) (2022-02-09)
 
 **Note:** Version bump only for package @ceramicnetwork/canary-integration
