@@ -26,10 +26,10 @@
   },
   "scripts": {
     "test": "node --experimental-vm-modules ../../node_modules/jest/bin/jest.js --silent --coverage --runInBand",
-    "build": "../../node_modules/.bin/tsc -p tsconfig.json",
+    "build": "npx tsc -p tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
-    "lint": "../../node_modules/.bin/eslint ./src --ext .js,.jsx,.ts,.tsx",
+    "lint": "npx eslint ./src --ext .js,.jsx,.ts,.tsx",
     "clean": "rimraf ./lib"
   },
   "dependencies": {

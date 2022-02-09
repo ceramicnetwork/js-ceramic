@@ -24,11 +24,11 @@
     ".": "./lib/index.js"
   },
   "scripts": {
-    "test": "../../node_modules/.bin/jest --coverage",
-    "build": "../../node_modules/.bin/tsc --project tsconfig.json",
+    "test": "npx jest --coverage",
+    "build": "npx tsc --project tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
-    "lint": "../../node_modules/.bin/eslint ./src --ext .js,.jsx,.ts,.tsx",
+    "lint": "npx eslint ./src --ext .js,.jsx,.ts,.tsx",
     "clean": "rimraf ./lib"
   },
   "dependencies": {
