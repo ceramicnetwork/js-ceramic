@@ -29,7 +29,7 @@
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
     "lint": "../../node_modules/.bin/eslint ./src --ext .js,.jsx,.ts,.tsx",
-    "clean": "rm -rf ./lib",
+    "clean": "rimraf ./lib",
     "test": "../../node_modules/.bin/jest --silent --coverage --passWithNoTests"
   },
   "dependencies": {
