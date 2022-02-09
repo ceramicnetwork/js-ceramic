@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.11.0-rc.1](/compare/@ceramicnetwork/cli@1.11.0-rc.0...@ceramicnetwork/cli@1.11.0-rc.1) (2022-02-09)
+
+
+### Reverts
+
+* Revert "Add Deprecation notice to all functions that have been moved to the Glaze CLI (#1985)" 20ada0a, closes #1985
+
+
+
+
+
 # [1.11.0-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/cli@1.10.5...@ceramicnetwork/cli@1.11.0-rc.0) (2022-01-12)
 
 
