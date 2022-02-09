@@ -3,7 +3,7 @@
 import * as u8a from 'uint8arrays'
 import * as bigintModArith from 'bigint-mod-arith'
 
-import * as nist_weierstrass_common from './nist_weierstrass_common'
+import * as nist_weierstrass_common from './nist_weierstrass_common.js'
 
 /**
   * x,y point as a BigInt (requires at least ES2020)
