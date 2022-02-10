@@ -7,7 +7,7 @@
     "test": "node --experimental-vm-modules ../../node_modules/jest/bin/jest.js --verbose --coverage --runInBand",
     "build": "npx tsc -p tsconfig.json",
     "lint": "npx eslint ./src --ext .js,.jsx,.ts,.tsx",
-    "clean": "rimraf ./lib"
+    "clean": "npx rimraf ./lib"
   },
   "license": "(Apache-2.0 OR MIT)",
   "directories": {

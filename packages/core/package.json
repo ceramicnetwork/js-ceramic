@@ -31,7 +31,7 @@
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
     "lint": "npx eslint ./src --ext .js,.jsx,.ts,.tsx",
-    "clean": "rimraf ./lib"
+    "clean": "npx rimraf ./lib"
   },
   "dependencies": {
     "@ceramicnetwork/common": "^2.0.0-alpha.1",

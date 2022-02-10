@@ -22,7 +22,7 @@
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
     "lint": "npx eslint ./src --ext .js,.jsx,.ts,.tsx",
-    "clean": "rimraf ./lib"
+    "clean": "npx rimraf ./lib"
   },
   "author": "Sergey Ukustov <sergey@ukstv.me>",
   "license": "(Apache-2.0 OR MIT)",

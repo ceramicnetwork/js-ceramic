@@ -25,7 +25,7 @@
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
     "lint": "npx eslint ./src --ext .js,.jsx,.ts,.tsx",
-    "clean": "rimraf ./lib"
+    "clean": "npx rimraf ./lib"
   },
   "author": "Zach Ferland <zachferland@gmail.com>",
   "license": "(Apache-2.0 OR MIT)",
