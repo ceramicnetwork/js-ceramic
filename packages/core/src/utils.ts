@@ -102,19 +102,17 @@ export class Utils {
   }
 
   /**
-   * Returns ipfs block PutOptions given a CID instance
-   * @param cid the CID to get the block PutOptions for
+   * Puts a block on IPFS
+   * @param cid the CID of the block to put
+   * @param block bytes array of block to put
+   * @param ipfsApi the IPFS Api instance to use
    */
-  static async getIPFSBlockPutOptionsFromCID(cid: CID | string, ipfsApi: IpfsApi) {
+  static async putIPFSBlock(cid: CID | string, block: Uint8Array, ipfsApi: IpfsApi) {
     if (typeof cid === 'string') cid = CID.parse(cid.replace('ipfs://', ''))
     const format = await ipfsApi.codecs.getCodec(cid.code).then((f) => f.name)
     const mhtype = await ipfsApi.hashers.getHasher(cid.multihash.code).then((mh) => mh.name)
     const version = cid.version
-    return {
-      format,
-      mhtype,
-      version,
-    }
+    await ipfsApi.block.put(block, { format, mhtype, version })
   }
 }
 

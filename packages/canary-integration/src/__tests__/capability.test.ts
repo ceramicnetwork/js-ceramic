@@ -29,17 +29,11 @@ test('verifies capability with signed commit', async () => {
   )
   const didPkh = new DID({ resolver: PkhDidResolver.getResolver() })
   // Create a determinstic tiledocument owned by the user
-  const deterministicDocument = await TileDocument.deterministic(
-    ceramic,
-    {
-      deterministic: true,
-      family: 'testCapabilities',
-      controllers: [`did:pkh:eip155:1:${wallet.address}`],
-    },
-    {
-      asDID: didPkh,
-    }
-  )
+  const deterministicDocument = await TileDocument.deterministic(ceramic, {
+    deterministic: true,
+    family: 'testCapabilities',
+    controllers: [`did:pkh:eip155:1:${wallet.address}`],
+  })
 
   const streamId = deterministicDocument.id
 
@@ -88,16 +82,10 @@ test('does not allow updating if cacao issuer is not document controller', async
   )
   const didPkh = new DID({ resolver: PkhDidResolver.getResolver() })
   // Create a determinstic tiledocument owned by the user
-  const deterministicDocument = await TileDocument.deterministic(
-    ceramic,
-    {
-      deterministic: true,
-      family: 'testCapabilities',
-    },
-    {
-      asDID: didPkh,
-    }
-  )
+  const deterministicDocument = await TileDocument.deterministic(ceramic, {
+    deterministic: true,
+    family: 'testCapabilities',
+  })
 
   const streamId = deterministicDocument.id
 
@@ -136,7 +124,7 @@ test('does not allow updating if cacao issuer is not document controller', async
       anchor: false,
       publish: false,
     })
-  ).rejects.toThrow()
+  ).rejects.toThrow(/invalid_jws/)
 }, 30000)
 
 test('fails to verify capability with invalid resource', async () => {
@@ -146,17 +134,11 @@ test('fails to verify capability with invalid resource', async () => {
   )
   const didPkh = new DID({ resolver: PkhDidResolver.getResolver() })
   // Create a determinstic tiledocument owned by the user
-  const deterministicDocument = await TileDocument.deterministic(
-    ceramic,
-    {
-      deterministic: true,
-      family: 'testCapabilities',
-      controllers: [`did:pkh:eip155:1:${wallet.address}`],
-    },
-    {
-      asDID: didPkh,
-    }
-  )
+  const deterministicDocument = await TileDocument.deterministic(ceramic, {
+    deterministic: true,
+    family: 'testCapabilities',
+    controllers: [`did:pkh:eip155:1:${wallet.address}`],
+  })
 
   // Create did:key for the dApp
   const seed = new Uint8Array([
