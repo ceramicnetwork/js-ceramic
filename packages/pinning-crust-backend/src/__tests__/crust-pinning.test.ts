@@ -1,14 +1,12 @@
 import { CrustPinningBackend, EmptySeedError } from '../index'
-import axios from "axios"
 import * as papi from '@polkadot/api'
 import * as pkr from '@polkadot/keyring'
 import { CID } from 'multiformats/cid'
+import * as cf from 'cross-fetch'
 
-jest.mock("axios");
+jest.mock('cross-fetch')
 jest.mock('@polkadot/api')
 jest.mock('@polkadot/keyring')
-
-const mockedAxios = axios as jest.Mocked<typeof axios>;
 
 const api = {
   tx: {
@@ -117,8 +115,11 @@ describe('#ls', () => {
 
   test('return list of cids pinned', async () => {
     const pinning = new CrustPinningBackend(connectionString)
-    await pinning.open()
-    mockedAxios.post.mockImplementation(() => Promise.resolve({ status: 200, data: { data: { substrate_extrinsic: cidsArray } } }));
+    await pinning.open();
+    (cf.default as jest.Mock).mockReturnValueOnce(Promise.resolve({
+      status: 200,
+      json: () => Promise.resolve({ data: { substrate_extrinsic: cidsArray } }),
+    }))
     const result = await pinning.ls()
     cids.forEach((cid) => {
       expect(result[cid.toString()]).toEqual([pinning.id])

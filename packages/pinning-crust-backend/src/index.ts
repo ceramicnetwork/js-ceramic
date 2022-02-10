@@ -3,7 +3,7 @@ import type { CidList, PinningBackend, PinningInfo } from '@ceramicnetwork/commo
 import { Keyring } from '@polkadot/keyring'
 import { ApiPromise, WsProvider } from '@polkadot/api'
 import { typesBundleForPolkadot } from '@crustio/type-definitions'
-import axios, { AxiosResponse } from 'axios'
+import fetch from 'cross-fetch'
 import * as sha256 from '@stablelib/sha256'
 import { toString } from 'uint8arrays/to-string'
 import { KeyringPair } from '@polkadot/keyring/types';
@@ -130,9 +130,15 @@ export class CrustPinningBackend implements PinningBackend {
     const tryTimes = 3
     for (let i = 0; i < tryTimes; i++) {
       try {
-        const res: AxiosResponse = await axios.post('https://crust.indexer.gc.subsquid.io/v4/graphql/', data)
+        const res = await fetch('https://crust.indexer.gc.subsquid.io/v4/graphql/', {
+          method: "post",
+          headers: {
+            'Content-Type': 'text/plain'
+          },
+          body: data
+        });
         if (res && res.status == 200) {
-          const resobj: ListRes = JSON.parse(JSON.stringify(res.data))
+          const resobj: ListRes = JSON.parse(JSON.stringify(await res.json()))
           resobj.data.substrate_extrinsic.forEach(element => {
             result[this.hex2a(element.args)] = [this.id]
           })

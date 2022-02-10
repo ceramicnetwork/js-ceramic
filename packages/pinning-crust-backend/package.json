@@ -37,7 +37,7 @@
     "@polkadot/keyring": "^6.2.1",
     "@polkadot/types": "^4.6.2",
     "@stablelib/sha256": "^1.0.1",
-    "axios": "^0.25.0",
+    "cross-fetch": "^3.1.4",
     "uint8arrays": "^3.0.0"
   },
   "devDependencies": {
