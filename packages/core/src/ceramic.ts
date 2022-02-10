@@ -206,7 +206,6 @@ export class Ceramic implements CeramicApi {
       anchorService: modules.anchorService,
       ipfs: modules.ipfs,
       loggerProvider: modules.loggerProvider,
-      shutdownSignal: this._shutdownController.signal,
     }
     if (!this._gateway) {
       this.context.anchorService.ceramic = this

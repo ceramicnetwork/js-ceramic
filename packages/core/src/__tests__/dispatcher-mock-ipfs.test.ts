@@ -57,7 +57,6 @@ describe('Dispatcher with mock ipfs', () => {
       stateStore,
     } as unknown as PinStore
     repository.setDeps({ pinStore } as unknown as RepositoryDependencies)
-
     dispatcher = new Dispatcher(
       ipfs as unknown as IpfsApi,
       TOPIC,
