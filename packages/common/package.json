@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/common",
-  "version": "2.0.0-alpha.1",
+  "version": "2.0.0-alpha.2",
   "description": "Ceramic common types and utilities",
   "keywords": [
     "ceramic",
@@ -36,14 +36,14 @@
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/streamid": "^2.0.0-alpha.1",
+    "@ceramicnetwork/streamid": "^2.0.0-alpha.2",
     "caip": "~1.0.0",
     "cross-fetch": "^3.1.4",
     "flat": "^5.0.2",
-    "overjet-logger": "^1.0.6",
     "lodash.clonedeep": "^4.5.0",
     "logfmt": "^1.3.2",
     "multiformats": "^9.5.8",
+    "overjet-logger": "^1.0.6",
     "rxjs": "^7.5.2",
     "uint8arrays": "^3.0.0"
   },

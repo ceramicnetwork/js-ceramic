@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.0.0-alpha.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/canary-integration@2.0.0-alpha.1...@ceramicnetwork/canary-integration@2.0.0-alpha.2) (2022-02-10)
+
+
+### Features
+
+* Cache chainId requests to providers ([#2003](https://github.com/ceramicnetwork/js-ceramic/issues/2003)) ([892d6af](https://github.com/ceramicnetwork/js-ceramic/commit/892d6af6708b32690e9eb0ae5dab6cfad3f822f6))
+* Restore mocked ethereum tests ([#2026](https://github.com/ceramicnetwork/js-ceramic/issues/2026)) ([019ec64](https://github.com/ceramicnetwork/js-ceramic/commit/019ec6427dcc81126a96e01cf8ed88abcb3afa4c))
+* Restore tezos tests that require mocks ([#2027](https://github.com/ceramicnetwork/js-ceramic/issues/2027)) ([8ab174d](https://github.com/ceramicnetwork/js-ceramic/commit/8ab174d201cb9387d3896438545ffc5f5ab31fad))
+
+
+
+
+
 # [2.0.0-alpha.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/canary-integration@1.4.3-rc.10...@ceramicnetwork/canary-integration@2.0.0-alpha.1) (2022-01-14)
 
 

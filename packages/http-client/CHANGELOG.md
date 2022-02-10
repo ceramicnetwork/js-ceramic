@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.0.0-alpha.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/http-client@2.0.0-alpha.1...@ceramicnetwork/http-client@2.0.0-alpha.2) (2022-02-10)
+
+
+### Bug Fixes
+
+* **cli,http-client:** Properly serialize timeout for multiquery requests through the http client ([#1899](https://github.com/ceramicnetwork/js-ceramic/issues/1899)) ([cb968a5](https://github.com/ceramicnetwork/js-ceramic/commit/cb968a53b9cbad825c8c01828fac52eb52752323))
+
+
+
+
+
 # [2.0.0-alpha.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/http-client@1.5.1-rc.4...@ceramicnetwork/http-client@2.0.0-alpha.1) (2022-01-14)
 
 

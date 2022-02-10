@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.0.0-alpha.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/blockchain-utils-linking@2.0.0-alpha.1...@ceramicnetwork/blockchain-utils-linking@2.0.0-alpha.2) (2022-02-10)
+
+
+### Features
+
+* Cache chainId requests to providers ([#2003](https://github.com/ceramicnetwork/js-ceramic/issues/2003)) ([892d6af](https://github.com/ceramicnetwork/js-ceramic/commit/892d6af6708b32690e9eb0ae5dab6cfad3f822f6))
+
+
+
+
+
 # [2.0.0-alpha.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/blockchain-utils-linking@1.5.1-rc.2...@ceramicnetwork/blockchain-utils-linking@2.0.0-alpha.1) (2022-01-14)
 
 

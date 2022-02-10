@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/3id-did-resolver",
-  "version": "2.0.0-alpha.1",
+  "version": "2.0.0-alpha.2",
   "description": "DID Resolver for the 3ID method",
   "keywords": [
     "Ceramic",
@@ -33,16 +33,16 @@
     "clean": "rm -rf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/common": "^2.0.0-alpha.1",
-    "@ceramicnetwork/stream-tile": "^2.0.0-alpha.1",
-    "@ceramicnetwork/streamid": "^2.0.0-alpha.1",
+    "@ceramicnetwork/common": "^2.0.0-alpha.2",
+    "@ceramicnetwork/stream-tile": "^2.0.0-alpha.2",
+    "@ceramicnetwork/streamid": "^2.0.0-alpha.2",
     "cross-fetch": "^3.1.4",
     "lru_map": "^0.4.1",
     "multiformats": "^9.5.8",
     "uint8arrays": "^3.0.0"
   },
   "devDependencies": {
-    "@ceramicnetwork/http-client": "^2.0.0-alpha.1",
+    "@ceramicnetwork/http-client": "^2.0.0-alpha.2",
     "did-resolver": "^3.1.5"
   },
   "gitHead": "34eeee25597b0a60def72906c26d3afd6230aaf1"

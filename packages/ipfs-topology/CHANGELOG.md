@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.0.0-alpha.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ipfs-topology@2.0.0-alpha.1...@ceramicnetwork/ipfs-topology@2.0.0-alpha.2) (2022-02-10)
+
+
+### Features
+
+* **ipfs-topology:** update multiaddresses ([#1979](https://github.com/ceramicnetwork/js-ceramic/issues/1979)) ([f05b253](https://github.com/ceramicnetwork/js-ceramic/commit/f05b2534810b2863ef453f88d8815a1f738f3e3f))
+
+
+
+
+
 # [2.0.0-alpha.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/ipfs-topology@1.1.17-rc.2...@ceramicnetwork/ipfs-topology@2.0.0-alpha.1) (2022-01-14)
 
 **Note:** Version bump only for package @ceramicnetwork/ipfs-topology
