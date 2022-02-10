@@ -23,7 +23,11 @@ jobs:
       IPFS_FLAVOR: go
     steps:
       - build-and-test
-      - run: npm run docs
+      - run:
+          name: Build docs
+          command: npm run docs
+          environment:
+            NODE_OPTIONS: '--max_old_space_size=4096'
   with-js-ipfs:
     machine:
       image: ubuntu-2004:202107-02
