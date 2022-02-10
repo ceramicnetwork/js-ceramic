@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals'
 import { StreamID } from '../stream-id.js'
 import { CID } from 'multiformats/cid'
 import * as util from 'util'

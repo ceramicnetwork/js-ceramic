@@ -4,7 +4,7 @@
   "private": true,
   "description": "Canary integration test for Ceramic components",
   "scripts": {
-    "test": "node --experimental-vm-modules ../../node_modules/jest/bin/jest.js --verbose --coverage --runInBand",
+    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest --verbose --coverage --runInBand",
     "build": "npx tsc -p tsconfig.json",
     "lint": "npx eslint ./src --ext .js,.jsx,.ts,.tsx",
     "clean": "npx rimraf ./lib"
