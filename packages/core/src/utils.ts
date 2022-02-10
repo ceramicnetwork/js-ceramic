@@ -2,12 +2,12 @@ import Ajv from 'ajv'
 import addFormats from 'ajv-formats'
 import { Memoize } from 'typescript-memoize'
 
-import { CommitData, CommitType, StreamUtils } from '@ceramicnetwork/common'
+import { CommitData, CommitType, IpfsApi, StreamUtils } from '@ceramicnetwork/common'
 
 import type { TileDocument } from '@ceramicnetwork/stream-tile'
 import { Dispatcher } from './dispatcher.js'
 import type { StreamID } from '@ceramicnetwork/streamid'
-import type { CID } from 'multiformats/cid'
+import { CID } from 'multiformats/cid'
 import { fromString, toString } from 'uint8arrays'
 
 /**
@@ -99,6 +99,22 @@ export class Utils {
     }
     if (!commitData.commit.prev) commitData.type = CommitType.GENESIS
     return commitData
+  }
+
+  /**
+   * Returns ipfs block PutOptions given a CID instance
+   * @param cid the CID to get the block PutOptions for
+   */
+  static async getIPFSBlockPutOptionsFromCID(cid: CID | string, ipfsApi: IpfsApi) {
+    if (typeof cid === 'string') cid = CID.parse(cid.replace('ipfs://', ''))
+    const format = await ipfsApi.codecs.getCodec(cid.code).then((f) => f.name)
+    const mhtype = await ipfsApi.hashers.getHasher(cid.multihash.code).then((mh) => mh.name)
+    const version = cid.version
+    return {
+      format,
+      mhtype,
+      version,
+    }
   }
 }
 

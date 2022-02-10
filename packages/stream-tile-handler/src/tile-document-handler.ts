@@ -14,7 +14,7 @@ import {
   StreamUtils,
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
-import { base64urlToJSON } from './utils'
+import { base64urlToJSON } from './utils.js'
 import { CID } from 'multiformats/cid'
 
 function stringArraysEqual(arr1: Array<string>, arr2: Array<string>) {
@@ -222,7 +222,7 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
     controller: string,
     streamId: StreamID
   ): Promise<void> {
-    const cacao = await this._verifyCapability(commitData, context, streamId)
+    const cacao = await this._verifyCapabilityAuthz(commitData, context, streamId)
 
     await context.did.verifyJWS(commitData.envelope, {
       atTime: commitData.timestamp,
@@ -239,7 +239,7 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
    * @param streamId - Stream ID for the commit
    * @returns Cacao is capability was found and verified, null otherwise
    */
-  async _verifyCapability(
+  async _verifyCapabilityAuthz(
     commitData: CommitData,
     context: Context,
     streamId: StreamID
