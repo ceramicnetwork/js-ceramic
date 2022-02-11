@@ -25,12 +25,12 @@
   },
   "sideEffects": false,
   "scripts": {
-    "build": "../../node_modules/.bin/tsc --project tsconfig.json",
+    "build": "npx tsc --project tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
-    "lint": "../../node_modules/.bin/eslint ./src --ext .js,.jsx,.ts,.tsx",
-    "clean": "rm -rf ./lib",
-    "test": "../../node_modules/.bin/jest --silent --coverage --passWithNoTests"
+    "lint": "npx eslint ./src --ext .js,.jsx,.ts,.tsx",
+    "clean": "npx rimraf ./lib",
+    "test": "npx jest --silent --coverage --passWithNoTests"
   },
   "dependencies": {
     "@ceramicnetwork/common": "^2.0.0-alpha.2",

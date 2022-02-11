@@ -26,12 +26,12 @@
     "ipfs-daemon": "./bin/ipfs-daemon.js"
   },
   "scripts": {
-    "build": "../../node_modules/.bin/tsc -p tsconfig.json",
-    "start": "./node_modules/.bin/tsm src/bin/ipfs-daemon.ts",
+    "build": "npx tsc -p tsconfig.json",
+    "start": "npx tsm src/bin/ipfs-daemon.ts",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
-    "lint": "../../node_modules/.bin/eslint ./src --ext .js,.jsx,.ts,.tsx",
-    "clean": "rm -rf ./lib",
+    "lint": "npx eslint ./src --ext .js,.jsx,.ts,.tsx",
+    "clean": "npx rimraf ./lib",
     "test": "exit 0"
   },
   "dependencies": {

@@ -20,12 +20,12 @@
     ".": "./lib/index.js"
   },
   "scripts": {
-    "test": "../../node_modules/.bin/jest --silent --coverage",
-    "build": "../../node_modules/.bin/tsc --project tsconfig.json",
+    "test": "npx jest --silent --coverage",
+    "build": "npx tsc --project tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
-    "lint": "../../node_modules/.bin/eslint ./src --ext .js,.jsx,.ts,.tsx",
-    "clean": "rm -rf ./lib"
+    "lint": "npx eslint ./src --ext .js,.jsx,.ts,.tsx",
+    "clean": "npx rimraf ./lib"
   },
   "author": "Zach Ferland <zachferland@gmail.com>",
   "license": "(Apache-2.0 OR MIT)",

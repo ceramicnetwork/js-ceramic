@@ -23,11 +23,11 @@
   },
   "scripts": {
     "test": "node --experimental-vm-modules ../../node_modules/jest/bin/jest.js --silent --coverage --runInBand",
-    "build": "../../node_modules/.bin/tsc --project tsconfig.json",
+    "build": "npx tsc --project tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
-    "lint": "../../node_modules/.bin/eslint ./src --ext .js,.jsx,.ts,.tsx",
-    "clean": "rm -rf ./lib"
+    "lint": "npx eslint ./src --ext .js,.jsx,.ts,.tsx",
+    "clean": "npx rimraf ./lib"
   },
   "dependencies": {
     "@ceramicnetwork/blockchain-utils-linking": "^2.0.0-alpha.2",

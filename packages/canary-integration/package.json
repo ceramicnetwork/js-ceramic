@@ -5,9 +5,9 @@
   "description": "Canary integration test for Ceramic components",
   "scripts": {
     "test": "node --experimental-vm-modules ../../node_modules/jest/bin/jest.js --verbose --coverage --runInBand",
-    "build": "../../node_modules/.bin/tsc -p tsconfig.json",
-    "lint": "../../node_modules/.bin/eslint ./src --ext .js,.jsx,.ts,.tsx",
-    "clean": "rm -rf ./lib"
+    "build": "npx tsc -p tsconfig.json",
+    "lint": "npx eslint ./src --ext .js,.jsx,.ts,.tsx",
+    "clean": "npx rimraf ./lib"
   },
   "license": "(Apache-2.0 OR MIT)",
   "directories": {
