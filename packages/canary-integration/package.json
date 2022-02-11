@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/canary-integration",
-  "version": "1.4.10-rc.3",
+  "version": "1.4.10",
   "private": true,
   "description": "Canary integration test for Ceramic components",
   "scripts": {
