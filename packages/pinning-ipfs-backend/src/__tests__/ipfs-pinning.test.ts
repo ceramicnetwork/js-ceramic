@@ -1,13 +1,22 @@
-import { create } from 'ipfs-http-client'
+import { jest } from '@jest/globals'
 import { CID } from 'multiformats/cid'
-import { IpfsPinning, NoIpfsInstanceError } from '../index.js'
 import { asyncIterableFromArray } from './async-iterable-from-array.util.js'
 import type { IPFS } from 'ipfs-core-types'
 
-jest.mock('ipfs-http-client')
+const mockIpfsCreate = jest.fn()
+jest.unstable_mockModule('ipfs-http-client', () => {
+  return {
+    create: mockIpfsCreate,
+  }
+})
 
-beforeEach(() => {
-  (create as any).mockClear()
+let IpfsPinning: any
+let NoIpfsInstanceError: any
+
+beforeEach(async () => {
+  const index = await import('../index.js')
+  IpfsPinning = index.IpfsPinning
+  NoIpfsInstanceError = index.NoIpfsInstanceError
 })
 
 describe('constructor', () => {
@@ -43,7 +52,7 @@ describe('#open', () => {
     const ipfs = {} as unknown as IPFS
     const pinning = new IpfsPinning('ipfs+https://example.com', ipfs)
     pinning.open()
-    expect(create).toBeCalledWith({ url: 'https://example.com:5001' })
+    expect(mockIpfsCreate).toBeCalledWith({ url: 'https://example.com:5001' })
   })
 })
 
