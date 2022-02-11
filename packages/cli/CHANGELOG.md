@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.11.1](/compare/@ceramicnetwork/cli@1.11.0-rc.3...@ceramicnetwork/cli@1.11.1) (2022-02-11)
+
+**Note:** Version bump only for package @ceramicnetwork/cli
+
+
+
+
+
 # [1.11.0-rc.3](/compare/@ceramicnetwork/cli@1.11.0-rc.1...@ceramicnetwork/cli@1.11.0-rc.3) (2022-02-09)
 
 **Note:** Version bump only for package @ceramicnetwork/cli

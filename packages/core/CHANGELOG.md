@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.13.2](/compare/@ceramicnetwork/core@1.13.1-rc.3...@ceramicnetwork/core@1.13.2) (2022-02-11)
+
+**Note:** Version bump only for package @ceramicnetwork/core
+
+
+
+
+
 ## [1.13.1-rc.3](/compare/@ceramicnetwork/core@1.13.1-rc.1...@ceramicnetwork/core@1.13.1-rc.3) (2022-02-09)
 
 **Note:** Version bump only for package @ceramicnetwork/core
