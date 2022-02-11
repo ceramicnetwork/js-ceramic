@@ -25,7 +25,7 @@ import { PubsubRateLimit } from './pubsub/pubsub-ratelimit.js'
 import { TaskQueue } from './pubsub/task-queue.js'
 
 const IPFS_GET_RETRIES = 3
-const IPFS_GET_TIMEOUT = 30000 // 30 seconds per retry, 3 retries = 90 seconds total timeout
+const DEFAULT_IPFS_GET_TIMEOUT = 30000 // 30 seconds per retry, 3 retries = 90 seconds total timeout
 const IPFS_MAX_COMMIT_SIZE = 256000 // 256 KB
 const IPFS_RESUBSCRIBE_INTERVAL_DELAY = 1000 * 15 // 15 sec
 const MAX_PUBSUB_PUBLISH_INTERVAL = 60 * 1000 // one minute
@@ -61,7 +61,8 @@ export class Dispatcher {
     private readonly _logger: DiagnosticsLogger,
     private readonly _pubsubLogger: ServiceLogger,
     maxQueriesPerSecond: number,
-    readonly tasks: TaskQueue = new TaskQueue()
+    readonly tasks: TaskQueue = new TaskQueue(),
+    private readonly _ipfsTimeout = DEFAULT_IPFS_GET_TIMEOUT
   ) {
     const pubsub = new Pubsub(
       _ipfs,
@@ -178,7 +179,7 @@ export class Dispatcher {
     let dagResult = null
     for (let retries = IPFS_GET_RETRIES - 1; retries >= 0 && dagResult == null; retries--) {
       try {
-        dagResult = await this._ipfs.dag.get(asCid, { timeout: IPFS_GET_TIMEOUT, path })
+        dagResult = await this._ipfs.dag.get(asCid, { timeout: this._ipfsTimeout, path })
       } catch (err) {
         if (
           err.code == 'ERR_TIMEOUT' ||
@@ -208,7 +209,7 @@ export class Dispatcher {
    */
   async _restrictCommitSize(cid: CID | string): Promise<void> {
     const asCid = typeof cid === 'string' ? CID.parse(cid) : cid
-    const stat = await this._ipfs.block.stat(asCid, { timeout: IPFS_GET_TIMEOUT })
+    const stat = await this._ipfs.block.stat(asCid, { timeout: this._ipfsTimeout })
     if (stat.size > IPFS_MAX_COMMIT_SIZE) {
       throw new Error(
         `${cid.toString()} commit size ${
