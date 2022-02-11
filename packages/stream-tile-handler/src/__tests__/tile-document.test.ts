@@ -1,8 +1,8 @@
+import { jest } from '@jest/globals'
 import { CID } from 'multiformats/cid'
 import { decode as decodeMultiHash } from 'multiformats/hashes/digest'
 import * as dagCBOR from '@ipld/dag-cbor'
-import { DID } from 'dids'
-import { Resolver } from 'did-resolver'
+import type { DID } from 'dids'
 import { wrapDocument } from '@ceramicnetwork/3id-did-resolver'
 import * as KeyDidResolver from 'key-did-resolver'
 import { TileDocumentHandler } from '../tile-document-handler.js'
@@ -17,14 +17,25 @@ import {
   StreamUtils,
   SignedCommitContainer,
   TestUtils,
+  IpfsApi, GenesisCommit
 } from '@ceramicnetwork/common'
 
-jest.mock('did-jwt', () => ({
-  // TODO - We should test for when this function throws as well
-  verifyJWS: (): void => {
-    return
-  },
-}))
+jest.unstable_mockModule('did-jwt', () => {
+  return {
+    // TODO - We should test for when this function throws as well
+    // Mock: Blindly accept a signature
+    verifyJWS: (): void => {
+      return
+    },
+    // And these functions are required for the test to run ¯\_(ツ)_/¯
+    resolveX25519Encrypters: () => {
+      return []
+    },
+    createJWE: () => {
+      return {}
+    },
+  }
+})
 
 const hash = (data: string): CID => {
   const body = uint8arrays.concat([
@@ -132,7 +143,7 @@ describe('TileDocumentHandler', () => {
   let tileDocumentHandler: TileDocumentHandler
   let context: Context
 
-  beforeAll(() => {
+  beforeAll(async () => {
     const recs: Record<string, any> = {}
     const ipfs = {
       dag: {
@@ -151,7 +162,7 @@ describe('TileDocumentHandler', () => {
           return recs[cid.toString()]
         },
       },
-    }
+    } as IpfsApi
 
     const threeIdResolver = {
       '3': async (did) => ({
@@ -170,11 +181,13 @@ describe('TileDocumentHandler', () => {
     }
 
     const keyDidResolver = KeyDidResolver.getResolver()
-    const resolver = new Resolver({
-      ...threeIdResolver,
-      ...keyDidResolver,
+    const { DID } = await import('dids')
+    did = new DID({
+      resolver: {
+        ...threeIdResolver,
+        ...keyDidResolver,
+      },
     })
-    did = new DID({ resolver })
     did.createJWS = jest.fn(async () => {
       // fake jws
       return {
@@ -188,7 +201,7 @@ describe('TileDocumentHandler', () => {
         ],
       }
     })
-    did._id = 'did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki'
+    ;(did as any)._id = 'did:3:k2t6wyfsu4pg0t2n4j8ms3s33xsgqjhtto04mvq8w5a2v5xo48idyz38l7ydki'
     const api = {
       getSupportedChains: jest.fn(async () => {
         return ['fakechain:123']
@@ -198,9 +211,8 @@ describe('TileDocumentHandler', () => {
 
     context = {
       did,
-      ipfs: ipfs,
+      ipfs,
       anchorService: null,
-      resolver,
       api: api as unknown as CeramicApi,
     }
   })
@@ -246,7 +258,7 @@ describe('TileDocumentHandler', () => {
   })
 
   it('Does not sign commit if no content', async () => {
-    const commit = await TileDocument.makeGenesis(context.api, null)
+    const commit = await TileDocument.makeGenesis(context.api, null) as GenesisCommit
     expect(commit.header.controllers[0]).toEqual(did.id)
   })
 
@@ -259,11 +271,11 @@ describe('TileDocumentHandler', () => {
     expect(jws).toBeDefined()
     expect(linkedBlock).toBeDefined()
 
-    const payload = dagCBOR.decode(linkedBlock)
+    const payload = dagCBOR.decode<any>(linkedBlock)
     expect(payload.data).toEqual(COMMITS.genesis.data)
     expect(payload.header.controllers[0]).toEqual(did.id)
 
-    const commitWithoutContent = await TileDocument.makeGenesis(context.api, null)
+    const commitWithoutContent = await TileDocument.makeGenesis(context.api, null) as GenesisCommit
     expect(commitWithoutContent.data).toBeUndefined
     expect(commitWithoutContent.header.controllers[0]).toEqual(did.id)
   })
