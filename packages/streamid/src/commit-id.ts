@@ -14,7 +14,7 @@ import { StreamRef } from './stream-ref.js'
  *
  * @param bytes - bytes representation of CommitID.
  * @throws error on invalid input
- * @see [[CommitID#bytes]]
+ * @see CommitID#bytes
  */
 function fromBytes(bytes: Uint8Array): CommitID {
   const result = fromBytesNoThrow(bytes)
@@ -101,8 +101,8 @@ function parseCommit(genesis: CID, commit: CID | string | number = null): CID | 
  * Parse CommitID from string representation.
  *
  * @param input - string representation of CommitID, be it base36-encoded string or URL.
- * @see [[CommitID#toString]]
- * @see [[CommitID#toUrl]]
+ * @see CommitID#toString
+ * @see CommitID#toUrl
  */
 function fromString(input: string): CommitID {
   const result = fromStringNoThrow(input)
