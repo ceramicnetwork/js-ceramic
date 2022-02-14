@@ -31,7 +31,7 @@ test('verifies capability with signed commit', async () => {
   // Create a determinstic tiledocument owned by the user
   const deterministicDocument = await TileDocument.deterministic(ceramic, {
     deterministic: true,
-    family: 'testCapabilities',
+    family: 'testCapabilities1',
     controllers: [`did:pkh:eip155:1:${wallet.address}`],
   })
 
@@ -84,7 +84,7 @@ test('does not allow updating if cacao issuer is not document controller', async
   // Create a determinstic tiledocument owned by the user
   const deterministicDocument = await TileDocument.deterministic(ceramic, {
     deterministic: true,
-    family: 'testCapabilities',
+    family: 'testCapabilities2',
   })
 
   const streamId = deterministicDocument.id
@@ -136,7 +136,7 @@ test('fails to verify capability with invalid resource', async () => {
   // Create a determinstic tiledocument owned by the user
   const deterministicDocument = await TileDocument.deterministic(ceramic, {
     deterministic: true,
-    family: 'testCapabilities',
+    family: 'testCapabilities3',
     controllers: [`did:pkh:eip155:1:${wallet.address}`],
   })
 
