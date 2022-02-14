@@ -320,7 +320,7 @@ describe('Ceramic API', () => {
     afterAll(async () => {
       await ceramic.close()
       await tmpFolder.cleanup()
-    })
+    }, 10000)
 
     it('can load linked stream path, returns expected form', async () => {
       const streams = await ceramic._loadLinkedStreams(
