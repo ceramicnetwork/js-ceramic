@@ -44,11 +44,11 @@ do
  case $t in
   "schemas")
     filename="${filename%.*}.json"
-    ./node_modules/.bin/typescript-json-schema "${f}" "*" -o "${o}/${filename}"
+    npx typescript-json-schema "${f}" "*" -o "${o}/${filename}"
   ;;
   "types")
     filename="${filename%.*}.ts"
-    ./node_modules/.bin/json2ts -i "$f" -o "${o}/${filename}"
+    npx json2ts -i "$f" -o "${o}/${filename}"
   ;;
    *) usage ;;
   esac

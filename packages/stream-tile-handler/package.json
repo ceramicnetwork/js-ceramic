@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/stream-tile-handler",
-  "version": "2.0.0-alpha.1",
+  "version": "2.0.0-alpha.2",
   "description": "Ceramic Tile Document stream handler",
   "keywords": [
     "ceramic",
@@ -23,29 +23,29 @@
     ".": "./lib/index.js"
   },
   "scripts": {
-    "test": "../../node_modules/.bin/jest --silent --coverage",
-    "build": "../../node_modules/.bin/tsc --project tsconfig.json",
+    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest --silent --coverage",
+    "build": "npx tsc --project tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
-    "lint": "../../node_modules/.bin/eslint ./src --ext .js,.jsx,.ts,.tsx",
-    "clean": "rm -rf ./lib"
+    "lint": "npx eslint ./src --ext .js,.jsx,.ts,.tsx",
+    "clean": "npx rimraf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/common": "^2.0.0-alpha.1",
-    "@ceramicnetwork/stream-tile": "^2.0.0-alpha.1",
+    "@ceramicnetwork/common": "^2.0.0-alpha.2",
+    "@ceramicnetwork/stream-tile": "^2.0.0-alpha.2",
     "fast-json-patch": "^3.1.0",
     "lodash.clonedeep": "^4.5.0",
     "uint8arrays": "^3.0.0"
   },
   "devDependencies": {
-    "@ceramicnetwork/3id-did-resolver": "^2.0.0-alpha.1",
+    "@ceramicnetwork/3id-did-resolver": "^2.0.0-alpha.2",
     "@ipld/dag-cbor": "^7.0.0",
     "@stablelib/sha256": "^1.0.1",
     "@types/lodash.clonedeep": "^4.5.6",
     "ceramic-cacao": "^0.0.13",
     "did-resolver": "^3.1.5",
     "dids": "^3.0.0-alpha.4",
-    "key-did-resolver": "^2.0.0-alpha.1",
+    "key-did-resolver": "^2.0.0-alpha.2",
     "multiformats": "^9.5.8"
   },
   "gitHead": "4f42c6ac204ad25e66efda4e24aed12c339b3c98"

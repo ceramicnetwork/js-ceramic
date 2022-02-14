@@ -16,7 +16,7 @@ import { StreamType } from './stream-type.js'
  *
  * @param bytes - bytes representation of StreamID.
  * @throws error on invalid input
- * @see [[StreamID#bytes]]
+ * @see StreamID#bytes
  */
 function fromBytes(bytes: Uint8Array): StreamID {
   const result = fromBytesNoThrow(bytes)
@@ -53,8 +53,8 @@ function fromBytesNoThrow(bytes: Uint8Array): StreamID | Error {
  * Parse StreamID from string representation.
  *
  * @param input - string representation of StreamID, be it base36-encoded string or URL.
- * @see [[StreamID#toString]]
- * @see [[StreamID#toUrl]]
+ * @see StreamID#toString
+ * @see StreamID#toUrl
  */
 function fromString(input: string): StreamID {
   const result = fromStringNoThrow(input)

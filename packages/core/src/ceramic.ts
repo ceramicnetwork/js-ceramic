@@ -119,6 +119,7 @@ export interface CeramicModules {
   loggerProvider: LoggerProvider
   pinStoreFactory: PinStoreFactory
   repository: Repository
+  shutdownController: AbortController
 }
 
 /**
@@ -183,12 +184,14 @@ export class Ceramic implements CeramicApi {
   private readonly _validateStreams: boolean
   private readonly stateValidation: StateValidation
   private readonly _loadOptsOverride: LoadOpts
+  private readonly _shutdownController: AbortController
 
   constructor(modules: CeramicModules, params: CeramicParameters) {
     this._ipfsTopology = modules.ipfsTopology
     this.loggerProvider = modules.loggerProvider
     this._logger = modules.loggerProvider.getDiagnosticsLogger()
     this.repository = modules.repository
+    this._shutdownController = modules.shutdownController
     this.dispatcher = modules.dispatcher
     this.pin = this._buildPinApi()
     this._anchorValidator = modules.anchorValidator
@@ -421,12 +424,14 @@ export class Ceramic implements CeramicApi {
     const ipfsTopology = new IpfsTopology(ipfs, networkOptions.name, logger)
     const pinStoreFactory = new PinStoreFactory(ipfs, pinStoreOptions)
     const repository = new Repository(streamCacheLimit, concurrentRequestsLimit, logger)
+    const shutdownController = new AbortController()
     const dispatcher = new Dispatcher(
       ipfs,
       networkOptions.pubsubTopic,
       repository,
       logger,
       pubsubLogger,
+      shutdownController.signal,
       maxQueriesPerSecond
     )
 
@@ -446,6 +451,7 @@ export class Ceramic implements CeramicApi {
       loggerProvider,
       pinStoreFactory,
       repository,
+      shutdownController,
     }
 
     return [modules, params]
@@ -760,6 +766,7 @@ export class Ceramic implements CeramicApi {
    */
   async close(): Promise<void> {
     this._logger.imp('Closing Ceramic instance')
+    this._shutdownController.abort()
     await this.dispatcher.close()
     await this.repository.close()
     this._ipfsTopology.stop()

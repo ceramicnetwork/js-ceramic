@@ -1,14 +1,16 @@
+import { jest } from '@jest/globals'
 import { CID } from 'multiformats/cid'
 import { decode as decodeMultiHash } from 'multiformats/hashes/digest'
-import { Resolver } from 'did-resolver'
 import * as dagCBOR from '@ipld/dag-cbor'
 import * as KeyDidResolver from 'key-did-resolver'
 import { wrapDocument } from '@ceramicnetwork/3id-did-resolver'
-import { DID } from 'dids'
+import type { DID } from 'dids'
 import {
   CeramicApi,
+  CommitData,
   CommitType,
   Context,
+  IpfsApi,
   SignedCommitContainer,
   TestUtils,
 } from '@ceramicnetwork/common'
@@ -18,12 +20,22 @@ import cloneDeep from 'lodash.clonedeep'
 import * as sha256 from '@stablelib/sha256'
 import * as uint8arrays from 'uint8arrays'
 
-jest.mock('did-jwt', () => ({
-  // TODO - We should test for when this function throws as well
-  verifyJWS: (): void => {
-    return
-  },
-}))
+jest.unstable_mockModule('did-jwt', () => {
+  return {
+    // TODO - We should test for when this function throws as well
+    // Mock: Blindly accept a signature
+    verifyJWS: (): void => {
+      return
+    },
+    // And these functions are required for the test to run ¯\_(ツ)_/¯
+    resolveX25519Encrypters: () => {
+      return []
+    },
+    createJWE: () => {
+      return {}
+    },
+  }
+})
 
 const hash = (data: string): CID =>
   CID.create(
@@ -133,7 +145,7 @@ let did: DID
 let tileDocumentHandler: TileDocumentHandler
 let context: Context
 
-beforeAll(() => {
+beforeAll(async () => {
   const recs: Record<string, any> = {}
   const ipfs = {
     dag: {
@@ -152,7 +164,7 @@ beforeAll(() => {
         return recs[cid.toString()]
       },
     },
-  }
+  } as IpfsApi
 
   const threeIdResolver = {
     '3': async (did) => ({
@@ -170,12 +182,14 @@ beforeAll(() => {
     }),
   }
 
+  const { DID } = await import('dids')
   const keyDidResolver = KeyDidResolver.getResolver()
-  const resolver = new Resolver({
-    ...threeIdResolver,
-    ...keyDidResolver,
+  did = new DID({
+    resolver: {
+      ...threeIdResolver,
+      ...keyDidResolver,
+    },
   })
-  did = new DID({ resolver })
   did.createJWS = jest.fn(async () => {
     // fake jws
     return {
@@ -189,7 +203,7 @@ beforeAll(() => {
       ],
     }
   })
-  did._id = 'did:key:zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV'
+  ;(did as any)._id = 'did:key:zQ3shwsCgFanBax6UiaLu1oGvM7vhuqoW88VBUiUTCeHbTeTV'
   const api = {
     getSupportedChains: jest.fn(async () => {
       return ['fakechain:123']
@@ -200,13 +214,12 @@ beforeAll(() => {
   context = {
     did,
     ipfs,
-    resolver,
     anchorService: null,
     api: api as unknown as CeramicApi,
   }
 })
 
-beforeEach(() => {
+beforeEach(async () => {
   tileDocumentHandler = new TileDocumentHandler()
 })
 
@@ -238,8 +251,6 @@ it('makes genesis commit correctly', async () => {
 })
 
 it('applies genesis commit correctly', async () => {
-  const tileHandler = new TileDocumentHandler()
-
   const commit = (await TileDocument.makeGenesis(context.api, COMMITS.genesis.data, {
     controllers: [did.id],
     tags: ['3id'],
@@ -255,14 +266,12 @@ it('applies genesis commit correctly', async () => {
     commit: payload,
     envelope: commit.jws,
   }
-  const streamState = await tileHandler.applyCommit(signedCommitData, context)
+  const streamState = await tileDocumentHandler.applyCommit(signedCommitData, context)
   delete streamState.metadata.unique
   expect(streamState).toMatchSnapshot()
 })
 
 it('makes signed commit correctly', async () => {
-  const tileDocumentHandler = new TileDocumentHandler()
-
   await context.ipfs.dag.put(COMMITS.genesisGenerated.jws, FAKE_CID_1)
   await context.ipfs.dag.put(
     COMMITS.genesisGenerated.linkedBlock,
@@ -293,8 +302,6 @@ it('makes signed commit correctly', async () => {
 })
 
 it('applies signed commit correctly', async () => {
-  const tileDocumentHandler = new TileDocumentHandler()
-
   const genesisCommit = (await TileDocument.makeGenesis(context.api, COMMITS.genesis.data, {
     controllers: [did.id],
     tags: ['3id'],
@@ -339,8 +346,6 @@ it('applies signed commit correctly', async () => {
 })
 
 it('throws error if commit signed by wrong DID', async () => {
-  const tileDocumentHandler = new TileDocumentHandler()
-
   const genesisCommit = (await TileDocument.makeGenesis(context.api, COMMITS.genesis.data, {
     controllers: ['did:3:fake'],
     tags: ['3id'],
@@ -362,8 +367,6 @@ it('throws error if commit signed by wrong DID', async () => {
 })
 
 it('applies anchor commit correctly', async () => {
-  const tileDocumentHandler = new TileDocumentHandler()
-
   const genesisCommit = (await TileDocument.makeGenesis(context.api, COMMITS.genesis.data, {
     controllers: [did.id],
     tags: ['3id'],
@@ -410,7 +413,7 @@ it('applies anchor commit correctly', async () => {
     type: CommitType.ANCHOR,
     commit: COMMITS.r2.commit,
     proof: COMMITS.proof,
-  }
+  } as CommitData
   state = await tileDocumentHandler.applyCommit(anchorCommitData, context, state)
   delete state.metadata.unique
   expect(state).toMatchSnapshot()

@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/ipfs-topology",
-  "version": "2.0.0-alpha.1",
+  "version": "2.0.0-alpha.2",
   "description": "Setup IPFS topology right",
   "keywords": [
     "ipfs",
@@ -22,15 +22,15 @@
   ],
   "sideEffects": false,
   "scripts": {
-    "build": "../../node_modules/.bin/tsc --project tsconfig.json",
+    "build": "npx tsc --project tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
-    "lint": "../../node_modules/.bin/eslint ./src --ext .js,.jsx,.ts,.tsx",
-    "clean": "rm -rf ./lib",
+    "lint": "npx eslint ./src --ext .js,.jsx,.ts,.tsx",
+    "clean": "npx rimraf ./lib",
     "test": "exit 0"
   },
   "dependencies": {
-    "@ceramicnetwork/common": "^2.0.0-alpha.1",
+    "@ceramicnetwork/common": "^2.0.0-alpha.2",
     "cross-fetch": "^3.1.4"
   },
   "devDependencies": {

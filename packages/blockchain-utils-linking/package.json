@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/blockchain-utils-linking",
-  "version": "2.0.0-alpha.1",
+  "version": "2.0.0-alpha.2",
   "description": "Blockchain utils for linking blockchain accounts to DID",
   "keywords": [
     "ceramic",
@@ -22,12 +22,12 @@
   },
   "sideEffects": false,
   "scripts": {
-    "test": "node --experimental-vm-modules ../../node_modules/jest/bin/jest.js --silent --env=node",
-    "build": "../../node_modules/.bin/tsc --project tsconfig.json",
+    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest --silent",
+    "build": "npx tsc --project tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
-    "lint": "../../node_modules/.bin/eslint ./src --ext .js,.jsx,.ts,.tsx",
-    "clean": "rm -rf ./lib"
+    "lint": "npx eslint ./src --ext .js,.jsx,.ts,.tsx",
+    "clean": "npx rimraf ./lib"
   },
   "dependencies": {
     "@stablelib/sha256": "^1.0.1",
@@ -36,7 +36,7 @@
     "uint8arrays": "^3.0.0"
   },
   "devDependencies": {
-    "@ceramicnetwork/streamid": "^2.0.0-alpha.1",
+    "@ceramicnetwork/streamid": "^2.0.0-alpha.2",
     "@glif/filecoin-address": "1.1.0",
     "@glif/local-managed-provider": "1.1.1",
     "@polkadot/api": "^4.6.2",

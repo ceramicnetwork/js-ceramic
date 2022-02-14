@@ -1,0 +1,51 @@
+{
+  "name": "@ceramicnetwork/pinning-crust-backend",
+  "version": "2.0.0-alpha.1",
+  "description": "Crust Pinning backend",
+  "keywords": [
+    "ceramic",
+    "ipfs",
+    "crust",
+    "web3.0"
+  ],
+  "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
+  "type": "module",
+  "files": [
+    "lib"
+  ],
+  "sideEffects": false,
+  "exports": {
+    ".": "./lib/index.js"
+  },
+  "scripts": {
+    "test": "node --experimental-vm-modules ../../node_modules/jest/bin/jest.js --silent --coverage",
+    "build": "../../node_modules/.bin/tsc --project tsconfig.json",
+    "prepublishOnly": "npm run build",
+    "prebuild": "npm run clean",
+    "lint": "../../node_modules/.bin/eslint ./src --ext .js,.jsx,.ts,.tsx",
+    "clean": "rm -rf ./lib"
+  },
+  "author": "LowEntropyBody <jszyyx@163.com>",
+  "license": "(Apache-2.0 OR MIT)",
+  "directories": {
+    "lib": "./lib"
+  },
+  "dependencies": {
+    "@crustio/type-definitions": "^1.2.0",
+    "@polkadot/api": "^4.6.2",
+    "@polkadot/keyring": "^6.2.1",
+    "@polkadot/types": "^4.6.2",
+    "@stablelib/sha256": "^1.0.1",
+    "cross-fetch": "^3.1.4",
+    "uint8arrays": "^3.0.0"
+  },
+  "devDependencies": {
+    "@ceramicnetwork/common": "^2.0.0-alpha.1",
+    "multiformats": "^9.5.8"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "gitHead": "34eeee25597b0a60def72906c26d3afd6230aaf1"
+}

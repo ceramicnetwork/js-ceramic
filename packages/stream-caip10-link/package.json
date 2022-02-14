@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/stream-caip10-link",
-  "version": "2.0.0-alpha.1",
+  "version": "2.0.0-alpha.2",
   "description": "Ceramic AccountLink stream type",
   "keywords": [
     "ceramic",
@@ -25,20 +25,20 @@
   "sideEffects": false,
   "scripts": {
     "test": "exit 0",
-    "build": "../../node_modules/.bin/tsc --project tsconfig.json",
+    "build": "npx tsc --project tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
-    "lint": "../../node_modules/.bin/eslint ./src --ext .js,.jsx,.ts,.tsx",
-    "clean": "rm -rf ./lib"
+    "lint": "npx eslint ./src --ext .js,.jsx,.ts,.tsx",
+    "clean": "npx rimraf ./lib"
   },
   "dependencies": {
-    "@ceramicnetwork/common": "^2.0.0-alpha.1",
-    "@ceramicnetwork/streamid": "^2.0.0-alpha.1",
+    "@ceramicnetwork/common": "^2.0.0-alpha.2",
+    "@ceramicnetwork/streamid": "^2.0.0-alpha.2",
     "caip": "~1.0.0",
     "did-resolver": "^3.1.5"
   },
   "devDependencies": {
-    "@ceramicnetwork/blockchain-utils-linking": "^2.0.0-alpha.1",
+    "@ceramicnetwork/blockchain-utils-linking": "^2.0.0-alpha.2",
     "dids": "^3.0.0-alpha.4"
   },
   "gitHead": "4f42c6ac204ad25e66efda4e24aed12c339b3c98"

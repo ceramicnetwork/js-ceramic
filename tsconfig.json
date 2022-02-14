@@ -36,6 +36,7 @@
     { "path": "./packages/pinning-aggregation" },
     { "path": "./packages/pinning-ipfs-backend" },
     { "path": "./packages/pinning-powergate-backend" },
+    { "path": "./packages/pinning-crust-backend" },
     { "path": "./packages/blockchain-utils-linking" },
     { "path": "./packages/blockchain-utils-validation" }
   ]

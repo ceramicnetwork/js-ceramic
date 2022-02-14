@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.0.0-alpha.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-caip10-link@2.0.0-alpha.1...@ceramicnetwork/stream-caip10-link@2.0.0-alpha.2) (2022-02-10)
+
+
+### Features
+
+* **core,stream-tile,stream-caip10-link:** Pin streams by default ([#2025](https://github.com/ceramicnetwork/js-ceramic/issues/2025)) ([463fecd](https://github.com/ceramicnetwork/js-ceramic/commit/463fecdca5f20373d78fb7775d2ad4825c576397))
+
+
+
+
+
 # [2.0.0-alpha.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/stream-caip10-link@1.2.3-rc.2...@ceramicnetwork/stream-caip10-link@2.0.0-alpha.1) (2022-01-14)
 
 

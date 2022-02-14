@@ -3,6 +3,23 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.0.0-alpha.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@2.0.0-alpha.1...@ceramicnetwork/common@2.0.0-alpha.2) (2022-02-10)
+
+
+### Bug Fixes
+
+* **core:** Allow loading multiple CommitIDs for the same stream in parallel ([#1956](https://github.com/ceramicnetwork/js-ceramic/issues/1956)) ([28cfd62](https://github.com/ceramicnetwork/js-ceramic/commit/28cfd622e684b3b7209884024e684be6e6a1fa88))
+* **core:** Fix ipfs retries when using ipfs http client ([#1949](https://github.com/ceramicnetwork/js-ceramic/issues/1949)) ([953df1e](https://github.com/ceramicnetwork/js-ceramic/commit/953df1e45a16285d234a9db5c0fd9e023a47e998))
+
+
+### Features
+
+* add client side timeout to http-requests ([a33356c](https://github.com/ceramicnetwork/js-ceramic/commit/a33356c8a518252af9d81d1136411725c429cc3b))
+
+
+
+
+
 # [2.0.0-alpha.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/common@1.9.0-rc.2...@ceramicnetwork/common@2.0.0-alpha.1) (2022-01-14)
 
 

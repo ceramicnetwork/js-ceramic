@@ -3,6 +3,29 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.0.0-alpha.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@2.0.0-alpha.1...@ceramicnetwork/core@2.0.0-alpha.2) (2022-02-10)
+
+
+### Bug Fixes
+
+* **cli,http-client:** Properly serialize timeout for multiquery requests through the http client ([#1899](https://github.com/ceramicnetwork/js-ceramic/issues/1899)) ([cb968a5](https://github.com/ceramicnetwork/js-ceramic/commit/cb968a53b9cbad825c8c01828fac52eb52752323))
+* **core:** Allow loading multiple CommitIDs for the same stream in parallel ([#1901](https://github.com/ceramicnetwork/js-ceramic/issues/1901)) ([3290a66](https://github.com/ceramicnetwork/js-ceramic/commit/3290a66db7f4063aac1df3781bef2962442740e2))
+* **core:** Allow loading multiple CommitIDs for the same stream in parallel ([#1956](https://github.com/ceramicnetwork/js-ceramic/issues/1956)) ([28cfd62](https://github.com/ceramicnetwork/js-ceramic/commit/28cfd622e684b3b7209884024e684be6e6a1fa88))
+* **core:** Fix ipfs retries when using ipfs http client ([#1949](https://github.com/ceramicnetwork/js-ceramic/issues/1949)) ([953df1e](https://github.com/ceramicnetwork/js-ceramic/commit/953df1e45a16285d234a9db5c0fd9e023a47e998))
+* **core:** Load commits serially again ([#1920](https://github.com/ceramicnetwork/js-ceramic/issues/1920)) ([8c73805](https://github.com/ceramicnetwork/js-ceramic/commit/8c73805991e1f3d960f5451af8fa795fb260fef2))
+
+
+### Features
+
+* **core,stream-tile,stream-caip10-link:** Pin streams by default ([#2025](https://github.com/ceramicnetwork/js-ceramic/issues/2025)) ([463fecd](https://github.com/ceramicnetwork/js-ceramic/commit/463fecdca5f20373d78fb7775d2ad4825c576397))
+* **core:** Add env var to configure pubsub qps limit ([#1947](https://github.com/ceramicnetwork/js-ceramic/issues/1947)) ([05e5f1c](https://github.com/ceramicnetwork/js-ceramic/commit/05e5f1cf51611cbdc651c37f10bad39ea833365f))
+* **core:** Don't fail queries when query pubsub queue is full ([#1955](https://github.com/ceramicnetwork/js-ceramic/issues/1955)) ([bdd9127](https://github.com/ceramicnetwork/js-ceramic/commit/bdd91273b0e46cec7804473a36d8bf5d5ef1e5e9))
+* **core:** Throw error if commit rejected by conflict resolution ([#2009](https://github.com/ceramicnetwork/js-ceramic/issues/2009)) ([998ac5e](https://github.com/ceramicnetwork/js-ceramic/commit/998ac5e2e7658bc523f803d99b80e65f8604dee3))
+
+
+
+
+
 # [2.0.0-alpha.1](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/core@1.11.1-rc.10...@ceramicnetwork/core@2.0.0-alpha.1) (2022-01-14)
 
 

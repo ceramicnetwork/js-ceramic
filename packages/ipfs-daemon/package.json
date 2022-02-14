@@ -1,6 +1,6 @@
 {
   "name": "@ceramicnetwork/ipfs-daemon",
-  "version": "2.0.0-alpha.1",
+  "version": "2.0.0-alpha.2",
   "description": "IPFS daemon wraps js-ipfs instance with dag-jose codec enabled",
   "keywords": [
     "ipfs",
@@ -26,17 +26,17 @@
     "ipfs-daemon": "./bin/ipfs-daemon.js"
   },
   "scripts": {
-    "build": "../../node_modules/.bin/tsc -p tsconfig.json",
-    "start": "./node_modules/.bin/tsm src/bin/ipfs-daemon.ts",
+    "build": "npx tsc -p tsconfig.json",
+    "start": "npx tsm src/bin/ipfs-daemon.ts",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
-    "lint": "../../node_modules/.bin/eslint ./src --ext .js,.jsx,.ts,.tsx",
-    "clean": "rm -rf ./lib",
+    "lint": "npx eslint ./src --ext .js,.jsx,.ts,.tsx",
+    "clean": "npx rimraf ./lib",
     "test": "exit 0"
   },
   "dependencies": {
-    "@ceramicnetwork/common": "^2.0.0-alpha.1",
-    "@ceramicnetwork/ipfs-topology": "^2.0.0-alpha.1",
+    "@ceramicnetwork/common": "^2.0.0-alpha.2",
+    "@ceramicnetwork/ipfs-topology": "^2.0.0-alpha.2",
     "dag-jose": "^1.0.0",
     "express": "^4.17.2",
     "get-port": "^6.0.0",

@@ -76,6 +76,8 @@ describe('Ceramic stream pinning', () => {
   })
 
   afterEach(async () => {
+    jest.resetAllMocks()
+    jest.restoreAllMocks()
     await ipfs1.stop()
     await tmpFolder.cleanup()
   })
@@ -215,8 +217,8 @@ describe('Ceramic stream pinning', () => {
       publish: false,
       pin: false,
     })
-    ceramic.pin.add(stream.id)
-    stream.update({ foo: 'baz' }, null, { anchor: false, publish: false })
+    await ceramic.pin.add(stream.id)
+    await stream.update({ foo: 'baz' }, null, { anchor: false, publish: false })
 
     expect(publishTipSpy).toBeCalledTimes(0)
 

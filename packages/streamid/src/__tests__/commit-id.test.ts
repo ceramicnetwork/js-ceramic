@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals'
 import * as util from 'util'
 import { CommitID } from '../commit-id.js'
 import { CID } from 'multiformats/cid'

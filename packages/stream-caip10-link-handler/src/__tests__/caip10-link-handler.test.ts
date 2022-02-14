@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals'
 import { Caip10LinkHandler } from '../caip10-link-handler.js'
 import cloneDeep from 'lodash.clonedeep'
 import { CID } from 'multiformats/cid'

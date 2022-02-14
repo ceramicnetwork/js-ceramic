@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [2.0.0-alpha.2](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/3id-did-resolver@2.0.0-alpha.1...@ceramicnetwork/3id-did-resolver@2.0.0-alpha.2) (2022-02-10)
+
+
+### Features
+
+* **core,stream-tile,stream-caip10-link:** Pin streams by default ([#2025](https://github.com/ceramicnetwork/js-ceramic/issues/2025)) ([463fecd](https://github.com/ceramicnetwork/js-ceramic/commit/463fecdca5f20373d78fb7775d2ad4825c576397))
+
+
+
+
+
 ## [1.4.17-rc.0](https://github.com/ceramicnetwork/js-ceramic/compare/@ceramicnetwork/3id-did-resolver@1.4.16...@ceramicnetwork/3id-did-resolver@1.4.17-rc.0) (2022-01-12)
 
 **Note:** Version bump only for package @ceramicnetwork/3id-did-resolver

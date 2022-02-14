@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals'
 import { CID } from 'multiformats/cid'
 import {
   CeramicCommit,
