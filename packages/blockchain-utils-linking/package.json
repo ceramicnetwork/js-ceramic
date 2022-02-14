@@ -22,7 +22,7 @@
   },
   "sideEffects": false,
   "scripts": {
-    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest --silent",
+    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest --silent --forceExit",
     "build": "npx tsc --project tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",
