@@ -1,7 +1,12 @@
-jest.mock('cross-fetch', () => {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const mockedCalls = require('./vectors.json')['http-mock']
-  return jest.fn(async (url, opts = {}) => ({
+import { jest } from '@jest/globals'
+import { readFileSync } from 'node:fs'
+
+const VECTORS_PATH = new URL('./vectors.json', import.meta.url)
+const vectors = JSON.parse(readFileSync(VECTORS_PATH, 'utf-8'))
+
+jest.unstable_mockModule('cross-fetch', () => {
+  const mockedCalls = vectors['http-mock']
+  const fetchFunc = jest.fn(async (url: string, opts: any = {}) => ({
     ok: true,
     json: async () => {
       const call = mockedCalls[url]
@@ -16,16 +21,14 @@ jest.mock('cross-fetch', () => {
       return call.response
     },
   }))
+  return {
+    default: fetchFunc
+  }
 })
 
-import * as ThreeIdResolver from '../index.js'
 import { Resolver } from 'did-resolver'
-import { CeramicClient } from '@ceramicnetwork/http-client'
 
 const DID_LD_JSON = 'application/did+ld+json'
-
-import vectors from './vectors.json'
-
 const v1 = '3IDv1'
 const v1unanchored = '3IDv1-unanchored'
 const v0 = '3IDv0'
@@ -43,16 +46,19 @@ describe('3ID DID Resolver', () => {
   let ceramic
 
   beforeAll(async () => {
+    const { CeramicClient } = await import('@ceramicnetwork/http-client')
     ceramic = new CeramicClient()
   })
 
   describe('3IDv1', () => {
     test('getResolver works correctly', async () => {
+      const ThreeIdResolver = await import('../index.js')
       const threeIdResolver = ThreeIdResolver.getResolver(ceramic)
       expect(Object.keys(threeIdResolver)).toEqual(['3'])
     })
 
     test.each(vectors[v1].queries)('resolves 3id documents correctly %#', async (query) => {
+      const ThreeIdResolver = await import('../index.js')
       const threeIdResolver = ThreeIdResolver.getResolver(ceramic)
       const resolver = new Resolver(threeIdResolver)
       const did = vectors[v1].did + query.params[0]
@@ -67,6 +73,7 @@ describe('3ID DID Resolver', () => {
     test.each(vectors[v1unanchored].queries)(
       'resolves unanchored 3id documents correctly %#',
       async (query) => {
+        const ThreeIdResolver = await import('../index.js')
         const threeIdResolver = ThreeIdResolver.getResolver(ceramic)
         const resolver = new Resolver(threeIdResolver)
         const did = vectors[v1unanchored].did + query.params[0]
@@ -78,6 +85,7 @@ describe('3ID DID Resolver', () => {
     )
 
     test('no commit found', async () => {
+      const ThreeIdResolver = await import('../index.js')
       const threeIdResolver = ThreeIdResolver.getResolver(ceramic)
       const resolver = new Resolver(threeIdResolver)
       const did =
@@ -96,6 +104,7 @@ describe('3ID DID Resolver', () => {
 
   describe('3IDv0', () => {
     test('resolves 3id with no updates', async () => {
+      const ThreeIdResolver = await import('../index.js')
       const threeIdResolver = ThreeIdResolver.getResolver(ceramic)
       const resolver = new Resolver(threeIdResolver)
       const query = vectors[v0NoUpdates].query
@@ -104,6 +113,7 @@ describe('3ID DID Resolver', () => {
     })
 
     test.each(vectors[v0].queries)('resolves 3id documents correctly %#', async (query) => {
+      const ThreeIdResolver = await import('../index.js')
       const threeIdResolver = ThreeIdResolver.getResolver(ceramic)
       const resolver = new Resolver(threeIdResolver)
       const did = vectors[v0].did + query.params[0]

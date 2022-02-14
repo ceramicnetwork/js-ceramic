@@ -25,7 +25,7 @@
     ".": "./lib/index.js"
   },
   "scripts": {
-    "test": "npx jest --silent --coverage",
+    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest --silent --coverage",
     "build": "npx tsc --project tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",

@@ -28,7 +28,7 @@
     "./lib/loggers.js": "./lib/loggers-browser.js"
   },
   "scripts": {
-    "test": "npx jest --silent --coverage --passWithNoTests",
+    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest --silent --coverage --passWithNoTests",
     "build": "npx tsc --project tsconfig.json",
     "prepublishOnly": "npm run build",
     "prebuild": "npm run clean",

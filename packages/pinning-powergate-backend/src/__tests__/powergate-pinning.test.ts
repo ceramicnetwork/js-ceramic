@@ -1,8 +1,5 @@
-import { EmptyTokenError, PowergatePinningBackend } from '../index.js'
-import * as pow from '@textile/powergate-client'
+import { jest } from '@jest/globals'
 import { CID } from 'multiformats/cid'
-
-jest.mock('@textile/powergate-client')
 
 const token = 'FOO_TOKEN'
 const connectionString = `powergate://example.com?token=${token}`
@@ -18,9 +15,22 @@ const mockPow = {
     list: jest.fn(),
   },
 }
+const createPow = jest.fn(() => {
+  return mockPow
+})
 
-beforeEach(() => {
-  jest.spyOn<any, any>(pow, 'createPow').mockImplementation(() => mockPow)
+jest.unstable_mockModule('@textile/powergate-client', () => {
+  return {
+    createPow: createPow
+  }
+})
+
+let PowergatePinningBackend: any
+let EmptyTokenError: any
+beforeEach(async () => {
+  const pow = await import('../index.js')
+  PowergatePinningBackend = pow.PowergatePinningBackend
+  EmptyTokenError = pow.EmptyTokenError
 })
 
 describe('constructor', () => {
@@ -47,11 +57,10 @@ describe('constructor', () => {
 })
 
 test('#open', async () => {
-  jest.spyOn<any, any>(pow, 'createPow').mockImplementation(() => mockPow)
   const pinning = new PowergatePinningBackend(connectionString)
   expect(pinning.pow).toBeUndefined()
   await pinning.open()
-  expect(pow.createPow).toBeCalledWith({ host: pinning.endpoint })
+  expect(createPow).toBeCalledWith({ host: pinning.endpoint })
   expect(setToken).toBeCalledWith(token)
   expect(pinning.pow).toBe(mockPow)
 })
@@ -66,7 +75,6 @@ describe('#pin', () => {
   })
 
   test('throw if not double pinning', async () => {
-    jest.spyOn<any, any>(pow, 'createPow').mockImplementation(() => mockPow)
     const pinning = new PowergatePinningBackend(connectionString)
     await pinning.open()
     const cid = CID.parse('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D')

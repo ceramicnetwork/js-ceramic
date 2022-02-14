@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals'
 import { CID } from 'multiformats/cid'
 import { PinningAggregation, UnknownPinningService } from '../index.js'
 import { CidList, PinningBackend, PinningInfo } from '@ceramicnetwork/common'

@@ -1,38 +1,62 @@
-import { CrustPinningBackend, EmptySeedError } from '../index'
-import * as papi from '@polkadot/api'
-import * as pkr from '@polkadot/keyring'
+import { jest } from '@jest/globals'
 import { CID } from 'multiformats/cid'
-import * as cf from 'cross-fetch'
 
-jest.mock('cross-fetch')
-jest.mock('@polkadot/api')
-jest.mock('@polkadot/keyring')
-
-const api = {
+const tx = {
+  signAndSend: jest.fn(() => ''),
+}
+const mockApiPromise = {
   tx: {
     market: {
       placeStorageOrder: jest.fn(() => tx),
-      addPrepaid: jest.fn(() => tx)
-    }
+      addPrepaid: jest.fn(() => tx),
+    },
   },
-  disconnect: jest.fn()
+  disconnect: jest.fn(),
 }
-
-const tx = {
-  signAndSend: jest.fn(() => new Promise(resolve => resolve('')))
+const mockPapi = {
+  ApiPromise: jest.fn(() => mockApiPromise),
+  WsProvider: jest.fn(),
 }
+jest.unstable_mockModule('@polkadot/api', () => {
+  return mockPapi
+})
 
-const kr = {
-  addFromUri: jest.fn(() => krp)
+const mockKeyring = {
+  addFromUri: jest.fn(() => krp),
 }
-
 const krp = {
-  address: "cTM4JJMox7nbUqa1R6yMDwnqdEJByWDzHtdr1QczT2MqEVC33"
+  address: 'cTM4JJMox7nbUqa1R6yMDwnqdEJByWDzHtdr1QczT2MqEVC33',
 }
+jest.unstable_mockModule('@polkadot/keyring', () => {
+  return {
+    Keyring: jest.fn(() => mockKeyring),
+  }
+})
 
-beforeEach(() => {
-  jest.spyOn<any, any>(papi, 'ApiPromise').mockImplementation(() => api)
-  jest.spyOn<any, any>(pkr, 'Keyring').mockImplementation(() => kr)
+const cids = [
+  CID.parse('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D'),
+  CID.parse('QmWXShtJXt6Mw3FH7hVCQvR56xPcaEtSj4YFSGjp2QxA4v'),
+]
+const cidsArray = cids.map((cid) => ({ args: str2HexStr(cid.toString()) }))
+jest.unstable_mockModule('cross-fetch', () => {
+  const mockFetch = jest.fn(() => {
+    return {
+      status: 200,
+      json: () => Promise.resolve({ data: { substrate_extrinsic: cidsArray } }),
+    }
+  })
+
+  return {
+    default: mockFetch,
+  }
+})
+
+let CrustPinningBackend: any
+let EmptySeedError: any
+beforeEach(async () => {
+  const module = await import('../index.js')
+  CrustPinningBackend = module.CrustPinningBackend
+  EmptySeedError = module.EmptySeedError
 })
 
 const seed = 'test seed test seed test seed test seed test seed test seed'
@@ -66,8 +90,8 @@ test('#open', async () => {
   expect(pinning.api).toBeUndefined()
   await pinning.open()
   expect(pinning.api).toBeDefined()
-  expect(papi.ApiPromise).toHaveBeenCalled()
-  expect(papi.WsProvider).toHaveBeenCalled()
+  expect(mockPapi.ApiPromise).toHaveBeenCalled()
+  expect(mockPapi.WsProvider).toHaveBeenCalled()
 })
 
 describe('#close', () => {
@@ -91,35 +115,24 @@ describe('#pin', () => {
   test('pin commit', async () => {
     const pinning = new CrustPinningBackend(connectionString)
     await pinning.open()
-    pinning.sendTx = jest.fn(() => new Promise(resolve => {
-      tx.signAndSend()
-      resolve()
-    }))
+    pinning.sendTx = jest.fn(async () => tx.signAndSend())
     const cid = CID.parse('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D')
     await pinning.pin(cid)
-    expect(pinning.api.tx.market.placeStorageOrder).toBeCalledWith(cid.toString(), expect.anything(), expect.anything(), expect.anything())
+    expect(pinning.api.tx.market.placeStorageOrder).toBeCalledWith(
+      cid.toString(),
+      expect.anything(),
+      expect.anything(),
+      expect.anything()
+    )
     expect(pinning.api.tx.market.addPrepaid).toBeCalledWith(cid.toString(), expect.anything())
     expect(tx.signAndSend).toHaveBeenCalledTimes(2)
   })
 })
 
 describe('#ls', () => {
-  const cids = [
-    CID.parse('QmSnuWmxptJZdLJpKRarxBMS2Ju2oANVrgbr2xWbie9b2D'),
-    CID.parse('QmWXShtJXt6Mw3FH7hVCQvR56xPcaEtSj4YFSGjp2QxA4v'),
-  ]
-  const cidsArray = []
-  cids.forEach((cid) => {
-    cidsArray.push({ args: str2HexStr(cid.toString()) })
-  })
-
   test('return list of cids pinned', async () => {
     const pinning = new CrustPinningBackend(connectionString)
-    await pinning.open();
-    (cf.default as jest.Mock).mockReturnValueOnce(Promise.resolve({
-      status: 200,
-      json: () => Promise.resolve({ data: { substrate_extrinsic: cidsArray } }),
-    }))
+    await pinning.open()
     const result = await pinning.ls()
     cids.forEach((cid) => {
       expect(result[cid.toString()]).toEqual([pinning.id])
@@ -143,9 +156,9 @@ test('#info', async () => {
 })
 
 function str2HexStr(str: string): string {
-  let hex = '';
+  let hex = ''
   for (let i = 0; i < str.length; i++) {
-    hex += '' + str.charCodeAt(i).toString(16);
+    hex += '' + str.charCodeAt(i).toString(16)
   }
-  return "0x" + hex;
+  return '0x' + hex
 }
