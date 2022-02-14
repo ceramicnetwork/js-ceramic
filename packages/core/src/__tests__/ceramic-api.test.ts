@@ -433,7 +433,7 @@ describe('Ceramic API', () => {
       expect(Object.keys(streams).length).toEqual(6)
     })
 
-    it('can load streams for array of multiqueries even if streamid or path throws error', async () => {
+    it.skip('can load streams for array of multiqueries even if streamid or path throws error', async () => {
       const queries = [
         {
           streamId: streamA.id,
