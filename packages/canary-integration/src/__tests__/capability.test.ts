@@ -15,7 +15,7 @@ let ceramic: CeramicApi
 beforeAll(async () => {
   ipfs = await createIPFS()
   ceramic = await createCeramic(ipfs)
-}, 60000)
+}, 120000)
 
 afterAll(async () => {
   await ipfs.stop()
@@ -177,4 +177,4 @@ test('fails to verify capability with invalid resource', async () => {
   ).rejects.toThrowError(
     'Capability does not have appropriate permissions to update this TileDocument'
   )
-})
+}, 30000)
