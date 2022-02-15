@@ -40,7 +40,7 @@
     "@stablelib/ed25519": "^1.0.2",
     "@taquito/utils": "^11.2.0",
     "@tendermint/sig": "^0.6.0",
-    "@zondax/filecoin-signing-tools": "^0.18.2",
+    "@zondax/filecoin-signing-tools": "^0.19.0",
     "caip": "~1.0.0",
     "cross-fetch": "^3.1.4",
     "uint8arrays": "^3.0.0"
