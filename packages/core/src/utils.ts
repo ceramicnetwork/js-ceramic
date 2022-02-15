@@ -106,6 +106,7 @@ export class Utils {
    * @param cid the CID of the block to put
    * @param block bytes array of block to put
    * @param ipfsApi the IPFS Api instance to use
+   * @param signal AbortSignal
    */
   static async putIPFSBlock(
     cid: CID | string,
