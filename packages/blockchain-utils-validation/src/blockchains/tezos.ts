@@ -1,5 +1,5 @@
 import { ChainId } from 'caip'
-import { RemoteSigner } from '@taquito/remote-signer'
+import { verifySignature } from '@taquito/utils'
 import { BlockchainHandler } from '../blockchain-handler.js'
 import { LinkProof, tezos } from '@ceramicnetwork/blockchain-utils-linking'
 import fetch from 'cross-fetch'
@@ -37,27 +37,25 @@ function encodeMessage(text: string): string {
 }
 
 /**
- * creates a function which attempts to resolve the public key associated with the wallet address
+ * attempts to resolve the public key associated with the wallet address
  *
  * @param {string} address - a Tezos wallet address to lookup
- * @returns {() => Promise<string>} - the fetching function for the public key of the address
+ * @returns {Promise<string>} - a promise for the public key of the address
  * @throws {Error} - if the address is not found on the blockchain
  * @throws {Error} - if the public key is not published to the blockchain
  */
-function publicKeyFinder(address: string): () => Promise<string> {
+async function findPublicKey(address: string): Promise<string> {
   // request the public key from the Tezos blockchain
-  const request = fetch(`https://api.tzstats.com/explorer/account/${address}`).catch(() => {
+  const response = await fetch(`https://api.tzstats.com/explorer/account/${address}`).catch(() => {
     throw ADDRESS_NOT_FOUND_ERROR
   })
-  return async (): Promise<string> => {
-    const response = await request
-    const json = await response.json()
-    const result = json?.pubkey
-    if (result) {
-      return result
-    } else {
-      throw PUBLIC_KEY_NOT_PUBLISHED_ERROR
-    }
+
+  const json = await response.json()
+  const result = json?.pubkey
+  if (result) {
+    return result
+  } else {
+    throw PUBLIC_KEY_NOT_PUBLISHED_ERROR
   }
 }
 
@@ -74,11 +72,9 @@ export async function validateLink(proof: LinkProof): Promise<LinkProof | null> 
   }
   const msg = encodeMessage(proof.message)
 
-  const verifier = new RemoteSigner(account.address, FAKE_API_ENDPOINT)
-  verifier.publicKey = publicKeyFinder(account.address)
-
   try {
-    const is_sig_valid: boolean = await verifier.verify(msg, proof.signature)
+    const pk = await findPublicKey(account.address)
+    const is_sig_valid: boolean = await verifySignature(msg, pk, proof.signature)
 
     return is_sig_valid ? proof : null
   } catch (ignored) {
