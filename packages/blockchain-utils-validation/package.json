@@ -35,7 +35,7 @@
     "@ethersproject/contracts": "^5.5.0",
     "@ethersproject/providers": "^5.5.1",
     "@ethersproject/wallet": "^5.5.0",
-    "@polkadot/util-crypto": "^7.0.2",
+    "@polkadot/util-crypto": "^8.4.1",
     "@smontero/eosio-signing-tools": "^0.0.6",
     "@stablelib/ed25519": "^1.0.2",
     "@taquito/utils": "^11.2.0",
