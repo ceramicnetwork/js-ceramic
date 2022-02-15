@@ -1,6 +1,6 @@
 import jsonpatch from 'fast-json-patch'
 import cloneDeep from 'lodash.clonedeep'
-
+import type { Cacao } from 'ceramic-cacao'
 import { TileDocument } from '@ceramicnetwork/stream-tile'
 import {
   AnchorStatus,
@@ -14,6 +14,8 @@ import {
   StreamUtils,
 } from '@ceramicnetwork/common'
 import { StreamID } from '@ceramicnetwork/streamid'
+import { base64urlToJSON } from './utils.js'
+import { CID } from 'multiformats/cid'
 
 function stringArraysEqual(arr1: Array<string>, arr2: Array<string>) {
   if (arr1.length != arr2.length) {
@@ -76,7 +78,8 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
     const payload = commitData.commit
     const isSigned = StreamUtils.isSignedCommitData(commitData)
     if (isSigned) {
-      await this._verifySignature(commitData, context, payload.header.controllers[0])
+      const streamId = await StreamID.fromGenesis('tile', commitData.commit)
+      await this._verifySignature(commitData, context, payload.header.controllers[0], streamId)
     } else if (payload.data) {
       throw Error('Genesis commit with contents should always be signed')
     }
@@ -111,7 +114,8 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
     const controller = state.next?.metadata?.controllers?.[0] || state.metadata.controllers[0]
 
     // Verify the signature first
-    await this._verifySignature(commitData, context, controller)
+    const streamId = StreamUtils.streamIdFromState(state)
+    await this._verifySignature(commitData, context, controller, streamId)
 
     // Retrieve the payload
     const payload = commitData.commit
@@ -174,7 +178,11 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
   ): Promise<StreamState> {
     // TODO: Assert that the 'prev' of the commit being applied is the end of the log in 'state'
     const proof = commitData.proof
-    state.log.push({ cid: commitData.cid, type: CommitType.ANCHOR, timestamp: proof.blockTimestamp })
+    state.log.push({
+      cid: commitData.cid,
+      type: CommitType.ANCHOR,
+      timestamp: proof.blockTimestamp,
+    })
     let content = state.content
     let metadata = state.metadata
 
@@ -205,17 +213,61 @@ export class TileDocumentHandler implements StreamHandler<TileDocument> {
    * @param commitData - Commit to be verified
    * @param context - Ceramic context
    * @param controller - DID value
+   * @param streamId - Stream ID for the commit
    * @private
    */
   async _verifySignature(
     commitData: CommitData,
     context: Context,
-    controller: string
+    controller: string,
+    streamId: StreamID
   ): Promise<void> {
+    const cacao = await this._verifyCapabilityAuthz(commitData, context, streamId)
+
     await context.did.verifyJWS(commitData.envelope, {
       atTime: commitData.timestamp,
       issuer: controller,
       disableTimecheck: commitData.disableTimecheck,
+      capability: cacao,
     })
+  }
+
+  /**
+   * Verifies capability attached to a signed commit
+   * @param commitData - Commit to be verified
+   * @param context - Ceramic context
+   * @param streamId - Stream ID for the commit
+   * @returns Cacao is capability was found and verified, null otherwise
+   */
+  async _verifyCapabilityAuthz(
+    commitData: CommitData,
+    context: Context,
+    streamId: StreamID
+  ): Promise<Cacao | null> {
+    const protectedHeader = commitData.envelope.signatures[0].protected
+    const decodedProtectedHeader = base64urlToJSON(protectedHeader)
+
+    if (!decodedProtectedHeader.cap) return null
+
+    const capIPFSUri = decodedProtectedHeader.cap
+    const capCID = CID.parse(capIPFSUri.replace('ipfs://', ''))
+    const cacao = (await context.ipfs.dag.get(capCID)).value as Cacao
+    const resources = cacao.p.resources as string[]
+    const payloadCID = commitData.envelope.link.toString()
+
+    if (resources.includes(`ceramic://*`)) {
+      throw new Error(`Capability resource is not allowed`)
+    }
+
+    if (
+      !resources.includes(`ceramic://${streamId.toString()}`) &&
+      !resources.includes(`ceramic://${streamId.toString()}?payload=${payloadCID}`)
+    ) {
+      throw new Error(
+        `Capability does not have appropriate permissions to update this TileDocument`
+      )
+    }
+
+    return cacao
   }
 }
