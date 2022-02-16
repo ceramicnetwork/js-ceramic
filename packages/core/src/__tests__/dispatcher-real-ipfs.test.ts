@@ -72,7 +72,8 @@ describe('Dispatcher with real ipfs over http', () => {
   it('retries on timeout', async () => {
     const ipfsGetSpy = jest.spyOn(ipfsClient.dag, 'get')
 
-    // try to load a CID that ipfs doesn't know about.  It will timeout
+    // try to load a CID that ipfs doesn't know about.  It will timeout.
+    // Timeout error message is different depending on if we are talking to a go-ipfs or js-ipfs instance
     await expect(dispatcher.retrieveCommit(FAKE_CID)).rejects.toThrow(/(context deadline exceeded|request timed out)/)
 
     // Make sure we tried 3 times to get the cid from ipfs, not just once
