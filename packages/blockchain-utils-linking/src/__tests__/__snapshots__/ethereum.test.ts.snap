@@ -18,20 +18,24 @@ Timestamp: 1538352000",
 
 exports[`Ocap requestCapability 1`] = `
 Object {
-  "message": "self.id wants you to sign in with your Ethereum account: 
-0x8fe2c4516e920425e177658aaac451ca0463ed69
-
-Give this app access to your streams
-
-URI: did:pkh:eip155:1:0x8fe2c4516e920425e177658aaac451ca0463ed69 
-Version: 1 
-Chain ID: eip155:1337 
-Nonce: 12345678 
-Issued At: 2021-10-14T07:18:41Z 
-Resources: 
-- ceramic://kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s 
-",
-  "signature": "0xd008043db6b85beffb4dc0c8d1371f55ac1d1f31716385f7b5d14457a700453309d2fe9f0f2278140638b000877b7b073f036c34eb0efdd23e6768cdc02e72761c",
+  "h": Object {
+    "t": "eip4361-eip191",
+  },
+  "p": Object {
+    "aud": "did:key:z6MkrBdNdwUPnXDVD1DCxedzVVBpaGi8aSmoXFAeKNgtAer8",
+    "domain": "service.org",
+    "iat": "2021-09-30T16:25:24.000Z",
+    "iss": "did:pkh:eip155:1:0x8fe2c4516e920425e177658aaac451ca0463ed69",
+    "nonce": "32891757",
+    "resources": Array [
+      "ceramic://kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s",
+    ],
+    "statement": "I accept the ServiceOrg Terms of Service: https://service.org/tos",
+    "version": "1",
+  },
+  "s": Object {
+    "s": "0x36d2299b04d4c93e8b1717611431b4a128ad385458c46545b05277aa2284515210dfb5b134d46d99aea01050a447ca0b42fc5012525b0b2520f711a67914cec21c",
+  },
 }
 `;
 

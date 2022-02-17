@@ -8,6 +8,7 @@ import MockDate from 'mockdate'
 import * as ethereum from '../ethereum.js'
 import { OcapParams, OcapTypes } from '../ocap-util.js'
 import { encodeRpcMessage } from '../util.js'
+import { SiweMessage } from 'ceramic-cacao'
 
 const CONTRACT_WALLET_ABI = [
   {
@@ -237,17 +238,18 @@ describe('Ocap', () => {
       'tile',
       'bagcqcerakszw2vsovxznyp5gfnpdj4cqm2xiv76yd24wkjewhhykovorwo6a'
     )
-    const fixedDate = new Date('2021-10-14T07:18:41Z')
-    const ocapParams: OcapParams = {
-      type: OcapTypes.EIP4361,
-      did: `did:pkh:eip155:1:${address}`,
-      streams: [streamId],
-      domain: 'self.id',
-      statement: 'Give this app access to your streams',
-      nonce: '12345678',
-      issuedAt: fixedDate.toISOString(),
-    }
+    const siweMessage = new SiweMessage({
+      domain: 'service.org',
+      address: address,
+      statement: 'I accept the ServiceOrg Terms of Service: https://service.org/tos',
+      uri: 'did:key:z6MkrBdNdwUPnXDVD1DCxedzVVBpaGi8aSmoXFAeKNgtAer8',
+      version: '1',
+      nonce: '32891757',
+      issuedAt: '2021-09-30T16:25:24.000Z',
+      chainId: '1',
+      resources: [streamId.toUrl()],
+    })
 
-    await expect(auth.requestCapability(ocapParams)).resolves.toMatchSnapshot()
+    await expect(auth.requestCapability(siweMessage)).resolves.toMatchSnapshot()
   })
 })

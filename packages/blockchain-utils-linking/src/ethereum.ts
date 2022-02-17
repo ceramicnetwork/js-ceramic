@@ -3,7 +3,7 @@ import { AccountId } from 'caip'
 import { encodeRpcMessage, getConsentMessage, LinkProof } from './util.js'
 import * as uint8arrays from 'uint8arrays'
 import * as sha256 from '@stablelib/sha256'
-import { Ocap, OcapParams, OcapTypes, buildOcapRequestMessage } from './ocap-util.js'
+import { Cacao, SiweMessage } from 'ceramic-cacao'
 
 const ADDRESS_TYPES = {
   ethereumEOA: 'ethereum-eoa',
@@ -61,25 +61,18 @@ export class EthereumAuthProvider implements AuthProvider {
     return createLink(did, accountId, this.provider, this.opts)
   }
 
-  async requestCapability(params: OcapParams): Promise<Ocap> {
+  async requestCapability(siweMessage: SiweMessage): Promise<Cacao> {
     console.warn(
       'WARN: requestCapability os an experimental API, that is subject to change any time.'
     )
     const account = await this.accountId()
-    const requestMessage = buildOcapRequestMessage({
-      ...params,
-      address: this.address,
-      chainId: account.chainId.toString(),
-      type: OcapTypes.EIP4361,
-    })
     const signature = await safeSend(this.provider, 'personal_sign', [
-      requestMessage,
+      siweMessage.signMessage(),
       account.address,
     ])
-    return {
-      message: requestMessage,
-      signature: signature,
-    }
+    siweMessage.signature = signature
+    const cacao = Cacao.fromSiweMessage(siweMessage)
+    return cacao
   }
 
   withAddress(address: string): AuthProvider {
