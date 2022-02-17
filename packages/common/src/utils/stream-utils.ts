@@ -36,6 +36,9 @@ export class StreamUtils {
     if (StreamUtils.isSignedCommitContainer(cloned)) {
       cloned.jws.link = cloned.jws.link.toString()
       cloned.linkedBlock = u8a.toString(cloned.linkedBlock, 'base64')
+      if (cloned.cacaoBlock) {
+        cloned.cacaoBlock = u8a.toString(cloned.cacaoBlock, 'base64')
+      }
       return cloned
     }
 
@@ -67,6 +70,9 @@ export class StreamUtils {
     if (StreamUtils.isSignedCommitContainer(cloned)) {
       cloned.jws.link = toCID(cloned.jws.link)
       cloned.linkedBlock = u8a.fromString(cloned.linkedBlock, 'base64')
+      if (cloned.cacaoBlock) {
+        cloned.cacaoBlock = u8a.fromString(cloned.cacaoBlock, 'base64')
+      }
       return cloned
     }
 
