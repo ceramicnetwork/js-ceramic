@@ -88,7 +88,12 @@ describe('Dispatcher with real ipfs over http', () => {
     // shutdownController successfully interrupted waiting on IPFS.
 
     const getPromise = dispatcher.retrieveCommit(FAKE_CID)
-    await delay(300) // Apparently, with js-ipfs, we need some extra time.
+    // Apparently, js-ipfs does not react on already triggered AbortSignal.
+    // So we have to add a timeout to make sure an ipfs function is called before the signal is triggered.
+    const isJsIpfsNode = Boolean((ipfsClient as any).preload) // Exists on js-ipfs node, and is not present on ipfs-http-client.
+    if (isJsIpfsNode) {
+      await delay(1000)
+    }
     shutdownController.abort()
     await expect(getPromise).rejects.toThrow(/aborted/)
   }, 50000)
