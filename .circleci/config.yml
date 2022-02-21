@@ -41,4 +41,4 @@ workflows:
   build-and-test:
     jobs:
       - with-go-ipfs
-#      - with-js-ipfs TODO(NET-1106)
+      - with-js-ipfs

@@ -30,7 +30,7 @@
     "prebuild": "npm run clean",
     "lint": "npx eslint ./src --ext .js,.jsx,.ts,.tsx",
     "clean": "npx rimraf ./lib",
-    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest --silent --coverage --passWithNoTests"
+    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest --silent --coverage --passWithNoTests --forceExit"
   },
   "dependencies": {
     "@ceramicnetwork/common": "^2.0.0-alpha.2",
