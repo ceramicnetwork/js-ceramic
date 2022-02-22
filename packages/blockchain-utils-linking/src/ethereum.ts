@@ -143,6 +143,10 @@ export function normalizeAccountId(input: AccountId): AccountId {
   })
 }
 
+export function asOldCaipString(input: AccountId): string {
+  return `${input.address}@${input.chainId.namespace}:${input.chainId.reference}`
+}
+
 function utf8toHex(message: string): string {
   const bytes = uint8arrays.fromString(message)
   const hex = uint8arrays.toString(bytes, 'base16')
@@ -164,7 +168,7 @@ async function createEthLink(
     type: ADDRESS_TYPES.ethereumEOA,
     message,
     signature,
-    account: account.toString(),
+    account: asOldCaipString(account),
   }
   if (!opts.skipTimestamp) proof.timestamp = timestamp
   return proof
@@ -190,7 +194,7 @@ async function createErc1271Link(
   await validateChainId(account, provider)
   return Object.assign(res, {
     type: ADDRESS_TYPES.erc1271,
-    account: account.toString(),
+    account: asOldCaipString(account),
   })
 }
 
