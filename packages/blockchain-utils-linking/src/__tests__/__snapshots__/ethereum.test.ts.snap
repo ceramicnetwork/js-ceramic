@@ -19,7 +19,7 @@ Timestamp: 1538352000",
 exports[`Ocap requestCapability 1`] = `
 Object {
   "h": Object {
-    "t": "eip4361",
+    "t": "eip4361-eip191",
   },
   "p": Object {
     "aud": "did:key:z6MkrBdNdwUPnXDVD1DCxedzVVBpaGi8aSmoXFAeKNgtAer8",
@@ -36,7 +36,6 @@ Object {
   },
   "s": Object {
     "s": "0x3d8a0f7e9f9941d1e676df237a20173a4d5dd3be73c58796dcfd4d134e17660b225e455a315525040930e710c39d9226bb59e8425df157647ead0528948704801b",
-    "t": "eip191",
   },
 }
 `;

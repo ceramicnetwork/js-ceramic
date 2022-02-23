@@ -6,9 +6,7 @@ import { Contract, ContractFactory } from '@ethersproject/contracts'
 import * as sigUtils from 'eth-sig-util'
 import MockDate from 'mockdate'
 import * as ethereum from '../ethereum.js'
-import { OcapParams, OcapTypes } from '../ocap-util.js'
 import { encodeRpcMessage } from '../util.js'
-import { SiweMessage } from 'ceramic-cacao'
 
 const CONTRACT_WALLET_ABI = [
   {
