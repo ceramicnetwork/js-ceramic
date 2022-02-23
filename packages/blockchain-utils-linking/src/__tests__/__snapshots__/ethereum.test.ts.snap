@@ -19,7 +19,7 @@ Timestamp: 1538352000",
 exports[`Ocap requestCapability 1`] = `
 Object {
   "h": Object {
-    "t": "eip4361-eip191",
+    "t": "eip4361",
   },
   "p": Object {
     "aud": "did:key:z6MkrBdNdwUPnXDVD1DCxedzVVBpaGi8aSmoXFAeKNgtAer8",
@@ -27,7 +27,7 @@ Object {
     "exp": "2018-10-08T00:00:00.000Z",
     "iat": "2018-10-01T00:00:00.000Z",
     "iss": "did:pkh:eip155:eip155:1337:0x8fe2c4516e920425e177658aaac451ca0463ed69",
-    "nonce": "8188hq9AQg",
+    "nonce": "12345",
     "resources": Array [
       "ceramic://kjzl6cwe1jw147dvq16zluojmraqvwdmbh61dx9e0c59i344lcrsgqfohexp60s",
     ],
@@ -35,7 +35,8 @@ Object {
     "version": "1",
   },
   "s": Object {
-    "s": "0x2fa4f567f8e274f0cb3d70c4fb3f17b49a6ab55c07ba1732c4b26a8fd609c0b6089f1298c4359c0604cfc227d0598afac6d7d5e12732b49ac864e2c0cd7186791b",
+    "s": "0x3d8a0f7e9f9941d1e676df237a20173a4d5dd3be73c58796dcfd4d134e17660b225e455a315525040930e710c39d9226bb59e8425df157647ead0528948704801b",
+    "t": "eip191",
   },
 }
 `;
