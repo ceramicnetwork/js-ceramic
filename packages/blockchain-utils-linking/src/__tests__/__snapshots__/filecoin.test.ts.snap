@@ -38,7 +38,7 @@ exports[`authenticate testnet 1`] = `"APHUqaCLuyqunqfYJl8YAq3/p6oO9iiEAGkGQILzZA
 
 exports[`createLink generate proof on mainnet 1`] = `
 Object {
-  "account": "fil:f:f1ymbkm43ysdiruibji6c6m2iy5bxwbuv5d6cdqmy",
+  "account": "f1ymbkm43ysdiruibji6c6m2iy5bxwbuv5d6cdqmy@fil:f",
   "message": "Link this account to your identity
 
 did:3:bafysdfwefwe 
@@ -52,7 +52,7 @@ Timestamp: 0",
 
 exports[`createLink generate proof on mainnet for BLS key 1`] = `
 Object {
-  "account": "fil:f:f3vbrwhphivdxyvs3pxpp54w73664bgxmb7ed4du4ohhu3dc6f5y264cs72yluw7mjbwnlrtzq543ys57plzka",
+  "account": "f3vbrwhphivdxyvs3pxpp54w73664bgxmb7ed4du4ohhu3dc6f5y264cs72yluw7mjbwnlrtzq543ys57plzka@fil:f",
   "message": "Link this account to your identity
 
 did:3:bafysdfwefwe 
@@ -66,7 +66,7 @@ Timestamp: 0",
 
 exports[`createLink generate proof on testnet 1`] = `
 Object {
-  "account": "fil:t:t17lxg2i2otnl7mmpw2ocd6o4e3b4un3272vny6ka",
+  "account": "t17lxg2i2otnl7mmpw2ocd6o4e3b4un3272vny6ka@fil:t",
   "message": "Link this account to your identity
 
 did:3:bafysdfwefwe 

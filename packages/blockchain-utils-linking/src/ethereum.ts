@@ -1,6 +1,6 @@
 import { AuthProvider } from './auth-provider.js'
 import { AccountId } from 'caip'
-import { encodeRpcMessage, getConsentMessage, LinkProof } from './util.js'
+import { asOldCaipString, encodeRpcMessage, getConsentMessage, LinkProof } from './util.js'
 import * as uint8arrays from 'uint8arrays'
 import * as sha256 from '@stablelib/sha256'
 import { Ocap, OcapParams, OcapTypes, buildOcapRequestMessage } from './ocap-util.js'
@@ -141,10 +141,6 @@ export function normalizeAccountId(input: AccountId): AccountId {
     address: input.address.toLowerCase(),
     chainId: input.chainId,
   })
-}
-
-export function asOldCaipString(input: AccountId): string {
-  return `${input.address}@${input.chainId.namespace}:${input.chainId.reference}`
 }
 
 function utf8toHex(message: string): string {

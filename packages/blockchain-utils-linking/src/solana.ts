@@ -1,6 +1,6 @@
 import { AccountId } from 'caip'
 import { AuthProvider } from './auth-provider.js'
-import { getConsentMessage, LinkProof } from './util.js'
+import { asOldCaipString, getConsentMessage, LinkProof } from './util.js'
 import * as uint8arrays from 'uint8arrays'
 import * as sha256 from '@stablelib/sha256'
 
@@ -46,7 +46,7 @@ export class SolanaAuthProvider implements AuthProvider {
       type: 'solana',
       message,
       signature,
-      account: accountID.toString(),
+      account: asOldCaipString(accountID),
       timestamp,
     }
   }

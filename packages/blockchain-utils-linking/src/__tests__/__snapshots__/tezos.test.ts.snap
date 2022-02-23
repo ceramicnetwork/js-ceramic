@@ -8,7 +8,7 @@ exports[`Blockchain: Tezos authenticate entropy replication for NetXdQprcVkpaWU 
 
 exports[`Blockchain: Tezos createLink create proof for NetXdQprcVkpaWU 1`] = `
 Object {
-  "account": "tezos:NetXdQprcVkpaWU:tz3Lfm6CyfSTZ7EgMckptZZGiPxzs9GK59At",
+  "account": "tz3Lfm6CyfSTZ7EgMckptZZGiPxzs9GK59At@tezos:NetXdQprcVkpaWU",
   "message": "Link this account to your identity
 
 did:3:bafysdfwefwe 
