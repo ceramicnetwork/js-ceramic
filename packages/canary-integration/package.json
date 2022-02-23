@@ -15,7 +15,7 @@
   },
   "devDependencies": {
     "@truffle/hdwallet-provider": "^2.0.0",
-    "ceramic-cacao": "^0.0.13",
+    "ceramic-cacao": "^0.0.14",
     "@ceramicnetwork/3id-did-resolver": "^2.0.0-alpha.2",
     "@ceramicnetwork/blockchain-utils-linking": "^2.0.0-alpha.2",
     "@ceramicnetwork/blockchain-utils-validation": "^2.0.0-alpha.2",
